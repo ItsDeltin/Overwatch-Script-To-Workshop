@@ -9,13 +9,13 @@ using System.Drawing;
 using System.Threading;
 using System.Diagnostics;
 
-namespace OverwatchParser
+namespace Deltin.OverwatchParser
 {
     public class InputHandler
     {
         public const int SmallStep = 25;
-        public const int MediumStep = 50;
-        public const int BigStep = 250;
+        public const int MediumStep = 100;
+        public const int BigStep = 500;
 
         public InputHandler(Process overwatchProcess)
         {

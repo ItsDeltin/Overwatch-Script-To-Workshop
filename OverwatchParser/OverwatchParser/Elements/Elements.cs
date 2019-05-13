@@ -17,7 +17,7 @@ using System.Threading.Tasks;
 using System.Reflection;
 using System.Windows.Forms;
 
-namespace OverwatchParser.Elements
+namespace Deltin.OverwatchParser.Elements
 {
     public struct OWEnum { }
 
@@ -28,11 +28,17 @@ namespace OverwatchParser.Elements
         Value
     }
 
+    enum ParameterType
+    {
+        Value,
+        Enum
+    }
+
     // Rule of thumb: Return values are restrictive (only 1), parameter values are loose (potentially multiple)
     [Flags]
     enum ValueType
     {
-        All = Number | Boolean | Hero | Vector | Player,
+        Any = Number | Boolean | Hero | Vector | Player,
         Number = 1,
         Boolean = 2,
         String = 4,
@@ -83,13 +89,23 @@ namespace OverwatchParser.Elements
             Name = name;
             ValueType = returnType;
             DefaultType = defaultType;
+            ParameterType = ParameterType.Value;
+        }
+
+        public Parameter(string name, Type enumType)
+        {
+            Name = name;
+            EnumType = enumType;
+            ParameterType = ParameterType.Enum;
         }
 
         public string Name { get; private set; }
+        public ParameterType ParameterType { get; private set; }
 
         public ValueType ValueType { get; private set; }
-
         public Type DefaultType { get; private set; } // The value that the variable is set to use by default
+
+        public Type EnumType { get; private set; }
     }
 
     public abstract class Element
@@ -108,18 +124,18 @@ namespace OverwatchParser.Elements
             {
                 var valueType = t.GetCustomAttribute<ElementData>().ValueType;
 
-                return parameterType.HasFlag(valueType) || parameterType == ValueType.All || valueType == ValueType.All;
+                return parameterType.HasFlag(valueType) || parameterType == ValueType.Any || valueType == ValueType.Any;
             }).ToArray();
         }
 
-        public static T Part<T>(params Element[] parameterValues) where T : Element, new()
+        public static T Part<T>(params object[] parameterValues) where T : Element, new()
         {
             T element = new T();
             element.ParameterValues = parameterValues;
             return element;
         }
 
-        public Element(params Element[] parameterValues)
+        public Element(params object[] parameterValues)
         {
             elementData = GetType().GetCustomAttribute<ElementData>();
             parameterData = GetType().GetCustomAttributes<Parameter>().ToArray();
@@ -129,14 +145,11 @@ namespace OverwatchParser.Elements
         ElementData elementData;
         Parameter[] parameterData;
 
-        public Element[] ParameterValues;
+        public object[] ParameterValues;
 
-        public void Input()
-        {
-            Input(false, ValueType.All);
-        }
+        public void Input() => Input(false, ValueType.Any, null);
 
-        private void Input(bool isAlreadySet, ValueType valueType)
+        private void Input(bool isAlreadySet, ValueType valueType, Type defaultType)
         {
             if (ParameterValues == null)
                 ParameterValues = new Element[0];
@@ -162,12 +175,18 @@ namespace OverwatchParser.Elements
             // Select the option
             if (!isAlreadySet)
             {
+                if (defaultType == typeof(Vector))
+                {
+                    Program.Input.KeyPress(Keys.Right);
+                    Thread.Sleep(InputHandler.SmallStep);
+                }
+
                 Program.Input.KeyPress(Keys.Space);
                 Thread.Sleep(InputHandler.BigStep);
 
                 // Leave the input field
                 Program.Input.KeyPress(Keys.Enter);
-                Thread.Sleep(InputHandler.BigStep);
+                Thread.Sleep(InputHandler.MediumStep);
 
                 for (int i = 0; i < pos; i++)
                 {
@@ -181,15 +200,48 @@ namespace OverwatchParser.Elements
 
             Console.WriteLine();
 
+            BeforeParameters();
+
             for (int i = 0; i < ParameterValues.Length; i++)
-#warning remove ? later
             {
                 Program.Input.KeyPress(Keys.Down);
-                ParameterValues[i]?.Input(parameterData[i].DefaultType == ParameterValues[i].GetType(), parameterData[i].ValueType);
+                Thread.Sleep(InputHandler.SmallStep);
+
+                if (parameterData[i].ParameterType == ParameterType.Value)
+                    ((Element)ParameterValues[i]).Input(parameterData[i].DefaultType == ParameterValues[i].GetType(), parameterData[i].ValueType, parameterData[i].DefaultType);
+
+                // Enum input
+                else if (parameterData[i].ParameterType == ParameterType.Enum)
+                {
+                    Array enumValues = Enum.GetValues(parameterData[i].EnumType);
+
+                    if (enumValues.GetValue(0) != ParameterValues[i])
+                    {
+                        int enumPos = Array.IndexOf(enumValues, ParameterValues[i]);
+                        Console.WriteLine($"    {ParameterValues[i]} pos: {enumPos}");
+
+                        Program.Input.KeyPress(Keys.Space);
+                        Thread.Sleep(InputHandler.MediumStep);
+                        Program.Input.KeyPress(Keys.Enter);
+                        Thread.Sleep(InputHandler.MediumStep);
+
+                        for (int e = 0; e < enumPos; e++)
+                        {
+                            Program.Input.KeyPress(Keys.Down);
+                            Thread.Sleep(InputHandler.SmallStep);
+                        }
+
+                        Program.Input.KeyPress(Keys.Space);
+                        Thread.Sleep(InputHandler.MediumStep);
+                    }
+                }
+
             }
 
-            InputFinished();
+            AfterParameters();
         }
-        protected virtual void InputFinished() { }
+
+        protected virtual void BeforeParameters() { }
+        protected virtual void AfterParameters() { }
     }
 }

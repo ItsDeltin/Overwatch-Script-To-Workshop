@@ -4,9 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Diagnostics;
-using OverwatchParser.Elements;
+using Deltin.OverwatchParser;
+using Deltin.OverwatchParser.Elements;
 
-namespace OverwatchParser
+namespace Deltin.OverwatchParser
 {
     public class Program
     {
@@ -14,43 +15,17 @@ namespace OverwatchParser
         {
             Element.LoadAllElements();
 
-            /*
-            new OverwatchParser.Elements.AbortIf()
-            {
-                ParameterValues = new Element[1]
-                {
-                    new And()
-                    {
-                        ParameterValues = new Element[2]
-                        {
-                            new AppendToArray()
-                            {
-                                ParameterValues = new Element[2]
-                                {
-                                    new AbsoluteValue(new Number(-30)),
-                                    new AbsoluteValue()
-                                    {
-                                        ParameterValues = new Element[1]
-                                        {
-                                            new Number(20)
-                                        }
-                                    }
-                                }
-                            },
-                            new True()
-                        }
-                    }
-                }
-            }.Input();
-            */
+            Elements.String.BuildString(new Elements.String("hello"), new Elements.String("you!"));
 
-            Element action = Element.Part<AbortIf>(
-                Element.Part<And>(
-                    Element.Part<AppendToArray>(
-                        Element.Part<AbsoluteValue>(new Number(-30)),
-                        Element.Part<AbsoluteValue>(new Number(20))
-                        ), Element.Part<True>()));
-            action.Input();
+            Element BigAction = Element.Part<BigMessage>
+            (
+                Element.Part<Add>(new Number(2), new Number(4)),
+                new OverwatchParser.Elements.String("...", 
+                Element.Part<Add>(new Number(1), new Number(2)),
+                Element.Part<Add>(new Number(1), new Number(2)),
+                Element.Part<Add>(new Number(1), new Number(2))));
+
+            BigAction.Input();
 
             Console.WriteLine("Done.");
             Console.ReadLine();
