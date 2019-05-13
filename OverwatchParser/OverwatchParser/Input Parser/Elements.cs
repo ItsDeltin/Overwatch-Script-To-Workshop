@@ -130,8 +130,8 @@ namespace Deltin.OverwatchParser.Elements
 
     public abstract class Element
     {
-        private static Type[] ActionList;
-        private static Type[] ValueList;
+        private static Type[] ActionList = null;
+        private static Type[] ValueList = null;
         public static void LoadAllElements()
         {
             Type[] types = Assembly.GetExecutingAssembly().GetTypes();
@@ -157,6 +157,9 @@ namespace Deltin.OverwatchParser.Elements
 
         public Element(params object[] parameterValues)
         {
+            if (ActionList == null)
+                LoadAllElements();
+
             ElementData = GetType().GetCustomAttribute<ElementData>();
             parameterData = GetType().GetCustomAttributes<Parameter>().ToArray();
             ParameterValues = parameterValues;

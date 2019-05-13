@@ -13,15 +13,23 @@ namespace Deltin.OverwatchParser
     {
         static void Main(string[] args)
         {
-            Element.LoadAllElements();
+            // Create rule
+            Rule rule = new Rule("Start game when there are at least 3 players.");
 
-            Rule rule = new Rule("Rule rocks!")
+            // Set conditions
+            rule.Conditions = new Condition[]
             {
-                Conditions = new Condition[]
-                {
-                    new Condition(new V_Number(1))
-                }
+                new Condition(Element.Part<V_GlobalVariable>(Variable.I), Operators.Equal,              new V_False()),
+                new Condition(new V_NumberOfPlayers(),                    Operators.GreaterThanOrEqual, new V_Number(3)),
             };
+
+            // Set actions
+            rule.Actions = new Element[]
+            {
+                Element.Part<A_BigMessage>(new V_AllPlayers(), V_String.BuildString(new V_String("current players"), new V_NumberOfPlayers())),
+            };
+
+            // Apply
             rule.Input();
 
             Console.WriteLine("Done.");

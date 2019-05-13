@@ -101,6 +101,9 @@ namespace Deltin.OverwatchParser.Elements
     [ElementData("Event Player", ValueType.Player, 0)]
     public class V_EventPlayer : Element {}
 
+    [ElementData("False", ValueType.Boolean, 0)]
+    public class V_False : Element {}
+
     [ElementData("Global Variable", ValueType.Any, 0)]
     [Parameter("Variable", typeof(Variable))]
     public class V_GlobalVariable : Element {}
@@ -135,6 +138,10 @@ namespace Deltin.OverwatchParser.Elements
             Thread.Sleep(InputHandler.SmallStep);
         }
     }
+
+    [ElementData("Number Of Players", ValueType.Number, 2)]
+    [Parameter("Team", ValueType.Team, typeof(V_Team))]
+    public class V_NumberOfPlayers : Element {}
 
     [ElementData("Player Variable", ValueType.Any, 0)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
@@ -204,6 +211,42 @@ namespace Deltin.OverwatchParser.Elements
 
             throw new Exception();
         }
+
+        public static Element BuildString(string value)
+        {
+            List<Element> elements = new List<Element>();
+
+            string[] stringSplit = value
+                .ToLower()
+                .Split(' ');
+
+            foreach (string part in stringSplit)
+            {
+                if (part.EndsWith("!!!"))
+                    elements.Add(new V_String("{0}!!!", new V_String(part)));
+
+                else if (part.EndsWith("!!"))
+                    elements.Add(new V_String("{0}!!", new V_String(part)));
+
+                else if (part.EndsWith("!"))
+                    elements.Add(new V_String("{0}!", new V_String(part)));
+
+                else if (part.EndsWith("???"))
+                    elements.Add(new V_String("{0}???", new V_String(part)));
+
+                else if (part.EndsWith("??"))
+                    elements.Add(new V_String("{0}??", new V_String(part)));
+
+                else if (part.EndsWith("?"))
+                    elements.Add(new V_String("{0}?", new V_String(part)));
+
+                else
+                    elements.Add(new V_String(part));
+            }
+
+            return BuildString(elements.ToArray());
+        }
+
         private static Element[] NullifyEmptyValues(Element[] stringValues)
         {
             var stringList = stringValues.ToList();

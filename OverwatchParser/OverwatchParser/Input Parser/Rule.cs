@@ -39,6 +39,12 @@ namespace Deltin.OverwatchParser.Elements
 
         public void Input()
         {
+            if (NumberOfRules == 0)
+            {
+                InputHandler.Input.KeyPress(Keys.Tab);
+                Thread.Sleep(InputHandler.SmallStep);
+            }
+
             // Create rule.
             InputHandler.Input.KeyPress(Keys.Space);
             Thread.Sleep(InputHandler.MediumStep);
@@ -80,14 +86,40 @@ namespace Deltin.OverwatchParser.Elements
                 InputHandler.Input.SelectEnumMenuOption(Player);
             }
 
-            InputHandler.Input.KeyPress(Keys.Down); // Hovering over the "Add Action" button
+            InputHandler.Input.KeyPress(Keys.Down); // Hovering over the "Add Action" button.
             Thread.Sleep(InputHandler.SmallStep);
 
-            InputHandler.Input.KeyPress(Keys.Left); // Hovering over the "Add Condition" button
+            InputHandler.Input.KeyPress(Keys.Left); // Hovering over the "Add Condition" button.
             Thread.Sleep(InputHandler.SmallStep);
 
+            // Add the conditions
             foreach (Condition condition in Conditions)
                 condition.Input();
+
+            // Select the "Add Action" button.
+            InputHandler.Input.KeyPress(Keys.Right); // Hovering over the "Add Action" button.
+            Thread.Sleep(InputHandler.SmallStep);
+
+            foreach(Element action in Actions)
+            {
+                // Open the "Create Action" menu.
+                InputHandler.Input.KeyPress(Keys.Space);
+                Thread.Sleep(InputHandler.BigStep);
+
+                // Setup control spot
+                InputHandler.Input.KeyPress(Keys.Tab);
+                Thread.Sleep(InputHandler.SmallStep);
+                // The spot will be at the bottom when tab is pressed. 
+                // Pressing up once will select the operator value, up another time will select the first value paramerer.
+                InputHandler.Input.RepeatKey(Keys.Up, 3);
+
+                // Input value1.
+                action.Input();
+
+                // Close the Create Condition menu.
+                InputHandler.Input.KeyPress(Keys.Escape);
+                Thread.Sleep(InputHandler.BigStep);
+            }
         }
     }
 }
