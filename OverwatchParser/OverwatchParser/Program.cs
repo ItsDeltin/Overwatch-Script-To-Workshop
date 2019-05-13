@@ -15,22 +15,17 @@ namespace Deltin.OverwatchParser
         {
             Element.LoadAllElements();
 
-            Elements.String.BuildString(new Elements.String("hello"), new Elements.String("you!"));
-
-            Element BigAction = Element.Part<BigMessage>
-            (
-                Element.Part<Add>(new Number(2), new Number(4)),
-                new OverwatchParser.Elements.String("...", 
-                Element.Part<Add>(new Number(1), new Number(2)),
-                Element.Part<Add>(new Number(1), new Number(2)),
-                Element.Part<Add>(new Number(1), new Number(2))));
-
-            BigAction.Input();
+            Rule rule = new Rule("Rule rocks!")
+            {
+                Conditions = new Condition[]
+                {
+                    new Condition(new V_Number(1))
+                }
+            };
+            rule.Input();
 
             Console.WriteLine("Done.");
             Console.ReadLine();
         }
-
-        public static InputHandler Input = new InputHandler(Process.GetProcessesByName("Overwatch")[0]);
     }
 }

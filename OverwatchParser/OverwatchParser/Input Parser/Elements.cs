@@ -22,7 +22,7 @@ namespace Deltin.OverwatchParser.Elements
     public struct OWEnum { }
 
     // The type of element the element is.
-    enum ElementType
+    public enum ElementType
     {
         Action,
         Value
@@ -36,16 +36,17 @@ namespace Deltin.OverwatchParser.Elements
 
     // Rule of thumb: Return values are restrictive (only 1), parameter values are loose (potentially multiple)
     [Flags]
-    enum ValueType
+    public enum ValueType
     {
-        Any = Number | Boolean | Hero | Vector | Player,
+        Any = Number | Boolean | Hero | Vector | Player | Team,
         Number = 1,
         Boolean = 2,
         String = 4,
         Hero = 8,
         VectorAndPlayer = Vector | Player, // Vectors can use player variables too
         Vector = 16,
-        Player = 32
+        Player = 32,
+        Team = 64
     }
 
     enum Button
@@ -61,22 +62,26 @@ namespace Deltin.OverwatchParser.Elements
     }
 
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
-    class ElementData : Attribute
+    public class ElementData : Attribute
     {
-        public ElementData(string elementName)
+        public ElementData(string elementName, int rowAfterSearch = -1)
         {
             ElementType = ElementType.Action;
             ElementName = elementName;
+            RowAfterSearch = rowAfterSearch;
         }
 
-        public ElementData(string elementName, ValueType elementType)
+        public ElementData(string elementName, ValueType elementType, int rowAfterSearch = -1)
         {
             ElementType = ElementType.Value;
             ElementName = elementName;
             ValueType = elementType;
+            RowAfterSearch = rowAfterSearch;
         }
 
         public string ElementName { get; private set; }
+        public int RowAfterSearch { get; private set; }
+
         public ElementType ElementType { get; private set; }
         public ValueType ValueType { get; private set; }
     }
@@ -106,6 +111,21 @@ namespace Deltin.OverwatchParser.Elements
         public Type DefaultType { get; private set; } // The value that the variable is set to use by default
 
         public Type EnumType { get; private set; }
+
+        public object GetDefault()
+        {
+            if (ParameterType == ParameterType.Value)
+            {
+                if (DefaultType == null)
+                    throw new Exception($"No default value to fallback on for parameter {Name}.");
+                return Activator.CreateInstance(DefaultType);
+            }
+
+            if (ParameterType == ParameterType.Enum)
+                return Enum.GetValues(EnumType).GetValue(0);
+
+            return null;
+        }
     }
 
     public abstract class Element
@@ -115,8 +135,8 @@ namespace Deltin.OverwatchParser.Elements
         public static void LoadAllElements()
         {
             Type[] types = Assembly.GetExecutingAssembly().GetTypes();
-            ActionList = types.Where(t => t.GetCustomAttribute<ElementData>()?.ElementType == ElementType.Action).OrderBy(a => a.Name).ToArray();
-            ValueList = types.Where(t => t.GetCustomAttribute<ElementData>()?.ElementType == ElementType.Value).OrderBy(a => a.Name).ToArray();
+            ActionList = types.Where(t => t.GetCustomAttribute<ElementData>()?.ElementType == ElementType.Action).OrderBy(a => a.GetCustomAttribute<ElementData>().ElementName).ToArray();
+            ValueList = types.Where(t => t.GetCustomAttribute<ElementData>()?.ElementType == ElementType.Value).OrderBy(a => a.GetCustomAttribute<ElementData>().ElementName).ToArray();
         }
         private static Type[] FilteredValueList(ValueType parameterType)
         {
@@ -137,12 +157,12 @@ namespace Deltin.OverwatchParser.Elements
 
         public Element(params object[] parameterValues)
         {
-            elementData = GetType().GetCustomAttribute<ElementData>();
+            ElementData = GetType().GetCustomAttribute<ElementData>();
             parameterData = GetType().GetCustomAttributes<Parameter>().ToArray();
             ParameterValues = parameterValues;
         }
 
-        ElementData elementData;
+        public ElementData ElementData { get; private set; }
         Parameter[] parameterData;
 
         public object[] ParameterValues;
@@ -151,50 +171,60 @@ namespace Deltin.OverwatchParser.Elements
 
         private void Input(bool isAlreadySet, ValueType valueType, Type defaultType)
         {
+            // Make ParameterValues the same size as parameterData.
             if (ParameterValues == null)
                 ParameterValues = new Element[0];
+            Array.Resize(ref ParameterValues, parameterData.Length);
 
-            if (ParameterValues.Length != parameterData.Length)
-                throw new Exception($"Incorrect number of parameters for {elementData.ElementName}. Expected: {parameterData.Length}, got: {ParameterValues.Length}");
-
-            Console.WriteLine($"{elementData.ElementName}:");
-
-            int pos = -1;
-
-            // Get the position of the element
-            if (elementData.ElementType == ElementType.Action)
-                pos = Array.IndexOf(ActionList, GetType());
-            else if (elementData.ElementType == ElementType.Value)
-            {
-                Console.WriteLine($"    {valueType} list: {string.Join(", ", FilteredValueList(valueType).Select(v => v.Name))}");
-                pos = Array.IndexOf(FilteredValueList(valueType), GetType());
-            }
-
-            Console.WriteLine($"    position: {pos}");
+            Console.WriteLine($"{ElementData.ElementName}:");
 
             // Select the option
             if (!isAlreadySet)
             {
-                if (defaultType == typeof(Vector))
+                // Vectors have an extra button that needs to be adjusted for.
+                if (defaultType == typeof(V_Vector))
                 {
-                    Program.Input.KeyPress(Keys.Right);
+                    InputHandler.Input.KeyPress(Keys.Right);
                     Thread.Sleep(InputHandler.SmallStep);
                 }
 
-                Program.Input.KeyPress(Keys.Space);
+                // Open the menu.
+                InputHandler.Input.KeyPress(Keys.Space);
                 Thread.Sleep(InputHandler.BigStep);
 
+                int pos = -1; // The position of the menu button.
+
+                if (ElementData.RowAfterSearch != -1)
+                {
+                    pos = ElementData.RowAfterSearch;
+                    InputHandler.Input.TextInput(ElementData.ElementName);
+                    Thread.Sleep(InputHandler.MediumStep);
+                }
+                else
+                {
+                    // Get the position of the element
+                    if (ElementData.ElementType == ElementType.Action)
+                        pos = Array.IndexOf(ActionList, GetType());
+                    else if (ElementData.ElementType == ElementType.Value)
+                    {
+                        Console.WriteLine($"    {valueType} list: {string.Join(", ", FilteredValueList(valueType).Select(v => v.Name))}");
+                        pos = Array.IndexOf(FilteredValueList(valueType), GetType());
+                    }
+                }
+
+                Console.WriteLine($"    position: {pos}");
+
                 // Leave the input field
-                Program.Input.KeyPress(Keys.Enter);
+                InputHandler.Input.KeyPress(Keys.Enter);
                 Thread.Sleep(InputHandler.MediumStep);
 
                 for (int i = 0; i < pos; i++)
                 {
-                    Program.Input.KeyPress(Keys.Down);
+                    InputHandler.Input.KeyPress(Keys.Down);
                     Thread.Sleep(InputHandler.SmallStep);
                 }
 
-                Program.Input.KeyPress(Keys.Space);
+                InputHandler.Input.KeyPress(Keys.Space);
                 Thread.Sleep(InputHandler.MediumStep);
             }
 
@@ -202,9 +232,12 @@ namespace Deltin.OverwatchParser.Elements
 
             BeforeParameters();
 
-            for (int i = 0; i < ParameterValues.Length; i++)
+            for (int i = 0; i < parameterData.Length; i++)
             {
-                Program.Input.KeyPress(Keys.Down);
+                if (ParameterValues.ElementAtOrDefault(i) == null)
+                    ParameterValues[i] = parameterData[i].GetDefault();
+
+                InputHandler.Input.KeyPress(Keys.Down);
                 Thread.Sleep(InputHandler.SmallStep);
 
                 if (parameterData[i].ParameterType == ParameterType.Value)
@@ -212,29 +245,7 @@ namespace Deltin.OverwatchParser.Elements
 
                 // Enum input
                 else if (parameterData[i].ParameterType == ParameterType.Enum)
-                {
-                    Array enumValues = Enum.GetValues(parameterData[i].EnumType);
-
-                    if (enumValues.GetValue(0) != ParameterValues[i])
-                    {
-                        int enumPos = Array.IndexOf(enumValues, ParameterValues[i]);
-                        Console.WriteLine($"    {ParameterValues[i]} pos: {enumPos}");
-
-                        Program.Input.KeyPress(Keys.Space);
-                        Thread.Sleep(InputHandler.MediumStep);
-                        Program.Input.KeyPress(Keys.Enter);
-                        Thread.Sleep(InputHandler.MediumStep);
-
-                        for (int e = 0; e < enumPos; e++)
-                        {
-                            Program.Input.KeyPress(Keys.Down);
-                            Thread.Sleep(InputHandler.SmallStep);
-                        }
-
-                        Program.Input.KeyPress(Keys.Space);
-                        Thread.Sleep(InputHandler.MediumStep);
-                    }
-                }
+                    InputHandler.Input.SelectEnumMenuOption(parameterData[i].EnumType, ParameterValues[i]);
 
             }
 

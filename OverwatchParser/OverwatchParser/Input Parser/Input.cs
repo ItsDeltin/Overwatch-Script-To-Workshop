@@ -13,6 +13,8 @@ namespace Deltin.OverwatchParser
 {
     public class InputHandler
     {
+        public static InputHandler Input = new InputHandler(Process.GetProcessesByName("Overwatch")[0]);
+
         public const int SmallStep = 25;
         public const int MediumStep = 100;
         public const int BigStep = 500;
@@ -67,53 +69,57 @@ namespace Deltin.OverwatchParser
             User32.PostMessage(OverwatchHandle, 0x0007, 0, 0); // 0x0007 = WM_DEVICECHANGE
         }
 
-        private void ScreenToClient(ref int x, ref int y)
+        public void RepeatKey(Keys key, int count)
         {
-            Point p = new Point(x, y);
-            User32.ScreenToClient(OverwatchHandle, ref p);
-            x = p.X;
-            y = p.Y;
+            for (int i = 0; i < count; i++)
+            {
+                KeyPress(key);
+                Thread.Sleep(SmallStep);
+            }
         }
 
-        private static int MakeLParam(int LoWord, int HiWord)
+        public void SelectEnumMenuOption<T>(T enumValue) where T : struct, IConvertible
         {
-            return (int)((HiWord << 16) | (LoWord & 0xFFFF));
+            if (!typeof(T).IsEnum)
+                throw new ArgumentException("T must be an enumerated type");
+
+            Array enumValues = Enum.GetValues(typeof(T));
+
+            if (!enumValues.GetValue(0).Equals(enumValue))
+            {
+                int enumPos = Array.IndexOf(enumValues, enumValue);
+
+                Input.KeyPress(Keys.Space);
+                Thread.Sleep(MediumStep);
+                Input.KeyPress(Keys.Enter);
+                Thread.Sleep(MediumStep);
+
+                RepeatKey(Keys.Down, enumPos);
+
+                Input.KeyPress(Keys.Space);
+                Thread.Sleep(MediumStep);
+            }
         }
 
-        // Left Click
-        internal void LeftClick(int x, int y, int waitTime = 500)
+        public void SelectEnumMenuOption(Type enumType, object enumValue)
         {
-            ScreenToClient(ref x, ref y);
+            Array enumValues = Enum.GetValues(enumType);
 
-            User32.PostMessage(OverwatchHandle, WM_ACTIVATE, 2, 0);
-            User32.PostMessage(OverwatchHandle, WM_MOUSEMOVE, 0, MakeLParam(x, y));
-            User32.PostMessage(OverwatchHandle, WM_LBUTTONDOWN, 0, MakeLParam(x, y));
-            User32.PostMessage(OverwatchHandle, WM_LBUTTONUP, 0, MakeLParam(x, y));
-            Thread.Sleep(waitTime);
+            if (!enumValues.GetValue(0).Equals(enumValue))
+            {
+                int enumPos = Array.IndexOf(enumValues, enumValue);
+
+                Input.KeyPress(Keys.Space);
+                Thread.Sleep(MediumStep);
+                Input.KeyPress(Keys.Enter);
+                Thread.Sleep(MediumStep);
+
+                RepeatKey(Keys.Down, enumPos);
+
+                Input.KeyPress(Keys.Space);
+                Thread.Sleep(MediumStep);
+            }
         }
-        internal void LeftClick(Point point, int waitTime = 500) => LeftClick(point.X, point.Y, waitTime);
-
-        // Right Click
-        internal void RightClick(int x, int y, int waitTime = 500)
-        {
-            ScreenToClient(ref x, ref y);
-
-            User32.PostMessage(OverwatchHandle, WM_ACTIVATE, 2, 0);
-            User32.PostMessage(OverwatchHandle, WM_MOUSEMOVE, 0, MakeLParam(x, y));
-            Thread.Sleep(100);
-            User32.PostMessage(OverwatchHandle, WM_RBUTTONDOWN, 0, MakeLParam(x, y));
-            User32.PostMessage(OverwatchHandle, WM_RBUTTONUP, 0, MakeLParam(x, y));
-            Thread.Sleep(waitTime);
-        }
-        internal void RightClick(Point point, int waitTime = 500) => RightClick(point.X, point.Y, waitTime);
-
-        // Move Mouse
-        internal void MoveMouseTo(int x, int y)
-        {
-            ScreenToClient(ref x, ref y);
-            User32.PostMessage(OverwatchHandle, WM_MOUSEMOVE, 0, MakeLParam(x, y));
-        }
-        internal void MoveMouseTo(Point point) => MoveMouseTo(point.X, point.Y);
 
         // Key Press
         internal void KeyPress(params Keys[] keys)

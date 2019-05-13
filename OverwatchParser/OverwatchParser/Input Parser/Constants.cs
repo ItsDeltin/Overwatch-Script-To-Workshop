@@ -8,6 +8,8 @@ namespace Deltin.OverwatchParser.Elements
 {
     public static class Constants
     {
+        public const int RULE_NAME_MAX_LENGTH = 128;
+
         public static readonly string[] Strings = new string[]
         {
             // No uppercase
@@ -35,6 +37,17 @@ namespace Deltin.OverwatchParser.Elements
             "{0} {1}",
             "{0} {1} {2}"
         };
+        public const string DEFAULT_STRING = " ";
+    }
+
+    public enum Operators
+    {
+        Equal,
+        NotEqual,
+        LessThan,
+        LessThanOrEqual,
+        GreaterThan,
+        GreaterThanOrEqual
     }
 
     public enum Relative
@@ -98,4 +111,74 @@ namespace Deltin.OverwatchParser.Elements
         Rooted,
         Stunned
     }
+
+    public enum RuleEvent
+    {
+        Ongoing_Global,
+        Ongoing_EachPlayer,
+
+        Player_Earned_Elimination,
+        Player_Dealt_Final_Blow,
+
+        Player_Dealt_Damage,
+        Player_Took_Damage,
+
+        Player_Died
+    }
+
+    public enum PlayerSelector
+    {
+        All,
+        Slot0,
+        Slot1,
+        Slot2,
+        Slot3,
+        Slot4,
+        Slot5,
+        Slot6,
+        Slot7,
+        Slot8,
+        Slot9,
+        Slot10,
+        Slot11,
+        // Why isn't it alphabetical? we will never know.
+        Reaper,
+        Tracer,
+        Mercy,
+        Hanzo,
+        Torbjorn,
+        Reinhardt,
+        Pharah,
+        Winston,
+        Widowmaker,
+        Bastion,
+        Symmetra,
+        Zenyatta,
+        Gengi,
+        Roadhog,
+        Mccree,
+        Junkrat,
+        Zarya,
+        Soldier76,
+        Lucio,
+        Dva,
+        Mei,
+        Sombra,
+        Doomfist,
+        Ana,
+        Orisa,
+        Brigitte,
+        Moira,
+        WreckingBall,
+        Ashe,
+        Baptiste
+    }
+
+    public enum TeamSelector
+    {
+        All,
+        Team1,
+        Team2,
+    }
+
 }
