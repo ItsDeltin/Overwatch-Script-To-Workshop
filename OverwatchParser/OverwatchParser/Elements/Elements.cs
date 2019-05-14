@@ -209,24 +209,17 @@ namespace Deltin.OverwatchParser.Elements
                     if (ElementData.ElementType == ElementType.Action)
                         pos = Array.IndexOf(ActionList, GetType());
                     else if (ElementData.ElementType == ElementType.Value)
-                    {
-                        Console.WriteLine($"    {valueType} list: {string.Join(", ", FilteredValueList(valueType).Select(v => v.Name))}");
                         pos = Array.IndexOf(FilteredValueList(valueType), GetType());
-                    }
                 }
-
-                Console.WriteLine($"    position: {pos}");
 
                 // Leave the input field
                 InputHandler.Input.KeyPress(Keys.Enter);
                 Thread.Sleep(InputHandler.MediumStep);
 
-                for (int i = 0; i < pos; i++)
-                {
-                    InputHandler.Input.KeyPress(Keys.Down);
-                    Thread.Sleep(InputHandler.SmallStep);
-                }
+                // Highlight the action/value.
+                InputHandler.Input.RepeatKey(Keys.Down, pos);
 
+                // Select it.
                 InputHandler.Input.KeyPress(Keys.Space);
                 Thread.Sleep(InputHandler.MediumStep);
             }
@@ -235,27 +228,30 @@ namespace Deltin.OverwatchParser.Elements
 
             BeforeParameters();
 
+            // Do stuff with parameters
             for (int i = 0; i < parameterData.Length; i++)
             {
+                // If the parameter is null, get the default variable.
                 if (ParameterValues.ElementAtOrDefault(i) == null)
                     ParameterValues[i] = parameterData[i].GetDefault();
 
+                // Select the parameter.
                 InputHandler.Input.KeyPress(Keys.Down);
                 Thread.Sleep(InputHandler.SmallStep);
 
+                // Element input
                 if (parameterData[i].ParameterType == ParameterType.Value)
                     ((Element)ParameterValues[i]).Input(parameterData[i].DefaultType == ParameterValues[i].GetType(), parameterData[i].ValueType, parameterData[i].DefaultType);
 
                 // Enum input
                 else if (parameterData[i].ParameterType == ParameterType.Enum)
                     InputHandler.Input.SelectEnumMenuOption(parameterData[i].EnumType, ParameterValues[i]);
-
             }
 
             AfterParameters();
         }
 
-        protected virtual void BeforeParameters() { }
-        protected virtual void AfterParameters() { }
+        protected virtual void BeforeParameters() { } // Executed before parameters are executed
+        protected virtual void AfterParameters() { } // Executed after parameters are executed
     }
 }
