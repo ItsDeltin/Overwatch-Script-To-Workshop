@@ -44,19 +44,20 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Input Parser\Actions.cs" />
-    <Compile Include="Input Parser\Condition.cs" />
-    <Compile Include="Input Parser\Elements.cs" />
-    <Compile Include="Input Parser\Constants.cs" />
+    <Compile Include="Elements\Actions.cs" />
+    <Compile Include="Elements\Condition.cs" />
+    <Compile Include="Elements\Elements.cs" />
+    <Compile Include="Elements\Constants.cs" />
     <Compile Include="Exceptions.cs" />
-    <Compile Include="Input Parser\Rule.cs" />
-    <Compile Include="Input Parser\Values.cs" />
-    <Compile Include="Input Parser\Input.cs" />
+    <Compile Include="Elements\Rule.cs" />
+    <Compile Include="Elements\Values.cs" />
+    <Compile Include="Elements\Input.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+    <None Include="example.dewo" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\GitHub\Overwatch-Custom-Game-Automation\CustomGameLib\CustomGameLib\CustomGameLib.csproj">

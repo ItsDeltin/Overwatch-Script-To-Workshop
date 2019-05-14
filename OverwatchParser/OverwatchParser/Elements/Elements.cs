@@ -38,12 +38,12 @@ namespace Deltin.OverwatchParser.Elements
     [Flags]
     public enum ValueType
     {
-        Any = Number | Boolean | Hero | Vector | Player | Team,
+        Any = Number | Boolean | String | Hero | Vector | Player | Team ,
+        VectorAndPlayer = Vector | Player, // Players can be subsituded as vectors, but not the other way around.
         Number = 1,
         Boolean = 2,
         String = 4,
         Hero = 8,
-        VectorAndPlayer = Vector | Player, // Vectors can use player variables too
         Vector = 16,
         Player = 32,
         Team = 64

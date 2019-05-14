@@ -66,7 +66,7 @@ namespace Deltin.OverwatchParser.Elements
     [ElementData("Array Contains", ValueType.Boolean)]
     [Parameter("Array", ValueType.Any, typeof(V_AllPlayers))]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
-    public class V_ArrayContains : Element { }
+    public class V_ArrayContains : Element {}
 
     [ElementData("Array Slice", ValueType.Any)]
     [Parameter("Array", ValueType.Any, typeof(V_GlobalVariable))]
@@ -130,7 +130,7 @@ namespace Deltin.OverwatchParser.Elements
             var keys = InputHandler.GetNumberKeys(value);
             for (int i = 0; i < keys.Length; i++)
             {
-                InputHandler.Input.KeyDown(keys[i]);
+                InputHandler.Input.KeyPress(keys[i]);
                 Thread.Sleep(InputHandler.SmallStep);
             }
 
@@ -149,18 +149,18 @@ namespace Deltin.OverwatchParser.Elements
     public class V_PlayerVariable : Element {}
 
     [ElementData("String", ValueType.String, 1)]
-    [Parameter("{0}", ValueType.Any, typeof(V_Number))]
-    [Parameter("{1}", ValueType.Any, typeof(V_Number))]
-    [Parameter("{2}", ValueType.Any, typeof(V_Number))]
+    [Parameter("{0}", ValueType.Any, typeof(V_Null))]
+    [Parameter("{1}", ValueType.Any, typeof(V_Null))]
+    [Parameter("{2}", ValueType.Any, typeof(V_Null))]
     public class V_String : Element
     {
         public V_String(string text, params Element[] stringValues) : base(NullifyEmptyValues(stringValues))
         {
             textID = Array.IndexOf(Constants.Strings, text);
             if (textID == -1)
-                throw new Exception();
+                throw new InvalidStringException(text);
         }
-        public V_String() : this(Constants.DEFAULT_STRING) { }
+        public V_String() : this(Constants.DEFAULT_STRING) {}
 
         int textID;
 
@@ -181,11 +181,7 @@ namespace Deltin.OverwatchParser.Elements
             Thread.Sleep(InputHandler.SmallStep);
 
             // Select the selected string by textID.
-            for (int i = 0; i < textID; i++)
-            {
-                InputHandler.Input.KeyPress(Keys.Down);
-                Thread.Sleep(InputHandler.SmallStep);
-            }
+            InputHandler.Input.RepeatKey(Keys.Down, textID);
 
             // Select the string
             InputHandler.Input.KeyPress(Keys.Space);
