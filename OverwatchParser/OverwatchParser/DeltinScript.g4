@@ -39,7 +39,7 @@ expr
 
 seperated: PART SEPERATOR PART ;
 method : PART LEFT_PAREN expr? (',' expr)* RIGHT_PAREN  ;
-variable : PART ~LEFT_PAREN;
+variable : PART;
 array  : PART INDEX_START expr INDEX_END ;
 
 statement :

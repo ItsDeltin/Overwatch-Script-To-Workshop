@@ -113,6 +113,10 @@ namespace OverwatchParser.Elements
     [Parameter("Variable", typeof(Variable))]
     public class V_GlobalVariable : Element {}
 
+    [ElementData("Is On Objective", ValueType.Boolean, 0)]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    public class V_IsOnObjective : Element {}
+
     [ElementData("Multiply", ValueType.Any, 0)]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]

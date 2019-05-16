@@ -18,7 +18,7 @@ namespace OverwatchParser.Parse
     {
         static Log Log = new Log("Parse");
 
-        public static void ParseText(string text)
+        public static Rule[] ParseText(string text)
         {
             Console.WriteLine($"- Input:\n{text}\n-");
 
@@ -50,8 +50,12 @@ namespace OverwatchParser.Parse
 
             // Parse the rules.
             var rules = context.ow_rule();
+            var compiledRules = new List<Rule>();
+
             for (int i = 0; i < rules.Length; i++)
-                ParseRule(rules[i]);
+                compiledRules.Add(ParseRule(rules[i]));
+
+            return compiledRules.ToArray();
         }
 
         static Rule ParseRule(DeltinScriptParser.Ow_ruleContext ruleContext)
@@ -71,6 +75,8 @@ namespace OverwatchParser.Parse
                 if (statements[i].GetChild(0) is DeltinScriptParser.MethodContext)
                     actions.Add(ParseMethod(statements[i].GetChild(0) as DeltinScriptParser.MethodContext));
             }
+
+            rule.Actions = actions.ToArray();
 
             return rule;
         }

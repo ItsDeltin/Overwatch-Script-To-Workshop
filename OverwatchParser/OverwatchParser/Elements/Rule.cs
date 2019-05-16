@@ -93,33 +93,35 @@ namespace OverwatchParser.Elements
             Thread.Sleep(InputHandler.SmallStep);
 
             // Add the conditions
-            foreach (Condition condition in Conditions)
-                condition.Input();
+            if (Conditions != null)
+                foreach (Condition condition in Conditions)
+                    condition.Input();
 
             // Select the "Add Action" button.
             InputHandler.Input.KeyPress(Keys.Right); // Hovering over the "Add Action" button.
             Thread.Sleep(InputHandler.SmallStep);
 
-            foreach(Element action in Actions)
-            {
-                // Open the "Create Action" menu.
-                InputHandler.Input.KeyPress(Keys.Space);
-                Thread.Sleep(InputHandler.BigStep);
+            if (Actions != null)
+                foreach(Element action in Actions)
+                {
+                    // Open the "Create Action" menu.
+                    InputHandler.Input.KeyPress(Keys.Space);
+                    Thread.Sleep(InputHandler.BigStep);
 
-                // Setup control spot
-                InputHandler.Input.KeyPress(Keys.Tab);
-                Thread.Sleep(InputHandler.SmallStep);
-                // The spot will be at the bottom when tab is pressed. 
-                // Pressing up once will select the operator value, up another time will select the first value paramerer.
-                InputHandler.Input.RepeatKey(Keys.Up, 3);
+                    // Setup control spot
+                    InputHandler.Input.KeyPress(Keys.Tab);
+                    Thread.Sleep(InputHandler.SmallStep);
+                    // The spot will be at the bottom when tab is pressed. 
+                    // Pressing up once will select the operator value, up another time will select the first value paramerer.
+                    InputHandler.Input.RepeatKey(Keys.Up, 3);
 
-                // Input value1.
-                action.Input();
+                    // Input value1.
+                    action.Input();
 
-                // Close the Create Condition menu.
-                InputHandler.Input.KeyPress(Keys.Escape);
-                Thread.Sleep(InputHandler.BigStep);
-            }
+                    // Close the Create Condition menu.
+                    InputHandler.Input.KeyPress(Keys.Escape);
+                    Thread.Sleep(InputHandler.BigStep);
+                }
         }
     }
 }

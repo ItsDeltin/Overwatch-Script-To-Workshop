@@ -70,6 +70,11 @@ namespace OverwatchParser.Elements
     [Parameter("Status", typeof(Status))]
     public class A_ClearStatus : Element {}
 
+    [ElementData("Kill", 0)]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [Parameter("Killer", ValueType.Player, typeof(V_Null))]
+    public class A_Kill : Element {}
+
     [ElementData("Set Global Variable", 0)]
     [Parameter("Variable", typeof(Variable))]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]

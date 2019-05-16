@@ -17,7 +17,10 @@ namespace OverwatchParser
         {
             string text = File.ReadAllText(args[0]);
 
-            Parse.Parser.ParseText(text);
+            Rule[] generatedRules = Parser.ParseText(text);
+
+            foreach (Rule rule in generatedRules)
+                rule.Input();
 
             /*
             // Create rule

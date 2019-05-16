@@ -1,21 +1,11 @@
-﻿// buffer
+﻿// internal vars
 usevar globalvar A;
 usevar playervar B;
 
-define playervar targetPlayer;
-define playervar playerEffects;
-define playervar slow;
+/* define playervar test; uncomment for free crash */
 
-rule: "Send a message if a player is going fast.", 
-	Event.Ongoing_EachPlayer, 
-	Player.Slot0
-	if (numberOfPlayers > 3)
-	if (isInitialized)
+rule: "do whatever.",
+	Event.Ongoing_EachPlayer
 	{
-        AbortIf(true);
+        AbortIf(IsOnObjective() != false);
 	}
-
-/*
-(ruleset usevar globalvar A ; 
- usevar playervar B ; (vardefine define playervar targetPlayer ;) (vardefine define playervar playerEffects ;) (ow_rule rule : "Send a message if a player is going fast." , Event.OngoingPlayer , Player.Slot0 if ( (expr (expr (variable numberOfPlayers)) > (expr (number 3))) ) if ( (expr (variable isInitialized)) ) (block { (statement (expr (variable playerDirectionVector)) = (expr (expr (method facingDirectionOf ( ))) * (expr (number 10))) ;) (statement if ( (expr (expr (method normalizedVector ( (expr (variable playerDirectionVector)) ))) > (expr (number 10))) ) (block { (statement (method BigMessage ( (expr (variable eventPlayer)) , (expr (string "Fast!")) )) ;) (statement @goto hello;) (statement for ( (expr (variable player)) in (expr (method AllPlayers ( ))) ) (block { (statement (method SmallMessage ( (expr (variable player)) , (expr (string "Slow!")) )) ;) (statement goto hello;) })) (statement (method CreateEffect ( (expr (method EventPlayer ( ))) , (expr (method AllPlayers ( ))) , (expr (variable Effect.Ring)) , (expr (variable Color.Blue)) , (expr (method EventPlayer ( ))) , (expr (variable Reevaluation.VisibleToAndPosition)) )) ;) (statement (expr (array playerEffects [ (expr (number 0)) ])) = (expr (method LastTextID ( ))) ;) })) })))
-*/

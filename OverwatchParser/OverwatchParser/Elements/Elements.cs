@@ -144,14 +144,9 @@ namespace OverwatchParser.Elements
             }).ToArray();
         }
 
-        public static bool IsMethod(string name)
-        {
-            return MethodList.Any(m => m.Name == name);
-        }
-
         public static Type GetMethod(string name)
         {
-            return MethodList.FirstOrDefault(t => t.Name == name);
+            return MethodList.FirstOrDefault(m => name == m.Name.Substring(2));
         }
 
         public static T Part<T>(params object[] parameterValues) where T : Element, new()
