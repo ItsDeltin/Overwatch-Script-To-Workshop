@@ -9,7 +9,7 @@ using System.Drawing;
 using System.Threading;
 using System.Diagnostics;
 
-namespace Deltin.OverwatchParser
+namespace OverwatchParser.Elements
 {
     public class InputHandler
     {

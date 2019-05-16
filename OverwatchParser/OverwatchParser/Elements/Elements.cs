@@ -17,7 +17,7 @@ using System.Threading.Tasks;
 using System.Reflection;
 using System.Windows.Forms;
 
-namespace Deltin.OverwatchParser.Elements
+namespace OverwatchParser.Elements
 {
     public struct OWEnum { }
 
@@ -130,14 +130,10 @@ namespace Deltin.OverwatchParser.Elements
 
     public abstract class Element
     {
-        private static Type[] ActionList = null;
-        private static Type[] ValueList = null;
-        public static void LoadAllElements()
-        {
-            Type[] types = Assembly.GetExecutingAssembly().GetTypes();
-            ActionList = types.Where(t => t.GetCustomAttribute<ElementData>()?.ElementType == ElementType.Action).OrderBy(a => a.GetCustomAttribute<ElementData>().ElementName).ToArray();
-            ValueList = types.Where(t => t.GetCustomAttribute<ElementData>()?.ElementType == ElementType.Value).OrderBy(a => a.GetCustomAttribute<ElementData>().ElementName).ToArray();
-        }
+        private static Type[] MethodList = Assembly.GetExecutingAssembly().GetTypes().Where(t => t.GetCustomAttribute<ElementData>() != null).ToArray();
+        private static Type[] ActionList = MethodList.Where(t => t.GetCustomAttribute<ElementData>().ElementType == ElementType.Action).OrderBy(t => t.GetCustomAttribute<ElementData>().ElementName).ToArray(); // Actions in the method list.
+        private static Type[] ValueList = MethodList.Where(t => t.GetCustomAttribute<ElementData>().ElementType == ElementType.Value).OrderBy(t => t.GetCustomAttribute<ElementData>().ElementName).ToArray(); // Values in the method list.
+
         private static Type[] FilteredValueList(ValueType parameterType)
         {
             return ValueList.Where(t =>
@@ -146,6 +142,16 @@ namespace Deltin.OverwatchParser.Elements
 
                 return parameterType.HasFlag(valueType) || parameterType == ValueType.Any || valueType == ValueType.Any;
             }).ToArray();
+        }
+
+        public static bool IsMethod(string name)
+        {
+            return MethodList.Any(m => m.Name == name);
+        }
+
+        public static Type GetMethod(string name)
+        {
+            return MethodList.FirstOrDefault(t => t.Name == name);
         }
 
         public static T Part<T>(params object[] parameterValues) where T : Element, new()
@@ -157,9 +163,6 @@ namespace Deltin.OverwatchParser.Elements
 
         public Element(params object[] parameterValues)
         {
-            if (ActionList == null)
-                LoadAllElements();
-
             ElementData = GetType().GetCustomAttribute<ElementData>();
             parameterData = GetType().GetCustomAttributes<Parameter>().ToArray();
             ParameterValues = parameterValues;

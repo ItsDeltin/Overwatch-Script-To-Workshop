@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using System.Threading;
 using System.Windows.Forms;
 
-namespace Deltin.OverwatchParser.Elements
+namespace OverwatchParser.Elements
 {
     [ElementData("Absolute Value", ValueType.Number)]
     [Parameter("Value", ValueType.Number, typeof(V_Number))]
@@ -98,6 +98,11 @@ namespace Deltin.OverwatchParser.Elements
     [ElementData("Control Point Scoring Team", ValueType.Team)]
     public class V_ControlPointScoringTeam : Element {}
 
+    [ElementData("Divide", ValueType.Any, 0)]
+    [Parameter("Value", ValueType.Any, typeof(V_Number))]
+    [Parameter("Value", ValueType.Any, typeof(V_Number))]
+    public class V_Divide : Element {}
+
     [ElementData("Event Player", ValueType.Player, 0)]
     public class V_EventPlayer : Element {}
 
@@ -107,6 +112,15 @@ namespace Deltin.OverwatchParser.Elements
     [ElementData("Global Variable", ValueType.Any, 0)]
     [Parameter("Variable", typeof(Variable))]
     public class V_GlobalVariable : Element {}
+
+    [ElementData("Multiply", ValueType.Any, 0)]
+    [Parameter("Value", ValueType.Any, typeof(V_Number))]
+    [Parameter("Value", ValueType.Any, typeof(V_Number))]
+    public class V_Multiply : Element {}
+
+    [ElementData("Not", ValueType.Boolean, 1)]
+    [Parameter("Value", ValueType.Boolean, typeof(V_True))]
+    public class V_Not : Element {}
 
     [ElementData("Null", ValueType.Player, 0)]
     public class V_Null : Element {}
@@ -143,10 +157,20 @@ namespace Deltin.OverwatchParser.Elements
     [Parameter("Team", ValueType.Team, typeof(V_Team))]
     public class V_NumberOfPlayers : Element {}
 
+    [ElementData("Or", ValueType.Boolean)]
+    [Parameter("Value", ValueType.Boolean, typeof(V_True))]
+    [Parameter("Value", ValueType.Boolean, typeof(V_True))]
+    public class V_Or : Element { }
+
     [ElementData("Player Variable", ValueType.Any, 0)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     [Parameter("Variable", typeof(Variable))]
     public class V_PlayerVariable : Element {}
+
+    [ElementData("Raise To Power", ValueType.Number)]
+    [Parameter("Value", ValueType.Any, typeof(V_Number))]
+    [Parameter("Value", ValueType.Any, typeof(V_Number))]
+    public class V_RaiseToPower : Element { }
 
     [ElementData("String", ValueType.String, 1)]
     [Parameter("{0}", ValueType.Any, typeof(V_Null))]
@@ -252,6 +276,11 @@ namespace Deltin.OverwatchParser.Elements
             return stringList.ToArray();
         }
     }
+
+    [ElementData("Subtract", ValueType.Any, 0)]
+    [Parameter("Value", ValueType.Any, typeof(V_Number))]
+    [Parameter("Value", ValueType.Any, typeof(V_Number))]
+    public class V_Subtract : Element {}
 
     [ElementData("Team", ValueType.Team, 4)]
     [Parameter("Team", typeof(TeamSelector))]

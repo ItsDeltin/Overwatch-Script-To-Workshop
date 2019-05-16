@@ -4,15 +4,22 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Diagnostics;
-using Deltin.OverwatchParser;
-using Deltin.OverwatchParser.Elements;
+using System.IO;
+using OverwatchParser;
+using OverwatchParser.Elements;
+using OverwatchParser.Parse;
 
-namespace Deltin.OverwatchParser
+namespace OverwatchParser
 {
     public class Program
     {
         static void Main(string[] args)
         {
+            string text = File.ReadAllText(args[0]);
+
+            Parse.Parser.ParseText(text);
+
+            /*
             // Create rule
             Rule rule = new Rule("Start game when there are at least 3 players.");
 
@@ -38,6 +45,10 @@ namespace Deltin.OverwatchParser
 
             // Apply
             rule.Input();
+            */
+
+            Console.WriteLine("Done.");
+            Console.ReadLine();
         }
     }
 }

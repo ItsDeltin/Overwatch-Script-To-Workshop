@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Deltin.OverwatchParser.Elements
+namespace OverwatchParser.Elements
 {
     [ElementData("Abort")]
     public class A_Abort : Element {}
