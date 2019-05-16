@@ -1,6 +1,6 @@
 ﻿// internal vars
-usevar globalvar Z;
-usevar playervar Z;
+usevar globalvar A;
+usevar playervar A;
 
 define playervar teleportTo;
 
@@ -9,4 +9,4 @@ rule: "do whatever.",
 	{
         teleportTo = Vector(16.3, -30.2, 19);
         Teleport(EventPlayer(), teleportTo);
-	}   
+	}

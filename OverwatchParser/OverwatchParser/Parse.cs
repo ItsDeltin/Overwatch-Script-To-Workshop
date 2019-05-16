@@ -65,6 +65,11 @@ namespace OverwatchParser.Parse
 
             Log.Write("Build succeeded.");
 
+            // List all variables
+            Log.Write("Variable Guide:");
+            foreach (Var var in Var.VarCollection)
+                Console.WriteLine($"{var.Name}: {var.Variable}{(var.IsArray ? $"[{var.Index}]" : "")}");
+
             return compiledRules.ToArray();
         }
 

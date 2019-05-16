@@ -17,9 +17,8 @@ namespace OverwatchParser
         public void Write(string text, ConsoleColor backgroundColor = ConsoleColor.Black)
         {
             Console.BackgroundColor = backgroundColor;
-            Console.Write($"[{name}] {text}");
+            Console.WriteLine($"[{name}] {text}");
             Console.BackgroundColor = ConsoleColor.Black;
-            Console.WriteLine();
         }
     }
 }
