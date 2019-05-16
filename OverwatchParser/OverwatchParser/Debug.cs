@@ -14,9 +14,12 @@ namespace OverwatchParser
         }
         readonly string name;
 
-        public void Write(string text)
+        public void Write(string text, ConsoleColor backgroundColor = ConsoleColor.Black)
         {
-            Console.WriteLine($"[{name}] {text}");
+            Console.BackgroundColor = backgroundColor;
+            Console.Write($"[{name}] {text}");
+            Console.BackgroundColor = ConsoleColor.Black;
+            Console.WriteLine();
         }
     }
 }

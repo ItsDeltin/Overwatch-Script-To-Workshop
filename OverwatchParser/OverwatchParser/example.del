@@ -1,11 +1,12 @@
 ﻿// internal vars
-usevar globalvar A;
-usevar playervar A;
+usevar globalvar Z;
+usevar playervar Z;
 
-define playervar test;
+define playervar teleportTo;
 
 rule: "do whatever.",
 	Event.Ongoing_EachPlayer
 	{
-        test = 40;
+        teleportTo = Vector(16.3, -30.2, 19);
+        Teleport(EventPlayer(), teleportTo);
 	}   

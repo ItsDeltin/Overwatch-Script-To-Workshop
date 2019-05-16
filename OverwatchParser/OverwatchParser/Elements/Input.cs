@@ -45,7 +45,7 @@ namespace OverwatchParser.Elements
         const int WM_SYSKEYDOWN = 0x0104;
         const int WM_SYSKEYUP = 0x0105;
 
-        public static Keys[] GetNumberKeys(int value)
+        public static Keys[] GetNumberKeys(double value)
         {
             Keys[] numberKeys = new Keys[] { Keys.D0, Keys.D1, Keys.D2, Keys.D3, Keys.D4, Keys.D5, Keys.D6, Keys.D7, Keys.D8, Keys.D9 };
 
@@ -55,6 +55,8 @@ namespace OverwatchParser.Elements
             for (int i = 0; i < get.Length; i++)
                 if (get[i] == '-')
                     keys.Add(Keys.Subtract);
+                else if (get[i] == '.')
+                    keys.Add(Keys.OemPeriod);
                 else
                     keys.Add(numberKeys[Int32.Parse(get[i].ToString())]);
 

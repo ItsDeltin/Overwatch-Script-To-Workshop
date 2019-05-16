@@ -132,13 +132,13 @@ namespace OverwatchParser.Elements
     [ElementData("Number", ValueType.Number, 0)]
     public class V_Number : Element
     {
-        public V_Number(int value)
+        public V_Number(double value)
         {
             this.value = value;
         }
         public V_Number() : this(0) { }
 
-        int value;
+        double value;
 
         protected override void AfterParameters()
         {
@@ -293,9 +293,9 @@ namespace OverwatchParser.Elements
     [ElementData("True", ValueType.Boolean, 2)]
     public class V_True : Element {}
 
-    [ElementData("Vector", ValueType.Vector, 2)]
+    [ElementData("Value In Array", ValueType.Vector, 2)]
     [Parameter("Array", ValueType.Any, typeof(V_GlobalVariable))]
-    [Parameter("Index", ValueType.Number, typeof(V_Number))]
+    [Parameter("Index", ValueType.Number, typeof(V_EventPlayer))]
     public class V_ValueInArray : Element {}
 
     [ElementData("Vector", ValueType.Vector, 1)]

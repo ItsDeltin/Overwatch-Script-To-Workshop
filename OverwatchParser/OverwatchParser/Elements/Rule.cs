@@ -42,6 +42,7 @@ namespace OverwatchParser.Elements
             if (NumberOfRules == 0)
             {
                 InputHandler.Input.KeyPress(Keys.Tab);
+                InputHandler.Input.RepeatKey(Keys.Right, 2);
                 Thread.Sleep(InputHandler.SmallStep);
             }
 

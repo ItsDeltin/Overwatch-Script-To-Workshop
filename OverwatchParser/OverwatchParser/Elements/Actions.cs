@@ -98,4 +98,9 @@ namespace OverwatchParser.Elements
     [Parameter("Index", ValueType.Number, typeof(V_Number))]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
     public class A_SetPlayerVariableAtIndex : Element {}
+
+    [ElementData("Teleport", 0)]
+    [Parameter("Player", ValueType.Any, typeof(V_Number))]
+    [Parameter("Position", ValueType.VectorAndPlayer, typeof(V_Vector))]
+    public class A_Teleport : Element {}
 }

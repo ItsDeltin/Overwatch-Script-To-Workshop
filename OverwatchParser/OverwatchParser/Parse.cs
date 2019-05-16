@@ -20,8 +20,6 @@ namespace OverwatchParser.Parse
 
         public static Rule[] ParseText(string text)
         {
-            Console.WriteLine($"- Input:\n{text}\n-");
-
             AntlrInputStream inputStream = new AntlrInputStream(text);
 
             // Lexer
@@ -35,8 +33,6 @@ namespace OverwatchParser.Parse
             DeltinScriptParser.RulesetContext context = speakParser.ruleset();
             Visitor visitor = new Visitor();
             visitor.Visit(context);
-
-            Console.WriteLine(context.ToStringTree(speakParser));
 
             InternalVars iv;
             {
@@ -67,12 +63,15 @@ namespace OverwatchParser.Parse
             for (int i = 0; i < rules.Length; i++)
                 compiledRules.Add(ParseRule(rules[i]));
 
+            Log.Write("Build succeeded.");
+
             return compiledRules.ToArray();
         }
 
         static Rule ParseRule(DeltinScriptParser.Ow_ruleContext ruleContext)
         {
             Rule rule = CreateRuleFromContext(ruleContext);
+            Log.Write($"Building rule: {rule.Name}");
 
             // Determines if the starting skip if was created (used by for and goto)
             bool beginningSkipWasCreated = false;
@@ -89,6 +88,7 @@ namespace OverwatchParser.Parse
 
             rule.Actions = actions.ToArray();
 
+            Log.Write($"Finished rule: {rule.Name}");
             return rule;
         }
 
@@ -116,8 +116,6 @@ namespace OverwatchParser.Parse
                     }
                 }
             }
-
-            Log.Write($"Rule: {ruleName}");
 
             return new Rule(ruleName, ruleEvent, team, player);
         }
@@ -205,14 +203,14 @@ namespace OverwatchParser.Parse
             {
                 var number = context.GetChild(0);
 
-                int num;
+                double num;
                 // num will have the format expr(number(X)) if positive, expr(number(neg(X))) if negative.
                 if (number.GetChild(0) is DeltinScriptParser.NegContext)
                     // Is negative, use '-' before int.parse to make it negative.
-                    num = -int.Parse(number.GetChild(0).GetText());
+                    num = -double.Parse(number.GetChild(0).GetText());
                 else
                     // Is positive
-                    num = int.Parse(number.GetChild(0).GetText());
+                    num = double.Parse(number.GetChild(0).GetText());
 
                 return new V_Number(num);
             }
@@ -274,7 +272,7 @@ namespace OverwatchParser.Parse
             #region Variable
 
             if (context.GetChild(0) is DeltinScriptParser.VariableContext)
-                throw new Exception("This shouldn't happen...");
+                return Var.GetVar((context.GetChild(0) as DeltinScriptParser.VariableContext).PART().GetText()).GetVariable(new V_EventPlayer());
 
             #endregion
 
@@ -484,7 +482,7 @@ namespace OverwatchParser.Parse
                     arrayParameter = Element.Part<V_PlayerVariable>(targetPlayer, Variable);
 
                 parameterValues.Add(arrayParameter);
-                parameterValues.Add(Index);
+                parameterValues.Add(new V_Number(Index));
                 element.ParameterValues = parameterValues.ToArray();
             }
 
