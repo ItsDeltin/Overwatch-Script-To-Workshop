@@ -1,11 +1,11 @@
 ﻿// internal vars
 usevar globalvar A;
-usevar playervar B;
+usevar playervar A;
 
-/* define playervar test; uncomment for free crash */
+define playervar test;
 
 rule: "do whatever.",
 	Event.Ongoing_EachPlayer
 	{
-        AbortIf(IsOnObjective() != false);
-	}
+        test = 40;
+	}   

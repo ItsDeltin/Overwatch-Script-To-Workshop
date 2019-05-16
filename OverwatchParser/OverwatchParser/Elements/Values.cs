@@ -148,7 +148,7 @@ namespace OverwatchParser.Elements
             var keys = InputHandler.GetNumberKeys(value);
             for (int i = 0; i < keys.Length; i++)
             {
-                InputHandler.Input.KeyPress(keys[i]);
+                InputHandler.Input.KeyDown(keys[i]);
                 Thread.Sleep(InputHandler.SmallStep);
             }
 
@@ -292,6 +292,11 @@ namespace OverwatchParser.Elements
 
     [ElementData("True", ValueType.Boolean, 2)]
     public class V_True : Element {}
+
+    [ElementData("Vector", ValueType.Vector, 2)]
+    [Parameter("Array", ValueType.Any, typeof(V_GlobalVariable))]
+    [Parameter("Index", ValueType.Number, typeof(V_Number))]
+    public class V_ValueInArray : Element {}
 
     [ElementData("Vector", ValueType.Vector, 1)]
     [Parameter("X", ValueType.Number, typeof(V_Number))]

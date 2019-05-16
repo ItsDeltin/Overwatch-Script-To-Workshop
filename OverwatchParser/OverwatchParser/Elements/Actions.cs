@@ -80,9 +80,22 @@ namespace OverwatchParser.Elements
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
     public class A_SetGlobalVariable : Element {}
 
+    [ElementData("Set Global Variable At Index", 0)]
+    [Parameter("Variable", typeof(Variable))]
+    [Parameter("Index", ValueType.Number, typeof(V_Number))]
+    [Parameter("Value", ValueType.Any, typeof(V_Number))]
+    public class A_SetGlobalVariableAtIndex : Element {}
+
     [ElementData("Set Player Variable", 0)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     [Parameter("Variable", typeof(Variable))]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
     public class A_SetPlayerVariable : Element {}
+
+    [ElementData("Set Player Variable At Index", 0)]
+    [Parameter("Player", ValueType.Any, typeof(V_EventPlayer))]
+    [Parameter("Variable", typeof(Variable))]
+    [Parameter("Index", ValueType.Number, typeof(V_Number))]
+    [Parameter("Value", ValueType.Any, typeof(V_Number))]
+    public class A_SetPlayerVariableAtIndex : Element {}
 }

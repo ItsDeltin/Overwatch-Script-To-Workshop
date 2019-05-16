@@ -12,20 +12,22 @@ false  : FALSE         ;
 null   : NULL          ;
 not    : NOT           ;
 
-vardefine : DEFINE (GLOBAL|PLAYER) PART (PART | ARRAY)? STATEMENT_END; /*#define global/player NAME (use variable?); */
+vardefine : DEFINE (GLOBAL|PLAYER) PART (PART (INDEX_START number INDEX_END)?)? STATEMENT_END; /*#define global/player NAME (use variable?); */
 useGlobalVar : USEVAR GLOBAL PART STATEMENT_END ;
 usePlayerVar : USEVAR PLAYER PART STATEMENT_END ;
 
 expr 
-	: number
+	: 
+      number
 	| method
-	| variable
 	| string
-	| array
+	| expr INDEX_START expr INDEX_END
 	| true
 	| false
 	| null
-	| seperated
+	| expr SEPERATOR expr
+	//| expr SEPERATOR variable
+	| variable
 	|<assoc=right> '(' expr ')'
 	| expr '^' expr
 	| expr '*' expr
@@ -37,10 +39,8 @@ expr
 	| expr COMPARE expr
 	;
 
-seperated: PART SEPERATOR PART ;
-method : PART LEFT_PAREN expr? (',' expr)* RIGHT_PAREN  ;
 variable : PART;
-array  : PART INDEX_START expr INDEX_END ;
+method   : PART LEFT_PAREN expr? (',' expr)* RIGHT_PAREN  ;
 
 statement :
 	( method STATEMENT_END

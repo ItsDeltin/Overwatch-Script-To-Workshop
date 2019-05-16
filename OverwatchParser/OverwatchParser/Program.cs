@@ -19,6 +19,8 @@ namespace OverwatchParser
 
             Rule[] generatedRules = Parser.ParseText(text);
 
+            Console.ReadLine();
+
             foreach (Rule rule in generatedRules)
                 rule.Input();
 
