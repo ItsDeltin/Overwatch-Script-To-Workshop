@@ -61,7 +61,16 @@ namespace OverwatchParser.Parse
             var compiledRules = new List<Rule>();
 
             for (int i = 0; i < rules.Length; i++)
-                compiledRules.Add(ParseRule(rules[i]));
+            {
+                ParseRule parsing = new ParseRule(rules[i], iv);
+
+                Log.Write($"Building rule: {parsing.Rule.Name}");
+                parsing.Parse();
+                Rule rule = parsing.Rule;
+                Log.Write($"Finished rule: {parsing.Rule.Name}");
+
+                compiledRules.Add(rule);
+            }
 
             Log.Write("Build succeeded.");
 
@@ -72,29 +81,65 @@ namespace OverwatchParser.Parse
 
             return compiledRules.ToArray();
         }
+    }
 
-        static Rule ParseRule(DeltinScriptParser.Ow_ruleContext ruleContext)
+    class ParseRule
+    {
+        public Rule Rule { get; private set; }
+
+        private readonly List<Element> Actions = new List<Element>();
+        private readonly List<Condition> Conditions = new List<Condition>();
+
+        private readonly InternalVars InternalVars;
+        private DeltinScriptParser.Ow_ruleContext RuleContext;
+
+        private bool IsGlobal;
+
+        //private bool CreateInitialSkip = false;
+        //private int SkipCountIndex = -1;
+
+        public ParseRule(DeltinScriptParser.Ow_ruleContext ruleContext, InternalVars internalVars)
         {
-            Rule rule = CreateRuleFromContext(ruleContext);
-            Log.Write($"Building rule: {rule.Name}");
+            Rule = CreateRuleFromContext(ruleContext);
+            RuleContext = ruleContext;
+            IsGlobal = Rule.RuleEvent == RuleEvent.Ongoing_Global;
+            InternalVars = internalVars;
+        }
 
-            // Determines if the starting skip if was created (used by for and goto)
-            bool beginningSkipWasCreated = false;
+        public void Parse()
+        {
+            // Parse conditions
+            ParseConditions();
+            
+            // Parse actions
+            ParseBlock(RuleContext.block());
 
-            // The list of actions.
-            List<Element> actions = new List<Element>();
+            // Add an initial skip if it is required.
+            /*
+            if (CreateInitialSkip)
+            {
+                if (SkipCountIndex == -1)
+                    throw new Exception($"{nameof(CreateInitialSkip)} cannot be true if {nameof(SkipCountIndex)} is -1!");
 
-            var statements = ruleContext.block().children
-                .Where(v => v is DeltinScriptParser.StatementContext)
-                .Cast<DeltinScriptParser.StatementContext>().ToArray();
+                Actions.Insert(0,
+                    Element.Part<A_SkipIf>
+                    (
+                        // Condition
+                        Element.Part<V_Compare>
+                        (
+                            GetIVarAtIndex(SkipCountIndex),
+                            Operators.NotEqual,
+                            new V_Number(0)
+                        ),
+                        // Number of actions
+                        GetIVarAtIndex(SkipCountIndex)
+                    )
+                );
+            }
+            */
 
-            for (int i = 0; i < statements.Length; i++)
-                actions.Add(ParseStatement(statements[i]));
-
-            rule.Actions = actions.ToArray();
-
-            Log.Write($"Finished rule: {rule.Name}");
-            return rule;
+            Rule.Conditions = Conditions.ToArray();
+            Rule.Actions = Actions.ToArray();
         }
 
         static Rule CreateRuleFromContext(DeltinScriptParser.Ow_ruleContext ruleContext)
@@ -125,7 +170,7 @@ namespace OverwatchParser.Parse
             return new Rule(ruleName, ruleEvent, team, player);
         }
 
-        static Element ParseExpression(DeltinScriptParser.ExprContext context)
+        Element ParseExpression(DeltinScriptParser.ExprContext context)
         {
             // If the expression is a(n)...
 
@@ -189,7 +234,7 @@ namespace OverwatchParser.Parse
                     case "!=":
                         return Element.Part<V_Compare>(left, Operators.NotEqual, right);
 
-                    #endregion
+                        #endregion
                 }
             }
 
@@ -257,8 +302,8 @@ namespace OverwatchParser.Parse
 
             #region Group ( expr )
 
-            if (context.ChildCount == 3 && context.GetChild(0).GetText() == "(" && 
-                context.GetChild(0) is DeltinScriptParser.ExprContext && 
+            if (context.ChildCount == 3 && context.GetChild(0).GetText() == "(" &&
+                context.GetChild(0) is DeltinScriptParser.ExprContext &&
                 context.GetChild(2).GetText() == ")")
             {
                 Console.WriteLine("Group type:" + context.GetChild(0).GetType());
@@ -310,7 +355,7 @@ namespace OverwatchParser.Parse
             throw new Exception($"What's a {context}?");
         }
 
-        static Element ParseMethod(DeltinScriptParser.MethodContext methodContext)
+        Element ParseMethod(DeltinScriptParser.MethodContext methodContext)
         {
             string methodName = methodContext.PART().GetText();
             Type methodType = Element.GetMethod(methodName);
@@ -327,12 +372,17 @@ namespace OverwatchParser.Parse
             return method;
         }
 
-        static Element ParseStatement(DeltinScriptParser.StatementContext statementContext)
+        void ParseStatement(DeltinScriptParser.StatementContext statementContext)
         {
-            // If the statement is a method.
+            #region Method
             if (statementContext.GetChild(0) is DeltinScriptParser.MethodContext)
-                return ParseMethod(statementContext.GetChild(0) as DeltinScriptParser.MethodContext);
+            {
+                Actions.Add(ParseMethod(statementContext.GetChild(0) as DeltinScriptParser.MethodContext));
+                return;
+            }
+            #endregion
 
+            #region Variable set. TODO: add support for += -= *= /=
             if (statementContext.STATEMENT_OPERATION() != null)
             {
                 Var variable;
@@ -354,10 +404,144 @@ namespace OverwatchParser.Parse
                     target = new V_EventPlayer();
                 }
 
-                return variable.SetVariable(value, target);
+                Actions.Add(variable.SetVariable(value, target));
+                return;
             }
+            #endregion
+
+            #region for
+            if (statementContext.GetChild(0) is DeltinScriptParser.ForContext)
+            {
+                /*
+                CreateInitialSkip = true;
+
+                if (SkipCountIndex == -1)
+                    SkipCountIndex = Assign();
+                */
+
+                int forActionStartIndex = Actions.Count();
+
+                Element forArrayElement = ParseExpression(statementContext.@for().expr());
+
+                int skipIndex = Assign();
+                Actions.Insert(0,
+                    Element.Part<A_SkipIf>
+                    (
+                        // Condition
+                        GetIVarAtIndex(skipIndex),
+                        // Number of actions
+                        new V_Number(forActionStartIndex)
+                    )
+                );
+
+                // Create the for's temporary variable.
+                int forIndex = Assign();
+                Var forTempVar = new Var(
+                    name    : statementContext.@for().PART().GetText(),
+                    isGlobal: IsGlobal,
+                    variable: IsGlobal ? InternalVars.Global : InternalVars.Player,
+                    index   : forIndex,
+                    line    : statementContext.@for().start.Line,
+                    column  : statementContext.@for().start.Column
+                    );
+
+                // Parse the for's block.
+                ParseBlock(statementContext.@for().block());
+
+                // Take the variable out of scope.
+                forTempVar.OutOfScope();
+
+                // Add the for's finishing elements
+                //Actions.Add(SetIVarAtIndex(skipIndex, new V_Number(forActionStartIndex))); // Sets how many variables to skip in the next iteraction.
+                Actions.Add(SetIVarAtIndex(skipIndex, new V_True())); // Enables the skip.
+
+#warning Maybe change to use the Modify action when it is added to the action list?
+                Actions.Add(SetIVarAtIndex( // Indent the index by 1.
+                    forIndex, 
+                    Element.Part<V_Add>
+                    (
+                        GetIVarAtIndex(forIndex), 
+                        new V_Number(1)
+                    )
+                ));
+
+                Actions.Add(Element.Part<A_Wait>(new V_Number(0.06), WaitBehavior.IgnoreCondition)); // Add the Wait() required by the workshop.
+                Actions.Add(Element.Part<A_LoopIf>( // Loop if the for condition is still true.
+                    Element.Part<V_Compare>
+                    (
+                        GetIVarAtIndex(forIndex),
+                        Operators.LessThan,
+                        Element.Part<V_CountOf>(forArrayElement)
+                    )
+                ));
+                Actions.Add(SetIVarAtIndex(skipIndex, new V_False()));
+                return;
+            }
+            #endregion
 
             throw new Exception($"What's a {statementContext}?");
+        }
+
+        void ParseBlock(DeltinScriptParser.BlockContext blockContext)
+        {
+            var statements = blockContext.children
+                .Where(v => v is DeltinScriptParser.StatementContext)
+                .Cast<DeltinScriptParser.StatementContext>().ToArray();
+
+            for (int i = 0; i < statements.Length; i++)
+                ParseStatement(statements[i]);
+        }
+
+        Element SetIVarAtIndex(int index, Element value)
+        {
+            if (IsGlobal)
+                return Element.Part<A_SetGlobalVariableAtIndex>(InternalVars.Global, new V_Number(index), value);
+            else
+                return Element.Part<A_SetPlayerVariableAtIndex>(new V_EventPlayer(), InternalVars.Player, new V_Number(index), value);
+        }
+        Element GetIVarAtIndex(int index)
+        {
+            if (IsGlobal)
+                return Element.Part<V_ValueInArray>(Element.Part<V_GlobalVariable>(InternalVars.Global), new V_Number(index));
+            else
+                return Element.Part<V_ValueInArray>(Element.Part<V_PlayerVariable>(new V_EventPlayer(), InternalVars.Player), new V_Number(index));
+        }
+
+        private int Assign()
+        {
+            int index;
+            if (IsGlobal)
+                index = InternalVars.AssignGlobalIndex();
+            else
+                index = InternalVars.AssignPlayerIndex();
+
+            return index;
+        }
+
+        void ParseConditions()
+        {
+            // Get the if contexts
+            var ifContexts = RuleContext.rule_if();
+            
+            foreach(var @if in ifContexts)
+            {
+                Element parsedIf = ParseExpression(@if.expr());
+                // If the parsed if is a V_Compare, translate it to a condition.
+                // Makes "(value1 == value2) == true" to just "value1 == value2"
+                if (parsedIf is V_Compare)
+                    Conditions.Add(
+                        new Condition(
+                            (Element)parsedIf.ParameterValues[0],
+                            (Operators)parsedIf.ParameterValues[1],
+                            (Element)parsedIf.ParameterValues[2]
+                        )
+                    );
+                // If not, just do "parsedIf == true"
+                else
+                    Conditions.Add(new Condition(
+                        parsedIf, Operators.Equal, new V_True()
+                    ));
+            }
         }
     }
 
@@ -456,6 +640,24 @@ namespace OverwatchParser.Parse
                         throw new SyntaxErrorException("Expected variable.", vardefine.start.Line, vardefine.start.Column);
                     Variable = var;
                 }
+            }
+
+            VarCollection.Add(this);
+        }
+
+        public Var(string name, bool isGlobal, Variable variable, int index, int line, int column)
+        {
+            if (IsVar(name))
+                throw new SyntaxErrorException($"The variable {name} was already defined.", line, column);
+
+            Name = name;
+            IsGlobal = isGlobal;
+            Variable = variable;
+
+            if (index != -1)
+            {
+                IsArray = true;
+                Index = index;
             }
 
             VarCollection.Add(this);

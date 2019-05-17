@@ -2,11 +2,20 @@
 usevar globalvar A;
 usevar playervar A;
 
-define playervar teleportTo;
+define globalvar teleportTo;
 
-rule: "do whatever.",
-	Event.Ongoing_EachPlayer
+rule: "Game start: setup",
+	Event.Ongoing_Global
+    if (TotalTimeElapsed() >= 10)
 	{
+        // Teleport the players to the game location.
         teleportTo = Vector(16.3, -30.2, 19);
-        Teleport(EventPlayer(), teleportTo);
+        Teleport(AllPlayers(), teleportTo);
+
+        // Print every player's name as a SmallMessage.
+        for (player in AllPlayers())
+        {
+            SmallMessage(AllPlayers(), AllPlayers()[player]);
+            Wait(2);
+        }
 	}

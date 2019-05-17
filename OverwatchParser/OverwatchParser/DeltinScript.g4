@@ -48,14 +48,18 @@ statement :
 	| GOTO
 	| GOTO_STATEMENT
 	| IF LEFT_PAREN expr RIGHT_PAREN block (ELSE IF LEFT_PAREN expr RIGHT_PAREN)* (block ELSE block)?
-	| FOR LEFT_PAREN expr IN expr RIGHT_PAREN block /* Syntax: for (VARIABLE in ARRAY) */
+	| for
 	);
 
 block : BLOCK_START statement* BLOCK_END ;
 
+for : FOR LEFT_PAREN PART IN expr RIGHT_PAREN block ; /* Syntax: for (VARIABLE in ARRAY) */
+
+rule_if : IF LEFT_PAREN expr RIGHT_PAREN ;
+
 ow_rule : 
 	RULE_WORD ':' STRINGLITERAL (',' expr)* 
-	(IF LEFT_PAREN expr RIGHT_PAREN)*
+	(rule_if)*
 	block
 	;
 

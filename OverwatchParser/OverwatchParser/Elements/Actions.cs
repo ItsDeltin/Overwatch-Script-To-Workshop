@@ -33,8 +33,8 @@ namespace OverwatchParser.Elements
     public class A_ApplyImpulse : Element {}
 
     [ElementData("Big Message")]
-    [Parameter("Visible To", ValueType.Player, null)]
-    [Parameter("Header", ValueType.String, typeof(OverwatchParser.Elements.V_String))]
+    [Parameter("Visible To", ValueType.Player, typeof(V_AllPlayers))]
+    [Parameter("Header", ValueType.String, typeof(V_String))]
     public class A_BigMessage : Element {}
 
     [ElementData("Chase Global Variable At Rate")]
@@ -75,6 +75,10 @@ namespace OverwatchParser.Elements
     [Parameter("Killer", ValueType.Player, typeof(V_Null))]
     public class A_Kill : Element {}
 
+    [ElementData("Loop If", 0)]
+    [Parameter("Condition", ValueType.Boolean, typeof(V_Compare))]
+    public class A_LoopIf : Element {}
+
     [ElementData("Set Global Variable", 0)]
     [Parameter("Variable", typeof(Variable))]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
@@ -99,8 +103,23 @@ namespace OverwatchParser.Elements
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
     public class A_SetPlayerVariableAtIndex : Element {}
 
+    [ElementData("Skip If", 0)]
+    [Parameter("Condition", ValueType.Boolean, typeof(V_Compare))]
+    [Parameter("Number Of Actions", ValueType.Number, typeof(V_Number))]
+    public class A_SkipIf : Element {}
+
+    [ElementData("Small Message", 0)]
+    [Parameter("Visible To", ValueType.Player, typeof(V_AllPlayers))]
+    [Parameter("Header", ValueType.String, typeof(V_String))]
+    public class A_SmallMessage : Element {}
+
     [ElementData("Teleport", 0)]
     [Parameter("Player", ValueType.Any, typeof(V_Number))]
     [Parameter("Position", ValueType.VectorAndPlayer, typeof(V_Vector))]
     public class A_Teleport : Element {}
+
+    [ElementData("Wait", 0)]
+    [Parameter("Time", ValueType.Number, typeof(V_Number))]
+    [Parameter("Wait Behavior", typeof(WaitBehavior))]
+    public class A_Wait : Element {}
 }

@@ -28,7 +28,7 @@ namespace OverwatchParser.Elements
     [Parameter("Team", ValueType.Team, typeof(V_Team))]
     public class V_AllLivingPlayers : Element {}
 
-    [ElementData("All Players", ValueType.Player)]
+    [ElementData("All Players", ValueType.Player, 2)]
     [Parameter("Team", ValueType.Team, typeof(V_Team))]
     public class V_AllPlayers : Element {}
 
@@ -98,6 +98,10 @@ namespace OverwatchParser.Elements
     [ElementData("Control Point Scoring Team", ValueType.Team)]
     public class V_ControlPointScoringTeam : Element {}
 
+    [ElementData("Count Of", ValueType.Number, 0)]
+    [Parameter("Array", ValueType.Any, typeof(V_GlobalVariable))]
+    public class V_CountOf : Element {}
+
     [ElementData("Divide", ValueType.Any, 0)]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
@@ -164,7 +168,7 @@ namespace OverwatchParser.Elements
     [ElementData("Or", ValueType.Boolean)]
     [Parameter("Value", ValueType.Boolean, typeof(V_True))]
     [Parameter("Value", ValueType.Boolean, typeof(V_True))]
-    public class V_Or : Element { }
+    public class V_Or : Element {}
 
     [ElementData("Player Variable", ValueType.Any, 0)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
@@ -289,6 +293,9 @@ namespace OverwatchParser.Elements
     [ElementData("Team", ValueType.Team, 4)]
     [Parameter("Team", typeof(TeamSelector))]
     public class V_Team : Element {}
+
+    [ElementData("Total Time Elapsed", ValueType.Number, 0)]
+    public class V_TotalTimeElapsed : Element {}
 
     [ElementData("True", ValueType.Boolean, 2)]
     public class V_True : Element {}

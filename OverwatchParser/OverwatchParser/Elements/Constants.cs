@@ -343,4 +343,10 @@ namespace OverwatchParser.Elements
         Team2,
     }
 
+    public enum WaitBehavior
+    {
+        IgnoreCondition,
+        AbortWhenFalse,
+        RestartWhenTrue
+    }
 }
