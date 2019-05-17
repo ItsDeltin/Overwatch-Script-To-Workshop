@@ -16,6 +16,7 @@ namespace OverwatchParser.Elements
         public RuleEvent RuleEvent { get; private set; }
         public TeamSelector Team { get; private set; }
         public PlayerSelector Player { get; private set; }
+        public bool IsGlobal { get; private set; }
 
         public Condition[] Conditions { get; set; }
         public Element[] Actions { get; set; }
@@ -29,12 +30,14 @@ namespace OverwatchParser.Elements
             RuleEvent = ruleEvent;
             Team = team;
             Player = player;
+            IsGlobal = ruleEvent == RuleEvent.Ongoing_Global;
         }
 
         public Rule(string name) // Creates a "Ongoing - Global" rule.
         {
             Name = name;
             RuleEvent = RuleEvent.Ongoing_Global;
+            IsGlobal = true;
         }
 
         public void Input()
@@ -48,7 +51,7 @@ namespace OverwatchParser.Elements
 
             // Create rule.
             InputHandler.Input.KeyPress(Keys.Space);
-            Thread.Sleep(InputHandler.MediumStep);
+            Thread.Sleep(InputHandler.BigStep);
 
             NumberOfRules++;
 
@@ -123,6 +126,17 @@ namespace OverwatchParser.Elements
                     InputHandler.Input.KeyPress(Keys.Escape);
                     Thread.Sleep(InputHandler.BigStep);
                 }
+
+            // Close the rule
+            InputHandler.Input.RepeatKey(Keys.Up, 2);
+            if (!IsGlobal)
+                InputHandler.Input.RepeatKey(Keys.Up, 2);
+
+            InputHandler.Input.KeyPress(Keys.Space);
+            Thread.Sleep(InputHandler.SmallStep);
+
+            InputHandler.Input.RepeatKey(Keys.Up, NumberOfRules);
+            Thread.Sleep(InputHandler.SmallStep);
         }
     }
 }

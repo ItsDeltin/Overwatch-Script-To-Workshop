@@ -3,12 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Reflection;
 
 namespace OverwatchParser.Elements
 {
     public static class Constants
     {
         public const int RULE_NAME_MAX_LENGTH = 128;
+
+        public static readonly Type[] EnumParameters = Assembly.GetExecutingAssembly().GetTypes().Where(t => t.GetCustomAttribute<EnumParameter>() != null).ToArray();
 
         public static readonly string[] Strings = new string[]
         {
@@ -202,6 +205,13 @@ namespace OverwatchParser.Elements
         public const string DEFAULT_STRING = " ";
     }
 
+    [AttributeUsage(AttributeTargets.Enum)]
+    public class EnumParameter : Attribute
+    {
+        public EnumParameter() {}
+    }
+
+    [EnumParameter]
     public enum Operators
     {
         Equal,
@@ -212,18 +222,21 @@ namespace OverwatchParser.Elements
         GreaterThanOrEqual
     }
 
+    [EnumParameter]
     public enum Relative
     {
         ToWorld,
         ToPlayer
     }
 
+    [EnumParameter]
     public enum ContraryMotion
     {
         Cancel,
         Incorporate
     }
 
+    [EnumParameter]
     public enum Variable
     {
         A,
@@ -254,12 +267,14 @@ namespace OverwatchParser.Elements
         Z
     }
 
+    [EnumParameter]
     public enum ChaseReevaluation
     {
         DestinationAndRate,
         None
     }
 
+    [EnumParameter]
     public enum Status
     {
         Hacked,
@@ -336,6 +351,7 @@ namespace OverwatchParser.Elements
         Baptiste
     }
 
+    [EnumParameter]
     public enum TeamSelector
     {
         All,
@@ -343,6 +359,7 @@ namespace OverwatchParser.Elements
         Team2,
     }
 
+    [EnumParameter]
     public enum WaitBehavior
     {
         IgnoreCondition,

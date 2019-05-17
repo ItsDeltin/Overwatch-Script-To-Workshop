@@ -168,16 +168,16 @@ namespace OverwatchParser.Elements
 
         public object[] ParameterValues;
 
-        public void Input() => Input(false, ValueType.Any, null);
+        public void Input() => Input(false, ValueType.Any, null, 0);
 
-        private void Input(bool isAlreadySet, ValueType valueType, Type defaultType)
+        private void Input(bool isAlreadySet, ValueType valueType, Type defaultType, int depth)
         {
             // Make ParameterValues the same size as parameterData.
             if (ParameterValues == null)
                 ParameterValues = new Element[0];
             Array.Resize(ref ParameterValues, parameterData.Length);
 
-            Console.WriteLine($"{ElementData.ElementName}:");
+            Console.WriteLine($"{new string(' ', depth * 4)}{ElementData.ElementName}");
 
             // Select the option
             if (!isAlreadySet)
@@ -222,8 +222,6 @@ namespace OverwatchParser.Elements
                 Thread.Sleep(InputHandler.MediumStep);
             }
 
-            Console.WriteLine();
-
             BeforeParameters();
 
             // Do stuff with parameters
@@ -239,7 +237,10 @@ namespace OverwatchParser.Elements
 
                 // Element input
                 if (parameterData[i].ParameterType == ParameterType.Value)
-                    ((Element)ParameterValues[i]).Input(parameterData[i].DefaultType == ParameterValues[i].GetType(), parameterData[i].ValueType, parameterData[i].DefaultType);
+                    ((Element)ParameterValues[i]).Input(
+                        parameterData[i].DefaultType == ParameterValues[i].GetType(), 
+                        parameterData[i].ValueType, parameterData[i].DefaultType,
+                        depth + 1);
 
                 // Enum input
                 else if (parameterData[i].ParameterType == ParameterType.Enum)

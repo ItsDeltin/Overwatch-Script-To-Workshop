@@ -61,7 +61,7 @@
     <Compile Include="Elements\Actions.cs" />
     <Compile Include="Elements\Condition.cs" />
     <Compile Include="Elements\Elements.cs" />
-    <Compile Include="Elements\Constants.cs" />
+    <Compile Include="Elements\ConstantsAndEnums.cs" />
     <Compile Include="Exceptions.cs" />
     <Compile Include="Elements\Rule.cs" />
     <Compile Include="Elements\Values.cs" />

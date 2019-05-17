@@ -34,8 +34,6 @@ namespace OverwatchParser.Parse
             Visitor visitor = new Visitor();
             visitor.Visit(context);
 
-            Log.Write($"Input: {context.ToStringTree()}");
-
             InternalVars iv;
             {
                 // Get the internal global variable to use.
@@ -339,12 +337,11 @@ namespace OverwatchParser.Parse
 
             #endregion
 
-            #region Seperator
+            #region Seperator/enum
 
             if (context.ChildCount == 3 && context.GetChild(1).GetText() == ".")
             {
                 Element left = ParseExpression(context.GetChild(0) as DeltinScriptParser.ExprContext);
-                // (left) . (expr(variable(yeet)))
                 string variableName = context.GetChild(2).GetChild(0).GetText();
 
                 Var var = Var.GetVar(variableName);
@@ -367,11 +364,29 @@ namespace OverwatchParser.Parse
             if (methodType == null)
                 throw new SyntaxErrorException($"The method {methodName} does not exist.", methodContext.start.Line, methodContext.start.Column);
 
-            Element[] parameters = methodContext.expr().Select(v => ParseExpression(v))
-                .ToArray();
+            List<object> parameters = new List<object>();
+            var parseParameters = methodContext.expr();
+            foreach (var param in parseParameters)
+            {
+                object value = null;
+
+                if (!int.TryParse(param.GetText(), out _))
+                    foreach (Type @enum in Constants.EnumParameters)
+                    {
+                        try
+                        {
+                            value = Enum.Parse(@enum, param.GetText());
+                        }
+                        catch (Exception ex) when (ex is ArgumentNullException || ex is ArgumentException || ex is OverflowException) {}
+                    }
+                    if (value == null)
+                        value = ParseExpression(param);
+
+                parameters.Add(value);
+            }
 
             Element method = (Element)Activator.CreateInstance(methodType);
-            method.ParameterValues = parameters;
+            method.ParameterValues = parameters.ToArray();
 
             return method;
         }

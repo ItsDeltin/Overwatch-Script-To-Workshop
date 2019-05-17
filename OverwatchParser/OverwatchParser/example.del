@@ -3,7 +3,25 @@ usevar globalvar A;
 usevar playervar A;
 
 define globalvar teleportTo;
+define globalvar tempvar;
 
+rule: "first rule",
+    Event.Ongoing_Global
+    {}
+
+rule: "second rule",
+    Event.Ongoing_Global
+    {}
+
+rule: "third rule",
+    Event.Ongoing_Global
+    {}
+
+rule: "fourth rule",
+    Event.Ongoing_Global
+    {}
+
+/*
 rule: "Game start: setup",
 	Event.Ongoing_Global
     if (TotalTimeElapsed() >= 10)
@@ -19,3 +37,10 @@ rule: "Game start: setup",
             Wait(2);
         }
 	}
+
+rule: "Vector debug",
+    Event.Ongoing_Global
+    if (true == false)
+    {
+        tempvar = Vector(0, 0, 0);
+    } */
