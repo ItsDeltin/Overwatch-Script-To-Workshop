@@ -34,6 +34,8 @@ namespace OverwatchParser.Parse
             Visitor visitor = new Visitor();
             visitor.Visit(context);
 
+            Log.Write($"Input: {context.ToStringTree()}");
+
             InternalVars iv;
             {
                 // Get the internal global variable to use.
@@ -253,7 +255,8 @@ namespace OverwatchParser.Parse
             {
                 var number = context.GetChild(0);
 
-                double num;
+                double num = double.Parse(number.GetChild(0).GetText());
+                /*
                 // num will have the format expr(number(X)) if positive, expr(number(neg(X))) if negative.
                 if (number.GetChild(0) is DeltinScriptParser.NegContext)
                     // Is negative, use '-' before int.parse to make it negative.
@@ -261,6 +264,7 @@ namespace OverwatchParser.Parse
                 else
                     // Is positive
                     num = double.Parse(number.GetChild(0).GetText());
+                */
 
                 return new V_Number(num);
             }

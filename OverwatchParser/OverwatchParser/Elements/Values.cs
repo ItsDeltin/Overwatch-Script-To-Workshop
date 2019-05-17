@@ -149,6 +149,12 @@ namespace OverwatchParser.Elements
             InputHandler.Input.KeyPress(Keys.Down);
             Thread.Sleep(InputHandler.SmallStep);
 
+            // Clear the text
+            InputHandler.Input.KeyPress(Keys.D0);
+            Thread.Sleep(InputHandler.SmallStep);
+            InputHandler.Input.KeyPress(Keys.Back);
+            Thread.Sleep(InputHandler.SmallStep);
+
             var keys = InputHandler.GetNumberKeys(value);
             for (int i = 0; i < keys.Length; i++)
             {
