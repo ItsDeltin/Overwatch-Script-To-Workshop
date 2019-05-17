@@ -70,6 +70,15 @@ namespace OverwatchParser.Elements
     [Parameter("Status", typeof(Status))]
     public class A_ClearStatus : Element {}
 
+    [ElementData("Create Effect", 0)]
+    [Parameter("Visible To", ValueType.Player, typeof(V_AllPlayers))]
+    [Parameter("Type", typeof(Effect))]
+    [Parameter("Color", typeof(Color))]
+    [Parameter("Position", ValueType.VectorAndPlayer, typeof(V_EventPlayer))]
+    [Parameter("Radius", ValueType.Number, typeof(V_Number))]
+    [Parameter("Reevaluation", typeof(EffectRev))]
+    public class A_CreateEffect : Element {}
+
     [ElementData("Kill", 0)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     [Parameter("Killer", ValueType.Player, typeof(V_Null))]
@@ -129,6 +138,17 @@ namespace OverwatchParser.Elements
     [Parameter("Visible To", ValueType.Player, typeof(V_AllPlayers))]
     [Parameter("Header", ValueType.String, typeof(V_String))]
     public class A_SmallMessage : Element {}
+
+    [ElementData("Start Camera", 0)]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [Parameter("Eye Position", ValueType.VectorAndPlayer, typeof(V_Vector))]
+    [Parameter("Look At Position", ValueType.VectorAndPlayer, typeof(V_Vector))]
+    [Parameter("Blend Speed", ValueType.Number, typeof(V_Number))]
+    public class A_StartCamera : Element {}
+
+    [ElementData("Stop Camera", 0)]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    public class A_StopCamera : Element {}
 
     [ElementData("Teleport", 0)]
     [Parameter("Player", ValueType.Any, typeof(V_Number))]

@@ -274,16 +274,34 @@ namespace OverwatchParser.Elements
     }
 
     [EnumParameter]
-    public enum Button
+    public enum Variable
     {
-        PrimaryFire,
-        SecondaryFire,
-        Ability1,
-        Ability2,
-        Ultimate,
-        Interact,
-        Jump,
-        Crouch
+        A,
+        B,
+        C,
+        D,
+        E,
+        F,
+        G,
+        H,
+        I,
+        J,
+        K,
+        L,
+        M,
+        N,
+        O,
+        P,
+        Q,
+        R,
+        S,
+        T,
+        U,
+        V,
+        W,
+        X,
+        Y,
+        Z
     }
 
     [EnumParameter]
@@ -314,6 +332,19 @@ namespace OverwatchParser.Elements
     }
 
     [EnumParameter]
+    public enum Button
+    {
+        PrimaryFire,
+        SecondaryFire,
+        Ability1,
+        Ability2,
+        Ultimate,
+        Interact,
+        Jump,
+        Crouch
+    }
+
+    [EnumParameter]
     public enum Relative
     {
         ToWorld,
@@ -325,37 +356,6 @@ namespace OverwatchParser.Elements
     {
         Cancel,
         Incorporate
-    }
-
-    [EnumParameter]
-    public enum Variable
-    {
-        A,
-        B,
-        C,
-        D,
-        E,
-        F,
-        G,
-        H,
-        I,
-        J,
-        K,
-        L,
-        M,
-        N,
-        O,
-        P,
-        Q,
-        R,
-        S,
-        T,
-        U,
-        V,
-        W,
-        X,
-        Y,
-        Z
     }
 
     [EnumParameter]
@@ -394,5 +394,48 @@ namespace OverwatchParser.Elements
         IgnoreCondition,
         AbortWhenFalse,
         RestartWhenTrue
+    }
+
+    [EnumParameter]
+    public enum Effect
+    {
+        Sphere,
+        LightShaft,
+        Orb,
+        Ring,
+        Cloud,
+        Sparkles,
+        GoodAura,
+        BadAura,
+        EnergySound,
+        PickupSound,
+        GoodAuraSound,
+        BadAuraSound,
+        SparklesSound,
+        SmokeSound,
+        DecalSound,
+        BeaconSound
+    }
+
+    [EnumParameter]
+    public enum Color
+    {
+        White,
+        Yellow,
+        Green,
+        Purple,
+        Red,
+        Blue,
+        Team1,
+        Team2
+    }
+
+    [EnumParameter]
+    public enum EffectRev
+    {
+        VisibleToPositionAndRadius,
+        PositionAndRadius,
+        VisibleTo,
+        None
     }
 }

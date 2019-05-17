@@ -19,6 +19,7 @@ usePlayerVar : USEVAR PLAYER PART STATEMENT_END ;
 expr 
 	: 
       number
+	| custom_method
 	| method
 	| string
 	| enum
@@ -41,13 +42,14 @@ expr
 	| expr COMPARE expr
 	;
 
-enum     : (BUTTON) SEPERATOR PART ;
+enum     : (BUTTON | COLOR | EFFECT | EFFECTREV) SEPERATOR PART ;
 variable : PART ;
 custom_method : DELTIN SEPERATOR PART LEFT_PAREN expr? (',' expr)* RIGHT_PAREN ;
 method   : PART LEFT_PAREN expr? (',' expr)* RIGHT_PAREN ;
 
 statement :
 	( method STATEMENT_END
+	| custom_method STATEMENT_END
 	| expr STATEMENT_OPERATION expr STATEMENT_END
 	| GOTO
 	| GOTO_STATEMENT
@@ -65,7 +67,7 @@ else    : ELSE block                                          ;
 rule_if : IF LEFT_PAREN expr RIGHT_PAREN ;
 
 ow_rule : 
-	RULE_WORD ':' STRINGLITERAL (',' expr)* 
+	RULE_WORD ':' STRINGLITERAL (expr)* 
 	(rule_if)*
 	block
 	;
@@ -130,7 +132,10 @@ NULL      : 'null'      ;
 DELTIN    : 'Deltin'    ;
 
 // Enum
-BUTTON : 'Button' ;
+BUTTON    : 'Button'    ;
+COLOR     : 'Color'     ;
+EFFECT    : 'Effect'    ;
+EFFECTREV : 'EffectRev' ;
 
 /*
 ONGOING_GLOBAL            : 'Event.Ongoing_Global'          ;

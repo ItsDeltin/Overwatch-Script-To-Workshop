@@ -15,8 +15,8 @@ namespace OverwatchParser.Elements
     {
         public static InputHandler Input = new InputHandler(Process.GetProcessesByName("Overwatch")[0]);
 
-        public const int SmallStep = 25;
-        public const int MediumStep = 100;
+        public const int SmallStep = 35;
+        public const int MediumStep = 150;
         public const int BigStep = 500;
 
         public InputHandler(Process overwatchProcess)

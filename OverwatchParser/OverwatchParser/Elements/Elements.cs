@@ -174,7 +174,7 @@ namespace OverwatchParser.Elements
                 if (defaultType == typeof(V_Vector))
                 {
                     InputHandler.Input.KeyPress(Keys.Right);
-                    Thread.Sleep(InputHandler.SmallStep);
+                    Thread.Sleep(InputHandler.MediumStep);
                 }
 
                 // Open the menu.
@@ -199,7 +199,7 @@ namespace OverwatchParser.Elements
                 }
 
                 // Leave the input field
-                InputHandler.Input.KeyPress(Keys.Enter);
+                InputHandler.Input.KeyPress(Keys.Tab);
                 Thread.Sleep(InputHandler.MediumStep);
 
                 // Highlight the action/value.

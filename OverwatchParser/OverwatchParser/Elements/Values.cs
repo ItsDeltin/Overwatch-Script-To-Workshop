@@ -115,6 +115,10 @@ namespace OverwatchParser.Elements
     [ElementData("Event Player", ValueType.Player, 0)]
     public class V_EventPlayer : Element {}
 
+    [ElementData("Facing Direction Of", ValueType.Vector, 0)]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    public class V_FacingDirectionOf : Element {}
+
     [ElementData("False", ValueType.Boolean, 0)]
     public class V_False : Element {}
 
@@ -208,6 +212,10 @@ namespace OverwatchParser.Elements
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     [Parameter("Variable", typeof(Variable))]
     public class V_PlayerVariable : Element {}
+
+    [ElementData("Position of", ValueType.Vector, 0)]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    public class V_PositionOf : Element {}  
 
     [ElementData("Raise To Power", ValueType.Number)]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]

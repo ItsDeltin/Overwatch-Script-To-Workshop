@@ -2,22 +2,49 @@
 usevar globalvar A;
 usevar playervar A;
 
-define globalvar teleportTo;
-define globalvar tempvar;
+define globalvar step;
 
-rule: "Game start: setup",
+define globalvar cameraPos;
+define globalvar facing;
+define globalvar angle;
+
+define playervar inview;
+
+rule: "Set sphere position"
 	Event.Ongoing_EachPlayer
+
     if (IsButtonHeld(EventPlayer(), Button.Interact))
+
 	{
-        // Teleport the players to the game location.
-        teleportTo = Vector(5.531, 8.183, -87.304);
-        Teleport(AllPlayers(), teleportTo);
-
-        teleportTo *= 2;
-
-        for (player in AllPlayers())
+        if (step == 0)
         {
-            SmallMessage(AllPlayers(), AllPlayers()[player]);
-            Wait(2);
+            cameraPos = PositionOf(EventPlayer());
+            facing = cameraPos + FacingDirectionOf(EventPlayer());
+
+            CreateEffect(AllPlayers(), Effect.Sphere, Color.Blue, cameraPos, 0.25, EffectRev.VisibleToPositionAndRadius);
+            SmallMessage(EventPlayer(), step);
+
+            step += 1;
+        }
+        else if (step == 1)
+        {
+            angle = Deltin.AngleOfVectors(cameraPos, facing, PositionOf(EventPlayer()));
+            SmallMessage(EventPlayer(), angle);
         }
 	}
+
+rule: "Enter/exit view"
+    Event.Ongoing_EachPlayer
+
+    if (IsButtonHeld(EventPlayer(), Button.Crouch))
+    {
+        if (!inview)
+        {
+            StartCamera(EventPlayer(), cameraPos, facing);
+        }
+        else
+        {
+            StopCamera(EventPlayer());
+        }
+        inview = !inview;
+    }

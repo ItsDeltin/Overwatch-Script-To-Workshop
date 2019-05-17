@@ -8,6 +8,12 @@ namespace OverwatchParser
 {
     public class Log
     {
+        public static object Passer(object obj)
+        {
+            Console.WriteLine(obj);
+            return obj;
+        }
+
         public Log(string name)
         {
             this.name = name;

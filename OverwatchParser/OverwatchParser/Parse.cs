@@ -5,12 +5,8 @@ using System.Text;
 using System.Threading.Tasks;
 using Antlr4;
 using Antlr4.Runtime;
-using Antlr4.Runtime.Misc;
-using Antlr4.Runtime.Tree;
-using Antlr4.Runtime.Atn;
-using Antlr4.Runtime.Dfa;
-using Antlr4.Runtime.Sharpen;
 using OverwatchParser.Elements;
+using System.Reflection;
 
 namespace OverwatchParser.Parse
 {
@@ -80,7 +76,7 @@ namespace OverwatchParser.Parse
             // List all variables
             Log.Write("Variable Guide:");
             foreach (DefinedVar var in DefinedVar.VarCollection)
-                Console.WriteLine($"{var.Name}: {var.Variable}{(var.IsArray ? $"[{var.Index}]" : "")}");
+                Console.WriteLine($"{var.Name}: {(var.IsGlobal ? "global" : "player")} {var.Variable}{(var.IsArray ? $"[{var.Index}]" : "")}");
 
             return compiledRules.ToArray();
         }
@@ -171,6 +167,314 @@ namespace OverwatchParser.Parse
             }
 
             return new Rule(ruleName, ruleEvent, team, player);
+        }
+
+        void ParseConditions()
+        {
+            // Get the if contexts
+            var ifContexts = RuleContext.rule_if();
+            
+            foreach(var @if in ifContexts)
+            {
+                Element parsedIf = ParseExpression(@if.expr());
+                // If the parsed if is a V_Compare, translate it to a condition.
+                // Makes "(value1 == value2) == true" to just "value1 == value2"
+                if (parsedIf is V_Compare)
+                    Conditions.Add(
+                        new Condition(
+                            (Element)parsedIf.ParameterValues[0],
+                            (Operators)parsedIf.ParameterValues[1],
+                            (Element)parsedIf.ParameterValues[2]
+                        )
+                    );
+                // If not, just do "parsedIf == true"
+                else
+                    Conditions.Add(new Condition(
+                        parsedIf, Operators.Equal, new V_True()
+                    ));
+            }
+        }
+
+        void ParseBlock(DeltinScriptParser.BlockContext blockContext)
+        {
+            var statements = blockContext.children
+                .Where(v => v is DeltinScriptParser.StatementContext)
+                .Cast<DeltinScriptParser.StatementContext>().ToArray();
+
+            for (int i = 0; i < statements.Length; i++)
+                ParseStatement(statements[i]);
+        }
+
+        void ParseStatement(DeltinScriptParser.StatementContext statementContext)
+        {
+            #region Method
+            if (statementContext.GetChild(0) is DeltinScriptParser.MethodContext)
+            {
+                Actions.Add(ParseMethod(statementContext.GetChild(0) as DeltinScriptParser.MethodContext));
+                return;
+            }
+            #endregion
+
+            #region Custom Method
+            if (statementContext.GetChild(0) is DeltinScriptParser.Custom_methodContext)
+            {
+                MethodResult result = ParseCustomMethod(statementContext.GetChild(0) as DeltinScriptParser.Custom_methodContext);
+
+                if (result.MethodType != CustomMethodType.Action)
+                    throw new SyntaxErrorException("Expected action method.", statementContext.start.Line, statementContext.start.Column);
+
+                return;
+            }
+            #endregion
+
+            #region Variable set. TODO: add support for += -= *= /=
+
+            if (statementContext.STATEMENT_OPERATION() != null)
+            {
+                DefinedVar variable;
+                Element target;
+                string operation = statementContext.STATEMENT_OPERATION().GetText();
+
+                Element value;
+
+                if (statementContext.expr(1).GetChild(0) is DeltinScriptParser.Custom_methodContext)
+                {
+                    var result = ParseCustomMethod(statementContext.expr(1).GetChild(0) as DeltinScriptParser.Custom_methodContext);
+
+                    if (result.MethodType != CustomMethodType.MultiAction_Value && result.MethodType != CustomMethodType.Value)
+                        throw new SyntaxErrorException("Expected value method.", statementContext.start.Line, statementContext.start.Column);
+
+                    if (result.Elements != null)
+                        Actions.AddRange(result.Elements);
+
+                    value = result.Result;
+                }
+                else
+                    value = ParseExpression(statementContext.expr(1) as DeltinScriptParser.ExprContext);
+
+                if (statementContext.expr(0).ChildCount == 3
+                    && statementContext.expr(0).GetChild(1).GetText() == ".")
+                {
+                    variable = DefinedVar.GetVar(statementContext.expr(0).expr(1).GetChild(0).GetText());
+                    target = ParseExpression(statementContext.expr(0).expr(0));
+                }
+                else
+                {
+                    variable = DefinedVar.GetVar(statementContext.expr(0).GetChild(0).GetText());
+                    target = new V_EventPlayer();
+                }
+
+                switch (operation)
+                {
+                    case "+=":
+                        value = Element.Part<V_Add>(variable.GetVariable(), value);
+                        break;
+
+                    case "-=":
+                        value = Element.Part<V_Subtract>(variable.GetVariable(), value);
+                        break;
+
+                    case "*=":
+                        value = Element.Part<V_Multiply>(variable.GetVariable(), value);
+                        break;
+
+                    case "/=":
+                        value = Element.Part<V_Divide>(variable.GetVariable(), value);
+                        break;
+
+                    case "^=":
+                        value = Element.Part<V_RaiseToPower>(variable.GetVariable(), value);
+                        break;
+
+                    case "%=":
+                        value = Element.Part<V_Modulo>(variable.GetVariable(), value);
+                        break;
+                }
+
+                Actions.Add(variable.SetVariable(value, target));
+                return;
+            }
+
+            #endregion
+
+            #region for
+
+            if (statementContext.GetChild(0) is DeltinScriptParser.ForContext)
+            {
+                /*
+                CreateInitialSkip = true;
+
+                if (SkipCountIndex == -1)
+                    SkipCountIndex = Assign();
+                */
+
+                // The action the for loop starts on.
+                // +1 for the counter reset.
+                int forActionStartIndex = Actions.Count() + 1;
+
+                // The target array in the for statement.
+                Element forArrayElement = ParseExpression(statementContext.@for().expr());
+
+                // Use skipIndex with Get/SetIVarAtIndex to get the bool to determine if the loop is running.
+                int skipIndex = InternalVars.Assign(IsGlobal);
+                // Insert the SkipIf at the start of the rule.
+                Actions.Insert(0,
+                    Element.Part<A_SkipIf>
+                    (
+                        // Condition
+                        InternalVars.GetIVar(IsGlobal, skipIndex),
+                        // Number of actions
+                        new V_Number(forActionStartIndex)
+                    )
+                );
+
+                // Create the for's temporary variable.
+                int forIndex = InternalVars.Assign(IsGlobal);
+                DefinedVar forTempVar = new DefinedVar(
+                    name    : statementContext.@for().PART().GetText(),
+                    isGlobal: IsGlobal,
+                    variable: IsGlobal ? InternalVars.Global : InternalVars.Player,
+                    index   : forIndex,
+                    line    : statementContext.@for().start.Line,
+                    column  : statementContext.@for().start.Column
+                    );
+
+                // Reset the counter.
+                Actions.Add(InternalVars.SetIVar(IsGlobal, forIndex, new V_Number(0)));
+
+                // Parse the for's block.
+                ParseBlock(statementContext.@for().block());
+
+                // Take the variable out of scope.
+                forTempVar.OutOfScope();
+
+                // Add the for's finishing elements
+                //Actions.Add(SetIVarAtIndex(skipIndex, new V_Number(forActionStartIndex))); // Sets how many variables to skip in the next iteraction.
+                Actions.Add(InternalVars.SetIVar(IsGlobal, skipIndex, new V_True())); // Enables the skip.
+
+                Actions.Add(InternalVars.SetIVar( // Indent the index by 1.
+                    IsGlobal,
+                    forIndex,
+                    Element.Part<V_Add>
+                    (
+                        InternalVars.GetIVar(IsGlobal, forIndex), 
+                        new V_Number(1)
+                    )
+                ));
+
+                Actions.Add(Element.Part<A_Wait>(new V_Number(0.06), WaitBehavior.IgnoreCondition)); // Add the Wait() required by the workshop.
+                Actions.Add(Element.Part<A_LoopIf>( // Loop if the for condition is still true.
+                    Element.Part<V_Compare>
+                    (
+                        InternalVars.GetIVar(IsGlobal, forIndex),
+                        Operators.LessThan,
+                        Element.Part<V_CountOf>(forArrayElement)
+                    )
+                ));
+                Actions.Add(InternalVars.SetIVar(IsGlobal, skipIndex, new V_False()));
+                return;
+            }
+
+            #endregion
+
+            #region if
+
+            if (statementContext.GetChild(0) is DeltinScriptParser.IfContext)
+            {
+                /*
+                Syntax after parse:
+
+                If:
+                    Skip If (Not (expr))
+                    (body)
+                    Skip - Only if there is if-else or else statements.
+                Else if:
+                    Skip If (Not (expr))
+                    (body)
+                    Skip - Only if there is more if-else or else statements.
+                Else:
+                    (body)
+
+                */
+
+                // Add dummy action, create after body is created.
+                int skipIfIndex = Actions.Count();
+                Actions.Add(null);
+
+                // Parse the if body.
+                ParseBlock(statementContext.@if().block());
+
+                // Determines if the "Skip" action after the if block will be created.
+                // Only if there is if-else or else statements.
+                bool addIfSkip = statementContext.@if().else_if().Count() > 0 || statementContext.@if().@else() != null;
+
+                // Create the inital "SkipIf" action now that we know how long the if's body is.
+                // Add one to the body length if a Skip action is going to be added.
+                Actions.RemoveAt(skipIfIndex);
+                Actions.Insert(skipIfIndex, Element.Part<A_SkipIf>(Element.Part<V_Not>(ParseExpression(statementContext.@if().expr())), new V_Number(Actions.Count - skipIfIndex + (addIfSkip ? 1 : 0))));
+
+                // Create the "Skip" dummy action.
+                int skipIndex = -1;
+                if (addIfSkip)
+                {
+                    skipIndex = Actions.Count();
+                    Actions.Add(null);
+                }
+
+                // Parse else-ifs
+                var skipIfContext = statementContext.@if().else_if();
+                int[] skipIfData = new int[skipIfContext.Length]; // The index where the else if's "Skip" action is.
+                for (int i = 0; i < skipIfContext.Length; i++)
+                {
+                    // Create the dummy action.
+                    int skipIfElseIndex = Actions.Count();
+                    Actions.Add(null);
+
+                    // Parse the else-if body.
+                    ParseBlock(skipIfContext[i].block());
+
+                    // Determines if the "Skip" action after the else-if block will be created.
+                    // Only if there is additional if-else or else statements.
+                    bool addIfElseSkip = i < skipIfContext.Length - 1 || statementContext.@if().@else() != null;
+
+                    // Create the "Skip If" action.
+                    Actions.RemoveAt(skipIfElseIndex);
+                    Actions.Insert(skipIfElseIndex, Element.Part<A_SkipIf>(Element.Part<V_Not>(ParseExpression(skipIfContext[i].expr())), new V_Number(Actions.Count - skipIfElseIndex + (addIfElseSkip ? 1 : 0))));
+
+                    // Create the "Skip" dummy action.
+                    if (addIfElseSkip)
+                    {
+                        skipIfData[i] = Actions.Count();
+                        Actions.Add(null);
+                    }
+                }
+
+                // Parse else body.
+                if (statementContext.@if().@else() != null)
+                    ParseBlock(statementContext.@if().@else().block());
+
+                // Replace dummy skip with real skip now that we know the length of the if, if-else, and else's bodies.
+                // Replace if's dummy.
+                if (skipIndex != -1)
+                {
+                    Actions.RemoveAt(skipIndex);
+                    Actions.Insert(skipIndex, Element.Part<A_Skip>(new V_Number(Actions.Count - skipIndex)));
+                }
+
+                // Replace else-if's dummy.
+                for (int i = 0; i < skipIfData.Length; i++)
+                    if (skipIfData[i] != 0)
+                    {
+                        Actions.RemoveAt(skipIfData[i]);
+                        Actions.Insert(skipIfData[i], Element.Part<A_Skip>(new V_Number(Actions.Count - skipIfData[i])));
+                    }
+
+                return;
+            }
+
+            #endregion
+
+            throw new Exception($"What's a {statementContext.GetChild(0)} ({statementContext.GetChild(0).GetType()})?");
         }
 
         Element ParseExpression(DeltinScriptParser.ExprContext context)
@@ -370,36 +674,11 @@ namespace OverwatchParser.Parse
             if (methodType == null)
                 throw new SyntaxErrorException($"The method {methodName} does not exist.", methodContext.start.Line, methodContext.start.Column);
 
+            // Parse parameters
             List<object> parameters = new List<object>();
             var parseParameters = methodContext.expr();
             foreach (var param in parseParameters)
-            {
-                object value = null;
-
-                if (param.GetChild(0) is DeltinScriptParser.EnumContext)
-                {
-                    foreach (Type @enum in Constants.EnumParameters)
-                    {
-                        try
-                        {
-                            value = Enum.Parse(@enum, param.GetText().Split('.').ElementAtOrDefault(1));
-                        }
-                        catch (Exception ex) when (ex is ArgumentNullException || ex is ArgumentException || ex is OverflowException) { }
-                    }
-
-                    if (value == null)
-                        throw new SyntaxErrorException($"Could not parse enum parameter {param.GetText()}.", param.start.Line, param.start.Column);
-                }
-
-                else if (value == null)
-                    value = ParseExpression(param);
-
-                else
-                    throw new SyntaxErrorException("Could not parse parameter.", param.start.Line, param.start.Column);
-
-
-                parameters.Add(value);
-            }
+                parameters.Add(ParseParameter(param));
 
             Element method = (Element)Activator.CreateInstance(methodType);
             method.ParameterValues = parameters.ToArray();
@@ -407,284 +686,50 @@ namespace OverwatchParser.Parse
             return method;
         }
 
-        void ParseStatement(DeltinScriptParser.StatementContext statementContext)
+        MethodResult ParseCustomMethod(DeltinScriptParser.Custom_methodContext cmContext)
         {
-            #region Method
-            if (statementContext.GetChild(0) is DeltinScriptParser.MethodContext)
-            {
-                Actions.Add(ParseMethod(statementContext.GetChild(0) as DeltinScriptParser.MethodContext));
-                return;
-            }
-            #endregion
+            string methodName = cmContext.PART().GetText();
 
-            #region Variable set. TODO: add support for += -= *= /=
+            var customMethod = CustomMethods.GetCustomMethod(methodName);
 
-            if (statementContext.STATEMENT_OPERATION() != null)
-            {
-                DefinedVar variable;
-                Element target;
-                string operation = statementContext.STATEMENT_OPERATION().GetText();
-                Element value = ParseExpression(statementContext.expr(1) as DeltinScriptParser.ExprContext);
+            if (customMethod == null)
+                throw new SyntaxErrorException($"The custom method {methodName} does not exist.", cmContext.start.Line, cmContext.start.Column);
 
-                if (statementContext.expr(0).ChildCount == 3
-                    && statementContext.expr(0).GetChild(1).GetText() == ".")
-                {
-                    variable = DefinedVar.GetVar(statementContext.expr(0).expr(1).GetChild(0).GetText());
-                    target = ParseExpression(statementContext.expr(0).expr(0));
-                }
-                else
-                {
-                    variable = DefinedVar.GetVar(statementContext.expr(0).GetChild(0).GetText());
-                    target = new V_EventPlayer();
-                }
+            var data = customMethod.GetCustomAttribute<CustomMethod>();
 
-                switch (operation)
-                {
-                    case "+=":
-                        value = Element.Part<V_Add>(variable.GetVariable(), value);
-                        break;
+            object[] parameters = cmContext.expr().Select(v => ParseParameter(v)).ToArray();
 
-                    case "-=":
-                        value = Element.Part<V_Subtract>(variable.GetVariable(), value);
-                        break;
-
-                    case "*=":
-                        value = Element.Part<V_Multiply>(variable.GetVariable(), value);
-                        break;
-
-                    case "/=":
-                        value = Element.Part<V_Divide>(variable.GetVariable(), value);
-                        break;
-
-                    case "^=":
-                        value = Element.Part<V_RaiseToPower>(variable.GetVariable(), value);
-                        break;
-
-                    case "%=":
-                        value = Element.Part<V_Modulo>(variable.GetVariable(), value);
-                        break;
-                }
-
-                Actions.Add(variable.SetVariable(value, target));
-                return;
-            }
-
-            #endregion
-
-            #region for
-
-            if (statementContext.GetChild(0) is DeltinScriptParser.ForContext)
-            {
-                /*
-                CreateInitialSkip = true;
-
-                if (SkipCountIndex == -1)
-                    SkipCountIndex = Assign();
-                */
-
-                // The action the for loop starts on.
-                // +1 for the counter reset.
-                int forActionStartIndex = Actions.Count() + 1;
-
-                // The target array in the for statement.
-                Element forArrayElement = ParseExpression(statementContext.@for().expr());
-
-                // Use skipIndex with Get/SetIVarAtIndex to get the bool to determine if the loop is running.
-                int skipIndex = InternalVars.Assign(IsGlobal);
-                // Insert the SkipIf at the start of the rule.
-                Actions.Insert(0,
-                    Element.Part<A_SkipIf>
-                    (
-                        // Condition
-                        InternalVars.GetIVar(IsGlobal, skipIndex),
-                        // Number of actions
-                        new V_Number(forActionStartIndex)
-                    )
-                );
-
-                // Create the for's temporary variable.
-                int forIndex = InternalVars.Assign(IsGlobal);
-                DefinedVar forTempVar = new DefinedVar(
-                    name    : statementContext.@for().PART().GetText(),
-                    isGlobal: IsGlobal,
-                    variable: IsGlobal ? InternalVars.Global : InternalVars.Player,
-                    index   : forIndex,
-                    line    : statementContext.@for().start.Line,
-                    column  : statementContext.@for().start.Column
-                    );
-
-                // Reset the counter.
-                Actions.Add(InternalVars.SetIVar(IsGlobal, forIndex, new V_Number(0)));
-
-                // Parse the for's block.
-                ParseBlock(statementContext.@for().block());
-
-                // Take the variable out of scope.
-                forTempVar.OutOfScope();
-
-                // Add the for's finishing elements
-                //Actions.Add(SetIVarAtIndex(skipIndex, new V_Number(forActionStartIndex))); // Sets how many variables to skip in the next iteraction.
-                Actions.Add(InternalVars.SetIVar(IsGlobal, skipIndex, new V_True())); // Enables the skip.
-
-                Actions.Add(InternalVars.SetIVar( // Indent the index by 1.
-                    IsGlobal,
-                    forIndex,
-                    Element.Part<V_Add>
-                    (
-                        InternalVars.GetIVar(IsGlobal, forIndex), 
-                        new V_Number(1)
-                    )
-                ));
-
-                Actions.Add(Element.Part<A_Wait>(new V_Number(0.06), WaitBehavior.IgnoreCondition)); // Add the Wait() required by the workshop.
-                Actions.Add(Element.Part<A_LoopIf>( // Loop if the for condition is still true.
-                    Element.Part<V_Compare>
-                    (
-                        InternalVars.GetIVar(IsGlobal, forIndex),
-                        Operators.LessThan,
-                        Element.Part<V_CountOf>(forArrayElement)
-                    )
-                ));
-                Actions.Add(InternalVars.SetIVar(IsGlobal, skipIndex, new V_False()));
-                return;
-            }
-
-            #endregion
-
-            #region if
-
-            if (statementContext.GetChild(0) is DeltinScriptParser.IfContext)
-            {
-                /*
-                Syntax after parse:
-
-                If:
-                    Skip If (Not (expr))
-                    (body)
-                    Skip - Only if there is if-else or else statements.
-                Else if:
-                    Skip If (Not (expr))
-                    (body)
-                    Skip - Only if there is more if-else or else statements.
-                Else:
-                    (body)
-
-                */
-
-                // Add dummy action, create after body is created.
-                int skipIfIndex = Actions.Count();
-                Actions.Add(null);
-
-                // Parse the if body.
-                ParseBlock(statementContext.@if().block());
-
-                // Determines if the "Skip" action after the if block will be created.
-                // Only if there is if-else or else statements.
-                bool addIfSkip = statementContext.@if().else_if().Count() > 0 || statementContext.@if().@else() != null;
-
-                // Create the inital "SkipIf" action now that we know how long the if's body is.
-                // Add one to the body length if a Skip action is going to be added.
-                Actions.RemoveAt(skipIfIndex);
-                Actions.Insert(skipIfIndex, Element.Part<A_SkipIf>(Element.Part<V_Not>(ParseExpression(statementContext.@if().expr())), new V_Number(Actions.Count - skipIfIndex + (addIfSkip ? 1 : 0))));
-
-                // Create the "Skip" dummy action.
-                int skipIndex = -1;
-                if (addIfSkip)
-                {
-                    skipIndex = Actions.Count();
-                    Actions.Add(null);
-                }
-
-                // Parse else-ifs
-                var skipIfContext = statementContext.@if().else_if();
-                int[] skipIfData = new int[skipIfContext.Length]; // The index where the else if's "Skip" action is.
-                for (int i = 0; i < skipIfContext.Length; i++)
-                {
-                    // Create the dummy action.
-                    int skipIfElseIndex = Actions.Count();
-                    Actions.Add(null);
-
-                    // Parse the else-if body.
-                    ParseBlock(statementContext.@if().block());
-
-                    // Determines if the "Skip" action after the else-if block will be created.
-                    // Only if there is additional if-else or else statements.
-                    bool addIfElseSkip = i < skipIfContext.Length - 1 || statementContext.@if().@else() != null;
-
-                    // Create the "Skip If" action.
-                    Actions.RemoveAt(skipIfElseIndex);
-                    Actions.Insert(skipIfElseIndex, Element.Part<A_SkipIf>(Element.Part<V_Not>(ParseExpression(skipIfContext[i].expr())), new V_Number(Actions.Count - skipIfElseIndex + (addIfElseSkip ? 1 : 0))));
-
-                    // Create the "Skip" dummy action.
-                    if (addIfElseSkip)
-                    {
-                        skipIfData[i] = Actions.Count();
-                        Actions.Add(null);
-                    }
-                }
-
-                // Parse else body.
-                if (statementContext.@if().@else() != null)
-                    ParseBlock(statementContext.@if().@else().block());
-
-                // Replace dummy skip with real skip now that we know the length of the if, if-else, and else's bodies.
-                // Replace if's dummy.
-                if (skipIndex != -1)
-                {
-                    Actions.RemoveAt(skipIndex);
-                    Actions.Insert(skipIndex, Element.Part<A_Skip>(new V_Number(Actions.Count - skipIndex)));
-                }
-
-                // Replace else-if's dummy.
-                for (int i = 0; i < skipIfData.Length; i++)
-                    if (skipIfData[i] != 0)
-                    {
-                        Actions.RemoveAt(skipIfData[i]);
-                        Actions.Insert(skipIfData[i], Element.Part<A_Skip>(new V_Number(Actions.Count - skipIfData[i])));
-                    }
-
-                return;
-            }
-
-            #endregion
-
-            throw new Exception($"What's a {statementContext.GetChild(0)} ({statementContext.GetChild(0).GetType()})?");
+            MethodResult result = (MethodResult)customMethod.Invoke(null, new object[] { InternalVars, IsGlobal, parameters });
+            return result;
         }
 
-        void ParseBlock(DeltinScriptParser.BlockContext blockContext)
+        object ParseParameter(DeltinScriptParser.ExprContext context)
         {
-            var statements = blockContext.children
-                .Where(v => v is DeltinScriptParser.StatementContext)
-                .Cast<DeltinScriptParser.StatementContext>().ToArray();
+            object value = null;
 
-            for (int i = 0; i < statements.Length; i++)
-                ParseStatement(statements[i]);
-        }
-
-        void ParseConditions()
-        {
-            // Get the if contexts
-            var ifContexts = RuleContext.rule_if();
-            
-            foreach(var @if in ifContexts)
+            if (context.GetChild(0) is DeltinScriptParser.EnumContext)
             {
-                Element parsedIf = ParseExpression(@if.expr());
-                // If the parsed if is a V_Compare, translate it to a condition.
-                // Makes "(value1 == value2) == true" to just "value1 == value2"
-                if (parsedIf is V_Compare)
-                    Conditions.Add(
-                        new Condition(
-                            (Element)parsedIf.ParameterValues[0],
-                            (Operators)parsedIf.ParameterValues[1],
-                            (Element)parsedIf.ParameterValues[2]
-                        )
-                    );
-                // If not, just do "parsedIf == true"
-                else
-                    Conditions.Add(new Condition(
-                        parsedIf, Operators.Equal, new V_True()
-                    ));
+                foreach (Type @enum in Constants.EnumParameters)
+                {
+                    try
+                    {
+                        value = Enum.Parse(@enum, context.GetText().Split('.').ElementAtOrDefault(1));
+                    }
+                    catch (Exception ex) when (ex is ArgumentNullException || ex is ArgumentException || ex is OverflowException) { }
+                }
+
+                if (value == null)
+                    throw new SyntaxErrorException($"Could not parse enum parameter {context.GetText()}.", context.start.Line, context.start.Column);
             }
+
+            else
+                value = ParseExpression(context);
+
+            if (value == null)
+                throw new SyntaxErrorException("Could not parse parameter.", context.start.Line, context.start.Column);
+
+
+            return value;
         }
     }
 
@@ -759,6 +804,7 @@ namespace OverwatchParser.Parse
             IsGlobal = isGlobal;
             Variable = variable;
             Index = index;
+            IsArray = index != -1;
         }
         public Var()
         {}
