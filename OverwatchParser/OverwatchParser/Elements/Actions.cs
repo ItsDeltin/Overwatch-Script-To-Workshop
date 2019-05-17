@@ -108,6 +108,10 @@ namespace OverwatchParser.Elements
     [Parameter("Number Of Actions", ValueType.Number, typeof(V_Number))]
     public class A_SkipIf : Element {}
 
+    [ElementData("Skip", 0)]
+    [Parameter("Number Of Actions", ValueType.Number, typeof(V_Number))]
+    public class A_Skip : Element {}
+
     [ElementData("Small Message", 0)]
     [Parameter("Visible To", ValueType.Player, typeof(V_AllPlayers))]
     [Parameter("Header", ValueType.String, typeof(V_String))]

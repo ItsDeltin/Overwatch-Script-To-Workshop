@@ -427,6 +427,8 @@ namespace OverwatchParser.Parse
             #endregion
 
             #region Variable set. TODO: add support for += -= *= /=
+
+#warning TODO: add support for += -= *= /=
             if (statementContext.STATEMENT_OPERATION() != null)
             {
                 Var variable;
@@ -451,9 +453,11 @@ namespace OverwatchParser.Parse
                 Actions.Add(variable.SetVariable(value, target));
                 return;
             }
+
             #endregion
 
             #region for
+
             if (statementContext.GetChild(0) is DeltinScriptParser.ForContext)
             {
                 /*
@@ -463,11 +467,16 @@ namespace OverwatchParser.Parse
                     SkipCountIndex = Assign();
                 */
 
+                // The action the for loop starts on.
+                // +1 for the counter reset.
                 int forActionStartIndex = Actions.Count() + 1;
 
+                // The target array in the for statement.
                 Element forArrayElement = ParseExpression(statementContext.@for().expr());
 
+                // Use skipIndex with Get/SetIVarAtIndex to get the bool to determine if the loop is running.
                 int skipIndex = Assign();
+                // Insert the SkipIf at the start of the rule.
                 Actions.Insert(0,
                     Element.Part<A_SkipIf>
                     (
@@ -524,9 +533,107 @@ namespace OverwatchParser.Parse
                 Actions.Add(SetIVarAtIndex(skipIndex, new V_False()));
                 return;
             }
+
             #endregion
 
-            throw new Exception($"What's a {statementContext}?");
+            #region if
+
+            if (statementContext.GetChild(0) is DeltinScriptParser.IfContext)
+            {
+                /*
+                Syntax after parse:
+
+                If:
+                    Skip If (Not (expr))
+                    (body)
+                    Skip - Only if there is if-else or else statements.
+                Else if:
+                    Skip If (Not (expr))
+                    (body)
+                    Skip - Only if there is more if-else or else statements.
+                Else:
+                    (body)
+
+                */
+
+                // Add dummy action, create after body is created.
+                int skipIfIndex = Actions.Count();
+                Actions.Add(null);
+
+                // Parse the if body.
+                ParseBlock(statementContext.@if().block());
+
+                // Determines if the "Skip" action after the if block will be created.
+                // Only if there is if-else or else statements.
+                bool addIfSkip = statementContext.@if().else_if().Count() > 0 || statementContext.@if().@else() != null;
+
+                // Create the inital "SkipIf" action now that we know how long the if's body is.
+                // Add one to the body length if a Skip action is going to be added.
+                Actions.RemoveAt(skipIfIndex);
+                Actions.Insert(skipIfIndex, Element.Part<A_SkipIf>(Element.Part<V_Not>(ParseExpression(statementContext.@if().expr())), new V_Number(Actions.Count - skipIfIndex + (addIfSkip ? 1 : 0))));
+
+                // Create the "Skip" dummy action.
+                int skipIndex = -1;
+                if (addIfSkip)
+                {
+                    skipIndex = Actions.Count();
+                    Actions.Add(null);
+                }
+
+                // Parse else-ifs
+                var skipIfContext = statementContext.@if().else_if();
+                int[] skipIfData = new int[skipIfContext.Length]; // The index where the else if's "Skip" action is.
+                for (int i = 0; i < skipIfContext.Length; i++)
+                {
+                    // Create the dummy action.
+                    int skipIfElseIndex = Actions.Count();
+                    Actions.Add(null);
+
+                    // Parse the else-if body.
+                    ParseBlock(statementContext.@if().block());
+
+                    // Determines if the "Skip" action after the else-if block will be created.
+                    // Only if there is additional if-else or else statements.
+                    bool addIfElseSkip = i < skipIfContext.Length - 1 || statementContext.@if().@else() != null;
+
+                    // Create the "Skip If" action.
+                    Actions.RemoveAt(skipIfElseIndex);
+                    Actions.Insert(skipIfElseIndex, Element.Part<A_SkipIf>(Element.Part<V_Not>(ParseExpression(skipIfContext[i].expr())), new V_Number(Actions.Count - skipIfElseIndex + (addIfElseSkip ? 1 : 0))));
+
+                    // Create the "Skip" dummy action.
+                    if (addIfElseSkip)
+                    {
+                        skipIfData[i] = Actions.Count();
+                        Actions.Add(null);
+                    }
+                }
+
+                // Parse else body.
+                if (statementContext.@if().@else() != null)
+                    ParseBlock(statementContext.@if().@else().block());
+
+                // Replace dummy skip with real skip now that we know the length of the if, if-else, and else's bodies.
+                // Replace if's dummy.
+                if (skipIndex != -1)
+                {
+                    Actions.RemoveAt(skipIndex);
+                    Actions.Insert(skipIndex, Element.Part<A_Skip>(new V_Number(Actions.Count - skipIndex)));
+                }
+
+                // Replace else-if's dummy.
+                for (int i = 0; i < skipIfData.Length; i++)
+                    if (skipIfData[i] != 0)
+                    {
+                        Actions.RemoveAt(skipIfData[i]);
+                        Actions.Insert(skipIfData[i], Element.Part<A_Skip>(new V_Number(Actions.Count - skipIfData[i])));
+                    }
+
+                return;
+            }
+
+            #endregion
+
+            throw new Exception($"What's a {statementContext.GetChild(0)} ({statementContext.GetChild(0).GetType()})?");
         }
 
         void ParseBlock(DeltinScriptParser.BlockContext blockContext)
