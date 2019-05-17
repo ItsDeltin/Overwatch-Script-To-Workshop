@@ -207,6 +207,9 @@ namespace OverwatchParser.Parse
                     case "-":
                         return Element.Part<V_Subtract>(left, right);
 
+                    case "%":
+                        return Element.Part<V_Modulo>(left, right);
+
                     #endregion
 
                     #region Bool compare
@@ -433,9 +436,7 @@ namespace OverwatchParser.Parse
             {
                 Var variable;
                 Element target;
-
                 string operation = statementContext.STATEMENT_OPERATION().GetText();
-
                 Element value = ParseExpression(statementContext.expr(1) as DeltinScriptParser.ExprContext);
 
                 if (statementContext.expr(0).ChildCount == 3
@@ -448,6 +449,33 @@ namespace OverwatchParser.Parse
                 {
                     variable = Var.GetVar(statementContext.expr(0).GetChild(0).GetText());
                     target = new V_EventPlayer();
+                }
+
+                switch (operation)
+                {
+                    case "+=":
+                        value = Element.Part<V_Add>(variable.GetVariable(), value);
+                        break;
+
+                    case "-=":
+                        value = Element.Part<V_Subtract>(variable.GetVariable(), value);
+                        break;
+
+                    case "*=":
+                        value = Element.Part<V_Multiply>(variable.GetVariable(), value);
+                        break;
+
+                    case "/=":
+                        value = Element.Part<V_Divide>(variable.GetVariable(), value);
+                        break;
+
+                    case "^=":
+                        value = Element.Part<V_RaiseToPower>(variable.GetVariable(), value);
+                        break;
+
+                    case "%=":
+                        value = Element.Part<V_Modulo>(variable.GetVariable(), value);
+                        break;
                 }
 
                 Actions.Add(variable.SetVariable(value, target));

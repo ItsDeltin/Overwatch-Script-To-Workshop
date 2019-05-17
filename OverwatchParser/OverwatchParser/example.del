@@ -13,19 +13,5 @@ rule: "Game start: setup",
         teleportTo = Vector(5.531, 8.183, -87.304);
         Teleport(AllPlayers(), teleportTo);
 
-        if (IsOnGround())
-        {
-            BigMessage(EventPlayer(), "down");
-        }
-        else
-        {
-            BigMessage(EventPlayer(), "danger");
-        }
-
-        // Print every player's name as a SmallMessage.
-        for (player in AllPlayers())
-        {
-            SmallMessage(AllPlayers(), AllPlayers()[player]);
-            Wait(2);
-        }
+        teleportTo *= 2;
 	}

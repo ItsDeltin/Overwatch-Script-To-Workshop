@@ -33,6 +33,7 @@ expr
 	| expr '^' expr
 	| expr '*' expr
 	| expr '/' expr
+	| expr '%' expr
 	| expr '+' expr
 	| expr '-' expr 
 	| not expr
@@ -140,7 +141,7 @@ PLAYER_DIED               : 'Event.PlayerDied'              ;
 */
 
 COMPARE : '<' | '<=' | '==' | '>=' | '>' | '!=';
-STATEMENT_OPERATION : '=' | '^=' | '*=' | '/=' | '+=' | '-=';
+STATEMENT_OPERATION : '=' | '^=' | '*=' | '/=' | '+=' | '-=' | '%=';
 BOOL : '&' | '|';
 NOT : '!';
 

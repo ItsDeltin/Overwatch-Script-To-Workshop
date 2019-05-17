@@ -153,7 +153,7 @@ namespace OverwatchParser.Elements
         {
             this.value = value;
         }
-        public V_Number() : this(0) { }
+        public V_Number() : this(0) {}
 
         double value;
 
@@ -178,11 +178,21 @@ namespace OverwatchParser.Elements
             InputHandler.Input.KeyPress(Keys.Enter);
             Thread.Sleep(InputHandler.SmallStep);
         }
+
+        protected override string Info()
+        {
+            return $"{ElementData.ElementName} {value}";
+        }
     }
 
     [ElementData("Number Of Players", ValueType.Number, 2)]
     [Parameter("Team", ValueType.Team, typeof(V_Team))]
     public class V_NumberOfPlayers : Element {}
+
+    [ElementData("Modulo", ValueType.Number, 0)]
+    [Parameter("Value", ValueType.Number, typeof(V_Number))]
+    [Parameter("Value", ValueType.Number, typeof(V_Number))]
+    public class V_Modulo : Element {}
 
     [ElementData("Or", ValueType.Boolean)]
     [Parameter("Value", ValueType.Boolean, typeof(V_True))]
@@ -237,6 +247,11 @@ namespace OverwatchParser.Elements
             // Select the string
             InputHandler.Input.KeyPress(Keys.Space);
             Thread.Sleep(InputHandler.BigStep);
+        }
+
+        protected override string Info()
+        {
+            return $"{ElementData.ElementName} {Constants.Strings[textID]}";
         }
 
         public static Element BuildString(params Element[] strings)

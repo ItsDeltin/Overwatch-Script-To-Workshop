@@ -165,7 +165,7 @@ namespace OverwatchParser.Elements
                 ParameterValues = new Element[0];
             Array.Resize(ref ParameterValues, parameterData.Length);
 
-            Console.WriteLine($"{new string(' ', depth * 4)}{ElementData.ElementName}");
+            Console.WriteLine($"{new string(' ', depth * 4)}{Info()}");
 
             // Select the option
             if (!isAlreadySet)
@@ -246,5 +246,9 @@ namespace OverwatchParser.Elements
 
         protected virtual void BeforeParameters() { } // Executed before parameters are executed
         protected virtual void AfterParameters() { } // Executed after parameters are executed
+        protected virtual string Info()
+        {
+            return ElementData.ElementName;
+        }
     }
 }

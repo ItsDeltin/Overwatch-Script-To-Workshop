@@ -79,6 +79,19 @@ namespace OverwatchParser.Elements
     [Parameter("Condition", ValueType.Boolean, typeof(V_Compare))]
     public class A_LoopIf : Element {}
 
+    [ElementData("Modify Global Variable", 0)]
+    [Parameter("Variable", typeof(Variable))]
+    [Parameter("Operation", typeof(Operation))]
+    [Parameter("Value", ValueType.Any, typeof(V_Number))]
+    public class A_ModifyGlobalVariable : Element {}
+
+    [ElementData("Modify Player Variable", 0)]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [Parameter("Variable", typeof(Variable))]
+    [Parameter("Operation", typeof(Operation))]
+    [Parameter("Value", ValueType.Any, typeof(V_Number))]
+    public class A_ModifyPlayerVariable : Element {}
+
     [ElementData("Set Global Variable", 0)]
     [Parameter("Variable", typeof(Variable))]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]

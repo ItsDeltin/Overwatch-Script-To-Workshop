@@ -298,6 +298,22 @@ namespace OverwatchParser.Elements
     }
 
     [EnumParameter]
+    public enum Operation
+    {
+        Add,
+        Subtract,
+        Multiply,
+        Divide,
+        Modulo,
+        RaiseToPower,
+        Min,
+        Max,
+        AppendToArray,
+        RemoveFromArrayByValue,
+        RemoveFromArrayByIndex
+    }
+
+    [EnumParameter]
     public enum Relative
     {
         ToWorld,
