@@ -43,7 +43,8 @@ expr
 
 enum     : (BUTTON) SEPERATOR PART ;
 variable : PART ;
-method   : PART LEFT_PAREN expr? (',' expr)* RIGHT_PAREN  ;
+custom_method : DELTIN SEPERATOR PART LEFT_PAREN expr? (',' expr)* RIGHT_PAREN ;
+method   : PART LEFT_PAREN expr? (',' expr)* RIGHT_PAREN ;
 
 statement :
 	( method STATEMENT_END
@@ -126,6 +127,7 @@ GLOBAL    : 'globalvar' ;
 TRUE      : 'true'      ;
 FALSE     : 'false'     ;
 NULL      : 'null'      ;
+DELTIN    : 'Deltin'    ;
 
 // Enum
 BUTTON : 'Button' ;

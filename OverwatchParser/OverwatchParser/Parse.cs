@@ -57,7 +57,7 @@ namespace OverwatchParser.Parse
 
             for (int i = 0; i < vardefine.Length; i++)
                 // The new var is stored in Var.VarCollection
-                new Var(vardefine[i], iv);
+                new DefinedVar(vardefine[i], iv);
 
             // Parse the rules.
             var rules = context.ow_rule();
@@ -79,7 +79,7 @@ namespace OverwatchParser.Parse
 
             // List all variables
             Log.Write("Variable Guide:");
-            foreach (Var var in Var.VarCollection)
+            foreach (DefinedVar var in DefinedVar.VarCollection)
                 Console.WriteLine($"{var.Name}: {var.Variable}{(var.IsArray ? $"[{var.Index}]" : "")}");
 
             return compiledRules.ToArray();
@@ -330,7 +330,7 @@ namespace OverwatchParser.Parse
             #region Variable
 
             if (context.GetChild(0) is DeltinScriptParser.VariableContext)
-                return Var.GetVar((context.GetChild(0) as DeltinScriptParser.VariableContext).PART().GetText()).GetVariable(new V_EventPlayer());
+                return DefinedVar.GetVar((context.GetChild(0) as DeltinScriptParser.VariableContext).PART().GetText()).GetVariable(new V_EventPlayer());
 
             #endregion
 
@@ -350,7 +350,7 @@ namespace OverwatchParser.Parse
                 Element left = ParseExpression(context.GetChild(0) as DeltinScriptParser.ExprContext);
                 string variableName = context.GetChild(2).GetChild(0).GetText();
 
-                Var var = Var.GetVar(variableName);
+                DefinedVar var = DefinedVar.GetVar(variableName);
                 if (var == null)
                     throw new SyntaxErrorException($"Variable {variableName} does not exist.", context.start.Line, context.start.Column);
 
@@ -376,18 +376,6 @@ namespace OverwatchParser.Parse
             {
                 object value = null;
 
-                /*
-                if (!int.TryParse(param.GetText(), out _))
-                    foreach (Type @enum in Constants.EnumParameters)
-                    {
-                        try
-                        {
-                            value = Enum.Parse(@enum, param.GetText());
-                        }
-                        catch (Exception ex) when (ex is ArgumentNullException || ex is ArgumentException || ex is OverflowException) {}
-                    }
-                */
-
                 if (param.GetChild(0) is DeltinScriptParser.EnumContext)
                 {
                     foreach (Type @enum in Constants.EnumParameters)
@@ -400,7 +388,7 @@ namespace OverwatchParser.Parse
                     }
 
                     if (value == null)
-                        throw new SyntaxErrorException($"Could not parse parameter {param.GetText()}.", param.start.Line, param.start.Column);
+                        throw new SyntaxErrorException($"Could not parse enum parameter {param.GetText()}.", param.start.Line, param.start.Column);
                 }
 
                 else if (value == null)
@@ -431,10 +419,9 @@ namespace OverwatchParser.Parse
 
             #region Variable set. TODO: add support for += -= *= /=
 
-#warning TODO: add support for += -= *= /=
             if (statementContext.STATEMENT_OPERATION() != null)
             {
-                Var variable;
+                DefinedVar variable;
                 Element target;
                 string operation = statementContext.STATEMENT_OPERATION().GetText();
                 Element value = ParseExpression(statementContext.expr(1) as DeltinScriptParser.ExprContext);
@@ -442,12 +429,12 @@ namespace OverwatchParser.Parse
                 if (statementContext.expr(0).ChildCount == 3
                     && statementContext.expr(0).GetChild(1).GetText() == ".")
                 {
-                    variable = Var.GetVar(statementContext.expr(0).expr(1).GetChild(0).GetText());
+                    variable = DefinedVar.GetVar(statementContext.expr(0).expr(1).GetChild(0).GetText());
                     target = ParseExpression(statementContext.expr(0).expr(0));
                 }
                 else
                 {
-                    variable = Var.GetVar(statementContext.expr(0).GetChild(0).GetText());
+                    variable = DefinedVar.GetVar(statementContext.expr(0).GetChild(0).GetText());
                     target = new V_EventPlayer();
                 }
 
@@ -503,21 +490,21 @@ namespace OverwatchParser.Parse
                 Element forArrayElement = ParseExpression(statementContext.@for().expr());
 
                 // Use skipIndex with Get/SetIVarAtIndex to get the bool to determine if the loop is running.
-                int skipIndex = Assign();
+                int skipIndex = InternalVars.Assign(IsGlobal);
                 // Insert the SkipIf at the start of the rule.
                 Actions.Insert(0,
                     Element.Part<A_SkipIf>
                     (
                         // Condition
-                        GetIVarAtIndex(skipIndex),
+                        InternalVars.GetIVar(IsGlobal, skipIndex),
                         // Number of actions
                         new V_Number(forActionStartIndex)
                     )
                 );
 
                 // Create the for's temporary variable.
-                int forIndex = Assign();
-                Var forTempVar = new Var(
+                int forIndex = InternalVars.Assign(IsGlobal);
+                DefinedVar forTempVar = new DefinedVar(
                     name    : statementContext.@for().PART().GetText(),
                     isGlobal: IsGlobal,
                     variable: IsGlobal ? InternalVars.Global : InternalVars.Player,
@@ -527,7 +514,7 @@ namespace OverwatchParser.Parse
                     );
 
                 // Reset the counter.
-                Actions.Add(SetIVarAtIndex(forIndex, new V_Number(0)));
+                Actions.Add(InternalVars.SetIVar(IsGlobal, forIndex, new V_Number(0)));
 
                 // Parse the for's block.
                 ParseBlock(statementContext.@for().block());
@@ -537,14 +524,14 @@ namespace OverwatchParser.Parse
 
                 // Add the for's finishing elements
                 //Actions.Add(SetIVarAtIndex(skipIndex, new V_Number(forActionStartIndex))); // Sets how many variables to skip in the next iteraction.
-                Actions.Add(SetIVarAtIndex(skipIndex, new V_True())); // Enables the skip.
+                Actions.Add(InternalVars.SetIVar(IsGlobal, skipIndex, new V_True())); // Enables the skip.
 
-#warning Maybe change to use the Modify action when it is added to the action list?
-                Actions.Add(SetIVarAtIndex( // Indent the index by 1.
-                    forIndex, 
+                Actions.Add(InternalVars.SetIVar( // Indent the index by 1.
+                    IsGlobal,
+                    forIndex,
                     Element.Part<V_Add>
                     (
-                        GetIVarAtIndex(forIndex), 
+                        InternalVars.GetIVar(IsGlobal, forIndex), 
                         new V_Number(1)
                     )
                 ));
@@ -553,12 +540,12 @@ namespace OverwatchParser.Parse
                 Actions.Add(Element.Part<A_LoopIf>( // Loop if the for condition is still true.
                     Element.Part<V_Compare>
                     (
-                        GetIVarAtIndex(forIndex),
+                        InternalVars.GetIVar(IsGlobal, forIndex),
                         Operators.LessThan,
                         Element.Part<V_CountOf>(forArrayElement)
                     )
                 ));
-                Actions.Add(SetIVarAtIndex(skipIndex, new V_False()));
+                Actions.Add(InternalVars.SetIVar(IsGlobal, skipIndex, new V_False()));
                 return;
             }
 
@@ -674,32 +661,6 @@ namespace OverwatchParser.Parse
                 ParseStatement(statements[i]);
         }
 
-        Element SetIVarAtIndex(int index, Element value)
-        {
-            if (IsGlobal)
-                return Element.Part<A_SetGlobalVariableAtIndex>(InternalVars.Global, new V_Number(index), value);
-            else
-                return Element.Part<A_SetPlayerVariableAtIndex>(new V_EventPlayer(), InternalVars.Player, new V_Number(index), value);
-        }
-        Element GetIVarAtIndex(int index)
-        {
-            if (IsGlobal)
-                return Element.Part<V_ValueInArray>(Element.Part<V_GlobalVariable>(InternalVars.Global), new V_Number(index));
-            else
-                return Element.Part<V_ValueInArray>(Element.Part<V_PlayerVariable>(new V_EventPlayer(), InternalVars.Player), new V_Number(index));
-        }
-
-        private int Assign()
-        {
-            int index;
-            if (IsGlobal)
-                index = InternalVars.AssignGlobalIndex();
-            else
-                index = InternalVars.AssignPlayerIndex();
-
-            return index;
-        }
-
         void ParseConditions()
         {
             // Get the if contexts
@@ -740,110 +701,67 @@ namespace OverwatchParser.Parse
         public int NextFreeGlobalIndex { get; private set; }
         public int NextFreePlayerIndex { get; private set; }
 
-        public int AssignGlobalIndex()
+        public int Assign(bool isGlobal)
         {
-            int index = NextFreeGlobalIndex;
-            NextFreeGlobalIndex++;
-            return index;
+            if (isGlobal)
+            {
+                int index = NextFreeGlobalIndex;
+                NextFreeGlobalIndex++;
+                return index;
+            }
+            else
+            {
+                int index = NextFreePlayerIndex;
+                NextFreePlayerIndex++;
+                return index;
+            }
         }
 
-        public int AssignPlayerIndex()
+        public Variable GetUsingVar(bool isGlobal)
         {
-            int index = NextFreePlayerIndex;
-            NextFreePlayerIndex++;
-            return index;
+            if (isGlobal)
+                return Global;
+            else
+                return Player;
+        }
+
+        public Var AssignVar(bool isGlobal)
+        {
+            return new Var(isGlobal, GetUsingVar(isGlobal), Assign(isGlobal));
+        }
+
+#warning Remove this later and anything else using it (for), replace it with the refactored Var class.
+        public Element SetIVar(bool isGlobal, int index, Element value)
+        {
+            if (isGlobal)
+                return Element.Part<A_SetGlobalVariableAtIndex>(Global, new V_Number(index), value);
+            else
+                return Element.Part<A_SetPlayerVariableAtIndex>(new V_EventPlayer(), Player, new V_Number(index), value);
+        }
+        public Element GetIVar(bool isGlobal, int index)
+        {
+            if (isGlobal)
+                return Element.Part<V_ValueInArray>(Element.Part<V_GlobalVariable>(Global), new V_Number(index));
+            else
+                return Element.Part<V_ValueInArray>(Element.Part<V_PlayerVariable>(new V_EventPlayer(), Player), new V_Number(index));
         }
     }
 
     class Var
     {
-        public static List<Var> VarCollection { get; private set; } = new List<Var>();
+        public bool IsGlobal { get; protected set; }
+        public bool IsArray { get; protected set; }
+        public Variable Variable { get; protected set; }
+        public int Index { get; protected set; }
 
-        public static bool IsVar(string name)
+        public Var(bool isGlobal, Variable variable, int index)
         {
-            return VarCollection.Any(v => v.Name == name);
-        }
-
-        public static Var GetVar(string name)
-        {
-            return VarCollection.FirstOrDefault(v => v.Name == name);
-        }
-
-        public bool IsGlobal { get; private set; }
-        public bool IsArray { get; private set; }
-        public string Name { get; private set; }
-        public Variable Variable { get; private set; }
-        public int Index { get; private set; }
-
-        public Var(DeltinScriptParser.VardefineContext vardefine, 
-            InternalVars iv)
-        {
-            IsGlobal = vardefine.GLOBAL() != null;
-            string name = vardefine.PART(0).GetText();
-
-            if (IsVar(name))
-                throw new SyntaxErrorException($"The variable {name} was already defined.", vardefine.start.Line, vardefine.start.Column);
-
-            Name = name;
-
-            // Both can be null, or only one can have a value.
-            string useVar = vardefine.PART(1)?.GetText();
-            var useNumber = vardefine.number();
-
-            // Auto assign
-            if (useNumber == null && useVar == null)
-            {
-                if (IsGlobal)
-                {
-                    Variable = iv.Global;
-                    Index = iv.AssignGlobalIndex();
-                }
-                else
-                {
-                    Variable = iv.Player;
-                    Index = iv.AssignPlayerIndex();
-                }
-                IsArray = true;
-            }
-            else
-            {
-                if (useNumber != null)
-                {
-                    IsArray = true;
-                    string indexString = useNumber.GetText();
-                    if (!int.TryParse(indexString, out int index))
-                        throw new SyntaxErrorException("Expected number.", useNumber.start.Line, useNumber.start.Column);
-                    Index = index;
-                }
-
-                if (useVar != null)
-                {
-                    if (!Enum.TryParse(useVar, out Variable var))
-                        throw new SyntaxErrorException("Expected variable.", vardefine.start.Line, vardefine.start.Column);
-                    Variable = var;
-                }
-            }
-
-            VarCollection.Add(this);
-        }
-
-        public Var(string name, bool isGlobal, Variable variable, int index, int line, int column)
-        {
-            if (IsVar(name))
-                throw new SyntaxErrorException($"The variable {name} was already defined.", line, column);
-
-            Name = name;
             IsGlobal = isGlobal;
             Variable = variable;
-
-            if (index != -1)
-            {
-                IsArray = true;
-                Index = index;
-            }
-
-            VarCollection.Add(this);
+            Index = index;
         }
+        public Var()
+        {}
 
         public Element GetVariable(Element targetPlayer = null)
         {
@@ -875,7 +793,7 @@ namespace OverwatchParser.Parse
                 element.ParameterValues = parameterValues.ToArray();
             }
 
-            
+
             return element;
         }
 
@@ -903,6 +821,90 @@ namespace OverwatchParser.Parse
 
             return element;
 
+        }
+    }
+
+    class DefinedVar : Var
+    {
+        public string Name { get; protected set; }
+
+        public static List<DefinedVar> VarCollection { get; private set; } = new List<DefinedVar>();
+
+        public static bool IsVar(string name)
+        {
+            return VarCollection.Any(v => v.Name == name);
+        }
+
+        public static DefinedVar GetVar(string name)
+        {
+            return VarCollection.FirstOrDefault(v => v.Name == name);
+        }
+
+        public DefinedVar(DeltinScriptParser.VardefineContext vardefine, 
+            InternalVars iv)
+        {
+            IsGlobal = vardefine.GLOBAL() != null;
+            string name = vardefine.PART(0).GetText();
+
+            if (IsVar(name))
+                throw new SyntaxErrorException($"The variable {name} was already defined.", vardefine.start.Line, vardefine.start.Column);
+
+            Name = name;
+
+            // Both can be null, or only one can have a value.
+            string useVar = vardefine.PART(1)?.GetText();
+            var useNumber = vardefine.number();
+
+            // Auto assign
+            if (useNumber == null && useVar == null)
+            {
+                Index = iv.Assign(IsGlobal);
+
+                if (IsGlobal)
+                    Variable = iv.Global;
+                else
+                    Variable = iv.Player;
+
+                IsArray = true;
+            }
+            else
+            {
+                if (useNumber != null)
+                {
+                    IsArray = true;
+                    string indexString = useNumber.GetText();
+                    if (!int.TryParse(indexString, out int index))
+                        throw new SyntaxErrorException("Expected number.", useNumber.start.Line, useNumber.start.Column);
+                    Index = index;
+                }
+
+                if (useVar != null)
+                {
+                    if (!Enum.TryParse(useVar, out Variable var))
+                        throw new SyntaxErrorException("Expected variable.", vardefine.start.Line, vardefine.start.Column);
+                    Variable = var;
+                }
+            }
+
+            VarCollection.Add(this);
+        }
+
+        public DefinedVar(string name, bool isGlobal, Variable variable, int index, int line, int column)
+        {
+            if (IsVar(name))
+                throw new SyntaxErrorException($"The variable {name} was already defined.", line, column);
+
+            Name = name;
+            IsGlobal = isGlobal;
+            Variable = variable;
+
+            if (index != -1)
+            {
+                IsArray = true;
+                Index = index;
+            }
+
+            VarCollection.Add(this);
         }
 
         public void OutOfScope()

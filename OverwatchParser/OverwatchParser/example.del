@@ -14,4 +14,10 @@ rule: "Game start: setup",
         Teleport(AllPlayers(), teleportTo);
 
         teleportTo *= 2;
+
+        for (player in AllPlayers())
+        {
+            SmallMessage(AllPlayers(), AllPlayers()[player]);
+            Wait(2);
+        }
 	}

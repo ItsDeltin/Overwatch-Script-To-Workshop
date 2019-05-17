@@ -102,6 +102,11 @@ namespace OverwatchParser.Elements
     [Parameter("Array", ValueType.Any, typeof(V_GlobalVariable))]
     public class V_CountOf : Element {}
 
+    [ElementData("Distance Between", ValueType.Number, 0)]
+    [Parameter("Start Pos", ValueType.VectorAndPlayer, typeof(V_Vector))]
+    [Parameter("End Pos", ValueType.VectorAndPlayer, typeof(V_Vector))]
+    public class V_DistanceBetween : Element {}
+
     [ElementData("Divide", ValueType.Any, 0)]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
@@ -207,7 +212,11 @@ namespace OverwatchParser.Elements
     [ElementData("Raise To Power", ValueType.Number)]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
-    public class V_RaiseToPower : Element { }
+    public class V_RaiseToPower : Element {}
+
+    [ElementData("Square Root", ValueType.Number)]
+    [Parameter("Value", ValueType.Number, typeof(V_Number))]
+    public class V_SquareRoot : Element {}
 
     [ElementData("String", ValueType.String, 1)]
     [Parameter("{0}", ValueType.Any, typeof(V_Null))]
@@ -344,4 +353,16 @@ namespace OverwatchParser.Elements
     [Parameter("Y", ValueType.Number, typeof(V_Number))]
     [Parameter("Z", ValueType.Number, typeof(V_Number))]
     public class V_Vector : Element {}
+
+    [ElementData("X Component Of", ValueType.Number, 0)]
+    [Parameter("Value", ValueType.VectorAndPlayer, typeof(V_Vector))]
+    public class V_XComponentOf : Element {}
+
+    [ElementData("Y Component Of", ValueType.Number, 0)]
+    [Parameter("Value", ValueType.VectorAndPlayer, typeof(V_Vector))]
+    public class V_YComponentOf : Element {}
+
+    [ElementData("Z Component Of", ValueType.Number, 0)]
+    [Parameter("Value", ValueType.VectorAndPlayer, typeof(V_Vector))]
+    public class V_ZComponentOf : Element {}
 }

@@ -60,6 +60,7 @@
     </Compile>
     <Compile Include="Elements\Actions.cs" />
     <Compile Include="Elements\Condition.cs" />
+    <Compile Include="Elements\CustomMethods.cs" />
     <Compile Include="Elements\Elements.cs" />
     <Compile Include="Elements\ConstantsAndEnums.cs" />
     <Compile Include="Exceptions.cs" />
