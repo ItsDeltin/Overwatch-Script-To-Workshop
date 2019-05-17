@@ -31,6 +31,9 @@ namespace OverwatchParser.Parse
 
             // Get context
             DeltinScriptParser.RulesetContext context = speakParser.ruleset();
+
+            Log.Write(context.ToStringTree());
+
             Visitor visitor = new Visitor();
             visitor.Visit(context);
 
@@ -370,6 +373,7 @@ namespace OverwatchParser.Parse
             {
                 object value = null;
 
+                /*
                 if (!int.TryParse(param.GetText(), out _))
                     foreach (Type @enum in Constants.EnumParameters)
                     {
@@ -379,8 +383,29 @@ namespace OverwatchParser.Parse
                         }
                         catch (Exception ex) when (ex is ArgumentNullException || ex is ArgumentException || ex is OverflowException) {}
                     }
+                */
+
+                if (param.GetChild(0) is DeltinScriptParser.EnumContext)
+                {
+                    foreach (Type @enum in Constants.EnumParameters)
+                    {
+                        try
+                        {
+                            value = Enum.Parse(@enum, param.GetText().Split('.').ElementAtOrDefault(1));
+                        }
+                        catch (Exception ex) when (ex is ArgumentNullException || ex is ArgumentException || ex is OverflowException) { }
+                    }
+
                     if (value == null)
-                        value = ParseExpression(param);
+                        throw new SyntaxErrorException($"Could not parse parameter {param.GetText()}.", param.start.Line, param.start.Column);
+                }
+
+                else if (value == null)
+                    value = ParseExpression(param);
+
+                else
+                    throw new SyntaxErrorException("Could not parse parameter.", param.start.Line, param.start.Column);
+
 
                 parameters.Add(value);
             }
@@ -438,7 +463,7 @@ namespace OverwatchParser.Parse
                     SkipCountIndex = Assign();
                 */
 
-                int forActionStartIndex = Actions.Count();
+                int forActionStartIndex = Actions.Count() + 1;
 
                 Element forArrayElement = ParseExpression(statementContext.@for().expr());
 
@@ -463,6 +488,9 @@ namespace OverwatchParser.Parse
                     line    : statementContext.@for().start.Line,
                     column  : statementContext.@for().start.Column
                     );
+
+                // Reset the counter.
+                Actions.Add(SetIVarAtIndex(forIndex, new V_Number(0)));
 
                 // Parse the for's block.
                 ParseBlock(statementContext.@for().block());

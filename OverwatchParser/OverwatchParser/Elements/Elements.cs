@@ -49,18 +49,6 @@ namespace OverwatchParser.Elements
         Team = 64
     }
 
-    enum Button
-    {
-        PrimaryFire,
-        SecondaryFire,
-        Ability1,
-        Ability2,
-        Ultimate,
-        Interact,
-        Jump,
-        Crouch
-    }
-
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
     public class ElementData : Attribute
     {
@@ -238,16 +226,22 @@ namespace OverwatchParser.Elements
                 // Element input
                 if (parameterData[i].ParameterType == ParameterType.Value)
                     ((Element)ParameterValues[i]).Input(
-                        parameterData[i].DefaultType == ParameterValues[i].GetType(), 
+                        parameterData[i].DefaultType == ParameterValues[i].GetType(),
                         parameterData[i].ValueType, parameterData[i].DefaultType,
                         depth + 1);
 
                 // Enum input
                 else if (parameterData[i].ParameterType == ParameterType.Enum)
+                {
+                    Console.WriteLine($"{new string(' ', (depth + 1) * 4)}{ParameterValues[i]}");
                     InputHandler.Input.SelectEnumMenuOption(parameterData[i].EnumType, ParameterValues[i]);
+                }
             }
 
             AfterParameters();
+
+            if (depth == 0)
+                Console.WriteLine();
         }
 
         protected virtual void BeforeParameters() { } // Executed before parameters are executed

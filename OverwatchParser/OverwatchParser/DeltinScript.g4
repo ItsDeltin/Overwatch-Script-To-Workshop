@@ -21,6 +21,7 @@ expr
       number
 	| method
 	| string
+	| enum
 	| expr INDEX_START expr INDEX_END
 	| true
 	| false
@@ -39,7 +40,8 @@ expr
 	| expr COMPARE expr
 	;
 
-variable : PART;
+enum     : (BUTTON) SEPERATOR PART ;
+variable : PART ;
 method   : PART LEFT_PAREN expr? (',' expr)* RIGHT_PAREN  ;
 
 statement :
@@ -47,13 +49,16 @@ statement :
 	| expr STATEMENT_OPERATION expr STATEMENT_END
 	| GOTO
 	| GOTO_STATEMENT
-	| IF LEFT_PAREN expr RIGHT_PAREN block (ELSE IF LEFT_PAREN expr RIGHT_PAREN)* (block ELSE block)?
+	| if
 	| for
 	);
 
 block : BLOCK_START statement* BLOCK_END ;
 
-for : FOR LEFT_PAREN PART IN expr RIGHT_PAREN block ; /* Syntax: for (VARIABLE in ARRAY) */
+for     : FOR LEFT_PAREN PART IN expr RIGHT_PAREN block       ; /* Syntax: for (VARIABLE in ARRAY) */
+if      : IF LEFT_PAREN expr RIGHT_PAREN block else_if* else? ;
+else_if : ELSE IF LEFT_PAREN expr RIGHT_PAREN block           ;
+else    : ELSE block                                          ;
 
 rule_if : IF LEFT_PAREN expr RIGHT_PAREN ;
 
@@ -120,6 +125,9 @@ GLOBAL    : 'globalvar' ;
 TRUE      : 'true'      ;
 FALSE     : 'false'     ;
 NULL      : 'null'      ;
+
+// Enum
+BUTTON : 'Button' ;
 
 /*
 ONGOING_GLOBAL            : 'Event.Ongoing_Global'          ;

@@ -205,10 +205,85 @@ namespace OverwatchParser.Elements
         public const string DEFAULT_STRING = " ";
     }
 
+    public enum RuleEvent
+    {
+        Ongoing_Global,
+        Ongoing_EachPlayer,
+
+        Player_Earned_Elimination,
+        Player_Dealt_Final_Blow,
+
+        Player_Dealt_Damage,
+        Player_Took_Damage,
+
+        Player_Died
+    }
+
+    public enum PlayerSelector
+    {
+        All,
+        Slot0,
+        Slot1,
+        Slot2,
+        Slot3,
+        Slot4,
+        Slot5,
+        Slot6,
+        Slot7,
+        Slot8,
+        Slot9,
+        Slot10,
+        Slot11,
+        // Why isn't it alphabetical? we will never know.
+        Reaper,
+        Tracer,
+        Mercy,
+        Hanzo,
+        Torbjorn,
+        Reinhardt,
+        Pharah,
+        Winston,
+        Widowmaker,
+        Bastion,
+        Symmetra,
+        Zenyatta,
+        Gengi,
+        Roadhog,
+        Mccree,
+        Junkrat,
+        Zarya,
+        Soldier76,
+        Lucio,
+        Dva,
+        Mei,
+        Sombra,
+        Doomfist,
+        Ana,
+        Orisa,
+        Brigitte,
+        Moira,
+        WreckingBall,
+        Ashe,
+        Baptiste
+    }
+
     [AttributeUsage(AttributeTargets.Enum)]
     public class EnumParameter : Attribute
     {
         public EnumParameter() {}
+    }
+
+    [EnumParameter]
+    public enum Button
+    {
+        PrimaryFire,
+        SecondaryFire,
+        Ability1,
+        Ability2,
+        Ultimate,
+        Interact,
+        Jump,
+        Crouch
     }
 
     [EnumParameter]
@@ -287,68 +362,6 @@ namespace OverwatchParser.Elements
         PhasedOut,
         Rooted,
         Stunned
-    }
-
-    public enum RuleEvent
-    {
-        Ongoing_Global,
-        Ongoing_EachPlayer,
-
-        Player_Earned_Elimination,
-        Player_Dealt_Final_Blow,
-
-        Player_Dealt_Damage,
-        Player_Took_Damage,
-
-        Player_Died
-    }
-
-    public enum PlayerSelector
-    {
-        All,
-        Slot0,
-        Slot1,
-        Slot2,
-        Slot3,
-        Slot4,
-        Slot5,
-        Slot6,
-        Slot7,
-        Slot8,
-        Slot9,
-        Slot10,
-        Slot11,
-        // Why isn't it alphabetical? we will never know.
-        Reaper,
-        Tracer,
-        Mercy,
-        Hanzo,
-        Torbjorn,
-        Reinhardt,
-        Pharah,
-        Winston,
-        Widowmaker,
-        Bastion,
-        Symmetra,
-        Zenyatta,
-        Gengi,
-        Roadhog,
-        Mccree,
-        Junkrat,
-        Zarya,
-        Soldier76,
-        Lucio,
-        Dva,
-        Mei,
-        Sombra,
-        Doomfist,
-        Ana,
-        Orisa,
-        Brigitte,
-        Moira,
-        WreckingBall,
-        Ashe,
-        Baptiste
     }
 
     [EnumParameter]

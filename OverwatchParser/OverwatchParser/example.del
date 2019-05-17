@@ -5,29 +5,12 @@ usevar playervar A;
 define globalvar teleportTo;
 define globalvar tempvar;
 
-rule: "first rule",
-    Event.Ongoing_Global
-    {}
-
-rule: "second rule",
-    Event.Ongoing_Global
-    {}
-
-rule: "third rule",
-    Event.Ongoing_Global
-    {}
-
-rule: "fourth rule",
-    Event.Ongoing_Global
-    {}
-
-/*
 rule: "Game start: setup",
-	Event.Ongoing_Global
-    if (TotalTimeElapsed() >= 10)
+	Event.Ongoing_EachPlayer
+    if (IsButtonHeld(EventPlayer(), Button.Interact))
 	{
         // Teleport the players to the game location.
-        teleportTo = Vector(16.3, -30.2, 19);
+        teleportTo = Vector(5.531, 8.183, -87.304);
         Teleport(AllPlayers(), teleportTo);
 
         // Print every player's name as a SmallMessage.
@@ -36,6 +19,15 @@ rule: "Game start: setup",
             SmallMessage(AllPlayers(), AllPlayers()[player]);
             Wait(2);
         }
+
+        if (IsOnGround())
+        {
+            SmallMessage(EventPlayer(), "down");
+        }
+        else
+        {
+            SmallMessage(EventPlayer(), "danger")
+        }
 	}
 
 rule: "Vector debug",
@@ -43,4 +35,4 @@ rule: "Vector debug",
     if (true == false)
     {
         tempvar = Vector(0, 0, 0);
-    } */
+    }

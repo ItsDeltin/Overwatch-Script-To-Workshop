@@ -117,9 +117,22 @@ namespace OverwatchParser.Elements
     [Parameter("Variable", typeof(Variable))]
     public class V_GlobalVariable : Element {}
 
+    [ElementData("Is Button Held", ValueType.Boolean, 0)]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [Parameter("Button", typeof(Button))]
+    public class V_IsButtonHeld : Element {}
+
     [ElementData("Is On Objective", ValueType.Boolean, 0)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     public class V_IsOnObjective : Element {}
+
+    [ElementData("Is On Ground", ValueType.Boolean, 0)]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    public class V_IsOnGround : Element {}
+
+    [ElementData("Is In Air", ValueType.Boolean, 0)]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    public class V_IsInAir : Element {}
 
     [ElementData("Multiply", ValueType.Any, 0)]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
