@@ -58,7 +58,7 @@ namespace OverwatchParser.Elements
     [Parameter("Angle", ValueType.Number, typeof(V_Number))]
     public class V_AngleDifference : Element {}
 
-    [ElementData("Append To Array", ValueType.Any)]
+    [ElementData("Append To Array", ValueType.Any, 0)]
     [Parameter("Array", ValueType.Any, typeof(V_AllPlayers))]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
     public class V_AppendToArray : Element {}
@@ -68,7 +68,7 @@ namespace OverwatchParser.Elements
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
     public class V_ArrayContains : Element {}
 
-    [ElementData("Array Slice", ValueType.Any)]
+    [ElementData("Array Slice", ValueType.Any, 0)]
     [Parameter("Array", ValueType.Any, typeof(V_GlobalVariable))]
     [Parameter("Start Index", ValueType.Number, typeof(V_Number))]
     [Parameter("Count", ValueType.Number, typeof(V_Number))]
@@ -112,6 +112,9 @@ namespace OverwatchParser.Elements
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
     public class V_Divide : Element {}
 
+    [ElementData("Empty Array", ValueType.Any, 0)]
+    public class V_EmptyArray : Element {}
+
     [ElementData("Event Player", ValueType.Player, 0)]
     public class V_EventPlayer : Element {}
 
@@ -125,6 +128,11 @@ namespace OverwatchParser.Elements
     [ElementData("Global Variable", ValueType.Any, 0)]
     [Parameter("Variable", typeof(Variable))]
     public class V_GlobalVariable : Element {}
+
+    [ElementData("Index Of Array Value", 0)]
+    [Parameter("Array", ValueType.Any, typeof(V_GlobalVariable))]
+    [Parameter("Value", ValueType.Any, typeof(V_Number))]
+    public class V_IndexOfArrayValue : Element {}
 
     [ElementData("Is Button Held", ValueType.Boolean, 0)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
@@ -142,6 +150,10 @@ namespace OverwatchParser.Elements
     [ElementData("Is In Air", ValueType.Boolean, 0)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     public class V_IsInAir : Element {}
+
+    [ElementData("Nearest Walkable Position", ValueType.Vector, 0)]
+    [Parameter("Position", ValueType.VectorAndPlayer, typeof(V_Vector))]
+    public class V_NearestWalkablePosition : Element {}
 
     [ElementData("Multiply", ValueType.Any, 0)]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
@@ -203,7 +215,7 @@ namespace OverwatchParser.Elements
     [Parameter("Value", ValueType.Number, typeof(V_Number))]
     public class V_Modulo : Element {}
 
-    [ElementData("Or", ValueType.Boolean)]
+    [ElementData("Or", ValueType.Boolean, 13)]
     [Parameter("Value", ValueType.Boolean, typeof(V_True))]
     [Parameter("Value", ValueType.Boolean, typeof(V_True))]
     public class V_Or : Element {}
@@ -221,6 +233,10 @@ namespace OverwatchParser.Elements
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
     public class V_RaiseToPower : Element {}
+
+    [ElementData("Round To Integer", ValueType.Number, 0)]
+    [Parameter("Value", ValueType.Number, typeof(V_Number))]
+    public class V_RoundToInteger : Element {}
 
     [ElementData("Square Root", ValueType.Number)]
     [Parameter("Value", ValueType.Number, typeof(V_Number))]

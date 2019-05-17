@@ -203,6 +203,65 @@ namespace OverwatchParser.Elements
             "east"
         };
         public const string DEFAULT_STRING = " ";
+
+        // All credit to https://us.forums.blizzard.com/en/overwatch/t/workshop-resource-get-the-current-map-name-updated-1-action/
+        public static readonly int[][] MapChecks = new int[][]
+        {
+            new int[]
+            {
+                1416,
+                2318,
+                7037,
+                2369,
+                4693,
+                4013,
+                1514,
+                3111,
+                2146,
+                2226,
+                1671,
+                1430,
+                4143,
+                553,
+                1228,
+                4524,
+                992,
+                4445,
+                3091,
+                6182,
+                901,
+                1414,
+                2794,
+                2432
+            },
+            new int[]
+            {
+                2729,
+                2308,
+                2823,
+                1635,
+                2853,
+                6694,
+                7722,
+                4244,
+                9362,
+                4686,
+                1717,
+                4831,
+                2016,
+                5017,
+                6014,
+                4165,
+                40,
+                41,
+                42,
+                43,
+                44,
+                45,
+                46,
+                47
+            }
+        };
     }
 
     public enum RuleEvent
@@ -437,5 +496,13 @@ namespace OverwatchParser.Elements
         PositionAndRadius,
         VisibleTo,
         None
+    }
+
+    [EnumParameter]
+    public enum Rounding
+    {
+        Up,
+        Down,
+        Nearest
     }
 }

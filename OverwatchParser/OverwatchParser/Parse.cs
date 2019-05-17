@@ -762,12 +762,21 @@ namespace OverwatchParser.Parse
             }
         }
 
+#warning remove later
         public Variable GetUsingVar(bool isGlobal)
         {
             if (isGlobal)
                 return Global;
             else
                 return Player;
+        }
+#warning remove later
+        public Element GetUsingVarElement(bool isGlobal)
+        {
+            if (isGlobal)
+                return Element.Part<V_GlobalVariable>(Global);
+            else
+                return Element.Part<V_PlayerVariable>(Player, new V_EventPlayer());
         }
 
         public Var AssignVar(bool isGlobal)
@@ -867,6 +876,15 @@ namespace OverwatchParser.Parse
 
             return element;
 
+        }
+
+#warning remove later
+        public Element GetUsingVarElement()
+        {
+            if (IsGlobal)
+                return Element.Part<V_GlobalVariable>(Variable);
+            else
+                return Element.Part<V_PlayerVariable>(Variable, new V_EventPlayer());
         }
     }
 

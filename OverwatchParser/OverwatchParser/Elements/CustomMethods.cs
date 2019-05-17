@@ -128,59 +128,59 @@ namespace OverwatchParser.Elements
             );
         }
 
-        [CustomMethod("AngleOfVectorsCon", CustomMethodType.Value)]
-        static MethodResult AngleOfVectorsCon(InternalVars internalVars, bool isGlobal, object[] parameters)
+        [CustomMethod("GetMapID", CustomMethodType.MultiAction_Value)]
+        static MethodResult GetMapID(InternalVars internalVars, bool isGlobal, object[] parameters)
         {
-            Element vector1 = (Element)parameters[0];
-            Element vector2 = (Element)parameters[1];
-            Element vector3 = (Element)parameters[2];
+            /*
+             All credit to https://us.forums.blizzard.com/en/overwatch/t/workshop-resource-get-the-current-map-name-updated-1-action/
+             Based off code: 5VAQA
+            */
+            Var work = internalVars.AssignVar(isGlobal);
 
-            // Condensed version of AngleBetween3Vectors. Not optimized at all.
-            Element zeroVec = Element.Part<V_Vector>(new V_Number(0), new V_Number(0), new V_Number(0));
-            Element ab = Element.Part<V_Vector>
-            (
-                Element.Part<V_Subtract>(Element.Part<V_XComponentOf>(vector2), Element.Part<V_XComponentOf>(vector1)),
-                Element.Part<V_Subtract>(Element.Part<V_YComponentOf>(vector2), Element.Part<V_YComponentOf>(vector1)),
-                Element.Part<V_Subtract>(Element.Part<V_ZComponentOf>(vector2), Element.Part<V_ZComponentOf>(vector1))
-            );
-            Element bc = Element.Part<V_Vector>
-            (
-                Element.Part<V_Subtract>(Element.Part<V_XComponentOf>(vector3), Element.Part<V_XComponentOf>(vector2)),
-                Element.Part<V_Subtract>(Element.Part<V_YComponentOf>(vector3), Element.Part<V_YComponentOf>(vector2)),
-                Element.Part<V_Subtract>(Element.Part<V_ZComponentOf>(vector3), Element.Part<V_ZComponentOf>(vector2))
-            );
-            Element abVec = Element.Part<V_DistanceBetween>
-            (
-                ab,
-                zeroVec
-            );
-            Element bcVec = Element.Part<V_DistanceBetween>
-            (
-                bc,
-                zeroVec
-            );
-            Element abNorm = Element.Part<V_Vector>
-            (
-                Element.Part<V_Divide>(Element.Part<V_XComponentOf>(ab), abVec),
-                Element.Part<V_Divide>(Element.Part<V_YComponentOf>(ab), abVec),
-                Element.Part<V_Divide>(Element.Part<V_ZComponentOf>(ab), abVec)
-            );
-            Element bcNorm = Element.Part<V_Vector>
-            (
-                Element.Part<V_Divide>(Element.Part<V_XComponentOf>(bc), bcVec),
-                Element.Part<V_Divide>(Element.Part<V_YComponentOf>(bc), bcVec),
-                Element.Part<V_Divide>(Element.Part<V_ZComponentOf>(bc), bcVec)
-            );
-            Element res = Element.Part<V_Add>
-            (
-                Element.Part<V_Add>
-                (
-                    Element.Part<V_Multiply>(Element.Part<V_XComponentOf>(abNorm), Element.Part<V_XComponentOf>(bcNorm)),
-                    Element.Part<V_Multiply>(Element.Part<V_YComponentOf>(abNorm), Element.Part<V_YComponentOf>(bcNorm))
+            List<Element> sets = new List<Element>();
+
+            for (int s = 0; s < Constants.MapChecks.Length; s++)
+            {
+                V_AppendToArray prev = null;
+                V_AppendToArray current = null;
+
+                for (int i = 0; i < Constants.MapChecks[s].Length; i++)
+                {
+                    current = new V_AppendToArray();
+                    current.ParameterValues = new object[2];
+
+                    if (prev != null)
+                        current.ParameterValues[0] = prev;
+                    else if (s > 0)
+                        current.ParameterValues[0] = work.GetVariable();
+                    else
+                        current.ParameterValues[0] = new V_EmptyArray();
+
+                    // Set the map ID
+                    current.ParameterValues[1] = new V_Number(Constants.MapChecks[s][i]);
+                    prev = current;
+                }
+
+                sets.Add(work.SetVariable(current));
+            }
+
+            return new MethodResult(sets.ToArray(),
+                Element.Part<V_IndexOfArrayValue>(work.GetVariable(),
+                Element.Part<V_RoundToInteger>(Element.Part<V_Divide>(
+                    Element.Part<V_RoundToInteger>(
+                        Element.Part<V_Multiply>(
+                            Element.Part<V_DistanceBetween>(
+                                Element.Part<V_Vector>(new V_Number(0), new V_Number(0), new V_Number(0)),
+                                Element.Part<V_NearestWalkablePosition>(Element.Part<V_Vector>(new V_Number(100), new V_Number(100), new V_Number(100)))
+                            ),
+                            new V_Number(100)
+                        ),
+                        Rounding.Down
+                    ),
+                    new V_Number(4)
                 ),
-                Element.Part<V_Multiply>(Element.Part<V_ZComponentOf>(abNorm), Element.Part<V_ZComponentOf>(bcNorm))
-            );
-            return new MethodResult(null, res, CustomMethodType.Value);
+                Rounding.Down)
+            ), CustomMethodType.MultiAction_Value);
         }
     }
 
