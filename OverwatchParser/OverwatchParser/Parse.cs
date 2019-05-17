@@ -316,31 +316,28 @@ namespace OverwatchParser.Parse
                 Element forArrayElement = ParseExpression(statementContext.@for().expr());
 
                 // Use skipIndex with Get/SetIVarAtIndex to get the bool to determine if the loop is running.
-                int skipIndex = InternalVars.Assign(IsGlobal);
+                Var isBoolRunningSkipIf = InternalVars.AssignVar(IsGlobal);
                 // Insert the SkipIf at the start of the rule.
                 Actions.Insert(0,
                     Element.Part<A_SkipIf>
                     (
                         // Condition
-                        InternalVars.GetIVar(IsGlobal, skipIndex),
+                        isBoolRunningSkipIf.GetVariable(),
                         // Number of actions
                         new V_Number(forActionStartIndex)
                     )
                 );
 
                 // Create the for's temporary variable.
-                int forIndex = InternalVars.Assign(IsGlobal);
-                DefinedVar forTempVar = new DefinedVar(
+                DefinedVar forTempVar = InternalVars.AssignDefinedVar(
                     name    : statementContext.@for().PART().GetText(),
                     isGlobal: IsGlobal,
-                    variable: IsGlobal ? InternalVars.Global : InternalVars.Player,
-                    index   : forIndex,
                     line    : statementContext.@for().start.Line,
                     column  : statementContext.@for().start.Column
                     );
 
                 // Reset the counter.
-                Actions.Add(InternalVars.SetIVar(IsGlobal, forIndex, new V_Number(0)));
+                Actions.Add(forTempVar.SetVariable(new V_Number(0)));
 
                 // Parse the for's block.
                 ParseBlock(statementContext.@for().block());
@@ -350,14 +347,12 @@ namespace OverwatchParser.Parse
 
                 // Add the for's finishing elements
                 //Actions.Add(SetIVarAtIndex(skipIndex, new V_Number(forActionStartIndex))); // Sets how many variables to skip in the next iteraction.
-                Actions.Add(InternalVars.SetIVar(IsGlobal, skipIndex, new V_True())); // Enables the skip.
+                Actions.Add(isBoolRunningSkipIf.SetVariable(new V_True())); // Enables the skip.
 
-                Actions.Add(InternalVars.SetIVar( // Indent the index by 1.
-                    IsGlobal,
-                    forIndex,
+                Actions.Add(forTempVar.SetVariable( // Indent the index by 1.
                     Element.Part<V_Add>
                     (
-                        InternalVars.GetIVar(IsGlobal, forIndex), 
+                        forTempVar.GetVariable(),
                         new V_Number(1)
                     )
                 ));
@@ -366,12 +361,12 @@ namespace OverwatchParser.Parse
                 Actions.Add(Element.Part<A_LoopIf>( // Loop if the for condition is still true.
                     Element.Part<V_Compare>
                     (
-                        InternalVars.GetIVar(IsGlobal, forIndex),
+                        forTempVar.GetVariable(),
                         Operators.LessThan,
                         Element.Part<V_CountOf>(forArrayElement)
                     )
                 ));
-                Actions.Add(InternalVars.SetIVar(IsGlobal, skipIndex, new V_False()));
+                Actions.Add(isBoolRunningSkipIf.SetVariable(new V_False()));
                 return;
             }
 
@@ -762,42 +757,22 @@ namespace OverwatchParser.Parse
             }
         }
 
-#warning remove later
-        public Variable GetUsingVar(bool isGlobal)
+        private Variable GetVar(bool isGlobal)
         {
             if (isGlobal)
                 return Global;
             else
                 return Player;
         }
-#warning remove later
-        public Element GetUsingVarElement(bool isGlobal)
-        {
-            if (isGlobal)
-                return Element.Part<V_GlobalVariable>(Global);
-            else
-                return Element.Part<V_PlayerVariable>(Player, new V_EventPlayer());
-        }
 
         public Var AssignVar(bool isGlobal)
         {
-            return new Var(isGlobal, GetUsingVar(isGlobal), Assign(isGlobal));
+            return new Var(isGlobal, GetVar(isGlobal), Assign(isGlobal));
         }
 
-#warning Remove this later and anything else using it (for), replace it with the refactored Var class.
-        public Element SetIVar(bool isGlobal, int index, Element value)
+        public DefinedVar AssignDefinedVar(bool isGlobal, string name, int line, int column)
         {
-            if (isGlobal)
-                return Element.Part<A_SetGlobalVariableAtIndex>(Global, new V_Number(index), value);
-            else
-                return Element.Part<A_SetPlayerVariableAtIndex>(new V_EventPlayer(), Player, new V_Number(index), value);
-        }
-        public Element GetIVar(bool isGlobal, int index)
-        {
-            if (isGlobal)
-                return Element.Part<V_ValueInArray>(Element.Part<V_GlobalVariable>(Global), new V_Number(index));
-            else
-                return Element.Part<V_ValueInArray>(Element.Part<V_PlayerVariable>(new V_EventPlayer(), Player), new V_Number(index));
+            return new DefinedVar(name, isGlobal, GetVar(isGlobal), Assign(isGlobal), line, column);
         }
     }
 
@@ -876,15 +851,6 @@ namespace OverwatchParser.Parse
 
             return element;
 
-        }
-
-#warning remove later
-        public Element GetUsingVarElement()
-        {
-            if (IsGlobal)
-                return Element.Part<V_GlobalVariable>(Variable);
-            else
-                return Element.Part<V_PlayerVariable>(Variable, new V_EventPlayer());
         }
     }
 

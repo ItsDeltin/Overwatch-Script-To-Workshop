@@ -10,6 +10,9 @@ rule: "Get map ID"
     if (IsButtonHeld(EventPlayer(), Button.Interact) | IsButtonHeld(EventPlayer(), Button.Crouch))
 
 	{
-        mapID = Deltin.GetMapID();
-        SmallMessage(EventPlayer(), mapID);
+        for (player in AllPlayers())
+        {
+            SmallMessage(EventPlayer(), AllPlayers()[player]);
+            Wait(2);
+        }
 	}
