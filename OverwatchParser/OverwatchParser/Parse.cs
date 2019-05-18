@@ -16,66 +16,72 @@ namespace OverwatchParser.Parse
 
         public static Rule[] ParseText(string text)
         {
-            AntlrInputStream inputStream = new AntlrInputStream(text);
-
-            // Lexer
-            DeltinScriptLexer speakLexer = new DeltinScriptLexer(inputStream);
-            CommonTokenStream commonTokenStream = new CommonTokenStream(speakLexer);
-
-            // Parse
-            DeltinScriptParser speakParser = new DeltinScriptParser(commonTokenStream);
-
-            // Get context
-            DeltinScriptParser.RulesetContext context = speakParser.ruleset();
-
-            Log.Write(context.ToStringTree());
-
-            Visitor visitor = new Visitor();
-            visitor.Visit(context);
-
+            try
             {
-                // Get the internal global variable to use.
-                if (!Enum.TryParse(context.useGlobalVar().PART().ToString(), out Variable useGlobalVar))
-                    throw new SyntaxErrorException("useGlobalVar must be a character.", 0, 0);
+                AntlrInputStream inputStream = new AntlrInputStream(text);
 
-                // Get the internal player variable to use.
-                if (!Enum.TryParse(context.usePlayerVar().PART().ToString(), out Variable usePlayerVar))
-                    throw new SyntaxErrorException("usePlayerVar must be a character.", 0, 0);
+                // Lexer
+                DeltinScriptLexer speakLexer = new DeltinScriptLexer(inputStream);
+                CommonTokenStream commonTokenStream = new CommonTokenStream(speakLexer);
 
-                Var.Setup(useGlobalVar, usePlayerVar);
+                // Parse
+                DeltinScriptParser speakParser = new DeltinScriptParser(commonTokenStream);
+
+                // Get context
+                DeltinScriptParser.RulesetContext context = speakParser.ruleset();
+
+                Visitor visitor = new Visitor();
+                visitor.Visit(context);
+
+                {
+                    // Get the internal global variable to use.
+                    if (!Enum.TryParse(context.useGlobalVar().PART().ToString(), out Variable useGlobalVar))
+                        throw new SyntaxErrorException("useGlobalVar must be a character.", 0, 0);
+
+                    // Get the internal player variable to use.
+                    if (!Enum.TryParse(context.usePlayerVar().PART().ToString(), out Variable usePlayerVar))
+                        throw new SyntaxErrorException("usePlayerVar must be a character.", 0, 0);
+
+                    Var.Setup(useGlobalVar, usePlayerVar);
+                }
+
+                // Get the defined variables.
+                var vardefine = context.vardefine();
+
+                for (int i = 0; i < vardefine.Length; i++)
+                    // The new var is stored in Var.VarCollection
+                    new DefinedVar(vardefine[i]);
+
+                // Parse the rules.
+                var rules = context.ow_rule();
+                var compiledRules = new List<Rule>();
+
+                for (int i = 0; i < rules.Length; i++)
+                {
+                    ParseRule parsing = new ParseRule(rules[i]);
+
+                    Log.Write($"Building rule: {parsing.Rule.Name}");
+                    parsing.Parse();
+                    Rule rule = parsing.Rule;
+                    Log.Write($"Finished rule: {parsing.Rule.Name}");
+
+                    compiledRules.Add(rule);
+                }
+
+                Log.Write("Build succeeded.");
+
+                // List all variables
+                Log.Write("Variable Guide:");
+                foreach (DefinedVar var in DefinedVar.VarCollection)
+                    Console.WriteLine($"{var.Name}: {(var.IsGlobal ? "global" : "player")} {var.Variable}{(var.IsInArray ? $"[{var.Index}]" : "")}");
+
+                return compiledRules.ToArray();
             }
-
-            // Get the defined variables.
-            var vardefine = context.vardefine();
-
-            for (int i = 0; i < vardefine.Length; i++)
-                // The new var is stored in Var.VarCollection
-                new DefinedVar(vardefine[i]);
-
-            // Parse the rules.
-            var rules = context.ow_rule();
-            var compiledRules = new List<Rule>();
-
-            for (int i = 0; i < rules.Length; i++)
+            catch (Exception ex)
             {
-                ParseRule parsing = new ParseRule(rules[i]);
-
-                Log.Write($"Building rule: {parsing.Rule.Name}");
-                parsing.Parse();
-                Rule rule = parsing.Rule;
-                Log.Write($"Finished rule: {parsing.Rule.Name}");
-
-                compiledRules.Add(rule);
+                Log.Write($"Error: Failed to parse.\n{ex}");
+                return null;
             }
-
-            Log.Write("Build succeeded.");
-
-            // List all variables
-            Log.Write("Variable Guide:");
-            foreach (DefinedVar var in DefinedVar.VarCollection)
-                Console.WriteLine($"{var.Name}: {(var.IsGlobal ? "global" : "player")} {var.Variable}{(var.IsInArray ? $"[{var.Index}]" : "")}");
-
-            return compiledRules.ToArray();
         }
     }
 

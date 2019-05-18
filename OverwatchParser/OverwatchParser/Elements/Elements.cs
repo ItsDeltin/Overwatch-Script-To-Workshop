@@ -275,7 +275,7 @@ namespace OverwatchParser.Elements
         private double Scalar;
         private const int MSBuffer = 100;
 
-        public Weight(double scalar = 0.4)
+        public Weight(double scalar = 0.5)
         {
             Scalar = scalar;
         }

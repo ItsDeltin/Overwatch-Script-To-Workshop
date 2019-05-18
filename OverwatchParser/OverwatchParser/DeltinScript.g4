@@ -18,29 +18,28 @@ usePlayerVar : USEVAR PLAYER PART STATEMENT_END ;
 
 expr 
 	: 
-      number
-	| custom_method
-	| method
-	| string
-	| enum
-	| expr INDEX_START expr INDEX_END
-	| INDEX_START expr (',' expr)* INDEX_END
-	| true
-	| false
-	| null
-	| expr SEPERATOR expr
-	//| expr SEPERATOR variable
-	| variable
-	|<assoc=right> '(' expr ')'
-	| expr '^' expr
-	| expr '*' expr
-	| expr '/' expr
-	| expr '%' expr
-	| expr '+' expr
-	| expr '-' expr 
-	| not expr
-	| expr BOOL expr
-	| expr COMPARE expr
+      number                                  // Numbers
+	| custom_method                           // Custom Methods
+	| method                                  // Methods
+	| string                                  // Strings
+	| enum                                    // Enums
+	| expr INDEX_START expr INDEX_END         // Array creation
+	| INDEX_START expr (',' expr)* INDEX_END  // Arrays
+	| true                                    // True
+	| false                                   // False
+	| null                                    // Null
+	| expr SEPERATOR expr                     // Variable seperation
+	| variable                                // Variables
+	|<assoc=right> '(' expr ')'               // Groups
+	| expr '^' expr                           // x^y
+	| expr '*' expr                           // x*y
+	| expr '/' expr                           // x/y
+	| expr '%' expr                           // x%y
+	| expr '+' expr                           // x+y
+	| expr '-' expr                           // x-y
+	| not expr                                // !x
+	| expr BOOL expr                          // x & y
+	| expr COMPARE expr                       // x == y
 	;
 
 enum     : (BUTTON | COLOR | EFFECT | EFFECTREV) SEPERATOR PART ;

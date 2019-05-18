@@ -19,5 +19,6 @@ namespace OverwatchParser
     public class SyntaxErrorException : Exception
     {
         public SyntaxErrorException(string message, int row, int column) : base($"Syntax error at {row},{column}: {message}") {}
+        public SyntaxErrorException(string message) : base($"Syntax error: {message}") {}
     }
 }

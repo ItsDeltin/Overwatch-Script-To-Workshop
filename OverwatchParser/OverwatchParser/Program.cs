@@ -21,8 +21,9 @@ namespace OverwatchParser
 
             Console.ReadLine();
 
-            foreach (Rule rule in generatedRules)
-                rule.Input();
+            if (generatedRules != null)
+                foreach (Rule rule in generatedRules)
+                    rule.Input();
 
             /*
             // Create rule

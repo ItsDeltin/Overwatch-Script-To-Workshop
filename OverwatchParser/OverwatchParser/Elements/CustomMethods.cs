@@ -29,6 +29,13 @@ namespace OverwatchParser.Elements
         [CustomMethod("AngleOfVectors", CustomMethodType.MultiAction_Value)]
         static MethodResult AngleOfVectors(bool isGlobal, object[] parameters)
         {
+            if (parameters.Length != 3)
+                throw new SyntaxErrorException("AngleOfVectors() requires 3 variables.");
+
+            for (int i = 0; i < parameters.Length; i++)
+                if (!(parameters[i] is Element))
+                    throw new SyntaxErrorException("AngleOfVectors() requires 3 elements.");
+
             var eventPlayer = new V_EventPlayer();
 
             Var a      = Var.AssignVar(isGlobal);
