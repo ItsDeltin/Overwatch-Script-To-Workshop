@@ -13,7 +13,7 @@ namespace OverwatchParser
 
     public class InvalidStringException : ArgumentException
     {
-        public InvalidStringException(string value) : base($"\"{value}\" is not a valid Overwatch string.") {}
+        public InvalidStringException(string value) : base(value) {}
     }
 
     public class SyntaxErrorException : Exception

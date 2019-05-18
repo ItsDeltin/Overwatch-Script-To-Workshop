@@ -135,10 +135,18 @@ namespace OverwatchParser.Elements
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
     public class V_IndexOfArrayValue : Element {}
 
+    [ElementData("Is Alive", ValueType.Boolean, 0)]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    public class V_IsAlive : Element {}
+
     [ElementData("Is Button Held", ValueType.Boolean, 0)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     [Parameter("Button", typeof(Button))]
     public class V_IsButtonHeld : Element {}
+
+    [ElementData("Is Dead", ValueType.Boolean, 0)]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    public class V_IsDead : Element {}
 
     [ElementData("Is On Objective", ValueType.Boolean, 0)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
@@ -327,27 +335,16 @@ namespace OverwatchParser.Elements
         */
         private static string[] searchOrder = Constants.Strings
             .OrderByDescending(str => str.Contains("{0}"))
-            //.OrderByDescending(str => Regex.Matches(str, @"\{[0-9]\}").Count)
             .ThenByDescending(str => str.IndexOfAny("-></*-+=()!?".ToCharArray()) != -1)
             .ThenByDescending(str => str.Length)
             .ToArray();
-
-        private static bool CheckSearch(string str, int count, bool special)
-        {
-            return Regex.Matches(str, @"\{[0-9]\}").Count == count
-                && (special ? str.IndexOfAny(",-></*-+=()!?:".ToCharArray()) != -1 || new string[] { "and", "vs" }.Any(specialString => str.Contains(specialString)) : true);
-        }
 
         public static Element ParseString(string value, Element[] parameters, int depth = 0)
         {
             value = value.ToLower();
 
-            string escapedValue = value;
             if (depth == 0)
-            {
                 Log.Write($"\"{value}\"");
-                //escapedValue = Escape(value);
-            }
 
             string debug = new string(' ', depth * 4);
 
@@ -357,16 +354,13 @@ namespace OverwatchParser.Elements
 
                 string regex =
                     Regex.Replace(Escape(searchString)
-                    , "({[0-9]})", @"(([a-z_]+ ?)|(.+))");  // Converts {0} {1} {2} to (.+) (.+) (.+)
+                    , "({[0-9]})", @"(([a-z_.]+ ?)|(.+))");  // Converts {0} {1} {2} to (.+) (.+) (.+)
                 regex = $"^{regex}$";
-                var match = Regex.Match(escapedValue, regex);
-
-                if (searchString == "{0} {1} {2}")
-                    ;
+                var match = Regex.Match(value, regex);
 
                 if (match.Success)
                 {
-                    Log.Write(debug + searchString + $" \"{regex}\" > \"{value}\"" /*+ $"    (\"{regex}\" to \"{escapedValue}\")"*/);
+                    Log.Write(debug + searchString);
                     V_String str = new V_String(searchString);
 
                     bool valid = true;
@@ -374,15 +368,14 @@ namespace OverwatchParser.Elements
                     for (int g = 1; g < match.Groups.Count; g+=3)
                     {
                         string currentParameterValue = match.Groups[g].Captures[0].Value;
-                        //Log.Write(debug + $"  -{currentParameterValue}");
 
                         Match parameterString = Regex.Match(currentParameterValue, "^<([0-9]+)>$");
                         if (parameters != null && parameterString.Success)
                         {
                             int index = int.Parse(parameterString.Groups[1].Value);
 
-                            if (index > parameters.Length)
-                                throw new InvalidStringException($"Tried to get the {index} format, but there are only {parameters.Length} parameters.");
+                            if (index >= parameters.Length)
+                                throw new InvalidStringException($"Tried to get the {index} format, but there are {parameters.Length} parameters. Check your string.");
 
                             Log.Write($"{debug}    <param {index}>");
                             parsedParameters.Add(parameters[index]);
@@ -392,7 +385,7 @@ namespace OverwatchParser.Elements
                             var p = ParseString(currentParameterValue, parameters, depth + 1);
                             if (p == null)
                             {
-                                Log.Write($"{debug}L{searchString}");
+                                Log.Write($"{debug}{searchString} combo fail");
                                 valid = false;
                                 break;
                             }
@@ -407,8 +400,10 @@ namespace OverwatchParser.Elements
                 }
             }
 
-            return null;
-            //throw new InvalidStringException($"Could not desipher the string {value}.");
+            if (depth > 0)
+                return null;
+            else
+                throw new InvalidStringException($"Could not parse the string {value}.");
         }
 
         private static string Escape(string value)

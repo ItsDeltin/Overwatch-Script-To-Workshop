@@ -2,15 +2,23 @@
 usevar globalvar A;
 usevar playervar A;
 
-define playervar TotalAbilityCharges;
-define playervar Remaining;
+define playervar NumberOfDeaths;
 
-rule: "Setup"
+rule: "Belittle the player when they die."
     Event.Ongoing_EachPlayer
-    {
-        TotalAbilityCharges = 5;
-        Remaining = TotalAbilityCharges;
 
-        SmallMessage(EventPlayer(), <"Ability: Crouch near dead player -> find team (<0> / <1>)", Remaining, TotalAbilityCharges>);
-        //SmallMessage(EventPlayer(), <"Ability: Crouch near dead player -> find team (<0>)", <"<0> / <1>", Remaining, TotalAbilityCharges>>);
+    if (IsDead())
+    {
+        NumberOfDeaths += 1;
+        SmallMessage(EventPlayer(),
+            <"You? dead? ugh! terrible! try_again, avoid #sudden_death! survive! you die <0> times ...", NumberOfDeaths>
+            );
+    }
+
+rule: "Suicide"
+    Event.Ongoing_EachPlayer
+
+    if (IsButtonHeld(EventPlayer(), Button.Interact))
+    {
+        Kill();
     }
