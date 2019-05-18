@@ -266,6 +266,8 @@ namespace OverwatchParser.Elements
 
         protected override void BeforeParameters(Weight weight)
         {
+            string value = Constants.Strings[textID];
+
             weight.Sleep(Wait.Small);
 
             // Select "string" option
@@ -276,12 +278,31 @@ namespace OverwatchParser.Elements
             InputHandler.Input.KeyPress(Keys.Space);
             weight.Sleep(Wait.Long);
 
+            // Search the string
+            InputHandler.Input.TextInput(value);
+            weight.Sleep(Wait.Long);
+
             // Leave the search field input
             InputHandler.Input.KeyPress(Keys.Enter);
             weight.Sleep(Wait.Small);
 
+            /*
+            Searching for "Down" results in:
+            - Cooldown
+            - Cooldowns
+            - Down
+            - Download
+            - Downloaded
+            - Downloading
+            */
+            var conflicting = Constants.Strings.Where(@string => value.Split(' ').All(valueWord => @string.Split(' ').Any(stringWord => stringWord.Contains(valueWord)))).ToList();
+
+            int before = conflicting.IndexOf(value);
+            if (before == -1)
+                before = 0;
+
             // Select the selected string by textID.
-            InputHandler.Input.RepeatKey(Keys.Down, textID);
+            InputHandler.Input.RepeatKey(Keys.Down, before);
 
             // Select the string
             InputHandler.Input.KeyPress(Keys.Space);
@@ -321,8 +342,34 @@ namespace OverwatchParser.Elements
                 .ToLower()
                 .Split(' ');
 
-            foreach (string part in stringSplit)
+            for (int s = 0; s < stringSplit.Length; s++)
             {
+                string fullString = "";
+
+                bool wasFound = false;
+                int lastSuccess = s;
+                for (int e = s; e < stringSplit.Length; e++)
+                {
+                    var test = string.Join(" ", stringSplit.Skip(s).Take(e + 1));
+
+                    if (Constants.Strings.Contains(test))
+                    {
+                        fullString = test;
+                        wasFound = true;
+                        lastSuccess = e;
+                    }
+                    else if (wasFound == true)
+                    {
+                        break;
+                    }
+                }
+                s = lastSuccess;
+
+                elements.Add(new V_String(fullString));
+            }
+
+
+                /*
                 if (part.EndsWith("!!!"))
                     elements.Add(new V_String("{0}!!!", new V_String(part)));
 
@@ -343,7 +390,7 @@ namespace OverwatchParser.Elements
 
                 else
                     elements.Add(new V_String(part));
-            }
+                */
 
             return BuildString(elements.ToArray());
         }
