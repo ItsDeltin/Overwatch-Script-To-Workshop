@@ -170,6 +170,15 @@ namespace OverwatchParser.Elements
             // Add to the weight.
             weight.Add(GetWeight());
 
+            /*
+            // Vectors have an extra button that needs to be adjusted for.
+            if (defaultType == typeof(V_Vector))
+            {
+                InputHandler.Input.KeyPress(Keys.Right);
+                weight.Sleep(Wait.Small);
+            }
+            */
+
             // Select the option
             if (!isAlreadySet)
             {
@@ -215,7 +224,6 @@ namespace OverwatchParser.Elements
 
             if (parameterData.Any(v => v.DefaultType == typeof(V_Vector)))
             {
-                Console.WriteLine($"[DEBUG]: V_Vector is a default value in {ElementData.ElementName}.");
                 weight.Sleep(Wait.Long);
             }
 
@@ -267,7 +275,7 @@ namespace OverwatchParser.Elements
         private double Scalar;
         private const int MSBuffer = 100;
 
-        public Weight(double scalar = 0.2)
+        public Weight(double scalar = 0.4)
         {
             Scalar = scalar;
         }
@@ -280,21 +288,25 @@ namespace OverwatchParser.Elements
         public void Sleep(Wait wait)
         {
             int duration = 0;
+            int max = 0;
             switch (wait)
             {
                 case Wait.Small:
                     duration = InputHandler.SmallStep;
+                    max = 2000;
                     break;
 
                 case Wait.Medium:
                     duration = InputHandler.MediumStep;
+                    max = 5000;
                     break;
 
                 case Wait.Long:
                     duration = InputHandler.BigStep;
+                    max = 10000;
                     break;
             }
-            duration = Math.Max(duration, duration * ((int)Math.Round(TotalWeight * Scalar) - MSBuffer + 1));
+            duration = Math.Min(Math.Max(duration, duration * ((int)Math.Round(TotalWeight * Scalar) - MSBuffer + 1)), max);
             Thread.Sleep(duration);
         }
     }

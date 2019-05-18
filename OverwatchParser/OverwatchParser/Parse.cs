@@ -655,7 +655,7 @@ namespace OverwatchParser.Parse
 
             #endregion
 
-            throw new Exception($"What's a {context}?");
+            throw new Exception($"What's a {context.GetType().Name}?");
         }
 
         Element ParseMethod(DeltinScriptParser.MethodContext methodContext)

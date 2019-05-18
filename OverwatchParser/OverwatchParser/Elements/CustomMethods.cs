@@ -128,68 +128,73 @@ namespace OverwatchParser.Elements
             );
         }
 
-        [CustomMethod("GetMapID", CustomMethodType.MultiAction_Value)]
-        static MethodResult GetMapID(bool isGlobal, object[] parameters)
+        /*
+         AngleOfVectors condensed into one action.
+         Don't uncomment this monstrocity, please.
+
+        [CustomMethod("AngleOfVectorsCom", CustomMethodType.Value)]
+        static MethodResult AngleOfVectorsCom(bool isGlobal, object[] parameters)
         {
-            /*
-             All credit to https://us.forums.blizzard.com/en/overwatch/t/workshop-resource-get-the-current-map-name-updated-1-action/
-             Based off code: 5VAQA
-            */
+            // AngleOfVectors compacted down into one element
+            // for the love of god, don't use this
+            // please
+            // why am I even including this
 
-            int mapcount = 0;
-            for (int i = 0; i < Constants.MapChecks.Length; i++)
-                mapcount += Constants.MapChecks[i].Length;
+            Element zeroVec = Element.Part<V_Vector>(new V_Number(0), new V_Number(0), new V_Number(0));
+            Element a = (Element)parameters[0];
+            Element b = (Element)parameters[1];
+            Element c = (Element)parameters[2];
 
-            Var work = Var.AssignVarRange(isGlobal, mapcount);
-
-            List<Element> sets = new List<Element>();
-
-            for (int s = 0; s < Constants.MapChecks.Length; s++)
-            {
-                V_AppendToArray prev = null;
-                V_AppendToArray current = null;
-
-                for (int i = 0; i < Constants.MapChecks[s].Length; i++)
-                {
-                    current = new V_AppendToArray();
-                    current.ParameterValues = new object[2];
-
-                    if (prev != null)
-                        current.ParameterValues[0] = prev;
-                    else if (s > 0)
-                        current.ParameterValues[0] = work.GetVariable();
-                    else
-                        current.ParameterValues[0] = new V_EmptyArray();
-
-                    // Set the map ID
-                    current.ParameterValues[1] = new V_Number(Constants.MapChecks[s][i]);
-                    prev = current;
-                }
-
-                sets.Add(work.SetVariable(current));
-            }
-
-            return new MethodResult(sets.ToArray(),
-                Element.Part<V_IndexOfArrayValue>(work.GetVariable(),
-                Element.Part<V_RoundToInteger>(Element.Part<V_Divide>(
-                    Element.Part<V_RoundToInteger>(
-                        Element.Part<V_Multiply>(
-                            Element.Part<V_DistanceBetween>(
-                                Element.Part<V_Vector>(new V_Number(0), new V_Number(0), new V_Number(0)),
-                                Element.Part<V_NearestWalkablePosition>(Element.Part<V_Vector>(new V_Number(100), new V_Number(100), new V_Number(100)))
-                            ),
-                            new V_Number(100)
-                        ),
-                        Rounding.Down
+            Element ab = Element.Part<V_Vector>
+                (
+                    Element.Part<V_Subtract>(Element.Part<V_XComponentOf>(b), Element.Part<V_XComponentOf>(a)),
+                    Element.Part<V_Subtract>(Element.Part<V_YComponentOf>(b), Element.Part<V_YComponentOf>(a)),
+                    Element.Part<V_Subtract>(Element.Part<V_ZComponentOf>(b), Element.Part<V_ZComponentOf>(a))
+                );
+            Element bc = Element.Part<V_Vector>
+                (
+                    Element.Part<V_Subtract>(Element.Part<V_XComponentOf>(c), Element.Part<V_XComponentOf>(b)),
+                    Element.Part<V_Subtract>(Element.Part<V_YComponentOf>(c), Element.Part<V_YComponentOf>(b)),
+                    Element.Part<V_Subtract>(Element.Part<V_ZComponentOf>(c), Element.Part<V_ZComponentOf>(b))
+                );
+            Element abVec = Element.Part<V_DistanceBetween>
+                (
+                    ab,
+                    zeroVec
+                );
+            Element bcVec = Element.Part<V_DistanceBetween>
+                (
+                    bc,
+                    zeroVec
+                );
+            Element abNorm = Element.Part<V_Vector>
+                (
+                    Element.Part<V_Divide>(Element.Part<V_XComponentOf>(ab), abVec),
+                    Element.Part<V_Divide>(Element.Part<V_YComponentOf>(ab), abVec),
+                    Element.Part<V_Divide>(Element.Part<V_ZComponentOf>(ab), abVec)
+                );
+            Element bcNorm = Element.Part<V_Vector>
+                (
+                    Element.Part<V_Divide>(Element.Part<V_XComponentOf>(bc), bcVec),
+                    Element.Part<V_Divide>(Element.Part<V_YComponentOf>(bc), bcVec),
+                    Element.Part<V_Divide>(Element.Part<V_ZComponentOf>(bc), bcVec)
+                );
+            Element res = Element.Part<V_Add>
+                (
+                    Element.Part<V_Add>
+                    (
+                        Element.Part<V_Multiply>(Element.Part<V_XComponentOf>(abNorm), Element.Part<V_XComponentOf>(bcNorm)),
+                        Element.Part<V_Multiply>(Element.Part<V_YComponentOf>(abNorm), Element.Part<V_YComponentOf>(bcNorm))
                     ),
-                    new V_Number(4)
-                ),
-                Rounding.Down)
-            ), CustomMethodType.MultiAction_Value);
-        }
+                    Element.Part<V_Multiply>(Element.Part<V_ZComponentOf>(abNorm), Element.Part<V_ZComponentOf>(bcNorm))
+                );
 
-        [CustomMethod("GetMapIDCom", CustomMethodType.MultiAction_Value)]
-        static MethodResult GetMapIDCom(bool isGlobal, object[] parameters)
+            return new MethodResult(null, res, CustomMethodType.MultiAction_Value);
+        }
+        */
+
+        [CustomMethod("GetMapID", CustomMethodType.Value)]
+        static MethodResult GetMapID(bool isGlobal, object[] parameters)
         {
             /*
              All credit to https://us.forums.blizzard.com/en/overwatch/t/workshop-resource-get-the-current-map-name-updated-1-action/
@@ -236,7 +241,7 @@ namespace OverwatchParser.Elements
                     new V_Number(4)
                 ),
                 Rounding.Down)
-            ), CustomMethodType.MultiAction_Value);
+            ), CustomMethodType.Value);
         }
     }
 
