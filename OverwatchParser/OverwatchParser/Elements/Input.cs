@@ -244,4 +244,11 @@ namespace OverwatchParser.Elements
         [return: MarshalAs(UnmanagedType.Bool)]
         internal static extern bool IsWindowVisible(IntPtr hWnd);
     }
+
+    public enum Wait
+    {
+        Small,
+        Medium,
+        Long
+    }
 }

@@ -120,11 +120,12 @@ namespace OverwatchParser.Elements
                     InputHandler.Input.RepeatKey(Keys.Up, 3);
 
                     // Input value1.
-                    action.Input();
+                    Weight weight = new Weight();
+                    action.Input(weight);
 
-                    // Close the Create Condition menu.
+                    // Close the Create Action menu.
                     InputHandler.Input.KeyPress(Keys.Escape);
-                    Thread.Sleep(InputHandler.BigStep);
+                    weight.Sleep(Wait.Long);
                 }
 
             // Close the rule

@@ -2,17 +2,14 @@
 usevar globalvar A;
 usevar playervar A;
 
-define globalvar mapID;
+define playervar mapID;
 
 rule: "Get map ID"
 	Event.Ongoing_EachPlayer
 
-    if (IsButtonHeld(EventPlayer(), Button.Interact) | IsButtonHeld(EventPlayer(), Button.Crouch))
+    if (IsButtonHeld(EventPlayer(), Button.Interact))
 
 	{
-        for (player in AllPlayers())
-        {
-            SmallMessage(EventPlayer(), AllPlayers()[player]);
-            Wait(2);
-        }
+        mapID = Deltin.GetMapIDCom();
+        SmallMessage(EventPlayer(), mapID);
 	}

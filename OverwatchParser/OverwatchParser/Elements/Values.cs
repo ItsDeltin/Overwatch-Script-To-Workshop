@@ -155,11 +155,6 @@ namespace OverwatchParser.Elements
     [Parameter("Position", ValueType.VectorAndPlayer, typeof(V_Vector))]
     public class V_NearestWalkablePosition : Element {}
 
-    [ElementData("Multiply", ValueType.Any, 0)]
-    [Parameter("Value", ValueType.Any, typeof(V_Number))]
-    [Parameter("Value", ValueType.Any, typeof(V_Number))]
-    public class V_Multiply : Element {}
-
     [ElementData("Not", ValueType.Boolean, 1)]
     [Parameter("Value", ValueType.Boolean, typeof(V_True))]
     public class V_Not : Element {}
@@ -178,31 +173,36 @@ namespace OverwatchParser.Elements
 
         double value;
 
-        protected override void AfterParameters()
+        protected override void AfterParameters(Weight weight)
         {
             InputHandler.Input.KeyPress(Keys.Down);
-            Thread.Sleep(InputHandler.SmallStep);
+            weight.Sleep(Wait.Small);
 
             // Clear the text
             InputHandler.Input.KeyPress(Keys.D0);
-            Thread.Sleep(InputHandler.SmallStep);
+            weight.Sleep(Wait.Small);
             InputHandler.Input.KeyPress(Keys.Back);
-            Thread.Sleep(InputHandler.SmallStep);
+            weight.Sleep(Wait.Small);
 
             var keys = InputHandler.GetNumberKeys(value);
             for (int i = 0; i < keys.Length; i++)
             {
                 InputHandler.Input.KeyDown(keys[i]);
-                Thread.Sleep(InputHandler.SmallStep);
+                weight.Sleep(Wait.Small);
             }
 
             InputHandler.Input.KeyPress(Keys.Enter);
-            Thread.Sleep(InputHandler.SmallStep);
+            weight.Sleep(Wait.Small);
         }
 
         protected override string Info()
         {
             return $"{ElementData.ElementName} {value}";
+        }
+
+        protected override double GetWeight()
+        {
+            return 2;
         }
     }
 
@@ -214,6 +214,11 @@ namespace OverwatchParser.Elements
     [Parameter("Value", ValueType.Number, typeof(V_Number))]
     [Parameter("Value", ValueType.Number, typeof(V_Number))]
     public class V_Modulo : Element {}
+
+    [ElementData("Multiply", ValueType.Any, 0)]
+    [Parameter("Value", ValueType.Any, typeof(V_Number))]
+    [Parameter("Value", ValueType.Any, typeof(V_Number))]
+    public class V_Multiply : Element {}
 
     [ElementData("Or", ValueType.Boolean, 13)]
     [Parameter("Value", ValueType.Boolean, typeof(V_True))]
@@ -236,6 +241,7 @@ namespace OverwatchParser.Elements
 
     [ElementData("Round To Integer", ValueType.Number, 0)]
     [Parameter("Value", ValueType.Number, typeof(V_Number))]
+    [Parameter("Rounding Type", typeof(Rounding))]
     public class V_RoundToInteger : Element {}
 
     [ElementData("Square Root", ValueType.Number)]
@@ -258,28 +264,28 @@ namespace OverwatchParser.Elements
 
         int textID;
 
-        protected override void BeforeParameters()
+        protected override void BeforeParameters(Weight weight)
         {
-            Thread.Sleep(InputHandler.BigStep);
+            weight.Sleep(Wait.Small);
 
             // Select "string" option
             InputHandler.Input.KeyPress(Keys.Down);
-            Thread.Sleep(InputHandler.SmallStep);
+            weight.Sleep(Wait.Small);
 
             // Open the string list
             InputHandler.Input.KeyPress(Keys.Space);
-            Thread.Sleep(InputHandler.BigStep);
+            weight.Sleep(Wait.Long);
 
             // Leave the search field input
             InputHandler.Input.KeyPress(Keys.Enter);
-            Thread.Sleep(InputHandler.SmallStep);
+            weight.Sleep(Wait.Small);
 
             // Select the selected string by textID.
             InputHandler.Input.RepeatKey(Keys.Down, textID);
 
             // Select the string
             InputHandler.Input.KeyPress(Keys.Space);
-            Thread.Sleep(InputHandler.BigStep);
+            weight.Sleep(Wait.Long);
         }
 
         protected override string Info()
@@ -349,6 +355,11 @@ namespace OverwatchParser.Elements
                 stringList.Add(new V_Null());
 
             return stringList.ToArray();
+        }
+
+        protected override double GetWeight()
+        {
+            return 2;
         }
     }
 

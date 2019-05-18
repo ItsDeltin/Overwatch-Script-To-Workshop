@@ -27,19 +27,19 @@ namespace OverwatchParser.Elements
         }
 
         [CustomMethod("AngleOfVectors", CustomMethodType.MultiAction_Value)]
-        static MethodResult AngleOfVectors(InternalVars internalVars, bool isGlobal, object[] parameters)
+        static MethodResult AngleOfVectors(bool isGlobal, object[] parameters)
         {
             var eventPlayer = new V_EventPlayer();
 
-            Var a      = internalVars.AssignVar(isGlobal);
-            Var b      = internalVars.AssignVar(isGlobal);
-            Var c      = internalVars.AssignVar(isGlobal);
-            Var ab     = internalVars.AssignVar(isGlobal);
-            Var bc     = internalVars.AssignVar(isGlobal);
-            Var abVec  = internalVars.AssignVar(isGlobal);
-            Var bcVec  = internalVars.AssignVar(isGlobal);
-            Var abNorm = internalVars.AssignVar(isGlobal);
-            Var bcNorm = internalVars.AssignVar(isGlobal);
+            Var a      = Var.AssignVar(isGlobal);
+            Var b      = Var.AssignVar(isGlobal);
+            Var c      = Var.AssignVar(isGlobal);
+            Var ab     = Var.AssignVar(isGlobal);
+            Var bc     = Var.AssignVar(isGlobal);
+            Var abVec  = Var.AssignVar(isGlobal);
+            Var bcVec  = Var.AssignVar(isGlobal);
+            Var abNorm = Var.AssignVar(isGlobal);
+            Var bcNorm = Var.AssignVar(isGlobal);
 
             Element zeroVec = Element.Part<V_Vector>(new V_Number(0), new V_Number(0), new V_Number(0));
 
@@ -129,13 +129,18 @@ namespace OverwatchParser.Elements
         }
 
         [CustomMethod("GetMapID", CustomMethodType.MultiAction_Value)]
-        static MethodResult GetMapID(InternalVars internalVars, bool isGlobal, object[] parameters)
+        static MethodResult GetMapID(bool isGlobal, object[] parameters)
         {
             /*
              All credit to https://us.forums.blizzard.com/en/overwatch/t/workshop-resource-get-the-current-map-name-updated-1-action/
              Based off code: 5VAQA
             */
-            Var work = internalVars.AssignVar(isGlobal);
+
+            int mapcount = 0;
+            for (int i = 0; i < Constants.MapChecks.Length; i++)
+                mapcount += Constants.MapChecks[i].Length;
+
+            Var work = Var.AssignVarRange(isGlobal, mapcount);
 
             List<Element> sets = new List<Element>();
 
@@ -166,6 +171,57 @@ namespace OverwatchParser.Elements
 
             return new MethodResult(sets.ToArray(),
                 Element.Part<V_IndexOfArrayValue>(work.GetVariable(),
+                Element.Part<V_RoundToInteger>(Element.Part<V_Divide>(
+                    Element.Part<V_RoundToInteger>(
+                        Element.Part<V_Multiply>(
+                            Element.Part<V_DistanceBetween>(
+                                Element.Part<V_Vector>(new V_Number(0), new V_Number(0), new V_Number(0)),
+                                Element.Part<V_NearestWalkablePosition>(Element.Part<V_Vector>(new V_Number(100), new V_Number(100), new V_Number(100)))
+                            ),
+                            new V_Number(100)
+                        ),
+                        Rounding.Down
+                    ),
+                    new V_Number(4)
+                ),
+                Rounding.Down)
+            ), CustomMethodType.MultiAction_Value);
+        }
+
+        [CustomMethod("GetMapIDCom", CustomMethodType.MultiAction_Value)]
+        static MethodResult GetMapIDCom(bool isGlobal, object[] parameters)
+        {
+            /*
+             All credit to https://us.forums.blizzard.com/en/overwatch/t/workshop-resource-get-the-current-map-name-updated-1-action/
+             Based off code: 5VAQA
+            */
+
+            int mapcount = 0;
+            for (int i = 0; i < Constants.MapChecks.Length; i++)
+                mapcount += Constants.MapChecks[i].Length;
+
+            List<Element> sets = new List<Element>();
+
+            V_AppendToArray prev = null;
+            V_AppendToArray current = null;
+            for (int s = 0; s < Constants.MapChecks.Length; s++)
+                for (int i = 0; i < Constants.MapChecks[s].Length; i++)
+                {
+                    current = new V_AppendToArray();
+                    current.ParameterValues = new object[2];
+
+                    if (prev != null)
+                        current.ParameterValues[0] = prev;
+                    else
+                        current.ParameterValues[0] = new V_EmptyArray();
+
+                    // Set the map ID
+                    current.ParameterValues[1] = new V_Number(Constants.MapChecks[s][i]);
+                    prev = current;
+                }
+
+            return new MethodResult(null,
+                Element.Part<V_IndexOfArrayValue>(current,
                 Element.Part<V_RoundToInteger>(Element.Part<V_Divide>(
                     Element.Part<V_RoundToInteger>(
                         Element.Part<V_Multiply>(

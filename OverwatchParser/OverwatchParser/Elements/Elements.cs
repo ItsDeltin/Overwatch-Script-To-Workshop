@@ -156,9 +156,9 @@ namespace OverwatchParser.Elements
 
         public object[] ParameterValues;
 
-        public void Input() => Input(false, ValueType.Any, null, 0);
+        public void Input(Weight weight = null) => Input(false, ValueType.Any, null, 0, weight != null ? weight : new Weight());
 
-        private void Input(bool isAlreadySet, ValueType valueType, Type defaultType, int depth)
+        private void Input(bool isAlreadySet, ValueType valueType, Type defaultType, int depth, Weight weight)
         {
             // Make ParameterValues the same size as parameterData.
             if (ParameterValues == null)
@@ -167,6 +167,9 @@ namespace OverwatchParser.Elements
 
             Console.WriteLine($"{new string(' ', depth * 4)}{Info()}");
 
+            // Add to the weight.
+            weight.Add(GetWeight());
+
             // Select the option
             if (!isAlreadySet)
             {
@@ -174,12 +177,12 @@ namespace OverwatchParser.Elements
                 if (defaultType == typeof(V_Vector))
                 {
                     InputHandler.Input.KeyPress(Keys.Right);
-                    Thread.Sleep(InputHandler.MediumStep);
+                    weight.Sleep(Wait.Small);
                 }
 
                 // Open the menu.
                 InputHandler.Input.KeyPress(Keys.Space);
-                Thread.Sleep(InputHandler.BigStep);
+                weight.Sleep(Wait.Long);
 
                 int pos = -1; // The position of the menu button.
 
@@ -187,7 +190,7 @@ namespace OverwatchParser.Elements
                 {
                     pos = ElementData.RowAfterSearch;
                     InputHandler.Input.TextInput(ElementData.ElementName);
-                    Thread.Sleep(InputHandler.MediumStep);
+                    weight.Sleep(Wait.Medium);
                 }
                 else
                 {
@@ -200,17 +203,23 @@ namespace OverwatchParser.Elements
 
                 // Leave the input field
                 InputHandler.Input.KeyPress(Keys.Tab);
-                Thread.Sleep(InputHandler.MediumStep);
+                weight.Sleep(Wait.Medium);
 
                 // Highlight the action/value.
                 InputHandler.Input.RepeatKey(Keys.Down, pos);
 
                 // Select it.
                 InputHandler.Input.KeyPress(Keys.Space);
-                Thread.Sleep(InputHandler.MediumStep);
+                weight.Sleep(Wait.Medium);
             }
 
-            BeforeParameters();
+            if (parameterData.Any(v => v.DefaultType == typeof(V_Vector)))
+            {
+                Console.WriteLine($"[DEBUG]: V_Vector is a default value in {ElementData.ElementName}.");
+                weight.Sleep(Wait.Long);
+            }
+
+            BeforeParameters(weight);
 
             // Do stuff with parameters
             for (int i = 0; i < parameterData.Length; i++)
@@ -221,34 +230,72 @@ namespace OverwatchParser.Elements
 
                 // Select the parameter.
                 InputHandler.Input.KeyPress(Keys.Down);
-                Thread.Sleep(InputHandler.SmallStep);
+                weight.Sleep(Wait.Small);
 
                 // Element input
                 if (parameterData[i].ParameterType == ParameterType.Value)
                     ((Element)ParameterValues[i]).Input(
                         parameterData[i].DefaultType == ParameterValues[i].GetType(),
                         parameterData[i].ValueType, parameterData[i].DefaultType,
-                        depth + 1);
+                        depth + 1,
+                        weight);
 
                 // Enum input
                 else if (parameterData[i].ParameterType == ParameterType.Enum)
                 {
                     Console.WriteLine($"{new string(' ', (depth + 1) * 4)}{ParameterValues[i]}");
                     InputHandler.Input.SelectEnumMenuOption(parameterData[i].EnumType, ParameterValues[i]);
+                    weight.Add(1);
                 }
             }
 
-            AfterParameters();
+            AfterParameters(weight);
 
             if (depth == 0)
                 Console.WriteLine();
         }
 
-        protected virtual void BeforeParameters() { } // Executed before parameters are executed
-        protected virtual void AfterParameters() { } // Executed after parameters are executed
-        protected virtual string Info()
+        protected virtual double GetWeight() { return 1; }
+        protected virtual void BeforeParameters(Weight weight) { } // Executed before parameters are executed
+        protected virtual void AfterParameters(Weight weight) { } // Executed after parameters are executed
+        protected virtual string Info() { return ElementData.ElementName; }
+    }
+
+    public class Weight
+    {
+        public double TotalWeight { get; private set; } = 0;
+        private double Scalar;
+        private const int MSBuffer = 100;
+
+        public Weight(double scalar = 0.2)
         {
-            return ElementData.ElementName;
+            Scalar = scalar;
+        }
+
+        public void Add(double weight)
+        {
+            TotalWeight += weight;
+        }
+
+        public void Sleep(Wait wait)
+        {
+            int duration = 0;
+            switch (wait)
+            {
+                case Wait.Small:
+                    duration = InputHandler.SmallStep;
+                    break;
+
+                case Wait.Medium:
+                    duration = InputHandler.MediumStep;
+                    break;
+
+                case Wait.Long:
+                    duration = InputHandler.BigStep;
+                    break;
+            }
+            duration = Math.Max(duration, duration * ((int)Math.Round(TotalWeight * Scalar) - MSBuffer + 1));
+            Thread.Sleep(duration);
         }
     }
 }

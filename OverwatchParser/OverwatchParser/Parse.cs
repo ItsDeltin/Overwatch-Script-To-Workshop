@@ -33,7 +33,6 @@ namespace OverwatchParser.Parse
             Visitor visitor = new Visitor();
             visitor.Visit(context);
 
-            InternalVars iv;
             {
                 // Get the internal global variable to use.
                 Variable useGlobalVar;
@@ -45,7 +44,7 @@ namespace OverwatchParser.Parse
                 if (!Enum.TryParse<Variable>(context.usePlayerVar().PART().ToString(), out usePlayerVar))
                     throw new SyntaxErrorException("usePlayerVar must be a character.", 0, 0);
 
-                iv = new InternalVars(useGlobalVar, usePlayerVar);
+                Var.Setup(useGlobalVar, usePlayerVar);
             }
 
             // Get the defined variables.
@@ -53,7 +52,7 @@ namespace OverwatchParser.Parse
 
             for (int i = 0; i < vardefine.Length; i++)
                 // The new var is stored in Var.VarCollection
-                new DefinedVar(vardefine[i], iv);
+                new DefinedVar(vardefine[i]);
 
             // Parse the rules.
             var rules = context.ow_rule();
@@ -61,7 +60,7 @@ namespace OverwatchParser.Parse
 
             for (int i = 0; i < rules.Length; i++)
             {
-                ParseRule parsing = new ParseRule(rules[i], iv);
+                ParseRule parsing = new ParseRule(rules[i]);
 
                 Log.Write($"Building rule: {parsing.Rule.Name}");
                 parsing.Parse();
@@ -76,7 +75,7 @@ namespace OverwatchParser.Parse
             // List all variables
             Log.Write("Variable Guide:");
             foreach (DefinedVar var in DefinedVar.VarCollection)
-                Console.WriteLine($"{var.Name}: {(var.IsGlobal ? "global" : "player")} {var.Variable}{(var.IsArray ? $"[{var.Index}]" : "")}");
+                Console.WriteLine($"{var.Name}: {(var.IsGlobal ? "global" : "player")} {var.Variable}{(var.IsInArray ? $"[{var.Index}]" : "")}");
 
             return compiledRules.ToArray();
         }
@@ -89,7 +88,6 @@ namespace OverwatchParser.Parse
         private readonly List<Element> Actions = new List<Element>();
         private readonly List<Condition> Conditions = new List<Condition>();
 
-        private readonly InternalVars InternalVars;
         private DeltinScriptParser.Ow_ruleContext RuleContext;
 
         private bool IsGlobal;
@@ -97,12 +95,11 @@ namespace OverwatchParser.Parse
         //private bool CreateInitialSkip = false;
         //private int SkipCountIndex = -1;
 
-        public ParseRule(DeltinScriptParser.Ow_ruleContext ruleContext, InternalVars internalVars)
+        public ParseRule(DeltinScriptParser.Ow_ruleContext ruleContext)
         {
             Rule = CreateRuleFromContext(ruleContext);
             RuleContext = ruleContext;
             IsGlobal = Rule.RuleEvent == RuleEvent.Ongoing_Global;
-            InternalVars = internalVars;
         }
 
         public void Parse()
@@ -316,7 +313,7 @@ namespace OverwatchParser.Parse
                 Element forArrayElement = ParseExpression(statementContext.@for().expr());
 
                 // Use skipIndex with Get/SetIVarAtIndex to get the bool to determine if the loop is running.
-                Var isBoolRunningSkipIf = InternalVars.AssignVar(IsGlobal);
+                Var isBoolRunningSkipIf = Var.AssignVar(IsGlobal);
                 // Insert the SkipIf at the start of the rule.
                 Actions.Insert(0,
                     Element.Part<A_SkipIf>
@@ -329,7 +326,7 @@ namespace OverwatchParser.Parse
                 );
 
                 // Create the for's temporary variable.
-                DefinedVar forTempVar = InternalVars.AssignDefinedVar(
+                DefinedVar forTempVar = Var.AssignDefinedVar(
                     name    : statementContext.@for().PART().GetText(),
                     isGlobal: IsGlobal,
                     line    : statementContext.@for().start.Line,
@@ -694,7 +691,7 @@ namespace OverwatchParser.Parse
 
             object[] parameters = cmContext.expr().Select(v => ParseParameter(v)).ToArray();
 
-            MethodResult result = (MethodResult)customMethod.Invoke(null, new object[] { InternalVars, IsGlobal, parameters });
+            MethodResult result = (MethodResult)customMethod.Invoke(null, new object[] { IsGlobal, parameters });
             return result;
         }
 
@@ -728,6 +725,8 @@ namespace OverwatchParser.Parse
         }
     }
 
+#warning delete pls
+    /*
     class InternalVars
     {
         public InternalVars(Variable global, Variable player)
@@ -775,22 +774,96 @@ namespace OverwatchParser.Parse
             return new DefinedVar(name, isGlobal, GetVar(isGlobal), Assign(isGlobal), line, column);
         }
     }
+    */
 
     class Var
     {
+        public static Variable Global { get; private set; }
+        public static Variable Player { get; private set; }
+
+        private static int NextFreeGlobalIndex { get; set; }
+        private static int NextFreePlayerIndex { get; set; }
+
+        public static void Setup(Variable global, Variable player)
+        {
+            Global = global;
+            Player = player;
+        }
+
+        public static int Assign(bool isGlobal)
+        {
+            if (isGlobal)
+            {
+                int index = NextFreeGlobalIndex;
+                NextFreeGlobalIndex++;
+                return index;
+            }
+            else
+            {
+                int index = NextFreePlayerIndex;
+                NextFreePlayerIndex++;
+                return index;
+            }
+        }
+
+        private static Variable GetVar(bool isGlobal)
+        {
+            if (isGlobal)
+                return Global;
+            else
+                return Player;
+        }
+
+        public static Var AssignVar(bool isGlobal)
+        {
+            return new Var(isGlobal, GetVar(isGlobal), Assign(isGlobal));
+        }
+
+        public static Var AssignVarRange(bool isGlobal, int count)
+        {
+            int start = Assign(isGlobal);
+            for (int i = 0; i < count; i++)
+                Assign(isGlobal);
+
+            return new Var(isGlobal, GetVar(isGlobal), start, count);
+        }
+
+        public static DefinedVar AssignDefinedVar(bool isGlobal, string name, int line, int column)
+        {
+            return new DefinedVar(name, isGlobal, GetVar(isGlobal), Assign(isGlobal), line, column);
+        }
+
+
+
         public bool IsGlobal { get; protected set; }
-        public bool IsArray { get; protected set; }
         public Variable Variable { get; protected set; }
+
+        public bool IsInArray { get; protected set; }
         public int Index { get; protected set; }
+
+        public bool IsSubArray { get; private set; }
+        public int Start { get; protected set; }
+        public int Count { get; protected set; }
 
         public Var(bool isGlobal, Variable variable, int index)
         {
             IsGlobal = isGlobal;
             Variable = variable;
             Index = index;
-            IsArray = index != -1;
+            IsInArray = index != -1;
         }
-        public Var()
+
+        public Var(bool isGlobal, Variable variable, int start, int count)
+        {
+            IsGlobal = isGlobal;
+            Variable = Variable;
+
+            IsSubArray = true;
+            Start = start;
+            Count = count;
+        }
+
+        protected Var()
         {}
 
         public Element GetVariable(Element targetPlayer = null)
@@ -800,29 +873,27 @@ namespace OverwatchParser.Parse
             if (targetPlayer == null)
                 targetPlayer = new V_EventPlayer();
 
-            if (!IsArray)
+            if (IsInArray)
+            {
+                if (IsGlobal)
+                    element = Element.Part<V_ValueInArray>(Element.Part<V_GlobalVariable>(Variable), new V_Number(Index));
+                else
+                    element = Element.Part<V_ValueInArray>(Element.Part<V_PlayerVariable>(targetPlayer, Variable), new V_Number(Index));
+            }
+            else if (IsSubArray)
+            {
+                if (IsGlobal)
+                    element = Element.Part<V_ArraySlice>(Element.Part<V_GlobalVariable>(Variable), new V_Number(Start), new V_Number(Count));
+                else
+                    element = Element.Part<V_ArraySlice>(Element.Part<V_PlayerVariable>(targetPlayer, Variable), new V_Number(Start), new V_Number(Count));
+            }
+            else
             {
                 if (IsGlobal)
                     element = Element.Part<V_GlobalVariable>(Variable);
                 else
                     element = Element.Part<V_PlayerVariable>(targetPlayer, Variable);
             }
-            else
-            {
-                element = new V_ValueInArray();
-                List<object> parameterValues = new List<object>();
-                Element arrayParameter;
-
-                if (IsGlobal)
-                    arrayParameter = Element.Part<V_GlobalVariable>(Variable);
-                else
-                    arrayParameter = Element.Part<V_PlayerVariable>(targetPlayer, Variable);
-
-                parameterValues.Add(arrayParameter);
-                parameterValues.Add(new V_Number(Index));
-                element.ParameterValues = parameterValues.ToArray();
-            }
-
 
             return element;
         }
@@ -833,20 +904,46 @@ namespace OverwatchParser.Parse
 
             if (targetPlayer == null)
                 targetPlayer = new V_EventPlayer();
-
-            if (!IsArray)
-            {
-                if (IsGlobal)
-                    element = Element.Part<A_SetGlobalVariable>(Variable, value);
-                else
-                    element = Element.Part<A_SetPlayerVariable>(targetPlayer, Variable, value);
-            }
-            else
+            
+            if (IsInArray)
             {
                 if (IsGlobal)
                     element = Element.Part<A_SetGlobalVariableAtIndex>(Variable, new V_Number(Index), value);
                 else
                     element = Element.Part<A_SetPlayerVariableAtIndex>(targetPlayer, Variable, new V_Number(Index), value);
+            }
+            else if (IsSubArray)
+            {
+                if (IsGlobal)
+                    element = Element.Part<A_SetGlobalVariable>(
+                        Variable, 
+                        Element.Part<V_AppendToArray>(
+                            Element.Part<V_AppendToArray>(
+                                Element.Part<V_ArraySlice>(Element.Part<V_GlobalVariable>(Variable), new V_Number(0), new V_Number(Start)),
+                                value
+                            ),
+                            Element.Part<V_ArraySlice>(Element.Part<V_GlobalVariable>(Variable), new V_Number(Start), Element.Part<V_CountOf>(value))
+                        )
+                    );
+                else
+                    element = Element.Part<A_SetPlayerVariable>(
+                        targetPlayer,
+                        Variable,
+                        Element.Part<V_AppendToArray>(
+                            Element.Part<V_AppendToArray>(
+                                Element.Part<V_ArraySlice>(Element.Part<V_PlayerVariable>(targetPlayer, Variable), new V_Number(0), new V_Number(Start)),
+                                value
+                            ),
+                            Element.Part<V_ArraySlice>(Element.Part<V_PlayerVariable>(targetPlayer, Variable), new V_Number(Start), Element.Part<V_CountOf>(value))
+                        )
+                    );
+            }
+            else
+            {
+                if (IsGlobal)
+                    element = Element.Part<A_SetGlobalVariable>(Variable, value);
+                else
+                    element = Element.Part<A_SetPlayerVariable>(targetPlayer, Variable, value);
             }
 
             return element;
@@ -870,8 +967,7 @@ namespace OverwatchParser.Parse
             return VarCollection.FirstOrDefault(v => v.Name == name);
         }
 
-        public DefinedVar(DeltinScriptParser.VardefineContext vardefine, 
-            InternalVars iv)
+        public DefinedVar(DeltinScriptParser.VardefineContext vardefine)
         {
             IsGlobal = vardefine.GLOBAL() != null;
             string name = vardefine.PART(0).GetText();
@@ -888,20 +984,20 @@ namespace OverwatchParser.Parse
             // Auto assign
             if (useNumber == null && useVar == null)
             {
-                Index = iv.Assign(IsGlobal);
+                Index = Var.Assign(IsGlobal);
 
                 if (IsGlobal)
-                    Variable = iv.Global;
+                    Variable = Var.Global;
                 else
-                    Variable = iv.Player;
+                    Variable = Var.Player;
 
-                IsArray = true;
+                IsInArray = true;
             }
             else
             {
                 if (useNumber != null)
                 {
-                    IsArray = true;
+                    IsInArray = true;
                     string indexString = useNumber.GetText();
                     if (!int.TryParse(indexString, out int index))
                         throw new SyntaxErrorException("Expected number.", useNumber.start.Line, useNumber.start.Column);
@@ -930,7 +1026,7 @@ namespace OverwatchParser.Parse
 
             if (index != -1)
             {
-                IsArray = true;
+                IsInArray = true;
                 Index = index;
             }
 
