@@ -327,6 +327,7 @@ namespace OverwatchParser.Elements
         */
         private static string[] searchOrder = Constants.Strings
             .OrderByDescending(str => str.Contains("{0}"))
+            //.OrderByDescending(str => Regex.Matches(str, @"\{[0-9]\}").Count)
             .ThenByDescending(str => str.IndexOfAny("-></*-+=()!?".ToCharArray()) != -1)
             .ThenByDescending(str => str.Length)
             .ToArray();
@@ -345,7 +346,7 @@ namespace OverwatchParser.Elements
             if (depth == 0)
             {
                 Log.Write($"\"{value}\"");
-                escapedValue = Escape(value);
+                //escapedValue = Escape(value);
             }
 
             string debug = new string(' ', depth * 4);
@@ -356,22 +357,26 @@ namespace OverwatchParser.Elements
 
                 string regex =
                     Regex.Replace(Escape(searchString)
-                    , "({[0-9]})", "(.+)");  // Converts {0} {1} {2} to (.+) (.+) (.+)
-                regex = $"{regex}";
+                    , "({[0-9]})", @"(([a-z_]+ ?)|(.+))");  // Converts {0} {1} {2} to (.+) (.+) (.+)
+                regex = $"^{regex}$";
                 var match = Regex.Match(escapedValue, regex);
+
+                if (searchString == "{0} {1} {2}")
+                    ;
 
                 if (match.Success)
                 {
-                    Log.Write(debug + searchString /*+ $"    (\"{regex}\" to \"{escapedValue}\")"*/);
+                    Log.Write(debug + searchString + $" \"{regex}\" > \"{value}\"" /*+ $"    (\"{regex}\" to \"{escapedValue}\")"*/);
                     V_String str = new V_String(searchString);
 
+                    bool valid = true;
                     List<Element> parsedParameters = new List<Element>();
-                    for (int g = 1; g < match.Groups.Count; g++)
+                    for (int g = 1; g < match.Groups.Count; g+=3)
                     {
                         string currentParameterValue = match.Groups[g].Captures[0].Value;
-                        Log.Write(debug + $"  -{currentParameterValue}");
+                        //Log.Write(debug + $"  -{currentParameterValue}");
 
-                        Match parameterString = Regex.Match(currentParameterValue, "<([0-9]+)>");
+                        Match parameterString = Regex.Match(currentParameterValue, "^<([0-9]+)>$");
                         if (parameters != null && parameterString.Success)
                         {
                             int index = int.Parse(parameterString.Groups[1].Value);
@@ -383,16 +388,27 @@ namespace OverwatchParser.Elements
                             parsedParameters.Add(parameters[index]);
                         }
                         else
-                            parsedParameters.Add(ParseString(currentParameterValue, parameters, depth + 1));
+                        {
+                            var p = ParseString(currentParameterValue, parameters, depth + 1);
+                            if (p == null)
+                            {
+                                Log.Write($"{debug}L{searchString}");
+                                valid = false;
+                                break;
+                            }
+                            parsedParameters.Add(p);
+                        }
                     }
                     str.ParameterValues = parsedParameters.ToArray();
 
+                    if (!valid)
+                        continue;
                     return str;
                 }
             }
 
-            //return null;
-            throw new InvalidStringException($"Could not desipher the string {value}.");
+            return null;
+            //throw new InvalidStringException($"Could not desipher the string {value}.");
         }
 
         private static string Escape(string value)
@@ -403,6 +419,7 @@ namespace OverwatchParser.Elements
                 .Replace("(", @"\(")
                 .Replace(")", @"\)")
                 .Replace(".", @"\.")
+                .Replace("/", @"\/")
                 ;
         }
 
