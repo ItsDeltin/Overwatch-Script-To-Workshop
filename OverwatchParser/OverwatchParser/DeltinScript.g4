@@ -18,28 +18,29 @@ usePlayerVar : USEVAR PLAYER PART STATEMENT_END ;
 
 expr 
 	: 
-      number                                  // Numbers
-	| custom_method                           // Custom Methods
-	| method                                  // Methods
-	| string                                  // Strings
-	| enum                                    // Enums
-	| expr INDEX_START expr INDEX_END         // Array creation
-	| INDEX_START expr (',' expr)* INDEX_END  // Arrays
-	| true                                    // True
-	| false                                   // False
-	| null                                    // Null
-	| expr SEPERATOR expr                     // Variable seperation
-	| variable                                // Variables
-	|<assoc=right> '(' expr ')'               // Groups
-	| expr '^' expr                           // x^y
-	| expr '*' expr                           // x*y
-	| expr '/' expr                           // x/y
-	| expr '%' expr                           // x%y
-	| expr '+' expr                           // x+y
-	| expr '-' expr                           // x-y
-	| not expr                                // !x
-	| expr BOOL expr                          // x & y
-	| expr COMPARE expr                       // x == y
+      number                                      // Numbers
+	| custom_method                               // Custom Methods
+	| method                                      // Methods
+	| string                                      // Strings
+	| enum                                        // Enums
+	| expr INDEX_START expr INDEX_END             // Array creation
+	| INDEX_START expr (',' expr)* INDEX_END      // Arrays
+	| FORMAT_START string (',' expr)* FORMAT_STOP // Formatted strings
+	| true                                        // True
+	| false                                       // False
+	| null                                        // Null
+	| expr SEPERATOR expr                         // Variable seperation
+	| variable                                    // Variables
+	|<assoc=right> '(' expr ')'                   // Groups
+	| expr '^' expr                               // x^y
+	| expr '*' expr                               // x*y
+	| expr '/' expr                               // x/y
+	| expr '%' expr                               // x%y
+	| expr '+' expr                               // x+y
+	| expr '-' expr                               // x-y
+	| not expr                                    // !x
+	| expr BOOL expr                              // x & y
+	| expr COMPARE expr                           // x == y
 	;
 
 enum     : (BUTTON | COLOR | EFFECT | EFFECTREV) SEPERATOR PART ;
@@ -115,6 +116,8 @@ INDEX_START   : '[' ;
 INDEX_END     : ']' ;
 STATEMENT_END : ';' ;
 SEPERATOR     : '.' ;
+FORMAT_START  : '<' ;
+FORMAT_STOP   : '>' ;
 
 // Keywords
 RULE_WORD : 'rule'      ;

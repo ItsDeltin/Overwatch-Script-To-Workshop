@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Threading;
 using System.Windows.Forms;
+using System.Text.RegularExpressions;
 
 namespace OverwatchParser.Elements
 {
@@ -256,17 +257,17 @@ namespace OverwatchParser.Elements
     {
         public V_String(string text, params Element[] stringValues) : base(NullifyEmptyValues(stringValues))
         {
-            textID = Array.IndexOf(Constants.Strings, text);
-            if (textID == -1)
+            TextID = Array.IndexOf(Constants.Strings, text);
+            if (TextID == -1)
                 throw new InvalidStringException(text);
         }
         public V_String() : this(Constants.DEFAULT_STRING) {}
 
-        int textID;
+        public int TextID { get; private set; }
 
         protected override void BeforeParameters(Weight weight)
         {
-            string value = Constants.Strings[textID]
+            string value = Constants.Strings[TextID]
                 .Replace('_', ' ');
 
             weight.Sleep(Wait.Small);
@@ -277,6 +278,7 @@ namespace OverwatchParser.Elements
 
             // Open the string list
             InputHandler.Input.KeyPress(Keys.Space);
+            weight.Sleep(Wait.Long);
             weight.Sleep(Wait.Long);
 
             // Search the string
@@ -312,88 +314,96 @@ namespace OverwatchParser.Elements
 
         protected override string Info()
         {
-            return $"{ElementData.ElementName} {Constants.Strings[textID]}";
+            return $"{ElementData.ElementName} {Constants.Strings[TextID]}";
         }
 
-        public static Element BuildString(params Element[] strings)
+        private static Log Log = new Log("String Parse");
+
+        /*
+         The order of string search:
+         - Has Parameters?
+         - Has a symbol?
+         - Length
+        */
+        private static string[] searchOrder = Constants.Strings
+            .OrderByDescending(str => str.Contains("{0}"))
+            .ThenByDescending(str => str.IndexOfAny("-></*-+=()!?".ToCharArray()) != -1)
+            .ThenByDescending(str => str.Length)
+            .ToArray();
+
+        private static bool CheckSearch(string str, int count, bool special)
         {
-            if (strings.Length == 0)
-                throw new ArgumentException($"There needs to be at least 1 string in the {nameof(strings)} array.");
-
-            if (strings.Length == 1)
-                return strings[0];
-
-            if (strings.Length == 2)
-                return new V_String("{0} {1}", strings);
-
-            if (strings.Length == 3)
-                return new V_String("{0} {1} {2}", strings);
-
-            if (strings.Length > 3)
-                return new V_String("{0} {1} {2}", strings[0], strings[1], BuildString(strings.Skip(2).ToArray()));
-
-            throw new Exception();
+            return Regex.Matches(str, @"\{[0-9]\}").Count == count
+                && (special ? str.IndexOfAny(",-></*-+=()!?:".ToCharArray()) != -1 || new string[] { "and", "vs" }.Any(specialString => str.Contains(specialString)) : true);
         }
 
-        public static Element BuildString(string value)
+        public static Element ParseString(string value, Element[] parameters, int depth = 0)
         {
-            List<Element> elements = new List<Element>();
+            value = value.ToLower();
 
-            string[] stringSplit = value
-                .ToLower()
-                .Split(' ');
-
-            for (int s = 0; s < stringSplit.Length; s++)
+            string escapedValue = value;
+            if (depth == 0)
             {
-                string fullString = "";
-
-                bool wasFound = false;
-                int lastSuccess = s;
-                for (int e = s; e < stringSplit.Length; e++)
-                {
-                    var test = string.Join(" ", stringSplit.Skip(s).Take(e + 1));
-
-                    if (Constants.Strings.Contains(test))
-                    {
-                        fullString = test;
-                        wasFound = true;
-                        lastSuccess = e;
-                    }
-                    else if (wasFound == true)
-                    {
-                        break;
-                    }
-                }
-                s = lastSuccess;
-
-                elements.Add(new V_String(fullString));
+                Log.Write($"\"{value}\"");
+                escapedValue = Escape(value);
             }
 
+            string debug = new string(' ', depth * 4);
 
-                /*
-                if (part.EndsWith("!!!"))
-                    elements.Add(new V_String("{0}!!!", new V_String(part)));
+            for (int i = 0; i < searchOrder.Length; i++)
+            {
+                string searchString = searchOrder[i];
 
-                else if (part.EndsWith("!!"))
-                    elements.Add(new V_String("{0}!!", new V_String(part)));
+                string regex =
+                    Regex.Replace(Escape(searchString)
+                    , "({[0-9]})", "(.+)");  // Converts {0} {1} {2} to (.+) (.+) (.+)
+                regex = $"{regex}";
+                var match = Regex.Match(escapedValue, regex);
 
-                else if (part.EndsWith("!"))
-                    elements.Add(new V_String("{0}!", new V_String(part)));
+                if (match.Success)
+                {
+                    Log.Write(debug + searchString /*+ $"    (\"{regex}\" to \"{escapedValue}\")"*/);
+                    V_String str = new V_String(searchString);
 
-                else if (part.EndsWith("???"))
-                    elements.Add(new V_String("{0}???", new V_String(part)));
+                    List<Element> parsedParameters = new List<Element>();
+                    for (int g = 1; g < match.Groups.Count; g++)
+                    {
+                        string currentParameterValue = match.Groups[g].Captures[0].Value;
+                        Log.Write(debug + $"  -{currentParameterValue}");
 
-                else if (part.EndsWith("??"))
-                    elements.Add(new V_String("{0}??", new V_String(part)));
+                        Match parameterString = Regex.Match(currentParameterValue, "<([0-9]+)>");
+                        if (parameters != null && parameterString.Success)
+                        {
+                            int index = int.Parse(parameterString.Groups[1].Value);
 
-                else if (part.EndsWith("?"))
-                    elements.Add(new V_String("{0}?", new V_String(part)));
+                            if (index > parameters.Length)
+                                throw new InvalidStringException($"Tried to get the {index} format, but there are only {parameters.Length} parameters.");
 
-                else
-                    elements.Add(new V_String(part));
-                */
+                            Log.Write($"{debug}    <param {index}>");
+                            parsedParameters.Add(parameters[index]);
+                        }
+                        else
+                            parsedParameters.Add(ParseString(currentParameterValue, parameters, depth + 1));
+                    }
+                    str.ParameterValues = parsedParameters.ToArray();
 
-            return BuildString(elements.ToArray());
+                    return str;
+                }
+            }
+
+            //return null;
+            throw new InvalidStringException($"Could not desipher the string {value}.");
+        }
+
+        private static string Escape(string value)
+        {
+            return value
+                .Replace("?", @"\?")
+                .Replace("*", @"\*")
+                .Replace("(", @"\(")
+                .Replace(")", @"\)")
+                .Replace(".", @"\.")
+                ;
         }
 
         private static Element[] NullifyEmptyValues(Element[] stringValues)

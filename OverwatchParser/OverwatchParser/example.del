@@ -11,5 +11,5 @@ rule: "Setup"
         TotalAbilityCharges = 5;
         Remaining = TotalAbilityCharges;
 
-        SmallMessage(EventPlayer(), "Ability: Crouch near dead player -> find team. ({Remaining} left)");
+        SmallMessage(EventPlayer(), <"Ability: Crouch near dead player -> find team (<0> <1> left)", Remaining, TotalAbilityCharges>);
     }

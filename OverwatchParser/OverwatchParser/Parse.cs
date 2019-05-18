@@ -591,12 +591,24 @@ namespace OverwatchParser.Parse
 
             if (context.GetChild(0) is DeltinScriptParser.StringContext)
             {
-                return V_String.BuildString(
-                    (context.GetChild(0) as DeltinScriptParser.StringContext)
-                    .STRINGLITERAL().GetText()
+                return V_String.ParseString(
                     // String will look like "hey this is the contents", trim the quotes.
-                    .Trim('\"')
+                    (context.GetChild(0) as DeltinScriptParser.StringContext).STRINGLITERAL().GetText().Trim('\"'),
+                    null
                 );
+            }
+
+            #endregion
+
+            #region Formatted String
+
+            if (context.GetChild(1) is DeltinScriptParser.StringContext)
+            {
+                Element[] values = context.expr().Select(expr => ParseExpression(expr)).ToArray();
+                return V_String.ParseString(
+                    (context.GetChild(1) as DeltinScriptParser.StringContext).STRINGLITERAL().GetText().Trim('\"'),
+                    values
+                    );
             }
 
             #endregion
