@@ -24,6 +24,7 @@ expr
 	| string
 	| enum
 	| expr INDEX_START expr INDEX_END
+	| INDEX_START expr (',' expr)* INDEX_END
 	| true
 	| false
 	| null
@@ -129,6 +130,7 @@ GLOBAL    : 'globalvar' ;
 TRUE      : 'true'      ;
 FALSE     : 'false'     ;
 NULL      : 'null'      ;
+ARRAY     : 'array'     ;
 DELTIN    : 'Deltin'    ;
 
 // Enum

@@ -3,11 +3,11 @@ usevar globalvar A;
 usevar playervar A;
 
 define playervar mapID;
-define playervar Locations L;
+define globalvar Locations L;
 
 rule: "Setup"
     {
-        Locations = [Vector(1, 2, 3), Vector(1, 2, 3), Vector(3, 2, 1)]
+        Locations = [Vector(1, 2, 3), Vector(10, 20, 30), Vector(3, 2, 1), Vector(301, 3, 1)]
     }
 
 rule: "Get map ID"

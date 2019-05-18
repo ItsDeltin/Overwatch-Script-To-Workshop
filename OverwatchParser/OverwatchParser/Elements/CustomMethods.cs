@@ -205,8 +205,6 @@ namespace OverwatchParser.Elements
             for (int i = 0; i < Constants.MapChecks.Length; i++)
                 mapcount += Constants.MapChecks[i].Length;
 
-            List<Element> sets = new List<Element>();
-
             V_AppendToArray prev = null;
             V_AppendToArray current = null;
             for (int s = 0; s < Constants.MapChecks.Length; s++)

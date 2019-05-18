@@ -35,13 +35,11 @@ namespace OverwatchParser.Parse
 
             {
                 // Get the internal global variable to use.
-                Variable useGlobalVar;
-                if (!Enum.TryParse<Variable>(context.useGlobalVar().PART().ToString(), out useGlobalVar))
+                if (!Enum.TryParse(context.useGlobalVar().PART().ToString(), out Variable useGlobalVar))
                     throw new SyntaxErrorException("useGlobalVar must be a character.", 0, 0);
 
                 // Get the internal player variable to use.
-                Variable usePlayerVar;
-                if (!Enum.TryParse<Variable>(context.usePlayerVar().PART().ToString(), out usePlayerVar))
+                if (!Enum.TryParse(context.usePlayerVar().PART().ToString(), out Variable usePlayerVar))
                     throw new SyntaxErrorException("usePlayerVar must be a character.", 0, 0);
 
                 Var.Setup(useGlobalVar, usePlayerVar);
@@ -90,7 +88,7 @@ namespace OverwatchParser.Parse
 
         private DeltinScriptParser.Ow_ruleContext RuleContext;
 
-        private bool IsGlobal;
+        private readonly bool IsGlobal;
 
         //private bool CreateInitialSkip = false;
         //private int SkipCountIndex = -1;
@@ -639,6 +637,33 @@ namespace OverwatchParser.Parse
 
             #endregion
 
+            #region Create Array
+
+            if (context.ChildCount >= 4 && context.GetChild(0).GetText() == "[")
+            {
+                var expressions = context.expr();
+                V_AppendToArray prev = null;
+                V_AppendToArray current = null;
+
+                for (int i = 0; i < expressions.Length; i++)
+                {
+                    current = new V_AppendToArray();
+                    current.ParameterValues = new object[2];
+
+                    if (prev != null)
+                        current.ParameterValues[0] = prev;
+                    else
+                        current.ParameterValues[0] = new V_EmptyArray();
+
+                    current.ParameterValues[1] = ParseExpression(expressions[i]);
+                    prev = current;
+                }
+
+                return current;
+            }
+
+            #endregion
+
             #region Seperator/enum
 
             if (context.ChildCount == 3 && context.GetChild(1).GetText() == ".")
@@ -724,57 +749,6 @@ namespace OverwatchParser.Parse
             return value;
         }
     }
-
-#warning delete pls
-    /*
-    class InternalVars
-    {
-        public InternalVars(Variable global, Variable player)
-        {
-            Global = global;
-            Player = player;
-        }
-        public Variable Global { get; private set; }
-        public Variable Player { get; private set; }
-
-        public int NextFreeGlobalIndex { get; private set; }
-        public int NextFreePlayerIndex { get; private set; }
-
-        public int Assign(bool isGlobal)
-        {
-            if (isGlobal)
-            {
-                int index = NextFreeGlobalIndex;
-                NextFreeGlobalIndex++;
-                return index;
-            }
-            else
-            {
-                int index = NextFreePlayerIndex;
-                NextFreePlayerIndex++;
-                return index;
-            }
-        }
-
-        private Variable GetVar(bool isGlobal)
-        {
-            if (isGlobal)
-                return Global;
-            else
-                return Player;
-        }
-
-        public Var AssignVar(bool isGlobal)
-        {
-            return new Var(isGlobal, GetVar(isGlobal), Assign(isGlobal));
-        }
-
-        public DefinedVar AssignDefinedVar(bool isGlobal, string name, int line, int column)
-        {
-            return new DefinedVar(name, isGlobal, GetVar(isGlobal), Assign(isGlobal), line, column);
-        }
-    }
-    */
 
     class Var
     {
