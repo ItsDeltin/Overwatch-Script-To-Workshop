@@ -15,6 +15,13 @@ namespace OverwatchParser
     {
         static void Main(string[] args)
         {
+            StringParser.ParseString("ability: crouch near dead player -> find team (<0> left)", new Element[]
+            {
+                Element.Part<V_GlobalVariable>(Variable.A)
+            });
+            Console.WriteLine("Done.");
+            Console.ReadLine();
+
             string text = File.ReadAllText(args[0]);
 
             Rule[] generatedRules = Parser.ParseText(text);
@@ -24,34 +31,6 @@ namespace OverwatchParser
             if (generatedRules != null)
                 foreach (Rule rule in generatedRules)
                     rule.Input();
-
-            /*
-            // Create rule
-            Rule rule = new Rule("Start game when there are at least 3 players.");
-
-            // Set conditions
-            rule.Conditions = new Condition[]
-            {
-                // If the game is not initialized (global variable I)
-                new Condition(Element.Part<V_GlobalVariable>(Variable.I), Operators.Equal, new V_False()),
-
-                // and there is at least 3 players.
-                new Condition(new V_NumberOfPlayers(), Operators.GreaterThanOrEqual, new V_Number(3)),
-            };
-
-            // Set actions
-            rule.Actions = new Element[]
-            {
-                // Send a message to chat containing the number of players.
-                Element.Part<A_BigMessage>(new V_AllPlayers(), V_String.BuildString(new V_String("current players"), new V_NumberOfPlayers())),
-
-                // Set initilized (global variable I) to true.
-                Element.Part<A_SetGlobalVariable>(Variable.I, new V_True())
-            };
-
-            // Apply
-            rule.Input();
-            */
 
             Console.WriteLine("Done.");
             Console.ReadLine();

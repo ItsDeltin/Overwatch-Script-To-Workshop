@@ -2,10 +2,14 @@
 usevar globalvar A;
 usevar playervar A;
 
-define playervar mapID;
-define globalvar Locations L;
+define playervar TotalAbilityCharges;
+define playervar Remaining;
 
 rule: "Setup"
+    Event.Ongoing_EachPlayer
     {
-        SmallMessage(EventPlayer(), "high score down");
+        TotalAbilityCharges = 5;
+        Remaining = TotalAbilityCharges;
+
+        SmallMessage(EventPlayer(), "Ability: Crouch near dead player -> find team. ({Remaining} left)");
     }

@@ -266,7 +266,8 @@ namespace OverwatchParser.Elements
 
         protected override void BeforeParameters(Weight weight)
         {
-            string value = Constants.Strings[textID];
+            string value = Constants.Strings[textID]
+                .Replace('_', ' ');
 
             weight.Sleep(Wait.Small);
 
