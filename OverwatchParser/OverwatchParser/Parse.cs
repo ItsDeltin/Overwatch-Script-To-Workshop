@@ -30,6 +30,9 @@ namespace OverwatchParser.Parse
                 // Get context
                 DeltinScriptParser.RulesetContext context = speakParser.ruleset();
 
+                //PrintContext(context);
+                Console.WriteLine(context.ToStringTree(speakParser));
+
                 Visitor visitor = new Visitor();
                 visitor.Visit(context);
 
@@ -82,6 +85,15 @@ namespace OverwatchParser.Parse
                 Log.Write($"Error: Failed to parse.\n{ex}");
                 return null;
             }
+        }
+
+        static void PrintContext(ParserRuleContext context)
+        {
+            if (context == null)
+                return;
+            Log.Write($"{new string(' ', (context.Depth() - 1) * 4)}{context.GetType().Name} [{context.start.Line}, {context.start.Column}] {context.GetText()}");
+            foreach (var child in context.children)
+                PrintContext(child as ParserRuleContext);
         }
     }
 

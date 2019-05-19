@@ -84,9 +84,18 @@ namespace OverwatchParser.Elements
     [Parameter("Killer", ValueType.Player, typeof(V_Null))]
     public class A_Kill : Element {}
 
+    [ElementData("Loop", 0)]
+    public class A_Loop : Element {}
+
     [ElementData("Loop If", 0)]
     [Parameter("Condition", ValueType.Boolean, typeof(V_Compare))]
     public class A_LoopIf : Element {}
+
+    [ElementData("Loop If Condition Is False", 0)]
+    public class A_LoopIfConditionIsFalse : Element {}
+
+    [ElementData("Loop If Condition Is True", 0)]
+    public class A_LoopIfConditionIsTrue : Element { }
 
     [ElementData("Modify Global Variable", 0)]
     [Parameter("Variable", typeof(Variable))]

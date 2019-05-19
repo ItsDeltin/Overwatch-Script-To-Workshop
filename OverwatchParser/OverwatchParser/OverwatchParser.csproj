@@ -68,6 +68,7 @@
     <Compile Include="Elements\Rule.cs" />
     <Compile Include="Elements\Values.cs" />
     <Compile Include="Elements\Input.cs" />
+    <Compile Include="NativeMethods.cs" />
     <Compile Include="Parse.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

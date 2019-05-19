@@ -182,26 +182,17 @@ namespace OverwatchParser.Elements
 
         double value;
 
-        protected override void AfterParameters(Weight weight)
+        protected override void AfterParameters()
         {
-            InputHandler.Input.KeyPress(Keys.Down);
-            weight.Sleep(Wait.Small);
+            InputSim.Press(Keys.Down, Wait.Short);
 
             // Clear the text
-            InputHandler.Input.KeyPress(Keys.D0);
-            weight.Sleep(Wait.Small);
-            InputHandler.Input.KeyPress(Keys.Back);
-            weight.Sleep(Wait.Small);
+            InputSim.Press(Keys.D0, Wait.Short);
+            InputSim.Press(Keys.Back, Wait.Short);
 
-            var keys = InputHandler.GetNumberKeys(value);
-            for (int i = 0; i < keys.Length; i++)
-            {
-                InputHandler.Input.KeyDown(keys[i]);
-                weight.Sleep(Wait.Small);
-            }
+            InputSim.NumberInput(value);
 
-            InputHandler.Input.KeyPress(Keys.Enter);
-            weight.Sleep(Wait.Small);
+            InputSim.Press(Keys.Enter, Wait.Short);
         }
 
         protected override string Info()
@@ -273,29 +264,22 @@ namespace OverwatchParser.Elements
 
         public int TextID { get; private set; }
 
-        protected override void BeforeParameters(Weight weight)
+        protected override void BeforeParameters()
         {
             string value = Constants.Strings[TextID]
                 .Replace('_', ' ');
 
-            weight.Sleep(Wait.Small);
-
             // Select "string" option
-            InputHandler.Input.KeyPress(Keys.Down);
-            weight.Sleep(Wait.Small);
+            InputSim.Press(Keys.Down, Wait.Short);
 
             // Open the string list
-            InputHandler.Input.KeyPress(Keys.Space);
-            weight.Sleep(Wait.Long);
-            weight.Sleep(Wait.Long);
+            InputSim.Press(Keys.Space, Wait.Long);
 
             // Search the string
-            InputHandler.Input.TextInput(value);
-            weight.Sleep(Wait.Long);
+            InputSim.TextInput(value, Wait.Long);
 
             // Leave the search field input
-            InputHandler.Input.KeyPress(Keys.Enter);
-            weight.Sleep(Wait.Small);
+            InputSim.Press(Keys.Enter, Wait.Short);
 
             /*
             Searching for "Down" results in:
@@ -313,11 +297,10 @@ namespace OverwatchParser.Elements
                 before = 0;
 
             // Select the selected string by textID.
-            InputHandler.Input.RepeatKey(Keys.Down, before);
+            InputSim.Repeat(Keys.Down, Wait.Short, before);
 
             // Select the string
-            InputHandler.Input.KeyPress(Keys.Space);
-            weight.Sleep(Wait.Long);
+            InputSim.Press(Keys.Space, Wait.Long);
         }
 
         protected override string Info()
@@ -429,7 +412,7 @@ namespace OverwatchParser.Elements
 
         protected override double GetWeight()
         {
-            return 2;
+            return 3;
         }
     }
 

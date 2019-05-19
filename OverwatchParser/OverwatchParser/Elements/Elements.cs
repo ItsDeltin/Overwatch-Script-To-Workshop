@@ -156,9 +156,9 @@ namespace OverwatchParser.Elements
 
         public object[] ParameterValues;
 
-        public void Input(Weight weight = null) => Input(false, ValueType.Any, null, 0, weight != null ? weight : new Weight());
+        public void Input() => Input(false, ValueType.Any, null, 0);
 
-        private void Input(bool isAlreadySet, ValueType valueType, Type defaultType, int depth, Weight weight)
+        private void Input(bool isAlreadySet, ValueType valueType, Type defaultType, int depth)
         {
             // Make ParameterValues the same size as parameterData.
             if (ParameterValues == null)
@@ -166,9 +166,6 @@ namespace OverwatchParser.Elements
             Array.Resize(ref ParameterValues, parameterData.Length);
 
             Console.WriteLine($"{new string(' ', depth * 4)}{Info()}");
-
-            // Add to the weight.
-            weight.Add(GetWeight());
 
             /*
             // Vectors have an extra button that needs to be adjusted for.
@@ -185,21 +182,18 @@ namespace OverwatchParser.Elements
                 // Vectors have an extra button that needs to be adjusted for.
                 if (defaultType == typeof(V_Vector))
                 {
-                    InputHandler.Input.KeyPress(Keys.Right);
-                    weight.Sleep(Wait.Small);
+                    InputSim.Press(Keys.Right, Wait.Short);
                 }
 
                 // Open the menu.
-                InputHandler.Input.KeyPress(Keys.Space);
-                weight.Sleep(Wait.Long);
+                InputSim.Press(Keys.Space, Wait.Long);
 
                 int pos = -1; // The position of the menu button.
 
                 if (ElementData.RowAfterSearch != -1)
                 {
                     pos = ElementData.RowAfterSearch;
-                    InputHandler.Input.TextInput(ElementData.ElementName);
-                    weight.Sleep(Wait.Medium);
+                    InputSim.TextInput(ElementData.ElementName, Wait.Medium);
                 }
                 else
                 {
@@ -211,23 +205,22 @@ namespace OverwatchParser.Elements
                 }
 
                 // Leave the input field
-                InputHandler.Input.KeyPress(Keys.Tab);
-                weight.Sleep(Wait.Medium);
+                InputSim.Press(Keys.Tab, Wait.Medium);
 
                 // Highlight the action/value.
-                InputHandler.Input.RepeatKey(Keys.Down, pos);
+                InputSim.Repeat(Keys.Down, Wait.Short, pos);
 
                 // Select it.
-                InputHandler.Input.KeyPress(Keys.Space);
-                weight.Sleep(Wait.Medium);
+                InputSim.Press(Keys.Space, Wait.Medium);
             }
 
             if (parameterData.Any(v => v.DefaultType == typeof(V_Vector)))
             {
-                weight.Sleep(Wait.Long);
+#warning try to see if it works without this later.
+                InputSim.WaitForNextUpdate(Wait.Long);
             }
 
-            BeforeParameters(weight);
+            BeforeParameters();
 
             // Do stuff with parameters
             for (int i = 0; i < parameterData.Length; i++)
@@ -237,77 +230,32 @@ namespace OverwatchParser.Elements
                     ParameterValues[i] = parameterData[i].GetDefault();
 
                 // Select the parameter.
-                InputHandler.Input.KeyPress(Keys.Down);
-                weight.Sleep(Wait.Small);
+                InputSim.Press(Keys.Down, Wait.Short);
 
                 // Element input
                 if (parameterData[i].ParameterType == ParameterType.Value)
                     ((Element)ParameterValues[i]).Input(
                         parameterData[i].DefaultType == ParameterValues[i].GetType(),
                         parameterData[i].ValueType, parameterData[i].DefaultType,
-                        depth + 1,
-                        weight);
+                        depth + 1);
 
                 // Enum input
                 else if (parameterData[i].ParameterType == ParameterType.Enum)
                 {
                     Console.WriteLine($"{new string(' ', (depth + 1) * 4)}{ParameterValues[i]}");
-                    InputHandler.Input.SelectEnumMenuOption(parameterData[i].EnumType, ParameterValues[i]);
-                    weight.Add(1);
+                    InputSim.SelectEnumMenuOption(parameterData[i].EnumType, ParameterValues[i]);
                 }
             }
 
-            AfterParameters(weight);
+            AfterParameters();
 
             if (depth == 0)
                 Console.WriteLine();
         }
 
         protected virtual double GetWeight() { return 1; }
-        protected virtual void BeforeParameters(Weight weight) { } // Executed before parameters are executed
-        protected virtual void AfterParameters(Weight weight) { } // Executed after parameters are executed
+        protected virtual void BeforeParameters() { } // Executed before parameters are executed
+        protected virtual void AfterParameters() { } // Executed after parameters are executed
         protected virtual string Info() { return ElementData.ElementName; }
-    }
-
-    public class Weight
-    {
-        public double TotalWeight { get; private set; } = 0;
-        private double Scalar;
-        private const int MSBuffer = 100;
-
-        public Weight(double scalar = 0.5)
-        {
-            Scalar = scalar;
-        }
-
-        public void Add(double weight)
-        {
-            TotalWeight += weight;
-        }
-
-        public void Sleep(Wait wait)
-        {
-            int duration = 0;
-            int max = 0;
-            switch (wait)
-            {
-                case Wait.Small:
-                    duration = InputHandler.SmallStep;
-                    max = 2000;
-                    break;
-
-                case Wait.Medium:
-                    duration = InputHandler.MediumStep;
-                    max = 5000;
-                    break;
-
-                case Wait.Long:
-                    duration = InputHandler.BigStep;
-                    max = 10000;
-                    break;
-            }
-            duration = Math.Min(Math.Max(duration, duration * ((int)Math.Round(TotalWeight * Scalar) - MSBuffer + 1)), max);
-            Thread.Sleep(duration);
-        }
     }
 }

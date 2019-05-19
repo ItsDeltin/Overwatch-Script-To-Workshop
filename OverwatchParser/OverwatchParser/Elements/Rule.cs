@@ -44,57 +44,48 @@ namespace OverwatchParser.Elements
         {
             if (NumberOfRules == 0)
             {
-                InputHandler.Input.KeyPress(Keys.Tab);
-                InputHandler.Input.RepeatKey(Keys.Right, 2);
-                Thread.Sleep(InputHandler.SmallStep);
+                InputSim.Press(Keys.Tab, Wait.Short);
+                InputSim.Repeat(Keys.Right, Wait.Short, 2);
             }
 
             // Create rule.
-            InputHandler.Input.KeyPress(Keys.Space);
-            Thread.Sleep(InputHandler.BigStep);
+            InputSim.Press(Keys.Space, Wait.Long);
 
             NumberOfRules++;
 
             // Select rule name.
-            InputHandler.Input.RepeatKey(Keys.Down, NumberOfRules);
+            InputSim.Repeat(Keys.Down, Wait.Short, NumberOfRules);
 
-            InputHandler.Input.KeyPress(Keys.Right);
-            Thread.Sleep(InputHandler.SmallStep);
+            InputSim.Press(Keys.Right, Wait.Short);
 
             // Input the name.
-            InputHandler.Input.TextInput(Name);
-            Thread.Sleep(InputHandler.SmallStep);
+            InputSim.TextInput(Name, Wait.Short);
 
             // Leave name input menu.
-            InputHandler.Input.KeyPress(Keys.Tab);
-            Thread.Sleep(InputHandler.SmallStep);
+            InputSim.Press(Keys.Tab, Wait.Short);
 
             // Leaving the input menu with tab resets the controller position.
 
             // Select the event type.
-            InputHandler.Input.RepeatKey(Keys.Down, NumberOfRules + 1);
+            InputSim.Repeat(Keys.Down, Wait.Short, NumberOfRules + 1);
 
-            InputHandler.Input.SelectEnumMenuOption(RuleEvent);
+            InputSim.SelectEnumMenuOption(RuleEvent);
 
             // If the rule's event is not global, set the team and player settings.
             if (RuleEvent != RuleEvent.Ongoing_Global)
             {
                 // Set the team setting.
-                InputHandler.Input.KeyPress(Keys.Down);
-                Thread.Sleep(InputHandler.SmallStep);
-                InputHandler.Input.SelectEnumMenuOption(Team);
+                InputSim.Press(Keys.Down, Wait.Short);
+                InputSim.SelectEnumMenuOption(Team);
 
                 // Set the player setting.
-                InputHandler.Input.KeyPress(Keys.Down);
-                Thread.Sleep(InputHandler.SmallStep);
-                InputHandler.Input.SelectEnumMenuOption(Player);
+                InputSim.Press(Keys.Down, Wait.Short);
+                InputSim.SelectEnumMenuOption(Player);
             }
 
-            InputHandler.Input.KeyPress(Keys.Down); // Hovering over the "Add Action" button.
-            Thread.Sleep(InputHandler.SmallStep);
+            InputSim.Press(Keys.Down, Wait.Short); // Hovering over the "Add Action" button.
 
-            InputHandler.Input.KeyPress(Keys.Left); // Hovering over the "Add Condition" button.
-            Thread.Sleep(InputHandler.SmallStep);
+            InputSim.Press(Keys.Left, Wait.Short); // Hovering over the "Add Condition" button.
 
             // Add the conditions
             if (Conditions != null)
@@ -102,42 +93,35 @@ namespace OverwatchParser.Elements
                     condition.Input();
 
             // Select the "Add Action" button.
-            InputHandler.Input.KeyPress(Keys.Right); // Hovering over the "Add Action" button.
-            Thread.Sleep(InputHandler.SmallStep);
+            InputSim.Press(Keys.Right, Wait.Short); // Hovering over the "Add Action" button.
 
             if (Actions != null)
                 foreach(Element action in Actions)
                 {
                     // Open the "Create Action" menu.
-                    InputHandler.Input.KeyPress(Keys.Space);
-                    Thread.Sleep(InputHandler.BigStep);
+                    InputSim.Press(Keys.Space, Wait.Long);
 
                     // Setup control spot
-                    InputHandler.Input.KeyPress(Keys.Tab);
-                    Thread.Sleep(InputHandler.SmallStep);
+                    InputSim.Press(Keys.Tab, Wait.Short);
                     // The spot will be at the bottom when tab is pressed. 
                     // Pressing up once will select the operator value, up another time will select the first value paramerer.
-                    InputHandler.Input.RepeatKey(Keys.Up, 3);
+                    InputSim.Repeat(Keys.Up, Wait.Short, 3);
 
                     // Input value1.
-                    Weight weight = new Weight();
-                    action.Input(weight);
+                    action.Input();
 
                     // Close the Create Action menu.
-                    InputHandler.Input.KeyPress(Keys.Escape);
-                    weight.Sleep(Wait.Long);
+                    InputSim.Press(Keys.Escape, Wait.Long);
                 }
 
             // Close the rule
-            InputHandler.Input.RepeatKey(Keys.Up, 2);
+            InputSim.Repeat(Keys.Up, Wait.Short, 2);
             if (!IsGlobal)
-                InputHandler.Input.RepeatKey(Keys.Up, 2);
+                InputSim.Repeat(Keys.Up, Wait.Short, 2);
 
-            InputHandler.Input.KeyPress(Keys.Space);
-            Thread.Sleep(InputHandler.SmallStep);
+            InputSim.Press(Keys.Space, Wait.Short);
 
-            InputHandler.Input.RepeatKey(Keys.Up, NumberOfRules);
-            Thread.Sleep(InputHandler.SmallStep);
+            InputSim.Repeat(Keys.Up, Wait.Short, NumberOfRules);
         }
     }
 }

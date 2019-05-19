@@ -33,32 +33,27 @@ namespace OverwatchParser.Elements
         public void Input()
         {
             // Open the "Create Condition" menu.
-            InputHandler.Input.KeyPress(Keys.Space);
-            Thread.Sleep(InputHandler.BigStep);
+            InputSim.Press(Keys.Space, Wait.Long);
 
             // Setup control spot
-            InputHandler.Input.KeyPress(Keys.Tab);
-            Thread.Sleep(InputHandler.SmallStep);
+            InputSim.Press(Keys.Tab, Wait.Short);
             // The spot will be at the bottom when tab is pressed. 
             // Pressing up once will select the operator value, up another time will select the first value paramerer.
-            InputHandler.Input.RepeatKey(Keys.Up, 2);
+            InputSim.Repeat(Keys.Up, Wait.Short, 2);
 
             // Input value1.
             Value1.Input();
 
             // Set the operator.
-            InputHandler.Input.KeyPress(Keys.Down);
-            Thread.Sleep(InputHandler.SmallStep);
-            InputHandler.Input.SelectEnumMenuOption(CompareOperator);
+            InputSim.Press(Keys.Down, Wait.Short);
+            InputSim.SelectEnumMenuOption(CompareOperator);
 
             // Input value2.
-            InputHandler.Input.KeyPress(Keys.Down);
-            Thread.Sleep(InputHandler.SmallStep);
+            InputSim.Press(Keys.Down, Wait.Short);
             Value2.Input();
 
             // Close the Create Condition menu.
-            InputHandler.Input.KeyPress(Keys.Escape);
-            Thread.Sleep(InputHandler.BigStep);
+            InputSim.Press(Keys.Escape, Wait.Long);
         }
     }
 }

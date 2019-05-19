@@ -25,7 +25,7 @@ expr
 	| enum                                        // Enums
 	| expr INDEX_START expr INDEX_END             // Array creation
 	| INDEX_START expr (',' expr)* INDEX_END      // Arrays
-	| FORMAT_START string (',' expr)* FORMAT_STOP // Formatted strings
+	| '<' string (',' expr)* '>' // Formatted strings
 	| true                                        // True
 	| false                                       // False
 	| null                                        // Null
@@ -40,7 +40,7 @@ expr
 	| expr '-' expr                               // x-y
 	| not expr                                    // !x
 	| expr BOOL expr                              // x & y
-	| expr COMPARE expr                           // x == y
+	| expr ('<' | '<=' | '==' | '>=' | '>' | '!=') expr // x == y
 	;
 
 enum     : (BUTTON | COLOR | EFFECT | EFFECTREV) SEPERATOR PART ;
@@ -116,8 +116,6 @@ INDEX_START   : '[' ;
 INDEX_END     : ']' ;
 STATEMENT_END : ';' ;
 SEPERATOR     : '.' ;
-FORMAT_START  : '<' ;
-FORMAT_STOP   : '>' ;
 
 // Keywords
 RULE_WORD : 'rule'      ;
@@ -141,17 +139,6 @@ COLOR     : 'Color'     ;
 EFFECT    : 'Effect'    ;
 EFFECTREV : 'EffectRev' ;
 
-/*
-ONGOING_GLOBAL            : 'Event.Ongoing_Global'          ;
-ONGOING_EACH_PLAYER       : 'Event.OngoingPlayer'           ;
-PLAYER_EARNED_ELIMINATION : 'Event.PlayerEarnedElimination' ;
-PLAYER_DEALT_FINAL_BLOW   : 'Event.PlayerDealtFinalBlow'    ;
-PLAYER_DEALT_DAMAGE       : 'Event.PlayerDealtDamage'       ;
-PLAYER_TOOK_DAMAGE        : 'Event.PlayerTookDamage'        ;
-PLAYER_DIED               : 'Event.PlayerDied'              ;
-*/
-
-COMPARE : '<' | '<=' | '==' | '>=' | '>' | '!=';
 STATEMENT_OPERATION : '=' | '^=' | '*=' | '/=' | '+=' | '-=' | '%=';
 BOOL : '&' | '|';
 NOT : '!';
