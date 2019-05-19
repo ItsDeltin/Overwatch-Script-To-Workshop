@@ -210,6 +210,11 @@ namespace OverwatchParser.Elements
     [Parameter("Team", ValueType.Team, typeof(V_Team))]
     public class V_NumberOfPlayers : Element {}
 
+    [ElementData("Players In Slot", ValueType.Player, 0)]
+    [Parameter("Slot", ValueType.Number, typeof(V_Number))]
+    [Parameter("Team", ValueType.Team, typeof(V_Team))]
+    public class V_PlayersInSlot : Element {}
+
     [ElementData("Modulo", ValueType.Number, 0)]
     [Parameter("Value", ValueType.Number, typeof(V_Number))]
     [Parameter("Value", ValueType.Number, typeof(V_Number))]

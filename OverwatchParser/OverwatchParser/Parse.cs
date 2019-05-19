@@ -80,7 +80,7 @@ namespace OverwatchParser.Parse
 
                 return compiledRules.ToArray();
             }
-            catch (Exception ex)
+            catch (SyntaxErrorException ex)
             {
                 Log.Write($"Error: Failed to parse.\n{ex}");
                 return null;
@@ -240,12 +240,13 @@ namespace OverwatchParser.Parse
             }
             #endregion
 
-            #region Variable set. TODO: add support for += -= *= /=
+            #region Variable set
 
             if (statementContext.STATEMENT_OPERATION() != null)
             {
                 DefinedVar variable;
                 Element target;
+                Element index = null;
                 string operation = statementContext.STATEMENT_OPERATION().GetText();
 
                 Element value;
@@ -268,15 +269,30 @@ namespace OverwatchParser.Parse
                 if (statementContext.expr(0).ChildCount == 3
                     && statementContext.expr(0).GetChild(1).GetText() == ".")
                 {
+#warning clarify the tree and add comments
+                    // statementcontext
+                    // V         .expr(0)                          .expr(1)       .expr(2)
+                    // V          V                                  V .GetChild(0) V        
+                    // V          V                                  V   V          V
+                    // statement (expr(expr(<target player expr> . expr(expr(var)) [expr])))
                     variable = DefinedVar.GetVar(statementContext.expr(0).expr(1).GetChild(0).GetText());
                     target = ParseExpression(statementContext.expr(0).expr(0));
+
+                    var indexExpression = statementContext.expr(0).expr(1).expr(1);
+                    if (indexExpression != null)
+                        index = ParseExpression(indexExpression);
                 }
                 else
                 {
                     variable = DefinedVar.GetVar(statementContext.expr(0).GetChild(0).GetText());
                     target = new V_EventPlayer();
+
+                    var indexExpression = statementContext.expr(0).expr(1);
+                    if (indexExpression != null)
+                        index = ParseExpression(indexExpression);
                 }
 
+#warning Add support for +=, -=, etc. for setting variables at indexes.
                 switch (operation)
                 {
                     case "+=":
@@ -304,7 +320,7 @@ namespace OverwatchParser.Parse
                         break;
                 }
 
-                Actions.Add(variable.SetVariable(value, target));
+                Actions.Add(variable.SetVariable(value, target, index));
                 return;
             }
 
@@ -902,52 +918,68 @@ namespace OverwatchParser.Parse
             return element;
         }
 
-        public Element SetVariable(Element value, Element targetPlayer = null)
+        public Element SetVariable(Element value, Element targetPlayer = null, Element setAtIndex = null)
         {
             Element element;
 
             if (targetPlayer == null)
                 targetPlayer = new V_EventPlayer();
-            
-            if (IsInArray)
+
+            if (setAtIndex == null)
             {
-                if (IsGlobal)
-                    element = Element.Part<A_SetGlobalVariableAtIndex>(Variable, new V_Number(Index), value);
-                else
-                    element = Element.Part<A_SetPlayerVariableAtIndex>(targetPlayer, Variable, new V_Number(Index), value);
-            }
-            else if (IsSubArray)
-            {
-                if (IsGlobal)
-                    element = Element.Part<A_SetGlobalVariable>(
-                        Variable, 
-                        Element.Part<V_AppendToArray>(
+                if (IsInArray)
+                {
+                    if (IsGlobal)
+                        element = Element.Part<A_SetGlobalVariableAtIndex>(Variable, new V_Number(Index), value);
+                    else
+                        element = Element.Part<A_SetPlayerVariableAtIndex>(targetPlayer, Variable, new V_Number(Index), value);
+                }
+                else if (IsSubArray)
+                {
+                    if (IsGlobal)
+                        element = Element.Part<A_SetGlobalVariable>(
+                            Variable,
                             Element.Part<V_AppendToArray>(
-                                Element.Part<V_ArraySlice>(Element.Part<V_GlobalVariable>(Variable), new V_Number(0), new V_Number(Start)),
-                                value
-                            ),
-                            Element.Part<V_ArraySlice>(Element.Part<V_GlobalVariable>(Variable), new V_Number(Start), Element.Part<V_CountOf>(value))
-                        )
-                    );
-                else
-                    element = Element.Part<A_SetPlayerVariable>(
-                        targetPlayer,
-                        Variable,
-                        Element.Part<V_AppendToArray>(
+                                Element.Part<V_AppendToArray>(
+                                    Element.Part<V_ArraySlice>(Element.Part<V_GlobalVariable>(Variable), new V_Number(0), new V_Number(Start)),
+                                    value
+                                ),
+                                Element.Part<V_ArraySlice>(Element.Part<V_GlobalVariable>(Variable), new V_Number(Start), Element.Part<V_CountOf>(value))
+                            )
+                        );
+                    else
+                        element = Element.Part<A_SetPlayerVariable>(
+                            targetPlayer,
+                            Variable,
                             Element.Part<V_AppendToArray>(
-                                Element.Part<V_ArraySlice>(Element.Part<V_PlayerVariable>(targetPlayer, Variable), new V_Number(0), new V_Number(Start)),
-                                value
-                            ),
-                            Element.Part<V_ArraySlice>(Element.Part<V_PlayerVariable>(targetPlayer, Variable), new V_Number(Start), Element.Part<V_CountOf>(value))
-                        )
-                    );
+                                Element.Part<V_AppendToArray>(
+                                    Element.Part<V_ArraySlice>(Element.Part<V_PlayerVariable>(targetPlayer, Variable), new V_Number(0), new V_Number(Start)),
+                                    value
+                                ),
+                                Element.Part<V_ArraySlice>(Element.Part<V_PlayerVariable>(targetPlayer, Variable), new V_Number(Start), Element.Part<V_CountOf>(value))
+                            )
+                        );
+                }
+                else
+                {
+                    if (IsGlobal)
+                        element = Element.Part<A_SetGlobalVariable>(Variable, value);
+                    else
+                        element = Element.Part<A_SetPlayerVariable>(targetPlayer, Variable, value);
+                }
             }
             else
             {
-                if (IsGlobal)
-                    element = Element.Part<A_SetGlobalVariable>(Variable, value);
+                if (IsInArray)
+                    throw new SyntaxErrorException("Can't change variable index for internal variables.");
                 else
-                    element = Element.Part<A_SetPlayerVariable>(targetPlayer, Variable, value);
+                {
+#warning Add subarray support for SetAtIndex.
+                    if (IsGlobal)
+                        element = Element.Part<A_SetGlobalVariableAtIndex>(Variable, setAtIndex, value);
+                    else
+                        element = Element.Part<A_SetPlayerVariableAtIndex>(targetPlayer, Variable, setAtIndex, value);
+                }
             }
 
             return element;
@@ -968,7 +1000,12 @@ namespace OverwatchParser.Parse
 
         public static DefinedVar GetVar(string name)
         {
-            return VarCollection.FirstOrDefault(v => v.Name == name);
+            DefinedVar var = VarCollection.FirstOrDefault(v => v.Name == name);
+#warning Add a variable with the line and column for a more verbose error message.
+            if (var == null)
+                throw new SyntaxErrorException($"The parameter {name} does not exist.");
+
+            return var;
         }
 
         public DefinedVar(DeltinScriptParser.VardefineContext vardefine)

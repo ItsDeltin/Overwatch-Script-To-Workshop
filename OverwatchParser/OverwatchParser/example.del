@@ -2,39 +2,13 @@
 usevar globalvar A;
 usevar playervar A;
 
-define globalvar locations L;
-define globalvar radius;
-define playervar deathCount;
+define playervar locations L;
+define playervar player;
 
-rule: "Setup Death Spheres."
-
+rule: "Setup"
+if (TotalTimeElapsed() > 10)
     {
-        radius = 8;
-        locations = [Vector(56.64, 21.00, -67.14), Vector(50.46, 9.15, -92.95), Vector(30.00, 14.00, -77.91), Vector(82.59, 12.68, -88.21)];
-
-        for (loc in locations)
-        {
-            CreateEffect(AllPlayers(), Effect.Sphere, Color.Red, locations[loc], radius, EffectRev.VisibleTo);
-        }
-    }
-
-rule: "Kill players in sphere."
-    Event.Ongoing_EachPlayer
-    if (IsAlive())
-    {
-        // Kill the player if they enter the radius of the death sphere.
-        for (loc in locations)
-        {
-            if (DistanceBetween(EventPlayer(), locations[loc]) < radius)
-            {
-                deathCount += 1;
-                SmallMessage(EventPlayer(), <"Danger! ... dead, try_again and survive! sudden_death: <0>", deathCount>);
-                Kill();
-                loc = CountOf(locations);
-            }
-        }
-
-        // Loop
-        Wait(0.06);
-        LoopIfConditionIsTrue();
+        // Array index setting time!
+        // Must be a subarray or a variable, NOT an InArray.
+        AllPlayers().locations[XComponentOf(Vector(20, 0, 0))] = 2;
     }
