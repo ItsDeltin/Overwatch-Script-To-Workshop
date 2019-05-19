@@ -97,7 +97,7 @@ namespace OverwatchParser
         }
 
         [DllImport("user32.dll")]
-        internal static extern bool EnableWindow(IntPtr hWnd, bool bEnable);
+        internal static extern bool EnableWindow(IntPtr hwnd, bool bEnable);
 
         [DllImport("user32.dll")]
         [return: MarshalAs(UnmanagedType.Bool)]

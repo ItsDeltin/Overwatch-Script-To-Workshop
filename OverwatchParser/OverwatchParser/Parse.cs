@@ -266,57 +266,73 @@ namespace OverwatchParser.Parse
                 else
                     value = ParseExpression(statementContext.expr(1) as DeltinScriptParser.ExprContext);
 
+                /*  Format if the variable has an expression beforehand (sets the target player)
+                                 expr(0)           .ChildCount
+                                   v                   v
+                    Statement (    v                   v          ) | Operation | Set to variable
+                               Variable to set (       v         )
+                                   ^            expr | . | expr
+                                   ^                   ^
+                                 expr(0)          .GetChild(1) == '.'                               */
                 if (statementContext.expr(0).ChildCount == 3
                     && statementContext.expr(0).GetChild(1).GetText() == ".")
                 {
-#warning clarify the tree and add comments
-                    // statementcontext
-                    // V         .expr(0)                          .expr(1)       .expr(2)
-                    // V          V                                  V .GetChild(0) V        
-                    // V          V                                  V   V          V
-                    // statement (expr(expr(<target player expr> . expr(expr(var)) [expr])))
+                    /*  Get Variable:  .expr(0)              .expr(1)
+                                         v                     v  .expr(1) (if the value to be set is an array)
+                        Statement (      v                     v      v    ) | Operation | Set to variable
+                                   Variable to set (           v      v  )
+                                         ^          expr | . | expr | []
+                                         ^           ^
+                        Get  Target:  .expr(0)    .expr(0)                                            */
+
                     variable = DefinedVar.GetVar(statementContext.expr(0).expr(1).GetChild(0).GetText());
                     target = ParseExpression(statementContext.expr(0).expr(0));
 
+                    // Get the index if the variable has []
                     var indexExpression = statementContext.expr(0).expr(1).expr(1);
                     if (indexExpression != null)
                         index = ParseExpression(indexExpression);
                 }
                 else
                 {
+                    /*               .expr(0)             .expr(1)
+                                        v                   v 
+                        Statement (     v                   v  ) | Operation | Set to variable
+                                   Variable to set (expr) | []
+                    */
                     variable = DefinedVar.GetVar(statementContext.expr(0).GetChild(0).GetText());
                     target = new V_EventPlayer();
 
+                    // Get the index if the variable has []
                     var indexExpression = statementContext.expr(0).expr(1);
                     if (indexExpression != null)
                         index = ParseExpression(indexExpression);
                 }
 
-#warning Add support for +=, -=, etc. for setting variables at indexes.
                 switch (operation)
                 {
                     case "+=":
-                        value = Element.Part<V_Add>(variable.GetVariable(), value);
+                        value = Element.Part<V_Add>(variable.GetVariable(target, index), value);
                         break;
 
                     case "-=":
-                        value = Element.Part<V_Subtract>(variable.GetVariable(), value);
+                        value = Element.Part<V_Subtract>(variable.GetVariable(target, index), value);
                         break;
 
                     case "*=":
-                        value = Element.Part<V_Multiply>(variable.GetVariable(), value);
+                        value = Element.Part<V_Multiply>(variable.GetVariable(target, index), value);
                         break;
 
                     case "/=":
-                        value = Element.Part<V_Divide>(variable.GetVariable(), value);
+                        value = Element.Part<V_Divide>(variable.GetVariable(target, index), value);
                         break;
 
                     case "^=":
-                        value = Element.Part<V_RaiseToPower>(variable.GetVariable(), value);
+                        value = Element.Part<V_RaiseToPower>(variable.GetVariable(target, index), value);
                         break;
 
                     case "%=":
-                        value = Element.Part<V_Modulo>(variable.GetVariable(), value);
+                        value = Element.Part<V_Modulo>(variable.GetVariable(target, index), value);
                         break;
                 }
 
@@ -886,33 +902,48 @@ namespace OverwatchParser.Parse
         protected Var()
         {}
 
-        public Element GetVariable(Element targetPlayer = null)
+        public Element GetVariable(Element targetPlayer = null, Element getAiIndex = null)
         {
             Element element;
 
             if (targetPlayer == null)
                 targetPlayer = new V_EventPlayer();
 
-            if (IsInArray)
+            if (getAiIndex == null)
             {
-                if (IsGlobal)
-                    element = Element.Part<V_ValueInArray>(Element.Part<V_GlobalVariable>(Variable), new V_Number(Index));
+                if (IsInArray)
+                {
+                    if (IsGlobal)
+                        element = Element.Part<V_ValueInArray>(Element.Part<V_GlobalVariable>(Variable), new V_Number(Index));
+                    else
+                        element = Element.Part<V_ValueInArray>(Element.Part<V_PlayerVariable>(targetPlayer, Variable), new V_Number(Index));
+                }
+                else if (IsSubArray)
+                {
+                    if (IsGlobal)
+                        element = Element.Part<V_ArraySlice>(Element.Part<V_GlobalVariable>(Variable), new V_Number(Start), new V_Number(Count));
+                    else
+                        element = Element.Part<V_ArraySlice>(Element.Part<V_PlayerVariable>(targetPlayer, Variable), new V_Number(Start), new V_Number(Count));
+                }
                 else
-                    element = Element.Part<V_ValueInArray>(Element.Part<V_PlayerVariable>(targetPlayer, Variable), new V_Number(Index));
-            }
-            else if (IsSubArray)
-            {
-                if (IsGlobal)
-                    element = Element.Part<V_ArraySlice>(Element.Part<V_GlobalVariable>(Variable), new V_Number(Start), new V_Number(Count));
-                else
-                    element = Element.Part<V_ArraySlice>(Element.Part<V_PlayerVariable>(targetPlayer, Variable), new V_Number(Start), new V_Number(Count));
+                {
+                    if (IsGlobal)
+                        element = Element.Part<V_GlobalVariable>(Variable);
+                    else
+                        element = Element.Part<V_PlayerVariable>(targetPlayer, Variable);
+                }
             }
             else
             {
-                if (IsGlobal)
-                    element = Element.Part<V_GlobalVariable>(Variable);
+                if (IsInArray)
+                    throw new SyntaxErrorException("Can't get variable index for internal variables.");
                 else
-                    element = Element.Part<V_PlayerVariable>(targetPlayer, Variable);
+                {
+                    if (IsGlobal)
+                        element = Element.Part<V_ValueInArray>(Element.Part<V_GlobalVariable>(Variable), getAiIndex);
+                    else
+                        element = Element.Part<V_ValueInArray>(Element.Part<V_PlayerVariable>(targetPlayer, Variable), getAiIndex);
+                }
             }
 
             return element;

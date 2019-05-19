@@ -8,6 +8,7 @@ using System.Windows.Forms;
 
 namespace OverwatchParser.Elements
 {
+    [Serializable]
     public class Condition
     {
         public Element Value1 { get; private set; }

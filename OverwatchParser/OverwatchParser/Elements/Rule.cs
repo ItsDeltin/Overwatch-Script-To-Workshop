@@ -8,6 +8,7 @@ using System.Windows.Forms;
 
 namespace OverwatchParser.Elements
 {
+    [Serializable]
     public class Rule
     {
         private static int NumberOfRules = 0; // Required for navigating the ruleset.

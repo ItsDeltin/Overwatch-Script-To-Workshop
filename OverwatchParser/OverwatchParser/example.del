@@ -11,4 +11,5 @@ if (TotalTimeElapsed() > 10)
         // Array index setting time!
         // Must be a subarray or a variable, NOT an InArray.
         AllPlayers().locations[XComponentOf(Vector(20, 0, 0))] = 2;
+        AllPlayers().locations[20] += 6;
     }

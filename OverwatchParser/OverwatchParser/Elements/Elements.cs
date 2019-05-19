@@ -19,8 +19,6 @@ using System.Windows.Forms;
 
 namespace OverwatchParser.Elements
 {
-    public struct OWEnum { }
-
     // The type of element the element is.
     public enum ElementType
     {
@@ -75,6 +73,7 @@ namespace OverwatchParser.Elements
     }
 
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, AllowMultiple = true)]
+    [Serializable]
     class Parameter : Attribute
     {
         public Parameter(string name, ValueType returnType, Type defaultType)
@@ -116,6 +115,7 @@ namespace OverwatchParser.Elements
         }
     }
 
+    [Serializable]
     public abstract class Element
     {
         private static Type[] MethodList = Assembly.GetExecutingAssembly().GetTypes().Where(t => t.GetCustomAttribute<ElementData>() != null).ToArray();
