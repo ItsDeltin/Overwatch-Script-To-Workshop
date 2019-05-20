@@ -78,19 +78,19 @@ namespace OverwatchParser
                 {
                     // Create new rule
                     InputLog.Write($"Creating rule \"{generatedRules[i].Name}\".");
-                    ruleActions.Add(new RuleAction(generatedRules[i], i));
+                    ruleActions.Add(new RuleAction(generatedRules[i], i, true));
                 }
                 else if (previousIndex != i)
                 {
                     // Move existing rule
                     InputLog.Write($"Moving rule \"{generatedRules[i].Name}\" from #{previousIndex} to #{i}.");
-                    ruleActions.Add(new RuleAction(previousIndex, i));
+                    ruleActions.Add(new RuleAction(generatedRules[i], previousIndex, i));
                     numberOfRules++;
                 }
                 else
                 {
                     InputLog.Write($"Doing nothing to rule \"{generatedRules[i].Name}\".");
-                    ruleActions.Add(null);
+                    ruleActions.Add(new RuleAction(generatedRules[i], i, false));
                     numberOfRules++;
                 }
             }
@@ -108,48 +108,62 @@ namespace OverwatchParser
             {
                 selectedRule = RuleNav(selectedRule, remove);
 
-                InputSim.Press(Keys.Space, Wait.Medium);
+                InputSim.Press(Keys.Space, Wait.Short);
                 InputSim.Press(Keys.Tab, Wait.Short);
                 InputSim.Press(Keys.Right, Wait.Short);
-                InputSim.Press(Keys.Space, Wait.Medium);
+                InputSim.Press(Keys.Space, Wait.Long);
+
+                selectedRule = -1;
             }
 
             // Move and add rules.
+            int index = 0;
             foreach(var action in ruleActions)
-                if (action != null)
+            {
+                if (action.RuleActionType == RuleActionType.Add)
                 {
-                    if (action.CreateRule)
+                    selectedRule = ResetRuleNav(selectedRule);
+
+                    action.Rule.Input(numberOfRules, action.RuleIndex);
+                    numberOfRules++;
+                    action.Exists = true;
+
+                    var conflicting = ruleActions.Where(v => v != null
+                    && v.Exists
+                    && action.NewIndex <= v.RuleIndex
+                    && !ReferenceEquals(action, v));
+                    foreach (var conflict in conflicting)
                     {
-                        selectedRule = ResetRuleNav(selectedRule);
-
-                        action.Rule.Input(numberOfRules, action.CreatedRuleIndex);
-                        numberOfRules++;
-
-                        var conflicting = ruleActions.Where(v => v != null && v.RuleIndex >= action.CreatedRuleIndex && !ReferenceEquals(action, v));
-                        foreach (var conflict in conflicting)
-                            conflict.RuleIndex += 1;
-                    }
-                    else if (action.RuleIndex != action.NewIndex)
-                    {
-                        selectedRule = RuleNav(selectedRule, action.RuleIndex);
-
-                        InputSim.Press(Keys.Left, Wait.Short, 2);
-                        if (selectedRule > action.NewIndex)
-                            InputSim.Press(Keys.Space, Wait.Short, selectedRule - action.NewIndex);
-                        else
-                        {
-                            InputSim.Press(Keys.Down, Wait.Short);
-                            InputSim.Press(Keys.Space, Wait.Short, action.NewIndex - selectedRule);
-                        }
-                        InputSim.Press(Keys.Right, Wait.Short, 2);
-
-                        selectedRule = action.NewIndex;
-
-                        var conflicting = ruleActions.Where(v => v != null && v.RuleIndex >= action.NewIndex && !ReferenceEquals(action, v));
-                        foreach(var conflict in conflicting)
-                            conflict.RuleIndex += 1;
+                        conflict.RuleIndex += 1;
                     }
                 }
+                if (action.RuleIndex != action.NewIndex)
+                {
+                    selectedRule = RuleNav(selectedRule, action.RuleIndex);
+
+                    InputSim.Press(Keys.Left, Wait.Short, 2);
+                    if (index < action.RuleIndex)
+                    {
+                        InputSim.Press(Keys.Space, Wait.Short, selectedRule - action.NewIndex);
+                    }
+
+                    InputSim.Press(Keys.Right, Wait.Short, 2);
+
+                    selectedRule = index;
+
+                    var conflicting = ruleActions.Where(v => v != null 
+                    &&  action.NewIndex <= v.RuleIndex && v.RuleIndex <= action.RuleIndex
+                    && !ReferenceEquals(action, v));
+                    foreach (var conflict in conflicting)
+                    {
+                        conflict.RuleIndex += 1;
+                    }
+
+                    action.RuleIndex = action.NewIndex;
+                }
+
+                index++;
+            }
 
             selectedRule = ResetRuleNav(selectedRule);
 
@@ -223,26 +237,47 @@ namespace OverwatchParser
 
     class RuleAction
     {
-        public RuleAction(Rule rule, int createdRuleIndex)
+        public RuleAction(Rule rule, int ruleIndex, bool create)
         {
-            CreateRule = true;
             Rule = rule;
-            CreatedRuleIndex = createdRuleIndex;
+            RuleIndex = ruleIndex;
+            NewIndex = ruleIndex;
+
+            if (create)
+            {
+                RuleActionType = RuleActionType.Add;
+                Exists = false;
+            }
+            else
+            {
+                RuleActionType = RuleActionType.None;
+                Exists = true;
+            }
         }
 
-        public RuleAction(int ruleIndex, int newIndex)
+        public RuleAction(Rule rule, int ruleIndex, int newIndex)
         {
-            CreateRule = false;
+            Rule = rule;
             RuleIndex = ruleIndex;
             NewIndex = newIndex;
+            RuleActionType = RuleActionType.Move;
+            Exists = true;
         }
 
-        public bool CreateRule { get; private set; }
-
         public Rule Rule { get; private set; }
-        public int CreatedRuleIndex { get; private set; }
 
         public int RuleIndex { get; set; }
-        public int NewIndex { get; private set; }
+        public int NewIndex { get; set; }
+
+        public bool Exists { get; set; }
+
+        public RuleActionType RuleActionType { get; private set; }
+    }
+
+    enum RuleActionType
+    {
+        None,
+        Add,
+        Move,
     }
 }

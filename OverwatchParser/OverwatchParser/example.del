@@ -5,28 +5,15 @@ usevar playervar A;
 define playervar locations L;
 define globalvar isInitialized;
 
-rule: "cool new rule"
-    {
-        SmallMessage(AllPlayers(), <"that_was_awesome!">);
-    }
-
-rule: "Setup"
-    Event.Ongoing_EachPlayer
-    if (TotalTimeElapsed() > 10)
-    {
-        // Array index setting time!
-        // Must be a subarray or a variable, NOT an InArray.
-        AllPlayers().locations[XComponentOf(Vector(20, 0, 0))] = 2;
-        AllPlayers().locations[20] += 6;
-    }
-
-rule: "cool new rule: electric boogaloo"
-    Event.Ongoing_EachPlayer
-    Player.Ana
-    if (isInitialized)
-    {
-        for (player in AllPlayers())
-        {
-            BigMessage(AllPlayers(), <"<0> new_high_score!", AllPlayers()[player]>);
-        }
-    }
+rule: "1!" {}
+rule: "2!" {}
+rule: "3!" {}
+rule: "4!" {}
+rule: "5!" {}
+rule: "6!" {}
+rule: "7!" {}
+rule: "8!" {}
+rule: "9!" {}
+rule: "10!" {}
+rule: "11!" {}
+rule: "12!" {}
