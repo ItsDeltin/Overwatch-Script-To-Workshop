@@ -4,8 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Reflection;
+using OverwatchParser.Elements;
 
-namespace OverwatchParser.Elements
+namespace OverwatchParser
 {
     public static class Constants
     {
@@ -699,5 +700,8 @@ namespace OverwatchParser.Elements
             "¡{0}!",
             "¿{0}?"
         };
+
+        public const string   SCRIPT_FILETYPE = ".del" ;
+        public const string COMPILED_FILETYPE = ".comp";
     }
 }

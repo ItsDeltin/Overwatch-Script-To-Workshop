@@ -7,21 +7,26 @@ using System.Threading.Tasks;
 namespace OverwatchParser.Elements
 {
     [ElementData("Abort")]
+    [Serializable]
     public class A_Abort : Element {}
 
     [ElementData("Abort If")]
     [Parameter("Condition", ValueType.Boolean, typeof(V_Compare))]
+    [Serializable]
     public class A_AbortIf : Element {}
 
     [ElementData("Abort If Condition Is False")]
+    [Serializable]
     public class A_AbortIfConditionIsFalse : Element {}
 
     [ElementData("Abort If Condition Is True")]
+    [Serializable]
     public class A_AbortIfConditionIsTrue : Element {}
 
     [ElementData("Allow Button")]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     [Parameter("Button", typeof(Button))]
+    [Serializable]
     public class A_AllowButton : Element {}
 
     [ElementData("Apply Impulse")]
@@ -30,11 +35,13 @@ namespace OverwatchParser.Elements
     [Parameter("Speed",     ValueType.Number,          typeof(V_Number))     ]
     [Parameter("Relative",  typeof(Relative))      ]
     [Parameter("Motion",    typeof(ContraryMotion))]
+    [Serializable]
     public class A_ApplyImpulse : Element {}
 
     [ElementData("Big Message")]
     [Parameter("Visible To", ValueType.Player, typeof(V_AllPlayers))]
     [Parameter("Header", ValueType.String, typeof(V_String))]
+    [Serializable]
     public class A_BigMessage : Element {}
 
     [ElementData("Chase Global Variable At Rate")]
@@ -42,6 +49,7 @@ namespace OverwatchParser.Elements
     [Parameter("Destination", ValueType.Any, typeof(V_Number))]
     [Parameter("Rate", ValueType.Number, typeof(V_Number))]
     [Parameter("Variable", typeof(ChaseReevaluation))]
+    [Serializable]
     public class A_ChaseGlobalVariableAtRate : Element {}
 
     [ElementData("Chase Global Variable Over Time")]
@@ -49,6 +57,7 @@ namespace OverwatchParser.Elements
     [Parameter("Destination", ValueType.Any, typeof(V_Number))]
     [Parameter("Duration", ValueType.Number, typeof(V_Number))]
     [Parameter("Variable", typeof(ChaseReevaluation))]
+    [Serializable]
     public class A_ChaseGlobalVariableOverTime : Element {}
 
     [ElementData("Chase Player Variable At Rate")]
@@ -56,6 +65,7 @@ namespace OverwatchParser.Elements
     [Parameter("Destination", ValueType.Any, typeof(V_Number))]
     [Parameter("Rate", ValueType.Number, typeof(V_Number))]
     [Parameter("Variable", typeof(ChaseReevaluation))]
+    [Serializable]
     public class A_ChasePlayerVariableAtRate : Element {}
 
     [ElementData("Chase Player Variable Over Time")]
@@ -63,11 +73,13 @@ namespace OverwatchParser.Elements
     [Parameter("Destination", ValueType.Any, typeof(V_Number))]
     [Parameter("Duration", ValueType.Number, typeof(V_Number))]
     [Parameter("Variable", typeof(ChaseReevaluation))]
+    [Serializable]
     public class A_ChasePlayerVariableOverTime : Element {}
 
     [ElementData("Clear Status")]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     [Parameter("Status", typeof(Status))]
+    [Serializable]
     public class A_ClearStatus : Element {}
 
     [ElementData("Create Effect", 0)]
@@ -77,30 +89,37 @@ namespace OverwatchParser.Elements
     [Parameter("Position", ValueType.VectorAndPlayer, typeof(V_EventPlayer))]
     [Parameter("Radius", ValueType.Number, typeof(V_Number))]
     [Parameter("Reevaluation", typeof(EffectRev))]
+    [Serializable]
     public class A_CreateEffect : Element {}
 
     [ElementData("Kill", 0)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     [Parameter("Killer", ValueType.Player, typeof(V_Null))]
+    [Serializable]
     public class A_Kill : Element {}
 
     [ElementData("Loop", 0)]
+    [Serializable]
     public class A_Loop : Element {}
 
     [ElementData("Loop If", 0)]
     [Parameter("Condition", ValueType.Boolean, typeof(V_Compare))]
+    [Serializable]
     public class A_LoopIf : Element {}
 
     [ElementData("Loop If Condition Is False", 0)]
+    [Serializable]
     public class A_LoopIfConditionIsFalse : Element {}
 
     [ElementData("Loop If Condition Is True", 0)]
+    [Serializable]
     public class A_LoopIfConditionIsTrue : Element { }
 
     [ElementData("Modify Global Variable", 0)]
     [Parameter("Variable", typeof(Variable))]
     [Parameter("Operation", typeof(Operation))]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
+    [Serializable]
     public class A_ModifyGlobalVariable : Element {}
 
     [ElementData("Modify Player Variable", 0)]
@@ -108,23 +127,27 @@ namespace OverwatchParser.Elements
     [Parameter("Variable", typeof(Variable))]
     [Parameter("Operation", typeof(Operation))]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
+    [Serializable]
     public class A_ModifyPlayerVariable : Element {}
 
     [ElementData("Set Global Variable", 0)]
     [Parameter("Variable", typeof(Variable))]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
+    [Serializable]
     public class A_SetGlobalVariable : Element {}
 
     [ElementData("Set Global Variable At Index", 0)]
     [Parameter("Variable", typeof(Variable))]
     [Parameter("Index", ValueType.Number, typeof(V_Number))]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
+    [Serializable]
     public class A_SetGlobalVariableAtIndex : Element {}
 
     [ElementData("Set Player Variable", 0)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     [Parameter("Variable", typeof(Variable))]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
+    [Serializable]
     public class A_SetPlayerVariable : Element {}
 
     [ElementData("Set Player Variable At Index", 0)]
@@ -132,20 +155,24 @@ namespace OverwatchParser.Elements
     [Parameter("Variable", typeof(Variable))]
     [Parameter("Index", ValueType.Number, typeof(V_Number))]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
+    [Serializable]
     public class A_SetPlayerVariableAtIndex : Element {}
 
     [ElementData("Skip If", 0)]
     [Parameter("Condition", ValueType.Boolean, typeof(V_Compare))]
     [Parameter("Number Of Actions", ValueType.Number, typeof(V_Number))]
+    [Serializable]
     public class A_SkipIf : Element {}
 
     [ElementData("Skip", 0)]
     [Parameter("Number Of Actions", ValueType.Number, typeof(V_Number))]
+    [Serializable]
     public class A_Skip : Element {}
 
     [ElementData("Small Message", 0)]
     [Parameter("Visible To", ValueType.Player, typeof(V_AllPlayers))]
     [Parameter("Header", ValueType.String, typeof(V_String))]
+    [Serializable]
     public class A_SmallMessage : Element {}
 
     [ElementData("Start Camera", 0)]
@@ -153,19 +180,23 @@ namespace OverwatchParser.Elements
     [Parameter("Eye Position", ValueType.VectorAndPlayer, typeof(V_Vector))]
     [Parameter("Look At Position", ValueType.VectorAndPlayer, typeof(V_Vector))]
     [Parameter("Blend Speed", ValueType.Number, typeof(V_Number))]
+    [Serializable]
     public class A_StartCamera : Element {}
 
     [ElementData("Stop Camera", 0)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [Serializable]
     public class A_StopCamera : Element {}
 
     [ElementData("Teleport", 0)]
     [Parameter("Player", ValueType.Any, typeof(V_Number))]
     [Parameter("Position", ValueType.VectorAndPlayer, typeof(V_Vector))]
+    [Serializable]
     public class A_Teleport : Element {}
 
     [ElementData("Wait", 0)]
     [Parameter("Time", ValueType.Number, typeof(V_Number))]
     [Parameter("Wait Behavior", typeof(WaitBehavior))]
+    [Serializable]
     public class A_Wait : Element {}
 }

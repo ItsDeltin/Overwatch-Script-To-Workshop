@@ -46,33 +46,41 @@ namespace OverwatchParser
 
             for (int i = 0; i < keys.Count; i++)
             {
-                Bitmap beforePress = BitBlt();
-                KeyDown(keys[i]);
-                Thread.Sleep(MsFromWait(Wait.Short));
-                WaitForImageChange(beforePress, MsFromWait(Wait.Short));
+                //using (Bitmap beforePress = BitBlt())
+                //{
+                    KeyDown(keys[i]);
+                    Thread.Sleep(MsFromWait(Wait.Short));
+                  //  WaitForImageChange(beforePress, MsFromWait(Wait.Short));
+                //}
             }
         }
 
-        // Some of Overwatch's input will not work unless Activate() is called beforehand.
-        // The known instances are Opening chat and going to lobby after starting/restarting a game.
-        public static void Activate()
+        public static void Press(Keys key, Wait wait, int count = 1)
         {
-            User32.PostMessage(Handle, 0x0086, 1, 0); // 0x0086 = WM_NCACTIVATE
-            User32.PostMessage(Handle, 0x0007, 0, 0); // 0x0007 = WM_DEVICECHANGE
-        }
-
-        public static void Repeat(Keys key, Wait wait, int count)
-        {
+            //using (Bitmap beforePress = BitBlt())
+            //{
             for (int i = 0; i < count; i++)
-                Press(key, wait);
+            {
+                KeyPress(key);
+                Thread.Sleep(MsFromWait(wait));
+            }
+              //  WaitForImageChange(beforePress, MsFromWait(wait));
+            //}
         }
 
-        public static void SelectEnumMenuOption<T>(T enumValue) where T : struct, IConvertible
+        // Text input
+        public static void TextInput(string text, Wait wait)
         {
-            if (!typeof(T).IsEnum)
-                throw new ArgumentException("T must be an enumerated type");
-
-            SelectEnumMenuOption(typeof(T), enumValue);
+            //using (Bitmap beforeType = BitBlt())
+            //{
+                for (int i = 0; i < text.Length; i++)
+                {
+                    char letter = text[i];
+                    User32.PostMessage(Handle, WM_UNICHAR, letter, 0);
+                }
+                Thread.Sleep(MsFromWait(wait));
+                //WaitForImageChange(beforeType, MsFromWait(wait));
+            //}
         }
 
         public static void SelectEnumMenuOption(Type enumType, object enumValue)
@@ -88,26 +96,36 @@ namespace OverwatchParser
                 KeyPress(Keys.Enter);
                 Thread.Sleep(MediumStep);
 
-                Repeat(Keys.Down, Wait.Short, enumPos);
+                Press(Keys.Down, Wait.Short, enumPos);
 
                 KeyPress(Keys.Space);
                 Thread.Sleep(MediumStep);
             }
         }
 
-        public static void Press(Keys key, Wait wait)
+        // Some of Overwatch's input will not work unless Activate() is called beforehand.
+        // The known instances are Opening chat and going to lobby after starting/restarting a game.
+        public static void Activate()
         {
-            Bitmap beforePress = BitBlt();
-            KeyPress(key);
-            Thread.Sleep(MsFromWait(wait));
-            WaitForImageChange(beforePress, MsFromWait(wait));
+            User32.PostMessage(Handle, 0x0086, 1, 0); // 0x0086 = WM_NCACTIVATE
+            User32.PostMessage(Handle, 0x0007, 0, 0); // 0x0007 = WM_DEVICECHANGE
+        }
+
+        public static void SelectEnumMenuOption<T>(T enumValue) where T : struct, IConvertible
+        {
+            if (!typeof(T).IsEnum)
+                throw new ArgumentException("T must be an enumerated type");
+
+            SelectEnumMenuOption(typeof(T), enumValue);
         }
 
         public static void WaitForNextUpdate(Wait wait)
         {
-            Bitmap beforePress = BitBlt();
-            Thread.Sleep(MsFromWait(wait));
-            WaitForImageChange(beforePress, MsFromWait(wait));
+            using (Bitmap beforePress = BitBlt())
+            {
+                Thread.Sleep(MsFromWait(wait));
+                WaitForImageChange(beforePress, MsFromWait(wait));
+            }
         }
 
         private static bool WaitForImageChange(Bitmap bmp, int maxTime)
@@ -188,19 +206,6 @@ namespace OverwatchParser
         {
             User32.PostMessage(Handle, WM_KEYDOWN, keycode, 0);
             User32.PostMessage(Handle, WM_KEYUP, keycode, 0);
-        }
-
-        // Text input
-        public static void TextInput(string text, Wait wait)
-        {
-            Bitmap beforeType = BitBlt();
-            for (int i = 0; i < text.Length; i++)
-            {
-                char letter = text[i];
-                User32.PostMessage(Handle, WM_UNICHAR, letter, 0);
-            }
-            Thread.Sleep(MsFromWait(wait));
-            WaitForImageChange(beforeType, MsFromWait(wait));
         }
 
         public static void Alt(Keys key)

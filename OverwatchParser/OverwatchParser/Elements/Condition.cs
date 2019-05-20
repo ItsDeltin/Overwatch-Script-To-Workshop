@@ -9,7 +9,7 @@ using System.Windows.Forms;
 namespace OverwatchParser.Elements
 {
     [Serializable]
-    public class Condition
+    public class Condition : IEquatable<Condition>
     {
         public Element Value1 { get; private set; }
         public Operators CompareOperator { get; private set; }
@@ -40,7 +40,7 @@ namespace OverwatchParser.Elements
             InputSim.Press(Keys.Tab, Wait.Short);
             // The spot will be at the bottom when tab is pressed. 
             // Pressing up once will select the operator value, up another time will select the first value paramerer.
-            InputSim.Repeat(Keys.Up, Wait.Short, 2);
+            InputSim.Press(Keys.Up, Wait.Short, 2);
 
             // Input value1.
             Value1.Input();
@@ -56,5 +56,30 @@ namespace OverwatchParser.Elements
             // Close the Create Condition menu.
             InputSim.Press(Keys.Escape, Wait.Long);
         }
+
+        public bool Equals(Condition other)
+        {
+            if(other == null)
+                return false;
+
+            if (ReferenceEquals(this, other))
+                return true;
+
+            if (CompareOperator != other.CompareOperator)
+                return false;
+
+            return Value1.Equals(other.Value1) && Value2.Equals(other.Value2);
+        }
+
+        public override bool Equals(object obj)
+        {
+            return Equals(obj as Condition);
+        }
+
+        public override int GetHashCode()
+        {
+            return (Value1, CompareOperator, Value2).GetHashCode();
+        }
+
     }
 }

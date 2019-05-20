@@ -9,10 +9,8 @@ using System.Windows.Forms;
 namespace OverwatchParser.Elements
 {
     [Serializable]
-    public class Rule
+    public class Rule: IEquatable<Rule>
     {
-        private static int NumberOfRules = 0; // Required for navigating the ruleset.
-
         public string Name { get; private set; }
         public RuleEvent RuleEvent { get; private set; }
         public TeamSelector Team { get; private set; }
@@ -41,21 +39,13 @@ namespace OverwatchParser.Elements
             IsGlobal = true;
         }
 
-        public void Input()
+        public void Input(int numberOfRules, int position)
         {
-            if (NumberOfRules == 0)
-            {
-                InputSim.Press(Keys.Tab, Wait.Short);
-                InputSim.Repeat(Keys.Right, Wait.Short, 2);
-            }
-
             // Create rule.
             InputSim.Press(Keys.Space, Wait.Long);
 
-            NumberOfRules++;
-
             // Select rule name.
-            InputSim.Repeat(Keys.Down, Wait.Short, NumberOfRules);
+            InputSim.Press(Keys.Down, Wait.Short, numberOfRules + 1);
 
             InputSim.Press(Keys.Right, Wait.Short);
 
@@ -68,7 +58,7 @@ namespace OverwatchParser.Elements
             // Leaving the input menu with tab resets the controller position.
 
             // Select the event type.
-            InputSim.Repeat(Keys.Down, Wait.Short, NumberOfRules + 1);
+            InputSim.Press(Keys.Down, Wait.Short, numberOfRules + 2);
 
             InputSim.SelectEnumMenuOption(RuleEvent);
 
@@ -106,7 +96,7 @@ namespace OverwatchParser.Elements
                     InputSim.Press(Keys.Tab, Wait.Short);
                     // The spot will be at the bottom when tab is pressed. 
                     // Pressing up once will select the operator value, up another time will select the first value paramerer.
-                    InputSim.Repeat(Keys.Up, Wait.Short, 3);
+                    InputSim.Press(Keys.Up, Wait.Short, 3);
 
                     // Input value1.
                     action.Input();
@@ -116,13 +106,68 @@ namespace OverwatchParser.Elements
                 }
 
             // Close the rule
-            InputSim.Repeat(Keys.Up, Wait.Short, 2);
+            InputSim.Press(Keys.Up, Wait.Short, 2);
             if (!IsGlobal)
-                InputSim.Repeat(Keys.Up, Wait.Short, 2);
+                InputSim.Press(Keys.Up, Wait.Short, 2);
 
             InputSim.Press(Keys.Space, Wait.Short);
 
-            InputSim.Repeat(Keys.Up, Wait.Short, NumberOfRules);
+            if (position != numberOfRules)
+            {
+                InputSim.Press(Keys.Left, Wait.Short, 3);
+
+                InputSim.Press(Keys.Space, Wait.Short, numberOfRules - position);
+
+                InputSim.Press(Keys.Right, Wait.Short);
+
+                InputSim.Press(Keys.Up, Wait.Short, position + 1);
+            }
+            else
+                InputSim.Press(Keys.Up, Wait.Short, numberOfRules + 1);
+        }
+
+        public bool Equals(Rule other)
+        {
+            if (other == null)
+                return false;
+
+            if (ReferenceEquals(this, other))
+                return true;
+
+            if (Conditions.Length != other.Conditions.Length ||
+                Actions.Length != other.Actions.Length)
+                return false;
+
+            if (Name != other.Name ||
+                RuleEvent != other.RuleEvent ||
+                Team != other.Team ||
+                Player != other.Player)
+                return false;
+
+            for (int i = 0; i < Conditions.Length; i++)
+                if (!Conditions[i].Equals(other.Conditions[i]))
+                    return false;
+
+            for (int i = 0; i < Actions.Length; i++)
+                if (!Actions[i].Equals(other.Actions[i]))
+                    return false;
+
+            return true;
+        }
+
+        public override bool Equals(object obj)
+        {
+            return Equals(obj as Rule);
+        }
+
+        public override int GetHashCode()
+        {
+            return (Name, RuleEvent, Team, Player, IsGlobal, Conditions, Actions).GetHashCode();
+        }
+
+        public override string ToString()
+        {
+            return Name;
         }
     }
 }

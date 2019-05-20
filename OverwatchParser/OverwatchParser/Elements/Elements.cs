@@ -1,14 +1,4 @@
 ﻿using System;
-/*
-
-Element
- L Condition
-    L Value
-       L Vector
-          L Player
-             L AllDeadPlayers
-
-*/
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -16,6 +6,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Reflection;
 using System.Windows.Forms;
+using System.Runtime.Serialization;
+using System.Runtime.Serialization.Formatters.Binary;
 
 namespace OverwatchParser.Elements
 {
@@ -48,6 +40,7 @@ namespace OverwatchParser.Elements
     }
 
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
+    [Serializable]
     public class ElementData : Attribute
     {
         public ElementData(string elementName, int rowAfterSearch = -1)
@@ -116,7 +109,7 @@ namespace OverwatchParser.Elements
     }
 
     [Serializable]
-    public abstract class Element
+    public abstract class Element : IEquatable<Element>
     {
         private static Type[] MethodList = Assembly.GetExecutingAssembly().GetTypes().Where(t => t.GetCustomAttribute<ElementData>() != null).ToArray();
         private static Type[] ActionList = MethodList.Where(t => t.GetCustomAttribute<ElementData>().ElementType == ElementType.Action).OrderBy(t => t.GetCustomAttribute<ElementData>().ElementName).ToArray(); // Actions in the method list.
@@ -160,21 +153,7 @@ namespace OverwatchParser.Elements
 
         private void Input(bool isAlreadySet, ValueType valueType, Type defaultType, int depth)
         {
-            // Make ParameterValues the same size as parameterData.
-            if (ParameterValues == null)
-                ParameterValues = new Element[0];
-            Array.Resize(ref ParameterValues, parameterData.Length);
-
             Console.WriteLine($"{new string(' ', depth * 4)}{Info()}");
-
-            /*
-            // Vectors have an extra button that needs to be adjusted for.
-            if (defaultType == typeof(V_Vector))
-            {
-                InputHandler.Input.KeyPress(Keys.Right);
-                weight.Sleep(Wait.Small);
-            }
-            */
 
             // Select the option
             if (!isAlreadySet)
@@ -208,7 +187,7 @@ namespace OverwatchParser.Elements
                 InputSim.Press(Keys.Tab, Wait.Medium);
 
                 // Highlight the action/value.
-                InputSim.Repeat(Keys.Down, Wait.Short, pos);
+                InputSim.Press(Keys.Down, Wait.Short, pos);
 
                 // Select it.
                 InputSim.Press(Keys.Space, Wait.Medium);
@@ -225,25 +204,27 @@ namespace OverwatchParser.Elements
             // Do stuff with parameters
             for (int i = 0; i < parameterData.Length; i++)
             {
+                object parameter = ParameterValues?.ElementAtOrDefault(i);
+
                 // If the parameter is null, get the default variable.
-                if (ParameterValues.ElementAtOrDefault(i) == null)
-                    ParameterValues[i] = parameterData[i].GetDefault();
+                if (parameter == null)
+                    parameter = parameterData[i].GetDefault();
 
                 // Select the parameter.
                 InputSim.Press(Keys.Down, Wait.Short);
 
                 // Element input
                 if (parameterData[i].ParameterType == ParameterType.Value)
-                    ((Element)ParameterValues[i]).Input(
-                        parameterData[i].DefaultType == ParameterValues[i].GetType(),
+                    ((Element)parameter).Input(
+                        parameterData[i].DefaultType == parameter.GetType(),
                         parameterData[i].ValueType, parameterData[i].DefaultType,
                         depth + 1);
 
                 // Enum input
                 else if (parameterData[i].ParameterType == ParameterType.Enum)
                 {
-                    Console.WriteLine($"{new string(' ', (depth + 1) * 4)}{ParameterValues[i]}");
-                    InputSim.SelectEnumMenuOption(parameterData[i].EnumType, ParameterValues[i]);
+                    Console.WriteLine($"{new string(' ', (depth + 1) * 4)}{parameter}");
+                    InputSim.SelectEnumMenuOption(parameterData[i].EnumType, parameter);
                 }
             }
 
@@ -253,9 +234,53 @@ namespace OverwatchParser.Elements
                 Console.WriteLine();
         }
 
-        protected virtual double GetWeight() { return 1; }
         protected virtual void BeforeParameters() { } // Executed before parameters are executed
         protected virtual void AfterParameters() { } // Executed after parameters are executed
         protected virtual string Info() { return ElementData.ElementName; }
+
+        public bool Equals(Element other)
+        {
+            if (other == null)
+                return false;
+
+            if (ReferenceEquals(this, other))
+                return true;
+
+            if (GetType() != other.GetType())
+                return false;
+
+            if (ParameterValues.Length != other.ParameterValues.Length)
+                return false;
+
+            if (!AdditionalEquals(other))
+                return false;
+
+            for (int i = 0; i < ParameterValues.Length; i++)
+            {
+                if (ParameterValues[i].GetType() != other.ParameterValues[i].GetType())
+                    return false;
+                if (ParameterValues[i] is Element)
+                {
+                    if (!(ParameterValues[i] as Element).Equals(other.ParameterValues[i] as Element))
+                        return false;
+                }
+                else if (!ParameterValues[i].Equals(other.ParameterValues[i]))
+                    return false;
+            }
+
+            return true;
+        }
+        protected virtual bool AdditionalEquals(Element other) { return true; }
+
+        public override bool Equals(object obj)
+        {
+            return Equals(obj as Rule);
+        }
+
+        public override int GetHashCode()
+        {
+            return (GetType(), ElementData, ParameterValues, AdditionalGetHashCode()).GetHashCode();
+        }
+        protected virtual int AdditionalGetHashCode() { return 0; }
     }
 }

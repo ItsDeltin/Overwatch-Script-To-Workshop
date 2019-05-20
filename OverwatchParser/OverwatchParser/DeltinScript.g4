@@ -25,7 +25,7 @@ expr
 	| enum                                        // Enums
 	| expr INDEX_START expr INDEX_END             // Array creation
 	| INDEX_START expr (',' expr)* INDEX_END      // Arrays
-	| '<' string (',' expr)* '>' // Formatted strings
+	| '<' string (',' expr)* '>'                  // Formatted strings
 	| true                                        // True
 	| false                                       // False
 	| null                                        // Null
@@ -68,7 +68,7 @@ else    : ELSE block                                          ;
 rule_if : IF LEFT_PAREN expr RIGHT_PAREN ;
 
 ow_rule : 
-	RULE_WORD ':' STRINGLITERAL (expr)* 
+	RULE_WORD ':' STRINGLITERAL expr* 
 	(rule_if)*
 	block
 	;

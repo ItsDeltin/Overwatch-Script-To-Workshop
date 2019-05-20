@@ -9,11 +9,12 @@
     <OutputType>Exe</OutputType>
     <RootNamespace>Deltin.OverwatchParser</RootNamespace>
     <AssemblyName>OverwatchParser</AssemblyName>
-    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.7</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <NuGetPackageImportStamp>
     </NuGetPackageImportStamp>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -62,7 +63,7 @@
     <Compile Include="Elements\Condition.cs" />
     <Compile Include="Elements\CustomMethods.cs" />
     <Compile Include="Elements\Elements.cs" />
-    <Compile Include="Elements\Constants.cs" />
+    <Compile Include="Constants.cs" />
     <Compile Include="Elements\Enums.cs" />
     <Compile Include="Exceptions.cs" />
     <Compile Include="Elements\Rule.cs" />

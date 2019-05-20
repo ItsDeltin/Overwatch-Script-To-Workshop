@@ -16,75 +16,67 @@ namespace OverwatchParser.Parse
 
         public static Rule[] ParseText(string text)
         {
-            try
+            AntlrInputStream inputStream = new AntlrInputStream(text);
+
+            // Lexer
+            DeltinScriptLexer speakLexer = new DeltinScriptLexer(inputStream);
+            CommonTokenStream commonTokenStream = new CommonTokenStream(speakLexer);
+
+            // Parse
+            DeltinScriptParser speakParser = new DeltinScriptParser(commonTokenStream);
+
+            // Get context
+            DeltinScriptParser.RulesetContext context = speakParser.ruleset();
+
+            //PrintContext(context);
+            Console.WriteLine(context.ToStringTree(speakParser));
+
+            Visitor visitor = new Visitor();
+            visitor.Visit(context);
+
             {
-                AntlrInputStream inputStream = new AntlrInputStream(text);
+                // Get the internal global variable to use.
+                if (!Enum.TryParse(context.useGlobalVar().PART().ToString(), out Variable useGlobalVar))
+                    throw new SyntaxErrorException("useGlobalVar must be a character.", 0, 0);
 
-                // Lexer
-                DeltinScriptLexer speakLexer = new DeltinScriptLexer(inputStream);
-                CommonTokenStream commonTokenStream = new CommonTokenStream(speakLexer);
+                // Get the internal player variable to use.
+                if (!Enum.TryParse(context.usePlayerVar().PART().ToString(), out Variable usePlayerVar))
+                    throw new SyntaxErrorException("usePlayerVar must be a character.", 0, 0);
 
-                // Parse
-                DeltinScriptParser speakParser = new DeltinScriptParser(commonTokenStream);
-
-                // Get context
-                DeltinScriptParser.RulesetContext context = speakParser.ruleset();
-
-                //PrintContext(context);
-                Console.WriteLine(context.ToStringTree(speakParser));
-
-                Visitor visitor = new Visitor();
-                visitor.Visit(context);
-
-                {
-                    // Get the internal global variable to use.
-                    if (!Enum.TryParse(context.useGlobalVar().PART().ToString(), out Variable useGlobalVar))
-                        throw new SyntaxErrorException("useGlobalVar must be a character.", 0, 0);
-
-                    // Get the internal player variable to use.
-                    if (!Enum.TryParse(context.usePlayerVar().PART().ToString(), out Variable usePlayerVar))
-                        throw new SyntaxErrorException("usePlayerVar must be a character.", 0, 0);
-
-                    Var.Setup(useGlobalVar, usePlayerVar);
-                }
-
-                // Get the defined variables.
-                var vardefine = context.vardefine();
-
-                for (int i = 0; i < vardefine.Length; i++)
-                    // The new var is stored in Var.VarCollection
-                    new DefinedVar(vardefine[i]);
-
-                // Parse the rules.
-                var rules = context.ow_rule();
-                var compiledRules = new List<Rule>();
-
-                for (int i = 0; i < rules.Length; i++)
-                {
-                    ParseRule parsing = new ParseRule(rules[i]);
-
-                    Log.Write($"Building rule: {parsing.Rule.Name}");
-                    parsing.Parse();
-                    Rule rule = parsing.Rule;
-                    Log.Write($"Finished rule: {parsing.Rule.Name}");
-
-                    compiledRules.Add(rule);
-                }
-
-                Log.Write("Build succeeded.");
-
-                // List all variables
-                Log.Write("Variable Guide:");
-                foreach (DefinedVar var in DefinedVar.VarCollection)
-                    Console.WriteLine($"{var.Name}: {(var.IsGlobal ? "global" : "player")} {var.Variable}{(var.IsInArray ? $"[{var.Index}]" : "")}");
-
-                return compiledRules.ToArray();
+                Var.Setup(useGlobalVar, usePlayerVar);
             }
-            catch (SyntaxErrorException ex)
+
+            // Get the defined variables.
+            var vardefine = context.vardefine();
+
+            for (int i = 0; i < vardefine.Length; i++)
+                // The new var is stored in Var.VarCollection
+                new DefinedVar(vardefine[i]);
+
+            // Parse the rules.
+            var rules = context.ow_rule();
+            var compiledRules = new List<Rule>();
+
+            for (int i = 0; i < rules.Length; i++)
             {
-                Log.Write($"Error: Failed to parse.\n{ex}");
-                return null;
+                ParseRule parsing = new ParseRule(rules[i]);
+
+                Log.Write($"Building rule: {parsing.Rule.Name}");
+                parsing.Parse();
+                Rule rule = parsing.Rule;
+                Log.Write($"Finished rule: {parsing.Rule.Name}");
+
+                compiledRules.Add(rule);
             }
+
+            Log.Write("Build succeeded.");
+
+            // List all variables
+            Log.Write("Variable Guide:");
+            foreach (DefinedVar var in DefinedVar.VarCollection)
+                Console.WriteLine($"{var.Name}: {(var.IsGlobal ? "global" : "player")} {var.Variable}{(var.IsInArray ? $"[{var.Index}]" : "")}");
+
+            return compiledRules.ToArray();
         }
 
         static void PrintContext(ParserRuleContext context)
@@ -165,17 +157,35 @@ namespace OverwatchParser.Parse
 
             {
                 var additionalArgs = ruleContext.expr();
+
                 foreach (var arg in additionalArgs)
                 {
+                    string type = arg.GetText().Split('.').ElementAtOrDefault(0);
                     string name = arg.GetText().Split('.').ElementAtOrDefault(1);
 
-                    if (name != null &&
-                        !Enum.TryParse($"{name}", out ruleEvent) &&
-                        !Enum.TryParse($"{name}", out team) &&
-                        !Enum.TryParse($"{name}", out player))
+                    if (type == "Event")
                     {
-                        throw new SyntaxErrorException("Unknown value in rule target parameters.", 0, 0);
+                        if (Enum.TryParse(name, out RuleEvent setEvent))
+                            ruleEvent = setEvent;
+                        else
+                            throw new SyntaxErrorException($"Unknown event type \"{arg.GetText()}\".", arg.start.Line, arg.start.Column);
                     }
+                    else if (type == "Team")
+                    {
+                        if (Enum.TryParse(name, out TeamSelector setTeam))
+                            team = setTeam;
+                        else
+                            throw new SyntaxErrorException($"Unknown team type \"{arg.GetText()}\".", arg.start.Line, arg.start.Column);
+                    }
+                    else if (type == "Player")
+                    {
+                        if (Enum.TryParse(name, out PlayerSelector setPlayer))
+                            player = setPlayer;
+                        else
+                            throw new SyntaxErrorException($"Unknown player type \"{arg.GetText()}\".", arg.start.Line, arg.start.Column);
+                    }
+                    else
+                        throw new SyntaxErrorException($"Unknown rule argument \"{arg.GetText()}\".", arg.start.Line, arg.start.Column);
                 }
             }
 
