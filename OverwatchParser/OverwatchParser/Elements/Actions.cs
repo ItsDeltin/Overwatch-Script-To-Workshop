@@ -700,11 +700,35 @@ namespace OverwatchParser.Elements
     [Serializable]
     public class A_StopForcingHero : Element {}
 
+    [ElementData("Stop Forcing Spawn Room", 0)]
+    [Parameter("Team", ValueType.Team, typeof(V_Team))]
+    [Serializable]
+    public class A_StopForcingSpawnRoom : Element {}
+
+    [ElementData("Stop Forcing Throttle", 0)]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [Serializable]
+    public class A_StopForcingThrottle : Element {}
+
+    [ElementData("Stop Heal Over Time", 0)]
+    [Parameter("Stop Heal Over Time", ValueType.Player, typeof(V_EventPlayer))]
+    [Serializable]
+    public class A_StopHealOverTime : Element {}
+
+    [ElementData("Stop Holding Button", 0)]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [Serializable]
+    public class A_StopHoldingButton : Element {}
+
     [ElementData("Teleport", 0)]
     [Parameter("Player", ValueType.Any, typeof(V_Number))]
     [Parameter("Position", ValueType.VectorAndPlayer, typeof(V_Vector))]
     [Serializable]
     public class A_Teleport : Element {}
+
+    [ElementData("Unpause Match Time", 0)]
+    [Serializable]
+    public class A_UnpauseMatchTime : Element {}
 
     [ElementData("Wait", 0)]
     [Parameter("Time", ValueType.Number, typeof(V_Number))]
