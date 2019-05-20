@@ -757,20 +757,30 @@ namespace OverwatchParser.Parse
 
         Element ParseMethod(DeltinScriptParser.MethodContext methodContext)
         {
+            // Get the method name
             string methodName = methodContext.PART().GetText();
-            Type methodType = Element.GetMethod(methodName);
 
-            if (methodType == null)
+            // Get the method type.
+            Type methodType = Element.GetMethod(methodName);
+            MethodInfo customMethodType = CustomMethods.GetCustomMethod(methodName);
+
+            if (methodType != null && customMethodType != null)
+                throw new Exception("Conflicting Overwatch method and custom method, report to Deltin.");
+
+            if (methodType == null && customMethodType == null)
                 throw new SyntaxErrorException($"The method {methodName} does not exist.", methodContext.start.Line, methodContext.start.Column);
 
             // Parse parameters
-            List<object> parameters = new List<object>();
+            List<object> finalParameters = new List<object>();
             var parseParameters = methodContext.expr();
-            foreach (var param in parseParameters)
-                parameters.Add(ParseParameter(param));
 
             Element method = (Element)Activator.CreateInstance(methodType);
-            method.ParameterValues = parameters.ToArray();
+            var parameterDatas = method.GetType().GetCustomAttributes<Parameter>().ToArray();
+
+            for (int i = 0; i < parseParameters.Length; i++)
+                finalParameters.Add(ParseParameter(parseParameters[i], method.ToString(), parameterDatas[i]));
+
+            method.ParameterValues = finalParameters.ToArray();
 
             return method;
         }
@@ -779,25 +789,48 @@ namespace OverwatchParser.Parse
         {
             string methodName = cmContext.PART().GetText();
 
-            var customMethod = CustomMethods.GetCustomMethod(methodName);
+            MethodInfo customMethod = CustomMethods.GetCustomMethod(methodName);
 
             if (customMethod == null)
                 throw new SyntaxErrorException($"The custom method {methodName} does not exist.", cmContext.start.Line, cmContext.start.Column);
 
             var data = customMethod.GetCustomAttribute<CustomMethod>();
+            var parameterData = customMethod.GetCustomAttributes<Parameter>().ToArray();
 
-            object[] parameters = cmContext.expr().Select(v => ParseParameter(v)).ToArray();
+            List<object> parameters = new List<object>();
 
-            MethodResult result = (MethodResult)customMethod.Invoke(null, new object[] { IsGlobal, parameters });
+            var parseParameters = cmContext.expr();
+            for (int i = 0; i < parameterData.Length; i++)
+            {
+                var parameter = parseParameters.ElementAtOrDefault(i);
+
+                if (parameter == null)
+                {
+                    if (parameterData[i].DefaultType == null)
+                        throw new SyntaxErrorException($"Missing parameter {parameterData[i].Name} in {CustomMethods.GetCustomMethodName(customMethod)}.", cmContext.start.Line, cmContext.start.Column);
+                    else
+                        parameters.Add(Activator.CreateInstance(parameterData[i].DefaultType));
+                }
+                else
+                    parameters.Add(ParseParameter(parseParameters[i], methodName, parameterData[i]));
+            }
+
+            //object[] parameters = cmContext.expr().Select(v => ParseParameter(v, customMethod.Name, null)).ToArray();
+
+            MethodResult result = (MethodResult)customMethod.Invoke(null, new object[] { IsGlobal, parameters.ToArray() });
             return result;
         }
 
-        object ParseParameter(DeltinScriptParser.ExprContext context)
+        object ParseParameter(DeltinScriptParser.ExprContext context, string methodName, Parameter parameterData)
         {
             object value = null;
 
             if (context.GetChild(0) is DeltinScriptParser.EnumContext)
             {
+                if (parameterData.ParameterType != ParameterType.Enum)
+                    throw new SyntaxErrorException($"Expected value type \"{parameterData.ValueType.ToString()}\" on {methodName}'s parameter \"{parameterData.Name}\"."
+                        , context.start.Line, context.start.Column);
+
                 foreach (Type @enum in Constants.EnumParameters)
                 {
                     try
@@ -808,11 +841,30 @@ namespace OverwatchParser.Parse
                 }
 
                 if (value == null)
-                    throw new SyntaxErrorException($"Could not parse enum parameter {context.GetText()}.", context.start.Line, context.start.Column);
+                    throw new SyntaxErrorException($"Could not parse enum parameter {context.GetText()}."
+                        , context.start.Line, context.start.Column);
+
+                if (value.GetType() != parameterData.EnumType)
+                    throw new SyntaxErrorException($"Expected enum type \"{parameterData.EnumType.ToString()}\" on {methodName}'s parameter \"{parameterData.Name}\", got \"{value.GetType().Name}\" instead."
+                        , context.start.Line, context.start.Column);
             }
 
             else
+            {
+                if (parameterData.ParameterType != ParameterType.Value)
+                    throw new SyntaxErrorException($"Expected enum type \"{parameterData.EnumType.Name}\" on {methodName}'s parameter \"{parameterData.Name}\"."
+                        , context.start.Line, context.start.Column);
+
                 value = ParseExpression(context);
+
+                Element element = value as Element;
+                ElementData elementData = element.GetType().GetCustomAttribute<ElementData>();
+
+                if (elementData.ValueType != Elements.ValueType.Any &&
+                    !parameterData.ValueType.HasFlag(elementData.ValueType))
+                    throw new SyntaxErrorException($"Expected value type \"{parameterData.ValueType.ToString()}\" on {methodName}'s parameter \"{parameterData.Name}\", got \"{elementData.ValueType.ToString()}\" instead."
+                        , context.start.Line, context.start.Column);
+            }
 
             if (value == null)
                 throw new SyntaxErrorException("Could not parse parameter.", context.start.Line, context.start.Column);

@@ -2,18 +2,10 @@
 usevar globalvar A;
 usevar playervar A;
 
-define playervar locations L;
-define globalvar isInitialized;
+define globalvar map;
 
-rule: "1!" {}
-rule: "2!" {}
-rule: "3!" {}
-rule: "4!" {}
-rule: "5!" {}
-rule: "6!" {}
-rule: "7!" {}
-rule: "8!" {}
-rule: "9!" {}
-rule: "10!" {}
-rule: "11!" {}
-rule: "12!" {}
+rule: "Get map ID." 
+Event.Ongoing_Global
+{
+    map = Deltin.GetMapID();
+}

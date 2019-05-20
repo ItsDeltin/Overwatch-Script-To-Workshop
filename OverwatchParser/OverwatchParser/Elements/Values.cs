@@ -502,7 +502,7 @@ namespace OverwatchParser.Elements
     [Serializable]
     public class V_True : Element {}
 
-    [ElementData("Value In Array", ValueType.Vector, 2)]
+    [ElementData("Value In Array", ValueType.Any, 2)]
     [Parameter("Array", ValueType.Any, typeof(V_GlobalVariable))]
     [Parameter("Index", ValueType.Number, typeof(V_EventPlayer))]
     [Serializable]

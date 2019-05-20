@@ -151,7 +151,8 @@ namespace OverwatchParser
 
                     selectedRule = index;
 
-                    var conflicting = ruleActions.Where(v => v != null 
+                    var conflicting = ruleActions.Where(v => v != null
+                    && v.Exists
                     &&  action.NewIndex <= v.RuleIndex && v.RuleIndex <= action.RuleIndex
                     && !ReferenceEquals(action, v));
                     foreach (var conflict in conflicting)

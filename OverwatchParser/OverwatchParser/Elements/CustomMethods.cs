@@ -12,7 +12,7 @@ namespace OverwatchParser.Elements
     {
         private static MethodInfo[] CustomMethodList = null;
 
-        public static MethodInfo GetCustomMethod(string name)
+        public static CustomMethods GetCustomMethod(string name)
         {
             if (CustomMethodList == null)
                 CustomMethodList = typeof(CustomMethods)
@@ -27,15 +27,11 @@ namespace OverwatchParser.Elements
         }
 
         [CustomMethod("AngleOfVectors", CustomMethodType.MultiAction_Value)]
+        [Parameter("Vector1", ValueType.VectorAndPlayer, null)]
+        [Parameter("Vector2", ValueType.VectorAndPlayer, null)]
+        [Parameter("Vector3", ValueType.VectorAndPlayer, null)]
         static MethodResult AngleOfVectors(bool isGlobal, object[] parameters)
         {
-            if (parameters.Length != 3)
-                throw new SyntaxErrorException("AngleOfVectors() requires 3 variables.");
-
-            for (int i = 0; i < parameters.Length; i++)
-                if (!(parameters[i] is Element))
-                    throw new SyntaxErrorException("AngleOfVectors() requires 3 elements.");
-
             var eventPlayer = new V_EventPlayer();
 
             Var a      = Var.AssignVar(isGlobal);
@@ -247,6 +243,16 @@ namespace OverwatchParser.Elements
                 ),
                 Rounding.Down)
             ), CustomMethodType.Value);
+        }
+
+        public static string GetCustomMethodName(MethodInfo methodInfo)
+        {
+            return $"{methodInfo.Name}({string.Join(", ", methodInfo.GetCustomAttributes<Parameter>().Select(v => $"{(v.ParameterType == ParameterType.Value ? v.ValueType.ToString() : v.EnumType.Name)}: {v.Name}"))})";
+        }
+
+        private CustomMethods(MethodInfo methodInfo)
+        {
+
         }
     }
 

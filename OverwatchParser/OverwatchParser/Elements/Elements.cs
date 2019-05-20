@@ -65,7 +65,7 @@ namespace OverwatchParser.Elements
         public ValueType ValueType { get; private set; }
     }
 
-    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, AllowMultiple = true)]
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Method, AllowMultiple = true)]
     [Serializable]
     class Parameter : Attribute
     {
@@ -282,5 +282,10 @@ namespace OverwatchParser.Elements
             return (GetType(), ElementData, ParameterValues, AdditionalGetHashCode()).GetHashCode();
         }
         protected virtual int AdditionalGetHashCode() { return 0; }
+
+        public override string ToString()
+        {
+            return $"{ElementData.ElementName}({string.Join(", ", parameterData.Select(v => $"{(v.ParameterType == ParameterType.Value ? v.ValueType.ToString() : v.EnumType.Name)}: {v.Name}"))})";
+        }
     }
 }
