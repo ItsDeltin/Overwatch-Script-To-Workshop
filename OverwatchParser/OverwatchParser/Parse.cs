@@ -37,11 +37,11 @@ namespace OverwatchParser.Parse
             {
                 // Get the internal global variable to use.
                 if (!Enum.TryParse(context.useGlobalVar().PART().ToString(), out Variable useGlobalVar))
-                    throw new SyntaxErrorException("useGlobalVar must be a character.", 0, 0);
+                    throw new SyntaxErrorException("useGlobalVar must be a character.", context.useGlobalVar().start);
 
                 // Get the internal player variable to use.
                 if (!Enum.TryParse(context.usePlayerVar().PART().ToString(), out Variable usePlayerVar))
-                    throw new SyntaxErrorException("usePlayerVar must be a character.", 0, 0);
+                    throw new SyntaxErrorException("usePlayerVar must be a character.", context.usePlayerVar().start);
 
                 Var.Setup(useGlobalVar, usePlayerVar);
             }
@@ -168,24 +168,24 @@ namespace OverwatchParser.Parse
                         if (Enum.TryParse(name, out RuleEvent setEvent))
                             ruleEvent = setEvent;
                         else
-                            throw new SyntaxErrorException($"Unknown event type \"{arg.GetText()}\".", arg.start.Line, arg.start.Column);
+                            throw new SyntaxErrorException($"Unknown event type \"{arg.GetText()}\".", arg.start);
                     }
                     else if (type == "Team")
                     {
                         if (Enum.TryParse(name, out TeamSelector setTeam))
                             team = setTeam;
                         else
-                            throw new SyntaxErrorException($"Unknown team type \"{arg.GetText()}\".", arg.start.Line, arg.start.Column);
+                            throw new SyntaxErrorException($"Unknown team type \"{arg.GetText()}\".", arg.start);
                     }
                     else if (type == "Player")
                     {
                         if (Enum.TryParse(name, out PlayerSelector setPlayer))
                             player = setPlayer;
                         else
-                            throw new SyntaxErrorException($"Unknown player type \"{arg.GetText()}\".", arg.start.Line, arg.start.Column);
+                            throw new SyntaxErrorException($"Unknown player type \"{arg.GetText()}\".", arg.start);
                     }
                     else
-                        throw new SyntaxErrorException($"Unknown rule argument \"{arg.GetText()}\".", arg.start.Line, arg.start.Column);
+                        throw new SyntaxErrorException($"Unknown rule argument \"{arg.GetText()}\".", arg.start);
                 }
             }
 
@@ -270,7 +270,8 @@ namespace OverwatchParser.Parse
                                          ^           ^
                         Get  Target:  .expr(0)    .expr(0)                                            */
 
-                    variable = DefinedVar.GetVar(statementContext.expr(0).expr(1).GetChild(0).GetText());
+                    variable = DefinedVar.GetVar(statementContext.expr(0).expr(1).GetChild(0).GetText(),
+                                                 statementContext.expr(0).expr(1).start);
                     target = ParseExpression(statementContext.expr(0).expr(0));
 
                     // Get the index if the variable has []
@@ -285,7 +286,8 @@ namespace OverwatchParser.Parse
                         Statement (     v                   v  ) | Operation | Set to variable
                                    Variable to set (expr) | []
                     */
-                    variable = DefinedVar.GetVar(statementContext.expr(0).GetChild(0).GetText());
+                    variable = DefinedVar.GetVar(statementContext.expr(0).GetChild(0).GetText(),
+                                                 statementContext.expr(0).start);
                     target = new V_EventPlayer();
 
                     // Get the index if the variable has []
@@ -362,8 +364,7 @@ namespace OverwatchParser.Parse
                 DefinedVar forTempVar = Var.AssignDefinedVar(
                     name    : statementContext.@for().PART().GetText(),
                     isGlobal: IsGlobal,
-                    line    : statementContext.@for().start.Line,
-                    column  : statementContext.@for().start.Column
+                    token    : statementContext.@for().start
                     );
 
                 // Reset the counter.
@@ -621,6 +622,7 @@ namespace OverwatchParser.Parse
             if (context.GetChild(0) is DeltinScriptParser.StringContext)
             {
                 return V_String.ParseString(
+                    context.start,
                     // String will look like "hey this is the contents", trim the quotes.
                     (context.GetChild(0) as DeltinScriptParser.StringContext).STRINGLITERAL().GetText().Trim('\"'),
                     null
@@ -635,6 +637,7 @@ namespace OverwatchParser.Parse
             {
                 Element[] values = context.expr().Select(expr => ParseExpression(expr)).ToArray();
                 return V_String.ParseString(
+                    context.start,
                     (context.GetChild(1) as DeltinScriptParser.StringContext).STRINGLITERAL().GetText().Trim('\"'),
                     values
                     );
@@ -671,7 +674,7 @@ namespace OverwatchParser.Parse
             #region Variable
 
             if (context.GetChild(0) is DeltinScriptParser.VariableContext)
-                return DefinedVar.GetVar((context.GetChild(0) as DeltinScriptParser.VariableContext).PART().GetText()).GetVariable(new V_EventPlayer());
+                return DefinedVar.GetVar((context.GetChild(0) as DeltinScriptParser.VariableContext).PART().GetText(), context.start).GetVariable(new V_EventPlayer());
 
             #endregion
 
@@ -694,8 +697,10 @@ namespace OverwatchParser.Parse
 
                 for (int i = 0; i < expressions.Length; i++)
                 {
-                    current = new V_AppendToArray();
-                    current.ParameterValues = new object[2];
+                    current = new V_AppendToArray()
+                    {
+                        ParameterValues = new object[2]
+                    };
 
                     if (prev != null)
                         current.ParameterValues[0] = prev;
@@ -718,9 +723,7 @@ namespace OverwatchParser.Parse
                 Element left = ParseExpression(context.GetChild(0) as DeltinScriptParser.ExprContext);
                 string variableName = context.GetChild(2).GetChild(0).GetText();
 
-                DefinedVar var = DefinedVar.GetVar(variableName);
-                if (var == null)
-                    throw new SyntaxErrorException($"Variable {variableName} does not exist.", context.start.Line, context.start.Column);
+                DefinedVar var = DefinedVar.GetVar(variableName, context.start);
 
                 return var.GetVariable(left);
             }
@@ -743,7 +746,7 @@ namespace OverwatchParser.Parse
                 throw new Exception("Conflicting Overwatch method and custom method, report to Deltin.");
 
             if (methodType == null && customMethod == null)
-                throw new SyntaxErrorException($"The method {methodName} does not exist.", methodContext.start.Line, methodContext.start.Column);
+                throw new SyntaxErrorException($"The method {methodName} does not exist.", methodContext.start);
 
             bool isCustomMethod = methodType == null;
 
@@ -763,7 +766,7 @@ namespace OverwatchParser.Parse
             else
             {
                 parameterData = customMethod.GetCustomAttributes<Parameter>().ToArray();
-                fullMethodName = CustomMethods.GetCustomMethodName(customMethod);
+                fullMethodName = CustomMethods.GetName(customMethod);
             }
 
             List<object> finalParameters = new List<object>();
@@ -807,7 +810,7 @@ namespace OverwatchParser.Parse
             {
                 if (parameterData.ParameterType != ParameterType.Enum)
                     throw new SyntaxErrorException($"Expected value type \"{parameterData.ValueType.ToString()}\" on {methodName}'s parameter \"{parameterData.Name}\"."
-                        , context.start.Line, context.start.Column);
+                        , context.start);
 
                 foreach (Type @enum in Constants.EnumParameters)
                 {
@@ -820,18 +823,18 @@ namespace OverwatchParser.Parse
 
                 if (value == null)
                     throw new SyntaxErrorException($"Could not parse enum parameter {context.GetText()}."
-                        , context.start.Line, context.start.Column);
+                        , context.start);
 
                 if (value.GetType() != parameterData.EnumType)
                     throw new SyntaxErrorException($"Expected enum type \"{parameterData.EnumType.ToString()}\" on {methodName}'s parameter \"{parameterData.Name}\", got \"{value.GetType().Name}\" instead."
-                        , context.start.Line, context.start.Column);
+                        , context.start);
             }
 
             else
             {
                 if (parameterData.ParameterType != ParameterType.Value)
                     throw new SyntaxErrorException($"Expected enum type \"{parameterData.EnumType.Name}\" on {methodName}'s parameter \"{parameterData.Name}\"."
-                        , context.start.Line, context.start.Column);
+                        , context.start);
 
                 value = ParseExpression(context);
 
@@ -841,11 +844,11 @@ namespace OverwatchParser.Parse
                 if (elementData.ValueType != Elements.ValueType.Any &&
                     !parameterData.ValueType.HasFlag(elementData.ValueType))
                     throw new SyntaxErrorException($"Expected value type \"{parameterData.ValueType.ToString()}\" on {methodName}'s parameter \"{parameterData.Name}\", got \"{elementData.ValueType.ToString()}\" instead."
-                        , context.start.Line, context.start.Column);
+                        , context.start);
             }
 
             if (value == null)
-                throw new SyntaxErrorException("Could not parse parameter.", context.start.Line, context.start.Column);
+                throw new SyntaxErrorException("Could not parse parameter.", context.start);
 
 
             return value;
@@ -904,9 +907,9 @@ namespace OverwatchParser.Parse
             return new Var(isGlobal, GetVar(isGlobal), start, count);
         }
 
-        public static DefinedVar AssignDefinedVar(bool isGlobal, string name, int line, int column)
+        public static DefinedVar AssignDefinedVar(bool isGlobal, string name, IToken token)
         {
-            return new DefinedVar(name, isGlobal, GetVar(isGlobal), Assign(isGlobal), line, column);
+            return new DefinedVar(name, isGlobal, GetVar(isGlobal), Assign(isGlobal), token);
         }
 
 
@@ -1069,12 +1072,12 @@ namespace OverwatchParser.Parse
             return VarCollection.Any(v => v.Name == name);
         }
 
-        public static DefinedVar GetVar(string name)
+        public static DefinedVar GetVar(string name, IToken token)
         {
             DefinedVar var = VarCollection.FirstOrDefault(v => v.Name == name);
-#warning Add a variable with the line and column for a more verbose error message.
+
             if (var == null)
-                throw new SyntaxErrorException($"The parameter {name} does not exist.");
+                throw new SyntaxErrorException($"The parameter {name} does not exist.", token);
 
             return var;
         }
@@ -1085,7 +1088,7 @@ namespace OverwatchParser.Parse
             string name = vardefine.PART(0).GetText();
 
             if (IsVar(name))
-                throw new SyntaxErrorException($"The variable {name} was already defined.", vardefine.start.Line, vardefine.start.Column);
+                throw new SyntaxErrorException($"The variable {name} was already defined.", vardefine.start);
 
             Name = name;
 
@@ -1112,14 +1115,14 @@ namespace OverwatchParser.Parse
                     IsInArray = true;
                     string indexString = useNumber.GetText();
                     if (!int.TryParse(indexString, out int index))
-                        throw new SyntaxErrorException("Expected number.", useNumber.start.Line, useNumber.start.Column);
+                        throw new SyntaxErrorException("Expected number.", useNumber.start);
                     Index = index;
                 }
 
                 if (useVar != null)
                 {
                     if (!Enum.TryParse(useVar, out Variable var))
-                        throw new SyntaxErrorException("Expected variable.", vardefine.start.Line, vardefine.start.Column);
+                        throw new SyntaxErrorException("Expected variable.", vardefine.start);
                     Variable = var;
                 }
             }
@@ -1127,10 +1130,10 @@ namespace OverwatchParser.Parse
             VarCollection.Add(this);
         }
 
-        public DefinedVar(string name, bool isGlobal, Variable variable, int index, int line, int column)
+        public DefinedVar(string name, bool isGlobal, Variable variable, int index, IToken token)
         {
             if (IsVar(name))
-                throw new SyntaxErrorException($"The variable {name} was already defined.", line, column);
+                throw new SyntaxErrorException($"The variable {name} was already defined.", token);
 
             Name = name;
             IsGlobal = isGlobal;

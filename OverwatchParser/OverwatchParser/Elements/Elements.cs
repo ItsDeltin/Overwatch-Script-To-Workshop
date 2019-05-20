@@ -111,9 +111,9 @@ namespace OverwatchParser.Elements
     [Serializable]
     public abstract class Element : IEquatable<Element>
     {
-        private static Type[] MethodList = Assembly.GetExecutingAssembly().GetTypes().Where(t => t.GetCustomAttribute<ElementData>() != null).ToArray();
-        private static Type[] ActionList = MethodList.Where(t => t.GetCustomAttribute<ElementData>().ElementType == ElementType.Action).OrderBy(t => t.GetCustomAttribute<ElementData>().ElementName).ToArray(); // Actions in the method list.
-        private static Type[] ValueList = MethodList.Where(t => t.GetCustomAttribute<ElementData>().ElementType == ElementType.Value).OrderBy(t => t.GetCustomAttribute<ElementData>().ElementName).ToArray(); // Values in the method list.
+        public static readonly Type[] MethodList = Assembly.GetExecutingAssembly().GetTypes().Where(t => t.GetCustomAttribute<ElementData>() != null).ToArray();
+        public static readonly Type[] ActionList = MethodList.Where(t => t.GetCustomAttribute<ElementData>().ElementType == ElementType.Action).OrderBy(t => t.GetCustomAttribute<ElementData>().ElementName).ToArray(); // Actions in the method list.
+        public static readonly Type[] ValueList = MethodList.Where(t => t.GetCustomAttribute<ElementData>().ElementType == ElementType.Value).OrderBy(t => t.GetCustomAttribute<ElementData>().ElementName).ToArray(); // Values in the method list.
 
         private static Type[] FilteredValueList(ValueType parameterType)
         {
@@ -132,9 +132,18 @@ namespace OverwatchParser.Elements
 
         public static T Part<T>(params object[] parameterValues) where T : Element, new()
         {
-            T element = new T();
-            element.ParameterValues = parameterValues;
+            T element = new T()
+            {
+                ParameterValues = parameterValues
+            };
             return element;
+        }
+
+        public static string GetName(Type type)
+        {
+            ElementData elementData = type.GetCustomAttribute<ElementData>();
+            Parameter[] parameters = type.GetCustomAttributes<Parameter>().ToArray();
+            return $"{elementData.ElementName}({string.Join(", ", parameters.Select(v => $"{(v.ParameterType == ParameterType.Value ? v.ValueType.ToString() : v.EnumType.Name)}: {v.Name}"))})";
         }
 
         public Element(params object[] parameterValues)
@@ -191,12 +200,6 @@ namespace OverwatchParser.Elements
 
                 // Select it.
                 InputSim.Press(Keys.Space, Wait.Medium);
-            }
-
-            if (parameterData.Any(v => v.DefaultType == typeof(V_Vector)))
-            {
-#warning try to see if it works without this later.
-                InputSim.WaitForNextUpdate(Wait.Long);
             }
 
             BeforeParameters();
@@ -285,7 +288,7 @@ namespace OverwatchParser.Elements
 
         public override string ToString()
         {
-            return $"{ElementData.ElementName}({string.Join(", ", parameterData.Select(v => $"{(v.ParameterType == ParameterType.Value ? v.ValueType.ToString() : v.EnumType.Name)}: {v.Name}"))})";
+            return GetName(this.GetType());
         }
     }
 }

@@ -17,24 +17,63 @@ namespace OverwatchParser
 {
     public class Program
     {
+        static Config Config = Config.GetConfig();
         static Log InputLog = new Log("Input");
+        static Log Log = new Log(":");
+
+        static readonly CancellationTokenSource CancelSource = new CancellationTokenSource();
 
         static void Main(string[] args)
         {
-            string file = args[0];
+            if (args.Length > 0)
+            {
+                if (File.Exists(args[0]))
+                {
+                    try
+                    {
+                        Script(args[0]);
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Write("Internal exception.");
+                        Log.Write(ex.ToString());
+                        return;
+                    }
+                }
+                else
+                    Console.WriteLine($"Could not locate file {args[0]}");
+            }
+            else
+            {
+                Console.WriteLine("Drag and drop a script over the executable to parse.");
+                ConsoleLoop.Start();
+            }
 
-            string text = File.ReadAllText(file);
-            string scriptName = Path.GetFileName(file);
+            Console.WriteLine("Done. Press enter to exit.");
+            Console.ReadLine();
+        }
+
+        static void Script(string parseFile)
+        {
+            string text = File.ReadAllText(parseFile);
+            string scriptName = Path.GetFileName(parseFile);
 
             string workingDirectory = Environment.CurrentDirectory;
             string compiledDirectory = Path.Combine(workingDirectory, "compiled");
 
             string compiledName = scriptName + Constants.COMPILED_FILETYPE;
 
-            Rule[] generatedRules = Parser.ParseText(text);
+            Rule[] generatedRules = null;
+            try
+            {
+                generatedRules = Parser.ParseText(text);
+            }
+            catch (SyntaxErrorException ex)
+            {
+                Log.Write(ex.Message, ConsoleColor.DarkRed);
+                return;
+            }
             Workshop workshop = new Workshop(generatedRules);
-
-            Console.ReadLine();
 
             if (!Directory.Exists(compiledDirectory))
                 Directory.CreateDirectory(compiledDirectory);
@@ -50,6 +89,19 @@ namespace OverwatchParser
                 stream.Close();
             }
 
+            Section();
+            if (prev != null)
+            {
+                Log.Write($"A previously compiled version of \"{scriptName}\" was found.");
+                Log.Write(": Rules:");
+                foreach (var lastRule in prev.Rules)
+                    Console.WriteLine($"    {lastRule.Name}");
+                Log.Write(": Press [Y] to update the current workshop ruleset based off the changes since the last compilation. The workshop code must be the same as the rules above.");
+                Log.Write(": Press [N] to regenerate the script. This requires the workshop's ruleset to be empty.");
+                if (!YorN())
+                    prev = null;
+            }
+
             List<Rule> previousRules = prev?.Rules.ToList();
 
             List<int> deleteRules = new List<int>();
@@ -60,7 +112,7 @@ namespace OverwatchParser
                 for (int i = 0; i < previousRules.Count; i++)
                     if (!generatedRules.Contains(previousRules[i]))
                     {
-                        InputLog.Write($"Deleting rule \"{previousRules[i].Name}\".");
+                        InputLog.Write($"Deleting rule \"{previousRules[i].Name}\"");
                         deleteRules.Add(i);
                         previousRules.RemoveAt(i);
                     }
@@ -77,7 +129,7 @@ namespace OverwatchParser
                 if (previousIndex == -1)
                 {
                     // Create new rule
-                    InputLog.Write($"Creating rule \"{generatedRules[i].Name}\".");
+                    InputLog.Write($"Creating rule \"{generatedRules[i].Name}\"");
                     ruleActions.Add(new RuleAction(generatedRules[i], i, true));
                 }
                 else if (previousIndex != i)
@@ -89,97 +141,125 @@ namespace OverwatchParser
                 }
                 else
                 {
-                    InputLog.Write($"Doing nothing to rule \"{generatedRules[i].Name}\".");
+                    InputLog.Write($"Doing nothing to rule \"{generatedRules[i].Name}\"");
                     ruleActions.Add(new RuleAction(generatedRules[i], i, false));
                     numberOfRules++;
                 }
             }
 
-            // Save workshop
-
+            Log.Write("To setup the input for the generation, leave then re-enter the Settings/Workshop menu in Overwatch.");
+            Log.Write("If input is incorrect or fails, increase the step wait times in the config.");
+            Log.Write("During generation, you can press ctrl+c to cancel.");
+            Log.Write("Press Enter to start.");
             Console.ReadLine();
 
-            InputSim.Press(Keys.Tab, Wait.Short);
-            //InputSim.Repeat(Keys.Right, Wait.Short, 2);
-
-            // Delete rules
-            int selectedRule = -1;
-            foreach (var remove in deleteRules)
+            while ((InputSim.OverwatchProcess = Process.GetProcessesByName("Overwatch").FirstOrDefault()) == null)
             {
-                selectedRule = RuleNav(selectedRule, remove);
+                Log.Write("No Overwatch window found, press enter to recheck.");
+                Console.ReadLine();
+            }
 
-                InputSim.Press(Keys.Space, Wait.Short);
+            // Generate rules
+            try
+            {
+                Console.CancelKeyPress += Console_CancelKeyPress;
+                InputSim.CancelToken = CancelSource.Token;
+
+                if (Config.StopInput)
+                    InputSim.EnableWindow(false);
+
                 InputSim.Press(Keys.Tab, Wait.Short);
-                InputSim.Press(Keys.Right, Wait.Short);
-                InputSim.Press(Keys.Space, Wait.Long);
 
-                selectedRule = -1;
+                // Delete rules
+                int selectedRule = -1;
+                foreach (var remove in deleteRules)
+                {
+                    selectedRule = RuleNav(selectedRule, remove);
+
+                    InputSim.Press(Keys.Space, Wait.Short);
+                    InputSim.Press(Keys.Tab, Wait.Short);
+                    InputSim.Press(Keys.Right, Wait.Short);
+                    InputSim.Press(Keys.Space, Wait.Long);
+
+                    selectedRule = -1;
+                }
+
+                // Move and add rules.
+                int index = 0;
+                foreach (var action in ruleActions)
+                {
+                    if (action.RuleActionType == RuleActionType.Add)
+                    {
+                        selectedRule = ResetRuleNav(selectedRule);
+
+                        action.Rule.Input(numberOfRules, action.RuleIndex);
+                        numberOfRules++;
+                        action.Exists = true;
+
+                        var conflicting = ruleActions.Where(v => v != null
+                        && v.Exists
+                        && action.NewIndex <= v.RuleIndex
+                        && !ReferenceEquals(action, v));
+                        foreach (var conflict in conflicting)
+                        {
+                            conflict.RuleIndex += 1;
+                        }
+                    }
+                    if (action.RuleIndex != action.NewIndex)
+                    {
+                        selectedRule = RuleNav(selectedRule, action.RuleIndex);
+
+                        InputSim.Press(Keys.Left, Wait.Short, 2);
+                        if (index < action.RuleIndex)
+                        {
+                            InputSim.Press(Keys.Space, Wait.Short, selectedRule - action.NewIndex);
+                        }
+
+                        InputSim.Press(Keys.Right, Wait.Short, 2);
+
+                        selectedRule = index;
+
+                        var conflicting = ruleActions.Where(v => v != null
+                        && v.Exists
+                        && action.NewIndex <= v.RuleIndex && v.RuleIndex <= action.RuleIndex
+                        && !ReferenceEquals(action, v));
+                        foreach (var conflict in conflicting)
+                        {
+                            conflict.RuleIndex += 1;
+                        }
+
+                        action.RuleIndex = action.NewIndex;
+                    }
+
+                    index++;
+                }
+
+                selectedRule = ResetRuleNav(selectedRule);
+
+                Console.WriteLine("Done. Press enter to save state.");
+                Console.ReadLine();
+
+                Stream saveStream = File.Open(Path.Combine(compiledDirectory, compiledName), FileMode.Create);
+
+                var saveFormatter = new BinaryFormatter();
+                saveFormatter.Serialize(saveStream, workshop);
+
+                saveStream.Close();
             }
-
-            // Move and add rules.
-            int index = 0;
-            foreach(var action in ruleActions)
+            catch (OperationCanceledException)
             {
-                if (action.RuleActionType == RuleActionType.Add)
-                {
-                    selectedRule = ResetRuleNav(selectedRule);
-
-                    action.Rule.Input(numberOfRules, action.RuleIndex);
-                    numberOfRules++;
-                    action.Exists = true;
-
-                    var conflicting = ruleActions.Where(v => v != null
-                    && v.Exists
-                    && action.NewIndex <= v.RuleIndex
-                    && !ReferenceEquals(action, v));
-                    foreach (var conflict in conflicting)
-                    {
-                        conflict.RuleIndex += 1;
-                    }
-                }
-                if (action.RuleIndex != action.NewIndex)
-                {
-                    selectedRule = RuleNav(selectedRule, action.RuleIndex);
-
-                    InputSim.Press(Keys.Left, Wait.Short, 2);
-                    if (index < action.RuleIndex)
-                    {
-                        InputSim.Press(Keys.Space, Wait.Short, selectedRule - action.NewIndex);
-                    }
-
-                    InputSim.Press(Keys.Right, Wait.Short, 2);
-
-                    selectedRule = index;
-
-                    var conflicting = ruleActions.Where(v => v != null
-                    && v.Exists
-                    &&  action.NewIndex <= v.RuleIndex && v.RuleIndex <= action.RuleIndex
-                    && !ReferenceEquals(action, v));
-                    foreach (var conflict in conflicting)
-                    {
-                        conflict.RuleIndex += 1;
-                    }
-
-                    action.RuleIndex = action.NewIndex;
-                }
-
-                index++;
+                Log.Write("Generation canceled.");
             }
+            finally
+            {
+                InputSim.EnableWindow(true);
+            }
+        }
 
-            selectedRule = ResetRuleNav(selectedRule);
-
-            Console.WriteLine("Done. Press enter to save state.");
-            Console.ReadLine();
-
-            Stream saveStream = File.Open(Path.Combine(compiledDirectory, compiledName), FileMode.Create);
-
-            var saveFormatter = new BinaryFormatter();
-            saveFormatter.Serialize(saveStream, workshop);
-
-            saveStream.Close();
-
-            Console.WriteLine("Done.");
-            Console.ReadLine();
+        private static void Console_CancelKeyPress(object sender, ConsoleCancelEventArgs e)
+        {
+            e.Cancel = true;
+            CancelSource.Cancel();
         }
 
         static int RuleNav(int selectedRule, int toRule)
@@ -205,6 +285,29 @@ namespace OverwatchParser
                 InputSim.Press(Keys.Up, Wait.Short, selectedRule + 1);
 
             return -1;
+        }
+
+        static bool YorN()
+        {
+            while (true)
+            {
+                var key = Console.ReadKey();
+                if (key.Key == ConsoleKey.Y)
+                {
+                    Console.WriteLine();
+                    return true;
+                }
+                else if (key.Key == ConsoleKey.N)
+                {
+                    Console.WriteLine();
+                    return false;
+                }
+            }
+        }
+
+        static void Section()
+        {
+            Console.WriteLine("\n---");
         }
     }
 

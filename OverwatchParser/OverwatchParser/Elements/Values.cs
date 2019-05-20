@@ -7,6 +7,7 @@ using System.Threading;
 using System.Windows.Forms;
 using System.Text.RegularExpressions;
 using System.Runtime.Serialization;
+using Antlr4.Runtime;
 
 namespace OverwatchParser.Elements
 {
@@ -316,13 +317,13 @@ namespace OverwatchParser.Elements
     [Serializable]
     public class V_String : Element
     {
-        public V_String(string text, params Element[] stringValues) : base(NullifyEmptyValues(stringValues))
+        public V_String(IToken token, string text, params Element[] stringValues) : base(NullifyEmptyValues(stringValues))
         {
             TextID = Array.IndexOf(Constants.Strings, text);
             if (TextID == -1)
-                throw new InvalidStringException(text);
+                throw new SyntaxErrorException($"{text} is not a valid string.", token);
         }
-        public V_String() : this(Constants.DEFAULT_STRING) {}
+        public V_String() : this(null, Constants.DEFAULT_STRING) {}
 
         public int TextID { get; private set; }
 
@@ -384,7 +385,7 @@ namespace OverwatchParser.Elements
             .ThenByDescending(str => str.Length)
             .ToArray();
 
-        public static Element ParseString(string value, Element[] parameters, int depth = 0)
+        public static Element ParseString(IToken token, string value, Element[] parameters, int depth = 0)
         {
             value = value.ToLower();
 
@@ -406,7 +407,7 @@ namespace OverwatchParser.Elements
                 if (match.Success)
                 {
                     Log.Write(debug + searchString);
-                    V_String str = new V_String(searchString);
+                    V_String str = new V_String(token, searchString);
 
                     bool valid = true;
                     List<Element> parsedParameters = new List<Element>();
@@ -420,14 +421,14 @@ namespace OverwatchParser.Elements
                             int index = int.Parse(parameterString.Groups[1].Value);
 
                             if (index >= parameters.Length)
-                                throw new InvalidStringException($"Tried to get the {index} format, but there are {parameters.Length} parameters. Check your string.");
+                                throw new SyntaxErrorException($"Tried to set the <{index}> format, but there are only {parameters.Length} parameters. Check your string.", token);
 
                             Log.Write($"{debug}    <param {index}>");
                             parsedParameters.Add(parameters[index]);
                         }
                         else
                         {
-                            var p = ParseString(currentParameterValue, parameters, depth + 1);
+                            var p = ParseString(token, currentParameterValue, parameters, depth + 1);
                             if (p == null)
                             {
                                 Log.Write($"{debug}{searchString} combo fail");
@@ -448,7 +449,7 @@ namespace OverwatchParser.Elements
             if (depth > 0)
                 return null;
             else
-                throw new InvalidStringException($"Could not parse the string {value}.");
+                throw new SyntaxErrorException($"Could not parse the string {value}.", token);
         }
 
         private static string Escape(string value)

@@ -10,16 +10,13 @@ namespace OverwatchParser.Elements
 {
     public class CustomMethods
     {
-        private static MethodInfo[] CustomMethodList = null;
-
-        public static MethodInfo GetCustomMethod(string name)
-        {
-            if (CustomMethodList == null)
-                CustomMethodList = typeof(CustomMethods)
+        public static readonly MethodInfo[] CustomMethodList = typeof(CustomMethods)
                     .GetMethods(BindingFlags.NonPublic | BindingFlags.Static)
                     .Where(t => t.GetCustomAttribute<CustomMethod>() != null)
                     .ToArray();
 
+        public static MethodInfo GetCustomMethod(string name)
+        {
             for (int i = 0; i < CustomMethodList.Length; i++)
                 if (CustomMethodList[i].Name == name)
                     return CustomMethodList[i];
@@ -213,8 +210,10 @@ namespace OverwatchParser.Elements
             for (int s = 0; s < Constants.MapChecks.Length; s++)
                 for (int i = 0; i < Constants.MapChecks[s].Length; i++)
                 {
-                    current = new V_AppendToArray();
-                    current.ParameterValues = new object[2];
+                    current = new V_AppendToArray()
+                    {
+                        ParameterValues = new object[2]
+                    };
 
                     if (prev != null)
                         current.ParameterValues[0] = prev;
@@ -245,7 +244,7 @@ namespace OverwatchParser.Elements
             ), CustomMethodType.Value);
         }
 
-        public static string GetCustomMethodName(MethodInfo methodInfo)
+        public static string GetName(MethodInfo methodInfo)
         {
             return $"{methodInfo.Name}({string.Join(", ", methodInfo.GetCustomAttributes<Parameter>().Select(v => $"{(v.ParameterType == ParameterType.Value ? v.ValueType.ToString() : v.EnumType.Name)}: {v.Name}"))})";
         }

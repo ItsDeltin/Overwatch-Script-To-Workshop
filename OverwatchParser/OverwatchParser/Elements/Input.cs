@@ -12,14 +12,16 @@ using System.Diagnostics;
 
 namespace OverwatchParser
 {
-    public class InputSim
+    public static class InputSim
     {
-        public static Process OverwatchProcess = Process.GetProcessesByName("Overwatch")[0];
+        public static Process OverwatchProcess;
         private static IntPtr Handle { get { return OverwatchProcess.MainWindowHandle; } }
 
-        public const int SmallStep = 35;
-        public const int MediumStep = 150;
-        public const int BigStep = 500;
+        public static CancellationToken CancelToken = new CancellationToken();
+
+        public static int SmallStep = 35;
+        public static int MediumStep = 150;
+        public static int BigStep = 500;
 
         const uint WM_KEYDOWN = 0x100;
         const uint WM_KEYUP = 0x0101;
@@ -29,8 +31,15 @@ namespace OverwatchParser
         const int WM_SYSKEYDOWN = 0x0104;
         const int WM_SYSKEYUP = 0x0105;
 
+        public static void EnableWindow(bool enable)
+        {
+            User32.EnableWindow(Handle, enable);
+        }
+
         public static void NumberInput(double value)
         {
+            CancelToken.ThrowIfCancellationRequested();
+
             Keys[] numberKeys = new Keys[] { Keys.D0, Keys.D1, Keys.D2, Keys.D3, Keys.D4, Keys.D5, Keys.D6, Keys.D7, Keys.D8, Keys.D9 };
 
             List<Keys> keys = new List<Keys>();
@@ -57,6 +66,8 @@ namespace OverwatchParser
 
         public static void Press(Keys key, Wait wait, int count = 1)
         {
+            CancelToken.ThrowIfCancellationRequested();
+
             //using (Bitmap beforePress = BitBlt())
             //{
             for (int i = 0; i < count; i++)
@@ -71,6 +82,8 @@ namespace OverwatchParser
         // Text input
         public static void TextInput(string text, Wait wait)
         {
+            CancelToken.ThrowIfCancellationRequested();
+
             //using (Bitmap beforeType = BitBlt())
             //{
                 for (int i = 0; i < text.Length; i++)
@@ -85,6 +98,8 @@ namespace OverwatchParser
 
         public static void SelectEnumMenuOption(Type enumType, object enumValue)
         {
+            CancelToken.ThrowIfCancellationRequested();
+
             Array enumValues = Enum.GetValues(enumType);
 
             if (!enumValues.GetValue(0).Equals(enumValue))
@@ -284,7 +299,6 @@ namespace OverwatchParser
             catch (ExternalException ex)
             {
                 // Failed to capture window, usually because it was closed.
-#warning todo: error handle this bad boy
                 throw ex;
             }
         }

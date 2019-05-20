@@ -4,7 +4,7 @@ usevar playervar A;
 
 define globalvar map;
 
-rule: "Get map ID." 
+rule: "Get map ID"
 Event.Ongoing_Global
 {
     map = GetMapID();
