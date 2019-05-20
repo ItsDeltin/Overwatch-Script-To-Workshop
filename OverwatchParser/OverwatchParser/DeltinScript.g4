@@ -42,7 +42,7 @@ expr
 	| expr ('<' | '<=' | '==' | '>=' | '>' | '!=') expr // x == y
 	;
 
-enum     : (BUTTON | COLOR | EFFECT | EFFECTREV) SEPERATOR PART ;
+enum     : ( 'Variable' | 'Operation' | 'Button' | 'Relative' | 'ContraryMotion' | 'ChaseReevaluation' | 'Status' ) SEPERATOR PART ;
 variable : PART ;
 method   : PART LEFT_PAREN expr? (',' expr)* RIGHT_PAREN ;
 
@@ -128,12 +128,6 @@ TRUE      : 'true'      ;
 FALSE     : 'false'     ;
 NULL      : 'null'      ;
 ARRAY     : 'array'     ;
-
-// Enum
-BUTTON    : 'Button'    ;
-COLOR     : 'Color'     ;
-EFFECT    : 'Effect'    ;
-EFFECTREV : 'EffectRev' ;
 
 STATEMENT_OPERATION : '=' | '^=' | '*=' | '/=' | '+=' | '-=' | '%=';
 BOOL : '&' | '|';

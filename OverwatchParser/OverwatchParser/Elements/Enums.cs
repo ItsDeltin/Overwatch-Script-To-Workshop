@@ -68,6 +68,16 @@ namespace OverwatchParser.Elements
         Baptiste
     }
 
+    public enum Operators
+    {
+        Equal,
+        NotEqual,
+        LessThan,
+        LessThanOrEqual,
+        GreaterThan,
+        GreaterThanOrEqual
+    }
+
     [AttributeUsage(AttributeTargets.Enum)]
     public class EnumParameter : Attribute
     {
@@ -103,17 +113,6 @@ namespace OverwatchParser.Elements
         X,
         Y,
         Z
-    }
-
-    [EnumParameter]
-    public enum Operators
-    {
-        Equal,
-        NotEqual,
-        LessThan,
-        LessThanOrEqual,
-        GreaterThan,
-        GreaterThanOrEqual
     }
 
     [EnumParameter]
@@ -246,5 +245,169 @@ namespace OverwatchParser.Elements
         Up,
         Down,
         Nearest
+    }
+
+    [EnumParameter]
+    public enum Communication
+    {
+        VoiceLineUp,
+        VoiceLineLeft,
+        VoiceLineRight,
+        VoiceLineDown,
+        EmoteUp,
+        EmoteLeft,
+        EmoteRight,
+        EmoteDown,
+        UltimateStatus,
+        Hello,
+        NeedHealing,
+        GroupUp,
+        Thanks,
+        Acknowledge
+    }
+
+    [EnumParameter]
+    public enum Location
+    {
+        Left,
+        Top,
+        Right
+    }
+
+    [EnumParameter]
+    public enum StringRev
+    {
+        VisibleToAndString,
+        String
+    }
+
+    [EnumParameter]
+    public enum Icon
+    {
+        ArrowDown,
+        ArrowLeft,
+        ArrowRight,
+        ArrowUp,
+        Aterisk,
+        Bolt,
+        Checkmark,
+        Circle,
+        Club,
+        Diamond,
+        Dizzy,
+        ExclamationMark,
+        Eye,
+        Fire,
+        Flag,
+        Halo,
+        Happy,
+        Heart,
+        Moon,
+        No,
+        Plus,
+        Poison1,
+        Poison2,
+        QuestionMark,
+        Radioactive,
+        Recycle,
+        RingThick,
+        RingThin,
+        Sad,
+        Skull,
+        Spade,
+        Spiral,
+        Stop,
+        Trashcan,
+        Warning,
+        X
+    }
+
+    [EnumParameter]
+    public enum IconRev
+    {
+        VisibleToAndPosition,
+        Position,
+        VisibleTo,
+        None
+    }
+
+    [EnumParameter]
+    public enum PlayEffect
+    {
+        GoodExplosion,
+        BadExplosion,
+        RingExplosion,
+        GoodPickupEffect,
+        BadPickupEffect,
+        DebuffImpactSound,
+        BuffImpactSound,
+        RingExplosionSound,
+        BuffExplosionSound,
+        ExplosionSound
+    }
+
+    [EnumParameter]
+    public enum Hero
+    {
+        Ana,
+        Ashe,
+        Baptiste,
+        Bastion,
+        Brigitte,
+        Dva,
+        Doomfist,
+        Genji,
+        Hanzo,
+        Junkrat,
+        Lucio,
+        Mccree,
+        Mei,
+        Mercy,
+        Moira,
+        Orisa,
+        Pharah,
+        Reaper,
+        Reinhardt,
+        Roadhog,
+        Soldier76,
+        Sombra,
+        Symmetra,
+        Torbjorn,
+        Tracer,
+        Widowmaker,
+        Winston,
+        WreckingBall,
+        Zarya,
+        Zenyatta
+    }
+
+    [EnumParameter]
+    public enum InvisibleTo
+    {
+        All,
+        Enemies,
+        None
+    }
+
+    [EnumParameter]
+    public enum AccelerateRev
+    {
+        DirectionRateAndMaxSpeed,
+        None
+    }
+
+    [EnumParameter]
+    public enum ModRev
+    {
+        ReceiversDamagersAndDamagePercent,
+        ReceiversAndDamagers,
+        None
+    }
+
+    [EnumParameter]
+    public enum FacingRev
+    {
+        DirectionAndTurnRate,
+        None
     }
 }

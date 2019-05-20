@@ -43,14 +43,14 @@ namespace OverwatchParser.Elements
     [Serializable]
     public class ElementData : Attribute
     {
-        public ElementData(string elementName, int rowAfterSearch = -1)
+        public ElementData(string elementName, int rowAfterSearch)
         {
             ElementType = ElementType.Action;
             ElementName = elementName;
             RowAfterSearch = rowAfterSearch;
         }
 
-        public ElementData(string elementName, ValueType elementType, int rowAfterSearch = -1)
+        public ElementData(string elementName, ValueType elementType, int rowAfterSearch)
         {
             ElementType = ElementType.Value;
             ElementName = elementName;
