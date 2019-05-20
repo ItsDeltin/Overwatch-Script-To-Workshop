@@ -7,5 +7,12 @@ define globalvar map;
 rule: "Get map ID." 
 Event.Ongoing_Global
 {
-    map = Deltin.GetMapID();
+    map = GetMapID();
+}
+
+rule: "Say map ID"
+Event.Ongoing_EachPlayer
+if (IsButtonHeld(EventPlayer(), Button.Interact))
+{
+    SmallMessage(EventPlayer(), <"Current Zone: <0>", map>);
 }

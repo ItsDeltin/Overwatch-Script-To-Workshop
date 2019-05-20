@@ -19,7 +19,6 @@ usePlayerVar : USEVAR PLAYER PART STATEMENT_END ;
 expr 
 	: 
       number                                      // Numbers
-	| custom_method                               // Custom Methods
 	| method                                      // Methods
 	| string                                      // Strings
 	| enum                                        // Enums
@@ -45,12 +44,10 @@ expr
 
 enum     : (BUTTON | COLOR | EFFECT | EFFECTREV) SEPERATOR PART ;
 variable : PART ;
-custom_method : DELTIN SEPERATOR PART LEFT_PAREN expr? (',' expr)* RIGHT_PAREN ;
 method   : PART LEFT_PAREN expr? (',' expr)* RIGHT_PAREN ;
 
 statement :
 	( method STATEMENT_END
-	| custom_method STATEMENT_END
 	| expr STATEMENT_OPERATION expr STATEMENT_END
 	| GOTO
 	| GOTO_STATEMENT
@@ -131,7 +128,6 @@ TRUE      : 'true'      ;
 FALSE     : 'false'     ;
 NULL      : 'null'      ;
 ARRAY     : 'array'     ;
-DELTIN    : 'Deltin'    ;
 
 // Enum
 BUTTON    : 'Button'    ;

@@ -12,7 +12,7 @@ namespace OverwatchParser.Elements
     {
         private static MethodInfo[] CustomMethodList = null;
 
-        public static CustomMethods GetCustomMethod(string name)
+        public static MethodInfo GetCustomMethod(string name)
         {
             if (CustomMethodList == null)
                 CustomMethodList = typeof(CustomMethods)
@@ -34,13 +34,13 @@ namespace OverwatchParser.Elements
         {
             var eventPlayer = new V_EventPlayer();
 
-            Var a      = Var.AssignVar(isGlobal);
-            Var b      = Var.AssignVar(isGlobal);
-            Var c      = Var.AssignVar(isGlobal);
-            Var ab     = Var.AssignVar(isGlobal);
-            Var bc     = Var.AssignVar(isGlobal);
-            Var abVec  = Var.AssignVar(isGlobal);
-            Var bcVec  = Var.AssignVar(isGlobal);
+            Var a = Var.AssignVar(isGlobal);
+            Var b = Var.AssignVar(isGlobal);
+            Var c = Var.AssignVar(isGlobal);
+            Var ab = Var.AssignVar(isGlobal);
+            Var bc = Var.AssignVar(isGlobal);
+            Var abVec = Var.AssignVar(isGlobal);
+            Var bcVec = Var.AssignVar(isGlobal);
             Var abNorm = Var.AssignVar(isGlobal);
             Var bcNorm = Var.AssignVar(isGlobal);
 
@@ -248,11 +248,6 @@ namespace OverwatchParser.Elements
         public static string GetCustomMethodName(MethodInfo methodInfo)
         {
             return $"{methodInfo.Name}({string.Join(", ", methodInfo.GetCustomAttributes<Parameter>().Select(v => $"{(v.ParameterType == ParameterType.Value ? v.ValueType.ToString() : v.EnumType.Name)}: {v.Name}"))})";
-        }
-
-        private CustomMethods(MethodInfo methodInfo)
-        {
-
         }
     }
 

@@ -233,19 +233,7 @@ namespace OverwatchParser.Parse
             #region Method
             if (statementContext.GetChild(0) is DeltinScriptParser.MethodContext)
             {
-                Actions.Add(ParseMethod(statementContext.GetChild(0) as DeltinScriptParser.MethodContext));
-                return;
-            }
-            #endregion
-
-            #region Custom Method
-            if (statementContext.GetChild(0) is DeltinScriptParser.Custom_methodContext)
-            {
-                MethodResult result = ParseCustomMethod(statementContext.GetChild(0) as DeltinScriptParser.Custom_methodContext);
-
-                if (result.MethodType != CustomMethodType.Action)
-                    throw new SyntaxErrorException("Expected action method.", statementContext.start.Line, statementContext.start.Column);
-
+                Actions.Add(ParseMethod(statementContext.GetChild(0) as DeltinScriptParser.MethodContext, false));
                 return;
             }
             #endregion
@@ -261,20 +249,7 @@ namespace OverwatchParser.Parse
 
                 Element value;
 
-                if (statementContext.expr(1).GetChild(0) is DeltinScriptParser.Custom_methodContext)
-                {
-                    var result = ParseCustomMethod(statementContext.expr(1).GetChild(0) as DeltinScriptParser.Custom_methodContext);
-
-                    if (result.MethodType != CustomMethodType.MultiAction_Value && result.MethodType != CustomMethodType.Value)
-                        throw new SyntaxErrorException("Expected value method.", statementContext.start.Line, statementContext.start.Column);
-
-                    if (result.Elements != null)
-                        Actions.AddRange(result.Elements);
-
-                    value = result.Result;
-                }
-                else
-                    value = ParseExpression(statementContext.expr(1) as DeltinScriptParser.ExprContext);
+                value = ParseExpression(statementContext.expr(1) as DeltinScriptParser.ExprContext);
 
                 /*  Format if the variable has an expression beforehand (sets the target player)
                                  expr(0)           .ChildCount
@@ -689,7 +664,7 @@ namespace OverwatchParser.Parse
             #region Method
 
             if (context.GetChild(0) is DeltinScriptParser.MethodContext)
-                return ParseMethod(context.GetChild(0) as DeltinScriptParser.MethodContext);
+                return ParseMethod(context.GetChild(0) as DeltinScriptParser.MethodContext, true);
 
             #endregion
 
@@ -755,70 +730,73 @@ namespace OverwatchParser.Parse
             throw new Exception($"What's a {context.GetType().Name}?");
         }
 
-        Element ParseMethod(DeltinScriptParser.MethodContext methodContext)
+        Element ParseMethod(DeltinScriptParser.MethodContext methodContext, bool needsToBeValue)
         {
             // Get the method name
             string methodName = methodContext.PART().GetText();
 
             // Get the method type.
             Type methodType = Element.GetMethod(methodName);
-            MethodInfo customMethodType = CustomMethods.GetCustomMethod(methodName);
-
-            if (methodType != null && customMethodType != null)
-                throw new Exception("Conflicting Overwatch method and custom method, report to Deltin.");
-
-            if (methodType == null && customMethodType == null)
-                throw new SyntaxErrorException($"The method {methodName} does not exist.", methodContext.start.Line, methodContext.start.Column);
-
-            // Parse parameters
-            List<object> finalParameters = new List<object>();
-            var parseParameters = methodContext.expr();
-
-            Element method = (Element)Activator.CreateInstance(methodType);
-            var parameterDatas = method.GetType().GetCustomAttributes<Parameter>().ToArray();
-
-            for (int i = 0; i < parseParameters.Length; i++)
-                finalParameters.Add(ParseParameter(parseParameters[i], method.ToString(), parameterDatas[i]));
-
-            method.ParameterValues = finalParameters.ToArray();
-
-            return method;
-        }
-
-        MethodResult ParseCustomMethod(DeltinScriptParser.Custom_methodContext cmContext)
-        {
-            string methodName = cmContext.PART().GetText();
-
             MethodInfo customMethod = CustomMethods.GetCustomMethod(methodName);
 
-            if (customMethod == null)
-                throw new SyntaxErrorException($"The custom method {methodName} does not exist.", cmContext.start.Line, cmContext.start.Column);
+            if (methodType != null && customMethod != null)
+                throw new Exception("Conflicting Overwatch method and custom method, report to Deltin.");
 
-            var data = customMethod.GetCustomAttribute<CustomMethod>();
-            var parameterData = customMethod.GetCustomAttributes<Parameter>().ToArray();
+            if (methodType == null && customMethod == null)
+                throw new SyntaxErrorException($"The method {methodName} does not exist.", methodContext.start.Line, methodContext.start.Column);
 
-            List<object> parameters = new List<object>();
+            bool isCustomMethod = methodType == null;
 
-            var parseParameters = cmContext.expr();
-            for (int i = 0; i < parameterData.Length; i++)
+            // Parse parameters
+            var parseParameters = methodContext.expr();
+            Parameter[] parameterData;
+
+            string fullMethodName;
+
+            Element method = null;
+            if (!isCustomMethod)
             {
-                var parameter = parseParameters.ElementAtOrDefault(i);
-
-                if (parameter == null)
-                {
-                    if (parameterData[i].DefaultType == null)
-                        throw new SyntaxErrorException($"Missing parameter {parameterData[i].Name} in {CustomMethods.GetCustomMethodName(customMethod)}.", cmContext.start.Line, cmContext.start.Column);
-                    else
-                        parameters.Add(Activator.CreateInstance(parameterData[i].DefaultType));
-                }
-                else
-                    parameters.Add(ParseParameter(parseParameters[i], methodName, parameterData[i]));
+                parameterData = methodType.GetCustomAttributes<Parameter>().ToArray();
+                method = (Element)Activator.CreateInstance(methodType);
+                fullMethodName = method.ToString();
+            }
+            else
+            {
+                parameterData = customMethod.GetCustomAttributes<Parameter>().ToArray();
+                fullMethodName = CustomMethods.GetCustomMethodName(customMethod);
             }
 
-            //object[] parameters = cmContext.expr().Select(v => ParseParameter(v, customMethod.Name, null)).ToArray();
+            List<object> finalParameters = new List<object>();
+            for (int i = 0; i < parseParameters.Length; i++)
+                finalParameters.Add(ParseParameter(parseParameters[i], fullMethodName, parameterData[i]));
 
-            MethodResult result = (MethodResult)customMethod.Invoke(null, new object[] { IsGlobal, parameters.ToArray() });
-            return result;
+            if (isCustomMethod)
+            {
+                MethodResult result = (MethodResult)customMethod.Invoke(null, new object[] { IsGlobal, finalParameters.ToArray() });
+
+                switch (result.MethodType)
+                {
+                    case CustomMethodType.Action:
+                        if (needsToBeValue)
+                            throw new IncorrectElementTypeException(fullMethodName, true);
+                        break;
+
+                    case CustomMethodType.MultiAction_Value:
+                    case CustomMethodType.Value:
+                        if (!needsToBeValue)
+                            throw new IncorrectElementTypeException(fullMethodName, false);
+                        break;
+                }
+
+                if (result.Elements != null)
+                    Actions.AddRange(result.Elements);
+                finalParameters = null;
+                method = result.Result;
+            }
+            else
+                method.ParameterValues = finalParameters?.ToArray();
+
+            return method;
         }
 
         object ParseParameter(DeltinScriptParser.ExprContext context, string methodName, Parameter parameterData)
