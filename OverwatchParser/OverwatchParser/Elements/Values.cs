@@ -11,27 +11,27 @@ using Antlr4.Runtime;
 
 namespace OverwatchParser.Elements
 {
-    [ElementData("Absolute Value", ValueType.Number)]
+    [ElementData("Absolute Value", ValueType.Number, 0)]
     [Parameter("Value", ValueType.Number, typeof(V_Number))]
     [Serializable]
     public class V_AbsoluteValue : Element {}
 
-    [ElementData("Add", ValueType.Any)]
+    [ElementData("Add", ValueType.Any, 0)]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
     [Serializable]
     public class V_Add : Element {}
 
-    [ElementData("All Dead Players", ValueType.Player)]
+    [ElementData("All Dead Players", ValueType.Player, 0)]
     [Parameter("Team", ValueType.Team, typeof(V_Team))]
     [Serializable]
     public class V_AllDeadPlayers : Element {}
 
-    [ElementData("All Heroes", ValueType.Hero)]
+    [ElementData("All Heroes", ValueType.Hero, 0)]
     [Serializable]
     public class V_AllHeroes : Element {}
 
-    [ElementData("All Living Players", ValueType.Player)]
+    [ElementData("All Living Players", ValueType.Player, 0)]
     [Parameter("Team", ValueType.Team, typeof(V_Team))]
     [Serializable]
     public class V_AllLivingPlayers : Element {}
@@ -41,33 +41,33 @@ namespace OverwatchParser.Elements
     [Serializable]
     public class V_AllPlayers : Element {}
 
-    [ElementData("All Players Not On Objective", ValueType.Player)]
+    [ElementData("All Players Not On Objective", ValueType.Player, 0)]
     [Parameter("Team", ValueType.Team, typeof(V_Team))]
     [Serializable]
     public class V_AllPlayersNotOnObjective : Element {}
 
-    [ElementData("All Players On Objective", ValueType.Player)]
+    [ElementData("All Players On Objective", ValueType.Player, 0)]
     [Parameter("Team", ValueType.Team, typeof(V_Team))]
     [Serializable]
     public class V_AllPlayersOnObjective : Element {}
 
-    [ElementData("Allowed Heroes", ValueType.Hero)]
+    [ElementData("Allowed Heroes", ValueType.Hero, 0)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     [Serializable]
     public class V_AllowedHeroes : Element {}
 
-    [ElementData("Altitude Of", ValueType.Number)]
+    [ElementData("Altitude Of", ValueType.Number, 0)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     [Serializable]
     public class V_AltitudeOf : Element {}
 
-    [ElementData("And", ValueType.Boolean)]
+    [ElementData("And", ValueType.Boolean, 0)]
     [Parameter("Value", ValueType.Boolean, typeof(V_True))]
     [Parameter("Value", ValueType.Boolean, typeof(V_True))]
     [Serializable]
     public class V_And : Element {}
 
-    [ElementData("Angle Difference", ValueType.Number)]
+    [ElementData("Angle Difference", ValueType.Number, 0)]
     [Parameter("Angle", ValueType.Number, typeof(V_Number))]
     [Parameter("Angle", ValueType.Number, typeof(V_Number))]
     [Serializable]
@@ -79,7 +79,7 @@ namespace OverwatchParser.Elements
     [Serializable]
     public class V_AppendToArray : Element {}
 
-    [ElementData("Array Contains", ValueType.Boolean)]
+    [ElementData("Array Contains", ValueType.Boolean, 0)]
     [Parameter("Array", ValueType.Any, typeof(V_AllPlayers))]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
     [Serializable]
@@ -92,33 +92,33 @@ namespace OverwatchParser.Elements
     [Serializable]
     public class V_ArraySlice : Element {}
 
-    [ElementData("Attacker", ValueType.Player)]
+    [ElementData("Attacker", ValueType.Player, 0)]
     [Serializable]
     public class V_Attacker : Element {}
 
-    [ElementData("Backward", ValueType.Vector)]
+    [ElementData("Backward", ValueType.Vector, 0)]
     [Serializable]
     public class V_Backward : Element {}
 
-    [ElementData("Closest Player To", ValueType.Player)]
+    [ElementData("Closest Player To", ValueType.Player, 0)]
     [Parameter("Center", ValueType.VectorAndPlayer, typeof(V_Vector))]
     [Parameter("Team", ValueType.Team, typeof(V_Team))]
     [Serializable]
     public class V_ClosestPlayerTo : Element {}
 
-    [ElementData("Compare", ValueType.Boolean)]
+    [ElementData("Compare", ValueType.Boolean, 0)]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
     [Parameter("", typeof(Operators))]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
     [Serializable]
     public class V_Compare : Element {}
 
-    [ElementData("Control Point Scoring Percentage", ValueType.Number)]
+    [ElementData("Control Point Scoring Percentage", ValueType.Number, 0)]
     [Parameter("Team", ValueType.Team, typeof(V_Team))]
     [Serializable]
     public class V_ControlPointScoringPercentage : Element {}
 
-    [ElementData("Control Point Scoring Team", ValueType.Team)]
+    [ElementData("Control Point Scoring Team", ValueType.Team, 0)]
     [Serializable]
     public class V_ControlPointScoringTeam : Element {}
 
@@ -126,6 +126,28 @@ namespace OverwatchParser.Elements
     [Parameter("Array", ValueType.Any, typeof(V_GlobalVariable))]
     [Serializable]
     public class V_CountOf : Element {}
+
+    [ElementData("Cross Product", ValueType.Vector, 0)]
+    [Parameter("Value", ValueType.VectorAndPlayer, typeof(V_Vector))]
+    [Parameter("Value", ValueType.VectorAndPlayer, typeof(V_Vector))]
+    [Serializable]
+    public class V_CrossProduct : Element {}
+
+    [ElementData("Current Array Element", ValueType.Any, 0)]
+    [Serializable]
+    public class V_CurrentArrayElement : Element {}
+
+    [ElementData("Direction From Angles", ValueType.Vector, 0)]
+    [Parameter("Horizontal Angle", ValueType.Number, typeof(V_Number))]
+    [Parameter("Vertical Angle", ValueType.Number, typeof(V_Number))]
+    [Serializable]
+    public class V_DirectionFromAngles : Element {}
+
+    [ElementData("Direction Towards", ValueType.Vector, 0)]
+    [Parameter("Start Pos", ValueType.VectorAndPlayer, typeof(V_Vector))]
+    [Parameter("End Pos", ValueType.VectorAndPlayer, typeof(V_Vector))]
+    [Serializable]
+    public class V_DirectionTowards : Element {}
 
     [ElementData("Distance Between", ValueType.Number, 0)]
     [Parameter("Start Pos", ValueType.VectorAndPlayer, typeof(V_Vector))]
@@ -139,9 +161,24 @@ namespace OverwatchParser.Elements
     [Serializable]
     public class V_Divide : Element {}
 
+    [ElementData("Dot Product", ValueType.Number, 0)]
+    [Parameter("Value", ValueType.Any, typeof(V_Number))]
+    [Parameter("Value", ValueType.Any, typeof(V_Number))]
+    [Serializable]
+    public class V_DotProduct : Element {}
+
+    [ElementData("Down", ValueType.Vector, 0)]
+    [Serializable]
+    public class V_Down : Element {}
+
     [ElementData("Empty Array", ValueType.Any, 0)]
     [Serializable]
     public class V_EmptyArray : Element {}
+
+    [ElementData("Entity Exists", ValueType.Boolean, 0)]
+    [Parameter("Entity", ValueType.Player, null)]
+    [Serializable]
+    public class V_EntityExists : Element {}
 
     [ElementData("Event Player", ValueType.Player, 0)]
     [Serializable]
@@ -156,10 +193,98 @@ namespace OverwatchParser.Elements
     [Serializable]
     public class V_False : Element {}
 
+    [ElementData("Farthest Player From", ValueType.Player, 0)]
+    [Parameter("Center", ValueType.Vector, typeof(V_Vector))]
+    [Parameter("Team", ValueType.Team, typeof(V_Team))]
+    [Serializable]
+    public class V_FarthestPlayerFrom : Element {}
+
+    [ElementData("Filtered Array", ValueType.Any, 0)]
+    [Parameter("Array", ValueType.Any, typeof(V_AllPlayers))]
+#warning check default type
+    [Parameter("Condition", ValueType.Boolean, null)]
+    [Serializable]
+    public class V_FilteredArray : Element {}
+
+    [ElementData("First Of", ValueType.Any, 0)]
+#warning check default type
+    [Parameter("Array", ValueType.Any, null)]
+    [Serializable]
+    public class V_FirstOf : Element {}
+
+    [ElementData("Flag Position", ValueType.Vector, 0)]
+    [Parameter("Team", ValueType.Team, typeof(V_Team))]
+    [Serializable]
+    public class V_FlagPosition : Element {}
+
+    [ElementData("Forward", ValueType.Vector, 0)]
+    [Serializable]
+    public class V_Forward : Element {}
+
     [ElementData("Global Variable", ValueType.Any, 0)]
     [Parameter("Variable", typeof(Variable))]
     [Serializable]
     public class V_GlobalVariable : Element {}
+
+    [ElementData("Has Spawned", ValueType.Boolean, 0)]
+#warning default type
+    [Parameter("Entity", ValueType.Player, null)]
+    [Serializable]
+    public class V_HasSpawned : Element {}
+
+    [ElementData("Has Status", ValueType.Boolean, 0)]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [Parameter("Status", typeof(Status))]
+    [Serializable]
+    public class V_HasStatus : Element {}
+
+#warning check health pos
+    [ElementData("Health", ValueType.Number, 0)]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [Serializable]
+    public class V_Health : Element {}
+
+    [ElementData("Health Percent", ValueType.Number, 0)]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [Serializable]
+    public class V_HealthPercent : Element {}
+
+#warning check hero pos
+    [ElementData("Hero", ValueType.Hero, 0)]
+    [Parameter("Hero", typeof(Hero))]
+    [Serializable]
+    public class V_Hero : Element {}
+
+    [ElementData("Hero Icon String", ValueType.String, 0)]
+    [Parameter("Value", ValueType.Hero, typeof(V_Hero))]
+    [Serializable]
+    public class V_HeroIconString : Element {}
+
+    [ElementData("Hero Of", ValueType.Hero, 0)]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [Serializable]
+    public class V_HeroOf : Element {}
+
+    [ElementData("Horizontal Angle From Direction", ValueType.Number, 0)]
+    [Parameter("Direction", ValueType.Vector, typeof(V_Vector))]
+    [Serializable]
+    public class V_HorizontalAngleFromDirection : Element {}
+
+    [ElementData("Horizontal Angle Towards", ValueType.Number, 0)]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [Parameter("Position", ValueType.Vector, typeof(V_Vector))]
+    [Serializable]
+    public class V_HorizontalAngleTowards : Element {}
+
+    [ElementData("Horizontal Facing Angle Of", ValueType.Number, 0)]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [Serializable]
+    public class V_HorizontalFacingAngleOf : Element {}
+
+    [ElementData("Horizontal Speed Of", ValueType.Number, 0)]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [Serializable]
+    public class V_HorizontalSpeedOf : Element {}
 
     [ElementData("Index Of Array Value", 0)]
     [Parameter("Array", ValueType.Any, typeof(V_GlobalVariable))]
@@ -172,36 +297,277 @@ namespace OverwatchParser.Elements
     [Serializable]
     public class V_IsAlive : Element {}
 
+    [ElementData("Is Assembling Heroes", ValueType.Boolean, 0)]
+    [Serializable]
+    public class V_IsAssemblingHeroes : Element {}
+
+    [ElementData("Is Between Rounds", ValueType.Boolean, 0)]
+    [Serializable]
+    public class V_IsBetweenRounds : Element {}
+
     [ElementData("Is Button Held", ValueType.Boolean, 0)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     [Parameter("Button", typeof(Button))]
     [Serializable]
     public class V_IsButtonHeld : Element {}
 
+#warning check order
+    [ElementData("Is Communicating", ValueType.Boolean, 0)]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [Parameter("Type", typeof(Communication))]
+    [Serializable]
+    public class V_IsCommunicating : Element {}
+
+    [ElementData("Is Communicating Any", ValueType.Boolean, 0)]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [Serializable]
+    public class V_IsCommunicatingAny : Element {}
+
+    [ElementData("Is Communicating Any Emote", ValueType.Boolean, 0)]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [Serializable]
+    public class V_IsCommunicatingAnyEmote : Element {}
+
+    [ElementData("Is Communicating Any Voice Line", ValueType.Boolean, 0)]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [Serializable]
+    public class V_IsCommunicatingAnyVoiceLine : Element {}
+
+    [ElementData("Is Control Mode Point Locked", ValueType.Boolean, 0)]
+    [Serializable]
+    public class V_IsControlModePointLocked : Element {}
+
+    [ElementData("Is Crouching", ValueType.Boolean, 0)]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [Serializable]
+    public class V_IsCrouching : Element {}
+
+    [ElementData("Is CTF Mode In Sudden Death", ValueType.Boolean, 0)]
+    [Serializable]
+    public class V_IsInSuddenDeath : Element {}
+
     [ElementData("Is Dead", ValueType.Boolean, 0)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     [Serializable]
     public class V_IsDead : Element {}
 
-    [ElementData("Is On Objective", ValueType.Boolean, 0)]
+    [ElementData("Is Firing Primary", ValueType.Boolean, 0)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     [Serializable]
-    public class V_IsOnObjective : Element {}
+    public class V_IsFiringPrimary : Element {}
 
-    [ElementData("Is On Ground", ValueType.Boolean, 0)]
+    [ElementData("Is Firing Secondary", ValueType.Boolean, 0)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     [Serializable]
-    public class V_IsOnGround : Element {}
+    public class V_IsFiringSecondary : Element {}
+
+    [ElementData("Is Flag At Base", ValueType.Boolean, 0)]
+    [Parameter("Team", ValueType.Team, typeof(V_Team))]
+    [Serializable]
+    public class V_IsFlagAtBase : Element {}
+
+    [ElementData("Is Game In Progress", ValueType.Boolean, 0)]
+    [Serializable]
+    public class V_IsGameInProgress : Element {}
+
+    [ElementData("Is Hero Being Played", ValueType.Boolean, 0)]
+    [Parameter("Hero", ValueType.Hero, typeof(V_Hero))]
+    [Parameter("Team", ValueType.Team, typeof(V_Team))]
+    [Serializable]
+    public class V_IsHeroBeingPlayed : Element {}
 
     [ElementData("Is In Air", ValueType.Boolean, 0)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     [Serializable]
     public class V_IsInAir : Element {}
 
+    [ElementData("Is In Line Of Sight", ValueType.Boolean, 0)]
+    [Parameter("Start Pos", ValueType.VectorAndPlayer, typeof(V_Vector))]
+    [Parameter("End Pos", ValueType.VectorAndPlayer, typeof(V_Vector))]
+    [Parameter("Barriers", typeof(BarrierLOS))]
+    [Serializable]
+    public class V_IsInLineOfSight : Element {}
+
+    [ElementData("Is In Setup", ValueType.Boolean, 0)]
+    [Serializable]
+    public class V_IsInSetup : Element {}
+
+    [ElementData("Is In Spawn Room", ValueType.Boolean, 0)]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [Serializable]
+    public class V_IsInSpawnRoom : Element {}
+
+    [ElementData("Is In View Angle", ValueType.Boolean, 0)]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [Parameter("Location", ValueType.VectorAndPlayer, typeof(V_Vector))]
+    [Parameter("View Angle", ValueType.Number, typeof(V_Number))]
+    [Serializable]
+    public class V_IsInViewAngle : Element {}
+
+    [ElementData("Is Match Complete", ValueType.Boolean, 0)]
+    [Serializable]
+    public class V_IsMatchComplete : Element {}
+
+    [ElementData("Is Moving", ValueType.Boolean, 0)]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [Serializable]
+    public class V_IsMoving : Element {}
+
+    [ElementData("Is Objective Complete", ValueType.Boolean, 0)]
+    [Parameter("Number", ValueType.Number, typeof(V_Number))]
+    [Serializable]
+    public class V_IsObjectiveComplete : Element {}
+
+    [ElementData("Is On Ground", ValueType.Boolean, 0)]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [Serializable]
+    public class V_IsOnGround : Element { }
+
+    [ElementData("Is On Objective", ValueType.Boolean, 0)]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [Serializable]
+    public class V_IsOnObjective : Element {}
+
+    [ElementData("Is On Wall", ValueType.Boolean, 0)]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [Serializable]
+    public class V_IsOnWall : Element {}
+
+    [ElementData("Is Portrait On Fire", ValueType.Boolean, 0)]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [Serializable]
+    public class V_IsPortraitOnFire : Element {}
+
+    [ElementData("Is Standing", ValueType.Boolean, 0)]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [Serializable]
+    public class V_IsStanding : Element {}
+
+    [ElementData("Is Team On Defense", ValueType.Boolean, 0)]
+    [Parameter("Team", ValueType.Team, typeof(V_Team))]
+    [Serializable]
+    public class V_IsTeamOnDefense : Element {}
+
+    [ElementData("Is Team On Offense", ValueType.Boolean, 0)]
+    [Parameter("Team", ValueType.Team, typeof(V_Team))]
+    [Serializable]
+    public class V_IsTeamOnOffense : Element {}
+
+    [ElementData("Is True For All", ValueType.Boolean, 0)]
+#warning check default
+    [Parameter("Array", ValueType.Any, typeof(V_AllPlayers))]
+    [Parameter("Condition", ValueType.Boolean, typeof(V_Compare))]
+    [Serializable]
+    public class V_IsTrueForAll : Element {}
+
+    [ElementData("Is True For Any", ValueType.Boolean, 0)]
+#warning check default
+    [Parameter("Array", ValueType.Any, typeof(V_AllPlayers))]
+    [Parameter("Condition", ValueType.Boolean, typeof(V_Compare))]
+    [Serializable]
+    public class V_IsTrueForAny : Element {}
+
+    [ElementData("Is Using Ability 1", ValueType.Boolean, 0)]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [Serializable]
+    public class V_IsUsingAbility1 : Element {}
+
+    [ElementData("Is Using Ability 2", ValueType.Boolean, 0)]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [Serializable]
+    public class V_IsUsingAbility2 : Element {}
+
+    [ElementData("Is Using Ultimate", ValueType.Boolean, 0)]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [Serializable]
+    public class V_IsUsingUltimate : Element {}
+
+    [ElementData("Is Waiting For Players", ValueType.Boolean, 0)]
+    [Serializable]
+    public class V_IsWaitingForPlayers : Element {}
+
+    [ElementData("Last Created Entity", ValueType.Player, 0)]
+    [Serializable]
+    public class V_LastCreatedEntity : Element {}
+
+    [ElementData("Last Damage Over Time ID", ValueType.Number, 0)]
+    [Serializable]
+    public class V_LastDamageOverTime : Element {}
+
+    [ElementData("Last Heal Over Time ID", ValueType.Number, 0)]
+    [Serializable]
+    public class V_LastHealOverTime : Element {}
+
+    [ElementData("Last Of", ValueType.Any, 0)]
+#warning check default
+    [Parameter("Array", ValueType.Any, typeof(V_GlobalVariable))]
+    [Serializable]
+    public class V_LastOf : Element {}
+
+    [ElementData("Last Text ID", ValueType.Number, 0)]
+    [Serializable]
+    public class V_LastTextID : Element {}
+
+#warning check order
+    [ElementData("Left", ValueType.Number, 0)]
+    [Serializable]
+    public class V_Left : Element {}
+
+    [ElementData("Local Vector Of", ValueType.Vector, 0)]
+    [Parameter("World Vector", ValueType.VectorAndPlayer, typeof(V_Vector))]
+    [Parameter("Relative Player", ValueType.Player, typeof(V_EventPlayer))]
+    [Parameter("Transformation", typeof(Transformation))]
+    [Serializable]
+    public class V_LocalVectorOf : Element {}
+
+    [ElementData("Match Round", ValueType.Number, 0)]
+    [Serializable]
+    public class V_MatchRound : Element {}
+
+    [ElementData("Match Time", ValueType.Number, 0)]
+    [Serializable]
+    public class V_MatchTime : Element {}
+
+#warning Check order
+    [ElementData("Max", ValueType.Number, 0)]
+    [Parameter("Value", ValueType.Number, typeof(V_Number))]
+    [Parameter("Value", ValueType.Number, typeof(V_Number))]
+    [Serializable]
+    public class V_Max : Element {}
+
+    [ElementData("Max Health", ValueType.Number, 0)]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [Serializable]
+    public class V_MaxHealth : Element {}
+
+#warning Check order
+    [ElementData("Min", ValueType.Number, 0)]
+    [Parameter("Value", ValueType.Number, typeof(V_Number))]
+    [Parameter("Value", ValueType.Number, typeof(V_Number))]
+    [Serializable]
+    public class V_Min : Element {}
+
+    [ElementData("Modulo", ValueType.Number, 0)]
+    [Parameter("Value", ValueType.Number, typeof(V_Number))]
+    [Parameter("Value", ValueType.Number, typeof(V_Number))]
+    [Serializable]
+    public class V_Modulo : Element {}
+
+    [ElementData("Multiply", ValueType.Any, 0)]
+    [Parameter("Value", ValueType.Any, typeof(V_Number))]
+    [Parameter("Value", ValueType.Any, typeof(V_Number))]
+    [Serializable]
+    public class V_Multiply : Element {}
+
     [ElementData("Nearest Walkable Position", ValueType.Vector, 0)]
     [Parameter("Position", ValueType.VectorAndPlayer, typeof(V_Vector))]
     [Serializable]
     public class V_NearestWalkablePosition : Element {}
+
+    [ElementData("Normalize", ValueType.Number, 0)]
+    [Parameter("Vector", ValueType.VectorAndPlayer, typeof(V_Vector))]
+    [Serializable]
+    public class V_Normalize : Element {}
 
     [ElementData("Not", ValueType.Boolean, 1)]
     [Parameter("Value", ValueType.Boolean, typeof(V_True))]
@@ -253,28 +619,60 @@ namespace OverwatchParser.Elements
         }
     }
 
+    [ElementData("Number Of Dead Players", ValueType.Number, 0)]
+    [Parameter("Team", ValueType.Team, typeof(V_Team))]
+    [Serializable]
+    public class V_NumberOfDeadPlayers : Element {}
+
+    [ElementData("Number Of Deaths", ValueType.Number, 0)]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [Serializable]
+    public class V_NumberOfDeaths : Element {}
+
+    [ElementData("Number Of Eliminations", ValueType.Number, 0)]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [Serializable]
+    public class V_NumberOfEliminations : Element {}
+
+    [ElementData("Number Of Final Blows", ValueType.Number, 0)]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [Serializable]
+    public class V_NumberOfFinalBlows : Element {}
+
+    [ElementData("Number Of Heroes", ValueType.Number, 0)]
+    [Parameter("Hero", ValueType.Hero, typeof(V_Hero))]
+    [Parameter("Team", ValueType.Team, typeof(V_Team))]
+    [Serializable]
+    public class V_NumberOfHeroes : Element {}
+
+    [ElementData("Number Of Living Players", ValueType.Number, 0)]
+    [Parameter("Team", ValueType.Team, typeof(V_Team))]
+    [Serializable]
+    public class V_NumberOfLivingPlayers : Element {}
+
     [ElementData("Number Of Players", ValueType.Number, 2)]
     [Parameter("Team", ValueType.Team, typeof(V_Team))]
     [Serializable]
     public class V_NumberOfPlayers : Element {}
 
-    [ElementData("Players In Slot", ValueType.Player, 0)]
-    [Parameter("Slot", ValueType.Number, typeof(V_Number))]
+    [ElementData("Number Of Players On Objective", ValueType.Number, 0)]
     [Parameter("Team", ValueType.Team, typeof(V_Team))]
     [Serializable]
-    public class V_PlayersInSlot : Element {}
+    public class V_NumberOfPlayersOnObjective : Element {}
 
-    [ElementData("Modulo", ValueType.Number, 0)]
-    [Parameter("Value", ValueType.Number, typeof(V_Number))]
-    [Parameter("Value", ValueType.Number, typeof(V_Number))]
+    [ElementData("Objective Index", ValueType.Number, 0)]
     [Serializable]
-    public class V_Modulo : Element {}
+    public class V_ObjectiveIndex : Element {}
 
-    [ElementData("Multiply", ValueType.Any, 0)]
-    [Parameter("Value", ValueType.Any, typeof(V_Number))]
-    [Parameter("Value", ValueType.Any, typeof(V_Number))]
+    [ElementData("Objective Position", ValueType.Number, 0)]
+    [Parameter("Number", ValueType.Number, typeof(V_Number))]
     [Serializable]
-    public class V_Multiply : Element {}
+    public class V_ObjectivePosition : Element {}
+
+    [ElementData("Opposite Team Of", ValueType.Team, 0)]
+    [Parameter("Team", ValueType.Team, typeof(V_Team))]
+    [Serializable]
+    public class V_OppositeTeamOf : Element {}
 
     [ElementData("Or", ValueType.Boolean, 13)]
     [Parameter("Value", ValueType.Boolean, typeof(V_True))]
@@ -282,22 +680,133 @@ namespace OverwatchParser.Elements
     [Serializable]
     public class V_Or : Element {}
 
+    [ElementData("Payload Position", ValueType.Vector, 0)]
+    [Serializable]
+    public class V_PayloadPosition : Element {}
+
+    [ElementData("Payload Progress Percentage", ValueType.Number, 0)]
+    [Serializable]
+    public class V_PayloadProgressPercentage : Element {}
+
+    [ElementData("Player Carrying Flag", ValueType.Number, 0)]
+    [Parameter("Team", ValueType.Team, typeof(V_Team))]
+    [Serializable]
+    public class V_PlayerCarryingFlag : Element {}
+
+    [ElementData("Player Closest To Reticle", ValueType.Player, 0)]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [Parameter("Team", ValueType.Team, typeof(V_Team))]
+    [Serializable]
+    public class V_PlayerClosestToReticle : Element {}
+
     [ElementData("Player Variable", ValueType.Any, 0)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     [Parameter("Variable", typeof(Variable))]
     [Serializable]
     public class V_PlayerVariable : Element {}
 
+    [ElementData("Players In Slot", ValueType.Player, 0)]
+    [Parameter("Slot", ValueType.Number, typeof(V_Number))]
+    [Parameter("Team", ValueType.Team, typeof(V_Team))]
+    [Serializable]
+    public class V_PlayersInSlot : Element {}
+
+    [ElementData("Players In View Angle", ValueType.Player, 0)]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [Parameter("Team", ValueType.Team, typeof(V_Team))]
+    [Parameter("View Angle", ValueType.Number, typeof(V_Number))]
+    [Serializable]
+    public class V_PlayersInViewAngle : Element {}
+
+    [ElementData("Players On Hero", ValueType.Player, 0)]
+    [Parameter("Hero", ValueType.Hero, typeof(V_Hero))]
+    [Parameter("Team", ValueType.Team, typeof(V_Team))]
+    [Serializable]
+    public class V_PlayersOnHero : Element {}
+
+    [ElementData("Players Within Radius", ValueType.Player, 0)]
+    [Parameter("Center", ValueType.Vector, typeof(V_Vector))]
+    [Parameter("Radius", ValueType.Number, typeof(V_Number))]
+    [Parameter("Team", ValueType.Team, typeof(V_Team))]
+    [Parameter("LOS Check", typeof(RadiusLOS))]
+    [Serializable]
+    public class V_PlayersWithinRadius : Element {}
+
+    [ElementData("Point Capture Percentage", ValueType.Number, 0)]
+    [Serializable]
+    public class V_PointCapturePercentage : Element {}
+
     [ElementData("Position of", ValueType.Vector, 0)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     [Serializable]
     public class V_PositionOf : Element {}  
 
-    [ElementData("Raise To Power", ValueType.Number)]
+    [ElementData("Raise To Power", ValueType.Number, 0)]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
     [Serializable]
     public class V_RaiseToPower : Element {}
+
+    [ElementData("Random Integer", ValueType.Number, 0)]
+    [Parameter("Min", ValueType.Number, typeof(V_Number))]
+    [Parameter("Max", ValueType.Number, typeof(V_Number))]
+    [Serializable]
+    public class V_RandomInteger : Element {}
+
+    [ElementData("Random Real", ValueType.Number, 0)]
+    [Parameter("Min", ValueType.Number, typeof(V_Number))]
+    [Parameter("Max", ValueType.Number, typeof(V_Number))]
+    [Serializable]
+    public class V_RandomReal : Element {}
+
+    [ElementData("Random Value In Arary", ValueType.Any, 0)]
+#warning check default type
+    [Parameter("Array", ValueType.Any, typeof(V_AllPlayers))]
+    [Serializable]
+    public class V_RandomValueInArray : Element {}
+
+    [ElementData("Randomized Array", ValueType.Number, 0)]
+    [Parameter("Array", ValueType.Any, typeof(V_AllPlayers))]
+    [Serializable]
+    public class V_RandomizedArray : Element {}
+
+    [ElementData("Ray Cast Hit Normal", ValueType.Vector, 0)]
+    [Parameter("Start POS", ValueType.VectorAndPlayer, typeof(V_Vector))]
+    [Parameter("End POS", ValueType.VectorAndPlayer, typeof(V_Vector))]
+    [Parameter("Players To Include", ValueType.Player, typeof(V_Null))]
+    [Parameter("Players To Exclude", ValueType.Player, typeof(V_EventPlayer))]
+    [Parameter("Include Player Owned Objects", ValueType.Boolean, typeof(V_True))]
+    [Serializable]
+    public class V_RayCastHitNormal : Element {}
+
+    [ElementData("Ray Cast Hit Player", ValueType.Player, 0)]
+    [Parameter("Start POS", ValueType.VectorAndPlayer, typeof(V_Vector))]
+    [Parameter("End POS", ValueType.VectorAndPlayer, typeof(V_Vector))]
+    [Parameter("Players To Include", ValueType.Player, typeof(V_Null))]
+    [Parameter("Players To Exclude", ValueType.Player, typeof(V_EventPlayer))]
+    [Parameter("Include Player Owned Objects", ValueType.Boolean, typeof(V_True))]
+    [Serializable]
+    public class V_RayCastHitPlayer : Element {}
+
+    [ElementData("Ray Cast Hit Position", ValueType.Vector, 0)]
+    [Parameter("Start POS", ValueType.VectorAndPlayer, typeof(V_Vector))]
+    [Parameter("End POS", ValueType.VectorAndPlayer, typeof(V_Vector))]
+    [Parameter("Players To Include", ValueType.Player, typeof(V_Null))]
+    [Parameter("Players To Exclude", ValueType.Player, typeof(V_EventPlayer))]
+    [Parameter("Include Player Owned Objects", ValueType.Boolean, typeof(V_True))]
+    [Serializable]
+    public class V_RayCastHitPosition : Element {}
+
+#warning check order and default
+    [ElementData("Remove From Array", ValueType.Any, 0)]
+    [Parameter("Array", ValueType.Any, typeof(V_GlobalVariable))]
+    [Parameter("Value", ValueType.Any, typeof(V_Number))]
+    [Serializable]
+    public class V_RemoveFromArray : Element {}
+
+    [ElementData("Right", ValueType.Vector, 0)]
+    [Serializable]
+    public class V_Right : Element {}
 
     [ElementData("Round To Integer", ValueType.Number, 0)]
     [Parameter("Value", ValueType.Number, typeof(V_Number))]
@@ -305,7 +814,46 @@ namespace OverwatchParser.Elements
     [Serializable]
     public class V_RoundToInteger : Element {}
 
-    [ElementData("Square Root", ValueType.Number)]
+    [ElementData("Score Of", ValueType.Number, 0)]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [Serializable]
+    public class V_ScoreOf : Element {}
+
+    [ElementData("Sine From Degrees", ValueType.Number, 0)]
+    [Parameter("Angle", ValueType.Number, typeof(V_Number))]
+    [Serializable]
+    public class V_SineFromDegrees : Element {}
+
+    [ElementData("Sine From Radians", ValueType.Number, 0)]
+    [Parameter("Angle", ValueType.Number, typeof(V_Number))]
+    [Serializable]
+    public class V_SineFromRadians : Element {}
+
+    [ElementData("Slot Of", ValueType.Number, 0)]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [Serializable]
+    public class V_SlotOf : Element {}
+
+#warning check default
+    [ElementData("Sorted Array", ValueType.Number, 0)]
+    [Parameter("Array", ValueType.Any, typeof(V_GlobalVariable))]
+    [Parameter("Value Rank", ValueType.Number, typeof(V_Number))]
+    [Serializable]
+    public class V_SortedArray : Element {}
+
+#warning check order
+    [ElementData("Speed Of", ValueType.Number, 0)]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [Serializable]
+    public class V_SpeedOf : Element {}
+
+    [ElementData("Speed Of In Direction", ValueType.Number, 0)]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [Parameter("Direction", ValueType.VectorAndPlayer, typeof(V_Vector))]
+    [Serializable]
+    public class V_SpeedOfInDirection : Element {}
+
+    [ElementData("Square Root", ValueType.Number, 0)]
     [Parameter("Value", ValueType.Number, typeof(V_Number))]
     [Serializable]
     public class V_SquareRoot : Element {}
@@ -495,6 +1043,22 @@ namespace OverwatchParser.Elements
     [Serializable]
     public class V_Team : Element {}
 
+#warning check order
+    [ElementData("TeamOf", ValueType.Team, 0)]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [Serializable]
+    public class V_TeamOf : Element {}
+
+    [ElementData("TeamScore", ValueType.Team, 0)]
+    [Parameter("Team", ValueType.Team, typeof(V_Team))]
+    [Serializable]
+    public class V_TeamScore : Element {}
+
+    [ElementData("Throttle Of", ValueType.Vector, 0)]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [Serializable]
+    public class V_ThrottleOf : Element {}
+
     [ElementData("Total Time Elapsed", ValueType.Number, 0)]
     [Serializable]
     public class V_TotalTimeElapsed : Element {}
@@ -502,6 +1066,16 @@ namespace OverwatchParser.Elements
     [ElementData("True", ValueType.Boolean, 2)]
     [Serializable]
     public class V_True : Element {}
+
+    [ElementData("Ultimate Charge Percent", ValueType.Number, 0)]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [Serializable]
+    public class V_UltimateChargePercent : Element {}
+
+#warning check order
+    [ElementData("Up", ValueType.Vector, 0)]
+    [Serializable]
+    public class V_Up : Element {}
 
     [ElementData("Value In Array", ValueType.Any, 2)]
     [Parameter("Array", ValueType.Any, typeof(V_GlobalVariable))]
@@ -515,6 +1089,49 @@ namespace OverwatchParser.Elements
     [Parameter("Z", ValueType.Number, typeof(V_Number))]
     [Serializable]
     public class V_Vector : Element {}
+
+#warning check order
+    [ElementData("Vector Towards", ValueType.Vector, 0)]
+    [Parameter("Start Pos", ValueType.VectorAndPlayer, typeof(V_Vector))]
+    [Parameter("End Pos", ValueType.VectorAndPlayer, typeof(V_Vector))]
+    [Serializable]
+    public class V_VectorTowards : Element {}
+
+    [ElementData("Velocity Of", ValueType.Vector, 0)]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [Serializable]
+    public class V_VelocityOf : Element {}
+
+    [ElementData("Vertical Angle From Direction", ValueType.Vector, 0)]
+    [Parameter("Direction", ValueType.VectorAndPlayer, typeof(V_Vector))]
+    [Serializable]
+    public class V_VerticalAngleFromDirection : Element {}
+
+    [ElementData("Vertical Angle Towards", ValueType.Number, 0)]
+    [Parameter("Position", ValueType.VectorAndPlayer, typeof(V_Vector))]
+    [Parameter("Position", ValueType.VectorAndPlayer, typeof(V_Vector))]
+    [Serializable]
+    public class V_VerticalAngleTowards : Element {}
+
+    [ElementData("Vertical Facing Angle Of", ValueType.Number, 0)]
+    [Serializable]
+    public class V_VerticalFacingAngleOf : Element {}
+
+    [ElementData("Vertical Speed Of", ValueType.Number, 0)]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [Serializable]
+    public class V_VerticalSpeedOf : Element {}
+
+    [ElementData("Victim", ValueType.Player, 0)]
+    [Serializable]
+    public class V_Victim : Element {}
+
+    [ElementData("World Vector Of", ValueType.Vector, 0)]
+    [Parameter("Local vector", ValueType.VectorAndPlayer, typeof(V_Vector))]
+    [Parameter("Relative Player", ValueType.Player, typeof(V_Vector))]
+    [Parameter("Local Vector", typeof(LocalVector))]
+    [Serializable]
+    public class V_WorldVectorOf : Element {}
 
     [ElementData("X Component Of", ValueType.Number, 0)]
     [Parameter("Value", ValueType.VectorAndPlayer, typeof(V_Vector))]

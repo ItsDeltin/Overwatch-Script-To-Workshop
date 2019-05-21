@@ -410,4 +410,35 @@ namespace OverwatchParser.Elements
         DirectionAndTurnRate,
         None
     }
+
+    [EnumParameter]
+    public enum BarrierLOS
+    {
+        NoBarriersBlock,
+        EnemyBarriersBlock,
+        AllBarriersBlock
+    }
+
+    [EnumParameter]
+    public enum Transformation
+    {
+        Rotation,
+        RotationAndTranslation
+    }
+
+    [EnumParameter]
+    public enum RadiusLOS
+    {
+        Off,
+        Surfaces,
+        SurfacesAndEnemyBarriers,
+        SurfacesAndAllBarriers
+    }
+
+    [EnumParameter]
+    public enum LocalVector
+    {
+        Rotation,
+        RotationAndTranslation
+    }
 }
