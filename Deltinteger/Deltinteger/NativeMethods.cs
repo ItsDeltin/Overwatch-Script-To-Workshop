@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using System.Runtime.InteropServices;
 using System.Drawing;
 
-namespace OverwatchParser
+namespace Deltin.Deltinteger
 {
     internal static class User32
     {

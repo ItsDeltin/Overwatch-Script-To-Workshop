@@ -7,14 +7,29 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{709BCB79-2898-4837-8157-4581CC198E69}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <RootNamespace>OverwatchParser</RootNamespace>
-    <AssemblyName>OverwatchParser</AssemblyName>
+    <RootNamespace>Deltin.Deltinteger</RootNamespace>
+    <AssemblyName>Deltin.Deltinteger</AssemblyName>
     <TargetFrameworkVersion>v4.7</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <NuGetPackageImportStamp>
     </NuGetPackageImportStamp>
     <TargetFrameworkProfile />
+    <PublishUrl>publish\</PublishUrl>
+    <Install>true</Install>
+    <InstallFrom>Disk</InstallFrom>
+    <UpdateEnabled>false</UpdateEnabled>
+    <UpdateMode>Foreground</UpdateMode>
+    <UpdateInterval>7</UpdateInterval>
+    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
+    <UpdatePeriodically>false</UpdatePeriodically>
+    <UpdateRequired>false</UpdateRequired>
+    <MapFileExtensions>true</MapFileExtensions>
+    <ApplicationRevision>0</ApplicationRevision>
+    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <IsWebBootstrapper>false</IsWebBootstrapper>
+    <UseApplicationTrust>false</UseApplicationTrust>
+    <BootstrapperEnabled>true</BootstrapperEnabled>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -70,7 +85,7 @@
     <Compile Include="Exceptions.cs" />
     <Compile Include="Elements\Rule.cs" />
     <Compile Include="Elements\Values.cs" />
-    <Compile Include="Elements\Input.cs" />
+    <Compile Include="Input.cs" />
     <Compile Include="NativeMethods.cs" />
     <Compile Include="Parse.cs" />
     <Compile Include="Program.cs" />
@@ -80,7 +95,7 @@
     <None Include="App.config" />
     <Antlr4 Include="DeltinScript.g4">
       <Generator>MSBuild:Compile</Generator>
-      <CustomToolNamespace>OverwatchParser</CustomToolNamespace>
+      <CustomToolNamespace>Deltin.Deltinteger</CustomToolNamespace>
     </Antlr4>
     <None Include="packages.config" />
   </ItemGroup>
@@ -88,6 +103,18 @@
     <Content Include="config.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <BootstrapperPackage Include=".NETFramework,Version=v4.7">
+      <Visible>False</Visible>
+      <ProductName>Microsoft .NET Framework 4.7 %28x86 and x64%29</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Reflection;
-using OverwatchParser.Parse;
+using Deltin.Deltinteger.Parse;
 
-namespace OverwatchParser.Elements
+namespace Deltin.Deltinteger.Elements
 {
     public class CustomMethods
     {

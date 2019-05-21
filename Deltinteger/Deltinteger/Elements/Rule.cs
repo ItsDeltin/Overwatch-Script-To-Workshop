@@ -6,7 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace OverwatchParser.Elements
+namespace Deltin.Deltinteger.Elements
 {
     [Serializable]
     public class Rule: IEquatable<Rule>

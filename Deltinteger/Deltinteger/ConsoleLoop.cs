@@ -5,9 +5,9 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Reflection;
 using System.Diagnostics;
-using OverwatchParser.Elements;
+using Deltin.Deltinteger.Elements;
 
-namespace OverwatchParser
+namespace Deltin.Deltinteger
 {
     static class ConsoleLoop
     {

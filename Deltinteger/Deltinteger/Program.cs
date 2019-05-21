@@ -9,11 +9,10 @@ using System.IO;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Windows.Forms;
-using OverwatchParser;
-using OverwatchParser.Elements;
-using OverwatchParser.Parse;
+using Deltin.Deltinteger.Elements;
+using Deltin.Deltinteger.Parse;
 
-namespace OverwatchParser
+namespace Deltin.Deltinteger
 {
     public class Program
     {

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace OverwatchParser.Elements
+namespace Deltin.Deltinteger.Elements
 {
     [ElementData("Abort", 0)]
     [Serializable]

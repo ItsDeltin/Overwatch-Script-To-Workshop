@@ -7,7 +7,7 @@ using System.IO;
 using System.Xml.Linq;
 using System.Reflection;
 
-namespace OverwatchParser
+namespace Deltin.Deltinteger
 {
     class Config
     {

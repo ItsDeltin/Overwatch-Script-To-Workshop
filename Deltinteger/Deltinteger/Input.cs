@@ -10,7 +10,7 @@ using System.Drawing.Imaging;
 using System.Threading;
 using System.Diagnostics;
 
-namespace OverwatchParser
+namespace Deltin.Deltinteger
 {
     public static class InputSim
     {

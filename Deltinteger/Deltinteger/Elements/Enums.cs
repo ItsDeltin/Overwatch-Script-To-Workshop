@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace OverwatchParser.Elements
+namespace Deltin.Deltinteger.Elements
 {
     public enum RuleEvent
     {

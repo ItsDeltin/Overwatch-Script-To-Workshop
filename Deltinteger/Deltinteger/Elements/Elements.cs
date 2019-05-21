@@ -9,7 +9,7 @@ using System.Windows.Forms;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
 
-namespace OverwatchParser.Elements
+namespace Deltin.Deltinteger.Elements
 {
     // The type of element the element is.
     public enum ElementType

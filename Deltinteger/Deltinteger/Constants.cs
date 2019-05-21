@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Reflection;
-using OverwatchParser.Elements;
+using Deltin.Deltinteger.Elements;
 
-namespace OverwatchParser
+namespace Deltin.Deltinteger
 {
     public static class Constants
     {

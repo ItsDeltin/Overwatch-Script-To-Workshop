@@ -9,7 +9,7 @@ using System.Text.RegularExpressions;
 using System.Runtime.Serialization;
 using Antlr4.Runtime;
 
-namespace OverwatchParser.Elements
+namespace Deltin.Deltinteger.Elements
 {
     [ElementData("Absolute Value", ValueType.Number, 0)]
     [Parameter("Value", ValueType.Number, typeof(V_Number))]

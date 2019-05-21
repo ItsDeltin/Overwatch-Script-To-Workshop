@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Antlr4.Runtime;
 
-namespace OverwatchParser
+namespace Deltin.Deltinteger
 {
     public class IncorrectElementTypeException : ArgumentException
     {
