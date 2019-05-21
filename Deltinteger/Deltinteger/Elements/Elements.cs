@@ -290,5 +290,15 @@ namespace Deltin.Deltinteger.Elements
         {
             return GetName(this.GetType());
         }
+
+        public void Print(int depth = 0)
+        {
+            Console.WriteLine(new string(' ', depth * 4) + Info());
+            foreach (var param in ParameterValues)
+                if (param is Element)
+                    (param as Element).Print(depth + 1);
+                else
+                    Console.WriteLine(new string(' ', (depth + 1) * 4) + param);
+        }
     }
 }

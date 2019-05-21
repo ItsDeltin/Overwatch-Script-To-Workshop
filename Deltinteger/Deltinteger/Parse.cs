@@ -900,15 +900,6 @@ namespace Deltin.Deltinteger.Parse
             return new Var(isGlobal, GetVar(isGlobal), Assign(isGlobal));
         }
 
-        public static Var AssignVarRange(bool isGlobal, int count)
-        {
-            int start = Assign(isGlobal);
-            for (int i = 0; i < count; i++)
-                Assign(isGlobal);
-
-            return new Var(isGlobal, GetVar(isGlobal), start, count);
-        }
-
         public static DefinedVar AssignDefinedVar(bool isGlobal, string name, IToken token)
         {
             return new DefinedVar(name, isGlobal, GetVar(isGlobal), Assign(isGlobal), token);
@@ -922,26 +913,12 @@ namespace Deltin.Deltinteger.Parse
         public bool IsInArray { get; protected set; }
         public int Index { get; protected set; }
 
-        public bool IsSubArray { get; private set; }
-        public int Start { get; protected set; }
-        public int Count { get; protected set; }
-
         public Var(bool isGlobal, Variable variable, int index)
         {
             IsGlobal = isGlobal;
             Variable = variable;
             Index = index;
             IsInArray = index != -1;
-        }
-
-        public Var(bool isGlobal, Variable variable, int start, int count)
-        {
-            IsGlobal = isGlobal;
-            Variable = Variable;
-
-            IsSubArray = true;
-            Start = start;
-            Count = count;
         }
 
         protected Var()
@@ -963,13 +940,6 @@ namespace Deltin.Deltinteger.Parse
                     else
                         element = Element.Part<V_ValueInArray>(Element.Part<V_PlayerVariable>(targetPlayer, Variable), new V_Number(Index));
                 }
-                else if (IsSubArray)
-                {
-                    if (IsGlobal)
-                        element = Element.Part<V_ArraySlice>(Element.Part<V_GlobalVariable>(Variable), new V_Number(Start), new V_Number(Count));
-                    else
-                        element = Element.Part<V_ArraySlice>(Element.Part<V_PlayerVariable>(targetPlayer, Variable), new V_Number(Start), new V_Number(Count));
-                }
                 else
                 {
                     if (IsGlobal)
@@ -981,7 +951,12 @@ namespace Deltin.Deltinteger.Parse
             else
             {
                 if (IsInArray)
-                    throw new SyntaxErrorException("Can't get variable index for internal variables.");
+                {
+                    if (IsGlobal)
+                        element = Element.Part<V_ValueInArray>(Element.Part<V_ValueInArray>(Element.Part<V_GlobalVariable>(Variable)), new V_Number(Index));
+                    else
+                        element = Element.Part<V_ValueInArray>(Element.Part<V_ValueInArray>(Element.Part<V_PlayerVariable>(targetPlayer, Variable)), new V_Number(Index));
+                }
                 else
                 {
                     if (IsGlobal)
@@ -1010,32 +985,6 @@ namespace Deltin.Deltinteger.Parse
                     else
                         element = Element.Part<A_SetPlayerVariableAtIndex>(targetPlayer, Variable, new V_Number(Index), value);
                 }
-                else if (IsSubArray)
-                {
-                    if (IsGlobal)
-                        element = Element.Part<A_SetGlobalVariable>(
-                            Variable,
-                            Element.Part<V_AppendToArray>(
-                                Element.Part<V_AppendToArray>(
-                                    Element.Part<V_ArraySlice>(Element.Part<V_GlobalVariable>(Variable), new V_Number(0), new V_Number(Start)),
-                                    value
-                                ),
-                                Element.Part<V_ArraySlice>(Element.Part<V_GlobalVariable>(Variable), new V_Number(Start), Element.Part<V_CountOf>(value))
-                            )
-                        );
-                    else
-                        element = Element.Part<A_SetPlayerVariable>(
-                            targetPlayer,
-                            Variable,
-                            Element.Part<V_AppendToArray>(
-                                Element.Part<V_AppendToArray>(
-                                    Element.Part<V_ArraySlice>(Element.Part<V_PlayerVariable>(targetPlayer, Variable), new V_Number(0), new V_Number(Start)),
-                                    value
-                                ),
-                                Element.Part<V_ArraySlice>(Element.Part<V_PlayerVariable>(targetPlayer, Variable), new V_Number(Start), Element.Part<V_CountOf>(value))
-                            )
-                        );
-                }
                 else
                 {
                     if (IsGlobal)
@@ -1047,10 +996,24 @@ namespace Deltin.Deltinteger.Parse
             else
             {
                 if (IsInArray)
-                    throw new SyntaxErrorException("Can't change variable index for internal variables.");
+                {
+                    if (IsGlobal)
+                        element = Element.Part<A_SetGlobalVariableAtIndex>(Variable, new V_Number(Index), 
+                            Element.Part<V_AppendToArray>(
+                                Element.Part<V_AppendToArray>(
+                                    Element.Part<V_ArraySlice>(GetVariable(targetPlayer), new V_Number(0), setAtIndex), 
+                                    value),
+                            Element.Part<V_ArraySlice>(GetVariable(targetPlayer), Element.Part<V_Add>(setAtIndex, new V_Number(1)), new V_Number(9999))));
+                    else
+                        element = Element.Part<A_SetPlayerVariableAtIndex>(targetPlayer, Variable, new V_Number(Index),
+                            Element.Part<V_AppendToArray>(
+                                Element.Part<V_AppendToArray>(
+                                    Element.Part<V_ArraySlice>(GetVariable(targetPlayer), new V_Number(0), setAtIndex),
+                                    value),
+                            Element.Part<V_ArraySlice>(GetVariable(targetPlayer), Element.Part<V_Add>(setAtIndex, new V_Number(1)), new V_Number(9999))));
+                }
                 else
                 {
-#warning Add subarray support for SetAtIndex.
                     if (IsGlobal)
                         element = Element.Part<A_SetGlobalVariableAtIndex>(Variable, setAtIndex, value);
                     else
@@ -1069,7 +1032,7 @@ namespace Deltin.Deltinteger.Parse
 
         public static List<DefinedVar> VarCollection { get; private set; } = new List<DefinedVar>();
 
-        public static bool IsVar(string name)
+        private static bool IsVar(string name)
         {
             return VarCollection.Any(v => v.Name == name);
         }
@@ -1079,7 +1042,7 @@ namespace Deltin.Deltinteger.Parse
             DefinedVar var = VarCollection.FirstOrDefault(v => v.Name == name);
 
             if (var == null)
-                throw new SyntaxErrorException($"The parameter {name} does not exist.", token);
+                throw new SyntaxErrorException($"The variable {name} does not exist.", token);
 
             return var;
         }

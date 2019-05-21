@@ -66,6 +66,11 @@ namespace Deltin.Deltinteger
             try
             {
                 generatedRules = Parser.ParseText(text);
+                for (int i = 0; i < generatedRules.Length; i++)
+                {
+                    Console.WriteLine($"Rule \"{generatedRules[i].Name}\":");
+                    generatedRules[i].Print();
+                }
             }
             catch (SyntaxErrorException ex)
             {

@@ -169,5 +169,11 @@ namespace Deltin.Deltinteger.Elements
         {
             return Name;
         }
+
+        public void Print()
+        {
+            foreach (var action in Actions)
+                action.Print();
+        }
     }
 }
