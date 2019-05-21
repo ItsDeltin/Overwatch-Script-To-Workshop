@@ -149,13 +149,15 @@ namespace Deltin.Deltinteger
                 }
             }
 
-            Log.Write("To setup the input for the generation, leave then re-enter the Settings/Workshop menu in Overwatch.");
-            Log.Write("It is recommended to save a backup preset before doing the input.");
+            Log.Write("To setup the input for the generation, leave then re-enter the Settings/Workshop menu in Overwatch.", ConsoleColor.Black, ConsoleColor.Cyan);
+            if (prev == null)
+                Log.Write("No previous workshop state loaded, make sure that there are no rules in the workshop.");
+            Log.Write("It is recommended to save a backup preset before starting the input.", ConsoleColor.Black, ConsoleColor.Yellow);
             Log.Write("If input is incorrect or fails, increase the step wait times in the config.");
             Log.Write("During generation, you can press ctrl+c to cancel.");
             if (Config.StopInput)
                 Log.Write("The stopinput option in the config is set to true. During generation any user input sent to the Overwatch window will be ignored." +
-                    " After generation if you can't interact with the Overwatch window, start the executable directly then type \"fixinput\".");
+                    " After generation if you can't interact with the Overwatch window, start the executable directly then type \"fixinput\".", ConsoleColor.Black, ConsoleColor.Gray);
             Log.Write("Press Enter to start input.");
             Console.ReadLine();
 

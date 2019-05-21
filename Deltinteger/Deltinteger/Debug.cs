@@ -20,10 +20,12 @@ namespace Deltin.Deltinteger
         }
         readonly string name;
 
-        public void Write(string text, ConsoleColor backgroundColor = ConsoleColor.Black)
+        public void Write(string text, ConsoleColor backgroundColor = ConsoleColor.Black, ConsoleColor textColor = ConsoleColor.White)
         {
             Console.BackgroundColor = backgroundColor;
+            Console.ForegroundColor = textColor;
             Console.WriteLine($"[{name}] {text}");
+            Console.ForegroundColor = ConsoleColor.White;
             Console.BackgroundColor = ConsoleColor.Black;
         }
     }
