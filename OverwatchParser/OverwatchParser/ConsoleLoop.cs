@@ -17,6 +17,7 @@ namespace OverwatchParser
             "    list           Lists all actions and values.",
             "    list actions   Lists all actions.",
             "    list values    Lists all values.",
+            "    list enums     List all enums.",
             "    fixinput       Run this if Overwatch can't be interacted with after generation."
         };
 
@@ -43,6 +44,8 @@ namespace OverwatchParser
                                 Console.WriteLine();
                                 ListValues();
                                 Console.WriteLine();
+                                ListEnums();
+                                Console.WriteLine();
                                 ListCustomMethods();
                                 break;
 
@@ -52,6 +55,10 @@ namespace OverwatchParser
 
                             case "values":
                                 ListValues();
+                                break;
+
+                            case "enums":
+                                ListEnums();
                                 break;
 
                             default:
@@ -111,6 +118,19 @@ namespace OverwatchParser
         {
             Console.Write("Values:");
             Console.WriteLine(string.Join("", Element.ValueList.Select(v => $"\n    {Element.GetName(v)}")));
+        }
+
+        static void ListEnums()
+        {
+            Console.WriteLine("Enums:");
+            var enumParameters = Constants.EnumParameters;
+            foreach(var e in enumParameters)
+            {
+                Console.WriteLine($"    {e.Name}");
+                string[] values = e.GetEnumNames();
+                foreach (string value in values)
+                    Console.WriteLine($"        {value}");
+            }
         }
 
         static void ListCustomMethods()

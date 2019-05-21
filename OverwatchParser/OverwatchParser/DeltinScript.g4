@@ -42,7 +42,7 @@ expr
 	| expr ('<' | '<=' | '==' | '>=' | '>' | '!=') expr // x == y
 	;
 
-enum     : ( 'Variable' | 'Operation' | 'Button' | 'Relative' | 'ContraryMotion' | 'ChaseReevaluation' | 'Status' ) SEPERATOR PART ;
+enum     : ( 'Variable'|'Operation'|'Button'|'Relative'|'ContraryMotion'|'ChaseReevaluation'|'Status'|'TeamSelector'|'WaitBehavior'|'Effect'|'Color'|'EffectRev'|'Rounding'|'Communication'|'Location'|'StringRev'|'Icon'|'IconRev'|'PlayEffect'|'Hero'|'InvisibleTo'|'AccelerateRev'|'ModRev'|'FacingRev'|'BarrierLOS'|'Transformation'|'RadiusLOS'|'LocalVector' ) SEPERATOR PART ;
 variable : PART ;
 method   : PART LEFT_PAREN expr? (',' expr)* RIGHT_PAREN ;
 
