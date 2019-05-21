@@ -82,12 +82,6 @@
       <Generator>MSBuild:Compile</Generator>
       <CustomToolNamespace>OverwatchParser</CustomToolNamespace>
     </Antlr4>
-    <None Include="death_spheres.del">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include="example.del">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>

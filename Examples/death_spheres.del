@@ -1,4 +1,6 @@
-﻿// internal vars
+﻿// Map is Eichenwalde!
+
+// internal vars
 usevar globalvar A;
 usevar playervar A;
 
