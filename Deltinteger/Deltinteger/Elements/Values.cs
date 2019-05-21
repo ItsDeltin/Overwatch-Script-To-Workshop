@@ -1136,15 +1136,15 @@ namespace Deltin.Deltinteger.Elements
     [ElementData("X Component Of", ValueType.Number, 0)]
     [Parameter("Value", ValueType.VectorAndPlayer, typeof(V_Vector))]
     [Serializable]
-    public class V_XComponentOf : Element {}
+    public class V_XOf : Element {}
 
     [ElementData("Y Component Of", ValueType.Number, 0)]
     [Parameter("Value", ValueType.VectorAndPlayer, typeof(V_Vector))]
     [Serializable]
-    public class V_YComponentOf : Element {}
+    public class V_YOf : Element {}
 
     [ElementData("Z Component Of", ValueType.Number, 0)]
     [Parameter("Value", ValueType.VectorAndPlayer, typeof(V_Vector))]
     [Serializable]
-    public class V_ZComponentOf : Element {}
+    public class V_ZOf : Element {}
 }
