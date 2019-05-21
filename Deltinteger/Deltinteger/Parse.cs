@@ -19,17 +19,19 @@ namespace Deltin.Deltinteger.Parse
             AntlrInputStream inputStream = new AntlrInputStream(text);
 
             // Lexer
-            DeltinScriptLexer speakLexer = new DeltinScriptLexer(inputStream);
-            CommonTokenStream commonTokenStream = new CommonTokenStream(speakLexer);
+            DeltinScriptLexer lexer = new DeltinScriptLexer(inputStream);
+            CommonTokenStream commonTokenStream = new CommonTokenStream(lexer);
 
             // Parse
-            DeltinScriptParser speakParser = new DeltinScriptParser(commonTokenStream);
+            DeltinScriptParser parser = new DeltinScriptParser(commonTokenStream);
+            parser.RemoveErrorListeners();
+            parser.AddErrorListener(new ErrorListener());
 
             // Get context
-            DeltinScriptParser.RulesetContext context = speakParser.ruleset();
+            DeltinScriptParser.RulesetContext context = parser.ruleset();
 
             //PrintContext(context);
-            Console.WriteLine(context.ToStringTree(speakParser));
+            Console.WriteLine(context.ToStringTree(parser));
 
             Visitor visitor = new Visitor();
             visitor.Visit(context);
@@ -716,6 +718,13 @@ namespace Deltin.Deltinteger.Parse
 
             #endregion
 
+            #region Empty Array
+
+            if (context.ChildCount == 2 && context.GetText() == "[]")
+                return Element.Part<V_EmptyArray>();
+
+            #endregion
+
             #region Seperator/enum
 
             if (context.ChildCount == 3 && context.GetChild(1).GetText() == ".")
@@ -1116,6 +1125,14 @@ namespace Deltin.Deltinteger.Parse
         public void OutOfScope()
         {
             VarCollection.Remove(this);
+        }
+    }
+
+    public class ErrorListener : BaseErrorListener
+    {
+        public override void SyntaxError(IRecognizer recognizer, IToken offendingSymbol, int line, int charPositionInLine, string msg, RecognitionException e)
+        {
+            throw new SyntaxErrorException(msg, offendingSymbol);
         }
     }
 

@@ -36,7 +36,6 @@ namespace Deltin.Deltinteger
                     {
                         Log.Write("Internal exception.");
                         Log.Write(ex.ToString());
-                        return;
                     }
                 }
                 else
@@ -154,6 +153,9 @@ namespace Deltin.Deltinteger
             Log.Write("To setup the input for the generation, leave then re-enter the Settings/Workshop menu in Overwatch.");
             Log.Write("If input is incorrect or fails, increase the step wait times in the config.");
             Log.Write("During generation, you can press ctrl+c to cancel.");
+            if (Config.StopInput)
+                Log.Write("The stopinput option in the config is set to true. During generation any user input sent to the Overwatch window will be ignored." +
+                    " After generation if you can't interact with the Overwatch window, start the executable directly then type \"fixinput\".");
             Log.Write("Press Enter to start.");
             Console.ReadLine();
 

@@ -24,6 +24,7 @@ expr
 	| enum                                        // Enums
 	| expr INDEX_START expr INDEX_END             // Array creation
 	| INDEX_START expr (',' expr)* INDEX_END      // Arrays
+	| INDEX_START INDEX_END                       // Empty array
 	| '<' string (',' expr)* '>'                  // Formatted strings
 	| true                                        // True
 	| false                                       // False
