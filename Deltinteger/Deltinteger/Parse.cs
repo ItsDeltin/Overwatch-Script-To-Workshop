@@ -657,7 +657,7 @@ namespace Deltin.Deltinteger.Parse
             #region Group ( expr )
 
             if (context.ChildCount == 3 && context.GetChild(0).GetText() == "(" &&
-                context.GetChild(0) is DeltinScriptParser.ExprContext &&
+                context.GetChild(1) is DeltinScriptParser.ExprContext &&
                 context.GetChild(2).GetText() == ")")
             {
                 Console.WriteLine("Group type:" + context.GetChild(0).GetType());

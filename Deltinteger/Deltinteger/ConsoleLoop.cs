@@ -5,6 +5,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Reflection;
 using System.Diagnostics;
+using System.Xml.Linq;
+using System.IO;
 using Deltin.Deltinteger.Elements;
 
 namespace Deltin.Deltinteger
@@ -18,7 +20,8 @@ namespace Deltin.Deltinteger
             "    list actions   Lists all actions.",
             "    list values    Lists all values.",
             "    list enums     List all enums.",
-            "    fixinput       Run this if Overwatch can't be interacted with after generation."
+            "    fixinput       Run this if Overwatch can't be interacted with after generation.",
+            "    autocomplete   Generates an autocomplete file that can be used with N++"
         };
 
         public static void Start()
@@ -96,6 +99,10 @@ namespace Deltin.Deltinteger
 
                         break;
 
+                    case "autocomplete":
+                        AutoComplete();
+                        break;
+
                     default:
                         ListHelp();
                         break;
@@ -137,6 +144,29 @@ namespace Deltin.Deltinteger
         {
             Console.Write("Other:");
             Console.WriteLine(string.Join("", CustomMethods.CustomMethodList.Select(v => $"\n    {CustomMethods.GetName(v)}")));
+        }
+
+        static void AutoComplete()
+        {
+            new XElement("NotepadPlus",
+                new XElement("AutoComplete", new XAttribute("language", "workshop"),
+                    new XElement("Enviroment", new XAttribute("ignoreCase", "no"), new XAttribute("startFunc", "("), new XAttribute("stopFunc", ")"), new XAttribute("paramSeperator", ","), new XAttribute("terminal", ";"), new XAttribute("additionalWordChar", ".")),
+                    Element.MethodList.Select(type =>
+                    {
+                        string methodName = type.Name.Substring(2);
+                        ElementData methodData = type.GetCustomAttribute<ElementData>();
+                        Parameter[] parameters = type.GetCustomAttributes<Parameter>().ToArray();
+
+                        return new XElement("KeyWord", new XAttribute("name", methodName), new XAttribute("func", "yes"),
+                            new XElement("Overload", new XAttribute("retVal", methodData.ValueType.ToString()), new XAttribute("descr", ""),
+                                parameters.Select(param =>
+                                    new XElement("Param", new XAttribute("name", $"{(param.ParameterType == ParameterType.Value ? param.ValueType.ToString() : param.EnumType.ToString())}: {param.Name}"))
+                                )
+                            )
+                        );
+                    }).OrderBy(v => v.Name)
+                )
+            ).Save(Path.Combine(Constants.WorkingDirectory, "workshop.xml"));
         }
     }
 }

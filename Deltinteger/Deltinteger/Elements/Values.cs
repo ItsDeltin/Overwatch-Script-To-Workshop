@@ -574,7 +574,7 @@ namespace Deltin.Deltinteger.Elements
     [Serializable]
     public class V_Not : Element {}
 
-    [ElementData("Null", ValueType.Player, 0)]
+    [ElementData("Null", ValueType.Any, 0)]
     [Serializable]
     public class V_Null : Element {}
 
