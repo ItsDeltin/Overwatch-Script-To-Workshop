@@ -244,6 +244,16 @@ namespace Deltin.Deltinteger.Elements
             ), CustomMethodType.Value);
         }
 
+        [CustomMethod("RandomValuesInArray", CustomMethodType.Value)]
+        [Parameter("Array", ValueType.Any, typeof(V_AllPlayers))]
+        [Parameter("Count", ValueType.Number, typeof(V_Number))]
+        static MethodResult RandomValuesInArray(bool isGlobal, object[] parameters)
+        {
+            Element array = parameters[0] as Element;
+            Element count = parameters[1] as Element;
+            return new MethodResult(null, Element.Part<V_ArraySlice>(Element.Part<V_RandomizedArray>(array), count), CustomMethodType.Value);
+        }
+
         public static string GetName(MethodInfo methodInfo)
         {
             return $"{methodInfo.Name}({string.Join(", ", methodInfo.GetCustomAttributes<Parameter>().Select(v => $"{(v.ParameterType == ParameterType.Value ? v.ValueType.ToString() : v.EnumType.Name)}: {v.Name}"))})";

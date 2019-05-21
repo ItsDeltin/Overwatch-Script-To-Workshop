@@ -130,3 +130,5 @@ https://us.forums.blizzard.com/en/overwatch/t/workshop-resource-get-the-current-
 After creating your script, drop the file into the .exe. When it is ready to input, leave the workshop menu then go back in. Press enter to start the input. Press ctrl+c to cancel. If the input has an error, it is usually because of lag. In the config, increase the `smallstep`, `mediumstep`, and/or `bigstep` values. If the input is still failing and it is always at the same spot, then it is a bug with the program. File an issue with your code/the affected methods.
 
 You can get a list of all actions and values by opening the executable directly and typing in "list all".
+
+In Notepad++,. you can press F5 to quickly compile the script. In the `The Program to Run` input, type `C:/path/to/ScriptToWorkshop.exe $(FULL_CURRENT_PATH)`

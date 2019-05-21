@@ -56,8 +56,7 @@ namespace Deltin.Deltinteger
             string text = File.ReadAllText(parseFile);
             string scriptName = Path.GetFileName(parseFile);
 
-            string workingDirectory = Environment.CurrentDirectory;
-            string compiledDirectory = Path.Combine(workingDirectory, "compiled");
+            string compiledDirectory = Path.Combine(Constants.WorkingDirectory, "compiled");
 
             string compiledName = scriptName + Constants.COMPILED_FILETYPE;
 
@@ -151,12 +150,13 @@ namespace Deltin.Deltinteger
             }
 
             Log.Write("To setup the input for the generation, leave then re-enter the Settings/Workshop menu in Overwatch.");
+            Log.Write("It is recommended to save a backup preset before doing the input.");
             Log.Write("If input is incorrect or fails, increase the step wait times in the config.");
             Log.Write("During generation, you can press ctrl+c to cancel.");
             if (Config.StopInput)
                 Log.Write("The stopinput option in the config is set to true. During generation any user input sent to the Overwatch window will be ignored." +
                     " After generation if you can't interact with the Overwatch window, start the executable directly then type \"fixinput\".");
-            Log.Write("Press Enter to start.");
+            Log.Write("Press Enter to start input.");
             Console.ReadLine();
 
             while ((InputSim.OverwatchProcess = Process.GetProcessesByName("Overwatch").FirstOrDefault()) == null)
@@ -242,15 +242,18 @@ namespace Deltin.Deltinteger
 
                 selectedRule = ResetRuleNav(selectedRule);
 
-                Console.WriteLine("Done. Press enter to save state.");
-                Console.ReadLine();
+                Log.Write("Input completed.");
+                Log.Write("Press [Y] to save the current workshop state. Only do this if the input was sucessful.");
+                Log.Write("Press [N] to discard the saved workshop state. The next generation will requre the workshop state to be the same as before the last input.");
+                if (YorN())
+                {
+                    Stream saveStream = File.Open(Path.Combine(compiledDirectory, compiledName), FileMode.Create);
 
-                Stream saveStream = File.Open(Path.Combine(compiledDirectory, compiledName), FileMode.Create);
+                    var saveFormatter = new BinaryFormatter();
+                    saveFormatter.Serialize(saveStream, workshop);
 
-                var saveFormatter = new BinaryFormatter();
-                saveFormatter.Serialize(saveStream, workshop);
-
-                saveStream.Close();
+                    saveStream.Close();
+                }
             }
             catch (OperationCanceledException)
             {

@@ -4,12 +4,15 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Reflection;
+using System.IO;
 using Deltin.Deltinteger.Elements;
 
 namespace Deltin.Deltinteger
 {
     public static class Constants
     {
+        public static readonly string WorkingDirectory = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
+
         public const int RULE_NAME_MAX_LENGTH = 128;
 
         public static readonly Type[] EnumParameters = Assembly.GetExecutingAssembly().GetTypes().Where(t => t.GetCustomAttribute<EnumParameter>() != null).ToArray();
@@ -703,5 +706,6 @@ namespace Deltin.Deltinteger
 
         public const string   SCRIPT_FILETYPE = ".del" ;
         public const string COMPILED_FILETYPE = ".comp";
+
     }
 }

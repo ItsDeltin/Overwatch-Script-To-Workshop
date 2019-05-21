@@ -15,7 +15,7 @@ namespace Deltin.Deltinteger
 
         public static Config GetConfig()
         {
-            string file = Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly().Location), "config.xml");
+            string file = Path.Combine(Constants.WorkingDirectory, "config.xml");
 
             if (!File.Exists(file))
             {
