@@ -812,21 +812,23 @@ namespace Deltin.Deltinteger.Parse
                     throw new SyntaxErrorException($"Expected value type \"{parameterData.ValueType.ToString()}\" on {methodName}'s parameter \"{parameterData.Name}\"."
                         , context.start);
 
-                foreach (Type @enum in Constants.EnumParameters)
-                {
+                bool invalidType = context.GetText().Split('.').ElementAtOrDefault(0) != parameterData.EnumType.Name;
+                if (!invalidType)
                     try
                     {
-                        value = Enum.Parse(@enum, context.GetText().Split('.').ElementAtOrDefault(1));
+                        value = Enum.Parse(parameterData.EnumType, context.GetText().Split('.').ElementAtOrDefault(1));
                     }
-                    catch (Exception ex) when (ex is ArgumentNullException || ex is ArgumentException || ex is OverflowException) { }
-                }
+                    catch (Exception ex) when (ex is ArgumentNullException || ex is ArgumentException || ex is OverflowException)
+                    {
+                        invalidType = true;
+                    }
+
+                if (invalidType)
+                    throw new SyntaxErrorException($"Expected enum type \"{parameterData.EnumType.ToString()}\" on {methodName}'s parameter \"{parameterData.Name}\"."
+                        , context.start);
 
                 if (value == null)
                     throw new SyntaxErrorException($"Could not parse enum parameter {context.GetText()}."
-                        , context.start);
-
-                if (value.GetType() != parameterData.EnumType)
-                    throw new SyntaxErrorException($"Expected enum type \"{parameterData.EnumType.ToString()}\" on {methodName}'s parameter \"{parameterData.Name}\", got \"{value.GetType().Name}\" instead."
                         , context.start);
             }
 
