@@ -59,9 +59,9 @@ namespace Deltin.Deltinteger.Elements
                     ab.SetVariable(
                         Element.Part<V_Vector>
                         (
-                            Element.Part<V_Subtract>(Element.Part<V_XComponentOf>(b.GetVariable()), Element.Part<V_XComponentOf>(a.GetVariable())),
-                            Element.Part<V_Subtract>(Element.Part<V_YComponentOf>(b.GetVariable()), Element.Part<V_YComponentOf>(a.GetVariable())),
-                            Element.Part<V_Subtract>(Element.Part<V_ZComponentOf>(b.GetVariable()), Element.Part<V_ZComponentOf>(a.GetVariable()))
+                            Element.Part<V_Subtract>(Element.Part<V_XOf>(b.GetVariable()), Element.Part<V_XOf>(a.GetVariable())),
+                            Element.Part<V_Subtract>(Element.Part<V_YOf>(b.GetVariable()), Element.Part<V_YOf>(a.GetVariable())),
+                            Element.Part<V_Subtract>(Element.Part<V_ZOf>(b.GetVariable()), Element.Part<V_ZOf>(a.GetVariable()))
                         ), eventPlayer),
 
                     // get bc
@@ -69,9 +69,9 @@ namespace Deltin.Deltinteger.Elements
                     bc.SetVariable(
                         Element.Part<V_Vector>
                         (
-                            Element.Part<V_Subtract>(Element.Part<V_XComponentOf>(c.GetVariable()), Element.Part<V_XComponentOf>(b.GetVariable())),
-                            Element.Part<V_Subtract>(Element.Part<V_YComponentOf>(c.GetVariable()), Element.Part<V_YComponentOf>(b.GetVariable())),
-                            Element.Part<V_Subtract>(Element.Part<V_ZComponentOf>(c.GetVariable()), Element.Part<V_ZComponentOf>(b.GetVariable()))
+                            Element.Part<V_Subtract>(Element.Part<V_XOf>(c.GetVariable()), Element.Part<V_XOf>(b.GetVariable())),
+                            Element.Part<V_Subtract>(Element.Part<V_YOf>(c.GetVariable()), Element.Part<V_YOf>(b.GetVariable())),
+                            Element.Part<V_Subtract>(Element.Part<V_ZOf>(c.GetVariable()), Element.Part<V_ZOf>(b.GetVariable()))
                         ), eventPlayer),
 
                     // get abVec
@@ -97,9 +97,9 @@ namespace Deltin.Deltinteger.Elements
                     abNorm.SetVariable(
                         Element.Part<V_Vector>
                         (
-                            Element.Part<V_Divide>(Element.Part<V_XComponentOf>(ab.GetVariable()), abVec.GetVariable()),
-                            Element.Part<V_Divide>(Element.Part<V_YComponentOf>(ab.GetVariable()), abVec.GetVariable()),
-                            Element.Part<V_Divide>(Element.Part<V_ZComponentOf>(ab.GetVariable()), abVec.GetVariable())
+                            Element.Part<V_Divide>(Element.Part<V_XOf>(ab.GetVariable()), abVec.GetVariable()),
+                            Element.Part<V_Divide>(Element.Part<V_YOf>(ab.GetVariable()), abVec.GetVariable()),
+                            Element.Part<V_Divide>(Element.Part<V_ZOf>(ab.GetVariable()), abVec.GetVariable())
                         ), eventPlayer),
 
                     // get bcNorm
@@ -107,9 +107,9 @@ namespace Deltin.Deltinteger.Elements
                     bcNorm.SetVariable(
                         Element.Part<V_Vector>
                         (
-                            Element.Part<V_Divide>(Element.Part<V_XComponentOf>(bc.GetVariable()), bcVec.GetVariable()),
-                            Element.Part<V_Divide>(Element.Part<V_YComponentOf>(bc.GetVariable()), bcVec.GetVariable()),
-                            Element.Part<V_Divide>(Element.Part<V_ZComponentOf>(bc.GetVariable()), bcVec.GetVariable())
+                            Element.Part<V_Divide>(Element.Part<V_XOf>(bc.GetVariable()), bcVec.GetVariable()),
+                            Element.Part<V_Divide>(Element.Part<V_YOf>(bc.GetVariable()), bcVec.GetVariable()),
+                            Element.Part<V_Divide>(Element.Part<V_ZOf>(bc.GetVariable()), bcVec.GetVariable())
                         ), eventPlayer),
                 },
                 // get res
@@ -119,10 +119,10 @@ namespace Deltin.Deltinteger.Elements
                 (
                     Element.Part<V_Add>
                     (
-                        Element.Part<V_Multiply>(Element.Part<V_XComponentOf>(abNorm.GetVariable()), Element.Part<V_XComponentOf>(bcNorm.GetVariable())),
-                        Element.Part<V_Multiply>(Element.Part<V_YComponentOf>(abNorm.GetVariable()), Element.Part<V_YComponentOf>(bcNorm.GetVariable()))
+                        Element.Part<V_Multiply>(Element.Part<V_XOf>(abNorm.GetVariable()), Element.Part<V_XOf>(bcNorm.GetVariable())),
+                        Element.Part<V_Multiply>(Element.Part<V_YOf>(abNorm.GetVariable()), Element.Part<V_YOf>(bcNorm.GetVariable()))
                     ),
-                    Element.Part<V_Multiply>(Element.Part<V_ZComponentOf>(abNorm.GetVariable()), Element.Part<V_ZComponentOf>(bcNorm.GetVariable()))
+                    Element.Part<V_Multiply>(Element.Part<V_ZOf>(abNorm.GetVariable()), Element.Part<V_ZOf>(bcNorm.GetVariable()))
                 ),
                 CustomMethodType.MultiAction_Value
             );
