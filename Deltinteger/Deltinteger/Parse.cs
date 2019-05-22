@@ -697,12 +697,12 @@ namespace Deltin.Deltinteger.Parse
             if (context.ChildCount >= 4 && context.GetChild(0).GetText() == "[")
             {
                 var expressions = context.expr();
-                V_AppendToArray prev = null;
-                V_AppendToArray current = null;
+                V_Append prev = null;
+                V_Append current = null;
 
                 for (int i = 0; i < expressions.Length; i++)
                 {
-                    current = new V_AppendToArray()
+                    current = new V_Append()
                     {
                         ParameterValues = new object[2]
                     };
@@ -1014,15 +1014,15 @@ namespace Deltin.Deltinteger.Parse
                 {
                     if (IsGlobal)
                         element = Element.Part<A_SetGlobalVariableAtIndex>(Variable, new V_Number(Index), 
-                            Element.Part<V_AppendToArray>(
-                                Element.Part<V_AppendToArray>(
+                            Element.Part<V_Append>(
+                                Element.Part<V_Append>(
                                     Element.Part<V_ArraySlice>(GetVariable(targetPlayer), new V_Number(0), setAtIndex), 
                                     value),
                             Element.Part<V_ArraySlice>(GetVariable(targetPlayer), Element.Part<V_Add>(setAtIndex, new V_Number(1)), new V_Number(9999))));
                     else
                         element = Element.Part<A_SetPlayerVariableAtIndex>(targetPlayer, Variable, new V_Number(Index),
-                            Element.Part<V_AppendToArray>(
-                                Element.Part<V_AppendToArray>(
+                            Element.Part<V_Append>(
+                                Element.Part<V_Append>(
                                     Element.Part<V_ArraySlice>(GetVariable(targetPlayer), new V_Number(0), setAtIndex),
                                     value),
                             Element.Part<V_ArraySlice>(GetVariable(targetPlayer), Element.Part<V_Add>(setAtIndex, new V_Number(1)), new V_Number(9999))));

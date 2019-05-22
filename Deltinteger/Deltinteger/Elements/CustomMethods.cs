@@ -205,12 +205,12 @@ namespace Deltin.Deltinteger.Elements
             for (int i = 0; i < Constants.MapChecks.Length; i++)
                 mapcount += Constants.MapChecks[i].Length;
 
-            V_AppendToArray prev = null;
-            V_AppendToArray current = null;
+            V_Append prev = null;
+            V_Append current = null;
             for (int s = 0; s < Constants.MapChecks.Length; s++)
                 for (int i = 0; i < Constants.MapChecks[s].Length; i++)
                 {
-                    current = new V_AppendToArray()
+                    current = new V_Append()
                     {
                         ParameterValues = new object[2]
                     };

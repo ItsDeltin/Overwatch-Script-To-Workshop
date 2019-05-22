@@ -63,6 +63,18 @@ define playervar interactHUD;
 define playervar interactEffect;
 define playervar abilityProgress;
 
+define playervar steps;
+define playervar killer;
+define playervar killersStep;
+
+define playervar hunterEffectsRegistered;
+define playervar hunterStep;
+define playervar hunterVictim;
+
+define playervar hunterEffect;
+define playervar hunterIcon;
+define playervar hunterHud;
+
 rule: "Constants"
 {
 	allyTeamID = 0;
@@ -353,6 +365,8 @@ if (isInitialized)
 		);
 		deathText = LastTextID();
 		
+		killer = Attacker();
+		killersStep = CountOf(Attacker().steps);
 		Attacker().killCount += 1;
 		
 		if (Attacker().team == team)
@@ -382,7 +396,7 @@ if (IsAlive())
 		& DistanceBetween(EventPlayer(), interactTarget) < 7)
 	{
 		// Create the interact hud
-		CreateHudText(EventPlayer(), <"Current Target: <0> (<1>%)", interactTarget, interactProgress>);
+		CreateHudText(EventPlayer(), <"Current Target: <0> (<1>%)", interactTarget, abilityProgress>);
 		interactHUD = LastTextID();
 		
 		// Create the effect
@@ -403,7 +417,7 @@ Event.Ongoing_EachPlayer
 if (canInteract)
 if (interactTarget != null)
 {
-	interactProgress += (100 / interactTime) * 0.100;
+	abilityProgress += (100 / interactTime) * 0.100;
 	Wait(0.100);
 	LoopIfConditionIsTrue();
 }
@@ -420,7 +434,7 @@ if (!IsButtonHeld(EventPlayer(), Button.Crouch)
 {
 	DestroyHudText(interactHUD);
 	DestroyEffect(interactEffect);
-	PlayEffect(EventPlayer(), PlayEffects.RingExplosion, Color.Blue, PositionOf(EventPlayer), 2);
+	PlayEffect(EventPlayer(), PlayEffects.RingExplosion, Color.Blue, PositionOf(EventPlayer()), 2);
 	if (abilityProgress != 100)
 	{
 		interactTarget = null;
@@ -433,9 +447,29 @@ Event.Ongoing_EachPlayer
 if (role == Hunter)
 if (abilityProgress >= 100)
 {
+	hunterVictim = interactTarget;
 	
+	if (!hunterEffectsRegistered)
+	{
+		hunterEffectsRegistered = true;
+		hunterStep = hunterVictim.killersStep;
+		
+		CreateHudText(EventPlayer(), <"finding <0> (<1> left)", hunterVictim, CountOf(hunterVictim.killer.steps) - hunterStep>);
+		hunterHud = LastTextID();
+	}
 }
 
+/*
+The step tracker tracks the player's position.
+This is used by the hunter to track a player's killer.
+Only do it every 10 meters.
+*/
 rule: "Step Tracker"
 Event.Ongoing_EachPlayer
 if (isInitialized)
+if (killCount > 0)
+if (TotalTimeElapsed() % 3 < 1)
+if (CountOf(steps) == 0 | DistanceBetween(LastOf(steps), EventPlayer()) >= 10)
+{
+	steps = Append(steps, PositionOf());
+}

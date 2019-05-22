@@ -77,7 +77,7 @@ namespace Deltin.Deltinteger.Elements
     [Parameter("Array", ValueType.Any, typeof(V_AllPlayers))]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
     [Serializable]
-    public class V_AppendToArray : Element {}
+    public class V_Append : Element {}
 
     [ElementData("Array Contains", ValueType.Boolean, 0)]
     [Parameter("Array", ValueType.Any, typeof(V_AllPlayers))]

@@ -178,7 +178,7 @@ namespace Deltin.Deltinteger.Elements
     [ElementData("Destroy Hud Text", 0)]
     [Parameter("Text ID", ValueType.Number, null)]
     [Serializable]
-    public class A_DestroyHudtext : Element {}
+    public class A_DestroyHudText : Element {}
 
     [ElementData("Destroy Effect", 0)]
     [Parameter("Effect ID", ValueType.Player, null)]
