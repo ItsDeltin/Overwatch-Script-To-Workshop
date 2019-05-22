@@ -1,5 +1,5 @@
 # Deltinteger
-Create a scipt that will be automatically generated in the workshop using simulated input. Includes if/else if/else, for loops, easy string creation, infinite named variables (except for arrays), no more expression trees, and easy array creation!
+Create a scipt that will be automatically generated in the workshop using simulated input. Includes if/else if/else, for loops, easy string creation, infinite named variables, no more expression trees, and easy array creation!
 
 A lot of the action/value data was not tested. If you find any methods that are not being inputed correctly, please file an issue.
 
@@ -13,9 +13,7 @@ usevar playervar A;
 define globalvar zombieCount;
 define playervar isZombie;
 
-// Since multi-dimensional arrays are not a thing on the workshop,
-// any arrays you add will need to be assigned to a new variable.
-define globalvar allZombies P;
+define globalvar allZombies;
 ```
 These variables can be referenced anywhere in the script.
 ```
@@ -75,7 +73,7 @@ The script below will create 5 red spheres on Eichenwalde. If a player goes insi
 usevar globalvar A;
 usevar playervar A;
 
-define globalvar locations L;
+define globalvar locations;
 define globalvar radius;
 define playervar deathCount;
 
