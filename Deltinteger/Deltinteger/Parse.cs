@@ -781,6 +781,9 @@ namespace Deltin.Deltinteger.Parse
                 fullMethodName = CustomMethods.GetName(customMethod);
             }
 
+            if (parseParameters.Length > parameterData.Length)
+                throw new SyntaxErrorException($"Too many arguments in the method {methodName} which only takes {parameterData.Length} parameters.", methodContext.start);
+
             List<object> finalParameters = new List<object>();
             for (int i = 0; i < parseParameters.Length; i++)
                 finalParameters.Add(ParseParameter(parseParameters[i], fullMethodName, parameterData[i]));

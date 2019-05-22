@@ -197,7 +197,7 @@ namespace Deltin.Deltinteger.Elements
     }
 
     [EnumParameter]
-    public enum Effect
+    public enum Effects
     {
         Sphere,
         LightShaft,
@@ -332,7 +332,7 @@ namespace Deltin.Deltinteger.Elements
     }
 
     [EnumParameter]
-    public enum PlayEffect
+    public enum PlayEffects
     {
         GoodExplosion,
         BadExplosion,
@@ -440,5 +440,20 @@ namespace Deltin.Deltinteger.Elements
     {
         Rotation,
         RotationAndTranslation
+    }
+
+    [EnumParameter]
+    public enum Clipping
+    {
+        ClipAgainstSurfaces,
+        DoNotClip
+    }
+
+    [EnumParameter]
+    public enum InworldTextRev
+    {
+        VisibleToPositionAndString,
+        VisibleToAndString,
+        String
     }
 }

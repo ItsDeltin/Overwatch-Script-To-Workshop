@@ -90,7 +90,7 @@ namespace Deltin.Deltinteger.Elements
 
     [ElementData("Create Effect", 0)]
     [Parameter("Visible To", ValueType.Player, typeof(V_AllPlayers))]
-    [Parameter("Type", typeof(Effect))]
+    [Parameter("Type", typeof(Effects))]
     [Parameter("Color", typeof(Color))]
     [Parameter("Position", ValueType.VectorAndPlayer, typeof(V_EventPlayer))]
     [Parameter("Radius", ValueType.Number, typeof(V_Number))]
@@ -127,6 +127,8 @@ namespace Deltin.Deltinteger.Elements
     [Parameter("Header", ValueType.Any, typeof(V_String))]
     [Parameter("Position", ValueType.VectorAndPlayer, typeof(V_EventPlayer))]
     [Parameter("Scale", ValueType.Number, typeof(V_Number))]
+    [Parameter("Clipping", typeof(Clipping))]
+    [Parameter("Reevaluation", typeof(InworldTextRev))]
     [Serializable]
     public class A_CreateInWorldText : Element {}
 
@@ -326,8 +328,8 @@ namespace Deltin.Deltinteger.Elements
 
     [ElementData("Play Effect", 0)]
     [Parameter("Visible To", ValueType.Player, typeof(V_AllPlayers))]
-    [Parameter("Type", typeof(PlayEffect))]
-    [Parameter("Color", typeof(PlayEffect))]
+    [Parameter("Type", typeof(PlayEffects))]
+    [Parameter("Color", typeof(Color))]
     [Parameter("Position", ValueType.VectorAndPlayer, typeof(V_EventPlayer))]
     [Parameter("Radius", ValueType.Number, typeof(V_Number))]
     [Serializable]

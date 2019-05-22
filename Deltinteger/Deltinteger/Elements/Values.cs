@@ -135,7 +135,7 @@ namespace Deltin.Deltinteger.Elements
 
     [ElementData("Current Array Element", ValueType.Any, 0)]
     [Serializable]
-    public class V_CurrentArrayElement : Element {}
+    public class V_ArrayElement : Element {}
 
     [ElementData("Direction From Angles", ValueType.Vector, 0)]
     [Parameter("Horizontal Angle", ValueType.Number, typeof(V_Number))]
@@ -838,7 +838,7 @@ namespace Deltin.Deltinteger.Elements
 
     [ElementData("Sorted Array", ValueType.Number, 0)]
     [Parameter("Array", ValueType.Any, typeof(V_GlobalVariable))]
-    [Parameter("Value Rank", ValueType.Number, typeof(V_CurrentArrayElement))]
+    [Parameter("Value Rank", ValueType.Number, typeof(V_ArrayElement))]
     [Serializable]
     public class V_SortedArray : Element {}
 

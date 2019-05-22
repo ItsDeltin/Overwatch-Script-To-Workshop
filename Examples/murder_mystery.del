@@ -38,11 +38,30 @@ define playervar team; // The team of a player.
 define playervar role; // The role of the player.
 define playervar cantHaveRole;
 
+define playervar killCount;
+
 // Effects
-define playervar objectiveHud;   // The player's objective.
-define playervar roleHud;        // The hud that describes their role to the player.
-define playervar orbIdentifier;  // The orb identifier
-define playervar teamHud;        // The player name icon on the top right
+	// Destroy on role switch
+	define playervar roleHud;        // The hud that describes their role to the player.
+
+	// Destroy on team switch
+	define playervar objectiveHud;   // The player's objective.
+	define playervar orbIdentifier;  // The orb identifier.
+	define playervar teamHud;        // The player name icon on the top right.
+
+	// Destroy on revive
+	define playervar deathSphere;    // The death sphere.
+	define playervar deathText;      // The death text.
+
+// Player ability
+define playervar canInteract;
+define playervar interactTime;
+define playervar abilityCharges;
+define playervar targetState;
+define playervar interactTarget;
+define playervar interactHUD;
+define playervar interactEffect;
+define playervar abilityProgress;
 
 rule: "Constants"
 {
@@ -132,8 +151,8 @@ if (team == mafiaTeamID)
 	
 	CreateEffect(
 		// Only allow the mafia players to see the effect.
-		FilteredArray(AllPlayers(), gameIsOver | (CurrentArrayElement().team == mafiaTeamID)),
-		Effect.Sphere,
+		FilteredArray(AllPlayers(), gameIsOver | (ArrayElement().team == mafiaTeamID)),
+		Effects.Sphere,
 		Color.Red,
 		EyePosition() + Vector(0, 0.25, 0),
 		0.25
@@ -143,7 +162,7 @@ if (team == mafiaTeamID)
 	
 	CreateHudText(
 		// Only allow the mafia players to see the hud text.
-		FilteredArray(AllPlayers(), gameIsOver | (CurrentArrayElement().team == mafiaTeamID)),
+		FilteredArray(AllPlayers(), gameIsOver | (ArrayElement().team == mafiaTeamID)),
 		HeroIconString(),
 		null,
 		EventPlayer(),
@@ -270,7 +289,7 @@ if ((MatchTime() == 0) // ...the time remaining is 0...
 	// The number of players that are not allies and are dead equals 0.
 	(CountOf(FilteredArray(
 			AllPlayers(), 
-			IsAlive(CurrentArrayElement()) & EntityExists(CurrentArrayElement()) & (CurrentArrayElement().team != allyTeamID)
+			IsAlive(ArrayElement()) & EntityExists(ArrayElement()) & (ArrayElement().team != allyTeamID)
 		)) == 0)
 	)
 {
@@ -278,7 +297,7 @@ if ((MatchTime() == 0) // ...the time remaining is 0...
 	SetSlowMotion(50);
 	BigMessage(AllPlayers(), <"Allies Win!">);
 	Wait(3);
-	DeclarePlayerVictory(RandomValueInArray(FilteredArray(AllPlayers(), CurrentArrayElement().team == allyTeamID)));
+	DeclarePlayerVictory(RandomValueInArray(FilteredArray(AllPlayers(), ArrayElement().team == allyTeamID)));
 }
 
 rule: "Mafia Win"
@@ -287,14 +306,14 @@ if (NumberOfPlayers() > 1)
 
 if (CountOf(FilteredArray(
 		AllPlayers(), 
-		IsAlive(CurrentArrayElement()) & EntityExists(CurrentArrayElement()) & (CurrentArrayElement().team != mafiaTeamID)
+		IsAlive(ArrayElement()) & EntityExists(ArrayElement()) & (ArrayElement().team != mafiaTeamID)
 	)) == 0)
 {
 	gameIsOver = true;
 	SetSlowMotion(50);
 	BigMessage(AllPlayers(), <"Attacking players Win!">);
 	Wait(3);
-	DeclarePlayerVictory(RandomValueInArray(FilteredArray(AllPlayers(), CurrentArrayElement().team == mafiaTeamID)));
+	DeclarePlayerVictory(RandomValueInArray(FilteredArray(AllPlayers(), ArrayElement().team == mafiaTeamID)));
 }
 
 rule: "Vampire Win"
@@ -303,12 +322,120 @@ if (NumberOfPlayers() > 1)
 
 if (CountOf(FilteredArray(
 		AllPlayers(), 
-		IsAlive(CurrentArrayElement()) & EntityExists(CurrentArrayElement()) & (CurrentArrayElement().team != vampireTeamID)
+		IsAlive(ArrayElement()) & EntityExists(ArrayElement()) & (ArrayElement().team != vampireTeamID)
 	)) == 0)
 {
 	gameIsOver = true;
 	SetSlowMotion(50);
 	BigMessage(AllPlayers(), <"Corrupt Win!">);
 	Wait(3);
-	DeclarePlayerVictory(RandomValueInArray(FilteredArray(AllPlayers(), CurrentArrayElement().team == vampireTeamID)));
+	DeclarePlayerVictory(RandomValueInArray(FilteredArray(AllPlayers(), ArrayElement().team == vampireTeamID)));
 }
+
+rule: "Death"
+Event.Player_Died
+if (isInitialized)
+{
+	if (Attacker().team != vampireTeamID)
+	{
+		// Create the sphere
+		CreateEffect(AllPlayers(), Effects.Sphere, Color.White, EventPlayer(), 0.350, EffectRev.None);
+		deathSphere = LastTextID();
+		
+		// Create the hud text
+		CreateInWorldText(
+			FilteredArray(AllPlayers(), DistanceBetween(ArrayElement(), EventPlayer()) < 7),
+			<"<0>: dead", EventPlayer()>,
+			PositionOf(EventPlayer()) + Vector(0, 0.15, 0),
+			2,
+			Clipping.ClipAgainstSurfaces,
+			InworldTextRev.VisibleToPositionAndString
+		);
+		deathText = LastTextID();
+		
+		Attacker().killCount += 1;
+		
+		if (Attacker().team == team)
+		{
+			SmallMessage(Attacker(), <"Team Kill!">);
+		}
+	}
+	else
+	{
+		// If the player was killed by a vampire, revive them and make them a vampire.
+		team = vampireTeamID;
+		Resurrect();
+	}
+}
+
+rule: "Player Interact Start"
+Event.Ongoing_EachPlayer
+if (canInteract)
+if (interactTarget == null)
+if (IsButtonHeld(EventPlayer(), Button.Crouch))
+if (abilityCharges == -1 | abilityCharges > 0)
+if (IsAlive())
+{
+	interactTarget = PlayerClosestToReticle(EventPlayer());
+	
+	if ((targetState == 0 | (targetState == 1 & IsAlive(interactTarget)) | (targetState == 2 & IsDead(interactTarget)))
+		& DistanceBetween(EventPlayer(), interactTarget) < 7)
+	{
+		// Create the interact hud
+		CreateHudText(EventPlayer(), <"Current Target: <0> (<1>%)", interactTarget, interactProgress>);
+		interactHUD = LastTextID();
+		
+		// Create the effect
+		CreateEffect(EventPlayer(), Effects.Ring, Color.Blue, interactTarget, 1, EffectRev.PositionAndRadius);
+		interactEffect = LastCreatedEntity();
+	}
+	else
+	{
+		interactTarget = null;
+		Wait(0.250);
+		LoopIfConditionIsTrue();
+		Abort();
+	}
+}
+
+rule: "Player Interact Update"
+Event.Ongoing_EachPlayer
+if (canInteract)
+if (interactTarget != null)
+{
+	interactProgress += (100 / interactTime) * 0.100;
+	Wait(0.100);
+	LoopIfConditionIsTrue();
+}
+
+rule: "Player Interact Stop"
+Event.Ongoing_EachPlayer
+if (canInteract)
+if (interactTarget != null)
+if (!IsButtonHeld(EventPlayer(), Button.Crouch)
+	| IsButtonHeld(EventPlayer(), Button.Jump)
+	| IsDead()
+	| abilityProgress >= 100
+	| DistanceBetween(EventPlayer(), interactTarget) > 8)
+{
+	DestroyHudText(interactHUD);
+	DestroyEffect(interactEffect);
+	PlayEffect(EventPlayer(), PlayEffects.RingExplosion, Color.Blue, PositionOf(EventPlayer), 2);
+	if (abilityProgress != 100)
+	{
+		interactTarget = null;
+		abilityProgress = 0;
+	}
+}
+
+rule: "Hunter Ability"
+Event.Ongoing_EachPlayer
+if (role == Hunter)
+if (abilityProgress >= 100)
+{
+	
+}
+
+rule: "Step Tracker"
+Event.Ongoing_EachPlayer
+if (isInitialized)

@@ -39,11 +39,11 @@ expr
 	| expr '+' expr                               // x+y
 	| expr '-' expr                               // x-y
 	| not expr                                    // !x
-	| expr BOOL expr                              // x & y
 	| expr ('<' | '<=' | '==' | '>=' | '>' | '!=') expr // x == y
+	| expr BOOL expr                              // x & y
 	;
 
-enum     : ( 'Variable'|'Operation'|'Button'|'Relative'|'ContraryMotion'|'ChaseReevaluation'|'Status'|'TeamSelector'|'WaitBehavior'|'Effect'|'Color'|'EffectRev'|'Rounding'|'Communication'|'Location'|'StringRev'|'Icon'|'IconRev'|'PlayEffect'|'Hero'|'InvisibleTo'|'AccelerateRev'|'ModRev'|'FacingRev'|'BarrierLOS'|'Transformation'|'RadiusLOS'|'LocalVector' ) SEPERATOR PART ;
+enum     : ( 'Variable'|'Operation'|'Button'|'Relative'|'ContraryMotion'|'ChaseReevaluation'|'Status'|'TeamSelector'|'WaitBehavior'|'Effects'|'Color'|'EffectRev'|'Rounding'|'Communication'|'Location'|'StringRev'|'Icon'|'IconRev'|'PlayEffects'|'Hero'|'InvisibleTo'|'AccelerateRev'|'ModRev'|'FacingRev'|'BarrierLOS'|'Transformation'|'RadiusLOS'|'LocalVector'|'Clipping'|'InworldTextRev' ) SEPERATOR PART ;
 variable : PART ;
 method   : PART LEFT_PAREN expr? (',' expr)* RIGHT_PAREN ;
 

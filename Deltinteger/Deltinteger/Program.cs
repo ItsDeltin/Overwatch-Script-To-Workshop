@@ -95,24 +95,32 @@ namespace Deltin.Deltinteger
             Workshop prev = null;
             if (File.Exists(Path.Combine(compiledDirectory, compiledName)))
             {
-                Stream stream = File.Open(Path.Combine(compiledDirectory, compiledName), FileMode.Open);
+                try
+                {
+                    Stream stream = File.Open(Path.Combine(compiledDirectory, compiledName), FileMode.Open);
 
-                var formatter = new BinaryFormatter();
-                prev = formatter.Deserialize(stream) as Workshop;
+                    var formatter = new BinaryFormatter();
+                    prev = formatter.Deserialize(stream) as Workshop;
 
-                stream.Close();
+                    stream.Close();
 
-                Log.Write($"A previously compiled version of \"{scriptName}\" was found.");
-                Log.Write("Rules:");
+                    Log.Write($"A previously compiled version of \"{scriptName}\" was found.");
+                    Log.Write("Rules:");
 
-                int maxlength = prev.Rules.Length.ToString().Length;
-                for (int i = 0; i < prev.Rules.Length; i++)
-                    Log.Colors(new ColorMod($"{i}{new string(' ', maxlength - i.ToString().Length)}", ConsoleColor.Gray), new ColorMod(": " + prev.Rules[i].Name));
+                    int maxlength = prev.Rules.Length.ToString().Length;
+                    for (int i = 0; i < prev.Rules.Length; i++)
+                        Log.Colors(new ColorMod($"{i}{new string(' ', maxlength - i.ToString().Length)}", ConsoleColor.Gray), new ColorMod(": " + prev.Rules[i].Name));
 
-                Log.Write("Press [Y] to update the current workshop ruleset based off the changes since the last compilation. The workshop code must be the same as the rules above.");
-                Log.Write("Press [N] to regenerate the script. This requires the workshop's ruleset to be empty.");
-                if (!YorN())
-                    prev = null;
+                    Log.Write("Press [Y] to update the current workshop ruleset based off the changes since the last compilation. The workshop code must be the same as the rules above.");
+                    Log.Write("Press [N] to regenerate the script. This requires the workshop's ruleset to be empty.");
+                    if (!YorN())
+                        prev = null;
+                }
+                catch (Exception ex)
+                {
+                    Log.Write($"Found previous compiled version of \"{scriptName}\", but failed to load it:", ConsoleColor.Black, ConsoleColor.Yellow);
+                    Log.Write(ex.ToString());
+                }
             }
 
             List<Rule> previousRules = prev?.Rules.ToList();
