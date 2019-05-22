@@ -9,6 +9,8 @@ using System.IO;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Windows.Forms;
+using System.Reflection;
+using System.Runtime.InteropServices;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.Parse;
 
@@ -24,6 +26,9 @@ namespace Deltin.Deltinteger
 
         static void Main(string[] args)
         {
+            handler = new ConsoleEventDelegate(ConsoleEventCallback);
+            SetConsoleCtrlHandler(handler, true);
+
             if (args.Length > 0)
             {
                 if (File.Exists(args[0]))
@@ -244,6 +249,8 @@ namespace Deltin.Deltinteger
 
                 selectedRule = ResetRuleNav(selectedRule);
 
+                InputSim.EnableWindow(true);
+
                 Log.Write("Input completed.");
                 Log.Write("Press [Y] to save the current workshop state. Only do this if the input was sucessful.");
                 Log.Write("Press [N] to discard the saved workshop state. The next generation will requre the workshop state to be the same as before the last input.");
@@ -320,6 +327,22 @@ namespace Deltin.Deltinteger
         {
             Console.WriteLine("\n---");
         }
+
+        static bool ConsoleEventCallback(int eventType)
+        {
+            if (eventType == 2)
+            {
+                Process[] processes = Process.GetProcessesByName("Overwatch");
+                foreach (Process process in processes)
+                    User32.EnableWindow(process.MainWindowHandle, true);
+            }
+            return false;
+        }
+        static ConsoleEventDelegate handler;   // Keeps it from getting garbage collected
+                                               // Pinvoke
+        private delegate bool ConsoleEventDelegate(int eventType);
+        [DllImport("kernel32.dll", SetLastError = true)]
+        private static extern bool SetConsoleCtrlHandler(ConsoleEventDelegate callback, bool add);
     }
 
     [Serializable]

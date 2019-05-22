@@ -40,7 +40,7 @@ namespace Deltin.Deltinteger.Elements
 
     [ElementData("Big Message", 0)]
     [Parameter("Visible To", ValueType.Player, typeof(V_AllPlayers))]
-    [Parameter("Header", ValueType.String, typeof(V_String))]
+    [Parameter("Header", ValueType.Any, typeof(V_String))]
     [Serializable]
     public class A_BigMessage : Element {}
 
@@ -100,9 +100,9 @@ namespace Deltin.Deltinteger.Elements
 
     [ElementData("Create Hud Text", 0)]
     [Parameter("Visible To", ValueType.Player, typeof(V_AllPlayers))]
-    [Parameter("Header", ValueType.String, typeof(V_String))]
-    [Parameter("Subheader", ValueType.String, typeof(V_Null))]
-    [Parameter("Text", ValueType.String, typeof(V_Null))]
+    [Parameter("Header", ValueType.Any, typeof(V_String))]
+    [Parameter("Subheader", ValueType.Any, typeof(V_Null))]
+    [Parameter("Text", ValueType.Any, typeof(V_Null))]
     [Parameter("Location", typeof(Location))]
     [Parameter("Sort Order", ValueType.Number, typeof(V_Number))]
     [Parameter("Header Color", typeof(Color))]
@@ -124,7 +124,7 @@ namespace Deltin.Deltinteger.Elements
 
     [ElementData("Create In-World Text", 0)]
     [Parameter("Visible To", ValueType.Player, typeof(V_AllPlayers))]
-    [Parameter("Header", ValueType.String, typeof(V_String))]
+    [Parameter("Header", ValueType.Any, typeof(V_String))]
     [Parameter("Position", ValueType.VectorAndPlayer, typeof(V_EventPlayer))]
     [Parameter("Scale", ValueType.Number, typeof(V_Number))]
     [Serializable]
@@ -454,7 +454,7 @@ namespace Deltin.Deltinteger.Elements
 
     [ElementData("Set Objective Description", 0)]
     [Parameter("Visible To", ValueType.Player, typeof(V_AllPlayers))]
-    [Parameter("Header", ValueType.String, typeof(V_String))]
+    [Parameter("Header", ValueType.Any, typeof(V_String))]
     [Parameter("Reevaluation", typeof(StringRev))]
     [Serializable]
     public class A_SetObjectiveDescription : Element {}
@@ -560,7 +560,7 @@ namespace Deltin.Deltinteger.Elements
 
     [ElementData("Small Message", 0)]
     [Parameter("Visible To", ValueType.Player, typeof(V_AllPlayers))]
-    [Parameter("Header", ValueType.String, typeof(V_String))]
+    [Parameter("Header", ValueType.Any, typeof(V_String))]
     [Serializable]
     public class A_SmallMessage : Element {}
 

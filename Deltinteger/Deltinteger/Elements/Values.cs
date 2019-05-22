@@ -184,6 +184,11 @@ namespace Deltin.Deltinteger.Elements
     [Serializable]
     public class V_EventPlayer : Element {}
 
+    [ElementData("Eye Position", ValueType.Vector, 0)]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [Serializable]
+    public class V_EyePosition : Element {}
+
     [ElementData("Facing Direction Of", ValueType.Vector, 0)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     [Serializable]
@@ -255,7 +260,7 @@ namespace Deltin.Deltinteger.Elements
     [Serializable]
     public class V_Hero : Element {}
 
-    [ElementData("Hero Icon String", ValueType.String, 0)]
+    [ElementData("Hero Icon String", ValueType.Any, 0)]
     [Parameter("Value", ValueType.Hero, typeof(V_Hero))]
     [Serializable]
     public class V_HeroIconString : Element {}
@@ -286,7 +291,7 @@ namespace Deltin.Deltinteger.Elements
     [Serializable]
     public class V_HorizontalSpeedOf : Element {}
 
-    [ElementData("Index Of Array Value", 0)]
+    [ElementData("Index Of Array Value", ValueType.Any, 0)]
     [Parameter("Array", ValueType.Any, typeof(V_GlobalVariable))]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
     [Serializable]
@@ -759,14 +764,13 @@ namespace Deltin.Deltinteger.Elements
     [Serializable]
     public class V_RandomReal : Element {}
 
-    [ElementData("Random Value In Arary", ValueType.Any, 0)]
-#warning check default type
-    [Parameter("Array", ValueType.Any, typeof(V_AllPlayers))]
+    [ElementData("Random Value In Array", ValueType.Any, 0)]
+    [Parameter("Array", ValueType.Any, typeof(V_GlobalVariable))]
     [Serializable]
     public class V_RandomValueInArray : Element {}
 
     [ElementData("Randomized Array", ValueType.Number, 0)]
-    [Parameter("Array", ValueType.Any, typeof(V_AllPlayers))]
+    [Parameter("Array", ValueType.Any, typeof(V_GlobalVariable))]
     [Serializable]
     public class V_RandomizedArray : Element {}
 
@@ -797,9 +801,8 @@ namespace Deltin.Deltinteger.Elements
     [Serializable]
     public class V_RayCastHitPosition : Element {}
 
-#warning check order and default
     [ElementData("Remove From Array", ValueType.Any, 0)]
-    [Parameter("Array", ValueType.Any, typeof(V_GlobalVariable))]
+    [Parameter("Array", ValueType.Any, typeof(V_AllPlayers))]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
     [Serializable]
     public class V_RemoveFromArray : Element {}
@@ -834,14 +837,12 @@ namespace Deltin.Deltinteger.Elements
     [Serializable]
     public class V_SlotOf : Element {}
 
-#warning check default
     [ElementData("Sorted Array", ValueType.Number, 0)]
     [Parameter("Array", ValueType.Any, typeof(V_GlobalVariable))]
-    [Parameter("Value Rank", ValueType.Number, typeof(V_Number))]
+    [Parameter("Value Rank", ValueType.Number, typeof(V_CurrentArrayElement))]
     [Serializable]
     public class V_SortedArray : Element {}
 
-#warning check order
     [ElementData("Speed Of", ValueType.Number, 0)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     [Serializable]
@@ -858,7 +859,7 @@ namespace Deltin.Deltinteger.Elements
     [Serializable]
     public class V_SquareRoot : Element {}
 
-    [ElementData("String", ValueType.String, 1)]
+    [ElementData("String", ValueType.Any, 1)]
     [Parameter("{0}", ValueType.Any, typeof(V_Null))]
     [Parameter("{1}", ValueType.Any, typeof(V_Null))]
     [Parameter("{2}", ValueType.Any, typeof(V_Null))]

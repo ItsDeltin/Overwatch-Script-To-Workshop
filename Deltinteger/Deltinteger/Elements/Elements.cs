@@ -28,15 +28,15 @@ namespace Deltin.Deltinteger.Elements
     [Flags]
     public enum ValueType
     {
-        Any = Number | Boolean | String | Hero | Vector | Player | Team ,
+        Any = Number | Boolean | Hero | Vector | Player | Team ,
         VectorAndPlayer = Vector | Player, // Players can be subsituded as vectors, but not the other way around.
         Number = 1,
         Boolean = 2,
-        String = 4,
-        Hero = 8,
-        Vector = 16,
-        Player = 32,
-        Team = 64
+        //String = 4,
+        Hero = 4,
+        Vector = 8,
+        Player = 16,
+        Team = 32,
     }
 
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
@@ -176,26 +176,27 @@ namespace Deltin.Deltinteger.Elements
                 // Open the menu.
                 InputSim.Press(Keys.Space, Wait.Long);
 
-                int pos = -1; // The position of the menu button.
-
-                if (ElementData.RowAfterSearch != -1)
-                {
-                    pos = ElementData.RowAfterSearch;
-                    InputSim.TextInput(ElementData.ElementName, Wait.Medium);
-                }
+                List<Type> conflicting;
+                if (ElementData.ElementType == ElementType.Action)
+                    conflicting = ActionList.Where(v => Matches(ElementData.ElementName, v.GetCustomAttribute<ElementData>().ElementName))
+                        .OrderBy(v => v.GetCustomAttribute<ElementData>().ElementName)
+                        .ToList();
                 else
-                {
-                    // Get the position of the element
-                    if (ElementData.ElementType == ElementType.Action)
-                        pos = Array.IndexOf(ActionList, GetType());
-                    else if (ElementData.ElementType == ElementType.Value)
-                        pos = Array.IndexOf(FilteredValueList(valueType), GetType());
-                }
+                    conflicting = ValueList.Where(v =>
+                    {
+                        var data = v.GetCustomAttribute<ElementData>();
+
+                        return Matches(ElementData.ElementName, data.ElementName) && (data.ValueType == ValueType.Any || valueType.HasFlag(data.ValueType));
+                    }).OrderBy(v => v.GetCustomAttribute<ElementData>().ElementName)
+                    .ToList();
+
+                InputSim.TextInput(ElementData.ElementName, Wait.Medium);
 
                 // Leave the input field
                 InputSim.Press(Keys.Tab, Wait.Medium);
 
                 // Highlight the action/value.
+                int pos = conflicting.IndexOf(GetType());
                 InputSim.Press(Keys.Down, Wait.Short, pos);
 
                 // Select it.
@@ -299,6 +300,25 @@ namespace Deltin.Deltinteger.Elements
                     (param as Element).Print(depth + 1);
                 else
                     Console.WriteLine(new string(' ', (depth + 1) * 4) + param);
+        }
+
+        private static bool Matches(string name1, string name2)
+        {
+            string[] compare1 = name1.ToLower().Split(' ').Where(v => v.Length > 2).ToArray();
+            string[] compare2 = name2.ToLower().Split(' ').Where(v => v.Length > 2).ToArray();
+
+            bool contains = false;
+            if (compare1.Length > 0 && compare2.Length > 0)
+            {
+                contains = true;
+                foreach (string word in compare1)
+                {
+                    if (!compare2.Contains(word))
+                        contains = false;
+                }
+            }
+
+            return name2.ToLower().Contains(name1.ToLower()) || contains;
         }
     }
 }
