@@ -514,16 +514,25 @@ namespace Deltin.Deltinteger.Parse
             //   0       1      2
             // (expr operation expr)
             // count == 3
-            if (context.ChildCount == 3 && new string[] { "^", "*", "/", "+", "-", "&", "|", "<", "<=", "==", ">=", ">", "!=" }.Contains(context.GetChild(1).GetText()))
+            if (context.ChildCount == 3
+                &&(Constants.   MathOperations.Contains(context.GetChild(1).GetText())
+                || Constants.CompareOperations.Contains(context.GetChild(1).GetText())
+                || Constants.   BoolOperations.Contains(context.GetChild(1).GetText())))
             {
                 Element left = ParseExpression(context.GetChild(0) as DeltinScriptParser.ExprContext);
                 string operation = context.GetChild(1).GetText();
                 Element right = ParseExpression(context.GetChild(2) as DeltinScriptParser.ExprContext);
 
+                if (Constants.BoolOperations.Contains(context.GetChild(1).GetText()))
+                {
+                    if (left.ElementData.ValueType != Elements.ValueType.Any && left.ElementData.ValueType != Elements.ValueType.Boolean)
+                        throw new SyntaxErrorException($"Expected boolean datatype, got {left .ElementData.ValueType.ToString()} instead.", context.start);
+                    if (right.ElementData.ValueType != Elements.ValueType.Any && right.ElementData.ValueType != Elements.ValueType.Boolean)
+                        throw new SyntaxErrorException($"Expected boolean datatype, got {right.ElementData.ValueType.ToString()} instead.", context.start);
+                }
+
                 switch (operation)
                 {
-                    #region Math
-
                     case "^":
                         return Element.Part<V_RaiseToPower>(left, right);
 
@@ -541,10 +550,6 @@ namespace Deltin.Deltinteger.Parse
 
                     case "%":
                         return Element.Part<V_Modulo>(left, right);
-
-                    #endregion
-
-                    #region Bool compare
 
                     // COMPARE : '<' | '<=' | '==' | '>=' | '>' | '!=';
 
@@ -571,8 +576,6 @@ namespace Deltin.Deltinteger.Parse
 
                     case "!=":
                         return Element.Part<V_Compare>(left, Operators.NotEqual, right);
-
-                        #endregion
                 }
             }
 
@@ -752,7 +755,7 @@ namespace Deltin.Deltinteger.Parse
             MethodInfo customMethod = CustomMethods.GetCustomMethod(methodName);
 
             if (methodType != null && customMethod != null)
-                throw new Exception("Conflicting Overwatch method and custom method, report to Deltin.");
+                throw new Exception("Conflicting Overwatch method and custom method.");
 
             if (methodType == null && customMethod == null)
                 throw new SyntaxErrorException($"The method {methodName} does not exist.", methodContext.start);
