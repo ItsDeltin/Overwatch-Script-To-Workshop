@@ -36,6 +36,13 @@ namespace Deltin.Deltinteger
             User32.EnableWindow(Handle, enable);
         }
 
+        public static void ResetAllWindows()
+        {
+            Process[] processes = Process.GetProcessesByName("Overwatch");
+            foreach (Process process in processes)
+                User32.EnableWindow(process.MainWindowHandle, true);
+        }
+
         public static void NumberInput(double value)
         {
             CancelToken.ThrowIfCancellationRequested();

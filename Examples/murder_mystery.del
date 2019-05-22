@@ -1,0 +1,211 @@
+usevar globalvar A;
+usevar playervar A;
+
+/*
+
+Murder Mystery!
+
+*/
+
+
+// Team ID's
+define globalvar allyTeamID;
+define globalvar mafiaTeamID;
+define globalvar vampireTeamID; // Special event
+
+// Role ID's
+define globalvar Hunter;
+define globalvar Detective;
+define globalvar Interrogator;
+define globalvar Tracker;
+define globalvar Doctor;
+define globalvar Observer;
+
+define globalvar isInitialized;
+define globalvar gameTime;
+define globalvar gameIsOver;
+define globalvar numberOfMafia;
+define globalvar registeredPlayers;
+
+// Special event data
+define globalvar event;
+define globalvar initalVampire;
+
+define playervar team; // The team of a player.
+define playervar role; // The role of the player.
+define playervar cantHaveRole;
+
+// Effects
+define playervar objectiveHud;   // The player's objective.
+define playervar roleHud;        // The hud that describes their role to the player.
+define playervar orbIdentifier;  // The orb identifier
+define playervar teamHud;        // The player name icon on the top right
+
+rule: "Constants"
+{
+	allyTeamID = 0;
+	mafiaTeamID = 1;
+	vampireTeamID = 2;
+	
+	gameTime = 300;
+}
+
+rule: "Setup Time"
+if (IsInSetup())
+{
+	SetMatchTime(10);
+}
+
+rule: "Initial Setup"
+if (!isInitialized)
+if (IsGameInProgress())
+{
+	DisableCompletion();
+	DisableScoring();
+	SetMatchTime(gameTime);
+	
+	if (NumberOfPlayers() > 1)
+	{
+		numberOfMafia = RoundToInteger(NumberOfPlayers() / 3.5);
+	}
+	
+	DestroyAllHudText();
+	
+	// Make random players mafia
+	RandomValuesInArray(AllPlayers(), numberOfMafia).team = mafiaTeamID;
+	
+	// Choose random event
+	event = RandomInteger(0, 3);
+	
+	// Get an array of all players that were in the game when the game started.
+	registeredPlayers = AllPlayers();
+	
+	isInitialized = true;
+}
+
+// Event setup
+rule: "Vampire Event Setup"
+if (isInitialized)
+if (event == 0)
+{
+	// Choose a random vampire
+	initalVampire = RandomValueInArray(AllPlayers());
+	initalVampire.team = vampireTeamID;
+	
+	BigMessage(AllPlayers(), <"warning: corrupt incoming!">);
+}
+
+rule: "Choose town roles"
+Event.Ongoing_EachPlayer
+if (team == allyTeamID)
+{
+	role = RandomInteger(1, 6);
+	CreateHudText(EventPlayer(), <"Current objective: Find Allies and Enemies">, 
+		null, null, Location.Top, 0, Color.Green);
+	objectiveHud = LastTextID();
+}
+
+rule: "Choose mafia roles"
+Event.Ongoing_EachPlayer
+if (team == mafiaTeamID)
+{
+	if (!cantHaveRole)
+	{
+		role = RandomInteger(-4, -1);
+	}
+	
+	CreateHudText(EventPlayer(), <"Current objective: Kill">, 
+		null, null, Location.Top, 0, Color.Red);
+	objectiveHud = LastTextID();
+	
+	CreateEffect(
+		// Only allow the mafia players to see the effect.
+		FilteredArray(AllPlayers(), gameIsOver | (CurrentArrayElement().team == mafiaTeamID)),
+		Effect.Sphere,
+		Color.Red,
+		EyePosition() + Vector(0, 0.25, 0),
+		0.25
+	);
+	
+	orbIdentifier = LastCreatedEntity();
+	
+	CreateHudText(
+		// Only allow the mafia players to see the hud text.
+		FilteredArray(AllPlayers(), gameIsOver | (CurrentArrayElement().team == mafiaTeamID)),
+		HeroIconString(),
+		null,
+		EventPlayer(),
+		Location.Right
+	);
+	
+	teamHud = LastTextID();
+}
+
+rule: "Role Setup: Hunter"
+Event.Ongoing_EachPlayer
+if (isInitialized)
+if (role == Hunter)
+{
+	CreateHudText(EventPlayer(), <"Crouch near dead player -> find attacking player">,
+		null, null, Location.Top, 0, Color.Green);
+	roleHud = LastTextID();
+}
+
+rule: "Role Setup: Detective"
+Event.Ongoing_EachPlayer
+if (isInitialized)
+if (role == Detective)
+{
+	CreateHudText(EventPlayer(), <"Crouch near dead player -> find team">,
+		null, null, Location.Top, 0, Color.Green);
+	roleHud = LastTextID();
+}
+
+rule: "Role Setup: Interrogator"
+Event.Ongoing_EachPlayer
+if (isInitialized)
+if (role == Interrogator)
+{
+	CreateHudText(EventPlayer(), <"Crouch near player -> find team (<0> times = <1> team)", 3, true>,
+		null, null, Location.Top, 0, Color.Green);
+	roleHud = LastTextID();
+}
+
+rule: "Role Setup: Tracker"
+Event.Ongoing_EachPlayer
+if (isInitialized)
+if (role == Tracker)
+{
+	CreateHudText(EventPlayer(), <"Ability near player -> Connect alert">,
+		null, null, Location.Top, 0, Color.Green);
+	roleHud = LastTextID();
+}
+
+rule: "Role Setup: Doctor"
+Event.Ongoing_EachPlayer
+if (isInitialized)
+if (role == Doctor)
+{
+	CreateHudText(EventPlayer(), <"Crouch near dead player -> resurrect player">,
+		null, null, Location.Top, 0, Color.Green);
+	roleHud = LastTextID();
+}
+
+rule: "Role Setup: Observer"
+Event.Ongoing_EachPlayer
+if (isInitialized)
+if (role == Observer)
+{
+	CreateHudText(EventPlayer(), <"Ability -> Build in_view">,
+		null, null, Location.Top, 0, Color.Green);
+	roleHud = LastTextID();
+}
+
+rule: "Slaughter innocent new players"
+Event.Ongoing_EachPlayer
+if (isInitialized)
+if (!ArrayContains(registeredPlayers, EventPlayer()))
+{
+	Kill();
+	CreateHudText(EventPlayer(), <"Waiting form next_game">);
+}

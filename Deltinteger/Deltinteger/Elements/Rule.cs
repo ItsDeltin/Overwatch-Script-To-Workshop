@@ -106,9 +106,12 @@ namespace Deltin.Deltinteger.Elements
                 }
 
             // Close the rule
+            /*
             InputSim.Press(Keys.Up, Wait.Short, 2);
             if (!IsGlobal)
                 InputSim.Press(Keys.Up, Wait.Short, 2);
+            */
+            InputSim.Press(Keys.Down, Wait.Short, Actions.Length + numberOfRules + 1);
 
             InputSim.Press(Keys.Space, Wait.Short);
 

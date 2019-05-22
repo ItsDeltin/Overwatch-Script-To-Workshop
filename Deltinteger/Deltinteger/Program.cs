@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Diagnostics;
@@ -26,6 +27,7 @@ namespace Deltin.Deltinteger
 
         static void Main(string[] args)
         {
+            InputSim.ResetAllWindows();
             handler = new ConsoleEventDelegate(ConsoleEventCallback);
             SetConsoleCtrlHandler(handler, true);
 
@@ -100,11 +102,11 @@ namespace Deltin.Deltinteger
             if (prev != null)
             {
                 Log.Write($"A previously compiled version of \"{scriptName}\" was found.");
-                Log.Write(": Rules:");
+                Log.Write("Rules:");
                 foreach (var lastRule in prev.Rules)
                     Console.WriteLine($"    {lastRule.Name}");
-                Log.Write(": Press [Y] to update the current workshop ruleset based off the changes since the last compilation. The workshop code must be the same as the rules above.");
-                Log.Write(": Press [N] to regenerate the script. This requires the workshop's ruleset to be empty.");
+                Log.Write("Press [Y] to update the current workshop ruleset based off the changes since the last compilation. The workshop code must be the same as the rules above.");
+                Log.Write("Press [N] to regenerate the script. This requires the workshop's ruleset to be empty.");
                 if (!YorN())
                     prev = null;
             }
@@ -136,19 +138,19 @@ namespace Deltin.Deltinteger
                 if (previousIndex == -1)
                 {
                     // Create new rule
-                    InputLog.Write($"Creating rule \"{generatedRules[i].Name}\"");
+                    InputLog.Write($"({i}) Creating rule \"{generatedRules[i].Name}\"");
                     ruleActions.Add(new RuleAction(generatedRules[i], i, true));
                 }
                 else if (previousIndex != i)
                 {
                     // Move existing rule
-                    InputLog.Write($"Moving rule \"{generatedRules[i].Name}\" from #{previousIndex} to #{i}.");
+                    InputLog.Write($"({i}) Moving rule \"{generatedRules[i].Name}\" from #{previousIndex} to #{i}.");
                     ruleActions.Add(new RuleAction(generatedRules[i], previousIndex, i));
                     numberOfRules++;
                 }
                 else
                 {
-                    InputLog.Write($"Doing nothing to rule \"{generatedRules[i].Name}\"");
+                    InputLog.Write($"({i}) Doing nothing to rule \"{generatedRules[i].Name}\"");
                     ruleActions.Add(new RuleAction(generatedRules[i], i, false));
                     numberOfRules++;
                 }
@@ -164,7 +166,34 @@ namespace Deltin.Deltinteger
                 Log.Write("The stopinput option in the config is set to true. During generation any user input sent to the Overwatch window will be ignored." +
                     " After generation if you can't interact with the Overwatch window, start the executable directly then type \"fixinput\".", ConsoleColor.Black, ConsoleColor.Gray);
             Log.Write("Press Enter to start input.");
-            Console.ReadLine();
+
+            List<int> breakAt = null;
+
+            var parameters = Regex.Matches(Console.ReadLine(), @"-([a-z]+)(=(.*))?");
+            foreach (Match match in parameters)
+            {
+                string paramName = match.Groups[1].Value;
+                string value = match.Groups.Count == 4 ? match.Groups[3].Value : null;
+
+                List<int> targetRules = null;
+
+                if (value != null)
+                {
+                    targetRules = new List<int>();
+                    string[] rulesToDo = value.Split(',');
+
+                    foreach (string ruleToDo in rulesToDo)
+                        if (int.TryParse(ruleToDo, out int set))
+                            targetRules.Add(set);
+                }
+
+                if (paramName == "break")
+                {
+                    breakAt = targetRules;
+                }
+                else
+                    Log.Write($"Unknown parameter {paramName}");
+            }
 
             while ((InputSim.OverwatchProcess = Process.GetProcessesByName("Overwatch").FirstOrDefault()) == null)
             {
@@ -201,6 +230,9 @@ namespace Deltin.Deltinteger
                 int index = 0;
                 foreach (var action in ruleActions)
                 {
+                    if (breakAt != null && breakAt.Contains(index))
+                        Debugger.Break();
+
                     if (action.RuleActionType == RuleActionType.Add)
                     {
                         selectedRule = ResetRuleNav(selectedRule);
@@ -332,9 +364,7 @@ namespace Deltin.Deltinteger
         {
             if (eventType == 2)
             {
-                Process[] processes = Process.GetProcessesByName("Overwatch");
-                foreach (Process process in processes)
-                    User32.EnableWindow(process.MainWindowHandle, true);
+                InputSim.ResetAllWindows();
             }
             return false;
         }
