@@ -20,6 +20,9 @@ define globalvar Interrogator;
 define globalvar Tracker;
 define globalvar Doctor;
 define globalvar Observer;
+define globalvar Framer;
+define globalvar Necromancer;
+define globalvar Revealer;
 
 define globalvar isInitialized;
 define globalvar gameTime;
@@ -46,6 +49,15 @@ rule: "Constants"
 	allyTeamID = 0;
 	mafiaTeamID = 1;
 	vampireTeamID = 2;
+	
+	Hunter = 1;
+	Detective = 2;
+	Interrogator = 3;
+	Tracker = 4;
+	Doctor = 5;
+	Observer = 6;
+	
+	
 	
 	gameTime = 300;
 }
@@ -196,8 +208,38 @@ Event.Ongoing_EachPlayer
 if (isInitialized)
 if (role == Observer)
 {
-	CreateHudText(EventPlayer(), <"Ability -> Build in_view">,
+	CreateHudText(EventPlayer(), <"Ability -> Build in_view, Crouch and ability -> go in_view">,
 		null, null, Location.Top, 0, Color.Green);
+	roleHud = LastTextID();
+}
+
+rule: "Role Setup: Framer"
+Event.Ongoing_EachPlayer
+if (isInitialized)
+if (role == Framer)
+{
+	CreateHudText(EventPlayer(), <"Crouch near player -> corrupt player">,
+		null, null, Location.Top, 0, Color.Red);
+	roleHud = LastTextID();
+}
+
+rule: "Role Setup: Necromancer"
+Event.Ongoing_EachPlayer
+if (isInitialized)
+if (role == Necromancer)
+{
+	CreateHudText(EventPlayer(), <"Crouch near dead player -> rescue? player">,
+		null, null, Location.Top, 0, Color.Red);
+	roleHud = LastTextID();
+}
+
+rule: "Role Setup: Revealer"
+Event.Ongoing_EachPlayer
+if (isInitialized)
+if (role == Revealer)
+{
+	CreateHudText(EventPlayer(), <"Crouch near dead player -> reveal enemy players">,
+		null, null, Location.Top, 0, Color.Red);
 	roleHud = LastTextID();
 }
 
@@ -208,4 +250,65 @@ if (!ArrayContains(registeredPlayers, EventPlayer()))
 {
 	Kill();
 	CreateHudText(EventPlayer(), <"Waiting form next_game">);
+}
+
+rule: "Player Setup"
+Event.Ongoing_EachPlayer
+if (isInitialized)
+if (HasSpawned())
+{
+	DisableRespawning();
+	DisableSpectate();
+}
+
+rule: "Town Win"
+if (isInitialized)
+if (NumberOfPlayers() > 1)
+// Allies win when either...
+if ((MatchTime() == 0) // ...the time remaining is 0...
+	|  // ...or...
+	// The number of players that are not allies and are dead equals 0.
+	(CountOf(FilteredArray(
+			AllPlayers(), 
+			IsAlive(CurrentArrayElement()) & EntityExists(CurrentArrayElement()) & (CurrentArrayElement().team != allyTeamID)
+		)) == 0)
+	)
+{
+	gameIsOver = true;
+	SetSlowMotion(50);
+	BigMessage(AllPlayers(), <"Allies Win!">);
+	Wait(3);
+	DeclarePlayerVictory(RandomValueInArray(FilteredArray(AllPlayers(), CurrentArrayElement().team == allyTeamID)));
+}
+
+rule: "Mafia Win"
+if (isInitialized)
+if (NumberOfPlayers() > 1)
+
+if (CountOf(FilteredArray(
+		AllPlayers(), 
+		IsAlive(CurrentArrayElement()) & EntityExists(CurrentArrayElement()) & (CurrentArrayElement().team != mafiaTeamID)
+	)) == 0)
+{
+	gameIsOver = true;
+	SetSlowMotion(50);
+	BigMessage(AllPlayers(), <"Attacking players Win!">);
+	Wait(3);
+	DeclarePlayerVictory(RandomValueInArray(FilteredArray(AllPlayers(), CurrentArrayElement().team == mafiaTeamID)));
+}
+
+rule: "Vampire Win"
+if (isInitialized)
+if (NumberOfPlayers() > 1)
+
+if (CountOf(FilteredArray(
+		AllPlayers(), 
+		IsAlive(CurrentArrayElement()) & EntityExists(CurrentArrayElement()) & (CurrentArrayElement().team != vampireTeamID)
+	)) == 0)
+{
+	gameIsOver = true;
+	SetSlowMotion(50);
+	BigMessage(AllPlayers(), <"Corrupt Win!">);
+	Wait(3);
+	DeclarePlayerVictory(RandomValueInArray(FilteredArray(AllPlayers(), CurrentArrayElement().team == vampireTeamID)));
 }

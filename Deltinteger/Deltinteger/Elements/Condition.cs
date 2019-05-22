@@ -81,5 +81,11 @@ namespace Deltin.Deltinteger.Elements
             return (Value1, CompareOperator, Value2).GetHashCode();
         }
 
+        public void Print()
+        {
+            Value1.Print();
+            Console.WriteLine(CompareOperator);
+            Value2.Print();
+        }
     }
 }

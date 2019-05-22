@@ -35,15 +35,19 @@ namespace Deltin.Deltinteger
             {
                 if (File.Exists(args[0]))
                 {
+#if DEBUG == false
                     try
                     {
+#endif
                         Script(args[0]);
+#if DEBUG == false
                     }
                     catch (Exception ex)
                     {
                         Log.Write("Internal exception.");
                         Log.Write(ex.ToString());
                     }
+#endif
                 }
                 else
                     Console.WriteLine($"Could not locate file {args[0]}");
@@ -87,6 +91,7 @@ namespace Deltin.Deltinteger
             if (!Directory.Exists(compiledDirectory))
                 Directory.CreateDirectory(compiledDirectory);
 
+            Section();
             Workshop prev = null;
             if (File.Exists(Path.Combine(compiledDirectory, compiledName)))
             {
@@ -96,15 +101,14 @@ namespace Deltin.Deltinteger
                 prev = formatter.Deserialize(stream) as Workshop;
 
                 stream.Close();
-            }
 
-            Section();
-            if (prev != null)
-            {
                 Log.Write($"A previously compiled version of \"{scriptName}\" was found.");
                 Log.Write("Rules:");
-                foreach (var lastRule in prev.Rules)
-                    Console.WriteLine($"    {lastRule.Name}");
+
+                int maxlength = prev.Rules.Length.ToString().Length;
+                for (int i = 0; i < prev.Rules.Length; i++)
+                    Log.Colors(new ColorMod($"{i}{new string(' ', maxlength - i.ToString().Length)}", ConsoleColor.Gray), new ColorMod(": " + prev.Rules[i].Name));
+
                 Log.Write("Press [Y] to update the current workshop ruleset based off the changes since the last compilation. The workshop code must be the same as the rules above.");
                 Log.Write("Press [N] to regenerate the script. This requires the workshop's ruleset to be empty.");
                 if (!YorN())
@@ -118,7 +122,7 @@ namespace Deltin.Deltinteger
 
             // Remove old rules
             if (previousRules != null)
-                for (int i = 0; i < previousRules.Count; i++)
+                for (int i = previousRules.Count - 1; i >= 0; i--)
                     if (!generatedRules.Contains(previousRules[i]))
                     {
                         InputLog.Write($"Deleting rule \"{previousRules[i].Name}\"");
@@ -138,19 +142,19 @@ namespace Deltin.Deltinteger
                 if (previousIndex == -1)
                 {
                     // Create new rule
-                    InputLog.Write($"({i}) Creating rule \"{generatedRules[i].Name}\"");
+                    InputLog.Write($"Creating rule \"{generatedRules[i].Name}\"");
                     ruleActions.Add(new RuleAction(generatedRules[i], i, true));
                 }
                 else if (previousIndex != i)
                 {
                     // Move existing rule
-                    InputLog.Write($"({i}) Moving rule \"{generatedRules[i].Name}\" from #{previousIndex} to #{i}.");
+                    InputLog.Write($"Moving rule \"{generatedRules[i].Name}\" from #{previousIndex} to #{i}.");
                     ruleActions.Add(new RuleAction(generatedRules[i], previousIndex, i));
                     numberOfRules++;
                 }
                 else
                 {
-                    InputLog.Write($"({i}) Doing nothing to rule \"{generatedRules[i].Name}\"");
+                    InputLog.Write($"Doing nothing to rule \"{generatedRules[i].Name}\"");
                     ruleActions.Add(new RuleAction(generatedRules[i], i, false));
                     numberOfRules++;
                 }
@@ -187,10 +191,8 @@ namespace Deltin.Deltinteger
                             targetRules.Add(set);
                 }
 
-                if (paramName == "break")
-                {
+                else if (paramName == "break")
                     breakAt = targetRules;
-                }
                 else
                     Log.Write($"Unknown parameter {paramName}");
             }

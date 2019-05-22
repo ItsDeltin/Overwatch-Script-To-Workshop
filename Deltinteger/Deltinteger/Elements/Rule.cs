@@ -119,11 +119,11 @@ namespace Deltin.Deltinteger.Elements
             {
                 InputSim.Press(Keys.Left, Wait.Short, 3);
 
-                InputSim.Press(Keys.Space, Wait.Short, numberOfRules - position);
+                InputSim.Press(Keys.Space, Wait.Long, numberOfRules - position);
 
                 InputSim.Press(Keys.Right, Wait.Short);
 
-                InputSim.Press(Keys.Up, Wait.Short, position + 1);
+                InputSim.Press(Keys.Up, Wait.Medium, position + 1);
             }
             else
                 InputSim.Press(Keys.Up, Wait.Short, numberOfRules + 1);
@@ -175,6 +175,10 @@ namespace Deltin.Deltinteger.Elements
 
         public void Print()
         {
+            Console.WriteLine("Conditions:");
+            foreach (var condition in Conditions)
+                condition.Print();
+            Console.WriteLine("Actions:");
             foreach (var action in Actions)
                 action.Print();
         }

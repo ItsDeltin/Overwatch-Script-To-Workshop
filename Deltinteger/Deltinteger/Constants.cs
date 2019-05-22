@@ -707,5 +707,8 @@ namespace Deltin.Deltinteger
         public const string   SCRIPT_FILETYPE = ".del" ;
         public const string COMPILED_FILETYPE = ".comp";
 
+        public static readonly string[] MathOperations = new string[] { "^", "*", "%", "/", "+", "-" };
+        public static readonly string[] CompareOperations = new string[] { "<", "<=", "==", ">=", ">", "!=" };
+        public static readonly string[] BoolOperations = new string[] { "&", "|" };
     }
 }

@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Reflection;
 using System.Diagnostics;
+using System.Xml;
 using System.Xml.Linq;
 using System.IO;
 using Deltin.Deltinteger.Elements;
@@ -148,7 +149,7 @@ namespace Deltin.Deltinteger
 
         static void AutoComplete()
         {
-            new XElement("NotepadPlus",
+            var doc = new XDocument(new XElement("NotepadPlus",
                 new XElement("AutoComplete", new XAttribute("language", "workshop"),
                     new XElement("Enviroment", new XAttribute("ignoreCase", "no"), new XAttribute("startFunc", "("), new XAttribute("stopFunc", ")"), new XAttribute("paramSeperator", ","), new XAttribute("terminal", ";"), new XAttribute("additionalWordChar", ".")),
                     Element.MethodList.Select(type =>
@@ -164,9 +165,19 @@ namespace Deltin.Deltinteger
                                 )
                             )
                         );
-                    }).OrderBy(v => v.Name)
+                    }).OrderBy(v => v.Attribute("name").Value)
                 )
-            ).Save(Path.Combine(Constants.WorkingDirectory, "workshop.xml"));
+            )); //.Save(Path.Combine(Constants.WorkingDirectory, "workshop.xml"));
+
+            XmlWriterSettings settings = new XmlWriterSettings()
+            {
+                Indent = true,
+                IndentChars = "\t"
+            };
+            using (XmlWriter xw = XmlWriter.Create(Path.Combine(Constants.WorkingDirectory, "workshop.xml"), settings))
+            {
+                doc.Save(xw);
+            }
         }
     }
 }
