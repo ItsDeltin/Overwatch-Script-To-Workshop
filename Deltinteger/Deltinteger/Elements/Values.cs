@@ -232,8 +232,7 @@ namespace Deltin.Deltinteger.Elements
     public class V_GlobalVariable : Element {}
 
     [ElementData("Has Spawned", ValueType.Boolean, 0)]
-#warning default type
-    [Parameter("Entity", ValueType.Player, null)]
+    [Parameter("Entity", ValueType.Player, typeof(V_EventPlayer))]
     [Serializable]
     public class V_HasSpawned : Element {}
 
@@ -885,13 +884,16 @@ namespace Deltin.Deltinteger.Elements
             InputSim.Press(Keys.Down, Wait.Short);
 
             // Open the string list
-            InputSim.Press(Keys.Space, Wait.Long);
+            using (new ScreenUpdate(3000))
+                InputSim.Press(Keys.Space, Wait.Short);
 
             // Search the string
-            InputSim.TextInput(value, Wait.Long);
+            using (new ScreenUpdate(1500))
+                InputSim.TextInput(value, Wait.Short);
 
             // Leave the search field input
-            InputSim.Press(Keys.Enter, Wait.Short);
+            using (new ScreenUpdate(1500))
+                InputSim.Press(Keys.Enter, Wait.Short);
 
             /*
             Searching for "Down" results in:
@@ -912,7 +914,8 @@ namespace Deltin.Deltinteger.Elements
             InputSim.Press(Keys.Down, Wait.Short, before);
 
             // Select the string
-            InputSim.Press(Keys.Space, Wait.Long);
+            using (new ScreenUpdate(3000))
+                InputSim.Press(Keys.Space, Wait.Long);
         }
 
         protected override string Info()

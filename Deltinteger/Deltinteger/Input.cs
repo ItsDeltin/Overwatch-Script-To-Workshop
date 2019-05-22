@@ -141,6 +141,7 @@ namespace Deltin.Deltinteger
             SelectEnumMenuOption(typeof(T), enumValue);
         }
 
+        /*
         public static void WaitForNextUpdate(Wait wait)
         {
             using (Bitmap beforePress = BitBlt())
@@ -149,19 +150,19 @@ namespace Deltin.Deltinteger
                 WaitForImageChange(beforePress, MsFromWait(wait));
             }
         }
+        */
 
-        private static bool WaitForImageChange(Bitmap bmp, int maxTime)
+        public static bool WaitForImageChange(Bitmap bmp, int maxTime)
         {
             Stopwatch sw = new Stopwatch();
             sw.Start();
-            using (bmp)
-                while (sw.ElapsedMilliseconds <= maxTime)
-                    using (Bitmap current = BitBlt())
-                    {
-                        if (!CompareMemCmp(bmp, current))
-                            return true;
-                        Thread.Sleep(SmallStep);
-                    }
+            while (sw.ElapsedMilliseconds <= maxTime)
+                using (Bitmap current = BitBlt())
+                {
+                    if (!CompareMemCmp(bmp, current))
+                        return true;
+                    Thread.Sleep(SmallStep);
+                }
             return false;
         }
 
@@ -270,7 +271,7 @@ namespace Deltin.Deltinteger
             KeyUp(Keys.LControlKey);
         }
 
-        private static Bitmap BitBlt()
+        public static Bitmap BitBlt()
         {
             try
             {
@@ -308,6 +309,24 @@ namespace Deltin.Deltinteger
                 // Failed to capture window, usually because it was closed.
                 throw ex;
             }
+        }
+    }
+
+    public class ScreenUpdate : IDisposable
+    {
+        public ScreenUpdate(int maxTime)
+        {
+            bitblt = InputSim.BitBlt();
+            this.maxTime = maxTime;
+        }
+
+        Bitmap bitblt;
+        int maxTime;
+
+        public void Dispose()
+        {
+            InputSim.WaitForImageChange(bitblt, maxTime);
+            bitblt.Dispose();
         }
     }
 
