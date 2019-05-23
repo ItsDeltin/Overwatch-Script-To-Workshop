@@ -952,7 +952,7 @@ namespace Deltin.Deltinteger.Elements
 
                 string regex =
                     Regex.Replace(Escape(searchString)
-                    , "({[0-9]})", @"(([a-z_.<>0-9]+ ?)|(.+))");  // Converts {0} {1} {2} to (.+) (.+) (.+)
+                    , "({[0-9]})", @"(([a-z_.<>0-9-]+ ?)|(.+))");  // Converts {0} {1} {2} to (.+) (.+) (.+)
                 regex = $"^{regex}$";
                 var match = Regex.Match(value, regex);
 

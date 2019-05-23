@@ -827,20 +827,21 @@ namespace Deltin.Deltinteger.Parse
                     throw new SyntaxErrorException($"Expected value type \"{parameterData.ValueType.ToString()}\" on {methodName}'s parameter \"{parameterData.Name}\"."
                         , context.start);
 
-                bool invalidType = context.GetText().Split('.').ElementAtOrDefault(0) != parameterData.EnumType.Name;
-                if (!invalidType)
-                    try
-                    {
-                        value = Enum.Parse(parameterData.EnumType, context.GetText().Split('.').ElementAtOrDefault(1));
-                    }
-                    catch (Exception ex) when (ex is ArgumentNullException || ex is ArgumentException || ex is OverflowException)
-                    {
-                        invalidType = true;
-                    }
+                string type = context.GetText().Split('.').ElementAtOrDefault(0);
+                string enumValue = context.GetText().Split('.').ElementAtOrDefault(1);
 
-                if (invalidType)
+                if (type != parameterData.EnumType.Name)
                     throw new SyntaxErrorException($"Expected enum type \"{parameterData.EnumType.ToString()}\" on {methodName}'s parameter \"{parameterData.Name}\"."
                         , context.start);
+
+                try
+                {
+                    value = Enum.Parse(parameterData.EnumType, enumValue);
+                }
+                catch (Exception ex) when (ex is ArgumentNullException || ex is ArgumentException || ex is OverflowException)
+                {
+                    throw new SyntaxErrorException($"The value {enumValue} does not exist in the enum {type}.");
+                }
 
                 if (value == null)
                     throw new SyntaxErrorException($"Could not parse enum parameter {context.GetText()}."

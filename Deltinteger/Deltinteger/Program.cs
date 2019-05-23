@@ -72,26 +72,29 @@ namespace Deltin.Deltinteger
             string compiledName = scriptName + Constants.COMPILED_FILETYPE;
 
             Rule[] generatedRules = null;
+#if DEBUG == false
             try
             {
+#endif
                 generatedRules = Parser.ParseText(text);
                 for (int i = 0; i < generatedRules.Length; i++)
                 {
                     Console.WriteLine($"Rule \"{generatedRules[i].Name}\":");
                     generatedRules[i].Print();
                 }
+#if DEBUG == false
             }
             catch (SyntaxErrorException ex)
             {
                 Log.Write(ex.Message, ConsoleColor.DarkRed);
                 return;
             }
+#endif
             Workshop workshop = new Workshop(generatedRules);
-
+            
+            Section();
             if (!Directory.Exists(compiledDirectory))
                 Directory.CreateDirectory(compiledDirectory);
-
-            Section();
             Workshop prev = null;
             if (File.Exists(Path.Combine(compiledDirectory, compiledName)))
             {
@@ -150,6 +153,7 @@ namespace Deltin.Deltinteger
                 if (previousIndex == -1)
                 {
                     // Create new rule
+
                     InputLog.Write($"Creating rule \"{generatedRules[i].Name}\"");
                     ruleActions.Add(new RuleAction(generatedRules[i], i, true));
                 }

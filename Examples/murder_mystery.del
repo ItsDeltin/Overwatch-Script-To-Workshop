@@ -70,6 +70,8 @@ define playervar killersStep;
 define playervar hunterEffectsRegistered;
 define playervar hunterStep;
 define playervar hunterVictim;
+define playervar hunterLocation;
+define playervar hunterSpeedBoost;
 
 define playervar hunterEffect;
 define playervar hunterIcon;
@@ -453,10 +455,20 @@ if (abilityProgress >= 100)
 	{
 		hunterEffectsRegistered = true;
 		hunterStep = hunterVictim.killersStep;
+		hunterLocation = hunterVictim.killer.steps[hunterStep];
 		
-		CreateHudText(EventPlayer(), <"finding <0> (<1> left)", hunterVictim, CountOf(hunterVictim.killer.steps) - hunterStep>);
+		CreateHudText(EventPlayer(), <"finding <0> attack (<1> left)", hunterVictim, CountOf(hunterVictim.killer.steps) - hunterStep>);
 		hunterHud = LastTextID();
+		
+		CreateEffect(EventPlayer(), Effects.Orb, Color.Red, hunterLocation);
+		hunterEffect = LastCreatedEntity();
+		
+		CreateIcon(EventPlayer(), hunterLocation, Icon.ArrowDown, IconRev.VisibleToAndPosition, Color.Red, true);
+		hunterIcon = LastCreatedEntity();
 	}
+	
+	interactTarget = null;
+	abilityProgress = 0;
 }
 
 /*
@@ -472,4 +484,33 @@ if (TotalTimeElapsed() % 3 < 1)
 if (CountOf(steps) == 0 | DistanceBetween(LastOf(steps), EventPlayer()) >= 10)
 {
 	steps = Append(steps, PositionOf());
+}
+
+rule: "Hunter Visual Tracking Indent"
+Event.Ongoing_EachPlayer
+if (role == Hunter)
+if (DistanceBetween(EventPlayer(), hunterLocation) < 3)
+{
+	if (hunterStep < CountOf(hunterVictim.killer.steps) - 1)
+	{
+		hunterStep += 1;
+		hunterLocation = hunterVictim.killer.steps[hunterStep];
+	}
+	else
+	{
+		hunterLocation = PositionOf(hunterVictim.killer);
+	}
+	PlayEffect(EventPlayer(), PlayEffects.BuffExplosionSound, Color.White, EventPlayer(), 50);
+	SetMoveSpeed(EventPlayer(), 150);
+	hunterSpeedBoost = TotalTimeElapsed() + 5;
+	SmallMessage(EventPlayer(), <"Fast chase power-up!">);
+	Wait(0.25);
+	LoopIfConditionIsTrue();
+}
+
+rule: "Hunter Speed Reset"
+if (role == Hunter)
+if (TotalTimeElapsed() > hunterSpeedBoost)
+{
+	SetMoveSpeed(EventPlayer(), 100);
 }
