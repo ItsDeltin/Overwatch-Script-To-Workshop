@@ -1,4 +1,4 @@
-# Deltinteger
+# Script To Workshop
 Create a scipt that will be automatically generated in the workshop using simulated input. Includes if/else if/else, for loops, easy string creation, infinite named variables, no more expression trees, and easy array creation!
 
 A lot of the action/value data was not tested. If you find any methods that are not being inputed correctly, please file an issue.
@@ -121,7 +121,7 @@ SmallMessage(AllPlayers(), <"hello? thank_you <0>, that_was_awesome!", PlayerClo
 ```
 #### Setting player variables
 `AllPlayers().variable = 4` will set every player's player-variable to the specified value.
-`EventPlayer().target.speedBuff = 120` A list of players work too, this will set the event player's speed boost to 120.  
+`EventPlayer().target.speedBuff = 120` A list of players work too, this will set the event player's target's speed boost to 120.  
 
 #### Custom methods
 This contains some custom methods that are not included in the Workshop.
