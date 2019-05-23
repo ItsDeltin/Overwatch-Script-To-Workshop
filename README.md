@@ -119,7 +119,13 @@ Format works as well.
 ```
 SmallMessage(AllPlayers(), <"hello? thank_you <0>, that_was_awesome!", PlayerClosestToReticle(EventPlayer())>);
 ```
-### Custom methods
+#### Setting player variables
+`AllPlayers().variable = 4` will set every player's player-variable to the specified value.
+`EventPlayer().target.speedBuff = 120` A list of players work too, this will set the event player's speed boost to 120.  
+
+#### Custom methods
+This contains some custom methods that are not included in the Workshop.
+
 `GetMapID()` gets the current map. This is based off of Xerxes's workshop code found from here:
 https://us.forums.blizzard.com/en/overwatch/t/workshop-resource-get-the-current-map-name-updated-1-action/
 
