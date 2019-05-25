@@ -1,3 +1,5 @@
+PTR support in the ptr_updates channel.
+
 # Script To Workshop
 Create a scipt that will be automatically generated in the workshop using simulated input. Includes if/else if/else, for loops, easy string creation, infinite named variables, no more expression trees, and easy array creation!
 
