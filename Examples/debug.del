@@ -7,5 +7,5 @@ rule: "Town Win"
 // Allies win when either...
 if (MatchTime() == 0) // ...the time remaining is 0...
 {
-	CreateHudText(EventPlayer(), <"finding <0> attack (hello hello)", EventPlayer()>);
+	CreateHudText(EventPlayer(), <"finding <0> attack (hellor()>);
 }

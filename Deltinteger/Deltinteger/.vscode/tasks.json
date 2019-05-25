@@ -1,18 +1,35 @@
 {
     "version": "2.0.0",
     "tasks": [
-    
         {
-            "label": "mybuild",
-            "command":"C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/MSBuild/Current/Bin/MSBuild.exe",
-            "type":"shell",
-            "args":[
+            "label": "Debug build",
+            "command": "C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/MSBuild/Current/Bin/MSBuild.exe",
+            "type": "shell",
+            "args": [
                 "Deltinteger.csproj",
                 "/t:Build",
                 "/p:Configuration=Debug",
                 "/p:Platform=\"AnyCPU\""
-            ]
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "Release build",
+            "command": "C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/MSBuild/Current/Bin/MSBuild.exe",
+            "type": "shell",
+            "args": [
+                "Deltinteger.csproj",
+                "/t:Build",
+                "/p:Configuration=Release",
+                "/p:Platform=\"AnyCPU\""
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
         }
-
     ]
 }

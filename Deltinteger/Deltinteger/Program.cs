@@ -47,6 +47,7 @@ namespace Deltin.Deltinteger
             else
             {
                 Log.Write(LogLevel.Normal, $"Drag and drop a script over the executable to parse.");
+                ConsoleLoop.Start();
             }
 
             Log.Write(LogLevel.Normal, "Done. Press enter to exit.");
@@ -65,7 +66,7 @@ namespace Deltin.Deltinteger
             }
             catch (SyntaxErrorException ex)
             {
-                Log.Write(LogLevel.Normal, new ColorMod(ex.Message));
+                Log.Write(LogLevel.Normal, new ColorMod(ex.Message, ConsoleColor.Red));
                 return;
             }
 #else
