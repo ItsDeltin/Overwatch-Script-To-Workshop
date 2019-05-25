@@ -1,0 +1,41 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug Console Loop",
+            "type":"clr",
+            "request": "launch",
+            "preLaunchTask": "mybuild",
+            "program": "${workspaceFolder}/bin/Debug/Deltinteger.exe",
+            "args":[],
+            "console": "externalTerminal",
+            "stopAtEntry": false,
+            "internalConsoleOptions": "openOnSessionStart"
+        },
+        {
+            "name": "Debug Script",
+            "type":"clr",
+            "request": "launch",
+            "preLaunchTask": "mybuild",
+            "program": "${workspaceFolder}/bin/Debug/Deltinteger.exe",
+            "args":["G:/Overwatch-Workshop-Text/Examples/debug.del"],
+            "console": "externalTerminal",
+            "stopAtEntry": false,
+            "internalConsoleOptions": "openOnSessionStart"
+        },
+        {
+            "name": "Debug Murder Mystery",
+            "type":"clr",
+            "request": "launch",
+            "preLaunchTask": "mybuild",
+            "program": "${workspaceFolder}/bin/Debug/Deltinteger.exe",
+            "args":["G:/Overwatch-Workshop-Text/Examples/murder_mystery.del"],
+            "console": "externalTerminal",
+            "stopAtEntry": false,
+            "internalConsoleOptions": "openOnSessionStart"
+        },
+    ]
+}

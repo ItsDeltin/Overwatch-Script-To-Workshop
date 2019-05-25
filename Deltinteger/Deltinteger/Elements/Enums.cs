@@ -3,20 +3,57 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Reflection;
 
 namespace Deltin.Deltinteger.Elements
 {
+    [AttributeUsage(AttributeTargets.Enum)]
+    public class EnumParameter : Attribute
+    {
+        public EnumParameter() 
+        { 
+
+        }
+    }
+
+    [AttributeUsage(AttributeTargets.Field)]
+    public class EnumValue : Attribute
+    {
+        public EnumValue(string codeName, string workshopName)
+        {
+            CodeName = codeName;
+            WorkshopName = workshopName;
+        }
+        public string CodeName { get; private set; }
+        public string WorkshopName { get; private set; }
+
+        public static string GetWorkshopName(object enumValue)
+        {
+            var enumType = enumValue.GetType();
+            var memInfo = enumType.GetMember(enumValue.ToString());
+            var attributes = memInfo[0].GetCustomAttributes(typeof(EnumValue), false);
+            return ((EnumValue)attributes.ElementAtOrDefault(0))?.WorkshopName ?? Extras.AddSpacesToSentence(enumValue.ToString(), false);
+         }
+    }
+
     public enum RuleEvent
     {
+        [EnumValue(null, "Ongoing - Global")]
         Ongoing_Global,
+        [EnumValue(null, "Ongoing - Each Player")]
         Ongoing_EachPlayer,
 
+        [EnumValue(null, "Player earned elimination")]
         Player_Earned_Elimination,
+        [EnumValue(null, "Player dealt final blow")]
         Player_Dealt_Final_Blow,
 
+        [EnumValue(null, "Player dealt damage")]
         Player_Dealt_Damage,
+        [EnumValue(null, "Player took damage")]
         Player_Took_Damage,
 
+        [EnumValue(null, "Player died")]
         Player_Died
     }
 
@@ -70,18 +107,18 @@ namespace Deltin.Deltinteger.Elements
 
     public enum Operators
     {
+        [EnumValue(null, "==")]
         Equal,
+        [EnumValue(null, "!=")]
         NotEqual,
+        [EnumValue(null, "<")]
         LessThan,
+        [EnumValue(null, "<=")]
         LessThanOrEqual,
+        [EnumValue(null, ">")]
         GreaterThan,
+        [EnumValue(null, ">=")]
         GreaterThanOrEqual
-    }
-
-    [AttributeUsage(AttributeTargets.Enum)]
-    public class EnumParameter : Attribute
-    {
-        public EnumParameter() { }
     }
 
     [EnumParameter]
@@ -284,9 +321,13 @@ namespace Deltin.Deltinteger.Elements
     [EnumParameter]
     public enum Icon
     {
+        [EnumValue(null, "Arrow: Down")]
         ArrowDown,
+        [EnumValue(null, "Arrow: Left")]
         ArrowLeft,
+        [EnumValue(null, "Arrow: Right")]
         ArrowRight,
+        [EnumValue(null, "Arrow: Up")]
         ArrowUp,
         Aterisk,
         Bolt,

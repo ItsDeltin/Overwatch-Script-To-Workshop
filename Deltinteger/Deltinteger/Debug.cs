@@ -8,6 +8,8 @@ namespace Deltin.Deltinteger
 {
     public class Log
     {
+        public static LogLevel LogLevel = LogLevel.Normal;
+
         public static object Passer(object obj)
         {
             Console.WriteLine(obj);
@@ -20,27 +22,27 @@ namespace Deltin.Deltinteger
         }
         readonly string name;
 
-        public void Write(string text, ConsoleColor backgroundColor = ConsoleColor.Black, ConsoleColor textColor = ConsoleColor.White)
+        public void Write(LogLevel logLevel, string text)
         {
-            Console.BackgroundColor = backgroundColor;
-            Console.ForegroundColor = textColor;
-            Console.WriteLine($"[{name}] {text}");
-            Console.ForegroundColor = ConsoleColor.White;
-            Console.BackgroundColor = ConsoleColor.Black;
+            if (logLevel == LogLevel)
+                Console.WriteLine($"[{name}] {text}");
         }
 
-        public void Colors(params ColorMod[] colors)
+        public void Write(LogLevel logLevel, params ColorMod[] colors)
         {
-            Console.Write($"[{name}] ");
-            foreach (ColorMod color in colors)
+            if (logLevel == LogLevel)
             {
-                Console.BackgroundColor = color.BackgroundColor;
-                Console.ForegroundColor = color.TextColor;
-                Console.Write(color.Text);
-                Console.BackgroundColor = ConsoleColor.Black;
-                Console.ForegroundColor = ConsoleColor.White;
+                Console.Write($"[{name}] ");
+                foreach (ColorMod color in colors)
+                {
+                    Console.BackgroundColor = color.BackgroundColor;
+                    Console.ForegroundColor = color.TextColor;
+                    Console.Write(color.Text);
+                    Console.BackgroundColor = ConsoleColor.Black;
+                    Console.ForegroundColor = ConsoleColor.White;
+                }
+                Console.WriteLine();
             }
-            Console.WriteLine();
         }
     }
 
@@ -55,5 +57,11 @@ namespace Deltin.Deltinteger
         public string Text { get; private set; }
         public ConsoleColor TextColor { get; private set; }
         public ConsoleColor BackgroundColor { get; private set; }
+    }
+
+    public enum LogLevel
+    {
+        Normal,
+        Verbose
     }
 }

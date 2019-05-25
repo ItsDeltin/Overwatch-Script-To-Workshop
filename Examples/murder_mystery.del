@@ -291,7 +291,6 @@ if (isInitialized)
 if (HasSpawned())
 {
 	DisableRespawning();
-	DisableSpectate();
 }
 
 rule: "Town Win"

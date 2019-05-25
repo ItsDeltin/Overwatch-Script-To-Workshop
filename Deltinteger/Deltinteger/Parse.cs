@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Reflection;
 using Antlr4;
 using Antlr4.Runtime;
+using Deltin.Deltinteger;
 using Deltin.Deltinteger.Elements;
 
 namespace Deltin.Deltinteger.Parse
@@ -31,7 +32,7 @@ namespace Deltin.Deltinteger.Parse
             DeltinScriptParser.RulesetContext context = parser.ruleset();
 
             //PrintContext(context);
-            Console.WriteLine(context.ToStringTree(parser));
+            Log.Write(LogLevel.Verbose, context.ToStringTree(parser));
 
             Visitor visitor = new Visitor();
             visitor.Visit(context);
@@ -63,31 +64,40 @@ namespace Deltin.Deltinteger.Parse
             {
                 ParseRule parsing = new ParseRule(rules[i]);
 
-                Log.Write($"Building rule: {parsing.Rule.Name}");
+                Log.Write(LogLevel.Normal, $"Building rule: {parsing.Rule.Name}");
                 parsing.Parse();
                 Rule rule = parsing.Rule;
-                Log.Write($"Finished rule: {parsing.Rule.Name}");
 
                 compiledRules.Add(rule);
             }
 
-            Log.Write("Build succeeded.");
+            Log.Write(LogLevel.Normal, new ColorMod("Build succeeded.", ConsoleColor.Green));
 
             // List all variables
-            Log.Write("Variable Guide:");
+            Log.Write(LogLevel.Normal, new ColorMod("Variable Guide:", ConsoleColor.Blue));
+
+            int nameLength = DefinedVar.VarCollection.Max(v => v.Name.Length);
+
+            bool other = false;
             foreach (DefinedVar var in DefinedVar.VarCollection)
-                Console.WriteLine($"{var.Name}: {(var.IsGlobal ? "global" : "player")} {var.Variable}{(var.IsInArray ? $"[{var.Index}]" : "")}");
+            {
+                ConsoleColor textcolor = other ? ConsoleColor.White : ConsoleColor.DarkGray;
+                other = !other;
+
+                Log.Write(LogLevel.Normal,
+                    // Names
+                    new ColorMod(var.Name + new string(' ', nameLength - var.Name.Length) + "  ", textcolor),
+                    // Variable
+                    new ColorMod(
+                        (var.IsGlobal ? "global" : "player") 
+                        + " " + 
+                        var.Variable.ToString() +
+                        (var.IsInArray ? $"[{var.Index}]" : "")
+                        , textcolor)
+                );
+            }
 
             return compiledRules.ToArray();
-        }
-
-        static void PrintContext(ParserRuleContext context)
-        {
-            if (context == null)
-                return;
-            Log.Write($"{new string(' ', (context.Depth() - 1) * 4)}{context.GetType().Name} [{context.start.Line}, {context.start.Column}] {context.GetText()}");
-            foreach (var child in context.children)
-                PrintContext(child as ParserRuleContext);
         }
     }
 
@@ -119,30 +129,6 @@ namespace Deltin.Deltinteger.Parse
             
             // Parse actions
             ParseBlock(RuleContext.block());
-
-            // Add an initial skip if it is required.
-            /*
-            if (CreateInitialSkip)
-            {
-                if (SkipCountIndex == -1)
-                    throw new Exception($"{nameof(CreateInitialSkip)} cannot be true if {nameof(SkipCountIndex)} is -1!");
-
-                Actions.Insert(0,
-                    Element.Part<A_SkipIf>
-                    (
-                        // Condition
-                        Element.Part<V_Compare>
-                        (
-                            GetIVarAtIndex(SkipCountIndex),
-                            Operators.NotEqual,
-                            new V_Number(0)
-                        ),
-                        // Number of actions
-                        GetIVarAtIndex(SkipCountIndex)
-                    )
-                );
-            }
-            */
 
             Rule.Conditions = Conditions.ToArray();
             Rule.Actions = Actions.ToArray();
@@ -662,10 +648,7 @@ namespace Deltin.Deltinteger.Parse
             if (context.ChildCount == 3 && context.GetChild(0).GetText() == "(" &&
                 context.GetChild(1) is DeltinScriptParser.ExprContext &&
                 context.GetChild(2).GetText() == ")")
-            {
-                Console.WriteLine("Group type:" + context.GetChild(0).GetType());
                 return ParseExpression(context.GetChild(1) as DeltinScriptParser.ExprContext);
-            }
 
             #endregion
 

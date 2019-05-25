@@ -1,0 +1,11 @@
+usevar globalvar A;
+usevar playervar A;
+
+define globalvar yeet;
+
+rule: "Town Win"
+// Allies win when either...
+if (MatchTime() == 0) // ...the time remaining is 0...
+{
+	CreateHudText(EventPlayer(), <"finding <0> attack (hello hello)", EventPlayer()>);
+}

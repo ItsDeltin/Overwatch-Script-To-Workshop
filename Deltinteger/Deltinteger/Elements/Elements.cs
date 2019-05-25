@@ -5,7 +5,6 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Reflection;
-using System.Windows.Forms;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
 
@@ -40,33 +39,30 @@ namespace Deltin.Deltinteger.Elements
     }
 
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
-    [Serializable]
     public class ElementData : Attribute
     {
-        public ElementData(string elementName, int rowAfterSearch)
+        // No value type == action
+        public ElementData(string elementName)
         {
             ElementType = ElementType.Action;
             ElementName = elementName;
-            RowAfterSearch = rowAfterSearch;
         }
 
-        public ElementData(string elementName, ValueType elementType, int rowAfterSearch)
+        // Value type == value
+        public ElementData(string elementName, ValueType elementType)
         {
             ElementType = ElementType.Value;
             ElementName = elementName;
             ValueType = elementType;
-            RowAfterSearch = rowAfterSearch;
         }
 
         public string ElementName { get; private set; }
-        public int RowAfterSearch { get; private set; }
 
         public ElementType ElementType { get; private set; }
         public ValueType ValueType { get; private set; }
     }
 
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Method, AllowMultiple = true)]
-    [Serializable]
     class Parameter : Attribute
     {
         public Parameter(string name, ValueType returnType, Type defaultType)
@@ -108,8 +104,7 @@ namespace Deltin.Deltinteger.Elements
         }
     }
 
-    [Serializable]
-    public abstract class Element : IEquatable<Element>
+    public abstract class Element : IWorkshopTree
     {
         public static readonly Type[] MethodList = Assembly.GetExecutingAssembly().GetTypes().Where(t => t.GetCustomAttribute<ElementData>() != null).ToArray();
         public static readonly Type[] ActionList = MethodList.Where(t => t.GetCustomAttribute<ElementData>().ElementType == ElementType.Action).OrderBy(t => t.GetCustomAttribute<ElementData>().ElementName).ToArray(); // Actions in the method list.
@@ -158,54 +153,27 @@ namespace Deltin.Deltinteger.Elements
 
         public object[] ParameterValues;
 
-        public void Input() => Input(false, ValueType.Any, null, 0);
+        protected virtual string Info() { return ElementData.ElementName; }
 
-        private void Input(bool isAlreadySet, ValueType valueType, Type defaultType, int depth)
+        public override string ToString()
         {
-            Console.WriteLine($"{new string(' ', depth * 4)}{Info()}");
+            return GetName(this.GetType());
+        }
 
-            // Select the option
-            if (!isAlreadySet)
-            {
-                // Vectors have an extra button that needs to be adjusted for.
-                if (defaultType == typeof(V_Vector))
-                {
-                    InputSim.Press(Keys.Right, Wait.Short);
-                }
-
-                // Open the menu.
-                InputSim.Press(Keys.Space, Wait.Long);
-
-                List<Type> conflicting;
-                if (ElementData.ElementType == ElementType.Action)
-                    conflicting = ActionList.Where(v => Matches(ElementData.ElementName, v.GetCustomAttribute<ElementData>().ElementName))
-                        .OrderBy(v => v.GetCustomAttribute<ElementData>().ElementName)
-                        .ToList();
+        public void DebugPrint(int depth = 0)
+        {
+            Console.WriteLine(new string(' ', depth * 4) + Info());
+            foreach (var param in ParameterValues)
+                if (param is Element)
+                    (param as Element).DebugPrint(depth + 1);
                 else
-                    conflicting = ValueList.Where(v =>
-                    {
-                        var data = v.GetCustomAttribute<ElementData>();
+                    Console.WriteLine(new string(' ', (depth + 1) * 4) + param);
+        }
 
-                        return Matches(ElementData.ElementName, data.ElementName) && (data.ValueType == ValueType.Any || valueType.HasFlag(data.ValueType));
-                    }).OrderBy(v => v.GetCustomAttribute<ElementData>().ElementName)
-                    .ToList();
+        public virtual string ToWorkshop()
+        {
+            List<object> elementParameters = new List<object>();
 
-                InputSim.TextInput(ElementData.ElementName, Wait.Medium);
-
-                // Leave the input field
-                InputSim.Press(Keys.Tab, Wait.Medium);
-
-                // Highlight the action/value.
-                int pos = conflicting.IndexOf(GetType());
-                InputSim.Press(Keys.Down, Wait.Short, pos);
-
-                // Select it.
-                InputSim.Press(Keys.Space, Wait.Medium);
-            }
-
-            BeforeParameters();
-
-            // Do stuff with parameters
             for (int i = 0; i < parameterData.Length; i++)
             {
                 object parameter = ParameterValues?.ElementAtOrDefault(i);
@@ -214,111 +182,26 @@ namespace Deltin.Deltinteger.Elements
                 if (parameter == null)
                     parameter = parameterData[i].GetDefault();
 
-                // Select the parameter.
-                InputSim.Press(Keys.Down, Wait.Short);
-
-                // Element input
-                if (parameterData[i].ParameterType == ParameterType.Value)
-                    ((Element)parameter).Input(
-                        parameterData[i].DefaultType == parameter.GetType(),
-                        parameterData[i].ValueType, parameterData[i].DefaultType,
-                        depth + 1);
-
-                // Enum input
-                else if (parameterData[i].ParameterType == ParameterType.Enum)
-                {
-                    Console.WriteLine($"{new string(' ', (depth + 1) * 4)}{parameter}");
-                    InputSim.SelectEnumMenuOption(parameterData[i].EnumType, parameter);
-                }
+                elementParameters.Add(parameter);
             }
 
-            AfterParameters();
+            List<string> parameters = AdditionalParameters().ToList();
 
-            if (depth == 0)
-                Console.WriteLine();
+            parameters.AddRange(
+                elementParameters.Select(p => p is Element ?
+                    (p as Element).ToWorkshop() :
+                    EnumValue.GetWorkshopName(p as Enum) 
+                ));
+
+
+            return ElementData.ElementName + 
+                (parameters.Count == 0 ? "" : 
+                "(" + string.Join(", ", parameters) + ")");
         }
 
-        protected virtual void BeforeParameters() { } // Executed before parameters are executed
-        protected virtual void AfterParameters() { } // Executed after parameters are executed
-        protected virtual string Info() { return ElementData.ElementName; }
-
-        public bool Equals(Element other)
+        protected virtual string[] AdditionalParameters()
         {
-            if (other == null)
-                return false;
-
-            if (ReferenceEquals(this, other))
-                return true;
-
-            if (GetType() != other.GetType())
-                return false;
-
-            if (ParameterValues.Length != other.ParameterValues.Length)
-                return false;
-
-            if (!AdditionalEquals(other))
-                return false;
-
-            for (int i = 0; i < ParameterValues.Length; i++)
-            {
-                if (ParameterValues[i].GetType() != other.ParameterValues[i].GetType())
-                    return false;
-                if (ParameterValues[i] is Element)
-                {
-                    if (!(ParameterValues[i] as Element).Equals(other.ParameterValues[i] as Element))
-                        return false;
-                }
-                else if (!ParameterValues[i].Equals(other.ParameterValues[i]))
-                    return false;
-            }
-
-            return true;
-        }
-        protected virtual bool AdditionalEquals(Element other) { return true; }
-
-        public override bool Equals(object obj)
-        {
-            return Equals(obj as Rule);
-        }
-
-        public override int GetHashCode()
-        {
-            return (GetType(), ElementData, ParameterValues, AdditionalGetHashCode()).GetHashCode();
-        }
-        protected virtual int AdditionalGetHashCode() { return 0; }
-
-        public override string ToString()
-        {
-            return GetName(this.GetType());
-        }
-
-        public void Print(int depth = 0)
-        {
-            Console.WriteLine(new string(' ', depth * 4) + Info());
-            foreach (var param in ParameterValues)
-                if (param is Element)
-                    (param as Element).Print(depth + 1);
-                else
-                    Console.WriteLine(new string(' ', (depth + 1) * 4) + param);
-        }
-
-        private static bool Matches(string name1, string name2)
-        {
-            string[] compare1 = name1.ToLower().Split(' ').Where(v => v.Length > 2).ToArray();
-            string[] compare2 = name2.ToLower().Split(' ').Where(v => v.Length > 2).ToArray();
-
-            bool contains = false;
-            if (compare1.Length > 0 && compare2.Length > 0)
-            {
-                contains = true;
-                foreach (string word in compare1)
-                {
-                    if (!compare2.Contains(word))
-                        contains = false;
-                }
-            }
-
-            return name2.ToLower().Contains(name1.ToLower()) || contains;
+            return new string[0];
         }
     }
 }

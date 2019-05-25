@@ -6,99 +6,85 @@ using System.Threading.Tasks;
 
 namespace Deltin.Deltinteger.Elements
 {
-    [ElementData("Abort", 0)]
-    [Serializable]
+    [ElementData("Abort")]
     public class A_Abort : Element {}
 
-    [ElementData("Abort If", 0)]
+    [ElementData("Abort If")]
     [Parameter("Condition", ValueType.Boolean, typeof(V_Compare))]
-    [Serializable]
     public class A_AbortIf : Element {}
 
-    [ElementData("Abort If Condition Is False", 0)]
-    [Serializable]
+    [ElementData("Abort If Condition Is False")]
     public class A_AbortIfConditionIsFalse : Element {}
 
-    [ElementData("Abort If Condition Is True", 0)]
-    [Serializable]
+    [ElementData("Abort If Condition Is True")]
     public class A_AbortIfConditionIsTrue : Element {}
 
-    [ElementData("Allow Button", 0)]
+    [ElementData("Allow Button")]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     [Parameter("Button", typeof(Button))]
-    [Serializable]
     public class A_AllowButton : Element {}
 
-    [ElementData("Apply Impulse", 0)]
+    [ElementData("Apply Impulse")]
     [Parameter("Player",    ValueType.Player,          typeof(V_EventPlayer))]
     [Parameter("Direction", ValueType.VectorAndPlayer, typeof(V_Vector))     ]
     [Parameter("Speed",     ValueType.Number,          typeof(V_Number))     ]
     [Parameter("Relative",  typeof(Relative))      ]
     [Parameter("Motion",    typeof(ContraryMotion))]
-    [Serializable]
     public class A_ApplyImpulse : Element {}
 
-    [ElementData("Big Message", 0)]
+    [ElementData("Big Message")]
     [Parameter("Visible To", ValueType.Player, typeof(V_AllPlayers))]
     [Parameter("Header", ValueType.Any, typeof(V_String))]
-    [Serializable]
     public class A_BigMessage : Element {}
 
-    [ElementData("Chase Global Variable At Rate", 0)]
+    [ElementData("Chase Global Variable At Rate")]
     [Parameter("Variable", typeof(Variable))]
     [Parameter("Destination", ValueType.Any, typeof(V_Number))]
     [Parameter("Rate", ValueType.Number, typeof(V_Number))]
     [Parameter("Variable", typeof(ChaseReevaluation))]
-    [Serializable]
     public class A_ChaseGlobalVariableAtRate : Element {}
 
-    [ElementData("Chase Global Variable Over Time", 0)]
+    [ElementData("Chase Global Variable Over Time")]
     [Parameter("Variable", typeof(Variable))]
     [Parameter("Destination", ValueType.Any, typeof(V_Number))]
     [Parameter("Duration", ValueType.Number, typeof(V_Number))]
     [Parameter("Variable", typeof(ChaseReevaluation))]
-    [Serializable]
     public class A_ChaseGlobalVariableOverTime : Element {}
 
-    [ElementData("Chase Player Variable At Rate", 0)]
+    [ElementData("Chase Player Variable At Rate")]
     [Parameter("Variable", typeof(Variable))]
     [Parameter("Destination", ValueType.Any, typeof(V_Number))]
     [Parameter("Rate", ValueType.Number, typeof(V_Number))]
     [Parameter("Variable", typeof(ChaseReevaluation))]
-    [Serializable]
     public class A_ChasePlayerVariableAtRate : Element {}
 
-    [ElementData("Chase Player Variable Over Time", 0)]
+    [ElementData("Chase Player Variable Over Time")]
     [Parameter("Variable", typeof(Variable))]
     [Parameter("Destination", ValueType.Any, typeof(V_Number))]
     [Parameter("Duration", ValueType.Number, typeof(V_Number))]
     [Parameter("Variable", typeof(ChaseReevaluation))]
-    [Serializable]
     public class A_ChasePlayerVariableOverTime : Element {}
 
-    [ElementData("Clear Status", 0)]
+    [ElementData("Clear Status")]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     [Parameter("Status", typeof(Status))]
-    [Serializable]
     public class A_ClearStatus : Element {}
 
-    [ElementData("Communicate", 0)]
+    [ElementData("Communicate")]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     [Parameter("Type", typeof(Communication))]
-    [Serializable]
     public class A_Communicate : Element {}
 
-    [ElementData("Create Effect", 0)]
+    [ElementData("Create Effect")]
     [Parameter("Visible To", ValueType.Player, typeof(V_AllPlayers))]
     [Parameter("Type", typeof(Effects))]
     [Parameter("Color", typeof(Color))]
     [Parameter("Position", ValueType.VectorAndPlayer, typeof(V_EventPlayer))]
     [Parameter("Radius", ValueType.Number, typeof(V_Number))]
     [Parameter("Reevaluation", typeof(EffectRev))]
-    [Serializable]
     public class A_CreateEffect : Element {}
 
-    [ElementData("Create Hud Text", 0)]
+    [ElementData("Create Hud Text")]
     [Parameter("Visible To", ValueType.Player, typeof(V_AllPlayers))]
     [Parameter("Header", ValueType.Any, typeof(V_String))]
     [Parameter("Subheader", ValueType.Any, typeof(V_Null))]
@@ -109,520 +95,432 @@ namespace Deltin.Deltinteger.Elements
     [Parameter("Subheader Color", typeof(Color))]
     [Parameter("Text Color", typeof(Color))]
     [Parameter("Reevaluation", typeof(StringRev))]
-    [Serializable]
     public class A_CreateHudText : Element {}
 
-    [ElementData("Create Icon", 0)]
+    [ElementData("Create Icon")]
     [Parameter("Visible To", ValueType.Player, typeof(V_AllPlayers))]
     [Parameter("Position", ValueType.VectorAndPlayer, typeof(V_EventPlayer))]
     [Parameter("Icon", typeof(Icon))]
     [Parameter("Reevaluation", typeof(IconRev))]
     [Parameter("Icon Color", typeof(Color))]
     [Parameter("Show When Offscreen", ValueType.Boolean, typeof(V_True))]
-    [Serializable]
     public class A_CreateIcon : Element {}
 
-    [ElementData("Create In-World Text", 0)]
+    [ElementData("Create In-World Text")]
     [Parameter("Visible To", ValueType.Player, typeof(V_AllPlayers))]
     [Parameter("Header", ValueType.Any, typeof(V_String))]
     [Parameter("Position", ValueType.VectorAndPlayer, typeof(V_EventPlayer))]
     [Parameter("Scale", ValueType.Number, typeof(V_Number))]
     [Parameter("Clipping", typeof(Clipping))]
     [Parameter("Reevaluation", typeof(InworldTextRev))]
-    [Serializable]
     public class A_CreateInWorldText : Element {}
 
-    [ElementData("Damage", 0)]
+    [ElementData("Damage")]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     [Parameter("Damager", ValueType.Player, typeof(V_Null))]
     [Parameter("Amount", ValueType.Number, typeof(V_Number))]
-    [Serializable]
     public class A_Damage : Element {}
 
-    [ElementData("Declare Match Draw", 0)]
-    [Serializable]
+    [ElementData("Declare Match Draw")]
     public class A_DeclareMatchDraw : Element {}
 
-    [ElementData("Declare Player Victory", 0)]
+    [ElementData("Declare Player Victory")]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
-    [Serializable]
     public class A_DeclarePlayerVictory : Element {}
 
-    [ElementData("Declare Round Victory", 0)]
+    [ElementData("Declare Round Victory")]
     [Parameter("Round Winning Team", ValueType.Team, typeof(V_Team))]
-    [Serializable]
     public class A_DeclareRoundVictory : Element {}
 
-    [ElementData("Declare team Victory", 0)]
+    [ElementData("Declare team Victory")]
     [Parameter("Team", ValueType.Team, typeof(V_Team))]
-    [Serializable]
     public class A_DeclareTeamVictory : Element {}
 
-    [ElementData("Destroy All Effects", 0)]
-    [Serializable]
+    [ElementData("Destroy All Effects")]
     public class A_DestroyAllEffects : Element {}
 
-    [ElementData("Destroy All HUD Text", 0)]
-    [Serializable]
+    [ElementData("Destroy All HUD Text")]
     public class A_DestroyAllHudText : Element {}
 
-    [ElementData("Destroy All Icons", 0)]
-    [Serializable]
+    [ElementData("Destroy All Icons")]
     public class A_DestroyAllIcons : Element {}
 
-    [ElementData("Destroy Effect", 0)]
+    [ElementData("Destroy Effect")]
     [Parameter("Effect ID", ValueType.Player, null)]
-    [Serializable]
     public class A_DestroyEffect : Element {}
 
-    [ElementData("Destroy Hud Text", 0)]
+    [ElementData("Destroy Hud Text")]
     [Parameter("Text ID", ValueType.Number, null)]
-    [Serializable]
     public class A_DestroyHudText : Element {}
 
-    [ElementData("Destroy Effect", 0)]
+    [ElementData("Destroy Effect")]
     [Parameter("Effect ID", ValueType.Player, null)]
-    [Serializable]
     public class A_DestroyIcon : Element {}
 
-    [ElementData("Destroy In-World Text", 0)]
+    [ElementData("Destroy In-World Text")]
     [Parameter("Text ID", ValueType.Number, null)]
-    [Serializable]
     public class A_DestroyInWorldText : Element {}
 
-    [ElementData("Disable Built-In Game Mode Announcer", 0)]
-    [Serializable]
+    [ElementData("Disable Built-In Game Mode Announcer")]
     public class A_DisableAnnouncer : Element {}
 
-    [ElementData("Disable Built-In Game Mode Completion", 0)]
-    [Serializable]
+    [ElementData("Disable Built-In Game Mode Completion")]
     public class A_DisableCompletion : Element {}
 
-    [ElementData("Disable Built-In Game Mode Music", 0)]
-    [Serializable]
+    [ElementData("Disable Built-In Game Mode Music")]
     public class A_DisableMusic : Element {}
 
-    [ElementData("Disable Built-In Game Mode Respawning", 0)]
+    [ElementData("Disable Built-In Game Mode Respawning")]
     [Parameter("Players", ValueType.Player, typeof(V_EventPlayer))]
-    [Serializable]
     public class A_DisableRespawning : Element {}
 
-    [ElementData("Disable Built-In Game Mode Scoring", 0)]
-    [Serializable]
+    [ElementData("Disable Built-In Game Mode Scoring")]
     public class A_DisableScoring : Element {}
 
-    [ElementData("Disable Death Spectate All Players", 0)]
+    [ElementData("Disable Death Spectate All Players")]
     [Parameter("Players", ValueType.Player, typeof(V_EventPlayer))]
-    [Serializable]
     public class A_DisableSpectate : Element {}
 
-    [ElementData("Disable Death Spectate Target HUD", 0)]
+    [ElementData("Disable Death Spectate Target HUD")]
     [Parameter("Players", ValueType.Player, typeof(V_EventPlayer))]
-    [Serializable]
     public class A_DisableSpectateHUD : Element {}
 
-    [ElementData("Disallow Button", 0)]
+    [ElementData("Disallow Button")]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     [Parameter("Button", typeof(Button))]
-    [Serializable]
     public class A_DisallowButton : Element {}
 
 
 
-    [ElementData("Enable Built-In Game Mode Announcer", 0)]
-    [Serializable]
+    [ElementData("Enable Built-In Game Mode Announcer")]
     public class A_EnableAnnouncer : Element {}
 
-    [ElementData("Enable Built-In Game Mode Completion", 0)]
-    [Serializable]
+    [ElementData("Enable Built-In Game Mode Completion")]
     public class A_EnableCompletion : Element {}
 
-    [ElementData("Enable Built-In Game Mode Music", 0)]
-    [Serializable]
+    [ElementData("Enable Built-In Game Mode Music")]
     public class A_EnableMusic : Element {}
 
-    [ElementData("Enable Built-In Game Mode Respawning", 0)]
+    [ElementData("Enable Built-In Game Mode Respawning")]
     [Parameter("Players", ValueType.Player, typeof(V_EventPlayer))]
-    [Serializable]
     public class A_EnableRespawning : Element {}
 
-    [ElementData("Enable Built-In Game Mode Scoring", 0)]
-    [Serializable]
+    [ElementData("Enable Built-In Game Mode Scoring")]
     public class A_EnableScoring : Element {}
 
-    [ElementData("Enable Death Spectate All Players", 0)]
+    [ElementData("Enable Death Spectate All Players")]
     [Parameter("Players", ValueType.Player, typeof(V_EventPlayer))]
-    [Serializable]
     public class A_EnableSpectate : Element {}
 
-    [ElementData("Enable Death Spectate Target HUD", 0)]
+    [ElementData("Enable Death Spectate Target HUD")]
     [Parameter("Players", ValueType.Player, typeof(V_EventPlayer))]
-    [Serializable]
     public class A_EnableSpectateHUD : Element {}
 
 
-    [ElementData("Go To Assemble Heroes", 0)]
-    [Serializable]
+    [ElementData("Go To Assemble Heroes")]
     public class A_AssembleHeroes : Element {}
 
-    [ElementData("Heal", 0)]
+    [ElementData("Heal")]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     [Parameter("Healer", ValueType.Player, typeof(V_Null))]
     [Parameter("Amount", ValueType.Number, typeof(V_Number))]
-    [Serializable]
     public class A_Heal : Element {}
 
-    [ElementData("Kill", 0)]
+    [ElementData("Kill")]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     [Parameter("Killer", ValueType.Player, typeof(V_Null))]
-    [Serializable]
     public class A_Kill : Element {}
 
-    [ElementData("Loop", 0)]
-    [Serializable]
+    [ElementData("Loop")]
     public class A_Loop : Element {}
 
-    [ElementData("Loop If", 0)]
+    [ElementData("Loop If")]
     [Parameter("Condition", ValueType.Boolean, typeof(V_Compare))]
-    [Serializable]
     public class A_LoopIf : Element {}
 
-    [ElementData("Loop If Condition Is False", 0)]
-    [Serializable]
+    [ElementData("Loop If Condition Is False")]
     public class A_LoopIfConditionIsFalse : Element {}
 
-    [ElementData("Loop If Condition Is True", 0)]
-    [Serializable]
+    [ElementData("Loop If Condition Is True")]
     public class A_LoopIfConditionIsTrue : Element { }
 
-    [ElementData("Modify Global Variable", 0)]
+    [ElementData("Modify Global Variable")]
     [Parameter("Variable", typeof(Variable))]
     [Parameter("Operation", typeof(Operation))]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
-    [Serializable]
     public class A_ModifyGlobalVariable : Element {}
 
-    [ElementData("Modify Player Score", 0)]
+    [ElementData("Modify Player Score")]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     [Parameter("Score", ValueType.Number, typeof(V_Number))]
-    [Serializable]
     public class A_ModifyPlayerScore : Element {}
 
-    [ElementData("Modify Player Variable", 0)]
+    [ElementData("Modify Player Variable")]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     [Parameter("Variable", typeof(Variable))]
     [Parameter("Operation", typeof(Operation))]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
-    [Serializable]
     public class A_ModifyPlayerVariable : Element {}
 
-    [ElementData("Modify Team Score", 0)]
+    [ElementData("Modify Team Score")]
     [Parameter("Team", ValueType.Team, typeof(V_Team))]
     [Parameter("Score", ValueType.Number, typeof(V_Number))]
-    [Serializable]
     public class A_ModifyTeamScore : Element {}
 
-    [ElementData("Pause Match Time", 0)]
-    [Serializable]
+    [ElementData("Pause Match Time")]
     public class A_PauseMatchTime : Element {}
 
-    [ElementData("Play Effect", 0)]
+    [ElementData("Play Effect")]
     [Parameter("Visible To", ValueType.Player, typeof(V_AllPlayers))]
     [Parameter("Type", typeof(PlayEffects))]
     [Parameter("Color", typeof(Color))]
     [Parameter("Position", ValueType.VectorAndPlayer, typeof(V_EventPlayer))]
     [Parameter("Radius", ValueType.Number, typeof(V_Number))]
-    [Serializable]
     public class A_PlayEffect : Element {}
 
-    [ElementData("Preload Hero", 0)]
+    [ElementData("Preload Hero")]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
 #warning confirm this parameter when the workshop is live
     [Parameter("Hero", typeof(Hero))]
-    [Serializable]
     public class A_PreloadHero : Element {}
 
-    [ElementData("Press Button", 0)]
+    [ElementData("Press Button")]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     [Parameter("Button", typeof(Button))]
-    [Serializable]
     public class A_PressButton : Element {}
 
-    [ElementData("Reset Player Hero Availability", 0)]
+    [ElementData("Reset Player Hero Availability")]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
-    [Serializable]
     public class A_ResetHeroRoster : Element {}
 
-    [ElementData("Respawn", 0)]
+    [ElementData("Respawn")]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
-    [Serializable]
     public class A_Respawn : Element {}
 
-    [ElementData("Resurrect", 0)]
+    [ElementData("Resurrect")]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
-    [Serializable]
     public class A_Resurrect : Element {}
 
-    [ElementData("Set Ability 1 Enabled", 0)]
+    [ElementData("Set Ability 1 Enabled")]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     [Parameter("Enabled", ValueType.Boolean, typeof(V_True))]
-    [Serializable]
     public class A_SetAbility1Enabled : Element {}
 
-    [ElementData("Set Ability 2 Enabled", 0)]
+    [ElementData("Set Ability 2 Enabled")]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     [Parameter("Enabled", ValueType.Boolean, typeof(V_True))]
-    [Serializable]
     public class A_SetAbility2Enabled : Element {}
 
-    [ElementData("Set Aim Speed", 0)]
+    [ElementData("Set Aim Speed")]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     [Parameter("Turn Speed Percent", ValueType.Number, typeof(V_Number))]
-    [Serializable]
     public class A_SetAimSpeed : Element {}
 
-    [ElementData("Set Damage Dealt", 0)]
+    [ElementData("Set Damage Dealt")]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     [Parameter("Damage Dealt Percent", ValueType.Number, typeof(V_Number))]
-    [Serializable]
     public class A_SetDamageDealt : Element {}
 
-    [ElementData("Set Damage Recieved", 0)]
+    [ElementData("Set Damage Recieved")]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     [Parameter("Damage Dealt Percent", ValueType.Number, typeof(V_Number))]
-    [Serializable]
     public class A_SetDamageRecieved : Element {}
 
-    [ElementData("Set Facing", 0)]
+    [ElementData("Set Facing")]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     [Parameter("Direction", ValueType.VectorAndPlayer, typeof(V_Vector))]
     [Parameter("Relative", typeof(Relative))]
-    [Serializable]
     public class A_SetFacing : Element {}
 
-    [ElementData("Set Global Variable", 0)]
+    [ElementData("Set Global Variable")]
     [Parameter("Variable", typeof(Variable))]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
-    [Serializable]
     public class A_SetGlobalVariable : Element {}
 
-    [ElementData("Set Global Variable At Index", 0)]
+    [ElementData("Set Global Variable At Index")]
     [Parameter("Variable", typeof(Variable))]
     [Parameter("Index", ValueType.Number, typeof(V_Number))]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
-    [Serializable]
     public class A_SetGlobalVariableAtIndex : Element {}
 
-    [ElementData("Set Gravity", 0)]
+    [ElementData("Set Gravity")]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     [Parameter("Gravity Percent", ValueType.Number, typeof(V_Number))]
-    [Serializable]
     public class A_SetGravity : Element {}
 
-    [ElementData("Set Healing Dealt", 0)]
+    [ElementData("Set Healing Dealt")]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     [Parameter("Healing Dealt Percent", ValueType.Number, typeof(V_Number))]
-    [Serializable]
     public class A_SetHealingDealt : Element {}
 
-    [ElementData("Set Healing Received", 0)]
+    [ElementData("Set Healing Received")]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     [Parameter("Healing Received Percent", ValueType.Number, typeof(V_Number))]
-    [Serializable]
     public class A_SetHealingReceived : Element {}
 
-    [ElementData("Set Invisible", 0)]
+    [ElementData("Set Invisible")]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     [Parameter("Invisible To", typeof(InvisibleTo))]
-    [Serializable]
     public class A_SetInvisible : Element {}
 
-    [ElementData("Set Match Time", 0)]
+    [ElementData("Set Match Time")]
     [Parameter("Match Time", ValueType.Number, typeof(V_Number))]
-    [Serializable]
     public class A_SetMatchTime : Element {}
 
-    [ElementData("Set Max Health", 0)]
+    [ElementData("Set Max Health")]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     [Parameter("Health Percent", ValueType.Number, typeof(V_Number))]
-    [Serializable]
     public class A_SetMaxHealth : Element {}
 
-    [ElementData("Set Move Speed", 0)]
+    [ElementData("Set Move Speed")]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     [Parameter("Move Speed Percent", ValueType.Number, typeof(V_Number))]
-    [Serializable]
     public class A_SetMoveSpeed : Element {}
 
-    [ElementData("Set Objective Description", 0)]
+    [ElementData("Set Objective Description")]
     [Parameter("Visible To", ValueType.Player, typeof(V_AllPlayers))]
     [Parameter("Header", ValueType.Any, typeof(V_String))]
     [Parameter("Reevaluation", typeof(StringRev))]
-    [Serializable]
     public class A_SetObjectiveDescription : Element {}
 
-    [ElementData("Set Player Allowed Heroes", 0)]
+    [ElementData("Set Player Allowed Heroes")]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     [Parameter("Hero", ValueType.Hero, null)]
-    [Serializable]
     public class A_SetHeroRoster : Element {}
 
-    [ElementData("Set Player Score", 0)]
+    [ElementData("Set Player Score")]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     [Parameter("Score", ValueType.Number, typeof(V_Number))]
-    [Serializable]
     public class A_SetPlayerScore : Element {}
 
-    [ElementData("Set Player Variable", 0)]
+    [ElementData("Set Player Variable")]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     [Parameter("Variable", typeof(Variable))]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
-    [Serializable]
     public class A_SetPlayerVariable : Element {}
 
-    [ElementData("Set Player Variable At Index", 0)]
+    [ElementData("Set Player Variable At Index")]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     [Parameter("Variable", typeof(Variable))]
     [Parameter("Index", ValueType.Number, typeof(V_Number))]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
-    [Serializable]
     public class A_SetPlayerVariableAtIndex : Element {}
 
-    [ElementData("Set Primary Fire Enabled", 0)]
+    [ElementData("Set Primary Fire Enabled")]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     [Parameter("Enabled", ValueType.Boolean, typeof(V_True))]
-    [Serializable]
     public class A_SetPrimaryFireEnabled : Element {}
 
-    [ElementData("Set Projectile Gravity", 0)]
+    [ElementData("Set Projectile Gravity")]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     [Parameter("Projectile Gravity Percent", ValueType.Number, typeof(V_Number))]
-    [Serializable]
     public class A_SetProjectileGravity : Element {}
 
-    [ElementData("Set Projectile Speed", 0)]
+    [ElementData("Set Projectile Speed")]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     [Parameter("Projectile Speed Percent", ValueType.Number, typeof(V_Number))]
-    [Serializable]
     public class A_SetProjectileSpeed : Element {}
 
-    [ElementData("Set Respawn Max Time", 0)]
+    [ElementData("Set Respawn Max Time")]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     [Parameter("Time", ValueType.Number, typeof(V_Number))]
-    [Serializable]
     public class A_SetRespawnMaxTime : Element {}
 
-    [ElementData("Set Secondary Fire Enabled", 0)]
+    [ElementData("Set Secondary Fire Enabled")]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     [Parameter("Enabled", ValueType.Boolean, typeof(V_True))]
-    [Serializable]
     public class A_SetSecondaryFireEnabled : Element {}
 
-    [ElementData("Set Slow Motion", 0)]
+    [ElementData("Set Slow Motion")]
     [Parameter("Speed Percent", ValueType.Number, typeof(V_Number))]
-    [Serializable]
     public class A_SetSlowMotion : Element {}
 
-    [ElementData("Set Status", 0)]
+    [ElementData("Set Status")]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     [Parameter("Assister", ValueType.Player, typeof(V_Null))]
     [Parameter("Status", typeof(Status))]
     [Parameter("Duration", ValueType.Number, typeof(V_Number))]
-    [Serializable]
     public class A_SetStatus : Element {}
 
-    [ElementData("Set Team Score", 0)]
+    [ElementData("Set Team Score")]
     [Parameter("Team", ValueType.Team, typeof(V_Team))]
     [Parameter("Score", ValueType.Number, typeof(V_Number))]
-    [Serializable]
     public class A_SetTeamScore : Element {}
 
-    [ElementData("Set Ultimate Ability Enabled", 0)]
+    [ElementData("Set Ultimate Ability Enabled")]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     [Parameter("Enabled", ValueType.Boolean, typeof(V_True))]
-    [Serializable]
     public class A_SetUltimateAbilityEnabled : Element {}
 
-    [ElementData("Set Ultimate Charge", 0)]
+    [ElementData("Set Ultimate Charge")]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     [Parameter("Charge Percent", ValueType.Number, typeof(V_Number))]
-    [Serializable]
     public class A_SetUltimateCharge : Element {}
 
-    [ElementData("Skip", 0)]
+    [ElementData("Skip")]
     [Parameter("Number Of Actions", ValueType.Number, typeof(V_Number))]
-    [Serializable]
     public class A_Skip : Element {}
 
-    [ElementData("Skip If", 0)]
+    [ElementData("Skip If")]
     [Parameter("Condition", ValueType.Boolean, typeof(V_Compare))]
     [Parameter("Number Of Actions", ValueType.Number, typeof(V_Number))]
-    [Serializable]
     public class A_SkipIf : Element {}
 
-    [ElementData("Small Message", 0)]
+    [ElementData("Small Message")]
     [Parameter("Visible To", ValueType.Player, typeof(V_AllPlayers))]
     [Parameter("Header", ValueType.Any, typeof(V_String))]
-    [Serializable]
     public class A_SmallMessage : Element {}
 
-    [ElementData("Start Accelerating", 0)]
+    [ElementData("Start Accelerating")]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     [Parameter("Rate", ValueType.Number, typeof(V_Number))]
     [Parameter("Max Speed", ValueType.Number, typeof(V_Number))]
     [Parameter("Relative", typeof(Relative))]
     [Parameter("Reevaluation", typeof(AccelerateRev))]
-    [Serializable]
     public class A_StartAccelerating : Element {}
 
-    [ElementData("Start Camera", 0)]
+    [ElementData("Start Camera")]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     [Parameter("Eye Position", ValueType.VectorAndPlayer, typeof(V_Vector))]
     [Parameter("Look At Position", ValueType.VectorAndPlayer, typeof(V_Vector))]
     [Parameter("Blend Speed", ValueType.Number, typeof(V_Number))]
-    [Serializable]
     public class A_StartCamera : Element {}
 
-    [ElementData("Start Damage Modification", 0)]
+    [ElementData("Start Damage Modification")]
 #warning check defaults when workshop is live
     [Parameter("Receivers", ValueType.Player, typeof(V_AllPlayers))]
     [Parameter("Damagers", ValueType.Player, typeof(V_AllPlayers))]
     [Parameter("Damage Percent", ValueType.Number, typeof(V_Number))]
     [Parameter("Reevaluation", typeof(ModRev))]
-    [Serializable]
     public class A_StartDamageModification : Element {}
 
-    [ElementData("Start Damage Over Time", 0)]
+    [ElementData("Start Damage Over Time")]
     [Parameter("Receivers", ValueType.Player, typeof(V_EventPlayer))]
     [Parameter("Damagers", ValueType.Player, typeof(V_Null))]
     [Parameter("Duration", ValueType.Number, typeof(V_Number))]
     [Parameter("Damage Per Second", ValueType.Number, typeof(V_Number))]
-    [Serializable]
     public class A_StartDamageOverTime : Element {}
 
-    [ElementData("Start Facing", 0)]
+    [ElementData("Start Facing")]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     [Parameter("Direction", ValueType.VectorAndPlayer, typeof(V_Vector))]
     [Parameter("Turn Rate", ValueType.Number, typeof(V_Number))]
     [Parameter("Relative", typeof(Relative))]
     [Parameter("Reevaluation", typeof(FacingRev))]
-    [Serializable]
     public class A_StartFacing : Element {}
 
-    [ElementData("Start Forcing Player To Be Hero", 0)]
+    [ElementData("Start Forcing Player To Be Hero")]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
 #warning check defaults when workshop is live
     [Parameter("Hero", ValueType.Hero, typeof(V_AllHeroes))]
-    [Serializable]
     public class A_ForcePlayerHero : Element {}
 
-    [ElementData("Start Forcing Spawn Room", 0)]
+    [ElementData("Start Forcing Spawn Room")]
     [Parameter("Team", ValueType.Team, typeof(V_Team))]
     [Parameter("Room", ValueType.Number, typeof(V_Number))]
-    [Serializable]
     public class A_ForceSpawnRoom : Element {}
 
-    [ElementData("Start Forcing Throttle", 0)]
+    [ElementData("Start Forcing Throttle")]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     [Parameter("Min Forward", ValueType.Number, typeof(V_Number))]
     [Parameter("Max Forward", ValueType.Number, typeof(V_Number))]
@@ -630,111 +528,90 @@ namespace Deltin.Deltinteger.Elements
     [Parameter("Max Backward", ValueType.Number, typeof(V_Number))]
     [Parameter("Min Sideways", ValueType.Number, typeof(V_Number))]
     [Parameter("Max Sideways", ValueType.Number, typeof(V_Number))]
-    [Serializable]
     public class A_ForceThrottle : Element {}
 
-    [ElementData("Start Heal Over Time", 0)]
+    [ElementData("Start Heal Over Time")]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     [Parameter("Healer", ValueType.Player, typeof(V_Null))]
     [Parameter("Duration", ValueType.Number, typeof(V_Number))]
     [Parameter("Healing Per Second", ValueType.Number, typeof(V_Number))]
-    [Serializable]
     public class A_StartHealOverTime : Element {}
 
-    [ElementData("Start Holding Button", 0)]
+    [ElementData("Start Holding Button")]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     [Parameter("Button", typeof(Button))]
-    [Serializable]
     public class A_StartHoldingButton : Element {}
 
-    [ElementData("Stop Accelerating", 0)]
+    [ElementData("Stop Accelerating")]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
-    [Serializable]
     public class A_StopAccelerating : Element {}
 
-    [ElementData("Stop All Damage Modifications", 0)]
-    [Serializable]
+    [ElementData("Stop All Damage Modifications")]
     public class A_StopAllDamageModifications : Element {}
 
-    [ElementData("Stop All Damage Over Time", 0)]
+    [ElementData("Stop All Damage Over Time")]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
-    [Serializable]
     public class A_StopAllDamageOverTime : Element {}
 
-    [ElementData("Stop All Heal Over Time", 0)]
+    [ElementData("Stop All Heal Over Time")]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
-    [Serializable]
     public class A_StopAllHealOverTime : Element {}
 
-    [ElementData("Stop Camera", 0)]
+    [ElementData("Stop Camera")]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
-    [Serializable]
     public class A_StopCamera : Element {}
 
-    [ElementData("Stop Chasing Global Variable", 0)]
+    [ElementData("Stop Chasing Global Variable")]
     [Parameter("Variable", typeof(Variable))]
-    [Serializable]
     public class A_StopChasingGlobalVariable : Element {}
 
-    [ElementData("Stop Chasing Player Variable", 0)]
+    [ElementData("Stop Chasing Player Variable")]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     [Parameter("Variable", typeof(Variable))]
-    [Serializable]
     public class A_StopChasingPlayerVariable : Element {}
 
-    [ElementData("Stop Damage Modifications", 0)]
+    [ElementData("Stop Damage Modifications")]
     [Parameter("Damage modification ID", ValueType.Number, null)]
-    [Serializable]
     public class A_StopDamageModifications : Element {}
 
-    [ElementData("Stop Damage Over Time", 0)]
+    [ElementData("Stop Damage Over Time")]
     [Parameter("Damage Over Time ID", ValueType.Number, null)]
-    [Serializable]
     public class A_StopDamageOverTime : Element {}
 
-    [ElementData("Stop Facing", 0)]
+    [ElementData("Stop Facing")]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
-    [Serializable]
     public class A_StopFacing : Element {}
 
-    [ElementData("Stop Forcing Player To Be Hero", 0)]
+    [ElementData("Stop Forcing Player To Be Hero")]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
-    [Serializable]
     public class A_StopForcingHero : Element {}
 
-    [ElementData("Stop Forcing Spawn Room", 0)]
+    [ElementData("Stop Forcing Spawn Room")]
     [Parameter("Team", ValueType.Team, typeof(V_Team))]
-    [Serializable]
     public class A_StopForcingSpawnRoom : Element {}
 
-    [ElementData("Stop Forcing Throttle", 0)]
+    [ElementData("Stop Forcing Throttle")]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
-    [Serializable]
     public class A_StopForcingThrottle : Element {}
 
-    [ElementData("Stop Heal Over Time", 0)]
+    [ElementData("Stop Heal Over Time")]
     [Parameter("Stop Heal Over Time", ValueType.Player, typeof(V_EventPlayer))]
-    [Serializable]
     public class A_StopHealOverTime : Element {}
 
-    [ElementData("Stop Holding Button", 0)]
+    [ElementData("Stop Holding Button")]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
-    [Serializable]
     public class A_StopHoldingButton : Element {}
 
-    [ElementData("Teleport", 0)]
+    [ElementData("Teleport")]
     [Parameter("Player", ValueType.Any, typeof(V_Number))]
     [Parameter("Position", ValueType.VectorAndPlayer, typeof(V_Vector))]
-    [Serializable]
     public class A_Teleport : Element {}
 
-    [ElementData("Unpause Match Time", 0)]
-    [Serializable]
+    [ElementData("Unpause Match Time")]
     public class A_UnpauseMatchTime : Element {}
 
-    [ElementData("Wait", 0)]
+    [ElementData("Wait")]
     [Parameter("Time", ValueType.Number, typeof(V_Number))]
     [Parameter("Wait Behavior", typeof(WaitBehavior))]
-    [Serializable]
     public class A_Wait : Element {}
 }

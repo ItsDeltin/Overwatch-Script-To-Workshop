@@ -4,12 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows.Forms;
 
 namespace Deltin.Deltinteger.Elements
 {
-    [Serializable]
-    public class Rule: IEquatable<Rule>
+    public class Rule: IWorkshopTree
     {
         public string Name { get; private set; }
         public RuleEvent RuleEvent { get; private set; }
@@ -39,148 +37,70 @@ namespace Deltin.Deltinteger.Elements
             IsGlobal = true;
         }
 
-        public void Input(int numberOfRules, int position)
-        {
-            // Create rule.
-            InputSim.Press(Keys.Space, Wait.Long);
-
-            // Select rule name.
-            InputSim.Press(Keys.Down, Wait.Short, numberOfRules + 1);
-
-            InputSim.Press(Keys.Right, Wait.Short);
-
-            // Input the name.
-            InputSim.TextInput(Name, Wait.Short);
-
-            // Leave name input menu.
-            InputSim.Press(Keys.Tab, Wait.Short);
-
-            // Leaving the input menu with tab resets the controller position.
-
-            // Select the event type.
-            InputSim.Press(Keys.Down, Wait.Short, numberOfRules + 2);
-
-            InputSim.SelectEnumMenuOption(RuleEvent);
-
-            // If the rule's event is not global, set the team and player settings.
-            if (RuleEvent != RuleEvent.Ongoing_Global)
-            {
-                // Set the team setting.
-                InputSim.Press(Keys.Down, Wait.Short);
-                InputSim.SelectEnumMenuOption(Team);
-
-                // Set the player setting.
-                InputSim.Press(Keys.Down, Wait.Short);
-                InputSim.SelectEnumMenuOption(Player);
-            }
-
-            InputSim.Press(Keys.Down, Wait.Short); // Hovering over the "Add Action" button.
-
-            InputSim.Press(Keys.Left, Wait.Short); // Hovering over the "Add Condition" button.
-
-            // Add the conditions
-            if (Conditions != null)
-                foreach (Condition condition in Conditions)
-                    condition.Input();
-
-            // Select the "Add Action" button.
-            InputSim.Press(Keys.Right, Wait.Short); // Hovering over the "Add Action" button.
-
-            if (Actions != null)
-                foreach(Element action in Actions)
-                {
-                    // Open the "Create Action" menu.
-                    InputSim.Press(Keys.Space, Wait.Long);
-
-                    // Setup control spot
-                    InputSim.Press(Keys.Tab, Wait.Short);
-                    // The spot will be at the bottom when tab is pressed. 
-                    // Pressing up once will select the operator value, up another time will select the first value paramerer.
-                    InputSim.Press(Keys.Up, Wait.Short, 3);
-
-                    // Input value1.
-                    action.Input();
-
-                    // Close the Create Action menu.
-                    InputSim.Press(Keys.Escape, Wait.Long);
-                }
-
-            // Close the rule
-            /*
-            InputSim.Press(Keys.Up, Wait.Short, 2);
-            if (!IsGlobal)
-                InputSim.Press(Keys.Up, Wait.Short, 2);
-            */
-            InputSim.Press(Keys.Down, Wait.Short, Actions.Length + numberOfRules + 1);
-
-            InputSim.Press(Keys.Space, Wait.Short);
-
-            if (position != numberOfRules)
-            {
-                InputSim.Press(Keys.Left, Wait.Short, 3);
-
-                InputSim.Press(Keys.Space, Wait.Long, numberOfRules - position);
-
-                InputSim.Press(Keys.Right, Wait.Short);
-
-                InputSim.Press(Keys.Up, Wait.Medium, position + 1);
-            }
-            else
-                InputSim.Press(Keys.Up, Wait.Short, numberOfRules + 1);
-        }
-
-        public bool Equals(Rule other)
-        {
-            if (other == null)
-                return false;
-
-            if (ReferenceEquals(this, other))
-                return true;
-
-            if (Conditions.Length != other.Conditions.Length ||
-                Actions.Length != other.Actions.Length)
-                return false;
-
-            if (Name != other.Name ||
-                RuleEvent != other.RuleEvent ||
-                Team != other.Team ||
-                Player != other.Player)
-                return false;
-
-            for (int i = 0; i < Conditions.Length; i++)
-                if (!Conditions[i].Equals(other.Conditions[i]))
-                    return false;
-
-            for (int i = 0; i < Actions.Length; i++)
-                if (!Actions[i].Equals(other.Actions[i]))
-                    return false;
-
-            return true;
-        }
-
-        public override bool Equals(object obj)
-        {
-            return Equals(obj as Rule);
-        }
-
-        public override int GetHashCode()
-        {
-            return (Name, RuleEvent, Team, Player, IsGlobal, Conditions, Actions).GetHashCode();
-        }
-
         public override string ToString()
         {
             return Name;
         }
 
-        public void Print()
+        public void DebugPrint(int depth = 0)
         {
             Console.WriteLine("Conditions:");
             foreach (var condition in Conditions)
-                condition.Print();
+                condition.DebugPrint();
             Console.WriteLine("Actions:");
             foreach (var action in Actions)
-                action.Print();
+                action.DebugPrint();
+        }
+
+        public string ToWorkshop()
+        {            
+            var builder = new TabStringBuilder(true);
+
+            builder.Indent = 0;                                              //
+            builder.AppendLine($"rule(\"{Name}\")");                         // rule("this is the name of the rule!")
+            builder.AppendLine("{");                                         // {
+            builder.AppendLine();                                            //
+                                                                             //
+            builder.Indent = 1;                                              // (indent)
+            builder.AppendLine("event");                                     //     event
+            builder.AppendLine("{");                                         //     {
+            builder.Indent = 2;                                              //     (indent)
+            builder.AppendLine(EnumValue.GetWorkshopName(RuleEvent) + ";");  //         Ongoing - Each Player
+            if (!IsGlobal)                                                   //       --(only if the event is a player event)
+            {                                                                //       |  
+                builder.AppendLine(EnumValue.GetWorkshopName(Team) + ";");   //       | Team 1
+                builder.AppendLine(EnumValue.GetWorkshopName(Player) + ";"); //       | Bastion
+            }                                                                //
+            builder.Indent = 1;                                              //     (outdent)
+            builder.AppendLine("}");                                         //     }
+                                                                             //
+            if (Conditions.Length > 0)                                       // (only if there are 1 or more conditions)
+            {                                                                // |
+                builder.AppendLine();                                        // |
+                builder.AppendLine("conditions");                            // |   conditions
+                builder.AppendLine("{");                                     // |   {
+                builder.Indent = 2;                                          // |   (indent)
+                foreach (var condition in Conditions)                        // |       
+                    builder.AppendLine(condition.ToWorkshop() + ";");        // |       Number Of Players >= 3;
+                builder.Indent = 1;                                          // |   (outdent)
+                builder.AppendLine("}");                                     // |   }
+            }                                                                //
+                                                                             //
+            if (Actions.Length > 0)                                          // (only if there are 1 or more actions)
+            {                                                                // |
+                builder.AppendLine();                                        // |
+                builder.AppendLine("actions");                               // |   actions
+                builder.AppendLine("{");                                     // |   {
+                builder.Indent = 2;                                          // |   (indent)
+                foreach (var action in Actions)                              // |       
+                    builder.AppendLine(action.ToWorkshop() + ";");           // |       Set Global Variable(A, true);
+                builder.Indent = 1;                                          // |   (outdent)
+                builder.AppendLine("}");                                     // |   }
+            }                                                                //
+            builder.Indent = 0;                                              // (outdent)
+            builder.AppendLine("}");                                         // }
+
+            return builder.ToString();
         }
     }
 }

@@ -16,13 +16,12 @@ namespace Deltin.Deltinteger
     {
         private static readonly string[] Help = new string[]
         {
-            "    syntax <name>  Gets the syntax of a method.",
-            "    list           Lists all actions and values.",
-            "    list actions   Lists all actions.",
-            "    list values    Lists all values.",
-            "    list enums     List all enums.",
-            "    fixinput       Run this if Overwatch can't be interacted with after generation.",
-            "    autocomplete   Generates an autocomplete file that can be used with N++"
+            "    syntax <name>        Gets the syntax of a method.",
+            "    list                 Lists all actions and values.",
+            "    list actions         Lists all actions.",
+            "    list values          Lists all values.",
+            "    list enums           List all enums.",
+            "    autocomplete npp     Generates an autocomplete file that can be used with Notepad++.",
         };
 
         public static void Start()
@@ -90,18 +89,27 @@ namespace Deltin.Deltinteger
                             break;
                         }
 
+                        var enumParameter = Constants.EnumParameters.Where(v => v.Name == method).FirstOrDefault();
+                        if (enumParameter != null)
+                        {
+                            ListEnum(enumParameter);
+                            break;
+                        }
+
                         Console.WriteLine("Unknown method.");
                         break;
 
-                    case "fixinput":
-                        Process[] processes = Process.GetProcessesByName("Overwatch");
-                        foreach (Process overwatch in processes)
-                            User32.EnableWindow(overwatch.MainWindowHandle, true);
-
-                        break;
-
                     case "autocomplete":
-                        AutoComplete();
+                        switch (inputSplit.ElementAtOrDefault(1)?.ToLower())
+                        {
+                            case "npp":
+                                AutoCompleteNPP();
+                                break;
+
+                            default:
+                                ListHelp();
+                                break;
+                        }
                         break;
 
                     default:
@@ -133,12 +141,15 @@ namespace Deltin.Deltinteger
             Console.WriteLine("Enums:");
             var enumParameters = Constants.EnumParameters;
             foreach(var e in enumParameters)
-            {
-                Console.WriteLine($"    {e.Name}");
-                string[] values = e.GetEnumNames();
-                foreach (string value in values)
-                    Console.WriteLine($"        {value}");
-            }
+                ListEnum(e);
+        }
+
+        static void ListEnum(Type @enum)
+        {
+            Console.WriteLine($"{@enum.Name}");
+            string[] values = @enum.GetEnumNames();
+            foreach (string value in values)
+                Console.WriteLine($"    {value}");
         }
 
         static void ListCustomMethods()
@@ -147,7 +158,7 @@ namespace Deltin.Deltinteger
             Console.WriteLine(string.Join("", CustomMethods.CustomMethodList.Select(v => $"\n    {CustomMethods.GetName(v)}")));
         }
 
-        static void AutoComplete()
+        static void AutoCompleteNPP()
         {
             var doc = new XDocument(new XElement("NotepadPlus",
                 new XElement("AutoComplete", new XAttribute("language", "workshop"),
