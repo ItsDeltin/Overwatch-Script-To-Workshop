@@ -42,14 +42,15 @@ namespace Deltin.Deltinteger.Elements
             return Name;
         }
 
-        public void DebugPrint(int depth = 0)
+        public void DebugPrint(Log log, int depth = 0)
         {
-            Console.WriteLine("Conditions:");
+            log.Write(LogLevel.Verbose, "Conditions:");
             foreach (var condition in Conditions)
-                condition.DebugPrint();
-            Console.WriteLine("Actions:");
+                condition.DebugPrint(log);
+            
+            log.Write(LogLevel.Verbose, "Actions:");
             foreach (var action in Actions)
-                action.DebugPrint();
+                action.DebugPrint(log);
         }
 
         public string ToWorkshop()

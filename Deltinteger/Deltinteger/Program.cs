@@ -74,8 +74,10 @@ namespace Deltin.Deltinteger
 #endif
 
             var builder = new StringBuilder();
+            Log debugPrintLog = new Log("Tree");
             foreach (var rule in generatedRules)
             {
+                rule.DebugPrint(debugPrintLog);
                 builder.AppendLine(rule.ToWorkshop());
                 builder.AppendLine();
             }

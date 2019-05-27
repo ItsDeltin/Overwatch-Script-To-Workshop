@@ -54,6 +54,7 @@ statement :
 	| GOTO_STATEMENT
 	| if
 	| for
+	| DEFINE PART
 	);
 
 block : BLOCK_START statement* BLOCK_END ;
@@ -63,19 +64,22 @@ if      : IF LEFT_PAREN expr RIGHT_PAREN block else_if* else? ;
 else_if : ELSE IF LEFT_PAREN expr RIGHT_PAREN block           ;
 else    : ELSE block                                          ;
 
-rule_if : IF LEFT_PAREN expr RIGHT_PAREN ;
+rule_if : IF LEFT_PAREN (expr (',' expr)*) RIGHT_PAREN;
 
 ow_rule : 
 	RULE_WORD ':' STRINGLITERAL expr* 
-	(rule_if)*
+	rule_if?
+	block
+	;
+
+user_method : METHOD (VOID | DATA_TYPE) PART LEFT_PAREN (DATA_TYPE PART (',' DATA_TYPE PART)*)? RIGHT_PAREN
 	block
 	;
 
 ruleset :
 	useGlobalVar
 	usePlayerVar
-	vardefine*
-	ow_rule*
+	(vardefine | ow_rule)*
 	;
 
 /*
@@ -129,6 +133,9 @@ TRUE      : 'true'      ;
 FALSE     : 'false'     ;
 NULL      : 'null'      ;
 ARRAY     : 'array'     ;
+METHOD    : 'method'    ;
+VOID      : 'void'      ;
+DATA_TYPE : 'Any' | 'VectorAndPlayer' | 'Number' | 'Boolean' | 'Hero' | 'Vector' | 'Player' | 'Team';
 
 STATEMENT_OPERATION : '=' | '^=' | '*=' | '/=' | '+=' | '-=' | '%=';
 BOOL : '&' | '|';

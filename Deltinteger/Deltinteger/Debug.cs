@@ -24,13 +24,13 @@ namespace Deltin.Deltinteger
 
         public void Write(LogLevel logLevel, string text)
         {
-            if (logLevel == LogLevel)
+            if ((int)logLevel <= (int)LogLevel)
                 Console.WriteLine($"[{name}] {text}");
         }
 
         public void Write(LogLevel logLevel, params ColorMod[] colors)
         {
-            if (logLevel == LogLevel)
+            if ((int)logLevel <= (int)LogLevel)
             {
                 Console.Write($"[{name}] ");
                 foreach (ColorMod color in colors)
@@ -61,7 +61,7 @@ namespace Deltin.Deltinteger
 
     public enum LogLevel
     {
-        Normal,
-        Verbose
+        Normal = 0,
+        Verbose = 1
     }
 }

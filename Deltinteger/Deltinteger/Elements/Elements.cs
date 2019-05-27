@@ -160,14 +160,15 @@ namespace Deltin.Deltinteger.Elements
             return GetName(this.GetType());
         }
 
-        public void DebugPrint(int depth = 0)
+        public void DebugPrint(Log log, int depth = 0)
         {
-            Console.WriteLine(new string(' ', depth * 4) + Info());
+            log.Write(LogLevel.Verbose, new string(' ', depth * 4) + Info());
+
             foreach (var param in ParameterValues)
                 if (param is Element)
-                    (param as Element).DebugPrint(depth + 1);
+                    (param as Element).DebugPrint(log, depth + 1);
                 else
-                    Console.WriteLine(new string(' ', (depth + 1) * 4) + param);
+                    log.Write(LogLevel.Verbose, new string(' ', (depth + 1) * 4) + param);
         }
 
         public virtual string ToWorkshop()

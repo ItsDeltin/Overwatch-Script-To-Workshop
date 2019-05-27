@@ -30,11 +30,11 @@ namespace Deltin.Deltinteger.Elements
             Value2 = value2;
         }
         
-        public void DebugPrint(int depth = 0)
+        public void DebugPrint(Log log, int depth = 0)
         {
-            Value1.DebugPrint(1);
-            Console.WriteLine(CompareOperator);
-            Value2.DebugPrint(1);
+            Value1.DebugPrint(log, 1);
+            log.Write(LogLevel.Verbose, CompareOperator.ToString());
+            Value2.DebugPrint(log, 1);
         }
 
         public string ToWorkshop()

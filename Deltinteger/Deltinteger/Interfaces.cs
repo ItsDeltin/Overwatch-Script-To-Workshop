@@ -5,6 +5,6 @@ namespace Deltin.Deltinteger
     public interface IWorkshopTree
     {
         string ToWorkshop();
-        void DebugPrint(int depth = 0);
+        void DebugPrint(Log log, int depth = 0);
     }
 }

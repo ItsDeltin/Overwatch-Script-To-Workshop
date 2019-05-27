@@ -3,7 +3,7 @@
     "tasks": [
         {
             "label": "Debug build",
-            "command": "C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/MSBuild/Current/Bin/MSBuild.exe",
+            "command": "G:/MSBuild/Current/Bin/MSBuild.exe",
             "type": "shell",
             "args": [
                 "Deltinteger.csproj",
@@ -18,7 +18,7 @@
         },
         {
             "label": "Release build",
-            "command": "C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/MSBuild/Current/Bin/MSBuild.exe",
+            "command": "G:/MSBuild/Current/Bin/MSBuild.exe",
             "type": "shell",
             "args": [
                 "Deltinteger.csproj",

@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Threading;
 using System.Text.RegularExpressions;
-using System.Runtime.Serialization;
+using System.Diagnostics;
 using Antlr4.Runtime;
 
 namespace Deltin.Deltinteger.Elements
@@ -730,8 +730,13 @@ namespace Deltin.Deltinteger.Elements
         {
             value = value.ToLower();
 
-            if (depth == 0)
+            Stopwatch time = null;
+            if (depth == 0 && Log.LogLevel == LogLevel.Verbose)
+            {
                 Log.Write(LogLevel.Verbose, $"String \"{value}\"");
+                time = new Stopwatch();
+                time.Start();
+            }
 
             string debug = new string(' ', depth * 4);
 
@@ -795,6 +800,10 @@ namespace Deltin.Deltinteger.Elements
 
                     if (!valid)
                         continue;
+
+                    if (depth == 0 && time != null)
+                        Log.Write(LogLevel.Verbose, $"String build completed in {time.ElapsedMilliseconds} ms.");
+                    
                     return str;
                 }
             }

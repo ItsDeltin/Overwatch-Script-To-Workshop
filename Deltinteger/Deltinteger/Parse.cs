@@ -56,6 +56,8 @@ namespace Deltin.Deltinteger.Parse
                 // The new var is stored in Var.VarCollection
                 new DefinedVar(vardefine[i]);
 
+            // Parse the user methods.
+
             // Parse the rules.
             var rules = context.ow_rule();
             var compiledRules = new List<Rule>();
@@ -183,27 +185,28 @@ namespace Deltin.Deltinteger.Parse
         void ParseConditions()
         {
             // Get the if contexts
-            var ifContexts = RuleContext.rule_if();
+            var conditions = RuleContext.rule_if()?.expr();
             
-            foreach(var @if in ifContexts)
-            {
-                Element parsedIf = ParseExpression(@if.expr());
-                // If the parsed if is a V_Compare, translate it to a condition.
-                // Makes "(value1 == value2) == true" to just "value1 == value2"
-                if (parsedIf is V_Compare)
-                    Conditions.Add(
-                        new Condition(
-                            (Element)parsedIf.ParameterValues[0],
-                            (Operators)parsedIf.ParameterValues[1],
-                            (Element)parsedIf.ParameterValues[2]
-                        )
-                    );
-                // If not, just do "parsedIf == true"
-                else
-                    Conditions.Add(new Condition(
-                        parsedIf, Operators.Equal, new V_True()
-                    ));
-            }
+            if (conditions != null)
+                foreach(var expr in conditions)
+                {
+                    Element parsedIf = ParseExpression(expr);
+                    // If the parsed if is a V_Compare, translate it to a condition.
+                    // Makes "(value1 == value2) == true" to just "value1 == value2"
+                    if (parsedIf is V_Compare)
+                        Conditions.Add(
+                            new Condition(
+                                (Element)parsedIf.ParameterValues[0],
+                                (Operators)parsedIf.ParameterValues[1],
+                                (Element)parsedIf.ParameterValues[2]
+                            )
+                        );
+                    // If not, just do "parsedIf == true"
+                    else
+                        Conditions.Add(new Condition(
+                            parsedIf, Operators.Equal, new V_True()
+                        ));
+                }
         }
 
         void ParseBlock(DeltinScriptParser.BlockContext blockContext)
@@ -1115,6 +1118,14 @@ namespace Deltin.Deltinteger.Parse
         public void OutOfScope()
         {
             VarCollection.Remove(this);
+        }
+    }
+
+    public class UserMethod 
+    {
+        public UserMethod(DeltinScriptParser.User_methodContext context)
+        {
+            
         }
     }
 
