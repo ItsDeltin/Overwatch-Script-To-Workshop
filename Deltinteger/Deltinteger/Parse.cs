@@ -552,10 +552,17 @@ namespace Deltin.Deltinteger.Parse
             #endregion
 
             #region define
-            else if (statementContext.DEFINE() != null)
+            else if (statementContext.define() != null)
             {
-                string variableName = statementContext.PART().GetText();
-                Var.AssignDefinedVar(scope, IsGlobal, variableName, statementContext.start);
+                string variableName = statementContext.define().PART().GetText();
+                // var has 3 different meanings here, have fun!
+                var var = Var.AssignDefinedVar(scope, IsGlobal, variableName, statementContext.start);
+
+                // Set the defined variable if the variable is defined like "define var = 1"
+                var setTo = statementContext.define().expr();
+                if (setTo != null)
+                    Actions.Add(var.SetVariable(ParseExpression(scope, setTo)));
+
                 return;
             }
             #endregion

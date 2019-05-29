@@ -46,6 +46,7 @@ expr
 enum     : ( 'Variable'|'Operation'|'Button'|'Relative'|'ContraryMotion'|'ChaseReevaluation'|'Status'|'TeamSelector'|'WaitBehavior'|'Effects'|'Color'|'EffectRev'|'Rounding'|'Communication'|'Location'|'StringRev'|'Icon'|'IconRev'|'PlayEffects'|'Hero'|'InvisibleTo'|'AccelerateRev'|'ModRev'|'FacingRev'|'BarrierLOS'|'Transformation'|'RadiusLOS'|'LocalVector'|'Clipping'|'InworldTextRev' ) SEPERATOR PART ;
 variable : PART ;
 method   : PART LEFT_PAREN expr? (',' expr)* RIGHT_PAREN ;
+define   : DEFINE PART (STATEMENT_OPERATION expr)? STATEMENT_END ;
 
 statement :
 	( method STATEMENT_END
@@ -54,7 +55,7 @@ statement :
 	| GOTO_STATEMENT
 	| if
 	| for
-	| DEFINE PART STATEMENT_END
+	| define
 	| RETURN expr STATEMENT_END
 	| RETURN STATEMENT_END
 	);
