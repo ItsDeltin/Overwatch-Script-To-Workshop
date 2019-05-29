@@ -44,13 +44,13 @@ namespace Deltin.Deltinteger.Elements
 
         public void DebugPrint(Log log, int depth = 0)
         {
-            log.Write(LogLevel.Verbose, "Conditions:");
+            log.Write(LogLevel.Verbose, new ColorMod("Conditions:", ConsoleColor.DarkYellow));
             foreach (var condition in Conditions)
-                condition.DebugPrint(log);
+                condition.DebugPrint(log, 1);
             
-            log.Write(LogLevel.Verbose, "Actions:");
+            log.Write(LogLevel.Verbose, new ColorMod("Actions:", ConsoleColor.DarkCyan));
             foreach (var action in Actions)
-                action.DebugPrint(log);
+                action.DebugPrint(log, 1);
         }
 
         public string ToWorkshop()

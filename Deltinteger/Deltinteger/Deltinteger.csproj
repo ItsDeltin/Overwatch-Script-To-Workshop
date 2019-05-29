@@ -62,9 +62,9 @@
     <Compile Include="Elements\Values.cs" />
     <Compile Include="Input.cs" />
     <Compile Include="Interfaces.cs" />
-    <Compile Include="Parse.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Extras.cs" />
+    <Compile Include="Parse.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -91,6 +91,9 @@
     <Content Include="InputRules.cs" />
     <Content Include="Interfaces.cs" />
     <Content Include="Extras.cs" />
+    <Content Include="Parse\ParseBlock.cs" />
+    <Content Include="Parse.cs" />
+    <Content Include="Parse\Parse.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

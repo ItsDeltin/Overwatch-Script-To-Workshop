@@ -56,7 +56,11 @@ namespace Deltin.Deltinteger.Parse
                 // The new var is stored in Var.VarCollection
                 new DefinedVar(vardefine[i]);
 
-            // Parse the user methods.
+            // Get the user methods.
+            var userMethods = context.user_method();
+
+            for (int i = 0; i < userMethods.Length; i++)
+                new UserMethod(userMethods[i]); 
 
             // Parse the rules.
             var rules = context.ow_rule();
@@ -130,7 +134,7 @@ namespace Deltin.Deltinteger.Parse
             ParseConditions();
             
             // Parse actions
-            ParseBlock(RuleContext.block());
+            ParseBlock(RuleContext.block(), true);
 
             Rule.Conditions = Conditions.ToArray();
             Rule.Actions = Actions.ToArray();
@@ -209,7 +213,7 @@ namespace Deltin.Deltinteger.Parse
                 }
         }
 
-        void ParseBlock(DeltinScriptParser.BlockContext blockContext)
+        Element ParseBlock(DeltinScriptParser.BlockContext blockContext, bool fulfillReturns)
         {
             var statements = blockContext.children
                 .Where(v => v is DeltinScriptParser.StatementContext)
@@ -217,6 +221,8 @@ namespace Deltin.Deltinteger.Parse
 
             for (int i = 0; i < statements.Length; i++)
                 ParseStatement(statements[i]);
+
+            return null;
         }
 
         void ParseStatement(DeltinScriptParser.StatementContext statementContext)
@@ -324,13 +330,6 @@ namespace Deltin.Deltinteger.Parse
 
             if (statementContext.GetChild(0) is DeltinScriptParser.ForContext)
             {
-                /*
-                CreateInitialSkip = true;
-
-                if (SkipCountIndex == -1)
-                    SkipCountIndex = Assign();
-                */
-
                 // The action the for loop starts on.
                 // +1 for the counter reset.
                 int forActionStartIndex = Actions.Count() + 1;
@@ -362,7 +361,7 @@ namespace Deltin.Deltinteger.Parse
                 Actions.Add(forTempVar.SetVariable(new V_Number(0)));
 
                 // Parse the for's block.
-                ParseBlock(statementContext.@for().block());
+                ParseBlock(statementContext.@for().block(), false);
 
                 // Take the variable out of scope.
                 forTempVar.OutOfScope();
@@ -414,12 +413,12 @@ namespace Deltin.Deltinteger.Parse
 
                 */
 
-                // Add dummy action, create after body is created.
-                int skipIfIndex = Actions.Count();
-                Actions.Add(null);
+                // Add if's skip if value.
+                A_SkipIf if_SkipIf = new A_SkipIf();
+                Actions.Add(if_SkipIf);
 
                 // Parse the if body.
-                ParseBlock(statementContext.@if().block());
+                ParseBlock(statementContext.@if().block(), false);
 
                 // Determines if the "Skip" action after the if block will be created.
                 // Only if there is if-else or else statements.
@@ -427,66 +426,82 @@ namespace Deltin.Deltinteger.Parse
 
                 // Create the inital "SkipIf" action now that we know how long the if's body is.
                 // Add one to the body length if a Skip action is going to be added.
-                Actions.RemoveAt(skipIfIndex);
-                Actions.Insert(skipIfIndex, Element.Part<A_SkipIf>(Element.Part<V_Not>(ParseExpression(statementContext.@if().expr())), new V_Number(Actions.Count - skipIfIndex + (addIfSkip ? 1 : 0))));
+                if_SkipIf.ParameterValues = new object[]
+                {
+                    Element.Part<V_Not>(ParseExpression(statementContext.@if().expr())),
+                    new V_Number(Actions.Count - 1 - Actions.IndexOf(if_SkipIf) + (addIfSkip ? 1 : 0))
+                };
 
                 // Create the "Skip" dummy action.
-                int skipIndex = -1;
+                A_Skip if_Skip = new A_Skip();
                 if (addIfSkip)
                 {
-                    skipIndex = Actions.Count();
-                    Actions.Add(null);
+                    Actions.Add(if_Skip);
                 }
 
                 // Parse else-ifs
                 var skipIfContext = statementContext.@if().else_if();
-                int[] skipIfData = new int[skipIfContext.Length]; // The index where the else if's "Skip" action is.
+                A_Skip[] elseif_Skips = new A_Skip[skipIfContext.Length]; // The index where the else if's "Skip" action is.
                 for (int i = 0; i < skipIfContext.Length; i++)
                 {
                     // Create the dummy action.
-                    int skipIfElseIndex = Actions.Count();
-                    Actions.Add(null);
+                    A_SkipIf elseif_SkipIf = new A_SkipIf();
 
                     // Parse the else-if body.
-                    ParseBlock(skipIfContext[i].block());
+                    ParseBlock(skipIfContext[i].block(), false);
 
                     // Determines if the "Skip" action after the else-if block will be created.
                     // Only if there is additional if-else or else statements.
                     bool addIfElseSkip = i < skipIfContext.Length - 1 || statementContext.@if().@else() != null;
 
                     // Create the "Skip If" action.
-                    Actions.RemoveAt(skipIfElseIndex);
-                    Actions.Insert(skipIfElseIndex, Element.Part<A_SkipIf>(Element.Part<V_Not>(ParseExpression(skipIfContext[i].expr())), new V_Number(Actions.Count - skipIfElseIndex + (addIfElseSkip ? 1 : 0))));
+                    elseif_SkipIf.ParameterValues = new object[]
+                    {
+                        Element.Part<V_Not>(ParseExpression(skipIfContext[i].expr())),
+                        new V_Number(Actions.Count - 1 - Actions.IndexOf(elseif_SkipIf) + (addIfElseSkip ? 1 : 0))
+                    };
 
                     // Create the "Skip" dummy action.
                     if (addIfElseSkip)
                     {
-                        skipIfData[i] = Actions.Count();
-                        Actions.Add(null);
+                        elseif_Skips[i] = new A_Skip();
+                        Actions.Add(elseif_Skips[i]);
                     }
                 }
 
                 // Parse else body.
                 if (statementContext.@if().@else() != null)
-                    ParseBlock(statementContext.@if().@else().block());
+                    ParseBlock(statementContext.@if().@else().block(), false);
 
                 // Replace dummy skip with real skip now that we know the length of the if, if-else, and else's bodies.
                 // Replace if's dummy.
-                if (skipIndex != -1)
+                if_Skip.ParameterValues = new object[]
                 {
-                    Actions.RemoveAt(skipIndex);
-                    Actions.Insert(skipIndex, Element.Part<A_Skip>(new V_Number(Actions.Count - skipIndex)));
-                }
+                    new V_Number(Actions.Count - 1 - Actions.IndexOf(if_Skip))
+                };
 
                 // Replace else-if's dummy.
-                for (int i = 0; i < skipIfData.Length; i++)
-                    if (skipIfData[i] != 0)
+                for (int i = 0; i < elseif_Skips.Length; i++)
+                {
+                    elseif_Skips[i].ParameterValues = new object[]
                     {
-                        Actions.RemoveAt(skipIfData[i]);
-                        Actions.Insert(skipIfData[i], Element.Part<A_Skip>(new V_Number(Actions.Count - skipIfData[i])));
-                    }
+                        new V_Number(Actions.Count - 1 - Actions.IndexOf(elseif_Skips[i]))
+                    };
+                }
 
                 return;
+            }
+
+            #endregion
+
+            #region return
+
+            if (statementContext.RETURN() != null)
+            {
+                // Will have a value if the statement is "return value;", will be null if the statement is "return;".
+                var returnExpr = statementContext.expr();
+
+
             }
 
             #endregion
@@ -736,69 +751,91 @@ namespace Deltin.Deltinteger.Parse
             // Get the method name
             string methodName = methodContext.PART().GetText();
 
-            // Get the method type.
-            Type methodType = Element.GetMethod(methodName);
-            MethodInfo customMethod = CustomMethods.GetCustomMethod(methodName);
-
-            if (methodType != null && customMethod != null)
-                throw new Exception("Conflicting Overwatch method and custom method.");
-
-            if (methodType == null && customMethod == null)
+            // Get the kind of method the method is (Method (Overwatch), Custom Method, or User Method.)
+            var methodType = GetMethodType(methodName);
+            if (methodType == null)
                 throw new SyntaxErrorException($"The method {methodName} does not exist.", methodContext.start);
 
-            bool isCustomMethod = methodType == null;
+            // Get the parameters
+            var parameters = methodContext.expr();
 
-            // Parse parameters
-            var parseParameters = methodContext.expr();
-            Parameter[] parameterData;
+            Element method;
 
-            string fullMethodName;
-
-            Element method = null;
-            if (!isCustomMethod)
+            switch (methodType)
             {
-                parameterData = methodType.GetCustomAttributes<Parameter>().ToArray();
-                method = (Element)Activator.CreateInstance(methodType);
-                fullMethodName = method.ToString();
-            }
-            else
-            {
-                parameterData = customMethod.GetCustomAttributes<Parameter>().ToArray();
-                fullMethodName = CustomMethods.GetName(customMethod);
-            }
-
-            if (parseParameters.Length > parameterData.Length)
-                throw new SyntaxErrorException($"Too many arguments in the method {methodName} which only takes {parameterData.Length} parameters.", methodContext.start);
-
-            List<object> finalParameters = new List<object>();
-            for (int i = 0; i < parseParameters.Length; i++)
-                finalParameters.Add(ParseParameter(parseParameters[i], fullMethodName, parameterData[i]));
-
-            if (isCustomMethod)
-            {
-                MethodResult result = (MethodResult)customMethod.Invoke(null, new object[] { IsGlobal, finalParameters.ToArray() });
-
-                switch (result.MethodType)
+                case MethodType.Method:
                 {
-                    case CustomMethodType.Action:
-                        if (needsToBeValue)
-                            throw new IncorrectElementTypeException(fullMethodName, true);
-                        break;
+                    Type owMethod = Element.GetMethod(methodName);
 
-                    case CustomMethodType.MultiAction_Value:
-                    case CustomMethodType.Value:
-                        if (!needsToBeValue)
-                            throw new IncorrectElementTypeException(fullMethodName, false);
-                        break;
+                    method = (Element)Activator.CreateInstance(owMethod);
+                    Parameter[] parameterData = owMethod.GetCustomAttributes<Parameter>().ToArray();
+                    object[] parsedParameters = new Element[parameterData.Length];
+
+                    for (int i = 0; i < parameterData.Length; i++)
+                    {
+                        if (parameters.Length > i)
+                            parsedParameters[i] = ParseParameter(parameters[i], methodName, parameterData[i]);
+                        else 
+                        {
+                            if (parameterData[i].DefaultType == null)
+                                throw new SyntaxErrorException($"Missing parameter {parameterData[i].Name} in the method {methodName} and no default type to fallback on.", 
+                                    parameters[i].start);
+                            else
+                                parsedParameters[i] = parameterData[i].GetDefault();
+                        }
+                    }
+
+                    method.ParameterValues = parsedParameters;
+                    break;
                 }
 
-                if (result.Elements != null)
-                    Actions.AddRange(result.Elements);
-                finalParameters = null;
-                method = result.Result;
+                case MethodType.CustomMethod:
+                {
+                    MethodInfo customMethod = CustomMethods.GetCustomMethod(methodName);
+                    Parameter[] parameterData = customMethod.GetCustomAttributes<Parameter>().ToArray();
+                    object[] parsedParameters = new Element[parameterData.Length];
+
+                    for (int i = 0; i < parameterData.Length; i++)
+                        if (parameters.Length > i)
+                            parsedParameters[i] = ParseParameter(parameters[i], methodName, parameterData[i]);
+                        else
+                            throw new SyntaxErrorException($"Missing parameter {parameterData[i].Name} in the method {methodName} and no default type to fallback on.", 
+                                parameters[i].start);
+
+                    MethodResult result = (MethodResult)customMethod.Invoke(null, new object[] { IsGlobal, parsedParameters });
+                    switch (result.MethodType)
+                    {
+                        case CustomMethodType.Action:
+                            if (needsToBeValue)
+                                throw new IncorrectElementTypeException(methodName, true);
+                            break;
+
+                        case CustomMethodType.MultiAction_Value:
+                        case CustomMethodType.Value:
+                            if (!needsToBeValue)
+                                throw new IncorrectElementTypeException(methodName, false);
+                            break;
+                    }
+
+                    // Some custom methods have extra actions.
+                    if (result.Elements != null)
+                        Actions.AddRange(result.Elements);
+                    method = result.Result;
+
+                    break;
+                }
+
+                case MethodType.UserMethod:
+                {
+                    UserMethod userMethod = UserMethod.GetUserMethod(methodName);
+
+                    method = ParseBlock(userMethod.Block, true);
+
+                    break;
+                }
+
+                default: throw new NotImplementedException();
             }
-            else
-                method.ParameterValues = finalParameters?.ToArray();
 
             return method;
         }
@@ -856,6 +893,24 @@ namespace Deltin.Deltinteger.Parse
 
 
             return value;
+        }
+
+        private static MethodType? GetMethodType(string name)
+        {
+            if (Element.GetMethod(name) != null)
+                return MethodType.Method;
+            if (CustomMethods.GetCustomMethod(name) != null)
+                return MethodType.CustomMethod;
+            if (UserMethod.GetUserMethod(name) != null)
+                return MethodType.UserMethod;
+            return null;
+        }
+
+        enum MethodType
+        {
+            Method,
+            CustomMethod,
+            UserMethod
         }
     }
 
@@ -1121,13 +1176,77 @@ namespace Deltin.Deltinteger.Parse
         }
     }
 
-    public class UserMethod 
+    class UserMethod 
     {
         public UserMethod(DeltinScriptParser.User_methodContext context)
         {
-            
+            Name = context.PART().GetText();
+            Block = context.block();
+
+            var returnType = context.DATA_TYPE();
+
+            if (context.VOID() != null)
+                ReturnType = null;
+            else
+                ReturnType = (Elements.ValueType?)Enum.Parse(typeof(Elements.ValueType), returnType.ToString());
+
+            /*
+            var contextParams = context.user_method_parameter();
+            Parameters = new UserMethodParameter[contextParams.Length];
+            for (int i = 0; i < Parameters.Length; i++)
+                Parameters[i] = new UserMethodParameter(contextParams[i]);
+            */
+
+            var contextParams = context.user_method_parameter();
+            Parameters = new Parameter[contextParams.Length];
+
+            for (int i = 0; i < Parameters.Length; i++)
+            {
+                var name = contextParams[i].PART().GetText();
+                var type = (Elements.ValueType)Enum.Parse(typeof(Elements.ValueType), contextParams[i].DATA_TYPE().GetText());
+
+                Parameters[i] = new Parameter(name, type, null);
+            }
+
+            UserMethodCollection.Add(this);
+        }
+
+        public string Name { get; private set; }
+
+        public Elements.ValueType? ReturnType { get; private set; }
+        public DeltinScriptParser.BlockContext Block { get; private set; }
+
+        /*
+        public UserMethodParameter[] Parameters { get; private set; }
+        */
+        public Parameter[] Parameters { get; private set; }
+
+        public static readonly List<UserMethod> UserMethodCollection = new List<UserMethod>();
+
+        public static UserMethod GetUserMethod(string name)
+        {
+            return UserMethodCollection.FirstOrDefault(um => um.Name == name);
         }
     }
+
+    /*
+    class UserMethodParameter
+    {
+        public UserMethodParameter(DeltinScriptParser.User_method_parameterContext context)
+        {
+            Name = context.PART().GetText();
+            Type = (Elements.ValueType)Enum.Parse(typeof(Elements.ValueType), context.DATA_TYPE().GetText());
+        }
+
+        public UserMethodParameter(string name, Elements.ValueType type)
+        {
+            Name = name;
+            Type = type;
+        }
+        public string Name { get; private set; }
+        public Elements.ValueType Type { get; private set; }
+    }
+    */
 
     public class ErrorListener : BaseErrorListener
     {

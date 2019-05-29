@@ -32,9 +32,9 @@ namespace Deltin.Deltinteger.Elements
         
         public void DebugPrint(Log log, int depth = 0)
         {
-            Value1.DebugPrint(log, 1);
-            log.Write(LogLevel.Verbose, CompareOperator.ToString());
-            Value2.DebugPrint(log, 1);
+            Value1.DebugPrint(log, depth);
+            log.Write(LogLevel.Verbose, new ColorMod(new string(' ', depth * 4) + CompareOperator.ToString(), ConsoleColor.DarkYellow));
+            Value2.DebugPrint(log, depth);
         }
 
         public string ToWorkshop()

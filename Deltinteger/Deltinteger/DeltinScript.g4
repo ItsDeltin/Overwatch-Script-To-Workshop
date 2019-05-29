@@ -54,7 +54,9 @@ statement :
 	| GOTO_STATEMENT
 	| if
 	| for
-	| DEFINE PART
+	| DEFINE PART STATEMENT_END
+	| RETURN expr STATEMENT_END
+	| RETURN STATEMENT_END
 	);
 
 block : BLOCK_START statement* BLOCK_END ;
@@ -72,14 +74,16 @@ ow_rule :
 	block
 	;
 
-user_method : METHOD (VOID | DATA_TYPE) PART LEFT_PAREN (DATA_TYPE PART (',' DATA_TYPE PART)*)? RIGHT_PAREN
+user_method : METHOD (VOID | DATA_TYPE) PART LEFT_PAREN (user_method_parameter (',' user_method_parameter)*)? RIGHT_PAREN
 	block
 	;
+
+user_method_parameter : DATA_TYPE PART ;
 
 ruleset :
 	useGlobalVar
 	usePlayerVar
-	(vardefine | ow_rule)*
+	(vardefine | ow_rule | user_method)*
 	;
 
 /*
@@ -135,6 +139,7 @@ NULL      : 'null'      ;
 ARRAY     : 'array'     ;
 METHOD    : 'method'    ;
 VOID      : 'void'      ;
+RETURN    : 'return'    ;
 DATA_TYPE : 'Any' | 'VectorAndPlayer' | 'Number' | 'Boolean' | 'Hero' | 'Vector' | 'Player' | 'Team';
 
 STATEMENT_OPERATION : '=' | '^=' | '*=' | '/=' | '+=' | '-=' | '%=';

@@ -7,8 +7,25 @@ define globalvar testArray;
 rule: "String Test"
 if (TotalTimeElapsed() % 3 < 1)
 {
-	SmallMessage(EventPlayer(), <"Current Score: <0>", 42>);
+
+	if (true)
+	{
+		for (player in AllPlayers())
+		{
+			SmallMessage(EventPlayer(), <"Hello">);
+		}
+	}
+	else
+	{
+		for (player in AllPlayers())
+		{
+			SmallMessage(EventPlayer(), <"goodbye">);
+		}
+	}
+
+	//IsAI(EventPlayer());
 }
+
 /*
 method Boolean IsAI(Player player)
 {
@@ -21,7 +38,7 @@ method Boolean IsAI(Player player)
 	
 	if (currentHero == Hero.Ana)
 	{
-		heroSwap = Hero.Bastion
+		heroSwap = Hero.Bastion;
 	}
 
 	StartForcingHero(player, heroSwap);
