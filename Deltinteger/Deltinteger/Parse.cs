@@ -118,8 +118,7 @@ namespace Deltin.Deltinteger.Parse
 
         private readonly bool IsGlobal;
 
-        //private bool CreateInitialSkip = false;
-        //private int SkipCountIndex = -1;
+        private readonly List<A_Skip> returnSkips = new List<A_Skip>();
 
         public ParseRule(DeltinScriptParser.Ow_ruleContext ruleContext)
         {
@@ -215,17 +214,36 @@ namespace Deltin.Deltinteger.Parse
 
         Element ParseBlock(DeltinScriptParser.BlockContext blockContext, bool fulfillReturns)
         {
+            int returnSkipStart = returnSkips.Count;
+
+            Var returned = null;
+            if (fulfillReturns)
+                returned = Var.AssignVar(IsGlobal);
+
             var statements = blockContext.children
                 .Where(v => v is DeltinScriptParser.StatementContext)
                 .Cast<DeltinScriptParser.StatementContext>().ToArray();
 
             for (int i = 0; i < statements.Length; i++)
-                ParseStatement(statements[i]);
+                ParseStatement(statements[i], returned, i == statements.Length - 1);
+
+            if (fulfillReturns)
+            {
+                for (int i = returnSkips.Count - 1; i >= returnSkipStart; i--)
+                {
+                    returnSkips[i].ParameterValues = new object[]
+                    {
+                        new V_Number(Actions.Count - 1 - Actions.IndexOf(returnSkips[i]))
+                    };
+                    returnSkips.RemoveAt(i);
+                }
+                return returned.GetVariable();
+            }
 
             return null;
         }
 
-        void ParseStatement(DeltinScriptParser.StatementContext statementContext)
+        void ParseStatement(DeltinScriptParser.StatementContext statementContext, Var returned, bool isLast)
         {
             #region Method
             if (statementContext.GetChild(0) is DeltinScriptParser.MethodContext)
@@ -237,7 +255,7 @@ namespace Deltin.Deltinteger.Parse
 
             #region Variable set
 
-            if (statementContext.STATEMENT_OPERATION() != null)
+            else if (statementContext.STATEMENT_OPERATION() != null)
             {
                 DefinedVar variable;
                 Element target;
@@ -328,7 +346,7 @@ namespace Deltin.Deltinteger.Parse
 
             #region for
 
-            if (statementContext.GetChild(0) is DeltinScriptParser.ForContext)
+            else if (statementContext.GetChild(0) is DeltinScriptParser.ForContext)
             {
                 // The action the for loop starts on.
                 // +1 for the counter reset.
@@ -395,7 +413,7 @@ namespace Deltin.Deltinteger.Parse
 
             #region if
 
-            if (statementContext.GetChild(0) is DeltinScriptParser.IfContext)
+            else if (statementContext.GetChild(0) is DeltinScriptParser.IfContext)
             {
                 /*
                 Syntax after parse:
@@ -413,7 +431,7 @@ namespace Deltin.Deltinteger.Parse
 
                 */
 
-                // Add if's skip if value.
+                // Add if's SkipIf action.
                 A_SkipIf if_SkipIf = new A_SkipIf();
                 Actions.Add(if_SkipIf);
 
@@ -424,7 +442,7 @@ namespace Deltin.Deltinteger.Parse
                 // Only if there is if-else or else statements.
                 bool addIfSkip = statementContext.@if().else_if().Count() > 0 || statementContext.@if().@else() != null;
 
-                // Create the inital "SkipIf" action now that we know how long the if's body is.
+                // Update the initial SkipIf's skip count now that we know the number of actions the if block has.
                 // Add one to the body length if a Skip action is going to be added.
                 if_SkipIf.ParameterValues = new object[]
                 {
@@ -432,7 +450,7 @@ namespace Deltin.Deltinteger.Parse
                     new V_Number(Actions.Count - 1 - Actions.IndexOf(if_SkipIf) + (addIfSkip ? 1 : 0))
                 };
 
-                // Create the "Skip" dummy action.
+                // Create the "Skip" action.
                 A_Skip if_Skip = new A_Skip();
                 if (addIfSkip)
                 {
@@ -441,11 +459,12 @@ namespace Deltin.Deltinteger.Parse
 
                 // Parse else-ifs
                 var skipIfContext = statementContext.@if().else_if();
-                A_Skip[] elseif_Skips = new A_Skip[skipIfContext.Length]; // The index where the else if's "Skip" action is.
+                A_Skip[] elseif_Skips = new A_Skip[skipIfContext.Length]; // The ElseIf's skips
                 for (int i = 0; i < skipIfContext.Length; i++)
                 {
-                    // Create the dummy action.
+                    // Create the SkipIf action for the else if.
                     A_SkipIf elseif_SkipIf = new A_SkipIf();
+                    Actions.Add(elseif_SkipIf);
 
                     // Parse the else-if body.
                     ParseBlock(skipIfContext[i].block(), false);
@@ -454,14 +473,14 @@ namespace Deltin.Deltinteger.Parse
                     // Only if there is additional if-else or else statements.
                     bool addIfElseSkip = i < skipIfContext.Length - 1 || statementContext.@if().@else() != null;
 
-                    // Create the "Skip If" action.
+                    // Set the SkipIf's parameters.
                     elseif_SkipIf.ParameterValues = new object[]
                     {
                         Element.Part<V_Not>(ParseExpression(skipIfContext[i].expr())),
                         new V_Number(Actions.Count - 1 - Actions.IndexOf(elseif_SkipIf) + (addIfElseSkip ? 1 : 0))
                     };
 
-                    // Create the "Skip" dummy action.
+                    // Create the "Skip" action for the else-if.
                     if (addIfElseSkip)
                     {
                         elseif_Skips[i] = new A_Skip();
@@ -495,15 +514,26 @@ namespace Deltin.Deltinteger.Parse
             #endregion
 
             #region return
-
-            if (statementContext.RETURN() != null)
+            else if (statementContext.RETURN() != null)
             {
                 // Will have a value if the statement is "return value;", will be null if the statement is "return;".
-                var returnExpr = statementContext.expr();
+                var returnExpr = statementContext.expr()?.FirstOrDefault();
 
+                if (returnExpr != null)
+                {
+                    Element result = ParseExpression(returnExpr);
+                    Actions.Add(returned.SetVariable(result));
+                }
 
+                if (!isLast)
+                {
+                    A_Skip returnSkip = new A_Skip();
+                    Actions.Add(returnSkip);
+                    returnSkips.Add(returnSkip);
+                }
+
+                return;
             }
-
             #endregion
 
             throw new Exception($"What's a {statementContext.GetChild(0)} ({statementContext.GetChild(0).GetType()})?");
@@ -743,7 +773,7 @@ namespace Deltin.Deltinteger.Parse
 
             #endregion
 
-            throw new Exception($"What's a {context.GetType().Name}?");
+            throw new Exception($"Failed to parse element: {context.GetType().Name} at {context.start.Line}, {context.start.Column}");
         }
 
         Element ParseMethod(DeltinScriptParser.MethodContext methodContext, bool needsToBeValue)
@@ -769,23 +799,28 @@ namespace Deltin.Deltinteger.Parse
 
                     method = (Element)Activator.CreateInstance(owMethod);
                     Parameter[] parameterData = owMethod.GetCustomAttributes<Parameter>().ToArray();
-                    object[] parsedParameters = new Element[parameterData.Length];
+                    //object[] parsedParameters = new Element[parameterData.Length];
+                    List<object> parsedParameters = new List<object>();
 
                     for (int i = 0; i < parameterData.Length; i++)
                     {
                         if (parameters.Length > i)
-                            parsedParameters[i] = ParseParameter(parameters[i], methodName, parameterData[i]);
+                        {
+                            //parsedParameters[i] = ParseParameter(parameters[i], methodName, parameterData[i]);
+                            parsedParameters.Add(ParseParameter(parameters[i], methodName, parameterData[i]));
+                        }
                         else 
                         {
-                            if (parameterData[i].DefaultType == null)
+                            if (parameterData[i].ParameterType == ParameterType.Value && parameterData[i].DefaultType == null)
                                 throw new SyntaxErrorException($"Missing parameter {parameterData[i].Name} in the method {methodName} and no default type to fallback on.", 
-                                    parameters[i].start);
+                                    methodContext.start);
                             else
-                                parsedParameters[i] = parameterData[i].GetDefault();
+                                //parsedParameters[i] = parameterData[i].GetDefault();
+                                parsedParameters.Add(parameterData[i].GetDefault());
                         }
                     }
 
-                    method.ParameterValues = parsedParameters;
+                    method.ParameterValues = parsedParameters.ToArray();
                     break;
                 }
 
@@ -800,7 +835,7 @@ namespace Deltin.Deltinteger.Parse
                             parsedParameters[i] = ParseParameter(parameters[i], methodName, parameterData[i]);
                         else
                             throw new SyntaxErrorException($"Missing parameter {parameterData[i].Name} in the method {methodName} and no default type to fallback on.", 
-                                parameters[i].start);
+                                methodContext.start);
 
                     MethodResult result = (MethodResult)customMethod.Invoke(null, new object[] { IsGlobal, parsedParameters });
                     switch (result.MethodType)
@@ -829,7 +864,17 @@ namespace Deltin.Deltinteger.Parse
                 {
                     UserMethod userMethod = UserMethod.GetUserMethod(methodName);
 
+                    DefinedVar[] parameterVars = new DefinedVar[userMethod.Parameters.Length];
+                    for (int i = 0; i < parameterVars.Length; i++)
+                    {
+                        parameterVars[i] = DefinedVar.AssignDefinedVar(IsGlobal, userMethod.Parameters[i].Name, methodContext.start);
+                        Actions.Add(parameterVars[i].SetVariable(ParseExpression(parameters[i])));
+                    }
+
                     method = ParseBlock(userMethod.Block, true);
+
+                    for (int i = 0; i < parameterVars.Length; i++)
+                        parameterVars[i].OutOfScope();
 
                     break;
                 }

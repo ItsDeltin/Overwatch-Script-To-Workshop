@@ -209,10 +209,10 @@ namespace Deltin.Deltinteger.Elements
 #warning check hero pos
     [ElementData("Hero", ValueType.Hero)]
     [Parameter("Hero", typeof(Hero))]
-    public class V_Hero : Element {}
+    public class V_HeroVar : Element {}
 
     [ElementData("Hero Icon String", ValueType.Any)]
-    [Parameter("Value", ValueType.Hero, typeof(V_Hero))]
+    [Parameter("Value", ValueType.Hero, typeof(V_HeroVar))]
     public class V_HeroIconString : Element {}
 
     [ElementData("Hero Of", ValueType.Hero)]
@@ -304,7 +304,7 @@ namespace Deltin.Deltinteger.Elements
     public class V_IsGameInProgress : Element {}
 
     [ElementData("Is Hero Being Played", ValueType.Boolean)]
-    [Parameter("Hero", ValueType.Hero, typeof(V_Hero))]
+    [Parameter("Hero", ValueType.Hero, typeof(V_HeroVar))]
     [Parameter("Team", ValueType.Team, typeof(V_Team))]
     public class V_IsHeroBeingPlayed : Element {}
 
@@ -510,7 +510,7 @@ namespace Deltin.Deltinteger.Elements
     public class V_NumberOfFinalBlows : Element {}
 
     [ElementData("Number Of Heroes", ValueType.Number)]
-    [Parameter("Hero", ValueType.Hero, typeof(V_Hero))]
+    [Parameter("Hero", ValueType.Hero, typeof(V_HeroVar))]
     [Parameter("Team", ValueType.Team, typeof(V_Team))]
     public class V_NumberOfHeroes : Element {}
 
@@ -574,7 +574,7 @@ namespace Deltin.Deltinteger.Elements
     public class V_PlayersInViewAngle : Element {}
 
     [ElementData("Players On Hero", ValueType.Player)]
-    [Parameter("Hero", ValueType.Hero, typeof(V_Hero))]
+    [Parameter("Hero", ValueType.Hero, typeof(V_HeroVar))]
     [Parameter("Team", ValueType.Team, typeof(V_Team))]
     public class V_PlayersOnHero : Element {}
 

@@ -162,7 +162,10 @@ namespace Deltin.Deltinteger.Elements
 
         public void DebugPrint(Log log, int depth = 0)
         {
-            log.Write(LogLevel.Verbose, new string(' ', depth * 4) + Info());
+            if (ElementData.ElementType == ElementType.Action)
+                log.Write(LogLevel.Verbose, new ColorMod(new string(' ', depth * 4) + Info(), ConsoleColor.Cyan));
+            else
+                log.Write(LogLevel.Verbose, new ColorMod(new string(' ', depth * 4) + Info(), ConsoleColor.White));
 
             foreach (var param in ParameterValues)
                 if (param is Element)
