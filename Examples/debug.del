@@ -1,45 +1,15 @@
 usevar globalvar A;
 usevar playervar A;
 
-define playervar aiCheckResult;
-
-rule: "Check If AI"
-Event.Ongoing_EachPlayer
-if (IsButtonHeld(EventPlayer(), Button.Interact))
+rule: "End game test"
 {
-	for (checkPlayer in AllPlayers())
-	{
-		aiCheckResult = IsAI(AllPlayers()[checkPlayer]);
-		SmallMessage(EventPlayer(), <"<0>: <1>", AllPlayers()[checkPlayer], aiCheckResult>);
-		Wait(2);
-	}
+	EndGame();
 }
 
-define playervar currentHero;
-define playervar heroSwap;
-define playervar isAI;
 
-method Boolean IsAI(Player player)
+method void EndGame(Player winner)
 {
-	currentHero = HeroOf(player);
-	heroSwap = HeroVar(Hero.Ana);
-	
-	if (currentHero == HeroVar(Hero.Ana))
-	{
-		heroSwap = HeroVar(Hero.Bastion);
-	}
-
-	ForcePlayerHero(player, heroSwap);
-	if (HeroOf(player) == currentHero)
-	{
-		isAI = true;
-	}
-	else
-	{
-		isAI = false;
-	}
-	ForcePlayerHero(player, currentHero);
-	StopForcingHero(player);
-	
-	return isAI;
+	BigMessage(<"<0> wins!", winner>);
+	Wait(2);
+	DeclarePlayerVictory(winner);
 }

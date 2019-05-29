@@ -82,25 +82,28 @@ namespace Deltin.Deltinteger.Parse
             // List all variables
             Log.Write(LogLevel.Normal, new ColorMod("Variable Guide:", ConsoleColor.Blue));
 
-            int nameLength = DefinedVar.VarCollection.Max(v => v.Name.Length);
-
-            bool other = false;
-            foreach (DefinedVar var in DefinedVar.VarCollection)
+            if (DefinedVar.VarCollection.Count > 0)
             {
-                ConsoleColor textcolor = other ? ConsoleColor.White : ConsoleColor.DarkGray;
-                other = !other;
+                int nameLength = DefinedVar.VarCollection.Max(v => v.Name.Length);
 
-                Log.Write(LogLevel.Normal,
-                    // Names
-                    new ColorMod(var.Name + new string(' ', nameLength - var.Name.Length) + "  ", textcolor),
-                    // Variable
-                    new ColorMod(
-                        (var.IsGlobal ? "global" : "player") 
-                        + " " + 
-                        var.Variable.ToString() +
-                        (var.IsInArray ? $"[{var.Index}]" : "")
-                        , textcolor)
-                );
+                bool other = false;
+                foreach (DefinedVar var in DefinedVar.VarCollection)
+                {
+                    ConsoleColor textcolor = other ? ConsoleColor.White : ConsoleColor.DarkGray;
+                    other = !other;
+
+                    Log.Write(LogLevel.Normal,
+                        // Names
+                        new ColorMod(var.Name + new string(' ', nameLength - var.Name.Length) + "  ", textcolor),
+                        // Variable
+                        new ColorMod(
+                            (var.IsGlobal ? "global" : "player") 
+                            + " " + 
+                            var.Variable.ToString() +
+                            (var.IsInArray ? $"[{var.Index}]" : "")
+                            , textcolor)
+                    );
+                }
             }
 
             return compiledRules.ToArray();
@@ -248,7 +251,9 @@ namespace Deltin.Deltinteger.Parse
             #region Method
             if (statementContext.GetChild(0) is DeltinScriptParser.MethodContext)
             {
-                Actions.Add(ParseMethod(statementContext.GetChild(0) as DeltinScriptParser.MethodContext, false));
+                Element method = ParseMethod(statementContext.GetChild(0) as DeltinScriptParser.MethodContext, false);
+                if (method != null)
+                    Actions.Add(method);
                 return;
             }
             #endregion
@@ -812,7 +817,7 @@ namespace Deltin.Deltinteger.Parse
                         else 
                         {
                             if (parameterData[i].ParameterType == ParameterType.Value && parameterData[i].DefaultType == null)
-                                throw new SyntaxErrorException($"Missing parameter {parameterData[i].Name} in the method {methodName} and no default type to fallback on.", 
+                                throw new SyntaxErrorException($"Missing parameter \"{parameterData[i].Name}\" in the method \"{methodName}\" and no default type to fallback on.", 
                                     methodContext.start);
                             else
                                 //parsedParameters[i] = parameterData[i].GetDefault();
@@ -834,7 +839,7 @@ namespace Deltin.Deltinteger.Parse
                         if (parameters.Length > i)
                             parsedParameters[i] = ParseParameter(parameters[i], methodName, parameterData[i]);
                         else
-                            throw new SyntaxErrorException($"Missing parameter {parameterData[i].Name} in the method {methodName} and no default type to fallback on.", 
+                            throw new SyntaxErrorException($"Missing parameter \"{parameterData[i].Name}\" in the method \"{methodName}\" and no default type to fallback on.", 
                                 methodContext.start);
 
                     MethodResult result = (MethodResult)customMethod.Invoke(null, new object[] { IsGlobal, parsedParameters });
@@ -867,19 +872,29 @@ namespace Deltin.Deltinteger.Parse
                     DefinedVar[] parameterVars = new DefinedVar[userMethod.Parameters.Length];
                     for (int i = 0; i < parameterVars.Length; i++)
                     {
-                        parameterVars[i] = DefinedVar.AssignDefinedVar(IsGlobal, userMethod.Parameters[i].Name, methodContext.start);
-                        Actions.Add(parameterVars[i].SetVariable(ParseExpression(parameters[i])));
+                        if (parameters.Length > i)
+                        {
+                            // Create a new variable using the parameter input.
+                            parameterVars[i] = DefinedVar.AssignDefinedVar(IsGlobal, userMethod.Parameters[i].Name, methodContext.start);
+                            Actions.Add(parameterVars[i].SetVariable(ParseExpression(parameters[i])));
+                        }
+                        else throw new SyntaxErrorException($"Missing parameter \"{userMethod.Parameters[i].Name}\" in the method \"{methodName}\".",
+                            methodContext.start);
                     }
 
                     method = ParseBlock(userMethod.Block, true);
+                    // No return value if the method is being used as an action.
+                    if (!needsToBeValue)
+                        method = null;
 
+                    // Take the parameters out of scope.
                     for (int i = 0; i < parameterVars.Length; i++)
                         parameterVars[i].OutOfScope();
 
                     break;
                 }
 
-                default: throw new NotImplementedException();
+                default: throw new NotImplementedException(); // Keep the compiler from complaining about method not being set.
             }
 
             return method;
@@ -908,7 +923,8 @@ namespace Deltin.Deltinteger.Parse
                 }
                 catch (Exception ex) when (ex is ArgumentNullException || ex is ArgumentException || ex is OverflowException)
                 {
-                    throw new SyntaxErrorException($"The value {enumValue} does not exist in the enum {type}.");
+                    throw new SyntaxErrorException($"The value {enumValue} does not exist in the enum {type}."
+                        , context.start);
                 }
 
                 if (value == null)
@@ -1273,25 +1289,6 @@ namespace Deltin.Deltinteger.Parse
             return UserMethodCollection.FirstOrDefault(um => um.Name == name);
         }
     }
-
-    /*
-    class UserMethodParameter
-    {
-        public UserMethodParameter(DeltinScriptParser.User_method_parameterContext context)
-        {
-            Name = context.PART().GetText();
-            Type = (Elements.ValueType)Enum.Parse(typeof(Elements.ValueType), context.DATA_TYPE().GetText());
-        }
-
-        public UserMethodParameter(string name, Elements.ValueType type)
-        {
-            Name = name;
-            Type = type;
-        }
-        public string Name { get; private set; }
-        public Elements.ValueType Type { get; private set; }
-    }
-    */
 
     public class ErrorListener : BaseErrorListener
     {
