@@ -17,7 +17,7 @@ if (IsButtonHeld(EventPlayer(), Button.Interact))
 	}
 }
 
-method Boolean IsAI(Player player)
+method IsAI(player)
 {
 	define currentHero = HeroOf(player);
 	define heroSwap = HeroVar(Hero.Ana);

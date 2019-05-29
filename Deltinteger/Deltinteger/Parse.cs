@@ -1309,25 +1309,16 @@ namespace Deltin.Deltinteger.Parse
     {
         public UserMethod(DeltinScriptParser.User_methodContext context)
         {
-            Name = context.PART().GetText();
+            Name = context.PART()[0].GetText();
             Block = context.block();
 
-            var returnType = context.DATA_TYPE();
-
-            if (context.VOID() != null)
-                ReturnType = null;
-            else
-                ReturnType = (Elements.ValueType?)Enum.Parse(typeof(Elements.ValueType), returnType.ToString());
-
-            var contextParams = context.user_method_parameter();
+            var contextParams = context.PART().Skip(1).ToArray();
             Parameters = new Parameter[contextParams.Length];
 
             for (int i = 0; i < Parameters.Length; i++)
             {
-                var name = contextParams[i].PART().GetText();
-                var type = (Elements.ValueType)Enum.Parse(typeof(Elements.ValueType), contextParams[i].DATA_TYPE().GetText());
-
-                Parameters[i] = new Parameter(name, type, null);
+                var name = contextParams[i].GetText();
+                Parameters[i] = new Parameter(name, Elements.ValueType.Any, null);
             }
 
             UserMethodCollection.Add(this);
@@ -1335,7 +1326,6 @@ namespace Deltin.Deltinteger.Parse
 
         public string Name { get; private set; }
 
-        public Elements.ValueType? ReturnType { get; private set; }
         public DeltinScriptParser.BlockContext Block { get; private set; }
 
         public Parameter[] Parameters { get; private set; }

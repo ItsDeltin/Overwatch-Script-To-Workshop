@@ -77,11 +77,9 @@ ow_rule :
 	block
 	;
 
-user_method : METHOD (VOID | DATA_TYPE) PART LEFT_PAREN (user_method_parameter (',' user_method_parameter)*)? RIGHT_PAREN
+user_method : METHOD PART LEFT_PAREN (PART (',' PART)*)? RIGHT_PAREN
 	block
 	;
-
-user_method_parameter : DATA_TYPE PART ;
 
 ruleset :
 	useGlobalVar
@@ -141,9 +139,8 @@ FALSE     : 'false'     ;
 NULL      : 'null'      ;
 ARRAY     : 'array'     ;
 METHOD    : 'method'    ;
-VOID      : 'void'      ;
 RETURN    : 'return'    ;
-DATA_TYPE : 'Any' | 'VectorAndPlayer' | 'Number' | 'Boolean' | 'Hero' | 'Vector' | 'Player' | 'Team';
+//DATA_TYPE : 'Any' | 'VectorAndPlayer' | 'Number' | 'Boolean' | 'Hero' | 'Vector' | 'Player' | 'Team';
 
 EQUALS          : '='  ;
 EQUALS_POW      : '^=' ;
