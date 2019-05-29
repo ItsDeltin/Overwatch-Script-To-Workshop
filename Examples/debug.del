@@ -1,15 +1,52 @@
 usevar globalvar A;
 usevar playervar A;
 
-rule: "End game test"
+rule: "Check If AI"
+Event.Ongoing_EachPlayer
+if (IsButtonHeld(EventPlayer(), Button.Interact))
 {
-	EndGame();
+	// Iterate through all players to check if they are an AI.
+	for (player in AllPlayers())
+	{
+		define isAI;
+		// Check if they are AI.
+		isAI = IsAI(AllPlayers()[player]);
+		
+		// Send the message.
+		SmallMessage(EventPlayer(), <"<0>: <1>", AllPlayers()[player], isAI>);
+		
+		Wait(2);
+	}
 }
 
-
-method void EndGame(Player winner)
+method Boolean IsAI(Player player)
 {
-	BigMessage(<"<0> wins!", winner>);
-	Wait(2);
-	DeclarePlayerVictory(winner);
+	define currentHero;
+	define heroSwap;
+	define isAI;
+	/*
+	Swap a player to Ana (Bastion if they are Ana), check if they are the new hero, then swap them back.
+	Possible improvements: Swap to a hero that isnt an option for AI.
+	*/
+	currentHero = HeroOf(player);
+	heroSwap = HeroVar(Hero.Ana);
+	
+	if (currentHero == HeroVar(Hero.Ana))
+	{
+		heroSwap = HeroVar(Hero.Bastion);
+	}
+
+	ForcePlayerHero(player, heroSwap);
+	if (HeroOf(player) == currentHero)
+	{
+		isAI = true;
+	}
+	else
+	{
+		isAI = false;
+	}
+	ForcePlayerHero(player, currentHero);
+	StopForcingHero(player);
+	
+	return isAI;
 }

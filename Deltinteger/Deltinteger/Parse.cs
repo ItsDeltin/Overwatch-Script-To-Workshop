@@ -54,7 +54,7 @@ namespace Deltin.Deltinteger.Parse
 
             for (int i = 0; i < vardefine.Length; i++)
                 // The new var is stored in Var.VarCollection
-                new DefinedVar(vardefine[i]);
+                new DefinedVar(ScopeGroup.Root, vardefine[i]);
 
             // Get the user methods.
             var userMethods = context.user_method();
@@ -82,12 +82,12 @@ namespace Deltin.Deltinteger.Parse
             // List all variables
             Log.Write(LogLevel.Normal, new ColorMod("Variable Guide:", ConsoleColor.Blue));
 
-            if (DefinedVar.VarCollection.Count > 0)
+            if (ScopeGroup.Root.VarCollection().Count > 0)
             {
-                int nameLength = DefinedVar.VarCollection.Max(v => v.Name.Length);
+                int nameLength = ScopeGroup.Root.VarCollection().Max(v => v.Name.Length);
 
                 bool other = false;
-                foreach (DefinedVar var in DefinedVar.VarCollection)
+                foreach (DefinedVar var in ScopeGroup.Root.VarCollection())
                 {
                     ConsoleColor textcolor = other ? ConsoleColor.White : ConsoleColor.DarkGray;
                     other = !other;
@@ -136,7 +136,7 @@ namespace Deltin.Deltinteger.Parse
             ParseConditions();
             
             // Parse actions
-            ParseBlock(RuleContext.block(), true);
+            ParseBlock(ScopeGroup.Root.Child(), RuleContext.block(), true);
 
             Rule.Conditions = Conditions.ToArray();
             Rule.Actions = Actions.ToArray();
@@ -196,7 +196,7 @@ namespace Deltin.Deltinteger.Parse
             if (conditions != null)
                 foreach(var expr in conditions)
                 {
-                    Element parsedIf = ParseExpression(expr);
+                    Element parsedIf = ParseExpression(ScopeGroup.Root, expr);
                     // If the parsed if is a V_Compare, translate it to a condition.
                     // Makes "(value1 == value2) == true" to just "value1 == value2"
                     if (parsedIf is V_Compare)
@@ -215,7 +215,7 @@ namespace Deltin.Deltinteger.Parse
                 }
         }
 
-        Element ParseBlock(DeltinScriptParser.BlockContext blockContext, bool fulfillReturns)
+        Element ParseBlock(ScopeGroup scopeGroup, DeltinScriptParser.BlockContext blockContext, bool fulfillReturns)
         {
             int returnSkipStart = returnSkips.Count;
 
@@ -228,7 +228,7 @@ namespace Deltin.Deltinteger.Parse
                 .Cast<DeltinScriptParser.StatementContext>().ToArray();
 
             for (int i = 0; i < statements.Length; i++)
-                ParseStatement(statements[i], returned, i == statements.Length - 1);
+                ParseStatement(scopeGroup, statements[i], returned, i == statements.Length - 1);
 
             if (fulfillReturns)
             {
@@ -246,12 +246,12 @@ namespace Deltin.Deltinteger.Parse
             return null;
         }
 
-        void ParseStatement(DeltinScriptParser.StatementContext statementContext, Var returned, bool isLast)
+        void ParseStatement(ScopeGroup scope, DeltinScriptParser.StatementContext statementContext, Var returned, bool isLast)
         {
             #region Method
             if (statementContext.GetChild(0) is DeltinScriptParser.MethodContext)
             {
-                Element method = ParseMethod(statementContext.GetChild(0) as DeltinScriptParser.MethodContext, false);
+                Element method = ParseMethod(scope, statementContext.GetChild(0) as DeltinScriptParser.MethodContext, false);
                 if (method != null)
                     Actions.Add(method);
                 return;
@@ -269,7 +269,7 @@ namespace Deltin.Deltinteger.Parse
 
                 Element value;
 
-                value = ParseExpression(statementContext.expr(1) as DeltinScriptParser.ExprContext);
+                value = ParseExpression(scope, statementContext.expr(1) as DeltinScriptParser.ExprContext);
 
                 /*  Format if the variable has an expression beforehand (sets the target player)
                                  expr(0)           .ChildCount
@@ -290,14 +290,14 @@ namespace Deltin.Deltinteger.Parse
                                          ^           ^
                         Get  Target:  .expr(0)    .expr(0)                                            */
 
-                    variable = DefinedVar.GetVar(statementContext.expr(0).expr(1).GetChild(0).GetText(),
+                    variable = scope.GetVar(statementContext.expr(0).expr(1).GetChild(0).GetText(),
                                                  statementContext.expr(0).expr(1).start);
-                    target = ParseExpression(statementContext.expr(0).expr(0));
+                    target = ParseExpression(scope, statementContext.expr(0).expr(0));
 
                     // Get the index if the variable has []
                     var indexExpression = statementContext.expr(0).expr(1).expr(1);
                     if (indexExpression != null)
-                        index = ParseExpression(indexExpression);
+                        index = ParseExpression(scope, indexExpression);
                 }
                 else
                 {
@@ -306,14 +306,14 @@ namespace Deltin.Deltinteger.Parse
                         Statement (     v                   v  ) | Operation | Set to variable
                                    Variable to set (expr) | []
                     */
-                    variable = DefinedVar.GetVar(statementContext.expr(0).GetChild(0).GetText(),
+                    variable = scope.GetVar(statementContext.expr(0).GetChild(0).GetText(),
                                                  statementContext.expr(0).start);
                     target = new V_EventPlayer();
 
                     // Get the index if the variable has []
                     var indexExpression = statementContext.expr(0).expr(1);
                     if (indexExpression != null)
-                        index = ParseExpression(indexExpression);
+                        index = ParseExpression(scope, indexExpression);
                 }
 
                 switch (operation)
@@ -358,7 +358,7 @@ namespace Deltin.Deltinteger.Parse
                 int forActionStartIndex = Actions.Count() + 1;
 
                 // The target array in the for statement.
-                Element forArrayElement = ParseExpression(statementContext.@for().expr());
+                Element forArrayElement = ParseExpression(scope, statementContext.@for().expr());
 
                 // Use skipIndex with Get/SetIVarAtIndex to get the bool to determine if the loop is running.
                 Var isBoolRunningSkipIf = Var.AssignVar(IsGlobal);
@@ -373,21 +373,24 @@ namespace Deltin.Deltinteger.Parse
                     )
                 );
 
+                ScopeGroup forGroup = scope.Child();
+
                 // Create the for's temporary variable.
                 DefinedVar forTempVar = Var.AssignDefinedVar(
-                    name    : statementContext.@for().PART().GetText(),
-                    isGlobal: IsGlobal,
-                    token    : statementContext.@for().start
+                    scopeGroup: forGroup,
+                    name      : statementContext.@for().PART().GetText(),
+                    isGlobal  : IsGlobal,
+                    token     : statementContext.@for().start
                     );
 
                 // Reset the counter.
                 Actions.Add(forTempVar.SetVariable(new V_Number(0)));
 
                 // Parse the for's block.
-                ParseBlock(statementContext.@for().block(), false);
+                ParseBlock(forGroup, statementContext.@for().block(), false);
 
                 // Take the variable out of scope.
-                forTempVar.OutOfScope();
+                forGroup.Out();
 
                 // Add the for's finishing elements
                 //Actions.Add(SetIVarAtIndex(skipIndex, new V_Number(forActionStartIndex))); // Sets how many variables to skip in the next iteraction.
@@ -440,8 +443,11 @@ namespace Deltin.Deltinteger.Parse
                 A_SkipIf if_SkipIf = new A_SkipIf();
                 Actions.Add(if_SkipIf);
 
-                // Parse the if body.
-                ParseBlock(statementContext.@if().block(), false);
+                using (var ifScope = scope.Child())
+                {
+                    // Parse the if body.
+                    ParseBlock(ifScope, statementContext.@if().block(), false);
+                }
 
                 // Determines if the "Skip" action after the if block will be created.
                 // Only if there is if-else or else statements.
@@ -451,7 +457,7 @@ namespace Deltin.Deltinteger.Parse
                 // Add one to the body length if a Skip action is going to be added.
                 if_SkipIf.ParameterValues = new object[]
                 {
-                    Element.Part<V_Not>(ParseExpression(statementContext.@if().expr())),
+                    Element.Part<V_Not>(ParseExpression(scope, statementContext.@if().expr())),
                     new V_Number(Actions.Count - 1 - Actions.IndexOf(if_SkipIf) + (addIfSkip ? 1 : 0))
                 };
 
@@ -472,7 +478,10 @@ namespace Deltin.Deltinteger.Parse
                     Actions.Add(elseif_SkipIf);
 
                     // Parse the else-if body.
-                    ParseBlock(skipIfContext[i].block(), false);
+                    using (var elseifScope = scope.Child())
+                    {
+                        ParseBlock(elseifScope, skipIfContext[i].block(), false);
+                    }
 
                     // Determines if the "Skip" action after the else-if block will be created.
                     // Only if there is additional if-else or else statements.
@@ -481,7 +490,7 @@ namespace Deltin.Deltinteger.Parse
                     // Set the SkipIf's parameters.
                     elseif_SkipIf.ParameterValues = new object[]
                     {
-                        Element.Part<V_Not>(ParseExpression(skipIfContext[i].expr())),
+                        Element.Part<V_Not>(ParseExpression(scope, skipIfContext[i].expr())),
                         new V_Number(Actions.Count - 1 - Actions.IndexOf(elseif_SkipIf) + (addIfElseSkip ? 1 : 0))
                     };
 
@@ -495,7 +504,8 @@ namespace Deltin.Deltinteger.Parse
 
                 // Parse else body.
                 if (statementContext.@if().@else() != null)
-                    ParseBlock(statementContext.@if().@else().block(), false);
+                    using (var elseScope = scope.Child())
+                        ParseBlock(elseScope, statementContext.@if().@else().block(), false);
 
                 // Replace dummy skip with real skip now that we know the length of the if, if-else, and else's bodies.
                 // Replace if's dummy.
@@ -526,7 +536,7 @@ namespace Deltin.Deltinteger.Parse
 
                 if (returnExpr != null)
                 {
-                    Element result = ParseExpression(returnExpr);
+                    Element result = ParseExpression(scope, returnExpr);
                     Actions.Add(returned.SetVariable(result));
                 }
 
@@ -541,10 +551,19 @@ namespace Deltin.Deltinteger.Parse
             }
             #endregion
 
+            #region define
+            else if (statementContext.DEFINE() != null)
+            {
+                string variableName = statementContext.PART().GetText();
+                Var.AssignDefinedVar(scope, IsGlobal, variableName, statementContext.start);
+                return;
+            }
+            #endregion
+
             throw new Exception($"What's a {statementContext.GetChild(0)} ({statementContext.GetChild(0).GetType()})?");
         }
 
-        Element ParseExpression(DeltinScriptParser.ExprContext context)
+        Element ParseExpression(ScopeGroup scope, DeltinScriptParser.ExprContext context)
         {
             // If the expression is a(n)...
 
@@ -558,9 +577,9 @@ namespace Deltin.Deltinteger.Parse
                 || Constants.CompareOperations.Contains(context.GetChild(1).GetText())
                 || Constants.   BoolOperations.Contains(context.GetChild(1).GetText())))
             {
-                Element left = ParseExpression(context.GetChild(0) as DeltinScriptParser.ExprContext);
+                Element left = ParseExpression(scope, context.GetChild(0) as DeltinScriptParser.ExprContext);
                 string operation = context.GetChild(1).GetText();
-                Element right = ParseExpression(context.GetChild(2) as DeltinScriptParser.ExprContext);
+                Element right = ParseExpression(scope, context.GetChild(2) as DeltinScriptParser.ExprContext);
 
                 if (Constants.BoolOperations.Contains(context.GetChild(1).GetText()))
                 {
@@ -623,7 +642,7 @@ namespace Deltin.Deltinteger.Parse
             #region Not
 
             if (context.GetChild(0) is DeltinScriptParser.NotContext)
-                return Element.Part<V_Not>(ParseExpression(context.GetChild(1) as DeltinScriptParser.ExprContext));
+                return Element.Part<V_Not>(ParseExpression(scope, context.GetChild(1) as DeltinScriptParser.ExprContext));
 
             #endregion
 
@@ -679,7 +698,7 @@ namespace Deltin.Deltinteger.Parse
 
             if (context.GetChild(1) is DeltinScriptParser.StringContext)
             {
-                Element[] values = context.expr().Select(expr => ParseExpression(expr)).ToArray();
+                Element[] values = context.expr().Select(expr => ParseExpression(scope, expr)).ToArray();
                 return V_String.ParseString(
                     context.start,
                     (context.GetChild(1) as DeltinScriptParser.StringContext).STRINGLITERAL().GetText().Trim('\"'),
@@ -701,21 +720,21 @@ namespace Deltin.Deltinteger.Parse
             if (context.ChildCount == 3 && context.GetChild(0).GetText() == "(" &&
                 context.GetChild(1) is DeltinScriptParser.ExprContext &&
                 context.GetChild(2).GetText() == ")")
-                return ParseExpression(context.GetChild(1) as DeltinScriptParser.ExprContext);
+                return ParseExpression(scope, context.GetChild(1) as DeltinScriptParser.ExprContext);
 
             #endregion
 
             #region Method
 
             if (context.GetChild(0) is DeltinScriptParser.MethodContext)
-                return ParseMethod(context.GetChild(0) as DeltinScriptParser.MethodContext, true);
+                return ParseMethod(scope, context.GetChild(0) as DeltinScriptParser.MethodContext, true);
 
             #endregion
 
             #region Variable
 
             if (context.GetChild(0) is DeltinScriptParser.VariableContext)
-                return DefinedVar.GetVar((context.GetChild(0) as DeltinScriptParser.VariableContext).PART().GetText(), context.start).GetVariable(new V_EventPlayer());
+                return scope.GetVar((context.GetChild(0) as DeltinScriptParser.VariableContext).PART().GetText(), context.start).GetVariable(new V_EventPlayer());
 
             #endregion
 
@@ -723,8 +742,8 @@ namespace Deltin.Deltinteger.Parse
 
             if (context.ChildCount == 4 && context.GetChild(1).GetText() == "[" && context.GetChild(3).GetText() == "]")
                 return Element.Part<V_ValueInArray>(
-                    ParseExpression(context.expr(0) as DeltinScriptParser.ExprContext),
-                    ParseExpression(context.expr(1) as DeltinScriptParser.ExprContext));
+                    ParseExpression(scope, context.expr(0) as DeltinScriptParser.ExprContext),
+                    ParseExpression(scope, context.expr(1) as DeltinScriptParser.ExprContext));
 
             #endregion
 
@@ -748,7 +767,7 @@ namespace Deltin.Deltinteger.Parse
                     else
                         current.ParameterValues[0] = new V_EmptyArray();
 
-                    current.ParameterValues[1] = ParseExpression(expressions[i]);
+                    current.ParameterValues[1] = ParseExpression(scope, expressions[i]);
                     prev = current;
                 }
 
@@ -768,10 +787,10 @@ namespace Deltin.Deltinteger.Parse
 
             if (context.ChildCount == 3 && context.GetChild(1).GetText() == ".")
             {
-                Element left = ParseExpression(context.GetChild(0) as DeltinScriptParser.ExprContext);
+                Element left = ParseExpression(scope, context.GetChild(0) as DeltinScriptParser.ExprContext);
                 string variableName = context.GetChild(2).GetChild(0).GetText();
 
-                DefinedVar var = DefinedVar.GetVar(variableName, context.start);
+                DefinedVar var = scope.GetVar(variableName, context.start);
 
                 return var.GetVariable(left);
             }
@@ -781,7 +800,7 @@ namespace Deltin.Deltinteger.Parse
             throw new Exception($"Failed to parse element: {context.GetType().Name} at {context.start.Line}, {context.start.Column}");
         }
 
-        Element ParseMethod(DeltinScriptParser.MethodContext methodContext, bool needsToBeValue)
+        Element ParseMethod(ScopeGroup scope, DeltinScriptParser.MethodContext methodContext, bool needsToBeValue)
         {
             // Get the method name
             string methodName = methodContext.PART().GetText();
@@ -812,7 +831,7 @@ namespace Deltin.Deltinteger.Parse
                         if (parameters.Length > i)
                         {
                             //parsedParameters[i] = ParseParameter(parameters[i], methodName, parameterData[i]);
-                            parsedParameters.Add(ParseParameter(parameters[i], methodName, parameterData[i]));
+                            parsedParameters.Add(ParseParameter(scope, parameters[i], methodName, parameterData[i]));
                         }
                         else 
                         {
@@ -837,7 +856,7 @@ namespace Deltin.Deltinteger.Parse
 
                     for (int i = 0; i < parameterData.Length; i++)
                         if (parameters.Length > i)
-                            parsedParameters[i] = ParseParameter(parameters[i], methodName, parameterData[i]);
+                            parsedParameters[i] = ParseParameter(scope, parameters[i], methodName, parameterData[i]);
                         else
                             throw new SyntaxErrorException($"Missing parameter \"{parameterData[i].Name}\" in the method \"{methodName}\" and no default type to fallback on.", 
                                 methodContext.start);
@@ -867,31 +886,30 @@ namespace Deltin.Deltinteger.Parse
 
                 case MethodType.UserMethod:
                 {
-                    UserMethod userMethod = UserMethod.GetUserMethod(methodName);
-
-                    DefinedVar[] parameterVars = new DefinedVar[userMethod.Parameters.Length];
-                    for (int i = 0; i < parameterVars.Length; i++)
+                    using (var methodScope = ScopeGroup.Root.Child())
                     {
-                        if (parameters.Length > i)
+                        UserMethod userMethod = UserMethod.GetUserMethod(methodName);
+
+                        // Add the parameter variables to the scope.
+                        DefinedVar[] parameterVars = new DefinedVar[userMethod.Parameters.Length];
+                        for (int i = 0; i < parameterVars.Length; i++)
                         {
-                            // Create a new variable using the parameter input.
-                            parameterVars[i] = DefinedVar.AssignDefinedVar(IsGlobal, userMethod.Parameters[i].Name, methodContext.start);
-                            Actions.Add(parameterVars[i].SetVariable(ParseExpression(parameters[i])));
+                            if (parameters.Length > i)
+                            {
+                                // Create a new variable using the parameter input.
+                                parameterVars[i] = DefinedVar.AssignDefinedVar(methodScope, IsGlobal, userMethod.Parameters[i].Name, methodContext.start);
+                                Actions.Add(parameterVars[i].SetVariable(ParseExpression(scope, parameters[i])));
+                            }
+                            else throw new SyntaxErrorException($"Missing parameter \"{userMethod.Parameters[i].Name}\" in the method \"{methodName}\".",
+                                methodContext.start);
                         }
-                        else throw new SyntaxErrorException($"Missing parameter \"{userMethod.Parameters[i].Name}\" in the method \"{methodName}\".",
-                            methodContext.start);
+
+                        method = ParseBlock(methodScope.Child(), userMethod.Block, true);
+                        // No return value if the method is being used as an action.
+                        if (!needsToBeValue)
+                            method = null;
+                        break;
                     }
-
-                    method = ParseBlock(userMethod.Block, true);
-                    // No return value if the method is being used as an action.
-                    if (!needsToBeValue)
-                        method = null;
-
-                    // Take the parameters out of scope.
-                    for (int i = 0; i < parameterVars.Length; i++)
-                        parameterVars[i].OutOfScope();
-
-                    break;
                 }
 
                 default: throw new NotImplementedException(); // Keep the compiler from complaining about method not being set.
@@ -900,7 +918,7 @@ namespace Deltin.Deltinteger.Parse
             return method;
         }
 
-        object ParseParameter(DeltinScriptParser.ExprContext context, string methodName, Parameter parameterData)
+        object ParseParameter(ScopeGroup scope, DeltinScriptParser.ExprContext context, string methodName, Parameter parameterData)
         {
             object value = null;
 
@@ -938,7 +956,7 @@ namespace Deltin.Deltinteger.Parse
                     throw new SyntaxErrorException($"Expected enum type \"{parameterData.EnumType.Name}\" on {methodName}'s parameter \"{parameterData.Name}\"."
                         , context.start);
 
-                value = ParseExpression(context);
+                value = ParseExpression(scope, context);
 
                 Element element = value as Element;
                 ElementData elementData = element.GetType().GetCustomAttribute<ElementData>();
@@ -1018,9 +1036,9 @@ namespace Deltin.Deltinteger.Parse
             return new Var(isGlobal, GetVar(isGlobal), Assign(isGlobal));
         }
 
-        public static DefinedVar AssignDefinedVar(bool isGlobal, string name, IToken token)
+        public static DefinedVar AssignDefinedVar(ScopeGroup scopeGroup, bool isGlobal, string name, IToken token)
         {
-            return new DefinedVar(name, isGlobal, GetVar(isGlobal), Assign(isGlobal), token);
+            return new DefinedVar(scopeGroup, name, isGlobal, GetVar(isGlobal), Assign(isGlobal), token);
         }
 
 
@@ -1148,29 +1166,12 @@ namespace Deltin.Deltinteger.Parse
     {
         public string Name { get; protected set; }
 
-        public static List<DefinedVar> VarCollection { get; private set; } = new List<DefinedVar>();
-
-        private static bool IsVar(string name)
-        {
-            return VarCollection.Any(v => v.Name == name);
-        }
-
-        public static DefinedVar GetVar(string name, IToken token)
-        {
-            DefinedVar var = VarCollection.FirstOrDefault(v => v.Name == name);
-
-            if (var == null)
-                throw new SyntaxErrorException($"The variable {name} does not exist.", token);
-
-            return var;
-        }
-
-        public DefinedVar(DeltinScriptParser.VardefineContext vardefine)
+        public DefinedVar(ScopeGroup scopeGroup, DeltinScriptParser.VardefineContext vardefine)
         {
             IsGlobal = vardefine.GLOBAL() != null;
             string name = vardefine.PART(0).GetText();
 
-            if (IsVar(name))
+            if (scopeGroup.IsVar(name))
                 throw new SyntaxErrorException($"The variable {name} was already defined.", vardefine.start);
 
             Name = name;
@@ -1210,12 +1211,12 @@ namespace Deltin.Deltinteger.Parse
                 }
             }
 
-            VarCollection.Add(this);
+            scopeGroup.In(this);
         }
 
-        public DefinedVar(string name, bool isGlobal, Variable variable, int index, IToken token)
+        public DefinedVar(ScopeGroup scopeGroup, string name, bool isGlobal, Variable variable, int index, IToken token)
         {
-            if (IsVar(name))
+            if (scopeGroup.IsVar(name))
                 throw new SyntaxErrorException($"The variable {name} was already defined.", token);
 
             Name = name;
@@ -1228,13 +1229,73 @@ namespace Deltin.Deltinteger.Parse
                 Index = index;
             }
 
-            VarCollection.Add(this);
+            scopeGroup.In(this);
+        }
+    }
+
+    class ScopeGroup : IDisposable
+    {
+        private ScopeGroup() {}
+
+        private ScopeGroup(ScopeGroup parent) 
+        {
+            Parent = parent;
         }
 
-        public void OutOfScope()
+        public void In(DefinedVar var)
         {
-            VarCollection.Remove(this);
+            InScope.Add(var);
         }
+
+        public void Out()
+        {
+            Parent.Children.Remove(this);
+        }
+
+        public bool IsVar(string name)
+        {
+            return GetVar(name, null) != null ? true : false;
+        }
+
+        public DefinedVar GetVar(string name, IToken token)
+        {
+            DefinedVar var = null;
+            ScopeGroup checkGroup = this;
+            while (var == null && checkGroup != null)
+            {
+                var = checkGroup.InScope.FirstOrDefault(v => v.Name == name);
+                checkGroup = checkGroup.Parent;
+            }
+
+            if (var == null && token != null)
+                throw new SyntaxErrorException($"The variable {name} does not exist.", token);
+
+            return var;
+        }
+
+        public ScopeGroup Child()
+        {
+            var newChild = new ScopeGroup(this);
+            Children.Add(newChild);
+            return newChild;
+        }
+
+        public List<DefinedVar> VarCollection()
+        {
+            return InScope;
+        }
+
+        public void Dispose()
+        {
+            Out();
+        }
+
+        private readonly List<DefinedVar> InScope = new List<DefinedVar>();
+
+        private readonly List<ScopeGroup> Children = new List<ScopeGroup>();
+        private readonly ScopeGroup Parent = null;
+
+        public static ScopeGroup Root = new ScopeGroup();
     }
 
     class UserMethod 
@@ -1250,13 +1311,6 @@ namespace Deltin.Deltinteger.Parse
                 ReturnType = null;
             else
                 ReturnType = (Elements.ValueType?)Enum.Parse(typeof(Elements.ValueType), returnType.ToString());
-
-            /*
-            var contextParams = context.user_method_parameter();
-            Parameters = new UserMethodParameter[contextParams.Length];
-            for (int i = 0; i < Parameters.Length; i++)
-                Parameters[i] = new UserMethodParameter(contextParams[i]);
-            */
 
             var contextParams = context.user_method_parameter();
             Parameters = new Parameter[contextParams.Length];
@@ -1277,9 +1331,6 @@ namespace Deltin.Deltinteger.Parse
         public Elements.ValueType? ReturnType { get; private set; }
         public DeltinScriptParser.BlockContext Block { get; private set; }
 
-        /*
-        public UserMethodParameter[] Parameters { get; private set; }
-        */
         public Parameter[] Parameters { get; private set; }
 
         public static readonly List<UserMethod> UserMethodCollection = new List<UserMethod>();
