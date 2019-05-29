@@ -12,6 +12,8 @@ false  : FALSE         ;
 null   : NULL          ;
 not    : NOT           ;
 
+statement_operation : EQUALS | EQUALS_ADD | EQUALS_DIVIDE | EQUALS_MODULO | EQUALS_MULTIPLY | EQUALS_POW | EQUALS_SUBTRACT ;
+
 vardefine : DEFINE (GLOBAL|PLAYER) PART (PART (INDEX_START number INDEX_END)?)? STATEMENT_END; /*#define global/player NAME (use variable?); */
 useGlobalVar : USEVAR GLOBAL PART STATEMENT_END ;
 usePlayerVar : USEVAR PLAYER PART STATEMENT_END ;
@@ -46,11 +48,11 @@ expr
 enum     : ( 'Variable'|'Operation'|'Button'|'Relative'|'ContraryMotion'|'ChaseReevaluation'|'Status'|'TeamSelector'|'WaitBehavior'|'Effects'|'Color'|'EffectRev'|'Rounding'|'Communication'|'Location'|'StringRev'|'Icon'|'IconRev'|'PlayEffects'|'Hero'|'InvisibleTo'|'AccelerateRev'|'ModRev'|'FacingRev'|'BarrierLOS'|'Transformation'|'RadiusLOS'|'LocalVector'|'Clipping'|'InworldTextRev' ) SEPERATOR PART ;
 variable : PART ;
 method   : PART LEFT_PAREN expr? (',' expr)* RIGHT_PAREN ;
-define   : DEFINE PART (STATEMENT_OPERATION expr)? STATEMENT_END ;
+define   : DEFINE PART (EQUALS expr)? STATEMENT_END ;
 
 statement :
 	( method STATEMENT_END
-	| expr STATEMENT_OPERATION expr STATEMENT_END
+	| expr statement_operation expr STATEMENT_END
 	| GOTO
 	| GOTO_STATEMENT
 	| if
@@ -143,7 +145,13 @@ VOID      : 'void'      ;
 RETURN    : 'return'    ;
 DATA_TYPE : 'Any' | 'VectorAndPlayer' | 'Number' | 'Boolean' | 'Hero' | 'Vector' | 'Player' | 'Team';
 
-STATEMENT_OPERATION : '=' | '^=' | '*=' | '/=' | '+=' | '-=' | '%=';
+EQUALS          : '='  ;
+EQUALS_POW      : '^=' ;
+EQUALS_MULTIPLY : '*=' ;
+EQUALS_DIVIDE   : '/=' ;
+EQUALS_ADD      : '+=' ;
+EQUALS_SUBTRACT : '-=' ;
+EQUALS_MODULO   : '%=' ;
 BOOL : '&' | '|';
 NOT : '!';
 

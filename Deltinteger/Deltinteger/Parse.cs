@@ -260,12 +260,12 @@ namespace Deltin.Deltinteger.Parse
 
             #region Variable set
 
-            else if (statementContext.STATEMENT_OPERATION() != null)
+            else if (statementContext.statement_operation() != null)
             {
                 DefinedVar variable;
                 Element target;
                 Element index = null;
-                string operation = statementContext.STATEMENT_OPERATION().GetText();
+                string operation = statementContext.statement_operation().GetText();
 
                 Element value;
 
