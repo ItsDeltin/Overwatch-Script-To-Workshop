@@ -61,10 +61,13 @@
     <Compile Include="Elements\Rule.cs" />
     <Compile Include="Elements\Values.cs" />
     <Compile Include="Input.cs" />
-    <Compile Include="Interfaces.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Extras.cs" />
-    <Compile Include="Parse.cs" />
+    <Compile Include="Interfaces.cs" />
+    <Compile Include="Parse\Parse.cs" />
+    <Compile Include="Parse\Scope.cs" />
+    <Compile Include="Parse\UserMethod.cs" />
+    <Compile Include="Parse\Var.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -88,12 +91,7 @@
     </BootstrapperPackage>
     <Content Include=".vscode\launch.json" />
     <Content Include=".vscode\tasks.json" />
-    <Content Include="InputRules.cs" />
-    <Content Include="Interfaces.cs" />
-    <Content Include="Extras.cs" />
-    <Content Include="Parse\ParseBlock.cs" />
-    <Content Include="Parse.cs" />
-    <Content Include="Parse\Parse.cs" />
+    <Content Include="Parse\ContinueSkip.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

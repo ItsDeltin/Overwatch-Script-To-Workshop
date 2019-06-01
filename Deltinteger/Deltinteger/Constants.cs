@@ -17,6 +17,8 @@ namespace Deltin.Deltinteger
 
         public static readonly Type[] EnumParameters = Assembly.GetExecutingAssembly().GetTypes().Where(t => t.GetCustomAttribute<EnumParameter>() != null).ToArray();
 
+        public const double MINIMUM_WAIT = 0.016;
+
         public const string DEFAULT_STRING = "hello";
 
         // All credit to https://us.forums.blizzard.com/en/overwatch/t/workshop-resource-get-the-current-map-name-updated-1-action/

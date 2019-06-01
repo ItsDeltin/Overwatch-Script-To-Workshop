@@ -121,13 +121,16 @@ namespace Deltin.Deltinteger.Parse
 
         private readonly bool IsGlobal;
 
-        private readonly List<A_Skip> returnSkips = new List<A_Skip>();
+        private readonly List<A_Skip> ReturnSkips = new List<A_Skip>(); // Return statements whos skip count needs to be filled out.
+
+        private ContinueSkip ContinueSkip; // Contains data about the wait/skip for continuing loops.
 
         public ParseRule(DeltinScriptParser.Ow_ruleContext ruleContext)
         {
             Rule = CreateRuleFromContext(ruleContext);
             RuleContext = ruleContext;
             IsGlobal = Rule.RuleEvent == RuleEvent.Ongoing_Global;
+            ContinueSkip = new ContinueSkip(IsGlobal, Actions);
         }
 
         public void Parse()
@@ -217,7 +220,7 @@ namespace Deltin.Deltinteger.Parse
 
         Element ParseBlock(ScopeGroup scopeGroup, DeltinScriptParser.BlockContext blockContext, bool fulfillReturns)
         {
-            int returnSkipStart = returnSkips.Count;
+            int returnSkipStart = ReturnSkips.Count;
 
             Var returned = null;
             if (fulfillReturns)
@@ -232,13 +235,13 @@ namespace Deltin.Deltinteger.Parse
 
             if (fulfillReturns)
             {
-                for (int i = returnSkips.Count - 1; i >= returnSkipStart; i--)
+                for (int i = ReturnSkips.Count - 1; i >= returnSkipStart; i--)
                 {
-                    returnSkips[i].ParameterValues = new object[]
+                    ReturnSkips[i].ParameterValues = new object[]
                     {
-                        new V_Number(Actions.Count - 1 - Actions.IndexOf(returnSkips[i]))
+                        new V_Number(Actions.Count - 1 - Actions.IndexOf(ReturnSkips[i]))
                     };
-                    returnSkips.RemoveAt(i);
+                    ReturnSkips.RemoveAt(i);
                 }
                 return returned.GetVariable();
             }
@@ -259,7 +262,6 @@ namespace Deltin.Deltinteger.Parse
             #endregion
 
             #region Variable set
-
             else if (statementContext.statement_operation() != null)
             {
                 DefinedVar variable;
@@ -350,7 +352,6 @@ namespace Deltin.Deltinteger.Parse
             #endregion
 
             #region for
-
             else if (statementContext.GetChild(0) is DeltinScriptParser.ForContext)
             {
                 // The action the for loop starts on.
@@ -544,7 +545,7 @@ namespace Deltin.Deltinteger.Parse
                 {
                     A_Skip returnSkip = new A_Skip();
                     Actions.Add(returnSkip);
-                    returnSkips.Add(returnSkip);
+                    ReturnSkips.Add(returnSkip);
                 }
 
                 return;
@@ -997,344 +998,6 @@ namespace Deltin.Deltinteger.Parse
             Method,
             CustomMethod,
             UserMethod
-        }
-    }
-
-    class Var
-    {
-        public static Variable Global { get; private set; }
-        public static Variable Player { get; private set; }
-
-        private static int NextFreeGlobalIndex { get; set; }
-        private static int NextFreePlayerIndex { get; set; }
-
-        public static void Setup(Variable global, Variable player)
-        {
-            Global = global;
-            Player = player;
-        }
-
-        public static int Assign(bool isGlobal)
-        {
-            if (isGlobal)
-            {
-                int index = NextFreeGlobalIndex;
-                NextFreeGlobalIndex++;
-                return index;
-            }
-            else
-            {
-                int index = NextFreePlayerIndex;
-                NextFreePlayerIndex++;
-                return index;
-            }
-        }
-
-        private static Variable GetVar(bool isGlobal)
-        {
-            if (isGlobal)
-                return Global;
-            else
-                return Player;
-        }
-
-        public static Var AssignVar(bool isGlobal)
-        {
-            return new Var(isGlobal, GetVar(isGlobal), Assign(isGlobal));
-        }
-
-        public static DefinedVar AssignDefinedVar(ScopeGroup scopeGroup, bool isGlobal, string name, IToken token)
-        {
-            return new DefinedVar(scopeGroup, name, isGlobal, GetVar(isGlobal), Assign(isGlobal), token);
-        }
-
-
-
-        public bool IsGlobal { get; protected set; }
-        public Variable Variable { get; protected set; }
-
-        public bool IsInArray { get; protected set; }
-        public int Index { get; protected set; }
-
-        public Var(bool isGlobal, Variable variable, int index)
-        {
-            IsGlobal = isGlobal;
-            Variable = variable;
-            Index = index;
-            IsInArray = index != -1;
-        }
-
-        protected Var()
-        {}
-
-        public Element GetVariable(Element targetPlayer = null, Element getAiIndex = null)
-        {
-            Element element;
-
-            if (targetPlayer == null)
-                targetPlayer = new V_EventPlayer();
-
-            if (getAiIndex == null)
-            {
-                if (IsInArray)
-                {
-                    if (IsGlobal)
-                        element = Element.Part<V_ValueInArray>(Element.Part<V_GlobalVariable>(Variable), new V_Number(Index));
-                    else
-                        element = Element.Part<V_ValueInArray>(Element.Part<V_PlayerVariable>(targetPlayer, Variable), new V_Number(Index));
-                }
-                else
-                {
-                    if (IsGlobal)
-                        element = Element.Part<V_GlobalVariable>(Variable);
-                    else
-                        element = Element.Part<V_PlayerVariable>(targetPlayer, Variable);
-                }
-            }
-            else
-            {
-                if (IsInArray)
-                {
-                    if (IsGlobal)
-                        element = Element.Part<V_ValueInArray>(Element.Part<V_ValueInArray>(Element.Part<V_GlobalVariable>(Variable)), new V_Number(Index));
-                    else
-                        element = Element.Part<V_ValueInArray>(Element.Part<V_ValueInArray>(Element.Part<V_PlayerVariable>(targetPlayer, Variable)), new V_Number(Index));
-                }
-                else
-                {
-                    if (IsGlobal)
-                        element = Element.Part<V_ValueInArray>(Element.Part<V_GlobalVariable>(Variable), getAiIndex);
-                    else
-                        element = Element.Part<V_ValueInArray>(Element.Part<V_PlayerVariable>(targetPlayer, Variable), getAiIndex);
-                }
-            }
-
-            return element;
-        }
-
-        public Element SetVariable(Element value, Element targetPlayer = null, Element setAtIndex = null)
-        {
-            Element element;
-
-            if (targetPlayer == null)
-                targetPlayer = new V_EventPlayer();
-
-            if (setAtIndex == null)
-            {
-                if (IsInArray)
-                {
-                    if (IsGlobal)
-                        element = Element.Part<A_SetGlobalVariableAtIndex>(Variable, new V_Number(Index), value);
-                    else
-                        element = Element.Part<A_SetPlayerVariableAtIndex>(targetPlayer, Variable, new V_Number(Index), value);
-                }
-                else
-                {
-                    if (IsGlobal)
-                        element = Element.Part<A_SetGlobalVariable>(Variable, value);
-                    else
-                        element = Element.Part<A_SetPlayerVariable>(targetPlayer, Variable, value);
-                }
-            }
-            else
-            {
-                if (IsInArray)
-                {
-                    if (IsGlobal)
-                        element = Element.Part<A_SetGlobalVariableAtIndex>(Variable, new V_Number(Index), 
-                            Element.Part<V_Append>(
-                                Element.Part<V_Append>(
-                                    Element.Part<V_ArraySlice>(GetVariable(targetPlayer), new V_Number(0), setAtIndex), 
-                                    value),
-                            Element.Part<V_ArraySlice>(GetVariable(targetPlayer), Element.Part<V_Add>(setAtIndex, new V_Number(1)), new V_Number(9999))));
-                    else
-                        element = Element.Part<A_SetPlayerVariableAtIndex>(targetPlayer, Variable, new V_Number(Index),
-                            Element.Part<V_Append>(
-                                Element.Part<V_Append>(
-                                    Element.Part<V_ArraySlice>(GetVariable(targetPlayer), new V_Number(0), setAtIndex),
-                                    value),
-                            Element.Part<V_ArraySlice>(GetVariable(targetPlayer), Element.Part<V_Add>(setAtIndex, new V_Number(1)), new V_Number(9999))));
-                }
-                else
-                {
-                    if (IsGlobal)
-                        element = Element.Part<A_SetGlobalVariableAtIndex>(Variable, setAtIndex, value);
-                    else
-                        element = Element.Part<A_SetPlayerVariableAtIndex>(targetPlayer, Variable, setAtIndex, value);
-                }
-            }
-
-            return element;
-
-        }
-    }
-
-    class DefinedVar : Var
-    {
-        public string Name { get; protected set; }
-
-        public DefinedVar(ScopeGroup scopeGroup, DeltinScriptParser.VardefineContext vardefine)
-        {
-            IsGlobal = vardefine.GLOBAL() != null;
-            string name = vardefine.PART(0).GetText();
-
-            if (scopeGroup.IsVar(name))
-                throw new SyntaxErrorException($"The variable {name} was already defined.", vardefine.start);
-
-            Name = name;
-
-            // Both can be null, or only one can have a value.
-            string useVar = vardefine.PART(1)?.GetText();
-            var useNumber = vardefine.number();
-
-            // Auto assign
-            if (useNumber == null && useVar == null)
-            {
-                Index = Var.Assign(IsGlobal);
-
-                if (IsGlobal)
-                    Variable = Var.Global;
-                else
-                    Variable = Var.Player;
-
-                IsInArray = true;
-            }
-            else
-            {
-                if (useNumber != null)
-                {
-                    IsInArray = true;
-                    string indexString = useNumber.GetText();
-                    if (!int.TryParse(indexString, out int index))
-                        throw new SyntaxErrorException("Expected number.", useNumber.start);
-                    Index = index;
-                }
-
-                if (useVar != null)
-                {
-                    if (!Enum.TryParse(useVar, out Variable var))
-                        throw new SyntaxErrorException("Expected variable.", vardefine.start);
-                    Variable = var;
-                }
-            }
-
-            scopeGroup.In(this);
-        }
-
-        public DefinedVar(ScopeGroup scopeGroup, string name, bool isGlobal, Variable variable, int index, IToken token)
-        {
-            if (scopeGroup.IsVar(name))
-                throw new SyntaxErrorException($"The variable {name} was already defined.", token);
-
-            Name = name;
-            IsGlobal = isGlobal;
-            Variable = variable;
-
-            if (index != -1)
-            {
-                IsInArray = true;
-                Index = index;
-            }
-
-            scopeGroup.In(this);
-        }
-    }
-
-    class ScopeGroup : IDisposable
-    {
-        private ScopeGroup() {}
-
-        private ScopeGroup(ScopeGroup parent) 
-        {
-            Parent = parent;
-        }
-
-        public void In(DefinedVar var)
-        {
-            InScope.Add(var);
-        }
-
-        public void Out()
-        {
-            Parent.Children.Remove(this);
-        }
-
-        public bool IsVar(string name)
-        {
-            return GetVar(name, null) != null ? true : false;
-        }
-
-        public DefinedVar GetVar(string name, IToken token)
-        {
-            DefinedVar var = null;
-            ScopeGroup checkGroup = this;
-            while (var == null && checkGroup != null)
-            {
-                var = checkGroup.InScope.FirstOrDefault(v => v.Name == name);
-                checkGroup = checkGroup.Parent;
-            }
-
-            if (var == null && token != null)
-                throw new SyntaxErrorException($"The variable {name} does not exist.", token);
-
-            return var;
-        }
-
-        public ScopeGroup Child()
-        {
-            var newChild = new ScopeGroup(this);
-            Children.Add(newChild);
-            return newChild;
-        }
-
-        public List<DefinedVar> VarCollection()
-        {
-            return InScope;
-        }
-
-        public void Dispose()
-        {
-            Out();
-        }
-
-        private readonly List<DefinedVar> InScope = new List<DefinedVar>();
-
-        private readonly List<ScopeGroup> Children = new List<ScopeGroup>();
-        private readonly ScopeGroup Parent = null;
-
-        public static ScopeGroup Root = new ScopeGroup();
-    }
-
-    class UserMethod 
-    {
-        public UserMethod(DeltinScriptParser.User_methodContext context)
-        {
-            Name = context.PART()[0].GetText();
-            Block = context.block();
-
-            var contextParams = context.PART().Skip(1).ToArray();
-            Parameters = new Parameter[contextParams.Length];
-
-            for (int i = 0; i < Parameters.Length; i++)
-            {
-                var name = contextParams[i].GetText();
-                Parameters[i] = new Parameter(name, Elements.ValueType.Any, null);
-            }
-
-            UserMethodCollection.Add(this);
-        }
-
-        public string Name { get; private set; }
-
-        public DeltinScriptParser.BlockContext Block { get; private set; }
-
-        public Parameter[] Parameters { get; private set; }
-
-        public static readonly List<UserMethod> UserMethodCollection = new List<UserMethod>();
-
-        public static UserMethod GetUserMethod(string name)
-        {
-            return UserMethodCollection.FirstOrDefault(um => um.Name == name);
         }
     }
 
