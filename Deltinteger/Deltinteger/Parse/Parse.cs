@@ -354,25 +354,14 @@ namespace Deltin.Deltinteger.Parse
             #region for
             else if (statementContext.GetChild(0) is DeltinScriptParser.ForContext)
             {
+                ContinueSkip.Setup();
+
                 // The action the for loop starts on.
                 // +1 for the counter reset.
-                int forActionStartIndex = Actions.Count() + 1;
+                int forActionStartIndex = Actions.Count() - 1;
 
                 // The target array in the for statement.
                 Element forArrayElement = ParseExpression(scope, statementContext.@for().expr());
-
-                // Use skipIndex with Get/SetIVarAtIndex to get the bool to determine if the loop is running.
-                Var isBoolRunningSkipIf = Var.AssignVar(IsGlobal);
-                // Insert the SkipIf at the start of the rule.
-                Actions.Insert(0,
-                    Element.Part<A_SkipIf>
-                    (
-                        // Condition
-                        isBoolRunningSkipIf.GetVariable(),
-                        // Number of actions
-                        new V_Number(forActionStartIndex)
-                    )
-                );
 
                 ScopeGroup forGroup = scope.Child();
 
@@ -394,9 +383,6 @@ namespace Deltin.Deltinteger.Parse
                 forGroup.Out();
 
                 // Add the for's finishing elements
-                //Actions.Add(SetIVarAtIndex(skipIndex, new V_Number(forActionStartIndex))); // Sets how many variables to skip in the next iteraction.
-                Actions.Add(isBoolRunningSkipIf.SetVariable(new V_True())); // Enables the skip.
-
                 Actions.Add(forTempVar.SetVariable( // Indent the index by 1.
                     Element.Part<V_Add>
                     (
@@ -405,7 +391,8 @@ namespace Deltin.Deltinteger.Parse
                     )
                 ));
 
-                Actions.Add(Element.Part<A_Wait>(new V_Number(0.06), WaitBehavior.IgnoreCondition)); // Add the Wait() required by the workshop.
+                ContinueSkip.SetSkipCount(forActionStartIndex);
+
                 Actions.Add(Element.Part<A_LoopIf>( // Loop if the for condition is still true.
                     Element.Part<V_Compare>
                     (
@@ -414,7 +401,8 @@ namespace Deltin.Deltinteger.Parse
                         Element.Part<V_CountOf>(forArrayElement)
                     )
                 ));
-                Actions.Add(isBoolRunningSkipIf.SetVariable(new V_False()));
+
+                ContinueSkip.ResetSkip();
                 return;
             }
 

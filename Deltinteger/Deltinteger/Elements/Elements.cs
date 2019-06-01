@@ -160,18 +160,25 @@ namespace Deltin.Deltinteger.Elements
             return GetName(this.GetType());
         }
 
-        public void DebugPrint(Log log, int depth = 0)
+        public virtual void DebugPrint(Log log, int depth = 0)
         {
             if (ElementData.ElementType == ElementType.Action)
                 log.Write(LogLevel.Verbose, new ColorMod(new string(' ', depth * 4) + Info(), ConsoleColor.Cyan));
             else
                 log.Write(LogLevel.Verbose, new ColorMod(new string(' ', depth * 4) + Info(), ConsoleColor.White));
 
-            foreach (var param in ParameterValues)
-                if (param is Element)
-                    (param as Element).DebugPrint(log, depth + 1);
-                else
-                    log.Write(LogLevel.Verbose, new string(' ', (depth + 1) * 4) + param);
+            for (int i = 0; i < parameterData.Length; i++)
+            {
+                log.Write(LogLevel.Verbose, new ColorMod(new string(' ', (depth + 1) * 4) + parameterData[i].Name + ":", ConsoleColor.Magenta));
+
+                if (i < ParameterValues.Length)
+                {
+                    if (ParameterValues[i] is Element)
+                        (ParameterValues[i] as Element).DebugPrint(log, depth + 1);
+                    else
+                        log.Write(LogLevel.Verbose, new string(' ', (depth + 1) * 4) + ParameterValues[i]);
+                }
+            }
         }
 
         public virtual string ToWorkshop()

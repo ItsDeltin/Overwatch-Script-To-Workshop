@@ -68,6 +68,7 @@
     <Compile Include="Parse\Scope.cs" />
     <Compile Include="Parse\UserMethod.cs" />
     <Compile Include="Parse\Var.cs" />
+    <Compile Include="Parse\ContinueSkip.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -91,7 +92,6 @@
     </BootstrapperPackage>
     <Content Include=".vscode\launch.json" />
     <Content Include=".vscode\tasks.json" />
-    <Content Include="Parse\ContinueSkip.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

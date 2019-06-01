@@ -22,17 +22,6 @@
             "request": "launch",
             "preLaunchTask": "Debug build",
             "program": "${workspaceFolder}/bin/Debug/Deltinteger.exe",
-            "args":["G:/Overwatch-Workshop-Text/Examples/debug.del"],
-            "console": "externalTerminal",
-            "stopAtEntry": false,
-            "internalConsoleOptions": "openOnSessionStart"
-        },
-        {
-            "name": "Debug Script (Verbose)",
-            "type":"clr",
-            "request": "launch",
-            "preLaunchTask": "Debug build",
-            "program": "${workspaceFolder}/bin/Debug/Deltinteger.exe",
             "args":["G:/Overwatch-Workshop-Text/Examples/debug.del", "-verbose"],
             "console": "externalTerminal",
             "stopAtEntry": false,
@@ -44,7 +33,7 @@
             "request": "launch",
             "preLaunchTask": "Debug build",
             "program": "${workspaceFolder}/bin/Debug/Deltinteger.exe",
-            "args":["G:/Overwatch-Workshop-Text/Examples/murder_mystery.del"],
+            "args":["G:/Overwatch-Workshop-Text/Examples/murder_mystery.del", "-verbose"],
             "console": "externalTerminal",
             "stopAtEntry": false,
             "internalConsoleOptions": "openOnSessionStart"
@@ -55,7 +44,7 @@
             "request": "launch",
             "preLaunchTask": "Debug build",
             "program": "${workspaceFolder}/bin/Debug/Deltinteger.exe",
-            "args":["G:/Overwatch-Workshop-Text/Examples/methods.del"],
+            "args":["G:/Overwatch-Workshop-Text/Examples/methods.del", "-verbose"],
             "console": "externalTerminal",
             "stopAtEntry": false,
             "internalConsoleOptions": "openOnSessionStart"

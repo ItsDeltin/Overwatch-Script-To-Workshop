@@ -40,16 +40,16 @@ namespace Deltin.Deltinteger.Parse
             );
         }
 
-        public Element SetSkipCount(int number)
+        public void SetSkipCount(int number)
         {
             CheckSetup();
-            return SkipCount.SetVariable(new V_Number(number));
+            Actions.Add(SkipCount.SetVariable(new V_Number(number)));
         }
 
-        public Element ResetSkip()
+        public void ResetSkip()
         {
             CheckSetup();
-            return SetSkipCount(0);
+            SetSkipCount(0);
         }
 
         private void CheckSetup()

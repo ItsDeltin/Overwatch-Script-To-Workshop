@@ -487,6 +487,13 @@ namespace Deltin.Deltinteger.Elements
             return value.ToString();
         }
 
+        public override void DebugPrint(Log log, int depth = 0)
+        {
+            log.Write(LogLevel.Verbose, 
+                new ColorMod(new string(' ', depth * 4) + "Number ", ConsoleColor.White), 
+                new ColorMod(value.ToString(), ConsoleColor.DarkYellow));
+        }
+
         protected override string Info()
         {
             return $"{ElementData.ElementName} {value}";
