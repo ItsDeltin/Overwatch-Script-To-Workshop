@@ -1,18 +1,25 @@
 import {
-createConnection,
-TextDocuments,
-TextDocument,
-Diagnostic,
-DiagnosticSeverity,
-ProposedFeatures,
-InitializeParams,
-DidChangeConfigurationNotification,
-CompletionItem,
-CompletionItemKind,
-TextDocumentPositionParams,
-RequestHandler,
-Hover
+	createConnection,
+	TextDocuments,
+	TextDocument,
+	Diagnostic,
+	DiagnosticSeverity,
+	ProposedFeatures,
+	InitializeParams,
+	DidChangeConfigurationNotification,
+	CompletionItem,
+	CompletionItemKind,
+	TextDocumentPositionParams,
+	RequestHandler,
+	Hover,
+	DocumentColorParams,
+	Color,
+	ColorInformation,
+	ColorPresentation,
+	ColorPresentationParams
 } from 'vscode-languageserver';
+import { connect } from 'tls';
+import { cpus } from 'os';
 //import { request } from 'http';
 
 // Create a connection for the server. The connection uses Node's IPC as a transport.
@@ -47,7 +54,8 @@ connection.onInitialize((params: InitializeParams) => {
 			// Tell the client that the server supports code completion
 			completionProvider: {
 				resolveProvider: true
-			}
+			},
+			colorProvider: true
 		}
 	};
 });
@@ -226,6 +234,54 @@ connection.onCompletionResolve(
 			item.documentation = "AbortIf will abort the rule if the condition is true.";
 		}
 		return item;
+	}
+);
+
+connection.onDocumentColor(
+	(documentColor: DocumentColorParams) => {
+
+		let textDocument = documents.get(documentColor.textDocument.uri);
+		
+		request.post({url:'http://localhost:3000/color', body: textDocument.getText()}, function callback(err, httpResponse, body) 
+		{
+			let colorInformations: ColorInformation[] = [];
+
+			let colors = JSON.parse(body);
+			for (var i = 0; i < colors.length; i++) {   
+				let color: ColorInformation =
+				{
+					range: {
+						start: textDocument.positionAt(colors[i].start),
+						end: textDocument.positionAt(colors[i].end),
+					},
+					color: {
+						red: colors[i].r,
+						green: colors[i].g,
+						blue: colors[i].b,
+						alpha: colors[i].a
+					}
+				};
+				colorInformations.push(color);
+			}
+
+			return colorInformations;
+		});
+	}
+);
+
+connection.onColorPresentation(
+	(params: ColorPresentationParams) => {
+		
+		let colorPresentations: ColorPresentation[] = [];
+
+		let cp: ColorPresentation = 
+		{
+			label: 'test'
+		};
+
+		colorPresentations.push(cp);
+
+		return colorPresentations;
 	}
 );
 

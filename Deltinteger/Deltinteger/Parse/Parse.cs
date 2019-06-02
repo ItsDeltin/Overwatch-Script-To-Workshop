@@ -15,14 +15,14 @@ namespace Deltin.Deltinteger.Parse
     {
         static Log Log = new Log("Parse");
 
-        public static Rule[] ParseText(string text)
+        public static Rule[] ParseText(string document)
         {
-            return ParseText(text, out _);
+            return ParseText(document, out _);
         }
 
-        public static Rule[] ParseText(string text, out SyntaxError[] syntaxErrors)
+        public static Rule[] ParseText(string document, out SyntaxError[] syntaxErrors)
         {
-            AntlrInputStream inputStream = new AntlrInputStream(text);
+            AntlrInputStream inputStream = new AntlrInputStream(document);
 
             // Lexer
             DeltinScriptLexer lexer = new DeltinScriptLexer(inputStream);
@@ -38,7 +38,8 @@ namespace Deltin.Deltinteger.Parse
             DeltinScriptParser.RulesetContext context = parser.ruleset();
 
             //PrintContext(context);
-            Log.Write(LogLevel.Verbose, context.ToStringTree(parser));
+            #warning loglevel
+            Log.Write(LogLevel.Quiet, context.ToStringTree(parser));
 
             syntaxErrors = errorListener.Errors.ToArray();
             if (syntaxErrors.Length > 0)
@@ -117,6 +118,23 @@ namespace Deltin.Deltinteger.Parse
             }
 
             return compiledRules.ToArray();
+        }
+
+        public static DeltinScriptParser GetParser(string document)
+        {
+            AntlrInputStream inputStream = new AntlrInputStream(document);
+
+            // Lexer
+            DeltinScriptLexer lexer = new DeltinScriptLexer(inputStream);
+            CommonTokenStream commonTokenStream = new CommonTokenStream(lexer);
+
+            // Parse
+            DeltinScriptParser parser = new DeltinScriptParser(commonTokenStream);
+            var errorListener = new ErrorListener();
+            parser.RemoveErrorListeners();
+            parser.AddErrorListener(errorListener);
+            
+            return parser;
         }
     }
 
@@ -1004,7 +1022,7 @@ namespace Deltin.Deltinteger.Parse
 
         public override void SyntaxError(IRecognizer recognizer, IToken offendingSymbol, int line, int charPositionInLine, string msg, RecognitionException e)
         {
-            Errors.Add(new SyntaxError(msg, offendingSymbol.StartIndex, offendingSymbol.StopIndex));
+            Errors.Add(new SyntaxError(msg, offendingSymbol.StartIndex, offendingSymbol.StopIndex + 1));
             //throw new SyntaxErrorException(msg, offendingSymbol);
         }
     }

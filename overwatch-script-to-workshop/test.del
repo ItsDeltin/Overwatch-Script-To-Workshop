@@ -1,8 +1,4 @@
 usevar globalvar A;
 usevar playervar A;
 
-rule: "hi"
-Event.Ongoing_Global
-{
-    
-}
+rule:"hello"

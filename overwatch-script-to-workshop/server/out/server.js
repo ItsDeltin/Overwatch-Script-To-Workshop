@@ -37,7 +37,8 @@ connection.onInitialize((params) => {
             // Tell the client that the server supports code completion
             completionProvider: {
                 resolveProvider: true
-            }
+            },
+            colorProvider: true
         }
     };
 });
@@ -187,6 +188,37 @@ connection.onCompletionResolve((item) => {
         item.documentation = "AbortIf will abort the rule if the condition is true.";
     }
     return item;
+});
+connection.onDocumentColor((documentColor) => {
+    let textDocument = documents.get(documentColor.textDocument.uri);
+    return request.post({ url: 'http://localhost:3000/color', body: textDocument.getText() }, function callback(err, httpResponse, body) {
+        let colorInformations = [];
+        let colors = JSON.parse(body);
+        for (var i = 0; i < colors.length; i++) {
+            let color = {
+                range: {
+                    start: textDocument.positionAt(colors[i].start),
+                    end: textDocument.positionAt(colors[i].end),
+                },
+                color: {
+                    red: colors[i].r,
+                    green: colors[i].g,
+                    blue: colors[i].b,
+                    alpha: colors[i].a
+                }
+            };
+            colorInformations.push(color);
+        }
+        return colorInformations;
+    });
+});
+connection.onColorPresentation((params) => {
+    let colorPresentations = [];
+    let cp = {
+        label: 'test'
+    };
+    colorPresentations.push(cp);
+    return colorPresentations;
 });
 /*
 connection.onHover((event) => {
