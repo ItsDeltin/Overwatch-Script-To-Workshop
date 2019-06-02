@@ -16,7 +16,8 @@ import {
 	Color,
 	ColorInformation,
 	ColorPresentation,
-	ColorPresentationParams
+	ColorPresentationParams,
+	SignatureHelp
 } from 'vscode-languageserver';
 import { connect } from 'tls';
 import { cpus } from 'os';
@@ -54,8 +55,7 @@ connection.onInitialize((params: InitializeParams) => {
 			// Tell the client that the server supports code completion
 			completionProvider: {
 				resolveProvider: true
-			},
-			colorProvider: true
+			}
 		}
 	};
 });
@@ -158,51 +158,6 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 
 		connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
 	});
-
-	// In this simple example we get the settings for every validate run.
-	
-
-	// The validator creates diagnostics for all uppercase words length 2 and more
-	/*
-	let text = textDocument.getText();
-	let pattern = /\b[A-Z]{2,}\b/g;
-	let m: RegExpExecArray | null;
-
-	let problems = 0;
-	let diagnostics: Diagnostic[] = [];
-		while ((m = pattern.exec(text)) && problems < settings.maxNumberOfProblems) {
-		problems++;
-		let diagnostic: Diagnostic = {
-			severity: DiagnosticSeverity.Warning,
-			range: {
-				start: textDocument.positionAt(m.index),
-				end: textDocument.positionAt(m.index + m[0].length)
-			},
-			message: `${m[0]} is all uppercase.`,
-			source: 'ex'
-		};
-		if (hasDiagnosticRelatedInformationCapability) {
-			diagnostic.relatedInformation = [{
-				location: {
-					uri: textDocument.uri,
-					range: Object.assign({}, diagnostic.range)
-				},
-				message: 'Spelling matters'
-			},
-			{
-				location: {
-					uri: textDocument.uri,
-					range: Object.assign({}, diagnostic.range)
-				},
-				message: 'Particularly for names'
-			}];
-		}
-		diagnostics.push(diagnostic);
-	}
-
-	// Send the computed diagnostics to VS Code.
-	connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
-	*/
 }
 
 connection.onDidChangeWatchedFiles(_change => {
@@ -211,11 +166,14 @@ connection.onDidChangeWatchedFiles(_change => {
 });
 
 // This handler provides the initial list of the completion items.
-connection.onCompletion(
-(_textDocumentPosition: TextDocumentPositionParams): CompletionItem[] => {
+connection.onCompletion((_textDocumentPosition: TextDocumentPositionParams) => {
+
+	return getCompletion(_textDocumentPosition);
+
 	// The pass parameter contains the position of the text document in
 	// which code complete got requested. For the example we ignore this
 	// info and always provide the same completion items.
+	/*
 	return [
 		{
 			label: 'AbortIf',
@@ -223,8 +181,74 @@ connection.onCompletion(
 			data: 1,
 		}
 	];
+	*/
 });
 
+function getCompletion(pos: TextDocumentPositionParams) {
+
+	let textDocument = documents.get(pos.textDocument.uri);
+	let data = JSON.stringify({
+		textDocument: textDocument.getText(),
+		caret: pos.position
+	});
+	
+	return new Promise<CompletionItem[]>(function (resolve, reject) {
+
+	  	request.post({url:'http://localhost:3000/completion', body: data}, function (error, res, body) {
+			if (!error && res.statusCode == 200) {
+
+				let completionItems: CompletionItem[] = [];
+
+				let completions = JSON.parse(body);
+				for (var i = 0; i < completions.length; i++) {
+					let completion: CompletionItem = {
+						label        : completions[i].label,
+						kind         : completions[i].kind,
+						detail       : completions[i].detail,
+						documentation: completions[i].documentation
+					};
+					completionItems.push(completion);
+				}
+
+				resolve(completionItems);
+			}
+			else {
+		  		reject(error);
+			}
+	  	});
+	});
+}
+
+connection.onSignatureHelp((pos: TextDocumentPositionParams) => {
+	return getSignatureHelp(pos);
+});
+
+function getSignatureHelp(pos: TextDocumentPositionParams) {
+
+	let textDocument = documents.get(pos.textDocument.uri);
+	let data = JSON.stringify({
+		textDocument: textDocument.getText(),
+		caret: pos.position
+	});
+	
+	return new Promise<SignatureHelp[]>(function (resolve, reject) {
+
+	  	request.post({url:'http://localhost:3000/signature', body: data}, function (error, res, body) {
+			if (!error && res.statusCode == 200) {
+
+				let signatureHelp: SignatureHelp;
+
+				resolve(signatureHelp);
+			}
+			else {
+		  		reject(error);
+			}
+	  	});
+	});
+
+}
+
+/*
 // This handler resolves additional information for the item selected in
 // the completion list.
 connection.onCompletionResolve(
@@ -232,20 +256,33 @@ connection.onCompletionResolve(
 		if (item.data == 1) {
 			item.detail = "AbortIf(condition)";
 			item.documentation = "AbortIf will abort the rule if the condition is true.";
+			item.textEdit 
 		}
 		return item;
 	}
 );
+*/
 
+/*
 connection.onDocumentColor(
 	(documentColor: DocumentColorParams) => {
 
-		let textDocument = documents.get(documentColor.textDocument.uri);
-		
-		request.post({url:'http://localhost:3000/color', body: textDocument.getText()}, function callback(err, httpResponse, body) 
-		{
-			let colorInformations: ColorInformation[] = [];
+		let colors = getColors(documentColor);
+		return colors;
+	}
+);
+*/
 
+/*
+function getColors(documentColor: DocumentColorParams) {
+
+	let textDocument = documents.get(documentColor.textDocument.uri);
+	
+	return new Promise<ColorInformation[]>(function (resolve, reject) {
+	  request.post({url:'http://localhost:3000/color', body: textDocument.getText()}, function (error, res, body) {
+		if (!error && res.statusCode == 200) {
+
+			let colorInformations: ColorInformation[] = [];
 			let colors = JSON.parse(body);
 			for (var i = 0; i < colors.length; i++) {   
 				let color: ColorInformation =
@@ -264,10 +301,13 @@ connection.onDocumentColor(
 				colorInformations.push(color);
 			}
 
-			return colorInformations;
-		});
-	}
-);
+			resolve(colorInformations);
+		} else {
+		  	reject(error);
+		}
+	  });
+	});
+  }
 
 connection.onColorPresentation(
 	(params: ColorPresentationParams) => {
@@ -276,7 +316,7 @@ connection.onColorPresentation(
 
 		let cp: ColorPresentation = 
 		{
-			label: 'test'
+			label: '????'
 		};
 
 		colorPresentations.push(cp);
@@ -284,6 +324,7 @@ connection.onColorPresentation(
 		return colorPresentations;
 	}
 );
+*/
 
 /*
 connection.onHover((event) => {

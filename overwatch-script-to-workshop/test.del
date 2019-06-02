@@ -1,4 +1,7 @@
 usevar globalvar A;
 usevar playervar A;
 
-rule:"hello"
+rule: "aa"
+{
+    FacingDirectionOf(Vector(0, 2, 3));
+}

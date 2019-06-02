@@ -37,8 +37,7 @@ connection.onInitialize((params) => {
             // Tell the client that the server supports code completion
             completionProvider: {
                 resolveProvider: true
-            },
-            colorProvider: true
+            }
         }
     };
 });
@@ -119,48 +118,6 @@ function validateTextDocument(textDocument) {
             }
             connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
         });
-        // In this simple example we get the settings for every validate run.
-        // The validator creates diagnostics for all uppercase words length 2 and more
-        /*
-        let text = textDocument.getText();
-        let pattern = /\b[A-Z]{2,}\b/g;
-        let m: RegExpExecArray | null;
-    
-        let problems = 0;
-        let diagnostics: Diagnostic[] = [];
-            while ((m = pattern.exec(text)) && problems < settings.maxNumberOfProblems) {
-            problems++;
-            let diagnostic: Diagnostic = {
-                severity: DiagnosticSeverity.Warning,
-                range: {
-                    start: textDocument.positionAt(m.index),
-                    end: textDocument.positionAt(m.index + m[0].length)
-                },
-                message: `${m[0]} is all uppercase.`,
-                source: 'ex'
-            };
-            if (hasDiagnosticRelatedInformationCapability) {
-                diagnostic.relatedInformation = [{
-                    location: {
-                        uri: textDocument.uri,
-                        range: Object.assign({}, diagnostic.range)
-                    },
-                    message: 'Spelling matters'
-                },
-                {
-                    location: {
-                        uri: textDocument.uri,
-                        range: Object.assign({}, diagnostic.range)
-                    },
-                    message: 'Particularly for names'
-                }];
-            }
-            diagnostics.push(diagnostic);
-        }
-    
-        // Send the computed diagnostics to VS Code.
-        connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
-        */
     });
 }
 connection.onDidChangeWatchedFiles(_change => {
@@ -169,57 +126,129 @@ connection.onDidChangeWatchedFiles(_change => {
 });
 // This handler provides the initial list of the completion items.
 connection.onCompletion((_textDocumentPosition) => {
+    return getCompletion(_textDocumentPosition);
     // The pass parameter contains the position of the text document in
     // which code complete got requested. For the example we ignore this
     // info and always provide the same completion items.
+    /*
     return [
         {
             label: 'AbortIf',
-            kind: vscode_languageserver_1.CompletionItemKind.Method,
+            kind: CompletionItemKind.Method,
             data: 1,
         }
     ];
+    */
 });
+function getCompletion(pos) {
+    let textDocument = documents.get(pos.textDocument.uri);
+    let data = JSON.stringify({
+        textDocument: textDocument.getText(),
+        caret: pos.position
+    });
+    return new Promise(function (resolve, reject) {
+        request.post({ url: 'http://localhost:3000/completion', body: data }, function (error, res, body) {
+            if (!error && res.statusCode == 200) {
+                let completionItems = [];
+                let completions = JSON.parse(body);
+                for (var i = 0; i < completions.length; i++) {
+                    let completion = {
+                        label: completions[i].label,
+                        kind: completions[i].kind,
+                        detail: completions[i].detail,
+                        documentation: completions[i].documentation
+                    };
+                    completionItems.push(completion);
+                }
+                resolve(completionItems);
+            }
+            else {
+                reject(error);
+            }
+        });
+    });
+}
+connection.onSignatureHelp((pos) => {
+    return getSignatureHelp(pos);
+});
+function getSignatureHelp(pos) {
+    return null;
+}
+/*
 // This handler resolves additional information for the item selected in
 // the completion list.
-connection.onCompletionResolve((item) => {
-    if (item.data == 1) {
-        item.detail = "AbortIf(condition)";
-        item.documentation = "AbortIf will abort the rule if the condition is true.";
-    }
-    return item;
-});
-connection.onDocumentColor((documentColor) => {
-    let textDocument = documents.get(documentColor.textDocument.uri);
-    return request.post({ url: 'http://localhost:3000/color', body: textDocument.getText() }, function callback(err, httpResponse, body) {
-        let colorInformations = [];
-        let colors = JSON.parse(body);
-        for (var i = 0; i < colors.length; i++) {
-            let color = {
-                range: {
-                    start: textDocument.positionAt(colors[i].start),
-                    end: textDocument.positionAt(colors[i].end),
-                },
-                color: {
-                    red: colors[i].r,
-                    green: colors[i].g,
-                    blue: colors[i].b,
-                    alpha: colors[i].a
-                }
-            };
-            colorInformations.push(color);
+connection.onCompletionResolve(
+    (item: CompletionItem): CompletionItem => {
+        if (item.data == 1) {
+            item.detail = "AbortIf(condition)";
+            item.documentation = "AbortIf will abort the rule if the condition is true.";
+            item.textEdit
         }
-        return colorInformations;
+        return item;
+    }
+);
+*/
+/*
+connection.onDocumentColor(
+    (documentColor: DocumentColorParams) => {
+
+        let colors = getColors(documentColor);
+        return colors;
+    }
+);
+*/
+/*
+function getColors(documentColor: DocumentColorParams) {
+
+    let textDocument = documents.get(documentColor.textDocument.uri);
+    
+    return new Promise<ColorInformation[]>(function (resolve, reject) {
+      request.post({url:'http://localhost:3000/color', body: textDocument.getText()}, function (error, res, body) {
+        if (!error && res.statusCode == 200) {
+
+            let colorInformations: ColorInformation[] = [];
+            let colors = JSON.parse(body);
+            for (var i = 0; i < colors.length; i++) {
+                let color: ColorInformation =
+                {
+                    range: {
+                        start: textDocument.positionAt(colors[i].start),
+                        end: textDocument.positionAt(colors[i].end),
+                    },
+                    color: {
+                        red: colors[i].r,
+                        green: colors[i].g,
+                        blue: colors[i].b,
+                        alpha: colors[i].a
+                    }
+                };
+                colorInformations.push(color);
+            }
+
+            resolve(colorInformations);
+        } else {
+            reject(error);
+        }
+      });
     });
-});
-connection.onColorPresentation((params) => {
-    let colorPresentations = [];
-    let cp = {
-        label: 'test'
-    };
-    colorPresentations.push(cp);
-    return colorPresentations;
-});
+  }
+
+connection.onColorPresentation(
+    (params: ColorPresentationParams) => {
+        
+        let colorPresentations: ColorPresentation[] = [];
+
+        let cp: ColorPresentation =
+        {
+            label: '????'
+        };
+
+        colorPresentations.push(cp);
+
+        return colorPresentations;
+    }
+);
+*/
 /*
 connection.onHover((event) => {
 });

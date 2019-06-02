@@ -5,6 +5,9 @@ using System.Text;
 using System.IO;
 using System.Drawing;
 using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using System.Diagnostics;
 using Deltin.Deltinteger.Parse;
 using Deltin.Deltinteger.Elements;
 using Newtonsoft.Json;
@@ -36,7 +39,7 @@ namespace Deltin.Deltinteger.Checker
                 var reader = new StreamReader(inputStream, encoding);
 
                 string url = request.RawUrl.Substring(1);
-                string document = reader.ReadToEnd();
+                string input = reader.ReadToEnd();
 
                 inputStream.Close();
                 reader.Close();
@@ -45,13 +48,21 @@ namespace Deltin.Deltinteger.Checker
                 switch (url)
                 {
                     case "parse":
-                        string json = ParseDocument(document);
-                        buffer = GetBytes(json);
+                        buffer = GetBytes(
+                            ParseDocument(input)
+                        );
                         break;
 
-                    case "color":
-                        json = GetColors(document);
-                        buffer = GetBytes(json);
+                    case "completion":
+                        buffer = GetBytes(
+                            GetAutocomplete(input)
+                        );
+                        break;
+
+                    case "signature":
+                        buffer = GetBytes(
+                            GetAutocomplete(input)
+                        );
                         break;
 
                     default: throw new Exception("Unsure of how to handle url " + url);
@@ -77,38 +88,104 @@ namespace Deltin.Deltinteger.Checker
             return JsonConvert.SerializeObject(errors);
         }
 
-        static string GetColors(string document)
+        static string GetAutocomplete(string json)
         {
+            /*
+                Format:
+                    textDocument
+                    caret
+                        caret.line
+                        caret.character
+            */
+            dynamic inputJson = JsonConvert.DeserializeObject(json);
+
+            int line      = inputJson.caret.line;
+            int character = inputJson.caret.character;
+            DocumentPos caret = new DocumentPos(line, character);
+
+            string document = inputJson.textDocument;
+
             DeltinScriptParser parser = Parse.Parser.GetParser(document);
             var ruleSet = parser.ruleset();
 
-            var colors = new List<DocumentColor>();
+            ParserRuleContext selectedRule = GetSelectedRule(ruleSet, caret, parser);
 
-            GetColors(ruleSet, colors);
-
-            return JsonConvert.SerializeObject(colors.ToArray());
-        }
-
-        static void GetColors(IParseTree tree, List<DocumentColor> colors)
-        {
-            if (tree is ParserRuleContext)
+            Completion[] completion;
+            
+            switch(selectedRule.GetType().Name)
             {
-                var context = tree as ParserRuleContext;
-                if (tree is DeltinScriptParser.Ow_ruleContext)
-                {
-                    var symbol = (tree as DeltinScriptParser.Ow_ruleContext).RULE_WORD().Symbol;
-                    colors.Add(new DocumentColor(50, 229, 113, 255, symbol.StartIndex, symbol.StopIndex));
-                }
+                // TODO seperate expressions and values
+                case nameof(DeltinScriptParser.BlockContext):
+                case nameof(DeltinScriptParser.rule_if):
+                case nameof(DeltinScriptParser.method):
+                case nameof(DeltinScriptParser.user_method):
+                case nameof(DeltinScriptParser.expr):
+
+                    completion = Element.MethodList.Select(m => 
+                        new Completion(m.Name.Substring(2))
+                        {
+                            kind = Method,
+                            detail = ((Element)Activator.CreateInstance(m)).ToString()
+                        }
+                        ).ToArray();
+
+                    break;
+                
+                case nameof(DeltinScriptParser.ruleset):
+                    // TODO ruleset autocomplete
+                    completion = new Completion[0];
+                    break;
+
+                default: 
+                    Console.WriteLine(selectedRule.GetType().Name + " not implemented.");
+                    Debugger.Break();
+                    throw new NotImplementedException();
             }
 
-            for (int i = 0; i < tree.ChildCount; i++)
-                GetColors(tree.GetChild(i), colors);
+            return JsonConvert.SerializeObject(completion);
         }
 
-        static string Autocomplete(string document, int line, int column)
+        static ParserRuleContext GetSelectedRule(ParserRuleContext tree, DocumentPos caret, DeltinScriptParser parser)
         {
+            if (tree.ChildCount == 0)
+                return tree;
+
+            ParserRuleContext selectedContext = null;
+            int selectedRange = 0;
+            for (int i = 0; i < tree.ChildCount; i++)
+                if (tree.GetChild(i) is ParserRuleContext)
+                {
+                    var child = tree.GetChild(i) as ParserRuleContext;
+                    var compare = GetSelectedRule(child, caret, parser);
+
+                    int compareRange = tree.SourceInterval.b - tree.SourceInterval.a;
+
+                    if ((compare.start.Line  < caret.Line || (compare.start.Line == caret.Line && compare.start.Column <= caret.Character)) &&
+                        (compare.stop.Line   > caret.Line || (compare.stop.Line  == caret.Line && compare.start.Column >= caret.Character)) &&
+                        (compareRange <= selectedRange || selectedRange == 0))
+                        {
+                            selectedRange = compareRange;
+                            selectedContext = compare;
+                        }
+                }
+
+            return selectedContext ?? tree;
+        }
+
+        static string GetSignatures(string json)
+        {
+            dynamic inputJson = JsonConvert.DeserializeObject(json);
+
+            int line      = inputJson.caret.line;
+            int character = inputJson.caret.character;
+            DocumentPos caret = new DocumentPos(line, character);
+
+            string document = inputJson.textDocument;
+
             DeltinScriptParser parser = Parse.Parser.GetParser(document);
-            return null;
+            var ruleSet = parser.ruleset();
+
+            ParserRuleContext selectedRule = GetSelectedRule(ruleSet, caret, parser);
         }
 
         private const int Text = 1;
@@ -137,24 +214,53 @@ namespace Deltin.Deltinteger.Checker
         private const int Operator = 24;
         private const int TypeParameter = 25;
 
-        class DocumentColor
+        class DocumentPos
         {
-            public int r;
-            public int g;
-            public int b;
-            public int a;
-            public int start;
-            public int end;
+            public int Line;
+            public int Character;
 
-            public DocumentColor(int r, int g, int b, int a, int start, int end)
+            public DocumentPos(int line, int character)
             {
-                this.r = r;
-                this.g = g;
-                this.b = b;
-                this.a = a;
-                this.start = start;
-                this.end = end;
+                Line = line;
+                Character = character;
             }
+        }
+
+        class Completion
+        {
+            public Completion(string label)
+            {
+                this.label = label;
+            }
+
+            public string label;
+
+            public int kind;
+
+            public string detail;
+
+            public string documentation;
+        }
+
+        class SignatureHelp
+        {
+            public SignatureInformation[] signatures;
+            public int activeSignature;
+            public int activeParameter;
+        }
+
+        class SignatureInformation
+        {
+            public string label;
+            public object documentation; // string or markdown
+            public ParameterInformation[] parameters;
+        }
+
+        class ParameterInformation
+        {
+            public object label; // string or int[]
+
+            public object documentation; // string or markdown
         }
     }
 }
