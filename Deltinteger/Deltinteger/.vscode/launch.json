@@ -50,6 +50,28 @@
             "internalConsoleOptions": "openOnSessionStart"
         },
         {
+            "name": "Debug Hitscan Sphere",
+            "type":"clr",
+            "request": "launch",
+            "preLaunchTask": "Debug build",
+            "program": "${workspaceFolder}/bin/Debug/Deltinteger.exe",
+            "args":["G:/Overwatch-Workshop-Text/Examples/hitscan_spheres.del", "-verbose"],
+            "console": "externalTerminal",
+            "stopAtEntry": false,
+            "internalConsoleOptions": "openOnSessionStart"
+        },
+        {
+            "name": "Checker",
+            "type":"clr",
+            "request": "launch",
+            "preLaunchTask": "Release build",
+            "program": "${workspaceFolder}/bin/Release/Deltinteger.exe",
+            "args":["-checker"],
+            "console": "externalTerminal",
+            "stopAtEntry": false,
+            "internalConsoleOptions": "openOnSessionStart"
+        },
+        {
             "name": "Release",
             "type":"clr",
             "request": "launch",

@@ -262,16 +262,16 @@ namespace Deltin.Deltinteger.Parse
             #endregion
 
             #region Variable set
-            else if (statementContext.statement_operation() != null)
+            else if (statementContext.varset() != null)
             {
                 DefinedVar variable;
                 Element target;
                 Element index = null;
-                string operation = statementContext.statement_operation().GetText();
+                string operation = statementContext.varset().statement_operation().GetText();
 
                 Element value;
 
-                value = ParseExpression(scope, statementContext.expr(1) as DeltinScriptParser.ExprContext);
+                value = ParseExpression(scope, statementContext.varset().expr(1) as DeltinScriptParser.ExprContext);
 
                 /*  Format if the variable has an expression beforehand (sets the target player)
                                  expr(0)           .ChildCount
@@ -281,8 +281,8 @@ namespace Deltin.Deltinteger.Parse
                                    ^            expr | . | expr
                                    ^                   ^
                                  expr(0)          .GetChild(1) == '.'                               */
-                if (statementContext.expr(0).ChildCount == 3
-                    && statementContext.expr(0).GetChild(1).GetText() == ".")
+                if (statementContext.varset().expr(0).ChildCount == 3
+                    && statementContext.varset().expr(0).GetChild(1).GetText() == ".")
                 {
                     /*  Get Variable:  .expr(0)              .expr(1)
                                          v                     v  .expr(1) (if the value to be set is an array)
@@ -292,12 +292,12 @@ namespace Deltin.Deltinteger.Parse
                                          ^           ^
                         Get  Target:  .expr(0)    .expr(0)                                            */
 
-                    variable = scope.GetVar(statementContext.expr(0).expr(1).GetChild(0).GetText(),
-                                                 statementContext.expr(0).expr(1).start);
-                    target = ParseExpression(scope, statementContext.expr(0).expr(0));
+                    variable = scope.GetVar(statementContext.varset().expr(0).expr(1).GetChild(0).GetText(),
+                                                 statementContext.varset().expr(0).expr(1).start);
+                    target = ParseExpression(scope, statementContext.varset().expr(0).expr(0));
 
                     // Get the index if the variable has []
-                    var indexExpression = statementContext.expr(0).expr(1).expr(1);
+                    var indexExpression = statementContext.varset().expr(0).expr(1).expr(1);
                     if (indexExpression != null)
                         index = ParseExpression(scope, indexExpression);
                 }
@@ -308,12 +308,12 @@ namespace Deltin.Deltinteger.Parse
                         Statement (     v                   v  ) | Operation | Set to variable
                                    Variable to set (expr) | []
                     */
-                    variable = scope.GetVar(statementContext.expr(0).GetChild(0).GetText(),
-                                                 statementContext.expr(0).start);
+                    variable = scope.GetVar(statementContext.varset().expr(0).GetChild(0).GetText(),
+                                                 statementContext.varset().expr(0).start);
                     target = new V_EventPlayer();
 
                     // Get the index if the variable has []
-                    var indexExpression = statementContext.expr(0).expr(1);
+                    var indexExpression = statementContext.varset().expr(0).expr(1);
                     if (indexExpression != null)
                         index = ParseExpression(scope, indexExpression);
                 }
@@ -360,9 +360,6 @@ namespace Deltin.Deltinteger.Parse
                 // +1 for the counter reset.
                 int forActionStartIndex = Actions.Count() - 1;
 
-                // The target array in the for statement.
-                Element forArrayElement = ParseExpression(scope, statementContext.@for().expr());
-
                 ScopeGroup forGroup = scope.Child();
 
                 // Create the for's temporary variable.
@@ -393,6 +390,9 @@ namespace Deltin.Deltinteger.Parse
 
                 ContinueSkip.SetSkipCount(forActionStartIndex);
 
+                // The target array in the for statement.
+                Element forArrayElement = ParseExpression(scope, statementContext.@for().expr());
+
                 Actions.Add(Element.Part<A_LoopIf>( // Loop if the for condition is still true.
                     Element.Part<V_Compare>
                     (
@@ -409,7 +409,6 @@ namespace Deltin.Deltinteger.Parse
             #endregion
 
             #region if
-
             else if (statementContext.GetChild(0) is DeltinScriptParser.IfContext)
             {
                 /*
@@ -521,7 +520,7 @@ namespace Deltin.Deltinteger.Parse
             else if (statementContext.RETURN() != null)
             {
                 // Will have a value if the statement is "return value;", will be null if the statement is "return;".
-                var returnExpr = statementContext.expr()?.FirstOrDefault();
+                var returnExpr = statementContext.expr();
 
                 if (returnExpr != null)
                 {

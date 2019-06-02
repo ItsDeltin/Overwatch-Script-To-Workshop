@@ -455,8 +455,11 @@ namespace Deltin.Deltinteger.Elements
     [EnumParameter]
     public enum BarrierLOS
     {
+        [EnumValue(null, "Barriers Do Not Block LOS")]
         NoBarriersBlock,
+        [EnumValue(null, "Enemy Barriers Block LOS")]
         EnemyBarriersBlock,
+        [EnumValue(null, "All Barriers Block LOS")]
         AllBarriersBlock
     }
 

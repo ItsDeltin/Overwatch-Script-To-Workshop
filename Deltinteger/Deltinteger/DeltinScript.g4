@@ -49,10 +49,11 @@ enum     : ( 'Variable'|'Operation'|'Button'|'Relative'|'ContraryMotion'|'ChaseR
 variable : PART ;
 method   : PART LEFT_PAREN expr? (',' expr)* RIGHT_PAREN ;
 define   : DEFINE PART (EQUALS expr)? STATEMENT_END ;
+varset   : expr statement_operation expr ;
 
 statement :
 	( method STATEMENT_END
-	| expr statement_operation expr STATEMENT_END
+	| varset STATEMENT_END
 	| GOTO
 	| GOTO_STATEMENT
 	| if
@@ -64,7 +65,9 @@ statement :
 
 block : BLOCK_START statement* BLOCK_END ;
 
-for     : FOR LEFT_PAREN PART IN expr RIGHT_PAREN block       ; /* Syntax: for (VARIABLE in ARRAY) */
+for     : FOR LEFT_PAREN 
+	((PART IN expr) | ((define? | varset) STATEMENT_END expr? STATEMENT_END statement?))
+	RIGHT_PAREN block;
 if      : IF LEFT_PAREN expr RIGHT_PAREN block else_if* else? ;
 else_if : ELSE IF LEFT_PAREN expr RIGHT_PAREN block           ;
 else    : ELSE block                                          ;

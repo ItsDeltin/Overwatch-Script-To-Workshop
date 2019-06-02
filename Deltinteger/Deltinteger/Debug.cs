@@ -61,7 +61,8 @@ namespace Deltin.Deltinteger
 
     public enum LogLevel
     {
-        Normal = 0,
-        Verbose = 1
+        Quiet = 0,
+        Normal = 1,
+        Verbose = 2
     }
 }

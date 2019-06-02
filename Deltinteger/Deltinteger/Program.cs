@@ -12,6 +12,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.Parse;
+using Deltin.Deltinteger.Checker;
 
 namespace Deltin.Deltinteger
 {
@@ -21,37 +22,46 @@ namespace Deltin.Deltinteger
 
         static void Main(string[] args)
         {
-            string script = args.ElementAtOrDefault(0);
-            Log.LogLevel = args.ElementAtOrDefault(1) == "-verbose" ? LogLevel.Verbose : LogLevel.Normal;
+            if (args.ElementAtOrDefault(0) == "-checker")
+            {
+                Log.LogLevel = LogLevel.Quiet;
 
-            if (File.Exists(script))
-            {
-                # if DEBUG == false
-                try
-                {
-                    Script(script);
-                }
-                catch (Exception ex)
-                {
-                    Log.Write(LogLevel.Normal, "Internal exception.");
-                    Log.Write(LogLevel.Normal, ex.ToString());
-                }
-                #else
-                Script(script);
-                #endif
-            }
-            else if (script != null)
-            {
-                Log.Write(LogLevel.Normal, $"Could not find the file \"{script}\"");
+                Check.RequestLoop();
             }
             else
             {
-                Log.Write(LogLevel.Normal, $"Drag and drop a script over the executable to parse.");
-                ConsoleLoop.Start();
-            }
+                string script = args.ElementAtOrDefault(0);
+                Log.LogLevel = args.ElementAtOrDefault(1) == "-verbose" ? LogLevel.Verbose : LogLevel.Normal;
 
-            Log.Write(LogLevel.Normal, "Done. Press enter to exit.");
-            Console.ReadLine();
+                if (File.Exists(script))
+                {
+                    # if DEBUG == false
+                    try
+                    {
+                        Script(script);
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Write(LogLevel.Normal, "Internal exception.");
+                        Log.Write(LogLevel.Normal, ex.ToString());
+                    }
+                    #else
+                    Script(script);
+                    #endif
+                }
+                else if (script != null)
+                {
+                    Log.Write(LogLevel.Normal, $"Could not find the file \"{script}\"");
+                }
+                else
+                {
+                    Log.Write(LogLevel.Normal, $"Drag and drop a script over the executable to parse.");
+                    ConsoleLoop.Start();
+                }
+
+                Log.Write(LogLevel.Normal, "Done. Press enter to exit.");
+                Console.ReadLine();
+            }
         }
 
         static void Script(string parseFile)

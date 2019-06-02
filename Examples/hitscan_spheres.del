@@ -1,0 +1,35 @@
+usevar globalvar A;
+usevar playervar A;
+
+define playervar isInLOS;
+define playervar loc;
+define playervar radius;
+
+rule: "Setup"
+Event.Ongoing_EachPlayer
+{
+	loc = Vector(83.52, 14.18, -84.29);
+	radius = 1;	
+	
+	CreateHudText(EventPlayer(), isInLOS);
+	CreateEffect(EventPlayer(), Effects.Sphere, Color.Red, loc, radius / 0.98472);
+}
+
+rule: "Update"
+Event.Ongoing_EachPlayer
+{
+	isInLOS = IsSphereInView(loc, radius, EventPlayer());
+	Wait();
+	Loop();
+}
+
+method IsSphereInView(center, rad, player)
+{
+	define eyePos = EyePosition(player);
+	define facing = FacingDirectionOf(player);
+	define what = eyePos + (AbsoluteValue(DotProduct(center - eyePos), facing) * facing);
+	
+	return DistanceBetween(Vector(0, 0, 0), center - what) <= rad
+		 & IsInLineOfSight(what, eyePos)
+		 & DistanceBetween(what, eyePos) <= 999;
+}
