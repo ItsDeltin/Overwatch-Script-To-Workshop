@@ -3,5 +3,6 @@ usevar playervar A;
 
 rule: "aa"
 {
-    FacingDirectionOf(Vector(0, 2, 3));
+    Add(EventPlayer(), EventPlayer());
+    CreateEffect(EventPlayer);
 }

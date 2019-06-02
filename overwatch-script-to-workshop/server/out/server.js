@@ -37,6 +37,9 @@ connection.onInitialize((params) => {
             // Tell the client that the server supports code completion
             completionProvider: {
                 resolveProvider: true
+            },
+            signatureHelpProvider: {
+                triggerCharacters: ['(', ',']
             }
         }
     };
@@ -172,7 +175,22 @@ connection.onSignatureHelp((pos) => {
     return getSignatureHelp(pos);
 });
 function getSignatureHelp(pos) {
-    return null;
+    let textDocument = documents.get(pos.textDocument.uri);
+    let data = JSON.stringify({
+        textDocument: textDocument.getText(),
+        caret: pos.position
+    });
+    return new Promise(function (resolve, reject) {
+        request.post({ url: 'http://localhost:3000/signature', body: data }, function (error, res, body) {
+            if (!error && res.statusCode == 200) {
+                let signatureHelp = JSON.parse(body);
+                resolve(signatureHelp);
+            }
+            else {
+                reject(error);
+            }
+        });
+    });
 }
 /*
 // This handler resolves additional information for the item selected in

@@ -21,7 +21,13 @@ namespace Deltin.Deltinteger
 
     public class SyntaxErrorException : Exception
     {
-        public SyntaxErrorException(string message, IToken token) : base($"Syntax error at {token.Line},{token.Column}: {message}") {}
+        public readonly IToken token;
+
+        public SyntaxErrorException(string message, IToken token) : base($"Syntax error at {token.Line},{token.Column}: {message}") 
+        {
+            this.token = token;
+        }
+
         public SyntaxErrorException(string message) : base($"Syntax error: {message}") {}
     }
 }

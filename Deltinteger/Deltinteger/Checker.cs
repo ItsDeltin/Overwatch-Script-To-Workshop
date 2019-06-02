@@ -61,7 +61,7 @@ namespace Deltin.Deltinteger.Checker
 
                     case "signature":
                         buffer = GetBytes(
-                            GetAutocomplete(input)
+                            GetSignatures(input)
                         );
                         break;
 
@@ -99,7 +99,7 @@ namespace Deltin.Deltinteger.Checker
             */
             dynamic inputJson = JsonConvert.DeserializeObject(json);
 
-            int line      = inputJson.caret.line;
+            int line      = inputJson.caret.line + 1;
             int character = inputJson.caret.character;
             DocumentPos caret = new DocumentPos(line, character);
 
@@ -116,10 +116,10 @@ namespace Deltin.Deltinteger.Checker
             {
                 // TODO seperate expressions and values
                 case nameof(DeltinScriptParser.BlockContext):
-                case nameof(DeltinScriptParser.rule_if):
-                case nameof(DeltinScriptParser.method):
-                case nameof(DeltinScriptParser.user_method):
-                case nameof(DeltinScriptParser.expr):
+                case nameof(DeltinScriptParser.Rule_ifContext):
+                case nameof(DeltinScriptParser.MethodContext):
+                case nameof(DeltinScriptParser.User_methodContext):
+                case nameof(DeltinScriptParser.ExprContext):
 
                     completion = Element.MethodList.Select(m => 
                         new Completion(m.Name.Substring(2))
@@ -160,8 +160,10 @@ namespace Deltin.Deltinteger.Checker
 
                     int compareRange = tree.SourceInterval.b - tree.SourceInterval.a;
 
+                    string name = compare.ToString(parser);
+
                     if ((compare.start.Line  < caret.Line || (compare.start.Line == caret.Line && compare.start.Column <= caret.Character)) &&
-                        (compare.stop.Line   > caret.Line || (compare.stop.Line  == caret.Line && compare.start.Column >= caret.Character)) &&
+                        (compare.stop.Line   > caret.Line || (compare.stop.Line  == caret.Line && compare.stop.Column >= caret.Character)) &&
                         (compareRange <= selectedRange || selectedRange == 0))
                         {
                             selectedRange = compareRange;
@@ -176,7 +178,7 @@ namespace Deltin.Deltinteger.Checker
         {
             dynamic inputJson = JsonConvert.DeserializeObject(json);
 
-            int line      = inputJson.caret.line;
+            int line      = inputJson.caret.line + 1;
             int character = inputJson.caret.character;
             DocumentPos caret = new DocumentPos(line, character);
 
@@ -186,6 +188,41 @@ namespace Deltin.Deltinteger.Checker
             var ruleSet = parser.ruleset();
 
             ParserRuleContext selectedRule = GetSelectedRule(ruleSet, caret, parser);
+
+            int methodIndex = 0;
+            int parameterIndex = 0;
+
+            string parentDebug = selectedRule.ToString(parser);
+            Type methodType = null;
+            SignatureInformation information = null;
+
+            if (selectedRule is DeltinScriptParser.MethodContext)
+            {
+                var method = selectedRule as DeltinScriptParser.MethodContext;
+                string name = method.PART().GetText();
+                methodType = Element.GetMethod(name);
+
+                if (methodType != null)
+                {
+                    Element element = (Element)Activator.CreateInstance(methodType);
+
+                    information = new SignatureInformation(
+                        element.ToString(),
+                        "",
+                        element.ParameterData.Select(p => 
+                            new ParameterInformation(p.Name, "")
+                        ).ToArray());
+                }
+            }
+
+            SignatureHelp signatures = new SignatureHelp
+            (
+                new SignatureInformation[] { information },
+                methodIndex,
+                parameterIndex
+            );
+
+            return JsonConvert.SerializeObject(signatures);
         }
 
         private const int Text = 1;
@@ -247,20 +284,55 @@ namespace Deltin.Deltinteger.Checker
             public SignatureInformation[] signatures;
             public int activeSignature;
             public int activeParameter;
+
+            public SignatureHelp(SignatureInformation[] signatures, int activeSignature, int activeParameter)
+            {
+                this.signatures = signatures;
+                this.activeSignature = activeSignature;
+                this.activeParameter = activeParameter;
+            }
         }
 
         class SignatureInformation
         {
             public string label;
-            public object documentation; // string or markdown
+            public object documentation; // string or markup
             public ParameterInformation[] parameters;
+
+            public SignatureInformation(string label, object documentation, ParameterInformation[] parameters)
+            {
+                this.label = label;
+                this.documentation = documentation;
+                this.parameters = parameters;
+            }
         }
 
         class ParameterInformation
         {
             public object label; // string or int[]
 
-            public object documentation; // string or markdown
+            public object documentation; // string or markup
+
+            public ParameterInformation(object label, object documentation)
+            {
+                this.label = label;
+                this.documentation = documentation;
+            }
+        }
+
+        class MarkupContent
+        {
+            public string kind;
+            public string value;
+
+            public const string PlainText = "plaintext";
+            public const string Markdown = "markdown";
+
+            public MarkupContent(string kind, string value)
+            {
+                this.kind = kind;
+                this.value = value;
+            }
         }
     }
 }

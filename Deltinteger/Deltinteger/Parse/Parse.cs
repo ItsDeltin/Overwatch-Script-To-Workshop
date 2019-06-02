@@ -48,76 +48,85 @@ namespace Deltin.Deltinteger.Parse
             Visitor visitor = new Visitor();
             visitor.Visit(context);
 
+            try
             {
-                // Get the internal global variable to use.
-                if (!Enum.TryParse(context.useGlobalVar().PART().ToString(), out Variable useGlobalVar))
-                    throw new SyntaxErrorException("useGlobalVar must be a character.", context.useGlobalVar().start);
 
-                // Get the internal player variable to use.
-                if (!Enum.TryParse(context.usePlayerVar().PART().ToString(), out Variable usePlayerVar))
-                    throw new SyntaxErrorException("usePlayerVar must be a character.", context.usePlayerVar().start);
-
-                Var.Setup(useGlobalVar, usePlayerVar);
-            }
-
-            // Get the defined variables.
-            var vardefine = context.vardefine();
-
-            for (int i = 0; i < vardefine.Length; i++)
-                // The new var is stored in Var.VarCollection
-                new DefinedVar(ScopeGroup.Root, vardefine[i]);
-
-            // Get the user methods.
-            var userMethods = context.user_method();
-
-            for (int i = 0; i < userMethods.Length; i++)
-                new UserMethod(userMethods[i]); 
-
-            // Parse the rules.
-            var rules = context.ow_rule();
-            var compiledRules = new List<Rule>();
-
-            for (int i = 0; i < rules.Length; i++)
-            {
-                ParseRule parsing = new ParseRule(rules[i]);
-
-                Log.Write(LogLevel.Normal, $"Building rule: {parsing.Rule.Name}");
-                parsing.Parse();
-                Rule rule = parsing.Rule;
-
-                compiledRules.Add(rule);
-            }
-
-            Log.Write(LogLevel.Normal, new ColorMod("Build succeeded.", ConsoleColor.Green));
-
-            // List all variables
-            Log.Write(LogLevel.Normal, new ColorMod("Variable Guide:", ConsoleColor.Blue));
-
-            if (ScopeGroup.Root.VarCollection().Count > 0)
-            {
-                int nameLength = ScopeGroup.Root.VarCollection().Max(v => v.Name.Length);
-
-                bool other = false;
-                foreach (DefinedVar var in ScopeGroup.Root.VarCollection())
                 {
-                    ConsoleColor textcolor = other ? ConsoleColor.White : ConsoleColor.DarkGray;
-                    other = !other;
+                    // Get the internal global variable to use.
+                    if (!Enum.TryParse(context.useGlobalVar().PART().ToString(), out Variable useGlobalVar))
+                        throw new SyntaxErrorException("useGlobalVar must be a character.", context.useGlobalVar().start);
 
-                    Log.Write(LogLevel.Normal,
-                        // Names
-                        new ColorMod(var.Name + new string(' ', nameLength - var.Name.Length) + "  ", textcolor),
-                        // Variable
-                        new ColorMod(
-                            (var.IsGlobal ? "global" : "player") 
-                            + " " + 
-                            var.Variable.ToString() +
-                            (var.IsInArray ? $"[{var.Index}]" : "")
-                            , textcolor)
-                    );
+                    // Get the internal player variable to use.
+                    if (!Enum.TryParse(context.usePlayerVar().PART().ToString(), out Variable usePlayerVar))
+                        throw new SyntaxErrorException("usePlayerVar must be a character.", context.usePlayerVar().start);
+
+                    Var.Setup(useGlobalVar, usePlayerVar);
                 }
-            }
 
-            return compiledRules.ToArray();
+                // Get the defined variables.
+                var vardefine = context.vardefine();
+
+                for (int i = 0; i < vardefine.Length; i++)
+                    // The new var is stored in Var.VarCollection
+                    new DefinedVar(ScopeGroup.Root, vardefine[i]);
+
+                // Get the user methods.
+                var userMethods = context.user_method();
+
+                for (int i = 0; i < userMethods.Length; i++)
+                    new UserMethod(userMethods[i]); 
+
+                // Parse the rules.
+                var rules = context.ow_rule();
+                var compiledRules = new List<Rule>();
+
+                for (int i = 0; i < rules.Length; i++)
+                {
+                    ParseRule parsing = new ParseRule(rules[i]);
+
+                    Log.Write(LogLevel.Normal, $"Building rule: {parsing.Rule.Name}");
+                    parsing.Parse();
+                    Rule rule = parsing.Rule;
+
+                    compiledRules.Add(rule);
+                }
+
+                Log.Write(LogLevel.Normal, new ColorMod("Build succeeded.", ConsoleColor.Green));
+
+                // List all variables
+                Log.Write(LogLevel.Normal, new ColorMod("Variable Guide:", ConsoleColor.Blue));
+
+                if (ScopeGroup.Root.VarCollection().Count > 0)
+                {
+                    int nameLength = ScopeGroup.Root.VarCollection().Max(v => v.Name.Length);
+
+                    bool other = false;
+                    foreach (DefinedVar var in ScopeGroup.Root.VarCollection())
+                    {
+                        ConsoleColor textcolor = other ? ConsoleColor.White : ConsoleColor.DarkGray;
+                        other = !other;
+
+                        Log.Write(LogLevel.Normal,
+                            // Names
+                            new ColorMod(var.Name + new string(' ', nameLength - var.Name.Length) + "  ", textcolor),
+                            // Variable
+                            new ColorMod(
+                                (var.IsGlobal ? "global" : "player") 
+                                + " " + 
+                                var.Variable.ToString() +
+                                (var.IsInArray ? $"[{var.Index}]" : "")
+                                , textcolor)
+                        );
+                    }
+                }
+
+                return compiledRules.ToArray();
+            }
+            catch (SyntaxErrorException ex)
+            {
+                syntaxErrors = new SyntaxError[] { new SyntaxError(ex.Message, ex.token.StartIndex, ex.token.StopIndex) };
+                return null;
+            }
         }
 
         public static DeltinScriptParser GetParser(string document)

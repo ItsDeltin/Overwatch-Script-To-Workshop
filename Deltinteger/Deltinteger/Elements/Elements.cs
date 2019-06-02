@@ -17,7 +17,7 @@ namespace Deltin.Deltinteger.Elements
         Value
     }
 
-    enum ParameterType
+    public enum ParameterType
     {
         Value,
         Enum
@@ -63,7 +63,7 @@ namespace Deltin.Deltinteger.Elements
     }
 
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Method, AllowMultiple = true)]
-    class Parameter : Attribute
+    public class Parameter : Attribute
     {
         public Parameter(string name, ValueType returnType, Type defaultType)
         {
@@ -144,12 +144,12 @@ namespace Deltin.Deltinteger.Elements
         public Element(params object[] parameterValues)
         {
             ElementData = GetType().GetCustomAttribute<ElementData>();
-            parameterData = GetType().GetCustomAttributes<Parameter>().ToArray();
+            ParameterData = GetType().GetCustomAttributes<Parameter>().ToArray();
             ParameterValues = parameterValues;
         }
 
         public ElementData ElementData { get; private set; }
-        Parameter[] parameterData;
+        public Parameter[] ParameterData { get; private set; }
 
         public object[] ParameterValues;
 
@@ -167,9 +167,9 @@ namespace Deltin.Deltinteger.Elements
             else
                 log.Write(LogLevel.Verbose, new ColorMod(new string(' ', depth * 4) + Info(), ConsoleColor.White));
 
-            for (int i = 0; i < parameterData.Length; i++)
+            for (int i = 0; i < ParameterData.Length; i++)
             {
-                log.Write(LogLevel.Verbose, new ColorMod(new string(' ', (depth + 1) * 4) + parameterData[i].Name + ":", ConsoleColor.Magenta));
+                log.Write(LogLevel.Verbose, new ColorMod(new string(' ', (depth + 1) * 4) + ParameterData[i].Name + ":", ConsoleColor.Magenta));
 
                 if (i < ParameterValues.Length)
                 {
@@ -185,13 +185,13 @@ namespace Deltin.Deltinteger.Elements
         {
             List<object> elementParameters = new List<object>();
 
-            for (int i = 0; i < parameterData.Length; i++)
+            for (int i = 0; i < ParameterData.Length; i++)
             {
                 object parameter = ParameterValues?.ElementAtOrDefault(i);
 
                 // If the parameter is null, get the default variable.
                 if (parameter == null)
-                    parameter = parameterData[i].GetDefault();
+                    parameter = ParameterData[i].GetDefault();
 
                 elementParameters.Add(parameter);
             }

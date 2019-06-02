@@ -55,6 +55,9 @@ connection.onInitialize((params: InitializeParams) => {
 			// Tell the client that the server supports code completion
 			completionProvider: {
 				resolveProvider: true
+			},
+			signatureHelpProvider: {
+				triggerCharacters: ['(', ',']
 			}
 		}
 	};
@@ -231,12 +234,12 @@ function getSignatureHelp(pos: TextDocumentPositionParams) {
 		caret: pos.position
 	});
 	
-	return new Promise<SignatureHelp[]>(function (resolve, reject) {
+	return new Promise<SignatureHelp>(function (resolve, reject) {
 
 	  	request.post({url:'http://localhost:3000/signature', body: data}, function (error, res, body) {
 			if (!error && res.statusCode == 200) {
 
-				let signatureHelp: SignatureHelp;
+				let signatureHelp: SignatureHelp = JSON.parse(body);
 
 				resolve(signatureHelp);
 			}
