@@ -96,21 +96,41 @@ documents.onDidChangeContent(change => {
 const request = require('request');
 function validateTextDocument(textDocument) {
     return __awaiter(this, void 0, void 0, function* () {
-        request.post({ url: 'http://localhost:3000/', body: textDocument.getText() }, function callback(err, httpResponse, body) {
+        let problems = 0;
+        let settings = yield getDocumentSettings(textDocument.uri);
+        let diagnostics = [];
+        request.post({ url: 'http://localhost:3000/parse', body: textDocument.getText() }, function callback(err, httpResponse, body) {
             connection.console.log('Recieved: ' + httpResponse);
+            let errors = JSON.parse(body);
+            for (var i = 0; i < errors.length && problems < settings.maxNumberOfProblems; i++) {
+                problems++;
+                let diagnostic = {
+                    severity: vscode_languageserver_1.DiagnosticSeverity.Error,
+                    range: {
+                        start: textDocument.positionAt(errors[i].Start),
+                        end: textDocument.positionAt(errors[i].Stop)
+                    },
+                    //message: `${m[0]} is all uppercase.`,
+                    message: errors[i].Message,
+                    source: 'ex'
+                };
+                diagnostics.push(diagnostic);
+            }
+            connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
         });
         // In this simple example we get the settings for every validate run.
-        let settings = yield getDocumentSettings(textDocument.uri);
         // The validator creates diagnostics for all uppercase words length 2 and more
+        /*
         let text = textDocument.getText();
         let pattern = /\b[A-Z]{2,}\b/g;
-        let m;
+        let m: RegExpExecArray | null;
+    
         let problems = 0;
-        let diagnostics = [];
-        while ((m = pattern.exec(text)) && problems < settings.maxNumberOfProblems) {
+        let diagnostics: Diagnostic[] = [];
+            while ((m = pattern.exec(text)) && problems < settings.maxNumberOfProblems) {
             problems++;
-            let diagnostic = {
-                severity: vscode_languageserver_1.DiagnosticSeverity.Warning,
+            let diagnostic: Diagnostic = {
+                severity: DiagnosticSeverity.Warning,
                 range: {
                     start: textDocument.positionAt(m.index),
                     end: textDocument.positionAt(m.index + m[0].length)
@@ -120,24 +140,26 @@ function validateTextDocument(textDocument) {
             };
             if (hasDiagnosticRelatedInformationCapability) {
                 diagnostic.relatedInformation = [{
-                        location: {
-                            uri: textDocument.uri,
-                            range: Object.assign({}, diagnostic.range)
-                        },
-                        message: 'Spelling matters'
+                    location: {
+                        uri: textDocument.uri,
+                        range: Object.assign({}, diagnostic.range)
                     },
-                    {
-                        location: {
-                            uri: textDocument.uri,
-                            range: Object.assign({}, diagnostic.range)
-                        },
-                        message: 'Particularly for names'
-                    }];
+                    message: 'Spelling matters'
+                },
+                {
+                    location: {
+                        uri: textDocument.uri,
+                        range: Object.assign({}, diagnostic.range)
+                    },
+                    message: 'Particularly for names'
+                }];
             }
             diagnostics.push(diagnostic);
         }
+    
         // Send the computed diagnostics to VS Code.
         connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
+        */
     });
 }
 connection.onDidChangeWatchedFiles(_change => {

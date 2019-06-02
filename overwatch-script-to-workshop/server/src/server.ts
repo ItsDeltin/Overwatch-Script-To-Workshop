@@ -122,14 +122,40 @@ const request = require('request');
 
 async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 
-	request.post({url:'http://localhost:3000/', body: textDocument.getText()}, function callback(err, httpResponse, body) {
+	let problems = 0;
+	let settings = await getDocumentSettings(textDocument.uri);
+	let diagnostics: Diagnostic[] = [];
+
+	request.post({url:'http://localhost:3000/parse', body: textDocument.getText()}, function callback(err, httpResponse, body) {
 		connection.console.log('Recieved: ' + httpResponse);
+
+		let errors = JSON.parse(body);
+
+		for (var i = 0; i < errors.length && problems < settings.maxNumberOfProblems; i++) {     
+			problems++;
+
+			let diagnostic: Diagnostic = {
+				severity: DiagnosticSeverity.Error,
+				range: {
+					start: textDocument.positionAt(errors[i].Start),
+					end: textDocument.positionAt(errors[i].Stop)
+				},
+				//message: `${m[0]} is all uppercase.`,
+				message: errors[i].Message,
+				source: 'ex'
+			};
+	
+			diagnostics.push(diagnostic);
+		}
+
+		connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
 	});
 
 	// In this simple example we get the settings for every validate run.
-	let settings = await getDocumentSettings(textDocument.uri);
+	
 
 	// The validator creates diagnostics for all uppercase words length 2 and more
+	/*
 	let text = textDocument.getText();
 	let pattern = /\b[A-Z]{2,}\b/g;
 	let m: RegExpExecArray | null;
@@ -139,13 +165,13 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 		while ((m = pattern.exec(text)) && problems < settings.maxNumberOfProblems) {
 		problems++;
 		let diagnostic: Diagnostic = {
-		severity: DiagnosticSeverity.Warning,
-		range: {
-			start: textDocument.positionAt(m.index),
-			end: textDocument.positionAt(m.index + m[0].length)
-		},
-		message: `${m[0]} is all uppercase.`,
-		source: 'ex'
+			severity: DiagnosticSeverity.Warning,
+			range: {
+				start: textDocument.positionAt(m.index),
+				end: textDocument.positionAt(m.index + m[0].length)
+			},
+			message: `${m[0]} is all uppercase.`,
+			source: 'ex'
 		};
 		if (hasDiagnosticRelatedInformationCapability) {
 			diagnostic.relatedInformation = [{
@@ -168,6 +194,7 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 
 	// Send the computed diagnostics to VS Code.
 	connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
+	*/
 }
 
 connection.onDidChangeWatchedFiles(_change => {

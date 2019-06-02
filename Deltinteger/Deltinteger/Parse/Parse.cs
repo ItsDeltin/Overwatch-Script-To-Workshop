@@ -17,6 +17,11 @@ namespace Deltin.Deltinteger.Parse
 
         public static Rule[] ParseText(string text)
         {
+            return ParseText(text, out _);
+        }
+
+        public static Rule[] ParseText(string text, out SyntaxError[] syntaxErrors)
+        {
             AntlrInputStream inputStream = new AntlrInputStream(text);
 
             // Lexer
@@ -25,14 +30,19 @@ namespace Deltin.Deltinteger.Parse
 
             // Parse
             DeltinScriptParser parser = new DeltinScriptParser(commonTokenStream);
+            var errorListener = new ErrorListener();
             parser.RemoveErrorListeners();
-            parser.AddErrorListener(new ErrorListener());
+            parser.AddErrorListener(errorListener);
 
             // Get context
             DeltinScriptParser.RulesetContext context = parser.ruleset();
 
             //PrintContext(context);
             Log.Write(LogLevel.Verbose, context.ToStringTree(parser));
+
+            syntaxErrors = errorListener.Errors.ToArray();
+            if (syntaxErrors.Length > 0)
+                return null;
 
             Visitor visitor = new Visitor();
             visitor.Visit(context);
@@ -990,10 +1000,26 @@ namespace Deltin.Deltinteger.Parse
 
     public class ErrorListener : BaseErrorListener
     {
+        public readonly List<SyntaxError> Errors = new List<SyntaxError>();
+
         public override void SyntaxError(IRecognizer recognizer, IToken offendingSymbol, int line, int charPositionInLine, string msg, RecognitionException e)
         {
-            throw new SyntaxErrorException(msg, offendingSymbol);
+            Errors.Add(new SyntaxError(msg, offendingSymbol.StartIndex, offendingSymbol.StopIndex));
+            //throw new SyntaxErrorException(msg, offendingSymbol);
         }
+    }
+
+    public class SyntaxError
+    {
+        public SyntaxError(string message, int start, int stop)
+        {
+            Message = message;
+            Start = start;
+            Stop = stop;
+        }
+        public readonly string Message;
+        public readonly int Start;
+        public readonly int Stop;
     }
 
     class Visitor : DeltinScriptBaseVisitor<object>
