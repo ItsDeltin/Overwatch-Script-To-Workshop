@@ -25,16 +25,16 @@ expr
 	| string                                      // Strings
 	| enum                                        // Enums
 	| expr INDEX_START expr INDEX_END             // Array creation
-	| INDEX_START expr (',' expr)* INDEX_END      // Arrays
+	| INDEX_START expr (COMMA expr)* INDEX_END    // Arrays
 	| INDEX_START INDEX_END                       // Empty array
-	| '<' string (',' expr)* '>'                  // Formatted strings
+	| '<' string (COMMA expr)* '>'                // Formatted strings
 	| true                                        // True
 	| false                                       // False
 	| null                                        // Null
-	| expr SEPERATOR expr                         // Variable seperation
 	| variable                                    // Variables
-	|<assoc=right> '(' expr ')'                   // Groups
-	| expr '^' expr                               // x^y
+	|LEFT_PAREN expr RIGHT_PAREN    // Groups
+	| expr SEPERATOR expr                         // Variable seperation
+	| <assoc=right> expr '^' expr                 // x^y
 	| expr '*' expr                               // x*y
 	| expr '/' expr                               // x/y
 	| expr '%' expr                               // x%y
@@ -45,17 +45,21 @@ expr
 	| expr BOOL expr                              // x & y
 	;
 
+array    : INDEX_START expr INDEX_END ;
 enum     : ( 'Variable'|'Operation'|'Button'|'Relative'|'ContraryMotion'|'ChaseReevaluation'|'Status'|'TeamSelector'|'WaitBehavior'|'Effects'|'Color'|'EffectRev'|'Rounding'|'Communication'|'Location'|'StringRev'|'Icon'|'IconRev'|'PlayEffects'|'Hero'|'InvisibleTo'|'AccelerateRev'|'ModRev'|'FacingRev'|'BarrierLOS'|'Transformation'|'RadiusLOS'|'LocalVector'|'Clipping'|'InworldTextRev' ) SEPERATOR PART ;
 variable : PART ;
-method   : PART LEFT_PAREN expr? (',' expr)* RIGHT_PAREN ;
 define   : DEFINE PART (EQUALS expr)? STATEMENT_END ;
-varset   : expr statement_operation expr ;
+varset   : (expr SEPERATOR)? PART array? statement_operation expr ;
+// Here, there should always be an expression. 
+// This is here so antlr recognizes it is a method midtype.
+// Confirm there is an expression in the visitor class.
+//                            V
+parameters : expr (COMMA expr?)*    		 	     ;
+method     : PART LEFT_PAREN parameters? RIGHT_PAREN ;
 
 statement :
-	( method STATEMENT_END
+	( method STATEMENT_END?
 	| varset STATEMENT_END
-	| GOTO
-	| GOTO_STATEMENT
 	| if
 	| for
 	| define
@@ -72,7 +76,7 @@ if      : IF LEFT_PAREN expr RIGHT_PAREN block else_if* else? ;
 else_if : ELSE IF LEFT_PAREN expr RIGHT_PAREN block           ;
 else    : ELSE block                                          ;
 
-rule_if : IF LEFT_PAREN (expr (',' expr)*) RIGHT_PAREN;
+rule_if : IF LEFT_PAREN (expr (COMMA expr)*) RIGHT_PAREN;
 
 ow_rule : 
 	RULE_WORD ':' STRINGLITERAL expr* 
@@ -80,7 +84,7 @@ ow_rule :
 	block
 	;
 
-user_method : METHOD PART LEFT_PAREN (PART (',' PART)*)? RIGHT_PAREN
+user_method : METHOD PART LEFT_PAREN (PART (COMMA PART)*)? RIGHT_PAREN
 	block
 	;
 
@@ -126,6 +130,7 @@ INDEX_START   : '[' ;
 INDEX_END     : ']' ;
 STATEMENT_END : ';' ;
 SEPERATOR     : '.' ;
+COMMA         : ',' ;
 
 // Keywords
 RULE_WORD : 'rule'      ;

@@ -1,6 +1,10 @@
 usevar globalvar A;
 usevar playervar A;
 
-rule: "Test"
+define playervar hello;
+
+rule: "aa"
 {
+    hello[0] = 42;
+	Abort();
 }

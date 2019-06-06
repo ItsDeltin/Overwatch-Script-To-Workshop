@@ -34,6 +34,13 @@ namespace Deltin.Deltinteger.Elements
             var attributes = memInfo[0].GetCustomAttributes(typeof(EnumValue), false);
             return ((EnumValue)attributes.ElementAtOrDefault(0))?.WorkshopName ?? Extras.AddSpacesToSentence(enumValue.ToString(), false);
          }
+
+         public static string[] GetCodeValues(Type enumType)
+         {
+             return enumType.GetFields()
+                .Select(v => v.GetCustomAttribute<EnumValue>().CodeName)
+                .ToArray();
+         }
     }
 
     public enum RuleEvent

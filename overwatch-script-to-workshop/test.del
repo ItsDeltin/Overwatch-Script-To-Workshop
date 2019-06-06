@@ -1,8 +1,7 @@
 usevar globalvar A;
 usevar playervar A;
 
-rule: "aa"
+rule: "My Rule"
 {
-    Add(EventPlayer(), EventPlayer());
-    CreateEffect(EventPlayer);
+    BigMessage(EventPlayer(),)
 }

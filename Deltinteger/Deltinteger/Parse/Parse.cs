@@ -22,31 +22,13 @@ namespace Deltin.Deltinteger.Parse
 
         public static Rule[] ParseText(string document, out SyntaxError[] syntaxErrors)
         {
-            AntlrInputStream inputStream = new AntlrInputStream(document);
-
-            // Lexer
-            DeltinScriptLexer lexer = new DeltinScriptLexer(inputStream);
-            CommonTokenStream commonTokenStream = new CommonTokenStream(lexer);
-
-            // Parse
-            DeltinScriptParser parser = new DeltinScriptParser(commonTokenStream);
-            var errorListener = new ErrorListener();
-            parser.RemoveErrorListeners();
-            parser.AddErrorListener(errorListener);
-
-            // Get context
-            DeltinScriptParser.RulesetContext context = parser.ruleset();
-
-            //PrintContext(context);
-            #warning loglevel
-            Log.Write(LogLevel.Quiet, context.ToStringTree(parser));
+            var parser = GetParser(document);
+            var context = parser.Item2;
+            var errorListener = parser.Item3;
 
             syntaxErrors = errorListener.Errors.ToArray();
             if (syntaxErrors.Length > 0)
                 return null;
-
-            Visitor visitor = new Visitor();
-            visitor.Visit(context);
 
             try
             {
@@ -129,7 +111,7 @@ namespace Deltin.Deltinteger.Parse
             }
         }
 
-        public static DeltinScriptParser GetParser(string document)
+        public static Tuple<DeltinScriptParser, DeltinScriptParser.RulesetContext, ErrorListener> GetParser(string document)
         {
             AntlrInputStream inputStream = new AntlrInputStream(document);
 
@@ -142,8 +124,14 @@ namespace Deltin.Deltinteger.Parse
             var errorListener = new ErrorListener();
             parser.RemoveErrorListeners();
             parser.AddErrorListener(errorListener);
+
+            DeltinScriptParser.RulesetContext context = parser.ruleset();
+            Log.Write(LogLevel.Verbose, context.ToStringTree(parser));
+
+            Visitor visitor = new Visitor(parser, errorListener);
+            visitor.Visit(context);
             
-            return parser;
+            return new Tuple<DeltinScriptParser, DeltinScriptParser.RulesetContext, ErrorListener>(parser, context, errorListener);
         }
     }
 
@@ -301,58 +289,24 @@ namespace Deltin.Deltinteger.Parse
             #region Variable set
             else if (statementContext.varset() != null)
             {
-                DefinedVar variable;
-                Element target;
-                Element index = null;
+                // The variable to set.
+                DefinedVar variable = scope.GetVar(statementContext.varset().PART().GetText(), statementContext.start);
+                // The value operation.
                 string operation = statementContext.varset().statement_operation().GetText();
+                // The value.
+                Element value = ParseExpression(scope, statementContext.varset().expr().Last());
 
-                Element value;
-
-                value = ParseExpression(scope, statementContext.varset().expr(1) as DeltinScriptParser.ExprContext);
-
-                /*  Format if the variable has an expression beforehand (sets the target player)
-                                 expr(0)           .ChildCount
-                                   v                   v
-                    Statement (    v                   v          ) | Operation | Set to variable
-                               Variable to set (       v         )
-                                   ^            expr | . | expr
-                                   ^                   ^
-                                 expr(0)          .GetChild(1) == '.'                               */
-                if (statementContext.varset().expr(0).ChildCount == 3
-                    && statementContext.varset().expr(0).GetChild(1).GetText() == ".")
+                // Target is the player to set the variable for.
+                Element target = null;
+                if (statementContext.varset().GetChild(0) is DeltinScriptParser.ExprContext)
                 {
-                    /*  Get Variable:  .expr(0)              .expr(1)
-                                         v                     v  .expr(1) (if the value to be set is an array)
-                        Statement (      v                     v      v    ) | Operation | Set to variable
-                                   Variable to set (           v      v  )
-                                         ^          expr | . | expr | []
-                                         ^           ^
-                        Get  Target:  .expr(0)    .expr(0)                                            */
-
-                    variable = scope.GetVar(statementContext.varset().expr(0).expr(1).GetChild(0).GetText(),
-                                                 statementContext.varset().expr(0).expr(1).start);
-                    target = ParseExpression(scope, statementContext.varset().expr(0).expr(0));
-
-                    // Get the index if the variable has []
-                    var indexExpression = statementContext.varset().expr(0).expr(1).expr(1);
-                    if (indexExpression != null)
-                        index = ParseExpression(scope, indexExpression);
+                    target = ParseExpression(scope, statementContext.varset().expr(0));
                 }
-                else
-                {
-                    /*               .expr(0)             .expr(1)
-                                        v                   v 
-                        Statement (     v                   v  ) | Operation | Set to variable
-                                   Variable to set (expr) | []
-                    */
-                    variable = scope.GetVar(statementContext.varset().expr(0).GetChild(0).GetText(),
-                                                 statementContext.varset().expr(0).start);
-                    target = new V_EventPlayer();
 
-                    // Get the index if the variable has []
-                    var indexExpression = statementContext.varset().expr(0).expr(1);
-                    if (indexExpression != null)
-                        index = ParseExpression(scope, indexExpression);
+                Element index = null;
+                if (statementContext.varset().array() != null)
+                {
+                    index = ParseExpression(scope, statementContext.varset().array().expr());
                 }
 
                 switch (operation)
@@ -843,7 +797,7 @@ namespace Deltin.Deltinteger.Parse
                 throw new SyntaxErrorException($"The method {methodName} does not exist.", methodContext.start);
 
             // Get the parameters
-            var parameters = methodContext.expr();
+            var parameters = methodContext.parameters().expr();
 
             Element method;
 
@@ -1051,5 +1005,33 @@ namespace Deltin.Deltinteger.Parse
 
     class Visitor : DeltinScriptBaseVisitor<object>
     {
+        private readonly BaseErrorListener _errorReporter;
+        private readonly DeltinScriptParser _parser;
+
+        public Visitor(DeltinScriptParser parser, BaseErrorListener errorReporter)
+        {
+            _parser = parser;
+            _errorReporter = errorReporter;
+        }
+
+        public override object VisitStatement(DeltinScriptParser.StatementContext context)
+        {
+            if (context.GetChild(0) is DeltinScriptParser.MethodContext &&
+                context.ChildCount == 1)
+            {
+                _errorReporter.SyntaxError(_parser, context.stop, context.stop.Line, context.stop.Column, "Expected ';'.", null);
+            }
+            return base.VisitStatement(context);
+        }
+
+        public override object VisitParameters(DeltinScriptParser.ParametersContext context)
+        {
+            // Confirm there is an expression after the last ",".
+            if (context.children?.Last().GetText() == ",")
+            {
+                _errorReporter.SyntaxError(_parser, context.stop, context.stop.Line, context.stop.Column, "Missing parameter.", null);
+            }
+            return base.VisitParameters(context);
+        }
     }
 }

@@ -152,17 +152,7 @@ function getCompletion(pos) {
     return new Promise(function (resolve, reject) {
         request.post({ url: 'http://localhost:3000/completion', body: data }, function (error, res, body) {
             if (!error && res.statusCode == 200) {
-                let completionItems = [];
-                let completions = JSON.parse(body);
-                for (var i = 0; i < completions.length; i++) {
-                    let completion = {
-                        label: completions[i].label,
-                        kind: completions[i].kind,
-                        detail: completions[i].detail,
-                        documentation: completions[i].documentation
-                    };
-                    completionItems.push(completion);
-                }
+                let completionItems = JSON.parse(body);
                 resolve(completionItems);
             }
             else {

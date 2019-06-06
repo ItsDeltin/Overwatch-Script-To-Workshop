@@ -20,9 +20,13 @@ namespace Deltin.Deltinteger.Checker
     public class Check
     {
         const int PORT = 3000;
+
+        static Log Log = new Log("LangServer");
         
         public static void RequestLoop()
         {
+            Log.Write(LogLevel.Normal, $"Language server started on port {PORT}.");
+
             HttpListener server = new HttpListener();
             server.Prefixes.Add($"http://localhost:{PORT}/");
             server.Start();
@@ -99,48 +103,93 @@ namespace Deltin.Deltinteger.Checker
             */
             dynamic inputJson = JsonConvert.DeserializeObject(json);
 
-            int line      = inputJson.caret.line + 1;
-            int character = inputJson.caret.character;
-            DocumentPos caret = new DocumentPos(line, character);
-
             string document = inputJson.textDocument;
 
-            DeltinScriptParser parser = Parse.Parser.GetParser(document);
-            var ruleSet = parser.ruleset();
+            int line      = inputJson.caret.line + 1;
+            int character = inputJson.caret.character;
+            DocumentPos caret = new DocumentPos(document, line, character);
 
-            ParserRuleContext selectedRule = GetSelectedRule(ruleSet, caret, parser);
+            var parser = Parse.Parser.GetParser(document);
 
-            Completion[] completion;
+            ParserRuleContext selectedRule = GetSelectedRule(parser.Item2, caret, parser.Item1);
+            string name = selectedRule.GetType().Name;
+
+            CompletionItem[] completion;
             
-            switch(selectedRule.GetType().Name)
+            switch(name)
             {
-                // TODO seperate expressions and values
+                // Ruleset
+                case nameof(DeltinScriptParser.RulesetContext):
+
+                    completion = new CompletionItem[]
+                    {
+                        // TODO insert text
+                        new CompletionItem("rule"),
+                        new CompletionItem("define"),
+                        new CompletionItem("method")
+                    };
+                    break;
+
+                // Actions
                 case nameof(DeltinScriptParser.BlockContext):
+
+                    completion = Element.ActionList.Select(m => 
+                            new CompletionItem(m.Name.Substring(2))
+                            {
+                                kind = Method,
+                                detail = ((Element)Activator.CreateInstance(m)).ToString(),
+                            }
+                        ).ToArray();
+
+                    break;
+
+                // Values
                 case nameof(DeltinScriptParser.Rule_ifContext):
                 case nameof(DeltinScriptParser.MethodContext):
                 case nameof(DeltinScriptParser.User_methodContext):
                 case nameof(DeltinScriptParser.ExprContext):
+                case nameof(DeltinScriptParser.ParametersContext):
 
-                    completion = Element.MethodList.Select(m => 
-                        new Completion(m.Name.Substring(2))
+                    completion = Element.ValueList.Select(m => 
+                        new CompletionItem(m.Name.Substring(2))
                         {
                             kind = Method,
-                            detail = ((Element)Activator.CreateInstance(m)).ToString()
+                            detail = ((Element)Activator.CreateInstance(m)).ToString(),
                         }
                         ).ToArray();
 
                     break;
-                
-                case nameof(DeltinScriptParser.ruleset):
-                    // TODO ruleset autocomplete
-                    completion = new Completion[0];
+
+                // Enum autocomplete
+                case nameof(DeltinScriptParser.EnumContext):
+                    completion = EnumValue.GetCodeValues
+                        (Constants.EnumParameters
+                            .First(ep => ep.Name == selectedRule.GetChild(0).GetText()).GetType()
+                        ).Select(v => new CompletionItem(v))
+                        .ToArray();
+                    break;
+
+                // Any rules that do not have any autocomplete.
+                case nameof(DeltinScriptParser.StatementContext):
+                case nameof(DeltinScriptParser.VarsetContext):
+                // -- todos:
+                // --
+                    completion = new CompletionItem[0];
                     break;
 
                 default: 
-                    Console.WriteLine(selectedRule.GetType().Name + " not implemented.");
-                    Debugger.Break();
-                    throw new NotImplementedException();
+                    Console.WriteLine(selectedRule.GetType().Name + " context not implemented.");
+                    completion = new CompletionItem[0];
+                    break;
             }
+
+            /*
+            string filter = selectedRule.GetText();
+            foreach(CompletionItem comp in completion)
+            {
+                comp.filterText = filter;
+            }
+            */
 
             return JsonConvert.SerializeObject(completion);
         }
@@ -156,15 +205,23 @@ namespace Deltin.Deltinteger.Checker
                 if (tree.GetChild(i) is ParserRuleContext)
                 {
                     var child = tree.GetChild(i) as ParserRuleContext;
+
+                    if (child is DeltinScriptParser.ParametersContext)
+                        ;
+
+                    Console.WriteLine(child.GetText());
+
                     var compare = GetSelectedRule(child, caret, parser);
 
-                    int compareRange = tree.SourceInterval.b - tree.SourceInterval.a;
+                    int compareRange = Math.Abs(compare.Start.StartIndex - compare.Start.StopIndex);
 
                     string name = compare.ToString(parser);
+                    string text = compare.GetText();
 
-                    if ((compare.start.Line  < caret.Line || (compare.start.Line == caret.Line && compare.start.Column <= caret.Character)) &&
-                        (compare.stop.Line   > caret.Line || (compare.stop.Line  == caret.Line && compare.stop.Column >= caret.Character)) &&
-                        (compareRange <= selectedRange || selectedRange == 0))
+                    if ((compare.Start.Line  < caret.line || (compare.Start.Line == caret.line && compare.Start.Column <= caret.character - 1)) &&
+                        (compare.Stop.Line   > caret.line || (compare.Stop.Line  == caret.line && compare.Stop.Column >= caret.character - 1)) &&
+                    //if (compare.Start.StartIndex <= caret.index && caret.index <= compare.Start.StopIndex &&
+                        (compareRange < selectedRange || selectedRange == 0))
                         {
                             selectedRange = compareRange;
                             selectedContext = compare;
@@ -174,32 +231,53 @@ namespace Deltin.Deltinteger.Checker
             return selectedContext ?? tree;
         }
 
+        // TODO comment this
         static string GetSignatures(string json)
         {
             dynamic inputJson = JsonConvert.DeserializeObject(json);
 
-            int line      = inputJson.caret.line + 1;
-            int character = inputJson.caret.character;
-            DocumentPos caret = new DocumentPos(line, character);
-
             string document = inputJson.textDocument;
 
-            DeltinScriptParser parser = Parse.Parser.GetParser(document);
-            var ruleSet = parser.ruleset();
+            int line      = inputJson.caret.line + 1;
+            int character = inputJson.caret.character;
+            DocumentPos caret = new DocumentPos(document, line, character);
 
-            ParserRuleContext selectedRule = GetSelectedRule(ruleSet, caret, parser);
+            var parser = Parse.Parser.GetParser(document);
+
+            // Get the rule where the caret is at.
+            ParserRuleContext selectedRule = GetSelectedRule(parser.Item2, caret, parser.Item1);
+            DeltinScriptParser.MethodContext methodContext = null;
 
             int methodIndex = 0;
             int parameterIndex = 0;
 
-            string parentDebug = selectedRule.ToString(parser);
             Type methodType = null;
             SignatureInformation information = null;
+            
+            bool foundMethodContext = false;
 
-            if (selectedRule is DeltinScriptParser.MethodContext)
+            if (selectedRule is DeltinScriptParser.ParametersContext)
             {
-                var method = selectedRule as DeltinScriptParser.MethodContext;
-                string name = method.PART().GetText();
+                methodContext = (DeltinScriptParser.MethodContext)selectedRule.Parent;
+                parameterIndex = ((DeltinScriptParser.ParametersContext)selectedRule).expr().Length;
+                foundMethodContext = true;
+            }
+            else if (selectedRule.Parent is DeltinScriptParser.ParametersContext)
+            {
+                methodContext = (DeltinScriptParser.MethodContext)selectedRule.Parent.Parent;
+                parameterIndex = Array.IndexOf(((DeltinScriptParser.ParametersContext)selectedRule.Parent).expr(), selectedRule);
+                foundMethodContext = true;
+            }
+            else if (selectedRule is DeltinScriptParser.MethodContext)
+            {
+                methodContext = (DeltinScriptParser.MethodContext)selectedRule;
+                parameterIndex = 0;
+                foundMethodContext = true;
+            }
+
+            if (foundMethodContext)
+            {
+                string name = methodContext.PART().GetText();
                 methodType = Element.GetMethod(name);
 
                 if (methodType != null)
@@ -225,6 +303,7 @@ namespace Deltin.Deltinteger.Checker
             return JsonConvert.SerializeObject(signatures);
         }
 
+#region Kinds
         private const int Text = 1;
         private const int Method = 2;
         private const int Function = 3;
@@ -250,35 +329,53 @@ namespace Deltin.Deltinteger.Checker
         private const int Event = 23;
         private const int Operator = 24;
         private const int TypeParameter = 25;
+#endregion
 
         class DocumentPos
         {
-            public int Line;
-            public int Character;
+            public int line;
+            public int character;
+            [JsonIgnore]
+            public int index;
 
-            public DocumentPos(int line, int character)
+            public DocumentPos(string document, int line, int character)
             {
-                Line = line;
-                Character = character;
+                this.line = line;
+                this.character = character;
+                if (document != null)
+                {
+                    string[] split = document.Split('\n');
+                    for (int i = 0; i < line - 1; i++)
+                        index += split[i].Length;
+                    index += character;
+                    index += 1;
+                }
             }
         }
 
-        class Completion
+        class CompletionItem
         {
-            public Completion(string label)
+            public CompletionItem(string label)
             {
                 this.label = label;
             }
 
             public string label;
-
             public int kind;
-
             public string detail;
-
-            public string documentation;
+            public object documentation;
+            public bool deprecated;
+            public string sortText;
+            public string filterText;
+            public int insertTextFormat;
+            public TextEdit textEdit;
+            public TextEdit[] additionalTextEdits;
+            public string[] commitCharacters;
+            public Command command;
+            public object data;
         }
 
+#region Signature
         class SignatureHelp
         {
             public SignatureInformation[] signatures;
@@ -319,6 +416,7 @@ namespace Deltin.Deltinteger.Checker
                 this.documentation = documentation;
             }
         }
+        #endregion
 
         class MarkupContent
         {
@@ -332,6 +430,62 @@ namespace Deltin.Deltinteger.Checker
             {
                 this.kind = kind;
                 this.value = value;
+            }
+        }
+
+        class Range
+        {
+            public DocumentPos start;
+            public DocumentPos end;
+
+            public Range(DocumentPos start, DocumentPos end)
+            {
+                this.start = start;
+                this.end = end;
+            }
+        }
+
+        class TextEdit
+        {
+            public static TextEdit Replace(Range range, string newText)
+            {
+                return new TextEdit()
+                {
+                    range = range,
+                    newText = newText
+                };
+            }
+            public static TextEdit Insert(DocumentPos pos, string newText)
+            {
+                return new TextEdit()
+                {
+                    range = new Range(pos, pos),
+                    newText = newText
+                };
+            }
+            public static TextEdit Delete(Range range)
+            {
+                return new TextEdit()
+                {
+                    range = range,
+                    newText = string.Empty
+                };
+            }
+
+            public Range range;
+            public string newText;
+        }
+
+        class Command
+        {
+            public string title;
+            public string command;
+            public object[] arguments;
+
+            public Command(string title, string command)
+            {
+                this.title = title;
+                this.command = command;
             }
         }
     }

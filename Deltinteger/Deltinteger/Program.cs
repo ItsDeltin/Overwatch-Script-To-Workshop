@@ -7,7 +7,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Diagnostics;
 using System.IO;
-using System.Windows.Forms;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using Deltin.Deltinteger.Elements;
@@ -22,16 +21,19 @@ namespace Deltin.Deltinteger
 
         static void Main(string[] args)
         {
-            if (args.ElementAtOrDefault(0) == "-checker")
-            {
+            Log.LogLevel = LogLevel.Normal;
+            if (args.Contains("-verbose"))
+                Log.LogLevel = LogLevel.Verbose;
+            if (args.Contains("-quiet"))
                 Log.LogLevel = LogLevel.Quiet;
 
+            if (args.Contains("-langserver"))
+            {
                 Check.RequestLoop();
             }
             else
             {
                 string script = args.ElementAtOrDefault(0);
-                Log.LogLevel = args.ElementAtOrDefault(1) == "-verbose" ? LogLevel.Verbose : LogLevel.Normal;
 
                 if (File.Exists(script))
                 {

@@ -138,7 +138,7 @@ namespace Deltin.Deltinteger.Elements
         {
             ElementData elementData = type.GetCustomAttribute<ElementData>();
             Parameter[] parameters = type.GetCustomAttributes<Parameter>().ToArray();
-            return $"{elementData.ElementName}({string.Join(", ", parameters.Select(v => $"{(v.ParameterType == ParameterType.Value ? v.ValueType.ToString() : v.EnumType.Name)}: {v.Name}"))})";
+            return $"{type.Name.Substring(2)}({string.Join(", ", parameters.Select(v => $"{(v.ParameterType == ParameterType.Value ? v.ValueType.ToString() : v.EnumType.Name)}: {v.Name}"))})";
         }
 
         public Element(params object[] parameterValues)

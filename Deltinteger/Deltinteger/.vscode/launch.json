@@ -22,7 +22,7 @@
             "request": "launch",
             "preLaunchTask": "Debug build",
             "program": "${workspaceFolder}/bin/Debug/Deltinteger.exe",
-            "args":["G:/Overwatch-Workshop-Text/Examples/debug.del", "-verbose"],
+            "args":["C:/Users/HDdel/Documents/GitHub/Overwatch-Workshop-Text/Examples/debug.del", "-verbose"],
             "console": "externalTerminal",
             "stopAtEntry": false,
             "internalConsoleOptions": "openOnSessionStart"
@@ -33,7 +33,7 @@
             "request": "launch",
             "preLaunchTask": "Debug build",
             "program": "${workspaceFolder}/bin/Debug/Deltinteger.exe",
-            "args":["G:/Overwatch-Workshop-Text/Examples/murder_mystery.del", "-verbose"],
+            "args":["C:/Users/HDdel/Documents/GitHub/Overwatch-Workshop-Text/Examples/murder_mystery.del", "-verbose"],
             "console": "externalTerminal",
             "stopAtEntry": false,
             "internalConsoleOptions": "openOnSessionStart"
@@ -44,7 +44,7 @@
             "request": "launch",
             "preLaunchTask": "Debug build",
             "program": "${workspaceFolder}/bin/Debug/Deltinteger.exe",
-            "args":["G:/Overwatch-Workshop-Text/Examples/methods.del", "-verbose"],
+            "args":["C:/Users/HDdel/Documents/GitHub/Overwatch-Workshop-Text/Examples/methods.del", "-verbose"],
             "console": "externalTerminal",
             "stopAtEntry": false,
             "internalConsoleOptions": "openOnSessionStart"
@@ -55,29 +55,18 @@
             "request": "launch",
             "preLaunchTask": "Debug build",
             "program": "${workspaceFolder}/bin/Debug/Deltinteger.exe",
-            "args":["G:/Overwatch-Workshop-Text/Examples/hitscan_spheres.del", "-verbose"],
+            "args":["C:/Users/HDdel/Documents/GitHub/Overwatch-Workshop-Text/Examples/hitscan_spheres.del", "-verbose"],
             "console": "externalTerminal",
             "stopAtEntry": false,
             "internalConsoleOptions": "openOnSessionStart"
         },
         {
-            "name": "Checker Debug",
+            "name": "Language Server Debug",
             "type":"clr",
             "request": "launch",
             "preLaunchTask": "Debug build",
             "program": "${workspaceFolder}/bin/Debug/Deltinteger.exe",
-            "args":["-checker"],
-            "console": "externalTerminal",
-            "stopAtEntry": false,
-            "internalConsoleOptions": "openOnSessionStart"
-        },
-        {
-            "name": "Checker Release",
-            "type":"clr",
-            "request": "launch",
-            "preLaunchTask": "Release build",
-            "program": "${workspaceFolder}/bin/Release/Deltinteger.exe",
-            "args":["-checker"],
+            "args":["-langserver", "-verbose"],
             "console": "externalTerminal",
             "stopAtEntry": false,
             "internalConsoleOptions": "openOnSessionStart"
