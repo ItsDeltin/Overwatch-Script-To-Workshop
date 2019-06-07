@@ -706,6 +706,11 @@ namespace Deltin.Deltinteger
             "¿{0}?"
         };
 
+        public static readonly string[] AllOperations = { 
+            "^", "*", "%", "/", "+", "-", 
+            "<", "<=", "==", ">=", ">", "!=",
+            "&", "|"  
+        };
         public static readonly string[] MathOperations = new string[] { "^", "*", "%", "/", "+", "-" };
         public static readonly string[] CompareOperations = new string[] { "<", "<=", "==", ">=", ">", "!=" };
         public static readonly string[] BoolOperations = new string[] { "&", "|" };

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Antlr4.Runtime;
+using Deltin.Deltinteger.Parse;
 
 namespace Deltin.Deltinteger
 {
@@ -21,11 +22,18 @@ namespace Deltin.Deltinteger
 
     public class SyntaxErrorException : Exception
     {
-        public readonly IToken token;
+        const string msg = "Syntax error at {0},{1}: {2}";
 
-        public SyntaxErrorException(string message, IToken token) : base($"Syntax error at {token.Line},{token.Column}: {message}") 
+        public readonly IToken token;
+        public SyntaxErrorException(string message, IToken token) : base(string.Format(msg, token.Line, token.Column, message)) 
         {
             this.token = token;
+        }
+
+        public readonly Range Range;
+        public SyntaxErrorException(string message, Deltin.Deltinteger.Parse.Range range) : base(string.Format(msg, range.start, range.end))
+        {
+            Range = range;
         }
 
         public SyntaxErrorException(string message) : base($"Syntax error: {message}") {}

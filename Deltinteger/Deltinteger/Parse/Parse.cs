@@ -130,8 +130,283 @@ namespace Deltin.Deltinteger.Parse
 
             Visitor visitor = new Visitor(parser, errorListener);
             visitor.Visit(context);
+
+            BuildAstVisitor bav = new BuildAstVisitor();
+            RulesetNode ruleSet = (RulesetNode)bav.Visit(context);
             
             return new Tuple<DeltinScriptParser, DeltinScriptParser.RulesetContext, ErrorListener>(parser, context, errorListener);
+        }
+    }
+
+    class ParseRule
+    {
+        public Rule Rule { get; private set; }
+        private readonly List<Element> Actions = new List<Element>();
+        private readonly List<Condition> Conditions = new List<Condition>();
+        private readonly bool IsGlobal;
+
+        public ParseRule(RuleNode ruleNode)
+        {
+            ParseConditions(ruleNode.Conditions);
+        }
+
+        void ParseConditions(IExpressionNode[] expressions)
+        {
+            foreach(var expr in expressions)
+            {
+                Element parsedIf = ParseExpression(ScopeGroup.Root, expr);
+                // If the parsed if is a V_Compare, translate it to a condition.
+                // Makes "(value1 == value2) == true" to just "value1 == value2"
+                if (parsedIf is V_Compare)
+                    Conditions.Add(
+                        new Condition(
+                            (Element)parsedIf.ParameterValues[0],
+                            (Operators)parsedIf.ParameterValues[1],
+                            (Element)parsedIf.ParameterValues[2]
+                        )
+                    );
+                // If not, just do "parsedIf == true"
+                else
+                    Conditions.Add(new Condition(
+                        parsedIf, Operators.Equal, new V_True()
+                    ));
+            }
+        }
+
+        Element ParseExpression(ScopeGroup scope, IExpressionNode expression)
+        {
+            // If the expression is a(n)...
+
+            #region Operation
+
+            //   0       1      2
+            // (expr operation expr)
+            // count == 3
+            if (expression is OperationNode)
+            {
+                OperationNode operationNode = (OperationNode)expression;
+                Element left = ParseExpression(scope, operationNode.Left);
+                Element right = ParseExpression(scope, operationNode.Right);
+
+                if (Constants.BoolOperations.Contains(operationNode.Operation))
+                {
+                    if (left.ElementData.ValueType != Elements.ValueType.Any && left.ElementData.ValueType != Elements.ValueType.Boolean)
+                        throw new SyntaxErrorException($"Expected boolean datatype, got {left .ElementData.ValueType.ToString()} instead.", operationNode.Left.Range);
+                    if (right.ElementData.ValueType != Elements.ValueType.Any && right.ElementData.ValueType != Elements.ValueType.Boolean)
+                        throw new SyntaxErrorException($"Expected boolean datatype, got {right.ElementData.ValueType.ToString()} instead.", context.start);
+                }
+
+                switch (operationNode.Operation)
+                {
+                    // Math: ^, *, %, /, +, -
+                    case "^":
+                        return Element.Part<V_RaiseToPower>(left, right);
+
+                    case "*":
+                        return Element.Part<V_Multiply>(left, right);
+
+                    case "%":
+                        return Element.Part<V_Modulo>(left, right);
+
+                    case "/":
+                        return Element.Part<V_Divide>(left, right);
+
+                    case "+":
+                        return Element.Part<V_Add>(left, right);
+
+                    case "-":
+                        return Element.Part<V_Subtract>(left, right);
+
+
+                    // BoolCompare: &, |
+                    case "&":
+                        return Element.Part<V_And>(left, right);
+
+                    case "|":
+                        return Element.Part<V_Or>(left, right);
+
+                    // Compare: <, <=, ==, >=, >, !=
+                    case "<":
+                        return Element.Part<V_Compare>(left, Operators.LessThan, right);
+
+                    case "<=":
+                        return Element.Part<V_Compare>(left, Operators.LessThanOrEqual, right);
+
+                    case "==":
+                        return Element.Part<V_Compare>(left, Operators.Equal, right);
+
+                    case ">=":
+                        return Element.Part<V_Compare>(left, Operators.GreaterThanOrEqual, right);
+
+                    case ">":
+                        return Element.Part<V_Compare>(left, Operators.GreaterThan, right);
+
+                    case "!=":
+                        return Element.Part<V_Compare>(left, Operators.NotEqual, right);
+                }
+            }
+
+            #endregion
+
+            #region Not
+
+            if (context.GetChild(0) is DeltinScriptParser.NotContext)
+                return Element.Part<V_Not>(ParseExpression(scope, context.GetChild(1) as DeltinScriptParser.ExprContext));
+
+            #endregion
+
+            #region Number
+
+            if (context.GetChild(0) is DeltinScriptParser.NumberContext)
+            {
+                var number = context.GetChild(0);
+
+                double num = double.Parse(number.GetChild(0).GetText());
+                /*
+                // num will have the format expr(number(X)) if positive, expr(number(neg(X))) if negative.
+                if (number.GetChild(0) is DeltinScriptParser.NegContext)
+                    // Is negative, use '-' before int.parse to make it negative.
+                    num = -double.Parse(number.GetChild(0).GetText());
+                else
+                    // Is positive
+                    num = double.Parse(number.GetChild(0).GetText());
+                */
+
+                return new V_Number(num);
+            }
+
+            #endregion
+
+            #region Boolean
+
+            // True
+            if (context.GetChild(0) is DeltinScriptParser.TrueContext)
+                return new V_True();
+
+            // False
+            if (context.GetChild(0) is DeltinScriptParser.FalseContext)
+                return new V_False();
+
+            #endregion
+
+            #region String
+
+            if (context.GetChild(0) is DeltinScriptParser.StringContext)
+            {
+                return V_String.ParseString(
+                    context.start,
+                    // String will look like "hey this is the contents", trim the quotes.
+                    (context.GetChild(0) as DeltinScriptParser.StringContext).STRINGLITERAL().GetText().Trim('\"'),
+                    null
+                );
+            }
+
+            #endregion
+
+            #region Formatted String
+
+            if (context.GetChild(1) is DeltinScriptParser.StringContext)
+            {
+                Element[] values = context.expr().Select(expr => ParseExpression(scope, expr)).ToArray();
+                return V_String.ParseString(
+                    context.start,
+                    (context.GetChild(1) as DeltinScriptParser.StringContext).STRINGLITERAL().GetText().Trim('\"'),
+                    values
+                    );
+            }
+
+            #endregion
+
+            #region null
+
+            if (context.GetChild(0) is DeltinScriptParser.NullContext)
+                return new V_Null();
+
+            #endregion
+
+            #region Group ( expr )
+
+            if (context.ChildCount == 3 && context.GetChild(0).GetText() == "(" &&
+                context.GetChild(1) is DeltinScriptParser.ExprContext &&
+                context.GetChild(2).GetText() == ")")
+                return ParseExpression(scope, context.GetChild(1) as DeltinScriptParser.ExprContext);
+
+            #endregion
+
+            #region Method
+
+            if (context.GetChild(0) is DeltinScriptParser.MethodContext)
+                return ParseMethod(scope, context.GetChild(0) as DeltinScriptParser.MethodContext, true);
+
+            #endregion
+
+            #region Variable
+
+            if (context.GetChild(0) is DeltinScriptParser.VariableContext)
+                return scope.GetVar((context.GetChild(0) as DeltinScriptParser.VariableContext).PART().GetText(), context.start).GetVariable(new V_EventPlayer());
+
+            #endregion
+
+            #region Array
+
+            if (context.ChildCount == 4 && context.GetChild(1).GetText() == "[" && context.GetChild(3).GetText() == "]")
+                return Element.Part<V_ValueInArray>(
+                    ParseExpression(scope, context.expr(0) as DeltinScriptParser.ExprContext),
+                    ParseExpression(scope, context.expr(1) as DeltinScriptParser.ExprContext));
+
+            #endregion
+
+            #region Create Array
+
+            if (context.ChildCount >= 4 && context.GetChild(0).GetText() == "[")
+            {
+                var expressions = context.expr();
+                V_Append prev = null;
+                V_Append current = null;
+
+                for (int i = 0; i < expressions.Length; i++)
+                {
+                    current = new V_Append()
+                    {
+                        ParameterValues = new object[2]
+                    };
+
+                    if (prev != null)
+                        current.ParameterValues[0] = prev;
+                    else
+                        current.ParameterValues[0] = new V_EmptyArray();
+
+                    current.ParameterValues[1] = ParseExpression(scope, expressions[i]);
+                    prev = current;
+                }
+
+                return current;
+            }
+
+            #endregion
+
+            #region Empty Array
+
+            if (context.ChildCount == 2 && context.GetText() == "[]")
+                return Element.Part<V_EmptyArray>();
+
+            #endregion
+
+            #region Seperator/enum
+
+            if (context.ChildCount == 3 && context.GetChild(1).GetText() == ".")
+            {
+                Element left = ParseExpression(scope, context.GetChild(0) as DeltinScriptParser.ExprContext);
+                string variableName = context.GetChild(2).GetChild(0).GetText();
+
+                DefinedVar var = scope.GetVar(variableName, context.start);
+
+                return var.GetVariable(left);
+            }
+
+            #endregion
+
+            throw new Exception($"Failed to parse element: {context.GetType().Name} at {context.start.Line}, {context.start.Column}");
         }
     }
 

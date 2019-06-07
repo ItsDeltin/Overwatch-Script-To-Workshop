@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using Antlr4.Runtime;
 using Antlr4.Runtime.Tree;
 using Deltin.Deltinteger.Checker;
@@ -31,7 +33,11 @@ namespace Deltin.Deltinteger.Parse
             string name = context.STRINGLITERAL().GetText().Trim('"');
             BlockNode block = (BlockNode)VisitBlock(context.block());
 
-            var node = new RuleNode(name, block, Range.GetRange(context));
+            IExpressionNode[] conditions = new IExpressionNode[context.rule_if().expr().Length];
+            for (int i = 0; i < conditions.Length; i++)
+                conditions[i] = (IExpressionNode)VisitExpr(context.rule_if().expr()[i]);
+
+            var node = new RuleNode(name, conditions, block, Range.GetRange(context));
             CheckRange(node);
             return node;
         }
@@ -59,7 +65,21 @@ namespace Deltin.Deltinteger.Parse
                     return Visit(context.GetChild(0));
             }
 
-            throw new Exception($"Can't translate expression {context.GetText()} of type {context.GetType().Name}");
+            Node node;
+
+            if (context.ChildCount == 3 && Constants.AllOperations.Contains(context.GetChild(1).GetText()))
+            {
+                IExpressionNode left = (IExpressionNode)Visit(context.GetChild(0));
+                string operation = context.GetChild(1).GetText();
+                IExpressionNode right = (IExpressionNode)Visit(context.GetChild(2));
+
+                node = new OperationNode(left, operation, right, Range.GetRange(context));
+            }
+
+            else throw new Exception($"Can't translate expression {context.GetText()} of type {context.GetType().Name}");
+
+            CheckRange(node);
+            return node;
         }
         
         #region Expressions
@@ -119,6 +139,9 @@ namespace Deltin.Deltinteger.Parse
         
         private void CheckRange(Node node)
         {
+            if (_caretPos == null)
+                return;
+
             // If the caret position is inside the node
             // and the node's range is less than the currently selected node.
             if ((node.Range.IsInside(_caretPos)) && (SelectedNode == null || node.Range < SelectedNode.Range))
@@ -151,22 +174,38 @@ namespace Deltin.Deltinteger.Parse
     public class RuleNode : Node
     {
         public string Name { get; private set; }
+        public IExpressionNode[] Conditions { get; private set; }
         public BlockNode Block { get; private set; }
 
-        public RuleNode(string name, BlockNode block, Range range) : base(range) 
+        public RuleNode(string name, IExpressionNode[] conditions, BlockNode block, Range range) : base(range)
         {
             Name = name;
+            Conditions = conditions;
             Block = block;
         }
     }
 
+    // TODO maybe remove IExpressionNode and IStatementNode if empty interfaces is a bad coding practice?
     public interface IExpressionNode {}
-
     public interface IStatementNode {}
 
     public interface INamedNode 
     {
         string Name { get; }
+    }
+
+    public class OperationNode : Node, IExpressionNode
+    {
+        public IExpressionNode Left { get; }
+        public string Operation { get; }
+        public IExpressionNode Right { get; }
+
+        public OperationNode(IExpressionNode left, string operation, IExpressionNode right, Range range) : base(range)
+        {
+            Left = left;
+            Operation = operation;
+            Right = right;
+        }
     }
 
     public class BlockNode : Node
@@ -239,6 +278,22 @@ namespace Deltin.Deltinteger.Parse
         }
     }
 
+    /*
+    public class CompareNode : Node, IExpressionNode, IOperationNode
+    {
+        public IExpressionNode Left { get; private set; }
+        public string Operation { get; private set; }
+        public IExpressionNode Right { get; private set; }
+
+        public CompareNode(IExpressionNode left, string operation, IExpressionNode right, Range range) : base(range)
+        {
+            Right = right;
+            Operation = operation;
+            Left = left;
+        }
+    }
+    */
+
     public class Pos
     {
         public int line { get; private set; }
@@ -262,16 +317,25 @@ namespace Deltin.Deltinteger.Parse
             this.end = end;
         }
 
-        public static Range GetRange(IToken start, IToken end)
-        {
-            return new Range(new Pos(start.Line, start.Column), new Pos(end.Line, end.Column));
-        }
         public static Range GetRange(ParserRuleContext context)
         {
             if (context.start.Line == context.stop.Line &&
                 context.start.Column == context.stop.Column)
-                return new Range(new Pos(context.start.Line, context.start.Column), new Pos(context.stop.Line, context.stop.Column + context.GetText().Length));
-            return GetRange(context.Start, context.Stop);
+            {
+                return new Range
+                (
+                    new Pos(context.start.Line, context.start.Column), 
+                    new Pos(context.stop.Line, context.stop.Column + context.GetText().Length)
+                );
+            }
+            else
+            {
+                return new Range
+                (
+                    new Pos(context.start.Line, context.start.Column), 
+                    new Pos(context.stop.Line, context.stop.Column)
+                );
+            }
         }
         public bool IsInside(Pos pos)
         {
