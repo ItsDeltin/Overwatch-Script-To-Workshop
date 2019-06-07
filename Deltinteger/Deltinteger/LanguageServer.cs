@@ -107,9 +107,14 @@ namespace Deltin.Deltinteger.Checker
 
             int line      = inputJson.caret.line + 1;
             int character = inputJson.caret.character;
-            DocumentPos caret = new DocumentPos(document, line, character);
+            DocumentPos caret = new DocumentPos(line, character);
 
             var parser = Parse.Parser.GetParser(document);
+            // TODO join Pos and DocumentPos
+            BuildAstVisitor bav = new BuildAstVisitor(new Pos(caret.line, caret.character));
+            Node ruleSet = bav.Visit(parser.Item2);
+
+            Console.WriteLine("Selected node: " + bav.SelectedNode.GetType().Name);
 
             ParserRuleContext selectedRule = GetSelectedRule(parser.Item2, caret, parser.Item1);
             string name = selectedRule.GetType().Name;
@@ -206,11 +211,6 @@ namespace Deltin.Deltinteger.Checker
                 {
                     var child = tree.GetChild(i) as ParserRuleContext;
 
-                    if (child is DeltinScriptParser.ParametersContext)
-                        ;
-
-                    Console.WriteLine(child.GetText());
-
                     var compare = GetSelectedRule(child, caret, parser);
 
                     int compareRange = Math.Abs(compare.Start.StartIndex - compare.Start.StopIndex);
@@ -240,13 +240,18 @@ namespace Deltin.Deltinteger.Checker
 
             int line      = inputJson.caret.line + 1;
             int character = inputJson.caret.character;
-            DocumentPos caret = new DocumentPos(document, line, character);
+            DocumentPos caret = new DocumentPos(line, character);
 
             var parser = Parse.Parser.GetParser(document);
 
             // Get the rule where the caret is at.
             ParserRuleContext selectedRule = GetSelectedRule(parser.Item2, caret, parser.Item1);
             DeltinScriptParser.MethodContext methodContext = null;
+
+            BuildAstVisitor bav = new BuildAstVisitor(new Pos(caret.line, caret.character));
+            Node ruleSet = bav.Visit(parser.Item2);
+
+            Console.WriteLine("Selected node: " + (bav.SelectedNode as INamedNode)?.Name ?? bav.SelectedNode.GetType().Name);
 
             int methodIndex = 0;
             int parameterIndex = 0;
@@ -335,21 +340,11 @@ namespace Deltin.Deltinteger.Checker
         {
             public int line;
             public int character;
-            [JsonIgnore]
-            public int index;
 
-            public DocumentPos(string document, int line, int character)
+            public DocumentPos(int line, int character)
             {
                 this.line = line;
                 this.character = character;
-                if (document != null)
-                {
-                    string[] split = document.Split('\n');
-                    for (int i = 0; i < line - 1; i++)
-                        index += split[i].Length;
-                    index += character;
-                    index += 1;
-                }
             }
         }
 

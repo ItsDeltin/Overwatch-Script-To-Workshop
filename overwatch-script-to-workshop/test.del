@@ -3,5 +3,5 @@ usevar playervar A;
 
 rule: "My Rule"
 {
-    BigMessage(EventPlayer(),)
+    Damage(EventPla)
 }

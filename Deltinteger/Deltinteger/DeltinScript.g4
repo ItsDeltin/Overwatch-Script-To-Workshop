@@ -7,6 +7,7 @@ grammar DeltinScript;
 number : NUMBER | neg  ;
 neg    : '-'NUMBER     ;
 string : STRINGLITERAL ;
+formatted_string: '<' string (COMMA expr)* '>' ;
 true   : TRUE          ;
 false  : FALSE         ;
 null   : NULL          ;
@@ -27,12 +28,12 @@ expr
 	| expr INDEX_START expr INDEX_END             // Array creation
 	| INDEX_START expr (COMMA expr)* INDEX_END    // Arrays
 	| INDEX_START INDEX_END                       // Empty array
-	| '<' string (COMMA expr)* '>'                // Formatted strings
+	| formatted_string                            // Formatted strings
 	| true                                        // True
 	| false                                       // False
 	| null                                        // Null
 	| variable                                    // Variables
-	|LEFT_PAREN expr RIGHT_PAREN    // Groups
+	| exprgroup
 	| expr SEPERATOR expr                         // Variable seperation
 	| <assoc=right> expr '^' expr                 // x^y
 	| expr '*' expr                               // x*y
@@ -44,6 +45,8 @@ expr
 	| expr ('<' | '<=' | '==' | '>=' | '>' | '!=') expr // x == y
 	| expr BOOL expr                              // x & y
 	;
+
+exprgroup : LEFT_PAREN expr RIGHT_PAREN ;
 
 array    : INDEX_START expr INDEX_END ;
 enum     : ( 'Variable'|'Operation'|'Button'|'Relative'|'ContraryMotion'|'ChaseReevaluation'|'Status'|'TeamSelector'|'WaitBehavior'|'Effects'|'Color'|'EffectRev'|'Rounding'|'Communication'|'Location'|'StringRev'|'Icon'|'IconRev'|'PlayEffects'|'Hero'|'InvisibleTo'|'AccelerateRev'|'ModRev'|'FacingRev'|'BarrierLOS'|'Transformation'|'RadiusLOS'|'LocalVector'|'Clipping'|'InworldTextRev' ) SEPERATOR PART ;

@@ -6,6 +6,7 @@
     <OutputType>Exe</OutputType>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <RuntimeIdentifiers>win-x64;win7-x64</RuntimeIdentifiers>
+    <LangVersion>7.3</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>x64</PlatformTarget>
@@ -42,7 +43,7 @@
     <Reference Include="System.Xml" />
     <Reference Include="Newtonsoft.Json">
       <HintPath>packages\Newtonsoft.Json\Newtonsoft.Json.dll</HintPath>
-      <SpecificVersion>False</SpecificVersion> 
+      <SpecificVersion>False</SpecificVersion>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -54,25 +55,26 @@
     <Compile Include="DeltinScript.g4.parser.cs">
       <DependentUpon>DeltinScript.g4</DependentUpon>
     </Compile>
-    <Compile Include="Elements\Actions.cs" />
-    <Compile Include="Elements\Condition.cs" />
-    <Compile Include="Elements\CustomMethods.cs" />
-    <Compile Include="Elements\Elements.cs" />
-    <Compile Include="Constants.cs" />
-    <Compile Include="Elements\Enums.cs" />
-    <Compile Include="Exceptions.cs" />
     <Compile Include="Elements\Rule.cs" />
+    <Compile Include="Elements\Condition.cs" />
+    <Compile Include="Elements\Elements.cs" />
+    <Compile Include="Elements\Actions.cs" />
     <Compile Include="Elements\Values.cs" />
-    <Compile Include="Input.cs" />
+    <Compile Include="Elements\Enums.cs" />
+    <Compile Include="Elements\CustomMethods.cs" />
     <Compile Include="Program.cs" />
+    <Compile Include="Input.cs" />
     <Compile Include="Extras.cs" />
+    <Compile Include="LanguageServer.cs" />
+    <Compile Include="Constants.cs" />
     <Compile Include="Interfaces.cs" />
+    <Compile Include="Exceptions.cs" />
+    <Compile Include="Parse\ast.cs" />
     <Compile Include="Parse\Parse.cs" />
+    <Compile Include="Parse\Var.cs" />
     <Compile Include="Parse\Scope.cs" />
     <Compile Include="Parse\UserMethod.cs" />
-    <Compile Include="Parse\Var.cs" />
     <Compile Include="Parse\ContinueSkip.cs" />
-    <Compile Include="Checker.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
