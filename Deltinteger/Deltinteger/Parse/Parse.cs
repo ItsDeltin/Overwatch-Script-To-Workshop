@@ -15,103 +15,68 @@ namespace Deltin.Deltinteger.Parse
     {
         static Log Log = new Log("Parse");
 
-        public static Rule[] ParseText(string document)
+        public static Rule[] ParseText(string document, out ParserElements parserData)
         {
-            return ParseText(document, out _);
-        }
+            parserData = ParserElements.GetParser(document, null);
 
-        public static Rule[] ParseText(string document, out SyntaxError[] syntaxErrors)
-        {
-            var parser = GetParser(document);
-            var context = parser.Item2;
-            var errorListener = parser.Item3;
+            // TODO fix usevar
+            Var.Setup(parserData.RuleSetNode.UseGlobalVar, parserData.RuleSetNode.UsePlayerVar);
 
-            syntaxErrors = errorListener.Errors.ToArray();
-            if (syntaxErrors.Length > 0)
-                return null;
+            // Get the defined variables.
+            foreach (var definedVar in parserData.RuleSetNode.DefinedVars)
+                // The new var is stored in Var.VarCollection
+                new DefinedVar(ScopeGroup.Root, definedVar);
 
-            try
+            // Get the user methods.
+            for (int i = 0; i < parserData.RuleSetNode.UserMethods.Length; i++)
+                new UserMethod(parserData.RuleSetNode.UserMethods[i]); 
+
+            // Parse the rules.
+            Rule[] rules = new Rule[parserData.RuleSetNode.Rules.Length];
+
+            for (int i = 0; i < rules.Length; i++)
             {
-
-                {
-                    // Get the internal global variable to use.
-                    if (!Enum.TryParse(context.useGlobalVar().PART().ToString(), out Variable useGlobalVar))
-                        throw new SyntaxErrorException("useGlobalVar must be a character.", context.useGlobalVar().start);
-
-                    // Get the internal player variable to use.
-                    if (!Enum.TryParse(context.usePlayerVar().PART().ToString(), out Variable usePlayerVar))
-                        throw new SyntaxErrorException("usePlayerVar must be a character.", context.usePlayerVar().start);
-
-                    Var.Setup(useGlobalVar, usePlayerVar);
-                }
-
-                // Get the defined variables.
-                var vardefine = context.vardefine();
-
-                for (int i = 0; i < vardefine.Length; i++)
-                    // The new var is stored in Var.VarCollection
-                    new DefinedVar(ScopeGroup.Root, vardefine[i]);
-
-                // Get the user methods.
-                var userMethods = context.user_method();
-
-                for (int i = 0; i < userMethods.Length; i++)
-                    new UserMethod(userMethods[i]); 
-
-                // Parse the rules.
-                var rules = context.ow_rule();
-                var compiledRules = new List<Rule>();
-
-                for (int i = 0; i < rules.Length; i++)
-                {
-                    ParseRule parsing = new ParseRule(rules[i]);
-
-                    Log.Write(LogLevel.Normal, $"Building rule: {parsing.Rule.Name}");
-                    parsing.Parse();
-                    Rule rule = parsing.Rule;
-
-                    compiledRules.Add(rule);
-                }
-
-                Log.Write(LogLevel.Normal, new ColorMod("Build succeeded.", ConsoleColor.Green));
-
-                // List all variables
-                Log.Write(LogLevel.Normal, new ColorMod("Variable Guide:", ConsoleColor.Blue));
-
-                if (ScopeGroup.Root.VarCollection().Count > 0)
-                {
-                    int nameLength = ScopeGroup.Root.VarCollection().Max(v => v.Name.Length);
-
-                    bool other = false;
-                    foreach (DefinedVar var in ScopeGroup.Root.VarCollection())
-                    {
-                        ConsoleColor textcolor = other ? ConsoleColor.White : ConsoleColor.DarkGray;
-                        other = !other;
-
-                        Log.Write(LogLevel.Normal,
-                            // Names
-                            new ColorMod(var.Name + new string(' ', nameLength - var.Name.Length) + "  ", textcolor),
-                            // Variable
-                            new ColorMod(
-                                (var.IsGlobal ? "global" : "player") 
-                                + " " + 
-                                var.Variable.ToString() +
-                                (var.IsInArray ? $"[{var.Index}]" : "")
-                                , textcolor)
-                        );
-                    }
-                }
-
-                return compiledRules.ToArray();
+                Rule newRule = Translate.GetRule(parserData.RuleSetNode.Rules[i]);
+                Log.Write(LogLevel.Normal, $"Built rule: {newRule.Name}");
+                rules[i] = newRule;
             }
-            catch (SyntaxErrorException ex)
+
+            Log.Write(LogLevel.Normal, new ColorMod("Build succeeded.", ConsoleColor.Green));
+
+            // List all variables
+            Log.Write(LogLevel.Normal, new ColorMod("Variable Guide:", ConsoleColor.Blue));
+
+            if (ScopeGroup.Root.VarCollection().Count > 0)
             {
-                syntaxErrors = new SyntaxError[] { new SyntaxError(ex.Message, ex.token.StartIndex, ex.token.StopIndex) };
-                return null;
-            }
-        }
+                int nameLength = ScopeGroup.Root.VarCollection().Max(v => v.Name.Length);
 
-        public static Tuple<DeltinScriptParser, DeltinScriptParser.RulesetContext, ErrorListener> GetParser(string document)
+                bool other = false;
+                foreach (DefinedVar var in ScopeGroup.Root.VarCollection())
+                {
+                    ConsoleColor textcolor = other ? ConsoleColor.White : ConsoleColor.DarkGray;
+                    other = !other;
+
+                    Log.Write(LogLevel.Normal,
+                        // Names
+                        new ColorMod(var.Name + new string(' ', nameLength - var.Name.Length) + "  ", textcolor),
+                        // Variable
+                        new ColorMod(
+                            (var.IsGlobal ? "global" : "player") 
+                            + " " + 
+                            var.Variable.ToString() +
+                            (var.IsInArray ? $"[{var.Index}]" : "")
+                            , textcolor)
+                    );
+                }
+            }
+
+            return rules;
+        }
+    }
+
+    public class ParserElements
+    {
+        public static ParserElements GetParser(string document, Pos documentPos)
         {
             AntlrInputStream inputStream = new AntlrInputStream(document);
 
@@ -126,28 +91,58 @@ namespace Deltin.Deltinteger.Parse
             parser.AddErrorListener(errorListener);
 
             DeltinScriptParser.RulesetContext context = parser.ruleset();
-            Log.Write(LogLevel.Verbose, context.ToStringTree(parser));
 
-            Visitor visitor = new Visitor(parser, errorListener);
-            visitor.Visit(context);
+            AdditionalErrorChecking aec = new AdditionalErrorChecking(parser, errorListener);
+            aec.Visit(context);
 
-            BuildAstVisitor bav = new BuildAstVisitor();
+            BuildAstVisitor bav = new BuildAstVisitor(documentPos);
             RulesetNode ruleSet = (RulesetNode)bav.Visit(context);
             
-            return new Tuple<DeltinScriptParser, DeltinScriptParser.RulesetContext, ErrorListener>(parser, context, errorListener);
+            return new ParserElements()
+            {
+                Parser = parser,
+                RulesetContext = context,
+                RuleSetNode = ruleSet,
+                Bav = bav,
+                ErrorListener = errorListener
+            };
         }
+
+        public DeltinScriptParser Parser { get; set; }
+        public DeltinScriptParser.RulesetContext RulesetContext { get; set; }
+        public RulesetNode RuleSetNode { get; set; }
+        public ErrorListener ErrorListener { get; set; } 
+        public BuildAstVisitor Bav { get; set; }
     }
 
-    class ParseRule
+    class Translate
     {
-        public Rule Rule { get; private set; }
+        public static Rule GetRule(RuleNode ruleNode)
+        {
+            return new Translate(ruleNode).Rule;
+        }
+
+        private readonly Rule Rule;
         private readonly List<Element> Actions = new List<Element>();
         private readonly List<Condition> Conditions = new List<Condition>();
         private readonly bool IsGlobal;
+        private readonly List<A_Skip> ReturnSkips = new List<A_Skip>(); // Return statements whos skip count needs to be filled out.
+        private ContinueSkip ContinueSkip; // Contains data about the wait/skip for continuing loops.
 
-        public ParseRule(RuleNode ruleNode)
+        private Translate(RuleNode ruleNode)
         {
+            Rule = new Rule(ruleNode.Name);
+
             ParseConditions(ruleNode.Conditions);
+            ParseBlock(ScopeGroup.Root.Child(), ruleNode.Block, false);
+
+            Rule.Conditions = Conditions.ToArray();
+            Rule.Actions = Actions.ToArray();
+
+            // Fufill remaining skips
+            foreach (var skip in ReturnSkips)
+                skip.ParameterValues = new object[] { new V_Number(Actions.Count - ReturnSkips.IndexOf(skip)) };
+            ReturnSkips.Clear();
         }
 
         void ParseConditions(IExpressionNode[] expressions)
@@ -175,363 +170,339 @@ namespace Deltin.Deltinteger.Parse
 
         Element ParseExpression(ScopeGroup scope, IExpressionNode expression)
         {
-            // If the expression is a(n)...
-
-            #region Operation
-
-            //   0       1      2
-            // (expr operation expr)
-            // count == 3
-            if (expression is OperationNode)
+            switch (expression)
             {
-                OperationNode operationNode = (OperationNode)expression;
-                Element left = ParseExpression(scope, operationNode.Left);
-                Element right = ParseExpression(scope, operationNode.Right);
-
-                if (Constants.BoolOperations.Contains(operationNode.Operation))
+                // Math and boolean operations.
+                case OperationNode operationNode:
                 {
-                    if (left.ElementData.ValueType != Elements.ValueType.Any && left.ElementData.ValueType != Elements.ValueType.Boolean)
-                        throw new SyntaxErrorException($"Expected boolean datatype, got {left .ElementData.ValueType.ToString()} instead.", operationNode.Left.Range);
-                    if (right.ElementData.ValueType != Elements.ValueType.Any && right.ElementData.ValueType != Elements.ValueType.Boolean)
-                        throw new SyntaxErrorException($"Expected boolean datatype, got {right.ElementData.ValueType.ToString()} instead.", context.start);
-                }
+                    Element left = ParseExpression(scope, operationNode.Left);
+                    Element right = ParseExpression(scope, operationNode.Right);
 
-                switch (operationNode.Operation)
-                {
-                    // Math: ^, *, %, /, +, -
-                    case "^":
-                        return Element.Part<V_RaiseToPower>(left, right);
-
-                    case "*":
-                        return Element.Part<V_Multiply>(left, right);
-
-                    case "%":
-                        return Element.Part<V_Modulo>(left, right);
-
-                    case "/":
-                        return Element.Part<V_Divide>(left, right);
-
-                    case "+":
-                        return Element.Part<V_Add>(left, right);
-
-                    case "-":
-                        return Element.Part<V_Subtract>(left, right);
-
-
-                    // BoolCompare: &, |
-                    case "&":
-                        return Element.Part<V_And>(left, right);
-
-                    case "|":
-                        return Element.Part<V_Or>(left, right);
-
-                    // Compare: <, <=, ==, >=, >, !=
-                    case "<":
-                        return Element.Part<V_Compare>(left, Operators.LessThan, right);
-
-                    case "<=":
-                        return Element.Part<V_Compare>(left, Operators.LessThanOrEqual, right);
-
-                    case "==":
-                        return Element.Part<V_Compare>(left, Operators.Equal, right);
-
-                    case ">=":
-                        return Element.Part<V_Compare>(left, Operators.GreaterThanOrEqual, right);
-
-                    case ">":
-                        return Element.Part<V_Compare>(left, Operators.GreaterThan, right);
-
-                    case "!=":
-                        return Element.Part<V_Compare>(left, Operators.NotEqual, right);
-                }
-            }
-
-            #endregion
-
-            #region Not
-
-            if (context.GetChild(0) is DeltinScriptParser.NotContext)
-                return Element.Part<V_Not>(ParseExpression(scope, context.GetChild(1) as DeltinScriptParser.ExprContext));
-
-            #endregion
-
-            #region Number
-
-            if (context.GetChild(0) is DeltinScriptParser.NumberContext)
-            {
-                var number = context.GetChild(0);
-
-                double num = double.Parse(number.GetChild(0).GetText());
-                /*
-                // num will have the format expr(number(X)) if positive, expr(number(neg(X))) if negative.
-                if (number.GetChild(0) is DeltinScriptParser.NegContext)
-                    // Is negative, use '-' before int.parse to make it negative.
-                    num = -double.Parse(number.GetChild(0).GetText());
-                else
-                    // Is positive
-                    num = double.Parse(number.GetChild(0).GetText());
-                */
-
-                return new V_Number(num);
-            }
-
-            #endregion
-
-            #region Boolean
-
-            // True
-            if (context.GetChild(0) is DeltinScriptParser.TrueContext)
-                return new V_True();
-
-            // False
-            if (context.GetChild(0) is DeltinScriptParser.FalseContext)
-                return new V_False();
-
-            #endregion
-
-            #region String
-
-            if (context.GetChild(0) is DeltinScriptParser.StringContext)
-            {
-                return V_String.ParseString(
-                    context.start,
-                    // String will look like "hey this is the contents", trim the quotes.
-                    (context.GetChild(0) as DeltinScriptParser.StringContext).STRINGLITERAL().GetText().Trim('\"'),
-                    null
-                );
-            }
-
-            #endregion
-
-            #region Formatted String
-
-            if (context.GetChild(1) is DeltinScriptParser.StringContext)
-            {
-                Element[] values = context.expr().Select(expr => ParseExpression(scope, expr)).ToArray();
-                return V_String.ParseString(
-                    context.start,
-                    (context.GetChild(1) as DeltinScriptParser.StringContext).STRINGLITERAL().GetText().Trim('\"'),
-                    values
-                    );
-            }
-
-            #endregion
-
-            #region null
-
-            if (context.GetChild(0) is DeltinScriptParser.NullContext)
-                return new V_Null();
-
-            #endregion
-
-            #region Group ( expr )
-
-            if (context.ChildCount == 3 && context.GetChild(0).GetText() == "(" &&
-                context.GetChild(1) is DeltinScriptParser.ExprContext &&
-                context.GetChild(2).GetText() == ")")
-                return ParseExpression(scope, context.GetChild(1) as DeltinScriptParser.ExprContext);
-
-            #endregion
-
-            #region Method
-
-            if (context.GetChild(0) is DeltinScriptParser.MethodContext)
-                return ParseMethod(scope, context.GetChild(0) as DeltinScriptParser.MethodContext, true);
-
-            #endregion
-
-            #region Variable
-
-            if (context.GetChild(0) is DeltinScriptParser.VariableContext)
-                return scope.GetVar((context.GetChild(0) as DeltinScriptParser.VariableContext).PART().GetText(), context.start).GetVariable(new V_EventPlayer());
-
-            #endregion
-
-            #region Array
-
-            if (context.ChildCount == 4 && context.GetChild(1).GetText() == "[" && context.GetChild(3).GetText() == "]")
-                return Element.Part<V_ValueInArray>(
-                    ParseExpression(scope, context.expr(0) as DeltinScriptParser.ExprContext),
-                    ParseExpression(scope, context.expr(1) as DeltinScriptParser.ExprContext));
-
-            #endregion
-
-            #region Create Array
-
-            if (context.ChildCount >= 4 && context.GetChild(0).GetText() == "[")
-            {
-                var expressions = context.expr();
-                V_Append prev = null;
-                V_Append current = null;
-
-                for (int i = 0; i < expressions.Length; i++)
-                {
-                    current = new V_Append()
+                    if (Constants.BoolOperations.Contains(operationNode.Operation))
                     {
-                        ParameterValues = new object[2]
-                    };
-
-                    if (prev != null)
-                        current.ParameterValues[0] = prev;
-                    else
-                        current.ParameterValues[0] = new V_EmptyArray();
-
-                    current.ParameterValues[1] = ParseExpression(scope, expressions[i]);
-                    prev = current;
-                }
-
-                return current;
-            }
-
-            #endregion
-
-            #region Empty Array
-
-            if (context.ChildCount == 2 && context.GetText() == "[]")
-                return Element.Part<V_EmptyArray>();
-
-            #endregion
-
-            #region Seperator/enum
-
-            if (context.ChildCount == 3 && context.GetChild(1).GetText() == ".")
-            {
-                Element left = ParseExpression(scope, context.GetChild(0) as DeltinScriptParser.ExprContext);
-                string variableName = context.GetChild(2).GetChild(0).GetText();
-
-                DefinedVar var = scope.GetVar(variableName, context.start);
-
-                return var.GetVariable(left);
-            }
-
-            #endregion
-
-            throw new Exception($"Failed to parse element: {context.GetType().Name} at {context.start.Line}, {context.start.Column}");
-        }
-    }
-
-    class ParseRule
-    {
-        public Rule Rule { get; private set; }
-
-        private readonly List<Element> Actions = new List<Element>();
-        private readonly List<Condition> Conditions = new List<Condition>();
-
-        private DeltinScriptParser.Ow_ruleContext RuleContext;
-
-        private readonly bool IsGlobal;
-
-        private readonly List<A_Skip> ReturnSkips = new List<A_Skip>(); // Return statements whos skip count needs to be filled out.
-
-        private ContinueSkip ContinueSkip; // Contains data about the wait/skip for continuing loops.
-
-        public ParseRule(DeltinScriptParser.Ow_ruleContext ruleContext)
-        {
-            Rule = CreateRuleFromContext(ruleContext);
-            RuleContext = ruleContext;
-            IsGlobal = Rule.RuleEvent == RuleEvent.Ongoing_Global;
-            ContinueSkip = new ContinueSkip(IsGlobal, Actions);
-        }
-
-        public void Parse()
-        {
-            // Parse conditions
-            ParseConditions();
-            
-            // Parse actions
-            ParseBlock(ScopeGroup.Root.Child(), RuleContext.block(), true);
-
-            Rule.Conditions = Conditions.ToArray();
-            Rule.Actions = Actions.ToArray();
-        }
-
-        static Rule CreateRuleFromContext(DeltinScriptParser.Ow_ruleContext ruleContext)
-        {
-            string ruleName = ruleContext.STRINGLITERAL().GetText();
-            ruleName = ruleName.Substring(1, ruleName.Length - 2);
-
-            RuleEvent ruleEvent = RuleEvent.Ongoing_Global;
-            TeamSelector team = TeamSelector.All;
-            PlayerSelector player = PlayerSelector.All;
-
-            {
-                var additionalArgs = ruleContext.expr();
-
-                foreach (var arg in additionalArgs)
-                {
-                    string type = arg.GetText().Split('.').ElementAtOrDefault(0);
-                    string name = arg.GetText().Split('.').ElementAtOrDefault(1);
-
-                    if (type == "Event")
-                    {
-                        if (Enum.TryParse(name, out RuleEvent setEvent))
-                            ruleEvent = setEvent;
-                        else
-                            throw new SyntaxErrorException($"Unknown event type \"{arg.GetText()}\".", arg.start);
+                        if (left.ElementData.ValueType != Elements.ValueType.Any && left.ElementData.ValueType != Elements.ValueType.Boolean)
+                            throw new SyntaxErrorException($"Expected boolean datatype, got {left .ElementData.ValueType.ToString()} instead.", ((Node)operationNode.Left).Range);
+                        if (right.ElementData.ValueType != Elements.ValueType.Any && right.ElementData.ValueType != Elements.ValueType.Boolean)
+                            throw new SyntaxErrorException($"Expected boolean datatype, got {right.ElementData.ValueType.ToString()} instead.", ((Node)operationNode.Right).Range);
                     }
-                    else if (type == "Team")
+
+                    switch (operationNode.Operation)
                     {
-                        if (Enum.TryParse(name, out TeamSelector setTeam))
-                            team = setTeam;
-                        else
-                            throw new SyntaxErrorException($"Unknown team type \"{arg.GetText()}\".", arg.start);
+                        // Math: ^, *, %, /, +, -
+                        case "^":
+                            return Element.Part<V_RaiseToPower>(left, right);
+
+                        case "*":
+                            return Element.Part<V_Multiply>(left, right);
+
+                        case "%":
+                            return Element.Part<V_Modulo>(left, right);
+
+                        case "/":
+                            return Element.Part<V_Divide>(left, right);
+
+                        case "+":
+                            return Element.Part<V_Add>(left, right);
+
+                        case "-":
+                            return Element.Part<V_Subtract>(left, right);
+
+
+                        // BoolCompare: &, |
+                        case "&":
+                            return Element.Part<V_And>(left, right);
+
+                        case "|":
+                            return Element.Part<V_Or>(left, right);
+
+                        // Compare: <, <=, ==, >=, >, !=
+                        case "<":
+                            return Element.Part<V_Compare>(left, Operators.LessThan, right);
+
+                        case "<=":
+                            return Element.Part<V_Compare>(left, Operators.LessThanOrEqual, right);
+
+                        case "==":
+                            return Element.Part<V_Compare>(left, Operators.Equal, right);
+
+                        case ">=":
+                            return Element.Part<V_Compare>(left, Operators.GreaterThanOrEqual, right);
+
+                        case ">":
+                            return Element.Part<V_Compare>(left, Operators.GreaterThan, right);
+
+                        case "!=":
+                            return Element.Part<V_Compare>(left, Operators.NotEqual, right);
                     }
-                    else if (type == "Player")
-                    {
-                        if (Enum.TryParse(name, out PlayerSelector setPlayer))
-                            player = setPlayer;
-                        else
-                            throw new SyntaxErrorException($"Unknown player type \"{arg.GetText()}\".", arg.start);
-                    }
-                    else
-                        throw new SyntaxErrorException($"Unknown rule argument \"{arg.GetText()}\".", arg.start);
+                    
+                    throw new Exception($"Operation {operationNode.Operation} not implemented.");
                 }
+
+                // Number
+                case NumberNode numberNode:
+                    return new V_Number(numberNode.Value);
+                
+                // Bool
+                case BooleanNode boolNode:
+                    if (boolNode.Value)
+                        return new V_True();
+                    else
+                        return new V_False();
+                
+                // Not operation
+                case NotNode notNode:
+                    return Element.Part<V_Not>(ParseExpression(scope, notNode.Value));
+
+                // Strings
+                case StringNode stringNode:
+                #warning todo
+                // TODO replace token with range
+                    Element[] stringFormat = new Element[stringNode.Format.Length];
+                    for (int i = 0; i < stringFormat.Length; i++)
+                        stringFormat[i] = ParseExpression(scope, stringNode.Format[i]);
+                    return V_String.ParseString(null, stringNode.Value, stringFormat);
+
+                // Null
+                case NullNode nullNode:
+                    return new V_Null();
+
+                // TODO check if groups need to be implemented here
+
+                // Methods
+                case MethodNode methodNode:
+                    return ParseMethod(scope, methodNode, true);
+
+                // Variable
+                case VariableNode variableNode:
+                    return scope.GetVar(variableNode.Name, variableNode.Range)
+                        .GetVariable(ParseExpression(scope, variableNode.Target));
+
+                // Get value in array
+                case ValueInArrayNode viaNode:
+                    return Element.Part<V_ValueInArray>(viaNode.Value, viaNode.Index);
+
+                // Create array
+                case CreateArrayNode createArrayNode:
+                {
+                    Element prev = null;
+                    Element current = null;
+
+                    for (int i = 0; i < createArrayNode.Values.Length; i++)
+                    {
+                        current = new V_Append()
+                        {
+                            ParameterValues = new object[2]
+                        };
+
+                        if (prev != null)
+                            current.ParameterValues[0] = prev;
+                        else
+                            current.ParameterValues[0] = new V_EmptyArray();
+
+                        current.ParameterValues[1] = ParseExpression(scope, createArrayNode.Values[i]);
+                        prev = current;
+                    }
+
+                    return current ?? new V_EmptyArray();
+                }
+
+                // Seperator
+
             }
 
-            return new Rule(ruleName, ruleEvent, team, player);
+            throw new Exception();
         }
 
-        void ParseConditions()
+        Element ParseMethod(ScopeGroup scope, MethodNode methodNode, bool needsToBeValue)
         {
-            // Get the if contexts
-            var conditions = RuleContext.rule_if()?.expr();
-            
-            if (conditions != null)
-                foreach(var expr in conditions)
+            // Get the kind of method the method is (Method (Overwatch), Custom Method, or User Method.)
+            var methodType = GetMethodType(methodNode.Name);
+            if (methodType == null)
+                throw new SyntaxErrorException($"The method {methodNode.Name} does not exist.", methodNode.Range);
+
+            Element method;
+            switch (methodType)
+            {
+                case MethodType.Method:
                 {
-                    Element parsedIf = ParseExpression(ScopeGroup.Root, expr);
-                    // If the parsed if is a V_Compare, translate it to a condition.
-                    // Makes "(value1 == value2) == true" to just "value1 == value2"
-                    if (parsedIf is V_Compare)
-                        Conditions.Add(
-                            new Condition(
-                                (Element)parsedIf.ParameterValues[0],
-                                (Operators)parsedIf.ParameterValues[1],
-                                (Element)parsedIf.ParameterValues[2]
-                            )
-                        );
-                    // If not, just do "parsedIf == true"
-                    else
-                        Conditions.Add(new Condition(
-                            parsedIf, Operators.Equal, new V_True()
-                        ));
+                    Type owMethod = Element.GetMethod(methodNode.Name);
+
+                    method = (Element)Activator.CreateInstance(owMethod);
+                    Parameter[] parameterData = owMethod.GetCustomAttributes<Parameter>().ToArray();
+                    
+                    List<object> parsedParameters = new List<object>();
+                    for (int i = 0; i < parameterData.Length; i++)
+                    {
+                        if (methodNode.Parameters.Length > i)
+                        {
+                            // Parse the parameter.
+                            parsedParameters.Add(ParseParameter(scope, methodNode.Parameters[i], methodNode.Name, parameterData[i]));
+                        }
+                        else 
+                        {
+                            if (parameterData[i].ParameterType == ParameterType.Value && parameterData[i].DefaultType == null)
+                                throw new SyntaxErrorException($"Missing parameter \"{parameterData[i].Name}\" in the method \"{methodNode.Name}\" and no default type to fallback on.", 
+                                    methodNode.Range);
+                            else
+                                parsedParameters.Add(parameterData[i].GetDefault());
+                        }
+                    }
+
+                    method.ParameterValues = parsedParameters.ToArray();
+                    break;
                 }
+
+                case MethodType.CustomMethod:
+                {
+                    MethodInfo customMethod = CustomMethods.GetCustomMethod(methodNode.Name);
+                    Parameter[] parameterData = customMethod.GetCustomAttributes<Parameter>().ToArray();
+                    object[] parsedParameters = new Element[parameterData.Length];
+
+                    for (int i = 0; i < parameterData.Length; i++)
+                        if (methodNode.Parameters.Length > i)
+                            parsedParameters[i] = ParseParameter(scope, methodNode.Parameters[i], methodNode.Name, parameterData[i]);
+                        else
+                            throw new SyntaxErrorException($"Missing parameter \"{parameterData[i].Name}\" in the method \"{methodNode.Name}\" and no default type to fallback on.", 
+                                methodNode.Range);
+
+                    MethodResult result = (MethodResult)customMethod.Invoke(null, new object[] { IsGlobal, parsedParameters });
+                    switch (result.MethodType)
+                    {
+                        case CustomMethodType.Action:
+                            if (needsToBeValue)
+                                throw new IncorrectElementTypeException(methodNode.Name, true);
+                            break;
+
+                        case CustomMethodType.MultiAction_Value:
+                        case CustomMethodType.Value:
+                            if (!needsToBeValue)
+                                throw new IncorrectElementTypeException(methodNode.Name, false);
+                            break;
+                    }
+
+                    // Some custom methods have extra actions.
+                    if (result.Elements != null)
+                        Actions.AddRange(result.Elements);
+                    method = result.Result;
+
+                    break;
+                }
+
+                case MethodType.UserMethod:
+                {
+                    using (var methodScope = ScopeGroup.Root.Child())
+                    {
+                        UserMethod userMethod = UserMethod.GetUserMethod(methodNode.Name);
+
+                        // Add the parameter variables to the scope.
+                        DefinedVar[] parameterVars = new DefinedVar[userMethod.Parameters.Length];
+                        for (int i = 0; i < parameterVars.Length; i++)
+                        {
+                            if (methodNode.Parameters.Length > i)
+                            {
+                                // Create a new variable using the parameter input.
+                                parameterVars[i] = DefinedVar.AssignDefinedVar(methodScope, IsGlobal, userMethod.Parameters[i].Name, methodNode.Range);
+                                Actions.Add(parameterVars[i].SetVariable(ParseExpression(scope, methodNode.Parameters[i])));
+                            }
+                            else throw new SyntaxErrorException($"Missing parameter \"{userMethod.Parameters[i].Name}\" in the method \"{methodNode.Name}\".",
+                                methodNode.Range);
+                        }
+
+                        method = ParseBlock(methodScope.Child(), userMethod.Block, true);
+                        // No return value if the method is being used as an action.
+                        if (!needsToBeValue)
+                            method = null;
+                        break;
+                    }
+                }
+
+                default: throw new NotImplementedException(); // Keep the compiler from complaining about method not being set.
+            }
+
+            return method;
         }
 
-        Element ParseBlock(ScopeGroup scopeGroup, DeltinScriptParser.BlockContext blockContext, bool fulfillReturns)
+        object ParseParameter(ScopeGroup scope, IExpressionNode node, string methodName, Parameter parameterData)
+        {
+            object value = null;
+
+            switch (node)
+            {
+                case EnumNode enumNode:
+
+                    if (parameterData.ParameterType != ParameterType.Enum)
+                        throw new SyntaxErrorException($"Expected value type \"{parameterData.ValueType.ToString()}\" on {methodName}'s parameter \"{parameterData.Name}\"."
+                            , enumNode.Range);
+
+                    if (enumNode.Type != parameterData.EnumType.Name)
+                        throw new SyntaxErrorException($"Expected enum type \"{parameterData.EnumType.ToString()}\" on {methodName}'s parameter \"{parameterData.Name}\"."
+                            , enumNode.Range);
+
+                    try
+                    {
+                        value = Enum.Parse(parameterData.EnumType, enumNode.Value);
+                    }
+                    catch (Exception ex) when (ex is ArgumentNullException || ex is ArgumentException || ex is OverflowException)
+                    {
+                        throw new SyntaxErrorException($"The value {enumNode.Value} does not exist in the enum {enumNode.Type}."
+                            , enumNode.Range);
+                    }
+                    
+                    break;
+
+                default:
+
+                    if (parameterData.ParameterType != ParameterType.Value)
+                    throw new SyntaxErrorException($"Expected enum type \"{parameterData.EnumType.Name}\" on {methodName}'s parameter \"{parameterData.Name}\"."
+                        , ((Node)node).Range);
+
+                    value = ParseExpression(scope, node);
+
+                    Element element = value as Element;
+                    ElementData elementData = element.GetType().GetCustomAttribute<ElementData>();
+
+                    if (elementData.ValueType != Elements.ValueType.Any &&
+                        !parameterData.ValueType.HasFlag(elementData.ValueType))
+                        throw new SyntaxErrorException($"Expected value type \"{parameterData.ValueType.ToString()}\" on {methodName}'s parameter \"{parameterData.Name}\", got \"{elementData.ValueType.ToString()}\" instead."
+                            , ((Node)node).Range);
+
+                    break;
+            }
+
+            if (value == null)
+                throw new SyntaxErrorException("Could not parse parameter.", ((Node)node).Range);
+
+            return value;
+        }
+    
+        private static MethodType? GetMethodType(string name)
+        {
+            if (Element.GetMethod(name) != null)
+                return MethodType.Method;
+            if (CustomMethods.GetCustomMethod(name) != null)
+                return MethodType.CustomMethod;
+            if (UserMethod.GetUserMethod(name) != null)
+                return MethodType.UserMethod;
+            return null;
+        }
+
+        private enum MethodType
+        {
+            Method,
+            CustomMethod,
+            UserMethod
+        }
+
+        Element ParseBlock(ScopeGroup scopeGroup, BlockNode blockNode, bool fulfillReturns)
         {
             int returnSkipStart = ReturnSkips.Count;
 
             Var returned = null;
             if (fulfillReturns)
                 returned = Var.AssignVar(IsGlobal);
-
-            var statements = blockContext.children
-                .Where(v => v is DeltinScriptParser.StatementContext)
-                .Cast<DeltinScriptParser.StatementContext>().ToArray();
-
-            for (int i = 0; i < statements.Length; i++)
-                ParseStatement(scopeGroup, statements[i], returned, i == statements.Length - 1);
+            
+            for (int i = 0; i < blockNode.Statements.Length; i++)
+                ParseStatement(scopeGroup, blockNode.Statements[i], returned, i == blockNode.Statements.Length - 1);
 
             if (fulfillReturns)
             {
@@ -549,764 +520,226 @@ namespace Deltin.Deltinteger.Parse
             return null;
         }
 
-        void ParseStatement(ScopeGroup scope, DeltinScriptParser.StatementContext statementContext, Var returned, bool isLast)
+        void ParseStatement(ScopeGroup scope, IStatementNode statement, Var returned, bool isLast)
         {
-            #region Method
-            if (statementContext.GetChild(0) is DeltinScriptParser.MethodContext)
+            switch (statement)
             {
-                Element method = ParseMethod(scope, statementContext.GetChild(0) as DeltinScriptParser.MethodContext, false);
-                if (method != null)
-                    Actions.Add(method);
-                return;
-            }
-            #endregion
+                // Method
+                case MethodNode methodNode:
+                    Element method = ParseMethod(scope, methodNode, false);
+                    if (method != null)
+                        Actions.Add(method);
+                    return;
+                
+                // Variable set
+                case VarSetNode varSetNode:
 
-            #region Variable set
-            else if (statementContext.varset() != null)
-            {
-                // The variable to set.
-                DefinedVar variable = scope.GetVar(statementContext.varset().PART().GetText(), statementContext.start);
-                // The value operation.
-                string operation = statementContext.varset().statement_operation().GetText();
-                // The value.
-                Element value = ParseExpression(scope, statementContext.varset().expr().Last());
+                    DefinedVar variable = scope.GetVar(varSetNode.Variable, varSetNode.Range);
+                    Element target = ParseExpression(scope, varSetNode.Target);
+                    Element value = ParseExpression(scope, varSetNode.Value);
+                    Element index = ParseExpression(scope, varSetNode.Index);
 
-                // Target is the player to set the variable for.
-                Element target = null;
-                if (statementContext.varset().GetChild(0) is DeltinScriptParser.ExprContext)
-                {
-                    target = ParseExpression(scope, statementContext.varset().expr(0));
-                }
-
-                Element index = null;
-                if (statementContext.varset().array() != null)
-                {
-                    index = ParseExpression(scope, statementContext.varset().array().expr());
-                }
-
-                switch (operation)
-                {
-                    case "+=":
-                        value = Element.Part<V_Add>(variable.GetVariable(target, index), value);
-                        break;
-
-                    case "-=":
-                        value = Element.Part<V_Subtract>(variable.GetVariable(target, index), value);
-                        break;
-
-                    case "*=":
-                        value = Element.Part<V_Multiply>(variable.GetVariable(target, index), value);
-                        break;
-
-                    case "/=":
-                        value = Element.Part<V_Divide>(variable.GetVariable(target, index), value);
-                        break;
-
-                    case "^=":
-                        value = Element.Part<V_RaiseToPower>(variable.GetVariable(target, index), value);
-                        break;
-
-                    case "%=":
-                        value = Element.Part<V_Modulo>(variable.GetVariable(target, index), value);
-                        break;
-                }
-
-                Actions.Add(variable.SetVariable(value, target, index));
-                return;
-            }
-
-            #endregion
-
-            #region for
-            else if (statementContext.GetChild(0) is DeltinScriptParser.ForContext)
-            {
-                ContinueSkip.Setup();
-
-                // The action the for loop starts on.
-                // +1 for the counter reset.
-                int forActionStartIndex = Actions.Count() - 1;
-
-                ScopeGroup forGroup = scope.Child();
-
-                // Create the for's temporary variable.
-                DefinedVar forTempVar = Var.AssignDefinedVar(
-                    scopeGroup: forGroup,
-                    name      : statementContext.@for().PART().GetText(),
-                    isGlobal  : IsGlobal,
-                    token     : statementContext.@for().start
-                    );
-
-                // Reset the counter.
-                Actions.Add(forTempVar.SetVariable(new V_Number(0)));
-
-                // Parse the for's block.
-                ParseBlock(forGroup, statementContext.@for().block(), false);
-
-                // Take the variable out of scope.
-                forGroup.Out();
-
-                // Add the for's finishing elements
-                Actions.Add(forTempVar.SetVariable( // Indent the index by 1.
-                    Element.Part<V_Add>
-                    (
-                        forTempVar.GetVariable(),
-                        new V_Number(1)
-                    )
-                ));
-
-                ContinueSkip.SetSkipCount(forActionStartIndex);
-
-                // The target array in the for statement.
-                Element forArrayElement = ParseExpression(scope, statementContext.@for().expr());
-
-                Actions.Add(Element.Part<A_LoopIf>( // Loop if the for condition is still true.
-                    Element.Part<V_Compare>
-                    (
-                        forTempVar.GetVariable(),
-                        Operators.LessThan,
-                        Element.Part<V_CountOf>(forArrayElement)
-                    )
-                ));
-
-                ContinueSkip.ResetSkip();
-                return;
-            }
-
-            #endregion
-
-            #region if
-            else if (statementContext.GetChild(0) is DeltinScriptParser.IfContext)
-            {
-                /*
-                Syntax after parse:
-
-                If:
-                    Skip If (Not (expr))
-                    (body)
-                    Skip - Only if there is if-else or else statements.
-                Else if:
-                    Skip If (Not (expr))
-                    (body)
-                    Skip - Only if there is more if-else or else statements.
-                Else:
-                    (body)
-
-                */
-
-                // Add if's SkipIf action.
-                A_SkipIf if_SkipIf = new A_SkipIf();
-                Actions.Add(if_SkipIf);
-
-                using (var ifScope = scope.Child())
-                {
-                    // Parse the if body.
-                    ParseBlock(ifScope, statementContext.@if().block(), false);
-                }
-
-                // Determines if the "Skip" action after the if block will be created.
-                // Only if there is if-else or else statements.
-                bool addIfSkip = statementContext.@if().else_if().Count() > 0 || statementContext.@if().@else() != null;
-
-                // Update the initial SkipIf's skip count now that we know the number of actions the if block has.
-                // Add one to the body length if a Skip action is going to be added.
-                if_SkipIf.ParameterValues = new object[]
-                {
-                    Element.Part<V_Not>(ParseExpression(scope, statementContext.@if().expr())),
-                    new V_Number(Actions.Count - 1 - Actions.IndexOf(if_SkipIf) + (addIfSkip ? 1 : 0))
-                };
-
-                // Create the "Skip" action.
-                A_Skip if_Skip = new A_Skip();
-                if (addIfSkip)
-                {
-                    Actions.Add(if_Skip);
-                }
-
-                // Parse else-ifs
-                var skipIfContext = statementContext.@if().else_if();
-                A_Skip[] elseif_Skips = new A_Skip[skipIfContext.Length]; // The ElseIf's skips
-                for (int i = 0; i < skipIfContext.Length; i++)
-                {
-                    // Create the SkipIf action for the else if.
-                    A_SkipIf elseif_SkipIf = new A_SkipIf();
-                    Actions.Add(elseif_SkipIf);
-
-                    // Parse the else-if body.
-                    using (var elseifScope = scope.Child())
+                    switch (varSetNode.Operation)
                     {
-                        ParseBlock(elseifScope, skipIfContext[i].block(), false);
-                    }
-
-                    // Determines if the "Skip" action after the else-if block will be created.
-                    // Only if there is additional if-else or else statements.
-                    bool addIfElseSkip = i < skipIfContext.Length - 1 || statementContext.@if().@else() != null;
-
-                    // Set the SkipIf's parameters.
-                    elseif_SkipIf.ParameterValues = new object[]
-                    {
-                        Element.Part<V_Not>(ParseExpression(scope, skipIfContext[i].expr())),
-                        new V_Number(Actions.Count - 1 - Actions.IndexOf(elseif_SkipIf) + (addIfElseSkip ? 1 : 0))
-                    };
-
-                    // Create the "Skip" action for the else-if.
-                    if (addIfElseSkip)
-                    {
-                        elseif_Skips[i] = new A_Skip();
-                        Actions.Add(elseif_Skips[i]);
-                    }
-                }
-
-                // Parse else body.
-                if (statementContext.@if().@else() != null)
-                    using (var elseScope = scope.Child())
-                        ParseBlock(elseScope, statementContext.@if().@else().block(), false);
-
-                // Replace dummy skip with real skip now that we know the length of the if, if-else, and else's bodies.
-                // Replace if's dummy.
-                if_Skip.ParameterValues = new object[]
-                {
-                    new V_Number(Actions.Count - 1 - Actions.IndexOf(if_Skip))
-                };
-
-                // Replace else-if's dummy.
-                for (int i = 0; i < elseif_Skips.Length; i++)
-                {
-                    elseif_Skips[i].ParameterValues = new object[]
-                    {
-                        new V_Number(Actions.Count - 1 - Actions.IndexOf(elseif_Skips[i]))
-                    };
-                }
-
-                return;
-            }
-
-            #endregion
-
-            #region return
-            else if (statementContext.RETURN() != null)
-            {
-                // Will have a value if the statement is "return value;", will be null if the statement is "return;".
-                var returnExpr = statementContext.expr();
-
-                if (returnExpr != null)
-                {
-                    Element result = ParseExpression(scope, returnExpr);
-                    Actions.Add(returned.SetVariable(result));
-                }
-
-                if (!isLast)
-                {
-                    A_Skip returnSkip = new A_Skip();
-                    Actions.Add(returnSkip);
-                    ReturnSkips.Add(returnSkip);
-                }
-
-                return;
-            }
-            #endregion
-
-            #region define
-            else if (statementContext.define() != null)
-            {
-                string variableName = statementContext.define().PART().GetText();
-                // var has 3 different meanings here, have fun!
-                var var = Var.AssignDefinedVar(scope, IsGlobal, variableName, statementContext.start);
-
-                // Set the defined variable if the variable is defined like "define var = 1"
-                var setTo = statementContext.define().expr();
-                if (setTo != null)
-                    Actions.Add(var.SetVariable(ParseExpression(scope, setTo)));
-
-                return;
-            }
-            #endregion
-
-            throw new Exception($"What's a {statementContext.GetChild(0)} ({statementContext.GetChild(0).GetType()})?");
-        }
-
-        Element ParseExpression(ScopeGroup scope, DeltinScriptParser.ExprContext context)
-        {
-            // If the expression is a(n)...
-
-            #region Operation
-
-            //   0       1      2
-            // (expr operation expr)
-            // count == 3
-            if (context.ChildCount == 3
-                &&(Constants.   MathOperations.Contains(context.GetChild(1).GetText())
-                || Constants.CompareOperations.Contains(context.GetChild(1).GetText())
-                || Constants.   BoolOperations.Contains(context.GetChild(1).GetText())))
-            {
-                Element left = ParseExpression(scope, context.GetChild(0) as DeltinScriptParser.ExprContext);
-                string operation = context.GetChild(1).GetText();
-                Element right = ParseExpression(scope, context.GetChild(2) as DeltinScriptParser.ExprContext);
-
-                if (Constants.BoolOperations.Contains(context.GetChild(1).GetText()))
-                {
-                    if (left.ElementData.ValueType != Elements.ValueType.Any && left.ElementData.ValueType != Elements.ValueType.Boolean)
-                        throw new SyntaxErrorException($"Expected boolean datatype, got {left .ElementData.ValueType.ToString()} instead.", context.start);
-                    if (right.ElementData.ValueType != Elements.ValueType.Any && right.ElementData.ValueType != Elements.ValueType.Boolean)
-                        throw new SyntaxErrorException($"Expected boolean datatype, got {right.ElementData.ValueType.ToString()} instead.", context.start);
-                }
-
-                switch (operation)
-                {
-                    case "^":
-                        return Element.Part<V_RaiseToPower>(left, right);
-
-                    case "*":
-                        return Element.Part<V_Multiply>(left, right);
-
-                    case "/":
-                        return Element.Part<V_Divide>(left, right);
-
-                    case "+":
-                        return Element.Part<V_Add>(left, right);
-
-                    case "-":
-                        return Element.Part<V_Subtract>(left, right);
-
-                    case "%":
-                        return Element.Part<V_Modulo>(left, right);
-
-                    // COMPARE : '<' | '<=' | '==' | '>=' | '>' | '!=';
-
-                    case "&":
-                        return Element.Part<V_And>(left, right);
-
-                    case "|":
-                        return Element.Part<V_Or>(left, right);
-
-                    case "<":
-                        return Element.Part<V_Compare>(left, Operators.LessThan, right);
-
-                    case "<=":
-                        return Element.Part<V_Compare>(left, Operators.LessThanOrEqual, right);
-
-                    case "==":
-                        return Element.Part<V_Compare>(left, Operators.Equal, right);
-
-                    case ">=":
-                        return Element.Part<V_Compare>(left, Operators.GreaterThanOrEqual, right);
-
-                    case ">":
-                        return Element.Part<V_Compare>(left, Operators.GreaterThan, right);
-
-                    case "!=":
-                        return Element.Part<V_Compare>(left, Operators.NotEqual, right);
-                }
-            }
-
-            #endregion
-
-            #region Not
-
-            if (context.GetChild(0) is DeltinScriptParser.NotContext)
-                return Element.Part<V_Not>(ParseExpression(scope, context.GetChild(1) as DeltinScriptParser.ExprContext));
-
-            #endregion
-
-            #region Number
-
-            if (context.GetChild(0) is DeltinScriptParser.NumberContext)
-            {
-                var number = context.GetChild(0);
-
-                double num = double.Parse(number.GetChild(0).GetText());
-                /*
-                // num will have the format expr(number(X)) if positive, expr(number(neg(X))) if negative.
-                if (number.GetChild(0) is DeltinScriptParser.NegContext)
-                    // Is negative, use '-' before int.parse to make it negative.
-                    num = -double.Parse(number.GetChild(0).GetText());
-                else
-                    // Is positive
-                    num = double.Parse(number.GetChild(0).GetText());
-                */
-
-                return new V_Number(num);
-            }
-
-            #endregion
-
-            #region Boolean
-
-            // True
-            if (context.GetChild(0) is DeltinScriptParser.TrueContext)
-                return new V_True();
-
-            // False
-            if (context.GetChild(0) is DeltinScriptParser.FalseContext)
-                return new V_False();
-
-            #endregion
-
-            #region String
-
-            if (context.GetChild(0) is DeltinScriptParser.StringContext)
-            {
-                return V_String.ParseString(
-                    context.start,
-                    // String will look like "hey this is the contents", trim the quotes.
-                    (context.GetChild(0) as DeltinScriptParser.StringContext).STRINGLITERAL().GetText().Trim('\"'),
-                    null
-                );
-            }
-
-            #endregion
-
-            #region Formatted String
-
-            if (context.GetChild(1) is DeltinScriptParser.StringContext)
-            {
-                Element[] values = context.expr().Select(expr => ParseExpression(scope, expr)).ToArray();
-                return V_String.ParseString(
-                    context.start,
-                    (context.GetChild(1) as DeltinScriptParser.StringContext).STRINGLITERAL().GetText().Trim('\"'),
-                    values
-                    );
-            }
-
-            #endregion
-
-            #region null
-
-            if (context.GetChild(0) is DeltinScriptParser.NullContext)
-                return new V_Null();
-
-            #endregion
-
-            #region Group ( expr )
-
-            if (context.ChildCount == 3 && context.GetChild(0).GetText() == "(" &&
-                context.GetChild(1) is DeltinScriptParser.ExprContext &&
-                context.GetChild(2).GetText() == ")")
-                return ParseExpression(scope, context.GetChild(1) as DeltinScriptParser.ExprContext);
-
-            #endregion
-
-            #region Method
-
-            if (context.GetChild(0) is DeltinScriptParser.MethodContext)
-                return ParseMethod(scope, context.GetChild(0) as DeltinScriptParser.MethodContext, true);
-
-            #endregion
-
-            #region Variable
-
-            if (context.GetChild(0) is DeltinScriptParser.VariableContext)
-                return scope.GetVar((context.GetChild(0) as DeltinScriptParser.VariableContext).PART().GetText(), context.start).GetVariable(new V_EventPlayer());
-
-            #endregion
-
-            #region Array
-
-            if (context.ChildCount == 4 && context.GetChild(1).GetText() == "[" && context.GetChild(3).GetText() == "]")
-                return Element.Part<V_ValueInArray>(
-                    ParseExpression(scope, context.expr(0) as DeltinScriptParser.ExprContext),
-                    ParseExpression(scope, context.expr(1) as DeltinScriptParser.ExprContext));
-
-            #endregion
-
-            #region Create Array
-
-            if (context.ChildCount >= 4 && context.GetChild(0).GetText() == "[")
-            {
-                var expressions = context.expr();
-                V_Append prev = null;
-                V_Append current = null;
-
-                for (int i = 0; i < expressions.Length; i++)
-                {
-                    current = new V_Append()
-                    {
-                        ParameterValues = new object[2]
-                    };
-
-                    if (prev != null)
-                        current.ParameterValues[0] = prev;
-                    else
-                        current.ParameterValues[0] = new V_EmptyArray();
-
-                    current.ParameterValues[1] = ParseExpression(scope, expressions[i]);
-                    prev = current;
-                }
-
-                return current;
-            }
-
-            #endregion
-
-            #region Empty Array
-
-            if (context.ChildCount == 2 && context.GetText() == "[]")
-                return Element.Part<V_EmptyArray>();
-
-            #endregion
-
-            #region Seperator/enum
-
-            if (context.ChildCount == 3 && context.GetChild(1).GetText() == ".")
-            {
-                Element left = ParseExpression(scope, context.GetChild(0) as DeltinScriptParser.ExprContext);
-                string variableName = context.GetChild(2).GetChild(0).GetText();
-
-                DefinedVar var = scope.GetVar(variableName, context.start);
-
-                return var.GetVariable(left);
-            }
-
-            #endregion
-
-            throw new Exception($"Failed to parse element: {context.GetType().Name} at {context.start.Line}, {context.start.Column}");
-        }
-
-        Element ParseMethod(ScopeGroup scope, DeltinScriptParser.MethodContext methodContext, bool needsToBeValue)
-        {
-            // Get the method name
-            string methodName = methodContext.PART().GetText();
-
-            // Get the kind of method the method is (Method (Overwatch), Custom Method, or User Method.)
-            var methodType = GetMethodType(methodName);
-            if (methodType == null)
-                throw new SyntaxErrorException($"The method {methodName} does not exist.", methodContext.start);
-
-            // Get the parameters
-            var parameters = methodContext.parameters().expr();
-
-            Element method;
-
-            switch (methodType)
-            {
-                case MethodType.Method:
-                {
-                    Type owMethod = Element.GetMethod(methodName);
-
-                    method = (Element)Activator.CreateInstance(owMethod);
-                    Parameter[] parameterData = owMethod.GetCustomAttributes<Parameter>().ToArray();
-                    //object[] parsedParameters = new Element[parameterData.Length];
-                    List<object> parsedParameters = new List<object>();
-
-                    for (int i = 0; i < parameterData.Length; i++)
-                    {
-                        if (parameters.Length > i)
-                        {
-                            //parsedParameters[i] = ParseParameter(parameters[i], methodName, parameterData[i]);
-                            parsedParameters.Add(ParseParameter(scope, parameters[i], methodName, parameterData[i]));
-                        }
-                        else 
-                        {
-                            if (parameterData[i].ParameterType == ParameterType.Value && parameterData[i].DefaultType == null)
-                                throw new SyntaxErrorException($"Missing parameter \"{parameterData[i].Name}\" in the method \"{methodName}\" and no default type to fallback on.", 
-                                    methodContext.start);
-                            else
-                                //parsedParameters[i] = parameterData[i].GetDefault();
-                                parsedParameters.Add(parameterData[i].GetDefault());
-                        }
-                    }
-
-                    method.ParameterValues = parsedParameters.ToArray();
-                    break;
-                }
-
-                case MethodType.CustomMethod:
-                {
-                    MethodInfo customMethod = CustomMethods.GetCustomMethod(methodName);
-                    Parameter[] parameterData = customMethod.GetCustomAttributes<Parameter>().ToArray();
-                    object[] parsedParameters = new Element[parameterData.Length];
-
-                    for (int i = 0; i < parameterData.Length; i++)
-                        if (parameters.Length > i)
-                            parsedParameters[i] = ParseParameter(scope, parameters[i], methodName, parameterData[i]);
-                        else
-                            throw new SyntaxErrorException($"Missing parameter \"{parameterData[i].Name}\" in the method \"{methodName}\" and no default type to fallback on.", 
-                                methodContext.start);
-
-                    MethodResult result = (MethodResult)customMethod.Invoke(null, new object[] { IsGlobal, parsedParameters });
-                    switch (result.MethodType)
-                    {
-                        case CustomMethodType.Action:
-                            if (needsToBeValue)
-                                throw new IncorrectElementTypeException(methodName, true);
+                        case "+=":
+                            value = Element.Part<V_Add>(variable.GetVariable(target, index), value);
                             break;
 
-                        case CustomMethodType.MultiAction_Value:
-                        case CustomMethodType.Value:
-                            if (!needsToBeValue)
-                                throw new IncorrectElementTypeException(methodName, false);
+                        case "-=":
+                            value = Element.Part<V_Subtract>(variable.GetVariable(target, index), value);
+                            break;
+
+                        case "*=":
+                            value = Element.Part<V_Multiply>(variable.GetVariable(target, index), value);
+                            break;
+
+                        case "/=":
+                            value = Element.Part<V_Divide>(variable.GetVariable(target, index), value);
+                            break;
+
+                        case "^=":
+                            value = Element.Part<V_RaiseToPower>(variable.GetVariable(target, index), value);
+                            break;
+
+                        case "%=":
+                            value = Element.Part<V_Modulo>(variable.GetVariable(target, index), value);
                             break;
                     }
 
-                    // Some custom methods have extra actions.
-                    if (result.Elements != null)
-                        Actions.AddRange(result.Elements);
-                    method = result.Result;
+                    Actions.Add(variable.SetVariable(value, target, index));
+                    return;
 
-                    break;
+                // For
+                case ForEachNode forEachNode:
+                {
+                    ContinueSkip.Setup();
+
+                    // The action the for loop starts on.
+                    int forActionStartIndex = Actions.Count() - 1;
+
+                    ScopeGroup forGroup = scope.Child();
+
+                    // Create the for's temporary variable.
+                    DefinedVar forTempVar = Var.AssignDefinedVar(
+                        scopeGroup: forGroup,
+                        name      : forEachNode.Variable,
+                        isGlobal  : IsGlobal,
+                        range     : forEachNode.Range
+                        );
+
+                    // Reset the counter.
+                    Actions.Add(forTempVar.SetVariable(new V_Number(0)));
+
+                    // Parse the for's block.
+                    ParseBlock(forGroup, forEachNode.Block, false);
+
+                    // Take the variable out of scope.
+                    forGroup.Out();
+
+                    // Add the for's finishing elements
+                    Actions.Add(forTempVar.SetVariable( // Indent the index by 1.
+                        Element.Part<V_Add>
+                        (
+                            forTempVar.GetVariable(),
+                            new V_Number(1)
+                        )
+                    ));
+
+                    ContinueSkip.SetSkipCount(forActionStartIndex);
+
+                    // The target array in the for statement.
+                    Element forArrayElement = ParseExpression(scope, forEachNode.Array);
+
+                    Actions.Add(Element.Part<A_LoopIf>( // Loop if the for condition is still true.
+                        Element.Part<V_Compare>
+                        (
+                            forTempVar.GetVariable(),
+                            Operators.LessThan,
+                            Element.Part<V_CountOf>(forArrayElement)
+                        )
+                    ));
+
+                    ContinueSkip.ResetSkip();
+                    return;
                 }
 
-                case MethodType.UserMethod:
+                // If
+                case IfNode ifNode:
                 {
-                    using (var methodScope = ScopeGroup.Root.Child())
-                    {
-                        UserMethod userMethod = UserMethod.GetUserMethod(methodName);
+                    A_SkipIf if_SkipIf = new A_SkipIf();
+                    Actions.Add(if_SkipIf);
 
-                        // Add the parameter variables to the scope.
-                        DefinedVar[] parameterVars = new DefinedVar[userMethod.Parameters.Length];
-                        for (int i = 0; i < parameterVars.Length; i++)
+                    using (var ifScope = scope.Child())
+                    {
+                        // Parse the if body.
+                        ParseBlock(ifScope, ifNode.IfData.Block, false);
+                    }
+
+                    // Determines if the "Skip" action after the if block will be created.
+                    // Only if there is if-else or else statements.
+                    bool addIfSkip = ifNode.ElseIfData.Length > 0 || ifNode.ElseBlock != null;
+
+                    // Update the initial SkipIf's skip count now that we know the number of actions the if block has.
+                    // Add one to the body length if a Skip action is going to be added.
+                    if_SkipIf.ParameterValues = new object[]
+                    {
+                        Element.Part<V_Not>(ParseExpression(scope, ifNode.IfData.Expression)),
+                        new V_Number(Actions.Count - 1 - Actions.IndexOf(if_SkipIf) + (addIfSkip ? 1 : 0))
+                    };
+
+                    // Create the "Skip" action.
+                    A_Skip if_Skip = new A_Skip();
+                    if (addIfSkip)
+                    {
+                        Actions.Add(if_Skip);
+                    }
+
+                    // Parse else-ifs
+                    A_Skip[] elseif_Skips = new A_Skip[ifNode.ElseIfData.Length]; // The ElseIf's skips
+                    for (int i = 0; i < ifNode.ElseIfData.Length; i++)
+                    {
+                        // Create the SkipIf action for the else if.
+                        A_SkipIf elseif_SkipIf = new A_SkipIf();
+                        Actions.Add(elseif_SkipIf);
+
+                        // Parse the else-if body.
+                        using (var elseifScope = scope.Child())
                         {
-                            if (parameters.Length > i)
-                            {
-                                // Create a new variable using the parameter input.
-                                parameterVars[i] = DefinedVar.AssignDefinedVar(methodScope, IsGlobal, userMethod.Parameters[i].Name, methodContext.start);
-                                Actions.Add(parameterVars[i].SetVariable(ParseExpression(scope, parameters[i])));
-                            }
-                            else throw new SyntaxErrorException($"Missing parameter \"{userMethod.Parameters[i].Name}\" in the method \"{methodName}\".",
-                                methodContext.start);
+                            ParseBlock(elseifScope, ifNode.ElseIfData[i].Block, false);
                         }
 
-                        method = ParseBlock(methodScope.Child(), userMethod.Block, true);
-                        // No return value if the method is being used as an action.
-                        if (!needsToBeValue)
-                            method = null;
-                        break;
+                        // Determines if the "Skip" action after the else-if block will be created.
+                        // Only if there is additional if-else or else statements.
+                        bool addIfElseSkip = i < ifNode.ElseIfData.Length - 1 || ifNode.ElseBlock != null;
+
+                        // Set the SkipIf's parameters.
+                        elseif_SkipIf.ParameterValues = new object[]
+                        {
+                            Element.Part<V_Not>(ParseExpression(scope, ifNode.ElseIfData[i].Expression)),
+                            new V_Number(Actions.Count - 1 - Actions.IndexOf(elseif_SkipIf) + (addIfElseSkip ? 1 : 0))
+                        };
+
+                        // Create the "Skip" action for the else-if.
+                        if (addIfElseSkip)
+                        {
+                            elseif_Skips[i] = new A_Skip();
+                            Actions.Add(elseif_Skips[i]);
+                        }
                     }
+
+                    // Parse else body.
+                    if (ifNode.ElseBlock != null)
+                        using (var elseScope = scope.Child())
+                            ParseBlock(elseScope, ifNode.ElseBlock, false);
+
+                    // Replace dummy skip with real skip now that we know the length of the if, if-else, and else's bodies.
+                    // Replace if's dummy.
+                    if_Skip.ParameterValues = new object[]
+                    {
+                        new V_Number(Actions.Count - 1 - Actions.IndexOf(if_Skip))
+                    };
+
+                    // Replace else-if's dummy.
+                    for (int i = 0; i < elseif_Skips.Length; i++)
+                    {
+                        elseif_Skips[i].ParameterValues = new object[]
+                        {
+                            new V_Number(Actions.Count - 1 - Actions.IndexOf(elseif_Skips[i]))
+                        };
+                    }
+
+                    return;
                 }
+                
+                // Return
+                case ReturnNode returnNode:
 
-                default: throw new NotImplementedException(); // Keep the compiler from complaining about method not being set.
+                    if (returnNode.Value != null)
+                    {
+                        Element result = ParseExpression(scope, returnNode.Value);
+                        Actions.Add(returned.SetVariable(result));
+                    }
+
+                    if (!isLast)
+                    {
+                        A_Skip returnSkip = new A_Skip();
+                        Actions.Add(returnSkip);
+                        ReturnSkips.Add(returnSkip);
+                    }
+
+                    return;
+                
+                // Define
+                case ScopedDefineNode defineNode:
+
+                    var var = Var.AssignDefinedVar(scope, IsGlobal, defineNode.VariableName, defineNode.Range);
+
+                    // Set the defined variable if the variable is defined like "define var = 1"
+                    if (defineNode.Value != null)
+                        Actions.Add(var.SetVariable(ParseExpression(scope, defineNode.Value)));
+
+                    return;
             }
-
-            return method;
-        }
-
-        object ParseParameter(ScopeGroup scope, DeltinScriptParser.ExprContext context, string methodName, Parameter parameterData)
-        {
-            object value = null;
-
-            if (context.GetChild(0) is DeltinScriptParser.EnumContext)
-            {
-                if (parameterData.ParameterType != ParameterType.Enum)
-                    throw new SyntaxErrorException($"Expected value type \"{parameterData.ValueType.ToString()}\" on {methodName}'s parameter \"{parameterData.Name}\"."
-                        , context.start);
-
-                string type = context.GetText().Split('.').ElementAtOrDefault(0);
-                string enumValue = context.GetText().Split('.').ElementAtOrDefault(1);
-
-                if (type != parameterData.EnumType.Name)
-                    throw new SyntaxErrorException($"Expected enum type \"{parameterData.EnumType.ToString()}\" on {methodName}'s parameter \"{parameterData.Name}\"."
-                        , context.start);
-
-                try
-                {
-                    value = Enum.Parse(parameterData.EnumType, enumValue);
-                }
-                catch (Exception ex) when (ex is ArgumentNullException || ex is ArgumentException || ex is OverflowException)
-                {
-                    throw new SyntaxErrorException($"The value {enumValue} does not exist in the enum {type}."
-                        , context.start);
-                }
-
-                if (value == null)
-                    throw new SyntaxErrorException($"Could not parse enum parameter {context.GetText()}."
-                        , context.start);
-            }
-
-            else
-            {
-                if (parameterData.ParameterType != ParameterType.Value)
-                    throw new SyntaxErrorException($"Expected enum type \"{parameterData.EnumType.Name}\" on {methodName}'s parameter \"{parameterData.Name}\"."
-                        , context.start);
-
-                value = ParseExpression(scope, context);
-
-                Element element = value as Element;
-                ElementData elementData = element.GetType().GetCustomAttribute<ElementData>();
-
-                if (elementData.ValueType != Elements.ValueType.Any &&
-                    !parameterData.ValueType.HasFlag(elementData.ValueType))
-                    throw new SyntaxErrorException($"Expected value type \"{parameterData.ValueType.ToString()}\" on {methodName}'s parameter \"{parameterData.Name}\", got \"{elementData.ValueType.ToString()}\" instead."
-                        , context.start);
-            }
-
-            if (value == null)
-                throw new SyntaxErrorException("Could not parse parameter.", context.start);
-
-
-            return value;
-        }
-
-        private static MethodType? GetMethodType(string name)
-        {
-            if (Element.GetMethod(name) != null)
-                return MethodType.Method;
-            if (CustomMethods.GetCustomMethod(name) != null)
-                return MethodType.CustomMethod;
-            if (UserMethod.GetUserMethod(name) != null)
-                return MethodType.UserMethod;
-            return null;
-        }
-
-        enum MethodType
-        {
-            Method,
-            CustomMethod,
-            UserMethod
-        }
-    }
-
-    public class ErrorListener : BaseErrorListener
-    {
-        public readonly List<SyntaxError> Errors = new List<SyntaxError>();
-
-        public override void SyntaxError(IRecognizer recognizer, IToken offendingSymbol, int line, int charPositionInLine, string msg, RecognitionException e)
-        {
-            Errors.Add(new SyntaxError(msg, offendingSymbol.StartIndex, offendingSymbol.StopIndex + 1));
-            //throw new SyntaxErrorException(msg, offendingSymbol);
-        }
-    }
-
-    public class SyntaxError
-    {
-        public SyntaxError(string message, int start, int stop)
-        {
-            Message = message;
-            Start = start;
-            Stop = stop;
-        }
-        public readonly string Message;
-        public readonly int Start;
-        public readonly int Stop;
-    }
-
-    class Visitor : DeltinScriptBaseVisitor<object>
-    {
-        private readonly BaseErrorListener _errorReporter;
-        private readonly DeltinScriptParser _parser;
-
-        public Visitor(DeltinScriptParser parser, BaseErrorListener errorReporter)
-        {
-            _parser = parser;
-            _errorReporter = errorReporter;
-        }
-
-        public override object VisitStatement(DeltinScriptParser.StatementContext context)
-        {
-            if (context.GetChild(0) is DeltinScriptParser.MethodContext &&
-                context.ChildCount == 1)
-            {
-                _errorReporter.SyntaxError(_parser, context.stop, context.stop.Line, context.stop.Column, "Expected ';'.", null);
-            }
-            return base.VisitStatement(context);
-        }
-
-        public override object VisitParameters(DeltinScriptParser.ParametersContext context)
-        {
-            // Confirm there is an expression after the last ",".
-            if (context.children?.Last().GetText() == ",")
-            {
-                _errorReporter.SyntaxError(_parser, context.stop, context.stop.Line, context.stop.Column, "Missing parameter.", null);
-            }
-            return base.VisitParameters(context);
         }
     }
 }

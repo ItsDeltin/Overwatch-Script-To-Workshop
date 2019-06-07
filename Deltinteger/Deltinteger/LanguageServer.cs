@@ -87,9 +87,9 @@ namespace Deltin.Deltinteger.Checker
 
         static string ParseDocument(string document)
         {
-            Parse.Parser.ParseText(document, out SyntaxError[] errors);
+            Parse.Parser.ParseText(document, out var data);
 
-            return JsonConvert.SerializeObject(errors);
+            return JsonConvert.SerializeObject(data.ErrorListener.Errors);
         }
 
         static string GetAutocomplete(string json)
@@ -109,22 +109,13 @@ namespace Deltin.Deltinteger.Checker
             int character = inputJson.caret.character;
             DocumentPos caret = new DocumentPos(line, character);
 
-            var parser = Parse.Parser.GetParser(document);
-            // TODO join Pos and DocumentPos
-            BuildAstVisitor bav = new BuildAstVisitor(new Pos(caret.line, caret.character));
-            Node ruleSet = bav.Visit(parser.Item2);
+            var parser = ParserElements.GetParser(document, new Pos(caret.line, caret.character));
 
-            Console.WriteLine("Selected node: " + bav.SelectedNode.GetType().Name);
-
-            ParserRuleContext selectedRule = GetSelectedRule(parser.Item2, caret, parser.Item1);
-            string name = selectedRule.GetType().Name;
-
-            CompletionItem[] completion;
-            
-            switch(name)
+            CompletionItem[] completion;            
+            switch(parser.Bav.SelectedNode.GetType().Name)
             {
                 // Ruleset
-                case nameof(DeltinScriptParser.RulesetContext):
+                case nameof(RulesetNode):
 
                     completion = new CompletionItem[]
                     {
@@ -136,7 +127,7 @@ namespace Deltin.Deltinteger.Checker
                     break;
 
                 // Actions
-                case nameof(DeltinScriptParser.BlockContext):
+                case nameof(BlockNode):
 
                     completion = Element.ActionList.Select(m => 
                             new CompletionItem(m.Name.Substring(2))
@@ -149,11 +140,9 @@ namespace Deltin.Deltinteger.Checker
                     break;
 
                 // Values
-                case nameof(DeltinScriptParser.Rule_ifContext):
-                case nameof(DeltinScriptParser.MethodContext):
-                case nameof(DeltinScriptParser.User_methodContext):
-                case nameof(DeltinScriptParser.ExprContext):
-                case nameof(DeltinScriptParser.ParametersContext):
+                case nameof(MethodNode):
+                case nameof(UserMethodNode):
+                case nameof(VariableNode):
 
                     completion = Element.ValueList.Select(m => 
                         new CompletionItem(m.Name.Substring(2))
@@ -165,15 +154,6 @@ namespace Deltin.Deltinteger.Checker
 
                     break;
 
-                // Enum autocomplete
-                case nameof(DeltinScriptParser.EnumContext):
-                    completion = EnumValue.GetCodeValues
-                        (Constants.EnumParameters
-                            .First(ep => ep.Name == selectedRule.GetChild(0).GetText()).GetType()
-                        ).Select(v => new CompletionItem(v))
-                        .ToArray();
-                    break;
-
                 // Any rules that do not have any autocomplete.
                 case nameof(DeltinScriptParser.StatementContext):
                 case nameof(DeltinScriptParser.VarsetContext):
@@ -183,7 +163,7 @@ namespace Deltin.Deltinteger.Checker
                     break;
 
                 default: 
-                    Console.WriteLine(selectedRule.GetType().Name + " context not implemented.");
+                    Console.WriteLine(parser.Bav.SelectedNode.GetType().Name + " context not implemented.");
                     completion = new CompletionItem[0];
                     break;
             }
@@ -199,38 +179,6 @@ namespace Deltin.Deltinteger.Checker
             return JsonConvert.SerializeObject(completion);
         }
 
-        static ParserRuleContext GetSelectedRule(ParserRuleContext tree, DocumentPos caret, DeltinScriptParser parser)
-        {
-            if (tree.ChildCount == 0)
-                return tree;
-
-            ParserRuleContext selectedContext = null;
-            int selectedRange = 0;
-            for (int i = 0; i < tree.ChildCount; i++)
-                if (tree.GetChild(i) is ParserRuleContext)
-                {
-                    var child = tree.GetChild(i) as ParserRuleContext;
-
-                    var compare = GetSelectedRule(child, caret, parser);
-
-                    int compareRange = Math.Abs(compare.Start.StartIndex - compare.Start.StopIndex);
-
-                    string name = compare.ToString(parser);
-                    string text = compare.GetText();
-
-                    if ((compare.Start.Line  < caret.line || (compare.Start.Line == caret.line && compare.Start.Column <= caret.character - 1)) &&
-                        (compare.Stop.Line   > caret.line || (compare.Stop.Line  == caret.line && compare.Stop.Column >= caret.character - 1)) &&
-                    //if (compare.Start.StartIndex <= caret.index && caret.index <= compare.Start.StopIndex &&
-                        (compareRange < selectedRange || selectedRange == 0))
-                        {
-                            selectedRange = compareRange;
-                            selectedContext = compare;
-                        }
-                }
-
-            return selectedContext ?? tree;
-        }
-
         // TODO comment this
         static string GetSignatures(string json)
         {
@@ -242,16 +190,7 @@ namespace Deltin.Deltinteger.Checker
             int character = inputJson.caret.character;
             DocumentPos caret = new DocumentPos(line, character);
 
-            var parser = Parse.Parser.GetParser(document);
-
-            // Get the rule where the caret is at.
-            ParserRuleContext selectedRule = GetSelectedRule(parser.Item2, caret, parser.Item1);
-            DeltinScriptParser.MethodContext methodContext = null;
-
-            BuildAstVisitor bav = new BuildAstVisitor(new Pos(caret.line, caret.character));
-            Node ruleSet = bav.Visit(parser.Item2);
-
-            Console.WriteLine("Selected node: " + (bav.SelectedNode as INamedNode)?.Name ?? bav.SelectedNode.GetType().Name);
+            var parser = ParserElements.GetParser(document, new Pos(caret.line, caret.character));
 
             int methodIndex = 0;
             int parameterIndex = 0;
@@ -261,7 +200,7 @@ namespace Deltin.Deltinteger.Checker
             
             bool foundMethodContext = false;
 
-            if (selectedRule is DeltinScriptParser.ParametersContext)
+            if (parser.Bav.SelectedNode is IExpressionNode)
             {
                 methodContext = (DeltinScriptParser.MethodContext)selectedRule.Parent;
                 parameterIndex = ((DeltinScriptParser.ParametersContext)selectedRule).expr().Length;

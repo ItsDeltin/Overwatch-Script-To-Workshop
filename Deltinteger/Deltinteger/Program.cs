@@ -74,7 +74,7 @@ namespace Deltin.Deltinteger
 #if DEBUG == false
             try
             {
-                generatedRules = Parser.ParseText(text);
+                generatedRules = Parser.ParseText(text, out ParserElements parserData);
             }
             catch (SyntaxErrorException ex)
             {

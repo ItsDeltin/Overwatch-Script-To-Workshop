@@ -26,15 +26,14 @@ expr
 	| string                                      // Strings
 	| enum                                        // Enums
 	| expr INDEX_START expr INDEX_END             // Array creation
-	| INDEX_START expr (COMMA expr)* INDEX_END    // Arrays
-	| INDEX_START INDEX_END                       // Empty array
+	| createarray
 	| formatted_string                            // Formatted strings
 	| true                                        // True
 	| false                                       // False
 	| null                                        // Null
 	| variable                                    // Variables
 	| exprgroup
-	| expr SEPERATOR expr                         // Variable seperation
+	| expr SEPERATOR variable                     // Variable seperation
 	| <assoc=right> expr '^' expr                 // x^y
 	| expr '*' expr                               // x*y
 	| expr '/' expr                               // x/y
@@ -46,7 +45,8 @@ expr
 	| expr BOOL expr                              // x & y
 	;
 
-exprgroup : LEFT_PAREN expr RIGHT_PAREN ;
+exprgroup   : LEFT_PAREN expr RIGHT_PAREN ;
+createarray : INDEX_START (expr (COMMA expr)*)? INDEX_END;
 
 array    : INDEX_START expr INDEX_END ;
 enum     : ( 'Variable'|'Operation'|'Button'|'Relative'|'ContraryMotion'|'ChaseReevaluation'|'Status'|'TeamSelector'|'WaitBehavior'|'Effects'|'Color'|'EffectRev'|'Rounding'|'Communication'|'Location'|'StringRev'|'Icon'|'IconRev'|'PlayEffects'|'Hero'|'InvisibleTo'|'AccelerateRev'|'ModRev'|'FacingRev'|'BarrierLOS'|'Transformation'|'RadiusLOS'|'LocalVector'|'Clipping'|'InworldTextRev' ) SEPERATOR PART ;
@@ -66,8 +66,7 @@ statement :
 	| if
 	| for
 	| define
-	| RETURN expr STATEMENT_END
-	| RETURN STATEMENT_END
+	| return
 	);
 
 block : BLOCK_START statement* BLOCK_END ;
@@ -78,6 +77,7 @@ for     : FOR LEFT_PAREN
 if      : IF LEFT_PAREN expr RIGHT_PAREN block else_if* else? ;
 else_if : ELSE IF LEFT_PAREN expr RIGHT_PAREN block           ;
 else    : ELSE block                                          ;
+return  : RETURN expr? STATEMENT_END                          ;
 
 rule_if : IF LEFT_PAREN (expr (COMMA expr)*) RIGHT_PAREN;
 
@@ -92,8 +92,8 @@ user_method : METHOD PART LEFT_PAREN (PART (COMMA PART)*)? RIGHT_PAREN
 	;
 
 ruleset :
-	useGlobalVar
-	usePlayerVar
+	useGlobalVar?
+	usePlayerVar?
 	(vardefine | ow_rule | user_method)*
 	;
 

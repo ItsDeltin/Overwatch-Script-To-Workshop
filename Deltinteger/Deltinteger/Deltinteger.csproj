@@ -62,6 +62,7 @@
     <Compile Include="Elements\Values.cs" />
     <Compile Include="Elements\Enums.cs" />
     <Compile Include="Elements\CustomMethods.cs" />
+    
     <Compile Include="Program.cs" />
     <Compile Include="Input.cs" />
     <Compile Include="Extras.cs" />
@@ -69,12 +70,15 @@
     <Compile Include="Constants.cs" />
     <Compile Include="Interfaces.cs" />
     <Compile Include="Exceptions.cs" />
+
     <Compile Include="Parse\ast.cs" />
     <Compile Include="Parse\Parse.cs" />
     <Compile Include="Parse\Var.cs" />
     <Compile Include="Parse\Scope.cs" />
     <Compile Include="Parse\UserMethod.cs" />
     <Compile Include="Parse\ContinueSkip.cs" />
+    <Compile Include="Parse\AdditionalErrorChecking.cs" />
+
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

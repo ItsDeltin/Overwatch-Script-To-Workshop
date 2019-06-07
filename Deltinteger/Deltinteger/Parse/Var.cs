@@ -47,9 +47,9 @@ namespace Deltin.Deltinteger.Parse
             return new Var(isGlobal, GetVar(isGlobal), Assign(isGlobal));
         }
 
-        public static DefinedVar AssignDefinedVar(ScopeGroup scopeGroup, bool isGlobal, string name, IToken token)
+        public static DefinedVar AssignDefinedVar(ScopeGroup scopeGroup, bool isGlobal, string name, Range range)
         {
-            return new DefinedVar(scopeGroup, name, isGlobal, GetVar(isGlobal), Assign(isGlobal), token);
+            return new DefinedVar(scopeGroup, name, isGlobal, GetVar(isGlobal), Assign(isGlobal), range);
         }
 
 
@@ -177,22 +177,16 @@ namespace Deltin.Deltinteger.Parse
     {
         public string Name { get; protected set; }
 
-        public DefinedVar(ScopeGroup scopeGroup, DeltinScriptParser.VardefineContext vardefine)
+        public DefinedVar(ScopeGroup scopeGroup, DefinedNode node)
         {
-            IsGlobal = vardefine.GLOBAL() != null;
-            string name = vardefine.PART(0).GetText();
+            IsGlobal = node.IsGlobal;
 
-            if (scopeGroup.IsVar(name))
-                throw new SyntaxErrorException($"The variable {name} was already defined.", vardefine.start);
+            if (scopeGroup.IsVar(node.VariableName))
+                throw new SyntaxErrorException($"The variable {node.VariableName} was already defined.", node.Range);
 
-            Name = name;
+            Name = node.VariableName;
 
-            // Both can be null, or only one can have a value.
-            string useVar = vardefine.PART(1)?.GetText();
-            var useNumber = vardefine.number();
-
-            // Auto assign
-            if (useNumber == null && useVar == null)
+            if (node.UseVar == null)
             {
                 Index = Var.Assign(IsGlobal);
 
@@ -205,30 +199,21 @@ namespace Deltin.Deltinteger.Parse
             }
             else
             {
-                if (useNumber != null)
+                Variable = (Variable)node.UseVar;
+                if (node.UseIndex != null)
                 {
                     IsInArray = true;
-                    string indexString = useNumber.GetText();
-                    if (!int.TryParse(indexString, out int index))
-                        throw new SyntaxErrorException("Expected number.", useNumber.start);
-                    Index = index;
-                }
-
-                if (useVar != null)
-                {
-                    if (!Enum.TryParse(useVar, out Variable var))
-                        throw new SyntaxErrorException("Expected variable.", vardefine.start);
-                    Variable = var;
+                    Index = (int)node.UseIndex;
                 }
             }
 
             scopeGroup.In(this);
         }
 
-        public DefinedVar(ScopeGroup scopeGroup, string name, bool isGlobal, Variable variable, int index, IToken token)
+        public DefinedVar(ScopeGroup scopeGroup, string name, bool isGlobal, Variable variable, int index, Range range)
         {
             if (scopeGroup.IsVar(name))
-                throw new SyntaxErrorException($"The variable {name} was already defined.", token);
+                throw new SyntaxErrorException($"The variable {name} was already defined.", range);
 
             Name = name;
             IsGlobal = isGlobal;

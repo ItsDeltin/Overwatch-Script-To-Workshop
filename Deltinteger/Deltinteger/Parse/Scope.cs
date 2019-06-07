@@ -29,7 +29,7 @@ namespace Deltin.Deltinteger.Parse
             return GetVar(name, null) != null ? true : false;
         }
 
-        public DefinedVar GetVar(string name, IToken token)
+        public DefinedVar GetVar(string name, Range range)
         {
             DefinedVar var = null;
             ScopeGroup checkGroup = this;
@@ -39,8 +39,8 @@ namespace Deltin.Deltinteger.Parse
                 checkGroup = checkGroup.Parent;
             }
 
-            if (var == null && token != null)
-                throw new SyntaxErrorException($"The variable {name} does not exist.", token);
+            if (var == null && range != null)
+                throw new SyntaxErrorException($"The variable {name} does not exist.", range);
 
             return var;
         }
