@@ -29,7 +29,8 @@ namespace Deltin.Deltinteger
 
             if (args.Contains("-langserver"))
             {
-                Check.RequestLoop();
+                int.TryParse(args.FirstOrDefault(v => v.Split(' ')[0] == "-port").Split(' ')[1], out int port);
+                Check.RequestLoop(port);
             }
             else
             {
@@ -74,7 +75,7 @@ namespace Deltin.Deltinteger
 #if DEBUG == false
             try
             {
-                generatedRules = Parser.ParseText(text, out ParserElements parserData);
+                generatedRules = Parser.ParseText(text, out _);
             }
             catch (SyntaxErrorException ex)
             {
@@ -82,7 +83,7 @@ namespace Deltin.Deltinteger
                 return;
             }
 #else
-            generatedRules = Parser.ParseText(text);
+            generatedRules = Parser.ParseText(text, out _);
 #endif
 
             var builder = new StringBuilder();

@@ -78,26 +78,27 @@ if (hasWorkspaceFolderCapability) {
 });
 
 // The example settings
-interface ExampleSettings {
+interface Settings {
 	maxNumberOfProblems: number;
+	port: number;
 }
 
 // The global settings, used when the `workspace/configuration` request is not supported by the client.
 // Please note that this is not the case when using this server with the client provided in this example
 // but could happen with other clients.
-const defaultSettings: ExampleSettings = { maxNumberOfProblems: 1000 };
-let globalSettings: ExampleSettings = defaultSettings;
+const defaultSettings: Settings = { maxNumberOfProblems: 1000, port: 3000 };
+let globalSettings: Settings = defaultSettings;
 
 // Cache the settings of all open documents
-let documentSettings: Map<string, Thenable<ExampleSettings>> = new Map();
+let documentSettings: Map<string, Thenable<Settings>> = new Map();
 
 connection.onDidChangeConfiguration(change => {
 if (hasConfigurationCapability) {
 	// Reset all cached document settings
 	documentSettings.clear();
 } else {
-	globalSettings = <ExampleSettings>(
-	(change.settings.languageServerExample || defaultSettings)
+	globalSettings = <Settings>(
+	(change.settings.ostw || defaultSettings)
 	);
 }
 
@@ -105,7 +106,7 @@ if (hasConfigurationCapability) {
 documents.all().forEach(validateTextDocument);
 });
 
-function getDocumentSettings(resource: string): Thenable<ExampleSettings> {
+function getDocumentSettings(resource: string): Thenable<Settings> {
 	if (!hasConfigurationCapability) {
 		return Promise.resolve(globalSettings);
 	}
@@ -113,7 +114,7 @@ function getDocumentSettings(resource: string): Thenable<ExampleSettings> {
 	if (!result) {
 		result = connection.workspace.getConfiguration({
 			scopeUri: resource,
-			section: 'languageServerExample'
+			section: 'ostw'
 		});
 		documentSettings.set(resource, result);
 	}
@@ -122,7 +123,7 @@ function getDocumentSettings(resource: string): Thenable<ExampleSettings> {
 
 // Only keep settings for open documents
 documents.onDidClose(e => {
-documentSettings.delete(e.document.uri);
+	documentSettings.delete(e.document.uri);
 });
 
 // The content of a text document has changed. This event is emitted
@@ -140,26 +141,8 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 	let diagnostics: Diagnostic[] = [];
 
 	request.post({url:'http://localhost:3000/parse', body: textDocument.getText()}, function callback(err, httpResponse, body) {
-		connection.console.log('Recieved: ' + httpResponse);
 
-		let errors = JSON.parse(body);
-
-		for (var i = 0; i < errors.length && problems < settings.maxNumberOfProblems; i++) {     
-			problems++;
-
-			let diagnostic: Diagnostic = {
-				severity: DiagnosticSeverity.Error,
-				range: {
-					start: textDocument.positionAt(errors[i].Start),
-					end: textDocument.positionAt(errors[i].Stop)
-				},
-				//message: `${m[0]} is all uppercase.`,
-				message: errors[i].Message,
-				source: 'ex'
-			};
-	
-			diagnostics.push(diagnostic);
-		}
+		let diagnostics: Diagnostic[] = JSON.parse(body);
 
 		connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
 	});

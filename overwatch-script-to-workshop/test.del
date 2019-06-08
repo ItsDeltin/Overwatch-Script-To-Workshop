@@ -3,5 +3,6 @@ usevar playervar A;
 
 rule: "My Rule"
 {
-    Damage(EventPla)
+    Resurrect(EventPlayer());
+    BigMessage(EventPlayer(), <"resurrected! try_again, good_luck <0>!", EventPlayer()>); 
 }

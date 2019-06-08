@@ -58,7 +58,7 @@ connection.onInitialized(() => {
 // The global settings, used when the `workspace/configuration` request is not supported by the client.
 // Please note that this is not the case when using this server with the client provided in this example
 // but could happen with other clients.
-const defaultSettings = { maxNumberOfProblems: 1000 };
+const defaultSettings = { maxNumberOfProblems: 1000, port: 3000 };
 let globalSettings = defaultSettings;
 // Cache the settings of all open documents
 let documentSettings = new Map();
@@ -68,7 +68,7 @@ connection.onDidChangeConfiguration(change => {
         documentSettings.clear();
     }
     else {
-        globalSettings = ((change.settings.languageServerExample || defaultSettings));
+        globalSettings = ((change.settings.ostw || defaultSettings));
     }
     // Revalidate all open text documents
     documents.all().forEach(validateTextDocument);
@@ -81,7 +81,7 @@ function getDocumentSettings(resource) {
     if (!result) {
         result = connection.workspace.getConfiguration({
             scopeUri: resource,
-            section: 'languageServerExample'
+            section: 'ostw'
         });
         documentSettings.set(resource, result);
     }
@@ -103,22 +103,7 @@ function validateTextDocument(textDocument) {
         let settings = yield getDocumentSettings(textDocument.uri);
         let diagnostics = [];
         request.post({ url: 'http://localhost:3000/parse', body: textDocument.getText() }, function callback(err, httpResponse, body) {
-            connection.console.log('Recieved: ' + httpResponse);
-            let errors = JSON.parse(body);
-            for (var i = 0; i < errors.length && problems < settings.maxNumberOfProblems; i++) {
-                problems++;
-                let diagnostic = {
-                    severity: vscode_languageserver_1.DiagnosticSeverity.Error,
-                    range: {
-                        start: textDocument.positionAt(errors[i].Start),
-                        end: textDocument.positionAt(errors[i].Stop)
-                    },
-                    //message: `${m[0]} is all uppercase.`,
-                    message: errors[i].Message,
-                    source: 'ex'
-                };
-                diagnostics.push(diagnostic);
-            }
+            let diagnostics = JSON.parse(body);
             connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
         });
     });

@@ -24,14 +24,8 @@ namespace Deltin.Deltinteger
     {
         const string msg = "Syntax error at {0},{1}: {2}";
 
-        public readonly IToken token;
-        public SyntaxErrorException(string message, IToken token) : base(string.Format(msg, token.Line, token.Column, message)) 
-        {
-            this.token = token;
-        }
-
         public readonly Range Range;
-        public SyntaxErrorException(string message, Deltin.Deltinteger.Parse.Range range) : base(string.Format(msg, range.start, range.end))
+        public SyntaxErrorException(string message, Deltin.Deltinteger.Parse.Range range) : base(string.Format(msg, range.start, range.end, message))
         {
             Range = range;
         }

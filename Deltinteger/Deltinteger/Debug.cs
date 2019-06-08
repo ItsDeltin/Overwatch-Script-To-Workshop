@@ -54,6 +54,10 @@ namespace Deltin.Deltinteger
             TextColor = textColor;
             BackgroundColor = backgroundColor;
         }
+
+        public static implicit operator string(ColorMod cm) => cm.Text;
+        public static implicit operator ColorMod(string value) => new ColorMod(value);
+
         public string Text { get; private set; }
         public ConsoleColor TextColor { get; private set; }
         public ConsoleColor BackgroundColor { get; private set; }

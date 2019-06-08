@@ -36,9 +36,16 @@ namespace Deltin.Deltinteger.Parse
 
             for (int i = 0; i < rules.Length; i++)
             {
-                Rule newRule = Translate.GetRule(parserData.RuleSetNode.Rules[i]);
-                Log.Write(LogLevel.Normal, $"Built rule: {newRule.Name}");
-                rules[i] = newRule;
+                try
+                {
+                    Rule newRule = Translate.GetRule(parserData.RuleSetNode.Rules[i]);
+                    Log.Write(LogLevel.Normal, $"Built rule: {newRule.Name}");
+                    rules[i] = newRule;
+                }
+                catch (SyntaxErrorException ex)
+                {
+                    parserData.ErrorListener.Error(ex.Message, ex.Range);
+                }
             }
 
             Log.Write(LogLevel.Normal, new ColorMod("Build succeeded.", ConsoleColor.Green));
@@ -257,10 +264,10 @@ namespace Deltin.Deltinteger.Parse
                 case StringNode stringNode:
                 #warning todo
                 // TODO replace token with range
-                    Element[] stringFormat = new Element[stringNode.Format.Length];
+                    Element[] stringFormat = new Element[stringNode.Format?.Length ?? 0];
                     for (int i = 0; i < stringFormat.Length; i++)
                         stringFormat[i] = ParseExpression(scope, stringNode.Format[i]);
-                    return V_String.ParseString(null, stringNode.Value, stringFormat);
+                    return V_String.ParseString(stringNode.Range, stringNode.Value, stringFormat);
 
                 // Null
                 case NullNode nullNode:

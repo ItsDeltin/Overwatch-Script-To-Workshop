@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Threading;
 using System.Text.RegularExpressions;
 using System.Diagnostics;
+using Deltin.Deltinteger.Parse;
 using Antlr4.Runtime;
 
 namespace Deltin.Deltinteger.Elements
@@ -699,11 +700,11 @@ namespace Deltin.Deltinteger.Elements
     [Parameter("{2}", ValueType.Any, typeof(V_Null))]
     public class V_String : Element
     {
-        public V_String(IToken token, string text, params Element[] stringValues) : base(NullifyEmptyValues(stringValues))
+        public V_String(Range range, string text, params Element[] stringValues) : base(NullifyEmptyValues(stringValues))
         {
             TextID = Array.IndexOf(Constants.Strings, text);
             if (TextID == -1)
-                throw new SyntaxErrorException($"{text} is not a valid string.", token);
+                throw new SyntaxErrorException($"{text} is not a valid string.", range);
         }
         public V_String() : this(null, Constants.DEFAULT_STRING) {}
 
@@ -733,7 +734,7 @@ namespace Deltin.Deltinteger.Elements
             .ThenByDescending(str => str.Length)
             .ToArray();
 
-        public static Element ParseString(IToken token, string value, Element[] parameters, int depth = 0)
+        public static Element ParseString(Range range, string value, Element[] parameters, int depth = 0)
         {
             value = value.ToLower();
 
@@ -768,7 +769,7 @@ namespace Deltin.Deltinteger.Elements
                     Log.Write(LogLevel.Verbose, debug + searchString);
 
                     // Create a string element with the found string.
-                    V_String str = new V_String(token, searchString);
+                    V_String str = new V_String(range, searchString);
 
                     bool valid = true; // Confirms that the arguments were able to successfully parse.
                     List<Element> parsedParameters = new List<Element>(); // The parameters that were successfully parsed.
@@ -785,7 +786,7 @@ namespace Deltin.Deltinteger.Elements
                             int index = int.Parse(parameterString.Groups[1].Value);
 
                             if (index >= parameters.Length)
-                                throw new SyntaxErrorException($"Tried to set the <{index}> format, but there are only {parameters.Length} parameters. Check your string.", token);
+                                throw new SyntaxErrorException($"Tried to set the <{index}> format, but there are only {parameters.Length} parameters. Check your string.", range);
 
                             Log.Write(LogLevel.Verbose, $"{debug}    <param {index}>");
                             parsedParameters.Add(parameters[index]);
@@ -793,7 +794,7 @@ namespace Deltin.Deltinteger.Elements
                         else
                         {
                             // Parse the parameter. If it fails it will return null and the string being checked is probably false.
-                            var p = ParseString(token, currentParameterValue, parameters, depth + 1);
+                            var p = ParseString(range, currentParameterValue, parameters, depth + 1);
                             if (p == null)
                             {
                                 Log.Write(LogLevel.Verbose, $"{debug}{searchString} combo fail");
@@ -818,7 +819,7 @@ namespace Deltin.Deltinteger.Elements
             if (depth > 0)
                 return null;
             else
-                throw new SyntaxErrorException($"Could not parse the string {value}.", token);
+                throw new SyntaxErrorException($"Could not parse the string {value}.", range);
         }
 
         private static string Escape(string value)

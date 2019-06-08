@@ -19,16 +19,19 @@ namespace Deltin.Deltinteger.Checker
 {
     public class Check
     {
-        const int PORT = 3000;
-
         static Log Log = new Log("LangServer");
+
+        const int DefaultPort = 3000;
         
-        public static void RequestLoop()
+        public static void RequestLoop(int port)
         {
-            Log.Write(LogLevel.Normal, $"Language server started on port {PORT}.");
+            if (port == 0)
+                port = DefaultPort;
+
+            Log.Write(LogLevel.Normal, new ColorMod("Language server", ConsoleColor.Magenta), " started on port ", new ColorMod(port.ToString(), ConsoleColor.DarkGreen));
 
             HttpListener server = new HttpListener();
-            server.Prefixes.Add($"http://localhost:{PORT}/");
+            server.Prefixes.Add($"http://localhost:{port}/");
             server.Start();
 
             bool isRunning = true;
@@ -89,7 +92,7 @@ namespace Deltin.Deltinteger.Checker
         {
             Parse.Parser.ParseText(document, out var data);
 
-            return JsonConvert.SerializeObject(data.ErrorListener.Errors);
+            return JsonConvert.SerializeObject(data.ErrorListener.Errors.ToArray());
         }
 
         static string GetAutocomplete(string json)
@@ -107,12 +110,12 @@ namespace Deltin.Deltinteger.Checker
 
             int line      = inputJson.caret.line + 1;
             int character = inputJson.caret.character;
-            DocumentPos caret = new DocumentPos(line, character);
+            Pos caret = new Pos(line, character);
 
-            var parser = ParserElements.GetParser(document, new Pos(caret.line, caret.character));
+            var parser = ParserElements.GetParser(document, new Parse.Pos(caret.line, caret.character));
 
             CompletionItem[] completion;            
-            switch(parser.Bav.SelectedNode.GetType().Name)
+            switch(parser.Bav.SelectedNode.FirstOrDefault()?.GetType().Name)
             {
                 // Ruleset
                 case nameof(RulesetNode):
@@ -132,7 +135,7 @@ namespace Deltin.Deltinteger.Checker
                     completion = Element.ActionList.Select(m => 
                             new CompletionItem(m.Name.Substring(2))
                             {
-                                kind = Method,
+                                kind = CompletionItem.Method,
                                 detail = ((Element)Activator.CreateInstance(m)).ToString(),
                             }
                         ).ToArray();
@@ -145,25 +148,30 @@ namespace Deltin.Deltinteger.Checker
                 case nameof(VariableNode):
 
                     completion = Element.ValueList.Select(m => 
-                        new CompletionItem(m.Name.Substring(2))
-                        {
-                            kind = Method,
-                            detail = ((Element)Activator.CreateInstance(m)).ToString(),
-                        }
+                            new CompletionItem(m.Name.Substring(2))
+                            {
+                                kind = CompletionItem.Method,
+                                detail = ((Element)Activator.CreateInstance(m)).ToString(),
+                            }
                         ).ToArray();
 
                     break;
 
-                // Any rules that do not have any autocomplete.
-                case nameof(DeltinScriptParser.StatementContext):
-                case nameof(DeltinScriptParser.VarsetContext):
-                // -- todos:
-                // --
-                    completion = new CompletionItem[0];
+                // If the selected node is a string node, show all strings.
+                case nameof(StringNode):
+
+                    completion = Constants.Strings
+                        .Select(str =>
+                            new CompletionItem(str)
+                            {
+                                kind = CompletionItem.Text
+                            }
+                        ).ToArray();
+
                     break;
 
                 default: 
-                    Console.WriteLine(parser.Bav.SelectedNode.GetType().Name + " context not implemented.");
+                    Console.WriteLine(parser.Bav.SelectedNode.FirstOrDefault()?.GetType().Name + " context not implemented.");
                     completion = new CompletionItem[0];
                     break;
             }
@@ -188,41 +196,31 @@ namespace Deltin.Deltinteger.Checker
 
             int line      = inputJson.caret.line + 1;
             int character = inputJson.caret.character;
-            DocumentPos caret = new DocumentPos(line, character);
+            Pos caret = new Pos(line, character);
 
-            var parser = ParserElements.GetParser(document, new Pos(caret.line, caret.character));
+            var parser = ParserElements.GetParser(document, new Parse.Pos(caret.line, caret.character));
 
             int methodIndex = 0;
             int parameterIndex = 0;
 
-            Type methodType = null;
-            SignatureInformation information = null;
+            MethodNode methodNode = null;
             
-            bool foundMethodContext = false;
-
-            if (parser.Bav.SelectedNode is IExpressionNode)
+            if (parser.Bav.SelectedNode.ElementAtOrDefault(0) is MethodNode)
             {
-                methodContext = (DeltinScriptParser.MethodContext)selectedRule.Parent;
-                parameterIndex = ((DeltinScriptParser.ParametersContext)selectedRule).expr().Length;
-                foundMethodContext = true;
+                methodNode = (MethodNode)parser.Bav.SelectedNode[0];
+                parameterIndex = methodNode.Parameters.Length;
             }
-            else if (selectedRule.Parent is DeltinScriptParser.ParametersContext)
+            else if (parser.Bav.SelectedNode.ElementAtOrDefault(0) is IExpressionNode
+            && parser.Bav.SelectedNode.ElementAtOrDefault(1) is MethodNode)
             {
-                methodContext = (DeltinScriptParser.MethodContext)selectedRule.Parent.Parent;
-                parameterIndex = Array.IndexOf(((DeltinScriptParser.ParametersContext)selectedRule.Parent).expr(), selectedRule);
-                foundMethodContext = true;
-            }
-            else if (selectedRule is DeltinScriptParser.MethodContext)
-            {
-                methodContext = (DeltinScriptParser.MethodContext)selectedRule;
-                parameterIndex = 0;
-                foundMethodContext = true;
+                methodNode = (MethodNode)parser.Bav.SelectedNode[1];
+                parameterIndex = Array.IndexOf(methodNode.Parameters, parser.Bav.SelectedNode[0]);
             }
 
-            if (foundMethodContext)
+            SignatureInformation information = null;
+            if (methodNode != null)
             {
-                string name = methodContext.PART().GetText();
-                methodType = Element.GetMethod(name);
+                Type methodType = Element.GetMethod(methodNode.Name);
 
                 if (methodType != null)
                 {
@@ -246,181 +244,218 @@ namespace Deltin.Deltinteger.Checker
 
             return JsonConvert.SerializeObject(signatures);
         }
+    }
 
-#region Kinds
-        private const int Text = 1;
-        private const int Method = 2;
-        private const int Function = 3;
-        private const int Constructor = 4;
-        private const int Field = 5;
-        private const int Variable = 6;
-        private const int Class = 7;
-        private const int Interface = 8;
-        private const int Module = 9;
-        private const int Property = 10;
-        private const int Unit = 11;
-        private const int Value = 12;
-        private const int Enum = 13;
-        private const int Keyword = 14;
-        private const int Snippet = 15;
-        private const int Color = 16;
-        private const int File = 17;
-        private const int Reference = 18;
-        private const int Folder = 19;
-        private const int EnumMember = 20;
-        private const int Constant = 21;
-        private const int Struct = 22;
-        private const int Event = 23;
-        private const int Operator = 24;
-        private const int TypeParameter = 25;
-#endregion
-
-        class DocumentPos
-        {
-            public int line;
-            public int character;
-
-            public DocumentPos(int line, int character)
-            {
-                this.line = line;
-                this.character = character;
-            }
-        }
-
-        class CompletionItem
-        {
-            public CompletionItem(string label)
-            {
-                this.label = label;
-            }
-
-            public string label;
-            public int kind;
-            public string detail;
-            public object documentation;
-            public bool deprecated;
-            public string sortText;
-            public string filterText;
-            public int insertTextFormat;
-            public TextEdit textEdit;
-            public TextEdit[] additionalTextEdits;
-            public string[] commitCharacters;
-            public Command command;
-            public object data;
-        }
-
-#region Signature
-        class SignatureHelp
-        {
-            public SignatureInformation[] signatures;
-            public int activeSignature;
-            public int activeParameter;
-
-            public SignatureHelp(SignatureInformation[] signatures, int activeSignature, int activeParameter)
-            {
-                this.signatures = signatures;
-                this.activeSignature = activeSignature;
-                this.activeParameter = activeParameter;
-            }
-        }
-
-        class SignatureInformation
-        {
-            public string label;
-            public object documentation; // string or markup
-            public ParameterInformation[] parameters;
-
-            public SignatureInformation(string label, object documentation, ParameterInformation[] parameters)
-            {
-                this.label = label;
-                this.documentation = documentation;
-                this.parameters = parameters;
-            }
-        }
-
-        class ParameterInformation
-        {
-            public object label; // string or int[]
-
-            public object documentation; // string or markup
-
-            public ParameterInformation(object label, object documentation)
-            {
-                this.label = label;
-                this.documentation = documentation;
-            }
-        }
+    class CompletionItem
+    {
+        #region Kinds
+        public const int Text = 1;
+        public const int Method = 2;
+        public const int Function = 3;
+        public const int Constructor = 4;
+        public const int Field = 5;
+        public const int Variable = 6;
+        public const int Class = 7;
+        public const int Interface = 8;
+        public const int Module = 9;
+        public const int Property = 10;
+        public const int Unit = 11;
+        public const int Value = 12;
+        public const int Enum = 13;
+        public const int Keyword = 14;
+        public const int Snippet = 15;
+        public const int Color = 16;
+        public const int File = 17;
+        public const int Reference = 18;
+        public const int Folder = 19;
+        public const int EnumMember = 20;
+        public const int Constant = 21;
+        public const int Struct = 22;
+        public const int Event = 23;
+        public const int Operator = 24;
+        public const int TypeParameter = 25;
         #endregion
 
-        class MarkupContent
+        public CompletionItem(string label)
         {
-            public string kind;
-            public string value;
-
-            public const string PlainText = "plaintext";
-            public const string Markdown = "markdown";
-
-            public MarkupContent(string kind, string value)
-            {
-                this.kind = kind;
-                this.value = value;
-            }
+            this.label = label;
         }
 
-        class Range
-        {
-            public DocumentPos start;
-            public DocumentPos end;
+        public string label;
+        public int kind;
+        public string detail;
+        public object documentation;
+        public bool deprecated;
+        public string sortText;
+        public string filterText;
+        public int insertTextFormat;
+        public TextEdit textEdit;
+        public TextEdit[] additionalTextEdits;
+        public string[] commitCharacters;
+        public Command command;
+        public object data;
+    }
 
-            public Range(DocumentPos start, DocumentPos end)
+#region Signature
+    class SignatureHelp
+    {
+        public SignatureInformation[] signatures;
+        public int activeSignature;
+        public int activeParameter;
+
+        public SignatureHelp(SignatureInformation[] signatures, int activeSignature, int activeParameter)
+        {
+            this.signatures = signatures;
+            this.activeSignature = activeSignature;
+            this.activeParameter = activeParameter;
+        }
+    }
+
+    class SignatureInformation
+    {
+        public string label;
+        public object documentation; // string or markup
+        public ParameterInformation[] parameters;
+
+        public SignatureInformation(string label, object documentation, ParameterInformation[] parameters)
+        {
+            this.label = label;
+            this.documentation = documentation;
+            this.parameters = parameters;
+        }
+    }
+
+    class ParameterInformation
+    {
+        public object label; // string or int[]
+
+        public object documentation; // string or markup
+
+        public ParameterInformation(object label, object documentation)
+        {
+            this.label = label;
+            this.documentation = documentation;
+        }
+    }
+#endregion
+
+#region Diagnostic
+    public class Diagnostic
+    {
+        public const int Error = 1;
+        public const int Warning = 2;
+        public const int Information = 3;
+        public const int Hint = 4;
+        
+        public string message;
+        public Range range;
+        public int severity;
+        public object code; // string or number
+        public string source;
+        public DiagnosticRelatedInformation[] relatedInformation;
+
+        public Diagnostic(string message, Range range)
+        {
+            this.message = message;
+            this.range = range;
+        }
+    }
+
+    public class DiagnosticRelatedInformation
+    {
+        public Location location;
+        public string message;
+
+        public DiagnosticRelatedInformation(Location location, string message)
+        {
+            this.location = location;
+            this.message = message;
+        }
+    }
+#endregion
+
+    class MarkupContent
+    {
+        public string kind;
+        public string value;
+
+        public const string PlainText = "plaintext";
+        public const string Markdown = "markdown";
+
+        public MarkupContent(string kind, string value)
+        {
+            this.kind = kind;
+            this.value = value;
+        }
+    }
+
+    /*
+    public class Range
+    {
+        public DocumentPos start;
+        public DocumentPos end;
+
+        public Range(DocumentPos start, DocumentPos end)
+        {
+            this.start = start;
+            this.end = end;
+        }
+    }
+    */
+
+    public class Location 
+    {
+        public string uri;
+        public Range range;
+
+        public Location(string uri, Range range)
+        {
+            this.uri = uri;
+            this.range = range;
+        }
+    }
+
+    class TextEdit
+    {
+        public static TextEdit Replace(Range range, string newText)
+        {
+            return new TextEdit()
             {
-                this.start = start;
-                this.end = end;
-            }
+                range = range,
+                newText = newText
+            };
+        }
+        public static TextEdit Insert(Pos pos, string newText)
+        {
+            return new TextEdit()
+            {
+                range = new Range(pos, pos),
+                newText = newText
+            };
+        }
+        public static TextEdit Delete(Range range)
+        {
+            return new TextEdit()
+            {
+                range = range,
+                newText = string.Empty
+            };
         }
 
-        class TextEdit
+        public Range range;
+        public string newText;
+    }
+
+    class Command
+    {
+        public string title;
+        public string command;
+        public object[] arguments;
+
+        public Command(string title, string command)
         {
-            public static TextEdit Replace(Range range, string newText)
-            {
-                return new TextEdit()
-                {
-                    range = range,
-                    newText = newText
-                };
-            }
-            public static TextEdit Insert(DocumentPos pos, string newText)
-            {
-                return new TextEdit()
-                {
-                    range = new Range(pos, pos),
-                    newText = newText
-                };
-            }
-            public static TextEdit Delete(Range range)
-            {
-                return new TextEdit()
-                {
-                    range = range,
-                    newText = string.Empty
-                };
-            }
-
-            public Range range;
-            public string newText;
-        }
-
-        class Command
-        {
-            public string title;
-            public string command;
-            public object[] arguments;
-
-            public Command(string title, string command)
-            {
-                this.title = title;
-                this.command = command;
-            }
+            this.title = title;
+            this.command = command;
         }
     }
 }

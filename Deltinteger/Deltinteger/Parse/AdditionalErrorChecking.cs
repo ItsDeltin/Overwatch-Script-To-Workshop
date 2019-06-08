@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Deltin.Deltinteger.Checker;
 using Antlr4.Runtime;
 
 namespace Deltin.Deltinteger.Parse
@@ -37,26 +38,20 @@ namespace Deltin.Deltinteger.Parse
         }
     }
 
-        public class ErrorListener : BaseErrorListener
+    public class ErrorListener : BaseErrorListener
     {
-        public readonly List<SyntaxError> Errors = new List<SyntaxError>();
+        public readonly List<Diagnostic> Errors = new List<Diagnostic>();
 
         public override void SyntaxError(IRecognizer recognizer, IToken offendingSymbol, int line, int charPositionInLine, string msg, RecognitionException e)
         {
-            Errors.Add(new SyntaxError(msg, offendingSymbol.StartIndex, offendingSymbol.StopIndex + 1));
+            //Errors.Add(new SyntaxError(msg, offendingSymbol.StartIndex, offendingSymbol.StopIndex + 1));
+            Errors.Add(new Diagnostic(msg, Range.GetRange(offendingSymbol)));
         }
-    }
 
-    public class SyntaxError
-    {
-        public SyntaxError(string message, int start, int stop)
+        public void Error(string message, Range range)
         {
-            Message = message;
-            Start = start;
-            Stop = stop;
+            //Errors.Add(new SyntaxError(message, 0, 0));
+            Errors.Add(new Diagnostic(message, range.LanguageServerOffset()) { severity = Diagnostic.Error });
         }
-        public readonly string Message;
-        public readonly int Start;
-        public readonly int Stop;
     }
 }

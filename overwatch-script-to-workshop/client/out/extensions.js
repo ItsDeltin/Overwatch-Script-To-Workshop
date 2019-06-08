@@ -34,7 +34,7 @@ function activate(context) {
         }
     };
     // Create the language client and start the client.
-    client = new vscode_languageclient_1.LanguageClient('languageServerExample', 'Language Server Example', serverOptions, clientOptions);
+    client = new vscode_languageclient_1.LanguageClient('ostw', 'Overwatch Script To Workshop', serverOptions, clientOptions);
     // Start the client. This will also launch the server
     client.start();
 }
