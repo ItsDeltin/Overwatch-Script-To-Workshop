@@ -140,6 +140,8 @@ namespace Deltin.Deltinteger.Parse
         {
             Rule = new Rule(ruleNode.Name);
 
+            ContinueSkip = new ContinueSkip(IsGlobal, Actions);
+
             ParseConditions(ruleNode.Conditions);
             ParseBlock(ScopeGroup.Root.Child(), ruleNode.Block, false);
 
@@ -282,11 +284,11 @@ namespace Deltin.Deltinteger.Parse
                 // Variable
                 case VariableNode variableNode:
                     return scope.GetVar(variableNode.Name, variableNode.Range)
-                        .GetVariable(ParseExpression(scope, variableNode.Target));
+                        .GetVariable(variableNode.Target != null ? ParseExpression(scope, variableNode.Target) : null);
 
                 // Get value in array
                 case ValueInArrayNode viaNode:
-                    return Element.Part<V_ValueInArray>(viaNode.Value, viaNode.Index);
+                    return Element.Part<V_ValueInArray>(ParseExpression(scope, viaNode.Value), ParseExpression(scope, viaNode.Index));
 
                 // Create array
                 case CreateArrayNode createArrayNode:

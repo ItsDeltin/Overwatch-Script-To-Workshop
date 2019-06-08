@@ -56,13 +56,17 @@ namespace Deltin.Deltinteger.Checker
                 byte[] buffer;
                 switch (url)
                 {
+                    case "ping":
+                        buffer = GetBytes("OK");
+                        break;
+                    
                     case "parse":
                         buffer = GetBytes(
                             ParseDocument(input)
                         );
                         break;
 
-                    case "completion":
+                    case "completion": 
                         buffer = GetBytes(
                             GetAutocomplete(input)
                         );

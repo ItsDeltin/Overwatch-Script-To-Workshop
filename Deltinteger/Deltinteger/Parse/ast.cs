@@ -102,6 +102,9 @@ namespace Deltin.Deltinteger.Parse
 
         public override Node VisitExpr(DeltinScriptParser.ExprContext context)
         {
+            if (context.exception != null)
+                return null;
+                
             Node node;
 
             // Operations
@@ -152,6 +155,9 @@ namespace Deltin.Deltinteger.Parse
         // -123.456
         public override Node VisitNumber(DeltinScriptParser.NumberContext context)
         {
+            if (context.exception != null)
+                return null;
+
             double value = double.Parse(context.GetText());
             Node node = new NumberNode(value, Range.GetRange(context));
             CheckRange(node);
@@ -161,6 +167,9 @@ namespace Deltin.Deltinteger.Parse
         // "Hello <0>! Waiting game..."
         public override Node VisitString(DeltinScriptParser.StringContext context)
         {
+            if (context.exception != null)
+                return null;
+
             string value = context.STRINGLITERAL().GetText().Trim('"');
             Node node = new StringNode(value, null, Range.GetRange(context));
             CheckRange(node);
@@ -170,6 +179,9 @@ namespace Deltin.Deltinteger.Parse
         // <"hello <0>! Waiting game...", EventPlayer()>
         public override Node VisitFormatted_string(DeltinScriptParser.Formatted_stringContext context)
         {
+            if (context.exception != null)
+                return null;
+                
             string value = context.@string().GetText().Trim('"');
             IExpressionNode[] format = new IExpressionNode[context.expr().Length];
             for (int i = 0; i < format.Length; i++)
@@ -199,6 +211,9 @@ namespace Deltin.Deltinteger.Parse
 
         public override Node VisitVariable(DeltinScriptParser.VariableContext context)
         {
+            if (context.exception != null)
+                return null;
+
             string name = context.PART().GetText();
             Node node = new VariableNode(name, null, Range.GetRange(context));
             CheckRange(node);

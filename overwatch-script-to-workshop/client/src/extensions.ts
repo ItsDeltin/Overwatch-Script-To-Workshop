@@ -17,11 +17,17 @@ let client: LanguageClient;
 
 let workshopOut: OutputChannel;
 
+const http = require('http');
+const request = require('request');
+
+const config = workspace.getConfiguration("ostw", null);
+
 export function activate(context: ExtensionContext) {
 	
+	ping();
+
 	// Shows the compiled result in an output window.
 	workshopOut = window.createOutputChannel("Workshop Code"); // Create the channel.
-	const http = require('http');
 	// Create the server.
 	http.createServer(function (req, res) {
 			
@@ -45,7 +51,7 @@ export function activate(context: ExtensionContext) {
 		{
 			res.end();
 		}
-	}).listen(3001); // Listen on port.
+	}).listen(config.get('port2')); // Listen on port.
 
 	// The server is implemented in node
 	let serverModule = context.asAbsolutePath(
@@ -93,4 +99,23 @@ export function deactivate(): Thenable<void> | undefined {
 		return undefined;
 	}
 	return client.stop();
+}
+
+var failSent : boolean;
+function ping()
+{
+	request('http://localhost:' + config.get('port1') + '/ping', function(error, res, body) {
+		if (!error && res.statusCode == 200 && body == 'OK') {
+			if (failSent)
+			{
+				window.showInformationMessage('Connected to the OSTW language server on port ' + config.get('port1') + '.');
+				failSent = false;
+			}
+		}
+		else if (!failSent) {
+			window.showWarningMessage('Failed to connect to the OSTW language server on port ' + config.get('port1') + '.');
+			failSent = true;
+		}
+	});
+	setTimeout(ping, 5);
 }

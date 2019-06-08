@@ -25,7 +25,7 @@ namespace Deltin.Deltinteger
         const string msg = "Syntax error at {0},{1}: {2}";
 
         public readonly Range Range;
-        public SyntaxErrorException(string message, Deltin.Deltinteger.Parse.Range range) : base(string.Format(msg, range.start, range.end, message))
+        public SyntaxErrorException(string message, Deltin.Deltinteger.Parse.Range range) : base(string.Format(msg, range.start.line, range.start.character, message))
         {
             Range = range;
         }

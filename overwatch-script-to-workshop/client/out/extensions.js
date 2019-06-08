@@ -9,10 +9,13 @@ const vscode_1 = require("vscode");
 const vscode_languageclient_1 = require("vscode-languageclient");
 let client;
 let workshopOut;
+const http = require('http');
+const request = require('request');
+const config = vscode_1.workspace.getConfiguration("ostw", null);
 function activate(context) {
+    ping();
     // Shows the compiled result in an output window.
     workshopOut = vscode_1.window.createOutputChannel("Workshop Code"); // Create the channel.
-    const http = require('http');
     // Create the server.
     http.createServer(function (req, res) {
         if (req.method == 'POST') {
@@ -32,7 +35,7 @@ function activate(context) {
         else {
             res.end();
         }
-    }).listen(3001); // Listen on port.
+    }).listen(config.get('port2')); // Listen on port.
     // The server is implemented in node
     let serverModule = context.asAbsolutePath(path.join('server', 'out', 'server.js'));
     // The debug options for the server
@@ -70,4 +73,20 @@ function deactivate() {
     return client.stop();
 }
 exports.deactivate = deactivate;
+var failSent;
+function ping() {
+    request('http://localhost:' + config.get('port1') + '/ping', function (error, res, body) {
+        if (!error && res.statusCode == 200 && body == 'OK') {
+            if (failSent) {
+                vscode_1.window.showInformationMessage('Connected to the OSTW language server on port ' + config.get('port1') + '.');
+                failSent = false;
+            }
+        }
+        else if (!failSent) {
+            vscode_1.window.showWarningMessage('Failed to connect to the OSTW language server on port ' + config.get('port1') + '.');
+            failSent = true;
+        }
+    });
+    setTimeout(ping, 5);
+}
 //# sourceMappingURL=extensions.js.map

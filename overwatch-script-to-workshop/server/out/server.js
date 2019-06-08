@@ -58,7 +58,7 @@ connection.onInitialized(() => {
 // The global settings, used when the `workspace/configuration` request is not supported by the client.
 // Please note that this is not the case when using this server with the client provided in this example
 // but could happen with other clients.
-const defaultSettings = { maxNumberOfProblems: 1000, port: 3000 };
+const defaultSettings = { maxNumberOfProblems: 1000, port1: 3000, port2: 3001 };
 let globalSettings = defaultSettings;
 // Cache the settings of all open documents
 let documentSettings = new Map();
@@ -99,13 +99,21 @@ documents.onDidChangeContent(change => {
 const request = require('request');
 function validateTextDocument(textDocument) {
     return __awaiter(this, void 0, void 0, function* () {
-        let problems = 0;
         let settings = yield getDocumentSettings(textDocument.uri);
-        let diagnostics = [];
-        request.post({ url: 'http://localhost:3000/parse', body: textDocument.getText() }, function callback(err, httpResponse, body) {
+        sendRequest(textDocument.uri, 'parse', textDocument.getText(), null, null, function callback(body) {
             let diagnostics = JSON.parse(body);
             connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
         });
+        /*
+        request.post({url:'http://localhost:3000/parse', body: textDocument.getText()}, function callback(error, res, body) {
+    
+            if (!error && res.statusCode == 200) {
+                let diagnostics: Diagnostic[] = JSON.parse(body);
+    
+                connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
+            }
+        });
+        */
     });
 }
 connection.onDidChangeWatchedFiles(_change => {
@@ -115,18 +123,6 @@ connection.onDidChangeWatchedFiles(_change => {
 // This handler provides the initial list of the completion items.
 connection.onCompletion((_textDocumentPosition) => {
     return getCompletion(_textDocumentPosition);
-    // The pass parameter contains the position of the text document in
-    // which code complete got requested. For the example we ignore this
-    // info and always provide the same completion items.
-    /*
-    return [
-        {
-            label: 'AbortIf',
-            kind: CompletionItemKind.Method,
-            data: 1,
-        }
-    ];
-    */
 });
 function getCompletion(pos) {
     let textDocument = documents.get(pos.textDocument.uri);
@@ -135,17 +131,15 @@ function getCompletion(pos) {
         caret: pos.position
     });
     return new Promise(function (resolve, reject) {
-        request.post({ url: 'http://localhost:3000/completion', body: data }, function (error, res, body) {
-            if (!error && res.statusCode == 200) {
-                let completionItems = JSON.parse(body);
-                resolve(completionItems);
-            }
-            else {
-                reject(error);
-            }
+        sendRequest(pos.textDocument.uri, 'completion', data, resolve, reject, function (body) {
+            let completionItems = JSON.parse(body);
+            return completionItems;
         });
     });
 }
+connection.onCompletionResolve((completionItem) => {
+    return null;
+});
 connection.onSignatureHelp((pos) => {
     return getSignatureHelp(pos);
 });
@@ -156,115 +150,27 @@ function getSignatureHelp(pos) {
         caret: pos.position
     });
     return new Promise(function (resolve, reject) {
-        request.post({ url: 'http://localhost:3000/signature', body: data }, function (error, res, body) {
+        sendRequest(pos.textDocument.uri, 'signature', data, resolve, reject, function (body) {
+            let signatureHelp = JSON.parse(body);
+            return signatureHelp;
+        });
+    });
+}
+function sendRequest(uri, path, data, resolve, reject, callback) {
+    return __awaiter(this, void 0, void 0, function* () {
+        let settings = yield getDocumentSettings(uri);
+        request.post({ url: 'http://localhost:' + settings.port1 + '/' + path, body: data }, function (error, res, body) {
             if (!error && res.statusCode == 200) {
-                let signatureHelp = JSON.parse(body);
-                resolve(signatureHelp);
+                let value = callback(body);
+                if (resolve != null)
+                    resolve(value);
             }
-            else {
+            else if (reject != null) {
                 reject(error);
             }
         });
     });
 }
-/*
-// This handler resolves additional information for the item selected in
-// the completion list.
-connection.onCompletionResolve(
-    (item: CompletionItem): CompletionItem => {
-        if (item.data == 1) {
-            item.detail = "AbortIf(condition)";
-            item.documentation = "AbortIf will abort the rule if the condition is true.";
-            item.textEdit
-        }
-        return item;
-    }
-);
-*/
-/*
-connection.onDocumentColor(
-    (documentColor: DocumentColorParams) => {
-
-        let colors = getColors(documentColor);
-        return colors;
-    }
-);
-*/
-/*
-function getColors(documentColor: DocumentColorParams) {
-
-    let textDocument = documents.get(documentColor.textDocument.uri);
-    
-    return new Promise<ColorInformation[]>(function (resolve, reject) {
-      request.post({url:'http://localhost:3000/color', body: textDocument.getText()}, function (error, res, body) {
-        if (!error && res.statusCode == 200) {
-
-            let colorInformations: ColorInformation[] = [];
-            let colors = JSON.parse(body);
-            for (var i = 0; i < colors.length; i++) {
-                let color: ColorInformation =
-                {
-                    range: {
-                        start: textDocument.positionAt(colors[i].start),
-                        end: textDocument.positionAt(colors[i].end),
-                    },
-                    color: {
-                        red: colors[i].r,
-                        green: colors[i].g,
-                        blue: colors[i].b,
-                        alpha: colors[i].a
-                    }
-                };
-                colorInformations.push(color);
-            }
-
-            resolve(colorInformations);
-        } else {
-            reject(error);
-        }
-      });
-    });
-  }
-
-connection.onColorPresentation(
-    (params: ColorPresentationParams) => {
-        
-        let colorPresentations: ColorPresentation[] = [];
-
-        let cp: ColorPresentation =
-        {
-            label: '????'
-        };
-
-        colorPresentations.push(cp);
-
-        return colorPresentations;
-    }
-);
-*/
-/*
-connection.onHover((event) => {
-});
-*/
-/*
-connection.onDidOpenTextDocument((params) => {
-    // A text document got opened in VS Code.
-    // params.uri uniquely identifies the document. For documents store on disk this is a file URI.
-    // params.text the initial full content of the document.
-    connection.console.log(`${params.textDocument.uri} opened.`);
-});
-connection.onDidChangeTextDocument((params) => {
-    // The content of a text document did change in VS Code.
-    // params.uri uniquely identifies the document.
-    // params.contentChanges describe the content changes to the document.
-    connection.console.log(`${params.textDocument.uri} changed: ${JSON.stringify(params.contentChanges)}`);
-});
-connection.onDidCloseTextDocument((params) => {
-    // A text document got closed in VS Code.
-    // params.uri uniquely identifies the document.
-    connection.console.log(`${params.textDocument.uri} closed.`);
-});
-*/
 // Make the text document manager listen on the connection
 // for open, change and close text document events
 documents.listen(connection);

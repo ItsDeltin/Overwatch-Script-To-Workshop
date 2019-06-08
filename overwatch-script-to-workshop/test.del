@@ -4,5 +4,11 @@ usevar playervar A;
 rule: "Resurrect player then send message."
 {
     Resurrect(EventPlayer());
-    BigMessage(EventPlayer(), <"resurrected! try_again, good_luck <0>!", EventPlayer()>);
+    BigMessage(EventPlayer(), <"resurrected! try_again and survive!", EventPlayer()>);
+
+    define ahh = AllPlayers();
+    for (ahs in ahh)
+    {
+        SmallMessage(ahh[ahs], <"hello <0>! warning: <1> resurrected?", ahh[ahs], EventPlayer()>);
+    }
 }

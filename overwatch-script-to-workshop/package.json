@@ -38,27 +38,33 @@
         ],
         "configuration": {
             "type": "object",
-            "title": "OSTW",
+            "title": "ostw",
             "properties": {
-                "owst.maxNumberOfProblems": {
+                "ostw.maxNumberOfProblems": {
                     "scope": "resource",
                     "type": "number",
                     "default": 100,
                     "description": "Controls the maximum number of problems produced by the server."
                 },
-                "owst.port": {
+                "ostw.port1": {
                     "scope": "resource",
                     "type": "number",
                     "default": 3000,
-                    "description": "The port the language server application is using."
+                    "description": "The first port the language server application is using."
                 },
-                "owst.stringParseTimeout": {
+                "ostw.port2": {
+                    "scope": "resource",
+                    "type": "number",
+                    "default": 3001,
+                    "description": "The second port the language server application is using."
+                },
+                "ostw.stringParseTimeout": {
                     "scope": "resource",
                     "type": "number",
                     "default": 5000,
-                    "description": "The number of milliseconds before a string parse is stopped."
+                    "description": "The number of milliseconds before a string parse timeouts."
                 },
-                "owst.trace.server": {
+                "ostw.trace.server": {
                     "scope": "window",
                     "type": "string",
                     "enum": [
