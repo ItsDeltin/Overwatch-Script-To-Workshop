@@ -4,7 +4,7 @@ using Antlr4.Runtime;
 
 namespace Deltin.Deltinteger.Parse
 {
-    class Var
+    public class Var
     {
         public static Variable Global { get; private set; }
         public static Variable Player { get; private set; }
@@ -173,7 +173,7 @@ namespace Deltin.Deltinteger.Parse
         }
     }
 
-    class DefinedVar : Var
+    public class DefinedVar : Var
     {
         public string Name { get; protected set; }
 

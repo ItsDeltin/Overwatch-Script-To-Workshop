@@ -15,7 +15,7 @@ using Antlr4;
 using Antlr4.Runtime;
 using Antlr4.Runtime.Tree;
 
-namespace Deltin.Deltinteger.Checker
+namespace Deltin.Deltinteger.LanguageServer
 {
     public class Check
     {
@@ -78,6 +78,12 @@ namespace Deltin.Deltinteger.Checker
                         );
                         break;
 
+                    case "hover":
+                        buffer = GetBytes(
+                            GetHover(input)
+                        );
+                        break;
+
                     default: throw new Exception("Unsure of how to handle url " + url);
                 }
 
@@ -130,10 +136,10 @@ namespace Deltin.Deltinteger.Checker
             var parser = ParserElements.GetParser(document, new Parse.Pos(caret.line, caret.character));
 
             CompletionItem[] completion;            
-            switch(parser.Bav.SelectedNode.FirstOrDefault()?.GetType().Name)
+            switch(parser.Bav.SelectedNode.FirstOrDefault())
             {
                 // Ruleset
-                case nameof(RulesetNode):
+                case RulesetNode rulesetNode:
 
                     completion = new CompletionItem[]
                     {
@@ -145,35 +151,37 @@ namespace Deltin.Deltinteger.Checker
                     break;
 
                 // Actions
-                case nameof(BlockNode):
+                case BlockNode blockNode:
 
-                    completion = Element.ActionList.Select(m => 
+                    // Get all variables
+                    completion = blockNode.RelatedScopeGroup.GetCompletionItems()
+                        // Get all action methods
+                        .Concat(Element.ActionList.Select(m => 
                             new CompletionItem(m.Name.Substring(2))
                             {
                                 kind = CompletionItem.Method,
                                 detail = ((Element)Activator.CreateInstance(m)).ToString(),
                             }
-                        ).ToArray();
+                        )).ToArray();
 
                     break;
 
                 // Values
-                case nameof(MethodNode):
-                case nameof(UserMethodNode):
-                case nameof(VariableNode):
+                case MethodNode methodNode:
 
-                    completion = Element.ValueList.Select(m => 
+                    completion = methodNode.RelatedScopeGroup.GetCompletionItems()
+                        .Concat(Element.ValueList.Select(m => 
                             new CompletionItem(m.Name.Substring(2))
                             {
                                 kind = CompletionItem.Method,
                                 detail = ((Element)Activator.CreateInstance(m)).ToString(),
                             }
-                        ).ToArray();
+                        )).ToArray();
 
                     break;
 
                 // If the selected node is a string node, show all strings.
-                case nameof(StringNode):
+                case StringNode stringNode:
 
                     completion = Constants.Strings
                         .Select(str =>
@@ -206,7 +214,6 @@ namespace Deltin.Deltinteger.Checker
         static string GetSignatures(string json)
         {
             dynamic inputJson = JsonConvert.DeserializeObject(json);
-
             string document = inputJson.textDocument;
 
             int line      = inputJson.caret.line + 1;
@@ -259,9 +266,36 @@ namespace Deltin.Deltinteger.Checker
 
             return JsonConvert.SerializeObject(signatures);
         }
+
+        // https://microsoft.github.io/language-server-protocol/specification#textDocument_hover
+        static string GetHover(string json)
+        {
+            dynamic inputJson = JsonConvert.DeserializeObject(json);
+            string document = inputJson.textDocument;
+
+            int line      = inputJson.caret.line + 1;
+            int character = inputJson.caret.character;
+            Pos caret = new Pos(line, character);
+
+            var parser = ParserElements.GetParser(document, new Parse.Pos(caret.line, caret.character));
+
+            Hover hover;
+            switch (parser.Bav.SelectedNode[0])
+            {
+                case MethodNode methodNode:
+                    hover = new Hover(new MarkupContent(MarkupContent.Markdown, methodNode.RelatedElement.ToString()));
+                    break;
+                
+                default:
+                    hover = null;
+                    break;
+            }
+
+            return JsonConvert.SerializeObject(hover);
+        }
     }
 
-    class CompletionItem
+    public class CompletionItem
     {
         #region Kinds
         public const int Text = 1;
@@ -389,7 +423,21 @@ namespace Deltin.Deltinteger.Checker
     }
 #endregion
 
-    class MarkupContent
+#region Hover
+    // https://microsoft.github.io/language-server-protocol/specification#textDocument_hover
+    class Hover
+    {
+        public MarkupContent contents; // TODO MarkedString support 
+        public Range range;
+
+        public Hover(MarkupContent contents)
+        {
+            this.contents = contents;
+        }
+    }
+#endregion
+
+    public class MarkupContent
     {
         public string kind;
         public string value;
@@ -404,20 +452,6 @@ namespace Deltin.Deltinteger.Checker
         }
     }
 
-    /*
-    public class Range
-    {
-        public DocumentPos start;
-        public DocumentPos end;
-
-        public Range(DocumentPos start, DocumentPos end)
-        {
-            this.start = start;
-            this.end = end;
-        }
-    }
-    */
-
     public class Location 
     {
         public string uri;
@@ -430,7 +464,7 @@ namespace Deltin.Deltinteger.Checker
         }
     }
 
-    class TextEdit
+    public class TextEdit
     {
         public static TextEdit Replace(Range range, string newText)
         {
@@ -461,7 +495,7 @@ namespace Deltin.Deltinteger.Checker
         public string newText;
     }
 
-    class Command
+    public class Command
     {
         public string title;
         public string command;

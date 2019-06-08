@@ -40,7 +40,8 @@ connection.onInitialize((params) => {
             },
             signatureHelpProvider: {
                 triggerCharacters: ['(', ',']
-            }
+            },
+            hoverProvider: true
         }
     };
 });
@@ -104,16 +105,6 @@ function validateTextDocument(textDocument) {
             let diagnostics = JSON.parse(body);
             connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
         });
-        /*
-        request.post({url:'http://localhost:3000/parse', body: textDocument.getText()}, function callback(error, res, body) {
-    
-            if (!error && res.statusCode == 200) {
-                let diagnostics: Diagnostic[] = JSON.parse(body);
-    
-                connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
-            }
-        });
-        */
     });
 }
 connection.onDidChangeWatchedFiles(_change => {
@@ -156,6 +147,19 @@ function getSignatureHelp(pos) {
         });
     });
 }
+connection.onHover((pos) => {
+    let textDocument = documents.get(pos.textDocument.uri);
+    let data = JSON.stringify({
+        textDocument: textDocument.getText(),
+        caret: pos.position
+    });
+    return new Promise(function (resolve, reject) {
+        sendRequest(pos.textDocument.uri, 'hover', data, resolve, reject, function (body) {
+            let hover = JSON.parse(body);
+            return hover;
+        });
+    });
+});
 function sendRequest(uri, path, data, resolve, reject, callback) {
     return __awaiter(this, void 0, void 0, function* () {
         let settings = yield getDocumentSettings(uri);

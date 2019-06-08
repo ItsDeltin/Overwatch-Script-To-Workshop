@@ -23,6 +23,7 @@ import {
 } from 'vscode-languageserver';
 import { connect } from 'tls';
 import { cpus } from 'os';
+import { realpath } from 'fs';
 //import { request } from 'http';
 
 // Create a connection for the server. The connection uses Node's IPC as a transport.
@@ -60,7 +61,8 @@ connection.onInitialize((params: InitializeParams) => {
 			},
 			signatureHelpProvider: {
 				triggerCharacters: ['(', ',']
-			}
+			},
+			hoverProvider: true
 		}
 	};
 });
@@ -144,17 +146,6 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 
 		connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
 	});
-
-	/*
-	request.post({url:'http://localhost:3000/parse', body: textDocument.getText()}, function callback(error, res, body) {
-
-		if (!error && res.statusCode == 200) {
-			let diagnostics: Diagnostic[] = JSON.parse(body);
-
-			connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
-		}
-	});
-	*/
 }
 
 connection.onDidChangeWatchedFiles(_change => {
@@ -206,8 +197,23 @@ function getSignatureHelp(pos: TextDocumentPositionParams) {
 			return signatureHelp;
 		});
 	});
-
 }
+
+connection.onHover((pos: TextDocumentPositionParams) => {
+
+	let textDocument = documents.get(pos.textDocument.uri);
+	let data = JSON.stringify({
+		textDocument: textDocument.getText(),
+		caret: pos.position
+	});
+
+	return new Promise<Hover>(function (resolve, reject) {
+		sendRequest(pos.textDocument.uri, 'hover', data, resolve, reject, function(body) {
+			let hover: Hover = JSON.parse(body);
+			return hover;
+		});
+	});
+});
 
 async function sendRequest(uri, path, data, resolve, reject, callback) {
 	

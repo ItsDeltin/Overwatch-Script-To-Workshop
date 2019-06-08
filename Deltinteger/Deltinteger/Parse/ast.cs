@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Antlr4.Runtime;
 using Antlr4.Runtime.Tree;
-using Deltin.Deltinteger.Checker;
+using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.Elements;
 
 namespace Deltin.Deltinteger.Parse
@@ -44,6 +44,9 @@ namespace Deltin.Deltinteger.Parse
 
         public override Node VisitVardefine(DeltinScriptParser.VardefineContext context)
         {
+            if (context.exception != null)
+                return null;
+            
             string variableName = context.PART(0).GetText();
             bool isGlobal = context.GLOBAL() != null;
 
@@ -113,6 +116,9 @@ namespace Deltin.Deltinteger.Parse
                 IExpressionNode left = (IExpressionNode)Visit(context.GetChild(0));
                 string operation = context.GetChild(1).GetText();
                 IExpressionNode right = (IExpressionNode)Visit(context.GetChild(2));
+
+                if (left == null || right == null)
+                    return null;
 
                 node = new OperationNode(left, operation, right, Range.GetRange(context));
             }
@@ -341,6 +347,9 @@ namespace Deltin.Deltinteger.Parse
                 (BlockNode)VisitBlock(context.block())
             );
 
+            if (ifData.Expression == null || ifData.Block == null)
+                return null;
+
             // Get the else-if data
             IfData[] elseIfData = null;
             if (context.else_if() != null)
@@ -410,6 +419,10 @@ namespace Deltin.Deltinteger.Parse
     public abstract class Node
     {
         public Range Range { get; private set; }
+
+        public Element RelatedElement { get; set; }
+
+        public ScopeGroup RelatedScopeGroup { get; set; }
 
         public Node(Range range)
         {
@@ -732,7 +745,7 @@ namespace Deltin.Deltinteger.Parse
             {
                 return new Range
                 (
-                    new Pos(context.start.Line, context.start.Column), 
+                    new Pos(context.start.Line, context.start.Column),
                     new Pos(context.stop.Line, context.stop.Column + context.GetText().Length)
                 );
             }
@@ -740,7 +753,7 @@ namespace Deltin.Deltinteger.Parse
             {
                 return new Range
                 (
-                    new Pos(context.start.Line, context.start.Column), 
+                    new Pos(context.start.Line, context.start.Column),
                     new Pos(context.stop.Line, context.stop.Column)
                 );
             }
@@ -811,7 +824,7 @@ namespace Deltin.Deltinteger.Parse
     
         public Range LanguageServerOffset()
         {
-            return new Range(new Pos(start.line - 1, start.character), new Pos(end.line - 1, end.character));
+            return new Range(new Pos(start.line /*- 1*/, start.character), new Pos(end.line /*- 1*/, end.character));
         }
     }
 }

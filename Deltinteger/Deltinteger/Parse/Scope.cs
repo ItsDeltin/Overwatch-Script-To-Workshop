@@ -2,10 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Antlr4.Runtime;
+using Deltin.Deltinteger.LanguageServer;
 
 namespace Deltin.Deltinteger.Parse
 {
-    class ScopeGroup : IDisposable
+    public class ScopeGroup : IDisposable
     {
         private ScopeGroup() {}
 
@@ -55,6 +56,23 @@ namespace Deltin.Deltinteger.Parse
         public List<DefinedVar> VarCollection()
         {
             return InScope;
+        }
+
+        public List<DefinedVar> FullVarCollection()
+        {
+            var varCollection = new List<DefinedVar>();
+            varCollection.AddRange(InScope);
+            if (Parent != null)
+                varCollection.AddRange(Parent.FullVarCollection());
+            return varCollection;
+        }
+
+        public CompletionItem[] GetCompletionItems()
+        {
+            return FullVarCollection().Select(var => new CompletionItem(var.Name)
+            {
+                kind = CompletionItem.Field
+            }).ToArray();
         }
 
         public void Dispose()

@@ -11,7 +11,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.Parse;
-using Deltin.Deltinteger.Checker;
+using Deltin.Deltinteger.LanguageServer;
 
 namespace Deltin.Deltinteger
 {

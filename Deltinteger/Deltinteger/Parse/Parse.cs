@@ -8,6 +8,7 @@ using Antlr4;
 using Antlr4.Runtime;
 using Deltin.Deltinteger;
 using Deltin.Deltinteger.Elements;
+using Deltin.Deltinteger.LanguageServer;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -18,35 +19,6 @@ namespace Deltin.Deltinteger.Parse
         public static Rule[] ParseText(string document, out ParserElements parserData)
         {
             parserData = ParserElements.GetParser(document, null);
-
-            // TODO fix usevar
-            Var.Setup(parserData.RuleSetNode.UseGlobalVar, parserData.RuleSetNode.UsePlayerVar);
-
-            // Get the defined variables.
-            foreach (var definedVar in parserData.RuleSetNode.DefinedVars)
-                // The new var is stored in Var.VarCollection
-                new DefinedVar(ScopeGroup.Root, definedVar);
-
-            // Get the user methods.
-            for (int i = 0; i < parserData.RuleSetNode.UserMethods.Length; i++)
-                new UserMethod(parserData.RuleSetNode.UserMethods[i]); 
-
-            // Parse the rules.
-            Rule[] rules = new Rule[parserData.RuleSetNode.Rules.Length];
-
-            for (int i = 0; i < rules.Length; i++)
-            {
-                try
-                {
-                    Rule newRule = Translate.GetRule(parserData.RuleSetNode.Rules[i]);
-                    Log.Write(LogLevel.Normal, $"Built rule: {newRule.Name}");
-                    rules[i] = newRule;
-                }
-                catch (SyntaxErrorException ex)
-                {
-                    parserData.ErrorListener.Error(ex.Message, ex.Range);
-                }
-            }
 
             Log.Write(LogLevel.Normal, new ColorMod("Build succeeded.", ConsoleColor.Green));
 
@@ -77,7 +49,7 @@ namespace Deltin.Deltinteger.Parse
                 }
             }
 
-            return rules;
+            return parserData.Rules;
         }
     }
 
@@ -97,36 +69,66 @@ namespace Deltin.Deltinteger.Parse
             parser.RemoveErrorListeners();
             parser.AddErrorListener(errorListener);
 
-            DeltinScriptParser.RulesetContext context = parser.ruleset();
+            DeltinScriptParser.RulesetContext ruleSetContext = parser.ruleset();
 
             AdditionalErrorChecking aec = new AdditionalErrorChecking(parser, errorListener);
-            aec.Visit(context);
+            aec.Visit(ruleSetContext);
 
             BuildAstVisitor bav = new BuildAstVisitor(documentPos);
-            RulesetNode ruleSet = (RulesetNode)bav.Visit(context);
+            RulesetNode ruleSetNode = (RulesetNode)bav.Visit(ruleSetContext);
+
+            Var.Setup(ruleSetNode.UseGlobalVar, ruleSetNode.UsePlayerVar);
+
+            foreach (var definedVar in ruleSetNode.DefinedVars)
+                // The new var is stored in Var.VarCollection
+                new DefinedVar(ScopeGroup.Root, definedVar);
+
+            // Get the user methods.
+            for (int i = 0; i < ruleSetNode.UserMethods.Length; i++)
+                new UserMethod(ruleSetNode.UserMethods[i]); 
+
+            // Parse the rules.
+            Rule[] rules = new Rule[ruleSetNode.Rules.Length];
+
+            for (int i = 0; i < rules.Length; i++)
+            {
+                try
+                {
+                    var result = Translate.GetRule(ruleSetNode.Rules[i]);
+                    rules[i] = result.Rule;
+                    errorListener.Errors.AddRange(result.Diagnostics);
+                }
+                catch (SyntaxErrorException ex)
+                {
+                    errorListener.Error(ex.Message, ex.Range);
+                }
+            }
             
             return new ParserElements()
             {
                 Parser = parser,
-                RulesetContext = context,
-                RuleSetNode = ruleSet,
+                RulesetContext = ruleSetContext,
+                RuleSetNode = ruleSetNode,
                 Bav = bav,
-                ErrorListener = errorListener
+                ErrorListener = errorListener,
+                Rules = rules
             };
         }
 
-        public DeltinScriptParser Parser { get; set; }
-        public DeltinScriptParser.RulesetContext RulesetContext { get; set; }
-        public RulesetNode RuleSetNode { get; set; }
-        public ErrorListener ErrorListener { get; set; } 
-        public BuildAstVisitor Bav { get; set; }
+        public DeltinScriptParser Parser { get; private set; }
+        public DeltinScriptParser.RulesetContext RulesetContext { get; private set; }
+        public RulesetNode RuleSetNode { get; private set; }
+        public ErrorListener ErrorListener { get; private set; } 
+        public BuildAstVisitor Bav { get; private set; }
+        public Rule[] Rules { get; private set; }
     }
 
     class Translate
     {
-        public static Rule GetRule(RuleNode ruleNode)
+        public static TranslateResult GetRule(RuleNode ruleNode)
         {
-            return new Translate(ruleNode).Rule;
+            var result = new Translate(ruleNode);
+            return new TranslateResult(result.Rule, result.Diagnostics.ToArray());
         }
 
         private readonly Rule Rule;
@@ -134,7 +136,8 @@ namespace Deltin.Deltinteger.Parse
         private readonly List<Condition> Conditions = new List<Condition>();
         private readonly bool IsGlobal;
         private readonly List<A_Skip> ReturnSkips = new List<A_Skip>(); // Return statements whos skip count needs to be filled out.
-        private ContinueSkip ContinueSkip; // Contains data about the wait/skip for continuing loops.
+        private readonly ContinueSkip ContinueSkip; // Contains data about the wait/skip for continuing loops.
+        private readonly List<Diagnostic> Diagnostics = new List<Diagnostic>();
 
         private Translate(RuleNode ruleNode)
         {
@@ -145,8 +148,8 @@ namespace Deltin.Deltinteger.Parse
             ParseConditions(ruleNode.Conditions);
             ParseBlock(ScopeGroup.Root.Child(), ruleNode.Block, false);
 
-            Rule.Conditions = Conditions.ToArray();
             Rule.Actions = Actions.ToArray();
+            Rule.Conditions = Conditions.ToArray();
 
             // Fufill remaining skips
             foreach (var skip in ReturnSkips)
@@ -190,9 +193,18 @@ namespace Deltin.Deltinteger.Parse
                     if (Constants.BoolOperations.Contains(operationNode.Operation))
                     {
                         if (left.ElementData.ValueType != Elements.ValueType.Any && left.ElementData.ValueType != Elements.ValueType.Boolean)
-                            throw new SyntaxErrorException($"Expected boolean datatype, got {left .ElementData.ValueType.ToString()} instead.", ((Node)operationNode.Left).Range);
+                        {
+                            //throw new SyntaxErrorException($"Expected boolean datatype, got {left .ElementData.ValueType.ToString()} instead.", ((Node)operationNode.Left).Range);
+                            Diagnostics.Add(new Diagnostic($"Expected boolean, got {left .ElementData.ValueType.ToString()} instead.", ((Node)operationNode.Left).Range));
+                            return null;
+                        }
+                        
                         if (right.ElementData.ValueType != Elements.ValueType.Any && right.ElementData.ValueType != Elements.ValueType.Boolean)
-                            throw new SyntaxErrorException($"Expected boolean datatype, got {right.ElementData.ValueType.ToString()} instead.", ((Node)operationNode.Right).Range);
+                        {
+                            //throw new SyntaxErrorException($"Expected boolean datatype, got {right.ElementData.ValueType.ToString()} instead.", ((Node)operationNode.Right).Range);
+                            Diagnostics.Add(new Diagnostic($"Expected boolean, got {right.ElementData.ValueType.ToString()} instead.", ((Node)operationNode.Right).Range));
+                            return null;
+                        }
                     }
 
                     switch (operationNode.Operation)
@@ -264,8 +276,6 @@ namespace Deltin.Deltinteger.Parse
 
                 // Strings
                 case StringNode stringNode:
-                #warning todo
-                // TODO replace token with range
                     Element[] stringFormat = new Element[stringNode.Format?.Length ?? 0];
                     for (int i = 0; i < stringFormat.Length; i++)
                         stringFormat[i] = ParseExpression(scope, stringNode.Format[i]);
@@ -324,6 +334,8 @@ namespace Deltin.Deltinteger.Parse
 
         Element ParseMethod(ScopeGroup scope, MethodNode methodNode, bool needsToBeValue)
         {
+            methodNode.RelatedScopeGroup = scope;
+
             // Get the kind of method the method is (Method (Overwatch), Custom Method, or User Method.)
             var methodType = GetMethodType(methodNode.Name);
             if (methodType == null)
@@ -428,6 +440,7 @@ namespace Deltin.Deltinteger.Parse
                 default: throw new NotImplementedException(); // Keep the compiler from complaining about method not being set.
             }
 
+            methodNode.RelatedElement = method;
             return method;
         }
 
@@ -504,6 +517,8 @@ namespace Deltin.Deltinteger.Parse
 
         Element ParseBlock(ScopeGroup scopeGroup, BlockNode blockNode, bool fulfillReturns)
         {
+            blockNode.RelatedScopeGroup = scopeGroup;
+
             int returnSkipStart = ReturnSkips.Count;
 
             Var returned = null;
@@ -749,6 +764,18 @@ namespace Deltin.Deltinteger.Parse
 
                     return;
             }
+        }
+    }
+
+    class TranslateResult
+    {
+        public readonly Rule Rule;
+        public readonly Diagnostic[] Diagnostics;
+
+        public TranslateResult(Rule rule, Diagnostic[] diagnostics)
+        {
+            Rule = rule;
+            Diagnostics = diagnostics;
         }
     }
 }

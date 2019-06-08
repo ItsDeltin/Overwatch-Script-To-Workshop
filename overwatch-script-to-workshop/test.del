@@ -3,6 +3,7 @@ usevar playervar A;
 
 rule: "Resurrect player then send message."
 {
+    SmallMessage(EventPlayer(), "avoided");
     Resurrect(EventPlayer());
     BigMessage(EventPlayer(), <"resurrected! try_again and survive!", EventPlayer()>);
 
@@ -10,5 +11,13 @@ rule: "Resurrect player then send message."
     for (ahs in ahh)
     {
         SmallMessage(ahh[ahs], <"hello <0>! warning: <1> resurrected?", ahh[ahs], EventPlayer()>);
+
+    } // aaa woooo
+
+    define woooo = 1;
+
+    if(false)
+    {
+         SmallMessage(EventPlayer(), woooo);
     }
 }
