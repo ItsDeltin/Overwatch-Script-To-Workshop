@@ -1,8 +1,8 @@
 usevar globalvar A;
 usevar playervar A;
 
-rule: "My Rule"
+rule: "Resurrect player then send message."
 {
     Resurrect(EventPlayer());
-    BigMessage(EventPlayer(), <"resurrected! try_again, good_luck <0>!", EventPlayer()>); 
+    BigMessage(EventPlayer(), <"resurrected! try_again, good_luck <0>!", EventPlayer()>);
 }

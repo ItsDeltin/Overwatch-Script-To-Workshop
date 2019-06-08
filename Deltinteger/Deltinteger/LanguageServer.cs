@@ -22,13 +22,15 @@ namespace Deltin.Deltinteger.Checker
         static Log Log = new Log("LangServer");
 
         const int DefaultPort = 3000;
+        const int DefaultClientPort = 3001;
         
         public static void RequestLoop(int port)
         {
             if (port == 0)
                 port = DefaultPort;
 
-            Log.Write(LogLevel.Normal, new ColorMod("Language server", ConsoleColor.Magenta), " started on port ", new ColorMod(port.ToString(), ConsoleColor.DarkGreen));
+            Log.Write(LogLevel.Normal, new ColorMod("Language server", ConsoleColor.Magenta), " started on port ", new ColorMod(port.ToString(), ConsoleColor.DarkCyan), 
+                " (", new ColorMod(DefaultClientPort.ToString(), ConsoleColor.DarkCyan), ")");
 
             HttpListener server = new HttpListener();
             server.Prefixes.Add($"http://localhost:{port}/");
@@ -90,7 +92,16 @@ namespace Deltin.Deltinteger.Checker
 
         static string ParseDocument(string document)
         {
-            Parse.Parser.ParseText(document, out var data);
+            Rule[] rules = Parse.Parser.ParseText(document, out var data);
+
+            if (rules != null && data.ErrorListener.Errors.Count == 0)
+            {
+                string final = Program.RuleArrayToWorkshop(rules);
+                using (var wc = new WebClient())
+                {
+                    wc.UploadString($"http://localhost:{DefaultClientPort}/", final);
+                }
+            }
 
             return JsonConvert.SerializeObject(data.ErrorListener.Errors.ToArray());
         }

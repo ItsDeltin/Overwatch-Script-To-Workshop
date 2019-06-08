@@ -44,13 +44,11 @@ namespace Deltin.Deltinteger.Parse
 
         public override void SyntaxError(IRecognizer recognizer, IToken offendingSymbol, int line, int charPositionInLine, string msg, RecognitionException e)
         {
-            //Errors.Add(new SyntaxError(msg, offendingSymbol.StartIndex, offendingSymbol.StopIndex + 1));
             Errors.Add(new Diagnostic(msg, Range.GetRange(offendingSymbol)));
         }
 
         public void Error(string message, Range range)
         {
-            //Errors.Add(new SyntaxError(message, 0, 0));
             Errors.Add(new Diagnostic(message, range.LanguageServerOffset()) { severity = Diagnostic.Error });
         }
     }

@@ -8,7 +8,31 @@ const path = require("path");
 const vscode_1 = require("vscode");
 const vscode_languageclient_1 = require("vscode-languageclient");
 let client;
+let workshopOut;
 function activate(context) {
+    // Shows the compiled result in an output window.
+    workshopOut = vscode_1.window.createOutputChannel("Workshop Code"); // Create the channel.
+    const http = require('http');
+    // Create the server.
+    http.createServer(function (req, res) {
+        if (req.method == 'POST') {
+            var body = '';
+            req.on('data', function (data) {
+                body += data;
+            });
+            req.on('end', function () {
+                // Clear the output
+                workshopOut.clear();
+                // Append the compiled result.
+                workshopOut.appendLine(body);
+                // Close connection.
+                res.end();
+            });
+        }
+        else {
+            res.end();
+        }
+    }).listen(3001); // Listen on port.
     // The server is implemented in node
     let serverModule = context.asAbsolutePath(path.join('server', 'out', 'server.js'));
     // The debug options for the server

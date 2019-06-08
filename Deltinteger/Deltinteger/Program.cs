@@ -86,20 +86,25 @@ namespace Deltin.Deltinteger
             generatedRules = Parser.ParseText(text, out _);
 #endif
 
-            var builder = new StringBuilder();
-            Log debugPrintLog = new Log("Tree");
-            foreach (var rule in generatedRules)
-            {
-                rule.DebugPrint(debugPrintLog);
-                builder.AppendLine(rule.ToWorkshop());
-                builder.AppendLine();
-            }
-            string final = builder.ToString();
+            string final = RuleArrayToWorkshop(generatedRules);
 
             Log.Write(LogLevel.Normal, "Press enter to copy code to clipboard, then in Overwatch click \"Paste Rule\".");
             Console.ReadLine();
 
             InputSim.SetClipboard(final);
+        }
+
+        public static string RuleArrayToWorkshop(Rule[] rules)
+        {
+            var builder = new StringBuilder();
+            Log debugPrintLog = new Log("Tree");
+            foreach (var rule in rules)
+            {
+                rule.DebugPrint(debugPrintLog);
+                builder.AppendLine(rule.ToWorkshop());
+                builder.AppendLine();
+            }
+            return builder.ToString();
         }
     }
 }
