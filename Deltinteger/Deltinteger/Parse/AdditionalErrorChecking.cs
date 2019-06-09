@@ -50,7 +50,7 @@ namespace Deltin.Deltinteger.Parse
 
         public void Error(string message, Range range)
         {
-            Errors.Add(new Diagnostic(message, range.LanguageServerOffset()) { severity = Diagnostic.Error });
+            Errors.Add(new Diagnostic(message, range) { severity = Diagnostic.Error });
         }
     }
 }

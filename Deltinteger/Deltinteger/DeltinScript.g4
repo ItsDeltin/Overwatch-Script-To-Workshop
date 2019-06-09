@@ -15,6 +15,7 @@ not    : NOT           ;
 
 statement_operation : EQUALS | EQUALS_ADD | EQUALS_DIVIDE | EQUALS_MODULO | EQUALS_MULTIPLY | EQUALS_POW | EQUALS_SUBTRACT ;
 
+define   : DEFINE PART (EQUALS expr)? ;
 vardefine : DEFINE (GLOBAL|PLAYER) PART (PART (INDEX_START number INDEX_END)?)? STATEMENT_END; /*#define global/player NAME (use variable?); */
 useGlobalVar : USEVAR GLOBAL PART STATEMENT_END ;
 usePlayerVar : USEVAR PLAYER PART STATEMENT_END ;
@@ -51,7 +52,7 @@ createarray : INDEX_START (expr (COMMA expr)*)? INDEX_END;
 array    : INDEX_START expr INDEX_END ;
 enum     : ( 'Variable'|'Operation'|'Button'|'Relative'|'ContraryMotion'|'ChaseReevaluation'|'Status'|'TeamSelector'|'WaitBehavior'|'Effects'|'Color'|'EffectRev'|'Rounding'|'Communication'|'Location'|'StringRev'|'Icon'|'IconRev'|'PlayEffects'|'Hero'|'InvisibleTo'|'AccelerateRev'|'ModRev'|'FacingRev'|'BarrierLOS'|'Transformation'|'RadiusLOS'|'LocalVector'|'Clipping'|'InworldTextRev' ) SEPERATOR PART ;
 variable : PART ;
-define   : DEFINE PART (EQUALS expr)? STATEMENT_END ;
+// define   : DEFINE PART (EQUALS expr)? STATEMENT_END ;
 varset   : (expr SEPERATOR)? PART array? statement_operation expr ;
 // Here, there should always be an expression. 
 // This is here so antlr recognizes it is a method midtype.
@@ -66,7 +67,7 @@ statement :
 	| if
 	| for
 	| while
-	| define
+	| define STATEMENT_END
 	| return
 	);
 

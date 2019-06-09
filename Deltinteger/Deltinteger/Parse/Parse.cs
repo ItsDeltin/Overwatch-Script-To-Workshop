@@ -25,7 +25,7 @@ namespace Deltin.Deltinteger.Parse
             // List all variables
             Log.Write(LogLevel.Normal, new ColorMod("Variable Guide:", ConsoleColor.Blue));
 
-            if (parserData.Root.VarCollection().Count > 0)
+            if (parserData.Root?.VarCollection().Count > 0)
             {
                 int nameLength = parserData.Root.VarCollection().Max(v => v.Name.Length);
 
@@ -74,32 +74,53 @@ namespace Deltin.Deltinteger.Parse
             AdditionalErrorChecking aec = new AdditionalErrorChecking(parser, errorListener);
             aec.Visit(ruleSetContext);
 
-            BuildAstVisitor bav = new BuildAstVisitor(documentPos);
-            RulesetNode ruleSetNode = (RulesetNode)bav.Visit(ruleSetContext);
-
             List<Diagnostic> diagnostics = new List<Diagnostic>();
             diagnostics.AddRange(errorListener.Errors);
 
-            VarCollection vars = new VarCollection();
-            ScopeGroup root = new ScopeGroup();
-            List<UserMethod> userMethods = new List<UserMethod>();
+            // Get the ruleset node.
+            BuildAstVisitor bav = null;
+            RulesetNode ruleSetNode = null;
 
-            foreach (var definedVar in ruleSetNode.DefinedVars)
-                // The new var is stored in Var.VarCollection
-                vars.AssignDefinedVar(root, definedVar.IsGlobal, definedVar.VariableName, definedVar.Range, diagnostics);
+            VarCollection vars = null;
+            ScopeGroup root = null;
+            List<UserMethod> userMethods = null;
+            Rule[] rules = null;
+            bool success = false;
 
-            // Get the user methods.
-            for (int i = 0; i < ruleSetNode.UserMethods.Length; i++)
-                userMethods.Add(new UserMethod(ruleSetNode.UserMethods[i]));
-
-            // Parse the rules.
-            Rule[] rules = new Rule[ruleSetNode.Rules.Length];
-
-            for (int i = 0; i < rules.Length; i++)
+            if (diagnostics.Count == 0)
             {
-                var result = Translate.GetRule(ruleSetNode.Rules[i], root, vars, userMethods.ToArray());
-                rules[i] = result.Rule;
-                diagnostics.AddRange(result.Diagnostics);
+                vars = new VarCollection();
+                root = new ScopeGroup();
+                userMethods = new List<UserMethod>();
+
+                bav = new BuildAstVisitor(documentPos);
+                ruleSetNode = (RulesetNode)bav.Visit(ruleSetContext);
+
+                foreach (var definedVar in ruleSetNode.DefinedVars)
+                    vars.AssignDefinedVar(root, definedVar.IsGlobal, definedVar.VariableName, definedVar.Range, diagnostics);
+
+                // Get the user methods.
+                for (int i = 0; i < ruleSetNode.UserMethods.Length; i++)
+                    userMethods.Add(new UserMethod(ruleSetNode.UserMethods[i]));
+
+                // Parse the rules.
+                rules = new Rule[ruleSetNode.Rules.Length];
+
+                for (int i = 0; i < rules.Length; i++)
+                {
+                    try
+                    {
+                        var result = Translate.GetRule(ruleSetNode.Rules[i], root, vars, userMethods.ToArray());
+                        rules[i] = result.Rule;
+                        diagnostics.AddRange(result.Diagnostics);
+                    }
+                    catch (SyntaxErrorException ex)
+                    {
+                        diagnostics.Add(new Diagnostic(ex.Message, ex.Range) { severity = Diagnostic.Error });
+                    }
+                }
+
+                success = true;
             }
             
             return new ParserElements()
@@ -110,8 +131,9 @@ namespace Deltin.Deltinteger.Parse
                 Bav = bav,
                 Diagnostics = diagnostics,
                 Rules = rules,
-                UserMethods = userMethods.ToArray(),
-                Root = root
+                UserMethods = userMethods?.ToArray(),
+                Root = root,
+                Success = success
             };
         }
 
@@ -124,6 +146,7 @@ namespace Deltin.Deltinteger.Parse
         public Rule[] Rules { get; private set; }
         public UserMethod[] UserMethods { get; private set; }
         public ScopeGroup Root { get; private set; }
+        public bool Success { get; private set; }
     }
 
     class Translate
@@ -204,14 +227,16 @@ namespace Deltin.Deltinteger.Parse
                     {
                         if (left.ElementData.ValueType != Elements.ValueType.Any && left.ElementData.ValueType != Elements.ValueType.Boolean)
                         {
-                            Diagnostics.Add(new Diagnostic($"Expected boolean, got {left .ElementData.ValueType.ToString()} instead.", ((Node)operationNode.Left).Range));
-                            return null;
+                            throw new SyntaxErrorException($"Expected boolean, got {left .ElementData.ValueType.ToString()} instead.", ((Node)operationNode.Left).Range);
+                            //Diagnostics.Add(new Diagnostic($"Expected boolean, got {left .ElementData.ValueType.ToString()} instead.", ((Node)operationNode.Left).Range));
+                            //return null;
                         }
                         
                         if (right.ElementData.ValueType != Elements.ValueType.Any && right.ElementData.ValueType != Elements.ValueType.Boolean)
                         {
-                            Diagnostics.Add(new Diagnostic($"Expected boolean, got {right.ElementData.ValueType.ToString()} instead.", ((Node)operationNode.Right).Range));
-                            return null;
+                            throw new SyntaxErrorException($"Expected boolean, got {right.ElementData.ValueType.ToString()} instead.", ((Node)operationNode.Right).Range);
+                            //Diagnostics.Add(new Diagnostic($"Expected boolean, got {right.ElementData.ValueType.ToString()} instead.", ((Node)operationNode.Right).Range));
+                            //return null;
                         }
                     }
 
@@ -301,7 +326,7 @@ namespace Deltin.Deltinteger.Parse
 
                 // Variable
                 case VariableNode variableNode:
-                    return scope.GetVar(variableNode.Name, variableNode.Range)
+                    return scope.GetVar(variableNode.Name, variableNode.Range, Diagnostics)
                         .GetVariable(variableNode.Target != null ? ParseExpression(scope, variableNode.Target) : null);
 
                 // Get value in array
@@ -348,8 +373,9 @@ namespace Deltin.Deltinteger.Parse
             var methodType = GetMethodType(UserMethods, methodNode.Name);
             if (methodType == null)
             {
-                Diagnostics.Add(new Diagnostic($"The method {methodNode.Name} does not exist.", methodNode.Range));
-                return null;
+                throw new SyntaxErrorException($"The method {methodNode.Name} does not exist.", methodNode.Range);
+                //Diagnostics.Add(new Diagnostic($"The method {methodNode.Name} does not exist.", methodNode.Range));
+                //return null;
             }
 
             Element method;
@@ -374,9 +400,9 @@ namespace Deltin.Deltinteger.Parse
                         {
                             if (parameterData[i].ParameterType == ParameterType.Value && parameterData[i].DefaultType == null)
                             {
-                                Diagnostics.Add(new Diagnostic($"Missing parameter \"{parameterData[i].Name}\" in the method \"{methodNode.Name}\" and no default type to fallback on.", 
-                                    methodNode.Range));
-                                return null;
+                                throw new SyntaxErrorException($"Missing parameter \"{parameterData[i].Name}\" in the method \"{methodNode.Name}\" and no default type to fallback on.", methodNode.Range);
+                                //Diagnostics.Add(new Diagnostic($"Missing parameter \"{parameterData[i].Name}\" in the method \"{methodNode.Name}\" and no default type to fallback on.", methodNode.Range));
+                                //return null;
                             }
                             else
                                 parsedParameters.Add(parameterData[i].GetDefault());
@@ -398,9 +424,9 @@ namespace Deltin.Deltinteger.Parse
                             parsedParameters[i] = ParseParameter(scope, methodNode.Parameters[i], methodNode.Name, parameterData[i]);
                         else
                         {
-                            Diagnostics.Add(new Diagnostic($"Missing parameter \"{parameterData[i].Name}\" in the method \"{methodNode.Name}\" and no default type to fallback on.", 
-                                methodNode.Range));
-                            return null;
+                            throw new SyntaxErrorException($"Missing parameter \"{parameterData[i].Name}\" in the method \"{methodNode.Name}\" and no default type to fallback on.", methodNode.Range);
+                            //Diagnostics.Add(new Diagnostic($"Missing parameter \"{parameterData[i].Name}\" in the method \"{methodNode.Name}\" and no default type to fallback on.", methodNode.Range));
+                            //return null;
                         }
 
                     MethodResult result = (MethodResult)customMethod.Invoke(null, new object[] { IsGlobal, VarCollection, parsedParameters });
@@ -445,14 +471,18 @@ namespace Deltin.Deltinteger.Parse
                         }
                         else 
                         {
-                            Diagnostics.Add(new Diagnostic($"Missing parameter \"{userMethod.Parameters[i].Name}\" in the method \"{methodNode.Name}\".",
-                                methodNode.Range));
-                            return null;
+                            throw new SyntaxErrorException($"Missing parameter \"{userMethod.Parameters[i].Name}\" in the method \"{methodNode.Name}\".", methodNode.Range);
+                            //Diagnostics.Add(new Diagnostic($"Missing parameter \"{userMethod.Parameters[i].Name}\" in the method \"{methodNode.Name}\".", methodNode.Range));
+                            //return null;
                         }
                     }
 
                     var returns = VarCollection.AssignVar(IsGlobal);
-                    ParseBlock(methodScope.Child(), userMethod.Block, true, returns);
+
+                    var userMethodScope = methodScope.Child();
+                    userMethod.Block.RelatedScopeGroup = userMethodScope;
+                    
+                    ParseBlock(userMethodScope, userMethod.Block, true, returns);
                     // No return value if the method is being used as an action.
                     if (needsToBeValue)
                         method = returns.GetVariable();
@@ -478,16 +508,16 @@ namespace Deltin.Deltinteger.Parse
 
                     if (parameterData.ParameterType != ParameterType.Enum)
                     {
-                        Diagnostics.Add(new Diagnostic($"Expected value type \"{parameterData.ValueType.ToString()}\" on {methodName}'s parameter \"{parameterData.Name}\"."
-                            , enumNode.Range));
-                            return null;
+                        throw new SyntaxErrorException($"Expected value type \"{parameterData.ValueType.ToString()}\" on {methodName}'s parameter \"{parameterData.Name}\".", enumNode.Range);
+                        //Diagnostics.Add(new Diagnostic($"Expected value type \"{parameterData.ValueType.ToString()}\" on {methodName}'s parameter \"{parameterData.Name}\".", enumNode.Range));
+                        //return null;
                     }
 
                     if (enumNode.Type != parameterData.EnumType.Name)
                     {
-                        Diagnostics.Add(new Diagnostic($"Expected enum type \"{parameterData.EnumType.ToString()}\" on {methodName}'s parameter \"{parameterData.Name}\"."
-                            , enumNode.Range));
-                        return null;
+                        throw new SyntaxErrorException($"Expected enum type \"{parameterData.EnumType.ToString()}\" on {methodName}'s parameter \"{parameterData.Name}\".", enumNode.Range);
+                        //Diagnostics.Add(new Diagnostic($"Expected enum type \"{parameterData.EnumType.ToString()}\" on {methodName}'s parameter \"{parameterData.Name}\".", enumNode.Range));
+                        //return null;
                     }
 
                     try
@@ -496,9 +526,9 @@ namespace Deltin.Deltinteger.Parse
                     }
                     catch (Exception ex) when (ex is ArgumentNullException || ex is ArgumentException || ex is OverflowException)
                     {
-                        Diagnostics.Add(new Diagnostic($"The value {enumNode.Value} does not exist in the enum {enumNode.Type}."
-                            , enumNode.Range));
-                        return null;
+                        throw new SyntaxErrorException($"The value {enumNode.Value} does not exist in the enum {enumNode.Type}.", enumNode.Range);
+                        //Diagnostics.Add(new Diagnostic($"The value {enumNode.Value} does not exist in the enum {enumNode.Type}.", enumNode.Range));
+                        //return null;
                     }
                     
                     break;
@@ -507,9 +537,9 @@ namespace Deltin.Deltinteger.Parse
 
                     if (parameterData.ParameterType != ParameterType.Value)
                     {
-                        Diagnostics.Add(new Diagnostic($"Expected enum type \"{parameterData.EnumType.Name}\" on {methodName}'s parameter \"{parameterData.Name}\"."
-                            , ((Node)node).Range));
-                        return null;
+                        throw new SyntaxErrorException($"Expected enum type \"{parameterData.EnumType.Name}\" on {methodName}'s parameter \"{parameterData.Name}\".", ((Node)node).Range);
+                        //Diagnostics.Add(new Diagnostic($"Expected enum type \"{parameterData.EnumType.Name}\" on {methodName}'s parameter \"{parameterData.Name}\".", ((Node)node).Range));
+                        //return null;
                     }
 
                     value = ParseExpression(scope, node);
@@ -520,9 +550,9 @@ namespace Deltin.Deltinteger.Parse
                     if (elementData.ValueType != Elements.ValueType.Any &&
                     !parameterData.ValueType.HasFlag(elementData.ValueType))
                     {
-                        Diagnostics.Add(new Diagnostic($"Expected value type \"{parameterData.ValueType.ToString()}\" on {methodName}'s parameter \"{parameterData.Name}\", got \"{elementData.ValueType.ToString()}\" instead."
-                            , ((Node)node).Range));
-                        return null;
+                        throw new SyntaxErrorException($"Expected value type \"{parameterData.ValueType.ToString()}\" on {methodName}'s parameter \"{parameterData.Name}\", got \"{elementData.ValueType.ToString()}\" instead.", ((Node)node).Range);
+                        //Diagnostics.Add(new Diagnostic($"Expected value type \"{parameterData.ValueType.ToString()}\" on {methodName}'s parameter \"{parameterData.Name}\", got \"{elementData.ValueType.ToString()}\" instead.", ((Node)node).Range));
+                        //return null;
                     }
 
                     break;
@@ -530,8 +560,9 @@ namespace Deltin.Deltinteger.Parse
 
             if (value == null)
             {
-                Diagnostics.Add(new Diagnostic("Could not parse parameter.", ((Node)node).Range));
-                return null;
+                throw new SyntaxErrorException("Could not parse parameter.", ((Node)node).Range);
+                //Diagnostics.Add(new Diagnostic("Could not parse parameter.", ((Node)node).Range));
+                //return null;
             }
 
             return value;
@@ -600,41 +631,6 @@ namespace Deltin.Deltinteger.Parse
                 case VarSetNode varSetNode:
                     ParseVarset(scope, varSetNode);
                     return;
-                    /*
-                    DefinedVar variable = scope.GetVar(varSetNode.Variable, varSetNode.Range);
-                    Element target = ParseExpression(scope, varSetNode.Target);
-                    Element value = ParseExpression(scope, varSetNode.Value);
-                    Element index = ParseExpression(scope, varSetNode.Index);
-
-                    switch (varSetNode.Operation)
-                    {
-                        case "+=":
-                            value = Element.Part<V_Add>(variable.GetVariable(target, index), value);
-                            break;
-
-                        case "-=":
-                            value = Element.Part<V_Subtract>(variable.GetVariable(target, index), value);
-                            break;
-
-                        case "*=":
-                            value = Element.Part<V_Multiply>(variable.GetVariable(target, index), value);
-                            break;
-
-                        case "/=":
-                            value = Element.Part<V_Divide>(variable.GetVariable(target, index), value);
-                            break;
-
-                        case "^=":
-                            value = Element.Part<V_RaiseToPower>(variable.GetVariable(target, index), value);
-                            break;
-
-                        case "%=":
-                            value = Element.Part<V_Modulo>(variable.GetVariable(target, index), value);
-                            break;
-                    }
-
-                    Actions.Add(variable.SetVariable(value, target, index));
-                    */
 
                 // For
                 case ForEachNode forEachNode:
@@ -701,6 +697,8 @@ namespace Deltin.Deltinteger.Parse
                     // Set the variable
                     if (forNode.VarSetNode != null)
                         ParseVarset(scope, forNode.VarSetNode);
+                    if (forNode.DefineNode != null)
+                        ParseDefine(scope, forNode.DefineNode);
 
                     // Parse the for's block.
                     ParseBlock(forGroup, forNode.Block, false, returnVar);
@@ -861,20 +859,14 @@ namespace Deltin.Deltinteger.Parse
                 
                 // Define
                 case ScopedDefineNode defineNode:
-
-                    var var = VarCollection.AssignDefinedVar(scope, IsGlobal, defineNode.VariableName, defineNode.Range, Diagnostics);
-
-                    // Set the defined variable if the variable is defined like "define var = 1"
-                    if (defineNode.Value != null)
-                        Actions.Add(var.SetVariable(ParseExpression(scope, defineNode.Value)));
-
+                    ParseDefine(scope, defineNode);
                     return;
             }
         }
 
         void ParseVarset(ScopeGroup scope, VarSetNode varSetNode)
         {
-            DefinedVar variable = scope.GetVar(varSetNode.Variable, varSetNode.Range);
+            DefinedVar variable = scope.GetVar(varSetNode.Variable, varSetNode.Range, Diagnostics);
 
             Element target = null;
             if (varSetNode.Target != null) 
@@ -914,7 +906,15 @@ namespace Deltin.Deltinteger.Parse
             }
 
             Actions.Add(variable.SetVariable(value, target, index));
-            return;
+        }
+
+        void ParseDefine(ScopeGroup scope, ScopedDefineNode defineNode)
+        {
+            var var = VarCollection.AssignDefinedVar(scope, IsGlobal, defineNode.VariableName, defineNode.Range, Diagnostics);
+
+            // Set the defined variable if the variable is defined like "define var = 1"
+            if (defineNode.Value != null)
+                Actions.Add(var.SetVariable(ParseExpression(scope, defineNode.Value)));
         }
     }
 

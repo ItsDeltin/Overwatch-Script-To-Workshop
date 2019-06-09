@@ -87,6 +87,6 @@ function ping() {
             failSent = true;
         }
     });
-    setTimeout(ping, 5);
+    setTimeout(ping, 5000);
 }
 //# sourceMappingURL=extensions.js.map

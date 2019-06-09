@@ -117,5 +117,5 @@ function ping()
 			failSent = true;
 		}
 	});
-	setTimeout(ping, 5);
+	setTimeout(ping, 5000);
 }

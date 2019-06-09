@@ -112,6 +112,8 @@ namespace Deltin.Deltinteger.LanguageServer
                     wc.UploadString($"http://localhost:{DefaultClientPort}/", final);
                 }
             }
+            
+            Console.WriteLine(data.RulesetContext.ToStringTree(data.Parser));
 
             return JsonConvert.SerializeObject(data.Diagnostics.ToArray());
         }
@@ -135,73 +137,74 @@ namespace Deltin.Deltinteger.LanguageServer
 
             var parser = ParserElements.GetParser(document, new Parse.Pos(caret.line, caret.character));
 
-            CompletionItem[] completion;            
-            switch(parser.Bav.SelectedNode.FirstOrDefault())
-            {
-                // Ruleset
-                case RulesetNode rulesetNode:
+            CompletionItem[] completion = null;
+            if (parser.Success)
+                switch(parser.Bav.SelectedNode.FirstOrDefault())
+                {
+                    // Ruleset
+                    case RulesetNode rulesetNode:
 
-                    completion = new CompletionItem[]
-                    {
-                        // TODO insert text
-                        new CompletionItem("rule"),
-                        new CompletionItem("define"),
-                        new CompletionItem("method")
-                    };
-                    break;
+                        completion = new CompletionItem[]
+                        {
+                            // TODO insert text
+                            new CompletionItem("rule"),
+                            new CompletionItem("define"),
+                            new CompletionItem("method")
+                        };
+                        break;
 
-                // Actions
-                case BlockNode blockNode:
+                    // Actions
+                    case BlockNode blockNode:
 
-                    // Get all variables
-                    completion = blockNode.RelatedScopeGroup?.GetCompletionItems()
-                        // Get custom methods
-                        .Concat(UserMethod.CollectionCompletion(parser.UserMethods))
-                        // Get all action methods
-                        .Concat(Element.ActionList.Select(m => 
-                            new CompletionItem(m.Name.Substring(2))
-                            {
-                                kind = CompletionItem.Method,
-                                detail = ((Element)Activator.CreateInstance(m)).ToString(),
-                            }
-                        )).ToArray();
+                        // Get all variables
+                        completion = blockNode.RelatedScopeGroup?.GetCompletionItems()
+                            // Get custom methods
+                            .Concat(UserMethod.CollectionCompletion(parser.UserMethods))
+                            // Get all action methods
+                            .Concat(Element.ActionList.Select(m => 
+                                new CompletionItem(m.Name.Substring(2))
+                                {
+                                    kind = CompletionItem.Method,
+                                    detail = ((Element)Activator.CreateInstance(m)).ToString(),
+                                }
+                            )).ToArray();
 
-                    break;
+                        break;
 
-                // Values
-                case MethodNode methodNode:
+                    // Values
+                    case MethodNode methodNode:
 
-                    completion = methodNode.RelatedScopeGroup.GetCompletionItems()
-                        // Get custom methods
-                        .Concat(UserMethod.CollectionCompletion(parser.UserMethods))
-                        .Concat(Element.ValueList.Select(m => 
-                            new CompletionItem(m.Name.Substring(2))
-                            {
-                                kind = CompletionItem.Constant,
-                                detail = ((Element)Activator.CreateInstance(m)).ToString(),
-                            }
-                        )).ToArray();
+                        completion = methodNode.RelatedScopeGroup.GetCompletionItems()
+                            // Get custom methods
+                            .Concat(UserMethod.CollectionCompletion(parser.UserMethods))
+                            .Concat(Element.ValueList.Select(m => 
+                                new CompletionItem(m.Name.Substring(2))
+                                {
+                                    kind = CompletionItem.Constant,
+                                    detail = ((Element)Activator.CreateInstance(m)).ToString(),
+                                }
+                            )).ToArray();
 
-                    break;
+                        break;
 
-                // If the selected node is a string node, show all strings.
-                case StringNode stringNode:
+                    // If the selected node is a string node, show all strings.
+                    case StringNode stringNode:
 
-                    completion = Constants.Strings
-                        .Select(str =>
-                            new CompletionItem(str)
-                            {
-                                kind = CompletionItem.Text
-                            }
-                        ).ToArray();
+                        completion = Constants.Strings
+                            .Select(str =>
+                                new CompletionItem(str)
+                                {
+                                    kind = CompletionItem.Text
+                                }
+                            ).ToArray();
 
-                    break;
+                        break;
 
-                default: 
-                    Console.WriteLine(parser.Bav.SelectedNode.FirstOrDefault()?.GetType().Name + " context not implemented.");
-                    completion = new CompletionItem[0];
-                    break;
-            }
+                    default: 
+                        Console.WriteLine(parser.Bav.SelectedNode.FirstOrDefault()?.GetType().Name + " context not implemented.");
+                        completion = new CompletionItem[0];
+                        break;
+                }
 
             /*
             string filter = selectedRule.GetText();
@@ -230,43 +233,48 @@ namespace Deltin.Deltinteger.LanguageServer
             int parameterIndex = 0;
 
             MethodNode methodNode = null;
+
+            SignatureHelp signatures = null;
             
-            if (parser.Bav.SelectedNode.ElementAtOrDefault(0) is MethodNode)
+            if (parser.Success)
             {
-                methodNode = (MethodNode)parser.Bav.SelectedNode[0];
-                parameterIndex = methodNode.Parameters.Length;
-            }
-            else if (parser.Bav.SelectedNode.ElementAtOrDefault(0) is IExpressionNode
-            && parser.Bav.SelectedNode.ElementAtOrDefault(1) is MethodNode)
-            {
-                methodNode = (MethodNode)parser.Bav.SelectedNode[1];
-                parameterIndex = Array.IndexOf(methodNode.Parameters, parser.Bav.SelectedNode[0]);
-            }
-
-            SignatureInformation information = null;
-            if (methodNode != null)
-            {
-                Type methodType = Element.GetMethod(methodNode.Name);
-
-                if (methodType != null)
+                if (parser.Bav.SelectedNode.ElementAtOrDefault(0) is MethodNode)
                 {
-                    Element element = (Element)Activator.CreateInstance(methodType);
-
-                    information = new SignatureInformation(
-                        element.ToString(),
-                        "",
-                        element.ParameterData.Select(p => 
-                            new ParameterInformation(p.Name, "")
-                        ).ToArray());
+                    methodNode = (MethodNode)parser.Bav.SelectedNode[0];
+                    parameterIndex = methodNode.Parameters.Length;
                 }
-            }
+                else if (parser.Bav.SelectedNode.ElementAtOrDefault(0) is IExpressionNode
+                && parser.Bav.SelectedNode.ElementAtOrDefault(1) is MethodNode)
+                {
+                    methodNode = (MethodNode)parser.Bav.SelectedNode[1];
+                    parameterIndex = Array.IndexOf(methodNode.Parameters, parser.Bav.SelectedNode[0]);
+                }
 
-            SignatureHelp signatures = new SignatureHelp
-            (
-                new SignatureInformation[] { information },
-                methodIndex,
-                parameterIndex
-            );
+                SignatureInformation information = null;
+                if (methodNode != null)
+                {
+                    Type methodType = Element.GetMethod(methodNode.Name);
+
+                    if (methodType != null)
+                    {
+                        Element element = (Element)Activator.CreateInstance(methodType);
+
+                        information = new SignatureInformation(
+                            element.ToString(),
+                            "",
+                            element.ParameterData.Select(p => 
+                                new ParameterInformation(p.Name, "")
+                            ).ToArray());
+                    }
+                }
+
+                signatures = new SignatureHelp
+                (
+                    new SignatureInformation[] { information },
+                    methodIndex,
+                    parameterIndex
+                );
+            }
 
             return JsonConvert.SerializeObject(signatures);
         }
@@ -283,37 +291,39 @@ namespace Deltin.Deltinteger.LanguageServer
 
             var parser = ParserElements.GetParser(document, new Parse.Pos(caret.line, caret.character));
 
-            Hover hover;
-            switch (parser.Bav.SelectedNode[0])
-            {
-                case MethodNode methodNode:
+            Hover hover = null;
 
-                    var type = Translate.GetMethodType(parser.UserMethods, methodNode.Name);
+            if (parser.Success && parser.Bav.SelectedNode.Count > 0)
+                switch (parser.Bav.SelectedNode[0])
+                {
+                    case MethodNode methodNode:
 
-                    if (type == null)
-                        hover = null;
+                        var type = Translate.GetMethodType(parser.UserMethods, methodNode.Name);
+
+                        if (type == null)
+                            hover = null;
+                        
+                        Parameter[] parameters;
+                        if (type == Translate.MethodType.Method)
+                            parameters = Element.GetMethod(methodNode.Name).GetCustomAttributes<Parameter>()
+                                .ToArray();
+                        else if (type == Translate.MethodType.CustomMethod)
+                            parameters = CustomMethods.GetCustomMethod(methodNode.Name).GetCustomAttributes<Parameter>()
+                                .ToArray();
+                        else if (type == Translate.MethodType.UserMethod)
+                            parameters = UserMethod.GetUserMethod(parser.UserMethods, methodNode.Name).Parameters;
+                        else parameters = null;
+
+                        hover = new Hover(new MarkupContent(MarkupContent.Markdown, methodNode.Name + "(" + Parameter.ParameterGroupToString(parameters) + ")"))
+                        {
+                            range = methodNode.Range
+                        };
+                        break;
                     
-                    Parameter[] parameters;
-                    if (type == Translate.MethodType.Method)
-                        parameters = Element.GetMethod(methodNode.Name).GetCustomAttributes<Parameter>()
-                            .ToArray();
-                    else if (type == Translate.MethodType.CustomMethod)
-                        parameters = CustomMethods.GetCustomMethod(methodNode.Name).GetCustomAttributes<Parameter>()
-                            .ToArray();
-                    else if (type == Translate.MethodType.UserMethod)
-                        parameters = UserMethod.GetUserMethod(parser.UserMethods, methodNode.Name).Parameters;
-                    else parameters = null;
-
-                    hover = new Hover(new MarkupContent(MarkupContent.Markdown, methodNode.Name + "(" + Parameter.ParameterGroupToString(parameters) + ")"))
-                    {
-                        range = methodNode.Range
-                    };
-                    break;
-                
-                default:
-                    hover = null;
-                    break;
-            }
+                    default:
+                        hover = null;
+                        break;
+                }
 
             return JsonConvert.SerializeObject(hover);
         }
