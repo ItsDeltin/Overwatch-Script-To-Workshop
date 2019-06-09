@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Deltin.Deltinteger.Elements;
 using Antlr4.Runtime;
 
@@ -177,10 +178,11 @@ namespace Deltin.Deltinteger.Parse
     {
         public string Name { get; protected set; }
 
-        public DefinedVar(ScopeGroup scopeGroup, DefinedNode node)
+        public DefinedVar(ScopeGroup scopeGroup, DefinedNode node, )
         {
             IsGlobal = node.IsGlobal;
 
+            // TODO replace throw with diagnostics push.
             if (scopeGroup.IsVar(node.VariableName))
                 throw new SyntaxErrorException($"The variable {node.VariableName} was already defined.", node.Range);
 

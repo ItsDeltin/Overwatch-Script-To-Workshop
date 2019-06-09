@@ -819,7 +819,7 @@ namespace Deltin.Deltinteger.Elements
             if (depth > 0)
                 return null;
             else
-                throw new SyntaxErrorException($"Could not parse the string {value}.", range);
+                throw new SyntaxErrorException($"Could not parse the string \"{value}\".", range);
         }
 
         private static string Escape(string value)

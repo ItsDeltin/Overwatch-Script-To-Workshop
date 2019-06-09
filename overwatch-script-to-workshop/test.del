@@ -1,23 +1,24 @@
 usevar globalvar A;
 usevar playervar A;
 
+define playervar isTargetted;
+
 rule: "Resurrect player then send message."
 {
-    SmallMessage(EventPlayer(), "avoided");
-    Resurrect(EventPlayer());
-    BigMessage(EventPlayer(), <"resurrected! try_again and survive!", EventPlayer()>);
-
-    define ahh = AllPlayers();
-    for (ahs in ahh)
+    define i = 0;
+    for (;;)
     {
-        SmallMessage(ahh[ahs], <"hello <0>! warning: <1> resurrected?", ahh[ahs], EventPlayer()>);
+        SmallMessage(EventPlayer(), i);
+    }
 
-    } // aaa woooo
-
-    define woooo = 1;
-
-    if(false)
+    for (player in AllPlayers())
     {
-         SmallMessage(EventPlayer(), woooo);
+        SmallMessage(AllPlayers()[player], "hello!");
+        AllPlayers()[player].isTargetted = true;
+    }
+
+    while (NumberOfPlayers() < 3)
+    {
+        SmallMessage(EventPlayer(), <"waiting form least <0> players", 3>); 
     }
 }

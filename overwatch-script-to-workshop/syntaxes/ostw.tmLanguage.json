@@ -15,7 +15,7 @@
 	"repository": {
 		"keywords": {
 			"name": "keyword.control.ostw",
-			"match": "\\b(if|while|for|return|in|define|rule|true|false|usevar)\\b"
+			"match": "\\b(if|else|while|for|return|in|define|rule|true|false|usevar|method)\\b"
 		},
 		"strings": {
 			"name": "string.quoted.double.ostw",

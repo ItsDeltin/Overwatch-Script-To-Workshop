@@ -65,18 +65,23 @@ statement :
 	| varset STATEMENT_END
 	| if
 	| for
+	| while
 	| define
 	| return
 	);
 
-block : BLOCK_START statement* BLOCK_END ;
+block : (BLOCK_START statement* BLOCK_END) | statement | STATEMENT_END ;
 
 for     : FOR LEFT_PAREN 
-	((PART IN expr) | ((define? | varset) STATEMENT_END expr? STATEMENT_END statement?))
+	((PART IN expr) | ((define | varset)? STATEMENT_END expr? STATEMENT_END statement?))
 	RIGHT_PAREN block;
+
+while   : WHILE LEFT_PAREN expr RIGHT_PAREN block             ;
+
 if      : IF LEFT_PAREN expr RIGHT_PAREN block else_if* else? ;
 else_if : ELSE IF LEFT_PAREN expr RIGHT_PAREN block           ;
 else    : ELSE block                                          ;
+
 return  : RETURN expr? STATEMENT_END                          ;
 
 rule_if : IF LEFT_PAREN (expr (COMMA expr)*) RIGHT_PAREN;
@@ -151,6 +156,7 @@ NULL      : 'null'      ;
 ARRAY     : 'array'     ;
 METHOD    : 'method'    ;
 RETURN    : 'return'    ;
+WHILE     : 'while'     ;
 //DATA_TYPE : 'Any' | 'VectorAndPlayer' | 'Number' | 'Boolean' | 'Hero' | 'Vector' | 'Player' | 'Team';
 
 EQUALS          : '='  ;

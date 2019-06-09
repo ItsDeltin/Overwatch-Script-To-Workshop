@@ -65,6 +65,9 @@ namespace Deltin.Deltinteger.Parse
 
         public override Node VisitUser_method(DeltinScriptParser.User_methodContext context)
         {
+            if (context.exception != null)
+                return null;
+
             string name = context.PART(0).GetText();
 
             string[] parameters = new string[context.PART().Length - 1];
@@ -312,7 +315,11 @@ namespace Deltin.Deltinteger.Parse
 
             IExpressionNode target = context.expr().Length == 2 ? (IExpressionNode)Visit(context.expr()[0]) : null;
             string variable = context.PART().GetText();
-            IExpressionNode index = (IExpressionNode)Visit(context.array().expr());
+            
+            IExpressionNode index = null;
+            if (context.array() != null)
+                index = (IExpressionNode)Visit(context.array().expr());
+            
             string operation = context.statement_operation().GetText();
             IExpressionNode value = (IExpressionNode)Visit(context.expr().Last());
 
@@ -326,11 +333,46 @@ namespace Deltin.Deltinteger.Parse
             if (context.exception != null)
                 return null;
             
-            IExpressionNode array = (IExpressionNode)Visit(context.expr());
-            string variable = context.PART().GetText();
+            Node node;
             BlockNode block = (BlockNode)VisitBlock(context.block());
 
-            Node node = new ForEachNode(variable, array, block, Range.GetRange(context));
+            if (context.IN() != null)
+            {
+                IExpressionNode array = (IExpressionNode)Visit(context.expr());
+                string variable = context.PART().GetText();
+                
+                node = new ForEachNode(variable, array, block, Range.GetRange(context));
+            }
+            else
+            {
+                VarSetNode varSet = null;
+                if (context.varset() != null)
+                    varSet = (VarSetNode)VisitVarset(context.varset());
+
+                IExpressionNode expression = null;
+                if (context.expr() != null)
+                    expression = (IExpressionNode)VisitExpr(context.expr());
+
+                IStatementNode statement = null;
+                if (context.statement() != null)
+                    statement = (IStatementNode)VisitStatement(context.statement());
+                
+                node = new ForNode(varSet, expression, statement, block, Range.GetRange(context));
+            }
+
+            CheckRange(node);
+            return node;
+        }
+
+        public override Node VisitWhile(DeltinScriptParser.WhileContext context)
+        {
+            if (context.exception != null)
+                return null;
+
+            BlockNode block = (BlockNode)VisitBlock(context.block());
+            IExpressionNode expression = (IExpressionNode)VisitExpr(context.expr());
+
+            Node node = new WhileNode(expression, block, Range.GetRange(context));
             CheckRange(node);
             return node;
         }
@@ -667,6 +709,34 @@ namespace Deltin.Deltinteger.Parse
         }
     }
 
+    public class ForNode : Node, IStatementNode
+    {
+        public VarSetNode VarSetNode { get; private set; }
+        public IExpressionNode Expression { get; private set; }
+        public IStatementNode Statement { get; private set; }
+        public BlockNode Block { get; private set; }
+
+        public ForNode(VarSetNode varSetNode, IExpressionNode expression, IStatementNode statement, BlockNode block, Range range) : base(range)
+        {
+            VarSetNode = varSetNode;
+            Expression = expression;
+            Statement = statement;
+            Block = block;
+        }
+    }
+
+    public class WhileNode : Node, IStatementNode
+    {
+        public IExpressionNode Expression { get; private set; }
+        public BlockNode Block { get; private set; }
+
+        public WhileNode(IExpressionNode expression, BlockNode block, Range range) : base(range)
+        {
+            Expression = expression;
+            Block = block;
+        }
+    }
+
     public class IfNode : Node, IStatementNode
     {
         public IfData IfData { get; private set; }
@@ -745,23 +815,23 @@ namespace Deltin.Deltinteger.Parse
             {
                 return new Range
                 (
-                    new Pos(context.start.Line, context.start.Column),
-                    new Pos(context.stop.Line, context.stop.Column + context.GetText().Length)
+                    new Pos(context.start.Line - 1, context.start.Column),
+                    new Pos(context.stop.Line - 1, context.stop.Column + context.GetText().Length)
                 );
             }
             else
             {
                 return new Range
                 (
-                    new Pos(context.start.Line, context.start.Column),
-                    new Pos(context.stop.Line, context.stop.Column)
+                    new Pos(context.start.Line - 1, context.start.Column),
+                    new Pos(context.stop.Line - 1, context.stop.Column)
                 );
             }
         }
 
         public static Range GetRange(IToken token)
         {
-            return new Range(new Pos(token.Line, token.StartIndex), new Pos(token.Line, token.StopIndex));
+            return new Range(new Pos(token.Line - 1, token.StartIndex), new Pos(token.Line - 1, token.StopIndex));
         }
 
         public bool IsInside(Pos pos)

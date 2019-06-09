@@ -1,6 +1,7 @@
 using System.Linq;
 using System.Collections.Generic;
 using Deltin.Deltinteger.Elements;
+using Deltin.Deltinteger.LanguageServer;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -28,9 +29,24 @@ namespace Deltin.Deltinteger.Parse
 
         public static readonly List<UserMethod> UserMethodCollection = new List<UserMethod>();
 
+        public override string ToString()
+        {
+            return Name + "(" + Parameter.ParameterGroupToString(Parameters) + ")";
+        }
+
         public static UserMethod GetUserMethod(string name)
         {
             return UserMethodCollection.FirstOrDefault(um => um.Name == name);
+        }
+
+        public static CompletionItem[] CollectionCompletion()
+        {
+            return UserMethodCollection.Select(method => 
+                new CompletionItem(method.ToString())
+                {
+                    kind = CompletionItem.Method
+                }
+            ).ToArray();
         }
     }
 }

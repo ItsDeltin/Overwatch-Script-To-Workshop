@@ -102,6 +102,16 @@ namespace Deltin.Deltinteger.Elements
 
             return null;
         }
+
+        public override string ToString()
+        {
+            return (ParameterType == ParameterType.Value ? ValueType.ToString() : EnumType.Name) + ": " + Name;
+        }
+
+        public static string ParameterGroupToString(Parameter[] parameters)
+        {
+            return string.Join(", ", parameters.Select(p => p.ToString()));
+        }
     }
 
     public abstract class Element : IWorkshopTree
@@ -138,7 +148,7 @@ namespace Deltin.Deltinteger.Elements
         {
             ElementData elementData = type.GetCustomAttribute<ElementData>();
             Parameter[] parameters = type.GetCustomAttributes<Parameter>().ToArray();
-            return $"{type.Name.Substring(2)}({string.Join(", ", parameters.Select(v => $"{(v.ParameterType == ParameterType.Value ? v.ValueType.ToString() : v.EnumType.Name)}: {v.Name}"))})";
+            return $"{type.Name.Substring(2)}({Parameter.ParameterGroupToString(parameters)})";
         }
 
         public Element(params object[] parameterValues)
@@ -213,6 +223,12 @@ namespace Deltin.Deltinteger.Elements
         protected virtual string[] AdditionalParameters()
         {
             return new string[0];
+        }
+
+        public static Element[] GenerateIf(Element condition, params Element[] actions)
+        {
+            Element skipIf = Element.Part<A_SkipIf>(Element.Part<V_Not>(condition), actions.Length);
+            return new Element[] { skipIf }.Concat(actions).ToArray();
         }
     }
 }

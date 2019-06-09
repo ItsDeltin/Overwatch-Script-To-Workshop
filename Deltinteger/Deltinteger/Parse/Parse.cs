@@ -146,7 +146,7 @@ namespace Deltin.Deltinteger.Parse
             ContinueSkip = new ContinueSkip(IsGlobal, Actions);
 
             ParseConditions(ruleNode.Conditions);
-            ParseBlock(ScopeGroup.Root.Child(), ruleNode.Block, false);
+            ParseBlock(ScopeGroup.Root.Child(), ruleNode.Block, false, Var.AssignVar(IsGlobal));
 
             Rule.Actions = Actions.ToArray();
             Rule.Conditions = Conditions.ToArray();
@@ -194,14 +194,12 @@ namespace Deltin.Deltinteger.Parse
                     {
                         if (left.ElementData.ValueType != Elements.ValueType.Any && left.ElementData.ValueType != Elements.ValueType.Boolean)
                         {
-                            //throw new SyntaxErrorException($"Expected boolean datatype, got {left .ElementData.ValueType.ToString()} instead.", ((Node)operationNode.Left).Range);
                             Diagnostics.Add(new Diagnostic($"Expected boolean, got {left .ElementData.ValueType.ToString()} instead.", ((Node)operationNode.Left).Range));
                             return null;
                         }
                         
                         if (right.ElementData.ValueType != Elements.ValueType.Any && right.ElementData.ValueType != Elements.ValueType.Boolean)
                         {
-                            //throw new SyntaxErrorException($"Expected boolean datatype, got {right.ElementData.ValueType.ToString()} instead.", ((Node)operationNode.Right).Range);
                             Diagnostics.Add(new Diagnostic($"Expected boolean, got {right.ElementData.ValueType.ToString()} instead.", ((Node)operationNode.Right).Range));
                             return null;
                         }
@@ -339,7 +337,10 @@ namespace Deltin.Deltinteger.Parse
             // Get the kind of method the method is (Method (Overwatch), Custom Method, or User Method.)
             var methodType = GetMethodType(methodNode.Name);
             if (methodType == null)
-                throw new SyntaxErrorException($"The method {methodNode.Name} does not exist.", methodNode.Range);
+            {
+                Diagnostics.Add(new Diagnostic($"The method {methodNode.Name} does not exist.", methodNode.Range));
+                return null;
+            }
 
             Element method;
             switch (methodType)
@@ -362,8 +363,11 @@ namespace Deltin.Deltinteger.Parse
                         else 
                         {
                             if (parameterData[i].ParameterType == ParameterType.Value && parameterData[i].DefaultType == null)
-                                throw new SyntaxErrorException($"Missing parameter \"{parameterData[i].Name}\" in the method \"{methodNode.Name}\" and no default type to fallback on.", 
-                                    methodNode.Range);
+                            {
+                                Diagnostics.Add(new Diagnostic($"Missing parameter \"{parameterData[i].Name}\" in the method \"{methodNode.Name}\" and no default type to fallback on.", 
+                                    methodNode.Range));
+                                return null;
+                            }
                             else
                                 parsedParameters.Add(parameterData[i].GetDefault());
                         }
@@ -383,12 +387,16 @@ namespace Deltin.Deltinteger.Parse
                         if (methodNode.Parameters.Length > i)
                             parsedParameters[i] = ParseParameter(scope, methodNode.Parameters[i], methodNode.Name, parameterData[i]);
                         else
-                            throw new SyntaxErrorException($"Missing parameter \"{parameterData[i].Name}\" in the method \"{methodNode.Name}\" and no default type to fallback on.", 
-                                methodNode.Range);
+                        {
+                            Diagnostics.Add(new Diagnostic($"Missing parameter \"{parameterData[i].Name}\" in the method \"{methodNode.Name}\" and no default type to fallback on.", 
+                                methodNode.Range));
+                            return null;
+                        }
 
                     MethodResult result = (MethodResult)customMethod.Invoke(null, new object[] { IsGlobal, parsedParameters });
                     switch (result.MethodType)
                     {
+                        #warning todo replace throws with Diagnostics.Add
                         case CustomMethodType.Action:
                             if (needsToBeValue)
                                 throw new IncorrectElementTypeException(methodNode.Name, true);
@@ -411,33 +419,39 @@ namespace Deltin.Deltinteger.Parse
 
                 case MethodType.UserMethod:
                 {
-                    using (var methodScope = ScopeGroup.Root.Child())
+                    var methodScope = ScopeGroup.Root.Child();
+
+                    UserMethod userMethod = UserMethod.GetUserMethod(methodNode.Name);
+
+                    // Add the parameter variables to the scope.
+                    DefinedVar[] parameterVars = new DefinedVar[userMethod.Parameters.Length];
+                    for (int i = 0; i < parameterVars.Length; i++)
                     {
-                        UserMethod userMethod = UserMethod.GetUserMethod(methodNode.Name);
-
-                        // Add the parameter variables to the scope.
-                        DefinedVar[] parameterVars = new DefinedVar[userMethod.Parameters.Length];
-                        for (int i = 0; i < parameterVars.Length; i++)
+                        if (methodNode.Parameters.Length > i)
                         {
-                            if (methodNode.Parameters.Length > i)
-                            {
-                                // Create a new variable using the parameter input.
-                                parameterVars[i] = DefinedVar.AssignDefinedVar(methodScope, IsGlobal, userMethod.Parameters[i].Name, methodNode.Range);
-                                Actions.Add(parameterVars[i].SetVariable(ParseExpression(scope, methodNode.Parameters[i])));
-                            }
-                            else throw new SyntaxErrorException($"Missing parameter \"{userMethod.Parameters[i].Name}\" in the method \"{methodNode.Name}\".",
-                                methodNode.Range);
+                            // Create a new variable using the parameter input.
+                            parameterVars[i] = DefinedVar.AssignDefinedVar(methodScope, IsGlobal, userMethod.Parameters[i].Name, methodNode.Range);
+                            Actions.Add(parameterVars[i].SetVariable(ParseExpression(scope, methodNode.Parameters[i])));
                         }
-
-                        method = ParseBlock(methodScope.Child(), userMethod.Block, true);
-                        // No return value if the method is being used as an action.
-                        if (!needsToBeValue)
-                            method = null;
-                        break;
+                        else 
+                        {
+                            Diagnostics.Add(new Diagnostic($"Missing parameter \"{userMethod.Parameters[i].Name}\" in the method \"{methodNode.Name}\".",
+                                methodNode.Range));
+                            return null;
+                        }
                     }
+
+                    var returns = Var.AssignVar(IsGlobal);
+                    ParseBlock(methodScope.Child(), userMethod.Block, true, returns);
+                    // No return value if the method is being used as an action.
+                    if (needsToBeValue)
+                        method = returns.GetVariable();
+                    else
+                        method = null;
+                    break;
                 }
 
-                default: throw new NotImplementedException(); // Keep the compiler from complaining about method not being set.
+                default: throw new NotImplementedException();
             }
 
             methodNode.RelatedElement = method;
@@ -453,12 +467,18 @@ namespace Deltin.Deltinteger.Parse
                 case EnumNode enumNode:
 
                     if (parameterData.ParameterType != ParameterType.Enum)
-                        throw new SyntaxErrorException($"Expected value type \"{parameterData.ValueType.ToString()}\" on {methodName}'s parameter \"{parameterData.Name}\"."
-                            , enumNode.Range);
+                    {
+                        Diagnostics.Add(new Diagnostic($"Expected value type \"{parameterData.ValueType.ToString()}\" on {methodName}'s parameter \"{parameterData.Name}\"."
+                            , enumNode.Range));
+                            return null;
+                    }
 
                     if (enumNode.Type != parameterData.EnumType.Name)
-                        throw new SyntaxErrorException($"Expected enum type \"{parameterData.EnumType.ToString()}\" on {methodName}'s parameter \"{parameterData.Name}\"."
-                            , enumNode.Range);
+                    {
+                        Diagnostics.Add(new Diagnostic($"Expected enum type \"{parameterData.EnumType.ToString()}\" on {methodName}'s parameter \"{parameterData.Name}\"."
+                            , enumNode.Range));
+                        return null;
+                    }
 
                     try
                     {
@@ -466,8 +486,9 @@ namespace Deltin.Deltinteger.Parse
                     }
                     catch (Exception ex) when (ex is ArgumentNullException || ex is ArgumentException || ex is OverflowException)
                     {
-                        throw new SyntaxErrorException($"The value {enumNode.Value} does not exist in the enum {enumNode.Type}."
-                            , enumNode.Range);
+                        Diagnostics.Add(new Diagnostic($"The value {enumNode.Value} does not exist in the enum {enumNode.Type}."
+                            , enumNode.Range));
+                        return null;
                     }
                     
                     break;
@@ -475,8 +496,11 @@ namespace Deltin.Deltinteger.Parse
                 default:
 
                     if (parameterData.ParameterType != ParameterType.Value)
-                    throw new SyntaxErrorException($"Expected enum type \"{parameterData.EnumType.Name}\" on {methodName}'s parameter \"{parameterData.Name}\"."
-                        , ((Node)node).Range);
+                    {
+                        Diagnostics.Add(new Diagnostic($"Expected enum type \"{parameterData.EnumType.Name}\" on {methodName}'s parameter \"{parameterData.Name}\"."
+                            , ((Node)node).Range));
+                        return null;
+                    }
 
                     value = ParseExpression(scope, node);
 
@@ -484,20 +508,26 @@ namespace Deltin.Deltinteger.Parse
                     ElementData elementData = element.GetType().GetCustomAttribute<ElementData>();
 
                     if (elementData.ValueType != Elements.ValueType.Any &&
-                        !parameterData.ValueType.HasFlag(elementData.ValueType))
-                        throw new SyntaxErrorException($"Expected value type \"{parameterData.ValueType.ToString()}\" on {methodName}'s parameter \"{parameterData.Name}\", got \"{elementData.ValueType.ToString()}\" instead."
-                            , ((Node)node).Range);
+                    !parameterData.ValueType.HasFlag(elementData.ValueType))
+                    {
+                        Diagnostics.Add(new Diagnostic($"Expected value type \"{parameterData.ValueType.ToString()}\" on {methodName}'s parameter \"{parameterData.Name}\", got \"{elementData.ValueType.ToString()}\" instead."
+                            , ((Node)node).Range));
+                        return null;
+                    }
 
                     break;
             }
 
             if (value == null)
-                throw new SyntaxErrorException("Could not parse parameter.", ((Node)node).Range);
+            {
+                Diagnostics.Add(new Diagnostic("Could not parse parameter.", ((Node)node).Range));
+                return null;
+            }
 
             return value;
         }
     
-        private static MethodType? GetMethodType(string name)
+        public static MethodType? GetMethodType(string name)
         {
             if (Element.GetMethod(name) != null)
                 return MethodType.Method;
@@ -508,25 +538,26 @@ namespace Deltin.Deltinteger.Parse
             return null;
         }
 
-        private enum MethodType
+        public enum MethodType
         {
             Method,
             CustomMethod,
             UserMethod
         }
 
-        Element ParseBlock(ScopeGroup scopeGroup, BlockNode blockNode, bool fulfillReturns)
+        void ParseBlock(ScopeGroup scopeGroup, BlockNode blockNode, bool fulfillReturns, Var returnVar)
         {
+            if (scopeGroup == null)
+                throw new ArgumentNullException(nameof(scopeGroup));
+
             blockNode.RelatedScopeGroup = scopeGroup;
 
             int returnSkipStart = ReturnSkips.Count;
 
-            Var returned = null;
-            if (fulfillReturns)
-                returned = Var.AssignVar(IsGlobal);
+            //returned = Var.AssignVar(IsGlobal);
             
             for (int i = 0; i < blockNode.Statements.Length; i++)
-                ParseStatement(scopeGroup, blockNode.Statements[i], returned, i == blockNode.Statements.Length - 1);
+                ParseStatement(scopeGroup, blockNode.Statements[i], returnVar, i == blockNode.Statements.Length - 1);
 
             if (fulfillReturns)
             {
@@ -538,13 +569,13 @@ namespace Deltin.Deltinteger.Parse
                     };
                     ReturnSkips.RemoveAt(i);
                 }
-                return returned.GetVariable();
+                //return returnVar.GetVariable();
             }
 
-            return null;
+            //return null;
         }
 
-        void ParseStatement(ScopeGroup scope, IStatementNode statement, Var returned, bool isLast)
+        void ParseStatement(ScopeGroup scope, IStatementNode statement, Var returnVar, bool isLast)
         {
             switch (statement)
             {
@@ -557,7 +588,9 @@ namespace Deltin.Deltinteger.Parse
                 
                 // Variable set
                 case VarSetNode varSetNode:
-
+                    ParseVarset(scope, varSetNode);
+                    return;
+                    /*
                     DefinedVar variable = scope.GetVar(varSetNode.Variable, varSetNode.Range);
                     Element target = ParseExpression(scope, varSetNode.Target);
                     Element value = ParseExpression(scope, varSetNode.Value);
@@ -591,7 +624,7 @@ namespace Deltin.Deltinteger.Parse
                     }
 
                     Actions.Add(variable.SetVariable(value, target, index));
-                    return;
+                    */
 
                 // For
                 case ForEachNode forEachNode:
@@ -615,10 +648,7 @@ namespace Deltin.Deltinteger.Parse
                     Actions.Add(forTempVar.SetVariable(new V_Number(0)));
 
                     // Parse the for's block.
-                    ParseBlock(forGroup, forEachNode.Block, false);
-
-                    // Take the variable out of scope.
-                    forGroup.Out();
+                    ParseBlock(forGroup, forEachNode.Block, false, returnVar);
 
                     // Add the for's finishing elements
                     Actions.Add(forTempVar.SetVariable( // Indent the index by 1.
@@ -647,17 +677,89 @@ namespace Deltin.Deltinteger.Parse
                     return;
                 }
 
+                // For
+                case ForNode forNode:
+                {
+                    ContinueSkip.Setup();
+
+                    // The action the for loop starts on.
+                    int forActionStartIndex = Actions.Count() - 2;
+
+                    ScopeGroup forGroup = scope.Child();
+
+                    // Set the variable
+                    if (forNode.VarSetNode != null)
+                        ParseVarset(scope, forNode.VarSetNode);
+
+                    // Parse the for's block.
+                    ParseBlock(forGroup, forNode.Block, false, returnVar);
+
+                    Element expression = null;
+                    if (forNode.Expression != null)
+                        expression = ParseExpression(forGroup, forNode.Expression);
+
+                    // Check the expression
+                    if (forNode.Expression != null) // If it has an expression
+                    {
+                        A_SkipIf comparer = new A_SkipIf() { ParameterValues = new object[2] };
+                        comparer.ParameterValues[0] = Element.Part<V_Not>(expression);
+                        Actions.Add(comparer);
+
+                        int actionsBeforeStatement = Actions.Count;
+                        // Parse the statement
+                        if (forNode.Statement != null)
+                            ParseStatement(forGroup, forNode.Statement, returnVar, false);
+
+                        // Set the skip if's skip count.
+                        comparer.ParameterValues[1] = new V_Number((Actions.Count - actionsBeforeStatement) + 1); // Add +1 to compensate for the loop being added later.
+                    }
+                    // If there is no expression but there is a statement, parse the statement.
+                    else if (forNode.Statement != null)
+                    {
+                        ParseStatement(forGroup, forNode.Statement, returnVar, false);
+                    }
+
+                    ContinueSkip.SetSkipCount(forActionStartIndex);
+
+                    // Add the loop
+                    Actions.Add(Element.Part<A_Loop>());
+
+                    ContinueSkip.ResetSkip();
+                    return;
+                }
+
+                // While
+                case WhileNode whileNode:
+                {
+                    ContinueSkip.Setup();
+
+                    // The action the while loop starts on.
+                    int whileStartIndex = Actions.Count() - 2;
+
+                    ScopeGroup whileGroup = scope.Child();
+
+                    ParseBlock(whileGroup, whileNode.Block, false, returnVar);
+
+                    ContinueSkip.SetSkipCount(whileStartIndex);
+
+                    // Add the loop-if
+                    Element expression = ParseExpression(scope, whileNode.Expression);
+                    Actions.Add(Element.Part<A_LoopIf>(expression));
+
+                    ContinueSkip.ResetSkip();
+                    return;
+                }
+
                 // If
                 case IfNode ifNode:
                 {
                     A_SkipIf if_SkipIf = new A_SkipIf();
                     Actions.Add(if_SkipIf);
 
-                    using (var ifScope = scope.Child())
-                    {
-                        // Parse the if body.
-                        ParseBlock(ifScope, ifNode.IfData.Block, false);
-                    }
+                    var ifScope = scope.Child();
+
+                    // Parse the if body.
+                    ParseBlock(ifScope, ifNode.IfData.Block, false, returnVar);
 
                     // Determines if the "Skip" action after the if block will be created.
                     // Only if there is if-else or else statements.
@@ -687,10 +789,8 @@ namespace Deltin.Deltinteger.Parse
                         Actions.Add(elseif_SkipIf);
 
                         // Parse the else-if body.
-                        using (var elseifScope = scope.Child())
-                        {
-                            ParseBlock(elseifScope, ifNode.ElseIfData[i].Block, false);
-                        }
+                        var elseifScope = scope.Child();
+                        ParseBlock(elseifScope, ifNode.ElseIfData[i].Block, false, returnVar);
 
                         // Determines if the "Skip" action after the else-if block will be created.
                         // Only if there is additional if-else or else statements.
@@ -713,8 +813,10 @@ namespace Deltin.Deltinteger.Parse
 
                     // Parse else body.
                     if (ifNode.ElseBlock != null)
-                        using (var elseScope = scope.Child())
-                            ParseBlock(elseScope, ifNode.ElseBlock, false);
+                    {
+                        var elseScope = scope.Child();
+                        ParseBlock(elseScope, ifNode.ElseBlock, false, returnVar);
+                    }
 
                     // Replace dummy skip with real skip now that we know the length of the if, if-else, and else's bodies.
                     // Replace if's dummy.
@@ -741,7 +843,7 @@ namespace Deltin.Deltinteger.Parse
                     if (returnNode.Value != null)
                     {
                         Element result = ParseExpression(scope, returnNode.Value);
-                        Actions.Add(returned.SetVariable(result));
+                        Actions.Add(returnVar.SetVariable(result));
                     }
 
                     if (!isLast)
@@ -764,6 +866,51 @@ namespace Deltin.Deltinteger.Parse
 
                     return;
             }
+        }
+
+        void ParseVarset(ScopeGroup scope, VarSetNode varSetNode)
+        {
+            DefinedVar variable = scope.GetVar(varSetNode.Variable, varSetNode.Range);
+
+            Element target = null;
+            if (varSetNode.Target != null) 
+                ParseExpression(scope, varSetNode.Target);
+            
+            Element value = ParseExpression(scope, varSetNode.Value);
+
+            Element index = null;
+            if (varSetNode.Index != null)
+                index = ParseExpression(scope, varSetNode.Index);
+
+            switch (varSetNode.Operation)
+            {
+                case "+=":
+                    value = Element.Part<V_Add>(variable.GetVariable(target, index), value);
+                    break;
+
+                case "-=":
+                    value = Element.Part<V_Subtract>(variable.GetVariable(target, index), value);
+                    break;
+
+                case "*=":
+                    value = Element.Part<V_Multiply>(variable.GetVariable(target, index), value);
+                    break;
+
+                case "/=":
+                    value = Element.Part<V_Divide>(variable.GetVariable(target, index), value);
+                    break;
+
+                case "^=":
+                    value = Element.Part<V_RaiseToPower>(variable.GetVariable(target, index), value);
+                    break;
+
+                case "%=":
+                    value = Element.Part<V_Modulo>(variable.GetVariable(target, index), value);
+                    break;
+            }
+
+            Actions.Add(variable.SetVariable(value, target, index));
+            return;
         }
     }
 

@@ -129,7 +129,7 @@ namespace Deltin.Deltinteger.LanguageServer
 
             string document = inputJson.textDocument;
 
-            int line      = inputJson.caret.line + 1;
+            int line      = inputJson.caret.line;
             int character = inputJson.caret.character;
             Pos caret = new Pos(line, character);
 
@@ -154,7 +154,9 @@ namespace Deltin.Deltinteger.LanguageServer
                 case BlockNode blockNode:
 
                     // Get all variables
-                    completion = blockNode.RelatedScopeGroup.GetCompletionItems()
+                    completion = blockNode.RelatedScopeGroup?.GetCompletionItems()
+                        // Get custom methods
+                        .Concat(UserMethod.CollectionCompletion())
                         // Get all action methods
                         .Concat(Element.ActionList.Select(m => 
                             new CompletionItem(m.Name.Substring(2))
@@ -170,10 +172,12 @@ namespace Deltin.Deltinteger.LanguageServer
                 case MethodNode methodNode:
 
                     completion = methodNode.RelatedScopeGroup.GetCompletionItems()
+                        // Get custom methods
+                        .Concat(UserMethod.CollectionCompletion())
                         .Concat(Element.ValueList.Select(m => 
                             new CompletionItem(m.Name.Substring(2))
                             {
-                                kind = CompletionItem.Method,
+                                kind = CompletionItem.Constant,
                                 detail = ((Element)Activator.CreateInstance(m)).ToString(),
                             }
                         )).ToArray();
@@ -216,7 +220,7 @@ namespace Deltin.Deltinteger.LanguageServer
             dynamic inputJson = JsonConvert.DeserializeObject(json);
             string document = inputJson.textDocument;
 
-            int line      = inputJson.caret.line + 1;
+            int line      = inputJson.caret.line;
             int character = inputJson.caret.character;
             Pos caret = new Pos(line, character);
 
@@ -273,7 +277,7 @@ namespace Deltin.Deltinteger.LanguageServer
             dynamic inputJson = JsonConvert.DeserializeObject(json);
             string document = inputJson.textDocument;
 
-            int line      = inputJson.caret.line + 1;
+            int line      = inputJson.caret.line;
             int character = inputJson.caret.character;
             Pos caret = new Pos(line, character);
 
@@ -283,7 +287,27 @@ namespace Deltin.Deltinteger.LanguageServer
             switch (parser.Bav.SelectedNode[0])
             {
                 case MethodNode methodNode:
-                    hover = new Hover(new MarkupContent(MarkupContent.Markdown, methodNode.RelatedElement.ToString()));
+
+                    var type = Translate.GetMethodType(methodNode.Name);
+
+                    if (type == null)
+                        hover = null;
+                    
+                    Parameter[] parameters;
+                    if (type == Translate.MethodType.Method)
+                        parameters = Element.GetMethod(methodNode.Name).GetCustomAttributes<Parameter>()
+                            .ToArray();
+                    else if (type == Translate.MethodType.CustomMethod)
+                        parameters = CustomMethods.GetCustomMethod(methodNode.Name).GetCustomAttributes<Parameter>()
+                            .ToArray();
+                    else if (type == Translate.MethodType.UserMethod)
+                        parameters = UserMethod.GetUserMethod(methodNode.Name).Parameters;
+                    else parameters = null;
+
+                    hover = new Hover(new MarkupContent(MarkupContent.Markdown, methodNode.Name + "(" + Parameter.ParameterGroupToString(parameters) + ")"))
+                    {
+                        range = methodNode.Range
+                    };
                     break;
                 
                 default:

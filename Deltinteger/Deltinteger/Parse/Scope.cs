@@ -6,7 +6,7 @@ using Deltin.Deltinteger.LanguageServer;
 
 namespace Deltin.Deltinteger.Parse
 {
-    public class ScopeGroup : IDisposable
+    public class ScopeGroup
     {
         private ScopeGroup() {}
 
@@ -18,11 +18,6 @@ namespace Deltin.Deltinteger.Parse
         public void In(DefinedVar var)
         {
             InScope.Add(var);
-        }
-
-        public void Out()
-        {
-            Parent.Children.Remove(this);
         }
 
         public bool IsVar(string name)
@@ -74,12 +69,7 @@ namespace Deltin.Deltinteger.Parse
                 kind = CompletionItem.Field
             }).ToArray();
         }
-
-        public void Dispose()
-        {
-            Out();
-        }
-
+        
         private readonly List<DefinedVar> InScope = new List<DefinedVar>();
 
         private readonly List<ScopeGroup> Children = new List<ScopeGroup>();
