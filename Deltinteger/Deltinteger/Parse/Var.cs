@@ -1,25 +1,19 @@
 using System;
 using System.Collections.Generic;
 using Deltin.Deltinteger.Elements;
+using Deltin.Deltinteger.LanguageServer;
 using Antlr4.Runtime;
 
 namespace Deltin.Deltinteger.Parse
 {
-    public class Var
+    public class VarCollection
     {
-        public static Variable Global { get; private set; }
-        public static Variable Player { get; private set; }
+        private int NextFreeGlobalIndex = 0;
+        private int NextFreePlayerIndex = 0;
 
-        private static int NextFreeGlobalIndex { get; set; }
-        private static int NextFreePlayerIndex { get; set; }
+        public Variable UseVar = Variable.A;
 
-        public static void Setup(Variable global, Variable player)
-        {
-            Global = global;
-            Player = player;
-        }
-
-        public static int Assign(bool isGlobal)
+        public int Assign(bool isGlobal)
         {
             if (isGlobal)
             {
@@ -35,26 +29,20 @@ namespace Deltin.Deltinteger.Parse
             }
         }
 
-        private static Variable GetVar(bool isGlobal)
+        public Var AssignVar(bool isGlobal)
         {
-            if (isGlobal)
-                return Global;
-            else
-                return Player;
+            return new Var(isGlobal, UseVar, Assign(isGlobal));
         }
 
-        public static Var AssignVar(bool isGlobal)
+        public DefinedVar AssignDefinedVar(ScopeGroup scopeGroup, bool isGlobal, string name, Range range, List<Diagnostic> diagnostics)
         {
-            return new Var(isGlobal, GetVar(isGlobal), Assign(isGlobal));
+            DefinedVar var = new DefinedVar(scopeGroup, name, isGlobal, UseVar, Assign(isGlobal), range, diagnostics);
+            return var;
         }
+    }
 
-        public static DefinedVar AssignDefinedVar(ScopeGroup scopeGroup, bool isGlobal, string name, Range range)
-        {
-            return new DefinedVar(scopeGroup, name, isGlobal, GetVar(isGlobal), Assign(isGlobal), range);
-        }
-
-
-
+    public class Var
+    {
         public bool IsGlobal { get; protected set; }
         public Variable Variable { get; protected set; }
 
@@ -68,9 +56,6 @@ namespace Deltin.Deltinteger.Parse
             Index = index;
             IsInArray = index != -1;
         }
-
-        protected Var()
-        {}
 
         public Element GetVariable(Element targetPlayer = null, Element getAiIndex = null)
         {
@@ -178,54 +163,26 @@ namespace Deltin.Deltinteger.Parse
     {
         public string Name { get; protected set; }
 
-        public DefinedVar(ScopeGroup scopeGroup, DefinedNode node, )
+        public DefinedVar(ScopeGroup scopeGroup, DefinedNode node, List<Diagnostic> diagnostics, VarCollection varCollection)
+            : base(node.IsGlobal, varCollection.UseVar, node.UseIndex ?? varCollection.Assign(node.IsGlobal))
         {
             IsGlobal = node.IsGlobal;
 
-            // TODO replace throw with diagnostics push.
             if (scopeGroup.IsVar(node.VariableName))
-                throw new SyntaxErrorException($"The variable {node.VariableName} was already defined.", node.Range);
+                diagnostics.Add(new Diagnostic($"The variable {node.VariableName} was already defined.", node.Range));
 
             Name = node.VariableName;
-
-            if (node.UseVar == null)
-            {
-                Index = Var.Assign(IsGlobal);
-
-                if (IsGlobal)
-                    Variable = Var.Global;
-                else
-                    Variable = Var.Player;
-
-                IsInArray = true;
-            }
-            else
-            {
-                Variable = (Variable)node.UseVar;
-                if (node.UseIndex != null)
-                {
-                    IsInArray = true;
-                    Index = (int)node.UseIndex;
-                }
-            }
 
             scopeGroup.In(this);
         }
 
-        public DefinedVar(ScopeGroup scopeGroup, string name, bool isGlobal, Variable variable, int index, Range range)
+        public DefinedVar(ScopeGroup scopeGroup, string name, bool isGlobal, Variable variable, int index, Range range, List<Diagnostic> diagnostics)
+            : base (isGlobal, variable, index)
         {
             if (scopeGroup.IsVar(name))
-                throw new SyntaxErrorException($"The variable {name} was already defined.", range);
+                diagnostics.Add(new Diagnostic($"The variable {name} was already defined.", range) { severity = Diagnostic.Error });
 
             Name = name;
-            IsGlobal = isGlobal;
-            Variable = variable;
-
-            if (index != -1)
-            {
-                IsInArray = true;
-                Index = index;
-            }
 
             scopeGroup.In(this);
         }

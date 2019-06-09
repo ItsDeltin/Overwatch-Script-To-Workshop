@@ -25,12 +25,12 @@ namespace Deltin.Deltinteger.Parse
             // List all variables
             Log.Write(LogLevel.Normal, new ColorMod("Variable Guide:", ConsoleColor.Blue));
 
-            if (ScopeGroup.Root.VarCollection().Count > 0)
+            if (parserData.Root.VarCollection().Count > 0)
             {
-                int nameLength = ScopeGroup.Root.VarCollection().Max(v => v.Name.Length);
+                int nameLength = parserData.Root.VarCollection().Max(v => v.Name.Length);
 
                 bool other = false;
-                foreach (DefinedVar var in ScopeGroup.Root.VarCollection())
+                foreach (DefinedVar var in parserData.Root.VarCollection())
                 {
                     ConsoleColor textcolor = other ? ConsoleColor.White : ConsoleColor.DarkGray;
                     other = !other;
@@ -77,31 +77,29 @@ namespace Deltin.Deltinteger.Parse
             BuildAstVisitor bav = new BuildAstVisitor(documentPos);
             RulesetNode ruleSetNode = (RulesetNode)bav.Visit(ruleSetContext);
 
-            Var.Setup(ruleSetNode.UseGlobalVar, ruleSetNode.UsePlayerVar);
+            List<Diagnostic> diagnostics = new List<Diagnostic>();
+            diagnostics.AddRange(errorListener.Errors);
+
+            VarCollection vars = new VarCollection();
+            ScopeGroup root = new ScopeGroup();
+            List<UserMethod> userMethods = new List<UserMethod>();
 
             foreach (var definedVar in ruleSetNode.DefinedVars)
                 // The new var is stored in Var.VarCollection
-                new DefinedVar(ScopeGroup.Root, definedVar);
+                vars.AssignDefinedVar(root, definedVar.IsGlobal, definedVar.VariableName, definedVar.Range, diagnostics);
 
             // Get the user methods.
             for (int i = 0; i < ruleSetNode.UserMethods.Length; i++)
-                new UserMethod(ruleSetNode.UserMethods[i]); 
+                userMethods.Add(new UserMethod(ruleSetNode.UserMethods[i]));
 
             // Parse the rules.
             Rule[] rules = new Rule[ruleSetNode.Rules.Length];
 
             for (int i = 0; i < rules.Length; i++)
             {
-                try
-                {
-                    var result = Translate.GetRule(ruleSetNode.Rules[i]);
-                    rules[i] = result.Rule;
-                    errorListener.Errors.AddRange(result.Diagnostics);
-                }
-                catch (SyntaxErrorException ex)
-                {
-                    errorListener.Error(ex.Message, ex.Range);
-                }
+                var result = Translate.GetRule(ruleSetNode.Rules[i], root, vars, userMethods.ToArray());
+                rules[i] = result.Rule;
+                diagnostics.AddRange(result.Diagnostics);
             }
             
             return new ParserElements()
@@ -110,27 +108,35 @@ namespace Deltin.Deltinteger.Parse
                 RulesetContext = ruleSetContext,
                 RuleSetNode = ruleSetNode,
                 Bav = bav,
-                ErrorListener = errorListener,
-                Rules = rules
+                Diagnostics = diagnostics,
+                Rules = rules,
+                UserMethods = userMethods.ToArray(),
+                Root = root
             };
         }
 
         public DeltinScriptParser Parser { get; private set; }
         public DeltinScriptParser.RulesetContext RulesetContext { get; private set; }
         public RulesetNode RuleSetNode { get; private set; }
-        public ErrorListener ErrorListener { get; private set; } 
+        //public ErrorListener ErrorListener { get; private set; } 
+        public List<Diagnostic> Diagnostics;
         public BuildAstVisitor Bav { get; private set; }
         public Rule[] Rules { get; private set; }
+        public UserMethod[] UserMethods { get; private set; }
+        public ScopeGroup Root { get; private set; }
     }
 
     class Translate
     {
-        public static TranslateResult GetRule(RuleNode ruleNode)
+        public static TranslateResult GetRule(RuleNode ruleNode, ScopeGroup root, VarCollection varCollection, UserMethod[] userMethods)
         {
-            var result = new Translate(ruleNode);
+            var result = new Translate(ruleNode, root, varCollection, userMethods);
             return new TranslateResult(result.Rule, result.Diagnostics.ToArray());
         }
 
+        private readonly ScopeGroup Root;
+        private readonly VarCollection VarCollection;
+        private readonly UserMethod[] UserMethods;
         private readonly Rule Rule;
         private readonly List<Element> Actions = new List<Element>();
         private readonly List<Condition> Conditions = new List<Condition>();
@@ -139,14 +145,18 @@ namespace Deltin.Deltinteger.Parse
         private readonly ContinueSkip ContinueSkip; // Contains data about the wait/skip for continuing loops.
         private readonly List<Diagnostic> Diagnostics = new List<Diagnostic>();
 
-        private Translate(RuleNode ruleNode)
+        private Translate(RuleNode ruleNode, ScopeGroup root, VarCollection varCollection, UserMethod[] userMethods)
         {
+            Root = root;
+            VarCollection = varCollection;
+            UserMethods = userMethods;
+
             Rule = new Rule(ruleNode.Name);
 
-            ContinueSkip = new ContinueSkip(IsGlobal, Actions);
+            ContinueSkip = new ContinueSkip(IsGlobal, Actions, varCollection);
 
             ParseConditions(ruleNode.Conditions);
-            ParseBlock(ScopeGroup.Root.Child(), ruleNode.Block, false, Var.AssignVar(IsGlobal));
+            ParseBlock(root.Child(), ruleNode.Block, false, varCollection.AssignVar(IsGlobal));
 
             Rule.Actions = Actions.ToArray();
             Rule.Conditions = Conditions.ToArray();
@@ -161,7 +171,7 @@ namespace Deltin.Deltinteger.Parse
         {
             foreach(var expr in expressions)
             {
-                Element parsedIf = ParseExpression(ScopeGroup.Root, expr);
+                Element parsedIf = ParseExpression(Root, expr);
                 // If the parsed if is a V_Compare, translate it to a condition.
                 // Makes "(value1 == value2) == true" to just "value1 == value2"
                 if (parsedIf is V_Compare)
@@ -335,7 +345,7 @@ namespace Deltin.Deltinteger.Parse
             methodNode.RelatedScopeGroup = scope;
 
             // Get the kind of method the method is (Method (Overwatch), Custom Method, or User Method.)
-            var methodType = GetMethodType(methodNode.Name);
+            var methodType = GetMethodType(UserMethods, methodNode.Name);
             if (methodType == null)
             {
                 Diagnostics.Add(new Diagnostic($"The method {methodNode.Name} does not exist.", methodNode.Range));
@@ -393,7 +403,7 @@ namespace Deltin.Deltinteger.Parse
                             return null;
                         }
 
-                    MethodResult result = (MethodResult)customMethod.Invoke(null, new object[] { IsGlobal, parsedParameters });
+                    MethodResult result = (MethodResult)customMethod.Invoke(null, new object[] { IsGlobal, VarCollection, parsedParameters });
                     switch (result.MethodType)
                     {
                         #warning todo replace throws with Diagnostics.Add
@@ -419,9 +429,9 @@ namespace Deltin.Deltinteger.Parse
 
                 case MethodType.UserMethod:
                 {
-                    var methodScope = ScopeGroup.Root.Child();
+                    var methodScope = Root.Child();
 
-                    UserMethod userMethod = UserMethod.GetUserMethod(methodNode.Name);
+                    UserMethod userMethod = UserMethod.GetUserMethod(UserMethods, methodNode.Name);
 
                     // Add the parameter variables to the scope.
                     DefinedVar[] parameterVars = new DefinedVar[userMethod.Parameters.Length];
@@ -430,7 +440,7 @@ namespace Deltin.Deltinteger.Parse
                         if (methodNode.Parameters.Length > i)
                         {
                             // Create a new variable using the parameter input.
-                            parameterVars[i] = DefinedVar.AssignDefinedVar(methodScope, IsGlobal, userMethod.Parameters[i].Name, methodNode.Range);
+                            parameterVars[i] = VarCollection.AssignDefinedVar(methodScope, IsGlobal, userMethod.Parameters[i].Name, methodNode.Range, Diagnostics);
                             Actions.Add(parameterVars[i].SetVariable(ParseExpression(scope, methodNode.Parameters[i])));
                         }
                         else 
@@ -441,7 +451,7 @@ namespace Deltin.Deltinteger.Parse
                         }
                     }
 
-                    var returns = Var.AssignVar(IsGlobal);
+                    var returns = VarCollection.AssignVar(IsGlobal);
                     ParseBlock(methodScope.Child(), userMethod.Block, true, returns);
                     // No return value if the method is being used as an action.
                     if (needsToBeValue)
@@ -527,13 +537,13 @@ namespace Deltin.Deltinteger.Parse
             return value;
         }
     
-        public static MethodType? GetMethodType(string name)
+        public static MethodType? GetMethodType(UserMethod[] userMethods, string name)
         {
             if (Element.GetMethod(name) != null)
                 return MethodType.Method;
             if (CustomMethods.GetCustomMethod(name) != null)
                 return MethodType.CustomMethod;
-            if (UserMethod.GetUserMethod(name) != null)
+            if (UserMethod.GetUserMethod(userMethods, name) != null)
                 return MethodType.UserMethod;
             return null;
         }
@@ -637,11 +647,12 @@ namespace Deltin.Deltinteger.Parse
                     ScopeGroup forGroup = scope.Child();
 
                     // Create the for's temporary variable.
-                    DefinedVar forTempVar = Var.AssignDefinedVar(
+                    DefinedVar forTempVar = VarCollection.AssignDefinedVar(
                         scopeGroup: forGroup,
                         name      : forEachNode.Variable,
                         isGlobal  : IsGlobal,
-                        range     : forEachNode.Range
+                        range     : forEachNode.Range,
+                        diagnostics: Diagnostics
                         );
 
                     // Reset the counter.
@@ -683,7 +694,7 @@ namespace Deltin.Deltinteger.Parse
                     ContinueSkip.Setup();
 
                     // The action the for loop starts on.
-                    int forActionStartIndex = Actions.Count() - 2;
+                    int forActionStartIndex = Actions.Count() - 1;
 
                     ScopeGroup forGroup = scope.Child();
 
@@ -700,29 +711,22 @@ namespace Deltin.Deltinteger.Parse
 
                     // Check the expression
                     if (forNode.Expression != null) // If it has an expression
-                    {
-                        A_SkipIf comparer = new A_SkipIf() { ParameterValues = new object[2] };
-                        comparer.ParameterValues[0] = Element.Part<V_Not>(expression);
-                        Actions.Add(comparer);
-
-                        int actionsBeforeStatement = Actions.Count;
+                    {                        
                         // Parse the statement
                         if (forNode.Statement != null)
                             ParseStatement(forGroup, forNode.Statement, returnVar, false);
 
-                        // Set the skip if's skip count.
-                        comparer.ParameterValues[1] = new V_Number((Actions.Count - actionsBeforeStatement) + 1); // Add +1 to compensate for the loop being added later.
+                        ContinueSkip.SetSkipCount(forActionStartIndex);
+                        Actions.Add(Element.Part<A_LoopIf>(expression));
                     }
                     // If there is no expression but there is a statement, parse the statement.
                     else if (forNode.Statement != null)
                     {
                         ParseStatement(forGroup, forNode.Statement, returnVar, false);
+                        ContinueSkip.SetSkipCount(forActionStartIndex);
+                        // Add the loop
+                        Actions.Add(Element.Part<A_Loop>());
                     }
-
-                    ContinueSkip.SetSkipCount(forActionStartIndex);
-
-                    // Add the loop
-                    Actions.Add(Element.Part<A_Loop>());
 
                     ContinueSkip.ResetSkip();
                     return;
@@ -858,7 +862,7 @@ namespace Deltin.Deltinteger.Parse
                 // Define
                 case ScopedDefineNode defineNode:
 
-                    var var = Var.AssignDefinedVar(scope, IsGlobal, defineNode.VariableName, defineNode.Range);
+                    var var = VarCollection.AssignDefinedVar(scope, IsGlobal, defineNode.VariableName, defineNode.Range, Diagnostics);
 
                     // Set the defined variable if the variable is defined like "define var = 1"
                     if (defineNode.Value != null)
@@ -874,7 +878,7 @@ namespace Deltin.Deltinteger.Parse
 
             Element target = null;
             if (varSetNode.Target != null) 
-                ParseExpression(scope, varSetNode.Target);
+                target = ParseExpression(scope, varSetNode.Target);
             
             Element value = ParseExpression(scope, varSetNode.Value);
 

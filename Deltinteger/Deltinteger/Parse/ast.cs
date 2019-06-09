@@ -435,7 +435,10 @@ namespace Deltin.Deltinteger.Parse
                 return null;
 
             string variableName = context.PART().GetText();
-            IExpressionNode value = (IExpressionNode)VisitExpr(context.expr());
+            
+            IExpressionNode value = null;
+            if (context.expr() != null)
+                value = (IExpressionNode)VisitExpr(context.expr());
 
             Node node = new ScopedDefineNode(variableName, value, Range.GetRange(context));
             CheckRange(node);

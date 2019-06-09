@@ -5,7 +5,7 @@ using Deltin.Deltinteger.LanguageServer;
 
 namespace Deltin.Deltinteger.Parse
 {
-    class UserMethod
+    public class UserMethod
     {
         public UserMethod(UserMethodNode node)
         {
@@ -18,7 +18,7 @@ namespace Deltin.Deltinteger.Parse
                 Parameters[i] = new Parameter(node.Parameters[i], Elements.ValueType.Any, null);
             }
 
-            UserMethodCollection.Add(this);
+            //UserMethodCollection.Add(this);
         }
 
         public string Name { get; private set; }
@@ -27,21 +27,21 @@ namespace Deltin.Deltinteger.Parse
 
         public Parameter[] Parameters { get; private set; }
 
-        public static readonly List<UserMethod> UserMethodCollection = new List<UserMethod>();
+        //public static readonly List<UserMethod> UserMethodCollection = new List<UserMethod>();
 
         public override string ToString()
         {
             return Name + "(" + Parameter.ParameterGroupToString(Parameters) + ")";
         }
 
-        public static UserMethod GetUserMethod(string name)
+        public static UserMethod GetUserMethod(UserMethod[] methods, string name)
         {
-            return UserMethodCollection.FirstOrDefault(um => um.Name == name);
+            return methods.FirstOrDefault(um => um.Name == name);
         }
 
-        public static CompletionItem[] CollectionCompletion()
+        public static CompletionItem[] CollectionCompletion(UserMethod[] methods)
         {
-            return UserMethodCollection.Select(method => 
+            return methods.Select(method => 
                 new CompletionItem(method.ToString())
                 {
                     kind = CompletionItem.Method

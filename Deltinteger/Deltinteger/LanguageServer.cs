@@ -104,7 +104,7 @@ namespace Deltin.Deltinteger.LanguageServer
         {
             Rule[] rules = Parse.Parser.ParseText(document, out var data);
 
-            if (rules != null && data.ErrorListener.Errors.Count == 0)
+            if (rules != null && data.Diagnostics.Count == 0)
             {
                 string final = Program.RuleArrayToWorkshop(rules);
                 using (var wc = new WebClient())
@@ -113,7 +113,7 @@ namespace Deltin.Deltinteger.LanguageServer
                 }
             }
 
-            return JsonConvert.SerializeObject(data.ErrorListener.Errors.ToArray());
+            return JsonConvert.SerializeObject(data.Diagnostics.ToArray());
         }
 
         static string GetAutocomplete(string json)
@@ -156,7 +156,7 @@ namespace Deltin.Deltinteger.LanguageServer
                     // Get all variables
                     completion = blockNode.RelatedScopeGroup?.GetCompletionItems()
                         // Get custom methods
-                        .Concat(UserMethod.CollectionCompletion())
+                        .Concat(UserMethod.CollectionCompletion(parser.UserMethods))
                         // Get all action methods
                         .Concat(Element.ActionList.Select(m => 
                             new CompletionItem(m.Name.Substring(2))
@@ -173,7 +173,7 @@ namespace Deltin.Deltinteger.LanguageServer
 
                     completion = methodNode.RelatedScopeGroup.GetCompletionItems()
                         // Get custom methods
-                        .Concat(UserMethod.CollectionCompletion())
+                        .Concat(UserMethod.CollectionCompletion(parser.UserMethods))
                         .Concat(Element.ValueList.Select(m => 
                             new CompletionItem(m.Name.Substring(2))
                             {
@@ -288,7 +288,7 @@ namespace Deltin.Deltinteger.LanguageServer
             {
                 case MethodNode methodNode:
 
-                    var type = Translate.GetMethodType(methodNode.Name);
+                    var type = Translate.GetMethodType(parser.UserMethods, methodNode.Name);
 
                     if (type == null)
                         hover = null;
@@ -301,7 +301,7 @@ namespace Deltin.Deltinteger.LanguageServer
                         parameters = CustomMethods.GetCustomMethod(methodNode.Name).GetCustomAttributes<Parameter>()
                             .ToArray();
                     else if (type == Translate.MethodType.UserMethod)
-                        parameters = UserMethod.GetUserMethod(methodNode.Name).Parameters;
+                        parameters = UserMethod.GetUserMethod(parser.UserMethods, methodNode.Name).Parameters;
                     else parameters = null;
 
                     hover = new Hover(new MarkupContent(MarkupContent.Markdown, methodNode.Name + "(" + Parameter.ParameterGroupToString(parameters) + ")"))

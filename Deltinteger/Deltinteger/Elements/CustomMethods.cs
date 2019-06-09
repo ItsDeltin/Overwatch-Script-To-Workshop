@@ -27,19 +27,19 @@ namespace Deltin.Deltinteger.Elements
         [Parameter("Vector1", ValueType.VectorAndPlayer, null)]
         [Parameter("Vector2", ValueType.VectorAndPlayer, null)]
         [Parameter("Vector3", ValueType.VectorAndPlayer, null)]
-        static MethodResult AngleOfVectors(bool isGlobal, object[] parameters)
+        static MethodResult AngleOfVectors(bool isGlobal, VarCollection varCollection, object[] parameters)
         {
             var eventPlayer = new V_EventPlayer();
 
-            Var a = Var.AssignVar(isGlobal);
-            Var b = Var.AssignVar(isGlobal);
-            Var c = Var.AssignVar(isGlobal);
-            Var ab = Var.AssignVar(isGlobal);
-            Var bc = Var.AssignVar(isGlobal);
-            Var abVec = Var.AssignVar(isGlobal);
-            Var bcVec = Var.AssignVar(isGlobal);
-            Var abNorm = Var.AssignVar(isGlobal);
-            Var bcNorm = Var.AssignVar(isGlobal);
+            Var a = varCollection.AssignVar(isGlobal);
+            Var b = varCollection.AssignVar(isGlobal);
+            Var c = varCollection.AssignVar(isGlobal);
+            Var ab = varCollection.AssignVar(isGlobal);
+            Var bc = varCollection.AssignVar(isGlobal);
+            Var abVec = varCollection.AssignVar(isGlobal);
+            Var bcVec = varCollection.AssignVar(isGlobal);
+            Var abNorm = varCollection.AssignVar(isGlobal);
+            Var bcNorm = varCollection.AssignVar(isGlobal);
 
             Element zeroVec = Element.Part<V_Vector>(new V_Number(0), new V_Number(0), new V_Number(0));
 
@@ -194,7 +194,7 @@ namespace Deltin.Deltinteger.Elements
         */
 
         [CustomMethod("GetMapID", CustomMethodType.Value)]
-        static MethodResult GetMapID(bool isGlobal, object[] parameters)
+        static MethodResult GetMapID(bool isGlobal, VarCollection varCollection, object[] parameters)
         {
             /*
              All credit to https://us.forums.blizzard.com/en/overwatch/t/workshop-resource-get-the-current-map-name-updated-1-action/

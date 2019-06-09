@@ -8,7 +8,7 @@ namespace Deltin.Deltinteger.Parse
 {
     public class ScopeGroup
     {
-        private ScopeGroup() {}
+        public ScopeGroup() {}
 
         private ScopeGroup(ScopeGroup parent) 
         {
@@ -75,6 +75,6 @@ namespace Deltin.Deltinteger.Parse
         private readonly List<ScopeGroup> Children = new List<ScopeGroup>();
         private readonly ScopeGroup Parent = null;
 
-        public static ScopeGroup Root = new ScopeGroup();
+        //public static ScopeGroup Root = new ScopeGroup();
     }
 }

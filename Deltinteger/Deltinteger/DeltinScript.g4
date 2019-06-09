@@ -61,8 +61,8 @@ parameters : expr (COMMA expr?)*    		 	     ;
 method     : PART LEFT_PAREN parameters? RIGHT_PAREN ;
 
 statement :
-	( method STATEMENT_END?
-	| varset STATEMENT_END
+	( varset STATEMENT_END
+	| method STATEMENT_END?
 	| if
 	| for
 	| while

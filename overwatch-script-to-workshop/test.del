@@ -4,21 +4,14 @@ usevar playervar A;
 define playervar isTargetted;
 
 rule: "Resurrect player then send message."
+if (IsButtonHeld(EventPlayer(), Button.Interact))
 {
-    define i = 0;
-    for (;;)
-    {
-        SmallMessage(EventPlayer(), i);
-    }
-
-    for (player in AllPlayers())
-    {
-        SmallMessage(AllPlayers()[player], "hello!");
-        AllPlayers()[player].isTargetted = true;
-    }
-
-    while (NumberOfPlayers() < 3)
-    {
-        SmallMessage(EventPlayer(), <"waiting form least <0> players", 3>); 
-    }
-}
+    define x;
+    define y;
+    for (x = 0; x < 10; x+=1;)
+        for (y = 0; y < 10; y+=1;)
+        {
+            SmallMessage(EventPlayer(), <"<0>, <1>", x, y>); 
+            Wait(0.5); 
+        }
+} 

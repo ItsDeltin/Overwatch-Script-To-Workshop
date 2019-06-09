@@ -8,15 +8,17 @@ namespace Deltin.Deltinteger.Parse
     {
         private readonly bool IsGlobal;
         private readonly List<Element> Actions;
+        private readonly VarCollection VarCollection;
 
         private Var SkipCount;
 
         private bool IsSetup = false;
 
-        public ContinueSkip(bool isGlobal, List<Element> actions)
+        public ContinueSkip(bool isGlobal, List<Element> actions, VarCollection varCollection)
         {
             IsGlobal = isGlobal;
             Actions = actions;
+            VarCollection = varCollection;
         }
 
         public void Setup()
@@ -25,7 +27,7 @@ namespace Deltin.Deltinteger.Parse
                 return;
             IsSetup = true;
 
-            SkipCount = Var.AssignVar(IsGlobal);
+            SkipCount = VarCollection.AssignVar(IsGlobal);
             
             // Add the required wait
             Actions.Insert(0, Element.Part<A_Wait>(new V_Number(Constants.MINIMUM_WAIT)));

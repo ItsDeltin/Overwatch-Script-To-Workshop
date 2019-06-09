@@ -8,10 +8,10 @@ namespace Deltin.Deltinteger.Parse
 {
     public class AdditionalErrorChecking : DeltinScriptBaseVisitor<object>
     {
-        private readonly BaseErrorListener _errorReporter;
+        private readonly ErrorListener _errorReporter;
         private readonly DeltinScriptParser _parser;
 
-        public AdditionalErrorChecking(DeltinScriptParser parser, BaseErrorListener errorReporter)
+        public AdditionalErrorChecking(DeltinScriptParser parser, ErrorListener errorReporter)
         {
             _parser = parser;
             _errorReporter = errorReporter;
@@ -22,7 +22,8 @@ namespace Deltin.Deltinteger.Parse
             if (context.GetChild(0) is DeltinScriptParser.MethodContext &&
                 context.ChildCount == 1)
             {
-                _errorReporter.SyntaxError(_parser, context.stop, context.stop.Line, context.stop.Column, "Expected ';'.", null);
+                //_errorReporter.SyntaxError(_parser, context.stop, context.stop.Line, context.stop.Column, "Expected ';'.", null);
+                _errorReporter.Error("Expected ';'", Range.GetRange(context));
             }
             return base.VisitStatement(context);
         }
