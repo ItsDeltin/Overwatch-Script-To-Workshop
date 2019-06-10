@@ -464,7 +464,22 @@ namespace Deltin.Deltinteger.Parse
                         ContinueSkip.Setup();
 
                         for (int i = 0; i < lastMethod.ParameterVars.Length; i++)
-                            Actions.Add(lastMethod.ParameterVars[i].Push(ParseExpression(scope, methodNode.Parameters[i])));
+                            if (methodNode.Parameters.Length < i)
+                                Actions.Add(lastMethod.ParameterVars[i].Push(ParseExpression(scope, methodNode.Parameters[i])));
+
+                        // ?--- Multidimensional Array 
+                        Actions.Add(
+                            Element.Part<A_SetGlobalVariable>(Variable.B, lastMethod.ContinueSkipArray.GetVariable())
+                        );
+                        Actions.Add(
+                            Element.Part<A_ModifyGlobalVariable>(Variable.B, Operation.AppendToArray, new V_Number(ContinueSkip.GetSkipCount() + 5))
+                        );
+                        Actions.Add(
+                            lastMethod.ContinueSkipArray.SetVariable(Element.Part<V_GlobalVariable>(Variable.B))
+                        );
+                        // ?---
+                        // ! Debug, remove later
+                        Actions.Add(Element.Part<A_SetGlobalVariable>(Variable.C, lastMethod.ContinueSkipArray.GetVariable()));
 
                         ContinueSkip.SetSkipCount(lastMethod.ActionIndex);
                         Actions.Add(Element.Part<A_Loop>());
@@ -498,21 +513,61 @@ namespace Deltin.Deltinteger.Parse
 
                         var returns = VarCollection.AssignVar(IsGlobal);
 
-                        var stack = new MethodStack(userMethod, parameterVars, ContinueSkip.GetSkipCount(), returns);
+                        Var continueSkipArray = VarCollection.AssignVar(IsGlobal);
+                        var stack = new MethodStack(userMethod, parameterVars, ContinueSkip.GetSkipCount(), returns, continueSkipArray);
                         MethodStack.Add(stack);
 
                         var userMethodScope = methodScope.Child();
                         userMethod.Block.RelatedScopeGroup = userMethodScope;
                         
+                        Actions.Add(Element.Part<A_SetGlobalVariable>(Variable.D, parameterVars[0].DebugStack())); //! Debug
                         ParseBlock(userMethodScope, userMethod.Block, true, returns);
+
                         // No return value if the method is being used as an action.
                         if (needsToBeValue)
                             method = returns.GetVariable();
                         else
                             method = null;
 
+                        Actions.Add(Element.Part<A_Wait>(new V_Number(Constants.MINIMUM_WAIT)));
                         for (int i = 0; i < parameterVars.Length; i++)
+                        {
                             Actions.Add(parameterVars[i].Pop());
+                            Actions.Add(Element.Part<A_SetGlobalVariable>(Variable.D, parameterVars[i].DebugStack())); //! Debug
+                        }
+
+                        ContinueSkip.SetSkipCount(Element.Part<V_LastOf>(continueSkipArray.GetVariable()));
+
+                        // ?--- Multidimensional Array 
+                        Actions.Add(
+                            Element.Part<A_SetGlobalVariable>(Variable.B, continueSkipArray.GetVariable())
+                        );
+                        Actions.Add(
+                            continueSkipArray.SetVariable(
+                                Element.Part<V_ArraySlice>(
+                                    Element.Part<V_GlobalVariable>(Variable.B), 
+                                    new V_Number(0),
+                                    Element.Part<V_Subtract>(
+                                        Element.Part<V_CountOf>(Element.Part<V_GlobalVariable>(Variable.B)),
+                                        new V_Number(1)
+                                    )
+                                )
+                            )
+                        );
+                        // ?---
+                        // ! Debug, remove later
+                        Actions.Add(Element.Part<A_SetGlobalVariable>(Variable.C, continueSkipArray.GetVariable()));
+
+                        Actions.Add(
+                            Element.Part<A_LoopIf>(
+                                Element.Part<V_Compare>(
+                                    Element.Part<V_CountOf>(continueSkipArray.GetVariable()),
+                                    Operators.NotEqual,
+                                    new V_Number(0)
+                                )
+                            )
+                        );
+                        ContinueSkip.ResetSkip();
 
                         MethodStack.Remove(stack);
                     }

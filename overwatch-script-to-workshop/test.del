@@ -6,15 +6,15 @@ define globalvar temp C;
 rule: "Resursion test."
 if (IsButtonHeld(EventPlayer(), Button.Interact))
 {
-    Count(1);
+    GenerateGrid(PositionOf(EventPlayer()));
 }
 
-method Count(x)
+method GenerateGrid(location)
 {
-    SmallMessage(EventPlayer(), x);
-    temp = x; 
-    if (x < 10)
-        Count(x + 1);
-    //Wait(3);
-    //SmallMessage(EventPlayer(), "downloaded!");
+    for (define x = 0; x < 10; x+=1;)
+        for (define y = 0; y < 10; y+=1;)
+        {
+            define local = location + Vector(x, y, ZOf(location));
+            CreateEffect(AllPlayers(), Effects.Sphere, Color.White, local, 0.1, EffectRev.None);
+        }
 }

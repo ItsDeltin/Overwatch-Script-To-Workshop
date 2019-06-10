@@ -137,74 +137,79 @@ namespace Deltin.Deltinteger.LanguageServer
 
             var parser = ParserElements.GetParser(document, new Parse.Pos(caret.line, caret.character));
 
-            CompletionItem[] completion = null;
-            if (parser.Success)
-                switch(parser.Bav.SelectedNode.FirstOrDefault())
-                {
-                    // Ruleset
-                    case RulesetNode rulesetNode:
+            List<CompletionItem> completion = new List<CompletionItem>();
+            switch(parser.Bav?.SelectedNode.FirstOrDefault())
+            {
+                // Ruleset
+                case RulesetNode rulesetNode:
 
-                        completion = new CompletionItem[]
+                    completion.AddRange(new CompletionItem[]
+                    {
+                        // TODO insert text
+                        new CompletionItem("rule"),
+                        new CompletionItem("define"),
+                        new CompletionItem("method")
+                    });
+                    break;
+
+                // Actions
+                case BlockNode blockNode:
+
+                    // Get all action methods
+                    completion.AddRange(Element.ActionList.Select(m => 
+                        new CompletionItem(m.Name.Substring(2))
                         {
-                            // TODO insert text
-                            new CompletionItem("rule"),
-                            new CompletionItem("define"),
-                            new CompletionItem("method")
-                        };
-                        break;
-
-                    // Actions
-                    case BlockNode blockNode:
-
+                            kind = CompletionItem.Method,
+                            detail = ((Element)Activator.CreateInstance(m)).ToString(),
+                        }));
+                    if (parser.Success)
+                    {
                         // Get all variables
-                        completion = blockNode.RelatedScopeGroup?.GetCompletionItems()
-                            // Get custom methods
-                            .Concat(UserMethod.CollectionCompletion(parser.UserMethods))
-                            // Get all action methods
-                            .Concat(Element.ActionList.Select(m => 
-                                new CompletionItem(m.Name.Substring(2))
-                                {
-                                    kind = CompletionItem.Method,
-                                    detail = ((Element)Activator.CreateInstance(m)).ToString(),
-                                }
-                            )).ToArray();
+                        completion.AddRange(blockNode.RelatedScopeGroup?.GetCompletionItems());
+                        // Get custom methods
+                        completion.AddRange(UserMethod.CollectionCompletion(parser.UserMethods));
+                    }
 
-                        break;
+                    break;
 
-                    // Values
-                    case MethodNode methodNode:
+                // Values
+                case MethodNode methodNode:
 
-                        completion = methodNode.RelatedScopeGroup.GetCompletionItems()
-                            // Get custom methods
-                            .Concat(UserMethod.CollectionCompletion(parser.UserMethods))
-                            .Concat(Element.ValueList.Select(m => 
-                                new CompletionItem(m.Name.Substring(2))
-                                {
-                                    kind = CompletionItem.Constant,
-                                    detail = ((Element)Activator.CreateInstance(m)).ToString(),
-                                }
-                            )).ToArray();
+                    completion.AddRange(Element.ValueList.Select(m => 
+                        new CompletionItem(m.Name.Substring(2))
+                        {
+                            kind = CompletionItem.Method,
+                            detail = ((Element)Activator.CreateInstance(m)).ToString(),
+                        }));
+                    if (parser.Success)
+                    {
+                        // Get all variables
+                        completion.AddRange(methodNode.RelatedScopeGroup.GetCompletionItems());
+                        // Get custom methods
+                        completion.AddRange(UserMethod.CollectionCompletion(parser.UserMethods));
+                    }
 
-                        break;
+                    break;
 
-                    // If the selected node is a string node, show all strings.
-                    case StringNode stringNode:
+                // If the selected node is a string node, show all strings.
+                case StringNode stringNode:
 
-                        completion = Constants.Strings
-                            .Select(str =>
-                                new CompletionItem(str)
-                                {
-                                    kind = CompletionItem.Text
-                                }
-                            ).ToArray();
+                    completion.AddRange(Constants.Strings.Select(str =>
+                            new CompletionItem(str)
+                            {
+                                kind = CompletionItem.Text
+                            }
+                        ));
 
-                        break;
+                    break;
+                
+                case null:
+                    break;
 
-                    default: 
-                        Console.WriteLine(parser.Bav.SelectedNode.FirstOrDefault()?.GetType().Name + " context not implemented.");
-                        completion = new CompletionItem[0];
-                        break;
-                }
+                default: 
+                    Console.WriteLine(parser.Bav.SelectedNode.FirstOrDefault()?.GetType().Name + " context not implemented.");
+                    break;
+            }
 
             /*
             string filter = selectedRule.GetText();
@@ -214,7 +219,7 @@ namespace Deltin.Deltinteger.LanguageServer
             }
             */
 
-            return JsonConvert.SerializeObject(completion);
+            return JsonConvert.SerializeObject(completion.ToArray());
         }
 
         // TODO comment this
@@ -314,10 +319,11 @@ namespace Deltin.Deltinteger.LanguageServer
                             parameters = UserMethod.GetUserMethod(parser.UserMethods, methodNode.Name).Parameters;
                         else parameters = null;
 
-                        hover = new Hover(new MarkupContent(MarkupContent.Markdown, methodNode.Name + "(" + Parameter.ParameterGroupToString(parameters) + ")"))
-                        {
-                            range = methodNode.Range
-                        };
+                        if (parameters != null)
+                            hover = new Hover(new MarkupContent(MarkupContent.Markdown, methodNode.Name + "(" + Parameter.ParameterGroupToString(parameters) + ")"))
+                            {
+                                range = methodNode.Range
+                            };
                         break;
                     
                     default:

@@ -220,5 +220,10 @@ namespace Deltin.Deltinteger.Parse
                 ), targetPlayer
             );
         }
+
+        public Element DebugStack(Element targetPlayer = null)
+        {
+            return base.GetVariable(targetPlayer);
+        }
     }
 }

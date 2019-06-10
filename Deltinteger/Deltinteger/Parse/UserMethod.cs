@@ -56,13 +56,15 @@ namespace Deltin.Deltinteger.Parse
         public ParameterVar[] ParameterVars { get; private set; }
         public int ActionIndex { get; private set; }
         public Var Return { get; private set; }
+        public Var ContinueSkipArray { get; private set; }
 
-        public MethodStack(UserMethod userMethod, ParameterVar[] parameterVars, int actionIndex, Var @return)
+        public MethodStack(UserMethod userMethod, ParameterVar[] parameterVars, int actionIndex, Var @return, Var continueSkipArray)
         {
             UserMethod = userMethod;
             ParameterVars = parameterVars;
             ActionIndex = actionIndex;
             Return = @return;
+            ContinueSkipArray = continueSkipArray;
         }
     }
 }
