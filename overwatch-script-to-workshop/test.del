@@ -1,7 +1,9 @@
 usevar globalvar A;
 usevar playervar A;
 
-define globalvar temp C;
+define globalvar generatedEffects;
+define globalvar effectLocations;
+define globalvar count;
 
 rule: "Resursion test."
 if (IsButtonHeld(EventPlayer(), Button.Interact))
@@ -11,11 +13,33 @@ if (IsButtonHeld(EventPlayer(), Button.Interact))
 
 method GenerateGrid(location)
 {
-    for (define x = 0; x < 3; x+=1;)
-        for (define y = 0; y < 3; y+=1;) 
+    for (define i = 0; i < CountOf(generatedEffects); i+=1;)
+    {
+        DestroyEffect(generatedEffects[i]); 
+        SmallMessage(EventPlayer(), <"destroyed sphere">);
+    }
+
+    generatedEffects = null;
+    effectLocations = null;
+    count = 10 * 10;
+    
+    for (define x = 0; x < 10; x+=1;)
+        for (define y = 0; y < 10; y+=1;) 
         {
-            define local = location + Vector(x * 2, y * 2, 0);
-            CreateEffect(AllPlayers(), Effects.Sphere, Color.White, local, 1, EffectRev.None);
-            SmallMessage(EventPlayer(), <"built sphere (<0>, <1>) <2>", x, y, local>);
+            define local = location + Vector(x / 2, y / 2, 0);
+
+            CreateEffect(AllPlayers(), Effects.Sphere, Color.Blue, local, 0.25, EffectRev.None);
+            generatedEffects = Append(generatedEffects, LastCreatedEntity());
+            effectLocations = Append(effectLocations, local);
         }
+}
+
+rule: "destroy close effects"
+{
+    while (true)
+        for (define index; index < 100; index += 1;)
+            if (DistanceBetween(EventPlayer(), effectLocations[index]) < 3)
+            {
+                DestroyEffect(effectLocations[index]);
+            }
 }
