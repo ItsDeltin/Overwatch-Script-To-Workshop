@@ -48,6 +48,12 @@ namespace Deltin.Deltinteger.Parse
             Actions.Add(SkipCount.SetVariable(new V_Number(number)));
         }
 
+        public void SetSkipCount(Element element)
+        {
+            CheckSetup();
+            Actions.Add(SkipCount.SetVariable(element));
+        }
+
         public void ResetSkip()
         {
             CheckSetup();

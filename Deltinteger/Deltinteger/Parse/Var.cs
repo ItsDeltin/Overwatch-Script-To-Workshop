@@ -205,16 +205,15 @@ namespace Deltin.Deltinteger.Parse
             );
 
             return base.SetVariable(Element.Part<V_GlobalVariable>(Variable.B), targetPlayer);
-
-            //return SetVariable(Element.Part<V_Append>(base.GetVariable(targetPlayer), value), targetPlayer);
         }
 
         public Element Pop(Element targetPlayer = null)
         {
             Element get = base.GetVariable(targetPlayer);
-            return SetVariable(
+            return base.SetVariable(
                 Element.Part<V_ArraySlice>(
-                    get, 
+                    get,
+                    new V_Number(0),
                     Element.Part<V_Subtract>(
                         Element.Part<V_CountOf>(get), new V_Number(1)
                     )

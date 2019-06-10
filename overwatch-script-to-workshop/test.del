@@ -1,7 +1,9 @@
 usevar globalvar A;
 usevar playervar A;
 
-rule: "Resurrect player then send message."
+define globalvar temp C;
+
+rule: "Resursion test."
 if (IsButtonHeld(EventPlayer(), Button.Interact))
 {
     Count(1);
@@ -10,6 +12,9 @@ if (IsButtonHeld(EventPlayer(), Button.Interact))
 method Count(x)
 {
     SmallMessage(EventPlayer(), x);
+    temp = x; 
     if (x < 10)
         Count(x + 1);
-} 
+    //Wait(3);
+    //SmallMessage(EventPlayer(), "downloaded!");
+}
