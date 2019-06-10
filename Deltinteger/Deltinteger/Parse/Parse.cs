@@ -472,14 +472,12 @@ namespace Deltin.Deltinteger.Parse
                             Element.Part<A_SetGlobalVariable>(Variable.B, lastMethod.ContinueSkipArray.GetVariable())
                         );
                         Actions.Add(
-                            Element.Part<A_ModifyGlobalVariable>(Variable.B, Operation.AppendToArray, new V_Number(ContinueSkip.GetSkipCount() + 5))
+                            Element.Part<A_ModifyGlobalVariable>(Variable.B, Operation.AppendToArray, new V_Number(ContinueSkip.GetSkipCount() + 4))
                         );
                         Actions.Add(
                             lastMethod.ContinueSkipArray.SetVariable(Element.Part<V_GlobalVariable>(Variable.B))
                         );
                         // ?---
-                        // ! Debug, remove later
-                        Actions.Add(Element.Part<A_SetGlobalVariable>(Variable.C, lastMethod.ContinueSkipArray.GetVariable()));
 
                         ContinueSkip.SetSkipCount(lastMethod.ActionIndex);
                         Actions.Add(Element.Part<A_Loop>());
@@ -520,7 +518,6 @@ namespace Deltin.Deltinteger.Parse
                         var userMethodScope = methodScope.Child();
                         userMethod.Block.RelatedScopeGroup = userMethodScope;
                         
-                        Actions.Add(Element.Part<A_SetGlobalVariable>(Variable.D, parameterVars[0].DebugStack())); //! Debug
                         ParseBlock(userMethodScope, userMethod.Block, true, returns);
 
                         // No return value if the method is being used as an action.
@@ -533,7 +530,6 @@ namespace Deltin.Deltinteger.Parse
                         for (int i = 0; i < parameterVars.Length; i++)
                         {
                             Actions.Add(parameterVars[i].Pop());
-                            Actions.Add(Element.Part<A_SetGlobalVariable>(Variable.D, parameterVars[i].DebugStack())); //! Debug
                         }
 
                         ContinueSkip.SetSkipCount(Element.Part<V_LastOf>(continueSkipArray.GetVariable()));
@@ -555,8 +551,6 @@ namespace Deltin.Deltinteger.Parse
                             )
                         );
                         // ?---
-                        // ! Debug, remove later
-                        Actions.Add(Element.Part<A_SetGlobalVariable>(Variable.C, continueSkipArray.GetVariable()));
 
                         Actions.Add(
                             Element.Part<A_LoopIf>(

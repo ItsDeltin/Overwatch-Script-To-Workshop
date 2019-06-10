@@ -11,10 +11,11 @@ if (IsButtonHeld(EventPlayer(), Button.Interact))
 
 method GenerateGrid(location)
 {
-    for (define x = 0; x < 10; x+=1;)
-        for (define y = 0; y < 10; y+=1;)
+    for (define x = 0; x < 3; x+=1;)
+        for (define y = 0; y < 3; y+=1;) 
         {
-            define local = location + Vector(x, y, ZOf(location));
-            CreateEffect(AllPlayers(), Effects.Sphere, Color.White, local, 0.1, EffectRev.None);
+            define local = location + Vector(x * 2, y * 2, 0);
+            CreateEffect(AllPlayers(), Effects.Sphere, Color.White, local, 1, EffectRev.None);
+            SmallMessage(EventPlayer(), <"built sphere (<0>, <1>) <2>", x, y, local>);
         }
 }
