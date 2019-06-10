@@ -2,6 +2,14 @@ usevar globalvar A;
 usevar playervar A;
 
 rule: "Resurrect player then send message."
+if (IsButtonHeld(EventPlayer(), Button.Interact))
 {
-    for (define x = 0; x < 10; for(define y = 0; y < 10; y += 1;) {}) {}
+    Count(1);
 }
+
+method Count(x)
+{
+    SmallMessage(EventPlayer(), x);
+    if (x < 10)
+        Count(x + 1);
+} 

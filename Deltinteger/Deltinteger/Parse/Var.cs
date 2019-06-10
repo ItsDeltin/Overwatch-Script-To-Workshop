@@ -34,10 +34,14 @@ namespace Deltin.Deltinteger.Parse
             return new Var(isGlobal, UseVar, Assign(isGlobal));
         }
 
-        public DefinedVar AssignDefinedVar(ScopeGroup scopeGroup, bool isGlobal, string name, Range range, List<Diagnostic> diagnostics)
+        public DefinedVar AssignDefinedVar(ScopeGroup scopeGroup, bool isGlobal, string name, Range range)
         {
-            DefinedVar var = new DefinedVar(scopeGroup, name, isGlobal, UseVar, Assign(isGlobal), range, diagnostics);
-            return var;
+            return new DefinedVar(scopeGroup, name, isGlobal, UseVar, Assign(isGlobal), range);
+        }
+
+        public ParameterVar AssignParameterVar(List<Element> actions, ScopeGroup scopeGroup, bool isGlobal, string name, Range range)
+        {
+            return new ParameterVar(actions, scopeGroup, name, isGlobal, UseVar, Assign(isGlobal), range);
         }
     }
 
@@ -45,8 +49,6 @@ namespace Deltin.Deltinteger.Parse
     {
         public bool IsGlobal { get; protected set; }
         public Variable Variable { get; protected set; }
-
-        public bool IsInArray { get; protected set; }
         public int Index { get; protected set; }
 
         public Var(bool isGlobal, Variable variable, int index)
@@ -54,55 +56,30 @@ namespace Deltin.Deltinteger.Parse
             IsGlobal = isGlobal;
             Variable = variable;
             Index = index;
-            IsInArray = index != -1;
         }
 
-        public Element GetVariable(Element targetPlayer = null, Element getAiIndex = null)
+        public virtual Element GetVariable(Element targetPlayer = null)
         {
-            Element element;
-
-            if (targetPlayer == null)
-                targetPlayer = new V_EventPlayer();
-
-            if (getAiIndex == null)
-            {
-                if (IsInArray)
-                {
-                    if (IsGlobal)
-                        element = Element.Part<V_ValueInArray>(Element.Part<V_GlobalVariable>(Variable), new V_Number(Index));
-                    else
-                        element = Element.Part<V_ValueInArray>(Element.Part<V_PlayerVariable>(targetPlayer, Variable), new V_Number(Index));
-                }
-                else
-                {
-                    if (IsGlobal)
-                        element = Element.Part<V_GlobalVariable>(Variable);
-                    else
-                        element = Element.Part<V_PlayerVariable>(targetPlayer, Variable);
-                }
-            }
-            else
-            {
-                if (IsInArray)
-                {
-                    if (IsGlobal)
-                        element = Element.Part<V_ValueInArray>(Element.Part<V_ValueInArray>(Element.Part<V_GlobalVariable>(Variable)), new V_Number(Index));
-                    else
-                        element = Element.Part<V_ValueInArray>(Element.Part<V_ValueInArray>(Element.Part<V_PlayerVariable>(targetPlayer, Variable)), new V_Number(Index));
-                }
-                else
-                {
-                    if (IsGlobal)
-                        element = Element.Part<V_ValueInArray>(Element.Part<V_GlobalVariable>(Variable), getAiIndex);
-                    else
-                        element = Element.Part<V_ValueInArray>(Element.Part<V_PlayerVariable>(targetPlayer, Variable), getAiIndex);
-                }
-            }
-
-            return element;
+            return GetSub(targetPlayer ?? new V_EventPlayer());
         }
 
-        public Element SetVariable(Element value, Element targetPlayer = null, Element setAtIndex = null)
+        private Element GetSub(Element targetPlayer)
+        {
+            if (Index != -1)
+                return Element.Part<V_ValueInArray>(GetRoot(targetPlayer), new V_Number(Index));
+            else
+                return GetRoot(targetPlayer);
+        }
+
+        private Element GetRoot(Element targetPlayer)
+        {
+            if (IsGlobal)
+                return Element.Part<V_GlobalVariable>(Variable);
+            else
+                return Element.Part<V_PlayerVariable>(targetPlayer, Variable);
+        }
+
+        public virtual Element SetVariable(Element value, Element targetPlayer = null, Element setAtIndex = null)
         {
             Element element;
 
@@ -111,7 +88,7 @@ namespace Deltin.Deltinteger.Parse
 
             if (setAtIndex == null)
             {
-                if (IsInArray)
+                if (Index != -1)
                 {
                     if (IsGlobal)
                         element = Element.Part<A_SetGlobalVariableAtIndex>(Variable, new V_Number(Index), value);
@@ -128,7 +105,7 @@ namespace Deltin.Deltinteger.Parse
             }
             else
             {
-                if (IsInArray)
+                if (Index != -1)
                 {
                     if (IsGlobal)
                         element = Element.Part<A_SetGlobalVariableAtIndex>(Variable, new V_Number(Index), 
@@ -163,28 +140,86 @@ namespace Deltin.Deltinteger.Parse
     {
         public string Name { get; protected set; }
 
-        public DefinedVar(ScopeGroup scopeGroup, DefinedNode node, List<Diagnostic> diagnostics, VarCollection varCollection)
+        public DefinedVar(ScopeGroup scopeGroup, DefinedNode node, VarCollection varCollection)
             : base(node.IsGlobal, varCollection.UseVar, node.UseIndex ?? varCollection.Assign(node.IsGlobal))
         {
-            IsGlobal = node.IsGlobal;
-
             if (scopeGroup.IsVar(node.VariableName))
-                diagnostics.Add(new Diagnostic($"The variable {node.VariableName} was already defined.", node.Range));
+            throw new SyntaxErrorException($"The variable {node.VariableName} was already defined.", node.Range);
+                //diagnostics.Add(new Diagnostic($"The variable {node.VariableName} was already defined.", node.Range));
 
             Name = node.VariableName;
 
             scopeGroup.In(this);
         }
 
-        public DefinedVar(ScopeGroup scopeGroup, string name, bool isGlobal, Variable variable, int index, Range range, List<Diagnostic> diagnostics)
+        public DefinedVar(ScopeGroup scopeGroup, string name, bool isGlobal, Variable variable, int index, Range range)
             : base (isGlobal, variable, index)
         {
             if (scopeGroup.IsVar(name))
-                diagnostics.Add(new Diagnostic($"The variable {name} was already defined.", range) { severity = Diagnostic.Error });
+                throw new SyntaxErrorException($"The variable {name} was already defined.", range);
+                //diagnostics.Add(new Diagnostic($"The variable {name} was already defined.", range) { severity = Diagnostic.Error });
 
             Name = name;
 
             scopeGroup.In(this);
+        }
+    }
+
+    public class ParameterVar : DefinedVar
+    {
+        private readonly List<Element> Actions = new List<Element>();
+
+        public ParameterVar(List<Element> actions, ScopeGroup scopeGroup, string name, bool isGlobal, Variable variable, int index, Range range)
+            : base (scopeGroup, name, isGlobal, variable, index, range)
+        {
+            Actions = actions;
+        }
+
+        override public Element GetVariable(Element targetPlayer = null)
+        {
+            return Element.Part<V_LastOf>(base.GetVariable(targetPlayer));
+        }
+
+        override public Element SetVariable(Element value, Element targetPlayer = null, Element setAtIndex = null)
+        {
+            Actions.Add(
+                Element.Part<A_SetGlobalVariable>(Variable.B, base.GetVariable(targetPlayer))
+                );
+            
+            Actions.Add(
+                Element.Part<A_SetGlobalVariableAtIndex>(Variable.B, 
+                    Element.Part<V_Subtract>(Element.Part<V_CountOf>(Element.Part<V_GlobalVariable>(Variable.B)), new V_Number(1)), value)
+            );
+
+            return base.SetVariable(Element.Part<V_GlobalVariable>(Variable.B), targetPlayer);
+        }
+
+        public Element Push(Element value, Element targetPlayer = null)
+        {
+            Actions.Add(
+                Element.Part<A_SetGlobalVariable>(Variable.B, base.GetVariable(targetPlayer))
+            );
+            
+            Actions.Add(
+                Element.Part<A_SetGlobalVariableAtIndex>(Variable.B, Element.Part<V_CountOf>(Element.Part<V_GlobalVariable>(Variable.B)), value)
+            );
+
+            return base.SetVariable(Element.Part<V_GlobalVariable>(Variable.B), targetPlayer);
+
+            //return SetVariable(Element.Part<V_Append>(base.GetVariable(targetPlayer), value), targetPlayer);
+        }
+
+        public Element Pop(Element targetPlayer = null)
+        {
+            Element get = base.GetVariable(targetPlayer);
+            return SetVariable(
+                Element.Part<V_ArraySlice>(
+                    get, 
+                    Element.Part<V_Subtract>(
+                        Element.Part<V_CountOf>(get), new V_Number(1)
+                    )
+                ), targetPlayer
+            );
         }
     }
 }

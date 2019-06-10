@@ -43,7 +43,7 @@ namespace Deltin.Deltinteger.Parse
                             (var.IsGlobal ? "global" : "player") 
                             + " " + 
                             var.Variable.ToString() +
-                            (var.IsInArray ? $"[{var.Index}]" : "")
+                            (var.Index != -1 ? $"[{var.Index}]" : "")
                             , textcolor)
                     );
                 }
@@ -97,7 +97,7 @@ namespace Deltin.Deltinteger.Parse
                 ruleSetNode = (RulesetNode)bav.Visit(ruleSetContext);
 
                 foreach (var definedVar in ruleSetNode.DefinedVars)
-                    vars.AssignDefinedVar(root, definedVar.IsGlobal, definedVar.VariableName, definedVar.Range, diagnostics);
+                    vars.AssignDefinedVar(root, definedVar.IsGlobal, definedVar.VariableName, definedVar.Range);
 
                 // Get the user methods.
                 for (int i = 0; i < ruleSetNode.UserMethods.Length; i++)
@@ -167,6 +167,7 @@ namespace Deltin.Deltinteger.Parse
         private readonly List<A_Skip> ReturnSkips = new List<A_Skip>(); // Return statements whos skip count needs to be filled out.
         private readonly ContinueSkip ContinueSkip; // Contains data about the wait/skip for continuing loops.
         private readonly List<Diagnostic> Diagnostics = new List<Diagnostic>();
+        private readonly List<MethodStack> MethodStack = new List<MethodStack>(); // The user method stack
 
         private Translate(RuleNode ruleNode, ScopeGroup root, VarCollection varCollection, UserMethod[] userMethods)
         {
@@ -455,39 +456,66 @@ namespace Deltin.Deltinteger.Parse
 
                 case MethodType.UserMethod:
                 {
-                    var methodScope = Root.Child();
-
                     UserMethod userMethod = UserMethod.GetUserMethod(UserMethods, methodNode.Name);
-
-                    // Add the parameter variables to the scope.
-                    DefinedVar[] parameterVars = new DefinedVar[userMethod.Parameters.Length];
-                    for (int i = 0; i < parameterVars.Length; i++)
-                    {
-                        if (methodNode.Parameters.Length > i)
-                        {
-                            // Create a new variable using the parameter input.
-                            parameterVars[i] = VarCollection.AssignDefinedVar(methodScope, IsGlobal, userMethod.Parameters[i].Name, methodNode.Range, Diagnostics);
-                            Actions.Add(parameterVars[i].SetVariable(ParseExpression(scope, methodNode.Parameters[i])));
-                        }
-                        else 
-                        {
-                            throw new SyntaxErrorException($"Missing parameter \"{userMethod.Parameters[i].Name}\" in the method \"{methodNode.Name}\".", methodNode.Range);
-                            //Diagnostics.Add(new Diagnostic($"Missing parameter \"{userMethod.Parameters[i].Name}\" in the method \"{methodNode.Name}\".", methodNode.Range));
-                            //return null;
-                        }
-                    }
-
-                    var returns = VarCollection.AssignVar(IsGlobal);
-
-                    var userMethodScope = methodScope.Child();
-                    userMethod.Block.RelatedScopeGroup = userMethodScope;
                     
-                    ParseBlock(userMethodScope, userMethod.Block, true, returns);
-                    // No return value if the method is being used as an action.
-                    if (needsToBeValue)
-                        method = returns.GetVariable();
+                    MethodStack lastMethod = MethodStack.FirstOrDefault(ms => ms.UserMethod == userMethod);
+                    if (lastMethod != null)
+                    {
+                        ContinueSkip.Setup();
+
+                        for (int i = 0; i < lastMethod.ParameterVars.Length; i++)
+                            Actions.Add(lastMethod.ParameterVars[i].Push(ParseExpression(scope, methodNode.Parameters[i])));
+
+                        ContinueSkip.SetSkipCount(lastMethod.ActionIndex);
+                        Actions.Add(Element.Part<A_Loop>());
+
+                        if (needsToBeValue)
+                            method = lastMethod.Return.GetVariable();
+                        else
+                            method = null;
+                    }
                     else
-                        method = null;
+                    {
+                        var methodScope = Root.Child();
+
+                        // Add the parameter variables to the scope.
+                        ParameterVar[] parameterVars = new ParameterVar[userMethod.Parameters.Length];
+                        for (int i = 0; i < parameterVars.Length; i++)
+                        {
+                            if (methodNode.Parameters.Length > i)
+                            {
+                                // Create a new variable using the parameter input.
+                                parameterVars[i] = VarCollection.AssignParameterVar(Actions, methodScope, IsGlobal, userMethod.Parameters[i].Name, methodNode.Range);
+                                Actions.Add(parameterVars[i].Push(ParseExpression(scope, methodNode.Parameters[i])));
+                            }
+                            else 
+                            {
+                                throw new SyntaxErrorException($"Missing parameter \"{userMethod.Parameters[i].Name}\" in the method \"{methodNode.Name}\".", methodNode.Range);
+                                //Diagnostics.Add(new Diagnostic($"Missing parameter \"{userMethod.Parameters[i].Name}\" in the method \"{methodNode.Name}\".", methodNode.Range));
+                                //return null;
+                            }
+                        }
+
+                        var returns = VarCollection.AssignVar(IsGlobal);
+
+                        var stack = new MethodStack(userMethod, parameterVars, ContinueSkip.GetSkipCount(), returns);
+                        MethodStack.Add(stack);
+
+                        var userMethodScope = methodScope.Child();
+                        userMethod.Block.RelatedScopeGroup = userMethodScope;
+                        
+                        ParseBlock(userMethodScope, userMethod.Block, true, returns);
+                        // No return value if the method is being used as an action.
+                        if (needsToBeValue)
+                            method = returns.GetVariable();
+                        else
+                            method = null;
+
+                        for (int i = 0; i < parameterVars.Length; i++)
+                            Actions.Add(parameterVars[i].Pop());
+
+                        MethodStack.Remove(stack);
+                    }
                     break;
                 }
 
@@ -647,8 +675,7 @@ namespace Deltin.Deltinteger.Parse
                         scopeGroup: forGroup,
                         name      : forEachNode.Variable,
                         isGlobal  : IsGlobal,
-                        range     : forEachNode.Range,
-                        diagnostics: Diagnostics
+                        range     : forEachNode.Range
                         );
 
                     // Reset the counter.
@@ -874,34 +901,40 @@ namespace Deltin.Deltinteger.Parse
             
             Element value = ParseExpression(scope, varSetNode.Value);
 
+            Element initialVar = variable.GetVariable(target);
+
             Element index = null;
             if (varSetNode.Index != null)
+            {
                 index = ParseExpression(scope, varSetNode.Index);
+                initialVar = Element.Part<V_ValueInArray>(initialVar, index);
+            }
+
 
             switch (varSetNode.Operation)
             {
                 case "+=":
-                    value = Element.Part<V_Add>(variable.GetVariable(target, index), value);
+                    value = Element.Part<V_Add>(initialVar, value);
                     break;
 
                 case "-=":
-                    value = Element.Part<V_Subtract>(variable.GetVariable(target, index), value);
+                    value = Element.Part<V_Subtract>(initialVar, value);
                     break;
 
                 case "*=":
-                    value = Element.Part<V_Multiply>(variable.GetVariable(target, index), value);
+                    value = Element.Part<V_Multiply>(initialVar, value);
                     break;
 
                 case "/=":
-                    value = Element.Part<V_Divide>(variable.GetVariable(target, index), value);
+                    value = Element.Part<V_Divide>(initialVar, value);
                     break;
 
                 case "^=":
-                    value = Element.Part<V_RaiseToPower>(variable.GetVariable(target, index), value);
+                    value = Element.Part<V_RaiseToPower>(initialVar, value);
                     break;
 
                 case "%=":
-                    value = Element.Part<V_Modulo>(variable.GetVariable(target, index), value);
+                    value = Element.Part<V_Modulo>(initialVar, value);
                     break;
             }
 
@@ -910,7 +943,7 @@ namespace Deltin.Deltinteger.Parse
 
         void ParseDefine(ScopeGroup scope, ScopedDefineNode defineNode)
         {
-            var var = VarCollection.AssignDefinedVar(scope, IsGlobal, defineNode.VariableName, defineNode.Range, Diagnostics);
+            var var = VarCollection.AssignDefinedVar(scope, IsGlobal, defineNode.VariableName, defineNode.Range);
 
             // Set the defined variable if the variable is defined like "define var = 1"
             if (defineNode.Value != null)

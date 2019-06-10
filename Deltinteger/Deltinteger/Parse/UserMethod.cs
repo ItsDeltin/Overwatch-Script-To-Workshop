@@ -49,4 +49,20 @@ namespace Deltin.Deltinteger.Parse
             ).ToArray();
         }
     }
+
+    public class MethodStack
+    {
+        public UserMethod UserMethod { get; private set; }
+        public ParameterVar[] ParameterVars { get; private set; }
+        public int ActionIndex { get; private set; }
+        public Var Return { get; private set; }
+
+        public MethodStack(UserMethod userMethod, ParameterVar[] parameterVars, int actionIndex, Var @return)
+        {
+            UserMethod = userMethod;
+            ParameterVars = parameterVars;
+            ActionIndex = actionIndex;
+            Return = @return;
+        }
+    }
 }

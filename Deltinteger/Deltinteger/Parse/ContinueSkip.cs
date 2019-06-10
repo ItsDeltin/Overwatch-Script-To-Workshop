@@ -54,6 +54,13 @@ namespace Deltin.Deltinteger.Parse
             SetSkipCount(0);
         }
 
+        public int GetSkipCount()
+        {
+            // Gets the skip count based on the number of actions and the position of the coninue skip's skip-if.
+            // This will need to be changed if any other components are added that insert actions into the ruleset.
+            return Actions.Count - (IsSetup ? 2 : 0);
+        }
+
         private void CheckSetup()
         {
             if (!IsSetup)
