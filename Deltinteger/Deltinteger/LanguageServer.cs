@@ -146,7 +146,7 @@ namespace Deltin.Deltinteger.LanguageServer
                     completion.AddRange(new CompletionItem[]
                     {
                         // TODO insert text
-                        new CompletionItem("rule") { kind = CompletionItem.Keyword },
+                        new CompletionItem("rule")   { kind = CompletionItem.Keyword },
                         new CompletionItem("define") { kind = CompletionItem.Keyword },
                         new CompletionItem("method") { kind = CompletionItem.Keyword }
                     });
@@ -189,7 +189,7 @@ namespace Deltin.Deltinteger.LanguageServer
                     if (parser.Success)
                     {
                         // Get all variables
-                        completion.AddRange(blockNode.RelatedScopeGroup?.GetCompletionItems());
+                        completion.AddRange(blockNode.RelatedScopeGroup.GetCompletionItems());
                         // Get custom methods
                         completion.AddRange(UserMethod.CollectionCompletion(parser.UserMethods));
                     }

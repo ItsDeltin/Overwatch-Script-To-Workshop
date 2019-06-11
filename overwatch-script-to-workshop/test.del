@@ -1,6 +1,3 @@
-usevar globalvar A;
-usevar playervar A;
-
 define globalvar generatedEffects;
 define globalvar effectLocations;
 define globalvar count;
@@ -34,7 +31,7 @@ method GenerateGrid(location)
         }
 }
 
-rule: "destroy close effects" 
+rule: "destroy close effects"
 Event.OngoingPlayer
 {
     while (true)

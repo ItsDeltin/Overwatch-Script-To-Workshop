@@ -8,13 +8,13 @@ namespace Deltin.Deltinteger.Parse
 {
     public class AdditionalErrorChecking : DeltinScriptBaseVisitor<object>
     {
-        private readonly ErrorListener _errorReporter;
+        private readonly List<Diagnostic> _diagnostics;
         private readonly DeltinScriptParser _parser;
 
-        public AdditionalErrorChecking(DeltinScriptParser parser, ErrorListener errorReporter)
+        public AdditionalErrorChecking(DeltinScriptParser parser, List<Diagnostic> diagnostics)
         {
             _parser = parser;
-            _errorReporter = errorReporter;
+            _diagnostics = diagnostics;
         }
 
         public override object VisitStatement(DeltinScriptParser.StatementContext context)
@@ -23,7 +23,7 @@ namespace Deltin.Deltinteger.Parse
                 context.ChildCount == 1)
             {
                 //_errorReporter.SyntaxError(_parser, context.stop, context.stop.Line, context.stop.Column, "Expected ';'.", null);
-                _errorReporter.Error("Expected ';'", Range.GetRange(context));
+                _diagnostics.Add(new Diagnostic("Expected ';'", Range.GetRange(context)) { severity = Diagnostic.Error });
             }
             return base.VisitStatement(context);
         }
@@ -33,7 +33,7 @@ namespace Deltin.Deltinteger.Parse
             // Confirm there is an expression after the last ",".
             if (context.children?.Last().GetText() == ",")
             {
-                _errorReporter.SyntaxError(_parser, context.stop, context.stop.Line, context.stop.Column, "Missing parameter.", null);
+                _diagnostics.Add(new Diagnostic("Missing parameter.", Range.GetRange(context)) { severity = Diagnostic.Error });
             }
             return base.VisitParameters(context);
         }
@@ -46,11 +46,6 @@ namespace Deltin.Deltinteger.Parse
         public override void SyntaxError(IRecognizer recognizer, IToken offendingSymbol, int line, int charPositionInLine, string msg, RecognitionException e)
         {
             Errors.Add(new Diagnostic(msg, Range.GetRange(offendingSymbol)));
-        }
-
-        public void Error(string message, Range range)
-        {
-            Errors.Add(new Diagnostic(message, range) { severity = Diagnostic.Error });
         }
     }
 }

@@ -30,15 +30,20 @@ namespace Deltin.Deltinteger.Parse
 
             DeltinScriptParser.RulesetContext ruleSetContext = parser.ruleset();
 
-            AdditionalErrorChecking aec = new AdditionalErrorChecking(parser, errorListener);
-            aec.Visit(ruleSetContext);
-
             List<Diagnostic> diagnostics = new List<Diagnostic>();
             diagnostics.AddRange(errorListener.Errors);
 
             // Get the ruleset node.
             BuildAstVisitor bav = null;
             RulesetNode ruleSetNode = null;
+            if (diagnostics.Count == 0)
+            {
+                bav = new BuildAstVisitor(documentPos, diagnostics);
+                ruleSetNode = (RulesetNode)bav.Visit(ruleSetContext);
+            }
+
+            AdditionalErrorChecking aec = new AdditionalErrorChecking(parser, diagnostics);
+            aec.Visit(ruleSetContext);
 
             VarCollection vars = null;
             ScopeGroup root = null;
@@ -51,9 +56,6 @@ namespace Deltin.Deltinteger.Parse
                 vars = new VarCollection();
                 root = new ScopeGroup();
                 userMethods = new List<UserMethod>();
-
-                bav = new BuildAstVisitor(documentPos, diagnostics);
-                ruleSetNode = (RulesetNode)bav.Visit(ruleSetContext);
 
                 foreach (var definedVar in ruleSetNode.DefinedVars)
                     vars.AssignDefinedVar(root, definedVar.IsGlobal, definedVar.VariableName, definedVar.Range);

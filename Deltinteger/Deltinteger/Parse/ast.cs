@@ -86,7 +86,7 @@ namespace Deltin.Deltinteger.Parse
             for (int i = 0; i < conditions.Length; i++)
                 conditions[i] = (IExpressionNode)VisitExpr(context.rule_if().expr()[i]);
 
-            RuleEvent @event = RuleEvent.OngoingGlobal;
+            RuleEvent eventType = RuleEvent.OngoingGlobal;
             TeamSelector team = TeamSelector.All;
             PlayerSelector player = PlayerSelector.All;
 
@@ -109,7 +109,7 @@ namespace Deltin.Deltinteger.Parse
                 switch (option)
                 {
                     case "Event":
-                        if (!Enum.TryParse<RuleEvent>(value, out @event))
+                        if (!Enum.TryParse<RuleEvent>(value, out eventType))
                             _diagnostics.Add(new Diagnostic($"{value} is not a valid Event type.", valueRange));
                         eventRange = Range.GetRange(ruleOption);
                         break;
@@ -132,17 +132,10 @@ namespace Deltin.Deltinteger.Parse
                 }
             }
 
-            var node = new RuleNode(name, @event, team, player, conditions, block, eventRange, teamRange, playerRange, Range.GetRange(context));
+            var node = new RuleNode(name, eventType, team, player, conditions, block, eventRange, teamRange, playerRange, Range.GetRange(context));
             CheckRange(node);
             return node;
         }
-
-        /*
-        public override Node VisitRule_option(DeltinScriptParser.Rule_optionContext context)
-        {
-
-        }
-        */
 
         public override Node VisitBlock(DeltinScriptParser.BlockContext context)
         {
@@ -544,12 +537,12 @@ namespace Deltin.Deltinteger.Parse
         public IExpressionNode[] Conditions { get; private set; }
         public BlockNode Block { get; private set; }
 
-        public RuleNode(string name, RuleEvent @event, TeamSelector team, PlayerSelector player, IExpressionNode[] conditions, BlockNode block, 
+        public RuleNode(string name, RuleEvent eventType, TeamSelector team, PlayerSelector player, IExpressionNode[] conditions, BlockNode block, 
             Range eventRange, Range teamRange, Range playerRange, Range range) : base(range, eventRange, teamRange, playerRange)
         {
             Name = name;
 
-            Event = @Event;
+            Event = eventType;
             Team = team;
             Player = player;
             
