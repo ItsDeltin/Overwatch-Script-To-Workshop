@@ -18,6 +18,7 @@ namespace Deltin.Deltinteger
     public class Program
     {
         static Log Log = new Log(":");
+        static Log ParseLog = new Log("Parse");
 
         static void Main(string[] args)
         {
@@ -29,8 +30,10 @@ namespace Deltin.Deltinteger
 
             if (args.Contains("-langserver"))
             {
-                int.TryParse(args.FirstOrDefault(v => v.Split(' ')[0] == "-port").Split(' ')[1], out int port);
-                Check.RequestLoop(port);
+                string[] portArgs = args.FirstOrDefault(v => v.Split(' ')[0] == "-port")?.Split(' ');
+                int.TryParse(portArgs.ElementAtOrDefault(1), out int serverPort);
+                int.TryParse(portArgs.ElementAtOrDefault(2), out int clientPort);
+                Check.RequestLoop(serverPort, clientPort);
             }
             else
             {
@@ -72,19 +75,46 @@ namespace Deltin.Deltinteger
             string text = File.ReadAllText(parseFile);
 
             Rule[] generatedRules = null;
-#if DEBUG == false
+
             try
             {
-                generatedRules = Parser.ParseText(text, out _);
+                var result = ParserData.GetParser(text, null);
+
+                ParseLog.Write(LogLevel.Normal, new ColorMod("Build succeeded.", ConsoleColor.Green));
+
+                // List all variables
+                ParseLog.Write(LogLevel.Normal, new ColorMod("Variable Guide:", ConsoleColor.Blue));
+
+                if (result.Root?.VarCollection().Count > 0)
+                {
+                    int nameLength = result.Root.VarCollection().Max(v => v.Name.Length);
+
+                    bool other = false;
+                    foreach (DefinedVar var in result.Root.VarCollection())
+                    {
+                        ConsoleColor textcolor = other ? ConsoleColor.White : ConsoleColor.DarkGray;
+                        other = !other;
+
+                        ParseLog.Write(LogLevel.Normal,
+                            // Names
+                            new ColorMod(var.Name + new string(' ', nameLength - var.Name.Length) + "  ", textcolor),
+                            // Variable
+                            new ColorMod(
+                                (var.IsGlobal ? "global" : "player") 
+                                + " " + 
+                                var.Variable.ToString() +
+                                (var.Index != -1 ? $"[{var.Index}]" : "")
+                                , textcolor)
+                        );
+                    }
+                }
+                generatedRules = result.Rules;
             }
             catch (SyntaxErrorException ex)
             {
                 Log.Write(LogLevel.Normal, new ColorMod(ex.Message, ConsoleColor.Red));
                 return;
             }
-#else
-            generatedRules = Parser.ParseText(text, out _);
-#endif
 
             string final = RuleArrayToWorkshop(generatedRules);
 

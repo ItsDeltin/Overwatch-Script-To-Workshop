@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Reflection;
+using Deltin.Deltinteger.LanguageServer;
 
 namespace Deltin.Deltinteger.Elements
 {
@@ -35,33 +36,40 @@ namespace Deltin.Deltinteger.Elements
             return ((EnumValue)attributes.ElementAtOrDefault(0))?.WorkshopName ?? Extras.AddSpacesToSentence(enumValue.ToString(), false);
          }
 
-         public static string[] GetCodeValues(Type enumType)
+         public static string[] GetCodeValues<T>()
          {
-             return enumType.GetFields()
-                .Select(v => v.GetCustomAttribute<EnumValue>().CodeName)
+             return typeof(T).GetFields(BindingFlags.Public | BindingFlags.Static)
+                .Select(v => v.GetCustomAttribute<EnumValue>()?.CodeName ?? v.Name)
                 .ToArray();
+         }
+
+         public static CompletionItem[] GetCompletion<T>()
+         {
+             return EnumValue.GetCodeValues<T>().Select(value =>
+                new CompletionItem(value) { kind = CompletionItem.EnumMember }
+            ).ToArray();
          }
     }
 
     public enum RuleEvent
     {
         [EnumValue(null, "Ongoing - Global")]
-        Ongoing_Global,
+        OngoingGlobal,
         [EnumValue(null, "Ongoing - Each Player")]
-        Ongoing_EachPlayer,
+        OngoingPlayer,
 
         [EnumValue(null, "Player earned elimination")]
-        Player_Earned_Elimination,
+        OnElimination,
         [EnumValue(null, "Player dealt final blow")]
-        Player_Dealt_Final_Blow,
+        OnFinalBlow,
 
         [EnumValue(null, "Player dealt damage")]
-        Player_Dealt_Damage,
+        OnDamageDealt,
         [EnumValue(null, "Player took damage")]
-        Player_Took_Damage,
+        OnDamageTaken,
 
         [EnumValue(null, "Player died")]
-        Player_Died
+        OnDeath
     }
 
     public enum PlayerSelector

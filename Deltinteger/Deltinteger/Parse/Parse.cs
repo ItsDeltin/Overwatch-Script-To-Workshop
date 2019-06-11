@@ -12,50 +12,9 @@ using Deltin.Deltinteger.LanguageServer;
 
 namespace Deltin.Deltinteger.Parse
 {
-    public class Parser
+    public class ParserData
     {
-        static Log Log = new Log("Parse");
-
-        public static Rule[] ParseText(string document, out ParserElements parserData)
-        {
-            parserData = ParserElements.GetParser(document, null);
-
-            Log.Write(LogLevel.Normal, new ColorMod("Build succeeded.", ConsoleColor.Green));
-
-            // List all variables
-            Log.Write(LogLevel.Normal, new ColorMod("Variable Guide:", ConsoleColor.Blue));
-
-            if (parserData.Root?.VarCollection().Count > 0)
-            {
-                int nameLength = parserData.Root.VarCollection().Max(v => v.Name.Length);
-
-                bool other = false;
-                foreach (DefinedVar var in parserData.Root.VarCollection())
-                {
-                    ConsoleColor textcolor = other ? ConsoleColor.White : ConsoleColor.DarkGray;
-                    other = !other;
-
-                    Log.Write(LogLevel.Normal,
-                        // Names
-                        new ColorMod(var.Name + new string(' ', nameLength - var.Name.Length) + "  ", textcolor),
-                        // Variable
-                        new ColorMod(
-                            (var.IsGlobal ? "global" : "player") 
-                            + " " + 
-                            var.Variable.ToString() +
-                            (var.Index != -1 ? $"[{var.Index}]" : "")
-                            , textcolor)
-                    );
-                }
-            }
-
-            return parserData.Rules;
-        }
-    }
-
-    public class ParserElements
-    {
-        public static ParserElements GetParser(string document, Pos documentPos)
+        public static ParserData GetParser(string document, Pos documentPos)
         {
             AntlrInputStream inputStream = new AntlrInputStream(document);
 
@@ -93,7 +52,7 @@ namespace Deltin.Deltinteger.Parse
                 root = new ScopeGroup();
                 userMethods = new List<UserMethod>();
 
-                bav = new BuildAstVisitor(documentPos);
+                bav = new BuildAstVisitor(documentPos, diagnostics);
                 ruleSetNode = (RulesetNode)bav.Visit(ruleSetContext);
 
                 foreach (var definedVar in ruleSetNode.DefinedVars)
@@ -123,7 +82,7 @@ namespace Deltin.Deltinteger.Parse
                 success = true;
             }
             
-            return new ParserElements()
+            return new ParserData()
             {
                 Parser = parser,
                 RulesetContext = ruleSetContext,
@@ -175,7 +134,7 @@ namespace Deltin.Deltinteger.Parse
             VarCollection = varCollection;
             UserMethods = userMethods;
 
-            Rule = new Rule(ruleNode.Name);
+            Rule = new Rule(ruleNode.Name, ruleNode.Event, ruleNode.Team, ruleNode.Player);
 
             ContinueSkip = new ContinueSkip(IsGlobal, Actions, varCollection);
 

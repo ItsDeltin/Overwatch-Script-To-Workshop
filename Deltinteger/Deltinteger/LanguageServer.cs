@@ -24,16 +24,18 @@ namespace Deltin.Deltinteger.LanguageServer
         const int DefaultPort = 3000;
         const int DefaultClientPort = 3001;
         
-        public static void RequestLoop(int port)
+        public static void RequestLoop(int serverPort, int clientPort)
         {
-            if (port == 0)
-                port = DefaultPort;
+            if (serverPort == 0)
+                serverPort = DefaultPort;
+            if (clientPort == 0)
+                clientPort = DefaultClientPort;
 
-            Log.Write(LogLevel.Normal, new ColorMod("Language server", ConsoleColor.Magenta), " started on port ", new ColorMod(port.ToString(), ConsoleColor.DarkCyan), 
-                " (", new ColorMod(DefaultClientPort.ToString(), ConsoleColor.DarkCyan), ")");
+            Log.Write(LogLevel.Normal, new ColorMod("Language server", ConsoleColor.Magenta), " started on port ", new ColorMod(serverPort.ToString(), ConsoleColor.DarkCyan), 
+                " (", new ColorMod(clientPort.ToString(), ConsoleColor.DarkCyan), ")");
 
             HttpListener server = new HttpListener();
-            server.Prefixes.Add($"http://localhost:{port}/");
+            server.Prefixes.Add($"http://localhost:{serverPort}/");
             server.Start();
 
             bool isRunning = true;
@@ -62,7 +64,7 @@ namespace Deltin.Deltinteger.LanguageServer
                     
                     case "parse":
                         buffer = GetBytes(
-                            ParseDocument(input)
+                            ParseDocument(input, clientPort)
                         );
                         break;
 
@@ -100,21 +102,19 @@ namespace Deltin.Deltinteger.LanguageServer
             return Encoding.UTF8.GetBytes(value);
         }
 
-        static string ParseDocument(string document)
+        static string ParseDocument(string document, int clientPort)
         {
-            Rule[] rules = Parse.Parser.ParseText(document, out var data);
+            var data = ParserData.GetParser(document, null);
 
-            if (rules != null && data.Diagnostics.Count == 0)
+            if (data.Rules != null && data.Diagnostics.Count == 0)
             {
-                string final = Program.RuleArrayToWorkshop(rules);
+                string final = Program.RuleArrayToWorkshop(data.Rules);
                 using (var wc = new WebClient())
                 {
-                    wc.UploadString($"http://localhost:{DefaultClientPort}/", final);
+                    wc.UploadString($"http://localhost:{clientPort}/", final);
                 }
             }
             
-            Console.WriteLine(data.RulesetContext.ToStringTree(data.Parser));
-
             return JsonConvert.SerializeObject(data.Diagnostics.ToArray());
         }
 
@@ -135,7 +135,7 @@ namespace Deltin.Deltinteger.LanguageServer
             int character = inputJson.caret.character;
             Pos caret = new Pos(line, character);
 
-            var parser = ParserElements.GetParser(document, new Parse.Pos(caret.line, caret.character));
+            var parser = ParserData.GetParser(document, new Parse.Pos(caret.line, caret.character));
 
             List<CompletionItem> completion = new List<CompletionItem>();
             switch(parser.Bav?.SelectedNode.FirstOrDefault())
@@ -146,10 +146,34 @@ namespace Deltin.Deltinteger.LanguageServer
                     completion.AddRange(new CompletionItem[]
                     {
                         // TODO insert text
-                        new CompletionItem("rule"),
-                        new CompletionItem("define"),
-                        new CompletionItem("method")
+                        new CompletionItem("rule") { kind = CompletionItem.Keyword },
+                        new CompletionItem("define") { kind = CompletionItem.Keyword },
+                        new CompletionItem("method") { kind = CompletionItem.Keyword }
                     });
+                    break;
+
+                // Rule node
+                case RuleNode ruleNode:
+
+                    // Event type
+                    if (ruleNode.IsEventOptionSelected())
+                        completion.AddRange(EnumValue.GetCompletion<RuleEvent>());
+                    
+                    // Player
+                    else if (ruleNode.IsPlayerOptionSelected())
+                        completion.AddRange(EnumValue.GetCompletion<PlayerSelector>());
+                    
+                    // Team
+                    else if (ruleNode.IsTeamOptionSelected())
+                        completion.AddRange(EnumValue.GetCompletion<TeamSelector>());
+
+                    else
+                        completion.AddRange(new CompletionItem[] 
+                        {
+                            new CompletionItem("Event" ) { kind = CompletionItem.Enum },
+                            new CompletionItem("Team"  ) { kind = CompletionItem.Enum },
+                            new CompletionItem("Player") { kind = CompletionItem.Enum },
+                        });
                     break;
 
                 // Actions
@@ -211,14 +235,6 @@ namespace Deltin.Deltinteger.LanguageServer
                     break;
             }
 
-            /*
-            string filter = selectedRule.GetText();
-            foreach(CompletionItem comp in completion)
-            {
-                comp.filterText = filter;
-            }
-            */
-
             return JsonConvert.SerializeObject(completion.ToArray());
         }
 
@@ -232,7 +248,7 @@ namespace Deltin.Deltinteger.LanguageServer
             int character = inputJson.caret.character;
             Pos caret = new Pos(line, character);
 
-            var parser = ParserElements.GetParser(document, new Parse.Pos(caret.line, caret.character));
+            var parser = ParserData.GetParser(document, new Parse.Pos(caret.line, caret.character));
 
             int methodIndex = 0;
             int parameterIndex = 0;
@@ -294,7 +310,7 @@ namespace Deltin.Deltinteger.LanguageServer
             int character = inputJson.caret.character;
             Pos caret = new Pos(line, character);
 
-            var parser = ParserElements.GetParser(document, new Parse.Pos(caret.line, caret.character));
+            var parser = ParserData.GetParser(document, new Parse.Pos(caret.line, caret.character));
 
             Hover hover = null;
 

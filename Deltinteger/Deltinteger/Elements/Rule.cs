@@ -27,13 +27,13 @@ namespace Deltin.Deltinteger.Elements
             RuleEvent = ruleEvent;
             Team = team;
             Player = player;
-            IsGlobal = ruleEvent == RuleEvent.Ongoing_Global;
+            IsGlobal = ruleEvent == RuleEvent.OngoingGlobal;
         }
 
         public Rule(string name) // Creates a "Ongoing - Global" rule.
         {
             Name = name;
-            RuleEvent = RuleEvent.Ongoing_Global;
+            RuleEvent = RuleEvent.OngoingGlobal;
             IsGlobal = true;
         }
 

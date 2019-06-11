@@ -5,7 +5,8 @@ define globalvar generatedEffects;
 define globalvar effectLocations;
 define globalvar count;
 
-rule: "Resursion test."
+rule: "Recursion test."
+Event.OngoingPlayer
 if (IsButtonHeld(EventPlayer(), Button.Interact))
 {
     GenerateGrid(PositionOf(EventPlayer()));
@@ -16,7 +17,6 @@ method GenerateGrid(location)
     for (define i = 0; i < CountOf(generatedEffects); i+=1;)
     {
         DestroyEffect(generatedEffects[i]); 
-        SmallMessage(EventPlayer(), <"destroyed sphere">);
     }
 
     generatedEffects = null;
@@ -34,12 +34,13 @@ method GenerateGrid(location)
         }
 }
 
-rule: "destroy close effects"
+rule: "destroy close effects" 
+Event.OngoingPlayer
 {
     while (true)
-        for (define index; index < 100; index += 1;)
-            if (DistanceBetween(EventPlayer(), effectLocations[index]) < 3)
+        for (define index = 0; index < CountOf(effectLocations); index += 1;)
+            if (DistanceBetween(EventPlayer(), effectLocations[index]) < 1.5)
             {
-                DestroyEffect(effectLocations[index]);
+                DestroyEffect(generatedEffects[index]);
             }
 }

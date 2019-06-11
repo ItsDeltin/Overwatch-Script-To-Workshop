@@ -11,11 +11,13 @@ namespace Deltin.Deltinteger.Parse
     public class BuildAstVisitor : DeltinScriptBaseVisitor<Node>
     {
         Pos _caretPos;
+        List<Diagnostic> _diagnostics;
         public List<Node> SelectedNode { get; private set; } = new List<Node>();
 
-        public BuildAstVisitor(Pos caretPos)
+        public BuildAstVisitor(Pos caretPos, List<Diagnostic> diagnostics)
         {
             _caretPos = caretPos;
+            _diagnostics = diagnostics;
         }
 
         public override Node VisitRuleset(DeltinScriptParser.RulesetContext context)
@@ -84,10 +86,63 @@ namespace Deltin.Deltinteger.Parse
             for (int i = 0; i < conditions.Length; i++)
                 conditions[i] = (IExpressionNode)VisitExpr(context.rule_if().expr()[i]);
 
-            var node = new RuleNode(name, conditions, block, Range.GetRange(context));
+            RuleEvent @event = RuleEvent.OngoingGlobal;
+            TeamSelector team = TeamSelector.All;
+            PlayerSelector player = PlayerSelector.All;
+
+            Range eventRange = null;
+            Range teamRange = null;
+            Range playerRange = null;
+            foreach(var ruleOption in context.rule_option())
+            {
+                string option = ruleOption.PART(0).GetText();
+                Range optionRange = Range.GetRange(ruleOption.PART(0).Symbol);
+
+                string value = null;
+                Range valueRange = null;
+                if (ruleOption.PART().Length == 2)
+                {
+                    value = ruleOption.PART(1).GetText();
+                    valueRange = Range.GetRange(ruleOption.PART(1).Symbol);
+                }
+                
+                switch (option)
+                {
+                    case "Event":
+                        if (!Enum.TryParse<RuleEvent>(value, out @event))
+                            _diagnostics.Add(new Diagnostic($"{value} is not a valid Event type.", valueRange));
+                        eventRange = Range.GetRange(ruleOption);
+                        break;
+                    
+                    case "Team":
+                        if (!Enum.TryParse<TeamSelector>(value, out team))
+                            _diagnostics.Add(new Diagnostic($"{value} is not a valid Team type.", valueRange));
+                        teamRange = Range.GetRange(ruleOption);
+                        break;
+
+                    case "Player":
+                        if (!Enum.TryParse<PlayerSelector>(value, out player))
+                            _diagnostics.Add(new Diagnostic($"{value} is not a valid Player type.", valueRange));
+                        playerRange = Range.GetRange(ruleOption);
+                        break;
+                    
+                    default:
+                        _diagnostics.Add(new Diagnostic($"{value} is not a valid rule option.", optionRange));
+                        break;
+                }
+            }
+
+            var node = new RuleNode(name, @event, team, player, conditions, block, eventRange, teamRange, playerRange, Range.GetRange(context));
             CheckRange(node);
             return node;
         }
+
+        /*
+        public override Node VisitRule_option(DeltinScriptParser.Rule_optionContext context)
+        {
+
+        }
+        */
 
         public override Node VisitBlock(DeltinScriptParser.BlockContext context)
         {
@@ -406,8 +461,17 @@ namespace Deltin.Deltinteger.Parse
             // and the node's range is less than the currently selected node.
             if ((node.Range.IsInside(_caretPos)) /*&& (SelectedNode == null || node.Range < SelectedNode.Range)*/)
             {
-                //SelectedNode = node;
                 SelectedNode.Add(node);
+
+                // Sub-ranges:
+                if (node.SubRanges != null)
+                {
+                    List<int> inside = new List<int>();
+                    for (int i = 0; i < node.SubRanges.Length; i++)
+                        if (node.SubRanges[i]?.IsInside(_caretPos) ?? false)
+                            inside.Add(i);
+                    node.SubRangesSelected = inside.ToArray();
+                }
             }
         }
     }
@@ -416,13 +480,18 @@ namespace Deltin.Deltinteger.Parse
     {
         public Range Range { get; private set; }
 
+        public Range[] SubRanges { get; private set; }
+
+        public int[] SubRangesSelected { get; set; }
+
         public Element RelatedElement { get; set; }
 
         public ScopeGroup RelatedScopeGroup { get; set; }
 
-        public Node(Range range)
+        public Node(Range range, params Range[] subRanges)
         {
             Range = range;
+            SubRanges = subRanges;
         }
     }
 
@@ -469,14 +538,38 @@ namespace Deltin.Deltinteger.Parse
     public class RuleNode : Node
     {
         public string Name { get; private set; }
+        public RuleEvent Event { get; private set; }
+        public TeamSelector Team { get; private set; }
+        public PlayerSelector Player { get; private set; }
         public IExpressionNode[] Conditions { get; private set; }
         public BlockNode Block { get; private set; }
 
-        public RuleNode(string name, IExpressionNode[] conditions, BlockNode block, Range range) : base(range)
+        public RuleNode(string name, RuleEvent @event, TeamSelector team, PlayerSelector player, IExpressionNode[] conditions, BlockNode block, 
+            Range eventRange, Range teamRange, Range playerRange, Range range) : base(range, eventRange, teamRange, playerRange)
         {
             Name = name;
+
+            Event = @Event;
+            Team = team;
+            Player = player;
+            
             Conditions = conditions;
             Block = block;
+        }
+
+        public bool IsEventOptionSelected()
+        {
+            return SubRangesSelected.Contains(0);
+        }
+
+        public bool IsTeamOptionSelected()
+        {
+            return SubRangesSelected.Contains(1);
+        }
+
+        public bool IsPlayerOptionSelected()
+        {
+            return SubRangesSelected.Contains(2);
         }
     }
 
@@ -780,7 +873,7 @@ namespace Deltin.Deltinteger.Parse
                 return new Range
                 (
                     new Pos(context.start.Line - 1, context.start.Column),
-                    new Pos(context.stop.Line - 1, context.stop.Column)
+                    new Pos(context.stop.Line - 1, context.stop.Column + 1)
                 );
             }
         }

@@ -170,7 +170,8 @@ function sendRequest(uri, path, data, resolve, reject, callback) {
                     resolve(value);
             }
             else if (reject != null) {
-                reject(error);
+                //reject(error);
+                resolve(null);
             }
         });
     });
