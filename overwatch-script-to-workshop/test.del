@@ -1,43 +1,22 @@
-define globalvar generatedEffects;
-define globalvar effectLocations;
-define globalvar count;
-
 rule: "Recursion test."
 Event.OngoingPlayer
 if (IsButtonHeld(EventPlayer(), Button.Interact))
 {
-    GenerateGrid(PositionOf(EventPlayer()));
+    Test(4);
 }
 
-method GenerateGrid(location)
+method Test(result) 
 {
-    for (define i = 0; i < CountOf(generatedEffects); i+=1;)
+    if (result < 10)
     {
-        DestroyEffect(generatedEffects[i]); 
+        SmallMessage(EventPlayer(), <"#<0>", result>);
+        define value = Test(result + 1);
+        SmallMessage(EventPlayer(), <"rank: <0>", value>);
+        return value;
     }
-
-    generatedEffects = null;
-    effectLocations = null;
-    count = 10 * 10;
-    
-    for (define x = 0; x < 10; x+=1;)
-        for (define y = 0; y < 10; y+=1;) 
-        {
-            define local = location + Vector(x / 2, y / 2, 0);
-
-            CreateEffect(AllPlayers(), Effects.Sphere, Color.Blue, local, 0.25, EffectRev.None);
-            generatedEffects = Append(generatedEffects, LastCreatedEntity());
-            effectLocations = Append(effectLocations, local);
-        }
-}
-
-rule: "destroy close effects"
-Event.OngoingPlayer
-{
-    while (true)
-        for (define index = 0; index < CountOf(effectLocations); index += 1;)
-            if (DistanceBetween(EventPlayer(), effectLocations[index]) < 1.5)
-            {
-                DestroyEffect(generatedEffects[index]);
-            }
+    else
+    {
+        SmallMessage(EventPlayer(), <"max!: <0>", result>);
+        return result;
+    }
 }

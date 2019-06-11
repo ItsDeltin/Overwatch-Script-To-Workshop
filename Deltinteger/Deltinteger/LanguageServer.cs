@@ -189,9 +189,11 @@ namespace Deltin.Deltinteger.LanguageServer
                     if (parser.Success)
                     {
                         // Get all variables
-                        completion.AddRange(blockNode.RelatedScopeGroup.GetCompletionItems());
+                        if (blockNode.RelatedScopeGroup != null)
+                            completion.AddRange(blockNode.RelatedScopeGroup.GetCompletionItems());
                         // Get custom methods
-                        completion.AddRange(UserMethod.CollectionCompletion(parser.UserMethods));
+                        if (parser.UserMethods != null)
+                            completion.AddRange(UserMethod.CollectionCompletion(parser.UserMethods));
                     }
 
                     break;
@@ -208,9 +210,11 @@ namespace Deltin.Deltinteger.LanguageServer
                     if (parser.Success)
                     {
                         // Get all variables
-                        completion.AddRange(methodNode.RelatedScopeGroup.GetCompletionItems());
+                        if (methodNode.RelatedScopeGroup != null)
+                            completion.AddRange(methodNode.RelatedScopeGroup?.GetCompletionItems());
                         // Get custom methods
-                        completion.AddRange(UserMethod.CollectionCompletion(parser.UserMethods));
+                        if (parser.UserMethods != null)
+                            completion.AddRange(UserMethod.CollectionCompletion(parser.UserMethods));
                     }
 
                     break;

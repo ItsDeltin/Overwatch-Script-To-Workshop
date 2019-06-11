@@ -425,7 +425,7 @@ namespace Deltin.Deltinteger.Parse
                         ContinueSkip.Setup();
 
                         for (int i = 0; i < lastMethod.ParameterVars.Length; i++)
-                            if (methodNode.Parameters.Length < i)
+                            if (methodNode.Parameters.Length > i)
                                 Actions.Add(lastMethod.ParameterVars[i].Push(ParseExpression(scope, methodNode.Parameters[i])));
 
                         // ?--- Multidimensional Array 
