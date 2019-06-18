@@ -105,6 +105,7 @@ namespace Deltin.Deltinteger.Elements
         Mccree,
         Junkrat,
         Zarya,
+        [EnumValue(null, "Soldier: 76")]
         Soldier76,
         Lucio,
         Dva,
@@ -425,6 +426,7 @@ namespace Deltin.Deltinteger.Elements
         Reaper,
         Reinhardt,
         Roadhog,
+        [EnumValue(null, "Soldier: 76")]
         Soldier76,
         Sombra,
         Symmetra,

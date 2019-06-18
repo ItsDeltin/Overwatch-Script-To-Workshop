@@ -7,29 +7,13 @@ if (IsButtonHeld(EventPlayer(), Button.Interact))
 
 method Test(result) 
 {
-    Wait(2);
-    SmallMessage(EventPlayer(), <"checkpoint <0>", result>);
-    Wait(2);
-    if (result == 123)
+    if (returns4() == 4)
     {
-        if (Test(1) == 4)
-        {
-            SmallMessage(EventPlayer(), "Success!");
-            Wait(2);
-            return 193;
-        }
-        else
-        {
-            SmallMessage(EventPlayer(), <"failed, spawned <0>", Test(1)>);
-            Wait(2);
-            return 9;
-        }
+        SmallMessage(EventPlayer(), <"hello <0>! good_luck?", EventPlayer()>);
     }
-    else if (result == 1)
-    {
-        SmallMessage(EventPlayer(), <"spawned <0>", 4>);
-        Wait(2);
-        return 4;
-    }
-    return -1;
+}
+
+method returns4()
+{
+    return 4;
 }
