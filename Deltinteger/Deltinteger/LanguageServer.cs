@@ -108,7 +108,7 @@ namespace Deltin.Deltinteger.LanguageServer
 
             if (data.Rules != null && data.Diagnostics.Count == 0)
             {
-                string final = Program.RuleArrayToWorkshop(data.Rules);
+                string final = Program.RuleArrayToWorkshop(data.Rules, data.VarCollection);
                 using (var wc = new WebClient())
                 {
                     wc.UploadString($"http://localhost:{clientPort}/", final);

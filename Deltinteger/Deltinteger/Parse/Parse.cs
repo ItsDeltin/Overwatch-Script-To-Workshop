@@ -45,7 +45,7 @@ namespace Deltin.Deltinteger.Parse
             AdditionalErrorChecking aec = new AdditionalErrorChecking(parser, diagnostics);
             aec.Visit(ruleSetContext);
 
-            VarCollection vars = null;
+            VarCollection varCollection = null;
             ScopeGroup root = null;
             List<UserMethod> userMethods = null;
             Rule[] rules = null;
@@ -53,12 +53,12 @@ namespace Deltin.Deltinteger.Parse
 
             if (diagnostics.Count == 0)
             {
-                vars = new VarCollection();
+                varCollection = new VarCollection();
                 root = new ScopeGroup();
                 userMethods = new List<UserMethod>();
 
                 foreach (var definedVar in ruleSetNode.DefinedVars)
-                    vars.AssignDefinedVar(root, definedVar.IsGlobal, definedVar.VariableName, definedVar.Range);
+                    varCollection.AssignDefinedVar(root, definedVar.IsGlobal, definedVar.VariableName, definedVar.Range);
 
                 // Get the user methods.
                 for (int i = 0; i < ruleSetNode.UserMethods.Length; i++)
@@ -71,7 +71,7 @@ namespace Deltin.Deltinteger.Parse
                 {
                     try
                     {
-                        var result = Translate.GetRule(ruleSetNode.Rules[i], root, vars, userMethods.ToArray());
+                        var result = Translate.GetRule(ruleSetNode.Rules[i], root, varCollection, userMethods.ToArray());
                         rules[i] = result.Rule;
                         diagnostics.AddRange(result.Diagnostics);
                     }
@@ -94,20 +94,21 @@ namespace Deltin.Deltinteger.Parse
                 Rules = rules,
                 UserMethods = userMethods?.ToArray(),
                 Root = root,
-                Success = success
+                Success = success,
+                VarCollection = varCollection
             };
         }
 
         public DeltinScriptParser Parser { get; private set; }
         public DeltinScriptParser.RulesetContext RulesetContext { get; private set; }
         public RulesetNode RuleSetNode { get; private set; }
-        //public ErrorListener ErrorListener { get; private set; } 
         public List<Diagnostic> Diagnostics;
         public BuildAstVisitor Bav { get; private set; }
         public Rule[] Rules { get; private set; }
         public UserMethod[] UserMethods { get; private set; }
         public ScopeGroup Root { get; private set; }
         public bool Success { get; private set; }
+        public VarCollection VarCollection { get; private set; }
     }
 
     class Translate
@@ -141,7 +142,7 @@ namespace Deltin.Deltinteger.Parse
             ContinueSkip = new ContinueSkip(IsGlobal, Actions, varCollection);
 
             ParseConditions(ruleNode.Conditions);
-            ParseBlock(root.Child(), ruleNode.Block, false, varCollection.AssignVar(IsGlobal));
+            ParseBlock(root.Child(), ruleNode.Block, false, varCollection.AssignVar($"{Rule.Name}: return value (todo: remove)", IsGlobal));
 
             Rule.Actions = Actions.ToArray();
             Rule.Conditions = Conditions.ToArray();
@@ -470,9 +471,9 @@ namespace Deltin.Deltinteger.Parse
                             }
                         }
 
-                        var returns = VarCollection.AssignVar(IsGlobal);
+                        var returns = VarCollection.AssignVar($"{methodNode.Name}: return temp value", IsGlobal);
 
-                        Var continueSkipArray = VarCollection.AssignVar(IsGlobal);
+                        Var continueSkipArray = VarCollection.AssignVar($"{methodNode.Name}: continue skip temp value", IsGlobal);
                         var stack = new MethodStack(userMethod, parameterVars, ContinueSkip.GetSkipCount(), returns, continueSkipArray);
                         MethodStack.Add(stack);
 
@@ -493,6 +494,7 @@ namespace Deltin.Deltinteger.Parse
                             Actions.Add(parameterVars[i].Pop());
                         }
 
+                        ContinueSkip.Setup();
                         ContinueSkip.SetSkipCount(Element.Part<V_LastOf>(continueSkipArray.GetVariable()));
 
                         // ?--- Multidimensional Array 
@@ -866,12 +868,13 @@ namespace Deltin.Deltinteger.Parse
 
                     // Replace else-if's dummy.
                     for (int i = 0; i < elseif_Skips.Length; i++)
-                    {
-                        elseif_Skips[i].ParameterValues = new object[]
+                        if (elseif_Skips[i] != null)
                         {
-                            new V_Number(Actions.Count - 1 - Actions.IndexOf(elseif_Skips[i]))
-                        };
-                    }
+                            elseif_Skips[i].ParameterValues = new object[]
+                            {
+                                new V_Number(Actions.Count - 1 - Actions.IndexOf(elseif_Skips[i]))
+                            };
+                        }
 
                     return;
                 }

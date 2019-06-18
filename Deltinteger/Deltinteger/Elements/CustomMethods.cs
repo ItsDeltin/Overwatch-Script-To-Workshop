@@ -31,15 +31,15 @@ namespace Deltin.Deltinteger.Elements
         {
             var eventPlayer = new V_EventPlayer();
 
-            Var a = varCollection.AssignVar(isGlobal);
-            Var b = varCollection.AssignVar(isGlobal);
-            Var c = varCollection.AssignVar(isGlobal);
-            Var ab = varCollection.AssignVar(isGlobal);
-            Var bc = varCollection.AssignVar(isGlobal);
-            Var abVec = varCollection.AssignVar(isGlobal);
-            Var bcVec = varCollection.AssignVar(isGlobal);
-            Var abNorm = varCollection.AssignVar(isGlobal);
-            Var bcNorm = varCollection.AssignVar(isGlobal);
+            Var a      = varCollection.AssignVar("AngleOfVectors: a",      isGlobal);
+            Var b      = varCollection.AssignVar("AngleOfVectors: b",      isGlobal);
+            Var c      = varCollection.AssignVar("AngleOfVectors: c",      isGlobal);
+            Var ab     = varCollection.AssignVar("AngleOfVectors: ab",     isGlobal);
+            Var bc     = varCollection.AssignVar("AngleOfVectors: bc",     isGlobal);
+            Var abVec  = varCollection.AssignVar("AngleOfVectors: abVec",  isGlobal);
+            Var bcVec  = varCollection.AssignVar("AngleOfVectors: bcVec",  isGlobal);
+            Var abNorm = varCollection.AssignVar("AngleOfVectors: abNorm", isGlobal);
+            Var bcNorm = varCollection.AssignVar("AngleOfVectors: bcNorm", isGlobal);
 
             Element zeroVec = Element.Part<V_Vector>(new V_Number(0), new V_Number(0), new V_Number(0));
 

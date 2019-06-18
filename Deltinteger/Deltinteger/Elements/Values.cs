@@ -475,13 +475,13 @@ namespace Deltin.Deltinteger.Elements
     [ElementData("Number", ValueType.Number)]
     public class V_Number : Element
     {
+        double value;
+
         public V_Number(double value)
         {
             this.value = value;
         }
         public V_Number() : this(0) {}
-
-        double value;
 
         public override string ToWorkshop()
         {
@@ -499,6 +499,8 @@ namespace Deltin.Deltinteger.Elements
         {
             return $"{ElementData.ElementName} {value}";
         }
+
+        public static implicit operator V_Number(double value) => new V_Number(value);
     }
 
     [ElementData("Number Of Dead Players", ValueType.Number)]

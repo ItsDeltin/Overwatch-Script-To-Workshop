@@ -29,30 +29,40 @@ namespace Deltin.Deltinteger.Parse
             }
         }
 
-        public Var AssignVar(bool isGlobal)
+        public Var AssignVar(string name, bool isGlobal)
         {
-            return new Var(isGlobal, UseVar, Assign(isGlobal));
+            Var var = new Var(name, isGlobal, UseVar, Assign(isGlobal));
+            AllVars.Add(var);
+            return var;
         }
 
         public DefinedVar AssignDefinedVar(ScopeGroup scopeGroup, bool isGlobal, string name, Range range)
         {
-            return new DefinedVar(scopeGroup, name, isGlobal, UseVar, Assign(isGlobal), range);
+            DefinedVar var = new DefinedVar(scopeGroup, name, isGlobal, UseVar, Assign(isGlobal), range);
+            AllVars.Add(var);
+            return var;
         }
 
         public ParameterVar AssignParameterVar(List<Element> actions, ScopeGroup scopeGroup, bool isGlobal, string name, Range range)
         {
-            return new ParameterVar(actions, scopeGroup, name, isGlobal, UseVar, Assign(isGlobal), range);
+            ParameterVar var = new ParameterVar(actions, scopeGroup, name, isGlobal, UseVar, Assign(isGlobal), range);
+            AllVars.Add(var);
+            return var;
         }
+
+        public readonly List<Var> AllVars = new List<Var>();
     }
 
     public class Var
     {
+        public string Name { get; protected set; }
         public bool IsGlobal { get; protected set; }
         public Variable Variable { get; protected set; }
         public int Index { get; protected set; }
 
-        public Var(bool isGlobal, Variable variable, int index)
+        public Var(string name, bool isGlobal, Variable variable, int index)
         {
+            Name = name;
             IsGlobal = isGlobal;
             Variable = variable;
             Index = index;
@@ -138,28 +148,22 @@ namespace Deltin.Deltinteger.Parse
 
     public class DefinedVar : Var
     {
-        public string Name { get; protected set; }
-
         public DefinedVar(ScopeGroup scopeGroup, DefinedNode node, VarCollection varCollection)
-            : base(node.IsGlobal, varCollection.UseVar, node.UseIndex ?? varCollection.Assign(node.IsGlobal))
+            : base(node.VariableName, node.IsGlobal, varCollection.UseVar, node.UseIndex ?? varCollection.Assign(node.IsGlobal))
         {
             if (scopeGroup.IsVar(node.VariableName))
-            throw new SyntaxErrorException($"The variable {node.VariableName} was already defined.", node.Range);
+                throw new SyntaxErrorException($"The variable {node.VariableName} was already defined.", node.Range);
                 //diagnostics.Add(new Diagnostic($"The variable {node.VariableName} was already defined.", node.Range));
-
-            Name = node.VariableName;
 
             scopeGroup.In(this);
         }
 
         public DefinedVar(ScopeGroup scopeGroup, string name, bool isGlobal, Variable variable, int index, Range range)
-            : base (isGlobal, variable, index)
+            : base (name, isGlobal, variable, index)
         {
             if (scopeGroup.IsVar(name))
                 throw new SyntaxErrorException($"The variable {name} was already defined.", range);
                 //diagnostics.Add(new Diagnostic($"The variable {name} was already defined.", range) { severity = Diagnostic.Error });
-
-            Name = name;
 
             scopeGroup.In(this);
         }

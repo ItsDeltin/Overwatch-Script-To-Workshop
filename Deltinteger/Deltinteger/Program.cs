@@ -74,49 +74,38 @@ namespace Deltin.Deltinteger
         {
             string text = File.ReadAllText(parseFile);
 
-            Rule[] generatedRules = null;
+            ParserData result = ParserData.GetParser(text, null);
 
-            try
+            ParseLog.Write(LogLevel.Normal, new ColorMod("Build succeeded.", ConsoleColor.Green));
+
+            // List all variables
+            ParseLog.Write(LogLevel.Normal, new ColorMod("Variable Guide:", ConsoleColor.Blue));
+
+            if (result.Root?.VarCollection().Count > 0)
             {
-                var result = ParserData.GetParser(text, null);
+                int nameLength = result.Root.VarCollection().Max(v => v.Name.Length);
 
-                ParseLog.Write(LogLevel.Normal, new ColorMod("Build succeeded.", ConsoleColor.Green));
-
-                // List all variables
-                ParseLog.Write(LogLevel.Normal, new ColorMod("Variable Guide:", ConsoleColor.Blue));
-
-                if (result.Root?.VarCollection().Count > 0)
+                bool other = false;
+                foreach (DefinedVar var in result.Root.VarCollection())
                 {
-                    int nameLength = result.Root.VarCollection().Max(v => v.Name.Length);
+                    ConsoleColor textcolor = other ? ConsoleColor.White : ConsoleColor.DarkGray;
+                    other = !other;
 
-                    bool other = false;
-                    foreach (DefinedVar var in result.Root.VarCollection())
-                    {
-                        ConsoleColor textcolor = other ? ConsoleColor.White : ConsoleColor.DarkGray;
-                        other = !other;
-
-                        ParseLog.Write(LogLevel.Normal,
-                            // Names
-                            new ColorMod(var.Name + new string(' ', nameLength - var.Name.Length) + "  ", textcolor),
-                            // Variable
-                            new ColorMod(
-                                (var.IsGlobal ? "global" : "player") 
-                                + " " + 
-                                var.Variable.ToString() +
-                                (var.Index != -1 ? $"[{var.Index}]" : "")
-                                , textcolor)
-                        );
-                    }
+                    ParseLog.Write(LogLevel.Normal,
+                        // Names
+                        new ColorMod(var.Name + new string(' ', nameLength - var.Name.Length) + "  ", textcolor),
+                        // Variable
+                        new ColorMod(
+                            (var.IsGlobal ? "global" : "player") 
+                            + " " + 
+                            var.Variable.ToString() +
+                            (var.Index != -1 ? $"[{var.Index}]" : "")
+                            , textcolor)
+                    );
                 }
-                generatedRules = result.Rules;
-            }
-            catch (SyntaxErrorException ex)
-            {
-                Log.Write(LogLevel.Normal, new ColorMod(ex.Message, ConsoleColor.Red));
-                return;
             }
 
-            string final = RuleArrayToWorkshop(generatedRules);
+            string final = RuleArrayToWorkshop(result.Rules, result.VarCollection);
 
             Log.Write(LogLevel.Normal, "Press enter to copy code to clipboard, then in Overwatch click \"Paste Rule\".");
             Console.ReadLine();
@@ -124,9 +113,17 @@ namespace Deltin.Deltinteger
             InputSim.SetClipboard(final);
         }
 
-        public static string RuleArrayToWorkshop(Rule[] rules)
+        public static string RuleArrayToWorkshop(Rule[] rules, VarCollection varCollection)
         {
             var builder = new StringBuilder();
+
+            builder.AppendLine("// --- Variable Guide ---");
+
+            foreach(var var in varCollection.AllVars)
+                builder.AppendLine("// " + var.Variable + "[" + var.Index + "] " + var.Name);
+            
+            builder.AppendLine();
+
             Log debugPrintLog = new Log("Tree");
             foreach (var rule in rules)
             {

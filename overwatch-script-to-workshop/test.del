@@ -2,21 +2,34 @@ rule: "Recursion test."
 Event.OngoingPlayer
 if (IsButtonHeld(EventPlayer(), Button.Interact))
 {
-    Test(4);
+    Test(123);
 }
 
 method Test(result) 
 {
-    if (result < 10)
+    Wait(2);
+    SmallMessage(EventPlayer(), <"checkpoint <0>", result>);
+    Wait(2);
+    if (result == 123)
     {
-        SmallMessage(EventPlayer(), <"#<0>", result>);
-        define value = Test(result + 1);
-        SmallMessage(EventPlayer(), <"rank: <0>", value>);
-        return value;
+        if (Test(1) == 4)
+        {
+            SmallMessage(EventPlayer(), "Success!");
+            Wait(2);
+            return 193;
+        }
+        else
+        {
+            SmallMessage(EventPlayer(), <"failed, spawned <0>", Test(1)>);
+            Wait(2);
+            return 9;
+        }
     }
-    else
+    else if (result == 1)
     {
-        SmallMessage(EventPlayer(), <"max!: <0>", result>);
-        return result;
+        SmallMessage(EventPlayer(), <"spawned <0>", 4>);
+        Wait(2);
+        return 4;
     }
+    return -1;
 }
