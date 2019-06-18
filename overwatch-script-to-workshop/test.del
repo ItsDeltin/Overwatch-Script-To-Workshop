@@ -1,25 +1,8 @@
+define globalvar ahh;
+
 rule: "Recursion test."
-Event.OngoingPlayer
-Player.Soldier76
+Event.OngoingGlobal
 if (IsButtonHeld(EventPlayer(), Button.Interact))
 {
-    Test(123);
-    /*
-        This is a test!
-    */
-    define text = 2;
-}
-
-method Test(result) 
-{
-    if (returns4() == 4)
-    {
-        SmallMessage(EventPlayer(), </*testing!*/"hello <0>! good_luck? <1> lives remaining!", /**/ EventPlayer(), result>);
-    }
-}
-
-method returns4()
-{
-    return 4;
-    SetDamageDealt();
+    define test = 3;
 }

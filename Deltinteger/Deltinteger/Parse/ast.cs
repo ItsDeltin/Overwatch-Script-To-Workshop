@@ -852,6 +852,12 @@ namespace Deltin.Deltinteger.Parse
 
         public static Range GetRange(ParserRuleContext context)
         {
+            if (context.stop == null)
+            {
+                Pos pos = new Pos(context.start.Line, context.start.Column);
+                return new Range(pos, pos);
+            }
+
             if (context.start.Line == context.stop.Line &&
                 context.start.Column == context.stop.Column)
             {

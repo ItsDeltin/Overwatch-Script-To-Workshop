@@ -120,7 +120,7 @@ namespace Deltin.Deltinteger
             builder.AppendLine("// --- Variable Guide ---");
 
             foreach(var var in varCollection.AllVars)
-                builder.AppendLine("// " + var.Variable + "[" + var.Index + "] " + var.Name);
+                builder.AppendLine("// " + (var.IsGlobal ? "global" : "player") + " " + var.Variable + "[" + var.Index + "] " + var.Name);
             
             builder.AppendLine();
 

@@ -138,11 +138,12 @@ namespace Deltin.Deltinteger.Parse
             UserMethods = userMethods;
 
             Rule = new Rule(ruleNode.Name, ruleNode.Event, ruleNode.Team, ruleNode.Player);
+            IsGlobal = Rule.IsGlobal;
 
             ContinueSkip = new ContinueSkip(IsGlobal, Actions, varCollection);
 
             ParseConditions(ruleNode.Conditions);
-            ParseBlock(root.Child(), ruleNode.Block, false, varCollection.AssignVar($"{Rule.Name}: return value (todo: remove)", IsGlobal));
+            ParseBlock(root.Child(), ruleNode.Block, false, null);
 
             Rule.Actions = Actions.ToArray();
             Rule.Conditions = Conditions.ToArray();
@@ -845,7 +846,8 @@ namespace Deltin.Deltinteger.Parse
                     if (returnNode.Value != null)
                     {
                         Element result = ParseExpression(scope, returnNode.Value);
-                        Actions.Add(returnVar.SetVariable(result));
+                        if (returnVar != null)
+                            Actions.Add(returnVar.SetVariable(result));
                     }
 
                     if (!isLast)

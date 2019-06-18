@@ -31,7 +31,7 @@ namespace Deltin.Deltinteger.Parse
 
         public Var AssignVar(string name, bool isGlobal)
         {
-            Var var = new Var(name, isGlobal, UseVar, Assign(isGlobal));
+            Var var = new Var("INTERNAL : " + name, isGlobal, UseVar, Assign(isGlobal));
             AllVars.Add(var);
             return var;
         }
