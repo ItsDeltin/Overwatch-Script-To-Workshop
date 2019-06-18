@@ -135,8 +135,6 @@ documents.onDidChangeContent(change => {
 	validateTextDocument(change.document);
 });
 
-const request = require('request');
-
 async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 
 	let settings = await getDocumentSettings(textDocument.uri);
@@ -215,6 +213,7 @@ connection.onHover((pos: TextDocumentPositionParams) => {
 	});
 });
 
+const request = require('request');
 async function sendRequest(uri, path, data, resolve, reject, callback) {
 	
 	let settings = await getDocumentSettings(uri);

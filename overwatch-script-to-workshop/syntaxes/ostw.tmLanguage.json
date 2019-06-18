@@ -13,9 +13,6 @@
 			"include": "#comments"
 		},
 		{
-			"include": "#blockComments"
-		},
-		{
 			"include": "#numbers"
 		},
 		{
@@ -26,6 +23,17 @@
 		}
 	],
 	"repository": {
+		"expressions": {
+			"patterns": [
+				{"include": "#keywords"}, 
+				{"include": "#strings"}, 
+				{"include": "#comments"}, 
+				{"include": "#numbers"}, 
+				{"include": "#methods"}, 
+				{"include": "#variables"}
+			]
+		},
+		
 		"keywords": {
 			"name": "keyword.control",
 			"match": "\\b(if|else|while|for|return|in|define|rule|true|false|usevar|method|playervar|globalvar|null)\\b"
@@ -46,14 +54,10 @@
 			]
 		},
 		"comments": {
-			"name": "comment.line.double-slash",
-			"begin": "//",
-			"end": "$"
-		},
-		"blockComments": {
-			"name": "comment.block",
-			"begin": "\\/\\*",
-			"end": "\\*\\/"
+			"patterns": [
+				{"begin": "//"    , "end": "$"      , "name": "comment.line.double-slash"},
+				{"begin": "\\/\\*", "end": "\\*\\/" , "name": "comment.block"}
+			]
 		},
 		"numbers": {
 			"name": "constant.numeric",
@@ -61,7 +65,9 @@
 		},
 		"methods": {
 			"name": "entity.name.function",
-			"match": "[a-zA-Z_0-9]+\\("
+			"begin": "[a-zA-Z_0-9]+\\(",
+			"end": "\\)",
+			"patterns": [{"include": "#expressions"}]
 		},
 		"variables": {
 			"name": "variable",

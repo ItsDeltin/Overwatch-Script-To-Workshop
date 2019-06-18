@@ -207,7 +207,9 @@ namespace Deltin.Deltinteger.Elements
     [EnumParameter]
     public enum ContraryMotion
     {
+        [EnumValue(null, "Cancel Contrary Motion")]
         Cancel,
+        [EnumValue(null, "Incorporate Contrary Motion")]
         Incorporate
     }
 

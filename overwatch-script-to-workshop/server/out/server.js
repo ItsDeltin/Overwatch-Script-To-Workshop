@@ -97,7 +97,6 @@ documents.onDidClose(e => {
 documents.onDidChangeContent(change => {
     validateTextDocument(change.document);
 });
-const request = require('request');
 function validateTextDocument(textDocument) {
     return __awaiter(this, void 0, void 0, function* () {
         let settings = yield getDocumentSettings(textDocument.uri);
@@ -160,6 +159,7 @@ connection.onHover((pos) => {
         });
     });
 });
+const request = require('request');
 function sendRequest(uri, path, data, resolve, reject, callback) {
     return __awaiter(this, void 0, void 0, function* () {
         let settings = yield getDocumentSettings(uri);
