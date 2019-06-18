@@ -186,22 +186,16 @@ namespace Deltin.Deltinteger.Parse
                     Element left = ParseExpression(scope, operationNode.Left);
                     Element right = ParseExpression(scope, operationNode.Right);
 
+                    /*
                     if (Constants.BoolOperations.Contains(operationNode.Operation))
                     {
                         if (left.ElementData.ValueType != Elements.ValueType.Any && left.ElementData.ValueType != Elements.ValueType.Boolean)
-                        {
                             throw new SyntaxErrorException($"Expected boolean, got {left .ElementData.ValueType.ToString()} instead.", ((Node)operationNode.Left).Range);
-                            //Diagnostics.Add(new Diagnostic($"Expected boolean, got {left .ElementData.ValueType.ToString()} instead.", ((Node)operationNode.Left).Range));
-                            //return null;
-                        }
                         
                         if (right.ElementData.ValueType != Elements.ValueType.Any && right.ElementData.ValueType != Elements.ValueType.Boolean)
-                        {
                             throw new SyntaxErrorException($"Expected boolean, got {right.ElementData.ValueType.ToString()} instead.", ((Node)operationNode.Right).Range);
-                            //Diagnostics.Add(new Diagnostic($"Expected boolean, got {right.ElementData.ValueType.ToString()} instead.", ((Node)operationNode.Right).Range));
-                            //return null;
-                        }
                     }
+                    */
 
                     switch (operationNode.Operation)
                     {
@@ -334,12 +328,10 @@ namespace Deltin.Deltinteger.Parse
 
             // Get the kind of method the method is (Method (Overwatch), Custom Method, or User Method.)
             var methodType = GetMethodType(UserMethods, methodNode.Name);
+
+            // Throw exception if the method does not exist.
             if (methodType == null)
-            {
-                throw new SyntaxErrorException($"The method {methodNode.Name} does not exist.", methodNode.Range);
-                //Diagnostics.Add(new Diagnostic($"The method {methodNode.Name} does not exist.", methodNode.Range));
-                //return null;
-            }
+                throw SyntaxErrorException.NonexistentMethod(methodNode.Name, methodNode.Range);
 
             Element method;
             switch (methodType)
@@ -362,11 +354,8 @@ namespace Deltin.Deltinteger.Parse
                         else 
                         {
                             if (parameterData[i].ParameterType == ParameterType.Value && parameterData[i].DefaultType == null)
-                            {
-                                throw new SyntaxErrorException($"Missing parameter \"{parameterData[i].Name}\" in the method \"{methodNode.Name}\" and no default type to fallback on.", methodNode.Range);
-                                //Diagnostics.Add(new Diagnostic($"Missing parameter \"{parameterData[i].Name}\" in the method \"{methodNode.Name}\" and no default type to fallback on.", methodNode.Range));
-                                //return null;
-                            }
+                                // Throw exception if there is no default method to fallback on.
+                                throw SyntaxErrorException.MissingParameter(parameterData[i].Name, methodNode.Name, methodNode.Range);
                             else
                                 parsedParameters.Add(parameterData[i].GetDefault());
                         }
@@ -386,11 +375,8 @@ namespace Deltin.Deltinteger.Parse
                         if (methodNode.Parameters.Length > i)
                             parsedParameters[i] = ParseParameter(scope, methodNode.Parameters[i], methodNode.Name, parameterData[i]);
                         else
-                        {
-                            throw new SyntaxErrorException($"Missing parameter \"{parameterData[i].Name}\" in the method \"{methodNode.Name}\" and no default type to fallback on.", methodNode.Range);
-                            //Diagnostics.Add(new Diagnostic($"Missing parameter \"{parameterData[i].Name}\" in the method \"{methodNode.Name}\" and no default type to fallback on.", methodNode.Range));
-                            //return null;
-                        }
+                            // Throw exception if there is no default method to fallback on.
+                            throw SyntaxErrorException.MissingParameter(parameterData[i].Name, methodNode.Name, methodNode.Range);
 
                     MethodResult result = (MethodResult)customMethod.Invoke(null, new object[] { IsGlobal, VarCollection, parsedParameters });
                     switch (result.MethodType)
@@ -463,12 +449,8 @@ namespace Deltin.Deltinteger.Parse
                                 parameterVars[i] = VarCollection.AssignParameterVar(Actions, methodScope, IsGlobal, userMethod.Parameters[i].Name, methodNode.Range);
                                 Actions.Add(parameterVars[i].Push(ParseExpression(scope, methodNode.Parameters[i])));
                             }
-                            else 
-                            {
-                                throw new SyntaxErrorException($"Missing parameter \"{userMethod.Parameters[i].Name}\" in the method \"{methodNode.Name}\".", methodNode.Range);
-                                //Diagnostics.Add(new Diagnostic($"Missing parameter \"{userMethod.Parameters[i].Name}\" in the method \"{methodNode.Name}\".", methodNode.Range));
-                                //return null;
-                            }
+                            else
+                                throw SyntaxErrorException.MissingParameter(userMethod.Parameters[i].Name, methodNode.Name, methodNode.Range);
                         }
 
                         var returns = VarCollection.AssignVar($"{methodNode.Name}: return temp value", IsGlobal);
@@ -491,7 +473,7 @@ namespace Deltin.Deltinteger.Parse
                         Actions.Add(Element.Part<A_Wait>(new V_Number(Constants.MINIMUM_WAIT)));
                         for (int i = 0; i < parameterVars.Length; i++)
                         {
-                            Actions.Add(parameterVars[i].Pop());
+                            parameterVars[i].Pop();
                         }
 
                         ContinueSkip.Setup();
@@ -547,18 +529,10 @@ namespace Deltin.Deltinteger.Parse
                 case EnumNode enumNode:
 
                     if (parameterData.ParameterType != ParameterType.Enum)
-                    {
-                        throw new SyntaxErrorException($"Expected value type \"{parameterData.ValueType.ToString()}\" on {methodName}'s parameter \"{parameterData.Name}\".", enumNode.Range);
-                        //Diagnostics.Add(new Diagnostic($"Expected value type \"{parameterData.ValueType.ToString()}\" on {methodName}'s parameter \"{parameterData.Name}\".", enumNode.Range));
-                        //return null;
-                    }
+                        throw SyntaxErrorException.ExpectedType(true, parameterData.ValueType.ToString(), methodName, parameterData.Name, enumNode.Range);
 
                     if (enumNode.Type != parameterData.EnumType.Name)
-                    {
-                        throw new SyntaxErrorException($"Expected enum type \"{parameterData.EnumType.ToString()}\" on {methodName}'s parameter \"{parameterData.Name}\".", enumNode.Range);
-                        //Diagnostics.Add(new Diagnostic($"Expected enum type \"{parameterData.EnumType.ToString()}\" on {methodName}'s parameter \"{parameterData.Name}\".", enumNode.Range));
-                        //return null;
-                    }
+                        throw SyntaxErrorException.ExpectedType(false, parameterData.EnumType.ToString(), methodName, parameterData.Name, enumNode.Range);
 
                     try
                     {
@@ -566,9 +540,7 @@ namespace Deltin.Deltinteger.Parse
                     }
                     catch (Exception ex) when (ex is ArgumentNullException || ex is ArgumentException || ex is OverflowException)
                     {
-                        throw new SyntaxErrorException($"The value {enumNode.Value} does not exist in the enum {enumNode.Type}.", enumNode.Range);
-                        //Diagnostics.Add(new Diagnostic($"The value {enumNode.Value} does not exist in the enum {enumNode.Type}.", enumNode.Range));
-                        //return null;
+                        throw SyntaxErrorException.InvalidEnumValue(enumNode.Type, enumNode.Value, enumNode.Range);
                     }
                     
                     break;
@@ -576,11 +548,7 @@ namespace Deltin.Deltinteger.Parse
                 default:
 
                     if (parameterData.ParameterType != ParameterType.Value)
-                    {
-                        throw new SyntaxErrorException($"Expected enum type \"{parameterData.EnumType.Name}\" on {methodName}'s parameter \"{parameterData.Name}\".", ((Node)node).Range);
-                        //Diagnostics.Add(new Diagnostic($"Expected enum type \"{parameterData.EnumType.Name}\" on {methodName}'s parameter \"{parameterData.Name}\".", ((Node)node).Range));
-                        //return null;
-                    }
+                        throw SyntaxErrorException.ExpectedType(false, parameterData.EnumType.Name, methodName, parameterData.Name, ((Node)node).Range);
 
                     value = ParseExpression(scope, node);
 
@@ -589,21 +557,13 @@ namespace Deltin.Deltinteger.Parse
 
                     if (elementData.ValueType != Elements.ValueType.Any &&
                     !parameterData.ValueType.HasFlag(elementData.ValueType))
-                    {
-                        throw new SyntaxErrorException($"Expected value type \"{parameterData.ValueType.ToString()}\" on {methodName}'s parameter \"{parameterData.Name}\", got \"{elementData.ValueType.ToString()}\" instead.", ((Node)node).Range);
-                        //Diagnostics.Add(new Diagnostic($"Expected value type \"{parameterData.ValueType.ToString()}\" on {methodName}'s parameter \"{parameterData.Name}\", got \"{elementData.ValueType.ToString()}\" instead.", ((Node)node).Range));
-                        //return null;
-                    }
+                        throw SyntaxErrorException.InvalidType(parameterData.ValueType, elementData.ValueType, ((Node)node).Range);
 
                     break;
             }
 
             if (value == null)
-            {
-                throw new SyntaxErrorException("Could not parse parameter.", ((Node)node).Range);
-                //Diagnostics.Add(new Diagnostic("Could not parse parameter.", ((Node)node).Range));
-                //return null;
-            }
+                throw new Exception("Failed to parse parameter.");
 
             return value;
         }

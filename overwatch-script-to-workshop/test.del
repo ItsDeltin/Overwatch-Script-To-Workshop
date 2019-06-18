@@ -1,19 +1,25 @@
 rule: "Recursion test."
 Event.OngoingPlayer
+Player.Soldier76
 if (IsButtonHeld(EventPlayer(), Button.Interact))
 {
     Test(123);
+    /*
+        This is a test!
+    */
+    define text = 2;
 }
 
 method Test(result) 
 {
     if (returns4() == 4)
     {
-        SmallMessage(EventPlayer(), <"hello <0>! good_luck?", EventPlayer()>);
+        SmallMessage(EventPlayer(), </*testing!*/"hello <0>! good_luck?", EventPlayer()>);
     }
 }
 
 method returns4()
 {
     return 4;
+    SetDamageDealt();
 }

@@ -12,33 +12,48 @@
 			"include": "#comments"
 		},
 		{
+			"include": "#blockComments"
+		},
+		{
 			"include": "#numbers"
+		},
+		{
+			"include": "#variables"
 		}
 	],
 	"repository": {
 		"keywords": {
-			"name": "keyword.control.ostw",
+			"name": "keyword.control",
 			"match": "\\b(if|else|while|for|return|in|define|rule|true|false|usevar|method|playervar|globalvar|null)\\b"
 		},
 		"strings": {
-			"name": "string.quoted.double.ostw",
+			"name": "string.quoted.double",
 			"begin": "\"",
 			"end": "\"",
 			"patterns": [
 				{
-					"name": "constant.character.escape.ostw",
+					"name": "constant.character.escape",
 					"match": "\\\\."
 				}
 			]
 		},
 		"comments": {
-			"name": "comment.ostw",
+			"name": "comment",
 			"begin": "//",
 			"end": "$"
 		},
+		"blockComments": {
+			"name": "comment",
+			"begin": "\\/\\*",
+			"end": "\\*\\/"
+		},
 		"numbers": {
-			"name": "number.ostw",
-			"match": "\\b-?[0-9]+(.[0-9])?\\b"
+			"name": "constant.numeric",
+			"match": "\\b-?[0-9]+(.[0-9]+)?\\b"
+		},
+		"variables": {
+			"name": "variable",
+			"match": "[a-zA-Z_0-9]+"
 		}
 	},
 	"scopeName": "source.del"

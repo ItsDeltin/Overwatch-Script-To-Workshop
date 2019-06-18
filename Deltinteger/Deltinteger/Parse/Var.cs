@@ -148,24 +148,24 @@ namespace Deltin.Deltinteger.Parse
 
     public class DefinedVar : Var
     {
+        /*
         public DefinedVar(ScopeGroup scopeGroup, DefinedNode node, VarCollection varCollection)
             : base(node.VariableName, node.IsGlobal, varCollection.UseVar, node.UseIndex ?? varCollection.Assign(node.IsGlobal))
         {
             if (scopeGroup.IsVar(node.VariableName))
-                throw new SyntaxErrorException($"The variable {node.VariableName} was already defined.", node.Range);
-                //diagnostics.Add(new Diagnostic($"The variable {node.VariableName} was already defined.", node.Range));
+                throw SyntaxErrorException.AlreadyDefined(node.VariableName, node.Range);
 
             scopeGroup.In(this);
         }
+        */
 
         public DefinedVar(ScopeGroup scopeGroup, string name, bool isGlobal, Variable variable, int index, Range range)
             : base (name, isGlobal, variable, index)
         {
             if (scopeGroup.IsVar(name))
-                throw new SyntaxErrorException($"The variable {name} was already defined.", range);
-                //diagnostics.Add(new Diagnostic($"The variable {name} was already defined.", range) { severity = Diagnostic.Error });
+                throw SyntaxErrorException.AlreadyDefined(name, range);
 
-            scopeGroup.In(this);
+            scopeGroup./* we're */ In(this) /* together! */;
         }
     }
 
@@ -211,10 +211,10 @@ namespace Deltin.Deltinteger.Parse
             return base.SetVariable(Element.Part<V_GlobalVariable>(Variable.B), targetPlayer);
         }
 
-        public Element Pop(Element targetPlayer = null)
+        public void Pop(Element targetPlayer = null)
         {
             Element get = base.GetVariable(targetPlayer);
-            return base.SetVariable(
+            Actions.Add(base.SetVariable(
                 Element.Part<V_ArraySlice>(
                     get,
                     new V_Number(0),
@@ -222,7 +222,7 @@ namespace Deltin.Deltinteger.Parse
                         Element.Part<V_CountOf>(get), new V_Number(1)
                     )
                 ), targetPlayer
-            );
+            ));
         }
 
         public Element DebugStack(Element targetPlayer = null)

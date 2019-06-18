@@ -570,9 +570,9 @@ namespace Deltin.Deltinteger.Elements
     [Parameter("Variable", typeof(Variable))]
     public class A_StopChasingPlayerVariable : Element {}
 
-    [ElementData("Stop Damage Modifications")]
+    [ElementData("Stop Damage Modification")]
     [Parameter("Damage modification ID", ValueType.Number, null)]
-    public class A_StopDamageModifications : Element {}
+    public class A_StopDamageModification : Element {}
 
     [ElementData("Stop Damage Over Time")]
     [Parameter("Damage Over Time ID", ValueType.Number, null)]

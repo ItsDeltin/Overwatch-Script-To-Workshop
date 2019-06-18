@@ -706,7 +706,7 @@ namespace Deltin.Deltinteger.Elements
         {
             TextID = Array.IndexOf(Constants.Strings, text);
             if (TextID == -1)
-                throw new SyntaxErrorException($"{text} is not a valid string.", range);
+                throw SyntaxErrorException.InvalidString(text, range);
         }
         public V_String() : this(null, Constants.DEFAULT_STRING) {}
 
@@ -787,8 +787,9 @@ namespace Deltin.Deltinteger.Elements
                         {
                             int index = int.Parse(parameterString.Groups[1].Value);
 
+                            // Throw syntax error if the number of parameters is less than the parameter index being set.
                             if (index >= parameters.Length)
-                                throw new SyntaxErrorException($"Tried to set the <{index}> format, but there are only {parameters.Length} parameters. Check your string.", range);
+                                throw SyntaxErrorException.StringParameterCount(index, parameters.Length, range);
 
                             Log.Write(LogLevel.Verbose, $"{debug}    <param {index}>");
                             parsedParameters.Add(parameters[index]);
@@ -821,7 +822,8 @@ namespace Deltin.Deltinteger.Elements
             if (depth > 0)
                 return null;
             else
-                throw new SyntaxErrorException($"Could not parse the string \"{value}\".", range);
+                // If the depth is 0, throw a syntax error.
+                throw SyntaxErrorException.StringParseFailed(value, range);
         }
 
         private static string Escape(string value)

@@ -36,8 +36,7 @@ namespace Deltin.Deltinteger.Parse
             }
 
             if (var == null && range != null && diagnostics != null)
-                //diagnostics.Add(new Diagnostic($"The variable {name} does not exist.", range));
-                throw new SyntaxErrorException($"The variable {name} does not exist.", range);
+                throw SyntaxErrorException.VariableDoesNotExist(name, range);
 
             return var;
         }
