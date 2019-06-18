@@ -21,10 +21,7 @@ namespace Deltin.Deltinteger.Parse
         {
             if (context.GetChild(0) is DeltinScriptParser.MethodContext &&
                 context.ChildCount == 1)
-            {
-                //_errorReporter.SyntaxError(_parser, context.stop, context.stop.Line, context.stop.Column, "Expected ';'.", null);
                 _diagnostics.Add(new Diagnostic("Expected ';'", Range.GetRange(context)) { severity = Diagnostic.Error });
-            }
             return base.VisitStatement(context);
         }
 
@@ -32,10 +29,15 @@ namespace Deltin.Deltinteger.Parse
         {
             // Confirm there is an expression after the last ",".
             if (context.children?.Last().GetText() == ",")
-            {
                 _diagnostics.Add(new Diagnostic("Missing parameter.", Range.GetRange(context)) { severity = Diagnostic.Error });
-            }
             return base.VisitParameters(context);
+        }
+
+        public override object VisitEnum(DeltinScriptParser.EnumContext context)
+        {
+            if (context.PART() == null)
+                _diagnostics.Add(new Diagnostic("Expected enum value.", Range.GetRange(context)) { severity = Diagnostic.Error });
+            return base.VisitEnum(context);
         }
     }
 

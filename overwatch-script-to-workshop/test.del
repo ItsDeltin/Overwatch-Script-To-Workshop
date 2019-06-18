@@ -1,8 +1,9 @@
 define globalvar ahh;
+define playervar is;
 
 rule: "Recursion test."
-Event.OngoingGlobal
+Event.OngoingPlayer 
 if (IsButtonHeld(EventPlayer(), Button.Interact))
 {
-    define test = 3;
+    
 }

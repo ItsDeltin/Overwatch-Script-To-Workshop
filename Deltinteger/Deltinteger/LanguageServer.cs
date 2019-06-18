@@ -231,6 +231,21 @@ namespace Deltin.Deltinteger.LanguageServer
 
                     break;
                 
+                case EnumNode enumNode:
+
+                    Type enumType = Constants.EnumParameters.FirstOrDefault(ep => ep.Name == enumNode.Type);
+                    if (enumType != null)
+                    {
+                        completion.AddRange(EnumValue.GetCodeValues(enumType).Select(enumValue => 
+                            new CompletionItem(enumValue)
+                            {
+                                kind = CompletionItem.EnumMember
+                            }
+                        ));
+                    }
+
+                    break;
+                
                 case null:
                     break;
 
