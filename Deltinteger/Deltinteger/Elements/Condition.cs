@@ -19,10 +19,10 @@ namespace Deltin.Deltinteger.Elements
             if (value2 == null)
                 value2 = new V_True();
 
-            if (value1.ElementData.ElementType != ElementType.Value)
+            if (!value1.ElementData.IsValue)
                 throw new ArgumentException("Method in condition must be a value method.", nameof(value1));
 
-            if (value2.ElementData.ElementType != ElementType.Value)
+            if (!value2.ElementData.IsValue)
                 throw new ArgumentException("Method in condition must be a value method.", nameof(value2));
 
             Value1 = value1;

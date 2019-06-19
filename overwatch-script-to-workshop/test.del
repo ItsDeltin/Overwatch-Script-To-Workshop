@@ -2,5 +2,8 @@ rule: "Recursion test."
 Event.OngoingPlayer 
 if (IsButtonHeld(EventPlayer(), Button.Interact))
 {
-     ApplyImpulse(EventPlayer(), Vector(1, 1, 1), 20, Relative.ToWorld, ContraryMotion.Cancel);
+    if (HeroOf() == HeroVar(Hero.Soldier76))
+    {
+        
+    }
 }

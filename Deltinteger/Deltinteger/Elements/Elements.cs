@@ -10,13 +10,6 @@ using System.Runtime.Serialization.Formatters.Binary;
 
 namespace Deltin.Deltinteger.Elements
 {
-    // The type of element the element is.
-    public enum ElementType
-    {
-        Action,
-        Value
-    }
-
     public enum ParameterType
     {
         Value,
@@ -44,21 +37,21 @@ namespace Deltin.Deltinteger.Elements
         // No value type == action
         public ElementData(string elementName)
         {
-            ElementType = ElementType.Action;
+            IsValue = false;
             ElementName = elementName;
         }
 
         // Value type == value
         public ElementData(string elementName, ValueType elementType)
         {
-            ElementType = ElementType.Value;
+            IsValue = true;
             ElementName = elementName;
             ValueType = elementType;
         }
 
         public string ElementName { get; private set; }
 
-        public ElementType ElementType { get; private set; }
+        public bool IsValue { get; private set; }
         public ValueType ValueType { get; private set; }
     }
 
@@ -117,8 +110,8 @@ namespace Deltin.Deltinteger.Elements
     public abstract class Element : IWorkshopTree
     {
         public static readonly Type[] MethodList = Assembly.GetExecutingAssembly().GetTypes().Where(t => t.GetCustomAttribute<ElementData>() != null).ToArray();
-        public static readonly Type[] ActionList = MethodList.Where(t => t.GetCustomAttribute<ElementData>().ElementType == ElementType.Action).OrderBy(t => t.GetCustomAttribute<ElementData>().ElementName).ToArray(); // Actions in the method list.
-        public static readonly Type[] ValueList = MethodList.Where(t => t.GetCustomAttribute<ElementData>().ElementType == ElementType.Value).OrderBy(t => t.GetCustomAttribute<ElementData>().ElementName).ToArray(); // Values in the method list.
+        public static readonly Type[] ActionList = MethodList.Where(t => t.GetCustomAttribute<ElementData>().IsValue == false).OrderBy(t => t.GetCustomAttribute<ElementData>().ElementName).ToArray(); // Actions in the method list.
+        public static readonly Type[] ValueList = MethodList.Where(t => t.GetCustomAttribute<ElementData>().IsValue).OrderBy(t => t.GetCustomAttribute<ElementData>().ElementName).ToArray(); // Values in the method list.
 
         private static Type[] FilteredValueList(ValueType parameterType)
         {
@@ -174,7 +167,7 @@ namespace Deltin.Deltinteger.Elements
 
         public virtual void DebugPrint(Log log, int depth = 0)
         {
-            if (ElementData.ElementType == ElementType.Action)
+            if (ElementData.IsValue)
                 log.Write(LogLevel.Verbose, new ColorMod(new string(' ', depth * 4) + Info(), ConsoleColor.Cyan));
             else
                 log.Write(LogLevel.Verbose, new ColorMod(new string(' ', depth * 4) + Info(), ConsoleColor.White));

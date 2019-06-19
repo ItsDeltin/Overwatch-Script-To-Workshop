@@ -18,9 +18,9 @@ namespace Deltin.Deltinteger.Elements
     }
 
     [AttributeUsage(AttributeTargets.Field)]
-    public class EnumValue : Attribute
+    public class EnumOverride : Attribute
     {
-        public EnumValue(string codeName, string workshopName)
+        public EnumOverride(string codeName, string workshopName)
         {
             CodeName = codeName;
             WorkshopName = workshopName;
@@ -32,8 +32,8 @@ namespace Deltin.Deltinteger.Elements
         {
             var enumType = enumValue.GetType();
             var memInfo = enumType.GetMember(enumValue.ToString());
-            var attributes = memInfo[0].GetCustomAttributes(typeof(EnumValue), false);
-            return ((EnumValue)attributes.ElementAtOrDefault(0))?.WorkshopName ?? Extras.AddSpacesToSentence(enumValue.ToString(), false);
+            var attributes = memInfo[0].GetCustomAttributes(typeof(EnumOverride), false);
+            return ((EnumOverride)attributes.ElementAtOrDefault(0))?.WorkshopName ?? Extras.AddSpacesToSentence(enumValue.ToString(), false);
          }
 
          public static string[] GetCodeValues<T>()
@@ -44,13 +44,13 @@ namespace Deltin.Deltinteger.Elements
          public static string[] GetCodeValues(Type type)
          {
              return type.GetFields(BindingFlags.Public | BindingFlags.Static)
-                .Select(v => v.GetCustomAttribute<EnumValue>()?.CodeName ?? v.Name)
+                .Select(v => v.GetCustomAttribute<EnumOverride>()?.CodeName ?? v.Name)
                 .ToArray();
          }
 
          public static CompletionItem[] GetCompletion<T>()
          {
-             return EnumValue.GetCodeValues<T>().Select(value =>
+             return EnumOverride.GetCodeValues<T>().Select(value =>
                 new CompletionItem(value) { kind = CompletionItem.EnumMember }
             ).ToArray();
          }
@@ -58,55 +58,91 @@ namespace Deltin.Deltinteger.Elements
 
     public class EnumData
     {
-        private static EnumData[] AllEnums = GetEnumData();
+        private static EnumData[] AllEnums = null;
 
         private static EnumData[] GetEnumData()
         {
-            Type[] enums = Assembly.GetExecutingAssembly().GetTypes().Where(t => t.GetCustomAttribute<EnumParameter>() != null).ToArray();
-            EnumData[] enumData = new EnumData[enums.Length];
-
-            for (int i = 0; i < enumData.Length; i++)
+            if (AllEnums == null)
             {
-                EnumValue data = enums[i].GetCustomAttribute<EnumValue>();
-                string codeName     = data.CodeName     ?? enums[i].Name;
-                string workshopName = data.WorkshopName ?? enums[i].Name;
+                Type[] enums = Assembly.GetExecutingAssembly().GetTypes().Where(t => t.GetCustomAttribute<EnumParameter>() != null).ToArray();
+                AllEnums = new EnumData[enums.Length];
 
-                enumData[i] = new EnumData(codeName, workshopName, enums[i]);
+                for (int i = 0; i < AllEnums.Length; i++)
+                {
+                    EnumOverride data = enums[i].GetCustomAttribute<EnumOverride>();
+                    string codeName     = data?.CodeName     ?? enums[i].Name;
+                    string workshopName = data?.WorkshopName ?? enums[i].Name;
+
+                    var fields = enums[i].GetFields(BindingFlags.Public | BindingFlags.Static);
+                    EnumMember[] values = new EnumMember[fields.Length];
+                    for (int v = 0; v < values.Length; v++)
+                    {
+                        EnumOverride fieldData = fields[v].GetCustomAttribute<EnumOverride>();
+                        string fieldCodeName     = fieldData?.CodeName     ?? fields[v].Name;
+                        string fieldWorkshopName = fieldData?.WorkshopName ?? fields[v].Name;
+
+                        values[v] = new EnumMember(fieldCodeName, fieldWorkshopName);
+                    }
+
+                    AllEnums[i] = new EnumData(codeName, workshopName, values, enums[i]);
+                }
             }
+            return AllEnums;
+        }
 
-            return enumData;
+        public static bool IsEnum(string codeName)
+        {
+            return GetEnum(codeName) != null;
+        }
+
+        public static EnumData GetEnum(string codeName)
+        {
+            return GetEnumData().FirstOrDefault(e => e.CodeName == codeName);
         }
 
         public string CodeName { get; private set; }
         public string WorkshopName { get; private set; }
+        public EnumMember[] Values { get; private set; }
         public Type Type { get; private set; } 
 
-        public EnumData(string codeName, string workshopName, Type type)
+        public EnumData(string codeName, string workshopName, EnumMember[] values, Type type)
         {
             CodeName = codeName;
             WorkshopName = workshopName;
+            Values = values;
             Type = type;
+        }
+    }
+
+    public class EnumMember
+    {
+        public string CodeName { get; private set; }
+        public string WorkshopName { get; private set; }
+        public EnumMember(string codeName, string workshopName)
+        {
+            CodeName = codeName;
+            WorkshopName = workshopName;
         }
     }
 
     public enum RuleEvent
     {
-        [EnumValue(null, "Ongoing - Global")]
+        [EnumOverride(null, "Ongoing - Global")]
         OngoingGlobal,
-        [EnumValue(null, "Ongoing - Each Player")]
+        [EnumOverride(null, "Ongoing - Each Player")]
         OngoingPlayer,
 
-        [EnumValue(null, "Player earned elimination")]
+        [EnumOverride(null, "Player earned elimination")]
         OnElimination,
-        [EnumValue(null, "Player dealt final blow")]
+        [EnumOverride(null, "Player dealt final blow")]
         OnFinalBlow,
 
-        [EnumValue(null, "Player dealt damage")]
+        [EnumOverride(null, "Player dealt damage")]
         OnDamageDealt,
-        [EnumValue(null, "Player took damage")]
+        [EnumOverride(null, "Player took damage")]
         OnDamageTaken,
 
-        [EnumValue(null, "Player died")]
+        [EnumOverride(null, "Player died")]
         OnDeath
     }
 
@@ -143,7 +179,7 @@ namespace Deltin.Deltinteger.Elements
         Mccree,
         Junkrat,
         Zarya,
-        [EnumValue(null, "Soldier: 76")]
+        [EnumOverride(null, "Soldier: 76")]
         Soldier76,
         Lucio,
         Dva,
@@ -161,17 +197,17 @@ namespace Deltin.Deltinteger.Elements
 
     public enum Operators
     {
-        [EnumValue(null, "==")]
+        [EnumOverride(null, "==")]
         Equal,
-        [EnumValue(null, "!=")]
+        [EnumOverride(null, "!=")]
         NotEqual,
-        [EnumValue(null, "<")]
+        [EnumOverride(null, "<")]
         LessThan,
-        [EnumValue(null, "<=")]
+        [EnumOverride(null, "<=")]
         LessThanOrEqual,
-        [EnumValue(null, ">")]
+        [EnumOverride(null, ">")]
         GreaterThan,
-        [EnumValue(null, ">=")]
+        [EnumOverride(null, ">=")]
         GreaterThanOrEqual
     }
 
@@ -245,9 +281,9 @@ namespace Deltin.Deltinteger.Elements
     [EnumParameter]
     public enum ContraryMotion
     {
-        [EnumValue(null, "Cancel Contrary Motion")]
+        [EnumOverride(null, "Cancel Contrary Motion")]
         Cancel,
-        [EnumValue(null, "Incorporate Contrary Motion")]
+        [EnumOverride(null, "Incorporate Contrary Motion")]
         Incorporate
     }
 
@@ -377,13 +413,13 @@ namespace Deltin.Deltinteger.Elements
     [EnumParameter]
     public enum Icon
     {
-        [EnumValue(null, "Arrow: Down")]
+        [EnumOverride(null, "Arrow: Down")]
         ArrowDown,
-        [EnumValue(null, "Arrow: Left")]
+        [EnumOverride(null, "Arrow: Left")]
         ArrowLeft,
-        [EnumValue(null, "Arrow: Right")]
+        [EnumOverride(null, "Arrow: Right")]
         ArrowRight,
-        [EnumValue(null, "Arrow: Up")]
+        [EnumOverride(null, "Arrow: Up")]
         ArrowUp,
         Aterisk,
         Bolt,
@@ -466,7 +502,7 @@ namespace Deltin.Deltinteger.Elements
         Reaper,
         Reinhardt,
         Roadhog,
-        [EnumValue(null, "Soldier: 76")]
+        [EnumOverride(null, "Soldier: 76")]
         Soldier76,
         Sombra,
         Symmetra,
@@ -512,11 +548,11 @@ namespace Deltin.Deltinteger.Elements
     [EnumParameter]
     public enum BarrierLOS
     {
-        [EnumValue(null, "Barriers Do Not Block LOS")]
+        [EnumOverride(null, "Barriers Do Not Block LOS")]
         NoBarriersBlock,
-        [EnumValue(null, "Enemy Barriers Block LOS")]
+        [EnumOverride(null, "Enemy Barriers Block LOS")]
         EnemyBarriersBlock,
-        [EnumValue(null, "All Barriers Block LOS")]
+        [EnumOverride(null, "All Barriers Block LOS")]
         AllBarriersBlock
     }
 

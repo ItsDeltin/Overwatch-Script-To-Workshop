@@ -401,6 +401,9 @@ namespace Deltin.Deltinteger.Elements
     [ElementData("Last Created Entity", ValueType.Player)]
     public class V_LastCreatedEntity : Element {}
 
+    [ElementData("Last Damage Modification ID", ValueType.Number)]
+    public class V_LastDamageModificationID : Element {}
+
     [ElementData("Last Damage Over Time ID", ValueType.Number)]
     public class V_LastDamageOverTime : Element {}
 

@@ -168,11 +168,11 @@ namespace Deltin.Deltinteger.Parse
                 if (parsedIf is V_Compare)
                 {
                     Element left = (Element)parsedIf.ParameterValues[0];
-                    if (left.ElementData.ElementType == ElementType.Action)
+                    if (!left.ElementData.IsValue)
                         throw SyntaxErrorException.InvalidMethodType(true, left.Name, ((Node)expr).Range);
 
                     Element right = (Element)parsedIf.ParameterValues[2];
-                    if (right.ElementData.ElementType == ElementType.Action)
+                    if (!right.ElementData.IsValue)
                         throw SyntaxErrorException.InvalidMethodType(true, right.Name, ((Node)expr).Range);
 
                     Conditions.Add(
@@ -186,7 +186,7 @@ namespace Deltin.Deltinteger.Parse
                 // If not, just do "parsedIf == true"
                 else
                 {
-                    if (parsedIf.ElementData.ElementType == ElementType.Action)
+                    if (!parsedIf.ElementData.IsValue)
                         throw SyntaxErrorException.InvalidMethodType(true, parsedIf.Name, ((Node)expr).Range);
 
                     Conditions.Add(new Condition(
