@@ -55,16 +55,19 @@ namespace Deltin.Deltinteger.Parse
 
     public class Var
     {
-        public string Name { get; protected set; }
-        public bool IsGlobal { get; protected set; }
-        public Variable Variable { get; protected set; }
-        public int Index { get; protected set; }
+        public string Name { get; private set; }
+        public bool IsGlobal { get; private set; }
+        public Variable Variable { get; private set; }
+        public int Index { get; private set; }
+
+        private readonly IWorkshopTree VariableAsWorkshop; 
 
         public Var(string name, bool isGlobal, Variable variable, int index)
         {
             Name = name;
             IsGlobal = isGlobal;
             Variable = variable;
+            VariableAsWorkshop = EnumData.GetEnumValue(Variable);
             Index = index;
         }
 
@@ -84,9 +87,9 @@ namespace Deltin.Deltinteger.Parse
         private Element GetRoot(Element targetPlayer)
         {
             if (IsGlobal)
-                return Element.Part<V_GlobalVariable>(Variable);
+                return Element.Part<V_GlobalVariable>(VariableAsWorkshop);
             else
-                return Element.Part<V_PlayerVariable>(targetPlayer, Variable);
+                return Element.Part<V_PlayerVariable>(targetPlayer, VariableAsWorkshop);
         }
 
         public virtual Element SetVariable(Element value, Element targetPlayer = null, Element setAtIndex = null)
@@ -101,16 +104,16 @@ namespace Deltin.Deltinteger.Parse
                 if (Index != -1)
                 {
                     if (IsGlobal)
-                        element = Element.Part<A_SetGlobalVariableAtIndex>(Variable, new V_Number(Index), value);
+                        element = Element.Part<A_SetGlobalVariableAtIndex>(VariableAsWorkshop, new V_Number(Index), value);
                     else
-                        element = Element.Part<A_SetPlayerVariableAtIndex>(targetPlayer, Variable, new V_Number(Index), value);
+                        element = Element.Part<A_SetPlayerVariableAtIndex>(targetPlayer, VariableAsWorkshop, new V_Number(Index), value);
                 }
                 else
                 {
                     if (IsGlobal)
-                        element = Element.Part<A_SetGlobalVariable>(Variable, value);
+                        element = Element.Part<A_SetGlobalVariable>(VariableAsWorkshop, value);
                     else
-                        element = Element.Part<A_SetPlayerVariable>(targetPlayer, Variable, value);
+                        element = Element.Part<A_SetPlayerVariable>(targetPlayer, VariableAsWorkshop, value);
                 }
             }
             else
@@ -118,14 +121,14 @@ namespace Deltin.Deltinteger.Parse
                 if (Index != -1)
                 {
                     if (IsGlobal)
-                        element = Element.Part<A_SetGlobalVariableAtIndex>(Variable, new V_Number(Index), 
+                        element = Element.Part<A_SetGlobalVariableAtIndex>(VariableAsWorkshop, new V_Number(Index), 
                             Element.Part<V_Append>(
                                 Element.Part<V_Append>(
                                     Element.Part<V_ArraySlice>(GetVariable(targetPlayer), new V_Number(0), setAtIndex), 
                                     value),
                             Element.Part<V_ArraySlice>(GetVariable(targetPlayer), Element.Part<V_Add>(setAtIndex, new V_Number(1)), new V_Number(9999))));
                     else
-                        element = Element.Part<A_SetPlayerVariableAtIndex>(targetPlayer, Variable, new V_Number(Index),
+                        element = Element.Part<A_SetPlayerVariableAtIndex>(targetPlayer, VariableAsWorkshop, new V_Number(Index),
                             Element.Part<V_Append>(
                                 Element.Part<V_Append>(
                                     Element.Part<V_ArraySlice>(GetVariable(targetPlayer), new V_Number(0), setAtIndex),
@@ -135,9 +138,9 @@ namespace Deltin.Deltinteger.Parse
                 else
                 {
                     if (IsGlobal)
-                        element = Element.Part<A_SetGlobalVariableAtIndex>(Variable, setAtIndex, value);
+                        element = Element.Part<A_SetGlobalVariableAtIndex>(VariableAsWorkshop, setAtIndex, value);
                     else
-                        element = Element.Part<A_SetPlayerVariableAtIndex>(targetPlayer, Variable, setAtIndex, value);
+                        element = Element.Part<A_SetPlayerVariableAtIndex>(targetPlayer, VariableAsWorkshop, setAtIndex, value);
                 }
             }
 
@@ -171,6 +174,8 @@ namespace Deltin.Deltinteger.Parse
 
     public class ParameterVar : DefinedVar
     {
+        private static readonly IWorkshopTree bAsWorkshop = EnumData.GetEnumValue(Variable.B); // TODO: Remove when multidimensional temp var can be set.
+
         private readonly List<Element> Actions = new List<Element>();
 
         public ParameterVar(List<Element> actions, ScopeGroup scopeGroup, string name, bool isGlobal, Variable variable, int index, Range range)
@@ -187,28 +192,28 @@ namespace Deltin.Deltinteger.Parse
         override public Element SetVariable(Element value, Element targetPlayer = null, Element setAtIndex = null)
         {
             Actions.Add(
-                Element.Part<A_SetGlobalVariable>(Variable.B, base.GetVariable(targetPlayer))
+                Element.Part<A_SetGlobalVariable>(bAsWorkshop, base.GetVariable(targetPlayer))
                 );
             
             Actions.Add(
-                Element.Part<A_SetGlobalVariableAtIndex>(Variable.B, 
-                    Element.Part<V_Subtract>(Element.Part<V_CountOf>(Element.Part<V_GlobalVariable>(Variable.B)), new V_Number(1)), value)
+                Element.Part<A_SetGlobalVariableAtIndex>(bAsWorkshop, 
+                    Element.Part<V_Subtract>(Element.Part<V_CountOf>(Element.Part<V_GlobalVariable>(bAsWorkshop)), new V_Number(1)), value)
             );
 
-            return base.SetVariable(Element.Part<V_GlobalVariable>(Variable.B), targetPlayer);
+            return base.SetVariable(Element.Part<V_GlobalVariable>(bAsWorkshop), targetPlayer);
         }
 
         public Element Push(Element value, Element targetPlayer = null)
         {
             Actions.Add(
-                Element.Part<A_SetGlobalVariable>(Variable.B, base.GetVariable(targetPlayer))
+                Element.Part<A_SetGlobalVariable>(bAsWorkshop, base.GetVariable(targetPlayer))
             );
             
             Actions.Add(
-                Element.Part<A_SetGlobalVariableAtIndex>(Variable.B, Element.Part<V_CountOf>(Element.Part<V_GlobalVariable>(Variable.B)), value)
+                Element.Part<A_SetGlobalVariableAtIndex>(bAsWorkshop, Element.Part<V_CountOf>(Element.Part<V_GlobalVariable>(bAsWorkshop)), value)
             );
 
-            return base.SetVariable(Element.Part<V_GlobalVariable>(Variable.B), targetPlayer);
+            return base.SetVariable(Element.Part<V_GlobalVariable>(bAsWorkshop), targetPlayer);
         }
 
         public void Pop(Element targetPlayer = null)

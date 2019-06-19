@@ -48,10 +48,10 @@ namespace Deltin.Deltinteger.Parse
             Rule[] rules = null;
             bool success = false;
 
-            bool parse = diagnostics.Count == 0;
-
             AdditionalErrorChecking aec = new AdditionalErrorChecking(parser, diagnostics);
             aec.Visit(ruleSetContext);
+
+            bool parse = diagnostics.Count == 0;
 
             if (parse)
             {
@@ -154,7 +154,7 @@ namespace Deltin.Deltinteger.Parse
 
             // Fufill remaining skips
             foreach (var skip in ReturnSkips)
-                skip.ParameterValues = new object[] { new V_Number(Actions.Count - ReturnSkips.IndexOf(skip)) };
+                skip.ParameterValues = new IWorkshopTree[] { new V_Number(Actions.Count - ReturnSkips.IndexOf(skip)) };
             ReturnSkips.Clear();
         }
 
@@ -178,7 +178,7 @@ namespace Deltin.Deltinteger.Parse
                     Conditions.Add(
                         new Condition(
                             left,
-                            (Operators)parsedIf.ParameterValues[1],
+                            (EnumMember)parsedIf.ParameterValues[1],
                             right
                         )
                     );
@@ -190,7 +190,7 @@ namespace Deltin.Deltinteger.Parse
                         throw SyntaxErrorException.InvalidMethodType(true, parsedIf.Name, ((Node)expr).Range);
 
                     Conditions.Add(new Condition(
-                        parsedIf, Operators.Equal, new V_True()
+                        parsedIf, EnumData.GetEnumValue(Operators.Equal), new V_True()
                     ));
                 }
             }
@@ -248,22 +248,22 @@ namespace Deltin.Deltinteger.Parse
 
                         // Compare: <, <=, ==, >=, >, !=
                         case "<":
-                            return Element.Part<V_Compare>(left, Operators.LessThan, right);
+                            return Element.Part<V_Compare>(left, EnumData.GetEnumValue(Operators.LessThan), right);
 
                         case "<=":
-                            return Element.Part<V_Compare>(left, Operators.LessThanOrEqual, right);
+                            return Element.Part<V_Compare>(left, EnumData.GetEnumValue(Operators.LessThanOrEqual), right);
 
                         case "==":
-                            return Element.Part<V_Compare>(left, Operators.Equal, right);
+                            return Element.Part<V_Compare>(left, EnumData.GetEnumValue(Operators.Equal), right);
 
                         case ">=":
-                            return Element.Part<V_Compare>(left, Operators.GreaterThanOrEqual, right);
+                            return Element.Part<V_Compare>(left, EnumData.GetEnumValue(Operators.GreaterThanOrEqual), right);
 
                         case ">":
-                            return Element.Part<V_Compare>(left, Operators.GreaterThan, right);
+                            return Element.Part<V_Compare>(left, EnumData.GetEnumValue(Operators.GreaterThan), right);
 
                         case "!=":
-                            return Element.Part<V_Compare>(left, Operators.NotEqual, right);
+                            return Element.Part<V_Compare>(left, EnumData.GetEnumValue(Operators.NotEqual), right);
                     }
                     
                     throw new Exception($"Operation {operationNode.Operation} not implemented.");
@@ -320,7 +320,7 @@ namespace Deltin.Deltinteger.Parse
                     {
                         current = new V_Append()
                         {
-                            ParameterValues = new object[2]
+                            ParameterValues = new IWorkshopTree[2]
                         };
 
                         if (prev != null)
@@ -333,6 +333,14 @@ namespace Deltin.Deltinteger.Parse
                     }
 
                     return current ?? new V_EmptyArray();
+                }
+
+                case EnumNode enumNode:
+                {
+                    if (enumNode.Type == "Hero" && enumNode.EnumMember != null)
+                        return Element.Part<V_HeroVar>(enumNode.EnumMember);
+                    else 
+                        return Element.Part<V_Null>(); // TODO: syntax error?
                 }
 
                 // Seperator
@@ -363,7 +371,7 @@ namespace Deltin.Deltinteger.Parse
                     method = (Element)Activator.CreateInstance(owMethod);
                     Parameter[] parameterData = owMethod.GetCustomAttributes<Parameter>().ToArray();
                     
-                    List<object> parsedParameters = new List<object>();
+                    List<IWorkshopTree> parsedParameters = new List<IWorkshopTree>();
                     for (int i = 0; i < parameterData.Length; i++)
                     {
                         if (methodNode.Parameters.Length > i)
@@ -472,13 +480,13 @@ namespace Deltin.Deltinteger.Parse
 
                             // ?--- Multidimensional Array 
                             Actions.Add(
-                                Element.Part<A_SetGlobalVariable>(Variable.B, lastMethod.ContinueSkipArray.GetVariable())
+                                Element.Part<A_SetGlobalVariable>(EnumData.GetEnumValue(Variable.B), lastMethod.ContinueSkipArray.GetVariable())
                             );
                             Actions.Add(
-                                Element.Part<A_ModifyGlobalVariable>(Variable.B, Operation.AppendToArray, new V_Number(ContinueSkip.GetSkipCount() + 4))
+                                Element.Part<A_ModifyGlobalVariable>(EnumData.GetEnumValue(Variable.B), EnumData.GetEnumValue(Operation.AppendToArray), new V_Number(ContinueSkip.GetSkipCount() + 4))
                             );
                             Actions.Add(
-                                lastMethod.ContinueSkipArray.SetVariable(Element.Part<V_GlobalVariable>(Variable.B))
+                                lastMethod.ContinueSkipArray.SetVariable(Element.Part<V_GlobalVariable>(EnumData.GetEnumValue(Variable.B)))
                             );
                             // ?---
 
@@ -536,15 +544,15 @@ namespace Deltin.Deltinteger.Parse
 
                             // ?--- Multidimensional Array 
                             Actions.Add(
-                                Element.Part<A_SetGlobalVariable>(Variable.B, continueSkipArray.GetVariable())
+                                Element.Part<A_SetGlobalVariable>(EnumData.GetEnumValue(Variable.B), continueSkipArray.GetVariable())
                             );
                             Actions.Add(
                                 continueSkipArray.SetVariable(
                                     Element.Part<V_ArraySlice>(
-                                        Element.Part<V_GlobalVariable>(Variable.B), 
+                                        Element.Part<V_GlobalVariable>(EnumData.GetEnumValue(Variable.B)), 
                                         new V_Number(0),
                                         Element.Part<V_Subtract>(
-                                            Element.Part<V_CountOf>(Element.Part<V_GlobalVariable>(Variable.B)),
+                                            Element.Part<V_CountOf>(Element.Part<V_GlobalVariable>(EnumData.GetEnumValue(Variable.B))),
                                             new V_Number(1)
                                         )
                                     )
@@ -556,7 +564,7 @@ namespace Deltin.Deltinteger.Parse
                                 Element.Part<A_LoopIf>(
                                     Element.Part<V_Compare>(
                                         Element.Part<V_CountOf>(continueSkipArray.GetVariable()),
-                                        Operators.NotEqual,
+                                        EnumData.GetEnumValue(Operators.NotEqual),
                                         new V_Number(0)
                                     )
                                 )
@@ -576,28 +584,29 @@ namespace Deltin.Deltinteger.Parse
             return method;
         }
 
-        object ParseParameter(ScopeGroup scope, IExpressionNode node, string methodName, Parameter parameterData)
+        IWorkshopTree ParseParameter(ScopeGroup scope, IExpressionNode node, string methodName, Parameter parameterData)
         {
-            object value = null;
+            IWorkshopTree value = null;
 
             switch (node)
             {
                 case EnumNode enumNode:
 
+                    /*
                     if (parameterData.ParameterType != ParameterType.Enum)
                         throw SyntaxErrorException.ExpectedType(true, parameterData.ValueType.ToString(), methodName, parameterData.Name, enumNode.Range);
 
                     if (enumNode.Type != parameterData.EnumType.Name)
                         throw SyntaxErrorException.ExpectedType(false, parameterData.EnumType.ToString(), methodName, parameterData.Name, enumNode.Range);
+                    */
 
-                    try
-                    {
-                        value = Enum.Parse(parameterData.EnumType, enumNode.Value);
-                    }
-                    catch (Exception ex) when (ex is ArgumentNullException || ex is ArgumentException || ex is OverflowException)
-                    {
-                        throw SyntaxErrorException.InvalidEnumValue(enumNode.Type, enumNode.Value, enumNode.Range);
-                    }
+                    if (enumNode.Type == "Hero")
+                        value = Element.Part<V_HeroVar>(enumNode.EnumMember);
+                    else
+                        value = enumNode.EnumMember;
+
+                    //if (value == null)
+                      //  throw SyntaxErrorException.InvalidEnumValue(enumNode.Type, enumNode.Value, enumNode.Range);
                     
                     break;
 
@@ -660,7 +669,7 @@ namespace Deltin.Deltinteger.Parse
             {
                 for (int i = ReturnSkips.Count - 1; i >= returnSkipStart; i--)
                 {
-                    ReturnSkips[i].ParameterValues = new object[]
+                    ReturnSkips[i].ParameterValues = new IWorkshopTree[]
                     {
                         new V_Number(Actions.Count - 1 - Actions.IndexOf(ReturnSkips[i]))
                     };
@@ -730,7 +739,7 @@ namespace Deltin.Deltinteger.Parse
                         Element.Part<V_Compare>
                         (
                             forTempVar.GetVariable(),
-                            Operators.LessThan,
+                            EnumData.GetEnumValue(Operators.LessThan),
                             Element.Part<V_CountOf>(forArrayElement)
                         )
                     ));
@@ -824,7 +833,7 @@ namespace Deltin.Deltinteger.Parse
 
                     // Update the initial SkipIf's skip count now that we know the number of actions the if block has.
                     // Add one to the body length if a Skip action is going to be added.
-                    if_SkipIf.ParameterValues = new object[]
+                    if_SkipIf.ParameterValues = new IWorkshopTree[]
                     {
                         Element.Part<V_Not>(ParseExpression(scope, ifNode.IfData.Expression)),
                         new V_Number(Actions.Count - 1 - Actions.IndexOf(if_SkipIf) + (addIfSkip ? 1 : 0))
@@ -854,7 +863,7 @@ namespace Deltin.Deltinteger.Parse
                         bool addIfElseSkip = i < ifNode.ElseIfData.Length - 1 || ifNode.ElseBlock != null;
 
                         // Set the SkipIf's parameters.
-                        elseif_SkipIf.ParameterValues = new object[]
+                        elseif_SkipIf.ParameterValues = new IWorkshopTree[]
                         {
                             Element.Part<V_Not>(ParseExpression(scope, ifNode.ElseIfData[i].Expression)),
                             new V_Number(Actions.Count - 1 - Actions.IndexOf(elseif_SkipIf) + (addIfElseSkip ? 1 : 0))
@@ -877,7 +886,7 @@ namespace Deltin.Deltinteger.Parse
 
                     // Replace dummy skip with real skip now that we know the length of the if, if-else, and else's bodies.
                     // Replace if's dummy.
-                    if_Skip.ParameterValues = new object[]
+                    if_Skip.ParameterValues = new IWorkshopTree[]
                     {
                         new V_Number(Actions.Count - 1 - Actions.IndexOf(if_Skip))
                     };
@@ -886,7 +895,7 @@ namespace Deltin.Deltinteger.Parse
                     for (int i = 0; i < elseif_Skips.Length; i++)
                         if (elseif_Skips[i] != null)
                         {
-                            elseif_Skips[i].ParameterValues = new object[]
+                            elseif_Skips[i].ParameterValues = new IWorkshopTree[]
                             {
                                 new V_Number(Actions.Count - 1 - Actions.IndexOf(elseif_Skips[i]))
                             };

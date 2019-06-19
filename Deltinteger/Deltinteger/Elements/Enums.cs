@@ -27,33 +27,6 @@ namespace Deltin.Deltinteger.Elements
         }
         public string CodeName { get; private set; }
         public string WorkshopName { get; private set; }
-
-        public static string GetWorkshopName(object enumValue)
-        {
-            var enumType = enumValue.GetType();
-            var memInfo = enumType.GetMember(enumValue.ToString());
-            var attributes = memInfo[0].GetCustomAttributes(typeof(EnumOverride), false);
-            return ((EnumOverride)attributes.ElementAtOrDefault(0))?.WorkshopName ?? Extras.AddSpacesToSentence(enumValue.ToString(), false);
-         }
-
-         public static string[] GetCodeValues<T>()
-         {
-             return GetCodeValues(typeof(T));
-         }
-
-         public static string[] GetCodeValues(Type type)
-         {
-             return type.GetFields(BindingFlags.Public | BindingFlags.Static)
-                .Select(v => v.GetCustomAttribute<EnumOverride>()?.CodeName ?? v.Name)
-                .ToArray();
-         }
-
-         public static CompletionItem[] GetCompletion<T>()
-         {
-             return EnumOverride.GetCodeValues<T>().Select(value =>
-                new CompletionItem(value) { kind = CompletionItem.EnumMember }
-            ).ToArray();
-         }
     }
 
     public class EnumData
@@ -68,24 +41,7 @@ namespace Deltin.Deltinteger.Elements
                 AllEnums = new EnumData[enums.Length];
 
                 for (int i = 0; i < AllEnums.Length; i++)
-                {
-                    EnumOverride data = enums[i].GetCustomAttribute<EnumOverride>();
-                    string codeName     = data?.CodeName     ?? enums[i].Name;
-                    string workshopName = data?.WorkshopName ?? enums[i].Name;
-
-                    var fields = enums[i].GetFields(BindingFlags.Public | BindingFlags.Static);
-                    EnumMember[] values = new EnumMember[fields.Length];
-                    for (int v = 0; v < values.Length; v++)
-                    {
-                        EnumOverride fieldData = fields[v].GetCustomAttribute<EnumOverride>();
-                        string fieldCodeName     = fieldData?.CodeName     ?? fields[v].Name;
-                        string fieldWorkshopName = fieldData?.WorkshopName ?? fields[v].Name;
-
-                        values[v] = new EnumMember(fieldCodeName, fieldWorkshopName);
-                    }
-
-                    AllEnums[i] = new EnumData(codeName, workshopName, values, enums[i]);
-                }
+                    AllEnums[i] = new EnumData(enums[i]);
             }
             return AllEnums;
         }
@@ -100,31 +56,98 @@ namespace Deltin.Deltinteger.Elements
             return GetEnumData().FirstOrDefault(e => e.CodeName == codeName);
         }
 
+        public static EnumData GetEnum(Type type)
+        {
+            return GetEnumData().FirstOrDefault(e => e.Type == type);
+        }
+
+        public static EnumData GetEnum<T>()
+        {
+            return GetEnum(typeof(T));
+        }
+
+        public static EnumMember GetEnumValue(string enumCodeName, string valueCodeName)
+        {
+            return GetEnum(enumCodeName)?.GetEnumMember(valueCodeName);
+        }
+
+        public static EnumMember GetEnumValue(object enumValue)
+        {
+            return GetEnum(enumValue.GetType()).GetEnumMember(enumValue.ToString());
+        }
+
+        public static CompletionItem[] GetAllEnumCompletion()
+        {
+            return GetEnumData().Select(e => new CompletionItem(e.CodeName) { kind = CompletionItem.Enum }).ToArray();
+        }
+
         public string CodeName { get; private set; }
         public string WorkshopName { get; private set; }
-        public EnumMember[] Values { get; private set; }
+        public EnumMember[] Members { get; private set; }
         public Type Type { get; private set; } 
 
-        public EnumData(string codeName, string workshopName, EnumMember[] values, Type type)
+        public EnumData(Type type)
         {
-            CodeName = codeName;
-            WorkshopName = workshopName;
-            Values = values;
+            EnumOverride data = type.GetCustomAttribute<EnumOverride>();
+            CodeName = data?.CodeName         ?? type.Name;
+            WorkshopName = data?.WorkshopName ?? type.Name;
+
             Type = type;
+
+            var fields = type.GetFields(BindingFlags.Public | BindingFlags.Static);
+            Members = new EnumMember[fields.Length];
+            for (int v = 0; v < Members.Length; v++)
+            {
+                EnumOverride fieldData = fields[v].GetCustomAttribute<EnumOverride>();
+                string fieldCodeName     = fieldData?.CodeName     ?? fields[v].Name;
+                string fieldWorkshopName = fieldData?.WorkshopName ?? fields[v].Name;
+
+                Members[v] = new EnumMember(this, fieldCodeName, fieldWorkshopName);
+            }
+        }
+
+        public bool IsEnumMember(string codeName)
+        {
+            return GetEnumMember(codeName) != null;
+        }
+
+        public EnumMember GetEnumMember(string codeName)
+        {
+            return Members.FirstOrDefault(m => m.CodeName == codeName);
+        }
+
+        public CompletionItem[] GetCompletion()
+        {
+            return Members.Select(value =>
+                new CompletionItem(value.CodeName) { kind = CompletionItem.EnumMember }
+            ).ToArray();
         }
     }
 
-    public class EnumMember
+    public class EnumMember : IWorkshopTree
     {
+        public EnumData @Enum { get; private set; }
         public string CodeName { get; private set; }
         public string WorkshopName { get; private set; }
-        public EnumMember(string codeName, string workshopName)
+        public EnumMember(EnumData @enum, string codeName, string workshopName)
         {
+            @Enum = @enum;
             CodeName = codeName;
             WorkshopName = workshopName;
         }
+
+        public string ToWorkshop()
+        {
+            return WorkshopName;
+        }
+
+        public void DebugPrint(Log log, int depth)
+        {
+            log.Write(LogLevel.Verbose, Extras.Indent(depth, false) + WorkshopName);
+        }
     }
 
+    [EnumParameter]
     public enum RuleEvent
     {
         [EnumOverride(null, "Ongoing - Global")]
@@ -146,6 +169,7 @@ namespace Deltin.Deltinteger.Elements
         OnDeath
     }
 
+    [EnumParameter]
     public enum PlayerSelector
     {
         All,
@@ -195,6 +219,7 @@ namespace Deltin.Deltinteger.Elements
         Baptiste
     }
 
+    [EnumParameter]
     public enum Operators
     {
         [EnumOverride(null, "==")]

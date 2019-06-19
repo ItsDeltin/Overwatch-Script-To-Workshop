@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Deltin.Deltinteger.LanguageServer;
+using Deltin.Deltinteger.Elements;
 using Antlr4.Runtime;
 
 namespace Deltin.Deltinteger.Parse
@@ -35,8 +36,15 @@ namespace Deltin.Deltinteger.Parse
 
         public override object VisitEnum(DeltinScriptParser.EnumContext context)
         {
-            if (context.PART() == null)
+            string type  = context.PART(0).GetText();
+            string value = context.PART(1)?.GetText();
+
+            if (value == null)
                 _diagnostics.Add(new Diagnostic("Expected enum value.", Range.GetRange(context)) { severity = Diagnostic.Error });
+            
+            else if (EnumData.GetEnumValue(type, value) == null)
+                _diagnostics.Add(new Diagnostic(string.Format(SyntaxErrorException.invalidEnumValue, value, type), Range.GetRange(context)) { severity = Diagnostic.Error }); 
+
             return base.VisitEnum(context);
         }
 

@@ -16,18 +16,18 @@ namespace Deltin.Deltinteger
             Range = range;
         }
 
-        const string parameterCount       = "Can't set the <{0}> format, there are only {1} parameters.";
-        const string stringParse          = "Failed to parse the string \"{0}\".";
-        const string invalidString        = "\"{0}\" is not a valid string.";
-        const string invalidType          = "Expected {0}, got {1} instead.";
-        const string methodDoesntExist    = "The method \"{0}\" does not exist.";
-        const string missingParameter     = "Missing parameter \"{0}\" in the method \"{1}\" and no default type to fallback on.";
-        const string expectedType         = "Expected {0} type \"{1}\" on {2}'s parameter \"{3}\".";
-        const string invalidEnumValue     = "The value {0} does not exist in the enum {1}.";
-        const string variableDoesNotExist = "The variable {0} does not exist.";
-        const string alreadyDefined       = "The variable {0} was already defined.";
-        const string mustBeValue    = "{0} must be a value method, not an action method.";
-        const string mustBeAction   = "{0} must be an action method, not a value method.";
+        public const string parameterCount       = "Can't set the <{0}> format, there are only {1} parameters.";
+        public const string stringParse          = "Failed to parse the string \"{0}\".";
+        public const string invalidString        = "\"{0}\" is not a valid string.";
+        public const string invalidType          = "Expected {0}, got {1} instead.";
+        public const string methodDoesntExist    = "The method \"{0}\" does not exist.";
+        public const string missingParameter     = "Missing parameter \"{0}\" in the method \"{1}\" and no default type to fallback on.";
+        public const string expectedType         = "Expected {0} type \"{1}\" on {2}'s parameter \"{3}\".";
+        public const string invalidEnumValue     = "The value '{0}' does not exist in the enum '{1}'.";
+        public const string variableDoesNotExist = "The variable {0} does not exist.";
+        public const string alreadyDefined       = "The variable {0} was already defined.";
+        public const string mustBeValue          = "{0} must be a value method, not an action method.";
+        public const string mustBeAction         = "{0} must be an action method, not a value method.";
 
         public static SyntaxErrorException StringParameterCount(int parameterIndex, int parameterCount, Range range)
         {

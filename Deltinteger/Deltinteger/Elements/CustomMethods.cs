@@ -212,7 +212,7 @@ namespace Deltin.Deltinteger.Elements
                 {
                     current = new V_Append()
                     {
-                        ParameterValues = new object[2]
+                        ParameterValues = new IWorkshopTree[2]
                     };
 
                     if (prev != null)
@@ -236,11 +236,11 @@ namespace Deltin.Deltinteger.Elements
                             ),
                             new V_Number(100)
                         ),
-                        Rounding.Down
+                        EnumData.GetEnumValue(Rounding.Down)
                     ),
                     new V_Number(4)
                 ),
-                Rounding.Down)
+                EnumData.GetEnumValue(Rounding.Down))
             ), CustomMethodType.Value);
         }
 

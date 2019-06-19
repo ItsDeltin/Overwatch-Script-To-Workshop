@@ -15,8 +15,6 @@ namespace Deltin.Deltinteger
 
         public const int RULE_NAME_MAX_LENGTH = 128;
 
-        public static readonly Type[] EnumParameters = Assembly.GetExecutingAssembly().GetTypes().Where(t => t.GetCustomAttribute<EnumParameter>() != null).ToArray();
-
         public const double MINIMUM_WAIT = 0.016;
 
         public const string DEFAULT_STRING = "hello";

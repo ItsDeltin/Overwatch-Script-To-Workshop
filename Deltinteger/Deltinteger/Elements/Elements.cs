@@ -81,17 +81,17 @@ namespace Deltin.Deltinteger.Elements
 
         public Type EnumType { get; private set; }
 
-        public object GetDefault()
+        public IWorkshopTree GetDefault()
         {
             if (ParameterType == ParameterType.Value)
             {
                 if (DefaultType == null)
                     throw new Exception($"No default value to fallback on for parameter {Name}.");
-                return Activator.CreateInstance(DefaultType);
+                return (IWorkshopTree)Activator.CreateInstance(DefaultType);
             }
 
             if (ParameterType == ParameterType.Enum)
-                return Enum.GetValues(EnumType).GetValue(0);
+                return EnumData.GetEnum(EnumType).Members[0];
 
             return null;
         }
@@ -128,7 +128,7 @@ namespace Deltin.Deltinteger.Elements
             return MethodList.FirstOrDefault(m => name == m.Name.Substring(2));
         }
 
-        public static T Part<T>(params object[] parameterValues) where T : Element, new()
+        public static T Part<T>(params IWorkshopTree[] parameterValues) where T : Element, new()
         {
             T element = new T()
             {
@@ -144,7 +144,7 @@ namespace Deltin.Deltinteger.Elements
             return $"{type.Name.Substring(2)}({Parameter.ParameterGroupToString(parameters)})";
         }
 
-        public Element(params object[] parameterValues)
+        public Element(params IWorkshopTree[] parameterValues)
         {
             ElementData = GetType().GetCustomAttribute<ElementData>();
             ParameterData = GetType().GetCustomAttributes<Parameter>().ToArray();
@@ -154,7 +154,7 @@ namespace Deltin.Deltinteger.Elements
         public ElementData ElementData { get; private set; }
         public Parameter[] ParameterData { get; private set; }
 
-        public object[] ParameterValues;
+        public IWorkshopTree[] ParameterValues;
 
         protected virtual string Info() { return ElementData.ElementName; }
 
@@ -168,31 +168,28 @@ namespace Deltin.Deltinteger.Elements
         public virtual void DebugPrint(Log log, int depth = 0)
         {
             if (ElementData.IsValue)
-                log.Write(LogLevel.Verbose, new ColorMod(new string(' ', depth * 4) + Info(), ConsoleColor.Cyan));
+                log.Write(LogLevel.Verbose, new ColorMod(Extras.Indent(depth, false) + Info(), ConsoleColor.Cyan));
             else
-                log.Write(LogLevel.Verbose, new ColorMod(new string(' ', depth * 4) + Info(), ConsoleColor.White));
+                log.Write(LogLevel.Verbose, new ColorMod(Extras.Indent(depth, false) + Info(), ConsoleColor.White));
 
             for (int i = 0; i < ParameterData.Length; i++)
             {
-                log.Write(LogLevel.Verbose, new ColorMod(new string(' ', (depth + 1) * 4) + ParameterData[i].Name + ":", ConsoleColor.Magenta));
+                log.Write(LogLevel.Verbose, new ColorMod(Extras.Indent(depth, false) + ParameterData[i].Name + ":", ConsoleColor.Magenta));
 
                 if (i < ParameterValues.Length)
                 {
-                    if (ParameterValues[i] is Element)
-                        (ParameterValues[i] as Element).DebugPrint(log, depth + 1);
-                    else
-                        log.Write(LogLevel.Verbose, new string(' ', (depth + 1) * 4) + ParameterValues[i]);
+                    ParameterValues[i].DebugPrint(log, depth + 1);
                 }
             }
         }
 
         public virtual string ToWorkshop()
         {
-            List<object> elementParameters = new List<object>();
+            List<IWorkshopTree> elementParameters = new List<IWorkshopTree>();
 
             for (int i = 0; i < ParameterData.Length; i++)
             {
-                object parameter = ParameterValues?.ElementAtOrDefault(i);
+                IWorkshopTree parameter = ParameterValues?.ElementAtOrDefault(i);
 
                 // If the parameter is null, get the default variable.
                 if (parameter == null)
@@ -203,27 +200,16 @@ namespace Deltin.Deltinteger.Elements
 
             List<string> parameters = AdditionalParameters().ToList();
 
-            parameters.AddRange(
-                elementParameters.Select(p => p is Element ?
-                    (p as Element).ToWorkshop() :
-                    EnumValue.GetWorkshopName(p as Enum) 
-                ));
-
+            parameters.AddRange(elementParameters.Select(p => p.ToWorkshop()));
 
             return ElementData.ElementName + 
-                (parameters.Count == 0 ? "" : 
+                (parameters.Count == 0 ? "" :
                 "(" + string.Join(", ", parameters) + ")");
         }
 
         protected virtual string[] AdditionalParameters()
         {
             return new string[0];
-        }
-
-        public static Element[] GenerateIf(Element condition, params Element[] actions)
-        {
-            Element skipIf = Element.Part<A_SkipIf>(Element.Part<V_Not>(condition), actions.Length);
-            return new Element[] { skipIf }.Concat(actions).ToArray();
         }
     }
 }

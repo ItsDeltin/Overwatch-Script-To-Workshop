@@ -157,15 +157,15 @@ namespace Deltin.Deltinteger.LanguageServer
 
                     // Event type
                     if (ruleNode.IsEventOptionSelected())
-                        completion.AddRange(EnumValue.GetCompletion<RuleEvent>());
+                        completion.AddRange(EnumData.GetEnum<RuleEvent>().GetCompletion());
                     
                     // Player
                     else if (ruleNode.IsPlayerOptionSelected())
-                        completion.AddRange(EnumValue.GetCompletion<PlayerSelector>());
+                        completion.AddRange(EnumData.GetEnum<PlayerSelector>().GetCompletion());
                     
                     // Team
                     else if (ruleNode.IsTeamOptionSelected())
-                        completion.AddRange(EnumValue.GetCompletion<TeamSelector>());
+                        completion.AddRange(EnumData.GetEnum<TeamSelector>().GetCompletion());
 
                     else
                         completion.AddRange(new CompletionItem[] 
@@ -207,6 +207,9 @@ namespace Deltin.Deltinteger.LanguageServer
                             kind = CompletionItem.Method,
                             detail = ((Element)Activator.CreateInstance(m)).ToString(),
                         }));
+                    
+                    completion.AddRange(EnumData.GetAllEnumCompletion());
+
                     if (parser.Success)
                     {
                         // Get all variables
@@ -232,25 +235,7 @@ namespace Deltin.Deltinteger.LanguageServer
                     break;
                 
                 case EnumNode enumNode:
-
-                    Type enumType = Constants.EnumParameters.FirstOrDefault(ep => ep.Name == enumNode.Type);
-                    if (enumType != null)
-                    {
-                        completion.AddRange(EnumValue.GetCodeValues(enumType).Select(enumValue => 
-                            new CompletionItem(enumValue)
-                            {
-                                kind = CompletionItem.EnumMember
-                            }
-                        ));
-                    }
-
-                    break;
-                
-                case null:
-                    break;
-
-                default: 
-                    Console.WriteLine(parser.Bav.SelectedNode.FirstOrDefault()?.GetType().Name + " context not implemented.");
+                    completion.AddRange(EnumData.GetEnum(enumNode.Type).GetCompletion());
                     break;
             }
 

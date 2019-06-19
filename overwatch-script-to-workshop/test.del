@@ -2,8 +2,5 @@ rule: "Recursion test."
 Event.OngoingPlayer 
 if (IsButtonHeld(EventPlayer(), Button.Interact))
 {
-    if (HeroOf() == HeroVar(Hero.Soldier76))
-    {
-        
-    }
+    PreloadHero(EventPlayer(), Hero.Soldier76);
 }

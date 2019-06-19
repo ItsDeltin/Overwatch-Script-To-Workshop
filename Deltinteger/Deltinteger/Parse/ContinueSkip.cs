@@ -36,7 +36,7 @@ namespace Deltin.Deltinteger.Parse
             Actions.Insert(1, 
                 Element.Part<A_SkipIf>
                 (
-                    Element.Part<V_Compare>(SkipCount.GetVariable(), Operators.NotEqual, new V_Number(0)),
+                    Element.Part<V_Compare>(SkipCount.GetVariable(), EnumData.GetEnumValue(Operators.NotEqual), new V_Number(0)),
                     SkipCount.GetVariable()
                 )
             );

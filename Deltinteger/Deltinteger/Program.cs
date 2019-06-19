@@ -60,16 +60,9 @@ namespace Deltin.Deltinteger
                     Script(script);
                     #endif
                 }
-                /*
-                else if (script != null)
-                {
-                    Log.Write(LogLevel.Normal, $"Could not find the file \"{script}\"");
-                }
-                */
                 else
                 {
                     Log.Write(LogLevel.Normal, $"Drag and drop a script over the executable to parse.");
-                    ConsoleLoop.Start();
                 }
 
                 Log.Write(LogLevel.Normal, "Done. Press enter to exit.");

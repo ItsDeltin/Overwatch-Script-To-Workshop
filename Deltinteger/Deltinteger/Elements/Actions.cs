@@ -281,7 +281,7 @@ namespace Deltin.Deltinteger.Elements
     [ElementData("Preload Hero")]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
 #warning confirm this parameter when the workshop is live
-    [Parameter("Hero", typeof(Hero))]
+    [Parameter("Hero", ValueType.Hero, typeof(V_HeroVar))]
     public class A_PreloadHero : Element {}
 
     [ElementData("Press Button")]

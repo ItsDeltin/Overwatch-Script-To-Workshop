@@ -692,11 +692,13 @@ namespace Deltin.Deltinteger.Parse
     {
         public string Type { get; private set; }
         public string Value { get; private set; }
+        public EnumMember EnumMember { get; private set; }
 
         public EnumNode(string type, string value, Range range) : base(range)
         {
             Type = type;
             Value = value;
+            EnumMember = EnumData.GetEnumValue(type, value);
         }
     }
 

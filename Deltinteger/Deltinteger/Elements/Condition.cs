@@ -11,14 +11,11 @@ namespace Deltin.Deltinteger.Elements
     public class Condition : IWorkshopTree
     {
         public Element Value1 { get; private set; }
-        public Operators CompareOperator { get; private set; }
+        public EnumMember CompareOperator { get; private set; }
         public Element Value2 { get; private set; }
 
-        public Condition(Element value1, Operators compareOperator = Operators.Equal, Element value2 = null)
+        public Condition(Element value1, EnumMember compareOperator, Element value2)
         {
-            if (value2 == null)
-                value2 = new V_True();
-
             if (!value1.ElementData.IsValue)
                 throw new ArgumentException("Method in condition must be a value method.", nameof(value1));
 
@@ -33,13 +30,13 @@ namespace Deltin.Deltinteger.Elements
         public void DebugPrint(Log log, int depth = 0)
         {
             Value1.DebugPrint(log, depth);
-            log.Write(LogLevel.Verbose, new ColorMod(new string(' ', depth * 4) + CompareOperator.ToString(), ConsoleColor.DarkYellow));
+            log.Write(LogLevel.Verbose, new ColorMod(new string(' ', depth * 4) + CompareOperator.ToWorkshop(), ConsoleColor.DarkYellow));
             Value2.DebugPrint(log, depth);
         }
 
         public string ToWorkshop()
         {
-            return Value1.ToWorkshop() + " " + EnumValue.GetWorkshopName(CompareOperator) + " " + Value2.ToWorkshop();
+            return Value1.ToWorkshop() + " " + CompareOperator.ToWorkshop() + " " + Value2.ToWorkshop();
         }
     }
 }
