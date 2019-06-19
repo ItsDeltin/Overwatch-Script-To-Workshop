@@ -473,6 +473,7 @@ namespace Deltin.Deltinteger.Elements
 
     [ElementData("Start Accelerating")]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [Parameter("Direction", ValueType.VectorAndPlayer, typeof(V_Vector))]
     [Parameter("Rate", ValueType.Number, typeof(V_Number))]
     [Parameter("Max Speed", ValueType.Number, typeof(V_Number))]
     [Parameter("Relative", typeof(Relative))]
