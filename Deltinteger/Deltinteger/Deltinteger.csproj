@@ -64,7 +64,6 @@
     <Compile Include="Elements\CustomMethods.cs" />
     
     <Compile Include="Program.cs" />
-    <Compile Include="Input.cs" />
     <Compile Include="Extras.cs" />
     <Compile Include="LanguageServer.cs" />
     <Compile Include="Constants.cs" />

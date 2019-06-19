@@ -20,10 +20,10 @@ namespace Deltin.Deltinteger.Elements
                 value2 = new V_True();
 
             if (value1.ElementData.ElementType != ElementType.Value)
-                throw new IncorrectElementTypeException(nameof(value1), true);
+                throw new ArgumentException("Method in condition must be a value method.", nameof(value1));
 
             if (value2.ElementData.ElementType != ElementType.Value)
-                throw new IncorrectElementTypeException(nameof(value2), true);
+                throw new ArgumentException("Method in condition must be a value method.", nameof(value2));
 
             Value1 = value1;
             CompareOperator = compareOperator;

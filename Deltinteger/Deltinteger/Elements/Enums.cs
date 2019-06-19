@@ -38,7 +38,12 @@ namespace Deltin.Deltinteger.Elements
 
          public static string[] GetCodeValues<T>()
          {
-             return typeof(T).GetFields(BindingFlags.Public | BindingFlags.Static)
+             return GetCodeValues(typeof(T));
+         }
+
+         public static string[] GetCodeValues(Type type)
+         {
+             return type.GetFields(BindingFlags.Public | BindingFlags.Static)
                 .Select(v => v.GetCustomAttribute<EnumValue>()?.CodeName ?? v.Name)
                 .ToArray();
          }
@@ -49,6 +54,39 @@ namespace Deltin.Deltinteger.Elements
                 new CompletionItem(value) { kind = CompletionItem.EnumMember }
             ).ToArray();
          }
+    }
+
+    public class EnumData
+    {
+        private static EnumData[] AllEnums = GetEnumData();
+
+        private static EnumData[] GetEnumData()
+        {
+            Type[] enums = Assembly.GetExecutingAssembly().GetTypes().Where(t => t.GetCustomAttribute<EnumParameter>() != null).ToArray();
+            EnumData[] enumData = new EnumData[enums.Length];
+
+            for (int i = 0; i < enumData.Length; i++)
+            {
+                EnumValue data = enums[i].GetCustomAttribute<EnumValue>();
+                string codeName     = data.CodeName     ?? enums[i].Name;
+                string workshopName = data.WorkshopName ?? enums[i].Name;
+
+                enumData[i] = new EnumData(codeName, workshopName, enums[i]);
+            }
+
+            return enumData;
+        }
+
+        public string CodeName { get; private set; }
+        public string WorkshopName { get; private set; }
+        public Type Type { get; private set; } 
+
+        public EnumData(string codeName, string workshopName, Type type)
+        {
+            CodeName = codeName;
+            WorkshopName = workshopName;
+            Type = type;
+        }
     }
 
     public enum RuleEvent

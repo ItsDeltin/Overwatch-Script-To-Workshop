@@ -42,16 +42,18 @@ namespace Deltin.Deltinteger.Parse
                 ruleSetNode = (RulesetNode)bav.Visit(ruleSetContext);
             }
 
-            AdditionalErrorChecking aec = new AdditionalErrorChecking(parser, diagnostics);
-            aec.Visit(ruleSetContext);
-
             VarCollection varCollection = null;
             ScopeGroup root = null;
             List<UserMethod> userMethods = null;
             Rule[] rules = null;
             bool success = false;
 
-            if (diagnostics.Count == 0)
+            bool parse = diagnostics.Count == 0;
+
+            AdditionalErrorChecking aec = new AdditionalErrorChecking(parser, diagnostics);
+            aec.Visit(ruleSetContext);
+
+            if (parse)
             {
                 varCollection = new VarCollection();
                 root = new ScopeGroup();
@@ -113,6 +115,8 @@ namespace Deltin.Deltinteger.Parse
 
     class Translate
     {
+        public static bool AllowRecursion = false;
+
         public static TranslateResult GetRule(RuleNode ruleNode, ScopeGroup root, VarCollection varCollection, UserMethod[] userMethods)
         {
             var result = new Translate(ruleNode, root, varCollection, userMethods);
@@ -162,18 +166,33 @@ namespace Deltin.Deltinteger.Parse
                 // If the parsed if is a V_Compare, translate it to a condition.
                 // Makes "(value1 == value2) == true" to just "value1 == value2"
                 if (parsedIf is V_Compare)
+                {
+                    Element left = (Element)parsedIf.ParameterValues[0];
+                    if (left.ElementData.ElementType == ElementType.Action)
+                        throw SyntaxErrorException.InvalidMethodType(true, left.Name, ((Node)expr).Range);
+
+                    Element right = (Element)parsedIf.ParameterValues[2];
+                    if (right.ElementData.ElementType == ElementType.Action)
+                        throw SyntaxErrorException.InvalidMethodType(true, right.Name, ((Node)expr).Range);
+
                     Conditions.Add(
                         new Condition(
-                            (Element)parsedIf.ParameterValues[0],
+                            left,
                             (Operators)parsedIf.ParameterValues[1],
-                            (Element)parsedIf.ParameterValues[2]
+                            right
                         )
                     );
+                }
                 // If not, just do "parsedIf == true"
                 else
+                {
+                    if (parsedIf.ElementData.ElementType == ElementType.Action)
+                        throw SyntaxErrorException.InvalidMethodType(true, parsedIf.Name, ((Node)expr).Range);
+
                     Conditions.Add(new Condition(
                         parsedIf, Operators.Equal, new V_True()
                     ));
+                }
             }
         }
 
@@ -382,16 +401,15 @@ namespace Deltin.Deltinteger.Parse
                     MethodResult result = (MethodResult)customMethod.Invoke(null, new object[] { IsGlobal, VarCollection, parsedParameters });
                     switch (result.MethodType)
                     {
-                        #warning todo replace throws with Diagnostics.Add
                         case CustomMethodType.Action:
                             if (needsToBeValue)
-                                throw new IncorrectElementTypeException(methodNode.Name, true);
+                                throw SyntaxErrorException.InvalidMethodType(true, methodNode.Name, methodNode.Range);
                             break;
 
                         case CustomMethodType.MultiAction_Value:
                         case CustomMethodType.Value:
                             if (!needsToBeValue)
-                                throw new IncorrectElementTypeException(methodNode.Name, false);
+                                throw SyntaxErrorException.InvalidMethodType(false, methodNode.Name, methodNode.Range);
                             break;
                     }
 
@@ -405,50 +423,21 @@ namespace Deltin.Deltinteger.Parse
 
                 case MethodType.UserMethod:
                 {
-                    UserMethod userMethod = UserMethod.GetUserMethod(UserMethods, methodNode.Name);
-                    
-                    MethodStack lastMethod = MethodStack.FirstOrDefault(ms => ms.UserMethod == userMethod);
-                    if (lastMethod != null)
-                    {
-                        ContinueSkip.Setup();
-
-                        for (int i = 0; i < lastMethod.ParameterVars.Length; i++)
-                            if (methodNode.Parameters.Length > i)
-                                Actions.Add(lastMethod.ParameterVars[i].Push(ParseExpression(scope, methodNode.Parameters[i])));
-
-                        // ?--- Multidimensional Array 
-                        Actions.Add(
-                            Element.Part<A_SetGlobalVariable>(Variable.B, lastMethod.ContinueSkipArray.GetVariable())
-                        );
-                        Actions.Add(
-                            Element.Part<A_ModifyGlobalVariable>(Variable.B, Operation.AppendToArray, new V_Number(ContinueSkip.GetSkipCount() + 4))
-                        );
-                        Actions.Add(
-                            lastMethod.ContinueSkipArray.SetVariable(Element.Part<V_GlobalVariable>(Variable.B))
-                        );
-                        // ?---
-
-                        ContinueSkip.SetSkipCount(lastMethod.ActionIndex);
-                        Actions.Add(Element.Part<A_Loop>());
-
-                        if (needsToBeValue)
-                            method = lastMethod.Return.GetVariable();
-                        else
-                            method = null;
-                    }
-                    else
+                    if (!AllowRecursion)
                     {
                         var methodScope = Root.Child();
 
+                        UserMethod userMethod = UserMethod.GetUserMethod(UserMethods, methodNode.Name);
+
                         // Add the parameter variables to the scope.
-                        ParameterVar[] parameterVars = new ParameterVar[userMethod.Parameters.Length];
+                        DefinedVar[] parameterVars = new DefinedVar[userMethod.Parameters.Length];
                         for (int i = 0; i < parameterVars.Length; i++)
                         {
                             if (methodNode.Parameters.Length > i)
                             {
                                 // Create a new variable using the parameter input.
-                                parameterVars[i] = VarCollection.AssignParameterVar(Actions, methodScope, IsGlobal, userMethod.Parameters[i].Name, methodNode.Range);
-                                Actions.Add(parameterVars[i].Push(ParseExpression(scope, methodNode.Parameters[i])));
+                                parameterVars[i] = VarCollection.AssignDefinedVar(methodScope, IsGlobal, userMethod.Parameters[i].Name, methodNode.Range);
+                                Actions.Add(parameterVars[i].SetVariable(ParseExpression(scope, methodNode.Parameters[i])));
                             }
                             else
                                 throw SyntaxErrorException.MissingParameter(userMethod.Parameters[i].Name, methodNode.Name, methodNode.Range);
@@ -456,62 +445,128 @@ namespace Deltin.Deltinteger.Parse
 
                         var returns = VarCollection.AssignVar($"{methodNode.Name}: return temp value", IsGlobal);
 
-                        Var continueSkipArray = VarCollection.AssignVar($"{methodNode.Name}: continue skip temp value", IsGlobal);
-                        var stack = new MethodStack(userMethod, parameterVars, ContinueSkip.GetSkipCount(), returns, continueSkipArray);
-                        MethodStack.Add(stack);
-
                         var userMethodScope = methodScope.Child();
                         userMethod.Block.RelatedScopeGroup = userMethodScope;
                         
                         ParseBlock(userMethodScope, userMethod.Block, true, returns);
-
                         // No return value if the method is being used as an action.
                         if (needsToBeValue)
                             method = returns.GetVariable();
                         else
                             method = null;
 
-                        Actions.Add(Element.Part<A_Wait>(new V_Number(Constants.MINIMUM_WAIT)));
-                        for (int i = 0; i < parameterVars.Length; i++)
+                        break;
+                    }
+                    else
+                    {
+                        UserMethod userMethod = UserMethod.GetUserMethod(UserMethods, methodNode.Name);
+                        
+                        MethodStack lastMethod = MethodStack.FirstOrDefault(ms => ms.UserMethod == userMethod);
+                        if (lastMethod != null)
                         {
-                            parameterVars[i].Pop();
+                            ContinueSkip.Setup();
+
+                            for (int i = 0; i < lastMethod.ParameterVars.Length; i++)
+                                if (methodNode.Parameters.Length > i)
+                                    Actions.Add(lastMethod.ParameterVars[i].Push(ParseExpression(scope, methodNode.Parameters[i])));
+
+                            // ?--- Multidimensional Array 
+                            Actions.Add(
+                                Element.Part<A_SetGlobalVariable>(Variable.B, lastMethod.ContinueSkipArray.GetVariable())
+                            );
+                            Actions.Add(
+                                Element.Part<A_ModifyGlobalVariable>(Variable.B, Operation.AppendToArray, new V_Number(ContinueSkip.GetSkipCount() + 4))
+                            );
+                            Actions.Add(
+                                lastMethod.ContinueSkipArray.SetVariable(Element.Part<V_GlobalVariable>(Variable.B))
+                            );
+                            // ?---
+
+                            ContinueSkip.SetSkipCount(lastMethod.ActionIndex);
+                            Actions.Add(Element.Part<A_Loop>());
+
+                            if (needsToBeValue)
+                                method = lastMethod.Return.GetVariable();
+                            else
+                                method = null;
                         }
+                        else
+                        {
+                            var methodScope = Root.Child();
 
-                        ContinueSkip.Setup();
-                        ContinueSkip.SetSkipCount(Element.Part<V_LastOf>(continueSkipArray.GetVariable()));
+                            // Add the parameter variables to the scope.
+                            ParameterVar[] parameterVars = new ParameterVar[userMethod.Parameters.Length];
+                            for (int i = 0; i < parameterVars.Length; i++)
+                            {
+                                if (methodNode.Parameters.Length > i)
+                                {
+                                    // Create a new variable using the parameter input.
+                                    parameterVars[i] = VarCollection.AssignParameterVar(Actions, methodScope, IsGlobal, userMethod.Parameters[i].Name, methodNode.Range);
+                                    Actions.Add(parameterVars[i].Push(ParseExpression(scope, methodNode.Parameters[i])));
+                                }
+                                else
+                                    throw SyntaxErrorException.MissingParameter(userMethod.Parameters[i].Name, methodNode.Name, methodNode.Range);
+                            }
 
-                        // ?--- Multidimensional Array 
-                        Actions.Add(
-                            Element.Part<A_SetGlobalVariable>(Variable.B, continueSkipArray.GetVariable())
-                        );
-                        Actions.Add(
-                            continueSkipArray.SetVariable(
-                                Element.Part<V_ArraySlice>(
-                                    Element.Part<V_GlobalVariable>(Variable.B), 
-                                    new V_Number(0),
-                                    Element.Part<V_Subtract>(
-                                        Element.Part<V_CountOf>(Element.Part<V_GlobalVariable>(Variable.B)),
-                                        new V_Number(1)
+                            var returns = VarCollection.AssignVar($"{methodNode.Name}: return temp value", IsGlobal);
+
+                            Var continueSkipArray = VarCollection.AssignVar($"{methodNode.Name}: continue skip temp value", IsGlobal);
+                            var stack = new MethodStack(userMethod, parameterVars, ContinueSkip.GetSkipCount(), returns, continueSkipArray);
+                            MethodStack.Add(stack);
+
+                            var userMethodScope = methodScope.Child();
+                            userMethod.Block.RelatedScopeGroup = userMethodScope;
+                            
+                            ParseBlock(userMethodScope, userMethod.Block, true, returns);
+
+                            // No return value if the method is being used as an action.
+                            if (needsToBeValue)
+                                method = returns.GetVariable();
+                            else
+                                method = null;
+
+                            Actions.Add(Element.Part<A_Wait>(new V_Number(Constants.MINIMUM_WAIT)));
+                            for (int i = 0; i < parameterVars.Length; i++)
+                            {
+                                parameterVars[i].Pop();
+                            }
+
+                            ContinueSkip.Setup();
+                            ContinueSkip.SetSkipCount(Element.Part<V_LastOf>(continueSkipArray.GetVariable()));
+
+                            // ?--- Multidimensional Array 
+                            Actions.Add(
+                                Element.Part<A_SetGlobalVariable>(Variable.B, continueSkipArray.GetVariable())
+                            );
+                            Actions.Add(
+                                continueSkipArray.SetVariable(
+                                    Element.Part<V_ArraySlice>(
+                                        Element.Part<V_GlobalVariable>(Variable.B), 
+                                        new V_Number(0),
+                                        Element.Part<V_Subtract>(
+                                            Element.Part<V_CountOf>(Element.Part<V_GlobalVariable>(Variable.B)),
+                                            new V_Number(1)
+                                        )
                                     )
                                 )
-                            )
-                        );
-                        // ?---
+                            );
+                            // ?---
 
-                        Actions.Add(
-                            Element.Part<A_LoopIf>(
-                                Element.Part<V_Compare>(
-                                    Element.Part<V_CountOf>(continueSkipArray.GetVariable()),
-                                    Operators.NotEqual,
-                                    new V_Number(0)
+                            Actions.Add(
+                                Element.Part<A_LoopIf>(
+                                    Element.Part<V_Compare>(
+                                        Element.Part<V_CountOf>(continueSkipArray.GetVariable()),
+                                        Operators.NotEqual,
+                                        new V_Number(0)
+                                    )
                                 )
-                            )
-                        );
-                        ContinueSkip.ResetSkip();
+                            );
+                            ContinueSkip.ResetSkip();
 
-                        MethodStack.Remove(stack);
+                            MethodStack.Remove(stack);
+                        }
+                        break;
                     }
-                    break;
                 }
 
                 default: throw new NotImplementedException();

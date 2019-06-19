@@ -9,6 +9,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Windows.Forms;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.Parse;
 using Deltin.Deltinteger.LanguageServer;
@@ -27,6 +28,10 @@ namespace Deltin.Deltinteger
                 Log.LogLevel = LogLevel.Verbose;
             if (args.Contains("-quiet"))
                 Log.LogLevel = LogLevel.Quiet;
+
+            // Determines if user methods can be recursive.
+            if (args.Contains("-allowrecursion"))
+                Translate.AllowRecursion = true;
 
             if (args.Contains("-langserver"))
             {
@@ -55,10 +60,12 @@ namespace Deltin.Deltinteger
                     Script(script);
                     #endif
                 }
+                /*
                 else if (script != null)
                 {
                     Log.Write(LogLevel.Normal, $"Could not find the file \"{script}\"");
                 }
+                */
                 else
                 {
                     Log.Write(LogLevel.Normal, $"Drag and drop a script over the executable to parse.");
@@ -110,7 +117,7 @@ namespace Deltin.Deltinteger
             Log.Write(LogLevel.Normal, "Press enter to copy code to clipboard, then in Overwatch click \"Paste Rule\".");
             Console.ReadLine();
 
-            InputSim.SetClipboard(final);
+            SetClipboard(final);
         }
 
         public static string RuleArrayToWorkshop(Rule[] rules, VarCollection varCollection)
@@ -132,6 +139,14 @@ namespace Deltin.Deltinteger
                 builder.AppendLine();
             }
             return builder.ToString();
+        }
+
+        public static void SetClipboard(string text)
+        {
+            Thread setClipboardThread = new Thread(() => Clipboard.SetText(text));
+            setClipboardThread.SetApartmentState(ApartmentState.STA); //Set the thread to STA
+            setClipboardThread.Start();
+            setClipboardThread.Join();
         }
     }
 }

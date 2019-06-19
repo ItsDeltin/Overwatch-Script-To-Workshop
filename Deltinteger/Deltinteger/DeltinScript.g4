@@ -85,7 +85,7 @@ else    : ELSE block                                          ;
 
 return  : RETURN expr? STATEMENT_END                          ;
 
-rule_if : IF LEFT_PAREN (expr (COMMA expr)*) RIGHT_PAREN;
+rule_if : IF LEFT_PAREN (expr (COMMA expr)*)? RIGHT_PAREN;
 
 // rule_option{0,3} does not work
 ow_rule : 

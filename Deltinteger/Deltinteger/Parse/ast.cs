@@ -83,8 +83,12 @@ namespace Deltin.Deltinteger.Parse
             BlockNode block = (BlockNode)VisitBlock(context.block());
 
             IExpressionNode[] conditions = new IExpressionNode[context.rule_if()?.expr().Length ?? 0];
+            Range[] conditionRanges = new Range[context.rule_if()?.expr().Length ?? 0];
             for (int i = 0; i < conditions.Length; i++)
+            {
                 conditions[i] = (IExpressionNode)VisitExpr(context.rule_if().expr()[i]);
+                conditionRanges[i] = Range.GetRange(context.rule_if().expr()[i]);
+            }
 
             RuleEvent eventType = RuleEvent.OngoingGlobal;
             TeamSelector team = TeamSelector.All;

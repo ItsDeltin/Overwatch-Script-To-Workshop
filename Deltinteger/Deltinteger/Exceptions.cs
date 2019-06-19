@@ -8,18 +8,6 @@ using Deltin.Deltinteger.Parse;
 
 namespace Deltin.Deltinteger
 {
-    public class IncorrectElementTypeException : ArgumentException
-    {
-        public IncorrectElementTypeException(string paramName, bool needsToBeValue) : base(needsToBeValue ? $"{paramName} is an action, not a value." : $"{paramName} is a value, not an action.", paramName) {}
-    }
-
-    /*
-    public class InvalidStringException : ArgumentException
-    {
-        public InvalidStringException(string value) : base(value) {}
-    }
-    */
-
     public class SyntaxErrorException : Exception
     {
         public Range Range { get; private set; }
@@ -38,6 +26,8 @@ namespace Deltin.Deltinteger
         const string invalidEnumValue     = "The value {0} does not exist in the enum {1}.";
         const string variableDoesNotExist = "The variable {0} does not exist.";
         const string alreadyDefined       = "The variable {0} was already defined.";
+        const string mustBeValue    = "{0} must be a value method, not an action method.";
+        const string mustBeAction   = "{0} must be an action method, not a value method.";
 
         public static SyntaxErrorException StringParameterCount(int parameterIndex, int parameterCount, Range range)
         {
@@ -115,6 +105,15 @@ namespace Deltin.Deltinteger
         {
             return new SyntaxErrorException(
                 string.Format(alreadyDefined, variableName),
+                range
+            );
+        }
+
+        public static SyntaxErrorException InvalidMethodType(bool needsToBeValue, string methodName, Range range)
+        {
+            string err = needsToBeValue? mustBeValue : mustBeAction;
+            return new SyntaxErrorException(
+                string.Format(err, methodName),
                 range
             );
         }

@@ -29,7 +29,7 @@ namespace Deltin.Deltinteger.Parse
         {
             // Confirm there is an expression after the last ",".
             if (context.children?.Last().GetText() == ",")
-                _diagnostics.Add(new Diagnostic("Missing parameter.", Range.GetRange(context)) { severity = Diagnostic.Error });
+                _diagnostics.Add(new Diagnostic("Expected parameter.", Range.GetRange(context)) { severity = Diagnostic.Error });
             return base.VisitParameters(context);
         }
 
@@ -38,6 +38,13 @@ namespace Deltin.Deltinteger.Parse
             if (context.PART() == null)
                 _diagnostics.Add(new Diagnostic("Expected enum value.", Range.GetRange(context)) { severity = Diagnostic.Error });
             return base.VisitEnum(context);
+        }
+
+        public override object VisitRule_if(DeltinScriptParser.Rule_ifContext context)
+        {
+            if (context.expr() == null)
+                _diagnostics.Add(new Diagnostic("Expected expression.", Range.GetRange(context)) { severity = Diagnostic.Error });
+            return base.VisitRule_if(context);
         }
     }
 
