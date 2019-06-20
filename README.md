@@ -1,36 +1,32 @@
-# Deltinteger
-Create a scipt that will be automatically generated in the workshop using simulated input. Includes if/else if/else, for loops, easy string creation, infinite named variables, no more expression trees, and easy array creation!
+# Deltin's Script To Workshop
+<center>
+<img src="https://i.imgur.com/38SWJCm.png" alt="" height="350"/>
+<img src="https://i.imgur.com/hFdmeew.png" alt="" height="350"/>
+</center>
 
-A lot of the action/value data was not tested. If you find any methods that are not being inputed correctly, please file an issue.
+Create a scipt that will be converted to an Overwatch Workshop. Includes if/else if/else, for loops, easy string creation, infinite named variables, no more expression trees, easy array creation, and methods!
 
-### Usage
-#### Infinite named variables
-(Or whatever the max array count is on the workshop.)
+## Usage
+### Infinite named variables
 ```
-usevar globalvar A;
-usevar playervar A;
-
-define globalvar zombieCount;
-define playervar isZombie;
-
 define globalvar allZombies;
+define playervar isZombie;
 ```
 These variables can be referenced anywhere in the script.
 ```
 rule: "Swap player when they die."
-	Event.Player_Died
-	if (!isZombie)
-    {
-    	isZombie = true;
-        AppendToArray(allZombies, EventPlayer());
-    }
+Event.PlayerDied
+if (!isZombie)
+{
+    isZombie = true;
+    AppendToArray(allZombies, EventPlayer());
+}
 ```
-#### No more operator or compare trees.
+### No more operator or compare trees.
 Or/and statements can easily be done by doing `true | true & true`.
 ```
 rule: "Swap players when they die"
   Event.Player_Died
-  // Make sure they do not have the vaccination powerup!
   if (!isZombie & !isVaccinated)
   {
   	isZombie = true;
@@ -42,13 +38,13 @@ You can multiply/divide/subtract/add/pow/modulo any expression and it will autom
 ```
 Sqrt(XOf(vec1) * XOf(vec1) + YOf(vec2) * YOf(vex2) + ZOf(vec3) * ZOf(vec3))
 ```
-#### Easy array creation
+### Easy array creation
 Arrays can easily be created with brackets.
 ```
 locations = [Vector(56.64, 21.00, -67.14), Vector(50.46, 9.15, -92.95), Vector(30.00, 14.00, -77.91), Vector(82.59, 12.68, -88.21)];
 ``` 
 This will generate a tree of Append To Arrays.
-#### If - Else If - Else
+### If - Else If - Else
 ```
 if (IsOnGround(EventPlayer()) & IsCrouching(EventPlayer))
 {
@@ -63,7 +59,7 @@ else
 	height = 2;
 }
 ```
-#### Effortless for loops
+### Effortless for loops
 The script below will create 5 red spheres on Eichenwalde. If a player goes inside any of the spheres, they will die. The vector array containing the sphere locations is created like so:
 `locations = [Vector(56.64, 21.00, -67.14), Vector(50.46, 9.15, -92.95), Vector(30.00, 14.00, -77.91), Vector(82.59, 12.68, -88.21)];`. The for loop then loops through it doing `for (loc in locations)`.
 
@@ -110,7 +106,7 @@ rule: "Kill players in sphere."
         LoopIfConditionIsTrue();
     }
 ```
-#### Effortless strings
+### Effortless strings
 Strings can easily be created. They will be translated for the workshop to use. The strings must be already in the game (https://pastebin.com/ZuvCeFRp). An exception will be thrown if a string is unrecognized.
 ```
 SmallMessage(AllPlayers(), <"hello? thank_you teammate, that_was_awesome!">);
@@ -119,20 +115,67 @@ Format works as well.
 ```
 SmallMessage(AllPlayers(), <"hello? thank_you <0>, that_was_awesome!", PlayerClosestToReticle(EventPlayer())>);
 ```
-#### Setting player variables
+### Setting player variables
 `AllPlayers().variable = 4` will set every player's player-variable to the specified value.
 `EventPlayer().target.speedBuff = 120` A list of players work too, this will set the event player's target's speed boost to 120.  
 
-#### Custom methods
+### Methods
+```
+method IsAI(player)
+{
+	define currentHero = HeroOf(player); 
+	define heroSwap = team.team;
+
+	/*
+	Swap a player to Ana (Bastion if they are Ana), check if they are the new hero, then swap them back.
+	Possible improvements: Swap to a hero that isnt an option for AI.
+	*/
+	
+	if (currentHero == Hero.Ana)
+		heroSwap = Hero.Bastion;
+
+	ForcePlayerHero(player, heroSwap);
+
+	define isAI = HeroOf(player) == currentHero;
+
+	ForcePlayerHero(player, currentHero);
+	StopForcingHero(player);
+	
+	return isAI;
+}
+```
+IsAI() will return true if the player is an AI, otherwise it will return false. By default, recursive methods are disabled because it would make the final output of methods a lot more complicated. Start `Deltinteger.exe` with the argument `-allowresursion` to enable it.
+
+### Custom methods
 This contains some custom methods that are not included in the Workshop.
 
 `GetMapID()` gets the current map. This is based off of Xerxes's workshop code found from here:
 https://us.forums.blizzard.com/en/overwatch/t/workshop-resource-get-the-current-map-name-updated-1-action/
 
 `AngleOfVectors(vector, vector, vector)` gets the angle of 3 vectors. Returns a value between -1 to 1. -1 being 180 degrees, 0 being 90 degrees, and 1 being 0 degrees.
-## Generating the script
-After creating your script, drop the file into the .exe. When it is ready to input, leave the workshop menu then go back in. Press enter to start the input. Press ctrl+c to cancel. If the input has an error, it is usually because of lag. In the config, increase the `smallstep`, `mediumstep`, and/or `bigstep` values. If the input is still failing and it is always at the same spot, then it is a bug with the program. File an issue with your code/the affected methods.
 
-You can get a list of all actions and values by opening the executable directly and typing in "list all".
+## Deltinteger.exe
+### Arguments:
+- `-langserver`: Starts the language server.
+- `-port xxxx yyyy`: The 2 ports the language server uses.
+- `-allowrecursion`: Allows methods to be recursive.
+- `-verbose`/`-quiet`
 
-In Notepad++,. you can press F5 to quickly compile the script. In the `The Program to Run` input, type `C:/path/to/ScriptToWorkshop.exe $(FULL_CURRENT_PATH)`
+### Copying the script into Overwatch
+
+#### With the VSCode extension
+
+Install the `overwatch-script-to-workshop-x.x.x.vsix` extension file.
+
+![](https://i.imgur.com/cwTBkNp.png)
+
+In `Start Language Server.bat` make sure the `-port` argument matches the ports set in the settings `ostw.port1` and `ostw.port2`. Is 3000 and 3001 by default. Launch the bat to start the language server.
+
+You can press `ctrl+space` to get a list of all the methods.
+
+The extention adds a channel in vscode's output tab with the compiled workshop code. This can easily be copied into Overwatch.
+
+![](https://i.imgur.com/bB2kZcE.png)
+
+#### Without the VSCode extension
+Drop your script into the Deltinteger.exe executable to generate the script. The workshop code will be copied into your clipboard.
