@@ -73,7 +73,7 @@ statement :
 	| return
 	);
 
-block : (BLOCK_START statement* BLOCK_END) | statement | STATEMENT_END ;
+block : (BLOCK_START statement* BLOCK_END) | statement | STATEMENT_END  ;
 
 for     : FOR LEFT_PAREN 
 	((PART IN expr) | ((define | varset)? STATEMENT_END expr? STATEMENT_END statement?))
@@ -87,12 +87,12 @@ else    : ELSE block                                          ;
 
 return  : RETURN expr? STATEMENT_END                          ;
 
-rule_if : IF LEFT_PAREN (expr (COMMA expr)*)? RIGHT_PAREN;
+rule_if : (IF LEFT_PAREN (expr (COMMA expr)*) RIGHT_PAREN)*;
 
 // rule_option{0,3} does not work
 ow_rule : 
 	RULE_WORD ':' STRINGLITERAL rule_option? rule_option? rule_option?
-	rule_if?
+	rule_if
 	block
 	;
 

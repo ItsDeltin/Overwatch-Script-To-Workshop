@@ -50,8 +50,8 @@ namespace Deltin.Deltinteger.Parse
 
         public override object VisitRule_if(DeltinScriptParser.Rule_ifContext context)
         {
-            if (context.expr() == null)
-                _diagnostics.Add(new Diagnostic("Expected expression.", Range.GetRange(context)) { severity = Diagnostic.Error });
+            //if (context.expr() == null)
+              //  _diagnostics.Add(new Diagnostic("Expected expression.", Range.GetRange(context)) { severity = Diagnostic.Error });
             return base.VisitRule_if(context);
         }
     }
