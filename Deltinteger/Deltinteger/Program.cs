@@ -62,6 +62,7 @@ namespace Deltin.Deltinteger
                 }
                 else
                 {
+                    Log.Write(LogLevel.Normal, $"Could not find the file '{script}'.");
                     Log.Write(LogLevel.Normal, $"Drag and drop a script over the executable to parse.");
                 }
 
