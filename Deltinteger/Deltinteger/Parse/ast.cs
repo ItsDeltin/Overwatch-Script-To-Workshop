@@ -191,6 +191,15 @@ namespace Deltin.Deltinteger.Parse
 
                 node = new VariableNode(name, target, Range.GetRange(context));
             }
+            
+            // Not
+            else if (context.ChildCount == 2
+            && context.GetChild(0).GetText() == "!"
+            && context.GetChild(1) is DeltinScriptParser.ExprContext)
+            {
+                IExpressionNode value = (IExpressionNode)Visit(context.GetChild(1));
+                node = new NotNode(value, Range.GetRange(context));
+            }
 
             else
             {
@@ -271,14 +280,6 @@ namespace Deltin.Deltinteger.Parse
         public override Node VisitFalse(DeltinScriptParser.FalseContext context)
         {
             Node node = new BooleanNode(false, Range.GetRange(context));
-            CheckRange(node);
-            return node;
-        }
-
-        public override Node VisitNot(DeltinScriptParser.NotContext context)
-        {
-            IExpressionNode value = (IExpressionNode)Visit(context.expr());
-            Node node = new NotNode(value, Range.GetRange(context));
             CheckRange(node);
             return node;
         }
