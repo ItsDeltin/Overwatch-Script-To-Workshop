@@ -102,7 +102,7 @@ if (IsInSetup())
 }
 
 rule: "Initial Setup"
-if (!isInitialized)
+if (!isInitialized) 
 if (IsGameInProgress())
 {
 	DisableCompletion();
@@ -141,7 +141,7 @@ if (event == 0)
 }
 
 rule: "Choose town roles"
-Event.Ongoing_EachPlayer
+Event.OngoingPlayer
 if (team == allyTeamID)
 {
 	role = RandomInteger(1, 6);
@@ -151,7 +151,7 @@ if (team == allyTeamID)
 }
 
 rule: "Choose mafia roles"
-Event.Ongoing_EachPlayer
+Event.OngoingPlayer
 if (team == mafiaTeamID)
 {
 	if (!cantHaveRole)
@@ -187,7 +187,7 @@ if (team == mafiaTeamID)
 }
 
 rule: "Role Setup: Hunter"
-Event.Ongoing_EachPlayer
+Event.OngoingPlayer
 if (isInitialized)
 if (role == Hunter)
 {
@@ -197,7 +197,7 @@ if (role == Hunter)
 }
 
 rule: "Role Setup: Detective"
-Event.Ongoing_EachPlayer
+Event.OngoingPlayer
 if (isInitialized)
 if (role == Detective)
 {
@@ -207,7 +207,7 @@ if (role == Detective)
 }
 
 rule: "Role Setup: Interrogator"
-Event.Ongoing_EachPlayer
+Event.OngoingPlayer
 if (isInitialized)
 if (role == Interrogator)
 {
@@ -217,7 +217,7 @@ if (role == Interrogator)
 }
 
 rule: "Role Setup: Tracker"
-Event.Ongoing_EachPlayer
+Event.OngoingPlayer
 if (isInitialized)
 if (role == Tracker)
 {
@@ -227,7 +227,7 @@ if (role == Tracker)
 }
 
 rule: "Role Setup: Doctor"
-Event.Ongoing_EachPlayer
+Event.OngoingPlayer
 if (isInitialized)
 if (role == Doctor)
 {
@@ -237,7 +237,7 @@ if (role == Doctor)
 }
 
 rule: "Role Setup: Observer"
-Event.Ongoing_EachPlayer
+Event.OngoingPlayer
 if (isInitialized)
 if (role == Observer)
 {
@@ -247,7 +247,7 @@ if (role == Observer)
 }
 
 rule: "Role Setup: Framer"
-Event.Ongoing_EachPlayer
+Event.OngoingPlayer
 if (isInitialized)
 if (role == Framer)
 {
@@ -257,7 +257,7 @@ if (role == Framer)
 }
 
 rule: "Role Setup: Necromancer"
-Event.Ongoing_EachPlayer
+Event.OngoingPlayer
 if (isInitialized)
 if (role == Necromancer)
 {
@@ -267,7 +267,7 @@ if (role == Necromancer)
 }
 
 rule: "Role Setup: Revealer"
-Event.Ongoing_EachPlayer
+Event.OngoingPlayer
 if (isInitialized)
 if (role == Revealer)
 {
@@ -277,7 +277,7 @@ if (role == Revealer)
 }
 
 rule: "Slaughter innocent new players"
-Event.Ongoing_EachPlayer
+Event.OngoingPlayer
 if (isInitialized)
 if (!ArrayContains(registeredPlayers, EventPlayer()))
 {
@@ -286,7 +286,7 @@ if (!ArrayContains(registeredPlayers, EventPlayer()))
 }
 
 rule: "Player Setup"
-Event.Ongoing_EachPlayer
+Event.OngoingPlayer
 if (isInitialized)
 if (HasSpawned())
 {
@@ -346,8 +346,8 @@ if (CountOf(FilteredArray(
 }
 
 rule: "Death"
-Event.Player_Died
-if (isInitialized)
+Event.OnDeath
+if (isInitialized) 
 {
 	if (Attacker().team != vampireTeamID)
 	{
@@ -384,7 +384,7 @@ if (isInitialized)
 }
 
 rule: "Player Interact Start"
-Event.Ongoing_EachPlayer
+Event.OngoingPlayer
 if (canInteract)
 if (interactTarget == null)
 if (IsButtonHeld(EventPlayer(), Button.Crouch))
@@ -414,7 +414,7 @@ if (IsAlive())
 }
 
 rule: "Player Interact Update"
-Event.Ongoing_EachPlayer
+Event.OngoingPlayer
 if (canInteract)
 if (interactTarget != null)
 {
@@ -424,7 +424,7 @@ if (interactTarget != null)
 }
 
 rule: "Player Interact Stop"
-Event.Ongoing_EachPlayer
+Event.OngoingPlayer
 if (canInteract)
 if (interactTarget != null)
 if (!IsButtonHeld(EventPlayer(), Button.Crouch)
@@ -444,7 +444,7 @@ if (!IsButtonHeld(EventPlayer(), Button.Crouch)
 }
 
 rule: "Hunter Ability"
-Event.Ongoing_EachPlayer
+Event.OngoingPlayer
 if (role == Hunter)
 if (abilityProgress >= 100)
 {
@@ -476,7 +476,7 @@ This is used by the hunter to track a player's killer.
 Only do it every 10 meters.
 */
 rule: "Step Tracker"
-Event.Ongoing_EachPlayer
+Event.OngoingPlayer
 if (isInitialized)
 if (killCount > 0)
 if (TotalTimeElapsed() % 3 < 1)
@@ -486,7 +486,7 @@ if (CountOf(steps) == 0 | DistanceBetween(LastOf(steps), EventPlayer()) >= 10)
 }
 
 rule: "Hunter Visual Tracking Indent"
-Event.Ongoing_EachPlayer
+Event.OngoingPlayer
 if (role == Hunter)
 if (DistanceBetween(EventPlayer(), hunterLocation) < 3)
 {

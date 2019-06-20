@@ -11,7 +11,7 @@ formatted_string: '<' string (COMMA expr)* '>' ;
 true   : TRUE          ;
 false  : FALSE         ;
 null   : NULL          ;
-not    : NOT           ;
+not    : NOT expr      ;
 
 statement_operation : EQUALS | EQUALS_ADD | EQUALS_DIVIDE | EQUALS_MODULO | EQUALS_MULTIPLY | EQUALS_POW | EQUALS_SUBTRACT ;
 
@@ -41,7 +41,7 @@ expr
 	| expr '%' expr                               // x%y
 	| expr '+' expr                               // x+y
 	| expr '-' expr                               // x-y
-	| not expr                                    // !x
+	| not                                         // !x
 	| expr ('<' | '<=' | '==' | '>=' | '>' | '!=') expr // x == y
 	| expr BOOL expr                              // x & y
 	;

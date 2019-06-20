@@ -163,7 +163,7 @@ namespace Deltin.Deltinteger.Elements
             return GetName(this.GetType());
         }
 
-        public string Name { get { return GetType().ToString().Substring(2); } set {} }
+        public string Name { get { return GetType().Name.Substring(2); } set {} }
 
         public virtual void DebugPrint(Log log, int depth = 0)
         {

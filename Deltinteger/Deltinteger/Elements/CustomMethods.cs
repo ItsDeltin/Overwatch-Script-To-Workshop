@@ -247,7 +247,7 @@ namespace Deltin.Deltinteger.Elements
         [CustomMethod("RandomValuesInArray", CustomMethodType.Value)]
         [Parameter("Array", ValueType.Any, typeof(V_AllPlayers))]
         [Parameter("Count", ValueType.Number, typeof(V_Number))]
-        static MethodResult RandomValuesInArray(bool isGlobal, object[] parameters)
+        static MethodResult RandomValuesInArray(bool isGlobal, VarCollection varCollection, object[] parameters)
         {
             Element array = parameters[0] as Element;
             Element count = parameters[1] as Element;

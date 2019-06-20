@@ -258,7 +258,7 @@ namespace Deltin.Deltinteger.Parse
         // ( expr )
         public override Node VisitExprgroup(DeltinScriptParser.ExprgroupContext context)
         {
-            return Visit(context.GetChild(0));
+            return Visit(context.expr());
         }
 
         public override Node VisitTrue(DeltinScriptParser.TrueContext context)
@@ -277,7 +277,7 @@ namespace Deltin.Deltinteger.Parse
 
         public override Node VisitNot(DeltinScriptParser.NotContext context)
         {
-            IExpressionNode value = (IExpressionNode)Visit(context.GetChild(0));
+            IExpressionNode value = (IExpressionNode)Visit(context.expr());
             Node node = new NotNode(value, Range.GetRange(context));
             CheckRange(node);
             return node;
@@ -603,6 +603,8 @@ namespace Deltin.Deltinteger.Parse
         {
             Left = left;
             Operation = operation;
+            if (right == null)
+                ;
             Right = right;
         }
     }
