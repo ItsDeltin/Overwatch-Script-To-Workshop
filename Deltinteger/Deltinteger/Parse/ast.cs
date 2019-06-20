@@ -155,7 +155,7 @@ namespace Deltin.Deltinteger.Parse
         public override Node VisitExpr(DeltinScriptParser.ExprContext context)
         {
             Node node;
-
+            
             // Operations
             if (context.ChildCount == 3 && Constants.AllOperations.Contains(context.GetChild(1).GetText()))
             {

@@ -48,6 +48,8 @@ namespace Deltin.Deltinteger.Elements
 
         public static bool IsEnum(string codeName)
         {
+            if (codeName == null)
+                return false;
             return GetEnum(codeName) != null;
         }
 

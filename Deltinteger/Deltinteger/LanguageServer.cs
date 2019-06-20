@@ -235,7 +235,11 @@ namespace Deltin.Deltinteger.LanguageServer
                     break;
                 
                 case EnumNode enumNode:
-                    completion.AddRange(EnumData.GetEnum(enumNode.Type).GetCompletion());
+                    var add = EnumData.GetEnum(enumNode.Type)?.GetCompletion();
+
+                    if (add != null)
+                        completion.AddRange(add);
+                    
                     break;
             }
 

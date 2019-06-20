@@ -36,8 +36,8 @@ namespace Deltin.Deltinteger.Parse
 
         public override object VisitEnum(DeltinScriptParser.EnumContext context)
         {
-            string type  = context.PART(0).GetText();
-            string value = context.PART(1)?.GetText();
+            string type  = context.ENUM().GetText();
+            string value = context.PART().GetText();
 
             if (value == null)
                 _diagnostics.Add(new Diagnostic("Expected enum value.", Range.GetRange(context)) { severity = Diagnostic.Error });
