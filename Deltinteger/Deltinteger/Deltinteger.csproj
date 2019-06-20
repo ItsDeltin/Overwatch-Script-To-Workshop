@@ -75,6 +75,9 @@
     <Compile Include="Parse\ContinueSkip.cs" />
     <Compile Include="Parse\AdditionalErrorChecking.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Content Include="Start Language Server.bat">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

@@ -134,6 +134,7 @@ namespace Deltin.Deltinteger.Parse
         private readonly ContinueSkip ContinueSkip; // Contains data about the wait/skip for continuing loops.
         private readonly List<Diagnostic> Diagnostics = new List<Diagnostic>();
         private readonly List<MethodStack> MethodStack = new List<MethodStack>(); // The user method stack
+        private readonly List<UserMethod> MethodStackNoRecursive = new List<UserMethod>();
 
         private Translate(RuleNode ruleNode, ScopeGroup root, VarCollection varCollection, UserMethod[] userMethods)
         {
@@ -433,9 +434,12 @@ namespace Deltin.Deltinteger.Parse
                 {
                     if (!AllowRecursion)
                     {
-                        var methodScope = Root.Child();
-
                         UserMethod userMethod = UserMethod.GetUserMethod(UserMethods, methodNode.Name);
+
+                        if (MethodStackNoRecursive.Contains(userMethod))
+                            throw SyntaxErrorException.RecursionNotAllowed(methodNode.Range);
+
+                        var methodScope = Root.Child();
 
                         // Add the parameter variables to the scope.
                         DefinedVar[] parameterVars = new DefinedVar[userMethod.Parameters.Length];
@@ -453,10 +457,15 @@ namespace Deltin.Deltinteger.Parse
 
                         var returns = VarCollection.AssignVar($"{methodNode.Name}: return temp value", IsGlobal);
 
+                        MethodStackNoRecursive.Add(userMethod);
+
                         var userMethodScope = methodScope.Child();
                         userMethod.Block.RelatedScopeGroup = userMethodScope;
                         
                         ParseBlock(userMethodScope, userMethod.Block, true, returns);
+
+                        MethodStackNoRecursive.Remove(userMethod);
+
                         // No return value if the method is being used as an action.
                         if (needsToBeValue)
                             method = returns.GetVariable();
