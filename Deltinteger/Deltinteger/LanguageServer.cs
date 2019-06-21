@@ -169,6 +169,14 @@ namespace Deltin.Deltinteger.LanguageServer
                     // Team
                     else if (ruleNode.IsTeamOptionSelected())
                         completion.AddRange(EnumData.GetEnum<Team>().GetCompletion());
+                    
+                    else if (ruleNode.IsIfSelected())
+                        completion.AddRange(Element.ValueList.Select(m => 
+                            new CompletionItem(m.Name.Substring(2))
+                            {
+                                kind = CompletionItem.Method,
+                                detail = ((Element)Activator.CreateInstance(m)).ToString(),
+                            }));
 
                     else
                         completion.AddRange(new CompletionItem[] 
@@ -261,26 +269,46 @@ namespace Deltin.Deltinteger.LanguageServer
 
             var parser = ParserData.GetParser(document, new Parse.Pos(caret.line, caret.character));
 
-            int methodIndex = 0;
-            int parameterIndex = 0;
 
             MethodNode methodNode = null;
 
             SignatureHelp signatures = null;
             
-            if (parser.Success)
+            int methodIndex = 0;
+            int parameterIndex;
+            if (parser.Bav?.SelectedNode != null)
             {
+                // Get the signature for the method the cursor is on.
+                // Check if the selected node is a method node.
                 if (parser.Bav.SelectedNode.ElementAtOrDefault(0) is MethodNode)
                 {
                     methodNode = (MethodNode)parser.Bav.SelectedNode[0];
-                    parameterIndex = methodNode.Parameters.Length;
+
+                    // If the parameters of the method node is not selected and the parent is a method node,
+                    // select the parent method node.
+                    if (!methodNode.IsParametersSelected() && parser.Bav.SelectedNode.ElementAtOrDefault(1) is MethodNode)
+                    {
+                        methodNode = (MethodNode)parser.Bav.SelectedNode[1];
+                        // Get the index of the selected node.
+                        parameterIndex = Array.IndexOf(methodNode.Parameters, parser.Bav.SelectedNode[0]);
+                    }
+                    else
+                    {
+                        if (methodNode.IsNameSelected())
+                            parameterIndex = -1;
+                        else
+                            parameterIndex = methodNode.Parameters.Length;
+                    }
                 }
                 else if (parser.Bav.SelectedNode.ElementAtOrDefault(0) is IExpressionNode
-                && parser.Bav.SelectedNode.ElementAtOrDefault(1) is MethodNode)
+                    && parser.Bav.SelectedNode.ElementAtOrDefault(1) is MethodNode)
                 {
                     methodNode = (MethodNode)parser.Bav.SelectedNode[1];
+                    // Get the index of the selected node.
                     parameterIndex = Array.IndexOf(methodNode.Parameters, parser.Bav.SelectedNode[0]);
                 }
+                else
+                    parameterIndex = 0;
 
                 SignatureInformation information = null;
                 if (methodNode != null)

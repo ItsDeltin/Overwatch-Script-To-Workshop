@@ -15,7 +15,7 @@ null   : NULL          ;
 statement_operation : EQUALS | EQUALS_ADD | EQUALS_DIVIDE | EQUALS_MODULO | EQUALS_MULTIPLY | EQUALS_POW | EQUALS_SUBTRACT ;
 
 vardefine : DEFINE (GLOBAL|PLAYER) PART (PART (INDEX_START number INDEX_END)?)? STATEMENT_END; /*#define global/player NAME (use variable?); */
-define   : DEFINE PART (EQUALS expr)? ;
+define   : DEFINE PART (EQUALS expr?)? ;
 useGlobalVar : USEVAR GLOBAL PART STATEMENT_END ;
 usePlayerVar : USEVAR PLAYER PART STATEMENT_END ;
 
@@ -54,7 +54,7 @@ enum : ENUM SEPERATOR PART? ;
 
 variable : PART ;
 // define   : DEFINE PART (EQUALS expr)? STATEMENT_END ;
-varset   : (expr SEPERATOR)? PART array? statement_operation expr ;
+varset   : (expr SEPERATOR)? PART array? statement_operation expr? ;
 // Here, there should always be an expression. 
 // This is here so antlr recognizes it is a method midtype.
 // Confirm there is an expression in the visitor class.
@@ -63,12 +63,12 @@ parameters : expr (COMMA expr?)*    		 	     ;
 method     : PART LEFT_PAREN parameters? RIGHT_PAREN ;
 
 statement :
-	( varset STATEMENT_END
+	( varset STATEMENT_END?
 	| method STATEMENT_END?
 	| if
 	| for
 	| while
-	| define STATEMENT_END
+	| define STATEMENT_END?
 	| return
 	);
 
@@ -86,12 +86,12 @@ else    : ELSE block                                          ;
 
 return  : RETURN expr? STATEMENT_END                          ;
 
-rule_if : (IF LEFT_PAREN (expr (COMMA expr)*) RIGHT_PAREN)*;
+rule_if : IF LEFT_PAREN expr? RIGHT_PAREN;
 
 // rule_option{0,3} does not work
 ow_rule : 
 	RULE_WORD ':' STRINGLITERAL enum? enum? enum?
-	rule_if
+	rule_if*
 	block
 	;
 

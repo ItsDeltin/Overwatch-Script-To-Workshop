@@ -20,9 +20,15 @@ namespace Deltin.Deltinteger.Parse
 
         public override object VisitStatement(DeltinScriptParser.StatementContext context)
         {
-            if (context.GetChild(0) is DeltinScriptParser.MethodContext &&
-                context.ChildCount == 1)
-                _diagnostics.Add(new Diagnostic("Expected ';'", Range.GetRange(context)) { severity = Diagnostic.Error });
+            switch (context.GetChild(0))
+            {
+                case DeltinScriptParser.MethodContext _:
+                case DeltinScriptParser.DefineContext _:
+                case DeltinScriptParser.VarsetContext _:
+                    if (context.ChildCount == 1)
+                        _diagnostics.Add(new Diagnostic("Expected ';'", Range.GetRange(context)) { severity = Diagnostic.Error });
+                    break;
+            }
             return base.VisitStatement(context);
         }
 
@@ -50,9 +56,23 @@ namespace Deltin.Deltinteger.Parse
 
         public override object VisitRule_if(DeltinScriptParser.Rule_ifContext context)
         {
-            //if (context.expr() == null)
-              //  _diagnostics.Add(new Diagnostic("Expected expression.", Range.GetRange(context)) { severity = Diagnostic.Error });
+            if (context.expr() == null)
+                _diagnostics.Add(new Diagnostic("Expected expression.", Range.GetRange(context)) { severity = Diagnostic.Error });
             return base.VisitRule_if(context);
+        }
+
+        public override object VisitVarset(DeltinScriptParser.VarsetContext context)
+        {
+            if (context.expr().Length == 0 || context.children.IndexOf(context.expr().Last()) < context.children.IndexOf(context.statement_operation()))
+                _diagnostics.Add(new Diagnostic("Expected expression.", Range.GetRange(context)) { severity = Diagnostic.Error });
+            return base.VisitVarset(context);
+        }
+
+        public override object VisitDefine(DeltinScriptParser.DefineContext context)
+        {
+            if (context.EQUALS() != null && context.expr() == null)
+                _diagnostics.Add(new Diagnostic("Expected expression.", Range.GetRange(context)) { severity = Diagnostic.Error });
+            return base.VisitDefine(context);
         }
     }
 
