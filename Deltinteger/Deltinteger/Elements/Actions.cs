@@ -77,7 +77,7 @@ namespace Deltin.Deltinteger.Elements
 
     [ElementData("Create Effect")]
     [Parameter("Visible To", ValueType.Player, typeof(V_AllPlayers))]
-    [Parameter("Type", typeof(Effects))]
+    [Parameter("Type", typeof(Effect))]
     [Parameter("Color", typeof(Color))]
     [Parameter("Position", ValueType.VectorAndPlayer, typeof(V_EventPlayer))]
     [Parameter("Radius", ValueType.Number, typeof(V_Number))]
@@ -129,11 +129,11 @@ namespace Deltin.Deltinteger.Elements
     public class A_DeclarePlayerVictory : Element {}
 
     [ElementData("Declare Round Victory")]
-    [Parameter("Round Winning Team", ValueType.Team, typeof(V_Team))]
+    [Parameter("Round Winning Team", ValueType.Team, typeof(V_TeamVar))]
     public class A_DeclareRoundVictory : Element {}
 
     [ElementData("Declare team Victory")]
-    [Parameter("Team", ValueType.Team, typeof(V_Team))]
+    [Parameter("Team", ValueType.Team, typeof(V_TeamVar))]
     public class A_DeclareTeamVictory : Element {}
 
     [ElementData("Destroy All Effects")]
@@ -263,7 +263,7 @@ namespace Deltin.Deltinteger.Elements
     public class A_ModifyPlayerVariable : Element {}
 
     [ElementData("Modify Team Score")]
-    [Parameter("Team", ValueType.Team, typeof(V_Team))]
+    [Parameter("Team", ValueType.Team, typeof(V_TeamVar))]
     [Parameter("Score", ValueType.Number, typeof(V_Number))]
     public class A_ModifyTeamScore : Element {}
 
@@ -443,7 +443,7 @@ namespace Deltin.Deltinteger.Elements
     public class A_SetStatus : Element {}
 
     [ElementData("Set Team Score")]
-    [Parameter("Team", ValueType.Team, typeof(V_Team))]
+    [Parameter("Team", ValueType.Team, typeof(V_TeamVar))]
     [Parameter("Score", ValueType.Number, typeof(V_Number))]
     public class A_SetTeamScore : Element {}
 
@@ -517,7 +517,7 @@ namespace Deltin.Deltinteger.Elements
     public class A_ForcePlayerHero : Element {}
 
     [ElementData("Start Forcing Spawn Room")]
-    [Parameter("Team", ValueType.Team, typeof(V_Team))]
+    [Parameter("Team", ValueType.Team, typeof(V_TeamVar))]
     [Parameter("Room", ValueType.Number, typeof(V_Number))]
     public class A_ForceSpawnRoom : Element {}
 
@@ -588,7 +588,7 @@ namespace Deltin.Deltinteger.Elements
     public class A_StopForcingHero : Element {}
 
     [ElementData("Stop Forcing Spawn Room")]
-    [Parameter("Team", ValueType.Team, typeof(V_Team))]
+    [Parameter("Team", ValueType.Team, typeof(V_TeamVar))]
     public class A_StopForcingSpawnRoom : Element {}
 
     [ElementData("Stop Forcing Throttle")]

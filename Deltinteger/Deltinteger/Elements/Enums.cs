@@ -92,6 +92,9 @@ namespace Deltin.Deltinteger.Elements
                 case "Hero":
                     return Element.Part<V_HeroVar>(enumMember);
                 
+                case "Team":
+                    return Element.Part<V_TeamVar>(enumMember);
+                
                 case "Map":
                     return new V_Number((int)enumMember.UnderlyingValue);
 
@@ -365,7 +368,7 @@ namespace Deltin.Deltinteger.Elements
     }
 
     [EnumParameter]
-    public enum TeamSelector
+    public enum Team
     {
         All,
         Team1,
@@ -381,7 +384,7 @@ namespace Deltin.Deltinteger.Elements
     }
 
     [EnumParameter]
-    public enum Effects
+    public enum Effect
     {
         Sphere,
         LightShaft,

@@ -11,14 +11,14 @@ namespace Deltin.Deltinteger.Elements
     {
         public string Name { get; private set; }
         public RuleEvent RuleEvent { get; private set; }
-        public TeamSelector Team { get; private set; }
+        public Team Team { get; private set; }
         public PlayerSelector Player { get; private set; }
         public bool IsGlobal { get; private set; }
 
         public Condition[] Conditions { get; set; }
         public Element[] Actions { get; set; }
 
-        public Rule(string name, RuleEvent ruleEvent, TeamSelector team, PlayerSelector player) // Creates a rule.
+        public Rule(string name, RuleEvent ruleEvent, Team team, PlayerSelector player) // Creates a rule.
         {
             if (name.Length > Constants.RULE_NAME_MAX_LENGTH)
                 throw new ArgumentOutOfRangeException(nameof(name), name, $"Rule names cannot be longer than {Constants.RULE_NAME_MAX_LENGTH} characters.");

@@ -86,7 +86,10 @@ namespace Deltin.Deltinteger.LanguageServer
                         );
                         break;
 
-                    default: throw new Exception("Unsure of how to handle url " + url);
+                    default: 
+                        Console.WriteLine("Unsure of how to handle url " + url);
+                        buffer = new byte[0];
+                        break;
                 }
 
                 HttpListenerResponse response = context.Response;
@@ -165,7 +168,7 @@ namespace Deltin.Deltinteger.LanguageServer
                     
                     // Team
                     else if (ruleNode.IsTeamOptionSelected())
-                        completion.AddRange(EnumData.GetEnum<TeamSelector>().GetCompletion());
+                        completion.AddRange(EnumData.GetEnum<Team>().GetCompletion());
 
                     else
                         completion.AddRange(new CompletionItem[] 

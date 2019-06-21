@@ -91,24 +91,21 @@ namespace Deltin.Deltinteger.Parse
             }
 
             RuleEvent eventType = RuleEvent.OngoingGlobal;
-            TeamSelector team = TeamSelector.All;
+            Team team = Team.All;
             PlayerSelector player = PlayerSelector.All;
 
             Range eventRange = null;
             Range teamRange = null;
             Range playerRange = null;
-            foreach(var ruleOption in context.rule_option())
+            foreach(var ruleOption in context.@enum())
             {
-                string option = ruleOption.PART(0).GetText();
-                Range optionRange = Range.GetRange(ruleOption.PART(0).Symbol);
+                string option = ruleOption.ENUM().GetText();
+                Range optionRange = Range.GetRange(ruleOption.ENUM().Symbol);
 
-                string value = null;
+                string value = ruleOption.PART()?.GetText();
                 Range valueRange = null;
-                if (ruleOption.PART().Length == 2)
-                {
-                    value = ruleOption.PART(1).GetText();
-                    valueRange = Range.GetRange(ruleOption.PART(1).Symbol);
-                }
+                if (value != null)
+                    valueRange = Range.GetRange(ruleOption.PART().Symbol);
                 
                 switch (option)
                 {
@@ -119,7 +116,7 @@ namespace Deltin.Deltinteger.Parse
                         break;
                     
                     case "Team":
-                        if (!Enum.TryParse<TeamSelector>(value, out team))
+                        if (!Enum.TryParse<Team>(value, out team))
                             _diagnostics.Add(new Diagnostic($"{value} is not a valid Team type.", valueRange));
                         teamRange = Range.GetRange(ruleOption);
                         break;
@@ -537,12 +534,12 @@ namespace Deltin.Deltinteger.Parse
     {
         public string Name { get; private set; }
         public RuleEvent Event { get; private set; }
-        public TeamSelector Team { get; private set; }
+        public Team Team { get; private set; }
         public PlayerSelector Player { get; private set; }
         public IExpressionNode[] Conditions { get; private set; }
         public BlockNode Block { get; private set; }
 
-        public RuleNode(string name, RuleEvent eventType, TeamSelector team, PlayerSelector player, IExpressionNode[] conditions, BlockNode block, 
+        public RuleNode(string name, RuleEvent eventType, Team team, PlayerSelector player, IExpressionNode[] conditions, BlockNode block, 
             Range eventRange, Range teamRange, Range playerRange, Range range) : base(range, eventRange, teamRange, playerRange)
         {
             Name = name;

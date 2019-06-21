@@ -90,12 +90,10 @@ rule_if : (IF LEFT_PAREN (expr (COMMA expr)*) RIGHT_PAREN)*;
 
 // rule_option{0,3} does not work
 ow_rule : 
-	RULE_WORD ':' STRINGLITERAL rule_option? rule_option? rule_option?
+	RULE_WORD ':' STRINGLITERAL enum? enum? enum?
 	rule_if
 	block
 	;
-
-rule_option: PART SEPERATOR PART? ;
 
 user_method : METHOD PART LEFT_PAREN (PART (COMMA PART)*)? RIGHT_PAREN
 	block

@@ -21,26 +21,26 @@ namespace Deltin.Deltinteger.Elements
     public class V_Add : Element {}
 
     [ElementData("All Dead Players", ValueType.Player)]
-    [Parameter("Team", ValueType.Team, typeof(V_Team))]
+    [Parameter("Team", ValueType.Team, typeof(V_TeamVar))]
     public class V_AllDeadPlayers : Element {}
 
     [ElementData("All Heroes", ValueType.Hero)]
     public class V_AllHeroes : Element {}
 
     [ElementData("All Living Players", ValueType.Player)]
-    [Parameter("Team", ValueType.Team, typeof(V_Team))]
+    [Parameter("Team", ValueType.Team, typeof(V_TeamVar))]
     public class V_AllLivingPlayers : Element {}
 
     [ElementData("All Players", ValueType.Player)]
-    [Parameter("Team", ValueType.Team, typeof(V_Team))]
+    [Parameter("Team", ValueType.Team, typeof(V_TeamVar))]
     public class V_AllPlayers : Element {}
 
     [ElementData("All Players Not On Objective", ValueType.Player)]
-    [Parameter("Team", ValueType.Team, typeof(V_Team))]
+    [Parameter("Team", ValueType.Team, typeof(V_TeamVar))]
     public class V_AllPlayersNotOnObjective : Element {}
 
     [ElementData("All Players On Objective", ValueType.Player)]
-    [Parameter("Team", ValueType.Team, typeof(V_Team))]
+    [Parameter("Team", ValueType.Team, typeof(V_TeamVar))]
     public class V_AllPlayersOnObjective : Element {}
 
     [ElementData("Allowed Heroes", ValueType.Hero)]
@@ -85,7 +85,7 @@ namespace Deltin.Deltinteger.Elements
 
     [ElementData("Closest Player To", ValueType.Player)]
     [Parameter("Center", ValueType.VectorAndPlayer, typeof(V_Vector))]
-    [Parameter("Team", ValueType.Team, typeof(V_Team))]
+    [Parameter("Team", ValueType.Team, typeof(V_TeamVar))]
     public class V_ClosestPlayerTo : Element {}
 
     [ElementData("Compare", ValueType.Boolean)]
@@ -95,7 +95,7 @@ namespace Deltin.Deltinteger.Elements
     public class V_Compare : Element {}
 
     [ElementData("Control Point Scoring Percentage", ValueType.Number)]
-    [Parameter("Team", ValueType.Team, typeof(V_Team))]
+    [Parameter("Team", ValueType.Team, typeof(V_TeamVar))]
     public class V_ControlPointScoringPercentage : Element {}
 
     [ElementData("Control Point Scoring Team", ValueType.Team)]
@@ -164,7 +164,7 @@ namespace Deltin.Deltinteger.Elements
 
     [ElementData("Farthest Player From", ValueType.Player)]
     [Parameter("Center", ValueType.Vector, typeof(V_Vector))]
-    [Parameter("Team", ValueType.Team, typeof(V_Team))]
+    [Parameter("Team", ValueType.Team, typeof(V_TeamVar))]
     public class V_FarthestPlayerFrom : Element {}
 
     [ElementData("Filtered Array", ValueType.Any)]
@@ -179,7 +179,7 @@ namespace Deltin.Deltinteger.Elements
     public class V_FirstOf : Element {}
 
     [ElementData("Flag Position", ValueType.Vector)]
-    [Parameter("Team", ValueType.Team, typeof(V_Team))]
+    [Parameter("Team", ValueType.Team, typeof(V_TeamVar))]
     public class V_FlagPosition : Element {}
 
     [ElementData("Forward", ValueType.Vector)]
@@ -298,7 +298,7 @@ namespace Deltin.Deltinteger.Elements
     public class V_IsFiringSecondary : Element {}
 
     [ElementData("Is Flag At Base", ValueType.Boolean)]
-    [Parameter("Team", ValueType.Team, typeof(V_Team))]
+    [Parameter("Team", ValueType.Team, typeof(V_TeamVar))]
     public class V_IsFlagAtBase : Element {}
 
     [ElementData("Is Game In Progress", ValueType.Boolean)]
@@ -306,7 +306,7 @@ namespace Deltin.Deltinteger.Elements
 
     [ElementData("Is Hero Being Played", ValueType.Boolean)]
     [Parameter("Hero", ValueType.Hero, typeof(V_HeroVar))]
-    [Parameter("Team", ValueType.Team, typeof(V_Team))]
+    [Parameter("Team", ValueType.Team, typeof(V_TeamVar))]
     public class V_IsHeroBeingPlayed : Element {}
 
     [ElementData("Is In Air", ValueType.Boolean)]
@@ -364,11 +364,11 @@ namespace Deltin.Deltinteger.Elements
     public class V_IsStanding : Element {}
 
     [ElementData("Is Team On Defense", ValueType.Boolean)]
-    [Parameter("Team", ValueType.Team, typeof(V_Team))]
+    [Parameter("Team", ValueType.Team, typeof(V_TeamVar))]
     public class V_IsTeamOnDefense : Element {}
 
     [ElementData("Is Team On Offense", ValueType.Boolean)]
-    [Parameter("Team", ValueType.Team, typeof(V_Team))]
+    [Parameter("Team", ValueType.Team, typeof(V_TeamVar))]
     public class V_IsTeamOnOffense : Element {}
 
     [ElementData("Is True For All", ValueType.Boolean)]
@@ -507,7 +507,7 @@ namespace Deltin.Deltinteger.Elements
     }
 
     [ElementData("Number Of Dead Players", ValueType.Number)]
-    [Parameter("Team", ValueType.Team, typeof(V_Team))]
+    [Parameter("Team", ValueType.Team, typeof(V_TeamVar))]
     public class V_NumberOfDeadPlayers : Element {}
 
     [ElementData("Number Of Deaths", ValueType.Number)]
@@ -524,19 +524,19 @@ namespace Deltin.Deltinteger.Elements
 
     [ElementData("Number Of Heroes", ValueType.Number)]
     [Parameter("Hero", ValueType.Hero, typeof(V_HeroVar))]
-    [Parameter("Team", ValueType.Team, typeof(V_Team))]
+    [Parameter("Team", ValueType.Team, typeof(V_TeamVar))]
     public class V_NumberOfHeroes : Element {}
 
     [ElementData("Number Of Living Players", ValueType.Number)]
-    [Parameter("Team", ValueType.Team, typeof(V_Team))]
+    [Parameter("Team", ValueType.Team, typeof(V_TeamVar))]
     public class V_NumberOfLivingPlayers : Element {}
 
     [ElementData("Number Of Players", ValueType.Number)]
-    [Parameter("Team", ValueType.Team, typeof(V_Team))]
+    [Parameter("Team", ValueType.Team, typeof(V_TeamVar))]
     public class V_NumberOfPlayers : Element {}
 
     [ElementData("Number Of Players On Objective", ValueType.Number)]
-    [Parameter("Team", ValueType.Team, typeof(V_Team))]
+    [Parameter("Team", ValueType.Team, typeof(V_TeamVar))]
     public class V_NumberOfPlayersOnObjective : Element {}
 
     [ElementData("Objective Index", ValueType.Number)]
@@ -547,7 +547,7 @@ namespace Deltin.Deltinteger.Elements
     public class V_ObjectivePosition : Element {}
 
     [ElementData("Opposite Team Of", ValueType.Team)]
-    [Parameter("Team", ValueType.Team, typeof(V_Team))]
+    [Parameter("Team", ValueType.Team, typeof(V_TeamVar))]
     public class V_OppositeTeamOf : Element {}
 
     [ElementData("Or", ValueType.Boolean)]
@@ -562,12 +562,12 @@ namespace Deltin.Deltinteger.Elements
     public class V_PayloadProgressPercentage : Element {}
 
     [ElementData("Player Carrying Flag", ValueType.Number)]
-    [Parameter("Team", ValueType.Team, typeof(V_Team))]
+    [Parameter("Team", ValueType.Team, typeof(V_TeamVar))]
     public class V_PlayerCarryingFlag : Element {}
 
     [ElementData("Player Closest To Reticle", ValueType.Player)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
-    [Parameter("Team", ValueType.Team, typeof(V_Team))]
+    [Parameter("Team", ValueType.Team, typeof(V_TeamVar))]
     public class V_PlayerClosestToReticle : Element {}
 
     [ElementData("Player Variable", ValueType.Any)]
@@ -577,24 +577,24 @@ namespace Deltin.Deltinteger.Elements
 
     [ElementData("Players In Slot", ValueType.Player)]
     [Parameter("Slot", ValueType.Number, typeof(V_Number))]
-    [Parameter("Team", ValueType.Team, typeof(V_Team))]
+    [Parameter("Team", ValueType.Team, typeof(V_TeamVar))]
     public class V_PlayersInSlot : Element {}
 
     [ElementData("Players In View Angle", ValueType.Player)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
-    [Parameter("Team", ValueType.Team, typeof(V_Team))]
+    [Parameter("Team", ValueType.Team, typeof(V_TeamVar))]
     [Parameter("View Angle", ValueType.Number, typeof(V_Number))]
     public class V_PlayersInViewAngle : Element {}
 
     [ElementData("Players On Hero", ValueType.Player)]
     [Parameter("Hero", ValueType.Hero, typeof(V_HeroVar))]
-    [Parameter("Team", ValueType.Team, typeof(V_Team))]
+    [Parameter("Team", ValueType.Team, typeof(V_TeamVar))]
     public class V_PlayersOnHero : Element {}
 
     [ElementData("Players Within Radius", ValueType.Player)]
     [Parameter("Center", ValueType.Vector, typeof(V_Vector))]
     [Parameter("Radius", ValueType.Number, typeof(V_Number))]
-    [Parameter("Team", ValueType.Team, typeof(V_Team))]
+    [Parameter("Team", ValueType.Team, typeof(V_TeamVar))]
     [Parameter("LOS Check", typeof(RadiusLOS))]
     public class V_PlayersWithinRadius : Element {}
 
@@ -857,8 +857,8 @@ namespace Deltin.Deltinteger.Elements
     public class V_Subtract : Element {}
 
     [ElementData("Team", ValueType.Team)]
-    [Parameter("Team", typeof(TeamSelector))]
-    public class V_Team : Element {}
+    [Parameter("Team", typeof(Team))]
+    public class V_TeamVar : Element {}
 
 #warning check order
     [ElementData("TeamOf", ValueType.Team)]
@@ -866,7 +866,7 @@ namespace Deltin.Deltinteger.Elements
     public class V_TeamOf : Element {}
 
     [ElementData("TeamScore", ValueType.Team)]
-    [Parameter("Team", ValueType.Team, typeof(V_Team))]
+    [Parameter("Team", ValueType.Team, typeof(V_TeamVar))]
     public class V_TeamScore : Element {}
 
     [ElementData("Throttle Of", ValueType.Vector)]
