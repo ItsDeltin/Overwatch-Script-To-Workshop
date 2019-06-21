@@ -100,7 +100,6 @@ namespace Deltin.Deltinteger.Elements
         }
 
         public string CodeName { get; private set; }
-        public string WorkshopName { get; private set; }
         public EnumMember[] Members { get; private set; }
         public Type Type { get; private set; }
         public Type UnderlyingType { get; private set; }
@@ -108,8 +107,7 @@ namespace Deltin.Deltinteger.Elements
         public EnumData(Type type)
         {
             EnumOverride data = type.GetCustomAttribute<EnumOverride>();
-            CodeName = data?.CodeName         ?? type.Name;
-            WorkshopName = data?.WorkshopName ?? type.Name;
+            CodeName = data?.CodeName ?? type.Name;
 
             Type = type;
             UnderlyingType = Enum.GetUnderlyingType(type);
@@ -122,7 +120,7 @@ namespace Deltin.Deltinteger.Elements
             {
                 EnumOverride fieldData = fields[v].GetCustomAttribute<EnumOverride>();
                 string fieldCodeName     = fieldData?.CodeName     ?? fields[v].Name;
-                string fieldWorkshopName = fieldData?.WorkshopName ?? fields[v].Name;
+                string fieldWorkshopName = fieldData?.WorkshopName ?? Extras.AddSpacesToSentence(fields[v].Name, false);
 
                 Members[v] = new EnumMember(this, fieldCodeName, fieldWorkshopName, values.GetValue(v));
             }
@@ -338,9 +336,16 @@ namespace Deltin.Deltinteger.Elements
     }
 
     [EnumParameter]
-    public enum ChaseReevaluation
+    public enum RateChaseReevaluation
     {
         DestinationAndRate,
+        None
+    }
+
+    [EnumParameter]
+    public enum TimeChaseReevaluation
+    {
+        DestinationAndDuration,
         None
     }
 

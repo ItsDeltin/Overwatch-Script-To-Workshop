@@ -41,28 +41,28 @@ namespace Deltin.Deltinteger.Elements
     [Parameter("Variable", typeof(Variable))]
     [Parameter("Destination", ValueType.Any, typeof(V_Number))]
     [Parameter("Rate", ValueType.Number, typeof(V_Number))]
-    [Parameter("Variable", typeof(ChaseReevaluation))]
+    [Parameter("Reevaluation", typeof(RateChaseReevaluation))]
     public class A_ChaseGlobalVariableAtRate : Element {}
 
     [ElementData("Chase Global Variable Over Time")]
     [Parameter("Variable", typeof(Variable))]
     [Parameter("Destination", ValueType.Any, typeof(V_Number))]
     [Parameter("Duration", ValueType.Number, typeof(V_Number))]
-    [Parameter("Variable", typeof(ChaseReevaluation))]
+    [Parameter("Reevaluation", typeof(TimeChaseReevaluation))]
     public class A_ChaseGlobalVariableOverTime : Element {}
 
     [ElementData("Chase Player Variable At Rate")]
     [Parameter("Variable", typeof(Variable))]
     [Parameter("Destination", ValueType.Any, typeof(V_Number))]
     [Parameter("Rate", ValueType.Number, typeof(V_Number))]
-    [Parameter("Variable", typeof(ChaseReevaluation))]
+    [Parameter("Reevaluation", typeof(RateChaseReevaluation))]
     public class A_ChasePlayerVariableAtRate : Element {}
 
     [ElementData("Chase Player Variable Over Time")]
     [Parameter("Variable", typeof(Variable))]
     [Parameter("Destination", ValueType.Any, typeof(V_Number))]
     [Parameter("Duration", ValueType.Number, typeof(V_Number))]
-    [Parameter("Variable", typeof(ChaseReevaluation))]
+    [Parameter("Reevaluation", typeof(TimeChaseReevaluation))]
     public class A_ChasePlayerVariableOverTime : Element {}
 
     [ElementData("Clear Status")]
