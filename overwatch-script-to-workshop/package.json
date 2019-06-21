@@ -24,7 +24,9 @@
                     "ostw"
                 ],
                 "extensions": [
-                    ".del"
+                    ".del",
+                    ".ostw",
+                    ".workshop"
                 ],
                 "configuration": "./language-configuration.json"
             }
