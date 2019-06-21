@@ -472,6 +472,11 @@ namespace Deltin.Deltinteger.LanguageServer
             this.message = message;
             this.range = range;
         }
+
+        override public string ToString()
+        {
+            return $"Syntax error at {range.start.ToString()}: " + message;
+        }
     }
 
     public class DiagnosticRelatedInformation

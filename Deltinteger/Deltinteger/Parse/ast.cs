@@ -844,6 +844,11 @@ namespace Deltin.Deltinteger.Parse
             this.line = line;
             this.character = character;
         }
+
+        public override string ToString()
+        {
+            return line + ", " + character;
+        }
     }
 
     public class Range : IComparable<Range>

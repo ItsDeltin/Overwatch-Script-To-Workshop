@@ -16,12 +16,12 @@ rule: "Setup Death Spheres."
 
         for (loc in locations)
         {
-            CreateEffect(AllPlayers(), Effect.Sphere, Color.Red, locations[loc], radius, EffectRev.VisibleTo);
+            CreateEffect(AllPlayers(), Effects.Sphere, Color.Red, locations[loc], radius, EffectRev.VisibleTo);
         }
     }
 
 rule: "Kill players in sphere."
-    Event.Ongoing_EachPlayer
+    Event.OngoingPlayer
     if (IsAlive())
     {
         // Kill the player if they enter the radius of the death sphere.

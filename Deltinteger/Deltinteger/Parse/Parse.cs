@@ -51,9 +51,7 @@ namespace Deltin.Deltinteger.Parse
             AdditionalErrorChecking aec = new AdditionalErrorChecking(parser, diagnostics);
             aec.Visit(ruleSetContext);
 
-            bool parse = diagnostics.Count == 0;
-
-            if (parse)
+            if (diagnostics.Count == 0)
             {
                 varCollection = new VarCollection();
                 root = new ScopeGroup();

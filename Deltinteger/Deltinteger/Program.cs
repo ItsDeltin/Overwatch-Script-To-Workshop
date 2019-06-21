@@ -77,41 +77,50 @@ namespace Deltin.Deltinteger
 
             ParserData result = ParserData.GetParser(text, null);
 
-            ParseLog.Write(LogLevel.Normal, new ColorMod("Build succeeded.", ConsoleColor.Green));
-
-            // List all variables
-            ParseLog.Write(LogLevel.Normal, new ColorMod("Variable Guide:", ConsoleColor.Blue));
-
-            if (result.Root?.VarCollection().Count > 0)
+            if (result.Success)
             {
-                int nameLength = result.Root.VarCollection().Max(v => v.Name.Length);
+                ParseLog.Write(LogLevel.Normal, new ColorMod("Build succeeded.", ConsoleColor.Green));
 
-                bool other = false;
-                foreach (DefinedVar var in result.Root.VarCollection())
+                // List all variables
+                ParseLog.Write(LogLevel.Normal, new ColorMod("Variable Guide:", ConsoleColor.Blue));
+
+                if (result.Root?.VarCollection().Count > 0)
                 {
-                    ConsoleColor textcolor = other ? ConsoleColor.White : ConsoleColor.DarkGray;
-                    other = !other;
+                    int nameLength = result.Root.VarCollection().Max(v => v.Name.Length);
 
-                    ParseLog.Write(LogLevel.Normal,
-                        // Names
-                        new ColorMod(var.Name + new string(' ', nameLength - var.Name.Length) + "  ", textcolor),
-                        // Variable
-                        new ColorMod(
-                            (var.IsGlobal ? "global" : "player") 
-                            + " " + 
-                            var.Variable.ToString() +
-                            (var.Index != -1 ? $"[{var.Index}]" : "")
-                            , textcolor)
-                    );
+                    bool other = false;
+                    foreach (DefinedVar var in result.Root.VarCollection())
+                    {
+                        ConsoleColor textcolor = other ? ConsoleColor.White : ConsoleColor.DarkGray;
+                        other = !other;
+
+                        ParseLog.Write(LogLevel.Normal,
+                            // Names
+                            new ColorMod(var.Name + new string(' ', nameLength - var.Name.Length) + "  ", textcolor),
+                            // Variable
+                            new ColorMod(
+                                (var.IsGlobal ? "global" : "player") 
+                                + " " + 
+                                var.Variable.ToString() +
+                                (var.Index != -1 ? $"[{var.Index}]" : "")
+                                , textcolor)
+                        );
+                    }
                 }
+
+                string final = RuleArrayToWorkshop(result.Rules, result.VarCollection);
+
+                Log.Write(LogLevel.Normal, "Press enter to copy code to clipboard, then in Overwatch click \"Paste Rule\".");
+                Console.ReadLine();
+
+                SetClipboard(final);
             }
-
-            string final = RuleArrayToWorkshop(result.Rules, result.VarCollection);
-
-            Log.Write(LogLevel.Normal, "Press enter to copy code to clipboard, then in Overwatch click \"Paste Rule\".");
-            Console.ReadLine();
-
-            SetClipboard(final);
+            else
+            {
+                Log.Write(LogLevel.Normal, new ColorMod("Build Failed.", ConsoleColor.Red));
+                for (int i = 0; i < result.Diagnostics.Count; i++)
+                    Log.Write(LogLevel.Normal, new ColorMod(result.Diagnostics[i].ToString(), ConsoleColor.Red));
+            }
         }
 
         public static string RuleArrayToWorkshop(Rule[] rules, VarCollection varCollection)
