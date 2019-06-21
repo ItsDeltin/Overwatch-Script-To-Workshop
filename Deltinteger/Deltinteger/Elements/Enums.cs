@@ -83,10 +83,27 @@ namespace Deltin.Deltinteger.Elements
             return GetEnumData().Select(e => new CompletionItem(e.CodeName) { kind = CompletionItem.Enum }).ToArray();
         }
 
+        public static Element Special(EnumMember enumMember)
+        {
+            // This converts enums with special properties to an Element.
+
+            switch(enumMember.Enum.CodeName)
+            {
+                case "Hero":
+                    return Element.Part<V_HeroVar>(enumMember);
+                
+                case "Map":
+                    return new V_Number((int)enumMember.UnderlyingValue);
+
+                default: return null;
+            }
+        }
+
         public string CodeName { get; private set; }
         public string WorkshopName { get; private set; }
         public EnumMember[] Members { get; private set; }
-        public Type Type { get; private set; } 
+        public Type Type { get; private set; }
+        public Type UnderlyingType { get; private set; }
 
         public EnumData(Type type)
         {
@@ -95,16 +112,19 @@ namespace Deltin.Deltinteger.Elements
             WorkshopName = data?.WorkshopName ?? type.Name;
 
             Type = type;
+            UnderlyingType = Enum.GetUnderlyingType(type);
 
             var fields = type.GetFields(BindingFlags.Public | BindingFlags.Static);
             Members = new EnumMember[fields.Length];
+            var values = Enum.GetValues(type);
+
             for (int v = 0; v < Members.Length; v++)
             {
                 EnumOverride fieldData = fields[v].GetCustomAttribute<EnumOverride>();
                 string fieldCodeName     = fieldData?.CodeName     ?? fields[v].Name;
                 string fieldWorkshopName = fieldData?.WorkshopName ?? fields[v].Name;
 
-                Members[v] = new EnumMember(this, fieldCodeName, fieldWorkshopName);
+                Members[v] = new EnumMember(this, fieldCodeName, fieldWorkshopName, values.GetValue(v));
             }
         }
 
@@ -131,11 +151,14 @@ namespace Deltin.Deltinteger.Elements
         public EnumData @Enum { get; private set; }
         public string CodeName { get; private set; }
         public string WorkshopName { get; private set; }
-        public EnumMember(EnumData @enum, string codeName, string workshopName)
+        public object UnderlyingValue { get; private set; }
+
+        public EnumMember(EnumData @enum, string codeName, string workshopName, object value)
         {
             @Enum = @enum;
             CodeName = codeName;
             WorkshopName = workshopName;
+            UnderlyingValue = System.Convert.ChangeType(value, @Enum.UnderlyingType);
         }
 
         public string ToWorkshop()
@@ -619,5 +642,52 @@ namespace Deltin.Deltinteger.Elements
         VisibleToPositionAndString,
         VisibleToAndString,
         String
+    }
+
+    [EnumParameter]
+    public enum Map
+    {
+        Black_Forest = 0,
+        Blizzard_World = 1,
+        Busan = 2,
+        Castillo = 3,
+        Chateau_Guillard = 4,
+        Dorado = 5,
+        Ecopoint_Antarctica = 6,
+        Eichenwalde = 7,
+        Hanamura = 8,
+        Havana = 9,
+        Hollywood = 10,
+        Horizon_Lunar_Colony = 11,
+        Ilios = 12,
+        Junkertown = 13,
+        Kings_Row = 14,
+        Lijiang_Tower = 15,
+        Necropolis = 16,
+        Nepal = 17,
+        Numbani = 18,
+        Oasis = 19,
+        Paris = 20,
+        Petra = 21,
+        Rialto = 22,
+        Route_66 = 23,
+        Temple_of_Anubis = 24,
+        Volskaya_Industries = 25,
+        Watchpoint_Gibraltar = 26,
+        Ayutthaya = 27,
+        Busan_Downtown = 28,
+        Busan_Sanctuary = 29,
+        Ilios_Lighthouse = 30,
+        Ilios_Ruins = 31,
+        Ilios_Well = 32,
+        Lijiang_Control_Center = 33,
+        Lijiang_Garden = 34,
+        Lijiang_Night_Market = 35,
+        Nepal_Sanctum = 36,
+        Nepal_Shrine = 37,
+        Nepal_Village = 38,
+        Oasis_City_Center = 39,
+        Oasis_Gardens = 40,
+        Oasis_University = 41
     }
 }

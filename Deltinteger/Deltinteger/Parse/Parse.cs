@@ -337,12 +337,8 @@ namespace Deltin.Deltinteger.Parse
                 }
 
                 case EnumNode enumNode:
-                {
-                    if (enumNode.Type == "Hero" && enumNode.EnumMember != null)
-                        return Element.Part<V_HeroVar>(enumNode.EnumMember);
-                    else 
-                        return Element.Part<V_Null>(); // TODO: syntax error?
-                }
+                    return EnumData.Special(enumNode.EnumMember) 
+                    ?? throw SyntaxErrorException.EnumCantBeValue(enumNode.Type, enumNode.Range);
 
                 // Seperator
 
@@ -609,10 +605,7 @@ namespace Deltin.Deltinteger.Parse
                         throw SyntaxErrorException.ExpectedType(false, parameterData.EnumType.ToString(), methodName, parameterData.Name, enumNode.Range);
                     */
 
-                    if (enumNode.Type == "Hero")
-                        value = Element.Part<V_HeroVar>(enumNode.EnumMember);
-                    else
-                        value = enumNode.EnumMember;
+                    value = (IWorkshopTree)EnumData.Special(enumNode.EnumMember) ?? (IWorkshopTree)enumNode.EnumMember;
 
                     //if (value == null)
                       //  throw SyntaxErrorException.InvalidEnumValue(enumNode.Type, enumNode.Value, enumNode.Range);

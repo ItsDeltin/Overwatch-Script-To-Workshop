@@ -29,6 +29,7 @@ namespace Deltin.Deltinteger
         public const string mustBeValue          = "{0} must be a value method, not an action method.";
         public const string mustBeAction         = "{0} must be an action method, not a value method.";
         public const string recursionNotAllowed  = "Recursion is not allowed. Start Deltinteger.exe with the argument -allowrecursion.";
+        public const string enumCantBeValue      = "The enum '{0}' cannot be used like a value.";
 
         public static SyntaxErrorException StringParameterCount(int parameterIndex, int parameterCount, Range range)
         {
@@ -123,6 +124,14 @@ namespace Deltin.Deltinteger
         {
             return new SyntaxErrorException(
                 recursionNotAllowed,
+                range
+            );
+        }
+
+        public static SyntaxErrorException EnumCantBeValue(string @enum, Range range)
+        {
+            return new SyntaxErrorException(
+                string.Format(enumCantBeValue, @enum),
                 range
             );
         }

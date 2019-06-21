@@ -604,8 +604,6 @@ namespace Deltin.Deltinteger.Parse
         {
             Left = left;
             Operation = operation;
-            if (right == null)
-                ;
             Right = right;
         }
     }
