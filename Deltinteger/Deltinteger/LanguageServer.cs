@@ -295,8 +295,10 @@ namespace Deltin.Deltinteger.LanguageServer
                     else
                     {
                         if (methodNode.IsNameSelected())
+                            // If the name is selected, -1 will not highlight any parameters.
                             parameterIndex = -1;
                         else
+                            // The last parameter is selected.
                             parameterIndex = methodNode.Parameters.Length;
                     }
                 }

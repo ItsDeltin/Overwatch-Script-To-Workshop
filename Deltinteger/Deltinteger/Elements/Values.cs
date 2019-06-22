@@ -66,6 +66,32 @@ namespace Deltin.Deltinteger.Elements
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
     public class V_Append : Element {}
 
+    [ElementData("Arccosine In Degrees", ValueType.Number)]
+    [Parameter("Value", ValueType.Number, typeof(V_Number))]
+    public class V_ArccosineInDegrees : Element {}
+
+    [ElementData("Arccosine In Radians", ValueType.Number)]
+    [Parameter("Value", ValueType.Number, typeof(V_Number))]
+    public class V_ArccosineInRadians : Element {}
+
+    [ElementData("Arcsine In Degrees", ValueType.Number)]
+    [Parameter("Value", ValueType.Number, typeof(V_Number))]
+    public class V_ArcsineInDegrees : Element {}
+
+    [ElementData("Arcsine In Radians", ValueType.Number)]
+    [Parameter("Value", ValueType.Number, typeof(V_Number))]
+    public class V_ArcsineInRadians : Element {}
+
+    [ElementData("Arctangent In Degrees", ValueType.Number)]
+    [Parameter("Numerator", ValueType.Number, typeof(V_Number))]
+    [Parameter("Denominator", ValueType.Number, typeof(V_Number))]
+    public class V_ArctangentInDegrees : Element {}
+
+    [ElementData("Arctangent In Radians", ValueType.Number)]
+    [Parameter("Numerator", ValueType.Number, typeof(V_Number))]
+    [Parameter("Denominator", ValueType.Number, typeof(V_Number))]
+    public class V_ArctangentInRadians : Element {}
+
     [ElementData("Array Contains", ValueType.Boolean)]
     [Parameter("Array", ValueType.Any, typeof(V_AllPlayers))]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
@@ -104,6 +130,14 @@ namespace Deltin.Deltinteger.Elements
     [ElementData("Count Of", ValueType.Number)]
     [Parameter("Array", ValueType.Any, typeof(V_GlobalVariable))]
     public class V_CountOf : Element {}
+
+    [ElementData("Cosine From Degrees", ValueType.Number)]
+    [Parameter("Angle", ValueType.Number, typeof(V_Number))]
+    public class V_CosineFromDegrees : Element{}
+
+    [ElementData("Cosine From Radians", ValueType.Number)]
+    [Parameter("Angle", ValueType.Number, typeof(V_Number))]
+    public class V_CosineFromRadians : Element{}
 
     [ElementData("Cross Product", ValueType.Vector)]
     [Parameter("Value", ValueType.VectorAndPlayer, typeof(V_Vector))]
@@ -855,6 +889,14 @@ namespace Deltin.Deltinteger.Elements
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
     public class V_Subtract : Element {}
+
+    [ElementData("Tangent From Degrees", ValueType.Number)]
+    [Parameter("Angle", ValueType.Number, typeof(V_Number))]
+    public class V_TangentFromDegrees : Element {}
+
+    [ElementData("Tangent From Radians", ValueType.Number)]
+    [Parameter("Angle", ValueType.Number, typeof(V_Number))]
+    public class V_TangentFromRadians : Element {}
 
     [ElementData("Team", ValueType.Team)]
     [Parameter("Team", typeof(Team))]
