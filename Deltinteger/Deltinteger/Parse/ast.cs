@@ -365,37 +365,39 @@ namespace Deltin.Deltinteger.Parse
 
         public override Node VisitFor(DeltinScriptParser.ForContext context)
         {
-            Node node;
             BlockNode block = (BlockNode)VisitBlock(context.block());
 
-            if (context.IN() != null)
-            {
-                IExpressionNode array = (IExpressionNode)Visit(context.expr());
-                string variable = context.PART().GetText();
-                
-                node = new ForEachNode(variable, array, block, Range.GetRange(context));
-            }
-            else
-            {
-                VarSetNode varSet = null;
-                if (context.varset() != null)
-                    varSet = (VarSetNode)VisitVarset(context.varset());
+            VarSetNode varSet = null;
+            if (context.varset() != null)
+                varSet = (VarSetNode)VisitVarset(context.varset());
 
-                ScopedDefineNode defineNode = null;
-                if (context.define() != null)
-                    defineNode = (ScopedDefineNode)VisitDefine(context.define());
+            ScopedDefineNode defineNode = null;
+            if (context.define() != null)
+                defineNode = (ScopedDefineNode)VisitDefine(context.define());
 
-                IExpressionNode expression = null;
-                if (context.expr() != null)
-                    expression = (IExpressionNode)VisitExpr(context.expr());
+            IExpressionNode expression = null;
+            if (context.expr() != null)
+                expression = (IExpressionNode)VisitExpr(context.expr());
 
-                VarSetNode statement = null;
-                if (context.forEndStatement() != null)
-                    statement = (VarSetNode)VisitVarset(context.forEndStatement().varset());
-                
-                node = new ForNode(varSet, defineNode, expression, statement, block, Range.GetRange(context));
-            }
+            VarSetNode statement = null;
+            if (context.forEndStatement() != null)
+                statement = (VarSetNode)VisitVarset(context.forEndStatement().varset());
+            
+            Node node = new ForNode(varSet, defineNode, expression, statement, block, Range.GetRange(context));
+            CheckRange(node);
+            return node;
+        }
 
+        public override Node VisitForeach(DeltinScriptParser.ForeachContext context)
+        {
+            IExpressionNode array = (IExpressionNode)Visit(context.expr());
+
+            bool define = context.DEFINE() != null;
+            string name = context.PART().GetText();
+
+            BlockNode block = (BlockNode)VisitBlock(context.block());
+            
+            Node node = new ForEachNode(name, define, array, block, Range.GetRange(context));
             CheckRange(node);
             return node;
         }
@@ -777,14 +779,16 @@ namespace Deltin.Deltinteger.Parse
 
     public class ForEachNode : Node, IStatementNode
     {
+        public string VariableName { get; private set; }
+        public bool Define { get; private set; }
         public IExpressionNode Array { get; private set; }
-        public string Variable { get; private set; }
         public BlockNode Block { get; private set; }
 
-        public ForEachNode(string variable, IExpressionNode array, BlockNode block, Range range) : base(range)
+        public ForEachNode(string variableName, bool define, IExpressionNode array, BlockNode block, Range range) : base(range)
         {
+            VariableName = variableName;
+            Define = define;
             Array = array;
-            Variable = variable;
             Block = block;
         }
     }

@@ -22,10 +22,10 @@ namespace Deltin.Deltinteger.Parse
 
         public bool IsVar(string name)
         {
-            return GetVar(name, null, null) != null ? true : false;
+            return GetVar(name, null) != null ? true : false;
         }
 
-        public DefinedVar GetVar(string name, Range range, List<Diagnostic> diagnostics)
+        public DefinedVar GetVar(string name, Range range)
         {
             DefinedVar var = null;
             ScopeGroup checkGroup = this;
@@ -35,7 +35,7 @@ namespace Deltin.Deltinteger.Parse
                 checkGroup = checkGroup.Parent;
             }
 
-            if (var == null && range != null && diagnostics != null)
+            if (var == null && range != null)
                 throw SyntaxErrorException.VariableDoesNotExist(name, range);
 
             return var;

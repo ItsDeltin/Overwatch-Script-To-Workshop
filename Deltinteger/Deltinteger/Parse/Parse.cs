@@ -305,7 +305,7 @@ namespace Deltin.Deltinteger.Parse
 
                 // Variable
                 case VariableNode variableNode:
-                    return scope.GetVar(variableNode.Name, variableNode.Range, Diagnostics)
+                    return scope.GetVar(variableNode.Name, variableNode.Range)
                         .GetVariable(variableNode.Target != null ? ParseExpression(scope, variableNode.Target) : null);
 
                 // Get value in array
@@ -705,47 +705,50 @@ namespace Deltin.Deltinteger.Parse
                 {
                     ContinueSkip.Setup();
 
-                    // The action the for loop starts on.
-                    int forActionStartIndex = Actions.Count() - 1;
-
                     ScopeGroup forGroup = scope.Child();
 
-                    // Create the for's temporary variable.
-                    DefinedVar forTempVar = VarCollection.AssignDefinedVar(
-                        scopeGroup: forGroup,
-                        name      : forEachNode.Variable,
-                        isGlobal  : IsGlobal,
-                        range     : forEachNode.Range
-                        );
+                    Element array = ParseExpression(scope, forEachNode.Array);
+
+                    DefinedVar variable;
+                    // Set/get the variable
+                    if (forEachNode.Define)
+                        variable = VarCollection.AssignDefinedVar(forGroup, IsGlobal, forEachNode.VariableName, forEachNode.Range);
+                    else
+                        variable = scope.GetVar(forEachNode.VariableName, forEachNode.Range);
+
+                    Var index = VarCollection.AssignVar($"'{forEachNode.VariableName}' for index", IsGlobal);
 
                     // Reset the counter.
-                    Actions.Add(forTempVar.SetVariable(new V_Number(0)));
+                    Actions.Add(index.SetVariable(new V_Number(0)));
+
+                    // The action the for loop starts on.
+                    int forStartIndex = ContinueSkip.GetSkipCount();
+
+                    A_SkipIf skipCondition = new A_SkipIf() { ParameterValues = new IWorkshopTree[2] };
+                    skipCondition.ParameterValues[0] = 
+                        Element.Part<V_Not>(Element.Part<V_Compare>(
+                            index.GetVariable(),
+                            EnumData.GetEnumValue(Operators.LessThan),
+                            Element.Part<V_CountOf>(array)
+                        ));
+                    Actions.Add(skipCondition);
+                    
+                    // Update the array variable
+                    Actions.Add(variable.SetVariable(Element.Part<V_ValueInArray>(array, index.GetVariable())));
 
                     // Parse the for's block.
                     ParseBlock(forGroup, forEachNode.Block, false, returnVar);
 
+                    // Increment the index
+                    Actions.Add(index.SetVariable(Element.Part<V_Add>(index.GetVariable(), new V_Number(1))));
+
                     // Add the for's finishing elements
-                    Actions.Add(forTempVar.SetVariable( // Indent the index by 1.
-                        Element.Part<V_Add>
-                        (
-                            forTempVar.GetVariable(),
-                            new V_Number(1)
-                        )
-                    ));
-
-                    ContinueSkip.SetSkipCount(forActionStartIndex);
-
-                    // The target array in the for statement.
-                    Element forArrayElement = ParseExpression(scope, forEachNode.Array);
-
-                    Actions.Add(Element.Part<A_LoopIf>( // Loop if the for condition is still true.
-                        Element.Part<V_Compare>
-                        (
-                            forTempVar.GetVariable(),
-                            EnumData.GetEnumValue(Operators.LessThan),
-                            Element.Part<V_CountOf>(forArrayElement)
-                        )
-                    ));
+                    ContinueSkip.SetSkipCount(forStartIndex);
+                    Actions.Add(Element.Part<A_Loop>());
+                    
+                    // Set the skip
+                    if (skipCondition != null)
+                        skipCondition.ParameterValues[1] = new V_Number(GetSkipCount(skipCondition));
 
                     ContinueSkip.ResetSkip();
                     return;
@@ -801,17 +804,20 @@ namespace Deltin.Deltinteger.Parse
                     ContinueSkip.Setup();
 
                     // The action the while loop starts on.
-                    int whileStartIndex = Actions.Count() - 2;
+                    int whileStartIndex = ContinueSkip.GetSkipCount();
+
+                    A_SkipIf skipCondition = new A_SkipIf() { ParameterValues = new IWorkshopTree[2] };
+                    skipCondition.ParameterValues[0] = Element.Part<V_Not>(ParseExpression(scope, whileNode.Expression));
+                    Actions.Add(skipCondition);
 
                     ScopeGroup whileGroup = scope.Child();
 
                     ParseBlock(whileGroup, whileNode.Block, false, returnVar);
 
                     ContinueSkip.SetSkipCount(whileStartIndex);
+                    Actions.Add(Element.Part<A_Loop>());
 
-                    // Add the loop-if
-                    Element expression = ParseExpression(scope, whileNode.Expression);
-                    Actions.Add(Element.Part<A_LoopIf>(expression));
+                    skipCondition.ParameterValues[1] = new V_Number(GetSkipCount(skipCondition));
 
                     ContinueSkip.ResetSkip();
                     return;
@@ -933,7 +939,7 @@ namespace Deltin.Deltinteger.Parse
 
         void ParseVarset(ScopeGroup scope, VarSetNode varSetNode)
         {
-            DefinedVar variable = scope.GetVar(varSetNode.Variable, varSetNode.Range, Diagnostics);
+            DefinedVar variable = scope.GetVar(varSetNode.Variable, varSetNode.Range);
 
             Element target = null;
             if (varSetNode.Target != null) 
@@ -1002,7 +1008,7 @@ namespace Deltin.Deltinteger.Parse
 
         int GetSkipCount(Element skipElement)
         {
-            return Actions.Count - Actions.IndexOf(skipElement);
+            return Actions.Count - Actions.IndexOf(skipElement) - 1;
         }
     }
 

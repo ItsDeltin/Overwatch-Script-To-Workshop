@@ -67,6 +67,7 @@ statement :
 	| method STATEMENT_END?
 	| if
 	| for
+	| foreach
 	| while
 	| define STATEMENT_END?
 	| return
@@ -75,9 +76,11 @@ statement :
 block : (BLOCK_START statement* BLOCK_END) | statement | STATEMENT_END  ;
 
 for     : FOR LEFT_PAREN 
-	((PART IN expr) | ((define | varset)? STATEMENT_END expr? STATEMENT_END forEndStatement?))
+	((define | varset)? STATEMENT_END expr? STATEMENT_END forEndStatement?)
 	RIGHT_PAREN block;
 forEndStatement : varset ;
+
+foreach : FOREACH LEFT_PAREN DEFINE? PART IN expr RIGHT_PAREN block ;
 
 while   : WHILE LEFT_PAREN expr RIGHT_PAREN block             ;
 
@@ -150,6 +153,7 @@ RULE_WORD : 'rule'      ;
 IF        : 'if'        ;
 ELSE      : 'else'      ;
 FOR       : 'for'       ;
+FOREACH   : 'foreach'   ;
 IN        : 'in'        ;
 DEFINE    : 'define'    ;
 USEVAR    : 'usevar'    ;
