@@ -116,7 +116,6 @@ namespace Deltin.Deltinteger.Parse
                 if (value != null)
                     valueRange = Range.GetRange(ruleOption.PART(1).Symbol);
                 
-                /*
                 switch (option)
                 {
                     case "Event":
@@ -141,7 +140,6 @@ namespace Deltin.Deltinteger.Parse
                         _diagnostics.Add(new Diagnostic($"{value} is not a valid rule option.", optionRange));
                         break;
                 }
-                */
             }
 
             var node = new RuleNode(name, eventType, team, player, conditions, block, eventRange, teamRange, playerRange, conditionRanges, Range.GetRange(context));
