@@ -77,19 +77,19 @@ namespace Deltin.Deltinteger
 
             ParserData result = ParserData.GetParser(text, null);
 
-            if (result.Success)
+            if (result.Diagnostics.Count == 0)
             {
                 ParseLog.Write(LogLevel.Normal, new ColorMod("Build succeeded.", ConsoleColor.Green));
 
                 // List all variables
                 ParseLog.Write(LogLevel.Normal, new ColorMod("Variable Guide:", ConsoleColor.Blue));
 
-                if (result.Root?.VarCollection().Count > 0)
+                if (result.VarCollection.AllVars.Count > 0)
                 {
-                    int nameLength = result.Root.VarCollection().Max(v => v.Name.Length);
+                    int nameLength = result.VarCollection.AllVars.Max(v => v.Name.Length);
 
                     bool other = false;
-                    foreach (DefinedVar var in result.Root.VarCollection())
+                    foreach (Var var in result.VarCollection.AllVars)
                     {
                         ConsoleColor textcolor = other ? ConsoleColor.White : ConsoleColor.DarkGray;
                         other = !other;

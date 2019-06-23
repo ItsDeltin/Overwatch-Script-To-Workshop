@@ -89,27 +89,19 @@ namespace Deltin.Deltinteger.Parse
             
             return new ParserData()
             {
-                Parser = parser,
-                RulesetContext = ruleSetContext,
-                RuleSetNode = ruleSetNode,
                 Bav = bav,
                 Diagnostics = diagnostics,
                 Rules = rules,
                 UserMethods = userMethods?.ToArray(),
-                Root = root,
                 Success = success,
                 VarCollection = varCollection
             };
         }
 
-        public DeltinScriptParser Parser { get; private set; }
-        public DeltinScriptParser.RulesetContext RulesetContext { get; private set; }
-        public RulesetNode RuleSetNode { get; private set; }
         public List<Diagnostic> Diagnostics;
         public BuildAstVisitor Bav { get; private set; }
         public Rule[] Rules { get; private set; }
         public UserMethod[] UserMethods { get; private set; }
-        public ScopeGroup Root { get; private set; }
         public bool Success { get; private set; }
         public VarCollection VarCollection { get; private set; }
     }

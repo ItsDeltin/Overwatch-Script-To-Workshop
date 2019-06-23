@@ -780,7 +780,7 @@ namespace Deltin.Deltinteger.Elements
             Stopwatch time = null;
             if (depth == 0 && Log.LogLevel == LogLevel.Verbose)
             {
-                Log.Write(LogLevel.Verbose, $"String \"{value}\"");
+                Log.Write(LogLevel.Verbose, $"Parsing String ", new ColorMod(value, ConsoleColor.Cyan));
                 time = new Stopwatch();
                 time.Start();
             }
@@ -805,7 +805,7 @@ namespace Deltin.Deltinteger.Elements
                 var match = Regex.Match(value, regex);
                 if (match.Success)
                 {
-                    Log.Write(LogLevel.Verbose, debug + searchString);
+                    Log.Write(LogLevel.Verbose, new ColorMod(debug + searchString, ConsoleColor.Gray));
 
                     // Create a string element with the found string.
                     V_String str = new V_String(range, searchString);
@@ -837,7 +837,7 @@ namespace Deltin.Deltinteger.Elements
                             var p = ParseString(range, currentParameterValue, parameters, depth + 1);
                             if (p == null)
                             {
-                                Log.Write(LogLevel.Verbose, $"{debug}{searchString} combo fail");
+                                Log.Write(LogLevel.Verbose, $"{debug}{searchString} ", new ColorMod("combo fail", ConsoleColor.DarkRed));
                                 valid = false;
                                 break;
                             }
@@ -850,7 +850,12 @@ namespace Deltin.Deltinteger.Elements
                         continue;
 
                     if (depth == 0 && time != null)
-                        Log.Write(LogLevel.Verbose, $"String build completed in {time.ElapsedMilliseconds} ms.");
+                        Log.Write(LogLevel.Verbose, 
+                            $"String build ", 
+                            new ColorMod("completed", ConsoleColor.DarkGreen), 
+                            " in ", 
+                            new ColorMod(time.ElapsedMilliseconds.ToString(), ConsoleColor.DarkCyan), 
+                            " ms.");
                     
                     return str;
                 }

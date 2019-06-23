@@ -36,7 +36,6 @@ define globalvar initalVampire;
 
 define playervar team; // The team of a player.
 define playervar role; // The role of the player.
-define playervar cantHaveRole;
 
 define playervar killCount;
 
@@ -77,6 +76,14 @@ define playervar hunterEffect;
 define playervar hunterIcon;
 define playervar hunterHud;
 
+rule: "Debug"
+Event.OngoingPlayer
+Player.Slot0
+{
+	team = allyTeamID;
+	role = Hunter;
+}
+
 rule: "Constants"
 {
 	allyTeamID = 0;
@@ -90,9 +97,7 @@ rule: "Constants"
 	Doctor = 5;
 	Observer = 6;
 	
-	
-	
-	gameTime = 300;
+	gameTime = 300; 
 }
 
 rule: "Setup Time"
@@ -102,11 +107,11 @@ if (IsInSetup())
 }
 
 rule: "Initial Setup"
-if (!isInitialized) 
-if (IsGameInProgress())
+if (!isInitialized & IsGameInProgress()) 
 {
 	DisableCompletion();
 	DisableScoring();
+	DisableRespawning(AllPlayers());
 	SetMatchTime(gameTime);
 	
 	if (NumberOfPlayers() > 1)
@@ -117,7 +122,7 @@ if (IsGameInProgress())
 	DestroyAllHudText();
 	
 	// Make random players mafia
-	RandomValuesInArray(AllPlayers(), numberOfMafia).team = mafiaTeamID;
+	RandomValuesInArray(FilteredArray(AllPlayers(), ArrayElement().team == 0), numberOfMafia).team = mafiaTeamID;
 	
 	// Choose random event
 	event = RandomInteger(0, 3);
@@ -142,9 +147,11 @@ if (event == 0)
 
 rule: "Choose town roles"
 Event.OngoingPlayer
+if (isInitialized)
 if (team == allyTeamID)
 {
-	role = RandomInteger(1, 6);
+	if (role == 0)
+		role = RandomInteger(1, 6);
 	CreateHudText(EventPlayer(), <"Current objective: Find Allies and Enemies">, 
 		null, null, Location.Top, 0, Color.Green);
 	objectiveHud = LastTextID();
@@ -152,12 +159,11 @@ if (team == allyTeamID)
 
 rule: "Choose mafia roles"
 Event.OngoingPlayer
+if (isInitialized)
 if (team == mafiaTeamID)
 {
-	if (!cantHaveRole)
-	{
+	if (role == 0)
 		role = RandomInteger(-4, -1);
-	}
 	
 	CreateHudText(EventPlayer(), <"Current objective: Kill">, 
 		null, null, Location.Top, 0, Color.Red);
@@ -166,7 +172,7 @@ if (team == mafiaTeamID)
 	CreateEffect(
 		// Only allow the mafia players to see the effect.
 		FilteredArray(AllPlayers(), gameIsOver | (ArrayElement().team == mafiaTeamID)),
-		Effects.Sphere,
+		Effect.Sphere,
 		Color.Red,
 		EyePosition() + Vector(0, 0.25, 0),
 		0.25
@@ -294,6 +300,7 @@ if (HasSpawned())
 }
 
 rule: "Town Win"
+if (false)
 if (isInitialized)
 if (NumberOfPlayers() > 1)
 // Allies win when either...
@@ -314,6 +321,7 @@ if ((MatchTime() == 0) // ...the time remaining is 0...
 }
 
 rule: "Mafia Win"
+if (false)
 if (isInitialized)
 if (NumberOfPlayers() > 1)
 
@@ -330,6 +338,7 @@ if (CountOf(FilteredArray(
 }
 
 rule: "Vampire Win"
+if (false)
 if (isInitialized)
 if (NumberOfPlayers() > 1)
 
@@ -352,7 +361,7 @@ if (isInitialized)
 	if (Attacker().team != vampireTeamID)
 	{
 		// Create the sphere
-		CreateEffect(AllPlayers(), Effects.Sphere, Color.White, EventPlayer(), 0.350, EffectRev.None);
+		CreateEffect(AllPlayers(), Effect.Sphere, Color.White, EventPlayer(), 0.350, EffectRev.None);
 		deathSphere = LastTextID();
 		
 		// Create the hud text
@@ -401,7 +410,7 @@ if (IsAlive())
 		interactHUD = LastTextID();
 		
 		// Create the effect
-		CreateEffect(EventPlayer(), Effects.Ring, Color.Blue, interactTarget, 1, EffectRev.PositionAndRadius);
+		CreateEffect(EventPlayer(), Effect.Ring, Color.Blue, interactTarget, 1, EffectRev.PositionAndRadius);
 		interactEffect = LastCreatedEntity();
 	}
 	else
@@ -459,7 +468,7 @@ if (abilityProgress >= 100)
 		CreateHudText(EventPlayer(), <"finding <0> attack (<1> left)", hunterVictim, CountOf(hunterVictim.killer.steps) - hunterStep>);
 		hunterHud = LastTextID();
 		
-		CreateEffect(EventPlayer(), Effects.Orb, Color.Red, hunterLocation);
+		CreateEffect(EventPlayer(), Effect.Orb, Color.Red, hunterLocation);
 		hunterEffect = LastCreatedEntity();
 		
 		CreateIcon(EventPlayer(), hunterLocation, Icon.ArrowDown, IconRev.VisibleToAndPosition, Color.Red, true);
@@ -508,8 +517,9 @@ if (DistanceBetween(EventPlayer(), hunterLocation) < 3)
 }
 
 rule: "Hunter Speed Reset"
+Event.OngoingPlayer
 if (role == Hunter)
-if (TotalTimeElapsed() > hunterSpeedBoost)
+if (TotalTimeElapsed() > hunterSpeedBoost & hunterSpeedBoost != 0)
 {
 	SetMoveSpeed(EventPlayer(), 100);
 }
