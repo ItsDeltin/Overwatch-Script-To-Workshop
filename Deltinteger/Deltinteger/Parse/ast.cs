@@ -137,7 +137,7 @@ namespace Deltin.Deltinteger.Parse
                         break;
                     
                     default:
-                        _diagnostics.Add(new Diagnostic($"{value} is not a valid rule option.", optionRange));
+                        _diagnostics.Add(new Diagnostic($"{option} is not a valid rule option.", optionRange));
                         break;
                 }
             }
