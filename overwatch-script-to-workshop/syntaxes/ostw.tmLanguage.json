@@ -36,7 +36,7 @@
 		
 		"keywords": {
 			"name": "keyword.control",
-			"match": "\\b(if|else|while|for|return|in|define|rule|true|false|usevar|method|playervar|globalvar|null)\\b"
+			"match": "\\b(if|else|while|for|foreach|return|in|define|rule|true|false|usevar|method|playervar|globalvar|null)\\b"
 		},
 		"strings": {
 			"name": "string.quoted.double",
