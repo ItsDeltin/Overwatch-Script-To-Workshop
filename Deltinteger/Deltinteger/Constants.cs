@@ -707,7 +707,7 @@ namespace Deltin.Deltinteger
         public static readonly string[] AllOperations = { 
             "^", "*", "%", "/", "+", "-", 
             "<", "<=", "==", ">=", ">", "!=",
-            "&", "|"  
+            "&", "|" 
         };
         public static readonly string[] MathOperations = new string[] { "^", "*", "%", "/", "+", "-" };
         public static readonly string[] CompareOperations = new string[] { "<", "<=", "==", ">=", ">", "!=" };

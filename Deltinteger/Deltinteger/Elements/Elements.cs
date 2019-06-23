@@ -198,7 +198,7 @@ namespace Deltin.Deltinteger.Elements
 
                 if (i < ParameterValues.Length)
                 {
-                    ParameterValues[i].DebugPrint(log, depth + 1);
+                    ParameterValues[i]?.DebugPrint(log, depth + 1);
                 }
             }
         }

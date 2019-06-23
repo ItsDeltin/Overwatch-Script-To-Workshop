@@ -346,9 +346,17 @@ namespace Deltin.Deltinteger.Parse
             IExpressionNode index = null;
             if (context.array() != null)
                 index = (IExpressionNode)Visit(context.array().expr());
-            
-            string operation = context.statement_operation().GetText();
+
             IExpressionNode value = context.expr().Length > 0 ? (IExpressionNode)Visit(context.expr().Last()) : null;
+
+            string operation = context.statement_operation()?.GetText();
+            if (operation == null)
+            {
+                if (context.INCREMENT() != null)
+                    operation = "++";
+                else if (context.DECREMENT() != null)
+                    operation = "--";
+            }
 
             Node node = new VarSetNode(target, variable, index, operation, value, Range.GetRange(context));
             CheckRange(node);
@@ -381,9 +389,9 @@ namespace Deltin.Deltinteger.Parse
                 if (context.expr() != null)
                     expression = (IExpressionNode)VisitExpr(context.expr());
 
-                IStatementNode statement = null;
-                if (context.statement() != null)
-                    statement = (IStatementNode)VisitStatement(context.statement());
+                VarSetNode statement = null;
+                if (context.forEndStatement() != null)
+                    statement = (VarSetNode)VisitVarset(context.forEndStatement().varset());
                 
                 node = new ForNode(varSet, defineNode, expression, statement, block, Range.GetRange(context));
             }
@@ -786,10 +794,10 @@ namespace Deltin.Deltinteger.Parse
         public VarSetNode VarSetNode { get; private set; }
         public ScopedDefineNode DefineNode { get; private set; }
         public IExpressionNode Expression { get; private set; }
-        public IStatementNode Statement { get; private set; }
+        public VarSetNode Statement { get; private set; }
         public BlockNode Block { get; private set; }
 
-        public ForNode(VarSetNode varSetNode, ScopedDefineNode defineNode, IExpressionNode expression, IStatementNode statement, BlockNode block, Range range) : base(range)
+        public ForNode(VarSetNode varSetNode, ScopedDefineNode defineNode, IExpressionNode expression, VarSetNode statement, BlockNode block, Range range) : base(range)
         {
             VarSetNode = varSetNode;
             DefineNode = defineNode;

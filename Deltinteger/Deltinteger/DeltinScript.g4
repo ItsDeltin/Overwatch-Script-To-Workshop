@@ -54,7 +54,7 @@ enum : PART SEPERATOR /*{ Deltin.Deltinteger.Elements.EnumData.IsEnum(_localctx?
 
 variable : PART ;
 // define   : DEFINE PART (EQUALS expr)? STATEMENT_END ;
-varset   : (expr SEPERATOR)? PART array? statement_operation expr? ;
+varset   : (expr SEPERATOR)? PART array? ((statement_operation expr?) | INCREMENT | DECREMENT) ;
 // Here, there should always be an expression. 
 // This is here so antlr recognizes it is a method midtype.
 // Confirm there is an expression in the visitor class.
@@ -75,8 +75,9 @@ statement :
 block : (BLOCK_START statement* BLOCK_END) | statement | STATEMENT_END  ;
 
 for     : FOR LEFT_PAREN 
-	((PART IN expr) | ((define | varset)? STATEMENT_END expr? STATEMENT_END statement?))
+	((PART IN expr) | ((define | varset)? STATEMENT_END expr? STATEMENT_END forEndStatement?))
 	RIGHT_PAREN block;
+forEndStatement : varset ;
 
 while   : WHILE LEFT_PAREN expr RIGHT_PAREN block             ;
 
@@ -171,6 +172,7 @@ EQUALS_SUBTRACT : '-=' ;
 EQUALS_MODULO   : '%=' ;
 BOOL : '&' | '|';
 NOT : '!';
+INCREMENT : '++' ;
+DECREMENT : '--' ;
 
-// ENUM : (LOWERCASE | UPPERCASE | '_' | NUMBERS)+ { Deltin.Deltinteger.Elements.EnumData.IsEnum(Text) }?;
 PART : (LOWERCASE | UPPERCASE | '_' | NUMBERS)+ ;

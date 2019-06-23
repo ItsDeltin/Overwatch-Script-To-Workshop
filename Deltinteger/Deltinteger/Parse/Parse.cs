@@ -756,42 +756,40 @@ namespace Deltin.Deltinteger.Parse
                 {
                     ContinueSkip.Setup();
 
-                    // The action the for loop starts on.
-                    int forActionStartIndex = Actions.Count() - 1;
-
                     ScopeGroup forGroup = scope.Child();
 
                     // Set the variable
                     if (forNode.VarSetNode != null)
                         ParseVarset(scope, forNode.VarSetNode);
                     if (forNode.DefineNode != null)
-                        ParseDefine(scope, forNode.DefineNode);
+                        ParseDefine(forGroup, forNode.DefineNode);
+
+                    // The action the for loop starts on.
+                    int forStartIndex = ContinueSkip.GetSkipCount();
+
+                    A_SkipIf skipCondition = null;
+                    // Skip if the condition is false.
+                    if (forNode.Expression != null) // If it has an expression
+                    {
+                        skipCondition = new A_SkipIf() { ParameterValues = new IWorkshopTree[2] };
+                        skipCondition.ParameterValues[0] = Element.Part<V_Not>(ParseExpression(forGroup, forNode.Expression));
+                        Actions.Add(skipCondition);
+                    }
 
                     // Parse the for's block.
                     ParseBlock(forGroup, forNode.Block, false, returnVar);
 
-                    Element expression = null;
-                    if (forNode.Expression != null)
-                        expression = ParseExpression(forGroup, forNode.Expression);
+                    // Parse the statement
+                    if (forNode.Statement != null)
+                        ParseVarset(forGroup, forNode.Statement);
+                        //ParseStatement(forGroup, forNode.Statement, returnVar, false);
 
-                    // Check the expression
-                    if (forNode.Expression != null) // If it has an expression
-                    {                        
-                        // Parse the statement
-                        if (forNode.Statement != null)
-                            ParseStatement(forGroup, forNode.Statement, returnVar, false);
-
-                        ContinueSkip.SetSkipCount(forActionStartIndex);
-                        Actions.Add(Element.Part<A_LoopIf>(expression));
-                    }
-                    // If there is no expression but there is a statement, parse the statement.
-                    else if (forNode.Statement != null)
-                    {
-                        ParseStatement(forGroup, forNode.Statement, returnVar, false);
-                        ContinueSkip.SetSkipCount(forActionStartIndex);
-                        // Add the loop
-                        Actions.Add(Element.Part<A_Loop>());
-                    }
+                    ContinueSkip.SetSkipCount(forStartIndex);
+                    Actions.Add(Element.Part<A_Loop>());
+                    
+                    // Set the skip
+                    if (skipCondition != null)
+                        skipCondition.ParameterValues[1] = new V_Number(GetSkipCount(skipCondition));
 
                     ContinueSkip.ResetSkip();
                     return;
@@ -941,7 +939,9 @@ namespace Deltin.Deltinteger.Parse
             if (varSetNode.Target != null) 
                 target = ParseExpression(scope, varSetNode.Target);
             
-            Element value = ParseExpression(scope, varSetNode.Value);
+            Element value = null;
+            if (varSetNode.Value != null)
+                value = ParseExpression(scope, varSetNode.Value);
 
             Element initialVar = variable.GetVariable(target);
 
@@ -978,6 +978,14 @@ namespace Deltin.Deltinteger.Parse
                 case "%=":
                     value = Element.Part<V_Modulo>(initialVar, value);
                     break;
+                
+                case "++":
+                    value = Element.Part<V_Add>(initialVar, new V_Number(1));
+                    break;
+                
+                case "--":
+                    value = Element.Part<V_Subtract>(initialVar, new V_Number(1));
+                    break;
             }
 
             Actions.Add(variable.SetVariable(value, target, index));
@@ -990,6 +998,11 @@ namespace Deltin.Deltinteger.Parse
             // Set the defined variable if the variable is defined like "define var = 1"
             if (defineNode.Value != null)
                 Actions.Add(var.SetVariable(ParseExpression(scope, defineNode.Value)));
+        }
+
+        int GetSkipCount(Element skipElement)
+        {
+            return Actions.Count - Actions.IndexOf(skipElement);
         }
     }
 

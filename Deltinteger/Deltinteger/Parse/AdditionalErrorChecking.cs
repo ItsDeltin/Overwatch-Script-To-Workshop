@@ -63,7 +63,12 @@ namespace Deltin.Deltinteger.Parse
 
         public override object VisitVarset(DeltinScriptParser.VarsetContext context)
         {
-            if (context.expr().Length == 0 || context.children.IndexOf(context.expr().Last()) < context.children.IndexOf(context.statement_operation()))
+            if (context.statement_operation() != null && 
+                (context.expr().Length == 0 || 
+                    context.children.IndexOf(context.expr().Last()) < 
+                    context.children.IndexOf(context.statement_operation())
+                )
+            )
                 _diagnostics.Add(new Diagnostic("Expected expression.", Range.GetRange(context)) { severity = Diagnostic.Error });
             return base.VisitVarset(context);
         }
