@@ -17,7 +17,7 @@ namespace Deltin.Deltinteger.Elements
         }
     }
 
-    [AttributeUsage(AttributeTargets.Field)]
+    [AttributeUsage(AttributeTargets.Field | AttributeTargets.Enum)]
     public class EnumOverride : Attribute
     {
         public EnumOverride(string codeName, string workshopName)
@@ -174,6 +174,7 @@ namespace Deltin.Deltinteger.Elements
     }
 
     [EnumParameter]
+    [EnumOverride("Event", null)]
     public enum RuleEvent
     {
         [EnumOverride(null, "Ongoing - Global")]
@@ -196,6 +197,7 @@ namespace Deltin.Deltinteger.Elements
     }
 
     [EnumParameter]
+    [EnumOverride("Player", null)]
     public enum PlayerSelector
     {
         All,

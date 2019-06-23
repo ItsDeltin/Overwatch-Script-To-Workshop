@@ -321,10 +321,10 @@ namespace Deltin.Deltinteger.Elements
     [Parameter("Damage Dealt Percent", ValueType.Number, typeof(V_Number))]
     public class A_SetDamageDealt : Element {}
 
-    [ElementData("Set Damage Recieved")]
+    [ElementData("Set Damage Received")]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     [Parameter("Damage Dealt Percent", ValueType.Number, typeof(V_Number))]
-    public class A_SetDamageRecieved : Element {}
+    public class A_SetDamageReceived : Element {}
 
     [ElementData("Set Facing")]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]

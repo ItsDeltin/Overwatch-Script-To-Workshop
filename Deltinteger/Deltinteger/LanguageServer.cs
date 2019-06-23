@@ -191,12 +191,16 @@ namespace Deltin.Deltinteger.LanguageServer
                 case BlockNode blockNode:
 
                     // Get all action methods
+                    /* 
                     completion.AddRange(Element.ActionList.Select(m => 
                         new CompletionItem(m.Name.Substring(2))
                         {
                             kind = CompletionItem.Method,
                             detail = ((Element)Activator.CreateInstance(m)).ToString(),
                         }));
+                        */
+                    completion.AddRange(Element.GetCompletion(false, true));
+                    
                     if (parser.Success)
                     {
                         // Get all variables
@@ -212,12 +216,15 @@ namespace Deltin.Deltinteger.LanguageServer
                 // Values
                 case MethodNode methodNode:
 
+                    /*
                     completion.AddRange(Element.ValueList.Select(m => 
                         new CompletionItem(m.Name.Substring(2))
                         {
                             kind = CompletionItem.Method,
                             detail = ((Element)Activator.CreateInstance(m)).ToString(),
                         }));
+                    */
+                    completion.AddRange(Element.GetCompletion(true, false));
                     
                     completion.AddRange(EnumData.GetAllEnumCompletion());
 
@@ -315,17 +322,23 @@ namespace Deltin.Deltinteger.LanguageServer
                 SignatureInformation information = null;
                 if (methodNode != null)
                 {
-                    Type methodType = Element.GetMethod(methodNode.Name);
+                    var element = Element.GetElement(methodNode.Name);
+                    //Type methodType = Element.GetMethod(methodNode.Name);
 
-                    if (methodType != null)
+                    if (element != null)
                     {
-                        Element element = (Element)Activator.CreateInstance(methodType);
+                        //Element element = (Element)Activator.CreateInstance(methodType);
 
                         information = new SignatureInformation(
-                            element.ToString(),
-                            "",
-                            element.ParameterData.Select(p => 
-                                new ParameterInformation(p.Name, "")
+                            element.GetObject().ToString(),
+                            // Get the method's documentation
+                            WorkshopWiki.Wiki.GetWikiMethod(element.WorkshopName)?.Description,
+                            // Get the parameter data
+                            element.Parameters.Select(p => 
+                                new ParameterInformation(
+                                    p.Name, 
+                                    WorkshopWiki.Wiki.GetWikiMethod(element.WorkshopName)?.GetWikiParameter(p.Name)?.Description ?? ""
+                                )
                             ).ToArray());
                     }
                 }

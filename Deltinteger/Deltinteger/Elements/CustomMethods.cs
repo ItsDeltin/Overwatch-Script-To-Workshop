@@ -112,17 +112,28 @@ namespace Deltin.Deltinteger.Elements
                             Element.Part<V_Divide>(Element.Part<V_ZOf>(bc.GetVariable()), bcVec.GetVariable())
                         ), eventPlayer),
                 },
-                // get res
-                // res = abNorm[0] * bcNorm[0] + abNorm[1] * bcNorm[1] + abNorm[2] * bcNorm[2];
-                //target.SetVariable(
-                Element.Part<V_Add>
+                Element.Part<V_Divide>
                 (
-                    Element.Part<V_Add>
+                    Element.Part<V_Multiply>
                     (
-                        Element.Part<V_Multiply>(Element.Part<V_XOf>(abNorm.GetVariable()), Element.Part<V_XOf>(bcNorm.GetVariable())),
-                        Element.Part<V_Multiply>(Element.Part<V_YOf>(abNorm.GetVariable()), Element.Part<V_YOf>(bcNorm.GetVariable()))
+                        Element.Part<V_ArccosineInRadians>
+                        (
+                            // get res
+                            // res = abNorm[0] * bcNorm[0] + abNorm[1] * bcNorm[1] + abNorm[2] * bcNorm[2];
+                            //target.SetVariable(
+                            Element.Part<V_Add>
+                            (
+                                Element.Part<V_Add>
+                                (
+                                    Element.Part<V_Multiply>(Element.Part<V_XOf>(abNorm.GetVariable()), Element.Part<V_XOf>(bcNorm.GetVariable())),
+                                    Element.Part<V_Multiply>(Element.Part<V_YOf>(abNorm.GetVariable()), Element.Part<V_YOf>(bcNorm.GetVariable()))
+                                ),
+                                Element.Part<V_Multiply>(Element.Part<V_ZOf>(abNorm.GetVariable()), Element.Part<V_ZOf>(bcNorm.GetVariable()))
+                            )
+                        ),
+                        new V_Number(180)
                     ),
-                    Element.Part<V_Multiply>(Element.Part<V_ZOf>(abNorm.GetVariable()), Element.Part<V_ZOf>(bcNorm.GetVariable()))
+                    new V_Number(Math.PI)
                 ),
                 CustomMethodType.MultiAction_Value
             );

@@ -50,7 +50,7 @@ createarray : INDEX_START (expr (COMMA expr)*)? INDEX_END;
 
 array : INDEX_START expr INDEX_END ;
 
-enum : ENUM SEPERATOR PART? ;
+enum : PART SEPERATOR PART? { Deltin.Deltinteger.Elements.EnumData.IsEnum(_localctx?.PART(0)?.GetText()) }? ;
 
 variable : PART ;
 // define   : DEFINE PART (EQUALS expr)? STATEMENT_END ;
@@ -90,8 +90,9 @@ rule_if : IF LEFT_PAREN expr? RIGHT_PAREN;
 
 // rule_option{0,3} does not work
 ow_rule : 
-	RULE_WORD ':' STRINGLITERAL enum? enum? enum?
-	rule_if*
+	RULE_WORD ':' STRINGLITERAL
+	(enum)*
+	(rule_if)*
 	block
 	;
 
@@ -171,5 +172,5 @@ EQUALS_MODULO   : '%=' ;
 BOOL : '&' | '|';
 NOT : '!';
 
-ENUM : (LOWERCASE | UPPERCASE | '_' | NUMBERS)+ { Deltin.Deltinteger.Elements.EnumData.IsEnum(Text) }?;
+// ENUM : (LOWERCASE | UPPERCASE | '_' | NUMBERS)+ { Deltin.Deltinteger.Elements.EnumData.IsEnum(Text) }?;
 PART : (LOWERCASE | UPPERCASE | '_' | NUMBERS)+ ;

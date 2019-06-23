@@ -108,13 +108,13 @@ namespace Deltin.Deltinteger.Parse
             Range playerRange = null;
             foreach(var ruleOption in context.@enum())
             {
-                string option = ruleOption.ENUM().GetText();
-                Range optionRange = Range.GetRange(ruleOption.ENUM().Symbol);
+                string option = ruleOption.PART(0).GetText();
+                Range optionRange = Range.GetRange(ruleOption.PART(0).Symbol);
 
-                string value = ruleOption.PART()?.GetText();
+                string value = ruleOption.PART(1)?.GetText();
                 Range valueRange = null;
                 if (value != null)
-                    valueRange = Range.GetRange(ruleOption.PART().Symbol);
+                    valueRange = Range.GetRange(ruleOption.PART(1).Symbol);
                 
                 /*
                 switch (option)

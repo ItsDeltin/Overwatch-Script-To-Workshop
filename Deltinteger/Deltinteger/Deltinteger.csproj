@@ -45,6 +45,10 @@
       <HintPath>packages\Newtonsoft.Json\Newtonsoft.Json.dll</HintPath>
       <SpecificVersion>False</SpecificVersion>
     </Reference>
+    <Reference Include="HtmlAgilityPack">
+      <HintPath>packages\HtmlAgilityPack\HtmlAgilityPack.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Debug.cs" />
@@ -64,6 +68,7 @@
     <Compile Include="Program.cs" />
     <Compile Include="Extras.cs" />
     <Compile Include="LanguageServer.cs" />
+    <Compile Include="Wiki.cs" />
     <Compile Include="Constants.cs" />
     <Compile Include="Interfaces.cs" />
     <Compile Include="Exceptions.cs" />
