@@ -30,6 +30,9 @@ namespace Deltin.Deltinteger.Parse
 
             DeltinScriptParser.RulesetContext ruleSetContext = parser.ruleset();
 
+            Log log = new Log("Parse");
+            log.Write(LogLevel.Verbose, ruleSetContext.ToStringTree(parser));
+
             List<Diagnostic> diagnostics = new List<Diagnostic>();
             diagnostics.AddRange(errorListener.Errors);
 

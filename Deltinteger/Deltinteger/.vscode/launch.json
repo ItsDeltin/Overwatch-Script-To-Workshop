@@ -66,7 +66,7 @@
             "request": "launch",
             "preLaunchTask": "Debug build",
             "program": "${workspaceFolder}/bin/Debug/Deltinteger.exe",
-            "args":["-langserver", "-port 3000 3001"],
+            "args":["-langserver", "-verbose", "-port 3000 3001"],
             "console": "externalTerminal",
             "stopAtEntry": false,
             "internalConsoleOptions": "openOnSessionStart"

@@ -29,7 +29,7 @@ namespace Deltin.Deltinteger.WorkshopWiki
             // Loop through all summaries
             foreach(var summary in htmlDoc.DocumentNode.Descendants("summary"))
             {
-                string name = summary.InnerText.Trim(); // Get sthe name
+                string name = summary.InnerText.Trim(); // Gets the name
 
                 var details = summary.ParentNode;
                 string description = details.SelectNodes("p").First().InnerText.Trim(); // Gets the description.
