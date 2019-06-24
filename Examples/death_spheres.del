@@ -14,9 +14,9 @@ rule: "Setup Death Spheres."
         radius = 8;
         locations = [Vector(56.64, 21.00, -67.14), Vector(50.46, 9.15, -92.95), Vector(30.00, 14.00, -77.91), Vector(82.59, 12.68, -88.21)];
 
-        for (loc in locations)
+        foreach (define loc in locations)
         {
-            CreateEffect(AllPlayers(), Effects.Sphere, Color.Red, locations[loc], radius, EffectRev.VisibleTo);
+            CreateEffect(AllPlayers(), Effect.Sphere, Color.Red, loc, radius, EffectRev.VisibleTo);
         }
     }
 
@@ -25,14 +25,13 @@ rule: "Kill players in sphere."
     if (IsAlive())
     {
         // Kill the player if they enter the radius of the death sphere.
-        for (loc in locations)
+        foreach (define loc in locations)
         {
-            if (DistanceBetween(EventPlayer(), locations[loc]) < radius)
+            if (DistanceBetween(EventPlayer(), loc) < radius)
             {
                 deathCount += 1;
                 SmallMessage(EventPlayer(), <"Danger! ... dead, try_again and survive! sudden_death: <0>", deathCount>);
                 Kill();
-                loc = CountOf(locations);
             }
         }
 
