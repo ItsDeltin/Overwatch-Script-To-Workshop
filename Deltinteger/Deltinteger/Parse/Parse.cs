@@ -48,7 +48,7 @@ namespace Deltin.Deltinteger.Parse
             VarCollection varCollection = null;
             ScopeGroup root = null;
             List<UserMethod> userMethods = null;
-            Rule[] rules = null;
+            List<Rule> rules = null;
             bool success = false;
 
             AdditionalErrorChecking aec = new AdditionalErrorChecking(parser, diagnostics);
@@ -68,14 +68,17 @@ namespace Deltin.Deltinteger.Parse
                     userMethods.Add(new UserMethod(ruleSetNode.UserMethods[i]));
 
                 // Parse the rules.
-                rules = new Rule[ruleSetNode.Rules.Length];
+                rules = new List<Rule>();
 
-                for (int i = 0; i < rules.Length; i++)
+                // The looper rule
+                Looper looper = new Looper();
+
+                for (int i = 0; i < ruleSetNode.Rules.Length; i++)
                 {
                     try
                     {
-                        var result = Translate.GetRule(ruleSetNode.Rules[i], root, varCollection, userMethods.ToArray());
-                        rules[i] = result.Rule;
+                        var result = Translate.GetRule(ruleSetNode.Rules[i], root, varCollection, userMethods.ToArray(), looper);
+                        rules.Add(result.Rule);
                         diagnostics.AddRange(result.Diagnostics);
                     }
                     catch (SyntaxErrorException ex)
@@ -84,6 +87,9 @@ namespace Deltin.Deltinteger.Parse
                     }
                 }
 
+                if (looper.Used)
+                    rules.Add(looper.Finalize());
+
                 success = true;
             }
             
@@ -91,7 +97,7 @@ namespace Deltin.Deltinteger.Parse
             {
                 Bav = bav,
                 Diagnostics = diagnostics,
-                Rules = rules,
+                Rules = rules.ToArray(),
                 UserMethods = userMethods?.ToArray(),
                 Success = success,
                 VarCollection = varCollection
@@ -110,15 +116,16 @@ namespace Deltin.Deltinteger.Parse
     {
         public static bool AllowRecursion = false;
 
-        public static TranslateResult GetRule(RuleNode ruleNode, ScopeGroup root, VarCollection varCollection, UserMethod[] userMethods)
+        public static TranslateResult GetRule(RuleNode ruleNode, ScopeGroup root, VarCollection varCollection, UserMethod[] userMethods, Looper looper)
         {
-            var result = new Translate(ruleNode, root, varCollection, userMethods);
+            var result = new Translate(ruleNode, root, varCollection, userMethods, looper);
             return new TranslateResult(result.Rule, result.Diagnostics.ToArray());
         }
 
         private readonly ScopeGroup Root;
         private readonly VarCollection VarCollection;
         private readonly UserMethod[] UserMethods;
+        private readonly Looper Looper;
         private readonly Rule Rule;
         private readonly List<Element> Actions = new List<Element>();
         private readonly List<Condition> Conditions = new List<Condition>();
@@ -129,11 +136,12 @@ namespace Deltin.Deltinteger.Parse
         private readonly List<MethodStack> MethodStack = new List<MethodStack>(); // The user method stack
         private readonly List<UserMethod> MethodStackNoRecursive = new List<UserMethod>();
 
-        private Translate(RuleNode ruleNode, ScopeGroup root, VarCollection varCollection, UserMethod[] userMethods)
+        private Translate(RuleNode ruleNode, ScopeGroup root, VarCollection varCollection, UserMethod[] userMethods, Looper looper)
         {
             Root = root;
             VarCollection = varCollection;
             UserMethods = userMethods;
+            Looper = looper;
 
             Rule = new Rule(ruleNode.Name, ruleNode.Event, ruleNode.Team, ruleNode.Player);
             IsGlobal = Rule.IsGlobal;
