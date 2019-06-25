@@ -452,8 +452,7 @@ namespace Deltin.Deltinteger.Elements
     [ElementData("Last Text ID", ValueType.Number)]
     public class V_LastTextID : Element {}
 
-#warning check order
-    [ElementData("Left", ValueType.Number)]
+    [ElementData("Left", ValueType.Vector)]
     public class V_Left : Element {}
 
     [ElementData("Local Vector Of", ValueType.Vector)]
