@@ -218,6 +218,7 @@ namespace Deltin.Deltinteger.Elements
         Tracer,
         Mercy,
         Hanzo,
+        [EnumOverride(null, "Torbjörn")]
         Torbjorn,
         Reinhardt,
         Pharah,
@@ -233,7 +234,9 @@ namespace Deltin.Deltinteger.Elements
         Zarya,
         [EnumOverride(null, "Soldier: 76")]
         Soldier76,
+        [EnumOverride(null, "Lúcio")]
         Lucio,
+        [EnumOverride(null, "D.va")]
         Dva,
         Mei,
         Sombra,
@@ -245,6 +248,45 @@ namespace Deltin.Deltinteger.Elements
         WreckingBall,
         Ashe,
         Baptiste
+    }
+
+    [EnumParameter]
+    public enum Hero
+    {
+        Ana,
+        Ashe,
+        Baptiste,
+        Bastion,
+        Brigitte,
+        [EnumOverride(null, "D.va")]
+        Dva,
+        Doomfist,
+        Genji,
+        Hanzo,
+        Junkrat,
+        [EnumOverride(null, "Lúcio")]
+        Lucio,
+        Mccree,
+        Mei,
+        Mercy,
+        Moira,
+        Orisa,
+        Pharah,
+        Reaper,
+        Reinhardt,
+        Roadhog,
+        [EnumOverride(null, "Soldier: 76")]
+        Soldier76,
+        Sombra,
+        Symmetra,
+        [EnumOverride(null, "Torbjörn")]
+        Torbjorn,
+        Tracer,
+        Widowmaker,
+        Winston,
+        WreckingBall,
+        Zarya,
+        Zenyatta
     }
 
     [EnumParameter]
@@ -537,42 +579,6 @@ namespace Deltin.Deltinteger.Elements
         RingExplosionSound,
         BuffExplosionSound,
         ExplosionSound
-    }
-
-    [EnumParameter]
-    public enum Hero
-    {
-        Ana,
-        Ashe,
-        Baptiste,
-        Bastion,
-        Brigitte,
-        Dva,
-        Doomfist,
-        Genji,
-        Hanzo,
-        Junkrat,
-        Lucio,
-        Mccree,
-        Mei,
-        Mercy,
-        Moira,
-        Orisa,
-        Pharah,
-        Reaper,
-        Reinhardt,
-        Roadhog,
-        [EnumOverride(null, "Soldier: 76")]
-        Soldier76,
-        Sombra,
-        Symmetra,
-        Torbjorn,
-        Tracer,
-        Widowmaker,
-        Winston,
-        WreckingBall,
-        Zarya,
-        Zenyatta
     }
 
     [EnumParameter]
