@@ -145,6 +145,9 @@ namespace Deltin.Deltinteger.Elements
     [ElementData("Destroy All Icons")]
     public class A_DestroyAllIcons : Element {}
 
+    [ElementData("Destroy All In-World Text")]
+    public class A_DestroyAllInworldText : Element {}
+
     [ElementData("Destroy Effect")]
     [Parameter("Effect ID", ValueType.Player, null)]
     public class A_DestroyEffect : Element {}
