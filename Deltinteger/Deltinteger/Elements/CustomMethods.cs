@@ -8,12 +8,12 @@ using Deltin.Deltinteger.Parse;
 
 namespace Deltin.Deltinteger.Elements
 {
-    [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class)]
+    [AttributeUsage(AttributeTargets.Class)]
     public class CustomMethod : Attribute
     {
         public CustomMethod(string elementName, CustomMethodType methodType)
         {
-            MethodName = MethodName;
+            MethodName = elementName;
             MethodType = methodType;
         }
 
