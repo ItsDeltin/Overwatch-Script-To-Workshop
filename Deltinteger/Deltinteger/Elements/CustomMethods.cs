@@ -8,38 +8,115 @@ using Deltin.Deltinteger.Parse;
 
 namespace Deltin.Deltinteger.Elements
 {
-    public class CustomMethods
+    [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class)]
+    public class CustomMethod : Attribute
     {
-        public static readonly MethodInfo[] CustomMethodList = typeof(CustomMethods)
-                    .GetMethods(BindingFlags.NonPublic | BindingFlags.Static)
-                    .Where(t => t.GetCustomAttribute<CustomMethod>() != null)
-                    .ToArray();
-
-        public static MethodInfo GetCustomMethod(string name)
+        public CustomMethod(string elementName, CustomMethodType methodType)
         {
-            for (int i = 0; i < CustomMethodList.Length; i++)
-                if (CustomMethodList[i].Name == name)
-                    return CustomMethodList[i];
-            return null;
+            MethodName = MethodName;
+            MethodType = methodType;
         }
 
-        [CustomMethod("AngleOfVectors", CustomMethodType.MultiAction_Value)]
-        [Parameter("Vector1", ValueType.VectorAndPlayer, null)]
-        [Parameter("Vector2", ValueType.VectorAndPlayer, null)]
-        [Parameter("Vector3", ValueType.VectorAndPlayer, null)]
-        static MethodResult AngleOfVectors(bool isGlobal, VarCollection varCollection, object[] parameters)
+        public string MethodName { get; private set; }
+        public CustomMethodType MethodType { get; private set; }
+    }
+
+    public class MethodResult
+    {
+        public MethodResult(Element[] elements, Element result)
+        {
+            Elements = elements;
+            Result = result;
+        }
+        public Element[] Elements { get; private set; }
+        public Element Result { get; private set; }
+    }
+
+    public enum CustomMethodType
+    {
+        Value,
+        MultiAction_Value,
+        Action
+    }
+
+    public class CustomMethodData
+    {
+        public string Name;
+        public Parameter[] Parameters;
+        public CustomMethodType CustomMethodType;
+        public Type Type;
+
+        public CustomMethodData(Type type)
+        {
+            Type = type;
+
+            CustomMethod data = type.GetCustomAttribute<CustomMethod>();
+            Name = data.MethodName;
+            CustomMethodType = data.MethodType;
+
+            Parameters = type.GetCustomAttributes<Parameter>()
+                .ToArray();
+        }
+
+        public CustomMethodBase GetObject(Translate context, IWorkshopTree[] parameters)
+        {
+            return (CustomMethodBase)Activator.CreateInstance(Type, new object[] { context, parameters });
+        }
+
+        static CustomMethodData[] _customMethodData = null;
+        private static CustomMethodData[] GetCustomMethods()
+        {
+            if (_customMethodData == null)
+            {
+                Type[] types = Assembly.GetExecutingAssembly().GetTypes()
+                    .Where(type => type.GetCustomAttribute<CustomMethod>() != null)
+                    .ToArray();
+
+                _customMethodData = new CustomMethodData[types.Length];
+                for (int i = 0; i < _customMethodData.Length; i++)
+                    _customMethodData[i] = new CustomMethodData(types[i]);
+            }
+            return _customMethodData;
+        }
+
+        public static CustomMethodData GetCustomMethod(string name)
+        {
+            return GetCustomMethods().FirstOrDefault(method => method.Name == name);
+        }
+    }
+
+    public abstract class CustomMethodBase
+    {
+        protected readonly Translate TranslateContext;
+        protected readonly Element[] Parameters;
+
+        public CustomMethodBase(Translate translate, Element[] parameters)
+        {
+            TranslateContext = translate;
+            Parameters = parameters;
+        }
+
+        public abstract MethodResult Get();
+    }
+
+    [CustomMethod("AngleOfVectors", CustomMethodType.MultiAction_Value)]
+    class AngleOfVectors : CustomMethodBase
+    {
+        public AngleOfVectors(Translate translate, Element[] parameters) : base (translate, parameters) {}
+
+        public override MethodResult Get()
         {
             var eventPlayer = new V_EventPlayer();
 
-            Var a      = varCollection.AssignVar("AngleOfVectors: a",      isGlobal);
-            Var b      = varCollection.AssignVar("AngleOfVectors: b",      isGlobal);
-            Var c      = varCollection.AssignVar("AngleOfVectors: c",      isGlobal);
-            Var ab     = varCollection.AssignVar("AngleOfVectors: ab",     isGlobal);
-            Var bc     = varCollection.AssignVar("AngleOfVectors: bc",     isGlobal);
-            Var abVec  = varCollection.AssignVar("AngleOfVectors: abVec",  isGlobal);
-            Var bcVec  = varCollection.AssignVar("AngleOfVectors: bcVec",  isGlobal);
-            Var abNorm = varCollection.AssignVar("AngleOfVectors: abNorm", isGlobal);
-            Var bcNorm = varCollection.AssignVar("AngleOfVectors: bcNorm", isGlobal);
+            Var a      = TranslateContext.VarCollection.AssignVar("AngleOfVectors: a"     , TranslateContext.IsGlobal);
+            Var b      = TranslateContext.VarCollection.AssignVar("AngleOfVectors: b"     , TranslateContext.IsGlobal);
+            Var c      = TranslateContext.VarCollection.AssignVar("AngleOfVectors: c"     , TranslateContext.IsGlobal);
+            Var ab     = TranslateContext.VarCollection.AssignVar("AngleOfVectors: ab"    , TranslateContext.IsGlobal);
+            Var bc     = TranslateContext.VarCollection.AssignVar("AngleOfVectors: bc"    , TranslateContext.IsGlobal);
+            Var abVec  = TranslateContext.VarCollection.AssignVar("AngleOfVectors: abVec" , TranslateContext.IsGlobal);
+            Var bcVec  = TranslateContext.VarCollection.AssignVar("AngleOfVectors: bcVec" , TranslateContext.IsGlobal);
+            Var abNorm = TranslateContext.VarCollection.AssignVar("AngleOfVectors: abNorm", TranslateContext.IsGlobal);
+            Var bcNorm = TranslateContext.VarCollection.AssignVar("AngleOfVectors: bcNorm", TranslateContext.IsGlobal);
 
             Element zeroVec = Element.Part<V_Vector>(new V_Number(0), new V_Number(0), new V_Number(0));
 
@@ -48,11 +125,11 @@ namespace Deltin.Deltinteger.Elements
                 new Element[]
                 {
                     // Save A
-                    a.SetVariable((Element)parameters[0], eventPlayer),
+                    a.SetVariable(Parameters[0], eventPlayer),
                     // Save B
-                    b.SetVariable((Element)parameters[1], eventPlayer),
+                    b.SetVariable(Parameters[1], eventPlayer),
                     // save C
-                    c.SetVariable((Element)parameters[2], eventPlayer),
+                    c.SetVariable(Parameters[2], eventPlayer),
 
                     // get ab
                     // ab[3] = { b[0] - a[0], b[1] - a[1], b[2] - a[2] };
@@ -134,21 +211,25 @@ namespace Deltin.Deltinteger.Elements
                         new V_Number(180)
                     ),
                     new V_Number(Math.PI)
-                ),
-                CustomMethodType.MultiAction_Value
+                )
             );
         }
+    }
 
-        [CustomMethod("AngleOfVectorsCom", CustomMethodType.Value)]
-        [Parameter("Vector1", ValueType.VectorAndPlayer, null)]
-        [Parameter("Vector2", ValueType.VectorAndPlayer, null)]
-        [Parameter("Vector3", ValueType.VectorAndPlayer, null)]
-        static MethodResult AngleOfVectorsCom(bool isGlobal, VarCollection varCollection, object[] parameters)
+    [CustomMethod("AngleOfVectorsCom", CustomMethodType.Value)]
+    [Parameter("Vector1", ValueType.VectorAndPlayer, null)]
+    [Parameter("Vector2", ValueType.VectorAndPlayer, null)]
+    [Parameter("Vector3", ValueType.VectorAndPlayer, null)]
+    class AngleOfVectorsCom : CustomMethodBase
+    {
+        public AngleOfVectorsCom(Translate translate, Element[] parameters) : base(translate, parameters) {}
+
+        public override MethodResult Get()
         {
             Element zeroVec = Element.Part<V_Vector>(new V_Number(0), new V_Number(0), new V_Number(0));
-            Element a = (Element)parameters[0];
-            Element b = (Element)parameters[1];
-            Element c = (Element)parameters[2];
+            Element a = Parameters[0];
+            Element b = Parameters[1];
+            Element c = Parameters[2];
 
             Element ab = Element.Part<V_Vector>
                 (
@@ -194,75 +275,19 @@ namespace Deltin.Deltinteger.Elements
                     Element.Part<V_Multiply>(Element.Part<V_ZOf>(abNorm), Element.Part<V_ZOf>(bcNorm))
                 );
 
-            return new MethodResult(null, res, CustomMethodType.MultiAction_Value);
+            return new MethodResult(null, res);
         }
+    }
 
-        [CustomMethod("GetMapID", CustomMethodType.Value)]
-        static MethodResult GetMapID(bool isGlobal, VarCollection varCollection, object[] parameters)
+    [CustomMethod("GetMap", CustomMethodType.MultiAction_Value)]
+    class GetMap : CustomMethodBase
+    {
+        public GetMap(Translate translate, Element[] parameters) : base(translate, parameters) {}
+
+        public override MethodResult Get()
         {
-            /*
-             All credit to https://us.forums.blizzard.com/en/overwatch/t/workshop-resource-get-the-current-map-name-updated-1-action/
-             Based off code: 5VAQA
-            */
+            Var temp = TranslateContext.VarCollection.AssignVar("GetMap: temp", TranslateContext.IsGlobal);
 
-            int mapcount = 0;
-            for (int i = 0; i < Constants.MapChecks.Length; i++)
-                mapcount += Constants.MapChecks[i].Length;
-
-            V_Append prev = null;
-            V_Append current = null;
-            for (int s = 0; s < Constants.MapChecks.Length; s++)
-                for (int i = 0; i < Constants.MapChecks[s].Length; i++)
-                {
-                    current = new V_Append()
-                    {
-                        ParameterValues = new IWorkshopTree[2]
-                    };
-
-                    if (prev != null)
-                        current.ParameterValues[0] = prev;
-                    else
-                        current.ParameterValues[0] = new V_EmptyArray();
-
-                    // Set the map ID
-                    current.ParameterValues[1] = new V_Number(Constants.MapChecks[s][i]);
-                    prev = current;
-                }
-
-            return new MethodResult(null,
-                Element.Part<V_IndexOfArrayValue>(current,
-                Element.Part<V_RoundToInteger>(Element.Part<V_Divide>(
-                    Element.Part<V_RoundToInteger>(
-                        Element.Part<V_Multiply>(
-                            Element.Part<V_DistanceBetween>(
-                                Element.Part<V_Vector>(new V_Number(0), new V_Number(0), new V_Number(0)),
-                                Element.Part<V_NearestWalkablePosition>(Element.Part<V_Vector>(new V_Number(100), new V_Number(100), new V_Number(100)))
-                            ),
-                            new V_Number(100)
-                        ),
-                        EnumData.GetEnumValue(Rounding.Down)
-                    ),
-                    new V_Number(4)
-                ),
-                EnumData.GetEnumValue(Rounding.Down))
-            ), CustomMethodType.Value);
-        }
-
-        [CustomMethod("RandomValuesInArray", CustomMethodType.Value)]
-        [Parameter("Array", ValueType.Any, typeof(V_AllPlayers))]
-        [Parameter("Count", ValueType.Number, typeof(V_Number))]
-        static MethodResult RandomValuesInArray(bool isGlobal, VarCollection varCollection, object[] parameters)
-        {
-            Element array = parameters[0] as Element;
-            Element count = parameters[1] as Element;
-            return new MethodResult(null, Element.Part<V_ArraySlice>(Element.Part<V_RandomizedArray>(array), count), CustomMethodType.Value);
-        }
- 
-        [CustomMethod("GetMap", CustomMethodType.MultiAction_Value)]
-        static MethodResult GetMap(bool isGlobal, VarCollection varCollection, object[] parameters)
-        {
-            Var temp = varCollection.AssignVar("GetMap: temp", isGlobal);
-            
             Element[] actions = new Element[]
             {
                 temp.SetVariable(Element.Part<V_RoundToInteger>(
@@ -272,7 +297,7 @@ namespace Deltin.Deltinteger.Elements
                                 Element.Part<V_Vector>(new V_Number(-500.000), new V_Number(0), new V_Number(0))
                             ),
                             Element.Part<V_NearestWalkablePosition>(Element.Part<V_Vector>(new V_Number(500), new V_Number(0), new V_Number(0)))
-                        ), 
+                        ),
                         Element.Part<V_DistanceBetween>(
                             Element.Part<V_NearestWalkablePosition>(Element.Part<V_Vector>(new V_Number(0), new V_Number(0), new V_Number(-500.000))),
                             Element.Part<V_NearestWalkablePosition>(Element.Part<V_Vector>(new V_Number(0), new V_Number(0), new V_Number(500)))
@@ -281,7 +306,7 @@ namespace Deltin.Deltinteger.Elements
                     EnumData.GetEnumValue(Rounding.Down)
                 )),
 
-                temp.SetVariable(Element.Part<V_IndexOfArrayValue>( 
+                temp.SetVariable(Element.Part<V_IndexOfArrayValue>(
                     Element.Part<V_Append>(
                         Element.Part<V_Append>(
                             Element.Part<V_Append>(
@@ -324,17 +349,17 @@ namespace Deltin.Deltinteger.Elements
                                                                                                                                                                                 Element.Part<V_Append>(
                                                                                                                                                                                     Element.Part<V_Append>(
                                                                                                                                                                                         Element.Part<V_Append>(Element.Part<V_EmptyArray>(), new V_Number(153)),
-                                                                                                                                                                                    new V_Number(468)), 
-                                                                                                                                                                                new V_Number(1196)), 
-                                                                                                                                                                            new V_Number(135)), 
-                                                                                                                                                                        new V_Number(139)), 
-                                                                                                                                                                    new V_Number(477)), 
-                                                                                                                                                                new V_Number(184)), 
+                                                                                                                                                                                    new V_Number(468)),
+                                                                                                                                                                                new V_Number(1196)),
+                                                                                                                                                                            new V_Number(135)),
+                                                                                                                                                                        new V_Number(139)),
+                                                                                                                                                                    new V_Number(477)),
+                                                                                                                                                                new V_Number(184)),
                                                                                                                                                                 Element.Part<V_FirstOf>(
                                                                                                                                                                     Element.Part<V_FilteredArray>(
                                                                                                                                                                         Element.Part<V_Append>(
-                                                                                                                                                                            Element.Part<V_Append>(Element.Part<V_EmptyArray>(), new V_Number(343)), 
-                                                                                                                                                                        new V_Number(347)), 
+                                                                                                                                                                            Element.Part<V_Append>(Element.Part<V_EmptyArray>(), new V_Number(343)),
+                                                                                                                                                                        new V_Number(347)),
                                                                                                                                                                         Element.Part<V_Compare>(
                                                                                                                                                                             Element.Part<V_ArrayElement>(),
                                                                                                                                                                             EnumData.GetEnumValue(Operators.Equal),
@@ -342,7 +367,7 @@ namespace Deltin.Deltinteger.Elements
                                                                                                                                                                         )
                                                                                                                                                                     )
                                                                                                                                                                 )
-                                                                                                                                                            ), 
+                                                                                                                                                            ),
                                                                                                                                                             new V_Number(366)
                                                                                                                                                         ),
                                                                                                                                                         Element.Part<V_FirstOf>(
@@ -350,116 +375,78 @@ namespace Deltin.Deltinteger.Elements
                                                                                                                                                                 Element.Part<V_Append>(
                                                                                                                                                                     Element.Part<V_Append>(Element.Part<V_EmptyArray>(), new V_Number(433)),
                                                                                                                                                                     new V_Number(436)
-                                                                                                                                                                ), 
+                                                                                                                                                                ),
                                                                                                                                                                 Element.Part<V_Compare>(
-                                                                                                                                                                    Element.Part<V_ArrayElement>(), 
-                                                                                                                                                                    EnumData.GetEnumValue(Operators.Equal), 
+                                                                                                                                                                    Element.Part<V_ArrayElement>(),
+                                                                                                                                                                    EnumData.GetEnumValue(Operators.Equal),
                                                                                                                                                                     temp.GetVariable()
                                                                                                                                                                 )
                                                                                                                                                             )
                                                                                                                                                         )
-                                                                                                                                                    ), 
-                                                                                                                                                new V_Number(403)), 
+                                                                                                                                                    ),
+                                                                                                                                                new V_Number(403)),
                                                                                                                                                 Element.Part<V_FirstOf>(
                                                                                                                                                     Element.Part<V_FilteredArray>(
                                                                                                                                                         Element.Part<V_Append>(
                                                                                                                                                             Element.Part<V_Append>(Element.Part<V_EmptyArray>(), new V_Number(382)),
                                                                                                                                                             new V_Number(384)
-                                                                                                                                                        ), 
+                                                                                                                                                        ),
                                                                                                                                                         Element.Part<V_Compare>(
-                                                                                                                                                            Element.Part<V_ArrayElement>(), 
-                                                                                                                                                            EnumData.GetEnumValue(Operators.Equal), 
+                                                                                                                                                            Element.Part<V_ArrayElement>(),
+                                                                                                                                                            EnumData.GetEnumValue(Operators.Equal),
                                                                                                                                                             temp.GetVariable()
                                                                                                                                                         )
                                                                                                                                                     )
                                                                                                                                                 )
-                                                                                                                                            ), 
-                                                                                                                                        new V_Number(993)), 
-                                                                                                                                    new V_Number(386)), 
+                                                                                                                                            ),
+                                                                                                                                        new V_Number(993)),
+                                                                                                                                    new V_Number(386)),
                                                                                                                                     Element.Part<V_FirstOf>(
                                                                                                                                         Element.Part<V_FilteredArray>(
                                                                                                                                             Element.Part<V_Append>(
-                                                                                                                                                Element.Part<V_Append>(Element.Part<V_EmptyArray>(), new V_Number(331)), 
+                                                                                                                                                Element.Part<V_Append>(Element.Part<V_EmptyArray>(), new V_Number(331)),
                                                                                                                                                 new V_Number(348)
-                                                                                                                                            ), 
+                                                                                                                                            ),
                                                                                                                                             Element.Part<V_Compare>(
-                                                                                                                                                Element.Part<V_ArrayElement>(), 
-                                                                                                                                                EnumData.GetEnumValue(Operators.Equal), 
+                                                                                                                                                Element.Part<V_ArrayElement>(),
+                                                                                                                                                EnumData.GetEnumValue(Operators.Equal),
                                                                                                                                                 temp.GetVariable()
                                                                                                                                             )
                                                                                                                                         )
                                                                                                                                     )
-                                                                                                                                ), 
-                                                                                                                                new V_Number(659)), 
-                                                                                                                            new V_Number(145)), 
-                                                                                                                        new V_Number(569)), 
-                                                                                                                    new V_Number(384)), 
-                                                                                                                new V_Number(1150)), 
-                                                                                                            new V_Number(371)), 
+                                                                                                                                ),
+                                                                                                                                new V_Number(659)),
+                                                                                                                            new V_Number(145)),
+                                                                                                                        new V_Number(569)),
+                                                                                                                    new V_Number(384)),
+                                                                                                                new V_Number(1150)),
+                                                                                                            new V_Number(371)),
                                                                                                         new V_Number(179)),
-                                                                                                    new V_Number(497)), 
-                                                                                                new V_Number(374)), 
-                                                                                            new V_Number(312)), 
-                                                                                        new V_Number(324)), 
-                                                                                    new V_Number(434)), 
-                                                                                new V_Number(297)), 
-                                                                            new V_Number(276)), 
-                                                                        new V_Number(330)), 
-                                                                    new V_Number(376)), 
-                                                                new V_Number(347)), 
-                                                            new V_Number(480)), 
-                                                        new V_Number(310)), 
-                                                    new V_Number(342)), 
-                                                new V_Number(360)), 
-                                            new V_Number(364)), 
-                                        new V_Number(372)), 
-                                    new V_Number(370)), 
-                                new V_Number(450)), 
-                            new V_Number(356)), 
+                                                                                                    new V_Number(497)),
+                                                                                                new V_Number(374)),
+                                                                                            new V_Number(312)),
+                                                                                        new V_Number(324)),
+                                                                                    new V_Number(434)),
+                                                                                new V_Number(297)),
+                                                                            new V_Number(276)),
+                                                                        new V_Number(330)),
+                                                                    new V_Number(376)),
+                                                                new V_Number(347)),
+                                                            new V_Number(480)),
+                                                        new V_Number(310)),
+                                                    new V_Number(342)),
+                                                new V_Number(360)),
+                                            new V_Number(364)),
+                                        new V_Number(372)),
+                                    new V_Number(370)),
+                                new V_Number(450)),
+                            new V_Number(356)),
                         new V_Number(305)),
                     temp.GetVariable())
                 )
             };
 
-            return new MethodResult(actions, temp.GetVariable(), CustomMethodType.MultiAction_Value);
+            return new MethodResult(actions, temp.GetVariable());
         }
-
-        public static string GetName(MethodInfo methodInfo)
-        {
-            return $"{methodInfo.Name}({string.Join(", ", methodInfo.GetCustomAttributes<Parameter>().Select(v => $"{(v.ParameterType == ParameterType.Value ? v.ValueType.ToString() : v.EnumType.Name)}: {v.Name}"))})";
-        }
-    }
-
-    [AttributeUsage(AttributeTargets.Method)]
-    public class CustomMethod : Attribute
-    {
-        public CustomMethod(string elementName, CustomMethodType methodType)
-        {
-            MethodName = MethodName;
-            MethodType = methodType;
-        }
-
-        public string MethodName { get; private set; }
-        public CustomMethodType MethodType { get; private set; }
-    }
-
-    public class MethodResult
-    {
-        public MethodResult(Element[] elements, Element result, CustomMethodType methodType)
-        {
-            Elements = elements;
-            Result = result;
-            MethodType = methodType;
-        }
-        public Element[] Elements { get; private set; }
-        public Element Result { get; private set; }
-        public CustomMethodType MethodType { get; private set; }
-    }
-
-    public enum CustomMethodType
-    {
-        Value,
-        MultiAction_Value,
-        Action
     }
 }

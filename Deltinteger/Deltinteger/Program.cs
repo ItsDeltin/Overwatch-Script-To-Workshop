@@ -13,11 +13,15 @@ namespace Deltin.Deltinteger
 {
     public class Program
     {
+        public const string VERSION = "v0.3.7";
+
         static Log Log = new Log(":");
         static Log ParseLog = new Log("Parse");
 
         static void Main(string[] args)
         {
+            Log.Write(LogLevel.Normal, "Overwatch Script To Workshop " + VERSION);
+
             Log.LogLevel = LogLevel.Normal;
             if (args.Contains("-verbose"))
                 Log.LogLevel = LogLevel.Verbose;

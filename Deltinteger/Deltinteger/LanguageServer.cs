@@ -383,7 +383,7 @@ namespace Deltin.Deltinteger.LanguageServer
                             parameters = Element.GetMethod(methodNode.Name).GetCustomAttributes<Parameter>()
                                 .ToArray();
                         else if (type == Translate.MethodType.CustomMethod)
-                            parameters = CustomMethods.GetCustomMethod(methodNode.Name).GetCustomAttributes<Parameter>()
+                            parameters = CustomMethodData.GetCustomMethod(methodNode.Name).Parameters
                                 .ToArray();
                         else if (type == Translate.MethodType.UserMethod)
                             parameters = UserMethod.GetUserMethod(parser.UserMethods, methodNode.Name).Parameters;

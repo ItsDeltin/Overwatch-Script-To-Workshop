@@ -112,7 +112,7 @@ namespace Deltin.Deltinteger.Parse
         public VarCollection VarCollection { get; private set; }
     }
 
-    class Translate
+    public class Translate
     {
         public static bool AllowRecursion = false;
 
@@ -123,13 +123,13 @@ namespace Deltin.Deltinteger.Parse
         }
 
         private readonly ScopeGroup Root;
-        private readonly VarCollection VarCollection;
+        public readonly VarCollection VarCollection;
         private readonly UserMethod[] UserMethods;
-        private readonly Looper Looper;
+        public readonly Looper Looper;
         private readonly Rule Rule;
         private readonly List<Element> Actions = new List<Element>();
         private readonly List<Condition> Conditions = new List<Condition>();
-        private readonly bool IsGlobal;
+        public readonly bool IsGlobal;
         private readonly List<A_Skip> ReturnSkips = new List<A_Skip>(); // Return statements whos skip count needs to be filled out.
         private readonly ContinueSkip ContinueSkip; // Contains data about the wait/skip for continuing loops.
         private readonly List<Diagnostic> Diagnostics = new List<Diagnostic>();
@@ -393,9 +393,10 @@ namespace Deltin.Deltinteger.Parse
 
                 case MethodType.CustomMethod:
                 {
-                    MethodInfo customMethod = CustomMethods.GetCustomMethod(methodNode.Name);
-                    Parameter[] parameterData = customMethod.GetCustomAttributes<Parameter>().ToArray();
-                    object[] parsedParameters = new Element[parameterData.Length];
+                    var customMethod = CustomMethodData.GetCustomMethod(methodNode.Name);
+
+                    Parameter[] parameterData = customMethod.Parameters.ToArray();
+                    IWorkshopTree[] parsedParameters = new Element[parameterData.Length];
 
                     for (int i = 0; i < parameterData.Length; i++)
                         if (methodNode.Parameters.Length > i)
@@ -404,8 +405,7 @@ namespace Deltin.Deltinteger.Parse
                             // Throw exception if there is no default method to fallback on.
                             throw SyntaxErrorException.MissingParameter(parameterData[i].Name, methodNode.Name, methodNode.Range);
 
-                    MethodResult result = (MethodResult)customMethod.Invoke(null, new object[] { IsGlobal, VarCollection, parsedParameters });
-                    switch (result.MethodType)
+                    switch (customMethod.CustomMethodType)
                     {
                         case CustomMethodType.Action:
                             if (needsToBeValue)
@@ -418,6 +418,7 @@ namespace Deltin.Deltinteger.Parse
                                 throw SyntaxErrorException.InvalidMethodType(false, methodNode.Name, methodNode.Range);
                             break;
                     }
+                    var result = customMethod.GetObject(this, parsedParameters).Get();
 
                     // Some custom methods have extra actions.
                     if (result.Elements != null)
@@ -640,7 +641,7 @@ namespace Deltin.Deltinteger.Parse
         {
             if (Element.GetMethod(name) != null)
                 return MethodType.Method;
-            if (CustomMethods.GetCustomMethod(name) != null)
+            if (CustomMethodData.GetCustomMethod(name) != null)
                 return MethodType.CustomMethod;
             if (UserMethod.GetUserMethod(userMethods, name) != null)
                 return MethodType.UserMethod;
@@ -1012,7 +1013,7 @@ namespace Deltin.Deltinteger.Parse
         }
     }
 
-    class TranslateResult
+    public class TranslateResult
     {
         public readonly Rule Rule;
         public readonly Diagnostic[] Diagnostics;
