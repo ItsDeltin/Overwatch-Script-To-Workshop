@@ -97,7 +97,7 @@ namespace Deltin.Deltinteger.Parse
             {
                 Bav = bav,
                 Diagnostics = diagnostics,
-                Rules = rules.ToArray(),
+                Rules = rules?.ToArray(),
                 UserMethods = userMethods?.ToArray(),
                 Success = success,
                 VarCollection = varCollection
