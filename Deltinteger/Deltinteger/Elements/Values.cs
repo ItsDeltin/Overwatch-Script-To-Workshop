@@ -182,8 +182,14 @@ namespace Deltin.Deltinteger.Elements
     [Parameter("Entity", ValueType.Player, null)]
     public class V_EntityExists : Element {}
 
+    [ElementData("Event Damage", ValueType.Number)]
+    public class V_EventDamage : Element {}
+
     [ElementData("Event Player", ValueType.Player)]
     public class V_EventPlayer : Element {}
+
+    [ElementData("Event Was Critical Hit", ValueType.Boolean)]
+    public class V_EventWasCriticalHit : Element {}
 
     [ElementData("Eye Position", ValueType.Vector)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
