@@ -11,7 +11,7 @@ namespace Deltin.Deltinteger
     public class SyntaxErrorException : Exception
     {
         public Range Range { get; private set; }
-        private SyntaxErrorException(string message, Deltin.Deltinteger.Parse.Range range) : base(message)
+        public SyntaxErrorException(string message, Range range) : base(message)
         {
             Range = range;
         }

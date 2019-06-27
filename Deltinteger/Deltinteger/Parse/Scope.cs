@@ -41,6 +41,11 @@ namespace Deltin.Deltinteger.Parse
             return var;
         }
 
+        public DefinedVar GetVar(VariableNode variableNode)
+        {
+            return GetVar(variableNode.Name, variableNode.Range);
+        }
+
         public ScopeGroup Child()
         {
             var newChild = new ScopeGroup(this);

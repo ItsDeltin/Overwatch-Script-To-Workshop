@@ -116,7 +116,7 @@ namespace Deltin.Deltinteger.Elements
 
     [ElementData("Compare", ValueType.Boolean)]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
-    [Parameter("", typeof(Operators))]
+    [EnumParameter("", typeof(Operators))]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
     public class V_Compare : Element {}
 
@@ -226,7 +226,7 @@ namespace Deltin.Deltinteger.Elements
     public class V_Forward : Element {}
 
     [ElementData("Global Variable", ValueType.Any)]
-    [Parameter("Variable", typeof(Variable))]
+    [EnumParameter("Variable", typeof(Variable))]
     public class V_GlobalVariable : Element {}
 
     [ElementData("Has Spawned", ValueType.Boolean)]
@@ -235,7 +235,7 @@ namespace Deltin.Deltinteger.Elements
 
     [ElementData("Has Status", ValueType.Boolean)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
-    [Parameter("Status", typeof(Status))]
+    [EnumParameter("Status", typeof(Status))]
     public class V_HasStatus : Element {}
 
 #warning check health pos
@@ -249,7 +249,7 @@ namespace Deltin.Deltinteger.Elements
 
 #warning check hero pos
     [ElementData("Hero", ValueType.Hero)]
-    [Parameter("Hero", typeof(Hero))]
+    [EnumParameter("Hero", typeof(Hero))]
     public class V_HeroVar : Element {}
 
     [ElementData("Hero Icon String", ValueType.Any)]
@@ -294,13 +294,13 @@ namespace Deltin.Deltinteger.Elements
 
     [ElementData("Is Button Held", ValueType.Boolean)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
-    [Parameter("Button", typeof(Button))]
+    [EnumParameter("Button", typeof(Button))]
     public class V_IsButtonHeld : Element {}
 
 #warning check order
     [ElementData("Is Communicating", ValueType.Boolean)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
-    [Parameter("Type", typeof(Communication))]
+    [EnumParameter("Type", typeof(Communication))]
     public class V_IsCommunicating : Element {}
 
     [ElementData("Is Communicating Any", ValueType.Boolean)]
@@ -356,7 +356,7 @@ namespace Deltin.Deltinteger.Elements
     [ElementData("Is In Line Of Sight", ValueType.Boolean)]
     [Parameter("Start Pos", ValueType.VectorAndPlayer, typeof(V_Vector))]
     [Parameter("End Pos", ValueType.VectorAndPlayer, typeof(V_Vector))]
-    [Parameter("Barriers", typeof(BarrierLOS))]
+    [EnumParameter("Barriers", typeof(BarrierLOS))]
     public class V_IsInLineOfSight : Element {}
 
     [ElementData("Is In Setup", ValueType.Boolean)]
@@ -464,7 +464,7 @@ namespace Deltin.Deltinteger.Elements
     [ElementData("Local Vector Of", ValueType.Vector)]
     [Parameter("World Vector", ValueType.VectorAndPlayer, typeof(V_Vector))]
     [Parameter("Relative Player", ValueType.Player, typeof(V_EventPlayer))]
-    [Parameter("Transformation", typeof(Transformation))]
+    [EnumParameter("Transformation", typeof(Transformation))]
     public class V_LocalVectorOf : Element {}
 
     [ElementData("Match Round", ValueType.Number)]
@@ -611,7 +611,7 @@ namespace Deltin.Deltinteger.Elements
 
     [ElementData("Player Variable", ValueType.Any)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
-    [Parameter("Variable", typeof(Variable))]
+    [EnumParameter("Variable", typeof(Variable))]
     public class V_PlayerVariable : Element {}
 
     [ElementData("Players In Slot", ValueType.Player)]
@@ -634,7 +634,7 @@ namespace Deltin.Deltinteger.Elements
     [Parameter("Center", ValueType.Vector, typeof(V_Vector))]
     [Parameter("Radius", ValueType.Number, typeof(V_Number))]
     [Parameter("Team", ValueType.Team, typeof(V_TeamVar))]
-    [Parameter("LOS Check", typeof(RadiusLOS))]
+    [EnumParameter("LOS Check", typeof(RadiusLOS))]
     public class V_PlayersWithinRadius : Element {}
 
     [ElementData("Point Capture Percentage", ValueType.Number)]
@@ -701,7 +701,7 @@ namespace Deltin.Deltinteger.Elements
 
     [ElementData("Round To Integer", ValueType.Number)]
     [Parameter("Value", ValueType.Number, typeof(V_Number))]
-    [Parameter("Rounding Type", typeof(Rounding))]
+    [EnumParameter("Rounding Type", typeof(Rounding))]
     public class V_RoundToInteger : Element {}
 
     [ElementData("Score Of", ValueType.Number)]
@@ -909,7 +909,7 @@ namespace Deltin.Deltinteger.Elements
     public class V_TangentFromRadians : Element {}
 
     [ElementData("Team", ValueType.Team)]
-    [Parameter("Team", typeof(Team))]
+    [EnumParameter("Team", typeof(Team))]
     public class V_TeamVar : Element {}
 
 #warning check order
@@ -982,7 +982,7 @@ namespace Deltin.Deltinteger.Elements
     [ElementData("World Vector Of", ValueType.Vector)]
     [Parameter("Local vector", ValueType.VectorAndPlayer, typeof(V_Vector))]
     [Parameter("Relative Player", ValueType.Player, typeof(V_Vector))]
-    [Parameter("Local Vector", typeof(LocalVector))]
+    [EnumParameter("Local Vector", typeof(LocalVector))]
     public class V_WorldVectorOf : Element {}
 
     [ElementData("X Component Of", ValueType.Number)]

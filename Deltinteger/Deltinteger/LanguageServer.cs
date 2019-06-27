@@ -378,9 +378,9 @@ namespace Deltin.Deltinteger.LanguageServer
                         if (type == null)
                             hover = null;
                         
-                        Parameter[] parameters;
+                        ParameterBase[] parameters;
                         if (type == Translate.MethodType.Method)
-                            parameters = Element.GetMethod(methodNode.Name).GetCustomAttributes<Parameter>()
+                            parameters = Element.GetMethod(methodNode.Name).GetCustomAttributes<ParameterBase>()
                                 .ToArray();
                         else if (type == Translate.MethodType.CustomMethod)
                             parameters = CustomMethodData.GetCustomMethod(methodNode.Name).Parameters

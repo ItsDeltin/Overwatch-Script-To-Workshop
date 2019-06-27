@@ -31,21 +31,21 @@ namespace Deltin.Deltinteger.Parse
 
         public Var AssignVar(string name, bool isGlobal)
         {
-            Var var = new Var(Constants.INTERNAL_ELEMENT + name, isGlobal, UseVar, Assign(isGlobal));
+            Var var = new Var(Constants.INTERNAL_ELEMENT + name, isGlobal, UseVar, Assign(isGlobal), this);
             AllVars.Add(var);
             return var;
         }
 
         public DefinedVar AssignDefinedVar(ScopeGroup scopeGroup, bool isGlobal, string name, Range range)
         {
-            DefinedVar var = new DefinedVar(scopeGroup, name, isGlobal, UseVar, Assign(isGlobal), range);
+            DefinedVar var = new DefinedVar(scopeGroup, name, isGlobal, UseVar, Assign(isGlobal), range, this);
             AllVars.Add(var);
             return var;
         }
 
-        public ParameterVar AssignParameterVar(List<Element> actions, ScopeGroup scopeGroup, bool isGlobal, string name, Range range)
+        public RecursiveVar AssignParameterVar(List<Element> actions, ScopeGroup scopeGroup, bool isGlobal, string name, Range range)
         {
-            ParameterVar var = new ParameterVar(actions, scopeGroup, name, isGlobal, UseVar, Assign(isGlobal), range);
+            RecursiveVar var = new RecursiveVar(actions, scopeGroup, name, isGlobal, UseVar, Assign(isGlobal), range, this);
             AllVars.Add(var);
             return var;
         }
@@ -53,22 +53,24 @@ namespace Deltin.Deltinteger.Parse
         public readonly List<Var> AllVars = new List<Var>();
     }
 
-    public class Var
+    public class Var : IWorkshopTree
     {
         public string Name { get; private set; }
         public bool IsGlobal { get; private set; }
         public Variable Variable { get; private set; }
         public int Index { get; private set; }
+        public VarCollection VarCollection { get; private set; }
 
         private readonly IWorkshopTree VariableAsWorkshop; 
 
-        public Var(string name, bool isGlobal, Variable variable, int index)
+        public Var(string name, bool isGlobal, Variable variable, int index, VarCollection varCollection)
         {
             Name = name;
             IsGlobal = isGlobal;
             Variable = variable;
             VariableAsWorkshop = EnumData.GetEnumValue(Variable);
             Index = index;
+            VarCollection = varCollection;
         }
 
         public virtual Element GetVariable(Element targetPlayer = null)
@@ -147,23 +149,22 @@ namespace Deltin.Deltinteger.Parse
             return element;
 
         }
+
+        // These are here for VarSet parameters.
+        public void DebugPrint(Log log, int depth)
+        {
+            throw new NotImplementedException();
+        }
+        public string ToWorkshop()
+        {
+            throw new NotImplementedException();
+        }
     }
 
     public class DefinedVar : Var
     {
-        /*
-        public DefinedVar(ScopeGroup scopeGroup, DefinedNode node, VarCollection varCollection)
-            : base(node.VariableName, node.IsGlobal, varCollection.UseVar, node.UseIndex ?? varCollection.Assign(node.IsGlobal))
-        {
-            if (scopeGroup.IsVar(node.VariableName))
-                throw SyntaxErrorException.AlreadyDefined(node.VariableName, node.Range);
-
-            scopeGroup.In(this);
-        }
-        */
-
-        public DefinedVar(ScopeGroup scopeGroup, string name, bool isGlobal, Variable variable, int index, Range range)
-            : base (name, isGlobal, variable, index)
+        public DefinedVar(ScopeGroup scopeGroup, string name, bool isGlobal, Variable variable, int index, Range range, VarCollection varCollection)
+            : base (name, isGlobal, variable, index, varCollection)
         {
             if (scopeGroup.IsVar(name))
                 throw SyntaxErrorException.AlreadyDefined(name, range);
@@ -172,14 +173,14 @@ namespace Deltin.Deltinteger.Parse
         }
     }
 
-    public class ParameterVar : DefinedVar
+    public class RecursiveVar : DefinedVar
     {
         private static readonly IWorkshopTree bAsWorkshop = EnumData.GetEnumValue(Variable.B); // TODO: Remove when multidimensional temp var can be set.
 
         private readonly List<Element> Actions = new List<Element>();
 
-        public ParameterVar(List<Element> actions, ScopeGroup scopeGroup, string name, bool isGlobal, Variable variable, int index, Range range)
-            : base (scopeGroup, name, isGlobal, variable, index, range)
+        public RecursiveVar(List<Element> actions, ScopeGroup scopeGroup, string name, bool isGlobal, Variable variable, int index, Range range, VarCollection varCollection)
+            : base (scopeGroup, name, isGlobal, variable, index, range, varCollection)
         {
             Actions = actions;
         }

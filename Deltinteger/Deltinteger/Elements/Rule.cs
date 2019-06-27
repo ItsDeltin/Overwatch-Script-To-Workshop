@@ -45,12 +45,14 @@ namespace Deltin.Deltinteger.Elements
         public void DebugPrint(Log log, int depth = 0)
         {
             log.Write(LogLevel.Verbose, new ColorMod("Conditions:", ConsoleColor.DarkYellow));
-            foreach (var condition in Conditions)
-                condition.DebugPrint(log, 1);
+            if (Conditions != null)
+                foreach (var condition in Conditions)
+                    condition.DebugPrint(log, 1);
             
             log.Write(LogLevel.Verbose, new ColorMod("Actions:", ConsoleColor.DarkCyan));
-            foreach (var action in Actions)
-                action.DebugPrint(log, 1);
+            if (Actions != null)
+                foreach (var action in Actions)
+                    action.DebugPrint(log, 1);
         }
 
         public string ToWorkshop()
@@ -75,7 +77,7 @@ namespace Deltin.Deltinteger.Elements
             builder.Indent = 1;                                                       //     (outdent)
             builder.AppendLine("}");                                                  //     }
                                                                                       //
-            if (Conditions.Length > 0)                                                // (only if there are 1 or more conditions)
+            if (Conditions?.Length > 0)                                               // (only if there are 1 or more conditions)
             {                                                                         // |
                 builder.AppendLine();                                                 // |
                 builder.AppendLine("conditions");                                     // |   conditions
@@ -87,7 +89,7 @@ namespace Deltin.Deltinteger.Elements
                 builder.AppendLine("}");                                              // |   }
             }                                                                         //
                                                                                       //
-            if (Actions.Length > 0)                                                   // (only if there are 1 or more actions)
+            if (Actions?.Length > 0)                                                  // (only if there are 1 or more actions)
             {                                                                         // |
                 builder.AppendLine();                                                 // |
                 builder.AppendLine("actions");                                        // |   actions

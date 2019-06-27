@@ -42,7 +42,7 @@ namespace Deltin.Deltinteger.Elements
     public class CustomMethodData
     {
         public string Name;
-        public Parameter[] Parameters;
+        public ParameterBase[] Parameters;
         public CustomMethodType CustomMethodType;
         public Type Type;
 
@@ -54,7 +54,7 @@ namespace Deltin.Deltinteger.Elements
             Name = data.MethodName;
             CustomMethodType = data.MethodType;
 
-            Parameters = type.GetCustomAttributes<Parameter>()
+            Parameters = type.GetCustomAttributes<ParameterBase>()
                 .ToArray();
         }
 
@@ -88,9 +88,9 @@ namespace Deltin.Deltinteger.Elements
     public abstract class CustomMethodBase
     {
         protected readonly Translate TranslateContext;
-        protected readonly Element[] Parameters;
+        protected readonly IWorkshopTree[] Parameters;
 
-        public CustomMethodBase(Translate translate, Element[] parameters)
+        public CustomMethodBase(Translate translate, IWorkshopTree[] parameters)
         {
             TranslateContext = translate;
             Parameters = parameters;
@@ -102,7 +102,7 @@ namespace Deltin.Deltinteger.Elements
     [CustomMethod("AngleOfVectors", CustomMethodType.MultiAction_Value)]
     class AngleOfVectors : CustomMethodBase
     {
-        public AngleOfVectors(Translate translate, Element[] parameters) : base (translate, parameters) {}
+        public AngleOfVectors(Translate translate, IWorkshopTree[] parameters) : base (translate, parameters) {}
 
         public override MethodResult Get()
         {
@@ -125,11 +125,11 @@ namespace Deltin.Deltinteger.Elements
                 new Element[]
                 {
                     // Save A
-                    a.SetVariable(Parameters[0], eventPlayer),
+                    a.SetVariable((Element)Parameters[0], eventPlayer),
                     // Save B
-                    b.SetVariable(Parameters[1], eventPlayer),
+                    b.SetVariable((Element)Parameters[1], eventPlayer),
                     // save C
-                    c.SetVariable(Parameters[2], eventPlayer),
+                    c.SetVariable((Element)Parameters[2], eventPlayer),
 
                     // get ab
                     // ab[3] = { b[0] - a[0], b[1] - a[1], b[2] - a[2] };
@@ -222,14 +222,14 @@ namespace Deltin.Deltinteger.Elements
     [Parameter("Vector3", ValueType.VectorAndPlayer, null)]
     class AngleOfVectorsCom : CustomMethodBase
     {
-        public AngleOfVectorsCom(Translate translate, Element[] parameters) : base(translate, parameters) {}
+        public AngleOfVectorsCom(Translate translate, IWorkshopTree[] parameters) : base(translate, parameters) {}
 
         public override MethodResult Get()
         {
             Element zeroVec = Element.Part<V_Vector>(new V_Number(0), new V_Number(0), new V_Number(0));
-            Element a = Parameters[0];
-            Element b = Parameters[1];
-            Element c = Parameters[2];
+            Element a = (Element)Parameters[0];
+            Element b = (Element)Parameters[1];
+            Element c = (Element)Parameters[2];
 
             Element ab = Element.Part<V_Vector>
                 (
@@ -282,7 +282,7 @@ namespace Deltin.Deltinteger.Elements
     [CustomMethod("GetMap", CustomMethodType.MultiAction_Value)]
     class GetMap : CustomMethodBase
     {
-        public GetMap(Translate translate, Element[] parameters) : base(translate, parameters) {}
+        public GetMap(Translate translate, IWorkshopTree[] parameters) : base(translate, parameters) {}
 
         public override MethodResult Get()
         {
@@ -447,6 +447,31 @@ namespace Deltin.Deltinteger.Elements
             };
 
             return new MethodResult(actions, temp.GetVariable());
+        }
+    }
+
+    [CustomMethod("ChaseVariable", CustomMethodType.Action)]
+    [VarRefParameter("Variable")]
+    [Parameter("Destination", ValueType.Number, null)]
+    [Parameter("Rate", ValueType.Number, null)]
+    class ChaseVariable : CustomMethodBase
+    {
+        public ChaseVariable(Translate translate, IWorkshopTree[] parameters) : base(translate, parameters) {}
+
+        public override MethodResult Get()
+        {
+            Var targetVariable = (Var)Parameters[0];
+            Element destination = (Element)Parameters[1];
+            Element rate = (Element)Parameters[2];
+            
+            ChaseData chaseData = TranslateContext.Looper.GetChaseData(targetVariable);
+            Element[] actions = new Element[]
+            {
+                chaseData.Destination.SetVariable(destination),
+                chaseData.Rate.SetVariable(rate),
+            };
+
+            return new MethodResult(actions, null);
         }
     }
 }

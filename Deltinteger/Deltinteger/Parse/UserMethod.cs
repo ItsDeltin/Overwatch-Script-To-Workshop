@@ -25,7 +25,7 @@ namespace Deltin.Deltinteger.Parse
 
         public BlockNode Block { get; private set; }
 
-        public Parameter[] Parameters { get; private set; }
+        public ParameterBase[] Parameters { get; private set; }
 
         //public static readonly List<UserMethod> UserMethodCollection = new List<UserMethod>();
 
@@ -53,12 +53,12 @@ namespace Deltin.Deltinteger.Parse
     public class MethodStack
     {
         public UserMethod UserMethod { get; private set; }
-        public ParameterVar[] ParameterVars { get; private set; }
+        public RecursiveVar[] ParameterVars { get; private set; }
         public int ActionIndex { get; private set; }
         public Var Return { get; private set; }
         public Var ContinueSkipArray { get; private set; }
 
-        public MethodStack(UserMethod userMethod, ParameterVar[] parameterVars, int actionIndex, Var @return, Var continueSkipArray)
+        public MethodStack(UserMethod userMethod, RecursiveVar[] parameterVars, int actionIndex, Var @return, Var continueSkipArray)
         {
             UserMethod = userMethod;
             ParameterVars = parameterVars;

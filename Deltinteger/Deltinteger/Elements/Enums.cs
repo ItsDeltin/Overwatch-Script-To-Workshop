@@ -9,9 +9,9 @@ using Deltin.Deltinteger.LanguageServer;
 namespace Deltin.Deltinteger.Elements
 {
     [AttributeUsage(AttributeTargets.Enum)]
-    public class EnumParameter : Attribute
+    public class WorkshopEnum : Attribute
     {
-        public EnumParameter() 
+        public WorkshopEnum() 
         { 
 
         }
@@ -37,7 +37,7 @@ namespace Deltin.Deltinteger.Elements
         {
             if (AllEnums == null)
             {
-                Type[] enums = Assembly.GetExecutingAssembly().GetTypes().Where(t => t.GetCustomAttribute<EnumParameter>() != null).ToArray();
+                Type[] enums = Assembly.GetExecutingAssembly().GetTypes().Where(t => t.GetCustomAttribute<WorkshopEnum>() != null).ToArray();
                 AllEnums = new EnumData[enums.Length];
 
                 for (int i = 0; i < AllEnums.Length; i++)
@@ -173,7 +173,7 @@ namespace Deltin.Deltinteger.Elements
         }
     }
 
-    [EnumParameter]
+    [WorkshopEnum]
     [EnumOverride("Event", null)]
     public enum RuleEvent
     {
@@ -196,7 +196,7 @@ namespace Deltin.Deltinteger.Elements
         OnDeath
     }
 
-    [EnumParameter]
+    [WorkshopEnum]
     [EnumOverride("Player", null)]
     public enum PlayerSelector
     {
@@ -250,7 +250,7 @@ namespace Deltin.Deltinteger.Elements
         Baptiste
     }
 
-    [EnumParameter]
+    [WorkshopEnum]
     public enum Hero
     {
         Ana,
@@ -289,7 +289,7 @@ namespace Deltin.Deltinteger.Elements
         Zenyatta
     }
 
-    [EnumParameter]
+    [WorkshopEnum]
     public enum Operators
     {
         [EnumOverride(null, "==")]
@@ -306,7 +306,7 @@ namespace Deltin.Deltinteger.Elements
         GreaterThanOrEqual
     }
 
-    [EnumParameter]
+    [WorkshopEnum]
     public enum Variable
     {
         A,
@@ -337,7 +337,7 @@ namespace Deltin.Deltinteger.Elements
         Z
     }
 
-    [EnumParameter]
+    [WorkshopEnum]
     public enum Operation
     {
         Add,
@@ -353,7 +353,7 @@ namespace Deltin.Deltinteger.Elements
         RemoveFromArrayByIndex
     }
 
-    [EnumParameter]
+    [WorkshopEnum]
     public enum Button
     {
         PrimaryFire,
@@ -366,14 +366,14 @@ namespace Deltin.Deltinteger.Elements
         Crouch
     }
 
-    [EnumParameter]
+    [WorkshopEnum]
     public enum Relative
     {
         ToWorld,
         ToPlayer
     }
 
-    [EnumParameter]
+    [WorkshopEnum]
     public enum ContraryMotion
     {
         [EnumOverride(null, "Cancel Contrary Motion")]
@@ -382,21 +382,21 @@ namespace Deltin.Deltinteger.Elements
         Incorporate
     }
 
-    [EnumParameter]
+    [WorkshopEnum]
     public enum RateChaseReevaluation
     {
         DestinationAndRate,
         None
     }
 
-    [EnumParameter]
+    [WorkshopEnum]
     public enum TimeChaseReevaluation
     {
         DestinationAndDuration,
         None
     }
 
-    [EnumParameter]
+    [WorkshopEnum]
     public enum Status
     {
         Hacked,
@@ -411,7 +411,7 @@ namespace Deltin.Deltinteger.Elements
         Stunned
     }
 
-    [EnumParameter]
+    [WorkshopEnum]
     public enum Team
     {
         All,
@@ -419,7 +419,7 @@ namespace Deltin.Deltinteger.Elements
         Team2,
     }
 
-    [EnumParameter]
+    [WorkshopEnum]
     public enum WaitBehavior
     {
         IgnoreCondition,
@@ -427,7 +427,7 @@ namespace Deltin.Deltinteger.Elements
         RestartWhenTrue
     }
 
-    [EnumParameter]
+    [WorkshopEnum]
     public enum Effect
     {
         Sphere,
@@ -448,7 +448,7 @@ namespace Deltin.Deltinteger.Elements
         BeaconSound
     }
 
-    [EnumParameter]
+    [WorkshopEnum]
     public enum Color
     {
         White,
@@ -461,7 +461,7 @@ namespace Deltin.Deltinteger.Elements
         Team2
     }
 
-    [EnumParameter]
+    [WorkshopEnum]
     public enum EffectRev
     {
         VisibleToPositionAndRadius,
@@ -470,7 +470,7 @@ namespace Deltin.Deltinteger.Elements
         None
     }
 
-    [EnumParameter]
+    [WorkshopEnum]
     public enum Rounding
     {
         Up,
@@ -478,7 +478,7 @@ namespace Deltin.Deltinteger.Elements
         Nearest
     }
 
-    [EnumParameter]
+    [WorkshopEnum]
     public enum Communication
     {
         VoiceLineUp,
@@ -497,7 +497,7 @@ namespace Deltin.Deltinteger.Elements
         Acknowledge
     }
 
-    [EnumParameter]
+    [WorkshopEnum]
     public enum Location
     {
         Left,
@@ -505,14 +505,14 @@ namespace Deltin.Deltinteger.Elements
         Right
     }
 
-    [EnumParameter]
+    [WorkshopEnum]
     public enum StringRev
     {
         VisibleToAndString,
         String
     }
 
-    [EnumParameter]
+    [WorkshopEnum]
     public enum Icon
     {
         [EnumOverride(null, "Arrow: Down")]
@@ -557,7 +557,7 @@ namespace Deltin.Deltinteger.Elements
         X
     }
 
-    [EnumParameter]
+    [WorkshopEnum]
     public enum IconRev
     {
         VisibleToAndPosition,
@@ -566,7 +566,7 @@ namespace Deltin.Deltinteger.Elements
         None
     }
 
-    [EnumParameter]
+    [WorkshopEnum]
     public enum PlayEffects
     {
         GoodExplosion,
@@ -581,7 +581,7 @@ namespace Deltin.Deltinteger.Elements
         ExplosionSound
     }
 
-    [EnumParameter]
+    [WorkshopEnum]
     public enum InvisibleTo
     {
         All,
@@ -589,14 +589,14 @@ namespace Deltin.Deltinteger.Elements
         None
     }
 
-    [EnumParameter]
+    [WorkshopEnum]
     public enum AccelerateRev
     {
         DirectionRateAndMaxSpeed,
         None
     }
 
-    [EnumParameter]
+    [WorkshopEnum]
     public enum ModRev
     {
         ReceiversDamagersAndDamagePercent,
@@ -604,14 +604,14 @@ namespace Deltin.Deltinteger.Elements
         None
     }
 
-    [EnumParameter]
+    [WorkshopEnum]
     public enum FacingRev
     {
         DirectionAndTurnRate,
         None
     }
 
-    [EnumParameter]
+    [WorkshopEnum]
     public enum BarrierLOS
     {
         [EnumOverride(null, "Barriers Do Not Block LOS")]
@@ -622,14 +622,14 @@ namespace Deltin.Deltinteger.Elements
         AllBarriersBlock
     }
 
-    [EnumParameter]
+    [WorkshopEnum]
     public enum Transformation
     {
         Rotation,
         RotationAndTranslation
     }
 
-    [EnumParameter]
+    [WorkshopEnum]
     public enum RadiusLOS
     {
         Off,
@@ -638,21 +638,21 @@ namespace Deltin.Deltinteger.Elements
         SurfacesAndAllBarriers
     }
 
-    [EnumParameter]
+    [WorkshopEnum]
     public enum LocalVector
     {
         Rotation,
         RotationAndTranslation
     }
 
-    [EnumParameter]
+    [WorkshopEnum]
     public enum Clipping
     {
         ClipAgainstSurfaces,
         DoNotClip
     }
 
-    [EnumParameter]
+    [WorkshopEnum]
     public enum InworldTextRev
     {
         VisibleToPositionAndString,
@@ -660,7 +660,7 @@ namespace Deltin.Deltinteger.Elements
         String
     }
 
-    [EnumParameter]
+    [WorkshopEnum]
     public enum Map
     {
         Black_Forest = 0,

@@ -12,12 +12,6 @@ using Deltin.Deltinteger.WorkshopWiki;
 
 namespace Deltin.Deltinteger.Elements
 {
-    public enum ParameterType
-    {
-        Value,
-        Enum
-    }
-
     // Rule of thumb: Return values are restrictive (only 1), parameter values are loose (potentially multiple)
     [Flags]
     public enum ValueType
@@ -58,54 +52,86 @@ namespace Deltin.Deltinteger.Elements
     }
 
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Method, AllowMultiple = true)]
-    public class Parameter : Attribute
+    public abstract class ParameterBase : Attribute
     {
-        public Parameter(string name, ValueType returnType, Type defaultType)
-        {
-            Name = name;
-            ValueType = returnType;
-            DefaultType = defaultType;
-            ParameterType = ParameterType.Value;
-        }
-
-        public Parameter(string name, Type enumType)
-        {
-            Name = name;
-            EnumType = enumType;
-            ParameterType = ParameterType.Enum;
-        }
-
         public string Name { get; private set; }
-        public ParameterType ParameterType { get; private set; }
 
-        public ValueType ValueType { get; private set; }
-        public Type DefaultType { get; private set; } // The value that the variable is set to use by default
-
-        public Type EnumType { get; private set; }
-
-        public IWorkshopTree GetDefault()
+        protected ParameterBase(string name)
         {
-            if (ParameterType == ParameterType.Value)
-            {
-                if (DefaultType == null)
-                    throw new Exception($"No default value to fallback on for parameter {Name}.");
-                return (IWorkshopTree)Activator.CreateInstance(DefaultType);
-            }
+            Name = name;
+        }
 
-            if (ParameterType == ParameterType.Enum)
-                return EnumData.GetEnum(EnumType).Members[0];
-
+        public virtual IWorkshopTree GetDefault()
+        {
             return null;
         }
 
         public override string ToString()
         {
-            return (ParameterType == ParameterType.Value ? ValueType.ToString() : EnumType.Name) + ": " + Name;
+            return Name;
         }
 
-        public static string ParameterGroupToString(Parameter[] parameters)
+        public abstract string Info();
+
+        public static string ParameterGroupToString(ParameterBase[] parameters)
         {
             return string.Join(", ", parameters.Select(p => p.ToString()));
+        }
+    }
+
+    class Parameter : ParameterBase
+    {
+        public ValueType ReturnType { get; private set; }
+        public Type DefaultType { get; private set; } // The value that the variable is set to use by default
+
+        public Parameter(string name, ValueType returnType, Type defaultType) : base (name)
+        {
+            ReturnType = returnType;
+            DefaultType = defaultType;
+        }
+
+        public override IWorkshopTree GetDefault()
+        {
+            if (DefaultType == null)
+                return null;
+            return (IWorkshopTree)Activator.CreateInstance(DefaultType);
+        }
+
+        public override string Info()
+        {
+            return ReturnType.ToString() + ": " + Name;
+        }
+    }
+
+    class EnumParameter : ParameterBase
+    {
+        public Type EnumType { get; private set; }
+        public EnumData EnumData { get; private set; }
+
+        public EnumParameter(string name, Type enumType) : base (name)
+        {
+            EnumType = enumType;
+            EnumData = EnumData.GetEnum(enumType);
+        }
+
+        public override IWorkshopTree GetDefault()
+        {
+            return EnumData.Members[0];
+        }
+
+        public override string Info()
+        {
+            return EnumData.CodeName + ": " + Name;
+        }
+    }
+
+    class VarRefParameter : ParameterBase 
+    {
+        public VarRefParameter(string name) : base(name) {}
+
+        public override string Info()
+        {
+            return "ref: " + Name;
         }
     }
 
@@ -160,19 +186,19 @@ namespace Deltin.Deltinteger.Elements
         public static string GetName(Type type)
         {
             ElementData elementData = type.GetCustomAttribute<ElementData>();
-            Parameter[] parameters = type.GetCustomAttributes<Parameter>().ToArray();
+            ParameterBase[] parameters = type.GetCustomAttributes<ParameterBase>().ToArray();
             return $"{type.Name.Substring(2)}({Parameter.ParameterGroupToString(parameters)})";
         }
 
         public Element(params IWorkshopTree[] parameterValues)
         {
             ElementData = GetType().GetCustomAttribute<ElementData>();
-            ParameterData = GetType().GetCustomAttributes<Parameter>().ToArray();
+            ParameterData = GetType().GetCustomAttributes<ParameterBase>().ToArray();
             ParameterValues = parameterValues;
         }
 
         public ElementData ElementData { get; private set; }
-        public Parameter[] ParameterData { get; private set; }
+        public ParameterBase[] ParameterData { get; private set; }
 
         public IWorkshopTree[] ParameterValues;
 
@@ -239,7 +265,7 @@ namespace Deltin.Deltinteger.Elements
         public string WorkshopName { get; private set; }
         public Type Type { get; private set; }
         public bool IsValue { get; private set; } 
-        public Parameter[] Parameters { get; private set; }
+        public ParameterBase[] Parameters { get; private set; }
 
         public ElementList(Type type)
         {
@@ -248,7 +274,7 @@ namespace Deltin.Deltinteger.Elements
             WorkshopName = data.ElementName;
             Type = type;
             IsValue = data.IsValue;
-            Parameters = type.GetCustomAttributes<Parameter>().ToArray();
+            Parameters = type.GetCustomAttributes<ParameterBase>().ToArray();
         }
 
         public Element GetObject()

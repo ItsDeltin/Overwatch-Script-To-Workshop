@@ -14,6 +14,8 @@ namespace Deltin.Deltinteger.Parse
         private int _insertAtIndex = 0;
         public bool Used { get; private set; }
 
+        private readonly List<ChaseData> _chaseData = new List<ChaseData>();
+
         public Looper()
         {
             _rule = new Rule(Constants.INTERNAL_ELEMENT + "Chase");
@@ -32,6 +34,43 @@ namespace Deltin.Deltinteger.Parse
         {
             _rule.Actions = _actions.ToArray();
             return _rule;
+        }
+
+        public ChaseData GetChaseData(Var var)
+        {
+            var existingChaseData = _chaseData.FirstOrDefault(cd => cd.Var == var);
+            if (existingChaseData != null)
+                return existingChaseData;
+            
+            Var destination = var.VarCollection.AssignVar($"'{var.Name}' chase destination", true);
+            Var rate        = var.VarCollection.AssignVar($"'{var.Name}' chase duration", true);
+
+            ChaseData newChaseData = new ChaseData(var, destination, rate);
+            _chaseData.Add(newChaseData);
+
+            AddActions(new Element[] 
+            {
+                Element.Part<A_SkipIf>(Element.Part<V_Not>(Element.Part<V_Compare>(var.GetVariable(), EnumData.GetEnumValue(Operators.LessThanOrEqual), destination.GetVariable())), new V_Number(2)),
+                var.SetVariable(Element.Part<V_Min>(Element.Part<V_Add>(var.GetVariable(), Element.Part<V_Multiply>(rate.GetVariable(), new V_Number(Constants.MINIMUM_WAIT))), destination.GetVariable())),
+                Element.Part<A_Skip>(new V_Number(1)),
+                var.SetVariable(Element.Part<V_Max>(Element.Part<V_Add>(var.GetVariable(), Element.Part<V_Multiply>(rate.GetVariable(), new V_Number(-Constants.MINIMUM_WAIT))), destination.GetVariable())),
+            });
+
+            return newChaseData;
+        }
+    }
+
+    public class ChaseData
+    {
+        public readonly Var Var;
+        public readonly Var Destination;
+        public readonly Var Rate;
+
+        public ChaseData(Var var, Var destination, Var rate)
+        {
+            Var = var;
+            Destination = destination;
+            Rate = rate;
         }
     }
 }

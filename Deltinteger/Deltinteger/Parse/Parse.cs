@@ -367,7 +367,7 @@ namespace Deltin.Deltinteger.Parse
                     Type owMethod = Element.GetMethod(methodNode.Name);
 
                     method = (Element)Activator.CreateInstance(owMethod);
-                    Parameter[] parameterData = owMethod.GetCustomAttributes<Parameter>().ToArray();
+                    ParameterBase[] parameterData = owMethod.GetCustomAttributes<ParameterBase>().ToArray();
                     
                     List<IWorkshopTree> parsedParameters = new List<IWorkshopTree>();
                     for (int i = 0; i < parameterData.Length; i++)
@@ -379,7 +379,7 @@ namespace Deltin.Deltinteger.Parse
                         }
                         else 
                         {
-                            if (parameterData[i].ParameterType == ParameterType.Value && parameterData[i].DefaultType == null)
+                            if (parameterData[i] is Parameter && ((Parameter)parameterData[i]).DefaultType == null)
                                 // Throw exception if there is no default method to fallback on.
                                 throw SyntaxErrorException.MissingParameter(parameterData[i].Name, methodNode.Name, methodNode.Range);
                             else
@@ -395,15 +395,28 @@ namespace Deltin.Deltinteger.Parse
                 {
                     var customMethod = CustomMethodData.GetCustomMethod(methodNode.Name);
 
-                    Parameter[] parameterData = customMethod.Parameters.ToArray();
-                    IWorkshopTree[] parsedParameters = new Element[parameterData.Length];
+                    ParameterBase[] parameterData = customMethod.Parameters.ToArray();
+                    List<IWorkshopTree> parsedParameters = new List<IWorkshopTree>();
 
                     for (int i = 0; i < parameterData.Length; i++)
+                    {     
                         if (methodNode.Parameters.Length > i)
-                            parsedParameters[i] = ParseParameter(scope, methodNode.Parameters[i], methodNode.Name, parameterData[i]);
+                        {
+                            if (parameterData[i] is VarRefParameter)
+                            {
+                                if (methodNode.Parameters[i] is VariableNode)
+                                    parsedParameters.Add((IWorkshopTree)scope.GetVar((VariableNode)methodNode.Parameters[i]));
+                                else
+                                    // TODO make constant in SyntaxErrorException
+                                    throw new SyntaxErrorException("Expected variable", ((Node)methodNode.Parameters[i]).Range);
+                            }
+                            else
+                                parsedParameters.Add(ParseParameter(scope, methodNode.Parameters[i], methodNode.Name, parameterData[i]));
+                        }
                         else
                             // Throw exception if there is no default method to fallback on.
                             throw SyntaxErrorException.MissingParameter(parameterData[i].Name, methodNode.Name, methodNode.Range);
+                    }
 
                     switch (customMethod.CustomMethodType)
                     {
@@ -418,7 +431,7 @@ namespace Deltin.Deltinteger.Parse
                                 throw SyntaxErrorException.InvalidMethodType(false, methodNode.Name, methodNode.Range);
                             break;
                     }
-                    var result = customMethod.GetObject(this, parsedParameters).Get();
+                    var result = customMethod.GetObject(this, parsedParameters.ToArray()).Get();
 
                     // Some custom methods have extra actions.
                     if (result.Elements != null)
@@ -510,7 +523,7 @@ namespace Deltin.Deltinteger.Parse
                             var methodScope = Root.Child();
 
                             // Add the parameter variables to the scope.
-                            ParameterVar[] parameterVars = new ParameterVar[userMethod.Parameters.Length];
+                            RecursiveVar[] parameterVars = new RecursiveVar[userMethod.Parameters.Length];
                             for (int i = 0; i < parameterVars.Length; i++)
                             {
                                 if (methodNode.Parameters.Length > i)
@@ -591,7 +604,7 @@ namespace Deltin.Deltinteger.Parse
             return method;
         }
 
-        IWorkshopTree ParseParameter(ScopeGroup scope, IExpressionNode node, string methodName, Parameter parameterData)
+        IWorkshopTree ParseParameter(ScopeGroup scope, IExpressionNode node, string methodName, ParameterBase parameterData)
         {
             IWorkshopTree value = null;
 
@@ -616,17 +629,17 @@ namespace Deltin.Deltinteger.Parse
 
                 default:
 
-                    if (parameterData.ParameterType != ParameterType.Value)
-                        throw SyntaxErrorException.ExpectedType(false, parameterData.EnumType.Name, methodName, parameterData.Name, ((Node)node).Range);
+                    //if (!(parameterData is Parameter))
+                      //  throw SyntaxErrorException.ExpectedType(false, parameterData.EnumType.Name, methodName, parameterData.Name, ((Node)node).Range);
 
                     value = ParseExpression(scope, node);
 
                     Element element = value as Element;
                     ElementData elementData = element.GetType().GetCustomAttribute<ElementData>();
 
-                    if (elementData.ValueType != Elements.ValueType.Any &&
-                    !parameterData.ValueType.HasFlag(elementData.ValueType))
-                        throw SyntaxErrorException.InvalidType(parameterData.ValueType, elementData.ValueType, ((Node)node).Range);
+                    //if (elementData.ValueType != Elements.ValueType.Any &&
+                    //!parameterData.ReturnType.HasFlag(elementData.ValueType))
+                      //  throw SyntaxErrorException.InvalidType(parameterData.ValueType, elementData.ValueType, ((Node)node).Range);
 
                     break;
             }
