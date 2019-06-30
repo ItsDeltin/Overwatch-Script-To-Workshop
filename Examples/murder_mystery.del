@@ -122,7 +122,7 @@ if (!isInitialized & IsGameInProgress())
 	DestroyAllHudText();
 	
 	// Make random players mafia
-	RandomValuesInArray(FilteredArray(AllPlayers(), ArrayElement().team == 0), numberOfMafia).team = mafiaTeamID;
+	ArraySlice(RandomizedArray(FilteredArray(AllPlayers(), ArrayElement().team == 0)), 0, numberOfMafia).team = mafiaTeamID;
 	
 	// Choose random event
 	event = RandomInteger(0, 3);
@@ -247,7 +247,7 @@ Event.OngoingPlayer
 if (isInitialized)
 if (role == Observer)
 {
-	CreateHudText(EventPlayer(), <"Ability -> Build in_view, Crouch and ability -> go in_view">,
+	CreateHudText(EventPlayer(), <"Ability -> Build in view, Crouch and ability -> go in view">,
 		null, null, Location.Top, 0, Color.Green);
 	roleHud = LastTextID();
 }
@@ -288,7 +288,7 @@ if (isInitialized)
 if (!ArrayContains(registeredPlayers, EventPlayer()))
 {
 	Kill();
-	CreateHudText(EventPlayer(), <"Waiting form next_game">);
+	CreateHudText(EventPlayer(), <"Waiting form next game">);
 }
 
 rule: "Player Setup"
