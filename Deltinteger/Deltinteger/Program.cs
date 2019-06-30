@@ -93,17 +93,7 @@ namespace Deltin.Deltinteger
                         ConsoleColor textcolor = other ? ConsoleColor.White : ConsoleColor.DarkGray;
                         other = !other;
 
-                        ParseLog.Write(LogLevel.Normal,
-                            // Names
-                            new ColorMod(var.Name + new string(' ', nameLength - var.Name.Length) + "  ", textcolor),
-                            // Variable
-                            new ColorMod(
-                                (var.IsGlobal ? "global" : "player") 
-                                + " " + 
-                                var.Variable.ToString() +
-                                (var.Index != -1 ? $"[{var.Index}]" : "")
-                                , textcolor)
-                        );
+                        ParseLog.Write(LogLevel.Normal, new ColorMod(var.ToString(), textcolor));
                     }
                 }
 
@@ -129,7 +119,7 @@ namespace Deltin.Deltinteger
             builder.AppendLine("// --- Variable Guide ---");
 
             foreach(var var in varCollection.AllVars)
-                builder.AppendLine("// " + (var.IsGlobal ? "global" : "player") + " " + var.Variable + "[" + var.Index + "] " + var.Name);
+                builder.AppendLine("// " + var.ToString());
             
             builder.AppendLine();
 

@@ -59,6 +59,7 @@ namespace Deltin.Deltinteger.Parse
         public bool IsGlobal { get; private set; }
         public Variable Variable { get; private set; }
         public int Index { get; private set; }
+        public bool UsesIndex { get; private set; }
         public VarCollection VarCollection { get; private set; }
 
         private readonly IWorkshopTree VariableAsWorkshop; 
@@ -70,6 +71,7 @@ namespace Deltin.Deltinteger.Parse
             Variable = variable;
             VariableAsWorkshop = EnumData.GetEnumValue(Variable);
             Index = index;
+            UsesIndex = Index != -1;
             VarCollection = varCollection;
         }
 
@@ -80,7 +82,7 @@ namespace Deltin.Deltinteger.Parse
 
         private Element GetSub(Element targetPlayer)
         {
-            if (Index != -1)
+            if (UsesIndex)
                 return Element.Part<V_ValueInArray>(GetRoot(targetPlayer), new V_Number(Index));
             else
                 return GetRoot(targetPlayer);
@@ -103,7 +105,7 @@ namespace Deltin.Deltinteger.Parse
 
             if (setAtIndex == null)
             {
-                if (Index != -1)
+                if (UsesIndex)
                 {
                     if (IsGlobal)
                         element = Element.Part<A_SetGlobalVariableAtIndex>(VariableAsWorkshop, new V_Number(Index), value);
@@ -120,7 +122,7 @@ namespace Deltin.Deltinteger.Parse
             }
             else
             {
-                if (Index != -1)
+                if (UsesIndex)
                 {
                     if (IsGlobal)
                         element = Element.Part<A_SetGlobalVariableAtIndex>(VariableAsWorkshop, new V_Number(Index), 
@@ -158,6 +160,11 @@ namespace Deltin.Deltinteger.Parse
         public string ToWorkshop()
         {
             throw new NotImplementedException();
+        }
+
+        public override string ToString()
+        {
+            return (IsGlobal ? "global" : "player") + " " + Variable + (UsesIndex ? $"[{Index}]" : "") + " " + Name;
         }
     }
 

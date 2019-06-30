@@ -60,8 +60,14 @@ namespace Deltin.Deltinteger.Parse
                 root = new ScopeGroup();
                 userMethods = new List<UserMethod>();
 
+                // Get the variables
                 foreach (var definedVar in ruleSetNode.DefinedVars)
-                    varCollection.AssignDefinedVar(root, definedVar.IsGlobal, definedVar.VariableName, definedVar.Range);
+                    if (definedVar.UseVar == null)
+                        varCollection.AssignDefinedVar(root, definedVar.IsGlobal, definedVar.VariableName, definedVar.Range);
+                    else
+                        varCollection.AllVars.Add(
+                            new DefinedVar(root, definedVar.VariableName, definedVar.IsGlobal, (Variable)definedVar.UseVar, definedVar.UseIndex ?? -1, definedVar.Range, varCollection)
+                        );
 
                 // Get the user methods.
                 for (int i = 0; i < ruleSetNode.UserMethods.Length; i++)
@@ -338,7 +344,7 @@ namespace Deltin.Deltinteger.Parse
                 }
 
                 case EnumNode enumNode:
-                    return EnumData.Special(enumNode.EnumMember) 
+                    return EnumData.ToElement(enumNode.EnumMember) 
                     ?? throw SyntaxErrorException.EnumCantBeValue(enumNode.Type, enumNode.Range);
 
                 // Seperator
@@ -620,7 +626,7 @@ namespace Deltin.Deltinteger.Parse
                         throw SyntaxErrorException.ExpectedType(false, parameterData.EnumType.ToString(), methodName, parameterData.Name, enumNode.Range);
                     */
 
-                    value = (IWorkshopTree)EnumData.Special(enumNode.EnumMember) ?? (IWorkshopTree)enumNode.EnumMember;
+                    value = (IWorkshopTree)EnumData.ToElement(enumNode.EnumMember) ?? (IWorkshopTree)enumNode.EnumMember;
 
                     //if (value == null)
                       //  throw SyntaxErrorException.InvalidEnumValue(enumNode.Type, enumNode.Value, enumNode.Range);

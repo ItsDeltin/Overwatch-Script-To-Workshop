@@ -83,7 +83,7 @@ namespace Deltin.Deltinteger.Elements
             return GetEnumData().Select(e => new CompletionItem(e.CodeName) { kind = CompletionItem.Enum }).ToArray();
         }
 
-        public static Element Special(EnumMember enumMember)
+        public static Element ToElement(EnumMember enumMember)
         {
             // This converts enums with special properties to an Element.
 

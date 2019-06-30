@@ -100,6 +100,9 @@ namespace Deltin.Deltinteger.Elements
     }
 
     [CustomMethod("AngleOfVectors", CustomMethodType.MultiAction_Value)]
+    [Parameter("Vector1", ValueType.VectorAndPlayer, null)]
+    [Parameter("Vector2", ValueType.VectorAndPlayer, null)]
+    [Parameter("Vector3", ValueType.VectorAndPlayer, null)]
     class AngleOfVectors : CustomMethodBase
     {
         public AngleOfVectors(Translate translate, IWorkshopTree[] parameters) : base (translate, parameters) {}
@@ -232,50 +235,59 @@ namespace Deltin.Deltinteger.Elements
             Element c = (Element)Parameters[2];
 
             Element ab = Element.Part<V_Vector>
-                (
-                    Element.Part<V_Subtract>(Element.Part<V_XOf>(b), Element.Part<V_XOf>(a)),
-                    Element.Part<V_Subtract>(Element.Part<V_YOf>(b), Element.Part<V_YOf>(a)),
-                    Element.Part<V_Subtract>(Element.Part<V_ZOf>(b), Element.Part<V_ZOf>(a))
-                );
+            (
+                Element.Part<V_Subtract>(Element.Part<V_XOf>(b), Element.Part<V_XOf>(a)),
+                Element.Part<V_Subtract>(Element.Part<V_YOf>(b), Element.Part<V_YOf>(a)),
+                Element.Part<V_Subtract>(Element.Part<V_ZOf>(b), Element.Part<V_ZOf>(a))
+            );
             Element bc = Element.Part<V_Vector>
-                (
-                    Element.Part<V_Subtract>(Element.Part<V_XOf>(c), Element.Part<V_XOf>(b)),
-                    Element.Part<V_Subtract>(Element.Part<V_YOf>(c), Element.Part<V_YOf>(b)),
-                    Element.Part<V_Subtract>(Element.Part<V_ZOf>(c), Element.Part<V_ZOf>(b))
-                );
+            (
+                Element.Part<V_Subtract>(Element.Part<V_XOf>(c), Element.Part<V_XOf>(b)),
+                Element.Part<V_Subtract>(Element.Part<V_YOf>(c), Element.Part<V_YOf>(b)),
+                Element.Part<V_Subtract>(Element.Part<V_ZOf>(c), Element.Part<V_ZOf>(b))
+            );
             Element abVec = Element.Part<V_DistanceBetween>
-                (
-                    ab,
-                    zeroVec
-                );
+            (
+                ab,
+                zeroVec
+            );
             Element bcVec = Element.Part<V_DistanceBetween>
-                (
-                    bc,
-                    zeroVec
-                );
+            (
+                bc,
+                zeroVec
+            );
             Element abNorm = Element.Part<V_Vector>
-                (
-                    Element.Part<V_Divide>(Element.Part<V_XOf>(ab), abVec),
-                    Element.Part<V_Divide>(Element.Part<V_YOf>(ab), abVec),
-                    Element.Part<V_Divide>(Element.Part<V_ZOf>(ab), abVec)
-                );
+            (
+                Element.Part<V_Divide>(Element.Part<V_XOf>(ab), abVec),
+                Element.Part<V_Divide>(Element.Part<V_YOf>(ab), abVec),
+                Element.Part<V_Divide>(Element.Part<V_ZOf>(ab), abVec)
+            );
             Element bcNorm = Element.Part<V_Vector>
-                (
-                    Element.Part<V_Divide>(Element.Part<V_XOf>(bc), bcVec),
-                    Element.Part<V_Divide>(Element.Part<V_YOf>(bc), bcVec),
-                    Element.Part<V_Divide>(Element.Part<V_ZOf>(bc), bcVec)
-                );
+            (
+                Element.Part<V_Divide>(Element.Part<V_XOf>(bc), bcVec),
+                Element.Part<V_Divide>(Element.Part<V_YOf>(bc), bcVec),
+                Element.Part<V_Divide>(Element.Part<V_ZOf>(bc), bcVec)
+            );
             Element res = Element.Part<V_Add>
+            (
+                Element.Part<V_Add>
                 (
-                    Element.Part<V_Add>
-                    (
-                        Element.Part<V_Multiply>(Element.Part<V_XOf>(abNorm), Element.Part<V_XOf>(bcNorm)),
-                        Element.Part<V_Multiply>(Element.Part<V_YOf>(abNorm), Element.Part<V_YOf>(bcNorm))
-                    ),
-                    Element.Part<V_Multiply>(Element.Part<V_ZOf>(abNorm), Element.Part<V_ZOf>(bcNorm))
-                );
+                    Element.Part<V_Multiply>(Element.Part<V_XOf>(abNorm), Element.Part<V_XOf>(bcNorm)),
+                    Element.Part<V_Multiply>(Element.Part<V_YOf>(abNorm), Element.Part<V_YOf>(bcNorm))
+                ),
+                Element.Part<V_Multiply>(Element.Part<V_ZOf>(abNorm), Element.Part<V_ZOf>(bcNorm))
+            );
+            Element result = Element.Part<V_Divide>
+            (
+                Element.Part<V_Multiply>
+                (
+                    Element.Part<V_ArccosineInRadians>(res),
+                    new V_Number(180)
+                ),
+                new V_Number(Math.PI)
+            );
 
-            return new MethodResult(null, res);
+            return new MethodResult(null, result);
         }
     }
 
@@ -472,6 +484,17 @@ namespace Deltin.Deltinteger.Elements
             };
 
             return new MethodResult(actions, null);
+        }
+    }
+
+    [CustomMethod("MinWait", CustomMethodType.Action)]
+    class MinWait : CustomMethodBase
+    {
+        public MinWait(Translate translate, IWorkshopTree[] parameters) : base(translate, parameters) {}
+
+        public override MethodResult Get()
+        {
+            return new MethodResult(new Element[] { Element.Part<A_Wait>(new V_Number(Constants.MINIMUM_WAIT)) }, null);
         }
     }
 }
