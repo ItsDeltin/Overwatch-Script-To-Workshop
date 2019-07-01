@@ -19,7 +19,7 @@ namespace Deltin.Deltinteger.Parse
         public Looper()
         {
             _rule = new Rule(Constants.INTERNAL_ELEMENT + "Chase");
-            _actions.Add(Element.Part<A_Wait>(new V_Number(Constants.MINIMUM_WAIT)));
+            _actions.Add(A_Wait.MinimumWait);
             _actions.Add(Element.Part<A_Loop>());
         }
 

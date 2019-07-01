@@ -30,7 +30,7 @@ namespace Deltin.Deltinteger.Parse
             SkipCount = VarCollection.AssignVar("ContinueSkip", IsGlobal);
             
             // Add the required wait
-            Actions.Insert(0, Element.Part<A_Wait>(new V_Number(Constants.MINIMUM_WAIT)));
+            Actions.Insert(0, A_Wait.MinimumWait);
 
             // Add the skip-if
             Actions.Insert(1, 

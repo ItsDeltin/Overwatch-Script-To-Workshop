@@ -617,5 +617,8 @@ namespace Deltin.Deltinteger.Elements
     [ElementData("Wait")]
     [Parameter("Time", ValueType.Number, typeof(V_Number))]
     [EnumParameter("Wait Behavior", typeof(WaitBehavior))]
-    public class A_Wait : Element {}
+    public class A_Wait : Element 
+    {
+        public static readonly A_Wait MinimumWait = Element.Part<A_Wait>(new V_Number(Constants.MINIMUM_WAIT));
+    }
 }

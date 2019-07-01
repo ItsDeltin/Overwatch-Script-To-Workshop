@@ -559,7 +559,7 @@ namespace Deltin.Deltinteger.Parse
                             else
                                 method = null;
 
-                            Actions.Add(Element.Part<A_Wait>(new V_Number(Constants.MINIMUM_WAIT)));
+                            Actions.Add(A_Wait.MinimumWait);
                             for (int i = 0; i < parameterVars.Length; i++)
                             {
                                 parameterVars[i].Pop();

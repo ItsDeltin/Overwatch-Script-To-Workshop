@@ -494,7 +494,7 @@ namespace Deltin.Deltinteger.Elements
 
         public override MethodResult Get()
         {
-            return new MethodResult(new Element[] { Element.Part<A_Wait>(new V_Number(Constants.MINIMUM_WAIT)) }, null);
+            return new MethodResult(new Element[] { A_Wait.MinimumWait }, null);
         }
     }
 }
