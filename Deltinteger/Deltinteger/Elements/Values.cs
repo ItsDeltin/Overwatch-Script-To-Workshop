@@ -772,10 +772,13 @@ namespace Deltin.Deltinteger.Elements
          - Has a symbol?
          - Length
         */
-        private static string[] searchOrder = Constants.Strings
+        private static readonly string[] searchOrder = Constants.Strings
             .OrderByDescending(str => str.Contains("{0}"))
             .ThenByDescending(str => str.IndexOfAny("-></*-+=()!?".ToCharArray()) != -1)
             .ThenByDescending(str => str.Length)
+            .ToArray();
+        
+        private static readonly string[] multiwordStrings = Constants.Strings.Where(str => str.Contains("_"))
             .ToArray();
 
         public static Element ParseString(Range range, string value, Element[] parameters, int depth = 0)
@@ -789,6 +792,10 @@ namespace Deltin.Deltinteger.Elements
                 time = new Stopwatch();
                 time.Start();
             }
+            
+            if (depth == 0)
+                foreach(string multiword in multiwordStrings)
+                    value = value.Replace(multiword.Replace('_', ' '), multiword);
 
             string debug = new string(' ', depth * 4);
 
