@@ -191,15 +191,8 @@ namespace Deltin.Deltinteger.LanguageServer
                 case BlockNode blockNode:
 
                     // Get all action methods
-                    /* 
-                    completion.AddRange(Element.ActionList.Select(m => 
-                        new CompletionItem(m.Name.Substring(2))
-                        {
-                            kind = CompletionItem.Method,
-                            detail = ((Element)Activator.CreateInstance(m)).ToString(),
-                        }));
-                        */
-                    completion.AddRange(Element.GetCompletion(false, true));
+                    completion.AddRange(Element.GetCompletion(true, true));
+                    completion.AddRange(CustomMethodData.GetCompletion());
                     
                     if (parser.Success)
                     {
@@ -216,17 +209,9 @@ namespace Deltin.Deltinteger.LanguageServer
                 // Values
                 case MethodNode methodNode:
 
-                    /*
-                    completion.AddRange(Element.ValueList.Select(m => 
-                        new CompletionItem(m.Name.Substring(2))
-                        {
-                            kind = CompletionItem.Method,
-                            detail = ((Element)Activator.CreateInstance(m)).ToString(),
-                        }));
-                    */
                     completion.AddRange(Element.GetCompletion(true, false));
-                    
                     completion.AddRange(EnumData.GetAllEnumCompletion());
+                    completion.AddRange(CustomMethodData.GetCompletion());
 
                     if (parser.Success)
                     {
@@ -244,11 +229,11 @@ namespace Deltin.Deltinteger.LanguageServer
                 case StringNode stringNode:
 
                     completion.AddRange(Constants.Strings.Select(str =>
-                            new CompletionItem(str)
-                            {
-                                kind = CompletionItem.Text
-                            }
-                        ));
+                        new CompletionItem(str)
+                        {
+                            kind = CompletionItem.Text
+                        }
+                    ));
 
                     break;
                 
@@ -323,12 +308,9 @@ namespace Deltin.Deltinteger.LanguageServer
                 if (methodNode != null)
                 {
                     var element = Element.GetElement(methodNode.Name);
-                    //Type methodType = Element.GetMethod(methodNode.Name);
 
                     if (element != null)
                     {
-                        //Element element = (Element)Activator.CreateInstance(methodType);
-
                         information = new SignatureInformation(
                             element.GetObject().ToString(),
                             // Get the method's documentation

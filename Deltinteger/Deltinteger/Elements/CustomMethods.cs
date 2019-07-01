@@ -5,6 +5,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Reflection;
 using Deltin.Deltinteger.Parse;
+using Deltin.Deltinteger.LanguageServer;
+using Deltin.Deltinteger.WorkshopWiki;
 
 namespace Deltin.Deltinteger.Elements
 {
@@ -45,6 +47,7 @@ namespace Deltin.Deltinteger.Elements
         public ParameterBase[] Parameters;
         public CustomMethodType CustomMethodType;
         public Type Type;
+        public WikiMethod WikiMethod;
 
         public CustomMethodData(Type type)
         {
@@ -56,6 +59,8 @@ namespace Deltin.Deltinteger.Elements
 
             Parameters = type.GetCustomAttributes<ParameterBase>()
                 .ToArray();
+            
+            WikiMethod = GetObject(null, null).Wiki();
         }
 
         public CustomMethodBase GetObject(Translate context, IWorkshopTree[] parameters)
@@ -83,6 +88,15 @@ namespace Deltin.Deltinteger.Elements
         {
             return GetCustomMethods().FirstOrDefault(method => method.Name == name);
         }
+
+        public static CompletionItem[] GetCompletion()
+        {
+            return GetCustomMethods().Select(cm => new CompletionItem(cm.Name) 
+            { 
+                kind = CompletionItem.Method,
+                documentation = cm.WikiMethod?.Description
+            }).ToArray();
+        }
     }
 
     public abstract class CustomMethodBase
@@ -97,6 +111,8 @@ namespace Deltin.Deltinteger.Elements
         }
 
         public abstract MethodResult Get();
+
+        public abstract WikiMethod Wiki();
     }
 
     [CustomMethod("AngleOfVectors", CustomMethodType.MultiAction_Value)]
@@ -217,6 +233,11 @@ namespace Deltin.Deltinteger.Elements
                 )
             );
         }
+    
+        public override WikiMethod Wiki()
+        {
+            return new WikiMethod("AngleOfVectors", "Gets the angle of 3 vectors in 3d space.", null);
+        }
     }
 
     [CustomMethod("AngleOfVectorsCom", CustomMethodType.Value)]
@@ -288,6 +309,11 @@ namespace Deltin.Deltinteger.Elements
             );
 
             return new MethodResult(null, result);
+        }
+    
+        public override WikiMethod Wiki()
+        {
+            return new WikiMethod("AngleOfVectorsCom", "Gets the angle of 3 vectors in 3d space.", null);
         }
     }
 
@@ -460,6 +486,11 @@ namespace Deltin.Deltinteger.Elements
 
             return new MethodResult(actions, temp.GetVariable());
         }
+    
+        public override WikiMethod Wiki()
+        {
+            return new WikiMethod("GetMap", "Gets the current map. The result can be compared with the Map enum.", null);
+        }
     }
 
     [CustomMethod("ChaseVariable", CustomMethodType.Action)]
@@ -485,6 +516,11 @@ namespace Deltin.Deltinteger.Elements
 
             return new MethodResult(actions, null);
         }
+    
+        public override WikiMethod Wiki()
+        {
+            return new WikiMethod("ChaseVariable", "Chases a variable to a value.", null);
+        }
     }
 
     [CustomMethod("MinWait", CustomMethodType.Action)]
@@ -495,6 +531,11 @@ namespace Deltin.Deltinteger.Elements
         public override MethodResult Get()
         {
             return new MethodResult(new Element[] { A_Wait.MinimumWait }, null);
+        }
+
+        public override WikiMethod Wiki()
+        {
+            return new WikiMethod("MinWait", "Waits for " + Constants.MINIMUM_WAIT + " milliseconds.", null);
         }
     }
 }
