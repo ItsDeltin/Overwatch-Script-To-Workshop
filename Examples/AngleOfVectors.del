@@ -1,0 +1,42 @@
+define playervar hudText;
+
+rule: "Setup"
+Event.OngoingPlayer
+{
+    CreateHudText(EventPlayer(), null, "sphere status:", angle, Location.Top, 0);
+    hudText = LastTextID();
+
+    // Empty arrays
+    markers = EmptyArray();
+    effects = EmptyArray();
+}
+
+define playervar markers M;
+define playervar effects E;
+define playervar angle   N;
+
+rule: "Place orb."
+Event.OngoingPlayer
+if (IsButtonHeld(EventPlayer(), Button.Interact))
+{
+    markers = Append(markers, EyePosition());
+    CreateEffect(AllPlayers(), Effect.Sphere, Color.Green, LastOf(markers), 0.25, EffectRev.VisibleTo);
+    effects = Append(effects, LastCreatedEntity());
+
+    if (CountOf(markers) == 4)
+    {
+        DestroyEffect(effects[0]);
+        effects = ArraySlice(effects, 1, 3);
+        markers = ArraySlice(markers, 1, 3);
+    }
+}
+
+rule: "Update angle"
+Event.OngoingPlayer
+if (CountOf(markers) == 3)
+{
+	// AngleOfVectorsCom works here too
+    angle = AngleOfVectors(markers[0], markers[1], markers[2]);
+    MinWait();
+    LoopIfConditionIsTrue();
+}

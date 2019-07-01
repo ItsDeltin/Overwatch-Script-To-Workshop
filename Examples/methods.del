@@ -2,11 +2,11 @@ usevar globalvar A;
 usevar playervar A;
 
 rule: "Check If AI"
-Event.Ongoing_EachPlayer
+Event.OngoingPlayer
 if (IsButtonHeld(EventPlayer(), Button.Interact))
 {
 	// Iterate through all players to check if they are an AI.
-	for (player in AllPlayers())
+	foreach (define player in AllPlayers())
 	{
 		define isAI = IsAI(AllPlayers()[player]);
 		
