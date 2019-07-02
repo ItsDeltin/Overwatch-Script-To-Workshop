@@ -14,7 +14,8 @@ namespace Deltin.Deltinteger.Parse
         private int _insertAtIndex = 0;
         public bool Used { get; private set; }
 
-        private readonly List<ChaseData> _chaseData = new List<ChaseData>();
+        private readonly List<VariableChase> _variableChases = new List<VariableChase>();
+        private readonly List<VectorChase> _vectorChases = new List<VectorChase>();
 
         public Looper()
         {
@@ -36,17 +37,17 @@ namespace Deltin.Deltinteger.Parse
             return _rule;
         }
 
-        public ChaseData GetChaseData(Var var)
+        public VariableChase GetVariableChaseData(Var var)
         {
-            var existingChaseData = _chaseData.FirstOrDefault(cd => cd.Var == var);
+            var existingChaseData = _variableChases.FirstOrDefault(cd => cd.Var == var);
             if (existingChaseData != null)
                 return existingChaseData;
             
             Var destination = var.VarCollection.AssignVar($"'{var.Name}' chase destination", true);
             Var rate        = var.VarCollection.AssignVar($"'{var.Name}' chase duration", true);
 
-            ChaseData newChaseData = new ChaseData(var, destination, rate);
-            _chaseData.Add(newChaseData);
+            VariableChase newChaseData = new VariableChase(var, destination, rate);
+            _variableChases.Add(newChaseData);
 
             AddActions(GetOneActionChase(var, destination, rate));
 
@@ -81,15 +82,67 @@ namespace Deltin.Deltinteger.Parse
                 var.SetVariable(Element.Part<V_Max>(Element.Part<V_Add>(var.GetVariable(), Element.Part<V_Multiply>(rate.GetVariable(), new V_Number(-Constants.MINIMUM_WAIT))), destination.GetVariable())),
             };
         }
+
+        public VectorChase GetVectorChaseData(Var var)
+        {
+            var existingChaseData = _vectorChases.FirstOrDefault(cd => cd.Var == var);
+            if (existingChaseData != null)
+                return existingChaseData;
+            
+            Var destination = var.VarCollection.AssignVar($"'{var.Name}' chase destination", true);
+            Var rate        = var.VarCollection.AssignVar($"'{var.Name}' chase duration", true);
+
+            VectorChase newChaseData = new VectorChase(var, destination, rate);
+            _vectorChases.Add(newChaseData);
+
+            AddActions(ChaseVectorActions(var, destination, rate));
+
+            return newChaseData;
+        }
+
+        private static Element[] ChaseVectorActions(Var var, Var destination, Var rate)
+        {
+            Element rateAdjusted = Element.Part<V_Multiply>(rate.GetVariable(), new V_Number(Constants.MINIMUM_WAIT));
+
+            Element distance = Element.Part<V_DistanceBetween>(var.GetVariable(), destination.GetVariable());
+
+            Element ratio = Element.Part<V_Divide>(rateAdjusted, distance);
+
+            Element delta = Element.Part<V_Subtract>(destination.GetVariable(), var.GetVariable());
+
+            Element result = Element.TernaryConditional(
+                new V_Compare(distance, Operators.GreaterThan, rateAdjusted),
+                Element.Part<V_Add>(var.GetVariable(), Element.Part<V_Multiply>(ratio, delta)),
+                destination.GetVariable()
+            );
+
+            Element setVar = var.SetVariable(result);
+
+            return new Element[] { setVar };
+        }
     }
 
-    public class ChaseData
+    public class VariableChase
     {
         public readonly Var Var;
         public readonly Var Destination;
         public readonly Var Rate;
 
-        public ChaseData(Var var, Var destination, Var rate)
+        public VariableChase(Var var, Var destination, Var rate)
+        {
+            Var = var;
+            Destination = destination;
+            Rate = rate;
+        }
+    }
+
+    public class VectorChase
+    {
+        public readonly Var Var;
+        public readonly Var Destination;
+        public readonly Var Rate;
+
+        public VectorChase(Var var, Var destination, Var rate)
         {
             Var = var;
             Destination = destination;

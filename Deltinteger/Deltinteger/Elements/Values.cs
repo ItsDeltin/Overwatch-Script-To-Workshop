@@ -118,7 +118,12 @@ namespace Deltin.Deltinteger.Elements
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
     [EnumParameter("", typeof(Operators))]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
-    public class V_Compare : Element {}
+    public class V_Compare : Element 
+    {
+        public V_Compare() : base() {}
+
+        public V_Compare(Element left, Operators op, Element right) : base(left, EnumData.GetEnumValue(op), right) {}
+    }
 
     [ElementData("Control Point Scoring Percentage", ValueType.Number)]
     [Parameter("Team", ValueType.Team, typeof(V_TeamVar))]

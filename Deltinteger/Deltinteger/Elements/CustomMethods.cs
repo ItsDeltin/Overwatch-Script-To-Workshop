@@ -507,7 +507,7 @@ namespace Deltin.Deltinteger.Elements
             Element destination = (Element)Parameters[1];
             Element rate = (Element)Parameters[2];
             
-            ChaseData chaseData = TranslateContext.Looper.GetChaseData(targetVariable);
+            VariableChase chaseData = TranslateContext.Looper.GetVariableChaseData(targetVariable);
             Element[] actions = new Element[]
             {
                 chaseData.Destination.SetVariable(destination),
@@ -520,6 +520,36 @@ namespace Deltin.Deltinteger.Elements
         public override WikiMethod Wiki()
         {
             return new WikiMethod("ChaseVariable", "Chases a variable to a value.", null);
+        }
+    }
+
+    [CustomMethod("ChaseVector", CustomMethodType.Action)]
+    [VarRefParameter("Vector")]
+    [Parameter("Destination", ValueType.VectorAndPlayer, null)]
+    [Parameter("Rate", ValueType.Number, null)]
+    class ChaseVector : CustomMethodBase
+    {
+        public ChaseVector(Translate translate, IWorkshopTree[] parameters) : base(translate, parameters) {}
+
+        public override MethodResult Get()
+        {
+            Var targetVector = (Var)Parameters[0];
+            Element destination = (Element)Parameters[1];
+            Element rate = (Element)Parameters[2];
+            
+            VectorChase chaseData = TranslateContext.Looper.GetVectorChaseData(targetVector);
+            Element[] actions = new Element[]
+            {
+                chaseData.Destination.SetVariable(destination),
+                chaseData.Rate.SetVariable(rate),
+            };
+
+            return new MethodResult(actions, null);
+        }
+
+        public override WikiMethod Wiki()
+        {
+            return new WikiMethod("ChaseVector", "Chases a vector to another vector.", null);
         }
     }
 
