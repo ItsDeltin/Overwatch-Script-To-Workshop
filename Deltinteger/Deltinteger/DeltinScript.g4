@@ -40,6 +40,7 @@ expr
 	| expr '%' expr                               // x%y
 	| expr '+' expr                               // x+y
 	| expr '-' expr                               // x-y
+	| expr TERNARY expr TERNARY_ELSE expr
 	| NOT expr                                     // !x
 	| expr ('<' | '<=' | '==' | '>=' | '>' | '!=') expr // x == y
 	| expr BOOL expr                              // x & y
@@ -147,6 +148,8 @@ INDEX_END     : ']' ;
 STATEMENT_END : ';' ;
 SEPERATOR     : '.' ;
 COMMA         : ',' ;
+TERNARY       : '?' ;
+TERNARY_ELSE  : ':' ;
 
 // Keywords
 RULE_WORD : 'rule'      ;

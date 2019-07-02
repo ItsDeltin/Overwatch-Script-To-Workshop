@@ -26,7 +26,7 @@ namespace Deltin.Deltinteger.Parse
                 case DeltinScriptParser.DefineContext _:
                 case DeltinScriptParser.VarsetContext _:
                     if (context.ChildCount == 1)
-                        _diagnostics.Add(new Diagnostic("Expected ';'", Range.GetRange(context)) { severity = Diagnostic.Error });
+                        _diagnostics.Add(new Diagnostic("Expected ';'", Range.GetRange(context).end.ToRange()) { severity = Diagnostic.Error });
                     break;
             }
             return base.VisitStatement(context);

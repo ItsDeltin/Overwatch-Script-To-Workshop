@@ -343,6 +343,15 @@ namespace Deltin.Deltinteger.Parse
                     return current ?? new V_EmptyArray();
                 }
 
+                // Ternary Conditional (a ? b : c)
+                case TernaryConditionalNode ternaryNode:
+                    return Element.TernaryConditional
+                    (
+                        ParseExpression(scope, ternaryNode.Condition),
+                        ParseExpression(scope, ternaryNode.Consequent),
+                        ParseExpression(scope, ternaryNode.Alternative)
+                    );
+
                 case EnumNode enumNode:
                     return EnumData.ToElement(enumNode.EnumMember) 
                     ?? throw SyntaxErrorException.EnumCantBeValue(enumNode.Type, enumNode.Range);

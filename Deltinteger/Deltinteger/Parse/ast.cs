@@ -207,6 +207,20 @@ namespace Deltin.Deltinteger.Parse
                 node = new NotNode(value, Range.GetRange(context));
             }
 
+            // Ternary Condition
+            else if (context.ChildCount == 5
+            && context.GetChild(0) is DeltinScriptParser.ExprContext
+            && context.GetChild(1).GetText() == "?"
+            && context.GetChild(2) is DeltinScriptParser.ExprContext
+            && context.GetChild(3).GetText() == ":"
+            && context.GetChild(4) is DeltinScriptParser.ExprContext)
+            {
+                IExpressionNode condition = (IExpressionNode)VisitExpr(context.expr(0));
+                IExpressionNode consequent = (IExpressionNode)VisitExpr(context.expr(1));
+                IExpressionNode alternative = (IExpressionNode)VisitExpr(context.expr(2));
+                node = new TernaryConditionalNode(condition, consequent, alternative, Range.GetRange(context));
+            }
+
             else
             {
                 return Visit(context.GetChild(0));
@@ -759,6 +773,19 @@ namespace Deltin.Deltinteger.Parse
         }
     }
 
+    public class TernaryConditionalNode : Node, IExpressionNode
+    {
+        public IExpressionNode Condition { get; private set; }
+        public IExpressionNode Consequent { get; private set; }
+        public IExpressionNode Alternative { get; private set; }
+        public TernaryConditionalNode(IExpressionNode condition, IExpressionNode consequent, IExpressionNode alternative, Range range) : base(range)
+        {
+            Condition = condition;
+            Consequent = consequent;
+            Alternative = alternative;
+        }
+    }
+
     public class VarSetNode : Node, IStatementNode
     {
         public IExpressionNode Target { get; private set; }
@@ -885,6 +912,11 @@ namespace Deltin.Deltinteger.Parse
         public override string ToString()
         {
             return line + ", " + character;
+        }
+
+        public Range ToRange()
+        {
+            return new Range(this, this);
         }
     }
 
