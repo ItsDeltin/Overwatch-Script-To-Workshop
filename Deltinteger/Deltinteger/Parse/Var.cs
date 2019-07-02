@@ -53,7 +53,7 @@ namespace Deltin.Deltinteger.Parse
         public readonly List<Var> AllVars = new List<Var>();
     }
 
-    public class Var : IWorkshopTree
+    public class Var
     {
         public string Name { get; private set; }
         public bool IsGlobal { get; private set; }
@@ -241,6 +241,28 @@ namespace Deltin.Deltinteger.Parse
         public Element DebugStack(Element targetPlayer = null)
         {
             return base.GetVariable(targetPlayer);
+        }
+    }
+
+    public class VarRef : IWorkshopTree
+    {
+        public Var Var { get; }
+        public Element Target { get; }
+
+        public VarRef(Var var, Element target)
+        {
+            Var = var;
+            Target = target;
+        }
+
+        public string ToWorkshop()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void DebugPrint(Log log, int depth)
+        {
+            throw new NotImplementedException();
         }
     }
 }

@@ -16,6 +16,8 @@ namespace Deltin.Deltinteger.Parse
     {
         public static ParserData GetParser(string document, Pos documentPos)
         {
+            ParserData parserData = new ParserData();
+
             AntlrInputStream inputStream = new AntlrInputStream(document);
 
             // Lexer
@@ -33,105 +35,94 @@ namespace Deltin.Deltinteger.Parse
             Log log = new Log("Parse");
             log.Write(LogLevel.Verbose, ruleSetContext.ToStringTree(parser));
 
-            List<Diagnostic> diagnostics = new List<Diagnostic>();
-            diagnostics.AddRange(errorListener.Errors);
+            parserData.Diagnostics = new List<Diagnostic>();
+            parserData.Diagnostics.AddRange(errorListener.Errors);
 
             // Get the ruleset node.
-            BuildAstVisitor bav = null;
             RulesetNode ruleSetNode = null;
-            if (diagnostics.Count == 0)
+            if (parserData.Diagnostics.Count == 0)
             {
-                bav = new BuildAstVisitor(documentPos, diagnostics);
-                ruleSetNode = (RulesetNode)bav.Visit(ruleSetContext);
+                parserData.Bav = new BuildAstVisitor(documentPos, parserData.Diagnostics);
+                ruleSetNode = (RulesetNode)parserData.Bav.Visit(ruleSetContext);
             }
 
-            VarCollection varCollection = null;
-            ScopeGroup root = null;
-            List<UserMethod> userMethods = null;
-            List<Rule> rules = null;
-            bool success = false;
-
-            AdditionalErrorChecking aec = new AdditionalErrorChecking(parser, diagnostics);
+            AdditionalErrorChecking aec = new AdditionalErrorChecking(parser, parserData.Diagnostics);
             aec.Visit(ruleSetContext);
 
-            if (diagnostics.Count == 0)
+            if (parserData.Diagnostics.Count == 0)
             {
-                varCollection = new VarCollection();
-                root = new ScopeGroup();
-                userMethods = new List<UserMethod>();
+                parserData.VarCollection = new VarCollection();
+                ScopeGroup root = new ScopeGroup();
+                parserData.UserMethods = new List<UserMethod>();
 
                 // Get the variables
                 foreach (var definedVar in ruleSetNode.DefinedVars)
                     if (definedVar.UseVar == null)
-                        varCollection.AssignDefinedVar(root, definedVar.IsGlobal, definedVar.VariableName, definedVar.Range);
+                        parserData.VarCollection.AssignDefinedVar(root, definedVar.IsGlobal, definedVar.VariableName, definedVar.Range);
                     else
-                        varCollection.AllVars.Add(
-                            new DefinedVar(root, definedVar.VariableName, definedVar.IsGlobal, (Variable)definedVar.UseVar, definedVar.UseIndex ?? -1, definedVar.Range, varCollection)
+                        parserData.VarCollection.AllVars.Add(
+                            new DefinedVar(root, definedVar.VariableName, definedVar.IsGlobal, (Variable)definedVar.UseVar, definedVar.UseIndex ?? -1, definedVar.Range, parserData.VarCollection)
                         );
 
                 // Get the user methods.
                 for (int i = 0; i < ruleSetNode.UserMethods.Length; i++)
-                    userMethods.Add(new UserMethod(ruleSetNode.UserMethods[i]));
+                    parserData.UserMethods.Add(new UserMethod(ruleSetNode.UserMethods[i]));
 
                 // Parse the rules.
-                rules = new List<Rule>();
+                parserData.Rules = new List<Rule>();
 
                 // The looper rule
-                Looper looper = new Looper();
+                parserData.GlobalLoop = new Looper(true);
+                parserData.PlayerLoop = new Looper(false);
 
                 for (int i = 0; i < ruleSetNode.Rules.Length; i++)
                 {
                     try
                     {
-                        var result = Translate.GetRule(ruleSetNode.Rules[i], root, varCollection, userMethods.ToArray(), looper);
-                        rules.Add(result.Rule);
-                        diagnostics.AddRange(result.Diagnostics);
+                        var result = Translate.GetRule(ruleSetNode.Rules[i], root, parserData);
+                        parserData.Rules.Add(result.Rule);
+                        parserData.Diagnostics.AddRange(result.Diagnostics);
                     }
                     catch (SyntaxErrorException ex)
                     {
-                        diagnostics.Add(new Diagnostic(ex.Message, ex.Range) { severity = Diagnostic.Error });
+                        parserData.Diagnostics.Add(new Diagnostic(ex.Message, ex.Range) { severity = Diagnostic.Error });
                     }
                 }
 
-                if (looper.Used)
-                    rules.Add(looper.Finalize());
+                if (parserData.GlobalLoop.Used)
+                    parserData.Rules.Add(parserData.GlobalLoop.Finalize());
+                if (parserData.PlayerLoop.Used)
+                    parserData.Rules.Add(parserData.PlayerLoop.Finalize());
 
-                success = true;
+                parserData.Success = true;
             }
             
-            return new ParserData()
-            {
-                Bav = bav,
-                Diagnostics = diagnostics,
-                Rules = rules?.ToArray(),
-                UserMethods = userMethods?.ToArray(),
-                Success = success,
-                VarCollection = varCollection
-            };
+            return parserData;
         }
 
         public List<Diagnostic> Diagnostics;
         public BuildAstVisitor Bav { get; private set; }
-        public Rule[] Rules { get; private set; }
-        public UserMethod[] UserMethods { get; private set; }
+        public List<Rule> Rules { get; private set; }
+        public List<UserMethod> UserMethods { get; private set; }
         public bool Success { get; private set; }
         public VarCollection VarCollection { get; private set; }
+        public Looper GlobalLoop { get; private set; }
+        public Looper PlayerLoop { get; private set; }
     }
 
     public class Translate
     {
         public static bool AllowRecursion = false;
 
-        public static TranslateResult GetRule(RuleNode ruleNode, ScopeGroup root, VarCollection varCollection, UserMethod[] userMethods, Looper looper)
+        public static TranslateResult GetRule(RuleNode ruleNode, ScopeGroup root, ParserData parserData)
         {
-            var result = new Translate(ruleNode, root, varCollection, userMethods, looper);
+            var result = new Translate(ruleNode, root, parserData);
             return new TranslateResult(result.Rule, result.Diagnostics.ToArray());
         }
 
         private readonly ScopeGroup Root;
         public readonly VarCollection VarCollection;
         private readonly UserMethod[] UserMethods;
-        public readonly Looper Looper;
         private readonly Rule Rule;
         private readonly List<Element> Actions = new List<Element>();
         private readonly List<Condition> Conditions = new List<Condition>();
@@ -141,18 +132,19 @@ namespace Deltin.Deltinteger.Parse
         private readonly List<Diagnostic> Diagnostics = new List<Diagnostic>();
         private readonly List<MethodStack> MethodStack = new List<MethodStack>(); // The user method stack
         private readonly List<UserMethod> MethodStackNoRecursive = new List<UserMethod>();
+        public readonly ParserData ParserData;
 
-        private Translate(RuleNode ruleNode, ScopeGroup root, VarCollection varCollection, UserMethod[] userMethods, Looper looper)
+        private Translate(RuleNode ruleNode, ScopeGroup root, ParserData parserData)
         {
             Root = root;
-            VarCollection = varCollection;
-            UserMethods = userMethods;
-            Looper = looper;
+            VarCollection = parserData.VarCollection;
+            UserMethods = parserData.UserMethods.ToArray();
+            ParserData = parserData;
 
             Rule = new Rule(ruleNode.Name, ruleNode.Event, ruleNode.Team, ruleNode.Player);
             IsGlobal = Rule.IsGlobal;
 
-            ContinueSkip = new ContinueSkip(IsGlobal, Actions, varCollection);
+            ContinueSkip = new ContinueSkip(IsGlobal, Actions, VarCollection);
 
             ParseConditions(ruleNode.Conditions);
             ParseBlock(root.Child(), ruleNode.Block, false, null);
@@ -417,10 +409,19 @@ namespace Deltin.Deltinteger.Parse
                     {     
                         if (methodNode.Parameters.Length > i)
                         {
+                            // If the parameter is a VarRefParameters, send the variable reference itself as the parameter.
                             if (parameterData[i] is VarRefParameter)
                             {
                                 if (methodNode.Parameters[i] is VariableNode)
-                                    parsedParameters.Add((IWorkshopTree)scope.GetVar((VariableNode)methodNode.Parameters[i]));
+                                {
+                                    VariableNode variableNode = (VariableNode)methodNode.Parameters[i];
+
+                                    Element target = null;
+                                    if (variableNode.Target != null)
+                                        target = ParseExpression(scope, variableNode.Target);
+
+                                    parsedParameters.Add(new VarRef(scope.GetVar(variableNode), target));
+                                }
                                 else
                                     // TODO make constant in SyntaxErrorException
                                     throw new SyntaxErrorException("Expected variable", ((Node)methodNode.Parameters[i]).Range);

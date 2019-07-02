@@ -111,7 +111,7 @@ namespace Deltin.Deltinteger.LanguageServer
 
             if (data.Rules != null && data.Diagnostics.Count == 0)
             {
-                string final = Program.RuleArrayToWorkshop(data.Rules, data.VarCollection);
+                string final = Program.RuleArrayToWorkshop(data.Rules.ToArray(), data.VarCollection);
                 using (var wc = new WebClient())
                 {
                     wc.UploadString($"http://localhost:{clientPort}/", final);
@@ -201,7 +201,7 @@ namespace Deltin.Deltinteger.LanguageServer
                             completion.AddRange(blockNode.RelatedScopeGroup.GetCompletionItems());
                         // Get custom methods
                         if (parser.UserMethods != null)
-                            completion.AddRange(UserMethod.CollectionCompletion(parser.UserMethods));
+                            completion.AddRange(UserMethod.CollectionCompletion(parser.UserMethods.ToArray()));
                     }
 
                     break;
@@ -220,7 +220,7 @@ namespace Deltin.Deltinteger.LanguageServer
                             completion.AddRange(methodNode.RelatedScopeGroup?.GetCompletionItems());
                         // Get custom methods
                         if (parser.UserMethods != null)
-                            completion.AddRange(UserMethod.CollectionCompletion(parser.UserMethods));
+                            completion.AddRange(UserMethod.CollectionCompletion(parser.UserMethods.ToArray()));
                     }
 
                     break;
@@ -355,7 +355,7 @@ namespace Deltin.Deltinteger.LanguageServer
                 {
                     case MethodNode methodNode:
 
-                        var type = Translate.GetMethodType(parser.UserMethods, methodNode.Name);
+                        var type = Translate.GetMethodType(parser.UserMethods.ToArray(), methodNode.Name);
 
                         if (type == null)
                             hover = null;
@@ -368,7 +368,7 @@ namespace Deltin.Deltinteger.LanguageServer
                             parameters = CustomMethodData.GetCustomMethod(methodNode.Name).Parameters
                                 .ToArray();
                         else if (type == Translate.MethodType.UserMethod)
-                            parameters = UserMethod.GetUserMethod(parser.UserMethods, methodNode.Name).Parameters;
+                            parameters = UserMethod.GetUserMethod(parser.UserMethods.ToArray(), methodNode.Name).Parameters;
                         else parameters = null;
 
                         if (parameters != null)

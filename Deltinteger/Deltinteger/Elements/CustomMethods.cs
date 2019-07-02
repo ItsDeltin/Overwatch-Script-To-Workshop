@@ -503,15 +503,20 @@ namespace Deltin.Deltinteger.Elements
 
         public override MethodResult Get()
         {
-            Var targetVariable = (Var)Parameters[0];
+            VarRef targetVariable = (VarRef)Parameters[0];
             Element destination = (Element)Parameters[1];
             Element rate = (Element)Parameters[2];
             
-            VariableChase chaseData = TranslateContext.Looper.GetVariableChaseData(targetVariable);
+            VariableChase chaseData;
+            if (targetVariable.Var.IsGlobal)
+                chaseData = TranslateContext.ParserData.GlobalLoop.GetVariableChaseData(targetVariable.Var);
+            else
+                chaseData = TranslateContext.ParserData.PlayerLoop.GetVariableChaseData(targetVariable.Var);
+            
             Element[] actions = new Element[]
             {
-                chaseData.Destination.SetVariable(destination),
-                chaseData.Rate.SetVariable(rate),
+                chaseData.Destination.SetVariable(destination, targetVariable.Target),
+                chaseData.Rate.SetVariable(rate, targetVariable.Target),
             };
 
             return new MethodResult(actions, null);
@@ -533,11 +538,16 @@ namespace Deltin.Deltinteger.Elements
 
         public override MethodResult Get()
         {
-            Var targetVector = (Var)Parameters[0];
+            VarRef targetVector = (VarRef)Parameters[0];
             Element destination = (Element)Parameters[1];
             Element rate = (Element)Parameters[2];
             
-            VectorChase chaseData = TranslateContext.Looper.GetVectorChaseData(targetVector);
+            VectorChase chaseData;
+            if (targetVector.Var.IsGlobal)
+                chaseData = TranslateContext.ParserData.GlobalLoop.GetVectorChaseData(targetVector.Var);
+            else
+                chaseData = TranslateContext.ParserData.PlayerLoop.GetVectorChaseData(targetVector.Var);
+
             Element[] actions = new Element[]
             {
                 chaseData.Destination.SetVariable(destination),

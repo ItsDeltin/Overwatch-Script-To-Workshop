@@ -97,7 +97,7 @@ namespace Deltin.Deltinteger
                     }
                 }
 
-                string final = RuleArrayToWorkshop(result.Rules, result.VarCollection);
+                string final = RuleArrayToWorkshop(result.Rules.ToArray(), result.VarCollection);
 
                 Log.Write(LogLevel.Normal, "Press enter to copy code to clipboard, then in Overwatch click \"Paste Rule\".");
                 Console.ReadLine();

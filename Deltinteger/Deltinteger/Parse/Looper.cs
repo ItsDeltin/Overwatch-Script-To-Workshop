@@ -17,9 +17,9 @@ namespace Deltin.Deltinteger.Parse
         private readonly List<VariableChase> _variableChases = new List<VariableChase>();
         private readonly List<VectorChase> _vectorChases = new List<VectorChase>();
 
-        public Looper()
+        public Looper(bool global)
         {
-            _rule = new Rule(Constants.INTERNAL_ELEMENT + "Chase");
+            _rule = new Rule(Constants.INTERNAL_ELEMENT + "Chase", global ? RuleEvent.OngoingGlobal : RuleEvent.OngoingPlayer, Team.All, PlayerSelector.All);
             _actions.Add(A_Wait.MinimumWait);
             _actions.Add(Element.Part<A_Loop>());
         }
