@@ -55,18 +55,17 @@ namespace Deltin.Deltinteger.Parse
 
         private static Element[] GetOneActionChase(Var var, Var destination, Var rate)
         {
-            Element direction = Element.Part<V_IndexOfArrayValue>(Element.CreateArray(new V_False(), new V_True()), Element.Part<V_Compare>(var.GetVariable(), EnumData.GetEnumValue(Operators.LessThanOrEqual), destination.GetVariable()));
+            Element isGoingUp = Element.Part<V_Compare>(var.GetVariable(), EnumData.GetEnumValue(Operators.LessThanOrEqual), destination.GetVariable());
 
-            Element rateAdjusted = Element.Part<V_Multiply>(rate.GetVariable(), Element.Part<V_Multiply>(new V_Number(Constants.MINIMUM_WAIT), Element.Part<V_ValueInArray>(Element.CreateArray(new V_Number(-1), new V_Number(1)), direction)));
+            Element rateAdjusted = Element.Part<V_Multiply>(rate.GetVariable(), Element.Part<V_Multiply>(new V_Number(Constants.MINIMUM_WAIT), Element.TernaryConditional(isGoingUp, new V_Number(1), new V_Number(-1))));
 
             Element varAdjusted = Element.Part<V_Add>(var.GetVariable(), rateAdjusted);
 
             Element setVar = var.SetVariable(
-                Element.Part<V_ValueInArray>(Element.CreateArray(
-                    Element.Part<V_Max>(varAdjusted, destination.GetVariable()),
-                    Element.Part<V_Min>(varAdjusted, destination.GetVariable())
-                ), 
-                direction)
+                Element.TernaryConditional(isGoingUp,
+                    Element.Part<V_Min>(varAdjusted, destination.GetVariable()),
+                    Element.Part<V_Max>(varAdjusted, destination.GetVariable())
+                )
             );
 
             return new Element[] { setVar };

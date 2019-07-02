@@ -269,7 +269,7 @@ namespace Deltin.Deltinteger.Elements
         // Creates an ternary conditional that works in the workshop
         public static Element TernaryConditional(Element condition, Element consequent, Element alternative)
         {
-            return Element.Part<V_ValueInArray>(CreateArray(consequent, alternative), Element.Part<V_IndexOfArrayValue>(CreateArray(new V_False(), new V_True()), condition));
+            return Element.Part<V_ValueInArray>(CreateArray(alternative, consequent), Element.Part<V_IndexOfArrayValue>(CreateArray(new V_False(), new V_True()), condition));
         }
     }
 
