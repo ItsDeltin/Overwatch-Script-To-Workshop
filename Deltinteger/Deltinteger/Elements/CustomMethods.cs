@@ -509,9 +509,9 @@ namespace Deltin.Deltinteger.Elements
             
             VariableChase chaseData;
             if (targetVariable.Var.IsGlobal)
-                chaseData = TranslateContext.ParserData.GlobalLoop.GetVariableChaseData(targetVariable.Var);
+                chaseData = TranslateContext.ParserData.GlobalLoop.GetChaseData(targetVariable.Var);
             else
-                chaseData = TranslateContext.ParserData.PlayerLoop.GetVariableChaseData(targetVariable.Var);
+                chaseData = TranslateContext.ParserData.PlayerLoop.GetChaseData(targetVariable.Var);
             
             Element[] actions = new Element[]
             {
@@ -524,42 +524,7 @@ namespace Deltin.Deltinteger.Elements
     
         public override WikiMethod Wiki()
         {
-            return new WikiMethod("ChaseVariable", "Chases a variable to a value.", null);
-        }
-    }
-
-    [CustomMethod("ChaseVector", CustomMethodType.Action)]
-    [VarRefParameter("Vector")]
-    [Parameter("Destination", ValueType.VectorAndPlayer, null)]
-    [Parameter("Rate", ValueType.Number, null)]
-    class ChaseVector : CustomMethodBase
-    {
-        public ChaseVector(Translate translate, IWorkshopTree[] parameters) : base(translate, parameters) {}
-
-        public override MethodResult Get()
-        {
-            VarRef targetVector = (VarRef)Parameters[0];
-            Element destination = (Element)Parameters[1];
-            Element rate = (Element)Parameters[2];
-            
-            VectorChase chaseData;
-            if (targetVector.Var.IsGlobal)
-                chaseData = TranslateContext.ParserData.GlobalLoop.GetVectorChaseData(targetVector.Var);
-            else
-                chaseData = TranslateContext.ParserData.PlayerLoop.GetVectorChaseData(targetVector.Var);
-
-            Element[] actions = new Element[]
-            {
-                chaseData.Destination.SetVariable(destination),
-                chaseData.Rate.SetVariable(rate),
-            };
-
-            return new MethodResult(actions, null);
-        }
-
-        public override WikiMethod Wiki()
-        {
-            return new WikiMethod("ChaseVector", "Chases a vector to another vector.", null);
+            return new WikiMethod("ChaseVariable", "Chases a variable to a value. Works with numbers and vectors.", null);
         }
     }
 
