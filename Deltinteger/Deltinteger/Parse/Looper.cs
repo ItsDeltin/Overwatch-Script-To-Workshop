@@ -48,15 +48,39 @@ namespace Deltin.Deltinteger.Parse
             ChaseData newChaseData = new ChaseData(var, destination, rate);
             _chaseData.Add(newChaseData);
 
-            AddActions(new Element[] 
+            AddActions(GetOneActionChase(var, destination, rate));
+
+            return newChaseData;
+        }
+
+        private static Element[] GetOneActionChase(Var var, Var destination, Var rate)
+        {
+            Element direction = Element.Part<V_IndexOfArrayValue>(Element.CreateArray(new V_False(), new V_True()), Element.Part<V_Compare>(var.GetVariable(), EnumData.GetEnumValue(Operators.LessThanOrEqual), destination.GetVariable()));
+
+            Element rateAdjusted = Element.Part<V_Multiply>(rate.GetVariable(), Element.Part<V_Multiply>(new V_Number(Constants.MINIMUM_WAIT), Element.Part<V_ValueInArray>(Element.CreateArray(new V_Number(-1), new V_Number(1)), direction)));
+
+            Element varAdjusted = Element.Part<V_Add>(var.GetVariable(), rateAdjusted);
+
+            Element setVar = var.SetVariable(
+                Element.Part<V_ValueInArray>(Element.CreateArray(
+                    Element.Part<V_Max>(varAdjusted, destination.GetVariable()),
+                    Element.Part<V_Min>(varAdjusted, destination.GetVariable())
+                ), 
+                direction)
+            );
+
+            return new Element[] { setVar };
+        }
+
+        private static Element[] GetChaseActions(Var var, Var destination, Var rate)
+        {
+            return new Element[] 
             {
                 Element.Part<A_SkipIf>(Element.Part<V_Not>(Element.Part<V_Compare>(var.GetVariable(), EnumData.GetEnumValue(Operators.LessThanOrEqual), destination.GetVariable())), new V_Number(2)),
                 var.SetVariable(Element.Part<V_Min>(Element.Part<V_Add>(var.GetVariable(), Element.Part<V_Multiply>(rate.GetVariable(), new V_Number(Constants.MINIMUM_WAIT))), destination.GetVariable())),
                 Element.Part<A_Skip>(new V_Number(1)),
                 var.SetVariable(Element.Part<V_Max>(Element.Part<V_Add>(var.GetVariable(), Element.Part<V_Multiply>(rate.GetVariable(), new V_Number(-Constants.MINIMUM_WAIT))), destination.GetVariable())),
-            });
-
-            return newChaseData;
+            };
         }
     }
 

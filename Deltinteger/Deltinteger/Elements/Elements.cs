@@ -257,6 +257,20 @@ namespace Deltin.Deltinteger.Elements
         {
             return new string[0];
         }
+
+        public static Element CreateArray(params Element[] values)
+        {
+            Element array = new V_EmptyArray();
+            for (int i = 0; i < values.Length; i++)
+                array = Element.Part<V_Append>(array, values[i]);
+            return array;
+        }
+
+        // Creates an ternary conditional that works in the workshop
+        public static Element TernaryConditional(Element condition, Element consequent, Element alternative)
+        {
+            return Element.Part<V_ValueInArray>(CreateArray(consequent, alternative), Element.Part<V_IndexOfArrayValue>(CreateArray(new V_False(), new V_True()), condition));
+        }
     }
 
     public class ElementList
