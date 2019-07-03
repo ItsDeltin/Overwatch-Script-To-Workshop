@@ -6,20 +6,6 @@
 
 Create a scipt that will be converted to an Overwatch Workshop. 
 
-Infinite named variables.
-
-Easy string creation.
-
-`if` / `else if` / `else` statements.
-
-`while`, `for`, and `foreach` loops.
-
-No more expression trees. Math operations (`Sqrt(XOf(vec1) * XOf(vec1) + YOf(vec2) * YOf(vex2) + ZOf(vec3) * ZOf(vec3))`) and booleans! (`!IsOnGround() | !IsCrouching()`)
-
-Easy array creation. ``
-
-Includes if/else if/else, for loops, easy string creation, infinite named variables, no more expression trees, easy array creation, and methods!
-
 ## Usage
 
 ### Infinite named variables
