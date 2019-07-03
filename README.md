@@ -4,110 +4,124 @@
 <img src="https://i.imgur.com/hFdmeew.png" alt="" height="350"/>
 </center>
 
-Create a scipt that will be converted to an Overwatch Workshop. Includes if/else if/else, for loops, easy string creation, infinite named variables, no more expression trees, easy array creation, and methods!
+Create a scipt that will be converted to an Overwatch Workshop. 
+
+Infinite named variables.
+
+Easy string creation.
+
+`if` / `else if` / `else` statements.
+
+`while`, `for`, and `foreach` loops.
+
+No more expression trees. Math operations (`Sqrt(XOf(vec1) * XOf(vec1) + YOf(vec2) * YOf(vex2) + ZOf(vec3) * ZOf(vec3))`) and booleans! (`!IsOnGround() | !IsCrouching()`)
+
+Easy array creation. ``
+
+Includes if/else if/else, for loops, easy string creation, infinite named variables, no more expression trees, easy array creation, and methods!
 
 ## Usage
+
 ### Infinite named variables
 ```
-define globalvar allZombies;
-define playervar isZombie;
-```
-These variables can be referenced anywhere in the script.
-```
-rule: "Swap player when they die."
-Event.PlayerDied
-if (!isZombie)
+// These variables can be referenced from anywhere in the script
+define globalvar myGlobalVar;
+define playervar myPlayerVar;
+
+rule: "My Rule"
 {
-    isZombie = true;
-    AppendToArray(allZombies, EventPlayer());
+    // Scoped variables work too. It will be a global/player variable depending on the rule it is defined in.
+    define myVar = NumberOfPlayers() - 1;
 }
 ```
+
 ### No more operator or compare trees.
-Or/and statements can easily be done by doing `true | true & true`.
+Or/and statements can easily be done using OR `|` and AND `&`.
 ```
-rule: "Swap players when they die"
-  Event.Player_Died
-  if (!isZombie & !isVaccinated)
-  {
-  	isZombie = true;
-    AppendToArray(allZombies, EventPlayer());
-  }
+rule: "Initial Setup"
+if (!isInitialized & IsGameInProgress()) 
+{
+    // ...
+
+    isInitialized = true;
+}
 ```
 You can multiply/divide/subtract/add/pow/modulo any expression and it will automatically create the tree following orders of operations.
-(Sqrt is converted to Square Root in the workshop. XOf, YOf, and ZOf are converted to their respective ComponentOf. Most methods in the workshop have the same name.)
 ```
 Sqrt(XOf(vec1) * XOf(vec1) + YOf(vec2) * YOf(vex2) + ZOf(vec3) * ZOf(vec3))
 ```
-### Easy array creation
-Arrays can easily be created with brackets.
-```
-locations = [Vector(56.64, 21.00, -67.14), Vector(50.46, 9.15, -92.95), Vector(30.00, 14.00, -77.91), Vector(82.59, 12.68, -88.21)];
-``` 
-This will generate a tree of Append To Arrays.
+
 ### If - Else If - Else
 ```
-if (IsOnGround(EventPlayer()) & IsCrouching(EventPlayer))
+if (hunterStep < CountOf(hunterVictim.killer.steps) - 1)
 {
-	height = 0;
-}
-else if (IsOnGround(EventPlayer()))
-{
-	height = 1;
+    hunterStep += 1;
+    hunterLocation = hunterVictim.killer.steps[hunterStep];
 }
 else
 {
-	height = 2;
+    hunterLocation = PositionOf(hunterVictim.killer);
 }
 ```
-### Effortless for loops
-The script below will create 5 red spheres on Eichenwalde. If a player goes inside any of the spheres, they will die. The vector array containing the sphere locations is created like so:
-`locations = [Vector(56.64, 21.00, -67.14), Vector(50.46, 9.15, -92.95), Vector(30.00, 14.00, -77.91), Vector(82.59, 12.68, -88.21)];`. The for loop then loops through it doing `for (loc in locations)`.
 
+### Ternary Conditionals
 ```
-// Make sure the map is Eichenwalde!
-
-usevar globalvar A;
-usevar playervar A;
-
-define globalvar locations;
-define globalvar radius;
-define playervar deathCount;
-
-rule: "Setup Death Spheres."
-
-    {
-        radius = 8;
-        locations = [Vector(56.64, 21.00, -67.14), Vector(50.46, 9.15, -92.95), Vector(30.00, 14.00, -77.91), Vector(82.59, 12.68, -88.21)];
-
-        for (loc in locations)
-        {
-            CreateEffect(AllPlayers(), Effect.Sphere, Color.Red, locations[loc], radius, EffectRev.VisibleTo);
-        }
-    }
-
-rule: "Kill players in sphere."
-    Event.Ongoing_EachPlayer
-    if (IsAlive())
-    {
-        // Kill the player if they enter the radius of the death sphere.
-        for (loc in locations)
-        {
-            if (DistanceBetween(EventPlayer(), locations[loc]) < radius)
-            {
-                deathCount += 1;
-                SmallMessage(EventPlayer(), <"Danger! ... dead, try_again and survive! sudden_death: <0>", deathCount>);
-                Kill();
-                loc = CountOf(locations);
-            }
-        }
-
-        // Loop
-        Wait(0.06);
-        LoopIfConditionIsTrue();
-    }
+// If the variable 'isGoingUp' is true, 'directionModifier' will equal 1. Otherwise, it will equal -1.
+define directionModifier = isGoingUp ? 1 : -1;
 ```
+
+### Arrays
+Arrays can be created by a group of values inside brackets.
+```
+locations = [Vector(56.64, 21.00, -67.14), Vector(50.46, 9.15, -92.95), Vector(30.00, 14.00, -77.91), Vector(82.59, 12.68, -88.21)];
+```
+This will generate a tree of Append To Arrays. Array values can be accessed like so:
+```
+// This will send the message "56.64, 21.00, -67.14" to all players.
+SmallMessage(AllPlayers(), locations[0]);
+```
+
+### Effortless loops
+
+#### for
+```
+for (define i = 0; i < CountOf(AllPlayers()); i++)
+{
+    define teamID = RandomInteger(0, 4);
+
+    SmallMessage(AllPlayers()[i], <"team: <0>", teamID + 1>);
+
+    AllPlayers()[i].team = teamID;
+}
+```
+
+#### foreach
+```
+define radius = 8;
+
+define locations = [Vector(56.64, 21.00, -67.14), Vector(50.46, 9.15, -92.95), Vector(30.00, 14.00, -77.91), Vector(82.59, 12.68, -88.21)];
+
+for (define loc in locations)
+{
+    CreateEffect(AllPlayers(), Effect.Sphere, Color.Red, loc, radius, EffectRev.VisibleTo);
+}
+```
+
+#### while
+```
+while (scanning)
+{
+    if (AngleOfVectors(cameraPos, cameraLookingAt, targetPlayer) < 45)
+    {
+        scanning = false;
+        SmallMessage(targetPlayer, "warning: detected!");
+    }
+}
+```
+
 ### Effortless strings
-Strings can easily be created. They will be translated for the workshop to use. The strings must be already in the game (https://pastebin.com/ZuvCeFRp). An exception will be thrown if a string is unrecognized.
+Strings can easily be created. They will be translated for the workshop to use. The strings must be already in the game. An exception will be thrown if a string is unrecognized.
+
 ```
 SmallMessage(AllPlayers(), <"hello? thank_you teammate, that_was_awesome!">);
 ```
@@ -115,11 +129,34 @@ Format works as well.
 ```
 SmallMessage(AllPlayers(), <"hello? thank_you <0>, that_was_awesome!", PlayerClosestToReticle(EventPlayer())>);
 ```
+
+[**List Of Strings**](https://github.com/ItsDeltin/Overwatch-Script-To-Workshop/blob/master/Deltinteger/Deltinteger/Constants.cs)
+
 ### Setting player variables
-`AllPlayers().variable = 4` will set every player's player-variable to the specified value.
-`EventPlayer().target.speedBuff = 120` A list of players work too, this will set the event player's target's speed boost to 120.  
+
+`EventPlayer()` is optional, it is used by default. Both of these work:
+```
+EventPlayer().speedBuff = 120
+speedBuff = 120
+```
+If a variable is set to a player, you can use it to set that player's variable like so:
+```
+define target = RandomValueInArray(AllPlayers());
+target.speedBuff = 120;
+```
+Player arrays will set every player in the array's variable.
+```
+// Reset all player's speed buff.
+AllPlayers().speedBuff = 100;
+```
 
 ### Methods
+
+#### Recursion
+By default, recursive methods are disabled because it would make the final output of methods a lot more complicated. Start `Deltinteger.exe` with the argument `-allowresursion` to enable it.
+
+#### IsAI() Example
+
 ```
 method IsAI(player)
 {
@@ -144,15 +181,54 @@ method IsAI(player)
 	return isAI;
 }
 ```
-IsAI() will return true if the player is an AI, otherwise it will return false. By default, recursive methods are disabled because it would make the final output of methods a lot more complicated. Start `Deltinteger.exe` with the argument `-allowresursion` to enable it.
+IsAI() will return true if the player is an AI, otherwise it will return false. 
 
 ### Custom methods
-This contains some custom methods that are not included in the Workshop.
+OSTW contains methods that are not found in the Overwatch Workshop.
 
-`GetMapID()` gets the current map. This is based off of Xerxes's workshop code found from here:
-https://us.forums.blizzard.com/en/overwatch/t/workshop-resource-get-the-current-map-name-updated-1-action/
+| Method            | Type              | Description |
+| ----------------- | ----------------- | ----------- |
+| GetMap()          | Multiaction Value | `GetMap()` gets the current map. This is based off of [Xerxes's Map Identifier](https://us.forums.blizzard.com/en/overwatch/t/workshop-resource-map-identifier-map-detection-script-v2-0-only-2-actions/341132). The result can be compared to with the `Map` enum.
+| AngleOfVectors    | Multiaction Value | Gets the angle of 3 vectors. 
+| AngleOfVectorsCom | Value             | Behaves the same as AngleOfVectors but condensed into one action.
+| ChaseVariable     | Action            | Behaves the same as the workshop method `Chase Global/Player Variable At Rate`, but will work with named variables. Works with numbers and vectors.
+| MinWait           | Action            | Same as doing `Wait(0.016)`.
 
-`AngleOfVectors(vector, vector, vector)` gets the angle of 3 vectors. Returns a value between -1 to 1. -1 being 180 degrees, 0 being 90 degrees, and 1 being 0 degrees.
+#### GetMap()
+```
+define globalvar currentMap;
+
+rule: "Get current map"
+{
+    currentMap = GetMap();
+
+    if (currentMap == Map.Dorado)
+    {
+        // ...
+    }
+}
+```
+
+#### AngleOfVectors(vector, vector, vector)
+```
+define angle = AngleOfVectors(
+    Vector(0, 1, 0),
+    Vector(0, 0, 0),
+    Vector(1, 0, 0)
+);
+// angle should now equal 90.
+```
+
+#### ChaseVariable(ref Variable, Destination, Rate)
+```
+define myVar = 0;
+
+// Counts to 10 in 10 seconds.
+ChaseVariable(myVar, 10, 1);
+
+// Player variables work too
+ChaseVariable(AllPlayers().playerVar, 10, 1);
+```
 
 ## Deltinteger.exe
 ### Arguments:
