@@ -8,10 +8,10 @@ if (IsButtonHeld(EventPlayer(), Button.Interact))
 	// Iterate through all players to check if they are an AI.
 	foreach (define player in AllPlayers())
 	{
-		define isAI = IsAI(AllPlayers()[player]);
+		define isAI = IsAI(player);
 		
 		// Send the message.
-		SmallMessage(EventPlayer(), <"<0>: <1>", AllPlayers()[player], isAI>);
+		SmallMessage(EventPlayer(), <"<0>: <1>", player, isAI>);
 		
 		Wait(2);
 	}
@@ -20,27 +20,21 @@ if (IsButtonHeld(EventPlayer(), Button.Interact))
 method IsAI(player)
 {
 	define currentHero = HeroOf(player);
-	define heroSwap = HeroVar(Hero.Ana);
-	define isAI;
+	define heroSwap = Hero.Ana;
 	/*
 	Swap a player to Ana (Bastion if they are Ana), check if they are the new hero, then swap them back.
 	Possible improvements: Swap to a hero that isnt an option for AI.
 	*/
 	
-	if (currentHero == HeroVar(Hero.Ana))
+	if (currentHero == Hero.Ana)
 	{
-		heroSwap = HeroVar(Hero.Bastion);
+		heroSwap = Hero.Bastion;
 	}
 
 	ForcePlayerHero(player, heroSwap);
-	if (HeroOf(player) == currentHero)
-	{
-		isAI = true;
-	}
-	else
-	{
-		isAI = false;
-	}
+
+	define isAI = HeroOf(player) == currentHero;
+
 	ForcePlayerHero(player, currentHero);
 	StopForcingHero(player);
 	

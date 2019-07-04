@@ -27,7 +27,7 @@ if (IsAlive())
         if (DistanceBetween(EventPlayer(), loc) < radius)
         {
             deathCount += 1;
-            SmallMessage(EventPlayer(), <"Danger! ... dead, try again and survive! sudden death: <0>", deathCount>);
+            SmallMessage(EventPlayer(), <"Danger! ... dead, try_again and survive! sudden_death: <0>", deathCount>);
             Kill();
         }
     }

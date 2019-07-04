@@ -247,7 +247,7 @@ Event.OngoingPlayer
 if (isInitialized)
 if (role == Observer)
 {
-	CreateHudText(EventPlayer(), <"Ability -> Build in view, Crouch and ability -> go in view">,
+	CreateHudText(EventPlayer(), <"Ability -> Build in_view, Crouch and ability -> go in_view">,
 		null, null, Location.Top, 0, Color.Green);
 	roleHud = LastTextID();
 }
