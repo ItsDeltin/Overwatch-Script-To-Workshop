@@ -199,7 +199,7 @@ namespace Deltin.Deltinteger.LanguageServer
                     {
                         // Get all variables
                         if (blockNode.RelatedScopeGroup != null)
-                            completion.AddRange(blockNode.RelatedScopeGroup.GetCompletionItems());
+                            completion.AddRange(blockNode.RelatedScopeGroup.GetCompletionItems(caret));
                         // Get custom methods
                         if (parser.UserMethods != null)
                             completion.AddRange(UserMethod.CollectionCompletion(parser.UserMethods.ToArray()));
@@ -218,7 +218,7 @@ namespace Deltin.Deltinteger.LanguageServer
                     {
                         // Get all variables
                         if (methodNode.RelatedScopeGroup != null)
-                            completion.AddRange(methodNode.RelatedScopeGroup?.GetCompletionItems());
+                            completion.AddRange(methodNode.RelatedScopeGroup?.GetCompletionItems(caret));
                         // Get custom methods
                         if (parser.UserMethods != null)
                             completion.AddRange(UserMethod.CollectionCompletion(parser.UserMethods.ToArray()));

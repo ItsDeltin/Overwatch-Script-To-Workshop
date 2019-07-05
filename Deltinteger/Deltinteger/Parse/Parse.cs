@@ -60,9 +60,7 @@ namespace Deltin.Deltinteger.Parse
                     if (definedVar.UseVar == null)
                         parserData.VarCollection.AssignDefinedVar(root, definedVar.IsGlobal, definedVar.VariableName, definedVar.Range);
                     else
-                        parserData.VarCollection.AllVars.Add(
-                            new DefinedVar(root, definedVar.VariableName, definedVar.IsGlobal, definedVar.UseVar.Variable, definedVar.UseVar.Index, definedVar.Range, parserData.VarCollection)
-                        );
+                        new Var(root, definedVar.VariableName, definedVar.IsGlobal, definedVar.UseVar.Variable, definedVar.UseVar.Index, definedVar.Range, parserData.VarCollection);
 
                 // Get the user methods.
                 for (int i = 0; i < ruleSetNode.UserMethods.Length; i++)
@@ -469,7 +467,7 @@ namespace Deltin.Deltinteger.Parse
                         var methodScope = Root.Child();
 
                         // Add the parameter variables to the scope.
-                        DefinedVar[] parameterVars = new DefinedVar[userMethod.Parameters.Length];
+                        Var[] parameterVars = new Var[userMethod.Parameters.Length];
                         for (int i = 0; i < parameterVars.Length; i++)
                         {
                             if (methodNode.Parameters.Length > i)
@@ -739,7 +737,7 @@ namespace Deltin.Deltinteger.Parse
 
                     Element array = ParseExpression(scope, forEachNode.Array);
 
-                    DefinedVar variable;
+                    Var variable;
                     // Set/get the variable
                     if (forEachNode.Define)
                         variable = VarCollection.AssignDefinedVar(forGroup, IsGlobal, forEachNode.VariableName, forEachNode.Range);
@@ -969,7 +967,7 @@ namespace Deltin.Deltinteger.Parse
 
         void ParseVarset(ScopeGroup scope, VarSetNode varSetNode)
         {
-            DefinedVar variable = scope.GetVar(varSetNode.Variable, varSetNode.Range);
+            Var variable = scope.GetVar(varSetNode.Variable, varSetNode.Range);
 
             Element target = null;
             if (varSetNode.Target != null) 
@@ -1033,10 +1031,7 @@ namespace Deltin.Deltinteger.Parse
             if (defineNode.UseVar == null)
                 var = VarCollection.AssignDefinedVar(scope, IsGlobal, defineNode.VariableName, defineNode.Range);
             else
-            {
-                var = new DefinedVar(scope, defineNode.VariableName, IsGlobal, defineNode.UseVar.Variable, defineNode.UseVar.Index, defineNode.Range, VarCollection);
-                VarCollection.AllVars.Add(var);
-            }
+                var = new Var(scope, defineNode.VariableName, IsGlobal, defineNode.UseVar.Variable, defineNode.UseVar.Index, defineNode.Range, VarCollection);
 
             // Set the defined variable if the variable is defined like "define var = 1"
             if (defineNode.Value != null)

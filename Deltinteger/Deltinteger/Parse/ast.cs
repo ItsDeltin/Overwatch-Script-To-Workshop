@@ -929,7 +929,7 @@ namespace Deltin.Deltinteger.Parse
         }
     }
 
-    public class Pos
+    public class Pos : IComparable<Pos>
     {
         public int line { get; private set; }
         public int character { get; private set; }
@@ -949,6 +949,27 @@ namespace Deltin.Deltinteger.Parse
         {
             return new Range(this, this);
         }
+
+        public int CompareTo(Pos other)
+        {
+            if (other == null || this.line < other.line || (this.line == other.line && this.character < other.character))
+                return -1;
+            
+            if (this.line == other.line && this.character == other.character)
+                return 0;
+            
+            if (this.line > other.line || (this.line == other.line && this.character > other.character))
+                return 1;
+
+            throw new Exception();
+        }
+
+        #region Operators
+        public static bool operator <(Pos p1, Pos p2)  => p1.CompareTo(p2) <  0;
+        public static bool operator >(Pos p1, Pos p2)  => p1.CompareTo(p2) >  0;
+        public static bool operator <=(Pos p1, Pos p2) => p1.CompareTo(p2) <= 0;
+        public static bool operator >=(Pos p1, Pos p2) => p1.CompareTo(p2) >= 0;
+        #endregion
     }
 
     public class Range : IComparable<Range>

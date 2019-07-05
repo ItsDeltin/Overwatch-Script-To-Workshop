@@ -15,7 +15,7 @@ namespace Deltin.Deltinteger.Parse
             Parent = parent;
         }
 
-        public void In(DefinedVar var)
+        public void In(Var var)
         {
             InScope.Add(var);
         }
@@ -25,9 +25,9 @@ namespace Deltin.Deltinteger.Parse
             return GetVar(name, null) != null ? true : false;
         }
 
-        public DefinedVar GetVar(string name, Range range)
+        public Var GetVar(string name, Range range)
         {
-            DefinedVar var = null;
+            Var var = null;
             ScopeGroup checkGroup = this;
             while (var == null && checkGroup != null)
             {
@@ -41,7 +41,7 @@ namespace Deltin.Deltinteger.Parse
             return var;
         }
 
-        public DefinedVar GetVar(VariableNode variableNode)
+        public Var GetVar(VariableNode variableNode)
         {
             return GetVar(variableNode.Name, variableNode.Range);
         }
@@ -53,29 +53,29 @@ namespace Deltin.Deltinteger.Parse
             return newChild;
         }
 
-        public List<DefinedVar> VarCollection()
+        public List<Var> VarCollection()
         {
             return InScope;
         }
 
-        public List<DefinedVar> FullVarCollection()
+        public List<Var> FullVarCollection()
         {
-            var varCollection = new List<DefinedVar>();
+            var varCollection = new List<Var>();
             varCollection.AddRange(InScope);
             if (Parent != null)
                 varCollection.AddRange(Parent.FullVarCollection());
             return varCollection;
         }
 
-        public CompletionItem[] GetCompletionItems()
+        public CompletionItem[] GetCompletionItems(Pos caret)
         {
-            return FullVarCollection().Select(var => new CompletionItem(var.Name)
+            return FullVarCollection().Where(var => var.DefinedRange.end < caret).Select(var => new CompletionItem(var.Name)
             {
                 kind = CompletionItem.Field
             }).ToArray();
         }
         
-        private readonly List<DefinedVar> InScope = new List<DefinedVar>();
+        private readonly List<Var> InScope = new List<Var>();
 
         private readonly List<ScopeGroup> Children = new List<ScopeGroup>();
         private readonly ScopeGroup Parent = null;
