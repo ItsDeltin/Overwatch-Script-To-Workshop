@@ -46,18 +46,49 @@ namespace Deltin.Deltinteger.Parse
 
         public override Node VisitVardefine(DeltinScriptParser.VardefineContext context)
         {
-            string variableName = context.PART(0).GetText();
+            string variableName = context.PART().GetText();
             bool isGlobal = context.GLOBAL() != null;
 
-            Variable? useVar = null;
-            if (Enum.TryParse<Variable>(context.PART().ElementAtOrDefault(1)?.GetText(), out Variable setUseVar))
-                useVar = setUseVar;
-            
-            int? useIndex = null;
-            if (int.TryParse(context.number()?.GetText(), out int setUseIndex))
-                useIndex = setUseIndex;
+            UseVarNode useVar = null;
+            if (context.useVar() != null)
+                useVar = (UseVarNode)VisitUseVar(context.useVar());
 
-            Node node = new DefinedNode(isGlobal, variableName, useVar, useIndex, Range.GetRange(context));
+            Node node = new DefinedNode(isGlobal, variableName, useVar, Range.GetRange(context));
+            CheckRange(node);
+            return node;
+        }
+
+        public override Node VisitDefine(DeltinScriptParser.DefineContext context)
+        {
+            string variableName = context.PART().GetText();
+            
+            IExpressionNode value = null;
+            if (context.expr() != null)
+                value = (IExpressionNode)VisitExpr(context.expr());
+
+            UseVarNode useVar = null;
+            if (context.useVar() != null)
+                useVar = (UseVarNode)VisitUseVar(context.useVar());
+
+            Node node = new ScopedDefineNode(variableName, value, useVar, Range.GetRange(context));
+            CheckRange(node);
+            return node;
+        }
+
+        public override Node VisitUseVar(DeltinScriptParser.UseVarContext context)
+        {
+            if (!Enum.TryParse<Variable>(context.PART().GetText(), out Variable variable))
+            {
+                _diagnostics.Add(new Diagnostic("Expected letter.", Range.GetRange(context)) { severity = Diagnostic.Error });
+                return null;
+            }
+            
+            int index = -1;
+            if (context.number() != null)
+                if (!int.TryParse(context.number().GetText(), out index))
+                    index = -1;
+
+            Node node = new UseVarNode(variable, index, Range.GetRange(context));
             CheckRange(node);
             return node;
         }
@@ -468,19 +499,6 @@ namespace Deltin.Deltinteger.Parse
             CheckRange(node);
             return node;
         }
-
-        public override Node VisitDefine(DeltinScriptParser.DefineContext context)
-        {
-            string variableName = context.PART().GetText();
-            
-            IExpressionNode value = null;
-            if (context.expr() != null)
-                value = (IExpressionNode)VisitExpr(context.expr());
-
-            Node node = new ScopedDefineNode(variableName, value, Range.GetRange(context));
-            CheckRange(node);
-            return node;
-        }
         #endregion
 
         private void CheckRange(Node node)
@@ -552,17 +570,42 @@ namespace Deltin.Deltinteger.Parse
 
     public class DefinedNode : Node
     {
-        public bool IsGlobal { get; private set; }
-        public string VariableName { get; private set; }
-        public Variable? UseVar { get; private set; }
-        public int? UseIndex { get; private set; }
+        public bool IsGlobal { get; set; }
+        public string VariableName { get; set; }
+        public UseVarNode UseVar { get; set; }
 
-        public DefinedNode(bool isGlobal, string variableName, Variable? useVar, int? useIndex, Range range) : base (range)
+        public DefinedNode(bool isGlobal, string variableName, UseVarNode useVar, Range range) : base (range)
         {
             IsGlobal = isGlobal;
             VariableName = variableName;
             UseVar = useVar;
-            UseIndex = useIndex;
+        }
+    }
+
+    public class ScopedDefineNode : Node, IStatementNode
+    {
+        public string VariableName { get; }
+        public IExpressionNode Value { get; }
+        public UseVarNode UseVar { get; }
+
+        public ScopedDefineNode(string variableName, IExpressionNode value, UseVarNode useVar, Range range) : base (range)
+        {
+            VariableName = variableName;
+            Value = value;
+            UseVar = useVar;
+        }
+    }
+
+    public class UseVarNode : Node
+    {
+        public Variable Variable { get; }
+        public int Index { get; }
+        public bool UsesIndex { get; }
+        public UseVarNode(Variable variable, int index, Range range) : base (range)
+        {
+            Variable = variable;
+            Index = index;
+            UsesIndex = Index != -1;
         }
     }
 
@@ -882,18 +925,6 @@ namespace Deltin.Deltinteger.Parse
 
         public ReturnNode(IExpressionNode value, Range range) : base (range)
         {
-            Value = value;
-        }
-    }
-
-    public class ScopedDefineNode : Node, IStatementNode
-    {
-        public string VariableName { get; private set; }
-        public IExpressionNode Value { get; private set; }
-
-        public ScopedDefineNode(string variableName, IExpressionNode value, Range range) : base (range)
-        {
-            VariableName = variableName;
             Value = value;
         }
     }

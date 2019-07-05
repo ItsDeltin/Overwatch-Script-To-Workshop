@@ -14,8 +14,9 @@ null   : NULL          ;
 
 statement_operation : EQUALS | EQUALS_ADD | EQUALS_DIVIDE | EQUALS_MODULO | EQUALS_MULTIPLY | EQUALS_POW | EQUALS_SUBTRACT ;
 
-vardefine : DEFINE (GLOBAL|PLAYER) PART (PART (INDEX_START number INDEX_END)?)? STATEMENT_END; /*#define global/player NAME (use variable?); */
-define   : DEFINE PART (EQUALS expr?)? ;
+vardefine : DEFINE (GLOBAL|PLAYER) PART useVar? STATEMENT_END; /*#define global/player NAME (use variable?); */
+define   : DEFINE PART useVar? (EQUALS expr?)? ;
+useVar   : PART (INDEX_START number INDEX_END)? ;
 useGlobalVar : USEVAR GLOBAL PART STATEMENT_END ;
 usePlayerVar : USEVAR PLAYER PART STATEMENT_END ;
 

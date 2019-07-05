@@ -61,7 +61,7 @@ namespace Deltin.Deltinteger.Parse
                         parserData.VarCollection.AssignDefinedVar(root, definedVar.IsGlobal, definedVar.VariableName, definedVar.Range);
                     else
                         parserData.VarCollection.AllVars.Add(
-                            new DefinedVar(root, definedVar.VariableName, definedVar.IsGlobal, (Variable)definedVar.UseVar, definedVar.UseIndex ?? -1, definedVar.Range, parserData.VarCollection)
+                            new DefinedVar(root, definedVar.VariableName, definedVar.IsGlobal, definedVar.UseVar.Variable, definedVar.UseVar.Index, definedVar.Range, parserData.VarCollection)
                         );
 
                 // Get the user methods.
@@ -1029,7 +1029,14 @@ namespace Deltin.Deltinteger.Parse
 
         void ParseDefine(ScopeGroup scope, ScopedDefineNode defineNode)
         {
-            var var = VarCollection.AssignDefinedVar(scope, IsGlobal, defineNode.VariableName, defineNode.Range);
+            Var var;
+            if (defineNode.UseVar == null)
+                var = VarCollection.AssignDefinedVar(scope, IsGlobal, defineNode.VariableName, defineNode.Range);
+            else
+            {
+                var = new DefinedVar(scope, defineNode.VariableName, IsGlobal, defineNode.UseVar.Variable, defineNode.UseVar.Index, defineNode.Range, VarCollection);
+                VarCollection.AllVars.Add(var);
+            }
 
             // Set the defined variable if the variable is defined like "define var = 1"
             if (defineNode.Value != null)

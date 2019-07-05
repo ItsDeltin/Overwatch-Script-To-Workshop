@@ -36,7 +36,7 @@ namespace Deltin.Deltinteger.Parse
         {
             // Confirm there is an expression after the last ",".
             if (context.children?.Last().GetText() == ",")
-                _diagnostics.Add(new Diagnostic("Expected parameter.", Range.GetRange(context)) { severity = Diagnostic.Error });
+                _diagnostics.Add(new Diagnostic("Expected parameter.", Range.GetRange(context).end.ToRange()) { severity = Diagnostic.Error });
             return base.VisitParameters(context);
         }
 
