@@ -508,9 +508,17 @@ namespace Deltin.Deltinteger.Parse
                         {
                             ContinueSkip.Setup();
 
+                            // ! Workaround for SmallMessage string re-evaluation workshop bug. Remove if blizzard fixes it
+                            Actions.Add(A_Wait.MinimumWait);
+                            // !
+
                             for (int i = 0; i < lastMethod.ParameterVars.Length; i++)
+                            {
                                 if (methodNode.Parameters.Length > i)
-                                    Actions.Add(lastMethod.ParameterVars[i].Push(ParseExpression(scope, methodNode.Parameters[i])));
+                                    lastMethod.ParameterVars[i].Push(ParseExpression(scope, methodNode.Parameters[i]));
+                                else
+                                    throw SyntaxErrorException.MissingParameter(userMethod.Parameters[i].Name, methodNode.Name, methodNode.Range);
+                            }
 
                             // ?--- Multidimensional Array 
                             Actions.Add(
@@ -543,8 +551,8 @@ namespace Deltin.Deltinteger.Parse
                                 if (methodNode.Parameters.Length > i)
                                 {
                                     // Create a new variable using the parameter input.
-                                    parameterVars[i] = VarCollection.AssignParameterVar(Actions, methodScope, IsGlobal, userMethod.Parameters[i].Name, methodNode.Range);
-                                    Actions.Add(parameterVars[i].Push(ParseExpression(scope, methodNode.Parameters[i])));
+                                    parameterVars[i] = VarCollection.AssignRecursiveVar(Actions, methodScope, IsGlobal, userMethod.Parameters[i].Name, methodNode.Range);
+                                    parameterVars[i].Push(ParseExpression(scope, methodNode.Parameters[i]));
                                 }
                                 else
                                     throw SyntaxErrorException.MissingParameter(userMethod.Parameters[i].Name, methodNode.Name, methodNode.Range);
@@ -567,7 +575,10 @@ namespace Deltin.Deltinteger.Parse
                             else
                                 method = null;
 
+                            // ! Workaround for SmallMessage string re-evaluation workshop bug. Remove if blizzard fixes it
                             Actions.Add(A_Wait.MinimumWait);
+                            // !
+
                             for (int i = 0; i < parameterVars.Length; i++)
                             {
                                 parameterVars[i].Pop();
@@ -604,7 +615,8 @@ namespace Deltin.Deltinteger.Parse
                                 )
                             );
                             ContinueSkip.ResetSkip();
-
+                            Actions.Add(continueSkipArray.SetVariable(new V_Number()));
+                            
                             MethodStack.Remove(stack);
                         }
                         break;

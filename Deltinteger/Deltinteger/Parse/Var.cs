@@ -198,7 +198,7 @@ namespace Deltin.Deltinteger.Parse
             return base.SetVariable(Element.Part<V_GlobalVariable>(bAsWorkshop), targetPlayer);
         }
 
-        public Element Push(Element value, Element targetPlayer = null)
+        public void Push(Element value, Element targetPlayer = null)
         {
             Actions.Add(
                 Element.Part<A_SetGlobalVariable>(bAsWorkshop, base.GetVariable(targetPlayer))
@@ -208,7 +208,9 @@ namespace Deltin.Deltinteger.Parse
                 Element.Part<A_SetGlobalVariableAtIndex>(bAsWorkshop, Element.Part<V_CountOf>(Element.Part<V_GlobalVariable>(bAsWorkshop)), value)
             );
 
-            return base.SetVariable(Element.Part<V_GlobalVariable>(bAsWorkshop), targetPlayer);
+            Actions.Add(
+                base.SetVariable(Element.Part<V_GlobalVariable>(bAsWorkshop), targetPlayer)
+            );
         }
 
         public void Pop(Element targetPlayer = null)
