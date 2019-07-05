@@ -17,7 +17,7 @@ let client: LanguageClient;
 
 let workshopOut: OutputChannel;
 
-const http = require('http');
+import * as http from 'http';
 const request = require('request');
 
 const config = workspace.getConfiguration("ostw", null);
@@ -28,8 +28,11 @@ export function activate(context: ExtensionContext) {
 
 	// Shows the compiled result in an output window.
 	workshopOut = window.createOutputChannel("Workshop Code"); // Create the channel.
+
+	let port2 : number = config.get('port2');
+
 	// Create the server.
-	http.createServer(function (req, res) {
+	let server = http.createServer(function (req, res) {
 			
 		if (req.method == 'POST') {
 			var body = '';
@@ -51,7 +54,8 @@ export function activate(context: ExtensionContext) {
 		{
 			res.end();
 		}
-	}).listen(config.get('port2')); // Listen on port.
+	});
+	server.listen(port2); // Listen on port.
 
 	// The server is implemented in node
 	let serverModule = context.asAbsolutePath(

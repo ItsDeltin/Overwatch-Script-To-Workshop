@@ -21,8 +21,8 @@ namespace Deltin.Deltinteger.LanguageServer
     {
         static Log Log = new Log("LangServer");
 
-        const int DefaultPort = 3000;
-        const int DefaultClientPort = 3001;
+        const int DefaultPort = 9145;
+        const int DefaultClientPort = 9146;
         
         public static void RequestLoop(int serverPort, int clientPort)
         {
@@ -114,6 +114,7 @@ namespace Deltin.Deltinteger.LanguageServer
                 string final = Program.RuleArrayToWorkshop(data.Rules.ToArray(), data.VarCollection);
                 using (var wc = new WebClient())
                 {
+                    wc.Encoding = System.Text.Encoding.UTF8;
                     wc.UploadString($"http://localhost:{clientPort}/", final);
                 }
             }

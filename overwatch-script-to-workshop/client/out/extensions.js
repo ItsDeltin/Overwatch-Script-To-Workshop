@@ -9,15 +9,16 @@ const vscode_1 = require("vscode");
 const vscode_languageclient_1 = require("vscode-languageclient");
 let client;
 let workshopOut;
-const http = require('http');
+const http = require("http");
 const request = require('request');
 const config = vscode_1.workspace.getConfiguration("ostw", null);
 function activate(context) {
     ping();
     // Shows the compiled result in an output window.
     workshopOut = vscode_1.window.createOutputChannel("Workshop Code"); // Create the channel.
+    let port2 = config.get('port2');
     // Create the server.
-    http.createServer(function (req, res) {
+    let server = http.createServer(function (req, res) {
         if (req.method == 'POST') {
             var body = '';
             req.on('data', function (data) {
@@ -35,7 +36,8 @@ function activate(context) {
         else {
             res.end();
         }
-    }).listen(config.get('port2')); // Listen on port.
+    });
+    server.listen(port2); // Listen on port.
     // The server is implemented in node
     let serverModule = context.asAbsolutePath(path.join('server', 'out', 'server.js'));
     // The debug options for the server
