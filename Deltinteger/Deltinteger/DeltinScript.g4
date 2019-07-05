@@ -166,7 +166,6 @@ GLOBAL    : 'globalvar' ;
 TRUE      : 'true'      ;
 FALSE     : 'false'     ;
 NULL      : 'null'      ;
-ARRAY     : 'array'     ;
 METHOD    : 'method'    ;
 RETURN    : 'return'    ;
 WHILE     : 'while'     ;

@@ -30,7 +30,10 @@ namespace Deltin.Deltinteger
 
             // Determines if user methods can be recursive.
             if (args.Contains("-allowrecursion"))
+            {
+                Log.Write(LogLevel.Normal, "Recursion enabled.");
                 Translate.AllowRecursion = true;
+            }
 
             if (args.Contains("-langserver"))
             {

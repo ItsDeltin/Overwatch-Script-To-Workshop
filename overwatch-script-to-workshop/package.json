@@ -2,7 +2,7 @@
     "name": "overwatch-script-to-workshop",
     "displayName": "Overwatch Script To Workshop",
     "description": "Autocomplete and syntax highlighting for Overwatch Script To Workshop",
-    "version": "0.0.2",
+    "version": "0.0.3",
     "publisher": "Deltin",
     "engines": {
         "vscode": "^1.34.0"
