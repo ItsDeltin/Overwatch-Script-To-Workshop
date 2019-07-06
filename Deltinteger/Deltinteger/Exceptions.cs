@@ -28,7 +28,7 @@ namespace Deltin.Deltinteger
         public const string alreadyDefined       = "The variable {0} was already defined.";
         public const string mustBeValue          = "{0} must be a value method, not an action method.";
         public const string mustBeAction         = "{0} must be an action method, not a value method.";
-        public const string recursionNotAllowed  = "Recursion is not allowed. Start Deltinteger.exe with the argument -allowrecursion.";
+        public const string recursionNotAllowed  = "Recursion is not allowed here. Add the 'recursive' modifier before where the method is defined.";
         public const string enumCantBeValue      = "The enum '{0}' cannot be used like a value.";
 
         public static SyntaxErrorException StringParameterCount(int parameterIndex, int parameterCount, Range range)

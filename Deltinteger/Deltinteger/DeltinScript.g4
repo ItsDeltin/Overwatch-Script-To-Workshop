@@ -102,7 +102,7 @@ ow_rule :
 	block
 	;
 
-user_method : METHOD PART LEFT_PAREN (PART (COMMA PART)*)? RIGHT_PAREN
+user_method : RECURSIVE? METHOD PART LEFT_PAREN (PART (COMMA PART)*)? RIGHT_PAREN
 	block
 	;
 
@@ -167,6 +167,7 @@ TRUE      : 'true'      ;
 FALSE     : 'false'     ;
 NULL      : 'null'      ;
 METHOD    : 'method'    ;
+RECURSIVE : 'recursive' ;
 RETURN    : 'return'    ;
 WHILE     : 'while'     ;
 

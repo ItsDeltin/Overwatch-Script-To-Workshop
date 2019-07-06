@@ -18,16 +18,17 @@ namespace Deltin.Deltinteger.Parse
                 Parameters[i] = new Parameter(node.Parameters[i], Elements.ValueType.Any, null);
             }
 
-            //UserMethodCollection.Add(this);
+            IsRecursive = node.IsRecursive;
         }
 
-        public string Name { get; private set; }
+        public string Name { get; }
 
-        public BlockNode Block { get; private set; }
+        public BlockNode Block { get; }
 
-        public ParameterBase[] Parameters { get; private set; }
+        public ParameterBase[] Parameters { get; }
 
-        //public static readonly List<UserMethod> UserMethodCollection = new List<UserMethod>();
+        public bool IsRecursive { get; }
+
 
         public override string ToString()
         {

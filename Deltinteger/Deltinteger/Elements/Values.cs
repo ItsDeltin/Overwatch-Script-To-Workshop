@@ -522,6 +522,8 @@ namespace Deltin.Deltinteger.Elements
     [ElementData("Number", ValueType.Number)]
     public class V_Number : Element
     {
+        public static readonly V_Number LargeArbitraryNumber = new V_Number(9999);
+
         double value;
 
         public V_Number(double value)
@@ -893,6 +895,7 @@ namespace Deltin.Deltinteger.Elements
                 .Replace(")", @"\)")
                 .Replace(".", @"\.")
                 .Replace("/", @"\/")
+                .Replace("+", @"\+")
                 ;
         }
 

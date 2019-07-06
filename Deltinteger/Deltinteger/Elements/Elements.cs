@@ -253,6 +253,22 @@ namespace Deltin.Deltinteger.Elements
                 "(" + string.Join(", ", parameters) + ")");
         }
 
+        public static string ToWorkshop(Element[] actions)
+        {
+            var builder = new TabStringBuilder(true);
+            builder.AppendLine("actions");
+            builder.AppendLine("{");
+            builder.Indent = 1;
+            foreach(Element action in actions)
+            {
+                builder.AppendLine(action.ToWorkshop() + ";");
+            }
+            builder.Indent = 0;
+            builder.AppendLine("}");
+            
+            return builder.ToString();
+        }
+
         protected virtual string[] AdditionalParameters()
         {
             return new string[0];

@@ -457,10 +457,9 @@ namespace Deltin.Deltinteger.Parse
 
                 case MethodType.UserMethod:
                 {
-                    if (!AllowRecursion)
+                    UserMethod userMethod = UserMethod.GetUserMethod(UserMethods, methodNode.Name);
+                    if (!userMethod.IsRecursive)
                     {
-                        UserMethod userMethod = UserMethod.GetUserMethod(UserMethods, methodNode.Name);
-
                         if (MethodStackNoRecursive.Contains(userMethod))
                             throw SyntaxErrorException.RecursionNotAllowed(methodNode.Range);
 
@@ -500,9 +499,7 @@ namespace Deltin.Deltinteger.Parse
                         break;
                     }
                     else
-                    {
-                        UserMethod userMethod = UserMethod.GetUserMethod(UserMethods, methodNode.Name);
-                        
+                    {                        
                         MethodStack lastMethod = MethodStack.FirstOrDefault(ms => ms.UserMethod == userMethod);
                         if (lastMethod != null)
                         {

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.LanguageServer;
 using Antlr4.Runtime;
@@ -139,14 +140,14 @@ namespace Deltin.Deltinteger.Parse
                                 Element.Part<V_Append>(
                                     Element.Part<V_ArraySlice>(GetVariable(targetPlayer), new V_Number(0), setAtIndex), 
                                     value),
-                            Element.Part<V_ArraySlice>(GetVariable(targetPlayer), Element.Part<V_Add>(setAtIndex, new V_Number(1)), new V_Number(9999))));
+                            Element.Part<V_ArraySlice>(GetVariable(targetPlayer), Element.Part<V_Add>(setAtIndex, new V_Number(1)), V_Number.LargeArbitraryNumber)));
                     else
                         element = Element.Part<A_SetPlayerVariableAtIndex>(targetPlayer, VariableAsWorkshop, new V_Number(Index),
                             Element.Part<V_Append>(
                                 Element.Part<V_Append>(
                                     Element.Part<V_ArraySlice>(GetVariable(targetPlayer), new V_Number(0), setAtIndex),
                                     value),
-                            Element.Part<V_ArraySlice>(GetVariable(targetPlayer), Element.Part<V_Add>(setAtIndex, new V_Number(1)), new V_Number(9999))));
+                            Element.Part<V_ArraySlice>(GetVariable(targetPlayer), Element.Part<V_Add>(setAtIndex, new V_Number(1)), V_Number.LargeArbitraryNumber)));
                 }
                 else
                 {
@@ -252,6 +253,80 @@ namespace Deltin.Deltinteger.Parse
         public void DebugPrint(Log log, int depth)
         {
             throw new NotImplementedException();
+        }
+    }
+
+    public class WorkshopDArray
+    {
+        public static Element[] SetVariable(Element value, Element targetPlayer, Variable variable, params V_Number[] index)
+        {
+            bool isGlobal = targetPlayer == null;
+
+            if (index == null || index.Length == 0)
+            {
+                if (isGlobal)
+                    return new Element[] { Element.Part<A_SetGlobalVariable>(              EnumData.GetEnumValue(variable), value) };
+                else
+                    return new Element[] { Element.Part<A_SetPlayerVariable>(targetPlayer, EnumData.GetEnumValue(variable), value) };
+            }
+
+            if (index.Length == 1)
+            {
+                if (isGlobal)
+                    return new Element[] { Element.Part<A_SetGlobalVariableAtIndex>(              EnumData.GetEnumValue(variable), index[0], value) };
+                else
+                    return new Element[] { Element.Part<A_SetPlayerVariableAtIndex>(targetPlayer, EnumData.GetEnumValue(variable), index[0], value) };
+            }
+
+            List<Element> actions = new List<Element>();
+
+            Element root = GetRoot(targetPlayer, variable);
+
+            // index is 2 or greater
+            int dimensions = index.Length - 1;
+            actions.AddRange(
+                SetVariable(ValueInArrayPath(root, index.Take(index.Length - 1).ToArray()), targetPlayer, Variable.B)
+            );
+            actions.AddRange(
+                SetVariable(value, targetPlayer, Variable.B, index.Last())
+            );
+            for (int i = 1; i < dimensions; i++)
+            {
+                Element array = ValueInArrayPath(root, index.Take(dimensions - i).ToArray());
+                
+                actions.AddRange(
+                    SetVariable(GetRoot(targetPlayer, Variable.B), targetPlayer, variable)
+                );
+                actions.AddRange(
+                    SetVariable(array, targetPlayer, Variable.B)
+                );
+                actions.AddRange(
+                    SetVariable(GetRoot(targetPlayer, variable), targetPlayer, Variable.B, index[i])
+                );
+            }
+            actions.AddRange(
+                SetVariable(GetRoot(targetPlayer, Variable.B), targetPlayer, variable, index[0])
+            );
+            return actions.ToArray();
+        }
+
+        private static Element ValueInArrayPath(Element array, V_Number[] index)
+        {
+            if (index.Length == 0)
+                return array;
+            
+            if (index.Length == 1)
+                return Element.Part<V_ValueInArray>(array, index[0]);
+            
+            return Element.Part<V_ValueInArray>(ValueInArrayPath(array, index.Take(index.Length - 1).ToArray()), index.Last());
+        }
+
+        private static Element GetRoot(Element targetPlayer, Variable variable)
+        {
+            if (targetPlayer == null)
+                return Element.Part<V_GlobalVariable>(EnumData.GetEnumValue(variable));
+            else
+                return Element.Part<V_PlayerVariable>(targetPlayer, EnumData.GetEnumValue(variable));
         }
     }
 }
