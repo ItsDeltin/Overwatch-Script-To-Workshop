@@ -10,11 +10,17 @@ namespace Deltin.Deltinteger
         void DebugPrint(Log log, int depth = 0);
     }
 
-    public interface IMethod
+    public interface IMethod : ILanguageServerInfo
     {
         string Name { get; }
         ParameterBase[] Parameters { get; }
-        string Label { get; }
         WikiMethod Wiki { get; }
+    }
+
+    public interface ILanguageServerInfo
+    {
+        //string Label { get; }
+        //string MarkdownLabel { get; }
+        string GetLabel(bool markdown);
     }
 }

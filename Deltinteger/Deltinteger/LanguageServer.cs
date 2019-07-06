@@ -313,7 +313,7 @@ namespace Deltin.Deltinteger.LanguageServer
                     if (method != null)
                     {
                         information = new SignatureInformation(
-                            method.Label,
+                            method.GetLabel(false),
                             // Get the method's documentation
                             method.Wiki?.Description,
                             // Get the parameter data
@@ -356,7 +356,7 @@ namespace Deltin.Deltinteger.LanguageServer
                         IMethod method = parser.GetMethod(methodNode.Name);
 
                         if (method != null)
-                            hover = new Hover(new MarkupContent(MarkupContent.Markdown, method.Label))
+                            hover = new Hover(new MarkupContent(MarkupContent.Markdown, method.GetLabel(true)))
                             {
                                 range = methodNode.Range
                             };

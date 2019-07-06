@@ -48,12 +48,9 @@ namespace Deltin.Deltinteger.Elements
         public CustomMethodType CustomMethodType { get; }
         public Type Type { get; }
         public WikiMethod Wiki { get; }
-        public string Label
+        public string GetLabel(bool markdown)
         {
-            get
-            {
-                return Name + "(" + Parameter.ParameterGroupToString(Parameters) + ")";
-            }
+            return Name + "(" + Parameter.ParameterGroupToString(Parameters, markdown) + ")";
         }
 
         public CustomMethodData(Type type)

@@ -52,7 +52,7 @@ namespace Deltin.Deltinteger.Elements
     }
 
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Method, AllowMultiple = true)]
-    public abstract class ParameterBase : Attribute
+    public abstract class ParameterBase : Attribute, ILanguageServerInfo
     {
         public string Name { get; private set; }
 
@@ -71,11 +71,11 @@ namespace Deltin.Deltinteger.Elements
             return Name;
         }
 
-        public abstract string Info();
+        public abstract string GetLabel(bool markdown);
 
-        public static string ParameterGroupToString(ParameterBase[] parameters)
+        public static string ParameterGroupToString(ParameterBase[] parameters, bool markdown)
         {
-            return string.Join(", ", parameters.Select(p => p.ToString()));
+            return string.Join(", ", parameters.Select(p => p.GetLabel(markdown)));
         }
     }
 
@@ -97,9 +97,12 @@ namespace Deltin.Deltinteger.Elements
             return (IWorkshopTree)Activator.CreateInstance(DefaultType);
         }
 
-        public override string Info()
+        public override string GetLabel(bool markdown)
         {
-            return ReturnType.ToString() + ": " + Name;
+            if (!markdown)
+                return ReturnType.ToString() + " " + Name;
+            else
+                return "**" + ReturnType.ToString() + "** " + Name;
         }
     }
 
@@ -119,9 +122,12 @@ namespace Deltin.Deltinteger.Elements
             return EnumData.Members[0];
         }
 
-        public override string Info()
+        public override string GetLabel(bool markdown)
         {
-            return EnumData.CodeName + ": " + Name;
+            if (!markdown)
+                return EnumData.CodeName + " " + Name;
+            else
+                return "**" + EnumData.CodeName + "** " + Name;
         }
     }
 
@@ -129,9 +135,12 @@ namespace Deltin.Deltinteger.Elements
     {
         public VarRefParameter(string name) : base(name) {}
 
-        public override string Info()
+        public override string GetLabel(bool markdown)
         {
-            return "ref: " + Name;
+            if (!markdown)
+                return "ref " + Name;
+            else
+                return "**ref** " + Name;
         }
     }
 
@@ -183,20 +192,15 @@ namespace Deltin.Deltinteger.Elements
             return element;
         }
 
-        public static string GetName(Type type)
-        {
-            ElementData elementData = type.GetCustomAttribute<ElementData>();
-            ParameterBase[] parameters = type.GetCustomAttributes<ParameterBase>().ToArray();
-            return $"{type.Name.Substring(2)}({Parameter.ParameterGroupToString(parameters)})";
-        }
-
         public Element(params IWorkshopTree[] parameterValues)
         {
+            ElementList = Element.GetElement(GetType().Name.Substring(2));
             ElementData = GetType().GetCustomAttribute<ElementData>();
-            ParameterData = GetType().GetCustomAttributes<ParameterBase>().ToArray();
+            ParameterData = ElementList.Parameters;
             ParameterValues = parameterValues;
         }
 
+        public ElementList ElementList { get; private set; }
         public ElementData ElementData { get; private set; }
         public ParameterBase[] ParameterData { get; private set; }
 
@@ -206,7 +210,7 @@ namespace Deltin.Deltinteger.Elements
 
         public override string ToString()
         {
-            return GetName(this.GetType());
+            return ElementList.GetLabel(false);
         }
 
         public string Name { get { return GetType().Name.Substring(2); } set {} }
@@ -306,12 +310,11 @@ namespace Deltin.Deltinteger.Elements
         public WikiMethod Wiki { get; }
 
 
-        public string Label
+        public string GetLabel(bool markdown)
         {
-            get
-            {
-                return Name + "(" + Parameter.ParameterGroupToString(Parameters) + ")";
-            }
+            return Name + "(" + Parameter.ParameterGroupToString(Parameters, markdown) + ")" 
+            + "\n\r" +
+            Wiki.Description;
         }
 
         public ElementList(Type type)

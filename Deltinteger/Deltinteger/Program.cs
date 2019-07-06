@@ -35,6 +35,13 @@ namespace Deltin.Deltinteger
                 Translate.AllowRecursion = true;
             }
 
+            var actions = WorkshopDArray.SetVariable(Element.Part<V_HeroVar>(EnumData.GetEnumValue(Hero.Baptiste)), null, Variable.C, new V_Number(2), new V_Number(2), new V_Number(2));
+
+            foreach(Element val in actions)
+                val.DebugPrint(ParseLog);
+            
+            SetClipboard(Element.ToWorkshop(actions));
+
             if (args.Contains("-langserver"))
             {
                 string[] portArgs = args.FirstOrDefault(v => v.Split(' ')[0] == "-port")?.Split(' ');

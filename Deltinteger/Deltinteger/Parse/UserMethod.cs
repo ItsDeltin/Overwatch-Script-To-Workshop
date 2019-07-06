@@ -30,12 +30,9 @@ namespace Deltin.Deltinteger.Parse
 
         public bool IsRecursive { get; }
 
-        public string Label 
-        { 
-            get 
-            {
-                return Name + "(" + Parameter.ParameterGroupToString(Parameters) + ")";
-            }
+        public string GetLabel(bool markdown)
+        {
+            return Name + "(" + Parameter.ParameterGroupToString(Parameters, markdown) + ")";
         }
         
         public WikiMethod Wiki { get { return null; }}
@@ -43,7 +40,7 @@ namespace Deltin.Deltinteger.Parse
 
         public override string ToString()
         {
-            return Name + "(" + Parameter.ParameterGroupToString(Parameters) + ")";
+            return GetLabel(false);
         }
 
         public static UserMethod GetUserMethod(UserMethod[] methods, string name)
