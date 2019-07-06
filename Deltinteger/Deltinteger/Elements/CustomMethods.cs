@@ -41,13 +41,20 @@ namespace Deltin.Deltinteger.Elements
         Action
     }
 
-    public class CustomMethodData
+    public class CustomMethodData : IMethod
     {
-        public string Name;
-        public ParameterBase[] Parameters;
-        public CustomMethodType CustomMethodType;
-        public Type Type;
-        public WikiMethod WikiMethod;
+        public string Name { get; }
+        public ParameterBase[] Parameters { get; }
+        public CustomMethodType CustomMethodType { get; }
+        public Type Type { get; }
+        public WikiMethod Wiki { get; }
+        public string Label
+        {
+            get
+            {
+                return Name + "(" + Parameter.ParameterGroupToString(Parameters) + ")";
+            }
+        }
 
         public CustomMethodData(Type type)
         {
@@ -60,7 +67,7 @@ namespace Deltin.Deltinteger.Elements
             Parameters = type.GetCustomAttributes<ParameterBase>()
                 .ToArray();
             
-            WikiMethod = GetObject(null, null).Wiki();
+            Wiki = GetObject(null, null).Wiki();
         }
 
         public CustomMethodBase GetObject(Translate context, IWorkshopTree[] parameters)
@@ -94,7 +101,7 @@ namespace Deltin.Deltinteger.Elements
             return GetCustomMethods().Select(cm => new CompletionItem(cm.Name) 
             { 
                 kind = CompletionItem.Method,
-                documentation = cm.WikiMethod?.Description
+                documentation = cm.Wiki?.Description
             }).ToArray();
         }
     }
@@ -495,7 +502,7 @@ namespace Deltin.Deltinteger.Elements
 
     [CustomMethod("ChaseVariable", CustomMethodType.Action)]
     [VarRefParameter("Variable")]
-    [Parameter("Destination", ValueType.Number, null)]
+    [Parameter("Destination", ValueType.Number | ValueType.Vector, null)]
     [Parameter("Rate", ValueType.Number, null)]
     class ChaseVariable : CustomMethodBase
     {
@@ -524,7 +531,14 @@ namespace Deltin.Deltinteger.Elements
     
         public override WikiMethod Wiki()
         {
-            return new WikiMethod("ChaseVariable", "Chases a variable to a value. Works with numbers and vectors.", null);
+            return new WikiMethod("ChaseVariable", "Chases a variable to a value. Works with numbers and vectors.", 
+                new WikiParameter[]
+                {
+                    new WikiParameter("Variable", "Variable that will chase the destination."),
+                    new WikiParameter("Destination", "The final variable destination. Can be a number or vector."),
+                    new WikiParameter("Rate", "The chase speed per second.")
+                }
+            );
         }
     }
 
@@ -566,7 +580,51 @@ namespace Deltin.Deltinteger.Elements
 
         public override WikiMethod Wiki()
         {
-            return new WikiMethod("RemoveFromArrayAtIndex", "Removes a value from an array by it's index.", null);
+            return new WikiMethod("RemoveFromArrayAtIndex", "Removes a value from an array by it's index.",
+                new WikiParameter[]
+                {
+                    new WikiParameter("Array", "The array to modify."),
+                    new WikiParameter("Index", "The index to remove.")
+                }
+            );
+        }
+    }
+
+    [CustomMethod("InsertValueInArray", CustomMethodType.Value)]
+    [Parameter("Array", ValueType.Any, null)]
+    [Parameter("Index", ValueType.Number, null)]
+    [Parameter("Value", ValueType.Any, null)]
+    class InsertValueInArray : CustomMethodBase
+    {
+        public InsertValueInArray(Translate translate, IWorkshopTree[] parameters) : base (translate, parameters) {}
+
+        public override MethodResult Get()
+        {
+            Element array = (Element)Parameters[0];
+            Element index = (Element)Parameters[1];
+            Element value = (Element)Parameters[2];
+
+            return new MethodResult(null,
+                Element.Part<V_Append>(
+                    Element.Part<V_Append>(
+                        Element.Part<V_ArraySlice>(array, new V_Number(0), index),
+                        value
+                    ),
+                    Element.Part<V_ArraySlice>(array, index, V_Number.LargeArbitraryNumber)
+                )
+            );
+        }
+
+        public override WikiMethod Wiki()
+        {
+            return new WikiMethod("InsertValueInArray", "Inserts a value into an array.",
+                new WikiParameter[]
+                {
+                    new WikiParameter("Array", "The array to modify."),
+                    new WikiParameter("Index", "Where to insert the value."),
+                    new WikiParameter("Value", "The value to insert.")
+                }
+            );
         }
     }
 }

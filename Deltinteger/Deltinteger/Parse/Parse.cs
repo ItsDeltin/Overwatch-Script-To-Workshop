@@ -106,6 +106,13 @@ namespace Deltin.Deltinteger.Parse
         public VarCollection VarCollection { get; private set; }
         public Looper GlobalLoop { get; private set; }
         public Looper PlayerLoop { get; private set; }
+
+        public IMethod GetMethod(string name)
+        {
+            return (IMethod)UserMethods?.FirstOrDefault(um => um.Name == name) 
+            ?? (IMethod)CustomMethodData.GetCustomMethod(name) 
+            ?? (IMethod)Element.GetElement(name);
+        }
     }
 
     public class Translate

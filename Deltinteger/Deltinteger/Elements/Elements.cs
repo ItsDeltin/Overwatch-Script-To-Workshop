@@ -156,7 +156,7 @@ namespace Deltin.Deltinteger.Elements
         }
         public static ElementList GetElement(string codeName)
         {
-            return Elements.FirstOrDefault(e => e.CodeName == codeName);
+            return Elements.FirstOrDefault(e => e.Name == codeName);
         }
         public static CompletionItem[] GetCompletion(bool values, bool actions)
         {
@@ -164,10 +164,10 @@ namespace Deltin.Deltinteger.Elements
             foreach(ElementList element in Elements)
                 if ((element.IsValue && values) || (!element.IsValue && actions))
                 {
-                    completions.Add(new CompletionItem(element.CodeName) {
+                    completions.Add(new CompletionItem(element.Name) {
                         detail = element.GetObject().ToString(),
                         kind = CompletionItem.Method,
-                        data = element.CodeName,
+                        data = element.Name,
                         documentation = Wiki.GetWikiMethod(element.WorkshopName)?.Description
                     });
                 }
@@ -296,22 +296,33 @@ namespace Deltin.Deltinteger.Elements
         }
     }
 
-    public class ElementList
+    public class ElementList : IMethod
     {
-        public string CodeName { get; private set; }
-        public string WorkshopName { get; private set; }
-        public Type Type { get; private set; }
-        public bool IsValue { get; private set; } 
-        public ParameterBase[] Parameters { get; private set; }
+        public string Name { get; }
+        public string WorkshopName { get; }
+        public Type Type { get; }
+        public bool IsValue { get; } 
+        public ParameterBase[] Parameters { get; }
+        public WikiMethod Wiki { get; }
+
+
+        public string Label
+        {
+            get
+            {
+                return Name + "(" + Parameter.ParameterGroupToString(Parameters) + ")";
+            }
+        }
 
         public ElementList(Type type)
         {
             ElementData data = type.GetCustomAttribute<ElementData>();
-            CodeName = type.Name.Substring(2); 
+            Name = type.Name.Substring(2); 
             WorkshopName = data.ElementName;
             Type = type;
             IsValue = data.IsValue;
             Parameters = type.GetCustomAttributes<ParameterBase>().ToArray();
+            Wiki = WorkshopWiki.Wiki.GetWikiMethod(WorkshopName);
         }
 
         public Element GetObject()

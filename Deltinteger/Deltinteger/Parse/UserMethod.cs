@@ -2,10 +2,11 @@ using System.Linq;
 using System.Collections.Generic;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.LanguageServer;
+using Deltin.Deltinteger.WorkshopWiki;
 
 namespace Deltin.Deltinteger.Parse
 {
-    public class UserMethod
+    public class UserMethod : IMethod
     {
         public UserMethod(UserMethodNode node)
         {
@@ -28,6 +29,16 @@ namespace Deltin.Deltinteger.Parse
         public ParameterBase[] Parameters { get; }
 
         public bool IsRecursive { get; }
+
+        public string Label 
+        { 
+            get 
+            {
+                return Name + "(" + Parameter.ParameterGroupToString(Parameters) + ")";
+            }
+        }
+        
+        public WikiMethod Wiki { get { return null; }}
 
 
         public override string ToString()

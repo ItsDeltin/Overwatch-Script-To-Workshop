@@ -308,21 +308,18 @@ namespace Deltin.Deltinteger.LanguageServer
                 SignatureInformation information = null;
                 if (methodNode != null)
                 {
-                    var element = Element.GetElement(methodNode.Name);
+                    IMethod method = parser.GetMethod(methodNode.Name);
 
-                    if (element != null)
+                    if (method != null)
                     {
                         information = new SignatureInformation(
-                            element.GetObject().ToString(),
+                            method.Label,
                             // Get the method's documentation
-                            WorkshopWiki.Wiki.GetWikiMethod(element.WorkshopName)?.Description,
+                            method.Wiki?.Description,
                             // Get the parameter data
-                            element.Parameters.Select(p => 
-                                new ParameterInformation(
-                                    p.Name, 
-                                    WorkshopWiki.Wiki.GetWikiMethod(element.WorkshopName)?.GetWikiParameter(p.Name)?.Description ?? ""
-                                )
-                            ).ToArray());
+                            method.Wiki?.Parameters?.Select(v => v.ToParameterInformation())
+                                .ToArray()
+                        );
                     }
                 }
 
@@ -356,24 +353,10 @@ namespace Deltin.Deltinteger.LanguageServer
                 {
                     case MethodNode methodNode:
 
-                        var type = Translate.GetMethodType(parser.UserMethods.ToArray(), methodNode.Name);
+                        IMethod method = parser.GetMethod(methodNode.Name);
 
-                        if (type == null)
-                            hover = null;
-                        
-                        ParameterBase[] parameters;
-                        if (type == Translate.MethodType.Method)
-                            parameters = Element.GetMethod(methodNode.Name).GetCustomAttributes<ParameterBase>()
-                                .ToArray();
-                        else if (type == Translate.MethodType.CustomMethod)
-                            parameters = CustomMethodData.GetCustomMethod(methodNode.Name).Parameters
-                                .ToArray();
-                        else if (type == Translate.MethodType.UserMethod)
-                            parameters = UserMethod.GetUserMethod(parser.UserMethods.ToArray(), methodNode.Name).Parameters;
-                        else parameters = null;
-
-                        if (parameters != null)
-                            hover = new Hover(new MarkupContent(MarkupContent.Markdown, methodNode.Name + "(" + Parameter.ParameterGroupToString(parameters) + ")"))
+                        if (method != null)
+                            hover = new Hover(new MarkupContent(MarkupContent.Markdown, method.Label))
                             {
                                 range = methodNode.Range
                             };
@@ -467,7 +450,7 @@ namespace Deltin.Deltinteger.LanguageServer
         }
     }
 
-    class ParameterInformation
+    public class ParameterInformation
     {
         public object label; // string or int[]
 
@@ -525,10 +508,18 @@ namespace Deltin.Deltinteger.LanguageServer
     // https://microsoft.github.io/language-server-protocol/specification#textDocument_hover
     class Hover
     {
-        public MarkupContent contents; // TODO MarkedString support 
+        public object contents; // TODO MarkedString support 
         public Range range;
 
         public Hover(MarkupContent contents)
+        {
+            this.contents = contents;
+        }
+        public Hover(MarkedString contents)
+        {
+            this.contents = contents;
+        }
+        public Hover(MarkedString[] contents)
         {
             this.contents = contents;
         }
@@ -546,6 +537,19 @@ namespace Deltin.Deltinteger.LanguageServer
         public MarkupContent(string kind, string value)
         {
             this.kind = kind;
+            this.value = value;
+        }
+    }
+
+    [Obsolete("MarkedString is obsolete, use MarkupContent instead.")]
+    public class MarkedString
+    {
+        public string language;
+        public string value;
+
+        public MarkedString(string language, string value)
+        {
+            this.language = language;
             this.value = value;
         }
     }

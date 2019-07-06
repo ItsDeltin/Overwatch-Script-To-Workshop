@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Collections.Generic;
 using HtmlAgilityPack;
+using Deltin.Deltinteger.LanguageServer;
 
 namespace Deltin.Deltinteger.WorkshopWiki
 {
@@ -93,6 +94,11 @@ namespace Deltin.Deltinteger.WorkshopWiki
         public override string ToString()
         {
             return Name;
+        }
+
+        public ParameterInformation ToParameterInformation()
+        {
+            return new ParameterInformation(Name, Description);
         }
     }
 }

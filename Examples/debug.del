@@ -1,22 +1,6 @@
 define globalvar myArray C;
 
-/*
-rule: "setup array"
-Event.OngoingPlayer
-{
-    myArray[0] = [1, 2, 3, 4];
-    myArray[1] = [Hero.Ana, Hero.Ashe, Hero.Baptiste];
-    myArray[2] = [Team.Team1, 75, Team.Team2];
-}
-*/
-
-rule: "Array Test"
-{
-    define testArray Z = [5, 6, 7, 8, 9];
-    testArray = RemoveFromArrayAtIndex(testArray, 2);  
-}
-
-rule: "My Rule"
+rule: "Array Scan"
 Event.OngoingPlayer
 if (IsButtonHeld(EventPlayer(), Button.Interact))
 {
