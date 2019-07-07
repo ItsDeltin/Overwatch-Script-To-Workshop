@@ -67,10 +67,11 @@ namespace Deltin.Deltinteger.Elements
             Wiki = GetObject().Wiki();
         }
 
-        public CustomMethodBase GetObject(Translate context, IWorkshopTree[] parameters)
+        public CustomMethodBase GetObject(Translate context, ScopeGroup scope, IWorkshopTree[] parameters)
         {
             CustomMethodBase customMethod = GetObject();
             customMethod.TranslateContext = context;
+            customMethod.Scope = scope;
             customMethod.Parameters = parameters;
             return customMethod;
         }
@@ -133,6 +134,34 @@ namespace Deltin.Deltinteger.Elements
         protected abstract MethodResult Get();
 
         public abstract WikiMethod Wiki();
+
+        protected static Element[] ElementBuilder(params ElementBuilderPart[] parts)
+        {
+            List<Element> elements = new List<Element>();
+            foreach(ElementBuilderPart part in parts)
+                elements.AddRange(part.Elements);
+            return elements.ToArray();
+        }
+
+        protected class ElementBuilderPart
+        {
+            public Element[] Elements;
+
+            public ElementBuilderPart(Element[] elements)
+            {
+                Elements = elements;
+            }
+
+            public static implicit operator ElementBuilderPart(Element element)
+            {
+                return new ElementBuilderPart(new Element[] { element });
+            }
+
+            public static implicit operator ElementBuilderPart(Element[] elements)
+            {
+                return new ElementBuilderPart(elements);
+            }
+        }
     }
 
     [CustomMethod("AngleOfVectors", CustomMethodType.MultiAction_Value)]
@@ -145,22 +174,22 @@ namespace Deltin.Deltinteger.Elements
         {
             var eventPlayer = new V_EventPlayer();
 
-            Var a      = TranslateContext.VarCollection.AssignVar("AngleOfVectors: a"     , TranslateContext.IsGlobal);
-            Var b      = TranslateContext.VarCollection.AssignVar("AngleOfVectors: b"     , TranslateContext.IsGlobal);
-            Var c      = TranslateContext.VarCollection.AssignVar("AngleOfVectors: c"     , TranslateContext.IsGlobal);
-            Var ab     = TranslateContext.VarCollection.AssignVar("AngleOfVectors: ab"    , TranslateContext.IsGlobal);
-            Var bc     = TranslateContext.VarCollection.AssignVar("AngleOfVectors: bc"    , TranslateContext.IsGlobal);
-            Var abVec  = TranslateContext.VarCollection.AssignVar("AngleOfVectors: abVec" , TranslateContext.IsGlobal);
-            Var bcVec  = TranslateContext.VarCollection.AssignVar("AngleOfVectors: bcVec" , TranslateContext.IsGlobal);
-            Var abNorm = TranslateContext.VarCollection.AssignVar("AngleOfVectors: abNorm", TranslateContext.IsGlobal);
-            Var bcNorm = TranslateContext.VarCollection.AssignVar("AngleOfVectors: bcNorm", TranslateContext.IsGlobal);
+            Var a      = TranslateContext.VarCollection.AssignVar(Scope, "AngleOfVectors: a"     , TranslateContext.IsGlobal);
+            Var b      = TranslateContext.VarCollection.AssignVar(Scope, "AngleOfVectors: b"     , TranslateContext.IsGlobal);
+            Var c      = TranslateContext.VarCollection.AssignVar(Scope, "AngleOfVectors: c"     , TranslateContext.IsGlobal);
+            Var ab     = TranslateContext.VarCollection.AssignVar(Scope, "AngleOfVectors: ab"    , TranslateContext.IsGlobal);
+            Var bc     = TranslateContext.VarCollection.AssignVar(Scope, "AngleOfVectors: bc"    , TranslateContext.IsGlobal);
+            Var abVec  = TranslateContext.VarCollection.AssignVar(Scope, "AngleOfVectors: abVec" , TranslateContext.IsGlobal);
+            Var bcVec  = TranslateContext.VarCollection.AssignVar(Scope, "AngleOfVectors: bcVec" , TranslateContext.IsGlobal);
+            Var abNorm = TranslateContext.VarCollection.AssignVar(Scope, "AngleOfVectors: abNorm", TranslateContext.IsGlobal);
+            Var bcNorm = TranslateContext.VarCollection.AssignVar(Scope, "AngleOfVectors: bcNorm", TranslateContext.IsGlobal);
 
             Element zeroVec = Element.Part<V_Vector>(new V_Number(0), new V_Number(0), new V_Number(0));
 
             return new MethodResult
             (
-                new Element[]
-                {
+                ElementBuilder
+                (
                     // Save A
                     a.SetVariable((Element)Parameters[0], eventPlayer),
                     // Save B
@@ -224,8 +253,8 @@ namespace Deltin.Deltinteger.Elements
                             Element.Part<V_Divide>(Element.Part<V_XOf>(bc.GetVariable()), bcVec.GetVariable()),
                             Element.Part<V_Divide>(Element.Part<V_YOf>(bc.GetVariable()), bcVec.GetVariable()),
                             Element.Part<V_Divide>(Element.Part<V_ZOf>(bc.GetVariable()), bcVec.GetVariable())
-                        ), eventPlayer),
-                },
+                        ), eventPlayer)
+                ),
                 Element.Part<V_Divide>
                 (
                     Element.Part<V_Multiply>
@@ -338,10 +367,10 @@ namespace Deltin.Deltinteger.Elements
     {
         protected override MethodResult Get()
         {
-            Var temp = TranslateContext.VarCollection.AssignVar("GetMap: temp", TranslateContext.IsGlobal);
+            Var temp = TranslateContext.VarCollection.AssignVar(Scope, "GetMap: temp", TranslateContext.IsGlobal);
 
-            Element[] actions = new Element[]
-            {
+            Element[] actions = ElementBuilder
+            (
                 temp.SetVariable(Element.Part<V_RoundToInteger>(
                     Element.Part<V_Add>(
                         Element.Part<V_DistanceBetween>(
@@ -496,7 +525,7 @@ namespace Deltin.Deltinteger.Elements
                         new V_Number(305)),
                     temp.GetVariable())
                 )
-            };
+            );
 
             return new MethodResult(actions, temp.GetVariable());
         }
@@ -525,11 +554,11 @@ namespace Deltin.Deltinteger.Elements
             else
                 chaseData = TranslateContext.ParserData.PlayerLoop.GetChaseData(targetVariable.Var);
             
-            Element[] actions = new Element[]
-            {
+            Element[] actions = ElementBuilder
+            (
                 chaseData.Destination.SetVariable(destination, targetVariable.Target),
-                chaseData.Rate.SetVariable(rate, targetVariable.Target),
-            };
+                chaseData.Rate.SetVariable(rate, targetVariable.Target)
+            );
 
             return new MethodResult(actions, null);
         }

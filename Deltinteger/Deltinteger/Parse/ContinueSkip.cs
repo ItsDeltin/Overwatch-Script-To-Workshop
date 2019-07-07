@@ -27,7 +27,9 @@ namespace Deltin.Deltinteger.Parse
                 return;
             IsSetup = true;
 
-            SkipCount = VarCollection.AssignVar("ContinueSkip", IsGlobal);
+            SkipCount = VarCollection.AssignVar(null, "ContinueSkip", IsGlobal);
+            if (SkipCount is RecursiveVar)
+                throw new Exception();
             
             // Add the required wait
             Actions.Insert(0, A_Wait.MinimumWait);
@@ -45,13 +47,13 @@ namespace Deltin.Deltinteger.Parse
         public void SetSkipCount(int number)
         {
             CheckSetup();
-            Actions.Add(SkipCount.SetVariable(new V_Number(number)));
+            Actions.AddRange(SkipCount.SetVariable(new V_Number(number)));
         }
 
         public void SetSkipCount(Element element)
         {
             CheckSetup();
-            Actions.Add(SkipCount.SetVariable(element));
+            Actions.AddRange(SkipCount.SetVariable(element));
         }
 
         public void ResetSkip()

@@ -30,14 +30,20 @@ namespace Deltin.Deltinteger.Parse
             }
         }
 
-        public Var AssignVar(string name, bool isGlobal)
+        public Var AssignVar(ScopeGroup scopeGroup, string name, bool isGlobal)
         {
-            return new Var(Constants.INTERNAL_ELEMENT + name, isGlobal, UseVar, Assign(isGlobal), this);
+            if (scopeGroup == null || !scopeGroup.Recursive)
+                return new Var         (Constants.INTERNAL_ELEMENT + name, isGlobal, UseVar, Assign(isGlobal), this);
+            else
+                return new RecursiveVar(Constants.INTERNAL_ELEMENT + name, isGlobal, UseVar, Assign(isGlobal), this);
         }
 
         public Var AssignDefinedVar(ScopeGroup scopeGroup, bool isGlobal, string name, Range range)
         {
-            return new Var(scopeGroup, name, isGlobal, UseVar, Assign(isGlobal), range, this);
+            if (scopeGroup == null || !scopeGroup.Recursive)
+                return new Var         (scopeGroup, name, isGlobal, UseVar, Assign(isGlobal), range, this);
+            else
+                return new RecursiveVar(scopeGroup, name, isGlobal, UseVar, Assign(isGlobal), range, this);
         }
 
         public Var AssignDefinedVar(ScopeGroup scopeGroup, bool isGlobal, string name, Variable variable, int index, Range range)
@@ -45,9 +51,9 @@ namespace Deltin.Deltinteger.Parse
             return new Var(scopeGroup, name, isGlobal, variable, index, range, this);
         }
 
-        public RecursiveVar AssignRecursiveVar(List<Element> actions, ScopeGroup scopeGroup, bool isGlobal, string name, Range range)
+        public RecursiveVar AssignRecursiveVar(ScopeGroup scopeGroup, bool isGlobal, string name, Range range)
         {
-            return new RecursiveVar(actions, scopeGroup, name, isGlobal, UseVar, Assign(isGlobal), range, this);
+            return new RecursiveVar(scopeGroup, name, isGlobal, UseVar, Assign(isGlobal), range, this);
         }
 
         public readonly List<Var> AllVars = new List<Var>();
@@ -164,7 +170,15 @@ namespace Deltin.Deltinteger.Parse
             }
 
             return new Element[] { element };
+        }
 
+        public virtual Element[] InScope(Element initialValue, Element targetPlayer = null)
+        {
+            return SetVariable(initialValue, targetPlayer);
+        }
+        public virtual Element[] OutOfScope(Element targetPlayer = null)
+        {
+            return null;
         }
 
         public override string ToString()
@@ -177,12 +191,14 @@ namespace Deltin.Deltinteger.Parse
     {
         private static readonly IWorkshopTree bAsWorkshop = EnumData.GetEnumValue(Variable.B); // TODO: Remove when multidimensional temp var can be set.
 
-        private readonly List<Element> Actions = new List<Element>();
-
-        public RecursiveVar(List<Element> actions, ScopeGroup scopeGroup, string name, bool isGlobal, Variable variable, int index, Range range, VarCollection varCollection)
+        public RecursiveVar(ScopeGroup scopeGroup, string name, bool isGlobal, Variable variable, int index, Range range, VarCollection varCollection)
             : base (scopeGroup, name, isGlobal, variable, index, range, varCollection)
         {
-            Actions = actions;
+        }
+
+        public RecursiveVar(string name, bool isGlobal, Variable variable, int index, VarCollection varCollection)
+            : base (name, isGlobal, variable, index, varCollection)
+        {
         }
 
         override public Element GetVariable(Element targetPlayer = null)
@@ -190,39 +206,36 @@ namespace Deltin.Deltinteger.Parse
             return Element.Part<V_LastOf>(base.GetVariable(targetPlayer));
         }
 
-        override public Element SetVariable(Element value, Element targetPlayer = null, Element setAtIndex = null)
+        override public Element[] SetVariable(Element value, Element targetPlayer = null, Element setAtIndex = null)
         {
-            Actions.Add(
-                Element.Part<A_SetGlobalVariable>(bAsWorkshop, base.GetVariable(targetPlayer))
-                );
-            
-            Actions.Add(
+            return new Element[]
+            {
+                Element.Part<A_SetGlobalVariable>(bAsWorkshop, base.GetVariable(targetPlayer)),
+
                 Element.Part<A_SetGlobalVariableAtIndex>(bAsWorkshop, 
-                    Element.Part<V_Subtract>(Element.Part<V_CountOf>(Element.Part<V_GlobalVariable>(bAsWorkshop)), new V_Number(1)), value)
-            );
-
-            return base.SetVariable(Element.Part<V_GlobalVariable>(bAsWorkshop), targetPlayer);
+                        Element.Part<V_Subtract>(Element.Part<V_CountOf>(Element.Part<V_GlobalVariable>(bAsWorkshop)), new V_Number(1)), value),
+                
+                base.SetVariable(Element.Part<V_GlobalVariable>(bAsWorkshop), targetPlayer)[0]
+            };
         }
 
-        public void Push(Element value, Element targetPlayer = null)
+        public override Element[] InScope(Element initialValue, Element targetPlayer = null)
         {
-            Actions.Add(
-                Element.Part<A_SetGlobalVariable>(bAsWorkshop, base.GetVariable(targetPlayer))
-            );
-            
-            Actions.Add(
-                Element.Part<A_SetGlobalVariableAtIndex>(bAsWorkshop, Element.Part<V_CountOf>(Element.Part<V_GlobalVariable>(bAsWorkshop)), value)
-            );
+            return new Element[]
+            {
+                Element.Part<A_SetGlobalVariable>(bAsWorkshop, base.GetVariable(targetPlayer)),
 
-            Actions.Add(
-                base.SetVariable(Element.Part<V_GlobalVariable>(bAsWorkshop), targetPlayer)
-            );
+                Element.Part<A_SetGlobalVariableAtIndex>(bAsWorkshop, Element.Part<V_CountOf>(Element.Part<V_GlobalVariable>(bAsWorkshop)), initialValue ?? new V_Number(0)),
+
+                base.SetVariable(Element.Part<V_GlobalVariable>(bAsWorkshop), targetPlayer)[0]
+            };
         }
 
-        public void Pop(Element targetPlayer = null)
+        public override Element[] OutOfScope(Element targetPlayer = null)
         {
             Element get = base.GetVariable(targetPlayer);
-            Actions.Add(base.SetVariable(
+
+            return base.SetVariable(
                 Element.Part<V_ArraySlice>(
                     get,
                     new V_Number(0),
@@ -230,7 +243,7 @@ namespace Deltin.Deltinteger.Parse
                         Element.Part<V_CountOf>(get), new V_Number(1)
                     )
                 ), targetPlayer
-            ));
+            );
         }
 
         public Element DebugStack(Element targetPlayer = null)

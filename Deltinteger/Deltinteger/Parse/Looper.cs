@@ -42,8 +42,8 @@ namespace Deltin.Deltinteger.Parse
             if (existingChaseData != null)
                 return existingChaseData;
             
-            Var destination = var.VarCollection.AssignVar($"'{var.Name}' chase destination", true);
-            Var rate        = var.VarCollection.AssignVar($"'{var.Name}' chase duration", true);
+            Var destination = var.VarCollection.AssignVar(null, $"'{var.Name}' chase destination", true);
+            Var rate        = var.VarCollection.AssignVar(null, $"'{var.Name}' chase duration", true);
 
             VariableChase newChaseData = new VariableChase(var, destination, rate);
             _chases.Add(newChaseData);
@@ -69,9 +69,9 @@ namespace Deltin.Deltinteger.Parse
                 destination.GetVariable()
             );
 
-            Element setVar = var.SetVariable(result);
+            Element[] setVar = var.SetVariable(result);
 
-            return new Element[] { setVar };
+            return setVar;
         }
     }
 

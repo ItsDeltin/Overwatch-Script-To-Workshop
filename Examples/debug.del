@@ -5,16 +5,15 @@ Event.OngoingPlayer
 if (IsButtonHeld(EventPlayer(), Button.Interact))
 {
     dims = EmptyArray();
-    arrayWalk(myArray, 0);
-    
+    arrayWalk(myArray);
 }
 
 define playervar dims;
  
 # Prints every value in a multidimensional array. 
-recursive method arrayWalk(array, index)
+recursive method arrayWalk(array) 
 { 
-    for (; index < CountOf(array); index++)
+    for (define index = 0; index < CountOf(array); index++)
     {
         if (CountOf(array[index]) == 0)
         {
@@ -39,7 +38,7 @@ recursive method arrayWalk(array, index)
         else
         {
             dims = Append(dims, index);
-            arrayWalk(array[index], 0);
+            arrayWalk(array[index]);
             dims = ArraySlice(dims, 0, CountOf(dims) - 1);
         }
     }

@@ -453,7 +453,7 @@ namespace Deltin.Deltinteger.Parse
                                 throw SyntaxErrorException.InvalidMethodType(false, methodNode.Name, methodNode.Range);
                             break;
                     }
-                    var result = customMethod.GetObject(this, parsedParameters.ToArray()).Result();
+                    var result = customMethod.GetObject(this, scope, parsedParameters.ToArray()).Result();
 
                     // Some custom methods have extra actions.
                     if (result.Elements != null)
@@ -481,13 +481,13 @@ namespace Deltin.Deltinteger.Parse
                             {
                                 // Create a new variable using the parameter input.
                                 parameterVars[i] = VarCollection.AssignDefinedVar(methodScope, IsGlobal, userMethod.Parameters[i].Name, methodNode.Range);
-                                Actions.Add(parameterVars[i].SetVariable(ParseExpression(scope, methodNode.Parameters[i])));
+                                Actions.AddRange(parameterVars[i].SetVariable(ParseExpression(scope, methodNode.Parameters[i])));
                             }
                             else
                                 throw SyntaxErrorException.MissingParameter(userMethod.Parameters[i].Name, methodNode.Name, methodNode.Range);
                         }
 
-                        var returns = VarCollection.AssignVar($"{methodNode.Name}: return temp value", IsGlobal);
+                        var returns = VarCollection.AssignVar(scope, $"{methodNode.Name}: return temp value", IsGlobal);
 
                         MethodStackNoRecursive.Add(userMethod);
 
@@ -520,7 +520,10 @@ namespace Deltin.Deltinteger.Parse
                             for (int i = 0; i < lastMethod.ParameterVars.Length; i++)
                             {
                                 if (methodNode.Parameters.Length > i)
-                                    lastMethod.ParameterVars[i].Push(ParseExpression(scope, methodNode.Parameters[i]));
+                                    Actions.AddRange
+                                    (
+                                        lastMethod.ParameterVars[i].InScope(ParseExpression(scope, methodNode.Parameters[i]))
+                                    );
                                 else
                                     throw SyntaxErrorException.MissingParameter(userMethod.Parameters[i].Name, methodNode.Name, methodNode.Range);
                             }
@@ -532,7 +535,7 @@ namespace Deltin.Deltinteger.Parse
                             Actions.Add(
                                 Element.Part<A_ModifyGlobalVariable>(EnumData.GetEnumValue(Variable.B), EnumData.GetEnumValue(Operation.AppendToArray), new V_Number(ContinueSkip.GetSkipCount() + 4))
                             );
-                            Actions.Add(
+                            Actions.AddRange(
                                 lastMethod.ContinueSkipArray.SetVariable(Element.Part<V_GlobalVariable>(EnumData.GetEnumValue(Variable.B)))
                             );
                             // ?---
@@ -547,7 +550,7 @@ namespace Deltin.Deltinteger.Parse
                         }
                         else
                         {
-                            var methodScope = Root.Child();
+                            var methodScope = Root.Child(true);
 
                             // Add the parameter variables to the scope.
                             RecursiveVar[] parameterVars = new RecursiveVar[userMethod.Parameters.Length];
@@ -556,16 +559,19 @@ namespace Deltin.Deltinteger.Parse
                                 if (methodNode.Parameters.Length > i)
                                 {
                                     // Create a new variable using the parameter input.
-                                    parameterVars[i] = VarCollection.AssignRecursiveVar(Actions, methodScope, IsGlobal, userMethod.Parameters[i].Name, methodNode.Range);
-                                    parameterVars[i].Push(ParseExpression(scope, methodNode.Parameters[i]));
+                                    parameterVars[i] = VarCollection.AssignRecursiveVar(methodScope, IsGlobal, userMethod.Parameters[i].Name, methodNode.Range);
+                                    Actions.AddRange
+                                    (
+                                        parameterVars[i].InScope(ParseExpression(scope, methodNode.Parameters[i]))
+                                    );
                                 }
                                 else
                                     throw SyntaxErrorException.MissingParameter(userMethod.Parameters[i].Name, methodNode.Name, methodNode.Range);
                             }
 
-                            var returns = VarCollection.AssignVar($"{methodNode.Name}: return temp value", IsGlobal);
+                            var returns = VarCollection.AssignVar(null, $"{methodNode.Name}: return temp value", IsGlobal);
 
-                            Var continueSkipArray = VarCollection.AssignVar($"{methodNode.Name}: continue skip temp value", IsGlobal);
+                            Var continueSkipArray = VarCollection.AssignVar(null, $"{methodNode.Name}: continue skip temp value", IsGlobal);
                             var stack = new MethodStack(userMethod, parameterVars, ContinueSkip.GetSkipCount(), returns, continueSkipArray);
                             MethodStack.Add(stack);
 
@@ -586,7 +592,10 @@ namespace Deltin.Deltinteger.Parse
 
                             for (int i = 0; i < parameterVars.Length; i++)
                             {
-                                parameterVars[i].Pop();
+                                Actions.AddRange
+                                (
+                                    parameterVars[i].OutOfScope()
+                                );
                             }
 
                             ContinueSkip.Setup();
@@ -596,7 +605,7 @@ namespace Deltin.Deltinteger.Parse
                             Actions.Add(
                                 Element.Part<A_SetGlobalVariable>(EnumData.GetEnumValue(Variable.B), continueSkipArray.GetVariable())
                             );
-                            Actions.Add(
+                            Actions.AddRange(
                                 continueSkipArray.SetVariable(
                                     Element.Part<V_ArraySlice>(
                                         Element.Part<V_GlobalVariable>(EnumData.GetEnumValue(Variable.B)), 
@@ -620,7 +629,7 @@ namespace Deltin.Deltinteger.Parse
                                 )
                             );
                             ContinueSkip.ResetSkip();
-                            Actions.Add(continueSkipArray.SetVariable(new V_Number()));
+                            Actions.AddRange(continueSkipArray.SetVariable(new V_Number()));
                             
                             MethodStack.Remove(stack);
                         }
@@ -761,10 +770,10 @@ namespace Deltin.Deltinteger.Parse
                     else
                         variable = scope.GetVar(forEachNode.VariableName, forEachNode.Range);
 
-                    Var index = VarCollection.AssignVar($"'{forEachNode.VariableName}' for index", IsGlobal);
+                    Var index = VarCollection.AssignVar(scope, $"'{forEachNode.VariableName}' for index", IsGlobal);
 
                     // Reset the counter.
-                    Actions.Add(index.SetVariable(new V_Number(0)));
+                    Actions.AddRange(index.SetVariable(new V_Number(0)));
 
                     // The action the for loop starts on.
                     int forStartIndex = ContinueSkip.GetSkipCount();
@@ -779,13 +788,13 @@ namespace Deltin.Deltinteger.Parse
                     Actions.Add(skipCondition);
                     
                     // Update the array variable
-                    Actions.Add(variable.SetVariable(Element.Part<V_ValueInArray>(array, index.GetVariable())));
+                    Actions.AddRange(variable.SetVariable(Element.Part<V_ValueInArray>(array, index.GetVariable())));
 
                     // Parse the for's block.
                     ParseBlock(forGroup, forEachNode.Block, false, returnVar);
 
                     // Increment the index
-                    Actions.Add(index.SetVariable(Element.Part<V_Add>(index.GetVariable(), new V_Number(1))));
+                    Actions.AddRange(index.SetVariable(Element.Part<V_Add>(index.GetVariable(), new V_Number(1))));
 
                     // Add the for's finishing elements
                     ContinueSkip.SetSkipCount(forStartIndex);
@@ -963,7 +972,7 @@ namespace Deltin.Deltinteger.Parse
                     {
                         Element result = ParseExpression(scope, returnNode.Value);
                         if (returnVar != null)
-                            Actions.Add(returnVar.SetVariable(result));
+                            Actions.AddRange(returnVar.SetVariable(result));
                     }
 
                     if (!isLast)
@@ -1039,7 +1048,7 @@ namespace Deltin.Deltinteger.Parse
                     break;
             }
 
-            Actions.Add(variable.SetVariable(value, target, index));
+            Actions.AddRange(variable.SetVariable(value, target, index));
         }
 
         void ParseDefine(ScopeGroup scope, ScopedDefineNode defineNode)
@@ -1053,7 +1062,7 @@ namespace Deltin.Deltinteger.Parse
 
             // Set the defined variable if the variable is defined like "define var = 1"
             if (defineNode.Value != null)
-                Actions.Add(var.SetVariable(ParseExpression(scope, defineNode.Value)));
+                Actions.AddRange(var.InScope(ParseExpression(scope, defineNode.Value)));
         }
 
         int GetSkipCount(Element skipElement)
