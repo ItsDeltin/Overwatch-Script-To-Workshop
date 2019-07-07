@@ -102,7 +102,7 @@ ow_rule :
 	block
 	;
 
-user_method : RECURSIVE? METHOD PART LEFT_PAREN (PART (COMMA PART)*)? RIGHT_PAREN
+user_method : DOCUMENTATION* RECURSIVE? METHOD PART LEFT_PAREN (PART (COMMA PART)*)? RIGHT_PAREN
 	block
 	;
 
@@ -124,6 +124,7 @@ fragment NUMBERS    : [0-9] ;
 STRINGLITERAL             : UNTERMINATEDSTRINGLITERAL '"'      ;
 UNTERMINATEDSTRINGLITERAL : '"' (~["\\\r\n] | '\\' (. | EOF))* ;
 
+DOCUMENTATION: '#' .*? NEWLINE ;
 // Comments
 COMMENT : (('/*' .*? '*/') | ('//' .*? NEWLINE))? -> skip ;
 

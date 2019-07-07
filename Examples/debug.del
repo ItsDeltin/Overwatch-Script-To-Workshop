@@ -5,10 +5,13 @@ Event.OngoingPlayer
 if (IsButtonHeld(EventPlayer(), Button.Interact))
 {
     dims = EmptyArray();
-    arrayWalk(myArray, 0, 0);
+    arrayWalk(myArray, 0);
+    
 }
 
 define playervar dims;
+ 
+# Prints every value in a multidimensional array. 
 recursive method arrayWalk(array, index)
 { 
     for (; index < CountOf(array); index++)

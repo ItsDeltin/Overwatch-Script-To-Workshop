@@ -314,7 +314,7 @@ namespace Deltin.Deltinteger.Elements
         {
             return Name + "(" + Parameter.ParameterGroupToString(Parameters, markdown) + ")" 
             + "\n\r" +
-            Wiki.Description;
+            Wiki?.Description;
         }
 
         public ElementList(Type type)

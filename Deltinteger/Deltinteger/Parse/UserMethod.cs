@@ -20,6 +20,8 @@ namespace Deltin.Deltinteger.Parse
             }
 
             IsRecursive = node.IsRecursive;
+            Documentation = node.Documentation;
+            Wiki = new WikiMethod(Name, Documentation, null);
         }
 
         public string Name { get; }
@@ -30,12 +32,16 @@ namespace Deltin.Deltinteger.Parse
 
         public bool IsRecursive { get; }
 
+        public string Documentation { get; }
+
         public string GetLabel(bool markdown)
         {
-            return Name + "(" + Parameter.ParameterGroupToString(Parameters, markdown) + ")";
+            return Name + "(" + Parameter.ParameterGroupToString(Parameters, markdown) + ")"
+            + "\n\r"
+            + Documentation;
         }
         
-        public WikiMethod Wiki { get { return null; }}
+        public WikiMethod Wiki { get; }
 
 
         public override string ToString()

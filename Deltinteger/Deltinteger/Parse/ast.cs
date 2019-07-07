@@ -105,7 +105,9 @@ namespace Deltin.Deltinteger.Parse
 
             bool isRecursive = context.RECURSIVE() != null;
 
-            Node node = new UserMethodNode(name, parameters, block, isRecursive, Range.GetRange(context));
+            string documentation = string.Join("\n\r", context.DOCUMENTATION().Select(doc => doc.GetText().TrimEnd().TrimStart('#', ' ')));
+
+            Node node = new UserMethodNode(name, parameters, block, isRecursive, documentation, Range.GetRange(context));
             CheckRange(node);
             return node;
         }
@@ -657,17 +659,19 @@ namespace Deltin.Deltinteger.Parse
 
     public class UserMethodNode : Node, INamedNode
     {
-        public string Name { get; private set; }
-        public string[] Parameters { get; private set; }
-        public BlockNode Block { get; private set; }
-        public bool IsRecursive { get; private set; }
+        public string Name { get; }
+        public string[] Parameters { get; }
+        public BlockNode Block { get; }
+        public bool IsRecursive { get; }
+        public string Documentation { get; }
         
-        public UserMethodNode(string name, string[] parameters, BlockNode block, bool isRecursive, Range range) : base(range)
+        public UserMethodNode(string name, string[] parameters, BlockNode block, bool isRecursive, string documentation, Range range) : base(range)
         {
             Name = name;
             Parameters = parameters;
             Block = block;
             IsRecursive = isRecursive;
+            Documentation = documentation;
         }
     }
 

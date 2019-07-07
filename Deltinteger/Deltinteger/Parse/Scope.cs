@@ -8,11 +8,20 @@ namespace Deltin.Deltinteger.Parse
 {
     public class ScopeGroup
     {
+        private readonly List<Var> InScope = new List<Var>();
+
+        private readonly List<ScopeGroup> Children = new List<ScopeGroup>();
+        
+        private readonly ScopeGroup Parent = null;
+
+        public bool Recursive { get; }
+
         public ScopeGroup() {}
 
-        private ScopeGroup(ScopeGroup parent) 
+        private ScopeGroup(ScopeGroup parent, bool recursive) 
         {
             Parent = parent;
+            Recursive = recursive;
         }
 
         public void In(Var var)
@@ -46,9 +55,9 @@ namespace Deltin.Deltinteger.Parse
             return GetVar(variableNode.Name, variableNode.Range);
         }
 
-        public ScopeGroup Child()
+        public ScopeGroup Child(bool recursive = false)
         {
-            var newChild = new ScopeGroup(this);
+            var newChild = new ScopeGroup(this, recursive);
             Children.Add(newChild);
             return newChild;
         }
@@ -74,11 +83,6 @@ namespace Deltin.Deltinteger.Parse
                 kind = CompletionItem.Field
             }).ToArray();
         }
-        
-        private readonly List<Var> InScope = new List<Var>();
-
-        private readonly List<ScopeGroup> Children = new List<ScopeGroup>();
-        private readonly ScopeGroup Parent = null;
 
         //public static ScopeGroup Root = new ScopeGroup();
     }
