@@ -172,12 +172,7 @@ namespace Deltin.Deltinteger.LanguageServer
                         completion.AddRange(EnumData.GetEnum<Team>().GetCompletion());
                     
                     else if (ruleNode.IsIfSelected())
-                        completion.AddRange(Element.ValueList.Select(m => 
-                            new CompletionItem(m.Name.Substring(2))
-                            {
-                                kind = CompletionItem.Method,
-                                detail = ((Element)Activator.CreateInstance(m)).ToString(),
-                            }));
+                        completion.AddRange(Element.GetCompletion(true, false));
 
                     else
                         completion.AddRange(new CompletionItem[] 

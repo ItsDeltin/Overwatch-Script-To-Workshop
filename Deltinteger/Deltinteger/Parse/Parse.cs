@@ -376,10 +376,10 @@ namespace Deltin.Deltinteger.Parse
             {
                 case MethodType.Method:
                 {
-                    Type owMethod = Element.GetMethod(methodNode.Name);
+                    var owMethod = Element.GetElement(methodNode.Name);
+                    method = owMethod.GetObject();
 
-                    method = (Element)Activator.CreateInstance(owMethod);
-                    ParameterBase[] parameterData = owMethod.GetCustomAttributes<ParameterBase>().ToArray();
+                    ParameterBase[] parameterData = owMethod.Parameters;
                     
                     List<IWorkshopTree> parsedParameters = new List<IWorkshopTree>();
                     for (int i = 0; i < parameterData.Length; i++)

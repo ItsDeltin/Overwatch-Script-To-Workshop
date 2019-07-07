@@ -146,21 +146,15 @@ namespace Deltin.Deltinteger.Elements
 
     public abstract class Element : IWorkshopTree
     {
-        public static readonly Type[] MethodList = Assembly.GetExecutingAssembly().GetTypes().Where(t => t.GetCustomAttribute<ElementData>() != null).ToArray();
-        public static readonly Type[] ActionList = MethodList.Where(t => t.GetCustomAttribute<ElementData>().IsValue == false).OrderBy(t => t.GetCustomAttribute<ElementData>().ElementName).ToArray(); // Actions in the method list.
-        public static readonly Type[] ValueList = MethodList.Where(t => t.GetCustomAttribute<ElementData>().IsValue).OrderBy(t => t.GetCustomAttribute<ElementData>().ElementName).ToArray(); // Values in the method list.
-
-        public static Type GetMethod(string name)
-        {
-            return MethodList.FirstOrDefault(m => name == m.Name.Substring(2));
-        }
-
         private static ElementList[] Elements = GetElementList();
         private static ElementList[] GetElementList()
         {
-            ElementList[] elements = new ElementList[MethodList.Length];
+            Type[] methodList = Assembly.GetExecutingAssembly().GetTypes().Where(t => t.GetCustomAttribute<ElementData>() != null).ToArray();
+
+            ElementList[] elements = new ElementList[methodList.Length];
             for (int i = 0; i < elements.Length; i++)
-                elements[i] = new ElementList(MethodList[i]);
+                elements[i] = new ElementList(methodList[i]);
+            
             return elements;
         }
         public static ElementList GetElement(string codeName)
@@ -213,7 +207,7 @@ namespace Deltin.Deltinteger.Elements
             return ElementList.GetLabel(false);
         }
 
-        public string Name { get { return GetType().Name.Substring(2); } set {} }
+        public string Name { get { return ElementList.Name; } }
 
         public virtual void DebugPrint(Log log, int depth = 0)
         {

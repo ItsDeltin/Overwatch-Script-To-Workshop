@@ -18,6 +18,12 @@ namespace Deltin.Deltinteger.Parse
 
         public ScopeGroup() {}
 
+        private ScopeGroup(ScopeGroup parent)
+        {
+            Parent = parent;
+            Recursive = parent.Recursive;
+        }
+
         private ScopeGroup(ScopeGroup parent, bool recursive) 
         {
             Parent = parent;
@@ -55,9 +61,16 @@ namespace Deltin.Deltinteger.Parse
             return GetVar(variableNode.Name, variableNode.Range);
         }
 
-        public ScopeGroup Child(bool recursive = false)
+        public ScopeGroup Child(bool recursive)
         {
             var newChild = new ScopeGroup(this, recursive);
+            Children.Add(newChild);
+            return newChild;
+        }
+
+        public ScopeGroup Child()
+        {
+            var newChild = new ScopeGroup(this);
             Children.Add(newChild);
             return newChild;
         }

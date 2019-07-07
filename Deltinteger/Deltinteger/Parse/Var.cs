@@ -284,12 +284,16 @@ namespace Deltin.Deltinteger.Parse
 
             // index is 2 or greater
             int dimensions = index.Length - 1;
+
+            // Get the last array in the index path and copy it to variable B.
             actions.AddRange(
                 SetVariable(ValueInArrayPath(root, index.Take(index.Length - 1).ToArray()), targetPlayer, Variable.B)
             );
+            // Set the value in the array.
             actions.AddRange(
                 SetVariable(value, targetPlayer, Variable.B, index.Last())
             );
+            // Reconstruct the multidimensional array.
             for (int i = 1; i < dimensions; i++)
             {
                 Element array = ValueInArrayPath(root, index.Take(dimensions - i).ToArray());
