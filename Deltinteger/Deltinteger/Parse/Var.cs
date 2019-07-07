@@ -40,6 +40,11 @@ namespace Deltin.Deltinteger.Parse
             return new Var(scopeGroup, name, isGlobal, UseVar, Assign(isGlobal), range, this);
         }
 
+        public Var AssignDefinedVar(ScopeGroup scopeGroup, bool isGlobal, string name, Variable variable, int index, Range range)
+        {
+            return new Var(scopeGroup, name, isGlobal, variable, index, range, this);
+        }
+
         public RecursiveVar AssignRecursiveVar(List<Element> actions, ScopeGroup scopeGroup, bool isGlobal, string name, Range range)
         {
             return new RecursiveVar(actions, scopeGroup, name, isGlobal, UseVar, Assign(isGlobal), range, this);
@@ -106,7 +111,7 @@ namespace Deltin.Deltinteger.Parse
                 return Element.Part<V_PlayerVariable>(targetPlayer, VariableAsWorkshop);
         }
 
-        public virtual Element SetVariable(Element value, Element targetPlayer = null, Element setAtIndex = null)
+        public virtual Element[] SetVariable(Element value, Element targetPlayer = null, Element setAtIndex = null)
         {
             Element element;
 
@@ -158,7 +163,7 @@ namespace Deltin.Deltinteger.Parse
                 }
             }
 
-            return element;
+            return new Element[] { element };
 
         }
 

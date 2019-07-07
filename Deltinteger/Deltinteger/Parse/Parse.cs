@@ -60,7 +60,8 @@ namespace Deltin.Deltinteger.Parse
                     if (definedVar.UseVar == null)
                         parserData.VarCollection.AssignDefinedVar(root, definedVar.IsGlobal, definedVar.VariableName, definedVar.Range);
                     else
-                        new Var(root, definedVar.VariableName, definedVar.IsGlobal, definedVar.UseVar.Variable, definedVar.UseVar.Index, definedVar.Range, parserData.VarCollection);
+                        //new Var(root, definedVar.VariableName, definedVar.IsGlobal, definedVar.UseVar.Variable, definedVar.UseVar.Index, definedVar.Range, parserData.VarCollection);
+                        parserData.VarCollection.AssignDefinedVar(root, definedVar.IsGlobal, definedVar.VariableName, definedVar.UseVar.Variable, definedVar.UseVar.Index, definedVar.Range);
 
                 // Get the user methods.
                 for (int i = 0; i < ruleSetNode.UserMethods.Length; i++)
@@ -452,7 +453,7 @@ namespace Deltin.Deltinteger.Parse
                                 throw SyntaxErrorException.InvalidMethodType(false, methodNode.Name, methodNode.Range);
                             break;
                     }
-                    var result = customMethod.GetObject(this, parsedParameters.ToArray()).Get();
+                    var result = customMethod.GetObject(this, parsedParameters.ToArray()).Result();
 
                     // Some custom methods have extra actions.
                     if (result.Elements != null)
@@ -680,9 +681,9 @@ namespace Deltin.Deltinteger.Parse
             return value;
         }
     
-        public static MethodType? GetMethodType(UserMethod[] userMethods, string name)
+        static MethodType? GetMethodType(UserMethod[] userMethods, string name)
         {
-            if (Element.GetMethod(name) != null)
+            if (Element.GetElement(name) != null)
                 return MethodType.Method;
             if (CustomMethodData.GetCustomMethod(name) != null)
                 return MethodType.CustomMethod;
@@ -691,7 +692,7 @@ namespace Deltin.Deltinteger.Parse
             return null;
         }
 
-        public enum MethodType
+        enum MethodType
         {
             Method,
             CustomMethod,
@@ -1047,7 +1048,8 @@ namespace Deltin.Deltinteger.Parse
             if (defineNode.UseVar == null)
                 var = VarCollection.AssignDefinedVar(scope, IsGlobal, defineNode.VariableName, defineNode.Range);
             else
-                var = new Var(scope, defineNode.VariableName, IsGlobal, defineNode.UseVar.Variable, defineNode.UseVar.Index, defineNode.Range, VarCollection);
+                var = VarCollection.AssignDefinedVar(scope, IsGlobal, defineNode.VariableName, defineNode.UseVar.Variable, defineNode.UseVar.Index, defineNode.Range);
+                //var = new Var(scope, defineNode.VariableName, IsGlobal, defineNode.UseVar.Variable, defineNode.UseVar.Index, defineNode.Range, VarCollection);
 
             // Set the defined variable if the variable is defined like "define var = 1"
             if (defineNode.Value != null)

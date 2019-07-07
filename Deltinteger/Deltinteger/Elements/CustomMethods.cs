@@ -64,12 +64,19 @@ namespace Deltin.Deltinteger.Elements
             Parameters = type.GetCustomAttributes<ParameterBase>()
                 .ToArray();
             
-            Wiki = GetObject(null, null).Wiki();
+            Wiki = GetObject().Wiki();
         }
 
         public CustomMethodBase GetObject(Translate context, IWorkshopTree[] parameters)
         {
-            return (CustomMethodBase)Activator.CreateInstance(Type, new object[] { context, parameters });
+            CustomMethodBase customMethod = GetObject();
+            customMethod.TranslateContext = context;
+            customMethod.Parameters = parameters;
+            return customMethod;
+        }
+        private CustomMethodBase GetObject()
+        {
+            return (CustomMethodBase)Activator.CreateInstance(Type);
         }
 
         static CustomMethodData[] _customMethodData = null;
@@ -105,16 +112,25 @@ namespace Deltin.Deltinteger.Elements
 
     public abstract class CustomMethodBase
     {
-        protected readonly Translate TranslateContext;
-        protected readonly IWorkshopTree[] Parameters;
+        public Translate TranslateContext { get; set; }
+        public IWorkshopTree[] Parameters { get; set; }
+        public ScopeGroup Scope { get; set; }
 
-        public CustomMethodBase(Translate translate, IWorkshopTree[] parameters)
+        public MethodResult Result()
         {
-            TranslateContext = translate;
-            Parameters = parameters;
+            if (TranslateContext == null)
+                throw new ArgumentNullException(nameof(TranslateContext));
+            
+            if (Parameters == null)
+                throw new ArgumentNullException(nameof(Parameters));
+            
+            if (Scope == null)
+                throw new ArgumentNullException(nameof(Scope));
+            
+            return Get();
         }
 
-        public abstract MethodResult Get();
+        protected abstract MethodResult Get();
 
         public abstract WikiMethod Wiki();
     }
@@ -125,9 +141,7 @@ namespace Deltin.Deltinteger.Elements
     [Parameter("Vector3", ValueType.VectorAndPlayer, null)]
     class AngleOfVectors : CustomMethodBase
     {
-        public AngleOfVectors(Translate translate, IWorkshopTree[] parameters) : base (translate, parameters) {}
-
-        public override MethodResult Get()
+        protected override MethodResult Get()
         {
             var eventPlayer = new V_EventPlayer();
 
@@ -250,9 +264,7 @@ namespace Deltin.Deltinteger.Elements
     [Parameter("Vector3", ValueType.VectorAndPlayer, null)]
     class AngleOfVectorsCom : CustomMethodBase
     {
-        public AngleOfVectorsCom(Translate translate, IWorkshopTree[] parameters) : base(translate, parameters) {}
-
-        public override MethodResult Get()
+        protected override MethodResult Get()
         {
             Element zeroVec = Element.Part<V_Vector>(new V_Number(0), new V_Number(0), new V_Number(0));
             Element a = (Element)Parameters[0];
@@ -324,9 +336,7 @@ namespace Deltin.Deltinteger.Elements
     [CustomMethod("GetMap", CustomMethodType.MultiAction_Value)]
     class GetMap : CustomMethodBase
     {
-        public GetMap(Translate translate, IWorkshopTree[] parameters) : base(translate, parameters) {}
-
-        public override MethodResult Get()
+        protected override MethodResult Get()
         {
             Var temp = TranslateContext.VarCollection.AssignVar("GetMap: temp", TranslateContext.IsGlobal);
 
@@ -503,9 +513,7 @@ namespace Deltin.Deltinteger.Elements
     [Parameter("Rate", ValueType.Number, null)]
     class ChaseVariable : CustomMethodBase
     {
-        public ChaseVariable(Translate translate, IWorkshopTree[] parameters) : base(translate, parameters) {}
-
-        public override MethodResult Get()
+        protected override MethodResult Get()
         {
             VarRef targetVariable = (VarRef)Parameters[0];
             Element destination = (Element)Parameters[1];
@@ -542,9 +550,7 @@ namespace Deltin.Deltinteger.Elements
     [CustomMethod("MinWait", CustomMethodType.Action)]
     class MinWait : CustomMethodBase
     {
-        public MinWait(Translate translate, IWorkshopTree[] parameters) : base(translate, parameters) {}
-
-        public override MethodResult Get()
+        protected override MethodResult Get()
         {
             return new MethodResult(new Element[] { A_Wait.MinimumWait }, null);
         }
@@ -560,9 +566,7 @@ namespace Deltin.Deltinteger.Elements
     [Parameter("Index", ValueType.Number, null)]
     class RemoveFromArrayAtIndex : CustomMethodBase
     {
-        public RemoveFromArrayAtIndex(Translate translate, IWorkshopTree[] parameters) : base (translate, parameters) {}
-
-        public override MethodResult Get()
+        protected override MethodResult Get()
         {
             Element array = (Element)Parameters[0];
             Element index = (Element)Parameters[1];
@@ -593,9 +597,7 @@ namespace Deltin.Deltinteger.Elements
     [Parameter("Value", ValueType.Any, null)]
     class InsertValueInArray : CustomMethodBase
     {
-        public InsertValueInArray(Translate translate, IWorkshopTree[] parameters) : base (translate, parameters) {}
-
-        public override MethodResult Get()
+        protected override MethodResult Get()
         {
             Element array = (Element)Parameters[0];
             Element index = (Element)Parameters[1];
