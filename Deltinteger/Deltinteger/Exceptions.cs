@@ -23,6 +23,7 @@ namespace Deltin.Deltinteger
         public const string methodDoesntExist    = "The method \"{0}\" does not exist.";
         public const string missingParameter     = "Missing parameter \"{0}\" in the method \"{1}\" and no default type to fallback on.";
         public const string expectedType         = "Expected {0} type \"{1}\" on {2}'s parameter \"{3}\".";
+        public const string tooManyParameters    = "The {0} method takes {1} parameters, got {2} instead.";
         public const string invalidEnumValue     = "The value '{0}' does not exist in the enum '{1}'.";
         public const string variableDoesNotExist = "The variable {0} does not exist.";
         public const string alreadyDefined       = "The variable {0} was already defined.";
@@ -132,6 +133,14 @@ namespace Deltin.Deltinteger
         {
             return new SyntaxErrorException(
                 string.Format(enumCantBeValue, @enum),
+                range
+            );
+        }
+
+        public static SyntaxErrorException TooManyParameters(string methodName, int parameterCount, int gotCount, Range range)
+        {
+            return new SyntaxErrorException(
+                string.Format(tooManyParameters, methodName, parameterCount, gotCount),
                 range
             );
         }

@@ -37,8 +37,7 @@ namespace Deltin.Deltinteger.Parse
         public string GetLabel(bool markdown)
         {
             return Name + "(" + Parameter.ParameterGroupToString(Parameters, markdown) + ")"
-            + "\n\r"
-            + Documentation;
+            + (markdown && Documentation != null ? "\n\r" + Documentation : "");
         }
         
         public WikiMethod Wiki { get; }
@@ -46,7 +45,7 @@ namespace Deltin.Deltinteger.Parse
 
         public override string ToString()
         {
-            return GetLabel(false);
+            return Name;
         }
 
         public static UserMethod GetUserMethod(UserMethod[] methods, string name)
@@ -57,9 +56,11 @@ namespace Deltin.Deltinteger.Parse
         public static CompletionItem[] CollectionCompletion(UserMethod[] methods)
         {
             return methods.Select(method => 
-                new CompletionItem(method.ToString())
+                new CompletionItem(method.Name)
                 {
-                    kind = CompletionItem.Method
+                    detail = method.GetLabel(false),
+                    kind = CompletionItem.Method,
+                    documentation = method.Documentation
                 }
             ).ToArray();
         }

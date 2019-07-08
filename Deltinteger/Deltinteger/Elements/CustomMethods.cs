@@ -50,7 +50,8 @@ namespace Deltin.Deltinteger.Elements
         public WikiMethod Wiki { get; }
         public string GetLabel(bool markdown)
         {
-            return Name + "(" + Parameter.ParameterGroupToString(Parameters, markdown) + ")";
+            return Name + "(" + Parameter.ParameterGroupToString(Parameters, markdown) + ")"
+            + (markdown && Wiki?.Description != null ? "\n\r" + Wiki.Description : "");
         }
 
         public CustomMethodData(Type type)
@@ -105,6 +106,7 @@ namespace Deltin.Deltinteger.Elements
         {
             return GetCustomMethods().Select(cm => new CompletionItem(cm.Name) 
             { 
+                detail = cm.GetLabel(false),
                 kind = CompletionItem.Method,
                 documentation = cm.Wiki?.Description
             }).ToArray();

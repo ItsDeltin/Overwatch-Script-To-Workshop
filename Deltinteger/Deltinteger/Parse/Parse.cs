@@ -365,347 +365,271 @@ namespace Deltin.Deltinteger.Parse
         {
             methodNode.RelatedScopeGroup = scope;
 
-            // Get the kind of method the method is (Method (Overwatch), Custom Method, or User Method.)
-            var methodType = GetMethodType(UserMethods, methodNode.Name);
+            IMethod method = ParserData.GetMethod(methodNode.Name);
 
-            // Throw exception if the method does not exist.
-            if (methodType == null)
+            // Syntax error if the method does not exist.
+            if (method == null)
                 throw SyntaxErrorException.NonexistentMethod(methodNode.Name, methodNode.Range);
 
-            Element method;
-            switch (methodType)
+            // Syntax error if there are too many parameters.
+            if (methodNode.Parameters.Length > method.Parameters.Length)
+                throw SyntaxErrorException.TooManyParameters(method.Name, method.Parameters.Length, methodNode.Parameters.Length, ((Node)methodNode.Parameters[method.Parameters.Length]).Range);
+            
+            // Parse the parameters
+            List<IWorkshopTree> parsedParameters = new List<IWorkshopTree>();
+            for(int i = 0; i < method.Parameters.Length; i++)
             {
-                case MethodType.Method:
+                if (method.Parameters[i] is Parameter || method.Parameters[i] is EnumParameter)
                 {
-                    var owMethod = Element.GetElement(methodNode.Name);
-                    method = owMethod.GetObject();
-
-                    ParameterBase[] parameterData = owMethod.Parameters;
-                    
-                    List<IWorkshopTree> parsedParameters = new List<IWorkshopTree>();
-                    for (int i = 0; i < parameterData.Length; i++)
+                    // Get the default parameter value if there are not enough parameters.
+                    if (methodNode.Parameters.Length <= i)
                     {
-                        if (methodNode.Parameters.Length > i)
-                        {
-                            // Parse the parameter.
-                            parsedParameters.Add(ParseParameter(scope, methodNode.Parameters[i], methodNode.Name, parameterData[i]));
-                        }
-                        else 
-                        {
-                            if (parameterData[i] is Parameter && ((Parameter)parameterData[i]).DefaultType == null)
-                                // Throw exception if there is no default method to fallback on.
-                                throw SyntaxErrorException.MissingParameter(parameterData[i].Name, methodNode.Name, methodNode.Range);
-                            else
-                                parsedParameters.Add(parameterData[i].GetDefault());
-                        }
+                        IWorkshopTree defaultValue = method.Parameters[i].GetDefault();
+
+                        // If there is no default value, throw a syntax error.
+                        if (defaultValue == null)
+                            throw SyntaxErrorException.MissingParameter(method.Parameters[i].Name, method.Name, methodNode.Range);
+                        
+                        parsedParameters.Add(defaultValue);
                     }
-
-                    method.ParameterValues = parsedParameters.ToArray();
-                    break;
-                }
-
-                case MethodType.CustomMethod:
-                {
-                    var customMethod = CustomMethodData.GetCustomMethod(methodNode.Name);
-
-                    ParameterBase[] parameterData = customMethod.Parameters.ToArray();
-                    List<IWorkshopTree> parsedParameters = new List<IWorkshopTree>();
-
-                    for (int i = 0; i < parameterData.Length; i++)
-                    {     
-                        if (methodNode.Parameters.Length > i)
+                    else
+                    {
+                        if (method.Parameters[i] is Parameter)
+                            // Parse the parameter
+                            parsedParameters.Add(ParseExpression(scope, methodNode.Parameters[i]));
+                        else if (method.Parameters[i] is EnumParameter)
                         {
-                            // If the parameter is a VarRefParameters, send the variable reference itself as the parameter.
-                            if (parameterData[i] is VarRefParameter)
+                            // Parse the enum
+                            if (methodNode.Parameters[i] is EnumNode)
                             {
-                                if (methodNode.Parameters[i] is VariableNode)
-                                {
-                                    VariableNode variableNode = (VariableNode)methodNode.Parameters[i];
-
-                                    Element target = null;
-                                    if (variableNode.Target != null)
-                                        target = ParseExpression(scope, variableNode.Target);
-
-                                    parsedParameters.Add(new VarRef(scope.GetVar(variableNode), target));
-                                }
-                                else
-                                    // TODO make constant in SyntaxErrorException
-                                    throw new SyntaxErrorException("Expected variable", ((Node)methodNode.Parameters[i]).Range);
+                                EnumNode enumNode = (EnumNode)methodNode.Parameters[i];
+                                parsedParameters.Add(
+                                    (IWorkshopTree)EnumData.ToElement(enumNode.EnumMember)
+                                    ?? (IWorkshopTree)enumNode.EnumMember
+                                );
                             }
                             else
-                                parsedParameters.Add(ParseParameter(scope, methodNode.Parameters[i], methodNode.Name, parameterData[i]));
+                                throw new SyntaxErrorException("Expected the enum " + ((EnumParameter)method.Parameters[i]).EnumData.CodeName + ", got a value instead.", ((Node)methodNode.Parameters[i]).Range);
                         }
-                        else
-                            // Throw exception if there is no default method to fallback on.
-                            throw SyntaxErrorException.MissingParameter(parameterData[i].Name, methodNode.Name, methodNode.Range);
                     }
+                }
+                else if (method.Parameters[i] is VarRefParameter)
+                {
+                    // A VarRef parameter is always required, there will never be a default to fallback on.
+                    if (methodNode.Parameters.Length <= i)
+                        throw SyntaxErrorException.MissingParameter(method.Parameters[i].Name, method.Name, methodNode.Range);
+                    
+                    // A VarRef parameter must be a variable
+                    if (!(methodNode.Parameters[i] is VariableNode))
+                        throw new SyntaxErrorException("Expected variable", ((Node)methodNode.Parameters[i]).Range);
+                    
+                    VariableNode variableNode = (VariableNode)methodNode.Parameters[i];
 
-                    switch (customMethod.CustomMethodType)
-                    {
-                        case CustomMethodType.Action:
-                            if (needsToBeValue)
-                                throw SyntaxErrorException.InvalidMethodType(true, methodNode.Name, methodNode.Range);
-                            break;
+                    Element target = null;
+                    if (variableNode.Target != null)
+                        target = ParseExpression(scope, variableNode.Target);
 
-                        case CustomMethodType.MultiAction_Value:
-                        case CustomMethodType.Value:
-                            if (!needsToBeValue)
-                                throw SyntaxErrorException.InvalidMethodType(false, methodNode.Name, methodNode.Range);
-                            break;
-                    }
-                    var result = customMethod.GetObject(this, scope, parsedParameters.ToArray()).Result();
+                    parsedParameters.Add(new VarRef(scope.GetVar(variableNode), target));
+                        
+                }
+                else throw new NotImplementedException();
+            }
 
-                    // Some custom methods have extra actions.
-                    if (result.Elements != null)
-                        Actions.AddRange(result.Elements);
-                    method = result.Result;
+            Element result;
 
-                    break;
+            if (method is ElementList)
+            {
+                result = ((ElementList)method).GetObject();
+                result.ParameterValues = parsedParameters.ToArray();
+            }
+            else if (method is CustomMethodData)
+            {
+                switch (((CustomMethodData)method).CustomMethodType)
+                {
+                    case CustomMethodType.Action:
+                        if (needsToBeValue)
+                            throw SyntaxErrorException.InvalidMethodType(true, methodNode.Name, methodNode.Range);
+                        break;
+
+                    case CustomMethodType.MultiAction_Value:
+                    case CustomMethodType.Value:
+                        if (!needsToBeValue)
+                            throw SyntaxErrorException.InvalidMethodType(false, methodNode.Name, methodNode.Range);
+                        break;
                 }
 
-                case MethodType.UserMethod:
-                {
-                    UserMethod userMethod = UserMethod.GetUserMethod(UserMethods, methodNode.Name);
-                    if (!userMethod.IsRecursive)
-                    {
-                        if (MethodStackNoRecursive.Contains(userMethod))
-                            throw SyntaxErrorException.RecursionNotAllowed(methodNode.Range);
+                var customMethodResult = ((CustomMethodData)method)
+                    .GetObject(this, scope, parsedParameters.ToArray())
+                    .Result();
 
-                        var methodScope = Root.Child();
+                // Some custom methods have extra actions.
+                if (customMethodResult.Elements != null)
+                    Actions.AddRange(customMethodResult.Elements);
+
+                result = customMethodResult.Result;
+            }
+            else if (method is UserMethod)
+            {
+                UserMethod userMethod = (UserMethod)method;
+
+                if (!userMethod.IsRecursive)
+                {
+                    if (MethodStackNoRecursive.Contains(userMethod))
+                        throw SyntaxErrorException.RecursionNotAllowed(methodNode.Range);
+
+                    var methodScope = Root.Child();
+
+                    // Add the parameter variables to the scope.
+                    Var[] parameterVars = new Var[parsedParameters.Count];
+                    for (int i = 0; i < parsedParameters.Count; i++)
+                    {
+                        // Create a new variable using the parameter.
+                        parameterVars[i] = VarCollection.AssignDefinedVar(methodScope, IsGlobal, userMethod.Parameters[i].Name, methodNode.Range);
+                        Actions.AddRange(parameterVars[i].SetVariable((Element)parsedParameters[i]));
+                    }
+
+                    var returns = VarCollection.AssignVar(scope, $"{methodNode.Name}: return temp value", IsGlobal);
+
+                    MethodStackNoRecursive.Add(userMethod);
+
+                    var userMethodScope = methodScope.Child();
+                    userMethod.Block.RelatedScopeGroup = userMethodScope;
+                    
+                    ParseBlock(userMethodScope, userMethod.Block, true, returns);
+
+                    MethodStackNoRecursive.Remove(userMethod);
+
+                    // No return value if the method is being used as an action.
+                    if (needsToBeValue)
+                        result = returns.GetVariable();
+                    else
+                        result = null;
+                }
+                else
+                {                        
+                    MethodStack lastMethod = MethodStack.FirstOrDefault(ms => ms.UserMethod == userMethod);
+                    if (lastMethod != null)
+                    {
+                        ContinueSkip.Setup();
+
+                        // ! Workaround for SmallMessage string re-evaluation workshop bug. Remove if blizzard fixes it
+                        Actions.Add(A_Wait.MinimumWait);
+                        // !
+
+                        for (int i = 0; i < lastMethod.ParameterVars.Length; i++)
+                        {
+                            Actions.AddRange
+                            (
+                                lastMethod.ParameterVars[i].InScope(ParseExpression(scope, methodNode.Parameters[i]))
+                            );
+                        }
+
+                        // ?--- Multidimensional Array 
+                        Actions.Add(
+                            Element.Part<A_SetGlobalVariable>(EnumData.GetEnumValue(Variable.B), lastMethod.ContinueSkipArray.GetVariable())
+                        );
+                        Actions.Add(
+                            Element.Part<A_ModifyGlobalVariable>(EnumData.GetEnumValue(Variable.B), EnumData.GetEnumValue(Operation.AppendToArray), new V_Number(ContinueSkip.GetSkipCount() + 4))
+                        );
+                        Actions.AddRange(
+                            lastMethod.ContinueSkipArray.SetVariable(Element.Part<V_GlobalVariable>(EnumData.GetEnumValue(Variable.B)))
+                        );
+                        // ?---
+
+                        ContinueSkip.SetSkipCount(lastMethod.ActionIndex);
+                        Actions.Add(Element.Part<A_Loop>());
+
+                        if (needsToBeValue)
+                            result = lastMethod.Return.GetVariable();
+                        else
+                            result = null;
+                    }
+                    else
+                    {
+                        var methodScope = Root.Child(true);
 
                         // Add the parameter variables to the scope.
-                        Var[] parameterVars = new Var[userMethod.Parameters.Length];
+                        RecursiveVar[] parameterVars = new RecursiveVar[userMethod.Parameters.Length];
                         for (int i = 0; i < parameterVars.Length; i++)
                         {
-                            if (methodNode.Parameters.Length > i)
-                            {
-                                // Create a new variable using the parameter input.
-                                parameterVars[i] = VarCollection.AssignDefinedVar(methodScope, IsGlobal, userMethod.Parameters[i].Name, methodNode.Range);
-                                Actions.AddRange(parameterVars[i].SetVariable(ParseExpression(scope, methodNode.Parameters[i])));
-                            }
-                            else
-                                throw SyntaxErrorException.MissingParameter(userMethod.Parameters[i].Name, methodNode.Name, methodNode.Range);
+                            // Create a new variable using the parameter input.
+                            //parameterVars[i] = VarCollection.AssignRecursiveVar(methodScope, IsGlobal, userMethod.Parameters[i].Name, methodNode.Range);
+                            parameterVars[i] = (RecursiveVar)VarCollection.AssignDefinedVar(methodScope, IsGlobal, userMethod.Parameters[i].Name, methodNode.Range);
+                            Actions.AddRange
+                            (
+                                parameterVars[i].InScope(ParseExpression(scope, methodNode.Parameters[i]))
+                            );
                         }
 
-                        var returns = VarCollection.AssignVar(scope, $"{methodNode.Name}: return temp value", IsGlobal);
+                        var returns = VarCollection.AssignVar(null, $"{methodNode.Name}: return temp value", IsGlobal);
 
-                        MethodStackNoRecursive.Add(userMethod);
+                        Var continueSkipArray = VarCollection.AssignVar(null, $"{methodNode.Name}: continue skip temp value", IsGlobal);
+                        var stack = new MethodStack(userMethod, parameterVars, ContinueSkip.GetSkipCount(), returns, continueSkipArray);
+                        MethodStack.Add(stack);
 
                         var userMethodScope = methodScope.Child();
                         userMethod.Block.RelatedScopeGroup = userMethodScope;
                         
                         ParseBlock(userMethodScope, userMethod.Block, true, returns);
 
-                        MethodStackNoRecursive.Remove(userMethod);
-
                         // No return value if the method is being used as an action.
                         if (needsToBeValue)
-                            method = returns.GetVariable();
+                            result = returns.GetVariable();
                         else
-                            method = null;
+                            result = null;
 
-                        break;
-                    }
-                    else
-                    {                        
-                        MethodStack lastMethod = MethodStack.FirstOrDefault(ms => ms.UserMethod == userMethod);
-                        if (lastMethod != null)
+                        // ! Workaround for SmallMessage string re-evaluation workshop bug. Remove if blizzard fixes it
+                        Actions.Add(A_Wait.MinimumWait);
+                        // !
+                        
+                        foreach (Var var in methodScope.AllChildVariables())
                         {
-                            ContinueSkip.Setup();
-
-                            // ! Workaround for SmallMessage string re-evaluation workshop bug. Remove if blizzard fixes it
-                            Actions.Add(A_Wait.MinimumWait);
-                            // !
-
-                            for (int i = 0; i < lastMethod.ParameterVars.Length; i++)
-                            {
-                                if (methodNode.Parameters.Length > i)
-                                    Actions.AddRange
-                                    (
-                                        lastMethod.ParameterVars[i].InScope(ParseExpression(scope, methodNode.Parameters[i]))
-                                    );
-                                else
-                                    throw SyntaxErrorException.MissingParameter(userMethod.Parameters[i].Name, methodNode.Name, methodNode.Range);
-                            }
-
-                            // ?--- Multidimensional Array 
-                            Actions.Add(
-                                Element.Part<A_SetGlobalVariable>(EnumData.GetEnumValue(Variable.B), lastMethod.ContinueSkipArray.GetVariable())
-                            );
-                            Actions.Add(
-                                Element.Part<A_ModifyGlobalVariable>(EnumData.GetEnumValue(Variable.B), EnumData.GetEnumValue(Operation.AppendToArray), new V_Number(ContinueSkip.GetSkipCount() + 4))
-                            );
-                            Actions.AddRange(
-                                lastMethod.ContinueSkipArray.SetVariable(Element.Part<V_GlobalVariable>(EnumData.GetEnumValue(Variable.B)))
-                            );
-                            // ?---
-
-                            ContinueSkip.SetSkipCount(lastMethod.ActionIndex);
-                            Actions.Add(Element.Part<A_Loop>());
-
-                            if (needsToBeValue)
-                                method = lastMethod.Return.GetVariable();
-                            else
-                                method = null;
+                            Element[] outOfScopeActions = var.OutOfScope();
+                            if (outOfScopeActions != null)
+                                Actions.AddRange(outOfScopeActions);
                         }
-                        else
-                        {
-                            var methodScope = Root.Child(true);
 
-                            // Add the parameter variables to the scope.
-                            RecursiveVar[] parameterVars = new RecursiveVar[userMethod.Parameters.Length];
-                            for (int i = 0; i < parameterVars.Length; i++)
-                            {
-                                if (methodNode.Parameters.Length > i)
-                                {
-                                    // Create a new variable using the parameter input.
-                                    //parameterVars[i] = VarCollection.AssignRecursiveVar(methodScope, IsGlobal, userMethod.Parameters[i].Name, methodNode.Range);
-                                    parameterVars[i] = (RecursiveVar)VarCollection.AssignDefinedVar(methodScope, IsGlobal, userMethod.Parameters[i].Name, methodNode.Range);
-                                    Actions.AddRange
-                                    (
-                                        parameterVars[i].InScope(ParseExpression(scope, methodNode.Parameters[i]))
-                                    );
-                                }
-                                else
-                                    throw SyntaxErrorException.MissingParameter(userMethod.Parameters[i].Name, methodNode.Name, methodNode.Range);
-                            }
+                        ContinueSkip.Setup();
+                        ContinueSkip.SetSkipCount(Element.Part<V_LastOf>(continueSkipArray.GetVariable()));
 
-                            var returns = VarCollection.AssignVar(null, $"{methodNode.Name}: return temp value", IsGlobal);
-
-                            Var continueSkipArray = VarCollection.AssignVar(null, $"{methodNode.Name}: continue skip temp value", IsGlobal);
-                            var stack = new MethodStack(userMethod, parameterVars, ContinueSkip.GetSkipCount(), returns, continueSkipArray);
-                            MethodStack.Add(stack);
-
-                            var userMethodScope = methodScope.Child();
-                            userMethod.Block.RelatedScopeGroup = userMethodScope;
-                            
-                            ParseBlock(userMethodScope, userMethod.Block, true, returns);
-
-                            // No return value if the method is being used as an action.
-                            if (needsToBeValue)
-                                method = returns.GetVariable();
-                            else
-                                method = null;
-
-                            // ! Workaround for SmallMessage string re-evaluation workshop bug. Remove if blizzard fixes it
-                            Actions.Add(A_Wait.MinimumWait);
-                            // !
-                            
-                            foreach (Var var in methodScope.AllChildVariables())
-                            {
-                                Element[] outOfScopeActions = var.OutOfScope();
-                                if (outOfScopeActions != null)
-                                    Actions.AddRange(outOfScopeActions);
-                            }
-
-                            ContinueSkip.Setup();
-                            ContinueSkip.SetSkipCount(Element.Part<V_LastOf>(continueSkipArray.GetVariable()));
-
-                            // ?--- Multidimensional Array 
-                            Actions.Add(
-                                Element.Part<A_SetGlobalVariable>(EnumData.GetEnumValue(Variable.B), continueSkipArray.GetVariable())
-                            );
-                            Actions.AddRange(
-                                continueSkipArray.SetVariable(
-                                    Element.Part<V_ArraySlice>(
-                                        Element.Part<V_GlobalVariable>(EnumData.GetEnumValue(Variable.B)), 
-                                        new V_Number(0),
-                                        Element.Part<V_Subtract>(
-                                            Element.Part<V_CountOf>(Element.Part<V_GlobalVariable>(EnumData.GetEnumValue(Variable.B))),
-                                            new V_Number(1)
-                                        )
+                        // ?--- Multidimensional Array 
+                        Actions.Add(
+                            Element.Part<A_SetGlobalVariable>(EnumData.GetEnumValue(Variable.B), continueSkipArray.GetVariable())
+                        );
+                        Actions.AddRange(
+                            continueSkipArray.SetVariable(
+                                Element.Part<V_ArraySlice>(
+                                    Element.Part<V_GlobalVariable>(EnumData.GetEnumValue(Variable.B)), 
+                                    new V_Number(0),
+                                    Element.Part<V_Subtract>(
+                                        Element.Part<V_CountOf>(Element.Part<V_GlobalVariable>(EnumData.GetEnumValue(Variable.B))),
+                                        new V_Number(1)
                                     )
                                 )
-                            );
-                            // ?---
+                            )
+                        );
+                        // ?---
 
-                            Actions.Add(
-                                Element.Part<A_LoopIf>(
-                                    Element.Part<V_Compare>(
-                                        Element.Part<V_CountOf>(continueSkipArray.GetVariable()),
-                                        EnumData.GetEnumValue(Operators.NotEqual),
-                                        new V_Number(0)
-                                    )
+                        Actions.Add(
+                            Element.Part<A_LoopIf>(
+                                Element.Part<V_Compare>(
+                                    Element.Part<V_CountOf>(continueSkipArray.GetVariable()),
+                                    EnumData.GetEnumValue(Operators.NotEqual),
+                                    new V_Number(0)
                                 )
-                            );
-                            ContinueSkip.ResetSkip();
-                            Actions.AddRange(continueSkipArray.SetVariable(new V_Number()));
-                            
-                            MethodStack.Remove(stack);
-                        }
-                        break;
+                            )
+                        );
+                        ContinueSkip.ResetSkip();
+                        Actions.AddRange(continueSkipArray.SetVariable(new V_Number()));
+                        
+                        MethodStack.Remove(stack);
                     }
                 }
-
-                default: throw new NotImplementedException();
             }
+            else throw new NotImplementedException();
 
-            methodNode.RelatedElement = method;
-            return method;
-        }
-
-        IWorkshopTree ParseParameter(ScopeGroup scope, IExpressionNode node, string methodName, ParameterBase parameterData)
-        {
-            IWorkshopTree value = null;
-
-            switch (node)
-            {
-                case EnumNode enumNode:
-
-                    /*
-                    if (parameterData.ParameterType != ParameterType.Enum)
-                        throw SyntaxErrorException.ExpectedType(true, parameterData.ValueType.ToString(), methodName, parameterData.Name, enumNode.Range);
-
-                    if (enumNode.Type != parameterData.EnumType.Name)
-                        throw SyntaxErrorException.ExpectedType(false, parameterData.EnumType.ToString(), methodName, parameterData.Name, enumNode.Range);
-                    */
-
-                    value = (IWorkshopTree)EnumData.ToElement(enumNode.EnumMember) ?? (IWorkshopTree)enumNode.EnumMember;
-
-                    //if (value == null)
-                      //  throw SyntaxErrorException.InvalidEnumValue(enumNode.Type, enumNode.Value, enumNode.Range);
-                    
-                    break;
-
-                default:
-
-                    //if (!(parameterData is Parameter))
-                      //  throw SyntaxErrorException.ExpectedType(false, parameterData.EnumType.Name, methodName, parameterData.Name, ((Node)node).Range);
-
-                    value = ParseExpression(scope, node);
-
-                    Element element = value as Element;
-                    ElementData elementData = element.GetType().GetCustomAttribute<ElementData>();
-
-                    //if (elementData.ValueType != Elements.ValueType.Any &&
-                    //!parameterData.ReturnType.HasFlag(elementData.ValueType))
-                      //  throw SyntaxErrorException.InvalidType(parameterData.ValueType, elementData.ValueType, ((Node)node).Range);
-
-                    break;
-            }
-
-            if (value == null)
-                throw new Exception("Failed to parse parameter.");
-
-            return value;
-        }
-    
-        static MethodType? GetMethodType(UserMethod[] userMethods, string name)
-        {
-            if (Element.GetElement(name) != null)
-                return MethodType.Method;
-            if (CustomMethodData.GetCustomMethod(name) != null)
-                return MethodType.CustomMethod;
-            if (UserMethod.GetUserMethod(userMethods, name) != null)
-                return MethodType.UserMethod;
-            return null;
-        }
-
-        enum MethodType
-        {
-            Method,
-            CustomMethod,
-            UserMethod
+            methodNode.RelatedElement = result;
+            return result;
         }
 
         void ParseBlock(ScopeGroup scopeGroup, BlockNode blockNode, bool fulfillReturns, Var returnVar)

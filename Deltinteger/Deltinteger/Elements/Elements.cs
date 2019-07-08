@@ -170,7 +170,6 @@ namespace Deltin.Deltinteger.Elements
                     completions.Add(new CompletionItem(element.Name) {
                         detail = element.GetObject().ToString(),
                         kind = CompletionItem.Method,
-                        data = element.Name,
                         documentation = Wiki.GetWikiMethod(element.WorkshopName)?.Description
                     });
                 }
@@ -309,8 +308,7 @@ namespace Deltin.Deltinteger.Elements
         public string GetLabel(bool markdown)
         {
             return Name + "(" + Parameter.ParameterGroupToString(Parameters, markdown) + ")" 
-            + "\n\r" +
-            Wiki?.Description;
+            + (markdown && Wiki?.Description != null ? "\n\r" + Wiki.Description : "");
         }
 
         public ElementList(Type type)
