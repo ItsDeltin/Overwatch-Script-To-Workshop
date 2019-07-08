@@ -214,13 +214,11 @@ namespace Deltin.Deltinteger.Elements
 
     [ElementData("Filtered Array", ValueType.Any)]
     [Parameter("Array", ValueType.Any, typeof(V_AllPlayers))]
-#warning check default type
-    [Parameter("Condition", ValueType.Boolean, null)]
+    [Parameter("Condition", ValueType.Boolean, typeof(V_Compare))]
     public class V_FilteredArray : Element {}
 
     [ElementData("First Of", ValueType.Any)]
-#warning check default type
-    [Parameter("Array", ValueType.Any, null)]
+    [Parameter("Array", ValueType.Any, typeof(V_GlobalVariable))]
     public class V_FirstOf : Element {}
 
     [ElementData("Flag Position", ValueType.Vector)]
@@ -243,7 +241,6 @@ namespace Deltin.Deltinteger.Elements
     [EnumParameter("Status", typeof(Status))]
     public class V_HasStatus : Element {}
 
-#warning check health pos
     [ElementData("Health", ValueType.Number)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     public class V_Health : Element {}
@@ -252,7 +249,6 @@ namespace Deltin.Deltinteger.Elements
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     public class V_HealthPercent : Element {}
 
-#warning check hero pos
     [ElementData("Hero", ValueType.Hero)]
     [EnumParameter("Hero", typeof(Hero))]
     public class V_HeroVar : Element {}
@@ -302,7 +298,6 @@ namespace Deltin.Deltinteger.Elements
     [EnumParameter("Button", typeof(Button))]
     public class V_IsButtonHeld : Element {}
 
-#warning check order
     [ElementData("Is Communicating", ValueType.Boolean)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     [EnumParameter("Type", typeof(Communication))]
@@ -417,14 +412,12 @@ namespace Deltin.Deltinteger.Elements
     public class V_IsTeamOnOffense : Element {}
 
     [ElementData("Is True For All", ValueType.Boolean)]
-#warning check default
-    [Parameter("Array", ValueType.Any, typeof(V_AllPlayers))]
+    [Parameter("Array", ValueType.Any, typeof(V_GlobalVariable))]
     [Parameter("Condition", ValueType.Boolean, typeof(V_Compare))]
     public class V_IsTrueForAll : Element {}
 
     [ElementData("Is True For Any", ValueType.Boolean)]
-#warning check default
-    [Parameter("Array", ValueType.Any, typeof(V_AllPlayers))]
+    [Parameter("Array", ValueType.Any, typeof(V_GlobalVariable))]
     [Parameter("Condition", ValueType.Boolean, typeof(V_Compare))]
     public class V_IsTrueForAny : Element {}
 
@@ -456,7 +449,6 @@ namespace Deltin.Deltinteger.Elements
     public class V_LastHealOverTime : Element {}
 
     [ElementData("Last Of", ValueType.Any)]
-#warning check default
     [Parameter("Array", ValueType.Any, typeof(V_GlobalVariable))]
     public class V_LastOf : Element {}
 
@@ -478,7 +470,6 @@ namespace Deltin.Deltinteger.Elements
     [ElementData("Match Time", ValueType.Number)]
     public class V_MatchTime : Element {}
 
-#warning Check order
     [ElementData("Max", ValueType.Number)]
     [Parameter("Value", ValueType.Number, typeof(V_Number))]
     [Parameter("Value", ValueType.Number, typeof(V_Number))]
@@ -488,7 +479,6 @@ namespace Deltin.Deltinteger.Elements
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     public class V_MaxHealth : Element {}
 
-#warning Check order
     [ElementData("Min", ValueType.Number)]
     [Parameter("Value", ValueType.Number, typeof(V_Number))]
     [Parameter("Value", ValueType.Number, typeof(V_Number))]
@@ -926,7 +916,6 @@ namespace Deltin.Deltinteger.Elements
     [EnumParameter("Team", typeof(Team))]
     public class V_TeamVar : Element {}
 
-#warning check order
     [ElementData("TeamOf", ValueType.Team)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     public class V_TeamOf : Element {}
@@ -949,7 +938,6 @@ namespace Deltin.Deltinteger.Elements
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     public class V_UltimateChargePercent : Element {}
 
-#warning check order
     [ElementData("Up", ValueType.Vector)]
     public class V_Up : Element {}
 
@@ -964,7 +952,6 @@ namespace Deltin.Deltinteger.Elements
     [Parameter("Z", ValueType.Number, typeof(V_Number))]
     public class V_Vector : Element {}
 
-#warning check order
     [ElementData("Vector Towards", ValueType.Vector)]
     [Parameter("Start Pos", ValueType.VectorAndPlayer, typeof(V_Vector))]
     [Parameter("End Pos", ValueType.VectorAndPlayer, typeof(V_Vector))]

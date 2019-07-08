@@ -559,7 +559,8 @@ namespace Deltin.Deltinteger.Parse
                                 if (methodNode.Parameters.Length > i)
                                 {
                                     // Create a new variable using the parameter input.
-                                    parameterVars[i] = VarCollection.AssignRecursiveVar(methodScope, IsGlobal, userMethod.Parameters[i].Name, methodNode.Range);
+                                    //parameterVars[i] = VarCollection.AssignRecursiveVar(methodScope, IsGlobal, userMethod.Parameters[i].Name, methodNode.Range);
+                                    parameterVars[i] = (RecursiveVar)VarCollection.AssignDefinedVar(methodScope, IsGlobal, userMethod.Parameters[i].Name, methodNode.Range);
                                     Actions.AddRange
                                     (
                                         parameterVars[i].InScope(ParseExpression(scope, methodNode.Parameters[i]))
@@ -589,13 +590,12 @@ namespace Deltin.Deltinteger.Parse
                             // ! Workaround for SmallMessage string re-evaluation workshop bug. Remove if blizzard fixes it
                             Actions.Add(A_Wait.MinimumWait);
                             // !
-
-                            for (int i = 0; i < parameterVars.Length; i++)
+                            
+                            foreach (Var var in methodScope.AllChildVariables())
                             {
-                                Actions.AddRange
-                                (
-                                    parameterVars[i].OutOfScope()
-                                );
+                                Element[] outOfScopeActions = var.OutOfScope();
+                                if (outOfScopeActions != null)
+                                    Actions.AddRange(outOfScopeActions);
                             }
 
                             ContinueSkip.Setup();

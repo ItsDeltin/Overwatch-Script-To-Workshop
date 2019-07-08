@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Antlr4.Runtime;
+using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.LanguageServer;
 
 namespace Deltin.Deltinteger.Parse
@@ -75,11 +76,6 @@ namespace Deltin.Deltinteger.Parse
             return newChild;
         }
 
-        public List<Var> VarCollection()
-        {
-            return InScope;
-        }
-
         public List<Var> FullVarCollection()
         {
             var varCollection = new List<Var>();
@@ -95,6 +91,15 @@ namespace Deltin.Deltinteger.Parse
             {
                 kind = CompletionItem.Field
             }).ToArray();
+        }
+
+        public List<Var> AllChildVariables()
+        {
+            List<Var> childVars = new List<Var>();
+            childVars.AddRange(InScope);
+            foreach(ScopeGroup child in Children)
+                childVars.AddRange(child.AllChildVariables());
+            return childVars;
         }
 
         //public static ScopeGroup Root = new ScopeGroup();

@@ -510,6 +510,7 @@ namespace Deltin.Deltinteger.LanguageServer
         {
             this.contents = contents;
         }
+        #pragma warning disable 0618
         public Hover(MarkedString contents)
         {
             this.contents = contents;
@@ -518,6 +519,7 @@ namespace Deltin.Deltinteger.LanguageServer
         {
             this.contents = contents;
         }
+        #pragma warning restore 0618
     }
 #endregion
 

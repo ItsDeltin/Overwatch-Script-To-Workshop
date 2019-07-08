@@ -292,6 +292,8 @@ namespace Deltin.Deltinteger.Elements
             // Another way to do it would be to add 0 to the boolean, however this won't work with truthey/falsey values that aren't booleans.
             // return Element.Part<V_ValueInArray>(CreateArray(alternative, consequent), Element.Part<V_Add>(condition, new V_Number(0)));
         }
+
+        public static readonly Element DefaultElement = new V_Number(0);
     }
 
     public class ElementList : IMethod

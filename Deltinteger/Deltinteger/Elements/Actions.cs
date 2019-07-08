@@ -283,7 +283,6 @@ namespace Deltin.Deltinteger.Elements
 
     [ElementData("Preload Hero")]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
-#warning confirm this parameter when the workshop is live
     [Parameter("Hero", ValueType.Hero, typeof(V_HeroVar))]
     public class A_PreloadHero : Element {}
 
@@ -491,8 +490,7 @@ namespace Deltin.Deltinteger.Elements
     public class A_StartCamera : Element {}
 
     [ElementData("Start Damage Modification")]
-#warning check defaults when workshop is live
-    [Parameter("Receivers", ValueType.Player, typeof(V_AllPlayers))]
+    [Parameter("Receivers", ValueType.Player, typeof(V_EventPlayer))]
     [Parameter("Damagers", ValueType.Player, typeof(V_AllPlayers))]
     [Parameter("Damage Percent", ValueType.Number, typeof(V_Number))]
     [EnumParameter("Reevaluation", typeof(ModRev))]
@@ -515,8 +513,7 @@ namespace Deltin.Deltinteger.Elements
 
     [ElementData("Start Forcing Player To Be Hero")]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
-#warning check defaults when workshop is live
-    [Parameter("Hero", ValueType.Hero, typeof(V_AllHeroes))]
+    [Parameter("Hero", ValueType.Hero, typeof(V_HeroVar))]
     public class A_ForcePlayerHero : Element {}
 
     [ElementData("Start Forcing Spawn Room")]

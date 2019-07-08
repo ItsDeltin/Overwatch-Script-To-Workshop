@@ -35,12 +35,15 @@ namespace Deltin.Deltinteger
                 Translate.AllowRecursion = true;
             }
 
-            var actions = WorkshopDArray.SetVariable(Element.Part<V_HeroVar>(EnumData.GetEnumValue(Hero.Baptiste)), null, Variable.C, new V_Number(2), new V_Number(2), new V_Number(2));
+            var actions = new List<Element>();
+            actions.AddRange(WorkshopDArray.SetVariable(Element.Part<V_HeroVar>(EnumData.GetEnumValue(Hero.Baptiste)), null, Variable.D, new V_Number(2), new V_Number(2), new V_Number(2)));
+            actions.AddRange(WorkshopDArray.SetVariable(Element.Part<V_HeroVar>(EnumData.GetEnumValue(Hero.Ana)), null, Variable.D, new V_Number(2), new V_Number(4)));
+            actions.AddRange(WorkshopDArray.SetVariable(Element.Part<V_HeroVar>(EnumData.GetEnumValue(Hero.Genji)), null, Variable.D, new V_Number(0), new V_Number(5), new V_Number(7), new V_Number(2)));
 
             foreach(Element val in actions)
                 val.DebugPrint(ParseLog);
             
-            SetClipboard(Element.ToWorkshop(actions));
+            SetClipboard(Element.ToWorkshop(actions.ToArray()));
 
             if (args.Contains("-langserver"))
             {

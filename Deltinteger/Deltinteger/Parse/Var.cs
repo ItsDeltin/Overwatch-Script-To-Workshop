@@ -48,7 +48,10 @@ namespace Deltin.Deltinteger.Parse
 
         public Var AssignDefinedVar(ScopeGroup scopeGroup, bool isGlobal, string name, Variable variable, int index, Range range)
         {
-            return new Var(scopeGroup, name, isGlobal, variable, index, range, this);
+            if (scopeGroup == null || !scopeGroup.Recursive)
+                return new Var         (scopeGroup, name, isGlobal, variable, index, range, this);
+            else
+                return new RecursiveVar(scopeGroup, name, isGlobal, variable, index, range, this);
         }
 
         public RecursiveVar AssignRecursiveVar(ScopeGroup scopeGroup, bool isGlobal, string name, Range range)
@@ -174,7 +177,9 @@ namespace Deltin.Deltinteger.Parse
 
         public virtual Element[] InScope(Element initialValue, Element targetPlayer = null)
         {
-            return SetVariable(initialValue, targetPlayer);
+            if (initialValue != null)
+                return SetVariable(initialValue, targetPlayer);
+            return null;
         }
         public virtual Element[] OutOfScope(Element targetPlayer = null)
         {
@@ -183,8 +188,14 @@ namespace Deltin.Deltinteger.Parse
 
         public override string ToString()
         {
-            return (IsGlobal ? "global" : "player") + " " + Variable + (UsesIndex ? $"[{Index}]" : "") + " " + Name;
+            return 
+            (IsGlobal ? "global" : "player") + " "
+            + Variable + (UsesIndex ? $"[{Index}]" : "") + " "
+            + (AdditionalToStringInfo != null ? AdditionalToStringInfo + " " : "")
+            + Name;
         }
+
+        protected virtual string AdditionalToStringInfo { get; } = null;
     }
 
     public class RecursiveVar : Var
@@ -225,7 +236,7 @@ namespace Deltin.Deltinteger.Parse
             {
                 Element.Part<A_SetGlobalVariable>(bAsWorkshop, base.GetVariable(targetPlayer)),
 
-                Element.Part<A_SetGlobalVariableAtIndex>(bAsWorkshop, Element.Part<V_CountOf>(Element.Part<V_GlobalVariable>(bAsWorkshop)), initialValue ?? new V_Number(0)),
+                Element.Part<A_SetGlobalVariableAtIndex>(bAsWorkshop, Element.Part<V_CountOf>(Element.Part<V_GlobalVariable>(bAsWorkshop)), initialValue ?? Element.DefaultElement),
 
                 base.SetVariable(Element.Part<V_GlobalVariable>(bAsWorkshop), targetPlayer)[0]
             };
@@ -245,6 +256,8 @@ namespace Deltin.Deltinteger.Parse
                 ), targetPlayer
             );
         }
+
+        protected override string AdditionalToStringInfo { get; } = "RECURSIVE";
 
         public Element DebugStack(Element targetPlayer = null)
         {
@@ -317,13 +330,13 @@ namespace Deltin.Deltinteger.Parse
                 Element array = ValueInArrayPath(root, index.Take(dimensions - i).ToArray());
                 
                 actions.AddRange(
-                    SetVariable(GetRoot(targetPlayer, Variable.B), targetPlayer, variable)
+                    SetVariable(GetRoot(targetPlayer, Variable.B), targetPlayer, Variable.C)
                 );
                 actions.AddRange(
                     SetVariable(array, targetPlayer, Variable.B)
                 );
                 actions.AddRange(
-                    SetVariable(GetRoot(targetPlayer, variable), targetPlayer, Variable.B, index[i])
+                    SetVariable(GetRoot(targetPlayer, Variable.C), targetPlayer, Variable.B, index[i])
                 );
             }
             actions.AddRange(
@@ -342,6 +355,7 @@ namespace Deltin.Deltinteger.Parse
             
             return Element.Part<V_ValueInArray>(ValueInArrayPath(array, index.Take(index.Length - 1).ToArray()), index.Last());
         }
+
 
         private static Element GetRoot(Element targetPlayer, Variable variable)
         {
