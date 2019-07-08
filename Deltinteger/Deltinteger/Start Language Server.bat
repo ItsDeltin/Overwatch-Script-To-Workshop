@@ -1,2 +1,2 @@
-start /WAIT /B "" "Deltinteger.exe" "-langserver" "-port 3000 3001"
+start /WAIT /B "" "Deltinteger.exe" "-langserver" "-port 9145 9146"
 pause
