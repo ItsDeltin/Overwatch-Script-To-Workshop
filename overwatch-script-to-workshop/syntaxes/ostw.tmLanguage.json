@@ -36,7 +36,7 @@
 		
 		"keywords": {
 			"name": "keyword.control",
-			"match": "\\b(if|else|while|for|foreach|return|in|define|rule|true|false|usevar|method|playervar|globalvar|null)\\b"
+			"match": "\\b(if|else|while|for|foreach|return|in|define|rule|true|false|usevar|method|recursive|playervar|globalvar|null)\\b"
 		},
 		"strings": {
 			"name": "string.quoted.double",
@@ -56,7 +56,8 @@
 		"comments": {
 			"patterns": [
 				{"begin": "//"    , "end": "$"      , "name": "comment.line.double-slash"},
-				{"begin": "\\/\\*", "end": "\\*\\/" , "name": "comment.block"}
+				{"begin": "\\/\\*", "end": "\\*\\/" , "name": "comment.block"},
+				{"begin": "#", "end": "$", "name": "comment.block.documentation" }
 			]
 		},
 		"numbers": {
