@@ -1,14 +1,9 @@
-define globalvar myArray D;
-
-rule: "Array Scan"
-Event.OngoingPlayer
-if (IsButtonHeld(EventPlayer(), Button.Interact))
+# Prints every value in a multidimensional array.
+method scanArray(array)
 {
-    arrayWalk(myArray, EmptyArray());
+    arrayWalk(array, EmptyArray());
 }
 
- 
-# Prints every value in a multidimensional array.
 recursive method arrayWalk(array, dims) 
 { 
     for (define index = 0; index < CountOf(array); index++)
