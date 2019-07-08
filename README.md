@@ -138,9 +138,6 @@ AllPlayers().speedBuff = 100;
 
 ### Methods
 
-#### Recursion
-By default, recursive methods are disabled because it would make the final output of methods a lot more complicated. Start `Deltinteger.exe` with the argument `-allowresursion` to enable it.
-
 #### IsAI() Example
 
 ```
@@ -167,14 +164,25 @@ method IsAI(player)
 	return isAI;
 }
 ```
-IsAI() will return true if the player is an AI, otherwise it will return false. 
+IsAI() will return true if the player is an AI, otherwise it will return false.
+
+#### Recursion
+
+To allow recursion in a method, do `recursive method` instead of just `method`.
+```
+# Prints every value in a multidimensional array.
+recursive method arrayWalker(array, dims)
+{
+    // ...
+}
+```
 
 ### Custom methods
 OSTW contains methods that are not found in the Overwatch Workshop.
 
 | Method            | Type              | Description |
 | ----------------- | ----------------- | ----------- |
-| GetMap()          | Multiaction Value | `GetMap()` gets the current map. This is based off of [Xerxes's Map Identifier](https://us.forums.blizzard.com/en/overwatch/t/workshop-resource-map-identifier-map-detection-script-v2-0-only-2-actions/341132). The result can be compared to with the `Map` enum.
+| GetMap            | Multiaction Value | `GetMap()` gets the current map. This is based off of [Xerxes's Map Identifier](https://us.forums.blizzard.com/en/overwatch/t/workshop-resource-map-identifier-map-detection-script-v2-0-only-2-actions/341132). The result can be compared to with the `Map` enum.
 | AngleOfVectors    | Multiaction Value | Gets the angle of 3 vectors. 
 | AngleOfVectorsCom | Value             | Behaves the same as AngleOfVectors but condensed into one action.
 | ChaseVariable     | Action            | Behaves the same as the workshop method `Chase Global/Player Variable At Rate`, but will work with named variables. Works with numbers and vectors.
@@ -220,7 +228,6 @@ ChaseVariable(AllPlayers().playerVar, 10, 1);
 ### Arguments:
 - `-langserver`: Starts the language server.
 - `-port xxxx yyyy`: The 2 ports the language server uses.
-- `-allowrecursion`: Allows methods to be recursive.
 - `-verbose`/`-quiet`
 
 ### Copying the script into Overwatch

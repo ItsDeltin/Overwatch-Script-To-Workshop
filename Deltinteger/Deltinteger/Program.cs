@@ -28,23 +28,6 @@ namespace Deltin.Deltinteger
             if (args.Contains("-quiet"))
                 Log.LogLevel = LogLevel.Quiet;
 
-            // Determines if user methods can be recursive.
-            if (args.Contains("-allowrecursion"))
-            {
-                Log.Write(LogLevel.Normal, "Recursion enabled.");
-                Translate.AllowRecursion = true;
-            }
-
-            var actions = new List<Element>();
-            actions.AddRange(WorkshopDArray.SetVariable(Element.Part<V_HeroVar>(EnumData.GetEnumValue(Hero.Baptiste)), null, Variable.D, new V_Number(2), new V_Number(2), new V_Number(2)));
-            actions.AddRange(WorkshopDArray.SetVariable(Element.Part<V_HeroVar>(EnumData.GetEnumValue(Hero.Ana)), null, Variable.D, new V_Number(2), new V_Number(4)));
-            actions.AddRange(WorkshopDArray.SetVariable(Element.Part<V_HeroVar>(EnumData.GetEnumValue(Hero.Genji)), null, Variable.D, new V_Number(0), new V_Number(5), new V_Number(7), new V_Number(2)));
-
-            foreach(Element val in actions)
-                val.DebugPrint(ParseLog);
-            
-            SetClipboard(Element.ToWorkshop(actions.ToArray()));
-
             if (args.Contains("-langserver"))
             {
                 string[] portArgs = args.FirstOrDefault(v => v.Split(' ')[0] == "-port")?.Split(' ');
