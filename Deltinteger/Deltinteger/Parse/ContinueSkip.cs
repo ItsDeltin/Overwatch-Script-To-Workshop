@@ -10,7 +10,7 @@ namespace Deltin.Deltinteger.Parse
         private readonly List<Element> Actions;
         private readonly VarCollection VarCollection;
 
-        private Var SkipCount;
+        private IndexedVar SkipCount;
 
         private bool IsSetup = false;
 
@@ -31,17 +31,20 @@ namespace Deltin.Deltinteger.Parse
             if (SkipCount is RecursiveVar)
                 throw new Exception();
             
+            A_Wait waitAction = A_Wait.MinimumWait;
+            waitAction.Comment = "ContinueSkip Wait";
             // Add the required wait
-            Actions.Insert(0, A_Wait.MinimumWait);
+            Actions.Insert(0, waitAction);
+
+            A_SkipIf skipAction = Element.Part<A_SkipIf>
+            (
+                Element.Part<V_Compare>(SkipCount.GetVariable(), EnumData.GetEnumValue(Operators.NotEqual), new V_Number(0)),
+                SkipCount.GetVariable()
+            );
+            skipAction.Comment = "ContinueSkip Skipper";
 
             // Add the skip-if
-            Actions.Insert(1, 
-                Element.Part<A_SkipIf>
-                (
-                    Element.Part<V_Compare>(SkipCount.GetVariable(), EnumData.GetEnumValue(Operators.NotEqual), new V_Number(0)),
-                    SkipCount.GetVariable()
-                )
-            );
+            Actions.Insert(1, skipAction);
         }
 
         public void SetSkipCount(int number)

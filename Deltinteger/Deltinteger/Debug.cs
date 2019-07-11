@@ -25,13 +25,19 @@ namespace Deltin.Deltinteger
         public void Write(LogLevel logLevel, string text)
         {
             if ((int)logLevel <= (int)LogLevel)
-                Console.WriteLine($"[{name}] {text}");
+            {
+                Console.ForegroundColor = ConsoleColor.Gray;
+                Console.Write($"[{name}] ");
+                Console.ForegroundColor = ConsoleColor.White;
+                Console.WriteLine(text);
+            }
         }
 
         public void Write(LogLevel logLevel, params ColorMod[] colors)
         {
             if ((int)logLevel <= (int)LogLevel)
             {
+                Console.ForegroundColor = ConsoleColor.Gray;
                 Console.Write($"[{name}] ");
                 foreach (ColorMod color in colors)
                 {

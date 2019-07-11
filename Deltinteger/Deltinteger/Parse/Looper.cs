@@ -36,14 +36,14 @@ namespace Deltin.Deltinteger.Parse
             return _rule;
         }
 
-        public VariableChase GetChaseData(Var var)
+        public VariableChase GetChaseData(IndexedVar var, Translate context)
         {
             var existingChaseData = _chases.FirstOrDefault(cd => cd.Var == var);
             if (existingChaseData != null)
                 return existingChaseData;
             
-            Var destination = var.VarCollection.AssignVar(null, $"'{var.Name}' chase destination", true);
-            Var rate        = var.VarCollection.AssignVar(null, $"'{var.Name}' chase duration", true);
+            IndexedVar destination = context.VarCollection.AssignVar(null, $"'{var.Name}' chase destination", true);
+            IndexedVar rate        = context.VarCollection.AssignVar(null, $"'{var.Name}' chase duration", true);
 
             VariableChase newChaseData = new VariableChase(var, destination, rate);
             _chases.Add(newChaseData);
@@ -53,7 +53,7 @@ namespace Deltin.Deltinteger.Parse
             return newChaseData;
         }
 
-        private static Element[] GetChaseActions(Var var, Var destination, Var rate)
+        private static Element[] GetChaseActions(IndexedVar var, IndexedVar destination, IndexedVar rate)
         {
             Element rateAdjusted = Element.Part<V_Multiply>(rate.GetVariable(), new V_Number(Constants.MINIMUM_WAIT));
 
@@ -77,11 +77,11 @@ namespace Deltin.Deltinteger.Parse
 
     public class VariableChase
     {
-        public readonly Var Var;
-        public readonly Var Destination;
-        public readonly Var Rate;
+        public readonly IndexedVar Var;
+        public readonly IndexedVar Destination;
+        public readonly IndexedVar Rate;
 
-        public VariableChase(Var var, Var destination, Var rate)
+        public VariableChase(IndexedVar var, IndexedVar destination, IndexedVar rate)
         {
             Var = var;
             Destination = destination;

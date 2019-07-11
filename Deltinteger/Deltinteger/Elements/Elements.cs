@@ -196,6 +196,7 @@ namespace Deltin.Deltinteger.Elements
         public ElementList ElementList { get; private set; }
         public ElementData ElementData { get; private set; }
         public ParameterBase[] ParameterData { get; private set; }
+        public string Comment { get; set; } = null;
 
         public IWorkshopTree[] ParameterValues;
 
@@ -246,8 +247,8 @@ namespace Deltin.Deltinteger.Elements
             parameters.AddRange(elementParameters.Select(p => p.ToWorkshop()));
 
             return ElementData.ElementName + 
-                (parameters.Count == 0 ? "" :
-                "(" + string.Join(", ", parameters) + ")");
+                (parameters.Count == 0 ? "" : "(" + string.Join(", ", parameters) + ")")
+                + (!ElementData.IsValue ? (";" + (Comment != null ? " // " + Comment : "")) : "");
         }
 
         public static string ToWorkshop(Element[] actions)
@@ -258,7 +259,7 @@ namespace Deltin.Deltinteger.Elements
             builder.Indent = 1;
             foreach(Element action in actions)
             {
-                builder.AppendLine(action.ToWorkshop() + ";");
+                builder.AppendLine(action.ToWorkshop());
             }
             builder.Indent = 0;
             builder.AppendLine("}");

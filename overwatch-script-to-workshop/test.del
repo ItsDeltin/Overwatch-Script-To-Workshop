@@ -2,5 +2,9 @@ rule: "Recursion test."
 Event.OngoingPlayer 
 if (IsButtonHeld(EventPlayer(), Button.Interact))
 {
-    PreloadHero(EventPlayer(), Hero.Lucio);
-}  
+    foreach (define myVar in AllPlayers())
+    {
+        myVar = 2;
+        SmallMessage(myVar, "");
+    }
+}

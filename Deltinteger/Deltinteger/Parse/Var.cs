@@ -30,81 +30,112 @@ namespace Deltin.Deltinteger.Parse
             }
         }
 
-        public Var AssignVar(ScopeGroup scopeGroup, string name, bool isGlobal)
+        public IndexedVar AssignVar(ScopeGroup scopeGroup, string name, bool isGlobal)
         {
+            IndexedVar var;
             if (scopeGroup == null || !scopeGroup.Recursive)
-                return new Var         (Constants.INTERNAL_ELEMENT + name, isGlobal, UseVar, Assign(isGlobal), this);
+                var = new IndexedVar  (Constants.INTERNAL_ELEMENT + name, isGlobal, UseVar, Assign(isGlobal));
             else
-                return new RecursiveVar(Constants.INTERNAL_ELEMENT + name, isGlobal, UseVar, Assign(isGlobal), this);
+                var = new RecursiveVar(Constants.INTERNAL_ELEMENT + name, isGlobal, UseVar, Assign(isGlobal));
+            
+            AllVars.Add(var);
+            return var;
         }
 
-        public Var AssignDefinedVar(ScopeGroup scopeGroup, bool isGlobal, string name, Range range)
+        public IndexedVar AssignDefinedVar(ScopeGroup scopeGroup, bool isGlobal, string name, Range range)
         {
+            IndexedVar var;
             if (scopeGroup == null || !scopeGroup.Recursive)
-                return new Var         (scopeGroup, name, isGlobal, UseVar, Assign(isGlobal), range, this);
+                var = new IndexedVar         (scopeGroup, name, isGlobal, UseVar, Assign(isGlobal), range);
             else
-                return new RecursiveVar(scopeGroup, name, isGlobal, UseVar, Assign(isGlobal), range, this);
+                var = new RecursiveVar(scopeGroup, name, isGlobal, UseVar, Assign(isGlobal), range);
+            
+            AllVars.Add(var);
+            return var;
         }
 
-        public Var AssignDefinedVar(ScopeGroup scopeGroup, bool isGlobal, string name, Variable variable, int index, Range range)
+        public IndexedVar AssignDefinedVar(ScopeGroup scopeGroup, bool isGlobal, string name, Variable variable, int index, Range range)
         {
+            IndexedVar var;
             if (scopeGroup == null || !scopeGroup.Recursive)
-                return new Var         (scopeGroup, name, isGlobal, variable, index, range, this);
+                var = new IndexedVar  (scopeGroup, name, isGlobal, variable, index, range);
             else
-                return new RecursiveVar(scopeGroup, name, isGlobal, variable, index, range, this);
+                var = new RecursiveVar(scopeGroup, name, isGlobal, variable, index, range);
+
+            AllVars.Add(var);
+            return var;
         }
 
-        public RecursiveVar AssignRecursiveVar(ScopeGroup scopeGroup, bool isGlobal, string name, Range range)
+        public ElementReferenceVar AssignElementReferenceVar(ScopeGroup scopeGroup, string name, Range range, Element reference)
         {
-            return new RecursiveVar(scopeGroup, name, isGlobal, UseVar, Assign(isGlobal), range, this);
+            ElementReferenceVar var = new ElementReferenceVar(name, scopeGroup, range, reference);
+            AllVars.Add(var);
+            return var; 
         }
 
         public readonly List<Var> AllVars = new List<Var>();
     }
 
-    public class Var
+    public abstract class Var
     {
         public string Name { get; }
+        public ScopeGroup Scope { get; private set; }
+        public bool IsDefinedVar { get; }
+        public Range DefinedRange { get; }
+
+        public Var(string name)
+        {
+            Name = name;
+        }
+
+        public Var(string name, ScopeGroup scope, Range definedRange) : this (name)
+        {
+            if (scope.IsVar(Name))
+                throw SyntaxErrorException.AlreadyDefined(Name, definedRange);
+            scope./* we're */ In(this) /* together! */;
+
+            Scope = scope;
+            DefinedRange = definedRange;
+            IsDefinedVar = DefinedRange != null;
+        }
+
+        public abstract Element GetVariable(Element targetPlayer = null);
+
+        public override string ToString()
+        {
+            return Name;
+        }
+    }
+
+    public class IndexedVar : Var
+    {
         public bool IsGlobal { get; }
         public Variable Variable { get; }
         public int Index { get; }
         public bool UsesIndex { get; }
-        public VarCollection VarCollection { get; }
-        public bool IsDefinedVar { get; } = false;
-        public Range DefinedRange { get; } = null;
 
         private readonly IWorkshopTree VariableAsWorkshop; 
 
-        public Var(string name, bool isGlobal, Variable variable, int index, VarCollection varCollection)
+        public IndexedVar(string name, bool isGlobal, Variable variable, int index) : base (name)
         {
-            Name = name;
             IsGlobal = isGlobal;
             Variable = variable;
             VariableAsWorkshop = EnumData.GetEnumValue(Variable);
             Index = index;
             UsesIndex = Index != -1;
-            VarCollection = varCollection;
-            varCollection.AllVars.Add(this);
         }
 
-        public Var(ScopeGroup scopeGroup, string name, bool isGlobal, Variable variable, int index, Range range, VarCollection varCollection)
-            : this (name, isGlobal, variable, index, varCollection)
+        public IndexedVar(ScopeGroup scopeGroup, string name, bool isGlobal, Variable variable, int index, Range range)
+            : base (name, scopeGroup, range)
         {
-            if (scopeGroup.IsVar(name))
-                throw SyntaxErrorException.AlreadyDefined(name, range);
-
-            scopeGroup./* we're */ In(this) /* together! */;
-
-            IsDefinedVar = true;
-            DefinedRange = range;
+            IsGlobal = isGlobal;
+            Variable = variable;
+            VariableAsWorkshop = EnumData.GetEnumValue(Variable);
+            Index = index;
+            UsesIndex = Index != -1;
         }
 
-        public virtual Element GetVariable(Element targetPlayer = null)
-        {
-            return GetSub(targetPlayer ?? new V_EventPlayer());
-        }
-
-        private Element GetSub(Element targetPlayer)
+        public override Element GetVariable(Element targetPlayer = null)
         {
             if (UsesIndex)
                 return Element.Part<V_ValueInArray>(GetRoot(targetPlayer), new V_Number(Index));
@@ -198,17 +229,17 @@ namespace Deltin.Deltinteger.Parse
         protected virtual string AdditionalToStringInfo { get; } = null;
     }
 
-    public class RecursiveVar : Var
+    public class RecursiveVar : IndexedVar
     {
         private static readonly IWorkshopTree bAsWorkshop = EnumData.GetEnumValue(Variable.B); // TODO: Remove when multidimensional temp var can be set.
 
-        public RecursiveVar(ScopeGroup scopeGroup, string name, bool isGlobal, Variable variable, int index, Range range, VarCollection varCollection)
-            : base (scopeGroup, name, isGlobal, variable, index, range, varCollection)
+        public RecursiveVar(ScopeGroup scopeGroup, string name, bool isGlobal, Variable variable, int index, Range range)
+            : base (scopeGroup, name, isGlobal, variable, index, range)
         {
         }
 
-        public RecursiveVar(string name, bool isGlobal, Variable variable, int index, VarCollection varCollection)
-            : base (name, isGlobal, variable, index, varCollection)
+        public RecursiveVar(string name, bool isGlobal, Variable variable, int index)
+            : base (name, isGlobal, variable, index)
         {
         }
 
@@ -265,12 +296,33 @@ namespace Deltin.Deltinteger.Parse
         }
     }
 
+    public class ElementReferenceVar : Var
+    {
+        public Element Reference { get; }
+
+        public ElementReferenceVar(string name, ScopeGroup scope, Range range, Element reference) : base (name, scope, range)
+        {
+            Reference = reference;
+        }
+
+        public override Element GetVariable(Element targetPlayer = null)
+        {
+            if (targetPlayer != null && !(targetPlayer is V_EventPlayer))
+                throw new Exception($"{nameof(targetPlayer)} must be null or EventPlayer.");
+            
+            if (targetPlayer == null)
+                targetPlayer = new V_EventPlayer();
+
+            return Reference;
+        }
+    }
+
     public class VarRef : IWorkshopTree
     {
-        public Var Var { get; }
+        public IndexedVar Var { get; }
         public Element Target { get; }
 
-        public VarRef(Var var, Element target)
+        public VarRef(IndexedVar var, Element target)
         {
             Var = var;
             Target = target;
@@ -329,16 +381,20 @@ namespace Deltin.Deltinteger.Parse
             {
                 Element array = ValueInArrayPath(root, index.Take(dimensions - i).ToArray());
                 
+                // Copy the array to the C variable
                 actions.AddRange(
                     SetVariable(GetRoot(targetPlayer, Variable.B), targetPlayer, Variable.C)
                 );
+                // Copy the array dimension
                 actions.AddRange(
                     SetVariable(array, targetPlayer, Variable.B)
                 );
+                // Copy back the variable at C to the correct index
                 actions.AddRange(
                     SetVariable(GetRoot(targetPlayer, Variable.C), targetPlayer, Variable.B, index[i])
                 );
             }
+            // Set the final variable using Set At Index.
             actions.AddRange(
                 SetVariable(GetRoot(targetPlayer, Variable.B), targetPlayer, variable, index[0])
             );

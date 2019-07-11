@@ -105,14 +105,19 @@ namespace Deltin.Deltinteger.Parse
         public List<UserMethod> UserMethods { get; private set; }
         public bool Success { get; private set; }
         public VarCollection VarCollection { get; private set; }
-        public Looper GlobalLoop { get; private set; }
-        public Looper PlayerLoop { get; private set; }
+        private Looper GlobalLoop { get; set; }
+        private Looper PlayerLoop { get; set; }
 
         public IMethod GetMethod(string name)
         {
             return (IMethod)UserMethods?.FirstOrDefault(um => um.Name == name) 
             ?? (IMethod)CustomMethodData.GetCustomMethod(name) 
             ?? (IMethod)Element.GetElement(name);
+        }
+
+        public Looper GetLooper(bool isGlobal)
+        {
+            return isGlobal? GlobalLoop : PlayerLoop;
         }
     }
 
@@ -429,7 +434,7 @@ namespace Deltin.Deltinteger.Parse
                     if (variableNode.Target != null)
                         target = ParseExpression(scope, variableNode.Target);
 
-                    parsedParameters.Add(new VarRef(scope.GetVar(variableNode), target));
+                    parsedParameters.Add(new VarRef((IndexedVar)scope.GetVar(variableNode), target));
                         
                 }
                 else throw new NotImplementedException();
@@ -480,7 +485,7 @@ namespace Deltin.Deltinteger.Parse
                     var methodScope = Root.Child();
 
                     // Add the parameter variables to the scope.
-                    Var[] parameterVars = new Var[parsedParameters.Count];
+                    IndexedVar[] parameterVars = new IndexedVar[parsedParameters.Count];
                     for (int i = 0; i < parsedParameters.Count; i++)
                     {
                         // Create a new variable using the parameter.
@@ -563,7 +568,7 @@ namespace Deltin.Deltinteger.Parse
 
                         var returns = VarCollection.AssignVar(null, $"{methodNode.Name}: return temp value", IsGlobal);
 
-                        Var continueSkipArray = VarCollection.AssignVar(null, $"{methodNode.Name}: continue skip temp value", IsGlobal);
+                        IndexedVar continueSkipArray = VarCollection.AssignVar(null, $"{methodNode.Name}: continue skip temp value", IsGlobal);
                         var stack = new MethodStack(userMethod, parameterVars, ContinueSkip.GetSkipCount(), returns, continueSkipArray);
                         MethodStack.Add(stack);
 
@@ -582,7 +587,7 @@ namespace Deltin.Deltinteger.Parse
                         Actions.Add(A_Wait.MinimumWait);
                         // !
                         
-                        foreach (Var var in methodScope.AllChildVariables())
+                        foreach (IndexedVar var in methodScope.AllChildVariables())
                         {
                             Element[] outOfScopeActions = var.OutOfScope();
                             if (outOfScopeActions != null)
@@ -632,7 +637,7 @@ namespace Deltin.Deltinteger.Parse
             return result;
         }
 
-        void ParseBlock(ScopeGroup scopeGroup, BlockNode blockNode, bool fulfillReturns, Var returnVar)
+        void ParseBlock(ScopeGroup scopeGroup, BlockNode blockNode, bool fulfillReturns, IndexedVar returnVar)
         {
             if (scopeGroup == null)
                 throw new ArgumentNullException(nameof(scopeGroup));
@@ -662,7 +667,7 @@ namespace Deltin.Deltinteger.Parse
             //return null;
         }
 
-        void ParseStatement(ScopeGroup scope, IStatementNode statement, Var returnVar, bool isLast)
+        void ParseStatement(ScopeGroup scope, IStatementNode statement, IndexedVar returnVar, bool isLast)
         {
             switch (statement)
             {
@@ -687,14 +692,17 @@ namespace Deltin.Deltinteger.Parse
 
                     Element array = ParseExpression(scope, forEachNode.Array);
 
+                    IndexedVar index = VarCollection.AssignVar(scope, $"'{forEachNode.VariableName}' for index", IsGlobal);
+
                     Var variable;
+                    bool isDefined = forEachNode.Define;
+
                     // Set/get the variable
-                    if (forEachNode.Define)
-                        variable = VarCollection.AssignDefinedVar(forGroup, IsGlobal, forEachNode.VariableName, forEachNode.Range);
+                    if (isDefined)
+                        //variable = VarCollection.AssignDefinedVar(forGroup, IsGlobal, forEachNode.VariableName, forEachNode.Range);
+                        variable = VarCollection.AssignElementReferenceVar(forGroup, forEachNode.VariableName, forEachNode.Range, Element.Part<V_ValueInArray>(array, index.GetVariable()));
                     else
                         variable = scope.GetVar(forEachNode.VariableName, forEachNode.Range);
-
-                    Var index = VarCollection.AssignVar(scope, $"'{forEachNode.VariableName}' for index", IsGlobal);
 
                     // Reset the counter.
                     Actions.AddRange(index.SetVariable(new V_Number(0)));
@@ -712,7 +720,8 @@ namespace Deltin.Deltinteger.Parse
                     Actions.Add(skipCondition);
                     
                     // Update the array variable
-                    Actions.AddRange(variable.SetVariable(Element.Part<V_ValueInArray>(array, index.GetVariable())));
+                    if (!isDefined)
+                        Actions.AddRange(((IndexedVar)variable).SetVariable(Element.Part<V_ValueInArray>(array, index.GetVariable())));
 
                     // Parse the for's block.
                     ParseBlock(forGroup, forEachNode.Block, false, returnVar);
@@ -917,7 +926,11 @@ namespace Deltin.Deltinteger.Parse
 
         void ParseVarset(ScopeGroup scope, VarSetNode varSetNode)
         {
-            Var variable = scope.GetVar(varSetNode.Variable, varSetNode.Range);
+            Var gotVar = scope.GetVar(varSetNode.Variable, varSetNode.Range);
+            if (!(gotVar is IndexedVar))
+                throw new SyntaxErrorException($"Variable '{gotVar.Name}' is readonly.", varSetNode.Range);
+
+            IndexedVar variable = (IndexedVar)gotVar;
 
             Element target = null;
             if (varSetNode.Target != null) 
@@ -977,7 +990,7 @@ namespace Deltin.Deltinteger.Parse
 
         void ParseDefine(ScopeGroup scope, ScopedDefineNode defineNode)
         {
-            Var var;
+            IndexedVar var;
             if (defineNode.UseVar == null)
                 var = VarCollection.AssignDefinedVar(scope, IsGlobal, defineNode.VariableName, defineNode.Range);
             else

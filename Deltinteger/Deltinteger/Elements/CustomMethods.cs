@@ -176,15 +176,15 @@ namespace Deltin.Deltinteger.Elements
         {
             var eventPlayer = new V_EventPlayer();
 
-            Var a      = TranslateContext.VarCollection.AssignVar(Scope, "AngleOfVectors: a"     , TranslateContext.IsGlobal);
-            Var b      = TranslateContext.VarCollection.AssignVar(Scope, "AngleOfVectors: b"     , TranslateContext.IsGlobal);
-            Var c      = TranslateContext.VarCollection.AssignVar(Scope, "AngleOfVectors: c"     , TranslateContext.IsGlobal);
-            Var ab     = TranslateContext.VarCollection.AssignVar(Scope, "AngleOfVectors: ab"    , TranslateContext.IsGlobal);
-            Var bc     = TranslateContext.VarCollection.AssignVar(Scope, "AngleOfVectors: bc"    , TranslateContext.IsGlobal);
-            Var abVec  = TranslateContext.VarCollection.AssignVar(Scope, "AngleOfVectors: abVec" , TranslateContext.IsGlobal);
-            Var bcVec  = TranslateContext.VarCollection.AssignVar(Scope, "AngleOfVectors: bcVec" , TranslateContext.IsGlobal);
-            Var abNorm = TranslateContext.VarCollection.AssignVar(Scope, "AngleOfVectors: abNorm", TranslateContext.IsGlobal);
-            Var bcNorm = TranslateContext.VarCollection.AssignVar(Scope, "AngleOfVectors: bcNorm", TranslateContext.IsGlobal);
+            IndexedVar a      = TranslateContext.VarCollection.AssignVar(Scope, "AngleOfVectors: a"     , TranslateContext.IsGlobal);
+            IndexedVar b      = TranslateContext.VarCollection.AssignVar(Scope, "AngleOfVectors: b"     , TranslateContext.IsGlobal);
+            IndexedVar c      = TranslateContext.VarCollection.AssignVar(Scope, "AngleOfVectors: c"     , TranslateContext.IsGlobal);
+            IndexedVar ab     = TranslateContext.VarCollection.AssignVar(Scope, "AngleOfVectors: ab"    , TranslateContext.IsGlobal);
+            IndexedVar bc     = TranslateContext.VarCollection.AssignVar(Scope, "AngleOfVectors: bc"    , TranslateContext.IsGlobal);
+            IndexedVar abVec  = TranslateContext.VarCollection.AssignVar(Scope, "AngleOfVectors: abVec" , TranslateContext.IsGlobal);
+            IndexedVar bcVec  = TranslateContext.VarCollection.AssignVar(Scope, "AngleOfVectors: bcVec" , TranslateContext.IsGlobal);
+            IndexedVar abNorm = TranslateContext.VarCollection.AssignVar(Scope, "AngleOfVectors: abNorm", TranslateContext.IsGlobal);
+            IndexedVar bcNorm = TranslateContext.VarCollection.AssignVar(Scope, "AngleOfVectors: bcNorm", TranslateContext.IsGlobal);
 
             Element zeroVec = Element.Part<V_Vector>(new V_Number(0), new V_Number(0), new V_Number(0));
 
@@ -369,7 +369,7 @@ namespace Deltin.Deltinteger.Elements
     {
         protected override MethodResult Get()
         {
-            Var temp = TranslateContext.VarCollection.AssignVar(Scope, "GetMap: temp", TranslateContext.IsGlobal);
+            IndexedVar temp = TranslateContext.VarCollection.AssignVar(Scope, "GetMap: temp", TranslateContext.IsGlobal);
 
             Element[] actions = ElementBuilder
             (
@@ -550,11 +550,7 @@ namespace Deltin.Deltinteger.Elements
             Element destination = (Element)Parameters[1];
             Element rate = (Element)Parameters[2];
             
-            VariableChase chaseData;
-            if (targetVariable.Var.IsGlobal)
-                chaseData = TranslateContext.ParserData.GlobalLoop.GetChaseData(targetVariable.Var);
-            else
-                chaseData = TranslateContext.ParserData.PlayerLoop.GetChaseData(targetVariable.Var);
+            VariableChase chaseData = TranslateContext.ParserData.GetLooper(targetVariable.Var.IsGlobal).GetChaseData(targetVariable.Var, TranslateContext);
             
             Element[] actions = ElementBuilder
             (

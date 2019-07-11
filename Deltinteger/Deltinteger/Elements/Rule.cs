@@ -92,11 +92,12 @@ namespace Deltin.Deltinteger.Elements
             if (Actions?.Length > 0)                                                  // (only if there are 1 or more actions)
             {                                                                         // |
                 builder.AppendLine();                                                 // |
+                builder.AppendLine("// Action count: " + Actions.Length);             // |   // Action count: #
                 builder.AppendLine("actions");                                        // |   actions
                 builder.AppendLine("{");                                              // |   {
                 builder.Indent = 2;                                                   // |   (indent)
                 foreach (var action in Actions)                                       // |       
-                    builder.AppendLine(action.ToWorkshop() + ";");                    // |       Set Global Variable(A, true);
+                    builder.AppendLine(action.ToWorkshop());                          // |       Set Global Variable(A, true);
                 builder.Indent = 1;                                                   // |   (outdent)
                 builder.AppendLine("}");                                              // |   }
             }                                                                         //

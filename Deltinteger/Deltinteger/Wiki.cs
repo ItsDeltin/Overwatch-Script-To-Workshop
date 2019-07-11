@@ -14,47 +14,57 @@ namespace Deltin.Deltinteger.WorkshopWiki
         private static Log Log = new Log("Wiki");
 
         private static WikiMethod[] wiki = null; 
-        private static void GetWiki()
+        private static bool gotWiki = false;
+        private static WikiMethod[] GetWiki()
         {
-            if (wiki != null)
-                return;
-            
-            HtmlDocument htmlDoc = new HtmlDocument();
-            htmlDoc.OptionFixNestedTags = true;
-        
-            using (var webClient = new WebClient())
-                htmlDoc.Load(webClient.OpenRead(URL), Encoding.UTF8);
-            
-            List<WikiMethod> methods = new List<WikiMethod>();
-
-            // Loop through all summaries
-            foreach(var summary in htmlDoc.DocumentNode.Descendants("summary"))
+            try
             {
-                string name = summary.InnerText.Trim(); // Gets the name
+                if (gotWiki)
+                    return wiki;
+                gotWiki = true;
+                
+                HtmlDocument htmlDoc = new HtmlDocument();
+                htmlDoc.OptionFixNestedTags = true;
+            
+                using (var webClient = new WebClient())
+                    htmlDoc.Load(webClient.OpenRead(URL), Encoding.UTF8);
+                
+                List<WikiMethod> methods = new List<WikiMethod>();
 
-                var details = summary.ParentNode;
-                string description = details.SelectNodes("p").First().InnerText.Trim(); // Gets the description.
+                // Loop through all summaries
+                foreach(var summary in htmlDoc.DocumentNode.Descendants("summary"))
+                {
+                    string name = summary.InnerText.Trim(); // Gets the name
 
-                // Get the parameters.
-                List<WikiParameter> parameters = new List<WikiParameter>();
-                var parameterSummaries = details.SelectSingleNode("ul")?.SelectNodes("li"); // 'ul' being list and 'li' being list element.
-                if (parameterSummaries != null)
-                    foreach (var parameterSummary in parameterSummaries)
-                    {
-                        string[] data = parameterSummary.InnerText.Split(new char[]{'-'}, 2);
-                        parameters.Add(new WikiParameter(data[0].Trim(), data.ElementAtOrDefault(1)?.Trim()));
-                    }
+                    var details = summary.ParentNode;
+                    string description = details.SelectNodes("p").First().InnerText.Trim(); // Gets the description.
 
-                methods.Add(new WikiMethod(name, description, parameters.ToArray()));
+                    // Get the parameters.
+                    List<WikiParameter> parameters = new List<WikiParameter>();
+                    var parameterSummaries = details.SelectSingleNode("ul")?.SelectNodes("li"); // 'ul' being list and 'li' being list element.
+                    if (parameterSummaries != null)
+                        foreach (var parameterSummary in parameterSummaries)
+                        {
+                            string[] data = parameterSummary.InnerText.Split(new char[]{'-'}, 2);
+                            parameters.Add(new WikiParameter(data[0].Trim(), data.ElementAtOrDefault(1)?.Trim()));
+                        }
+
+                    methods.Add(new WikiMethod(name, description, parameters.ToArray()));
+                }
+
+                wiki = methods.ToArray();
+                return wiki;
             }
-            wiki = methods.ToArray();
+            catch (Exception ex)
+            {
+                Log.Write(LogLevel.Normal, "Failed to load Workshop Wiki: ", new ColorMod(ex.Message, ConsoleColor.Red));
+                return null;
+            }
         }
 
         public static WikiMethod GetWikiMethod(string name)
         {
-            GetWiki();
-            var method = wiki.FirstOrDefault(w => w.Name.ToLower() == name.ToLower());
-            return method;
+            return GetWiki()?.FirstOrDefault(w => w.Name.ToLower() == name.ToLower());
         }
     }
 
