@@ -3,7 +3,7 @@ Event.OngoingPlayer
 if (IsButtonHeld(EventPlayer(), Button.Interact))
 {
     define start = TotalTimeElapsed();
-    foreach 1 (define myVar in AllPlayers())
+    foreach 5 (define myVar in AllPlayers())
     {
         Teleport(myVar, PositionOf(myVar) + Vector(0, 5, 0));
     }

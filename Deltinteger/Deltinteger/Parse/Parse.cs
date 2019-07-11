@@ -755,14 +755,14 @@ namespace Deltin.Deltinteger.Parse
                         ParseBlock(forGroup, forEachNode.Block, false, returnVar);
                     }
 
-                    rangeSkips.ForEach(var => var.ParameterValues[1] = new V_Number(GetSkipCount(var)));
-
                     // Increment the index
                     Actions.AddRange(index.SetVariable(Element.Part<V_Add>(index.GetVariable(), new V_Number(forEachNode.Repeaters))));
 
                     // Add the for's finishing elements
                     ContinueSkip.SetSkipCount(forStartIndex);
                     Actions.Add(Element.Part<A_Loop>());
+
+                    rangeSkips.ForEach(var => var.ParameterValues[1] = new V_Number(GetSkipCount(var)));
                     
                     // Set the skip
                     if (skipCondition != null)
