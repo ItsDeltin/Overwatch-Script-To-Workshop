@@ -4,7 +4,8 @@ if (IsButtonHeld(EventPlayer(), Button.Interact))
 {
     foreach (define myVar in AllPlayers())
     {
-        myVar = 2;
-        SmallMessage(myVar, "");
+        Teleport(myVar, PositionOf(myVar) + Vector(0, 5, 0))
+        SmallMessage(EventPlayer(), myVar);
+        MinWait();
     }
 }

@@ -683,7 +683,7 @@ namespace Deltin.Deltinteger.Parse
                     ParseVarset(scope, varSetNode);
                     return;
 
-                // For
+                // Foreach
                 case ForEachNode forEachNode:
                 {
                     ContinueSkip.Setup();
@@ -694,15 +694,7 @@ namespace Deltin.Deltinteger.Parse
 
                     IndexedVar index = VarCollection.AssignVar(scope, $"'{forEachNode.VariableName}' for index", IsGlobal);
 
-                    Var variable;
-                    bool isDefined = forEachNode.Define;
-
-                    // Set/get the variable
-                    if (isDefined)
-                        //variable = VarCollection.AssignDefinedVar(forGroup, IsGlobal, forEachNode.VariableName, forEachNode.Range);
-                        variable = VarCollection.AssignElementReferenceVar(forGroup, forEachNode.VariableName, forEachNode.Range, Element.Part<V_ValueInArray>(array, index.GetVariable()));
-                    else
-                        variable = scope.GetVar(forEachNode.VariableName, forEachNode.Range);
+                    ElementReferenceVar variable = VarCollection.AssignElementReferenceVar(forGroup, forEachNode.VariableName, forEachNode.Range, Element.Part<V_ValueInArray>(array, index.GetVariable()));
 
                     // Reset the counter.
                     Actions.AddRange(index.SetVariable(new V_Number(0)));
@@ -719,10 +711,6 @@ namespace Deltin.Deltinteger.Parse
                         ));
                     Actions.Add(skipCondition);
                     
-                    // Update the array variable
-                    if (!isDefined)
-                        Actions.AddRange(((IndexedVar)variable).SetVariable(Element.Part<V_ValueInArray>(array, index.GetVariable())));
-
                     // Parse the for's block.
                     ParseBlock(forGroup, forEachNode.Block, false, returnVar);
 

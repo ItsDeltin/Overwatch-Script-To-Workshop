@@ -441,12 +441,11 @@ namespace Deltin.Deltinteger.Parse
         {
             IExpressionNode array = (IExpressionNode)Visit(context.expr());
 
-            bool define = context.DEFINE() != null;
             string name = context.PART().GetText();
 
             BlockNode block = (BlockNode)VisitBlock(context.block());
             
-            Node node = new ForEachNode(name, define, array, block, Range.GetRange(context));
+            Node node = new ForEachNode(name, array, block, Range.GetRange(context));
             CheckRange(node);
             return node;
         }
@@ -858,14 +857,12 @@ namespace Deltin.Deltinteger.Parse
     public class ForEachNode : Node, IStatementNode
     {
         public string VariableName { get; private set; }
-        public bool Define { get; private set; }
         public IExpressionNode Array { get; private set; }
         public BlockNode Block { get; private set; }
 
-        public ForEachNode(string variableName, bool define, IExpressionNode array, BlockNode block, Range range) : base(range)
+        public ForEachNode(string variableName, IExpressionNode array, BlockNode block, Range range) : base(range)
         {
             VariableName = variableName;
-            Define = define;
             Array = array;
             Block = block;
         }
