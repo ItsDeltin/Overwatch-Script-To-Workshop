@@ -2,10 +2,11 @@ rule: "Recursion test."
 Event.OngoingPlayer 
 if (IsButtonHeld(EventPlayer(), Button.Interact))
 {
-    foreach (define myVar in AllPlayers())
+    define start = TotalTimeElapsed();
+    foreach 1 (define myVar in AllPlayers())
     {
-        Teleport(myVar, PositionOf(myVar) + Vector(0, 5, 0))
-        SmallMessage(EventPlayer(), myVar);
-        MinWait();
+        Teleport(myVar, PositionOf(myVar) + Vector(0, 5, 0));
     }
+    define finished = TotalTimeElapsed();
+    SmallMessage(EventPlayer(), <"time finished: <0>", finished - start>);
 }

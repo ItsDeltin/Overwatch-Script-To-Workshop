@@ -23,4 +23,9 @@ namespace Deltin.Deltinteger
         //string MarkdownLabel { get; }
         string GetLabel(bool markdown);
     }
+
+    public interface ISkip
+    {
+        int SkipParameterIndex();
+    }
 }

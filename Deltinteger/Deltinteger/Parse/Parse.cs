@@ -694,7 +694,26 @@ namespace Deltin.Deltinteger.Parse
 
                     IndexedVar index = VarCollection.AssignVar(scope, $"'{forEachNode.VariableName}' for index", IsGlobal);
 
-                    ElementReferenceVar variable = VarCollection.AssignElementReferenceVar(forGroup, forEachNode.VariableName, forEachNode.Range, Element.Part<V_ValueInArray>(array, index.GetVariable()));
+                    int offset = 0;
+
+                    Element getVariableReference()
+                    {
+                        if (offset == 0)
+                            return Element.Part<V_ValueInArray>(array, index.GetVariable());
+                        else
+                            return Element.Part<V_ValueInArray>(array, Element.Part<V_Add>(index.GetVariable(), getOffset()));
+                    }
+                    V_Number getOffset()
+                    {
+                        return new V_Number(offset);
+                    }
+
+                    ElementReferenceVar variable = VarCollection.AssignElementReferenceVar(
+                        forGroup, 
+                        forEachNode.VariableName, 
+                        forEachNode.Range, 
+                        getVariableReference()
+                    );
 
                     // Reset the counter.
                     Actions.AddRange(index.SetVariable(new V_Number(0)));
@@ -710,12 +729,36 @@ namespace Deltin.Deltinteger.Parse
                             Element.Part<V_CountOf>(array)
                         ));
                     Actions.Add(skipCondition);
-                    
-                    // Parse the for's block.
-                    ParseBlock(forGroup, forEachNode.Block, false, returnVar);
+
+                    List<A_SkipIf> rangeSkips = new List<A_SkipIf>();
+                    for (; offset < forEachNode.Repeaters; offset++)
+                    {
+                        if (offset > 0)
+                        {
+                            variable.Reference = getVariableReference();
+
+                            A_SkipIf skipper = new A_SkipIf() { ParameterValues = new Element[2] };
+                            skipper.ParameterValues[0] = Element.Part<V_Not>
+                            (
+                                Element.Part<V_Compare>
+                                (
+                                    Element.Part<V_Add>(index.GetVariable(), getOffset()),
+                                    EnumData.GetEnumValue(Operators.LessThan),
+                                    Element.Part<V_CountOf>(array)
+                                )
+                            );
+                            rangeSkips.Add(skipper);
+                            Actions.Add(skipper);
+                        }
+
+                        // Parse the for's block.
+                        ParseBlock(forGroup, forEachNode.Block, false, returnVar);
+                    }
+
+                    rangeSkips.ForEach(var => var.ParameterValues[1] = new V_Number(GetSkipCount(var)));
 
                     // Increment the index
-                    Actions.AddRange(index.SetVariable(Element.Part<V_Add>(index.GetVariable(), new V_Number(1))));
+                    Actions.AddRange(index.SetVariable(Element.Part<V_Add>(index.GetVariable(), new V_Number(forEachNode.Repeaters))));
 
                     // Add the for's finishing elements
                     ContinueSkip.SetSkipCount(forStartIndex);

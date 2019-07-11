@@ -298,7 +298,7 @@ namespace Deltin.Deltinteger.Parse
 
     public class ElementReferenceVar : Var
     {
-        public Element Reference { get; }
+        public Element Reference { get; set; }
 
         public ElementReferenceVar(string name, ScopeGroup scope, Range range, Element reference) : base (name, scope, range)
         {
@@ -312,6 +312,9 @@ namespace Deltin.Deltinteger.Parse
             
             if (targetPlayer == null)
                 targetPlayer = new V_EventPlayer();
+            
+            if (Reference == null)
+                throw new ArgumentNullException(nameof(Reference));
 
             return Reference;
         }

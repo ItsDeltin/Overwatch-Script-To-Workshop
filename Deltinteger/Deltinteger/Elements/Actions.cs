@@ -461,12 +461,24 @@ namespace Deltin.Deltinteger.Elements
 
     [ElementData("Skip")]
     [Parameter("Number Of Actions", ValueType.Number, typeof(V_Number))]
-    public class A_Skip : Element {}
+    public class A_Skip : Element, ISkip 
+    {
+        public int SkipParameterIndex()
+        {
+            return 0;
+        }
+    }
 
     [ElementData("Skip If")]
     [Parameter("Condition", ValueType.Boolean, typeof(V_Compare))]
     [Parameter("Number Of Actions", ValueType.Number, typeof(V_Number))]
-    public class A_SkipIf : Element {}
+    public class A_SkipIf : Element, ISkip 
+    {
+        public int SkipParameterIndex()
+        {
+            return 1;
+        }
+    }
 
     [ElementData("Small Message")]
     [Parameter("Visible To", ValueType.Player, typeof(V_AllPlayers))]

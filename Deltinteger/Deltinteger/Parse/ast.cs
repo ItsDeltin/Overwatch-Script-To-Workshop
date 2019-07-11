@@ -444,8 +444,12 @@ namespace Deltin.Deltinteger.Parse
             string name = context.PART().GetText();
 
             BlockNode block = (BlockNode)VisitBlock(context.block());
+
+            int repeaters = 1;
+            if (context.number() != null)
+                repeaters = int.Parse(context.number().GetText());
             
-            Node node = new ForEachNode(name, array, block, Range.GetRange(context));
+            Node node = new ForEachNode(name, array, block, repeaters, Range.GetRange(context));
             CheckRange(node);
             return node;
         }
@@ -856,15 +860,17 @@ namespace Deltin.Deltinteger.Parse
 
     public class ForEachNode : Node, IStatementNode
     {
-        public string VariableName { get; private set; }
-        public IExpressionNode Array { get; private set; }
-        public BlockNode Block { get; private set; }
+        public string VariableName { get; }
+        public IExpressionNode Array { get; }
+        public BlockNode Block { get; }
+        public int Repeaters { get; }
 
-        public ForEachNode(string variableName, IExpressionNode array, BlockNode block, Range range) : base(range)
+        public ForEachNode(string variableName, IExpressionNode array, BlockNode block, int repeaters, Range range) : base(range)
         {
             VariableName = variableName;
             Array = array;
             Block = block;
+            Repeaters = repeaters;
         }
     }
 
