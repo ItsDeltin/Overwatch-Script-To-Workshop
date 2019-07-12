@@ -37,12 +37,12 @@ namespace Deltin.Deltinteger.Parse
                 InScope.Add(var);
         }
 
-        public Var AlreadyDefined(string name, Node node)
+        public Var AlreadyDefined(List<Var> allVars, string name, Node node)
         {
             if (FullVarCollection().Any(v => !ReferenceEquals(v.Node, node) && v.Name == name))
                 throw SyntaxErrorException.AlreadyDefined(name, node.Range);
             
-            return FullVarCollection().FirstOrDefault(v => v.Name == name);
+            return allVars.FirstOrDefault(v => ReferenceEquals(v.Node, node));
         }
 
         public Var GetVar(string name, Range range)

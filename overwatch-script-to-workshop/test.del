@@ -5,17 +5,9 @@ if (IsButtonHeld(EventPlayer(), Button.Interact))
     define start = TotalTimeElapsed();    
     foreach 4 (define player in AllPlayers())
     {
-        recursiveMethod(player, 0);
+        if (true)
+            define wow = AngleOfVectors(Vector(), Vector(), Vector());
     }
     define finished = TotalTimeElapsed();
     SmallMessage(EventPlayer(), <"time finished: <0>", finished - start>);
-}
-
-recursive method recursiveMethod(player, num)
-{
-    if (num < 3)
-    {
-        recursiveMethod(player, num + 1);
-    }
-    SmallMessage(EventPlayer(), <"<0> backward <1>", player, num>);
 }

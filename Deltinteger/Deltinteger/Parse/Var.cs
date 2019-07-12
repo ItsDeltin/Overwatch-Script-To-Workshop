@@ -44,7 +44,7 @@ namespace Deltin.Deltinteger.Parse
 
         public IndexedVar AssignDefinedVar(ScopeGroup scopeGroup, bool isGlobal, string name, Node node)
         {
-            IndexedVar var = scopeGroup.AlreadyDefined(name, node) as IndexedVar;
+            IndexedVar var = scopeGroup.AlreadyDefined(AllVars, name, node) as IndexedVar;
             if (var != null)
             {
                 scopeGroup.In(var);
@@ -62,7 +62,7 @@ namespace Deltin.Deltinteger.Parse
 
         public IndexedVar AssignDefinedVar(ScopeGroup scopeGroup, bool isGlobal, string name, Variable variable, int index, Node node)
         {
-            IndexedVar var = scopeGroup.AlreadyDefined(name, node) as IndexedVar;
+            IndexedVar var = scopeGroup.AlreadyDefined(AllVars, name, node) as IndexedVar;
             if (var != null)
             {
                 scopeGroup.In(var);
@@ -80,7 +80,7 @@ namespace Deltin.Deltinteger.Parse
 
         public ElementReferenceVar AssignElementReferenceVar(ScopeGroup scopeGroup, string name, Node node, Element reference)
         {
-            ElementReferenceVar var = scopeGroup.AlreadyDefined(name, node) as ElementReferenceVar;
+            ElementReferenceVar var = scopeGroup.AlreadyDefined(AllVars, name, node) as ElementReferenceVar;
             if (var != null)
             {
                 scopeGroup.In(var);
