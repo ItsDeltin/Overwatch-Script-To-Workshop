@@ -42,8 +42,8 @@ namespace Deltin.Deltinteger.Parse
             if (existingChaseData != null)
                 return existingChaseData;
             
-            IndexedVar destination = context.VarCollection.AssignVar(null, $"'{var.Name}' chase destination", true);
-            IndexedVar rate        = context.VarCollection.AssignVar(null, $"'{var.Name}' chase duration", true);
+            IndexedVar destination = context.VarCollection.AssignVar(null, $"'{var.Name}' chase destination", var.IsGlobal);
+            IndexedVar rate        = context.VarCollection.AssignVar(null, $"'{var.Name}' chase duration"   , var.IsGlobal);
 
             VariableChase newChaseData = new VariableChase(var, destination, rate);
             _chases.Add(newChaseData);

@@ -42,33 +42,52 @@ namespace Deltin.Deltinteger.Parse
             return var;
         }
 
-        public IndexedVar AssignDefinedVar(ScopeGroup scopeGroup, bool isGlobal, string name, Range range)
+        public IndexedVar AssignDefinedVar(ScopeGroup scopeGroup, bool isGlobal, string name, Node node)
         {
-            IndexedVar var;
+            IndexedVar var = scopeGroup.AlreadyDefined(name, node) as IndexedVar;
+            if (var != null)
+            {
+                scopeGroup.In(var);
+                return var;
+            }
+
             if (scopeGroup == null || !scopeGroup.Recursive)
-                var = new IndexedVar         (scopeGroup, name, isGlobal, UseVar, Assign(isGlobal), range);
+                var = new IndexedVar         (scopeGroup, name, isGlobal, UseVar, Assign(isGlobal), node);
             else
-                var = new RecursiveVar(scopeGroup, name, isGlobal, UseVar, Assign(isGlobal), range);
+                var = new RecursiveVar       (scopeGroup, name, isGlobal, UseVar, Assign(isGlobal), node);
             
             AllVars.Add(var);
             return var;
         }
 
-        public IndexedVar AssignDefinedVar(ScopeGroup scopeGroup, bool isGlobal, string name, Variable variable, int index, Range range)
+        public IndexedVar AssignDefinedVar(ScopeGroup scopeGroup, bool isGlobal, string name, Variable variable, int index, Node node)
         {
-            IndexedVar var;
+            IndexedVar var = scopeGroup.AlreadyDefined(name, node) as IndexedVar;
+            if (var != null)
+            {
+                scopeGroup.In(var);
+                return null;
+            }
+
             if (scopeGroup == null || !scopeGroup.Recursive)
-                var = new IndexedVar  (scopeGroup, name, isGlobal, variable, index, range);
+                var = new IndexedVar  (scopeGroup, name, isGlobal, variable, index, node);
             else
-                var = new RecursiveVar(scopeGroup, name, isGlobal, variable, index, range);
+                var = new RecursiveVar(scopeGroup, name, isGlobal, variable, index, node);
 
             AllVars.Add(var);
             return var;
         }
 
-        public ElementReferenceVar AssignElementReferenceVar(ScopeGroup scopeGroup, string name, Range range, Element reference)
+        public ElementReferenceVar AssignElementReferenceVar(ScopeGroup scopeGroup, string name, Node node, Element reference)
         {
-            ElementReferenceVar var = new ElementReferenceVar(name, scopeGroup, range, reference);
+            ElementReferenceVar var = scopeGroup.AlreadyDefined(name, node) as ElementReferenceVar;
+            if (var != null)
+            {
+                scopeGroup.In(var);
+                return var;
+            }
+
+            var = new ElementReferenceVar(name, scopeGroup, node, reference);
             AllVars.Add(var);
             return var; 
         }
@@ -81,22 +100,20 @@ namespace Deltin.Deltinteger.Parse
         public string Name { get; }
         public ScopeGroup Scope { get; private set; }
         public bool IsDefinedVar { get; }
-        public Range DefinedRange { get; }
+        public Node Node { get; }
 
         public Var(string name)
         {
             Name = name;
         }
 
-        public Var(string name, ScopeGroup scope, Range definedRange) : this (name)
+        public Var(string name, ScopeGroup scope, Node node) : this (name)
         {
-            if (scope.IsVar(Name))
-                throw SyntaxErrorException.AlreadyDefined(Name, definedRange);
-            scope./* we're */ In(this) /* together! */;
-
             Scope = scope;
-            DefinedRange = definedRange;
-            IsDefinedVar = DefinedRange != null;
+            Node = node;
+            IsDefinedVar = node != null;
+
+            scope./* we're */ In(this) /* together! */;
         }
 
         public abstract Element GetVariable(Element targetPlayer = null);
@@ -125,8 +142,8 @@ namespace Deltin.Deltinteger.Parse
             UsesIndex = Index != -1;
         }
 
-        public IndexedVar(ScopeGroup scopeGroup, string name, bool isGlobal, Variable variable, int index, Range range)
-            : base (name, scopeGroup, range)
+        public IndexedVar(ScopeGroup scopeGroup, string name, bool isGlobal, Variable variable, int index, Node node)
+            : base (name, scopeGroup, node)
         {
             IsGlobal = isGlobal;
             Variable = variable;
@@ -233,8 +250,8 @@ namespace Deltin.Deltinteger.Parse
     {
         private static readonly IWorkshopTree bAsWorkshop = EnumData.GetEnumValue(Variable.B); // TODO: Remove when multidimensional temp var can be set.
 
-        public RecursiveVar(ScopeGroup scopeGroup, string name, bool isGlobal, Variable variable, int index, Range range)
-            : base (scopeGroup, name, isGlobal, variable, index, range)
+        public RecursiveVar(ScopeGroup scopeGroup, string name, bool isGlobal, Variable variable, int index, Node node)
+            : base (scopeGroup, name, isGlobal, variable, index, node)
         {
         }
 
@@ -300,7 +317,7 @@ namespace Deltin.Deltinteger.Parse
     {
         public Element Reference { get; set; }
 
-        public ElementReferenceVar(string name, ScopeGroup scope, Range range, Element reference) : base (name, scope, range)
+        public ElementReferenceVar(string name, ScopeGroup scope, Node node, Element reference) : base (name, scope, node)
         {
             Reference = reference;
         }
@@ -317,6 +334,11 @@ namespace Deltin.Deltinteger.Parse
                 throw new ArgumentNullException(nameof(Reference));
 
             return Reference;
+        }
+
+        public override string ToString()
+        {
+            return "element reference : " + Name;
         }
     }
 

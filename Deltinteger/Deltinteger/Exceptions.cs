@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Diagnostics;
+using System.IO;
 using Antlr4.Runtime;
 using Deltin.Deltinteger.Parse;
 
@@ -11,9 +13,23 @@ namespace Deltin.Deltinteger
     public class SyntaxErrorException : Exception
     {
         public Range Range { get; private set; }
+
+        public bool TrackLocation { get; set; } = false;
+
         public SyntaxErrorException(string message, Range range) : base(message)
         {
             Range = range;
+        }
+
+        public string GetInfo() 
+        {
+            string message = Message;
+            if (TrackLocation)
+            {
+                var frame = new StackTrace(this, true).GetFrame(0);
+                message += " (from " + Path.GetFileName(frame.GetFileName()) + " at line " + frame.GetFileLineNumber() + ", column " + frame.GetFileColumnNumber() + ")";
+            }
+            return message;
         }
 
         public const string parameterCount       = "Can't set the <{0}> format, there are only {1} parameters.";

@@ -58,10 +58,9 @@ namespace Deltin.Deltinteger.Parse
                 // Get the variables
                 foreach (var definedVar in ruleSetNode.DefinedVars)
                     if (definedVar.UseVar == null)
-                        parserData.VarCollection.AssignDefinedVar(root, definedVar.IsGlobal, definedVar.VariableName, definedVar.Range);
+                        parserData.VarCollection.AssignDefinedVar(root, definedVar.IsGlobal, definedVar.VariableName, definedVar);
                     else
-                        //new Var(root, definedVar.VariableName, definedVar.IsGlobal, definedVar.UseVar.Variable, definedVar.UseVar.Index, definedVar.Range, parserData.VarCollection);
-                        parserData.VarCollection.AssignDefinedVar(root, definedVar.IsGlobal, definedVar.VariableName, definedVar.UseVar.Variable, definedVar.UseVar.Index, definedVar.Range);
+                        parserData.VarCollection.AssignDefinedVar(root, definedVar.IsGlobal, definedVar.VariableName, definedVar.UseVar.Variable, definedVar.UseVar.Index, definedVar);
 
                 // Get the user methods.
                 for (int i = 0; i < ruleSetNode.UserMethods.Length; i++)
@@ -84,7 +83,7 @@ namespace Deltin.Deltinteger.Parse
                     }
                     catch (SyntaxErrorException ex)
                     {
-                        parserData.Diagnostics.Add(new Diagnostic(ex.Message, ex.Range) { severity = Diagnostic.Error });
+                        parserData.Diagnostics.Add(new Diagnostic(ex.GetInfo(), ex.Range) { severity = Diagnostic.Error });
                     }
                 }
 
@@ -489,7 +488,7 @@ namespace Deltin.Deltinteger.Parse
                     for (int i = 0; i < parsedParameters.Count; i++)
                     {
                         // Create a new variable using the parameter.
-                        parameterVars[i] = VarCollection.AssignDefinedVar(methodScope, IsGlobal, userMethod.Parameters[i].Name, methodNode.Range);
+                        parameterVars[i] = VarCollection.AssignDefinedVar(methodScope, IsGlobal, userMethod.Parameters[i].Name, methodNode);
                         Actions.AddRange(parameterVars[i].SetVariable((Element)parsedParameters[i]));
                     }
 
@@ -559,7 +558,7 @@ namespace Deltin.Deltinteger.Parse
                         {
                             // Create a new variable using the parameter input.
                             //parameterVars[i] = VarCollection.AssignRecursiveVar(methodScope, IsGlobal, userMethod.Parameters[i].Name, methodNode.Range);
-                            parameterVars[i] = (RecursiveVar)VarCollection.AssignDefinedVar(methodScope, IsGlobal, userMethod.Parameters[i].Name, methodNode.Range);
+                            parameterVars[i] = (RecursiveVar)VarCollection.AssignDefinedVar(methodScope, IsGlobal, userMethod.Parameters[i].Name, methodNode);
                             Actions.AddRange
                             (
                                 parameterVars[i].InScope(ParseExpression(scope, methodNode.Parameters[i]))
@@ -711,7 +710,7 @@ namespace Deltin.Deltinteger.Parse
                     ElementReferenceVar variable = VarCollection.AssignElementReferenceVar(
                         forGroup, 
                         forEachNode.VariableName, 
-                        forEachNode.Range, 
+                        forEachNode, 
                         getVariableReference()
                     );
 
@@ -738,10 +737,8 @@ namespace Deltin.Deltinteger.Parse
                             variable.Reference = getVariableReference();
 
                             A_SkipIf skipper = new A_SkipIf() { ParameterValues = new Element[2] };
-                            skipper.ParameterValues[0] = Element.Part<V_Not>
-                            (
-                                Element.Part<V_Compare>
-                                (
+                            skipper.ParameterValues[0] = Element.Part<V_Not>(
+                                Element.Part<V_Compare>(
                                     Element.Part<V_Add>(index.GetVariable(), getOffset()),
                                     EnumData.GetEnumValue(Operators.LessThan),
                                     Element.Part<V_CountOf>(array)
@@ -751,7 +748,7 @@ namespace Deltin.Deltinteger.Parse
                             Actions.Add(skipper);
                         }
 
-                        // Parse the for's block.
+                        // Parse the for's block. Use a child to prevent conflicts with repeaters.
                         ParseBlock(forGroup, forEachNode.Block, false, returnVar);
                     }
 
@@ -1023,9 +1020,9 @@ namespace Deltin.Deltinteger.Parse
         {
             IndexedVar var;
             if (defineNode.UseVar == null)
-                var = VarCollection.AssignDefinedVar(scope, IsGlobal, defineNode.VariableName, defineNode.Range);
+                var = VarCollection.AssignDefinedVar(scope, IsGlobal, defineNode.VariableName, defineNode);
             else
-                var = VarCollection.AssignDefinedVar(scope, IsGlobal, defineNode.VariableName, defineNode.UseVar.Variable, defineNode.UseVar.Index, defineNode.Range);
+                var = VarCollection.AssignDefinedVar(scope, IsGlobal, defineNode.VariableName, defineNode.UseVar.Variable, defineNode.UseVar.Index, defineNode);
                 //var = new Var(scope, defineNode.VariableName, IsGlobal, defineNode.UseVar.Variable, defineNode.UseVar.Index, defineNode.Range, VarCollection);
 
             // Set the defined variable if the variable is defined like "define var = 1"

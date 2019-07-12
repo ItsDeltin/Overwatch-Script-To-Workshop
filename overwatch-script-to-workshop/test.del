@@ -2,11 +2,20 @@ rule: "Recursion test."
 Event.OngoingPlayer 
 if (IsButtonHeld(EventPlayer(), Button.Interact))
 {
-    define start = TotalTimeElapsed();
-    foreach 5 (define myVar in AllPlayers())
+    define start = TotalTimeElapsed();    
+    foreach 4 (define player in AllPlayers())
     {
-        Teleport(myVar, PositionOf(myVar) + Vector(0, 5, 0));
+        recursiveMethod(player, 0);
     }
     define finished = TotalTimeElapsed();
     SmallMessage(EventPlayer(), <"time finished: <0>", finished - start>);
+}
+
+recursive method recursiveMethod(player, num)
+{
+    if (num < 3)
+    {
+        recursiveMethod(player, num + 1);
+    }
+    SmallMessage(EventPlayer(), <"<0> backward <1>", player, num>);
 }

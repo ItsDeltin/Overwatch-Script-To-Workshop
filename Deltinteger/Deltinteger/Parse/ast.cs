@@ -577,9 +577,9 @@ namespace Deltin.Deltinteger.Parse
 
     public class DefinedNode : Node
     {
-        public bool IsGlobal { get; set; }
-        public string VariableName { get; set; }
-        public UseVarNode UseVar { get; set; }
+        public string VariableName { get; }
+        public UseVarNode UseVar { get; }
+        public bool IsGlobal { get; }
 
         public DefinedNode(bool isGlobal, string variableName, UseVarNode useVar, Range range) : base (range)
         {
@@ -592,8 +592,8 @@ namespace Deltin.Deltinteger.Parse
     public class ScopedDefineNode : Node, IStatementNode
     {
         public string VariableName { get; }
-        public IExpressionNode Value { get; }
         public UseVarNode UseVar { get; }
+        public IExpressionNode Value { get; }
 
         public ScopedDefineNode(string variableName, IExpressionNode value, UseVarNode useVar, Range range) : base (range)
         {

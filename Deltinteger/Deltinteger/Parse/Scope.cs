@@ -33,12 +33,16 @@ namespace Deltin.Deltinteger.Parse
 
         public void In(Var var)
         {
-            InScope.Add(var);
+            if (!InScope.Contains(var))
+                InScope.Add(var);
         }
 
-        public bool IsVar(string name)
+        public Var AlreadyDefined(string name, Node node)
         {
-            return GetVar(name, null) != null ? true : false;
+            if (FullVarCollection().Any(v => !ReferenceEquals(v.Node, node) && v.Name == name))
+                throw SyntaxErrorException.AlreadyDefined(name, node.Range);
+            
+            return FullVarCollection().FirstOrDefault(v => v.Name == name);
         }
 
         public Var GetVar(string name, Range range)
@@ -87,7 +91,7 @@ namespace Deltin.Deltinteger.Parse
 
         public CompletionItem[] GetCompletionItems(Pos caret)
         {
-            return FullVarCollection().Where(var => var.DefinedRange.end < caret).Select(var => new CompletionItem(var.Name)
+            return FullVarCollection().Where(var => var.Node.Range.end < caret).Select(var => new CompletionItem(var.Name)
             {
                 kind = CompletionItem.Field
             }).ToArray();
@@ -101,7 +105,5 @@ namespace Deltin.Deltinteger.Parse
                 childVars.AddRange(child.AllChildVariables());
             return childVars;
         }
-
-        //public static ScopeGroup Root = new ScopeGroup();
     }
 }
