@@ -116,7 +116,7 @@ namespace Deltin.Deltinteger.Parse
 
         public CompletionItem[] GetCompletionItems(Pos caret)
         {
-            return FullVarCollection().Where(var => var.Node.Range.end < caret).Select(var => new CompletionItem(var.Name)
+            return FullVarCollection().Where(var => var.IsDefinedVar && var.Node.Range.end < caret).Select(var => new CompletionItem(var.Name)
             {
                 kind = CompletionItem.Field
             }).ToArray();

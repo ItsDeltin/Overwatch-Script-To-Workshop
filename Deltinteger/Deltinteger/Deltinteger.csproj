@@ -86,8 +86,15 @@
     <Compile Include="Elements\Actions.cs" />
     <Compile Include="Elements\Values.cs" />
     <Compile Include="Elements\Enums.cs" />
-    <Compile Include="Elements\CustomMethods.cs" />
-    <Compile Include="Parse\Looper.cs" />
+    <Compile Include="Custom Methods\CustomMethods.cs" />
+    <Compile Include="Custom Methods\AngleOfVectors.cs" />
+    <Compile Include="Custom Methods\AngleOfVectorsCom.cs" />
+    <Compile Include="Custom Methods\ChaseVariable.cs" />
+    <Compile Include="Custom Methods\GetMap.cs" />
+    <Compile Include="Custom Methods\MinWait.cs" />
+    <Compile Include="Custom Methods\InsertValueInArray.cs" />
+    <Compile Include="Custom Methods\RemoveFromArrayAtIndex.cs" />
+    <Compile Include="Custom Methods\Pi.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Extras.cs" />
     <Compile Include="LanguageServer.cs" />
@@ -99,6 +106,7 @@
     <Compile Include="Parse\Parse.cs" />
     <Compile Include="Parse\Var.cs" />
     <Compile Include="Parse\Scope.cs" />
+    <Compile Include="Parse\Looper.cs" />
     <Compile Include="Parse\UserMethod.cs" />
     <Compile Include="Parse\ContinueSkip.cs" />
     <Compile Include="Parse\AdditionalErrorChecking.cs" />
