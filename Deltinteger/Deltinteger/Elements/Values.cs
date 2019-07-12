@@ -971,6 +971,7 @@ namespace Deltin.Deltinteger.Elements
     public class V_VerticalAngleTowards : Element {}
 
     [ElementData("Vertical Facing Angle Of", ValueType.Number)]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     public class V_VerticalFacingAngleOf : Element {}
 
     [ElementData("Vertical Speed Of", ValueType.Number)]

@@ -41,10 +41,10 @@ expr
 	| expr '%' expr                               // x%y
 	| expr '+' expr                               // x+y
 	| expr '-' expr                               // x-y
-	| expr TERNARY expr TERNARY_ELSE expr
 	| NOT expr                                     // !x
 	| expr ('<' | '<=' | '==' | '>=' | '>' | '!=') expr // x == y
 	| expr BOOL expr                              // x & y
+	| expr TERNARY expr TERNARY_ELSE expr
 	;
 
 exprgroup   : LEFT_PAREN expr RIGHT_PAREN ;

@@ -9,6 +9,8 @@ namespace Deltin.Deltinteger.Parse
 {
     public class VarCollection
     {
+        private const bool REUSE_VARIABLES = false;
+
         public Variable UseVar = Variable.A;
 
         public int Assign(bool isGlobal)
@@ -43,6 +45,9 @@ namespace Deltin.Deltinteger.Parse
 
         public void Free(IndexedVar var)
         {
+            if (!REUSE_VARIABLES)
+                return;
+            
             if (var.IsGlobal)
             {
                 if (GlobalCollection[var.Index] == null)
