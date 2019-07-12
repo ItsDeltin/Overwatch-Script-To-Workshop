@@ -3,11 +3,9 @@ Event.OngoingPlayer
 if (IsButtonHeld(EventPlayer(), Button.Interact))
 {
     define start = TotalTimeElapsed();    
-    foreach 4 (define player in AllPlayers())
+    foreach 2 (define player in AllPlayers())
     {
-        if (true)
-            define wow = AngleOfVectors(Vector(), Vector(), Vector());
     }
     define finished = TotalTimeElapsed();
-    SmallMessage(EventPlayer(), <"time finished: <0>", finished - start>);
+    SmallMessage(EventPlayer(), <"time finished: <0>", finished - start>); 
 }

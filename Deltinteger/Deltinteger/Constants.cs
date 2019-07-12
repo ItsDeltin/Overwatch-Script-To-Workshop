@@ -19,6 +19,8 @@ namespace Deltin.Deltinteger
 
         public const string DEFAULT_STRING = "hello";
 
+        public const int MAX_ARRAY_LENGTH = 1000;
+
         public static readonly string[] Strings = new string[]
         {
             // All lowercase please :)

@@ -52,7 +52,7 @@ namespace Deltin.Deltinteger.Parse
             if (parserData.Diagnostics.Count == 0)
             {
                 parserData.VarCollection = new VarCollection();
-                ScopeGroup root = new ScopeGroup();
+                ScopeGroup root = new ScopeGroup(parserData.VarCollection);
                 parserData.UserMethods = new List<UserMethod>();
 
                 // Get the variables
@@ -157,7 +157,12 @@ namespace Deltin.Deltinteger.Parse
             ContinueSkip = new ContinueSkip(IsGlobal, Actions, VarCollection);
 
             ParseConditions(ruleNode.Conditions);
-            ParseBlock(root.Child(), ruleNode.Block, false, null);
+
+            // Parse the block of the rule.
+            ScopeGroup ruleScope = root.Child();
+            ParseBlock(ruleScope, ruleNode.Block, false, null);
+            
+            if (ruleScope.Out().Length != 0) throw new Exception();
 
             Rule.Actions = Actions.ToArray();
             Rule.Conditions = Conditions.ToArray();
@@ -496,10 +501,10 @@ namespace Deltin.Deltinteger.Parse
 
                     MethodStackNoRecursive.Add(userMethod);
 
-                    var userMethodScope = methodScope.Child();
-                    userMethod.Block.RelatedScopeGroup = userMethodScope;
-                    
-                    ParseBlock(userMethodScope, userMethod.Block, true, returns);
+                    userMethod.Block.RelatedScopeGroup = methodScope;
+
+                    ParseBlock(methodScope, userMethod.Block, true, returns);
+                    Actions.AddRange(methodScope.Out());
 
                     MethodStackNoRecursive.Remove(userMethod);
 
@@ -571,10 +576,9 @@ namespace Deltin.Deltinteger.Parse
                         var stack = new MethodStack(userMethod, parameterVars, ContinueSkip.GetSkipCount(), returns, continueSkipArray);
                         MethodStack.Add(stack);
 
-                        var userMethodScope = methodScope.Child();
-                        userMethod.Block.RelatedScopeGroup = userMethodScope;
+                        userMethod.Block.RelatedScopeGroup = methodScope;
                         
-                        ParseBlock(userMethodScope, userMethod.Block, true, returns);
+                        ParseBlock(methodScope, userMethod.Block, true, returns);
 
                         // No return value if the method is being used as an action.
                         if (needsToBeValue)
@@ -586,12 +590,15 @@ namespace Deltin.Deltinteger.Parse
                         Actions.Add(A_Wait.MinimumWait);
                         // !
                         
+                        /*
                         foreach (IndexedVar var in methodScope.AllChildVariables())
                         {
                             Element[] outOfScopeActions = var.OutOfScope();
                             if (outOfScopeActions != null)
                                 Actions.AddRange(outOfScopeActions);
                         }
+                        */
+                        Actions.AddRange(methodScope.Out());
 
                         ContinueSkip.Setup();
                         ContinueSkip.SetSkipCount(Element.Part<V_LastOf>(continueSkipArray.GetVariable()));
@@ -627,6 +634,7 @@ namespace Deltin.Deltinteger.Parse
                         Actions.AddRange(continueSkipArray.SetVariable(new V_Number()));
                         
                         MethodStack.Remove(stack);
+                        //Actions.AddRange(methodScope.Out());
                     }
                 }
             }
@@ -749,7 +757,9 @@ namespace Deltin.Deltinteger.Parse
                         }
 
                         // Parse the for's block. Use a child to prevent conflicts with repeaters.
-                        ParseBlock(forGroup, forEachNode.Block, false, returnVar);
+                        ScopeGroup tempChild = forGroup.Child();
+                        ParseBlock(tempChild, forEachNode.Block, false, returnVar);
+                        Actions.AddRange(tempChild.Out());
                     }
 
                     // Increment the index
@@ -800,7 +810,9 @@ namespace Deltin.Deltinteger.Parse
                     // Parse the statement
                     if (forNode.Statement != null)
                         ParseVarset(forGroup, forNode.Statement);
-                        //ParseStatement(forGroup, forNode.Statement, returnVar, false);
+                    
+                    // Take the for out of scope.
+                    Actions.AddRange(forGroup.Out());
 
                     ContinueSkip.SetSkipCount(forStartIndex);
                     Actions.Add(Element.Part<A_Loop>());
@@ -829,6 +841,9 @@ namespace Deltin.Deltinteger.Parse
 
                     ParseBlock(whileGroup, whileNode.Block, false, returnVar);
 
+                    // Take the while out of scope.
+                    Actions.AddRange(whileGroup.Out());
+
                     ContinueSkip.SetSkipCount(whileStartIndex);
                     Actions.Add(Element.Part<A_Loop>());
 
@@ -848,6 +863,9 @@ namespace Deltin.Deltinteger.Parse
 
                     // Parse the if body.
                     ParseBlock(ifScope, ifNode.IfData.Block, false, returnVar);
+
+                    // Take the if out of scope.
+                    Actions.AddRange(ifScope.Out());
 
                     // Determines if the "Skip" action after the if block will be created.
                     // Only if there is if-else or else statements.
@@ -880,6 +898,9 @@ namespace Deltin.Deltinteger.Parse
                         var elseifScope = scope.Child();
                         ParseBlock(elseifScope, ifNode.ElseIfData[i].Block, false, returnVar);
 
+                        // Take the else-if out of scope.
+                        Actions.AddRange(elseifScope.Out());
+
                         // Determines if the "Skip" action after the else-if block will be created.
                         // Only if there is additional if-else or else statements.
                         bool addIfElseSkip = i < ifNode.ElseIfData.Length - 1 || ifNode.ElseBlock != null;
@@ -904,6 +925,9 @@ namespace Deltin.Deltinteger.Parse
                     {
                         var elseScope = scope.Child();
                         ParseBlock(elseScope, ifNode.ElseBlock, false, returnVar);
+
+                        // Take the else out of scope.
+                        Actions.AddRange(elseScope.Out());
                     }
 
                     // Replace dummy skip with real skip now that we know the length of the if, if-else, and else's bodies.

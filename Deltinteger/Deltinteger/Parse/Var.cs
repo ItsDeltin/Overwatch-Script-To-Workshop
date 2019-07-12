@@ -9,90 +9,115 @@ namespace Deltin.Deltinteger.Parse
 {
     public class VarCollection
     {
-        private int NextFreeGlobalIndex = 0;
-        private int NextFreePlayerIndex = 0;
-
         public Variable UseVar = Variable.A;
 
         public int Assign(bool isGlobal)
         {
             if (isGlobal)
             {
-                int index = NextFreeGlobalIndex;
-                NextFreeGlobalIndex++;
+                int index = Array.IndexOf(GlobalCollection, null);
+
+                if (index == -1)
+                    throw new Exception();
+                
                 return index;
             }
             else
             {
-                int index = NextFreePlayerIndex;
-                NextFreePlayerIndex++;
+                int index = Array.IndexOf(PlayerCollection, null);
+
+                if (index == -1)
+                    throw new Exception();
+                
                 return index;
             }
         }
 
-        public IndexedVar AssignVar(ScopeGroup scopeGroup, string name, bool isGlobal)
+        private void Set(bool isGlobal, IndexedVar var)
+        {
+            if (isGlobal)
+                GlobalCollection[var.Index] = var;
+            else
+                PlayerCollection[var.Index] = var;
+        }
+
+        public void Free(IndexedVar var)
+        {
+            if (var.IsGlobal)
+            {
+                if (GlobalCollection[var.Index] == null)
+                    throw new Exception();
+
+                GlobalCollection[var.Index] = null;
+            }
+            else
+            {
+                if (PlayerCollection[var.Index] == null)
+                    throw new Exception();
+
+                PlayerCollection[var.Index] = null;
+            }
+        }
+
+        public IndexedVar AssignVar(ScopeGroup scope, string name, bool isGlobal)
         {
             IndexedVar var;
-            if (scopeGroup == null || !scopeGroup.Recursive)
-                var = new IndexedVar  (Constants.INTERNAL_ELEMENT + name, isGlobal, UseVar, Assign(isGlobal));
-            else
-                var = new RecursiveVar(Constants.INTERNAL_ELEMENT + name, isGlobal, UseVar, Assign(isGlobal));
             
-            AllVars.Add(var);
-            return var;
-        }
-
-        public IndexedVar AssignDefinedVar(ScopeGroup scopeGroup, bool isGlobal, string name, Node node)
-        {
-            IndexedVar var = scopeGroup.AlreadyDefined(AllVars, name, node) as IndexedVar;
-            if (var != null)
-            {
-                scopeGroup.In(var);
-                return var;
-            }
-
-            if (scopeGroup == null || !scopeGroup.Recursive)
-                var = new IndexedVar         (scopeGroup, name, isGlobal, UseVar, Assign(isGlobal), node);
+            if (scope == null || !scope.Recursive)
+                var = new IndexedVar  (scope, Constants.INTERNAL_ELEMENT + name, isGlobal, UseVar, Assign(isGlobal));
             else
-                var = new RecursiveVar       (scopeGroup, name, isGlobal, UseVar, Assign(isGlobal), node);
+                var = new RecursiveVar(scope, Constants.INTERNAL_ELEMENT + name, isGlobal, UseVar, Assign(isGlobal));
             
-            AllVars.Add(var);
+            Set(isGlobal, var);
+            AddVar(var);
             return var;
         }
 
-        public IndexedVar AssignDefinedVar(ScopeGroup scopeGroup, bool isGlobal, string name, Variable variable, int index, Node node)
+        public IndexedVar AssignDefinedVar(ScopeGroup scope, bool isGlobal, string name, Node node)
         {
-            IndexedVar var = scopeGroup.AlreadyDefined(AllVars, name, node) as IndexedVar;
-            if (var != null)
-            {
-                scopeGroup.In(var);
-                return null;
-            }
+            IndexedVar var;
 
-            if (scopeGroup == null || !scopeGroup.Recursive)
-                var = new IndexedVar  (scopeGroup, name, isGlobal, variable, index, node);
+            if (scope == null || !scope.Recursive)
+                var = new IndexedVar  (scope, name, isGlobal, UseVar, Assign(isGlobal), node);
             else
-                var = new RecursiveVar(scopeGroup, name, isGlobal, variable, index, node);
-
-            AllVars.Add(var);
+                var = new RecursiveVar(scope, name, isGlobal, UseVar, Assign(isGlobal), node);
+            
+            Set(isGlobal, var);
+            AddVar(var);
             return var;
         }
 
-        public ElementReferenceVar AssignElementReferenceVar(ScopeGroup scopeGroup, string name, Node node, Element reference)
+        public IndexedVar AssignDefinedVar(ScopeGroup scope, bool isGlobal, string name, Variable variable, int index, Node node)
         {
-            ElementReferenceVar var = scopeGroup.AlreadyDefined(AllVars, name, node) as ElementReferenceVar;
-            if (var != null)
-            {
-                scopeGroup.In(var);
-                return var;
-            }
+            IndexedVar var;
 
-            var = new ElementReferenceVar(name, scopeGroup, node, reference);
-            AllVars.Add(var);
+            if (scope == null || !scope.Recursive)
+                var = new IndexedVar  (scope, name, isGlobal, variable, index, node);
+            else
+                var = new RecursiveVar(scope, name, isGlobal, variable, index, node);
+
+            AddVar(var);
+            return var;
+        }
+
+        public ElementReferenceVar AssignElementReferenceVar(ScopeGroup scope, string name, Node node, Element reference)
+        {
+            ElementReferenceVar var = new ElementReferenceVar(name, scope, node, reference);
+
+            AddVar(var);
             return var; 
         }
 
+        private void AddVar(Var var)
+        {
+            if (!AllVars.Contains(var))
+                AllVars.Add(var);
+        }
+
         public readonly List<Var> AllVars = new List<Var>();
+
+        private readonly IndexedVar[] GlobalCollection = new IndexedVar[Constants.MAX_ARRAY_LENGTH];
+        private readonly IndexedVar[] PlayerCollection = new IndexedVar[Constants.MAX_ARRAY_LENGTH];
     }
 
     public abstract class Var
@@ -107,13 +132,13 @@ namespace Deltin.Deltinteger.Parse
             Name = name;
         }
 
-        public Var(string name, ScopeGroup scope, Node node) : this (name)
+        public Var(string name, ScopeGroup scope, Node node = null) : this (name)
         {
             Scope = scope;
             Node = node;
             IsDefinedVar = node != null;
 
-            scope./* we're */ In(this) /* together! */;
+            scope?./* we're */ In(this) /* together! */;
         }
 
         public abstract Element GetVariable(Element targetPlayer = null);
@@ -133,7 +158,7 @@ namespace Deltin.Deltinteger.Parse
 
         private readonly IWorkshopTree VariableAsWorkshop; 
 
-        public IndexedVar(string name, bool isGlobal, Variable variable, int index) : base (name)
+        public IndexedVar(ScopeGroup scope, string name, bool isGlobal, Variable variable, int index) : base (name, scope)
         {
             IsGlobal = isGlobal;
             Variable = variable;
@@ -255,8 +280,8 @@ namespace Deltin.Deltinteger.Parse
         {
         }
 
-        public RecursiveVar(string name, bool isGlobal, Variable variable, int index)
-            : base (name, isGlobal, variable, index)
+        public RecursiveVar(ScopeGroup scope, string name, bool isGlobal, Variable variable, int index)
+            : base (scope, name, isGlobal, variable, index)
         {
         }
 

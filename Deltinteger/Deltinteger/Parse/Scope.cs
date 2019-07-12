@@ -17,15 +17,22 @@ namespace Deltin.Deltinteger.Parse
 
         public bool Recursive { get; }
 
-        public ScopeGroup() {}
+        public VarCollection VarCollection { get; }
 
-        private ScopeGroup(ScopeGroup parent)
+        private bool IsInScope = true;
+
+        public ScopeGroup(VarCollection varCollection)
+        {
+            VarCollection = varCollection;
+        }
+
+        private ScopeGroup(VarCollection varCollection, ScopeGroup parent) : this(varCollection)
         {
             Parent = parent;
             Recursive = parent.Recursive;
         }
 
-        private ScopeGroup(ScopeGroup parent, bool recursive) 
+        private ScopeGroup(VarCollection varCollection, ScopeGroup parent, bool recursive) : this(varCollection)
         {
             Parent = parent;
             Recursive = recursive;
@@ -37,12 +44,30 @@ namespace Deltin.Deltinteger.Parse
                 InScope.Add(var);
         }
 
-        public Var AlreadyDefined(List<Var> allVars, string name, Node node)
+        public Element[] Out()
         {
-            if (FullVarCollection().Any(v => !ReferenceEquals(v.Node, node) && v.Name == name))
-                throw SyntaxErrorException.AlreadyDefined(name, node.Range);
+            if (!IsInScope)
+                throw new Exception("ScopeGroup is already out of scope.");
+
+            IsInScope = false;
+
+            List<Element> actions = new List<Element>();
+            foreach (Var var in InScope)
+                if (var is IndexedVar)
+                {
+                    Element[] outOfScopeActions = ((IndexedVar)var).OutOfScope();
+                    if (outOfScopeActions != null)
+                        actions.AddRange(outOfScopeActions);
+
+                    VarCollection.Free((IndexedVar)var);
+                }
             
-            return allVars.FirstOrDefault(v => ReferenceEquals(v.Node, node));
+            while (Children.Count > 0)
+                actions.AddRange(Children[0].Out());
+            
+            Parent.Children.Remove(this);
+
+            return actions.ToArray();
         }
 
         public Var GetVar(string name, Range range)
@@ -68,14 +93,14 @@ namespace Deltin.Deltinteger.Parse
 
         public ScopeGroup Child(bool recursive)
         {
-            var newChild = new ScopeGroup(this, recursive);
+            var newChild = new ScopeGroup(VarCollection, this, recursive);
             Children.Add(newChild);
             return newChild;
         }
 
         public ScopeGroup Child()
         {
-            var newChild = new ScopeGroup(this);
+            var newChild = new ScopeGroup(VarCollection, this);
             Children.Add(newChild);
             return newChild;
         }
