@@ -1,11 +1,11 @@
-rule: "Recursion test."
+rule: "Repeater test."
 Event.OngoingPlayer 
 if (IsButtonHeld(EventPlayer(), Button.Interact))
 {
     define start = TotalTimeElapsed();    
     foreach 2 (define player in AllPlayers())
     {
-        IsButtonHeld(EventPlayer(), Button.Interact);
+        SmallMessage(player, "hello!");
     }
     define finished = TotalTimeElapsed();
     SmallMessage(EventPlayer(), <"time finished: <0>", finished - start>);

@@ -112,7 +112,8 @@ namespace Deltin.Deltinteger.LanguageServer
 
         string ParseDocument(string input, int clientPort)
         {
-            dynamic json = JsonConvert.DeserializeObject(input);
+            dynamic json; 
+            json = JsonConvert.DeserializeObject(input);
             string uri = json.uri;
             string content = json.content;
 
@@ -157,105 +158,106 @@ namespace Deltin.Deltinteger.LanguageServer
             if (posData == null) return null;
 
             List<CompletionItem> completion = new List<CompletionItem>();
-            switch(posData.SelectedNode.FirstOrDefault())
-            {
-                // Ruleset
-                case RulesetNode rulesetNode:
+            if (posData.SelectedNode != null)
+                switch(posData.SelectedNode.FirstOrDefault())
+                {
+                    // Ruleset
+                    case RulesetNode rulesetNode:
 
-                    completion.AddRange(new CompletionItem[]
-                    {
-                        // TODO insert text
-                        new CompletionItem("rule")   { kind = CompletionItem.Keyword },
-                        new CompletionItem("define") { kind = CompletionItem.Keyword },
-                        new CompletionItem("method") { kind = CompletionItem.Keyword }
-                    });
-                    break;
-
-                // Rule node
-                case RuleNode ruleNode:
-
-                    // Event type
-                    if (ruleNode.IsEventOptionSelected(posData.Caret))
-                        completion.AddRange(EnumData.GetEnum<RuleEvent>().GetCompletion());
-                    
-                    // Player
-                    else if (ruleNode.IsPlayerOptionSelected(posData.Caret))
-                        completion.AddRange(EnumData.GetEnum<PlayerSelector>().GetCompletion());
-                    
-                    // Team
-                    else if (ruleNode.IsTeamOptionSelected(posData.Caret))
-                        completion.AddRange(EnumData.GetEnum<Team>().GetCompletion());
-                    
-                    else if (ruleNode.IsIfSelected(posData.Caret))
-                        completion.AddRange(Element.GetCompletion(true, false));
-
-                    else
-                        completion.AddRange(new CompletionItem[] 
+                        completion.AddRange(new CompletionItem[]
                         {
-                            new CompletionItem("Event" ) { kind = CompletionItem.Enum },
-                            new CompletionItem("Team"  ) { kind = CompletionItem.Enum },
-                            new CompletionItem("Player") { kind = CompletionItem.Enum },
+                            // TODO insert text
+                            new CompletionItem("rule")   { kind = CompletionItem.Keyword },
+                            new CompletionItem("define") { kind = CompletionItem.Keyword },
+                            new CompletionItem("method") { kind = CompletionItem.Keyword }
                         });
-                    break;
+                        break;
 
-                // Actions
-                case BlockNode blockNode:
+                    // Rule node
+                    case RuleNode ruleNode:
 
-                    // Get all action methods
-                    completion.AddRange(Element.GetCompletion(true, true));
-                    completion.AddRange(CustomMethodData.GetCompletion());
-                    
-                    if (parserData.Success)
-                    {
-                        // Get all variables
-                        if (blockNode.RelatedScopeGroup != null)
-                            completion.AddRange(blockNode.RelatedScopeGroup.GetCompletionItems(posData.Caret));
-                        // Get custom methods
-                        if (parserData.UserMethods != null)
-                            completion.AddRange(UserMethod.CollectionCompletion(parserData.UserMethods.ToArray()));
-                    }
+                        // Event type
+                        if (ruleNode.IsEventOptionSelected(posData.Caret))
+                            completion.AddRange(EnumData.GetEnum<RuleEvent>().GetCompletion());
+                        
+                        // Player
+                        else if (ruleNode.IsPlayerOptionSelected(posData.Caret))
+                            completion.AddRange(EnumData.GetEnum<PlayerSelector>().GetCompletion());
+                        
+                        // Team
+                        else if (ruleNode.IsTeamOptionSelected(posData.Caret))
+                            completion.AddRange(EnumData.GetEnum<Team>().GetCompletion());
+                        
+                        else if (ruleNode.IsIfSelected(posData.Caret))
+                            completion.AddRange(Element.GetCompletion(true, false));
 
-                    break;
+                        else
+                            completion.AddRange(new CompletionItem[] 
+                            {
+                                new CompletionItem("Event" ) { kind = CompletionItem.Enum },
+                                new CompletionItem("Team"  ) { kind = CompletionItem.Enum },
+                                new CompletionItem("Player") { kind = CompletionItem.Enum },
+                            });
+                        break;
 
-                // Values
-                case MethodNode methodNode:
+                    // Actions
+                    case BlockNode blockNode:
 
-                    completion.AddRange(Element.GetCompletion(true, false));
-                    completion.AddRange(EnumData.GetAllEnumCompletion());
-                    completion.AddRange(CustomMethodData.GetCompletion());
-
-                    if (parserData.Success)
-                    {
-                        // Get all variables
-                        if (methodNode.RelatedScopeGroup != null)
-                            completion.AddRange(methodNode.RelatedScopeGroup?.GetCompletionItems(posData.Caret));
-                        // Get custom methods
-                        if (parserData.UserMethods != null)
-                            completion.AddRange(UserMethod.CollectionCompletion(parserData.UserMethods.ToArray()));
-                    }
-
-                    break;
-
-                // If the selected node is a string node, show all strings.
-                case StringNode stringNode:
-
-                    completion.AddRange(Constants.Strings.Select(str =>
-                        new CompletionItem(str)
+                        // Get all action methods
+                        completion.AddRange(Element.GetCompletion(true, true));
+                        completion.AddRange(CustomMethodData.GetCompletion());
+                        
+                        if (parserData.Success)
                         {
-                            kind = CompletionItem.Text
+                            // Get all variables
+                            if (blockNode.RelatedScopeGroup != null)
+                                completion.AddRange(blockNode.RelatedScopeGroup.GetCompletionItems(posData.Caret));
+                            // Get custom methods
+                            if (parserData.UserMethods != null)
+                                completion.AddRange(UserMethod.CollectionCompletion(parserData.UserMethods.ToArray()));
                         }
-                    ));
 
-                    break;
-                
-                case EnumNode enumNode:
-                    var add = EnumData.GetEnum(enumNode.Type)?.GetCompletion();
+                        break;
 
-                    if (add != null)
-                        completion.AddRange(add);
+                    // Values
+                    case MethodNode methodNode:
+
+                        completion.AddRange(Element.GetCompletion(true, false));
+                        completion.AddRange(EnumData.GetAllEnumCompletion());
+                        completion.AddRange(CustomMethodData.GetCompletion());
+
+                        if (parserData.Success)
+                        {
+                            // Get all variables
+                            if (methodNode.RelatedScopeGroup != null)
+                                completion.AddRange(methodNode.RelatedScopeGroup?.GetCompletionItems(posData.Caret));
+                            // Get custom methods
+                            if (parserData.UserMethods != null)
+                                completion.AddRange(UserMethod.CollectionCompletion(parserData.UserMethods.ToArray()));
+                        }
+
+                        break;
+
+                    // If the selected node is a string node, show all strings.
+                    case StringNode stringNode:
+
+                        completion.AddRange(Constants.Strings.Select(str =>
+                            new CompletionItem(str)
+                            {
+                                kind = CompletionItem.Text
+                            }
+                        ));
+
+                        break;
                     
-                    break;
-            }
+                    case EnumNode enumNode:
+                        var add = EnumData.GetEnum(enumNode.Type)?.GetCompletion();
+
+                        if (add != null)
+                            completion.AddRange(add);
+                        
+                        break;
+                }
 
             return JsonConvert.SerializeObject(completion.ToArray());
         }
@@ -345,7 +347,7 @@ namespace Deltin.Deltinteger.LanguageServer
 
             Hover hover = null;
 
-            if (parserData.Success && posData.SelectedNode.Length > 0)
+            if (parserData.Success && posData.SelectedNode != null && posData.SelectedNode.Length > 0)
                 switch (posData.SelectedNode[0])
                 {
                     case MethodNode methodNode:

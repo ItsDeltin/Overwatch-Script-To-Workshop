@@ -24,6 +24,7 @@ import {
 import { connect } from 'tls';
 import { cpus } from 'os';
 import { realpath } from 'fs';
+import { stringify } from 'querystring';
 //import { request } from 'http';
 
 // Create a connection for the server. The connection uses Node's IPC as a transport.
@@ -146,8 +147,9 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 	});
 
 	sendRequest(textDocument.uri, 'parse', data, null, null, function callback(body) {
-		let diagnostics: Diagnostic[] = JSON.parse(body);
 
+		let diagnostics: Diagnostic[] = JSON.parse(body);
+		
 		connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
 	});
 }
@@ -215,7 +217,10 @@ async function sendRequest(uri, path, data, resolve, reject, callback) {
 	request.post({url:'http://localhost:' + settings.port1 + '/' + path, body: data}, function (error, res, body) 
 	{
 		if (!error && res.statusCode == 200) {
-			let value = callback(body);
+
+			let value = null;
+			if (body != "")
+				value = callback(body);
 
 			if (resolve != null)
 				resolve(value);

@@ -157,7 +157,9 @@ function sendRequest(uri, path, data, resolve, reject, callback) {
         let settings = yield getDocumentSettings(uri);
         request.post({ url: 'http://localhost:' + settings.port1 + '/' + path, body: data }, function (error, res, body) {
             if (!error && res.statusCode == 200) {
-                let value = callback(body);
+                let value = null;
+                if (body != "")
+                    value = callback(body);
                 if (resolve != null)
                     resolve(value);
             }
