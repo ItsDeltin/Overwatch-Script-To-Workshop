@@ -245,10 +245,6 @@ namespace Deltin.Deltinteger.Elements
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     public class V_Health : Element {}
 
-    [ElementData("Health Percent", ValueType.Number)]
-    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
-    public class V_HealthPercent : Element {}
-
     [ElementData("Hero", ValueType.Hero)]
     [EnumParameter("Hero", typeof(Hero))]
     public class V_HeroVar : Element {}
@@ -501,6 +497,10 @@ namespace Deltin.Deltinteger.Elements
     [ElementData("Normalize", ValueType.Number)]
     [Parameter("Vector", ValueType.VectorAndPlayer, typeof(V_Vector))]
     public class V_Normalize : Element {}
+
+    [ElementData("Normalized Health", ValueType.Number)]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    public class V_NormalizedHealth : Element {}
 
     [ElementData("Not", ValueType.Boolean)]
     [Parameter("Value", ValueType.Boolean, typeof(V_True))]
