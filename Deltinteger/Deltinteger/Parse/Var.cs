@@ -45,10 +45,12 @@ namespace Deltin.Deltinteger.Parse
 
         public void Free(IndexedVar var)
         {
+            # pragma warning disable
             if (!REUSE_VARIABLES)
                 return;
             
             if (var.IsGlobal)
+            #pragma warning restore
             {
                 if (GlobalCollection[var.Index] == null)
                     throw new Exception();

@@ -475,6 +475,7 @@ namespace Deltin.Deltinteger.Elements
     {
         Up,
         Down,
+        [EnumOverride(null, "To Nearest")]
         Nearest
     }
 
