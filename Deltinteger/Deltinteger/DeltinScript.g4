@@ -57,10 +57,7 @@ enum : PART SEPERATOR /*{ Deltin.Deltinteger.Elements.EnumData.IsEnum(_localctx?
 variable : PART ;
 // define   : DEFINE PART (EQUALS expr)? STATEMENT_END ;
 varset   : (expr SEPERATOR)? PART array? ((statement_operation expr?) | INCREMENT | DECREMENT) ;
-// Here, there should always be an expression. 
-// This is here so antlr recognizes it is a method midtype.
-// Confirm there is an expression in the visitor class.
-//                            V
+
 parameters : expr (COMMA expr?)*    		 	     ;
 method     : PART LEFT_PAREN parameters? RIGHT_PAREN ;
 
@@ -94,7 +91,6 @@ return  : RETURN expr? STATEMENT_END                          ;
 
 rule_if : IF LEFT_PAREN expr? RIGHT_PAREN;
 
-// rule_option{0,3} does not work
 ow_rule : 
 	RULE_WORD ':' STRINGLITERAL
 	(enum)*
@@ -126,16 +122,11 @@ UNTERMINATEDSTRINGLITERAL : '"' (~["\\\r\n] | '\\' (. | EOF))* ;
 
 DOCUMENTATION: '#' .*? NEWLINE ;
 // Comments
-COMMENT : (('/*' .*? '*/') | ('//' .*? NEWLINE))? -> skip ;
+COMMENT : (('/*' .*? '*/') | ('//' .*? NEWLINE)) -> skip ;
 
 // Misc
 WHITESPACE : (' '|'\t')+ -> skip ;
 NEWLINE    : ('\r'? '\n' | '\r')+ -> skip;
-
-// Goto statement
-/* split this into a parse statement later */
-GOTO           : '@goto' WHITESPACE+ PART ';' ;
-GOTO_STATEMENT :  'goto' WHITESPACE+ PART ';' ;
 
 // Numbers
 NUMBER : [0-9]+ ('.'[0-9]+)?  ;

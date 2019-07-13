@@ -100,7 +100,11 @@ documents.onDidChangeContent(change => {
 function validateTextDocument(textDocument) {
     return __awaiter(this, void 0, void 0, function* () {
         let settings = yield getDocumentSettings(textDocument.uri);
-        sendRequest(textDocument.uri, 'parse', textDocument.getText(), null, null, function callback(body) {
+        let data = JSON.stringify({
+            uri: textDocument.uri,
+            content: textDocument.getText()
+        });
+        sendRequest(textDocument.uri, 'parse', data, null, null, function callback(body) {
             let diagnostics = JSON.parse(body);
             connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
         });
@@ -115,11 +119,7 @@ connection.onCompletion((_textDocumentPosition) => {
     return getCompletion(_textDocumentPosition);
 });
 function getCompletion(pos) {
-    let textDocument = documents.get(pos.textDocument.uri);
-    let data = JSON.stringify({
-        textDocument: textDocument.getText(),
-        caret: pos.position
-    });
+    let data = JSON.stringify(pos);
     return new Promise(function (resolve, reject) {
         sendRequest(pos.textDocument.uri, 'completion', data, resolve, reject, function (body) {
             let completionItems = JSON.parse(body);
@@ -134,11 +134,7 @@ connection.onSignatureHelp((pos) => {
     return getSignatureHelp(pos);
 });
 function getSignatureHelp(pos) {
-    let textDocument = documents.get(pos.textDocument.uri);
-    let data = JSON.stringify({
-        textDocument: textDocument.getText(),
-        caret: pos.position
-    });
+    let data = JSON.stringify(pos);
     return new Promise(function (resolve, reject) {
         sendRequest(pos.textDocument.uri, 'signature', data, resolve, reject, function (body) {
             let signatureHelp = JSON.parse(body);
@@ -147,11 +143,7 @@ function getSignatureHelp(pos) {
     });
 }
 connection.onHover((pos) => {
-    let textDocument = documents.get(pos.textDocument.uri);
-    let data = JSON.stringify({
-        textDocument: textDocument.getText(),
-        caret: pos.position
-    });
+    let data = JSON.stringify(pos);
     return new Promise(function (resolve, reject) {
         sendRequest(pos.textDocument.uri, 'hover', data, resolve, reject, function (body) {
             let hover = JSON.parse(body);

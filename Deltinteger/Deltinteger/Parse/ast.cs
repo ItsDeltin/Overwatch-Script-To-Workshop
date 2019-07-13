@@ -10,13 +10,10 @@ namespace Deltin.Deltinteger.Parse
 {
     public class BuildAstVisitor : DeltinScriptBaseVisitor<Node>
     {
-        Pos _caretPos;
         List<Diagnostic> _diagnostics;
-        public List<Node> SelectedNode { get; private set; } = new List<Node>();
 
-        public BuildAstVisitor(Pos caretPos, List<Diagnostic> diagnostics)
+        public BuildAstVisitor(List<Diagnostic> diagnostics)
         {
-            _caretPos = caretPos;
             _diagnostics = diagnostics;
         }
 
@@ -39,9 +36,7 @@ namespace Deltin.Deltinteger.Parse
             for (int i = 0; i < userMethods.Length; i++)
                 userMethods[i] = (UserMethodNode)VisitUser_method(context.user_method()[i]);
             
-            Node node = new RulesetNode(rules, useGlobalVar, usePlayerVar, definedVars, userMethods, Range.GetRange(context));
-            CheckRange(node);
-            return node;
+            return new RulesetNode(rules, useGlobalVar, usePlayerVar, definedVars, userMethods, Range.GetRange(context));
         }
 
         public override Node VisitVardefine(DeltinScriptParser.VardefineContext context)
@@ -53,26 +48,22 @@ namespace Deltin.Deltinteger.Parse
             if (context.useVar() != null)
                 useVar = (UseVarNode)VisitUseVar(context.useVar());
 
-            Node node = new DefinedNode(isGlobal, variableName, useVar, Range.GetRange(context));
-            CheckRange(node);
-            return node;
+            return new DefinedNode(isGlobal, variableName, useVar, Range.GetRange(context));
         }
 
         public override Node VisitDefine(DeltinScriptParser.DefineContext context)
         {
             string variableName = context.PART().GetText();
             
-            IExpressionNode value = null;
+            Node value = null;
             if (context.expr() != null)
-                value = (IExpressionNode)VisitExpr(context.expr());
+                value = VisitExpr(context.expr());
 
             UseVarNode useVar = null;
             if (context.useVar() != null)
                 useVar = (UseVarNode)VisitUseVar(context.useVar());
 
-            Node node = new ScopedDefineNode(variableName, value, useVar, Range.GetRange(context));
-            CheckRange(node);
-            return node;
+            return new ScopedDefineNode(variableName, value, useVar, Range.GetRange(context));
         }
 
         public override Node VisitUseVar(DeltinScriptParser.UseVarContext context)
@@ -88,9 +79,7 @@ namespace Deltin.Deltinteger.Parse
                 if (!int.TryParse(context.number().GetText(), out index))
                     index = -1;
 
-            Node node = new UseVarNode(variable, index, Range.GetRange(context));
-            CheckRange(node);
-            return node;
+            return new UseVarNode(variable, index, Range.GetRange(context));
         }
 
         public override Node VisitUser_method(DeltinScriptParser.User_methodContext context)
@@ -107,9 +96,7 @@ namespace Deltin.Deltinteger.Parse
 
             string documentation = string.Join("\n\r", context.DOCUMENTATION().Select(doc => doc.GetText().TrimEnd().TrimStart('#', ' ')));
 
-            Node node = new UserMethodNode(name, parameters, block, isRecursive, documentation, Range.GetRange(context));
-            CheckRange(node);
-            return node;
+            return new UserMethodNode(name, parameters, block, isRecursive, documentation, Range.GetRange(context));
         }
 
         public override Node VisitOw_rule(DeltinScriptParser.Ow_ruleContext context)
@@ -117,13 +104,13 @@ namespace Deltin.Deltinteger.Parse
             string name = context.STRINGLITERAL().GetText().Trim('"');
             BlockNode block = (BlockNode)VisitBlock(context.block());
 
-            IExpressionNode[] conditions = new IExpressionNode[context.rule_if().Length];
+            Node[] conditions = new Node[context.rule_if().Length];
             Range[] conditionRanges      = new Range          [context.rule_if().Length];
 
             for (int i = 0; i < context.rule_if().Length; i++)
             {
                 if (context.rule_if(i).expr() != null)
-                    conditions[i] = (IExpressionNode)VisitExpr(context.rule_if(i).expr());
+                    conditions[i] = VisitExpr(context.rule_if(i).expr());
 
 
                 //conditionRanges[i] = Range.GetRange(context.rule_if(i));
@@ -177,20 +164,16 @@ namespace Deltin.Deltinteger.Parse
                 }
             }
 
-            var node = new RuleNode(name, eventType, team, player, conditions, block, eventRange, teamRange, playerRange, conditionRanges, Range.GetRange(context));
-            CheckRange(node);
-            return node;
+            return new RuleNode(name, eventType, team, player, conditions, block, eventRange, teamRange, playerRange, conditionRanges, Range.GetRange(context));
         }
 
         public override Node VisitBlock(DeltinScriptParser.BlockContext context)
         {
-            IStatementNode[] statements = new IStatementNode[context.statement().Length];
+            Node[] statements = new Node[context.statement().Length];
             for (int i = 0; i < statements.Length; i++)
-                statements[i] = (IStatementNode)VisitStatement(context.statement()[i]);
+                statements[i] = VisitStatement(context.statement()[i]);
             
-            var node = new BlockNode(statements, Range.GetRange(context));
-            CheckRange(node);
-            return node;
+            return new BlockNode(statements, Range.GetRange(context));
         }
 
         public override Node VisitExpr(DeltinScriptParser.ExprContext context)
@@ -200,9 +183,9 @@ namespace Deltin.Deltinteger.Parse
             // Operations
             if (context.ChildCount == 3 && Constants.AllOperations.Contains(context.GetChild(1).GetText()))
             {
-                IExpressionNode left = (IExpressionNode)Visit(context.GetChild(0));
+                Node left = Visit(context.GetChild(0));
                 string operation = context.GetChild(1).GetText();
-                IExpressionNode right = (IExpressionNode)Visit(context.GetChild(2));
+                Node right = Visit(context.GetChild(2));
 
 
                 node = new OperationNode(left, operation, right, Range.GetRange(context));
@@ -215,8 +198,8 @@ namespace Deltin.Deltinteger.Parse
             && context.GetChild(2) is DeltinScriptParser.ExprContext
             && context.GetChild(3).GetText() == "]")
             {
-                IExpressionNode value = (IExpressionNode)Visit(context.GetChild(0));
-                IExpressionNode index = (IExpressionNode)Visit(context.GetChild(2));
+                Node value = Visit(context.GetChild(0));
+                Node index = Visit(context.GetChild(2));
 
                 node = new ValueInArrayNode(value, index, Range.GetRange(context));
             }
@@ -228,7 +211,7 @@ namespace Deltin.Deltinteger.Parse
             && context.GetChild(2) is DeltinScriptParser.VariableContext)
             {
                 string name = context.GetChild(2).GetText();
-                IExpressionNode target = (IExpressionNode)Visit(context.GetChild(0));
+                Node target = Visit(context.GetChild(0));
 
                 node = new VariableNode(name, target, Range.GetRange(context));
             }
@@ -238,7 +221,7 @@ namespace Deltin.Deltinteger.Parse
             && context.GetChild(0).GetText() == "!"
             && context.GetChild(1) is DeltinScriptParser.ExprContext)
             {
-                IExpressionNode value = (IExpressionNode)Visit(context.GetChild(1));
+                Node value = Visit(context.GetChild(1));
                 node = new NotNode(value, Range.GetRange(context));
             }
 
@@ -250,9 +233,9 @@ namespace Deltin.Deltinteger.Parse
             && context.GetChild(3).GetText() == ":"
             && context.GetChild(4) is DeltinScriptParser.ExprContext)
             {
-                IExpressionNode condition = (IExpressionNode)VisitExpr(context.expr(0));
-                IExpressionNode consequent = (IExpressionNode)VisitExpr(context.expr(1));
-                IExpressionNode alternative = (IExpressionNode)VisitExpr(context.expr(2));
+                Node condition = VisitExpr(context.expr(0));
+                Node consequent = VisitExpr(context.expr(1));
+                Node alternative = VisitExpr(context.expr(2));
                 node = new TernaryConditionalNode(condition, consequent, alternative, Range.GetRange(context));
             }
 
@@ -261,7 +244,6 @@ namespace Deltin.Deltinteger.Parse
                 return Visit(context.GetChild(0));
             }
 
-            CheckRange(node);
             return node;
         }
         
@@ -270,30 +252,24 @@ namespace Deltin.Deltinteger.Parse
         public override Node VisitNumber(DeltinScriptParser.NumberContext context)
         {
             double value = double.Parse(context.GetText());
-            Node node = new NumberNode(value, Range.GetRange(context));
-            CheckRange(node);
-            return node;
+            return new NumberNode(value, Range.GetRange(context));
         }
 
         // "Hello <0>! Waiting game..."
         public override Node VisitString(DeltinScriptParser.StringContext context)
         {
             string value = context.STRINGLITERAL().GetText().Trim('"');
-            Node node = new StringNode(value, null, Range.GetRange(context));
-            CheckRange(node);
-            return node;
+            return new StringNode(value, null, Range.GetRange(context));
         }
 
         // <"hello <0>! Waiting game...", EventPlayer()>
         public override Node VisitFormatted_string(DeltinScriptParser.Formatted_stringContext context)
         {
             string value = context.@string().GetText().Trim('"');
-            IExpressionNode[] format = new IExpressionNode[context.expr().Length];
+            Node[] format = new Node[context.expr().Length];
             for (int i = 0; i < format.Length; i++)
-                format[i] = (IExpressionNode)VisitExpr(context.expr()[i]);
-            Node node = new StringNode(value, format, Range.GetRange(context));
-            CheckRange(node);
-            return node;
+                format[i] = VisitExpr(context.expr()[i]);
+            return new StringNode(value, format, Range.GetRange(context));
         }
 
         // Method()
@@ -302,24 +278,20 @@ namespace Deltin.Deltinteger.Parse
             string methodName = context.PART().GetText();
 
             // TODO check null check spots in [].
-            IExpressionNode[] parameters = new IExpressionNode[context.parameters()?.expr().Length ?? 0];
+            Node[] parameters = new Node[context.parameters()?.expr().Length ?? 0];
             for (int i = 0; i < parameters.Length; i++)
-                parameters[i] = (IExpressionNode)Visit(context.parameters().expr()[i]);
+                parameters[i] = Visit(context.parameters().expr()[i]);
 
             Range nameRange = Range.GetRange(context.PART().Symbol);
             Range parameterRange = Range.GetRange(context.LEFT_PAREN().Symbol, context.RIGHT_PAREN().Symbol);
 
-            Node node = new MethodNode(methodName, parameters, nameRange, parameterRange, Range.GetRange(context));
-            CheckRange(node);
-            return node;
+            return new MethodNode(methodName, parameters, nameRange, parameterRange, Range.GetRange(context));
         }
 
         public override Node VisitVariable(DeltinScriptParser.VariableContext context)
         {
             string name = context.PART().GetText();
-            Node node = new VariableNode(name, null, Range.GetRange(context));
-            CheckRange(node);
-            return node;
+            return new VariableNode(name, null, Range.GetRange(context));
         }
 
         // ( expr )
@@ -330,23 +302,17 @@ namespace Deltin.Deltinteger.Parse
 
         public override Node VisitTrue(DeltinScriptParser.TrueContext context)
         {
-            Node node = new BooleanNode(true, Range.GetRange(context));
-            CheckRange(node);
-            return node;
+            return new BooleanNode(true, Range.GetRange(context));
         }
 
         public override Node VisitFalse(DeltinScriptParser.FalseContext context)
         {
-            Node node = new BooleanNode(false, Range.GetRange(context));
-            CheckRange(node);
-            return node;
+            return new BooleanNode(false, Range.GetRange(context));
         }
 
         public override Node VisitNull(DeltinScriptParser.NullContext context)
         {
-            Node node = new NullNode(Range.GetRange(context));
-            CheckRange(node);
-            return node;
+            return new NullNode(Range.GetRange(context));
         }
 
         public override Node VisitEnum(DeltinScriptParser.EnumContext context)
@@ -354,20 +320,16 @@ namespace Deltin.Deltinteger.Parse
             string[] split = context.GetText().Split('.');
             string type = split[0];
             string value = split[1];
-            Node node = new EnumNode(type, value, Range.GetRange(context));
-            CheckRange(node);
-            return node;
+            return new EnumNode(type, value, Range.GetRange(context));
         }
         
         public override Node VisitCreatearray(DeltinScriptParser.CreatearrayContext context)
         {
-            IExpressionNode[] values = new IExpressionNode[context.expr().Length];
+            Node[] values = new Node[context.expr().Length];
             for (int i = 0; i < values.Length; i++)
-                values[i] = (IExpressionNode)VisitExpr(context.expr()[i]);
+                values[i] = VisitExpr(context.expr()[i]);
 
-            Node node = new CreateArrayNode(values, Range.GetRange(context));
-            CheckRange(node);
-            return node;
+            return new CreateArrayNode(values, Range.GetRange(context));
         }
         #endregion
         
@@ -381,7 +343,6 @@ namespace Deltin.Deltinteger.Parse
             }
             else
             {
-                CheckRange(node);
                 return node;
             }
         }
@@ -389,14 +350,14 @@ namespace Deltin.Deltinteger.Parse
         #region Statements
         public override Node VisitVarset(DeltinScriptParser.VarsetContext context)
         {
-            IExpressionNode target = context.expr().Length == 2 ? (IExpressionNode)Visit(context.expr()[0]) : null;
+            Node target = context.expr().Length == 2 ? Visit(context.expr()[0]) : null;
             string variable = context.PART().GetText();
             
-            IExpressionNode index = null;
+            Node index = null;
             if (context.array() != null)
-                index = (IExpressionNode)Visit(context.array().expr());
+                index = Visit(context.array().expr());
 
-            IExpressionNode value = context.expr().Length > 0 ? (IExpressionNode)Visit(context.expr().Last()) : null;
+            Node value = context.expr().Length > 0 ? Visit(context.expr().Last()) : null;
 
             string operation = context.statement_operation()?.GetText();
             if (operation == null)
@@ -407,9 +368,7 @@ namespace Deltin.Deltinteger.Parse
                     operation = "--";
             }
 
-            Node node = new VarSetNode(target, variable, index, operation, value, Range.GetRange(context));
-            CheckRange(node);
-            return node;
+            return new VarSetNode(target, variable, index, operation, value, Range.GetRange(context));
         }
 
         public override Node VisitFor(DeltinScriptParser.ForContext context)
@@ -424,22 +383,20 @@ namespace Deltin.Deltinteger.Parse
             if (context.define() != null)
                 defineNode = (ScopedDefineNode)VisitDefine(context.define());
 
-            IExpressionNode expression = null;
+            Node expression = null;
             if (context.expr() != null)
-                expression = (IExpressionNode)VisitExpr(context.expr());
+                expression = VisitExpr(context.expr());
 
             VarSetNode statement = null;
             if (context.forEndStatement() != null)
                 statement = (VarSetNode)VisitVarset(context.forEndStatement().varset());
             
-            Node node = new ForNode(varSet, defineNode, expression, statement, block, Range.GetRange(context));
-            CheckRange(node);
-            return node;
+            return new ForNode(varSet, defineNode, expression, statement, block, Range.GetRange(context));
         }
 
         public override Node VisitForeach(DeltinScriptParser.ForeachContext context)
         {
-            IExpressionNode array = (IExpressionNode)Visit(context.expr());
+            Node array = Visit(context.expr());
 
             string name = context.PART().GetText();
 
@@ -449,19 +406,15 @@ namespace Deltin.Deltinteger.Parse
             if (context.number() != null)
                 repeaters = int.Parse(context.number().GetText());
             
-            Node node = new ForEachNode(name, array, block, repeaters, Range.GetRange(context));
-            CheckRange(node);
-            return node;
+            return new ForEachNode(name, array, block, repeaters, Range.GetRange(context));
         }
 
         public override Node VisitWhile(DeltinScriptParser.WhileContext context)
         {
             BlockNode block = (BlockNode)VisitBlock(context.block());
-            IExpressionNode expression = (IExpressionNode)VisitExpr(context.expr());
+            Node expression = VisitExpr(context.expr());
 
-            Node node = new WhileNode(expression, block, Range.GetRange(context));
-            CheckRange(node);
-            return node;
+            return new WhileNode(expression, block, Range.GetRange(context));
         }
 
         public override Node VisitIf(DeltinScriptParser.IfContext context)
@@ -469,7 +422,7 @@ namespace Deltin.Deltinteger.Parse
             // Get the if data
             IfData ifData = new IfData
             (
-                (IExpressionNode)VisitExpr(context.expr()),
+                VisitExpr(context.expr()),
                 (BlockNode)VisitBlock(context.block())
             );
 
@@ -481,7 +434,7 @@ namespace Deltin.Deltinteger.Parse
                 for (int i = 0; i < context.else_if().Length; i++)
                     elseIfData[i] = new IfData
                     (
-                        (IExpressionNode)VisitExpr(context.else_if()[i].expr()),
+                        VisitExpr(context.else_if()[i].expr()),
                         (BlockNode)VisitBlock(context.else_if()[i].block())
                     );
             }
@@ -491,45 +444,18 @@ namespace Deltin.Deltinteger.Parse
             if (context.@else() != null)
                 elseBlock = (BlockNode)VisitBlock(context.@else().block());
 
-            Node node = new IfNode(ifData, elseIfData, elseBlock, Range.GetRange(context));
-            CheckRange(node);
-            return node;
+            return new IfNode(ifData, elseIfData, elseBlock, Range.GetRange(context));
         }
 
         public override Node VisitReturn(DeltinScriptParser.ReturnContext context)
         {
-            IExpressionNode returnValue = null;
+            Node returnValue = null;
             if (context.expr() != null)
-                returnValue = (IExpressionNode)VisitExpr(context.expr());
+                returnValue = VisitExpr(context.expr());
 
-            Node node = new ReturnNode(returnValue, Range.GetRange(context));
-            CheckRange(node);
-            return node;
+            return new ReturnNode(returnValue, Range.GetRange(context));
         }
         #endregion
-
-        private void CheckRange(Node node)
-        {
-            if (_caretPos == null)
-                return;
-
-            // If the caret position is inside the node
-            // and the node's range is less than the currently selected node.
-            if ((node.Range.IsInside(_caretPos)) /*&& (SelectedNode == null || node.Range < SelectedNode.Range)*/)
-            {
-                SelectedNode.Add(node);
-
-                // Sub-ranges:
-                if (node.SubRanges != null)
-                {
-                    List<int> inside = new List<int>();
-                    for (int i = 0; i < node.SubRanges.Length; i++)
-                        if (node.SubRanges[i]?.IsInside(_caretPos) ?? false)
-                            inside.Add(i);
-                    node.SubRangesSelected = inside.ToArray();
-                }
-            }
-        }
     }
 
     public abstract class Node
@@ -537,8 +463,6 @@ namespace Deltin.Deltinteger.Parse
         public Range Range { get; private set; }
 
         public Range[] SubRanges { get; private set; }
-
-        public int[] SubRangesSelected { get; set; }
 
         public Element RelatedElement { get; set; }
 
@@ -549,15 +473,49 @@ namespace Deltin.Deltinteger.Parse
             Range = range;
             SubRanges = subRanges;
         }
+
+        public abstract Node[] Children();
+
+        public Node[] SelectedNode(Pos caretPos)
+        {
+            List<Node> nodes = new List<Node>();
+            SelectedNode(caretPos, nodes);
+            return nodes.ToArray();
+        }
+
+        private void SelectedNode(Pos caretPos, List<Node> nodes)
+        {
+            if (Range.IsInside(caretPos))
+                nodes.Insert(0, this);
+
+            var children = Children();
+            if (children != null)
+                foreach(var child in children)
+                    if (child != null)
+                        child.SelectedNode(caretPos, nodes);
+        }
+
+        public int[] SubrangesSelected(Pos caretPos)
+        {
+            if (SubRanges != null)
+            {
+                List<int> inside = new List<int>();
+                for (int i = 0; i < SubRanges.Length; i++)
+                    if (SubRanges[i]?.IsInside(caretPos) ?? false)
+                        inside.Add(i);
+                return inside.ToArray();
+            }
+            return new int[0];
+        }
     }
 
     public class RulesetNode : Node
     {
-        public RuleNode[] Rules { get; private set; }
-        public Variable UseGlobalVar { get; private set; }
-        public Variable UsePlayerVar { get; private set; }
-        public DefinedNode[] DefinedVars { get; private set; }
-        public UserMethodNode[] UserMethods { get; private set; }
+        public Variable UseGlobalVar { get; }
+        public Variable UsePlayerVar { get; }
+        public RuleNode[] Rules { get; }
+        public DefinedNode[] DefinedVars { get; }
+        public UserMethodNode[] UserMethods { get; }
 
         public RulesetNode(
             RuleNode[] rules, 
@@ -573,6 +531,15 @@ namespace Deltin.Deltinteger.Parse
             DefinedVars = definedVars;
             UserMethods = userMethods;
         }
+
+        public override Node[] Children()
+        {
+            List<Node> children = new List<Node>();
+            children.AddRange(Rules);
+            children.AddRange(DefinedVars);
+            children.AddRange(UserMethods);
+            return children.ToArray();
+        }
     }
 
     public class DefinedNode : Node
@@ -587,19 +554,29 @@ namespace Deltin.Deltinteger.Parse
             VariableName = variableName;
             UseVar = useVar;
         }
+
+        public override Node[] Children()
+        {
+            return new Node[] { UseVar };
+        }
     }
 
-    public class ScopedDefineNode : Node, IStatementNode
+    public class ScopedDefineNode : Node
     {
         public string VariableName { get; }
         public UseVarNode UseVar { get; }
-        public IExpressionNode Value { get; }
+        public Node Value { get; }
 
-        public ScopedDefineNode(string variableName, IExpressionNode value, UseVarNode useVar, Range range) : base (range)
+        public ScopedDefineNode(string variableName, Node value, UseVarNode useVar, Range range) : base (range)
         {
             VariableName = variableName;
             Value = value;
             UseVar = useVar;
+        }
+
+        public override Node[] Children()
+        {
+            return new Node[] { UseVar, Value };
         }
     }
 
@@ -614,6 +591,11 @@ namespace Deltin.Deltinteger.Parse
             Index = index;
             UsesIndex = Index != -1;
         }
+
+        public override Node[] Children()
+        {
+            return null;
+        }
     }
 
     public class RuleNode : Node
@@ -622,10 +604,10 @@ namespace Deltin.Deltinteger.Parse
         public RuleEvent Event { get; private set; }
         public Team Team { get; private set; }
         public PlayerSelector Player { get; private set; }
-        public IExpressionNode[] Conditions { get; private set; }
+        public Node[] Conditions { get; private set; }
         public BlockNode Block { get; private set; }
 
-        public RuleNode(string name, RuleEvent eventType, Team team, PlayerSelector player, IExpressionNode[] conditions, BlockNode block, 
+        public RuleNode(string name, RuleEvent eventType, Team team, PlayerSelector player, Node[] conditions, BlockNode block, 
             Range eventRange, Range teamRange, Range playerRange, Range[] conditionRanges, Range range) : base(range,
             new Range[] { eventRange, teamRange, playerRange}.Concat(conditionRanges).ToArray())
         {
@@ -639,28 +621,36 @@ namespace Deltin.Deltinteger.Parse
             Block = block;
         }
 
-        public bool IsEventOptionSelected()
+        public bool IsEventOptionSelected(Pos caretPos)
         {
-            return SubRangesSelected.Contains(0);
+            return SubrangesSelected(caretPos).Contains(0);
         }
 
-        public bool IsTeamOptionSelected()
+        public bool IsTeamOptionSelected(Pos caretPos)
         {
-            return SubRangesSelected.Contains(1);
+            return SubrangesSelected(caretPos).Contains(1);
         }
 
-        public bool IsPlayerOptionSelected()
+        public bool IsPlayerOptionSelected(Pos caretPos)
         {
-            return SubRangesSelected.Contains(2);
+            return SubrangesSelected(caretPos).Contains(2);
         }
 
-        public bool IsIfSelected()
+        public bool IsIfSelected(Pos caretPos)
         {
-            return SubRangesSelected.Any(v => v > 2);
+            return SubrangesSelected(caretPos).Any(v => v > 2);
+        }
+
+        public override Node[] Children()
+        {
+            List<Node> children = new List<Node>();
+            children.AddRange(Conditions);
+            children.Add(Block);
+            return children.ToArray();
         }
     }
 
-    public class UserMethodNode : Node, INamedNode
+    public class UserMethodNode : Node
     {
         public string Name { get; }
         public string[] Parameters { get; }
@@ -676,76 +666,92 @@ namespace Deltin.Deltinteger.Parse
             IsRecursive = isRecursive;
             Documentation = documentation;
         }
+
+        public override Node[] Children()
+        {
+            return new Node[] { Block };
+        }
     }
 
-    // TODO maybe remove IExpressionNode and IStatementNode if empty interfaces is a bad coding practice?
-    public interface IExpressionNode {}
-    public interface IStatementNode {}
-
-    public interface INamedNode 
+    public class OperationNode : Node
     {
-        string Name { get; }
-    }
-
-    public class OperationNode : Node, IExpressionNode
-    {
-        public IExpressionNode Left { get; }
+        public Node Left { get; }
         public string Operation { get; }
-        public IExpressionNode Right { get; }
+        public Node Right { get; }
 
-        public OperationNode(IExpressionNode left, string operation, IExpressionNode right, Range range) : base(range)
+        public OperationNode(Node left, string operation, Node right, Range range) : base(range)
         {
             Left = left;
             Operation = operation;
             Right = right;
         }
+
+        public override Node[] Children()
+        {
+            return new Node[] { Left, Right };
+        }
     }
 
     public class BlockNode : Node
     {
-        public IStatementNode[] Statements;
+        public Node[] Statements;
 
-        public BlockNode(IStatementNode[] statements, Range range) : base(range) 
+        public BlockNode(Node[] statements, Range range) : base(range) 
         {
             Statements = statements;
         }
+
+        public override Node[] Children()
+        {
+            return Statements;
+        }
     }
 
-    public class MethodNode : Node, IExpressionNode, IStatementNode, INamedNode
+    public class MethodNode : Node
     {
         public string Name { get; private set; }
-        public IExpressionNode[] Parameters { get; private set; }
+        public Node[] Parameters { get; private set; }
 
-        public MethodNode(string name, IExpressionNode[] parameters, Range nameRange, Range parameterRange, Range range) : base(range, nameRange, parameterRange)
+        public MethodNode(string name, Node[] parameters, Range nameRange, Range parameterRange, Range range) : base(range, nameRange, parameterRange)
         {
             Name = name;
             Parameters = parameters;
         }
 
-        public bool IsNameSelected()
+        public bool IsNameSelected(Pos caretPos)
         {
-            return SubRangesSelected.Contains(0);
+            return SubrangesSelected(caretPos).Contains(0);
         }
 
-        public bool IsParametersSelected()
+        public bool IsParametersSelected(Pos caretPos)
         {
-            return SubRangesSelected.Contains(1);
+            return SubrangesSelected(caretPos).Contains(1);
+        }
+
+        public override Node[] Children()
+        {
+            return Parameters;
         }
     }
 
-    public class VariableNode : Node, IExpressionNode, INamedNode
+    public class VariableNode : Node
     {
         public string Name { get; private set; }
-        public IExpressionNode Target { get; private set; }
+        public Node Target { get; private set; }
 
-        public VariableNode(string name, IExpressionNode target, Range range) : base(range)
+        public VariableNode(string name, Node target, Range range) : base(range)
         {
             Name = name;
             Target = target;
         }
+
+        public override Node[] Children()
+        {
+            return new Node[] { Target };
+        }
     }
 
-    public class NumberNode : Node, IExpressionNode
+    public class NumberNode : Node
     {
         public double Value;
 
@@ -753,21 +759,31 @@ namespace Deltin.Deltinteger.Parse
         {
             Value = value;
         }
+
+        public override Node[] Children()
+        {
+            return null;
+        }
     }
 
-    public class StringNode : Node, IExpressionNode
+    public class StringNode : Node
     {
         public string Value { get; private set; }
-        public IExpressionNode[] Format { get; private set; }
+        public Node[] Format { get; private set; }
 
-        public StringNode(string value, IExpressionNode[] format, Range range) : base (range)
+        public StringNode(string value, Node[] format, Range range) : base (range)
         {
             Value = value;
             Format = format;
         }
+
+        public override Node[] Children()
+        {
+            return Format;
+        }
     }
 
-    public class BooleanNode : Node, IExpressionNode
+    public class BooleanNode : Node
     {
         public bool Value { get; private set; }
 
@@ -775,24 +791,39 @@ namespace Deltin.Deltinteger.Parse
         {
             Value = value;
         }
-    }
 
-    public class NotNode : Node, IExpressionNode
-    {
-        public IExpressionNode Value;
-
-        public NotNode(IExpressionNode value, Range range) : base(range)
+        public override Node[] Children()
         {
-            Value = value;
+            return null;
         }
     }
 
-    public class NullNode : Node, IExpressionNode
+    public class NotNode : Node
     {
-        public NullNode(Range range) : base(range) {}
+        public Node Value;
+
+        public NotNode(Node value, Range range) : base(range)
+        {
+            Value = value;
+        }
+
+        public override Node[] Children()
+        {
+            return new Node[] { Value };
+        }
     }
 
-    public class EnumNode : Node, IExpressionNode
+    public class NullNode : Node
+    {
+        public NullNode(Range range) : base(range) {}
+
+        public override Node[] Children()
+        {
+            return null;
+        }
+    }
+
+    public class EnumNode : Node
     {
         public string Type { get; private set; }
         public string Value { get; private set; }
@@ -804,51 +835,71 @@ namespace Deltin.Deltinteger.Parse
             Value = value;
             EnumMember = EnumData.GetEnumValue(type, value);
         }
+
+        public override Node[] Children()
+        {
+            return null;
+        }
     }
 
-    public class ValueInArrayNode : Node, IExpressionNode
+    public class ValueInArrayNode : Node
     {
-        public IExpressionNode Value { get; private set; }
-        public IExpressionNode Index { get; private set; }
+        public Node Value { get; private set; }
+        public Node Index { get; private set; }
 
-        public ValueInArrayNode(IExpressionNode value, IExpressionNode index, Range range) : base(range)
+        public ValueInArrayNode(Node value, Node index, Range range) : base(range)
         {
             Value = value;
             Index = index;
         }
-    }
 
-    public class CreateArrayNode : Node, IExpressionNode
-    {
-        public IExpressionNode[] Values { get; private set; }
-        public CreateArrayNode(IExpressionNode[] values, Range range) : base(range)
+        public override Node[] Children()
         {
-            Values = values;
+            return new Node[] { Value, Index };
         }
     }
 
-    public class TernaryConditionalNode : Node, IExpressionNode
+    public class CreateArrayNode : Node
     {
-        public IExpressionNode Condition { get; private set; }
-        public IExpressionNode Consequent { get; private set; }
-        public IExpressionNode Alternative { get; private set; }
-        public TernaryConditionalNode(IExpressionNode condition, IExpressionNode consequent, IExpressionNode alternative, Range range) : base(range)
+        public Node[] Values { get; private set; }
+        public CreateArrayNode(Node[] values, Range range) : base(range)
+        {
+            Values = values;
+        }
+
+        public override Node[] Children()
+        {
+            return Values;
+        }
+    }
+
+    public class TernaryConditionalNode : Node
+    {
+        public Node Condition { get; private set; }
+        public Node Consequent { get; private set; }
+        public Node Alternative { get; private set; }
+        public TernaryConditionalNode(Node condition, Node consequent, Node alternative, Range range) : base(range)
         {
             Condition = condition;
             Consequent = consequent;
             Alternative = alternative;
         }
+
+        public override Node[] Children()
+        {
+            return new Node[] { Condition, Consequent, Alternative };
+        }
     }
 
-    public class VarSetNode : Node, IStatementNode
+    public class VarSetNode : Node
     {
-        public IExpressionNode Target { get; private set; }
+        public Node Target { get; private set; }
         public string Variable { get; private set; }
-        public IExpressionNode Index { get; private set; }
+        public Node Index { get; private set; }
         public string Operation { get; private set; }
-        public IExpressionNode Value { get; private set; }
+        public Node Value { get; private set; }
 
-        public VarSetNode(IExpressionNode target, string variable, IExpressionNode index, string operation, IExpressionNode value, Range range) : base(range)
+        public VarSetNode(Node target, string variable, Node index, string operation, Node value, Range range) : base(range)
         {
             Target = target;
             Variable = variable;
@@ -856,33 +907,43 @@ namespace Deltin.Deltinteger.Parse
             Operation = operation;
             Value = value;
         }
+
+        public override Node[] Children()
+        {
+            return new Node[] { Target, Index, Value };
+        }
     }
 
-    public class ForEachNode : Node, IStatementNode
+    public class ForEachNode : Node
     {
         public string VariableName { get; }
-        public IExpressionNode Array { get; }
+        public Node Array { get; }
         public BlockNode Block { get; }
         public int Repeaters { get; }
 
-        public ForEachNode(string variableName, IExpressionNode array, BlockNode block, int repeaters, Range range) : base(range)
+        public ForEachNode(string variableName, Node array, BlockNode block, int repeaters, Range range) : base(range)
         {
             VariableName = variableName;
             Array = array;
             Block = block;
             Repeaters = repeaters;
         }
+
+        public override Node[] Children()
+        {
+            return new Node[] { Array, Block };
+        }
     }
 
-    public class ForNode : Node, IStatementNode
+    public class ForNode : Node
     {
         public VarSetNode VarSetNode { get; private set; }
         public ScopedDefineNode DefineNode { get; private set; }
-        public IExpressionNode Expression { get; private set; }
+        public Node Expression { get; private set; }
         public VarSetNode Statement { get; private set; }
         public BlockNode Block { get; private set; }
 
-        public ForNode(VarSetNode varSetNode, ScopedDefineNode defineNode, IExpressionNode expression, VarSetNode statement, BlockNode block, Range range) : base(range)
+        public ForNode(VarSetNode varSetNode, ScopedDefineNode defineNode, Node expression, VarSetNode statement, BlockNode block, Range range) : base(range)
         {
             VarSetNode = varSetNode;
             DefineNode = defineNode;
@@ -890,21 +951,31 @@ namespace Deltin.Deltinteger.Parse
             Statement = statement;
             Block = block;
         }
+
+        public override Node[] Children()
+        {
+            return new Node[] { VarSetNode, DefineNode, Expression, Statement, Block };
+        }
     }
 
-    public class WhileNode : Node, IStatementNode
+    public class WhileNode : Node
     {
-        public IExpressionNode Expression { get; private set; }
+        public Node Expression { get; private set; }
         public BlockNode Block { get; private set; }
 
-        public WhileNode(IExpressionNode expression, BlockNode block, Range range) : base(range)
+        public WhileNode(Node expression, BlockNode block, Range range) : base(range)
         {
             Expression = expression;
             Block = block;
         }
+
+        public override Node[] Children()
+        {
+            return new Node[] { Expression, Block };
+        }
     }
 
-    public class IfNode : Node, IStatementNode
+    public class IfNode : Node
     {
         public IfData IfData { get; private set; }
         public IfData[] ElseIfData { get; private set; }
@@ -916,40 +987,65 @@ namespace Deltin.Deltinteger.Parse
             ElseIfData = elseIfData;
             ElseBlock = elseBlock;
         }
+
+        public override Node[] Children()
+        {
+            List<Node> children = new List<Node>();
+            children.Add(IfData.Expression);
+            children.Add(IfData.Block);
+            
+            foreach(IfData elseIf in ElseIfData)
+            {
+                children.Add(elseIf.Expression);
+                children.Add(elseIf.Block);
+            }
+
+            if (ElseBlock != null)
+                children.Add(ElseBlock);
+
+            return children.ToArray();
+        }
     }
 
     public class IfData
     {
-        public IExpressionNode Expression { get; private set; }
+        public Node Expression { get; private set; }
         public BlockNode Block { get; private set; }
 
-        public IfData(IExpressionNode expression, BlockNode block)
+        public IfData(Node expression, BlockNode block)
         {
             Expression = expression;
             Block = block;
         }
     }
 
-    public class ReturnNode : Node, IStatementNode
+    public class ReturnNode : Node
     {
-        public IExpressionNode Value { get; private set; }
+        public Node Value { get; private set; }
 
-        public ReturnNode(IExpressionNode value, Range range) : base (range)
+        public ReturnNode(Node value, Range range) : base (range)
         {
             Value = value;
+        }
+
+        public override Node[] Children()
+        {
+            return new Node[] { Value };
         }
     }
 
     public class Pos : IComparable<Pos>
     {
-        public int line { get; private set; }
-        public int character { get; private set; }
+        public int line { get; set; }
+        public int character { get; set; }
 
         public Pos(int line, int character)
         {
             this.line = line;
             this.character = character;
         }
+
+        public Pos() {}
 
         public override string ToString()
         {

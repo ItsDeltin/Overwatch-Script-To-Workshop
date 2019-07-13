@@ -33,7 +33,7 @@ namespace Deltin.Deltinteger
                 string[] portArgs = args.FirstOrDefault(v => v.Split(' ')[0] == "-port")?.Split(' ');
                 int.TryParse(portArgs.ElementAtOrDefault(1), out int serverPort);
                 int.TryParse(portArgs.ElementAtOrDefault(2), out int clientPort);
-                Check.RequestLoop(serverPort, clientPort);
+                new Server().RequestLoop(serverPort, clientPort);
             }
             else
             {
@@ -70,7 +70,7 @@ namespace Deltin.Deltinteger
         {
             string text = File.ReadAllText(parseFile);
 
-            ParserData result = ParserData.GetParser(text, null);
+            ParserData result = ParserData.GetParser(text);
 
             if (result.Diagnostics.Count == 0)
             {

@@ -17,14 +17,18 @@ using Antlr4.Runtime.Tree;
 
 namespace Deltin.Deltinteger.LanguageServer
 {
-    public class Check
+    public class Server
     {
         static Log Log = new Log("LangServer");
 
         const int DefaultPort = 9145;
         const int DefaultClientPort = 9146;
+
+        ParserData parserData;
+
+        Dictionary<string, Document> documents = new Dictionary<string, Document>();
         
-        public static void RequestLoop(int serverPort, int clientPort)
+        public void RequestLoop(int serverPort, int clientPort)
         {
             if (serverPort == 0)
                 serverPort = DefaultPort;
@@ -102,16 +106,34 @@ namespace Deltin.Deltinteger.LanguageServer
 
         static byte[] GetBytes(string value)
         {
+            if (value == null) return new byte[0];
             return Encoding.UTF8.GetBytes(value);
         }
 
-        static string ParseDocument(string document, int clientPort)
+        string ParseDocument(string input, int clientPort)
         {
-            var data = ParserData.GetParser(document, null);
+            dynamic json = JsonConvert.DeserializeObject(input);
+            string uri = json.uri;
+            string content = json.content;
 
-            if (data.Rules != null && data.Diagnostics.Count == 0)
+            Document document;
+
+            if (documents.ContainsKey(uri))
             {
-                string final = Program.RuleArrayToWorkshop(data.Rules.ToArray(), data.VarCollection);
+                document = documents[uri];
+            }
+            else
+            {
+                document = new Document(uri);
+                documents.Add(uri, document);
+            }
+            document.Content = content;
+
+            parserData = ParserData.GetParser(content);
+
+            if (parserData.Rules != null && parserData.Diagnostics.Count == 0)
+            {
+                string final = Program.RuleArrayToWorkshop(parserData.Rules.ToArray(), parserData.VarCollection);
                 using (var wc = new WebClient())
                 {
                     wc.Encoding = System.Text.Encoding.UTF8;
@@ -119,10 +141,10 @@ namespace Deltin.Deltinteger.LanguageServer
                 }
             }
             
-            return JsonConvert.SerializeObject(data.Diagnostics.ToArray());
+            return JsonConvert.SerializeObject(parserData.Diagnostics.ToArray());
         }
 
-        static string GetAutocomplete(string json)
+        string GetAutocomplete(string json)
         {
             /*
                 Format:
@@ -131,18 +153,11 @@ namespace Deltin.Deltinteger.LanguageServer
                         caret.line
                         caret.character
             */
-            dynamic inputJson = JsonConvert.DeserializeObject(json);
-
-            string document = inputJson.textDocument;
-
-            int line      = inputJson.caret.line;
-            int character = inputJson.caret.character;
-            Pos caret = new Pos(line, character);
-
-            var parser = ParserData.GetParser(document, new Parse.Pos(caret.line, caret.character));
+            PosData posData = GetPosData(json);
+            if (posData == null) return null;
 
             List<CompletionItem> completion = new List<CompletionItem>();
-            switch(parser.Bav?.SelectedNode.FirstOrDefault())
+            switch(posData.SelectedNode.FirstOrDefault())
             {
                 // Ruleset
                 case RulesetNode rulesetNode:
@@ -160,18 +175,18 @@ namespace Deltin.Deltinteger.LanguageServer
                 case RuleNode ruleNode:
 
                     // Event type
-                    if (ruleNode.IsEventOptionSelected())
+                    if (ruleNode.IsEventOptionSelected(posData.Caret))
                         completion.AddRange(EnumData.GetEnum<RuleEvent>().GetCompletion());
                     
                     // Player
-                    else if (ruleNode.IsPlayerOptionSelected())
+                    else if (ruleNode.IsPlayerOptionSelected(posData.Caret))
                         completion.AddRange(EnumData.GetEnum<PlayerSelector>().GetCompletion());
                     
                     // Team
-                    else if (ruleNode.IsTeamOptionSelected())
+                    else if (ruleNode.IsTeamOptionSelected(posData.Caret))
                         completion.AddRange(EnumData.GetEnum<Team>().GetCompletion());
                     
-                    else if (ruleNode.IsIfSelected())
+                    else if (ruleNode.IsIfSelected(posData.Caret))
                         completion.AddRange(Element.GetCompletion(true, false));
 
                     else
@@ -190,14 +205,14 @@ namespace Deltin.Deltinteger.LanguageServer
                     completion.AddRange(Element.GetCompletion(true, true));
                     completion.AddRange(CustomMethodData.GetCompletion());
                     
-                    if (parser.Success)
+                    if (parserData.Success)
                     {
                         // Get all variables
                         if (blockNode.RelatedScopeGroup != null)
-                            completion.AddRange(blockNode.RelatedScopeGroup.GetCompletionItems(caret));
+                            completion.AddRange(blockNode.RelatedScopeGroup.GetCompletionItems(posData.Caret));
                         // Get custom methods
-                        if (parser.UserMethods != null)
-                            completion.AddRange(UserMethod.CollectionCompletion(parser.UserMethods.ToArray()));
+                        if (parserData.UserMethods != null)
+                            completion.AddRange(UserMethod.CollectionCompletion(parserData.UserMethods.ToArray()));
                     }
 
                     break;
@@ -209,14 +224,14 @@ namespace Deltin.Deltinteger.LanguageServer
                     completion.AddRange(EnumData.GetAllEnumCompletion());
                     completion.AddRange(CustomMethodData.GetCompletion());
 
-                    if (parser.Success)
+                    if (parserData.Success)
                     {
                         // Get all variables
                         if (methodNode.RelatedScopeGroup != null)
-                            completion.AddRange(methodNode.RelatedScopeGroup?.GetCompletionItems(caret));
+                            completion.AddRange(methodNode.RelatedScopeGroup?.GetCompletionItems(posData.Caret));
                         // Get custom methods
-                        if (parser.UserMethods != null)
-                            completion.AddRange(UserMethod.CollectionCompletion(parser.UserMethods.ToArray()));
+                        if (parserData.UserMethods != null)
+                            completion.AddRange(UserMethod.CollectionCompletion(parserData.UserMethods.ToArray()));
                     }
 
                     break;
@@ -246,17 +261,10 @@ namespace Deltin.Deltinteger.LanguageServer
         }
 
         // TODO comment this
-        static string GetSignatures(string json)
+        string GetSignatures(string json)
         {
-            dynamic inputJson = JsonConvert.DeserializeObject(json);
-            string document = inputJson.textDocument;
-
-            int line      = inputJson.caret.line;
-            int character = inputJson.caret.character;
-            Pos caret = new Pos(line, character);
-
-            var parser = ParserData.GetParser(document, new Parse.Pos(caret.line, caret.character));
-
+            PosData posData = GetPosData(json);
+            if (posData == null) return null;
 
             MethodNode methodNode = null;
 
@@ -264,25 +272,25 @@ namespace Deltin.Deltinteger.LanguageServer
             
             int methodIndex = 0;
             int parameterIndex;
-            if (parser.Bav?.SelectedNode != null)
+            if (posData.SelectedNode != null)
             {
                 // Get the signature for the method the cursor is on.
                 // Check if the selected node is a method node.
-                if (parser.Bav.SelectedNode.ElementAtOrDefault(0) is MethodNode)
+                if (posData.SelectedNode.ElementAtOrDefault(0) is MethodNode)
                 {
-                    methodNode = (MethodNode)parser.Bav.SelectedNode[0];
+                    methodNode = (MethodNode)posData.SelectedNode[0];
 
                     // If the parameters of the method node is not selected and the parent is a method node,
                     // select the parent method node.
-                    if (!methodNode.IsParametersSelected() && parser.Bav.SelectedNode.ElementAtOrDefault(1) is MethodNode)
+                    if (!methodNode.IsParametersSelected(posData.Caret) && posData.SelectedNode.ElementAtOrDefault(1) is MethodNode)
                     {
-                        methodNode = (MethodNode)parser.Bav.SelectedNode[1];
+                        methodNode = (MethodNode)posData.SelectedNode[1];
                         // Get the index of the selected node.
-                        parameterIndex = Array.IndexOf(methodNode.Parameters, parser.Bav.SelectedNode[0]);
+                        parameterIndex = Array.IndexOf(methodNode.Parameters, posData.SelectedNode[0]);
                     }
                     else
                     {
-                        if (methodNode.IsNameSelected())
+                        if (methodNode.IsNameSelected(posData.Caret))
                             // If the name is selected, -1 will not highlight any parameters.
                             parameterIndex = -1;
                         else
@@ -290,12 +298,12 @@ namespace Deltin.Deltinteger.LanguageServer
                             parameterIndex = methodNode.Parameters.Length;
                     }
                 }
-                else if (parser.Bav.SelectedNode.ElementAtOrDefault(0) is IExpressionNode
-                    && parser.Bav.SelectedNode.ElementAtOrDefault(1) is MethodNode)
+                else if (/*parser.Bav.SelectedNode.ElementAtOrDefault(0) is IExpressionNode
+                    &&*/ posData.SelectedNode.ElementAtOrDefault(1) is MethodNode)
                 {
-                    methodNode = (MethodNode)parser.Bav.SelectedNode[1];
+                    methodNode = (MethodNode)posData.SelectedNode[1];
                     // Get the index of the selected node.
-                    parameterIndex = Array.IndexOf(methodNode.Parameters, parser.Bav.SelectedNode[0]);
+                    parameterIndex = Array.IndexOf(methodNode.Parameters, posData.SelectedNode[0]);
                 }
                 else
                     parameterIndex = 0;
@@ -303,7 +311,7 @@ namespace Deltin.Deltinteger.LanguageServer
                 SignatureInformation information = null;
                 if (methodNode != null)
                 {
-                    IMethod method = parser.GetMethod(methodNode.Name);
+                    IMethod method = parserData.GetMethod(methodNode.Name);
 
                     if (method != null)
                     {
@@ -330,25 +338,19 @@ namespace Deltin.Deltinteger.LanguageServer
         }
 
         // https://microsoft.github.io/language-server-protocol/specification#textDocument_hover
-        static string GetHover(string json)
+        string GetHover(string json)
         {
-            dynamic inputJson = JsonConvert.DeserializeObject(json);
-            string document = inputJson.textDocument;
-
-            int line      = inputJson.caret.line;
-            int character = inputJson.caret.character;
-            Pos caret = new Pos(line, character);
-
-            var parser = ParserData.GetParser(document, new Parse.Pos(caret.line, caret.character));
+            PosData posData = GetPosData(json);
+            if (posData == null) return null;
 
             Hover hover = null;
 
-            if (parser.Success && parser.Bav.SelectedNode.Count > 0)
-                switch (parser.Bav.SelectedNode[0])
+            if (parserData.Success && posData.SelectedNode.Length > 0)
+                switch (posData.SelectedNode[0])
                 {
                     case MethodNode methodNode:
 
-                        IMethod method = parser.GetMethod(methodNode.Name);
+                        IMethod method = parserData.GetMethod(methodNode.Name);
 
                         if (method != null)
                             hover = new Hover(new MarkupContent(MarkupContent.Markdown, method.GetLabel(true)))
@@ -364,6 +366,44 @@ namespace Deltin.Deltinteger.LanguageServer
 
             return JsonConvert.SerializeObject(hover);
         }
+
+        PosData GetPosData(string json)
+        {
+            dynamic inputJson = JsonConvert.DeserializeObject(json);
+
+            string uri = inputJson.textDocument.uri;
+
+            if (!documents.ContainsKey(uri)) return null;
+
+            string content = documents[uri].Content;
+            Pos caret = new Pos((int)inputJson.position.line, (int)inputJson.position.character);
+            var selectedNode = parserData.RuleSetNode?.SelectedNode(caret);
+
+            return new PosData(caret, selectedNode);
+        }
+    }
+
+    class Document
+    {
+        public string Uri { get; }
+        public string Content { get; set; }
+
+        public Document(string uri)
+        {
+            Uri = uri;
+        }
+    }
+
+    class PosData
+    {
+        public PosData(Pos caret, Node[] selectedNode)
+        {
+            Caret = caret;
+            SelectedNode = selectedNode;
+        }
+
+        public Pos Caret { get; }
+        public Node[] SelectedNode { get; }
     }
 
     public class CompletionItem

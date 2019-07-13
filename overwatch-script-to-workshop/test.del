@@ -5,7 +5,7 @@ if (IsButtonHeld(EventPlayer(), Button.Interact))
     define start = TotalTimeElapsed();    
     foreach 2 (define player in AllPlayers())
     {
-        define cool = Pi();
+        IsButtonHeld(EventPlayer(), Button.Interact);
     }
     define finished = TotalTimeElapsed();
     SmallMessage(EventPlayer(), <"time finished: <0>", finished - start>);

@@ -14,7 +14,7 @@ namespace Deltin.Deltinteger.Parse
 {
     public class ParserData
     {
-        public static ParserData GetParser(string document, Pos documentPos)
+        public static ParserData GetParser(string document)
         {
             ParserData parserData = new ParserData();
 
@@ -39,11 +39,10 @@ namespace Deltin.Deltinteger.Parse
             parserData.Diagnostics.AddRange(errorListener.Errors);
 
             // Get the ruleset node.
-            RulesetNode ruleSetNode = null;
             if (parserData.Diagnostics.Count == 0)
             {
-                parserData.Bav = new BuildAstVisitor(documentPos, parserData.Diagnostics);
-                ruleSetNode = (RulesetNode)parserData.Bav.Visit(ruleSetContext);
+                parserData.Bav = new BuildAstVisitor(parserData.Diagnostics);
+                parserData.RuleSetNode = (RulesetNode)parserData.Bav.Visit(ruleSetContext);
             }
 
             AdditionalErrorChecking aec = new AdditionalErrorChecking(parser, parserData.Diagnostics);
@@ -56,15 +55,15 @@ namespace Deltin.Deltinteger.Parse
                 parserData.UserMethods = new List<UserMethod>();
 
                 // Get the variables
-                foreach (var definedVar in ruleSetNode.DefinedVars)
+                foreach (var definedVar in parserData.RuleSetNode.DefinedVars)
                     if (definedVar.UseVar == null)
                         parserData.VarCollection.AssignDefinedVar(root, definedVar.IsGlobal, definedVar.VariableName, definedVar);
                     else
                         parserData.VarCollection.AssignDefinedVar(root, definedVar.IsGlobal, definedVar.VariableName, definedVar.UseVar.Variable, definedVar.UseVar.Index, definedVar);
 
                 // Get the user methods.
-                for (int i = 0; i < ruleSetNode.UserMethods.Length; i++)
-                    parserData.UserMethods.Add(new UserMethod(ruleSetNode.UserMethods[i]));
+                for (int i = 0; i < parserData.RuleSetNode.UserMethods.Length; i++)
+                    parserData.UserMethods.Add(new UserMethod(parserData.RuleSetNode.UserMethods[i]));
 
                 // Parse the rules.
                 parserData.Rules = new List<Rule>();
@@ -73,11 +72,11 @@ namespace Deltin.Deltinteger.Parse
                 parserData.GlobalLoop = new Looper(true);
                 parserData.PlayerLoop = new Looper(false);
 
-                for (int i = 0; i < ruleSetNode.Rules.Length; i++)
+                for (int i = 0; i < parserData.RuleSetNode.Rules.Length; i++)
                 {
                     try
                     {
-                        var result = Translate.GetRule(ruleSetNode.Rules[i], root, parserData);
+                        var result = Translate.GetRule(parserData.RuleSetNode.Rules[i], root, parserData);
                         parserData.Rules.Add(result.Rule);
                         parserData.Diagnostics.AddRange(result.Diagnostics);
                     }
@@ -104,6 +103,7 @@ namespace Deltin.Deltinteger.Parse
         public List<UserMethod> UserMethods { get; private set; }
         public bool Success { get; private set; }
         public VarCollection VarCollection { get; private set; }
+        public RulesetNode RuleSetNode { get; private set; }
         private Looper GlobalLoop { get; set; }
         private Looper PlayerLoop { get; set; }
 
@@ -173,7 +173,7 @@ namespace Deltin.Deltinteger.Parse
             ReturnSkips.Clear();
         }
 
-        void ParseConditions(IExpressionNode[] expressions)
+        void ParseConditions(Node[] expressions)
         {
             foreach(var expr in expressions)
             {
@@ -211,7 +211,7 @@ namespace Deltin.Deltinteger.Parse
             }
         }
 
-        Element ParseExpression(ScopeGroup scope, IExpressionNode expression)
+        Element ParseExpression(ScopeGroup scope, Node expression)
         {
             switch (expression)
             {
@@ -674,7 +674,7 @@ namespace Deltin.Deltinteger.Parse
             //return null;
         }
 
-        void ParseStatement(ScopeGroup scope, IStatementNode statement, IndexedVar returnVar, bool isLast)
+        void ParseStatement(ScopeGroup scope, Node statement, IndexedVar returnVar, bool isLast)
         {
             switch (statement)
             {

@@ -45,8 +45,10 @@ connection.onInitialize((params: InitializeParams) => {
 	// If not, we will fall back using global settings
 	hasConfigurationCapability =
 		capabilities.workspace && !!capabilities.workspace.configuration;
+		
 	hasWorkspaceFolderCapability =
 		capabilities.workspace && !!capabilities.workspace.workspaceFolders;
+		
 	hasDiagnosticRelatedInformationCapability =
 		capabilities.textDocument &&
 		capabilities.textDocument.publishDiagnostics &&
@@ -68,15 +70,15 @@ connection.onInitialize((params: InitializeParams) => {
 });
 
 connection.onInitialized(() => {
-if (hasConfigurationCapability) {
-	// Register for all configuration changes.
-	connection.client.register(DidChangeConfigurationNotification.type, undefined);
-}
-if (hasWorkspaceFolderCapability) {
-	connection.workspace.onDidChangeWorkspaceFolders(_event => {
-	connection.console.log('Workspace folder change event received.');
-	});
-}
+	if (hasConfigurationCapability) {
+		// Register for all configuration changes.
+		connection.client.register(DidChangeConfigurationNotification.type, undefined);
+	}
+	if (hasWorkspaceFolderCapability) {
+		connection.workspace.onDidChangeWorkspaceFolders(_event => {
+		connection.console.log('Workspace folder change event received.');
+		});
+	}
 });
 
 // The example settings
@@ -138,8 +140,12 @@ documents.onDidChangeContent(change => {
 async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 
 	let settings = await getDocumentSettings(textDocument.uri);
+	let data = JSON.stringify({
+		uri: textDocument.uri,
+		content: textDocument.getText()
+	});
 
-	sendRequest(textDocument.uri, 'parse', textDocument.getText(), null, null, function callback(body) {
+	sendRequest(textDocument.uri, 'parse', data, null, null, function callback(body) {
 		let diagnostics: Diagnostic[] = JSON.parse(body);
 
 		connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
@@ -159,11 +165,7 @@ connection.onCompletion((_textDocumentPosition: TextDocumentPositionParams) => {
 
 function getCompletion(pos: TextDocumentPositionParams) {
 
-	let textDocument = documents.get(pos.textDocument.uri);
-	let data = JSON.stringify({
-		textDocument: textDocument.getText(),
-		caret: pos.position
-	});
+	let data = JSON.stringify(pos);
 	
 	return new Promise<CompletionItem[]>(function (resolve, reject) {
 		sendRequest(pos.textDocument.uri, 'completion', data, resolve, reject, function(body) {
@@ -183,11 +185,7 @@ connection.onSignatureHelp((pos: TextDocumentPositionParams) => {
 
 function getSignatureHelp(pos: TextDocumentPositionParams) {
 
-	let textDocument = documents.get(pos.textDocument.uri);
-	let data = JSON.stringify({
-		textDocument: textDocument.getText(),
-		caret: pos.position
-	});
+	let data = JSON.stringify(pos);
 	
 	return new Promise<SignatureHelp>(function (resolve, reject) {
 		sendRequest(pos.textDocument.uri, 'signature', data, resolve, reject, function(body) {
@@ -199,11 +197,7 @@ function getSignatureHelp(pos: TextDocumentPositionParams) {
 
 connection.onHover((pos: TextDocumentPositionParams) => {
 
-	let textDocument = documents.get(pos.textDocument.uri);
-	let data = JSON.stringify({
-		textDocument: textDocument.getText(),
-		caret: pos.position
-	});
+	let data = JSON.stringify(pos);
 
 	return new Promise<Hover>(function (resolve, reject) {
 		sendRequest(pos.textDocument.uri, 'hover', data, resolve, reject, function(body) {
