@@ -93,6 +93,32 @@ for (define loc in locations)
 }
 ```
 
+`foreach` takes an optional repeater parameter. Makes the `foreach` faster, but uses more actions. For example:
+```
+rule: "Repeater test."
+Event.OngoingPlayer 
+if (IsButtonHeld(EventPlayer(), Button.Interact))
+{
+    define start = TotalTimeElapsed();    
+    foreach 5 (define player in AllPlayers()) // 5 is the repeater count
+    {
+        SmallMessage(player, "hello!");
+    }
+    define finished = TotalTimeElapsed();
+    SmallMessage(EventPlayer(), <"time finished: <0>", finished - start>);
+}
+```
+
+| Repeater count | Time to Complete | Actions |
+| ---------------  | ------------------ | ------- |
+| 1                       | 19 ms                  | 12       |
+| 2                       | 10 ms                  | 14       |
+| 3                       | 6 ms                    | 16       |
+| 4                       | 5 ms                    | 18       |
+| 5                       | 3 ms                   | 20        |
+
+The number of actions scale with the number of statements in the `foreach`.
+
 #### while
 ```
 while (scanning)
