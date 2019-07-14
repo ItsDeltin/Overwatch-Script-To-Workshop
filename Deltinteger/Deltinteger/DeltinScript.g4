@@ -35,16 +35,12 @@ expr
 	| variable                                    // Variables
 	| exprgroup
 	| expr SEPERATOR variable                     // Variable seperation
-	| <assoc=right> expr '^' expr                 // x^y
-	| expr '*' expr                               // x*y
-	| expr '/' expr                               // x/y
-	| expr '%' expr                               // x%y
-	| expr '+' expr                               // x+y
-	| expr '-' expr                               // x-y
 	| NOT expr                                     // !x
 	| expr ('<' | '<=' | '==' | '>=' | '>' | '!=') expr // x == y
 	| expr BOOL expr                              // x & y
 	| expr TERNARY expr TERNARY_ELSE expr
+	| <assoc=right> expr ('^' | '*' | '/' | '%') expr // x^y
+	| expr ('+' | '-') expr                           // x+y
 	;
 
 exprgroup   : LEFT_PAREN expr RIGHT_PAREN ;
@@ -170,6 +166,14 @@ EQUALS_DIVIDE   : '/=' ;
 EQUALS_ADD      : '+=' ;
 EQUALS_SUBTRACT : '-=' ;
 EQUALS_MODULO   : '%=' ;
+
+POW   : '^';
+MULT  : '*';
+DIV   : '/';
+MOD   : '%';
+ADD   : '+';
+MINUS : '-';
+
 BOOL : '&' | '|';
 NOT : '!';
 INCREMENT : '++' ;
