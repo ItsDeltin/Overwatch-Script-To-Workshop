@@ -26,7 +26,7 @@ namespace Deltin.Deltinteger.Elements
 
             Element zeroVec = Element.Part<V_Vector>(new V_Number(0), new V_Number(0), new V_Number(0));
 
-            Element[] actions = ElementBuilder
+            Element[] actions = ArrayBuilder<Element>.Build
             (
                 // Save A
                 a.SetVariable((Element)Parameters[0], eventPlayer),

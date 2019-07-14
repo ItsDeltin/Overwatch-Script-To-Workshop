@@ -10,7 +10,7 @@ namespace Deltin.Deltinteger.Elements
         {
             IndexedVar temp = TranslateContext.VarCollection.AssignVar(Scope, "GetMap: temp", TranslateContext.IsGlobal);
 
-            Element[] actions = ElementBuilder
+            Element[] actions = ArrayBuilder<Element>.Build
             (
                 temp.SetVariable(Element.Part<V_RoundToInteger>(
                     Element.Part<V_Add>(

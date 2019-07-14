@@ -1,5 +1,6 @@
 using System;
 using System.Text;
+using System.Collections.Generic;
 
 namespace Deltin.Deltinteger
 {
@@ -82,6 +83,37 @@ namespace Deltin.Deltinteger
         public override string ToString()
         {
             return StringBuilder.ToString();
+        }
+    }
+
+    class ArrayBuilder<T>
+    {
+        private readonly T[] values;
+
+        public ArrayBuilder(T[] values)
+        {
+            this.values = values;
+        }
+        
+        public static implicit operator ArrayBuilder<T>(T value)
+        {
+            return new ArrayBuilder<T>(new T[] { value });
+        }
+        
+        public static implicit operator ArrayBuilder<T>(T[] value)
+        {
+            return new ArrayBuilder<T>(value);
+        }
+        
+        public static T[] Build(params ArrayBuilder<T>[] values)
+        {
+            List<T> valueList = new List<T>();
+
+            foreach (var val in values)
+                if (val != null)
+                    valueList.AddRange(val.values);
+            
+            return valueList.ToArray();
         }
     }
 }

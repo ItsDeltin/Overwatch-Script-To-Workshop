@@ -17,7 +17,7 @@ namespace Deltin.Deltinteger.Elements
             
             VariableChase chaseData = TranslateContext.ParserData.GetLooper(targetVariable.Var.IsGlobal).GetChaseData(targetVariable.Var, TranslateContext);
             
-            Element[] actions = ElementBuilder
+            Element[] actions = ArrayBuilder<Element>.Build
             (
                 chaseData.Destination.SetVariable(destination, targetVariable.Target),
                 chaseData.Rate.SetVariable(rate, targetVariable.Target)

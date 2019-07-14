@@ -136,33 +136,5 @@ namespace Deltin.Deltinteger.Elements
         protected abstract MethodResult Get();
 
         public abstract WikiMethod Wiki();
-
-        protected static Element[] ElementBuilder(params ElementBuilderPart[] parts)
-        {
-            List<Element> elements = new List<Element>();
-            foreach(ElementBuilderPart part in parts)
-                elements.AddRange(part.Elements);
-            return elements.ToArray();
-        }
-
-        protected class ElementBuilderPart
-        {
-            public Element[] Elements;
-
-            public ElementBuilderPart(Element[] elements)
-            {
-                Elements = elements;
-            }
-
-            public static implicit operator ElementBuilderPart(Element element)
-            {
-                return new ElementBuilderPart(new Element[] { element });
-            }
-
-            public static implicit operator ElementBuilderPart(Element[] elements)
-            {
-                return new ElementBuilderPart(elements);
-            }
-        }
     }
 }

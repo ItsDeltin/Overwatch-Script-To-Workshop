@@ -534,11 +534,7 @@ namespace Deltin.Deltinteger.Parse
 
         public override Node[] Children()
         {
-            List<Node> children = new List<Node>();
-            children.AddRange(Rules);
-            children.AddRange(DefinedVars);
-            children.AddRange(UserMethods);
-            return children.ToArray();
+            return ArrayBuilder<Node>.Build(Rules, DefinedVars, UserMethods);
         }
     }
 
@@ -557,7 +553,7 @@ namespace Deltin.Deltinteger.Parse
 
         public override Node[] Children()
         {
-            return new Node[] { UseVar };
+            return ArrayBuilder<Node>.Build(UseVar);
         }
     }
 
@@ -576,7 +572,7 @@ namespace Deltin.Deltinteger.Parse
 
         public override Node[] Children()
         {
-            return new Node[] { UseVar, Value };
+            return ArrayBuilder<Node>.Build(UseVar, Value);
         }
     }
 
@@ -643,10 +639,7 @@ namespace Deltin.Deltinteger.Parse
 
         public override Node[] Children()
         {
-            List<Node> children = new List<Node>();
-            children.AddRange(Conditions);
-            children.Add(Block);
-            return children.ToArray();
+            return ArrayBuilder<Node>.Build(Conditions, Block);
         }
     }
 
@@ -669,7 +662,7 @@ namespace Deltin.Deltinteger.Parse
 
         public override Node[] Children()
         {
-            return new Node[] { Block };
+            return ArrayBuilder<Node>.Build(Block);
         }
     }
 
@@ -688,7 +681,7 @@ namespace Deltin.Deltinteger.Parse
 
         public override Node[] Children()
         {
-            return new Node[] { Left, Right };
+            return ArrayBuilder<Node>.Build(Left, Right);
         }
     }
 
@@ -747,7 +740,7 @@ namespace Deltin.Deltinteger.Parse
 
         public override Node[] Children()
         {
-            return new Node[] { Target };
+            return ArrayBuilder<Node>.Build(Target);
         }
     }
 
@@ -809,7 +802,7 @@ namespace Deltin.Deltinteger.Parse
 
         public override Node[] Children()
         {
-            return new Node[] { Value };
+            return ArrayBuilder<Node>.Build(Value);
         }
     }
 
@@ -855,7 +848,7 @@ namespace Deltin.Deltinteger.Parse
 
         public override Node[] Children()
         {
-            return new Node[] { Value, Index };
+            return ArrayBuilder<Node>.Build(Value, Index);
         }
     }
 
@@ -887,7 +880,7 @@ namespace Deltin.Deltinteger.Parse
 
         public override Node[] Children()
         {
-            return new Node[] { Condition, Consequent, Alternative };
+            return ArrayBuilder<Node>.Build(Condition, Consequent, Alternative);
         }
     }
 
@@ -910,7 +903,7 @@ namespace Deltin.Deltinteger.Parse
 
         public override Node[] Children()
         {
-            return new Node[] { Target, Index, Value };
+            return ArrayBuilder<Node>.Build(Target, Index, Value);
         }
     }
 
@@ -931,7 +924,7 @@ namespace Deltin.Deltinteger.Parse
 
         public override Node[] Children()
         {
-            return new Node[] { Array, Block };
+            return ArrayBuilder<Node>.Build(Array, Block);
         }
     }
 
@@ -954,7 +947,7 @@ namespace Deltin.Deltinteger.Parse
 
         public override Node[] Children()
         {
-            return new Node[] { VarSetNode, DefineNode, Expression, Statement, Block };
+            return ArrayBuilder<Node>.Build(VarSetNode, DefineNode, Expression, Statement, Block);
         }
     }
 
@@ -971,7 +964,7 @@ namespace Deltin.Deltinteger.Parse
 
         public override Node[] Children()
         {
-            return new Node[] { Expression, Block };
+            return ArrayBuilder<Node>.Build(Expression, Block);
         }
     }
 
@@ -1003,7 +996,7 @@ namespace Deltin.Deltinteger.Parse
             if (ElseBlock != null)
                 children.Add(ElseBlock);
 
-            return children.ToArray();
+            return ArrayBuilder<Node>.Build(IfData.Expression, IfData.Block, ElseBlock, ElseIfData.Select(ei => ei.Block).ToArray(), ElseIfData.Select(ei => ei.Expression).ToArray());
         }
     }
 
@@ -1030,7 +1023,7 @@ namespace Deltin.Deltinteger.Parse
 
         public override Node[] Children()
         {
-            return new Node[] { Value };
+            return ArrayBuilder<Node>.Build(Value);
         }
     }
 
