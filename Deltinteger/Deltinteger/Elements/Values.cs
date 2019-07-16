@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -524,7 +525,7 @@ namespace Deltin.Deltinteger.Elements
 
         public override string ToWorkshop()
         {
-            return value.ToString();
+            return value.ToString(CultureInfo.InvariantCulture);
         }
 
         public override void DebugPrint(Log log, int depth = 0)
