@@ -51,7 +51,7 @@ namespace Deltin.Deltinteger.Elements
         public ValueType ValueType { get; private set; }
     }
 
-    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Method, AllowMultiple = true)]
+    [AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
     public abstract class ParameterBase : Attribute, ILanguageServerInfo
     {
         public string Name { get; private set; }
@@ -197,24 +197,21 @@ namespace Deltin.Deltinteger.Elements
         public ElementData ElementData { get; private set; }
         public ParameterBase[] ParameterData { get; private set; }
         public string Comment { get; set; } = null;
+        public string Name { get { return ElementList.Name; } }
 
-        public IWorkshopTree[] ParameterValues;
-
-        protected virtual string Info() { return ElementData.ElementName; }
+        public IWorkshopTree[] ParameterValues { get; set; }
 
         public override string ToString()
         {
             return ElementList.GetLabel(false);
         }
 
-        public string Name { get { return ElementList.Name; } }
-
         public virtual void DebugPrint(Log log, int depth = 0)
         {
             if (ElementData.IsValue)
-                log.Write(LogLevel.Verbose, new ColorMod(Extras.Indent(depth, false) + Info(), ConsoleColor.Cyan));
+                log.Write(LogLevel.Verbose, new ColorMod(Extras.Indent(depth, false) + DebugInfo(), ConsoleColor.Cyan));
             else
-                log.Write(LogLevel.Verbose, new ColorMod(Extras.Indent(depth, false) + Info(), ConsoleColor.White));
+                log.Write(LogLevel.Verbose, new ColorMod(Extras.Indent(depth, false) + DebugInfo(), ConsoleColor.White));
 
             for (int i = 0; i < ParameterData.Length; i++)
             {
@@ -226,6 +223,7 @@ namespace Deltin.Deltinteger.Elements
                 }
             }
         }
+        protected virtual string DebugInfo() { return ElementData.ElementName; }
 
         public virtual string ToWorkshop()
         {
@@ -251,6 +249,12 @@ namespace Deltin.Deltinteger.Elements
                 + (!ElementData.IsValue ? (";" + (Comment != null ? " // " + Comment : "")) : "");
         }
 
+        protected virtual string[] AdditionalParameters()
+        {
+            return new string[0];
+        }
+
+        // Converts an array of actions to a workshop
         public static string ToWorkshop(Element[] actions)
         {
             var builder = new TabStringBuilder(true);
@@ -267,11 +271,20 @@ namespace Deltin.Deltinteger.Elements
             return builder.ToString();
         }
 
-        protected virtual string[] AdditionalParameters()
+        // The estimated server load of the current element.
+        public double ServerLoadWeight()
         {
-            return new string[0];
+            double weight = Weight();
+            foreach (IWorkshopTree parameter in ParameterValues)
+                weight += parameter.ServerLoadWeight();
+            return weight;
+        }
+        protected virtual double Weight()
+        {
+            return 0;
         }
 
+        // Creates an array from a list of values.
         public static Element CreateArray(params Element[] values)
         {
             Element array = new V_EmptyArray();

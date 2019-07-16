@@ -16,8 +16,11 @@ namespace Deltin.Deltinteger.Parse
     {
         public static ParserData GetParser(string document)
         {
-            ParserData parserData = new ParserData();
+            return new ParserData(document);
+        }
 
+        private ParserData(string document)
+        {
             AntlrInputStream inputStream = new AntlrInputStream(document);
 
             // Lexer
@@ -35,66 +38,70 @@ namespace Deltin.Deltinteger.Parse
             Log log = new Log("Parse");
             log.Write(LogLevel.Verbose, ruleSetContext.ToStringTree(parser));
 
-            parserData.Diagnostics = new List<Diagnostic>();
-            parserData.Diagnostics.AddRange(errorListener.Errors);
+            Diagnostics = new List<Diagnostic>();
+            Diagnostics.AddRange(errorListener.Errors);
 
             // Get the ruleset node.
-            if (parserData.Diagnostics.Count == 0)
+            if (Diagnostics.Count == 0)
             {
-                parserData.Bav = new BuildAstVisitor(parserData.Diagnostics);
-                parserData.RuleSetNode = (RulesetNode)parserData.Bav.Visit(ruleSetContext);
+                Bav = new BuildAstVisitor(Diagnostics);
+                RuleSetNode = (RulesetNode)Bav.Visit(ruleSetContext);
             }
 
-            AdditionalErrorChecking aec = new AdditionalErrorChecking(parser, parserData.Diagnostics);
+            AdditionalErrorChecking aec = new AdditionalErrorChecking(parser, Diagnostics);
             aec.Visit(ruleSetContext);
 
-            if (parserData.Diagnostics.Count == 0)
+            if (Diagnostics.Count == 0)
             {
-                parserData.VarCollection = new VarCollection();
-                ScopeGroup root = new ScopeGroup(parserData.VarCollection);
-                parserData.UserMethods = new List<UserMethod>();
+                VarCollection = new VarCollection();
+                ScopeGroup root = new ScopeGroup(VarCollection);
+                UserMethods = new List<UserMethod>();
 
                 // Get the variables
-                foreach (var definedVar in parserData.RuleSetNode.DefinedVars)
-                    if (definedVar.UseVar == null)
-                        parserData.VarCollection.AssignDefinedVar(root, definedVar.IsGlobal, definedVar.VariableName, definedVar);
+                foreach (var definedVar in RuleSetNode.DefinedVars)
+                    if (definedVar.Define.UseVar == null)
+                        VarCollection.AssignDefinedVar(root, definedVar.IsGlobal, definedVar.Define.VariableName, definedVar);
                     else
-                        parserData.VarCollection.AssignDefinedVar(root, definedVar.IsGlobal, definedVar.VariableName, definedVar.UseVar.Variable, definedVar.UseVar.Index, definedVar);
+                        VarCollection.AssignDefinedVar(
+                            root, 
+                            definedVar.IsGlobal, 
+                            definedVar.Define.VariableName, 
+                            definedVar.Define.UseVar.Variable, 
+                            definedVar.Define.UseVar.Index, 
+                            definedVar
+                        );
 
                 // Get the user methods.
-                for (int i = 0; i < parserData.RuleSetNode.UserMethods.Length; i++)
-                    parserData.UserMethods.Add(new UserMethod(parserData.RuleSetNode.UserMethods[i]));
+                for (int i = 0; i < RuleSetNode.UserMethods.Length; i++)
+                    UserMethods.Add(new UserMethod(RuleSetNode.UserMethods[i]));
 
                 // Parse the rules.
-                parserData.Rules = new List<Rule>();
+                Rules = new List<Rule>();
 
                 // The looper rule
-                parserData.GlobalLoop = new Looper(true);
-                parserData.PlayerLoop = new Looper(false);
+                GlobalLoop = new Looper(true);
+                PlayerLoop = new Looper(false);
 
-                for (int i = 0; i < parserData.RuleSetNode.Rules.Length; i++)
+                for (int i = 0; i < RuleSetNode.Rules.Length; i++)
                 {
                     try
                     {
-                        var result = Translate.GetRule(parserData.RuleSetNode.Rules[i], root, parserData);
-                        parserData.Rules.Add(result.Rule);
-                        parserData.Diagnostics.AddRange(result.Diagnostics);
+                        var result = Translate.GetRule(RuleSetNode.Rules[i], root, this);
+                        Rules.Add(result);
                     }
                     catch (SyntaxErrorException ex)
                     {
-                        parserData.Diagnostics.Add(new Diagnostic(ex.GetInfo(), ex.Range) { severity = Diagnostic.Error });
+                        Diagnostics.Add(new Diagnostic(ex.GetInfo(), ex.Range) { severity = Diagnostic.Error });
                     }
                 }
 
-                if (parserData.GlobalLoop.Used)
-                    parserData.Rules.Add(parserData.GlobalLoop.Finalize());
-                if (parserData.PlayerLoop.Used)
-                    parserData.Rules.Add(parserData.PlayerLoop.Finalize());
+                if (GlobalLoop.Used)
+                    Rules.Add(GlobalLoop.Finalize());
+                if (PlayerLoop.Used)
+                    Rules.Add(PlayerLoop.Finalize());
 
-                parserData.Success = true;
+                Success = true;
             }
-            
-            return parserData;
         }
 
         public List<Diagnostic> Diagnostics;
@@ -124,22 +131,20 @@ namespace Deltin.Deltinteger.Parse
     {
         public static bool AllowRecursion = false;
 
-        public static TranslateResult GetRule(RuleNode ruleNode, ScopeGroup root, ParserData parserData)
+        public static Rule GetRule(RuleNode ruleNode, ScopeGroup root, ParserData parserData)
         {
             var result = new Translate(ruleNode, root, parserData);
-            return new TranslateResult(result.Rule, result.Diagnostics.ToArray());
+            return result.Rule;
         }
 
         private readonly ScopeGroup Root;
         public readonly VarCollection VarCollection;
-        private readonly UserMethod[] UserMethods;
         private readonly Rule Rule;
         private readonly List<Element> Actions = new List<Element>();
         private readonly List<Condition> Conditions = new List<Condition>();
         public readonly bool IsGlobal;
         private readonly List<A_Skip> ReturnSkips = new List<A_Skip>(); // Return statements whos skip count needs to be filled out.
         private readonly ContinueSkip ContinueSkip; // Contains data about the wait/skip for continuing loops.
-        private readonly List<Diagnostic> Diagnostics = new List<Diagnostic>();
         private readonly List<MethodStack> MethodStack = new List<MethodStack>(); // The user method stack
         private readonly List<UserMethod> MethodStackNoRecursive = new List<UserMethod>();
         public readonly ParserData ParserData;
@@ -148,7 +153,6 @@ namespace Deltin.Deltinteger.Parse
         {
             Root = root;
             VarCollection = parserData.VarCollection;
-            UserMethods = parserData.UserMethods.ToArray();
             ParserData = parserData;
 
             Rule = new Rule(ruleNode.Name, ruleNode.Event, ruleNode.Team, ruleNode.Player);
@@ -970,7 +974,7 @@ namespace Deltin.Deltinteger.Parse
                     return;
                 
                 // Define
-                case ScopedDefineNode defineNode:
+                case DefineNode defineNode:
                     ParseDefine(scope, defineNode);
                     return;
             }
@@ -1040,14 +1044,13 @@ namespace Deltin.Deltinteger.Parse
             Actions.AddRange(variable.SetVariable(value, target, index));
         }
 
-        void ParseDefine(ScopeGroup scope, ScopedDefineNode defineNode)
+        void ParseDefine(ScopeGroup scope, DefineNode defineNode)
         {
             IndexedVar var;
             if (defineNode.UseVar == null)
                 var = VarCollection.AssignDefinedVar(scope, IsGlobal, defineNode.VariableName, defineNode);
             else
                 var = VarCollection.AssignDefinedVar(scope, IsGlobal, defineNode.VariableName, defineNode.UseVar.Variable, defineNode.UseVar.Index, defineNode);
-                //var = new Var(scope, defineNode.VariableName, IsGlobal, defineNode.UseVar.Variable, defineNode.UseVar.Index, defineNode.Range, VarCollection);
 
             // Set the defined variable if the variable is defined like "define var = 1"
             if (defineNode.Value != null)
@@ -1057,18 +1060,6 @@ namespace Deltin.Deltinteger.Parse
         int GetSkipCount(Element skipElement)
         {
             return Actions.Count - Actions.IndexOf(skipElement) - 1;
-        }
-    }
-
-    public class TranslateResult
-    {
-        public readonly Rule Rule;
-        public readonly Diagnostic[] Diagnostics;
-
-        public TranslateResult(Rule rule, Diagnostic[] diagnostics)
-        {
-            Rule = rule;
-            Diagnostics = diagnostics;
         }
     }
 }

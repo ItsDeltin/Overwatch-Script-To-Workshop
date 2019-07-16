@@ -534,7 +534,7 @@ namespace Deltin.Deltinteger.Elements
                 new ColorMod(value.ToString(), ConsoleColor.DarkYellow));
         }
 
-        protected override string Info()
+        protected override string DebugInfo()
         {
             return $"{ElementData.ElementName} {value}";
         }
@@ -756,7 +756,7 @@ namespace Deltin.Deltinteger.Elements
             return new string[] { "\"" + Constants.Strings[TextID].Replace("_", " ") + "\"" };
         }
 
-        protected override string Info()
+        protected override string DebugInfo()
         {
             return $"{ElementData.ElementName} {Constants.Strings[TextID]}";
         }

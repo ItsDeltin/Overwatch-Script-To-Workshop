@@ -394,6 +394,21 @@ namespace Deltin.Deltinteger.Parse
         {
             throw new NotImplementedException();
         }
+
+        public double ServerLoadWeight()
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    class VarType
+    {
+        public string Name { get; }
+
+        public VarType(string name)
+        {
+            Name = name;
+        }
     }
 
     public class WorkshopDArray

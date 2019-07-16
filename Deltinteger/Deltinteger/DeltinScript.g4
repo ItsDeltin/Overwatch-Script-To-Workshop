@@ -14,8 +14,8 @@ null   : NULL          ;
 
 statement_operation : EQUALS | EQUALS_ADD | EQUALS_DIVIDE | EQUALS_MODULO | EQUALS_MULTIPLY | EQUALS_POW | EQUALS_SUBTRACT ;
 
-vardefine : DEFINE (GLOBAL|PLAYER) PART useVar? STATEMENT_END; /*#define global/player NAME (use variable?); */
-define   : DEFINE PART useVar? (EQUALS expr?)? ;
+rule_define : (GLOBAL|PLAYER) define STATEMENT_END;
+define   : (type=PART | DEFINE) name=PART useVar? (EQUALS expr?)? ;
 useVar   : PART (INDEX_START number INDEX_END)? ;
 useGlobalVar : USEVAR GLOBAL PART STATEMENT_END ;
 usePlayerVar : USEVAR PLAYER PART STATEMENT_END ;
@@ -101,8 +101,13 @@ user_method : DOCUMENTATION* RECURSIVE? METHOD PART LEFT_PAREN (PART (COMMA PART
 ruleset :
 	useGlobalVar?
 	usePlayerVar?
-	(vardefine | ow_rule | user_method)*
+	(rule_define | ow_rule | user_method)*
 	;
+
+class : CLASS name=PART 
+	BLOCK_START
+
+	BLOCK_END ;
 
 /*
  * Lexer Rules
@@ -158,6 +163,9 @@ METHOD    : 'method'    ;
 RECURSIVE : 'recursive' ;
 RETURN    : 'return'    ;
 WHILE     : 'while'     ;
+CLASS     : 'class'     ;
+PRIVATE   : 'private'   ;
+PUBLIC    : 'public'    ;
 
 EQUALS          : '='  ;
 EQUALS_POW      : '^=' ;
