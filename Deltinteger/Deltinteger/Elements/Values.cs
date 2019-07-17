@@ -710,6 +710,15 @@ namespace Deltin.Deltinteger.Elements
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     public class V_ScoreOf : Element {}
 
+    [ElementData("Server Load", ValueType.Number)]
+    public class ServerLoad : Element {}
+
+    [ElementData("Server Load Average", ValueType.Number)]
+    public class ServerLoadAverage : Element {}
+
+    [ElementData("Server Load Peak", ValueType.Number)]
+    public class ServerLoadPeak : Element {}
+
     [ElementData("Sine From Degrees", ValueType.Number)]
     [Parameter("Angle", ValueType.Number, typeof(V_Number))]
     public class V_SineFromDegrees : Element {}

@@ -1,5 +1,16 @@
-rule: ""
+rule: "Recursive Test"
+Event.OngoingPlayer
+if (IsButtonHeld(EventPlayer(), Button.Interact))
 {
-    define array = [10, 11, 12, 13, 14, 15];
-    array[2] = 2;
+    Count(3);
+}
+
+recursive method Count(num)
+{
+    SmallMessage(EventPlayer(), <"forward: <0>", num>);
+    if (num < 10)
+        Count(num + 1);
+    MinWait();
+    SmallMessage(EventPlayer(), <"backward: <0>", num>);
+    MinWait();
 }

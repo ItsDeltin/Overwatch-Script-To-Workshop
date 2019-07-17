@@ -214,13 +214,14 @@ namespace Deltin.Deltinteger.Parse
         {
             return arrayBuilder.SetVariable(value, IsGlobal, targetPlayer, Variable, ArrayBuilder<Element>.Build(IntToElement(Index), setAtIndex));
         }
-
+        
         public virtual Element[] InScope(Element initialValue, Element targetPlayer = null)
         {
             if (initialValue != null)
                 return SetVariable(initialValue, targetPlayer);
             return null;
         }
+
         public virtual Element[] OutOfScope(Element targetPlayer = null)
         {
             return null;
@@ -259,12 +260,12 @@ namespace Deltin.Deltinteger.Parse
         {
         }
 
-        override public Element GetVariable(Element targetPlayer = null)
+        public override Element GetVariable(Element targetPlayer = null)
         {
             return Element.Part<V_LastOf>(base.GetVariable(targetPlayer));
         }
 
-        override public Element[] SetVariable(Element value, Element targetPlayer = null, params Element[] setAtIndex)
+        public override Element[] SetVariable(Element value, Element targetPlayer = null, params Element[] setAtIndex)
         {
             return base.SetVariable(value, targetPlayer, 
                 ArrayBuilder<Element>.Build(
@@ -279,7 +280,7 @@ namespace Deltin.Deltinteger.Parse
 
         public override Element[] InScope(Element initialValue, Element targetPlayer = null)
         {
-            return base.SetVariable(initialValue, targetPlayer, Element.Part<V_CountOf>(GetVariable(targetPlayer)));
+            return base.SetVariable(initialValue, targetPlayer, Element.Part<V_CountOf>(base.GetVariable(targetPlayer)));
         }
 
         public override Element[] OutOfScope(Element targetPlayer = null)
@@ -293,7 +294,8 @@ namespace Deltin.Deltinteger.Parse
                     Element.Part<V_Subtract>(
                         Element.Part<V_CountOf>(get), new V_Number(1)
                     )
-                ), targetPlayer
+                ),
+                targetPlayer
             );
         }
 
@@ -413,7 +415,6 @@ namespace Deltin.Deltinteger.Parse
                 // Copy the array to the C variable
                 actions.AddRange(
                     Store.SetVariable(GetRoot(isGlobal, targetPlayer, Constructor), targetPlayer)
-                    //SetVariable(GetRoot(targetPlayer, Constructor), targetPlayer, Variable.C)
                 );
 
                 // Copy the next array dimension
@@ -426,7 +427,6 @@ namespace Deltin.Deltinteger.Parse
                 // Copy back the variable at C to the correct index
                 actions.AddRange(
                     SetVariable(Store.GetVariable(targetPlayer), isGlobal, targetPlayer, Constructor, index[i])
-                    //SetVariable(GetRoot(targetPlayer, Variable.C), targetPlayer, Constructor, index[i])
                 );
             }
             // Set the final variable using Set At Index.
