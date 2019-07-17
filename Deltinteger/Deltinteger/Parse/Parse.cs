@@ -57,8 +57,6 @@ namespace Deltin.Deltinteger.Parse
                 ScopeGroup root = new ScopeGroup(VarCollection);
                 UserMethods = new List<UserMethod>();
 
-                
-
                 // Get the variables
                 foreach (var definedVar in RuleSetNode.DefinedVars)
                     if (definedVar.Define.UseVar == null)
@@ -69,7 +67,7 @@ namespace Deltin.Deltinteger.Parse
                             definedVar.IsGlobal, 
                             definedVar.Define.VariableName, 
                             definedVar.Define.UseVar.Variable, 
-                            definedVar.Define.UseVar.Index, 
+                            definedVar.Define.UseVar.Index,
                             definedVar
                         );
 
