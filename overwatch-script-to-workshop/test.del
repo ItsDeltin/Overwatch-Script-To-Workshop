@@ -7,7 +7,9 @@ if (IsButtonHeld(EventPlayer(), Button.Interact))
 
 recursive method Count(num)
 {
+    MinWait();
     SmallMessage(EventPlayer(), <"forward: <0>", num>);
+    MinWait();
     if (num < 10)
         Count(num + 1);
     MinWait();

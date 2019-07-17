@@ -525,10 +525,6 @@ namespace Deltin.Deltinteger.Parse
                     {
                         ContinueSkip.Setup();
 
-                        // ! Workaround for SmallMessage string re-evaluation workshop bug. Remove if blizzard fixes it
-                        Actions.Add(A_Wait.MinimumWait);
-                        // !
-
                         for (int i = 0; i < lastMethod.ParameterVars.Length; i++)
                         {
                             Actions.AddRange
@@ -537,17 +533,11 @@ namespace Deltin.Deltinteger.Parse
                             );
                         }
 
-                        // ?--- Multidimensional Array 
-                        Actions.Add(
-                            Element.Part<A_SetGlobalVariable>(EnumData.GetEnumValue(Variable.B), lastMethod.ContinueSkipArray.GetVariable())
-                        );
-                        Actions.Add(
-                            Element.Part<A_ModifyGlobalVariable>(EnumData.GetEnumValue(Variable.B), EnumData.GetEnumValue(Operation.AppendToArray), new V_Number(ContinueSkip.GetSkipCount() + 4))
-                        );
                         Actions.AddRange(
-                            lastMethod.ContinueSkipArray.SetVariable(Element.Part<V_GlobalVariable>(EnumData.GetEnumValue(Variable.B)))
+                            lastMethod.ContinueSkipArray.SetVariable(
+                                Element.Part<V_Append>(lastMethod.ContinueSkipArray.GetVariable(), new V_Number(ContinueSkip.GetSkipCount() + 4))
+                            )
                         );
-                        // ?---
 
                         ContinueSkip.SetSkipCount(lastMethod.ActionIndex);
                         Actions.Add(Element.Part<A_Loop>());
@@ -576,7 +566,7 @@ namespace Deltin.Deltinteger.Parse
 
                         var returns = VarCollection.AssignVar(null, $"{methodNode.Name}: return temp value", IsGlobal);
 
-                        IndexedVar continueSkipArray = VarCollection.AssignVar(null, $"{methodNode.Name}: continue skip temp value", IsGlobal);
+                        IndexedVar continueSkipArray = VarCollection.AssignVar(null, $"{methodNode.Name}: continue skip array", IsGlobal);
                         var stack = new MethodStack(userMethod, parameterVars, ContinueSkip.GetSkipCount(), returns, continueSkipArray);
                         MethodStack.Add(stack);
 
@@ -590,40 +580,24 @@ namespace Deltin.Deltinteger.Parse
                         else
                             result = null;
 
-                        // ! Workaround for SmallMessage string re-evaluation workshop bug. Remove if blizzard fixes it
-                        Actions.Add(A_Wait.MinimumWait);
-                        // !
-                        
-                        /*
-                        foreach (IndexedVar var in methodScope.AllChildVariables())
-                        {
-                            Element[] outOfScopeActions = var.OutOfScope();
-                            if (outOfScopeActions != null)
-                                Actions.AddRange(outOfScopeActions);
-                        }
-                        */
+                        // Take the method out of scope.
                         Actions.AddRange(methodScope.Out());
 
                         ContinueSkip.Setup();
                         ContinueSkip.SetSkipCount(Element.Part<V_LastOf>(continueSkipArray.GetVariable()));
 
-                        // ?--- Multidimensional Array 
-                        Actions.Add(
-                            Element.Part<A_SetGlobalVariable>(EnumData.GetEnumValue(Variable.B), continueSkipArray.GetVariable())
-                        );
                         Actions.AddRange(
                             continueSkipArray.SetVariable(
                                 Element.Part<V_ArraySlice>(
-                                    Element.Part<V_GlobalVariable>(EnumData.GetEnumValue(Variable.B)), 
+                                    continueSkipArray.GetVariable(), 
                                     new V_Number(0),
                                     Element.Part<V_Subtract>(
-                                        Element.Part<V_CountOf>(Element.Part<V_GlobalVariable>(EnumData.GetEnumValue(Variable.B))),
+                                        Element.Part<V_CountOf>(continueSkipArray.GetVariable()),
                                         new V_Number(1)
                                     )
                                 )
                             )
                         );
-                        // ?---
 
                         Actions.Add(
                             Element.Part<A_LoopIf>(
@@ -638,7 +612,6 @@ namespace Deltin.Deltinteger.Parse
                         Actions.AddRange(continueSkipArray.SetVariable(new V_Number()));
                         
                         MethodStack.Remove(stack);
-                        //Actions.AddRange(methodScope.Out());
                     }
                 }
             }
