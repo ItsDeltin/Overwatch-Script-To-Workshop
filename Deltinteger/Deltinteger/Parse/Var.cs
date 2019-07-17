@@ -401,16 +401,6 @@ namespace Deltin.Deltinteger.Parse
         }
     }
 
-    class VarType
-    {
-        public string Name { get; }
-
-        public VarType(string name)
-        {
-            Name = name;
-        }
-    }
-
     public class WorkshopDArray
     {
         public static Element[] SetVariable(Element value, Element targetPlayer, Variable variable, params V_Number[] index)
@@ -444,23 +434,27 @@ namespace Deltin.Deltinteger.Parse
             actions.AddRange(
                 SetVariable(ValueInArrayPath(root, index.Take(index.Length - 1).ToArray()), targetPlayer, Variable.B)
             );
+
             // Set the value in the array.
             actions.AddRange(
                 SetVariable(value, targetPlayer, Variable.B, index.Last())
             );
+
             // Reconstruct the multidimensional array.
             for (int i = 1; i < dimensions; i++)
             {
-                Element array = ValueInArrayPath(root, index.Take(dimensions - i).ToArray());
-                
                 // Copy the array to the C variable
                 actions.AddRange(
                     SetVariable(GetRoot(targetPlayer, Variable.B), targetPlayer, Variable.C)
                 );
-                // Copy the array dimension
+
+                // Copy the next array dimension
+                Element array = ValueInArrayPath(root, index.Take(dimensions - i).ToArray());
+
                 actions.AddRange(
                     SetVariable(array, targetPlayer, Variable.B)
                 );
+
                 // Copy back the variable at C to the correct index
                 actions.AddRange(
                     SetVariable(GetRoot(targetPlayer, Variable.C), targetPlayer, Variable.B, index[i])
@@ -483,8 +477,7 @@ namespace Deltin.Deltinteger.Parse
             
             return Element.Part<V_ValueInArray>(ValueInArrayPath(array, index.Take(index.Length - 1).ToArray()), index.Last());
         }
-
-
+        
         private static Element GetRoot(Element targetPlayer, Variable variable)
         {
             if (targetPlayer == null)
