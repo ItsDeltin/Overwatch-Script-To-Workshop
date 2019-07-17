@@ -401,9 +401,18 @@ namespace Deltin.Deltinteger.Parse
         }
     }
 
-    public class WorkshopDArray
+    public class WorkshopArrayBuilder
     {
-        public static Element[] SetVariable(Element value, Element targetPlayer, Variable variable, params V_Number[] index)
+        Variable Constructor;
+        IndexedVar Store;
+
+        public WorkshopArrayBuilder(Variable constructor, IndexedVar store)
+        {
+            Constructor = constructor;
+            Store = store;
+        }
+
+        public Element[] SetVariable(Element value, Element targetPlayer, Variable variable, params V_Number[] index)
         {
             bool isGlobal = targetPlayer == null;
 
@@ -432,12 +441,12 @@ namespace Deltin.Deltinteger.Parse
 
             // Get the last array in the index path and copy it to variable B.
             actions.AddRange(
-                SetVariable(ValueInArrayPath(root, index.Take(index.Length - 1).ToArray()), targetPlayer, Variable.B)
+                SetVariable(ValueInArrayPath(root, index.Take(index.Length - 1).ToArray()), targetPlayer, Constructor)
             );
 
             // Set the value in the array.
             actions.AddRange(
-                SetVariable(value, targetPlayer, Variable.B, index.Last())
+                SetVariable(value, targetPlayer, Constructor, index.Last())
             );
 
             // Reconstruct the multidimensional array.
@@ -445,24 +454,26 @@ namespace Deltin.Deltinteger.Parse
             {
                 // Copy the array to the C variable
                 actions.AddRange(
-                    SetVariable(GetRoot(targetPlayer, Variable.B), targetPlayer, Variable.C)
+                    Store.SetVariable(GetRoot(targetPlayer, Constructor), targetPlayer)
+                    //SetVariable(GetRoot(targetPlayer, Constructor), targetPlayer, Variable.C)
                 );
 
                 // Copy the next array dimension
                 Element array = ValueInArrayPath(root, index.Take(dimensions - i).ToArray());
 
                 actions.AddRange(
-                    SetVariable(array, targetPlayer, Variable.B)
+                    SetVariable(array, targetPlayer, Constructor)
                 );
 
                 // Copy back the variable at C to the correct index
                 actions.AddRange(
-                    SetVariable(GetRoot(targetPlayer, Variable.C), targetPlayer, Variable.B, index[i])
+                    SetVariable(Store.GetVariable(targetPlayer), targetPlayer, Constructor, index[i])
+                    //SetVariable(GetRoot(targetPlayer, Variable.C), targetPlayer, Constructor, index[i])
                 );
             }
             // Set the final variable using Set At Index.
             actions.AddRange(
-                SetVariable(GetRoot(targetPlayer, Variable.B), targetPlayer, variable, index[0])
+                SetVariable(GetRoot(targetPlayer, Constructor), targetPlayer, variable, index[0])
             );
             return actions.ToArray();
         }
