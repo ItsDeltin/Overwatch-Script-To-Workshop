@@ -56,6 +56,11 @@ namespace Deltin.Deltinteger.Elements
     [Parameter("Value", ValueType.Boolean, typeof(V_True))]
     public class V_And : Element {}
 
+    [ElementData("Angle Between Vectors", ValueType.Vector)]
+    [Parameter("Vector", ValueType.Vector, typeof(V_Vector))]
+    [Parameter("Vector", ValueType.Vector, typeof(V_Vector))]
+    public class V_AngleBetweenVectors : Element {}
+
     [ElementData("Angle Difference", ValueType.Number)]
     [Parameter("Angle", ValueType.Number, typeof(V_Number))]
     [Parameter("Angle", ValueType.Number, typeof(V_Number))]
