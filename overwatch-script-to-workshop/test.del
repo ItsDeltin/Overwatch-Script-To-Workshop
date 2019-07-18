@@ -3,8 +3,11 @@ Event.OngoingPlayer
 if (IsButtonHeld(EventPlayer(), Button.Interact))
 {
     define wow = [0, 1, 2];
-    wow[4,1] = 2;
 
+    wow[3][2] = [10, 20, 30];
+    scanArray(wow);
+
+    wow[3][2] = InsertValueInArray(wow[3][2], 1, 5);
     scanArray(wow);
 }
 
@@ -20,23 +23,26 @@ recursive method arrayWalk(array, dims)
     {
         if (CountOf(array[index]) == 0)
         {
-            MinWait();
-            define arrayLength = CountOf(dims);
+            if (array[index] != 0)
+            {
+                MinWait();
+                define arrayLength = CountOf(dims);
 
-            if (arrayLength == 0)
-                SmallMessage(AllPlayers(), <"<0>: <1>", index, array[index]>);
-            else if (arrayLength == 1)
-                SmallMessage(AllPlayers(), <"<0>, <1>: <2>", dims[0], index, array[index]>);
-            else if (arrayLength == 2)
-                SmallMessage(AllPlayers(), <"<0>, <1>, <2>: <3>", dims[0], dims[1], index, array[index]>);
-            else if (arrayLength == 3)
-                SmallMessage(AllPlayers(), <"<0>, <1>, <2>, <3>: <4>", dims[0], dims[1], dims[2], index, array[index]>);
-            else if (arrayLength == 4)
-                SmallMessage(AllPlayers(), <"<0>, <1>, <2>, <3>, <4>: <5>", dims[0], dims[1], dims[2], dims[3], index, array[index]>);
-            else if (arrayLength == 5)
-                SmallMessage(AllPlayers(), <"<0>, <1>, <2>, <3>, <4>, <5>: <6>", dims[0], dims[1], dims[2], dims[3], dims[4], index, array[index]>);
+                if (arrayLength == 0)
+                    SmallMessage(AllPlayers(), <"<0>: <1>", index, array[index]>);
+                else if (arrayLength == 1)
+                    SmallMessage(AllPlayers(), <"<0>, <1>: <2>", dims[0], index, array[index]>);
+                else if (arrayLength == 2)
+                    SmallMessage(AllPlayers(), <"<0>, <1>, <2>: <3>", dims[0], dims[1], index, array[index]>);
+                else if (arrayLength == 3)
+                    SmallMessage(AllPlayers(), <"<0>, <1>, <2>, <3>: <4>", dims[0], dims[1], dims[2], index, array[index]>);
+                else if (arrayLength == 4)
+                    SmallMessage(AllPlayers(), <"<0>, <1>, <2>, <3>, <4>: <5>", dims[0], dims[1], dims[2], dims[3], index, array[index]>);
+                else if (arrayLength == 5)
+                    SmallMessage(AllPlayers(), <"<0>, <1>, <2>, <3>, <4>, <5>: <6>", dims[0], dims[1], dims[2], dims[3], dims[4], index, array[index]>);
 
-            Wait(0.5);
+                Wait(0.5);
+            }
         }
         else
         {
