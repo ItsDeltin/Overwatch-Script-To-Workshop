@@ -106,5 +106,16 @@ namespace Deltin.Deltinteger.Elements
 
             return builder.ToString();
         }
+
+        public double ServerLoadWeight()
+        {
+            double weight = 0;
+            foreach (var action in Actions)
+                weight += action.ServerLoadWeight();
+            foreach (var condition in Conditions)
+                weight += condition.ServerLoadWeight();
+            
+            return weight;
+        }
     }
 }

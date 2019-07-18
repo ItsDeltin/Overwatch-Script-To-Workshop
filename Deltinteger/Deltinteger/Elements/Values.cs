@@ -57,6 +57,11 @@ namespace Deltin.Deltinteger.Elements
     [Parameter("Value", ValueType.Boolean, typeof(V_True))]
     public class V_And : Element {}
 
+    [ElementData("Angle Between Vectors", ValueType.Vector)]
+    [Parameter("Vector", ValueType.Vector, typeof(V_Vector))]
+    [Parameter("Vector", ValueType.Vector, typeof(V_Vector))]
+    public class V_AngleBetweenVectors : Element {}
+
     [ElementData("Angle Difference", ValueType.Number)]
     [Parameter("Angle", ValueType.Number, typeof(V_Number))]
     [Parameter("Angle", ValueType.Number, typeof(V_Number))]
@@ -515,11 +520,11 @@ namespace Deltin.Deltinteger.Elements
     {
         public static readonly V_Number LargeArbitraryNumber = new V_Number(9999);
 
-        double value;
+        public double Value { get; set; }
 
         public V_Number(double value)
         {
-            this.value = value;
+            this.Value = value;
         }
         public V_Number() : this(0) {}
 
@@ -532,12 +537,12 @@ namespace Deltin.Deltinteger.Elements
         {
             log.Write(LogLevel.Verbose, 
                 new ColorMod(new string(' ', depth * 4) + "Number ", ConsoleColor.White), 
-                new ColorMod(value.ToString(), ConsoleColor.DarkYellow));
+                new ColorMod(Value.ToString(), ConsoleColor.DarkYellow));
         }
 
-        protected override string Info()
+        protected override string DebugInfo()
         {
-            return $"{ElementData.ElementName} {value}";
+            return $"{ElementData.ElementName} {Value}";
         }
 
         public static implicit operator V_Number(double value) => new V_Number(value);
@@ -706,6 +711,15 @@ namespace Deltin.Deltinteger.Elements
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     public class V_ScoreOf : Element {}
 
+    [ElementData("Server Load", ValueType.Number)]
+    public class ServerLoad : Element {}
+
+    [ElementData("Server Load Average", ValueType.Number)]
+    public class ServerLoadAverage : Element {}
+
+    [ElementData("Server Load Peak", ValueType.Number)]
+    public class ServerLoadPeak : Element {}
+
     [ElementData("Sine From Degrees", ValueType.Number)]
     [Parameter("Angle", ValueType.Number, typeof(V_Number))]
     public class V_SineFromDegrees : Element {}
@@ -757,7 +771,7 @@ namespace Deltin.Deltinteger.Elements
             return new string[] { "\"" + Constants.Strings[TextID].Replace("_", " ") + "\"" };
         }
 
-        protected override string Info()
+        protected override string DebugInfo()
         {
             return $"{ElementData.ElementName} {Constants.Strings[TextID]}";
         }

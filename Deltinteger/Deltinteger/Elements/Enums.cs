@@ -167,6 +167,11 @@ namespace Deltin.Deltinteger.Elements
             return WorkshopName;
         }
 
+        public double ServerLoadWeight()
+        {
+            return 0;
+        }
+
         public void DebugPrint(Log log, int depth)
         {
             log.Write(LogLevel.Verbose, Extras.Indent(depth, false) + WorkshopName);

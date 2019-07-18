@@ -32,12 +32,12 @@ namespace Deltin.Deltinteger.Parse
             return base.VisitStatement(context);
         }
 
-        public override object VisitParameters(DeltinScriptParser.ParametersContext context)
+        public override object VisitCall_parameters(DeltinScriptParser.Call_parametersContext context)
         {
             // Confirm there is an expression after the last ",".
             if (context.children?.Last().GetText() == ",")
                 _diagnostics.Add(new Diagnostic("Expected parameter.", Range.GetRange(context).end.ToRange()) { severity = Diagnostic.Error });
-            return base.VisitParameters(context);
+            return base.VisitCall_parameters(context);
         }
 
         public override object VisitEnum(DeltinScriptParser.EnumContext context)

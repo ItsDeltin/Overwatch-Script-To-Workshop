@@ -1,12 +1,52 @@
-rule: "Repeater test."
-Event.OngoingPlayer 
+rule: "Recursive Test"
+Event.OngoingPlayer
 if (IsButtonHeld(EventPlayer(), Button.Interact))
 {
-    define start = TotalTimeElapsed();    
-    foreach 2 (define player in AllPlayers())
+    define wow = [0, 1, 2];
+
+    wow[3][2] = [10, 20, 30];
+    scanArray(wow);
+
+    wow[3][2] = InsertValueInArray(wow[3][2], 1, 5);
+    scanArray(wow);
+}
+
+# Prints every value in a multidimensional array.
+method scanArray(array)
+{
+    arrayWalk(array, EmptyArray());
+}
+
+recursive method arrayWalk(array, dims)
+{
+    for (define index = 0; index < CountOf(array); index++)
     {
-        SmallMessage(player, "hello!");
+        if (CountOf(array[index]) == 0)
+        {
+            if (array[index] != 0)
+            {
+                MinWait();
+                define arrayLength = CountOf(dims);
+
+                if (arrayLength == 0)
+                    SmallMessage(AllPlayers(), <"<0>: <1>", index, array[index]>);
+                else if (arrayLength == 1)
+                    SmallMessage(AllPlayers(), <"<0>, <1>: <2>", dims[0], index, array[index]>);
+                else if (arrayLength == 2)
+                    SmallMessage(AllPlayers(), <"<0>, <1>, <2>: <3>", dims[0], dims[1], index, array[index]>);
+                else if (arrayLength == 3)
+                    SmallMessage(AllPlayers(), <"<0>, <1>, <2>, <3>: <4>", dims[0], dims[1], dims[2], index, array[index]>);
+                else if (arrayLength == 4)
+                    SmallMessage(AllPlayers(), <"<0>, <1>, <2>, <3>, <4>: <5>", dims[0], dims[1], dims[2], dims[3], index, array[index]>);
+                else if (arrayLength == 5)
+                    SmallMessage(AllPlayers(), <"<0>, <1>, <2>, <3>, <4>, <5>: <6>", dims[0], dims[1], dims[2], dims[3], dims[4], index, array[index]>);
+
+                Wait(0.5);
+            }
+        }
+        else
+        {
+            arrayWalk(array[index], Append(dims, index));
+        }
     }
-    define finished = TotalTimeElapsed();
-    SmallMessage(EventPlayer(), <"time finished: <0>", finished - start>);
 }

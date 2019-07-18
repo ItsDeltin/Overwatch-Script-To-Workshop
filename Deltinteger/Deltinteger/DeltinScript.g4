@@ -14,8 +14,8 @@ null   : NULL          ;
 
 statement_operation : EQUALS | EQUALS_ADD | EQUALS_DIVIDE | EQUALS_MODULO | EQUALS_MULTIPLY | EQUALS_POW | EQUALS_SUBTRACT ;
 
-vardefine : DEFINE (GLOBAL|PLAYER) PART useVar? STATEMENT_END; /*#define global/player NAME (use variable?); */
-define   : DEFINE PART useVar? (EQUALS expr?)? ;
+rule_define : (GLOBAL|PLAYER) define STATEMENT_END;
+define   : (type=PART | DEFINE) name=PART useVar? (EQUALS expr?)? ;
 useVar   : PART (INDEX_START number INDEX_END)? ;
 useGlobalVar : USEVAR GLOBAL PART STATEMENT_END ;
 usePlayerVar : USEVAR PLAYER PART STATEMENT_END ;
@@ -46,16 +46,15 @@ expr
 exprgroup   : LEFT_PAREN expr RIGHT_PAREN ;
 createarray : INDEX_START (expr (COMMA expr)*)? INDEX_END;
 
-array : INDEX_START expr INDEX_END ;
+array : (INDEX_START expr INDEX_END)+ ;
 
 enum : PART SEPERATOR /*{ Deltin.Deltinteger.Elements.EnumData.IsEnum(_localctx?.PART(0)?.GetText()) }?*/ PART? ;
 
 variable : PART ;
-// define   : DEFINE PART (EQUALS expr)? STATEMENT_END ;
 varset   : (expr SEPERATOR)? PART array? ((statement_operation expr?) | INCREMENT | DECREMENT) ;
 
-parameters : expr (COMMA expr?)*    		 	     ;
-method     : PART LEFT_PAREN parameters? RIGHT_PAREN ;
+call_parameters : expr (COMMA expr?)*    		 	     ;
+method          : PART LEFT_PAREN call_parameters? RIGHT_PAREN ;
 
 statement :
 	( varset STATEMENT_END?
@@ -101,8 +100,21 @@ user_method : DOCUMENTATION* RECURSIVE? METHOD PART LEFT_PAREN (PART (COMMA PART
 ruleset :
 	useGlobalVar?
 	usePlayerVar?
-	(vardefine | ow_rule | user_method)*
+	(rule_define | ow_rule | user_method | type_define)*
 	;
+
+// Classes/structs
+
+type_define : (STRUCT | CLASS) name=PART
+	BLOCK_START
+	(define | constructor | user_method)*
+	BLOCK_END ;
+
+accessor : PRIVATE | PUBLIC;
+
+constructor : accessor? name=PART LEFT_PAREN setParameters RIGHT_PAREN block ;
+
+setParameters : (define? (COMMA define)*)? ;
 
 /*
  * Lexer Rules
@@ -158,6 +170,11 @@ METHOD    : 'method'    ;
 RECURSIVE : 'recursive' ;
 RETURN    : 'return'    ;
 WHILE     : 'while'     ;
+STRUCT    : 'struct'    ;
+CLASS     : 'class'     ;
+PRIVATE   : 'private'   ;
+PUBLIC    : 'public'    ;
+THIS      : 'this'      ;
 
 EQUALS          : '='  ;
 EQUALS_POW      : '^=' ;
