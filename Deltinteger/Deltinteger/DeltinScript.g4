@@ -46,7 +46,7 @@ expr
 exprgroup   : LEFT_PAREN expr RIGHT_PAREN ;
 createarray : INDEX_START (expr (COMMA expr)*)? INDEX_END;
 
-array : INDEX_START expr INDEX_END ;
+array : INDEX_START expr (COMMA expr)* INDEX_END ;
 
 enum : PART SEPERATOR /*{ Deltin.Deltinteger.Elements.EnumData.IsEnum(_localctx?.PART(0)?.GetText()) }?*/ PART? ;
 

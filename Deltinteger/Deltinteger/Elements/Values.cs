@@ -519,29 +519,29 @@ namespace Deltin.Deltinteger.Elements
     {
         public static readonly V_Number LargeArbitraryNumber = new V_Number(9999);
 
-        double value;
+        public double Value { get; set; }
 
         public V_Number(double value)
         {
-            this.value = value;
+            this.Value = value;
         }
         public V_Number() : this(0) {}
 
         public override string ToWorkshop()
         {
-            return value.ToString();
+            return Value.ToString();
         }
 
         public override void DebugPrint(Log log, int depth = 0)
         {
             log.Write(LogLevel.Verbose, 
                 new ColorMod(new string(' ', depth * 4) + "Number ", ConsoleColor.White), 
-                new ColorMod(value.ToString(), ConsoleColor.DarkYellow));
+                new ColorMod(Value.ToString(), ConsoleColor.DarkYellow));
         }
 
         protected override string DebugInfo()
         {
-            return $"{ElementData.ElementName} {value}";
+            return $"{ElementData.ElementName} {Value}";
         }
 
         public static implicit operator V_Number(double value) => new V_Number(value);

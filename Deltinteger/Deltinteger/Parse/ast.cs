@@ -319,9 +319,9 @@ namespace Deltin.Deltinteger.Parse
             Node target = context.expr().Length == 2 ? Visit(context.expr()[0]) : null;
             string variable = context.PART().GetText();
             
-            Node index = null;
-            if (context.array() != null)
-                index = Visit(context.array().expr());
+            Node[] index = new Node[context.array()?.expr().Length ?? 0];
+            for (int i = 0; i < index.Length; i++)
+                index[i] = VisitExpr(context.array().expr(i));
 
             Node value = context.expr().Length > 0 ? Visit(context.expr().Last()) : null;
 
@@ -950,11 +950,11 @@ namespace Deltin.Deltinteger.Parse
     {
         public Node Target { get; private set; }
         public string Variable { get; private set; }
-        public Node Index { get; private set; }
+        public Node[] Index { get; private set; }
         public string Operation { get; private set; }
         public Node Value { get; private set; }
 
-        public VarSetNode(Node target, string variable, Node index, string operation, Node value, Range range) : base(range)
+        public VarSetNode(Node target, string variable, Node[] index, string operation, Node value, Range range) : base(range)
         {
             Target = target;
             Variable = variable;

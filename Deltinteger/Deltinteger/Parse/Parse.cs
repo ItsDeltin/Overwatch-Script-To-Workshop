@@ -535,7 +535,7 @@ namespace Deltin.Deltinteger.Parse
 
                         Actions.AddRange(
                             lastMethod.ContinueSkipArray.SetVariable(
-                                Element.Part<V_Append>(lastMethod.ContinueSkipArray.GetVariable(), new V_Number(ContinueSkip.GetSkipCount() + 4))
+                                Element.Part<V_Append>(lastMethod.ContinueSkipArray.GetVariable(), new V_Number(ContinueSkip.GetSkipCount() + 3))
                             )
                         );
 
@@ -592,8 +592,7 @@ namespace Deltin.Deltinteger.Parse
                                     continueSkipArray.GetVariable(), 
                                     new V_Number(0),
                                     Element.Part<V_Subtract>(
-                                        Element.Part<V_CountOf>(continueSkipArray.GetVariable()),
-                                        new V_Number(1)
+                                        Element.Part<V_CountOf>(continueSkipArray.GetVariable()), new V_Number(1)
                                     )
                                 )
                             )
@@ -761,13 +760,15 @@ namespace Deltin.Deltinteger.Parse
                 {
                     ContinueSkip.Setup();
 
-                    ScopeGroup forGroup = scope.Child();
+                    ScopeGroup forContainer = scope.Child();
 
                     // Set the variable
                     if (forNode.VarSetNode != null)
                         ParseVarset(scope, forNode.VarSetNode);
                     if (forNode.DefineNode != null)
-                        ParseDefine(forGroup, forNode.DefineNode);
+                        ParseDefine(forContainer, forNode.DefineNode);
+                    
+                    ScopeGroup forGroup = forContainer.Child();
 
                     // The action the for loop starts on.
                     int forStartIndex = ContinueSkip.GetSkipCount();
@@ -797,6 +798,9 @@ namespace Deltin.Deltinteger.Parse
                     // Set the skip
                     if (skipCondition != null)
                         skipCondition.ParameterValues[1] = new V_Number(GetSkipCount(skipCondition));
+                    
+                    // Take the defined variable in the for out of scope
+                    Actions.AddRange(forContainer.Out());
 
                     ContinueSkip.ResetSkip();
                     return;
@@ -971,13 +975,12 @@ namespace Deltin.Deltinteger.Parse
 
             Element initialVar = variable.GetVariable(target);
 
-            Element index = null;
-            if (varSetNode.Index != null)
+            Element[] index = new Element[varSetNode.Index.Length];
+            for (int i = 0; i < index.Length; i++)
             {
-                index = ParseExpression(scope, varSetNode.Index);
-                initialVar = Element.Part<V_ValueInArray>(initialVar, index);
+                index[i] = ParseExpression(scope, varSetNode.Index[i]);
+                initialVar = Element.Part<V_ValueInArray>(initialVar, index[index.Length - i - 1]);
             }
-
 
             switch (varSetNode.Operation)
             {

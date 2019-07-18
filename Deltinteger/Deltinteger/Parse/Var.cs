@@ -19,6 +19,7 @@ namespace Deltin.Deltinteger.Parse
         {
             IndexedVar tempArrayBuilderVar = AssignVar(null, "Multidimensional Array Builder", true);
             WorkshopArrayBuilder = new WorkshopArrayBuilder(Variable.B, tempArrayBuilderVar);
+            tempArrayBuilderVar.ArrayBuilder = WorkshopArrayBuilder;
         }
 
         public int Assign(bool isGlobal)
@@ -180,7 +181,7 @@ namespace Deltin.Deltinteger.Parse
         public int[] Index { get; }
         public bool UsesIndex { get; }
 
-        private readonly WorkshopArrayBuilder arrayBuilder;
+        public WorkshopArrayBuilder ArrayBuilder { get; set; }
 
         private readonly IWorkshopTree VariableAsWorkshop; 
 
@@ -191,7 +192,7 @@ namespace Deltin.Deltinteger.Parse
             VariableAsWorkshop = EnumData.GetEnumValue(Variable);
             Index = index;
             UsesIndex = index != null && index.Length > 0;
-            this.arrayBuilder = arrayBuilder;
+            this.ArrayBuilder = arrayBuilder;
         }
 
         public IndexedVar(ScopeGroup scopeGroup, string name, bool isGlobal, Variable variable, int[] index, WorkshopArrayBuilder arrayBuilder, Node node)
@@ -202,7 +203,7 @@ namespace Deltin.Deltinteger.Parse
             VariableAsWorkshop = EnumData.GetEnumValue(Variable);
             Index = index;
             UsesIndex = index != null && index.Length > 0;
-            this.arrayBuilder = arrayBuilder;
+            this.ArrayBuilder = arrayBuilder;
         }
 
         public override Element GetVariable(Element targetPlayer = null)
@@ -212,7 +213,7 @@ namespace Deltin.Deltinteger.Parse
 
         public virtual Element[] SetVariable(Element value, Element targetPlayer = null, params Element[] setAtIndex)
         {
-            return arrayBuilder.SetVariable(value, IsGlobal, targetPlayer, Variable, ArrayBuilder<Element>.Build(IntToElement(Index), setAtIndex));
+            return ArrayBuilder.SetVariable(value, IsGlobal, targetPlayer, Variable, ArrayBuilder<Element>.Build(IntToElement(Index), setAtIndex));
         }
         
         public virtual Element[] InScope(Element initialValue, Element targetPlayer = null)
@@ -270,7 +271,7 @@ namespace Deltin.Deltinteger.Parse
             return base.SetVariable(value, targetPlayer, 
                 ArrayBuilder<Element>.Build(
                     Element.Part<V_Subtract>(
-                        Element.Part<V_CountOf>(GetVariable(targetPlayer)),
+                        Element.Part<V_CountOf>(base.GetVariable(targetPlayer)),
                         new V_Number(1)
                     ),
                     setAtIndex
@@ -291,9 +292,7 @@ namespace Deltin.Deltinteger.Parse
                 Element.Part<V_ArraySlice>(
                     get,
                     new V_Number(0),
-                    Element.Part<V_Subtract>(
-                        Element.Part<V_CountOf>(get), new V_Number(1)
-                    )
+                    Element.Part<V_Subtract>(Element.Part<V_CountOf>(get), new V_Number(1))
                 ),
                 targetPlayer
             );
