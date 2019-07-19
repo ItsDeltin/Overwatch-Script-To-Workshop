@@ -34,6 +34,7 @@ expr
 	| null                                        // Null
 	| variable                                    // Variables
 	| exprgroup
+	| create_object
 	| expr SEPERATOR variable                     // Variable seperation
 	| NOT expr                                     // !x
 	| expr ('<' | '<=' | '==' | '>=' | '>' | '!=') expr // x == y
@@ -116,6 +117,8 @@ constructor : accessor? name=PART LEFT_PAREN setParameters RIGHT_PAREN block ;
 
 setParameters : (define? (COMMA define)*)? ;
 
+create_object : NEW type=PART LEFT_PAREN call_parameters? RIGHT_PAREN ;
+
 /*
  * Lexer Rules
  */
@@ -175,6 +178,7 @@ CLASS     : 'class'     ;
 PRIVATE   : 'private'   ;
 PUBLIC    : 'public'    ;
 THIS      : 'this'      ;
+NEW       : 'new'       ;
 
 EQUALS          : '='  ;
 EQUALS_POW      : '^=' ;

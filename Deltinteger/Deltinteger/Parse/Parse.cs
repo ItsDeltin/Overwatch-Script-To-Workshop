@@ -56,16 +56,21 @@ namespace Deltin.Deltinteger.Parse
                 VarCollection = new VarCollection();
                 ScopeGroup root = new ScopeGroup(VarCollection);
                 UserMethods = new List<UserMethod>();
+                DefinedTypes = new List<DefinedType>();
+
+                // Get the defined types
+                foreach (var definedType in RuleSetNode.DefinedTypes)
+                    DefinedTypes.Add(new DefinedType(definedType));
 
                 // Get the variables
                 foreach (var definedVar in RuleSetNode.DefinedVars)
                     if (definedVar.Define.UseVar == null)
-                        VarCollection.AssignDefinedVar(root, definedVar.IsGlobal, definedVar.Define.VariableName, definedVar);
+                        VarCollection.AssignVar(root, definedVar.Define.VariableName, definedVar.IsGlobal, definedVar);
                     else
-                        VarCollection.AssignDefinedVar(
+                        VarCollection.AssignVar(
                             root, 
-                            definedVar.IsGlobal, 
                             definedVar.Define.VariableName, 
+                            definedVar.IsGlobal,
                             definedVar.Define.UseVar.Variable, 
                             definedVar.Define.UseVar.Index,
                             definedVar
@@ -107,6 +112,7 @@ namespace Deltin.Deltinteger.Parse
         public List<Diagnostic> Diagnostics;
         public BuildAstVisitor Bav { get; private set; }
         public List<Rule> Rules { get; private set; }
+        public List<DefinedType> DefinedTypes { get; private set; }
         public List<UserMethod> UserMethods { get; private set; }
         public bool Success { get; private set; }
         public VarCollection VarCollection { get; private set; }
@@ -119,6 +125,11 @@ namespace Deltin.Deltinteger.Parse
             return (IMethod)UserMethods?.FirstOrDefault(um => um.Name == name) 
             ?? (IMethod)CustomMethodData.GetCustomMethod(name) 
             ?? (IMethod)Element.GetElement(name);
+        }
+
+        public DefinedType GetDefinedType(string name)
+        {
+            return DefinedTypes.FirstOrDefault(dt => dt.Name == name);
         }
 
         public Looper GetLooper(bool isGlobal)
@@ -363,12 +374,27 @@ namespace Deltin.Deltinteger.Parse
                         ParseExpression(scope, ternaryNode.Alternative)
                     );
 
+                // Enums
                 case EnumNode enumNode:
                     return EnumData.ToElement(enumNode.EnumMember) 
                     ?? throw SyntaxErrorException.EnumCantBeValue(enumNode.Type, enumNode.Range);
 
-                // Seperator
+                // New object
+                case CreateObjectNode createObjectNode:
 
+                    DefinedType typeData = ParserData.GetDefinedType(createObjectNode.TypeName);
+
+                    if (typeData == null)
+                        throw new SyntaxErrorException($"The type {createObjectNode.TypeName} could not be found.", createObjectNode.Range);
+
+                    IndexedVar store = VarCollection.AssignVar(scope, typeData.Name + " store", IsGlobal, null);
+                    for (int i = 0; i < typeData.DefinedVars.Length; i++)
+                    {
+                        Actions.AddRange(
+                            store.SetVariable(ParseExpression(scope, typeData.DefinedVars[i].Value), null, new V_Number(i))
+                        );
+                    }
+                    return store.GetVariable();
             }
 
             throw new Exception();
@@ -497,11 +523,11 @@ namespace Deltin.Deltinteger.Parse
                     for (int i = 0; i < parsedParameters.Count; i++)
                     {
                         // Create a new variable using the parameter.
-                        parameterVars[i] = VarCollection.AssignDefinedVar(methodScope, IsGlobal, userMethod.Parameters[i].Name, methodNode);
+                        parameterVars[i] = VarCollection.AssignVar(methodScope, userMethod.Parameters[i].Name, IsGlobal, methodNode);
                         Actions.AddRange(parameterVars[i].SetVariable((Element)parsedParameters[i]));
                     }
 
-                    var returns = VarCollection.AssignVar(scope, $"{methodNode.Name}: return temp value", IsGlobal);
+                    var returns = VarCollection.AssignVar(scope, $"{methodNode.Name}: return temp value", IsGlobal, null);
 
                     MethodStackNoRecursive.Add(userMethod);
 
@@ -556,17 +582,16 @@ namespace Deltin.Deltinteger.Parse
                         for (int i = 0; i < parameterVars.Length; i++)
                         {
                             // Create a new variable using the parameter input.
-                            //parameterVars[i] = VarCollection.AssignRecursiveVar(methodScope, IsGlobal, userMethod.Parameters[i].Name, methodNode.Range);
-                            parameterVars[i] = (RecursiveVar)VarCollection.AssignDefinedVar(methodScope, IsGlobal, userMethod.Parameters[i].Name, methodNode);
+                            parameterVars[i] = (RecursiveVar)VarCollection.AssignVar(methodScope, userMethod.Parameters[i].Name, IsGlobal, methodNode);
                             Actions.AddRange
                             (
                                 parameterVars[i].InScope(ParseExpression(scope, methodNode.Parameters[i]))
                             );
                         }
 
-                        var returns = VarCollection.AssignVar(null, $"{methodNode.Name}: return temp value", IsGlobal);
+                        var returns = VarCollection.AssignVar(null, $"{methodNode.Name}: return temp value", IsGlobal, null);
 
-                        IndexedVar continueSkipArray = VarCollection.AssignVar(null, $"{methodNode.Name}: continue skip array", IsGlobal);
+                        IndexedVar continueSkipArray = VarCollection.AssignVar(null, $"{methodNode.Name}: continue skip array", IsGlobal, null);
                         var stack = new MethodStack(userMethod, parameterVars, ContinueSkip.GetSkipCount(), returns, continueSkipArray);
                         MethodStack.Add(stack);
 
@@ -618,6 +643,70 @@ namespace Deltin.Deltinteger.Parse
 
             methodNode.RelatedElement = result;
             return result;
+        }
+
+        List<IWorkshopTree> ParseParameters(ScopeGroup scope, IMethod method, MethodNode methodNode)
+        {
+            List<IWorkshopTree> parsedParameters = new List<IWorkshopTree>();
+            for(int i = 0; i < method.Parameters.Length; i++)
+            {
+                if (method.Parameters[i] is Parameter || method.Parameters[i] is EnumParameter)
+                {
+                    // Get the default parameter value if there are not enough parameters.
+                    if (methodNode.Parameters.Length <= i)
+                    {
+                        IWorkshopTree defaultValue = method.Parameters[i].GetDefault();
+
+                        // If there is no default value, throw a syntax error.
+                        if (defaultValue == null)
+                            throw SyntaxErrorException.MissingParameter(method.Parameters[i].Name, method.Name, methodNode.Range);
+                        
+                        parsedParameters.Add(defaultValue);
+                    }
+                    else
+                    {
+                        if (method.Parameters[i] is Parameter)
+                            // Parse the parameter
+                            parsedParameters.Add(ParseExpression(scope, methodNode.Parameters[i]));
+                        else if (method.Parameters[i] is EnumParameter)
+                        {
+                            // Parse the enum
+                            if (methodNode.Parameters[i] is EnumNode)
+                            {
+                                EnumNode enumNode = (EnumNode)methodNode.Parameters[i];
+                                parsedParameters.Add(
+                                    (IWorkshopTree)EnumData.ToElement(enumNode.EnumMember)
+                                    ?? (IWorkshopTree)enumNode.EnumMember
+                                );
+                            }
+                            else
+                                throw new SyntaxErrorException("Expected the enum " + ((EnumParameter)method.Parameters[i]).EnumData.CodeName + ", got a value instead.", ((Node)methodNode.Parameters[i]).Range);
+                        }
+                    }
+                }
+                else if (method.Parameters[i] is VarRefParameter)
+                {
+                    // A VarRef parameter is always required, there will never be a default to fallback on.
+                    if (methodNode.Parameters.Length <= i)
+                        throw SyntaxErrorException.MissingParameter(method.Parameters[i].Name, method.Name, methodNode.Range);
+                    
+                    // A VarRef parameter must be a variable
+                    if (!(methodNode.Parameters[i] is VariableNode))
+                        throw new SyntaxErrorException("Expected variable", ((Node)methodNode.Parameters[i]).Range);
+                    
+                    VariableNode variableNode = (VariableNode)methodNode.Parameters[i];
+
+                    Element target = null;
+                    if (variableNode.Target != null)
+                        target = ParseExpression(scope, variableNode.Target);
+
+                    parsedParameters.Add(new VarRef((IndexedVar)scope.GetVar(variableNode), target));
+                        
+                }
+                else throw new NotImplementedException();
+            }
+
+            return parsedParameters;
         }
 
         void ParseBlock(ScopeGroup scopeGroup, BlockNode blockNode, bool fulfillReturns, IndexedVar returnVar)
@@ -675,7 +764,7 @@ namespace Deltin.Deltinteger.Parse
 
                     Element array = ParseExpression(scope, forEachNode.Array);
 
-                    IndexedVar index = VarCollection.AssignVar(scope, $"'{forEachNode.VariableName}' for index", IsGlobal);
+                    IndexedVar index = VarCollection.AssignVar(scope, $"'{forEachNode.VariableName}' for index", IsGlobal, null);
 
                     int offset = 0;
 
@@ -691,12 +780,13 @@ namespace Deltin.Deltinteger.Parse
                         return new V_Number(offset);
                     }
 
-                    ElementReferenceVar variable = VarCollection.AssignElementReferenceVar(
-                        forGroup, 
-                        forEachNode.VariableName, 
-                        forEachNode, 
-                        getVariableReference()
-                    );
+                    ElementReferenceVar variable = new ElementReferenceVar(forEachNode.VariableName, forGroup, forEachNode, getVariableReference());
+                    // VarCollection.AssignElementReferenceVar(
+                    //     forGroup, 
+                    //     forEachNode.VariableName, 
+                    //     forEachNode, 
+                    //     getVariableReference()
+                    // );
 
                     // Reset the counter.
                     Actions.AddRange(index.SetVariable(new V_Number(0)));
@@ -1024,9 +1114,9 @@ namespace Deltin.Deltinteger.Parse
         {
             IndexedVar var;
             if (defineNode.UseVar == null)
-                var = VarCollection.AssignDefinedVar(scope, IsGlobal, defineNode.VariableName, defineNode);
+                var = VarCollection.AssignVar(scope, defineNode.VariableName, IsGlobal, defineNode);
             else
-                var = VarCollection.AssignDefinedVar(scope, IsGlobal, defineNode.VariableName, defineNode.UseVar.Variable, defineNode.UseVar.Index, defineNode);
+                var = VarCollection.AssignVar(scope, defineNode.VariableName, IsGlobal, defineNode.UseVar.Variable, defineNode.UseVar.Index, defineNode);
 
             // Set the defined variable if the variable is defined like "define var = 1"
             if (defineNode.Value != null)

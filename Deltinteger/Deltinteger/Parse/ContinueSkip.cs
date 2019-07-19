@@ -27,7 +27,7 @@ namespace Deltin.Deltinteger.Parse
                 return;
             IsSetup = true;
 
-            SkipCount = VarCollection.AssignVar(null, "ContinueSkip", IsGlobal);
+            SkipCount = VarCollection.AssignVar(null, "ContinueSkip", IsGlobal, null);
             if (SkipCount is RecursiveVar)
                 throw new Exception();
             

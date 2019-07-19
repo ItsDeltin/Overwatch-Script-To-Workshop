@@ -2,13 +2,8 @@ rule: "Recursive Test"
 Event.OngoingPlayer
 if (IsButtonHeld(EventPlayer(), Button.Interact))
 {
-    define wow = [0, 1, 2];
-
-    wow[3][2] = [10, 20, 30];
-    scanArray(wow);
-
-    wow[3][2] = InsertValueInArray(wow[3][2], 1, 5);
-    scanArray(wow);
+    myClass wow = new myClass();
+    wow.wow = 4;
 }
 
 # Prints every value in a multidimensional array.
@@ -49,4 +44,9 @@ recursive method arrayWalk(array, dims)
             arrayWalk(array[index], Append(dims, index));
         }
     }
+}
+
+struct myClass
+{
+    define wow = 2
 }

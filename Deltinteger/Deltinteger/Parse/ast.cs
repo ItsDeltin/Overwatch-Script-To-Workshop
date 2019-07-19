@@ -243,7 +243,6 @@ namespace Deltin.Deltinteger.Parse
         {
             string methodName = context.PART().GetText();
 
-            // TODO check null check spots in [].
             Node[] parameters = new Node[context.call_parameters()?.expr().Length ?? 0];
             for (int i = 0; i < parameters.Length; i++)
                 parameters[i] = Visit(context.call_parameters().expr()[i]);
@@ -296,6 +295,11 @@ namespace Deltin.Deltinteger.Parse
                 values[i] = VisitExpr(context.expr()[i]);
 
             return new CreateArrayNode(values, Range.GetRange(context));
+        }
+
+        public override Node VisitCreate_object(DeltinScriptParser.Create_objectContext context)
+        {
+            return new CreateObjectNode(context, this);
         }
         #endregion
         
@@ -422,6 +426,11 @@ namespace Deltin.Deltinteger.Parse
             return new ReturnNode(returnValue, Range.GetRange(context));
         }
         #endregion
+
+        public override Node VisitType_define(DeltinScriptParser.Type_defineContext context)
+        {
+            return new TypeDefineNode(context, this);
+        }
     }
 
     public abstract class Node
@@ -477,7 +486,7 @@ namespace Deltin.Deltinteger.Parse
 
     public class TypeDefineNode : Node
     {
-        public DefineType DefineType { get; }
+        public TypeKind DefineType { get; }
         public string Name { get; }
         public DefineNode[] DefinedVars { get; }
         public ConstructorNode[] Constructors { get; }
@@ -487,11 +496,11 @@ namespace Deltin.Deltinteger.Parse
             if (context.CLASS() != null)
             {
                 visitor._diagnostics.Add(new Diagnostic("Classes are not yet supported, use struct instead.", Range.GetRange(context.CLASS())) { severity = Diagnostic.Error });
-                DefineType = DefineType.Class;
+                DefineType = TypeKind.Class;
             }
 
             else if (context.STRUCT() != null)
-                DefineType = DefineType.Struct;
+                DefineType = TypeKind.Struct;
             
             else throw new Exception();
 
@@ -516,6 +525,7 @@ namespace Deltin.Deltinteger.Parse
     {
         public AccessLevel AccessLevel { get; }
         public DefineNode[] Parameters { get; }
+        public BlockNode BlockNode { get; }
 
         public ConstructorNode(DeltinScriptParser.ConstructorContext context, BuildAstVisitor visitor) : base (Range.GetRange(context))
         {
@@ -526,23 +536,14 @@ namespace Deltin.Deltinteger.Parse
             AccessLevel = AccessLevel.Private;
             if (context.accessor() != null)
                 AccessLevel = (AccessLevel)Enum.Parse(typeof(AccessLevel), context.accessor().GetText(), true);
+            
+            BlockNode = (BlockNode)visitor.VisitBlock(context.block());
         }
 
         public override Node[] Children()
         {
-            return ArrayBuilder<Node>.Build(Parameters);
+            return ArrayBuilder<Node>.Build(Parameters, BlockNode);
         }
-    }
-
-    public enum DefineType
-    {
-        Class,
-        Struct
-    }
-    public enum AccessLevel
-    {
-        Public,
-        Private
     }
 
     public class RulesetNode : Node
@@ -943,6 +944,26 @@ namespace Deltin.Deltinteger.Parse
         public override Node[] Children()
         {
             return ArrayBuilder<Node>.Build(Condition, Consequent, Alternative);
+        }
+    }
+
+    public class CreateObjectNode : Node
+    {
+        public string TypeName { get; }
+        public Node[] Parameters { get; }
+
+        public CreateObjectNode(DeltinScriptParser.Create_objectContext context, BuildAstVisitor visitor) : base(Range.GetRange(context))
+        {
+            TypeName = context.type.Text;
+            
+            Parameters = new Node[context.call_parameters()?.expr().Length ?? 0];
+            for (int i = 0; i < Parameters.Length; i++)
+                Parameters[i] = visitor.VisitExpr(context.call_parameters().expr()[i]);
+        }
+
+        public override Node[] Children()
+        {
+            return Parameters;
         }
     }
 

@@ -14,15 +14,15 @@ namespace Deltin.Deltinteger.Elements
         {
             var eventPlayer = new V_EventPlayer();
 
-            IndexedVar a      = TranslateContext.VarCollection.AssignVar(Scope, "AngleOfVectors: a"     , TranslateContext.IsGlobal);
-            IndexedVar b      = TranslateContext.VarCollection.AssignVar(Scope, "AngleOfVectors: b"     , TranslateContext.IsGlobal);
-            IndexedVar c      = TranslateContext.VarCollection.AssignVar(Scope, "AngleOfVectors: c"     , TranslateContext.IsGlobal);
-            IndexedVar ab     = TranslateContext.VarCollection.AssignVar(Scope, "AngleOfVectors: ab"    , TranslateContext.IsGlobal);
-            IndexedVar bc     = TranslateContext.VarCollection.AssignVar(Scope, "AngleOfVectors: bc"    , TranslateContext.IsGlobal);
-            IndexedVar abVec  = TranslateContext.VarCollection.AssignVar(Scope, "AngleOfVectors: abVec" , TranslateContext.IsGlobal);
-            IndexedVar bcVec  = TranslateContext.VarCollection.AssignVar(Scope, "AngleOfVectors: bcVec" , TranslateContext.IsGlobal);
-            IndexedVar abNorm = TranslateContext.VarCollection.AssignVar(Scope, "AngleOfVectors: abNorm", TranslateContext.IsGlobal);
-            IndexedVar bcNorm = TranslateContext.VarCollection.AssignVar(Scope, "AngleOfVectors: bcNorm", TranslateContext.IsGlobal);
+            IndexedVar a      = TranslateContext.VarCollection.AssignVar(Scope, "AngleOfVectors: a"     , TranslateContext.IsGlobal, null);
+            IndexedVar b      = TranslateContext.VarCollection.AssignVar(Scope, "AngleOfVectors: b"     , TranslateContext.IsGlobal, null);
+            IndexedVar c      = TranslateContext.VarCollection.AssignVar(Scope, "AngleOfVectors: c"     , TranslateContext.IsGlobal, null);
+            IndexedVar ab     = TranslateContext.VarCollection.AssignVar(Scope, "AngleOfVectors: ab"    , TranslateContext.IsGlobal, null);
+            IndexedVar bc     = TranslateContext.VarCollection.AssignVar(Scope, "AngleOfVectors: bc"    , TranslateContext.IsGlobal, null);
+            IndexedVar abVec  = TranslateContext.VarCollection.AssignVar(Scope, "AngleOfVectors: abVec" , TranslateContext.IsGlobal, null);
+            IndexedVar bcVec  = TranslateContext.VarCollection.AssignVar(Scope, "AngleOfVectors: bcVec" , TranslateContext.IsGlobal, null);
+            IndexedVar abNorm = TranslateContext.VarCollection.AssignVar(Scope, "AngleOfVectors: abNorm", TranslateContext.IsGlobal, null);
+            IndexedVar bcNorm = TranslateContext.VarCollection.AssignVar(Scope, "AngleOfVectors: bcNorm", TranslateContext.IsGlobal, null);
 
             Element zeroVec = Element.Part<V_Vector>(new V_Number(0), new V_Number(0), new V_Number(0));
 

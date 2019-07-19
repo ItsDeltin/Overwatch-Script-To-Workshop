@@ -110,6 +110,7 @@
     <Compile Include="Parse\UserMethod.cs" />
     <Compile Include="Parse\ContinueSkip.cs" />
     <Compile Include="Parse\AdditionalErrorChecking.cs" />
+    <Compile Include="Parse\DefinedType.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Content Include="Start Language Server.bat">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>

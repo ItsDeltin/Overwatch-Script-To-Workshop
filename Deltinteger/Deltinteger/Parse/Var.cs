@@ -17,7 +17,7 @@ namespace Deltin.Deltinteger.Parse
 
         public VarCollection()
         {
-            IndexedVar tempArrayBuilderVar = AssignVar(null, "Multidimensional Array Builder", true);
+            IndexedVar tempArrayBuilderVar = AssignVar(null, "Multidimensional Array Builder", true, null);
             WorkshopArrayBuilder = new WorkshopArrayBuilder(Variable.B, tempArrayBuilderVar);
             tempArrayBuilderVar.ArrayBuilder = WorkshopArrayBuilder;
         }
@@ -84,24 +84,13 @@ namespace Deltin.Deltinteger.Parse
             }
         }
 
-        public IndexedVar AssignVar(ScopeGroup scope, string name, bool isGlobal)
-        {
-            IndexedVar var;
-            
-            if (scope == null || !scope.Recursive)
-                var = new IndexedVar  (scope, Constants.INTERNAL_ELEMENT + name, isGlobal, UseVar, new int[] { Assign(isGlobal) }, WorkshopArrayBuilder);
-            else
-                var = new RecursiveVar(scope, Constants.INTERNAL_ELEMENT + name, isGlobal, UseVar, new int[] { Assign(isGlobal) }, WorkshopArrayBuilder);
-            
-            Set(isGlobal, var);
-            AddVar(var);
-            return var;
-        }
-
-        public IndexedVar AssignDefinedVar(ScopeGroup scope, bool isGlobal, string name, Node node)
+        public IndexedVar AssignVar(ScopeGroup scope, string name, bool isGlobal, Node node)
         {
             IndexedVar var;
 
+            if (node == null)
+                name = Constants.INTERNAL_ELEMENT + name;
+            
             if (scope == null || !scope.Recursive)
                 var = new IndexedVar  (scope, name, isGlobal, UseVar, new int[] { Assign(isGlobal) }, WorkshopArrayBuilder, node);
             else
@@ -112,7 +101,7 @@ namespace Deltin.Deltinteger.Parse
             return var;
         }
 
-        public IndexedVar AssignDefinedVar(ScopeGroup scope, bool isGlobal, string name, Variable variable, int[] index, Node node)
+        public IndexedVar AssignVar(ScopeGroup scope, string name, bool isGlobal, Variable variable, int[] index, Node node)
         {
             IndexedVar var;
 
@@ -123,14 +112,6 @@ namespace Deltin.Deltinteger.Parse
 
             AddVar(var);
             return var;
-        }
-
-        public ElementReferenceVar AssignElementReferenceVar(ScopeGroup scope, string name, Node node, Element reference)
-        {
-            ElementReferenceVar var = new ElementReferenceVar(name, scope, node, reference);
-
-            AddVar(var);
-            return var; 
         }
 
         private void AddVar(Var var)
@@ -152,13 +133,9 @@ namespace Deltin.Deltinteger.Parse
         public bool IsDefinedVar { get; }
         public Node Node { get; }
 
-        public Var(string name)
+        public Var(string name, ScopeGroup scope, Node node = null)
         {
             Name = name;
-        }
-
-        public Var(string name, ScopeGroup scope, Node node = null) : this (name)
-        {
             Scope = scope;
             Node = node;
             IsDefinedVar = node != null;
@@ -176,24 +153,16 @@ namespace Deltin.Deltinteger.Parse
 
     public class IndexedVar : Var
     {
+        public WorkshopArrayBuilder ArrayBuilder { get; set; }
         public bool IsGlobal { get; }
         public Variable Variable { get; }
         public int[] Index { get; }
         public bool UsesIndex { get; }
+        
+        public DefinedType Type { get; }
 
-        public WorkshopArrayBuilder ArrayBuilder { get; set; }
 
         private readonly IWorkshopTree VariableAsWorkshop; 
-
-        public IndexedVar(ScopeGroup scope, string name, bool isGlobal, Variable variable, int[] index, WorkshopArrayBuilder arrayBuilder) : base (name, scope)
-        {
-            IsGlobal = isGlobal;
-            Variable = variable;
-            VariableAsWorkshop = EnumData.GetEnumValue(Variable);
-            Index = index;
-            UsesIndex = index != null && index.Length > 0;
-            this.ArrayBuilder = arrayBuilder;
-        }
 
         public IndexedVar(ScopeGroup scopeGroup, string name, bool isGlobal, Variable variable, int[] index, WorkshopArrayBuilder arrayBuilder, Node node)
             : base (name, scopeGroup, node)
@@ -253,11 +222,6 @@ namespace Deltin.Deltinteger.Parse
     {
         public RecursiveVar(ScopeGroup scopeGroup, string name, bool isGlobal, Variable variable, int[] index, WorkshopArrayBuilder arrayBuilder, Node node)
             : base (scopeGroup, name, isGlobal, variable, index, arrayBuilder, node)
-        {
-        }
-
-        public RecursiveVar(ScopeGroup scope, string name, bool isGlobal, Variable variable, int[] index, WorkshopArrayBuilder arrayBuilder)
-            : base (scope, name, isGlobal, variable, index, arrayBuilder)
         {
         }
 

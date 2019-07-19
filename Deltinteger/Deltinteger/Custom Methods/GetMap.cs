@@ -8,7 +8,7 @@ namespace Deltin.Deltinteger.Elements
     {
         protected override MethodResult Get()
         {
-            IndexedVar temp = TranslateContext.VarCollection.AssignVar(Scope, "GetMap: temp", TranslateContext.IsGlobal);
+            IndexedVar temp = TranslateContext.VarCollection.AssignVar(Scope, "GetMap: temp", TranslateContext.IsGlobal, null);
 
             Element[] actions = ArrayBuilder<Element>.Build
             (
