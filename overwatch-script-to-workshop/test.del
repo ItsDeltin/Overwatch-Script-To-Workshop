@@ -1,10 +1,10 @@
 rule: "Recursive Test"
-Event.OngoingPlayer
-if (IsButtonHeld(EventPlayer(), Button.Interact))
+//Event.OngoingPlayer
+//if (IsButtonHeld(EventPlayer(), Button.Interact))
 {
-    myClass wow = new myClass();
-    wow.wow = 4;
-}
+    myClass a = new myClass(2);
+    SmallMessage(a.wow);
+} 
 
 # Prints every value in a multidimensional array.
 method scanArray(array)

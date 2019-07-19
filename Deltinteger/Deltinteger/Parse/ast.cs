@@ -171,15 +171,9 @@ namespace Deltin.Deltinteger.Parse
             }
 
             // Seperator
-            else if (context.ChildCount == 3
-            && context.GetChild(0) is DeltinScriptParser.ExprContext
-            && context.GetChild(1).GetText() == "."
-            && context.GetChild(2) is DeltinScriptParser.VariableContext)
+            else if (context.SEPERATOR() != null && context.expr().Length >= 2)
             {
-                string name = context.GetChild(2).GetText();
-                Node target = Visit(context.GetChild(0));
-
-                node = new VariableNode(name, target, Range.GetRange(context));
+                node = new ExpressionTreeNode(context, this);
             }
             
             // Not
@@ -804,6 +798,22 @@ namespace Deltin.Deltinteger.Parse
         public override Node[] Children()
         {
             return ArrayBuilder<Node>.Build(Target);
+        }
+    }
+
+    public class ExpressionTreeNode : Node
+    {
+        public Node[] Tree { get; }
+        public ExpressionTreeNode(DeltinScriptParser.ExprContext context, BuildAstVisitor visitor) : base (Range.GetRange(context))
+        {
+            Tree = new Node[context.expr().Length];
+            for (int i = 0; i < Tree.Length; i++)
+                Tree[i] = visitor.VisitExpr(context.expr(i));
+        }
+
+        public override Node[] Children()
+        {
+            return Tree;
         }
     }
 

@@ -196,10 +196,11 @@ namespace Deltin.Deltinteger.Elements
         public ElementList ElementList { get; private set; }
         public ElementData ElementData { get; private set; }
         public ParameterBase[] ParameterData { get; private set; }
-        public string Comment { get; set; } = null;
         public string Name { get { return ElementList.Name; } }
 
+        public string Comment { get; set; } = null;
         public IWorkshopTree[] ParameterValues { get; set; }
+        public Deltin.Deltinteger.Parse.DefinedType SupportedType { get; set; }
 
         public override string ToString()
         {

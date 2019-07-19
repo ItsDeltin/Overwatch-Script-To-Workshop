@@ -395,7 +395,29 @@ namespace Deltin.Deltinteger.Parse
                         );
                     }
                     return store.GetVariable();
-            }
+
+                // Expression tree
+                case ExpressionTreeNode expressionTree:
+
+                    Element root = ParseExpression(scope, expressionTree.Tree[0]);
+
+                    if (root.SupportedType != null)
+                    {
+                        if (expressionTree.Tree[1] is VariableNode)
+                        {
+                            int i;
+                            for (i = 0; i < root.SupportedType.DefinedVars.Length; i++)
+                                if (root.SupportedType.DefinedVars[i].VariableName == ((VariableNode)expressionTree.Tree[1]).Name)
+                                    break;
+                            
+                            if (i == root.SupportedType.DefinedVars.Length)
+                                throw new SyntaxErrorException("eeergh idiot", null);
+
+                            return Element.Part<V_ValueInArray>(root, new V_Number(i));
+                        }
+                    }
+                    throw new SyntaxErrorException("wew", null);
+                }
 
             throw new Exception();
         }
@@ -1119,8 +1141,12 @@ namespace Deltin.Deltinteger.Parse
                 var = VarCollection.AssignVar(scope, defineNode.VariableName, IsGlobal, defineNode.UseVar.Variable, defineNode.UseVar.Index, defineNode);
 
             // Set the defined variable if the variable is defined like "define var = 1"
-            if (defineNode.Value != null)
-                Actions.AddRange(var.InScope(ParseExpression(scope, defineNode.Value)));
+            Element[] inScopeActions = var.InScope(ParseExpression(scope, defineNode.Value));
+            if (inScopeActions != null)
+                Actions.AddRange(inScopeActions);
+            
+            if (defineNode.Type != null)
+                var.Type = ParserData.GetDefinedType(defineNode.Type);
         }
 
         int GetSkipCount(Element skipElement)

@@ -35,7 +35,7 @@ expr
 	| variable                                    // Variables
 	| exprgroup
 	| create_object
-	| expr SEPERATOR variable                     // Variable seperation
+	| expr (SEPERATOR expr)+             // Variable seperation
 	| NOT expr                                     // !x
 	| expr ('<' | '<=' | '==' | '>=' | '>' | '!=') expr // x == y
 	| expr BOOL expr                              // x & y

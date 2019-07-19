@@ -159,8 +159,7 @@ namespace Deltin.Deltinteger.Parse
         public int[] Index { get; }
         public bool UsesIndex { get; }
         
-        public DefinedType Type { get; }
-
+        public DefinedType Type { get; set; }
 
         private readonly IWorkshopTree VariableAsWorkshop; 
 
@@ -176,6 +175,14 @@ namespace Deltin.Deltinteger.Parse
         }
 
         public override Element GetVariable(Element targetPlayer = null)
+        {
+            Element element = Get(targetPlayer);
+            if (Type != null)
+                element.SupportedType = Type;
+            return element;
+        }
+
+        protected virtual Element Get(Element targetPlayer = null)
         {
             return WorkshopArrayBuilder.GetVariable(IsGlobal, targetPlayer, Variable, IntToElement(Index));
         }
@@ -225,9 +232,9 @@ namespace Deltin.Deltinteger.Parse
         {
         }
 
-        public override Element GetVariable(Element targetPlayer = null)
+        protected override Element Get(Element targetPlayer = null)
         {
-            return Element.Part<V_LastOf>(base.GetVariable(targetPlayer));
+            return Element.Part<V_LastOf>(base.Get(targetPlayer));
         }
 
         public override Element[] SetVariable(Element value, Element targetPlayer = null, params Element[] setAtIndex)
