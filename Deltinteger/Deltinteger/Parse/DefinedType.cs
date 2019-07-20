@@ -4,7 +4,7 @@ namespace Deltin.Deltinteger.Parse
     {
         public string Name { get; }
         public TypeKind DefineType { get; }
-        public DefineNode[] DefinedVars { get; }
+        public InclassDefineNode[] DefinedVars { get; }
         public ConstructorNode[] Constructors { get; }
         public DefinedType(TypeDefineNode node)
         {

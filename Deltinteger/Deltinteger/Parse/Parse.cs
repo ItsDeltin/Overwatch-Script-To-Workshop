@@ -64,21 +64,21 @@ namespace Deltin.Deltinteger.Parse
 
                 // Get the variables
                 foreach (var definedVar in RuleSetNode.DefinedVars)
-                    if (definedVar.Define.UseVar == null)
-                        VarCollection.AssignVar(root, definedVar.Define.VariableName, definedVar.IsGlobal, definedVar);
+                    if (definedVar.UseVar == null)
+                        VarCollection.AssignVar(root, definedVar.VariableName, definedVar.IsGlobal, definedVar);
                     else
                         VarCollection.AssignVar(
                             root, 
-                            definedVar.Define.VariableName, 
+                            definedVar.VariableName, 
                             definedVar.IsGlobal,
-                            definedVar.Define.UseVar.Variable, 
-                            definedVar.Define.UseVar.Index,
+                            definedVar.UseVar.Variable, 
+                            definedVar.UseVar.Index,
                             definedVar
                         );
 
                 // Get the user methods.
                 for (int i = 0; i < RuleSetNode.UserMethods.Length; i++)
-                    UserMethods.Add(new UserMethod(RuleSetNode.UserMethods[i]));
+                    UserMethods.Add(new UserMethod(root, RuleSetNode.UserMethods[i]));
 
                 // Parse the rules.
                 Rules = new List<Rule>();
@@ -490,7 +490,7 @@ namespace Deltin.Deltinteger.Parse
                     if (variableNode.Target != null)
                         target = ParseExpression(scope, variableNode.Target);
 
-                    parsedParameters.Add(new VarRef((IndexedVar)scope.GetVar(variableNode), target));
+                    parsedParameters.Add(new VarRef((IndexedVar)scope.GetVar(variableNode.Name, variableNode.Range), target));
                         
                 }
                 else throw new NotImplementedException();
@@ -665,70 +665,6 @@ namespace Deltin.Deltinteger.Parse
 
             methodNode.RelatedElement = result;
             return result;
-        }
-
-        List<IWorkshopTree> ParseParameters(ScopeGroup scope, IMethod method, MethodNode methodNode)
-        {
-            List<IWorkshopTree> parsedParameters = new List<IWorkshopTree>();
-            for(int i = 0; i < method.Parameters.Length; i++)
-            {
-                if (method.Parameters[i] is Parameter || method.Parameters[i] is EnumParameter)
-                {
-                    // Get the default parameter value if there are not enough parameters.
-                    if (methodNode.Parameters.Length <= i)
-                    {
-                        IWorkshopTree defaultValue = method.Parameters[i].GetDefault();
-
-                        // If there is no default value, throw a syntax error.
-                        if (defaultValue == null)
-                            throw SyntaxErrorException.MissingParameter(method.Parameters[i].Name, method.Name, methodNode.Range);
-                        
-                        parsedParameters.Add(defaultValue);
-                    }
-                    else
-                    {
-                        if (method.Parameters[i] is Parameter)
-                            // Parse the parameter
-                            parsedParameters.Add(ParseExpression(scope, methodNode.Parameters[i]));
-                        else if (method.Parameters[i] is EnumParameter)
-                        {
-                            // Parse the enum
-                            if (methodNode.Parameters[i] is EnumNode)
-                            {
-                                EnumNode enumNode = (EnumNode)methodNode.Parameters[i];
-                                parsedParameters.Add(
-                                    (IWorkshopTree)EnumData.ToElement(enumNode.EnumMember)
-                                    ?? (IWorkshopTree)enumNode.EnumMember
-                                );
-                            }
-                            else
-                                throw new SyntaxErrorException("Expected the enum " + ((EnumParameter)method.Parameters[i]).EnumData.CodeName + ", got a value instead.", ((Node)methodNode.Parameters[i]).Range);
-                        }
-                    }
-                }
-                else if (method.Parameters[i] is VarRefParameter)
-                {
-                    // A VarRef parameter is always required, there will never be a default to fallback on.
-                    if (methodNode.Parameters.Length <= i)
-                        throw SyntaxErrorException.MissingParameter(method.Parameters[i].Name, method.Name, methodNode.Range);
-                    
-                    // A VarRef parameter must be a variable
-                    if (!(methodNode.Parameters[i] is VariableNode))
-                        throw new SyntaxErrorException("Expected variable", ((Node)methodNode.Parameters[i]).Range);
-                    
-                    VariableNode variableNode = (VariableNode)methodNode.Parameters[i];
-
-                    Element target = null;
-                    if (variableNode.Target != null)
-                        target = ParseExpression(scope, variableNode.Target);
-
-                    parsedParameters.Add(new VarRef((IndexedVar)scope.GetVar(variableNode), target));
-                        
-                }
-                else throw new NotImplementedException();
-            }
-
-            return parsedParameters;
         }
 
         void ParseBlock(ScopeGroup scopeGroup, BlockNode blockNode, bool fulfillReturns, IndexedVar returnVar)
