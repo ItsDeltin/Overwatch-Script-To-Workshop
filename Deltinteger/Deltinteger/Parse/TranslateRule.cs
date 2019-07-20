@@ -253,6 +253,7 @@ namespace Deltin.Deltinteger.Parse
                         throw new SyntaxErrorException($"The type {createObjectNode.TypeName} could not be found.", createObjectNode.Range);
 
                     IndexedVar store = VarCollection.AssignVar(scope, typeData.Name + " store", IsGlobal, null);
+                    store.Type = typeData;
                     for (int i = 0; i < typeData.DefinedVars.Length; i++)
                     {
                         Actions.AddRange(
@@ -273,11 +274,11 @@ namespace Deltin.Deltinteger.Parse
                             string variableName = ((VariableNode)expressionTree.Tree[1]).Name;
 
                             int i;
-                            for (i = 0; i < root.SupportedType.DefinedVars.Length; i++)
-                                if (root.SupportedType.DefinedVars[i].VariableName == variableName)
+                            for (i = 0; i < root.SupportedType.Type.DefinedVars.Length; i++)
+                                if (root.SupportedType.Type.DefinedVars[i].VariableName == variableName)
                                     break;
                             
-                            if (i == root.SupportedType.DefinedVars.Length)
+                            if (i == root.SupportedType.Type.DefinedVars.Length)
                                 throw new SyntaxErrorException(
                                     $"The variable {variableName} does not exist in the type {root.SupportedType.Name}.", 
                                     expressionTree.Tree[1].Range
@@ -287,7 +288,7 @@ namespace Deltin.Deltinteger.Parse
                         }
                         else if (expressionTree.Tree[1] is MethodNode)
                         {
-                            ScopeGroup methodScope = root.SupportedType.GetRootScope(root, VarCollection);
+                            ScopeGroup methodScope = root.SupportedType.Type.GetRootScope(root.SupportedType, VarCollection);
                             Element result = ParseMethod(methodScope, (MethodNode)expressionTree.Tree[1], false);
                             Actions.AddRange(methodScope.Out());
                             return result;

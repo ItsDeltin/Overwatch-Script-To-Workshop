@@ -521,7 +521,7 @@ namespace Deltin.Deltinteger.Parse
 
         public override Node[] Children()
         {
-            return ArrayBuilder<Node>.Build(DefinedVars, Constructors);
+            return ArrayBuilder<Node>.Build(DefinedVars, Constructors, Methods);
         }
     }
 
@@ -587,7 +587,7 @@ namespace Deltin.Deltinteger.Parse
 
         public override Node[] Children()
         {
-            return ArrayBuilder<Node>.Build(Rules, DefinedVars, UserMethods);
+            return ArrayBuilder<Node>.Build(Rules, DefinedVars, UserMethods, DefinedTypes);
         }
     }
 

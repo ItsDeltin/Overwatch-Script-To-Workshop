@@ -200,7 +200,8 @@ namespace Deltin.Deltinteger.Elements
 
         public string Comment { get; set; } = null;
         public IWorkshopTree[] ParameterValues { get; set; }
-        public Deltin.Deltinteger.Parse.DefinedType SupportedType { get; set; }
+
+        public Deltin.Deltinteger.Parse.IndexedVar SupportedType { get; set; }
 
         public override string ToString()
         {

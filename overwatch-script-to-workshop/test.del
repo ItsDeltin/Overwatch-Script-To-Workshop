@@ -53,6 +53,7 @@ struct myClass
 
     method ResetWow()
     {
+        SmallMessage();
         wow = 4;
     }
 }

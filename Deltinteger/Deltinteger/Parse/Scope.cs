@@ -51,7 +51,7 @@ namespace Deltin.Deltinteger.Parse
             IsInScope = false;
 
             List<Element> actions = new List<Element>();
-            foreach (Var var in InScope)
+            foreach (IScopeable var in InScope)
                 if (var is IndexedVar)
                 {
                     Element[] outOfScopeActions = ((IndexedVar)var).OutOfScope();
@@ -64,7 +64,8 @@ namespace Deltin.Deltinteger.Parse
             while (Children.Count > 0)
                 actions.AddRange(Children[0].Out());
             
-            Parent.Children.Remove(this);
+            if (Parent != null)
+                Parent.Children.Remove(this);
 
             return actions.ToArray();
         }

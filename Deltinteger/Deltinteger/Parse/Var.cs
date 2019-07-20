@@ -178,7 +178,7 @@ namespace Deltin.Deltinteger.Parse
         {
             Element element = Get(targetPlayer);
             if (Type != null)
-                element.SupportedType = Type;
+                element.SupportedType = this;
             return element;
         }
 
@@ -202,6 +202,11 @@ namespace Deltin.Deltinteger.Parse
         public virtual Element[] OutOfScope(Element targetPlayer = null)
         {
             return null;
+        }
+
+        public IndexedVar CreateChild(ScopeGroup scope, string name, int[] index)
+        {
+            return new IndexedVar(scope, name, IsGlobal, Variable, ArrayBuilder<int>.Build(Index, index), ArrayBuilder, null);
         }
 
         public override string ToString()
