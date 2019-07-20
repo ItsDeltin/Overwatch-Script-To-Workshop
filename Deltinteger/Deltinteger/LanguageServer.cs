@@ -24,7 +24,7 @@ namespace Deltin.Deltinteger.LanguageServer
         const int DefaultPort = 9145;
         const int DefaultClientPort = 9146;
 
-        ParserData parserData;
+        ParsingData parserData;
 
         Dictionary<string, Document> documents = new Dictionary<string, Document>();
         
@@ -130,7 +130,7 @@ namespace Deltin.Deltinteger.LanguageServer
             }
             document.Content = content;
 
-            parserData = ParserData.GetParser(content);
+            parserData = ParsingData.GetParser(content);
 
             if (parserData.Rules != null && parserData.Diagnostics.Count == 0)
             {

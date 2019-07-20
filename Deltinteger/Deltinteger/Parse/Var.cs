@@ -126,7 +126,7 @@ namespace Deltin.Deltinteger.Parse
         private readonly IndexedVar[] PlayerCollection = new IndexedVar[Constants.MAX_ARRAY_LENGTH];
     }
 
-    public abstract class Var
+    public abstract class Var : IScopeable
     {
         public string Name { get; }
         public ScopeGroup Scope { get; private set; }

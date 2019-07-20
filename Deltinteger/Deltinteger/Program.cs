@@ -70,7 +70,7 @@ namespace Deltin.Deltinteger
         {
             string text = File.ReadAllText(parseFile);
 
-            ParserData result = ParserData.GetParser(text);
+            ParsingData result = ParsingData.GetParser(text);
 
             if (result.Diagnostics.Count == 0)
             {

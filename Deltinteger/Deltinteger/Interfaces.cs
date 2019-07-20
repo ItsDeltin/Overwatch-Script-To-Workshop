@@ -29,4 +29,9 @@ namespace Deltin.Deltinteger
     {
         int SkipParameterIndex();
     }
+
+    public interface IScopeable
+    {
+        string Name { get; }
+    }
 }

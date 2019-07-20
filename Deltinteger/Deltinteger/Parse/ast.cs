@@ -32,6 +32,11 @@ namespace Deltin.Deltinteger.Parse
             return new DefineNode(context, this);
         }
 
+        public override Node VisitInclass_define(DeltinScriptParser.Inclass_defineContext context)
+        {
+            return new InclassDefineNode(context, this);
+        }
+
         public override Node VisitUseVar(DeltinScriptParser.UseVarContext context)
         {
             if (!Enum.TryParse<Variable>(context.PART().GetText(), out Variable variable))
@@ -482,8 +487,9 @@ namespace Deltin.Deltinteger.Parse
     {
         public TypeKind DefineType { get; }
         public string Name { get; }
-        public DefineNode[] DefinedVars { get; }
+        public InclassDefineNode[] DefinedVars { get; }
         public ConstructorNode[] Constructors { get; }
+        public UserMethodNode[] Methods { get; }
 
         public TypeDefineNode(DeltinScriptParser.Type_defineContext context, BuildAstVisitor visitor) : base (Range.GetRange(context))
         {
@@ -500,13 +506,17 @@ namespace Deltin.Deltinteger.Parse
 
             Name = context.name.Text;
 
-            DefinedVars = new DefineNode[context.define().Length];
+            DefinedVars = new InclassDefineNode[context.inclass_define().Length];
             for (int i = 0; i < DefinedVars.Length; i++)
-                DefinedVars[i] = (DefineNode)visitor.VisitDefine(context.define(i));
+                DefinedVars[i] = (InclassDefineNode)visitor.VisitInclass_define(context.inclass_define(i));
             
             Constructors = new ConstructorNode[context.constructor().Length];
             for (int i = 0; i < Constructors.Length; i++)
                 Constructors[i] = (ConstructorNode)visitor.VisitConstructor(context.constructor(i));
+            
+            Methods = new UserMethodNode[context.user_method().Length];
+            for (int i = 0; i < Methods.Length; i++)
+                Methods[i] = (UserMethodNode)visitor.VisitUser_method(context.user_method(i));
         }
 
         public override Node[] Children()
@@ -562,9 +572,9 @@ namespace Deltin.Deltinteger.Parse
             UseGlobalVar = useGlobalVar;
             UsePlayerVar = usePlayerVar;
 
-            DefinedVars = new RuleDefineNode[context.rule_define().Length];
+            DefinedVars = new RuleDefineNode[context.define().Length];
             for (int i = 0; i < DefinedVars.Length; i++)
-                DefinedVars[i] = (RuleDefineNode)visitor.VisitRule_define(context.rule_define(i));
+                DefinedVars[i] = (RuleDefineNode)visitor.VisitDefine(context.define(i));
 
             UserMethods = new UserMethodNode[context.user_method().Length];
             for (int i = 0; i < UserMethods.Length; i++)
@@ -581,7 +591,14 @@ namespace Deltin.Deltinteger.Parse
         }
     }
 
-    public class DefineNode : Node
+    public interface IDefine
+    {
+        string VariableName { get; }
+        string Type { get; }
+        Node Value { get; }
+    }
+
+    public class DefineNode : Node, IDefine
     {
         public string VariableName { get; }
         public string Type { get; }
@@ -613,20 +630,48 @@ namespace Deltin.Deltinteger.Parse
         }
     }
 
-    public class RuleDefineNode : Node
+    public class RuleDefineNode : Node, IDefine
     {
-        public DefineNode Define { get; }
+        public string VariableName { get; }
+        public string Type { get; }
+        public Node Value { get; }
+        public UseVarNode UseVar { get; }
         public bool IsGlobal { get; }
 
         public RuleDefineNode(DeltinScriptParser.Rule_defineContext context, BuildAstVisitor visitor) : base(Range.GetRange(context))
         {
-            Define = (DefineNode)visitor.VisitDefine(context.define());
+            VariableName = context.name.Text;
+            Type = context.type?.Text;
+            Value = visitor.Visit(context.expr());
+            UseVar = (UseVarNode)visitor.Visit(context.useVar());
             IsGlobal = context.GLOBAL() != null;
         }
 
         public override Node[] Children()
         {
-            return ArrayBuilder<Node>.Build(Define);
+            return ArrayBuilder<Node>.Build(Value, UseVar);
+        }
+    }
+
+    public class InclassDefineNode : Node, IDefine
+    {
+        public string VariableName { get; }
+        public string Type { get; }
+        public Node Value { get; }
+        public AccessLevel AccessLevel { get; }
+
+        public InclassDefineNode(DeltinScriptParser.Inclass_defineContext context, BuildAstVisitor visitor) : base(Range.GetRange(context))
+        {
+            VariableName = context.name.Text;
+            Type = context.type?.Text;
+            Value = visitor.Visit(context.expr());
+            if (context.accessor() != null)
+                AccessLevel = (AccessLevel)Enum.Parse(typeof(AccessLevel), context.accessor().GetText());
+        }
+
+        public override Node[] Children()
+        {
+            return ArrayBuilder<Node>.Build(Value);
         }
     }
 

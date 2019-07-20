@@ -6,9 +6,9 @@ using Deltin.Deltinteger.WorkshopWiki;
 
 namespace Deltin.Deltinteger.Parse
 {
-    public class UserMethod : IMethod
+    public class UserMethod : IMethod, IScopeable
     {
-        public UserMethod(UserMethodNode node)
+        public UserMethod(ScopeGroup scope, UserMethodNode node)
         {
             Name = node.Name;
             Block = node.Block;
@@ -22,6 +22,8 @@ namespace Deltin.Deltinteger.Parse
             IsRecursive = node.IsRecursive;
             Documentation = node.Documentation;
             Wiki = new WikiMethod(Name, Documentation, null);
+
+            scope.In(this);
         }
 
         public string Name { get; }

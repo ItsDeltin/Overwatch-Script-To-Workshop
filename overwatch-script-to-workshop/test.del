@@ -4,6 +4,7 @@ rule: "Recursive Test"
 {
     myClass a = new myClass(2);
     SmallMessage(a.wow);
+    define test = a.ResetWow();
 } 
 
 # Prints every value in a multidimensional array.
@@ -49,4 +50,9 @@ recursive method arrayWalk(array, dims)
 struct myClass
 {
     define wow = 2
+
+    method ResetWow()
+    {
+        wow = 4;
+    }
 }

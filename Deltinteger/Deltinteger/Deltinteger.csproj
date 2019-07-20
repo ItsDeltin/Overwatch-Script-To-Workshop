@@ -104,6 +104,7 @@
     <Compile Include="Exceptions.cs" />
     <Compile Include="Parse\ast.cs" />
     <Compile Include="Parse\Parse.cs" />
+    <Compile Include="Parse\TranslateRule.cs" />
     <Compile Include="Parse\Var.cs" />
     <Compile Include="Parse\Scope.cs" />
     <Compile Include="Parse\Looper.cs" />

@@ -68,7 +68,7 @@ namespace Deltin.Deltinteger.Elements
             Wiki = GetObject().Wiki();
         }
 
-        public CustomMethodBase GetObject(Translate context, ScopeGroup scope, IWorkshopTree[] parameters)
+        public CustomMethodBase GetObject(TranslateRule context, ScopeGroup scope, IWorkshopTree[] parameters)
         {
             CustomMethodBase customMethod = GetObject();
             customMethod.TranslateContext = context;
@@ -115,7 +115,7 @@ namespace Deltin.Deltinteger.Elements
 
     public abstract class CustomMethodBase
     {
-        public Translate TranslateContext { get; set; }
+        public TranslateRule TranslateContext { get; set; }
         public IWorkshopTree[] Parameters { get; set; }
         public ScopeGroup Scope { get; set; }
 

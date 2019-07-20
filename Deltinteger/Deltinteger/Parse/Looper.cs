@@ -36,7 +36,7 @@ namespace Deltin.Deltinteger.Parse
             return _rule;
         }
 
-        public VariableChase GetChaseData(IndexedVar var, Translate context)
+        public VariableChase GetChaseData(IndexedVar var, TranslateRule context)
         {
             var existingChaseData = _chases.FirstOrDefault(cd => cd.Var == var);
             if (existingChaseData != null)
