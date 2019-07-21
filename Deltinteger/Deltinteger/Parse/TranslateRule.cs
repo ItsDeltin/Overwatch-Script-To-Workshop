@@ -269,30 +269,10 @@ namespace Deltin.Deltinteger.Parse
 
                     if (root.SupportedType != null)
                     {
-                        if (expressionTree.Tree[1] is VariableNode)
-                        {
-                            string variableName = ((VariableNode)expressionTree.Tree[1]).Name;
-
-                            int i;
-                            for (i = 0; i < root.SupportedType.Type.DefinedVars.Length; i++)
-                                if (root.SupportedType.Type.DefinedVars[i].VariableName == variableName)
-                                    break;
-                            
-                            if (i == root.SupportedType.Type.DefinedVars.Length)
-                                throw new SyntaxErrorException(
-                                    $"The variable {variableName} does not exist in the type {root.SupportedType.Name}.", 
-                                    expressionTree.Tree[1].Range
-                                );
-
-                            return Element.Part<V_ValueInArray>(root, new V_Number(i));
-                        }
-                        else if (expressionTree.Tree[1] is MethodNode)
-                        {
-                            ScopeGroup methodScope = root.SupportedType.Type.GetRootScope(root.SupportedType, VarCollection);
-                            Element result = ParseMethod(methodScope, (MethodNode)expressionTree.Tree[1], false);
-                            Actions.AddRange(methodScope.Out());
-                            return result;
-                        }
+                        ScopeGroup typeScope = root.SupportedType.Type.GetRootScope(root.SupportedType, VarCollection);
+                        Element result = ParseExpression(typeScope, expressionTree.Tree[1]);
+                        Actions.AddRange(typeScope.Out());
+                        return result;
                     }
                     throw new SyntaxErrorException("wew", null);
                 }
