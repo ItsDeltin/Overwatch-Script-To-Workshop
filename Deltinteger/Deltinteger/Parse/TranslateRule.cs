@@ -264,18 +264,13 @@ namespace Deltin.Deltinteger.Parse
 
                 // Expression tree
                 case ExpressionTreeNode expressionTree:
+                    return new ParseExpressionTree(this, scope, expressionTree).ResultingElement;
+                
+                // This
+                case ThisNode thisNode:
+                    return scope.GetThis(thisNode.Range).GetVariable();
+            }
 
-                    Element root = ParseExpression(scope, expressionTree.Tree[0]);
-
-                    if (root.SupportedType != null)
-                    {
-                        ScopeGroup typeScope = root.SupportedType.Type.GetRootScope(root.SupportedType, VarCollection);
-                        Element result = ParseExpression(typeScope, expressionTree.Tree[1]);
-                        Actions.AddRange(typeScope.Out());
-                        return result;
-                    }
-                    throw new SyntaxErrorException("wew", null);
-                }
 
             throw new Exception();
         }
@@ -389,141 +384,157 @@ namespace Deltin.Deltinteger.Parse
             }
             else if (method is UserMethod)
             {
-                UserMethod userMethod = (UserMethod)method;
-
-                if (!userMethod.IsRecursive)
-                {
-                    if (MethodStackNoRecursive.Contains(userMethod))
-                        throw SyntaxErrorException.RecursionNotAllowed(methodNode.Range);
-
-                    //var methodScope = Root.Child();
-                    var methodScope = scope.Root().Child();
-
-                    // Add the parameter variables to the scope.
-                    IndexedVar[] parameterVars = new IndexedVar[parsedParameters.Count];
-                    for (int i = 0; i < parsedParameters.Count; i++)
-                    {
-                        // Create a new variable using the parameter.
-                        parameterVars[i] = VarCollection.AssignVar(methodScope, userMethod.Parameters[i].Name, IsGlobal, methodNode);
-                        Actions.AddRange(parameterVars[i].SetVariable((Element)parsedParameters[i]));
-                    }
-
-                    var returns = VarCollection.AssignVar(scope, $"{methodNode.Name}: return temp value", IsGlobal, null);
-
-                    MethodStackNoRecursive.Add(userMethod);
-
-                    userMethod.Block.RelatedScopeGroup = methodScope;
-
-                    ParseBlock(methodScope, userMethod.Block, true, returns);
-                    Actions.AddRange(methodScope.Out());
-
-                    MethodStackNoRecursive.Remove(userMethod);
-
-                    // No return value if the method is being used as an action.
-                    if (needsToBeValue)
-                        result = returns.GetVariable();
-                    else
-                        result = null;
-                }
-                else
-                {                        
-                    MethodStack lastMethod = MethodStack.FirstOrDefault(ms => ms.UserMethod == userMethod);
-                    if (lastMethod != null)
-                    {
-                        ContinueSkip.Setup();
-
-                        for (int i = 0; i < lastMethod.ParameterVars.Length; i++)
-                        {
-                            Actions.AddRange
-                            (
-                                lastMethod.ParameterVars[i].InScope(ParseExpression(scope, methodNode.Parameters[i]))
-                            );
-                        }
-
-                        Actions.AddRange(
-                            lastMethod.ContinueSkipArray.SetVariable(
-                                Element.Part<V_Append>(lastMethod.ContinueSkipArray.GetVariable(), new V_Number(ContinueSkip.GetSkipCount() + 3))
-                            )
-                        );
-
-                        ContinueSkip.SetSkipCount(lastMethod.ActionIndex);
-                        Actions.Add(Element.Part<A_Loop>());
-
-                        if (needsToBeValue)
-                            result = lastMethod.Return.GetVariable();
-                        else
-                            result = null;
-                    }
-                    else
-                    {
-                        //var methodScope = Root.Child(true);
-                        var methodScope = scope.Root().Child(true);
-
-                        // Add the parameter variables to the scope.
-                        RecursiveVar[] parameterVars = new RecursiveVar[userMethod.Parameters.Length];
-                        for (int i = 0; i < parameterVars.Length; i++)
-                        {
-                            // Create a new variable using the parameter input.
-                            parameterVars[i] = (RecursiveVar)VarCollection.AssignVar(methodScope, userMethod.Parameters[i].Name, IsGlobal, methodNode);
-                            Actions.AddRange
-                            (
-                                parameterVars[i].InScope(ParseExpression(scope, methodNode.Parameters[i]))
-                            );
-                        }
-
-                        var returns = VarCollection.AssignVar(null, $"{methodNode.Name}: return temp value", IsGlobal, null);
-
-                        IndexedVar continueSkipArray = VarCollection.AssignVar(null, $"{methodNode.Name}: continue skip array", IsGlobal, null);
-                        var stack = new MethodStack(userMethod, parameterVars, ContinueSkip.GetSkipCount(), returns, continueSkipArray);
-                        MethodStack.Add(stack);
-
-                        userMethod.Block.RelatedScopeGroup = methodScope;
-                        
-                        ParseBlock(methodScope, userMethod.Block, true, returns);
-
-                        // No return value if the method is being used as an action.
-                        if (needsToBeValue)
-                            result = returns.GetVariable();
-                        else
-                            result = null;
-
-                        // Take the method out of scope.
-                        Actions.AddRange(methodScope.Out());
-
-                        ContinueSkip.Setup();
-                        ContinueSkip.SetSkipCount(Element.Part<V_LastOf>(continueSkipArray.GetVariable()));
-
-                        Actions.AddRange(
-                            continueSkipArray.SetVariable(
-                                Element.Part<V_ArraySlice>(
-                                    continueSkipArray.GetVariable(), 
-                                    new V_Number(0),
-                                    Element.Part<V_Subtract>(
-                                        Element.Part<V_CountOf>(continueSkipArray.GetVariable()), new V_Number(1)
-                                    )
-                                )
-                            )
-                        );
-
-                        Actions.Add(
-                            Element.Part<A_LoopIf>(
-                                Element.Part<V_Compare>(
-                                    Element.Part<V_CountOf>(continueSkipArray.GetVariable()),
-                                    EnumData.GetEnumValue(Operators.NotEqual),
-                                    new V_Number(0)
-                                )
-                            )
-                        );
-                        ContinueSkip.ResetSkip();
-                        Actions.AddRange(continueSkipArray.SetVariable(new V_Number()));
-                        
-                        MethodStack.Remove(stack);
-                    }
-                }
+                result = ParseUserMethod(scope, methodNode, (UserMethod)method, parsedParameters.ToArray());
             }
             else throw new NotImplementedException();
 
             methodNode.RelatedElement = result;
+            return result;
+        }
+
+        Element ParseUserMethod(ScopeGroup scope, MethodNode methodNode, UserMethod method, IWorkshopTree[] parameters)
+        {
+            UserMethod userMethod = (UserMethod)method;
+            Element result;
+            if (!userMethod.IsRecursive)
+            {
+                // Check the method stack if this method was already called.
+                // Throw a syntax error if it was.
+                if (MethodStackNoRecursive.Contains(userMethod))
+                    throw SyntaxErrorException.RecursionNotAllowed(methodNode.Range);
+
+                var methodScope = scope.Root().Child();
+
+                // Add the parameter variables to the scope.
+                IndexedVar[] parameterVars = new IndexedVar[parameters.Length];
+                for (int i = 0; i < parameters.Length; i++)
+                {
+                    // Create a new variable using the parameter.
+                    parameterVars[i] = VarCollection.AssignVar(methodScope, userMethod.Parameters[i].Name, IsGlobal, methodNode);
+                    Actions.AddRange(parameterVars[i].SetVariable((Element)parameters[i]));
+                }
+
+                // The variable that stores the return value.
+                IndexedVar returns = VarCollection.AssignVar(scope, $"{methodNode.Name}: return temp value", IsGlobal, null);
+
+                // Add the method to the method stack
+                MethodStackNoRecursive.Add(userMethod);
+
+                userMethod.Block.RelatedScopeGroup = methodScope;
+
+                // Parse the block of the method
+                ParseBlock(methodScope, userMethod.Block, true, returns);
+
+                // Take the method scope out of scope.
+                Actions.AddRange(methodScope.Out());
+
+                // Remove the method from the stack.
+                MethodStackNoRecursive.Remove(userMethod);
+
+                result = returns.GetVariable();
+            }
+            else
+            {
+                // Check the method stack if this method was already called. It will be null if it wasn't called.
+                MethodStack lastMethod = MethodStack.FirstOrDefault(ms => ms.UserMethod == userMethod);
+                if (lastMethod != null)
+                {
+                    ContinueSkip.Setup();
+
+                    // Re-push the paramaters.
+                    for (int i = 0; i < lastMethod.ParameterVars.Length; i++)
+                    {
+                        Actions.AddRange
+                        (
+                            lastMethod.ParameterVars[i].InScope(ParseExpression(scope, methodNode.Parameters[i]))
+                        );
+                    }
+
+                    // Add to the continue skip array.
+                    Actions.AddRange(
+                        lastMethod.ContinueSkipArray.SetVariable(
+                            Element.Part<V_Append>(lastMethod.ContinueSkipArray.GetVariable(), new V_Number(ContinueSkip.GetSkipCount() + 3))
+                        )
+                    );
+
+                    // Loop back to the start of the method.
+                    ContinueSkip.SetSkipCount(lastMethod.ActionIndex);
+                    Actions.Add(Element.Part<A_Loop>());
+
+                    result = lastMethod.Return.GetVariable();
+                }
+                else
+                {
+                    var methodScope = scope.Root().Child(true);
+
+                    // Add the parameter variables to the scope.
+                    RecursiveVar[] parameterVars = new RecursiveVar[userMethod.Parameters.Length];
+                    for (int i = 0; i < parameterVars.Length; i++)
+                    {
+                        // Create a new variable using the parameter input.
+                        parameterVars[i] = (RecursiveVar)VarCollection.AssignVar(methodScope, userMethod.Parameters[i].Name, IsGlobal, methodNode);
+                        Actions.AddRange
+                        (
+                            parameterVars[i].InScope(ParseExpression(scope, methodNode.Parameters[i]))
+                        );
+                    }
+
+                    var returns = VarCollection.AssignVar(null, $"{methodNode.Name}: return temp value", IsGlobal, null);
+
+                    // Setup the continue skip array.
+                    IndexedVar continueSkipArray = VarCollection.AssignVar(null, $"{methodNode.Name}: continue skip array", IsGlobal, null);
+                    var stack = new MethodStack(userMethod, parameterVars, ContinueSkip.GetSkipCount(), returns, continueSkipArray);
+
+                    // Add the method to the stack.
+                    MethodStack.Add(stack);
+
+                    userMethod.Block.RelatedScopeGroup = methodScope;
+                    
+                    // Parse the method block
+                    ParseBlock(methodScope, userMethod.Block, true, returns);
+
+                    // No return value if the method is being used as an action.
+                    result = returns.GetVariable();
+
+                    // Take the method out of scope.
+                    Actions.AddRange(methodScope.Out());
+
+                    // Setup the next continue skip.
+                    ContinueSkip.Setup();
+                    ContinueSkip.SetSkipCount(Element.Part<V_LastOf>(continueSkipArray.GetVariable()));
+
+                    // Remove the last continue skip.
+                    Actions.AddRange(
+                        continueSkipArray.SetVariable(
+                            Element.Part<V_ArraySlice>(
+                                continueSkipArray.GetVariable(), 
+                                new V_Number(0),
+                                Element.Part<V_Subtract>(
+                                    Element.Part<V_CountOf>(continueSkipArray.GetVariable()), new V_Number(1)
+                                )
+                            )
+                        )
+                    );
+
+                    // Loop if the method goes any deeper by checking the length of the continue skip array.
+                    Actions.Add(
+                        Element.Part<A_LoopIf>(
+                            Element.Part<V_Compare>(
+                                Element.Part<V_CountOf>(continueSkipArray.GetVariable()),
+                                EnumData.GetEnumValue(Operators.NotEqual),
+                                new V_Number(0)
+                            )
+                        )
+                    );
+
+                    // Reset the continue skip.
+                    ContinueSkip.ResetSkip();
+                    Actions.AddRange(continueSkipArray.SetVariable(new V_Number()));
+                    
+                    // Remove the method from the stack.
+                    MethodStack.Remove(stack);
+                }
+            }
             return result;
         }
 
@@ -535,14 +546,11 @@ namespace Deltin.Deltinteger.Parse
             blockNode.RelatedScopeGroup = scopeGroup;
 
             int returnSkipStart = ReturnSkips.Count;
-
-            //returned = Var.AssignVar(IsGlobal);
             
             for (int i = 0; i < blockNode.Statements.Length; i++)
                 ParseStatement(scopeGroup, blockNode.Statements[i], returnVar, i == blockNode.Statements.Length - 1);
 
             if (fulfillReturns)
-            {
                 for (int i = ReturnSkips.Count - 1; i >= returnSkipStart; i--)
                 {
                     ReturnSkips[i].ParameterValues = new IWorkshopTree[]
@@ -551,10 +559,6 @@ namespace Deltin.Deltinteger.Parse
                     };
                     ReturnSkips.RemoveAt(i);
                 }
-                //return returnVar.GetVariable();
-            }
-
-            //return null;
         }
 
         void ParseStatement(ScopeGroup scope, Node statement, IndexedVar returnVar, bool isLast)
@@ -948,6 +952,75 @@ namespace Deltin.Deltinteger.Parse
         int GetSkipCount(Element skipElement)
         {
             return Actions.Count - Actions.IndexOf(skipElement) - 1;
+        }
+    
+        class ParseExpressionTree
+        {
+            readonly List<Node> nodes;
+            ScopeGroup currentScope;
+
+            int index;
+
+            public Var ResultingVariable { get; private set; }
+
+            public Element ResultingElement { get; private set; }
+            
+            public ParseExpressionTree(TranslateRule translator, ScopeGroup scope, ExpressionTreeNode root)
+            {
+                nodes = flatten(root);
+                currentScope = scope;
+
+                Element nodeResult = null;
+                Element target = null;
+                for (; index < nodes.Count; index++)
+                {
+                    if (nodes[index] is VariableNode)
+                    {
+                        VariableNode variableNode = (VariableNode)nodes[index];
+                        Var var = currentScope.GetVar(variableNode.Name, variableNode.Range);
+
+                        if (index == nodes.Count - 1)
+                            ResultingVariable = var;
+                        nodeResult = var.GetVariable(target);
+                    }
+                    else
+                        nodeResult = translator.ParseExpression(currentScope, nodes[index]);
+
+                    if (nodeResult.SupportedType == null)
+                    {
+                        currentScope = scope;
+                        if (index < nodes.Count - 1)
+                        {
+                            target = nodeResult;
+                            nodeResult = null;
+                        }
+                    }
+                    else
+                        currentScope = nodeResult.SupportedType.Type.GetRootScope(nodeResult.SupportedType, translator.ParserData);
+                }
+                ResultingElement = nodeResult;
+            }
+
+            static List<Node> flatten(ExpressionTreeNode root)
+            {
+                List<Node> nodes = new List<Node>();
+                ExpressionTreeNode flatten = root;
+                while (true)
+                {
+                    nodes.Add(flatten.Tree[0]);
+                    if (flatten.Tree.Length == 2)
+                    {
+                        if (flatten.Tree[1] is ExpressionTreeNode)
+                            flatten = (ExpressionTreeNode)flatten.Tree[1];
+                        else
+                        {
+                            nodes.Add(flatten.Tree[1]);
+                            break;
+                        }
+                    }
+                }
+                return nodes;
+            }
         }
     }
 }

@@ -22,23 +22,25 @@ namespace Deltin.Deltinteger.Parse
             MethodNodes = node.Methods;
         }
 
-        public ScopeGroup GetRootScope(IndexedVar var, VarCollection varCollection)
+        public ScopeGroup GetRootScope(IndexedVar var, ParsingData parseData)
         {
-            ScopeGroup methodScope = new ScopeGroup(varCollection);
+            ScopeGroup typeScope = new ScopeGroup(parseData.VarCollection);
+            typeScope.This = var;
 
             for (int i = 0; i < DefinedVars.Length; i++)
             {
-                IndexedVar newVar = var.CreateChild(methodScope, DefinedVars[i].VariableName, new int[] { i });
-                methodScope.In(newVar);
+                IndexedVar newVar = var.CreateChild(typeScope, DefinedVars[i].VariableName, new int[] { i });
+                newVar.Type = parseData.GetDefinedType(DefinedVars[i].Type);
+                typeScope.In(newVar);
             }
 
             for (int i = 0; i < MethodNodes.Length; i++)
             {
-                UserMethod method = new UserMethod(methodScope, MethodNodes[i]);
-                methodScope.In(method);
+                UserMethod method = new UserMethod(typeScope, MethodNodes[i]);
+                typeScope.In(method);
             }
 
-            return methodScope;
+            return typeScope;
         }
     }
 

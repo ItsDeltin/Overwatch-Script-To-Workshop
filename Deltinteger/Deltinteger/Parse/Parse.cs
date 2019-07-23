@@ -59,10 +59,12 @@ namespace Deltin.Deltinteger.Parse
 
                 // Get the variables
                 foreach (var definedVar in RuleSetNode.DefinedVars)
+                {
+                    IndexedVar var;
                     if (definedVar.UseVar == null)
-                        VarCollection.AssignVar(root, definedVar.VariableName, definedVar.IsGlobal, definedVar);
+                        var = VarCollection.AssignVar(root, definedVar.VariableName, definedVar.IsGlobal, definedVar);
                     else
-                        VarCollection.AssignVar(
+                        var = VarCollection.AssignVar(
                             root, 
                             definedVar.VariableName, 
                             definedVar.IsGlobal,
@@ -70,6 +72,8 @@ namespace Deltin.Deltinteger.Parse
                             definedVar.UseVar.Index,
                             definedVar
                         );
+                    var.Type = GetDefinedType(definedVar.Type);
+                }
 
                 // Get the user methods.
                 for (int i = 0; i < RuleSetNode.UserMethods.Length; i++)

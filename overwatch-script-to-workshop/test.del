@@ -1,10 +1,10 @@
+myClass playervar myVariable;
+
 rule: "Recursive Test"
-//Event.OngoingPlayer
-//if (IsButtonHeld(EventPlayer(), Button.Interact))
+Event.OngoingPlayer
+if (IsButtonHeld(EventPlayer(), Button.Interact))
 {
-    myClass a = new myClass(2);
-    SmallMessage(a.wow);
-} 
+}
 
 # Prints every value in a multidimensional array.
 method scanArray(array)
@@ -43,16 +43,5 @@ recursive method arrayWalk(array, dims)
         {
             arrayWalk(array[index], Append(dims, index));
         }
-    }
-}
-
-struct myClass
-{
-    define wow = 2
-
-    method ResetWow()
-    {
-        SmallMessage();
-        wow = 4;
     }
 }

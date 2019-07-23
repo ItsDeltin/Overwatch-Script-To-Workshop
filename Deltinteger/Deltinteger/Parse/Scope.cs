@@ -9,16 +9,15 @@ namespace Deltin.Deltinteger.Parse
     public class ScopeGroup
     {
         private readonly List<IScopeable> InScope = new List<IScopeable>();
-
         private readonly List<ScopeGroup> Children = new List<ScopeGroup>();
-        
         private readonly ScopeGroup Parent = null;
+        private bool IsInScope = true;
 
         public bool Recursive { get; }
 
         public VarCollection VarCollection { get; }
 
-        private bool IsInScope = true;
+        public IndexedVar This { get; set; }
 
         public ScopeGroup(VarCollection varCollection)
         {
@@ -72,28 +71,23 @@ namespace Deltin.Deltinteger.Parse
 
         public Var GetVar(string name, Range range)
         {
-            return GetScopeable<Var>(name, range);
+            return GetScopeable<Var>(name)
+                ?? throw SyntaxErrorException.VariableDoesNotExist(name, range);
         }
 
         public IMethod GetMethod(string name, Range range)
         {
-            try
-            {
-                // Get the method by it's name.
-                return GetScopeable<UserMethod>(name, range);
-            }
-            catch (SyntaxErrorException ex)
-            {
-                // If it is not found, check if its a workshop method.
-                return (IMethod)Element.GetElement(name) 
-                // Then check if its a custom method.
-                    ?? (IMethod)CustomMethodData.GetCustomMethod(name)
-                // Throw if not found.
-                    ?? throw ex;
-            }
+            // Get the method by it's name.
+            return GetScopeable<UserMethod>(name)
+            // If it is not found, check if its a workshop method.
+                ?? (IMethod)Element.GetElement(name) 
+            // Then check if its a custom method.
+                ?? (IMethod)CustomMethodData.GetCustomMethod(name)
+            // Throw if not found.
+                ?? throw SyntaxErrorException.NonexistentMethod(name, range);
         }
 
-        private T GetScopeable<T>(string name, Range range) where T : IScopeable
+        private T GetScopeable<T>(string name) where T : IScopeable
         {
             IScopeable var = null;
             ScopeGroup checkGroup = this;
@@ -102,9 +96,6 @@ namespace Deltin.Deltinteger.Parse
                 var = checkGroup.InScope.FirstOrDefault(v => v is T && v.Name == name);
                 checkGroup = checkGroup.Parent;
             }
-
-            if (var == null && range != null)
-                throw SyntaxErrorException.VariableDoesNotExist(name, range);
 
             return (T)var;
         }
@@ -128,6 +119,27 @@ namespace Deltin.Deltinteger.Parse
             ScopeGroup root = this;
             while (root.Parent != null) root = root.Parent;
             return root;
+        }
+
+        // Get This was an Australian radio comedy show which aired on Triple M and was hosted
+        // by Tony Martin and Ed Kavalee, with contributions from panel operator, Richard Marsland.
+        // A different guest co-host was featured nearly every day on the show and included music played throughout.
+        // On the 15 October 2007 episode, the Get This team announced that Triple M/Austereo would not be renewing the show for 2008.
+        // The final broadcast was on 23 November 2007. During its lifetime and since its cancellation, Get This developed a strong cult following. 
+        public IndexedVar GetThis(Range errorRange)
+        {
+            ScopeGroup check = this;
+            IndexedVar @this = null;
+            while (check != null && @this == null)
+            {
+                @this = check.This;
+                check = Parent;
+            }
+
+            if (errorRange != null && @this == null)
+                throw new SyntaxErrorException("The 'this' keyword cannot be used here.", errorRange);
+            
+            return @this;
         }
 
         public List<IScopeable> FullVarCollection()

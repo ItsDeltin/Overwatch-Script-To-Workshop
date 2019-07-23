@@ -15,7 +15,7 @@ null   : NULL          ;
 statement_operation : EQUALS | EQUALS_ADD | EQUALS_DIVIDE | EQUALS_MODULO | EQUALS_MULTIPLY | EQUALS_POW | EQUALS_SUBTRACT ;
 
 define         :                   (type=PART | DEFINE)                 name=PART useVar? (EQUALS expr?)? ;
-rule_define    :                   (type=PART | DEFINE) (GLOBAL|PLAYER) name=PART useVar? (EQUALS expr?)? ;
+rule_define    :                   (type=PART | DEFINE) (GLOBAL|PLAYER) name=PART useVar? (EQUALS expr?)? STATEMENT_END;
 inclass_define : accessor? STATIC? (type=PART | DEFINE)                 name=PART         (EQUALS expr?)? ;
 
 useVar   : PART (INDEX_START number INDEX_END)? ;
@@ -28,8 +28,8 @@ expr
 	| method                                      // Methods
 	| string                                      // Strings
 	| { Deltin.Deltinteger.Elements.EnumData.IsEnum(_input.Lt(1).Text) }? enum // Enums
-	| expr INDEX_START expr INDEX_END             // Array creation
-	| createarray
+	| expr INDEX_START expr INDEX_END             // Array index
+	| createarray                                 // Array creation
 	| formatted_string                            // Formatted strings
 	| true                                        // True
 	| false                                       // False
@@ -37,7 +37,8 @@ expr
 	| variable                                    // Variables
 	| exprgroup
 	| create_object
-	| expr (SEPERATOR expr)+             // Variable seperation
+	| THIS
+	| <assoc=right> expr SEPERATOR expr           // Variable seperation
 	| NOT expr                                     // !x
 	| expr ('<' | '<=' | '==' | '>=' | '>' | '!=') expr // x == y
 	| expr BOOL expr                              // x & y
@@ -103,14 +104,14 @@ user_method : DOCUMENTATION* accessor? RECURSIVE? METHOD PART LEFT_PAREN (PART (
 ruleset :
 	useGlobalVar?
 	usePlayerVar?
-	(define | ow_rule | user_method | type_define)*
+	(rule_define | ow_rule | user_method | type_define)*
 	;
 
 // Classes/structs
 
 type_define : (STRUCT | CLASS) name=PART
 	BLOCK_START
-	(inclass_define | constructor | user_method)*
+	((inclass_define STATEMENT_END) | constructor | user_method)*
 	BLOCK_END ;
 
 accessor : PRIVATE | PUBLIC;

@@ -204,6 +204,12 @@ namespace Deltin.Deltinteger.Parse
                 node = new TernaryConditionalNode(condition, consequent, alternative, Range.GetRange(context));
             }
 
+            // This
+            else if (context.THIS() != null)
+            {
+                node = new ThisNode(Range.GetRange(context));
+            }
+
             else
             {
                 return Visit(context.GetChild(0));
@@ -430,6 +436,11 @@ namespace Deltin.Deltinteger.Parse
         {
             return new TypeDefineNode(context, this);
         }
+
+        public override Node VisitConstructor(DeltinScriptParser.ConstructorContext context)
+        {
+            return new ConstructorNode(context, this);
+        }
     }
 
     public abstract class Node
@@ -572,9 +583,9 @@ namespace Deltin.Deltinteger.Parse
             UseGlobalVar = useGlobalVar;
             UsePlayerVar = usePlayerVar;
 
-            DefinedVars = new RuleDefineNode[context.define().Length];
+            DefinedVars = new RuleDefineNode[context.rule_define().Length];
             for (int i = 0; i < DefinedVars.Length; i++)
-                DefinedVars[i] = (RuleDefineNode)visitor.VisitDefine(context.define(i));
+                DefinedVars[i] = (RuleDefineNode)visitor.VisitRule_define(context.rule_define(i));
 
             UserMethods = new UserMethodNode[context.user_method().Length];
             for (int i = 0; i < UserMethods.Length; i++)
@@ -642,8 +653,10 @@ namespace Deltin.Deltinteger.Parse
         {
             VariableName = context.name.Text;
             Type = context.type?.Text;
-            Value = visitor.Visit(context.expr());
-            UseVar = (UseVarNode)visitor.Visit(context.useVar());
+            if (context.expr() != null)
+                Value = visitor.Visit(context.expr());
+            if (context.useVar() != null)
+                UseVar = (UseVarNode)visitor.Visit(context.useVar());
             IsGlobal = context.GLOBAL() != null;
         }
 
@@ -1019,6 +1032,18 @@ namespace Deltin.Deltinteger.Parse
         public override Node[] Children()
         {
             return Parameters;
+        }
+    }
+
+    public class ThisNode : Node
+    {
+        public ThisNode(Range range) : base (range)
+        {
+        }
+
+        public override Node[] Children()
+        {
+            return null;
         }
     }
 

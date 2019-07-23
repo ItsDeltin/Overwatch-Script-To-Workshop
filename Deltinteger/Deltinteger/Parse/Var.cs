@@ -133,6 +133,8 @@ namespace Deltin.Deltinteger.Parse
         public bool IsDefinedVar { get; }
         public Node Node { get; }
 
+        public DefinedType Type { get; set; }
+
         public Var(string name, ScopeGroup scope, Node node = null)
         {
             Name = name;
@@ -158,8 +160,6 @@ namespace Deltin.Deltinteger.Parse
         public Variable Variable { get; }
         public int[] Index { get; }
         public bool UsesIndex { get; }
-        
-        public DefinedType Type { get; set; }
 
         private readonly IWorkshopTree VariableAsWorkshop; 
 

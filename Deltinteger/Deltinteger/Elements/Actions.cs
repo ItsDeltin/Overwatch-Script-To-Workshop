@@ -613,6 +613,7 @@ namespace Deltin.Deltinteger.Elements
 
     [ElementData("Stop Holding Button")]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [EnumParameter("Button", typeof(Button))]
     public class A_StopHoldingButton : Element {}
 
     [ElementData("Teleport")]
