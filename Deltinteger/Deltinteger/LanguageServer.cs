@@ -524,7 +524,20 @@ namespace Deltin.Deltinteger.LanguageServer
 
         override public string ToString()
         {
-            return $"Syntax error at {range.start.ToString()}: " + message;
+            return $"{DiagnosticSeverityText()} at {range.start.ToString()}: " + message;
+        }
+
+        private string DiagnosticSeverityText()
+        {
+            if (severity == 1)
+                return "Error";
+            else if (severity == 2)
+                return "Warning";
+            else if (severity == 3)
+                return "Information";
+            else if (severity == 4)
+                return "Hint";
+            else throw new Exception();
         }
     }
 

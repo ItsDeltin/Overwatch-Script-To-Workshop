@@ -4,6 +4,9 @@ rule: "Recursive Test"
 Event.OngoingPlayer
 if (IsButtonHeld(EventPlayer(), Button.Interact))
 {
+    Abort();
+    Skip();
+    ChaseGlobalVariableAtRate();
 }
 
 # Prints every value in a multidimensional array.

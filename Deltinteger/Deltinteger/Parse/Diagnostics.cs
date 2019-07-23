@@ -9,7 +9,13 @@ namespace Deltin.Deltinteger.Parse
 {
     public class Diagnostics
     {
-        private static readonly ConsoleColor[] SeverityColors = new ConsoleColor[] { ConsoleColor.Red, ConsoleColor.Yellow, ConsoleColor.DarkGray, ConsoleColor.Black };
+        private static readonly ConsoleColor[] SeverityColors = new ConsoleColor[] 
+        { 
+            ConsoleColor.Red,
+            ConsoleColor.Yellow,
+            ConsoleColor.DarkGreen,
+            ConsoleColor.DarkGray
+        };
 
         private readonly List<Diagnostic> diagnostics = new List<Diagnostic>();
 
@@ -48,6 +54,11 @@ namespace Deltin.Deltinteger.Parse
         public void Hint(string message, Range range)
         {
             diagnostics.Add(new Diagnostic(message, range) { severity = Diagnostic.Hint });
+        }
+
+        public void AddDiagnostic(Diagnostic diagnostic)
+        {
+            diagnostics.Add(diagnostic);
         }
 
         public void PrintDiagnostics(Log log)

@@ -318,8 +318,8 @@ namespace Deltin.Deltinteger.Elements
         public Type Type { get; }
         public bool IsValue { get; } 
         public ParameterBase[] Parameters { get; }
+        public UsageDiagnostic[] UsageDiagnostics { get; }
         public WikiMethod Wiki { get; }
-
 
         public string GetLabel(bool markdown)
         {
@@ -336,11 +336,30 @@ namespace Deltin.Deltinteger.Elements
             IsValue = data.IsValue;
             Parameters = type.GetCustomAttributes<ParameterBase>().ToArray();
             Wiki = WorkshopWiki.Wiki.GetWikiMethod(WorkshopName);
+            UsageDiagnostics = type.GetCustomAttributes<UsageDiagnostic>().ToArray();
         }
 
         public Element GetObject()
         {
             return (Element)Activator.CreateInstance(Type);
+        }
+    }
+
+    [AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
+    public class UsageDiagnostic : Attribute
+    {
+        public UsageDiagnostic(string message, int severity)
+        {
+            Message = message;
+            Severity = severity;
+        }
+
+        public string Message { get; }
+        public int Severity { get; }
+
+        public Diagnostic GetDiagnostic(Deltin.Deltinteger.Parse.Range range)
+        {
+            return new Diagnostic(Message, range) { severity = Severity };
         }
     }
 }

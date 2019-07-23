@@ -353,8 +353,12 @@ namespace Deltin.Deltinteger.Parse
 
             if (method is ElementList)
             {
-                result = ((ElementList)method).GetObject();
+                ElementList elementData = (ElementList)method;
+                result = elementData.GetObject();
                 result.ParameterValues = parsedParameters.ToArray();
+
+                foreach (var usageDiagnostic in elementData.UsageDiagnostics)
+                    ParserData.Diagnostics.AddDiagnostic(usageDiagnostic.GetDiagnostic(methodNode.Range));
             }
             else if (method is CustomMethodData)
             {

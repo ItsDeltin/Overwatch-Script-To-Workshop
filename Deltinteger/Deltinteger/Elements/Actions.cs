@@ -7,16 +7,20 @@ using System.Threading.Tasks;
 namespace Deltin.Deltinteger.Elements
 {
     [ElementData("Abort")]
+    [UsageDiagnostic("This workshop method can leave the workshop in an invalid state. Method callers will also be aborted.", 2)]
     public class A_Abort : Element {}
 
     [ElementData("Abort If")]
     [Parameter("Condition", ValueType.Boolean, typeof(V_Compare))]
+    [UsageDiagnostic("This workshop method can leave the workshop in an invalid state. Method callers will also be aborted.", 2)]
     public class A_AbortIf : Element {}
 
     [ElementData("Abort If Condition Is False")]
+    [UsageDiagnostic("This workshop method can leave the workshop in an invalid state. Method callers will also be aborted.", 2)]
     public class A_AbortIfConditionIsFalse : Element {}
 
     [ElementData("Abort If Condition Is True")]
+    [UsageDiagnostic("This workshop method can leave the workshop in an invalid state. Method callers will also be aborted.", 2)]
     public class A_AbortIfConditionIsTrue : Element {}
 
     [ElementData("Allow Button")]
@@ -42,6 +46,7 @@ namespace Deltin.Deltinteger.Elements
     [Parameter("Destination", ValueType.Any, typeof(V_Number))]
     [Parameter("Rate", ValueType.Number, typeof(V_Number))]
     [EnumParameter("Reevaluation", typeof(RateChaseReevaluation))]
+    [UsageDiagnostic("Use ChaseVariable instead.", 3)]
     public class A_ChaseGlobalVariableAtRate : Element {}
 
     [ElementData("Chase Global Variable Over Time")]
@@ -52,13 +57,16 @@ namespace Deltin.Deltinteger.Elements
     public class A_ChaseGlobalVariableOverTime : Element {}
 
     [ElementData("Chase Player Variable At Rate")]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     [EnumParameter("Variable", typeof(Variable))]
     [Parameter("Destination", ValueType.Any, typeof(V_Number))]
     [Parameter("Rate", ValueType.Number, typeof(V_Number))]
     [EnumParameter("Reevaluation", typeof(RateChaseReevaluation))]
+    [UsageDiagnostic("Use ChaseVariable instead.", 3)]
     public class A_ChasePlayerVariableAtRate : Element {}
 
     [ElementData("Chase Player Variable Over Time")]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     [EnumParameter("Variable", typeof(Variable))]
     [Parameter("Destination", ValueType.Any, typeof(V_Number))]
     [Parameter("Duration", ValueType.Number, typeof(V_Number))]
@@ -461,6 +469,7 @@ namespace Deltin.Deltinteger.Elements
 
     [ElementData("Skip")]
     [Parameter("Number Of Actions", ValueType.Number, typeof(V_Number))]
+    [UsageDiagnostic("This workshop method can leave the workshop in an invalid state.", 2)]
     public class A_Skip : Element, ISkip 
     {
         public int SkipParameterIndex()
@@ -472,6 +481,7 @@ namespace Deltin.Deltinteger.Elements
     [ElementData("Skip If")]
     [Parameter("Condition", ValueType.Boolean, typeof(V_Compare))]
     [Parameter("Number Of Actions", ValueType.Number, typeof(V_Number))]
+    [UsageDiagnostic("This workshop method can leave the workshop in an invalid state.", 2)]
     public class A_SkipIf : Element, ISkip 
     {
         public int SkipParameterIndex()
