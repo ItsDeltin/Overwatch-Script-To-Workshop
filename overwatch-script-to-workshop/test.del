@@ -45,3 +45,8 @@ recursive method arrayWalk(array, dims)
         }
     }
 }
+
+struct myClass
+{
+    
+}

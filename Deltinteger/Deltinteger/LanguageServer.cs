@@ -132,7 +132,7 @@ namespace Deltin.Deltinteger.LanguageServer
 
             parserData = ParsingData.GetParser(content);
 
-            if (parserData.Rules != null && parserData.Diagnostics.Count == 0)
+            if (parserData.Rules != null && !parserData.Diagnostics.ContainsErrors())
             {
                 string final = Program.RuleArrayToWorkshop(parserData.Rules.ToArray(), parserData.VarCollection);
                 using (var wc = new WebClient())
@@ -142,7 +142,7 @@ namespace Deltin.Deltinteger.LanguageServer
                 }
             }
             
-            return JsonConvert.SerializeObject(parserData.Diagnostics.ToArray());
+            return JsonConvert.SerializeObject(parserData.Diagnostics.GetDiagnostics());
         }
 
         string GetAutocomplete(string json)

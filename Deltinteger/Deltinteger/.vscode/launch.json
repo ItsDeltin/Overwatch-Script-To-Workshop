@@ -22,40 +22,18 @@
             "request": "launch",
             "preLaunchTask": "Debug build",
             "program": "${workspaceFolder}/bin/Debug/Deltinteger.exe",
-            "args":["C:/Users/HDdel/Documents/GitHub/Overwatch-Workshop-Text/Examples/debug.del", "-verbose"],
+            "args":["${file}"],
             "console": "externalTerminal",
             "stopAtEntry": false,
             "internalConsoleOptions": "openOnSessionStart"
         },
         {
-            "name": "Debug Murder Mystery",
+            "name": "Debug Script Verbose",
             "type":"clr",
             "request": "launch",
             "preLaunchTask": "Debug build",
             "program": "${workspaceFolder}/bin/Debug/Deltinteger.exe",
-            "args":["C:/Users/HDdel/Documents/GitHub/Overwatch-Workshop-Text/Examples/murder_mystery.del"],
-            "console": "externalTerminal",
-            "stopAtEntry": false,
-            "internalConsoleOptions": "openOnSessionStart"
-        },
-        {
-            "name": "Debug Methods Example",
-            "type":"clr",
-            "request": "launch",
-            "preLaunchTask": "Debug build",
-            "program": "${workspaceFolder}/bin/Debug/Deltinteger.exe",
-            "args":["C:/Users/HDdel/Documents/GitHub/Overwatch-Workshop-Text/Examples/methods.del", "-verbose"],
-            "console": "externalTerminal",
-            "stopAtEntry": false,
-            "internalConsoleOptions": "openOnSessionStart"
-        },
-        {
-            "name": "Debug Hitscan Sphere",
-            "type":"clr",
-            "request": "launch",
-            "preLaunchTask": "Debug build",
-            "program": "${workspaceFolder}/bin/Debug/Deltinteger.exe",
-            "args":["C:/Users/HDdel/Documents/GitHub/Overwatch-Workshop-Text/Examples/hitscan_spheres.del", "-verbose"],
+            "args":["${file}", "-verbose"],
             "console": "externalTerminal",
             "stopAtEntry": false,
             "internalConsoleOptions": "openOnSessionStart"

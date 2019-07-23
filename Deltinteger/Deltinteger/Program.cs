@@ -72,9 +72,11 @@ namespace Deltin.Deltinteger
 
             ParsingData result = ParsingData.GetParser(text);
 
-            if (result.Diagnostics.Count == 0)
+            if (!result.Diagnostics.ContainsErrors())
             {
                 ParseLog.Write(LogLevel.Normal, new ColorMod("Build succeeded.", ConsoleColor.Green));
+
+                result.Diagnostics.PrintDiagnostics(Log);
 
                 // List all variables
                 ParseLog.Write(LogLevel.Normal, new ColorMod("Variable Guide:", ConsoleColor.Blue));
@@ -103,8 +105,7 @@ namespace Deltin.Deltinteger
             else
             {
                 Log.Write(LogLevel.Normal, new ColorMod("Build Failed.", ConsoleColor.Red));
-                for (int i = 0; i < result.Diagnostics.Count; i++)
-                    Log.Write(LogLevel.Normal, new ColorMod(result.Diagnostics[i].ToString(), ConsoleColor.Red));
+                result.Diagnostics.PrintDiagnostics(Log);
             }
         }
 

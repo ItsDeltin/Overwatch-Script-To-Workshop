@@ -247,7 +247,7 @@ namespace Deltin.Deltinteger.Parse
                 // New object
                 case CreateObjectNode createObjectNode:
 
-                    DefinedType typeData = ParserData.GetDefinedType(createObjectNode.TypeName);
+                    DefinedType typeData = ParserData.GetDefinedType(createObjectNode.TypeName, createObjectNode.Range);
 
                     if (typeData == null)
                         throw new SyntaxErrorException($"The type {createObjectNode.TypeName} could not be found.", createObjectNode.Range);
@@ -946,7 +946,7 @@ namespace Deltin.Deltinteger.Parse
                 Actions.AddRange(inScopeActions);
             
             if (defineNode.Type != null)
-                var.Type = ParserData.GetDefinedType(defineNode.Type);
+                var.Type = ParserData.GetDefinedType(defineNode.Type, defineNode.Range);
         }
 
         int GetSkipCount(Element skipElement)
@@ -956,39 +956,43 @@ namespace Deltin.Deltinteger.Parse
     
         class ParseExpressionTree
         {
-            readonly List<Node> nodes;
-            ScopeGroup currentScope;
-
-            int index;
-
             public Var ResultingVariable { get; private set; }
-
             public Element ResultingElement { get; private set; }
             
             public ParseExpressionTree(TranslateRule translator, ScopeGroup scope, ExpressionTreeNode root)
             {
-                nodes = flatten(root);
-                currentScope = scope;
+                List<Node> nodes = flatten(root);
+                ScopeGroup currentScope = scope;
 
                 Element nodeResult = null;
                 Element target = null;
-                for (; index < nodes.Count; index++)
+                for (int index = 0; index < nodes.Count; index++)
                 {
+                    // If the node is a variable node, get the value.
                     if (nodes[index] is VariableNode)
                     {
                         VariableNode variableNode = (VariableNode)nodes[index];
                         Var var = currentScope.GetVar(variableNode.Name, variableNode.Range);
 
+                        // If this is the last node, parse it as an expression.
                         if (index == nodes.Count - 1)
                             ResultingVariable = var;
+
+                        // Set the nodeResult.
                         nodeResult = var.GetVariable(target);
                     }
+                    // If not, parse the node as an expression.
                     else
                         nodeResult = translator.ParseExpression(currentScope, nodes[index]);
 
+                    // SupportedType will equal null if the element is not a defined type.
                     if (nodeResult.SupportedType == null)
                     {
+                        // If there is no supported type, assume the element or variable is containing a player.
+                        // Reset the scope.
                         currentScope = scope;
+
+                        // If this isn't the last node, set the target and reset the nodeResult.
                         if (index < nodes.Count - 1)
                         {
                             target = nodeResult;
@@ -996,6 +1000,7 @@ namespace Deltin.Deltinteger.Parse
                         }
                     }
                     else
+                        // Set the target scope to the type.
                         currentScope = nodeResult.SupportedType.Type.GetRootScope(nodeResult.SupportedType, translator.ParserData);
                 }
                 ResultingElement = nodeResult;

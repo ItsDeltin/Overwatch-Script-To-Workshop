@@ -30,7 +30,7 @@ namespace Deltin.Deltinteger.Parse
             for (int i = 0; i < DefinedVars.Length; i++)
             {
                 IndexedVar newVar = var.CreateChild(typeScope, DefinedVars[i].VariableName, new int[] { i });
-                newVar.Type = parseData.GetDefinedType(DefinedVars[i].Type);
+                newVar.Type = parseData.GetDefinedType(DefinedVars[i].Type, DefinedVars[i].Range);
                 typeScope.In(newVar);
             }
 

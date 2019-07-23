@@ -24,7 +24,7 @@ namespace Deltin.Deltinteger.Parse
 
             // Parse
             DeltinScriptParser parser = new DeltinScriptParser(commonTokenStream);
-            var errorListener = new ErrorListener();
+            var errorListener = new ErrorListener(Diagnostics);
             parser.RemoveErrorListeners();
             parser.AddErrorListener(errorListener);
 
@@ -33,21 +33,15 @@ namespace Deltin.Deltinteger.Parse
             Log log = new Log("Parse");
             log.Write(LogLevel.Verbose, ruleSetContext.ToStringTree(parser));
 
-            Diagnostics = new List<Diagnostic>();
-            Diagnostics.AddRange(errorListener.Errors);
-
             // Get the ruleset node.
-            if (Diagnostics.Count == 0)
+            if (!Diagnostics.ContainsErrors())
             {
                 Bav = new BuildAstVisitor(Diagnostics);
                 RuleSetNode = (RulesetNode)Bav.Visit(ruleSetContext);
-            }
 
-            AdditionalErrorChecking aec = new AdditionalErrorChecking(parser, Diagnostics);
-            aec.Visit(ruleSetContext);
+                AdditionalErrorChecking aec = new AdditionalErrorChecking(parser, Diagnostics);
+                aec.Visit(ruleSetContext);
 
-            if (Diagnostics.Count == 0)
-            {
                 VarCollection = new VarCollection();
                 ScopeGroup root = new ScopeGroup(VarCollection);
                 UserMethods = new List<UserMethod>();
@@ -60,19 +54,26 @@ namespace Deltin.Deltinteger.Parse
                 // Get the variables
                 foreach (var definedVar in RuleSetNode.DefinedVars)
                 {
-                    IndexedVar var;
-                    if (definedVar.UseVar == null)
-                        var = VarCollection.AssignVar(root, definedVar.VariableName, definedVar.IsGlobal, definedVar);
-                    else
-                        var = VarCollection.AssignVar(
-                            root, 
-                            definedVar.VariableName, 
-                            definedVar.IsGlobal,
-                            definedVar.UseVar.Variable, 
-                            definedVar.UseVar.Index,
-                            definedVar
-                        );
-                    var.Type = GetDefinedType(definedVar.Type);
+                    try
+                    {
+                        IndexedVar var;
+                        if (definedVar.UseVar == null)
+                            var = VarCollection.AssignVar(root, definedVar.VariableName, definedVar.IsGlobal, definedVar);
+                        else
+                            var = VarCollection.AssignVar(
+                                root, 
+                                definedVar.VariableName, 
+                                definedVar.IsGlobal,
+                                definedVar.UseVar.Variable, 
+                                definedVar.UseVar.Index,
+                                definedVar
+                            );
+                        var.Type = GetDefinedType(definedVar.Type, definedVar.Range);
+                    }
+                    catch (SyntaxErrorException ex)
+                    {
+                        Diagnostics.Error(ex);
+                    }
                 }
 
                 // Get the user methods.
@@ -95,7 +96,7 @@ namespace Deltin.Deltinteger.Parse
                     }
                     catch (SyntaxErrorException ex)
                     {
-                        Diagnostics.Add(new Diagnostic(ex.GetInfo(), ex.Range) { severity = Diagnostic.Error });
+                        Diagnostics.Error(ex);
                     }
                 }
 
@@ -108,7 +109,7 @@ namespace Deltin.Deltinteger.Parse
             }
         }
 
-        public List<Diagnostic> Diagnostics;
+        public Diagnostics Diagnostics { get; private set; } = new Diagnostics();
         public BuildAstVisitor Bav { get; private set; }
         public List<Rule> Rules { get; private set; }
         public List<DefinedType> DefinedTypes { get; private set; }
@@ -126,9 +127,9 @@ namespace Deltin.Deltinteger.Parse
             ?? (IMethod)Element.GetElement(name);
         }
 
-        public DefinedType GetDefinedType(string name)
+        public DefinedType GetDefinedType(string name, Range range)
         {
-            return DefinedTypes.FirstOrDefault(dt => dt.Name == name);
+            return DefinedTypes.FirstOrDefault(dt => dt.Name == name) ?? throw new SyntaxErrorException($"The type {name} does not exist.", range);
         }
 
         public Looper GetLooper(bool isGlobal)

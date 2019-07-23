@@ -10,9 +10,9 @@ namespace Deltin.Deltinteger.Parse
 {
     public class BuildAstVisitor : DeltinScriptBaseVisitor<Node>
     {
-        public List<Diagnostic> _diagnostics { get; }
+        public Diagnostics _diagnostics { get; }
 
-        public BuildAstVisitor(List<Diagnostic> diagnostics)
+        public BuildAstVisitor(Diagnostics diagnostics)
         {
             _diagnostics = diagnostics;
         }
@@ -41,7 +41,7 @@ namespace Deltin.Deltinteger.Parse
         {
             if (!Enum.TryParse<Variable>(context.PART().GetText(), out Variable variable))
             {
-                _diagnostics.Add(new Diagnostic("Expected letter.", Range.GetRange(context)) { severity = Diagnostic.Error });
+                _diagnostics.Error("Expected letter.", Range.GetRange(context));
                 return null;
             }
             
@@ -113,24 +113,24 @@ namespace Deltin.Deltinteger.Parse
                 {
                     case "Event":
                         if (!Enum.TryParse<RuleEvent>(value, out eventType))
-                            _diagnostics.Add(new Diagnostic($"{value} is not a valid Event type.", valueRange));
+                            _diagnostics.Error($"{value} is not a valid Event type.", valueRange);
                         eventRange = Range.GetRange(ruleOption);
                         break;
                     
                     case "Team":
                         if (!Enum.TryParse<Team>(value, out team))
-                            _diagnostics.Add(new Diagnostic($"{value} is not a valid Team type.", valueRange));
+                            _diagnostics.Error($"{value} is not a valid Team type.", valueRange);
                         teamRange = Range.GetRange(ruleOption);
                         break;
 
                     case "Player":
                         if (!Enum.TryParse<PlayerSelector>(value, out player))
-                            _diagnostics.Add(new Diagnostic($"{value} is not a valid Player type.", valueRange));
+                            _diagnostics.Error($"{value} is not a valid Player type.", valueRange);
                         playerRange = Range.GetRange(ruleOption);
                         break;
                     
                     default:
-                        _diagnostics.Add(new Diagnostic($"{option} is not a valid rule option.", optionRange));
+                        _diagnostics.Error($"{option} is not a valid rule option.", optionRange);
                         break;
                 }
             }
@@ -506,7 +506,7 @@ namespace Deltin.Deltinteger.Parse
         {
             if (context.CLASS() != null)
             {
-                visitor._diagnostics.Add(new Diagnostic("Classes are not yet supported, use struct instead.", Range.GetRange(context.CLASS())) { severity = Diagnostic.Error });
+                visitor._diagnostics.Error("Classes are not yet supported, use struct instead.", Range.GetRange(context.CLASS()));
                 DefineType = TypeKind.Class;
             }
 
