@@ -283,7 +283,7 @@ namespace Deltin.Deltinteger.Elements
 
     [ElementData("Play Effect")]
     [Parameter("Visible To", ValueType.Player, typeof(V_AllPlayers))]
-    [EnumParameter("Type", typeof(PlayEffects))]
+    [EnumParameter("Type", typeof(PlayEffect))]
     [EnumParameter("Color", typeof(Color))]
     [Parameter("Position", ValueType.VectorAndPlayer, typeof(V_EventPlayer))]
     [Parameter("Radius", ValueType.Number, typeof(V_Number))]

@@ -573,7 +573,7 @@ namespace Deltin.Deltinteger.Elements
     }
 
     [WorkshopEnum]
-    public enum PlayEffects
+    public enum PlayEffect
     {
         GoodExplosion,
         BadExplosion,
