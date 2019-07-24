@@ -110,7 +110,7 @@ namespace Deltin.Deltinteger
             List<T> valueList = new List<T>();
 
             foreach (var val in values)
-                if (val != null)
+                if (val?.values != null)
                     valueList.AddRange(val.values);
             
             return valueList.ToArray();

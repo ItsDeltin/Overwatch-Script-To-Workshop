@@ -256,9 +256,10 @@ namespace Deltin.Deltinteger.Parse
                     store.Type = typeData;
                     for (int i = 0; i < typeData.DefinedVars.Length; i++)
                     {
-                        Actions.AddRange(
-                            store.SetVariable(ParseExpression(scope, typeData.DefinedVars[i].Value), null, new V_Number(i))
-                        );
+                        if (typeData.DefinedVars[i].Value != null)
+                            Actions.AddRange(
+                                store.SetVariable(ParseExpression(scope, typeData.DefinedVars[i].Value), null, new V_Number(i))
+                            );
                     }
                     return store.GetVariable();
 
@@ -875,23 +876,20 @@ namespace Deltin.Deltinteger.Parse
 
         void ParseVarset(ScopeGroup scope, VarSetNode varSetNode)
         {
-            Var gotVar = scope.GetVar(varSetNode.Variable, varSetNode.Range);
-            if (!(gotVar is IndexedVar))
-                throw new SyntaxErrorException($"Variable '{gotVar.Name}' is readonly.", varSetNode.Range);
+            var varSetData = new ParseExpressionTree(this, scope, varSetNode.Variable);
 
-            IndexedVar variable = (IndexedVar)gotVar;
+            if (!(varSetData.ResultingVariable is IndexedVar))
+                throw new SyntaxErrorException($"Variable '{varSetData.ResultingVariable.Name}' is readonly.", varSetNode.Range);
 
-            Element target = null;
-            if (varSetNode.Target != null) 
-                target = ParseExpression(scope, varSetNode.Target);
+            IndexedVar variable = (IndexedVar)varSetData.ResultingVariable;
             
             Element value = null;
             if (varSetNode.Value != null)
                 value = ParseExpression(scope, varSetNode.Value);
 
-            Element initialVar = variable.GetVariable(target);
+            Element initialVar = variable.GetVariable(varSetData.Target);
 
-            Element[] index = new Element[varSetNode.Index.Length];
+            Element[] index = new Element[varSetNode.Index?.Length ?? 0];
             for (int i = 0; i < index.Length; i++)
             {
                 index[i] = ParseExpression(scope, varSetNode.Index[i]);
@@ -933,7 +931,7 @@ namespace Deltin.Deltinteger.Parse
                     break;
             }
 
-            Actions.AddRange(variable.SetVariable(value, target, index));
+            Actions.AddRange(variable.SetVariable(value, varSetData.Target, index));
         }
 
         void ParseDefine(ScopeGroup scope, DefineNode defineNode)
@@ -945,7 +943,7 @@ namespace Deltin.Deltinteger.Parse
                 var = VarCollection.AssignVar(scope, defineNode.VariableName, IsGlobal, defineNode.UseVar.Variable, defineNode.UseVar.Index, defineNode);
 
             // Set the defined variable if the variable is defined like "define var = 1"
-            Element[] inScopeActions = var.InScope(ParseExpression(scope, defineNode.Value));
+            Element[] inScopeActions = var.InScope(defineNode.Value != null ? ParseExpression(scope, defineNode.Value) : null);
             if (inScopeActions != null)
                 Actions.AddRange(inScopeActions);
             
@@ -962,14 +960,22 @@ namespace Deltin.Deltinteger.Parse
         {
             public Var ResultingVariable { get; private set; }
             public Element ResultingElement { get; private set; }
+            public Element Target { get; private set; }
             
-            public ParseExpressionTree(TranslateRule translator, ScopeGroup scope, ExpressionTreeNode root)
+            public ParseExpressionTree(TranslateRule translator, ScopeGroup scope, Node root)
             {
-                List<Node> nodes = flatten(root);
+                if (root is VariableNode)
+                {
+                    Var var = scope.GetVar(((VariableNode)root).Name, root.Range);
+                    ResultingVariable = var;
+                    ResultingElement = var.GetVariable();
+                    return;
+                }
+
+                List<Node> nodes = flatten((ExpressionTreeNode)root);
                 ScopeGroup currentScope = scope;
 
                 Element nodeResult = null;
-                Element target = null;
                 for (int index = 0; index < nodes.Count; index++)
                 {
                     // If the node is a variable node, get the value.
@@ -983,7 +989,7 @@ namespace Deltin.Deltinteger.Parse
                             ResultingVariable = var;
 
                         // Set the nodeResult.
-                        nodeResult = var.GetVariable(target);
+                        nodeResult = var.GetVariable(Target);
                     }
                     // If not, parse the node as an expression.
                     else
@@ -999,7 +1005,7 @@ namespace Deltin.Deltinteger.Parse
                         // If this isn't the last node, set the target and reset the nodeResult.
                         if (index < nodes.Count - 1)
                         {
-                            target = nodeResult;
+                            Target = nodeResult;
                             nodeResult = null;
                         }
                     }

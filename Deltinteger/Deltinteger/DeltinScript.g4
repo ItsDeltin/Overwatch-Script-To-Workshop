@@ -52,10 +52,10 @@ createarray : INDEX_START (expr (COMMA expr)*)? INDEX_END;
 
 array : (INDEX_START expr INDEX_END)+ ;
 
-enum : PART SEPERATOR /*{ Deltin.Deltinteger.Elements.EnumData.IsEnum(_localctx?.PART(0)?.GetText()) }?*/ PART? ;
+enum : PART SEPERATOR PART? ;
 
 variable : PART ;
-varset   : (expr SEPERATOR)? PART array? ((statement_operation expr?) | INCREMENT | DECREMENT) ;
+varset   : var=expr array? ((statement_operation val=expr?) | INCREMENT | DECREMENT) ;
 
 call_parameters : expr (COMMA expr?)*    		 	     ;
 method          : PART LEFT_PAREN call_parameters? RIGHT_PAREN ;

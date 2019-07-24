@@ -325,25 +325,7 @@ namespace Deltin.Deltinteger.Parse
         #region Statements
         public override Node VisitVarset(DeltinScriptParser.VarsetContext context)
         {
-            Node target = context.expr().Length == 2 ? Visit(context.expr()[0]) : null;
-            string variable = context.PART().GetText();
-            
-            Node[] index = new Node[context.array()?.expr().Length ?? 0];
-            for (int i = 0; i < index.Length; i++)
-                index[i] = VisitExpr(context.array().expr(i));
-
-            Node value = context.expr().Length > 0 ? Visit(context.expr().Last()) : null;
-
-            string operation = context.statement_operation()?.GetText();
-            if (operation == null)
-            {
-                if (context.INCREMENT() != null)
-                    operation = "++";
-                else if (context.DECREMENT() != null)
-                    operation = "--";
-            }
-
-            return new VarSetNode(target, variable, index, operation, value, Range.GetRange(context));
+            return new VarSetNode(context, this);
         }
 
         public override Node VisitFor(DeltinScriptParser.ForContext context)
@@ -677,7 +659,8 @@ namespace Deltin.Deltinteger.Parse
         {
             VariableName = context.name.Text;
             Type = context.type?.Text;
-            Value = visitor.Visit(context.expr());
+            if (context.expr() != null)
+                Value = visitor.Visit(context.expr());
             if (context.accessor() != null)
                 AccessLevel = (AccessLevel)Enum.Parse(typeof(AccessLevel), context.accessor().GetText());
         }
@@ -1049,24 +1032,35 @@ namespace Deltin.Deltinteger.Parse
 
     public class VarSetNode : Node
     {
-        public Node Target { get; private set; }
-        public string Variable { get; private set; }
+        public Node Variable { get; private set; }
         public Node[] Index { get; private set; }
         public string Operation { get; private set; }
         public Node Value { get; private set; }
 
-        public VarSetNode(Node target, string variable, Node[] index, string operation, Node value, Range range) : base(range)
+        public VarSetNode(DeltinScriptParser.VarsetContext context, BuildAstVisitor visitor) : base(Range.GetRange(context))
         {
-            Target = target;
-            Variable = variable;
-            Index = index;
-            Operation = operation;
-            Value = value;
+            Variable = visitor.VisitExpr(context.var);
+            
+            Node[] index = new Node[context.array()?.expr().Length ?? 0];
+            for (int i = 0; i < index.Length; i++)
+                index[i] = visitor.VisitExpr(context.array().expr(i));
+
+            if (context.val != null)
+                Value = visitor.VisitExpr(context.val);
+
+            Operation = context.statement_operation()?.GetText();
+            if (Operation == null)
+            {
+                if (context.INCREMENT() != null)
+                    Operation = "++";
+                else if (context.DECREMENT() != null)
+                    Operation = "--";
+            }
         }
 
         public override Node[] Children()
         {
-            return ArrayBuilder<Node>.Build(Target, Index, Value);
+            return ArrayBuilder<Node>.Build(Variable, Index, Value);
         }
     }
 
