@@ -91,6 +91,7 @@ namespace Deltin.Deltinteger.Parse
                 case DeltinScriptParser.MethodContext _:
                 case DeltinScriptParser.DefineContext _:
                 case DeltinScriptParser.VarsetContext _:
+                case DeltinScriptParser.ExprContext _:
                     if (context.ChildCount == 1)
                         _diagnostics.Error("Expected ';'", Range.GetRange(context).end.ToRange());
                     break;

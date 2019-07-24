@@ -414,7 +414,8 @@ namespace Deltin.Deltinteger.Parse
         public static Element GetVariable(bool isGlobal, Element targetPlayer, Variable variable, params Element[] index)
         {
             Element element = GetRoot(isGlobal, targetPlayer, variable);
-            for (int i = index.Length - 1; i >= 0; i--)
+            //for (int i = index.Length - 1; i >= 0; i--)
+            for (int i = 0; i < index.Length; i++)
                 element = Element.Part<V_ValueInArray>(element, index[i]);
             return element;
         }

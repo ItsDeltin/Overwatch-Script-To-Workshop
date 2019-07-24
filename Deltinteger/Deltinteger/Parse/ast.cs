@@ -55,11 +55,11 @@ namespace Deltin.Deltinteger.Parse
 
         public override Node VisitUser_method(DeltinScriptParser.User_methodContext context)
         {
-            string name = context.PART(0).GetText();
+            string name = context.PART().GetText();
 
-            string[] parameters = new string[context.PART().Length - 1];
+            string[] parameters = new string[context.setParameters().PART().Length];
             for (int i = 0; i < parameters.Length; i++)
-                parameters[i] = context.PART(i + 1).GetText();
+                parameters[i] = context.setParameters().PART(i).GetText();
 
             BlockNode block = (BlockNode)VisitBlock(context.block());
 
@@ -478,7 +478,7 @@ namespace Deltin.Deltinteger.Parse
 
     public class TypeDefineNode : Node
     {
-        public TypeKind DefineType { get; }
+        public TypeKind TypeKind { get; }
         public string Name { get; }
         public InclassDefineNode[] DefinedVars { get; }
         public ConstructorNode[] Constructors { get; }
@@ -489,11 +489,11 @@ namespace Deltin.Deltinteger.Parse
             if (context.CLASS() != null)
             {
                 visitor._diagnostics.Error("Classes are not yet supported, use struct instead.", Range.GetRange(context.CLASS()));
-                DefineType = TypeKind.Class;
+                TypeKind = TypeKind.Class;
             }
 
             else if (context.STRUCT() != null)
-                DefineType = TypeKind.Struct;
+                TypeKind = TypeKind.Struct;
             
             else throw new Exception();
 
@@ -521,14 +521,14 @@ namespace Deltin.Deltinteger.Parse
     public class ConstructorNode : Node
     {
         public AccessLevel AccessLevel { get; }
-        public DefineNode[] Parameters { get; }
+        public string[] Parameters { get; }
         public BlockNode BlockNode { get; }
 
         public ConstructorNode(DeltinScriptParser.ConstructorContext context, BuildAstVisitor visitor) : base (Range.GetRange(context))
         {
-            Parameters = new DefineNode[context.setParameters().define().Length];
+            Parameters = new string[context.setParameters().PART().Length];
             for (int i = 0; i < Parameters.Length; i++)
-                Parameters[i] = (DefineNode)visitor.VisitDefine(context.setParameters().define(i));
+                Parameters[i] = context.setParameters().PART(i).GetText();
 
             AccessLevel = AccessLevel.Private;
             if (context.accessor() != null)
@@ -539,7 +539,7 @@ namespace Deltin.Deltinteger.Parse
 
         public override Node[] Children()
         {
-            return ArrayBuilder<Node>.Build(Parameters, BlockNode);
+            return ArrayBuilder<Node>.Build(BlockNode);
         }
     }
 

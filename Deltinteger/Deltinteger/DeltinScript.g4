@@ -69,6 +69,7 @@ statement :
 	| while
 	| define STATEMENT_END?
 	| return
+	| expr STATEMENT_END?
 	);
 
 block : (BLOCK_START statement* BLOCK_END) | statement | STATEMENT_END  ;
@@ -97,7 +98,7 @@ ow_rule :
 	block
 	;
 
-user_method : DOCUMENTATION* accessor? RECURSIVE? METHOD PART LEFT_PAREN (PART (COMMA PART)*)? RIGHT_PAREN
+user_method : DOCUMENTATION* accessor? RECURSIVE? METHOD PART LEFT_PAREN setParameters RIGHT_PAREN
 	block
 	;
 
@@ -118,7 +119,8 @@ accessor : PRIVATE | PUBLIC;
 
 constructor : accessor? name=PART LEFT_PAREN setParameters RIGHT_PAREN block ;
 
-setParameters : (define? (COMMA define)*)? ;
+setParameters: (PART (COMMA PART)*)?;
+//setParameters : (define? (COMMA define)*)? ;
 
 create_object : NEW type=PART LEFT_PAREN call_parameters? RIGHT_PAREN ;
 

@@ -8,18 +8,21 @@ namespace Deltin.Deltinteger.Parse
     public class DefinedType
     {
         public string Name { get; }
-        public TypeKind DefineType { get; }
+        public TypeKind TypeKind { get; }
         public InclassDefineNode[] DefinedVars { get; }
-        public ConstructorNode[] Constructors { get; }
         public UserMethodNode[] MethodNodes { get; }
+        public Constructor[] Constructors { get; }
 
         public DefinedType(TypeDefineNode node)
         {
             Name = node.Name;
-            DefineType = node.DefineType;
+            TypeKind = node.TypeKind;
             DefinedVars = node.DefinedVars;
-            Constructors = node.Constructors;
             MethodNodes = node.Methods;
+
+            Constructors = new Constructor[node.Constructors.Length];
+            for (int i = 0; i < Constructors.Length; i++)
+                Constructors[i] = new Constructor(node.Constructors[i]);
         }
 
         public ScopeGroup GetRootScope(IndexedVar var, ParsingData parseData)
@@ -42,6 +45,23 @@ namespace Deltin.Deltinteger.Parse
             }
 
             return typeScope;
+        }
+    }
+
+    public class Constructor
+    {
+        public AccessLevel AccessLevel { get; }
+        public BlockNode BlockNode { get; }
+        public ParameterBase[] Parameters { get; }
+
+        public Constructor(ConstructorNode constructorNode)
+        {
+            AccessLevel = constructorNode.AccessLevel;
+            BlockNode = constructorNode.BlockNode;
+            
+            Parameters = new ParameterBase[constructorNode.Parameters.Length];
+            for (int i = 0; i < Parameters.Length; i++)
+                Parameters[i] = new Parameter(constructorNode.Parameters[i], Elements.ValueType.Any, null);
         }
     }
 

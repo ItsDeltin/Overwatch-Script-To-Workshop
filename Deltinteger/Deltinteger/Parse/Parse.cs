@@ -38,10 +38,13 @@ namespace Deltin.Deltinteger.Parse
             {
                 Bav = new BuildAstVisitor(Diagnostics);
                 RuleSetNode = (RulesetNode)Bav.Visit(ruleSetContext);
+            }
 
-                AdditionalErrorChecking aec = new AdditionalErrorChecking(parser, Diagnostics);
-                aec.Visit(ruleSetContext);
-
+            AdditionalErrorChecking aec = new AdditionalErrorChecking(parser, Diagnostics);
+            aec.Visit(ruleSetContext);
+            
+            if (!Diagnostics.ContainsErrors())
+            {
                 VarCollection = new VarCollection();
                 ScopeGroup root = new ScopeGroup(VarCollection);
                 UserMethods = new List<UserMethod>();

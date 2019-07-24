@@ -49,7 +49,10 @@ namespace Deltin.Deltinteger.Parse
 
             // Fufill remaining skips
             foreach (var skip in ReturnSkips)
-                skip.ParameterValues = new IWorkshopTree[] { new V_Number(Actions.Count - ReturnSkips.IndexOf(skip)) };
+                if (Actions.Last() != skip)
+                    skip.ParameterValues = new IWorkshopTree[] { new V_Number(Actions.Count - ReturnSkips.IndexOf(skip)) };
+                else
+                    Actions.Remove(skip);
             ReturnSkips.Clear();
         }
 
@@ -249,18 +252,40 @@ namespace Deltin.Deltinteger.Parse
 
                     DefinedType typeData = ParserData.GetDefinedType(createObjectNode.TypeName, createObjectNode.Range);
 
-                    if (typeData == null)
-                        throw new SyntaxErrorException($"The type {createObjectNode.TypeName} could not be found.", createObjectNode.Range);
-
                     IndexedVar store = VarCollection.AssignVar(scope, typeData.Name + " store", IsGlobal, null);
                     store.Type = typeData;
+
+                    ScopeGroup typeScope = typeData.GetRootScope(store, ParserData);
+
+                    // Set the default variables in the struct
                     for (int i = 0; i < typeData.DefinedVars.Length; i++)
                     {
                         if (typeData.DefinedVars[i].Value != null)
                             Actions.AddRange(
-                                store.SetVariable(ParseExpression(scope, typeData.DefinedVars[i].Value), null, new V_Number(i))
+                                store.SetVariable(ParseExpression(typeScope, typeData.DefinedVars[i].Value), null, new V_Number(i))
                             );
                     }
+
+                    Constructor constructor = typeData.Constructors.FirstOrDefault(c => c.Parameters.Length == createObjectNode.Parameters.Length);
+                    if (constructor == null && !(createObjectNode.Parameters.Length == 0 && typeData.Constructors.Length == 0))
+                        throw new SyntaxErrorException(
+                            $"No constructors in the {typeData.TypeKind} {typeData.Name} have {createObjectNode.Parameters.Length} parameters.",
+                            createObjectNode.Range);
+                    if (constructor != null)
+                    {
+                        ScopeGroup constructorScope = typeScope.Child();
+                        for (int i = 0; i < constructor.Parameters.Length; i++)
+                        {
+                            IndexedVar var = VarCollection.AssignVar(constructorScope, constructor.Parameters[i].Name, IsGlobal, createObjectNode);
+                            Actions.AddRange
+                            (
+                                var.InScope(ParseExpression(scope, createObjectNode.Parameters[i]))
+                            );
+                        }
+
+                        ParseBlock(constructorScope, constructor.BlockNode, true, null);
+                    }
+
                     return store.GetVariable();
 
                 // Expression tree
@@ -272,73 +297,64 @@ namespace Deltin.Deltinteger.Parse
                     return scope.GetThis(thisNode.Range).GetVariable();
             }
 
-
             throw new Exception();
         }
 
-        Element ParseMethod(ScopeGroup scope, MethodNode methodNode, bool needsToBeValue)
+        IWorkshopTree[] ParseParameters(ScopeGroup scope, ParameterBase[] parameters, Node[] values, string methodName, Range methodRange)
         {
-            methodNode.RelatedScopeGroup = scope;
-
-            IMethod method = scope.GetMethod(methodNode.Name, methodNode.Range);
-
-            // Syntax error if the method does not exist.
-            //if (method == null)
-              //  throw SyntaxErrorException.NonexistentMethod(methodNode.Name, methodNode.Range);
-
             // Syntax error if there are too many parameters.
-            if (methodNode.Parameters.Length > method.Parameters.Length)
-                throw SyntaxErrorException.TooManyParameters(method.Name, method.Parameters.Length, methodNode.Parameters.Length, ((Node)methodNode.Parameters[method.Parameters.Length]).Range);
-            
+            if (values.Length > parameters.Length)
+                throw SyntaxErrorException.TooManyParameters(methodName, parameters.Length, values.Length, values[parameters.Length].Range);
+
             // Parse the parameters
             List<IWorkshopTree> parsedParameters = new List<IWorkshopTree>();
-            for(int i = 0; i < method.Parameters.Length; i++)
+            for(int i = 0; i < parameters.Length; i++)
             {
-                if (method.Parameters[i] is Parameter || method.Parameters[i] is EnumParameter)
+                if (parameters[i] is Parameter || parameters[i] is EnumParameter)
                 {
                     // Get the default parameter value if there are not enough parameters.
-                    if (methodNode.Parameters.Length <= i)
+                    if (values.Length <= i)
                     {
-                        IWorkshopTree defaultValue = method.Parameters[i].GetDefault();
+                        IWorkshopTree defaultValue = parameters[i].GetDefault();
 
                         // If there is no default value, throw a syntax error.
                         if (defaultValue == null)
-                            throw SyntaxErrorException.MissingParameter(method.Parameters[i].Name, method.Name, methodNode.Range);
+                            throw SyntaxErrorException.MissingParameter(parameters[i].Name, methodName, methodRange);
                         
                         parsedParameters.Add(defaultValue);
                     }
                     else
                     {
-                        if (method.Parameters[i] is Parameter)
+                        if (parameters[i] is Parameter)
                             // Parse the parameter
-                            parsedParameters.Add(ParseExpression(scope, methodNode.Parameters[i]));
-                        else if (method.Parameters[i] is EnumParameter)
+                            parsedParameters.Add(ParseExpression(scope, values[i]));
+                        else if (parameters[i] is EnumParameter)
                         {
                             // Parse the enum
-                            if (methodNode.Parameters[i] is EnumNode)
+                            if (values[i] is EnumNode)
                             {
-                                EnumNode enumNode = (EnumNode)methodNode.Parameters[i];
+                                EnumNode enumNode = (EnumNode)values[i];
                                 parsedParameters.Add(
                                     (IWorkshopTree)EnumData.ToElement(enumNode.EnumMember)
                                     ?? (IWorkshopTree)enumNode.EnumMember
                                 );
                             }
                             else
-                                throw new SyntaxErrorException("Expected the enum " + ((EnumParameter)method.Parameters[i]).EnumData.CodeName + ", got a value instead.", ((Node)methodNode.Parameters[i]).Range);
+                                throw new SyntaxErrorException("Expected the enum " + ((EnumParameter)parameters[i]).EnumData.CodeName + ", got a value instead.", ((Node)values[i]).Range);
                         }
                     }
                 }
-                else if (method.Parameters[i] is VarRefParameter)
+                else if (parameters[i] is VarRefParameter)
                 {
                     // A VarRef parameter is always required, there will never be a default to fallback on.
-                    if (methodNode.Parameters.Length <= i)
-                        throw SyntaxErrorException.MissingParameter(method.Parameters[i].Name, method.Name, methodNode.Range);
+                    if (values.Length <= i)
+                        throw SyntaxErrorException.MissingParameter(parameters[i].Name, methodName, methodRange);
                     
                     // A VarRef parameter must be a variable
-                    if (!(methodNode.Parameters[i] is VariableNode))
-                        throw new SyntaxErrorException("Expected variable", ((Node)methodNode.Parameters[i]).Range);
+                    if (!(values[i] is VariableNode))
+                        throw new SyntaxErrorException("Expected variable", ((Node)values[i]).Range);
                     
-                    VariableNode variableNode = (VariableNode)methodNode.Parameters[i];
+                    VariableNode variableNode = (VariableNode)values[i];
 
                     Element target = null;
                     if (variableNode.Target != null)
@@ -349,9 +365,19 @@ namespace Deltin.Deltinteger.Parse
                 }
                 else throw new NotImplementedException();
             }
+            return parsedParameters.ToArray();
+        }
+
+        Element ParseMethod(ScopeGroup scope, MethodNode methodNode, bool needsToBeValue)
+        {
+            methodNode.RelatedScopeGroup = scope;
+
+            IMethod method = scope.GetMethod(methodNode.Name, methodNode.Range);
+            
+            // Parse the parameters
+            IWorkshopTree[] parsedParameters = ParseParameters(scope, method.Parameters, methodNode.Parameters, methodNode.Name, methodNode.Range);
 
             Element result;
-
             if (method is ElementList)
             {
                 ElementList elementData = (ElementList)method;
@@ -553,7 +579,7 @@ namespace Deltin.Deltinteger.Parse
             int returnSkipStart = ReturnSkips.Count;
             
             for (int i = 0; i < blockNode.Statements.Length; i++)
-                ParseStatement(scopeGroup, blockNode.Statements[i], returnVar, i == blockNode.Statements.Length - 1);
+                ParseStatement(scopeGroup, blockNode.Statements[i], returnVar);
 
             if (fulfillReturns)
                 for (int i = ReturnSkips.Count - 1; i >= returnSkipStart; i--)
@@ -566,7 +592,7 @@ namespace Deltin.Deltinteger.Parse
                 }
         }
 
-        void ParseStatement(ScopeGroup scope, Node statement, IndexedVar returnVar, bool isLast)
+        void ParseStatement(ScopeGroup scope, Node statement, IndexedVar returnVar)
         {
             switch (statement)
             {
@@ -858,18 +884,19 @@ namespace Deltin.Deltinteger.Parse
                             Actions.AddRange(returnVar.SetVariable(result));
                     }
 
-                    if (!isLast)
-                    {
-                        A_Skip returnSkip = new A_Skip();
-                        Actions.Add(returnSkip);
-                        ReturnSkips.Add(returnSkip);
-                    }
+                    A_Skip returnSkip = new A_Skip();
+                    Actions.Add(returnSkip);
+                    ReturnSkips.Add(returnSkip);
 
                     return;
                 
                 // Define
                 case DefineNode defineNode:
                     ParseDefine(scope, defineNode);
+                    return;
+
+                case ExpressionTreeNode expressionTree:
+                    new ParseExpressionTree(this, scope, expressionTree);
                     return;
             }
         }
