@@ -71,7 +71,8 @@ namespace Deltin.Deltinteger.Parse
                                 definedVar.UseVar.Index,
                                 definedVar
                             );
-                        var.Type = GetDefinedType(definedVar.Type, definedVar.Range);
+                        if (var.Type != null)
+                            var.Type = GetDefinedType(definedVar.Type, definedVar.Range);
                     }
                     catch (SyntaxErrorException ex)
                     {
