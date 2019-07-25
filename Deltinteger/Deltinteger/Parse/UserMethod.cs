@@ -22,6 +22,7 @@ namespace Deltin.Deltinteger.Parse
             IsRecursive = node.IsRecursive;
             Documentation = node.Documentation;
             Wiki = new WikiMethod(Name, Documentation, null);
+            AccessLevel = node.AccessLevel;
 
             scope.In(this);
         }
@@ -36,6 +37,8 @@ namespace Deltin.Deltinteger.Parse
 
         public string Documentation { get; }
 
+        public AccessLevel AccessLevel { get; set; } = AccessLevel.Public;
+
         public string GetLabel(bool markdown)
         {
             return Name + "(" + Parameter.ParameterGroupToString(Parameters, markdown) + ")"
@@ -43,7 +46,6 @@ namespace Deltin.Deltinteger.Parse
         }
         
         public WikiMethod Wiki { get; }
-
 
         public override string ToString()
         {
@@ -66,6 +68,7 @@ namespace Deltin.Deltinteger.Parse
                 }
             ).ToArray();
         }
+
     }
 
     public class MethodStack

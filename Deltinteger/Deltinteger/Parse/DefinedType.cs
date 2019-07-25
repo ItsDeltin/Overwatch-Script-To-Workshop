@@ -35,12 +35,14 @@ namespace Deltin.Deltinteger.Parse
                 IndexedVar newVar = var.CreateChild(typeScope, DefinedVars[i].VariableName, new int[] { i });
                 if (DefinedVars[i].Type != null)
                     newVar.Type = parseData.GetDefinedType(DefinedVars[i].Type, DefinedVars[i].Range);
+                newVar.AccessLevel = DefinedVars[i].AccessLevel;
                 typeScope.In(newVar);
             }
 
             for (int i = 0; i < MethodNodes.Length; i++)
             {
                 UserMethod method = new UserMethod(typeScope, MethodNodes[i]);
+                method.AccessLevel = MethodNodes[i].AccessLevel;
                 typeScope.In(method);
             }
 

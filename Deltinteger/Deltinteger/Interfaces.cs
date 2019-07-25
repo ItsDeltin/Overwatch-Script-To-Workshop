@@ -1,6 +1,7 @@
 using System.Text;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.WorkshopWiki;
+using Deltin.Deltinteger.Parse;
 
 namespace Deltin.Deltinteger
 {
@@ -31,5 +32,6 @@ namespace Deltin.Deltinteger
     public interface IScopeable
     {
         string Name { get; }
+        AccessLevel AccessLevel { get; }
     }
 }

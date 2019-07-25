@@ -55,19 +55,7 @@ namespace Deltin.Deltinteger.Parse
 
         public override Node VisitUser_method(DeltinScriptParser.User_methodContext context)
         {
-            string name = context.PART().GetText();
-
-            string[] parameters = new string[context.setParameters().PART().Length];
-            for (int i = 0; i < parameters.Length; i++)
-                parameters[i] = context.setParameters().PART(i).GetText();
-
-            BlockNode block = (BlockNode)VisitBlock(context.block());
-
-            bool isRecursive = context.RECURSIVE() != null;
-
-            string documentation = string.Join("\n\r", context.DOCUMENTATION().Select(doc => doc.GetText().TrimEnd().TrimStart('#', ' ')));
-
-            return new UserMethodNode(name, parameters, block, isRecursive, documentation, Range.GetRange(context));
+            return new UserMethodNode(context, this);
         }
 
         public override Node VisitOw_rule(DeltinScriptParser.Ow_ruleContext context)
@@ -748,14 +736,24 @@ namespace Deltin.Deltinteger.Parse
         public BlockNode Block { get; }
         public bool IsRecursive { get; }
         public string Documentation { get; }
+        public AccessLevel AccessLevel { get; }
         
-        public UserMethodNode(string name, string[] parameters, BlockNode block, bool isRecursive, string documentation, Range range) : base(range)
+        public UserMethodNode(DeltinScriptParser.User_methodContext context, BuildAstVisitor visitor) : base(Range.GetRange(context))
         {
-            Name = name;
-            Parameters = parameters;
-            Block = block;
-            IsRecursive = isRecursive;
-            Documentation = documentation;
+            Name = context.PART().GetText();
+
+            Parameters = new string[context.setParameters().PART().Length];
+            for (int i = 0; i < Parameters.Length; i++)
+                Parameters[i] = context.setParameters().PART(i).GetText();
+
+            Block = (BlockNode)visitor.VisitBlock(context.block());
+            IsRecursive = context.RECURSIVE() != null;
+            Documentation = string.Join("\n\r", context.DOCUMENTATION().Select(doc => doc.GetText().TrimEnd().TrimStart('#', ' ')));
+
+            AccessLevel = AccessLevel.Private;
+            if (context.accessor() != null)
+                AccessLevel = (AccessLevel)Enum.Parse(typeof(AccessLevel), context.accessor().GetText(), true);
+
         }
 
         public override Node[] Children()

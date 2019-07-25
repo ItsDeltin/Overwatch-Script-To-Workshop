@@ -135,6 +135,8 @@ namespace Deltin.Deltinteger.Parse
 
         public DefinedType Type { get; set; }
 
+        public AccessLevel AccessLevel { get; set; } = AccessLevel.Public;
+
         public Var(string name, ScopeGroup scope, Node node = null)
         {
             Name = name;
