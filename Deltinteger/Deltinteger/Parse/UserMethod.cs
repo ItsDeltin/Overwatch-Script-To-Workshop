@@ -23,6 +23,7 @@ namespace Deltin.Deltinteger.Parse
             Documentation = node.Documentation;
             Wiki = new WikiMethod(Name, Documentation, null);
             AccessLevel = node.AccessLevel;
+            Node = node;
 
             scope.In(this);
         }
@@ -38,6 +39,10 @@ namespace Deltin.Deltinteger.Parse
         public string Documentation { get; }
 
         public AccessLevel AccessLevel { get; set; } = AccessLevel.Public;
+
+        public UserMethodNode Node { get; }
+
+        public Range Range { get { return Node.Range; }}
 
         public string GetLabel(bool markdown)
         {

@@ -38,17 +38,31 @@ namespace Deltin.Deltinteger.Parse
 
         public void In(IScopeable var)
         {
-            if (!InScope.Contains(var))
+            if (!FullVarCollection().Any(v => var.Name == v.Name))
                 InScope.Add(var);
+            else
+                throw SyntaxErrorException.AlreadyDefined(var.Name, var.Range);
         }
 
-        public Element[] Out()
+        public void Out()
         {
             if (!IsInScope)
                 throw new Exception("ScopeGroup is already out of scope.");
 
             IsInScope = false;
 
+            foreach (IScopeable var in InScope)
+                if (var is IndexedVar)
+                    VarCollection.Free((IndexedVar)var);
+            
+            for (int i = 0; i < Children.Count; i++)
+                if (Children[0].IsInScope)
+                    throw new Exception();
+                //Children[0].Out();
+        }
+
+        public Element[] RecursiveMethodStackPop()
+        {
             List<Element> actions = new List<Element>();
             foreach (IScopeable var in InScope)
                 if (var is IndexedVar)
@@ -56,15 +70,10 @@ namespace Deltin.Deltinteger.Parse
                     Element[] outOfScopeActions = ((IndexedVar)var).OutOfScope();
                     if (outOfScopeActions != null)
                         actions.AddRange(outOfScopeActions);
-
-                    VarCollection.Free((IndexedVar)var);
                 }
-            
-            while (Children.Count > 0)
-                actions.AddRange(Children[0].Out());
-            
-            if (Parent != null)
-                Parent.Children.Remove(this);
+
+            for (int i = 0; i < Children.Count; i++)
+                actions.AddRange(Children[0].RecursiveMethodStackPop());
 
             return actions.ToArray();
         }

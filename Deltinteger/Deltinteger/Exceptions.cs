@@ -40,8 +40,8 @@ namespace Deltin.Deltinteger
         public const string missingParameter     = "Missing parameter \"{0}\" in the method \"{1}\" and no default type to fallback on.";
         public const string tooManyParameters    = "The {0} method takes {1} parameters, got {2} instead.";
         public const string invalidEnumValue     = "The value '{0}' does not exist in the enum '{1}'.";
-        public const string variableDoesNotExist = "The variable {0} does not exist.";
-        public const string alreadyDefined       = "The variable {0} was already defined.";
+        public const string variableDoesNotExist = "The variable '{0}' does not exist.";
+        public const string alreadyDefined       = "The variable '{0}' was already defined.";
         public const string mustBeValue          = "{0} must be a value method, not an action method.";
         public const string mustBeAction         = "{0} must be an action method, not a value method.";
         public const string recursionNotAllowed  = "Recursion is not allowed here. Do 'recursive method' instead of 'method' to allow recursion.";
