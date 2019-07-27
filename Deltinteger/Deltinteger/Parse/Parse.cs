@@ -46,7 +46,7 @@ namespace Deltin.Deltinteger.Parse
             if (!Diagnostics.ContainsErrors())
             {
                 VarCollection = new VarCollection();
-                ScopeGroup root = new ScopeGroup(VarCollection);
+                Root = new ScopeGroup(VarCollection);
                 UserMethods = new List<UserMethod>();
                 DefinedTypes = new List<DefinedType>();
 
@@ -61,10 +61,10 @@ namespace Deltin.Deltinteger.Parse
                     {
                         IndexedVar var;
                         if (definedVar.UseVar == null)
-                            var = VarCollection.AssignVar(root, definedVar.VariableName, definedVar.IsGlobal, definedVar);
+                            var = VarCollection.AssignVar(Root, definedVar.VariableName, definedVar.IsGlobal, definedVar);
                         else
                             var = VarCollection.AssignVar(
-                                root, 
+                                Root, 
                                 definedVar.VariableName, 
                                 definedVar.IsGlobal,
                                 definedVar.UseVar.Variable, 
@@ -82,7 +82,7 @@ namespace Deltin.Deltinteger.Parse
 
                 // Get the user methods.
                 for (int i = 0; i < RuleSetNode.UserMethods.Length; i++)
-                    UserMethods.Add(new UserMethod(root, RuleSetNode.UserMethods[i]));
+                    UserMethods.Add(new UserMethod(Root, RuleSetNode.UserMethods[i]));
 
                 // Parse the rules.
                 Rules = new List<Rule>();
@@ -95,7 +95,7 @@ namespace Deltin.Deltinteger.Parse
                 {
                     try
                     {
-                        var result = TranslateRule.GetRule(RuleSetNode.Rules[i], root, this);
+                        var result = TranslateRule.GetRule(RuleSetNode.Rules[i], Root, this);
                         Rules.Add(result);
                     }
                     catch (SyntaxErrorException ex)
@@ -120,6 +120,7 @@ namespace Deltin.Deltinteger.Parse
         public List<UserMethod> UserMethods { get; private set; }
         public bool Success { get; private set; }
         public VarCollection VarCollection { get; private set; }
+        public ScopeGroup Root { get; private set; }
         public RulesetNode RuleSetNode { get; private set; }
         private Looper GlobalLoop { get; set; }
         private Looper PlayerLoop { get; set; }
