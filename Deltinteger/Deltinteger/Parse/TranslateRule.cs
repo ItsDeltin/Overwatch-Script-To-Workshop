@@ -1027,7 +1027,8 @@ namespace Deltin.Deltinteger.Parse
                     {
                         // If there is no supported type, assume the element or variable is containing a player.
                         // Reset the scope.
-                        currentScope = scope;
+                        //currentScope = scope;
+                        currentScope = translator.ParserData.Root;
 
                         // If this isn't the last node, set the target and reset the nodeResult.
                         if (index < nodes.Count - 1)
