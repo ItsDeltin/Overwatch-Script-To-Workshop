@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading;
 using System.IO;
 using System.Windows.Forms;
+using System.Globalization;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.Parse;
 using Deltin.Deltinteger.LanguageServer;
@@ -13,13 +14,15 @@ namespace Deltin.Deltinteger
 {
     public class Program
     {
-        public const string VERSION = "v0.3.11";
+        public const string VERSION = "v0.3.12";
 
         static Log Log = new Log(":");
         static Log ParseLog = new Log("Parse");
 
         static void Main(string[] args)
         {
+            CultureInfo.DefaultThreadCurrentCulture = new CultureInfo("en-US");
+
             Log.Write(LogLevel.Normal, "Overwatch Script To Workshop " + VERSION);
 
             Log.LogLevel = LogLevel.Normal;
