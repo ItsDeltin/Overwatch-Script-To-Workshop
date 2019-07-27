@@ -44,16 +44,34 @@ namespace Deltin.Deltinteger.Parse
             
             if (ruleScope.Out().Length != 0) throw new Exception();
 
+            // Fulfill remaining returns.
+            FulfillReturns(0);
+
             Rule.Actions = Actions.ToArray();
             Rule.Conditions = Conditions.ToArray();
+        }
 
-            // Fufill remaining skips
-            foreach (var skip in ReturnSkips)
-                if (Actions.Last() != skip)
-                    skip.ParameterValues = new IWorkshopTree[] { new V_Number(Actions.Count - ReturnSkips.IndexOf(skip)) };
+        void FulfillReturns(int startAt)
+        {
+            for (int i = ReturnSkips.Count - 1; i >= startAt; i--)
+            {
+                int skipCount = Actions.Count - 1 - Actions.IndexOf(ReturnSkips[i]);
+                
+                if (skipCount == 0)
+                {
+                    throw new Exception("Zero length return skip");
+                    //Actions.Remove(ReturnSkips[i]);
+                }
                 else
-                    Actions.Remove(skip);
-            ReturnSkips.Clear();
+                {
+                    ReturnSkips[i].ParameterValues = new IWorkshopTree[]
+                    {
+                        new V_Number(skipCount)
+                    };
+                }
+                
+                ReturnSkips.RemoveAt(i);
+            }
         }
 
         void ParseConditions(ScopeGroup scope, Node[] expressions)
@@ -415,6 +433,8 @@ namespace Deltin.Deltinteger.Parse
             else if (method is UserMethod)
             {
                 result = ParseUserMethod(scope, methodNode, (UserMethod)method, parsedParameters.ToArray());
+                if (!needsToBeValue)
+                    result = null;
             }
             else throw new NotImplementedException();
 
@@ -581,14 +601,7 @@ namespace Deltin.Deltinteger.Parse
                 ParseStatement(scopeGroup, blockNode.Statements[i], returnVar);
 
             if (fulfillReturns)
-                for (int i = ReturnSkips.Count - 1; i >= returnSkipStart; i--)
-                {
-                    ReturnSkips[i].ParameterValues = new IWorkshopTree[]
-                    {
-                        new V_Number(Actions.Count - 1 - Actions.IndexOf(ReturnSkips[i]))
-                    };
-                    ReturnSkips.RemoveAt(i);
-                }
+                FulfillReturns(returnSkipStart);
         }
 
         void ParseStatement(ScopeGroup scope, Node statement, IndexedVar returnVar)
@@ -779,7 +792,9 @@ namespace Deltin.Deltinteger.Parse
                 // If
                 case IfNode ifNode:
                 {
-                    A_SkipIf if_SkipIf = new A_SkipIf();
+                    A_SkipIf if_SkipIf = new A_SkipIf() { ParameterValues = new IWorkshopTree[2] };
+                    if_SkipIf.ParameterValues[0] = Element.Part<V_Not>(ParseExpression(scope, ifNode.IfData.Expression));
+
                     Actions.Add(if_SkipIf);
 
                     var ifScope = scope.Child();
@@ -794,14 +809,6 @@ namespace Deltin.Deltinteger.Parse
                     // Only if there is if-else or else statements.
                     bool addIfSkip = ifNode.ElseIfData.Length > 0 || ifNode.ElseBlock != null;
 
-                    // Update the initial SkipIf's skip count now that we know the number of actions the if block has.
-                    // Add one to the body length if a Skip action is going to be added.
-                    if_SkipIf.ParameterValues = new IWorkshopTree[]
-                    {
-                        Element.Part<V_Not>(ParseExpression(scope, ifNode.IfData.Expression)),
-                        new V_Number(Actions.Count - 1 - Actions.IndexOf(if_SkipIf) + (addIfSkip ? 1 : 0))
-                    };
-
                     // Create the "Skip" action.
                     A_Skip if_Skip = new A_Skip();
                     if (addIfSkip)
@@ -809,12 +816,17 @@ namespace Deltin.Deltinteger.Parse
                         Actions.Add(if_Skip);
                     }
 
+                    // Update the initial SkipIf's skip count now that we know the number of actions the if block has.
+                    if_SkipIf.ParameterValues[1] = new V_Number(GetSkipCount(if_SkipIf));
+
                     // Parse else-ifs
                     A_Skip[] elseif_Skips = new A_Skip[ifNode.ElseIfData.Length]; // The ElseIf's skips
                     for (int i = 0; i < ifNode.ElseIfData.Length; i++)
                     {
                         // Create the SkipIf action for the else if.
-                        A_SkipIf elseif_SkipIf = new A_SkipIf();
+                        A_SkipIf elseif_SkipIf = new A_SkipIf() { ParameterValues = new IWorkshopTree[2] };
+                        elseif_SkipIf.ParameterValues[0] = Element.Part<V_Not>(ParseExpression(scope, ifNode.ElseIfData[i].Expression));
+
                         Actions.Add(elseif_SkipIf);
 
                         // Parse the else-if body.
@@ -828,19 +840,15 @@ namespace Deltin.Deltinteger.Parse
                         // Only if there is additional if-else or else statements.
                         bool addIfElseSkip = i < ifNode.ElseIfData.Length - 1 || ifNode.ElseBlock != null;
 
-                        // Set the SkipIf's parameters.
-                        elseif_SkipIf.ParameterValues = new IWorkshopTree[]
-                        {
-                            Element.Part<V_Not>(ParseExpression(scope, ifNode.ElseIfData[i].Expression)),
-                            new V_Number(Actions.Count - 1 - Actions.IndexOf(elseif_SkipIf) + (addIfElseSkip ? 1 : 0))
-                        };
-
                         // Create the "Skip" action for the else-if.
                         if (addIfElseSkip)
                         {
                             elseif_Skips[i] = new A_Skip();
                             Actions.Add(elseif_Skips[i]);
                         }
+
+                        // Set the SkipIf's parameters.
+                        elseif_SkipIf.ParameterValues[1] = new V_Number(GetSkipCount(elseif_SkipIf));
                     }
 
                     // Parse else body.
@@ -855,10 +863,11 @@ namespace Deltin.Deltinteger.Parse
 
                     // Replace dummy skip with real skip now that we know the length of the if, if-else, and else's bodies.
                     // Replace if's dummy.
-                    if_Skip.ParameterValues = new IWorkshopTree[]
-                    {
-                        new V_Number(Actions.Count - 1 - Actions.IndexOf(if_Skip))
-                    };
+                    if (addIfSkip)
+                        if_Skip.ParameterValues = new IWorkshopTree[]
+                        {
+                            new V_Number(GetSkipCount(if_Skip))
+                        };
 
                     // Replace else-if's dummy.
                     for (int i = 0; i < elseif_Skips.Length; i++)
@@ -866,7 +875,7 @@ namespace Deltin.Deltinteger.Parse
                         {
                             elseif_Skips[i].ParameterValues = new IWorkshopTree[]
                             {
-                                new V_Number(Actions.Count - 1 - Actions.IndexOf(elseif_Skips[i]))
+                                new V_Number(GetSkipCount(elseif_Skips[i]))
                             };
                         }
 
@@ -885,6 +894,7 @@ namespace Deltin.Deltinteger.Parse
 
                     A_Skip returnSkip = new A_Skip();
                     Actions.Add(returnSkip);
+                    Actions.Add(Element.Part<A_Skip>(new V_Number(-1)));
                     ReturnSkips.Add(returnSkip);
 
                     return;
@@ -979,7 +989,11 @@ namespace Deltin.Deltinteger.Parse
 
         int GetSkipCount(Element skipElement)
         {
-            return Actions.Count - Actions.IndexOf(skipElement) - 1;
+            int index = Actions.IndexOf(skipElement);
+            if (index == -1)
+                throw new Exception("skipElement not found.");
+
+            return Actions.Count - index - 1;
         }
     
         class ParseExpressionTree
