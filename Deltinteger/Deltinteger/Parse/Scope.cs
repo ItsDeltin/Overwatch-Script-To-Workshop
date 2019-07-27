@@ -133,11 +133,11 @@ namespace Deltin.Deltinteger.Parse
             while (check != null && @this == null)
             {
                 @this = check.This;
-                check = Parent;
+                check = check.Parent;
             }
 
             if (errorRange != null && @this == null)
-                throw new SyntaxErrorException("The 'this' keyword cannot be used here.", errorRange);
+                throw SyntaxErrorException.ThisCantBeUsed(errorRange);
             
             return @this;
         }

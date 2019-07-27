@@ -52,7 +52,14 @@ namespace Deltin.Deltinteger.Parse
 
                 // Get the defined types
                 foreach (var definedType in RuleSetNode.DefinedTypes)
-                    DefinedTypes.Add(new DefinedType(definedType));
+                    try
+                    {
+                        DefinedTypes.Add(new DefinedType(definedType));
+                    }
+                    catch (SyntaxErrorException ex)
+                    {
+                        Diagnostics.Error(ex);
+                    }
 
                 // Get the variables
                 foreach (var definedVar in RuleSetNode.DefinedVars)
@@ -134,7 +141,7 @@ namespace Deltin.Deltinteger.Parse
 
         public DefinedType GetDefinedType(string name, Range range)
         {
-            return DefinedTypes.FirstOrDefault(dt => dt.Name == name) ?? throw new SyntaxErrorException($"The type {name} does not exist.", range);
+            return DefinedTypes.FirstOrDefault(dt => dt.Name == name) ?? throw SyntaxErrorException.NonexistentType(name, range);
         }
 
         public Looper GetLooper(bool isGlobal)

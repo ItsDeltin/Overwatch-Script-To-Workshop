@@ -22,7 +22,11 @@ namespace Deltin.Deltinteger.Parse
 
             Constructors = new Constructor[node.Constructors.Length];
             for (int i = 0; i < Constructors.Length; i++)
+            {
+                if (node.Constructors[i].Name != node.Name)
+                    throw SyntaxErrorException.ConstructorName(node.Constructors[i].Range);
                 Constructors[i] = new Constructor(node.Constructors[i]);
+            }
         }
 
         public ScopeGroup GetRootScope(IndexedVar var, ParsingData parseData)

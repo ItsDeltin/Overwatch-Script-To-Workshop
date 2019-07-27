@@ -268,9 +268,8 @@ namespace Deltin.Deltinteger.Parse
 
                     Constructor constructor = typeData.Constructors.FirstOrDefault(c => c.Parameters.Length == createObjectNode.Parameters.Length);
                     if (constructor == null && !(createObjectNode.Parameters.Length == 0 && typeData.Constructors.Length == 0))
-                        throw new SyntaxErrorException(
-                            $"No constructors in the {typeData.TypeKind} {typeData.Name} have {createObjectNode.Parameters.Length} parameters.",
-                            createObjectNode.Range);
+                        throw SyntaxErrorException.NotAConstructor(typeData.TypeKind, typeData.Name, createObjectNode.Parameters.Length,createObjectNode.Range);
+                    
                     if (constructor != null)
                     {
                         ScopeGroup constructorScope = typeScope.Child();
@@ -340,7 +339,7 @@ namespace Deltin.Deltinteger.Parse
                                 );
                             }
                             else
-                                throw new SyntaxErrorException("Expected the enum " + ((EnumParameter)parameters[i]).EnumData.CodeName + ", got a value instead.", ((Node)values[i]).Range);
+                                throw SyntaxErrorException.ExpectedEnumGotValue(((EnumParameter)parameters[i]).EnumData.CodeName, ((Node)values[i]).Range);
                         }
                     }
                 }
@@ -352,7 +351,7 @@ namespace Deltin.Deltinteger.Parse
                     
                     // A VarRef parameter must be a variable
                     if (!(values[i] is VariableNode))
-                        throw new SyntaxErrorException("Expected variable", ((Node)values[i]).Range);
+                        throw  SyntaxErrorException.ExpectedVariable(((Node)values[i]).Range);
                     
                     VariableNode variableNode = (VariableNode)values[i];
 
@@ -906,7 +905,7 @@ namespace Deltin.Deltinteger.Parse
             var varSetData = new ParseExpressionTree(this, scope, varSetNode.Variable);
 
             if (!(varSetData.ResultingVariable is IndexedVar))
-                throw new SyntaxErrorException($"Variable '{varSetData.ResultingVariable.Name}' is readonly.", varSetNode.Range);
+                throw SyntaxErrorException.VariableIsReadonly(varSetData.ResultingVariable.Name, varSetNode.Range);
 
             IndexedVar variable = (IndexedVar)varSetData.ResultingVariable;
             

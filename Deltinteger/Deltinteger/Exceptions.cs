@@ -32,13 +32,12 @@ namespace Deltin.Deltinteger
             return message;
         }
 
+        #region Messages
         public const string parameterCount       = "Can't set the <{0}> format, there are only {1} parameters.";
         public const string stringParse          = "Failed to parse the string \"{0}\".";
         public const string invalidString        = "\"{0}\" is not a valid string.";
-        public const string invalidType          = "Expected {0}, got {1} instead.";
         public const string methodDoesntExist    = "The method \"{0}\" does not exist.";
         public const string missingParameter     = "Missing parameter \"{0}\" in the method \"{1}\" and no default type to fallback on.";
-        public const string expectedType         = "Expected {0} type \"{1}\" on {2}'s parameter \"{3}\".";
         public const string tooManyParameters    = "The {0} method takes {1} parameters, got {2} instead.";
         public const string invalidEnumValue     = "The value '{0}' does not exist in the enum '{1}'.";
         public const string variableDoesNotExist = "The variable {0} does not exist.";
@@ -47,6 +46,14 @@ namespace Deltin.Deltinteger
         public const string mustBeAction         = "{0} must be an action method, not a value method.";
         public const string recursionNotAllowed  = "Recursion is not allowed here. Do 'recursive method' instead of 'method' to allow recursion.";
         public const string enumCantBeValue      = "The enum '{0}' cannot be used like a value.";
+        public const string notAConstructor      = "No constructors in the {0} '{1}' have {2} parameters.";
+        public const string constructorName      = "Constructor name must be the same as the type name.";
+        public const string expectedEnumGotValue = "Expected the enum '{0}', got a value instead.";
+        public const string variableIsReadonly   = "Variable '{0}' is readonly.";
+        public const string expectedVariable     = "Expected a variable.";
+        public const string typeDoesNotExist     = "The type '{0}' does not exist.";
+        public const string thisCantBeUsed       = "The 'this' keyword cannot be used here.";
+        #endregion
 
         public static SyntaxErrorException StringParameterCount(int parameterIndex, int parameterCount, Range range)
         {
@@ -72,14 +79,6 @@ namespace Deltin.Deltinteger
             );
         }
 
-        public static SyntaxErrorException InvalidType(ValueType expected, ValueType got, Range range)
-        {
-            return new SyntaxErrorException(
-                string.Format(invalidType, expected.ToString(), got.ToString()),
-                range
-            );
-        }
-
         public static SyntaxErrorException NonexistentMethod(string name, Range range)
         {
             return new SyntaxErrorException(
@@ -92,22 +91,6 @@ namespace Deltin.Deltinteger
         {
             return new SyntaxErrorException(
                 string.Format(missingParameter, parameterName, methodName),
-                range
-            );
-        }
-
-        public static SyntaxErrorException ExpectedType(bool value, string typeName, string methodName, string parameterName, Range range)
-        {
-            return new SyntaxErrorException(
-                string.Format(expectedType, (value ? "value" : "enum"), typeName, methodName, parameterName),
-                range
-            );
-        }
-
-        public static SyntaxErrorException InvalidEnumValue(string enumName, string value, Range range)
-        {
-            return new SyntaxErrorException(
-                string.Format(invalidEnumValue, value, enumName),
                 range
             );
         }
@@ -159,6 +142,44 @@ namespace Deltin.Deltinteger
                 string.Format(tooManyParameters, methodName, parameterCount, gotCount),
                 range
             );
+        }
+    
+        public static SyntaxErrorException NotAConstructor(TypeKind typeKind, string typeName, int parameterCount, Range range)
+        {
+            return new SyntaxErrorException(
+                string.Format(notAConstructor, typeKind.ToString().ToLower(), typeName, parameterCount),
+                range
+            );
+        }
+    
+        public static SyntaxErrorException ConstructorName(Range range)
+        {
+            return new SyntaxErrorException(constructorName, range);
+        }
+    
+        public static SyntaxErrorException ExpectedEnumGotValue(string enumName, Range range)
+        {
+            return new SyntaxErrorException(string.Format(expectedEnumGotValue, enumName), range);
+        }
+    
+        public static SyntaxErrorException VariableIsReadonly(string variableName, Range range)
+        {
+            return new SyntaxErrorException(string.Format(variableIsReadonly, variableName), range);
+        }
+    
+        public static SyntaxErrorException ExpectedVariable(Range range)
+        {
+            return new SyntaxErrorException(expectedVariable, range);
+        }
+    
+        public static SyntaxErrorException NonexistentType(string typeName, Range range)
+        {
+            return new SyntaxErrorException(string.Format(typeDoesNotExist, typeName), range);
+        }
+    
+        public static SyntaxErrorException ThisCantBeUsed(Range range)
+        {
+            throw new SyntaxErrorException(thisCantBeUsed, range);
         }
     }
 }

@@ -511,9 +511,12 @@ namespace Deltin.Deltinteger.Parse
         public AccessLevel AccessLevel { get; }
         public string[] Parameters { get; }
         public BlockNode BlockNode { get; }
+        public string Name { get; }
 
         public ConstructorNode(DeltinScriptParser.ConstructorContext context, BuildAstVisitor visitor) : base (Range.GetRange(context))
         {
+            Name = context.PART().GetText();
+
             Parameters = new string[context.setParameters().PART().Length];
             for (int i = 0; i < Parameters.Length; i++)
                 Parameters[i] = context.setParameters().PART(i).GetText();
