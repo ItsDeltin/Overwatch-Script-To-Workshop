@@ -63,7 +63,6 @@ namespace Deltin.Deltinteger.Parse
 
                 // Get the variables
                 foreach (var definedVar in RuleSetNode.DefinedVars)
-                {
                     try
                     {
                         IndexedVar var;
@@ -85,11 +84,17 @@ namespace Deltin.Deltinteger.Parse
                     {
                         Diagnostics.Error(ex);
                     }
-                }
 
                 // Get the user methods.
                 for (int i = 0; i < RuleSetNode.UserMethods.Length; i++)
-                    UserMethods.Add(new UserMethod(Root, RuleSetNode.UserMethods[i]));
+                    try
+                    {
+                        UserMethods.Add(new UserMethod(Root, RuleSetNode.UserMethods[i]));
+                    }
+                    catch (SyntaxErrorException ex)
+                    {
+                        Diagnostics.Error(ex);
+                    }
 
                 // Parse the rules.
                 Rules = new List<Rule>();

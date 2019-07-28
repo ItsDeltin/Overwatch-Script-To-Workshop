@@ -38,10 +38,31 @@ namespace Deltin.Deltinteger.Parse
 
         public void In(IScopeable var)
         {
-            if (!FullVarCollection().Any(v => var.Name == v.Name))
-                InScope.Add(var);
-            else
+            //if (!FullVarCollection().Any(v => var.Name == v.Name))
+            if (IsAlreadyDefined(var.Name))
                 throw SyntaxErrorException.AlreadyDefined(var.Name, var.Range);
+            else
+                InScope.Add(var);
+        }
+
+        private bool IsAlreadyDefined(string name)
+        {
+            int index = 0;
+            ScopeGroup check = this;
+
+            while (check != null)
+            {
+                if (check.This != null && index > 0)
+                    return false;
+
+                if (check.InScope.Any(v => v.Name == name))
+                    return true;
+
+                index++;
+                check = check.Parent;
+            }
+
+            return false;
         }
 
         public void Out()
@@ -58,7 +79,6 @@ namespace Deltin.Deltinteger.Parse
             for (int i = 0; i < Children.Count; i++)
                 if (Children[0].IsInScope)
                     throw new Exception();
-                //Children[0].Out();
         }
 
         public Element[] RecursiveMethodStackPop()

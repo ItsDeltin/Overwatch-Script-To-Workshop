@@ -668,15 +668,11 @@ namespace Deltin.Deltinteger.Parse
     {
         public Variable Variable { get; }
         public int[] Index { get; }
-        public bool UsesIndex { get; }
         public UseVarNode(Variable variable, int index, Range range) : base (range)
         {
             Variable = variable;
             if (index != -1)
-            {
                 Index = new int[] { index };
-                UsesIndex = true;
-            }
         }
 
         public override Node[] Children()

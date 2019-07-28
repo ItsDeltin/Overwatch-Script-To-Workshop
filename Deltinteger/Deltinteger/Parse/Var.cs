@@ -208,9 +208,9 @@ namespace Deltin.Deltinteger.Parse
             return null;
         }
 
-        public IndexedVar CreateChild(ScopeGroup scope, string name, int[] index)
+        public IndexedVar CreateChild(ScopeGroup scope, string name, int[] index, Node node)
         {
-            return new IndexedVar(scope, name, IsGlobal, Variable, ArrayBuilder<int>.Build(Index, index), ArrayBuilder, null);
+            return new IndexedVar(scope, name, IsGlobal, Variable, ArrayBuilder<int>.Build(Index, index), ArrayBuilder, node);
         }
 
         public override string ToString()
@@ -251,7 +251,7 @@ namespace Deltin.Deltinteger.Parse
             return base.SetVariable(value, targetPlayer, 
                 ArrayBuilder<Element>.Build(
                     Element.Part<V_Subtract>(
-                        Element.Part<V_CountOf>(base.GetVariable(targetPlayer)),
+                        Element.Part<V_CountOf>(base.Get(targetPlayer)),
                         new V_Number(1)
                     ),
                     setAtIndex
@@ -261,12 +261,12 @@ namespace Deltin.Deltinteger.Parse
 
         public override Element[] InScope(Element initialValue, Element targetPlayer = null)
         {
-            return base.SetVariable(initialValue, targetPlayer, Element.Part<V_CountOf>(base.GetVariable(targetPlayer)));
+            return base.SetVariable(initialValue, targetPlayer, Element.Part<V_CountOf>(base.Get(targetPlayer)));
         }
 
         public override Element[] OutOfScope(Element targetPlayer = null)
         {
-            Element get = base.GetVariable(targetPlayer);
+            Element get = base.Get(targetPlayer);
 
             return base.SetVariable(
                 Element.Part<V_ArraySlice>(
@@ -282,7 +282,7 @@ namespace Deltin.Deltinteger.Parse
 
         public Element DebugStack(Element targetPlayer = null)
         {
-            return base.GetVariable(targetPlayer);
+            return base.Get(targetPlayer);
         }
     }
 
