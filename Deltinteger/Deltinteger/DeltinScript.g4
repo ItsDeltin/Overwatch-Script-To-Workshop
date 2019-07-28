@@ -54,7 +54,7 @@ array : (INDEX_START expr INDEX_END)+ ;
 
 enum : PART SEPERATOR PART? ;
 
-variable : PART ;
+variable : PART array? ;
 varset   : var=expr array? ((statement_operation val=expr?) | INCREMENT | DECREMENT) ;
 
 call_parameters : expr (COMMA expr?)*    		 	     ;

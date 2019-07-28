@@ -248,8 +248,7 @@ namespace Deltin.Deltinteger.Parse
 
         public override Node VisitVariable(DeltinScriptParser.VariableContext context)
         {
-            string name = context.PART().GetText();
-            return new VariableNode(name, null, Range.GetRange(context));
+            return new VariableNode(context, this);
         }
 
         // ( expr )
@@ -827,17 +826,20 @@ namespace Deltin.Deltinteger.Parse
     public class VariableNode : Node
     {
         public string Name { get; private set; }
-        public Node Target { get; private set; }
+        public Node[] Index { get; private set; }
 
-        public VariableNode(string name, Node target, Range range) : base(range)
+        public VariableNode(DeltinScriptParser.VariableContext context, BuildAstVisitor visitor) : base(Range.GetRange(context))
         {
-            Name = name;
-            Target = target;
+            Name = context.PART().GetText();
+
+            Index = new Node[context.array()?.expr().Length ?? 0];
+            for (int i = 0; i < Index.Length; i++)
+                Index[i] = visitor.VisitExpr(context.array().expr(i));
         }
 
         public override Node[] Children()
         {
-            return ArrayBuilder<Node>.Build(Target);
+            return ArrayBuilder<Node>.Build(Index);
         }
     }
 
