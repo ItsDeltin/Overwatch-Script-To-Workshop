@@ -17,7 +17,7 @@ namespace Deltin.Deltinteger.Parse
 
         public readonly VarCollection VarCollection;
         private readonly Rule Rule;
-        private readonly List<Element> Actions = new List<Element>();
+        public readonly List<Element> Actions = new List<Element>();
         private readonly List<Condition> Conditions = new List<Condition>();
         public readonly bool IsGlobal;
         private readonly List<A_Skip> ReturnSkips = new List<A_Skip>(); // Return statements whos skip count needs to be filled out.
@@ -47,6 +47,22 @@ namespace Deltin.Deltinteger.Parse
             // Fulfill remaining returns.
             FulfillReturns(0);
 
+            Finish();
+        }
+
+        public TranslateRule(Rule rule, ScopeGroup root, ParsingData parserData)
+        {
+            VarCollection = parserData.VarCollection;
+            ParserData = parserData;
+
+            Rule = rule;
+            IsGlobal = Rule.IsGlobal;
+
+            ContinueSkip = new ContinueSkip(IsGlobal, Actions, VarCollection);
+        }
+
+        public void Finish()
+        {
             Rule.Actions = Actions.ToArray();
             Rule.Conditions = Conditions.ToArray();
         }
@@ -112,7 +128,7 @@ namespace Deltin.Deltinteger.Parse
             }
         }
 
-        Element ParseExpression(ScopeGroup scope, Node expression)
+        public Element ParseExpression(ScopeGroup scope, Node expression)
         {
             switch (expression)
             {
@@ -382,7 +398,7 @@ namespace Deltin.Deltinteger.Parse
                     if (varData.ResultingVariable == null)
                         throw SyntaxErrorException.ExpectedVariable(((Node)values[i]).Range);
                     
-                    parsedParameters.Add(new VarRef((IndexedVar)varData.ResultingVariable, varData.Target));
+                    parsedParameters.Add(new VarRef((IndexedVar)varData.ResultingVariable, varData.VariableIndex, varData.Target));
                         
                 }
                 else throw new NotImplementedException();

@@ -318,11 +318,13 @@ namespace Deltin.Deltinteger.Parse
     public class VarRef : IWorkshopTree
     {
         public IndexedVar Var { get; }
+        public Element[] Index { get; }
         public Element Target { get; }
 
-        public VarRef(IndexedVar var, Element target)
+        public VarRef(IndexedVar var, Element[] index, Element target)
         {
             Var = var;
+            Index = index;
             Target = target;
         }
 

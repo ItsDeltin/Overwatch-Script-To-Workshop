@@ -50,6 +50,12 @@ namespace Deltin.Deltinteger.Parse
                 UserMethods = new List<UserMethod>();
                 DefinedTypes = new List<DefinedType>();
 
+                Rule initialGlobalValues = new Rule("Initial Global Values");
+                Rule initialPlayerValues = new Rule("Initial Player Values", RuleEvent.OngoingPlayer, Team.All, PlayerSelector.All);
+
+                TranslateRule globalTranslate = new TranslateRule(initialGlobalValues, Root, this);
+                TranslateRule playerTranslate = new TranslateRule(initialPlayerValues, Root, this);
+
                 // Get the defined types
                 foreach (var definedType in RuleSetNode.DefinedTypes)
                     try
@@ -79,11 +85,22 @@ namespace Deltin.Deltinteger.Parse
                             );
                         if (definedVar.Type != null)
                             var.Type = GetDefinedType(definedVar.Type, definedVar.Range);
+
+                        // Set initial values
+                        if (definedVar.Value != null)
+                            if (definedVar.IsGlobal)
+                                globalTranslate.Actions.AddRange(var.SetVariable(globalTranslate.ParseExpression(Root, definedVar.Value)));
+                            else
+                                playerTranslate.Actions.AddRange(var.SetVariable(playerTranslate.ParseExpression(Root, definedVar.Value)));
+
                     }
                     catch (SyntaxErrorException ex)
                     {
                         Diagnostics.Error(ex);
                     }
+
+                globalTranslate.Finish();
+                playerTranslate.Finish();
 
                 // Get the user methods.
                 for (int i = 0; i < RuleSetNode.UserMethods.Length; i++)
@@ -98,6 +115,12 @@ namespace Deltin.Deltinteger.Parse
 
                 // Parse the rules.
                 Rules = new List<Rule>();
+
+                if (initialGlobalValues.Actions.Length > 0)
+                    Rules.Add(initialGlobalValues);
+                
+                if (initialPlayerValues.Actions.Length > 0)
+                    Rules.Add(initialPlayerValues);
 
                 // The looper rule
                 GlobalLoop = new Looper(true);
