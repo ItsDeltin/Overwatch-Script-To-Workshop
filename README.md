@@ -109,13 +109,13 @@ if (IsButtonHeld(EventPlayer(), Button.Interact))
 }
 ```
 
-| Repeater count | Time to Complete | Actions |
-| ---------------  | ------------------ | ------- |
-| 1                       | 19 ms                  | 12       |
-| 2                       | 10 ms                  | 14       |
-| 3                       | 6 ms                    | 16       |
-| 4                       | 5 ms                    | 18       |
-| 5                       | 3 ms                   | 20        |
+| Repeater count  | Time to Complete | Actions |
+| --------------- | ---------------- | ------- |
+| 1               | 19 ms            | 12      |
+| 2               | 10 ms            | 14      |
+| 3               | 6 ms             | 16      |
+| 4               | 5 ms             | 18      |
+| 5               | 3 ms             | 20      |
 
 The number of actions scale with the number of statements in the `foreach`.
 
@@ -206,13 +206,18 @@ recursive method arrayWalker(array, dims)
 ### Custom methods
 OSTW contains methods that are not found in the Overwatch Workshop.
 
-| Method            | Type              | Description |
-| ----------------- | ----------------- | ----------- |
-| GetMap            | Multiaction Value | `GetMap()` gets the current map. This is based off of [Xerxes's Map Identifier](https://us.forums.blizzard.com/en/overwatch/t/workshop-resource-map-identifier-map-detection-script-v2-0-only-2-actions/341132). The result can be compared to with the `Map` enum.
-| AngleOfVectors    | Multiaction Value | Gets the angle of 3 vectors. 
-| AngleOfVectorsCom | Value             | Behaves the same as AngleOfVectors but condensed into one action.
-| ChaseVariable     | Action            | Behaves the same as the workshop method `Chase Global/Player Variable At Rate`, but will work with named variables. Works with numbers and vectors.
-| MinWait           | Action            | Same as doing `Wait(0.016)`.
+| Method                 | Type              | Description |
+| ---------------------- | ----------------- | ----------- |
+| GetMap                 | Multiaction Value | `GetMap()` gets the current map. This is based off of [Xerxes's Map Identifier](https://us.forums.blizzard.com/en/overwatch/t/workshop-resource-map-identifier-map-detection-script-v2-0-only-2-actions/341132). The result can be compared to with the `Map` enum.
+| AngleOfVectors         | Multiaction Value | Gets the angle of 3 vectors. 
+| AngleOfVectorsCom      | Value             | Behaves the same as AngleOfVectors but condensed into one action.
+| ChaseVariable          | Action            | Behaves the same as the workshop method `Chase Global/Player Variable At Rate`, but will work with named variables. Works with numbers and vectors.
+| MinWait                | Action            | Same as doing `Wait(0.016)`.
+| InsertValueInArray     | Value             | Inserts a value into an array at an index.
+| RemoveFromArrayAtIndex | Value             | Removes value from an array at an index.
+| Pi                     | Value             | Returns the constant π: `3.14159265358979`.
+| IsConditionTrue        | Multiaction Value | Determines if the condition is true. Has a 0.016 second delay.
+| IsConditionFalse       | Multiaction Value | Determines if the condition is false. Has a 0.016 second delay.
 
 #### GetMap()
 ```
