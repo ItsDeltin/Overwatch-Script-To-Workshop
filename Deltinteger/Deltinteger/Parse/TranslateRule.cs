@@ -21,7 +21,7 @@ namespace Deltin.Deltinteger.Parse
         private readonly List<Condition> Conditions = new List<Condition>();
         public readonly bool IsGlobal;
         private readonly List<A_Skip> ReturnSkips = new List<A_Skip>(); // Return statements whos skip count needs to be filled out.
-        private readonly ContinueSkip ContinueSkip; // Contains data about the wait/skip for continuing loops.
+        public readonly ContinueSkip ContinueSkip; // Contains data about the wait/skip for continuing loops.
         private readonly List<MethodStack> MethodStack = new List<MethodStack>(); // The user method stack
         private readonly List<UserMethod> MethodStackNoRecursive = new List<UserMethod>();
         public readonly ParsingData ParserData;

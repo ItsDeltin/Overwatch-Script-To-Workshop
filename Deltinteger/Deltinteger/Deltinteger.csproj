@@ -95,6 +95,7 @@
     <Compile Include="Custom Methods\InsertValueInArray.cs" />
     <Compile Include="Custom Methods\RemoveFromArrayAtIndex.cs" />
     <Compile Include="Custom Methods\Pi.cs" />
+    <Compile Include="Custom Methods\ConditionTesting.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Extras.cs" />
     <Compile Include="LanguageServer.cs" />
