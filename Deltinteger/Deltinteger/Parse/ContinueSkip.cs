@@ -4,13 +4,16 @@ using Deltin.Deltinteger.Elements;
 
 namespace Deltin.Deltinteger.Parse
 {
-    class ContinueSkip
+    public class ContinueSkip
     {
+        private const int ExpectedActionCount = 5;
+
         private readonly bool IsGlobal;
         private readonly List<Element> Actions;
         private readonly VarCollection VarCollection;
 
         private IndexedVar SkipCount;
+        private IndexedVar TempHolder;
 
         private bool IsSetup = false;
 
@@ -28,29 +31,44 @@ namespace Deltin.Deltinteger.Parse
             IsSetup = true;
 
             SkipCount = VarCollection.AssignVar(null, "ContinueSkip", IsGlobal, null);
-            if (SkipCount is RecursiveVar)
-                throw new Exception();
+            TempHolder = VarCollection.AssignVar(null, "ContinueSkip temp holder", IsGlobal, null);
             
             A_Wait waitAction = A_Wait.MinimumWait;
             waitAction.Comment = "ContinueSkip Wait";
-            // Add the required wait
-            Actions.Insert(0, waitAction);
 
             A_SkipIf skipAction = Element.Part<A_SkipIf>
             (
-                Element.Part<V_Compare>(SkipCount.GetVariable(), EnumData.GetEnumValue(Operators.NotEqual), new V_Number(0)),
-                SkipCount.GetVariable()
+                // Condition
+                Element.Part<V_Compare>(SkipCount.GetVariable(), EnumData.GetEnumValue(Operators.Equal), new V_Number(0)),
+                // Number of actions
+                new V_Number(3)
             );
             skipAction.Comment = "ContinueSkip Skipper";
 
-            // Add the skip-if
-            Actions.Insert(1, skipAction);
+            Element[] actions = ArrayBuilder<Element>.Build(
+                waitAction,
+                skipAction,
+                TempHolder.SetVariable(SkipCount.GetVariable()),
+                SkipCount.SetVariable(new V_Number(0)),
+                Element.Part<A_Skip>(TempHolder.GetVariable())
+            );
+
+            if (actions.Length != ExpectedActionCount)
+                throw new Exception($"Expected {ExpectedActionCount} actions for the Continue Skip, got {actions.Length} instead.");
+
+            Actions.InsertRange(0, actions);
         }
+        
 
         public void SetSkipCount(int number)
         {
             CheckSetup();
-            Actions.AddRange(SkipCount.SetVariable(new V_Number(number)));
+            Actions.AddRange(SetSkipCountActions(number));
+        }
+
+        public Element[] SetSkipCountActions(int number)
+        {
+            return SkipCount.SetVariable(new V_Number(number));
         }
 
         public void SetSkipCount(Element element)
@@ -65,11 +83,17 @@ namespace Deltin.Deltinteger.Parse
             SetSkipCount(0);
         }
 
+        public Element[] ResetSkipActions()
+        {
+            CheckSetup();
+            return SetSkipCountActions(0);
+        }
+
         public int GetSkipCount()
         {
             // Gets the skip count based on the number of actions and the position of the coninue skip's skip-if.
             // This will need to be changed if any other components are added that insert actions into the ruleset.
-            return Actions.Count - (IsSetup ? 2 : 0);
+            return Actions.Count - (IsSetup ? ExpectedActionCount : 0);
         }
 
         private void CheckSetup()
