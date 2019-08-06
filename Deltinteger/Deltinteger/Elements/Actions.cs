@@ -243,16 +243,20 @@ namespace Deltin.Deltinteger.Elements
     public class A_Kill : Element {}
 
     [ElementData("Loop")]
+    [UsageDiagnostic("This workshop method can leave the workshop in an invalid state. Method callers will also be looped.", 2)]
     public class A_Loop : Element {}
 
     [ElementData("Loop If")]
     [Parameter("Condition", ValueType.Boolean, typeof(V_Compare))]
+    [UsageDiagnostic("This workshop method can leave the workshop in an invalid state. Method callers will also be looped.", 2)]
     public class A_LoopIf : Element {}
 
     [ElementData("Loop If Condition Is False")]
+    [UsageDiagnostic("This workshop method can leave the workshop in an invalid state. Method callers will also be looped.", 2)]
     public class A_LoopIfConditionIsFalse : Element {}
 
     [ElementData("Loop If Condition Is True")]
+    [UsageDiagnostic("This workshop method can leave the workshop in an invalid state. Method callers will also be looped.", 2)]
     public class A_LoopIfConditionIsTrue : Element { }
 
     [ElementData("Modify Global Variable")]
