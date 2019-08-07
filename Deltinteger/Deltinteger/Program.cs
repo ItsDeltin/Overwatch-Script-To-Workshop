@@ -14,7 +14,7 @@ namespace Deltin.Deltinteger
 {
     public class Program
     {
-        public const string VERSION = "v0.3.12";
+        public const string VERSION = "v0.3.13";
 
         static Log Log = new Log(":");
         static Log ParseLog = new Log("Parse");
