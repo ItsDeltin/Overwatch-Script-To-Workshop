@@ -40,9 +40,7 @@ namespace Deltin.Deltinteger.Parse
 
         public AccessLevel AccessLevel { get; set; } = AccessLevel.Public;
 
-        public UserMethodNode Node { get; }
-
-        public Range Range { get { return Node.Range; }}
+        public Node Node { get; }
 
         public string GetLabel(bool markdown)
         {

@@ -33,6 +33,6 @@ namespace Deltin.Deltinteger
     {
         string Name { get; }
         AccessLevel AccessLevel { get; }
-        Range Range { get; }
+        Node Node { get; }
     }
 }

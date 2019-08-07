@@ -92,7 +92,6 @@ namespace Deltin.Deltinteger.Parse
                                 globalTranslate.Actions.AddRange(var.SetVariable(globalTranslate.ParseExpression(Root, definedVar.Value)));
                             else
                                 playerTranslate.Actions.AddRange(var.SetVariable(playerTranslate.ParseExpression(Root, definedVar.Value)));
-
                     }
                     catch (SyntaxErrorException ex)
                     {

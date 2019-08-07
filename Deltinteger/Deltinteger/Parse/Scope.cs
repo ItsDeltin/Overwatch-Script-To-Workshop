@@ -39,8 +39,8 @@ namespace Deltin.Deltinteger.Parse
         public void In(IScopeable var)
         {
             //if (!FullVarCollection().Any(v => var.Name == v.Name))
-            if (IsAlreadyDefined(var.Name))
-                throw SyntaxErrorException.AlreadyDefined(var.Name, var.Range);
+            if (IsAlreadyDefined(var.Name) && var.Node != null)
+                throw SyntaxErrorException.AlreadyDefined(var.Name, var.Node.Range);
             else
                 InScope.Add(var);
         }
