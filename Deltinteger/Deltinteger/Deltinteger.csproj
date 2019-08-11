@@ -72,6 +72,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Custom Methods\Destination.cs" />
     <Compile Include="Custom Methods\EyeCastHitPosition.cs" />
     <Compile Include="Custom Methods\FOVTakenUpBySphere.cs" />
     <Compile Include="Custom Methods\HorizontalDistance.cs" />
