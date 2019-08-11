@@ -73,6 +73,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Custom Methods\EyeCastHitPosition.cs" />
+    <Compile Include="Custom Methods\Midpoint.cs" />
     <Compile Include="Custom Methods\SphereHitbox.cs" />
     <Compile Include="Debug.cs" />
     <Compile Include="DeltinScript.g4.lexer.cs">
