@@ -1,5 +1,5 @@
 [This folder](https://github.com/ItsDeltin/Overwatch-Script-To-Workshop/tree/master/Deltinteger/Deltinteger/Custom%20Methods) contains all the custom methods. [Pi.cs](https://github.com/ItsDeltin/Overwatch-Script-To-Workshop/blob/master/Deltinteger/Deltinteger/Custom%20Methods/Pi.cs) is a simple example:
-```
+```C#
 [CustomMethod("Pi", CustomMethodType.Value)]
     class Pi : CustomMethodBase
     {
@@ -39,7 +39,7 @@
 [AngleOfVectors.cs](https://github.com/ItsDeltin/Overwatch-Script-To-Workshop/blob/master/Deltinteger/Deltinteger/Custom%20Methods/AngleOfVectors.cs) is a multi-action value.
 
 To add parameters, add the Parameter attribute:
-```
+```C#
     [CustomMethod("AngleOfVectors", CustomMethodType.MultiAction_Value)]
     [Parameter("Vector1", ValueType.VectorAndPlayer, null)]
     [Parameter("Vector2", ValueType.VectorAndPlayer, null)]
@@ -49,7 +49,7 @@ To add parameters, add the Parameter attribute:
 ```
 
 The parameter values are obtained with the `CustomGameBase.Parameters` array.
-```
+```C#
 Element vector1Parameter = (Element)Parameters[0];
 Element vector2Parameter = (Element)Parameters[1];
 Element vector3Parameter = (Element)Parameters[2];
