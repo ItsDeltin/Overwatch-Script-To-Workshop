@@ -80,6 +80,7 @@
     <Compile Include="Custom Methods\Midpoint.cs" />
     <Compile Include="Custom Methods\Pythag.cs" />
     <Compile Include="Custom Methods\SphereHitbox.cs" />
+    <Compile Include="Custom Methods\TallnessOfPlayer.cs" />
     <Compile Include="Custom Methods\Units.cs" />
     <Compile Include="Debug.cs" />
     <Compile Include="DeltinScript.g4.lexer.cs">
