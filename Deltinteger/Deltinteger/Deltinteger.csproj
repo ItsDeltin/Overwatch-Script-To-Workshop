@@ -73,6 +73,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Custom Methods\EyeCastHitPosition.cs" />
     <Compile Include="Debug.cs" />
     <Compile Include="DeltinScript.g4.lexer.cs">
       <DependentUpon>DeltinScript.g4</DependentUpon>
