@@ -38,4 +38,33 @@ namespace Deltin.Deltinteger.Elements
             );
         }
     }
+
+    [CustomMethod("StopChasingVariable", CustomMethodType.Action)]
+    [VarRefParameter("Variable")]
+    class StopChasingVariable : CustomMethodBase
+    {
+        protected override MethodResult Get()
+        {
+            VarRef targetVariable = (VarRef)Parameters[0];
+            
+            VariableChase chaseData = TranslateContext.ParserData.GetLooper(targetVariable.Var.IsGlobal).GetChaseData(targetVariable.Var, TranslateContext);
+            
+            Element[] actions = ArrayBuilder<Element>.Build
+            (
+                chaseData.Rate.SetVariable(new V_Number(0), targetVariable.Target)
+            );
+
+            return new MethodResult(actions, null);
+        }
+    
+        public override WikiMethod Wiki()
+        {
+            return new WikiMethod("StopChasingVariable", "Stops chasing a variable.", 
+                new WikiParameter[]
+                {
+                    new WikiParameter("Variable", "Variable that will no longer be chasing."),
+                }
+            );
+        }
+    }
 }

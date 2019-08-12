@@ -69,9 +69,13 @@ namespace Deltin.Deltinteger.Parse
                 destination.GetVariable()
             );
 
-            Element[] setVar = var.SetVariable(result);
+            Element chaseTest = Element.TernaryConditional(
+                new V_Compare(rate.GetVariable(), Operators.NotEqual, new V_Number(0)),
+                result,
+                var.GetVariable()
+            );
 
-            return setVar;
+            return var.SetVariable(chaseTest);
         }
     }
 
