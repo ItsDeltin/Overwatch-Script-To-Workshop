@@ -198,7 +198,17 @@ namespace Deltin.Deltinteger.Elements
         OnDamageTaken,
 
         [EnumOverride(null, "Player died")]
-        OnDeath
+        OnDeath,
+
+        [EnumOverride(null, "Player Dealt Healing")]
+        OnHealingDealt,
+        [EnumOverride(null, "Player Received Healing")]
+        OnHealingTaken,
+
+        [EnumOverride(null, "Player Joined Match")]
+        OnPlayerJoin,
+        [EnumOverride(null, "Player Left Match")]
+        OnPlayerLeave,
     }
 
     [WorkshopEnum]

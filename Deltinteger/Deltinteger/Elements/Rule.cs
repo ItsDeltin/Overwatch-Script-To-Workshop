@@ -20,9 +20,6 @@ namespace Deltin.Deltinteger.Elements
 
         public Rule(string name, RuleEvent ruleEvent, Team team, PlayerSelector player) // Creates a rule.
         {
-            if (name.Length > Constants.RULE_NAME_MAX_LENGTH)
-                throw new ArgumentOutOfRangeException(nameof(name), name, $"Rule names cannot be longer than {Constants.RULE_NAME_MAX_LENGTH} characters.");
-
             Name = name;
             RuleEvent = ruleEvent;
             Team = team;
