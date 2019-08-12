@@ -6,7 +6,7 @@ namespace Deltin.Deltinteger.Elements
     [CustomMethod("EyeCastHitPosition", CustomMethodType.Value)]
     [Parameter("player", ValueType.Player, null)]
     [Parameter("range", ValueType.Number, null)]
-    class Test : CustomMethodBase
+    class EyeCastHitPosition : CustomMethodBase
     {
         protected override MethodResult Get()
         {
