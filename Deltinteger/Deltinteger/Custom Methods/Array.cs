@@ -77,4 +77,46 @@ namespace Deltin.Deltinteger.Elements
             return new WikiMethod("RangeOfArray", "The highest value of an array subtracted by its lowest value.", null);
         }
     }
+
+    [CustomMethod("SortedMedian", CustomMethodType.Value)]
+    [Parameter("array", ValueType.Any, null)]
+    class SortedMedian : CustomMethodBase
+    {
+        protected override MethodResult Get()
+        {
+            Element array = (Element)Parameters[0];
+            Element length = Element.Part<V_CountOf>(array);
+            Element condition = Element.Part<V_Compare>(Element.Part<V_Modulo>(length, new V_Number(2)), EnumData.GetEnumValue(Operators.Equal), new V_Number(0));
+            Element medianIndex = Element.Part<V_Divide>(Element.Part<V_Add>(length, new V_Number(1)), new V_Number(2));
+            Element consequent = Element.Part<V_Divide>(Element.Part<V_Add>(Element.Part<V_ValueInArray>(array, Element.Part<V_Subtract>(medianIndex, new V_Number(0.5))), Element.Part<V_ValueInArray>(array, Element.Part<V_Add>(medianIndex, new V_Number(0.5)))), new V_Number(2));
+            Element alternative = Element.Part<V_ValueInArray>(array, medianIndex);
+            return new MethodResult(null, Element.TernaryConditional(condition, consequent, alternative));
+        }
+
+        public override WikiMethod Wiki()
+        {
+            return new WikiMethod("SortedMedian", "The median of an array that has already been sorted.", null);
+        }
+    }
+
+    [CustomMethod("UnsortedMedian", CustomMethodType.Value)]
+    [Parameter("array", ValueType.Any, null)]
+    class UnsortedMedian : CustomMethodBase
+    {
+        protected override MethodResult Get()
+        {
+            Element array = Element.Part<V_SortedArray>((Element)Parameters[0], new V_ArrayElement());
+            Element length = Element.Part<V_CountOf>(array);
+            Element condition = Element.Part<V_Compare>(Element.Part<V_Modulo>(length, new V_Number(2)), EnumData.GetEnumValue(Operators.Equal), new V_Number(0));
+            Element medianIndex = Element.Part<V_Divide>(Element.Part<V_Add>(length, new V_Number(1)), new V_Number(2));
+            Element consequent = Element.Part<V_Divide>(Element.Part<V_Add>(Element.Part<V_ValueInArray>(array, Element.Part<V_Subtract>(medianIndex, new V_Number(0.5))), Element.Part<V_ValueInArray>(array, Element.Part<V_Add>(medianIndex, new V_Number(0.5)))), new V_Number(2));
+            Element alternative = Element.Part<V_ValueInArray>(array, medianIndex);
+            return new MethodResult(null, Element.TernaryConditional(condition, consequent, alternative));
+        }
+
+        public override WikiMethod Wiki()
+        {
+            return new WikiMethod("UnsortedMedian", "The median of an array that has not been sorted yet.", null);
+        }
+    }
 }
