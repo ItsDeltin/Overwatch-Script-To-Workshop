@@ -4,7 +4,7 @@ using Deltin.Deltinteger.WorkshopWiki;
 namespace Deltin.Deltinteger.Elements
 {
     [CustomMethod("EyeCastHitPosition", CustomMethodType.Value)]
-    [Parameter("player", ValueType.Player, null)]
+    [Parameter("player", ValueType.Player, typeof(V_EventPlayer))]
     [Parameter("range", ValueType.Number, null)]
     class EyeCastHitPosition : CustomMethodBase
     {

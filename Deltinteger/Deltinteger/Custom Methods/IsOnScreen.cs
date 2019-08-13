@@ -4,7 +4,7 @@ using Deltin.Deltinteger.WorkshopWiki;
 namespace Deltin.Deltinteger.Elements
 {
     [CustomMethod("IsOnScreen", CustomMethodType.Value)]
-    [Parameter("player", ValueType.Player, null)]
+    [Parameter("player", ValueType.Player, typeof(V_EventPlayer))]
     [Parameter("point", ValueType.Vector, null)]
     [Parameter("fovOfPlayer", ValueType.Number, null)]
     class IsOnScreen : CustomMethodBase

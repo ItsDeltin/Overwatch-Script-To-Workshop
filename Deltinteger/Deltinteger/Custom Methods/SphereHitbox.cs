@@ -4,7 +4,7 @@ using Deltin.Deltinteger.WorkshopWiki;
 namespace Deltin.Deltinteger.Elements
 {
     [CustomMethod("SphereHitbox", CustomMethodType.Value)]
-    [Parameter("player", ValueType.Player, null)]
+    [Parameter("player", ValueType.Player, typeof(V_EventPlayer))]
     [Parameter("spherePosition", ValueType.VectorAndPlayer, null)]
     [Parameter("sphereRadius", ValueType.Number, null)]
     class SphereHitbox : CustomMethodBase
