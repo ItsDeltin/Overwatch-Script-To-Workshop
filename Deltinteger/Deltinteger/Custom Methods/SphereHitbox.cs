@@ -76,7 +76,7 @@ namespace Deltin.Deltinteger.Elements
 
         public override WikiMethod Wiki()
         {
-            return new WikiMethod("OptimisedSphereHitbox", "Whether the given player is looking directly at a sphere with collision.", null);
+            return new WikiMethod("OptimisedSphereHitbox", "Whether the given player is looking directly at a sphere with collision. This method does not work in conditions.", null);
         }
     }
 }

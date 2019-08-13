@@ -52,7 +52,7 @@ namespace Deltin.Deltinteger.Elements
 
         public override WikiMethod Wiki()
         {
-            return new WikiMethod("OptimisedLinearInterpolate", "A point a fraction along the distance between 2 points.", null);
+            return new WikiMethod("OptimisedLinearInterpolate", "A point a fraction along the distance between 2 points. This method does not work in conditions.", null);
         }
     }
 
@@ -106,7 +106,7 @@ namespace Deltin.Deltinteger.Elements
 
         public override WikiMethod Wiki()
         {
-            return new WikiMethod("OptimisedLinearInterpolateDistance", "A point a distance along a straight line between 2 points.", null);
+            return new WikiMethod("OptimisedLinearInterpolateDistance", "A point a distance along a straight line between 2 points. This method does not work in conditions.", null);
         }
     }
 }

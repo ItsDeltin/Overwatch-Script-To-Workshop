@@ -50,7 +50,7 @@ namespace Deltin.Deltinteger.Elements
 
         public override WikiMethod Wiki()
         {
-            return new WikiMethod("OptimisedHorizontalDistance", "The distance between 2 points as if they were on the same Y level.", null);
+            return new WikiMethod("OptimisedHorizontalDistance", "The distance between 2 points as if they were on the same Y level. This method does not work in conditions.", null);
         }
     }
 }

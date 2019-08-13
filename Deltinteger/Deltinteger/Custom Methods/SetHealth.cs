@@ -30,7 +30,7 @@ namespace Deltin.Deltinteger.Elements
 
         public override WikiMethod Wiki()
         {
-            return new WikiMethod("SetHealth", "Sets the health of a player.", null);
+            return new WikiMethod("SetHealth", "Sets the health of a player. This method does not work in conditions (obviously).", null);
         }
     }
 }

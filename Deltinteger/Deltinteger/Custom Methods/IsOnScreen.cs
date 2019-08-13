@@ -52,7 +52,7 @@ namespace Deltin.Deltinteger.Elements
 
         public override WikiMethod Wiki()
         {
-            return new WikiMethod("OptimisedIsOnScreen", "Whether a point is visible on a players screen or not.", null);
+            return new WikiMethod("OptimisedIsOnScreen", "Whether a point is visible on a players screen or not. This method does not work in conditions.", null);
         }
     }
 }

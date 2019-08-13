@@ -65,7 +65,7 @@ namespace Deltin.Deltinteger.Elements
 
         public override WikiMethod Wiki()
         {
-            return new WikiMethod("OptimisedEyeCastHitPosition", "Casts a ray in the direction the player is facing with a certain range.", null);
+            return new WikiMethod("OptimisedEyeCastHitPosition", "Casts a ray in the direction the player is facing with a certain range. This method does not work in conditions.", null);
         }
     }
 }

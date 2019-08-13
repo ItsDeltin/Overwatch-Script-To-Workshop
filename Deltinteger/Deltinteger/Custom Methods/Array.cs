@@ -99,7 +99,7 @@ namespace Deltin.Deltinteger.Elements
 
         public override WikiMethod Wiki()
         {
-            return new WikiMethod("OptimisedRangeOfArray", "The highest value of an array subtracted by its lowest value.", null);
+            return new WikiMethod("OptimisedRangeOfArray", "The highest value of an array subtracted by its lowest value. This method does not work in conditions.", null);
         }
     }
 
@@ -149,7 +149,7 @@ namespace Deltin.Deltinteger.Elements
 
         public override WikiMethod Wiki()
         {
-            return new WikiMethod("OptimisedSortedMedian", "The median of an array that has already been sorted.", null);
+            return new WikiMethod("OptimisedSortedMedian", "The median of an array that has already been sorted. This method does not work in conditions.", null);
         }
     }
 
@@ -199,7 +199,7 @@ namespace Deltin.Deltinteger.Elements
 
         public override WikiMethod Wiki()
         {
-            return new WikiMethod("OptimisedUnsortedMedian", "The median of an array that has not been sorted yet.", null);
+            return new WikiMethod("OptimisedUnsortedMedian", "The median of an array that has not been sorted yet. This method does not work in conditions.", null);
         }
     }
 }

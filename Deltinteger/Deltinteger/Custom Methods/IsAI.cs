@@ -25,7 +25,7 @@ namespace Deltin.Deltinteger.Elements
 
         public override WikiMethod Wiki()
         {
-            return new WikiMethod("IsAIUnintrusive", "Whether the player is an AI or not. Works in less situations but much less intrusive. Requires the player to be spawned in.", null);
+            return new WikiMethod("IsAIUnintrusive", "Whether the player is an AI or not. Works in less situations but much less intrusive. Requires the player to be spawned in.  This method does not work in conditions.", null);
         }
     }
 
@@ -59,7 +59,7 @@ namespace Deltin.Deltinteger.Elements
 
         public override WikiMethod Wiki()
         {
-            return new WikiMethod("IsAIAccurate", "Whether the player is an AI or not. Works in more situations but it is more intrusive.", null);
+            return new WikiMethod("IsAIAccurate", "Whether the player is an AI or not. Works in more situations but it is more intrusive. This method does not work in conditions.", null);
         }
     }
 }
