@@ -5,12 +5,12 @@ using Deltin.Deltinteger.WorkshopWiki;
 namespace Deltin.Deltinteger.Elements
 {
     [CustomMethod("IsAIUnintrusive", CustomMethodType.Value)]
-    [Parameter("player", ValueType.Number, typeof(V_EventPlayer))]
+    [Parameter("player", ValueType.Player, typeof(V_EventPlayer))]
     class IsAIUnintrusive : CustomMethodBase
     {
         protected override MethodResult Get()
         {
-            IndexedVar player = TranslateContext.VarCollection.AssignVar(Scope, "IsAIUnintrusive: temp", TranslateContext.IsGlobal, null);
+            IndexedVar player = TranslateContext.VarCollection.AssignVar(Scope, "IsAIUnintrusive: player", TranslateContext.IsGlobal, null);
 
             Element[] actions = ArrayBuilder<Element>.Build
             (
