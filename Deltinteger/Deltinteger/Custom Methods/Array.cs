@@ -54,7 +54,7 @@ namespace Deltin.Deltinteger.Elements
 
         public override WikiMethod Wiki()
         {
-            return new WikiMethod("BlendedIndex", "Allows you to get a value from an array using a non-integer index. Only works on data types that can have math operations performed upon them. This method can not be used in a condition.", null);
+            return new WikiMethod("OptimisedBlendedIndex", "Allows you to get a value from an array using a non-integer index. Only works on data types that can have math operations performed upon them. This method can not be used in a condition.", null);
         }
     }
 
