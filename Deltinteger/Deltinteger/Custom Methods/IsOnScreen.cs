@@ -26,7 +26,7 @@ namespace Deltin.Deltinteger.Elements
         }
     }
 
-    [CustomMethod("OptimisedIsOnScreen", CustomMethodType.Value)]
+    [CustomMethod("OptimisedIsOnScreen", CustomMethodType.MultiAction_Value)]
     [Parameter("player", ValueType.Player, typeof(V_EventPlayer))]
     [Parameter("point", ValueType.Vector, null)]
     [Parameter("fovOfPlayer", ValueType.Number, null)]
