@@ -40,7 +40,7 @@ namespace Deltin.Deltinteger.Elements
     {
         protected override MethodResult Get()
         {
-            IndexedVar player = TranslateContext.VarCollection.AssignVar(Scope, "IsAIUnintrusive: player", TranslateContext.IsGlobal, null);
+            IndexedVar player = TranslateContext.VarCollection.AssignVar(Scope, "OptimisedEyeCastHitPosition: player", TranslateContext.IsGlobal, null);
 
             Element range = (Element)Parameters[1];
             Element eyePos = Element.Part<V_EyePosition>(player.GetVariable());
