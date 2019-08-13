@@ -4,7 +4,7 @@ using Deltin.Deltinteger.WorkshopWiki;
 
 namespace Deltin.Deltinteger.Elements
 {
-    [CustomMethod("IsAIUnintrusive", CustomMethodType.Value)]
+    [CustomMethod("IsAIUnintrusive", CustomMethodType.MultiAction_Value)]
     [Parameter("player", ValueType.Player, typeof(V_EventPlayer))]
     class IsAIUnintrusive : CustomMethodBase
     {
@@ -29,7 +29,7 @@ namespace Deltin.Deltinteger.Elements
         }
     }
 
-    [CustomMethod("IsAIAccurate", CustomMethodType.Value)]
+    [CustomMethod("IsAIAccurate", CustomMethodType.MultiAction_Value)]
     [Parameter("player", ValueType.Player, typeof(V_EventPlayer))]
     class IsAIAccurate : CustomMethodBase
     {
