@@ -1,4 +1,5 @@
 ﻿using System;
+using Deltin.Deltinteger.Parse;
 using Deltin.Deltinteger.WorkshopWiki;
 
 namespace Deltin.Deltinteger.Elements
@@ -78,6 +79,30 @@ namespace Deltin.Deltinteger.Elements
         }
     }
 
+    [CustomMethod("OptimisedRangeOfArray", CustomMethodType.MultiAction_Value)]
+    [Parameter("array", ValueType.Any, null)]
+    class OptmisedRangeOfArray : CustomMethodBase
+    {
+        protected override MethodResult Get()
+        {
+            IndexedVar array = TranslateContext.VarCollection.AssignVar(Scope, "OptimisedRangeOfArray: array", TranslateContext.IsGlobal, null);
+
+            Element[] actions = ArrayBuilder<Element>.Build
+            (
+                array.SetVariable((Element)Parameters[0])
+            );
+
+            Element min = Element.Part<V_FirstOf>(Element.Part<V_SortedArray>(array.GetVariable(), new V_ArrayElement()));
+            Element max = Element.Part<V_LastOf>(Element.Part<V_SortedArray>(array.GetVariable(), new V_ArrayElement()));
+            return new MethodResult(actions, Element.Part<V_Subtract>(max, min));
+        }
+
+        public override WikiMethod Wiki()
+        {
+            return new WikiMethod("OptimisedRangeOfArray", "The highest value of an array subtracted by its lowest value.", null);
+        }
+    }
+
     [CustomMethod("SortedMedian", CustomMethodType.Value)]
     [Parameter("array", ValueType.Any, null)]
     class SortedMedian : CustomMethodBase
@@ -99,6 +124,35 @@ namespace Deltin.Deltinteger.Elements
         }
     }
 
+    [CustomMethod("OptimisedSortedMedian", CustomMethodType.Value)]
+    [Parameter("array", ValueType.Any, null)]
+    class OptimisedSortedMedian : CustomMethodBase
+    {
+        protected override MethodResult Get()
+        {
+            IndexedVar array = TranslateContext.VarCollection.AssignVar(Scope, "OptimisedSortedMedian: array", TranslateContext.IsGlobal, null);
+            IndexedVar medianIndex = TranslateContext.VarCollection.AssignVar(Scope, "OptimisedSortedMedian: medianIndex", TranslateContext.IsGlobal, null);
+
+            Element length = Element.Part<V_CountOf>(array.GetVariable());
+            Element condition = Element.Part<V_Compare>(Element.Part<V_Modulo>(length, new V_Number(2)), EnumData.GetEnumValue(Operators.Equal), new V_Number(0));
+            Element consequent = Element.Part<V_Divide>(Element.Part<V_Add>(Element.Part<V_ValueInArray>(array.GetVariable(), Element.Part<V_Subtract>(medianIndex.GetVariable(), new V_Number(0.5))), Element.Part<V_ValueInArray>(array.GetVariable(), Element.Part<V_Add>(medianIndex.GetVariable(), new V_Number(0.5)))), new V_Number(2));
+            Element alternative = Element.Part<V_ValueInArray>(array.GetVariable(), medianIndex.GetVariable());
+
+            Element[] actions = ArrayBuilder<Element>.Build
+            (
+                array.SetVariable((Element)Parameters[0]),
+                medianIndex.SetVariable(Element.Part<V_Divide>(Element.Part<V_Add>(length, new V_Number(1)), new V_Number(2)))
+            );
+            
+            return new MethodResult(actions, Element.TernaryConditional(condition, consequent, alternative));
+        }
+
+        public override WikiMethod Wiki()
+        {
+            return new WikiMethod("OptimisedSortedMedian", "The median of an array that has already been sorted.", null);
+        }
+    }
+
     [CustomMethod("UnsortedMedian", CustomMethodType.Value)]
     [Parameter("array", ValueType.Any, null)]
     class UnsortedMedian : CustomMethodBase
@@ -117,6 +171,35 @@ namespace Deltin.Deltinteger.Elements
         public override WikiMethod Wiki()
         {
             return new WikiMethod("UnsortedMedian", "The median of an array that has not been sorted yet.", null);
+        }
+    }
+
+    [CustomMethod("OptimisedUnsortedMedian", CustomMethodType.Value)]
+    [Parameter("array", ValueType.Any, null)]
+    class OptimisedUnsortedMedian : CustomMethodBase
+    {
+        protected override MethodResult Get()
+        {
+            IndexedVar array = TranslateContext.VarCollection.AssignVar(Scope, "OptimisedSortedMedian: array", TranslateContext.IsGlobal, null);
+            IndexedVar medianIndex = TranslateContext.VarCollection.AssignVar(Scope, "OptimisedSortedMedian: medianIndex", TranslateContext.IsGlobal, null);
+
+            Element length = Element.Part<V_CountOf>(array.GetVariable());
+            Element condition = Element.Part<V_Compare>(Element.Part<V_Modulo>(length, new V_Number(2)), EnumData.GetEnumValue(Operators.Equal), new V_Number(0));
+            Element consequent = Element.Part<V_Divide>(Element.Part<V_Add>(Element.Part<V_ValueInArray>(array.GetVariable(), Element.Part<V_Subtract>(medianIndex.GetVariable(), new V_Number(0.5))), Element.Part<V_ValueInArray>(array.GetVariable(), Element.Part<V_Add>(medianIndex.GetVariable(), new V_Number(0.5)))), new V_Number(2));
+            Element alternative = Element.Part<V_ValueInArray>(array.GetVariable(), medianIndex.GetVariable());
+
+            Element[] actions = ArrayBuilder<Element>.Build
+            (
+                array.SetVariable(Element.Part<V_SortedArray>((Element)Parameters[0], new V_ArrayElement())),
+                medianIndex.SetVariable(Element.Part<V_Divide>(Element.Part<V_Add>(length, new V_Number(1)), new V_Number(2)))
+            );
+
+            return new MethodResult(actions, Element.TernaryConditional(condition, consequent, alternative));
+        }
+
+        public override WikiMethod Wiki()
+        {
+            return new WikiMethod("OptimisedUnsortedMedian", "The median of an array that has not been sorted yet.", null);
         }
     }
 }
