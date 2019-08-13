@@ -539,7 +539,7 @@ namespace Deltin.Deltinteger.Elements
         ArrowRight,
         [EnumOverride(null, "Arrow: Up")]
         ArrowUp,
-        Aterisk,
+        Asterisk,
         Bolt,
         Checkmark,
         Circle,
