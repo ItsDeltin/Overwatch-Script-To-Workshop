@@ -81,6 +81,7 @@
     <Compile Include="Custom Methods\LinearInterpolate.cs" />
     <Compile Include="Custom Methods\Midpoint.cs" />
     <Compile Include="Custom Methods\Pythag.cs" />
+    <Compile Include="Custom Methods\Radians.cs" />
     <Compile Include="Custom Methods\SphereHitbox.cs" />
     <Compile Include="Custom Methods\TallnessOfPlayer.cs" />
     <Compile Include="Custom Methods\Units.cs" />
