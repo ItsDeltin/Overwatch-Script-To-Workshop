@@ -77,6 +77,7 @@
     <Compile Include="Custom Methods\EyeCastHitPosition.cs" />
     <Compile Include="Custom Methods\FOVTakenUpBySphere.cs" />
     <Compile Include="Custom Methods\HorizontalDistance.cs" />
+    <Compile Include="Custom Methods\IsAI.cs" />
     <Compile Include="Custom Methods\IsOnScreen.cs" />
     <Compile Include="Custom Methods\LinearInterpolate.cs" />
     <Compile Include="Custom Methods\Midpoint.cs" />
