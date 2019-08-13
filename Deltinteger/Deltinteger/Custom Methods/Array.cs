@@ -23,7 +23,38 @@ namespace Deltin.Deltinteger.Elements
 
         public override WikiMethod Wiki()
         {
-            return new WikiMethod("BlendedIndex", "Allows you to get a value from an array using a non-integer index. Only works on data types that can have math operation performed upon them.", null);
+            return new WikiMethod("BlendedIndex", "Allows you to get a value from an array using a non-integer index. Only works on data types that can have math operations performed upon them.", null);
+        }
+    }
+
+    [CustomMethod("OptimisedBlendedIndex", CustomMethodType.MultiAction_Value)]
+    [Parameter("array", ValueType.Any, null)]
+    [Parameter("index", ValueType.Number, null)]
+    class OptimisedBlendedIndex : CustomMethodBase
+    {
+        protected override MethodResult Get()
+        {
+            IndexedVar array = TranslateContext.VarCollection.AssignVar(Scope, "OptimisedBlendedIndex: array", TranslateContext.IsGlobal, null);
+            IndexedVar index = TranslateContext.VarCollection.AssignVar(Scope, "OptimisedBlendedIndex: index", TranslateContext.IsGlobal, null);
+
+            Element[] actions = ArrayBuilder<Element>.Build
+            (
+                array.SetVariable((Element)Parameters[0]),
+                index.SetVariable((Element)Parameters[1])
+            );
+
+            Element condition = Element.Part<V_Compare>(Element.Part<V_RoundToInteger>(index.GetVariable(), EnumData.GetEnumValue(Rounding.Down)), EnumData.GetEnumValue(Operators.Equal), index.GetVariable());
+            Element consequent = Element.Part<V_ValueInArray>(array.GetVariable(), index.GetVariable());
+            Element alt1 = Element.Part<V_Multiply>(Element.Part<V_ValueInArray>(array.GetVariable(), Element.Part<V_RoundToInteger>(index.GetVariable(), EnumData.GetEnumValue(Rounding.Down))), Element.Part<V_Subtract>(index.GetVariable(), Element.Part<V_RoundToInteger>(index.GetVariable(), EnumData.GetEnumValue(Rounding.Down))));
+            Element alt2 = Element.Part<V_Multiply>(Element.Part<V_ValueInArray>(array.GetVariable(), Element.Part<V_RoundToInteger>(index.GetVariable(), EnumData.GetEnumValue(Rounding.Up))), Element.Part<V_Subtract>(Element.Part<V_RoundToInteger>(index.GetVariable(), EnumData.GetEnumValue(Rounding.Up)), index.GetVariable()));
+            Element alternative = Element.Part<V_Add>(alt1, alt2);
+
+            return new MethodResult(actions, Element.TernaryConditional(condition, consequent, alternative));
+        }
+
+        public override WikiMethod Wiki()
+        {
+            return new WikiMethod("BlendedIndex", "Allows you to get a value from an array using a non-integer index. Only works on data types that can have math operations performed upon them. This method can not be used in a condition.", null);
         }
     }
 
