@@ -124,7 +124,7 @@ namespace Deltin.Deltinteger.Elements
         }
     }
 
-    [CustomMethod("OptimisedSortedMedian", CustomMethodType.Value)]
+    [CustomMethod("OptimisedSortedMedian", CustomMethodType.MultiAction_Value)]
     [Parameter("array", ValueType.Any, null)]
     class OptimisedSortedMedian : CustomMethodBase
     {
@@ -174,7 +174,7 @@ namespace Deltin.Deltinteger.Elements
         }
     }
 
-    [CustomMethod("OptimisedUnsortedMedian", CustomMethodType.Value)]
+    [CustomMethod("OptimisedUnsortedMedian", CustomMethodType.MultiAction_Value)]
     [Parameter("array", ValueType.Any, null)]
     class OptimisedUnsortedMedian : CustomMethodBase
     {
