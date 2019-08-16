@@ -195,6 +195,9 @@ namespace Deltin.Deltinteger.Elements
     [ElementData("Event Damage", ValueType.Number)]
     public class V_EventDamage : Element {}
 
+    [ElementData("Event Healing", ValueType.Number)]
+    public class V_EventHealing : Element {}
+
     [ElementData("Event Player", ValueType.Player)]
     public class V_EventPlayer : Element {}
 
@@ -246,6 +249,12 @@ namespace Deltin.Deltinteger.Elements
     [EnumParameter("Status", typeof(Status))]
     public class V_HasStatus : Element {}
 
+    [ElementData("Healee", ValueType.Player)]
+    public class V_Healee : Element {}
+
+    [ElementData("Healer", ValueType.Player)]
+    public class V_Healer : Element {}
+
     [ElementData("Health", ValueType.Number)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     public class V_Health : Element {}
@@ -278,6 +287,9 @@ namespace Deltin.Deltinteger.Elements
     [ElementData("Horizontal Speed Of", ValueType.Number)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     public class V_HorizontalSpeedOf : Element {}
+
+    [ElementData("Host Player", ValueType.Player)]
+    public class V_HostPlayer : Element {}
 
     [ElementData("Index Of Array Value", ValueType.Any)]
     [Parameter("Array", ValueType.Any, typeof(V_GlobalVariable))]
@@ -711,13 +723,13 @@ namespace Deltin.Deltinteger.Elements
     public class V_ScoreOf : Element {}
 
     [ElementData("Server Load", ValueType.Number)]
-    public class ServerLoad : Element {}
+    public class V_ServerLoad : Element {}
 
     [ElementData("Server Load Average", ValueType.Number)]
-    public class ServerLoadAverage : Element {}
+    public class V_ServerLoadAverage : Element {}
 
     [ElementData("Server Load Peak", ValueType.Number)]
-    public class ServerLoadPeak : Element {}
+    public class V_ServerLoadPeak : Element {}
 
     [ElementData("Sine From Degrees", ValueType.Number)]
     [Parameter("Angle", ValueType.Number, typeof(V_Number))]
