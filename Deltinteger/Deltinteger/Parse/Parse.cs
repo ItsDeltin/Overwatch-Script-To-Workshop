@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.IO;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.LanguageServer;
 using Antlr4.Runtime;
@@ -9,12 +10,65 @@ namespace Deltin.Deltinteger.Parse
 {
     public class ParsingData
     {
-        public static ParsingData GetParser(string document)
+        private static readonly Log Log = new Log("Parse");
+
+        public static ParsingData GetParser(string document, string uri)
         {
-            return new ParsingData(document);
+            return new ParsingData(document, uri);
         }
 
-        private ParsingData(string document)
+        private ParsingData(string document, string uri)
+        {
+            URI = uri;
+
+            Rule initialGlobalValues = new Rule(Constants.INTERNAL_ELEMENT + "Initial Global Values");
+            Rule initialPlayerValues = new Rule(Constants.INTERNAL_ELEMENT + "Initial Player Values", RuleEvent.OngoingPlayer, Team.All, PlayerSelector.All);
+            TranslateRule globalTranslate = new TranslateRule(initialGlobalValues, Root, this);
+            TranslateRule playerTranslate = new TranslateRule(initialPlayerValues, Root, this);
+
+            // The looper rule
+            GlobalLoop = new Looper(true);
+            PlayerLoop = new Looper(false);
+            
+            VarCollection = new VarCollection();
+            Root = new ScopeGroup(VarCollection);
+            UserMethods = new List<UserMethod>();
+            DefinedTypes = new List<DefinedType>();
+
+            GetObjects(document, URI, globalTranslate, playerTranslate);
+
+            // Parse the rules.
+            Rules = new List<Rule>();
+
+            for (int i = 0; i < RuleNodes.Count; i++)
+            {
+                try
+                {
+                    var result = TranslateRule.GetRule(RuleNodes[i], Root, this);
+                    Rules.Add(result);
+                }
+                catch (SyntaxErrorException ex)
+                {
+                    Diagnostics.Error(ex);
+                }
+            }
+
+            globalTranslate.Finish();
+            playerTranslate.Finish();
+
+            if (initialGlobalValues.Actions.Length > 0)
+                Rules.Add(initialGlobalValues);
+            if (initialPlayerValues.Actions.Length > 0)
+                Rules.Add(initialPlayerValues);
+            if (GlobalLoop.Used)
+                Rules.Add(GlobalLoop.Finalize());
+            if (PlayerLoop.Used)
+                Rules.Add(PlayerLoop.Finalize());
+
+            Success = Diagnostics.ContainsErrors();
+        }
+
+        private RulesetNode GetRuleset(string document)
         {
             AntlrInputStream inputStream = new AntlrInputStream(document);
 
@@ -30,34 +84,30 @@ namespace Deltin.Deltinteger.Parse
 
             DeltinScriptParser.RulesetContext ruleSetContext = parser.ruleset();
 
-            Log log = new Log("Parse");
-            log.Write(LogLevel.Verbose, ruleSetContext.ToStringTree(parser));
+            Log.Write(LogLevel.Verbose, ruleSetContext.ToStringTree(parser));
 
             // Get the ruleset node.
+            RulesetNode ruleset = null;
             if (!Diagnostics.ContainsErrors())
             {
-                Bav = new BuildAstVisitor(Diagnostics);
-                RuleSetNode = (RulesetNode)Bav.Visit(ruleSetContext);
+                BuildAstVisitor bav = new BuildAstVisitor(Diagnostics);
+                ruleset = (RulesetNode)bav.Visit(ruleSetContext);
             }
 
             AdditionalErrorChecking aec = new AdditionalErrorChecking(parser, Diagnostics);
             aec.Visit(ruleSetContext);
-            
-            if (!Diagnostics.ContainsErrors())
+
+            return ruleset;
+        }
+
+        private void GetObjects(string document, string referenceFile, TranslateRule globalTranslate, TranslateRule playerTranslate)
+        {
+            RulesetNode ruleset = GetRuleset(document);
+
+            if (ruleset != null)
             {
-                VarCollection = new VarCollection();
-                Root = new ScopeGroup(VarCollection);
-                UserMethods = new List<UserMethod>();
-                DefinedTypes = new List<DefinedType>();
-
-                Rule initialGlobalValues = new Rule("Initial Global Values");
-                Rule initialPlayerValues = new Rule("Initial Player Values", RuleEvent.OngoingPlayer, Team.All, PlayerSelector.All);
-
-                TranslateRule globalTranslate = new TranslateRule(initialGlobalValues, Root, this);
-                TranslateRule playerTranslate = new TranslateRule(initialPlayerValues, Root, this);
-
                 // Get the defined types
-                foreach (var definedType in RuleSetNode.DefinedTypes)
+                foreach (var definedType in ruleset.DefinedTypes)
                     try
                     {
                         DefinedTypes.Add(new DefinedType(definedType));
@@ -68,7 +118,7 @@ namespace Deltin.Deltinteger.Parse
                     }
 
                 // Get the variables
-                foreach (var definedVar in RuleSetNode.DefinedVars)
+                foreach (var definedVar in ruleset.DefinedVars)
                     try
                     {
                         IndexedVar var;
@@ -98,66 +148,54 @@ namespace Deltin.Deltinteger.Parse
                         Diagnostics.Error(ex);
                     }
 
-                globalTranslate.Finish();
-                playerTranslate.Finish();
-
                 // Get the user methods.
-                for (int i = 0; i < RuleSetNode.UserMethods.Length; i++)
+                for (int i = 0; i < ruleset.UserMethods.Length; i++)
                     try
                     {
-                        UserMethods.Add(new UserMethod(Root, RuleSetNode.UserMethods[i]));
+                        UserMethods.Add(new UserMethod(Root, ruleset.UserMethods[i]));
                     }
                     catch (SyntaxErrorException ex)
                     {
                         Diagnostics.Error(ex);
                     }
 
-                // Parse the rules.
-                Rules = new List<Rule>();
+                // Get the rules
+                RuleNodes.AddRange(ruleset.Rules);
 
-                if (initialGlobalValues.Actions.Length > 0)
-                    Rules.Add(initialGlobalValues);
-                
-                if (initialPlayerValues.Actions.Length > 0)
-                    Rules.Add(initialPlayerValues);
-
-                // The looper rule
-                GlobalLoop = new Looper(true);
-                PlayerLoop = new Looper(false);
-
-                for (int i = 0; i < RuleSetNode.Rules.Length; i++)
-                {
+                // Check the imported files.
+                foreach (ImportNode importNode in ruleset.Imports)
                     try
                     {
-                        var result = TranslateRule.GetRule(RuleSetNode.Rules[i], Root, this);
-                        Rules.Add(result);
+                        string directory = Path.GetDirectoryName(referenceFile);
+                        string combined = Path.Combine(directory, importNode.File);
+                        string uri = Path.GetFullPath(combined);
+
+                        if (!File.Exists(uri))
+                            throw SyntaxErrorException.ImportFileNotFound(importNode.File, importNode.Range);
+
+                        string content = File.ReadAllText(uri);
+                        
+                        GetObjects(content, uri, globalTranslate, playerTranslate);
                     }
                     catch (SyntaxErrorException ex)
                     {
                         Diagnostics.Error(ex);
                     }
-                }
-
-                if (GlobalLoop.Used)
-                    Rules.Add(GlobalLoop.Finalize());
-                if (PlayerLoop.Used)
-                    Rules.Add(PlayerLoop.Finalize());
-
-                Success = true;
             }
         }
 
         public Diagnostics Diagnostics { get; private set; } = new Diagnostics();
-        public BuildAstVisitor Bav { get; private set; }
         public List<Rule> Rules { get; private set; }
+        private List<RuleNode> RuleNodes { get; set; } = new List<RuleNode>();
         public List<DefinedType> DefinedTypes { get; private set; }
         public List<UserMethod> UserMethods { get; private set; }
         public bool Success { get; private set; }
-        public VarCollection VarCollection { get; private set; }
+        public VarCollection VarCollection { get; private set; } = new VarCollection();
         public ScopeGroup Root { get; private set; }
         public RulesetNode RuleSetNode { get; private set; }
         private Looper GlobalLoop { get; set; }
         private Looper PlayerLoop { get; set; }
+        private string URI { get; set; }
 
         public IMethod GetMethod(string name)
         {

@@ -8,12 +8,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Diagnostics;
+using System.Web;
 using Deltin.Deltinteger.Parse;
 using Deltin.Deltinteger.Elements;
 using Newtonsoft.Json;
-using Antlr4;
-using Antlr4.Runtime;
-using Antlr4.Runtime.Tree;
 
 namespace Deltin.Deltinteger.LanguageServer
 {
@@ -114,7 +112,8 @@ namespace Deltin.Deltinteger.LanguageServer
         {
             dynamic json; 
             json = JsonConvert.DeserializeObject(input);
-            string uri = json.uri;
+            string uri = new Uri(Uri.UnescapeDataString((string)json.uri)).AbsolutePath;
+
             string content = json.content;
 
             Document document;
@@ -130,7 +129,7 @@ namespace Deltin.Deltinteger.LanguageServer
             }
             document.Content = content;
 
-            parserData = ParsingData.GetParser(content);
+            parserData = ParsingData.GetParser(content, document.Uri);
 
             if (parserData.Rules != null && !parserData.Diagnostics.ContainsErrors())
             {

@@ -22,6 +22,11 @@ namespace Deltin.Deltinteger.Parse
             return new RulesetNode(context, this);
         }
 
+        public override Node VisitImport_file(DeltinScriptParser.Import_fileContext context)
+        {
+            return new ImportNode(context, this);
+        }
+
         public override Node VisitRule_define(DeltinScriptParser.Rule_defineContext context)
         {
             return new RuleDefineNode(context, this);
@@ -463,6 +468,21 @@ namespace Deltin.Deltinteger.Parse
         }
     }
 
+    public class ImportNode : Node
+    {
+        public string File { get; }
+
+        public ImportNode(DeltinScriptParser.Import_fileContext context, BuildAstVisitor visitor) : base(Range.GetRange(context))
+        {
+            File = context.STRINGLITERAL().GetText().Trim('"');
+        }
+
+        override public Node[] Children()
+        {
+            return null;
+        }
+    }
+    
     public class TypeDefineNode : Node
     {
         public TypeKind TypeKind { get; }
@@ -537,6 +557,7 @@ namespace Deltin.Deltinteger.Parse
 
     public class RulesetNode : Node
     {
+        public ImportNode[] Imports { get; }
         public Variable UseGlobalVar { get; }
         public Variable UsePlayerVar { get; }
         public RuleNode[] Rules { get; }
@@ -546,6 +567,10 @@ namespace Deltin.Deltinteger.Parse
 
         public RulesetNode(DeltinScriptParser.RulesetContext context, BuildAstVisitor visitor) : base(Range.GetRange(context))
         {
+            Imports = new ImportNode[context.import_file().Length];
+            for (int i = 0; i < Imports.Length; i++)
+                Imports[i] = new ImportNode(context.import_file(i), visitor);
+
             Rules = new RuleNode[context.ow_rule().Length];
             for (int i = 0; i < Rules.Length; i++)
                 Rules[i] = (RuleNode)visitor.VisitOw_rule(context.ow_rule()[i]);
@@ -572,7 +597,7 @@ namespace Deltin.Deltinteger.Parse
 
         public override Node[] Children()
         {
-            return ArrayBuilder<Node>.Build(Rules, DefinedVars, UserMethods, DefinedTypes);
+            return ArrayBuilder<Node>.Build(Imports, Rules, DefinedVars, UserMethods, DefinedTypes);
         }
     }
 
