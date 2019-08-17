@@ -679,7 +679,7 @@ namespace Deltin.Deltinteger.Parse
             if (context.expr() != null)
                 Value = visitor.Visit(context.expr());
             if (context.accessor() != null)
-                AccessLevel = (AccessLevel)Enum.Parse(typeof(AccessLevel), context.accessor().GetText());
+                AccessLevel = (AccessLevel)Enum.Parse(typeof(AccessLevel), context.accessor().GetText(), true);
         }
 
         public override Node[] Children()

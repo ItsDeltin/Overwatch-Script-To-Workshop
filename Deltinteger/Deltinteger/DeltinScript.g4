@@ -125,7 +125,7 @@ setParameters: (PART (COMMA PART)*)?;
 
 create_object : NEW type=PART LEFT_PAREN call_parameters? RIGHT_PAREN ;
 
-import_file : IMPORT STRINGLITERAL ;
+import_file : IMPORT STRINGLITERAL STATEMENT_END ;
 
 /*
  * Lexer Rules

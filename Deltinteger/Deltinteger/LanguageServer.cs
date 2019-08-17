@@ -108,11 +108,16 @@ namespace Deltin.Deltinteger.LanguageServer
             return Encoding.UTF8.GetBytes(value);
         }
 
+        string uriPath(string uri)
+        {
+            return new Uri(Uri.UnescapeDataString(uri)).AbsolutePath;
+        }
+
         string ParseDocument(string input, int clientPort)
         {
             dynamic json; 
             json = JsonConvert.DeserializeObject(input);
-            string uri = new Uri(Uri.UnescapeDataString((string)json.uri)).AbsolutePath;
+            string uri = uriPath((string)json.uri);
 
             string content = json.content;
 
@@ -372,7 +377,7 @@ namespace Deltin.Deltinteger.LanguageServer
         {
             dynamic inputJson = JsonConvert.DeserializeObject(json);
 
-            string uri = inputJson.textDocument.uri;
+            string uri = uriPath((string)inputJson.textDocument.uri);
 
             if (!documents.ContainsKey(uri)) return null;
 

@@ -53,7 +53,8 @@ namespace Deltin.Deltinteger
         public const string expectedVariable     = "Expected a variable.";
         public const string typeDoesNotExist     = "The type '{0}' does not exist.";
         public const string thisCantBeUsed       = "The 'this' keyword cannot be used here.";
-        public const string importFileNotFound   = "The file '{0}' can not be found.";
+        public const string importFileNotFound   = "The file '{0}' could not be found.";
+        public const string invalidPathChars     = "The path '{0}' contains invalid characters.";
         #endregion
 
         public static SyntaxErrorException StringParameterCount(int parameterIndex, int parameterCount, Range range)
@@ -183,9 +184,14 @@ namespace Deltin.Deltinteger
             throw new SyntaxErrorException(thisCantBeUsed, range);
         }
     
-        public static SyntaxErrorException ImportFileNotFound(string file, Range range)
+        public static SyntaxErrorException ImportFileNotFound(string fullPath, Range range)
         {
-            return new SyntaxErrorException(string.Format(importFileNotFound, file), range);
+            return new SyntaxErrorException(string.Format(importFileNotFound, fullPath), range);
+        }
+    
+        public static SyntaxErrorException InvalidImportPathChars(string path, Range range)
+        {
+            return new SyntaxErrorException(string.Format(invalidPathChars, path), range);
         }
     }
 }

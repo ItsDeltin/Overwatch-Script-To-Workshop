@@ -103,6 +103,8 @@ namespace Deltin.Deltinteger.Parse
         private void GetObjects(string document, string referenceFile, TranslateRule globalTranslate, TranslateRule playerTranslate)
         {
             RulesetNode ruleset = GetRuleset(document);
+            if (RuleSetNode == null)
+                RuleSetNode = ruleset;
 
             if (ruleset != null)
             {
@@ -168,10 +170,18 @@ namespace Deltin.Deltinteger.Parse
                     {
                         string directory = Path.GetDirectoryName(referenceFile);
                         string combined = Path.Combine(directory, importNode.File);
-                        string uri = Path.GetFullPath(combined);
+                        string uri;
+                        try
+                        {
+                            uri = Path.GetFullPath(combined);
+                        }
+                        catch (ArgumentException)
+                        {
+                            throw SyntaxErrorException.InvalidImportPathChars(importNode.File, importNode.Range);
+                        }
 
                         if (!File.Exists(uri))
-                            throw SyntaxErrorException.ImportFileNotFound(importNode.File, importNode.Range);
+                            throw SyntaxErrorException.ImportFileNotFound(uri, importNode.Range);
 
                         string content = File.ReadAllText(uri);
                         
