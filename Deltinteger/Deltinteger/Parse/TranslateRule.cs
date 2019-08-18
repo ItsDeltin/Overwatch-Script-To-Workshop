@@ -103,11 +103,11 @@ namespace Deltin.Deltinteger.Parse
                 {
                     Element left = (Element)parsedIf.ParameterValues[0];
                     if (!left.ElementData.IsValue)
-                        throw SyntaxErrorException.InvalidMethodType(true, left.Name, ((Node)expr).Range);
+                        throw SyntaxErrorException.InvalidMethodType(true, left.Name, expr.Location);
 
                     Element right = (Element)parsedIf.ParameterValues[2];
                     if (!right.ElementData.IsValue)
-                        throw SyntaxErrorException.InvalidMethodType(true, right.Name, ((Node)expr).Range);
+                        throw SyntaxErrorException.InvalidMethodType(true, right.Name, expr.Location);
 
                     Conditions.Add(
                         new Condition(
@@ -121,7 +121,7 @@ namespace Deltin.Deltinteger.Parse
                 else
                 {
                     if (!parsedIf.ElementData.IsValue)
-                        throw SyntaxErrorException.InvalidMethodType(true, parsedIf.Name, ((Node)expr).Range);
+                        throw SyntaxErrorException.InvalidMethodType(true, parsedIf.Name, expr.Location);
 
                     Conditions.Add(new Condition(
                         parsedIf, EnumData.GetEnumValue(Operators.Equal), new V_True()
@@ -223,7 +223,7 @@ namespace Deltin.Deltinteger.Parse
                     Element[] stringFormat = new Element[stringNode.Format?.Length ?? 0];
                     for (int i = 0; i < stringFormat.Length; i++)
                         stringFormat[i] = ParseExpression(scope, stringNode.Format[i]);
-                    return V_String.ParseString(stringNode.Range, stringNode.Value, stringFormat);
+                    return V_String.ParseString(stringNode.Location, stringNode.Value, stringFormat);
 
                 // Null
                 case NullNode nullNode:
@@ -242,7 +242,7 @@ namespace Deltin.Deltinteger.Parse
                     for (int i = 0; i < index.Length; i++)
                         index[i] = ParseExpression(scope, variableNode.Index[i]);
 
-                    Element result = scope.GetVar(variableNode.Name, variableNode.Range).GetVariable();
+                    Element result = scope.GetVar(variableNode.Name, variableNode.Location).GetVariable();
                     for (int i = 0; i < index.Length; i++)
                         result = Element.Part<V_ValueInArray>(result, index[i]);
 
@@ -289,12 +289,12 @@ namespace Deltin.Deltinteger.Parse
                 // Enums
                 case EnumNode enumNode:
                     return EnumData.ToElement(enumNode.EnumMember) 
-                    ?? throw SyntaxErrorException.EnumCantBeValue(enumNode.Type, enumNode.Range);
+                    ?? throw SyntaxErrorException.EnumCantBeValue(enumNode.Type, enumNode.Location);
 
                 // New object
                 case CreateObjectNode createObjectNode:
 
-                    DefinedType typeData = ParserData.GetDefinedType(createObjectNode.TypeName, createObjectNode.Range);
+                    DefinedType typeData = ParserData.GetDefinedType(createObjectNode.TypeName, createObjectNode.Location);
 
                     IndexedVar store = VarCollection.AssignVar(scope, typeData.Name + " store", IsGlobal, null);
                     store.Type = typeData;
@@ -312,7 +312,7 @@ namespace Deltin.Deltinteger.Parse
 
                     Constructor constructor = typeData.Constructors.FirstOrDefault(c => c.Parameters.Length == createObjectNode.Parameters.Length);
                     if (constructor == null && !(createObjectNode.Parameters.Length == 0 && typeData.Constructors.Length == 0))
-                        throw SyntaxErrorException.NotAConstructor(typeData.TypeKind, typeData.Name, createObjectNode.Parameters.Length,createObjectNode.Range);
+                        throw SyntaxErrorException.NotAConstructor(typeData.TypeKind, typeData.Name, createObjectNode.Parameters.Length,createObjectNode.Location);
                     
                     if (constructor != null)
                     {
@@ -338,17 +338,17 @@ namespace Deltin.Deltinteger.Parse
                 
                 // This
                 case ThisNode thisNode:
-                    return scope.GetThis(thisNode.Range).GetVariable();
+                    return scope.GetThis(thisNode.Location).GetVariable();
             }
 
             throw new Exception();
         }
 
-        IWorkshopTree[] ParseParameters(ScopeGroup scope, ParameterBase[] parameters, Node[] values, string methodName, Range methodRange)
+        IWorkshopTree[] ParseParameters(ScopeGroup scope, ParameterBase[] parameters, Node[] values, string methodName, LanguageServer.Location methodRange)
         {
             // Syntax error if there are too many parameters.
             if (values.Length > parameters.Length)
-                throw SyntaxErrorException.TooManyParameters(methodName, parameters.Length, values.Length, values[parameters.Length].Range);
+                throw SyntaxErrorException.TooManyParameters(methodName, parameters.Length, values.Length, values[parameters.Length].Location);
 
             // Parse the parameters
             List<IWorkshopTree> parsedParameters = new List<IWorkshopTree>();
@@ -384,7 +384,7 @@ namespace Deltin.Deltinteger.Parse
                                 );
                             }
                             else
-                                throw SyntaxErrorException.ExpectedEnumGotValue(((EnumParameter)parameters[i]).EnumData.CodeName, ((Node)values[i]).Range);
+                                throw SyntaxErrorException.ExpectedEnumGotValue(((EnumParameter)parameters[i]).EnumData.CodeName, values[i].Location);
                         }
                     }
                 }
@@ -398,7 +398,7 @@ namespace Deltin.Deltinteger.Parse
                     
                     // A VarRef parameter must be a variable
                     if (varData.ResultingVariable == null)
-                        throw SyntaxErrorException.ExpectedVariable(((Node)values[i]).Range);
+                        throw SyntaxErrorException.ExpectedVariable(values[i].Location);
                     
                     parsedParameters.Add(new VarRef((IndexedVar)varData.ResultingVariable, varData.VariableIndex, varData.Target));
                         
@@ -412,10 +412,10 @@ namespace Deltin.Deltinteger.Parse
         {
             methodNode.RelatedScopeGroup = scope;
 
-            IMethod method = scope.GetMethod(methodNode.Name, methodNode.Range);
+            IMethod method = scope.GetMethod(methodNode.Name, methodNode.Location);
             
             // Parse the parameters
-            IWorkshopTree[] parsedParameters = ParseParameters(scope, method.Parameters, methodNode.Parameters, methodNode.Name, methodNode.Range);
+            IWorkshopTree[] parsedParameters = ParseParameters(scope, method.Parameters, methodNode.Parameters, methodNode.Name, methodNode.Location);
 
             Element result;
             if (method is ElementList)
@@ -425,7 +425,7 @@ namespace Deltin.Deltinteger.Parse
                 result.ParameterValues = parsedParameters.ToArray();
 
                 foreach (var usageDiagnostic in elementData.UsageDiagnostics)
-                    ParserData.Diagnostics.AddDiagnostic(File, usageDiagnostic.GetDiagnostic(methodNode.Range));
+                    ParserData.Diagnostics.AddDiagnostic(methodNode.Location.uri, usageDiagnostic.GetDiagnostic(methodNode.Location.range));
             }
             else if (method is CustomMethodData)
             {
@@ -433,13 +433,13 @@ namespace Deltin.Deltinteger.Parse
                 {
                     case CustomMethodType.Action:
                         if (needsToBeValue)
-                            throw SyntaxErrorException.InvalidMethodType(true, methodNode.Name, methodNode.Range);
+                            throw SyntaxErrorException.InvalidMethodType(true, methodNode.Name, methodNode.Location);
                         break;
 
                     case CustomMethodType.MultiAction_Value:
                     case CustomMethodType.Value:
                         if (!needsToBeValue)
-                            throw SyntaxErrorException.InvalidMethodType(false, methodNode.Name, methodNode.Range);
+                            throw SyntaxErrorException.InvalidMethodType(false, methodNode.Name, methodNode.Location);
                         break;
                 }
 
@@ -474,7 +474,7 @@ namespace Deltin.Deltinteger.Parse
                 // Check the method stack if this method was already called.
                 // Throw a syntax error if it was.
                 if (MethodStackNoRecursive.Contains(userMethod))
-                    throw SyntaxErrorException.RecursionNotAllowed(methodNode.Range);
+                    throw SyntaxErrorException.RecursionNotAllowed(methodNode.Location);
 
                 var methodScope = scope.Root().Child();
 
@@ -941,7 +941,7 @@ namespace Deltin.Deltinteger.Parse
             var varSetData = new ParseExpressionTree(this, scope, varSetNode.Variable);
 
             if (!(varSetData.ResultingVariable is IndexedVar))
-                throw SyntaxErrorException.VariableIsReadonly(varSetData.ResultingVariable.Name, varSetNode.Range);
+                throw SyntaxErrorException.VariableIsReadonly(varSetData.ResultingVariable.Name, varSetNode.Location);
 
             IndexedVar variable = (IndexedVar)varSetData.ResultingVariable;
             Element[] index = varSetData.VariableIndex;
@@ -1004,7 +1004,7 @@ namespace Deltin.Deltinteger.Parse
                 Actions.AddRange(inScopeActions);
             
             if (defineNode.Type != null)
-                var.Type = ParserData.GetDefinedType(defineNode.Type, defineNode.Range);
+                var.Type = ParserData.GetDefinedType(defineNode.Type, defineNode.Location);
         }
 
         int GetSkipCount(Element skipElement)
@@ -1029,7 +1029,7 @@ namespace Deltin.Deltinteger.Parse
                 {
                     VariableNode variableNode = (VariableNode)root;
 
-                    Var var = scope.GetVar(((VariableNode)root).Name, root.Range);
+                    Var var = scope.GetVar(((VariableNode)root).Name, root.Location);
                     ResultingVariable = var;
 
                     ResultingElement = var.GetVariable();
@@ -1054,7 +1054,7 @@ namespace Deltin.Deltinteger.Parse
                     if (nodes[index] is VariableNode)
                     {
                         VariableNode variableNode = (VariableNode)nodes[index];
-                        Var var = currentScope.GetVar(variableNode.Name, variableNode.Range);
+                        Var var = currentScope.GetVar(variableNode.Name, variableNode.Location);
 
                         // If this is the last node, set the resulting var.
                         if (index == nodes.Count - 1)

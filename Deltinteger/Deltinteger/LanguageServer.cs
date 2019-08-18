@@ -368,7 +368,7 @@ namespace Deltin.Deltinteger.LanguageServer
                         if (method != null)
                             hover = new Hover(new MarkupContent(MarkupContent.Markdown, method.GetLabel(true)))
                             {
-                                range = methodNode.Range
+                                range = methodNode.Location.range
                             };
                         break;
 
@@ -382,7 +382,7 @@ namespace Deltin.Deltinteger.LanguageServer
                         catch (ArgumentException) {}
 
                         if (path != null)
-                            hover = new Hover(new MarkupContent(MarkupContent.Markdown, path)) { range = importNode.Range };
+                            hover = new Hover(new MarkupContent(MarkupContent.Markdown, path)) { range = importNode.Location.range };
 
                         break;
                     

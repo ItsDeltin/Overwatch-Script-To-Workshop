@@ -767,11 +767,11 @@ namespace Deltin.Deltinteger.Elements
     [Parameter("{2}", ValueType.Any, typeof(V_Null))]
     public class V_String : Element
     {
-        public V_String(Range range, string text, params Element[] stringValues) : base(NullifyEmptyValues(stringValues))
+        public V_String(LanguageServer.Location location, string text, params Element[] stringValues) : base(NullifyEmptyValues(stringValues))
         {
             TextID = Array.IndexOf(Constants.Strings, text);
             if (TextID == -1)
-                throw SyntaxErrorException.InvalidString(text, range);
+                throw SyntaxErrorException.InvalidString(text, location);
         }
         public V_String() : this(null, Constants.DEFAULT_STRING) {}
 
@@ -803,7 +803,7 @@ namespace Deltin.Deltinteger.Elements
         
         //private static readonly string[] multiwordStrings = Constants.Strings.Where(str => str.Contains("_")).ToArray();
 
-        public static Element ParseString(Range range, string value, Element[] parameters, int depth = 0)
+        public static Element ParseString(LanguageServer.Location location, string value, Element[] parameters, int depth = 0)
         {
             value = value.ToLower();
 
@@ -842,7 +842,7 @@ namespace Deltin.Deltinteger.Elements
                     Log.Write(LogLevel.Verbose, new ColorMod(debug + searchString, ConsoleColor.Gray));
 
                     // Create a string element with the found string.
-                    V_String str = new V_String(range, searchString);
+                    V_String str = new V_String(location, searchString);
 
                     bool valid = true; // Confirms that the arguments were able to successfully parse.
                     List<Element> parsedParameters = new List<Element>(); // The parameters that were successfully parsed.
@@ -860,7 +860,7 @@ namespace Deltin.Deltinteger.Elements
 
                             // Throw syntax error if the number of parameters is less than the parameter index being set.
                             if (index >= parameters.Length)
-                                throw SyntaxErrorException.StringParameterCount(index, parameters.Length, range);
+                                throw SyntaxErrorException.StringParameterCount(index, parameters.Length, location);
 
                             Log.Write(LogLevel.Verbose, $"{debug}    <param {index}>");
                             parsedParameters.Add(parameters[index]);
@@ -868,7 +868,7 @@ namespace Deltin.Deltinteger.Elements
                         else
                         {
                             // Parse the parameter. If it fails it will return null and the string being checked is probably false.
-                            var p = ParseString(range, currentParameterValue, parameters, depth + 1);
+                            var p = ParseString(location, currentParameterValue, parameters, depth + 1);
                             if (p == null)
                             {
                                 Log.Write(LogLevel.Verbose, $"{debug}{searchString} ", new ColorMod("combo fail", ConsoleColor.DarkRed));
@@ -899,7 +899,7 @@ namespace Deltin.Deltinteger.Elements
                 return null;
             else
                 // If the depth is 0, throw a syntax error.
-                throw SyntaxErrorException.StringParseFailed(value, range);
+                throw SyntaxErrorException.StringParseFailed(value, location);
         }
 
         private static string Escape(string value)

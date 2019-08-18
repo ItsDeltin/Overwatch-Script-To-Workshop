@@ -47,7 +47,7 @@ namespace Deltin.Deltinteger.Parse
                 }
                 catch (SyntaxErrorException ex)
                 {
-                    Diagnostics.Error(file, ex);
+                    Diagnostics.Error(ex);
                 }
             }
 
@@ -121,7 +121,7 @@ namespace Deltin.Deltinteger.Parse
                     }
                     catch (SyntaxErrorException ex)
                     {
-                        Diagnostics.Error(file, ex);
+                        Diagnostics.Error(ex);
                     }
 
                 // Get the variables
@@ -141,7 +141,7 @@ namespace Deltin.Deltinteger.Parse
                                 definedVar
                             );
                         if (definedVar.Type != null)
-                            var.Type = GetDefinedType(definedVar.Type, definedVar.Range);
+                            var.Type = GetDefinedType(definedVar.Type, definedVar.Location);
 
                         // Set initial values
                         if (definedVar.Value != null)
@@ -152,7 +152,7 @@ namespace Deltin.Deltinteger.Parse
                     }
                     catch (SyntaxErrorException ex)
                     {
-                        Diagnostics.Error(file, ex);
+                        Diagnostics.Error(ex);
                     }
 
                 // Get the user methods.
@@ -163,7 +163,7 @@ namespace Deltin.Deltinteger.Parse
                     }
                     catch (SyntaxErrorException ex)
                     {
-                        Diagnostics.Error(file, ex);
+                        Diagnostics.Error(ex);
                     }
 
                 // Get the rules
@@ -184,20 +184,20 @@ namespace Deltin.Deltinteger.Parse
                         catch (ArgumentException)
                         {
                             // ArgumentException is thrown if the filename has invalid characters.
-                            throw SyntaxErrorException.InvalidImportPathChars(importNode.File, importNode.Range);
+                            throw SyntaxErrorException.InvalidImportPathChars(importNode.File, importNode.Location);
                         }
 
                         if (file == importFilePath)
-                            throw SyntaxErrorException.SelfImport(importNode.Range);
+                            throw SyntaxErrorException.SelfImport(importNode.Location);
 
                         // Syntax error if the file does not exist.
                         if (!System.IO.File.Exists(importFilePath))
-                            throw SyntaxErrorException.ImportFileNotFound(importFilePath, importNode.Range);
+                            throw SyntaxErrorException.ImportFileNotFound(importFilePath, importNode.Location);
 
                         // Warning if the file was already imported.
                         if (importedFiles.Contains(importFilePath))
                         {
-                            Diagnostics.Warning(file, string.Format(SyntaxErrorException.alreadyImported, importFileName), importNode.Range);
+                            Diagnostics.Warning(string.Format(SyntaxErrorException.alreadyImported, importFileName), importNode.Location);
                         }
                         else
                         {
@@ -208,7 +208,7 @@ namespace Deltin.Deltinteger.Parse
                     }
                     catch (SyntaxErrorException ex)
                     {
-                        Diagnostics.Error(file, ex);
+                        Diagnostics.Error(ex);
                     }
             }
         }
@@ -233,9 +233,9 @@ namespace Deltin.Deltinteger.Parse
             ?? (IMethod)Element.GetElement(name);
         }
 
-        public DefinedType GetDefinedType(string name, Range range)
+        public DefinedType GetDefinedType(string name, Location location)
         {
-            return DefinedTypes.FirstOrDefault(dt => dt.Name == name) ?? throw SyntaxErrorException.NonexistentType(name, range);
+            return DefinedTypes.FirstOrDefault(dt => dt.Name == name) ?? throw SyntaxErrorException.NonexistentType(name, location);
         }
 
         public Looper GetLooper(bool isGlobal)

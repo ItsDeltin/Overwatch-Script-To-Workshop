@@ -40,7 +40,7 @@ namespace Deltin.Deltinteger.Parse
         {
             //if (!FullVarCollection().Any(v => var.Name == v.Name))
             if (IsAlreadyDefined(var.Name) && var.Node != null)
-                throw SyntaxErrorException.AlreadyDefined(var.Name, var.Node.Range);
+                throw SyntaxErrorException.AlreadyDefined(var.Name, var.Node.Location);
             else
                 InScope.Add(var);
         }
@@ -98,13 +98,13 @@ namespace Deltin.Deltinteger.Parse
             return actions.ToArray();
         }
 
-        public Var GetVar(string name, Range range)
+        public Var GetVar(string name, Location location)
         {
             return GetScopeable<Var>(name)
-                ?? throw SyntaxErrorException.VariableDoesNotExist(name, range);
+                ?? throw SyntaxErrorException.VariableDoesNotExist(name, location);
         }
 
-        public IMethod GetMethod(string name, Range range)
+        public IMethod GetMethod(string name, Location location)
         {
             // Get the method by it's name.
             return GetScopeable<UserMethod>(name)
@@ -113,7 +113,7 @@ namespace Deltin.Deltinteger.Parse
             // Then check if its a custom method.
                 ?? (IMethod)CustomMethodData.GetCustomMethod(name)
             // Throw if not found.
-                ?? throw SyntaxErrorException.NonexistentMethod(name, range);
+                ?? throw SyntaxErrorException.NonexistentMethod(name, location);
         }
 
         private T GetScopeable<T>(string name) where T : IScopeable
@@ -155,7 +155,7 @@ namespace Deltin.Deltinteger.Parse
         // A different guest co-host was featured nearly every day on the show and included music played throughout.
         // On the 15 October 2007 episode, the Get This team announced that Triple M/Austereo would not be renewing the show for 2008.
         // The final broadcast was on 23 November 2007. During its lifetime and since its cancellation, Get This developed a strong cult following. 
-        public IndexedVar GetThis(Range errorRange)
+        public IndexedVar GetThis(Location errorLocation)
         {
             ScopeGroup check = this;
             IndexedVar @this = null;
@@ -165,8 +165,8 @@ namespace Deltin.Deltinteger.Parse
                 check = check.Parent;
             }
 
-            if (errorRange != null && @this == null)
-                throw SyntaxErrorException.ThisCantBeUsed(errorRange);
+            if (errorLocation != null && @this == null)
+                throw SyntaxErrorException.ThisCantBeUsed(errorLocation);
             
             return @this;
         }
@@ -182,7 +182,8 @@ namespace Deltin.Deltinteger.Parse
 
         public CompletionItem[] GetCompletionItems(Pos caret)
         {
-            return FullVarCollection().Where(var => var is Var && ((Var)var).IsDefinedVar && ((Var)var).Node.Range.end < caret).Select(var => new CompletionItem(var.Name)
+            #warning caret file
+            return FullVarCollection().Where(var => var is Var && ((Var)var).IsDefinedVar && ((Var)var).Node.Location.range.end < caret).Select(var => new CompletionItem(var.Name)
             {
                 kind = CompletionItem.Field
             }).ToArray();

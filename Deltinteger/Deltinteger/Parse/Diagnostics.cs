@@ -33,29 +33,29 @@ namespace Deltin.Deltinteger.Parse
             return diagnostics.Any(d => d.Value.Any(diag => diag.severity == Diagnostic.Error));
         }
 
-        public void Error(string file, string message, Range range)
+        public void Error(string message, Location location)
         {
-            diagnostics[file].Add(new Diagnostic(message, range) { severity = Diagnostic.Error });
+            diagnostics[location.uri].Add(new Diagnostic(message, location.range) { severity = Diagnostic.Error });
         }
 
-        public void Error(string file, SyntaxErrorException ex)
+        public void Error(SyntaxErrorException ex)
         {
-            Error(file, ex.GetInfo(), ex.Range);
+            Error(ex.GetInfo(), ex.Location);
         }
 
-        public void Warning(string file, string message, Range range)
+        public void Warning(string message, Location location)
         {
-            diagnostics[file].Add(new Diagnostic(message, range) { severity = Diagnostic.Warning });
+            diagnostics[location.uri].Add(new Diagnostic(message, location.range) { severity = Diagnostic.Warning });
         }
 
-        public void Information(string file, string message, Range range)
+        public void Information(string message, Location location)
         {
-            diagnostics[file].Add(new Diagnostic(message, range) { severity = Diagnostic.Information });
+            diagnostics[location.uri].Add(new Diagnostic(message, location.range) { severity = Diagnostic.Information });
         }
 
-        public void Hint(string file, string message, Range range)
+        public void Hint(string message, Location location)
         {
-            diagnostics[file].Add(new Diagnostic(message, range) { severity = Diagnostic.Hint });
+            diagnostics[location.uri].Add(new Diagnostic(message, location.range) { severity = Diagnostic.Hint });
         }
 
         public void AddDiagnostic(string file, Diagnostic diagnostic)
@@ -104,7 +104,7 @@ namespace Deltin.Deltinteger.Parse
                 case DeltinScriptParser.VarsetContext _:
                 case DeltinScriptParser.ExprContext _:
                     if (context.ChildCount == 1)
-                        _diagnostics.Error(_file, "Expected ';'", Range.GetRange(context).end.ToRange());
+                        _diagnostics.Error("Expected ';'", new Location(_file, Range.GetRange(context).end.ToRange()));
                     break;
             }
             return base.VisitStatement(context);
@@ -114,7 +114,7 @@ namespace Deltin.Deltinteger.Parse
         {
             // Confirm there is an expression after the last ",".
             if (context.children?.Last().GetText() == ",")
-                _diagnostics.Error(_file, "Expected parameter.", Range.GetRange(context).end.ToRange());
+                _diagnostics.Error("Expected parameter.", new Location(_file, Range.GetRange(context).end.ToRange()));
             return base.VisitCall_parameters(context);
         }
 
@@ -124,10 +124,10 @@ namespace Deltin.Deltinteger.Parse
             string value = context.PART(1)?.GetText();
 
             if (value == null)
-                _diagnostics.Error(_file, "Expected enum value.", Range.GetRange(context));
+                _diagnostics.Error("Expected enum value.", new Location(_file, Range.GetRange(context)));
             
             else if (EnumData.GetEnumValue(type, value) == null)
-                _diagnostics.Error(_file, string.Format(SyntaxErrorException.invalidEnumValue, value, type), Range.GetRange(context)); 
+                _diagnostics.Error(string.Format(SyntaxErrorException.invalidEnumValue, value, type), new Location(_file, Range.GetRange(context))); 
 
             return base.VisitEnum(context);
         }
@@ -135,7 +135,7 @@ namespace Deltin.Deltinteger.Parse
         public override object VisitRule_if(DeltinScriptParser.Rule_ifContext context)
         {
             if (context.expr() == null)
-                _diagnostics.Error(_file, "Expected expression.", Range.GetRange(context));
+                _diagnostics.Error("Expected expression.", new Location(_file, Range.GetRange(context)));
             return base.VisitRule_if(context);
         }
 
@@ -146,14 +146,14 @@ namespace Deltin.Deltinteger.Parse
                     context.children.IndexOf(context.expr().Last()) < 
                     context.children.IndexOf(context.statement_operation())
                 ))
-                _diagnostics.Error(_file, "Expected expression.", Range.GetRange(context));
+                _diagnostics.Error("Expected expression.", new Location(_file, Range.GetRange(context)));
             return base.VisitVarset(context);
         }
 
         public override object VisitDefine(DeltinScriptParser.DefineContext context)
         {
             if (context.EQUALS() != null && context.expr() == null)
-                _diagnostics.Error(_file, "Expected expression.", Range.GetRange(context));
+                _diagnostics.Error("Expected expression.", new Location(_file, Range.GetRange(context)));
             return base.VisitDefine(context);
         }
     }
@@ -171,7 +171,7 @@ namespace Deltin.Deltinteger.Parse
 
         public override void SyntaxError(IRecognizer recognizer, IToken offendingSymbol, int line, int charPositionInLine, string msg, RecognitionException e)
         {
-            diagnostics.Error(file, msg, Range.GetRange(offendingSymbol));
+            diagnostics.Error(msg, new Location(file, Range.GetRange(offendingSymbol)));
         }
     }
 }

@@ -514,7 +514,8 @@ namespace Deltin.Deltinteger.Elements
     }
 
     [WorkshopEnum]
-    public enum Location
+    [EnumOverride("Location", null)]
+    public enum HudLocation
     {
         Left,
         Top,

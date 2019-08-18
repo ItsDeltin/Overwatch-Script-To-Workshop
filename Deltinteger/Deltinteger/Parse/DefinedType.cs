@@ -24,7 +24,7 @@ namespace Deltin.Deltinteger.Parse
             for (int i = 0; i < Constructors.Length; i++)
             {
                 if (node.Constructors[i].Name != node.Name)
-                    throw SyntaxErrorException.ConstructorName(node.Constructors[i].Range);
+                    throw SyntaxErrorException.ConstructorName(node.Constructors[i].Location);
                 Constructors[i] = new Constructor(node.Constructors[i]);
             }
         }
@@ -38,7 +38,7 @@ namespace Deltin.Deltinteger.Parse
             {
                 IndexedVar newVar = var.CreateChild(typeScope, DefinedVars[i].VariableName, new int[] { i }, DefinedVars[i]);
                 if (DefinedVars[i].Type != null)
-                    newVar.Type = parseData.GetDefinedType(DefinedVars[i].Type, DefinedVars[i].Range);
+                    newVar.Type = parseData.GetDefinedType(DefinedVars[i].Type, DefinedVars[i].Location);
                 newVar.AccessLevel = DefinedVars[i].AccessLevel;
             }
 

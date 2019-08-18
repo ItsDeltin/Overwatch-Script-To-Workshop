@@ -7,18 +7,19 @@ using System.Diagnostics;
 using System.IO;
 using Antlr4.Runtime;
 using Deltin.Deltinteger.Parse;
+using Deltin.Deltinteger.LanguageServer;
 
 namespace Deltin.Deltinteger
 {
     public class SyntaxErrorException : Exception
     {
-        public Range Range { get; private set; }
+        public Location Location { get; }
 
         public bool TrackLocation { get; set; } = false;
 
-        public SyntaxErrorException(string message, Range range) : base(message)
+        public SyntaxErrorException(string message, Location location) : base(message)
         {
-            Range = range;
+            Location = location;
         }
 
         public string GetInfo() 
@@ -59,146 +60,146 @@ namespace Deltin.Deltinteger
         public const string selfImport           = "Can't import own file.";
         #endregion
 
-        public static SyntaxErrorException StringParameterCount(int parameterIndex, int parameterCount, Range range)
+        public static SyntaxErrorException StringParameterCount(int parameterIndex, int parameterCount, Location location)
         {
             return new SyntaxErrorException(
                 string.Format(SyntaxErrorException.parameterCount, parameterIndex, parameterCount),
-                range
+                location
             );
         }
 
-        public static SyntaxErrorException StringParseFailed(string str, Range range)
+        public static SyntaxErrorException StringParseFailed(string str, Location location)
         {
             return new SyntaxErrorException(
                 string.Format(stringParse, str),
-                range
+                location
             );
         }
 
-        public static SyntaxErrorException InvalidString(string str, Range range)
+        public static SyntaxErrorException InvalidString(string str, Location location)
         {
             return new SyntaxErrorException(
                 string.Format(invalidString, str),
-                range
+                location
             );
         }
 
-        public static SyntaxErrorException NonexistentMethod(string name, Range range)
+        public static SyntaxErrorException NonexistentMethod(string name, Location location)
         {
             return new SyntaxErrorException(
                 string.Format(methodDoesntExist, name),
-                range
+                location
             );
         }
 
-        public static SyntaxErrorException MissingParameter(string parameterName, string methodName, Range range)
+        public static SyntaxErrorException MissingParameter(string parameterName, string methodName, Location location)
         {
             return new SyntaxErrorException(
                 string.Format(missingParameter, parameterName, methodName),
-                range
+                location
             );
         }
     
-        public static SyntaxErrorException VariableDoesNotExist(string variableName, Range range)
+        public static SyntaxErrorException VariableDoesNotExist(string variableName, Location location)
         {
             return new SyntaxErrorException(
                 string.Format(variableDoesNotExist, variableName),
-                range
+                location
             );
         }
 
-        public static SyntaxErrorException AlreadyDefined(string variableName, Range range)
+        public static SyntaxErrorException AlreadyDefined(string variableName, Location location)
         {
             return new SyntaxErrorException(
                 string.Format(alreadyDefined, variableName),
-                range
+                location
             );
         }
 
-        public static SyntaxErrorException InvalidMethodType(bool needsToBeValue, string methodName, Range range)
+        public static SyntaxErrorException InvalidMethodType(bool needsToBeValue, string methodName, Location location)
         {
             string err = needsToBeValue? mustBeValue : mustBeAction;
             return new SyntaxErrorException(
                 string.Format(err, methodName),
-                range
+                location
             );
         }
 
-        public static SyntaxErrorException RecursionNotAllowed(Range range)
+        public static SyntaxErrorException RecursionNotAllowed(Location location)
         {
             return new SyntaxErrorException(
                 recursionNotAllowed,
-                range
+                location
             );
         }
 
-        public static SyntaxErrorException EnumCantBeValue(string @enum, Range range)
+        public static SyntaxErrorException EnumCantBeValue(string @enum, Location location)
         {
             return new SyntaxErrorException(
                 string.Format(enumCantBeValue, @enum),
-                range
+                location
             );
         }
 
-        public static SyntaxErrorException TooManyParameters(string methodName, int parameterCount, int gotCount, Range range)
+        public static SyntaxErrorException TooManyParameters(string methodName, int parameterCount, int gotCount, Location location)
         {
             return new SyntaxErrorException(
                 string.Format(tooManyParameters, methodName, parameterCount, gotCount),
-                range
+                location
             );
         }
     
-        public static SyntaxErrorException NotAConstructor(TypeKind typeKind, string typeName, int parameterCount, Range range)
+        public static SyntaxErrorException NotAConstructor(TypeKind typeKind, string typeName, int parameterCount, Location location)
         {
             return new SyntaxErrorException(
                 string.Format(notAConstructor, typeKind.ToString().ToLower(), typeName, parameterCount),
-                range
+                location
             );
         }
     
-        public static SyntaxErrorException ConstructorName(Range range)
+        public static SyntaxErrorException ConstructorName(Location location)
         {
-            return new SyntaxErrorException(constructorName, range);
+            return new SyntaxErrorException(constructorName, location);
         }
     
-        public static SyntaxErrorException ExpectedEnumGotValue(string enumName, Range range)
+        public static SyntaxErrorException ExpectedEnumGotValue(string enumName, Location location)
         {
-            return new SyntaxErrorException(string.Format(expectedEnumGotValue, enumName), range);
+            return new SyntaxErrorException(string.Format(expectedEnumGotValue, enumName), location);
         }
     
-        public static SyntaxErrorException VariableIsReadonly(string variableName, Range range)
+        public static SyntaxErrorException VariableIsReadonly(string variableName, Location location)
         {
-            return new SyntaxErrorException(string.Format(variableIsReadonly, variableName), range);
+            return new SyntaxErrorException(string.Format(variableIsReadonly, variableName), location);
         }
     
-        public static SyntaxErrorException ExpectedVariable(Range range)
+        public static SyntaxErrorException ExpectedVariable(Location location)
         {
-            return new SyntaxErrorException(expectedVariable, range);
+            return new SyntaxErrorException(expectedVariable, location);
         }
     
-        public static SyntaxErrorException NonexistentType(string typeName, Range range)
+        public static SyntaxErrorException NonexistentType(string typeName, Location location)
         {
-            return new SyntaxErrorException(string.Format(typeDoesNotExist, typeName), range);
+            return new SyntaxErrorException(string.Format(typeDoesNotExist, typeName), location);
         }
     
-        public static SyntaxErrorException ThisCantBeUsed(Range range)
+        public static SyntaxErrorException ThisCantBeUsed(Location location)
         {
-            throw new SyntaxErrorException(thisCantBeUsed, range);
+            throw new SyntaxErrorException(thisCantBeUsed, location);
         }
     
-        public static SyntaxErrorException ImportFileNotFound(string fullPath, Range range)
+        public static SyntaxErrorException ImportFileNotFound(string fullPath, Location location)
         {
-            return new SyntaxErrorException(string.Format(importFileNotFound, fullPath), range);
+            return new SyntaxErrorException(string.Format(importFileNotFound, fullPath), location);
         }
     
-        public static SyntaxErrorException InvalidImportPathChars(string path, Range range)
+        public static SyntaxErrorException InvalidImportPathChars(string path, Location location)
         {
-            return new SyntaxErrorException(string.Format(invalidPathChars, path), range);
+            return new SyntaxErrorException(string.Format(invalidPathChars, path), location);
         }
 
-        public static SyntaxErrorException SelfImport(Range range)
+        public static SyntaxErrorException SelfImport(Location location)
         {
-            return new SyntaxErrorException(selfImport, range);
+            return new SyntaxErrorException(selfImport, location);
         }
     }
 }

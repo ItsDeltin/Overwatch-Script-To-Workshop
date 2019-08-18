@@ -97,7 +97,7 @@ namespace Deltin.Deltinteger.Elements
     [Parameter("Header", ValueType.Any, typeof(V_String))]
     [Parameter("Subheader", ValueType.Any, typeof(V_Null))]
     [Parameter("Text", ValueType.Any, typeof(V_Null))]
-    [EnumParameter("Location", typeof(Location))]
+    [EnumParameter("Location", typeof(HudLocation))]
     [Parameter("Sort Order", ValueType.Number, typeof(V_Number))]
     [EnumParameter("Header Color", typeof(Color))]
     [EnumParameter("Subheader Color", typeof(Color))]
