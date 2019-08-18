@@ -63,7 +63,7 @@ namespace Deltin.Deltinteger.Parse
             if (PlayerLoop.Used)
                 Rules.Add(PlayerLoop.Finalize());
 
-            Success = Diagnostics.ContainsErrors();
+            Success = !Diagnostics.ContainsErrors();
         }
 
         private RulesetNode GetRuleset(string file, string content)
