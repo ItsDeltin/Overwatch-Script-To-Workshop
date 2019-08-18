@@ -65,10 +65,9 @@ namespace Deltin.Deltinteger.Parse
 
         public void PrintDiagnostics(Log log)
         {
-            #warning print file
             foreach (var fileDiagnostics in diagnostics.ToArray())
                 foreach (var diag in fileDiagnostics.Value.OrderBy(diag => diag.severity))
-                    log.Write(LogLevel.Normal, new ColorMod(diag.ToString(), GetDiagnosticColor(diag.severity)));
+                    log.Write(LogLevel.Normal, new ColorMod(diag.Info(fileDiagnostics.Key), GetDiagnosticColor(diag.severity)));
         }
 
         public void AddFile(string file)

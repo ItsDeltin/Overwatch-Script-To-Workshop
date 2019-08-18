@@ -569,6 +569,10 @@ namespace Deltin.Deltinteger.LanguageServer
         {
             return $"{DiagnosticSeverityText()} at {range.start.ToString()}: " + message;
         }
+        public string Info(string file)
+        {
+            return $"{System.IO.Path.GetFileName(file)}: {DiagnosticSeverityText()} at {range.start.ToString()}: " + message;
+        }
 
         private string DiagnosticSeverityText()
         {
