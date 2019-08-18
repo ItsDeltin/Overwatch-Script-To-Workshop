@@ -227,6 +227,9 @@ namespace Deltin.Deltinteger.LanguageServer
                             // Get custom methods
                             if (parserData.UserMethods != null)
                                 completion.AddRange(UserMethod.CollectionCompletion(parserData.UserMethods.ToArray()));
+                            // Get structs
+                            if (parserData.DefinedTypes != null)
+                                completion.AddRange(DefinedType.CollectionCompletion(parserData.DefinedTypes.ToArray()));
                         }
 
                         break;
