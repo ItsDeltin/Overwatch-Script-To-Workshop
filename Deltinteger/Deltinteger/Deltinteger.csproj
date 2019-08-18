@@ -102,7 +102,6 @@
     <Compile Include="Elements\Enums.cs" />
     <Compile Include="Custom Methods\CustomMethods.cs" />
     <Compile Include="Custom Methods\AngleOfVectors.cs" />
-    <Compile Include="Custom Methods\AngleOfVectorsCom.cs" />
     <Compile Include="Custom Methods\ChaseVariable.cs" />
     <Compile Include="Custom Methods\GetMap.cs" />
     <Compile Include="Custom Methods\MinWait.cs" />
