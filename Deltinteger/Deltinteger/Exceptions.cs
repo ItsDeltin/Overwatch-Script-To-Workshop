@@ -55,6 +55,8 @@ namespace Deltin.Deltinteger
         public const string thisCantBeUsed       = "The 'this' keyword cannot be used here.";
         public const string importFileNotFound   = "The file '{0}' could not be found.";
         public const string invalidPathChars     = "The path '{0}' contains invalid characters.";
+        public const string alreadyImported      = "The file '{0}' was already imported.";
+        public const string selfImport           = "Can't import own file.";
         #endregion
 
         public static SyntaxErrorException StringParameterCount(int parameterIndex, int parameterCount, Range range)
@@ -192,6 +194,11 @@ namespace Deltin.Deltinteger
         public static SyntaxErrorException InvalidImportPathChars(string path, Range range)
         {
             return new SyntaxErrorException(string.Format(invalidPathChars, path), range);
+        }
+
+        public static SyntaxErrorException SelfImport(Range range)
+        {
+            return new SyntaxErrorException(selfImport, range);
         }
     }
 }

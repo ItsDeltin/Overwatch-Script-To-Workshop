@@ -102,12 +102,18 @@ namespace Deltin.Deltinteger.Parse
 
         private void GetObjects(string document, string referenceFile, TranslateRule globalTranslate, TranslateRule playerTranslate)
         {
+            // If this file was already loaded, don't load it again.
+            if (Imported.Contains(referenceFile)) return;
+            Imported.Add(referenceFile);
+
+            // Get the ruleset.
             RulesetNode ruleset = GetRuleset(document);
-            if (RuleSetNode == null)
-                RuleSetNode = ruleset;
 
             if (ruleset != null)
             {
+                if (RuleSetNode == null)
+                    RuleSetNode = ruleset;
+
                 // Get the defined types
                 foreach (var definedType in ruleset.DefinedTypes)
                     try
@@ -164,28 +170,44 @@ namespace Deltin.Deltinteger.Parse
                 // Get the rules
                 RuleNodes.AddRange(ruleset.Rules);
 
+                List<string> importedFiles = new List<string>();
+
                 // Check the imported files.
                 foreach (ImportNode importNode in ruleset.Imports)
                     try
                     {
-                        string directory = Path.GetDirectoryName(referenceFile);
-                        string combined = Path.Combine(directory, importNode.File);
+                        string fileName = Path.GetFileName(importNode.File);
                         string uri;
                         try
                         {
+                            string directory = Path.GetDirectoryName(referenceFile);
+                            string combined = Path.Combine(directory, importNode.File);
                             uri = Path.GetFullPath(combined);
                         }
                         catch (ArgumentException)
                         {
+                            // ArgumentException is thrown if the filename has invalid characters.
                             throw SyntaxErrorException.InvalidImportPathChars(importNode.File, importNode.Range);
                         }
 
+                        if (referenceFile == uri)
+                            throw SyntaxErrorException.SelfImport(importNode.Range);
+
+                        // Syntax error if the file does not exist.
                         if (!File.Exists(uri))
                             throw SyntaxErrorException.ImportFileNotFound(uri, importNode.Range);
 
-                        string content = File.ReadAllText(uri);
-                        
-                        GetObjects(content, uri, globalTranslate, playerTranslate);
+                        // Warning if the file was already imported.
+                        if (importedFiles.Contains(uri))
+                        {
+                            Diagnostics.Warning(string.Format(SyntaxErrorException.alreadyImported, fileName), importNode.Range);
+                        }
+                        else
+                        {
+                            string content = File.ReadAllText(uri);
+                            GetObjects(content, uri, globalTranslate, playerTranslate);
+                            importedFiles.Add(uri);
+                        }
                     }
                     catch (SyntaxErrorException ex)
                     {
@@ -206,6 +228,7 @@ namespace Deltin.Deltinteger.Parse
         private Looper GlobalLoop { get; set; }
         private Looper PlayerLoop { get; set; }
         private string URI { get; set; }
+        private List<string> Imported { get; } = new List<string>();
 
         public IMethod GetMethod(string name)
         {
