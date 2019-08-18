@@ -11,9 +11,9 @@ namespace Deltin.Deltinteger.Elements
             return new MethodResult(new Element[] { A_Wait.MinimumWait }, null);
         }
 
-        public override WikiMethod Wiki()
+        public override CustomMethodWiki Wiki()
         {
-            return new WikiMethod("MinWait", "Waits for " + Constants.MINIMUM_WAIT + " milliseconds.", null);
+            return new CustomMethodWiki("Waits for " + Constants.MINIMUM_WAIT + " milliseconds.");
         }
     }
 }

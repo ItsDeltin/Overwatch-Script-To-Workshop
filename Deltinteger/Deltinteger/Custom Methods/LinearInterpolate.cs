@@ -21,9 +21,15 @@ namespace Deltin.Deltinteger.Elements
             return new MethodResult(null, Element.Part<V_Add>(p1, p2));
         }
 
-        public override WikiMethod Wiki()
+        public override CustomMethodWiki Wiki()
         {
-            return new WikiMethod("LinearInterpolate", "A point a fraction along the distance between 2 points.", null);
+            return new CustomMethodWiki(
+                "A point a fraction along the distance between 2 points.",
+                // Parameters
+                "The first point.",
+                "The second point.",
+                "The fraction. 0 will return the first point, 1 will return the second point."
+            );
         }
     }
 
@@ -50,9 +56,15 @@ namespace Deltin.Deltinteger.Elements
             return new MethodResult(actions, Element.Part<V_Add>(p1, p2));
         }
 
-        public override WikiMethod Wiki()
+        public override CustomMethodWiki Wiki()
         {
-            return new WikiMethod("OptimisedLinearInterpolate", "A point a fraction along the distance between 2 points. This method does not work in conditions.", null);
+            return new CustomMethodWiki(
+                "A point a fraction along the distance between 2 points.",
+                // Parameters
+                "The first point.",
+                "The second point.",
+                "The fraction. 0 will return the first point, 1 will return the second point."
+            );
         }
     }
 
@@ -73,9 +85,15 @@ namespace Deltin.Deltinteger.Elements
             return new MethodResult(null, Element.Part<V_Add>(p1, p2));
         }
 
-        public override WikiMethod Wiki()
+        public override CustomMethodWiki Wiki()
         {
-            return new WikiMethod("LinearInterpolateDistance", "A point a distance along a straight line between 2 points.", null);
+            return new CustomMethodWiki(
+                "A point a distance along a straight line between 2 points.",
+                // Parameters
+                "The first point.",
+                "The second point.",
+                "The distance."
+            );
         }
     }
 
@@ -104,9 +122,15 @@ namespace Deltin.Deltinteger.Elements
             return new MethodResult(actions, Element.Part<V_Add>(p1, p2));
         }
 
-        public override WikiMethod Wiki()
+        public override CustomMethodWiki Wiki()
         {
-            return new WikiMethod("OptimisedLinearInterpolateDistance", "A point a distance along a straight line between 2 points. This method does not work in conditions.", null);
+            return new CustomMethodWiki(
+                "A point a distance along a straight line between 2 points.",
+                // Parameters
+                "The first point.",
+                "The second point.",
+                "The distance."
+            );
         }
     }
 }

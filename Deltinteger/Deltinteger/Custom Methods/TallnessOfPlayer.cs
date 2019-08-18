@@ -14,9 +14,9 @@ namespace Deltin.Deltinteger.Elements
             return new MethodResult(null, Element.Part<V_Subtract>(Element.Part<V_YOf>(eyepos), Element.Part<V_YOf>(feetpos)));
         }
 
-        public override WikiMethod Wiki()
+        public override CustomMethodWiki Wiki()
         {
-            return new WikiMethod("TallnessOfPlayer", "The height of the player measured from feet to eyes.", null);
+            return new CustomMethodWiki("The height of the player measured from feet to eyes.");
         }
     }
 }

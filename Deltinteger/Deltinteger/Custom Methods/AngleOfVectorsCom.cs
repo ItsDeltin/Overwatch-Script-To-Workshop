@@ -72,9 +72,9 @@ namespace Deltin.Deltinteger.Elements
             return new MethodResult(null, result);
         }
     
-        public override WikiMethod Wiki()
+        public override CustomMethodWiki Wiki()
         {
-            return new WikiMethod("AngleOfVectorsCom", "Gets the angle of 3 vectors in 3d space.", null);
+            return new CustomMethodWiki("Gets the angle of 3 vectors in 3d space.");
         }
     }
 }

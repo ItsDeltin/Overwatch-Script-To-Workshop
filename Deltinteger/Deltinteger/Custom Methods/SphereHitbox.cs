@@ -32,9 +32,15 @@ namespace Deltin.Deltinteger.Elements
             return new MethodResult(null, compare);
         }
 
-        public override WikiMethod Wiki()
+        public override CustomMethodWiki Wiki()
         {
-            return new WikiMethod("SphereHitbox", "Whether the given player is looking directly at a sphere with collision.", null);
+            return new CustomMethodWiki(
+                "Whether the given player is looking directly at a sphere with collision.",
+                // Parameters
+                "The player.",
+                "The position of the sphere.",
+                "The radius of the sphere."
+            );
         }
     }
 
@@ -74,9 +80,15 @@ namespace Deltin.Deltinteger.Elements
             return new MethodResult(actions, compare);
         }
 
-        public override WikiMethod Wiki()
+        public override CustomMethodWiki Wiki()
         {
-            return new WikiMethod("OptimisedSphereHitbox", "Whether the given player is looking directly at a sphere with collision. This method does not work in conditions.", null);
+            return new CustomMethodWiki(
+                "Whether the given player is looking directly at a sphere with collision.",
+                // Parameters
+                "The player.",
+                "The position of the sphere.",
+                "The radius of the sphere."
+            );
         }
     }
 }

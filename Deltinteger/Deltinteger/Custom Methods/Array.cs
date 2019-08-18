@@ -21,9 +21,11 @@ namespace Deltin.Deltinteger.Elements
             return new MethodResult(null, Element.TernaryConditional(condition, consequent, alternative));
         }
 
-        public override WikiMethod Wiki()
+        public override CustomMethodWiki Wiki()
         {
-            return new WikiMethod("BlendedIndex", "Allows you to get a value from an array using a non-integer index. Only works on data types that can have math operations performed upon them.", null);
+            return new CustomMethodWiki(
+                "Allows you to get a value from an array using a non-integer index. Only works on data types that can have math operations performed upon them."
+            );
         }
     }
 
@@ -52,9 +54,11 @@ namespace Deltin.Deltinteger.Elements
             return new MethodResult(actions, Element.TernaryConditional(condition, consequent, alternative));
         }
 
-        public override WikiMethod Wiki()
+        public override CustomMethodWiki Wiki()
         {
-            return new WikiMethod("OptimisedBlendedIndex", "Allows you to get a value from an array using a non-integer index. Only works on data types that can have math operations performed upon them. This method can not be used in a condition.", null);
+            return new CustomMethodWiki(
+                "Allows you to get a value from an array using a non-integer index. Only works on data types that can have math operations performed upon them."
+            );
         }
     }
 
@@ -69,9 +73,13 @@ namespace Deltin.Deltinteger.Elements
             return new MethodResult(null, min);
         }
 
-        public override WikiMethod Wiki()
+        public override CustomMethodWiki Wiki()
         {
-            return new WikiMethod("MinOfArray", "The lowest value of an array.", null);
+            return new CustomMethodWiki(
+                "The lowest value of an array.",
+                // Parameters
+                "The array to get the lowest value from."
+            );
         }
     }
 
@@ -86,9 +94,13 @@ namespace Deltin.Deltinteger.Elements
             return new MethodResult(null, max);
         }
 
-        public override WikiMethod Wiki()
+        public override CustomMethodWiki Wiki()
         {
-            return new WikiMethod("MaxOfArray", "The highest value of an array.", null);
+            return new CustomMethodWiki(
+                "The highest value of an array.",
+                // Parameters
+                "The array to get the highest value from."
+            );
         }
     }
 
@@ -104,9 +116,13 @@ namespace Deltin.Deltinteger.Elements
             return new MethodResult(null, Element.Part<V_Subtract>(max, min));
         }
 
-        public override WikiMethod Wiki()
+        public override CustomMethodWiki Wiki()
         {
-            return new WikiMethod("RangeOfArray", "The highest value of an array subtracted by its lowest value.", null);
+            return new CustomMethodWiki(
+                "The highest value of an array subtracted by its lowest value.",
+                // Parameters
+                "The array to get the range from."
+            );
         }
     }
 
@@ -128,9 +144,13 @@ namespace Deltin.Deltinteger.Elements
             return new MethodResult(actions, Element.Part<V_Subtract>(max, min));
         }
 
-        public override WikiMethod Wiki()
+        public override CustomMethodWiki Wiki()
         {
-            return new WikiMethod("OptimisedRangeOfArray", "The highest value of an array subtracted by its lowest value. This method does not work in conditions.", null);
+            return new CustomMethodWiki(
+                "The highest value of an array subtracted by its lowest value.",
+                // Parameters
+                "The array to get the range from."
+            );
         }
     }
 
@@ -149,9 +169,13 @@ namespace Deltin.Deltinteger.Elements
             return new MethodResult(null, Element.TernaryConditional(condition, consequent, alternative));
         }
 
-        public override WikiMethod Wiki()
+        public override CustomMethodWiki Wiki()
         {
-            return new WikiMethod("SortedMedian", "The median of an array that has already been sorted.", null);
+            return new CustomMethodWiki(
+                "The median of an array that has already been sorted.",
+                // Parameters
+                "The array to get the median from."
+            );
         }
     }
 
@@ -178,9 +202,13 @@ namespace Deltin.Deltinteger.Elements
             return new MethodResult(actions, Element.TernaryConditional(condition, consequent, alternative));
         }
 
-        public override WikiMethod Wiki()
+        public override CustomMethodWiki Wiki()
         {
-            return new WikiMethod("OptimisedSortedMedian", "The median of an array that has already been sorted. This method does not work in conditions.", null);
+            return new CustomMethodWiki(
+                "The median of an array that has already been sorted.",
+                // Parameters
+                "The array to get the median from."
+            );
         }
     }
 
@@ -199,9 +227,13 @@ namespace Deltin.Deltinteger.Elements
             return new MethodResult(null, Element.TernaryConditional(condition, consequent, alternative));
         }
 
-        public override WikiMethod Wiki()
+        public override CustomMethodWiki Wiki()
         {
-            return new WikiMethod("UnsortedMedian", "The median of an array that has not been sorted yet.", null);
+            return new CustomMethodWiki(
+                "The median of an array that has not been sorted yet.",
+                // Parameters
+                "The array to get the median from."
+            );
         }
     }
 
@@ -228,9 +260,13 @@ namespace Deltin.Deltinteger.Elements
             return new MethodResult(actions, Element.TernaryConditional(condition, consequent, alternative));
         }
 
-        public override WikiMethod Wiki()
+        public override CustomMethodWiki Wiki()
         {
-            return new WikiMethod("OptimisedUnsortedMedian", "The median of an array that has not been sorted yet. This method does not work in conditions.", null);
+            return new CustomMethodWiki(
+                "The median of an array that has not been sorted yet.",
+                // Parameters
+                "The array to get the median from."
+            );
         }
     }
 }

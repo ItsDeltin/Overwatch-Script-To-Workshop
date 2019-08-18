@@ -26,15 +26,14 @@ namespace Deltin.Deltinteger.Elements
             );
         }
 
-        public override WikiMethod Wiki()
+        public override CustomMethodWiki Wiki()
         {
-            return new WikiMethod("InsertValueInArray", "Inserts a value into an array.",
-                new WikiParameter[]
-                {
-                    new WikiParameter("Array", "The array to modify."),
-                    new WikiParameter("Index", "Where to insert the value."),
-                    new WikiParameter("Value", "The value to insert.")
-                }
+            return new CustomMethodWiki(
+                "Inserts a value into an array.",
+                // Parameters
+                "The array to modify.",
+                "Where to insert the value.",
+                "The value to insert."
             );
         }
     }

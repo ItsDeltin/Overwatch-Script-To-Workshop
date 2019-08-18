@@ -21,14 +21,13 @@ namespace Deltin.Deltinteger.Elements
             );
         }
 
-        public override WikiMethod Wiki()
+        public override CustomMethodWiki Wiki()
         {
-            return new WikiMethod("RemoveFromArrayAtIndex", "Removes a value from an array by it's index.",
-                new WikiParameter[]
-                {
-                    new WikiParameter("Array", "The array to modify."),
-                    new WikiParameter("Index", "The index to remove.")
-                }
+            return new CustomMethodWiki(
+                "Removes a value from an array by its index.",
+                // Parameters
+                "The array to modify.",
+                "The index to remove."
             );
         }
     }

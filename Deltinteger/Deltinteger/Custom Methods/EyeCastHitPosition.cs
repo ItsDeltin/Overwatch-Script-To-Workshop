@@ -27,9 +27,14 @@ namespace Deltin.Deltinteger.Elements
             return new MethodResult(null, raycast);
         }
 
-        public override WikiMethod Wiki()
+        public override CustomMethodWiki Wiki()
         {
-            return new WikiMethod("EyeCastHitPosition", "Casts a ray in the direction the player is facing with a certain range.", null);
+            return new CustomMethodWiki(
+                "Casts a ray in the direction the player is facing with a certain range.",
+                // Parameters
+                "The player to perform the raycast.",
+                "The range of the raycast."
+            );
         }
     }
 
@@ -63,9 +68,14 @@ namespace Deltin.Deltinteger.Elements
             return new MethodResult(actions, raycast);
         }
 
-        public override WikiMethod Wiki()
+        public override CustomMethodWiki Wiki()
         {
-            return new WikiMethod("OptimisedEyeCastHitPosition", "Casts a ray in the direction the player is facing with a certain range. This method does not work in conditions.", null);
+            return new CustomMethodWiki(
+                "Casts a ray in the direction the player is facing with a certain range.",
+                // Parameters
+                "The player to perform the raycast.",
+                "The range of the raycast."
+            );
         }
     }
 }

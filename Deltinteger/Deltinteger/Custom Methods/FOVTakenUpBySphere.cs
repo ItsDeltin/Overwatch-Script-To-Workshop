@@ -16,9 +16,14 @@ namespace Deltin.Deltinteger.Elements
             return new MethodResult(null, Element.Part<V_Multiply>(angle, new V_Number(2)));
         }
 
-        public override WikiMethod Wiki()
+        public override CustomMethodWiki Wiki()
         {
-            return new WikiMethod("FOVTakenUpBySphere", "The angle of field of view a sphere will take up at a specific distance from an eye.", null);
+            return new CustomMethodWiki(
+                "The angle of field of view a sphere will take up at a specific distance from an eye.",
+                // Parameters
+                "The distance to the center of the sphere.",
+                "The radius of the sphere."
+            );
         }
     }
 }

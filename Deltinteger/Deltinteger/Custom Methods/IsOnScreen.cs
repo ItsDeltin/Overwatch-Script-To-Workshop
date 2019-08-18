@@ -20,9 +20,15 @@ namespace Deltin.Deltinteger.Elements
             return new MethodResult(null, Element.Part<V_And>(los, angle));
         }
 
-        public override WikiMethod Wiki()
+        public override CustomMethodWiki Wiki()
         {
-            return new WikiMethod("IsOnScreen", "Whether a point is visible on a players screen or not.", null);
+            return new CustomMethodWiki(
+                "Whether a point is visible on a players screen or not.",
+                // Parameters
+                "The target player.",
+                "The point to check.",
+                "The FOV of the player."
+            );
         }
     }
 
@@ -50,9 +56,15 @@ namespace Deltin.Deltinteger.Elements
             return new MethodResult(actions, Element.Part<V_And>(los, angle));
         }
 
-        public override WikiMethod Wiki()
+        public override CustomMethodWiki Wiki()
         {
-            return new WikiMethod("OptimisedIsOnScreen", "Whether a point is visible on a players screen or not. This method does not work in conditions.", null);
+            return new CustomMethodWiki(
+                "Whether a point is visible on a players screen or not.",
+                // Parameters
+                "The target player.",
+                "The point to check.",
+                "The FOV of the player."
+            );
         }
     }
 }

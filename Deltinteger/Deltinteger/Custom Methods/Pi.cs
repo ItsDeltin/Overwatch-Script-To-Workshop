@@ -11,9 +11,9 @@ namespace Deltin.Deltinteger.Elements
             return new MethodResult(null, new V_Number(Math.PI));
         }
 
-        public override WikiMethod Wiki()
+        public override CustomMethodWiki Wiki()
         {
-            return new WikiMethod("Pi", "Represents the ratio of the circumference of a circle to its diameter, specified by the constant π. Equal to " + Math.PI, null);
+            return new CustomMethodWiki("Represents the ratio of the circumference of a circle to its diameter, specified by the constant π. Equal to " + Math.PI);
         }
     }
 }

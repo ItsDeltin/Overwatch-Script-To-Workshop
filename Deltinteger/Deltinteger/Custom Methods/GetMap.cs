@@ -171,9 +171,9 @@ namespace Deltin.Deltinteger.Elements
             return new MethodResult(actions, temp.GetVariable());
         }
     
-        public override WikiMethod Wiki()
+        public override CustomMethodWiki Wiki()
         {
-            return new WikiMethod("GetMap", "Gets the current map. The result can be compared with the Map enum. This method does not work in conditions.", null);
+            return new CustomMethodWiki("Gets the current map. The result can be compared with the Map enum.");
         }
     }
 }

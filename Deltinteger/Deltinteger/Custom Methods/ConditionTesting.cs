@@ -7,6 +7,7 @@ namespace Deltin.Deltinteger.Elements
     abstract class TestCondition : CustomMethodBase
     {
         protected bool TestingIfTrue;
+        private string Name { get; }
 
         protected TestCondition(bool testingIfTrue)
         {
@@ -46,12 +47,10 @@ namespace Deltin.Deltinteger.Elements
                 return new MethodResult(actions, Element.Part<V_Not>(result.GetVariable()));
         }
 
-        public override WikiMethod Wiki()
+        public override CustomMethodWiki Wiki()
         {
-            return new WikiMethod(Name, $"Determines if the condition is {TestingIfTrue.ToString().ToLower()}. Has a {Constants.MINIMUM_WAIT} second delay.", null);
+            return new CustomMethodWiki($"Determines if the condition is {TestingIfTrue.ToString().ToLower()}. Has a {Constants.MINIMUM_WAIT} second delay.");
         }
-
-        private string Name { get; }
     }
 
     [CustomMethod("IsConditionTrue", CustomMethodType.MultiAction_Value)]

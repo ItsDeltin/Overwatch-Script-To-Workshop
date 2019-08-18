@@ -26,15 +26,14 @@ namespace Deltin.Deltinteger.Elements
             return new MethodResult(actions, null);
         }
     
-        public override WikiMethod Wiki()
+        public override CustomMethodWiki Wiki()
         {
-            return new WikiMethod("ChaseVariable", "Chases a variable to a value. Works with numbers and vectors.", 
-                new WikiParameter[]
-                {
-                    new WikiParameter("Variable", "Variable that will chase the destination."),
-                    new WikiParameter("Destination", "The final variable destination. Can be a number or vector."),
-                    new WikiParameter("Rate", "The chase speed per second.")
-                }
+            return new CustomMethodWiki(
+                "Chases a variable to a value. Works with numbers and vectors.",
+                // Parameters
+                /* Variable    */ "Variable that will chase the destination.", 
+                /* Destination */ "The final variable destination. Can be a number or vector.",
+                /* Rate        */ "The chase speed per second."
             );
         }
     }
@@ -57,13 +56,12 @@ namespace Deltin.Deltinteger.Elements
             return new MethodResult(actions, null);
         }
     
-        public override WikiMethod Wiki()
+        public override CustomMethodWiki Wiki()
         {
-            return new WikiMethod("StopChasingVariable", "Stops chasing a variable.", 
-                new WikiParameter[]
-                {
-                    new WikiParameter("Variable", "Variable that will no longer be chasing."),
-                }
+            return new CustomMethodWiki(
+                "Stops chasing a variable.", 
+                // Parameters
+                "Variable that will no longer be chasing."
             );
         }
     }

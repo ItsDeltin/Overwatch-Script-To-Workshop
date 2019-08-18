@@ -15,9 +15,14 @@ namespace Deltin.Deltinteger.Elements
             return new MethodResult(null, Element.Part<V_Divide>(Element.Part<V_Add>(point1, point2), new V_Number(2)));
         }
 
-        public override WikiMethod Wiki()
+        public override CustomMethodWiki Wiki()
         {
-            return new WikiMethod("Midpoint", "The midpoint between 2 vectors.", null);
+            return new CustomMethodWiki(
+                "The midpoint between 2 vectors.",
+                // Parameters
+                "The first point.",
+                "The second point."
+            );
         }
     }
 }

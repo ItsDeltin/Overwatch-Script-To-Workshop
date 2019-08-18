@@ -65,7 +65,29 @@ namespace Deltin.Deltinteger.Elements
             Parameters = type.GetCustomAttributes<ParameterBase>()
                 .ToArray();
             
-            Wiki = GetObject().Wiki();
+            CustomMethodWiki cmWiki = GetObject().Wiki();
+            if (cmWiki != null)
+            {
+                WikiParameter[] parameters = null;
+
+                if (cmWiki.ParameterDescriptions != null)
+                {
+                    parameters = new WikiParameter[cmWiki.ParameterDescriptions.Length];
+                    for (int i = 0; i < parameters.Length; i++)
+                        parameters[i] = new WikiParameter(Parameters[i].Name, cmWiki.ParameterDescriptions[i]);
+                }
+
+                string description = cmWiki.Description;
+                if (CustomMethodType == CustomMethodType.MultiAction_Value)
+                {
+                    if (description != null)
+                        description += "\nThis method cannot be used in conditions.";
+                    else
+                        description = "This method cannot be used in conditions.";
+                }
+
+                Wiki = new WikiMethod(Name, description, parameters);
+            }
         }
 
         public CustomMethodBase GetObject(TranslateRule context, ScopeGroup scope, IWorkshopTree[] parameters)
@@ -135,6 +157,17 @@ namespace Deltin.Deltinteger.Elements
 
         protected abstract MethodResult Get();
 
-        public abstract WikiMethod Wiki();
+        public abstract CustomMethodWiki Wiki();
+    }
+
+    public class CustomMethodWiki
+    {
+        public string Description { get; }
+        public string[] ParameterDescriptions { get; }
+        public CustomMethodWiki(string description, params string[] parameterDescriptions)
+        {
+            Description = description;
+            ParameterDescriptions = parameterDescriptions;
+        }
     }
 }

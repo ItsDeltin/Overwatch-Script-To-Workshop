@@ -12,9 +12,9 @@ namespace Deltin.Deltinteger.Elements
             return new MethodResult(null, Element.Part<V_Divide>((Element)Parameters[0], new V_Number(180 / Math.PI)));
         }
 
-        public override WikiMethod Wiki()
+        public override CustomMethodWiki Wiki()
         {
-            return new WikiMethod("ToRadians", "Converts from degress to radians.", null);
+            return new CustomMethodWiki("Converts from degress to radians.");
         }
     }
 
@@ -27,9 +27,9 @@ namespace Deltin.Deltinteger.Elements
             return new MethodResult(null, Element.Part<V_Multiply>((Element)Parameters[0], new V_Number(180 / Math.PI)));
         }
 
-        public override WikiMethod Wiki()
+        public override CustomMethodWiki Wiki()
         {
-            return new WikiMethod("ToDegrees", "Converts from radians to degrees.", null);
+            return new CustomMethodWiki("Converts from radians to degrees.");
         }
     }
 }

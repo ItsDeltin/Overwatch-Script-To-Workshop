@@ -12,9 +12,9 @@ namespace Deltin.Deltinteger.Elements
             return new MethodResult(null, Element.Part<V_Multiply>((Element)Parameters[0], new V_Number(3.6)));
         }
 
-        public override WikiMethod Wiki()
+        public override CustomMethodWiki Wiki()
         {
-            return new WikiMethod("ToKPH", "Converts from meters per second to kilometers per hour.", null);
+            return new CustomMethodWiki("Converts from meters per second to kilometers per hour.");
         }
     }
 
@@ -27,9 +27,9 @@ namespace Deltin.Deltinteger.Elements
             return new MethodResult(null, Element.Part<V_Multiply>((Element)Parameters[0], new V_Number(2.237)));
         }
 
-        public override WikiMethod Wiki()
+        public override CustomMethodWiki Wiki()
         {
-            return new WikiMethod("ToMPH", "Converts from meters per second to miles per hour.", null);
+            return new CustomMethodWiki("Converts from meters per second to miles per hour.");
         }
     }
 
@@ -42,9 +42,9 @@ namespace Deltin.Deltinteger.Elements
             return new MethodResult(null, Element.Part<V_Multiply>((Element)Parameters[0], new V_Number(2.381)));
         }
 
-        public override WikiMethod Wiki()
+        public override CustomMethodWiki Wiki()
         {
-            return new WikiMethod("ToFt", "Converts from meters to feet.", null);
+            return new CustomMethodWiki("Converts from meters to feet.");
         }
     }
 
@@ -57,9 +57,9 @@ namespace Deltin.Deltinteger.Elements
             return new MethodResult(null, Element.Part<V_Multiply>((Element)Parameters[0], new V_Number(1.094)));
         }
 
-        public override WikiMethod Wiki()
+        public override CustomMethodWiki Wiki()
         {
-            return new WikiMethod("ToYards", "Converts from meters to yards.", null);
+            return new CustomMethodWiki("Converts from meters to yards.");
         }
     }
 
@@ -72,9 +72,9 @@ namespace Deltin.Deltinteger.Elements
             return new MethodResult(null, Element.Part<V_Multiply>((Element)Parameters[0], new V_Number(39.37)));
         }
 
-        public override WikiMethod Wiki()
+        public override CustomMethodWiki Wiki()
         {
-            return new WikiMethod("ToInches", "Converts meters to inches.", null);
+            return new CustomMethodWiki("Converts meters to inches.");
         }
     }
 }

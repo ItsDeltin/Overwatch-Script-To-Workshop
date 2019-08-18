@@ -19,9 +19,14 @@ namespace Deltin.Deltinteger.Elements
             return new MethodResult(null, Element.Part<V_SquareRoot>(sum));
         }
 
-        public override WikiMethod Wiki()
+        public override CustomMethodWiki Wiki()
         {
-            return new WikiMethod("HorizontalDistance", "The distance between 2 points as if they were on the same Y level.", null);
+            return new CustomMethodWiki(
+                "The distance between 2 points as if they were on the same Y level.",
+                // Parameters
+                "The first point.",
+                "The second point."
+            );
         }
     }
 
@@ -48,9 +53,14 @@ namespace Deltin.Deltinteger.Elements
             return new MethodResult(actions, Element.Part<V_SquareRoot>(sum));
         }
 
-        public override WikiMethod Wiki()
+        public override CustomMethodWiki Wiki()
         {
-            return new WikiMethod("OptimisedHorizontalDistance", "The distance between 2 points as if they were on the same Y level. This method does not work in conditions.", null);
+            return new CustomMethodWiki(
+                "The distance between 2 points as if they were on the same Y level.",
+                // Parameters
+                "The first point.",
+                "The second point."
+            );
         }
     }
 }

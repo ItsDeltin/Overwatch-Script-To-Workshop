@@ -121,9 +121,9 @@ namespace Deltin.Deltinteger.Elements
             return new MethodResult(actions, result);
         }
     
-        public override WikiMethod Wiki()
+        public override CustomMethodWiki Wiki()
         {
-            return new WikiMethod("AngleOfVectors", "Gets the angle of 3 vectors in 3d space.  This method does not work in conditions.", null);
+            return new CustomMethodWiki("Gets the angle of 3 vectors in 3d space.");
         }
     }
 }

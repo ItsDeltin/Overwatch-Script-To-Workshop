@@ -17,9 +17,15 @@ namespace Deltin.Deltinteger.Elements
             return new MethodResult(null, Element.Part<V_Add>(startingPoint, Element.Part<V_Multiply>(direction, distance)));
         }
 
-        public override WikiMethod Wiki()
+        public override CustomMethodWiki Wiki()
         {
-            return new WikiMethod("Destination", "Calculates a destination given a starting point, distance and direction", null);
+            return new CustomMethodWiki(
+                "Calculates a destination given a starting point, distance and direction",
+                // Parameters
+                "The starting point.",
+                "The direction to move.",
+                "The distance to move."
+            );
         }
     }
 }

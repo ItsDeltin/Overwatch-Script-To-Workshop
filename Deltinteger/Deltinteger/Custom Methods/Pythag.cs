@@ -18,9 +18,14 @@ namespace Deltin.Deltinteger.Elements
             return new MethodResult(null, Element.Part<V_SquareRoot>(sum));
         }
 
-        public override WikiMethod Wiki()
+        public override CustomMethodWiki Wiki()
         {
-            return new WikiMethod("Pythag", "Calculates the length of the longest side (hypotenuse) of a right angled triangle.", null);
+            return new CustomMethodWiki(
+                "Calculates the length of the longest side (hypotenuse) of a right angled triangle.",
+                // Parameters
+                "The first side.",
+                "The second side."
+            );
         }
     }
 
@@ -39,9 +44,14 @@ namespace Deltin.Deltinteger.Elements
             return new MethodResult(null, Element.Part<V_SquareRoot>(sum));
         }
 
-        public override WikiMethod Wiki()
+        public override CustomMethodWiki Wiki()
         {
-            return new WikiMethod("PythagConverse", "Calculates the missing side of a right angled triangle.", null);
+            return new CustomMethodWiki(
+                "Calculates the missing side of a right angled triangle.",
+                // Parameters
+                "The first side.",
+                "The hypotenuse."
+            );
         }
     }
 }
