@@ -1,4 +1,5 @@
 ﻿using System;
+using Deltin.Deltinteger.Parse;
 using Deltin.Deltinteger.WorkshopWiki;
 
 namespace Deltin.Deltinteger.Elements
@@ -16,12 +17,42 @@ namespace Deltin.Deltinteger.Elements
             Element fraction = (Element)Parameters[2];
             Element p1 = Element.Part<V_Multiply>(point1, Element.Part<V_Subtract>(new V_Number(1), fraction));
             Element p2 = Element.Part<V_Multiply>(point2, fraction);
+
             return new MethodResult(null, Element.Part<V_Add>(p1, p2));
         }
 
         public override WikiMethod Wiki()
         {
             return new WikiMethod("LinearInterpolate", "A point a fraction along the distance between 2 points.", null);
+        }
+    }
+
+    [CustomMethod("OptimisedLinearInterpolate", CustomMethodType.MultiAction_Value)]
+    [Parameter("point1", ValueType.Vector, null)]
+    [Parameter("point2", ValueType.Vector, null)]
+    [Parameter("fraction", ValueType.Number, null)]
+    class OptimisedLinearInterpolate : CustomMethodBase
+    {
+        protected override MethodResult Get()
+        {
+            IndexedVar fraction = TranslateContext.VarCollection.AssignVar(Scope, "OptimisedLinearInterpolate: fraction", TranslateContext.IsGlobal, null);
+
+            Element[] actions = ArrayBuilder<Element>.Build
+            (
+                fraction.SetVariable((Element)Parameters[2])
+            );
+
+            Element point1 = (Element)Parameters[0];
+            Element point2 = (Element)Parameters[1];
+            Element p1 = Element.Part<V_Multiply>(point1, Element.Part<V_Subtract>(new V_Number(1), fraction.GetVariable()));
+            Element p2 = Element.Part<V_Multiply>(point2, fraction.GetVariable());
+
+            return new MethodResult(actions, Element.Part<V_Add>(p1, p2));
+        }
+
+        public override WikiMethod Wiki()
+        {
+            return new WikiMethod("OptimisedLinearInterpolate", "A point a fraction along the distance between 2 points. This method does not work in conditions.", null);
         }
     }
 
@@ -45,6 +76,37 @@ namespace Deltin.Deltinteger.Elements
         public override WikiMethod Wiki()
         {
             return new WikiMethod("LinearInterpolateDistance", "A point a distance along a straight line between 2 points.", null);
+        }
+    }
+
+    [CustomMethod("OptimisedLinearInterpolateDistance", CustomMethodType.MultiAction_Value)]
+    [Parameter("point1", ValueType.Vector, null)]
+    [Parameter("point2", ValueType.Vector, null)]
+    [Parameter("distance", ValueType.Number, null)]
+    class OptimisedLinearInterpolateDistance : CustomMethodBase
+    {
+        protected override MethodResult Get()
+        {
+            IndexedVar fraction = TranslateContext.VarCollection.AssignVar(Scope, "OptimisedLinearInterpolateDistance: fraction", TranslateContext.IsGlobal, null);
+            IndexedVar point1 = TranslateContext.VarCollection.AssignVar(Scope, "OptimisedLinearInterpolateDistance: point1", TranslateContext.IsGlobal, null);
+            IndexedVar point2 = TranslateContext.VarCollection.AssignVar(Scope, "OptimisedLinearInterpolateDistance: point2", TranslateContext.IsGlobal, null);
+
+            Element[] actions = ArrayBuilder<Element>.Build
+            (
+                point1.SetVariable((Element)Parameters[0]),
+                point2.SetVariable((Element)Parameters[1]),
+                fraction.SetVariable(Element.Part<V_Divide>((Element)Parameters[2], Element.Part<V_DistanceBetween>(point1.GetVariable(), point2.GetVariable())))
+            ) ;
+
+            Element p1 = Element.Part<V_Multiply>(point1.GetVariable(), Element.Part<V_Subtract>(new V_Number(1), fraction.GetVariable()));
+            Element p2 = Element.Part<V_Multiply>(point2.GetVariable(), fraction.GetVariable());
+
+            return new MethodResult(actions, Element.Part<V_Add>(p1, p2));
+        }
+
+        public override WikiMethod Wiki()
+        {
+            return new WikiMethod("OptimisedLinearInterpolateDistance", "A point a distance along a straight line between 2 points. This method does not work in conditions.", null);
         }
     }
 }

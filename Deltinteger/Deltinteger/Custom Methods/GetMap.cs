@@ -173,7 +173,7 @@ namespace Deltin.Deltinteger.Elements
     
         public override WikiMethod Wiki()
         {
-            return new WikiMethod("GetMap", "Gets the current map. The result can be compared with the Map enum.", null);
+            return new WikiMethod("GetMap", "Gets the current map. The result can be compared with the Map enum. This method does not work in conditions.", null);
         }
     }
 }

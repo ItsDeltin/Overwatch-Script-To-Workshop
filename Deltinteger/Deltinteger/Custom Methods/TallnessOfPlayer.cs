@@ -4,7 +4,7 @@ using Deltin.Deltinteger.WorkshopWiki;
 namespace Deltin.Deltinteger.Elements
 {
     [CustomMethod("TallnessOfPlayer", CustomMethodType.Value)]
-    [Parameter("player", ValueType.Player, null)]
+    [Parameter("player", ValueType.Player, typeof(V_EventPlayer))]
     class TallnessOfPlayer : CustomMethodBase
     {
         protected override MethodResult Get()

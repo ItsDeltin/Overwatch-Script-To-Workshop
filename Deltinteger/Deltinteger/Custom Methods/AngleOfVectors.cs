@@ -123,7 +123,7 @@ namespace Deltin.Deltinteger.Elements
     
         public override WikiMethod Wiki()
         {
-            return new WikiMethod("AngleOfVectors", "Gets the angle of 3 vectors in 3d space.", null);
+            return new WikiMethod("AngleOfVectors", "Gets the angle of 3 vectors in 3d space.  This method does not work in conditions.", null);
         }
     }
 }

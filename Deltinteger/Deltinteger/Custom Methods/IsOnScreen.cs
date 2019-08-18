@@ -1,10 +1,11 @@
 ﻿using System;
+using Deltin.Deltinteger.Parse;
 using Deltin.Deltinteger.WorkshopWiki;
 
 namespace Deltin.Deltinteger.Elements
 {
     [CustomMethod("IsOnScreen", CustomMethodType.Value)]
-    [Parameter("player", ValueType.Player, null)]
+    [Parameter("player", ValueType.Player, typeof(V_EventPlayer))]
     [Parameter("point", ValueType.Vector, null)]
     [Parameter("fovOfPlayer", ValueType.Number, null)]
     class IsOnScreen : CustomMethodBase
@@ -22,6 +23,36 @@ namespace Deltin.Deltinteger.Elements
         public override WikiMethod Wiki()
         {
             return new WikiMethod("IsOnScreen", "Whether a point is visible on a players screen or not.", null);
+        }
+    }
+
+    [CustomMethod("OptimisedIsOnScreen", CustomMethodType.MultiAction_Value)]
+    [Parameter("player", ValueType.Player, typeof(V_EventPlayer))]
+    [Parameter("point", ValueType.Vector, null)]
+    [Parameter("fovOfPlayer", ValueType.Number, null)]
+    class OptimisedIsOnScreen : CustomMethodBase
+    {
+        protected override MethodResult Get()
+        {
+            IndexedVar player = TranslateContext.VarCollection.AssignVar(Scope, "OptimisedIsOnScreen: player", TranslateContext.IsGlobal, null);
+            IndexedVar point = TranslateContext.VarCollection.AssignVar(Scope, "OptimisedIsOnScreen: point", TranslateContext.IsGlobal, null);
+
+            Element[] actions = ArrayBuilder<Element>.Build
+            (
+                player.SetVariable((Element)Parameters[0]),
+                point.SetVariable((Element)Parameters[1])
+            );
+
+            Element fov = (Element)Parameters[2];
+            Element los = Element.Part<V_IsInLineOfSight>(Element.Part<V_EyePosition>(player.GetVariable()), point.GetVariable());
+            Element angle = Element.Part<V_IsInViewAngle>(player.GetVariable(), point.GetVariable(), Element.Part<V_Divide>(fov, new V_Number(2)));
+
+            return new MethodResult(actions, Element.Part<V_And>(los, angle));
+        }
+
+        public override WikiMethod Wiki()
+        {
+            return new WikiMethod("OptimisedIsOnScreen", "Whether a point is visible on a players screen or not. This method does not work in conditions.", null);
         }
     }
 }

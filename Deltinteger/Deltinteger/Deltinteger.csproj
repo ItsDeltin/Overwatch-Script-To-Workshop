@@ -77,10 +77,13 @@
     <Compile Include="Custom Methods\EyeCastHitPosition.cs" />
     <Compile Include="Custom Methods\FOVTakenUpBySphere.cs" />
     <Compile Include="Custom Methods\HorizontalDistance.cs" />
+    <Compile Include="Custom Methods\IsAI.cs" />
     <Compile Include="Custom Methods\IsOnScreen.cs" />
     <Compile Include="Custom Methods\LinearInterpolate.cs" />
     <Compile Include="Custom Methods\Midpoint.cs" />
     <Compile Include="Custom Methods\Pythag.cs" />
+    <Compile Include="Custom Methods\Radians.cs" />
+    <Compile Include="Custom Methods\SetHealth.cs" />
     <Compile Include="Custom Methods\SphereHitbox.cs" />
     <Compile Include="Custom Methods\TallnessOfPlayer.cs" />
     <Compile Include="Custom Methods\Units.cs" />

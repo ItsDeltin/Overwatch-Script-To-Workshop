@@ -18,7 +18,7 @@ namespace Deltin.Deltinteger.Elements
 
         public override WikiMethod Wiki()
         {
-            return new WikiMethod("Midpoint", "The midpoint between 2 vectors.", null);
+            return new WikiMethod("FOVTakenUpBySphere", "The angle of field of view a sphere will take up at a specific distance from an eye.", null);
         }
     }
 }
