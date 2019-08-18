@@ -10,10 +10,12 @@ namespace Deltin.Deltinteger.Parse
 {
     public class BuildAstVisitor : DeltinScriptBaseVisitor<Node>
     {
-        public Diagnostics _diagnostics { get; }
+        private Diagnostics _diagnostics { get; }
+        private string _file { get; }
 
-        public BuildAstVisitor(Diagnostics diagnostics)
+        public BuildAstVisitor(string file, Diagnostics diagnostics)
         {
+            this._file = file;
             _diagnostics = diagnostics;
         }
 
@@ -46,7 +48,7 @@ namespace Deltin.Deltinteger.Parse
         {
             if (!Enum.TryParse<Variable>(context.PART().GetText(), out Variable variable))
             {
-                _diagnostics.Error("Expected letter.", Range.GetRange(context));
+                _diagnostics.Error(_file, "Expected letter.", Range.GetRange(context));
                 return null;
             }
             
@@ -106,24 +108,24 @@ namespace Deltin.Deltinteger.Parse
                 {
                     case "Event":
                         if (!Enum.TryParse<RuleEvent>(value, out eventType))
-                            _diagnostics.Error($"{value} is not a valid Event type.", valueRange);
+                            _diagnostics.Error(_file, $"{value} is not a valid Event type.", valueRange);
                         eventRange = Range.GetRange(ruleOption);
                         break;
                     
                     case "Team":
                         if (!Enum.TryParse<Team>(value, out team))
-                            _diagnostics.Error($"{value} is not a valid Team type.", valueRange);
+                            _diagnostics.Error(_file, $"{value} is not a valid Team type.", valueRange);
                         teamRange = Range.GetRange(ruleOption);
                         break;
 
                     case "Player":
                         if (!Enum.TryParse<PlayerSelector>(value, out player))
-                            _diagnostics.Error($"{value} is not a valid Player type.", valueRange);
+                            _diagnostics.Error(_file, $"{value} is not a valid Player type.", valueRange);
                         playerRange = Range.GetRange(ruleOption);
                         break;
                     
                     default:
-                        _diagnostics.Error($"{option} is not a valid rule option.", optionRange);
+                        _diagnostics.Error(_file, $"{option} is not a valid rule option.", optionRange);
                         break;
                 }
             }

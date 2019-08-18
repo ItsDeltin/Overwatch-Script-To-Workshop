@@ -12,15 +12,13 @@ namespace Deltin.Deltinteger.Parse
     {
         private static readonly Log Log = new Log("Parse");
 
-        public static ParsingData GetParser(string document, string uri)
+        public static ParsingData GetParser(string file, string content)
         {
-            return new ParsingData(document, uri);
+            return new ParsingData(file, content);
         }
 
-        private ParsingData(string document, string uri)
+        private ParsingData(string file, string content)
         {
-            URI = uri;
-
             Rule initialGlobalValues = new Rule(Constants.INTERNAL_ELEMENT + "Initial Global Values");
             Rule initialPlayerValues = new Rule(Constants.INTERNAL_ELEMENT + "Initial Player Values", RuleEvent.OngoingPlayer, Team.All, PlayerSelector.All);
             TranslateRule globalTranslate = new TranslateRule(initialGlobalValues, Root, this);
@@ -35,7 +33,7 @@ namespace Deltin.Deltinteger.Parse
             UserMethods = new List<UserMethod>();
             DefinedTypes = new List<DefinedType>();
 
-            GetObjects(document, URI, globalTranslate, playerTranslate);
+            GetObjects(content, file, globalTranslate, playerTranslate);
 
             // Parse the rules.
             Rules = new List<Rule>();
@@ -44,12 +42,12 @@ namespace Deltin.Deltinteger.Parse
             {
                 try
                 {
-                    var result = TranslateRule.GetRule(RuleNodes[i], Root, this);
+                    var result = TranslateRule.GetRule(file, RuleNodes[i], Root, this);
                     Rules.Add(result);
                 }
                 catch (SyntaxErrorException ex)
                 {
-                    Diagnostics.Error(ex);
+                    Diagnostics.Error(file, ex);
                 }
             }
 
@@ -68,9 +66,9 @@ namespace Deltin.Deltinteger.Parse
             Success = Diagnostics.ContainsErrors();
         }
 
-        private RulesetNode GetRuleset(string document)
+        private RulesetNode GetRuleset(string file, string content)
         {
-            AntlrInputStream inputStream = new AntlrInputStream(document);
+            AntlrInputStream inputStream = new AntlrInputStream(content);
 
             // Lexer
             DeltinScriptLexer lexer = new DeltinScriptLexer(inputStream);
@@ -78,7 +76,7 @@ namespace Deltin.Deltinteger.Parse
 
             // Parse
             DeltinScriptParser parser = new DeltinScriptParser(commonTokenStream);
-            var errorListener = new ErrorListener(Diagnostics);
+            var errorListener = new ErrorListener(file, Diagnostics);
             parser.RemoveErrorListeners();
             parser.AddErrorListener(errorListener);
 
@@ -90,24 +88,25 @@ namespace Deltin.Deltinteger.Parse
             RulesetNode ruleset = null;
             if (!Diagnostics.ContainsErrors())
             {
-                BuildAstVisitor bav = new BuildAstVisitor(Diagnostics);
+                BuildAstVisitor bav = new BuildAstVisitor(file, Diagnostics);
                 ruleset = (RulesetNode)bav.Visit(ruleSetContext);
             }
 
-            AdditionalErrorChecking aec = new AdditionalErrorChecking(parser, Diagnostics);
+            AdditionalErrorChecking aec = new AdditionalErrorChecking(file, parser, Diagnostics);
             aec.Visit(ruleSetContext);
 
             return ruleset;
         }
 
-        private void GetObjects(string document, string referenceFile, TranslateRule globalTranslate, TranslateRule playerTranslate)
+        private void GetObjects(string document, string file, TranslateRule globalTranslate, TranslateRule playerTranslate)
         {
             // If this file was already loaded, don't load it again.
-            if (Imported.Contains(referenceFile)) return;
-            Imported.Add(referenceFile);
+            if (Imported.Contains(file)) return;
+            Imported.Add(file);
+            Diagnostics.AddFile(file);
 
             // Get the ruleset.
-            RulesetNode ruleset = GetRuleset(document);
+            RulesetNode ruleset = GetRuleset(file, document);
 
             if (ruleset != null)
             {
@@ -122,7 +121,7 @@ namespace Deltin.Deltinteger.Parse
                     }
                     catch (SyntaxErrorException ex)
                     {
-                        Diagnostics.Error(ex);
+                        Diagnostics.Error(file, ex);
                     }
 
                 // Get the variables
@@ -153,7 +152,7 @@ namespace Deltin.Deltinteger.Parse
                     }
                     catch (SyntaxErrorException ex)
                     {
-                        Diagnostics.Error(ex);
+                        Diagnostics.Error(file, ex);
                     }
 
                 // Get the user methods.
@@ -164,7 +163,7 @@ namespace Deltin.Deltinteger.Parse
                     }
                     catch (SyntaxErrorException ex)
                     {
-                        Diagnostics.Error(ex);
+                        Diagnostics.Error(file, ex);
                     }
 
                 // Get the rules
@@ -176,13 +175,11 @@ namespace Deltin.Deltinteger.Parse
                 foreach (ImportNode importNode in ruleset.Imports)
                     try
                     {
-                        string fileName = Path.GetFileName(importNode.File);
-                        string uri;
+                        string importFileName = Path.GetFileName(importNode.File);
+                        string importFilePath;
                         try
                         {
-                            string directory = Path.GetDirectoryName(referenceFile);
-                            string combined = Path.Combine(directory, importNode.File);
-                            uri = Path.GetFullPath(combined);
+                            importFilePath = Extras.CombinePathWithDotNotation(file, importNode.File);
                         }
                         catch (ArgumentException)
                         {
@@ -190,28 +187,28 @@ namespace Deltin.Deltinteger.Parse
                             throw SyntaxErrorException.InvalidImportPathChars(importNode.File, importNode.Range);
                         }
 
-                        if (referenceFile == uri)
+                        if (file == importFilePath)
                             throw SyntaxErrorException.SelfImport(importNode.Range);
 
                         // Syntax error if the file does not exist.
-                        if (!File.Exists(uri))
-                            throw SyntaxErrorException.ImportFileNotFound(uri, importNode.Range);
+                        if (!System.IO.File.Exists(importFilePath))
+                            throw SyntaxErrorException.ImportFileNotFound(importFilePath, importNode.Range);
 
                         // Warning if the file was already imported.
-                        if (importedFiles.Contains(uri))
+                        if (importedFiles.Contains(importFilePath))
                         {
-                            Diagnostics.Warning(string.Format(SyntaxErrorException.alreadyImported, fileName), importNode.Range);
+                            Diagnostics.Warning(file, string.Format(SyntaxErrorException.alreadyImported, importFileName), importNode.Range);
                         }
                         else
                         {
-                            string content = File.ReadAllText(uri);
-                            GetObjects(content, uri, globalTranslate, playerTranslate);
-                            importedFiles.Add(uri);
+                            string content = System.IO.File.ReadAllText(importFilePath);
+                            GetObjects(content, importFilePath, globalTranslate, playerTranslate);
+                            importedFiles.Add(importFilePath);
                         }
                     }
                     catch (SyntaxErrorException ex)
                     {
-                        Diagnostics.Error(ex);
+                        Diagnostics.Error(file, ex);
                     }
             }
         }
@@ -227,7 +224,6 @@ namespace Deltin.Deltinteger.Parse
         public RulesetNode RuleSetNode { get; private set; }
         private Looper GlobalLoop { get; set; }
         private Looper PlayerLoop { get; set; }
-        private string URI { get; set; }
         private List<string> Imported { get; } = new List<string>();
 
         public IMethod GetMethod(string name)

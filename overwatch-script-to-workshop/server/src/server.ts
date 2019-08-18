@@ -19,7 +19,8 @@ import {
 	ColorPresentationParams,
 	SignatureHelp,
 	TextEdit,
-	Position
+	Position,
+	PublishDiagnosticsParams
 } from 'vscode-languageserver';
 import { connect } from 'tls';
 import { cpus } from 'os';
@@ -148,9 +149,10 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 
 	sendRequest(textDocument.uri, 'parse', data, null, null, function callback(body) {
 
-		let diagnostics: Diagnostic[] = JSON.parse(body);
-		
-		connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
+		let diagnostics: PublishDiagnosticsParams[] = JSON.parse(body);
+
+		for (var i = 0; i < diagnostics.length; i++)
+			connection.sendDiagnostics(diagnostics[i]);
 	});
 }
 

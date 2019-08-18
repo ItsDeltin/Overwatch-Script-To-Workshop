@@ -134,19 +134,27 @@ namespace Deltin.Deltinteger.LanguageServer
             }
             document.Content = content;
 
-            parserData = ParsingData.GetParser(content, document.Uri);
+            parserData = ParsingData.GetParser(document.Uri, content);
 
             if (parserData.Rules != null && !parserData.Diagnostics.ContainsErrors())
             {
                 string final = Program.RuleArrayToWorkshop(parserData.Rules.ToArray(), parserData.VarCollection);
-                using (var wc = new WebClient())
+                try
                 {
-                    wc.Encoding = System.Text.Encoding.UTF8;
-                    wc.UploadString($"http://localhost:{clientPort}/", final);
+                    using (var wc = new WebClient())
+                    {
+                        wc.Encoding = System.Text.Encoding.UTF8;
+                        wc.UploadString($"http://localhost:{clientPort}/", final);
+                    }
+                }
+                catch (WebException)
+                {
+                    Log.Write(LogLevel.Normal, "Failed to upload workshop result.");
                 }
             }
             
-            return JsonConvert.SerializeObject(parserData.Diagnostics.GetDiagnostics());
+            PublishDiagnosticsParams[] diagnostics = parserData.Diagnostics.GetDiagnostics();
+            return JsonConvert.SerializeObject(diagnostics);
         }
 
         string GetAutocomplete(string json)
@@ -266,7 +274,6 @@ namespace Deltin.Deltinteger.LanguageServer
             return JsonConvert.SerializeObject(completion.ToArray());
         }
 
-        // TODO comment this
         string GetSignatures(string json)
         {
             PosData posData = GetPosData(json);
@@ -351,7 +358,7 @@ namespace Deltin.Deltinteger.LanguageServer
 
             Hover hover = null;
 
-            if (parserData.Success && posData.SelectedNode != null && posData.SelectedNode.Length > 0)
+            if (/*parserData.Success &&*/ posData.SelectedNode != null && posData.SelectedNode.Length > 0)
                 switch (posData.SelectedNode[0])
                 {
                     case MethodNode methodNode:
@@ -363,6 +370,20 @@ namespace Deltin.Deltinteger.LanguageServer
                             {
                                 range = methodNode.Range
                             };
+                        break;
+
+                    case ImportNode importNode:
+                        
+                        string path = null;
+                        try
+                        {
+                            path = Extras.CombinePathWithDotNotation(posData.File, importNode.File);
+                        }
+                        catch (ArgumentException) {}
+
+                        if (path != null)
+                            hover = new Hover(new MarkupContent(MarkupContent.Markdown, path)) { range = importNode.Range };
+
                         break;
                     
                     default:
@@ -385,7 +406,7 @@ namespace Deltin.Deltinteger.LanguageServer
             Pos caret = new Pos((int)inputJson.position.line, (int)inputJson.position.character);
             var selectedNode = parserData.RuleSetNode?.SelectedNode(caret);
 
-            return new PosData(caret, selectedNode);
+            return new PosData(uri, caret, selectedNode);
         }
     }
 
@@ -402,12 +423,14 @@ namespace Deltin.Deltinteger.LanguageServer
 
     class PosData
     {
-        public PosData(Pos caret, Node[] selectedNode)
+        public PosData(string file, Pos caret, Node[] selectedNode)
         {
+            File = file;
             Caret = caret;
             SelectedNode = selectedNode;
         }
 
+        public string File { get; }
         public Pos Caret { get; }
         public Node[] SelectedNode { get; }
     }
@@ -506,6 +529,19 @@ namespace Deltin.Deltinteger.LanguageServer
 #endregion
 
 #region Diagnostic
+
+    public class PublishDiagnosticsParams
+    {
+        public string uri;
+        public Diagnostic[] diagnostics;
+
+        public PublishDiagnosticsParams(string uri, Diagnostic[] diagnostics)
+        {
+            this.uri = uri;
+            this.diagnostics = diagnostics;
+        }
+    }
+
     public class Diagnostic
     {
         public const int Error = 1;

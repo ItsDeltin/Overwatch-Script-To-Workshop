@@ -9,12 +9,13 @@ namespace Deltin.Deltinteger.Parse
     {
         public static bool AllowRecursion = false;
 
-        public static Rule GetRule(RuleNode ruleNode, ScopeGroup root, ParsingData parserData)
+        public static Rule GetRule(string file, RuleNode ruleNode, ScopeGroup root, ParsingData parserData)
         {
-            var result = new TranslateRule(ruleNode, root, parserData);
+            var result = new TranslateRule(file, ruleNode, root, parserData);
             return result.Rule;
         }
 
+        private string File { get; }
         public readonly VarCollection VarCollection;
         private readonly Rule Rule;
         public readonly List<Element> Actions = new List<Element>();
@@ -26,8 +27,9 @@ namespace Deltin.Deltinteger.Parse
         private readonly List<UserMethod> MethodStackNoRecursive = new List<UserMethod>();
         public readonly ParsingData ParserData;
 
-        private TranslateRule(RuleNode ruleNode, ScopeGroup root, ParsingData parserData)
+        private TranslateRule(string file, RuleNode ruleNode, ScopeGroup root, ParsingData parserData)
         {
+            File = file;
             VarCollection = parserData.VarCollection;
             ParserData = parserData;
 
@@ -423,7 +425,7 @@ namespace Deltin.Deltinteger.Parse
                 result.ParameterValues = parsedParameters.ToArray();
 
                 foreach (var usageDiagnostic in elementData.UsageDiagnostics)
-                    ParserData.Diagnostics.AddDiagnostic(usageDiagnostic.GetDiagnostic(methodNode.Range));
+                    ParserData.Diagnostics.AddDiagnostic(File, usageDiagnostic.GetDiagnostic(methodNode.Range));
             }
             else if (method is CustomMethodData)
             {
@@ -949,15 +951,6 @@ namespace Deltin.Deltinteger.Parse
                 value = ParseExpression(scope, varSetNode.Value);
 
             Element initialVar = variable.GetVariable(varSetData.Target);
-
-            /*
-            Element[] index = new Element[varSetNode.Index?.Length ?? 0];
-            for (int i = 0; i < index.Length; i++)
-            {
-                index[i] = ParseExpression(scope, varSetNode.Index[i]);
-                initialVar = Element.Part<V_ValueInArray>(initialVar, index[index.Length - i - 1]);
-            }
-            */
 
             switch (varSetNode.Operation)
             {

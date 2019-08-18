@@ -1,6 +1,7 @@
 using System;
 using System.Text;
 using System.Collections.Generic;
+using System.IO;
 
 namespace Deltin.Deltinteger
 {
@@ -46,6 +47,13 @@ namespace Deltin.Deltinteger
             index += character;
             index += 1;
             return index;
+        }
+
+        public static string CombinePathWithDotNotation(string referenceDirectory, string file)
+        {
+            string directory = Path.GetDirectoryName(referenceDirectory);
+            string combined = Path.Combine(directory, file);
+            return Path.GetFullPath(combined);
         }
     }
 
