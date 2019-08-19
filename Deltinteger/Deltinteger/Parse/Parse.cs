@@ -108,7 +108,7 @@ namespace Deltin.Deltinteger.Parse
             // Get the ruleset.
             RulesetNode ruleset = GetRuleset(file, document);
 
-            if (ruleset != null)
+            if (ruleset != null && !Diagnostics.ContainsErrors())
             {
                 if (RuleSetNode == null)
                     RuleSetNode = ruleset;
