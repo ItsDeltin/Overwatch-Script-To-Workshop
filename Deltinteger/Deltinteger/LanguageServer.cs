@@ -110,7 +110,7 @@ namespace Deltin.Deltinteger.LanguageServer
 
         string uriPath(string uri)
         {
-            return new Uri(Uri.UnescapeDataString(uri)).AbsolutePath;
+            return Uri.UnescapeDataString(new Uri(Uri.UnescapeDataString(uri)).AbsolutePath);
         }
 
         string ParseDocument(string input, int clientPort)
