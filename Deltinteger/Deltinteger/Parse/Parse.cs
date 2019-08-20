@@ -42,7 +42,7 @@ namespace Deltin.Deltinteger.Parse
             {
                 try
                 {
-                    var result = TranslateRule.GetRule(file, RuleNodes[i], Root, this);
+                    var result = TranslateRule.GetRule(RuleNodes[i], Root, this);
                     Rules.Add(result);
                 }
                 catch (SyntaxErrorException ex)
@@ -54,10 +54,15 @@ namespace Deltin.Deltinteger.Parse
             globalTranslate.Finish();
             playerTranslate.Finish();
 
-            if (initialGlobalValues.Actions.Length > 0)
-                Rules.Add(initialGlobalValues);
+            // Add the player initial values rule if it was used.
             if (initialPlayerValues.Actions.Length > 0)
-                Rules.Add(initialPlayerValues);
+                Rules.Insert(0, initialPlayerValues);
+            
+            // Add the global initial values rule if it was used.
+            if (initialGlobalValues.Actions.Length > 0)
+                Rules.Insert(0, initialGlobalValues);
+            
+            // Add the looper rules if they were used.
             if (GlobalLoop.Used)
                 Rules.Add(GlobalLoop.Finalize());
             if (PlayerLoop.Used)
@@ -108,11 +113,11 @@ namespace Deltin.Deltinteger.Parse
             // Get the ruleset.
             RulesetNode ruleset = GetRuleset(file, document);
 
+            if (RuleSetNode == null)
+                RuleSetNode = ruleset;
+
             if (ruleset != null && !Diagnostics.ContainsErrors())
             {
-                if (RuleSetNode == null)
-                    RuleSetNode = ruleset;
-
                 // Get the defined types
                 foreach (var definedType in ruleset.DefinedTypes)
                     try

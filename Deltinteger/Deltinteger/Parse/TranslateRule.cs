@@ -9,13 +9,12 @@ namespace Deltin.Deltinteger.Parse
     {
         public static bool AllowRecursion = false;
 
-        public static Rule GetRule(string file, RuleNode ruleNode, ScopeGroup root, ParsingData parserData)
+        public static Rule GetRule(RuleNode ruleNode, ScopeGroup root, ParsingData parserData)
         {
-            var result = new TranslateRule(file, ruleNode, root, parserData);
+            var result = new TranslateRule(ruleNode, root, parserData);
             return result.Rule;
         }
 
-        private string File { get; }
         public readonly VarCollection VarCollection;
         private readonly Rule Rule;
         public readonly List<Element> Actions = new List<Element>();
@@ -27,9 +26,8 @@ namespace Deltin.Deltinteger.Parse
         private readonly List<UserMethod> MethodStackNoRecursive = new List<UserMethod>();
         public readonly ParsingData ParserData;
 
-        private TranslateRule(string file, RuleNode ruleNode, ScopeGroup root, ParsingData parserData)
+        private TranslateRule(RuleNode ruleNode, ScopeGroup root, ParsingData parserData)
         {
-            File = file;
             VarCollection = parserData.VarCollection;
             ParserData = parserData;
 
