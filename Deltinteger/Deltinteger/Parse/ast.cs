@@ -726,24 +726,38 @@ namespace Deltin.Deltinteger.Parse
                 Range valueRange = null;
                 if (value != null)
                     valueRange = Range.GetRange(ruleOption.PART(1).Symbol);
+
+                Range totalRange = Range.GetRange(ruleOption.PART(0).Symbol, ruleOption.PART(1).Symbol);
                 
                 switch (option)
                 {
                     case "Event":
+                        if (eventRange != null)
+                            visitor._diagnostics.Error("Event already set.", new Location(visitor.file, totalRange));
+                        
                         if (!Enum.TryParse<RuleEvent>(value, out eventType))
                             visitor._diagnostics.Error($"{value} is not a valid Event type.", new Location(visitor.file, valueRange));
+                        
                         eventRange = Range.GetRange(ruleOption);
                         break;
                     
                     case "Team":
+                        if (teamRange != null)
+                            visitor._diagnostics.Error("Team already set.", new Location(visitor.file, totalRange));
+
                         if (!Enum.TryParse<Team>(value, out team))
                             visitor._diagnostics.Error($"{value} is not a valid Team type.", new Location(visitor.file, valueRange));
+                        
                         teamRange = Range.GetRange(ruleOption);
                         break;
 
                     case "Player":
+                        if (eventRange != null)
+                            visitor._diagnostics.Error("Player already set.", new Location(visitor.file, totalRange));
+
                         if (!Enum.TryParse<PlayerSelector>(value, out player))
                             visitor._diagnostics.Error($"{value} is not a valid Player type.", new Location(visitor.file, valueRange));
+                        
                         playerRange = Range.GetRange(ruleOption);
                         break;
                     
@@ -1331,7 +1345,7 @@ namespace Deltin.Deltinteger.Parse
 
         public static Range GetRange(IToken start, IToken stop)
         {
-            return new Range(new Pos(start.Line - 1, start.Column + 1), new Pos(stop.Line - 1, stop.Column));
+            return new Range(new Pos(start.Line - 1, start.Column), new Pos(stop.Line - 1, stop.Column + stop.Text.Length));
         }
 
         public static Range GetRange(ITerminalNode node)

@@ -145,7 +145,7 @@ namespace Deltin.Deltinteger.Parse
                     try
                     {
                         if (DefinedTypes.Any(type => type.Name == definedType.Name))
-                            throw new SyntaxErrorException("A type of the same name was already defined.", definedType.Location);
+                            throw SyntaxErrorException.NameAlreadyDefined(definedType.Location);
                         DefinedTypes.Add(new DefinedType(definedType));
                     }
                     catch (SyntaxErrorException ex)

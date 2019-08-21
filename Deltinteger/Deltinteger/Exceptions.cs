@@ -50,7 +50,9 @@ namespace Deltin.Deltinteger
         public const string notAConstructor      = "No constructors in the {0} '{1}' have {2} parameters.";
         public const string constructorName      = "Constructor name must be the same as the type name.";
         public const string expectedEnumGotValue = "Expected the enum '{0}', got a value instead.";
+        public const string incorrectEnumType    = "Expected enum of type '{0}', got '{1}' instead.";
         public const string variableIsReadonly   = "Variable '{0}' is readonly.";
+        public const string cantReadVariable     = "Can't read the variable '{0}'.";
         public const string expectedVariable     = "Expected a variable.";
         public const string typeDoesNotExist     = "The type '{0}' does not exist.";
         public const string thisCantBeUsed       = "The 'this' keyword cannot be used here.";
@@ -58,6 +60,9 @@ namespace Deltin.Deltinteger
         public const string invalidPathChars     = "The path '{0}' contains invalid characters.";
         public const string alreadyImported      = "The file '{0}' was already imported.";
         public const string selfImport           = "Can't import own file.";
+        public const string typeNameConflict     = "The type name '{0}' conflicts with an predefined workshop type.";
+        public const string nameAlreadyDefined   = "A type of the same name was already defined.";
+        public const string invalidValueType     = "Expected value of type '{0}'.";
         #endregion
 
         public static SyntaxErrorException StringParameterCount(int parameterIndex, int parameterCount, Location location)
@@ -172,6 +177,11 @@ namespace Deltin.Deltinteger
             return new SyntaxErrorException(string.Format(variableIsReadonly, variableName), location);
         }
     
+        public static SyntaxErrorException CantReadVariable(string variableName, Location location)
+        {
+            return new SyntaxErrorException(string.Format(cantReadVariable, variableName), location);
+        }
+
         public static SyntaxErrorException ExpectedVariable(Location location)
         {
             return new SyntaxErrorException(expectedVariable, location);
@@ -200,6 +210,26 @@ namespace Deltin.Deltinteger
         public static SyntaxErrorException SelfImport(Location location)
         {
             return new SyntaxErrorException(selfImport, location);
+        }
+    
+        public static SyntaxErrorException TypeNameConflict(string name, Location location)
+        {
+            return new SyntaxErrorException(string.Format(typeNameConflict, name), location);
+        }
+
+        public static SyntaxErrorException NameAlreadyDefined(Location location)
+        {
+            return new SyntaxErrorException(nameAlreadyDefined, location);
+        }
+    
+        public static SyntaxErrorException InvalidValueType(string expected, string got, Location location)
+        {
+            return new SyntaxErrorException(string.Format(invalidValueType, expected), location);
+        }
+
+        public static SyntaxErrorException IncorrectEnumType(string expected, string got, Location location)
+        {
+            return new SyntaxErrorException(string.Format(incorrectEnumType, expected, got), location);
         }
     }
 }

@@ -374,14 +374,19 @@ namespace Deltin.Deltinteger.Parse
                             parsedParameters.Add(result);
 
                             if (parameters[i] is TypeParameter && result.SupportedType?.Type != ((TypeParameter)parameters[i]).Type)
-                                throw new SyntaxErrorException($"Expected value of type {((TypeParameter)parameters[i]).Type.Name}.", values[i].Location);
+                                throw SyntaxErrorException.InvalidValueType(((TypeParameter)parameters[i]).Type.Name, result.SupportedType?.Type.Name ?? "any", values[i].Location);
                         }
                         else if (parameters[i] is EnumParameter)
                         {
+                            EnumData expectedType = ((EnumParameter)parameters[i]).EnumData;
                             // Parse the enum
                             if (values[i] is EnumNode)
                             {
                                 EnumNode enumNode = (EnumNode)values[i];
+
+                                if (enumNode.EnumMember.Enum != expectedType)
+                                    throw SyntaxErrorException.IncorrectEnumType(expectedType.CodeName, enumNode.EnumMember.Enum.CodeName, values[i].Location);
+
                                 parsedParameters.Add(
                                     (IWorkshopTree)EnumData.ToElement(enumNode.EnumMember)
                                     ?? (IWorkshopTree)enumNode.EnumMember
@@ -394,6 +399,9 @@ namespace Deltin.Deltinteger.Parse
                                 if (var is ElementReferenceVar && ((ElementReferenceVar)var).Reference is EnumMember)
                                 {
                                     EnumMember member = (EnumMember)((ElementReferenceVar)var).Reference;
+                                    if (member.Enum != expectedType)
+                                        throw SyntaxErrorException.IncorrectEnumType(expectedType.CodeName, member.Enum.CodeName, values[i].Location);
+
                                     parsedParameters.Add(
                                         (IWorkshopTree)EnumData.ToElement(member)
                                         ?? (IWorkshopTree)member
@@ -1059,7 +1067,7 @@ namespace Deltin.Deltinteger.Parse
                     Var var = scope.GetVar(((VariableNode)root).Name, root.Location);
                     ResultingVariable = var;
 
-                    if (!ResultingVariable.Gettable()) throw new SyntaxErrorException("Can't read variable.", root.Location);
+                    if (!ResultingVariable.Gettable()) throw SyntaxErrorException.CantReadVariable(ResultingVariable.Name, root.Location);
 
                     ResultingElement = var.GetVariable();
 

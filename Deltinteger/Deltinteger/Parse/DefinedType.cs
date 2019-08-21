@@ -18,7 +18,7 @@ namespace Deltin.Deltinteger.Parse
         public DefinedType(TypeDefineNode node)
         {
             if (EnumData.GetEnum(node.Name) != null)
-                throw new SyntaxErrorException("A type cannot have the same name as a predefined enum in the Overwatch Workshop.", node.Location);
+                throw SyntaxErrorException.TypeNameConflict(node.Name, node.Location);
 
             Name = node.Name;
             TypeKind = node.TypeKind;
