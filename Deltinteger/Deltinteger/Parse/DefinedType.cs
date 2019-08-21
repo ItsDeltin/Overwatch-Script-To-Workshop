@@ -6,27 +6,36 @@ using Deltin.Deltinteger.LanguageServer;
 
 namespace Deltin.Deltinteger.Parse
 {
-    public class DefinedType
+    public class DefinedType : ITypeRegister
     {
         public string Name { get; }
         public TypeKind TypeKind { get; }
         public InclassDefineNode[] DefinedVars { get; }
         public UserMethodNode[] MethodNodes { get; }
-        public Constructor[] Constructors { get; }
+        public Constructor[] Constructors { get; private set; }
+        private ConstructorNode[] ConstructorNodes { get; }
 
         public DefinedType(TypeDefineNode node)
         {
+            if (EnumData.GetEnum(node.Name) != null)
+                throw new SyntaxErrorException("A type cannot have the same name as a predefined enum in the Overwatch Workshop.", node.Location);
+
             Name = node.Name;
             TypeKind = node.TypeKind;
             DefinedVars = node.DefinedVars;
             MethodNodes = node.Methods;
 
-            Constructors = new Constructor[node.Constructors.Length];
+            ConstructorNodes = node.Constructors;
+        }
+
+        public void RegisterParameters(ParsingData parser)
+        {
+            Constructors = new Constructor[ConstructorNodes.Length];
             for (int i = 0; i < Constructors.Length; i++)
             {
-                if (node.Constructors[i].Name != node.Name)
-                    throw SyntaxErrorException.ConstructorName(node.Constructors[i].Location);
-                Constructors[i] = new Constructor(node.Constructors[i]);
+                if (ConstructorNodes[i].Name != Name)
+                    throw SyntaxErrorException.ConstructorName(ConstructorNodes[i].Location);
+                Constructors[i] = new Constructor(parser, ConstructorNodes[i]);
             }
         }
 
@@ -46,6 +55,7 @@ namespace Deltin.Deltinteger.Parse
             for (int i = 0; i < MethodNodes.Length; i++)
             {
                 UserMethod method = new UserMethod(typeScope, MethodNodes[i]);
+                method.RegisterParameters(parseData);
                 method.AccessLevel = MethodNodes[i].AccessLevel;
             }
 
@@ -69,14 +79,12 @@ namespace Deltin.Deltinteger.Parse
         public BlockNode BlockNode { get; }
         public ParameterBase[] Parameters { get; }
 
-        public Constructor(ConstructorNode constructorNode)
+        public Constructor(ParsingData parser, ConstructorNode constructorNode)
         {
             AccessLevel = constructorNode.AccessLevel;
             BlockNode = constructorNode.BlockNode;
             
-            Parameters = new ParameterBase[constructorNode.Parameters.Length];
-            for (int i = 0; i < Parameters.Length; i++)
-                Parameters[i] = new Parameter(constructorNode.Parameters[i], Elements.ValueType.Any, null);
+            Parameters = ParameterDefineNode.GetParameters(parser, constructorNode.Parameters);
         }
     }
 

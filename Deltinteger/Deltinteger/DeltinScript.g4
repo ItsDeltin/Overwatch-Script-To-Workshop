@@ -14,9 +14,10 @@ null   : NULL          ;
 
 statement_operation : EQUALS | EQUALS_ADD | EQUALS_DIVIDE | EQUALS_MODULO | EQUALS_MULTIPLY | EQUALS_POW | EQUALS_SUBTRACT ;
 
-define         :                   (type=PART | DEFINE)                 name=PART useVar? (EQUALS expr?)? ;
-rule_define    :                   (type=PART | DEFINE) (GLOBAL|PLAYER) name=PART useVar? (EQUALS expr?)? STATEMENT_END;
-inclass_define : accessor? STATIC? (type=PART | DEFINE)                 name=PART         (EQUALS expr?)? ;
+define           :                   (type=PART | DEFINE)                 name=PART useVar? (EQUALS expr?)? ;
+rule_define      :                   (type=PART | DEFINE) (GLOBAL|PLAYER) name=PART useVar? (EQUALS expr?)? STATEMENT_END;
+inclass_define   : accessor? STATIC? (type=PART | DEFINE)                 name=PART         (EQUALS expr?)? ;
+parameter_define :                   (type=PART | DEFINE)                 name=PART                         ;
 
 useVar   : PART (INDEX_START number INDEX_END)? ;
 useGlobalVar : USEVAR GLOBAL PART STATEMENT_END ;
@@ -120,8 +121,7 @@ accessor : PRIVATE | PUBLIC;
 
 constructor : accessor? name=PART LEFT_PAREN setParameters RIGHT_PAREN block ;
 
-setParameters: (PART (COMMA PART)*)?;
-//setParameters : (define? (COMMA define)*)? ;
+setParameters: (parameter_define (COMMA parameter_define)*)?;
 
 create_object : NEW type=PART LEFT_PAREN call_parameters? RIGHT_PAREN ;
 

@@ -6,19 +6,13 @@ using Deltin.Deltinteger.WorkshopWiki;
 
 namespace Deltin.Deltinteger.Parse
 {
-    public class UserMethod : IMethod, IScopeable
+    public class UserMethod : IMethod, IScopeable, ITypeRegister
     {
         public UserMethod(ScopeGroup scope, UserMethodNode node)
         {
             Name = node.Name;
             Block = node.Block;
-
-            Parameters = new Parameter[node.Parameters.Length];
-            for (int i = 0; i < Parameters.Length; i++)
-            {
-                Parameters[i] = new Parameter(node.Parameters[i], Elements.ValueType.Any, null);
-            }
-
+            ParameterNodes = node.Parameters;
             IsRecursive = node.IsRecursive;
             Documentation = node.Documentation;
             Wiki = new WikiMethod(Name, Documentation, null);
@@ -28,11 +22,17 @@ namespace Deltin.Deltinteger.Parse
             scope.In(this);
         }
 
+        public void RegisterParameters(ParsingData parser)
+        {
+            Parameters = ParameterDefineNode.GetParameters(parser, ParameterNodes);
+        }
+
         public string Name { get; }
 
         public BlockNode Block { get; }
 
-        public ParameterBase[] Parameters { get; }
+        public ParameterBase[] Parameters { get; private set; }
+        private ParameterDefineNode[] ParameterNodes { get; }
 
         public bool IsRecursive { get; }
 

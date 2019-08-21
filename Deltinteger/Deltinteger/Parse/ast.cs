@@ -457,7 +457,7 @@ namespace Deltin.Deltinteger.Parse
     public class ConstructorNode : Node
     {
         public AccessLevel AccessLevel { get; }
-        public string[] Parameters { get; }
+        public ParameterDefineNode[] Parameters { get; }
         public BlockNode BlockNode { get; }
         public string Name { get; }
 
@@ -465,9 +465,9 @@ namespace Deltin.Deltinteger.Parse
         {
             Name = context.PART().GetText();
 
-            Parameters = new string[context.setParameters().PART().Length];
+            Parameters = new ParameterDefineNode[context.setParameters().parameter_define().Length];
             for (int i = 0; i < Parameters.Length; i++)
-                Parameters[i] = context.setParameters().PART(i).GetText();
+                Parameters[i] = new ParameterDefineNode(context.setParameters().parameter_define(i), visitor);
 
             AccessLevel = AccessLevel.Private;
             if (context.accessor() != null)
@@ -608,6 +608,51 @@ namespace Deltin.Deltinteger.Parse
         }
     }
 
+    public class ParameterDefineNode : Node, IDefine
+    {
+        public string VariableName { get; }
+        public string Type { get; }
+        public Node Value { get { throw new NotImplementedException(); } }
+
+        public ParameterDefineNode(DeltinScriptParser.Parameter_defineContext context, BuildAstVisitor visitor) : base(new Location(visitor.file, Range.GetRange(context)))
+        {
+            VariableName = context.name.Text;
+            Type = context.type?.Text;
+        }
+
+        public override Node[] Children()
+        {
+            return null;
+        }
+
+        public static ParameterBase[] GetParameters(ParsingData parser, ParameterDefineNode[] defineNodes)
+        {
+            ParameterBase[] parameters = new ParameterBase[defineNodes.Length];
+            for (int i = 0; i < parameters.Length; i++)
+            {
+                EnumData enumData = null;
+                DefinedType type = null;
+                if (defineNodes[i].Type != null)
+                {
+                    enumData = EnumData.GetEnum(defineNodes[i].Type);
+                    type = parser.GetDefinedType(defineNodes[i].Type, null);
+
+                    if (enumData == null && type == null)
+                        throw SyntaxErrorException.NonexistentType(defineNodes[i].Type, defineNodes[i].Location);
+                }
+
+                if (enumData != null)
+                    parameters[i] = new EnumParameter(defineNodes[i].VariableName, enumData.Type);
+                
+                else if (type != null)
+                    parameters[i] = new TypeParameter(defineNodes[i].VariableName, type);
+
+                else parameters[i] = new Parameter(defineNodes[i].VariableName, Elements.ValueType.Any, null);
+            }
+            return parameters;
+        }
+    }
+
     public class UseVarNode : Node
     {
         public Variable Variable { get; }
@@ -743,7 +788,7 @@ namespace Deltin.Deltinteger.Parse
     public class UserMethodNode : Node
     {
         public string Name { get; }
-        public string[] Parameters { get; }
+        public ParameterDefineNode[] Parameters { get; }
         public BlockNode Block { get; }
         public bool IsRecursive { get; }
         public string Documentation { get; }
@@ -753,9 +798,9 @@ namespace Deltin.Deltinteger.Parse
         {
             Name = context.PART().GetText();
 
-            Parameters = new string[context.setParameters().PART().Length];
+            Parameters = new ParameterDefineNode[context.setParameters().parameter_define().Length];
             for (int i = 0; i < Parameters.Length; i++)
-                Parameters[i] = context.setParameters().PART(i).GetText();
+                Parameters[i] = new ParameterDefineNode(context.setParameters().parameter_define(i), visitor);
 
             Block = (BlockNode)visitor.VisitBlock(context.block());
             IsRecursive = context.RECURSIVE() != null;

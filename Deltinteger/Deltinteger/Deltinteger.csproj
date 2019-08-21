@@ -100,6 +100,7 @@
     <Compile Include="Elements\Actions.cs" />
     <Compile Include="Elements\Values.cs" />
     <Compile Include="Elements\Enums.cs" />
+    <Compile Include="Elements\Parameter.cs" />
     <Compile Include="Custom Methods\CustomMethods.cs" />
     <Compile Include="Custom Methods\AngleOfVectors.cs" />
     <Compile Include="Custom Methods\ChaseVariable.cs" />

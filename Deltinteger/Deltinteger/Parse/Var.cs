@@ -149,6 +149,9 @@ namespace Deltin.Deltinteger.Parse
 
         public abstract Element GetVariable(Element targetPlayer = null);
 
+        public abstract bool Gettable();
+        public abstract bool Settable();
+
         public override string ToString()
         {
             return Name;
@@ -175,6 +178,9 @@ namespace Deltin.Deltinteger.Parse
             UsesIndex = index != null && index.Length > 0;
             this.ArrayBuilder = arrayBuilder;
         }
+
+        override public bool Gettable() { return true; }
+        override public bool Settable() { return true; }
 
         public override Element GetVariable(Element targetPlayer = null)
         {
@@ -286,9 +292,9 @@ namespace Deltin.Deltinteger.Parse
 
     public class ElementReferenceVar : Var
     {
-        public Element Reference { get; set; }
+        public IWorkshopTree Reference { get; set; }
 
-        public ElementReferenceVar(string name, ScopeGroup scope, Node node, Element reference) : base (name, scope, node)
+        public ElementReferenceVar(string name, ScopeGroup scope, Node node, IWorkshopTree reference) : base (name, scope, node)
         {
             Reference = reference;
         }
@@ -304,8 +310,14 @@ namespace Deltin.Deltinteger.Parse
             if (Reference == null)
                 throw new ArgumentNullException(nameof(Reference));
 
-            return Reference;
+            if (Reference is Element == false)
+                throw new Exception("Reference is not an element, can't get the variable.");
+
+            return (Element)Reference;
         }
+
+        override public bool Gettable() { return Reference is Element; }
+        override public bool Settable() { return false; }
 
         public override string ToString()
         {

@@ -100,20 +100,22 @@ namespace Deltin.Deltinteger.Parse
 
         public Var GetVar(string name, Location location)
         {
-            return GetScopeable<Var>(name)
-                ?? throw SyntaxErrorException.VariableDoesNotExist(name, location);
+            Var var = GetScopeable<Var>(name);
+            if (var == null && location != null) throw SyntaxErrorException.VariableDoesNotExist(name, location);
+            return var;
         }
 
         public IMethod GetMethod(string name, Location location)
         {
             // Get the method by it's name.
-            return GetScopeable<UserMethod>(name)
+            IMethod method = GetScopeable<UserMethod>(name)
             // If it is not found, check if its a workshop method.
                 ?? (IMethod)Element.GetElement(name) 
             // Then check if its a custom method.
-                ?? (IMethod)CustomMethodData.GetCustomMethod(name)
+                ?? (IMethod)CustomMethodData.GetCustomMethod(name);
             // Throw if not found.
-                ?? throw SyntaxErrorException.NonexistentMethod(name, location);
+            if (method == null && location != null) throw SyntaxErrorException.NonexistentMethod(name, location);
+            return method;
         }
 
         private T GetScopeable<T>(string name) where T : IScopeable

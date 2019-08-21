@@ -35,4 +35,9 @@ namespace Deltin.Deltinteger
         AccessLevel AccessLevel { get; }
         Node Node { get; }
     }
+
+    public interface ITypeRegister
+    {
+        void RegisterParameters(ParsingData parser);
+    }
 }

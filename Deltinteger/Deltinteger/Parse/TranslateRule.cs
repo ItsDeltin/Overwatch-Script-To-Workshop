@@ -352,7 +352,7 @@ namespace Deltin.Deltinteger.Parse
             List<IWorkshopTree> parsedParameters = new List<IWorkshopTree>();
             for(int i = 0; i < parameters.Length; i++)
             {
-                if (parameters[i] is Parameter || parameters[i] is EnumParameter)
+                if (parameters[i] is Parameter || parameters[i] is TypeParameter || parameters[i] is EnumParameter)
                 {
                     // Get the default parameter value if there are not enough parameters.
                     if (values.Length <= i)
@@ -367,9 +367,15 @@ namespace Deltin.Deltinteger.Parse
                     }
                     else
                     {
-                        if (parameters[i] is Parameter)
+                        if (parameters[i] is Parameter || parameters[i] is TypeParameter)
+                        {
                             // Parse the parameter
-                            parsedParameters.Add(ParseExpression(scope, values[i]));
+                            Element result = ParseExpression(scope, values[i]);
+                            parsedParameters.Add(result);
+
+                            if (parameters[i] is TypeParameter && result.SupportedType?.Type != ((TypeParameter)parameters[i]).Type)
+                                throw new SyntaxErrorException($"Expected value of type {((TypeParameter)parameters[i]).Type.Name}.", values[i].Location);
+                        }
                         else if (parameters[i] is EnumParameter)
                         {
                             // Parse the enum
@@ -380,6 +386,21 @@ namespace Deltin.Deltinteger.Parse
                                     (IWorkshopTree)EnumData.ToElement(enumNode.EnumMember)
                                     ?? (IWorkshopTree)enumNode.EnumMember
                                 );
+                            }
+                            else if (values[i] is VariableNode)
+                            {
+                                Var var = scope.GetVar(((VariableNode)values[i]).Name, null);
+                                
+                                if (var is ElementReferenceVar && ((ElementReferenceVar)var).Reference is EnumMember)
+                                {
+                                    EnumMember member = (EnumMember)((ElementReferenceVar)var).Reference;
+                                    parsedParameters.Add(
+                                        (IWorkshopTree)EnumData.ToElement(member)
+                                        ?? (IWorkshopTree)member
+                                    );
+                                }
+                                else
+                                    throw SyntaxErrorException.ExpectedEnumGotValue(((EnumParameter)parameters[i]).EnumData.CodeName, values[i].Location);
                             }
                             else
                                 throw SyntaxErrorException.ExpectedEnumGotValue(((EnumParameter)parameters[i]).EnumData.CodeName, values[i].Location);
@@ -477,12 +498,20 @@ namespace Deltin.Deltinteger.Parse
                 var methodScope = scope.Root().Child();
 
                 // Add the parameter variables to the scope.
-                IndexedVar[] parameterVars = new IndexedVar[parameters.Length];
+                Var[] parameterVars = new Var[parameters.Length];
                 for (int i = 0; i < parameters.Length; i++)
                 {
-                    // Create a new variable using the parameter.
-                    parameterVars[i] = VarCollection.AssignVar(methodScope, userMethod.Parameters[i].Name, IsGlobal, methodNode);
-                    Actions.AddRange(parameterVars[i].SetVariable((Element)parameters[i]));
+                    if (parameters[i] is Element)
+                    {
+                        // Create a new variable using the parameter.
+                        parameterVars[i] = VarCollection.AssignVar(methodScope, userMethod.Parameters[i].Name, IsGlobal, methodNode);
+                        ((IndexedVar)parameterVars[i]).Type = ((Element)parameters[i]).SupportedType?.Type;
+                        Actions.AddRange(((IndexedVar)parameterVars[i]).SetVariable((Element)parameters[i]));
+                    }
+                    else if (parameters[i] is EnumMember)
+                    {
+                        parameterVars[i] = new ElementReferenceVar(userMethod.Parameters[i].Name, methodScope, methodNode, parameters[i]);
+                    }
                 }
 
                 // The variable that stores the return value.
@@ -1029,6 +1058,8 @@ namespace Deltin.Deltinteger.Parse
 
                     Var var = scope.GetVar(((VariableNode)root).Name, root.Location);
                     ResultingVariable = var;
+
+                    if (!ResultingVariable.Gettable()) throw new SyntaxErrorException("Can't read variable.", root.Location);
 
                     ResultingElement = var.GetVariable();
 

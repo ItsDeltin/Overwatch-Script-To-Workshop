@@ -35,38 +35,60 @@ namespace Deltin.Deltinteger.Parse
 
             GetObjects(content, file, globalTranslate, playerTranslate);
 
-            // Parse the rules.
-            Rules = new List<Rule>();
-
-            for (int i = 0; i < RuleNodes.Count; i++)
-            {
+            foreach (var type in DefinedTypes)
                 try
                 {
-                    var result = TranslateRule.GetRule(RuleNodes[i], Root, this);
-                    Rules.Add(result);
+                    type.RegisterParameters(this);
                 }
                 catch (SyntaxErrorException ex)
                 {
                     Diagnostics.Error(ex);
                 }
+            foreach (var method in UserMethods)
+                try
+                {
+                    method.RegisterParameters(this);
+                }
+                catch (SyntaxErrorException ex)
+                {
+                    Diagnostics.Error(ex);
+                }
+            
+            if (!Diagnostics.ContainsErrors())
+            {
+                // Parse the rules.
+                Rules = new List<Rule>();
+
+                for (int i = 0; i < RuleNodes.Count; i++)
+                {
+                    try
+                    {
+                        var result = TranslateRule.GetRule(RuleNodes[i], Root, this);
+                        Rules.Add(result);
+                    }
+                    catch (SyntaxErrorException ex)
+                    {
+                        Diagnostics.Error(ex);
+                    }
+                }
+
+                globalTranslate.Finish();
+                playerTranslate.Finish();
+
+                // Add the player initial values rule if it was used.
+                if (initialPlayerValues.Actions.Length > 0)
+                    Rules.Insert(0, initialPlayerValues);
+                
+                // Add the global initial values rule if it was used.
+                if (initialGlobalValues.Actions.Length > 0)
+                    Rules.Insert(0, initialGlobalValues);
+                
+                // Add the looper rules if they were used.
+                if (GlobalLoop.Used)
+                    Rules.Add(GlobalLoop.Finalize());
+                if (PlayerLoop.Used)
+                    Rules.Add(PlayerLoop.Finalize());
             }
-
-            globalTranslate.Finish();
-            playerTranslate.Finish();
-
-            // Add the player initial values rule if it was used.
-            if (initialPlayerValues.Actions.Length > 0)
-                Rules.Insert(0, initialPlayerValues);
-            
-            // Add the global initial values rule if it was used.
-            if (initialGlobalValues.Actions.Length > 0)
-                Rules.Insert(0, initialGlobalValues);
-            
-            // Add the looper rules if they were used.
-            if (GlobalLoop.Used)
-                Rules.Add(GlobalLoop.Finalize());
-            if (PlayerLoop.Used)
-                Rules.Add(PlayerLoop.Finalize());
 
             Success = !Diagnostics.ContainsErrors();
         }
@@ -122,6 +144,8 @@ namespace Deltin.Deltinteger.Parse
                 foreach (var definedType in ruleset.DefinedTypes)
                     try
                     {
+                        if (DefinedTypes.Any(type => type.Name == definedType.Name))
+                            throw new SyntaxErrorException("A type of the same name was already defined.", definedType.Location);
                         DefinedTypes.Add(new DefinedType(definedType));
                     }
                     catch (SyntaxErrorException ex)
@@ -214,7 +238,7 @@ namespace Deltin.Deltinteger.Parse
                     catch (SyntaxErrorException ex)
                     {
                         Diagnostics.Error(ex);
-                    }
+                    }               
             }
         }
 
@@ -240,7 +264,10 @@ namespace Deltin.Deltinteger.Parse
 
         public DefinedType GetDefinedType(string name, Location location)
         {
-            return DefinedTypes.FirstOrDefault(dt => dt.Name == name) ?? throw SyntaxErrorException.NonexistentType(name, location);
+            DefinedType type = DefinedTypes.FirstOrDefault(dt => dt.Name == name);
+            if (type == null && location != null)
+                throw SyntaxErrorException.NonexistentType(name, location);
+            return type;
         }
 
         public Looper GetLooper(bool isGlobal)
