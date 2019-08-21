@@ -187,10 +187,18 @@ namespace Deltin.Deltinteger.LanguageServer
 
                         completion.AddRange(new CompletionItem[]
                         {
-                            // TODO insert text
-                            new CompletionItem("rule")   { kind = CompletionItem.Keyword },
+                            new CompletionItem("rule")   { kind = CompletionItem.Keyword, textEdit = TextEdit.Insert(posData.Caret, Extras.Lines(
+                                "rule: \"My Rule\"",
+                                "Event.OngoingGlobal",
+                                "{",
+                                "}"
+                            )) },
                             new CompletionItem("define") { kind = CompletionItem.Keyword },
-                            new CompletionItem("method") { kind = CompletionItem.Keyword }
+                            new CompletionItem("method") { kind = CompletionItem.Keyword, textEdit = TextEdit.Insert(posData.Caret, Extras.Lines(
+                                "method myMethod()",
+                                "{",
+                                "}"
+                            )) }
                         });
                         break;
 
@@ -470,7 +478,7 @@ namespace Deltin.Deltinteger.LanguageServer
             Pos caret = new Pos((int)inputJson.position.line, (int)inputJson.position.character);
 
             Node[] selectedNode;
-            if (!parserData.Rulesets.ContainsKey(uri))
+            if (!parserData.Rulesets.ContainsKey(uri) || parserData.Rulesets[uri] == null)
                 selectedNode = null;
             else
                 selectedNode = parserData.Rulesets[uri].SelectedNode(caret);

@@ -38,22 +38,16 @@ namespace Deltin.Deltinteger
                 return newText.ToString();
         }
 
-        public static int GetIndex(string document, int line, int character)
-        {
-            int index = 0;
-            string[] split = document.Split('\n');
-            for (int i = 0; i < line - 1; i++)
-                index += split[i].Length;
-            index += character;
-            index += 1;
-            return index;
-        }
-
         public static string CombinePathWithDotNotation(string referenceDirectory, string file)
         {
             string directory = Path.GetDirectoryName(referenceDirectory);
             string combined = Path.Combine(directory, file);
             return Path.GetFullPath(combined);
+        }
+
+        public static string Lines(params string[] lines)
+        {
+            return string.Join("\n", lines);
         }
     }
 
