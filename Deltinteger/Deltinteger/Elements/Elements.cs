@@ -263,7 +263,7 @@ namespace Deltin.Deltinteger.Elements
         public string Message { get; }
         public int Severity { get; }
 
-        public Diagnostic GetDiagnostic(Deltin.Deltinteger.Parse.Range range)
+        public Diagnostic GetDiagnostic(Range range)
         {
             return new Diagnostic(Message, range) { severity = Severity };
         }

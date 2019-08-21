@@ -135,8 +135,7 @@ namespace Deltin.Deltinteger.Parse
             // Get the ruleset.
             RulesetNode ruleset = GetRuleset(file, document);
 
-            if (RuleSetNode == null)
-                RuleSetNode = ruleset;
+            Rulesets.Add(file, ruleset);
 
             if (ruleset != null && !Diagnostics.ContainsErrors())
             {
@@ -250,7 +249,7 @@ namespace Deltin.Deltinteger.Parse
         public bool Success { get; private set; }
         public VarCollection VarCollection { get; private set; } = new VarCollection();
         public ScopeGroup Root { get; private set; }
-        public RulesetNode RuleSetNode { get; private set; }
+        public Dictionary<string, RulesetNode> Rulesets { get; } = new Dictionary<string, RulesetNode>();
         private Looper GlobalLoop { get; set; }
         private Looper PlayerLoop { get; set; }
         private List<string> Imported { get; } = new List<string>();

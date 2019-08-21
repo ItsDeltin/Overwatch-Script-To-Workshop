@@ -20,7 +20,10 @@ import {
 	SignatureHelp,
 	TextEdit,
 	Position,
-	PublishDiagnosticsParams
+	PublishDiagnosticsParams,
+	Definition,
+	LocationLink,
+	DefinitionLink
 } from 'vscode-languageserver';
 import { connect } from 'tls';
 import { cpus } from 'os';
@@ -64,9 +67,10 @@ connection.onInitialize((params: InitializeParams) => {
 				resolveProvider: true
 			},
 			signatureHelpProvider: {
-				triggerCharacters: ['(', ',']
+				triggerCharacters: ['(', ',', '.']
 			},
-			hoverProvider: true
+			hoverProvider: true,
+			definitionProvider: true
 		}
 	};
 });
@@ -207,6 +211,18 @@ connection.onHover((pos: TextDocumentPositionParams) => {
 		sendRequest(pos.textDocument.uri, 'hover', data, resolve, reject, function(body) {
 			let hover: Hover = JSON.parse(body);
 			return hover;
+		});
+	});
+});
+
+connection.onDefinition((pos: TextDocumentPositionParams) => {
+
+	let data = JSON.stringify(pos);
+
+	return new Promise<DefinitionLink[]>(function (resolve, reject) {
+		sendRequest(pos.textDocument.uri, 'definition', data, resolve, reject, function(body) {
+			let definition: DefinitionLink[] = JSON.parse(body);
+			return definition;
 		});
 	});
 });

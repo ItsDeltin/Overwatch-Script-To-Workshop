@@ -87,6 +87,12 @@ namespace Deltin.Deltinteger.LanguageServer
                             GetHover(input)
                         );
                         break;
+                    
+                    case "definition":
+                        buffer = GetBytes(
+                            GetDefinition(input)
+                        );
+                        break;
 
                     default: 
                         Console.WriteLine("Unsure of how to handle url " + url);
@@ -135,6 +141,9 @@ namespace Deltin.Deltinteger.LanguageServer
             document.Content = content;
 
             parserData = ParsingData.GetParser(document.Uri, content);
+
+            if (parserData.Rulesets.ContainsKey(uri))
+                document.Ruleset = parserData.Rulesets[uri];
 
             if (parserData.Rules != null && !parserData.Diagnostics.ContainsErrors())
             {
@@ -397,6 +406,58 @@ namespace Deltin.Deltinteger.LanguageServer
             return JsonConvert.SerializeObject(hover);
         }
 
+        string GetDefinition(string json)
+        {
+            PosData posData = GetPosData(json);
+            if (posData == null)
+                return null;
+
+            /*
+            LocationLink location = null;
+
+            if (posData.SelectedNode != null && posData.SelectedNode.Length > 0)
+                switch(posData.SelectedNode[0])
+                {
+                    case ImportNode importNode:
+
+                        string path = null;
+                        try
+                        {
+                            path = Extras.CombinePathWithDotNotation(posData.File, importNode.File);
+                        }
+                        catch (ArgumentException) {}
+
+                        if (path != null)
+                            //location = new Location(new Uri(path).AbsoluteUri, Range.Zero);
+                            location = new LocationLink(importNode.Location.range, new Uri(path).AbsoluteUri, Range.Zero, Range.Zero);
+                        
+                        break;
+                }
+            
+            if (location == null) return null;
+            return JsonConvert.SerializeObject(new LocationLink[] { location });
+            */
+
+            List<LocationLink> locations = new List<LocationLink>();
+            
+            if (documents.ContainsKey(posData.File) && documents[posData.File].Ruleset != null)
+            {
+                foreach (ImportNode node in documents[posData.File].Ruleset.Imports)
+                {
+                    string path = null;
+                    try
+                    {
+                        path = Extras.CombinePathWithDotNotation(posData.File, node.File);
+                    }
+                    catch (ArgumentException) {}
+
+                    if (path != null)
+                        locations.Add(new LocationLink(node.Location.range, new Uri(path).AbsoluteUri, Range.Zero, Range.Zero));
+                }
+            }
+            return JsonConvert.SerializeObject(locations.ToArray());
+        }
+
         PosData GetPosData(string json)
         {
             dynamic inputJson = JsonConvert.DeserializeObject(json);
@@ -407,7 +468,12 @@ namespace Deltin.Deltinteger.LanguageServer
 
             string content = documents[uri].Content;
             Pos caret = new Pos((int)inputJson.position.line, (int)inputJson.position.character);
-            var selectedNode = parserData.RuleSetNode?.SelectedNode(caret);
+
+            Node[] selectedNode;
+            if (!parserData.Rulesets.ContainsKey(uri))
+                selectedNode = null;
+            else
+                selectedNode = parserData.Rulesets[uri].SelectedNode(caret);
 
             return new PosData(uri, caret, selectedNode);
         }
@@ -417,6 +483,7 @@ namespace Deltin.Deltinteger.LanguageServer
     {
         public string Uri { get; }
         public string Content { get; set; }
+        public RulesetNode Ruleset { get; set; }
 
         public Document(string uri)
         {
@@ -436,276 +503,5 @@ namespace Deltin.Deltinteger.LanguageServer
         public string File { get; }
         public Pos Caret { get; }
         public Node[] SelectedNode { get; }
-    }
-
-    public class CompletionItem
-    {
-        #region Kinds
-        public const int Text = 1;
-        public const int Method = 2;
-        public const int Function = 3;
-        public const int Constructor = 4;
-        public const int Field = 5;
-        public const int Variable = 6;
-        public const int Class = 7;
-        public const int Interface = 8;
-        public const int Module = 9;
-        public const int Property = 10;
-        public const int Unit = 11;
-        public const int Value = 12;
-        public const int Enum = 13;
-        public const int Keyword = 14;
-        public const int Snippet = 15;
-        public const int Color = 16;
-        public const int File = 17;
-        public const int Reference = 18;
-        public const int Folder = 19;
-        public const int EnumMember = 20;
-        public const int Constant = 21;
-        public const int Struct = 22;
-        public const int Event = 23;
-        public const int Operator = 24;
-        public const int TypeParameter = 25;
-        #endregion
-
-        public CompletionItem(string label)
-        {
-            this.label = label;
-        }
-
-        public string label;
-        public int kind;
-        public string detail;
-        public object documentation;
-        public bool deprecated;
-        public string sortText;
-        public string filterText;
-        public int insertTextFormat;
-        public TextEdit textEdit;
-        public TextEdit[] additionalTextEdits;
-        public string[] commitCharacters;
-        public Command command;
-        public object data;
-    }
-
-#region Signature
-    class SignatureHelp
-    {
-        public SignatureInformation[] signatures;
-        public int activeSignature;
-        public int activeParameter;
-
-        public SignatureHelp(SignatureInformation[] signatures, int activeSignature, int activeParameter)
-        {
-            this.signatures = signatures;
-            this.activeSignature = activeSignature;
-            this.activeParameter = activeParameter;
-        }
-    }
-
-    class SignatureInformation
-    {
-        public string label;
-        public object documentation; // string or markup
-        public ParameterInformation[] parameters;
-
-        public SignatureInformation(string label, object documentation, ParameterInformation[] parameters)
-        {
-            this.label = label;
-            this.documentation = documentation;
-            this.parameters = parameters;
-        }
-    }
-
-    public class ParameterInformation
-    {
-        public object label; // string or int[]
-
-        public object documentation; // string or markup
-
-        public ParameterInformation(object label, object documentation)
-        {
-            this.label = label;
-            this.documentation = documentation;
-        }
-    }
-#endregion
-
-#region Diagnostic
-
-    public class PublishDiagnosticsParams
-    {
-        public string uri;
-        public Diagnostic[] diagnostics;
-
-        public PublishDiagnosticsParams(string uri, Diagnostic[] diagnostics)
-        {
-            this.uri = uri;
-            this.diagnostics = diagnostics;
-        }
-    }
-
-    public class Diagnostic
-    {
-        public const int Error = 1;
-        public const int Warning = 2;
-        public const int Information = 3;
-        public const int Hint = 4;
-        
-        public string message;
-        public Range range;
-        public int severity;
-        public object code; // string or number
-        public string source;
-        public DiagnosticRelatedInformation[] relatedInformation;
-
-        public Diagnostic(string message, Range range)
-        {
-            this.message = message;
-            this.range = range;
-        }
-
-        override public string ToString()
-        {
-            return $"{DiagnosticSeverityText()} at {range.start.ToString()}: " + message;
-        }
-        public string Info(string file)
-        {
-            return $"{System.IO.Path.GetFileName(file)}: {DiagnosticSeverityText()} at {range.start.ToString()}: " + message;
-        }
-
-        private string DiagnosticSeverityText()
-        {
-            if (severity == 1)
-                return "Error";
-            else if (severity == 2)
-                return "Warning";
-            else if (severity == 3)
-                return "Information";
-            else if (severity == 4)
-                return "Hint";
-            else throw new Exception();
-        }
-    }
-
-    public class DiagnosticRelatedInformation
-    {
-        public Location location;
-        public string message;
-
-        public DiagnosticRelatedInformation(Location location, string message)
-        {
-            this.location = location;
-            this.message = message;
-        }
-    }
-#endregion
-
-#region Hover
-    // https://microsoft.github.io/language-server-protocol/specification#textDocument_hover
-    class Hover
-    {
-        public object contents; // TODO MarkedString support 
-        public Range range;
-
-        public Hover(MarkupContent contents)
-        {
-            this.contents = contents;
-        }
-        #pragma warning disable 0618
-        public Hover(MarkedString contents)
-        {
-            this.contents = contents;
-        }
-        public Hover(MarkedString[] contents)
-        {
-            this.contents = contents;
-        }
-        #pragma warning restore 0618
-    }
-#endregion
-
-    public class MarkupContent
-    {
-        public string kind;
-        public string value;
-
-        public const string PlainText = "plaintext";
-        public const string Markdown = "markdown";
-
-        public MarkupContent(string kind, string value)
-        {
-            this.kind = kind;
-            this.value = value;
-        }
-    }
-
-    [Obsolete("MarkedString is obsolete, use MarkupContent instead.")]
-    public class MarkedString
-    {
-        public string language;
-        public string value;
-
-        public MarkedString(string language, string value)
-        {
-            this.language = language;
-            this.value = value;
-        }
-    }
-
-    public class Location 
-    {
-        public string uri;
-        public Range range;
-
-        public Location(string uri, Range range)
-        {
-            this.uri = uri;
-            this.range = range;
-        }
-    }
-
-    public class TextEdit
-    {
-        public static TextEdit Replace(Range range, string newText)
-        {
-            return new TextEdit()
-            {
-                range = range,
-                newText = newText
-            };
-        }
-        public static TextEdit Insert(Pos pos, string newText)
-        {
-            return new TextEdit()
-            {
-                range = new Range(pos, pos),
-                newText = newText
-            };
-        }
-        public static TextEdit Delete(Range range)
-        {
-            return new TextEdit()
-            {
-                range = range,
-                newText = string.Empty
-            };
-        }
-
-        public Range range;
-        public string newText;
-    }
-
-    public class Command
-    {
-        public string title;
-        public string command;
-        public object[] arguments;
-
-        public Command(string title, string command)
-        {
-            this.title = title;
-            this.command = command;
-        }
     }
 }
