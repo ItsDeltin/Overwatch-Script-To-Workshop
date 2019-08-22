@@ -162,6 +162,21 @@ Player arrays will set every player in the array's variable.
 AllPlayers().speedBuff = 100;
 ```
 
+### Import other files
+
+```
+// Top of file
+import "HUD.del";
+import "TrackerClass.del";
+import "ZombieClass.del";
+
+// Absolute paths work too.
+import "../Extras.del";
+
+rule: "my rule"
+...
+```
+
 ### Methods
 
 #### IsAI() Example
