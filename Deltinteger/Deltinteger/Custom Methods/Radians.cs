@@ -14,7 +14,10 @@ namespace Deltin.Deltinteger.Elements
 
         public override CustomMethodWiki Wiki()
         {
-            return new CustomMethodWiki("Converts from degress to radians.");
+            return new CustomMethodWiki(
+                "Converts from degress to radians.",
+                "Degrees to convert."
+            );
         }
     }
 
@@ -29,7 +32,10 @@ namespace Deltin.Deltinteger.Elements
 
         public override CustomMethodWiki Wiki()
         {
-            return new CustomMethodWiki("Converts from radians to degrees.");
+            return new CustomMethodWiki(
+                "Converts from radians to degrees.",
+                "Radians to convert."
+            );
         }
     }
 }
