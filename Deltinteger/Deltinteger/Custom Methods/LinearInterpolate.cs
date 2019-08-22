@@ -28,7 +28,7 @@ namespace Deltin.Deltinteger.Elements
                 // Parameters
                 "The first point.",
                 "The second point.",
-                "The fraction. 0 will return the first point, 1 will return the second point."
+                "The fraction. 0 will return the first point, 1 will return the second point, 0.5 will return the midpoint, etc."
             );
         }
     }
@@ -63,7 +63,7 @@ namespace Deltin.Deltinteger.Elements
                 // Parameters
                 "The first point.",
                 "The second point.",
-                "The fraction. 0 will return the first point, 1 will return the second point."
+                "The fraction. 0 will return the first point, 1 will return the second point, 0.5 will return the midpoint, etc."
             );
         }
     }

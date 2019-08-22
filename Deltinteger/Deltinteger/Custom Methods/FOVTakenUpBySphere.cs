@@ -21,7 +21,7 @@ namespace Deltin.Deltinteger.Elements
             return new CustomMethodWiki(
                 "The angle of field of view a sphere will take up at a specific distance from an eye.",
                 // Parameters
-                "The distance to the center of the sphere.",
+                "The distance to the center of the sphere from an eye.",
                 "The radius of the sphere."
             );
         }

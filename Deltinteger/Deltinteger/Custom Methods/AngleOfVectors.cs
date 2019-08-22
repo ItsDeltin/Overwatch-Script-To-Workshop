@@ -123,7 +123,12 @@ namespace Deltin.Deltinteger.Elements
     
         public override CustomMethodWiki Wiki()
         {
-            return new CustomMethodWiki("Gets the angle of 3 vectors in 3d space.");
+            return new CustomMethodWiki(
+                "Gets the angle of 3 vectors in 3d space.",
+                "The first vector.",
+                "The second vector.",
+                "The third vector."
+            );
         }
     }
 
@@ -198,7 +203,12 @@ namespace Deltin.Deltinteger.Elements
     
         public override CustomMethodWiki Wiki()
         {
-            return new CustomMethodWiki("Gets the angle of 3 vectors in 3d space.");
+            return new CustomMethodWiki(
+                "Gets the angle of 3 vectors in 3d space.",
+                "The first vector.",
+                "The second vector.",
+                "The third vector."
+            );
         }
     }
 }

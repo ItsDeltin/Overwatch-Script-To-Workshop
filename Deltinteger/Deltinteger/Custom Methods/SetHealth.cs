@@ -30,7 +30,10 @@ namespace Deltin.Deltinteger.Elements
 
         public override CustomMethodWiki Wiki()
         {
-            return new CustomMethodWiki("Sets the health of a player.");
+            return new CustomMethodWiki(
+                "Sets the health of a player.",
+                "The resulting health of the player."
+            );
         }
     }
 }

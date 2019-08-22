@@ -16,7 +16,10 @@ namespace Deltin.Deltinteger.Elements
 
         public override CustomMethodWiki Wiki()
         {
-            return new CustomMethodWiki("The height of the player measured from feet to eyes.");
+            return new CustomMethodWiki(
+                "The height of the player measured from feet to eyes. (totally useless)",
+                "The player to get the height of."
+            );
         }
     }
 }
