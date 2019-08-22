@@ -178,9 +178,9 @@ namespace Deltin.Deltinteger.Parse
                         {
                             importFilePath = Extras.CombinePathWithDotNotation(file, importNode.File);
                         }
-                        catch (ArgumentException)
+                        catch (Exception)
                         {
-                            // ArgumentException is thrown if the filename has invalid characters.
+                            // Exception is thrown if the filename has invalid characters.
                             throw SyntaxErrorException.InvalidImportPathChars(importNode.File, importNode.Location);
                         }
 

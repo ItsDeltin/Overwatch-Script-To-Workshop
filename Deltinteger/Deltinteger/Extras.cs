@@ -38,7 +38,7 @@ namespace Deltin.Deltinteger
                 return newText.ToString();
         }
 
-        public static string CombinePathWithDotNotation(string referenceDirectory, string file, bool doThrow = true)
+        public static string CombinePathWithDotNotation(string referenceDirectory, string file, bool invalidSymbolThrow = true)
         {
             try
             {
@@ -47,9 +47,9 @@ namespace Deltin.Deltinteger
                 if (file == "") combined += Path.DirectorySeparatorChar;
                 return Path.GetFullPath(combined);
             }
-            catch (ArgumentException ex)
+            catch (Exception ex)
             {
-                if (doThrow)
+                if (invalidSymbolThrow)
                     throw ex;
                 return null;
             }
