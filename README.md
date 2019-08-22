@@ -269,7 +269,7 @@ Install the `overwatch-script-to-workshop-x.x.x.vsix` extension file.
 
 ![](https://i.imgur.com/cwTBkNp.png)
 
-In `Start Language Server.bat` make sure the `-port` argument matches the ports set in the settings `ostw.port1` and `ostw.port2`. Is 3000 and 3001 by default. Launch the bat to start the language server.
+In `Start Language Server.bat` make sure the `-port` argument matches the ports set in the settings `ostw.port1` and `ostw.port2`. Is 9145 and 9146 by default. Launch the bat to start the language server.
 
 You can press `ctrl+space` to get a list of all the methods.
 
