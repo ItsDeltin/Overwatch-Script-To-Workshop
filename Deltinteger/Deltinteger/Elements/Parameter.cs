@@ -54,9 +54,9 @@ namespace Deltin.Deltinteger.Elements
         public override string GetLabel(bool markdown)
         {
             if (!markdown)
-                return ReturnType.ToString() + " " + Name;
+                return ReturnType.ToString() + ": " + Name;
             else
-                return "**" + ReturnType.ToString() + "** " + Name;
+                return "**" + ReturnType.ToString() + "**: " + Name;
         }
     }
 
@@ -72,9 +72,9 @@ namespace Deltin.Deltinteger.Elements
         public override string GetLabel(bool markdown)
         {
             if (!markdown)
-                return Type.Name + " " + Name;
+                return Type.Name + ": " + Name;
             else
-                return "**" + Type.Name + "** " + Name;
+                return "**" + Type.Name + "**: " + Name;
         }
     }
 
@@ -97,9 +97,9 @@ namespace Deltin.Deltinteger.Elements
         public override string GetLabel(bool markdown)
         {
             if (!markdown)
-                return EnumData.CodeName + " " + Name;
+                return EnumData.CodeName + ": " + Name;
             else
-                return "**" + EnumData.CodeName + "** " + Name;
+                return "**" + EnumData.CodeName + "**: " + Name;
         }
     }
 
@@ -110,9 +110,9 @@ namespace Deltin.Deltinteger.Elements
         public override string GetLabel(bool markdown)
         {
             if (!markdown)
-                return "ref " + Name;
+                return "ref: " + Name;
             else
-                return "**ref** " + Name;
+                return "**ref**: " + Name;
         }
     }
 }

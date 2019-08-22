@@ -378,13 +378,25 @@ namespace Deltin.Deltinteger.LanguageServer
 
                     if (method != null)
                     {
+                        ParameterInformation[] parameterInfo = null;
+                        if (method.Wiki?.Parameters != null)
+                        {
+                            parameterInfo = new ParameterInformation[method.Parameters.Length];
+                            for (int i = 0; i < parameterInfo.Length; i++)
+                                parameterInfo[i] = new ParameterInformation(
+                                    method.Parameters[i].GetLabel(false),
+                                    method.Wiki.Parameters.ElementAtOrDefault(i)?.Description
+                                );
+                        }
+
                         information = new SignatureInformation(
                             method.GetLabel(false),
                             // Get the method's documentation
                             method.Wiki?.Description,
                             // Get the parameter data
-                            method.Wiki?.Parameters?.Select(v => v.ToParameterInformation())
-                                .ToArray()
+                            parameterInfo
+                            //method.Wiki?.Parameters?.Select(v => v.ToParameterInformation())
+                            //    .ToArray()
                         );
                     }
                 }
