@@ -354,6 +354,9 @@ ChaseVariable(myVar, 10, 1);
 ChaseVariable(AllPlayers().playerVar, 10, 1);
 ```
 
+#### Contributing custom methods
+Documentation for creating custom methods within DeInteger.exe can be found [here](https://github.com/ItsDeltin/Overwatch-Script-To-Workshop/blob/master/Deltinteger/Deltinteger/Custom%20Methods/README.md).
+
 ## Deltinteger.exe
 ### Arguments:
 - `-langserver`: Starts the language server.
