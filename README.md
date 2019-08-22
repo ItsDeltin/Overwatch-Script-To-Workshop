@@ -364,6 +364,8 @@ OSTW contains methods that are not found in the Overwatch Workshop.
 
 Some methods have `Optimised` variants which can not be used in conditions and use more variables but use less server load. Any methods with the type `Multiaction	Value` or `Action` can not be used in conditions.
 
+Warning: `Optimised`, Multiaction Value, and `method` methods can not be used in conditions or sorted or filtered arrays. Multiple can not be used in a single action either.
+
 #### GetMap()
 ```
 define globalvar currentMap;
