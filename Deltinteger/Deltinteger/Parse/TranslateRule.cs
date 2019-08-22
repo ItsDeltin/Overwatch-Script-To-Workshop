@@ -520,6 +520,7 @@ namespace Deltin.Deltinteger.Parse
                     {
                         parameterVars[i] = new ElementReferenceVar(userMethod.Parameters[i].Name, methodScope, methodNode, parameters[i]);
                     }
+                    else throw new NotImplementedException();
                 }
 
                 // The variable that stores the return value.
@@ -553,10 +554,11 @@ namespace Deltin.Deltinteger.Parse
                     // Re-push the paramaters.
                     for (int i = 0; i < lastMethod.ParameterVars.Length; i++)
                     {
-                        Actions.AddRange
-                        (
-                            lastMethod.ParameterVars[i].InScope(ParseExpression(scope, methodNode.Parameters[i]))
-                        );
+                        if (lastMethod.ParameterVars[i] is RecursiveVar)
+                            Actions.AddRange
+                            (
+                                ((RecursiveVar)lastMethod.ParameterVars[i]).InScope((Element)parameters[i])
+                            );
                     }
 
                     // Add to the continue skip array.
@@ -577,15 +579,24 @@ namespace Deltin.Deltinteger.Parse
                     var methodScope = scope.Root().Child(true);
 
                     // Add the parameter variables to the scope.
-                    RecursiveVar[] parameterVars = new RecursiveVar[userMethod.Parameters.Length];
+                    Var[] parameterVars = new Var[userMethod.Parameters.Length];
                     for (int i = 0; i < parameterVars.Length; i++)
                     {
-                        // Create a new variable using the parameter input.
-                        parameterVars[i] = (RecursiveVar)VarCollection.AssignVar(methodScope, userMethod.Parameters[i].Name, IsGlobal, methodNode);
-                        Actions.AddRange
-                        (
-                            parameterVars[i].InScope(ParseExpression(scope, methodNode.Parameters[i]))
-                        );
+                        if (parameters[i] is Element)
+                        {
+                            // Create a new variable using the parameter input.
+                            parameterVars[i] = (RecursiveVar)VarCollection.AssignVar(methodScope, userMethod.Parameters[i].Name, IsGlobal, methodNode);
+                            ((RecursiveVar)parameterVars[i]).Type = ((Element)parameters[i]).SupportedType?.Type;
+                            Actions.AddRange
+                            (
+                                ((RecursiveVar)parameterVars[i]).InScope((Element)parameters[i])
+                            );
+                        }
+                        else if (parameters[i] is EnumMember)
+                        {
+                            parameterVars[i] = new ElementReferenceVar(userMethod.Parameters[i].Name, methodScope, methodNode, parameters[i]);
+                        }
+                        else throw new NotImplementedException();
                     }
 
                     var returns = VarCollection.AssignVar(null, $"{methodNode.Name}: return temp value", IsGlobal, null);

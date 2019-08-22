@@ -727,7 +727,9 @@ namespace Deltin.Deltinteger.Parse
                 if (value != null)
                     valueRange = Range.GetRange(ruleOption.PART(1).Symbol);
 
-                Range totalRange = Range.GetRange(ruleOption.PART(0).Symbol, ruleOption.PART(1).Symbol);
+                Range totalRange;
+                if (ruleOption.PART(1) != null) totalRange = Range.GetRange(ruleOption.PART(0).Symbol, ruleOption.PART(1).Symbol);
+                else totalRange = Range.GetRange(ruleOption.PART(0));
                 
                 switch (option)
                 {
@@ -812,7 +814,7 @@ namespace Deltin.Deltinteger.Parse
         public UserMethodNode(DeltinScriptParser.User_methodContext context, BuildAstVisitor visitor) : base(new Location(visitor.file, Range.GetRange(context)))
         {
             Name = context.name.Text;
-            Type = context.type.Text;
+            Type = context.type?.Text;
 
             Parameters = new ParameterDefineNode[context.setParameters().parameter_define().Length];
             for (int i = 0; i < Parameters.Length; i++)

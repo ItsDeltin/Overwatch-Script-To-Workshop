@@ -83,12 +83,12 @@ namespace Deltin.Deltinteger.Parse
     public class MethodStack
     {
         public UserMethod UserMethod { get; private set; }
-        public RecursiveVar[] ParameterVars { get; private set; }
+        public Var[] ParameterVars { get; private set; }
         public int ActionIndex { get; private set; }
         public IndexedVar Return { get; private set; }
         public IndexedVar ContinueSkipArray { get; private set; }
 
-        public MethodStack(UserMethod userMethod, RecursiveVar[] parameterVars, int actionIndex, IndexedVar @return, IndexedVar continueSkipArray)
+        public MethodStack(UserMethod userMethod, Var[] parameterVars, int actionIndex, IndexedVar @return, IndexedVar continueSkipArray)
         {
             UserMethod = userMethod;
             ParameterVars = parameterVars;
