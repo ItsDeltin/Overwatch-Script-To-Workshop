@@ -317,7 +317,6 @@ struct TeleportSphere
     }
 }
 ```
-</br>
 </details>
 
 Public, private, and static support will come later.
