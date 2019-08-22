@@ -72,6 +72,20 @@ namespace Deltin.Deltinteger.Parse
                     }
                 }
 
+                foreach (var definedVar in VarCollection.AllVars)
+                    if (definedVar is IndexedVar && definedVar.IsDefinedVar)
+                    {
+                        Node value = ((IDefine)definedVar.Node).Value;
+                        if (value != null)
+                        {
+                            if (((IndexedVar)definedVar).IsGlobal)
+                                globalTranslate.Actions.AddRange(((IndexedVar)definedVar).SetVariable(globalTranslate.ParseExpression(Root, value)));
+                            else
+                                playerTranslate.Actions.AddRange(((IndexedVar)definedVar).SetVariable(playerTranslate.ParseExpression(Root, value)));
+
+                        }
+                    }
+                
                 globalTranslate.Finish();
                 playerTranslate.Finish();
 
@@ -228,11 +242,13 @@ namespace Deltin.Deltinteger.Parse
                             var.Type = GetDefinedType(definedVar.Type, definedVar.Location);
 
                         // Set initial values
+                        /*
                         if (definedVar.Value != null)
                             if (definedVar.IsGlobal)
                                 globalTranslate.Actions.AddRange(var.SetVariable(globalTranslate.ParseExpression(Root, definedVar.Value)));
                             else
                                 playerTranslate.Actions.AddRange(var.SetVariable(playerTranslate.ParseExpression(Root, definedVar.Value)));
+                                */
                     }
                     catch (SyntaxErrorException ex)
                     {

@@ -754,7 +754,7 @@ namespace Deltin.Deltinteger.Parse
                         break;
 
                     case "Player":
-                        if (eventRange != null)
+                        if (playerRange != null)
                             visitor._diagnostics.Error("Player already set.", new Location(visitor.file, totalRange));
 
                         if (!Enum.TryParse<PlayerSelector>(value, out player))
