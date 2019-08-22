@@ -24,7 +24,9 @@ namespace Deltin.Deltinteger.Elements
         public override CustomMethodWiki Wiki()
         {
             return new CustomMethodWiki(
-                "Allows you to get a value from an array using a non-integer index. Only works on data types that can have math operations performed upon them."
+                "Allows you to get a value from an array using a non-integer index. Only works on data types that can have math operations performed upon them.",
+                "Input Array",
+                "Index to access. Can be a non-integer."
             );
         }
     }
@@ -57,7 +59,9 @@ namespace Deltin.Deltinteger.Elements
         public override CustomMethodWiki Wiki()
         {
             return new CustomMethodWiki(
-                "Allows you to get a value from an array using a non-integer index. Only works on data types that can have math operations performed upon them."
+                "Allows you to get a value from an array using a non-integer index. Only works on data types that can have math operations performed upon them.",
+                "Input Array",
+                "Index to access. Can be a non-integer."
             );
         }
     }

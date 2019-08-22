@@ -14,7 +14,7 @@ namespace Deltin.Deltinteger.Elements
 
         public override CustomMethodWiki Wiki()
         {
-            return new CustomMethodWiki("Converts from meters per second to kilometers per hour.");
+            return new CustomMethodWiki("Converts from meters per second to kilometers per hour.", "Meters per second to convert.");
         }
     }
 
@@ -29,7 +29,7 @@ namespace Deltin.Deltinteger.Elements
 
         public override CustomMethodWiki Wiki()
         {
-            return new CustomMethodWiki("Converts from meters per second to miles per hour.");
+            return new CustomMethodWiki("Converts from meters per second to miles per hour.", "Meters per second to convert.");
         }
     }
 
@@ -44,7 +44,7 @@ namespace Deltin.Deltinteger.Elements
 
         public override CustomMethodWiki Wiki()
         {
-            return new CustomMethodWiki("Converts from meters to feet.");
+            return new CustomMethodWiki("Converts from meters to feet.", "Meters to convert.");
         }
     }
 
@@ -59,7 +59,7 @@ namespace Deltin.Deltinteger.Elements
 
         public override CustomMethodWiki Wiki()
         {
-            return new CustomMethodWiki("Converts from meters to yards.");
+            return new CustomMethodWiki("Converts from meters to yards.", "Meters to convert.");
         }
     }
 
@@ -74,7 +74,7 @@ namespace Deltin.Deltinteger.Elements
 
         public override CustomMethodWiki Wiki()
         {
-            return new CustomMethodWiki("Converts meters to inches.");
+            return new CustomMethodWiki("Converts meters to inches.", "Meters to convert.");
         }
     }
 }
