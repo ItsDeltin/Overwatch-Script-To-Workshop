@@ -203,6 +203,104 @@ recursive method arrayWalker(array, dims)
 }
 ```
 
+### Structs
+
+
+```
+TeleportSphere playervar spheres;
+define playervar wasCreated;
+
+rule: "Create sphere"
+Event.OngoingPlayer
+if (IsButtonHeld(EventPlayer(), Button.Interact))
+{
+    if (!wasCreated)
+    {
+        spheres = new TeleportSphere(EventPlayer(), PositionOf(EventPlayer()));
+        spheres.Create(); 
+    }
+}
+
+rule: "Destroy"
+Event.OngoingPlayer
+if (IsButtonHeld(EventPlayer(), Button.PrimaryFire))
+{
+    spheres.Destroy();
+}
+
+rule: "Return"
+Event.OngoingPlayer
+if (IsButtonHeld(EventPlayer(), Button.SecondaryFire))
+{
+    spheres.Return();
+}
+
+struct TeleportSphere
+{
+    define location;
+    define owner;
+    define radius = 5;
+    define initialRadius = radius;
+    define effectID;
+    define wasDestroyed = false;
+
+    public TeleportSphere(owner, location)
+    {
+        this.owner = owner;
+        this.location = location;
+        owner.wasCreated = true;
+    }
+
+    private method Create()
+    {
+        CreateEffect(AllPlayers(), Effect.Sphere, Color.Red, this.location, radius, EffectRev.VisibleToPositionAndRadius);
+        effectID = LastCreatedEntity();
+        ApplyImpulse(EventPlayer(), Vector(0, 10, 0), 10);
+    }
+
+    private method Destroy()
+    {
+        if (wasDestroyed) return;
+
+        ChaseVariable(radius, 0, 10);
+
+        // Wait for the effect to be destroyed
+        CreateEffect(AllPlayers(), Effect.BadAura, Color.Red, location, radius + 1);
+        define sparkEffect = LastCreatedEntity();
+        while (radius != 0);
+        DestroyEffect(sparkEffect);
+
+        ChaseVariable(radius, 0, 0);
+
+        // Play an explosion
+        PlayEffect(AllPlayers(), PlayEffect.BadExplosion, Color.Red, location, 3);
+
+        // Damage nearby players
+        foreach 6 (define player in AllPlayers())
+            if (IsInRange(player))
+                Damage(player, owner, 50);
+
+        DestroyEffect(effectID);
+        wasDestroyed = true;
+        owner.wasCreated = false;
+    }
+
+    private method IsInRange(player)
+    {
+        return DistanceBetween(PositionOf(player), location) < initialRadius;
+    }
+
+    private method Return()
+    {
+        if (wasDestroyed) return;
+        Teleport(owner, location);
+        PlayEffect(AllPlayers(), PlayEffect.GoodExplosion, Color.Blue, location, radius - 1);
+    }
+}
+```
+
+Public, private, and static support will come later.
+
 ### Custom methods
 OSTW contains methods that are not found in the Overwatch Workshop.
 
