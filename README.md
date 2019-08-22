@@ -222,6 +222,9 @@ recursive method arrayWalker(array, dims)
 
 These can contain variables and methods. When storing structs as variables they must be defined as their struct name: `TeleportSphere playervar spheres;` instead of `define playervar spheres;`.
 
+<details>
+<summary>Example</summary>
+<br>
 ```
 TeleportSphere playervar spheres;
 define playervar wasCreated;
@@ -314,6 +317,7 @@ struct TeleportSphere
     }
 }
 ```
+</details>
 
 Public, private, and static support will come later.
 
