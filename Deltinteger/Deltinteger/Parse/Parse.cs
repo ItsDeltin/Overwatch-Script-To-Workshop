@@ -152,37 +152,6 @@ namespace Deltin.Deltinteger.Parse
                         Diagnostics.Error(ex);
                     }
 
-                // Get the variables
-                foreach (var definedVar in ruleset.DefinedVars)
-                    try
-                    {
-                        IndexedVar var;
-                        if (definedVar.UseVar == null)
-                            var = VarCollection.AssignVar(Root, definedVar.VariableName, definedVar.IsGlobal, definedVar);
-                        else
-                            var = VarCollection.AssignVar(
-                                Root, 
-                                definedVar.VariableName, 
-                                definedVar.IsGlobal,
-                                definedVar.UseVar.Variable, 
-                                definedVar.UseVar.Index,
-                                definedVar
-                            );
-                        if (definedVar.Type != null)
-                            var.Type = GetDefinedType(definedVar.Type, definedVar.Location);
-
-                        // Set initial values
-                        if (definedVar.Value != null)
-                            if (definedVar.IsGlobal)
-                                globalTranslate.Actions.AddRange(var.SetVariable(globalTranslate.ParseExpression(Root, definedVar.Value)));
-                            else
-                                playerTranslate.Actions.AddRange(var.SetVariable(playerTranslate.ParseExpression(Root, definedVar.Value)));
-                    }
-                    catch (SyntaxErrorException ex)
-                    {
-                        Diagnostics.Error(ex);
-                    }
-
                 // Get the user methods.
                 for (int i = 0; i < ruleset.UserMethods.Length; i++)
                     try
@@ -237,7 +206,38 @@ namespace Deltin.Deltinteger.Parse
                     catch (SyntaxErrorException ex)
                     {
                         Diagnostics.Error(ex);
-                    }               
+                    }
+
+                // Get the variables
+                foreach (var definedVar in ruleset.DefinedVars)
+                    try
+                    {
+                        IndexedVar var;
+                        if (definedVar.UseVar == null)
+                            var = VarCollection.AssignVar(Root, definedVar.VariableName, definedVar.IsGlobal, definedVar);
+                        else
+                            var = VarCollection.AssignVar(
+                                Root, 
+                                definedVar.VariableName, 
+                                definedVar.IsGlobal,
+                                definedVar.UseVar.Variable, 
+                                definedVar.UseVar.Index,
+                                definedVar
+                            );
+                        if (definedVar.Type != null)
+                            var.Type = GetDefinedType(definedVar.Type, definedVar.Location);
+
+                        // Set initial values
+                        if (definedVar.Value != null)
+                            if (definedVar.IsGlobal)
+                                globalTranslate.Actions.AddRange(var.SetVariable(globalTranslate.ParseExpression(Root, definedVar.Value)));
+                            else
+                                playerTranslate.Actions.AddRange(var.SetVariable(playerTranslate.ParseExpression(Root, definedVar.Value)));
+                    }
+                    catch (SyntaxErrorException ex)
+                    {
+                        Diagnostics.Error(ex);
+                    }
             }
         }
 
