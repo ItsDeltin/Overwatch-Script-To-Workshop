@@ -802,6 +802,7 @@ namespace Deltin.Deltinteger.Parse
     public class UserMethodNode : Node
     {
         public string Name { get; }
+        public string Type { get; }
         public ParameterDefineNode[] Parameters { get; }
         public BlockNode Block { get; }
         public bool IsRecursive { get; }
@@ -810,7 +811,8 @@ namespace Deltin.Deltinteger.Parse
         
         public UserMethodNode(DeltinScriptParser.User_methodContext context, BuildAstVisitor visitor) : base(new Location(visitor.file, Range.GetRange(context)))
         {
-            Name = context.PART().GetText();
+            Name = context.name.Text;
+            Type = context.type.Text;
 
             Parameters = new ParameterDefineNode[context.setParameters().parameter_define().Length];
             for (int i = 0; i < Parameters.Length; i++)
@@ -823,7 +825,6 @@ namespace Deltin.Deltinteger.Parse
             AccessLevel = AccessLevel.Private;
             if (context.accessor() != null)
                 AccessLevel = (AccessLevel)Enum.Parse(typeof(AccessLevel), context.accessor().GetText(), true);
-
         }
 
         public override Node[] Children()

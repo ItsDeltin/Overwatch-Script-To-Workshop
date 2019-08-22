@@ -524,6 +524,7 @@ namespace Deltin.Deltinteger.Parse
 
                 // The variable that stores the return value.
                 IndexedVar returns = VarCollection.AssignVar(scope, $"{methodNode.Name}: return temp value", IsGlobal, null);
+                returns.Type = method.Type;
 
                 // Add the method to the method stack
                 MethodStackNoRecursive.Add(userMethod);
@@ -588,6 +589,7 @@ namespace Deltin.Deltinteger.Parse
                     }
 
                     var returns = VarCollection.AssignVar(null, $"{methodNode.Name}: return temp value", IsGlobal, null);
+                    returns.Type = method.Type;
 
                     // Setup the continue skip array.
                     IndexedVar continueSkipArray = VarCollection.AssignVar(null, $"{methodNode.Name}: continue skip array", IsGlobal, null);
@@ -644,6 +646,7 @@ namespace Deltin.Deltinteger.Parse
                     MethodStack.Remove(stack);
                 }
             }
+
             return result;
         }
 

@@ -11,6 +11,7 @@ namespace Deltin.Deltinteger.Parse
         public UserMethod(ScopeGroup scope, UserMethodNode node)
         {
             Name = node.Name;
+            TypeString = node.Type;
             Block = node.Block;
             ParameterNodes = node.Parameters;
             IsRecursive = node.IsRecursive;
@@ -24,10 +25,15 @@ namespace Deltin.Deltinteger.Parse
 
         public void RegisterParameters(ParsingData parser)
         {
+            if (TypeString != null)
+                Type = parser.GetDefinedType(TypeString, Node.Location);
             Parameters = ParameterDefineNode.GetParameters(parser, ParameterNodes);
         }
 
         public string Name { get; }
+
+        public DefinedType Type { get; private set; }
+        private string TypeString { get; }
 
         public BlockNode Block { get; }
 

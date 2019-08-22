@@ -99,7 +99,7 @@ ow_rule :
 	block
 	;
 
-user_method : DOCUMENTATION* accessor? RECURSIVE? METHOD PART LEFT_PAREN setParameters RIGHT_PAREN
+user_method : DOCUMENTATION* accessor? RECURSIVE? (METHOD | type=PART) name=PART LEFT_PAREN setParameters RIGHT_PAREN
 	block
 	;
 
