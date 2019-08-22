@@ -50,6 +50,11 @@ namespace Deltin.Deltinteger.LanguageServer
         public static bool operator <=(Pos p1, Pos p2) => p1.CompareTo(p2) <= 0;
         public static bool operator >=(Pos p1, Pos p2) => p1.CompareTo(p2) >= 0;
         #endregion
+
+        public Pos Offset(Pos other)
+        {
+            return new Pos(this.line + other.line, this.character + other.character);
+        }
     }
 
     public class Range : IComparable<Range>
@@ -164,6 +169,11 @@ namespace Deltin.Deltinteger.LanguageServer
         public static bool operator <=(Range r1, Range r2) => r1.CompareTo(r2) <= 0;
         public static bool operator >=(Range r1, Range r2) => r1.CompareTo(r2) >= 0;
         #endregion
+
+        public Range Offset(Range other)
+        {
+            return new Range(start.Offset(other.start), end.Offset(other.end));
+        }
     }
     
     public class CompletionItem

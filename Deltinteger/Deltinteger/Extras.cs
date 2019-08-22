@@ -38,11 +38,21 @@ namespace Deltin.Deltinteger
                 return newText.ToString();
         }
 
-        public static string CombinePathWithDotNotation(string referenceDirectory, string file)
+        public static string CombinePathWithDotNotation(string referenceDirectory, string file, bool doThrow = true)
         {
-            string directory = Path.GetDirectoryName(referenceDirectory);
-            string combined = Path.Combine(directory, file);
-            return Path.GetFullPath(combined);
+            try
+            {
+                string directory = Path.GetDirectoryName(referenceDirectory);
+                string combined = Path.Combine(directory, file);
+                if (file == "") combined += Path.DirectorySeparatorChar;
+                return Path.GetFullPath(combined);
+            }
+            catch (ArgumentException ex)
+            {
+                if (doThrow)
+                    throw ex;
+                return null;
+            }
         }
 
         public static string Lines(params string[] lines)

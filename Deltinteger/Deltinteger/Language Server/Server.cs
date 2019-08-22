@@ -289,6 +289,36 @@ namespace Deltin.Deltinteger.LanguageServer
                             completion.AddRange(add);
                         
                         break;
+                    
+                    case ImportNode importNode:
+
+                        string currentPath = importNode.File;
+
+                        string path = Extras.CombinePathWithDotNotation(posData.File, importNode.File, false);
+
+                        if (path != null)
+                        {
+                            completion.Add(new CompletionItem("../") { kind = CompletionItem.Folder });
+
+                            // GetDirectoryName can return null even if path isn't null.
+                            path = Path.GetDirectoryName(path);
+
+                            if (path != null)
+                            {
+                                foreach(string fullDirectoryPath in Directory.GetDirectories(path))
+                                {
+                                    string directory = new DirectoryInfo(fullDirectoryPath).Name;
+                                    completion.Add(new CompletionItem(directory) { kind = CompletionItem.Folder });
+                                }
+                                foreach(string fullFilePath in Directory.GetFiles(path))
+                                {
+                                    string file = Path.GetFileName(fullFilePath);
+                                    completion.Add(new CompletionItem(file) { kind = CompletionItem.File });
+                                }
+                            }
+                        }
+
+                        break;
                 }
 
             return JsonConvert.SerializeObject(completion.ToArray());
