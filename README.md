@@ -320,18 +320,49 @@ Public, private, and static support will come later.
 ### Custom methods
 OSTW contains methods that are not found in the Overwatch Workshop.
 
-| Method                 | Type              | Description |
-| ---------------------- | ----------------- | ----------- |
-| GetMap                 | Multiaction Value | `GetMap()` gets the current map. This is based off of [Xerxes's Map Identifier](https://us.forums.blizzard.com/en/overwatch/t/workshop-resource-map-identifier-map-detection-script-v2-0-only-2-actions/341132). The result can be compared to with the `Map` enum.
-| AngleOfVectors         | Multiaction Value | Gets the angle of 3 vectors. 
-| AngleOfVectorsCom      | Value             | Behaves the same as AngleOfVectors but condensed into one action.
-| ChaseVariable          | Action            | Behaves the same as the workshop method `Chase Global/Player Variable At Rate`, but will work with named variables. Works with numbers and vectors.
-| MinWait                | Action            | Same as doing `Wait(0.016)`.
-| InsertValueInArray     | Value             | Inserts a value into an array at an index.
-| RemoveFromArrayAtIndex | Value             | Removes value from an array at an index.
-| Pi                     | Value             | Returns the constant π: `3.14159265358979`.
-| IsConditionTrue        | Multiaction Value | Determines if the condition is true. Has a 0.016 second delay.
-| IsConditionFalse       | Multiaction Value | Determines if the condition is false. Has a 0.016 second delay.
+| Method                    | Type              | Description |
+| ------------------------- | ----------------- | ----------- |
+| GetMap                    | Multiaction Value | `GetMap()` gets the current map. This is based off of [Xerxes's Map Identifier](https://us.forums.blizzard.com/en/overwatch/t/workshop-resource-map-identifier-map-detection-script-v2-0-only-2-actions/341132). The result can be compared to with the `Map` enum.
+| AngleOfVectors            | Multiaction Value | Gets the angle of 3 vectors. 
+| AngleOfVectorsCom         | Value             | Behaves the same as AngleOfVectors but condensed into one action.
+| ChaseVariable             | Action            | Behaves the same as the workshop method `Chase Global/Player Variable At Rate`, but will work with named variables. Works with numbers and vectors.
+| MinWait                   | Action            | Same as doing `Wait(0.016)`.
+| InsertValueInArray        | Value             | Inserts a value into an array at an index.
+| RemoveFromArrayAtIndex    | Value             | Removes value from an array at an index.
+| Pi                        | Value             | Returns the constant π: `3.14159265358979`.
+| IsConditionTrue           | Multiaction Value | Determines if the condition is true. Has a 0.016 second delay.
+| IsConditionFalse          | Multiaction Value | Determines if the condition is false. Has a 0.016 second delay.
+| BlendedIndex			    | Value             | Allows you to get a value from an array using a non-integer index. Only works on data types that can have math operation performed upon them.
+| MinOfArray                | Value			    | The lowest value of an array.
+| MaxOfArray                | Value             | The highest value of an array.
+| RangeOfArray              | Value             | The highest value of an array subtracted by its lowest value.
+| SortedMedian			    | Value             | The median of an array that has already been sorted.
+| UnsortedMedian            | Value             | The median of an array that has not been sorted yet.
+| Destination               | Value             | Calculates a destination given a starting point, distance and direction.
+| EyeCastHitPosition        | Value             | Casts a ray in the direction the player is facing with a certain range.
+| FOVTakenUpBySphere        | Value             | The angle of field of view a sphere of a certain size will take up at a certain distance from an eye.
+| HorizontalDistance        | Value             | The distance between 2 points as if they were on the same Y level.
+| IsOnScreen                | Value             | Whether a point is visible on a players screen or not.
+| LinearInterpolate         | Value             | A point a fraction along the distance between 2 points.
+| LinearInterpolateDistance | Value             | A point a distance along a straight line between 2 points.
+| Midpoint                  | Value             | The midpoint between 2 vectors.
+| Pythag                    | Value             | Calculates the length of the longest side (hypotenuse) of a right angled triangle.
+| PythagConverse            | Value             | Calculates the missing side of a right angled triangle.
+| SphereHitbox              | Value             | Whether the given player is looking directly at a sphere with collision.
+| TallnessOfPlayer          | Value             | The height of the player measured from feet to eyes.
+| ToKPH                     | Value             | Converts from meters per second to kilometers per hour.
+| ToMPH                     | Value             | Converts from meters per second to miles per hour.
+| ToFt                      | Value             | Converts from meters to feet.
+| ToYards                   | Value             | Converts from meters to yards.
+| ToInches                  | Value             | Converts meters to inches.
+| IsAIUnintrusive           | Multiaction Value | Whether the player is an AI or not. Works in less situations but much less intrusive. Requires the player to be spawned in.
+| IsAIAccurate              | Multiaction Value | Whether the player is an AI or not. Works in more situations but it is more intrusive.
+| ToRadians                 | Value             | Converts from degrees to radians.
+| ToDegrees                 | Value             | Converts from radians to degrees.
+| SetHealth                 | Action            | Sets the health of a player.
+
+
+Some methods have `Optimised` variants which can not be used in conditions and use more variables but use less server load. Any methods with the type `Multiaction	Value` or `Action` can not be used in conditions.
 
 #### GetMap()
 ```
