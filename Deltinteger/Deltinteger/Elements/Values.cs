@@ -342,6 +342,10 @@ namespace Deltin.Deltinteger.Elements
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     public class V_IsDead : Element {}
 
+    [ElementData("Is Dummy Bot", ValueType.Boolean)]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    public class V_IsDummyBot : Element {}
+
     [ElementData("Is Firing Primary", ValueType.Boolean)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     public class V_IsFiringPrimary : Element {}

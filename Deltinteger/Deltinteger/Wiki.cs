@@ -36,6 +36,10 @@ namespace Deltin.Deltinteger.WorkshopWiki
                 {
                     string name = summary.InnerText.Trim(); // Gets the name
 
+                    // Sometimes methods have "- New!" at the end, be sure to remove it.
+                    if (name.EndsWith("- New!"))
+                        name = name.Substring(0, name.Length - "- New!".Length).Trim();
+
                     var details = summary.ParentNode;
                     string description = details.SelectNodes("p").First().InnerText.Trim(); // Gets the description.
 

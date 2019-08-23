@@ -473,7 +473,12 @@ namespace Deltin.Deltinteger.Elements
         Red,
         Blue,
         Team1,
-        Team2
+        Team2,
+        Aqua,
+        Orange,
+        SkyBlue,
+        Turqoise,
+        LimeGreen
     }
 
     [WorkshopEnum]
@@ -675,6 +680,14 @@ namespace Deltin.Deltinteger.Elements
         VisibleToPositionAndString,
         VisibleToAndString,
         String
+    }
+
+    [WorkshopEnum]
+    public enum BeamType
+    {
+        GoodBeam,
+        BadBeam,
+        GrappleBeam
     }
 
     [WorkshopEnum]

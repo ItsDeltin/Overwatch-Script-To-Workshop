@@ -1,14 +1,10 @@
 using System;
+using System.Threading.Tasks;
 using System.Net;
-using System.Net.Sockets;
 using System.Text;
 using System.IO;
-using System.Drawing;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
-using System.Diagnostics;
-using System.Web;
 using Deltin.Deltinteger.Parse;
 using Deltin.Deltinteger.Elements;
 using Newtonsoft.Json;
@@ -147,23 +143,32 @@ namespace Deltin.Deltinteger.LanguageServer
 
             if (parserData.Rules != null && !parserData.Diagnostics.ContainsErrors())
             {
-                string final = Program.RuleArrayToWorkshop(parserData.Rules.ToArray(), parserData.VarCollection);
-                try
+                ParsingData data = parserData;
+                Task.Run(() => 
                 {
-                    using (var wc = new WebClient())
-                    {
-                        wc.Encoding = System.Text.Encoding.UTF8;
-                        wc.UploadString($"http://localhost:{clientPort}/", final);
-                    }
-                }
-                catch (WebException)
-                {
-                    Log.Write(LogLevel.Normal, "Failed to upload workshop result.");
-                }
+                    Send(data, clientPort);
+                });
             }
             
             PublishDiagnosticsParams[] diagnostics = parserData.Diagnostics.GetDiagnostics();
             return JsonConvert.SerializeObject(diagnostics);
+        }
+
+        private static void Send(ParsingData data, int clientPort)
+        {
+            string final = Program.RuleArrayToWorkshop(data.Rules.ToArray(), data.VarCollection);
+            try
+            {
+                using (var wc = new WebClient())
+                {
+                    wc.Encoding = System.Text.Encoding.UTF8;
+                    wc.UploadString($"http://localhost:{clientPort}/", final);
+                }
+            }
+            catch (WebException ex)
+            {
+                Log.Write(LogLevel.Normal, "Failed to upload workshop result: " + ex.Message);
+            }
         }
 
         string GetAutocomplete(string json)
@@ -378,16 +383,13 @@ namespace Deltin.Deltinteger.LanguageServer
 
                     if (method != null)
                     {
-                        ParameterInformation[] parameterInfo = null;
-                        if (method.Wiki?.Parameters != null)
-                        {
-                            parameterInfo = new ParameterInformation[method.Parameters.Length];
-                            for (int i = 0; i < parameterInfo.Length; i++)
-                                parameterInfo[i] = new ParameterInformation(
-                                    method.Parameters[i].GetLabel(false),
-                                    method.Wiki.Parameters.ElementAtOrDefault(i)?.Description
-                                );
-                        }
+                        ParameterInformation[] parameterInfo = new ParameterInformation[method.Parameters.Length];
+                        for (int i = 0; i < parameterInfo.Length; i++)
+                            parameterInfo[i] = new ParameterInformation(
+                                method.Parameters[i].GetLabel(false),
+                                // Every value in the tree can potentially be null.
+                                method.Wiki?.Parameters?.ElementAtOrDefault(i)?.Description
+                            );
 
                         information = new SignatureInformation(
                             method.GetLabel(false),

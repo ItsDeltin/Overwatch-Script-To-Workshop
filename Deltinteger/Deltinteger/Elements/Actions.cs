@@ -83,6 +83,24 @@ namespace Deltin.Deltinteger.Elements
     [EnumParameter("Type", typeof(Communication))]
     public class A_Communicate : Element {}
 
+    [ElementData("Create Beam Effect")]
+    [Parameter("Visible To", ValueType.Player, typeof(V_AllPlayers))]
+    [EnumParameter("Beam Type", typeof(BeamType))]
+    [Parameter("Start Position", ValueType.VectorAndPlayer, typeof(V_EventPlayer))]
+    [Parameter("End Position", ValueType.VectorAndPlayer, typeof(V_EventPlayer))]
+    [EnumParameter("Color", typeof(Color))]
+    [EnumParameter("Reevaluation", typeof(EffectRev))]
+    public class A_CreateBeamEffect : Element {}
+
+    [ElementData("Create Dummy Bot")]
+    [Parameter("Hero", ValueType.Hero, typeof(V_HeroVar))]
+    [Parameter("Team", ValueType.Team, typeof(V_TeamVar))]
+    #warning settable default number
+    [Parameter("Slot", ValueType.Number, typeof(V_Number))]
+    [Parameter("Position", ValueType.VectorAndPlayer, typeof(V_Vector))]
+    [Parameter("Facing", ValueType.VectorAndPlayer, typeof(V_Vector))]
+    public class A_CreateDummyBot : Element {}
+
     [ElementData("Create Effect")]
     [Parameter("Visible To", ValueType.Player, typeof(V_AllPlayers))]
     [EnumParameter("Type", typeof(Effect))]
@@ -144,6 +162,9 @@ namespace Deltin.Deltinteger.Elements
     [Parameter("Team", ValueType.Team, typeof(V_TeamVar))]
     public class A_DeclareTeamVictory : Element {}
 
+    [ElementData("Destroy All Dummy Bots")]
+    public class A_DestroyAllDummyBots : Element {}
+
     [ElementData("Destroy All Effects")]
     public class A_DestroyAllEffects : Element {}
 
@@ -155,6 +176,11 @@ namespace Deltin.Deltinteger.Elements
 
     [ElementData("Destroy All In-World Text")]
     public class A_DestroyAllInworldText : Element {}
+
+    [ElementData("Destroy Dummy Bot")]
+    [Parameter("Team", ValueType.Team, typeof(V_TeamVar))]
+    [Parameter("Slot", ValueType.Number, typeof(V_Number))]
+    public class A_DestroyDummyBot : Element {}
 
     [ElementData("Destroy Effect")]
     [Parameter("Effect ID", ValueType.Player, null)]
