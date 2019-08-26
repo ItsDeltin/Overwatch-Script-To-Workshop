@@ -4,6 +4,7 @@ using System.Linq;
 using System.IO;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.LanguageServer;
+using Deltin.Deltinteger.Models;
 using Antlr4.Runtime;
 
 namespace Deltin.Deltinteger.Parse
@@ -189,39 +190,38 @@ namespace Deltin.Deltinteger.Parse
 
                 List<string> importedFiles = new List<string>();
 
+                foreach (ImportObjectNode importObject in ruleset.ObjectImports)
+                    try
+                    {
+                        Importer importer = new Importer(Diagnostics, importedFiles, importObject.File, file, importObject.Location);
+                        if (!importer.AlreadyImported)
+                        {
+                            importedFiles.Add(importer.ResultingPath);
+                            string content = importer.GetFile();
+                            switch (importer.FileType)
+                            {
+                                case ".obj":
+                                    Model newModel = Model.ImportObj(content);
+                                    new ModelVar(importObject.Name, Root, importObject, newModel);
+                                    break;
+                            }
+                        }
+                    }
+                    catch (SyntaxErrorException ex)
+                    {
+                        Diagnostics.Error(ex);
+                    }
+
                 // Check the imported files.
                 foreach (ImportNode importNode in ruleset.Imports)
                     try
                     {
-                        string importFileName = Path.GetFileName(importNode.File);
-                        string importFilePath;
-                        try
+                        Importer importer = new Importer(Diagnostics, importedFiles, importNode.File, file, importNode.Location);
+                        if (!importer.AlreadyImported)
                         {
-                            importFilePath = Extras.CombinePathWithDotNotation(file, importNode.File);
-                        }
-                        catch (Exception)
-                        {
-                            // Exception is thrown if the filename has invalid characters.
-                            throw SyntaxErrorException.InvalidImportPathChars(importNode.File, importNode.Location);
-                        }
-
-                        if (file == importFilePath)
-                            throw SyntaxErrorException.SelfImport(importNode.Location);
-
-                        // Syntax error if the file does not exist.
-                        if (!System.IO.File.Exists(importFilePath))
-                            throw SyntaxErrorException.ImportFileNotFound(importFilePath, importNode.Location);
-
-                        // Warning if the file was already imported.
-                        if (importedFiles.Contains(importFilePath))
-                        {
-                            Diagnostics.Warning(string.Format(SyntaxErrorException.alreadyImported, importFileName), importNode.Location);
-                        }
-                        else
-                        {
-                            string content = System.IO.File.ReadAllText(importFilePath);
-                            GetObjects(content, importFilePath, globalTranslate, playerTranslate);
-                            importedFiles.Add(importFilePath);
+                            string content = File.ReadAllText(importer.ResultingPath);
+                            GetObjects(content, importer.ResultingPath, globalTranslate, playerTranslate);
+                            importedFiles.Add(importer.ResultingPath);
                         }
                     }
                     catch (SyntaxErrorException ex)
@@ -247,15 +247,6 @@ namespace Deltin.Deltinteger.Parse
                             );
                         if (definedVar.Type != null)
                             var.Type = GetDefinedType(definedVar.Type, definedVar.Location);
-
-                        // Set initial values
-                        /*
-                        if (definedVar.Value != null)
-                            if (definedVar.IsGlobal)
-                                globalTranslate.Actions.AddRange(var.SetVariable(globalTranslate.ParseExpression(Root, definedVar.Value)));
-                            else
-                                playerTranslate.Actions.AddRange(var.SetVariable(playerTranslate.ParseExpression(Root, definedVar.Value)));
-                                */
                     }
                     catch (SyntaxErrorException ex)
                     {

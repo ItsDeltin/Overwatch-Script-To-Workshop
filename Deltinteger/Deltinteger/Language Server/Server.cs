@@ -299,7 +299,7 @@ namespace Deltin.Deltinteger.LanguageServer
 
                         string currentPath = importNode.File;
 
-                        string path = Extras.CombinePathWithDotNotation(posData.File, importNode.File, false);
+                        string path = Extras.CombinePathWithDotNotation(posData.File, importNode.File);
 
                         if (path != null)
                         {
@@ -438,7 +438,7 @@ namespace Deltin.Deltinteger.LanguageServer
 
                     case ImportNode importNode:
                         
-                        string path = Extras.CombinePathWithDotNotation(posData.File, importNode.File, false);
+                        string path = Extras.CombinePathWithDotNotation(posData.File, importNode.File);
 
                         if (path != null)
                             hover = new Hover(new MarkupContent(MarkupContent.Markdown, path)) { range = importNode.Location.range };
@@ -491,7 +491,7 @@ namespace Deltin.Deltinteger.LanguageServer
             {
                 foreach (ImportNode node in documents[posData.File].Ruleset.Imports)
                 {
-                    string path = Extras.CombinePathWithDotNotation(posData.File, node.File, false);
+                    string path = Extras.CombinePathWithDotNotation(posData.File, node.File);
 
                     if (path != null)
                         locations.Add(new LocationLink(node.Location.range, new Uri(path).AbsoluteUri, Range.Zero, Range.Zero));

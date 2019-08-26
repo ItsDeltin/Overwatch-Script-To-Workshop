@@ -104,7 +104,7 @@ user_method : DOCUMENTATION* accessor? RECURSIVE? (METHOD | type=PART) name=PART
 	;
 
 ruleset :
-	import_file*
+	(import_file | import_object)*
 	useGlobalVar?
 	usePlayerVar?
 	(rule_define | ow_rule | user_method | type_define)*
@@ -126,6 +126,7 @@ setParameters: (parameter_define (COMMA parameter_define)*)?;
 create_object : NEW type=PART LEFT_PAREN call_parameters? RIGHT_PAREN ;
 
 import_file : IMPORT STRINGLITERAL STATEMENT_END ;
+import_object : IMPORT file=STRINGLITERAL AS name=PART STATEMENT_END ;
 
 /*
  * Lexer Rules
@@ -188,6 +189,7 @@ THIS      : 'this'      ;
 NEW       : 'new'       ;
 STATIC    : 'static'    ;
 IMPORT    : 'import'    ;
+AS        : 'as'        ;
 
 EQUALS          : '='  ;
 EQUALS_POW      : '^=' ;

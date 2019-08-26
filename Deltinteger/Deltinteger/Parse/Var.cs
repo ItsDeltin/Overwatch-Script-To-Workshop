@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.LanguageServer;
+using Deltin.Deltinteger.Models;
 using Antlr4.Runtime;
 
 namespace Deltin.Deltinteger.Parse
@@ -325,13 +326,31 @@ namespace Deltin.Deltinteger.Parse
         }
     }
 
+    public class ModelVar : Var
+    {
+        public Model Model { get; }
+
+        public ModelVar(string name, ScopeGroup scope, Node node, Model model) : base(name, scope, node)
+        {
+            Model = model;
+        }
+
+        override public Element GetVariable(Element targetPlayer = null)
+        {
+            throw new NotImplementedException();
+        }
+
+        override public bool Gettable() => false;
+        override public bool Settable() => false;
+    }
+
     public class VarRef : IWorkshopTree
     {
-        public IndexedVar Var { get; }
+        public Var Var { get; }
         public Element[] Index { get; }
         public Element Target { get; }
 
-        public VarRef(IndexedVar var, Element[] index, Element target)
+        public VarRef(Var var, Element[] index, Element target)
         {
             Var = var;
             Index = index;

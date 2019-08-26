@@ -29,6 +29,11 @@ namespace Deltin.Deltinteger.Parse
             return new ImportNode(context, this);
         }
 
+        public override Node VisitImport_object(DeltinScriptParser.Import_objectContext context)
+        {
+            return new ImportObjectNode(context, this);
+        }
+
         public override Node VisitRule_define(DeltinScriptParser.Rule_defineContext context)
         {
             return new RuleDefineNode(context, this);
@@ -409,6 +414,23 @@ namespace Deltin.Deltinteger.Parse
             return null;
         }
     }
+
+    public class ImportObjectNode : Node
+    {
+        public string Name { get; }
+        public string File { get; }
+
+        public ImportObjectNode(DeltinScriptParser.Import_objectContext context, BuildAstVisitor visitor) : base(new Location(visitor.file, Range.GetRange(context)))
+        {
+            Name = context.name.Text;
+            File = context.file.Text.Trim('"');
+        }
+
+        override public Node[] Children()
+        {
+            return null;
+        }
+    }
     
     public class TypeDefineNode : Node
     {
@@ -485,6 +507,7 @@ namespace Deltin.Deltinteger.Parse
     public class RulesetNode : Node
     {
         public ImportNode[] Imports { get; }
+        public ImportObjectNode[] ObjectImports { get; }
         public Variable UseGlobalVar { get; }
         public Variable UsePlayerVar { get; }
         public RuleNode[] Rules { get; }
@@ -497,6 +520,10 @@ namespace Deltin.Deltinteger.Parse
             Imports = new ImportNode[context.import_file().Length];
             for (int i = 0; i < Imports.Length; i++)
                 Imports[i] = new ImportNode(context.import_file(i), visitor);
+
+            ObjectImports = new ImportObjectNode[context.import_object().Length];
+            for (int i = 0; i < ObjectImports.Length; i++)
+                ObjectImports[i] = new ImportObjectNode(context.import_object(i), visitor);
 
             Rules = new RuleNode[context.ow_rule().Length];
             for (int i = 0; i < Rules.Length; i++)

@@ -427,7 +427,7 @@ namespace Deltin.Deltinteger.Parse
                     if (varData.ResultingVariable == null)
                         throw SyntaxErrorException.ExpectedVariable(values[i].Location);
                     
-                    parsedParameters.Add(new VarRef((IndexedVar)varData.ResultingVariable, varData.VariableIndex, varData.Target));
+                    parsedParameters.Add(new VarRef(varData.ResultingVariable, varData.VariableIndex, varData.Target));
                         
                 }
                 else throw new NotImplementedException();
@@ -1067,10 +1067,10 @@ namespace Deltin.Deltinteger.Parse
     
         class ParseExpressionTree
         {
-            public Var ResultingVariable { get; private set; }
-            public Element[] VariableIndex { get; private set; }
-            public Element ResultingElement { get; private set; }
-            public Element Target { get; private set; }
+            public Var ResultingVariable { get; }
+            public Element[] VariableIndex { get; }
+            public Element ResultingElement { get; }
+            public Element Target { get; }
             
             public ParseExpressionTree(TranslateRule translator, ScopeGroup scope, Node root)
             {
@@ -1081,16 +1081,20 @@ namespace Deltin.Deltinteger.Parse
                     Var var = scope.GetVar(((VariableNode)root).Name, root.Location);
                     ResultingVariable = var;
 
-                    if (!ResultingVariable.Gettable()) throw SyntaxErrorException.CantReadVariable(ResultingVariable.Name, root.Location);
+                    //if (!ResultingVariable.Gettable()) throw SyntaxErrorException.CantReadVariable(ResultingVariable.Name, root.Location);
 
-                    ResultingElement = var.GetVariable();
+                    if (ResultingVariable.Gettable())
+                        ResultingElement = var.GetVariable();
 
                     VariableIndex = new Element[variableNode.Index.Length];
                     for (int i = 0; i < VariableIndex.Length; i++)
                         VariableIndex[i] = translator.ParseExpression(scope, variableNode.Index[i]);
                     
                     for (int i = 0; i < VariableIndex.Length; i++)
+                    {
+                        if (!ResultingVariable.Gettable()) throw SyntaxErrorException.CantReadVariable(ResultingVariable.Name, root.Location);
                         ResultingElement = Element.Part<V_ValueInArray>(ResultingElement, VariableIndex[i]);
+                    }
 
                     return;
                 }
