@@ -90,12 +90,13 @@ namespace Deltin.Deltinteger.Elements
             }
         }
 
-        public CustomMethodBase GetObject(TranslateRule context, ScopeGroup scope, IWorkshopTree[] parameters)
+        public CustomMethodBase GetObject(TranslateRule context, ScopeGroup scope, IWorkshopTree[] parameters, Location[] parameterLocations)
         {
             CustomMethodBase customMethod = GetObject();
             customMethod.TranslateContext = context;
             customMethod.Scope = scope;
             customMethod.Parameters = parameters;
+            customMethod.ParameterLocations = parameterLocations;
             return customMethod;
         }
         private CustomMethodBase GetObject()
@@ -140,6 +141,7 @@ namespace Deltin.Deltinteger.Elements
         public TranslateRule TranslateContext { get; set; }
         public IWorkshopTree[] Parameters { get; set; }
         public ScopeGroup Scope { get; set; }
+        public Location[] ParameterLocations { get; set; }
 
         public MethodResult Result()
         {
@@ -151,6 +153,9 @@ namespace Deltin.Deltinteger.Elements
             
             if (Scope == null)
                 throw new ArgumentNullException(nameof(Scope));
+            
+            if (ParameterLocations == null)
+                throw new ArgumentNullException(nameof(ParameterLocations));
             
             return Get();
         }

@@ -115,4 +115,50 @@ namespace Deltin.Deltinteger.Elements
                 return "**ref**: " + Name;
         }
     }
+
+    class ConstantParameter : ParameterBase // where T: IConvertible
+    {
+        public Type Type { get; } 
+
+        public ConstantParameter(string name, Type type) : base(name)
+        {
+            Type = type;
+        }
+
+        public override string GetLabel(bool markdown)
+        {
+            if (!markdown)
+                return "const " + Type.Name + ": " + Name;
+            else
+                return "**const " + Type.Name + "**: " + Name;
+        }
+
+        public bool IsValid(object obj)
+        {
+            return obj.GetType() == Type;
+        }
+    }
+
+    class ConstantObject : IWorkshopTree
+    {
+        public object Value { get; }
+
+        public ConstantObject(object value)
+        {
+            Value = value;
+        }
+
+        public string ToWorkshop()
+        {
+            throw new NotImplementedException();
+        }
+        public void DebugPrint(Log log, int depth)
+        {
+            throw new NotImplementedException();
+        }
+        public double ServerLoadWeight()
+        {
+            throw new NotImplementedException();
+        }
+    }
 }

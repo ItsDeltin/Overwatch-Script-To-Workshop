@@ -691,6 +691,14 @@ namespace Deltin.Deltinteger.Elements
     }
 
     [WorkshopEnum]
+    public enum Spectators
+    {
+        DefaultVisibility,
+        VisibleAlways,
+        VisibleNever
+    }
+
+    [WorkshopEnum]
     public enum Map
     {
         Black_Forest = 0,

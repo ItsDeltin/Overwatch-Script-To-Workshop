@@ -352,7 +352,7 @@ namespace Deltin.Deltinteger.Parse
             List<IWorkshopTree> parsedParameters = new List<IWorkshopTree>();
             for(int i = 0; i < parameters.Length; i++)
             {
-                if (parameters[i] is Parameter || parameters[i] is TypeParameter || parameters[i] is EnumParameter)
+                if (parameters[i] is Parameter || parameters[i] is TypeParameter || parameters[i] is EnumParameter || parameters[i] is ConstantParameter)
                 {
                     // Get the default parameter value if there are not enough parameters.
                     if (values.Length <= i)
@@ -413,6 +413,17 @@ namespace Deltin.Deltinteger.Parse
                             else
                                 throw SyntaxErrorException.ExpectedEnumGotValue(((EnumParameter)parameters[i]).EnumData.CodeName, values[i].Location);
                         }
+                        else if (parameters[i] is ConstantParameter)
+                        {
+                            if (values[i] is IConstantSupport == false)
+                                throw new SyntaxErrorException("Parameter must be a constant.", values[i].Location);
+                            object value = ((IConstantSupport)values[i]).GetValue();
+
+                            if (!((ConstantParameter)parameters[i]).IsValid(value))
+                                throw new SyntaxErrorException("Parameter must be a " + ((ConstantParameter)parameters[i]).Type.Name + ".", values[i].Location);
+
+                            parsedParameters.Add(new ConstantObject(value));
+                        }
                     }
                 }
                 else if (parameters[i] is VarRefParameter)
@@ -471,7 +482,7 @@ namespace Deltin.Deltinteger.Parse
                 }
 
                 var customMethodResult = ((CustomMethodData)method)
-                    .GetObject(this, scope, parsedParameters.ToArray())
+                    .GetObject(this, scope, parsedParameters.ToArray(), methodNode.Parameters.Select(p => p.Location).ToArray())
                     .Result();
 
                 // Some custom methods have extra actions.

@@ -124,6 +124,7 @@
     <Compile Include="Language Server\Server.cs" />
     <Compile Include="Language Server\Specification.cs" />
     <Compile Include="Models\Models.cs" />
+    <Compile Include="Models\ModelMethods.cs" />
     <Compile Include="Models\Import\Obj.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Extras.cs" />
