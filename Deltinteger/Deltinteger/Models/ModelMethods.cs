@@ -7,7 +7,7 @@ using Deltin.Deltinteger.Parse;
 
 namespace Deltin.Deltinteger.Models
 {
-    [CustomMethod("ShowWireframe", CustomMethodType.MultiAction_Value)]
+    [CustomMethod("ShowWireframe", CustomMethodType.Action)]
     [VarRefParameter("Model")]
     [Parameter("Visible To", Elements.ValueType.Player, null)]
     [Parameter("Location", Elements.ValueType.Vector, null)]
