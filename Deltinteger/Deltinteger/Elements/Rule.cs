@@ -18,20 +18,13 @@ namespace Deltin.Deltinteger.Elements
         public Condition[] Conditions { get; set; }
         public Element[] Actions { get; set; }
 
-        public Rule(string name, RuleEvent ruleEvent, Team team, PlayerSelector player) // Creates a rule.
+        public Rule(string name, RuleEvent ruleEvent = RuleEvent.OngoingGlobal, Team team = Team.All, PlayerSelector player = PlayerSelector.All) // Creates a rule.
         {
             Name = name;
             RuleEvent = ruleEvent;
             Team = team;
             Player = player;
             IsGlobal = ruleEvent == RuleEvent.OngoingGlobal;
-        }
-
-        public Rule(string name) // Creates a "Ongoing - Global" rule.
-        {
-            Name = name;
-            RuleEvent = RuleEvent.OngoingGlobal;
-            IsGlobal = true;
         }
 
         public override string ToString()

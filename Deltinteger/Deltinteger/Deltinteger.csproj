@@ -116,7 +116,6 @@
     <Compile Include="Parse\TranslateRule.cs" />
     <Compile Include="Parse\Var.cs" />
     <Compile Include="Parse\Scope.cs" />
-    <Compile Include="Parse\Looper.cs" />
     <Compile Include="Parse\UserMethod.cs" />
     <Compile Include="Parse\ContinueSkip.cs" />
     <Compile Include="Parse\DefinedType.cs" />

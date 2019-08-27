@@ -24,10 +24,6 @@ namespace Deltin.Deltinteger.Parse
             Rule initialPlayerValues = new Rule(Constants.INTERNAL_ELEMENT + "Initial Player Values", RuleEvent.OngoingPlayer, Team.All, PlayerSelector.All);
             TranslateRule globalTranslate = new TranslateRule(initialGlobalValues, Root, this);
             TranslateRule playerTranslate = new TranslateRule(initialPlayerValues, Root, this);
-
-            // The looper rule
-            GlobalLoop = new Looper(true);
-            PlayerLoop = new Looper(false);
             
             VarCollection = new VarCollection();
             Root = new ScopeGroup(VarCollection);
@@ -104,12 +100,10 @@ namespace Deltin.Deltinteger.Parse
                 // Add the global initial values rule if it was used.
                 if (initialGlobalValues.Actions.Length > 0)
                     Rules.Insert(0, initialGlobalValues);
-                
-                // Add the looper rules if they were used.
-                if (GlobalLoop.Used)
-                    Rules.Add(GlobalLoop.Finalize());
-                if (PlayerLoop.Used)
-                    Rules.Add(PlayerLoop.Finalize());
+
+                foreach (Rule rule in AdditionalRules)
+                    if (rule.Actions.Length > 0)
+                        Rules.Add(rule);
             }
 
             Success = !Diagnostics.ContainsErrors();
@@ -264,8 +258,8 @@ namespace Deltin.Deltinteger.Parse
         public VarCollection VarCollection { get; private set; } = new VarCollection();
         public ScopeGroup Root { get; private set; }
         public Dictionary<string, RulesetNode> Rulesets { get; } = new Dictionary<string, RulesetNode>();
-        private Looper GlobalLoop { get; set; }
-        private Looper PlayerLoop { get; set; }
+        public List<Rule> AdditionalRules { get; } = new List<Rule>();
+        public List<VariableChaseData> Chasing { get; } = new List<VariableChaseData>();
         private List<string> Imported { get; } = new List<string>();
 
         public IMethod GetMethod(string name)
@@ -281,11 +275,6 @@ namespace Deltin.Deltinteger.Parse
             if (type == null && location != null)
                 throw SyntaxErrorException.NonexistentType(name, location);
             return type;
-        }
-
-        public Looper GetLooper(bool isGlobal)
-        {
-            return isGlobal? GlobalLoop : PlayerLoop;
         }
     }
 }
