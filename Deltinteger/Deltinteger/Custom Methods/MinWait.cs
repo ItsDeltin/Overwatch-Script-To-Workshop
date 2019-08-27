@@ -13,7 +13,7 @@ namespace Deltin.Deltinteger.Elements
 
         public override CustomMethodWiki Wiki()
         {
-            return new CustomMethodWiki("Waits for " + Constants.MINIMUM_WAIT + " milliseconds.");
+            return new CustomMethodWiki("Waits for " + Constants.MINIMUM_WAIT + " seconds.");
         }
     }
 }
