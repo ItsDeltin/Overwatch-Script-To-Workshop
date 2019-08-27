@@ -89,6 +89,12 @@ namespace Deltin.Deltinteger.LanguageServer
                             GetDefinition(input)
                         );
                         break;
+                    
+                    case "code":
+                        buffer = GetBytes(
+                            GetCode(input)
+                        );
+                        break;
 
                     default: 
                         Console.WriteLine("Unsure of how to handle url " + url);
@@ -112,7 +118,14 @@ namespace Deltin.Deltinteger.LanguageServer
 
         string uriPath(string uri)
         {
-            return Uri.UnescapeDataString(new Uri(Uri.UnescapeDataString(uri)).AbsolutePath);
+            try
+            {
+                return Uri.UnescapeDataString(new Uri(Uri.UnescapeDataString(uri)).AbsolutePath);
+            }
+            catch (UriFormatException)
+            {
+                return null;
+            }
         }
 
         string ParseDocument(string input, int clientPort)
@@ -120,11 +133,11 @@ namespace Deltin.Deltinteger.LanguageServer
             dynamic json; 
             json = JsonConvert.DeserializeObject(input);
             string uri = uriPath((string)json.uri);
-
+            if (uri == null) return null;
             string content = json.content;
 
+            // Get the document.
             Document document;
-
             if (documents.ContainsKey(uri))
             {
                 document = documents[uri];
@@ -136,33 +149,43 @@ namespace Deltin.Deltinteger.LanguageServer
             }
             document.Content = content;
 
+            // Parse the file.
             parserData = ParsingData.GetParser(document.Uri, content);
 
+            // Update the document's ruleset.
             if (parserData.Rulesets.ContainsKey(uri))
                 document.Ruleset = parserData.Rulesets[uri];
 
             if (parserData.Rules != null && !parserData.Diagnostics.ContainsErrors())
-            {
-                ParsingData data = parserData;
-                Task.Run(() => 
-                {
-                    Send(data, clientPort);
-                });
-            }
+                // Update the document's workshop result.
+                document.WorkshopResult = Program.RuleArrayToWorkshop(parserData.Rules.ToArray(), parserData.VarCollection);
             
             PublishDiagnosticsParams[] diagnostics = parserData.Diagnostics.GetDiagnostics();
             return JsonConvert.SerializeObject(diagnostics);
         }
 
-        private static void Send(ParsingData data, int clientPort)
+        string GetCode(string input)
+        {
+            dynamic json; 
+            json = JsonConvert.DeserializeObject(input);
+            string uri = uriPath((string)json.uri);
+
+            if (uri == null || !documents.ContainsKey(uri))
+                return null;
+
+            return documents[uri].WorkshopResult;
+        }
+
+        private static void Send(ParsingData data, int clientPort, string uri)
         {
             string final = Program.RuleArrayToWorkshop(data.Rules.ToArray(), data.VarCollection);
+            var result = JsonConvert.SerializeObject((code:final, uri:uri));
             try
             {
                 using (var wc = new WebClient())
                 {
                     wc.Encoding = System.Text.Encoding.UTF8;
-                    wc.UploadString($"http://localhost:{clientPort}/", final);
+                    wc.UploadString($"http://localhost:{clientPort}/", result);
                 }
             }
             catch (WebException ex)
@@ -506,7 +529,7 @@ namespace Deltin.Deltinteger.LanguageServer
 
             string uri = uriPath((string)inputJson.textDocument.uri);
 
-            if (!documents.ContainsKey(uri)) return null;
+            if (uri == null || !documents.ContainsKey(uri)) return null;
 
             string content = documents[uri].Content;
             Pos caret = new Pos((int)inputJson.position.line, (int)inputJson.position.character);
@@ -526,6 +549,7 @@ namespace Deltin.Deltinteger.LanguageServer
         public string Uri { get; }
         public string Content { get; set; }
         public RulesetNode Ruleset { get; set; }
+        public string WorkshopResult { get; set; }
 
         public Document(string uri)
         {
