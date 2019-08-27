@@ -704,9 +704,6 @@ namespace Deltin.Deltinteger.Parse
                 // Method
                 case MethodNode methodNode:
                     Element method = ParseMethod(scope, methodNode, false);
-                    #warning check this!
-                    //if (method != null)
-                    //    Actions.Add(method);
                     return;
                 
                 // Variable set
