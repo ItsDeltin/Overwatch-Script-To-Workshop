@@ -35,8 +35,7 @@ namespace Deltin.Deltinteger
             {
                 string[] portArgs = args.FirstOrDefault(v => v.Split(' ')[0] == "-port")?.Split(' ');
                 int.TryParse(portArgs.ElementAtOrDefault(1), out int serverPort);
-                int.TryParse(portArgs.ElementAtOrDefault(2), out int clientPort);
-                new Server().RequestLoop(serverPort, clientPort);
+                new Server().RequestLoop(serverPort);
             }
             else
             {

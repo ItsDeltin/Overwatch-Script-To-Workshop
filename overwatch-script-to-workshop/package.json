@@ -54,12 +54,6 @@
                     "default": 9145,
                     "description": "The first port the language server application is using."
                 },
-                "ostw.port2": {
-                    "scope": "resource",
-                    "type": "number",
-                    "default": 9146,
-                    "description": "The second port the language server application is using."
-                },
                 "ostw.trace.server": {
                     "scope": "window",
                     "type": "string",

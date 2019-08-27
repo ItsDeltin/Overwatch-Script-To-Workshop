@@ -16,21 +16,17 @@ namespace Deltin.Deltinteger.LanguageServer
         static Log Log = new Log("LangServer");
 
         const int DefaultPort = 9145;
-        const int DefaultClientPort = 9146;
 
         ParsingData parserData;
 
         Dictionary<string, Document> documents = new Dictionary<string, Document>();
         
-        public void RequestLoop(int serverPort, int clientPort)
+        public void RequestLoop(int serverPort)
         {
             if (serverPort == 0)
                 serverPort = DefaultPort;
-            if (clientPort == 0)
-                clientPort = DefaultClientPort;
 
-            Log.Write(LogLevel.Normal, new ColorMod("Language server", ConsoleColor.Magenta), " started on port ", new ColorMod(serverPort.ToString(), ConsoleColor.DarkCyan), 
-                " (", new ColorMod(clientPort.ToString(), ConsoleColor.DarkCyan), ")");
+            Log.Write(LogLevel.Normal, new ColorMod("Language server", ConsoleColor.Magenta), " started on port ", new ColorMod(serverPort.ToString(), ConsoleColor.DarkCyan));
 
             HttpListener server = new HttpListener();
             server.Prefixes.Add($"http://localhost:{serverPort}/");
@@ -62,7 +58,7 @@ namespace Deltin.Deltinteger.LanguageServer
                     
                     case "parse":
                         buffer = GetBytes(
-                            ParseDocument(input, clientPort)
+                            ParseDocument(input)
                         );
                         break;
 
@@ -128,7 +124,7 @@ namespace Deltin.Deltinteger.LanguageServer
             }
         }
 
-        string ParseDocument(string input, int clientPort)
+        string ParseDocument(string input)
         {
             dynamic json; 
             json = JsonConvert.DeserializeObject(input);
