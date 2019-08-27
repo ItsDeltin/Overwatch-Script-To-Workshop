@@ -34,15 +34,15 @@ namespace Deltin.Deltinteger.Models
             return new Model(result.GetLines());
         }
 
-        public static Model ImportString(string text, FontFamily family, double quality, double angle)
+        public static Model ImportString(string text, FontFamily family, double quality, double angle, double scale)
         {
+            scale *= 0.05;
+
             List<Line> lines = new List<Line>();
 
             using (var gp = new GraphicsPath())
             using (var flipY = new Matrix(1, 0, 0, -1, 0, gp.GetBounds().Height))
             {
-                const double scale = 0.05;
-
                 gp.AddString(text, family, 0, 40f, new Point(0, 0), StringFormat.GenericDefault);
                 gp.Flatten(flipY, (float)quality);
 

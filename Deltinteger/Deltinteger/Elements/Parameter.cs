@@ -118,24 +118,39 @@ namespace Deltin.Deltinteger.Elements
 
     class ConstantParameter : ParameterBase // where T: IConvertible
     {
-        public Type Type { get; } 
+        public Type Type { get; }
+        public object Default { get; }
 
-        public ConstantParameter(string name, Type type) : base(name)
+        public ConstantParameter(string name, Type type, object def = null) : base(name)
         {
             Type = type;
+            Default = def;
         }
 
         public override string GetLabel(bool markdown)
         {
+            string label;
             if (!markdown)
-                return "const " + Type.Name + ": " + Name;
+                label = "const " + Type.Name + ": " + Name;
             else
-                return "**const " + Type.Name + "**: " + Name;
+                label = "**const " + Type.Name + "**: " + Name;
+            
+            if (Default != null)
+                label += " = " + Default.ToString();
+
+            return label;
         }
 
         public bool IsValid(object obj)
         {
             return obj.GetType() == Type;
+        }
+
+        public override IWorkshopTree GetDefault()
+        {
+            if (Default == null)
+                return null;
+            return new ConstantObject(Default);
         }
     }
 

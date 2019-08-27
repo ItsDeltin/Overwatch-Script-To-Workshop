@@ -459,8 +459,16 @@ namespace Deltin.Deltinteger.Parse
             if (method is ElementList)
             {
                 ElementList elementData = (ElementList)method;
-                result = elementData.GetObject();
-                result.ParameterValues = parsedParameters.ToArray();
+                Element element = elementData.GetObject();
+                element.ParameterValues = parsedParameters.ToArray();
+
+                if (element.ElementData.IsValue)
+                    result = element;
+                else
+                {
+                    Actions.Add(element);
+                    result = null;
+                }
 
                 foreach (var usageDiagnostic in elementData.UsageDiagnostics)
                     ParserData.Diagnostics.AddDiagnostic(methodNode.Location.uri, usageDiagnostic.GetDiagnostic(methodNode.Location.range));
@@ -474,11 +482,12 @@ namespace Deltin.Deltinteger.Parse
                             throw SyntaxErrorException.InvalidMethodType(true, methodNode.Name, methodNode.Location);
                         break;
 
-                    case CustomMethodType.MultiAction_Value:
                     case CustomMethodType.Value:
                         if (!needsToBeValue)
                             throw SyntaxErrorException.InvalidMethodType(false, methodNode.Name, methodNode.Location);
                         break;
+
+                    //case CustomMethodType.MultiAction_Value:
                 }
 
                 var customMethodResult = ((CustomMethodData)method)
@@ -695,8 +704,9 @@ namespace Deltin.Deltinteger.Parse
                 // Method
                 case MethodNode methodNode:
                     Element method = ParseMethod(scope, methodNode, false);
-                    if (method != null)
-                        Actions.Add(method);
+                    #warning check this!
+                    //if (method != null)
+                    //    Actions.Add(method);
                     return;
                 
                 // Variable set
@@ -1109,6 +1119,8 @@ namespace Deltin.Deltinteger.Parse
 
                     return;
                 }
+                
+                if (root is ExpressionTreeNode == false) throw new SyntaxErrorException("Error", root.Location);
 
                 List<Node> nodes = flatten((ExpressionTreeNode)root);
                 ScopeGroup currentScope = scope;
