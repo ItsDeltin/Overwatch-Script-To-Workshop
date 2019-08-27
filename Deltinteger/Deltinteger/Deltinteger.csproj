@@ -110,7 +110,7 @@
     <Compile Include="Custom Methods\RemoveFromArrayAtIndex.cs" />
     <Compile Include="Custom Methods\Pi.cs" />
     <Compile Include="Custom Methods\ConditionTesting.cs" />
-    <Compile Include="Models\ModelMethods.cs" />
+    <Compile Include="Custom Methods\DestroyEffectArray.cs" />
     <Compile Include="Parse\ast.cs" />
     <Compile Include="Parse\Parse.cs" />
     <Compile Include="Parse\TranslateRule.cs" />
@@ -125,6 +125,7 @@
     <Compile Include="Language Server\Server.cs" />
     <Compile Include="Language Server\Specification.cs" />
     <Compile Include="Models\Models.cs" />
+    <Compile Include="Models\ModelMethods.cs" />
     <Compile Include="Models\Import\Obj.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Extras.cs" />

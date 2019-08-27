@@ -535,6 +535,8 @@ namespace Deltin.Deltinteger.Elements
     {
         public static readonly V_Number LargeArbitraryNumber = new V_Number(9999);
 
+        private const int MAX_LENGTH = 10;
+
         public double Value { get; set; }
 
         public V_Number(double value)
@@ -545,7 +547,7 @@ namespace Deltin.Deltinteger.Elements
 
         public override string ToWorkshop()
         {
-            return Value.ToString();
+            return Math.Round(Value, MAX_LENGTH).ToString();
         }
 
         public override void DebugPrint(Log log, int depth = 0)

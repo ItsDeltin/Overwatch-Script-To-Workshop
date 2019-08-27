@@ -562,6 +562,11 @@ namespace Deltin.Deltinteger.Parse
         Node Value { get; }
     }
 
+    public interface IConstantSupport
+    {
+        object GetValue();
+    }
+
     public class DefineNode : Node, IDefine
     {
         public string VariableName { get; }
@@ -959,7 +964,7 @@ namespace Deltin.Deltinteger.Parse
         }
     }
 
-    public class NumberNode : Node
+    public class NumberNode : Node, IConstantSupport
     {
         public double Value;
 
@@ -972,9 +977,14 @@ namespace Deltin.Deltinteger.Parse
         {
             return null;
         }
+
+        public object GetValue()
+        {
+            return Value;
+        }
     }
 
-    public class StringNode : Node
+    public class StringNode : Node, IConstantSupport
     {
         public string Value { get; private set; }
         public Node[] Format { get; private set; }
@@ -989,9 +999,14 @@ namespace Deltin.Deltinteger.Parse
         {
             return Format;
         }
+
+        public object GetValue()
+        {
+            return Value;
+        }
     }
 
-    public class BooleanNode : Node
+    public class BooleanNode : Node, IConstantSupport
     {
         public bool Value { get; private set; }
 
@@ -1003,6 +1018,11 @@ namespace Deltin.Deltinteger.Parse
         public override Node[] Children()
         {
             return null;
+        }
+
+        public object GetValue()
+        {
+            return Value;
         }
     }
 

@@ -352,7 +352,7 @@ namespace Deltin.Deltinteger.Parse
             List<IWorkshopTree> parsedParameters = new List<IWorkshopTree>();
             for(int i = 0; i < parameters.Length; i++)
             {
-                if (parameters[i] is Parameter || parameters[i] is TypeParameter || parameters[i] is EnumParameter)
+                if (parameters[i] is Parameter || parameters[i] is TypeParameter || parameters[i] is EnumParameter || parameters[i] is ConstantParameter)
                 {
                     // Get the default parameter value if there are not enough parameters.
                     if (values.Length <= i)
@@ -413,6 +413,17 @@ namespace Deltin.Deltinteger.Parse
                             else
                                 throw SyntaxErrorException.ExpectedEnumGotValue(((EnumParameter)parameters[i]).EnumData.CodeName, values[i].Location);
                         }
+                        else if (parameters[i] is ConstantParameter)
+                        {
+                            if (values[i] is IConstantSupport == false)
+                                throw new SyntaxErrorException("Parameter must be a constant.", values[i].Location);
+                            object value = ((IConstantSupport)values[i]).GetValue();
+
+                            if (!((ConstantParameter)parameters[i]).IsValid(value))
+                                throw new SyntaxErrorException("Parameter must be a " + ((ConstantParameter)parameters[i]).Type.Name + ".", values[i].Location);
+
+                            parsedParameters.Add(new ConstantObject(value));
+                        }
                     }
                 }
                 else if (parameters[i] is VarRefParameter)
@@ -448,8 +459,16 @@ namespace Deltin.Deltinteger.Parse
             if (method is ElementList)
             {
                 ElementList elementData = (ElementList)method;
-                result = elementData.GetObject();
-                result.ParameterValues = parsedParameters.ToArray();
+                Element element = elementData.GetObject();
+                element.ParameterValues = parsedParameters.ToArray();
+
+                if (element.ElementData.IsValue)
+                    result = element;
+                else
+                {
+                    Actions.Add(element);
+                    result = null;
+                }
 
                 foreach (var usageDiagnostic in elementData.UsageDiagnostics)
                     ParserData.Diagnostics.AddDiagnostic(methodNode.Location.uri, usageDiagnostic.GetDiagnostic(methodNode.Location.range));
@@ -463,15 +482,16 @@ namespace Deltin.Deltinteger.Parse
                             throw SyntaxErrorException.InvalidMethodType(true, methodNode.Name, methodNode.Location);
                         break;
 
-                    case CustomMethodType.MultiAction_Value:
                     case CustomMethodType.Value:
                         if (!needsToBeValue)
                             throw SyntaxErrorException.InvalidMethodType(false, methodNode.Name, methodNode.Location);
                         break;
+
+                    //case CustomMethodType.MultiAction_Value:
                 }
 
                 var customMethodResult = ((CustomMethodData)method)
-                    .GetObject(this, scope, parsedParameters.ToArray())
+                    .GetObject(this, scope, parsedParameters.ToArray(), methodNode.Parameters.Select(p => p.Location).ToArray())
                     .Result();
 
                 // Some custom methods have extra actions.
@@ -684,8 +704,9 @@ namespace Deltin.Deltinteger.Parse
                 // Method
                 case MethodNode methodNode:
                     Element method = ParseMethod(scope, methodNode, false);
-                    if (method != null)
-                        Actions.Add(method);
+                    #warning check this!
+                    //if (method != null)
+                    //    Actions.Add(method);
                     return;
                 
                 // Variable set
@@ -1098,6 +1119,8 @@ namespace Deltin.Deltinteger.Parse
 
                     return;
                 }
+                
+                if (root is ExpressionTreeNode == false) throw new SyntaxErrorException("Error", root.Location);
 
                 List<Node> nodes = flatten((ExpressionTreeNode)root);
                 ScopeGroup currentScope = scope;

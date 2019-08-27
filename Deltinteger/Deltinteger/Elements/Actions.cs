@@ -121,6 +121,7 @@ namespace Deltin.Deltinteger.Elements
     [EnumParameter("Subheader Color", typeof(Color))]
     [EnumParameter("Text Color", typeof(Color))]
     [EnumParameter("Reevaluation", typeof(StringRev))]
+    [EnumParameter("Spectators", typeof(Spectators))]
     public class A_CreateHudText : Element {}
 
     [ElementData("Create Icon")]

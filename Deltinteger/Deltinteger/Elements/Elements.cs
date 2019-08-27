@@ -214,6 +214,25 @@ namespace Deltin.Deltinteger.Elements
             // return Element.Part<V_ValueInArray>(CreateArray(alternative, consequent), Element.Part<V_Add>(condition, new V_Number(0)));
         }
 
+        public static Element[] While(ContinueSkip continueSkip, Element condition, Element[] actions)
+        {
+            List<Element> result = new List<Element>();
+
+            continueSkip.Setup();
+            int whileStartIndex = continueSkip.GetSkipCount() + 1;
+
+            A_SkipIf skipCondition = new A_SkipIf() { ParameterValues = new IWorkshopTree[2] };
+            skipCondition.ParameterValues[0] = Element.Part<V_Not>(condition);
+            result.Add(skipCondition);
+            result.AddRange(actions);
+            result.AddRange(continueSkip.SetSkipCountActions(whileStartIndex));
+            skipCondition.ParameterValues[1] = new V_Number(result.Count);
+            result.Add(new A_Loop());
+            result.AddRange(continueSkip.ResetSkipActions());
+
+            return result.ToArray();
+        }
+
         public static readonly Element DefaultElement = new V_Number(0);
     }
 
