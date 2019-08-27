@@ -63,6 +63,7 @@ namespace Deltin.Deltinteger
         public const string typeNameConflict     = "The type name '{0}' conflicts with an predefined workshop type.";
         public const string nameAlreadyDefined   = "A type of the same name was already defined.";
         public const string invalidValueType     = "Expected value of type '{0}'.";
+        public const string invalidVarRefType    = "'{0}' must be {1} variable.";
         #endregion
 
         public static SyntaxErrorException StringParameterCount(int parameterIndex, int parameterCount, Location location)
@@ -231,5 +232,21 @@ namespace Deltin.Deltinteger
         {
             return new SyntaxErrorException(string.Format(incorrectEnumType, expected, got), location);
         }
+    
+        public static SyntaxErrorException InvalidVarRefType(string name, VarType varType, Location location)
+        {
+            if (varType == VarType.Indexed)
+                return new SyntaxErrorException(string.Format(invalidVarRefType, name, "an indexed"), location);
+            else if (varType == VarType.Model)
+                return new SyntaxErrorException(string.Format(invalidVarRefType, name, "a model"), location);
+            else
+                throw new NotImplementedException();
+        }
+    }
+
+    public enum VarType
+    {
+        Indexed,
+        Model
     }
 }

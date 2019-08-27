@@ -116,7 +116,9 @@ namespace Deltin.Deltinteger.Models
         override protected MethodResult Get()
         {
             if (((VarRef)Parameters[0]).Var is ModelVar == false)
-                throw new SyntaxErrorException("Variable must reference a model.", ParameterLocations[0]);
+                throw SyntaxErrorException.InvalidVarRefType(((VarRef)Parameters[0]).Var.Name, VarType.Model, ParameterLocations[0]);
+
+                //throw new SyntaxErrorException("Variable must reference a model.", ParameterLocations[0]);
             
             ModelVar modelVar = (ModelVar)((VarRef)Parameters[0]).Var;
             Element visibleTo           = (Element)Parameters[1];

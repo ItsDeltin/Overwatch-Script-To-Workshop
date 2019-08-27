@@ -12,7 +12,10 @@ namespace Deltin.Deltinteger.Elements
         protected override MethodResult Get()
         {
             VarRef targetVariable = (VarRef)Parameters[0];
-            #warning will crash with model variable input.
+            
+            if (targetVariable.Var is IndexedVar == false)
+                throw SyntaxErrorException.InvalidVarRefType(targetVariable.Var.Name, VarType.Indexed, ParameterLocations[0]);
+
             IndexedVar var = (IndexedVar)targetVariable.Var;
             Element destination = (Element)Parameters[1];
             Element rate = (Element)Parameters[2];
@@ -47,7 +50,10 @@ namespace Deltin.Deltinteger.Elements
         protected override MethodResult Get()
         {
             VarRef targetVariable = (VarRef)Parameters[0];
-            #warning will crash with model variable input.
+
+            if (targetVariable.Var is IndexedVar == false)
+                throw SyntaxErrorException.InvalidVarRefType(targetVariable.Var.Name, VarType.Indexed, ParameterLocations[0]);
+
             IndexedVar var = (IndexedVar)targetVariable.Var;
             
             VariableChase chaseData = TranslateContext.ParserData.GetLooper(var.IsGlobal).GetChaseData(var, TranslateContext);
