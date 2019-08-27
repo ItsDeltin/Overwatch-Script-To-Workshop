@@ -14,6 +14,8 @@ namespace Deltin.Deltinteger.Models
     {
         protected const bool GET_EFFECT_IDS_BY_DEFAULT = true;
 
+        private const bool DEBUG = true;
+
         protected Element[] RenderModel(Model model, Element visibleTo, Element location, Element scale, IWorkshopTree reevaluation, IndexedVar store)
         {
             List<Element> actions = new List<Element>();
@@ -26,6 +28,29 @@ namespace Deltin.Deltinteger.Models
                     actions.AddRange(
                         store.SetVariable(Element.Part<V_Append>(store.GetVariable(), new V_LastCreatedEntity()))
                     );
+
+                if (DEBUG)
+                {
+                    actions.Add(
+                        Element.Part<A_PlayEffect>(
+                            visibleTo, 
+                            EnumData.GetEnumValue(PlayEffect.GoodExplosion),
+                            EnumData.GetEnumValue(Elements.Color.Turqoise),
+                            model.Lines[i].Vertex1.ToVector(),
+                            new V_Number(0.1)
+                        )
+                    );
+                    actions.Add(
+                        Element.Part<A_PlayEffect>(
+                            visibleTo, 
+                            EnumData.GetEnumValue(PlayEffect.GoodExplosion),
+                            EnumData.GetEnumValue(Elements.Color.Turqoise),
+                            model.Lines[i].Vertex2.ToVector(),
+                            new V_Number(0.1)
+                        )
+                    );
+                    actions.Add(Element.Part<A_Wait>(new V_Number(1)));
+                }
 
                 // Add a wait every 25 actions to prevent high server load.
                 if (actions.Count % 25 == 0)
@@ -53,6 +78,29 @@ namespace Deltin.Deltinteger.Models
                 EnumData.GetEnumValue(Elements.Color.Red),
                 reevaluation
             );
+        }
+
+        protected MethodResult RenderText(string text, string font, double quality, double angle, Element visibleTo, Element location, double scale, IWorkshopTree effectRev, bool getIds)
+        {
+            quality = Math.Max(10 - quality, 0.1);
+
+            if (!FontFamily.Families.Any(fam => fam.Name.ToLower() == font.ToLower()))
+                throw new SyntaxErrorException("The '" + font + "' font does not exist.", ParameterLocations[1]);
+
+            Model model = Model.ImportString(text, new FontFamily(font), quality, angle, scale);
+
+            List<Element> actions = new List<Element>();
+
+            IndexedVar effects = null;
+            if (getIds)
+            {
+                effects = TranslateContext.VarCollection.AssignVar(Scope, "Model Effects", TranslateContext.IsGlobal, null);
+                actions.AddRange(effects.SetVariable(new V_EmptyArray()));
+            }
+                
+            actions.AddRange(RenderModel(model, visibleTo, location, null, effectRev, effects));
+            
+            return new MethodResult(actions.ToArray(), effects?.GetVariable());
         }
     }
 
@@ -106,7 +154,7 @@ namespace Deltin.Deltinteger.Models
         }
     }
 
-    [CustomMethod("CreateText", CustomMethodType.MultiAction_Value)]
+    [CustomMethod("CreateTextFont", CustomMethodType.MultiAction_Value)]
     [ConstantParameter("Text", typeof(string))]
     [ConstantParameter("Font", typeof(string))]
     [ConstantParameter("Quality", typeof(double))]
@@ -116,7 +164,7 @@ namespace Deltin.Deltinteger.Models
     [ConstantParameter("Scale", typeof(double))]
     [EnumParameter("Reevaluation", typeof(EffectRev))]
     [ConstantParameter("Get Effect IDs", typeof(bool), GET_EFFECT_IDS_BY_DEFAULT)]
-    class CreateTextModel : ModelCreator
+    class CreateTextWithFont : ModelCreator
     {
         override protected MethodResult Get()
         {
@@ -130,25 +178,7 @@ namespace Deltin.Deltinteger.Models
             EnumMember effectRev        = (EnumMember)Parameters[7];
             bool getIds    = (bool)  ((ConstantObject)Parameters[8]).Value;
 
-            quality = Math.Max(10 - quality, 0.1);
-
-            if (!FontFamily.Families.Any(fam => fam.Name.ToLower() == font.ToLower()))
-                throw new SyntaxErrorException("The '" + font + "' font does not exist.", ParameterLocations[1]);
-
-            Model model = Model.ImportString(text, new FontFamily(font), quality, angle, scale);
-
-            List<Element> actions = new List<Element>();
-
-            IndexedVar effects = null;
-            if (getIds)
-            {
-                effects = TranslateContext.VarCollection.AssignVar(Scope, "Model Effects", TranslateContext.IsGlobal, null);
-                actions.AddRange(effects.SetVariable(new V_EmptyArray()));
-            }
-                
-            actions.AddRange(RenderModel(model, visibleTo, location, null, effectRev, effects));
-            
-            return new MethodResult(actions.ToArray(), effects?.GetVariable());
+            return RenderText(text, font, quality, angle, visibleTo, location, scale, effectRev, getIds);
         }
 
         override public CustomMethodWiki Wiki()
@@ -159,6 +189,45 @@ namespace Deltin.Deltinteger.Models
                 "The text to display. This is a string constant.",
                 "The name of the font to use. This is a string constant.",
                 "The quality of the font. The value must be between 0-10. Higher numbers creates more effects. This is a number constant.",
+                "The angle of the text. This is a number constant.",
+                "Who the text is visible to.",
+                "The location to display the text.",
+                "The scale of the text.",
+                "Specifies which of this methods inputs will be continuously reevaluated, the text will keep asking for and using new values from reevaluated inputs.",
+                "If true, the method will return the effect IDs used to create the text. Use DestroyEffectArray() to destroy the effect. This is a boolean constant."
+            );
+        }
+    }
+
+    [CustomMethod("CreateText", CustomMethodType.MultiAction_Value)]
+    [ConstantParameter("Text", typeof(string))]
+    [ConstantParameter("Angle", typeof(double))]
+    [Parameter("Visible To", Elements.ValueType.Player, null)]
+    [Parameter("Location", Elements.ValueType.Vector, null)]
+    [ConstantParameter("Scale", typeof(double))]
+    [EnumParameter("Reevaluation", typeof(EffectRev))]
+    [ConstantParameter("Get Effect IDs", typeof(bool), GET_EFFECT_IDS_BY_DEFAULT)]
+    class CreateText : ModelCreator
+    {
+        override protected MethodResult Get()
+        {
+            string text    = (string)((ConstantObject)Parameters[0]).Value;
+            double angle   = (double)((ConstantObject)Parameters[1]).Value + 22.2; // Add offset to make it even with HorizontalAngleOf().
+            Element visibleTo              = (Element)Parameters[2];
+            Element location               = (Element)Parameters[3];
+            double scale   = (double)((ConstantObject)Parameters[4]).Value;
+            EnumMember effectRev        = (EnumMember)Parameters[5];
+            bool getIds    = (bool)  ((ConstantObject)Parameters[6]).Value;
+
+            return RenderText(text, "BigNoodleTooOblique", 7, angle, visibleTo, location, scale, effectRev, getIds);
+        }
+
+        override public CustomMethodWiki Wiki()
+        {
+            return new CustomMethodWiki(
+                "Creates in-world text using any custom text.",
+                // Parameters
+                "The text to display. This is a string constant.",
                 "The angle of the text. This is a number constant.",
                 "Who the text is visible to.",
                 "The location to display the text.",

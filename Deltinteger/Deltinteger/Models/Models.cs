@@ -17,15 +17,44 @@ namespace Deltin.Deltinteger.Models
 
         private Model(Line[] lines)
         {
+            List<Line> addLines = new List<Line>(lines);
+
+            // Remove duplicate lines
+            for (int a = addLines.Count - 1; a >= 0; a--)
+            {
+                var pointsA = new (double X, double Y, double Z)[] {
+                    (addLines[a].Vertex1.X, addLines[a].Vertex1.Y, addLines[a].Vertex1.Z),
+                    (addLines[a].Vertex2.X, addLines[a].Vertex2.Y, addLines[a].Vertex2.Z)
+                };
+
+                for (int b = 0; b < addLines.Count; b++)
+                {
+                    var pointsB = new (double X, double Y, double Z)[] {
+                        (addLines[b].Vertex1.X, addLines[b].Vertex1.Y, addLines[b].Vertex1.Z),
+                        (addLines[b].Vertex2.X, addLines[b].Vertex2.Y, addLines[b].Vertex2.Z)
+                    };
+
+                    if ((a != b) && (
+                        (pointsA[0] == pointsB[0] && pointsA[0] == pointsB[1]) ||
+                        (pointsA[0] == pointsB[1] && pointsA[1] == pointsB[0])
+                    ))
+                    {
+                        addLines.RemoveAt(a);
+                        a--;
+                        break;
+                    }
+                }
+            }
+
             if (VERTICAL_LINE_FIX)
-                foreach (Line line in lines)
+                foreach (Line line in addLines)
                     if (line.Vertex1.X == line.Vertex2.X &&
                         line.Vertex1.Z == line.Vertex2.Z)
                     {
                         line.Vertex2.X += 0.0001;
                     }
 
-            Lines = lines;
+            Lines = addLines.ToArray();
         }
 
         public static Model ImportObj(string obj)

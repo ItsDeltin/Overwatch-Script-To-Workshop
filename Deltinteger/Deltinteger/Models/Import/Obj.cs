@@ -40,32 +40,6 @@ namespace Deltin.Deltinteger.Models.Import
             foreach (Face face in Faces)
                 lines.AddRange(face.GetLines());
 
-            for (int a = 0; a < lines.Count; a++)
-            {
-                var pointsA = new (double X, double Y, double Z)[] {
-                    (lines[a].Vertex1.X, lines[a].Vertex1.Y, lines[a].Vertex1.Z),
-                    (lines[a].Vertex2.X, lines[a].Vertex2.Y, lines[a].Vertex2.Z)
-                };
-
-                for (int b = 0; b < lines.Count; b++)
-                {
-                    var pointsB = new (double X, double Y, double Z)[] {
-                        (lines[b].Vertex1.X, lines[b].Vertex1.Y, lines[b].Vertex1.Z),
-                        (lines[b].Vertex2.X, lines[b].Vertex2.Y, lines[b].Vertex2.Z)
-                    };
-
-                    if ((a != b) && (
-                        (pointsA[0] == pointsB[0] && pointsA[0] == pointsB[1]) ||
-                        (pointsA[0] == pointsB[1] && pointsA[1] == pointsB[0])
-                    ))
-                    {
-                        lines.RemoveAt(a);
-                        a--;
-                        break;
-                    }
-                }
-            }
-
             return lines.ToArray();
         }
     }
