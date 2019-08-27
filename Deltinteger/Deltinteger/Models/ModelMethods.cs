@@ -14,24 +14,27 @@ namespace Deltin.Deltinteger.Models
     {
         protected const bool GET_EFFECT_IDS_BY_DEFAULT = true;
 
-        protected Element[] RenderModel(Model model, Element visibleTo, Element location, Element scale, IndexedVar store)
+        protected Element[] RenderModel(Model model, Element visibleTo, Element location, Element scale, IWorkshopTree reevaluation, IndexedVar store)
         {
             List<Element> actions = new List<Element>();
             for (int i = 0; i < model.Lines.Length; i++)
             {
-                actions.Add(CreateLine(model.Lines[i], visibleTo, location, scale));
+                actions.Add(CreateLine(model.Lines[i], visibleTo, location, scale, reevaluation));
+
+                // Get the last created effect and append it to the store array.
                 if (store != null)
                     actions.AddRange(
                         store.SetVariable(Element.Part<V_Append>(store.GetVariable(), new V_LastCreatedEntity()))
                     );
 
+                // Add a wait every 25 actions to prevent high server load.
                 if (actions.Count % 25 == 0)
                     actions.Add(A_Wait.MinimumWait);
             }
             return actions.ToArray();
         }
 
-        protected Element CreateLine(Line line, Element visibleTo, Element location, Element scale)
+        protected Element CreateLine(Line line, Element visibleTo, Element location, Element scale, IWorkshopTree reevaluation)
         {
             Element pos1 = line.Vertex1.ToVector();
             Element pos2 = line.Vertex2.ToVector();
@@ -47,8 +50,8 @@ namespace Deltin.Deltinteger.Models
                 EnumData.GetEnumValue(BeamType.GrappleBeam),
                 Element.Part<V_Add>(location, pos1),
                 Element.Part<V_Add>(location, pos2),
-                EnumData.GetEnumValue(Elements.Color.LimeGreen),
-                EnumData.GetEnumValue(EffectRev.VisibleToPositionAndRadius)
+                EnumData.GetEnumValue(Elements.Color.Red),
+                reevaluation
             );
         }
     }
@@ -58,6 +61,7 @@ namespace Deltin.Deltinteger.Models
     [Parameter("Visible To", Elements.ValueType.Player, null)]
     [Parameter("Location", Elements.ValueType.Vector, null)]
     [Parameter("Scale", Elements.ValueType.Number, null)]
+    [EnumParameter("Reevaluation", typeof(EffectRev))]
     [ConstantParameter("Get Effect IDs", typeof(bool), GET_EFFECT_IDS_BY_DEFAULT)]
     class ShowModel : ModelCreator
     {
@@ -70,7 +74,8 @@ namespace Deltin.Deltinteger.Models
             Element visibleTo           = (Element)Parameters[1];
             Element location            = (Element)Parameters[2];
             Element scale               = (Element)Parameters[3];
-            bool getIds   = (bool)((ConstantObject)Parameters[4]).Value;
+            EnumMember effectRev     = (EnumMember)Parameters[4];
+            bool getIds   = (bool)((ConstantObject)Parameters[5]).Value;
 
             List<Element> actions = new List<Element>();
 
@@ -81,7 +86,7 @@ namespace Deltin.Deltinteger.Models
                 actions.AddRange(effects.SetVariable(new V_EmptyArray()));
             }
 
-            actions.AddRange(RenderModel(modelVar.Model, visibleTo, location, scale, effects));
+            actions.AddRange(RenderModel(modelVar.Model, visibleTo, location, scale, effectRev, effects));
 
             return new MethodResult(actions.ToArray(), effects?.GetVariable());
         }
@@ -95,6 +100,7 @@ namespace Deltin.Deltinteger.Models
                 "Who the model is visible to.",
                 "The location of the model.",
                 "The scale of the model.",
+                "Specifies which of this methods inputs will be continuously reevaluated, the model will keep asking for and using new values from reevaluated inputs.",
                 "If true, the method will return the effect IDs used to create the model. Use DestroyEffectArray() to destroy the effect. This is a boolean constant."
             );
         }
@@ -107,7 +113,8 @@ namespace Deltin.Deltinteger.Models
     [ConstantParameter("Angle", typeof(double))]
     [Parameter("Visible To", Elements.ValueType.Player, null)]
     [Parameter("Location", Elements.ValueType.Vector, null)]
-    [ConstantParameter("Scale", typeof(double), 1.0)]
+    [ConstantParameter("Scale", typeof(double))]
+    [EnumParameter("Reevaluation", typeof(EffectRev))]
     [ConstantParameter("Get Effect IDs", typeof(bool), GET_EFFECT_IDS_BY_DEFAULT)]
     class CreateTextModel : ModelCreator
     {
@@ -116,12 +123,12 @@ namespace Deltin.Deltinteger.Models
             string text    = (string)((ConstantObject)Parameters[0]).Value;
             string font    = (string)((ConstantObject)Parameters[1]).Value;
             double quality = (double)((ConstantObject)Parameters[2]).Value;
-            double angle   = (double)((ConstantObject)Parameters[3]).Value + 22.2;
+            double angle   = (double)((ConstantObject)Parameters[3]).Value + 22.2; // Add offset to make it even with HorizontalAngleOf().
             Element visibleTo              = (Element)Parameters[4];
             Element location               = (Element)Parameters[5];
-            //Element scale                  = (Element)Parameters[6];
             double scale   = (double)((ConstantObject)Parameters[6]).Value;
-            bool getIds    = (bool)  ((ConstantObject)Parameters[7]).Value;
+            EnumMember effectRev        = (EnumMember)Parameters[7];
+            bool getIds    = (bool)  ((ConstantObject)Parameters[8]).Value;
 
             quality = Math.Max(10 - quality, 0.1);
 
@@ -139,7 +146,7 @@ namespace Deltin.Deltinteger.Models
                 actions.AddRange(effects.SetVariable(new V_EmptyArray()));
             }
                 
-            actions.AddRange(RenderModel(model, visibleTo, location, null, effects));
+            actions.AddRange(RenderModel(model, visibleTo, location, null, effectRev, effects));
             
             return new MethodResult(actions.ToArray(), effects?.GetVariable());
         }
@@ -156,6 +163,7 @@ namespace Deltin.Deltinteger.Models
                 "Who the text is visible to.",
                 "The location to display the text.",
                 "The scale of the text.",
+                "Specifies which of this methods inputs will be continuously reevaluated, the text will keep asking for and using new values from reevaluated inputs.",
                 "If true, the method will return the effect IDs used to create the text. Use DestroyEffectArray() to destroy the effect. This is a boolean constant."
             );
         }
