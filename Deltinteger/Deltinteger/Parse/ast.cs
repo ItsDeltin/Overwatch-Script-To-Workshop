@@ -508,8 +508,9 @@ namespace Deltin.Deltinteger.Parse
     {
         public ImportNode[] Imports { get; }
         public ImportObjectNode[] ObjectImports { get; }
-        public Variable UseGlobalVar { get; }
-        public Variable UsePlayerVar { get; }
+        public Variable UseGlobalVar { get; } = Variable.A;
+        public Variable UsePlayerVar { get; } = Variable.A;
+        public Variable UseBuilderVar { get; } = Variable.B;
         public RuleNode[] Rules { get; }
         public RuleDefineNode[] DefinedVars { get; }
         public UserMethodNode[] UserMethods { get; }
@@ -529,12 +530,17 @@ namespace Deltin.Deltinteger.Parse
             for (int i = 0; i < Rules.Length; i++)
                 Rules[i] = (RuleNode)visitor.VisitOw_rule(context.ow_rule()[i]);
 
-            Variable useGlobalVar;
-            Variable usePlayerVar;
-            Enum.TryParse<Variable>(context.useGlobalVar()?.PART().GetText(), out useGlobalVar);
-            Enum.TryParse<Variable>(context.usePlayerVar()?.PART().GetText(), out usePlayerVar);
-            UseGlobalVar = useGlobalVar;
-            UsePlayerVar = usePlayerVar;
+            if (context.useGlobalVar() != null)
+                if (Enum.TryParse(context.useGlobalVar().PART().GetText(), out Variable temp))
+                    UseGlobalVar = temp;
+            
+            if (context.usePlayerVar() != null)
+                if (Enum.TryParse(context.usePlayerVar().PART().GetText(), out Variable temp))
+                    UsePlayerVar = temp;
+            
+            if (context.useDimVar() != null)
+                if (Enum.TryParse(context.useDimVar().PART().GetText(), out Variable temp))
+                    UseBuilderVar = temp;
 
             DefinedVars = new RuleDefineNode[context.rule_define().Length];
             for (int i = 0; i < DefinedVars.Length; i++)
@@ -692,12 +698,7 @@ namespace Deltin.Deltinteger.Parse
 
         public UseVarNode(DeltinScriptParser.UseVarContext context, BuildAstVisitor visitor) : base(new Location(visitor.file, Range.GetRange(context)))
         {
-            if (!Enum.TryParse<Variable>(context.PART().GetText(), out Variable variable))
-            {
-                visitor._diagnostics.Error("Expected letter.", new Location(visitor.file, Range.GetRange(context)));
-                variable = Variable.A;
-            }
-            Variable = variable;
+            Variable = (Variable)Enum.Parse(typeof(Variable), context.PART().GetText());
             
             int index = -1;
             if (context.number() != null)

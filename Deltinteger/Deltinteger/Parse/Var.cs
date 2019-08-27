@@ -12,14 +12,18 @@ namespace Deltin.Deltinteger.Parse
     {
         private const bool REUSE_VARIABLES = false;
 
-        public Variable UseVar = Variable.A;
+        private Variable Global { get; }
+        private Variable Player { get; }
 
-        private readonly WorkshopArrayBuilder WorkshopArrayBuilder;
+        public WorkshopArrayBuilder WorkshopArrayBuilder { get; }
 
-        public VarCollection()
+        public VarCollection(Variable global, Variable player, Variable builder)
         {
+            Global = global;
+            Player = player;
+
             IndexedVar tempArrayBuilderVar = AssignVar(null, "Multidimensional Array Builder", true, null);
-            WorkshopArrayBuilder = new WorkshopArrayBuilder(Variable.B, tempArrayBuilderVar);
+            WorkshopArrayBuilder = new WorkshopArrayBuilder(builder, tempArrayBuilderVar);
             tempArrayBuilderVar.ArrayBuilder = WorkshopArrayBuilder;
         }
 
@@ -93,9 +97,9 @@ namespace Deltin.Deltinteger.Parse
                 name = Constants.INTERNAL_ELEMENT + name;
             
             if (scope == null || !scope.Recursive)
-                var = new IndexedVar  (scope, name, isGlobal, UseVar, new int[] { Assign(isGlobal) }, WorkshopArrayBuilder, node);
+                var = new IndexedVar  (scope, name, isGlobal, GetUseVar(isGlobal), new int[] { Assign(isGlobal) }, WorkshopArrayBuilder, node);
             else
-                var = new RecursiveVar(scope, name, isGlobal, UseVar, new int[] { Assign(isGlobal) }, WorkshopArrayBuilder, node);
+                var = new RecursiveVar(scope, name, isGlobal, GetUseVar(isGlobal), new int[] { Assign(isGlobal) }, WorkshopArrayBuilder, node);
             
             Set(isGlobal, var);
             AddVar(var);
@@ -119,6 +123,11 @@ namespace Deltin.Deltinteger.Parse
         {
             if (!AllVars.Contains(var))
                 AllVars.Add(var);
+        }
+
+        private Variable GetUseVar(bool isGlobal)
+        {
+            return isGlobal ? Global : Player;
         }
 
         public readonly List<Var> AllVars = new List<Var>();
@@ -375,7 +384,7 @@ namespace Deltin.Deltinteger.Parse
 
     public class WorkshopArrayBuilder
     {
-        Variable Constructor;
+        private Variable Constructor { get; }
         IndexedVar Store;
 
         public WorkshopArrayBuilder(Variable constructor, IndexedVar store)

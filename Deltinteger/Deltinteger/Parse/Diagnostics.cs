@@ -4,6 +4,7 @@ using System.Linq;
 using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.Elements;
 using Antlr4.Runtime;
+using Antlr4.Runtime.Tree;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -154,6 +155,42 @@ namespace Deltin.Deltinteger.Parse
             if (context.EQUALS() != null && context.expr() == null)
                 _diagnostics.Error("Expected expression.", new Location(_file, Range.GetRange(context)));
             return base.VisitDefine(context);
+        }
+
+        public override object VisitUseVar(DeltinScriptParser.UseVarContext context)
+        {
+            CheckLetter(context, context.PART());
+            return base.VisitUseVar(context);
+        }
+
+        public override object VisitUseGlobalVar(DeltinScriptParser.UseGlobalVarContext context)
+        {
+            CheckLetter(context, context.PART());
+            return base.VisitUseGlobalVar(context);
+        }
+
+        public override object VisitUsePlayerVar(DeltinScriptParser.UsePlayerVarContext context)
+        {
+            CheckLetter(context, context.PART());
+            return base.VisitUsePlayerVar(context);
+        }
+
+        public override object VisitUseDimVar(DeltinScriptParser.UseDimVarContext context)
+        {
+            CheckLetter(context, context.PART());
+            return base.VisitUseDimVar(context);
+        }
+
+        private void CheckLetter(ParserRuleContext context, ITerminalNode node)
+        {
+            if (node == null)
+            {
+                _diagnostics.Error("Expected letter.", new Location(_file, Range.GetRange(context)));
+                return;
+            }
+
+            if (!Enum.TryParse<Variable>(node.GetText(), out Variable variable))
+                _diagnostics.Error("Expected letter.", new Location(_file, Range.GetRange(node)));
         }
     }
 

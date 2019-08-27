@@ -22,6 +22,7 @@ parameter_define :                   (type=PART | DEFINE)                 name=P
 useVar   : PART (INDEX_START number INDEX_END)? ;
 useGlobalVar : USEVAR GLOBAL PART STATEMENT_END ;
 usePlayerVar : USEVAR PLAYER PART STATEMENT_END ;
+useDimVar    : USEVAR DIM    PART STATEMENT_END ;
 
 expr 
 	: 
@@ -107,6 +108,7 @@ ruleset :
 	(import_file | import_object)*
 	useGlobalVar?
 	usePlayerVar?
+	useDimVar?
 	(rule_define | ow_rule | user_method | type_define)*
 	;
 
@@ -173,8 +175,9 @@ FOREACH   : 'foreach'   ;
 IN        : 'in'        ;
 DEFINE    : 'define'    ;
 USEVAR    : 'usevar'    ;
-PLAYER    : 'playervar' ;
 GLOBAL    : 'globalvar' ;
+PLAYER    : 'playervar' ;
+DIM       : 'buildervar';
 TRUE      : 'true'      ;
 FALSE     : 'false'     ;
 NULL      : 'null'      ;
