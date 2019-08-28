@@ -19,6 +19,7 @@ let client: LanguageClient;
 let workshopOut: OutputChannel;
 
 import * as http from 'http';
+import { format } from 'util';
 const request = require('request');
 
 const config = workspace.getConfiguration("ostw", null);
@@ -98,22 +99,28 @@ function ping()
 		}
 	});
 
-	let file = window.activeTextEditor.document.fileName;
-	getCode(file, function (code) {
-		if (lastWorkshopOutput != code && code != "")
-		{
-			// Clear the output
-			workshopOut.clear();
-			// Append the compiled result.
-			workshopOut.appendLine(code);
-			lastWorkshopOutput = code;
-		}
+	if (window.activeTextEditor != null)
+	{
+		let file = window.activeTextEditor.document.fileName;
+		getCode(file, (code) => updateCode(file, code) );
+		setTimeout(ping, 1000);
+	}
+}
 
-		for (var i = 0; i < panels.length; i++)
-			if (panels[i].fullPath == file)
-				panels[i].setCode(code);
-	});
-	setTimeout(ping, 1000);
+function updateCode(file: string, code: string)
+{
+	if (lastWorkshopOutput != code && code != "")
+	{
+		// Clear the output
+		workshopOut.clear();
+		// Append the compiled result.
+		workshopOut.appendLine(code);
+		lastWorkshopOutput = code;
+	}
+
+	for (var i = 0; i < panels.length; i++)
+		if (panels[i].fullPath == file)
+			panels[i].setCode(code);
 }
 
 function getCode(uri:string, callback)
@@ -133,6 +140,9 @@ function addCommands(context: ExtensionContext)
 
 function webviewOutput()
 {
+	if (vscode.window.activeTextEditor == null)
+		return;
+
 	let fullPath = vscode.window.activeTextEditor.document.fileName;
 
 	for (var i = 0; i < panels.length; i++)
@@ -162,7 +172,11 @@ class OutputPanel
 		this.panel = window.createWebviewPanel(
 			'ostw',
 			this.fileName + ' Workshop Output',
-			vscode.ViewColumn.Active
+			vscode.ViewColumn.Active,
+			{
+				enableScripts: true,
+				retainContextWhenHidden: true
+			}
 		);
 
 		this.panel.onDidDispose(() => this.dispose());
@@ -170,13 +184,69 @@ class OutputPanel
 		getCode(fullPath, (code) => this.setCode(code));
 	}
 
-	setCode(code)
+	setCode(code: string)
 	{
 		if (this.lastWorkshopOutput != code)
 		{
-			this.panel.webview.html = "<pre><code>" + code + "</code></pre>";
+			this.panel.webview.html = this.getContent(code);
 			this.lastWorkshopOutput = code;
 		}
+	}
+
+	getContent(code: string)
+	{
+		if (code == null) code = lastWorkshopOutput;
+
+		return `<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>OSTW Output</title>
+	<style>
+		pre{
+			counter-reset: line;
+		}
+		code{
+			counter-increment: line;
+			color: var(--vscode-editor-foreground);
+		}
+		code:before{
+			content: counter(line);
+			-webkit-user-select: none;
+
+			display: inline-block;
+			text-align: right;
+			width: 25px;
+			margin-right: 15px;
+			font-family: Consolas;
+			color: var(--vscode-editorLineNumber-foreground);
+			font-size: 14px;
+		}
+		button {
+			color: var(--vscode-button-foreground);
+			background-color: var(--vscode-button-background);
+			border: none;
+			padding: 5px 25px 5px 25px;
+			font-family: sans-serif;
+		}
+		button:hover {
+			background-color: var(--vscode-button-hoverBackground);
+		}
+	</style>
+</head>
+<body>
+	${this.formatCode(code)}
+</body>
+</html>`;
+	}
+
+	formatCode(code: string) {
+		var final: string = '<pre id="workshop-code">';
+		var lines: string[] = code.split('\n');
+		for (var i = 0; i < lines.length; i++)
+			final += '<code>' + lines[i] + '</code>';
+		final += '</pre>';
+		return final;
 	}
 
 	dispose()
