@@ -14,7 +14,7 @@ namespace Deltin.Deltinteger.Models
     {
         protected const bool GET_EFFECT_IDS_BY_DEFAULT = true;
 
-        private const bool DEBUG = true;
+        private const bool DEBUG = false;
 
         protected Element[] RenderModel(Model model, Element visibleTo, Element location, Element scale, IWorkshopTree reevaluation, IndexedVar store)
         {
@@ -31,25 +31,7 @@ namespace Deltin.Deltinteger.Models
 
                 if (DEBUG)
                 {
-                    actions.Add(
-                        Element.Part<A_PlayEffect>(
-                            visibleTo, 
-                            EnumData.GetEnumValue(PlayEffect.GoodExplosion),
-                            EnumData.GetEnumValue(Elements.Color.Turqoise),
-                            model.Lines[i].Vertex1.ToVector(),
-                            new V_Number(0.1)
-                        )
-                    );
-                    actions.Add(
-                        Element.Part<A_PlayEffect>(
-                            visibleTo, 
-                            EnumData.GetEnumValue(PlayEffect.GoodExplosion),
-                            EnumData.GetEnumValue(Elements.Color.Turqoise),
-                            model.Lines[i].Vertex2.ToVector(),
-                            new V_Number(0.1)
-                        )
-                    );
-                    actions.Add(Element.Part<A_Wait>(new V_Number(1)));
+                    actions.Add(Element.Part<A_Wait>(new V_Number(0.5)));
                 }
 
                 // Add a wait every 25 actions to prevent high server load.
@@ -80,14 +62,14 @@ namespace Deltin.Deltinteger.Models
             );
         }
 
-        protected MethodResult RenderText(string text, string font, double quality, double angle, Element visibleTo, Element location, double scale, IWorkshopTree effectRev, bool getIds)
+        protected MethodResult RenderText(string text, string font, double quality, double angle, Element visibleTo, Element location, double scale, IWorkshopTree effectRev, bool getIds, double angleRound)
         {
             quality = Math.Max(10 - quality, 0.1);
 
             if (!FontFamily.Families.Any(fam => fam.Name.ToLower() == font.ToLower()))
                 throw new SyntaxErrorException("The '" + font + "' font does not exist.", ParameterLocations[1]);
 
-            Model model = Model.ImportString(text, new FontFamily(font), quality, angle, scale);
+            Model model = Model.ImportString(text, new FontFamily(font), quality, angle, scale, angleRound);
 
             List<Element> actions = new List<Element>();
 
@@ -180,7 +162,7 @@ namespace Deltin.Deltinteger.Models
             EnumMember effectRev        = (EnumMember)Parameters[7];
             bool getIds    = (bool)  ((ConstantObject)Parameters[8]).Value;
 
-            return RenderText(text, font, quality, angle, visibleTo, location, scale, effectRev, getIds);
+            return RenderText(text, font, quality, angle, visibleTo, location, scale, effectRev, getIds, 0);
         }
 
         override public CustomMethodWiki Wiki()
@@ -221,13 +203,52 @@ namespace Deltin.Deltinteger.Models
             EnumMember effectRev        = (EnumMember)Parameters[5];
             bool getIds    = (bool)  ((ConstantObject)Parameters[6]).Value;
 
-            return RenderText(text, "BigNoodleTooOblique", 7, angle, visibleTo, location, scale, effectRev, getIds);
+            return RenderText(text, "BigNoodleTooOblique", 8, angle, visibleTo, location, scale, effectRev, getIds, 0);
         }
 
         override public CustomMethodWiki Wiki()
         {
             return new CustomMethodWiki(
-                "Creates in-world text using any custom text.",
+                "Creates in-world text using any custom text. Uses the BigNoodleTooOblique font, Overwatch's main font.",
+                // Parameters
+                "The text to display. This is a string constant.",
+                "The angle of the text. This is a number constant.",
+                "Who the text is visible to.",
+                "The location to display the text.",
+                "The scale of the text.",
+                "Specifies which of this methods inputs will be continuously reevaluated, the text will keep asking for and using new values from reevaluated inputs.",
+                "If true, the method will return the effect IDs used to create the text. Use DestroyEffectArray() to destroy the effect. This is a boolean constant."
+            );
+        }
+    }
+
+    [CustomMethod("CreateTextMinimal", CustomMethodType.MultiAction_Value)]
+    [ConstantParameter("Text", typeof(string))]
+    [ConstantParameter("Angle", typeof(double))]
+    [Parameter("Visible To", Elements.ValueType.Player, null)]
+    [Parameter("Location", Elements.ValueType.Vector, null)]
+    [ConstantParameter("Scale", typeof(double))]
+    [EnumParameter("Reevaluation", typeof(EffectRev))]
+    [ConstantParameter("Get Effect IDs", typeof(bool), GET_EFFECT_IDS_BY_DEFAULT)]
+    class CreateTextMinimal : ModelCreator
+    {
+        override protected MethodResult Get()
+        {
+            string text    = (string)((ConstantObject)Parameters[0]).Value;
+            double angle   = (double)((ConstantObject)Parameters[1]).Value + 22.2; // Add offset to make it even with HorizontalAngleOf().
+            Element visibleTo              = (Element)Parameters[2];
+            Element location               = (Element)Parameters[3];
+            double scale   = (double)((ConstantObject)Parameters[4]).Value;
+            EnumMember effectRev        = (EnumMember)Parameters[5];
+            bool getIds    = (bool)  ((ConstantObject)Parameters[6]).Value;
+
+            return RenderText(text, "1CamBam_Stick_1", 10, angle, visibleTo, location, scale, effectRev, getIds, 35);
+        }
+
+        override public CustomMethodWiki Wiki()
+        {
+            return new CustomMethodWiki(
+                "Creates in-world text using any custom text. Uses a less amount of effects.",
                 // Parameters
                 "The text to display. This is a string constant.",
                 "The angle of the text. This is a number constant.",

@@ -102,9 +102,9 @@ function ping()
 	if (window.activeTextEditor != null)
 	{
 		let file = window.activeTextEditor.document.fileName;
-		getCode(file, (code) => updateCode(file, code) );
-		setTimeout(ping, 1000);
+		getCode(file, (code) => updateCode(file, code));
 	}
+	setTimeout(ping, 1000);
 }
 
 function updateCode(file: string, code: string)
