@@ -514,7 +514,7 @@ namespace Deltin.Deltinteger.Parse
                 }
 
                 var customMethodResult = ((CustomMethodData)method)
-                    .GetObject(this, scope, parsedParameters.ToArray(), methodNode.Parameters.Select(p => p.Location).ToArray())
+                    .GetObject(this, scope, parsedParameters.ToArray(), methodNode.Location, methodNode.Parameters.Select(p => p.Location).ToArray())
                     .Result();
 
                 // Some custom methods have extra actions.

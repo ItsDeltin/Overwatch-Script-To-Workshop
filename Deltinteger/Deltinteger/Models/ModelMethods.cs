@@ -3,10 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.IO;
 using Deltin.Deltinteger;
 using Deltin.Deltinteger.Models.Import;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.Parse;
+using Deltin.Deltinteger.LanguageServer;
 
 namespace Deltin.Deltinteger.Models
 {
@@ -14,7 +16,7 @@ namespace Deltin.Deltinteger.Models
     {
         protected const bool GET_EFFECT_IDS_BY_DEFAULT = true;
 
-        private const bool DEBUG = false;
+        protected virtual int FontParameter { get; } = -1;
 
         protected Element[] RenderModel(Model model, Element visibleTo, Element location, Element scale, IWorkshopTree reevaluation, IndexedVar store)
         {
@@ -28,11 +30,6 @@ namespace Deltin.Deltinteger.Models
                     actions.AddRange(
                         store.SetVariable(Element.Part<V_Append>(store.GetVariable(), new V_LastCreatedEntity()))
                     );
-
-                if (DEBUG)
-                {
-                    actions.Add(Element.Part<A_Wait>(new V_Number(0.5)));
-                }
 
                 // Add a wait every 25 actions to prevent high server load.
                 if (actions.Count % 25 == 0)
@@ -66,10 +63,8 @@ namespace Deltin.Deltinteger.Models
         {
             quality = Math.Max(10 - quality, 0.1);
 
-            if (!FontFamily.Families.Any(fam => fam.Name.ToLower() == font.ToLower()))
-                throw new SyntaxErrorException("The '" + font + "' font does not exist.", ParameterLocations[1]);
-
-            Model model = Model.ImportString(text, new FontFamily(font), quality, angle, scale, angleRound);
+            FontFamily family = GetFontFamily(font, FontParameter == -1 ? MethodLocation : ParameterLocations[FontParameter]);
+            Model model = Model.ImportString(text, family, quality, angle, scale, angleRound);
 
             List<Element> actions = new List<Element>();
 
@@ -83,6 +78,26 @@ namespace Deltin.Deltinteger.Models
             actions.AddRange(RenderModel(model, visibleTo, location, null, effectRev, effects));
             
             return new MethodResult(actions.ToArray(), effects?.GetVariable());
+        }
+
+        private static FontFamily GetFontFamily(string name, Location location)
+        {
+            string included = Path.Combine(Program.ExeFolder, "Fonts", "#" + name);
+
+            if (File.Exists(included))
+                try
+                {
+                    return new FontFamily(included);
+                }
+                catch (ArgumentException)
+                {
+                    throw new SyntaxErrorException($"Failed to load the font {name} at '{included}'.", location);
+                }
+            
+            if (!FontFamily.Families.Any(fam => fam.Name.ToLower() == name.ToLower()))
+                throw new SyntaxErrorException($"The font {name} does not exist.", location);
+            
+            return new FontFamily(name);
         }
     }
 
@@ -142,6 +157,7 @@ namespace Deltin.Deltinteger.Models
     [ConstantParameter("Text", typeof(string))]
     [ConstantParameter("Font", typeof(string))]
     [ConstantParameter("Quality", typeof(double))]
+    [ConstantParameter("Line Angle Merge", typeof(double))]
     [ConstantParameter("Angle", typeof(double))]
     [Parameter("Visible To", Elements.ValueType.Player, null)]
     [Parameter("Location", Elements.ValueType.Vector, null)]
@@ -150,19 +166,22 @@ namespace Deltin.Deltinteger.Models
     [ConstantParameter("Get Effect IDs", typeof(bool), GET_EFFECT_IDS_BY_DEFAULT)]
     class CreateTextWithFont : ModelCreator
     {
+        override protected int FontParameter { get; } = 1;
+
         override protected MethodResult Get()
         {
             string text    = (string)((ConstantObject)Parameters[0]).Value;
             string font    = (string)((ConstantObject)Parameters[1]).Value;
             double quality = (double)((ConstantObject)Parameters[2]).Value;
-            double angle   = (double)((ConstantObject)Parameters[3]).Value + 22.2; // Add offset to make it even with HorizontalAngleOf().
-            Element visibleTo              = (Element)Parameters[4];
-            Element location               = (Element)Parameters[5];
-            double scale   = (double)((ConstantObject)Parameters[6]).Value;
-            EnumMember effectRev        = (EnumMember)Parameters[7];
-            bool getIds    = (bool)  ((ConstantObject)Parameters[8]).Value;
+            double merge   = (double)((ConstantObject)Parameters[3]).Value;
+            double angle   = (double)((ConstantObject)Parameters[4]).Value + 22.2; // Add offset to make it even with HorizontalAngleOf().
+            Element visibleTo              = (Element)Parameters[5];
+            Element location               = (Element)Parameters[6];
+            double scale   = (double)((ConstantObject)Parameters[7]).Value;
+            EnumMember effectRev        = (EnumMember)Parameters[8];
+            bool getIds    = (bool)  ((ConstantObject)Parameters[9]).Value;
 
-            return RenderText(text, font, quality, angle, visibleTo, location, scale, effectRev, getIds, 0);
+            return RenderText(text, font, quality, angle, visibleTo, location, scale, effectRev, getIds, merge);
         }
 
         override public CustomMethodWiki Wiki()
@@ -173,6 +192,7 @@ namespace Deltin.Deltinteger.Models
                 "The text to display. This is a string constant.",
                 "The name of the font to use. This is a string constant.",
                 "The quality of the font. The value must be between 0-10. Higher numbers creates more effects. This is a number constant.",
+                "Merge lines if their angles are under this amount.",
                 "The angle of the text. This is a number constant.",
                 "Who the text is visible to.",
                 "The location to display the text.",
@@ -203,7 +223,7 @@ namespace Deltin.Deltinteger.Models
             EnumMember effectRev        = (EnumMember)Parameters[5];
             bool getIds    = (bool)  ((ConstantObject)Parameters[6]).Value;
 
-            return RenderText(text, "BigNoodleTooOblique", 8, angle, visibleTo, location, scale, effectRev, getIds, 0);
+            return RenderText(text, "BigNoodleTooOblique", 9, angle, visibleTo, location, scale, effectRev, getIds, 0);
         }
 
         override public CustomMethodWiki Wiki()
@@ -242,7 +262,7 @@ namespace Deltin.Deltinteger.Models
             EnumMember effectRev        = (EnumMember)Parameters[5];
             bool getIds    = (bool)  ((ConstantObject)Parameters[6]).Value;
 
-            return RenderText(text, "1CamBam_Stick_1", 10, angle, visibleTo, location, scale, effectRev, getIds, 35);
+            return RenderText(text, "1CamBam_Stick_1", 10, angle, visibleTo, location, scale, effectRev, getIds, 50);
         }
 
         override public CustomMethodWiki Wiki()

@@ -16,8 +16,11 @@ namespace Deltin.Deltinteger
     {
         public const string VERSION = "v0.4.0";
 
+        public static readonly string ExeFolder = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+
         static Log Log = new Log(":");
         static Log ParseLog = new Log("Parse");
+
 
         static void Main(string[] args)
         {
