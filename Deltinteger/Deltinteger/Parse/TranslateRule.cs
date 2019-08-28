@@ -315,14 +315,16 @@ namespace Deltin.Deltinteger.Parse
                     if (constructor != null)
                     {
                         ScopeGroup constructorScope = typeScope.Child();
-                        for (int i = 0; i < constructor.Parameters.Length; i++)
-                        {
-                            IndexedVar var = VarCollection.AssignVar(constructorScope, constructor.Parameters[i].Name, IsGlobal, createObjectNode);
-                            Actions.AddRange
-                            (
-                                var.InScope(ParseExpression(scope, createObjectNode.Parameters[i]))
-                            );
-                        }
+
+                        IWorkshopTree[] parameters = ParseParameters(
+                            constructorScope, 
+                            constructor.Parameters, 
+                            createObjectNode.Parameters, 
+                            createObjectNode.TypeName, 
+                            createObjectNode.Location
+                        );
+
+                        AssignParameterVariables(constructorScope, constructor.Parameters, parameters, createObjectNode);
 
                         ParseBlock(constructorScope, constructor.BlockNode, true, null);
                         constructorScope.Out();
@@ -446,6 +448,27 @@ namespace Deltin.Deltinteger.Parse
             return parsedParameters.ToArray();
         }
 
+        Var[] AssignParameterVariables(ScopeGroup methodScope, ParameterBase[] parameters, IWorkshopTree[] values, Node methodNode)
+        {
+            Var[] parameterVars = new Var[values.Length];
+            for (int i = 0; i < values.Length; i++)
+            {
+                if (values[i] is Element)
+                {
+                    // Create a new variable using the parameter.
+                    parameterVars[i] = VarCollection.AssignVar(methodScope, parameters[i].Name, IsGlobal, methodNode);
+                    ((IndexedVar)parameterVars[i]).Type = ((Element)values[i]).SupportedType?.Type;
+                    Actions.AddRange(((IndexedVar)parameterVars[i]).SetVariable((Element)values[i]));
+                }
+                else if (values[i] is EnumMember)
+                {
+                    parameterVars[i] = new ElementReferenceVar(parameters[i].Name, methodScope, methodNode, values[i]);
+                }
+                else throw new NotImplementedException();
+            }
+            return parameterVars;
+        }
+
         Element ParseMethod(ScopeGroup scope, MethodNode methodNode, bool needsToBeValue)
         {
             methodNode.RelatedScopeGroup = scope;
@@ -526,22 +549,7 @@ namespace Deltin.Deltinteger.Parse
                 var methodScope = scope.Root().Child();
 
                 // Add the parameter variables to the scope.
-                Var[] parameterVars = new Var[parameters.Length];
-                for (int i = 0; i < parameters.Length; i++)
-                {
-                    if (parameters[i] is Element)
-                    {
-                        // Create a new variable using the parameter.
-                        parameterVars[i] = VarCollection.AssignVar(methodScope, userMethod.Parameters[i].Name, IsGlobal, methodNode);
-                        ((IndexedVar)parameterVars[i]).Type = ((Element)parameters[i]).SupportedType?.Type;
-                        Actions.AddRange(((IndexedVar)parameterVars[i]).SetVariable((Element)parameters[i]));
-                    }
-                    else if (parameters[i] is EnumMember)
-                    {
-                        parameterVars[i] = new ElementReferenceVar(userMethod.Parameters[i].Name, methodScope, methodNode, parameters[i]);
-                    }
-                    else throw new NotImplementedException();
-                }
+                AssignParameterVariables(methodScope, userMethod.Parameters, parameters, methodNode);
 
                 // The variable that stores the return value.
                 IndexedVar returns = VarCollection.AssignVar(scope, $"{methodNode.Name}: return temp value", IsGlobal, null);
