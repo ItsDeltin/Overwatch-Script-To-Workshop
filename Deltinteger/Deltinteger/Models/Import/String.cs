@@ -34,7 +34,7 @@ namespace Deltin.Deltinteger.Models.Import
                         vec2 = i + 1;
                     }
 
-                    else if (gp.PathTypes[i] == (byte)PathPointType.LastPointInClosedSubpath)
+                    else if (gp.PathTypes[i] == (byte)PathPointType.LastPointInClosedSubpath || gp.PathTypes[i] == 161)
                     {
                         vec1 = i;
                         vec2 = lastStart;

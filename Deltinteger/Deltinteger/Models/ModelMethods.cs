@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.Drawing.Text;
 using System.IO;
 using Deltin.Deltinteger;
 using Deltin.Deltinteger.Models.Import;
@@ -63,8 +64,9 @@ namespace Deltin.Deltinteger.Models
         {
             quality = Math.Max(10 - quality, 0.1);
 
-            FontFamily family = GetFontFamily(font, FontParameter == -1 ? MethodLocation : ParameterLocations[FontParameter]);
-            Model model = Model.ImportString(text, family, quality, angle, scale, angleRound);
+            Model model;
+            using (FontFamily family = GetFontFamily(font, FontParameter == -1 ? MethodLocation : ParameterLocations[FontParameter]))
+                model = Model.ImportString(text, family, quality, angle, scale, angleRound);
 
             List<Element> actions = new List<Element>();
 
@@ -82,23 +84,40 @@ namespace Deltin.Deltinteger.Models
 
         private static FontFamily GetFontFamily(string name, Location location)
         {
-            string included = Path.Combine(Program.ExeFolder, "Fonts", "#" + name);
+            string filepath = Path.Combine(Program.ExeFolder, "Fonts", name + ".ttf");
 
-            if (File.Exists(included))
-                try
+            if (File.Exists(filepath))
+            {
+                if (LoadedFonts == null)
+                    LoadedFonts = new PrivateFontCollection();
+
+                FontFamily family = LoadedFonts.Families.FirstOrDefault(fam => fam.Name.ToLower() == name.ToLower());
+
+                if (family == null)
                 {
-                    return new FontFamily(included);
+                    try
+                    {
+                        LoadedFonts.AddFontFile(filepath);
+                    }
+                    catch (ArgumentException)
+                    {
+                        throw new SyntaxErrorException($"Failed to load the font {name} at '{filepath}'.", location);
+                    }
+                    family = LoadedFonts.Families.FirstOrDefault(fam => fam.Name.ToLower() == name.ToLower());
+                    if (family == null)
+                        throw new SyntaxErrorException($"Failed to load the font {name} at '{filepath}'.", location);
                 }
-                catch (ArgumentException)
-                {
-                    throw new SyntaxErrorException($"Failed to load the font {name} at '{included}'.", location);
-                }
+
+                return family;
+            }
             
             if (!FontFamily.Families.Any(fam => fam.Name.ToLower() == name.ToLower()))
                 throw new SyntaxErrorException($"The font {name} does not exist.", location);
             
             return new FontFamily(name);
         }
+
+        private static PrivateFontCollection LoadedFonts = null;
     }
 
     [CustomMethod("ShowWireframe", CustomMethodType.MultiAction_Value)]
