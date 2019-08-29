@@ -262,7 +262,8 @@ namespace Deltin.Deltinteger.Elements
         Moira,
         WreckingBall,
         Ashe,
-        Baptiste
+        Baptiste,
+        Sigma
     }
 
     [WorkshopEnum]
@@ -290,6 +291,7 @@ namespace Deltin.Deltinteger.Elements
         Reaper,
         Reinhardt,
         Roadhog,
+        Sigma,
         [EnumOverride(null, "Soldier: 76")]
         Soldier76,
         Sombra,
@@ -696,6 +698,20 @@ namespace Deltin.Deltinteger.Elements
         DefaultVisibility,
         VisibleAlways,
         VisibleNever
+    }
+
+    [WorkshopEnum]
+    public enum ThrottleBehavior
+    {
+        ReplaceExistingThrottle,
+        AddToExistingThrottle
+    }
+
+    [WorkshopEnum]
+    public enum ThrottleRev
+    {
+        DirectionAndMagnitude,
+        None
     }
 
     [WorkshopEnum]
