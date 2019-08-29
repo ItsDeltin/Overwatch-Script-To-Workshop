@@ -698,8 +698,9 @@ namespace Deltin.Deltinteger.Parse
 
         public UseVarNode(DeltinScriptParser.UseVarContext context, BuildAstVisitor visitor) : base(new Location(visitor.file, Range.GetRange(context)))
         {
-            Variable = (Variable)Enum.Parse(typeof(Variable), context.PART().GetText());
-            
+            if (Enum.TryParse(context.PART().GetText(), out Variable temp))
+                Variable = temp;
+                        
             int index = -1;
             if (context.number() != null)
                 if (!int.TryParse(context.number().GetText(), out index))
