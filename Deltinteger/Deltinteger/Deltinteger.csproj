@@ -116,7 +116,6 @@
     <Compile Include="Parse\TranslateRule.cs" />
     <Compile Include="Parse\Var.cs" />
     <Compile Include="Parse\Scope.cs" />
-    <Compile Include="Parse\Looper.cs" />
     <Compile Include="Parse\UserMethod.cs" />
     <Compile Include="Parse\ContinueSkip.cs" />
     <Compile Include="Parse\DefinedType.cs" />
@@ -125,8 +124,12 @@
     <Compile Include="Language Server\Server.cs" />
     <Compile Include="Language Server\Specification.cs" />
     <Compile Include="Models\Models.cs" />
+    <Compile Include="Models\Vertex.cs" />
+    <Compile Include="Models\Line.cs" />
+    <Compile Include="Models\Face.cs" />
     <Compile Include="Models\ModelMethods.cs" />
     <Compile Include="Models\Import\Obj.cs" />
+    <Compile Include="Models\Import\String.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Extras.cs" />
     <Compile Include="Wiki.cs" />
@@ -135,6 +138,12 @@
     <Compile Include="Exceptions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Content Include="Start Language Server.bat">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Fonts\BigNoodleTooOblique.ttf">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Fonts\1CamBam_Stick_1.ttf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

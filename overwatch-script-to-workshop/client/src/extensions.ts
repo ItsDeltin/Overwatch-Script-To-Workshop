@@ -4,6 +4,7 @@
  * ------------------------------------------------------------------------------------------ */
 
 import * as path from 'path';
+import * as vscode from 'vscode';
 import { workspace, ExtensionContext, OutputChannel, window } from 'vscode';
 
 import {
@@ -18,44 +19,19 @@ let client: LanguageClient;
 let workshopOut: OutputChannel;
 
 import * as http from 'http';
+import { format } from 'util';
 const request = require('request');
 
 const config = workspace.getConfiguration("ostw", null);
 
 export function activate(context: ExtensionContext) {
-	
-	ping();
 
 	// Shows the compiled result in an output window.
 	workshopOut = window.createOutputChannel("Workshop Code"); // Create the channel.
+	
+	addCommands(context);
 
-	let port2 : number = config.get('port2');
-
-	// Create the server.
-	let server = http.createServer(function (req, res) {
-			
-		if (req.method == 'POST') {
-			var body = '';
-			req.on('data', function(data) {
-				body += data;
-			});
-			req.on('end', function() {
-				// Clear the output
-				workshopOut.clear();
-
-				// Append the compiled result.
-				workshopOut.appendLine(body);
-
-				// Close connection.
-				res.end();
-			});
-		}
-		else
-		{
-			res.end();
-		}
-	});
-	server.listen(port2); // Listen on port.
+	ping();
 
 	// The server is implemented in node
 	let serverModule = context.asAbsolutePath(
@@ -106,6 +82,7 @@ export function deactivate(): Thenable<void> | undefined {
 }
 
 var failSent : boolean;
+var lastWorkshopOutput : string = null;
 function ping()
 {
 	request('http://localhost:' + config.get('port1') + '/ping', function(error, res, body) {
@@ -121,5 +98,161 @@ function ping()
 			failSent = true;
 		}
 	});
-	setTimeout(ping, 5000);
+
+	if (window.activeTextEditor != null)
+	{
+		let file = window.activeTextEditor.document.fileName;
+		getCode(file, (code) => updateCode(file, code));
+	}
+	setTimeout(ping, 1000);
 }
+
+function updateCode(file: string, code: string)
+{
+	if (lastWorkshopOutput != code && code != "")
+	{
+		// Clear the output
+		workshopOut.clear();
+		// Append the compiled result.
+		workshopOut.appendLine(code);
+		lastWorkshopOutput = code;
+	}
+
+	for (var i = 0; i < panels.length; i++)
+		if (panels[i].fullPath == file)
+			panels[i].setCode(code);
+}
+
+function getCode(uri:string, callback)
+{
+	request.post({url:'http://localhost:' + config.port1 + '/code', body: JSON.stringify({uri: uri})}, function (error, res, body) {
+		if (!error) callback(body);
+		res.end();
+	});
+}
+
+function addCommands(context: ExtensionContext)
+{
+	context.subscriptions.push(
+		vscode.commands.registerCommand('ostw.webviewOutput', webviewOutput, this)
+	);
+}
+
+function webviewOutput()
+{
+	if (vscode.window.activeTextEditor == null)
+		return;
+
+	let fullPath = vscode.window.activeTextEditor.document.fileName;
+
+	for (var i = 0; i < panels.length; i++)
+		if (panels[i].fullPath == fullPath)
+		{
+			panels[i].panel.reveal();
+			return;
+		}
+
+	let panel: OutputPanel = new OutputPanel(fullPath);
+	panel.panel.reveal();
+	panels.push(panel);
+}
+
+class OutputPanel
+{
+	panel: vscode.WebviewPanel;
+	fileName: string;
+	fullPath: string;
+	lastWorkshopOutput : string = null;
+
+	constructor(fullPath: string)
+	{
+		this.fullPath = fullPath;
+		this.fileName = path.basename(fullPath);
+
+		this.panel = window.createWebviewPanel(
+			'ostw',
+			this.fileName + ' Workshop Output',
+			vscode.ViewColumn.Active,
+			{
+				enableScripts: true,
+				retainContextWhenHidden: true
+			}
+		);
+
+		this.panel.onDidDispose(() => this.dispose());
+
+		getCode(fullPath, (code) => this.setCode(code));
+	}
+
+	setCode(code: string)
+	{
+		if (this.lastWorkshopOutput != code)
+		{
+			this.panel.webview.html = this.getContent(code);
+			this.lastWorkshopOutput = code;
+		}
+	}
+
+	getContent(code: string)
+	{
+		if (code == null) code = lastWorkshopOutput;
+
+		return `<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>OSTW Output</title>
+	<style>
+		pre{
+			counter-reset: line;
+		}
+		code{
+			counter-increment: line;
+			color: var(--vscode-editor-foreground);
+		}
+		code:before{
+			content: counter(line);
+			-webkit-user-select: none;
+
+			display: inline-block;
+			text-align: right;
+			width: 25px;
+			margin-right: 15px;
+			font-family: Consolas;
+			color: var(--vscode-editorLineNumber-foreground);
+			font-size: 14px;
+		}
+		button {
+			color: var(--vscode-button-foreground);
+			background-color: var(--vscode-button-background);
+			border: none;
+			padding: 5px 25px 5px 25px;
+			font-family: sans-serif;
+		}
+		button:hover {
+			background-color: var(--vscode-button-hoverBackground);
+		}
+	</style>
+</head>
+<body>
+	${this.formatCode(code)}
+</body>
+</html>`;
+	}
+
+	formatCode(code: string) {
+		var final: string = '<pre id="workshop-code">';
+		var lines: string[] = code.split('\n');
+		for (var i = 0; i < lines.length; i++)
+			final += '<code>' + lines[i] + '</code>';
+		final += '</pre>';
+		return final;
+	}
+
+	dispose()
+	{
+		var index = panels.indexOf(this);
+		panels.splice(index, 1);
+	}
+}
+var panels : OutputPanel[] = [];

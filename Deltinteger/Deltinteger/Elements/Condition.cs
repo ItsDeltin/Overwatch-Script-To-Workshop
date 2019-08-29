@@ -26,6 +26,8 @@ namespace Deltin.Deltinteger.Elements
             CompareOperator = compareOperator;
             Value2 = value2;
         }
+
+        public Condition(Element value1, Elements.Operators compareOperator, Element value2) : this(value1, EnumData.GetEnumValue(compareOperator), value2) {}
         
         public void DebugPrint(Log log, int depth = 0)
         {

@@ -40,6 +40,8 @@ namespace Deltin.Deltinteger.Models.Import
             foreach (Face face in Faces)
                 lines.AddRange(face.GetLines());
 
+            Line.RemoveDuplicateLines(lines);
+
             return lines.ToArray();
         }
     }

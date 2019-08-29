@@ -143,6 +143,10 @@ documents.onDidChangeContent(change => {
 	validateTextDocument(change.document);
 });
 
+documents.onDidSave(saved => {
+	validateTextDocument(saved.document);
+});
+
 async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 
 	let settings = await getDocumentSettings(textDocument.uri);

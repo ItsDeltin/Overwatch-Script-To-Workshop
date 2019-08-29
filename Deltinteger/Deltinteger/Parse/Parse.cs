@@ -25,16 +25,7 @@ namespace Deltin.Deltinteger.Parse
             TranslateRule globalTranslate = new TranslateRule(initialGlobalValues, Root, this);
             TranslateRule playerTranslate = new TranslateRule(initialPlayerValues, Root, this);
 
-            // The looper rule
-            GlobalLoop = new Looper(true);
-            PlayerLoop = new Looper(false);
-            
-            VarCollection = new VarCollection();
-            Root = new ScopeGroup(VarCollection);
-            UserMethods = new List<UserMethod>();
-            DefinedTypes = new List<DefinedType>();
-
-            GetObjects(content, file, globalTranslate, playerTranslate);
+            GetObjects(content, file, globalTranslate, playerTranslate, true);
 
             foreach (var type in DefinedTypes)
                 try
@@ -104,12 +95,10 @@ namespace Deltin.Deltinteger.Parse
                 // Add the global initial values rule if it was used.
                 if (initialGlobalValues.Actions.Length > 0)
                     Rules.Insert(0, initialGlobalValues);
-                
-                // Add the looper rules if they were used.
-                if (GlobalLoop.Used)
-                    Rules.Add(GlobalLoop.Finalize());
-                if (PlayerLoop.Used)
-                    Rules.Add(PlayerLoop.Finalize());
+
+                foreach (Rule rule in AdditionalRules)
+                    if (rule.Actions.Length > 0)
+                        Rules.Add(rule);
             }
 
             Success = !Diagnostics.ContainsErrors();
@@ -147,7 +136,7 @@ namespace Deltin.Deltinteger.Parse
             return ruleset;
         }
 
-        private void GetObjects(string document, string file, TranslateRule globalTranslate, TranslateRule playerTranslate)
+        private void GetObjects(string document, string file, TranslateRule globalTranslate, TranslateRule playerTranslate, bool isRoot)
         {
             // If this file was already loaded, don't load it again.
             if (Imported.Contains(file)) return;
@@ -156,11 +145,16 @@ namespace Deltin.Deltinteger.Parse
 
             // Get the ruleset.
             RulesetNode ruleset = GetRuleset(file, document);
-
             Rulesets.Add(file, ruleset);
 
             if (ruleset != null && !Diagnostics.ContainsErrors())
             {
+                if (isRoot)
+                {
+                    VarCollection = new VarCollection(ruleset.UseGlobalVar, ruleset.UsePlayerVar, ruleset.UseBuilderVar);
+                    Root = new ScopeGroup(VarCollection);
+                }
+
                 // Get the defined types
                 foreach (var definedType in ruleset.DefinedTypes)
                     try
@@ -220,7 +214,7 @@ namespace Deltin.Deltinteger.Parse
                         if (!importer.AlreadyImported)
                         {
                             string content = File.ReadAllText(importer.ResultingPath);
-                            GetObjects(content, importer.ResultingPath, globalTranslate, playerTranslate);
+                            GetObjects(content, importer.ResultingPath, globalTranslate, playerTranslate, false);
                             importedFiles.Add(importer.ResultingPath);
                         }
                     }
@@ -258,14 +252,14 @@ namespace Deltin.Deltinteger.Parse
         public Diagnostics Diagnostics { get; private set; } = new Diagnostics();
         public List<Rule> Rules { get; private set; }
         private List<RuleNode> RuleNodes { get; set; } = new List<RuleNode>();
-        public List<DefinedType> DefinedTypes { get; private set; }
-        public List<UserMethod> UserMethods { get; private set; }
+        public List<DefinedType> DefinedTypes { get; private set; } = new List<DefinedType>();
+        public List<UserMethod> UserMethods { get; private set; } = new List<UserMethod>();
         public bool Success { get; private set; }
-        public VarCollection VarCollection { get; private set; } = new VarCollection();
+        public VarCollection VarCollection { get; private set; }
         public ScopeGroup Root { get; private set; }
         public Dictionary<string, RulesetNode> Rulesets { get; } = new Dictionary<string, RulesetNode>();
-        private Looper GlobalLoop { get; set; }
-        private Looper PlayerLoop { get; set; }
+        public List<Rule> AdditionalRules { get; } = new List<Rule>();
+        public List<VariableChaseData> Chasing { get; } = new List<VariableChaseData>();
         private List<string> Imported { get; } = new List<string>();
 
         public IMethod GetMethod(string name)
@@ -281,11 +275,6 @@ namespace Deltin.Deltinteger.Parse
             if (type == null && location != null)
                 throw SyntaxErrorException.NonexistentType(name, location);
             return type;
-        }
-
-        public Looper GetLooper(bool isGlobal)
-        {
-            return isGlobal? GlobalLoop : PlayerLoop;
         }
     }
 }
