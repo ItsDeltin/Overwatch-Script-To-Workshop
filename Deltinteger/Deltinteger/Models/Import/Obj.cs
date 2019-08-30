@@ -11,10 +11,13 @@ namespace Deltin.Deltinteger.Models.Import
 
         public List<Face> Faces { get; } = new List<Face>();
 
+        public List<Line> Lines { get; } = new List<Line>();
+
         private static ObjImportParser[] LineParsers = new ObjImportParser[] 
         {
             new VertexParser(),
-            new FaceParser()
+            new FaceParser(),
+            new LineParser()
         };
 
         public static ObjModel Import(string obj)
@@ -37,11 +40,12 @@ namespace Deltin.Deltinteger.Models.Import
         public Line[] GetLines()
         {
             List<Line> lines = new List<Line>();
+            lines.AddRange(this.Lines);
+
             foreach (Face face in Faces)
                 lines.AddRange(face.GetLines());
 
             Line.RemoveDuplicateLines(lines);
-
             return lines.ToArray();
         }
     }
@@ -96,6 +100,18 @@ namespace Deltin.Deltinteger.Models.Import
                 vertices.Add(model.Vertices[index]);
             }
             model.Faces.Add(new Face(vertices.ToArray()));
+        }
+    }
+
+    class LineParser : ObjImportParser
+    {
+        protected override string Match { get; } = @"l ([0-9]+) ([0-9]+)";
+
+        protected override void Add(Match match, ObjModel model)
+        {
+            int id1 = int.Parse(match.Groups[1].Value) - 1;
+            int id2 = int.Parse(match.Groups[2].Value) - 1;
+            model.Lines.Add(new Line(model.Vertices[id1], model.Vertices[id2]));
         }
     }
 }

@@ -596,6 +596,22 @@ namespace Deltin.Deltinteger.Elements
     [EnumParameter("Button", typeof(Button))]
     public class A_StartHoldingButton : Element {}
 
+    [ElementData("Start Throttle In Direction")]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [Parameter("Direction", ValueType.VectorAndPlayer, typeof(V_Vector))]
+    [Parameter("Magnitude", ValueType.Number, typeof(V_Number))] // def of 1
+    [EnumParameter("Relative", typeof(Relative))]
+    [EnumParameter("Behavior", typeof(ThrottleBehavior))]
+    [EnumParameter("Reevaluation", typeof(ThrottleRev))]
+    public class A_StartThrottleInDirection : Element {}
+
+    [ElementData("Start Transforming Throttle")]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [Parameter("X Axis Scalar", ValueType.Number, typeof(V_Number))]
+    [Parameter("Y Axis Scalar", ValueType.Number, typeof(V_Number))]
+    [Parameter("Relative Direction", ValueType.Vector, typeof(V_Vector))]
+    public class A_StartTransformingThrottle : Element {}
+
     [ElementData("Stop Accelerating")]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     public class A_StopAccelerating : Element {}
@@ -656,6 +672,14 @@ namespace Deltin.Deltinteger.Elements
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     [EnumParameter("Button", typeof(Button))]
     public class A_StopHoldingButton : Element {}
+
+    [ElementData("Stop Throttle In Direction")]
+    [Parameter("Event Player", ValueType.Player, typeof(V_EventPlayer))]
+    public class A_StopThrottleInDirection : Element {}
+
+    [ElementData("Stop Transforming Throttle")]
+    [Parameter("Event Player", ValueType.Player, typeof(V_EventPlayer))]
+    public class A_StopTransformingThrottle : Element {}
 
     [ElementData("Teleport")]
     [Parameter("Player", ValueType.Any, typeof(V_Number))]
