@@ -19,12 +19,12 @@ namespace Deltin.Deltinteger.Models
 
         protected virtual int FontParameter { get; } = -1;
 
-        protected Element[] RenderModel(Model model, Element visibleTo, Element location, Element scale, IWorkshopTree reevaluation, IndexedVar store)
+        protected Element[] RenderModel(Model model, Element visibleTo, Element location, Element scale, IWorkshopTree reevaluation, IndexedVar store, Element rotation, bool reevaluateRotation)
         {
             List<Element> actions = new List<Element>();
             for (int i = 0; i < model.Lines.Length; i++)
             {
-                actions.Add(CreateLine(model.Lines[i], visibleTo, location, scale, reevaluation));
+                actions.Add(CreateLine(model.Lines[i], visibleTo, location, scale, reevaluation, rotation, reevaluateRotation));
 
                 // Get the last created effect and append it to the store array.
                 if (store != null)
@@ -39,10 +39,22 @@ namespace Deltin.Deltinteger.Models
             return actions.ToArray();
         }
 
-        protected Element CreateLine(Line line, Element visibleTo, Element location, Element scale, IWorkshopTree reevaluation)
+        protected Element CreateLine(Line line, Element visibleTo, Element location, Element scale, IWorkshopTree reevaluation, Element rotation, bool reevaluateRotation)
         {
             Element pos1 = line.Vertex1.ToVector();
             Element pos2 = line.Vertex2.ToVector();
+
+            Element zero = Element.Part<V_Vector>(new V_Number(0), new V_Number(0), new V_Number(0));
+
+            if (reevaluateRotation)
+            {
+                pos1 = Element.Part<V_Multiply>(Element.Part<V_DistanceBetween>(zero, pos1), Element.Part<V_Normalize>(Element.Part<V_Add>(Element.Part<V_DirectionTowards>(zero, pos1), rotation)));
+                pos2 = Element.Part<V_Multiply>(Element.Part<V_DistanceBetween>(zero, pos2), Element.Part<V_Normalize>(Element.Part<V_Add>(Element.Part<V_DirectionTowards>(zero, pos2), rotation)));
+            }
+            else
+            {
+                throw new NotImplementedException();
+            }
 
             if (scale != null)
             {
@@ -60,7 +72,7 @@ namespace Deltin.Deltinteger.Models
             );
         }
 
-        protected MethodResult RenderText(string text, string font, double quality, double angle, Element visibleTo, Element location, double scale, IWorkshopTree effectRev, bool getIds, double angleRound)
+        protected MethodResult RenderText(string text, string font, double quality, double angle, Element visibleTo, Element location, double scale, IWorkshopTree effectRev, bool getIds, double angleRound, Element rotation, bool reevaluateRotation)
         {
             quality = Math.Max(10 - quality, 0.1);
 
@@ -77,7 +89,7 @@ namespace Deltin.Deltinteger.Models
                 actions.AddRange(effects.SetVariable(new V_EmptyArray()));
             }
                 
-            actions.AddRange(RenderModel(model, visibleTo, location, null, effectRev, effects));
+            actions.AddRange(RenderModel(model, visibleTo, location, null, effectRev, effects, rotation, reevaluateRotation));
             
             return new MethodResult(actions.ToArray(), effects?.GetVariable());
         }
@@ -125,6 +137,8 @@ namespace Deltin.Deltinteger.Models
     [Parameter("Visible To", Elements.ValueType.Player, null)]
     [Parameter("Location", Elements.ValueType.Vector, null)]
     [Parameter("Scale", Elements.ValueType.Number, null)]
+    [Parameter("Rotation", Elements.ValueType.Vector, null)]
+    [ConstantParameter("Reevaluate Rotation", typeof(bool))]
     [EnumParameter("Reevaluation", typeof(EffectRev))]
     [ConstantParameter("Get Effect IDs", typeof(bool), GET_EFFECT_IDS_BY_DEFAULT)]
     class ShowModel : ModelCreator
@@ -140,8 +154,10 @@ namespace Deltin.Deltinteger.Models
             Element visibleTo           = (Element)Parameters[1];
             Element location            = (Element)Parameters[2];
             Element scale               = (Element)Parameters[3];
-            EnumMember effectRev     = (EnumMember)Parameters[4];
-            bool getIds   = (bool)((ConstantObject)Parameters[5]).Value;
+            Element rotation = (Element)Parameters[4];
+            bool reevaluateRotation = (bool)((ConstantObject)Parameters[5]).Value;
+            EnumMember effectRev     = (EnumMember)Parameters[6];
+            bool getIds   = (bool)((ConstantObject)Parameters[7]).Value;
 
             List<Element> actions = new List<Element>();
 
@@ -152,7 +168,7 @@ namespace Deltin.Deltinteger.Models
                 actions.AddRange(effects.SetVariable(new V_EmptyArray()));
             }
 
-            actions.AddRange(RenderModel(modelVar.Model, visibleTo, location, scale, effectRev, effects));
+            actions.AddRange(RenderModel(modelVar.Model, visibleTo, location, scale, effectRev, effects, rotation, reevaluateRotation));
 
             return new MethodResult(actions.ToArray(), effects?.GetVariable());
         }
@@ -166,7 +182,9 @@ namespace Deltin.Deltinteger.Models
                 "Who the model is visible to.",
                 "The location of the model.",
                 "The scale of the model.",
-                "Specifies which of this methods inputs will be continuously reevaluated, the model will keep asking for and using new values from reevaluated inputs.",
+                "The rotation of the model as a directional vector",
+                "Whether to enable reevaluation for rotation. If false rotations will be pre-calculated and will consume less server load. This is a boolean constant.",
+                "Specifies which of this methods' inputs will be continuously reevaluated, the model will keep asking for and using new values from reevaluated inputs.",
                 "If true, the method will return the effect IDs used to create the model. Use DestroyEffectArray() to destroy the effect. This is a boolean constant."
             );
         }
@@ -181,6 +199,8 @@ namespace Deltin.Deltinteger.Models
     [Parameter("Visible To", Elements.ValueType.Player, null)]
     [Parameter("Location", Elements.ValueType.Vector, null)]
     [ConstantParameter("Scale", typeof(double))]
+    [Parameter("Rotation", Elements.ValueType.Vector, null)]
+    [ConstantParameter("Reevaluate Rotation", typeof(bool))]
     [EnumParameter("Reevaluation", typeof(EffectRev))]
     [ConstantParameter("Get Effect IDs", typeof(bool), GET_EFFECT_IDS_BY_DEFAULT)]
     class CreateTextWithFont : ModelCreator
@@ -197,10 +217,12 @@ namespace Deltin.Deltinteger.Models
             Element visibleTo              = (Element)Parameters[5];
             Element location               = (Element)Parameters[6];
             double scale   = (double)((ConstantObject)Parameters[7]).Value;
-            EnumMember effectRev        = (EnumMember)Parameters[8];
-            bool getIds    = (bool)  ((ConstantObject)Parameters[9]).Value;
+            Element rotation = (Element)Parameters[8];
+            bool reevaluateRotation = (bool)((ConstantObject)Parameters[9]).Value;
+            EnumMember effectRev        = (EnumMember)Parameters[10];
+            bool getIds    = (bool)  ((ConstantObject)Parameters[11]).Value;
 
-            return RenderText(text, font, quality, angle, visibleTo, location, scale, effectRev, getIds, merge);
+            return RenderText(text, font, quality, angle, visibleTo, location, scale, effectRev, getIds, merge, rotation, reevaluateRotation);
         }
 
         override public CustomMethodWiki Wiki()
@@ -216,6 +238,8 @@ namespace Deltin.Deltinteger.Models
                 "Who the text is visible to.",
                 "The location to display the text.",
                 "The scale of the text.",
+                "The rotation of the model as a directional vector",
+                "Whether to enable reevaluation for rotation. If false rotations will be pre-calculated and will consume less server load. This is a boolean constant.",
                 "Specifies which of this methods inputs will be continuously reevaluated, the text will keep asking for and using new values from reevaluated inputs.",
                 "If true, the method will return the effect IDs used to create the text. Use DestroyEffectArray() to destroy the effect. This is a boolean constant."
             );
@@ -228,6 +252,8 @@ namespace Deltin.Deltinteger.Models
     [Parameter("Visible To", Elements.ValueType.Player, null)]
     [Parameter("Location", Elements.ValueType.Vector, null)]
     [ConstantParameter("Scale", typeof(double))]
+    [Parameter("Rotation", Elements.ValueType.Vector, null)]
+    [ConstantParameter("Reevaluate Rotation", typeof(bool))]
     [EnumParameter("Reevaluation", typeof(EffectRev))]
     [ConstantParameter("Get Effect IDs", typeof(bool), GET_EFFECT_IDS_BY_DEFAULT)]
     class CreateText : ModelCreator
@@ -239,10 +265,12 @@ namespace Deltin.Deltinteger.Models
             Element visibleTo              = (Element)Parameters[2];
             Element location               = (Element)Parameters[3];
             double scale   = (double)((ConstantObject)Parameters[4]).Value;
-            EnumMember effectRev        = (EnumMember)Parameters[5];
-            bool getIds    = (bool)  ((ConstantObject)Parameters[6]).Value;
+            Element rotation = (Element)Parameters[5];
+            bool reevaluateRotation = (bool)((ConstantObject)Parameters[6]).Value;
+            EnumMember effectRev        = (EnumMember)Parameters[7];
+            bool getIds    = (bool)  ((ConstantObject)Parameters[8]).Value;
 
-            return RenderText(text, "BigNoodleTooOblique", 9, angle, visibleTo, location, scale, effectRev, getIds, 0);
+            return RenderText(text, "BigNoodleTooOblique", 9, angle, visibleTo, location, scale, effectRev, getIds, 0, rotation, reevaluateRotation);
         }
 
         override public CustomMethodWiki Wiki()
@@ -255,6 +283,8 @@ namespace Deltin.Deltinteger.Models
                 "Who the text is visible to.",
                 "The location to display the text.",
                 "The scale of the text.",
+                "The rotation of the model as a directional vector",
+                "Whether to enable reevaluation for rotation. If false rotations will be pre-calculated and will consume less server load. This is a boolean constant.",
                 "Specifies which of this methods inputs will be continuously reevaluated, the text will keep asking for and using new values from reevaluated inputs.",
                 "If true, the method will return the effect IDs used to create the text. Use DestroyEffectArray() to destroy the effect. This is a boolean constant."
             );
@@ -267,6 +297,8 @@ namespace Deltin.Deltinteger.Models
     [Parameter("Visible To", Elements.ValueType.Player, null)]
     [Parameter("Location", Elements.ValueType.Vector, null)]
     [ConstantParameter("Scale", typeof(double))]
+    [Parameter("Rotation", Elements.ValueType.Vector, null)]
+    [ConstantParameter("Reevaluate Rotation", typeof(bool))]
     [EnumParameter("Reevaluation", typeof(EffectRev))]
     [ConstantParameter("Get Effect IDs", typeof(bool), GET_EFFECT_IDS_BY_DEFAULT)]
     class CreateTextMinimal : ModelCreator
@@ -278,10 +310,12 @@ namespace Deltin.Deltinteger.Models
             Element visibleTo              = (Element)Parameters[2];
             Element location               = (Element)Parameters[3];
             double scale   = (double)((ConstantObject)Parameters[4]).Value;
-            EnumMember effectRev        = (EnumMember)Parameters[5];
-            bool getIds    = (bool)  ((ConstantObject)Parameters[6]).Value;
+            Element rotation = (Element)Parameters[5];
+            bool reevaluateRotation = (bool)((ConstantObject)Parameters[6]).Value;
+            EnumMember effectRev        = (EnumMember)Parameters[7];
+            bool getIds    = (bool)  ((ConstantObject)Parameters[8]).Value;
 
-            return RenderText(text, "1CamBam_Stick_1", 10, angle, visibleTo, location, scale, effectRev, getIds, 50);
+            return RenderText(text, "1CamBam_Stick_1", 10, angle, visibleTo, location, scale, effectRev, getIds, 50, rotation, reevaluateRotation);
         }
 
         override public CustomMethodWiki Wiki()
@@ -294,6 +328,8 @@ namespace Deltin.Deltinteger.Models
                 "Who the text is visible to.",
                 "The location to display the text.",
                 "The scale of the text.",
+                "The rotation of the model as a directional vector",
+                "Whether to enable reevaluation for rotation. If false rotations will be pre-calculated and will consume less server load. This is a boolean constant.",
                 "Specifies which of this methods inputs will be continuously reevaluated, the text will keep asking for and using new values from reevaluated inputs.",
                 "If true, the method will return the effect IDs used to create the text. Use DestroyEffectArray() to destroy the effect. This is a boolean constant."
             );
