@@ -3,7 +3,7 @@ using Deltin.Deltinteger.Elements;
 
 namespace Deltin.Deltinteger.Models
 {
-    public class Vertex //: IEquatable<Vertex>
+    public class Vertex : ICloneable
     {
         public double X { get; set; }
         public double Y { get; set; }
@@ -18,6 +18,7 @@ namespace Deltin.Deltinteger.Models
             W = w;
         }
         public Vertex(double x, double y, double z) : this(x,y,z,0) {}
+        public Vertex(double x, double y) : this(x,y,0,0) {}
         public Vertex() : this(0,0,0,0) {}
 
         public V_Vector ToVector()
@@ -60,6 +61,18 @@ namespace Deltin.Deltinteger.Models
             return new Vertex(X * scale, Y * scale, Z * scale);
         }
 
+        public void Offset(double x, double y, double z)
+        {
+            X += x;
+            Y += y;
+            Z += z;
+        }
+
+        public object Clone()
+        {
+            return new Vertex(X, Y, Z, W);
+        }
+
         public static double GetAngle(Vertex a, Vertex b, Vertex c)
         {
             if (a == null) throw new ArgumentNullException("a");
@@ -84,53 +97,5 @@ namespace Deltin.Deltinteger.Models
         {
             return X == other.X && Y == other.Y && Z == other.Z;
         }
-
-        /*
-        public override bool Equals(object obj)
-        {
-            if (obj == null || GetType() != obj.GetType())
-                return false;
-            
-            return Equals((Vertex)obj);
-        }
-
-        public bool Equals(Vertex v2)
-        {
-            if (v2 == null)
-                return false;
-                        
-            return X == v2.X && Y == v2.Y && Z == v2.Z;
-        }
-        
-        public override int GetHashCode()
-        {
-            return X.GetHashCode() ^ Y.GetHashCode() ^ Z.GetHashCode();
-        }
-
-        public static bool operator ==(Vertex v1, Vertex v2)
-        {
-            if (Object.ReferenceEquals(v1, null))
-            {
-                if (Object.ReferenceEquals(v2, null))
-                    return true;
-                return false;
-            }
-            if (Object.ReferenceEquals(v2, null))
-            {
-                if (Object.ReferenceEquals(v1, null))
-                    return true;
-                return false;
-            }
-
-            return v1.X == v2.X
-                && v1.Y == v2.Y
-                && v1.Z == v2.Z;
-        }
-
-        public static bool operator !=(Vertex v1, Vertex v2)
-        {
-            return !(v1 == v2);
-        }
-        */
     }
 }

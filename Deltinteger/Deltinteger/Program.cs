@@ -25,7 +25,6 @@ namespace Deltin.Deltinteger
         static void Main(string[] args)
         {
             CultureInfo.DefaultThreadCurrentCulture = new CultureInfo("en-US");
-
             Log.Write(LogLevel.Normal, "Overwatch Script To Workshop " + VERSION);
 
             Log.LogLevel = LogLevel.Normal;
@@ -39,6 +38,12 @@ namespace Deltin.Deltinteger
                 string[] portArgs = args.FirstOrDefault(v => v.Split(' ')[0] == "-port")?.Split(' ');
                 int.TryParse(portArgs.ElementAtOrDefault(1), out int serverPort);
                 new Server().RequestLoop(serverPort);
+            }
+            else if (args.Contains("-generatealphabet"))
+            {
+                Console.Write("Output folder: ");
+                string folder = Console.ReadLine();
+                Deltin.Deltinteger.Models.Letter.Generate(folder);
             }
             else
             {

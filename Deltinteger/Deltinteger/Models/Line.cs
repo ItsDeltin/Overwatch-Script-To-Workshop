@@ -5,7 +5,7 @@ using Deltin.Deltinteger.Models;
 
 namespace Deltin.Deltinteger.Models
 {
-    public class Line
+    public class Line : ICloneable
     {
         public Vertex Vertex1 { get; }
         public Vertex Vertex2 { get; }
@@ -14,6 +14,17 @@ namespace Deltin.Deltinteger.Models
         {
             Vertex1 = vertex1;
             Vertex2 = vertex2;
+        }
+
+        public void Offset(double x, double y, double z)
+        {
+            Vertex1.Offset(x, y, z);
+            Vertex2.Offset(x, y, z);
+        }
+
+        public object Clone()
+        {
+            return new Line((Vertex)Vertex1.Clone(), (Vertex)Vertex2.Clone());
         }
 
         public static void RemoveDuplicateLines(List<Line> lines)
