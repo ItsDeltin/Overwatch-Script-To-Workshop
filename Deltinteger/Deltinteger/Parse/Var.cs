@@ -353,6 +353,52 @@ namespace Deltin.Deltinteger.Parse
         override public bool Settable() => false;
     }
 
+    public class AnimationVar : Var
+    {
+        public Animation Animation { get; }
+
+        public AnimationVar(string name, ScopeGroup scope, Node node, Animation animation) : base(name, scope, node)
+        {
+            Animation = animation;
+        }
+
+        override public Element GetVariable(Element targetPlayer = null)
+        {
+            throw new NotImplementedException();
+        }
+
+        override public bool Gettable() => false;
+        override public bool Settable() => false;
+    }
+
+    /*
+    public class ForEachVar : Var
+    {
+        private IndexedVar IndexVar { get; }
+        private int Repeater { get; }
+        public int Offset { get; private set; }
+
+        public ForEachVar(Element array, IndexedVar indexVar, int repeater, string name, ScopeGroup scope, Node node) : base(name, scope, node)
+        {
+            IndexVar = indexVar;
+            Repeater = repeater;
+        }
+
+        override public bool Settable() => false;
+        override public bool Gettable() => true;
+
+        public void IncrementOffset()
+        {
+            Offset++;
+        }
+
+        override public Element GetVariable(Element eventPlayer)
+        {
+
+        }
+    }
+    */
+
     public class VarRef : IWorkshopTree
     {
         public Var Var { get; }

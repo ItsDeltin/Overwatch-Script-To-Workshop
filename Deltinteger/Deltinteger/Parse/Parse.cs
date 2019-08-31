@@ -195,6 +195,11 @@ namespace Deltin.Deltinteger.Parse
                             switch (importer.FileType)
                             {
                                 case ".obj":
+
+                                    Animation newAnimation = Animation.ImportObjSequence(Path.GetDirectoryName(importer.ResultingPath));
+                                    new AnimationVar(importObject.Name, Root, importObject, newAnimation);
+                                    break;
+
                                     Model newModel = Model.ImportObj(content);
                                     new ModelVar(importObject.Name, Root, importObject, newModel);
                                     break;
