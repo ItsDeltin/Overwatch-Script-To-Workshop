@@ -60,6 +60,13 @@ namespace Deltin.Deltinteger.Models
             return new Vertex(X * scale, Y * scale, Z * scale);
         }
 
+        public void Offset(double x, double y, double z)
+        {
+            X += x;
+            Y += y;
+            Z += z;
+        }
+
         public object Clone()
         {
             return new Vertex(X, Y, Z, W);
