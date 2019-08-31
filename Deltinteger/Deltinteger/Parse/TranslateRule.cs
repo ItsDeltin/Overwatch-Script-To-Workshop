@@ -171,11 +171,11 @@ namespace Deltin.Deltinteger.Parse
                             return Element.Part<V_Subtract>(left, right);
 
 
-                        // BoolCompare: &, |
-                        case "&":
+                        // BoolCompare: &&, ||
+                        case "&&":
                             return Element.Part<V_And>(left, right);
 
-                        case "|":
+                        case "||":
                             return Element.Part<V_Or>(left, right);
 
                         // Compare: <, <=, ==, >=, >, !=
