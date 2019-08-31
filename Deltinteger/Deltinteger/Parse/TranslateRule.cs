@@ -240,7 +240,11 @@ namespace Deltin.Deltinteger.Parse
                     for (int i = 0; i < index.Length; i++)
                         index[i] = ParseExpression(scope, variableNode.Index[i]);
 
-                    Element result = scope.GetVar(variableNode.Name, variableNode.Location).GetVariable();
+                    Var var = scope.GetVar(variableNode.Name, variableNode.Location);
+                    if (!var.Gettable())
+                        throw SyntaxErrorException.VariableIsReadonly(var.Name, variableNode.Location);
+
+                    Element result = var.GetVariable();
                     for (int i = 0; i < index.Length; i++)
                         result = Element.Part<V_ValueInArray>(result, index[i]);
 
