@@ -10,10 +10,32 @@ namespace Deltin.Deltinteger.Models
         public Vertex Vertex1 { get; }
         public Vertex Vertex2 { get; }
 
+        public int Vertex1Reference { get; }
+        public int Vertex2Reference { get; }
+
         public Line(Vertex vertex1, Vertex vertex2)
         {
             Vertex1 = vertex1;
             Vertex2 = vertex2;
+        }
+
+        public Line(Vertex vertex1, Vertex vertex2, int vertex1Reference, int vertex2Reference)
+        {
+            Vertex1 = vertex1;
+            Vertex2 = vertex2;
+            Vertex1Reference = vertex1Reference;
+            Vertex2Reference = vertex2Reference;
+        }
+
+        public void Offset(double x, double y, double z)
+        {
+            Vertex1.Offset(x, y, z);
+            Vertex2.Offset(x, y, z);
+        }
+
+        public object Clone()
+        {
+            return new Line((Vertex)Vertex1.Clone(), (Vertex)Vertex2.Clone());
         }
 
         public static void RemoveDuplicateLines(List<Line> lines)

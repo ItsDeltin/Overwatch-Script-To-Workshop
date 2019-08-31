@@ -111,7 +111,7 @@ namespace Deltin.Deltinteger.Models.Import
         {
             int id1 = int.Parse(match.Groups[1].Value) - 1;
             int id2 = int.Parse(match.Groups[2].Value) - 1;
-            model.Lines.Add(new Line(model.Vertices[id1], model.Vertices[id2]));
+            model.Lines.Add(new Line(model.Vertices[id1], model.Vertices[id2], id1, id2));
         }
     }
 }
