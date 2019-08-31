@@ -209,7 +209,7 @@ MOD   : '%';
 ADD   : '+';
 MINUS : '-';
 
-BOOL : '&' | '|';
+BOOL : '&&' | '||';
 NOT : '!';
 INCREMENT : '++' ;
 DECREMENT : '--' ;
