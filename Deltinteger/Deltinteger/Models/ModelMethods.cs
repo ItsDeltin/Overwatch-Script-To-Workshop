@@ -39,6 +39,11 @@ namespace Deltin.Deltinteger.Models
             return actions.ToArray();
         }
 
+        public static double DistanceBetween((double X, double Y, double Z) point1, (double X, double Y, double Z) point2)
+        {
+            return Math.Sqrt(Math.Pow(point2.X - point1.X, 2) + Math.Pow(point2.Y - point1.Y, 2) + Math.Pow(point2.Z - point1.Z, 2));
+        }
+
         protected Element CreateLine(Line line, Element visibleTo, Element location, Element scale, IWorkshopTree reevaluation, Element rotation, bool reevaluateRotation)
         {
             Element pos1 = line.Vertex1.ToVector();
@@ -48,8 +53,18 @@ namespace Deltin.Deltinteger.Models
 
             if (reevaluateRotation)
             {
-                pos1 = Element.Part<V_Multiply>(Element.Part<V_DistanceBetween>(zero, pos1), Element.Part<V_Normalize>(Element.Part<V_Add>(Element.Part<V_DirectionTowards>(zero, pos1), rotation)));
-                pos2 = Element.Part<V_Multiply>(Element.Part<V_DistanceBetween>(zero, pos2), Element.Part<V_Normalize>(Element.Part<V_Add>(Element.Part<V_DirectionTowards>(zero, pos2), rotation)));
+                pos1 = Element.Part<V_Multiply>(Element.Part<V_DistanceBetween>(zero, pos1),
+                    Element.Part<V_DirectionFromAngles>(
+                        Element.Part<V_Add>(Element.Part<V_HorizontalAngleFromDirection>(Element.Part<V_DirectionTowards>(zero, pos1)), Element.Part<V_HorizontalAngleFromDirection>(rotation)),
+                        Element.Part<V_Add>(Element.Part<V_VerticalAngleFromDirection>(Element.Part<V_DirectionTowards>(zero, pos1)), Element.Part<V_VerticalAngleFromDirection>(rotation))
+                    )
+                );
+                pos2 = Element.Part<V_Multiply>(Element.Part<V_DistanceBetween>(zero, pos2),
+                    Element.Part<V_DirectionFromAngles>(
+                        Element.Part<V_Add>(Element.Part<V_HorizontalAngleFromDirection>(Element.Part<V_DirectionTowards>(zero, pos2)), Element.Part<V_HorizontalAngleFromDirection>(rotation)),
+                        Element.Part<V_Add>(Element.Part<V_VerticalAngleFromDirection>(Element.Part<V_DirectionTowards>(zero, pos2)), Element.Part<V_VerticalAngleFromDirection>(rotation))
+                    )
+                );
             }
             else
             {
