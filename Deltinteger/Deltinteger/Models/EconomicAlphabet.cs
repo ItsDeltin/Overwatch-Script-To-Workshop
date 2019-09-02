@@ -18,13 +18,21 @@ namespace Deltin.Deltinteger.Models
             {
                 string name = Path.GetFileNameWithoutExtension(file);
                 string[] split = name.Split('_');
-                if (split.Length != 2 || split[1].Length != 1) continue;
 
-                char character = split[1][0];
-                if (split[0] == "lowercase")
-                    character = Char.ToLower(character);
-                else
-                    character = Char.ToUpper(character);
+                char character;
+                if (split.Length == 2)
+                {
+                    character = split[1][0];
+                    if (split[0] == "lowercase")
+                        character = Char.ToLower(character);
+                    else
+                        character = Char.ToUpper(character);
+                }
+                else if (split.Length == 1)
+                {
+                    character = Uri.UnescapeDataString(split[0])[0];
+                }
+                else continue;
 
                 string content = File.ReadAllText(file);
                 Line[] lines = ObjModel.Import(content).GetLines();
@@ -58,7 +66,7 @@ namespace Deltin.Deltinteger.Models
             Console.ReadLine();
         }
 
-        public static Line[] Create(string text, bool exactLetter, Location location)
+        public static Line[] Create(string text, bool exactLetter, Location location, double scale)
         {
             double offset = 0;
             List<Line> result = new List<Line>();
@@ -75,7 +83,7 @@ namespace Deltin.Deltinteger.Models
                         result.Add(newLine);
                     }
 
-                offset += letter.Width;
+                offset += letter.Width + (.15 * scale);
             }
 
             if (result.Count > 0)
@@ -106,7 +114,11 @@ namespace Deltin.Deltinteger.Models
         private static Letter[] Alphabet { get; } = new Letter[]
         {
             new Letter(' ', 1),
-            new Letter('a', new Line(new Vertex(0.564487, 0.458625), new Vertex(0.0532909999999944, 0.058373)), new Line(new Vertex(0.0532909999999944, 0.058373), new Vertex(0.688666999999995, 0)), new Line(new Vertex(0.688666999999995, 0), new Vertex(0.535995, 0.581049)), new Line(new Vertex(0.535995, 0.581049), new Vertex(0, 0.582419))),
+            new Letter('!', new Line(new Vertex(0, 0.917514), new Vertex(0, 0.293021)), new Line(new Vertex(0, 0.144243), new Vertex(0, 0.06782))),
+            new Letter(',', new Line(new Vertex(0.147216999999998, 0.074171), new Vertex(0, -0.091914))),
+            new Letter('@', new Line(new Vertex(0.397579999999998, 0.431019), new Vertex(0.141663000000001, 0.16622)), new Line(new Vertex(0.141663000000001, 0.16622), new Vertex(0.504554999999996, 0.169297)), new Line(new Vertex(0.504554999999996, 0.169297), new Vertex(0.35698, 0.534764)), new Line(new Vertex(0.35698, 0.534764), new Vertex(0, 0.093171)), new Line(new Vertex(0, 0.093171), new Vertex(0.544541000000002, 0.095003))),
+            new Letter('.', new Line(new Vertex(0, 0.144243), new Vertex(0, 0.06782))),
+            new Letter('a', new Line(new Vertex(0.478656999999998, 0.359592), new Vertex(0.0995069999999956, 0.058373)), new Line(new Vertex(0.0995069999999956, 0.058373), new Vertex(0.573127999999997, 0)), new Line(new Vertex(0.573127999999997, 0), new Vertex(0.443562, 0.501822)), new Line(new Vertex(0.443562, 0.501822), new Vertex(0, 0.430568))),
             new Letter('b', new Line(new Vertex(0, 0.498007), new Vertex(0.403122000000003, 0)), new Line(new Vertex(0.403122000000003, 0), new Vertex(0, 0)), new Line(new Vertex(0, 0), new Vertex(0, 0.997687))),
             new Letter('c', new Line(new Vertex(0, 0.270344), new Vertex(0.387867, -0.000705)), new Line(new Vertex(0.387867, 0.541393), new Vertex(0, 0.270344))),
             new Letter('d', new Line(new Vertex(0.366948000000001, 0.459883), new Vertex(0, 0)), new Line(new Vertex(0, 0), new Vertex(0.366948000000001, 0)), new Line(new Vertex(0.366948000000001, 0), new Vertex(0.366948000000001, 1.00457))),
@@ -168,7 +180,7 @@ namespace Deltin.Deltinteger.Models
         {
             Character = character;
             Lines = lines;
-            Width = Lines.Max(line => Math.Max(line.Vertex1.X, line.Vertex2.X)) + .25;
+            Width = Lines.Max(line => Math.Max(line.Vertex1.X, line.Vertex2.X));
         }
         public Letter(char character, double width)
         {

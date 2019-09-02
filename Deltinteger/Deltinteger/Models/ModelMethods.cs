@@ -318,7 +318,7 @@ namespace Deltin.Deltinteger.Models
             EnumMember effectRev        = (EnumMember)Parameters[5];
             bool getIds    = (bool)  ((ConstantObject)Parameters[6]).Value;
 
-            Model model = new Model(Letter.Create(text, false, ParameterLocations[0]));
+            Model model = new Model(Letter.Create(text, false, ParameterLocations[0], scale));
 
             List<Element> actions = new List<Element>();
 
