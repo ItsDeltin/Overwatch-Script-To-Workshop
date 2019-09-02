@@ -55,6 +55,11 @@ namespace Deltin.Deltinteger.Models
             return new Vertex(newX, newY, newZ);
         }
 
+        public Vertex Rotate(Vertex xyz)
+        {
+            return Rotate(xyz.Y, xyz.X, xyz.Z);
+        }
+
         public Vertex Scale(double scale)
         {
             return new Vertex(X * scale, Y * scale, Z * scale);

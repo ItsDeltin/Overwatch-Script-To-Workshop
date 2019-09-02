@@ -157,6 +157,15 @@ namespace Deltin.Deltinteger.Elements
                 + (!ElementData.IsValue ? (";" + (Comment != null ? " // " + Comment : "")) : "");
         }
 
+        public virtual bool ConstantSupported<T>()
+        {
+            return false;
+        }
+        public virtual object GetConstant()
+        {
+            return null;
+        }
+
         protected virtual string[] AdditionalParameters()
         {
             return new string[0];

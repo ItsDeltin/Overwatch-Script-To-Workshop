@@ -36,7 +36,7 @@ namespace Deltin.Deltinteger.Models
             return new Model(result.GetLines());
         }
 
-        public static Model ImportString(string text, FontFamily family, double quality, double angle, double scale, double angleRound)
+        public static Model ImportString(string text, FontFamily family, double quality, Vertex angle, double scale, double angleRound)
         {
             StringModel stringModel = new StringModel(text, family, quality, angle, scale, angleRound);
             return new Model(stringModel.GetLines());
