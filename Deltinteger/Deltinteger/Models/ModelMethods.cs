@@ -54,19 +54,16 @@ namespace Deltin.Deltinteger.Models
                 }
                 else
                 {
-                    pos1 = line.Vertex1.ToVector();
-                    pos2 = line.Vertex2.ToVector();
-
-                    pos1 = Element.Part<V_Multiply>(Element.Part<V_DistanceBetween>(V_Vector.Zero, pos1),
+                    pos1 = Element.Part<V_Multiply>(new V_Number(PreCalc.DistanceBetween(new Vertex(), line.Vertex1)),
                     Element.Part<V_DirectionFromAngles>(
-                        Element.Part<V_Add>(Element.Part<V_HorizontalAngleFromDirection>(Element.Part<V_DirectionTowards>(V_Vector.Zero, pos1)), Element.Part<V_HorizontalAngleFromDirection>(rotation)),
-                        Element.Part<V_Add>(Element.Part<V_VerticalAngleFromDirection>(Element.Part<V_DirectionTowards>(V_Vector.Zero, pos1)), Element.Part<V_VerticalAngleFromDirection>(rotation))
+                        Element.Part<V_Add>(new V_Number(PreCalc.HorizontalAngleFromDirection(PreCalc.DirectionTowards(new Vertex(), line.Vertex1))), Element.Part<V_HorizontalAngleFromDirection>(rotation)),
+                        Element.Part<V_Add>(new V_Number(PreCalc.VerticalAngleFromDirection(PreCalc.DirectionTowards(new Vertex(), line.Vertex1))), Element.Part<V_VerticalAngleFromDirection>(rotation))
                         )
                     );
-                    pos2 = Element.Part<V_Multiply>(Element.Part<V_DistanceBetween>(V_Vector.Zero, pos2),
+                    pos2 = Element.Part<V_Multiply>(new V_Number(PreCalc.DistanceBetween(new Vertex(), line.Vertex2)),
                         Element.Part<V_DirectionFromAngles>(
-                            Element.Part<V_Add>(Element.Part<V_HorizontalAngleFromDirection>(Element.Part<V_DirectionTowards>(V_Vector.Zero, pos2)), Element.Part<V_HorizontalAngleFromDirection>(rotation)),
-                            Element.Part<V_Add>(Element.Part<V_VerticalAngleFromDirection>(Element.Part<V_DirectionTowards>(V_Vector.Zero, pos2)), Element.Part<V_VerticalAngleFromDirection>(rotation))
+                            Element.Part<V_Add>(new V_Number(PreCalc.HorizontalAngleFromDirection(PreCalc.DirectionTowards(new Vertex(), line.Vertex2))), Element.Part<V_HorizontalAngleFromDirection>(rotation)),
+                            Element.Part<V_Add>(new V_Number(PreCalc.VerticalAngleFromDirection(PreCalc.DirectionTowards(new Vertex(), line.Vertex2))), Element.Part<V_VerticalAngleFromDirection>(rotation))
                         )
                     );
                 }
