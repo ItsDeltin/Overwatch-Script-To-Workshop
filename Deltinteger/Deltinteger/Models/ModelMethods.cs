@@ -97,13 +97,7 @@ namespace Deltin.Deltinteger.Models
 
             Model model;
             using (FontFamily family = GetFontFamily(font, FontParameter == -1 ? MethodLocation : ParameterLocations[FontParameter]))
-            {
-                Vertex angle = null;
-                if (rotation.ConstantSupported<Vertex>())
-                    angle = (Vertex)rotation.GetConstant();
-
-                model = Model.ImportString(text, family, quality, angle, scale, angleRound);
-            }
+                model = Model.ImportString(text, family, quality, null, scale, angleRound);
 
             List<Element> actions = new List<Element>();
 
@@ -113,9 +107,8 @@ namespace Deltin.Deltinteger.Models
                 effects = TranslateContext.VarCollection.AssignVar(Scope, "Model Effects", TranslateContext.IsGlobal, null);
                 actions.AddRange(effects.SetVariable(new V_EmptyArray()));
             }
-                
-            #warning check rotation argument
-            actions.AddRange(RenderModel(model, visibleTo, location, null, effectRev, effects, null));
+            
+            actions.AddRange(RenderModel(model, visibleTo, location, null, effectRev, effects, rotation));
             
             return new MethodResult(actions.ToArray(), effects?.GetVariable());
         }
@@ -218,7 +211,6 @@ namespace Deltin.Deltinteger.Models
     [ConstantParameter("Font", typeof(string))]
     [ConstantParameter("Quality", typeof(double))]
     [ConstantParameter("Line Angle Merge", typeof(double))]
-    [ConstantParameter("Angle", typeof(double))]
     [Parameter("Visible To", Elements.ValueType.Player, null)]
     [Parameter("Location", Elements.ValueType.Vector, null)]
     [Parameter("Rotation", Elements.ValueType.Vector, null)]
@@ -305,7 +297,6 @@ namespace Deltin.Deltinteger.Models
 
     [CustomMethod("CreateTextMinimal", CustomMethodType.MultiAction_Value)]
     [ConstantParameter("Text", typeof(string))]
-    [ConstantParameter("Angle", typeof(double))]
     [Parameter("Visible To", Elements.ValueType.Player, null)]
     [Parameter("Location", Elements.ValueType.Vector, null)]
     [Parameter("Rotation", Elements.ValueType.Vector, null)]
@@ -317,13 +308,12 @@ namespace Deltin.Deltinteger.Models
         override protected MethodResult Get()
         {
             string text    = (string)((ConstantObject)Parameters[0]).Value;
-            double angle   = (double)((ConstantObject)Parameters[1]).Value + 22.2; // Add offset to make it even with HorizontalAngleOf().
-            Element visibleTo              = (Element)Parameters[2];
-            Element location               = (Element)Parameters[3];
-            Element rotation               = (Element)Parameters[4];
-            double scale   = (double)((ConstantObject)Parameters[5]).Value;
-            EnumMember effectRev        = (EnumMember)Parameters[6];
-            bool getIds    = (bool)  ((ConstantObject)Parameters[7]).Value;
+            Element visibleTo              = (Element)Parameters[1];
+            Element location               = (Element)Parameters[2];
+            Element rotation               = (Element)Parameters[3];
+            double scale   = (double)((ConstantObject)Parameters[4]).Value;
+            EnumMember effectRev        = (EnumMember)Parameters[5];
+            bool getIds    = (bool)  ((ConstantObject)Parameters[6]).Value;
 
             return RenderText(text, "1CamBam_Stick_1", 10, visibleTo, location, scale, effectRev, getIds, 50, rotation);
         }

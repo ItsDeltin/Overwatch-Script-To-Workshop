@@ -12,6 +12,7 @@ namespace Deltin.Deltinteger.Models.Import
         public StringModel(string text, FontFamily family, double quality, Vertex angle, double scale, double angleRound)
         {
             scale *= 0.05;
+            if (angle == null) angle = new Vertex();
 
             using (var gp = new GraphicsPath())
             using (var flipY = new Matrix(1, 0, 0, -1, 0, gp.GetBounds().Height))

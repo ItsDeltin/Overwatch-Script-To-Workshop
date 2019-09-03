@@ -89,53 +89,5 @@ namespace Deltin.Deltinteger.Models
         {
             return X == other.X && Y == other.Y && Z == other.Z;
         }
-
-        /*
-        public override bool Equals(object obj)
-        {
-            if (obj == null || GetType() != obj.GetType())
-                return false;
-            
-            return Equals((Vertex)obj);
-        }
-
-        public bool Equals(Vertex v2)
-        {
-            if (v2 == null)
-                return false;
-                        
-            return X == v2.X && Y == v2.Y && Z == v2.Z;
-        }
-        
-        public override int GetHashCode()
-        {
-            return X.GetHashCode() ^ Y.GetHashCode() ^ Z.GetHashCode();
-        }
-
-        public static bool operator ==(Vertex v1, Vertex v2)
-        {
-            if (Object.ReferenceEquals(v1, null))
-            {
-                if (Object.ReferenceEquals(v2, null))
-                    return true;
-                return false;
-            }
-            if (Object.ReferenceEquals(v2, null))
-            {
-                if (Object.ReferenceEquals(v1, null))
-                    return true;
-                return false;
-            }
-
-            return v1.X == v2.X
-                && v1.Y == v2.Y
-                && v1.Z == v2.Z;
-        }
-
-        public static bool operator !=(Vertex v1, Vertex v2)
-        {
-            return !(v1 == v2);
-        }
-        */
     }
 }
