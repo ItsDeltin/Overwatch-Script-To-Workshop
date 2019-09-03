@@ -81,7 +81,7 @@ for     : FOR LEFT_PAREN
 	RIGHT_PAREN block;
 forEndStatement : varset ;
 
-foreach : FOREACH number? LEFT_PAREN DEFINE PART IN expr RIGHT_PAREN block ;
+foreach : FOREACH number? LEFT_PAREN parameter_define IN expr RIGHT_PAREN block ;
 
 while   : WHILE LEFT_PAREN expr RIGHT_PAREN block             ;
 

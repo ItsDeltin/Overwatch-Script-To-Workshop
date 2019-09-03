@@ -277,17 +277,7 @@ namespace Deltin.Deltinteger.Parse
 
         public override Node VisitForeach(DeltinScriptParser.ForeachContext context)
         {
-            Node array = Visit(context.expr());
-
-            string name = context.PART().GetText();
-
-            BlockNode block = (BlockNode)VisitBlock(context.block());
-
-            int repeaters = 1;
-            if (context.number() != null)
-                repeaters = int.Parse(context.number().GetText());
-            
-            return new ForEachNode(name, array, block, repeaters, new Location(file, Range.GetRange(context)));
+            return new ForEachNode(context, this);
         }
 
         public override Node VisitWhile(DeltinScriptParser.WhileContext context)
@@ -1189,22 +1179,25 @@ namespace Deltin.Deltinteger.Parse
 
     public class ForEachNode : Node
     {
-        public string VariableName { get; }
+        public ParameterDefineNode Variable { get; }
         public Node Array { get; }
         public BlockNode Block { get; }
         public int Repeaters { get; }
 
-        public ForEachNode(string variableName, Node array, BlockNode block, int repeaters, Location location) : base(location)
+        public ForEachNode(DeltinScriptParser.ForeachContext context, BuildAstVisitor visitor) : base(new Location(visitor.file, Range.GetRange(context)))
         {
-            VariableName = variableName;
-            Array = array;
-            Block = block;
-            Repeaters = repeaters;
+            Array = visitor.Visit(context.expr());
+            Variable = new ParameterDefineNode(context.parameter_define(), visitor);
+            Block = (BlockNode)visitor.VisitBlock(context.block());
+
+            Repeaters = 1;
+            if (context.number() != null)
+                Repeaters = int.Parse(context.number().GetText());
         }
 
         public override Node[] Children()
         {
-            return ArrayBuilder<Node>.Build(Array, Block);
+            return ArrayBuilder<Node>.Build(Variable, Array, Block);
         }
     }
 

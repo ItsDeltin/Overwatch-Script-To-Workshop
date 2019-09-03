@@ -422,7 +422,7 @@ namespace Deltin.Deltinteger.Parse
                         else if (parameters[i] is ConstantParameter)
                         {
                             if (values[i] is IConstantSupport == false)
-                                throw new SyntaxErrorException("Parameter must be a constant.", values[i].Location);
+                                throw new SyntaxErrorException("Parameter must be a " + ((ConstantParameter)parameters[i]).Type.Name + " constant.", values[i].Location);
                             object value = ((IConstantSupport)values[i]).GetValue();
 
                             if (!((ConstantParameter)parameters[i]).IsValid(value))
@@ -732,29 +732,34 @@ namespace Deltin.Deltinteger.Parse
 
                     Element array = ParseExpression(scope, forEachNode.Array);
 
-                    IndexedVar index = VarCollection.AssignVar(scope, $"'{forEachNode.VariableName}' for index", IsGlobal, null);
+                    IndexedVar index = VarCollection.AssignVar(scope, $"'{forEachNode.Variable.VariableName}' for index", IsGlobal, null);
 
                     int offset = 0;
 
                     Element getVariableReference()
                     {
+                        return Element.Part<V_ValueInArray>(array, indexer());
+                    }
+                    Element indexer()
+                    {
                         if (offset == 0)
-                            return Element.Part<V_ValueInArray>(array, index.GetVariable());
+                            return index.GetVariable();
                         else
-                            return Element.Part<V_ValueInArray>(array, Element.Part<V_Add>(index.GetVariable(), getOffset()));
+                            return Element.Part<V_Add>(index.GetVariable(), getOffset());
                     }
                     V_Number getOffset()
                     {
                         return new V_Number(offset);
                     }
 
-                    ElementReferenceVar variable = new ElementReferenceVar(forEachNode.VariableName, forGroup, forEachNode, getVariableReference());
-                    // VarCollection.AssignElementReferenceVar(
-                    //     forGroup, 
-                    //     forEachNode.VariableName, 
-                    //     forEachNode, 
-                    //     getVariableReference()
-                    // );
+                    IndexedVar arrayVar = null;
+                    ElementOrigin origin = ElementOrigin.GetElementOrigin(array);
+                    if (origin == null && forEachNode.Variable.Type != null)
+                        throw new SyntaxErrorException("Could not get the struct source.", forEachNode.Variable.Location);
+                    if (origin != null)
+                    {
+                        arrayVar = origin.OriginVar(VarCollection, null, null);
+                    }
 
                     // Reset the counter.
                     Actions.AddRange(index.SetVariable(new V_Number(0)));
@@ -776,7 +781,7 @@ namespace Deltin.Deltinteger.Parse
                     {
                         if (offset > 0)
                         {
-                            variable.Reference = getVariableReference();
+                            //variable.Reference = getVariableReference();
 
                             A_SkipIf skipper = new A_SkipIf() { ParameterValues = new Element[2] };
                             skipper.ParameterValues[0] = Element.Part<V_Not>(
@@ -792,6 +797,16 @@ namespace Deltin.Deltinteger.Parse
 
                         // Parse the for's block. Use a child to prevent conflicts with repeaters.
                         ScopeGroup tempChild = forGroup.Child();
+
+                        Var variable;
+                        if (arrayVar != null)
+                        {
+                            variable = arrayVar.CreateChild(tempChild, forEachNode.Variable.VariableName, new Element[]{indexer()}, forEachNode.Variable);
+                            variable.Type = ParserData.GetDefinedType(forEachNode.Variable.Type, forEachNode.Variable.Location);
+                        }
+                        else
+                            variable = new ElementReferenceVar(forEachNode.Variable.VariableName, tempChild, forEachNode, getVariableReference());
+
                         ParseBlock(tempChild, forEachNode.Block, false, returnVar);
                         tempChild.Out();
                     }
