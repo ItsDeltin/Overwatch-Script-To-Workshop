@@ -55,9 +55,9 @@ namespace Deltin.Deltinteger.Models
                 else
                 {
                     pos1 = Element.Part<V_Multiply>(new V_Number(PreCalc.DistanceBetween(new Vertex(), line.Vertex1)),
-                    Element.Part<V_DirectionFromAngles>(
-                        Element.Part<V_Add>(new V_Number(PreCalc.HorizontalAngleFromDirection(PreCalc.DirectionTowards(new Vertex(), line.Vertex1))), Element.Part<V_HorizontalAngleFromDirection>(rotation)),
-                        Element.Part<V_Add>(new V_Number(PreCalc.VerticalAngleFromDirection(PreCalc.DirectionTowards(new Vertex(), line.Vertex1))), Element.Part<V_VerticalAngleFromDirection>(rotation))
+                        Element.Part<V_DirectionFromAngles>(
+                            Element.Part<V_Add>(new V_Number(PreCalc.HorizontalAngleFromDirection(PreCalc.DirectionTowards(new Vertex(), line.Vertex1))), Element.Part<V_HorizontalAngleFromDirection>(rotation)),
+                            Element.Part<V_Add>(new V_Number(PreCalc.VerticalAngleFromDirection(PreCalc.DirectionTowards(new Vertex(), line.Vertex1))), Element.Part<V_VerticalAngleFromDirection>(rotation))
                         )
                     );
                     pos2 = Element.Part<V_Multiply>(new V_Number(PreCalc.DistanceBetween(new Vertex(), line.Vertex2)),
