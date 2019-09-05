@@ -114,7 +114,7 @@ ruleset :
 
 // Classes/structs
 
-type_define : (STRUCT) name=PART
+type_define : (STRUCT | CLASS) name=PART
 	BLOCK_START
 	((inclass_define STATEMENT_END) | constructor | user_method)*
 	BLOCK_END ;
@@ -186,6 +186,7 @@ RECURSIVE : 'recursive' ;
 RETURN    : 'return'    ;
 WHILE     : 'while'     ;
 STRUCT    : 'struct'    ;
+CLASS     : 'class'     ;
 PRIVATE   : 'private'   ;
 PUBLIC    : 'public'    ;
 THIS      : 'this'      ;

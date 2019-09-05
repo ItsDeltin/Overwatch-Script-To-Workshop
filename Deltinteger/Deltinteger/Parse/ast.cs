@@ -432,17 +432,10 @@ namespace Deltin.Deltinteger.Parse
 
         public TypeDefineNode(DeltinScriptParser.Type_defineContext context, BuildAstVisitor visitor) : base(new Location(visitor.file, Range.GetRange(context)))
         {
-            /*
-            if (context.CLASS() != null)
-            {
-                visitor._diagnostics.Error("Classes are not yet supported, use struct instead.", Range.GetRange(context.CLASS()));
-                TypeKind = TypeKind.Class;
-            }
-            */
-
             if (context.STRUCT() != null)
                 TypeKind = TypeKind.Struct;
-            
+            else if (context.CLASS() != null)
+                TypeKind = TypeKind.Class;
             else throw new Exception();
 
             Name = context.name.Text;

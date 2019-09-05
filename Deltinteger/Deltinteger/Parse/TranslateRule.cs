@@ -295,46 +295,8 @@ namespace Deltin.Deltinteger.Parse
 
                 // New object
                 case CreateObjectNode createObjectNode:
-
                     DefinedType typeData = ParserData.GetDefinedType(createObjectNode.TypeName, createObjectNode.Location);
-
-                    IndexedVar store = VarCollection.AssignVar(scope, typeData.Name + " store", IsGlobal, null);
-                    store.Type = typeData;
-
-                    ScopeGroup typeScope = typeData.GetRootScope(store, ParserData);
-
-                    // Set the default variables in the struct
-                    for (int i = 0; i < typeData.DefinedVars.Length; i++)
-                    {
-                        if (typeData.DefinedVars[i].Value != null)
-                            Actions.AddRange(
-                                store.SetVariable(ParseExpression(typeScope, typeData.DefinedVars[i].Value), null, new V_Number(i))
-                            );
-                    }
-
-                    Constructor constructor = typeData.Constructors.FirstOrDefault(c => c.Parameters.Length == createObjectNode.Parameters.Length);
-                    if (constructor == null && !(createObjectNode.Parameters.Length == 0 && typeData.Constructors.Length == 0))
-                        throw SyntaxErrorException.NotAConstructor(typeData.TypeKind, typeData.Name, createObjectNode.Parameters.Length,createObjectNode.Location);
-                    
-                    if (constructor != null)
-                    {
-                        ScopeGroup constructorScope = typeScope.Child();
-
-                        IWorkshopTree[] parameters = ParseParameters(
-                            constructorScope, 
-                            constructor.Parameters, 
-                            createObjectNode.Parameters, 
-                            createObjectNode.TypeName, 
-                            createObjectNode.Location
-                        );
-
-                        AssignParameterVariables(constructorScope, constructor.Parameters, parameters, createObjectNode);
-
-                        ParseBlock(constructorScope, constructor.BlockNode, true, null);
-                        constructorScope.Out();
-                    }
-
-                    return store.GetVariable();
+                    return typeData.New(createObjectNode, scope, this);
 
                 // Expression tree
                 case ExpressionTreeNode expressionTree:
@@ -348,7 +310,7 @@ namespace Deltin.Deltinteger.Parse
             throw new Exception();
         }
 
-        IWorkshopTree[] ParseParameters(ScopeGroup scope, ParameterBase[] parameters, Node[] values, string methodName, LanguageServer.Location methodRange)
+        public IWorkshopTree[] ParseParameters(ScopeGroup scope, ParameterBase[] parameters, Node[] values, string methodName, LanguageServer.Location methodRange)
         {
             // Syntax error if there are too many parameters.
             if (values.Length > parameters.Length)
@@ -452,7 +414,7 @@ namespace Deltin.Deltinteger.Parse
             return parsedParameters.ToArray();
         }
 
-        Var[] AssignParameterVariables(ScopeGroup methodScope, ParameterBase[] parameters, IWorkshopTree[] values, Node methodNode)
+        public Var[] AssignParameterVariables(ScopeGroup methodScope, ParameterBase[] parameters, IWorkshopTree[] values, Node methodNode)
         {
             Var[] parameterVars = new Var[values.Length];
             for (int i = 0; i < values.Length; i++)
@@ -693,7 +655,7 @@ namespace Deltin.Deltinteger.Parse
             return result;
         }
 
-        void ParseBlock(ScopeGroup scopeGroup, BlockNode blockNode, bool fulfillReturns, IndexedVar returnVar)
+        public void ParseBlock(ScopeGroup scopeGroup, BlockNode blockNode, bool fulfillReturns, IndexedVar returnVar)
         {
             if (scopeGroup == null)
                 throw new ArgumentNullException(nameof(scopeGroup));
