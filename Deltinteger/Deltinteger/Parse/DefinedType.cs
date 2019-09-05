@@ -50,9 +50,10 @@ namespace Deltin.Deltinteger.Parse
 
         public ScopeGroup GetRootScope(IndexedVar var, ParsingData parseData)
         {
-            ScopeGroup typeScope = new ScopeGroup(parseData.VarCollection);
             IndexedVar root = GetRoot(var, parseData);
-            typeScope.This = var;
+            
+            ScopeGroup typeScope = new ScopeGroup(parseData.VarCollection);
+            typeScope.This = root;
 
             for (int i = 0; i < DefinedVars.Length; i++)
             {
@@ -159,6 +160,7 @@ namespace Deltin.Deltinteger.Parse
 
         override protected IndexedVar GetRoot(IndexedVar req, ParsingData context)
         {
+            if (req.Name == Name + " root") return req;
             return new IndexedVar(
                 null,
                 Name + " root",
@@ -174,7 +176,7 @@ namespace Deltin.Deltinteger.Parse
         {
             IndexedVar store = new IndexedVar(
                 scope,
-                Name + " store",
+                Name + " root",
                 true,
                 Variable.C,
                 new Element[] { context.ParserData.ClassIndex.GetVariable() },
