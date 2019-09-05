@@ -52,7 +52,7 @@ namespace Deltin.Deltinteger.Parse
         {
             ScopeGroup typeScope = new ScopeGroup(parseData.VarCollection);
             IndexedVar root = GetRoot(var, parseData);
-            typeScope.This = root;
+            typeScope.This = var;
 
             for (int i = 0; i < DefinedVars.Length; i++)
             {
