@@ -153,7 +153,6 @@ namespace Deltin.Deltinteger.Parse
                 {
                     VarCollection = new VarCollection(ruleset.UseGlobalVar, ruleset.UsePlayerVar, ruleset.UseBuilderVar);
                     Root = new ScopeGroup(VarCollection);
-                    ClassIndex = VarCollection.AssignVar(null, "New Class Index", true, null);
                 }
 
                 // Get the defined types
@@ -255,7 +254,6 @@ namespace Deltin.Deltinteger.Parse
         private List<RuleNode> RuleNodes { get; set; } = new List<RuleNode>();
         public List<DefinedType> DefinedTypes { get; private set; } = new List<DefinedType>();
         public List<UserMethod> UserMethods { get; private set; } = new List<UserMethod>();
-        public IndexedVar ClassIndex { get; private set; }
         public bool Success { get; private set; }
         public VarCollection VarCollection { get; private set; }
         public ScopeGroup Root { get; private set; }

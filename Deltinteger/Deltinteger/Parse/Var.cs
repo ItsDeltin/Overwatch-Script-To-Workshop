@@ -222,9 +222,8 @@ namespace Deltin.Deltinteger.Parse
             return null;
         }
 
-        public virtual Element[] OutOfScope(Element targetPlayer = null)
+        public virtual void OutOfScope(TranslateRule context, Element targetPlayer = null)
         {
-            return null;
         }
 
         public IndexedVar CreateChild(ScopeGroup scope, string name, Element[] index, Node node)
@@ -332,18 +331,19 @@ namespace Deltin.Deltinteger.Parse
             return base.SetVariable(initialValue, targetPlayer, Element.Part<V_CountOf>(base.Get(targetPlayer)));
         }
 
-        public override Element[] OutOfScope(Element targetPlayer = null)
+        public override void OutOfScope(TranslateRule context, Element targetPlayer = null)
         {
             Element get = base.Get(targetPlayer);
-
-            return base.SetVariable(
+            context.Actions.AddRange(base.SetVariable(
                 Element.Part<V_ArraySlice>(
                     get,
                     new V_Number(0),
                     Element.Part<V_Subtract>(Element.Part<V_CountOf>(get), new V_Number(1))
                 ),
                 targetPlayer
-            );
+            ));
+
+            base.OutOfScope(context, targetPlayer);
         }
 
         protected override string AdditionalToStringInfo { get; } = "RECURSIVE";

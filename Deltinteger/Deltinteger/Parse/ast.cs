@@ -326,6 +326,11 @@ namespace Deltin.Deltinteger.Parse
 
             return new ReturnNode(returnValue, new Location(file, Range.GetRange(context)));
         }
+
+        public override Node VisitDelete(DeltinScriptParser.DeleteContext context)
+        {
+            return new DeleteNode(context, this);
+        }
         #endregion
 
         public override Node VisitType_define(DeltinScriptParser.Type_defineContext context)
@@ -1290,6 +1295,21 @@ namespace Deltin.Deltinteger.Parse
         public override Node[] Children()
         {
             return ArrayBuilder<Node>.Build(Value);
+        }
+    }
+
+    public class DeleteNode : Node
+    {
+        public Node Delete { get; } 
+
+        public DeleteNode(DeltinScriptParser.DeleteContext context, BuildAstVisitor visitor) : base(new Location(visitor.file, Range.GetRange(context)))
+        {
+            Delete = visitor.VisitExpr(context.expr());
+        }
+
+        public override Node[] Children()
+        {
+            return ArrayBuilder<Node>.Build(Delete);
         }
     }
 }

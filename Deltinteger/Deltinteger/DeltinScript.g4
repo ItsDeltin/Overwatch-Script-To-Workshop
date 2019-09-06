@@ -72,6 +72,7 @@ statement :
 	| define STATEMENT_END?
 	| return
 	| expr STATEMENT_END?
+	| delete STATEMENT_END?
 	);
 
 block : (BLOCK_START statement* BLOCK_END) | statement | STATEMENT_END  ;
@@ -90,6 +91,7 @@ else_if : ELSE IF LEFT_PAREN expr RIGHT_PAREN block           ;
 else    : ELSE block                                          ;
 
 return  : RETURN expr? STATEMENT_END                          ;
+delete  : DELETE LEFT_PAREN expr RIGHT_PAREN                  ;
 
 rule_if : IF LEFT_PAREN expr? RIGHT_PAREN;
 
@@ -194,6 +196,7 @@ NEW       : 'new'       ;
 STATIC    : 'static'    ;
 IMPORT    : 'import'    ;
 AS        : 'as'        ;
+DELETE    : 'delete'    ;
 
 EQUALS          : '='  ;
 EQUALS_POW      : '^=' ;

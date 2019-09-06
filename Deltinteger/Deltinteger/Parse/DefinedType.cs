@@ -75,13 +75,10 @@ namespace Deltin.Deltinteger.Parse
 
         abstract protected IndexedVar GetRoot(IndexedVar req, ParsingData context);
         
-        public Element New(CreateObjectNode node, ScopeGroup scope, TranslateRule context)
+        abstract public Element New(CreateObjectNode node, ScopeGroup scope, TranslateRule context);
+
+        protected void SetupNew(IndexedVar store, ScopeGroup typeScope, TranslateRule context, CreateObjectNode node)
         {
-            IndexedVar store = GetStore(scope, context);
-            store.Type = this;
-
-            ScopeGroup typeScope = GetRootScope(store, context.ParserData);
-
             // Set the default variables in the struct
             for (int i = 0; i < DefinedVars.Length; i++)
             {
@@ -109,15 +106,9 @@ namespace Deltin.Deltinteger.Parse
 
                 context.AssignParameterVariables(constructorScope, constructor.Parameters, parameters, node);
                 context.ParseBlock(constructorScope, constructor.BlockNode, true, null);
-                constructorScope.Out();
+                constructorScope.Out(context);
             }
-
-            return ReferenceReturn(store);
         }
-
-        abstract protected IndexedVar GetStore(ScopeGroup scope, TranslateRule context);
-
-        abstract protected Element ReferenceReturn(IndexedVar var);
 
         public static CompletionItem[] CollectionCompletion(DefinedType[] definedTypes)
         {
@@ -136,19 +127,20 @@ namespace Deltin.Deltinteger.Parse
 
         public DefinedStruct(TypeDefineNode definedType) : base(definedType) {}
 
+        override public Element New(CreateObjectNode node, ScopeGroup scope, TranslateRule context)
+        {
+            IndexedVar store = context.VarCollection.AssignVar(scope, Name + " store", context.IsGlobal, null);
+            store.Type = this;
+            ScopeGroup typeScope = GetRootScope(store, context.ParserData);
+
+            SetupNew(store, typeScope, context, node);
+
+            return store.GetVariable();
+        }
+
         override protected IndexedVar GetRoot(IndexedVar req, ParsingData context)
         {
             return req;
-        }
-
-        override protected IndexedVar GetStore(ScopeGroup scope, TranslateRule context)
-        {
-            return context.VarCollection.AssignVar(scope, Name + " store", context.IsGlobal, null);
-        }
-
-        override protected Element ReferenceReturn(IndexedVar var)
-        {
-            return var.GetVariable();
         }
     }
 
@@ -157,6 +149,51 @@ namespace Deltin.Deltinteger.Parse
         override public TypeKind TypeKind { get; } = TypeKind.Class;
 
         public DefinedClass(TypeDefineNode definedType) : base(definedType) {}
+
+        override public Element New(CreateObjectNode node, ScopeGroup scope, TranslateRule context)
+        {
+            // Get the index to store the class.
+            IndexedVar index = context.VarCollection.AssignVar(scope, "New " + Name + " class index", context.IsGlobal, null); // Assigns the index variable.
+            // Get the index of the next free spot in the class array.
+            context.Actions.AddRange(
+                index.SetVariable(
+                    Element.Part<V_IndexOfArrayValue>(
+                        WorkshopArrayBuilder.GetVariable(true, null, Variable.C),
+                        new V_Null()
+                    )
+                )
+            );
+            // Set the index to the count of the class array if the index equals -1.
+            context.Actions.AddRange(
+                index.SetVariable(
+                    Element.TernaryConditional(
+                        new V_Compare(index.GetVariable(), Operators.Equal, new V_Number(-1)),
+                        Element.Part<V_CountOf>(
+                            WorkshopArrayBuilder.GetVariable(true, null, Variable.C)
+                        ),
+                        index.GetVariable()
+                    )
+                )
+            );
+            // The direct reference to the class variable.
+            IndexedVar store = new IndexedVar(
+                scope,
+                Name + " root",
+                true,
+                Variable.C,
+                new Element[] { index.GetVariable() },
+                context.VarCollection.WorkshopArrayBuilder,
+                null
+            );
+            store.Index[0].SupportedType = store;
+            store.Type = this;
+
+            ScopeGroup typeScope = GetRootScope(store, context.ParserData);
+
+            SetupNew(store, typeScope, context, node);
+
+            return index.GetVariable();
+        }
 
         override protected IndexedVar GetRoot(IndexedVar req, ParsingData context)
         {
@@ -172,32 +209,11 @@ namespace Deltin.Deltinteger.Parse
             );
         }
 
-        override protected IndexedVar GetStore(ScopeGroup scope, TranslateRule context)
+        public static void Delete(Element index, TranslateRule context)
         {
-            IndexedVar store = new IndexedVar(
-                scope,
-                Name + " root",
-                true,
-                Variable.C,
-                new Element[] { context.ParserData.ClassIndex.GetVariable() },
-                context.VarCollection.WorkshopArrayBuilder,
-                null
-            );
-            store.Index[0].SupportedType = store;
-            context.Actions.AddRange(
-                context.ParserData.ClassIndex.SetVariable(
-                    Element.Part<V_Add>(
-                        context.ParserData.ClassIndex.GetVariable(),
-                        new V_Number(1)
-                    )
-                )
-            );
-            return store;
-        }
-
-        override protected Element ReferenceReturn(IndexedVar var)
-        {
-            return var.Index[0];
+            context.Actions.AddRange(context.VarCollection.WorkshopArrayBuilder.SetVariable(
+                new V_Null(), true, null, Variable.C, index
+            ));
         }
     }
 

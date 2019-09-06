@@ -65,7 +65,7 @@ namespace Deltin.Deltinteger.Parse
             return false;
         }
 
-        public void Out()
+        public void Out(TranslateRule context)
         {
             if (!IsInScope)
                 throw new Exception("ScopeGroup is already out of scope.");
@@ -74,13 +74,17 @@ namespace Deltin.Deltinteger.Parse
 
             foreach (IScopeable var in InScope)
                 if (var is IndexedVar)
+                {
+                    ((IndexedVar)var).OutOfScope(context);
                     VarCollection.Free((IndexedVar)var);
+                }
             
             for (int i = 0; i < Children.Count; i++)
                 if (Children[0].IsInScope)
                     throw new Exception();
         }
 
+        /*
         public Element[] RecursiveMethodStackPop()
         {
             List<Element> actions = new List<Element>();
@@ -97,6 +101,7 @@ namespace Deltin.Deltinteger.Parse
 
             return actions.ToArray();
         }
+        */
 
         public Var GetVar(string name, Location location)
         {
