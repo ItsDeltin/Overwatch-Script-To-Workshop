@@ -7,8 +7,8 @@ namespace Deltin.Deltinteger.Models
 {
     public class Line : ICloneable
     {
-        public Vertex Vertex1 { get; }
-        public Vertex Vertex2 { get; }
+        public Vertex Vertex1 { get; set; }
+        public Vertex Vertex2 { get; set; }
 
         public Line(Vertex vertex1, Vertex vertex2)
         {

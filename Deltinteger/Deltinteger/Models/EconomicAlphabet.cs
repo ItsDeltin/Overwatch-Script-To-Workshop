@@ -66,7 +66,7 @@ namespace Deltin.Deltinteger.Models
             Console.ReadLine();
         }
 
-        public static Line[] Create(string text, bool exactLetter, Location location, double scale)
+        public static Line[] Create(string text, bool exactLetter, Location location, double angle, double scale)
         {
             double offset = 0;
             List<Line> result = new List<Line>();
@@ -93,6 +93,12 @@ namespace Deltin.Deltinteger.Models
                 foreach (Line line in result)
                     line.Offset(xOffset, 0, 0);
             }
+
+            foreach (Line line in result)
+            {
+                line.Vertex1 = line.Vertex1.Rotate(angle, 0, 0).Scale(scale);
+                line.Vertex2 = line.Vertex2.Rotate(angle, 0, 0).Scale(scale);
+            }
             
             return result.ToArray();
         }
@@ -113,7 +119,7 @@ namespace Deltin.Deltinteger.Models
 
         private static Letter[] Alphabet { get; } = new Letter[]
         {
-            new Letter(' ', 1),
+            new Letter(' ', .35),
             new Letter('!', new Line(new Vertex(0, 0.917514), new Vertex(0, 0.293021)), new Line(new Vertex(0, 0.144243), new Vertex(0, 0.06782))),
             new Letter(',', new Line(new Vertex(0.147216999999998, 0.074171), new Vertex(0, -0.091914))),
             new Letter('@', new Line(new Vertex(0.397579999999998, 0.431019), new Vertex(0.141663000000001, 0.16622)), new Line(new Vertex(0.141663000000001, 0.16622), new Vertex(0.504554999999996, 0.169297)), new Line(new Vertex(0.504554999999996, 0.169297), new Vertex(0.35698, 0.534764)), new Line(new Vertex(0.35698, 0.534764), new Vertex(0, 0.093171)), new Line(new Vertex(0, 0.093171), new Vertex(0.544541000000002, 0.095003))),

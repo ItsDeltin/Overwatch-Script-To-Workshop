@@ -298,7 +298,7 @@ namespace Deltin.Deltinteger.Models
         }
     }
 
-    [CustomMethod("CreateTextMinimaler", CustomMethodType.MultiAction_Value)]
+    [CustomMethod("CreateTextEconomic", CustomMethodType.MultiAction_Value)]
     [ConstantParameter("Text", typeof(string))]
     [ConstantParameter("Angle", typeof(double))]
     [Parameter("Visible To", Elements.ValueType.Player, null)]
@@ -306,7 +306,7 @@ namespace Deltin.Deltinteger.Models
     [ConstantParameter("Scale", typeof(double))]
     [EnumParameter("Reevaluation", typeof(EffectRev))]
     [ConstantParameter("Get Effect IDs", typeof(bool), GET_EFFECT_IDS_BY_DEFAULT)]
-    class CreateTextMinimaler : ModelCreator
+    class CreateTextEconomic : ModelCreator
     {
         override protected MethodResult Get()
         {
@@ -318,7 +318,7 @@ namespace Deltin.Deltinteger.Models
             EnumMember effectRev        = (EnumMember)Parameters[5];
             bool getIds    = (bool)  ((ConstantObject)Parameters[6]).Value;
 
-            Model model = new Model(Letter.Create(text, false, ParameterLocations[0], scale));
+            Model model = new Model(Letter.Create(text, false, ParameterLocations[0], angle, scale));
 
             List<Element> actions = new List<Element>();
 
