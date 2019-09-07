@@ -84,7 +84,7 @@ namespace Deltin.Deltinteger.Parse
             {
                 if (DefinedVars[i].Value != null)
                     context.Actions.AddRange(
-                        store.SetVariable(context.ParseExpression(typeScope, DefinedVars[i].Value), null, new V_Number(i))
+                        store.SetVariable(context.ParseExpression(typeScope, typeScope, DefinedVars[i].Value), null, new V_Number(i))
                     );
             }
 
@@ -97,6 +97,7 @@ namespace Deltin.Deltinteger.Parse
                 ScopeGroup constructorScope = typeScope.Child();
 
                 IWorkshopTree[] parameters = context.ParseParameters(
+                    typeScope,
                     constructorScope,
                     constructor.Parameters,
                     node.Parameters,
@@ -105,7 +106,7 @@ namespace Deltin.Deltinteger.Parse
                 );
 
                 context.AssignParameterVariables(constructorScope, constructor.Parameters, parameters, node);
-                context.ParseBlock(constructorScope, constructor.BlockNode, true, null);
+                context.ParseBlock(typeScope, constructorScope, constructor.BlockNode, true, null);
                 constructorScope.Out(context);
             }
         }
