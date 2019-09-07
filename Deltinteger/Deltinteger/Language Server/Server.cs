@@ -222,7 +222,9 @@ namespace Deltin.Deltinteger.LanguageServer
                                 "method myMethod()",
                                 "{",
                                 "}"
-                            )) }
+                            )) },
+                            new CompletionItem("class") { kind = CompletionItem.Keyword },
+                            new CompletionItem("struct") { kind = CompletionItem.Keyword }
                         });
                         break;
 
