@@ -237,12 +237,12 @@ namespace Deltin.Deltinteger.Models
         override public CustomMethodWiki Wiki()
         {
             return new CustomMethodWiki(
-                "Create a wireframe of a variable containing a 3D model.",
+                "Create a wireframe of a variable containing a 3D model. Using a non-constant rotation will use excessive server load. To reduce server load set rotation as a variable which that can be modified.",
                 // Parameters
                 "The variable containing the model constant.",
                 "Who the model is visible to.",
                 "The location of the model.",
-                "The rotation of the model as a directional vector. If it is a vector constant, the rotation will be pre-calulated and will consume less server load.",
+                "The rotation of the model as a directional vector. If it is a vector constant, the rotation will be pre-calulated and will consume less server load (much less).",
                 "The scale of the model.",
                 "Specifies which of this methods' inputs will be continuously reevaluated, the model will keep asking for and using new values from reevaluated inputs.",
                 "If true, the method will return the effect IDs used to create the model. Use DestroyEffectArray() to destroy the effect. This is a boolean constant."
@@ -284,7 +284,7 @@ namespace Deltin.Deltinteger.Models
         override public CustomMethodWiki Wiki()
         {
             return new CustomMethodWiki(
-                "Creates in-world text using any custom text.",
+                "Creates in-world text using any custom text. Using a non-constant rotation will use excessive server load. To reduce server load set rotation as a variable which that can be modified.",
                 // Parameters
                 "The text to display. This is a string constant.",
                 "The name of the font to use. This is a string constant.",
@@ -292,7 +292,7 @@ namespace Deltin.Deltinteger.Models
                 "Merge lines if their angles are under this amount.",
                 "Who the text is visible to.",
                 "The location to display the text.",
-                "The rotation of the model as a directional vector. If it is a vector constant, the rotation will be pre-calulated and will consume less server load.",
+                "The rotation of the model as a directional vector. If it is a vector constant, the rotation will be pre-calulated and will consume less server load (much less).",
                 "The scale of the text.",
                 "Specifies which of this methods inputs will be continuously reevaluated, the text will keep asking for and using new values from reevaluated inputs.",
                 "If true, the method will return the effect IDs used to create the text. Use DestroyEffectArray() to destroy the effect. This is a boolean constant."
@@ -326,12 +326,12 @@ namespace Deltin.Deltinteger.Models
         override public CustomMethodWiki Wiki()
         {
             return new CustomMethodWiki(
-                "Creates in-world text using any custom text. Uses the BigNoodleTooOblique font, Overwatch's main font.",
+                "Creates in-world text using any custom text. Uses the BigNoodleTooOblique font, Overwatch's main font. Using a non-constant rotation will use excessive server load. To reduce server load set rotation as a variable which that can be modified.",
                 // Parameters
                 "The text to display. This is a string constant.",
                 "Who the text is visible to.",
                 "The location to display the text.",
-                "The rotation of the model as a directional vector. If it is a vector constant, the rotation will be pre-calulated and will consume less server load.",
+                "The rotation of the model as a directional vector. If it is a vector constant, the rotation will be pre-calulated and will consume less server load (much less).",
                 "The scale of the text.",
                 "Specifies which of this methods inputs will be continuously reevaluated, the text will keep asking for and using new values from reevaluated inputs.",
                 "If true, the method will return the effect IDs used to create the text. Use DestroyEffectArray() to destroy the effect. This is a boolean constant."
@@ -365,12 +365,12 @@ namespace Deltin.Deltinteger.Models
         override public CustomMethodWiki Wiki()
         {
             return new CustomMethodWiki(
-                "Creates in-world text using any custom text. Uses a less amount of effects.",
+                "Creates in-world text using any custom text. Uses a less amount of effects. Using a non-constant rotation will use excessive server load. To reduce server load set rotation as a variable which that can be modified.",
                 // Parameters
                 "The text to display. This is a string constant.",
                 "Who the text is visible to.",
                 "The location to display the text.",
-                "The rotation of the model as a directional vector. If it is a vector constant, the rotation will be pre-calulated and will consume less server load.",
+                "The rotation of the model as a directional vector. If it is a vector constant, the rotation will be pre-calulated and will consume less server load (much less).",
                 "The scale of the text.",
                 "Specifies which of this methods inputs will be continuously reevaluated, the text will keep asking for and using new values from reevaluated inputs.",
                 "If true, the method will return the effect IDs used to create the text. Use DestroyEffectArray() to destroy the effect. This is a boolean constant."
