@@ -54,20 +54,61 @@ namespace Deltin.Deltinteger.Models
                 }
                 else
                 {
-                    pos1 = line.Vertex1.ToVector();
-                    pos2 = line.Vertex2.ToVector();
+                    var pos1X = new V_Number(line.Vertex1.X);
+                    var pos1Y = new V_Number(line.Vertex1.Y);
+                    var pos1Z = new V_Number(line.Vertex1.Z);
+                    var pos2X = new V_Number(line.Vertex2.X);
+                    var pos2Y = new V_Number(line.Vertex2.Y);
+                    var pos2Z = new V_Number(line.Vertex2.Z);
 
-                    pos1 = Element.Part<V_Multiply>(Element.Part<V_DistanceBetween>(V_Vector.Zero, pos1),
-                        Element.Part<V_DirectionFromAngles>(
-                            Element.Part<V_Add>(Element.Part<V_HorizontalAngleFromDirection>(Element.Part<V_DirectionTowards>(V_Vector.Zero, pos1)), Element.Part<V_HorizontalAngleFromDirection>(rotation)),
-                            Element.Part<V_Add>(Element.Part<V_VerticalAngleFromDirection>(Element.Part<V_DirectionTowards>(V_Vector.Zero, pos1)), Element.Part<V_VerticalAngleFromDirection>(rotation))
-                        )
+                    var yaw = Element.Part<V_HorizontalAngleFromDirection>(rotation);
+                    var pitch = Element.Part<V_VerticalAngleFromDirection>(rotation);
+
+                    var cosa = Element.Part<V_CosineFromDegrees>(pitch);
+                    var sina = Element.Part<V_SineFromDegrees>(pitch);
+
+                    var cosb = Element.Part<V_CosineFromDegrees>(yaw);
+                    var sinb = Element.Part<V_SineFromDegrees>(yaw);
+
+                    var cosc = new V_Number(1);
+                    var sinc = new V_Number(0);
+
+                    var Axx = Element.Part<V_Multiply>(cosa, cosb);
+                    var Axy = Element.Part<V_Subtract>(new V_Number(0), sina);
+                    var Axz = Element.Part<V_Multiply>(cosa, sinb);
+
+                    var Ayx = Element.Part<V_Multiply>(sina, cosb);
+                    var Ayy = cosa;
+                    var Ayz = Element.Part<V_Multiply>(sina, sinb);
+
+                    var Azx = Element.Part<V_Multiply>(new V_Number(-1), sinb);
+
+                    pos1 = Element.Part<V_Vector>(
+                        Element.Part<V_Add>(Element.Part<V_Add>(
+                            Element.Part<V_Multiply>(Axx, pos1X),
+                            Element.Part<V_Multiply>(Axy, pos1Y)),
+                            Element.Part<V_Multiply>(Axz, pos1Z)),
+                        Element.Part<V_Add>(Element.Part<V_Add>(
+                            Element.Part<V_Multiply>(Ayx, pos1X),
+                            Element.Part<V_Multiply>(Ayy, pos1Y)),
+                            Element.Part<V_Multiply>(Ayz, pos1Z)),
+                        Element.Part<V_Add>(
+                            Element.Part<V_Multiply>(Azx, pos1X),
+                            pos1Z)
                     );
-                    pos2 = Element.Part<V_Multiply>(Element.Part<V_DistanceBetween>(V_Vector.Zero, pos2),
-                        Element.Part<V_DirectionFromAngles>(
-                            Element.Part<V_Add>(Element.Part<V_HorizontalAngleFromDirection>(Element.Part<V_DirectionTowards>(V_Vector.Zero, pos2)), Element.Part<V_HorizontalAngleFromDirection>(rotation)),
-                            Element.Part<V_Add>(Element.Part<V_VerticalAngleFromDirection>(Element.Part<V_DirectionTowards>(V_Vector.Zero, pos2)), Element.Part<V_VerticalAngleFromDirection>(rotation))
-                        )
+
+                    pos2 = Element.Part<V_Vector>(
+                        Element.Part<V_Add>(Element.Part<V_Add>(
+                            Element.Part<V_Multiply>(Axx, pos2X),
+                            Element.Part<V_Multiply>(Axy, pos2Y)),
+                            Element.Part<V_Multiply>(Axz, pos2Z)),
+                        Element.Part<V_Add>(Element.Part<V_Add>(
+                            Element.Part<V_Multiply>(Ayx, pos2X),
+                            Element.Part<V_Multiply>(Ayy, pos2Y)),
+                            Element.Part<V_Multiply>(Ayz, pos2Z)),
+                        Element.Part<V_Add>(
+                            Element.Part<V_Multiply>(Azx, pos2X),
+                            pos2Z)
                     );
                 }
             }
