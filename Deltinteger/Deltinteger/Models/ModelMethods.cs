@@ -70,9 +70,6 @@ namespace Deltin.Deltinteger.Models
                     var cosb = Element.Part<V_CosineFromDegrees>(yaw);
                     var sinb = Element.Part<V_SineFromDegrees>(yaw);
 
-                    var cosc = new V_Number(1);
-                    var sinc = new V_Number(0);
-
                     var Axx = Element.Part<V_Multiply>(cosa, cosb);
                     var Axy = Element.Part<V_Subtract>(new V_Number(0), sina);
                     var Axz = Element.Part<V_Multiply>(cosa, sinb);
