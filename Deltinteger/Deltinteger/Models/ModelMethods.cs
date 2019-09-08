@@ -42,16 +42,61 @@ namespace Deltin.Deltinteger.Models
 
         protected Element CreateLine(Line line, Element visibleTo, Element location, Element scale, IWorkshopTree reevaluation, Element rotation)
         {
+            Vertex vertex1 = line.Vertex1;
+            Vertex vertex2 = line.Vertex2;
             Element pos1;
             Element pos2;
 
+            bool scaleSet = false;
+            bool rotationSet = false;
+
+            if (scale != null)
+            {
+                double? constantScale = null;
+
+                // Double constant scale
+                if (scale.ConstantSupported<double>())
+                    constantScale = (double)scale.GetConstant();
+                
+                // Null constant rotation
+                else if (scale is V_Null)
+                    constantScale = 1;
+
+                if (constantScale == 1)
+                    scaleSet = true;
+                
+                if (!scaleSet && constantScale != null)
+                {
+                    vertex1 = vertex1.Scale((double)constantScale);
+                    vertex2 = vertex2.Scale((double)constantScale);
+                    scaleSet = true;
+                }
+            }
+
             if (rotation != null)
             {
+                Vertex rotationConstant = null;
+
+                // Vector constant rotation
                 if (rotation.ConstantSupported<Vertex>())
+                    rotationConstant = (Vertex)rotation.GetConstant();
+                
+                // Double constant rotation
+                else if (rotation.ConstantSupported<double>())
+                    rotationConstant = new Vertex(0, (double)rotation.GetConstant(), 0);
+                
+                // Null constant rotation
+                else if (rotation is V_Null)
+                    rotationConstant = new Vertex(0, 0, 0);
+                
+                if (rotationConstant != null && rotationConstant.EqualTo(new Vertex(0, 0, 0)))
+                    rotationSet = true;
+                
+                if (rotationConstant != null && !rotationSet)
                 {
-                    Vertex rotate = (Vertex)rotation.GetConstant();
-                    pos1 = line.Vertex1.Rotate(rotate).ToVector();
-                    pos2 = line.Vertex2.Rotate(rotate).ToVector();
+                    vertex1 = vertex1.Rotate(rotationConstant);
+                    vertex2 = vertex2.Rotate(rotationConstant);
+                    rotationSet = true;
                 }
                 else
                 {
@@ -95,29 +140,69 @@ namespace Deltin.Deltinteger.Models
                             pos1Z)
                     );
 
-                    pos2 = Element.Part<V_Vector>(
-                        Element.Part<V_Add>(Element.Part<V_Add>(
-                            Element.Part<V_Multiply>(Axx, pos2X),
-                            Element.Part<V_Multiply>(Axy, pos2Y)),
-                            Element.Part<V_Multiply>(Axz, pos2Z)),
-                        Element.Part<V_Add>(Element.Part<V_Add>(
-                            Element.Part<V_Multiply>(Ayx, pos2X),
-                            Element.Part<V_Multiply>(Ayy, pos2Y)),
-                            Element.Part<V_Multiply>(Ayz, pos2Z)),
-                        Element.Part<V_Add>(
-                            Element.Part<V_Multiply>(Azx, pos2X),
-                            pos2Z)
-                    );
-                }
+            if (rotation != null && !rotationSet)
+            {
+                var pos1X = new V_Number(vertex1.X);
+                var pos1Y = new V_Number(vertex1.Y);
+                var pos1Z = new V_Number(vertex1.Z);
+                var pos2X = new V_Number(vertex2.X);
+                var pos2Y = new V_Number(vertex2.Y);
+                var pos2Z = new V_Number(vertex2.Z);
+
+                var yaw = Element.Part<V_HorizontalAngleFromDirection>(rotation);
+                var pitch = Element.Part<V_VerticalAngleFromDirection>(rotation);
+
+                var cosa = Element.Part<V_CosineFromDegrees>(pitch);
+                var sina = Element.Part<V_SineFromDegrees>(pitch);
+
+                var cosb = Element.Part<V_CosineFromDegrees>(yaw);
+                var sinb = Element.Part<V_SineFromDegrees>(yaw);
+
+                var Axx = Element.Part<V_Multiply>(cosa, cosb);
+                var Axy = Element.Part<V_Subtract>(new V_Number(0), sina);
+                var Axz = Element.Part<V_Multiply>(cosa, sinb);
+
+                var Ayx = Element.Part<V_Multiply>(sina, cosb);
+                var Ayy = cosa;
+                var Ayz = Element.Part<V_Multiply>(sina, sinb);
+
+                var Azx = Element.Part<V_Multiply>(new V_Number(-1), sinb);
+
+                pos1 = Element.Part<V_Vector>(
+                    Element.Part<V_Add>(Element.Part<V_Add>(
+                        Element.Part<V_Multiply>(Axx, pos1X),
+                        Element.Part<V_Multiply>(Axy, pos1Y)),
+                        Element.Part<V_Multiply>(Axz, pos1Z)),
+                    Element.Part<V_Add>(Element.Part<V_Add>(
+                        Element.Part<V_Multiply>(Ayx, pos1X),
+                        Element.Part<V_Multiply>(Ayy, pos1Y)),
+                        Element.Part<V_Multiply>(Ayz, pos1Z)),
+                    Element.Part<V_Add>(
+                        Element.Part<V_Multiply>(Azx, pos1X),
+                        pos1Z)
+                );
+
+                pos2 = Element.Part<V_Vector>(
+                    Element.Part<V_Add>(Element.Part<V_Add>(
+                        Element.Part<V_Multiply>(Axx, pos2X),
+                        Element.Part<V_Multiply>(Axy, pos2Y)),
+                        Element.Part<V_Multiply>(Axz, pos2Z)),
+                    Element.Part<V_Add>(Element.Part<V_Add>(
+                        Element.Part<V_Multiply>(Ayx, pos2X),
+                        Element.Part<V_Multiply>(Ayy, pos2Y)),
+                        Element.Part<V_Multiply>(Ayz, pos2Z)),
+                    Element.Part<V_Add>(
+                        Element.Part<V_Multiply>(Azx, pos2X),
+                        pos2Z)
+                );
             }
             else
             {
-                pos1 = line.Vertex1.ToVector();
-                pos2 = line.Vertex2.ToVector();
+                pos1 = vertex1.ToVector();
+                pos2 = vertex2.ToVector();
             }
 
-            #warning Built-in scale!
-            if (scale != null)
+            if (scale != null && !scaleSet)
             {
                 pos1 = Element.Part<V_Multiply>(pos1, scale);
                 pos2 = Element.Part<V_Multiply>(pos2, scale);
