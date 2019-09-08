@@ -22,6 +22,7 @@ namespace Deltin.Deltinteger.Models
         protected Element[] RenderModel(Model model, Element visibleTo, Element location, Element scale, IWorkshopTree reevaluation, IndexedVar store, Element rotation)
         {
             List<Element> actions = new List<Element>();
+            int waitEvery = rotation.ConstantSupported<Vertex>() ? 25 : 10;
             for (int i = 0; i < model.Lines.Length; i++)
             {
                 actions.Add(CreateLine(model.Lines[i], visibleTo, location, scale, reevaluation, rotation));
@@ -33,7 +34,7 @@ namespace Deltin.Deltinteger.Models
                     );
 
                 // Add a wait every 25 actions to prevent high server load.
-                if (actions.Count % 25 == 0)
+                if (actions.Count % waitEvery == 0)
                     actions.Add(A_Wait.MinimumWait);
             }
             return actions.ToArray();
