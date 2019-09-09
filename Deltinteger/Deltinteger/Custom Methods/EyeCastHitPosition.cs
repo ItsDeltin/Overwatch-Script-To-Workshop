@@ -19,11 +19,11 @@ namespace Deltin.Deltinteger.Elements
                 Element.Part<V_Add>(
                     eyePos,
                     Element.Part<V_Multiply>(direction, range)
-                    ),
-                    new V_AllPlayers(),
+                ),
                     new V_Null(),
+                    new V_EventPlayer(),
                     new V_False()
-                );
+            );
             return new MethodResult(null, raycast);
         }
 
@@ -54,11 +54,11 @@ namespace Deltin.Deltinteger.Elements
                 Element.Part<V_Add>(
                     eyePos,
                     Element.Part<V_Multiply>(direction, range)
-                    ),
-                    new V_AllPlayers(),
+                ),
                     new V_Null(),
+                    new V_EventPlayer(),
                     new V_False()
-                );
+            );
 
             Element[] actions = ArrayBuilder<Element>.Build
             (

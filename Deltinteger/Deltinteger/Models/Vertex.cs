@@ -18,6 +18,7 @@ namespace Deltin.Deltinteger.Models
             W = w;
         }
         public Vertex(double x, double y, double z) : this(x,y,z,0) {}
+        public Vertex(double x, double y) : this(x,y,0,0) {}
         public Vertex() : this(0,0,0,0) {}
 
         public V_Vector ToVector()
@@ -53,6 +54,11 @@ namespace Deltin.Deltinteger.Models
             var newZ = Azx*X + Azy*Y + Azz*Z;
 
             return new Vertex(newX, newY, newZ);
+        }
+
+        public Vertex Rotate(Vertex xyz)
+        {
+            return Rotate(xyz.Y, xyz.X, xyz.Z);
         }
 
         public Vertex Scale(double scale)

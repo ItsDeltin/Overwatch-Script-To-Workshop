@@ -336,4 +336,10 @@ ASALocalRun/
 .localhistory/
 overwatch-script-to-workshop/test.del
 Deltinteger/Deltinteger/Properties/app.manifest
+
+# Debug scripts
 Examples/Debug.del
+
+# Alphabet Generator Output
+Deltinteger/Deltinteger/Models/Alphabet Generator/*.obj
+Deltinteger/Deltinteger/Models/Alphabet Generator/*.mtl

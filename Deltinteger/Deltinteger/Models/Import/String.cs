@@ -9,10 +9,8 @@ namespace Deltin.Deltinteger.Models.Import
     {
         private List<Line> lines { get; } = new List<Line>();
 
-        public StringModel(string text, FontFamily family, double quality, double angle, double scale, double angleRound)
+        public StringModel(string text, FontFamily family, double quality, double angleRound)
         {
-            scale *= 0.05;
-
             using (var gp = new GraphicsPath())
             using (var flipY = new Matrix(1, 0, 0, -1, 0, gp.GetBounds().Height))
             {
@@ -51,8 +49,8 @@ namespace Deltin.Deltinteger.Models.Import
 
                         lines.Add(
                             new Line(
-                                new Vertex(first.X - xOffset, first.Y + yOffset, 0).Rotate(angle, 0, 0).Scale(scale),
-                                new Vertex(next.X - xOffset, next.Y + yOffset, 0).Rotate(angle, 0, 0).Scale(scale)
+                                new Vertex(first.X - xOffset, first.Y + yOffset, 0).Scale(0.05),
+                                new Vertex(next.X - xOffset, next.Y + yOffset, 0).Scale(0.05)
                             )
                         );
                     }

@@ -129,6 +129,7 @@
     <Compile Include="Models\Face.cs" />
     <Compile Include="Models\ModelMethods.cs" />
     <Compile Include="Models\Animation.cs" />
+    <Compile Include="Models\EconomicAlphabet.cs" />
     <Compile Include="Models\Import\Obj.cs" />
     <Compile Include="Models\Import\String.cs" />
     <Compile Include="Program.cs" />
@@ -142,9 +143,6 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="Fonts\BigNoodleTooOblique.ttf">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Fonts\1CamBam_Stick_1.ttf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

@@ -65,7 +65,7 @@ namespace Deltin.Deltinteger.Parse
             return false;
         }
 
-        public void Out()
+        public void Out(TranslateRule context)
         {
             if (!IsInScope)
                 throw new Exception("ScopeGroup is already out of scope.");
@@ -74,13 +74,17 @@ namespace Deltin.Deltinteger.Parse
 
             foreach (IScopeable var in InScope)
                 if (var is IndexedVar)
+                {
+                    ((IndexedVar)var).OutOfScope(context);
                     VarCollection.Free((IndexedVar)var);
+                }
             
             for (int i = 0; i < Children.Count; i++)
                 if (Children[0].IsInScope)
                     throw new Exception();
         }
 
+        /*
         public Element[] RecursiveMethodStackPop()
         {
             List<Element> actions = new List<Element>();
@@ -97,18 +101,19 @@ namespace Deltin.Deltinteger.Parse
 
             return actions.ToArray();
         }
+        */
 
-        public Var GetVar(string name, Location location)
+        public Var GetVar(ScopeGroup getter, string name, Location location)
         {
-            Var var = GetScopeable<Var>(name);
+            Var var = GetScopeable<Var>(getter, name);
             if (var == null && location != null) throw SyntaxErrorException.VariableDoesNotExist(name, location);
             return var;
         }
 
-        public IMethod GetMethod(string name, Location location)
+        public IMethod GetMethod(ScopeGroup getter, string name, Location location)
         {
             // Get the method by it's name.
-            IMethod method = GetScopeable<UserMethod>(name)
+            IMethod method = GetScopeable<UserMethod>(getter, name)
             // If it is not found, check if its a workshop method.
                 ?? (IMethod)Element.GetElement(name) 
             // Then check if its a custom method.
@@ -118,13 +123,14 @@ namespace Deltin.Deltinteger.Parse
             return method;
         }
 
-        private T GetScopeable<T>(string name) where T : IScopeable
+        private T GetScopeable<T>(ScopeGroup getter, string name) where T : IScopeable
         {
+            bool publicOnly = getter.Root() != Root();
             IScopeable var = null;
             ScopeGroup checkGroup = this;
             while (var == null && checkGroup != null)
             {
-                var = checkGroup.InScope.FirstOrDefault(v => v is T && v.Name == name);
+                var = checkGroup.InScope.FirstOrDefault(v => v is T && v.Name == name && (!publicOnly || v.AccessLevel == AccessLevel.Public));
                 checkGroup = checkGroup.Parent;
             }
 

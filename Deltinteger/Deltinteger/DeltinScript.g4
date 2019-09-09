@@ -72,6 +72,7 @@ statement :
 	| define STATEMENT_END?
 	| return
 	| expr STATEMENT_END?
+	| delete STATEMENT_END?
 	);
 
 block : (BLOCK_START statement* BLOCK_END) | statement | STATEMENT_END  ;
@@ -81,7 +82,7 @@ for     : FOR LEFT_PAREN
 	RIGHT_PAREN block;
 forEndStatement : varset ;
 
-foreach : FOREACH number? LEFT_PAREN DEFINE PART IN expr RIGHT_PAREN block ;
+foreach : FOREACH number? LEFT_PAREN parameter_define IN expr RIGHT_PAREN block ;
 
 while   : WHILE LEFT_PAREN expr RIGHT_PAREN block             ;
 
@@ -90,6 +91,7 @@ else_if : ELSE IF LEFT_PAREN expr RIGHT_PAREN block           ;
 else    : ELSE block                                          ;
 
 return  : RETURN expr? STATEMENT_END                          ;
+delete  : DELETE LEFT_PAREN expr RIGHT_PAREN                  ;
 
 rule_if : IF LEFT_PAREN expr? RIGHT_PAREN;
 
@@ -114,7 +116,7 @@ ruleset :
 
 // Classes/structs
 
-type_define : (STRUCT) name=PART
+type_define : (STRUCT | CLASS) name=PART
 	BLOCK_START
 	((inclass_define STATEMENT_END) | constructor | user_method)*
 	BLOCK_END ;
@@ -186,6 +188,7 @@ RECURSIVE : 'recursive' ;
 RETURN    : 'return'    ;
 WHILE     : 'while'     ;
 STRUCT    : 'struct'    ;
+CLASS     : 'class'     ;
 PRIVATE   : 'private'   ;
 PUBLIC    : 'public'    ;
 THIS      : 'this'      ;
@@ -193,6 +196,7 @@ NEW       : 'new'       ;
 STATIC    : 'static'    ;
 IMPORT    : 'import'    ;
 AS        : 'as'        ;
+DELETE    : 'delete'    ;
 
 EQUALS          : '='  ;
 EQUALS_POW      : '^=' ;
@@ -209,7 +213,7 @@ MOD   : '%';
 ADD   : '+';
 MINUS : '-';
 
-BOOL : '&' | '|';
+BOOL : '&&' | '||';
 NOT : '!';
 INCREMENT : '++' ;
 DECREMENT : '--' ;

@@ -157,6 +157,15 @@ namespace Deltin.Deltinteger.Elements
                 + (!ElementData.IsValue ? (";" + (Comment != null ? " // " + Comment : "")) : "");
         }
 
+        public virtual bool ConstantSupported<T>()
+        {
+            return false;
+        }
+        public virtual object GetConstant()
+        {
+            return null;
+        }
+
         protected virtual string[] AdditionalParameters()
         {
             return new string[0];
@@ -231,6 +240,15 @@ namespace Deltin.Deltinteger.Elements
             result.AddRange(continueSkip.ResetSkipActions());
 
             return result.ToArray();
+        }
+
+        public static V_Number[] IntToElement(params int[] numbers)
+        {
+            V_Number[] elements = new V_Number[numbers?.Length ?? 0];
+            for (int i = 0; i < elements.Length; i++)
+                elements[i] = new V_Number(numbers[i]);
+
+            return elements;
         }
 
         public static readonly Element DefaultElement = new V_Number(0);

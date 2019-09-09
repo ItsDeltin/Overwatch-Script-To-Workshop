@@ -13,7 +13,22 @@ namespace Deltin.Deltinteger.Elements
 {
     [ElementData("Absolute Value", ValueType.Number)]
     [Parameter("Value", ValueType.Number, typeof(V_Number))]
-    public class V_AbsoluteValue : Element {}
+    public class V_AbsoluteValue : Element
+    {
+        override public bool ConstantSupported<T>()
+        {
+            if (ParameterValues.Length == 0) return true;
+            return typeof(T) == typeof(double)
+                && ParameterValues[0] is Element
+                && ((Element)ParameterValues[0]).ConstantSupported<double>();
+        }
+
+        override public object GetConstant()
+        {
+            if (ParameterValues.Length == 0) return 0;
+            return Math.Abs((double)((Element)ParameterValues[0]).GetConstant());
+        }
+    }
 
     [ElementData("Add", ValueType.Any)]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
@@ -562,7 +577,15 @@ namespace Deltin.Deltinteger.Elements
             return $"{ElementData.ElementName} {Value}";
         }
 
-        public static implicit operator V_Number(double value) => new V_Number(value);
+        override public bool ConstantSupported<T>()
+        {
+            return typeof(T) == typeof(double);
+        }
+
+        override public object GetConstant()
+        {
+            return Value;
+        }
     }
 
     [ElementData("Number Of Dead Players", ValueType.Number)]
@@ -982,7 +1005,43 @@ namespace Deltin.Deltinteger.Elements
     [Parameter("X", ValueType.Number, typeof(V_Number))]
     [Parameter("Y", ValueType.Number, typeof(V_Number))]
     [Parameter("Z", ValueType.Number, typeof(V_Number))]
-    public class V_Vector : Element {}
+    public class V_Vector : Element
+    {
+        override public bool ConstantSupported<T>()
+        {
+            if (typeof(T) != typeof(Models.Vertex)) return false;
+
+            for (int i = 0; i < ParameterValues.Length && i < 3; i++)
+            {
+                if (ParameterValues[i] is Element == false)
+                    return false;
+                
+                if (!((Element)ParameterValues[i]).ConstantSupported<double>())
+                    return false;
+            }
+
+            return true;
+        }
+
+        override public object GetConstant()
+        {
+            double x = 0;
+            if (ParameterValues.Length > 0)
+                x = (double)((Element)ParameterValues[0]).GetConstant();
+            
+            double y = 0;
+            if (ParameterValues.Length > 1)
+                y = (double)((Element)ParameterValues[1]).GetConstant();
+            
+            double z = 0;
+            if (ParameterValues.Length > 2)
+                z = (double)((Element)ParameterValues[2]).GetConstant();
+            
+            return new Models.Vertex(x, y, z);
+        }
+
+        public static V_Vector Zero { get { return Element.Part<V_Vector>(new V_Number(0), new V_Number(0), new V_Number(0)); }}
+    }
 
     [ElementData("Vector Towards", ValueType.Vector)]
     [Parameter("Start Pos", ValueType.VectorAndPlayer, typeof(V_Vector))]

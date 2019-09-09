@@ -6,22 +6,31 @@ using Deltin.Deltinteger.LanguageServer;
 
 namespace Deltin.Deltinteger.Parse
 {
-    public class DefinedType : ITypeRegister
+    public abstract class DefinedType : ITypeRegister
     {
+        public static DefinedType GetDefinedType(TypeDefineNode node)
+        {
+            if (node.TypeKind == TypeKind.Struct)
+                return new DefinedStruct(node);
+            else if (node.TypeKind == TypeKind.Class)
+                return new DefinedClass(node);
+            else
+                throw new Exception();
+        }
+
         public string Name { get; }
-        public TypeKind TypeKind { get; }
         public InclassDefineNode[] DefinedVars { get; }
         public UserMethodNode[] MethodNodes { get; }
         public Constructor[] Constructors { get; private set; }
         private ConstructorNode[] ConstructorNodes { get; }
+        public abstract TypeKind TypeKind { get; }
 
-        public DefinedType(TypeDefineNode node)
+        protected DefinedType(TypeDefineNode node)
         {
             if (EnumData.GetEnum(node.Name) != null)
                 throw SyntaxErrorException.TypeNameConflict(node.Name, node.Location);
 
             Name = node.Name;
-            TypeKind = node.TypeKind;
             DefinedVars = node.DefinedVars;
             MethodNodes = node.Methods;
 
@@ -41,12 +50,14 @@ namespace Deltin.Deltinteger.Parse
 
         public ScopeGroup GetRootScope(IndexedVar var, ParsingData parseData)
         {
+            IndexedVar root = GetRoot(var, parseData);
+            
             ScopeGroup typeScope = new ScopeGroup(parseData.VarCollection);
-            typeScope.This = var;
+            typeScope.This = root;
 
             for (int i = 0; i < DefinedVars.Length; i++)
             {
-                IndexedVar newVar = var.CreateChild(typeScope, DefinedVars[i].VariableName, new int[] { i }, DefinedVars[i]);
+                IndexedVar newVar = root.CreateChild(typeScope, DefinedVars[i].VariableName, Element.IntToElement(i), DefinedVars[i]);
                 if (DefinedVars[i].Type != null)
                     newVar.Type = parseData.GetDefinedType(DefinedVars[i].Type, DefinedVars[i].Location);
                 newVar.AccessLevel = DefinedVars[i].AccessLevel;
@@ -62,6 +73,44 @@ namespace Deltin.Deltinteger.Parse
             return typeScope;
         }
 
+        abstract protected IndexedVar GetRoot(IndexedVar req, ParsingData context);
+        
+        abstract public Element New(CreateObjectNode node, ScopeGroup scope, TranslateRule context);
+
+        protected void SetupNew(IndexedVar store, ScopeGroup typeScope, TranslateRule context, CreateObjectNode node)
+        {
+            // Set the default variables in the struct
+            for (int i = 0; i < DefinedVars.Length; i++)
+            {
+                if (DefinedVars[i].Value != null)
+                    context.Actions.AddRange(
+                        store.SetVariable(context.ParseExpression(typeScope, typeScope, DefinedVars[i].Value), null, new V_Number(i))
+                    );
+            }
+
+            Constructor constructor = Constructors.FirstOrDefault(c => c.Parameters.Length == node.Parameters.Length);
+            if (constructor == null && !(node.Parameters.Length == 0 && Constructors.Length == 0))
+                throw SyntaxErrorException.NotAConstructor(TypeKind, Name, node.Parameters.Length, node.Location);
+            
+            if (constructor != null)
+            {
+                ScopeGroup constructorScope = typeScope.Child();
+
+                IWorkshopTree[] parameters = context.ParseParameters(
+                    typeScope,
+                    constructorScope,
+                    constructor.Parameters,
+                    node.Parameters,
+                    node.TypeName,
+                    node.Location
+                );
+
+                context.AssignParameterVariables(constructorScope, constructor.Parameters, parameters, node);
+                context.ParseBlock(typeScope, constructorScope, constructor.BlockNode, true, null);
+                constructorScope.Out(context);
+            }
+        }
+
         public static CompletionItem[] CollectionCompletion(DefinedType[] definedTypes)
         {
             return definedTypes.Select(
@@ -70,6 +119,102 @@ namespace Deltin.Deltinteger.Parse
                     kind = CompletionItem.Struct
                 }
             ).ToArray();
+        }
+    }
+
+    public class DefinedStruct : DefinedType
+    {
+        override public TypeKind TypeKind { get; } = TypeKind.Struct;
+
+        public DefinedStruct(TypeDefineNode definedType) : base(definedType) {}
+
+        override public Element New(CreateObjectNode node, ScopeGroup scope, TranslateRule context)
+        {
+            IndexedVar store = context.VarCollection.AssignVar(scope, Name + " store", context.IsGlobal, null);
+            store.Type = this;
+            ScopeGroup typeScope = GetRootScope(store, context.ParserData);
+
+            SetupNew(store, typeScope, context, node);
+
+            return store.GetVariable();
+        }
+
+        override protected IndexedVar GetRoot(IndexedVar req, ParsingData context)
+        {
+            return req;
+        }
+    }
+
+    public class DefinedClass : DefinedType
+    {
+        override public TypeKind TypeKind { get; } = TypeKind.Class;
+
+        public DefinedClass(TypeDefineNode definedType) : base(definedType) {}
+
+        override public Element New(CreateObjectNode node, ScopeGroup scope, TranslateRule context)
+        {
+            // Get the index to store the class.
+            IndexedVar index = context.VarCollection.AssignVar(scope, "New " + Name + " class index", context.IsGlobal, null); // Assigns the index variable.
+            // Get the index of the next free spot in the class array.
+            context.Actions.AddRange(
+                index.SetVariable(
+                    Element.Part<V_IndexOfArrayValue>(
+                        WorkshopArrayBuilder.GetVariable(true, null, Variable.C),
+                        new V_Null()
+                    )
+                )
+            );
+            // Set the index to the count of the class array if the index equals -1.
+            context.Actions.AddRange(
+                index.SetVariable(
+                    Element.TernaryConditional(
+                        new V_Compare(index.GetVariable(), Operators.Equal, new V_Number(-1)),
+                        Element.Part<V_CountOf>(
+                            WorkshopArrayBuilder.GetVariable(true, null, Variable.C)
+                        ),
+                        index.GetVariable()
+                    )
+                )
+            );
+            // The direct reference to the class variable.
+            IndexedVar store = new IndexedVar(
+                scope,
+                Name + " root",
+                true,
+                Variable.C,
+                new Element[] { index.GetVariable() },
+                context.VarCollection.WorkshopArrayBuilder,
+                null
+            );
+            store.Index[0].SupportedType = store;
+            store.Type = this;
+
+            ScopeGroup typeScope = GetRootScope(store, context.ParserData);
+
+            SetupNew(store, typeScope, context, node);
+
+            return index.GetVariable();
+        }
+
+        override protected IndexedVar GetRoot(IndexedVar req, ParsingData context)
+        {
+            if (req.Name == Name + " root") return req;
+            return new IndexedVar(
+                null,
+                Name + " root",
+                true,
+                Variable.C,
+                new Element[] { req.GetVariable() },
+                context.VarCollection.WorkshopArrayBuilder,
+                null
+            );
+        }
+
+        public static void Delete(Element index, TranslateRule context)
+        {
+            context.Actions.AddRange(context.VarCollection.WorkshopArrayBuilder.SetVariable(
+                new V_Null(), true, null, Variable.C, index
+            ));
         }
     }
 
