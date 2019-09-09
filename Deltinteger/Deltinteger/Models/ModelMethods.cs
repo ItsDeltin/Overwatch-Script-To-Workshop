@@ -33,8 +33,8 @@ namespace Deltin.Deltinteger.Models
                         store.SetVariable(Element.Part<V_Append>(store.GetVariable(), new V_LastCreatedEntity()))
                     );
 
-                // Add a wait every 25 actions to prevent high server load.
-                if (actions.Count % waitEvery == 0)
+                // Add a wait every 12 effects to prevent high server load.
+                if (i % waitEvery == 0)
                     actions.Add(A_Wait.MinimumWait);
             }
             return actions.ToArray();
@@ -98,47 +98,7 @@ namespace Deltin.Deltinteger.Models
                     vertex2 = vertex2.Rotate(rotationConstant);
                     rotationSet = true;
                 }
-                else
-                {
-                    var pos1X = new V_Number(line.Vertex1.X);
-                    var pos1Y = new V_Number(line.Vertex1.Y);
-                    var pos1Z = new V_Number(line.Vertex1.Z);
-                    var pos2X = new V_Number(line.Vertex2.X);
-                    var pos2Y = new V_Number(line.Vertex2.Y);
-                    var pos2Z = new V_Number(line.Vertex2.Z);
-
-                    var yaw = Element.Part<V_HorizontalAngleFromDirection>(rotation);
-                    var pitch = Element.Part<V_VerticalAngleFromDirection>(rotation);
-
-                    var cosa = Element.Part<V_CosineFromDegrees>(pitch);
-                    var sina = Element.Part<V_SineFromDegrees>(pitch);
-
-                    var cosb = Element.Part<V_CosineFromDegrees>(yaw);
-                    var sinb = Element.Part<V_SineFromDegrees>(yaw);
-
-                    var Axx = Element.Part<V_Multiply>(cosa, cosb);
-                    var Axy = Element.Part<V_Subtract>(new V_Number(0), sina);
-                    var Axz = Element.Part<V_Multiply>(cosa, sinb);
-
-                    var Ayx = Element.Part<V_Multiply>(sina, cosb);
-                    var Ayy = cosa;
-                    var Ayz = Element.Part<V_Multiply>(sina, sinb);
-
-                    var Azx = Element.Part<V_Multiply>(new V_Number(-1), sinb);
-
-                    pos1 = Element.Part<V_Vector>(
-                        Element.Part<V_Add>(Element.Part<V_Add>(
-                            Element.Part<V_Multiply>(Axx, pos1X),
-                            Element.Part<V_Multiply>(Axy, pos1Y)),
-                            Element.Part<V_Multiply>(Axz, pos1Z)),
-                        Element.Part<V_Add>(Element.Part<V_Add>(
-                            Element.Part<V_Multiply>(Ayx, pos1X),
-                            Element.Part<V_Multiply>(Ayy, pos1Y)),
-                            Element.Part<V_Multiply>(Ayz, pos1Z)),
-                        Element.Part<V_Add>(
-                            Element.Part<V_Multiply>(Azx, pos1X),
-                            pos1Z)
-                    );
+            }
 
             if (rotation != null && !rotationSet)
             {
