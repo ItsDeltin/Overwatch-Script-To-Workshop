@@ -66,7 +66,7 @@ namespace Deltin.Deltinteger.Models
             Console.ReadLine();
         }
 
-        public static Line[] Create(string text, bool exactLetter, Location location, double angle, double scale)
+        public static Line[] Create(string text, bool exactLetter, Location location)
         {
             double offset = 0;
             List<Line> result = new List<Line>();
@@ -83,7 +83,7 @@ namespace Deltin.Deltinteger.Models
                         result.Add(newLine);
                     }
 
-                offset += letter.Width + (.15 * scale);
+                offset += letter.Width + .15;
             }
 
             if (result.Count > 0)
@@ -96,8 +96,8 @@ namespace Deltin.Deltinteger.Models
 
             foreach (Line line in result)
             {
-                line.Vertex1 = line.Vertex1.Rotate(angle, 0, 0).Scale(scale);
-                line.Vertex2 = line.Vertex2.Rotate(angle, 0, 0).Scale(scale);
+                line.Vertex1 = line.Vertex1;
+                line.Vertex2 = line.Vertex2;
             }
             
             return result.ToArray();
