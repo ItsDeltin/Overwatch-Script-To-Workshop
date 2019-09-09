@@ -48,9 +48,12 @@ namespace Deltin.Deltinteger.Parse
             }
         }
 
-        public ScopeGroup GetRootScope(IndexedVar var, ParsingData parseData)
+        public ScopeGroup GetRootScope(IndexedVar var, ParsingData parseData, Element target = null)
         {
-            IndexedVar root = GetRoot(var, parseData);
+            if (target == null) target = new V_EventPlayer();
+
+            IndexedVar root = GetRoot(var, parseData, target);
+            root.DefaultTarget = target;
             
             ScopeGroup typeScope = new ScopeGroup(parseData.VarCollection);
             typeScope.This = root;
@@ -58,6 +61,7 @@ namespace Deltin.Deltinteger.Parse
             for (int i = 0; i < DefinedVars.Length; i++)
             {
                 IndexedVar newVar = root.CreateChild(typeScope, DefinedVars[i].VariableName, Element.IntToElement(i), DefinedVars[i]);
+                newVar.DefaultTarget = target;
                 if (DefinedVars[i].Type != null)
                     newVar.Type = parseData.GetDefinedType(DefinedVars[i].Type, DefinedVars[i].Location);
                 newVar.AccessLevel = DefinedVars[i].AccessLevel;
@@ -73,11 +77,11 @@ namespace Deltin.Deltinteger.Parse
             return typeScope;
         }
 
-        abstract protected IndexedVar GetRoot(IndexedVar req, ParsingData context);
+        abstract protected IndexedVar GetRoot(IndexedVar req, ParsingData context, Element target);
         
-        abstract public Element New(CreateObjectNode node, ScopeGroup scope, TranslateRule context);
+        abstract public Element New(CreateObjectNode node, ScopeGroup getter, ScopeGroup scope, TranslateRule context);
 
-        protected void SetupNew(IndexedVar store, ScopeGroup typeScope, TranslateRule context, CreateObjectNode node)
+        protected void SetupNew(ScopeGroup getter, ScopeGroup scope, IndexedVar store, ScopeGroup typeScope, TranslateRule context, CreateObjectNode node)
         {
             // Set the default variables in the struct
             for (int i = 0; i < DefinedVars.Length; i++)
@@ -97,8 +101,8 @@ namespace Deltin.Deltinteger.Parse
                 ScopeGroup constructorScope = typeScope.Child();
 
                 IWorkshopTree[] parameters = context.ParseParameters(
-                    typeScope,
-                    constructorScope,
+                    getter,
+                    scope,
                     constructor.Parameters,
                     node.Parameters,
                     node.TypeName,
@@ -128,18 +132,18 @@ namespace Deltin.Deltinteger.Parse
 
         public DefinedStruct(TypeDefineNode definedType) : base(definedType) {}
 
-        override public Element New(CreateObjectNode node, ScopeGroup scope, TranslateRule context)
+        override public Element New(CreateObjectNode node, ScopeGroup getter, ScopeGroup scope, TranslateRule context)
         {
             IndexedVar store = context.VarCollection.AssignVar(scope, Name + " store", context.IsGlobal, null);
             store.Type = this;
             ScopeGroup typeScope = GetRootScope(store, context.ParserData);
 
-            SetupNew(store, typeScope, context, node);
+            SetupNew(getter, scope, store, typeScope, context, node);
 
             return store.GetVariable();
         }
 
-        override protected IndexedVar GetRoot(IndexedVar req, ParsingData context)
+        override protected IndexedVar GetRoot(IndexedVar req, ParsingData context, Element target)
         {
             return req;
         }
@@ -151,7 +155,7 @@ namespace Deltin.Deltinteger.Parse
 
         public DefinedClass(TypeDefineNode definedType) : base(definedType) {}
 
-        override public Element New(CreateObjectNode node, ScopeGroup scope, TranslateRule context)
+        override public Element New(CreateObjectNode node, ScopeGroup getter, ScopeGroup scope, TranslateRule context)
         {
             // Get the index to store the class.
             IndexedVar index = context.VarCollection.AssignVar(scope, "New " + Name + " class index", context.IsGlobal, null); // Assigns the index variable.
@@ -191,12 +195,12 @@ namespace Deltin.Deltinteger.Parse
 
             ScopeGroup typeScope = GetRootScope(store, context.ParserData);
 
-            SetupNew(store, typeScope, context, node);
+            SetupNew(getter, scope, store, typeScope, context, node);
 
             return index.GetVariable();
         }
 
-        override protected IndexedVar GetRoot(IndexedVar req, ParsingData context)
+        override protected IndexedVar GetRoot(IndexedVar req, ParsingData context, Element target)
         {
             if (req.Name == Name + " root") return req;
             return new IndexedVar(
@@ -204,7 +208,7 @@ namespace Deltin.Deltinteger.Parse
                 Name + " root",
                 true,
                 Variable.C,
-                new Element[] { req.GetVariable() },
+                new Element[] { req.GetVariable(target) },
                 context.VarCollection.WorkshopArrayBuilder,
                 null
             );

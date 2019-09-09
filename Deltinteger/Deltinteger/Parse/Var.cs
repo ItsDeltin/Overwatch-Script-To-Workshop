@@ -180,6 +180,7 @@ namespace Deltin.Deltinteger.Parse
         public Element[] Index { get; }
         public bool UsesIndex { get; }
         public int CollectionIndex { get; set; } = -1;
+        public Element DefaultTarget { get; set; } = new V_EventPlayer();
 
         private readonly IWorkshopTree VariableAsWorkshop; 
 
@@ -199,6 +200,7 @@ namespace Deltin.Deltinteger.Parse
 
         public override Element GetVariable(Element targetPlayer = null)
         {
+            if (targetPlayer == null) targetPlayer = DefaultTarget;
             Element element = Get(targetPlayer);
             if (Type != null)
                 element.SupportedType = this;

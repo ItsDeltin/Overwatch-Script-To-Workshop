@@ -294,7 +294,7 @@ namespace Deltin.Deltinteger.Parse
                 // New object
                 case CreateObjectNode createObjectNode:
                     DefinedType typeData = ParserData.GetDefinedType(createObjectNode.TypeName, createObjectNode.Location);
-                    return typeData.New(createObjectNode, scope, this);
+                    return typeData.New(createObjectNode, getter, scope, this);
 
                 // Expression tree
                 case ExpressionTreeNode expressionTree:
@@ -1005,7 +1005,7 @@ namespace Deltin.Deltinteger.Parse
             
             Element value = null;
             if (varSetNode.Value != null)
-                value = ParseExpression(scope, getter, varSetNode.Value);
+                value = ParseExpression(getter, scope, varSetNode.Value);
 
             Element initialVar = variable.GetVariable(varSetData.Target);
 
@@ -1158,7 +1158,7 @@ namespace Deltin.Deltinteger.Parse
                     }
                     else
                         // Set the target scope to the type.
-                        currentScope = nodeResult.SupportedType.Type.GetRootScope(nodeResult.SupportedType, translator.ParserData);
+                        currentScope = nodeResult.SupportedType.Type.GetRootScope(nodeResult.SupportedType, translator.ParserData, Target);
                 }
                 ResultingElement = nodeResult;
             }
