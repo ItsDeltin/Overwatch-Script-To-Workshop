@@ -252,8 +252,6 @@ namespace Deltin.Deltinteger.Models
         {
             if (((VarRef)Parameters[0]).Var is ModelVar == false)
                 throw SyntaxErrorException.InvalidVarRefType(((VarRef)Parameters[0]).Var.Name, VarType.Model, ParameterLocations[0]);
-
-                //throw new SyntaxErrorException("Variable must reference a model.", ParameterLocations[0]);
             
             ModelVar modelVar = (ModelVar)((VarRef)Parameters[0]).Var;
             Element visibleTo           = (Element)Parameters[1];
@@ -414,6 +412,58 @@ namespace Deltin.Deltinteger.Models
                 "Who the text is visible to.",
                 "The location to display the text.",
                 "The rotation of the model as a directional vector. If it is a vector constant, the rotation will be pre-calulated and will consume less server load (much less).",
+                "The scale of the text.",
+                "Specifies which of this methods inputs will be continuously reevaluated, the text will keep asking for and using new values from reevaluated inputs.",
+                "If true, the method will return the effect IDs used to create the text. Use DestroyEffectArray() to destroy the effect. This is a boolean constant."
+            );
+        }
+    }
+
+    [CustomMethod("CreateTextEconomic", CustomMethodType.MultiAction_Value)]
+    [ConstantParameter("Text", typeof(string))]
+    [ConstantParameter("Angle", typeof(double))]
+    [Parameter("Visible To", Elements.ValueType.Player, null)]
+    [Parameter("Location", Elements.ValueType.Vector, null)]
+    [ConstantParameter("Scale", typeof(double))]
+    [EnumParameter("Reevaluation", typeof(EffectRev))]
+    [ConstantParameter("Get Effect IDs", typeof(bool), GET_EFFECT_IDS_BY_DEFAULT)]
+    class CreateTextEconomic : ModelCreator
+    {
+        override protected MethodResult Get()
+        {
+            string text    = (string)((ConstantObject)Parameters[0]).Value;
+            double angle   = (double)((ConstantObject)Parameters[1]).Value + 22.2; // Add offset to make it even with HorizontalAngleOf().
+            Element visibleTo              = (Element)Parameters[2];
+            Element location               = (Element)Parameters[3];
+            double scale   = (double)((ConstantObject)Parameters[4]).Value;
+            EnumMember effectRev        = (EnumMember)Parameters[5];
+            bool getIds    = (bool)  ((ConstantObject)Parameters[6]).Value;
+
+            Model model = new Model(Letter.Create(text, false, ParameterLocations[0], angle, scale));
+
+            List<Element> actions = new List<Element>();
+
+            IndexedVar effects = null;
+            if (getIds)
+            {
+                effects = TranslateContext.VarCollection.AssignVar(Scope, "Model Effects", TranslateContext.IsGlobal, null);
+                actions.AddRange(effects.SetVariable(new V_EmptyArray()));
+            }
+
+            actions.AddRange(RenderModel(model, visibleTo, location, null, effectRev, effects));
+
+            return new MethodResult(actions.ToArray(), effects?.GetVariable());
+        }
+
+        override public CustomMethodWiki Wiki()
+        {
+            return new CustomMethodWiki(
+                "Creates in-world text using any custom text. Uses a less amount of effects.",
+                // Parameters
+                "The text to display. This is a string constant.",
+                "The angle of the text. This is a number constant.",
+                "Who the text is visible to.",
+                "The location to display the text.",
                 "The scale of the text.",
                 "Specifies which of this methods inputs will be continuously reevaluated, the text will keep asking for and using new values from reevaluated inputs.",
                 "If true, the method will return the effect IDs used to create the text. Use DestroyEffectArray() to destroy the effect. This is a boolean constant."

@@ -38,6 +38,17 @@
             "internalConsoleOptions": "openOnSessionStart"
         },
         {
+            "name": "Generate Economic Alphabet",
+            "type":"clr",
+            "request": "launch",
+            "preLaunchTask": "Debug build",
+            "program": "${workspaceFolder}/bin/Debug/Deltinteger.exe",
+            "args":["-generatealphabet"],
+            "console": "externalTerminal",
+            "stopAtEntry": false,
+            "internalConsoleOptions": "openOnSessionStart"
+        },
+        {
             "name": "Release",
             "type":"clr",
             "request": "launch",

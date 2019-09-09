@@ -15,7 +15,7 @@ namespace Deltin.Deltinteger.Models
 
         public Line[] Lines { get; }
 
-        private Model(Line[] lines)
+        public Model(Line[] lines)
         {
             List<Line> addLines = new List<Line>(lines);
 

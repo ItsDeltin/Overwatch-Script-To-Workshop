@@ -3,7 +3,7 @@ using Deltin.Deltinteger.Elements;
 
 namespace Deltin.Deltinteger.Models
 {
-    public class Vertex //: IEquatable<Vertex>
+    public class Vertex : ICloneable
     {
         public double X { get; set; }
         public double Y { get; set; }
@@ -18,6 +18,7 @@ namespace Deltin.Deltinteger.Models
             W = w;
         }
         public Vertex(double x, double y, double z) : this(x,y,z,0) {}
+        public Vertex(double x, double y) : this(x,y,0,0) {}
         public Vertex() : this(0,0,0,0) {}
 
         public V_Vector ToVector()
@@ -63,6 +64,18 @@ namespace Deltin.Deltinteger.Models
         public Vertex Scale(double scale)
         {
             return new Vertex(X * scale, Y * scale, Z * scale);
+        }
+
+        public void Offset(double x, double y, double z)
+        {
+            X += x;
+            Y += y;
+            Z += z;
+        }
+
+        public object Clone()
+        {
+            return new Vertex(X, Y, Z, W);
         }
 
         public static double GetAngle(Vertex a, Vertex b, Vertex c)
