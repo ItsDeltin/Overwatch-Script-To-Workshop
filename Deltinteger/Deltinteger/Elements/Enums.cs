@@ -153,6 +153,7 @@ namespace Deltin.Deltinteger.Elements
         public string CodeName { get; private set; }
         public string WorkshopName { get; private set; }
         public object UnderlyingValue { get; private set; }
+        public object Value { get; private set; }
 
         public EnumMember(EnumData @enum, string codeName, string workshopName, object value)
         {
@@ -160,6 +161,7 @@ namespace Deltin.Deltinteger.Elements
             CodeName = codeName;
             WorkshopName = workshopName;
             UnderlyingValue = System.Convert.ChangeType(value, @Enum.UnderlyingType);
+            Value = value;
         }
 
         public string ToWorkshop()

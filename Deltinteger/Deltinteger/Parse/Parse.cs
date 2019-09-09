@@ -73,9 +73,9 @@ namespace Deltin.Deltinteger.Parse
                             if (value != null)
                             {
                                 if (((IndexedVar)definedVar).IsGlobal)
-                                    globalTranslate.Actions.AddRange(((IndexedVar)definedVar).SetVariable(globalTranslate.ParseExpression(Root, value)));
+                                    globalTranslate.Actions.AddRange(((IndexedVar)definedVar).SetVariable(globalTranslate.ParseExpression(Root, Root, value)));
                                 else
-                                    playerTranslate.Actions.AddRange(((IndexedVar)definedVar).SetVariable(playerTranslate.ParseExpression(Root, value)));
+                                    playerTranslate.Actions.AddRange(((IndexedVar)definedVar).SetVariable(playerTranslate.ParseExpression(Root, Root, value)));
 
                             }
                         }
@@ -161,7 +161,7 @@ namespace Deltin.Deltinteger.Parse
                     {
                         if (DefinedTypes.Any(type => type.Name == definedType.Name))
                             throw SyntaxErrorException.NameAlreadyDefined(definedType.Location);
-                        DefinedTypes.Add(new DefinedType(definedType));
+                        DefinedTypes.Add(DefinedType.GetDefinedType(definedType));
                     }
                     catch (SyntaxErrorException ex)
                     {

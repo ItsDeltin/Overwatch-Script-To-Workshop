@@ -242,6 +242,15 @@ namespace Deltin.Deltinteger.Elements
             return result.ToArray();
         }
 
+        public static V_Number[] IntToElement(params int[] numbers)
+        {
+            V_Number[] elements = new V_Number[numbers?.Length ?? 0];
+            for (int i = 0; i < elements.Length; i++)
+                elements[i] = new V_Number(numbers[i]);
+
+            return elements;
+        }
+
         public static readonly Element DefaultElement = new V_Number(0);
     }
 

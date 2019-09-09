@@ -277,17 +277,7 @@ namespace Deltin.Deltinteger.Parse
 
         public override Node VisitForeach(DeltinScriptParser.ForeachContext context)
         {
-            Node array = Visit(context.expr());
-
-            string name = context.PART().GetText();
-
-            BlockNode block = (BlockNode)VisitBlock(context.block());
-
-            int repeaters = 1;
-            if (context.number() != null)
-                repeaters = int.Parse(context.number().GetText());
-            
-            return new ForEachNode(name, array, block, repeaters, new Location(file, Range.GetRange(context)));
+            return new ForEachNode(context, this);
         }
 
         public override Node VisitWhile(DeltinScriptParser.WhileContext context)
@@ -335,6 +325,11 @@ namespace Deltin.Deltinteger.Parse
                 returnValue = VisitExpr(context.expr());
 
             return new ReturnNode(returnValue, new Location(file, Range.GetRange(context)));
+        }
+
+        public override Node VisitDelete(DeltinScriptParser.DeleteContext context)
+        {
+            return new DeleteNode(context, this);
         }
         #endregion
 
@@ -442,17 +437,10 @@ namespace Deltin.Deltinteger.Parse
 
         public TypeDefineNode(DeltinScriptParser.Type_defineContext context, BuildAstVisitor visitor) : base(new Location(visitor.file, Range.GetRange(context)))
         {
-            /*
-            if (context.CLASS() != null)
-            {
-                visitor._diagnostics.Error("Classes are not yet supported, use struct instead.", Range.GetRange(context.CLASS()));
-                TypeKind = TypeKind.Class;
-            }
-            */
-
             if (context.STRUCT() != null)
                 TypeKind = TypeKind.Struct;
-            
+            else if (context.CLASS() != null)
+                TypeKind = TypeKind.Class;
             else throw new Exception();
 
             Name = context.name.Text;
@@ -1189,22 +1177,25 @@ namespace Deltin.Deltinteger.Parse
 
     public class ForEachNode : Node
     {
-        public string VariableName { get; }
+        public ParameterDefineNode Variable { get; }
         public Node Array { get; }
         public BlockNode Block { get; }
         public int Repeaters { get; }
 
-        public ForEachNode(string variableName, Node array, BlockNode block, int repeaters, Location location) : base(location)
+        public ForEachNode(DeltinScriptParser.ForeachContext context, BuildAstVisitor visitor) : base(new Location(visitor.file, Range.GetRange(context)))
         {
-            VariableName = variableName;
-            Array = array;
-            Block = block;
-            Repeaters = repeaters;
+            Array = visitor.Visit(context.expr());
+            Variable = new ParameterDefineNode(context.parameter_define(), visitor);
+            Block = (BlockNode)visitor.VisitBlock(context.block());
+
+            Repeaters = 1;
+            if (context.number() != null)
+                Repeaters = int.Parse(context.number().GetText());
         }
 
         public override Node[] Children()
         {
-            return ArrayBuilder<Node>.Build(Array, Block);
+            return ArrayBuilder<Node>.Build(Variable, Array, Block);
         }
     }
 
@@ -1304,6 +1295,21 @@ namespace Deltin.Deltinteger.Parse
         public override Node[] Children()
         {
             return ArrayBuilder<Node>.Build(Value);
+        }
+    }
+
+    public class DeleteNode : Node
+    {
+        public Node Delete { get; } 
+
+        public DeleteNode(DeltinScriptParser.DeleteContext context, BuildAstVisitor visitor) : base(new Location(visitor.file, Range.GetRange(context)))
+        {
+            Delete = visitor.VisitExpr(context.expr());
+        }
+
+        public override Node[] Children()
+        {
+            return ArrayBuilder<Node>.Build(Delete);
         }
     }
 }
