@@ -172,7 +172,7 @@ namespace Deltin.Deltinteger.Parse
                 for (int i = 0; i < ruleset.UserMethods.Length; i++)
                     try
                     {
-                        UserMethods.Add(new UserMethod(Root, ruleset.UserMethods[i]));
+                        UserMethods.Add(UserMethod.CreateUserMethod(Root, ruleset.UserMethods[i]));
                     }
                     catch (SyntaxErrorException ex)
                     {

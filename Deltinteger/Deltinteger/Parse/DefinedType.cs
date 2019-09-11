@@ -69,7 +69,7 @@ namespace Deltin.Deltinteger.Parse
 
             for (int i = 0; i < MethodNodes.Length; i++)
             {
-                UserMethod method = new UserMethod(typeScope, MethodNodes[i]);
+                UserMethod method = UserMethod.CreateUserMethod(typeScope, MethodNodes[i]);
                 method.RegisterParameters(parseData);
                 method.AccessLevel = MethodNodes[i].AccessLevel;
             }

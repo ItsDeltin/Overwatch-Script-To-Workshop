@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using System.Collections.Generic;
 using Deltin.Deltinteger.Elements;
@@ -6,15 +7,21 @@ using Deltin.Deltinteger.WorkshopWiki;
 
 namespace Deltin.Deltinteger.Parse
 {
-    public class UserMethod : IMethod, IScopeable, ITypeRegister
+    abstract public class UserMethod : IMethod, IScopeable, ITypeRegister
     {
-        public UserMethod(ScopeGroup scope, UserMethodNode node)
+        public static UserMethod CreateUserMethod(ScopeGroup scope, UserMethodBase node)
+        {
+            if (node is UserMethodNode)
+                return new UserMethodBlock(scope, (UserMethodNode)node);
+            else if (node is MacroNode)
+                return new Macro(scope, (MacroNode)node);
+            else throw new Exception();
+        }
+
+        protected UserMethod(ScopeGroup scope, UserMethodBase node)
         {
             Name = node.Name;
-            TypeString = node.Type;
-            Block = node.Block;
             ParameterNodes = node.Parameters;
-            IsRecursive = node.IsRecursive;
             Documentation = node.Documentation;
             Wiki = new WikiMethod(Name, Documentation, null);
             AccessLevel = node.AccessLevel;
@@ -31,30 +38,22 @@ namespace Deltin.Deltinteger.Parse
         }
 
         public string Name { get; }
-
         public DefinedType Type { get; private set; }
-        private string TypeString { get; }
-
-        public BlockNode Block { get; }
-
+        protected string TypeString { get; set; }
         public ParameterBase[] Parameters { get; private set; }
         private ParameterDefineNode[] ParameterNodes { get; }
-
-        public bool IsRecursive { get; }
-
         public string Documentation { get; }
-
         public AccessLevel AccessLevel { get; set; } = AccessLevel.Public;
-
         public Node Node { get; }
+        public WikiMethod Wiki { get; }
+
+        abstract public Element Get(TranslateRule context, ScopeGroup scope, MethodNode methodNode, IWorkshopTree[] parameters);
 
         public string GetLabel(bool markdown)
         {
             return Name + "(" + Parameter.ParameterGroupToString(Parameters, markdown) + ")"
             + (markdown && Documentation != null ? "\n\r" + Documentation : "");
         }
-        
-        public WikiMethod Wiki { get; }
 
         public override string ToString()
         {
@@ -78,6 +77,194 @@ namespace Deltin.Deltinteger.Parse
             ).ToArray();
         }
 
+    }
+
+    public class UserMethodBlock : UserMethod
+    {
+        public BlockNode Block { get; }
+        public bool IsRecursive { get; }
+
+        public UserMethodBlock(ScopeGroup scope, UserMethodNode node) : base(scope, node)
+        {
+            Block = node.Block;
+            IsRecursive = node.IsRecursive;
+            TypeString = node.Type;
+        }
+
+        override public Element Get(TranslateRule context, ScopeGroup scope, MethodNode methodNode, IWorkshopTree[] parameters)
+        {
+            Element result;
+            if (!IsRecursive)
+            {
+                // Check the method stack if this method was already called.
+                // Throw a syntax error if it was.
+                if (context.MethodStackNotRecursive.Contains(this))
+                    throw SyntaxErrorException.RecursionNotAllowed(methodNode.Location);
+
+                var methodScope = scope.Root().Child();
+
+                // Add the parameter variables to the scope.
+                context.AssignParameterVariables(methodScope, Parameters, parameters, methodNode);
+
+                // The variable that stores the return value.
+                IndexedVar returns = context.VarCollection.AssignVar(scope, $"{methodNode.Name}: return temp value", context.IsGlobal, null);
+                returns.Type = Type;
+
+                // Add the method to the method stack
+                context.MethodStackNotRecursive.Add(this);
+
+                Block.RelatedScopeGroup = methodScope;
+
+                // Parse the block of the method
+                context.ParseBlock(methodScope, methodScope, Block, true, returns);
+
+                // Take the method scope out of scope.
+                methodScope.Out(context);
+
+                // Remove the method from the stack.
+                context.MethodStackNotRecursive.Remove(this);
+
+                result = returns.GetVariable();
+            }
+            else
+            {
+                // Check the method stack if this method was already called. It will be null if it wasn't called.
+                MethodStack lastMethod = context.MethodStackRecursive.FirstOrDefault(ms => ms.UserMethod == this);
+                if (lastMethod != null)
+                {
+                    context.ContinueSkip.Setup();
+
+                    // Re-push the paramaters.
+                    for (int i = 0; i < lastMethod.ParameterVars.Length; i++)
+                    {
+                        if (lastMethod.ParameterVars[i] is RecursiveVar)
+                            context.Actions.AddRange
+                            (
+                                ((RecursiveVar)lastMethod.ParameterVars[i]).InScope((Element)parameters[i])
+                            );
+                    }
+
+                    // Add to the continue skip array.
+                    context.Actions.AddRange(
+                        lastMethod.ContinueSkipArray.SetVariable(
+                            Element.Part<V_Append>(lastMethod.ContinueSkipArray.GetVariable(), new V_Number(context.ContinueSkip.GetSkipCount() + 3))
+                        )
+                    );
+
+                    // Loop back to the start of the method.
+                    context.ContinueSkip.SetSkipCount(lastMethod.ActionIndex);
+                    context.Actions.Add(Element.Part<A_Loop>());
+
+                    result = lastMethod.Return.GetVariable();
+                }
+                else
+                {
+                    var methodScope = scope.Root().Child(true);
+
+                    // Add the parameter variables to the scope.
+                    Var[] parameterVars = new Var[Parameters.Length];
+                    for (int i = 0; i < parameterVars.Length; i++)
+                    {
+                        if (parameters[i] is Element)
+                        {
+                            // Create a new variable using the parameter input.
+                            parameterVars[i] = (RecursiveVar)context.VarCollection.AssignVar(methodScope, Parameters[i].Name, context.IsGlobal, methodNode);
+                            ((RecursiveVar)parameterVars[i]).Type = ((Element)parameters[i]).SupportedType?.Type;
+                            context.Actions.AddRange
+                            (
+                                ((RecursiveVar)parameterVars[i]).InScope((Element)parameters[i])
+                            );
+                        }
+                        else if (parameters[i] is EnumMember)
+                        {
+                            parameterVars[i] = new ElementReferenceVar(Parameters[i].Name, methodScope, methodNode, parameters[i]);
+                        }
+                        else throw new NotImplementedException();
+                    }
+
+                    var returns = context.VarCollection.AssignVar(null, $"{methodNode.Name}: return temp value", context.IsGlobal, null);
+                    returns.Type = Type;
+
+                    // Setup the continue skip array.
+                    IndexedVar continueSkipArray = context.VarCollection.AssignVar(null, $"{methodNode.Name}: continue skip array", context.IsGlobal, null);
+                    var stack = new MethodStack(this, parameterVars, context.ContinueSkip.GetSkipCount(), returns, continueSkipArray);
+
+                    // Add the method to the stack.
+                    context.MethodStackRecursive.Add(stack);
+
+                    Block.RelatedScopeGroup = methodScope;
+                    
+                    // Parse the method block
+                    context.ParseBlock(methodScope, methodScope, Block, true, returns);
+
+                    // No return value if the method is being used as an action.
+                    result = returns.GetVariable();
+
+                    // Take the method out of scope.
+                    //Actions.AddRange(methodScope.RecursiveMethodStackPop());
+                    methodScope.Out(context);
+
+                    // Setup the next continue skip.
+                    context.ContinueSkip.Setup();
+                    context.ContinueSkip.SetSkipCount(Element.Part<V_LastOf>(continueSkipArray.GetVariable()));
+
+                    // Remove the last continue skip.
+                    context.Actions.AddRange(
+                        continueSkipArray.SetVariable(
+                            Element.Part<V_ArraySlice>(
+                                continueSkipArray.GetVariable(), 
+                                new V_Number(0),
+                                Element.Part<V_Subtract>(
+                                    Element.Part<V_CountOf>(continueSkipArray.GetVariable()), new V_Number(1)
+                                )
+                            )
+                        )
+                    );
+
+                    // Loop if the method goes any deeper by checking the length of the continue skip array.
+                    context.Actions.Add(
+                        Element.Part<A_LoopIf>(
+                            Element.Part<V_Compare>(
+                                Element.Part<V_CountOf>(continueSkipArray.GetVariable()),
+                                EnumData.GetEnumValue(Operators.NotEqual),
+                                new V_Number(0)
+                            )
+                        )
+                    );
+
+                    // Reset the continue skip.
+                    context.ContinueSkip.ResetSkip();
+                    context.Actions.AddRange(continueSkipArray.SetVariable(new V_Number()));
+                    
+                    // Remove the method from the stack.
+                    context.MethodStackRecursive.Remove(stack);
+                }
+            }
+
+            return result;
+        }
+    }
+
+    public class Macro : UserMethod
+    {
+        public Node Expression { get; }
+
+        public Macro(ScopeGroup scope, MacroNode node) : base(scope, node)
+        {
+            Expression = node.Expression;
+            TypeString = "Any";
+        }
+
+        override public Element Get(TranslateRule context, ScopeGroup scope, MethodNode methodNode, IWorkshopTree[] parameters)
+        {
+            int actionCount = context.Actions.Count;
+            Element result = context.ParseExpression(scope, scope, Expression);
+            
+            if (context.Actions.Count > actionCount)
+                throw new SyntaxErrorException("Macro cannot result in any actions.", methodNode.Location);
+            
+            return result;
+        }
     }
 
     public class MethodStack

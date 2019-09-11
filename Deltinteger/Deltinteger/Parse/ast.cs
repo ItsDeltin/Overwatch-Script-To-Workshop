@@ -59,6 +59,11 @@ namespace Deltin.Deltinteger.Parse
             return new UserMethodNode(context, this);
         }
 
+        public override Node VisitMacro(DeltinScriptParser.MacroContext context)
+        {
+            return new MacroNode(context, this);
+        }
+
         public override Node VisitOw_rule(DeltinScriptParser.Ow_ruleContext context)
         {
             return new RuleNode(context, this);
@@ -501,7 +506,7 @@ namespace Deltin.Deltinteger.Parse
         public Variable UseBuilderVar { get; } = Variable.B;
         public RuleNode[] Rules { get; }
         public RuleDefineNode[] DefinedVars { get; }
-        public UserMethodNode[] UserMethods { get; }
+        public UserMethodBase[] UserMethods { get; }
         public TypeDefineNode[] DefinedTypes { get; }
 
         public RulesetNode(DeltinScriptParser.RulesetContext context, BuildAstVisitor visitor) : base(new Location(visitor.file, Range.GetRange(context)))
@@ -534,9 +539,12 @@ namespace Deltin.Deltinteger.Parse
             for (int i = 0; i < DefinedVars.Length; i++)
                 DefinedVars[i] = (RuleDefineNode)visitor.VisitRule_define(context.rule_define(i));
 
-            UserMethods = new UserMethodNode[context.user_method().Length];
-            for (int i = 0; i < UserMethods.Length; i++)
+            UserMethods = new UserMethodBase[context.user_method().Length + context.macro().Length];
+            for (int i = 0; i < context.user_method().Length; i++)
                 UserMethods[i] = (UserMethodNode)visitor.VisitUser_method(context.user_method(i));
+            
+            for (int i = 0; i < context.macro().Length; i++)
+                UserMethods[i + context.user_method().Length] = new MacroNode(context.macro(i), visitor);
             
             DefinedTypes = new TypeDefineNode[context.type_define().Length];
             for (int i = 0; i < DefinedTypes.Length; i++)
@@ -823,15 +831,35 @@ namespace Deltin.Deltinteger.Parse
         }
     }
 
-    public class UserMethodNode : Node
+    public abstract class UserMethodBase : Node
     {
-        public string Name { get; }
+        public string Name { get; protected set; }
+        public string Documentation { get; protected set; }
+        public ParameterDefineNode[] Parameters { get; protected set; }
+        public AccessLevel AccessLevel { get; protected set; }
+
+        public UserMethodBase(Location location) : base(location)
+        {
+        }
+
+        protected string GetDocumentation(ITerminalNode[] nodes)
+        {
+            return string.Join("\n\r", nodes.Select(doc => doc.GetText().TrimEnd().TrimStart('#', ' ')));
+        }
+
+        override public Node[] Children()
+        {
+            return ArrayBuilder<Node>.Build(Parameters, GetChildren());
+        }
+
+        abstract protected Node[] GetChildren();
+    }
+
+    public class UserMethodNode : UserMethodBase
+    {
         public string Type { get; }
-        public ParameterDefineNode[] Parameters { get; }
         public BlockNode Block { get; }
         public bool IsRecursive { get; }
-        public string Documentation { get; }
-        public AccessLevel AccessLevel { get; }
         
         public UserMethodNode(DeltinScriptParser.User_methodContext context, BuildAstVisitor visitor) : base(new Location(visitor.file, Range.GetRange(context)))
         {
@@ -844,16 +872,42 @@ namespace Deltin.Deltinteger.Parse
 
             Block = (BlockNode)visitor.VisitBlock(context.block());
             IsRecursive = context.RECURSIVE() != null;
-            Documentation = string.Join("\n\r", context.DOCUMENTATION().Select(doc => doc.GetText().TrimEnd().TrimStart('#', ' ')));
+            Documentation = GetDocumentation(context.DOCUMENTATION());
 
             AccessLevel = AccessLevel.Private;
             if (context.accessor() != null)
                 AccessLevel = (AccessLevel)Enum.Parse(typeof(AccessLevel), context.accessor().GetText(), true);
         }
 
-        public override Node[] Children()
+        override protected Node[] GetChildren()
         {
             return ArrayBuilder<Node>.Build(Block);
+        }
+    }
+
+    public class MacroNode : UserMethodBase
+    {
+        public Node Expression { get; }
+
+        public MacroNode(DeltinScriptParser.MacroContext context, BuildAstVisitor visitor) : base(new Location(visitor.file, Range.GetRange(context)))
+        {
+            Name = context.name.Text;
+            Documentation = GetDocumentation(context.DOCUMENTATION());
+
+            Parameters = new ParameterDefineNode[context.setParameters().parameter_define().Length];
+            for (int i = 0; i < Parameters.Length; i++)
+                Parameters[i] = new ParameterDefineNode(context.setParameters().parameter_define(i), visitor);
+            
+            AccessLevel = AccessLevel.Private;
+            if (context.accessor() != null)
+                AccessLevel = (AccessLevel)Enum.Parse(typeof(AccessLevel), context.accessor().GetText(), true);
+            
+            Expression = visitor.VisitExpr(context.expr());
+        }
+
+        override protected Node[] GetChildren()
+        {
+            return ArrayBuilder<Node>.Build(Expression);
         }
     }
 

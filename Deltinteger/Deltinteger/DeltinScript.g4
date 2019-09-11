@@ -106,12 +106,14 @@ user_method : DOCUMENTATION* accessor? RECURSIVE? (METHOD | type=PART) name=PART
 	block
 	;
 
+macro       : DOCUMENTATION* accessor? MACRO name=PART LEFT_PAREN setParameters RIGHT_PAREN expr STATEMENT_END ;
+
 ruleset :
-	(import_file | import_object)*
 	useGlobalVar?
 	usePlayerVar?
 	useDimVar?
-	(rule_define | ow_rule | user_method | type_define)*
+	(import_file | import_object)*
+	(rule_define | ow_rule | user_method | type_define | macro)*
 	;
 
 // Classes/structs
@@ -197,6 +199,7 @@ STATIC    : 'static'    ;
 IMPORT    : 'import'    ;
 AS        : 'as'        ;
 DELETE    : 'delete'    ;
+MACRO     : 'macro'     ;
 
 EQUALS          : '='  ;
 EQUALS_POW      : '^=' ;
