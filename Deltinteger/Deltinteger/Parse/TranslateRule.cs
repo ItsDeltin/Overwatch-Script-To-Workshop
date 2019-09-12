@@ -961,8 +961,13 @@ namespace Deltin.Deltinteger.Parse
                 Element nodeResult = null;
                 for (int index = 0; index < nodes.Count; index++)
                 {
+                    if (nodes[index] is RootNode)
+                    {
+                        currentScope = translator.ParserData.Root;
+                        nodeResult = new V_Null();
+                    }
                     // If the node is a variable node, get the value.
-                    if (nodes[index] is VariableNode)
+                    else if (nodes[index] is VariableNode)
                     {
                         VariableNode variableNode = (VariableNode)nodes[index];
                         Var var = currentScope.GetVar(getter, variableNode.Name, variableNode.Location);

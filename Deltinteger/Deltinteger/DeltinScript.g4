@@ -40,6 +40,7 @@ expr
 	| exprgroup
 	| create_object
 	| THIS
+	| ROOT
 	| <assoc=right> expr SEPERATOR expr           // Variable seperation
 	| NOT expr                                     // !x
 	| expr TERNARY expr TERNARY_ELSE expr
@@ -120,7 +121,7 @@ ruleset :
 
 type_define : (STRUCT | CLASS) name=PART
 	BLOCK_START
-	((inclass_define STATEMENT_END) | constructor | user_method)*
+	((inclass_define STATEMENT_END) | constructor | user_method | macro)*
 	BLOCK_END ;
 
 accessor : PRIVATE | PUBLIC;
@@ -194,6 +195,7 @@ CLASS     : 'class'     ;
 PRIVATE   : 'private'   ;
 PUBLIC    : 'public'    ;
 THIS      : 'this'      ;
+ROOT      : 'global'    ;
 NEW       : 'new'       ;
 STATIC    : 'static'    ;
 IMPORT    : 'import'    ;

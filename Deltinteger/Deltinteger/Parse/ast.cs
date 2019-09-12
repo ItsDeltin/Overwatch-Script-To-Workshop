@@ -140,6 +140,11 @@ namespace Deltin.Deltinteger.Parse
                 node = new ThisNode(new Location(file, Range.GetRange(context)));
             }
 
+            else if (context.ROOT() != null)
+            {
+                node = new RootNode(new Location(file, Range.GetRange(context)));
+            }
+
             else
             {
                 return Visit(context.GetChild(0));
@@ -438,7 +443,7 @@ namespace Deltin.Deltinteger.Parse
         public string Name { get; }
         public InclassDefineNode[] DefinedVars { get; }
         public ConstructorNode[] Constructors { get; }
-        public UserMethodNode[] Methods { get; }
+        public UserMethodBase[] Methods { get; }
 
         public TypeDefineNode(DeltinScriptParser.Type_defineContext context, BuildAstVisitor visitor) : base(new Location(visitor.file, Range.GetRange(context)))
         {
@@ -458,9 +463,12 @@ namespace Deltin.Deltinteger.Parse
             for (int i = 0; i < Constructors.Length; i++)
                 Constructors[i] = (ConstructorNode)visitor.VisitConstructor(context.constructor(i));
             
-            Methods = new UserMethodNode[context.user_method().Length];
-            for (int i = 0; i < Methods.Length; i++)
-                Methods[i] = (UserMethodNode)visitor.VisitUser_method(context.user_method(i));
+            Methods = new UserMethodBase[context.user_method().Length + context.macro().Length];
+            for (int i = 0; i < context.user_method().Length; i++)
+                Methods[i] = (UserMethodBase)visitor.VisitUser_method(context.user_method(i));
+
+            for (int i = 0; i < context.macro().Length; i++)
+                Methods[context.user_method().Length + i] = (UserMethodBase)visitor.VisitMacro(context.macro(i));
         }
 
         public override Node[] Children()
@@ -1186,6 +1194,18 @@ namespace Deltin.Deltinteger.Parse
     public class ThisNode : Node
     {
         public ThisNode(Location location) : base(location)
+        {
+        }
+
+        public override Node[] Children()
+        {
+            return null;
+        }
+    }
+
+    public class RootNode : Node
+    {
+        public RootNode(Location location) : base (location)
         {
         }
 

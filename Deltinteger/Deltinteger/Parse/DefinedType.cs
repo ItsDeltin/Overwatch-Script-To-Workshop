@@ -20,7 +20,7 @@ namespace Deltin.Deltinteger.Parse
 
         public string Name { get; }
         public InclassDefineNode[] DefinedVars { get; }
-        public UserMethodNode[] MethodNodes { get; }
+        public UserMethodBase[] MethodNodes { get; }
         public Constructor[] Constructors { get; private set; }
         private ConstructorNode[] ConstructorNodes { get; }
         public abstract TypeKind TypeKind { get; }

@@ -252,14 +252,22 @@ namespace Deltin.Deltinteger.Parse
         public Macro(ScopeGroup scope, MacroNode node) : base(scope, node)
         {
             Expression = node.Expression;
-            TypeString = "Any";
+            TypeString = null;
         }
 
         override public Element Get(TranslateRule context, ScopeGroup scope, MethodNode methodNode, IWorkshopTree[] parameters)
         {
             int actionCount = context.Actions.Count;
-            Element result = context.ParseExpression(scope, scope, Expression);
-            
+
+            ScopeGroup methodScope = scope.Root().Child();
+
+            for (int i = 0; i < parameters.Length; i++)
+                new ElementReferenceVar(Parameters[i].Name, methodScope, methodNode.Parameters[i], parameters[i]);
+
+            Element result = context.ParseExpression(methodScope, methodScope, Expression);
+
+            methodScope.Out(context);
+
             if (context.Actions.Count > actionCount)
                 throw new SyntaxErrorException("Macro cannot result in any actions.", methodNode.Location);
             
