@@ -159,16 +159,26 @@ namespace Deltin.Deltinteger.Parse
         {
             // Get the index to store the class.
             IndexedVar index = context.VarCollection.AssignVar(scope, "New " + Name + " class index", context.IsGlobal, null); // Assigns the index variable.
-            // Get the index of the next free spot in the class array.
+            Element takenIndexes = context.ParserData.ClassIndexes.GetVariable();
             context.Actions.AddRange(
                 index.SetVariable(
-                    Element.Part<V_IndexOfArrayValue>(
-                        WorkshopArrayBuilder.GetVariable(true, null, Variable.C),
-                        new V_Null()
+                    Element.Part<V_Subtract>(
+                        Element.Part<V_FirstOf>(
+                            Element.Part<V_FilteredArray>(
+                                Element.Part<V_SortedArray>(takenIndexes, new V_ArrayElement()),
+                                Element.Part<V_And>(
+                                    Element.Part<V_Not>(Element.Part<V_ArrayContains>(
+                                        takenIndexes,
+                                        Element.Part<V_Subtract>(new V_ArrayElement(), new V_Number(1))
+                                    )),
+                                    new V_Compare(new V_ArrayElement(), Operators.NotEqual, new V_Number(0))
+                                )
+                            )
+                        ),
+                        new V_Number(1)
                     )
                 )
             );
-            // Set the index to the count of the class array if the index equals -1.
             context.Actions.AddRange(
                 index.SetVariable(
                     Element.TernaryConditional(
