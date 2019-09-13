@@ -303,6 +303,13 @@ namespace Deltin.Deltinteger.Parse
                 // This
                 case ThisNode thisNode:
                     return scope.GetThis(thisNode.Location).GetVariable();
+                
+                // Type convert
+                case TypeConvertNode typeConvertNode:
+                    DefinedType type = ParserData.GetDefinedType(typeConvertNode.Type, typeConvertNode.Location);
+                    Element element = ParseExpression(getter, scope, typeConvertNode.Expression);
+                    type.GetSource(this, element, typeConvertNode.Location);
+                    return element;
             }
 
             throw new Exception();
@@ -561,7 +568,7 @@ namespace Deltin.Deltinteger.Parse
                     IndexedVar arrayVar = null;
                     ElementOrigin origin = ElementOrigin.GetElementOrigin(array);
                     if (origin == null && forEachNode.Variable.Type != null)
-                        throw new SyntaxErrorException("Could not get the struct source.", forEachNode.Variable.Location);
+                        throw new SyntaxErrorException("Could not get the type source.", forEachNode.Variable.Location);
                     if (origin != null)
                     {
                         arrayVar = origin.OriginVar(VarCollection, null, null);

@@ -115,6 +115,8 @@ namespace Deltin.Deltinteger.Parse
             }
         }
 
+        abstract public void GetSource(TranslateRule context, Element element, Location location);
+
         public static CompletionItem[] CollectionCompletion(DefinedType[] definedTypes)
         {
             return definedTypes.Select(
@@ -146,6 +148,18 @@ namespace Deltin.Deltinteger.Parse
         override protected IndexedVar GetRoot(IndexedVar req, ParsingData context, Element target)
         {
             return req;
+        }
+
+        override public void GetSource(TranslateRule context, Element element, Location location)
+        {
+            ElementOrigin origin = ElementOrigin.GetElementOrigin(element);
+
+            if (origin == null)
+                throw new SyntaxErrorException("Could not get the type source.", location);
+
+            IndexedVar typeVar = origin.OriginVar(context.VarCollection, null, Name + " origin");
+            typeVar.Type = this;
+            element.SupportedType = typeVar;
         }
     }
 
@@ -229,6 +243,22 @@ namespace Deltin.Deltinteger.Parse
             context.Actions.AddRange(context.VarCollection.WorkshopArrayBuilder.SetVariable(
                 new V_Null(), true, null, Variable.C, index
             ));
+        }
+
+        override public void GetSource(TranslateRule context, Element element, Location location)
+        {
+            element.SupportedType = new IndexedVar(
+                null,
+                Name + " root",
+                true,
+                Variable.C,
+                new Element[] { element },
+                context.VarCollection.WorkshopArrayBuilder,
+                null
+            )
+            {
+                Type = this
+            };
         }
     }
 

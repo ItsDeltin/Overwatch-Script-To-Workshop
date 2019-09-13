@@ -145,6 +145,11 @@ namespace Deltin.Deltinteger.Parse
                 node = new RootNode(new Location(file, Range.GetRange(context)));
             }
 
+            else if (context.typeconvert() != null)
+            {
+                node = new TypeConvertNode(context.typeconvert(), this);
+            }
+
             else
             {
                 return Visit(context.GetChild(0));
@@ -1384,6 +1389,23 @@ namespace Deltin.Deltinteger.Parse
         public override Node[] Children()
         {
             return ArrayBuilder<Node>.Build(Delete);
+        }
+    }
+
+    public class TypeConvertNode : Node
+    {
+        public string Type { get; }
+        public Node Expression { get; }
+
+        public TypeConvertNode(DeltinScriptParser.TypeconvertContext context, BuildAstVisitor visitor) : base(new Location(visitor.file, Range.GetRange(context)))
+        {
+            Type = context.PART().GetText();
+            Expression = visitor.VisitExpr(context.expr());
+        }
+
+        override public Node[] Children()
+        {
+            return new Node[] { Expression };
         }
     }
 }

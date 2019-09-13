@@ -39,6 +39,7 @@ expr
 	| variable                                    // Variables
 	| exprgroup
 	| create_object
+	| typeconvert
 	| THIS
 	| ROOT
 	| <assoc=right> expr SEPERATOR expr           // Variable seperation
@@ -49,6 +50,8 @@ expr
 	| expr ('<' | '<=' | '==' | '>=' | '>' | '!=') expr // x == y
 	| expr BOOL expr                              // x & y
 	;
+
+typeconvert : '<' PART '>' expr ;
 
 exprgroup   : LEFT_PAREN expr RIGHT_PAREN ;
 createarray : INDEX_START (expr (COMMA expr)*)? INDEX_END;
