@@ -843,6 +843,9 @@ namespace Deltin.Deltinteger.Parse
                 case ExpressionTreeNode expressionTree:
                     new ParseExpressionTree(this, getter, scope, expressionTree);
                     return;
+                
+                default:
+                    throw new SyntaxErrorException("Expected statement.", statement.Location);
             }
         }
 
