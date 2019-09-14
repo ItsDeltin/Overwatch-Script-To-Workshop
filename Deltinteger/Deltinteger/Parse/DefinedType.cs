@@ -174,25 +174,30 @@ namespace Deltin.Deltinteger.Parse
             // Get the index to store the class.
             IndexedVar index = context.VarCollection.AssignVar(scope, "New " + Name + " class index", context.IsGlobal, null); // Assigns the index variable.
             Element takenIndexes = context.ParserData.ClassIndexes.GetVariable();
-            context.Actions.AddRange(
-                index.SetVariable(
-                    Element.Part<V_Subtract>(
-                        Element.Part<V_FirstOf>(
-                            Element.Part<V_FilteredArray>(
-                                Element.Part<V_SortedArray>(takenIndexes, new V_ArrayElement()),
-                                Element.Part<V_And>(
-                                    Element.Part<V_Not>(Element.Part<V_ArrayContains>(
-                                        takenIndexes,
-                                        Element.Part<V_Subtract>(new V_ArrayElement(), new V_Number(1))
-                                    )),
-                                    new V_Compare(new V_ArrayElement(), Operators.NotEqual, new V_Number(0))
-                                )
-                            )
-                        ),
-                        new V_Number(1)
+
+            Element firstFree = Element.Part<V_Subtract>(
+                Element.Part<V_FirstOf>(
+                    Element.Part<V_FilteredArray>(
+                        Element.Part<V_SortedArray>(takenIndexes, new V_ArrayElement()),
+                        Element.Part<V_And>(
+                            Element.Part<V_Not>(Element.Part<V_ArrayContains>(
+                                takenIndexes,
+                                Element.Part<V_Subtract>(new V_ArrayElement(), new V_Number(1))
+                            )),
+                            new V_Compare(new V_ArrayElement(), Operators.NotEqual, new V_Number(0))
+                        )
                     )
-                )
+                ),
+                new V_Number(1)
             );
+            firstFree = Element.TernaryConditional(
+                new V_Compare(Element.Part<V_CountOf>(takenIndexes), Operators.NotEqual, new V_Number(0)),
+                firstFree,
+                Element.Part<V_Subtract>(Element.Part<V_CountOf>(WorkshopArrayBuilder.GetVariable(true, null, Variable.C)), new V_Number(1))
+            );
+
+            context.Actions.AddRange(index.SetVariable(firstFree));
+
             context.Actions.AddRange(
                 index.SetVariable(
                     Element.TernaryConditional(
@@ -204,6 +209,16 @@ namespace Deltin.Deltinteger.Parse
                     )
                 )
             );
+
+            context.Actions.AddRange(
+                context.ParserData.ClassIndexes.SetVariable(
+                    Element.Part<V_Append>(
+                        context.ParserData.ClassIndexes.GetVariable(),
+                        index.GetVariable()
+                    )
+                )
+            );
+
             // The direct reference to the class variable.
             IndexedVar store = new IndexedVar(
                 scope,
@@ -242,6 +257,12 @@ namespace Deltin.Deltinteger.Parse
         {
             context.Actions.AddRange(context.VarCollection.WorkshopArrayBuilder.SetVariable(
                 new V_Null(), true, null, Variable.C, index
+            ));
+            context.Actions.AddRange(context.ParserData.ClassIndexes.SetVariable(
+                Element.Part<V_RemoveFromArray>(
+                    context.ParserData.ClassIndexes.GetVariable(),
+                    index
+                )
             ));
         }
 

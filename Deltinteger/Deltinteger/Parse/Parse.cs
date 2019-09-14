@@ -154,6 +154,7 @@ namespace Deltin.Deltinteger.Parse
                     VarCollection = new VarCollection(ruleset.UseGlobalVar, ruleset.UsePlayerVar, ruleset.UseBuilderVar);
                     Root = new ScopeGroup(VarCollection);
                     ClassIndexes = VarCollection.AssignVar(null, "Class Indexes", true, null);
+                    globalTranslate.Actions.AddRange(ClassIndexes.SetVariable(new V_EmptyArray()));
                 }
 
                 // Get the defined types
