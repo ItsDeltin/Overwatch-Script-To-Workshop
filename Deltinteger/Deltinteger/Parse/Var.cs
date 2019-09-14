@@ -5,6 +5,7 @@ using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.Models;
 using Antlr4.Runtime;
+using Deltin.Deltinteger.Images;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -389,6 +390,24 @@ namespace Deltin.Deltinteger.Parse
         {
             return "element reference : " + Name;
         }
+    }
+
+    public class ImageVar : Var
+    {
+        public EffectImage Image { get; }
+
+        public ImageVar(string name, ScopeGroup scope, Node node, EffectImage image) : base(name, scope, node)
+        {
+            Image = image;
+        }
+
+        override public Element GetVariable(Element targetPlayer = null)
+        {
+            throw new NotImplementedException();
+        }
+
+        override public bool Gettable() => false;
+        override public bool Settable() => false;
     }
 
     public class ModelVar : Var

@@ -6,6 +6,7 @@ using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.Models;
 using Antlr4.Runtime;
+using Deltin.Deltinteger.Images;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -195,9 +196,22 @@ namespace Deltin.Deltinteger.Parse
                             switch (importer.FileType)
                             {
                                 case ".obj":
+                                {
                                     Model newModel = Model.ImportObj(content);
                                     new ModelVar(importObject.Name, Root, importObject, newModel);
                                     break;
+                                }
+                                case ".jpg":
+                                case ".png":
+                                case ".jpeg":
+                                case ".bmp":
+                                case ".tiff":
+                                case ".gif":
+                                {
+                                    EffectImage img = EffectImage.FromFile(importer.ResultingPath);
+                                    new ImageVar(importObject.Name, Root, importObject, img);
+                                    break;
+                                }
                             }
                         }
                     }

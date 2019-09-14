@@ -11,6 +11,23 @@ namespace Deltin.Deltinteger
 {
     public static class Constants
     {
+        public const int MAX_EFFECT_COUNT = 128;
+
+        public static readonly (Color EffectColor, System.Drawing.Color RGBColor)[] COLORS = new (Color EffectColor, System.Drawing.Color RGBColor)[]
+        {
+            (Color.White, System.Drawing.Color.White),
+            (Color.Yellow, System.Drawing.Color.Yellow),
+            (Color.Green, System.Drawing.Color.Green),
+            (Color.Purple, System.Drawing.Color.Purple),
+            (Color.Red, System.Drawing.Color.Red),
+            (Color.Blue, System.Drawing.Color.Blue),
+            (Color.Aqua, System.Drawing.Color.Aqua),
+            (Color.Orange, System.Drawing.Color.Orange),
+            (Color.SkyBlue, System.Drawing.Color.SkyBlue),
+            (Color.Turquoise, System.Drawing.Color.Turquoise),
+            (Color.LimeGreen, System.Drawing.Color.LimeGreen)
+        };
+
         public const int RULE_NAME_MAX_LENGTH = 128;
 
         public const double MINIMUM_WAIT = 0.016;
