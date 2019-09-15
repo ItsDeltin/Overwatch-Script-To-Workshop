@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Deltin.Deltinteger.Models;
+using Deltin.Deltinteger.Assets.Models;
 
-namespace Deltin.Deltinteger.Models
+namespace Deltin.Deltinteger.Assets.Models
 {
     public class Line : ICloneable
     {

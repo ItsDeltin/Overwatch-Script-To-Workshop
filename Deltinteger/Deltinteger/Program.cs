@@ -43,7 +43,7 @@ namespace Deltin.Deltinteger
             {
                 Console.Write("Output folder: ");
                 string folder = Console.ReadLine();
-                Deltin.Deltinteger.Models.Letter.Generate(folder);
+                Deltin.Deltinteger.Assets.Models.Letter.Generate(folder);
             }
             else
             {

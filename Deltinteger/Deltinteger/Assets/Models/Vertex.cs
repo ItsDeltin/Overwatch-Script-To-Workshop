@@ -1,7 +1,7 @@
 using System;
 using Deltin.Deltinteger.Elements;
 
-namespace Deltin.Deltinteger.Models
+namespace Deltin.Deltinteger.Assets.Models
 {
     public class Vertex : ICloneable
     {

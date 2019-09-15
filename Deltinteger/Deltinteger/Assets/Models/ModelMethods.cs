@@ -6,12 +6,12 @@ using System.Drawing.Drawing2D;
 using System.Drawing.Text;
 using System.IO;
 using Deltin.Deltinteger;
-using Deltin.Deltinteger.Models.Import;
+using Deltin.Deltinteger.Assets.Models.Import;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.Parse;
 using Deltin.Deltinteger.LanguageServer;
 
-namespace Deltin.Deltinteger.Models
+namespace Deltin.Deltinteger.Assets.Models
 {
     abstract class ModelCreator : CustomMethodBase
     {

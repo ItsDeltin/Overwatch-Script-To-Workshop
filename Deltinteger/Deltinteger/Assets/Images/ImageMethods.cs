@@ -1,13 +1,13 @@
-﻿using Deltin.Deltinteger.Elements;
-using Deltin.Deltinteger.Models;
-using Deltin.Deltinteger.Parse;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Deltin.Deltinteger.Elements;
+using Deltin.Deltinteger.Assets.Models;
+using Deltin.Deltinteger.Parse;
 
-namespace Deltin.Deltinteger.Images
+namespace Deltin.Deltinteger.Assets.Images
 {
     abstract class ImageCreator : CustomMethodBase
     {

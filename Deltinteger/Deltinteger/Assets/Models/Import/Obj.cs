@@ -3,7 +3,7 @@ using System.Text.RegularExpressions;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Deltin.Deltinteger.Models.Import
+namespace Deltin.Deltinteger.Assets.Models.Import
 {
     class ObjModel : IModelLoader
     {

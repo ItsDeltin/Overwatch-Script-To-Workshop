@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 
-namespace Deltin.Deltinteger.Models.Import
+namespace Deltin.Deltinteger.Assets.Models.Import
 {
     class StringModel : IModelLoader
     {

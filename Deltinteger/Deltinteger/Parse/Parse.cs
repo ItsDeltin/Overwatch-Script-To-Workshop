@@ -4,9 +4,9 @@ using System.Linq;
 using System.IO;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.LanguageServer;
-using Deltin.Deltinteger.Models;
+using Deltin.Deltinteger.Assets.Models;
+using Deltin.Deltinteger.Assets.Images;
 using Antlr4.Runtime;
-using Deltin.Deltinteger.Images;
 
 namespace Deltin.Deltinteger.Parse
 {

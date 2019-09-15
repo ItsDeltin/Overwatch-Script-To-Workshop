@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using Deltin.Deltinteger;
-using Deltin.Deltinteger.Models.Import;
+using Deltin.Deltinteger.Assets.Models.Import;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.Parse;
 
-namespace Deltin.Deltinteger.Models
+namespace Deltin.Deltinteger.Assets.Models
 {
     public class Model
     {

@@ -6,8 +6,7 @@ using System.Threading.Tasks;
 using System.Threading;
 using System.Text.RegularExpressions;
 using System.Diagnostics;
-using Deltin.Deltinteger.Parse;
-using Antlr4.Runtime;
+using Deltin.Deltinteger.Assets.Models;
 
 namespace Deltin.Deltinteger.Elements
 {
@@ -1009,7 +1008,7 @@ namespace Deltin.Deltinteger.Elements
     {
         override public bool ConstantSupported<T>()
         {
-            if (typeof(T) != typeof(Models.Vertex)) return false;
+            if (typeof(T) != typeof(Vertex)) return false;
 
             for (int i = 0; i < ParameterValues.Length && i < 3; i++)
             {
@@ -1037,7 +1036,7 @@ namespace Deltin.Deltinteger.Elements
             if (ParameterValues.Length > 2)
                 z = (double)((Element)ParameterValues[2]).GetConstant();
             
-            return new Models.Vertex(x, y, z);
+            return new Vertex(x, y, z);
         }
 
         public static V_Vector Zero { get { return Element.Part<V_Vector>(new V_Number(0), new V_Number(0), new V_Number(0)); }}

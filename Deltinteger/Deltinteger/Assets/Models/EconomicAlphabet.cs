@@ -3,10 +3,10 @@ using System.Drawing;
 using System.Linq;
 using System.Collections.Generic;
 using System.IO;
-using Deltin.Deltinteger.Models.Import;
+using Deltin.Deltinteger.Assets.Models.Import;
 using Deltin.Deltinteger.LanguageServer;
 
-namespace Deltin.Deltinteger.Models
+namespace Deltin.Deltinteger.Assets.Models
 {
     public class Letter
     {

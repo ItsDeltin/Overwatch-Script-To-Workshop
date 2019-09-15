@@ -3,7 +3,7 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 
-namespace Deltin.Deltinteger.Images
+namespace Deltin.Deltinteger.Assets.Images
 {
     public class EffectImage
     {
@@ -30,6 +30,8 @@ namespace Deltin.Deltinteger.Images
             for (int x = 0; x < eff.Pixels.GetLength(0); x++)
                 for (int y = 0; y < eff.Pixels.GetLength(1); y++)
                     eff.Pixels[x, y] = EffectPixel.FromRGBColor(x, y, resizedImage.GetPixel(x, y));
+            
+            resizedImage.Dispose();
 
             return eff;
         }
@@ -83,6 +85,8 @@ namespace Deltin.Deltinteger.Images
                     graphics.DrawImage(image, destRect, 0, 0, image.Width, image.Height, GraphicsUnit.Pixel, wrapMode);
                 }
             }
+
+            image.Dispose();
 
             return destImage;
         }
