@@ -119,7 +119,8 @@ namespace Deltin.Deltinteger.Parse
             // Then check if its a custom method.
                 ?? (IMethod)CustomMethodData.GetCustomMethod(name);
             // Throw if not found.
-            if (method == null && location != null) throw SyntaxErrorException.NonexistentMethod(name, location);
+            if (method == null && location != null)
+                throw SyntaxErrorException.NonexistentMethod(name, location);
             return method;
         }
 

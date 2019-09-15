@@ -20,7 +20,7 @@ namespace Deltin.Deltinteger.Parse
 
         public string Name { get; }
         public InclassDefineNode[] DefinedVars { get; }
-        public UserMethodNode[] MethodNodes { get; }
+        public UserMethodBase[] MethodNodes { get; }
         public Constructor[] Constructors { get; private set; }
         private ConstructorNode[] ConstructorNodes { get; }
         public abstract TypeKind TypeKind { get; }
@@ -115,6 +115,8 @@ namespace Deltin.Deltinteger.Parse
             }
         }
 
+        abstract public void GetSource(TranslateRule context, Element element, Location location);
+
         public static CompletionItem[] CollectionCompletion(DefinedType[] definedTypes)
         {
             return definedTypes.Select(
@@ -147,6 +149,18 @@ namespace Deltin.Deltinteger.Parse
         {
             return req;
         }
+
+        override public void GetSource(TranslateRule context, Element element, Location location)
+        {
+            ElementOrigin origin = ElementOrigin.GetElementOrigin(element);
+
+            if (origin == null)
+                throw new SyntaxErrorException("Could not get the type source.", location);
+
+            IndexedVar typeVar = origin.OriginVar(context.VarCollection, null, Name + " origin");
+            typeVar.Type = this;
+            element.SupportedType = typeVar;
+        }
     }
 
     public class DefinedClass : DefinedType
@@ -159,19 +173,41 @@ namespace Deltin.Deltinteger.Parse
         {
             // Get the index to store the class.
             IndexedVar index = context.VarCollection.AssignVar(scope, "New " + Name + " class index", context.IsGlobal, null); // Assigns the index variable.
-            // Get the index of the next free spot in the class array.
-            context.Actions.AddRange(
-                index.SetVariable(
-                    Element.Part<V_IndexOfArrayValue>(
-                        WorkshopArrayBuilder.GetVariable(true, null, Variable.C),
-                        new V_Null()
+            Element takenIndexes = context.ParserData.ClassIndexes.GetVariable();
+
+            // Get an empty index in the class array to store the new class.
+            Element firstFree = Element.Part<V_Subtract>(
+                Element.Part<V_FirstOf>(
+                    Element.Part<V_FilteredArray>(
+                        // Sort the taken index array.
+                        Element.Part<V_SortedArray>(takenIndexes, new V_ArrayElement()),
+                        // Filter
+                        Element.Part<V_And>(
+                            // If the previous index was not taken, use that index.
+                            Element.Part<V_Not>(Element.Part<V_ArrayContains>(
+                                takenIndexes,
+                                Element.Part<V_Subtract>(new V_ArrayElement(), new V_Number(1))
+                            )),
+                            // Make sure the index does not equal 0 so the resulting index is not -1.
+                            new V_Compare(new V_ArrayElement(), Operators.NotEqual, new V_Number(0))
+                        )
                     )
-                )
+                ),
+                new V_Number(1) // Subtract 1 to get the previous index
             );
-            // Set the index to the count of the class array if the index equals -1.
+            // If the taken index array has 0 elements, just use the length of the class array subtracted by 1.
+            firstFree = Element.TernaryConditional(
+                new V_Compare(Element.Part<V_CountOf>(takenIndexes), Operators.NotEqual, new V_Number(0)),
+                firstFree,
+                Element.Part<V_Subtract>(Element.Part<V_CountOf>(WorkshopArrayBuilder.GetVariable(true, null, Variable.C)), new V_Number(1))
+            );
+
+            context.Actions.AddRange(index.SetVariable(firstFree));
+
             context.Actions.AddRange(
                 index.SetVariable(
                     Element.TernaryConditional(
+                        // If the index equals -1, use the length of the class array instead.
                         new V_Compare(index.GetVariable(), Operators.Equal, new V_Number(-1)),
                         Element.Part<V_CountOf>(
                             WorkshopArrayBuilder.GetVariable(true, null, Variable.C)
@@ -180,6 +216,17 @@ namespace Deltin.Deltinteger.Parse
                     )
                 )
             );
+
+            // Add the selected index to the taken indexes array.
+            context.Actions.AddRange(
+                context.ParserData.ClassIndexes.SetVariable(
+                    Element.Part<V_Append>(
+                        context.ParserData.ClassIndexes.GetVariable(),
+                        index.GetVariable()
+                    )
+                )
+            );
+
             // The direct reference to the class variable.
             IndexedVar store = new IndexedVar(
                 scope,
@@ -219,6 +266,28 @@ namespace Deltin.Deltinteger.Parse
             context.Actions.AddRange(context.VarCollection.WorkshopArrayBuilder.SetVariable(
                 new V_Null(), true, null, Variable.C, index
             ));
+            context.Actions.AddRange(context.ParserData.ClassIndexes.SetVariable(
+                Element.Part<V_RemoveFromArray>(
+                    context.ParserData.ClassIndexes.GetVariable(),
+                    index
+                )
+            ));
+        }
+
+        override public void GetSource(TranslateRule context, Element element, Location location)
+        {
+            element.SupportedType = new IndexedVar(
+                null,
+                Name + " root",
+                true,
+                Variable.C,
+                new Element[] { element },
+                context.VarCollection.WorkshopArrayBuilder,
+                null
+            )
+            {
+                Type = this
+            };
         }
     }
 

@@ -39,7 +39,9 @@ expr
 	| variable                                    // Variables
 	| exprgroup
 	| create_object
+	| typeconvert
 	| THIS
+	| ROOT
 	| <assoc=right> expr SEPERATOR expr           // Variable seperation
 	| NOT expr                                     // !x
 	| expr TERNARY expr TERNARY_ELSE expr
@@ -48,6 +50,8 @@ expr
 	| expr ('<' | '<=' | '==' | '>=' | '>' | '!=') expr // x == y
 	| expr BOOL expr                              // x & y
 	;
+
+typeconvert : '<' PART '>' expr ;
 
 exprgroup   : LEFT_PAREN expr RIGHT_PAREN ;
 createarray : INDEX_START (expr (COMMA expr)*)? INDEX_END;
@@ -120,7 +124,7 @@ ruleset :
 
 type_define : (STRUCT | CLASS) name=PART
 	BLOCK_START
-	((inclass_define STATEMENT_END) | constructor | user_method)*
+	((inclass_define STATEMENT_END) | constructor | user_method | macro)*
 	BLOCK_END ;
 
 accessor : PRIVATE | PUBLIC;
@@ -194,6 +198,7 @@ CLASS     : 'class'     ;
 PRIVATE   : 'private'   ;
 PUBLIC    : 'public'    ;
 THIS      : 'this'      ;
+ROOT      : 'global'    ;
 NEW       : 'new'       ;
 STATIC    : 'static'    ;
 IMPORT    : 'import'    ;
