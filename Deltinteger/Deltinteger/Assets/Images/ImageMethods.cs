@@ -129,7 +129,7 @@ namespace Deltin.Deltinteger.Assets.Images
     [Parameter("Scale", Elements.ValueType.Number, null)]
     [Parameter("Rotation", Elements.ValueType.Vector, null)]
     [EnumParameter("Reevaluation", typeof(EffectRev))]
-    [ConstantParameter("Get Effect IDs", typeof(bool), false)]
+    [ConstantParameter("Get Effect IDs", typeof(bool), ModelCreator.GET_EFFECT_IDS_BY_DEFAULT)]
     class ShowImage : ImageCreator
     {
         protected override MethodResult Get()

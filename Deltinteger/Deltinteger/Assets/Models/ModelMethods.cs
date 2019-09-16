@@ -15,7 +15,7 @@ namespace Deltin.Deltinteger.Assets.Models
 {
     abstract class ModelCreator : CustomMethodBase
     {
-        protected const bool GET_EFFECT_IDS_BY_DEFAULT = true;
+        public const bool GET_EFFECT_IDS_BY_DEFAULT = true;
 
         protected virtual int FontParameter { get; } = -1;
 
