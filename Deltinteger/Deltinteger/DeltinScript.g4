@@ -44,6 +44,7 @@ expr
 	| ROOT
 	| <assoc=right> expr SEPERATOR expr           // Variable seperation
 	| NOT expr                                     // !x
+	| '-' expr                                     // -x
 	| expr TERNARY expr TERNARY_ELSE expr
 	| <assoc=right> expr ('^' | '*' | '/' | '%') expr // x^y
 	| expr ('+' | '-') expr                           // x+y

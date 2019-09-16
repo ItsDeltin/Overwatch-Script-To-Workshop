@@ -120,6 +120,14 @@ namespace Deltin.Deltinteger.Parse
                 node = new NotNode(value, new Location(file, Range.GetRange(context)));
             }
 
+            else if (context.ChildCount == 2
+            && context.GetChild(0).GetText() == "-"
+            && context.GetChild(1) is DeltinScriptParser.ExprContext)
+            {
+                Node value = Visit(context.GetChild(1));
+                node = new InvertNode(value, new Location(file, Range.GetRange(context)));
+            }
+
             // Ternary Condition
             else if (context.ChildCount == 5
             && context.GetChild(0) is DeltinScriptParser.ExprContext
@@ -1085,9 +1093,24 @@ namespace Deltin.Deltinteger.Parse
 
     public class NotNode : Node
     {
-        public Node Value;
+        public Node Value { get; }
 
         public NotNode(Node value, Location location) : base(location)
+        {
+            Value = value;
+        }
+
+        public override Node[] Children()
+        {
+            return ArrayBuilder<Node>.Build(Value);
+        }
+    }
+
+    public class InvertNode : Node
+    {
+        public Node Value { get; }
+
+        public InvertNode(Node value, Location location) : base(location)
         {
             Value = value;
         }

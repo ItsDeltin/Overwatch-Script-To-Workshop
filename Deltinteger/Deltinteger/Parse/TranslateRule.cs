@@ -213,6 +213,9 @@ namespace Deltin.Deltinteger.Parse
                 // Not operation
                 case NotNode notNode:
                     return Element.Part<V_Not>(ParseExpression(getter, scope, notNode.Value));
+                
+                case InvertNode invertNode:
+                    return Element.Part<V_Multiply>(ParseExpression(getter, scope, invertNode.Value), new V_Number(-1));
 
                 // Strings
                 case StringNode stringNode:
