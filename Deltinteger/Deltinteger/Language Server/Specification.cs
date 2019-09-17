@@ -174,6 +174,11 @@ namespace Deltin.Deltinteger.LanguageServer
         {
             return new Range(start.Offset(other.start), end.Offset(other.end));
         }
+
+        public override string ToString()
+        {
+            return start.ToString() + " - " + end.ToString();
+        }
     }
     
     public class CompletionItem

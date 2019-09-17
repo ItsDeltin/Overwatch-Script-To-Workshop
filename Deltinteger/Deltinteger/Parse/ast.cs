@@ -367,7 +367,7 @@ namespace Deltin.Deltinteger.Parse
         }
     }
 
-    public abstract class Node
+    public abstract class Node : INode
     {
         public Location Location { get; private set; }
 
@@ -418,7 +418,7 @@ namespace Deltin.Deltinteger.Parse
         }
     }
 
-    public class ImportNode : Node
+    public class ImportNode : Node, IImportNode
     {
         public string File { get; }
 
@@ -433,7 +433,7 @@ namespace Deltin.Deltinteger.Parse
         }
     }
 
-    public class ImportObjectNode : Node
+    public class ImportObjectNode : Node, IImportNode
     {
         public string Name { get; }
         public string File { get; }
@@ -578,16 +578,31 @@ namespace Deltin.Deltinteger.Parse
         }
     }
 
-    public interface IDefine
+    public interface INode
+    {
+        Location Location { get; }
+    }
+
+    public interface IDefine : INode
     {
         string VariableName { get; }
         string Type { get; }
         Node Value { get; }
     }
 
-    public interface IConstantSupport
+    public interface IConstantSupport : INode
     {
         object GetValue();
+    }
+
+    public interface ICallableNode : INode
+    {
+        Node[] Parameters { get; }
+    }
+
+    public interface IImportNode : INode
+    {
+        string File { get; }
     }
 
     public class DefineNode : Node, IDefine
@@ -966,7 +981,7 @@ namespace Deltin.Deltinteger.Parse
         }
     }
 
-    public class MethodNode : Node
+    public class MethodNode : Node, ICallableNode
     {
         public string Name { get; private set; }
         public Node[] Parameters { get; private set; }
@@ -1199,7 +1214,7 @@ namespace Deltin.Deltinteger.Parse
         }
     }
 
-    public class CreateObjectNode : Node
+    public class CreateObjectNode : Node, ICallableNode
     {
         public string TypeName { get; }
         public Node[] Parameters { get; }

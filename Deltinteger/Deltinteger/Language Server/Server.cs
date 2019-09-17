@@ -440,33 +440,27 @@ namespace Deltin.Deltinteger.LanguageServer
 
             Hover hover = null;
 
-            if (/*parserData.Success &&*/ posData.SelectedNode != null && posData.SelectedNode.Length > 0)
-                switch (posData.SelectedNode[0])
+            if (posData.SelectedNode != null && posData.SelectedNode.Length > 0)
+            {
+                if (posData.SelectedNode[0] is MethodNode)
                 {
-                    case MethodNode methodNode:
+                    MethodNode methodNode = (MethodNode)posData.SelectedNode[0];
+                    IMethod method = parserData.GetMethod(methodNode.Name);
 
-                        IMethod method = parserData.GetMethod(methodNode.Name);
-
-                        if (method != null)
-                            hover = new Hover(new MarkupContent(MarkupContent.Markdown, method.GetLabel(true)))
-                            {
-                                range = methodNode.Location.range
-                            };
-                        break;
-
-                    case ImportNode importNode:
-                        
-                        string path = Extras.CombinePathWithDotNotation(posData.File, importNode.File);
-
-                        if (path != null)
-                            hover = new Hover(new MarkupContent(MarkupContent.Markdown, path)) { range = importNode.Location.range };
-
-                        break;
-                    
-                    default:
-                        hover = null;
-                        break;
+                    if (method != null)
+                        hover = new Hover(new MarkupContent(MarkupContent.Markdown, method.GetLabel(true)))
+                        {
+                            range = methodNode.Location.range
+                        };
                 }
+                else if (posData.SelectedNode[0] is IImportNode)
+                {
+                    IImportNode importNode = (IImportNode)posData.SelectedNode[0];
+                    string path = Extras.CombinePathWithDotNotation(posData.File, importNode.File);
+                    if (path != null)
+                        hover = new Hover(new MarkupContent(MarkupContent.Markdown, path)) { range = importNode.Location.range };
+                }
+            }
 
             return JsonConvert.SerializeObject(hover);
         }
@@ -477,42 +471,16 @@ namespace Deltin.Deltinteger.LanguageServer
             if (posData == null)
                 return null;
 
-            /*
-            LocationLink location = null;
-
-            if (posData.SelectedNode != null && posData.SelectedNode.Length > 0)
-                switch(posData.SelectedNode[0])
-                {
-                    case ImportNode importNode:
-
-                        string path = null;
-                        try
-                        {
-                            path = Extras.CombinePathWithDotNotation(posData.File, importNode.File);
-                        }
-                        catch (ArgumentException) {}
-
-                        if (path != null)
-                            //location = new Location(new Uri(path).AbsoluteUri, Range.Zero);
-                            location = new LocationLink(importNode.Location.range, new Uri(path).AbsoluteUri, Range.Zero, Range.Zero);
-                        
-                        break;
-                }
-            
-            if (location == null) return null;
-            return JsonConvert.SerializeObject(new LocationLink[] { location });
-            */
-
             List<LocationLink> locations = new List<LocationLink>();
             
-            if (documents.ContainsKey(posData.File) && documents[posData.File].Ruleset != null)
+            if (posData.SelectedNode != null && posData.SelectedNode.Length > 0)
             {
-                foreach (ImportNode node in documents[posData.File].Ruleset.Imports)
+                if (posData.SelectedNode[0] is IImportNode)
                 {
-                    string path = Extras.CombinePathWithDotNotation(posData.File, node.File);
-
+                    IImportNode importNode = (IImportNode)posData.SelectedNode[0];
+                    string path = Extras.CombinePathWithDotNotation(posData.File, importNode.File);
                     if (path != null)
-                        locations.Add(new LocationLink(node.Location.range, new Uri(path).AbsoluteUri, Range.Zero, Range.Zero));
+                        locations.Add(new LocationLink(importNode.Location.range, new Uri(path).AbsoluteUri, Range.Zero, Range.Zero));
                 }
             }
             return JsonConvert.SerializeObject(locations.ToArray());
@@ -530,10 +498,10 @@ namespace Deltin.Deltinteger.LanguageServer
             Pos caret = new Pos((int)inputJson.position.line, (int)inputJson.position.character);
 
             Node[] selectedNode;
-            if (!parserData.Rulesets.ContainsKey(uri) || parserData.Rulesets[uri] == null)
+            if (!documents.ContainsKey(uri) || documents[uri].Ruleset == null)
                 selectedNode = null;
             else
-                selectedNode = parserData.Rulesets[uri].SelectedNode(caret);
+                selectedNode = documents[uri].Ruleset.SelectedNode(caret);
 
             return new PosData(uri, caret, selectedNode);
         }
