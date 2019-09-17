@@ -505,7 +505,6 @@ namespace Deltin.Deltinteger.Parse
             }
             else throw new NotImplementedException();
 
-            methodNode.RelatedElement = result;
             return result;
         }
 

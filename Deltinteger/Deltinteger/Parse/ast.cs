@@ -373,8 +373,6 @@ namespace Deltin.Deltinteger.Parse
 
         public Range[] SubRanges { get; set; }
 
-        public Element RelatedElement { get; set; }
-
         public ScopeGroup RelatedScopeGroup { get; set; }
 
         public Node(Location location, params Range[] subRanges)
