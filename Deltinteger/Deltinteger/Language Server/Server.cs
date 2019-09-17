@@ -313,7 +313,7 @@ namespace Deltin.Deltinteger.LanguageServer
                         
                         break;
                     
-                    case ImportNode importNode:
+                    case IImportNode importNode:
 
                         string currentPath = importNode.File;
 

@@ -574,7 +574,7 @@ namespace Deltin.Deltinteger.Parse
 
         public override Node[] Children()
         {
-            return ArrayBuilder<Node>.Build(Imports, Rules, DefinedVars, UserMethods, DefinedTypes);
+            return ArrayBuilder<Node>.Build(Imports, ObjectImports, Rules, DefinedVars, UserMethods, DefinedTypes);
         }
     }
 
