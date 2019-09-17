@@ -336,4 +336,58 @@ namespace Deltin.Deltinteger.Parse
         Public,
         Private
     }
+
+    [CustomMethod("ClassMemoryRemaining", CustomMethodType.Value)]
+    public class ClassMemoryRemaining : CustomMethodBase
+    {
+        override protected MethodResult Get()
+        {
+            Element result = Element.Part<V_Subtract>(
+                new V_Number(Constants.MAX_ARRAY_LENGTH),
+                Element.Part<V_CountOf>(TranslateContext.ParserData.ClassIndexes.GetVariable())
+            );
+            return new MethodResult(null, result);
+        }
+
+        override public CustomMethodWiki Wiki()
+        {
+            return new CustomMethodWiki("Gets the remaining number of classes that can be created.");
+        }
+    }
+
+    [CustomMethod("ClassMemoryCreated", CustomMethodType.Value)]
+    public class ClassMemoryCreated : CustomMethodBase
+    {
+        override protected MethodResult Get()
+        {
+            Element result = Element.Part<V_CountOf>(TranslateContext.ParserData.ClassIndexes.GetVariable());
+            return new MethodResult(null, result);
+        }
+
+        override public CustomMethodWiki Wiki()
+        {
+            return new CustomMethodWiki("Gets the number of classes that were created.");
+        }
+    }
+
+    [CustomMethod("ClassMemoryPercentage", CustomMethodType.Value)]
+    public class ClassMemoryPercentage : CustomMethodBase
+    {
+        override protected MethodResult Get()
+        {
+            Element result = Element.Part<V_Multiply>(
+                Element.Part<V_Divide>(
+                    new V_Number(Constants.MAX_ARRAY_LENGTH),
+                    Element.Part<V_CountOf>(TranslateContext.ParserData.ClassIndexes.GetVariable())
+                ),
+                new V_Number(100)
+            );
+            return new MethodResult(null, result);
+        }
+
+        override public CustomMethodWiki Wiki()
+        {
+            return new CustomMethodWiki("Gets the percentage of class memory taken.");
+        }
+    }
 }
