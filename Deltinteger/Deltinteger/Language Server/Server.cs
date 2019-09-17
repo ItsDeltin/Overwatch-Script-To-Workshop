@@ -257,10 +257,6 @@ namespace Deltin.Deltinteger.LanguageServer
 
                     // Actions
                     case BlockNode blockNode:
-
-                        // Get all action methods
-                        completion.AddRange(Element.GetCompletion(true, true));
-                        completion.AddRange(CustomMethodData.GetCompletion());
                         
                         if (parserData.Success)
                         {
@@ -274,15 +270,13 @@ namespace Deltin.Deltinteger.LanguageServer
                             if (parserData.DefinedTypes != null)
                                 completion.AddRange(DefinedType.CollectionCompletion(parserData.DefinedTypes.ToArray()));
                         }
+                        completion.AddRange(Element.GetCompletion(true, true));
+                        completion.AddRange(CustomMethodData.GetCompletion());
 
                         break;
 
                     // Values
                     case MethodNode methodNode:
-
-                        completion.AddRange(Element.GetCompletion(true, false));
-                        completion.AddRange(EnumData.GetAllEnumCompletion());
-                        completion.AddRange(CustomMethodData.GetCompletion());
 
                         if (parserData.Success)
                         {
@@ -293,6 +287,9 @@ namespace Deltin.Deltinteger.LanguageServer
                             if (parserData.UserMethods != null)
                                 completion.AddRange(UserMethod.CollectionCompletion(parserData.UserMethods.ToArray()));
                         }
+                        completion.AddRange(Element.GetCompletion(true, false));
+                        completion.AddRange(EnumData.GetAllEnumCompletion());
+                        completion.AddRange(CustomMethodData.GetCompletion());
 
                         break;
 

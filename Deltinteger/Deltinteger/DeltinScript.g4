@@ -199,7 +199,7 @@ CLASS     : 'class'     ;
 PRIVATE   : 'private'   ;
 PUBLIC    : 'public'    ;
 THIS      : 'this'      ;
-ROOT      : 'global'    ;
+ROOT      : 'root'      ;
 NEW       : 'new'       ;
 STATIC    : 'static'    ;
 IMPORT    : 'import'    ;

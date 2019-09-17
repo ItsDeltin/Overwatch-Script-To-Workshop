@@ -39,12 +39,22 @@ namespace Deltin.Deltinteger.Parse
 
         public void RegisterParameters(ParsingData parser)
         {
-            Constructors = new Constructor[ConstructorNodes.Length];
-            for (int i = 0; i < Constructors.Length; i++)
+            if (ConstructorNodes.Length != 0)
             {
-                if (ConstructorNodes[i].Name != Name)
-                    throw SyntaxErrorException.ConstructorName(ConstructorNodes[i].Location);
-                Constructors[i] = new Constructor(parser, ConstructorNodes[i]);
+                Constructors = new Constructor[ConstructorNodes.Length];
+                for (int i = 0; i < Constructors.Length; i++)
+                {
+                    if (ConstructorNodes[i].Name != Name)
+                        throw SyntaxErrorException.ConstructorName(ConstructorNodes[i].Location);
+                    Constructors[i] = new Constructor(parser, ConstructorNodes[i]);
+                }
+            }
+            else
+            {
+                Constructors = new Constructor[] 
+                {
+                    new Constructor(AccessLevel.Public, new Parameter[0], null)
+                };
             }
         }
 
@@ -93,26 +103,28 @@ namespace Deltin.Deltinteger.Parse
             }
 
             Constructor constructor = Constructors.FirstOrDefault(c => c.Parameters.Length == node.Parameters.Length);
-            if (constructor == null && !(node.Parameters.Length == 0 && Constructors.Length == 0))
+            if (constructor == null)
                 throw SyntaxErrorException.NotAConstructor(TypeKind, Name, node.Parameters.Length, node.Location);
             
-            if (constructor != null)
-            {
-                ScopeGroup constructorScope = typeScope.Child();
+            if (context.MethodStackNotRecursive.Contains(constructor))
+                throw new SyntaxErrorException("Constructors cannot be recursive.", node.Location);
+            context.MethodStackNotRecursive.Add(constructor);
+            
+            ScopeGroup constructorScope = typeScope.Child();
 
-                IWorkshopTree[] parameters = context.ParseParameters(
-                    getter,
-                    scope,
-                    constructor.Parameters,
-                    node.Parameters,
-                    node.TypeName,
-                    node.Location
-                );
+            IWorkshopTree[] parameters = context.ParseParameters(
+                getter,
+                scope,
+                constructor.Parameters,
+                node.Parameters,
+                node.TypeName,
+                node.Location
+            );
 
-                context.AssignParameterVariables(constructorScope, constructor.Parameters, parameters, node);
-                context.ParseBlock(typeScope, constructorScope, constructor.BlockNode, true, null);
-                constructorScope.Out(context);
-            }
+            context.AssignParameterVariables(constructorScope, constructor.Parameters, parameters, node);
+            context.ParseBlock(typeScope, constructorScope, constructor.BlockNode, true, null);
+            constructorScope.Out(context);
+            context.MethodStackNotRecursive.Remove(constructor);
         }
 
         abstract public void GetSource(TranslateRule context, Element element, Location location);
@@ -291,7 +303,7 @@ namespace Deltin.Deltinteger.Parse
         }
     }
 
-    public class Constructor
+    public class Constructor : ICallable
     {
         public AccessLevel AccessLevel { get; }
         public BlockNode BlockNode { get; }
@@ -303,6 +315,13 @@ namespace Deltin.Deltinteger.Parse
             BlockNode = constructorNode.BlockNode;
             
             Parameters = ParameterDefineNode.GetParameters(parser, constructorNode.Parameters);
+        }
+
+        public Constructor(AccessLevel accessLevel, ParameterBase[] parameters, BlockNode block)
+        {
+            AccessLevel = accessLevel;
+            Parameters = parameters;
+            BlockNode = block;
         }
     }
 

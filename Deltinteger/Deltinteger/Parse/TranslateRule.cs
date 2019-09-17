@@ -23,7 +23,7 @@ namespace Deltin.Deltinteger.Parse
         private readonly List<A_Skip> ReturnSkips = new List<A_Skip>(); // Return statements whos skip count needs to be filled out.
         public readonly ContinueSkip ContinueSkip; // Contains data about the wait/skip for continuing loops.
         public readonly List<MethodStack> MethodStackRecursive = new List<MethodStack>(); // The user method stack
-        public readonly List<UserMethod> MethodStackNotRecursive = new List<UserMethod>();
+        public readonly List<ICallable> MethodStackNotRecursive = new List<ICallable>();
         public readonly ParsingData ParserData;
 
         private TranslateRule(RuleNode ruleNode, ScopeGroup root, ParsingData parserData)
