@@ -211,7 +211,7 @@ namespace Deltin.Deltinteger.Parse
             firstFree = Element.TernaryConditional(
                 new V_Compare(Element.Part<V_CountOf>(takenIndexes), Operators.NotEqual, new V_Number(0)),
                 firstFree,
-                Element.Part<V_Subtract>(Element.Part<V_CountOf>(WorkshopArrayBuilder.GetVariable(true, null, Variable.C)), new V_Number(1))
+                Element.Part<V_Subtract>(Element.Part<V_CountOf>(context.ParserData.ClassArray.GetVariable()), new V_Number(1))
             );
 
             context.Actions.AddRange(index.SetVariable(firstFree));
@@ -221,9 +221,7 @@ namespace Deltin.Deltinteger.Parse
                     Element.TernaryConditional(
                         // If the index equals -1, use the length of the class array instead.
                         new V_Compare(index.GetVariable(), Operators.Equal, new V_Number(-1)),
-                        Element.Part<V_CountOf>(
-                            WorkshopArrayBuilder.GetVariable(true, null, Variable.C)
-                        ),
+                        Element.Part<V_CountOf>(context.ParserData.ClassArray.GetVariable()),
                         index.GetVariable()
                     )
                 )
@@ -240,6 +238,7 @@ namespace Deltin.Deltinteger.Parse
             );
 
             // The direct reference to the class variable.
+            /*
             IndexedVar store = new IndexedVar(
                 scope,
                 Name + " root",
@@ -249,6 +248,8 @@ namespace Deltin.Deltinteger.Parse
                 context.VarCollection.WorkshopArrayBuilder,
                 null
             );
+            */
+            IndexedVar store = context.ParserData.ClassArray.CreateChild(scope, Name + " root", new Element[] { index.GetVariable() }, null);
             store.Index[0].SupportedType = store;
             store.Type = this;
 
@@ -262,6 +263,8 @@ namespace Deltin.Deltinteger.Parse
         override protected IndexedVar GetRoot(IndexedVar req, ParsingData context, Element target)
         {
             if (req.Name == Name + " root") return req;
+            return context.ClassArray.CreateChild(null, Name + " root", new Element[] { req.GetVariable(target) }, null);
+            /*
             return new IndexedVar(
                 null,
                 Name + " root",
@@ -271,13 +274,20 @@ namespace Deltin.Deltinteger.Parse
                 context.VarCollection.WorkshopArrayBuilder,
                 null
             );
+            */
         }
 
         public static void Delete(Element index, TranslateRule context)
         {
+            /*
             context.Actions.AddRange(context.VarCollection.WorkshopArrayBuilder.SetVariable(
                 new V_Null(), true, null, Variable.C, index
             ));
+            */
+            context.Actions.AddRange(
+                context.ParserData.ClassArray.SetVariable(new V_Null(), null, index)
+            );
+
             context.Actions.AddRange(context.ParserData.ClassIndexes.SetVariable(
                 Element.Part<V_RemoveFromArray>(
                     context.ParserData.ClassIndexes.GetVariable(),
@@ -288,6 +298,7 @@ namespace Deltin.Deltinteger.Parse
 
         override public void GetSource(TranslateRule context, Element element, Location location)
         {
+            /*
             element.SupportedType = new IndexedVar(
                 null,
                 Name + " root",
@@ -300,6 +311,10 @@ namespace Deltin.Deltinteger.Parse
             {
                 Type = this
             };
+            */
+            IndexedVar supportedType = context.ParserData.ClassArray.CreateChild(null, Name + " root", new Element[] { element }, null);
+            supportedType.Type = this;
+            element.SupportedType = supportedType;
         }
     }
 

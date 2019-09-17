@@ -518,11 +518,13 @@ namespace Deltin.Deltinteger.Parse
 
     public class RulesetNode : Node
     {
+        public InternalVarNode[] InternalVarNodes { get; }
         public ImportNode[] Imports { get; }
         public ImportObjectNode[] ObjectImports { get; }
         public Variable UseGlobalVar { get; } = Variable.A;
         public Variable UsePlayerVar { get; } = Variable.A;
         public Variable UseBuilderVar { get; } = Variable.B;
+        public Variable UseClassVar { get; } = Variable.C;
         public RuleNode[] Rules { get; }
         public RuleDefineNode[] DefinedVars { get; }
         public UserMethodBase[] UserMethods { get; }
@@ -530,6 +532,7 @@ namespace Deltin.Deltinteger.Parse
 
         public RulesetNode(DeltinScriptParser.RulesetContext context, BuildAstVisitor visitor) : base(new Location(visitor.file, Range.GetRange(context)))
         {
+            // Get imports
             Imports = new ImportNode[context.import_file().Length];
             for (int i = 0; i < Imports.Length; i++)
                 Imports[i] = new ImportNode(context.import_file(i), visitor);
@@ -538,33 +541,45 @@ namespace Deltin.Deltinteger.Parse
             for (int i = 0; i < ObjectImports.Length; i++)
                 ObjectImports[i] = new ImportObjectNode(context.import_object(i), visitor);
 
+            // Get rules
             Rules = new RuleNode[context.ow_rule().Length];
             for (int i = 0; i < Rules.Length; i++)
                 Rules[i] = (RuleNode)visitor.VisitOw_rule(context.ow_rule()[i]);
 
-            if (context.useGlobalVar() != null)
-                if (Enum.TryParse(context.useGlobalVar().PART().GetText(), out Variable temp))
-                    UseGlobalVar = temp;
-            
-            if (context.usePlayerVar() != null)
-                if (Enum.TryParse(context.usePlayerVar().PART().GetText(), out Variable temp))
-                    UsePlayerVar = temp;
-            
-            if (context.useDimVar() != null)
-                if (Enum.TryParse(context.useDimVar().PART().GetText(), out Variable temp))
-                    UseBuilderVar = temp;
+            // Get internal variable overrides
+            List<InternalVarNode> internalVarNodes = new List<InternalVarNode>();
+            for (int i = 0; i < context.internalVars().Length; i++)
+            {
+                var varOverride = new InternalVarNode(internalVarNodes, context.internalVars(i), visitor);
+                internalVarNodes.Add(varOverride);
 
+                if (varOverride.Type == InternalVarType.Global)
+                    UseGlobalVar = varOverride.Variable;
+                else if (varOverride.Type == InternalVarType.Player)
+                    UsePlayerVar = varOverride.Variable;
+                else if (varOverride.Type == InternalVarType.Builder)
+                    UseBuilderVar = varOverride.Variable;
+                else if (varOverride.Type == InternalVarType.Class)
+                    UseClassVar = varOverride.Variable;
+                else throw new NotImplementedException();
+            }
+            InternalVarNodes = internalVarNodes.ToArray();
+
+            // Get defined variables
             DefinedVars = new RuleDefineNode[context.rule_define().Length];
             for (int i = 0; i < DefinedVars.Length; i++)
                 DefinedVars[i] = (RuleDefineNode)visitor.VisitRule_define(context.rule_define(i));
 
+            // Get user methods
             UserMethods = new UserMethodBase[context.user_method().Length + context.macro().Length];
             for (int i = 0; i < context.user_method().Length; i++)
                 UserMethods[i] = (UserMethodNode)visitor.VisitUser_method(context.user_method(i));
             
+            // Get macros
             for (int i = 0; i < context.macro().Length; i++)
                 UserMethods[i + context.user_method().Length] = new MacroNode(context.macro(i), visitor);
             
+            // Get types
             DefinedTypes = new TypeDefineNode[context.type_define().Length];
             for (int i = 0; i < DefinedTypes.Length; i++)
                 DefinedTypes[i] = (TypeDefineNode)visitor.VisitType_define(context.type_define(i));
@@ -572,8 +587,46 @@ namespace Deltin.Deltinteger.Parse
 
         public override Node[] Children()
         {
-            return ArrayBuilder<Node>.Build(Imports, ObjectImports, Rules, DefinedVars, UserMethods, DefinedTypes);
+            return ArrayBuilder<Node>.Build(InternalVarNodes, Imports, ObjectImports, Rules, DefinedVars, UserMethods, DefinedTypes);
         }
+    }
+
+    public class InternalVarNode : Node
+    {
+        public InternalVarType Type { get; }
+        public Variable Variable { get; }
+
+        public InternalVarNode(List<InternalVarNode> internalVarNodes, DeltinScriptParser.InternalVarsContext context, BuildAstVisitor visitor) : base(new Location(visitor.file, Range.GetRange(context)))
+        {
+            if (context.GLOBAL() != null)
+                Type = InternalVarType.Global;
+            else if (context.PLAYER() != null)
+                Type = InternalVarType.Player;
+            else if (context.DIM() != null)
+                Type = InternalVarType.Builder;
+            else if (context.CLASS() != null)
+                Type = InternalVarType.Class;
+            else throw new NotImplementedException();
+            
+            if (internalVarNodes.Any(ivn => ivn.Type == Type))
+                visitor._diagnostics.Error($"{Type.ToString()} override already defined.", Location);
+
+            if (Enum.TryParse(context.PART().GetText(), out Variable temp))
+                Variable = temp;
+        }
+
+        override public Node[] Children()
+        {
+            return new Node[0];
+        }
+    }
+
+    public enum InternalVarType
+    {
+        Global,
+        Player,
+        Builder,
+        Class,
     }
 
     public interface INode

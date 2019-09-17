@@ -20,9 +20,7 @@ inclass_define   : accessor? STATIC? (type=PART | DEFINE)                 name=P
 parameter_define :                   (type=PART | DEFINE)                 name=PART                         ;
 
 useVar   : PART (INDEX_START number INDEX_END)? ;
-useGlobalVar : USEVAR GLOBAL PART STATEMENT_END ;
-usePlayerVar : USEVAR PLAYER PART STATEMENT_END ;
-useDimVar    : USEVAR DIM    PART STATEMENT_END ;
+internalVars : USEVAR (GLOBAL | PLAYER | DIM | CLASS) PART STATEMENT_END ;
 
 expr 
 	: 
@@ -114,9 +112,7 @@ user_method : DOCUMENTATION* accessor? RECURSIVE? (METHOD | type=PART) name=PART
 macro       : DOCUMENTATION* accessor? MACRO name=PART LEFT_PAREN setParameters RIGHT_PAREN expr STATEMENT_END ;
 
 ruleset :
-	useGlobalVar?
-	usePlayerVar?
-	useDimVar?
+	internalVars*
 	(import_file | import_object)*
 	(rule_define | ow_rule | user_method | type_define | macro)*
 	;
