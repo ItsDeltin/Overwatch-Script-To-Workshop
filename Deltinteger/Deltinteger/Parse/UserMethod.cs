@@ -7,7 +7,7 @@ using Deltin.Deltinteger.WorkshopWiki;
 
 namespace Deltin.Deltinteger.Parse
 {
-    abstract public class UserMethod : IMethod, IScopeable, ITypeRegister
+    abstract public class UserMethod : IMethod, IScopeable, ITypeRegister, ICallable
     {
         public static UserMethod CreateUserMethod(ScopeGroup scope, UserMethodBase node)
         {
@@ -257,6 +257,12 @@ namespace Deltin.Deltinteger.Parse
 
         override public Element Get(TranslateRule context, ScopeGroup scope, MethodNode methodNode, IWorkshopTree[] parameters)
         {
+            // Check the method stack if this method was already called.
+            // Throw a syntax error if it was.
+            if (context.MethodStackNotRecursive.Contains(this))
+                throw new SyntaxErrorException("Recursion is not allowed in macros.", methodNode.Location);
+            context.MethodStackNotRecursive.Add(this);
+
             int actionCount = context.Actions.Count;
 
             ScopeGroup methodScope = scope.Root().Child();
@@ -267,6 +273,8 @@ namespace Deltin.Deltinteger.Parse
             Element result = context.ParseExpression(methodScope, methodScope, Expression);
 
             methodScope.Out(context);
+
+            context.MethodStackNotRecursive.Remove(this);
 
             if (context.Actions.Count > actionCount)
                 throw new SyntaxErrorException("Macro cannot result in any actions.", methodNode.Location);
