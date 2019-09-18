@@ -111,7 +111,9 @@
     <Compile Include="Custom Methods\Pi.cs" />
     <Compile Include="Custom Methods\ConditionTesting.cs" />
     <Compile Include="Custom Methods\DestroyEffectArray.cs" />
-    <Compile Include="Parse\ast.cs" />
+    <Compile Include="Parse\ast\Nodes.cs" />
+    <Compile Include="Parse\ast\Visitor.cs" />
+    <Compile Include="Parse\ast\NodeInterfaces.cs" />
     <Compile Include="Parse\Parse.cs" />
     <Compile Include="Parse\TranslateRule.cs" />
     <Compile Include="Parse\Var.cs" />
