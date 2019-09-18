@@ -556,14 +556,16 @@ namespace Deltin.Deltinteger.Parse
         abstract protected Node[] GetChildren();
     }
 
-    public class UserMethodNode : UserMethodBase
+    public class UserMethodNode : UserMethodBase, IBlockContainer
     {
         public string Type { get; }
         public BlockNode Block { get; }
         public bool IsRecursive { get; }
+        private Location errorRange { get; }
         
         public UserMethodNode(DeltinScriptParser.User_methodContext context, BuildAstVisitor visitor) : base(new Location(visitor.file, Range.GetRange(context)))
         {
+            errorRange = new Location(visitor.file, Range.GetRange(context.name));
             Name = context.name.Text;
             Type = context.type?.Text;
 
@@ -583,6 +585,11 @@ namespace Deltin.Deltinteger.Parse
         override protected Node[] GetChildren()
         {
             return ArrayBuilder<Node>.Build(Block);
+        }
+    
+        public PathInfo[] Paths()
+        {
+            return new PathInfo[] {new PathInfo(Block, errorRange, false)};
         }
     }
 
@@ -633,7 +640,7 @@ namespace Deltin.Deltinteger.Parse
 
     public class BlockNode : Node
     {
-        public Node[] Statements;
+        public Node[] Statements { get; }
 
         public BlockNode(Node[] statements, Location location) : base(location) 
         {
@@ -957,16 +964,17 @@ namespace Deltin.Deltinteger.Parse
         }
     }
 
-    public class ForEachNode : Node
+    public class ForEachNode : Node, IBlockContainer
     {
         public ParameterDefineNode Variable { get; }
         public Node Array { get; }
         public BlockNode Block { get; }
         public int Repeaters { get; }
-        public bool AlwaysWillRun { get; } = false;
+        private Location errorRange { get; }
 
         public ForEachNode(DeltinScriptParser.ForeachContext context, BuildAstVisitor visitor) : base(new Location(visitor.file, Range.GetRange(context)))
         {
+            errorRange = new Location(visitor.file, Range.GetRange(context.FOREACH()));
             Array = visitor.Visit(context.expr());
             Variable = new ParameterDefineNode(context.parameter_define(), visitor);
             Block = (BlockNode)visitor.VisitBlock(context.block());
@@ -980,62 +988,128 @@ namespace Deltin.Deltinteger.Parse
         {
             return ArrayBuilder<Node>.Build(Variable, Array, Block);
         }
+    
+        public PathInfo[] Paths()
+        {
+            return new PathInfo[] {new PathInfo(Block, errorRange, false)};
+        }
     }
 
-    public class ForNode : Node
+    public class ForNode : Node, IBlockContainer
     {
         public VarSetNode VarSetNode { get; private set; }
         public DefineNode DefineNode { get; private set; }
         public Node Expression { get; private set; }
         public VarSetNode Statement { get; private set; }
         public BlockNode Block { get; private set; }
-        public bool AlwaysWillRun { get; } = false;
+        private Location errorRange { get; }
 
-        public ForNode(VarSetNode varSetNode, DefineNode defineNode, Node expression, VarSetNode statement, BlockNode block, Location location) : base(location)
+        public ForNode(DeltinScriptParser.ForContext context, BuildAstVisitor visitor) : base(new Location(visitor.file, Range.GetRange(context)))
         {
-            VarSetNode = varSetNode;
-            DefineNode = defineNode;
-            Expression = expression;
-            Statement = statement;
-            Block = block;
+            errorRange = new Location(visitor.file, Range.GetRange(context.FOR()));
+            Block = (BlockNode)visitor.VisitBlock(context.block());
+
+            if (context.varset() != null)
+                VarSetNode = (VarSetNode)visitor.VisitVarset(context.varset());
+
+            if (context.define() != null)
+                DefineNode = (DefineNode)visitor.VisitDefine(context.define());
+
+            if (context.expr() != null)
+                Expression = visitor.VisitExpr(context.expr());
+
+            if (context.forEndStatement() != null)
+                Statement = (VarSetNode)visitor.VisitVarset(context.forEndStatement().varset());
         }
 
         public override Node[] Children()
         {
             return ArrayBuilder<Node>.Build(VarSetNode, DefineNode, Expression, Statement, Block);
         }
+    
+        public PathInfo[] Paths()
+        {
+            return new PathInfo[] {new PathInfo(Block, errorRange, false)};
+        }
     }
 
-    public class WhileNode : Node
+    public class WhileNode : Node, IBlockContainer
     {
         public Node Expression { get; private set; }
         public BlockNode Block { get; private set; }
-        public bool AlwaysWillRun { get; } = false;
+        private Location errorRange { get; }
 
-        public WhileNode(Node expression, BlockNode block, Location location) : base(location)
+        public WhileNode(DeltinScriptParser.WhileContext context, BuildAstVisitor visitor) : base(new Location(visitor.file, Range.GetRange(context)))
         {
-            Expression = expression;
-            Block = block;
+            Expression = visitor.VisitExpr(context.expr());
+            Block = (BlockNode)visitor.VisitBlock(context.block());
+            errorRange = new Location(visitor.file, Range.GetRange(context.WHILE()));
         }
 
         public override Node[] Children()
         {
             return ArrayBuilder<Node>.Build(Expression, Block);
         }
+    
+        public PathInfo[] Paths()
+        {
+            return new PathInfo[] {new PathInfo(Block, errorRange, false)};
+        }
     }
 
-    public class IfNode : Node
+    public class IfNode : Node, IBlockContainer
     {
-        public IfData IfData { get; private set; }
-        public IfData[] ElseIfData { get; private set; }
-        public BlockNode ElseBlock { get; private set; }
-        public bool AlwaysWillRun { get; } = false;
+        public IfData IfData { get; }
+        public IfData[] ElseIfData { get; }
+        public BlockNode ElseBlock { get; }
 
-        public IfNode(IfData ifData, IfData[] elseIfData, BlockNode elseBlock, Location location) : base(location)
+        private List<PathInfo> paths { get; } = new List<PathInfo>();
+
+        public IfNode(DeltinScriptParser.IfContext context, BuildAstVisitor visitor) : base(new Location(visitor.file, Range.GetRange(context)))
         {
-            IfData = ifData;
-            ElseIfData = elseIfData;
-            ElseBlock = elseBlock;
+            // Get the if data
+            IfData = new IfData
+            (
+                visitor.VisitExpr(context.expr()),
+                (BlockNode)visitor.VisitBlock(context.block())
+            );
+            paths.Add(new PathInfo(IfData.Block, new Location(visitor.file, Range.GetRange(context.IF())), false));
+
+            // Get the else-if data
+            ElseIfData = null;
+            if (context.else_if() != null)
+            {
+                ElseIfData = new IfData[context.else_if().Length];
+                for (int i = 0; i < context.else_if().Length; i++)
+                {
+                    ElseIfData[i] = new IfData
+                    (
+                        visitor.VisitExpr(context.else_if(i).expr()),
+                        (BlockNode)visitor.VisitBlock(context.else_if(i).block())
+                    );
+                    paths.Add(
+                        new PathInfo(
+                            ElseIfData[i].Block,
+                            new Location(
+                                visitor.file, 
+                                Range.GetRange(
+                                    context.else_if(i).ELSE(),
+                                    context.else_if(i).IF()
+                                )
+                            ),
+                            false
+                        )
+                    );
+                }
+            }
+            
+            // Get the else block
+            ElseBlock = null;
+            if (context.@else() != null)
+            {
+                ElseBlock = (BlockNode)visitor.VisitBlock(context.@else().block());
+                paths.Add(new PathInfo(ElseBlock, new Location(visitor.file, Range.GetRange(context.@else().ELSE())), true));
+            }
         }
 
         public override Node[] Children()
@@ -1054,6 +1128,11 @@ namespace Deltin.Deltinteger.Parse
                 children.Add(ElseBlock);
 
             return ArrayBuilder<Node>.Build(IfData.Expression, IfData.Block, ElseBlock, ElseIfData.Select(ei => ei.Block).ToArray(), ElseIfData.Select(ei => ei.Expression).ToArray());
+        }
+
+        public PathInfo[] Paths()
+        {
+            return paths.ToArray();
         }
     }
 

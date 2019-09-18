@@ -83,12 +83,62 @@ namespace Deltin.Deltinteger.Parse
     {
         public BlockNode Block { get; }
         public bool IsRecursive { get; }
+        public bool DoesReturn { get; }
 
         public UserMethodBlock(ScopeGroup scope, UserMethodNode node) : base(scope, node)
         {
+            List<ReturnNode> returnNodes = new List<ReturnNode>();
+            ReturnNodes(node.Block, returnNodes);
+            DoesReturn = node.Type != null || returnNodes.Any(returnNode => returnNode.Value != null);
+            if (DoesReturn)
+            {
+                foreach (var returnNode in returnNodes)
+                    if (returnNode.Value == null)
+                        throw new SyntaxErrorException("A return value is required.", returnNode.Location);
+                CheckContainer((IBlockContainer)node);
+            }
+
             Block = node.Block;
             IsRecursive = node.IsRecursive;
             TypeString = node.Type;
+        }
+        
+        private static void ReturnNodes(BlockNode block, List<ReturnNode> returnNodes)
+        {
+            foreach (var statement in block.Statements)
+            {
+                if (statement is IBlockContainer)
+                    foreach (var container in ((IBlockContainer)statement).Paths())
+                        ReturnNodes(container.Block, returnNodes);
+                
+                if (statement is ReturnNode)
+                    returnNodes.Add((ReturnNode)statement);
+            }
+        }
+
+        private static void CheckContainer(IBlockContainer container)
+        {
+            foreach(var path in container.Paths())
+            {
+                bool blockReturns = false;
+                for (int i = path.Block.Statements.Length - 1; i >= 0; i--)
+                {
+                    if (path.Block.Statements[i] is ReturnNode)
+                    {
+                        blockReturns = true;
+                        break;
+                    }
+                    
+                    if (path.Block.Statements[i] is IBlockContainer)
+                    {
+                        if (((IBlockContainer)path.Block.Statements[i]).Paths().Any(containerPath => containerPath.WillRun)) blockReturns = true;
+
+                        CheckContainer((IBlockContainer)path.Block.Statements[i]);
+                    }
+                }
+                if (!blockReturns)
+                    throw new SyntaxErrorException("Path does not return a value.", path.ErrorRange);
+            }
         }
 
         override public Element Get(TranslateRule context, ScopeGroup scope, MethodNode methodNode, IWorkshopTree[] parameters)
@@ -107,8 +157,12 @@ namespace Deltin.Deltinteger.Parse
                 context.AssignParameterVariables(methodScope, Parameters, parameters, methodNode);
 
                 // The variable that stores the return value.
-                IndexedVar returns = context.VarCollection.AssignVar(scope, $"{methodNode.Name}: return temp value", context.IsGlobal, null);
-                returns.Type = Type;
+                IndexedVar returns = null;
+                if (DoesReturn)
+                {
+                    returns = context.VarCollection.AssignVar(scope, $"{methodNode.Name}: return temp value", context.IsGlobal, null);
+                    returns.Type = Type;
+                }
 
                 // Add the method to the method stack
                 context.MethodStackNotRecursive.Add(this);
@@ -124,7 +178,9 @@ namespace Deltin.Deltinteger.Parse
                 // Remove the method from the stack.
                 context.MethodStackNotRecursive.Remove(this);
 
-                result = returns.GetVariable();
+                if (DoesReturn)
+                    result = returns.GetVariable();
+                else result = new V_Null();
             }
             else
             {

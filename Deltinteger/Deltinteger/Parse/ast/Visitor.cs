@@ -277,25 +277,7 @@ namespace Deltin.Deltinteger.Parse
 
         public override Node VisitFor(DeltinScriptParser.ForContext context)
         {
-            BlockNode block = (BlockNode)VisitBlock(context.block());
-
-            VarSetNode varSet = null;
-            if (context.varset() != null)
-                varSet = (VarSetNode)VisitVarset(context.varset());
-
-            DefineNode defineNode = null;
-            if (context.define() != null)
-                defineNode = (DefineNode)VisitDefine(context.define());
-
-            Node expression = null;
-            if (context.expr() != null)
-                expression = VisitExpr(context.expr());
-
-            VarSetNode statement = null;
-            if (context.forEndStatement() != null)
-                statement = (VarSetNode)VisitVarset(context.forEndStatement().varset());
-            
-            return new ForNode(varSet, defineNode, expression, statement, block, new Location(file, Range.GetRange(context)));
+            return new ForNode(context, this);
         }
 
         public override Node VisitForeach(DeltinScriptParser.ForeachContext context)
@@ -305,40 +287,12 @@ namespace Deltin.Deltinteger.Parse
 
         public override Node VisitWhile(DeltinScriptParser.WhileContext context)
         {
-            BlockNode block = (BlockNode)VisitBlock(context.block());
-            Node expression = VisitExpr(context.expr());
-
-            return new WhileNode(expression, block, new Location(file, Range.GetRange(context)));
+            return new WhileNode(context, this);
         }
 
         public override Node VisitIf(DeltinScriptParser.IfContext context)
         {
-            // Get the if data
-            IfData ifData = new IfData
-            (
-                VisitExpr(context.expr()),
-                (BlockNode)VisitBlock(context.block())
-            );
-
-            // Get the else-if data
-            IfData[] elseIfData = null;
-            if (context.else_if() != null)
-            {
-                elseIfData = new IfData[context.else_if().Length];
-                for (int i = 0; i < context.else_if().Length; i++)
-                    elseIfData[i] = new IfData
-                    (
-                        VisitExpr(context.else_if()[i].expr()),
-                        (BlockNode)VisitBlock(context.else_if()[i].block())
-                    );
-            }
-            
-            // Get the else block
-            BlockNode elseBlock = null;
-            if (context.@else() != null)
-                elseBlock = (BlockNode)VisitBlock(context.@else().block());
-
-            return new IfNode(ifData, elseIfData, elseBlock, new Location(file, Range.GetRange(context)));
+            return new IfNode(context, this);
         }
 
         public override Node VisitReturn(DeltinScriptParser.ReturnContext context)

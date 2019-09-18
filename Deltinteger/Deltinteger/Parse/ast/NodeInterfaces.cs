@@ -28,4 +28,23 @@ namespace Deltin.Deltinteger.Parse
     {
         string File { get; }
     }
+
+    public interface IBlockContainer : INode
+    {
+        PathInfo[] Paths();
+    }
+
+    public class PathInfo
+    {
+        public BlockNode Block { get; }
+        public Location ErrorRange { get; }
+        public bool WillRun { get; }
+
+        public PathInfo (BlockNode block, Location errorRange, bool willRun)
+        {
+            Block = block;
+            ErrorRange = errorRange;
+            WillRun = willRun;
+        }
+    }
 }
