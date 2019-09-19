@@ -22,8 +22,8 @@ namespace Deltin.Deltinteger.Parse
         {
             Rule initialGlobalValues = new Rule(Constants.INTERNAL_ELEMENT + "Initial Global Values");
             Rule initialPlayerValues = new Rule(Constants.INTERNAL_ELEMENT + "Initial Player Values", RuleEvent.OngoingPlayer, Team.All, PlayerSelector.All);
-            TranslateRule globalTranslate = new TranslateRule(initialGlobalValues, Root, this);
-            TranslateRule playerTranslate = new TranslateRule(initialPlayerValues, Root, this);
+            globalTranslate = new TranslateRule(initialGlobalValues, Root, this);
+            playerTranslate = new TranslateRule(initialPlayerValues, Root, this);
 
             GetObjects(content, file, globalTranslate, playerTranslate, true);
 
@@ -154,7 +154,6 @@ namespace Deltin.Deltinteger.Parse
                     VarCollection = new VarCollection(ruleset.UseGlobalVar, ruleset.UsePlayerVar, ruleset.UseBuilderVar);
                     Root = new ScopeGroup(VarCollection);
                     ClassIndexes = VarCollection.AssignVar(null, "Class Indexes", true, null);
-                    globalTranslate.Actions.AddRange(ClassIndexes.SetVariable(new V_EmptyArray()));
                     ClassArray = new IndexedVar(null, "Class Array", true, ruleset.UseClassVar, new Element[0], VarCollection.WorkshopArrayBuilder, null);
                 }
 
@@ -266,6 +265,8 @@ namespace Deltin.Deltinteger.Parse
         public List<Rule> AdditionalRules { get; } = new List<Rule>();
         public List<VariableChaseData> Chasing { get; } = new List<VariableChaseData>();
         private List<string> Imported { get; } = new List<string>();
+        private TranslateRule globalTranslate;
+        private TranslateRule playerTranslate;
 
         public IMethod GetMethod(string name)
         {
@@ -280,6 +281,16 @@ namespace Deltin.Deltinteger.Parse
             if (type == null && location != null)
                 throw SyntaxErrorException.NonexistentType(name, location);
             return type;
+        }
+
+        private bool ClassesWereSetUp = false;
+
+        public void SetupClasses()
+        {
+            if (ClassesWereSetUp) return;
+
+            globalTranslate.Actions.AddRange(ClassIndexes.SetVariable(new V_EmptyArray()));
+            ClassesWereSetUp = true;
         }
     }
 }

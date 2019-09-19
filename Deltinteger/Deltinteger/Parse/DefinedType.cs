@@ -183,6 +183,8 @@ namespace Deltin.Deltinteger.Parse
 
         override public Element New(CreateObjectNode node, ScopeGroup getter, ScopeGroup scope, TranslateRule context)
         {
+            context.ParserData.SetupClasses();
+
             // Get the index to store the class.
             IndexedVar index = context.VarCollection.AssignVar(scope, "New " + Name + " class index", context.IsGlobal, null); // Assigns the index variable.
             Element takenIndexes = context.ParserData.ClassIndexes.GetVariable();
@@ -238,17 +240,6 @@ namespace Deltin.Deltinteger.Parse
             );
 
             // The direct reference to the class variable.
-            /*
-            IndexedVar store = new IndexedVar(
-                scope,
-                Name + " root",
-                true,
-                Variable.C,
-                new Element[] { index.GetVariable() },
-                context.VarCollection.WorkshopArrayBuilder,
-                null
-            );
-            */
             IndexedVar store = context.ParserData.ClassArray.CreateChild(scope, Name + " root", new Element[] { index.GetVariable() }, null);
             store.Index[0].SupportedType = store;
             store.Type = this;
@@ -264,26 +255,10 @@ namespace Deltin.Deltinteger.Parse
         {
             if (req.Name == Name + " root") return req;
             return context.ClassArray.CreateChild(null, Name + " root", new Element[] { req.GetVariable(target) }, null);
-            /*
-            return new IndexedVar(
-                null,
-                Name + " root",
-                true,
-                Variable.C,
-                new Element[] { req.GetVariable(target) },
-                context.VarCollection.WorkshopArrayBuilder,
-                null
-            );
-            */
         }
 
         public static void Delete(Element index, TranslateRule context)
         {
-            /*
-            context.Actions.AddRange(context.VarCollection.WorkshopArrayBuilder.SetVariable(
-                new V_Null(), true, null, Variable.C, index
-            ));
-            */
             context.Actions.AddRange(
                 context.ParserData.ClassArray.SetVariable(new V_Null(), null, index)
             );
@@ -298,20 +273,6 @@ namespace Deltin.Deltinteger.Parse
 
         override public void GetSource(TranslateRule context, Element element, Location location)
         {
-            /*
-            element.SupportedType = new IndexedVar(
-                null,
-                Name + " root",
-                true,
-                Variable.C,
-                new Element[] { element },
-                context.VarCollection.WorkshopArrayBuilder,
-                null
-            )
-            {
-                Type = this
-            };
-            */
             IndexedVar supportedType = context.ParserData.ClassArray.CreateChild(null, Name + " root", new Element[] { element }, null);
             supportedType.Type = this;
             element.SupportedType = supportedType;
