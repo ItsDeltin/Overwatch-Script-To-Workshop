@@ -109,7 +109,7 @@ user_method : DOCUMENTATION* accessor? RECURSIVE? (METHOD | type=PART) name=PART
 	block
 	;
 
-macro       : DOCUMENTATION* accessor? MACRO name=PART LEFT_PAREN setParameters RIGHT_PAREN expr STATEMENT_END ;
+macro       : DOCUMENTATION* accessor? MACRO name=PART LEFT_PAREN setParameters RIGHT_PAREN ':' expr STATEMENT_END ;
 
 ruleset :
 	internalVars*
