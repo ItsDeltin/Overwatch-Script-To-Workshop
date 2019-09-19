@@ -331,8 +331,8 @@ namespace Deltin.Deltinteger.Parse
         }
     }
 
-    [CustomMethod("ClassMemoryCreated", CustomMethodType.Value)]
-    public class ClassMemoryCreated : CustomMethodBase
+    [CustomMethod("ClassMemoryUsed", CustomMethodType.Value)]
+    public class ClassMemoryUsed : CustomMethodBase
     {
         override protected MethodResult Get()
         {
@@ -346,15 +346,15 @@ namespace Deltin.Deltinteger.Parse
         }
     }
 
-    [CustomMethod("ClassMemoryPercentage", CustomMethodType.Value)]
-    public class ClassMemoryPercentage : CustomMethodBase
+    [CustomMethod("ClassMemory", CustomMethodType.Value)]
+    public class ClassMemory : CustomMethodBase
     {
         override protected MethodResult Get()
         {
             Element result = Element.Part<V_Multiply>(
                 Element.Part<V_Divide>(
-                    new V_Number(Constants.MAX_ARRAY_LENGTH),
-                    Element.Part<V_CountOf>(TranslateContext.ParserData.ClassIndexes.GetVariable())
+                    Element.Part<V_CountOf>(TranslateContext.ParserData.ClassIndexes.GetVariable()),
+                    new V_Number(Constants.MAX_ARRAY_LENGTH)
                 ),
                 new V_Number(100)
             );
