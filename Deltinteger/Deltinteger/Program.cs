@@ -14,7 +14,7 @@ namespace Deltin.Deltinteger
 {
     public class Program
     {
-        public const string VERSION = "v0.4.0.2";
+        public const string VERSION = "v0.5";
 
         public static readonly string ExeFolder = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
 
