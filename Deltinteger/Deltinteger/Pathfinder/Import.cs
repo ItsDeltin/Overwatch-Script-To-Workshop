@@ -2,13 +2,15 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.IO;
+using System.Xml;
+using System.Xml.Serialization;
 using Deltin.Deltinteger.Csv;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.Models;
 
 namespace Deltin.Deltinteger.Pathfinder
 {
-    class PathMap
+    public class PathMap
     {
         private static readonly Log Log = new Log("PathMap");
 
@@ -26,7 +28,7 @@ namespace Deltin.Deltinteger.Pathfinder
             for (int i = 0; i < frames.Length; i++)
                 if (frames[i].VariableSetOwner != "Global")
                 {
-                    Log.Write(LogLevel.Normal, new ColorMod("Error: need the global variable set, got " + frames[i].VariableSetOwner + " instead on line " + i, ConsoleColor.Red));
+                    Log.Write(LogLevel.Normal, new ColorMod("Error: need the global variable set, got " + frames[i].VariableSetOwner + " instead on line " + i + ".", ConsoleColor.Red));
                     Console.ReadLine();
                 }
 
@@ -68,25 +70,55 @@ namespace Deltin.Deltinteger.Pathfinder
             return new PathMap(vectors.ToArray(), segments.ToArray());
         }
 
-        public Vertex[] Nodes { get; }
-        public Segment[] Segments { get; }
+        public static PathMap ImportFromXML(string file)
+        {
+            using (var reader = XmlReader.Create(file))
+            {
+                XmlSerializer serializer = new XmlSerializer(typeof(PathMap));
+                return (PathMap)serializer.Deserialize(reader);
+            }
+        }
+
+        public Vertex[] Nodes { get; set; }
+        public Segment[] Segments { get; set; }
 
         public PathMap(Vertex[] nodes, Segment[] segments)
         {
             Nodes = nodes;
             Segments = segments;
         }
+
+        private PathMap() {}
+
+        public string ExportAsXML()
+        {
+            XmlSerializer serializer = new XmlSerializer(typeof(PathMap));
+            XmlSerializerNamespaces ns = new XmlSerializerNamespaces();
+            ns.Add("","");
+
+            string result;
+            using (StringWriter stringWriter = new StringWriter())
+            {
+                serializer.Serialize(stringWriter, this, ns);
+                result = stringWriter.ToString();
+            }
+            return result;
+        }
     }
 
-    class Segment
+    public class Segment
     {
-        public int Node1 { get; }
-        public int Node2 { get; }
+        [XmlAttribute]
+        public int Node1 { get; set; }
+        [XmlAttribute]
+        public int Node2 { get; set; }
 
         public Segment(int node1, int node2)
         {
             Node1 = node1;
             Node2 = node2;
         }
+
+        private Segment() {}
     }
 }

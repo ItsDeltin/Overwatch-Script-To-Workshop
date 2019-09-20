@@ -9,6 +9,7 @@ using System.Globalization;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.Parse;
 using Deltin.Deltinteger.LanguageServer;
+using Deltin.Deltinteger.Pathfinder;
 
 namespace Deltin.Deltinteger
 {
@@ -41,7 +42,8 @@ namespace Deltin.Deltinteger
             }
             else if (args.Contains("-pathfind"))
             {
-                Pathfinder.PathMap.ImportFromCSV(@"C:\Users\HDdel\Desktop\csv.txt");
+                PathMap map = PathMap.ImportFromCSV(@"C:\Users\HDdel\Desktop\csv.txt");
+                map.Export();
             }
             else if (args.Contains("-generatealphabet"))
             {
