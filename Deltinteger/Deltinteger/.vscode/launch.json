@@ -38,17 +38,6 @@
             "internalConsoleOptions": "openOnSessionStart"
         },
         {
-            "name": "Generate Pathfinder",
-            "type":"clr",
-            "request": "launch",
-            "preLaunchTask": "Debug build",
-            "program": "${workspaceFolder}/bin/Debug/Deltinteger.exe",
-            "args":["-pathfind"],
-            "console": "externalTerminal",
-            "stopAtEntry": false,
-            "internalConsoleOptions": "openOnSessionStart"
-        },
-        {
             "name": "Generate Economic Alphabet",
             "type":"clr",
             "request": "launch",

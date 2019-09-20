@@ -40,11 +40,6 @@ namespace Deltin.Deltinteger
                 int.TryParse(portArgs.ElementAtOrDefault(1), out int serverPort);
                 new Server().RequestLoop(serverPort);
             }
-            else if (args.Contains("-pathfind"))
-            {
-                PathMap map = PathMap.ImportFromCSV(@"C:\Users\HDdel\Desktop\csv.txt");
-                map.Export();
-            }
             else if (args.Contains("-generatealphabet"))
             {
                 Console.Write("Output folder: ");
@@ -55,21 +50,28 @@ namespace Deltin.Deltinteger
             {
                 string script = args.ElementAtOrDefault(0);
 
-                if (File.Exists(script))
+                if (script != null && File.Exists(script))
                 {
-                    # if DEBUG == false
                     try
                     {
-                        Script(script);
+                        if (Path.GetExtension(script).ToLower() == ".csv")
+                        {
+                            PathMap map = PathMap.ImportFromCSV(script);
+                            string result = map.ExportAsXML();
+                            string output = Path.ChangeExtension(script, "pathmap");
+                            using (FileStream fs = File.Create(output))
+                            {
+                                Byte[] info = new UTF8Encoding(true).GetBytes(result);
+                                fs.Write(info, 0, info.Length);
+                            }
+                        }
+                        else Script(script);
                     }
                     catch (Exception ex)
                     {
                         Log.Write(LogLevel.Normal, "Internal exception.");
                         Log.Write(LogLevel.Normal, ex.ToString());
                     }
-                    #else
-                    Script(script);
-                    #endif
                 }
                 else
                 {
