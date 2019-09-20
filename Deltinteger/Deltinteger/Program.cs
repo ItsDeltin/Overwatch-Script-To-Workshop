@@ -61,7 +61,7 @@ namespace Deltin.Deltinteger
                             string output = Path.ChangeExtension(script, "pathmap");
                             using (FileStream fs = File.Create(output))
                             {
-                                Byte[] info = new UTF8Encoding(true).GetBytes(result);
+                                Byte[] info = Encoding.Unicode.GetBytes(result);
                                 fs.Write(info, 0, info.Length);
                             }
                         }

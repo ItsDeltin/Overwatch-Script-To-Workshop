@@ -1007,6 +1007,17 @@ namespace Deltin.Deltinteger.Elements
     [Parameter("Z", ValueType.Number, typeof(V_Number))]
     public class V_Vector : Element
     {
+        public V_Vector(V_Number x, V_Number y, V_Number z)
+        {
+            ParameterValues = new IWorkshopTree[] { x, y, z };
+        }
+        public V_Vector(double x, double y, double z) : this(new V_Number(x), new V_Number(y), new V_Number(z))
+        {
+        }
+        public V_Vector()
+        {
+        }
+
         override public bool ConstantSupported<T>()
         {
             if (typeof(T) != typeof(Models.Vertex)) return false;
@@ -1039,6 +1050,10 @@ namespace Deltin.Deltinteger.Elements
             
             return new Models.Vertex(x, y, z);
         }
+
+        public Element X { get { return (Element)ParameterValues[0]; } }
+        public Element Y { get { return (Element)ParameterValues[1]; } }
+        public Element Z { get { return (Element)ParameterValues[2]; } }
 
         public static V_Vector Zero { get { return Element.Part<V_Vector>(new V_Number(0), new V_Number(0), new V_Number(0)); }}
     }

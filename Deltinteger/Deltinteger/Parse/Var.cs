@@ -4,7 +4,7 @@ using System.Linq;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.Models;
-using Antlr4.Runtime;
+using Deltin.Deltinteger.Pathfinder;
 
 namespace Deltin.Deltinteger.Parse
 {

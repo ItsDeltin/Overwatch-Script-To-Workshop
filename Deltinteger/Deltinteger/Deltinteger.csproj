@@ -133,7 +133,9 @@
     <Compile Include="Models\EconomicAlphabet.cs" />
     <Compile Include="Models\Import\Obj.cs" />
     <Compile Include="Models\Import\String.cs" />
-    <Compile Include="Pathfinder\Import.cs" />
+    <Compile Include="Pathfinder\PathMap.cs" />
+    <Compile Include="Pathfinder\GetPath.cs" />
+    <Compile Include="Pathfinder\PathMapVar.cs" />
     <Compile Include="CSV.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Extras.cs" />

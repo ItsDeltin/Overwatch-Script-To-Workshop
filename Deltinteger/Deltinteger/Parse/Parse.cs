@@ -5,6 +5,7 @@ using System.IO;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.Models;
+using Deltin.Deltinteger.Pathfinder;
 using Antlr4.Runtime;
 
 namespace Deltin.Deltinteger.Parse
@@ -193,12 +194,17 @@ namespace Deltin.Deltinteger.Parse
                         if (!importer.AlreadyImported)
                         {
                             importedFiles.Add(importer.ResultingPath);
-                            string content = importer.GetFile();
                             switch (importer.FileType)
                             {
                                 case ".obj":
+                                    string content = importer.GetFile();
                                     Model newModel = Model.ImportObj(content);
                                     new ModelVar(importObject.Name, Root, importObject, newModel);
+                                    break;
+                                
+                                case ".pathmap":
+                                    PathMap pathMap = PathMap.ImportFromXML(importer.ResultingPath);
+                                    new PathMapVar(this, importObject.Name, Root, importObject, pathMap);
                                     break;
                             }
                         }
@@ -288,9 +294,13 @@ namespace Deltin.Deltinteger.Parse
         public void SetupClasses()
         {
             if (ClassesWereSetUp) return;
-
             globalTranslate.Actions.AddRange(ClassIndexes.SetVariable(new V_EmptyArray()));
             ClassesWereSetUp = true;
+        }
+
+        public void GlobalSetup(Element[] actions)
+        {
+            globalTranslate.Actions.AddRange(actions);
         }
     }
 }
