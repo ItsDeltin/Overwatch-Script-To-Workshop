@@ -133,13 +133,14 @@
     <Compile Include="Models\EconomicAlphabet.cs" />
     <Compile Include="Models\Import\Obj.cs" />
     <Compile Include="Models\Import\String.cs" />
+    <Compile Include="Pathfinder\Import.cs" />
+    <Compile Include="CSV.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Extras.cs" />
     <Compile Include="Wiki.cs" />
     <Compile Include="Constants.cs" />
     <Compile Include="Interfaces.cs" />
     <Compile Include="Exceptions.cs" />
-    <Compile Include="CSV.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Content Include="Start Language Server.bat">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>

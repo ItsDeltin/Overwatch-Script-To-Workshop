@@ -23,8 +23,14 @@ namespace Deltin.Deltinteger.Csv
         public static CsvFrame[] ParseSet(string[] lines)
         {
             CsvFrame[] frames = new CsvFrame[lines.Length];
-             for (int i = 0; i < lines.Length; i++)
+            for (int i = 0; i < lines.Length; i++)
                 frames[i] = ParseOne(lines[i]);
+            
+            for (int i = 1; i < frames.Length; i++)
+                foreach (var frameVar in frames[i].VariableValues)
+                    if (!frames[i].VariableValues[frameVar.Key].EqualTo(frames[i - 1].VariableValues[frameVar.Key]))
+                        frameVar.Value.Changed = true;
+            
             return frames;
         }
 
@@ -133,7 +139,17 @@ namespace Deltin.Deltinteger.Csv
         }
     }
 
-    public abstract class CsvPart {}
+    public abstract class CsvPart
+    {
+        public bool Changed { get; set; } 
+
+        public bool EqualTo(CsvPart other)
+        {
+            return GetType() == other.GetType() && IsEqual(other);
+        }
+
+        protected abstract bool IsEqual(CsvPart other);
+    }
 
     class CsvArray : CsvPart
     {
@@ -142,6 +158,18 @@ namespace Deltin.Deltinteger.Csv
         public CsvArray(CsvPart[] values)
         {
             Values = values;
+        }
+
+        override protected bool IsEqual(CsvPart other)
+        {
+            CsvArray array = (CsvArray)other;
+            if (array.Values.Length != Values.Length) return false;
+
+            for (int i = 0; i < Values.Length; i++)
+                if (!Values[i].EqualTo(array.Values[i]))
+                    return false;
+            
+            return true;
         }
     }
 
@@ -153,6 +181,11 @@ namespace Deltin.Deltinteger.Csv
         {
             Value = value;
         }
+
+        override protected bool IsEqual(CsvPart other)
+        {
+            return ((CsvNumber)other).Value == Value;
+        }
     }
 
     class CsvVector : CsvPart
@@ -162,6 +195,11 @@ namespace Deltin.Deltinteger.Csv
         public CsvVector(Vertex value)
         {
             Value = value;
+        }
+
+        override protected bool IsEqual(CsvPart other)
+        {
+            return ((CsvVector)other).Value.EqualTo(Value);
         }
     }
 
@@ -173,6 +211,11 @@ namespace Deltin.Deltinteger.Csv
         {
             Value = value;
         }
+
+        override protected bool IsEqual(CsvPart other)
+        {
+            return ((CsvBoolean)other).Value == Value;
+        }
     }
 
     class CsvString : CsvPart
@@ -182,6 +225,11 @@ namespace Deltin.Deltinteger.Csv
         public CsvString(string value)
         {
             Value = value;
+        }
+
+        override protected bool IsEqual(CsvPart other)
+        {
+            return ((CsvString)other).Value == Value;
         }
     }
 

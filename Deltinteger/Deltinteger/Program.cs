@@ -39,6 +39,10 @@ namespace Deltin.Deltinteger
                 int.TryParse(portArgs.ElementAtOrDefault(1), out int serverPort);
                 new Server().RequestLoop(serverPort);
             }
+            else if (args.Contains("-pathfind"))
+            {
+                Pathfinder.PathMap.ImportFromCSV(@"C:\Users\HDdel\Desktop\csv.txt");
+            }
             else if (args.Contains("-generatealphabet"))
             {
                 Console.Write("Output folder: ");

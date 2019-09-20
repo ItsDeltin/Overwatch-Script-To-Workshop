@@ -214,20 +214,26 @@ if (IsCommunicating(EventPlayer(), Communication.VoiceLineUp))
     SmallMessage(AllPlayers(), "building ...");
     isBuilding = true;
 
-    foreach (Node node in Nodes)
-        buildingNode = node.Location;
-    
-    foreach (Segment segment in Segments)
+    for (define i = 0; i < CountOf(Nodes); i++)
     {
-        connect1 = IndexOfArrayValue(Nodes, segment.Node1);
-        connect2 = IndexOfArrayValue(Nodes, segment.Node2);
+        buildingNode = (<Node>Nodes[i]).Location;
+        buildingNodeIndex = i;
+    }
+    
+    for (define i = 0; i < CountOf(Segments); i++)
+    {
+        connect1 = IndexOfArrayValue(Nodes, (<Segment>Segments[i]).Node1);
+        connect2 = IndexOfArrayValue(Nodes, (<Segment>Segments[i]).Node2);
+        connectIndex = i;
     }
 
     SmallMessage(AllPlayers(), "downloaded!");
     isBuilding = false;
 }
 
-define globalvar isBuilding D = false;
-define globalvar buildingNode E = -1;
-define globalvar connect1 F = -1;
-define globalvar connect2 G = -1;
+define globalvar isBuilding        D = false;
+define globalvar buildingNodeIndex E = -1;
+define globalvar buildingNode      F = -1;
+define globalvar connectIndex      G = -1;
+define globalvar connect1          H = -1;
+define globalvar connect2          I = -1;
