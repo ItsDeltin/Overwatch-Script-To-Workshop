@@ -139,6 +139,7 @@
     <Compile Include="Constants.cs" />
     <Compile Include="Interfaces.cs" />
     <Compile Include="Exceptions.cs" />
+    <Compile Include="CSV.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Content Include="Start Language Server.bat">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
