@@ -91,10 +91,6 @@ namespace Deltin.Deltinteger.Pathfinder
                         Node2(forBuilder.IndexValue)
                     )
                 ),
-                A_Wait.MinimumWait,
-                Element.Part<A_SmallMessage>(new V_EventPlayer(), forBuilder.IndexValue), // ! Debug
-                Element.Part<A_SmallMessage>(new V_EventPlayer(), neighborIndex.GetVariable()), // ! Debug
-                A_Wait.MinimumWait,
 
                 // Get the distance between the current and the neighbor index.
                 neighborDistance.SetVariable(
@@ -106,6 +102,14 @@ namespace Deltin.Deltinteger.Pathfinder
                         Element.Part<V_ValueInArray>(distances.GetVariable(), current.GetVariable())
                     )
                 ),
+
+                A_Wait.MinimumWait,
+                Element.Part<A_SmallMessage>(new V_EventPlayer(), forBuilder.IndexValue), // ! Debug
+                Element.Part<A_SmallMessage>(new V_EventPlayer(), neighborIndex.GetVariable()), // ! Debug
+                Element.Part<A_SmallMessage>(new V_EventPlayer(), neighborDistance.GetVariable()), // ! Debug
+                Element.Part<A_SmallMessage>(new V_EventPlayer(), Element.Part<V_ValueInArray>(distances.GetVariable(), neighborIndex.GetVariable())), // ! Debug
+                A_Wait.MinimumWait,
+
                 // Set the current neighbor's distance if the new distance is less than what it is now.
                 distances.SetVariable(Element.TernaryConditional(
                     new V_Compare(
@@ -115,7 +119,7 @@ namespace Deltin.Deltinteger.Pathfinder
                     ),
                     neighborDistance.GetVariable(),
                     Element.Part<V_ValueInArray>(distances.GetVariable(), neighborIndex.GetVariable())
-                ), neighborIndex.GetVariable())
+                ), null, neighborIndex.GetVariable())
             ));
             forBuilder.Finish();
 
