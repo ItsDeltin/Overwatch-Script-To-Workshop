@@ -257,7 +257,6 @@ namespace Deltin.Deltinteger.Pathfinder
     [CustomMethod("Pathfind", CustomMethodType.Action)]
     [Parameter("Player", Elements.ValueType.Player, null)]
     [VarRefParameter("Path Map")]
-    [Parameter("Position", Elements.ValueType.Vector, null)]
     [Parameter("Destination", Elements.ValueType.Vector, null)]
     class Pathfind : CustomMethodBase
     {
@@ -273,16 +272,28 @@ namespace Deltin.Deltinteger.Pathfinder
             
             Element player                 = (Element)Parameters[0];
             PathMapVar pathmap = (PathMapVar)((VarRef)Parameters[1]).Var;
-            Element position               = (Element)Parameters[2];
-            Element destination            = (Element)Parameters[3];
 
-            IndexedVar path = GetPath.Get(TranslateContext, pathmap, position, destination);
+            IndexedVar destinationVar = TranslateContext.VarCollection.AssignVar(Scope, "Destination", TranslateContext.IsGlobal, null);
+            TranslateContext.Actions.AddRange(
+                destinationVar.SetVariable((Element)Parameters[2])
+            );
+
+            IndexedVar path = GetPath.Get(TranslateContext, pathmap, Element.Part<V_PositionOf>(player), destinationVar.GetVariable());
 
             TranslateContext.Actions.AddRange(
-                pathfinderInfo.Nodes.SetVariable(Element.Part<V_Append>(pathmap.Nodes.GetVariable(), Element.Part<V_NearestWalkablePosition>(destination)))
+                pathfinderInfo.Nodes.SetVariable(
+                    Element.Part<V_Append>(
+                        pathmap.Nodes.GetVariable(),
+                        Element.Part<V_Add>(
+                            destinationVar.GetVariable(),
+                            new V_Vector(0, 1.5, 0)
+                        )
+                    ),
+                    player
+                )
             );
             TranslateContext.Actions.AddRange(
-                pathfinderInfo.Path.SetVariable(Element.Part<V_Append>(path.GetVariable(), new V_Number(pathmap.PathMap.Nodes.Length)))
+                pathfinderInfo.Path.SetVariable(Element.Part<V_Append>(path.GetVariable(), new V_Number(pathmap.PathMap.Nodes.Length)), player)
             );
 
             return new MethodResult(null, null);
@@ -290,13 +301,15 @@ namespace Deltin.Deltinteger.Pathfinder
 
         override public CustomMethodWiki Wiki()
         {
-            return null;
+            return new CustomMethodWiki(
+                "Moves a player to the specified position."
+            );
         }
     }
 
     public class PathfinderInfo
     {
-        public const double MoveToNext = 1;
+        public const double MoveToNext = 0.5;
 
         public IndexedVar Nodes { get; }
         public IndexedVar Path { get; }
@@ -335,6 +348,14 @@ namespace Deltin.Deltinteger.Pathfinder
                     EnumData.GetEnumValue(ThrottleBehavior.ReplaceExistingThrottle),
                     EnumData.GetEnumValue(ThrottleRev.DirectionAndMagnitude)
                 )
+                // ,Element.Part<A_CreateEffect>(
+                //     new V_AllPlayers(),
+                //     EnumData.GetEnumValue(Effect.Sphere),
+                //     EnumData.GetEnumValue(Color.Green),
+                //     NextPosition(),
+                //     new V_Number(0.33),
+                //     EnumData.GetEnumValue(EffectRev.VisibleToPositionAndRadius)
+                // )
             );
 
             Rule updateIndex = new Rule(Constants.INTERNAL_ELEMENT + "Pathfinder: Update", RuleEvent.OngoingPlayer);
