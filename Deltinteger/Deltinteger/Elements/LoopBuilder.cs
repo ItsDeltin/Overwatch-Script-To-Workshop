@@ -3,6 +3,43 @@ using Deltin.Deltinteger.Elements;
 
 namespace Deltin.Deltinteger.Parse
 {
+    class IfBuilder
+    {
+        protected TranslateRule Context { get; }
+        public bool IsSetup { get; private set; } = false;
+        public bool Finished { get; private set; } = false;
+        private int StartIndex { get; set; }
+        private Element Condition { get; }
+        private A_SkipIf SkipCondition { get; set; }
+
+        public IfBuilder(TranslateRule context, Element condition)
+        {
+            Context = context;
+            Condition = condition;
+        }
+
+        public void Setup()
+        {
+            if (Finished || IsSetup) throw new Exception();
+
+            StartIndex = Context.ContinueSkip.GetSkipCount();
+
+            // Setup the skip if.
+            SkipCondition = new A_SkipIf() { ParameterValues = new IWorkshopTree[2] };
+            SkipCondition.ParameterValues[0] = Element.Part<V_Not>(Condition);
+            Context.Actions.Add(SkipCondition);
+            IsSetup = true;
+        }
+
+        public void Finish()
+        {
+            if (Finished || !IsSetup) throw new Exception();
+
+            SkipCondition.ParameterValues[1] = new V_Number(Context.ContinueSkip.GetSkipCount() - StartIndex - 1);
+            Finished = true;
+        }
+    }
+
     abstract class LoopBuilder
     {
         protected TranslateRule Context { get; }

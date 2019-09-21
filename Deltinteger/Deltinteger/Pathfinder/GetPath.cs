@@ -65,7 +65,14 @@ namespace Deltin.Deltinteger.Pathfinder
             //IndexedVar neighbors = context.VarCollection.AssignVar(null, "Dijkstra: Neighbors", context.IsGlobal, null);
             //IndexedVar neighborDistance = context.VarCollection.AssignVar(null, "Dijkstra: Distance", context.IsGlobal, null);
 
-            WhileBuilder whileBuilder = new WhileBuilder(context, new V_True());
+            IndexedVar prev = context.VarCollection.AssignVar(null, "Dijkstra: Prev Array", context.IsGlobal, Variable.O, new int[0], null);
+
+            WhileBuilder whileBuilder = new WhileBuilder(context, 
+                Element.Part<V_ArrayContains>(
+                    unvisited.GetVariable(),
+                    lastNode
+                )
+            );
             whileBuilder.Setup();
 
             // Get neighboring indexes
@@ -104,19 +111,21 @@ namespace Deltin.Deltinteger.Pathfinder
                         ),
                         Element.Part<V_ValueInArray>(distances.GetVariable(), current.GetVariable())
                     )
-                ),
-
-                // Set the current neighbor's distance if the new distance is less than what it is now.
-                distances.SetVariable(Element.TernaryConditional(
-                    new V_Compare(
-                        neighborDistance.GetVariable(),
-                        Operators.LessThan,
-                        Element.Part<V_ValueInArray>(distances.GetVariable(), neighborIndex.GetVariable())
-                    ),
-                    neighborDistance.GetVariable(),
-                    Element.Part<V_ValueInArray>(distances.GetVariable(), neighborIndex.GetVariable())
-                ), null, neighborIndex.GetVariable())
+                )
             ));
+
+            // Set the current neighbor's distance if the new distance is less than what it is now.
+            IfBuilder ifBuilder = new IfBuilder(context, new V_Compare(
+                neighborDistance.GetVariable(),
+                Operators.LessThan,
+                Element.Part<V_ValueInArray>(distances.GetVariable(), neighborIndex.GetVariable())
+            ));
+            ifBuilder.Setup();
+
+            forBuilder.AddActions(distances.SetVariable(neighborDistance.GetVariable(), null, neighborIndex.GetVariable()));
+            forBuilder.AddActions(prev.SetVariable(current.GetVariable(), null, neighborIndex.GetVariable()));
+
+            ifBuilder.Finish();
             forBuilder.Finish();
 
             whileBuilder.AddActions(ArrayBuilder<Element>.Build(
