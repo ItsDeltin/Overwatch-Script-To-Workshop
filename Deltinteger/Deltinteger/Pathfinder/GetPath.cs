@@ -35,6 +35,8 @@ namespace Deltin.Deltinteger.Pathfinder
             );
         }
 
+        private static readonly V_Number Infinity = new V_Number(9999);
+
         public static MethodResult Get(TranslateRule context, PathMapVar pathmap, Element position, Element destination)
         {
             var firstNode = ClosestToPosition(pathmap, position);
@@ -42,16 +44,18 @@ namespace Deltin.Deltinteger.Pathfinder
 
             List<Element> actions = new List<Element>();
 
-            IndexedVar current = context.VarCollection.AssignVar(null, "Dijkstra: Current", context.IsGlobal, null);
+            IndexedVar current = context.VarCollection.AssignVar(null, "Dijkstra: Current", context.IsGlobal, Variable.I, new int[0], null);
+            //IndexedVar current = context.VarCollection.AssignVar(null, "Dijkstra: Current", context.IsGlobal, null);
             context.Actions.AddRange(current.SetVariable(firstNode));
 
             IndexedVar distances = context.VarCollection.AssignVar(null, "Dijkstra: Distances", context.IsGlobal, Variable.J, new int[0], null);
             //IndexedVar distances = context.VarCollection.AssignVar(null, "Dijkstra: Distances", context.IsGlobal, null);
             SetInitialDistances(context, pathmap.PathMap, distances, current.GetVariable());
 
-            IndexedVar visited = context.VarCollection.AssignVar(null, "Dijkstra: Visited", context.IsGlobal, Variable.K, new int[0], null);
+            IndexedVar unvisited = context.VarCollection.AssignVar(null, "Dijkstra: Visited", context.IsGlobal, Variable.K, new int[0], null);
             //IndexedVar visited = context.VarCollection.AssignVar(null, "Dijkstra: Visited", context.IsGlobal, null);
-            context.Actions.AddRange(visited.SetVariable(new V_EmptyArray()));
+            SetInitialUnvisited(context, pathmap.PathMap, unvisited);
+            //context.Actions.AddRange(unvisited.SetVariable(new V_EmptyArray()));
 
             IndexedVar connectedSegments = context.VarCollection.AssignVar(null, "Dijkstra: Connected Segments", context.IsGlobal, Variable.L, new int[0], null);
 
@@ -69,7 +73,6 @@ namespace Deltin.Deltinteger.Pathfinder
                 connectedSegments.SetVariable(GetConnectedSegments(
                     pathmap.Nodes.GetVariable(),
                     pathmap.Segments.GetVariable(),
-                    visited.GetVariable(),
                     current.GetVariable()
                 ))
             );
@@ -103,13 +106,6 @@ namespace Deltin.Deltinteger.Pathfinder
                     )
                 ),
 
-                A_Wait.MinimumWait,
-                Element.Part<A_SmallMessage>(new V_EventPlayer(), forBuilder.IndexValue), // ! Debug
-                Element.Part<A_SmallMessage>(new V_EventPlayer(), neighborIndex.GetVariable()), // ! Debug
-                Element.Part<A_SmallMessage>(new V_EventPlayer(), neighborDistance.GetVariable()), // ! Debug
-                Element.Part<A_SmallMessage>(new V_EventPlayer(), Element.Part<V_ValueInArray>(distances.GetVariable(), neighborIndex.GetVariable())), // ! Debug
-                A_Wait.MinimumWait,
-
                 // Set the current neighbor's distance if the new distance is less than what it is now.
                 distances.SetVariable(Element.TernaryConditional(
                     new V_Compare(
@@ -125,8 +121,15 @@ namespace Deltin.Deltinteger.Pathfinder
 
             whileBuilder.AddActions(ArrayBuilder<Element>.Build(
                 // Add the current to the visited array.
-                visited.SetVariable(Element.Part<V_Append>(visited.GetVariable(), current.GetVariable())),
-                Element.Part<A_SmallMessage>(new V_EventPlayer(), new V_String(null, "finished"))
+                unvisited.SetVariable(Element.Part<V_RemoveFromArray>(unvisited.GetVariable(), current.GetVariable())),
+
+                // Set the current node as the smallest unvisited.
+                current.SetVariable(LowestUnvisited(pathmap.Nodes.GetVariable(), distances.GetVariable(), unvisited.GetVariable())),
+
+                A_Wait.MinimumWait,
+                Element.Part<A_SmallMessage>(new V_EventPlayer(), current.GetVariable()),
+                Element.Part<A_SmallMessage>(new V_EventPlayer(), new V_String(null, "finished", current.GetVariable())),
+                A_Wait.MinimumWait
             ));
 
             whileBuilder.Finish();
@@ -154,13 +157,22 @@ namespace Deltin.Deltinteger.Pathfinder
         {
             Element[] distances = new Element[pathmap.Nodes.Length];
             for (int i = 0; i < distances.Length; i++)
-                distances[i] = new V_Number(9999);
+                distances[i] = Infinity;
             
             context.Actions.AddRange(distancesVar.SetVariable(Element.CreateArray(distances)));
             context.Actions.AddRange(distancesVar.SetVariable(new V_Number(0), null, currentIndex));
         }
 
-        private static Element GetConnectedSegments(Element nodes, Element segments, Element visited, Element currentIndex)
+        private static void SetInitialUnvisited(TranslateRule context, PathMap pathmap, IndexedVar unvisitedVar)
+        {
+            Element[] unvisited = new Element[pathmap.Nodes.Length];
+            for (int i = 0; i < unvisited.Length; i++)
+                unvisited[i] = new V_Number(i);
+            
+            context.Actions.AddRange(unvisitedVar.SetVariable(Element.CreateArray(unvisited)));
+        }
+
+        private static Element GetConnectedSegments(Element nodes, Element segments, Element currentIndex)
         {
             return Element.Part<V_FilteredArray>(
                 segments,
@@ -169,24 +181,17 @@ namespace Deltin.Deltinteger.Pathfinder
                     currentIndex
                 )
             );
-            /*
-            return Element.Part<V_FilteredArray>(
-                nodes,
-                Element.Part<V_And>(
-                    Element.Part<V_IsTrueForAny>(
-                        segments,
-                        Element.Part<V_ArrayContains>(
-                            Nodes(new V_ArrayElement()),
-                            currentIndex
-                        )
-                    ),
-                    Element.Part<V_Not>(Element.Part<V_ArrayContains>(
-                        visited,
-                        new V_ArrayElement()
-                    ))
+        }
+
+        private static Element LowestUnvisited(Element nodes, Element distances, Element unvisited)
+        {
+            return Element.Part<V_FirstOf>(Element.Part<V_SortedArray>(
+                unvisited,
+                Element.Part<V_ValueInArray>(
+                    distances,
+                    new V_ArrayElement()
                 )
-            );
-            */
+            ));
         }
 
         private static Element Nodes(Element segment)
