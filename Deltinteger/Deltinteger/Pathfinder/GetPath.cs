@@ -61,60 +61,71 @@ namespace Deltin.Deltinteger.Pathfinder
             //IndexedVar neighbors = context.VarCollection.AssignVar(null, "Dijkstra: Neighbors", context.IsGlobal, null);
             //IndexedVar neighborDistance = context.VarCollection.AssignVar(null, "Dijkstra: Distance", context.IsGlobal, null);
 
-            context.Actions.AddRange(Element.While(
-                context.ContinueSkip,
-                null,
-                ArrayBuilder<Element>.Build(
-                    // Get neighboring indexes
-                    connectedSegments.SetVariable(GetConnectedSegments(
-                        pathmap.Nodes.GetVariable(),
-                        pathmap.Segments.GetVariable(),
-                        visited.GetVariable(),
-                        current.GetVariable()
-                    )),
-                    // Loop through neighboring indexes
-                    Element.For(context, connectedSegments.GetVariable(), (index, indexValue) => {
-                        return ArrayBuilder<Element>.Build(
-                            // Get the index from the segment data
-                            neighborIndex.SetVariable(
-                                Element.TernaryConditional(
-                                    new V_Compare(
-                                        current.GetVariable(),
-                                        Operators.NotEqual,
-                                        Node1(indexValue)
-                                    ),
-                                    Node1(indexValue),
-                                    Node2(indexValue)
-                                )
-                            ),
-                            Element.Part<A_SmallMessage>(new V_EventPlayer(), indexValue),
-                            // Get the distance between the current and the neighbor index.
-                            neighborDistance.SetVariable(
-                                Element.Part<V_Add>(
-                                    Element.Part<V_DistanceBetween>(
-                                        Element.Part<V_ValueInArray>(pathmap.Nodes.GetVariable(), neighborIndex.GetVariable()),
-                                        Element.Part<V_ValueInArray>(pathmap.Nodes.GetVariable(), current.GetVariable())
-                                    ),
-                                    Element.Part<V_ValueInArray>(distances.GetVariable(), current.GetVariable())
-                                )
-                            ),
-                            // Set the current neighbor's distance if the new distance is less than what it is now.
-                            distances.SetVariable(Element.TernaryConditional(
-                                new V_Compare(
-                                    neighborDistance.GetVariable(),
-                                    Operators.LessThan,
-                                    Element.Part<V_ValueInArray>(distances.GetVariable(), neighborIndex.GetVariable())
-                                ),
-                                neighborDistance.GetVariable(),
-                                Element.Part<V_ValueInArray>(distances.GetVariable(), neighborIndex.GetVariable())
-                            ), neighborIndex.GetVariable())
-                        );
-                    }),
-                    // Add the current to the visited array.
-                    visited.SetVariable(Element.Part<V_Append>(visited.GetVariable(), current.GetVariable())),
-                    Element.Part<A_SmallMessage>(new V_EventPlayer(), new V_String(null, "finished"))
-                )
+            WhileBuilder whileBuilder = new WhileBuilder(context, new V_True());
+            whileBuilder.Setup();
+
+            // Get neighboring indexes
+            whileBuilder.AddActions(
+                connectedSegments.SetVariable(GetConnectedSegments(
+                    pathmap.Nodes.GetVariable(),
+                    pathmap.Segments.GetVariable(),
+                    visited.GetVariable(),
+                    current.GetVariable()
+                ))
+            );
+
+            // Loop through neighboring indexes
+            ForEachBuilder forBuilder = new ForEachBuilder(context, connectedSegments.GetVariable());
+            forBuilder.Setup();
+
+            forBuilder.AddActions(ArrayBuilder<Element>.Build(
+                // Get the index from the segment data
+                neighborIndex.SetVariable(
+                    Element.TernaryConditional(
+                        new V_Compare(
+                            current.GetVariable(),
+                            Operators.NotEqual,
+                            Node1(forBuilder.IndexValue)
+                        ),
+                        Node1(forBuilder.IndexValue),
+                        Node2(forBuilder.IndexValue)
+                    )
+                ),
+                A_Wait.MinimumWait,
+                Element.Part<A_SmallMessage>(new V_EventPlayer(), forBuilder.IndexValue), // ! Debug
+                Element.Part<A_SmallMessage>(new V_EventPlayer(), neighborIndex.GetVariable()), // ! Debug
+                A_Wait.MinimumWait,
+
+                // Get the distance between the current and the neighbor index.
+                neighborDistance.SetVariable(
+                    Element.Part<V_Add>(
+                        Element.Part<V_DistanceBetween>(
+                            Element.Part<V_ValueInArray>(pathmap.Nodes.GetVariable(), neighborIndex.GetVariable()),
+                            Element.Part<V_ValueInArray>(pathmap.Nodes.GetVariable(), current.GetVariable())
+                        ),
+                        Element.Part<V_ValueInArray>(distances.GetVariable(), current.GetVariable())
+                    )
+                ),
+                // Set the current neighbor's distance if the new distance is less than what it is now.
+                distances.SetVariable(Element.TernaryConditional(
+                    new V_Compare(
+                        neighborDistance.GetVariable(),
+                        Operators.LessThan,
+                        Element.Part<V_ValueInArray>(distances.GetVariable(), neighborIndex.GetVariable())
+                    ),
+                    neighborDistance.GetVariable(),
+                    Element.Part<V_ValueInArray>(distances.GetVariable(), neighborIndex.GetVariable())
+                ), neighborIndex.GetVariable())
             ));
+            forBuilder.Finish();
+
+            whileBuilder.AddActions(ArrayBuilder<Element>.Build(
+                // Add the current to the visited array.
+                visited.SetVariable(Element.Part<V_Append>(visited.GetVariable(), current.GetVariable())),
+                Element.Part<A_SmallMessage>(new V_EventPlayer(), new V_String(null, "finished"))
+            ));
+
+            whileBuilder.Finish();
 
             return new MethodResult(null, null);
         }

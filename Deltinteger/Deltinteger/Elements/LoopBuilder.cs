@@ -20,8 +20,8 @@ namespace Deltin.Deltinteger.Parse
         {
             if (Finished || IsSetup) throw new Exception();
 
+            Context.ContinueSkip.Setup();
             PreLoopStart();
-
             StartIndex = Context.ContinueSkip.GetSkipCount();
 
             // Setup the skip if.
@@ -36,8 +36,8 @@ namespace Deltin.Deltinteger.Parse
             if (Finished || !IsSetup) throw new Exception();
 
             PreLoopEnd();
-            SkipCondition.ParameterValues[1] = new V_Number(Context.ContinueSkip.GetSkipCount() - StartIndex);
             Context.ContinueSkip.SetSkipCount(StartIndex);
+            SkipCondition.ParameterValues[1] = new V_Number(Context.ContinueSkip.GetSkipCount() - StartIndex);
             AddActions(new A_Loop());
             AddActions(Context.ContinueSkip.ResetSkipActions());
             Finished = true;
@@ -48,13 +48,14 @@ namespace Deltin.Deltinteger.Parse
 
         protected abstract Element Condition();
 
-        public void AddActions(Element[] actions)
+        public void AddActions(params Element[] actions)
         {
             Context.Actions.AddRange(actions);
         }
-        public void AddActions(Element action)
+        public void AddActions(params Element[][] actions)
         {
-            Context.Actions.Add(action);
+            foreach (Element[] action in actions)
+                Context.Actions.AddRange(action);
         }
     }
 
@@ -85,7 +86,7 @@ namespace Deltin.Deltinteger.Parse
 
         override protected Element Condition()
         {
-            return new V_Compare();
+            return new V_Compare(Index, Operators.LessThan, Element.Part<V_CountOf>(array));
         }
 
         override protected void PreLoopStart()
