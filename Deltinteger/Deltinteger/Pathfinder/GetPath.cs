@@ -53,8 +53,11 @@ namespace Deltin.Deltinteger.Pathfinder
             //IndexedVar visited = context.VarCollection.AssignVar(null, "Dijkstra: Visited", context.IsGlobal, null);
             context.Actions.AddRange(visited.SetVariable(new V_EmptyArray()));
 
-            IndexedVar neighbors = context.VarCollection.AssignVar(null, "Dijkstra: Neighbors", context.IsGlobal, Variable.L, new int[0], null);
-            IndexedVar neighborDistance = context.VarCollection.AssignVar(null, "Dijkstra: Distance", context.IsGlobal, Variable.M, new int[0], null);
+            IndexedVar connectedSegments = context.VarCollection.AssignVar(null, "Dijkstra: Connected Segments", context.IsGlobal, Variable.L, new int[0], null);
+
+            IndexedVar neighborIndex = context.VarCollection.AssignVar(null, "Dijkstra: Neighbor Index", context.IsGlobal, Variable.M, new int[0], null);
+
+            IndexedVar neighborDistance = context.VarCollection.AssignVar(null, "Dijkstra: Distance", context.IsGlobal, Variable.N, new int[0], null);
             //IndexedVar neighbors = context.VarCollection.AssignVar(null, "Dijkstra: Neighbors", context.IsGlobal, null);
             //IndexedVar neighborDistance = context.VarCollection.AssignVar(null, "Dijkstra: Distance", context.IsGlobal, null);
 
@@ -63,20 +66,33 @@ namespace Deltin.Deltinteger.Pathfinder
                 null,
                 ArrayBuilder<Element>.Build(
                     // Get neighboring indexes
-                    neighbors.SetVariable(GetNeighboringIndexes(
-                        pathmap.Nodes.GetVariable(), 
-                        pathmap.Segments.GetVariable(), 
-                        visited.GetVariable(), 
+                    connectedSegments.SetVariable(GetConnectedSegments(
+                        pathmap.Nodes.GetVariable(),
+                        pathmap.Segments.GetVariable(),
+                        visited.GetVariable(),
                         current.GetVariable()
                     )),
                     // Loop through neighboring indexes
-                    Element.For(context, neighbors.GetVariable(), (index, indexValue) => {
+                    Element.For(context, connectedSegments.GetVariable(), (index, indexValue) => {
                         return ArrayBuilder<Element>.Build(
+                            // Get the index from the segment data
+                            neighborIndex.SetVariable(
+                                Element.TernaryConditional(
+                                    new V_Compare(
+                                        current.GetVariable(),
+                                        Operators.NotEqual,
+                                        Node1(indexValue)
+                                    ),
+                                    Node1(indexValue),
+                                    Node2(indexValue)
+                                )
+                            ),
+                            Element.Part<A_SmallMessage>(new V_EventPlayer(), indexValue),
                             // Get the distance between the current and the neighbor index.
                             neighborDistance.SetVariable(
                                 Element.Part<V_Add>(
                                     Element.Part<V_DistanceBetween>(
-                                        Element.Part<V_ValueInArray>(pathmap.Nodes.GetVariable(), indexValue),
+                                        Element.Part<V_ValueInArray>(pathmap.Nodes.GetVariable(), neighborIndex.GetVariable()),
                                         Element.Part<V_ValueInArray>(pathmap.Nodes.GetVariable(), current.GetVariable())
                                     ),
                                     Element.Part<V_ValueInArray>(distances.GetVariable(), current.GetVariable())
@@ -87,15 +103,16 @@ namespace Deltin.Deltinteger.Pathfinder
                                 new V_Compare(
                                     neighborDistance.GetVariable(),
                                     Operators.LessThan,
-                                    Element.Part<V_ValueInArray>(distances.GetVariable(), indexValue)
+                                    Element.Part<V_ValueInArray>(distances.GetVariable(), neighborIndex.GetVariable())
                                 ),
                                 neighborDistance.GetVariable(),
-                                Element.Part<V_ValueInArray>(distances.GetVariable(), indexValue)
-                            ), indexValue)
+                                Element.Part<V_ValueInArray>(distances.GetVariable(), neighborIndex.GetVariable())
+                            ), neighborIndex.GetVariable())
                         );
                     }),
                     // Add the current to the visited array.
-                    visited.SetVariable(Element.Part<V_Append>(visited.GetVariable(), current.GetVariable()))
+                    visited.SetVariable(Element.Part<V_Append>(visited.GetVariable(), current.GetVariable())),
+                    Element.Part<A_SmallMessage>(new V_EventPlayer(), new V_String(null, "finished"))
                 )
             ));
 
@@ -128,8 +145,16 @@ namespace Deltin.Deltinteger.Pathfinder
             context.Actions.AddRange(distancesVar.SetVariable(new V_Number(0), null, currentIndex));
         }
 
-        private static Element GetNeighboringIndexes(Element nodes, Element segments, Element visited, Element currentIndex)
+        private static Element GetConnectedSegments(Element nodes, Element segments, Element visited, Element currentIndex)
         {
+            return Element.Part<V_FilteredArray>(
+                segments,
+                Element.Part<V_ArrayContains>(
+                    Nodes(new V_ArrayElement()),
+                    currentIndex
+                )
+            );
+            /*
             return Element.Part<V_FilteredArray>(
                 nodes,
                 Element.Part<V_And>(
@@ -146,6 +171,7 @@ namespace Deltin.Deltinteger.Pathfinder
                     ))
                 )
             );
+            */
         }
 
         private static Element Nodes(Element segment)
