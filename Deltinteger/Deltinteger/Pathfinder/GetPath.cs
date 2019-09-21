@@ -66,6 +66,10 @@ namespace Deltin.Deltinteger.Pathfinder
             //IndexedVar neighborDistance = context.VarCollection.AssignVar(null, "Dijkstra: Distance", context.IsGlobal, null);
 
             IndexedVar prev = context.VarCollection.AssignVar(null, "Dijkstra: Prev Array", context.IsGlobal, Variable.O, new int[0], null);
+            SetInitialParents(context, pathmap.PathMap, prev);
+
+            IndexedVar finalPath = context.VarCollection.AssignVar(null, "Dijkstra: Final Path", context.IsGlobal, Variable.P, new int[0], null);
+            context.Actions.AddRange(finalPath.SetVariable(new V_EmptyArray()));
 
             WhileBuilder whileBuilder = new WhileBuilder(context, 
                 Element.Part<V_ArrayContains>(
@@ -133,15 +137,27 @@ namespace Deltin.Deltinteger.Pathfinder
                 unvisited.SetVariable(Element.Part<V_RemoveFromArray>(unvisited.GetVariable(), current.GetVariable())),
 
                 // Set the current node as the smallest unvisited.
-                current.SetVariable(LowestUnvisited(pathmap.Nodes.GetVariable(), distances.GetVariable(), unvisited.GetVariable())),
-
-                A_Wait.MinimumWait,
-                Element.Part<A_SmallMessage>(new V_EventPlayer(), current.GetVariable()),
-                Element.Part<A_SmallMessage>(new V_EventPlayer(), new V_String(null, "finished", current.GetVariable())),
-                A_Wait.MinimumWait
+                current.SetVariable(LowestUnvisited(pathmap.Nodes.GetVariable(), distances.GetVariable(), unvisited.GetVariable()))
             ));
 
             whileBuilder.Finish();
+
+            context.Actions.AddRange(
+                current.SetVariable(lastNode)
+            );
+
+            // Get the path.
+            WhileBuilder backtrack = new WhileBuilder(context, new V_Compare(
+                current.GetVariable(),
+                Operators.NotEqual,
+                new V_Number(-1)
+            ));
+            backtrack.Setup();
+            backtrack.AddActions(ArrayBuilder<Element>.Build(
+                finalPath.SetVariable(Element.Part<V_Append>(current.GetVariable(), finalPath.GetVariable())),
+                current.SetVariable(Element.Part<V_ValueInArray>(prev.GetVariable(), current.GetVariable()))
+            ));
+            backtrack.Finish();
 
             return new MethodResult(null, null);
         }
@@ -179,6 +195,15 @@ namespace Deltin.Deltinteger.Pathfinder
                 unvisited[i] = new V_Number(i);
             
             context.Actions.AddRange(unvisitedVar.SetVariable(Element.CreateArray(unvisited)));
+        }
+
+        private static void SetInitialParents(TranslateRule context, PathMap pathmap, IndexedVar parentVar)
+        {
+            Element[] parents = new Element[pathmap.Nodes.Length];
+            for (int i = 0; i < parents.Length; i++)
+                parents[i] = new V_Number(-1);
+            
+            context.Actions.AddRange(parentVar.SetVariable(Element.CreateArray(parents)));
         }
 
         private static Element GetConnectedSegments(Element nodes, Element segments, Element currentIndex)
