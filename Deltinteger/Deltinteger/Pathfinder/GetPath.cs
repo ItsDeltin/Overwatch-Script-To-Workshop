@@ -19,10 +19,11 @@ namespace Deltin.Deltinteger.Pathfinder
                 throw SyntaxErrorException.InvalidVarRefType(((VarRef)Parameters[0]).Var.Name, VarType.PathMap, ParameterLocations[0]);
             
             PathMapVar pathmap = (PathMapVar)((VarRef)Parameters[0]).Var;
-            Element position             = (Element)Parameters[1];
-            Element destination          = (Element)Parameters[2];
+            Element position               = (Element)Parameters[1];
+            Element destination            = (Element)Parameters[2];
 
-            return Get(TranslateContext, pathmap, position, destination);
+            IndexedVar finalPath = Get(TranslateContext, pathmap, position, destination);
+            return new MethodResult(null, finalPath.GetVariable());
         }
 
         public override CustomMethodWiki Wiki()
@@ -37,12 +38,10 @@ namespace Deltin.Deltinteger.Pathfinder
 
         private static readonly V_Number Infinity = new V_Number(9999);
 
-        public static MethodResult Get(TranslateRule context, PathMapVar pathmap, Element position, Element destination)
+        public static IndexedVar Get(TranslateRule context, PathMapVar pathmap, Element position, Element destination)
         {
             var firstNode = ClosestToPosition(pathmap, position);
             var lastNode = ClosestToPosition(pathmap, destination);
-
-            List<Element> actions = new List<Element>();
 
             IndexedVar current = context.VarCollection.AssignVar(null, "Dijkstra: Current", context.IsGlobal, Variable.I, new int[0], null);
             //IndexedVar current = context.VarCollection.AssignVar(null, "Dijkstra: Current", context.IsGlobal, null);
@@ -55,14 +54,12 @@ namespace Deltin.Deltinteger.Pathfinder
             IndexedVar unvisited = context.VarCollection.AssignVar(null, "Dijkstra: Visited", context.IsGlobal, Variable.K, new int[0], null);
             //IndexedVar visited = context.VarCollection.AssignVar(null, "Dijkstra: Visited", context.IsGlobal, null);
             SetInitialUnvisited(context, pathmap.PathMap, unvisited);
-            //context.Actions.AddRange(unvisited.SetVariable(new V_EmptyArray()));
 
             IndexedVar connectedSegments = context.VarCollection.AssignVar(null, "Dijkstra: Connected Segments", context.IsGlobal, Variable.L, new int[0], null);
 
             IndexedVar neighborIndex = context.VarCollection.AssignVar(null, "Dijkstra: Neighbor Index", context.IsGlobal, Variable.M, new int[0], null);
 
             IndexedVar neighborDistance = context.VarCollection.AssignVar(null, "Dijkstra: Distance", context.IsGlobal, Variable.N, new int[0], null);
-            //IndexedVar neighbors = context.VarCollection.AssignVar(null, "Dijkstra: Neighbors", context.IsGlobal, null);
             //IndexedVar neighborDistance = context.VarCollection.AssignVar(null, "Dijkstra: Distance", context.IsGlobal, null);
 
             IndexedVar prev = context.VarCollection.AssignVar(null, "Dijkstra: Prev Array", context.IsGlobal, Variable.O, new int[0], null);
@@ -159,7 +156,22 @@ namespace Deltin.Deltinteger.Pathfinder
             ));
             backtrack.Finish();
 
-            return new MethodResult(null, null);
+            /*
+            ForEachBuilder resultDebug = new ForEachBuilder(context, finalPath.GetVariable());
+            resultDebug.Setup();
+            resultDebug.AddActions(
+                Element.Part<A_Teleport>(new V_EventPlayer(),
+                    Element.Part<V_ValueInArray>(
+                        pathmap.Nodes.GetVariable(),
+                        resultDebug.IndexValue
+                    )
+                ),
+                Element.Part<A_Wait>(new V_Number(2))
+            );
+            resultDebug.Finish();
+            */
+
+            return finalPath;
         }
 
         private static Element ClosestToPosition(PathMapVar pathmap, Element position)
@@ -239,6 +251,135 @@ namespace Deltin.Deltinteger.Pathfinder
         private static Element Node2(Element segment)
         {
             return Element.Part<V_YOf>(segment);
+        }
+    }
+
+    [CustomMethod("Pathfind", CustomMethodType.Action)]
+    [Parameter("Player", Elements.ValueType.Player, null)]
+    [VarRefParameter("Path Map")]
+    [Parameter("Position", Elements.ValueType.Vector, null)]
+    [Parameter("Destination", Elements.ValueType.Vector, null)]
+    class Pathfind : CustomMethodBase
+    {
+        override protected MethodResult Get()
+        {
+            if (((VarRef)Parameters[1]).Var is PathMapVar == false)
+                throw SyntaxErrorException.InvalidVarRefType(((VarRef)Parameters[1]).Var.Name, VarType.PathMap, ParameterLocations[1]);
+            
+            if (TranslateContext.ParserData.PathfinderInfo == null)
+                TranslateContext.ParserData.PathfinderInfo = new PathfinderInfo(TranslateContext.ParserData);
+            
+            PathfinderInfo pathfinderInfo = TranslateContext.ParserData.PathfinderInfo;
+            
+            Element player                 = (Element)Parameters[0];
+            PathMapVar pathmap = (PathMapVar)((VarRef)Parameters[1]).Var;
+            Element position               = (Element)Parameters[2];
+            Element destination            = (Element)Parameters[3];
+
+            IndexedVar path = GetPath.Get(TranslateContext, pathmap, position, destination);
+
+            TranslateContext.Actions.AddRange(
+                pathfinderInfo.Nodes.SetVariable(Element.Part<V_Append>(pathmap.Nodes.GetVariable(), Element.Part<V_NearestWalkablePosition>(destination)))
+            );
+            TranslateContext.Actions.AddRange(
+                pathfinderInfo.Path.SetVariable(Element.Part<V_Append>(path.GetVariable(), new V_Number(pathmap.PathMap.Nodes.Length)))
+            );
+
+            return new MethodResult(null, null);
+        }
+
+        override public CustomMethodWiki Wiki()
+        {
+            return null;
+        }
+    }
+
+    public class PathfinderInfo
+    {
+        public const double MoveToNext = 1;
+
+        public IndexedVar Nodes { get; }
+        public IndexedVar Path { get; }
+
+        public PathfinderInfo(ParsingData parser)
+        {
+            Nodes = parser.VarCollection.AssignVar(null, "Pathfinder: Nodes", false, null);
+            Path = parser.VarCollection.AssignVar(null, "Pathfinder: Path", false, Variable.Q, new int[0], null);
+
+            Rule pathfind = new Rule(Constants.INTERNAL_ELEMENT + "Pathfinder: Move", RuleEvent.OngoingPlayer);
+            pathfind.Conditions = new Condition[]
+            {
+                new Condition(
+                    Element.Part<V_CountOf>(Path.GetVariable()),
+                    Operators.GreaterThan,
+                    new V_Number(0)
+                )
+            };
+            pathfind.Actions = ArrayBuilder<Element>.Build
+            (
+                Element.Part<A_StartFacing>(
+                    new V_EventPlayer(),
+                    Element.Part<V_DirectionTowards>(
+                        new V_EyePosition(),
+                        NextPosition()
+                    ),
+                    new V_Number(700),
+                    EnumData.GetEnumValue(Relative.ToWorld),
+                    EnumData.GetEnumValue(FacingRev.DirectionAndTurnRate)
+                ),
+                Element.Part<A_StartThrottleInDirection>(
+                    new V_EventPlayer(),
+                    new V_Forward(),
+                    new V_Number(1),
+                    EnumData.GetEnumValue(Relative.ToPlayer),
+                    EnumData.GetEnumValue(ThrottleBehavior.ReplaceExistingThrottle),
+                    EnumData.GetEnumValue(ThrottleRev.DirectionAndMagnitude)
+                )
+            );
+
+            Rule updateIndex = new Rule(Constants.INTERNAL_ELEMENT + "Pathfinder: Update", RuleEvent.OngoingPlayer);
+            updateIndex.Conditions = new Condition[]
+            {
+                new Condition(
+                    Element.Part<V_CountOf>(Nodes.GetVariable()),
+                    Operators.GreaterThan,
+                    new V_Number(0)
+                ),
+                new Condition(
+                    Element.Part<V_DistanceBetween>(
+                        NextPosition(),
+                        Element.Part<V_EyePosition>(new V_EventPlayer())
+                    ),
+                    Operators.LessThan,
+                    new V_Number(MoveToNext)
+                )
+            };
+            updateIndex.Actions = ArrayBuilder<Element>.Build(
+                Path.SetVariable(Element.Part<V_ArraySlice>(Path.GetVariable(), new V_Number(1), new V_Number(Constants.MAX_ARRAY_LENGTH)))
+            );
+
+            Rule stop = new Rule(Constants.INTERNAL_ELEMENT + "Pathfinder: Stop", RuleEvent.OngoingPlayer);
+            stop.Conditions = new Condition[]
+            {
+                new Condition(
+                    Element.Part<V_CountOf>(Path.GetVariable()),
+                    Operators.Equal,
+                    new V_Number(0)
+                )
+            };
+            stop.Actions = ArrayBuilder<Element>.Build(
+                Element.Part<A_StopFacing>(new V_EventPlayer()),
+                Element.Part<A_StopThrottleInDirection>(new V_EventPlayer())
+            );
+
+            parser.Rules.Add(pathfind);
+            parser.Rules.Add(updateIndex);
+            parser.Rules.Add(stop);
+        }
+
+        private Element NextPosition()
+        {
+            return Element.Part<V_ValueInArray>(Nodes.GetVariable(), Element.Part<V_FirstOf>(Path.GetVariable()));
         }
     }
 }

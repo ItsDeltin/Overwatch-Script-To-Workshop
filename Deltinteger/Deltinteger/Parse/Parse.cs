@@ -302,5 +302,7 @@ namespace Deltin.Deltinteger.Parse
         {
             globalTranslate.Actions.AddRange(actions);
         }
+
+        public PathfinderInfo PathfinderInfo { get; set; } = null;
     }
 }
