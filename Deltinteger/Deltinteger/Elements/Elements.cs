@@ -242,6 +242,23 @@ namespace Deltin.Deltinteger.Elements
             return result.ToArray();
         }
 
+        public static Element[] For(TranslateRule context, Element array, ForBlock block)
+        {
+            IndexedVar indexVar = context.VarCollection.AssignVar(null, "For Index", context.IsGlobal, null);
+            return ArrayBuilder<Element>.Build(
+                indexVar.SetVariable(new V_Number(0)),
+                While(
+                    context.ContinueSkip, 
+                    new V_Compare(indexVar.GetVariable(), Operators.LessThan, Element.Part<V_CountOf>(array)),
+                    ArrayBuilder<Element>.Build(
+                        block.Invoke(indexVar.GetVariable(), Element.Part<V_ValueInArray>(array, indexVar.GetVariable())),
+                        indexVar.SetVariable(Element.Part<V_Add>(indexVar.GetVariable(), new V_Number(1)))
+                    )
+                )
+            );
+        }
+        public delegate Element[] ForBlock(Element index, Element indexValue);
+
         public static V_Number[] IntToElement(params int[] numbers)
         {
             V_Number[] elements = new V_Number[numbers?.Length ?? 0];
