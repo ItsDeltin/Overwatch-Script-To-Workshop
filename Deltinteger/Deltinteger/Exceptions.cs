@@ -239,6 +239,8 @@ namespace Deltin.Deltinteger
                 return new SyntaxErrorException(string.Format(invalidVarRefType, name, "an indexed"), location);
             else if (varType == VarType.Model)
                 return new SyntaxErrorException(string.Format(invalidVarRefType, name, "a model"), location);
+            else if (varType == VarType.Image)
+                return new SyntaxErrorException(string.Format(invalidVarRefType, name, "an image"), location);
             else
                 throw new NotImplementedException();
         }
@@ -247,6 +249,7 @@ namespace Deltin.Deltinteger
     public enum VarType
     {
         Indexed,
-        Model
+        Model,
+        Image
     }
 }

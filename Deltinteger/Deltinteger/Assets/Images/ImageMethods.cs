@@ -134,6 +134,9 @@ namespace Deltin.Deltinteger.Assets.Images
     {
         protected override MethodResult Get()
         {
+            if (((VarRef)Parameters[0]).Var is ImageVar == false)
+                throw SyntaxErrorException.InvalidVarRefType(((VarRef)Parameters[0]).Var.Name, VarType.Image, ParameterLocations[0]);
+
             ImageVar imageVar = (ImageVar)((VarRef)Parameters[0]).Var;
             Element visibleTo = (Element)Parameters[1];
             Element location = (Element)Parameters[2];
