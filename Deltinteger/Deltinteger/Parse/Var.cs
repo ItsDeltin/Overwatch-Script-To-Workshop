@@ -451,6 +451,11 @@ namespace Deltin.Deltinteger.Parse
 
         public Element[] SetVariable(Element value, bool isGlobal, Element targetPlayer, Variable variable, params Element[] index)
         {
+            return SetVariable(this, value, isGlobal, targetPlayer, variable, index);
+        }
+
+        public static Element[] SetVariable(WorkshopArrayBuilder builder, Element value, bool isGlobal, Element targetPlayer, Variable variable, params Element[] index)
+        {
             if (index == null || index.Length == 0)
             {
                 if (isGlobal)
@@ -467,6 +472,8 @@ namespace Deltin.Deltinteger.Parse
                     return new Element[] { Element.Part<A_SetPlayerVariableAtIndex>(targetPlayer, EnumData.GetEnumValue(variable), index[0], value) };
             }
 
+            if (builder == null) throw new ArgumentNullException("builder", "Can't set multidimensional array if builder is null.");
+
             List<Element> actions = new List<Element>();
 
             Element root = GetRoot(isGlobal, targetPlayer, variable);
@@ -476,12 +483,12 @@ namespace Deltin.Deltinteger.Parse
 
             // Get the last array in the index path and copy it to variable B.
             actions.AddRange(
-                SetVariable(ValueInArrayPath(root, index.Take(index.Length - 1).ToArray()), isGlobal, targetPlayer, Constructor)
+                SetVariable(builder, ValueInArrayPath(root, index.Take(index.Length - 1).ToArray()), isGlobal, targetPlayer, builder.Constructor)
             );
 
             // Set the value in the array.
             actions.AddRange(
-                SetVariable(value, isGlobal, targetPlayer, Constructor, index.Last())
+                SetVariable(builder, value, isGlobal, targetPlayer, builder.Constructor, index.Last())
             );
 
             // Reconstruct the multidimensional array.
@@ -489,24 +496,24 @@ namespace Deltin.Deltinteger.Parse
             {
                 // Copy the array to the C variable
                 actions.AddRange(
-                    Store.SetVariable(GetRoot(isGlobal, targetPlayer, Constructor), targetPlayer)
+                    builder.Store.SetVariable(GetRoot(isGlobal, targetPlayer, builder.Constructor), targetPlayer)
                 );
 
                 // Copy the next array dimension
                 Element array = ValueInArrayPath(root, index.Take(dimensions - i).ToArray());
 
                 actions.AddRange(
-                    SetVariable(array, isGlobal, targetPlayer, Constructor)
+                    SetVariable(builder, array, isGlobal, targetPlayer, builder.Constructor)
                 );
 
                 // Copy back the variable at C to the correct index
                 actions.AddRange(
-                    SetVariable(Store.GetVariable(targetPlayer), isGlobal, targetPlayer, Constructor, index[i])
+                    SetVariable(builder, builder.Store.GetVariable(targetPlayer), isGlobal, targetPlayer, builder.Constructor, index[i])
                 );
             }
             // Set the final variable using Set At Index.
             actions.AddRange(
-                SetVariable(GetRoot(isGlobal, targetPlayer, Constructor), isGlobal, targetPlayer, variable, index[0])
+                SetVariable(builder, GetRoot(isGlobal, targetPlayer, builder.Constructor), isGlobal, targetPlayer, variable, index[0])
             );
             return actions.ToArray();
         }

@@ -137,6 +137,7 @@
     <Compile Include="Pathfinder\PathMap.cs" />
     <Compile Include="Pathfinder\GetPath.cs" />
     <Compile Include="Pathfinder\PathMapVar.cs" />
+    <Compile Include="Pathfinder\Editor.cs" />
     <Compile Include="CSV.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Extras.cs" />
@@ -145,12 +146,11 @@
     <Compile Include="Interfaces.cs" />
     <Compile Include="Exceptions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Content Include="Start Language Server.bat">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Fonts\BigNoodleTooOblique.ttf">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
+    <Content Include="Start Language Server.bat"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
+    <Content Include="Fonts\BigNoodleTooOblique.ttf"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
+    <Content Include="Modules\Container.del"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
+    <Content Include="Modules\Debug Tools.del"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
+    <Content Include="Modules\PathfindEditor.del"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

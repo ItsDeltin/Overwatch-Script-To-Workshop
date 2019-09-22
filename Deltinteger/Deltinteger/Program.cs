@@ -54,7 +54,8 @@ namespace Deltin.Deltinteger
                 {
                     try
                     {
-                        if (Path.GetExtension(script).ToLower() == ".csv")
+                        string ext = Path.GetExtension(script).ToLower();
+                        if (ext == ".csv")
                         {
                             PathMap map = PathMap.ImportFromCSV(script);
                             string result = map.ExportAsXML();
@@ -64,6 +65,10 @@ namespace Deltin.Deltinteger
                                 Byte[] info = Encoding.Unicode.GetBytes(result);
                                 fs.Write(info, 0, info.Length);
                             }
+                        }
+                        else if (ext == ".pathmap")
+                        {
+                            Editor.FromPathmapFile(script);
                         }
                         else Script(script);
                     }

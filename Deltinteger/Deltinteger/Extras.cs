@@ -40,6 +40,12 @@ namespace Deltin.Deltinteger
 
         public static string CombinePathWithDotNotation(string referenceDirectory, string file)
         {
+            if (file[0] == '!')
+            {
+                referenceDirectory = Path.Combine(Program.ExeFolder, "Modules" + Path.DirectorySeparatorChar);
+                file = file.Substring(1);
+            }
+
             try
             {
                 string directory = Path.GetDirectoryName(referenceDirectory);

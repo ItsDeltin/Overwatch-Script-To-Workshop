@@ -1,0 +1,70 @@
+/*
+Usage:
+
+    To create contained rule:
+        import "Container.del";
+
+        rule: "Scoped Index"
+        Event.OnDamageTaken          // On Damage Takene event
+        if (scoper == EventPlayer()) // Check if is scoper
+        if (GetID() == 79) return;   // GetID equals expected ID
+        {
+            // GetPlayer() for executor
+            // GetData() for sent data
+            CreateEffect(AllPlayers(), Effect.Sphere, Color.Red, Destination(EyePosition(GetPlayer()), FacingDirectionOf(GetPlayer()), GetData()), 0.1);
+        }
+
+    To trigger rule:
+        ActivateScoper(79, someData);
+
+*/
+
+define globalvar scoper;
+
+rule: "Create Scoper"
+{
+    CreateDummyBot(Hero.Roadhog, Team.Team1, 5, Vector(0, 2000, 0));
+    scoper = LastCreatedEntity();
+    SetGravity(scoper, 0);
+    SetStatus(scoper, null, Status.Unkillable, 9999);
+    SetMaxHealth(scoper, 1000);
+    StartDamageModification(scoper, FilteredArray(AllPlayers(), ArrayElement() != scoper), 0, ModRev.ReceiversDamagersAndDamagePercent);
+    SetInvisible(scoper, InvisibleTo.All);
+}
+
+rule: "Scoper: Heal Set"
+Event.OngoingPlayer
+if (scoper == EventPlayer())
+if (HasSpawned())
+{
+    Heal(scoper, null, 6000);
+}
+
+method ActivateScoper(define id, define data)
+{
+    // Encode the executor, id and data into one number.
+    //      vv executor
+    // 1234.5678
+    // ^^^^   ^^
+    // data   ID
+    data += (SlotOf(EventPlayer()) + (TeamOf(EventPlayer()) == Team.Team1) ? 0 : 6) / 100;
+    data += id / 10000;
+    Damage(scoper, scoper, data);
+}
+
+// 123.0179
+// ^^^ Gets the whole number (123)
+public macro GetData(): RoundToInteger(EventDamage(), Rounding.Down);
+
+macro GetPlayer(): PlayersInSlot(rawPlayerID() - ((rawPlayerID() < 6) ? 0 : 6), decodeTeam());
+
+// 123.0179
+//       ^^ Gets the last 2 digits (79)
+// Use Nearest because of optimizations at this decimal level
+macro GetID(): RoundToInteger((EventDamage() * 10000) % 100, Rounding.Nearest);
+
+// 123.0179
+//     ^^ Gets the first 2 digits (01)
+macro rawPlayerID(): RoundToInteger((EventDamage() * 100) % 100, Rounding.Down);
+
+macro decodeTeam(): (rawPlayerID() < 6) ? Team.Team1 : Team.Team2;

@@ -30,16 +30,8 @@ namespace Deltin.Deltinteger.Pathfinder
 
         private void Setup(ParsingData parser)
         {
-            parser.GlobalSetup(Nodes.SetVariable(
-                Element.CreateArray(
-                    PathMap.Nodes.Select(node => node.ToVector()).ToArray()
-                ) 
-            ));
-            parser.GlobalSetup(Segments.SetVariable(
-                Element.CreateArray(
-                    PathMap.Segments.Select(segment => new V_Vector((double)segment.Node1, (double)segment.Node2, 0)).ToArray()
-                ) 
-            ));
+            parser.GlobalSetup(Nodes.SetVariable(PathMap.NodesAsWorkshopData()));
+            parser.GlobalSetup(Segments.SetVariable(PathMap.SegmentsAsWorkshopData()));
         }
     }
 }

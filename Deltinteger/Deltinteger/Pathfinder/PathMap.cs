@@ -104,6 +104,19 @@ namespace Deltin.Deltinteger.Pathfinder
             }
             return result;
         }
+
+        public Element NodesAsWorkshopData()
+        {
+            return Element.CreateArray(
+                Nodes.Select(node => node.ToVector()).ToArray()
+            );
+        }
+        public Element SegmentsAsWorkshopData()
+        {
+            return Element.CreateArray(
+                Segments.Select(segment => new V_Vector((double)segment.Node1, (double)segment.Node2, 0)).ToArray()
+            );
+        }
     }
 
     public class Segment
