@@ -94,7 +94,7 @@ class Node
     public define Location;
     private define EffectID;
     public define Selected = false;
-    private define visible = false;
+    public define visible = false;
 
     public Node(define pos)
     {
@@ -160,6 +160,7 @@ if (acknowledgeReady)
             if (l != f && !IsTrueForAny(Segments, ArrayContains((<Segment>ArrayElement()).Nodes, Selected[f]) && ArrayContains((<Segment>ArrayElement()).Nodes, Selected[l])))
             {
                 Segments = Append(Segments, new Segment(<Node>Selected[f], <Node>Selected[l]));
+                (<Segment>LastOf(Segments)).Show();
             }
     acknowledgeReady = false;
 }
@@ -173,7 +174,7 @@ if (acknowledgeReady)
     for (define i = CountOf(Segments) - 1; i >= 0; i--)
         if (IsTrueForAll((<Segment>Segments[i]).Nodes, ArrayContains(Selected, ArrayElement())))
         {
-            DestroyEffect((<Segment>Segments[i]).EffectID);
+            (<Segment>Segments[i]).Hide();
             delete(Segments[i]);
             Segments = RemoveFromArrayAtIndex(Segments, i);
         }
@@ -196,14 +197,52 @@ class Segment
     public Node Node2;
     public define Nodes;
     define EffectID;
+    public define visible = false;
 
     public Segment(Node node1, Node node2)
     {
         Node1 = node1;
         Node2 = node2;
         Nodes = [Node1, Node2];
-        CreateBeamEffect(AllPlayers(), BeamType.GrappleBeam, Node1.Location, Node2.Location, Color.Red, EffectRev.VisibleTo);
-        EffectID = LastCreatedEntity();
+    }
+
+    public method Show()
+    {
+        if (!visible)
+        {
+            CreateBeamEffect(AllPlayers(), BeamType.GrappleBeam, Node1.Location, Node2.Location, Color.Red, EffectRev.VisibleTo);
+            EffectID = LastCreatedEntity();
+            visible = true;
+        }
+    }
+    public method Hide()
+    {
+        if (visible)
+        {
+            DestroyEffect(EffectID);
+            visible = false;
+        }
+    }
+}
+
+rule: "Update visible"
+Event.OngoingPlayer
+if (HostPlayer() == EventPlayer())
+if (Modulo(TotalTimeElapsed(), 5) < 1)
+{
+    foreach (Node node in Nodes)
+    {
+        if (DistanceBetween(EventPlayer(), node.Location) > 40)
+            node.Hide();
+        else
+            node.Show();
+    }
+    foreach (Segment segment in Segments)
+    {
+        if (!segment.Node1.visible || !segment.Node2.visible)
+            segment.Hide();
+        else
+            segment.Show();
     }
 }
 
@@ -242,11 +281,7 @@ rule: "Preload"
 if (CountOf(preloadNodes) != 0)
 {
     for (define i = 0; i < CountOf(preloadNodes); i++)
-    {
-        Nodes = Append(Nodes, new Node(preloadNodes[i]));
-        (<Node>LastOf(Nodes)).Show();
-    }
-    
+        Nodes = Append(Nodes, new Node(preloadNodes[i]));    
     for (define i = 0; i < CountOf(preloadSegments); i++)
         Segments = Append(Segments, new Segment(<Node>Nodes[XOf(preloadSegments[i])], <Node>Nodes[YOf(preloadSegments[i])]));
 }
