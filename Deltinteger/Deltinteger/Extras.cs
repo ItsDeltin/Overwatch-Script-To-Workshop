@@ -40,7 +40,7 @@ namespace Deltin.Deltinteger
 
         public static string CombinePathWithDotNotation(string referenceDirectory, string file)
         {
-            if (file[0] == '!')
+            if (file.Length > 0 && file[0] == '!')
             {
                 referenceDirectory = Path.Combine(Program.ExeFolder, "Modules" + Path.DirectorySeparatorChar);
                 file = file.Substring(1);
