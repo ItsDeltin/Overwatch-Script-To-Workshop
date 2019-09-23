@@ -305,7 +305,7 @@ if (CountOf(preloadNodes) != 0)
         Segments = Append(Segments, new Segment(
                 <Node>Nodes[XOf(preloadSegments[i])],
                 <Node>Nodes[YOf(preloadSegments[i])],
-                <Node>Nodes[ZOf(preloadSegments[i])]
+                ZOf(preloadSegments[i])
             ));
 }
 
