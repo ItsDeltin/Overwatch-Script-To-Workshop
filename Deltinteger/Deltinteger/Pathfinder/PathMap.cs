@@ -14,67 +14,41 @@ namespace Deltin.Deltinteger.Pathfinder
     {
         private static readonly Log Log = new Log("PathMap");
 
-        private static readonly Variable IsBuilding = Variable.D;
-        private static readonly Variable BuildingNodeIndex = Variable.E;
-        private static readonly Variable BuildingNode = Variable.F;
-        private static readonly Variable ConnectIndex = Variable.G;
-        private static readonly Variable SegmentOut = Variable.H;
+        private static readonly Variable nodesOut = Variable.D;
+        private static readonly Variable segmentsOut = Variable.E;
 
         public static PathMap ImportFromCSV(string file)
         {
-            CsvFrame[] frames = CsvFrame.ParseSet(File.ReadAllLines(file));
+            CsvFrame frame = CsvFrame.ParseOne(File.ReadAllText(file).Trim());
 
-            for (int i = 0; i < frames.Length; i++)
-                if (frames[i].VariableSetOwner != "Global")
-                {
-                    Log.Write(LogLevel.Normal, new ColorMod("Error: need the global variable set, got " + frames[i].VariableSetOwner + " instead on line " + i + ".", ConsoleColor.Red));
-                    Console.ReadLine();
-                    return null;
-                }
-
-            bool started = false;
-            int startAt = -1;
-            for (int i = frames.Length - 1; i >= 0; i--)
+            if (frame.VariableSetOwner != "Global")
             {
-                if (frames[i].VariableValues[IsBuilding] is CsvBoolean && ((CsvBoolean)frames[i].VariableValues[IsBuilding]).Value)
-                {
-                    started = true;
-                }
-                else if (started)
-                {
-                    startAt = i + 1;
-                    break;
-                }
+                Log.Write(LogLevel.Normal, new ColorMod("Error: need the global variable set, got " + frame.VariableSetOwner + " instead.", ConsoleColor.Red));
+                return null;
             }
-
-            if (startAt == -1)
-            {
-                Log.Write(LogLevel.Normal, new ColorMod("Error: build not sure. Press Voice Line Up to compile the pathmap.", ConsoleColor.Red));
-                Console.ReadLine();
-            }
-
-            int last = -1;
 
             List<Vertex> vectors = new List<Vertex>();
-            for (int i = startAt; i < frames.Length; i++)
-                if (frames[i].VariableValues[BuildingNodeIndex].Changed && frames[i].VariableValues[BuildingNode] is CsvVector)
-                {
-                    vectors.Add(((CsvVector)frames[i].VariableValues[BuildingNode]).Value);
-                    last = i + 1;
-                }
+            CsvArray nodeArray = frame.VariableValues[nodesOut] as CsvArray;
+
+            for (int i = 0; i < nodeArray.Values.Length; i++)
+            {
+                CsvVector nodeVector = (CsvVector)nodeArray.Values[i];
+                vectors.Add(nodeVector.Value);
+            }
             
             List<Segment> segments = new List<Segment>();
-            for (int i = last; i < frames.Length; i++)
-                if (frames[i].VariableValues[ConnectIndex].Changed && frames[i].VariableValues[SegmentOut] is CsvVector)
-                {
-                    Vertex vector = ((CsvVector)frames[i].VariableValues[SegmentOut]).Value;
+            CsvArray segmentArray = frame.VariableValues[segmentsOut] as CsvArray;
 
-                    segments.Add(new Segment(
-                        (int)vector.X,
-                        (int)vector.Y,
-                        (int)vector.Z
-                    ));
-                }
+            for (int i = 0; i < segmentArray.Values.Length; i++)
+            {
+                CsvVector segmentVector = (CsvVector)segmentArray.Values[i];
+
+                segments.Add(new Segment(
+                    (int)segmentVector.Value.X,
+                    (int)segmentVector.Value.Y,
+                    (int)segmentVector.Value.Z
+                ));
+            }
             
             return new PathMap(vectors.ToArray(), segments.ToArray());
         }

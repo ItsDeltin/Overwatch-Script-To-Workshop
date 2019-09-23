@@ -413,7 +413,7 @@ namespace Deltin.Deltinteger.Pathfinder
                 new Condition(
                     Element.Part<V_DistanceBetween>(
                         NextPosition(),
-                        Element.Part<V_EyePosition>(new V_EventPlayer())
+                        Element.Part<V_PositionOf>(new V_EventPlayer())
                     ),
                     Operators.LessThan,
                     new V_Number(MoveToNext)

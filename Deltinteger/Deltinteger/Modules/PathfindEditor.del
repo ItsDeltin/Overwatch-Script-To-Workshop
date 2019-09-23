@@ -149,6 +149,13 @@ class Node
     {
         CreateEffect(AllPlayers(), Effect.Sphere, color, ShownLocation, 0.25, EffectRev.VisibleTo);
     }
+
+    public method UpdateVisible()
+    {
+        Hide();
+        if (DistanceBetween(EventPlayer(), ShownLocation) < 20)
+            Show();
+    }
 }
 
 define playervar acknowledgeReady = true;
@@ -246,18 +253,13 @@ Event.OngoingPlayer
 if (HostPlayer() == EventPlayer())
 if (IsCommunicating(EventPlayer(), Communication.Hello))
 {
-    foreach (Node node in Nodes)
-    {
-        if (DistanceBetween(EventPlayer(), node.ShownLocation) > 40)
-            node.Hide();
-        else
-            node.Show();
-    }
     foreach (Segment segment in Segments)
     {
-        if (!segment.Node1.visible || !segment.Node2.visible)
-            segment.Hide();
-        else
+        segment.Node1.UpdateVisible();
+        segment.Node2.UpdateVisible();
+
+        segment.Hide();
+        if (segment.Node1.visible && segment.Node2.visible)
             segment.Show();
     }
 }
@@ -267,34 +269,25 @@ Event.OngoingPlayer
 if (IsCommunicating(EventPlayer(), Communication.VoiceLineUp))
 {
     SmallMessage(AllPlayers(), "building ...");
-    isBuilding = true;
+
+    nodesOut = EmptyArray();
+    segmentsOut = EmptyArray();
 
     for (define i = 0; i < CountOf(Nodes); i++)
-    {
-        buildingNode = (<Node>Nodes[i]).Location;
-        buildingNodeIndex = i;
-    }
+        nodesOut = Append(nodesOut, (<Node>Nodes[i]).Location);
     
     for (define i = 0; i < CountOf(Segments); i++)
-    {
-        segmentOut = Vector(
+        segmentsOut = Append(segmentsOut, Vector(
             IndexOfArrayValue(Nodes, (<Segment>Segments[i]).Node1),
             IndexOfArrayValue(Nodes, (<Segment>Segments[i]).Node2),
             (<Segment>Segments[i]).Attribute
-        );
-        //connect2 = IndexOfArrayValue(Nodes, (<Segment>Segments[i]).Node2);
-        connectIndex = i;
-    }
+        ));
 
     SmallMessage(AllPlayers(), "downloaded!");
-    isBuilding = false;
 }
 
-define globalvar isBuilding        D = false;
-define globalvar buildingNodeIndex E = -1;
-define globalvar buildingNode      F = -1;
-define globalvar connectIndex      G = -1;
-define globalvar segmentOut        H = -1;
+define globalvar nodesOut          D;
+define globalvar segmentsOut       E;
 
 rule: "Preload"
 if (CountOf(preloadNodes) != 0)
