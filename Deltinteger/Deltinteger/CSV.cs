@@ -10,6 +10,8 @@ namespace Deltin.Deltinteger.Csv
 {
     public class CsvFrame
     {
+        private static Log Log = new Log("CSV");
+
         public static CsvFrame[] ParseSet(string value)
         {
             string[] lines = value.Split(
@@ -22,9 +24,14 @@ namespace Deltin.Deltinteger.Csv
 
         public static CsvFrame[] ParseSet(string[] lines)
         {
+            Progress progress = Log.Progress(LogLevel.Normal, "Parsing CSV lines", lines.Length);
             CsvFrame[] frames = new CsvFrame[lines.Length];
             for (int i = 0; i < lines.Length; i++)
+            {
                 frames[i] = ParseOne(lines[i]);
+                progress.ActionCompleted();
+            }
+            progress.Finish();
             
             for (int i = 1; i < frames.Length; i++)
                 foreach (var frameVar in frames[i].VariableValues)
