@@ -20,9 +20,11 @@ Event.OngoingPlayer
     CreateHudText(EventPlayer(), null, "crouch + interact: stop selecting spheres", null, Location.Right, 3, Color.White, Color.Blue);
     CreateHudText(EventPlayer(), null, "fold: connect", IsCommunicating(EventPlayer(), Communication.Acknowledge), Location.Right, 4, Color.White, Color.Green);
     CreateHudText(EventPlayer(), null, "crouch + fold: stop connect", IsCommunicating(EventPlayer(), Communication.Acknowledge), Location.Right, 5, Color.White, Color.Green);
+    CreateHudText(EventPlayer(), null, "hello: reveal", IsCommunicating(EventPlayer(), Communication.Acknowledge), Location.Right, 6, Color.White, Color.Green);
+    CreateHudText(EventPlayer(), null, "up: upload", IsCommunicating(EventPlayer(), Communication.Acknowledge), Location.Right, 7, Color.White, Color.Green);
 }
 
-macro GetClosestNode(): FirstOf(SortedArray(Nodes, DistanceBetween(EyePosition(EventPlayer()), (<Node>ArrayElement()).Location)));
+macro GetClosestNode(): FirstOf(SortedArray(Nodes, DistanceBetween(EyePosition(EventPlayer()), (<Node>ArrayElement()).ShownLocation)));
 macro IsNodeSelectable(Node node): DistanceBetween(node.Location, EyePosition(EventPlayer())) < 5;
 
 rule: "Create node"
@@ -30,7 +32,7 @@ Event.OngoingPlayer
 if (IsButtonHeld(EventPlayer(), Button.Ultimate))
 if (!IsButtonHeld(EventPlayer(), Button.Crouch))
 {
-    Nodes = Append(Nodes, new Node(EyePosition(EventPlayer())));
+    Nodes = Append(Nodes, new Node(PositionOf(EventPlayer())));
     (<Node>LastOf(Nodes)).Show();
 }
 
@@ -49,7 +51,7 @@ if (IsButtonHeld(EventPlayer(), Button.Crouch))
             delete(Segments[i]);
             Segments = RemoveFromArrayAtIndex(Segments, i);
         }
-    PlayEffect(AllPlayers(), PlayEffect.BadExplosion, Color.Blue, selected.Location, 0.25);
+    PlayEffect(AllPlayers(), PlayEffect.BadExplosion, Color.Blue, selected.ShownLocation, 0.25);
     selected.Hide();
     Selected = RemoveFromArray(Selected, selected);
     Nodes = RemoveFromArray(Nodes, selected); 
@@ -92,6 +94,7 @@ define globalvar Selected = EmptyArray();
 class Node
 {
     public define Location;
+    public define ShownLocation;
     private define EffectID;
     public define Selected = false;
     public define visible = false;
@@ -99,6 +102,7 @@ class Node
     public Node(define pos)
     {
         Location = pos;
+        ShownLocation = Location + Vector(0, 1.5, 0);
     }
 
     public method Show()
@@ -143,7 +147,7 @@ class Node
 
     private method Make(Color color)
     {
-        CreateEffect(AllPlayers(), Effect.Sphere, color, Location, 0.25, EffectRev.VisibleTo);
+        CreateEffect(AllPlayers(), Effect.Sphere, color, ShownLocation, 0.25, EffectRev.VisibleTo);
     }
 }
 
@@ -216,15 +220,15 @@ class Segment
     {
         if (!visible)
         {
-            CreateBeamEffect(AllPlayers(), BeamType.GrappleBeam, Node1.Location, Node2.Location, Color.Red, EffectRev.VisibleTo);
+            CreateBeamEffect(AllPlayers(), BeamType.GrappleBeam, Node1.ShownLocation, Node2.ShownLocation, Color.Red, EffectRev.VisibleTo);
             EffectID = LastCreatedEntity();
             visible = true;
 
             if (Attribute == 1)
             {
-                CreateEffect(AllPlayers(), Effect.Sphere, Color.Purple, LinearInterpolate(Node1.Location, Node2.Location, 0.4), 0.25, EffectRev.VisibleTo);
+                CreateEffect(AllPlayers(), Effect.Sphere, Color.Purple, LinearInterpolate(Node1.ShownLocation, Node2.ShownLocation, 0.4), 0.25, EffectRev.VisibleTo);
                 DirectionMarker1 = LastCreatedEntity();
-                CreateEffect(AllPlayers(), Effect.Sphere, Color.Purple, LinearInterpolate(Node1.Location, Node2.Location, 0.6), 0.15, EffectRev.VisibleTo);
+                CreateEffect(AllPlayers(), Effect.Sphere, Color.Purple, LinearInterpolate(Node1.ShownLocation, Node2.ShownLocation, 0.6), 0.15, EffectRev.VisibleTo);
                 DirectionMarker2 = LastCreatedEntity();
             }
         }
@@ -248,7 +252,7 @@ if (IsCommunicating(EventPlayer(), Communication.Hello))
 {
     foreach (Node node in Nodes)
     {
-        if (DistanceBetween(EventPlayer(), node.Location) > 40)
+        if (DistanceBetween(EventPlayer(), node.ShownLocation) > 40)
             node.Hide();
         else
             node.Show();
