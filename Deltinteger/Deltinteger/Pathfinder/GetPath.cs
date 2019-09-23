@@ -295,10 +295,7 @@ namespace Deltin.Deltinteger.Pathfinder
                 pathfinderInfo.Nodes.SetVariable(
                     Element.Part<V_Append>(
                         pathmap.Nodes.GetVariable(),
-                        Element.Part<V_Add>(
-                            destinationVar.GetVariable(),
-                            new V_Vector(0, 1.5, 0)
-                        )
+                        destinationVar.GetVariable()
                     ),
                     player
                 )
