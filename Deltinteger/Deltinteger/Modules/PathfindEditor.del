@@ -159,7 +159,7 @@ if (acknowledgeReady)
         for (define l = 0; l < CountOf(Selected); l++)
             if (l != f && !IsTrueForAny(Segments, ArrayContains((<Segment>ArrayElement()).Nodes, Selected[f]) && ArrayContains((<Segment>ArrayElement()).Nodes, Selected[l])))
             {
-                Segments = Append(Segments, new Segment(<Node>Selected[f], <Node>Selected[l]));
+                Segments = Append(Segments, new Segment(<Node>Selected[f], <Node>Selected[l], Attribute));
                 (<Segment>LastOf(Segments)).Show();
             }
     acknowledgeReady = false;
@@ -194,16 +194,22 @@ define globalvar Segments = EmptyArray();
 class Segment
 {
     public Node Node1;
-    public Node Node2;
+    public Node Node2;    
     public define Nodes;
+    public define Attribute;
+
     define EffectID;
     public define visible = false;
 
-    public Segment(Node node1, Node node2)
+    define DirectionMarker1;
+    define DirectionMarker2;
+
+    public Segment(Node node1, Node node2, define attribute)
     {
         Node1 = node1;
         Node2 = node2;
         Nodes = [Node1, Node2];
+        Attribute = attribute;
     }
 
     public method Show()
@@ -213,6 +219,14 @@ class Segment
             CreateBeamEffect(AllPlayers(), BeamType.GrappleBeam, Node1.Location, Node2.Location, Color.Red, EffectRev.VisibleTo);
             EffectID = LastCreatedEntity();
             visible = true;
+
+            if (Attribute == 1)
+            {
+                CreateEffect(AllPlayers(), Effect.Sphere, Color.Purple, LinearInterpolate(Node1.Location, Node2.Location, 0.4), 0.25, EffectRev.VisibleTo);
+                DirectionMarker1 = LastCreatedEntity();
+                CreateEffect(AllPlayers(), Effect.Sphere, Color.Purple, LinearInterpolate(Node1.Location, Node2.Location, 0.6), 0.15, EffectRev.VisibleTo);
+                DirectionMarker2 = LastCreatedEntity();
+            }
         }
     }
     public method Hide()
@@ -220,6 +234,8 @@ class Segment
         if (visible)
         {
             DestroyEffect(EffectID);
+            DestroyEffect(DirectionMarker1);
+            DestroyEffect(DirectionMarker2);
             visible = false;
         }
     }
@@ -228,7 +244,7 @@ class Segment
 rule: "Update visible"
 Event.OngoingPlayer
 if (HostPlayer() == EventPlayer())
-if (Modulo(TotalTimeElapsed(), 5) < 1)
+if (IsCommunicating(EventPlayer(), Communication.Hello))
 {
     foreach (Node node in Nodes)
     {
@@ -261,8 +277,12 @@ if (IsCommunicating(EventPlayer(), Communication.VoiceLineUp))
     
     for (define i = 0; i < CountOf(Segments); i++)
     {
-        connect1 = IndexOfArrayValue(Nodes, (<Segment>Segments[i]).Node1);
-        connect2 = IndexOfArrayValue(Nodes, (<Segment>Segments[i]).Node2);
+        segmentOut = Vector(
+            IndexOfArrayValue(Nodes, (<Segment>Segments[i]).Node1),
+            IndexOfArrayValue(Nodes, (<Segment>Segments[i]).Node2),
+            (<Segment>Segments[i]).Attribute
+        );
+        //connect2 = IndexOfArrayValue(Nodes, (<Segment>Segments[i]).Node2);
         connectIndex = i;
     }
 
@@ -274,8 +294,7 @@ define globalvar isBuilding        D = false;
 define globalvar buildingNodeIndex E = -1;
 define globalvar buildingNode      F = -1;
 define globalvar connectIndex      G = -1;
-define globalvar connect1          H = -1;
-define globalvar connect2          I = -1;
+define globalvar segmentOut        H = -1;
 
 rule: "Preload"
 if (CountOf(preloadNodes) != 0)
@@ -283,8 +302,32 @@ if (CountOf(preloadNodes) != 0)
     for (define i = 0; i < CountOf(preloadNodes); i++)
         Nodes = Append(Nodes, new Node(preloadNodes[i]));    
     for (define i = 0; i < CountOf(preloadSegments); i++)
-        Segments = Append(Segments, new Segment(<Node>Nodes[XOf(preloadSegments[i])], <Node>Nodes[YOf(preloadSegments[i])]));
+        Segments = Append(Segments, new Segment(
+                <Node>Nodes[XOf(preloadSegments[i])],
+                <Node>Nodes[YOf(preloadSegments[i])],
+                <Node>Nodes[ZOf(preloadSegments[i])]
+            ));
 }
 
 define globalvar preloadNodes J;
 define globalvar preloadSegments K;
+
+define globalvar Attribute = 0;
+define globalvar AttributeHud = 0;
+
+rule: "Change attribute"
+Event.OngoingPlayer
+if (IsButtonHeld(EventPlayer(), Button.Ability1))
+{
+    Attribute++;
+    DestroyHudText(AttributeHud);
+
+    if (Attribute == 2) Attribute = 0;
+
+    if (Attribute == 0)
+        CreateHudText(AllPlayers(), "current_form:", "normal", null, Location.Top);
+    else if (Attribute == 1)
+        CreateHudText(AllPlayers(), "current_form:", <"<0> location", 1>, null, Location.Top);
+
+    AttributeHud = LastTextID();
+}

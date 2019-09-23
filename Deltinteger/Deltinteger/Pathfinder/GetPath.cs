@@ -220,11 +220,19 @@ namespace Deltin.Deltinteger.Pathfinder
 
         private static Element GetConnectedSegments(Element nodes, Element segments, Element currentIndex)
         {
+            Element currentSegmentCheck = new V_ArrayElement();
+
             return Element.Part<V_FilteredArray>(
                 segments,
-                Element.Part<V_ArrayContains>(
-                    Nodes(new V_ArrayElement()),
-                    currentIndex
+                Element.Part<V_And>(
+                    Element.Part<V_ArrayContains>(
+                        Nodes(currentSegmentCheck),
+                        currentIndex
+                    ),
+                    Element.Part<V_Or>(
+                        new V_Compare(Attribute(currentSegmentCheck), Operators.NotEqual, new V_Number(1)),
+                        new V_Compare(Node1(currentSegmentCheck), Operators.Equal, currentIndex)
+                    )
                 )
             );
         }
@@ -251,6 +259,10 @@ namespace Deltin.Deltinteger.Pathfinder
         private static Element Node2(Element segment)
         {
             return Element.Part<V_YOf>(segment);
+        }
+        private static Element Attribute(Element segment)
+        {
+            return Element.Part<V_ZOf>(segment);
         }
     }
 

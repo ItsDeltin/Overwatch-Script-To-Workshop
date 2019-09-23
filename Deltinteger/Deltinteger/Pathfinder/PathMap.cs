@@ -18,8 +18,7 @@ namespace Deltin.Deltinteger.Pathfinder
         private static readonly Variable BuildingNodeIndex = Variable.E;
         private static readonly Variable BuildingNode = Variable.F;
         private static readonly Variable ConnectIndex = Variable.G;
-        private static readonly Variable Connect1 = Variable.H;
-        private static readonly Variable Connect2 = Variable.I;
+        private static readonly Variable SegmentOut = Variable.H;
 
         public static PathMap ImportFromCSV(string file)
         {
@@ -30,6 +29,7 @@ namespace Deltin.Deltinteger.Pathfinder
                 {
                     Log.Write(LogLevel.Normal, new ColorMod("Error: need the global variable set, got " + frames[i].VariableSetOwner + " instead on line " + i + ".", ConsoleColor.Red));
                     Console.ReadLine();
+                    return null;
                 }
 
             bool started = false;
@@ -47,6 +47,12 @@ namespace Deltin.Deltinteger.Pathfinder
                 }
             }
 
+            if (startAt == -1)
+            {
+                Log.Write(LogLevel.Normal, new ColorMod("Error: build not sure. Press Voice Line Up to compile the pathmap.", ConsoleColor.Red));
+                Console.ReadLine();
+            }
+
             int last = -1;
 
             List<Vertex> vectors = new List<Vertex>();
@@ -59,11 +65,14 @@ namespace Deltin.Deltinteger.Pathfinder
             
             List<Segment> segments = new List<Segment>();
             for (int i = last; i < frames.Length; i++)
-                if (frames[i].VariableValues[ConnectIndex].Changed && frames[i].VariableValues[Connect1] is CsvNumber && frames[i].VariableValues[Connect2] is CsvNumber)
+                if (frames[i].VariableValues[ConnectIndex].Changed && frames[i].VariableValues[SegmentOut] is CsvVector)
                 {
+                    Vertex vector = ((CsvVector)frames[i].VariableValues[SegmentOut]).Value;
+
                     segments.Add(new Segment(
-                        (int)((CsvNumber)frames[i].VariableValues[Connect1]).Value,
-                        (int)((CsvNumber)frames[i].VariableValues[Connect2]).Value
+                        (int)vector.X,
+                        (int)vector.Y,
+                        (int)vector.Z
                     ));
                 }
             
@@ -114,7 +123,7 @@ namespace Deltin.Deltinteger.Pathfinder
         public Element SegmentsAsWorkshopData()
         {
             return Element.CreateArray(
-                Segments.Select(segment => new V_Vector((double)segment.Node1, (double)segment.Node2, 0)).ToArray()
+                Segments.Select(segment => segment.AsWorkshopData()).ToArray()
             );
         }
     }
@@ -125,13 +134,26 @@ namespace Deltin.Deltinteger.Pathfinder
         public int Node1 { get; set; }
         [XmlAttribute]
         public int Node2 { get; set; }
+        [XmlAttribute]
+        public int Attribute { get; set; }
 
-        public Segment(int node1, int node2)
+        public Segment(int node1, int node2, int attribute)
         {
             Node1 = node1;
             Node2 = node2;
+            Attribute = attribute;
         }
 
         private Segment() {}
+
+        public bool ShouldSerializeAttribute()
+        {
+            return Attribute != 0;
+        }
+
+        public V_Vector AsWorkshopData()
+        {
+            return new V_Vector((double)Node1, (double)Node2, (double)Attribute);
+        }
     }
 }
