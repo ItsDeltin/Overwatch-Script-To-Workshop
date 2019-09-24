@@ -40,8 +40,8 @@ namespace Deltin.Deltinteger.Pathfinder
 
         public static IndexedVar Get(TranslateRule context, PathMapVar pathmap, Element position, Element destination)
         {
-            var firstNode = ClosestToPosition(pathmap, position);
-            var lastNode = ClosestToPosition(pathmap, destination);
+            var firstNode = ClosestNodeToPosition(pathmap, position);
+            var lastNode = ClosestNodeToPosition(pathmap, destination);
 
             IndexedVar current = context.VarCollection.AssignVar(null, "Dijkstra: Current", context.IsGlobal, Variable.I, new int[0], null);
             //IndexedVar current = context.VarCollection.AssignVar(null, "Dijkstra: Current", context.IsGlobal, null);
@@ -156,34 +156,27 @@ namespace Deltin.Deltinteger.Pathfinder
             ));
             backtrack.Finish();
 
-            /*
-            ForEachBuilder resultDebug = new ForEachBuilder(context, finalPath.GetVariable());
-            resultDebug.Setup();
-            resultDebug.AddActions(
-                Element.Part<A_Teleport>(new V_EventPlayer(),
-                    Element.Part<V_ValueInArray>(
-                        pathmap.Nodes.GetVariable(),
-                        resultDebug.IndexValue
-                    )
-                ),
-                Element.Part<A_Wait>(new V_Number(2))
-            );
-            resultDebug.Finish();
-            */
-
             return finalPath;
         }
 
-        private static Element ClosestToPosition(PathMapVar pathmap, Element position)
+        private static Element ClosestNodeToPosition(PathMapVar pathmap, Element position)
         {
             return Element.Part<V_IndexOfArrayValue>(
                 pathmap.Nodes.GetVariable(),
                 Element.Part<V_FirstOf>(
                     Element.Part<V_SortedArray>(
                         pathmap.Nodes.GetVariable(),
-                        Element.Part<V_DistanceBetween>(
-                            position,
-                            new V_ArrayElement()
+
+                        Element.TernaryConditional(
+                            Element.Part<V_IsInLineOfSight>(
+                                position + new V_Vector(0, 1.5, 0),
+                                new V_ArrayElement()
+                            ),
+                            Element.Part<V_DistanceBetween>(
+                                position,
+                                new V_ArrayElement()
+                            ),
+                            new V_Number(9999)
                         )
                     )
                 )
@@ -371,32 +364,43 @@ namespace Deltin.Deltinteger.Pathfinder
             };
             pathfind.Actions = ArrayBuilder<Element>.Build
             (
-                Element.Part<A_StartFacing>(
+                // Element.Part<A_StartFacing>(
+                //     new V_EventPlayer(),
+                //     Element.Part<V_DirectionTowards>(
+                //         new V_EyePosition(),
+                //         NextPosition()
+                //     ),
+                //     new V_Number(700),
+                //     EnumData.GetEnumValue(Relative.ToWorld),
+                //     EnumData.GetEnumValue(FacingRev.DirectionAndTurnRate)
+                // ),
+                // Element.Part<A_StartThrottleInDirection>(
+                //     new V_EventPlayer(),
+                //     new V_Forward(),
+                //     new V_Number(1),
+                //     EnumData.GetEnumValue(Relative.ToPlayer),
+                //     EnumData.GetEnumValue(ThrottleBehavior.ReplaceExistingThrottle),
+                //     EnumData.GetEnumValue(ThrottleRev.DirectionAndMagnitude)
+                // )
+                Element.Part<A_StartThrottleInDirection>(
                     new V_EventPlayer(),
                     Element.Part<V_DirectionTowards>(
                         new V_EyePosition(),
                         NextPosition()
                     ),
-                    new V_Number(700),
-                    EnumData.GetEnumValue(Relative.ToWorld),
-                    EnumData.GetEnumValue(FacingRev.DirectionAndTurnRate)
-                ),
-                Element.Part<A_StartThrottleInDirection>(
-                    new V_EventPlayer(),
-                    new V_Forward(),
                     new V_Number(1),
-                    EnumData.GetEnumValue(Relative.ToPlayer),
+                    EnumData.GetEnumValue(Relative.ToWorld),
                     EnumData.GetEnumValue(ThrottleBehavior.ReplaceExistingThrottle),
                     EnumData.GetEnumValue(ThrottleRev.DirectionAndMagnitude)
                 )
-                // ,Element.Part<A_CreateEffect>(
-                //     new V_AllPlayers(),
-                //     EnumData.GetEnumValue(Effect.Sphere),
-                //     EnumData.GetEnumValue(Color.Green),
-                //     NextPosition(),
-                //     new V_Number(0.33),
-                //     EnumData.GetEnumValue(EffectRev.VisibleToPositionAndRadius)
-                // )
+                ,Element.Part<A_CreateEffect>(
+                    new V_AllPlayers(),
+                    EnumData.GetEnumValue(Effect.Sphere),
+                    EnumData.GetEnumValue(Color.Green),
+                    NextPosition(),
+                    new V_Number(0.33),
+                    EnumData.GetEnumValue(EffectRev.VisibleToPositionAndRadius)
+                )
             );
 
             Rule updateIndex = new Rule(Constants.INTERNAL_ELEMENT + "Pathfinder: Update", RuleEvent.OngoingPlayer);
@@ -417,7 +421,9 @@ namespace Deltin.Deltinteger.Pathfinder
                 )
             };
             updateIndex.Actions = ArrayBuilder<Element>.Build(
-                Path.SetVariable(Element.Part<V_ArraySlice>(Path.GetVariable(), new V_Number(1), new V_Number(Constants.MAX_ARRAY_LENGTH)))
+                Path.SetVariable(Element.Part<V_ArraySlice>(Path.GetVariable(), new V_Number(1), new V_Number(Constants.MAX_ARRAY_LENGTH))),
+                A_Wait.MinimumWait,
+                new A_LoopIfConditionIsTrue()
             );
 
             Rule stop = new Rule(Constants.INTERNAL_ELEMENT + "Pathfinder: Stop", RuleEvent.OngoingPlayer);
