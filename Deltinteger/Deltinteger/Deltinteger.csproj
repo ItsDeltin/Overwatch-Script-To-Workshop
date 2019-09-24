@@ -138,6 +138,8 @@
     <Compile Include="Pathfinder\GetPath.cs" />
     <Compile Include="Pathfinder\PathMapVar.cs" />
     <Compile Include="Pathfinder\Editor.cs" />
+    <Compile Include="Pathfinder\PathfinderInfo.cs" />
+    <Compile Include="Pathfinder\AdditionalMethods.cs" />
     <Compile Include="CSV.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Extras.cs" />

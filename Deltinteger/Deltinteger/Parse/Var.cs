@@ -495,11 +495,6 @@ namespace Deltin.Deltinteger.Parse
                 );
 
                 return SetVariable(null, baseArrayValue, isGlobal, targetPlayer, variable, false, index[0]);
-
-                // if (isGlobal)
-                //     return new Element[] { Element.Part<A_SetGlobalVariableAtIndex>(              EnumData.GetEnumValue(variable), index[0], baseArrayValue) };
-                // else
-                //     return new Element[] { Element.Part<A_SetGlobalVariableAtIndex>(targetPlayer, EnumData.GetEnumValue(variable), index[0], baseArrayValue) };
             }
 
             if (builder == null) throw new ArgumentNullException("builder", "Can't set multidimensional array if builder is null.");
