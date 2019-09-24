@@ -166,17 +166,9 @@ namespace Deltin.Deltinteger.Pathfinder
                 Element.Part<V_FirstOf>(
                     Element.Part<V_SortedArray>(
                         pathmap.Nodes.GetVariable(),
-
-                        Element.TernaryConditional(
-                            Element.Part<V_IsInLineOfSight>(
-                                position + new V_Vector(0, 1.5, 0),
-                                new V_ArrayElement()
-                            ),
-                            Element.Part<V_DistanceBetween>(
-                                position,
-                                new V_ArrayElement()
-                            ),
-                            new V_Number(9999)
+                        Element.Part<V_DistanceBetween>(
+                            position,
+                            new V_ArrayElement()
                         )
                     )
                 )
@@ -374,14 +366,6 @@ namespace Deltin.Deltinteger.Pathfinder
                 //     EnumData.GetEnumValue(Relative.ToWorld),
                 //     EnumData.GetEnumValue(FacingRev.DirectionAndTurnRate)
                 // ),
-                // Element.Part<A_StartThrottleInDirection>(
-                //     new V_EventPlayer(),
-                //     new V_Forward(),
-                //     new V_Number(1),
-                //     EnumData.GetEnumValue(Relative.ToPlayer),
-                //     EnumData.GetEnumValue(ThrottleBehavior.ReplaceExistingThrottle),
-                //     EnumData.GetEnumValue(ThrottleRev.DirectionAndMagnitude)
-                // )
                 Element.Part<A_StartThrottleInDirection>(
                     new V_EventPlayer(),
                     Element.Part<V_DirectionTowards>(

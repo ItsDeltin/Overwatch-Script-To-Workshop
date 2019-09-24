@@ -256,6 +256,7 @@ namespace Deltin.Deltinteger.Elements
         public static Element operator *(Element a, Element b) => Element.Part<V_Multiply>(a, b);
         public static Element operator /(Element a, Element b) => Element.Part<V_Divide>(a, b);
         public static Element operator %(Element a, Element b) => Element.Part<V_Modulo>(a, b);
+        public static implicit operator Element(double number) => new V_Number(number);
 
         public static readonly Element DefaultElement = new V_Number(0);
     }

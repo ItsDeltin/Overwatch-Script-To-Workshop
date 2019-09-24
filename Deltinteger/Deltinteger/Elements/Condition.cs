@@ -28,6 +28,8 @@ namespace Deltin.Deltinteger.Elements
         }
 
         public Condition(Element value1, Elements.Operators compareOperator, Element value2) : this(value1, EnumData.GetEnumValue(compareOperator), value2) {}
+        public Condition(V_Compare condition) : this((Element)condition.ParameterValues[0], (EnumMember)condition.ParameterValues[1], (Element)condition.ParameterValues[2]) {}
+        public Condition(Element condition) : this(condition, Operators.Equal, new V_True()) {}
         
         public void DebugPrint(Log log, int depth = 0)
         {
