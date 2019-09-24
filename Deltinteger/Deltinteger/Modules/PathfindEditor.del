@@ -324,3 +324,9 @@ if (IsButtonHeld(EventPlayer(), Button.Ability1))
 
     AttributeHud = LastTextID();
 }
+
+rule: "Initial attribute HUD"
+{
+    CreateHudText(AllPlayers(), "current_form:", "normal", null, Location.Top);
+    AttributeHud = LastTextID();
+}
