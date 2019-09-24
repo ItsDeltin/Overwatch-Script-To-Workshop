@@ -181,6 +181,7 @@ namespace Deltin.Deltinteger.Parse
         public bool UsesIndex { get; }
         public int CollectionIndex { get; set; } = -1;
         public Element DefaultTarget { get; set; } = new V_EventPlayer();
+        public bool Optimize2ndDim { get; set; } = false;
 
         private readonly IWorkshopTree VariableAsWorkshop; 
 
@@ -214,7 +215,7 @@ namespace Deltin.Deltinteger.Parse
 
         public virtual Element[] SetVariable(Element value, Element targetPlayer = null, params Element[] setAtIndex)
         {
-            return ArrayBuilder.SetVariable(value, IsGlobal, targetPlayer, Variable, ArrayBuilder<Element>.Build(Index, setAtIndex));
+            return ArrayBuilder.SetVariable(value, IsGlobal, targetPlayer, Variable, Optimize2ndDim, ArrayBuilder<Element>.Build(Index, setAtIndex));
         }
         
         public virtual Element[] InScope(Element initialValue, Element targetPlayer = null)
@@ -449,12 +450,12 @@ namespace Deltin.Deltinteger.Parse
             Store = store;
         }
 
-        public Element[] SetVariable(Element value, bool isGlobal, Element targetPlayer, Variable variable, params Element[] index)
+        public Element[] SetVariable(Element value, bool isGlobal, Element targetPlayer, Variable variable, bool optimize2ndDim, params Element[] index)
         {
-            return SetVariable(this, value, isGlobal, targetPlayer, variable, index);
+            return SetVariable(this, value, isGlobal, targetPlayer, variable, optimize2ndDim, index);
         }
 
-        public static Element[] SetVariable(WorkshopArrayBuilder builder, Element value, bool isGlobal, Element targetPlayer, Variable variable, params Element[] index)
+        public static Element[] SetVariable(WorkshopArrayBuilder builder, Element value, bool isGlobal, Element targetPlayer, Variable variable, bool optimize2ndDim, params Element[] index)
         {
             if (index == null || index.Length == 0)
             {
@@ -472,6 +473,35 @@ namespace Deltin.Deltinteger.Parse
                     return new Element[] { Element.Part<A_SetPlayerVariableAtIndex>(targetPlayer, EnumData.GetEnumValue(variable), index[0], value) };
             }
 
+            if (optimize2ndDim && index.Length > 2) throw new ArgumentOutOfRangeException("index", "Can't set more than 2 dimensions if optimizeIndexSet is true.");
+
+            if (index.Length == 2 && optimize2ndDim)
+            {
+                Element baseArray = GetVariable(isGlobal, targetPlayer, variable, index[0]);
+                Element baseArrayValue = Element.Part<V_Append>(
+                    Element.Part<V_Append>(
+                        Element.Part<V_ArraySlice>(
+                            baseArray,
+                            new V_Number(0),
+                            index[1]
+                        ),
+                        value
+                    ),
+                    Element.Part<V_ArraySlice>(
+                        baseArray,
+                        index[1] + 1,
+                        new V_Number(Constants.MAX_ARRAY_LENGTH)
+                    )
+                );
+
+                return SetVariable(null, baseArrayValue, isGlobal, targetPlayer, variable, false, index[0]);
+
+                // if (isGlobal)
+                //     return new Element[] { Element.Part<A_SetGlobalVariableAtIndex>(              EnumData.GetEnumValue(variable), index[0], baseArrayValue) };
+                // else
+                //     return new Element[] { Element.Part<A_SetGlobalVariableAtIndex>(targetPlayer, EnumData.GetEnumValue(variable), index[0], baseArrayValue) };
+            }
+
             if (builder == null) throw new ArgumentNullException("builder", "Can't set multidimensional array if builder is null.");
 
             List<Element> actions = new List<Element>();
@@ -483,12 +513,12 @@ namespace Deltin.Deltinteger.Parse
 
             // Get the last array in the index path and copy it to variable B.
             actions.AddRange(
-                SetVariable(builder, ValueInArrayPath(root, index.Take(index.Length - 1).ToArray()), isGlobal, targetPlayer, builder.Constructor)
+                SetVariable(builder, ValueInArrayPath(root, index.Take(index.Length - 1).ToArray()), isGlobal, targetPlayer, builder.Constructor, false)
             );
 
             // Set the value in the array.
             actions.AddRange(
-                SetVariable(builder, value, isGlobal, targetPlayer, builder.Constructor, index.Last())
+                SetVariable(builder, value, isGlobal, targetPlayer, builder.Constructor, false, index.Last())
             );
 
             // Reconstruct the multidimensional array.
@@ -503,17 +533,17 @@ namespace Deltin.Deltinteger.Parse
                 Element array = ValueInArrayPath(root, index.Take(dimensions - i).ToArray());
 
                 actions.AddRange(
-                    SetVariable(builder, array, isGlobal, targetPlayer, builder.Constructor)
+                    SetVariable(builder, array, isGlobal, targetPlayer, builder.Constructor, false)
                 );
 
                 // Copy back the variable at C to the correct index
                 actions.AddRange(
-                    SetVariable(builder, builder.Store.GetVariable(targetPlayer), isGlobal, targetPlayer, builder.Constructor, index[i])
+                    SetVariable(builder, builder.Store.GetVariable(targetPlayer), isGlobal, targetPlayer, builder.Constructor, false, index[i])
                 );
             }
             // Set the final variable using Set At Index.
             actions.AddRange(
-                SetVariable(builder, GetRoot(isGlobal, targetPlayer, builder.Constructor), isGlobal, targetPlayer, variable, index[0])
+                SetVariable(builder, GetRoot(isGlobal, targetPlayer, builder.Constructor), isGlobal, targetPlayer, variable, false, index[0])
             );
             return actions.ToArray();
         }

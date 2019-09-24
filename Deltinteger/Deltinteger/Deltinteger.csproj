@@ -151,6 +151,7 @@
     <Content Include="Modules\Container.del"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
     <Content Include="Modules\Debug Tools.del"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
     <Content Include="Modules\PathfindEditor.del"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
+    <Content Include="Modules\Hanamura.pathmap"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
