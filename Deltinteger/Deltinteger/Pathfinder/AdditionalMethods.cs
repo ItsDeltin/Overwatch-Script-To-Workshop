@@ -17,7 +17,7 @@ namespace Deltin.Deltinteger.Pathfinder
             Element isPathfinding = new V_Compare(
                 Element.Part<V_CountOf>(pathfinderInfo.Path.GetVariable()),
                 Operators.GreaterThan,
-                new V_Number(0)
+                0
             );
 
             return new MethodResult(null, isPathfinding);

@@ -21,7 +21,7 @@ namespace Deltin.Deltinteger.Pathfinder
                 new Condition(
                     Element.Part<V_CountOf>(Path.GetVariable()),
                     Operators.GreaterThan,
-                    new V_Number(0)
+                    0
                 )
             };
             pathfind.Actions = ArrayBuilder<Element>.Build
@@ -55,7 +55,7 @@ namespace Deltin.Deltinteger.Pathfinder
                 new Condition(
                     Element.Part<V_CountOf>(Nodes.GetVariable()),
                     Operators.GreaterThan,
-                    new V_Number(0)
+                    0
                 ),
                 new Condition(
                     Element.Part<V_DistanceBetween>(
@@ -63,7 +63,7 @@ namespace Deltin.Deltinteger.Pathfinder
                         Element.Part<V_PositionOf>(new V_EventPlayer())
                     ),
                     Operators.LessThan,
-                    new V_Number(MoveToNext)
+                    MoveToNext
                 )
             };
             updateIndex.Actions = ArrayBuilder<Element>.Build(
@@ -78,7 +78,7 @@ namespace Deltin.Deltinteger.Pathfinder
                 new Condition(
                     Element.Part<V_CountOf>(Path.GetVariable()),
                     Operators.Equal,
-                    new V_Number(0)
+                    0
                 )
             };
             stop.Actions = ArrayBuilder<Element>.Build(
