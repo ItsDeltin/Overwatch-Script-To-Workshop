@@ -23,8 +23,8 @@ namespace Deltin.Deltinteger.Pathfinder
             
             Rule initialNodes = new Rule("Initial Nodes");
             initialNodes.Actions = ArrayBuilder<Element>.Build(
-                WorkshopArrayBuilder.SetVariable(null, map.NodesAsWorkshopData(), true, null, Variable.J),
-                WorkshopArrayBuilder.SetVariable(null, map.SegmentsAsWorkshopData(), true, null, Variable.K)
+                WorkshopArrayBuilder.SetVariable(null, map.NodesAsWorkshopData(), true, null, Variable.J, false),
+                WorkshopArrayBuilder.SetVariable(null, map.SegmentsAsWorkshopData(), true, null, Variable.K, false)
             );
             rules.Add(initialNodes);
 

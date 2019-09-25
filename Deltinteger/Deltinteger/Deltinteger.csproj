@@ -138,6 +138,8 @@
     <Compile Include="Pathfinder\GetPath.cs" />
     <Compile Include="Pathfinder\PathMapVar.cs" />
     <Compile Include="Pathfinder\Editor.cs" />
+    <Compile Include="Pathfinder\PathfinderInfo.cs" />
+    <Compile Include="Pathfinder\AdditionalMethods.cs" />
     <Compile Include="CSV.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Extras.cs" />
@@ -151,6 +153,7 @@
     <Content Include="Modules\Container.del"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
     <Content Include="Modules\Debug Tools.del"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
     <Content Include="Modules\PathfindEditor.del"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
+    <Content Include="Modules\Hanamura.pathmap"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
