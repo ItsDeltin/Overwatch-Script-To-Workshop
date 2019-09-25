@@ -270,9 +270,7 @@ namespace Deltin.Deltinteger.Parse
                             Element.Part<V_ArraySlice>(
                                 continueSkipArray.GetVariable(), 
                                 new V_Number(0),
-                                Element.Part<V_Subtract>(
-                                    Element.Part<V_CountOf>(continueSkipArray.GetVariable()), new V_Number(1)
-                                )
+                                Element.Part<V_CountOf>(continueSkipArray.GetVariable()) - 1
                             )
                         )
                     );
@@ -290,7 +288,7 @@ namespace Deltin.Deltinteger.Parse
 
                     // Reset the continue skip.
                     context.ContinueSkip.ResetSkip();
-                    context.Actions.AddRange(continueSkipArray.SetVariable(new V_Number()));
+                    context.Actions.AddRange(continueSkipArray.SetVariable(0));
                     
                     // Remove the method from the stack.
                     context.MethodStackRecursive.Remove(stack);

@@ -20,7 +20,7 @@ namespace Deltin.Deltinteger.Elements
             List<Element> actions = new List<Element>();
 
             IndexedVar index = TranslateContext.VarCollection.AssignVar(Scope, "DestroyEffectArray index", TranslateContext.IsGlobal, null);
-            actions.AddRange(index.SetVariable(new V_Number(0)));
+            actions.AddRange(index.SetVariable(0));
 
             Element[] destroyActions = new Element[destroyPerLoop];
             for (int i = 0; i < destroyPerLoop; i++)
@@ -28,21 +28,17 @@ namespace Deltin.Deltinteger.Elements
                 if (i == 0)
                     destroyActions[i] = Element.Part<A_DestroyEffect>(Element.Part<V_ValueInArray>(effectArray, index.GetVariable()));
                 else
-                    destroyActions[i] = Element.Part<A_DestroyEffect>(Element.Part<V_ValueInArray>(effectArray, Element.Part<V_Add>(index.GetVariable(), new V_Number(i))));
+                    destroyActions[i] = Element.Part<A_DestroyEffect>(Element.Part<V_ValueInArray>(effectArray, index.GetVariable() + i));
             }
 
             actions.AddRange(
                 Element.While(
-                    TranslateContext.ContinueSkip, 
-                    new V_Compare(
-                        index.GetVariable(), 
-                        Operators.LessThan, 
-                        Element.Part<V_CountOf>(effectArray)
-                    ),
+                    TranslateContext.ContinueSkip,
+                    index.GetVariable() < Element.Part<V_CountOf>(effectArray),
                     ArrayBuilder<Element>.Build
                     (
                         destroyActions,
-                        index.SetVariable(Element.Part<V_Add>(index.GetVariable(), new V_Number(destroyPerLoop)))
+                        index.SetVariable(index.GetVariable() + destroyPerLoop)
                     )
                 )
             );

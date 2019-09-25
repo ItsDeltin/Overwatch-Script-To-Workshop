@@ -9,7 +9,7 @@ namespace Deltin.Deltinteger.Elements
     {
         protected override MethodResult Get()
         {
-            return new MethodResult(null, Element.Part<V_Multiply>((Element)Parameters[0], new V_Number(3.6)));
+            return new MethodResult(null, (Element)Parameters[0] * 3.6);
         }
 
         public override CustomMethodWiki Wiki()
@@ -24,7 +24,7 @@ namespace Deltin.Deltinteger.Elements
     {
         protected override MethodResult Get()
         {
-            return new MethodResult(null, Element.Part<V_Multiply>((Element)Parameters[0], new V_Number(2.237)));
+            return new MethodResult(null, (Element)Parameters[0] * 2.237);
         }
 
         public override CustomMethodWiki Wiki()
@@ -39,7 +39,7 @@ namespace Deltin.Deltinteger.Elements
     {
         protected override MethodResult Get()
         {
-            return new MethodResult(null, Element.Part<V_Multiply>((Element)Parameters[0], new V_Number(2.381)));
+            return new MethodResult(null, (Element)Parameters[0] * 2.381);
         }
 
         public override CustomMethodWiki Wiki()
@@ -54,7 +54,7 @@ namespace Deltin.Deltinteger.Elements
     {
         protected override MethodResult Get()
         {
-            return new MethodResult(null, Element.Part<V_Multiply>((Element)Parameters[0], new V_Number(1.094)));
+            return new MethodResult(null, (Element)Parameters[0] * 1.094);
         }
 
         public override CustomMethodWiki Wiki()
@@ -69,7 +69,7 @@ namespace Deltin.Deltinteger.Elements
     {
         protected override MethodResult Get()
         {
-            return new MethodResult(null, Element.Part<V_Multiply>((Element)Parameters[0], new V_Number(39.37)));
+            return new MethodResult(null, (Element)Parameters[0] * 39.37);
         }
 
         public override CustomMethodWiki Wiki()

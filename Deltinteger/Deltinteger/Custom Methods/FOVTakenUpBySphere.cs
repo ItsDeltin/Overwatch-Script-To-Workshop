@@ -12,8 +12,8 @@ namespace Deltin.Deltinteger.Elements
         {
             Element distance = (Element)Parameters[0];
             Element radius = (Element)Parameters[1];
-            Element angle = Element.Part<V_ArcsineInDegrees>(Element.Part<V_Divide>(radius, distance));
-            return new MethodResult(null, Element.Part<V_Multiply>(angle, new V_Number(2)));
+            Element angle = Element.Part<V_ArcsineInDegrees>(radius / distance);
+            return new MethodResult(null, angle * 2);
         }
 
         public override CustomMethodWiki Wiki()

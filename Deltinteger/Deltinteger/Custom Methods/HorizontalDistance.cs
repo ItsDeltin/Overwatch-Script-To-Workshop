@@ -13,9 +13,9 @@ namespace Deltin.Deltinteger.Elements
         {
             Element point1 = (Element)Parameters[0];
             Element point2 = (Element)Parameters[1];
-            Element x = Element.Part<V_Subtract>(Element.Part<V_XOf>(point1), Element.Part<V_XOf>(point2));
-            Element z = Element.Part<V_Subtract>(Element.Part<V_ZOf>(point1), Element.Part<V_ZOf>(point2));
-            Element sum = Element.Part<V_Add>(Element.Part<V_RaiseToPower>(x, new V_Number(2)), Element.Part<V_RaiseToPower>(z, new V_Number(2)));
+            Element x = Element.Part<V_XOf>(point1) - Element.Part<V_XOf>(point2);
+            Element z = Element.Part<V_ZOf>(point1) - Element.Part<V_ZOf>(point2);
+            Element sum = Element.Part<V_RaiseToPower>(x, new V_Number(2)) + Element.Part<V_RaiseToPower>(z, new V_Number(2));
             return new MethodResult(null, Element.Part<V_SquareRoot>(sum));
         }
 
@@ -46,9 +46,9 @@ namespace Deltin.Deltinteger.Elements
                 point2.SetVariable((Element)Parameters[1])
             );
 
-            Element x = Element.Part<V_Subtract>(Element.Part<V_XOf>(point1.GetVariable()), Element.Part<V_XOf>(point2.GetVariable()));
-            Element z = Element.Part<V_Subtract>(Element.Part<V_ZOf>(point1.GetVariable()), Element.Part<V_ZOf>(point2.GetVariable()));
-            Element sum = Element.Part<V_Add>(Element.Part<V_RaiseToPower>(x, new V_Number(2)), Element.Part<V_RaiseToPower>(z, new V_Number(2)));
+            Element x = Element.Part<V_XOf>(point1.GetVariable()) - Element.Part<V_XOf>(point2.GetVariable());
+            Element z = Element.Part<V_ZOf>(point1.GetVariable()) - Element.Part<V_ZOf>(point2.GetVariable());
+            Element sum = Element.Part<V_RaiseToPower>(x, new V_Number(2)) + Element.Part<V_RaiseToPower>(z, new V_Number(2));
 
             return new MethodResult(actions, Element.Part<V_SquareRoot>(sum));
         }

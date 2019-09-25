@@ -19,16 +19,16 @@ namespace Deltin.Deltinteger.Elements
             Element range = Element.Part<V_DistanceBetween>(eyePos, position);
             Element direction = Element.Part<V_FacingDirectionOf>(player);
             Element raycast = Element.Part<V_RayCastHitPosition>(eyePos,
-                Element.Part<V_Add>(
-                    eyePos,
-                    Element.Part<V_Multiply>(direction, range)
-                    ),
-                    new V_AllPlayers(),
-                    new V_Null(),
-                    new V_False()
-                );
+                (
+                    eyePos +
+                    direction * range
+                ),
+                new V_AllPlayers(),
+                new V_Null(),
+                new V_False()
+            );
             Element distance = Element.Part<V_DistanceBetween>(position, raycast);
-            Element compare = Element.Part<V_Compare>(distance, EnumData.GetEnumValue(Operators.LessThanOrEqual), radius);
+            Element compare = distance <= radius;
             return new MethodResult(null, compare);
         }
 
@@ -66,16 +66,16 @@ namespace Deltin.Deltinteger.Elements
             Element range = Element.Part<V_DistanceBetween>(eyePos, position.GetVariable());
             Element direction = Element.Part<V_FacingDirectionOf>(player.GetVariable());
             Element raycast = Element.Part<V_RayCastHitPosition>(eyePos,
-                Element.Part<V_Add>(
-                    eyePos,
-                    Element.Part<V_Multiply>(direction, range)
-                    ),
-                    new V_AllPlayers(),
-                    new V_Null(),
-                    new V_False()
-                );
+                (
+                    eyePos +
+                    direction * range
+                ),
+                new V_AllPlayers(),
+                new V_Null(),
+                new V_False()
+            );
             Element distance = Element.Part<V_DistanceBetween>(position.GetVariable(), raycast);
-            Element compare = Element.Part<V_Compare>(distance, EnumData.GetEnumValue(Operators.LessThanOrEqual), radius);
+            Element compare = distance <= radius;
 
             return new MethodResult(actions, compare);
         }

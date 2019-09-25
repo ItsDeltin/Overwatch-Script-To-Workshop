@@ -8,7 +8,7 @@ namespace Deltin.Deltinteger.Elements
     {
         protected override MethodResult Get()
         {
-            return new MethodResult(null, new V_Number(Math.PI));
+            return new MethodResult(null, Math.PI);
         }
 
         public override CustomMethodWiki Wiki()

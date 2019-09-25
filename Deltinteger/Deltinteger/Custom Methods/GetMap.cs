@@ -13,13 +13,13 @@ namespace Deltin.Deltinteger.Elements
             Element[] actions = ArrayBuilder<Element>.Build
             (
                 temp.SetVariable(Element.Part<V_RoundToInteger>(
-                    Element.Part<V_Add>(
+                    (
                         Element.Part<V_DistanceBetween>(
                             Element.Part<V_NearestWalkablePosition>(
                                 Element.Part<V_Vector>(new V_Number(-500.000), new V_Number(0), new V_Number(0))
                             ),
                             Element.Part<V_NearestWalkablePosition>(Element.Part<V_Vector>(new V_Number(500), new V_Number(0), new V_Number(0)))
-                        ),
+                        ) +
                         Element.Part<V_DistanceBetween>(
                             Element.Part<V_NearestWalkablePosition>(Element.Part<V_Vector>(new V_Number(0), new V_Number(0), new V_Number(-500.000))),
                             Element.Part<V_NearestWalkablePosition>(Element.Part<V_Vector>(new V_Number(0), new V_Number(0), new V_Number(500)))

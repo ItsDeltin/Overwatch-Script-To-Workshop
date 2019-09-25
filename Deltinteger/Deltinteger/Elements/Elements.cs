@@ -231,7 +231,7 @@ namespace Deltin.Deltinteger.Elements
             int whileStartIndex = continueSkip.GetSkipCount() + 1;
 
             A_SkipIf skipCondition = new A_SkipIf() { ParameterValues = new IWorkshopTree[2] };
-            skipCondition.ParameterValues[0] = Element.Part<V_Not>(condition);
+            skipCondition.ParameterValues[0] = !(condition);
             result.Add(skipCondition);
             result.AddRange(actions);
             result.AddRange(continueSkip.SetSkipCountActions(whileStartIndex));
@@ -256,9 +256,16 @@ namespace Deltin.Deltinteger.Elements
         public static Element operator *(Element a, Element b) => Element.Part<V_Multiply>(a, b);
         public static Element operator /(Element a, Element b) => Element.Part<V_Divide>(a, b);
         public static Element operator %(Element a, Element b) => Element.Part<V_Modulo>(a, b);
+        public static Element operator <(Element a, Element b) => Element.Part<V_Compare>(a, EnumData.GetEnumValue(Operators.LessThan), b);
+        public static Element operator >(Element a, Element b) => Element.Part<V_Compare>(a, EnumData.GetEnumValue(Operators.GreaterThan), b);
+        public static Element operator <=(Element a, Element b) => Element.Part<V_Compare>(a, EnumData.GetEnumValue(Operators.LessThanOrEqual), b);
+        public static Element operator >=(Element a, Element b) => Element.Part<V_Compare>(a, EnumData.GetEnumValue(Operators.GreaterThanOrEqual), b);
+        public static Element operator !(Element a) => Element.Part<V_Not>(a);
+        public static Element operator -(Element a) => a * -1;
         public static implicit operator Element(double number) => new V_Number(number);
+        public static implicit operator Element(int number) => new V_Number(number);
 
-        public static readonly Element DefaultElement = new V_Number(0);
+        public static readonly Element DefaultElement = 0;
     }
 
     public class ElementList : IMethod

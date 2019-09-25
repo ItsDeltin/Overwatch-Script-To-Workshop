@@ -16,7 +16,7 @@ namespace Deltin.Deltinteger.Elements
             Element point = (Element)Parameters[1];
             Element fov = (Element)Parameters[2];
             Element los = Element.Part<V_IsInLineOfSight>(Element.Part<V_EyePosition>(player), point);
-            Element angle = Element.Part<V_IsInViewAngle>(player, point, Element.Part<V_Divide>(fov, new V_Number(2)));
+            Element angle = Element.Part<V_IsInViewAngle>(player, point, fov / 2);
             return new MethodResult(null, Element.Part<V_And>(los, angle));
         }
 
@@ -51,7 +51,7 @@ namespace Deltin.Deltinteger.Elements
 
             Element fov = (Element)Parameters[2];
             Element los = Element.Part<V_IsInLineOfSight>(Element.Part<V_EyePosition>(player.GetVariable()), point.GetVariable());
-            Element angle = Element.Part<V_IsInViewAngle>(player.GetVariable(), point.GetVariable(), Element.Part<V_Divide>(fov, new V_Number(2)));
+            Element angle = Element.Part<V_IsInViewAngle>(player.GetVariable(), point.GetVariable(), fov / 2);
 
             return new MethodResult(actions, Element.Part<V_And>(los, angle));
         }

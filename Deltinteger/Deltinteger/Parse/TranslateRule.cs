@@ -154,19 +154,19 @@ namespace Deltin.Deltinteger.Parse
                             return Element.Part<V_RaiseToPower>(left, right);
 
                         case "*":
-                            return Element.Part<V_Multiply>(left, right);
+                            return left * right;
 
                         case "%":
-                            return Element.Part<V_Modulo>(left, right);
+                            return left % right;
 
                         case "/":
-                            return Element.Part<V_Divide>(left, right);
+                            return left / right;
 
                         case "+":
-                            return Element.Part<V_Add>(left, right);
+                            return left + right;
 
                         case "-":
-                            return Element.Part<V_Subtract>(left, right);
+                            return left - right;
 
 
                         // BoolCompare: &&, ||
@@ -178,19 +178,19 @@ namespace Deltin.Deltinteger.Parse
 
                         // Compare: <, <=, ==, >=, >, !=
                         case "<":
-                            return Element.Part<V_Compare>(left, EnumData.GetEnumValue(Operators.LessThan), right);
+                            return left < right;
 
                         case "<=":
-                            return Element.Part<V_Compare>(left, EnumData.GetEnumValue(Operators.LessThanOrEqual), right);
+                            return left <= right;
 
                         case "==":
                             return Element.Part<V_Compare>(left, EnumData.GetEnumValue(Operators.Equal), right);
 
                         case ">=":
-                            return Element.Part<V_Compare>(left, EnumData.GetEnumValue(Operators.GreaterThanOrEqual), right);
+                            return left >= right;
 
                         case ">":
-                            return Element.Part<V_Compare>(left, EnumData.GetEnumValue(Operators.GreaterThan), right);
+                            return left > right;
 
                         case "!=":
                             return Element.Part<V_Compare>(left, EnumData.GetEnumValue(Operators.NotEqual), right);
@@ -201,7 +201,7 @@ namespace Deltin.Deltinteger.Parse
 
                 // Number
                 case NumberNode numberNode:
-                    return new V_Number(numberNode.Value);
+                    return numberNode.Value;
                 
                 // Bool
                 case BooleanNode boolNode:
@@ -212,10 +212,10 @@ namespace Deltin.Deltinteger.Parse
                 
                 // Not operation
                 case NotNode notNode:
-                    return Element.Part<V_Not>(ParseExpression(getter, scope, notNode.Value));
+                    return !(ParseExpression(getter, scope, notNode.Value));
                 
                 case InvertNode invertNode:
-                    return Element.Part<V_Multiply>(ParseExpression(getter, scope, invertNode.Value), new V_Number(-1));
+                    return -ParseExpression(getter, scope, invertNode.Value);
 
                 // Strings
                 case StringNode stringNode:
@@ -560,7 +560,7 @@ namespace Deltin.Deltinteger.Parse
                         if (offset == 0)
                             return index.GetVariable();
                         else
-                            return Element.Part<V_Add>(index.GetVariable(), getOffset());
+                            return index.GetVariable() + getOffset();
                     }
                     V_Number getOffset()
                     {
@@ -577,18 +577,15 @@ namespace Deltin.Deltinteger.Parse
                     }
 
                     // Reset the counter.
-                    Actions.AddRange(index.SetVariable(new V_Number(0)));
+                    Actions.AddRange(index.SetVariable(0));
 
                     // The action the for loop starts on.
                     int forStartIndex = ContinueSkip.GetSkipCount();
 
                     A_SkipIf skipCondition = new A_SkipIf() { ParameterValues = new IWorkshopTree[2] };
                     skipCondition.ParameterValues[0] = 
-                        Element.Part<V_Not>(Element.Part<V_Compare>(
-                            index.GetVariable(),
-                            EnumData.GetEnumValue(Operators.LessThan),
-                            Element.Part<V_CountOf>(array)
-                        ));
+                        !(index.GetVariable() < Element.Part<V_CountOf>(array)
+                    );
                     Actions.Add(skipCondition);
 
                     List<A_SkipIf> rangeSkips = new List<A_SkipIf>();
@@ -599,12 +596,8 @@ namespace Deltin.Deltinteger.Parse
                             //variable.Reference = getVariableReference();
 
                             A_SkipIf skipper = new A_SkipIf() { ParameterValues = new Element[2] };
-                            skipper.ParameterValues[0] = Element.Part<V_Not>(
-                                Element.Part<V_Compare>(
-                                    Element.Part<V_Add>(index.GetVariable(), getOffset()),
-                                    EnumData.GetEnumValue(Operators.LessThan),
-                                    Element.Part<V_CountOf>(array)
-                                )
+                            skipper.ParameterValues[0] = !(
+                                    index.GetVariable() + getOffset() < Element.Part<V_CountOf>(array)
                             );
                             rangeSkips.Add(skipper);
                             Actions.Add(skipper);
@@ -629,7 +622,7 @@ namespace Deltin.Deltinteger.Parse
                     forGroup.Out(this);
 
                     // Increment the index
-                    Actions.AddRange(index.SetVariable(Element.Part<V_Add>(index.GetVariable(), new V_Number(forEachNode.Repeaters))));
+                    Actions.AddRange(index.SetVariable(index.GetVariable() + forEachNode.Repeaters));
 
                     // Add the for's finishing elements
                     ContinueSkip.SetSkipCount(forStartIndex);
@@ -668,7 +661,7 @@ namespace Deltin.Deltinteger.Parse
                     if (forNode.Expression != null) // If it has an expression
                     {
                         skipCondition = new A_SkipIf() { ParameterValues = new IWorkshopTree[2] };
-                        skipCondition.ParameterValues[0] = Element.Part<V_Not>(ParseExpression(getter, forGroup, forNode.Expression));
+                        skipCondition.ParameterValues[0] = !(ParseExpression(getter, forGroup, forNode.Expression));
                         Actions.Add(skipCondition);
                     }
 
@@ -705,7 +698,7 @@ namespace Deltin.Deltinteger.Parse
                     int whileStartIndex = ContinueSkip.GetSkipCount();
 
                     A_SkipIf skipCondition = new A_SkipIf() { ParameterValues = new IWorkshopTree[2] };
-                    skipCondition.ParameterValues[0] = Element.Part<V_Not>(ParseExpression(getter, scope, whileNode.Expression));
+                    skipCondition.ParameterValues[0] = !(ParseExpression(getter, scope, whileNode.Expression));
                     Actions.Add(skipCondition);
 
                     ScopeGroup whileGroup = scope.Child();
@@ -728,7 +721,7 @@ namespace Deltin.Deltinteger.Parse
                 case IfNode ifNode:
                 {
                     A_SkipIf if_SkipIf = new A_SkipIf() { ParameterValues = new IWorkshopTree[2] };
-                    if_SkipIf.ParameterValues[0] = Element.Part<V_Not>(ParseExpression(getter, scope, ifNode.IfData.Expression));
+                    if_SkipIf.ParameterValues[0] = !(ParseExpression(getter, scope, ifNode.IfData.Expression));
 
                     Actions.Add(if_SkipIf);
 
@@ -760,7 +753,7 @@ namespace Deltin.Deltinteger.Parse
                     {
                         // Create the SkipIf action for the else if.
                         A_SkipIf elseif_SkipIf = new A_SkipIf() { ParameterValues = new IWorkshopTree[2] };
-                        elseif_SkipIf.ParameterValues[0] = Element.Part<V_Not>(ParseExpression(getter, scope, ifNode.ElseIfData[i].Expression));
+                        elseif_SkipIf.ParameterValues[0] = !(ParseExpression(getter, scope, ifNode.ElseIfData[i].Expression));
 
                         Actions.Add(elseif_SkipIf);
 
@@ -870,19 +863,19 @@ namespace Deltin.Deltinteger.Parse
             switch (varSetNode.Operation)
             {
                 case "+=":
-                    value = Element.Part<V_Add>(initialVar, value);
+                    value = initialVar + value;
                     break;
 
                 case "-=":
-                    value = Element.Part<V_Subtract>(initialVar, value);
+                    value = initialVar - value;
                     break;
 
                 case "*=":
-                    value = Element.Part<V_Multiply>(initialVar, value);
+                    value = initialVar * value;
                     break;
 
                 case "/=":
-                    value = Element.Part<V_Divide>(initialVar, value);
+                    value = initialVar / value;
                     break;
 
                 case "^=":
@@ -890,15 +883,15 @@ namespace Deltin.Deltinteger.Parse
                     break;
 
                 case "%=":
-                    value = Element.Part<V_Modulo>(initialVar, value);
+                    value = initialVar % value;
                     break;
                 
                 case "++":
-                    value = Element.Part<V_Add>(initialVar, new V_Number(1));
+                    value = initialVar + 1;
                     break;
                 
                 case "--":
-                    value = Element.Part<V_Subtract>(initialVar, new V_Number(1));
+                    value = initialVar - 1;
                     break;
             }
 

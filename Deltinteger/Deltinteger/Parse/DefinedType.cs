@@ -98,7 +98,7 @@ namespace Deltin.Deltinteger.Parse
             {
                 if (DefinedVars[i].Value != null)
                     context.Actions.AddRange(
-                        store.SetVariable(context.ParseExpression(typeScope, typeScope, DefinedVars[i].Value), null, new V_Number(i))
+                        store.SetVariable(context.ParseExpression(typeScope, typeScope, DefinedVars[i].Value), null, i)
                     );
             }
 
@@ -191,7 +191,7 @@ namespace Deltin.Deltinteger.Parse
             Element takenIndexes = context.ParserData.ClassIndexes.GetVariable();
 
             // Get an empty index in the class array to store the new class.
-            Element firstFree = Element.Part<V_Subtract>(
+            Element firstFree = (
                 Element.Part<V_FirstOf>(
                     Element.Part<V_FilteredArray>(
                         // Sort the taken index array.
@@ -199,22 +199,22 @@ namespace Deltin.Deltinteger.Parse
                         // Filter
                         Element.Part<V_And>(
                             // If the previous index was not taken, use that index.
-                            Element.Part<V_Not>(Element.Part<V_ArrayContains>(
+                            !(Element.Part<V_ArrayContains>(
                                 takenIndexes,
-                                Element.Part<V_Subtract>(new V_ArrayElement(), new V_Number(1))
+                                new V_ArrayElement() - 1
                             )),
                             // Make sure the index does not equal 0 so the resulting index is not -1.
                             new V_Compare(new V_ArrayElement(), Operators.NotEqual, new V_Number(0))
                         )
                     )
-                ),
-                new V_Number(1) // Subtract 1 to get the previous index
+                ) -
+                1 // Subtract 1 to get the previous index
             );
             // If the taken index array has 0 elements, just use the length of the class array subtracted by 1.
             firstFree = Element.TernaryConditional(
                 new V_Compare(Element.Part<V_CountOf>(takenIndexes), Operators.NotEqual, new V_Number(0)),
                 firstFree,
-                Element.Part<V_Subtract>(Element.Part<V_CountOf>(context.ParserData.ClassArray.GetVariable()), new V_Number(1))
+                Element.Part<V_CountOf>(context.ParserData.ClassArray.GetVariable()) - 1
             );
 
             context.Actions.AddRange(index.SetVariable(firstFree));
@@ -319,8 +319,8 @@ namespace Deltin.Deltinteger.Parse
     {
         override protected MethodResult Get()
         {
-            Element result = Element.Part<V_Subtract>(
-                new V_Number(Constants.MAX_ARRAY_LENGTH),
+            Element result = (
+                Constants.MAX_ARRAY_LENGTH -
                 Element.Part<V_CountOf>(TranslateContext.ParserData.ClassIndexes.GetVariable())
             );
             return new MethodResult(null, result);
@@ -352,12 +352,12 @@ namespace Deltin.Deltinteger.Parse
     {
         override protected MethodResult Get()
         {
-            Element result = Element.Part<V_Multiply>(
-                Element.Part<V_Divide>(
-                    Element.Part<V_CountOf>(TranslateContext.ParserData.ClassIndexes.GetVariable()),
-                    new V_Number(Constants.MAX_ARRAY_LENGTH)
-                ),
-                new V_Number(100)
+            Element result = (
+                (
+                    Element.Part<V_CountOf>(TranslateContext.ParserData.ClassIndexes.GetVariable()) /
+                    Constants.MAX_ARRAY_LENGTH
+                ) *
+                100
             );
             return new MethodResult(null, result);
         }

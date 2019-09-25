@@ -319,9 +319,8 @@ namespace Deltin.Deltinteger.Parse
         {
             return base.SetVariable(value, targetPlayer, 
                 ArrayBuilder<Element>.Build(
-                    Element.Part<V_Subtract>(
-                        Element.Part<V_CountOf>(base.Get(targetPlayer)),
-                        new V_Number(1)
+                    (
+                        Element.Part<V_CountOf>(base.Get(targetPlayer)) - 1
                     ),
                     setAtIndex
                 )
@@ -340,7 +339,7 @@ namespace Deltin.Deltinteger.Parse
                 Element.Part<V_ArraySlice>(
                     get,
                     new V_Number(0),
-                    Element.Part<V_Subtract>(Element.Part<V_CountOf>(get), new V_Number(1))
+                    Element.Part<V_CountOf>(get) - 1
                 ),
                 targetPlayer
             ));

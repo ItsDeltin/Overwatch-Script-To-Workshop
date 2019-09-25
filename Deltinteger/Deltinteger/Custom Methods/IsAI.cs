@@ -18,7 +18,7 @@ namespace Deltin.Deltinteger.Elements
                 Element.Part<A_Communicate>(player.GetVariable(), EnumData.GetEnumValue(Communication.VoiceLineUp))
             );
 
-            Element result = Element.Part<V_Not>(Element.Part<V_IsCommunicating>(player.GetVariable(), EnumData.GetEnumValue(Communication.VoiceLineUp)));
+            Element result = !(Element.Part<V_IsCommunicating>(player.GetVariable(), EnumData.GetEnumValue(Communication.VoiceLineUp)));
 
             return new MethodResult(actions, result);
         }
@@ -47,7 +47,7 @@ namespace Deltin.Deltinteger.Elements
             (
                 player.SetVariable((Element)Parameters[0]),
                 originalHero.SetVariable(Element.Part<V_HeroOf>(player.GetVariable())),
-                Element.Part<A_SkipIf>(Element.Part<V_Not>(Element.Part<V_Compare>(originalHero.GetVariable(), EnumData.GetEnumValue(Operators.Equal), new V_Null())), new V_Number(2)),
+                Element.Part<A_SkipIf>(!(Element.Part<V_Compare>(originalHero.GetVariable(), EnumData.GetEnumValue(Operators.Equal), new V_Null())), new V_Number(2)),
                 isAI.SetVariable(new V_False()),
                 Element.Part<A_Skip>(new V_Number(4)),
                 Element.Part<A_ForcePlayerHero>(player.GetVariable(), EnumData.GetEnumValue(Hero.Ashe)),

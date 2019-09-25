@@ -26,7 +26,7 @@ namespace Deltin.Deltinteger.Parse
 
             // Setup the skip if.
             SkipCondition = new A_SkipIf() { ParameterValues = new IWorkshopTree[2] };
-            SkipCondition.ParameterValues[0] = Element.Part<V_Not>(Condition);
+            SkipCondition.ParameterValues[0] = !(Condition);
             Context.Actions.Add(SkipCondition);
             IsSetup = true;
         }
@@ -63,7 +63,7 @@ namespace Deltin.Deltinteger.Parse
 
             // Setup the skip if.
             SkipCondition = new A_SkipIf() { ParameterValues = new IWorkshopTree[2] };
-            SkipCondition.ParameterValues[0] = Element.Part<V_Not>(Condition());
+            SkipCondition.ParameterValues[0] = !(Condition());
             AddActions(SkipCondition);
             IsSetup = true;
         }
@@ -123,18 +123,18 @@ namespace Deltin.Deltinteger.Parse
 
         override protected Element Condition()
         {
-            return new V_Compare(Index, Operators.LessThan, Element.Part<V_CountOf>(array));
+            return Index < Element.Part<V_CountOf>(array);
         }
 
         override protected void PreLoopStart()
         {
             indexVar = Context.VarCollection.AssignVar(null, "Index", Context.IsGlobal, null);
-            AddActions(indexVar.SetVariable(new V_Number(0)));
+            AddActions(indexVar.SetVariable(0));
         }
 
         override protected void PreLoopEnd()
         {
-            AddActions(indexVar.SetVariable(Element.Part<V_Add>(indexVar.GetVariable(), new V_Number(1))));
+            AddActions(indexVar.SetVariable(indexVar.GetVariable() + 1));
         }
     }
 }

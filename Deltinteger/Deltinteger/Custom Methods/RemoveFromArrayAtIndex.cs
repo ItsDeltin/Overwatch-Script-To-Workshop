@@ -16,7 +16,7 @@ namespace Deltin.Deltinteger.Elements
             return new MethodResult(null, 
                 Element.Part<V_Append>(
                     Element.Part<V_ArraySlice>(array, new V_Number(0), index),
-                    Element.Part<V_ArraySlice>(array, Element.Part<V_Add>(index, new V_Number(1)), V_Number.LargeArbitraryNumber)
+                    Element.Part<V_ArraySlice>(array, index + 1, V_Number.LargeArbitraryNumber)
                 )
             );
         }

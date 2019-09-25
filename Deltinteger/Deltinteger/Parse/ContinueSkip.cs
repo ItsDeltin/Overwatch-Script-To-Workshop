@@ -49,7 +49,7 @@ namespace Deltin.Deltinteger.Parse
                 waitAction,
                 skipAction,
                 TempHolder.SetVariable(SkipCount.GetVariable()),
-                SkipCount.SetVariable(new V_Number(0)),
+                SkipCount.SetVariable(0),
                 Element.Part<A_Skip>(TempHolder.GetVariable())
             );
 
@@ -68,7 +68,7 @@ namespace Deltin.Deltinteger.Parse
 
         public Element[] SetSkipCountActions(int number)
         {
-            return SkipCount.SetVariable(new V_Number(number));
+            return SkipCount.SetVariable(number);
         }
 
         public void SetSkipCount(Element element)

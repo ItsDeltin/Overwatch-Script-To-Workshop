@@ -105,22 +105,22 @@ namespace Deltin.Deltinteger.Pathfinder
 
                 // Get the distance between the current and the neighbor index.
                 neighborDistance.SetVariable(
-                    Element.Part<V_Add>(
+                    (
                         Element.Part<V_DistanceBetween>(
                             Element.Part<V_ValueInArray>(pathmap.Nodes.GetVariable(), neighborIndex.GetVariable()),
                             Element.Part<V_ValueInArray>(pathmap.Nodes.GetVariable(), current.GetVariable())
-                        ),
+                        ) +
                         Element.Part<V_ValueInArray>(distances.GetVariable(), current.GetVariable())
                     )
                 )
             ));
 
             // Set the current neighbor's distance if the new distance is less than what it is now.
-            IfBuilder ifBuilder = new IfBuilder(context, new V_Compare(
-                neighborDistance.GetVariable(),
-                Operators.LessThan,
+            IfBuilder ifBuilder = new IfBuilder(context,
+                neighborDistance.GetVariable()
+                <
                 Element.Part<V_ValueInArray>(distances.GetVariable(), neighborIndex.GetVariable())
-            ));
+            );
             ifBuilder.Setup();
 
             forBuilder.AddActions(distances.SetVariable(neighborDistance.GetVariable(), null, neighborIndex.GetVariable()));
@@ -182,14 +182,14 @@ namespace Deltin.Deltinteger.Pathfinder
                 distances[i] = Infinity;
             
             context.Actions.AddRange(distancesVar.SetVariable(Element.CreateArray(distances)));
-            context.Actions.AddRange(distancesVar.SetVariable(new V_Number(0), null, currentIndex));
+            context.Actions.AddRange(distancesVar.SetVariable(0, null, currentIndex));
         }
 
         private static void SetInitialUnvisited(TranslateRule context, PathMap pathmap, IndexedVar unvisitedVar)
         {
             Element[] unvisited = new Element[pathmap.Nodes.Length];
             for (int i = 0; i < unvisited.Length; i++)
-                unvisited[i] = new V_Number(i);
+                unvisited[i] = i;
             
             context.Actions.AddRange(unvisitedVar.SetVariable(Element.CreateArray(unvisited)));
         }
@@ -198,7 +198,7 @@ namespace Deltin.Deltinteger.Pathfinder
         {
             Element[] parents = new Element[pathmap.Nodes.Length];
             for (int i = 0; i < parents.Length; i++)
-                parents[i] = new V_Number(-1);
+                parents[i] = -1;
             
             context.Actions.AddRange(parentVar.SetVariable(Element.CreateArray(parents)));
         }
@@ -315,11 +315,7 @@ namespace Deltin.Deltinteger.Pathfinder
                 TranslateContext.ParserData.PathfinderInfo = new PathfinderInfo(TranslateContext.ParserData);
             PathfinderInfo pathfinderInfo = TranslateContext.ParserData.PathfinderInfo;
 
-            Element isPathfinding = new V_Compare(
-                Element.Part<V_CountOf>(pathfinderInfo.Path.GetVariable()),
-                Operators.GreaterThan,
-                new V_Number(0)
-            );
+            Element isPathfinding = Element.Part<V_CountOf>(pathfinderInfo.Path.GetVariable()) > 0;
 
             return new MethodResult(null, isPathfinding);
         }
@@ -351,7 +347,7 @@ namespace Deltin.Deltinteger.Pathfinder
                 new Condition(
                     Element.Part<V_CountOf>(Path.GetVariable()),
                     Operators.GreaterThan,
-                    new V_Number(0)
+                    0
                 )
             };
             pathfind.Actions = ArrayBuilder<Element>.Build
@@ -393,7 +389,7 @@ namespace Deltin.Deltinteger.Pathfinder
                 new Condition(
                     Element.Part<V_CountOf>(Nodes.GetVariable()),
                     Operators.GreaterThan,
-                    new V_Number(0)
+                    0
                 ),
                 new Condition(
                     Element.Part<V_DistanceBetween>(
@@ -401,7 +397,7 @@ namespace Deltin.Deltinteger.Pathfinder
                         Element.Part<V_PositionOf>(new V_EventPlayer())
                     ),
                     Operators.LessThan,
-                    new V_Number(MoveToNext)
+                    MoveToNext
                 )
             };
             updateIndex.Actions = ArrayBuilder<Element>.Build(
@@ -416,7 +412,7 @@ namespace Deltin.Deltinteger.Pathfinder
                 new Condition(
                     Element.Part<V_CountOf>(Path.GetVariable()),
                     Operators.Equal,
-                    new V_Number(0)
+                    0
                 )
             };
             stop.Actions = ArrayBuilder<Element>.Build(

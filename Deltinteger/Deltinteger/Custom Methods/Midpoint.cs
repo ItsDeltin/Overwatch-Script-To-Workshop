@@ -12,7 +12,7 @@ namespace Deltin.Deltinteger.Elements
         {
             Element point1 = (Element)Parameters[0];
             Element point2 = (Element)Parameters[1];
-            return new MethodResult(null, Element.Part<V_Divide>(Element.Part<V_Add>(point1, point2), new V_Number(2)));
+            return new MethodResult(null, (point1 + point2) / 2);
         }
 
         public override CustomMethodWiki Wiki()

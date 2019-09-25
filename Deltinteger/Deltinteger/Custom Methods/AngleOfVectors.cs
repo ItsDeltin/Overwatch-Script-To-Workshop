@@ -40,9 +40,9 @@ namespace Deltin.Deltinteger.Elements
                 ab.SetVariable(
                     Element.Part<V_Vector>
                     (
-                        Element.Part<V_Subtract>(Element.Part<V_XOf>(b.GetVariable()), Element.Part<V_XOf>(a.GetVariable())),
-                        Element.Part<V_Subtract>(Element.Part<V_YOf>(b.GetVariable()), Element.Part<V_YOf>(a.GetVariable())),
-                        Element.Part<V_Subtract>(Element.Part<V_ZOf>(b.GetVariable()), Element.Part<V_ZOf>(a.GetVariable()))
+                        Element.Part<V_XOf>(b.GetVariable()) - Element.Part<V_XOf>(a.GetVariable()),
+                        Element.Part<V_YOf>(b.GetVariable()) - Element.Part<V_YOf>(a.GetVariable()),
+                        Element.Part<V_ZOf>(b.GetVariable()) - Element.Part<V_ZOf>(a.GetVariable())
                     ), eventPlayer),
 
                 // get bc
@@ -50,9 +50,9 @@ namespace Deltin.Deltinteger.Elements
                 bc.SetVariable(
                     Element.Part<V_Vector>
                     (
-                        Element.Part<V_Subtract>(Element.Part<V_XOf>(c.GetVariable()), Element.Part<V_XOf>(b.GetVariable())),
-                        Element.Part<V_Subtract>(Element.Part<V_YOf>(c.GetVariable()), Element.Part<V_YOf>(b.GetVariable())),
-                        Element.Part<V_Subtract>(Element.Part<V_ZOf>(c.GetVariable()), Element.Part<V_ZOf>(b.GetVariable()))
+                        Element.Part<V_XOf>(c.GetVariable()) - Element.Part<V_XOf>(b.GetVariable()),
+                        Element.Part<V_YOf>(c.GetVariable()) - Element.Part<V_YOf>(b.GetVariable()),
+                        Element.Part<V_ZOf>(c.GetVariable()) - Element.Part<V_ZOf>(b.GetVariable())
                     ), eventPlayer),
 
                 // get abVec
@@ -78,9 +78,9 @@ namespace Deltin.Deltinteger.Elements
                 abNorm.SetVariable(
                     Element.Part<V_Vector>
                     (
-                        Element.Part<V_Divide>(Element.Part<V_XOf>(ab.GetVariable()), abVec.GetVariable()),
-                        Element.Part<V_Divide>(Element.Part<V_YOf>(ab.GetVariable()), abVec.GetVariable()),
-                        Element.Part<V_Divide>(Element.Part<V_ZOf>(ab.GetVariable()), abVec.GetVariable())
+                        Element.Part<V_XOf>(ab.GetVariable()) / abVec.GetVariable(),
+                        Element.Part<V_YOf>(ab.GetVariable()) / abVec.GetVariable(),
+                        Element.Part<V_ZOf>(ab.GetVariable()) / abVec.GetVariable()
                     ), eventPlayer),
 
                 // get bcNorm
@@ -88,35 +88,31 @@ namespace Deltin.Deltinteger.Elements
                 bcNorm.SetVariable(
                     Element.Part<V_Vector>
                     (
-                        Element.Part<V_Divide>(Element.Part<V_XOf>(bc.GetVariable()), bcVec.GetVariable()),
-                        Element.Part<V_Divide>(Element.Part<V_YOf>(bc.GetVariable()), bcVec.GetVariable()),
-                        Element.Part<V_Divide>(Element.Part<V_ZOf>(bc.GetVariable()), bcVec.GetVariable())
+                        Element.Part<V_XOf>(bc.GetVariable()) / bcVec.GetVariable(),
+                        Element.Part<V_YOf>(bc.GetVariable()) / bcVec.GetVariable(),
+                        Element.Part<V_ZOf>(bc.GetVariable()) / bcVec.GetVariable()
                     ), eventPlayer)
             );
 
-            Element result = Element.Part<V_Divide>
-            (
-                Element.Part<V_Multiply>
+            Element result =
                 (
                     Element.Part<V_ArccosineInRadians>
                     (
                         // get res
                         // res = abNorm[0] * bcNorm[0] + abNorm[1] * bcNorm[1] + abNorm[2] * bcNorm[2];
                         //target.SetVariable(
-                        Element.Part<V_Add>
                         (
-                            Element.Part<V_Add>
                             (
-                                Element.Part<V_Multiply>(Element.Part<V_XOf>(abNorm.GetVariable()), Element.Part<V_XOf>(bcNorm.GetVariable())),
-                                Element.Part<V_Multiply>(Element.Part<V_YOf>(abNorm.GetVariable()), Element.Part<V_YOf>(bcNorm.GetVariable()))
-                            ),
-                            Element.Part<V_Multiply>(Element.Part<V_ZOf>(abNorm.GetVariable()), Element.Part<V_ZOf>(bcNorm.GetVariable()))
+                                Element.Part<V_XOf>(abNorm.GetVariable()) * Element.Part<V_XOf>(bcNorm.GetVariable()) +
+                                Element.Part<V_YOf>(abNorm.GetVariable()) * Element.Part<V_YOf>(bcNorm.GetVariable())
+                            ) +
+                            Element.Part<V_ZOf>(abNorm.GetVariable()) * Element.Part<V_ZOf>(bcNorm.GetVariable())
                         )
-                    ),
-                    new V_Number(180)
-                ),
-                new V_Number(Math.PI)
-            );
+                    ) *
+                    180
+                ) /
+                Math.PI
+            ;
 
             return new MethodResult(actions, result);
         }
@@ -147,15 +143,15 @@ namespace Deltin.Deltinteger.Elements
 
             Element ab = Element.Part<V_Vector>
             (
-                Element.Part<V_Subtract>(Element.Part<V_XOf>(b), Element.Part<V_XOf>(a)),
-                Element.Part<V_Subtract>(Element.Part<V_YOf>(b), Element.Part<V_YOf>(a)),
-                Element.Part<V_Subtract>(Element.Part<V_ZOf>(b), Element.Part<V_ZOf>(a))
+                Element.Part<V_XOf>(b) - Element.Part<V_XOf>(a),
+                Element.Part<V_YOf>(b) - Element.Part<V_YOf>(a),
+                Element.Part<V_ZOf>(b) - Element.Part<V_ZOf>(a)
             );
             Element bc = Element.Part<V_Vector>
             (
-                Element.Part<V_Subtract>(Element.Part<V_XOf>(c), Element.Part<V_XOf>(b)),
-                Element.Part<V_Subtract>(Element.Part<V_YOf>(c), Element.Part<V_YOf>(b)),
-                Element.Part<V_Subtract>(Element.Part<V_ZOf>(c), Element.Part<V_ZOf>(b))
+                Element.Part<V_XOf>(c) - Element.Part<V_XOf>(b),
+                Element.Part<V_YOf>(c) - Element.Part<V_YOf>(b),
+                Element.Part<V_ZOf>(c) - Element.Part<V_ZOf>(b)
             );
             Element abVec = Element.Part<V_DistanceBetween>
             (
@@ -169,33 +165,31 @@ namespace Deltin.Deltinteger.Elements
             );
             Element abNorm = Element.Part<V_Vector>
             (
-                Element.Part<V_Divide>(Element.Part<V_XOf>(ab), abVec),
-                Element.Part<V_Divide>(Element.Part<V_YOf>(ab), abVec),
-                Element.Part<V_Divide>(Element.Part<V_ZOf>(ab), abVec)
+                Element.Part<V_XOf>(ab) / abVec,
+                Element.Part<V_YOf>(ab) / abVec,
+                Element.Part<V_ZOf>(ab) / abVec
             );
             Element bcNorm = Element.Part<V_Vector>
             (
-                Element.Part<V_Divide>(Element.Part<V_XOf>(bc), bcVec),
-                Element.Part<V_Divide>(Element.Part<V_YOf>(bc), bcVec),
-                Element.Part<V_Divide>(Element.Part<V_ZOf>(bc), bcVec)
+                Element.Part<V_XOf>(bc) / bcVec,
+                Element.Part<V_YOf>(bc) / bcVec,
+                Element.Part<V_ZOf>(bc) / bcVec
             );
-            Element res = Element.Part<V_Add>
+            Element res =
             (
-                Element.Part<V_Add>
                 (
-                    Element.Part<V_Multiply>(Element.Part<V_XOf>(abNorm), Element.Part<V_XOf>(bcNorm)),
-                    Element.Part<V_Multiply>(Element.Part<V_YOf>(abNorm), Element.Part<V_YOf>(bcNorm))
-                ),
-                Element.Part<V_Multiply>(Element.Part<V_ZOf>(abNorm), Element.Part<V_ZOf>(bcNorm))
+                    Element.Part<V_XOf>(abNorm) * Element.Part<V_XOf>(bcNorm) +
+                    Element.Part<V_YOf>(abNorm) * Element.Part<V_YOf>(bcNorm)
+                ) +
+                Element.Part<V_ZOf>(abNorm) * Element.Part<V_ZOf>(bcNorm)
             );
-            Element result = Element.Part<V_Divide>
+            Element result =
             (
-                Element.Part<V_Multiply>
                 (
-                    Element.Part<V_ArccosineInRadians>(res),
-                    new V_Number(180)
-                ),
-                new V_Number(Math.PI)
+                    Element.Part<V_ArccosineInRadians>(res) *
+                    180
+                ) /
+                Math.PI
             );
 
             return new MethodResult(null, result);

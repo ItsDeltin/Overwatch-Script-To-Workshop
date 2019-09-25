@@ -16,13 +16,10 @@ namespace Deltin.Deltinteger.Elements
             Element eyePos = Element.Part<V_EyePosition>(player);
             Element direction = Element.Part<V_FacingDirectionOf>(player);
             Element raycast = Element.Part<V_RayCastHitPosition>(eyePos,
-                Element.Part<V_Add>(
-                    eyePos,
-                    Element.Part<V_Multiply>(direction, range)
-                ),
-                    new V_Null(),
-                    new V_EventPlayer(),
-                    new V_False()
+                eyePos + direction * range,
+                new V_Null(),
+                new V_EventPlayer(),
+                new V_False()
             );
             return new MethodResult(null, raycast);
         }
@@ -51,13 +48,10 @@ namespace Deltin.Deltinteger.Elements
             Element eyePos = Element.Part<V_EyePosition>(player.GetVariable());
             Element direction = Element.Part<V_FacingDirectionOf>(player.GetVariable());
             Element raycast = Element.Part<V_RayCastHitPosition>(eyePos,
-                Element.Part<V_Add>(
-                    eyePos,
-                    Element.Part<V_Multiply>(direction, range)
-                ),
-                    new V_Null(),
-                    new V_EventPlayer(),
-                    new V_False()
+                eyePos + direction * range,
+                new V_Null(),
+                new V_EventPlayer(),
+                new V_False()
             );
 
             Element[] actions = ArrayBuilder<Element>.Build

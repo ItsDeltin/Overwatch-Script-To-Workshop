@@ -102,12 +102,12 @@ namespace Deltin.Deltinteger.Models
 
             if (rotation != null && !rotationSet)
             {
-                var pos1X = new V_Number(vertex1.X);
-                var pos1Y = new V_Number(vertex1.Y);
-                var pos1Z = new V_Number(vertex1.Z);
-                var pos2X = new V_Number(vertex2.X);
-                var pos2Y = new V_Number(vertex2.Y);
-                var pos2Z = new V_Number(vertex2.Z);
+                var pos1X = vertex1.X;
+                var pos1Y = vertex1.Y;
+                var pos1Z = vertex1.Z;
+                var pos2X = vertex2.X;
+                var pos2Y = vertex2.Y;
+                var pos2Z = vertex2.Z;
 
                 var yaw = Element.Part<V_HorizontalAngleFromDirection>(rotation);
                 var pitch = Element.Part<V_VerticalAngleFromDirection>(rotation);
@@ -118,42 +118,36 @@ namespace Deltin.Deltinteger.Models
                 var cosb = Element.Part<V_CosineFromDegrees>(yaw);
                 var sinb = Element.Part<V_SineFromDegrees>(yaw);
 
-                var Axx = Element.Part<V_Multiply>(cosa, cosb);
-                var Axy = Element.Part<V_Subtract>(new V_Number(0), sina);
-                var Axz = Element.Part<V_Multiply>(cosa, sinb);
+                var Axx = cosa * cosb;
+                var Axy = 0 - sina;
+                var Axz = cosa * sinb;
 
-                var Ayx = Element.Part<V_Multiply>(sina, cosb);
+                var Ayx = sina * cosb;
                 var Ayy = cosa;
-                var Ayz = Element.Part<V_Multiply>(sina, sinb);
+                var Ayz = sina * sinb;
 
-                var Azx = Element.Part<V_Multiply>(new V_Number(-1), sinb);
-
+                var Azx = -sinb;
+                
                 pos1 = Element.Part<V_Vector>(
-                    Element.Part<V_Add>(Element.Part<V_Add>(
-                        Element.Part<V_Multiply>(Axx, pos1X),
-                        Element.Part<V_Multiply>(Axy, pos1Y)),
-                        Element.Part<V_Multiply>(Axz, pos1Z)),
-                    Element.Part<V_Add>(Element.Part<V_Add>(
-                        Element.Part<V_Multiply>(Ayx, pos1X),
-                        Element.Part<V_Multiply>(Ayy, pos1Y)),
-                        Element.Part<V_Multiply>(Ayz, pos1Z)),
-                    Element.Part<V_Add>(
-                        Element.Part<V_Multiply>(Azx, pos1X),
-                        pos1Z)
+                    Axx * pos1X +
+                    Axy * pos1Y +
+                    Axz * pos1Z,
+                    Ayx * pos1X +
+                    Ayy * pos1Y +
+                    Ayz * pos1Z,
+                    Azx * pos1X +
+                    pos1Z
                 );
 
                 pos2 = Element.Part<V_Vector>(
-                    Element.Part<V_Add>(Element.Part<V_Add>(
-                        Element.Part<V_Multiply>(Axx, pos2X),
-                        Element.Part<V_Multiply>(Axy, pos2Y)),
-                        Element.Part<V_Multiply>(Axz, pos2Z)),
-                    Element.Part<V_Add>(Element.Part<V_Add>(
-                        Element.Part<V_Multiply>(Ayx, pos2X),
-                        Element.Part<V_Multiply>(Ayy, pos2Y)),
-                        Element.Part<V_Multiply>(Ayz, pos2Z)),
-                    Element.Part<V_Add>(
-                        Element.Part<V_Multiply>(Azx, pos2X),
-                        pos2Z)
+                    Axx * pos2X +
+                    Axy * pos2Y +
+                    Axz * pos2Z,
+                    Ayx * pos2X +
+                    Ayy * pos2Y +
+                    Ayz * pos2Z,
+                    Azx * pos2X +
+                    pos2Z
                 );
             }
             else
@@ -164,15 +158,15 @@ namespace Deltin.Deltinteger.Models
 
             if (scale != null && !scaleSet)
             {
-                pos1 = Element.Part<V_Multiply>(pos1, scale);
-                pos2 = Element.Part<V_Multiply>(pos2, scale);
+                pos1 = pos1 * scale;
+                pos2 = pos2 * scale;
             }
 
             return Element.Part<A_CreateBeamEffect>(
                 visibleTo,
                 EnumData.GetEnumValue(BeamType.GrappleBeam),
-                Element.Part<V_Add>(location, pos1),
-                Element.Part<V_Add>(location, pos2),
+                location + pos1,
+                location + pos2,
                 EnumData.GetEnumValue(Elements.Color.Red),
                 reevaluation
             );
