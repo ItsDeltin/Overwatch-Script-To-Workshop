@@ -7,6 +7,19 @@ using Deltin.Deltinteger.Parse;
 
 namespace Deltin.Deltinteger.Pathfinder
 {
+    public abstract class PathfindPlayer : CustomMethodBase
+    {
+        protected override MethodResult Get()
+        {
+            if (TranslateContext.ParserData.PathfinderInfo == null)
+                TranslateContext.ParserData.PathfinderInfo = new PathfinderInfo(TranslateContext.ParserData);
+            PathfinderInfo info = TranslateContext.ParserData.PathfinderInfo;
+            return Get(info);
+        }
+
+        protected abstract MethodResult Get(PathfinderInfo info);
+    }
+
     [CustomMethod("GetPath", CustomMethodType.MultiAction_Value)]
     [VarRefParameter("Path Map")]
     [Parameter("Position", Elements.ValueType.Vector, null)]
@@ -42,16 +55,12 @@ namespace Deltin.Deltinteger.Pathfinder
     [Parameter("Player", Elements.ValueType.Player, null)]
     [VarRefParameter("Path Map")]
     [Parameter("Destination", Elements.ValueType.Vector, null)]
-    class Pathfind : CustomMethodBase
+    class Pathfind : PathfindPlayer
     {
-        override protected MethodResult Get()
+        override protected MethodResult Get(PathfinderInfo info)
         {
             if (((VarRef)Parameters[1]).Var is PathMapVar == false)
                 throw SyntaxErrorException.InvalidVarRefType(((VarRef)Parameters[1]).Var.Name, VarType.PathMap, ParameterLocations[1]);
-            
-            if (TranslateContext.ParserData.PathfinderInfo == null)
-                TranslateContext.ParserData.PathfinderInfo = new PathfinderInfo(TranslateContext.ParserData);
-            PathfinderInfo pathfinderInfo = TranslateContext.ParserData.PathfinderInfo;
             
             Element player                 = (Element)Parameters[0];
             PathMapVar pathmap = (PathMapVar)((VarRef)Parameters[1]).Var;
@@ -61,7 +70,7 @@ namespace Deltin.Deltinteger.Pathfinder
 
             DijkstraNormal algorithm = new DijkstraNormal(TranslateContext, pathmap, Element.Part<V_PositionOf>(player), destination.GetVariable());
             algorithm.Get();
-            DijkstraBase.Pathfind(TranslateContext, pathfinderInfo, pathmap, algorithm.finalPath.GetVariable(), player, destination.GetVariable());
+            DijkstraBase.Pathfind(TranslateContext, info, pathmap, algorithm.finalPath.GetVariable(), player, destination.GetVariable());
             return new MethodResult(null, null);
         }
 
@@ -81,16 +90,12 @@ namespace Deltin.Deltinteger.Pathfinder
     [Parameter("Players", Elements.ValueType.Player, null)]
     [VarRefParameter("Path Map")]
     [Parameter("Destination", Elements.ValueType.Vector, null)]
-    class PathfindAll : CustomMethodBase
+    class PathfindAll : PathfindPlayer
     {
-        protected override MethodResult Get()
+        protected override MethodResult Get(PathfinderInfo info)
         {
             if (((VarRef)Parameters[1]).Var is PathMapVar == false)
                 throw SyntaxErrorException.InvalidVarRefType(((VarRef)Parameters[1]).Var.Name, VarType.PathMap, ParameterLocations[1]);
-            
-            if (TranslateContext.ParserData.PathfinderInfo == null)
-                TranslateContext.ParserData.PathfinderInfo = new PathfinderInfo(TranslateContext.ParserData);
-            PathfinderInfo pathfinderInfo = TranslateContext.ParserData.PathfinderInfo;
 
             IndexedVar players = TranslateContext.VarCollection.AssignVar(Scope, "Players", TranslateContext.IsGlobal, Variable.O, new int[0], null);
             TranslateContext.Actions.AddRange(players.SetVariable((Element)Parameters[0]));
@@ -100,7 +105,7 @@ namespace Deltin.Deltinteger.Pathfinder
             IndexedVar destination = TranslateContext.VarCollection.AssignVar(Scope, "Destination", TranslateContext.IsGlobal, null);
             TranslateContext.Actions.AddRange(destination.SetVariable((Element)Parameters[2]));
 
-            DijkstraMultiSource algorithm = new DijkstraMultiSource(TranslateContext, pathfinderInfo, pathmap, players.GetVariable(), destination.GetVariable());
+            DijkstraMultiSource algorithm = new DijkstraMultiSource(TranslateContext, info, pathmap, players.GetVariable(), destination.GetVariable());
             algorithm.Get();
             return new MethodResult(null, null);
         }
@@ -113,6 +118,55 @@ namespace Deltin.Deltinteger.Pathfinder
                 "The array of players to move.",
                 "The path map.",
                 "The destination to move the player to."
+            );
+        }
+    }
+
+    [CustomMethod("StopPathfind", CustomMethodType.Action)]
+    [Parameter("Players", Elements.ValueType.Player, null)]
+    class StopPathfind : PathfindPlayer
+    {
+        protected override MethodResult Get(PathfinderInfo info)
+        {
+            Element player = (Element)Parameters[0];
+
+            return new MethodResult(ArrayBuilder<Element>.Build(
+                info.Nodes.SetVariable(new V_EmptyArray(), player),
+                info.Path.SetVariable(new V_EmptyArray(), player)
+            ), null);
+        }
+
+        public override CustomMethodWiki Wiki()
+        {
+            return new CustomMethodWiki(
+                "Stops pathfinding for the specified players.",
+                "The players that will stop pathfinding."
+            );
+        }
+    }
+
+    [CustomMethod("IsPathfinding", CustomMethodType.Value)]
+    [Parameter("Player", Elements.ValueType.Player, null)]
+    class IsPathfinding : PathfindPlayer
+    {
+        override protected MethodResult Get(PathfinderInfo info)
+        {
+            Element player = (Element)Parameters[0];
+
+            Element isPathfinding = new V_Compare(
+                Element.Part<V_CountOf>(info.Path.GetVariable()),
+                Operators.GreaterThan,
+                new V_Number(0)
+            );
+
+            return new MethodResult(null, isPathfinding);
+        }
+
+        override public CustomMethodWiki Wiki()
+        {
+            return new CustomMethodWiki(
+                "Checks if the target player is currently pathfinding with Pathfind().",
+                "The player to check."
             );
         }
     }

@@ -49,7 +49,6 @@ namespace Deltin.Deltinteger.Pathfinder
 
             parentArray = context.VarCollection.AssignVar(null, "Dijkstra: Parent Array",                        context.IsGlobal, Variable.L, new int[0], null);
             parentArray.Optimize2ndDim = false;
-            SetInitialParents(context, pathmap.PathMap, parentArray);
 
             WhileBuilder whileBuilder = new WhileBuilder(context, LoopCondition());
             whileBuilder.Setup();
@@ -197,16 +196,6 @@ namespace Deltin.Deltinteger.Pathfinder
                 unvisited[i] = new V_Number(i);
             
             context.Actions.AddRange(unvisitedVar.SetVariable(Element.CreateArray(unvisited)));
-        }
-
-        private static void SetInitialParents(TranslateRule context, PathMap pathmap, IndexedVar parentVar)
-        {
-            return;
-            Element[] parents = new Element[pathmap.Nodes.Length];
-            for (int i = 0; i < parents.Length; i++)
-                parents[i] = new V_Number(-1);
-            
-            context.Actions.AddRange(parentVar.SetVariable(Element.CreateArray(parents)));
         }
 
         private static Element GetConnectedSegments(Element nodes, Element segments, Element currentIndex, bool reversed)
