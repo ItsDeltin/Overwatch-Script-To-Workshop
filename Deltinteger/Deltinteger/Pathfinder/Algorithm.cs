@@ -143,6 +143,9 @@ namespace Deltin.Deltinteger.Pathfinder
             context.Actions.AddRange(
                 current.SetVariable(destination)
             );
+            context.Actions.AddRange(
+                finalPath.SetVariable(new V_EmptyArray())
+            );
 
             // Get the path.
             WhileBuilder backtrack = new WhileBuilder(context, new V_Compare(
@@ -261,6 +264,23 @@ namespace Deltin.Deltinteger.Pathfinder
         {
             return Element.Part<V_ZOf>(segment);
         }
+    
+        public static void Pathfind(TranslateRule context, PathfinderInfo info, PathMapVar pathMapVar, Element pathResult, Element target, Element destination)
+        {
+            context.Actions.AddRange(ArrayBuilder<Element>.Build(
+                info.Nodes.SetVariable(
+                    Element.Part<V_Append>(
+                        pathMapVar.Nodes.GetVariable(),
+                        destination
+                    ),
+                    target
+                ),
+                info.Path.SetVariable(
+                    Element.Part<V_Append>(pathResult, new V_Number(pathMapVar.PathMap.Nodes.Length)),
+                    target
+                )
+            ));
+        }
     }
 
     public class DijkstraNormal : DijkstraBase
@@ -295,14 +315,13 @@ namespace Deltin.Deltinteger.Pathfinder
 
         override protected void GetResult()
         {
-            Backtrack(destination, finalPath);
+            Backtrack(finalNode.GetVariable(), finalPath);
         }
 
         override protected void Reset()
         {
             context.Actions.AddRange(ArrayBuilder<Element>.Build(
-                finalNode.SetVariable(-1),
-                finalPath.SetVariable(-1)
+                finalNode.SetVariable(-1)
             ));
         }
     }
@@ -356,7 +375,6 @@ namespace Deltin.Deltinteger.Pathfinder
             assignPlayerPaths.Setup();
 
             IndexedVar finalPath = context.VarCollection.AssignVar(null, "Dijkstra: Final Path", context.IsGlobal, Variable.M, new int[0], null);
-            assignPlayerPaths.AddActions(finalPath.SetVariable(new V_EmptyArray()));
 
             Backtrack(
                 Element.Part<V_ValueInArray>(
@@ -365,10 +383,7 @@ namespace Deltin.Deltinteger.Pathfinder
                 ),
                 finalPath
             );
-            assignPlayerPaths.AddActions(ArrayBuilder<Element>.Build(
-                pathfinderInfo.Path.SetVariable(finalPath.GetVariable(), assignPlayerPaths.IndexValue),
-                pathfinderInfo.Nodes.SetVariable(pathmap.Nodes.GetVariable(), assignPlayerPaths.IndexValue)
-            ));
+            Pathfind(context, pathfinderInfo, pathmap, finalPath.GetVariable(), assignPlayerPaths.IndexValue, position);
             assignPlayerPaths.Finish();
         }
 
