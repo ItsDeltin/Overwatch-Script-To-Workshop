@@ -110,15 +110,17 @@ namespace Deltin.Deltinteger.Parse
 
     class ForEachBuilder : LoopBuilder
     {
+        string name { get; }
         Element array { get; }
         IndexedVar indexVar { get; set; }
 
         public Element Index { get { return indexVar.GetVariable(); }}
         public Element IndexValue { get { return Element.Part<V_ValueInArray>(array, indexVar.GetVariable()); }}
 
-        public ForEachBuilder(TranslateRule context, Element array) : base(context)
+        public ForEachBuilder(TranslateRule context, Element array, string name = null) : base(context)
         {
             this.array = array;
+            this.name = name;
         }
 
         override protected Element Condition()
@@ -128,7 +130,7 @@ namespace Deltin.Deltinteger.Parse
 
         override protected void PreLoopStart()
         {
-            indexVar = Context.VarCollection.AssignVar(null, "Index", Context.IsGlobal, null);
+            indexVar = Context.VarCollection.AssignVar(null, name == null ? "Index" : name + " Index", Context.IsGlobal, null);
             AddActions(indexVar.SetVariable(new V_Number(0)));
         }
 

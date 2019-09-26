@@ -12,8 +12,8 @@ namespace Deltin.Deltinteger.Pathfinder
 
         public PathfinderInfo(ParsingData parser)
         {
-            Nodes = parser.VarCollection.AssignVar(null, "Pathfinder: Nodes", false, null);
-            Path = parser.VarCollection.AssignVar(null, "Pathfinder: Path", false, null);
+            Nodes = parser.VarCollection.AssignVar(null, "Pathfinder: Nodes", false, Variable.D, new int[0], null);
+            Path = parser.VarCollection.AssignVar(null, "Pathfinder: Path", false, Variable.E, new int[0], null);
 
             Rule pathfind = new Rule(Constants.INTERNAL_ELEMENT + "Pathfinder: Move", RuleEvent.OngoingPlayer);
             pathfind.Conditions = new Condition[]

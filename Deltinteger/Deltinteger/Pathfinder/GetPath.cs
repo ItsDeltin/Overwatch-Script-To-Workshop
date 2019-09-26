@@ -311,7 +311,7 @@ namespace Deltin.Deltinteger.Pathfinder
                 "Moves a player to the specified position by pathfinding.",
                 "The player to move.",
                 "The path map.",
-                "The dstination to move the player to."
+                "The destination to move the player to."
             );
         }
     }
