@@ -139,9 +139,11 @@ namespace Deltin.Deltinteger.Parse
 
         private void GetObjects(string document, string file, TranslateRule globalTranslate, TranslateRule playerTranslate, bool isRoot)
         {
+            string absolute = new Uri(file).AbsolutePath;
+
             // If this file was already loaded, don't load it again.
-            if (Imported.Contains(file)) return;
-            Imported.Add(file);
+            if (Imported.Contains(absolute)) return;
+            Imported.Add(absolute);
             Diagnostics.AddFile(file);
 
             // Get the ruleset.
