@@ -10,12 +10,14 @@ namespace Deltin.Deltinteger.Pathfinder
         public IndexedVar Nodes { get; }
         public IndexedVar Path { get; }
         public IndexedVar LastUpdate { get; }
+        public IndexedVar DistanceToNext { get; }
 
         public PathfinderInfo(ParsingData parser)
         {
             Nodes = parser.VarCollection.AssignVar(null, "Pathfinder: Nodes", false, null);
             Path = parser.VarCollection.AssignVar(null, "Pathfinder: Path", false, null);
             LastUpdate = parser.VarCollection.AssignVar(null, "Pathfinder: Last Update", false, null);
+            DistanceToNext = parser.VarCollection.AssignVar(null, "Pathfinder: Distance To Next Node", false, null);
 
             parser.Rules.Add(GetStartRule());
             parser.Rules.Add(GetUpdateRule());
@@ -36,6 +38,7 @@ namespace Deltin.Deltinteger.Pathfinder
             pathfind.Actions = ArrayBuilder<Element>.Build
             (
                 LastUpdate.SetVariable(new V_TotalTimeElapsed()),
+                DistanceToNext.SetVariable(Element.Part<V_DistanceBetween>(Element.Part<V_PositionOf>(new V_EventPlayer()), NextPosition())),
                 // Element.Part<A_StartFacing>(
                 //     new V_EventPlayer(),
                 //     Element.Part<V_DirectionTowards>(
@@ -112,6 +115,7 @@ namespace Deltin.Deltinteger.Pathfinder
             updateIndex.Actions = ArrayBuilder<Element>.Build(
                 LastUpdate.SetVariable(new V_TotalTimeElapsed()),
                 Path.SetVariable(Element.Part<V_ArraySlice>(Path.GetVariable(), new V_Number(1), new V_Number(Constants.MAX_ARRAY_LENGTH))), // (5)
+                DistanceToNext.SetVariable(Element.Part<V_DistanceBetween>(Element.Part<V_PositionOf>(new V_EventPlayer()), NextPosition())),
                 A_Wait.MinimumWait,
                 new A_LoopIfConditionIsTrue()
             );
@@ -136,12 +140,12 @@ namespace Deltin.Deltinteger.Pathfinder
             return stop;
         }
 
-        private Element NextPosition()
+        public Element NextPosition()
         {
             return Element.Part<V_ValueInArray>(Nodes.GetVariable(), Element.Part<V_FirstOf>(Path.GetVariable()));
         }
 
-        private Element PositionAt(Element index)
+        public Element PositionAt(Element index)
         {
             return Element.Part<V_ValueInArray>(Nodes.GetVariable(), Element.Part<V_ValueInArray>(Path.GetVariable(), index));
         }

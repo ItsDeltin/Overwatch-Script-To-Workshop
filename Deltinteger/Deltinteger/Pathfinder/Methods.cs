@@ -214,14 +214,28 @@ namespace Deltin.Deltinteger.Pathfinder
 
     [CustomMethod("IsPathfindStuck", CustomMethodType.Value)]
     [Parameter("Player", Elements.ValueType.Player, null)]
+    [Parameter("Speed Scalar", Elements.ValueType.Number, null)]
     class IsPathfindStuck : PathfindPlayer
     {
         private const double StuckTime = 3;
 
         override protected MethodResult Get(PathfinderInfo info)
         {
+            Element leniency = 2;
+
             Element player = (Element)Parameters[0];
-            return new MethodResult(null, Get(info, player));
+            Element scalar = (Element)Parameters[1];
+            Element defaultSpeed = 5.5;
+            Element nodeDistance = info.DistanceToNext.GetVariable(player);
+            Element timeSinceLastNode = new V_TotalTimeElapsed() - info.LastUpdate.GetVariable(player);
+            
+            Element isStuck = new V_Compare(
+                nodeDistance - ((defaultSpeed * scalar * timeSinceLastNode) / leniency),
+                Operators.LessThanOrEqual,
+                0
+            );
+            isStuck = Element.Part<V_And>(IsPathfinding.Get(info, player), isStuck);
+            return new MethodResult(null, isStuck);
         }
 
         public override CustomMethodWiki Wiki()
@@ -229,25 +243,6 @@ namespace Deltin.Deltinteger.Pathfinder
             return new CustomMethodWiki(
                 "Checks if the player is pathfinding and stuck.",
                 "The player to check."
-            );
-        }
-
-        public static Element Get(PathfinderInfo info, Element player)
-        {
-            return Element.Part<V_And>(
-                IsPathfinding.Get(info, player),
-                Element.Part<V_And>(
-                    new V_Compare(
-                        Element.Part<V_SpeedOf>(player),
-                        Operators.LessThan,
-                        0.15
-                    ),
-                    new V_Compare(
-                        new V_TotalTimeElapsed() - info.LastUpdate.GetVariable(),
-                        Operators.GreaterThan,
-                        StuckTime
-                    )
-                )
             );
         }
     }
@@ -259,13 +254,9 @@ namespace Deltin.Deltinteger.Pathfinder
         override protected MethodResult Get(PathfinderInfo info)
         {
             Element player = (Element)Parameters[0];
-
-            IfBuilder doFix = new IfBuilder(TranslateContext, IsPathfindStuck.Get(info, player));
-            doFix.Setup();
             TranslateContext.Actions.AddRange(ArrayBuilder<Element>.Build(
                 Element.Part<A_Teleport>(player, Element.Part<V_ValueInArray>(info.Nodes.GetVariable(), Element.Part<V_FirstOf>(info.Path.GetVariable())))
             ));
-            doFix.Finish();
             return new MethodResult(null, null);
         }
 
