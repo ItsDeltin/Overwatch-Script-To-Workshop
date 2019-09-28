@@ -18,10 +18,10 @@ Event.OngoingPlayer
     CreateHudText(EventPlayer(), null, "crouch + ultimate_ability: destroy sphere", null, Location.Right, 1, Color.White, Color.White);
     CreateHudText(EventPlayer(), null, "interact: select sphere", null, Location.Right, 2, Color.White, Color.Blue);
     CreateHudText(EventPlayer(), null, "crouch + interact: stop selecting spheres", null, Location.Right, 3, Color.White, Color.Blue);
-    CreateHudText(EventPlayer(), null, "fold: connect", IsCommunicating(EventPlayer(), Communication.Acknowledge), Location.Right, 4, Color.White, Color.Green);
-    CreateHudText(EventPlayer(), null, "crouch + fold: stop connect", IsCommunicating(EventPlayer(), Communication.Acknowledge), Location.Right, 5, Color.White, Color.Green);
-    CreateHudText(EventPlayer(), null, "hello: reveal", IsCommunicating(EventPlayer(), Communication.Acknowledge), Location.Right, 6, Color.White, Color.Green);
-    CreateHudText(EventPlayer(), null, "up: upload", IsCommunicating(EventPlayer(), Communication.Acknowledge), Location.Right, 7, Color.White, Color.Green);
+    CreateHudText(EventPlayer(), null, "secondary_fire: connect", null, Location.Right, 4, Color.White, Color.Green);
+    CreateHudText(EventPlayer(), null, "crouch + secondary_fire: stop connect", null, Location.Right, 5, Color.White, Color.Green);
+    CreateHudText(EventPlayer(), null, "hello: reveal", null, Location.Right, 6, Color.White, Color.Green);
+    CreateHudText(EventPlayer(), null, "up: upload", null, Location.Right, 7, Color.White, Color.Green);
 }
 
 macro GetClosestNode(): FirstOf(SortedArray(Nodes, DistanceBetween(EyePosition(EventPlayer()), (<Node>ArrayElement()).ShownLocation)));
@@ -158,13 +158,10 @@ class Node
     }
 }
 
-define playervar acknowledgeReady = true;
-
 rule: "Create Segments"
 Event.OngoingPlayer
-if (IsCommunicating(EventPlayer(), Communication.Acknowledge))
+if (IsButtonHeld(EventPlayer(), Button.SecondaryFire))
 if (!IsButtonHeld(EventPlayer(), Button.Crouch))
-if (acknowledgeReady)
 {
     for (define f = 0; f < CountOf(Selected); f++)
         for (define l = 0; l < CountOf(Selected); l++)
@@ -173,14 +170,12 @@ if (acknowledgeReady)
                 Segments = Append(Segments, new Segment(<Node>Selected[f], <Node>Selected[l], Attribute));
                 (<Segment>LastOf(Segments)).Show();
             }
-    acknowledgeReady = false;
 }
 
 rule: "Delete Segments"
 Event.OngoingPlayer
-if (IsCommunicating(EventPlayer(), Communication.Acknowledge))
+if (IsButtonHeld(EventPlayer(), Button.SecondaryFire))
 if (IsButtonHeld(EventPlayer(), Button.Crouch))
-if (acknowledgeReady)
 {
     for (define i = CountOf(Segments) - 1; i >= 0; i--)
         if (IsTrueForAll((<Segment>Segments[i]).Nodes, ArrayContains(Selected, ArrayElement())))
@@ -189,15 +184,6 @@ if (acknowledgeReady)
             delete(Segments[i]);
             Segments = RemoveFromArrayAtIndex(Segments, i);
         }
-    acknowledgeReady = false;
-}
-
-rule: "Reset Acknowledge"
-Event.OngoingPlayer
-if (!IsCommunicating(EventPlayer(), Communication.Acknowledge))
-if (!acknowledgeReady)
-{
-    acknowledgeReady = true;
 }
 
 define globalvar Segments = EmptyArray();
