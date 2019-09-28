@@ -38,7 +38,7 @@ namespace Deltin.Deltinteger.Pathfinder
             pathfind.Actions = ArrayBuilder<Element>.Build
             (
                 LastUpdate.SetVariable(new V_TotalTimeElapsed()),
-                DistanceToNext.SetVariable(Element.Part<V_DistanceBetween>(Element.Part<V_PositionOf>(new V_EventPlayer()), NextPosition())),
+                DistanceToNext.SetVariable(Element.Part<V_DistanceBetween>(Element.Part<V_PositionOf>(new V_EventPlayer()), NextPosition(new V_EventPlayer()))),
                 // Element.Part<A_StartFacing>(
                 //     new V_EventPlayer(),
                 //     Element.Part<V_DirectionTowards>(
@@ -55,7 +55,7 @@ namespace Deltin.Deltinteger.Pathfinder
                     new V_EventPlayer(),
                     Element.Part<V_DirectionTowards>(
                         new V_EyePosition(),
-                        NextPosition() // Because of ThrottleRev this will be reevaluated so 'Start Throttle In Direction' only needs to run once.
+                        NextPosition(new V_EventPlayer()) // Because of ThrottleRev this will be reevaluated so 'Start Throttle In Direction' only needs to run once.
                     ),
                     new V_Number(1),
                     EnumData.GetEnumValue(Relative.ToWorld),
@@ -89,7 +89,7 @@ namespace Deltin.Deltinteger.Pathfinder
                         // (1)
                         new V_Compare(
                             Element.Part<V_DistanceBetween>(
-                                NextPosition(),
+                                NextPosition(new V_EventPlayer()),
                                 position
                             ),
                             Operators.LessThan,
@@ -104,9 +104,9 @@ namespace Deltin.Deltinteger.Pathfinder
                             ),
                             Element.Part<V_And>(
                                 // (3)
-                                IsBetween(position, PositionAt(0), PositionAt(1)),
+                                IsBetween(position, PositionAt(new V_EventPlayer(), 0), PositionAt(new V_EventPlayer(), 1)),
                                 // (4)
-                                Element.Part<V_IsInLineOfSight>(position + new V_Vector(0, 1.5, 0), PositionAt(1) + new V_Vector(0, 1.5, 0))
+                                Element.Part<V_IsInLineOfSight>(position + new V_Vector(0, 1.5, 0), PositionAt(new V_EventPlayer(), 1) + new V_Vector(0, 1.5, 0))
                             )
                         )
                     )
@@ -115,7 +115,7 @@ namespace Deltin.Deltinteger.Pathfinder
             updateIndex.Actions = ArrayBuilder<Element>.Build(
                 LastUpdate.SetVariable(new V_TotalTimeElapsed()),
                 Path.SetVariable(Element.Part<V_ArraySlice>(Path.GetVariable(), new V_Number(1), new V_Number(Constants.MAX_ARRAY_LENGTH))), // (5)
-                DistanceToNext.SetVariable(Element.Part<V_DistanceBetween>(Element.Part<V_PositionOf>(new V_EventPlayer()), NextPosition())),
+                DistanceToNext.SetVariable(Element.Part<V_DistanceBetween>(Element.Part<V_PositionOf>(new V_EventPlayer()), NextPosition(new V_EventPlayer()))),
                 A_Wait.MinimumWait,
                 new A_LoopIfConditionIsTrue()
             );
@@ -140,14 +140,14 @@ namespace Deltin.Deltinteger.Pathfinder
             return stop;
         }
 
-        public Element NextPosition()
+        public Element NextPosition(Element player)
         {
-            return Element.Part<V_ValueInArray>(Nodes.GetVariable(), Element.Part<V_FirstOf>(Path.GetVariable()));
+            return Element.Part<V_ValueInArray>(Nodes.GetVariable(player), Element.Part<V_FirstOf>(Path.GetVariable(player)));
         }
 
-        public Element PositionAt(Element index)
+        public Element PositionAt(Element player, Element index)
         {
-            return Element.Part<V_ValueInArray>(Nodes.GetVariable(), Element.Part<V_ValueInArray>(Path.GetVariable(), index));
+            return Element.Part<V_ValueInArray>(Nodes.GetVariable(player), Element.Part<V_ValueInArray>(Path.GetVariable(player), index));
         }
 
         private Element IsBetween(Element position, Element start, Element end)

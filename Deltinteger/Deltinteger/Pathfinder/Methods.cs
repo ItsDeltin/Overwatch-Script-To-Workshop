@@ -217,8 +217,6 @@ namespace Deltin.Deltinteger.Pathfinder
     [Parameter("Speed Scalar", Elements.ValueType.Number, null)]
     class IsPathfindStuck : PathfindPlayer
     {
-        private const double StuckTime = 3;
-
         override protected MethodResult Get(PathfinderInfo info)
         {
             Element leniency = 2;
@@ -255,7 +253,7 @@ namespace Deltin.Deltinteger.Pathfinder
         {
             Element player = (Element)Parameters[0];
             TranslateContext.Actions.AddRange(ArrayBuilder<Element>.Build(
-                Element.Part<A_Teleport>(player, Element.Part<V_ValueInArray>(info.Nodes.GetVariable(), Element.Part<V_FirstOf>(info.Path.GetVariable())))
+                Element.Part<A_Teleport>(player, info.NextPosition(player))
             ));
             return new MethodResult(null, null);
         }
