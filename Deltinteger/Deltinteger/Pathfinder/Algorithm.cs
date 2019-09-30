@@ -38,7 +38,7 @@ namespace Deltin.Deltinteger.Pathfinder
             distances.Optimize2ndDim = true;
             SetInitialDistances(context, pathmap.PathMap, distances, current.GetVariable());
 
-            unvisited = context.VarCollection.AssignVar(null, "Dijkstra: Visited",                               context.IsGlobal, null);
+            unvisited = context.VarCollection.AssignVar(null, "Dijkstra: Unvisited",                             context.IsGlobal, null);
             SetInitialUnvisited(context, pathmap.PathMap, unvisited);
 
             IndexedVar connectedSegments = context.VarCollection.AssignVar(null, "Dijkstra: Connected Segments", context.IsGlobal, null);
