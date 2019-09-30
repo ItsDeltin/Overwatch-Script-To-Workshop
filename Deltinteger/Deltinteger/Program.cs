@@ -52,8 +52,11 @@ namespace Deltin.Deltinteger
 
                 if (script != null && File.Exists(script))
                 {
+                    #if DEBUG == false
                     try
                     {
+                    #endif
+
                         string ext = Path.GetExtension(script).ToLower();
                         if (ext == ".csv")
                         {
@@ -71,12 +74,15 @@ namespace Deltin.Deltinteger
                             Editor.FromPathmapFile(script);
                         }
                         else Script(script);
+                    
+                    #if DEBUG == false
                     }
                     catch (Exception ex)
                     {
                         Log.Write(LogLevel.Normal, "Internal exception.");
                         Log.Write(LogLevel.Normal, ex.ToString());
                     }
+                    #endif
                 }
                 else
                 {

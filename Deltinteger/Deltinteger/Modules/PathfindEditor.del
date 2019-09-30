@@ -20,8 +20,10 @@ Event.OngoingPlayer
     CreateHudText(EventPlayer(), null, "crouch + interact: stop selecting spheres", null, Location.Right, 3, Color.White, Color.Blue);
     CreateHudText(EventPlayer(), null, "secondary_fire: connect", null, Location.Right, 4, Color.White, Color.Green);
     CreateHudText(EventPlayer(), null, "crouch + secondary_fire: stop connect", null, Location.Right, 5, Color.White, Color.Green);
-    CreateHudText(EventPlayer(), null, "hello: reveal", null, Location.Right, 6, Color.White, Color.Green);
-    CreateHudText(EventPlayer(), null, "up: upload", null, Location.Right, 7, Color.White, Color.Green);
+    CreateHudText(EventPlayer(), null, "right: connect initial -> final", null, Location.Right, 6, Color.White, Color.Green);
+    CreateHudText(EventPlayer(), null, "left: connect initial -> remaining", null, Location.Right, 7, Color.White, Color.Green);
+    CreateHudText(EventPlayer(), null, "hello: reveal", null, Location.Right, 8, Color.White, Color.SkyBlue);
+    CreateHudText(EventPlayer(), null, "up: upload", null, Location.Right, 9, Color.White, Color.SkyBlue);
 }
 
 macro GetClosestNode(): FirstOf(SortedArray(Nodes, DistanceBetween(EyePosition(EventPlayer()), (<Node>ArrayElement()).ShownLocation)));
@@ -153,24 +155,58 @@ class Node
     public method UpdateVisible()
     {
         Hide();
-        if (DistanceBetween(EventPlayer(), ShownLocation) < 20)
+        if (DistanceBetween(EventPlayer(), ShownLocation) < 30)
             Show();
     }
 }
 
-rule: "Create Segments"
+rule: "Connect All Segments"
 Event.OngoingPlayer
 if (IsButtonHeld(EventPlayer(), Button.SecondaryFire))
 if (!IsButtonHeld(EventPlayer(), Button.Crouch))
 {
     for (define f = 0; f < CountOf(Selected); f++)
         for (define l = 0; l < CountOf(Selected); l++)
-            if (l != f && !IsTrueForAny(Segments, ArrayContains((<Segment>ArrayElement()).Nodes, Selected[f]) && ArrayContains((<Segment>ArrayElement()).Nodes, Selected[l])))
+            if (l != f && !SegmentExists(Selected[f], Selected[l]))
             {
                 Segments = Append(Segments, new Segment(<Node>Selected[f], <Node>Selected[l], Attribute));
                 (<Segment>LastOf(Segments)).Show();
             }
 }
+
+rule: "Connect Segment Path"
+Event.OngoingPlayer
+if (IsCommunicating(EventPlayer(), Communication.VoiceLineRight))
+if (!IsButtonHeld(EventPlayer(), Button.Crouch))
+{
+    for (define i = 1; i < CountOf(Selected); i++)
+        if (!SegmentExists(Selected[i - 1], Selected[i]))
+        {
+            Segments = Append(Segments, new Segment(<Node>Selected[i - 1], <Node>Selected[i], Attribute));
+            (<Segment>LastOf(Segments)).Show();
+        }
+}
+
+rule: "Connect Segments From First"
+Event.OngoingPlayer
+if (IsCommunicating(EventPlayer(), Communication.VoiceLineLeft))
+if (!IsButtonHeld(EventPlayer(), Button.Crouch))
+{
+    for (define i = 1; i < CountOf(Selected); i++)
+        if (!SegmentExists(Selected[0], Selected[i]))
+        {
+            Segments = Append(Segments, new Segment(<Node>Selected[0], <Node>Selected[i], Attribute));
+            (<Segment>LastOf(Segments)).Show();
+        }
+}
+
+macro SegmentExists(define node1, define node2):
+    IsTrueForAny(
+        Segments,
+        ArrayContains((<Segment>ArrayElement()).Nodes, node1)
+        &&
+        ArrayContains((<Segment>ArrayElement()).Nodes, node2)
+    );
 
 rule: "Delete Segments"
 Event.OngoingPlayer
