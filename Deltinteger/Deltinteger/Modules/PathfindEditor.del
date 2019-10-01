@@ -235,7 +235,7 @@ class Segment
     define EffectID;
     public define visible = false;
 
-    define DirectionMarker1;
+    define AttributeMarker;
 
     public Segment(Node node1, Node node2, define attribute)
     {
@@ -256,7 +256,11 @@ class Segment
             if (Attribute == 1)
             {
                 CreateEffect(AllPlayers(), Effect.Sphere, Color.Purple, LinearInterpolate(Node1.ShownLocation, Node2.ShownLocation, 0.9), 0.25, EffectRev.VisibleTo);
-                DirectionMarker1 = LastCreatedEntity();
+                AttributeMarker = LastCreatedEntity();
+            }
+            else if (Attribute > 1)
+            {
+                root.ActivateScoper(1, this);
             }
         }
     }
@@ -265,10 +269,24 @@ class Segment
         if (visible)
         {
             DestroyEffect(EffectID);
-            DestroyEffect(DirectionMarker1);
+            if (Attribute == 1)
+                DestroyEffect(AttributeMarker);
+            else if (Attribute > 1)
+            {
+                DestroyInWorldText(AttributeMarker);
+            }
             visible = false;
         }
     }
+}
+
+rule: "Attribute Text"
+Event.OnDamageDealt
+if (scoper == EventPlayer()) // Check if is scoper
+if (GetID() == 1)            // GetID equals expected ID
+{
+    CreateInWorldText(AllPlayers(), (<Segment>GetData()).Attribute, Midpoint((<Segment>GetData()).Node1.ShownLocation, (<Segment>GetData()).Node2.ShownLocation), 1.5, Clipping.ClipAgainstSurfaces, InworldTextRev.String, Color.Purple);
+    (<Segment>GetData()).AttributeMarker = LastTextID();
 }
 
 rule: "Update visible"
@@ -334,22 +352,36 @@ define globalvar AttributeHud = 0;
 rule: "Change attribute"
 Event.OngoingPlayer
 if (IsButtonHeld(EventPlayer(), Button.Ability1))
+if (!IsButtonHeld(EventPlayer(), Button.Crouch))
 {
     Attribute++;
-    DestroyHudText(AttributeHud);
+    updateHud();
+}
 
-    if (Attribute == 2) Attribute = 0;
-
-    if (Attribute == 0)
-        CreateHudText(AllPlayers(), "current_form:", "normal", null, Location.Top);
-    else if (Attribute == 1)
-        CreateHudText(AllPlayers(), "current_form:", <"<0> location", 1>, null, Location.Top);
-
-    AttributeHud = LastTextID();
+rule: "Reset attribute"
+Event.OngoingPlayer
+if (IsButtonHeld(EventPlayer(), Button.Ability1))
+if (IsButtonHeld(EventPlayer(), Button.Crouch))
+{
+    Attribute = 0;
+    updateHud();
 }
 
 rule: "Initial attribute HUD"
 {
-    CreateHudText(AllPlayers(), "current_form:", "normal", null, Location.Top);
+    updateHud();
+}
+
+method updateHud()
+{
+    DestroyHudText(AttributeHud);
+
+    if (Attribute == 0)
+        CreateHudText(AllPlayers(), "current_form:", "normal", Attribute, Location.Top);
+    else if (Attribute == 1)
+        CreateHudText(AllPlayers(), "current_form:", <"<0> location", 1>, Attribute, Location.Top);
+    else
+        CreateHudText(AllPlayers(), "current_form:", "resource", Attribute, Location.Top);
+
     AttributeHud = LastTextID();
 }
