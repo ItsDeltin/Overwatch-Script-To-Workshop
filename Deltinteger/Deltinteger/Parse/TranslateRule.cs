@@ -305,7 +305,7 @@ namespace Deltin.Deltinteger.Parse
                 
                 // This
                 case ThisNode thisNode:
-                    return scope.GetThis(thisNode.Location).GetVariable();
+                    return getter.GetThis(thisNode.Location);
                 
                 // Type convert
                 case TypeConvertNode typeConvertNode:
@@ -1021,7 +1021,7 @@ namespace Deltin.Deltinteger.Parse
                     }
                     else
                         // Set the target scope to the type.
-                        currentScope = nodeResult.SupportedType.Type.GetRootScope(nodeResult.SupportedType, translator.ParserData, Target);
+                        currentScope = nodeResult.SupportedType.Type.GetRootScope(nodeResult, nodeResult.SupportedType, translator.ParserData, Target);
                 }
                 ResultingElement = nodeResult;
             }
