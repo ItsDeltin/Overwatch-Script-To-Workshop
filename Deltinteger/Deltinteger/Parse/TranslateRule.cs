@@ -40,7 +40,7 @@ namespace Deltin.Deltinteger.Parse
 
             // Parse the block of the rule.
             ScopeGroup ruleScope = root.Child();
-            ParseBlock(root, ruleScope, ruleNode.Block, false, null);
+            ParseBlock(ruleScope, ruleScope, ruleNode.Block, false, null);
             
             // Fulfill remaining returns.
             FulfillReturns(0);
@@ -450,7 +450,7 @@ namespace Deltin.Deltinteger.Parse
             IMethod method = scope.GetMethod(getter, methodNode.Name, methodNode.Location);
             
             // Parse the parameters
-            IWorkshopTree[] parsedParameters = ParseParameters(getter, scope, method.Parameters, methodNode.Parameters, methodNode.Name, methodNode.Location);
+            IWorkshopTree[] parsedParameters = ParseParameters(getter, getter, method.Parameters, methodNode.Parameters, methodNode.Name, methodNode.Location);
 
             Element result;
             if (method is ElementList)
@@ -622,7 +622,7 @@ namespace Deltin.Deltinteger.Parse
                         else
                             variable = new ElementReferenceVar(forEachNode.Variable.VariableName, tempChild, forEachNode, getVariableReference());
 
-                        ParseBlock(getter, tempChild, forEachNode.Block, false, returnVar);
+                        ParseBlock(tempChild, tempChild, forEachNode.Block, false, returnVar);
                         tempChild.Out(this);
                     }
                     // Take the foreach out of scope.
@@ -668,16 +668,16 @@ namespace Deltin.Deltinteger.Parse
                     if (forNode.Expression != null) // If it has an expression
                     {
                         skipCondition = new A_SkipIf() { ParameterValues = new IWorkshopTree[2] };
-                        skipCondition.ParameterValues[0] = Element.Part<V_Not>(ParseExpression(getter, forGroup, forNode.Expression));
+                        skipCondition.ParameterValues[0] = Element.Part<V_Not>(ParseExpression(forGroup, forGroup, forNode.Expression));
                         Actions.Add(skipCondition);
                     }
 
                     // Parse the for's block.
-                    ParseBlock(getter, forGroup, forNode.Block, false, returnVar);
+                    ParseBlock(forGroup, forGroup, forNode.Block, false, returnVar);
 
                     // Parse the statement
                     if (forNode.Statement != null)
-                        ParseVarset(getter, forGroup, forNode.Statement);
+                        ParseVarset(forGroup, forGroup, forNode.Statement);
                     
                     // Take the for out of scope.
                     forGroup.Out(this);
@@ -710,7 +710,7 @@ namespace Deltin.Deltinteger.Parse
 
                     ScopeGroup whileGroup = scope.Child();
 
-                    ParseBlock(getter, whileGroup, whileNode.Block, false, returnVar);
+                    ParseBlock(whileGroup, whileGroup, whileNode.Block, false, returnVar);
 
                     // Take the while out of scope.
                     whileGroup.Out(this);
@@ -735,7 +735,7 @@ namespace Deltin.Deltinteger.Parse
                     var ifScope = scope.Child();
 
                     // Parse the if body.
-                    ParseBlock(getter, ifScope, ifNode.IfData.Block, false, returnVar);
+                    ParseBlock(ifScope, ifScope, ifNode.IfData.Block, false, returnVar);
 
                     // Take the if out of scope.
                     ifScope.Out(this);
@@ -766,7 +766,7 @@ namespace Deltin.Deltinteger.Parse
 
                         // Parse the else-if body.
                         var elseifScope = scope.Child();
-                        ParseBlock(getter, elseifScope, ifNode.ElseIfData[i].Block, false, returnVar);
+                        ParseBlock(elseifScope, elseifScope, ifNode.ElseIfData[i].Block, false, returnVar);
 
                         // Take the else-if out of scope.
                         elseifScope.Out(this);
@@ -790,7 +790,7 @@ namespace Deltin.Deltinteger.Parse
                     if (ifNode.ElseBlock != null)
                     {
                         var elseScope = scope.Child();
-                        ParseBlock(getter, elseScope, ifNode.ElseBlock, false, returnVar);
+                        ParseBlock(elseScope, elseScope, ifNode.ElseBlock, false, returnVar);
 
                         // Take the else out of scope.
                         elseScope.Out(this);
