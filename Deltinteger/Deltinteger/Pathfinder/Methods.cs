@@ -239,8 +239,9 @@ namespace Deltin.Deltinteger.Pathfinder
         public override CustomMethodWiki Wiki()
         {
             return new CustomMethodWiki(
-                "Checks if the player is pathfinding and stuck.",
-                "The player to check."
+                "Returns true if the specified player takes longer than expected to reach the next pathfind node.",
+                "The player to check.",
+                "The speed scalar of the player."
             );
         }
     }
@@ -261,7 +262,7 @@ namespace Deltin.Deltinteger.Pathfinder
         public override CustomMethodWiki Wiki()
         {
             return new CustomMethodWiki(
-                "Fixes pathfinding for player if they are stuck.",
+                "Fixes pathfinding for a player by teleporting them to the next node. Use in conjunction with IsPathfindStuck().",
                 "The player to fix pathfinding for."
             );
         }
