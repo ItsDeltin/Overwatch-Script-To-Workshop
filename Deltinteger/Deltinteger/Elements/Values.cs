@@ -1007,7 +1007,7 @@ namespace Deltin.Deltinteger.Elements
     [Parameter("Z", ValueType.Number, typeof(V_Number))]
     public class V_Vector : Element
     {
-        public V_Vector(Element x, Element y, Element z)
+        public V_Vector(V_Number x, V_Number y, V_Number z)
         {
             ParameterValues = new IWorkshopTree[] { x, y, z };
         }

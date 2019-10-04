@@ -35,7 +35,7 @@ namespace Deltin.Deltinteger.Pathfinder
             Element position               = (Element)Parameters[1];
             Element destination            = (Element)Parameters[2];
 
-            DijkstraNormal algorithm = new DijkstraNormal(TranslateContext, pathmap, position, destination, new V_EmptyArray());
+            DijkstraNormal algorithm = new DijkstraNormal(TranslateContext, pathmap, position, destination);
             algorithm.Get();
             return new MethodResult(null, algorithm.finalPath.GetVariable());
         }
@@ -55,7 +55,6 @@ namespace Deltin.Deltinteger.Pathfinder
     [Parameter("Player", Elements.ValueType.Player, null)]
     [VarRefParameter("Path Map")]
     [Parameter("Destination", Elements.ValueType.Vector, null)]
-    [Parameter("Attributes", Elements.ValueType.Any, typeof(V_EmptyArray))]
     class Pathfind : PathfindPlayer
     {
         override protected MethodResult Get(PathfinderInfo info)
@@ -69,9 +68,7 @@ namespace Deltin.Deltinteger.Pathfinder
             IndexedVar destination = TranslateContext.VarCollection.AssignVar(Scope, "Destination", TranslateContext.IsGlobal, null);
             TranslateContext.Actions.AddRange(destination.SetVariable((Element)Parameters[2]));
 
-            Element attributes            = (Element)Parameters[3];
-
-            DijkstraNormal algorithm = new DijkstraNormal(TranslateContext, pathmap, Element.Part<V_PositionOf>(player), destination.GetVariable(), attributes);
+            DijkstraNormal algorithm = new DijkstraNormal(TranslateContext, pathmap, Element.Part<V_PositionOf>(player), destination.GetVariable());
             algorithm.Get();
             DijkstraBase.Pathfind(TranslateContext, info, pathmap, algorithm.finalPath.GetVariable(), player, destination.GetVariable());
             return new MethodResult(null, null);

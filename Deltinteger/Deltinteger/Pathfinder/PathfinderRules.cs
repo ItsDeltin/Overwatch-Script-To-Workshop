@@ -29,7 +29,11 @@ namespace Deltin.Deltinteger.Pathfinder
             Rule pathfind = new Rule(Constants.INTERNAL_ELEMENT + "Pathfinder: Move", RuleEvent.OngoingPlayer);
             pathfind.Conditions = new Condition[]
             {
-                IsPathfinding()
+                new Condition(
+                    Element.Part<V_CountOf>(Path.GetVariable()),
+                    Operators.GreaterThan,
+                    new V_Number(0)
+                )
             };
             pathfind.Actions = ArrayBuilder<Element>.Build
             (
@@ -75,7 +79,11 @@ namespace Deltin.Deltinteger.Pathfinder
             Rule updateIndex = new Rule(Constants.INTERNAL_ELEMENT + "Pathfinder: Update", RuleEvent.OngoingPlayer);
             updateIndex.Conditions = new Condition[]
             {
-                IsPathfinding(),
+                new Condition(
+                    Element.Part<V_CountOf>(Path.GetVariable()),
+                    Operators.GreaterThan,
+                    new V_Number(0)
+                ),
                 new Condition(
                     Element.Part<V_Or>(
                         // (1)
@@ -148,15 +156,6 @@ namespace Deltin.Deltinteger.Pathfinder
                 Element.Part<V_DistanceBetween>((start + end) / 2, position),
                 Operators.LessThanOrEqual,
                 (Element.Part<V_DistanceBetween>(start, end) / 2)
-            );
-        }
-
-        private Condition IsPathfinding()
-        {
-            return new Condition(
-                Element.Part<V_CountOf>(Path.GetVariable()),
-                Operators.GreaterThan,
-                0
             );
         }
     }
