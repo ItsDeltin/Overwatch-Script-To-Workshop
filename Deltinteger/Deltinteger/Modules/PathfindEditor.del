@@ -22,8 +22,9 @@ Event.OngoingPlayer
     CreateHudText(EventPlayer(), null, "crouch + secondary_fire: stop connect", null, Location.Right, 5, Color.White, Color.Green);
     CreateHudText(EventPlayer(), null, "right: connect initial -> final", null, Location.Right, 6, Color.White, Color.Green);
     CreateHudText(EventPlayer(), null, "left: connect initial -> remaining", null, Location.Right, 7, Color.White, Color.Green);
-    CreateHudText(EventPlayer(), null, "hello: reveal", null, Location.Right, 8, Color.White, Color.SkyBlue);
-    CreateHudText(EventPlayer(), null, "up: upload", null, Location.Right, 9, Color.White, Color.SkyBlue);
+    CreateHudText(EventPlayer(), null, "ability 1: next_form", null, Location.Right, 8, Color.White, Color.Orange);
+    CreateHudText(EventPlayer(), null, "hello: reveal", null, Location.Right, 9, Color.White, Color.SkyBlue);
+    CreateHudText(EventPlayer(), null, "up: upload", null, Location.Right, 10, Color.White, Color.SkyBlue);
 }
 
 macro GetClosestNode(): FirstOf(SortedArray(Nodes, DistanceBetween(EyePosition(EventPlayer()), (<Node>ArrayElement()).ShownLocation)));

@@ -40,7 +40,7 @@ if (HasSpawned())
     Heal(scoper, null, 6000);
 }
 
-method ActivateScoper(define id, define data)
+public method ActivateScoper(define id, define data)
 {
     // Encode the executor, id and data into one number.
     //      vv executor

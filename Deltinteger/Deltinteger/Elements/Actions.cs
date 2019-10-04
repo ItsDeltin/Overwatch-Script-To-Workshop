@@ -140,6 +140,7 @@ namespace Deltin.Deltinteger.Elements
     [Parameter("Scale", ValueType.Number, typeof(V_Number))]
     [EnumParameter("Clipping", typeof(Clipping))]
     [EnumParameter("Reevaluation", typeof(InworldTextRev))]
+    [EnumParameter("Text Color", typeof(Color))]
     [EnumParameter("Spectators", typeof(Spectators))]
     public class A_CreateInWorldText : Element {}
 

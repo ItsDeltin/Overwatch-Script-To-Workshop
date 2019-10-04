@@ -58,7 +58,7 @@ namespace Deltin.Deltinteger.Parse
             }
         }
 
-        public ScopeGroup GetRootScope(IndexedVar var, ParsingData parseData, Element target = null)
+        public ScopeGroup GetRootScope(Element reference, IndexedVar var, ParsingData parseData, Element target = null)
         {
             if (target == null) target = new V_EventPlayer();
 
@@ -66,7 +66,12 @@ namespace Deltin.Deltinteger.Parse
             root.DefaultTarget = target;
             
             ScopeGroup typeScope = new ScopeGroup(parseData.VarCollection);
-            typeScope.This = root;
+            if (reference == null) typeScope.This = root.GetVariable();
+            else
+            {
+                typeScope.This = reference;
+                typeScope.This.SupportedType = root;
+            }
 
             for (int i = 0; i < DefinedVars.Length; i++)
             {
@@ -151,7 +156,7 @@ namespace Deltin.Deltinteger.Parse
         {
             IndexedVar store = context.VarCollection.AssignVar(scope, Name + " store", context.IsGlobal, null);
             store.Type = this;
-            ScopeGroup typeScope = GetRootScope(store, context.ParserData);
+            ScopeGroup typeScope = GetRootScope(null, store, context.ParserData);
 
             SetupNew(getter, scope, store, typeScope, context, node);
 
@@ -245,7 +250,7 @@ namespace Deltin.Deltinteger.Parse
             store.Index[0].SupportedType = store;
             store.Type = this;
 
-            ScopeGroup typeScope = GetRootScope(store, context.ParserData);
+            ScopeGroup typeScope = GetRootScope(index.GetVariable(), store, context.ParserData);
 
             SetupNew(getter, scope, store, typeScope, context, node);
 

@@ -154,6 +154,9 @@
     <Content Include="Modules\Debug Tools.del"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
     <Content Include="Modules\PathfindEditor.del"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
     <Content Include="Modules\Hanamura.pathmap"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
+    <Content Include="Modules\Route66.pathmap"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
+    <Content Include="Modules\Horizon.pathmap"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
+    <Content Include="Modules\KingsRowDM.pathmap"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
