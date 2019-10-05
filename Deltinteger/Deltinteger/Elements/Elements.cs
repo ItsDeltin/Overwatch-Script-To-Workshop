@@ -256,10 +256,10 @@ namespace Deltin.Deltinteger.Elements
         public static Element operator *(Element a, Element b) => Element.Part<V_Multiply>(a, b);
         public static Element operator /(Element a, Element b) => Element.Part<V_Divide>(a, b);
         public static Element operator %(Element a, Element b) => Element.Part<V_Modulo>(a, b);
-        public static Element operator <(Element a, Element b) => Element.Part<V_Compare>(a, EnumData.GetEnumValue(Operators.LessThan), b);
-        public static Element operator >(Element a, Element b) => Element.Part<V_Compare>(a, EnumData.GetEnumValue(Operators.GreaterThan), b);
-        public static Element operator <=(Element a, Element b) => Element.Part<V_Compare>(a, EnumData.GetEnumValue(Operators.LessThanOrEqual), b);
-        public static Element operator >=(Element a, Element b) => Element.Part<V_Compare>(a, EnumData.GetEnumValue(Operators.GreaterThanOrEqual), b);
+        public static Element operator <(Element a, Element b) => new V_Compare(a, Operators.LessThan, b);
+        public static Element operator >(Element a, Element b) => new V_Compare(a, Operators.GreaterThan, b);
+        public static Element operator <=(Element a, Element b) => new V_Compare(a, Operators.LessThanOrEqual, b);
+        public static Element operator >=(Element a, Element b) => new V_Compare(a, Operators.GreaterThanOrEqual, b);
         public static Element operator !(Element a) => Element.Part<V_Not>(a);
         public static Element operator -(Element a) => a * -1;
         public static implicit operator Element(double number) => new V_Number(number);

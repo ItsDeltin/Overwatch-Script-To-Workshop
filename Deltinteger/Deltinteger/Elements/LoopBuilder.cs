@@ -1,20 +1,20 @@
 using System;
+using System.Collections.Generic;
 using Deltin.Deltinteger.Elements;
 
 namespace Deltin.Deltinteger.Parse
 {
     class IfBuilder
     {
-        protected TranslateRule Context { get; }
+        protected List<Element> Actions { get; }
         public bool IsSetup { get; private set; } = false;
         public bool Finished { get; private set; } = false;
-        private int StartIndex { get; set; }
         private Element Condition { get; }
         private A_SkipIf SkipCondition { get; set; }
 
-        public IfBuilder(TranslateRule context, Element condition)
+        public IfBuilder(List<Element> actions, Element condition)
         {
-            Context = context;
+            Actions = actions;
             Condition = condition;
         }
 
@@ -22,12 +22,10 @@ namespace Deltin.Deltinteger.Parse
         {
             if (Finished || IsSetup) throw new Exception();
 
-            StartIndex = Context.ContinueSkip.GetSkipCount();
-
             // Setup the skip if.
             SkipCondition = new A_SkipIf() { ParameterValues = new IWorkshopTree[2] };
             SkipCondition.ParameterValues[0] = !(Condition);
-            Context.Actions.Add(SkipCondition);
+            Actions.Add(SkipCondition);
             IsSetup = true;
         }
 
@@ -35,7 +33,7 @@ namespace Deltin.Deltinteger.Parse
         {
             if (Finished || !IsSetup) throw new Exception();
 
-            SkipCondition.ParameterValues[1] = new V_Number(Context.ContinueSkip.GetSkipCount() - StartIndex - 1);
+            SkipCondition.ParameterValues[1] = new V_Number(TranslateRule.GetSkipCount(Actions, SkipCondition));
             Finished = true;
         }
     }

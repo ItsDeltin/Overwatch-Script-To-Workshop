@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.Parse;
 
@@ -35,7 +38,22 @@ namespace Deltin.Deltinteger.Pathfinder
                     0
                 )
             };
-            pathfind.Actions = ArrayBuilder<Element>.Build
+
+            Element eventPlayer = new V_EventPlayer();
+            Element eventPlayerPos = Element.Part<V_PositionOf>(eventPlayer);
+
+            List<Element> actions = new List<Element>();
+            IfBuilder isBetween = new IfBuilder(actions, 
+                Element.Part<V_And>(
+                    Element.Part<V_CountOf>(Path.GetVariable()) >= 2,
+                    IsBetween(eventPlayerPos, NextPosition(eventPlayer), PositionAt(eventPlayer, 1))
+                )
+            );
+            isBetween.Setup();
+            actions.AddRange(Next());
+            isBetween.Finish();
+
+            actions.AddRange(ArrayBuilder<Element>.Build
             (
                 LastUpdate.SetVariable(new V_TotalTimeElapsed()),
                 DistanceToNext.SetVariable(Element.Part<V_DistanceBetween>(Element.Part<V_PositionOf>(new V_EventPlayer()), NextPosition(new V_EventPlayer()))),
@@ -62,7 +80,8 @@ namespace Deltin.Deltinteger.Pathfinder
                     EnumData.GetEnumValue(ThrottleBehavior.ReplaceExistingThrottle),
                     EnumData.GetEnumValue(ThrottleRev.DirectionAndMagnitude)
                 )
-            );
+            ));
+            pathfind.Actions = actions.ToArray();
             return pathfind;
         }
 
@@ -99,8 +118,8 @@ namespace Deltin.Deltinteger.Pathfinder
                             // (2)
                             new V_Compare(
                                 Element.Part<V_CountOf>(Path.GetVariable()),
-                                Operators.GreaterThan,
-                                1
+                                Operators.Equal,
+                                2
                             ),
                             Element.Part<V_And>(
                                 // (3)
@@ -114,7 +133,7 @@ namespace Deltin.Deltinteger.Pathfinder
             };
             updateIndex.Actions = ArrayBuilder<Element>.Build(
                 LastUpdate.SetVariable(new V_TotalTimeElapsed()),
-                Path.SetVariable(Element.Part<V_ArraySlice>(Path.GetVariable(), new V_Number(1), new V_Number(Constants.MAX_ARRAY_LENGTH))), // (5)
+                Next(), // (5)
                 DistanceToNext.SetVariable(Element.Part<V_DistanceBetween>(Element.Part<V_PositionOf>(new V_EventPlayer()), NextPosition(new V_EventPlayer()))),
                 A_Wait.MinimumWait,
                 new A_LoopIfConditionIsTrue()
@@ -157,6 +176,11 @@ namespace Deltin.Deltinteger.Pathfinder
                 Operators.LessThanOrEqual,
                 (Element.Part<V_DistanceBetween>(start, end) / 2)
             );
+        }
+
+        private Element[] Next()
+        {
+            return Path.SetVariable(Element.Part<V_ArraySlice>(Path.GetVariable(), new V_Number(1), new V_Number(Constants.MAX_ARRAY_LENGTH)));
         }
     }
 }

@@ -915,13 +915,21 @@ namespace Deltin.Deltinteger.Parse
                 var.Type = ParserData.GetDefinedType(defineNode.Type, defineNode.Location);
         }
 
-        int GetSkipCount(Element skipElement)
+        public int GetSkipCount(Element skipElement)
         {
             int index = Actions.IndexOf(skipElement);
             if (index == -1)
                 throw new Exception("skipElement not found.");
 
             return Actions.Count - index - 1;
+        }
+        public static int GetSkipCount(List<Element> actions, Element skipElement)
+        {
+            int index = actions.IndexOf(skipElement);
+            if (index == -1)
+                throw new Exception("skipElement not found.");
+
+            return actions.Count - index - 1;
         }
     
         class ParseExpressionTree
