@@ -176,7 +176,6 @@ namespace Deltin.Deltinteger.Pathfinder
 
     [CustomMethod("IsPathfindUpdateSafe", CustomMethodType.Value)]
     [Parameter("Player", Elements.ValueType.Player, null)]
-    [VarRefParameter("Path Map")]
     class IsPathfindUpdateSafe : PathfindPlayer
     {
         override protected MethodResult Get(PathfinderInfo info)
@@ -185,7 +184,6 @@ namespace Deltin.Deltinteger.Pathfinder
 
             if (((VarRef)Parameters[1]).Var is PathMapVar == false)
                 throw SyntaxErrorException.InvalidVarRefType(((VarRef)Parameters[1]).Var.Name, VarType.PathMap, ParameterLocations[1]);
-            PathMapVar pathmap = (PathMapVar)((VarRef)Parameters[1]).Var;
 
             Element isPathfinding = IsPathfinding.Get(info, player);
 
@@ -207,8 +205,7 @@ namespace Deltin.Deltinteger.Pathfinder
         {
             return new CustomMethodWiki(
                 "Checks if updating the pathfinding of a player is currently safe.",
-                "The player to check.",
-                "The path map."
+                "The player to check."
             );
         }
     }
