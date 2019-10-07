@@ -7,6 +7,7 @@ namespace Deltin.Deltinteger.Pathfinder
     public abstract class DijkstraBase
     {
         private static readonly V_Number Infinity = new V_Number(9999);
+        private static readonly V_Number LeastNot0 = new V_Number(0.001);
 
         protected TranslateRule context { get; }
         protected PathMapVar pathmap { get; }
@@ -35,7 +36,7 @@ namespace Deltin.Deltinteger.Pathfinder
             context.Actions.AddRange(current.SetVariable(firstNode));
 
             IndexedVar distances = context.VarCollection.AssignVar(null, "Dijkstra: Distances",                  context.IsGlobal, null);
-            distances.Optimize2ndDim = true;
+            distances.Optimize2ndDim = false;
             SetInitialDistances(context, pathmap.PathMap, distances, current.GetVariable());
 
             unvisited = context.VarCollection.AssignVar(null, "Dijkstra: Unvisited",                             context.IsGlobal, null);
@@ -98,7 +99,7 @@ namespace Deltin.Deltinteger.Pathfinder
             IfBuilder ifBuilder = new IfBuilder(context.Actions,
                 neighborDistance.GetVariable()
                 <
-                Element.Part<V_ValueInArray>(distances.GetVariable(), neighborIndex.GetVariable())
+                WorkingDistance(distances.GetVariable(), neighborIndex.GetVariable())
             );
             ifBuilder.Setup();
 
@@ -182,12 +183,7 @@ namespace Deltin.Deltinteger.Pathfinder
 
         private static void SetInitialDistances(TranslateRule context, PathMap pathmap, IndexedVar distancesVar, Element currentIndex)
         {
-            Element[] distances = new Element[pathmap.Nodes.Length];
-            for (int i = 0; i < distances.Length; i++)
-                distances[i] = Infinity;
-            
-            context.Actions.AddRange(distancesVar.SetVariable(Element.CreateArray(distances)));
-            context.Actions.AddRange(distancesVar.SetVariable(0, null, currentIndex));
+            context.Actions.AddRange(distancesVar.SetVariable(LeastNot0, null, currentIndex));
         }
 
         private static void SetInitialUnvisited(TranslateRule context, PathMap pathmap, IndexedVar unvisitedVar)
@@ -240,11 +236,21 @@ namespace Deltin.Deltinteger.Pathfinder
         {
             return Element.Part<V_FirstOf>(Element.Part<V_SortedArray>(
                 unvisited,
-                Element.Part<V_ValueInArray>(
+                WorkingDistance(
                     distances,
                     new V_ArrayElement()
                 )
             ));
+        }
+
+        private static Element WorkingDistance(Element distances, Element index)
+        {
+            // Return infinity if the distance is unassigned.
+            return Element.TernaryConditional(
+                new V_Compare(distances[index], Operators.NotEqual, 0),
+                distances[index],
+                Infinity
+            );
         }
 
         private static Element Nodes(Element segment)

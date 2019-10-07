@@ -262,6 +262,11 @@ namespace Deltin.Deltinteger.Elements
         public static Element operator >=(Element a, Element b) => new V_Compare(a, Operators.GreaterThanOrEqual, b);
         public static Element operator !(Element a) => Element.Part<V_Not>(a);
         public static Element operator -(Element a) => a * -1;
+        public Element this[Element i]
+        {
+            get { return Element.Part<V_ValueInArray>(this, i); }
+            private set {}
+        }
         public static implicit operator Element(double number) => new V_Number(number);
         public static implicit operator Element(int number) => new V_Number(number);
 
