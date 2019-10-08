@@ -7,7 +7,7 @@ namespace Deltin.Deltinteger.Pathfinder
     public abstract class DijkstraBase
     {
         private static readonly V_Number Infinity = new V_Number(9999);
-        private static readonly V_Number LeastNot0 = new V_Number(0.001);
+        private static readonly V_Number LeastNot0 = new V_Number(0.0001);
 
         protected TranslateRule context { get; }
         protected PathMapVar pathmap { get; }
