@@ -215,7 +215,12 @@ namespace Deltin.Deltinteger.Parse
 
         public virtual Element[] SetVariable(Element value, Element targetPlayer = null, params Element[] setAtIndex)
         {
-            return ArrayBuilder.SetVariable(value, IsGlobal, targetPlayer, Variable, Optimize2ndDim, ArrayBuilder<Element>.Build(Index, setAtIndex));
+            return WorkshopArrayBuilder.SetVariable(ArrayBuilder, value, IsGlobal, targetPlayer, Variable, Optimize2ndDim, ArrayBuilder<Element>.Build(Index, setAtIndex));
+        }
+
+        public virtual Element[] ModifyVariable(Operation operation, Element value, Element targetPlayer = null, params Element[] setAtIndex)
+        {
+            return WorkshopArrayBuilder.ModifyVariable(ArrayBuilder, operation, value, IsGlobal, targetPlayer, Variable, ArrayBuilder<Element>.Build(Index, setAtIndex));
         }
         
         public virtual Element[] InScope(Element initialValue, Element targetPlayer = null)
@@ -318,13 +323,19 @@ namespace Deltin.Deltinteger.Parse
 
         public override Element[] SetVariable(Element value, Element targetPlayer = null, params Element[] setAtIndex)
         {
-            return base.SetVariable(value, targetPlayer, 
-                ArrayBuilder<Element>.Build(
-                    (
-                        Element.Part<V_CountOf>(base.Get(targetPlayer)) - 1
-                    ),
-                    setAtIndex
-                )
+            return base.SetVariable(value, targetPlayer, CurrentIndex(targetPlayer, setAtIndex));
+        }
+
+        public override Element[] ModifyVariable(Operation operation, Element value, Element targetPlayer = null, params Element[] setAtIndex)
+        {
+            return base.ModifyVariable(operation, value, targetPlayer, CurrentIndex(targetPlayer, setAtIndex));
+        }
+
+        private Element[] CurrentIndex(Element targetPlayer, params Element[] setAtIndex)
+        {
+            return ArrayBuilder<Element>.Build(
+                Element.Part<V_CountOf>(base.Get(targetPlayer)) - 1,
+                setAtIndex
             );
         }
 
@@ -435,139 +446,6 @@ namespace Deltin.Deltinteger.Parse
         public double ServerLoadWeight()
         {
             throw new NotImplementedException();
-        }
-    }
-
-    public class WorkshopArrayBuilder
-    {
-        private Variable Constructor { get; }
-        IndexedVar Store;
-
-        public WorkshopArrayBuilder(Variable constructor, IndexedVar store)
-        {
-            Constructor = constructor;
-            Store = store;
-        }
-
-        public Element[] SetVariable(Element value, bool isGlobal, Element targetPlayer, Variable variable, bool optimize2ndDim, params Element[] index)
-        {
-            return SetVariable(this, value, isGlobal, targetPlayer, variable, optimize2ndDim, index);
-        }
-
-        public static Element[] SetVariable(WorkshopArrayBuilder builder, Element value, bool isGlobal, Element targetPlayer, Variable variable, bool optimize2ndDim, params Element[] index)
-        {
-            if (index == null || index.Length == 0)
-            {
-                if (isGlobal)
-                    return new Element[] { Element.Part<A_SetGlobalVariable>(              EnumData.GetEnumValue(variable), value) };
-                else
-                    return new Element[] { Element.Part<A_SetPlayerVariable>(targetPlayer, EnumData.GetEnumValue(variable), value) };
-            }
-
-            if (index.Length == 1)
-            {
-                if (isGlobal)
-                    return new Element[] { Element.Part<A_SetGlobalVariableAtIndex>(              EnumData.GetEnumValue(variable), index[0], value) };
-                else
-                    return new Element[] { Element.Part<A_SetPlayerVariableAtIndex>(targetPlayer, EnumData.GetEnumValue(variable), index[0], value) };
-            }
-
-            if (optimize2ndDim && index.Length > 2) throw new ArgumentOutOfRangeException("index", "Can't set more than 2 dimensions if optimizeIndexSet is true.");
-
-            if (index.Length == 2 && optimize2ndDim)
-            {
-                Element baseArray = GetVariable(isGlobal, targetPlayer, variable, index[0]);
-                Element baseArrayValue = Element.Part<V_Append>(
-                    Element.Part<V_Append>(
-                        Element.Part<V_ArraySlice>(
-                            baseArray,
-                            new V_Number(0),
-                            index[1]
-                        ),
-                        value
-                    ),
-                    Element.Part<V_ArraySlice>(
-                        baseArray,
-                        index[1] + 1,
-                        new V_Number(Constants.MAX_ARRAY_LENGTH)
-                    )
-                );
-
-                return SetVariable(null, baseArrayValue, isGlobal, targetPlayer, variable, false, index[0]);
-            }
-
-            if (builder == null) throw new ArgumentNullException("builder", "Can't set multidimensional array if builder is null.");
-
-            List<Element> actions = new List<Element>();
-
-            Element root = GetRoot(isGlobal, targetPlayer, variable);
-
-            // index is 2 or greater
-            int dimensions = index.Length - 1;
-
-            // Get the last array in the index path and copy it to variable B.
-            actions.AddRange(
-                SetVariable(builder, ValueInArrayPath(root, index.Take(index.Length - 1).ToArray()), isGlobal, targetPlayer, builder.Constructor, false)
-            );
-
-            // Set the value in the array.
-            actions.AddRange(
-                SetVariable(builder, value, isGlobal, targetPlayer, builder.Constructor, false, index.Last())
-            );
-
-            // Reconstruct the multidimensional array.
-            for (int i = 1; i < dimensions; i++)
-            {
-                // Copy the array to the C variable
-                actions.AddRange(
-                    builder.Store.SetVariable(GetRoot(isGlobal, targetPlayer, builder.Constructor), targetPlayer)
-                );
-
-                // Copy the next array dimension
-                Element array = ValueInArrayPath(root, index.Take(dimensions - i).ToArray());
-
-                actions.AddRange(
-                    SetVariable(builder, array, isGlobal, targetPlayer, builder.Constructor, false)
-                );
-
-                // Copy back the variable at C to the correct index
-                actions.AddRange(
-                    SetVariable(builder, builder.Store.GetVariable(targetPlayer), isGlobal, targetPlayer, builder.Constructor, false, index[i])
-                );
-            }
-            // Set the final variable using Set At Index.
-            actions.AddRange(
-                SetVariable(builder, GetRoot(isGlobal, targetPlayer, builder.Constructor), isGlobal, targetPlayer, variable, false, index[0])
-            );
-            return actions.ToArray();
-        }
-
-        public static Element GetVariable(bool isGlobal, Element targetPlayer, Variable variable, params Element[] index)
-        {
-            Element element = GetRoot(isGlobal, targetPlayer, variable);
-            //for (int i = index.Length - 1; i >= 0; i--)
-            for (int i = 0; i < index.Length; i++)
-                element = Element.Part<V_ValueInArray>(element, index[i]);
-            return element;
-        }
-
-        private static Element ValueInArrayPath(Element array, Element[] index)
-        {
-            if (index.Length == 0)
-                return array;
-            
-            if (index.Length == 1)
-                return Element.Part<V_ValueInArray>(array, index[0]);
-            
-            return Element.Part<V_ValueInArray>(ValueInArrayPath(array, index.Take(index.Length - 1).ToArray()), index.Last());
-        }
-        
-        private static Element GetRoot(bool isGlobal, Element targetPlayer, Variable variable)
-        {
-            if (isGlobal)
-                return Element.Part<V_GlobalVariable>(EnumData.GetEnumValue(variable));
-            else
-                return Element.Part<V_PlayerVariable>(targetPlayer, EnumData.GetEnumValue(variable));
         }
     }
 }

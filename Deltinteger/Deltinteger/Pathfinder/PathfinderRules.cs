@@ -180,7 +180,8 @@ namespace Deltin.Deltinteger.Pathfinder
 
         private Element[] Next()
         {
-            return Path.SetVariable(Element.Part<V_ArraySlice>(Path.GetVariable(), new V_Number(1), new V_Number(Constants.MAX_ARRAY_LENGTH)));
+            return Path.ModifyVariable(Operation.RemoveFromArrayByIndex, 0);
+            //return Path.SetVariable(Element.Part<V_ArraySlice>(Path.GetVariable(), new V_Number(1), new V_Number(Constants.MAX_ARRAY_LENGTH)));
         }
     }
 }

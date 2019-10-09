@@ -865,42 +865,49 @@ namespace Deltin.Deltinteger.Parse
 
             Element initialVar = variable.GetVariable(varSetData.Target);
 
+            Operation? operation = null;
+
             switch (varSetNode.Operation)
             {
                 case "+=":
-                    value = initialVar + value;
+                    operation = Operation.Add;
                     break;
 
                 case "-=":
-                    value = initialVar - value;
+                    operation = Operation.Subtract;
                     break;
 
                 case "*=":
-                    value = initialVar * value;
+                    operation = Operation.Multiply;
                     break;
 
                 case "/=":
-                    value = initialVar / value;
+                    operation = Operation.Divide;
                     break;
 
                 case "^=":
-                    value = Element.Part<V_RaiseToPower>(initialVar, value);
+                    operation = Operation.RaiseToPower;
                     break;
 
                 case "%=":
-                    value = initialVar % value;
+                    operation = Operation.Modulo;
                     break;
                 
                 case "++":
-                    value = initialVar + 1;
+                    operation = Operation.Add;
+                    value = 1;
                     break;
                 
                 case "--":
-                    value = initialVar - 1;
+                    operation = Operation.Subtract;
+                    value = 1;
                     break;
             }
 
-            Actions.AddRange(variable.SetVariable(value, varSetData.Target, index));
+            if (operation == null)
+                Actions.AddRange(variable.SetVariable(value, varSetData.Target, index));
+            else
+                Actions.AddRange(variable.ModifyVariable((Operation)operation, value, varSetData.Target, index));
         }
 
         void ParseDefine(ScopeGroup getter, ScopeGroup scope, DefineNode defineNode)
