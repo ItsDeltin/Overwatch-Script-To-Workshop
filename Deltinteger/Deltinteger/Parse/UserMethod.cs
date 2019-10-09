@@ -7,7 +7,7 @@ using Deltin.Deltinteger.WorkshopWiki;
 
 namespace Deltin.Deltinteger.Parse
 {
-    abstract public class UserMethod : IMethod, IScopeable, ITypeRegister
+    abstract public class UserMethod : IMethod, IScopeable, ITypeRegister, ICallable
     {
         public static UserMethod CreateUserMethod(ScopeGroup scope, UserMethodBase node)
         {
@@ -83,12 +83,62 @@ namespace Deltin.Deltinteger.Parse
     {
         public BlockNode Block { get; }
         public bool IsRecursive { get; }
+        public bool DoesReturn { get; }
 
         public UserMethodBlock(ScopeGroup scope, UserMethodNode node) : base(scope, node)
         {
+            List<ReturnNode> returnNodes = new List<ReturnNode>();
+            ReturnNodes(node.Block, returnNodes);
+            DoesReturn = node.Type != null || returnNodes.Any(returnNode => returnNode.Value != null);
+            if (DoesReturn)
+            {
+                foreach (var returnNode in returnNodes)
+                    if (returnNode.Value == null)
+                        throw new SyntaxErrorException("A return value is required.", returnNode.Location);
+                CheckContainer((IBlockContainer)node);
+            }
+
             Block = node.Block;
             IsRecursive = node.IsRecursive;
             TypeString = node.Type;
+        }
+        
+        private static void ReturnNodes(BlockNode block, List<ReturnNode> returnNodes)
+        {
+            foreach (var statement in block.Statements)
+            {
+                if (statement is IBlockContainer)
+                    foreach (var container in ((IBlockContainer)statement).Paths())
+                        ReturnNodes(container.Block, returnNodes);
+                
+                if (statement is ReturnNode)
+                    returnNodes.Add((ReturnNode)statement);
+            }
+        }
+
+        private static void CheckContainer(IBlockContainer container)
+        {
+            foreach(var path in container.Paths())
+            {
+                bool blockReturns = false;
+                for (int i = path.Block.Statements.Length - 1; i >= 0; i--)
+                {
+                    if (path.Block.Statements[i] is ReturnNode)
+                    {
+                        blockReturns = true;
+                        break;
+                    }
+                    
+                    if (path.Block.Statements[i] is IBlockContainer)
+                    {
+                        if (((IBlockContainer)path.Block.Statements[i]).Paths().Any(containerPath => containerPath.WillRun)) blockReturns = true;
+
+                        CheckContainer((IBlockContainer)path.Block.Statements[i]);
+                    }
+                }
+                if (!blockReturns)
+                    throw new SyntaxErrorException("Path does not return a value.", path.ErrorRange);
+            }
         }
 
         override public Element Get(TranslateRule context, ScopeGroup scope, MethodNode methodNode, IWorkshopTree[] parameters)
@@ -107,8 +157,12 @@ namespace Deltin.Deltinteger.Parse
                 context.AssignParameterVariables(methodScope, Parameters, parameters, methodNode);
 
                 // The variable that stores the return value.
-                IndexedVar returns = context.VarCollection.AssignVar(scope, $"{methodNode.Name}: return temp value", context.IsGlobal, null);
-                returns.Type = Type;
+                IndexedVar returns = null;
+                if (DoesReturn)
+                {
+                    returns = context.VarCollection.AssignVar(scope, $"{methodNode.Name}: return temp value", context.IsGlobal, null);
+                    returns.Type = Type;
+                }
 
                 // Add the method to the method stack
                 context.MethodStackNotRecursive.Add(this);
@@ -124,7 +178,9 @@ namespace Deltin.Deltinteger.Parse
                 // Remove the method from the stack.
                 context.MethodStackNotRecursive.Remove(this);
 
-                result = returns.GetVariable();
+                if (DoesReturn)
+                    result = returns.GetVariable();
+                else result = new V_Null();
             }
             else
             {
@@ -214,9 +270,7 @@ namespace Deltin.Deltinteger.Parse
                             Element.Part<V_ArraySlice>(
                                 continueSkipArray.GetVariable(), 
                                 new V_Number(0),
-                                Element.Part<V_Subtract>(
-                                    Element.Part<V_CountOf>(continueSkipArray.GetVariable()), new V_Number(1)
-                                )
+                                Element.Part<V_CountOf>(continueSkipArray.GetVariable()) - 1
                             )
                         )
                     );
@@ -234,7 +288,7 @@ namespace Deltin.Deltinteger.Parse
 
                     // Reset the continue skip.
                     context.ContinueSkip.ResetSkip();
-                    context.Actions.AddRange(continueSkipArray.SetVariable(new V_Number()));
+                    context.Actions.AddRange(continueSkipArray.SetVariable(0));
                     
                     // Remove the method from the stack.
                     context.MethodStackRecursive.Remove(stack);
@@ -257,6 +311,12 @@ namespace Deltin.Deltinteger.Parse
 
         override public Element Get(TranslateRule context, ScopeGroup scope, MethodNode methodNode, IWorkshopTree[] parameters)
         {
+            // Check the method stack if this method was already called.
+            // Throw a syntax error if it was.
+            if (context.MethodStackNotRecursive.Contains(this))
+                throw new SyntaxErrorException("Recursion is not allowed in macros.", methodNode.Location);
+            context.MethodStackNotRecursive.Add(this);
+
             int actionCount = context.Actions.Count;
 
             ScopeGroup methodScope = scope.Root().Child();
@@ -267,6 +327,8 @@ namespace Deltin.Deltinteger.Parse
             Element result = context.ParseExpression(methodScope, methodScope, Expression);
 
             methodScope.Out(context);
+
+            context.MethodStackNotRecursive.Remove(this);
 
             if (context.Actions.Count > actionCount)
                 throw new SyntaxErrorException("Macro cannot result in any actions.", methodNode.Location);

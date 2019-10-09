@@ -96,7 +96,7 @@ namespace Deltin.Deltinteger.Elements
                     return Element.Part<V_TeamVar>(enumMember);
                 
                 case "Map":
-                    return new V_Number((int)enumMember.UnderlyingValue);
+                    return (int)enumMember.UnderlyingValue;
 
                 default: return null;
             }

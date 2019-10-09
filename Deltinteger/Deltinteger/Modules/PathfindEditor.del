@@ -1,0 +1,355 @@
+import "!Debug Tools.del";
+import "!Container.del";
+
+rule: "good luck dum dum"
+{
+    define a = new Empty();
+}
+
+class Empty
+{
+    define wow = 123;
+}
+
+rule: "Commands"
+Event.OngoingPlayer
+{
+    CreateHudText(EventPlayer(), null, "ultimate_ability: build sphere", null, Location.Right, 0, Color.White, Color.White);
+    CreateHudText(EventPlayer(), null, "crouch + ultimate_ability: destroy sphere", null, Location.Right, 1, Color.White, Color.White);
+    CreateHudText(EventPlayer(), null, "interact: select sphere", null, Location.Right, 2, Color.White, Color.Blue);
+    CreateHudText(EventPlayer(), null, "crouch + interact: stop selecting spheres", null, Location.Right, 3, Color.White, Color.Blue);
+    CreateHudText(EventPlayer(), null, "secondary_fire: connect", null, Location.Right, 4, Color.White, Color.Green);
+    CreateHudText(EventPlayer(), null, "crouch + secondary_fire: stop connect", null, Location.Right, 5, Color.White, Color.Green);
+    CreateHudText(EventPlayer(), null, "right: connect initial -> final", null, Location.Right, 6, Color.White, Color.Green);
+    CreateHudText(EventPlayer(), null, "left: connect initial -> remaining", null, Location.Right, 7, Color.White, Color.Green);
+    CreateHudText(EventPlayer(), null, "ability 1: next_form", null, Location.Right, 8, Color.White, Color.Orange);
+    CreateHudText(EventPlayer(), null, "hello: reveal", null, Location.Right, 9, Color.White, Color.SkyBlue);
+    CreateHudText(EventPlayer(), null, "up: upload", null, Location.Right, 10, Color.White, Color.SkyBlue);
+}
+
+macro GetClosestNode(): FirstOf(SortedArray(Nodes, DistanceBetween(EyePosition(EventPlayer()), (<Node>ArrayElement()).ShownLocation)));
+macro IsNodeSelectable(Node node): DistanceBetween(node.Location, EyePosition(EventPlayer())) < 5;
+
+rule: "Create node"
+Event.OngoingPlayer
+if (IsButtonHeld(EventPlayer(), Button.Ultimate))
+if (!IsButtonHeld(EventPlayer(), Button.Crouch))
+{
+    Nodes = Append(Nodes, new Node(PositionOf(EventPlayer())));
+    (<Node>LastOf(Nodes)).Show();
+}
+
+rule: "Delete node"
+Event.OngoingPlayer
+if (IsButtonHeld(EventPlayer(), Button.Ultimate))
+if (IsButtonHeld(EventPlayer(), Button.Crouch))
+{
+    Node selected = GetClosestNode();
+    if (!IsNodeSelectable(selected)) return;
+
+    for (define i = CountOf(Segments) - 1; i >= 0; i--)
+        if (ArrayContains((<Segment>Segments[i]).Nodes, selected))
+        {
+            DestroyEffect((<Segment>Segments[i]).EffectID);
+            delete(Segments[i]);
+            Segments = RemoveFromArrayAtIndex(Segments, i);
+        }
+    PlayEffect(AllPlayers(), PlayEffect.BadExplosion, Color.Blue, selected.ShownLocation, 0.25);
+    selected.Hide();
+    Selected = RemoveFromArray(Selected, selected);
+    Nodes = RemoveFromArray(Nodes, selected); 
+    delete(selected);
+}
+
+rule: "Select"
+Event.OngoingPlayer
+if (IsButtonHeld(EventPlayer(), Button.Interact))
+if (!IsButtonHeld(EventPlayer(), Button.Crouch))
+{
+    Node selected = GetClosestNode();
+    if (!IsNodeSelectable(selected)) return;
+
+    if (!selected.Selected)
+    {        
+        selected.Select();
+        Selected = Append(Selected, selected);
+    }
+    else
+    {
+        selected.Deselect();
+        Selected = RemoveFromArray(Selected, selected);
+    }
+}
+
+rule: "Deselect all"
+Event.OngoingPlayer
+if (IsButtonHeld(EventPlayer(), Button.Interact))
+if (IsButtonHeld(EventPlayer(), Button.Crouch))
+{
+    foreach (Node selected in Selected)
+        selected.Deselect();
+    Selected = EmptyArray();
+}
+
+define globalvar Nodes = EmptyArray();
+define globalvar Selected = EmptyArray();
+
+class Node
+{
+    public define Location;
+    public define ShownLocation;
+    private define EffectID;
+    public define Selected = false;
+    public define visible = false;
+
+    public Node(define pos)
+    {
+        Location = pos;
+        ShownLocation = Location + Vector(0, 1.25, 0);
+    }
+
+    public method Show()
+    {
+        if (!visible)
+        {
+            Update();
+            visible = true;
+        }
+    }
+
+    public method Hide()
+    {
+        if (visible)
+        {
+            DestroyEffect(EffectID);
+            visible = false;
+        }
+    }
+    
+    public method Select()
+    {
+        Selected = true;
+        Update();
+    }
+
+    public method Deselect()
+    {
+        Selected = false;
+        Update();
+    }
+
+    private method Update()
+    {
+        DestroyEffect(EffectID);
+        if (!Selected)
+            Make(Color.Blue);
+        else
+            Make(Color.Green);
+        EffectID = LastCreatedEntity();
+    }
+
+    private method Make(Color color)
+    {
+        CreateEffect(AllPlayers(), Effect.Sphere, color, ShownLocation, 0.25, EffectRev.VisibleTo);
+    }
+
+    public method UpdateVisible()
+    {
+        Hide();
+        if (DistanceBetween(EventPlayer(), ShownLocation) < 30)
+            Show();
+    }
+}
+
+rule: "Connect All Segments"
+Event.OngoingPlayer
+if (IsButtonHeld(EventPlayer(), Button.SecondaryFire))
+if (!IsButtonHeld(EventPlayer(), Button.Crouch))
+{
+    for (define f = 0; f < CountOf(Selected); f++)
+        for (define l = 0; l < CountOf(Selected); l++)
+            if (l != f && !SegmentExists(Selected[f], Selected[l]))
+            {
+                Segments = Append(Segments, new Segment(<Node>Selected[f], <Node>Selected[l], Attribute));
+                (<Segment>LastOf(Segments)).Show();
+            }
+}
+
+rule: "Connect Segment Path"
+Event.OngoingPlayer
+if (IsCommunicating(EventPlayer(), Communication.VoiceLineRight))
+if (!IsButtonHeld(EventPlayer(), Button.Crouch))
+{
+    for (define i = 1; i < CountOf(Selected); i++)
+        if (!SegmentExists(Selected[i - 1], Selected[i]))
+        {
+            Segments = Append(Segments, new Segment(<Node>Selected[i - 1], <Node>Selected[i], Attribute));
+            (<Segment>LastOf(Segments)).Show();
+        }
+}
+
+rule: "Connect Segments From First"
+Event.OngoingPlayer
+if (IsCommunicating(EventPlayer(), Communication.VoiceLineLeft))
+if (!IsButtonHeld(EventPlayer(), Button.Crouch))
+{
+    for (define i = 1; i < CountOf(Selected); i++)
+        if (!SegmentExists(Selected[0], Selected[i]))
+        {
+            Segments = Append(Segments, new Segment(<Node>Selected[0], <Node>Selected[i], Attribute));
+            (<Segment>LastOf(Segments)).Show();
+        }
+}
+
+macro SegmentExists(define node1, define node2):
+    IsTrueForAny(
+        Segments,
+        ArrayContains((<Segment>ArrayElement()).Nodes, node1)
+        &&
+        ArrayContains((<Segment>ArrayElement()).Nodes, node2)
+    );
+
+rule: "Delete Segments"
+Event.OngoingPlayer
+if (IsButtonHeld(EventPlayer(), Button.SecondaryFire))
+if (IsButtonHeld(EventPlayer(), Button.Crouch))
+{
+    for (define i = CountOf(Segments) - 1; i >= 0; i--)
+        if (IsTrueForAll((<Segment>Segments[i]).Nodes, ArrayContains(Selected, ArrayElement())))
+        {
+            (<Segment>Segments[i]).Hide();
+            delete(Segments[i]);
+            Segments = RemoveFromArrayAtIndex(Segments, i);
+        }
+}
+
+define globalvar Segments = EmptyArray();
+
+class Segment
+{
+    public Node Node1;
+    public Node Node2;    
+    public define Nodes;
+    public define Attribute;
+
+    define EffectID;
+    public define visible = false;
+
+    define DirectionMarker1;
+
+    public Segment(Node node1, Node node2, define attribute)
+    {
+        Node1 = node1;
+        Node2 = node2;
+        Nodes = [Node1, Node2];
+        Attribute = attribute;
+    }
+
+    public method Show()
+    {
+        if (!visible)
+        {
+            CreateBeamEffect(AllPlayers(), BeamType.GrappleBeam, Node1.ShownLocation, Node2.ShownLocation, Color.Red, EffectRev.VisibleTo);
+            EffectID = LastCreatedEntity();
+            visible = true;
+
+            if (Attribute == 1)
+            {
+                CreateEffect(AllPlayers(), Effect.Sphere, Color.Purple, LinearInterpolate(Node1.ShownLocation, Node2.ShownLocation, 0.9), 0.25, EffectRev.VisibleTo);
+                DirectionMarker1 = LastCreatedEntity();
+            }
+        }
+    }
+    public method Hide()
+    {
+        if (visible)
+        {
+            DestroyEffect(EffectID);
+            DestroyEffect(DirectionMarker1);
+            visible = false;
+        }
+    }
+}
+
+rule: "Update visible"
+Event.OngoingPlayer
+if (HostPlayer() == EventPlayer())
+if (IsCommunicating(EventPlayer(), Communication.Hello))
+{
+    foreach (Segment segment in Segments)
+    {
+        segment.Node1.UpdateVisible();
+        segment.Node2.UpdateVisible();
+
+        segment.Hide();
+        if (segment.Node1.visible && segment.Node2.visible)
+            segment.Show();
+    }
+}
+
+rule: "CSV out"
+Event.OngoingPlayer
+if (IsCommunicating(EventPlayer(), Communication.VoiceLineUp))
+{
+    SmallMessage(AllPlayers(), "building ...");
+
+    nodesOut = EmptyArray();
+    segmentsOut = EmptyArray();
+
+    for (define i = 0; i < CountOf(Nodes); i++)
+        nodesOut = Append(nodesOut, (<Node>Nodes[i]).Location);
+    
+    for (define i = 0; i < CountOf(Segments); i++)
+        segmentsOut = Append(segmentsOut, Vector(
+            IndexOfArrayValue(Nodes, (<Segment>Segments[i]).Node1),
+            IndexOfArrayValue(Nodes, (<Segment>Segments[i]).Node2),
+            (<Segment>Segments[i]).Attribute
+        ));
+
+    SmallMessage(AllPlayers(), "downloaded!");
+}
+
+define globalvar nodesOut          D;
+define globalvar segmentsOut       E;
+
+rule: "Preload"
+if (CountOf(preloadNodes) != 0)
+{
+    for (define i = 0; i < CountOf(preloadNodes); i++)
+        Nodes = Append(Nodes, new Node(preloadNodes[i]));    
+    for (define i = 0; i < CountOf(preloadSegments); i++)
+        Segments = Append(Segments, new Segment(
+                <Node>Nodes[XOf(preloadSegments[i])],
+                <Node>Nodes[YOf(preloadSegments[i])],
+                ZOf(preloadSegments[i])
+            ));
+}
+
+define globalvar preloadNodes J;
+define globalvar preloadSegments K;
+
+define globalvar Attribute = 0;
+define globalvar AttributeHud = 0;
+
+rule: "Change attribute"
+Event.OngoingPlayer
+if (IsButtonHeld(EventPlayer(), Button.Ability1))
+{
+    Attribute++;
+    DestroyHudText(AttributeHud);
+
+    if (Attribute == 2) Attribute = 0;
+
+    if (Attribute == 0)
+        CreateHudText(AllPlayers(), "current_form:", "normal", null, Location.Top);
+    else if (Attribute == 1)
+        CreateHudText(AllPlayers(), "current_form:", <"<0> location", 1>, null, Location.Top);
+
+    AttributeHud = LastTextID();
+}
+
+rule: "Initial attribute HUD"
+{
+    CreateHudText(AllPlayers(), "current_form:", "normal", null, Location.Top);
+    AttributeHud = LastTextID();
+}

@@ -140,6 +140,7 @@ namespace Deltin.Deltinteger.Elements
     [Parameter("Scale", ValueType.Number, typeof(V_Number))]
     [EnumParameter("Clipping", typeof(Clipping))]
     [EnumParameter("Reevaluation", typeof(InworldTextRev))]
+    [EnumParameter("Text Color", typeof(Color))]
     [EnumParameter("Spectators", typeof(Spectators))]
     public class A_CreateInWorldText : Element {}
 
@@ -293,6 +294,13 @@ namespace Deltin.Deltinteger.Elements
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
     public class A_ModifyGlobalVariable : Element {}
 
+    [ElementData("Modify Global Variable At Index")]
+    [EnumParameter("Variable", typeof(Variable))]
+    [Parameter("Index", ValueType.Number, typeof(V_Number))]
+    [EnumParameter("Operation", typeof(Operation))]
+    [Parameter("Value", ValueType.Any, typeof(V_Number))]
+    public class A_ModifyGlobalVariableAtIndex : Element {}
+
     [ElementData("Modify Player Score")]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     [Parameter("Score", ValueType.Number, typeof(V_Number))]
@@ -304,6 +312,14 @@ namespace Deltin.Deltinteger.Elements
     [EnumParameter("Operation", typeof(Operation))]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
     public class A_ModifyPlayerVariable : Element {}
+
+    [ElementData("Modify Player Variable At Index")]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [EnumParameter("Variable", typeof(Variable))]
+    [Parameter("Index", ValueType.Number, typeof(V_Number))]
+    [EnumParameter("Operation", typeof(Operation))]
+    [Parameter("Value", ValueType.Any, typeof(V_Number))]
+    public class A_ModifyPlayerVariableAtIndex : Element {}
 
     [ElementData("Modify Team Score")]
     [Parameter("Team", ValueType.Team, typeof(V_TeamVar))]

@@ -15,10 +15,10 @@ namespace Deltin.Deltinteger.Elements
             Element point1 = (Element)Parameters[0];
             Element point2 = (Element)Parameters[1];
             Element fraction = (Element)Parameters[2];
-            Element p1 = Element.Part<V_Multiply>(point1, Element.Part<V_Subtract>(new V_Number(1), fraction));
-            Element p2 = Element.Part<V_Multiply>(point2, fraction);
+            Element p1 = point1 * (1 - fraction);
+            Element p2 = point2 * fraction;
 
-            return new MethodResult(null, Element.Part<V_Add>(p1, p2));
+            return new MethodResult(null, p1 + p2);
         }
 
         public override CustomMethodWiki Wiki()
@@ -50,10 +50,10 @@ namespace Deltin.Deltinteger.Elements
 
             Element point1 = (Element)Parameters[0];
             Element point2 = (Element)Parameters[1];
-            Element p1 = Element.Part<V_Multiply>(point1, Element.Part<V_Subtract>(new V_Number(1), fraction.GetVariable()));
-            Element p2 = Element.Part<V_Multiply>(point2, fraction.GetVariable());
+            Element p1 = point1 * (1 - fraction.GetVariable());
+            Element p2 = point2 * fraction.GetVariable();
 
-            return new MethodResult(actions, Element.Part<V_Add>(p1, p2));
+            return new MethodResult(actions, p1 + p2);
         }
 
         public override CustomMethodWiki Wiki()
@@ -79,10 +79,10 @@ namespace Deltin.Deltinteger.Elements
             Element point1 = (Element)Parameters[0];
             Element point2 = (Element)Parameters[1];
             Element distance = (Element)Parameters[2];
-            Element fraction = Element.Part<V_Divide>(distance, Element.Part<V_DistanceBetween>(point1, point2));
-            Element p1 = Element.Part<V_Multiply>(point1, Element.Part<V_Subtract>(new V_Number(1), fraction));
-            Element p2 = Element.Part<V_Multiply>(point2, fraction);
-            return new MethodResult(null, Element.Part<V_Add>(p1, p2));
+            Element fraction = distance / Element.Part<V_DistanceBetween>(point1, point2);
+            Element p1 = point1 * (1 - fraction);
+            Element p2 = point2 * fraction;
+            return new MethodResult(null, p1 + p2);
         }
 
         public override CustomMethodWiki Wiki()
@@ -113,13 +113,13 @@ namespace Deltin.Deltinteger.Elements
             (
                 point1.SetVariable((Element)Parameters[0]),
                 point2.SetVariable((Element)Parameters[1]),
-                fraction.SetVariable(Element.Part<V_Divide>((Element)Parameters[2], Element.Part<V_DistanceBetween>(point1.GetVariable(), point2.GetVariable())))
+                fraction.SetVariable((Element)Parameters[2] / Element.Part<V_DistanceBetween>(point1.GetVariable(), point2.GetVariable()))
             ) ;
 
-            Element p1 = Element.Part<V_Multiply>(point1.GetVariable(), Element.Part<V_Subtract>(new V_Number(1), fraction.GetVariable()));
-            Element p2 = Element.Part<V_Multiply>(point2.GetVariable(), fraction.GetVariable());
+            Element p1 = point1.GetVariable() * (1 - fraction.GetVariable());
+            Element p2 = point2.GetVariable() * fraction.GetVariable();
 
-            return new MethodResult(actions, Element.Part<V_Add>(p1, p2));
+            return new MethodResult(actions, p1 + p2);
         }
 
         public override CustomMethodWiki Wiki()

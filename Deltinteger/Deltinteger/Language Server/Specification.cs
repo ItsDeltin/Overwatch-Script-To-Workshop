@@ -107,6 +107,11 @@ namespace Deltin.Deltinteger.LanguageServer
             return new Range(new Pos(start.Line - 1, start.Column), new Pos(stop.Line - 1, stop.Column + stop.Text.Length));
         }
 
+        public static Range GetRange(ITerminalNode start, ITerminalNode stop)
+        {
+            return GetRange(start.Symbol, stop.Symbol);
+        }
+
         public static Range GetRange(ITerminalNode node)
         {
             return GetRange(node.Symbol);
@@ -173,6 +178,11 @@ namespace Deltin.Deltinteger.LanguageServer
         public Range Offset(Range other)
         {
             return new Range(start.Offset(other.start), end.Offset(other.end));
+        }
+
+        public override string ToString()
+        {
+            return start.ToString() + " - " + end.ToString();
         }
     }
     

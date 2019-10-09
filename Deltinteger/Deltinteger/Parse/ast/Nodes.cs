@@ -8,364 +8,11 @@ using Deltin.Deltinteger.Elements;
 
 namespace Deltin.Deltinteger.Parse
 {
-    public class BuildAstVisitor : DeltinScriptBaseVisitor<Node>
-    {
-        public Diagnostics _diagnostics { get; }
-        public string file { get; }
-
-        public BuildAstVisitor(string file, Diagnostics diagnostics)
-        {
-            this.file = file;
-            _diagnostics = diagnostics;
-        }
-
-        public override Node VisitRuleset(DeltinScriptParser.RulesetContext context)
-        {
-            return new RulesetNode(context, this);
-        }
-
-        public override Node VisitImport_file(DeltinScriptParser.Import_fileContext context)
-        {
-            return new ImportNode(context, this);
-        }
-
-        public override Node VisitImport_object(DeltinScriptParser.Import_objectContext context)
-        {
-            return new ImportObjectNode(context, this);
-        }
-
-        public override Node VisitRule_define(DeltinScriptParser.Rule_defineContext context)
-        {
-            return new RuleDefineNode(context, this);
-        }
-
-        public override Node VisitDefine(DeltinScriptParser.DefineContext context)
-        {
-            return new DefineNode(context, this);
-        }
-
-        public override Node VisitInclass_define(DeltinScriptParser.Inclass_defineContext context)
-        {
-            return new InclassDefineNode(context, this);
-        }
-
-        public override Node VisitUseVar(DeltinScriptParser.UseVarContext context)
-        {
-            return new UseVarNode(context, this);
-        }
-
-        public override Node VisitUser_method(DeltinScriptParser.User_methodContext context)
-        {
-            return new UserMethodNode(context, this);
-        }
-
-        public override Node VisitMacro(DeltinScriptParser.MacroContext context)
-        {
-            return new MacroNode(context, this);
-        }
-
-        public override Node VisitOw_rule(DeltinScriptParser.Ow_ruleContext context)
-        {
-            return new RuleNode(context, this);
-        }
-
-        public override Node VisitBlock(DeltinScriptParser.BlockContext context)
-        {
-            Node[] statements = new Node[context.statement().Length];
-            for (int i = 0; i < statements.Length; i++)
-                statements[i] = VisitStatement(context.statement()[i]);
-            
-            return new BlockNode(statements, new Location(file, Range.GetRange(context)));
-        }
-
-        public override Node VisitExpr(DeltinScriptParser.ExprContext context)
-        {
-            Node node;
-            
-            // Operations
-            if (context.ChildCount == 3 && Constants.AllOperations.Contains(context.GetChild(1).GetText()))
-            {
-                Node left = Visit(context.GetChild(0));
-                string operation = context.GetChild(1).GetText();
-                Node right = Visit(context.GetChild(2));
-
-                node = new OperationNode(left, operation, right, new Location(file, Range.GetRange(context)));
-            }
-
-            // Getting values in arrays
-            else if (context.ChildCount == 4
-            && context.GetChild(0) is DeltinScriptParser.ExprContext
-            && context.GetChild(1).GetText() == "["
-            && context.GetChild(2) is DeltinScriptParser.ExprContext
-            && context.GetChild(3).GetText() == "]")
-            {
-                Node value = Visit(context.GetChild(0));
-                Node index = Visit(context.GetChild(2));
-
-                node = new ValueInArrayNode(value, index, new Location(file, Range.GetRange(context)));
-            }
-
-            // Seperator
-            else if (context.SEPERATOR() != null && context.expr().Length >= 2)
-            {
-                node = new ExpressionTreeNode(context, this);
-            }
-            
-            // Not
-            else if (context.ChildCount == 2
-            && context.GetChild(0).GetText() == "!"
-            && context.GetChild(1) is DeltinScriptParser.ExprContext)
-            {
-                Node value = Visit(context.GetChild(1));
-                node = new NotNode(value, new Location(file, Range.GetRange(context)));
-            }
-
-            // Ternary Condition
-            else if (context.ChildCount == 5
-            && context.GetChild(0) is DeltinScriptParser.ExprContext
-            && context.GetChild(1).GetText() == "?"
-            && context.GetChild(2) is DeltinScriptParser.ExprContext
-            && context.GetChild(3).GetText() == ":"
-            && context.GetChild(4) is DeltinScriptParser.ExprContext)
-            {
-                Node condition = VisitExpr(context.expr(0));
-                Node consequent = VisitExpr(context.expr(1));
-                Node alternative = VisitExpr(context.expr(2));
-                node = new TernaryConditionalNode(condition, consequent, alternative, new Location(file, Range.GetRange(context)));
-            }
-
-            // This
-            else if (context.THIS() != null)
-            {
-                node = new ThisNode(new Location(file, Range.GetRange(context)));
-            }
-
-            else if (context.ROOT() != null)
-            {
-                node = new RootNode(new Location(file, Range.GetRange(context)));
-            }
-
-            else if (context.typeconvert() != null)
-            {
-                node = new TypeConvertNode(context.typeconvert(), this);
-            }
-
-            else
-            {
-                return Visit(context.GetChild(0));
-            }
-
-            return node;
-        }
-        
-        #region Expressions
-        // -123.456
-        public override Node VisitNumber(DeltinScriptParser.NumberContext context)
-        {
-            double value = double.Parse(context.GetText());
-            return new NumberNode(value, new Location(file, Range.GetRange(context)));
-        }
-
-        // "Hello <0>! Waiting game..."
-        public override Node VisitString(DeltinScriptParser.StringContext context)
-        {
-            string value = context.STRINGLITERAL().GetText().Trim('"');
-            return new StringNode(value, null, new Location(file, Range.GetRange(context)));
-        }
-
-        // <"hello <0>! Waiting game...", EventPlayer()>
-        public override Node VisitFormatted_string(DeltinScriptParser.Formatted_stringContext context)
-        {
-            string value = context.@string().GetText().Trim('"');
-            Node[] format = new Node[context.expr().Length];
-            for (int i = 0; i < format.Length; i++)
-                format[i] = VisitExpr(context.expr()[i]);
-            return new StringNode(value, format, new Location(file, Range.GetRange(context)));
-        }
-
-        // Method()
-        public override Node VisitMethod(DeltinScriptParser.MethodContext context)
-        {
-            string methodName = context.PART().GetText();
-
-            Node[] parameters = new Node[context.call_parameters()?.expr().Length ?? 0];
-            for (int i = 0; i < parameters.Length; i++)
-                parameters[i] = Visit(context.call_parameters().expr()[i]);
-
-            Range nameRange = Range.GetRange(context.PART().Symbol);
-            Range parameterRange = Range.GetRange(context.LEFT_PAREN().Symbol, context.RIGHT_PAREN().Symbol);
-
-            return new MethodNode(methodName, parameters, nameRange, parameterRange, new Location(file, Range.GetRange(context)));
-        }
-
-        public override Node VisitVariable(DeltinScriptParser.VariableContext context)
-        {
-            return new VariableNode(context, this);
-        }
-
-        // ( expr )
-        public override Node VisitExprgroup(DeltinScriptParser.ExprgroupContext context)
-        {
-            return Visit(context.expr());
-        }
-
-        public override Node VisitTrue(DeltinScriptParser.TrueContext context)
-        {
-            return new BooleanNode(true, new Location(file, Range.GetRange(context)));
-        }
-
-        public override Node VisitFalse(DeltinScriptParser.FalseContext context)
-        {
-            return new BooleanNode(false, new Location(file, Range.GetRange(context)));
-        }
-
-        public override Node VisitNull(DeltinScriptParser.NullContext context)
-        {
-            return new NullNode(new Location(file, Range.GetRange(context)));
-        }
-
-        public override Node VisitEnum(DeltinScriptParser.EnumContext context)
-        {
-            string[] split = context.GetText().Split('.');
-            string type = split[0];
-            string value = split[1];
-            return new EnumNode(type, value, new Location(file, Range.GetRange(context)));
-        }
-        
-        public override Node VisitCreatearray(DeltinScriptParser.CreatearrayContext context)
-        {
-            Node[] values = new Node[context.expr().Length];
-            for (int i = 0; i < values.Length; i++)
-                values[i] = VisitExpr(context.expr()[i]);
-
-            return new CreateArrayNode(values, new Location(file, Range.GetRange(context)));
-        }
-
-        public override Node VisitCreate_object(DeltinScriptParser.Create_objectContext context)
-        {
-            return new CreateObjectNode(context, this);
-        }
-        #endregion
-        
-        public override Node VisitStatement(DeltinScriptParser.StatementContext context)
-        {
-            Node node = null;
-
-            if (node == null)
-            {
-                return Visit(context.GetChild(0));
-            }
-            else
-            {
-                return node;
-            }
-        }
-
-        #region Statements
-        public override Node VisitVarset(DeltinScriptParser.VarsetContext context)
-        {
-            return new VarSetNode(context, this);
-        }
-
-        public override Node VisitFor(DeltinScriptParser.ForContext context)
-        {
-            BlockNode block = (BlockNode)VisitBlock(context.block());
-
-            VarSetNode varSet = null;
-            if (context.varset() != null)
-                varSet = (VarSetNode)VisitVarset(context.varset());
-
-            DefineNode defineNode = null;
-            if (context.define() != null)
-                defineNode = (DefineNode)VisitDefine(context.define());
-
-            Node expression = null;
-            if (context.expr() != null)
-                expression = VisitExpr(context.expr());
-
-            VarSetNode statement = null;
-            if (context.forEndStatement() != null)
-                statement = (VarSetNode)VisitVarset(context.forEndStatement().varset());
-            
-            return new ForNode(varSet, defineNode, expression, statement, block, new Location(file, Range.GetRange(context)));
-        }
-
-        public override Node VisitForeach(DeltinScriptParser.ForeachContext context)
-        {
-            return new ForEachNode(context, this);
-        }
-
-        public override Node VisitWhile(DeltinScriptParser.WhileContext context)
-        {
-            BlockNode block = (BlockNode)VisitBlock(context.block());
-            Node expression = VisitExpr(context.expr());
-
-            return new WhileNode(expression, block, new Location(file, Range.GetRange(context)));
-        }
-
-        public override Node VisitIf(DeltinScriptParser.IfContext context)
-        {
-            // Get the if data
-            IfData ifData = new IfData
-            (
-                VisitExpr(context.expr()),
-                (BlockNode)VisitBlock(context.block())
-            );
-
-            // Get the else-if data
-            IfData[] elseIfData = null;
-            if (context.else_if() != null)
-            {
-                elseIfData = new IfData[context.else_if().Length];
-                for (int i = 0; i < context.else_if().Length; i++)
-                    elseIfData[i] = new IfData
-                    (
-                        VisitExpr(context.else_if()[i].expr()),
-                        (BlockNode)VisitBlock(context.else_if()[i].block())
-                    );
-            }
-            
-            // Get the else block
-            BlockNode elseBlock = null;
-            if (context.@else() != null)
-                elseBlock = (BlockNode)VisitBlock(context.@else().block());
-
-            return new IfNode(ifData, elseIfData, elseBlock, new Location(file, Range.GetRange(context)));
-        }
-
-        public override Node VisitReturn(DeltinScriptParser.ReturnContext context)
-        {
-            Node returnValue = null;
-            if (context.expr() != null)
-                returnValue = VisitExpr(context.expr());
-
-            return new ReturnNode(returnValue, new Location(file, Range.GetRange(context)));
-        }
-
-        public override Node VisitDelete(DeltinScriptParser.DeleteContext context)
-        {
-            return new DeleteNode(context, this);
-        }
-        #endregion
-
-        public override Node VisitType_define(DeltinScriptParser.Type_defineContext context)
-        {
-            return new TypeDefineNode(context, this);
-        }
-
-        public override Node VisitConstructor(DeltinScriptParser.ConstructorContext context)
-        {
-            return new ConstructorNode(context, this);
-        }
-    }
-
-    public abstract class Node
+    public abstract class Node : INode
     {
         public Location Location { get; private set; }
 
         public Range[] SubRanges { get; set; }
-
-        public Element RelatedElement { get; set; }
 
         public ScopeGroup RelatedScopeGroup { get; set; }
 
@@ -410,7 +57,7 @@ namespace Deltin.Deltinteger.Parse
         }
     }
 
-    public class ImportNode : Node
+    public class ImportNode : Node, IImportNode
     {
         public string File { get; }
 
@@ -425,7 +72,7 @@ namespace Deltin.Deltinteger.Parse
         }
     }
 
-    public class ImportObjectNode : Node
+    public class ImportObjectNode : Node, IImportNode
     {
         public string Name { get; }
         public string File { get; }
@@ -512,11 +159,13 @@ namespace Deltin.Deltinteger.Parse
 
     public class RulesetNode : Node
     {
+        public InternalVarNode[] InternalVarNodes { get; }
         public ImportNode[] Imports { get; }
         public ImportObjectNode[] ObjectImports { get; }
         public Variable UseGlobalVar { get; } = Variable.A;
         public Variable UsePlayerVar { get; } = Variable.A;
         public Variable UseBuilderVar { get; } = Variable.B;
+        public Variable UseClassVar { get; } = Variable.C;
         public RuleNode[] Rules { get; }
         public RuleDefineNode[] DefinedVars { get; }
         public UserMethodBase[] UserMethods { get; }
@@ -524,6 +173,7 @@ namespace Deltin.Deltinteger.Parse
 
         public RulesetNode(DeltinScriptParser.RulesetContext context, BuildAstVisitor visitor) : base(new Location(visitor.file, Range.GetRange(context)))
         {
+            // Get imports
             Imports = new ImportNode[context.import_file().Length];
             for (int i = 0; i < Imports.Length; i++)
                 Imports[i] = new ImportNode(context.import_file(i), visitor);
@@ -532,33 +182,45 @@ namespace Deltin.Deltinteger.Parse
             for (int i = 0; i < ObjectImports.Length; i++)
                 ObjectImports[i] = new ImportObjectNode(context.import_object(i), visitor);
 
+            // Get rules
             Rules = new RuleNode[context.ow_rule().Length];
             for (int i = 0; i < Rules.Length; i++)
                 Rules[i] = (RuleNode)visitor.VisitOw_rule(context.ow_rule()[i]);
 
-            if (context.useGlobalVar() != null)
-                if (Enum.TryParse(context.useGlobalVar().PART().GetText(), out Variable temp))
-                    UseGlobalVar = temp;
-            
-            if (context.usePlayerVar() != null)
-                if (Enum.TryParse(context.usePlayerVar().PART().GetText(), out Variable temp))
-                    UsePlayerVar = temp;
-            
-            if (context.useDimVar() != null)
-                if (Enum.TryParse(context.useDimVar().PART().GetText(), out Variable temp))
-                    UseBuilderVar = temp;
+            // Get internal variable overrides
+            List<InternalVarNode> internalVarNodes = new List<InternalVarNode>();
+            for (int i = 0; i < context.internalVars().Length; i++)
+            {
+                var varOverride = new InternalVarNode(internalVarNodes, context.internalVars(i), visitor);
+                internalVarNodes.Add(varOverride);
 
+                if (varOverride.Type == InternalVarType.Global)
+                    UseGlobalVar = varOverride.Variable;
+                else if (varOverride.Type == InternalVarType.Player)
+                    UsePlayerVar = varOverride.Variable;
+                else if (varOverride.Type == InternalVarType.Builder)
+                    UseBuilderVar = varOverride.Variable;
+                else if (varOverride.Type == InternalVarType.Class)
+                    UseClassVar = varOverride.Variable;
+                else throw new NotImplementedException();
+            }
+            InternalVarNodes = internalVarNodes.ToArray();
+
+            // Get defined variables
             DefinedVars = new RuleDefineNode[context.rule_define().Length];
             for (int i = 0; i < DefinedVars.Length; i++)
                 DefinedVars[i] = (RuleDefineNode)visitor.VisitRule_define(context.rule_define(i));
 
+            // Get user methods
             UserMethods = new UserMethodBase[context.user_method().Length + context.macro().Length];
             for (int i = 0; i < context.user_method().Length; i++)
                 UserMethods[i] = (UserMethodNode)visitor.VisitUser_method(context.user_method(i));
             
+            // Get macros
             for (int i = 0; i < context.macro().Length; i++)
                 UserMethods[i + context.user_method().Length] = new MacroNode(context.macro(i), visitor);
             
+            // Get types
             DefinedTypes = new TypeDefineNode[context.type_define().Length];
             for (int i = 0; i < DefinedTypes.Length; i++)
                 DefinedTypes[i] = (TypeDefineNode)visitor.VisitType_define(context.type_define(i));
@@ -566,20 +228,46 @@ namespace Deltin.Deltinteger.Parse
 
         public override Node[] Children()
         {
-            return ArrayBuilder<Node>.Build(Imports, Rules, DefinedVars, UserMethods, DefinedTypes);
+            return ArrayBuilder<Node>.Build(InternalVarNodes, Imports, ObjectImports, Rules, DefinedVars, UserMethods, DefinedTypes);
         }
     }
 
-    public interface IDefine
+    public class InternalVarNode : Node
     {
-        string VariableName { get; }
-        string Type { get; }
-        Node Value { get; }
+        public InternalVarType Type { get; }
+        public Variable Variable { get; }
+
+        public InternalVarNode(List<InternalVarNode> internalVarNodes, DeltinScriptParser.InternalVarsContext context, BuildAstVisitor visitor) : base(new Location(visitor.file, Range.GetRange(context)))
+        {
+            if (context.GLOBAL() != null)
+                Type = InternalVarType.Global;
+            else if (context.PLAYER() != null)
+                Type = InternalVarType.Player;
+            else if (context.DIM() != null)
+                Type = InternalVarType.Builder;
+            else if (context.CLASS() != null)
+                Type = InternalVarType.Class;
+            else throw new NotImplementedException();
+            
+            if (internalVarNodes.Any(ivn => ivn.Type == Type))
+                visitor._diagnostics.Error($"{Type.ToString()} override already defined.", Location);
+
+            if (Enum.TryParse(context.PART().GetText(), out Variable temp))
+                Variable = temp;
+        }
+
+        override public Node[] Children()
+        {
+            return new Node[0];
+        }
     }
 
-    public interface IConstantSupport
+    public enum InternalVarType
     {
-        object GetValue();
+        Global,
+        Player,
+        Builder,
+        Class,
     }
 
     public class DefineNode : Node, IDefine
@@ -868,14 +556,16 @@ namespace Deltin.Deltinteger.Parse
         abstract protected Node[] GetChildren();
     }
 
-    public class UserMethodNode : UserMethodBase
+    public class UserMethodNode : UserMethodBase, IBlockContainer
     {
         public string Type { get; }
         public BlockNode Block { get; }
         public bool IsRecursive { get; }
+        private Location errorRange { get; }
         
         public UserMethodNode(DeltinScriptParser.User_methodContext context, BuildAstVisitor visitor) : base(new Location(visitor.file, Range.GetRange(context)))
         {
+            errorRange = new Location(visitor.file, Range.GetRange(context.name));
             Name = context.name.Text;
             Type = context.type?.Text;
 
@@ -895,6 +585,11 @@ namespace Deltin.Deltinteger.Parse
         override protected Node[] GetChildren()
         {
             return ArrayBuilder<Node>.Build(Block);
+        }
+    
+        public PathInfo[] Paths()
+        {
+            return new PathInfo[] {new PathInfo(Block, errorRange, false)};
         }
     }
 
@@ -945,7 +640,7 @@ namespace Deltin.Deltinteger.Parse
 
     public class BlockNode : Node
     {
-        public Node[] Statements;
+        public Node[] Statements { get; }
 
         public BlockNode(Node[] statements, Location location) : base(location) 
         {
@@ -958,7 +653,7 @@ namespace Deltin.Deltinteger.Parse
         }
     }
 
-    public class MethodNode : Node
+    public class MethodNode : Node, ICallableNode
     {
         public string Name { get; private set; }
         public Node[] Parameters { get; private set; }
@@ -1085,9 +780,24 @@ namespace Deltin.Deltinteger.Parse
 
     public class NotNode : Node
     {
-        public Node Value;
+        public Node Value { get; }
 
         public NotNode(Node value, Location location) : base(location)
+        {
+            Value = value;
+        }
+
+        public override Node[] Children()
+        {
+            return ArrayBuilder<Node>.Build(Value);
+        }
+    }
+
+    public class InvertNode : Node
+    {
+        public Node Value { get; }
+
+        public InvertNode(Node value, Location location) : base(location)
         {
             Value = value;
         }
@@ -1176,7 +886,7 @@ namespace Deltin.Deltinteger.Parse
         }
     }
 
-    public class CreateObjectNode : Node
+    public class CreateObjectNode : Node, ICallableNode
     {
         public string TypeName { get; }
         public Node[] Parameters { get; }
@@ -1254,15 +964,17 @@ namespace Deltin.Deltinteger.Parse
         }
     }
 
-    public class ForEachNode : Node
+    public class ForEachNode : Node, IBlockContainer
     {
         public ParameterDefineNode Variable { get; }
         public Node Array { get; }
         public BlockNode Block { get; }
         public int Repeaters { get; }
+        private Location errorRange { get; }
 
         public ForEachNode(DeltinScriptParser.ForeachContext context, BuildAstVisitor visitor) : base(new Location(visitor.file, Range.GetRange(context)))
         {
+            errorRange = new Location(visitor.file, Range.GetRange(context.FOREACH()));
             Array = visitor.Visit(context.expr());
             Variable = new ParameterDefineNode(context.parameter_define(), visitor);
             Block = (BlockNode)visitor.VisitBlock(context.block());
@@ -1276,59 +988,128 @@ namespace Deltin.Deltinteger.Parse
         {
             return ArrayBuilder<Node>.Build(Variable, Array, Block);
         }
+    
+        public PathInfo[] Paths()
+        {
+            return new PathInfo[] {new PathInfo(Block, errorRange, false)};
+        }
     }
 
-    public class ForNode : Node
+    public class ForNode : Node, IBlockContainer
     {
         public VarSetNode VarSetNode { get; private set; }
         public DefineNode DefineNode { get; private set; }
         public Node Expression { get; private set; }
         public VarSetNode Statement { get; private set; }
         public BlockNode Block { get; private set; }
+        private Location errorRange { get; }
 
-        public ForNode(VarSetNode varSetNode, DefineNode defineNode, Node expression, VarSetNode statement, BlockNode block, Location location) : base(location)
+        public ForNode(DeltinScriptParser.ForContext context, BuildAstVisitor visitor) : base(new Location(visitor.file, Range.GetRange(context)))
         {
-            VarSetNode = varSetNode;
-            DefineNode = defineNode;
-            Expression = expression;
-            Statement = statement;
-            Block = block;
+            errorRange = new Location(visitor.file, Range.GetRange(context.FOR()));
+            Block = (BlockNode)visitor.VisitBlock(context.block());
+
+            if (context.varset() != null)
+                VarSetNode = (VarSetNode)visitor.VisitVarset(context.varset());
+
+            if (context.define() != null)
+                DefineNode = (DefineNode)visitor.VisitDefine(context.define());
+
+            if (context.expr() != null)
+                Expression = visitor.VisitExpr(context.expr());
+
+            if (context.forEndStatement() != null)
+                Statement = (VarSetNode)visitor.VisitVarset(context.forEndStatement().varset());
         }
 
         public override Node[] Children()
         {
             return ArrayBuilder<Node>.Build(VarSetNode, DefineNode, Expression, Statement, Block);
         }
+    
+        public PathInfo[] Paths()
+        {
+            return new PathInfo[] {new PathInfo(Block, errorRange, false)};
+        }
     }
 
-    public class WhileNode : Node
+    public class WhileNode : Node, IBlockContainer
     {
         public Node Expression { get; private set; }
         public BlockNode Block { get; private set; }
+        private Location errorRange { get; }
 
-        public WhileNode(Node expression, BlockNode block, Location location) : base(location)
+        public WhileNode(DeltinScriptParser.WhileContext context, BuildAstVisitor visitor) : base(new Location(visitor.file, Range.GetRange(context)))
         {
-            Expression = expression;
-            Block = block;
+            Expression = visitor.VisitExpr(context.expr());
+            Block = (BlockNode)visitor.VisitBlock(context.block());
+            errorRange = new Location(visitor.file, Range.GetRange(context.WHILE()));
         }
 
         public override Node[] Children()
         {
             return ArrayBuilder<Node>.Build(Expression, Block);
         }
+    
+        public PathInfo[] Paths()
+        {
+            return new PathInfo[] {new PathInfo(Block, errorRange, false)};
+        }
     }
 
-    public class IfNode : Node
+    public class IfNode : Node, IBlockContainer
     {
-        public IfData IfData { get; private set; }
-        public IfData[] ElseIfData { get; private set; }
-        public BlockNode ElseBlock { get; private set; }
+        public IfData IfData { get; }
+        public IfData[] ElseIfData { get; }
+        public BlockNode ElseBlock { get; }
 
-        public IfNode(IfData ifData, IfData[] elseIfData, BlockNode elseBlock, Location location) : base(location)
+        private List<PathInfo> paths { get; } = new List<PathInfo>();
+
+        public IfNode(DeltinScriptParser.IfContext context, BuildAstVisitor visitor) : base(new Location(visitor.file, Range.GetRange(context)))
         {
-            IfData = ifData;
-            ElseIfData = elseIfData;
-            ElseBlock = elseBlock;
+            // Get the if data
+            IfData = new IfData
+            (
+                visitor.VisitExpr(context.expr()),
+                (BlockNode)visitor.VisitBlock(context.block())
+            );
+            paths.Add(new PathInfo(IfData.Block, new Location(visitor.file, Range.GetRange(context.IF())), false));
+
+            // Get the else-if data
+            ElseIfData = null;
+            if (context.else_if() != null)
+            {
+                ElseIfData = new IfData[context.else_if().Length];
+                for (int i = 0; i < context.else_if().Length; i++)
+                {
+                    ElseIfData[i] = new IfData
+                    (
+                        visitor.VisitExpr(context.else_if(i).expr()),
+                        (BlockNode)visitor.VisitBlock(context.else_if(i).block())
+                    );
+                    paths.Add(
+                        new PathInfo(
+                            ElseIfData[i].Block,
+                            new Location(
+                                visitor.file, 
+                                Range.GetRange(
+                                    context.else_if(i).ELSE(),
+                                    context.else_if(i).IF()
+                                )
+                            ),
+                            false
+                        )
+                    );
+                }
+            }
+            
+            // Get the else block
+            ElseBlock = null;
+            if (context.@else() != null)
+            {
+                ElseBlock = (BlockNode)visitor.VisitBlock(context.@else().block());
+                paths.Add(new PathInfo(ElseBlock, new Location(visitor.file, Range.GetRange(context.@else().ELSE())), true));
+            }
         }
 
         public override Node[] Children()
@@ -1347,6 +1128,11 @@ namespace Deltin.Deltinteger.Parse
                 children.Add(ElseBlock);
 
             return ArrayBuilder<Node>.Build(IfData.Expression, IfData.Block, ElseBlock, ElseIfData.Select(ei => ei.Block).ToArray(), ElseIfData.Select(ei => ei.Expression).ToArray());
+        }
+
+        public PathInfo[] Paths()
+        {
+            return paths.ToArray();
         }
     }
 

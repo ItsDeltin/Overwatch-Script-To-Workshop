@@ -28,7 +28,7 @@ namespace Deltin.Deltinteger.Elements
                 new Condition(
                     rate.GetVariable(),
                     Operators.NotEqual,
-                    new V_Number(0)
+                    0
                 )
             };
             chaseRule.Actions = ArrayBuilder<Element>.Build(
@@ -43,17 +43,17 @@ namespace Deltin.Deltinteger.Elements
 
         private static Element[] UpdateVariable(IndexedVar var, IndexedVar destination, IndexedVar rate)
         {
-            Element rateAdjusted = Element.Part<V_Multiply>(rate.GetVariable(), new V_Number(Constants.MINIMUM_WAIT));
+            Element rateAdjusted = rate.GetVariable() * Constants.MINIMUM_WAIT;
 
             Element distance = Element.Part<V_DistanceBetween>(var.GetVariable(), destination.GetVariable());
 
-            Element ratio = Element.Part<V_Divide>(rateAdjusted, distance);
+            Element ratio = rateAdjusted / distance;
 
-            Element delta = Element.Part<V_Subtract>(destination.GetVariable(), var.GetVariable());
+            Element delta = destination.GetVariable() -  var.GetVariable();
 
             Element result = Element.TernaryConditional(
-                new V_Compare(distance, Operators.GreaterThan, rateAdjusted),
-                Element.Part<V_Add>(var.GetVariable(), Element.Part<V_Multiply>(ratio, delta)),
+                distance > rateAdjusted,
+                var.GetVariable() + ratio * delta,
                 destination.GetVariable()
             );
 
@@ -132,7 +132,7 @@ namespace Deltin.Deltinteger.Elements
             
             Element[] actions = ArrayBuilder<Element>.Build
             (
-                chaseData.Rate.SetVariable(new V_Number(0), targetVariable.Target)
+                chaseData.Rate.SetVariable(0, targetVariable.Target)
             );
 
             return new MethodResult(actions, null);

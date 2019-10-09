@@ -101,6 +101,7 @@
     <Compile Include="Elements\Values.cs" />
     <Compile Include="Elements\Enums.cs" />
     <Compile Include="Elements\Parameter.cs" />
+    <Compile Include="Elements\LoopBuilder.cs" />
     <Compile Include="Custom Methods\CustomMethods.cs" />
     <Compile Include="Custom Methods\AngleOfVectors.cs" />
     <Compile Include="Custom Methods\ChaseVariable.cs" />
@@ -111,10 +112,13 @@
     <Compile Include="Custom Methods\Pi.cs" />
     <Compile Include="Custom Methods\ConditionTesting.cs" />
     <Compile Include="Custom Methods\DestroyEffectArray.cs" />
-    <Compile Include="Parse\ast.cs" />
+    <Compile Include="Parse\ast\Nodes.cs" />
+    <Compile Include="Parse\ast\Visitor.cs" />
+    <Compile Include="Parse\ast\NodeInterfaces.cs" />
     <Compile Include="Parse\Parse.cs" />
     <Compile Include="Parse\TranslateRule.cs" />
     <Compile Include="Parse\Var.cs" />
+    <Compile Include="Parse\WorkshopVariableHandler.cs" />
     <Compile Include="Parse\Scope.cs" />
     <Compile Include="Parse\UserMethod.cs" />
     <Compile Include="Parse\ContinueSkip.cs" />
@@ -131,8 +135,15 @@
     <Compile Include="Assets\Models\Import\String.cs" />
     <Compile Include="Assets\Images\ImageMethods.cs" />
     <Compile Include="Assets\Images\Images.cs" />
+    <Compile Include="Pathfinder\PathMap.cs" />
+    <Compile Include="Pathfinder\PathMapVar.cs" />
+    <Compile Include="Pathfinder\Editor.cs" />
+    <Compile Include="Pathfinder\Algorithm.cs" />
+    <Compile Include="Pathfinder\Methods.cs" />
+    <Compile Include="Pathfinder\PathfinderRules.cs" />
     <Compile Include="Language Server\Server.cs" />
     <Compile Include="Language Server\Specification.cs" />
+    <Compile Include="CSV.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Extras.cs" />
     <Compile Include="Wiki.cs" />
@@ -140,12 +151,15 @@
     <Compile Include="Interfaces.cs" />
     <Compile Include="Exceptions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Content Include="Start Language Server.bat">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Fonts\BigNoodleTooOblique.ttf">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
+    <Content Include="Start Language Server.bat"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
+    <Content Include="Fonts\BigNoodleTooOblique.ttf"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
+    <Content Include="Modules\Container.del"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
+    <Content Include="Modules\Debug Tools.del"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
+    <Content Include="Modules\PathfindEditor.del"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
+    <Content Include="Modules\Hanamura.pathmap"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
+    <Content Include="Modules\Route66.pathmap"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
+    <Content Include="Modules\Horizon.pathmap"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
+    <Content Include="Modules\KingsRowDM.pathmap"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

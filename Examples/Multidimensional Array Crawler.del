@@ -1,10 +1,10 @@
 # Prints every value in a multidimensional array.
-method scanArray(array)
+method scanArray(define array)
 {
     arrayWalk(array, EmptyArray());
 }
 
-recursive method arrayWalk(array, dims) 
+recursive method arrayWalk(define array, define dims) 
 { 
     for (define index = 0; index < CountOf(array); index++)
     {

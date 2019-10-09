@@ -6,6 +6,7 @@ using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.Assets.Models;
 using Deltin.Deltinteger.Assets.Images;
+using Deltin.Deltinteger.Pathfinder;
 using Antlr4.Runtime;
 
 namespace Deltin.Deltinteger.Parse
@@ -23,8 +24,8 @@ namespace Deltin.Deltinteger.Parse
         {
             Rule initialGlobalValues = new Rule(Constants.INTERNAL_ELEMENT + "Initial Global Values");
             Rule initialPlayerValues = new Rule(Constants.INTERNAL_ELEMENT + "Initial Player Values", RuleEvent.OngoingPlayer, Team.All, PlayerSelector.All);
-            TranslateRule globalTranslate = new TranslateRule(initialGlobalValues, Root, this);
-            TranslateRule playerTranslate = new TranslateRule(initialPlayerValues, Root, this);
+            globalTranslate = new TranslateRule(initialGlobalValues, Root, this);
+            playerTranslate = new TranslateRule(initialPlayerValues, Root, this);
 
             GetObjects(content, file, globalTranslate, playerTranslate, true);
 
@@ -139,9 +140,11 @@ namespace Deltin.Deltinteger.Parse
 
         private void GetObjects(string document, string file, TranslateRule globalTranslate, TranslateRule playerTranslate, bool isRoot)
         {
+            string absolute = new Uri(file).AbsolutePath;
+
             // If this file was already loaded, don't load it again.
-            if (Imported.Contains(file)) return;
-            Imported.Add(file);
+            if (Imported.Contains(absolute)) return;
+            Imported.Add(absolute);
             Diagnostics.AddFile(file);
 
             // Get the ruleset.
@@ -155,7 +158,7 @@ namespace Deltin.Deltinteger.Parse
                     VarCollection = new VarCollection(ruleset.UseGlobalVar, ruleset.UsePlayerVar, ruleset.UseBuilderVar);
                     Root = new ScopeGroup(VarCollection);
                     ClassIndexes = VarCollection.AssignVar(null, "Class Indexes", true, null);
-                    globalTranslate.Actions.AddRange(ClassIndexes.SetVariable(new V_EmptyArray()));
+                    ClassArray = new IndexedVar(null, "Class Array", true, ruleset.UseClassVar, new Element[0], VarCollection.WorkshopArrayBuilder, null);
                 }
 
                 // Get the defined types
@@ -194,11 +197,11 @@ namespace Deltin.Deltinteger.Parse
                         if (!importer.AlreadyImported)
                         {
                             importedFiles.Add(importer.ResultingPath);
-                            string content = importer.GetFile();
                             switch (importer.FileType)
                             {
                                 case ".obj":
                                 {
+                                    string content = importer.GetFile();
                                     Model newModel = Model.ImportObj(content);
                                     new ModelVar(importObject.Name, Root, importObject, newModel);
                                     break;
@@ -214,6 +217,11 @@ namespace Deltin.Deltinteger.Parse
                                     new ImageVar(importObject.Name, Root, importObject, img);
                                     break;
                                 }
+                                
+                                case ".pathmap":
+                                    PathMap pathMap = PathMap.ImportFromXML(importer.ResultingPath);
+                                    new PathMapVar(this, importObject.Name, Root, importObject, pathMap);
+                                    break;
                             }
                         }
                     }
@@ -270,6 +278,7 @@ namespace Deltin.Deltinteger.Parse
         private List<RuleNode> RuleNodes { get; set; } = new List<RuleNode>();
         public List<DefinedType> DefinedTypes { get; private set; } = new List<DefinedType>();
         public IndexedVar ClassIndexes { get; private set; }
+        public IndexedVar ClassArray { get; private set; }
         public List<UserMethod> UserMethods { get; private set; } = new List<UserMethod>();
         public bool Success { get; private set; }
         public VarCollection VarCollection { get; private set; }
@@ -278,6 +287,8 @@ namespace Deltin.Deltinteger.Parse
         public List<Rule> AdditionalRules { get; } = new List<Rule>();
         public List<VariableChaseData> Chasing { get; } = new List<VariableChaseData>();
         private List<string> Imported { get; } = new List<string>();
+        private TranslateRule globalTranslate;
+        private TranslateRule playerTranslate;
 
         public IMethod GetMethod(string name)
         {
@@ -293,5 +304,21 @@ namespace Deltin.Deltinteger.Parse
                 throw SyntaxErrorException.NonexistentType(name, location);
             return type;
         }
+
+        private bool ClassesWereSetUp = false;
+
+        public void SetupClasses()
+        {
+            if (ClassesWereSetUp) return;
+            globalTranslate.Actions.AddRange(ClassIndexes.SetVariable(new V_EmptyArray()));
+            ClassesWereSetUp = true;
+        }
+
+        public void GlobalSetup(Element[] actions)
+        {
+            globalTranslate.Actions.AddRange(actions);
+        }
+
+        public PathfinderInfo PathfinderInfo { get; set; } = null;
     }
 }

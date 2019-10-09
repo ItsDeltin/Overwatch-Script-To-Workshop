@@ -1,0 +1,157 @@
+import "Debug Tools.del";
+import "Container.del";
+
+rule: "Fire Bullet Scoped"
+Event.OnDamageTaken
+if (scoper == EventPlayer())
+if (GetID() == 1)
+{
+    bullets = bullets.Append(bullets, GetData());
+    (<Bullet>GetData()).Apply();
+}
+
+rule: "Fire Bullet"
+Event.OngoingPlayer
+if (IsButtonHeld(EventPlayer(), Button.Interact))
+{
+    define bulletType = IsCrouching() ? 1 : 2;
+    ActivateScoper(1, new Bullet(Color.Yellow, GetPlayer(), 0.25, 0.1, bulletType));
+}
+
+define globalvar cleaning;
+
+rule: "Update bullets"
+if (CountOf(bullets) > 0)
+if (!cleaning)
+{
+    foreach (Bullet bullet in bullets)
+        if (!bullet.Destroyed)
+            bullet.Update();
+    
+    LoopIfConditionIsTrue();
+}
+
+rule: "Clean up destroyed bullets"
+if (Modulo(TotalTimeElapsed(), 10) < 1)
+{
+    cleaning = true;
+    for (define i = CountOf(bullets); i >= 0; i--)
+        if ((<Bullet>bullets[i]).Destroyed)
+        {
+            delete(bullets[i]);
+            bullets = RemoveFromArray(bullets, bullets[i]);
+        }
+    cleaning = false;
+}
+
+define globalvar bullets = EmptyArray();
+
+define playervar team;
+
+class Bullet
+{
+    public define Owner;
+    public define Radius;
+    public define Speed;
+    public define OnHit;
+    public define Location;
+    public define Direction;
+    public define Destroyed;
+    private define LastUpdated;
+    public define EffectID;
+
+    public Bullet(Color color, define firedBy, define radius, define speed, define onHit)
+    {
+        Owner = firedBy;
+        Radius = radius;
+        Speed = speed;
+        OnHit = onHit;
+        Direction = FacingDirectionOf(firedBy);
+        Location = EyePosition(firedBy);
+        LastUpdated = TotalTimeElapsed();
+    }
+
+    public method Apply()
+    {
+        CreateEffect(AllPlayers(), Effect.Sphere, Color.Yellow,
+            Location,
+            Radius,
+            EffectRev.VisibleToPositionAndRadius
+        );
+        EffectID = LastCreatedEntity();
+    }
+
+    public method Update()
+    {
+        define oldPos = Location;
+        define newTime = TotalTimeElapsed();
+        define newUpdate = TotalTimeElapsed();
+        define newPos = Destination(Location, Direction, Speed * ((newUpdate - LastUpdated) / 0.016));
+        LastUpdated = newUpdate;
+
+        Location = RayCastHitPosition(Location, newPos, NotOnTeam(Owner), Owner, true);
+
+        define hits = RayCastHitPlayer(Location, newPos, NotOnTeam(Owner), Owner, true);
+        hits = ArrayContains(AllPlayers(), hits) ? hits : null;
+        if (hits == null)
+            hits = RayCastHitPlayer(Location + Vector(0, Radius, 0), Location - Vector(0, Radius, 0), NotOnTeam(Owner), Owner, true);
+        hits = ArrayContains(AllPlayers(), hits) ? hits : null;
+        if (hits == null)
+            hits = RayCastHitPlayer(Location + Vector(Radius, 0, 0), Location - Vector(Radius, 0, 0), NotOnTeam(Owner), Owner, true);
+        hits = ArrayContains(AllPlayers(), hits) ? hits : null;
+        if (hits == null)
+            hits = RayCastHitPlayer(Location + Vector(0, 0, Radius), Location - Vector(0, 0, Radius), NotOnTeam(Owner), Owner, true);
+        hits = ArrayContains(AllPlayers(), hits) ? hits : null;
+
+        if (hits != null || newPos != Location)
+        {
+            OnHitEvent(oldPos, newPos, hits);
+        }
+    }
+
+    private method OnHitEvent(define start, define end, define hits)
+    {
+        if (hits != null)
+        {
+            Damage(hits, Owner, 50);
+            Destroy();
+        }
+        else if (OnHit == 1)
+        {
+            Direction += Normal(start, end) * 2;
+            PlayEffect(AllPlayers(), PlayEffect.RingExplosionSound, Color.Blue, Location, 25);
+        }
+        else Destroy();
+    }
+
+    public method Destroy()
+    {
+        if (!Destroyed)
+        {
+            PlayEffect(AllPlayers(), PlayEffect.BadExplosion, Color.Yellow, Location, Radius);
+            PlayEffect(AllPlayers(), PlayEffect.ExplosionSound, Color.Yellow, Location, 100);
+            DestroyEffect(EffectID);
+            Destroyed = true;
+        }
+    }
+
+    private macro NotOnTeam(define player): FilteredArray(AllPlayers(), ArrayElement().team != player.team && IsAlive(ArrayElement()));
+    private macro Normal(define start, define end): RayCastHitNormal(start, end, null, null, true);
+}
+
+rule: "Boop"
+Event.OngoingPlayer
+if (IsButtonHeld(EventPlayer(), Button.SecondaryFire))
+{
+    foreach 2 (Bullet bullet in bullets)
+        bullet.Direction = DirectionTowards(bullet.Location, EyePosition());
+    LoopIfConditionIsTrue();
+}
+
+rule: "Destroy All Bullets"
+Event.OngoingPlayer
+if (IsButtonHeld(EventPlayer(), Button.Ultimate))
+{
+    foreach (Bullet bullet in bullets)
+        bullet.Destroy();
+}

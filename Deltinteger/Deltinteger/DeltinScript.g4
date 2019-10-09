@@ -20,9 +20,7 @@ inclass_define   : accessor? STATIC? (type=PART | DEFINE)                 name=P
 parameter_define :                   (type=PART | DEFINE)                 name=PART                         ;
 
 useVar   : PART (INDEX_START number INDEX_END)? ;
-useGlobalVar : USEVAR GLOBAL PART STATEMENT_END ;
-usePlayerVar : USEVAR PLAYER PART STATEMENT_END ;
-useDimVar    : USEVAR DIM    PART STATEMENT_END ;
+internalVars : USEVAR (GLOBAL | PLAYER | DIM | CLASS) PART STATEMENT_END ;
 
 expr 
 	: 
@@ -44,10 +42,11 @@ expr
 	| ROOT
 	| <assoc=right> expr SEPERATOR expr           // Variable seperation
 	| NOT expr                                     // !x
-	| expr TERNARY expr TERNARY_ELSE expr
+	| '-' expr                                     // -x
 	| <assoc=right> expr ('^' | '*' | '/' | '%') expr // x^y
 	| expr ('+' | '-') expr                           // x+y
 	| expr ('<' | '<=' | '==' | '>=' | '>' | '!=') expr // x == y
+	| expr TERNARY expr TERNARY_ELSE expr
 	| expr BOOL expr                              // x & y
 	;
 
@@ -110,12 +109,10 @@ user_method : DOCUMENTATION* accessor? RECURSIVE? (METHOD | type=PART) name=PART
 	block
 	;
 
-macro       : DOCUMENTATION* accessor? MACRO name=PART LEFT_PAREN setParameters RIGHT_PAREN expr STATEMENT_END ;
+macro       : DOCUMENTATION* accessor? MACRO name=PART LEFT_PAREN setParameters RIGHT_PAREN ':' expr STATEMENT_END ;
 
 ruleset :
-	useGlobalVar?
-	usePlayerVar?
-	useDimVar?
+	internalVars*
 	(import_file | import_object)*
 	(rule_define | ow_rule | user_method | type_define | macro)*
 	;
@@ -198,7 +195,7 @@ CLASS     : 'class'     ;
 PRIVATE   : 'private'   ;
 PUBLIC    : 'public'    ;
 THIS      : 'this'      ;
-ROOT      : 'global'    ;
+ROOT      : 'root'      ;
 NEW       : 'new'       ;
 STATIC    : 'static'    ;
 IMPORT    : 'import'    ;

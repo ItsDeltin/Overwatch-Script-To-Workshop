@@ -164,22 +164,10 @@ namespace Deltin.Deltinteger.Parse
             return base.VisitUseVar(context);
         }
 
-        public override object VisitUseGlobalVar(DeltinScriptParser.UseGlobalVarContext context)
+        public override object VisitInternalVars(DeltinScriptParser.InternalVarsContext context)
         {
             CheckLetter(context, context.PART());
-            return base.VisitUseGlobalVar(context);
-        }
-
-        public override object VisitUsePlayerVar(DeltinScriptParser.UsePlayerVarContext context)
-        {
-            CheckLetter(context, context.PART());
-            return base.VisitUsePlayerVar(context);
-        }
-
-        public override object VisitUseDimVar(DeltinScriptParser.UseDimVarContext context)
-        {
-            CheckLetter(context, context.PART());
-            return base.VisitUseDimVar(context);
+            return base.VisitInternalVars(context);
         }
 
         private void CheckLetter(ParserRuleContext context, ITerminalNode node)

@@ -1,13 +1,18 @@
 using System;
+using System.Xml.Serialization;
 using Deltin.Deltinteger.Elements;
 
 namespace Deltin.Deltinteger.Assets.Models
 {
     public class Vertex : ICloneable
     {
+        [XmlAttribute]
         public double X { get; set; }
+        [XmlAttribute]
         public double Y { get; set; }
+        [XmlAttribute]
         public double Z { get; set; }
+        [XmlIgnore]
         public double W { get; set; }
 
         public Vertex(double x, double y, double z, double w)

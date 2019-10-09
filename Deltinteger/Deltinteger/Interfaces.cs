@@ -40,4 +40,9 @@ namespace Deltin.Deltinteger
     {
         void RegisterParameters(ParsingData parser);
     }
+
+    public interface ICallable
+    {
+        
+    }
 }

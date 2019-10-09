@@ -241,6 +241,8 @@ namespace Deltin.Deltinteger
                 return new SyntaxErrorException(string.Format(invalidVarRefType, name, "a model"), location);
             else if (varType == VarType.Image)
                 return new SyntaxErrorException(string.Format(invalidVarRefType, name, "an image"), location);
+            else if (varType == VarType.PathMap)
+                return new SyntaxErrorException(string.Format(invalidVarRefType, name, "a path map"), location);
             else
                 throw new NotImplementedException();
         }
@@ -250,6 +252,7 @@ namespace Deltin.Deltinteger
     {
         Indexed,
         Model,
-        Image
+        Image,
+        PathMap
     }
 }

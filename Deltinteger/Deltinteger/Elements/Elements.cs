@@ -231,7 +231,7 @@ namespace Deltin.Deltinteger.Elements
             int whileStartIndex = continueSkip.GetSkipCount() + 1;
 
             A_SkipIf skipCondition = new A_SkipIf() { ParameterValues = new IWorkshopTree[2] };
-            skipCondition.ParameterValues[0] = Element.Part<V_Not>(condition);
+            skipCondition.ParameterValues[0] = !(condition);
             result.Add(skipCondition);
             result.AddRange(actions);
             result.AddRange(continueSkip.SetSkipCountActions(whileStartIndex));
@@ -251,7 +251,26 @@ namespace Deltin.Deltinteger.Elements
             return elements;
         }
 
-        public static readonly Element DefaultElement = new V_Number(0);
+        public static Element operator +(Element a, Element b) => Element.Part<V_Add>(a, b);
+        public static Element operator -(Element a, Element b) => Element.Part<V_Subtract>(a, b);
+        public static Element operator *(Element a, Element b) => Element.Part<V_Multiply>(a, b);
+        public static Element operator /(Element a, Element b) => Element.Part<V_Divide>(a, b);
+        public static Element operator %(Element a, Element b) => Element.Part<V_Modulo>(a, b);
+        public static Element operator <(Element a, Element b) => new V_Compare(a, Operators.LessThan, b);
+        public static Element operator >(Element a, Element b) => new V_Compare(a, Operators.GreaterThan, b);
+        public static Element operator <=(Element a, Element b) => new V_Compare(a, Operators.LessThanOrEqual, b);
+        public static Element operator >=(Element a, Element b) => new V_Compare(a, Operators.GreaterThanOrEqual, b);
+        public static Element operator !(Element a) => Element.Part<V_Not>(a);
+        public static Element operator -(Element a) => a * -1;
+        public Element this[Element i]
+        {
+            get { return Element.Part<V_ValueInArray>(this, i); }
+            private set {}
+        }
+        public static implicit operator Element(double number) => new V_Number(number);
+        public static implicit operator Element(int number) => new V_Number(number);
+
+        public static readonly Element DefaultElement = 0;
     }
 
     public class ElementList : IMethod

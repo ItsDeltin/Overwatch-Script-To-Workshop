@@ -9,12 +9,13 @@ using System.Globalization;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.Parse;
 using Deltin.Deltinteger.LanguageServer;
+using Deltin.Deltinteger.Pathfinder;
 
 namespace Deltin.Deltinteger
 {
     public class Program
     {
-        public const string VERSION = "v0.4.0.2";
+        public const string VERSION = "v0.6";
 
         public static readonly string ExeFolder = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
 
@@ -49,20 +50,38 @@ namespace Deltin.Deltinteger
             {
                 string script = args.ElementAtOrDefault(0);
 
-                if (File.Exists(script))
+                if (script != null && File.Exists(script))
                 {
-                    # if DEBUG == false
+                    #if DEBUG == false
                     try
                     {
-                        Script(script);
+                    #endif
+
+                        string ext = Path.GetExtension(script).ToLower();
+                        if (ext == ".csv")
+                        {
+                            PathMap map = PathMap.ImportFromCSV(script);
+                            string result = map.ExportAsXML();
+                            string output = Path.ChangeExtension(script, "pathmap");
+                            using (FileStream fs = File.Create(output))
+                            {
+                                Byte[] info = Encoding.Unicode.GetBytes(result);
+                                fs.Write(info, 0, info.Length);
+                            }
+                        }
+                        else if (ext == ".pathmap")
+                        {
+                            Editor.FromPathmapFile(script);
+                        }
+                        else Script(script);
+                    
+                    #if DEBUG == false
                     }
                     catch (Exception ex)
                     {
                         Log.Write(LogLevel.Normal, "Internal exception.");
                         Log.Write(LogLevel.Normal, ex.ToString());
                     }
-                    #else
-                    Script(script);
                     #endif
                 }
                 else

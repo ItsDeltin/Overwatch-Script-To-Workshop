@@ -39,16 +39,26 @@ namespace Deltin.Deltinteger.Parse
 
         public void RegisterParameters(ParsingData parser)
         {
-            Constructors = new Constructor[ConstructorNodes.Length];
-            for (int i = 0; i < Constructors.Length; i++)
+            if (ConstructorNodes.Length != 0)
             {
-                if (ConstructorNodes[i].Name != Name)
-                    throw SyntaxErrorException.ConstructorName(ConstructorNodes[i].Location);
-                Constructors[i] = new Constructor(parser, ConstructorNodes[i]);
+                Constructors = new Constructor[ConstructorNodes.Length];
+                for (int i = 0; i < Constructors.Length; i++)
+                {
+                    if (ConstructorNodes[i].Name != Name)
+                        throw SyntaxErrorException.ConstructorName(ConstructorNodes[i].Location);
+                    Constructors[i] = new Constructor(parser, ConstructorNodes[i]);
+                }
+            }
+            else
+            {
+                Constructors = new Constructor[] 
+                {
+                    new Constructor(AccessLevel.Public, new Parameter[0], null)
+                };
             }
         }
 
-        public ScopeGroup GetRootScope(IndexedVar var, ParsingData parseData, Element target = null)
+        public ScopeGroup GetRootScope(Element reference, IndexedVar var, ParsingData parseData, Element target = null)
         {
             if (target == null) target = new V_EventPlayer();
 
@@ -56,7 +66,12 @@ namespace Deltin.Deltinteger.Parse
             root.DefaultTarget = target;
             
             ScopeGroup typeScope = new ScopeGroup(parseData.VarCollection);
-            typeScope.This = root;
+            if (reference == null) typeScope.This = root.GetVariable();
+            else
+            {
+                typeScope.This = reference;
+                typeScope.This.SupportedType = root;
+            }
 
             for (int i = 0; i < DefinedVars.Length; i++)
             {
@@ -88,31 +103,34 @@ namespace Deltin.Deltinteger.Parse
             {
                 if (DefinedVars[i].Value != null)
                     context.Actions.AddRange(
-                        store.SetVariable(context.ParseExpression(typeScope, typeScope, DefinedVars[i].Value), null, new V_Number(i))
+                        store.SetVariable(context.ParseExpression(typeScope, typeScope, DefinedVars[i].Value), null, i)
                     );
             }
 
             Constructor constructor = Constructors.FirstOrDefault(c => c.Parameters.Length == node.Parameters.Length);
-            if (constructor == null && !(node.Parameters.Length == 0 && Constructors.Length == 0))
+            if (constructor == null)
                 throw SyntaxErrorException.NotAConstructor(TypeKind, Name, node.Parameters.Length, node.Location);
             
-            if (constructor != null)
-            {
-                ScopeGroup constructorScope = typeScope.Child();
+            if (context.MethodStackNotRecursive.Contains(constructor))
+                throw new SyntaxErrorException("Constructors cannot be recursive.", node.Location);
+            context.MethodStackNotRecursive.Add(constructor);
+            
+            ScopeGroup constructorScope = typeScope.Child();
 
-                IWorkshopTree[] parameters = context.ParseParameters(
-                    getter,
-                    scope,
-                    constructor.Parameters,
-                    node.Parameters,
-                    node.TypeName,
-                    node.Location
-                );
+            IWorkshopTree[] parameters = context.ParseParameters(
+                getter,
+                scope,
+                constructor.Parameters,
+                node.Parameters,
+                node.TypeName,
+                node.Location
+            );
 
-                context.AssignParameterVariables(constructorScope, constructor.Parameters, parameters, node);
+            context.AssignParameterVariables(constructorScope, constructor.Parameters, parameters, node);
+            if (constructor.BlockNode != null)
                 context.ParseBlock(typeScope, constructorScope, constructor.BlockNode, true, null);
-                constructorScope.Out(context);
-            }
+            constructorScope.Out(context);
+            context.MethodStackNotRecursive.Remove(constructor);
         }
 
         abstract public void GetSource(TranslateRule context, Element element, Location location);
@@ -138,7 +156,7 @@ namespace Deltin.Deltinteger.Parse
         {
             IndexedVar store = context.VarCollection.AssignVar(scope, Name + " store", context.IsGlobal, null);
             store.Type = this;
-            ScopeGroup typeScope = GetRootScope(store, context.ParserData);
+            ScopeGroup typeScope = GetRootScope(null, store, context.ParserData);
 
             SetupNew(getter, scope, store, typeScope, context, node);
 
@@ -171,12 +189,14 @@ namespace Deltin.Deltinteger.Parse
 
         override public Element New(CreateObjectNode node, ScopeGroup getter, ScopeGroup scope, TranslateRule context)
         {
+            context.ParserData.SetupClasses();
+
             // Get the index to store the class.
             IndexedVar index = context.VarCollection.AssignVar(scope, "New " + Name + " class index", context.IsGlobal, null); // Assigns the index variable.
             Element takenIndexes = context.ParserData.ClassIndexes.GetVariable();
 
             // Get an empty index in the class array to store the new class.
-            Element firstFree = Element.Part<V_Subtract>(
+            Element firstFree = (
                 Element.Part<V_FirstOf>(
                     Element.Part<V_FilteredArray>(
                         // Sort the taken index array.
@@ -184,22 +204,22 @@ namespace Deltin.Deltinteger.Parse
                         // Filter
                         Element.Part<V_And>(
                             // If the previous index was not taken, use that index.
-                            Element.Part<V_Not>(Element.Part<V_ArrayContains>(
+                            !(Element.Part<V_ArrayContains>(
                                 takenIndexes,
-                                Element.Part<V_Subtract>(new V_ArrayElement(), new V_Number(1))
+                                new V_ArrayElement() - 1
                             )),
                             // Make sure the index does not equal 0 so the resulting index is not -1.
                             new V_Compare(new V_ArrayElement(), Operators.NotEqual, new V_Number(0))
                         )
                     )
-                ),
-                new V_Number(1) // Subtract 1 to get the previous index
+                ) -
+                1 // Subtract 1 to get the previous index
             );
             // If the taken index array has 0 elements, just use the length of the class array subtracted by 1.
             firstFree = Element.TernaryConditional(
                 new V_Compare(Element.Part<V_CountOf>(takenIndexes), Operators.NotEqual, new V_Number(0)),
                 firstFree,
-                Element.Part<V_Subtract>(Element.Part<V_CountOf>(WorkshopArrayBuilder.GetVariable(true, null, Variable.C)), new V_Number(1))
+                Element.Part<V_CountOf>(context.ParserData.ClassArray.GetVariable()) - 1
             );
 
             context.Actions.AddRange(index.SetVariable(firstFree));
@@ -209,9 +229,7 @@ namespace Deltin.Deltinteger.Parse
                     Element.TernaryConditional(
                         // If the index equals -1, use the length of the class array instead.
                         new V_Compare(index.GetVariable(), Operators.Equal, new V_Number(-1)),
-                        Element.Part<V_CountOf>(
-                            WorkshopArrayBuilder.GetVariable(true, null, Variable.C)
-                        ),
+                        Element.Part<V_CountOf>(context.ParserData.ClassArray.GetVariable()),
                         index.GetVariable()
                     )
                 )
@@ -228,19 +246,11 @@ namespace Deltin.Deltinteger.Parse
             );
 
             // The direct reference to the class variable.
-            IndexedVar store = new IndexedVar(
-                scope,
-                Name + " root",
-                true,
-                Variable.C,
-                new Element[] { index.GetVariable() },
-                context.VarCollection.WorkshopArrayBuilder,
-                null
-            );
+            IndexedVar store = context.ParserData.ClassArray.CreateChild(scope, Name + " root", new Element[] { index.GetVariable() }, null);
             store.Index[0].SupportedType = store;
             store.Type = this;
 
-            ScopeGroup typeScope = GetRootScope(store, context.ParserData);
+            ScopeGroup typeScope = GetRootScope(index.GetVariable(), store, context.ParserData);
 
             SetupNew(getter, scope, store, typeScope, context, node);
 
@@ -250,22 +260,15 @@ namespace Deltin.Deltinteger.Parse
         override protected IndexedVar GetRoot(IndexedVar req, ParsingData context, Element target)
         {
             if (req.Name == Name + " root") return req;
-            return new IndexedVar(
-                null,
-                Name + " root",
-                true,
-                Variable.C,
-                new Element[] { req.GetVariable(target) },
-                context.VarCollection.WorkshopArrayBuilder,
-                null
-            );
+            return context.ClassArray.CreateChild(null, Name + " root", new Element[] { req.GetVariable(target) }, null);
         }
 
         public static void Delete(Element index, TranslateRule context)
         {
-            context.Actions.AddRange(context.VarCollection.WorkshopArrayBuilder.SetVariable(
-                new V_Null(), true, null, Variable.C, index
-            ));
+            context.Actions.AddRange(
+                context.ParserData.ClassArray.SetVariable(new V_Null(), null, index)
+            );
+
             context.Actions.AddRange(context.ParserData.ClassIndexes.SetVariable(
                 Element.Part<V_RemoveFromArray>(
                     context.ParserData.ClassIndexes.GetVariable(),
@@ -276,22 +279,13 @@ namespace Deltin.Deltinteger.Parse
 
         override public void GetSource(TranslateRule context, Element element, Location location)
         {
-            element.SupportedType = new IndexedVar(
-                null,
-                Name + " root",
-                true,
-                Variable.C,
-                new Element[] { element },
-                context.VarCollection.WorkshopArrayBuilder,
-                null
-            )
-            {
-                Type = this
-            };
+            IndexedVar supportedType = context.ParserData.ClassArray.CreateChild(null, Name + " root", new Element[] { element }, null);
+            supportedType.Type = this;
+            element.SupportedType = supportedType;
         }
     }
 
-    public class Constructor
+    public class Constructor : ICallable
     {
         public AccessLevel AccessLevel { get; }
         public BlockNode BlockNode { get; }
@@ -303,6 +297,13 @@ namespace Deltin.Deltinteger.Parse
             BlockNode = constructorNode.BlockNode;
             
             Parameters = ParameterDefineNode.GetParameters(parser, constructorNode.Parameters);
+        }
+
+        public Constructor(AccessLevel accessLevel, ParameterBase[] parameters, BlockNode block)
+        {
+            AccessLevel = accessLevel;
+            Parameters = parameters;
+            BlockNode = block;
         }
     }
 
@@ -316,5 +317,59 @@ namespace Deltin.Deltinteger.Parse
     {
         Public,
         Private
+    }
+
+    [CustomMethod("ClassMemoryRemaining", CustomMethodType.Value)]
+    public class ClassMemoryRemaining : CustomMethodBase
+    {
+        override protected MethodResult Get()
+        {
+            Element result = (
+                Constants.MAX_ARRAY_LENGTH -
+                Element.Part<V_CountOf>(TranslateContext.ParserData.ClassIndexes.GetVariable())
+            );
+            return new MethodResult(null, result);
+        }
+
+        override public CustomMethodWiki Wiki()
+        {
+            return new CustomMethodWiki("Gets the remaining number of classes that can be created.");
+        }
+    }
+
+    [CustomMethod("ClassMemoryUsed", CustomMethodType.Value)]
+    public class ClassMemoryUsed : CustomMethodBase
+    {
+        override protected MethodResult Get()
+        {
+            Element result = Element.Part<V_CountOf>(TranslateContext.ParserData.ClassIndexes.GetVariable());
+            return new MethodResult(null, result);
+        }
+
+        override public CustomMethodWiki Wiki()
+        {
+            return new CustomMethodWiki("Gets the number of classes that were created.");
+        }
+    }
+
+    [CustomMethod("ClassMemory", CustomMethodType.Value)]
+    public class ClassMemory : CustomMethodBase
+    {
+        override protected MethodResult Get()
+        {
+            Element result = (
+                (
+                    Element.Part<V_CountOf>(TranslateContext.ParserData.ClassIndexes.GetVariable()) /
+                    Constants.MAX_ARRAY_LENGTH
+                ) *
+                100
+            );
+            return new MethodResult(null, result);
+        }
+
+        override public CustomMethodWiki Wiki()
+        {
+            return new CustomMethodWiki("Gets the percentage of class memory taken.");
+        }
     }
 }

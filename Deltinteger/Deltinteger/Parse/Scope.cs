@@ -17,7 +17,7 @@ namespace Deltin.Deltinteger.Parse
 
         public VarCollection VarCollection { get; }
 
-        public IndexedVar This { get; set; }
+        public Element This { get; set; }
 
         public ScopeGroup(VarCollection varCollection)
         {
@@ -164,10 +164,10 @@ namespace Deltin.Deltinteger.Parse
         // A different guest co-host was featured nearly every day on the show and included music played throughout.
         // On the 15 October 2007 episode, the Get This team announced that Triple M/Austereo would not be renewing the show for 2008.
         // The final broadcast was on 23 November 2007. During its lifetime and since its cancellation, Get This developed a strong cult following. 
-        public IndexedVar GetThis(Location errorLocation)
+        public Element GetThis(Location errorLocation)
         {
             ScopeGroup check = this;
-            IndexedVar @this = null;
+            Element @this = null;
             while (check != null && @this == null)
             {
                 @this = check.This;

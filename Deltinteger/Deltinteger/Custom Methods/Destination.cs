@@ -14,7 +14,7 @@ namespace Deltin.Deltinteger.Elements
             Element startingPoint = (Element)Parameters[0];
             Element direction = (Element)Parameters[1];
             Element distance = (Element)Parameters[2];
-            return new MethodResult(null, Element.Part<V_Add>(startingPoint, Element.Part<V_Multiply>(direction, distance)));
+            return new MethodResult(null, startingPoint + direction * distance);
         }
 
         public override CustomMethodWiki Wiki()

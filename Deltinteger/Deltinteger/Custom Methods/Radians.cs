@@ -9,7 +9,7 @@ namespace Deltin.Deltinteger.Elements
     {
         protected override MethodResult Get()
         {
-            return new MethodResult(null, Element.Part<V_Divide>((Element)Parameters[0], new V_Number(180 / Math.PI)));
+            return new MethodResult(null, (Element)Parameters[0] / (180 / Math.PI));
         }
 
         public override CustomMethodWiki Wiki()
@@ -27,7 +27,7 @@ namespace Deltin.Deltinteger.Elements
     {
         protected override MethodResult Get()
         {
-            return new MethodResult(null, Element.Part<V_Multiply>((Element)Parameters[0], new V_Number(180 / Math.PI)));
+            return new MethodResult(null, (Element)Parameters[0] * (180 / Math.PI));
         }
 
         public override CustomMethodWiki Wiki()
