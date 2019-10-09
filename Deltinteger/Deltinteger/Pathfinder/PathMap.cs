@@ -6,7 +6,7 @@ using System.Xml;
 using System.Xml.Serialization;
 using Deltin.Deltinteger.Csv;
 using Deltin.Deltinteger.Elements;
-using Deltin.Deltinteger.Models;
+using Deltin.Deltinteger.Assets.Models;
 
 namespace Deltin.Deltinteger.Pathfinder
 {
