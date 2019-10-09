@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Deltin.Deltinteger.Elements;
+using Deltin.Deltinteger.LanguageServer;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -456,6 +457,9 @@ namespace Deltin.Deltinteger.Parse
             if (method is ElementList)
             {
                 ElementList elementData = (ElementList)method;
+
+                CheckMethodType(needsToBeValue, elementData.IsValue ? CustomMethodType.Value : CustomMethodType.Action, methodNode.Name, methodNode.Location);
+
                 Element element = elementData.GetObject();
                 element.ParameterValues = parsedParameters.ToArray();
 
@@ -472,20 +476,7 @@ namespace Deltin.Deltinteger.Parse
             }
             else if (method is CustomMethodData)
             {
-                switch (((CustomMethodData)method).CustomMethodType)
-                {
-                    case CustomMethodType.Action:
-                        if (needsToBeValue)
-                            throw SyntaxErrorException.InvalidMethodType(true, methodNode.Name, methodNode.Location);
-                        break;
-
-                    case CustomMethodType.Value:
-                        if (!needsToBeValue)
-                            throw SyntaxErrorException.InvalidMethodType(false, methodNode.Name, methodNode.Location);
-                        break;
-
-                    //case CustomMethodType.MultiAction_Value:
-                }
+                CheckMethodType(needsToBeValue, ((CustomMethodData)method).CustomMethodType, methodNode.Name, methodNode.Location);
 
                 var customMethodResult = ((CustomMethodData)method)
                     .GetObject(this, scope, parsedParameters.ToArray(), methodNode.Location, methodNode.Parameters.Select(p => p.Location).ToArray())
@@ -841,6 +832,20 @@ namespace Deltin.Deltinteger.Parse
                 
                 default:
                     throw new SyntaxErrorException("Expected statement.", statement.Location);
+            }
+        }
+
+        static void CheckMethodType(bool needsToBeValue, CustomMethodType type, string methodName, Location location)
+        {
+            if (type == CustomMethodType.Action)
+            {
+                if (needsToBeValue)
+                    throw SyntaxErrorException.InvalidMethodType(true, methodName, location);
+            }
+            else if (type == CustomMethodType.Value)
+            {
+                if (!needsToBeValue)
+                        throw SyntaxErrorException.InvalidMethodType(false, methodName, location);
             }
         }
 
