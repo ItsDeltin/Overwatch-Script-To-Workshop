@@ -208,17 +208,12 @@ namespace Deltin.Deltinteger.Pathfinder
         {
             Element currentSegmentCheck = new V_ArrayElement();
 
-            Element isValid;
-            if (!reversed)
-                isValid = Element.Part<V_Or>(
-                    new V_Compare(Attribute(currentSegmentCheck), Operators.NotEqual, new V_Number(1)),
-                    new V_Compare(Node1(currentSegmentCheck), Operators.Equal, currentIndex)
-                );
-            else
-                isValid = Element.Part<V_Or>(
-                    new V_Compare(Attribute(currentSegmentCheck), Operators.NotEqual, new V_Number(1)),
-                    new V_Compare(Node2(currentSegmentCheck), Operators.Equal, currentIndex)
-                );
+            Element directionCheck = !reversed ? Node1(currentSegmentCheck) : Node2(currentSegmentCheck);
+
+            Element isValid = Element.Part<V_Or>(
+                new V_Compare(Attribute(currentSegmentCheck), Operators.NotEqual, new V_Number(1)),
+                new V_Compare(directionCheck, Operators.Equal, currentIndex)
+            );
 
             return Element.Part<V_FilteredArray>(
                 segments,
