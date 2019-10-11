@@ -156,7 +156,7 @@ namespace Deltin.Deltinteger.Pathfinder
             ));
             backtrack.Setup();
 
-            Element next = current.GetVariable();
+            Element next = pathmap.Nodes.GetVariable()[current.GetVariable()];
             Element array = finalPath.GetVariable();
             Element first;
             Element second;
@@ -283,18 +283,11 @@ namespace Deltin.Deltinteger.Pathfinder
             return Element.Part<V_ZOf>(segment);
         }
     
-        public static void Pathfind(TranslateRule context, PathfinderInfo info, PathMapVar pathMapVar, Element pathResult, Element target, Element destination)
+        public static void Pathfind(TranslateRule context, PathfinderInfo info, Element pathResult, Element target, Element destination)
         {
             context.Actions.AddRange(ArrayBuilder<Element>.Build(
-                info.Nodes.SetVariable(
-                    Element.Part<V_Append>(
-                        pathMapVar.Nodes.GetVariable(),
-                        destination
-                    ),
-                    target
-                ),
                 info.Path.SetVariable(
-                    Element.Part<V_Append>(pathResult, new V_Number(pathMapVar.PathMap.Nodes.Length)),
+                    Element.Part<V_Append>(pathResult, destination),
                     target
                 )
             ));
@@ -401,7 +394,7 @@ namespace Deltin.Deltinteger.Pathfinder
                 ),
                 finalPath
             );
-            Pathfind(context, pathfinderInfo, pathmap, finalPath.GetVariable(), assignPlayerPaths.IndexValue, position);
+            Pathfind(context, pathfinderInfo, finalPath.GetVariable(), assignPlayerPaths.IndexValue, position);
             assignPlayerPaths.Finish();
         }
 

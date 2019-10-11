@@ -37,7 +37,10 @@ namespace Deltin.Deltinteger.Pathfinder
 
             DijkstraNormal algorithm = new DijkstraNormal(TranslateContext, pathmap, position, destination);
             algorithm.Get();
-            return new MethodResult(null, algorithm.finalPath.GetVariable());
+            return new MethodResult(
+                null,
+                Element.Part<V_Append>(algorithm.finalPath.GetVariable(), destination)
+            );
         }
 
         public override CustomMethodWiki Wiki()
@@ -71,7 +74,7 @@ namespace Deltin.Deltinteger.Pathfinder
 
             DijkstraNormal algorithm = new DijkstraNormal(TranslateContext, pathmap, Element.Part<V_PositionOf>(player), destination.GetVariable());
             algorithm.Get();
-            DijkstraBase.Pathfind(TranslateContext, info, pathmap, algorithm.finalPath.GetVariable(), player, destination.GetVariable());
+            DijkstraBase.Pathfind(TranslateContext, info, algorithm.finalPath.GetVariable(), player, destination.GetVariable());
             return new MethodResult(null, null);
         }
 
@@ -132,7 +135,6 @@ namespace Deltin.Deltinteger.Pathfinder
             Element player = (Element)Parameters[0];
 
             return new MethodResult(ArrayBuilder<Element>.Build(
-                info.Nodes.SetVariable(new V_EmptyArray(), player),
                 info.Path.SetVariable(new V_EmptyArray(), player)
             ), null);
         }
@@ -190,7 +192,7 @@ namespace Deltin.Deltinteger.Pathfinder
             Element isSafe = Element.Part<V_Or>(
                 Element.Part<V_Not>(isPathfinding),
                 Element.Part<V_IsTrueForAny>(
-                    info.Nodes.GetVariable(player),
+                    info.Path.GetVariable(player),
                     new V_Compare(
                         Element.Part<V_DistanceBetween>(Element.Part<V_PositionOf>(player), new V_ArrayElement()),
                         Operators.LessThanOrEqual,
