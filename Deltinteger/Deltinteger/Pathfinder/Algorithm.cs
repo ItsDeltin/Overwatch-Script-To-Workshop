@@ -15,8 +15,8 @@ namespace Deltin.Deltinteger.Pathfinder
         private bool reversed { get; }
 
         protected IndexedVar unvisited { get; private set; }
-        protected IndexedVar current { get; private set; }
-        protected IndexedVar parentArray { get; private set; }
+        private IndexedVar current { get; set; }
+        private IndexedVar parentArray { get; set; }
 
         public DijkstraBase(TranslateRule context, PathMapVar pathmap, Element position, bool reversed)
         {
@@ -155,11 +155,24 @@ namespace Deltin.Deltinteger.Pathfinder
                 new V_Number(-1)
             ));
             backtrack.Setup();
+
+            Element next = current.GetVariable();
+            Element array = finalPath.GetVariable();
+            Element first;
+            Element second;
+            if (!reversed)
+            {
+                first = next;
+                second = array;
+            }
+            else
+            {
+                first = array;
+                second = next;
+            }
+
             backtrack.AddActions(ArrayBuilder<Element>.Build(
-                !reversed ? 
-                    finalPath.SetVariable(Element.Part<V_Append>(current.GetVariable(), finalPath.GetVariable()))
-                    :
-                    finalPath.SetVariable(Element.Part<V_Append>(finalPath.GetVariable(), current.GetVariable())),
+                finalPath.SetVariable(Element.Part<V_Append>(first, second)),
                 current.SetVariable(Element.Part<V_ValueInArray>(parentArray.GetVariable(), current.GetVariable()) - 1)
             ));
             backtrack.Finish();
