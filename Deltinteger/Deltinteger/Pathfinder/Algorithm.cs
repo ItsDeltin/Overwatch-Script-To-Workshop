@@ -85,13 +85,10 @@ namespace Deltin.Deltinteger.Pathfinder
 
                 // Get the distance between the current and the neighbor index.
                 neighborDistance.SetVariable(
-                    (
-                        Element.Part<V_DistanceBetween>(
-                            Element.Part<V_ValueInArray>(pathmap.Nodes.GetVariable(), neighborIndex.GetVariable()),
-                            Element.Part<V_ValueInArray>(pathmap.Nodes.GetVariable(), current.GetVariable())
-                        ) +
-                        Element.Part<V_ValueInArray>(distances.GetVariable(), current.GetVariable())
-                    )
+                    Element.Part<V_DistanceBetween>(
+                        pathmap.Nodes.GetVariable()[neighborIndex.GetVariable()],
+                        pathmap.Nodes.GetVariable()[current.GetVariable()]
+                    ) + distances.GetVariable()[current.GetVariable()]
                 )
             ));
 
