@@ -601,7 +601,8 @@ namespace Deltin.Deltinteger.Parse
                         if (arrayVar != null)
                         {
                             variable = arrayVar.CreateChild(tempChild, forEachNode.Variable.VariableName, new Element[]{indexer()}, forEachNode.Variable);
-                            variable.Type = ParserData.GetDefinedType(forEachNode.Variable.Type, forEachNode.Variable.Location);
+                            if (forEachNode.Variable.Type != null)
+                                variable.Type = ParserData.GetDefinedType(forEachNode.Variable.Type, forEachNode.Variable.Location);
                         }
                         else
                             variable = new ElementReferenceVar(forEachNode.Variable.VariableName, tempChild, forEachNode, getVariableReference());
