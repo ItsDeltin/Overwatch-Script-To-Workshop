@@ -151,8 +151,8 @@ namespace Deltin.Deltinteger.Pathfinder
                 )
             };
             stop.Actions = ArrayBuilder<Element>.Build(
-                Element.Part<A_StopFacing>(new V_EventPlayer()),
                 Element.Part<A_StopThrottleInDirection>(new V_EventPlayer())
+                // Element.Part<A_StopFacing>(new V_EventPlayer()),
             );
             return stop;
         }
