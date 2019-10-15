@@ -126,6 +126,27 @@ namespace Deltin.Deltinteger.Pathfinder
         }
     }
 
+    [CustomMethod("WalkPath", CustomMethodType.Action)]
+    [Parameter("Players", Elements.ValueType.Player, null)]
+    [Parameter("Path", Elements.ValueType.Any, null)]
+    class WalkPath : PathfindPlayer
+    {
+        protected override MethodResult Get(PathfinderInfo info)
+        {
+            TranslateContext.Actions.AddRange(info.Path.SetVariable((Element)Parameters[1], (Element)Parameters[0]));
+            return new MethodResult(null, null);
+        }
+
+        public override CustomMethodWiki Wiki()
+        {
+            return new CustomMethodWiki(
+                "Input players will walk to each position in the path.",
+                "Players that will follow the path.",
+                "The array of positions to walk to."
+            );
+        }
+    }
+
     [CustomMethod("StopPathfind", CustomMethodType.Action)]
     [Parameter("Players", Elements.ValueType.Player, null)]
     class StopPathfind : PathfindPlayer
@@ -183,9 +204,6 @@ namespace Deltin.Deltinteger.Pathfinder
         override protected MethodResult Get(PathfinderInfo info)
         {
             Element player = (Element)Parameters[0];
-
-            if (((VarRef)Parameters[1]).Var is PathMapVar == false)
-                throw SyntaxErrorException.InvalidVarRefType(((VarRef)Parameters[1]).Var.Name, VarType.PathMap, ParameterLocations[1]);
 
             Element isPathfinding = IsPathfinding.Get(info, player);
 
@@ -264,6 +282,25 @@ namespace Deltin.Deltinteger.Pathfinder
             return new CustomMethodWiki(
                 "Fixes pathfinding for a player by teleporting them to the next node. Use in conjunction with IsPathfindStuck().",
                 "The player to fix pathfinding for."
+            );
+        }
+    }
+
+    [CustomMethod("NextNode", CustomMethodType.Value)]
+    [Parameter("Player", Elements.ValueType.Player, null)]
+    class NextNode : PathfindPlayer
+    {
+        override protected MethodResult Get(PathfinderInfo info)
+        {
+            Element player = (Element)Parameters[0];
+            return new MethodResult(null, info.NextPosition(player));
+        }
+
+        public override CustomMethodWiki Wiki()
+        {
+            return new CustomMethodWiki(
+                "Gets the position of the next node.",
+                "The player to get the next node of."
             );
         }
     }
