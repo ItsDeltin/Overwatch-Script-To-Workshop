@@ -481,7 +481,7 @@ namespace Deltin.Deltinteger.Elements
         Aqua,
         Orange,
         SkyBlue,
-        Turqoise,
+        Turquoise,
         LimeGreen
     }
 
