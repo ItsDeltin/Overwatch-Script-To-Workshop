@@ -3,6 +3,7 @@ using System.IO;
 using System.Collections.Generic;
 using Deltin.Deltinteger.Parse;
 using Deltin.Deltinteger.Elements;
+using TextCopy;
 
 namespace Deltin.Deltinteger.Pathfinder
 {
@@ -33,7 +34,7 @@ namespace Deltin.Deltinteger.Pathfinder
                 string final = Program.RuleArrayToWorkshop(rules.ToArray(), result.VarCollection);
                 Log.Write(LogLevel.Normal, "Press enter to copy code to clipboard, then in Overwatch click \"Paste Rule\".");
                 Console.ReadLine();
-                Program.SetClipboard(final);
+                Clipboard.SetText(final);
             }
             else
             {

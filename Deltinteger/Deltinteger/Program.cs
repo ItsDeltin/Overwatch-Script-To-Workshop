@@ -4,12 +4,12 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.IO;
-using System.Windows.Forms;
 using System.Globalization;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.Parse;
 using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.Pathfinder;
+using TextCopy;
 
 namespace Deltin.Deltinteger
 {
@@ -129,7 +129,7 @@ namespace Deltin.Deltinteger
                 Log.Write(LogLevel.Normal, "Press enter to copy code to clipboard, then in Overwatch click \"Paste Rule\".");
                 Console.ReadLine();
 
-                SetClipboard(final);
+                Clipboard.SetText(final);
             }
             else
             {
@@ -157,14 +157,6 @@ namespace Deltin.Deltinteger
                 builder.AppendLine();
             }
             return builder.ToString();
-        }
-
-        public static void SetClipboard(string text)
-        {
-            Thread setClipboardThread = new Thread(() => Clipboard.SetText(text));
-            setClipboardThread.SetApartmentState(ApartmentState.STA); //Set the thread to STA
-            setClipboardThread.Start();
-            setClipboardThread.Join();
         }
     }
 }
