@@ -39,9 +39,7 @@ namespace Deltin.Deltinteger.Pathfinder
             if (!result.Diagnostics.ContainsErrors())
             {
                 string final = Program.RuleArrayToWorkshop(rules.ToArray(), result.VarCollection);
-                Log.Write(LogLevel.Normal, "Press enter to copy code to clipboard, then in Overwatch click \"Paste Rule\".");
-                Console.ReadLine();
-                Clipboard.SetText(final);
+                Program.WorkshopCodeResult(final);
             }
             else
             {

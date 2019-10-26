@@ -36,7 +36,7 @@ namespace Deltin.Deltinteger.Parse
         {
             int index = NextFree(isGlobal);
 
-            WorkshopVariable workshopVariable = new WorkshopVariable(isGlobal, index, WorkshopNameFromCodeName(name));
+            WorkshopVariable workshopVariable = new WorkshopVariable(isGlobal, index, WorkshopNameFromCodeName(isGlobal, name));
 
             UseCollection(isGlobal)[index] = workshopVariable;
 
@@ -50,18 +50,21 @@ namespace Deltin.Deltinteger.Parse
 
         public int NextFree(bool isGlobal)
         {
-            int index = -1;
+            // Get the next free ID.
+            int id = -1;
             var collection = UseCollection(isGlobal);
             for (int i = 0; i < Constants.NUMBER_OF_VARIABLES; i++)
+                // Make sure the ID is not reserved.
                 if (collection[i] == null && !Reserved.Contains(i))
                 {
-                    index = i;
+                    id = i;
                     break;
                 }
 
-            if (index == -1)
+            // If ID still equals -1, there are no more free variables.
+            if (id == -1)
                 throw new Exception();
-            return index;
+            return id;
         }
 
         public int NextFreeExtended(bool isGlobal)
@@ -73,28 +76,30 @@ namespace Deltin.Deltinteger.Parse
             return index;
         }
 
-        public string WorkshopNameFromCodeName(string name)
+        public string WorkshopNameFromCodeName(bool isGlobal, string name)
         {
             StringBuilder newName = new StringBuilder();
+
+            // Remove invalid characters and replace ' ' with '_'.
             for (int i = 0; i < name.Length; i++)
                 if (name[i] == ' ')
                     newName.Append('_');
                 else if (WorkshopVariable.ValidVariableCharacters.Contains(name[i]))
                     newName.Append(name[i]);
 
-            if (NameTaken(newName.ToString()))
+            // Add a number to the end of the variable name if a variable with the same name was already created.
+            if (NameTaken(isGlobal, newName.ToString()))
             {
                 int num = 0;
-                while (NameTaken(newName.ToString() + "_" + num)) num++;
+                while (NameTaken(isGlobal, newName.ToString() + "_" + num)) num++;
                 newName.Append("_" + num);
             }
             return newName.ToString();
         }
 
-        private bool NameTaken(string name)
+        private bool NameTaken(bool isGlobal, string name)
         {
-            return GlobalVariables.Any(gv => gv != null && gv.Name == name) 
-                || PlayerVariables.Any(gv => gv != null && gv.Name == name);
+            return UseCollection(isGlobal).Any(gv => gv != null && gv.Name == name);
         }
 
         private void Add(WorkshopVariable variable)
@@ -182,7 +187,7 @@ namespace Deltin.Deltinteger.Parse
             string workshopName = variable.Name;
 
             if (workshopName == null)
-                workshopName = collection.WorkshopNameFromCodeName(name);
+                workshopName = collection.WorkshopNameFromCodeName(isGlobal, name);
             
             int id = variable.ID;
 
@@ -461,24 +466,6 @@ namespace Deltin.Deltinteger.Parse
         }
     }
 
-    public class ModelVar : Var
-    {
-        public Model Model { get; }
-
-        public ModelVar(string name, ScopeGroup scope, Node node, Model model) : base(name, scope, node)
-        {
-            Model = model;
-        }
-
-        override public Element GetVariable(Element targetPlayer = null)
-        {
-            throw new NotImplementedException();
-        }
-
-        override public bool Gettable() => false;
-        override public bool Settable() => false;
-    }
-
     public class VarRef : IWorkshopTree
     {
         public Var Var { get; }
@@ -494,12 +481,12 @@ namespace Deltin.Deltinteger.Parse
 
         public string ToWorkshop()
         {
-            throw new NotImplementedException();
+            return ((IndexedVar)Var).Variable.Name;
         }
 
         public void DebugPrint(Log log, int depth)
         {
-            throw new NotImplementedException();
+            // throw new NotImplementedException();
         }
     }
 }

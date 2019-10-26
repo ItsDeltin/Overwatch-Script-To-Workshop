@@ -46,6 +46,15 @@ namespace Deltin.Deltinteger
                 string folder = Console.ReadLine();
                 Deltin.Deltinteger.Models.Letter.Generate(folder);
             }
+            else if (args.Contains("-editor"))
+            {
+                string pathfindEditorScript = Extras.CombinePathWithDotNotation(null, "!PathfindEditor.del");
+
+                if (!File.Exists(pathfindEditorScript))
+                    Log.Write(LogLevel.Normal, "The PathfindEditor.del module is missing!");
+                else
+                    Script(pathfindEditorScript);
+            }
             else
             {
                 string script = args.ElementAtOrDefault(0);
@@ -89,10 +98,9 @@ namespace Deltin.Deltinteger
                     Log.Write(LogLevel.Normal, $"Could not find the file '{script}'.");
                     Log.Write(LogLevel.Normal, $"Drag and drop a script over the executable to parse.");
                 }
-
-                Log.Write(LogLevel.Normal, "Done. Press enter to exit.");
-                Console.ReadLine();
             }
+            
+            Finished();
         }
 
         static void Script(string parseFile)
@@ -125,11 +133,7 @@ namespace Deltin.Deltinteger
                 }
 
                 string final = RuleArrayToWorkshop(result.Rules.ToArray(), result.VarCollection);
-
-                Log.Write(LogLevel.Normal, "Press enter to copy code to clipboard, then in Overwatch click \"Paste Rule\".");
-                Console.ReadLine();
-
-                Clipboard.SetText(final);
+                WorkshopCodeResult(final);
             }
             else
             {
@@ -159,6 +163,19 @@ namespace Deltin.Deltinteger
                 builder.AppendLine();
             }
             return builder.ToString();
+        }
+
+        public static void WorkshopCodeResult(string code)
+        {
+            Log.Write(LogLevel.Normal, "Press enter to copy code to clipboard, then in Overwatch click \"Paste Rule\".");
+            Console.ReadLine();
+            Clipboard.SetText(code);
+        }
+
+        public static void Finished()
+        {
+            Log.Write(LogLevel.Normal, "Done. Press enter to exit.");
+            Console.ReadLine();
         }
     }
 }
