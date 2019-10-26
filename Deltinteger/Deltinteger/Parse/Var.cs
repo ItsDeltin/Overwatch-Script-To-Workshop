@@ -192,7 +192,7 @@ namespace Deltin.Deltinteger.Parse
             {
                 WorkshopVariable assigned = collection.FromID(isGlobal, variable.ID);
                 if (assigned != null)
-                    throw new SyntaxErrorException("Variable ID " + variable.ID + " has already been assigned by " + assigned.Name + ".", node.Location);
+                    throw new SyntaxErrorException("Variable ID '" + variable.ID + "' has already been assigned by '" + assigned.Name + "'.", node.Location);
             }
             
             WorkshopVariable use = new WorkshopVariable(isGlobal, id, workshopName);
