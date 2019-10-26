@@ -480,7 +480,7 @@ namespace Deltin.Deltinteger.LanguageServer
                     IImportNode importNode = (IImportNode)posData.SelectedNode[0];
                     string path = Extras.CombinePathWithDotNotation(posData.File, importNode.File);
                     if (path != null)
-                        locations.Add(new LocationLink(importNode.Location.range, new Uri(path).AbsoluteUri, Range.Zero, Range.Zero));
+                        locations.Add(new LocationLink(importNode.Location.range, new Uri(path).AbsoluteUri, DocRange.Zero, DocRange.Zero));
                 }
             }
             return JsonConvert.SerializeObject(locations.ToArray());

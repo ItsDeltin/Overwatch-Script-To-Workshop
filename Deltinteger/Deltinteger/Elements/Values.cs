@@ -252,7 +252,8 @@ namespace Deltin.Deltinteger.Elements
     public class V_Forward : Element {}
 
     [ElementData("Global Variable", ValueType.Any)]
-    [EnumParameter("Variable", typeof(Variable))]
+    [VarRefParameter("Variable")]
+    //[EnumParameter("Variable", typeof(Variable))]
     public class V_GlobalVariable : Element {}
 
     [ElementData("Has Spawned", ValueType.Boolean)]
@@ -654,7 +655,8 @@ namespace Deltin.Deltinteger.Elements
 
     [ElementData("Player Variable", ValueType.Any)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
-    [EnumParameter("Variable", typeof(Variable))]
+    [VarRefParameter("Variable")]
+    // [EnumParameter("Variable", typeof(Variable))]
     public class V_PlayerVariable : Element {}
 
     [ElementData("Players In Slot", ValueType.Player)]

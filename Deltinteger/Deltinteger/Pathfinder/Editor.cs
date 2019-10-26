@@ -11,6 +11,9 @@ namespace Deltin.Deltinteger.Pathfinder
     {
         private static readonly Log Log = new Log("Editor");
 
+        private static readonly WorkshopVariable LoadNodes    = new WorkshopVariable(true, 0, "LoadNodes");
+        private static readonly WorkshopVariable LoadSegments = new WorkshopVariable(true, 0, "LoadSegments");
+
         public static void FromPathmapFile(string file)
         {
             PathMap map = PathMap.ImportFromXML(file);
@@ -24,8 +27,8 @@ namespace Deltin.Deltinteger.Pathfinder
             
             Rule initialNodes = new Rule("Initial Nodes");
             initialNodes.Actions = ArrayBuilder<Element>.Build(
-                WorkshopArrayBuilder.SetVariable(null, map.NodesAsWorkshopData(), true, null, Variable.J, false),
-                WorkshopArrayBuilder.SetVariable(null, map.SegmentsAsWorkshopData(), true, null, Variable.K, false)
+                WorkshopArrayBuilder.SetVariable(null, map.NodesAsWorkshopData(), true, null, LoadNodes, false),
+                WorkshopArrayBuilder.SetVariable(null, map.SegmentsAsWorkshopData(), true, null, LoadSegments, false)
             );
             rules.Add(initialNodes);
 

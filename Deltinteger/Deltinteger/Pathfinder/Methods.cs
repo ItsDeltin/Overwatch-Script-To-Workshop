@@ -69,7 +69,7 @@ namespace Deltin.Deltinteger.Pathfinder
             Element player                 = (Element)Parameters[0];
             PathMapVar pathmap = (PathMapVar)((VarRef)Parameters[1]).Var;
 
-            IndexedVar destination = TranslateContext.VarCollection.AssignVar(Scope, "Destination", TranslateContext.IsGlobal, null);
+            IndexedVar destination = IndexedVar.AssignInternalVarExt(TranslateContext.VarCollection, Scope, "Destination", TranslateContext.IsGlobal);
             TranslateContext.Actions.AddRange(destination.SetVariable((Element)Parameters[2]));
 
             DijkstraNormal algorithm = new DijkstraNormal(TranslateContext, pathmap, Element.Part<V_PositionOf>(player), destination.GetVariable());
@@ -101,12 +101,12 @@ namespace Deltin.Deltinteger.Pathfinder
             if (((VarRef)Parameters[1]).Var is PathMapVar == false)
                 throw SyntaxErrorException.InvalidVarRefType(((VarRef)Parameters[1]).Var.Name, VarType.PathMap, ParameterLocations[1]);
 
-            IndexedVar players = TranslateContext.VarCollection.AssignVar(Scope, "Players", TranslateContext.IsGlobal, null);
+            IndexedVar players = IndexedVar.AssignInternalVarExt(TranslateContext.VarCollection, Scope, "Players", TranslateContext.IsGlobal);
             TranslateContext.Actions.AddRange(players.SetVariable((Element)Parameters[0]));
 
             PathMapVar pathmap = (PathMapVar)((VarRef)Parameters[1]).Var;
 
-            IndexedVar destination = TranslateContext.VarCollection.AssignVar(Scope, "Destination", TranslateContext.IsGlobal, null);
+            IndexedVar destination = IndexedVar.AssignInternalVarExt(TranslateContext.VarCollection, Scope, "Destination", TranslateContext.IsGlobal);
             TranslateContext.Actions.AddRange(destination.SetVariable((Element)Parameters[2]));
 
             DijkstraMultiSource algorithm = new DijkstraMultiSource(TranslateContext, info, pathmap, players.GetVariable(), destination.GetVariable());

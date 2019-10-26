@@ -16,9 +16,9 @@ namespace Deltin.Deltinteger.Pathfinder
 
         public PathfinderInfo(ParsingData parser)
         {
-            Path = parser.VarCollection.AssignVar(null, "Pathfinder: Path", false, null);
-            LastUpdate = parser.VarCollection.AssignVar(null, "Pathfinder: Last Update", false, null);
-            DistanceToNext = parser.VarCollection.AssignVar(null, "Pathfinder: Distance To Next Node", false, null);
+            Path           = IndexedVar.AssignInternalVar   (parser.VarCollection, null, "Pathfinder: Path",                  false);
+            LastUpdate     = IndexedVar.AssignInternalVarExt(parser.VarCollection, null, "Pathfinder: Last Update",           false);
+            DistanceToNext = IndexedVar.AssignInternalVarExt(parser.VarCollection, null, "Pathfinder: Distance To Next Node", false);
 
             parser.Rules.Add(GetStartRule());
             parser.Rules.Add(GetUpdateRule());

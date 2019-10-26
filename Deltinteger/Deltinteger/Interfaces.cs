@@ -9,7 +9,6 @@ namespace Deltin.Deltinteger
     {
         string ToWorkshop();
         void DebugPrint(Log log, int depth = 0);
-        double ServerLoadWeight();
     }
 
     public interface IMethod : ILanguageServerInfo

@@ -15,8 +15,8 @@ namespace Deltin.Deltinteger.Pathfinder
         public PathMapVar(ParsingData parser, string name, ScopeGroup scope, Node node, PathMap pathMap) : base(name, scope, node)
         {
             PathMap = pathMap;
-            Nodes = parser.VarCollection.AssignVar(null, "Path Map Node Data", true, null);
-            Segments = parser.VarCollection.AssignVar(null, "Path Map Segment Data", true, null);
+            Nodes    = IndexedVar.AssignInternalVar(parser.VarCollection, null, "Path Map Node Data"   , true);
+            Segments = IndexedVar.AssignInternalVar(parser.VarCollection, null, "Path Map Segment Data", true);
             Setup(parser);
         }
 

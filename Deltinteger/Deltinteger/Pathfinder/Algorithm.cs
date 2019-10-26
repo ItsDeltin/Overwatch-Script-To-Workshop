@@ -32,25 +32,18 @@ namespace Deltin.Deltinteger.Pathfinder
 
             Assign();
             
-            current = context.VarCollection.AssignVar(null, "Dijkstra: Current",                                 context.IsGlobal, null);
+            current                      = IndexedVar.AssignInternalVarExt(context.VarCollection, null, "Dijkstra: Current",   context.IsGlobal);
+            IndexedVar distances         = IndexedVar.AssignInternalVar   (context.VarCollection, null, "Dijkstra: Distances", context.IsGlobal);
+            unvisited                    = IndexedVar.AssignInternalVar   (context.VarCollection, null, "Dijkstra: Unvisited", context.IsGlobal);
+            IndexedVar connectedSegments = IndexedVar.AssignInternalVarExt(context.VarCollection, null, "Dijkstra: Connected Segments", context.IsGlobal);
+            IndexedVar neighborIndex     = IndexedVar.AssignInternalVarExt(context.VarCollection, null, "Dijkstra: Neighbor Index", context.IsGlobal);
+            IndexedVar neighborDistance  = IndexedVar.AssignInternalVarExt(context.VarCollection, null, "Dijkstra: Distance", context.IsGlobal);
+            parentArray                  = IndexedVar.AssignInternalVarExt(context.VarCollection, null, "Dijkstra: Parent Array", context.IsGlobal);
+
+            // Set the current variable as the first node.
             context.Actions.AddRange(current.SetVariable(firstNode));
-
-            IndexedVar distances = context.VarCollection.AssignVar(null, "Dijkstra: Distances",                  context.IsGlobal, null);
-            distances.Optimize2ndDim = false;
             SetInitialDistances(context, pathmap.PathMap, distances, current.GetVariable());
-
-            unvisited = context.VarCollection.AssignVar(null, "Dijkstra: Unvisited",                             context.IsGlobal, null);
             SetInitialUnvisited(context, pathmap.PathMap, unvisited);
-
-            IndexedVar connectedSegments = context.VarCollection.AssignVar(null, "Dijkstra: Connected Segments", context.IsGlobal, null);
-
-            IndexedVar neighborIndex = context.VarCollection.AssignVar(null, "Dijkstra: Neighbor Index",         context.IsGlobal, null);
-
-            IndexedVar neighborDistance = context.VarCollection.AssignVar(null, "Dijkstra: Distance",            context.IsGlobal, null);
-
-            parentArray = context.VarCollection.AssignVar(null, "Dijkstra: Parent Array",                        context.IsGlobal, null);
-            parentArray.Optimize2ndDim = false;
-            //SetInitialParents(context, pathmap.PathMap, parentArray);
 
             WhileBuilder whileBuilder = new WhileBuilder(context, LoopCondition());
             whileBuilder.Setup();
@@ -306,10 +299,9 @@ namespace Deltin.Deltinteger.Pathfinder
         {
             var lastNode = ClosestNodeToPosition(pathmap, destination);
 
-            finalNode = context.VarCollection.AssignVar(null, "Dijkstra: Last", context.IsGlobal, null);
+            finalNode = IndexedVar.AssignInternalVarExt(context.VarCollection, null, "Dijkstra: Last", context.IsGlobal);
+            finalPath = IndexedVar.AssignInternalVar   (context.VarCollection, null, "Dijkstra: Final Path", context.IsGlobal);
             context.Actions.AddRange(finalNode.SetVariable(lastNode));
-
-            finalPath = context.VarCollection.AssignVar(null, "Dijkstra: Final Path", context.IsGlobal, null);
             context.Actions.AddRange(finalPath.SetVariable(new V_EmptyArray()));
         }
 
@@ -348,7 +340,7 @@ namespace Deltin.Deltinteger.Pathfinder
 
         override protected void Assign()
         {
-            closestNodesToPlayers = context.VarCollection.AssignVar(null, "Dijkstra: Closest nodes", context.IsGlobal, null);
+            closestNodesToPlayers = IndexedVar.AssignInternalVar(context.VarCollection, null, "Dijkstra: Closest nodes", context.IsGlobal);
             context.Actions.AddRange(closestNodesToPlayers.SetVariable(Element.Part<V_EmptyArray>()));
 
             ForEachBuilder getClosestNodes = new ForEachBuilder(context, players, "Get closest nodes");
@@ -382,7 +374,7 @@ namespace Deltin.Deltinteger.Pathfinder
             ForEachBuilder assignPlayerPaths = new ForEachBuilder(context, players, "Assign Player Paths");
             assignPlayerPaths.Setup();
 
-            IndexedVar finalPath = context.VarCollection.AssignVar(null, "Dijkstra: Final Path", context.IsGlobal, null);
+            IndexedVar finalPath = IndexedVar.AssignInternalVar(context.VarCollection, null, "Dijkstra: Final Path", context.IsGlobal);
 
             Backtrack(
                 Element.Part<V_ValueInArray>(

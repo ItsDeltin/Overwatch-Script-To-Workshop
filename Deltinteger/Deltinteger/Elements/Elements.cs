@@ -188,19 +188,6 @@ namespace Deltin.Deltinteger.Elements
             return builder.ToString();
         }
 
-        // The estimated server load of the current element.
-        public double ServerLoadWeight()
-        {
-            double weight = Weight();
-            foreach (IWorkshopTree parameter in ParameterValues)
-                weight += parameter.ServerLoadWeight();
-            return weight;
-        }
-        protected virtual double Weight()
-        {
-            return 0;
-        }
-
         // Creates an array from a list of values.
         public static Element CreateArray(params Element[] values)
         {
@@ -319,7 +306,7 @@ namespace Deltin.Deltinteger.Elements
         public string Message { get; }
         public int Severity { get; }
 
-        public Diagnostic GetDiagnostic(Range range)
+        public Diagnostic GetDiagnostic(DocRange range)
         {
             return new Diagnostic(Message, range) { severity = Severity };
         }

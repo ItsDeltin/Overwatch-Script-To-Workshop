@@ -14,8 +14,8 @@ namespace Deltin.Deltinteger.Pathfinder
     {
         private static readonly Log Log = new Log("PathMap");
 
-        private static readonly Variable nodesOut = Variable.D;
-        private static readonly Variable segmentsOut = Variable.E;
+        private const int nodesOut = 125;
+        private const int segmentsOut = 126;
 
         public static PathMap ImportFromCSV(string file)
         {

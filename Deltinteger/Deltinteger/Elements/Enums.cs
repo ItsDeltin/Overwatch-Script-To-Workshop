@@ -169,11 +169,6 @@ namespace Deltin.Deltinteger.Elements
             return WorkshopName;
         }
 
-        public double ServerLoadWeight()
-        {
-            return 0;
-        }
-
         public void DebugPrint(Log log, int depth)
         {
             log.Write(LogLevel.Verbose, Extras.Indent(depth, false) + WorkshopName);
@@ -323,37 +318,6 @@ namespace Deltin.Deltinteger.Elements
         GreaterThan,
         [EnumOverride(null, ">=")]
         GreaterThanOrEqual
-    }
-
-    [WorkshopEnum]
-    public enum Variable
-    {
-        A,
-        B,
-        C,
-        D,
-        E,
-        F,
-        G,
-        H,
-        I,
-        J,
-        K,
-        L,
-        M,
-        N,
-        O,
-        P,
-        Q,
-        R,
-        S,
-        T,
-        U,
-        V,
-        W,
-        X,
-        Y,
-        Z
     }
 
     [WorkshopEnum]

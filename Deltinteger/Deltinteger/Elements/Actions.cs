@@ -42,7 +42,8 @@ namespace Deltin.Deltinteger.Elements
     public class A_BigMessage : Element {}
 
     [ElementData("Chase Global Variable At Rate")]
-    [EnumParameter("Variable", typeof(Variable))]
+    [VarRefParameter("Variable")]
+    // [EnumParameter("Variable", typeof(Variable))]
     [Parameter("Destination", ValueType.Any, typeof(V_Number))]
     [Parameter("Rate", ValueType.Number, typeof(V_Number))]
     [EnumParameter("Reevaluation", typeof(RateChaseReevaluation))]
@@ -50,7 +51,8 @@ namespace Deltin.Deltinteger.Elements
     public class A_ChaseGlobalVariableAtRate : Element {}
 
     [ElementData("Chase Global Variable Over Time")]
-    [EnumParameter("Variable", typeof(Variable))]
+    [VarRefParameter("Variable")]
+    // [EnumParameter("Variable", typeof(Variable))]
     [Parameter("Destination", ValueType.Any, typeof(V_Number))]
     [Parameter("Duration", ValueType.Number, typeof(V_Number))]
     [EnumParameter("Reevaluation", typeof(TimeChaseReevaluation))]
@@ -58,7 +60,8 @@ namespace Deltin.Deltinteger.Elements
 
     [ElementData("Chase Player Variable At Rate")]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
-    [EnumParameter("Variable", typeof(Variable))]
+    [VarRefParameter("Variable")]
+    // [EnumParameter("Variable", typeof(Variable))]
     [Parameter("Destination", ValueType.Any, typeof(V_Number))]
     [Parameter("Rate", ValueType.Number, typeof(V_Number))]
     [EnumParameter("Reevaluation", typeof(RateChaseReevaluation))]
@@ -67,7 +70,8 @@ namespace Deltin.Deltinteger.Elements
 
     [ElementData("Chase Player Variable Over Time")]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
-    [EnumParameter("Variable", typeof(Variable))]
+    [VarRefParameter("Variable")]
+    // [EnumParameter("Variable", typeof(Variable))]
     [Parameter("Destination", ValueType.Any, typeof(V_Number))]
     [Parameter("Duration", ValueType.Number, typeof(V_Number))]
     [EnumParameter("Reevaluation", typeof(TimeChaseReevaluation))]
@@ -289,13 +293,15 @@ namespace Deltin.Deltinteger.Elements
     public class A_LoopIfConditionIsTrue : Element { }
 
     [ElementData("Modify Global Variable")]
-    [EnumParameter("Variable", typeof(Variable))]
+    // [EnumParameter("Variable", typeof(Variable))]
+    [VarRefParameter("Variable")]
     [EnumParameter("Operation", typeof(Operation))]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
     public class A_ModifyGlobalVariable : Element {}
 
     [ElementData("Modify Global Variable At Index")]
-    [EnumParameter("Variable", typeof(Variable))]
+    // [EnumParameter("Variable", typeof(Variable))]
+    [VarRefParameter("Variable")]
     [Parameter("Index", ValueType.Number, typeof(V_Number))]
     [EnumParameter("Operation", typeof(Operation))]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
@@ -308,14 +314,16 @@ namespace Deltin.Deltinteger.Elements
 
     [ElementData("Modify Player Variable")]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
-    [EnumParameter("Variable", typeof(Variable))]
+    // [EnumParameter("Variable", typeof(Variable))]
+    [VarRefParameter("Variable")]
     [EnumParameter("Operation", typeof(Operation))]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
     public class A_ModifyPlayerVariable : Element {}
 
     [ElementData("Modify Player Variable At Index")]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
-    [EnumParameter("Variable", typeof(Variable))]
+    // [EnumParameter("Variable", typeof(Variable))]
+    [VarRefParameter("Variable")]
     [Parameter("Index", ValueType.Number, typeof(V_Number))]
     [EnumParameter("Operation", typeof(Operation))]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
@@ -391,12 +399,14 @@ namespace Deltin.Deltinteger.Elements
     public class A_SetFacing : Element {}
 
     [ElementData("Set Global Variable")]
-    [EnumParameter("Variable", typeof(Variable))]
+    // [EnumParameter("Variable", typeof(Variable))]
+    [VarRefParameter("Variable")]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
     public class A_SetGlobalVariable : Element {}
 
     [ElementData("Set Global Variable At Index")]
-    [EnumParameter("Variable", typeof(Variable))]
+    // [EnumParameter("Variable", typeof(Variable))]
+    [VarRefParameter("Variable")]
     [Parameter("Index", ValueType.Number, typeof(V_Number))]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
     public class A_SetGlobalVariableAtIndex : Element {}
@@ -453,13 +463,15 @@ namespace Deltin.Deltinteger.Elements
 
     [ElementData("Set Player Variable")]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
-    [EnumParameter("Variable", typeof(Variable))]
+    // [EnumParameter("Variable", typeof(Variable))]
+    [VarRefParameter("Variable")]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
     public class A_SetPlayerVariable : Element {}
 
     [ElementData("Set Player Variable At Index")]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
-    [EnumParameter("Variable", typeof(Variable))]
+    // [EnumParameter("Variable", typeof(Variable))]
+    [VarRefParameter("Variable")]
     [Parameter("Index", ValueType.Number, typeof(V_Number))]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
     public class A_SetPlayerVariableAtIndex : Element {}
@@ -649,12 +661,14 @@ namespace Deltin.Deltinteger.Elements
     public class A_StopCamera : Element {}
 
     [ElementData("Stop Chasing Global Variable")]
-    [EnumParameter("Variable", typeof(Variable))]
+    // [EnumParameter("Variable", typeof(Variable))]
+    [VarRefParameter("Variable")]
     public class A_StopChasingGlobalVariable : Element {}
 
     [ElementData("Stop Chasing Player Variable")]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
-    [EnumParameter("Variable", typeof(Variable))]
+    // [EnumParameter("Variable", typeof(Variable))]
+    [VarRefParameter("Variable")]
     public class A_StopChasingPlayerVariable : Element {}
 
     [ElementData("Stop Damage Modification")]

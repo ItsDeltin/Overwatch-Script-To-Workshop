@@ -128,7 +128,7 @@ namespace Deltin.Deltinteger.Parse
 
         override protected void PreLoopStart()
         {
-            indexVar = Context.VarCollection.AssignVar(null, name == null ? "Index" : name + " Index", Context.IsGlobal, null);
+            indexVar = IndexedVar.AssignInternalVarExt(Context.VarCollection, null, name == null ? "Index" : name + " Index", Context.IsGlobal);
             AddActions(indexVar.SetVariable(0));
         }
 

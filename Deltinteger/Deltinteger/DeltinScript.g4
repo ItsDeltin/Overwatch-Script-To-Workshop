@@ -19,8 +19,8 @@ rule_define      :                   (type=PART | DEFINE) (GLOBAL|PLAYER) name=P
 inclass_define   : accessor? STATIC? (type=PART | DEFINE)                 name=PART         (EQUALS expr?)? ;
 parameter_define :                   (type=PART | DEFINE)                 name=PART                         ;
 
-useVar   : PART (INDEX_START number INDEX_END)? ;
-internalVars : USEVAR (GLOBAL | PLAYER | DIM | CLASS) PART STATEMENT_END ;
+useVar   : PART? (INDEX_START number INDEX_END)? ;
+internalVars : USEVAR (GLOBAL | PLAYER | DIM | CLASS) NUMBER STATEMENT_END ;
 
 expr 
 	: 

@@ -7,6 +7,18 @@
   <PropertyGroup>
     <Antlr4UseCSharpGenerator>True</Antlr4UseCSharpGenerator>
   </PropertyGroup>
+
+  <!-- REMOVE LATER -->
+  <ItemGroup>
+    <Compile Remove="Custom Methods\**" />
+    <Compile Include="Custom Methods\CustomMethods.cs" />
+    <Compile Include="Custom Methods\RemoveFromArrayAtIndex.cs" />
+    <Compile Include="Custom Methods\LinearInterpolate.cs" />
+    <Compile Include="Custom Methods\MinWait.cs" />
+    <Compile Include="Custom Methods\Destination.cs" />
+  </ItemGroup>
+  <!-- REMOVE LATER -->
+
   <ItemGroup>
     <Reference Include="System"/>
     <Reference Include="System.Core"/>

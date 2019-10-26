@@ -11,15 +11,15 @@ namespace Deltin.Deltinteger
 {
     public static class Constants
     {
-        public const int RULE_NAME_MAX_LENGTH = 128;
-
+        public const int MAX_ARRAY_LENGTH = 1000;
+        public const int NUMBER_OF_VARIABLES = 128;
         public const double MINIMUM_WAIT = 0.016;
+
+        public const int RULE_NAME_MAX_LENGTH = 128;
 
         public const string INTERNAL_ELEMENT = "INTERNAL : ";
 
         public const string DEFAULT_STRING = "hello";
-
-        public const int MAX_ARRAY_LENGTH = 1000;
 
         public static readonly string[] Strings = new string[]
         {
