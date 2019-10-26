@@ -145,15 +145,8 @@ namespace Deltin.Deltinteger
         public static string RuleArrayToWorkshop(Rule[] rules, VarCollection varCollection)
         {
             var builder = new StringBuilder();
-
-            builder.AppendLine("// --- Variable Guide ---");
-
-            foreach(var var in varCollection.AllVars)
-                builder.AppendLine("// " + var.ToString());
-            
-            builder.AppendLine();
-
             varCollection.ToWorkshop(builder);
+            builder.AppendLine();
 
             Log debugPrintLog = new Log("Tree");
             foreach (var rule in rules)

@@ -169,6 +169,9 @@ namespace Deltin.Deltinteger.Elements
     [Parameter("Value", ValueType.VectorAndPlayer, typeof(V_Vector))]
     public class V_CrossProduct : Element {}
 
+    [ElementData("Current Map", ValueType.Map)]
+    public class V_CurrentMap : Element {}
+
     [ElementData("Current Array Element", ValueType.Any)]
     public class V_ArrayElement : Element {}
 
@@ -496,6 +499,10 @@ namespace Deltin.Deltinteger.Elements
     [Parameter("Relative Player", ValueType.Player, typeof(V_EventPlayer))]
     [EnumParameter("Transformation", typeof(Transformation))]
     public class V_LocalVectorOf : Element {}
+
+    [ElementData("Map", ValueType.Map)]
+    [EnumParameter("Map", typeof(Map))]
+    public class V_MapVar : Element {}
 
     [ElementData("Match Round", ValueType.Number)]
     public class V_MatchRound : Element {}

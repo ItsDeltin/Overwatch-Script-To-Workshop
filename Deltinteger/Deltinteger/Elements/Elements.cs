@@ -24,6 +24,7 @@ namespace Deltin.Deltinteger.Elements
         Vector = 8,
         Player = 16,
         Team = 32,
+        Map = 64
     }
 
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
