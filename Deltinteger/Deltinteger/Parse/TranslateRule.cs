@@ -915,7 +915,7 @@ namespace Deltin.Deltinteger.Parse
         {
             IndexedVar var;
             #warning update
-            if (defineNode.UseVar == null)
+            if (defineNode.UseVar == null || (defineNode.UseVar.Variable == null && defineNode.UseVar.ID == -1))
                 var = IndexedVar.AssignVar(VarCollection, scope, defineNode.VariableName, IsGlobal, defineNode);
             else
                 var = IndexedVar.AssignVar(VarCollection, scope, defineNode.VariableName, IsGlobal, new WorkshopVariable(IsGlobal, defineNode.UseVar.ID, defineNode.UseVar.Variable), defineNode);

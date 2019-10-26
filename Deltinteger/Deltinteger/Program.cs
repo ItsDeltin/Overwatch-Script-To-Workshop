@@ -149,6 +149,8 @@ namespace Deltin.Deltinteger
             
             builder.AppendLine();
 
+            varCollection.ToWorkshop(builder);
+
             Log debugPrintLog = new Log("Tree");
             foreach (var rule in rules)
             {

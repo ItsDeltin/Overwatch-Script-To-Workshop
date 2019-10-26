@@ -16,6 +16,8 @@ namespace Deltin.Deltinteger.Parse
 
         public WorkshopArrayBuilder WorkshopArrayBuilder { get; }
 
+        public List<int> Reserved { get; } = new List<int>();
+
         public VarCollection(WorkshopVariable global, WorkshopVariable player, WorkshopVariable builder)
         {
             Add(global);
@@ -48,7 +50,14 @@ namespace Deltin.Deltinteger.Parse
 
         public int NextFree(bool isGlobal)
         {
-            int index = Array.IndexOf(isGlobal ? GlobalVariables : PlayerVariables, null);
+            int index = -1;
+            var collection = UseCollection(isGlobal);
+            for (int i = 0; i < Constants.NUMBER_OF_VARIABLES; i++)
+                if (collection[i] == null && !Reserved.Contains(i))
+                {
+                    index = i;
+                    break;
+                }
 
             if (index == -1)
                 throw new Exception();
@@ -73,16 +82,19 @@ namespace Deltin.Deltinteger.Parse
                 else if (WorkshopVariable.ValidVariableCharacters.Contains(name[i]))
                     newName.Append(name[i]);
 
-            int num = 0;
-            while (GlobalVariables.Any(gv => gv != null && gv.Name == newName + "_" + num) 
-                || PlayerVariables.Any(gv => gv != null && gv.Name == newName + "_" + num))
+            if (NameTaken(newName.ToString()))
             {
-                num++;
-            }
-
-            if (num > 0)
+                int num = 0;
+                while (NameTaken(newName.ToString() + "_" + num)) num++;
                 newName.Append("_" + num);
+            }
             return newName.ToString();
+        }
+
+        private bool NameTaken(string name)
+        {
+            return GlobalVariables.Any(gv => gv != null && gv.Name == name) 
+                || PlayerVariables.Any(gv => gv != null && gv.Name == name);
         }
 
         private void Add(WorkshopVariable variable)
@@ -100,6 +112,25 @@ namespace Deltin.Deltinteger.Parse
         private readonly WorkshopVariable[] PlayerVariables = new WorkshopVariable[Constants.NUMBER_OF_VARIABLES]; 
         private readonly IndexedVar[] ExtendedGlobalCollection = new IndexedVar[Constants.MAX_ARRAY_LENGTH];
         private readonly IndexedVar[] ExtendedPlayerCollection = new IndexedVar[Constants.MAX_ARRAY_LENGTH];
+
+        public void ToWorkshop(StringBuilder builder)
+        {
+            builder.AppendLine("variables");
+            builder.AppendLine("{");
+            builder.AppendLine("    global:");
+            WriteCollection(builder, UseCollection(true));
+            builder.AppendLine("    player:");
+            WriteCollection(builder, UseCollection(false));
+            builder.AppendLine("}");
+        }
+
+        private void WriteCollection(StringBuilder builder, WorkshopVariable[] variables)
+        {
+            for (int i = 0; i < Constants.NUMBER_OF_VARIABLES; i++)
+                if (variables[i] != null)
+                    builder.AppendLine("        " + variables[i].ID + ": " + variables[i].Name);
+
+        }
     }
 
     public abstract class Var : IScopeable

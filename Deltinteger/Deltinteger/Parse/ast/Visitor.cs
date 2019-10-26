@@ -13,6 +13,8 @@ namespace Deltin.Deltinteger.Parse
         public Diagnostics _diagnostics { get; }
         public string file { get; }
 
+        public List<int> ReservedVariableIDs { get; } = new List<int>();
+
         public BuildAstVisitor(string file, Diagnostics diagnostics)
         {
             this.file = file;

@@ -166,6 +166,7 @@ namespace Deltin.Deltinteger.Parse
         public RuleDefineNode[] DefinedVars { get; }
         public UserMethodBase[] UserMethods { get; }
         public TypeDefineNode[] DefinedTypes { get; }
+        public int[] Reserved { get; } 
 
         public RulesetNode(DeltinScriptParser.RulesetContext context, BuildAstVisitor visitor) : base(new Location(visitor.file, DocRange.GetRange(context)))
         {
@@ -201,6 +202,8 @@ namespace Deltin.Deltinteger.Parse
             DefinedTypes = new TypeDefineNode[context.type_define().Length];
             for (int i = 0; i < DefinedTypes.Length; i++)
                 DefinedTypes[i] = (TypeDefineNode)visitor.VisitType_define(context.type_define(i));
+            
+            Reserved = visitor.ReservedVariableIDs.ToArray();
         }
 
         public override Node[] Children()
@@ -373,12 +376,15 @@ namespace Deltin.Deltinteger.Parse
         public UseVarNode(DeltinScriptParser.UseVarContext context, BuildAstVisitor visitor) : base(new Location(visitor.file, DocRange.GetRange(context)))
         {
             Variable = context.PART()?.GetText();
-                        
+            
             int id = -1;
             if (context.number() != null)
                 if (!int.TryParse(context.number().GetText(), out id))
                     id = -1;
             ID = id;
+
+            if (id != -1)
+                visitor.ReservedVariableIDs.Add(ID);
         }
 
         public override Node[] Children()

@@ -159,10 +159,14 @@ namespace Deltin.Deltinteger.Parse
                         new WorkshopVariable(false, 0, "_extendedPlayerCollection"),
                         new WorkshopVariable(true, 1, "_arrayBuilder")
                     );
+                    VarCollection.Reserved.AddRange(ruleset.Reserved);
+                    
                     Root = new ScopeGroup(VarCollection);
                     ClassIndexes = IndexedVar.AssignInternalVar(VarCollection, null, "Class Indexes", true);
                     ClassArray   = IndexedVar.AssignInternalVar(VarCollection, null, "Class Array", true);
                 }
+                else
+                    VarCollection.Reserved.AddRange(ruleset.Reserved);
 
                 // Get the defined types
                 foreach (var definedType in ruleset.DefinedTypes)
