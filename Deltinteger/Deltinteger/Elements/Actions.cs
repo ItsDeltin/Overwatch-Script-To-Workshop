@@ -7,20 +7,20 @@ using System.Threading.Tasks;
 namespace Deltin.Deltinteger.Elements
 {
     [ElementData("Abort")]
-    [UsageDiagnostic("This workshop method can leave the workshop in an invalid state. Method callers will also be aborted.", 2)]
+    [UsageDiagnostic("This workshop method can leave the workshop in an unexpected state. Method callers will also be aborted.", 2)]
     public class A_Abort : Element {}
 
     [ElementData("Abort If")]
     [Parameter("Condition", ValueType.Boolean, typeof(V_Compare))]
-    [UsageDiagnostic("This workshop method can leave the workshop in an invalid state. Method callers will also be aborted.", 2)]
+    [UsageDiagnostic("This workshop method can leave the workshop in an unexpected state. Method callers will also be aborted.", 2)]
     public class A_AbortIf : Element {}
 
     [ElementData("Abort If Condition Is False")]
-    [UsageDiagnostic("This workshop method can leave the workshop in an invalid state. Method callers will also be aborted.", 2)]
+    [UsageDiagnostic("This workshop method can leave the workshop in an unexpected state. Method callers will also be aborted.", 2)]
     public class A_AbortIfConditionIsFalse : Element {}
 
     [ElementData("Abort If Condition Is True")]
-    [UsageDiagnostic("This workshop method can leave the workshop in an invalid state. Method callers will also be aborted.", 2)]
+    [UsageDiagnostic("This workshop method can leave the workshop in an unexpected state. Method callers will also be aborted.", 2)]
     public class A_AbortIfConditionIsTrue : Element {}
 
     [ElementData("Allow Button")]
@@ -276,20 +276,20 @@ namespace Deltin.Deltinteger.Elements
     public class A_Kill : Element {}
 
     [ElementData("Loop")]
-    [UsageDiagnostic("This workshop method can leave the workshop in an invalid state. Method callers will also be looped.", 2)]
+    [UsageDiagnostic("This workshop method can leave the workshop in an unexpected state. Method callers will also be looped.", 2)]
     public class A_Loop : Element {}
 
     [ElementData("Loop If")]
     [Parameter("Condition", ValueType.Boolean, typeof(V_Compare))]
-    [UsageDiagnostic("This workshop method can leave the workshop in an invalid state. Method callers will also be looped.", 2)]
+    [UsageDiagnostic("This workshop method can leave the workshop in an unexpected state. Method callers will also be looped.", 2)]
     public class A_LoopIf : Element {}
 
     [ElementData("Loop If Condition Is False")]
-    [UsageDiagnostic("This workshop method can leave the workshop in an invalid state. Method callers will also be looped.", 2)]
+    [UsageDiagnostic("This workshop method can leave the workshop in an unexpected state. Method callers will also be looped.", 2)]
     public class A_LoopIfConditionIsFalse : Element {}
 
     [ElementData("Loop If Condition Is True")]
-    [UsageDiagnostic("This workshop method can leave the workshop in an invalid state. Method callers will also be looped.", 2)]
+    [UsageDiagnostic("This workshop method can leave the workshop in an unexpected state. Method callers will also be looped.", 2)]
     public class A_LoopIfConditionIsTrue : Element { }
 
     [ElementData("Modify Global Variable")]
@@ -529,7 +529,7 @@ namespace Deltin.Deltinteger.Elements
 
     [ElementData("Skip")]
     [Parameter("Number Of Actions", ValueType.Number, typeof(V_Number))]
-    [UsageDiagnostic("This workshop method can leave the workshop in an invalid state.", 2)]
+    [UsageDiagnostic("This workshop method can leave the workshop in an unexpected state.", 2)]
     public class A_Skip : Element, ISkip 
     {
         public int SkipParameterIndex()
@@ -541,7 +541,7 @@ namespace Deltin.Deltinteger.Elements
     [ElementData("Skip If")]
     [Parameter("Condition", ValueType.Boolean, typeof(V_Compare))]
     [Parameter("Number Of Actions", ValueType.Number, typeof(V_Number))]
-    [UsageDiagnostic("This workshop method can leave the workshop in an invalid state.", 2)]
+    [UsageDiagnostic("This workshop method can leave the workshop in an unexpected state.", 2)]
     public class A_SkipIf : Element, ISkip 
     {
         public int SkipParameterIndex()
