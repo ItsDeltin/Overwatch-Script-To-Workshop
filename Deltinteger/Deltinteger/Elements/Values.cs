@@ -990,45 +990,63 @@ namespace Deltin.Deltinteger.Elements
             // Look for <#>s
             var formats = Regex.Matches(value, "<([0-9]+)>").ToArray();
 
+            // If there are no formats, return the custom string normally.
             if (formats.Length == 0)
                 return new V_CustomString(value);
             
-            List<FormatParameter> stringGroupParameters = new List<FormatParameter>();
-            List<StringGroup> stringGroups = new List<StringGroup>();
-            List<int> unique = new List<int>();
+            // The Overwatch workshop only supports 3 formats in a string.
+            // The following code will split the string into multiple sections so it can support more.
+            // Split the string after every 3 unique formats, for example:
+            //                                    v split here
+            //           <0> this <1> <0> is a <3> custom <4> string <5>
+
+            List<FormatParameter> stringGroupParameters = new List<FormatParameter>(); // The current group of formats.
+            List<StringGroup> stringGroups = new List<StringGroup>(); // Stores information about each section in the string.
+            List<int> unique = new List<int>(); // Stores the list of each unique format id. The count shouldn't go above 3.
             for (int i = 0; i < formats.Length; i++)
             {
                 FormatParameter parameter = new FormatParameter(formats[i]);
 
+                // If the format id is more than the number of parameters, throw a syntax error.
                 if (parameter.Parameter >= parameters.Length)
                     throw SyntaxErrorException.StringParameterCount(parameter.Parameter, parameters.Length, location);
 
+                // If there is already 3 unique IDs, create a new section.
                 if (unique.Count == 3 && !unique.Contains(parameter.Parameter))
                 {
                     stringGroups.Add(new StringGroup(stringGroupParameters.ToArray()));
                     stringGroupParameters.Clear();
                     unique.Clear();
                 }
+
                 stringGroupParameters.Add(parameter);
 
+                // If the current format ID is new, add it to the unique list.
                 if (!unique.Contains(parameter.Parameter))
                     unique.Add(parameter.Parameter);
             }
+
+            // Add tailing formats to a new section.
             stringGroups.Add(new StringGroup(stringGroupParameters.ToArray()));
 
+            // Convert each section to a custom string.
             V_CustomString[] strings = new V_CustomString[stringGroups.Count];
             for (int i = 0; i < strings.Length; i++)
             {
+                // start is either the start of the string or the end of the last section.
                 int start = i == 0                  ? 0            : stringGroups[i - 1].EndIndex;
+                // end is the index of last format in the section unless this is the last section, then it will be the end of the string.
                 int end   = i == strings.Length - 1 ? value.Length : stringGroups[i]    .EndIndex;
 
                 string groupString = value.Substring(start, end - start);
                 
+                // Returns an array of all unique formats in the current section.
                 var formatGroups = stringGroups[i].Formats
                     .GroupBy(g => g.Parameter)
                     .Select(g => g.First())
                     .ToArray();
                 
+                // groupParameters is {0}, {1}, and {2}. Length should be between 1 and 3.
                 Element[] groupParameters = new Element[formatGroups.Length];
                 for (int g = 0; g < formatGroups.Length; g++)
                 {
@@ -1039,6 +1057,7 @@ namespace Deltin.Deltinteger.Elements
                 strings[i] = new V_CustomString(groupString, groupParameters);
             }
             
+            // Join the sections together.
             return Join(strings);
         }
 
