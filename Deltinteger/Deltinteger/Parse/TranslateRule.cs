@@ -220,10 +220,14 @@ namespace Deltin.Deltinteger.Parse
 
                 // Strings
                 case StringNode stringNode:
+
                     Element[] stringFormat = new Element[stringNode.Format?.Length ?? 0];
                     for (int i = 0; i < stringFormat.Length; i++)
                         stringFormat[i] = ParseExpression(getter, scope, stringNode.Format[i]);
-                    return V_String.ParseString(stringNode.Location, stringNode.Value, stringFormat);
+                    if (stringNode.Localized)
+                        return V_String.ParseString(stringNode.Location, stringNode.Value, stringFormat);
+                    else
+                        return V_CustomString.ParseString(stringNode.Location, stringNode.Value, stringFormat);
 
                 // Null
                 case NullNode nullNode:
@@ -914,7 +918,6 @@ namespace Deltin.Deltinteger.Parse
         void ParseDefine(ScopeGroup getter, ScopeGroup scope, DefineNode defineNode)
         {
             IndexedVar var;
-            #warning update
             if (defineNode.UseVar == null || (defineNode.UseVar.Variable == null && defineNode.UseVar.ID == -1))
                 var = IndexedVar.AssignVar(VarCollection, scope, defineNode.VariableName, IsGlobal, defineNode);
             else

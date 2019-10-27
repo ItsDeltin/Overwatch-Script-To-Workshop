@@ -10,7 +10,7 @@ namespace Deltin.Deltinteger.Parse
 {
     public abstract class Node : INode
     {
-        public Location Location { get; private set; }
+        public Location Location { get; }
 
         public DocRange[] SubRanges { get; set; }
 
@@ -395,12 +395,12 @@ namespace Deltin.Deltinteger.Parse
 
     public class RuleNode : Node
     {
-        public string Name { get; private set; }
-        public RuleEvent Event { get; private set; }
-        public Team Team { get; private set; }
-        public PlayerSelector Player { get; private set; }
-        public Node[] Conditions { get; private set; }
-        public BlockNode Block { get; private set; }
+        public string Name { get; }
+        public RuleEvent Event { get; }
+        public Team Team { get; }
+        public PlayerSelector Player { get; }
+        public Node[] Conditions { get; }
+        public BlockNode Block { get; }
 
         public RuleNode(DeltinScriptParser.Ow_ruleContext context, BuildAstVisitor visitor) : base(new Location(visitor.file, DocRange.GetRange(context)))
         {
@@ -636,8 +636,8 @@ namespace Deltin.Deltinteger.Parse
 
     public class MethodNode : Node, ICallableNode
     {
-        public string Name { get; private set; }
-        public Node[] Parameters { get; private set; }
+        public string Name { get; }
+        public Node[] Parameters { get; }
 
         public MethodNode(string name, Node[] parameters, DocRange nameRange, DocRange parameterRange, Location location) : base(location, nameRange, parameterRange)
         {
@@ -663,8 +663,8 @@ namespace Deltin.Deltinteger.Parse
 
     public class VariableNode : Node
     {
-        public string Name { get; private set; }
-        public Node[] Index { get; private set; }
+        public string Name { get; }
+        public Node[] Index { get; }
 
         public VariableNode(DeltinScriptParser.VariableContext context, BuildAstVisitor visitor) : base(new Location(visitor.file, DocRange.GetRange(context)))
         {
@@ -719,13 +719,15 @@ namespace Deltin.Deltinteger.Parse
 
     public class StringNode : Node, IConstantSupport
     {
-        public string Value { get; private set; }
-        public Node[] Format { get; private set; }
+        public string Value { get; }
+        public Node[] Format { get; }
+        public bool Localized { get; }
 
-        public StringNode(string value, Node[] format, Location location) : base(location)
+        public StringNode(string value, Node[] format, bool localized, Location location) : base(location)
         {
             Value = value;
             Format = format;
+            Localized = localized;
         }
 
         public override Node[] Children()
@@ -741,7 +743,7 @@ namespace Deltin.Deltinteger.Parse
 
     public class BooleanNode : Node, IConstantSupport
     {
-        public bool Value { get; private set; }
+        public bool Value { get; }
 
         public BooleanNode(bool value, Location location) : base(location)
         {
@@ -801,9 +803,9 @@ namespace Deltin.Deltinteger.Parse
 
     public class EnumNode : Node
     {
-        public string Type { get; private set; }
-        public string Value { get; private set; }
-        public EnumMember EnumMember { get; private set; }
+        public string Type { get; }
+        public string Value { get; }
+        public EnumMember EnumMember { get; }
 
         public EnumNode(string type, string value, Location location) : base(location)
         {
@@ -820,8 +822,8 @@ namespace Deltin.Deltinteger.Parse
 
     public class ValueInArrayNode : Node
     {
-        public Node Value { get; private set; }
-        public Node Index { get; private set; }
+        public Node Value { get; }
+        public Node Index { get; }
 
         public ValueInArrayNode(Node value, Node index, Location location) : base(location)
         {
@@ -837,7 +839,7 @@ namespace Deltin.Deltinteger.Parse
 
     public class CreateArrayNode : Node
     {
-        public Node[] Values { get; private set; }
+        public Node[] Values { get; }
         public CreateArrayNode(Node[] values, Location location) : base(location)
         {
             Values = values;
@@ -851,9 +853,9 @@ namespace Deltin.Deltinteger.Parse
 
     public class TernaryConditionalNode : Node
     {
-        public Node Condition { get; private set; }
-        public Node Consequent { get; private set; }
-        public Node Alternative { get; private set; }
+        public Node Condition { get; }
+        public Node Consequent { get; }
+        public Node Alternative { get; }
         public TernaryConditionalNode(Node condition, Node consequent, Node alternative, Location location) : base(location)
         {
             Condition = condition;
@@ -913,10 +915,10 @@ namespace Deltin.Deltinteger.Parse
 
     public class VarSetNode : Node
     {
-        public Node Variable { get; private set; }
-        public Node[] Index { get; private set; }
-        public string Operation { get; private set; }
-        public Node Value { get; private set; }
+        public Node Variable { get; }
+        public Node[] Index { get; }
+        public string Operation { get; }
+        public Node Value { get; }
 
         public VarSetNode(DeltinScriptParser.VarsetContext context, BuildAstVisitor visitor) : base(new Location(visitor.file, DocRange.GetRange(context)))
         {
@@ -978,11 +980,11 @@ namespace Deltin.Deltinteger.Parse
 
     public class ForNode : Node, IBlockContainer
     {
-        public VarSetNode VarSetNode { get; private set; }
-        public DefineNode DefineNode { get; private set; }
-        public Node Expression { get; private set; }
-        public VarSetNode Statement { get; private set; }
-        public BlockNode Block { get; private set; }
+        public VarSetNode VarSetNode { get; }
+        public DefineNode DefineNode { get; }
+        public Node Expression { get; }
+        public VarSetNode Statement { get; }
+        public BlockNode Block { get; }
         private Location errorRange { get; }
 
         public ForNode(DeltinScriptParser.ForContext context, BuildAstVisitor visitor) : base(new Location(visitor.file, DocRange.GetRange(context)))
@@ -1016,8 +1018,8 @@ namespace Deltin.Deltinteger.Parse
 
     public class WhileNode : Node, IBlockContainer
     {
-        public Node Expression { get; private set; }
-        public BlockNode Block { get; private set; }
+        public Node Expression { get; }
+        public BlockNode Block { get; }
         private Location errorRange { get; }
 
         public WhileNode(DeltinScriptParser.WhileContext context, BuildAstVisitor visitor) : base(new Location(visitor.file, DocRange.GetRange(context)))
@@ -1119,8 +1121,8 @@ namespace Deltin.Deltinteger.Parse
 
     public class IfData
     {
-        public Node Expression { get; private set; }
-        public BlockNode Block { get; private set; }
+        public Node Expression { get; }
+        public BlockNode Block { get; }
 
         public IfData(Node expression, BlockNode block)
         {
@@ -1131,7 +1133,7 @@ namespace Deltin.Deltinteger.Parse
 
     public class ReturnNode : Node
     {
-        public Node Value { get; private set; }
+        public Node Value { get; }
 
         public ReturnNode(Node value, Location location) : base (location)
         {

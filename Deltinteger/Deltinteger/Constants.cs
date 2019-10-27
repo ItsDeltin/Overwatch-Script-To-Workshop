@@ -199,7 +199,7 @@ namespace Deltin.Deltinteger
             "defend",
             "defended",
             "defending",
-            "defence",
+            "defense",
             "deliver",
             "delivered",
             "delivering",

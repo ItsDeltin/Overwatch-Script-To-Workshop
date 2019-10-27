@@ -6,7 +6,7 @@ grammar DeltinScript;
 
 number : NUMBER | neg  ;
 neg    : '-'NUMBER     ;
-string : STRINGLITERAL ;
+string : LOCALIZED? STRINGLITERAL ;
 formatted_string: '<' string (COMMA expr)* '>' ;
 true   : TRUE          ;
 false  : FALSE         ;
@@ -170,6 +170,7 @@ SEPERATOR     : '.' ;
 COMMA         : ',' ;
 TERNARY       : '?' ;
 TERNARY_ELSE  : ':' ;
+LOCALIZED     : '@' ;
 
 // Keywords
 RULE_WORD : 'rule'      ;

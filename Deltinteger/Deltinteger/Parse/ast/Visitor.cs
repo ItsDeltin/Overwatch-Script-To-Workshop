@@ -180,7 +180,7 @@ namespace Deltin.Deltinteger.Parse
         public override Node VisitString(DeltinScriptParser.StringContext context)
         {
             string value = context.STRINGLITERAL().GetText().Trim('"');
-            return new StringNode(value, null, new Location(file, DocRange.GetRange(context)));
+            return new StringNode(value, null, context.LOCALIZED() != null, new Location(file, DocRange.GetRange(context)));
         }
 
         // <"hello <0>! Waiting game...", EventPlayer()>
@@ -190,7 +190,7 @@ namespace Deltin.Deltinteger.Parse
             Node[] format = new Node[context.expr().Length];
             for (int i = 0; i < format.Length; i++)
                 format[i] = VisitExpr(context.expr()[i]);
-            return new StringNode(value, format, new Location(file, DocRange.GetRange(context)));
+            return new StringNode(value, format, context.@string().LOCALIZED() != null, new Location(file, DocRange.GetRange(context)));
         }
 
         // Method()

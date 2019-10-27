@@ -963,6 +963,135 @@ namespace Deltin.Deltinteger.Elements
         }
     }
 
+    [ElementData("Custom String", ValueType.Any)]
+    [Parameter("{0}", ValueType.Any, typeof(V_Null))]
+    [Parameter("{1}", ValueType.Any, typeof(V_Null))]
+    [Parameter("{2}", ValueType.Any, typeof(V_Null))]
+    public class V_CustomString : Element
+    {
+        public string Text { get; }
+
+        public V_CustomString(string text, params Element[] format) : base(format)
+        {
+            Text = text;
+        }
+        public V_CustomString()
+        {
+            Text = "";
+        }
+
+        protected override string[] AdditionalParameters()
+        {
+            return new string[] { "\"" + Text + "\"" };
+        }
+
+        public static Element ParseString(LanguageServer.Location location, string value, Element[] parameters)
+        {
+            // Look for <#>s
+            var formats = Regex.Matches(value, "<([0-9]+)>").ToArray();
+
+            if (formats.Length == 0)
+                return new V_CustomString(value);
+            
+            List<FormatParameter> stringGroupParameters = new List<FormatParameter>();
+            List<StringGroup> stringGroups = new List<StringGroup>();
+            List<int> unique = new List<int>();
+            for (int i = 0; i < formats.Length; i++)
+            {
+                FormatParameter parameter = new FormatParameter(formats[i]);
+
+                if (parameter.Parameter >= parameters.Length)
+                    throw SyntaxErrorException.StringParameterCount(parameter.Parameter, parameters.Length, location);
+
+                if (unique.Count == 3 && !unique.Contains(parameter.Parameter))
+                {
+                    stringGroups.Add(new StringGroup(stringGroupParameters.ToArray()));
+                    stringGroupParameters.Clear();
+                    unique.Clear();
+                }
+                stringGroupParameters.Add(parameter);
+
+                if (!unique.Contains(parameter.Parameter))
+                    unique.Add(parameter.Parameter);
+            }
+            stringGroups.Add(new StringGroup(stringGroupParameters.ToArray()));
+
+            V_CustomString[] strings = new V_CustomString[stringGroups.Count];
+            for (int i = 0; i < strings.Length; i++)
+            {
+                int start = i == 0                  ? 0            : stringGroups[i - 1].EndIndex;
+                int end   = i == strings.Length - 1 ? value.Length : stringGroups[i]    .EndIndex;
+
+                string groupString = value.Substring(start, end - start);
+                
+                var formatGroups = stringGroups[i].Formats
+                    .GroupBy(g => g.Parameter)
+                    .Select(g => g.First())
+                    .ToArray();
+                
+                Element[] groupParameters = new Element[formatGroups.Length];
+                for (int g = 0; g < formatGroups.Length; g++)
+                {
+                    int parameter = formatGroups[g].Parameter;
+                    groupString = groupString.Replace("<" + parameter + ">", "{" + g + "}");
+                    groupParameters[g] = parameters[parameter];
+                }
+                strings[i] = new V_CustomString(groupString, groupParameters);
+            }
+            
+            return Join(strings);
+        }
+
+        public static Element Join(params Element[] elements)
+        {
+            if (elements.Length == 0) throw new Exception();
+
+            const string join2 = "{0}{1}";
+            const string join3 = "{0}{1}{2}";
+
+            List<Element> list = elements.ToList();
+            while (list.Count > 1)
+            {
+                if (list.Count >= 3)
+                {
+                    list[0] = new V_CustomString(join3, list[0], list[1], list[2]);
+                    list.RemoveRange(1, 2);
+                }
+                else if (list.Count >= 2)
+                {
+                    list[0] = new V_CustomString(join2, list[0], list[1], new V_Null());
+                    list.RemoveAt(1);
+                }
+                else throw new Exception();
+            }
+            return list[0];
+        }
+
+        class FormatParameter
+        {
+            public Match Match { get; }
+            public int Parameter { get; } 
+
+            public FormatParameter(Match match)
+            {
+                Match = match;
+                Parameter = int.Parse(match.Groups[1].Value);
+            }
+        }
+
+        class StringGroup
+        {
+            public FormatParameter[] Formats { get; }
+            public int EndIndex { get; }
+
+            public StringGroup(FormatParameter[] formats)
+            {
+                Formats = formats;
+                EndIndex = formats.Last().Match.Index + formats.Last().Match.Length;
+            }
+        }
+    }
+
     [ElementData("Subtract", ValueType.Any)]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
