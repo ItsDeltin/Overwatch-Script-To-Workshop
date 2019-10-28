@@ -150,7 +150,7 @@ namespace Deltin.Deltinteger.Assets.Images
             IndexedVar effects = null;
             if (getIds)
             {
-                effects = TranslateContext.VarCollection.AssignVar(Scope, "Image Effects", TranslateContext.IsGlobal, null);
+                effects = IndexedVar.AssignInternalVar(TranslateContext.VarCollection, Scope, "Image Effects", TranslateContext.IsGlobal);
                 actions.AddRange(effects.SetVariable(new V_EmptyArray()));
             }
 

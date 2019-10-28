@@ -2,7 +2,7 @@ using System;
 using Deltin.Deltinteger.Parse;
 using Deltin.Deltinteger.Elements;
 
-namespace Deltin.Deltinteger.Models
+namespace Deltin.Deltinteger.Assets.Models
 {
     public class ModelVar : Var
     {
