@@ -4,12 +4,12 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.IO;
-using System.Windows.Forms;
 using System.Globalization;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.Parse;
 using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.Pathfinder;
+using TextCopy;
 
 namespace Deltin.Deltinteger
 {
@@ -45,6 +45,15 @@ namespace Deltin.Deltinteger
                 Console.Write("Output folder: ");
                 string folder = Console.ReadLine();
                 Deltin.Deltinteger.Assets.Models.Letter.Generate(folder);
+            }
+            else if (args.Contains("-editor"))
+            {
+                string pathfindEditorScript = Extras.CombinePathWithDotNotation(null, "!PathfindEditor.del");
+
+                if (!File.Exists(pathfindEditorScript))
+                    Log.Write(LogLevel.Normal, "The PathfindEditor.del module is missing!");
+                else
+                    Script(pathfindEditorScript);
             }
             else
             {
@@ -89,10 +98,9 @@ namespace Deltin.Deltinteger
                     Log.Write(LogLevel.Normal, $"Could not find the file '{script}'.");
                     Log.Write(LogLevel.Normal, $"Drag and drop a script over the executable to parse.");
                 }
-
-                Log.Write(LogLevel.Normal, "Done. Press enter to exit.");
-                Console.ReadLine();
             }
+            
+            Finished();
         }
 
         static void Script(string parseFile)
@@ -125,11 +133,7 @@ namespace Deltin.Deltinteger
                 }
 
                 string final = RuleArrayToWorkshop(result.Rules.ToArray(), result.VarCollection);
-
-                Log.Write(LogLevel.Normal, "Press enter to copy code to clipboard, then in Overwatch click \"Paste Rule\".");
-                Console.ReadLine();
-
-                SetClipboard(final);
+                WorkshopCodeResult(final);
             }
             else
             {
@@ -141,12 +145,7 @@ namespace Deltin.Deltinteger
         public static string RuleArrayToWorkshop(Rule[] rules, VarCollection varCollection)
         {
             var builder = new StringBuilder();
-
-            builder.AppendLine("// --- Variable Guide ---");
-
-            foreach(var var in varCollection.AllVars)
-                builder.AppendLine("// " + var.ToString());
-            
+            varCollection.ToWorkshop(builder);
             builder.AppendLine();
 
             Log debugPrintLog = new Log("Tree");
@@ -159,12 +158,17 @@ namespace Deltin.Deltinteger
             return builder.ToString();
         }
 
-        public static void SetClipboard(string text)
+        public static void WorkshopCodeResult(string code)
         {
-            Thread setClipboardThread = new Thread(() => Clipboard.SetText(text));
-            setClipboardThread.SetApartmentState(ApartmentState.STA); //Set the thread to STA
-            setClipboardThread.Start();
-            setClipboardThread.Join();
+            Log.Write(LogLevel.Normal, "Press enter to copy code to clipboard, then in Overwatch click \"Paste Rule\".");
+            Console.ReadLine();
+            Clipboard.SetText(code);
+        }
+
+        public static void Finished()
+        {
+            Log.Write(LogLevel.Normal, "Done. Press enter to exit.");
+            Console.ReadLine();
         }
     }
 }

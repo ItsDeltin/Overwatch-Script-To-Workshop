@@ -6,7 +6,7 @@ grammar DeltinScript;
 
 number : NUMBER | neg  ;
 neg    : '-'NUMBER     ;
-string : STRINGLITERAL ;
+string : LOCALIZED? STRINGLITERAL ;
 formatted_string: '<' string (COMMA expr)* '>' ;
 true   : TRUE          ;
 false  : FALSE         ;
@@ -19,8 +19,8 @@ rule_define      :                   (type=PART | DEFINE) (GLOBAL|PLAYER) name=P
 inclass_define   : accessor? STATIC? (type=PART | DEFINE)                 name=PART         (EQUALS expr?)? ;
 parameter_define :                   (type=PART | DEFINE)                 name=PART                         ;
 
-useVar   : PART (INDEX_START number INDEX_END)? ;
-internalVars : USEVAR (GLOBAL | PLAYER | DIM | CLASS) PART STATEMENT_END ;
+useVar   : PART? (INDEX_START number INDEX_END)? ;
+internalVars : USEVAR (GLOBAL | PLAYER | DIM | CLASS) NUMBER STATEMENT_END ;
 
 expr 
 	: 
@@ -170,6 +170,7 @@ SEPERATOR     : '.' ;
 COMMA         : ',' ;
 TERNARY       : '?' ;
 TERNARY_ELSE  : ':' ;
+LOCALIZED     : '@' ;
 
 // Keywords
 RULE_WORD : 'rule'      ;

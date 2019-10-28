@@ -168,6 +168,9 @@ namespace Deltin.Deltinteger.Elements
     [Parameter("Value", ValueType.VectorAndPlayer, typeof(V_Vector))]
     public class V_CrossProduct : Element {}
 
+    [ElementData("Current Map", ValueType.Map)]
+    public class V_CurrentMap : Element {}
+
     [ElementData("Current Array Element", ValueType.Any)]
     public class V_ArrayElement : Element {}
 
@@ -251,7 +254,8 @@ namespace Deltin.Deltinteger.Elements
     public class V_Forward : Element {}
 
     [ElementData("Global Variable", ValueType.Any)]
-    [EnumParameter("Variable", typeof(Variable))]
+    [VarRefParameter("Variable")]
+    //[EnumParameter("Variable", typeof(Variable))]
     public class V_GlobalVariable : Element {}
 
     [ElementData("Has Spawned", ValueType.Boolean)]
@@ -495,6 +499,10 @@ namespace Deltin.Deltinteger.Elements
     [EnumParameter("Transformation", typeof(Transformation))]
     public class V_LocalVectorOf : Element {}
 
+    [ElementData("Map", ValueType.Map)]
+    [EnumParameter("Map", typeof(Map))]
+    public class V_MapVar : Element {}
+
     [ElementData("Match Round", ValueType.Number)]
     public class V_MatchRound : Element {}
 
@@ -653,7 +661,8 @@ namespace Deltin.Deltinteger.Elements
 
     [ElementData("Player Variable", ValueType.Any)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
-    [EnumParameter("Variable", typeof(Variable))]
+    [VarRefParameter("Variable")]
+    // [EnumParameter("Variable", typeof(Variable))]
     public class V_PlayerVariable : Element {}
 
     [ElementData("Players In Slot", ValueType.Player)]
@@ -950,6 +959,154 @@ namespace Deltin.Deltinteger.Elements
                 stringList.Add(new V_Null());
 
             return stringList.ToArray();
+        }
+    }
+
+    [ElementData("Custom String", ValueType.Any)]
+    [Parameter("{0}", ValueType.Any, typeof(V_Null))]
+    [Parameter("{1}", ValueType.Any, typeof(V_Null))]
+    [Parameter("{2}", ValueType.Any, typeof(V_Null))]
+    public class V_CustomString : Element
+    {
+        public string Text { get; }
+
+        public V_CustomString(string text, params Element[] format) : base(format)
+        {
+            Text = text;
+        }
+        public V_CustomString()
+        {
+            Text = "";
+        }
+
+        protected override string[] AdditionalParameters()
+        {
+            return new string[] { "\"" + Text + "\"" };
+        }
+
+        public static Element ParseString(LanguageServer.Location location, string value, Element[] parameters)
+        {
+            // Look for <#>s
+            var formats = Regex.Matches(value, "<([0-9]+)>").ToArray();
+
+            // If there are no formats, return the custom string normally.
+            if (formats.Length == 0)
+                return new V_CustomString(value);
+            
+            // The Overwatch workshop only supports 3 formats in a string.
+            // The following code will split the string into multiple sections so it can support more.
+            // Split the string after every 3 unique formats, for example:
+            //                                    v split here
+            //           <0> this <1> <0> is a <3> custom <4> string <5>
+
+            List<FormatParameter> stringGroupParameters = new List<FormatParameter>(); // The current group of formats.
+            List<StringGroup> stringGroups = new List<StringGroup>(); // Stores information about each section in the string.
+            List<int> unique = new List<int>(); // Stores the list of each unique format id. The count shouldn't go above 3.
+            for (int i = 0; i < formats.Length; i++)
+            {
+                FormatParameter parameter = new FormatParameter(formats[i]);
+
+                // If the format id is more than the number of parameters, throw a syntax error.
+                if (parameter.Parameter >= parameters.Length)
+                    throw SyntaxErrorException.StringParameterCount(parameter.Parameter, parameters.Length, location);
+
+                // If there is already 3 unique IDs, create a new section.
+                if (unique.Count == 3 && !unique.Contains(parameter.Parameter))
+                {
+                    stringGroups.Add(new StringGroup(stringGroupParameters.ToArray()));
+                    stringGroupParameters.Clear();
+                    unique.Clear();
+                }
+
+                stringGroupParameters.Add(parameter);
+
+                // If the current format ID is new, add it to the unique list.
+                if (!unique.Contains(parameter.Parameter))
+                    unique.Add(parameter.Parameter);
+            }
+
+            // Add tailing formats to a new section.
+            stringGroups.Add(new StringGroup(stringGroupParameters.ToArray()));
+
+            // Convert each section to a custom string.
+            V_CustomString[] strings = new V_CustomString[stringGroups.Count];
+            for (int i = 0; i < strings.Length; i++)
+            {
+                // start is either the start of the string or the end of the last section.
+                int start = i == 0                  ? 0            : stringGroups[i - 1].EndIndex;
+                // end is the index of last format in the section unless this is the last section, then it will be the end of the string.
+                int end   = i == strings.Length - 1 ? value.Length : stringGroups[i]    .EndIndex;
+
+                string groupString = value.Substring(start, end - start);
+                
+                // Returns an array of all unique formats in the current section.
+                var formatGroups = stringGroups[i].Formats
+                    .GroupBy(g => g.Parameter)
+                    .Select(g => g.First())
+                    .ToArray();
+                
+                // groupParameters is {0}, {1}, and {2}. Length should be between 1 and 3.
+                Element[] groupParameters = new Element[formatGroups.Length];
+                for (int g = 0; g < formatGroups.Length; g++)
+                {
+                    int parameter = formatGroups[g].Parameter;
+                    groupString = groupString.Replace("<" + parameter + ">", "{" + g + "}");
+                    groupParameters[g] = parameters[parameter];
+                }
+                strings[i] = new V_CustomString(groupString, groupParameters);
+            }
+            
+            // Join the sections together.
+            return Join(strings);
+        }
+
+        public static Element Join(params Element[] elements)
+        {
+            if (elements.Length == 0) throw new Exception();
+
+            const string join2 = "{0}{1}";
+            const string join3 = "{0}{1}{2}";
+
+            List<Element> list = elements.ToList();
+            while (list.Count > 1)
+            {
+                if (list.Count >= 3)
+                {
+                    list[0] = new V_CustomString(join3, list[0], list[1], list[2]);
+                    list.RemoveRange(1, 2);
+                }
+                else if (list.Count >= 2)
+                {
+                    list[0] = new V_CustomString(join2, list[0], list[1], new V_Null());
+                    list.RemoveAt(1);
+                }
+                else throw new Exception();
+            }
+            return list[0];
+        }
+
+        class FormatParameter
+        {
+            public Match Match { get; }
+            public int Parameter { get; } 
+
+            public FormatParameter(Match match)
+            {
+                Match = match;
+                Parameter = int.Parse(match.Groups[1].Value);
+            }
+        }
+
+        class StringGroup
+        {
+            public FormatParameter[] Formats { get; }
+            public int EndIndex { get; }
+
+            public StringGroup(FormatParameter[] formats)
+            {
+                Formats = formats;
+                EndIndex = formats.Last().Match.Index + formats.Last().Match.Length;
+            }
         }
     }
 

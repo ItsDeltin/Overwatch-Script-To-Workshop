@@ -171,9 +171,5 @@ namespace Deltin.Deltinteger.Elements
         {
             throw new NotImplementedException();
         }
-        public double ServerLoadWeight()
-        {
-            throw new NotImplementedException();
-        }
     }
 }

@@ -44,7 +44,7 @@ namespace Deltin.Deltinteger.Elements
             if (TestingIfTrue)
                 return new MethodResult(actions, result.GetVariable());
             else
-                return new MethodResult(actions, !(result.GetVariable()));
+                return new MethodResult(actions, !result.GetVariable());
         }
 
         public override CustomMethodWiki Wiki()

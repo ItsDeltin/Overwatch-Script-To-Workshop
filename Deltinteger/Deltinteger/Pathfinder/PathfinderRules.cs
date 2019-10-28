@@ -10,17 +10,15 @@ namespace Deltin.Deltinteger.Pathfinder
     {
         public const double MoveToNext = 0.3;
 
-        public IndexedVar Nodes { get; }
         public IndexedVar Path { get; }
         public IndexedVar LastUpdate { get; }
         public IndexedVar DistanceToNext { get; }
 
         public PathfinderInfo(ParsingData parser)
         {
-            Nodes = parser.VarCollection.AssignVar(null, "Pathfinder: Nodes", false, null);
-            Path = parser.VarCollection.AssignVar(null, "Pathfinder: Path", false, null);
-            LastUpdate = parser.VarCollection.AssignVar(null, "Pathfinder: Last Update", false, null);
-            DistanceToNext = parser.VarCollection.AssignVar(null, "Pathfinder: Distance To Next Node", false, null);
+            Path           = IndexedVar.AssignInternalVar   (parser.VarCollection, null, "Pathfinder: Path",                  false);
+            LastUpdate     = IndexedVar.AssignInternalVarExt(parser.VarCollection, null, "Pathfinder: Last Update",           false);
+            DistanceToNext = IndexedVar.AssignInternalVarExt(parser.VarCollection, null, "Pathfinder: Distance To Next Node", false);
 
             parser.Rules.Add(GetStartRule());
             parser.Rules.Add(GetUpdateRule());
@@ -153,20 +151,20 @@ namespace Deltin.Deltinteger.Pathfinder
                 )
             };
             stop.Actions = ArrayBuilder<Element>.Build(
-                Element.Part<A_StopFacing>(new V_EventPlayer()),
                 Element.Part<A_StopThrottleInDirection>(new V_EventPlayer())
+                // Element.Part<A_StopFacing>(new V_EventPlayer()),
             );
             return stop;
         }
 
         public Element NextPosition(Element player)
         {
-            return Element.Part<V_ValueInArray>(Nodes.GetVariable(player), Element.Part<V_FirstOf>(Path.GetVariable(player)));
+            return Element.Part<V_FirstOf>(Path.GetVariable(player));
         }
 
         public Element PositionAt(Element player, Element index)
         {
-            return Element.Part<V_ValueInArray>(Nodes.GetVariable(player), Element.Part<V_ValueInArray>(Path.GetVariable(player), index));
+            return Path.GetVariable(player)[index];
         }
 
         private Element IsBetween(Element position, Element start, Element end)

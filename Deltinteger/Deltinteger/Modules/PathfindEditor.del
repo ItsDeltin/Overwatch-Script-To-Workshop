@@ -309,8 +309,8 @@ if (IsCommunicating(EventPlayer(), Communication.VoiceLineUp))
     SmallMessage(AllPlayers(), "downloaded!");
 }
 
-define globalvar nodesOut          D;
-define globalvar segmentsOut       E;
+define globalvar nodesOut    [3];
+define globalvar segmentsOut [4];
 
 rule: "Preload"
 if (CountOf(preloadNodes) != 0)
@@ -325,8 +325,8 @@ if (CountOf(preloadNodes) != 0)
             ));
 }
 
-define globalvar preloadNodes J;
-define globalvar preloadSegments K;
+define globalvar preloadNodes [5];
+define globalvar preloadSegments [6];
 
 define globalvar Attribute = 0;
 define globalvar AttributeHud = 0;

@@ -155,11 +155,19 @@ namespace Deltin.Deltinteger.Parse
             {
                 if (isRoot)
                 {
-                    VarCollection = new VarCollection(ruleset.UseGlobalVar, ruleset.UsePlayerVar, ruleset.UseBuilderVar);
+                    VarCollection = new VarCollection(
+                        new WorkshopVariable(true, 0, "_extendedGlobalCollection"),
+                        new WorkshopVariable(false, 0, "_extendedPlayerCollection"),
+                        new WorkshopVariable(true, 1, "_arrayBuilder")
+                    );
+                    VarCollection.Reserved.AddRange(ruleset.Reserved);
+                    
                     Root = new ScopeGroup(VarCollection);
-                    ClassIndexes = VarCollection.AssignVar(null, "Class Indexes", true, null);
-                    ClassArray = new IndexedVar(null, "Class Array", true, ruleset.UseClassVar, new Element[0], VarCollection.WorkshopArrayBuilder, null);
+                    ClassIndexes = IndexedVar.AssignInternalVar(VarCollection, null, "Class Indexes", true);
+                    ClassArray   = IndexedVar.AssignInternalVar(VarCollection, null, "Class Array", true);
                 }
+                else
+                    VarCollection.Reserved.AddRange(ruleset.Reserved);
 
                 // Get the defined types
                 foreach (var definedType in ruleset.DefinedTypes)
@@ -253,14 +261,14 @@ namespace Deltin.Deltinteger.Parse
                     {
                         IndexedVar var;
                         if (definedVar.UseVar == null)
-                            var = VarCollection.AssignVar(Root, definedVar.VariableName, definedVar.IsGlobal, definedVar);
+                            var = IndexedVar.AssignVar(VarCollection, Root, definedVar.VariableName, definedVar.IsGlobal, definedVar);
                         else
-                            var = VarCollection.AssignVar(
-                                Root, 
-                                definedVar.VariableName, 
+                            var = IndexedVar.AssignVar(
+                                VarCollection,
+                                Root,
+                                definedVar.VariableName,
                                 definedVar.IsGlobal,
-                                definedVar.UseVar.Variable, 
-                                definedVar.UseVar.Index,
+                                new WorkshopVariable(definedVar.IsGlobal, definedVar.UseVar.ID, definedVar.UseVar.Variable),
                                 definedVar
                             );
                         if (definedVar.Type != null)
@@ -285,7 +293,7 @@ namespace Deltin.Deltinteger.Parse
         public ScopeGroup Root { get; private set; }
         public Dictionary<string, RulesetNode> Rulesets { get; } = new Dictionary<string, RulesetNode>();
         public List<Rule> AdditionalRules { get; } = new List<Rule>();
-        public List<VariableChaseData> Chasing { get; } = new List<VariableChaseData>();
+        //public List<VariableChaseData> Chasing { get; } = new List<VariableChaseData>();
         private List<string> Imported { get; } = new List<string>();
         private TranslateRule globalTranslate;
         private TranslateRule playerTranslate;

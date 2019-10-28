@@ -30,8 +30,8 @@ namespace Deltin.Deltinteger.Parse
                 return;
             IsSetup = true;
 
-            SkipCount = VarCollection.AssignVar(null, "ContinueSkip", IsGlobal, null);
-            TempHolder = VarCollection.AssignVar(null, "ContinueSkip temp holder", IsGlobal, null);
+            SkipCount = IndexedVar.AssignInternalVarExt(VarCollection, null, "ContinueSkip", IsGlobal);
+            TempHolder = IndexedVar.AssignInternalVarExt(VarCollection, null, "ContinueSkip temp holder", IsGlobal);
             
             A_Wait waitAction = A_Wait.MinimumWait;
             waitAction.Comment = "ContinueSkip Wait";

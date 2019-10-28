@@ -42,10 +42,5 @@ namespace Deltin.Deltinteger.Elements
         {
             return Value1.ToWorkshop() + " " + CompareOperator.ToWorkshop() + " " + Value2.ToWorkshop();
         }
-
-        public double ServerLoadWeight()
-        {
-            return Value1.ServerLoadWeight() + Value2.ServerLoadWeight();
-        }
     }
 }
