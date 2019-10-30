@@ -280,7 +280,8 @@ namespace Deltin.Deltinteger.LanguageServer
 
                         if (parserData.Success)
                         {
-                            completion.AddRange(methodNode.Method.Parameters.Select(param => new CompletionItem(param.Name + ":") { kind = CompletionItem.Keyword }) );
+                            if (methodNode.Method.Parameters != null)
+                                completion.AddRange(methodNode.Method.Parameters.Select(param => new CompletionItem(param.Name + ":") { kind = CompletionItem.Keyword }) );
 
                             // Get all variables
                             if (methodNode.RelatedScopeGroup != null)

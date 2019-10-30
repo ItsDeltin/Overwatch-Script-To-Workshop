@@ -52,8 +52,8 @@ namespace Deltin.Deltinteger.Elements
     {
         protected override MethodResult Get()
         {
-            IndexedVar player = TranslateContext.VarCollection.AssignVar(Scope, "OptimisedSphereHitbox: player", TranslateContext.IsGlobal, null);
-            IndexedVar position = TranslateContext.VarCollection.AssignVar(Scope, "OptimisedSphereHitbox: position", TranslateContext.IsGlobal, null);
+            IndexedVar player   = IndexedVar.AssignInternalVar(TranslateContext.VarCollection, Scope, "OptimisedSphereHitbox: player", TranslateContext.IsGlobal);
+            IndexedVar position = IndexedVar.AssignInternalVar(TranslateContext.VarCollection, Scope, "OptimisedSphereHitbox: position", TranslateContext.IsGlobal);
 
             Element[] actions = ArrayBuilder<Element>.Build
             (

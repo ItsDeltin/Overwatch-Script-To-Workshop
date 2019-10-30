@@ -37,8 +37,8 @@ namespace Deltin.Deltinteger.Elements
     {
         protected override MethodResult Get()
         {
-            IndexedVar point1 = TranslateContext.VarCollection.AssignVar(Scope, "OptimisedHorizontalDistance: point1", TranslateContext.IsGlobal, null);
-            IndexedVar point2 = TranslateContext.VarCollection.AssignVar(Scope, "OptimisedHorizontalDistance: point2", TranslateContext.IsGlobal, null);
+            IndexedVar point1 = IndexedVar.AssignInternalVar(TranslateContext.VarCollection, Scope, "OptimisedHorizontalDistance: point1", TranslateContext.IsGlobal);
+            IndexedVar point2 = IndexedVar.AssignInternalVar(TranslateContext.VarCollection, Scope, "OptimisedHorizontalDistance: point2", TranslateContext.IsGlobal);
 
             Element[] actions = ArrayBuilder<Element>.Build
             (

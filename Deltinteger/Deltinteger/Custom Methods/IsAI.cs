@@ -10,7 +10,7 @@ namespace Deltin.Deltinteger.Elements
     {
         protected override MethodResult Get()
         {
-            IndexedVar player = TranslateContext.VarCollection.AssignVar(Scope, "IsAIUnintrusive: player", TranslateContext.IsGlobal, null);
+            IndexedVar player = IndexedVar.AssignInternalVar(TranslateContext.VarCollection, Scope, "IsAIUnintrusive: player", TranslateContext.IsGlobal);
 
             Element[] actions = ArrayBuilder<Element>.Build
             (
@@ -39,9 +39,9 @@ namespace Deltin.Deltinteger.Elements
     {
         protected override MethodResult Get()
         {
-            IndexedVar player = TranslateContext.VarCollection.AssignVar(Scope, "IsAIAccurate: player", TranslateContext.IsGlobal, null);
-            IndexedVar originalHero = TranslateContext.VarCollection.AssignVar(Scope, "IsAIAccurate: originalHero", TranslateContext.IsGlobal, null);
-            IndexedVar isAI = TranslateContext.VarCollection.AssignVar(Scope, "IsAIAccurate: isAI", TranslateContext.IsGlobal, null);
+            IndexedVar player       = IndexedVar.AssignInternalVar(TranslateContext.VarCollection, Scope, "IsAIAccurate: player", TranslateContext.IsGlobal);
+            IndexedVar originalHero = IndexedVar.AssignInternalVar(TranslateContext.VarCollection, Scope, "IsAIAccurate: originalHero", TranslateContext.IsGlobal);
+            IndexedVar isAI         = IndexedVar.AssignInternalVar(TranslateContext.VarCollection, Scope, "IsAIAccurate: isAI", TranslateContext.IsGlobal);
 
             Element[] actions = ArrayBuilder<Element>.Build
             (

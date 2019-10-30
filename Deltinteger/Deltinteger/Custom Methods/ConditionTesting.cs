@@ -21,7 +21,7 @@ namespace Deltin.Deltinteger.Elements
             ContinueSkip continueSkip = TranslateContext.ContinueSkip;
             continueSkip.Setup();
 
-            IndexedVar result = TranslateContext.VarCollection.AssignVar(Scope, $"{Name} result", TranslateContext.IsGlobal, null);
+            IndexedVar result = IndexedVar.AssignInternalVar(TranslateContext.VarCollection, Scope, $"{Name} result", TranslateContext.IsGlobal);
 
             Element[] actions = ArrayBuilder<Element>.Build(
 

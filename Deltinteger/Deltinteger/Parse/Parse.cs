@@ -279,7 +279,6 @@ namespace Deltin.Deltinteger.Parse
         public ScopeGroup Root { get; private set; }
         public Dictionary<string, RulesetNode> Rulesets { get; } = new Dictionary<string, RulesetNode>();
         public List<Rule> AdditionalRules { get; } = new List<Rule>();
-        //public List<VariableChaseData> Chasing { get; } = new List<VariableChaseData>();
         private List<string> Imported { get; } = new List<string>();
         private TranslateRule globalTranslate;
         private TranslateRule playerTranslate;

@@ -11,8 +11,8 @@ namespace Deltin.Deltinteger.Elements
     {
         protected override MethodResult Get()
         {
-            IndexedVar player = TranslateContext.VarCollection.AssignVar(Scope, "SetHealth: player", TranslateContext.IsGlobal, null);
-            IndexedVar health = TranslateContext.VarCollection.AssignVar(Scope, "SetHealth: health", TranslateContext.IsGlobal, null);
+            IndexedVar player = IndexedVar.AssignInternalVar(TranslateContext.VarCollection, Scope, "SetHealth: player", TranslateContext.IsGlobal);
+            IndexedVar health = IndexedVar.AssignInternalVar(TranslateContext.VarCollection, Scope, "SetHealth: health", TranslateContext.IsGlobal);
 
             Element[] actions = ArrayBuilder<Element>.Build
             (

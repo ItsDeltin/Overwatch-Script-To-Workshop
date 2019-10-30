@@ -47,7 +47,6 @@ namespace Deltin.Deltinteger.Elements
     [Parameter("Destination", ValueType.Any, typeof(V_Number))]
     [Parameter("Rate", ValueType.Number, typeof(V_Number))]
     [EnumParameter("Reevaluation", typeof(RateChaseReevaluation))]
-    [UsageDiagnostic("Use ChaseVariable instead.", 3)]
     public class A_ChaseGlobalVariableAtRate : Element {}
 
     [ElementData("Chase Global Variable Over Time")]
@@ -65,7 +64,6 @@ namespace Deltin.Deltinteger.Elements
     [Parameter("Destination", ValueType.Any, typeof(V_Number))]
     [Parameter("Rate", ValueType.Number, typeof(V_Number))]
     [EnumParameter("Reevaluation", typeof(RateChaseReevaluation))]
-    [UsageDiagnostic("Use ChaseVariable instead.", 3)]
     public class A_ChasePlayerVariableAtRate : Element {}
 
     [ElementData("Chase Player Variable Over Time")]
