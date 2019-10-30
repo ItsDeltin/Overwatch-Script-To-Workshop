@@ -271,6 +271,29 @@ namespace Deltin.Deltinteger.Elements
         public UsageDiagnostic[] UsageDiagnostics { get; }
         public WikiMethod Wiki { get; }
 
+        public Element Parse(TranslateRule context, bool needsToBeValue, ScopeGroup scope, MethodNode methodNode, IWorkshopTree[] parameters)
+        {
+            TranslateRule.CheckMethodType(needsToBeValue, IsValue ? CustomMethodType.Value : CustomMethodType.Action, methodNode.Name, methodNode.Location);
+
+            Element element = GetObject();
+            element.ParameterValues = parameters;
+
+            Element result;
+
+            if (element.ElementData.IsValue)
+                result = element;
+            else
+            {
+                context.Actions.Add(element);
+                result = null;
+            }
+
+            foreach (var usageDiagnostic in UsageDiagnostics)
+                context.ParserData.Diagnostics.AddDiagnostic(methodNode.Location.uri, usageDiagnostic.GetDiagnostic(methodNode.Location.range));
+            
+            return result;
+        }
+
         public string GetLabel(bool markdown)
         {
             return Name + "(" + Parameter.ParameterGroupToString(Parameters, markdown) + ")" 

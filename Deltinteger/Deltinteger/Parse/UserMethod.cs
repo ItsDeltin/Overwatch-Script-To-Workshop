@@ -49,6 +49,15 @@ namespace Deltin.Deltinteger.Parse
 
         abstract public Element Get(TranslateRule context, ScopeGroup scope, MethodNode methodNode, IWorkshopTree[] parameters);
 
+        public Element Parse(TranslateRule context, bool needsToBeValue, ScopeGroup scope, MethodNode methodNode, IWorkshopTree[] parameters)
+        {
+            Element result = Get(context, scope, methodNode, parameters);
+            if (!needsToBeValue)
+                result = null;
+            
+            return result;
+        }
+
         public string GetLabel(bool markdown)
         {
             return Name + "(" + Parameter.ParameterGroupToString(Parameters, markdown) + ")"

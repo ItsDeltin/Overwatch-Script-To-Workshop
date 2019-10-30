@@ -280,6 +280,8 @@ namespace Deltin.Deltinteger.LanguageServer
 
                         if (parserData.Success)
                         {
+                            completion.AddRange(methodNode.Method.Parameters.Select(param => new CompletionItem(param.Name + ":") { kind = CompletionItem.Keyword }) );
+
                             // Get all variables
                             if (methodNode.RelatedScopeGroup != null)
                                 completion.AddRange(methodNode.RelatedScopeGroup?.GetCompletionItems(posData.Caret));
@@ -372,7 +374,7 @@ namespace Deltin.Deltinteger.LanguageServer
                     {
                         methodNode = (MethodNode)posData.SelectedNode[1];
                         // Get the index of the selected node.
-                        parameterIndex = Array.IndexOf(methodNode.Parameters, posData.SelectedNode[0]);
+                        parameterIndex = Array.IndexOf(methodNode.GetParameters(), posData.SelectedNode[0]);
                     }
                     else
                     {
@@ -381,15 +383,14 @@ namespace Deltin.Deltinteger.LanguageServer
                             parameterIndex = -1;
                         else
                             // The last parameter is selected.
-                            parameterIndex = methodNode.Parameters.Length;
+                            parameterIndex = methodNode.GetParameters().Length;
                     }
                 }
-                else if (/*parser.Bav.SelectedNode.ElementAtOrDefault(0) is IExpressionNode
-                    &&*/ posData.SelectedNode.ElementAtOrDefault(1) is MethodNode)
+                else if (posData.SelectedNode.ElementAtOrDefault(1) is MethodNode)
                 {
                     methodNode = (MethodNode)posData.SelectedNode[1];
                     // Get the index of the selected node.
-                    parameterIndex = Array.IndexOf(methodNode.Parameters, posData.SelectedNode[0]);
+                    parameterIndex = Array.IndexOf(methodNode.GetParameters(), posData.SelectedNode[0]);
                 }
                 else
                     parameterIndex = 0;
@@ -397,6 +398,8 @@ namespace Deltin.Deltinteger.LanguageServer
                 SignatureInformation information = null;
                 if (methodNode != null)
                 {
+                    if (!methodNode.UsingNormalParameters()) parameterIndex = -1;
+
                     IMethod method = parserData.GetMethod(methodNode.Name);
 
                     if (method != null)
@@ -415,8 +418,6 @@ namespace Deltin.Deltinteger.LanguageServer
                             method.Wiki?.Description,
                             // Get the parameter data
                             parameterInfo
-                            //method.Wiki?.Parameters?.Select(v => v.ToParameterInformation())
-                            //    .ToArray()
                         );
                     }
                 }

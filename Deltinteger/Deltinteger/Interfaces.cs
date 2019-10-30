@@ -16,6 +16,8 @@ namespace Deltin.Deltinteger
         string Name { get; }
         ParameterBase[] Parameters { get; }
         WikiMethod Wiki { get; }
+
+        Element Parse(TranslateRule context, bool needsToBeValue, ScopeGroup scope, MethodNode methodNode, IWorkshopTree[] parameters);
     }
 
     public interface ILanguageServerInfo

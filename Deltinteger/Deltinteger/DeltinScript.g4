@@ -62,8 +62,10 @@ enum : PART SEPERATOR PART? ;
 variable : PART array? ;
 varset   : var=expr array? ((statement_operation val=expr?) | INCREMENT | DECREMENT) ;
 
-call_parameters : expr (COMMA expr?)*    		 	     ;
-method          : PART LEFT_PAREN call_parameters? RIGHT_PAREN ;
+call_parameters  : expr (COMMA expr?)*    		 	         ;
+picky_parameter  : PART TERNARY_ELSE expr                    ;
+picky_parameters : picky_parameter (COMMA picky_parameter?)* ;
+method           : PART LEFT_PAREN (call_parameters | picky_parameters)? RIGHT_PAREN ;
 
 statement :
 	( varset STATEMENT_END?

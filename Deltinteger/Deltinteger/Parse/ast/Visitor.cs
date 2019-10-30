@@ -196,16 +196,7 @@ namespace Deltin.Deltinteger.Parse
         // Method()
         public override Node VisitMethod(DeltinScriptParser.MethodContext context)
         {
-            string methodName = context.PART().GetText();
-
-            Node[] parameters = new Node[context.call_parameters()?.expr().Length ?? 0];
-            for (int i = 0; i < parameters.Length; i++)
-                parameters[i] = Visit(context.call_parameters().expr()[i]);
-
-            DocRange nameRange = DocRange.GetRange(context.PART().Symbol);
-            DocRange parameterRange = DocRange.GetRange(context.LEFT_PAREN().Symbol, context.RIGHT_PAREN().Symbol);
-
-            return new MethodNode(methodName, parameters, nameRange, parameterRange, new Location(file, DocRange.GetRange(context)));
+            return new MethodNode(context, this);
         }
 
         public override Node VisitVariable(DeltinScriptParser.VariableContext context)

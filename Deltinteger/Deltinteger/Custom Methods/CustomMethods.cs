@@ -90,6 +90,20 @@ namespace Deltin.Deltinteger.Elements
             }
         }
 
+        public Element Parse(TranslateRule context, bool needsToBeValue, ScopeGroup scope, MethodNode methodNode, IWorkshopTree[] parameters)
+        {
+            TranslateRule.CheckMethodType(needsToBeValue, CustomMethodType, methodNode.Name, methodNode.Location);
+
+            var customMethodResult = GetObject(context, scope, parameters, methodNode.Location, methodNode.Parameters.Select(p => p.Location).ToArray())
+                .Result();
+
+            // Some custom methods have extra actions.
+            if (customMethodResult.Elements != null)
+                context.Actions.AddRange(customMethodResult.Elements);
+
+            return customMethodResult.Result;
+        }
+
         public CustomMethodBase GetObject(TranslateRule context, ScopeGroup scope, IWorkshopTree[] parameters, Location methodLocation, Location[] parameterLocations)
         {
             CustomMethodBase customMethod = GetObject();

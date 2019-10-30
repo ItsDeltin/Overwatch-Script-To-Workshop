@@ -27,7 +27,7 @@ namespace Deltin.Deltinteger.Parse
             Global = global;
             Player = player;
 
-            IndexedVar tempArrayBuilderVar = IndexedVar.AssignInternalVar(this, null, "Multidimensional Array Builder", true);
+            IndexedVar tempArrayBuilderVar = IndexedVar.AssignInternalVar(this, null, "_arrayBuilderStore", true);
             WorkshopArrayBuilder = new WorkshopArrayBuilder(builder, tempArrayBuilderVar);
             tempArrayBuilderVar.ArrayBuilder = WorkshopArrayBuilder;
         }

@@ -638,11 +638,33 @@ namespace Deltin.Deltinteger.Parse
     {
         public string Name { get; }
         public Node[] Parameters { get; }
+        public PickyParameter[] PickyParameters { get; }
 
-        public MethodNode(string name, Node[] parameters, DocRange nameRange, DocRange parameterRange, Location location) : base(location, nameRange, parameterRange)
+        public IMethod Method { get; set; }
+
+        public MethodNode(DeltinScriptParser.MethodContext context, BuildAstVisitor visitor)
+            : base(
+                new Location(visitor.file, DocRange.GetRange(context)),
+                DocRange.GetRange(context.PART().Symbol),
+                DocRange.GetRange(context.LEFT_PAREN().Symbol, context.RIGHT_PAREN().Symbol)
+            )
         {
-            Name = name;
-            Parameters = parameters;
+            Name = context.PART().GetText();
+
+            if (context.call_parameters() != null)
+            {
+                Parameters = new Node[context.call_parameters().expr().Length];
+                for (int i = 0; i < Parameters.Length; i++)
+                    Parameters[i] = visitor.Visit(context.call_parameters().expr()[i]);
+            }
+            else if (context.picky_parameters() != null)
+            {
+                PickyParameters = new PickyParameter[context.picky_parameters().picky_parameter().Length];
+                for (int i = 0; i < PickyParameters.Length; i++)
+                    PickyParameters[i] = new PickyParameter(context.picky_parameters().picky_parameter(i), visitor);
+            }
+            else
+                Parameters = new Node[0];
         }
 
         public bool IsNameSelected(Pos caretPos)
@@ -655,9 +677,36 @@ namespace Deltin.Deltinteger.Parse
             return SubrangesSelected(caretPos).Contains(1);
         }
 
+        public bool UsingNormalParameters()
+        {
+            return Parameters != null;
+        }
+
+        public Node[] GetParameters()
+        {
+            return UsingNormalParameters() ? Parameters : PickyParameters;
+        }
+
         public override Node[] Children()
         {
-            return Parameters;
+            return ArrayBuilder<Node>.Build(Parameters, PickyParameters);
+        }
+    }
+
+    public class PickyParameter : Node
+    {
+        public string Name { get; }
+        public Node Expression { get; }
+
+        public PickyParameter(DeltinScriptParser.Picky_parameterContext context, BuildAstVisitor visitor) : base(new Location(visitor.file, DocRange.GetRange(context)))
+        {
+            Name = context.PART().GetText();
+            Expression = visitor.Visit(context.expr());
+        }
+
+        public override Node[] Children()
+        {
+            return new Node[] { Expression };
         }
     }
 
