@@ -1,30 +1,20 @@
 import "!Debug Tools.del";
 import "!Container.del";
 
-rule: "good luck dum dum"
-{
-    define a = new Empty();
-}
-
-class Empty
-{
-    define wow = 123;
-}
-
 rule: "Commands"
-Event.OngoingPlayer
 {
-    CreateHudText(EventPlayer(), null, "ultimate_ability: build sphere", null, Location.Right, 0, Color.White, Color.White);
-    CreateHudText(EventPlayer(), null, "crouch + ultimate_ability: destroy sphere", null, Location.Right, 1, Color.White, Color.White);
-    CreateHudText(EventPlayer(), null, "interact: select sphere", null, Location.Right, 2, Color.White, Color.Blue);
-    CreateHudText(EventPlayer(), null, "crouch + interact: stop selecting spheres", null, Location.Right, 3, Color.White, Color.Blue);
-    CreateHudText(EventPlayer(), null, "secondary_fire: connect", null, Location.Right, 4, Color.White, Color.Green);
-    CreateHudText(EventPlayer(), null, "crouch + secondary_fire: stop connect", null, Location.Right, 5, Color.White, Color.Green);
-    CreateHudText(EventPlayer(), null, "right: connect initial -> final", null, Location.Right, 6, Color.White, Color.Green);
-    CreateHudText(EventPlayer(), null, "left: connect initial -> remaining", null, Location.Right, 7, Color.White, Color.Green);
-    CreateHudText(EventPlayer(), null, "ability 1: next_form", null, Location.Right, 8, Color.White, Color.Orange);
-    CreateHudText(EventPlayer(), null, "hello: reveal", null, Location.Right, 9, Color.White, Color.SkyBlue);
-    CreateHudText(EventPlayer(), null, "up: upload", null, Location.Right, 10, Color.White, Color.SkyBlue);
+    CreateHudText(VisibleTo:AllPlayers(), Text:"https://github.com/ItsDeltin/Overwatch-Script-To-Workshop/wiki/Pathfinding"     , TextColor     :Color.Blue   , Location:Location.Right, SortOrder:0 );
+    CreateHudText(VisibleTo:AllPlayers(), Subheader:"Ultimate: Create node."                                                    , SubheaderColor:Color.Aqua   , Location:Location.Right, SortOrder:1 );
+    CreateHudText(VisibleTo:AllPlayers(), Subheader:"Crouch + Ultimate: Destroy node."                                          , SubheaderColor:Color.Aqua   , Location:Location.Right, SortOrder:2 );
+    CreateHudText(VisibleTo:AllPlayers(), Subheader:"Interact: Select node."                                                    , SubheaderColor:Color.Green  , Location:Location.Right, SortOrder:3 );
+    CreateHudText(VisibleTo:AllPlayers(), Subheader:"Crouch + Interact: Deselect all nodes."                                    , SubheaderColor:Color.Green  , Location:Location.Right, SortOrder:4 );
+    CreateHudText(VisibleTo:AllPlayers(), Subheader:"Secondary Fire: Connect all selected nodes."                               , SubheaderColor:Color.Orange , Location:Location.Right, SortOrder:5 );
+    CreateHudText(VisibleTo:AllPlayers(), Subheader:"Crouch + Secondary Fire: Disconnect all selected nodes."                   , SubheaderColor:Color.Orange , Location:Location.Right, SortOrder:6 );
+    CreateHudText(VisibleTo:AllPlayers(), Subheader:"Voice Line Right: Create a path from the first to the last selected nodes.", SubheaderColor:Color.Orange , Location:Location.Right, SortOrder:7 );
+    CreateHudText(VisibleTo:AllPlayers(), Subheader:"Voice Line Left: Connect all selected nodes to the first selected node."   , SubheaderColor:Color.Orange , Location:Location.Right, SortOrder:8 );
+    CreateHudText(VisibleTo:AllPlayers(), Subheader:"Shift: Switch attribute."                                                  , SubheaderColor:Color.Purple , Location:Location.Right, SortOrder:9 );
+    CreateHudText(VisibleTo:AllPlayers(), Subheader:"Hello: Update shown nodes."                                                , SubheaderColor:Color.SkyBlue, Location:Location.Right, SortOrder:10);
+    CreateHudText(VisibleTo:AllPlayers(), Subheader:"Voice Line Up: Compile pathmap."                                           , SubheaderColor:Color.SkyBlue, Location:Location.Right, SortOrder:11);
 }
 
 macro GetClosestNode(): FirstOf(SortedArray(Nodes, DistanceBetween(EyePosition(EventPlayer()), (<Node>ArrayElement()).ShownLocation)));
@@ -291,7 +281,7 @@ rule: "CSV out"
 Event.OngoingPlayer
 if (IsCommunicating(EventPlayer(), Communication.VoiceLineUp))
 {
-    SmallMessage(AllPlayers(), "building ...");
+    SmallMessage(AllPlayers(), "Compiling...");
 
     nodesOut = EmptyArray();
     segmentsOut = EmptyArray();
@@ -306,7 +296,7 @@ if (IsCommunicating(EventPlayer(), Communication.VoiceLineUp))
             (<Segment>Segments[i]).Attribute
         ));
 
-    SmallMessage(AllPlayers(), "downloaded!");
+    SmallMessage(AllPlayers(), "Compile Finished!");
 }
 
 define globalvar nodesOut    [3];
@@ -341,15 +331,15 @@ if (IsButtonHeld(EventPlayer(), Button.Ability1))
     if (Attribute == 2) Attribute = 0;
 
     if (Attribute == 0)
-        CreateHudText(AllPlayers(), "current_form:", "normal", null, Location.Top);
+        CreateHudText(AllPlayers(), "Attribute:", "Normal", null, Location.Top);
     else if (Attribute == 1)
-        CreateHudText(AllPlayers(), "current_form:", <"<0> location", 1>, null, Location.Top);
+        CreateHudText(AllPlayers(), "Attribute:", "One-way", null, Location.Top);
 
     AttributeHud = LastTextID();
 }
 
 rule: "Initial attribute HUD"
 {
-    CreateHudText(AllPlayers(), "current_form:", "normal", null, Location.Top);
+    CreateHudText(AllPlayers(), "Attribute:", "normal", null, Location.Top);
     AttributeHud = LastTextID();
 }

@@ -114,7 +114,7 @@ namespace Deltin.Deltinteger.Elements
 
     [ElementData("Create Hud Text")]
     [Parameter("Visible To", ValueType.Player, typeof(V_AllPlayers))]
-    [Parameter("Header", ValueType.Any, typeof(V_String))]
+    [Parameter("Header", ValueType.Any, typeof(V_Null))]
     [Parameter("Subheader", ValueType.Any, typeof(V_Null))]
     [Parameter("Text", ValueType.Any, typeof(V_Null))]
     [EnumParameter("Location", typeof(HudLocation))]
