@@ -26,7 +26,16 @@ namespace Deltin.Deltinteger.Parse
             globalTranslate = new TranslateRule(initialGlobalValues, Root, this);
             playerTranslate = new TranslateRule(initialPlayerValues, Root, this);
 
-            GetObjects(content, file, globalTranslate, playerTranslate, true);
+            GetRulesets(content, file, true);
+
+            VarCollection = new VarCollection(reserved.ToArray());                    
+            Root = new ScopeGroup(VarCollection);
+            ClassIndexes = IndexedVar.AssignInternalVar(VarCollection, null, "Class Indexes", true);
+            ClassArray   = IndexedVar.AssignInternalVar(VarCollection, null, "Class Array", true);
+
+            if (!Diagnostics.ContainsErrors())
+                foreach(var ruleset in Rulesets)
+                    GetObjects(ruleset.Value, ruleset.Key, globalTranslate, playerTranslate);
 
             foreach (var type in DefinedTypes)
                 try
@@ -137,7 +146,7 @@ namespace Deltin.Deltinteger.Parse
             return ruleset;
         }
 
-        private void GetObjects(string document, string file, TranslateRule globalTranslate, TranslateRule playerTranslate, bool isRoot)
+        private void GetRulesets(string document, string file, bool isRoot)
         {
             string absolute = new Uri(file).AbsolutePath;
 
@@ -150,121 +159,107 @@ namespace Deltin.Deltinteger.Parse
             RulesetNode ruleset = GetRuleset(file, document);
             Rulesets.Add(file, ruleset);
 
+            // Get the imported files.
             if (ruleset != null && !Diagnostics.ContainsErrors())
             {
-                if (isRoot)
-                {
-                    VarCollection = new VarCollection(
-                        new WorkshopVariable(true, 0, "_extendedGlobalCollection"),
-                        new WorkshopVariable(false, 0, "_extendedPlayerCollection"),
-                        new WorkshopVariable(true, 1, "_arrayBuilder")
-                    );
-                    VarCollection.Reserved.AddRange(ruleset.Reserved);
-                    
-                    Root = new ScopeGroup(VarCollection);
-                    ClassIndexes = IndexedVar.AssignInternalVar(VarCollection, null, "Class Indexes", true);
-                    ClassArray   = IndexedVar.AssignInternalVar(VarCollection, null, "Class Array", true);
-                }
-                else
-                    VarCollection.Reserved.AddRange(ruleset.Reserved);
-
-                // Get the defined types
-                foreach (var definedType in ruleset.DefinedTypes)
-                    try
-                    {
-                        if (DefinedTypes.Any(type => type.Name == definedType.Name))
-                            throw SyntaxErrorException.NameAlreadyDefined(definedType.Location);
-                        DefinedTypes.Add(DefinedType.GetDefinedType(definedType));
-                    }
-                    catch (SyntaxErrorException ex)
-                    {
-                        Diagnostics.Error(ex);
-                    }
-
-                // Get the user methods.
-                for (int i = 0; i < ruleset.UserMethods.Length; i++)
-                    try
-                    {
-                        UserMethods.Add(UserMethod.CreateUserMethod(Root, ruleset.UserMethods[i]));
-                    }
-                    catch (SyntaxErrorException ex)
-                    {
-                        Diagnostics.Error(ex);
-                    }
-
-                // Get the rules
-                RuleNodes.AddRange(ruleset.Rules);
-
+                reserved.AddRange(ruleset.Reserved);
                 List<string> importedFiles = new List<string>();
-
-                foreach (ImportObjectNode importObject in ruleset.ObjectImports)
-                    try
-                    {
-                        Importer importer = new Importer(Diagnostics, importedFiles, importObject.File, file, importObject.Location);
-                        if (!importer.AlreadyImported)
-                        {
-                            importedFiles.Add(importer.ResultingPath);
-                            switch (importer.FileType)
-                            {
-                                case ".obj":
-                                    string content = importer.GetFile();
-                                    Model newModel = Model.ImportObj(content);
-                                    new ModelVar(importObject.Name, Root, importObject, newModel);
-                                    break;
-                                
-                                case ".pathmap":
-                                    PathMap pathMap = PathMap.ImportFromXML(importer.ResultingPath);
-                                    new PathMapVar(this, importObject.Name, Root, importObject, pathMap);
-                                    break;
-                            }
-                        }
-                    }
-                    catch (SyntaxErrorException ex)
-                    {
-                        Diagnostics.Error(ex);
-                    }
-
-                // Check the imported files.
                 foreach (ImportNode importNode in ruleset.Imports)
-                    try
+                {
+                    Importer importer = new Importer(Diagnostics, importedFiles, importNode.File, file, importNode.Location);
+                    if (!importer.AlreadyImported)
                     {
-                        Importer importer = new Importer(Diagnostics, importedFiles, importNode.File, file, importNode.Location);
-                        if (!importer.AlreadyImported)
+                        string content = File.ReadAllText(importer.ResultingPath);
+                        GetRulesets(content, importer.ResultingPath, false);
+                        importedFiles.Add(importer.ResultingPath);
+                    }
+                }
+            }
+        }
+
+        private void GetObjects(RulesetNode rulesetNode, string file, TranslateRule globalTranslate, TranslateRule playerTranslate)
+        {
+            string absolute = new Uri(file).AbsolutePath;
+
+            // Get the defined types
+            foreach (var definedType in rulesetNode.DefinedTypes)
+                try
+                {
+                    if (DefinedTypes.Any(type => type.Name == definedType.Name))
+                        throw SyntaxErrorException.NameAlreadyDefined(definedType.Location);
+                    DefinedTypes.Add(DefinedType.GetDefinedType(definedType));
+                }
+                catch (SyntaxErrorException ex)
+                {
+                    Diagnostics.Error(ex);
+                }
+
+            // Get the user methods.
+            for (int i = 0; i < rulesetNode.UserMethods.Length; i++)
+                try
+                {
+                    UserMethods.Add(UserMethod.CreateUserMethod(Root, rulesetNode.UserMethods[i]));
+                }
+                catch (SyntaxErrorException ex)
+                {
+                    Diagnostics.Error(ex);
+                }
+
+            // Get the rules
+            RuleNodes.AddRange(rulesetNode.Rules);
+
+            List<string> importedFiles = new List<string>();
+
+            foreach (ImportObjectNode importObject in rulesetNode.ObjectImports)
+                try
+                {
+                    Importer importer = new Importer(Diagnostics, importedFiles, importObject.File, file, importObject.Location);
+                    if (!importer.AlreadyImported)
+                    {
+                        importedFiles.Add(importer.ResultingPath);
+                        switch (importer.FileType)
                         {
-                            string content = File.ReadAllText(importer.ResultingPath);
-                            GetObjects(content, importer.ResultingPath, globalTranslate, playerTranslate, false);
-                            importedFiles.Add(importer.ResultingPath);
+                            case ".obj":
+                                string content = importer.GetFile();
+                                Model newModel = Model.ImportObj(content);
+                                new ModelVar(importObject.Name, Root, importObject, newModel);
+                                break;
+                            
+                            case ".pathmap":
+                                PathMap pathMap = PathMap.ImportFromXML(importer.ResultingPath);
+                                new PathMapVar(this, importObject.Name, Root, importObject, pathMap);
+                                break;
                         }
                     }
-                    catch (SyntaxErrorException ex)
-                    {
-                        Diagnostics.Error(ex);
-                    }
+                }
+                catch (SyntaxErrorException ex)
+                {
+                    Diagnostics.Error(ex);
+                }
 
-                // Get the variables
-                foreach (var definedVar in ruleset.DefinedVars)
-                    try
-                    {
-                        IndexedVar var;
-                        if (definedVar.UseVar == null)
-                            var = IndexedVar.AssignVar(VarCollection, Root, definedVar.VariableName, definedVar.IsGlobal, definedVar);
-                        else
-                            var = IndexedVar.AssignVar(
-                                VarCollection,
-                                Root,
-                                definedVar.VariableName,
-                                definedVar.IsGlobal,
-                                new WorkshopVariable(definedVar.IsGlobal, definedVar.UseVar.ID, definedVar.UseVar.Variable),
-                                definedVar
-                            );
-                        if (definedVar.Type != null)
-                            var.Type = GetDefinedType(definedVar.Type, definedVar.Location);
-                    }
-                    catch (SyntaxErrorException ex)
-                    {
-                        Diagnostics.Error(ex);
-                    }
-            }
+            // Get the variables
+            foreach (var definedVar in rulesetNode.DefinedVars)
+                try
+                {
+                    IndexedVar var;
+                    if (definedVar.UseVar == null)
+                        var = IndexedVar.AssignVar(VarCollection, Root, definedVar.VariableName, definedVar.IsGlobal, definedVar);
+                    else
+                        var = IndexedVar.AssignVar(
+                            VarCollection,
+                            Root,
+                            definedVar.VariableName,
+                            definedVar.IsGlobal,
+                            new WorkshopVariable(definedVar.IsGlobal, definedVar.UseVar.ID, definedVar.UseVar.Variable),
+                            definedVar
+                        );
+                    if (definedVar.Type != null)
+                        var.Type = GetDefinedType(definedVar.Type, definedVar.Location);
+                }
+                catch (SyntaxErrorException ex)
+                {
+                    Diagnostics.Error(ex);
+                }
         }
 
         public Diagnostics Diagnostics { get; private set; } = new Diagnostics();
@@ -282,6 +277,7 @@ namespace Deltin.Deltinteger.Parse
         private List<string> Imported { get; } = new List<string>();
         private TranslateRule globalTranslate;
         private TranslateRule playerTranslate;
+        private List<int> reserved = new List<int>();
 
         public IMethod GetMethod(string name)
         {

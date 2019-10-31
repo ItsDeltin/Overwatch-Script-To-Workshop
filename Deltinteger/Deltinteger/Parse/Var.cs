@@ -16,16 +16,15 @@ namespace Deltin.Deltinteger.Parse
 
         public WorkshopArrayBuilder WorkshopArrayBuilder { get; }
 
-        public List<int> Reserved { get; } = new List<int>();
+        private int[] Reserved { get; }
 
-        public VarCollection(WorkshopVariable global, WorkshopVariable player, WorkshopVariable builder)
+        public VarCollection(int[] reserved)
         {
-            Add(global);
-            Add(player);
-            Add(builder);
+            Reserved = reserved;
 
-            Global = global;
-            Player = player;
+            Global      = Assign("_extendedGlobalCollection", true);
+            Player      = Assign("_extendedPlayerCollection", false);
+            var builder = Assign("_arrayBuilder", true);
 
             IndexedVar tempArrayBuilderVar = IndexedVar.AssignInternalVar(this, null, "_arrayBuilderStore", true);
             WorkshopArrayBuilder = new WorkshopArrayBuilder(builder, tempArrayBuilderVar);

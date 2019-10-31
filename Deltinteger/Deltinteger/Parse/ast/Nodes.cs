@@ -166,7 +166,7 @@ namespace Deltin.Deltinteger.Parse
         public RuleDefineNode[] DefinedVars { get; }
         public UserMethodBase[] UserMethods { get; }
         public TypeDefineNode[] DefinedTypes { get; }
-        public int[] Reserved { get; } 
+        public int[] Reserved { get; }
 
         public RulesetNode(DeltinScriptParser.RulesetContext context, BuildAstVisitor visitor) : base(new Location(visitor.file, DocRange.GetRange(context)))
         {
@@ -203,6 +203,11 @@ namespace Deltin.Deltinteger.Parse
             for (int i = 0; i < DefinedTypes.Length; i++)
                 DefinedTypes[i] = (TypeDefineNode)visitor.VisitType_define(context.type_define(i));
             
+            List<InternalVarNode> internalVars = new List<InternalVarNode>();
+            for (int i = 0; i < context.internalVars().Length; i++)
+                internalVars.Add(new InternalVarNode(internalVars, context.internalVars(i), visitor));
+            InternalVarNodes = internalVars.ToArray();
+            
             Reserved = visitor.ReservedVariableIDs.ToArray();
         }
 
@@ -219,6 +224,8 @@ namespace Deltin.Deltinteger.Parse
 
         public InternalVarNode(List<InternalVarNode> internalVarNodes, DeltinScriptParser.InternalVarsContext context, BuildAstVisitor visitor) : base(new Location(visitor.file, DocRange.GetRange(context)))
         {
+            ID = int.Parse(context.NUMBER().GetText());
+
             if (context.GLOBAL() != null)
                 Type = InternalVarType.Global;
             else if (context.PLAYER() != null)
@@ -233,7 +240,7 @@ namespace Deltin.Deltinteger.Parse
             if (internalVarNodes.Any(ivn => ivn.Type == Type))
                 visitor._diagnostics.Error($"{Type.ToString()} override already defined.", Location);
 
-            ID = int.Parse(context.NUMBER().GetText());
+            visitor.ReservedVariableIDs.Add(ID);
         }
 
         override public Node[] Children()
