@@ -159,7 +159,6 @@ namespace Deltin.Deltinteger.Parse
 
     public class RulesetNode : Node
     {
-        public InternalVarNode[] InternalVarNodes { get; }
         public ImportNode[] Imports { get; }
         public ImportObjectNode[] ObjectImports { get; }
         public RuleNode[] Rules { get; }
@@ -202,61 +201,16 @@ namespace Deltin.Deltinteger.Parse
             DefinedTypes = new TypeDefineNode[context.type_define().Length];
             for (int i = 0; i < DefinedTypes.Length; i++)
                 DefinedTypes[i] = (TypeDefineNode)visitor.VisitType_define(context.type_define(i));
-            
-            List<InternalVarNode> internalVars = new List<InternalVarNode>();
-            for (int i = 0; i < context.internalVars().Length; i++)
-                internalVars.Add(new InternalVarNode(internalVars, context.internalVars(i), visitor));
-            InternalVarNodes = internalVars.ToArray();
-            
+                        
             Reserved = visitor.ReservedVariableIDs.ToArray();
         }
 
         public override Node[] Children()
         {
-            return ArrayBuilder<Node>.Build(InternalVarNodes, Imports, ObjectImports, Rules, DefinedVars, UserMethods, DefinedTypes);
+            return ArrayBuilder<Node>.Build(Imports, ObjectImports, Rules, DefinedVars, UserMethods, DefinedTypes);
         }
     }
-
-    public class InternalVarNode : Node
-    {
-        public InternalVarType Type { get; }
-        public int ID { get; }
-
-        public InternalVarNode(List<InternalVarNode> internalVarNodes, DeltinScriptParser.InternalVarsContext context, BuildAstVisitor visitor) : base(new Location(visitor.file, DocRange.GetRange(context)))
-        {
-            ID = int.Parse(context.NUMBER().GetText());
-
-            if (context.GLOBAL() != null)
-                Type = InternalVarType.Global;
-            else if (context.PLAYER() != null)
-                Type = InternalVarType.Player;
-            else if (context.DIM() != null)
-                Type = InternalVarType.Builder;
-            else if (context.CLASS() != null)
-                Type = InternalVarType.Class;
-            else
-                throw new NotImplementedException();
-            
-            if (internalVarNodes.Any(ivn => ivn.Type == Type))
-                visitor._diagnostics.Error($"{Type.ToString()} override already defined.", Location);
-
-            visitor.ReservedVariableIDs.Add(ID);
-        }
-
-        override public Node[] Children()
-        {
-            return new Node[0];
-        }
-    }
-
-    public enum InternalVarType
-    {
-        Global,
-        Player,
-        Builder,
-        Class,
-    }
-
+    
     public class DefineNode : Node, IDefine
     {
         public string VariableName { get; }

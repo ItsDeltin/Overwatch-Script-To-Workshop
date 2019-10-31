@@ -348,7 +348,6 @@ namespace Deltin.Deltinteger.Parse
 
         public IWorkshopTree[] ParsePickyParameters(ScopeGroup getter, ScopeGroup scope, ParameterBase[] parameters, PickyParameter[] values, string methodName, LanguageServer.Location methodRange)
         {
-            #warning Remove 'Name.Replace(" ", "")', update ElementList names to trim parameter spaces.
             for (int f = 0; f < values.Length; f++)
             {
                 // Syntax error if the parameter does not exist.
