@@ -38,7 +38,7 @@ namespace Deltin.Deltinteger.Pathfinder
             IndexedVar connectedSegments = IndexedVar.AssignInternalVarExt(context.VarCollection, null, "Dijkstra: Connected Segments", context.IsGlobal);
             IndexedVar neighborIndex     = IndexedVar.AssignInternalVarExt(context.VarCollection, null, "Dijkstra: Neighbor Index", context.IsGlobal);
             IndexedVar neighborDistance  = IndexedVar.AssignInternalVarExt(context.VarCollection, null, "Dijkstra: Distance", context.IsGlobal);
-            parentArray                  = IndexedVar.AssignInternalVarExt(context.VarCollection, null, "Dijkstra: Parent Array", context.IsGlobal);
+            parentArray                  = IndexedVar.AssignInternalVar   (context.VarCollection, null, "Dijkstra: Parent Array", context.IsGlobal);
 
             // Set the current variable as the first node.
             context.Actions.AddRange(current.SetVariable(firstNode));

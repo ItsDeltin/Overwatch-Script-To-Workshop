@@ -115,23 +115,6 @@ namespace Deltin.Deltinteger
 
                 result.Diagnostics.PrintDiagnostics(Log);
 
-                // List all variables
-                ParseLog.Write(LogLevel.Normal, new ColorMod("Variable Guide:", ConsoleColor.Blue));
-
-                if (result.VarCollection.AllVars.Count > 0)
-                {
-                    int nameLength = result.VarCollection.AllVars.Max(v => v.Name.Length);
-
-                    bool other = false;
-                    foreach (Var var in result.VarCollection.AllVars)
-                    {
-                        ConsoleColor textcolor = other ? ConsoleColor.White : ConsoleColor.DarkGray;
-                        other = !other;
-
-                        ParseLog.Write(LogLevel.Normal, new ColorMod(var.ToString(), textcolor));
-                    }
-                }
-
                 string final = RuleArrayToWorkshop(result.Rules.ToArray(), result.VarCollection);
                 WorkshopCodeResult(final);
             }
@@ -145,6 +128,18 @@ namespace Deltin.Deltinteger
         public static string RuleArrayToWorkshop(Rule[] rules, VarCollection varCollection)
         {
             var builder = new StringBuilder();
+
+            var globalCollection = varCollection.UseExtendedCollection(true);
+            for (int i = 0; i < globalCollection.Length; i++)
+            if (globalCollection[i] != null)
+                builder.AppendLine("// global [" + i + "]: " + globalCollection[i].Name);
+            
+            var playerCollection = varCollection.UseExtendedCollection(false);
+            for (int i = 0; i < playerCollection.Length; i++)
+            if (playerCollection[i] != null)
+                builder.AppendLine("// player [" + i + "]: " + playerCollection[i].Name);
+            builder.AppendLine();
+
             varCollection.ToWorkshop(builder);
             builder.AppendLine();
 
