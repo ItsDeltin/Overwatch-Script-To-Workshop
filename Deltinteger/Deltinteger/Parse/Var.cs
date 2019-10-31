@@ -274,17 +274,17 @@ namespace Deltin.Deltinteger.Parse
 
         protected virtual Element Get(Element targetPlayer = null)
         {
-            return WorkshopArrayBuilder.GetVariable(IsGlobal, targetPlayer, Variable, Index);
+            return WorkshopArrayBuilder.GetVariable(targetPlayer, Variable, Index);
         }
 
         public virtual Element[] SetVariable(Element value, Element targetPlayer = null, params Element[] setAtIndex)
         {
-            return WorkshopArrayBuilder.SetVariable(ArrayBuilder, value, IsGlobal, targetPlayer, Variable, Optimize2ndDim, ArrayBuilder<Element>.Build(Index, setAtIndex));
+            return WorkshopArrayBuilder.SetVariable(ArrayBuilder, value, targetPlayer, Variable, Optimize2ndDim, ArrayBuilder<Element>.Build(Index, setAtIndex));
         }
 
         public virtual Element[] ModifyVariable(Operation operation, Element value, Element targetPlayer = null, params Element[] setAtIndex)
         {
-            return WorkshopArrayBuilder.ModifyVariable(ArrayBuilder, operation, value, IsGlobal, targetPlayer, Variable, ArrayBuilder<Element>.Build(Index, setAtIndex));
+            return WorkshopArrayBuilder.ModifyVariable(ArrayBuilder, operation, value, targetPlayer, Variable, ArrayBuilder<Element>.Build(Index, setAtIndex));
         }
         
         public virtual Element[] InScope(Element initialValue, Element targetPlayer = null)
