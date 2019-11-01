@@ -166,12 +166,19 @@ namespace Deltin.Deltinteger.Parse
                 List<string> importedFiles = new List<string>();
                 foreach (ImportNode importNode in ruleset.Imports)
                 {
-                    Importer importer = new Importer(Diagnostics, importedFiles, importNode.File, file, importNode.Location);
-                    if (!importer.AlreadyImported)
+                    try
                     {
-                        string content = File.ReadAllText(importer.ResultingPath);
-                        GetRulesets(content, importer.ResultingPath, false);
-                        importedFiles.Add(importer.ResultingPath);
+                        Importer importer = new Importer(Diagnostics, importedFiles, importNode.File, file, importNode.Location);
+                        if (!importer.AlreadyImported)
+                        {
+                            string content = File.ReadAllText(importer.ResultingPath);
+                            GetRulesets(content, importer.ResultingPath, false);
+                            importedFiles.Add(importer.ResultingPath);
+                        }
+                    }
+                    catch (SyntaxErrorException ex)
+                    {
+                        Diagnostics.Error(ex);
                     }
                 }
             }
