@@ -128,7 +128,7 @@ namespace Deltin.Deltinteger.Parse
 
             context.AssignParameterVariables(constructorScope, constructor.Parameters, parameters, node);
             if (constructor.BlockNode != null)
-                context.ParseBlock(typeScope, constructorScope, constructor.BlockNode, true, null);
+                context.ParseBlock(constructorScope, constructorScope, constructor.BlockNode, true, null);
             constructorScope.Out(context);
             context.MethodStackNotRecursive.Remove(constructor);
         }
