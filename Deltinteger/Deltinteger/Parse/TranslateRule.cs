@@ -938,16 +938,16 @@ namespace Deltin.Deltinteger.Parse
                             ResultingVariable = var;
 
                         // Get the variable index
-                        Element[] varIndex = new Element[variableNode.Index.Length];
-                        for (int i = 0; i < varIndex.Length; i++)
-                            varIndex[i] = translator.ParseExpression(getter, scope, variableNode.Index[i]);
+                        VariableIndex = new Element[variableNode.Index.Length];
+                        for (int i = 0; i < VariableIndex.Length; i++)
+                            VariableIndex[i] = translator.ParseExpression(getter, scope, variableNode.Index[i]);
 
                         // Set the nodeResult.
                         nodeResult = var.GetVariable(Target);
 
                         // Apply the index
-                        for (int i = 0; i < varIndex.Length; i++)
-                            nodeResult = Element.Part<V_ValueInArray>(nodeResult, varIndex[i]);
+                        for (int i = 0; i < VariableIndex.Length; i++)
+                            nodeResult = Element.Part<V_ValueInArray>(nodeResult, VariableIndex[i]);
                     }
                     // If not, parse the node as an expression.
                     else

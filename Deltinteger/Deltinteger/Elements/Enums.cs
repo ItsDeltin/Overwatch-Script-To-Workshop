@@ -707,6 +707,8 @@ namespace Deltin.Deltinteger.Elements
         [EnumOverride(null, "Ecopoint: Antarctica (Winter)")]
         Ecopoint_Antarctica_Winter,
         Eichenwalde,
+        [EnumOverride(null, "Eichenwalde (Halloween)")]
+        Eichenwalde_Halloween,
         [EnumOverride(null, "Estádio das Rãs")]
         Estadio_Das_Ras,
         Hanamura,
