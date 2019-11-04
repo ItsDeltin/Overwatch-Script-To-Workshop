@@ -77,6 +77,7 @@ namespace Deltin.Deltinteger
                                 Byte[] info = Encoding.Unicode.GetBytes(result);
                                 fs.Write(info, 0, info.Length);
                             }
+                            Log.Write(LogLevel.Normal, "Created pathmap file at '" + output + "'.");
                         }
                         else if (ext == ".pathmap")
                         {

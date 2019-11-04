@@ -47,7 +47,7 @@ namespace Deltin.Deltinteger.Csv
             for (int i = 0; i < infoSplit.Length; i++)
                 infoSplit[i] = infoSplit[i].Trim();
 
-            const int expectedLength = 26 + 2; // Every letter of the alphabet plus the time and variable set owner.
+            const int expectedLength = Constants.NUMBER_OF_VARIABLES + 2; // Every letter of the alphabet plus the time and variable set owner.
             if (infoSplit.Length != expectedLength)
                 throw new CsvParseFailedException("Expected " + expectedLength + " nodes, got " + infoSplit.Length + " instead.");
             
@@ -80,9 +80,20 @@ namespace Deltin.Deltinteger.Csv
                     }
 
                     // Get the values
-                    CsvPart[] array = new CsvPart[arrayElements.Length];
-                    for (int a = 0; a < array.Length; a++)
-                        array[a] = ParseValue(arrayElements[a]);
+                    CsvPart[] array;
+
+                    // Check if it is an empty array
+                    if (arrayElements.Length == 1 && arrayElements[0] == "")
+                    {
+                        array = new CsvPart[0];
+                    }
+                    else
+                    {
+                        array = new CsvPart[arrayElements.Length];
+
+                        for (int a = 0; a < array.Length; a++)
+                            array[a] = ParseValue(arrayElements[a]);
+                    }
                     
                     variableValues[i] = new CsvArray(array);
                 }

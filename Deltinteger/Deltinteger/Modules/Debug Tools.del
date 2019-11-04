@@ -87,6 +87,7 @@ if (IsCommunicating(EventPlayer(), Communication.VoiceLineLeft))
 rule: "Move camera"
 Event.OngoingPlayer
 if (HostPlayer() == EventPlayer())
+if (cam)
 if (DistanceBetween(Vector(), ThrottleOf(EventPlayer())) > 0)
 {
     define x = XOf(ThrottleOf());
@@ -111,6 +112,7 @@ if (DistanceBetween(Vector(), ThrottleOf(EventPlayer())) > 0)
 rule: "Move camera down"
 Event.OngoingPlayer
 if (HostPlayer() == EventPlayer())
+if (cam)
 if (IsButtonHeld(EventPlayer(), Button.Crouch))
 {
     cameraPos += Down() / 2;
@@ -121,6 +123,7 @@ if (IsButtonHeld(EventPlayer(), Button.Crouch))
 rule: "Move camera up"
 Event.OngoingPlayer
 if (HostPlayer() == EventPlayer())
+if (cam)
 if (IsButtonHeld(EventPlayer(), Button.Jump))
 {
     cameraPos += Up() / 2;
