@@ -146,7 +146,7 @@ class Node
     public method UpdateVisible()
     {
         Hide();
-        if (DistanceBetween(EventPlayer(), ShownLocation) < 30)
+        if (DistanceBetween(EventPlayer(), ShownLocation) < 35)
             Show();
     }
 }
@@ -272,7 +272,7 @@ if (IsCommunicating(EventPlayer(), Communication.Hello))
         segment.Node2.UpdateVisible();
 
         segment.Hide();
-        if (segment.Node1.visible && segment.Node2.visible)
+        if (segment.Node1.visible || segment.Node2.visible)
             segment.Show();
     }
 }
