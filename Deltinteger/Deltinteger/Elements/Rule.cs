@@ -9,17 +9,20 @@ namespace Deltin.Deltinteger.Elements
 {
     public class Rule: IWorkshopTree
     {
-        public string Name { get; private set; }
-        public RuleEvent RuleEvent { get; private set; }
-        public Team Team { get; private set; }
-        public PlayerSelector Player { get; private set; }
-        public bool IsGlobal { get; private set; }
+        public string Name { get; }
+        public RuleEvent RuleEvent { get; }
+        public Team Team { get; }
+        public PlayerSelector Player { get; }
+        public bool IsGlobal { get; }
 
         public Condition[] Conditions { get; set; }
         public Element[] Actions { get; set; }
 
         public Rule(string name, RuleEvent ruleEvent = RuleEvent.OngoingGlobal, Team team = Team.All, PlayerSelector player = PlayerSelector.All) // Creates a rule.
         {
+            if (ruleEvent == RuleEvent.OngoingGlobal && (team != Team.All || player != PlayerSelector.All))
+                ruleEvent = RuleEvent.OngoingPlayer;
+
             Name = name;
             RuleEvent = ruleEvent;
             Team = team;
