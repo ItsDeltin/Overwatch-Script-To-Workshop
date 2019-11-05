@@ -26,7 +26,7 @@ namespace Deltin.Deltinteger.Parse
             globalTranslate = new TranslateRule(initialGlobalValues, Root, this);
             playerTranslate = new TranslateRule(initialPlayerValues, Root, this);
 
-            GetRulesets(content, file, true);
+            GetRulesets(content, file, true, null);
 
             VarCollection = new VarCollection(ReservedGlobalIDs.ToArray(), ReservedGlobalNames.ToArray(), ReservedPlayerIDs.ToArray(), ReservedPlayerNames.ToArray());                    
             Root = new ScopeGroup(VarCollection);
@@ -146,7 +146,7 @@ namespace Deltin.Deltinteger.Parse
             return ruleset;
         }
 
-        private void GetRulesets(string document, string file, bool isRoot)
+        private void GetRulesets(string document, string file, bool isRoot, ImportedFile cache)
         {
             string absolute = new Uri(file).AbsolutePath;
 
@@ -156,7 +156,18 @@ namespace Deltin.Deltinteger.Parse
             Diagnostics.AddFile(file);
 
             // Get the ruleset.
-            RulesetNode ruleset = GetRuleset(file, document);
+            RulesetNode ruleset;
+
+            if (cache == null)
+                ruleset = GetRuleset(file, document);
+            else if (cache.Update() || cache.Cache == null)
+            {
+                ruleset = GetRuleset(file, cache.Content);
+                cache.Cache = ruleset;
+            }
+            else
+                ruleset = (RulesetNode)cache.Cache;
+
             Rulesets.Add(file, ruleset);
 
             // Get the imported files.
@@ -183,8 +194,7 @@ namespace Deltin.Deltinteger.Parse
                         Importer importer = new Importer(Diagnostics, importedFiles, importNode.File, file, importNode.Location);
                         if (!importer.AlreadyImported)
                         {
-                            string content = File.ReadAllText(importer.ResultingPath);
-                            GetRulesets(content, importer.ResultingPath, false);
+                            GetRulesets(null, importer.ResultingPath, false, importer.FileData);
                             importedFiles.Add(importer.ResultingPath);
                         }
                     }
@@ -239,7 +249,8 @@ namespace Deltin.Deltinteger.Parse
                         switch (importer.FileType)
                         {
                             case ".obj":
-                                string content = importer.GetFile();
+                                importer.FileData.Update();
+                                string content = importer.FileData.Content;
                                 Model newModel = Model.ImportObj(content);
                                 new ModelVar(importObject.Name, Root, importObject, newModel);
                                 break;

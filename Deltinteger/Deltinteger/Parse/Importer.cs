@@ -1,5 +1,8 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Security.Cryptography;
+using System.Linq;
 using Deltin.Deltinteger.LanguageServer;
 
 namespace Deltin.Deltinteger.Parse
@@ -10,6 +13,7 @@ namespace Deltin.Deltinteger.Parse
         public string FileName { get; }
         public string FileType { get; }
         public bool AlreadyImported { get; }
+        public ImportedFile FileData { get; }
 
         public Importer(Diagnostics diagnostics, List<string> importedFiles, string file, string referencePath, Location location)
         {
@@ -36,11 +40,70 @@ namespace Deltin.Deltinteger.Parse
                 AlreadyImported = true;
             }
             else AlreadyImported = false;
+
+            FileData = ImportedFile.GetImportedFile(ResultingPath);
+        }
+    }
+
+    class ImportedFile
+    {
+        public string File { get; }
+        public string Content { get; private set; }
+        private byte[] Hash { get; set; }
+        public object Cache { get; set; }
+
+        protected ImportedFile(string file)
+        {
+            File = file;
+            
+            using (FileStream stream = GetStream())
+            {
+                Hash = GetFileHash(stream);
+                GetContent(stream);
+            }
+
+            ImportedFiles.Add(this);
         }
 
-        public string GetFile()
+        private FileStream GetStream() => new FileStream(File, FileMode.Open, FileAccess.Read);
+
+        private byte[] GetFileHash(FileStream stream)
         {
-            return File.ReadAllText(ResultingPath);
+            HashAlgorithm sha1 = HashAlgorithm.Create("SHA1");
+            return sha1.ComputeHash(stream);
+        }
+
+        private void GetContent(FileStream stream)
+        {
+            using (StreamReader reader = new StreamReader(stream))
+                Content = reader.ReadToEnd();
+        }
+
+        public bool Update()
+        {
+            using (FileStream stream = GetStream())
+            {
+                byte[] newHash = GetFileHash(stream);
+            
+                if (!Hash.SequenceEqual(newHash))
+                {
+                    Hash = newHash;
+                    GetContent(stream);
+                    return true;
+                }
+                else
+                    return false;
+            }
+        }
+
+        private static List<ImportedFile> ImportedFiles = new List<ImportedFile>();
+
+        public static ImportedFile GetImportedFile(string file)
+        {
+            foreach (ImportedFile importedFile in ImportedFiles)
+            if (importedFile.File == file)
+                return importedFile;
+            return new ImportedFile(file);
         }
     }
 }
