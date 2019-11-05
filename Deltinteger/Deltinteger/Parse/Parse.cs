@@ -28,7 +28,7 @@ namespace Deltin.Deltinteger.Parse
 
             GetRulesets(content, file, true);
 
-            VarCollection = new VarCollection(reserved.ToArray());                    
+            VarCollection = new VarCollection(ReservedGlobalIDs.ToArray(), ReservedGlobalNames.ToArray(), ReservedPlayerIDs.ToArray(), ReservedPlayerNames.ToArray());                    
             Root = new ScopeGroup(VarCollection);
             ClassIndexes = IndexedVar.AssignInternalVar(VarCollection, null, "Class Indexes", true);
             ClassArray   = IndexedVar.AssignInternalVar(VarCollection, null, "Class Array", true);
@@ -162,7 +162,19 @@ namespace Deltin.Deltinteger.Parse
             // Get the imported files.
             if (ruleset != null && !Diagnostics.ContainsErrors())
             {
-                reserved.AddRange(ruleset.Reserved);
+                ReservedGlobalIDs.AddRange(ruleset.ReservedGlobalIDs);
+                ReservedPlayerIDs.AddRange(ruleset.ReservedPlayerIDs);
+                if (ruleset.ReservedGlobal != null)
+                {
+                    ReservedGlobalIDs.AddRange(ruleset.ReservedGlobal.ReservedIDs);
+                    ReservedGlobalNames.AddRange(ruleset.ReservedGlobal.ReservedNames);
+                }
+                if (ruleset.ReservedPlayer != null)
+                {
+                    ReservedPlayerIDs.AddRange(ruleset.ReservedPlayer.ReservedIDs);
+                    ReservedPlayerNames.AddRange(ruleset.ReservedPlayer.ReservedNames);
+                }
+
                 List<string> importedFiles = new List<string>();
                 foreach (ImportNode importNode in ruleset.Imports)
                 {
@@ -249,7 +261,7 @@ namespace Deltin.Deltinteger.Parse
                 try
                 {
                     IndexedVar var;
-                    if (definedVar.UseVar == null)
+                    if (definedVar.OverrideID == -1)
                         var = IndexedVar.AssignVar(VarCollection, Root, definedVar.VariableName, definedVar.IsGlobal, definedVar);
                     else
                         var = IndexedVar.AssignVar(
@@ -257,7 +269,7 @@ namespace Deltin.Deltinteger.Parse
                             Root,
                             definedVar.VariableName,
                             definedVar.IsGlobal,
-                            new WorkshopVariable(definedVar.IsGlobal, definedVar.UseVar.ID, definedVar.UseVar.Variable),
+                            new WorkshopVariable(definedVar.IsGlobal, definedVar.OverrideID, VarCollection.WorkshopNameFromCodeName(definedVar.IsGlobal, definedVar.VariableName)),
                             definedVar
                         );
                     if (definedVar.Type != null)
@@ -284,7 +296,11 @@ namespace Deltin.Deltinteger.Parse
         private List<string> Imported { get; } = new List<string>();
         private TranslateRule globalTranslate;
         private TranslateRule playerTranslate;
-        private List<int> reserved = new List<int>();
+
+        private List<int> ReservedGlobalIDs { get; } = new List<int>();
+        private List<int> ReservedPlayerIDs { get; } = new List<int>();
+        private List<string> ReservedGlobalNames { get; } = new List<string>();
+        private List<string> ReservedPlayerNames { get; } = new List<string>();
 
         public IMethod GetMethod(string name)
         {

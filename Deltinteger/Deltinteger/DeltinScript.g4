@@ -4,6 +4,10 @@ grammar DeltinScript;
  * Parser Rules
  */
 
+reserved_global : GLOBAL BLOCK_START reserved_list? BLOCK_END ;
+reserved_player : PLAYER BLOCK_START reserved_list? BLOCK_END ;
+reserved_list : (PART | NUMBER) (COMMA (PART | NUMBER))* ;
+
 number : NUMBER | neg  ;
 neg    : '-'NUMBER     ;
 string : LOCALIZED? STRINGLITERAL ;
@@ -14,12 +18,10 @@ null   : NULL          ;
 
 statement_operation : EQUALS | EQUALS_ADD | EQUALS_DIVIDE | EQUALS_MODULO | EQUALS_MULTIPLY | EQUALS_POW | EQUALS_SUBTRACT ;
 
-define           :                   (type=PART | DEFINE)                 name=PART useVar? (EQUALS expr?)? ;
-rule_define      :                   (type=PART | DEFINE) (GLOBAL|PLAYER) name=PART useVar? (EQUALS expr?)? STATEMENT_END;
-inclass_define   : accessor? STATIC? (type=PART | DEFINE)                 name=PART         (EQUALS expr?)? ;
-parameter_define :                   (type=PART | DEFINE)                 name=PART                         ;
-
-useVar   : PART? (INDEX_START number INDEX_END)? ;
+define           :                   (type=PART | DEFINE)                 name=PART            (EQUALS expr?)? ;
+rule_define      :                   (type=PART | DEFINE) (GLOBAL|PLAYER) name=PART id=number? (EQUALS expr?)? STATEMENT_END;
+inclass_define   : accessor? STATIC? (type=PART | DEFINE)                 name=PART            (EQUALS expr?)? ;
+parameter_define :                   (type=PART | DEFINE)                 name=PART                            ;
 
 expr 
 	: 
@@ -113,6 +115,8 @@ user_method : DOCUMENTATION* accessor? RECURSIVE? (METHOD | type=PART) name=PART
 macro       : DOCUMENTATION* accessor? MACRO name=PART LEFT_PAREN setParameters RIGHT_PAREN ':' expr STATEMENT_END ;
 
 ruleset :
+	reserved_global?
+	reserved_player?
 	(import_file | import_object)*
 	(rule_define | ow_rule | user_method | type_define | macro)*
 	;

@@ -848,11 +848,7 @@ namespace Deltin.Deltinteger.Parse
 
         void ParseDefine(ScopeGroup getter, ScopeGroup scope, DefineNode defineNode)
         {
-            IndexedVar var;
-            if (defineNode.UseVar == null || (defineNode.UseVar.Variable == null && defineNode.UseVar.ID == -1))
-                var = IndexedVar.AssignVar(VarCollection, scope, defineNode.VariableName, IsGlobal, defineNode);
-            else
-                var = IndexedVar.AssignVar(VarCollection, scope, defineNode.VariableName, IsGlobal, new WorkshopVariable(IsGlobal, defineNode.UseVar.ID, defineNode.UseVar.Variable), defineNode);
+            IndexedVar var = IndexedVar.AssignVar(VarCollection, scope, defineNode.VariableName, IsGlobal, defineNode);
 
             // Set the defined variable if the variable is defined like "define var = 1"
             Element[] inScopeActions = var.InScope(defineNode.Value != null ? ParseExpression(getter, scope, defineNode.Value) : null);

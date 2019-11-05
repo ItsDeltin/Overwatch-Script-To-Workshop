@@ -165,7 +165,10 @@ namespace Deltin.Deltinteger.Parse
         public RuleDefineNode[] DefinedVars { get; }
         public UserMethodBase[] UserMethods { get; }
         public TypeDefineNode[] DefinedTypes { get; }
-        public int[] Reserved { get; }
+        public ReservedNode ReservedGlobal { get; }
+        public ReservedNode ReservedPlayer { get; }
+        public int[] ReservedGlobalIDs { get; }
+        public int[] ReservedPlayerIDs { get; }
 
         public RulesetNode(DeltinScriptParser.RulesetContext context, BuildAstVisitor visitor) : base(new Location(visitor.file, DocRange.GetRange(context)))
         {
@@ -185,8 +188,16 @@ namespace Deltin.Deltinteger.Parse
 
             // Get defined variables
             DefinedVars = new RuleDefineNode[context.rule_define().Length];
+            var reservedGlobalIDs = new List<int>();
+            var reservedPlayerIDs = new List<int>();
             for (int i = 0; i < DefinedVars.Length; i++)
-                DefinedVars[i] = (RuleDefineNode)visitor.VisitRule_define(context.rule_define(i));
+            {
+                DefinedVars[i] = new RuleDefineNode(context.rule_define(i), visitor);
+                if (DefinedVars[i].OverrideID != -1)
+                    (DefinedVars[i].IsGlobal ? reservedGlobalIDs : reservedPlayerIDs).Add(DefinedVars[i].OverrideID);
+            }
+            ReservedGlobalIDs = reservedGlobalIDs.ToArray();
+            ReservedPlayerIDs = reservedPlayerIDs.ToArray();
 
             // Get user methods
             UserMethods = new UserMethodBase[context.user_method().Length + context.macro().Length];
@@ -201,13 +212,36 @@ namespace Deltin.Deltinteger.Parse
             DefinedTypes = new TypeDefineNode[context.type_define().Length];
             for (int i = 0; i < DefinedTypes.Length; i++)
                 DefinedTypes[i] = (TypeDefineNode)visitor.VisitType_define(context.type_define(i));
-                        
-            Reserved = visitor.ReservedVariableIDs.ToArray();
+            
+            // Get reserved global variables
+            if (context.reserved_global()?.reserved_list() != null)
+                ReservedGlobal = new ReservedNode(context.reserved_global().reserved_list(), visitor);
+            
+            // Get reserved player variables
+            if (context.reserved_player()?.reserved_list() != null)
+                ReservedPlayer = new ReservedNode(context.reserved_player().reserved_list(), visitor);
         }
 
         public override Node[] Children()
         {
-            return ArrayBuilder<Node>.Build(Imports, ObjectImports, Rules, DefinedVars, UserMethods, DefinedTypes);
+            return ArrayBuilder<Node>.Build(ReservedGlobal, ReservedPlayer, Imports, ObjectImports, Rules, DefinedVars, UserMethods, DefinedTypes);
+        }
+    }
+
+    public class ReservedNode : Node
+    {
+        public string[] ReservedNames { get; }
+        public int[] ReservedIDs { get; }
+
+        public ReservedNode(DeltinScriptParser.Reserved_listContext context, BuildAstVisitor visitor) : base(new Location(visitor.file, DocRange.GetRange(context)))
+        {
+            ReservedNames = context.PART().Select(p => p.GetText()).ToArray();
+            ReservedIDs = context.NUMBER().Select(n => int.Parse(n.GetText())).ToArray();
+        }
+
+        public override Node[] Children()
+        {
+            return null;
         }
     }
     
@@ -215,7 +249,6 @@ namespace Deltin.Deltinteger.Parse
     {
         public string VariableName { get; }
         public string Type { get; }
-        public UseVarNode UseVar { get; }
         public Node Value { get; }
 
         public DefineNode(DeltinScriptParser.DefineContext context, BuildAstVisitor visitor) : base(new Location(visitor.file, DocRange.GetRange(context)))
@@ -225,14 +258,11 @@ namespace Deltin.Deltinteger.Parse
             
             if (context.expr() != null)
                 Value = visitor.VisitExpr(context.expr());
-
-            if (context.useVar() != null)
-                UseVar = (UseVarNode)visitor.VisitUseVar(context.useVar());
         }
 
         public override Node[] Children()
         {
-            return ArrayBuilder<Node>.Build(UseVar, Value);
+            return ArrayBuilder<Node>.Build(Value);
         }
     }
 
@@ -241,8 +271,8 @@ namespace Deltin.Deltinteger.Parse
         public string VariableName { get; }
         public string Type { get; }
         public Node Value { get; }
-        public UseVarNode UseVar { get; }
         public bool IsGlobal { get; }
+        public int OverrideID { get; } = -1;
 
         public RuleDefineNode(DeltinScriptParser.Rule_defineContext context, BuildAstVisitor visitor) : base(new Location(visitor.file, DocRange.GetRange(context)))
         {
@@ -250,14 +280,15 @@ namespace Deltin.Deltinteger.Parse
             Type = context.type?.Text;
             if (context.expr() != null)
                 Value = visitor.Visit(context.expr());
-            if (context.useVar() != null)
-                UseVar = (UseVarNode)visitor.Visit(context.useVar());
             IsGlobal = context.GLOBAL() != null;
+
+            if (context.id != null)
+                OverrideID = int.Parse(context.id.GetText());
         }
 
         public override Node[] Children()
         {
-            return ArrayBuilder<Node>.Build(Value, UseVar);
+            return ArrayBuilder<Node>.Build(Value);
         }
     }
 
@@ -326,31 +357,6 @@ namespace Deltin.Deltinteger.Parse
                 else parameters[i] = new Parameter(defineNodes[i].VariableName, Elements.ValueType.Any, null);
             }
             return parameters;
-        }
-    }
-
-    public class UseVarNode : Node
-    {
-        public string Variable { get; }
-        public int ID { get; }
-
-        public UseVarNode(DeltinScriptParser.UseVarContext context, BuildAstVisitor visitor) : base(new Location(visitor.file, DocRange.GetRange(context)))
-        {
-            Variable = context.PART()?.GetText();
-            
-            int id = -1;
-            if (context.number() != null)
-                if (!int.TryParse(context.number().GetText(), out id))
-                    id = -1;
-            ID = id;
-
-            if (id != -1)
-                visitor.ReservedVariableIDs.Add(ID);
-        }
-
-        public override Node[] Children()
-        {
-            return null;
         }
     }
 

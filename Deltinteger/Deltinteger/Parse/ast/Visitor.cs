@@ -13,8 +13,6 @@ namespace Deltin.Deltinteger.Parse
         public Diagnostics _diagnostics { get; }
         public string file { get; }
 
-        public List<int> ReservedVariableIDs { get; } = new List<int>();
-
         public BuildAstVisitor(string file, Diagnostics diagnostics)
         {
             this.file = file;
@@ -49,11 +47,6 @@ namespace Deltin.Deltinteger.Parse
         public override Node VisitInclass_define(DeltinScriptParser.Inclass_defineContext context)
         {
             return new InclassDefineNode(context, this);
-        }
-
-        public override Node VisitUseVar(DeltinScriptParser.UseVarContext context)
-        {
-            return new UseVarNode(context, this);
         }
 
         public override Node VisitUser_method(DeltinScriptParser.User_methodContext context)

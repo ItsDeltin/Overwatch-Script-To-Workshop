@@ -16,11 +16,17 @@ namespace Deltin.Deltinteger.Parse
 
         public WorkshopArrayBuilder WorkshopArrayBuilder { get; }
 
-        private int[] Reserved { get; }
+        private int[] ReservedGlobalIDs { get; }
+        private string[] ReservedGlobalNames { get; }
+        private int[] ReservedPlayerIDs { get; }
+        private string[] ReservedPlayerNames { get; }
 
-        public VarCollection(int[] reserved)
+        public VarCollection(int[] reservedGlobalIDs, string[] reservedGlobalNames, int[] reservedPlayerIDs, string[] reservedPlayerNames)
         {
-            Reserved = reserved;
+            ReservedGlobalIDs   = reservedGlobalIDs;
+            ReservedPlayerIDs   = reservedPlayerIDs;
+            ReservedGlobalNames = reservedGlobalNames;
+            ReservedPlayerNames = reservedPlayerNames;
 
             Global      = Assign("_extendedGlobalCollection", true);
             Player      = Assign("_extendedPlayerCollection", false);
@@ -54,7 +60,7 @@ namespace Deltin.Deltinteger.Parse
             var collection = UseCollection(isGlobal);
             for (int i = 0; i < Constants.NUMBER_OF_VARIABLES; i++)
                 // Make sure the ID is not reserved.
-                if (collection[i] == null && !Reserved.Contains(i))
+                if (collection[i] == null && !(isGlobal ? ReservedGlobalIDs : ReservedPlayerIDs).Contains(i))
                 {
                     id = i;
                     break;
@@ -98,7 +104,7 @@ namespace Deltin.Deltinteger.Parse
 
         private bool NameTaken(bool isGlobal, string name)
         {
-            return UseCollection(isGlobal).Any(gv => gv != null && gv.Name == name);
+            return UseCollection(isGlobal).Any(gv => gv != null && gv.Name == name) || (isGlobal ? ReservedGlobalNames : ReservedPlayerNames).Contains(name);
         }
 
         private void Add(WorkshopVariable variable)
