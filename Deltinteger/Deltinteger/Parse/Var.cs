@@ -83,22 +83,25 @@ namespace Deltin.Deltinteger.Parse
 
         public string WorkshopNameFromCodeName(bool isGlobal, string name)
         {
-            StringBuilder newName = new StringBuilder();
+            StringBuilder valid = new StringBuilder();
 
             // Remove invalid characters and replace ' ' with '_'.
             for (int i = 0; i < name.Length; i++)
                 if (name[i] == ' ')
-                    newName.Append('_');
+                    valid.Append('_');
                 else if (WorkshopVariable.ValidVariableCharacters.Contains(name[i]))
-                    newName.Append(name[i]);
+                    valid.Append(name[i]);
+                
+            string newName = valid.ToString();
 
             // Add a number to the end of the variable name if a variable with the same name was already created.
-            if (NameTaken(isGlobal, newName.ToString()))
+            if (NameTaken(isGlobal, newName))
             {
                 int num = 0;
-                while (NameTaken(isGlobal, newName.ToString() + "_" + num)) num++;
-                newName.Append("_" + num);
+                while (NameTaken(isGlobal, (newName = newName.Substring(0, Math.Min(newName.Length, Constants.MAX_VARIABLE_NAME_LENGTH - (num.ToString().Length + 1))) + "_" + num))) num++;
             }
+            else if (newName.Length > Constants.MAX_VARIABLE_NAME_LENGTH)
+                newName = newName.Substring(0, Constants.MAX_VARIABLE_NAME_LENGTH);
             return newName.ToString();
         }
 

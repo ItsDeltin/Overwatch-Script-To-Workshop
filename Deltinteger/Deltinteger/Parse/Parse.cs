@@ -30,8 +30,8 @@ namespace Deltin.Deltinteger.Parse
 
             VarCollection = new VarCollection(ReservedGlobalIDs.ToArray(), ReservedGlobalNames.ToArray(), ReservedPlayerIDs.ToArray(), ReservedPlayerNames.ToArray());                    
             Root = new ScopeGroup(VarCollection);
-            ClassIndexes = IndexedVar.AssignInternalVar(VarCollection, null, "Class Indexes", true);
-            ClassArray   = IndexedVar.AssignInternalVar(VarCollection, null, "Class Array", true);
+            ClassIndexes = IndexedVar.AssignInternalVar(VarCollection, null, "_classIndexes", true);
+            ClassArray   = IndexedVar.AssignInternalVar(VarCollection, null, "_classArray", true);
 
             if (!Diagnostics.ContainsErrors())
                 foreach(var ruleset in Rulesets)
