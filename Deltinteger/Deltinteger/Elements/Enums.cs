@@ -685,38 +685,33 @@ namespace Deltin.Deltinteger.Elements
     {
         Ayutthaya,
         Black_Forest,
-        [EnumOverride(null, "Black Forest (Winter)")]
         Black_Forest_Winter,
         Blizzard_World,
-        [EnumOverride(null, "Blizzard World (Winter)")]
         Blizzard_World_Winter,
         Busan,
-        [EnumOverride(null, "Busan Downtown (Lunar New Year)")]
+        [EnumOverride(null, "Busan Downtown Lunar New Year")]
         Busan_Downtown_Lunar,
-        [EnumOverride(null, "Busan Sanctuary (Lunar New Year)")]
+        [EnumOverride(null, "Busan Sanctuary Lunar New Year")]
         Busan_Sanctuary_Lunar,
         Busan_Stadium,
         Castillo,
         [EnumOverride(null, "Château Guillard")]
         Chateau_Guillard,
-        [EnumOverride(null, "Château Guillard (Halloween)")]
+        [EnumOverride(null, "Château Guillard Halloween")]
         Chateau_Guillard_Halloween,
         Dorado,
         [EnumOverride(null, "Ecopoint: Antarctica")]
         Ecopoint_Antarctica,
-        [EnumOverride(null, "Ecopoint: Antarctica (Winter)")]
+        [EnumOverride(null, "Ecopoint: Antarctica Winter")]
         Ecopoint_Antarctica_Winter,
         Eichenwalde,
-        [EnumOverride(null, "Eichenwalde (Halloween)")]
         Eichenwalde_Halloween,
         [EnumOverride(null, "Estádio das Rãs")]
         Estadio_Das_Ras,
         Hanamura,
-        [EnumOverride(null, "Hanamura (Winter)")]
         Hanamura_Winter,
         Havana,
         Hollywood,
-        [EnumOverride(null, "Hollywood (Halloween)")]
         Hollywood_Halloween,
         Horizon_Lunar_Colony,
         Ilios,
@@ -728,19 +723,19 @@ namespace Deltin.Deltinteger.Elements
         Junkertown,
         [EnumOverride(null, "King's Row")]
         Kings_Row,
-        [EnumOverride(null, "King's Row (Winter)")]
+        [EnumOverride(null, "King's Row Winter")]
         Kings_Row_Winter,
         Lijiang_Control_Center,
-        [EnumOverride(null, "Lijiang Control Center (Lunar New Year)")]
+        [EnumOverride(null, "Lijiang Control Center Lunar New Year")]
         Lijiang_Control_Center_Lunar,
         Lijiang_Garden,
-        [EnumOverride(null, "Lijiang Garden (Lunar New Year)")]
+        [EnumOverride(null, "Lijiang Garden Lunar New Year")]
         Lijiang_Garden_Lunar,
         Lijiang_Night_Market,
-        [EnumOverride(null, "Lijiang Night Market (Lunar New Year)")]
+        [EnumOverride(null, "Lijiang Night Market Lunar New Year")]
         Lijiang_Night_Market_Lunar,
         Lijiang_Tower,
-        [EnumOverride(null, "Lijiang Tower (Lunar New Year)")]
+        [EnumOverride(null, "Lijiang Tower Lunar New Year")]
         Lijiang_Tower_Lunar,
         Necropolis,
         Nepal,
