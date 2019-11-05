@@ -337,6 +337,9 @@ ASALocalRun/
 overwatch-script-to-workshop/test.del
 Deltinteger/Deltinteger/Properties/app.manifest
 
+# Antlr build
+Deltinteger/Deltinteger/.antlr/
+
 # Debug scripts
 Examples/Debug.del
 
