@@ -272,17 +272,24 @@ namespace Deltin.Deltinteger.Parse
                 try
                 {
                     IndexedVar var;
-                    if (definedVar.OverrideID == -1)
-                        var = IndexedVar.AssignVar(VarCollection, Root, definedVar.VariableName, definedVar.IsGlobal, definedVar);
-                    else
-                        var = IndexedVar.AssignVar(
-                            VarCollection,
-                            Root,
-                            definedVar.VariableName,
-                            definedVar.IsGlobal,
-                            new WorkshopVariable(definedVar.IsGlobal, definedVar.OverrideID, VarCollection.WorkshopNameFromCodeName(definedVar.IsGlobal, definedVar.VariableName)),
-                            definedVar
-                        );
+
+                    if (!definedVar.Extended)
+                    {
+                        if (definedVar.OverrideID == -1)
+                            var = IndexedVar.AssignVar(VarCollection, Root, definedVar.VariableName, definedVar.IsGlobal, definedVar);
+                        else
+                            var = IndexedVar.AssignVar(
+                                VarCollection,
+                                Root,
+                                definedVar.VariableName,
+                                definedVar.IsGlobal,
+                                new WorkshopVariable(definedVar.IsGlobal, definedVar.OverrideID, VarCollection.WorkshopNameFromCodeName(definedVar.IsGlobal, definedVar.VariableName)),
+                                definedVar
+                            );
+                    }
+                    else var = IndexedVar.AssignVarExt(VarCollection, Root, definedVar.VariableName, definedVar.IsGlobal, definedVar);
+
+                    
                     if (definedVar.Type != null)
                         var.Type = GetDefinedType(definedVar.Type, definedVar.Location);
                 }

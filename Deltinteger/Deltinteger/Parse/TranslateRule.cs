@@ -401,7 +401,11 @@ namespace Deltin.Deltinteger.Parse
                 if (values[i] is Element)
                 {
                     // Create a new variable using the parameter.
-                    parameterVars[i] = IndexedVar.AssignVar(VarCollection, methodScope, parameters[i].Name, IsGlobal, methodNode);
+                    if (!parameters[i].Extended)
+                        parameterVars[i] = IndexedVar.AssignVar   (VarCollection, methodScope, parameters[i].Name, IsGlobal, methodNode);
+                    else
+                        parameterVars[i] = IndexedVar.AssignVarExt(VarCollection, methodScope, parameters[i].Name, IsGlobal, methodNode);
+
                     ((IndexedVar)parameterVars[i]).Type = ((Element)values[i]).SupportedType?.Type;
                     Actions.AddRange(((IndexedVar)parameterVars[i]).SetVariable((Element)values[i]));
                 }
@@ -848,7 +852,11 @@ namespace Deltin.Deltinteger.Parse
 
         void ParseDefine(ScopeGroup getter, ScopeGroup scope, DefineNode defineNode)
         {
-            IndexedVar var = IndexedVar.AssignVar(VarCollection, scope, defineNode.VariableName, IsGlobal, defineNode);
+            IndexedVar var;
+            if (!defineNode.Extended)
+                var = IndexedVar.AssignVar   (VarCollection, scope, defineNode.VariableName, IsGlobal, defineNode);
+            else
+                var = IndexedVar.AssignVarExt(VarCollection, scope, defineNode.VariableName, IsGlobal, defineNode);
 
             // Set the defined variable if the variable is defined like "define var = 1"
             Element[] inScopeActions = var.InScope(defineNode.Value != null ? ParseExpression(getter, scope, defineNode.Value) : null);

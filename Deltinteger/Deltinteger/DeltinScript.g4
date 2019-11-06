@@ -18,10 +18,10 @@ null   : NULL          ;
 
 statement_operation : EQUALS | EQUALS_ADD | EQUALS_DIVIDE | EQUALS_MODULO | EQUALS_MULTIPLY | EQUALS_POW | EQUALS_SUBTRACT ;
 
-define           :                   (type=PART | DEFINE)                 name=PART            (EQUALS expr?)? ;
-rule_define      :                   (type=PART | DEFINE) (GLOBAL|PLAYER) name=PART id=number? (EQUALS expr?)? STATEMENT_END;
-inclass_define   : accessor? STATIC? (type=PART | DEFINE)                 name=PART            (EQUALS expr?)? ;
-parameter_define :                   (type=PART | DEFINE)                 name=PART                            ;
+define           :                   (type=PART | DEFINE)                 name=PART               NOT?  (EQUALS expr?)? ;
+rule_define      :                   (type=PART | DEFINE) (GLOBAL|PLAYER) name=PART (id=number? | NOT?) (EQUALS expr?)? STATEMENT_END;
+inclass_define   : accessor? STATIC? (type=PART | DEFINE)                 name=PART                     (EQUALS expr?)? ;
+parameter_define :                   (type=PART | DEFINE)                 name=PART               NOT?                  ;
 
 expr 
 	: 

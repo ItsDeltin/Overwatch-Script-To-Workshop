@@ -10,6 +10,8 @@ namespace Deltin.Deltinteger.Elements
     {
         public string Name { get; private set; }
 
+        public bool Extended { get; set; }
+
         protected ParameterBase(string name)
         {
             Name = name;

@@ -250,11 +250,13 @@ namespace Deltin.Deltinteger.Parse
         public string VariableName { get; }
         public string Type { get; }
         public Node Value { get; }
+        public bool Extended { get; }
 
         public DefineNode(DeltinScriptParser.DefineContext context, BuildAstVisitor visitor) : base(new Location(visitor.file, DocRange.GetRange(context)))
         {
             VariableName = context.name.Text;
             Type = context.type?.Text;
+            Extended = context.NOT() != null;
             
             if (context.expr() != null)
                 Value = visitor.VisitExpr(context.expr());
@@ -271,6 +273,7 @@ namespace Deltin.Deltinteger.Parse
         public string VariableName { get; }
         public string Type { get; }
         public Node Value { get; }
+        public bool Extended { get; }
         public bool IsGlobal { get; }
         public int OverrideID { get; } = -1;
 
@@ -280,6 +283,7 @@ namespace Deltin.Deltinteger.Parse
             Type = context.type?.Text;
             if (context.expr() != null)
                 Value = visitor.Visit(context.expr());
+            Extended = context.NOT() != null;
             IsGlobal = context.GLOBAL() != null;
 
             if (context.id != null)
@@ -297,6 +301,7 @@ namespace Deltin.Deltinteger.Parse
         public string VariableName { get; }
         public string Type { get; }
         public Node Value { get; }
+        public bool Extended { get; } = false;
         public AccessLevel AccessLevel { get; }
 
         public InclassDefineNode(DeltinScriptParser.Inclass_defineContext context, BuildAstVisitor visitor) : base(new Location(visitor.file, DocRange.GetRange(context)))
@@ -320,11 +325,13 @@ namespace Deltin.Deltinteger.Parse
         public string VariableName { get; }
         public string Type { get; }
         public Node Value { get { throw new NotImplementedException(); } }
+        public bool Extended { get; }
 
         public ParameterDefineNode(DeltinScriptParser.Parameter_defineContext context, BuildAstVisitor visitor) : base(new Location(visitor.file, DocRange.GetRange(context)))
         {
             VariableName = context.name.Text;
             Type = context.type?.Text;
+            Extended = Extended = context.NOT() != null;
         }
 
         public override Node[] Children()
@@ -355,6 +362,8 @@ namespace Deltin.Deltinteger.Parse
                     parameters[i] = new TypeParameter(defineNodes[i].VariableName, type);
 
                 else parameters[i] = new Parameter(defineNodes[i].VariableName, Elements.ValueType.Any, null);
+
+                parameters[i].Extended = defineNodes[i].Extended;
             }
             return parameters;
         }
