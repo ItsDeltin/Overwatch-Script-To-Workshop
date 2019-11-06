@@ -94,14 +94,15 @@ namespace Deltin.Deltinteger.Parse
                 
             string newName = valid.ToString();
 
+            if (newName.Length > Constants.MAX_VARIABLE_NAME_LENGTH)
+                newName = newName.Substring(0, Constants.MAX_VARIABLE_NAME_LENGTH);
+
             // Add a number to the end of the variable name if a variable with the same name was already created.
             if (NameTaken(isGlobal, newName))
             {
                 int num = 0;
                 while (NameTaken(isGlobal, (newName = newName.Substring(0, Math.Min(newName.Length, Constants.MAX_VARIABLE_NAME_LENGTH - (num.ToString().Length + 1))) + "_" + num))) num++;
             }
-            else if (newName.Length > Constants.MAX_VARIABLE_NAME_LENGTH)
-                newName = newName.Substring(0, Constants.MAX_VARIABLE_NAME_LENGTH);
             return newName.ToString();
         }
 

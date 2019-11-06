@@ -123,7 +123,7 @@ namespace Deltin.Deltinteger.Elements
             {
                 EnumOverride fieldData = fields[v].GetCustomAttribute<EnumOverride>();
                 string fieldCodeName     = fieldData?.CodeName     ?? fields[v].Name;
-                string fieldWorkshopName = fieldData?.WorkshopName ?? Extras.AddSpacesToSentence(fields[v].Name, false);
+                string fieldWorkshopName = fieldData?.WorkshopName ?? Extras.AddSpacesToSentence(fields[v].Name.Replace('_', ' '), false);
 
                 Members[v] = new EnumMember(this, fieldCodeName, fieldWorkshopName, values.GetValue(v));
             }
