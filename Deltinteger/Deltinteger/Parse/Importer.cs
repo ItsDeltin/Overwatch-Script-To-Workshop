@@ -59,6 +59,7 @@ namespace Deltin.Deltinteger.Parse
             using (FileStream stream = GetStream())
             {
                 Hash = GetFileHash(stream);
+                stream.Position = 0;
                 GetContent(stream);
             }
 
@@ -88,6 +89,7 @@ namespace Deltin.Deltinteger.Parse
                 if (!Hash.SequenceEqual(newHash))
                 {
                     Hash = newHash;
+                    stream.Position = 0;
                     GetContent(stream);
                     return true;
                 }
