@@ -1111,6 +1111,10 @@ namespace Deltin.Deltinteger.Elements
         }
     }
 
+    [ElementData("Icon String", ValueType.Any)]
+    [EnumParameter("Icon", typeof(Icon))]
+    public class V_IconString : Element {}
+
     [ElementData("Subtract", ValueType.Any)]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
