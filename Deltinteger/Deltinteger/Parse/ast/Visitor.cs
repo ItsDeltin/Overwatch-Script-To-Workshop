@@ -179,7 +179,7 @@ namespace Deltin.Deltinteger.Parse
         // <"hello <0>! Waiting game...", EventPlayer()>
         public override Node VisitFormatted_string(DeltinScriptParser.Formatted_stringContext context)
         {
-            string value = context.@string().GetText().Trim('"');
+            string value = context.@string().STRINGLITERAL().GetText().Trim('"');
             Node[] format = new Node[context.expr().Length];
             for (int i = 0; i < format.Length; i++)
                 format[i] = VisitExpr(context.expr()[i]);

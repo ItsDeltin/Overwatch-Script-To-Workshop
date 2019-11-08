@@ -318,6 +318,8 @@ namespace Deltin.Deltinteger.Parse
                     Element element = ParseExpression(getter, scope, typeConvertNode.Expression);
                     type.GetSource(this, element, typeConvertNode.Location);
                     return element;
+                
+                case RootNode rootNode: throw new SyntaxErrorException("'root' cannot be used like an expression.", rootNode.Location);
             }
 
             throw new Exception();

@@ -118,7 +118,7 @@ namespace Deltin.Deltinteger.Elements
     public class V_ArrayContains : Element {}
 
     [ElementData("Array Slice", ValueType.Any)]
-    [Parameter("Array", ValueType.Any, typeof(V_GlobalVariable))]
+    [Parameter("Array", ValueType.Any, null)]
     [Parameter("Start Index", ValueType.Number, typeof(V_Number))]
     [Parameter("Count", ValueType.Number, typeof(V_Number))]
     public class V_ArraySlice : Element {}
@@ -153,7 +153,7 @@ namespace Deltin.Deltinteger.Elements
     public class V_ControlPointScoringTeam : Element {}
 
     [ElementData("Count Of", ValueType.Number)]
-    [Parameter("Array", ValueType.Any, typeof(V_GlobalVariable))]
+    [Parameter("Array", ValueType.Any, null)]
     public class V_CountOf : Element {}
 
     [ElementData("Cosine From Degrees", ValueType.Number)]
@@ -244,7 +244,7 @@ namespace Deltin.Deltinteger.Elements
     public class V_FilteredArray : Element {}
 
     [ElementData("First Of", ValueType.Any)]
-    [Parameter("Array", ValueType.Any, typeof(V_GlobalVariable))]
+    [Parameter("Array", ValueType.Any, null)]
     public class V_FirstOf : Element {}
 
     [ElementData("Flag Position", ValueType.Vector)]
@@ -311,7 +311,7 @@ namespace Deltin.Deltinteger.Elements
     public class V_HostPlayer : Element {}
 
     [ElementData("Index Of Array Value", ValueType.Any)]
-    [Parameter("Array", ValueType.Any, typeof(V_GlobalVariable))]
+    [Parameter("Array", ValueType.Any, null)]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
     public class V_IndexOfArrayValue : Element {}
 
@@ -448,12 +448,12 @@ namespace Deltin.Deltinteger.Elements
     public class V_IsTeamOnOffense : Element {}
 
     [ElementData("Is True For All", ValueType.Boolean)]
-    [Parameter("Array", ValueType.Any, typeof(V_GlobalVariable))]
+    [Parameter("Array", ValueType.Any, null)]
     [Parameter("Condition", ValueType.Boolean, typeof(V_Compare))]
     public class V_IsTrueForAll : Element {}
 
     [ElementData("Is True For Any", ValueType.Boolean)]
-    [Parameter("Array", ValueType.Any, typeof(V_GlobalVariable))]
+    [Parameter("Array", ValueType.Any, null)]
     [Parameter("Condition", ValueType.Boolean, typeof(V_Compare))]
     public class V_IsTrueForAny : Element {}
 
@@ -485,7 +485,7 @@ namespace Deltin.Deltinteger.Elements
     public class V_LastHealOverTime : Element {}
 
     [ElementData("Last Of", ValueType.Any)]
-    [Parameter("Array", ValueType.Any, typeof(V_GlobalVariable))]
+    [Parameter("Array", ValueType.Any, null)]
     public class V_LastOf : Element {}
 
     [ElementData("Last Text ID", ValueType.Number)]
@@ -712,11 +712,11 @@ namespace Deltin.Deltinteger.Elements
     public class V_RandomReal : Element {}
 
     [ElementData("Random Value In Array", ValueType.Any)]
-    [Parameter("Array", ValueType.Any, typeof(V_GlobalVariable))]
+    [Parameter("Array", ValueType.Any, null)]
     public class V_RandomValueInArray : Element {}
 
     [ElementData("Randomized Array", ValueType.Number)]
-    [Parameter("Array", ValueType.Any, typeof(V_GlobalVariable))]
+    [Parameter("Array", ValueType.Any, null)]
     public class V_RandomizedArray : Element {}
 
     [ElementData("Ray Cast Hit Normal", ValueType.Vector)]
@@ -782,7 +782,7 @@ namespace Deltin.Deltinteger.Elements
     public class V_SlotOf : Element {}
 
     [ElementData("Sorted Array", ValueType.Number)]
-    [Parameter("Array", ValueType.Any, typeof(V_GlobalVariable))]
+    [Parameter("Array", ValueType.Any, null)]
     [Parameter("Value Rank", ValueType.Number, typeof(V_ArrayElement))]
     public class V_SortedArray : Element {}
 
@@ -1158,7 +1158,7 @@ namespace Deltin.Deltinteger.Elements
     public class V_Up : Element {}
 
     [ElementData("Value In Array", ValueType.Any)]
-    [Parameter("Array", ValueType.Any, typeof(V_GlobalVariable))]
+    [Parameter("Array", ValueType.Any, null)]
     [Parameter("Index", ValueType.Number, typeof(V_EventPlayer))]
     public class V_ValueInArray : Element {}
 
