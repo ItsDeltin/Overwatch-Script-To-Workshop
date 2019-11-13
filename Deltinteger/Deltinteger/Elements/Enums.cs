@@ -530,7 +530,7 @@ namespace Deltin.Deltinteger.Elements
         Moon,
         No,
         Plus,
-        Poison1,
+        Poison,
         Poison2,
         QuestionMark,
         Radioactive,
