@@ -167,6 +167,19 @@ namespace Deltin.Deltinteger.Elements
             return null;
         }
 
+        public virtual Element Optimize()
+        {
+            OptimizeChildren();
+            return this;
+        }
+
+        protected void OptimizeChildren()
+        {
+            for (int i = 0; i < ParameterValues.Length; i++)
+                if (ParameterValues[i] is Element)
+                    ParameterValues[i] = ((Element)ParameterValues[i]).Optimize();
+        }
+
         protected virtual string[] AdditionalParameters()
         {
             return new string[0];

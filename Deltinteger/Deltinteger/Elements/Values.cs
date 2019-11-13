@@ -28,12 +28,33 @@ namespace Deltin.Deltinteger.Elements
             if (ParameterValues.Length == 0) return 0;
             return Math.Abs((double)((Element)ParameterValues[0]).GetConstant());
         }
+
+        override public Element Optimize()
+        {
+            OptimizeChildren();
+
+            if (ParameterValues[0] is V_Number)
+                return Math.Abs(((V_Number)ParameterValues[0]).Value);
+            
+            return this;
+        }
     }
 
     [ElementData("Add", ValueType.Any)]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
-    public class V_Add : Element {}
+    public class V_Add : Element
+    {
+        override public Element Optimize()
+        {
+            OptimizeChildren();
+
+            if (ParameterValues[0] is V_Number && ParameterValues[1] is V_Number)
+                return ((V_Number)ParameterValues[0]).Value + ((V_Number)ParameterValues[1]).Value;
+            
+            return this;
+        }
+    }
 
     [ElementData("All Dead Players", ValueType.Player)]
     [Parameter("Team", ValueType.Team, typeof(V_TeamVar))]
@@ -193,7 +214,18 @@ namespace Deltin.Deltinteger.Elements
     [ElementData("Divide", ValueType.Any)]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
-    public class V_Divide : Element {}
+    public class V_Divide : Element
+    {
+        override public Element Optimize()
+        {
+            OptimizeChildren();
+
+            if (ParameterValues[0] is V_Number && ParameterValues[1] is V_Number)
+                return ((V_Number)ParameterValues[0]).Value / ((V_Number)ParameterValues[1]).Value;
+            
+            return this;
+        }
+    }
 
     [ElementData("Dot Product", ValueType.Number)]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
@@ -527,12 +559,55 @@ namespace Deltin.Deltinteger.Elements
     [ElementData("Modulo", ValueType.Number)]
     [Parameter("Value", ValueType.Number, typeof(V_Number))]
     [Parameter("Value", ValueType.Number, typeof(V_Number))]
-    public class V_Modulo : Element {}
+    public class V_Modulo : Element
+    {
+        override public Element Optimize()
+        {
+            OptimizeChildren();
+
+            if (ParameterValues[0] is V_Number && ParameterValues[1] is V_Number)
+                return ((V_Number)ParameterValues[0]).Value % ((V_Number)ParameterValues[1]).Value;
+            
+            return this;
+        }
+    }
 
     [ElementData("Multiply", ValueType.Any)]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
-    public class V_Multiply : Element {}
+    public class V_Multiply : Element
+    {
+        override public Element Optimize()
+        {
+            OptimizeChildren();
+
+            IWorkshopTree a = ParameterValues[0];
+            IWorkshopTree b = ParameterValues[1];
+
+            // Multiply number and number
+            if (a is V_Number && b is V_Number)
+                return ((V_Number)ParameterValues[0]).Value * ((V_Number)ParameterValues[1]).Value;
+            
+            // Multiply vector and number
+            if ((a is V_Vector && b is V_Number) || (a is V_Number && b is V_Vector))
+            {
+                V_Vector vector = a is V_Vector ? (V_Vector)a : (V_Vector)b;
+                V_Number number = a is V_Number ? (V_Number)a : (V_Number)b;
+
+                if (vector.ConstantSupported<Models.Vertex>())
+                {
+                    Models.Vertex vertex = (Models.Vertex)vector.GetConstant();
+                    return new V_Vector(
+                        vertex.X * number.Value,
+                        vertex.Y * number.Value,
+                        vertex.Z * number.Value
+                    );
+                }
+            }
+            
+            return this;
+        }
+    }
 
     [ElementData("Nearest Walkable Position", ValueType.Vector)]
     [Parameter("Position", ValueType.VectorAndPlayer, typeof(V_Vector))]
@@ -699,7 +774,20 @@ namespace Deltin.Deltinteger.Elements
     [ElementData("Raise To Power", ValueType.Number)]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
-    public class V_RaiseToPower : Element {}
+    public class V_RaiseToPower : Element
+    {
+        override public Element Optimize()
+        {
+            OptimizeChildren();
+
+            if (ParameterValues[0] is V_Number && ParameterValues[1] is V_Number)
+                return Math.Pow(
+                    ((V_Number)ParameterValues[0]).Value,
+                    ((V_Number)ParameterValues[1]).Value);
+            
+            return this;
+        }
+    }
 
     [ElementData("Random Integer", ValueType.Number)]
     [Parameter("Min", ValueType.Number, typeof(V_Number))]
@@ -1118,7 +1206,18 @@ namespace Deltin.Deltinteger.Elements
     [ElementData("Subtract", ValueType.Any)]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
-    public class V_Subtract : Element {}
+    public class V_Subtract : Element
+    {
+        override public Element Optimize()
+        {
+            OptimizeChildren();
+
+            if (ParameterValues[0] is V_Number && ParameterValues[1] is V_Number)
+                return ((V_Number)ParameterValues[0]).Value - ((V_Number)ParameterValues[1]).Value;
+            
+            return this;
+        }
+    }
 
     [ElementData("Tangent From Degrees", ValueType.Number)]
     [Parameter("Angle", ValueType.Number, typeof(V_Number))]

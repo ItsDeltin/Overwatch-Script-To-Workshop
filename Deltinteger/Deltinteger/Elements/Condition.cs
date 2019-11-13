@@ -40,7 +40,7 @@ namespace Deltin.Deltinteger.Elements
 
         public string ToWorkshop()
         {
-            return Value1.ToWorkshop() + " " + CompareOperator.ToWorkshop() + " " + Value2.ToWorkshop();
+            return Value1.Optimize().ToWorkshop() + " " + CompareOperator.ToWorkshop() + " " + Value2.Optimize().ToWorkshop();
         }
     }
 }
