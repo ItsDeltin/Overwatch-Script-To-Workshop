@@ -18,6 +18,8 @@ namespace Deltin.Deltinteger.Elements
         public Condition[] Conditions { get; set; }
         public Element[] Actions { get; set; }
 
+        public bool Disabled { get; set; }
+
         public Rule(string name, RuleEvent ruleEvent = RuleEvent.OngoingGlobal, Team team = Team.All, PlayerSelector player = PlayerSelector.All) // Creates a rule.
         {
             if (ruleEvent == RuleEvent.OngoingGlobal && (team != Team.All || player != PlayerSelector.All))
@@ -53,6 +55,8 @@ namespace Deltin.Deltinteger.Elements
             var builder = new TabStringBuilder(true);
 
             builder.Indent = 0;                                                       //
+            if (Disabled)
+                builder.Append("disabled ");
             builder.AppendLine($"rule(\"{Name}\")");                                  // rule("this is the name of the rule!")
             builder.AppendLine("{");                                                  // {
             builder.AppendLine();                                                     //

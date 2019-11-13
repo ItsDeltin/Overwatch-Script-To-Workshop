@@ -377,11 +377,13 @@ namespace Deltin.Deltinteger.Parse
         public PlayerSelector Player { get; }
         public Node[] Conditions { get; }
         public BlockNode Block { get; }
+        public bool Disabled { get; }
 
         public RuleNode(DeltinScriptParser.Ow_ruleContext context, BuildAstVisitor visitor) : base(new Location(visitor.file, DocRange.GetRange(context)))
         {
             Name = context.STRINGLITERAL().GetText().Trim('"');
             Block = (BlockNode)visitor.VisitBlock(context.block());
+            Disabled = context.DISABLED() != null;
 
             Conditions = new Node[context.rule_if().Length];
             DocRange[] conditionRanges      = new DocRange          [context.rule_if().Length];

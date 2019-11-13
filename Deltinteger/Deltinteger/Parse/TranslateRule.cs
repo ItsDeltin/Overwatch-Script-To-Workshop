@@ -33,6 +33,7 @@ namespace Deltin.Deltinteger.Parse
             ParserData = parserData;
 
             Rule = new Rule(ruleNode.Name, ruleNode.Event, ruleNode.Team, ruleNode.Player);
+            Rule.Disabled = ruleNode.Disabled;
             IsGlobal = Rule.IsGlobal;
 
             ContinueSkip = new ContinueSkip(IsGlobal, Actions, VarCollection);

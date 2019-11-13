@@ -102,7 +102,7 @@ delete  : DELETE LEFT_PAREN expr RIGHT_PAREN                  ;
 rule_if : IF LEFT_PAREN expr? RIGHT_PAREN;
 
 ow_rule : 
-	RULE_WORD ':' STRINGLITERAL
+	DISABLED? RULE_WORD ':' STRINGLITERAL
 	(enum)*
 	(rule_if)*
 	block
@@ -206,6 +206,7 @@ IMPORT    : 'import'    ;
 AS        : 'as'        ;
 DELETE    : 'delete'    ;
 MACRO     : 'macro'     ;
+DISABLED  : 'disabled'  ;
 
 EQUALS          : '='  ;
 EQUALS_POW      : '^=' ;
