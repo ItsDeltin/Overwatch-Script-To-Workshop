@@ -49,8 +49,23 @@ namespace Deltin.Deltinteger.Elements
         {
             OptimizeChildren();
 
-            if (ParameterValues[0] is V_Number && ParameterValues[1] is V_Number)
-                return ((V_Number)ParameterValues[0]).Value + ((V_Number)ParameterValues[1]).Value;
+            IWorkshopTree a = ParameterValues[0];
+            IWorkshopTree b = ParameterValues[1];
+
+            if (a is V_Number && ParameterValues[1] is V_Number)
+                return ((V_Number)a).Value + ((V_Number)b).Value;
+            
+            if (((Element)a).ConstantSupported<Models.Vertex>() && ((Element)b).ConstantSupported<Models.Vertex>())
+            {
+                var aVertex = (Models.Vertex)(((Element)a).GetConstant());
+                var bVertex = (Models.Vertex)(((Element)b).GetConstant());
+
+                return new V_Vector(
+                    aVertex.X + bVertex.X,
+                    aVertex.Y + bVertex.Y,
+                    aVertex.Z + bVertex.Z
+                );
+            }
             
             return this;
         }
@@ -220,9 +235,30 @@ namespace Deltin.Deltinteger.Elements
         {
             OptimizeChildren();
 
-            if (ParameterValues[0] is V_Number && ParameterValues[1] is V_Number)
+            IWorkshopTree a = ParameterValues[0];
+            IWorkshopTree b = ParameterValues[1];
+
+            // Divide number and number
+            if (a is V_Number && b is V_Number)
                 return ((V_Number)ParameterValues[0]).Value / ((V_Number)ParameterValues[1]).Value;
             
+            // Divide vector and number
+            if ((a is V_Vector && b is V_Number) || (a is V_Number && b is V_Vector))
+            {
+                V_Vector vector = a is V_Vector ? (V_Vector)a : (V_Vector)b;
+                V_Number number = a is V_Number ? (V_Number)a : (V_Number)b;
+
+                if (vector.ConstantSupported<Models.Vertex>())
+                {
+                    Models.Vertex vertex = (Models.Vertex)vector.GetConstant();
+                    return new V_Vector(
+                        vertex.X / number.Value,
+                        vertex.Y / number.Value,
+                        vertex.Z / number.Value
+                    );
+                }
+            }
+
             return this;
         }
     }
@@ -1212,8 +1248,23 @@ namespace Deltin.Deltinteger.Elements
         {
             OptimizeChildren();
 
-            if (ParameterValues[0] is V_Number && ParameterValues[1] is V_Number)
-                return ((V_Number)ParameterValues[0]).Value - ((V_Number)ParameterValues[1]).Value;
+            IWorkshopTree a = ParameterValues[0];
+            IWorkshopTree b = ParameterValues[1];
+
+            if (a is V_Number && ParameterValues[1] is V_Number)
+                return ((V_Number)a).Value - ((V_Number)b).Value;
+            
+            if (((Element)a).ConstantSupported<Models.Vertex>() && ((Element)b).ConstantSupported<Models.Vertex>())
+            {
+                var aVertex = (Models.Vertex)(((Element)a).GetConstant());
+                var bVertex = (Models.Vertex)(((Element)b).GetConstant());
+
+                return new V_Vector(
+                    aVertex.X - bVertex.X,
+                    aVertex.Y - bVertex.Y,
+                    aVertex.Z - bVertex.Z
+                );
+            }
             
             return this;
         }
