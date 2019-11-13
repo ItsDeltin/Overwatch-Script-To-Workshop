@@ -101,7 +101,8 @@ namespace Deltin.Deltinteger.Parse
             if (NameTaken(isGlobal, newName))
             {
                 int num = 0;
-                while (NameTaken(isGlobal, (newName = newName.Substring(0, Math.Min(newName.Length, Constants.MAX_VARIABLE_NAME_LENGTH - (num.ToString().Length + 1))) + "_" + num))) num++;
+                while (NameTaken(isGlobal, NewName(newName, num))) num++;
+                newName = NewName(newName, num);
             }
             return newName.ToString();
         }
@@ -109,6 +110,11 @@ namespace Deltin.Deltinteger.Parse
         private bool NameTaken(bool isGlobal, string name)
         {
             return UseCollection(isGlobal).Any(gv => gv != null && gv.Name == name) || (isGlobal ? ReservedGlobalNames : ReservedPlayerNames).Contains(name);
+        }
+
+        private string NewName(string baseName, int indent)
+        {
+            return baseName.Substring(0, Math.Min(baseName.Length, Constants.MAX_VARIABLE_NAME_LENGTH - (indent.ToString().Length + 1))) + "_" + indent;
         }
 
         private void Add(WorkshopVariable variable)
