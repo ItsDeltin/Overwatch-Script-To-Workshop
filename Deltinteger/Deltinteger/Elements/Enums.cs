@@ -97,6 +97,9 @@ namespace Deltin.Deltinteger.Elements
                 
                 case "Map":
                     return Element.Part<V_MapVar>(enumMember);
+                
+                case "Gamemode":
+                    return Element.Part<V_GameModeVar>(enumMember);
 
                 default: return null;
             }
@@ -756,5 +759,27 @@ namespace Deltin.Deltinteger.Elements
         Volskaya_Industries,
         [EnumOverride(null, "Watchpoint: Gibraltar")]
         Watchpoint_Gibraltar
+    }
+
+    [WorkshopEnum]
+    public enum GameMode
+    {
+        Assault,
+        CaptureTheFlag,
+        Control,
+        Deathmatch,
+        Elimination,
+        Escort,
+        Hybrid,
+        [EnumOverride(null, "Junkenstein's Revenge")]
+        JunkensteinsRevenge,
+        [EnumOverride(null, "Lúcioball")]
+        Lucioball,
+        [EnumOverride(null, "Mei's Snowball Offensive")]
+        MeisSnowballOffensive,
+        PracticeRange,
+        Skirmish,
+        TeamDeathmatch,
+        YetiHunter
     }
 }

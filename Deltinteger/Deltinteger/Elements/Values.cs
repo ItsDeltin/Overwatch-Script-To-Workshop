@@ -322,6 +322,13 @@ namespace Deltin.Deltinteger.Elements
     [ElementData("Forward", ValueType.Vector)]
     public class V_Forward : Element {}
 
+    [ElementData("Game Mode", ValueType.Vector)]
+    [EnumParameter("Gamemode", typeof(GameMode))]
+    public class V_GameModeVar : Element {}
+
+    [ElementData("Current Game Mode", ValueType.Vector)]
+    public class V_CurrentGameMode : Element {}
+
     [ElementData("Global Variable", ValueType.Any)]
     [VarRefParameter("Variable")]
     //[EnumParameter("Variable", typeof(Variable))]
