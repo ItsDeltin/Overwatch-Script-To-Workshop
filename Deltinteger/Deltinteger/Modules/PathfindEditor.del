@@ -47,7 +47,7 @@ if (IsButtonHeld(EventPlayer(), Button.Crouch))
     for (define i = CountOf(Segments) - 1; i >= 0; i--)
         if (ArrayContains((<Segment>Segments[i]).Nodes, selected))
         {
-            DestroyEffect((<Segment>Segments[i]).EffectID);
+            (<Segment>Segments[i]).Hide();
             delete(Segments[i]);
             Segments = RemoveFromArrayAtIndex(Segments, i);
         }
