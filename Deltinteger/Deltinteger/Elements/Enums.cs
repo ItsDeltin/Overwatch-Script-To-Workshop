@@ -98,7 +98,7 @@ namespace Deltin.Deltinteger.Elements
                 case "Map":
                     return Element.Part<V_MapVar>(enumMember);
                 
-                case "Gamemode":
+                case "GameMode":
                     return Element.Part<V_GameModeVar>(enumMember);
 
                 default: return null;
