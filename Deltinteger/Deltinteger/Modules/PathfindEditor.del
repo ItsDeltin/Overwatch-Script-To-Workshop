@@ -1,4 +1,5 @@
 import "!Debug Tools.del";
+import "!Container.del";
 
 rule: "Commands"
 {
@@ -14,6 +15,13 @@ rule: "Commands"
     CreateHudText(VisibleTo:AllPlayers(), Subheader:"Shift: Switch attribute."                                                  , SubheaderColor:Color.Purple , Location:Location.Right, SortOrder:9 );
     CreateHudText(VisibleTo:AllPlayers(), Subheader:"Hello: Update shown nodes."                                                , SubheaderColor:Color.SkyBlue, Location:Location.Right, SortOrder:10);
     CreateHudText(VisibleTo:AllPlayers(), Subheader:"Voice Line Up: Compile pathmap."                                           , SubheaderColor:Color.SkyBlue, Location:Location.Right, SortOrder:11);
+}
+
+rule: "Disable conflicting controls"
+Event.OngoingPlayer
+{
+    SetAbility1Enabled(EventPlayer(), false);
+    SetSecondaryFireEnabled(EventPlayer(), false);
 }
 
 macro GetClosestNode(): FirstOf(SortedArray(Nodes, DistanceBetween(EyePosition(EventPlayer()), (<Node>ArrayElement()).ShownLocation)));
@@ -225,6 +233,7 @@ class Segment
     public define visible = false;
 
     define DirectionMarker1;
+    public define AttributeText;
 
     public Segment(Node node1, Node node2, define attribute)
     {
@@ -247,6 +256,10 @@ class Segment
                 CreateEffect(AllPlayers(), Effect.Sphere, Color.Purple, LinearInterpolate(Node1.ShownLocation, Node2.ShownLocation, 0.9), 0.25, EffectRev.VisibleTo);
                 DirectionMarker1 = LastCreatedEntity();
             }
+            else if (Attribute > 1)
+            {
+                root.ActivateScoper(1, this);
+            }
         }
     }
     public method Hide()
@@ -255,6 +268,7 @@ class Segment
         {
             DestroyEffect(EffectID);
             DestroyEffect(DirectionMarker1);
+            DestroyInWorldText(AttributeText);
             visible = false;
         }
     }
@@ -323,22 +337,58 @@ define globalvar AttributeHud = 0;
 rule: "Change attribute"
 Event.OngoingPlayer
 if (IsButtonHeld(EventPlayer(), Button.Ability1))
+if (!IsButtonHeld(EventPlayer(), Button.Crouch))
 {
     Attribute++;
+}
+
+rule: "Reset attribute"
+Event.OngoingPlayer
+if (IsButtonHeld(EventPlayer(), Button.Ability1))
+if (IsButtonHeld(EventPlayer(), Button.Crouch))
+{
+    Attribute = 0;
+}
+
+define globalvar lastAttribute = -1;
+
+rule: "Update attribute HUD"
+if (lastAttribute != Attribute)
+{
     DestroyHudText(AttributeHud);
 
-    if (Attribute == 2) Attribute = 0;
-
     if (Attribute == 0)
-        CreateHudText(AllPlayers(), "Attribute:", "Normal", null, Location.Top);
-    else if (Attribute == 1)
-        CreateHudText(AllPlayers(), "Attribute:", "One-way", null, Location.Top);
-
+    {
+        CreateHudText(
+            VisibleTo: AllPlayers(),
+            Header   : "Attribute:",
+            Subheader: ["Normal", "One-Way", "Custom"][Min(Attribute, 2)],
+            Text     : Attribute,
+            TextColor: Color.Orange,
+            Location : Location.Top
+        );
+    }
+    
     AttributeHud = LastTextID();
 }
 
-rule: "Initial attribute HUD"
+rule: "Create segment attribute text"
+Event.OnDamageTaken          // On Damage Takene event
+if (scoper == EventPlayer()) // Check if is scoper
+if (GetID() == 1)            // GetID equals expected ID
 {
-    CreateHudText(AllPlayers(), "Attribute:", "normal", null, Location.Top);
-    AttributeHud = LastTextID();
+    CreateInWorldText(
+        AllPlayers(),
+        (<Segment>GetData()).Attribute,
+        Midpoint(
+            (<Node>((<Segment>GetData()).Node1)).ShownLocation,
+            (<Node>((<Segment>GetData()).Node2)).ShownLocation
+        ),
+        2.5,
+        Clipping.ClipAgainstSurfaces,
+        InworldTextRev.String,
+        Color.Orange,
+        Spectators.VisibleAlways
+    );
+    (<Segment>GetData()).AttributeText = LastTextID();
 }
