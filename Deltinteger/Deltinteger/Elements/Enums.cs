@@ -96,7 +96,10 @@ namespace Deltin.Deltinteger.Elements
                     return Element.Part<V_TeamVar>(enumMember);
                 
                 case "Map":
-                    return (int)enumMember.UnderlyingValue;
+                    return Element.Part<V_MapVar>(enumMember);
+                
+                case "GameMode":
+                    return Element.Part<V_GameModeVar>(enumMember);
 
                 default: return null;
             }
@@ -123,7 +126,7 @@ namespace Deltin.Deltinteger.Elements
             {
                 EnumOverride fieldData = fields[v].GetCustomAttribute<EnumOverride>();
                 string fieldCodeName     = fieldData?.CodeName     ?? fields[v].Name;
-                string fieldWorkshopName = fieldData?.WorkshopName ?? Extras.AddSpacesToSentence(fields[v].Name, false);
+                string fieldWorkshopName = fieldData?.WorkshopName ?? Extras.AddSpacesToSentence(fields[v].Name.Replace('_', ' '), false);
 
                 Members[v] = new EnumMember(this, fieldCodeName, fieldWorkshopName, values.GetValue(v));
             }
@@ -167,11 +170,6 @@ namespace Deltin.Deltinteger.Elements
         public string ToWorkshop()
         {
             return WorkshopName;
-        }
-
-        public double ServerLoadWeight()
-        {
-            return 0;
         }
 
         public void DebugPrint(Log log, int depth)
@@ -326,37 +324,6 @@ namespace Deltin.Deltinteger.Elements
     }
 
     [WorkshopEnum]
-    public enum Variable
-    {
-        A,
-        B,
-        C,
-        D,
-        E,
-        F,
-        G,
-        H,
-        I,
-        J,
-        K,
-        L,
-        M,
-        N,
-        O,
-        P,
-        Q,
-        R,
-        S,
-        T,
-        U,
-        V,
-        W,
-        X,
-        Y,
-        Z
-    }
-
-    [WorkshopEnum]
     public enum Operation
     {
         Add,
@@ -481,7 +448,7 @@ namespace Deltin.Deltinteger.Elements
         Aqua,
         Orange,
         SkyBlue,
-        Turqoise,
+        Turquoise,
         LimeGreen
     }
 
@@ -566,7 +533,7 @@ namespace Deltin.Deltinteger.Elements
         Moon,
         No,
         Plus,
-        Poison1,
+        Poison,
         Poison2,
         QuestionMark,
         Radioactive,
@@ -719,47 +686,100 @@ namespace Deltin.Deltinteger.Elements
     [WorkshopEnum]
     public enum Map
     {
-        Black_Forest = 0,
-        Blizzard_World = 1,
-        Busan = 2,
-        Castillo = 3,
-        Chateau_Guillard = 4,
-        Dorado = 5,
-        Ecopoint_Antarctica = 6,
-        Eichenwalde = 7,
-        Hanamura = 8,
-        Havana = 9,
-        Hollywood = 10,
-        Horizon_Lunar_Colony = 11,
-        Ilios = 12,
-        Junkertown = 13,
-        Kings_Row = 14,
-        Lijiang_Tower = 15,
-        Necropolis = 16,
-        Nepal = 17,
-        Numbani = 18,
-        Oasis = 19,
-        Paris = 20,
-        Petra = 21,
-        Rialto = 22,
-        Route_66 = 23,
-        Temple_of_Anubis = 24,
-        Volskaya_Industries = 25,
-        Watchpoint_Gibraltar = 26,
-        Ayutthaya = 27,
-        Busan_Downtown = 28,
-        Busan_Sanctuary = 29,
-        Ilios_Lighthouse = 30,
-        Ilios_Ruins = 31,
-        Ilios_Well = 32,
-        Lijiang_Control_Center = 33,
-        Lijiang_Garden = 34,
-        Lijiang_Night_Market = 35,
-        Nepal_Sanctum = 36,
-        Nepal_Shrine = 37,
-        Nepal_Village = 38,
-        Oasis_City_Center = 39,
-        Oasis_Gardens = 40,
-        Oasis_University = 41
+        Ayutthaya,
+        Black_Forest,
+        Black_Forest_Winter,
+        Blizzard_World,
+        Blizzard_World_Winter,
+        Busan,
+        [EnumOverride(null, "Busan Downtown Lunar New Year")]
+        Busan_Downtown_Lunar,
+        [EnumOverride(null, "Busan Sanctuary Lunar New Year")]
+        Busan_Sanctuary_Lunar,
+        Busan_Stadium,
+        Castillo,
+        [EnumOverride(null, "Château Guillard")]
+        Chateau_Guillard,
+        [EnumOverride(null, "Château Guillard Halloween")]
+        Chateau_Guillard_Halloween,
+        Dorado,
+        [EnumOverride(null, "Ecopoint: Antarctica")]
+        Ecopoint_Antarctica,
+        [EnumOverride(null, "Ecopoint: Antarctica Winter")]
+        Ecopoint_Antarctica_Winter,
+        Eichenwalde,
+        Eichenwalde_Halloween,
+        [EnumOverride(null, "Estádio das Rãs")]
+        Estadio_Das_Ras,
+        Hanamura,
+        Hanamura_Winter,
+        Havana,
+        Hollywood,
+        Hollywood_Halloween,
+        Horizon_Lunar_Colony,
+        Ilios,
+        Ilios_Lighthouse,
+        Ilios_Ruins,
+        Ilios_Well,
+        [EnumOverride(null, "Junkenstein's Revenge")]
+        Junkensteins_Revenge,
+        Junkertown,
+        [EnumOverride(null, "King's Row")]
+        Kings_Row,
+        [EnumOverride(null, "King's Row Winter")]
+        Kings_Row_Winter,
+        Lijiang_Control_Center,
+        [EnumOverride(null, "Lijiang Control Center Lunar New Year")]
+        Lijiang_Control_Center_Lunar,
+        Lijiang_Garden,
+        [EnumOverride(null, "Lijiang Garden Lunar New Year")]
+        Lijiang_Garden_Lunar,
+        Lijiang_Night_Market,
+        [EnumOverride(null, "Lijiang Night Market Lunar New Year")]
+        Lijiang_Night_Market_Lunar,
+        Lijiang_Tower,
+        [EnumOverride(null, "Lijiang Tower Lunar New Year")]
+        Lijiang_Tower_Lunar,
+        Necropolis,
+        Nepal,
+        Nepal_Sanctum,
+        Nepal_Shrine,
+        Nepal_Village,
+        Numbani,
+        Oasis,
+        Oasis_City_Center,
+        Oasis_Gardens,
+        Oasis_University,
+        Paris,
+        Petra,
+        Rialto,
+        Route_66,
+        Sydney_Harbour_Arena,
+        Temple_of_Anubis,
+        Volskaya_Industries,
+        [EnumOverride(null, "Watchpoint: Gibraltar")]
+        Watchpoint_Gibraltar
+    }
+
+    [WorkshopEnum]
+    public enum GameMode
+    {
+        Assault,
+        CaptureTheFlag,
+        Control,
+        Deathmatch,
+        Elimination,
+        Escort,
+        Hybrid,
+        [EnumOverride(null, "Junkenstein's Revenge")]
+        JunkensteinsRevenge,
+        [EnumOverride(null, "Lúcioball")]
+        Lucioball,
+        [EnumOverride(null, "Mei's Snowball Offensive")]
+        MeisSnowballOffensive,
+        PracticeRange,
+        Skirmish,
+        TeamDeathmatch,
+        YetiHunter
     }
 }

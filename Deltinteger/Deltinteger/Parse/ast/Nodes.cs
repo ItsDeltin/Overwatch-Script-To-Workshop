@@ -10,13 +10,13 @@ namespace Deltin.Deltinteger.Parse
 {
     public abstract class Node : INode
     {
-        public Location Location { get; private set; }
+        public Location Location { get; }
 
-        public Range[] SubRanges { get; set; }
+        public DocRange[] SubRanges { get; set; }
 
         public ScopeGroup RelatedScopeGroup { get; set; }
 
-        public Node(Location location, params Range[] subRanges)
+        public Node(Location location, params DocRange[] subRanges)
         {
             Location = location;
             SubRanges = subRanges;
@@ -61,7 +61,7 @@ namespace Deltin.Deltinteger.Parse
     {
         public string File { get; }
 
-        public ImportNode(DeltinScriptParser.Import_fileContext context, BuildAstVisitor visitor) : base(new Location(visitor.file, Range.GetRange(context)))
+        public ImportNode(DeltinScriptParser.Import_fileContext context, BuildAstVisitor visitor) : base(new Location(visitor.file, DocRange.GetRange(context)))
         {
             File = context.STRINGLITERAL().GetText().Trim('"');
         }
@@ -77,7 +77,7 @@ namespace Deltin.Deltinteger.Parse
         public string Name { get; }
         public string File { get; }
 
-        public ImportObjectNode(DeltinScriptParser.Import_objectContext context, BuildAstVisitor visitor) : base(new Location(visitor.file, Range.GetRange(context)))
+        public ImportObjectNode(DeltinScriptParser.Import_objectContext context, BuildAstVisitor visitor) : base(new Location(visitor.file, DocRange.GetRange(context)))
         {
             Name = context.name.Text;
             File = context.file.Text.Trim('"');
@@ -97,7 +97,7 @@ namespace Deltin.Deltinteger.Parse
         public ConstructorNode[] Constructors { get; }
         public UserMethodBase[] Methods { get; }
 
-        public TypeDefineNode(DeltinScriptParser.Type_defineContext context, BuildAstVisitor visitor) : base(new Location(visitor.file, Range.GetRange(context)))
+        public TypeDefineNode(DeltinScriptParser.Type_defineContext context, BuildAstVisitor visitor) : base(new Location(visitor.file, DocRange.GetRange(context)))
         {
             if (context.STRUCT() != null)
                 TypeKind = TypeKind.Struct;
@@ -136,7 +136,7 @@ namespace Deltin.Deltinteger.Parse
         public BlockNode BlockNode { get; }
         public string Name { get; }
 
-        public ConstructorNode(DeltinScriptParser.ConstructorContext context, BuildAstVisitor visitor) : base(new Location(visitor.file, Range.GetRange(context)))
+        public ConstructorNode(DeltinScriptParser.ConstructorContext context, BuildAstVisitor visitor) : base(new Location(visitor.file, DocRange.GetRange(context)))
         {
             Name = context.PART().GetText();
 
@@ -159,19 +159,18 @@ namespace Deltin.Deltinteger.Parse
 
     public class RulesetNode : Node
     {
-        public InternalVarNode[] InternalVarNodes { get; }
         public ImportNode[] Imports { get; }
         public ImportObjectNode[] ObjectImports { get; }
-        public Variable UseGlobalVar { get; } = Variable.A;
-        public Variable UsePlayerVar { get; } = Variable.A;
-        public Variable UseBuilderVar { get; } = Variable.B;
-        public Variable UseClassVar { get; } = Variable.C;
         public RuleNode[] Rules { get; }
         public RuleDefineNode[] DefinedVars { get; }
         public UserMethodBase[] UserMethods { get; }
         public TypeDefineNode[] DefinedTypes { get; }
+        public ReservedNode ReservedGlobal { get; }
+        public ReservedNode ReservedPlayer { get; }
+        public int[] ReservedGlobalIDs { get; }
+        public int[] ReservedPlayerIDs { get; }
 
-        public RulesetNode(DeltinScriptParser.RulesetContext context, BuildAstVisitor visitor) : base(new Location(visitor.file, Range.GetRange(context)))
+        public RulesetNode(DeltinScriptParser.RulesetContext context, BuildAstVisitor visitor) : base(new Location(visitor.file, DocRange.GetRange(context)))
         {
             // Get imports
             Imports = new ImportNode[context.import_file().Length];
@@ -187,29 +186,18 @@ namespace Deltin.Deltinteger.Parse
             for (int i = 0; i < Rules.Length; i++)
                 Rules[i] = (RuleNode)visitor.VisitOw_rule(context.ow_rule()[i]);
 
-            // Get internal variable overrides
-            List<InternalVarNode> internalVarNodes = new List<InternalVarNode>();
-            for (int i = 0; i < context.internalVars().Length; i++)
-            {
-                var varOverride = new InternalVarNode(internalVarNodes, context.internalVars(i), visitor);
-                internalVarNodes.Add(varOverride);
-
-                if (varOverride.Type == InternalVarType.Global)
-                    UseGlobalVar = varOverride.Variable;
-                else if (varOverride.Type == InternalVarType.Player)
-                    UsePlayerVar = varOverride.Variable;
-                else if (varOverride.Type == InternalVarType.Builder)
-                    UseBuilderVar = varOverride.Variable;
-                else if (varOverride.Type == InternalVarType.Class)
-                    UseClassVar = varOverride.Variable;
-                else throw new NotImplementedException();
-            }
-            InternalVarNodes = internalVarNodes.ToArray();
-
             // Get defined variables
             DefinedVars = new RuleDefineNode[context.rule_define().Length];
+            var reservedGlobalIDs = new List<int>();
+            var reservedPlayerIDs = new List<int>();
             for (int i = 0; i < DefinedVars.Length; i++)
-                DefinedVars[i] = (RuleDefineNode)visitor.VisitRule_define(context.rule_define(i));
+            {
+                DefinedVars[i] = new RuleDefineNode(context.rule_define(i), visitor);
+                if (DefinedVars[i].OverrideID != -1)
+                    (DefinedVars[i].IsGlobal ? reservedGlobalIDs : reservedPlayerIDs).Add(DefinedVars[i].OverrideID);
+            }
+            ReservedGlobalIDs = reservedGlobalIDs.ToArray();
+            ReservedPlayerIDs = reservedPlayerIDs.ToArray();
 
             // Get user methods
             UserMethods = new UserMethodBase[context.user_method().Length + context.macro().Length];
@@ -224,74 +212,59 @@ namespace Deltin.Deltinteger.Parse
             DefinedTypes = new TypeDefineNode[context.type_define().Length];
             for (int i = 0; i < DefinedTypes.Length; i++)
                 DefinedTypes[i] = (TypeDefineNode)visitor.VisitType_define(context.type_define(i));
+            
+            // Get reserved global variables
+            if (context.reserved_global()?.reserved_list() != null)
+                ReservedGlobal = new ReservedNode(context.reserved_global().reserved_list(), visitor);
+            
+            // Get reserved player variables
+            if (context.reserved_player()?.reserved_list() != null)
+                ReservedPlayer = new ReservedNode(context.reserved_player().reserved_list(), visitor);
         }
 
         public override Node[] Children()
         {
-            return ArrayBuilder<Node>.Build(InternalVarNodes, Imports, ObjectImports, Rules, DefinedVars, UserMethods, DefinedTypes);
+            return ArrayBuilder<Node>.Build(ReservedGlobal, ReservedPlayer, Imports, ObjectImports, Rules, DefinedVars, UserMethods, DefinedTypes);
         }
     }
 
-    public class InternalVarNode : Node
+    public class ReservedNode : Node
     {
-        public InternalVarType Type { get; }
-        public Variable Variable { get; }
+        public string[] ReservedNames { get; }
+        public int[] ReservedIDs { get; }
 
-        public InternalVarNode(List<InternalVarNode> internalVarNodes, DeltinScriptParser.InternalVarsContext context, BuildAstVisitor visitor) : base(new Location(visitor.file, Range.GetRange(context)))
+        public ReservedNode(DeltinScriptParser.Reserved_listContext context, BuildAstVisitor visitor) : base(new Location(visitor.file, DocRange.GetRange(context)))
         {
-            if (context.GLOBAL() != null)
-                Type = InternalVarType.Global;
-            else if (context.PLAYER() != null)
-                Type = InternalVarType.Player;
-            else if (context.DIM() != null)
-                Type = InternalVarType.Builder;
-            else if (context.CLASS() != null)
-                Type = InternalVarType.Class;
-            else throw new NotImplementedException();
-            
-            if (internalVarNodes.Any(ivn => ivn.Type == Type))
-                visitor._diagnostics.Error($"{Type.ToString()} override already defined.", Location);
-
-            if (Enum.TryParse(context.PART().GetText(), out Variable temp))
-                Variable = temp;
+            ReservedNames = context.PART().Select(p => p.GetText()).ToArray();
+            ReservedIDs = context.NUMBER().Select(n => int.Parse(n.GetText())).ToArray();
         }
 
-        override public Node[] Children()
+        public override Node[] Children()
         {
-            return new Node[0];
+            return null;
         }
     }
-
-    public enum InternalVarType
-    {
-        Global,
-        Player,
-        Builder,
-        Class,
-    }
-
+    
     public class DefineNode : Node, IDefine
     {
         public string VariableName { get; }
         public string Type { get; }
-        public UseVarNode UseVar { get; }
         public Node Value { get; }
+        public bool Extended { get; }
 
-        public DefineNode(DeltinScriptParser.DefineContext context, BuildAstVisitor visitor) : base(new Location(visitor.file, Range.GetRange(context)))
+        public DefineNode(DeltinScriptParser.DefineContext context, BuildAstVisitor visitor) : base(new Location(visitor.file, DocRange.GetRange(context)))
         {
             VariableName = context.name.Text;
             Type = context.type?.Text;
+            Extended = context.NOT() != null;
             
             if (context.expr() != null)
                 Value = visitor.VisitExpr(context.expr());
-
-            if (context.useVar() != null)
-                UseVar = (UseVarNode)visitor.VisitUseVar(context.useVar());
         }
 
         public override Node[] Children()
         {
-            return ArrayBuilder<Node>.Build(UseVar, Value);
+            return ArrayBuilder<Node>.Build(Value);
         }
     }
 
@@ -300,23 +273,26 @@ namespace Deltin.Deltinteger.Parse
         public string VariableName { get; }
         public string Type { get; }
         public Node Value { get; }
-        public UseVarNode UseVar { get; }
+        public bool Extended { get; }
         public bool IsGlobal { get; }
+        public int OverrideID { get; } = -1;
 
-        public RuleDefineNode(DeltinScriptParser.Rule_defineContext context, BuildAstVisitor visitor) : base(new Location(visitor.file, Range.GetRange(context)))
+        public RuleDefineNode(DeltinScriptParser.Rule_defineContext context, BuildAstVisitor visitor) : base(new Location(visitor.file, DocRange.GetRange(context)))
         {
             VariableName = context.name.Text;
             Type = context.type?.Text;
             if (context.expr() != null)
                 Value = visitor.Visit(context.expr());
-            if (context.useVar() != null)
-                UseVar = (UseVarNode)visitor.Visit(context.useVar());
+            Extended = context.NOT() != null;
             IsGlobal = context.GLOBAL() != null;
+
+            if (context.id != null)
+                OverrideID = int.Parse(context.id.GetText());
         }
 
         public override Node[] Children()
         {
-            return ArrayBuilder<Node>.Build(Value, UseVar);
+            return ArrayBuilder<Node>.Build(Value);
         }
     }
 
@@ -325,9 +301,10 @@ namespace Deltin.Deltinteger.Parse
         public string VariableName { get; }
         public string Type { get; }
         public Node Value { get; }
+        public bool Extended { get; } = false;
         public AccessLevel AccessLevel { get; }
 
-        public InclassDefineNode(DeltinScriptParser.Inclass_defineContext context, BuildAstVisitor visitor) : base(new Location(visitor.file, Range.GetRange(context)))
+        public InclassDefineNode(DeltinScriptParser.Inclass_defineContext context, BuildAstVisitor visitor) : base(new Location(visitor.file, DocRange.GetRange(context)))
         {
             VariableName = context.name.Text;
             Type = context.type?.Text;
@@ -348,11 +325,13 @@ namespace Deltin.Deltinteger.Parse
         public string VariableName { get; }
         public string Type { get; }
         public Node Value { get { throw new NotImplementedException(); } }
+        public bool Extended { get; }
 
-        public ParameterDefineNode(DeltinScriptParser.Parameter_defineContext context, BuildAstVisitor visitor) : base(new Location(visitor.file, Range.GetRange(context)))
+        public ParameterDefineNode(DeltinScriptParser.Parameter_defineContext context, BuildAstVisitor visitor) : base(new Location(visitor.file, DocRange.GetRange(context)))
         {
             VariableName = context.name.Text;
             Type = context.type?.Text;
+            Extended = Extended = context.NOT() != null;
         }
 
         public override Node[] Children()
@@ -383,51 +362,31 @@ namespace Deltin.Deltinteger.Parse
                     parameters[i] = new TypeParameter(defineNodes[i].VariableName, type);
 
                 else parameters[i] = new Parameter(defineNodes[i].VariableName, Elements.ValueType.Any, null);
+
+                parameters[i].Extended = defineNodes[i].Extended;
             }
             return parameters;
         }
     }
 
-    public class UseVarNode : Node
-    {
-        public Variable Variable { get; }
-        public int[] Index { get; }
-
-        public UseVarNode(DeltinScriptParser.UseVarContext context, BuildAstVisitor visitor) : base(new Location(visitor.file, Range.GetRange(context)))
-        {
-            if (Enum.TryParse(context.PART().GetText(), out Variable temp))
-                Variable = temp;
-                        
-            int index = -1;
-            if (context.number() != null)
-                if (!int.TryParse(context.number().GetText(), out index))
-                    index = -1;
-            if (index != -1)
-                Index = new int[] {index};
-        }
-
-        public override Node[] Children()
-        {
-            return null;
-        }
-    }
-
     public class RuleNode : Node
     {
-        public string Name { get; private set; }
-        public RuleEvent Event { get; private set; }
-        public Team Team { get; private set; }
-        public PlayerSelector Player { get; private set; }
-        public Node[] Conditions { get; private set; }
-        public BlockNode Block { get; private set; }
+        public string Name { get; }
+        public RuleEvent Event { get; }
+        public Team Team { get; }
+        public PlayerSelector Player { get; }
+        public Node[] Conditions { get; }
+        public BlockNode Block { get; }
+        public bool Disabled { get; }
 
-        public RuleNode(DeltinScriptParser.Ow_ruleContext context, BuildAstVisitor visitor) : base(new Location(visitor.file, Range.GetRange(context)))
+        public RuleNode(DeltinScriptParser.Ow_ruleContext context, BuildAstVisitor visitor) : base(new Location(visitor.file, DocRange.GetRange(context)))
         {
             Name = context.STRINGLITERAL().GetText().Trim('"');
             Block = (BlockNode)visitor.VisitBlock(context.block());
+            Disabled = context.DISABLED() != null;
 
             Conditions = new Node[context.rule_if().Length];
-            Range[] conditionRanges      = new Range          [context.rule_if().Length];
+            DocRange[] conditionRanges      = new DocRange          [context.rule_if().Length];
 
             for (int i = 0; i < context.rule_if().Length; i++)
             {
@@ -435,7 +394,7 @@ namespace Deltin.Deltinteger.Parse
                     Conditions[i] = visitor.VisitExpr(context.rule_if(i).expr());
 
                 // Get the range between the ().
-                conditionRanges[i] = Range.GetRange(
+                conditionRanges[i] = DocRange.GetRange(
                     context.rule_if(i).LEFT_PAREN().Symbol, 
                     context.rule_if(i).RIGHT_PAREN().Symbol
                 );
@@ -445,22 +404,22 @@ namespace Deltin.Deltinteger.Parse
             Team team = Team.All;
             PlayerSelector player = PlayerSelector.All;
 
-            Range eventRange = null;
-            Range teamRange = null;
-            Range playerRange = null;
+            DocRange eventRange = null;
+            DocRange teamRange = null;
+            DocRange playerRange = null;
             foreach(var ruleOption in context.@enum())
             {
                 string option = ruleOption.PART(0).GetText();
-                Range optionRange = Range.GetRange(ruleOption.PART(0).Symbol);
+                DocRange optionRange = DocRange.GetRange(ruleOption.PART(0).Symbol);
 
                 string value = ruleOption.PART(1)?.GetText();
-                Range valueRange = null;
+                DocRange valueRange = null;
                 if (value != null)
-                    valueRange = Range.GetRange(ruleOption.PART(1).Symbol);
+                    valueRange = DocRange.GetRange(ruleOption.PART(1).Symbol);
 
-                Range totalRange;
-                if (ruleOption.PART(1) != null) totalRange = Range.GetRange(ruleOption.PART(0).Symbol, ruleOption.PART(1).Symbol);
-                else totalRange = Range.GetRange(ruleOption.PART(0));
+                DocRange totalRange;
+                if (ruleOption.PART(1) != null) totalRange = DocRange.GetRange(ruleOption.PART(0).Symbol, ruleOption.PART(1).Symbol);
+                else totalRange = DocRange.GetRange(ruleOption.PART(0));
                 
                 switch (option)
                 {
@@ -471,7 +430,7 @@ namespace Deltin.Deltinteger.Parse
                         if (!Enum.TryParse<RuleEvent>(value, out eventType))
                             visitor._diagnostics.Error($"{value} is not a valid Event type.", new Location(visitor.file, valueRange));
                         
-                        eventRange = Range.GetRange(ruleOption);
+                        eventRange = DocRange.GetRange(ruleOption);
                         break;
                     
                     case "Team":
@@ -481,7 +440,7 @@ namespace Deltin.Deltinteger.Parse
                         if (!Enum.TryParse<Team>(value, out team))
                             visitor._diagnostics.Error($"{value} is not a valid Team type.", new Location(visitor.file, valueRange));
                         
-                        teamRange = Range.GetRange(ruleOption);
+                        teamRange = DocRange.GetRange(ruleOption);
                         break;
 
                     case "Player":
@@ -491,7 +450,7 @@ namespace Deltin.Deltinteger.Parse
                         if (!Enum.TryParse<PlayerSelector>(value, out player))
                             visitor._diagnostics.Error($"{value} is not a valid Player type.", new Location(visitor.file, valueRange));
                         
-                        playerRange = Range.GetRange(ruleOption);
+                        playerRange = DocRange.GetRange(ruleOption);
                         break;
                     
                     default:
@@ -503,7 +462,7 @@ namespace Deltin.Deltinteger.Parse
             Team = team;
             Player = player;
 
-            SubRanges = ArrayBuilder<Range>.Build(eventRange, teamRange, playerRange, conditionRanges);
+            SubRanges = ArrayBuilder<DocRange>.Build(eventRange, teamRange, playerRange, conditionRanges);
         }
 
         public bool IsEventOptionSelected(Pos caretPos)
@@ -563,9 +522,9 @@ namespace Deltin.Deltinteger.Parse
         public bool IsRecursive { get; }
         private Location errorRange { get; }
         
-        public UserMethodNode(DeltinScriptParser.User_methodContext context, BuildAstVisitor visitor) : base(new Location(visitor.file, Range.GetRange(context)))
+        public UserMethodNode(DeltinScriptParser.User_methodContext context, BuildAstVisitor visitor) : base(new Location(visitor.file, DocRange.GetRange(context)))
         {
-            errorRange = new Location(visitor.file, Range.GetRange(context.name));
+            errorRange = new Location(visitor.file, DocRange.GetRange(context.name));
             Name = context.name.Text;
             Type = context.type?.Text;
 
@@ -597,7 +556,7 @@ namespace Deltin.Deltinteger.Parse
     {
         public Node Expression { get; }
 
-        public MacroNode(DeltinScriptParser.MacroContext context, BuildAstVisitor visitor) : base(new Location(visitor.file, Range.GetRange(context)))
+        public MacroNode(DeltinScriptParser.MacroContext context, BuildAstVisitor visitor) : base(new Location(visitor.file, DocRange.GetRange(context)))
         {
             Name = context.name.Text;
             Documentation = GetDocumentation(context.DOCUMENTATION());
@@ -655,13 +614,35 @@ namespace Deltin.Deltinteger.Parse
 
     public class MethodNode : Node, ICallableNode
     {
-        public string Name { get; private set; }
-        public Node[] Parameters { get; private set; }
+        public string Name { get; }
+        public Node[] Parameters { get; }
+        public PickyParameter[] PickyParameters { get; }
 
-        public MethodNode(string name, Node[] parameters, Range nameRange, Range parameterRange, Location location) : base(location, nameRange, parameterRange)
+        public IMethod Method { get; set; }
+
+        public MethodNode(DeltinScriptParser.MethodContext context, BuildAstVisitor visitor)
+            : base(
+                new Location(visitor.file, DocRange.GetRange(context)),
+                DocRange.GetRange(context.PART().Symbol),
+                DocRange.GetRange(context.LEFT_PAREN().Symbol, context.RIGHT_PAREN().Symbol)
+            )
         {
-            Name = name;
-            Parameters = parameters;
+            Name = context.PART().GetText();
+
+            if (context.call_parameters() != null)
+            {
+                Parameters = new Node[context.call_parameters().expr().Length];
+                for (int i = 0; i < Parameters.Length; i++)
+                    Parameters[i] = visitor.Visit(context.call_parameters().expr()[i]);
+            }
+            else if (context.picky_parameters() != null)
+            {
+                PickyParameters = new PickyParameter[context.picky_parameters().picky_parameter().Length];
+                for (int i = 0; i < PickyParameters.Length; i++)
+                    PickyParameters[i] = new PickyParameter(context.picky_parameters().picky_parameter(i), visitor);
+            }
+            else
+                Parameters = new Node[0];
         }
 
         public bool IsNameSelected(Pos caretPos)
@@ -674,18 +655,45 @@ namespace Deltin.Deltinteger.Parse
             return SubrangesSelected(caretPos).Contains(1);
         }
 
+        public bool UsingNormalParameters()
+        {
+            return Parameters != null;
+        }
+
+        public Node[] GetParameters()
+        {
+            return UsingNormalParameters() ? Parameters : PickyParameters;
+        }
+
         public override Node[] Children()
         {
-            return Parameters;
+            return ArrayBuilder<Node>.Build(Parameters, PickyParameters);
+        }
+    }
+
+    public class PickyParameter : Node
+    {
+        public string Name { get; }
+        public Node Expression { get; }
+
+        public PickyParameter(DeltinScriptParser.Picky_parameterContext context, BuildAstVisitor visitor) : base(new Location(visitor.file, DocRange.GetRange(context)))
+        {
+            Name = context.PART().GetText();
+            Expression = visitor.Visit(context.expr());
+        }
+
+        public override Node[] Children()
+        {
+            return new Node[] { Expression };
         }
     }
 
     public class VariableNode : Node
     {
-        public string Name { get; private set; }
-        public Node[] Index { get; private set; }
+        public string Name { get; }
+        public Node[] Index { get; }
 
-        public VariableNode(DeltinScriptParser.VariableContext context, BuildAstVisitor visitor) : base(new Location(visitor.file, Range.GetRange(context)))
+        public VariableNode(DeltinScriptParser.VariableContext context, BuildAstVisitor visitor) : base(new Location(visitor.file, DocRange.GetRange(context)))
         {
             Name = context.PART().GetText();
 
@@ -703,7 +711,7 @@ namespace Deltin.Deltinteger.Parse
     public class ExpressionTreeNode : Node
     {
         public Node[] Tree { get; }
-        public ExpressionTreeNode(DeltinScriptParser.ExprContext context, BuildAstVisitor visitor) : base(new Location(visitor.file, Range.GetRange(context)))
+        public ExpressionTreeNode(DeltinScriptParser.ExprContext context, BuildAstVisitor visitor) : base(new Location(visitor.file, DocRange.GetRange(context)))
         {
             Tree = new Node[context.expr().Length];
             for (int i = 0; i < Tree.Length; i++)
@@ -738,13 +746,15 @@ namespace Deltin.Deltinteger.Parse
 
     public class StringNode : Node, IConstantSupport
     {
-        public string Value { get; private set; }
-        public Node[] Format { get; private set; }
+        public string Value { get; }
+        public Node[] Format { get; }
+        public bool Localized { get; }
 
-        public StringNode(string value, Node[] format, Location location) : base(location)
+        public StringNode(string value, Node[] format, bool localized, Location location) : base(location)
         {
             Value = value;
             Format = format;
+            Localized = localized;
         }
 
         public override Node[] Children()
@@ -760,7 +770,7 @@ namespace Deltin.Deltinteger.Parse
 
     public class BooleanNode : Node, IConstantSupport
     {
-        public bool Value { get; private set; }
+        public bool Value { get; }
 
         public BooleanNode(bool value, Location location) : base(location)
         {
@@ -820,9 +830,9 @@ namespace Deltin.Deltinteger.Parse
 
     public class EnumNode : Node
     {
-        public string Type { get; private set; }
-        public string Value { get; private set; }
-        public EnumMember EnumMember { get; private set; }
+        public string Type { get; }
+        public string Value { get; }
+        public EnumMember EnumMember { get; }
 
         public EnumNode(string type, string value, Location location) : base(location)
         {
@@ -839,8 +849,8 @@ namespace Deltin.Deltinteger.Parse
 
     public class ValueInArrayNode : Node
     {
-        public Node Value { get; private set; }
-        public Node Index { get; private set; }
+        public Node Value { get; }
+        public Node Index { get; }
 
         public ValueInArrayNode(Node value, Node index, Location location) : base(location)
         {
@@ -856,7 +866,7 @@ namespace Deltin.Deltinteger.Parse
 
     public class CreateArrayNode : Node
     {
-        public Node[] Values { get; private set; }
+        public Node[] Values { get; }
         public CreateArrayNode(Node[] values, Location location) : base(location)
         {
             Values = values;
@@ -870,9 +880,9 @@ namespace Deltin.Deltinteger.Parse
 
     public class TernaryConditionalNode : Node
     {
-        public Node Condition { get; private set; }
-        public Node Consequent { get; private set; }
-        public Node Alternative { get; private set; }
+        public Node Condition { get; }
+        public Node Consequent { get; }
+        public Node Alternative { get; }
         public TernaryConditionalNode(Node condition, Node consequent, Node alternative, Location location) : base(location)
         {
             Condition = condition;
@@ -891,7 +901,7 @@ namespace Deltin.Deltinteger.Parse
         public string TypeName { get; }
         public Node[] Parameters { get; }
 
-        public CreateObjectNode(DeltinScriptParser.Create_objectContext context, BuildAstVisitor visitor) : base(new Location(visitor.file, Range.GetRange(context)))
+        public CreateObjectNode(DeltinScriptParser.Create_objectContext context, BuildAstVisitor visitor) : base(new Location(visitor.file, DocRange.GetRange(context)))
         {
             TypeName = context.type.Text;
             
@@ -932,12 +942,12 @@ namespace Deltin.Deltinteger.Parse
 
     public class VarSetNode : Node
     {
-        public Node Variable { get; private set; }
-        public Node[] Index { get; private set; }
-        public string Operation { get; private set; }
-        public Node Value { get; private set; }
+        public Node Variable { get; }
+        public Node[] Index { get; }
+        public string Operation { get; }
+        public Node Value { get; }
 
-        public VarSetNode(DeltinScriptParser.VarsetContext context, BuildAstVisitor visitor) : base(new Location(visitor.file, Range.GetRange(context)))
+        public VarSetNode(DeltinScriptParser.VarsetContext context, BuildAstVisitor visitor) : base(new Location(visitor.file, DocRange.GetRange(context)))
         {
             Variable = visitor.VisitExpr(context.var);
             
@@ -972,9 +982,9 @@ namespace Deltin.Deltinteger.Parse
         public int Repeaters { get; }
         private Location errorRange { get; }
 
-        public ForEachNode(DeltinScriptParser.ForeachContext context, BuildAstVisitor visitor) : base(new Location(visitor.file, Range.GetRange(context)))
+        public ForEachNode(DeltinScriptParser.ForeachContext context, BuildAstVisitor visitor) : base(new Location(visitor.file, DocRange.GetRange(context)))
         {
-            errorRange = new Location(visitor.file, Range.GetRange(context.FOREACH()));
+            errorRange = new Location(visitor.file, DocRange.GetRange(context.FOREACH()));
             Array = visitor.Visit(context.expr());
             Variable = new ParameterDefineNode(context.parameter_define(), visitor);
             Block = (BlockNode)visitor.VisitBlock(context.block());
@@ -997,16 +1007,16 @@ namespace Deltin.Deltinteger.Parse
 
     public class ForNode : Node, IBlockContainer
     {
-        public VarSetNode VarSetNode { get; private set; }
-        public DefineNode DefineNode { get; private set; }
-        public Node Expression { get; private set; }
-        public VarSetNode Statement { get; private set; }
-        public BlockNode Block { get; private set; }
+        public VarSetNode VarSetNode { get; }
+        public DefineNode DefineNode { get; }
+        public Node Expression { get; }
+        public VarSetNode Statement { get; }
+        public BlockNode Block { get; }
         private Location errorRange { get; }
 
-        public ForNode(DeltinScriptParser.ForContext context, BuildAstVisitor visitor) : base(new Location(visitor.file, Range.GetRange(context)))
+        public ForNode(DeltinScriptParser.ForContext context, BuildAstVisitor visitor) : base(new Location(visitor.file, DocRange.GetRange(context)))
         {
-            errorRange = new Location(visitor.file, Range.GetRange(context.FOR()));
+            errorRange = new Location(visitor.file, DocRange.GetRange(context.FOR()));
             Block = (BlockNode)visitor.VisitBlock(context.block());
 
             if (context.varset() != null)
@@ -1035,15 +1045,15 @@ namespace Deltin.Deltinteger.Parse
 
     public class WhileNode : Node, IBlockContainer
     {
-        public Node Expression { get; private set; }
-        public BlockNode Block { get; private set; }
+        public Node Expression { get; }
+        public BlockNode Block { get; }
         private Location errorRange { get; }
 
-        public WhileNode(DeltinScriptParser.WhileContext context, BuildAstVisitor visitor) : base(new Location(visitor.file, Range.GetRange(context)))
+        public WhileNode(DeltinScriptParser.WhileContext context, BuildAstVisitor visitor) : base(new Location(visitor.file, DocRange.GetRange(context)))
         {
             Expression = visitor.VisitExpr(context.expr());
             Block = (BlockNode)visitor.VisitBlock(context.block());
-            errorRange = new Location(visitor.file, Range.GetRange(context.WHILE()));
+            errorRange = new Location(visitor.file, DocRange.GetRange(context.WHILE()));
         }
 
         public override Node[] Children()
@@ -1065,7 +1075,7 @@ namespace Deltin.Deltinteger.Parse
 
         private List<PathInfo> paths { get; } = new List<PathInfo>();
 
-        public IfNode(DeltinScriptParser.IfContext context, BuildAstVisitor visitor) : base(new Location(visitor.file, Range.GetRange(context)))
+        public IfNode(DeltinScriptParser.IfContext context, BuildAstVisitor visitor) : base(new Location(visitor.file, DocRange.GetRange(context)))
         {
             // Get the if data
             IfData = new IfData
@@ -1073,7 +1083,7 @@ namespace Deltin.Deltinteger.Parse
                 visitor.VisitExpr(context.expr()),
                 (BlockNode)visitor.VisitBlock(context.block())
             );
-            paths.Add(new PathInfo(IfData.Block, new Location(visitor.file, Range.GetRange(context.IF())), false));
+            paths.Add(new PathInfo(IfData.Block, new Location(visitor.file, DocRange.GetRange(context.IF())), false));
 
             // Get the else-if data
             ElseIfData = null;
@@ -1092,7 +1102,7 @@ namespace Deltin.Deltinteger.Parse
                             ElseIfData[i].Block,
                             new Location(
                                 visitor.file, 
-                                Range.GetRange(
+                                DocRange.GetRange(
                                     context.else_if(i).ELSE(),
                                     context.else_if(i).IF()
                                 )
@@ -1108,7 +1118,7 @@ namespace Deltin.Deltinteger.Parse
             if (context.@else() != null)
             {
                 ElseBlock = (BlockNode)visitor.VisitBlock(context.@else().block());
-                paths.Add(new PathInfo(ElseBlock, new Location(visitor.file, Range.GetRange(context.@else().ELSE())), true));
+                paths.Add(new PathInfo(ElseBlock, new Location(visitor.file, DocRange.GetRange(context.@else().ELSE())), true));
             }
         }
 
@@ -1138,8 +1148,8 @@ namespace Deltin.Deltinteger.Parse
 
     public class IfData
     {
-        public Node Expression { get; private set; }
-        public BlockNode Block { get; private set; }
+        public Node Expression { get; }
+        public BlockNode Block { get; }
 
         public IfData(Node expression, BlockNode block)
         {
@@ -1150,7 +1160,7 @@ namespace Deltin.Deltinteger.Parse
 
     public class ReturnNode : Node
     {
-        public Node Value { get; private set; }
+        public Node Value { get; }
 
         public ReturnNode(Node value, Location location) : base (location)
         {
@@ -1167,7 +1177,7 @@ namespace Deltin.Deltinteger.Parse
     {
         public Node Delete { get; } 
 
-        public DeleteNode(DeltinScriptParser.DeleteContext context, BuildAstVisitor visitor) : base(new Location(visitor.file, Range.GetRange(context)))
+        public DeleteNode(DeltinScriptParser.DeleteContext context, BuildAstVisitor visitor) : base(new Location(visitor.file, DocRange.GetRange(context)))
         {
             Delete = visitor.VisitExpr(context.expr());
         }
@@ -1183,7 +1193,7 @@ namespace Deltin.Deltinteger.Parse
         public string Type { get; }
         public Node Expression { get; }
 
-        public TypeConvertNode(DeltinScriptParser.TypeconvertContext context, BuildAstVisitor visitor) : base(new Location(visitor.file, Range.GetRange(context)))
+        public TypeConvertNode(DeltinScriptParser.TypeconvertContext context, BuildAstVisitor visitor) : base(new Location(visitor.file, DocRange.GetRange(context)))
         {
             Type = context.PART().GetText();
             Expression = visitor.VisitExpr(context.expr());

@@ -14,8 +14,11 @@ namespace Deltin.Deltinteger.Pathfinder
     {
         private static readonly Log Log = new Log("PathMap");
 
-        private static readonly Variable nodesOut = Variable.D;
-        private static readonly Variable segmentsOut = Variable.E;
+        // nodesOut and segmentsOut must equal the ID override in Modules/PathfindEditor.del:
+        // line 312: define globalvar nodesOut    [3];
+        // line 313: define globalvar segmentsOut [4];
+        private const int nodesOut = 3;
+        private const int segmentsOut = 4;
 
         public static PathMap ImportFromCSV(string file)
         {

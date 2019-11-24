@@ -49,6 +49,15 @@ namespace Deltin.Deltinteger.Parse
 
         abstract public Element Get(TranslateRule context, ScopeGroup scope, MethodNode methodNode, IWorkshopTree[] parameters);
 
+        public Element Parse(TranslateRule context, bool needsToBeValue, ScopeGroup scope, MethodNode methodNode, IWorkshopTree[] parameters)
+        {
+            Element result = Get(context, scope, methodNode, parameters);
+            if (!needsToBeValue)
+                result = null;
+            
+            return result;
+        }
+
         public string GetLabel(bool markdown)
         {
             return Name + "(" + Parameter.ParameterGroupToString(Parameters, markdown) + ")"
@@ -160,7 +169,7 @@ namespace Deltin.Deltinteger.Parse
                 IndexedVar returns = null;
                 if (DoesReturn)
                 {
-                    returns = context.VarCollection.AssignVar(scope, $"{methodNode.Name}: return temp value", context.IsGlobal, null);
+                    returns = IndexedVar.AssignVar(context.VarCollection, scope, $"{methodNode.Name} return", context.IsGlobal, null);
                     returns.Type = Type;
                 }
 
@@ -224,7 +233,7 @@ namespace Deltin.Deltinteger.Parse
                         if (parameters[i] is Element)
                         {
                             // Create a new variable using the parameter input.
-                            parameterVars[i] = (RecursiveVar)context.VarCollection.AssignVar(methodScope, Parameters[i].Name, context.IsGlobal, methodNode);
+                            parameterVars[i] = (RecursiveVar)IndexedVar.AssignVar(context.VarCollection, methodScope, Parameters[i].Name, context.IsGlobal, methodNode);
                             ((RecursiveVar)parameterVars[i]).Type = ((Element)parameters[i]).SupportedType?.Type;
                             context.Actions.AddRange
                             (
@@ -238,11 +247,11 @@ namespace Deltin.Deltinteger.Parse
                         else throw new NotImplementedException();
                     }
 
-                    var returns = context.VarCollection.AssignVar(null, $"{methodNode.Name}: return temp value", context.IsGlobal, null);
+                    var returns = IndexedVar.AssignInternalVarExt(context.VarCollection, null, $"{methodNode.Name}: return", context.IsGlobal);
                     returns.Type = Type;
 
                     // Setup the continue skip array.
-                    IndexedVar continueSkipArray = context.VarCollection.AssignVar(null, $"{methodNode.Name}: continue skip array", context.IsGlobal, null);
+                    IndexedVar continueSkipArray = IndexedVar.AssignInternalVar(context.VarCollection, null, $"{methodNode.Name} sca", context.IsGlobal);
                     var stack = new MethodStack(this, parameterVars, context.ContinueSkip.GetSkipCount(), returns, continueSkipArray);
 
                     // Add the method to the stack.

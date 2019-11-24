@@ -9,7 +9,6 @@ namespace Deltin.Deltinteger
     {
         string ToWorkshop();
         void DebugPrint(Log log, int depth = 0);
-        double ServerLoadWeight();
     }
 
     public interface IMethod : ILanguageServerInfo
@@ -17,6 +16,8 @@ namespace Deltin.Deltinteger
         string Name { get; }
         ParameterBase[] Parameters { get; }
         WikiMethod Wiki { get; }
+
+        Element Parse(TranslateRule context, bool needsToBeValue, ScopeGroup scope, MethodNode methodNode, IWorkshopTree[] parameters);
     }
 
     public interface ILanguageServerInfo

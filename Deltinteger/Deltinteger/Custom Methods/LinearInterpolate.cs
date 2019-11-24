@@ -41,7 +41,7 @@ namespace Deltin.Deltinteger.Elements
     {
         protected override MethodResult Get()
         {
-            IndexedVar fraction = TranslateContext.VarCollection.AssignVar(Scope, "OptimisedLinearInterpolate: fraction", TranslateContext.IsGlobal, null);
+            IndexedVar fraction = IndexedVar.AssignInternalVarExt(TranslateContext.VarCollection, Scope, "OptimisedLinearInterpolate: fraction", TranslateContext.IsGlobal);
 
             Element[] actions = ArrayBuilder<Element>.Build
             (
@@ -105,9 +105,9 @@ namespace Deltin.Deltinteger.Elements
     {
         protected override MethodResult Get()
         {
-            IndexedVar fraction = TranslateContext.VarCollection.AssignVar(Scope, "OptimisedLinearInterpolateDistance: fraction", TranslateContext.IsGlobal, null);
-            IndexedVar point1 = TranslateContext.VarCollection.AssignVar(Scope, "OptimisedLinearInterpolateDistance: point1", TranslateContext.IsGlobal, null);
-            IndexedVar point2 = TranslateContext.VarCollection.AssignVar(Scope, "OptimisedLinearInterpolateDistance: point2", TranslateContext.IsGlobal, null);
+            IndexedVar fraction = IndexedVar.AssignInternalVarExt(TranslateContext.VarCollection, Scope, "OptimisedLinearInterpolateDistance: fraction", TranslateContext.IsGlobal);
+            IndexedVar point1 = IndexedVar.AssignInternalVarExt(TranslateContext.VarCollection, Scope, "OptimisedLinearInterpolateDistance: point1", TranslateContext.IsGlobal);
+            IndexedVar point2 = IndexedVar.AssignInternalVarExt(TranslateContext.VarCollection, Scope, "OptimisedLinearInterpolateDistance: point2", TranslateContext.IsGlobal);
 
             Element[] actions = ArrayBuilder<Element>.Build
             (

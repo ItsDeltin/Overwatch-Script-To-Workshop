@@ -28,12 +28,48 @@ namespace Deltin.Deltinteger.Elements
             if (ParameterValues.Length == 0) return 0;
             return Math.Abs((double)((Element)ParameterValues[0]).GetConstant());
         }
+
+        override public Element Optimize()
+        {
+            OptimizeChildren();
+
+            if (ParameterValues[0] is V_Number)
+                return Math.Abs(((V_Number)ParameterValues[0]).Value);
+            
+            return this;
+        }
     }
 
     [ElementData("Add", ValueType.Any)]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
-    public class V_Add : Element {}
+    public class V_Add : Element
+    {
+        override public Element Optimize()
+        {
+            OptimizeChildren();
+
+            IWorkshopTree a = ParameterValues[0];
+            IWorkshopTree b = ParameterValues[1];
+
+            if (a is V_Number && ParameterValues[1] is V_Number)
+                return ((V_Number)a).Value + ((V_Number)b).Value;
+            
+            if (((Element)a).ConstantSupported<Models.Vertex>() && ((Element)b).ConstantSupported<Models.Vertex>())
+            {
+                var aVertex = (Models.Vertex)(((Element)a).GetConstant());
+                var bVertex = (Models.Vertex)(((Element)b).GetConstant());
+
+                return new V_Vector(
+                    aVertex.X + bVertex.X,
+                    aVertex.Y + bVertex.Y,
+                    aVertex.Z + bVertex.Z
+                );
+            }
+            
+            return this;
+        }
+    }
 
     [ElementData("All Dead Players", ValueType.Player)]
     [Parameter("Team", ValueType.Team, typeof(V_TeamVar))]
@@ -118,7 +154,7 @@ namespace Deltin.Deltinteger.Elements
     public class V_ArrayContains : Element {}
 
     [ElementData("Array Slice", ValueType.Any)]
-    [Parameter("Array", ValueType.Any, typeof(V_GlobalVariable))]
+    [Parameter("Array", ValueType.Any, null)]
     [Parameter("Start Index", ValueType.Number, typeof(V_Number))]
     [Parameter("Count", ValueType.Number, typeof(V_Number))]
     public class V_ArraySlice : Element {}
@@ -153,7 +189,7 @@ namespace Deltin.Deltinteger.Elements
     public class V_ControlPointScoringTeam : Element {}
 
     [ElementData("Count Of", ValueType.Number)]
-    [Parameter("Array", ValueType.Any, typeof(V_GlobalVariable))]
+    [Parameter("Array", ValueType.Any, null)]
     public class V_CountOf : Element {}
 
     [ElementData("Cosine From Degrees", ValueType.Number)]
@@ -168,6 +204,9 @@ namespace Deltin.Deltinteger.Elements
     [Parameter("Value", ValueType.VectorAndPlayer, typeof(V_Vector))]
     [Parameter("Value", ValueType.VectorAndPlayer, typeof(V_Vector))]
     public class V_CrossProduct : Element {}
+
+    [ElementData("Current Map", ValueType.Map)]
+    public class V_CurrentMap : Element {}
 
     [ElementData("Current Array Element", ValueType.Any)]
     public class V_ArrayElement : Element {}
@@ -190,7 +229,39 @@ namespace Deltin.Deltinteger.Elements
     [ElementData("Divide", ValueType.Any)]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
-    public class V_Divide : Element {}
+    public class V_Divide : Element
+    {
+        override public Element Optimize()
+        {
+            OptimizeChildren();
+
+            IWorkshopTree a = ParameterValues[0];
+            IWorkshopTree b = ParameterValues[1];
+
+            // Divide number and number
+            if (a is V_Number && b is V_Number)
+                return ((V_Number)ParameterValues[0]).Value / ((V_Number)ParameterValues[1]).Value;
+            
+            // Divide vector and number
+            if ((a is V_Vector && b is V_Number) || (a is V_Number && b is V_Vector))
+            {
+                V_Vector vector = a is V_Vector ? (V_Vector)a : (V_Vector)b;
+                V_Number number = a is V_Number ? (V_Number)a : (V_Number)b;
+
+                if (vector.ConstantSupported<Models.Vertex>())
+                {
+                    Models.Vertex vertex = (Models.Vertex)vector.GetConstant();
+                    return new V_Vector(
+                        vertex.X / number.Value,
+                        vertex.Y / number.Value,
+                        vertex.Z / number.Value
+                    );
+                }
+            }
+
+            return this;
+        }
+    }
 
     [ElementData("Dot Product", ValueType.Number)]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
@@ -241,7 +312,7 @@ namespace Deltin.Deltinteger.Elements
     public class V_FilteredArray : Element {}
 
     [ElementData("First Of", ValueType.Any)]
-    [Parameter("Array", ValueType.Any, typeof(V_GlobalVariable))]
+    [Parameter("Array", ValueType.Any, null)]
     public class V_FirstOf : Element {}
 
     [ElementData("Flag Position", ValueType.Vector)]
@@ -251,8 +322,16 @@ namespace Deltin.Deltinteger.Elements
     [ElementData("Forward", ValueType.Vector)]
     public class V_Forward : Element {}
 
+    [ElementData("Game Mode", ValueType.Vector)]
+    [EnumParameter("Gamemode", typeof(GameMode))]
+    public class V_GameModeVar : Element {}
+
+    [ElementData("Current Game Mode", ValueType.Vector)]
+    public class V_CurrentGameMode : Element {}
+
     [ElementData("Global Variable", ValueType.Any)]
-    [EnumParameter("Variable", typeof(Variable))]
+    [VarRefParameter("Variable")]
+    //[EnumParameter("Variable", typeof(Variable))]
     public class V_GlobalVariable : Element {}
 
     [ElementData("Has Spawned", ValueType.Boolean)]
@@ -307,7 +386,7 @@ namespace Deltin.Deltinteger.Elements
     public class V_HostPlayer : Element {}
 
     [ElementData("Index Of Array Value", ValueType.Any)]
-    [Parameter("Array", ValueType.Any, typeof(V_GlobalVariable))]
+    [Parameter("Array", ValueType.Any, null)]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
     public class V_IndexOfArrayValue : Element {}
 
@@ -444,12 +523,12 @@ namespace Deltin.Deltinteger.Elements
     public class V_IsTeamOnOffense : Element {}
 
     [ElementData("Is True For All", ValueType.Boolean)]
-    [Parameter("Array", ValueType.Any, typeof(V_GlobalVariable))]
+    [Parameter("Array", ValueType.Any, null)]
     [Parameter("Condition", ValueType.Boolean, typeof(V_Compare))]
     public class V_IsTrueForAll : Element {}
 
     [ElementData("Is True For Any", ValueType.Boolean)]
-    [Parameter("Array", ValueType.Any, typeof(V_GlobalVariable))]
+    [Parameter("Array", ValueType.Any, null)]
     [Parameter("Condition", ValueType.Boolean, typeof(V_Compare))]
     public class V_IsTrueForAny : Element {}
 
@@ -481,7 +560,7 @@ namespace Deltin.Deltinteger.Elements
     public class V_LastHealOverTime : Element {}
 
     [ElementData("Last Of", ValueType.Any)]
-    [Parameter("Array", ValueType.Any, typeof(V_GlobalVariable))]
+    [Parameter("Array", ValueType.Any, null)]
     public class V_LastOf : Element {}
 
     [ElementData("Last Text ID", ValueType.Number)]
@@ -495,6 +574,10 @@ namespace Deltin.Deltinteger.Elements
     [Parameter("Relative Player", ValueType.Player, typeof(V_EventPlayer))]
     [EnumParameter("Transformation", typeof(Transformation))]
     public class V_LocalVectorOf : Element {}
+
+    [ElementData("Map", ValueType.Map)]
+    [EnumParameter("Map", typeof(Map))]
+    public class V_MapVar : Element {}
 
     [ElementData("Match Round", ValueType.Number)]
     public class V_MatchRound : Element {}
@@ -519,12 +602,55 @@ namespace Deltin.Deltinteger.Elements
     [ElementData("Modulo", ValueType.Number)]
     [Parameter("Value", ValueType.Number, typeof(V_Number))]
     [Parameter("Value", ValueType.Number, typeof(V_Number))]
-    public class V_Modulo : Element {}
+    public class V_Modulo : Element
+    {
+        override public Element Optimize()
+        {
+            OptimizeChildren();
+
+            if (ParameterValues[0] is V_Number && ParameterValues[1] is V_Number)
+                return ((V_Number)ParameterValues[0]).Value % ((V_Number)ParameterValues[1]).Value;
+            
+            return this;
+        }
+    }
 
     [ElementData("Multiply", ValueType.Any)]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
-    public class V_Multiply : Element {}
+    public class V_Multiply : Element
+    {
+        override public Element Optimize()
+        {
+            OptimizeChildren();
+
+            IWorkshopTree a = ParameterValues[0];
+            IWorkshopTree b = ParameterValues[1];
+
+            // Multiply number and number
+            if (a is V_Number && b is V_Number)
+                return ((V_Number)ParameterValues[0]).Value * ((V_Number)ParameterValues[1]).Value;
+            
+            // Multiply vector and number
+            if ((a is V_Vector && b is V_Number) || (a is V_Number && b is V_Vector))
+            {
+                V_Vector vector = a is V_Vector ? (V_Vector)a : (V_Vector)b;
+                V_Number number = a is V_Number ? (V_Number)a : (V_Number)b;
+
+                if (vector.ConstantSupported<Models.Vertex>())
+                {
+                    Models.Vertex vertex = (Models.Vertex)vector.GetConstant();
+                    return new V_Vector(
+                        vertex.X * number.Value,
+                        vertex.Y * number.Value,
+                        vertex.Z * number.Value
+                    );
+                }
+            }
+            
+            return this;
+        }
+    }
 
     [ElementData("Nearest Walkable Position", ValueType.Vector)]
     [Parameter("Position", ValueType.VectorAndPlayer, typeof(V_Vector))]
@@ -654,7 +780,8 @@ namespace Deltin.Deltinteger.Elements
 
     [ElementData("Player Variable", ValueType.Any)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
-    [EnumParameter("Variable", typeof(Variable))]
+    [VarRefParameter("Variable")]
+    // [EnumParameter("Variable", typeof(Variable))]
     public class V_PlayerVariable : Element {}
 
     [ElementData("Players In Slot", ValueType.Player)]
@@ -690,7 +817,20 @@ namespace Deltin.Deltinteger.Elements
     [ElementData("Raise To Power", ValueType.Number)]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
-    public class V_RaiseToPower : Element {}
+    public class V_RaiseToPower : Element
+    {
+        override public Element Optimize()
+        {
+            OptimizeChildren();
+
+            if (ParameterValues[0] is V_Number && ParameterValues[1] is V_Number)
+                return Math.Pow(
+                    ((V_Number)ParameterValues[0]).Value,
+                    ((V_Number)ParameterValues[1]).Value);
+            
+            return this;
+        }
+    }
 
     [ElementData("Random Integer", ValueType.Number)]
     [Parameter("Min", ValueType.Number, typeof(V_Number))]
@@ -703,11 +843,11 @@ namespace Deltin.Deltinteger.Elements
     public class V_RandomReal : Element {}
 
     [ElementData("Random Value In Array", ValueType.Any)]
-    [Parameter("Array", ValueType.Any, typeof(V_GlobalVariable))]
+    [Parameter("Array", ValueType.Any, null)]
     public class V_RandomValueInArray : Element {}
 
     [ElementData("Randomized Array", ValueType.Number)]
-    [Parameter("Array", ValueType.Any, typeof(V_GlobalVariable))]
+    [Parameter("Array", ValueType.Any, null)]
     public class V_RandomizedArray : Element {}
 
     [ElementData("Ray Cast Hit Normal", ValueType.Vector)]
@@ -773,7 +913,7 @@ namespace Deltin.Deltinteger.Elements
     public class V_SlotOf : Element {}
 
     [ElementData("Sorted Array", ValueType.Number)]
-    [Parameter("Array", ValueType.Any, typeof(V_GlobalVariable))]
+    [Parameter("Array", ValueType.Any, null)]
     [Parameter("Value Rank", ValueType.Number, typeof(V_ArrayElement))]
     public class V_SortedArray : Element {}
 
@@ -954,10 +1094,188 @@ namespace Deltin.Deltinteger.Elements
         }
     }
 
+    [ElementData("Custom String", ValueType.Any)]
+    [Parameter("{0}", ValueType.Any, typeof(V_Null))]
+    [Parameter("{1}", ValueType.Any, typeof(V_Null))]
+    [Parameter("{2}", ValueType.Any, typeof(V_Null))]
+    public class V_CustomString : Element
+    {
+        public string Text { get; }
+
+        public V_CustomString(string text, params Element[] format) : base(format)
+        {
+            Text = text;
+        }
+        public V_CustomString()
+        {
+            Text = "";
+        }
+
+        protected override string[] AdditionalParameters()
+        {
+            return new string[] { "\"" + Text + "\"" };
+        }
+
+        public static Element ParseString(LanguageServer.Location location, string value, Element[] parameters)
+        {
+            // Look for <#>s
+            var formats = Regex.Matches(value, "<([0-9]+)>").ToArray();
+
+            // If there are no formats, return the custom string normally.
+            if (formats.Length == 0)
+                return new V_CustomString(value);
+            
+            // The Overwatch workshop only supports 3 formats in a string.
+            // The following code will split the string into multiple sections so it can support more.
+            // Split the string after every 3 unique formats, for example:
+            //                                    v split here
+            //           <0> this <1> <0> is a <3> custom <4> string <5>
+
+            List<FormatParameter> stringGroupParameters = new List<FormatParameter>(); // The current group of formats.
+            List<StringGroup> stringGroups = new List<StringGroup>(); // Stores information about each section in the string.
+            List<int> unique = new List<int>(); // Stores the list of each unique format id. The count shouldn't go above 3.
+            for (int i = 0; i < formats.Length; i++)
+            {
+                FormatParameter parameter = new FormatParameter(formats[i]);
+
+                // If the format id is more than the number of parameters, throw a syntax error.
+                if (parameter.Parameter >= parameters.Length)
+                    throw SyntaxErrorException.StringParameterCount(parameter.Parameter, parameters.Length, location);
+
+                // If there is already 3 unique IDs, create a new section.
+                if (unique.Count == 3 && !unique.Contains(parameter.Parameter))
+                {
+                    stringGroups.Add(new StringGroup(stringGroupParameters.ToArray()));
+                    stringGroupParameters.Clear();
+                    unique.Clear();
+                }
+
+                stringGroupParameters.Add(parameter);
+
+                // If the current format ID is new, add it to the unique list.
+                if (!unique.Contains(parameter.Parameter))
+                    unique.Add(parameter.Parameter);
+            }
+
+            // Add tailing formats to a new section.
+            stringGroups.Add(new StringGroup(stringGroupParameters.ToArray()));
+
+            // Convert each section to a custom string.
+            V_CustomString[] strings = new V_CustomString[stringGroups.Count];
+            for (int i = 0; i < strings.Length; i++)
+            {
+                // start is either the start of the string or the end of the last section.
+                int start = i == 0                  ? 0            : stringGroups[i - 1].EndIndex;
+                // end is the index of last format in the section unless this is the last section, then it will be the end of the string.
+                int end   = i == strings.Length - 1 ? value.Length : stringGroups[i]    .EndIndex;
+
+                string groupString = value.Substring(start, end - start);
+                
+                // Returns an array of all unique formats in the current section.
+                var formatGroups = stringGroups[i].Formats
+                    .GroupBy(g => g.Parameter)
+                    .Select(g => g.First())
+                    .ToArray();
+                
+                // groupParameters is {0}, {1}, and {2}. Length should be between 1 and 3.
+                Element[] groupParameters = new Element[formatGroups.Length];
+                for (int g = 0; g < formatGroups.Length; g++)
+                {
+                    int parameter = formatGroups[g].Parameter;
+                    groupString = groupString.Replace("<" + parameter + ">", "{" + g + "}");
+                    groupParameters[g] = parameters[parameter];
+                }
+                strings[i] = new V_CustomString(groupString, groupParameters);
+            }
+            
+            // Join the sections together.
+            return Join(strings);
+        }
+
+        public static Element Join(params Element[] elements)
+        {
+            if (elements.Length == 0) throw new Exception();
+
+            const string join2 = "{0}{1}";
+            const string join3 = "{0}{1}{2}";
+
+            List<Element> list = elements.ToList();
+            while (list.Count > 1)
+            {
+                if (list.Count >= 3)
+                {
+                    list[0] = new V_CustomString(join3, list[0], list[1], list[2]);
+                    list.RemoveRange(1, 2);
+                }
+                else if (list.Count >= 2)
+                {
+                    list[0] = new V_CustomString(join2, list[0], list[1], new V_Null());
+                    list.RemoveAt(1);
+                }
+                else throw new Exception();
+            }
+            return list[0];
+        }
+
+        class FormatParameter
+        {
+            public Match Match { get; }
+            public int Parameter { get; } 
+
+            public FormatParameter(Match match)
+            {
+                Match = match;
+                Parameter = int.Parse(match.Groups[1].Value);
+            }
+        }
+
+        class StringGroup
+        {
+            public FormatParameter[] Formats { get; }
+            public int EndIndex { get; }
+
+            public StringGroup(FormatParameter[] formats)
+            {
+                Formats = formats;
+                EndIndex = formats.Last().Match.Index + formats.Last().Match.Length;
+            }
+        }
+    }
+
+    [ElementData("Icon String", ValueType.Any)]
+    [EnumParameter("Icon", typeof(Icon))]
+    public class V_IconString : Element {}
+
     [ElementData("Subtract", ValueType.Any)]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
-    public class V_Subtract : Element {}
+    public class V_Subtract : Element
+    {
+        override public Element Optimize()
+        {
+            OptimizeChildren();
+
+            IWorkshopTree a = ParameterValues[0];
+            IWorkshopTree b = ParameterValues[1];
+
+            if (a is V_Number && ParameterValues[1] is V_Number)
+                return ((V_Number)a).Value - ((V_Number)b).Value;
+            
+            if (((Element)a).ConstantSupported<Models.Vertex>() && ((Element)b).ConstantSupported<Models.Vertex>())
+            {
+                var aVertex = (Models.Vertex)(((Element)a).GetConstant());
+                var bVertex = (Models.Vertex)(((Element)b).GetConstant());
+
+                return new V_Vector(
+                    aVertex.X - bVertex.X,
+                    aVertex.Y - bVertex.Y,
+                    aVertex.Z - bVertex.Z
+                );
+            }
+            
+            return this;
+        }
+    }
 
     [ElementData("Tangent From Degrees", ValueType.Number)]
     [Parameter("Angle", ValueType.Number, typeof(V_Number))]
@@ -997,7 +1315,7 @@ namespace Deltin.Deltinteger.Elements
     public class V_Up : Element {}
 
     [ElementData("Value In Array", ValueType.Any)]
-    [Parameter("Array", ValueType.Any, typeof(V_GlobalVariable))]
+    [Parameter("Array", ValueType.Any, null)]
     [Parameter("Index", ValueType.Number, typeof(V_EventPlayer))]
     public class V_ValueInArray : Element {}
 

@@ -40,8 +40,8 @@ namespace Deltin.Deltinteger.Elements
     {
         protected override MethodResult Get()
         {
-            IndexedVar player = TranslateContext.VarCollection.AssignVar(Scope, "OptimisedIsOnScreen: player", TranslateContext.IsGlobal, null);
-            IndexedVar point = TranslateContext.VarCollection.AssignVar(Scope, "OptimisedIsOnScreen: point", TranslateContext.IsGlobal, null);
+            IndexedVar player = IndexedVar.AssignInternalVar(TranslateContext.VarCollection, Scope, "OptimisedIsOnScreen: player", TranslateContext.IsGlobal);
+            IndexedVar point  = IndexedVar.AssignInternalVar(TranslateContext.VarCollection, Scope, "OptimisedIsOnScreen: point", TranslateContext.IsGlobal);
 
             Element[] actions = ArrayBuilder<Element>.Build
             (

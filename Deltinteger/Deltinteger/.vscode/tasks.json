@@ -2,35 +2,41 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "Debug build",
-            "command": "C:/Program Files (x86)/Microsoft Visual Studio/2017/BuildTools/MSBuild/15.0/Bin/MSBuild.exe",
-            "type": "shell",
+            "label": "build",
+            "command": "dotnet",
+            "type": "process",
             "args": [
-                "Deltinteger.csproj",
-                "/t:Build",
-                "/p:Configuration=Debug",
-                "/p:Platform=\"AnyCPU\""
+                "build",
+                "${workspaceFolder}/Deltinteger.csproj",
+                "/property:GenerateFullPaths=true",
+                "/consoleloggerparameters:NoSummary"
             ],
-            "group": {
-                "kind": "build",
-                "isDefault": true
-            }
+            "problemMatcher": "$msCompile"
         },
         {
-            "label": "Release build",
-            "command": "C:/Program Files (x86)/Microsoft Visual Studio/2017/BuildTools/MSBuild/15.0/Bin/MSBuild.exe",
-            "type": "shell",
+            "label": "publish",
+            "command": "dotnet",
+            "type": "process",
             "args": [
-                "Deltinteger.csproj",
-                "/t:Build",
-                "/p:Configuration=Release",
-                "/p:Platform=\"AnyCPU\""
+                "publish",
+                "${workspaceFolder}/Deltinteger.csproj",
+                "/property:GenerateFullPaths=true",
+                "/consoleloggerparameters:NoSummary"
             ],
-            "group": {
-                "kind": "build",
-                "isDefault": true
-            },
-            "problemMatcher": []
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "watch",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "watch",
+                "run",
+                "${workspaceFolder}/Deltinteger.csproj",
+                "/property:GenerateFullPaths=true",
+                "/consoleloggerparameters:NoSummary"
+            ],
+            "problemMatcher": "$msCompile"
         }
     ]
 }

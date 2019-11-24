@@ -19,7 +19,7 @@ namespace Deltin.Deltinteger.Elements
 
             List<Element> actions = new List<Element>();
 
-            IndexedVar index = TranslateContext.VarCollection.AssignVar(Scope, "DestroyEffectArray index", TranslateContext.IsGlobal, null);
+            IndexedVar index = IndexedVar.AssignInternalVar(TranslateContext.VarCollection, Scope, "DestroyEffectArray index", TranslateContext.IsGlobal);
             actions.AddRange(index.SetVariable(0));
 
             Element[] destroyActions = new Element[destroyPerLoop];

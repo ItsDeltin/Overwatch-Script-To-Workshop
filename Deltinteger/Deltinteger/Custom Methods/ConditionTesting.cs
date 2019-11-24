@@ -21,7 +21,7 @@ namespace Deltin.Deltinteger.Elements
             ContinueSkip continueSkip = TranslateContext.ContinueSkip;
             continueSkip.Setup();
 
-            IndexedVar result = TranslateContext.VarCollection.AssignVar(Scope, $"{Name} result", TranslateContext.IsGlobal, null);
+            IndexedVar result = IndexedVar.AssignInternalVar(TranslateContext.VarCollection, Scope, $"{Name} result", TranslateContext.IsGlobal);
 
             Element[] actions = ArrayBuilder<Element>.Build(
 
@@ -44,7 +44,7 @@ namespace Deltin.Deltinteger.Elements
             if (TestingIfTrue)
                 return new MethodResult(actions, result.GetVariable());
             else
-                return new MethodResult(actions, !(result.GetVariable()));
+                return new MethodResult(actions, !result.GetVariable());
         }
 
         public override CustomMethodWiki Wiki()

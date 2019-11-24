@@ -2,11 +2,11 @@ rule: "Debug"
 Event.OngoingPlayer
 if (!IsDummyBot())
 {
-    CreateHudText(EventPlayer(), null, "height position:", EyePosition(), Location.Left, 0, Color.White, Color.White, Color.Blue);
-    CreateHudText(EventPlayer(), null, "position:", PositionOf(), Location.Left, 1, Color.White, Color.White, Color.Blue);
-    CreateHudText(EventPlayer(), null, "speed:", ThrottleOf(), Location.Left, 2, Color.White, Color.White, Color.Blue);
-    CreateHudText(EventPlayer(), null, "facing:", FacingDirectionOf(), Location.Left, 3, Color.White, Color.White, Color.Blue);
-    CreateHudText(EventPlayer(), null, "hit position:",
+    CreateHudText(EventPlayer(), null, "Eye Position:", EyePosition(), Location.Left, 0, Color.White, Color.White, Color.Blue);
+    CreateHudText(EventPlayer(), null, "Position:", PositionOf(), Location.Left, 1, Color.White, Color.White, Color.Blue);
+    CreateHudText(EventPlayer(), null, "Throttle:", ThrottleOf(), Location.Left, 2, Color.White, Color.White, Color.Blue);
+    CreateHudText(EventPlayer(), null, "Facing:", FacingDirectionOf(), Location.Left, 3, Color.White, Color.White, Color.Blue);
+    CreateHudText(EventPlayer(), null, "Ray Cast Hit Position:",
         RayCastHitPosition(
             EyePosition(),
             Destination(EyePosition(), FacingDirectionOf(), 100),
@@ -15,7 +15,7 @@ if (!IsDummyBot())
             true
         ), Location.Left, 4, Color.White, Color.White, Color.Blue
     );
-    CreateHudText(EventPlayer(), null, "hit normal:",
+    CreateHudText(EventPlayer(), null, "Ray Cast Hit Normal:",
         RayCastHitNormal(
             EyePosition(),
             Destination(EyePosition(), FacingDirectionOf(), 100),
@@ -24,7 +24,7 @@ if (!IsDummyBot())
             true
         ), Location.Left, 5, Color.White, Color.White, Color.Blue
     );
-    CreateHudText(EventPlayer(), null, "hit player:",
+    CreateHudText(EventPlayer(), null, "Ray Cast Hit Player:",
         RayCastHitPlayer(
             EyePosition(),
             Destination(EyePosition(), FacingDirectionOf(), 100),
@@ -33,11 +33,100 @@ if (!IsDummyBot())
             true
         ), Location.Left, 6, Color.White, Color.White, Color.Blue
     );
-    CreateHudText(EventPlayer(), null, "server_load:", ServerLoad(), Location.Left, 7, Color.White, Color.White, Color.Blue);
-    CreateHudText(EventPlayer(), null, "server_load_average:", ServerLoadAverage(), Location.Left, 8, Color.White, Color.White, Color.Blue);
-    CreateHudText(EventPlayer(), null, "server_load_peak:", ServerLoadPeak(), Location.Left, 9, Color.White, Color.White, Color.Blue);
+    CreateHudText(EventPlayer(), null, "Server Load:", ServerLoad(), Location.Left, 7, Color.White, Color.White, Color.Blue);
+    CreateHudText(EventPlayer(), null, "Server Load Average:", ServerLoadAverage(), Location.Left, 8, Color.White, Color.White, Color.Blue);
+    CreateHudText(EventPlayer(), null, "Server Load Peak:", ServerLoadPeak(), Location.Left, 9, Color.White, Color.White, Color.Blue);
 
-    CreateHudText(EventPlayer(), null, "left:", ClassMemory(), Location.Left, 10, Color.White, Color.White, Color.Blue);
-    CreateHudText(EventPlayer(), null, "built:", ClassMemoryUsed(), Location.Left, 11, Color.White, Color.White, Color.Blue);
-    CreateHudText(EventPlayer(), null, "remaining:", ClassMemoryRemaining(), Location.Left, 12, Color.White, Color.White, Color.Blue);
+    CreateHudText(EventPlayer(), null, "Class Memory:", ClassMemory(), Location.Left, 10, Color.White, Color.White, Color.Blue);
+    CreateHudText(EventPlayer(), null, "Class Memory Used:", ClassMemoryUsed(), Location.Left, 11, Color.White, Color.White, Color.Blue);
+    CreateHudText(EventPlayer(), null, "Class Memory Created:", ClassMemoryRemaining(), Location.Left, 12, Color.White, Color.White, Color.Blue);
+}
+
+define playervar cam = false;
+define playervar cameraPos;
+
+rule: "Free cam"
+Event.OngoingPlayer
+if (HostPlayer() == EventPlayer())
+if (IsCommunicating(EventPlayer(), Communication.VoiceLineDown))
+{
+    cam = !cam;
+}
+
+rule: "Start Camera"
+Event.OngoingPlayer
+if (HostPlayer() == EventPlayer())
+if (cam)
+{
+    cameraPos = EyePosition();
+    StartCamera(EventPlayer(), cameraPos, cameraPos + FacingDirectionOf(), 25);
+    SetMoveSpeed(EventPlayer(), 0);
+}
+
+rule: "Stop Camera"
+Event.OngoingPlayer
+if (HostPlayer() == EventPlayer())
+if (!cam)
+{
+    StopCamera(EventPlayer());
+    SetMoveSpeed(EventPlayer(), 100);
+}
+
+rule: "TP to camera"
+Event.OngoingPlayer
+if (HostPlayer() == EventPlayer())
+if (cam)
+if (IsCommunicating(EventPlayer(), Communication.VoiceLineLeft))
+{
+    cam = false;
+    define storeFacing = FacingDirectionOf();
+    Teleport(EventPlayer(), cameraPos);
+    SetFacing(EventPlayer(), storeFacing, Relative.ToWorld);
+}
+
+rule: "Move camera"
+Event.OngoingPlayer
+if (HostPlayer() == EventPlayer())
+if (cam)
+if (DistanceBetween(Vector(), ThrottleOf(EventPlayer())) > 0)
+{
+    define x = XOf(ThrottleOf());
+    define z = ZOf(ThrottleOf());
+
+    define right = CrossProduct(FacingDirectionOf(), Up());
+
+    if (x < 0)
+        cameraPos += right / 2;
+    else if (x > 0)
+        cameraPos += -right / 2;
+    
+    if (z > 0)
+        cameraPos += FacingDirectionOf() / 2;
+    else if (z < 0)
+        cameraPos -= FacingDirectionOf() / 2;
+
+    MinWait();
+    LoopIfConditionIsTrue();
+}
+
+rule: "Move camera down"
+Event.OngoingPlayer
+if (HostPlayer() == EventPlayer())
+if (cam)
+if (IsButtonHeld(EventPlayer(), Button.Crouch))
+{
+    cameraPos += Down() / 2;
+    MinWait();
+    LoopIfConditionIsTrue();
+}
+
+rule: "Move camera up"
+Event.OngoingPlayer
+if (HostPlayer() == EventPlayer())
+if (cam)
+if (IsButtonHeld(EventPlayer(), Button.Jump))
+{
+    cameraPos += Up() / 2;
+    MinWait();
+    LoopIfConditionIsTrue();
 }

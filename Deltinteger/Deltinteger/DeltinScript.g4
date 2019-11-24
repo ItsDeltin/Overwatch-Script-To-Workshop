@@ -4,9 +4,13 @@ grammar DeltinScript;
  * Parser Rules
  */
 
+reserved_global : GLOBAL BLOCK_START reserved_list? BLOCK_END ;
+reserved_player : PLAYER BLOCK_START reserved_list? BLOCK_END ;
+reserved_list : (PART | NUMBER) (COMMA (PART | NUMBER))* ;
+
 number : NUMBER | neg  ;
 neg    : '-'NUMBER     ;
-string : STRINGLITERAL ;
+string : LOCALIZED? STRINGLITERAL ;
 formatted_string: '<' string (COMMA expr)* '>' ;
 true   : TRUE          ;
 false  : FALSE         ;
@@ -14,13 +18,10 @@ null   : NULL          ;
 
 statement_operation : EQUALS | EQUALS_ADD | EQUALS_DIVIDE | EQUALS_MODULO | EQUALS_MULTIPLY | EQUALS_POW | EQUALS_SUBTRACT ;
 
-define           :                   (type=PART | DEFINE)                 name=PART useVar? (EQUALS expr?)? ;
-rule_define      :                   (type=PART | DEFINE) (GLOBAL|PLAYER) name=PART useVar? (EQUALS expr?)? STATEMENT_END;
-inclass_define   : accessor? STATIC? (type=PART | DEFINE)                 name=PART         (EQUALS expr?)? ;
-parameter_define :                   (type=PART | DEFINE)                 name=PART                         ;
-
-useVar   : PART (INDEX_START number INDEX_END)? ;
-internalVars : USEVAR (GLOBAL | PLAYER | DIM | CLASS) PART STATEMENT_END ;
+define           :                   (type=PART | DEFINE)                 name=PART               NOT?  (EQUALS expr?)? ;
+rule_define      :                   (type=PART | DEFINE) (GLOBAL|PLAYER) name=PART (id=number? | NOT?) (EQUALS expr?)? STATEMENT_END;
+inclass_define   : accessor? STATIC? (type=PART | DEFINE)                 name=PART                     (EQUALS expr?)? ;
+parameter_define :                   (type=PART | DEFINE)                 name=PART               NOT?                  ;
 
 expr 
 	: 
@@ -62,8 +63,10 @@ enum : PART SEPERATOR PART? ;
 variable : PART array? ;
 varset   : var=expr array? ((statement_operation val=expr?) | INCREMENT | DECREMENT) ;
 
-call_parameters : expr (COMMA expr?)*    		 	     ;
-method          : PART LEFT_PAREN call_parameters? RIGHT_PAREN ;
+call_parameters  : expr (COMMA expr?)*    		 	         ;
+picky_parameter  : PART TERNARY_ELSE expr                    ;
+picky_parameters : picky_parameter (COMMA picky_parameter?)* ;
+method           : PART LEFT_PAREN (call_parameters | picky_parameters)? RIGHT_PAREN ;
 
 statement :
 	( varset STATEMENT_END?
@@ -99,7 +102,7 @@ delete  : DELETE LEFT_PAREN expr RIGHT_PAREN                  ;
 rule_if : IF LEFT_PAREN expr? RIGHT_PAREN;
 
 ow_rule : 
-	RULE_WORD ':' STRINGLITERAL
+	DISABLED? RULE_WORD ':' STRINGLITERAL
 	(enum)*
 	(rule_if)*
 	block
@@ -112,7 +115,8 @@ user_method : DOCUMENTATION* accessor? RECURSIVE? (METHOD | type=PART) name=PART
 macro       : DOCUMENTATION* accessor? MACRO name=PART LEFT_PAREN setParameters RIGHT_PAREN ':' expr STATEMENT_END ;
 
 ruleset :
-	internalVars*
+	reserved_global?
+	reserved_player?
 	(import_file | import_object)*
 	(rule_define | ow_rule | user_method | type_define | macro)*
 	;
@@ -170,6 +174,7 @@ SEPERATOR     : '.' ;
 COMMA         : ',' ;
 TERNARY       : '?' ;
 TERNARY_ELSE  : ':' ;
+LOCALIZED     : '@' ;
 
 // Keywords
 RULE_WORD : 'rule'      ;
@@ -182,7 +187,6 @@ DEFINE    : 'define'    ;
 USEVAR    : 'usevar'    ;
 GLOBAL    : 'globalvar' ;
 PLAYER    : 'playervar' ;
-DIM       : 'buildervar';
 TRUE      : 'true'      ;
 FALSE     : 'false'     ;
 NULL      : 'null'      ;
@@ -202,6 +206,7 @@ IMPORT    : 'import'    ;
 AS        : 'as'        ;
 DELETE    : 'delete'    ;
 MACRO     : 'macro'     ;
+DISABLED  : 'disabled'  ;
 
 EQUALS          : '='  ;
 EQUALS_POW      : '^=' ;

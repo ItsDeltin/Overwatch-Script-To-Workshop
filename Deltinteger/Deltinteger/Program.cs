@@ -4,18 +4,18 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.IO;
-using System.Windows.Forms;
 using System.Globalization;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.Parse;
 using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.Pathfinder;
+using TextCopy;
 
 namespace Deltin.Deltinteger
 {
     public class Program
     {
-        public const string VERSION = "v0.6";
+        public const string VERSION = "v0.7.3";
 
         public static readonly string ExeFolder = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
 
@@ -46,6 +46,15 @@ namespace Deltin.Deltinteger
                 string folder = Console.ReadLine();
                 Deltin.Deltinteger.Models.Letter.Generate(folder);
             }
+            else if (args.Contains("-editor"))
+            {
+                string pathfindEditorScript = Extras.CombinePathWithDotNotation(null, "!PathfindEditor.del");
+
+                if (!File.Exists(pathfindEditorScript))
+                    Log.Write(LogLevel.Normal, "The PathfindEditor.del module is missing!");
+                else
+                    Script(pathfindEditorScript);
+            }
             else
             {
                 string script = args.ElementAtOrDefault(0);
@@ -68,6 +77,7 @@ namespace Deltin.Deltinteger
                                 Byte[] info = Encoding.Unicode.GetBytes(result);
                                 fs.Write(info, 0, info.Length);
                             }
+                            Log.Write(LogLevel.Normal, "Created pathmap file at '" + output + "'.");
                         }
                         else if (ext == ".pathmap")
                         {
@@ -89,10 +99,9 @@ namespace Deltin.Deltinteger
                     Log.Write(LogLevel.Normal, $"Could not find the file '{script}'.");
                     Log.Write(LogLevel.Normal, $"Drag and drop a script over the executable to parse.");
                 }
-
-                Log.Write(LogLevel.Normal, "Done. Press enter to exit.");
-                Console.ReadLine();
             }
+            
+            Finished();
         }
 
         static void Script(string parseFile)
@@ -107,29 +116,8 @@ namespace Deltin.Deltinteger
 
                 result.Diagnostics.PrintDiagnostics(Log);
 
-                // List all variables
-                ParseLog.Write(LogLevel.Normal, new ColorMod("Variable Guide:", ConsoleColor.Blue));
-
-                if (result.VarCollection.AllVars.Count > 0)
-                {
-                    int nameLength = result.VarCollection.AllVars.Max(v => v.Name.Length);
-
-                    bool other = false;
-                    foreach (Var var in result.VarCollection.AllVars)
-                    {
-                        ConsoleColor textcolor = other ? ConsoleColor.White : ConsoleColor.DarkGray;
-                        other = !other;
-
-                        ParseLog.Write(LogLevel.Normal, new ColorMod(var.ToString(), textcolor));
-                    }
-                }
-
                 string final = RuleArrayToWorkshop(result.Rules.ToArray(), result.VarCollection);
-
-                Log.Write(LogLevel.Normal, "Press enter to copy code to clipboard, then in Overwatch click \"Paste Rule\".");
-                Console.ReadLine();
-
-                SetClipboard(final);
+                WorkshopCodeResult(final);
             }
             else
             {
@@ -142,11 +130,18 @@ namespace Deltin.Deltinteger
         {
             var builder = new StringBuilder();
 
-            builder.AppendLine("// --- Variable Guide ---");
-
-            foreach(var var in varCollection.AllVars)
-                builder.AppendLine("// " + var.ToString());
+            var globalCollection = varCollection.UseExtendedCollection(true);
+            for (int i = 0; i < globalCollection.Length; i++)
+            if (globalCollection[i] != null)
+                builder.AppendLine("// global [" + i + "]: " + globalCollection[i].Name);
             
+            var playerCollection = varCollection.UseExtendedCollection(false);
+            for (int i = 0; i < playerCollection.Length; i++)
+            if (playerCollection[i] != null)
+                builder.AppendLine("// player [" + i + "]: " + playerCollection[i].Name);
+            builder.AppendLine();
+
+            varCollection.ToWorkshop(builder);
             builder.AppendLine();
 
             Log debugPrintLog = new Log("Tree");
@@ -159,12 +154,17 @@ namespace Deltin.Deltinteger
             return builder.ToString();
         }
 
-        public static void SetClipboard(string text)
+        public static void WorkshopCodeResult(string code)
         {
-            Thread setClipboardThread = new Thread(() => Clipboard.SetText(text));
-            setClipboardThread.SetApartmentState(ApartmentState.STA); //Set the thread to STA
-            setClipboardThread.Start();
-            setClipboardThread.Join();
+            Log.Write(LogLevel.Normal, "Press enter to copy code to clipboard, then in Overwatch click \"Paste Rule\".");
+            Console.ReadLine();
+            Clipboard.SetText(code);
+        }
+
+        public static void Finished()
+        {
+            Log.Write(LogLevel.Normal, "Done. Press enter to exit.");
+            Console.ReadLine();
         }
     }
 }

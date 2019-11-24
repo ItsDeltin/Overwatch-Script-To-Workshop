@@ -74,34 +74,12 @@ namespace Deltin.Deltinteger.Parse
 
             foreach (IScopeable var in InScope)
                 if (var is IndexedVar)
-                {
                     ((IndexedVar)var).OutOfScope(context);
-                    VarCollection.Free((IndexedVar)var);
-                }
             
             for (int i = 0; i < Children.Count; i++)
                 if (Children[0].IsInScope)
                     throw new Exception();
         }
-
-        /*
-        public Element[] RecursiveMethodStackPop()
-        {
-            List<Element> actions = new List<Element>();
-            foreach (IScopeable var in InScope)
-                if (var is IndexedVar)
-                {
-                    Element[] outOfScopeActions = ((IndexedVar)var).OutOfScope();
-                    if (outOfScopeActions != null)
-                        actions.AddRange(outOfScopeActions);
-                }
-
-            for (int i = 0; i < Children.Count; i++)
-                actions.AddRange(Children[0].RecursiveMethodStackPop());
-
-            return actions.ToArray();
-        }
-        */
 
         public Var GetVar(ScopeGroup getter, string name, Location location)
         {

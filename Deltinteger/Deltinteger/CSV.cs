@@ -34,9 +34,9 @@ namespace Deltin.Deltinteger.Csv
             progress.Finish();
             
             for (int i = 1; i < frames.Length; i++)
-                foreach (var frameVar in frames[i].VariableValues)
-                    if (!frames[i].VariableValues[frameVar.Key].EqualTo(frames[i - 1].VariableValues[frameVar.Key]))
-                        frameVar.Value.Changed = true;
+                for (int v = 0; v < Constants.NUMBER_OF_VARIABLES; v++)
+                    if (!frames[i].VariableValues[v].EqualTo(frames[i - 1].VariableValues[v]))
+                        frames[i].VariableValues[v].Changed = true;
             
             return frames;
         }
@@ -47,7 +47,7 @@ namespace Deltin.Deltinteger.Csv
             for (int i = 0; i < infoSplit.Length; i++)
                 infoSplit[i] = infoSplit[i].Trim();
 
-            const int expectedLength = 26 + 2; // Every letter of the alphabet plus the time and variable set owner.
+            const int expectedLength = Constants.NUMBER_OF_VARIABLES + 2; // Every letter of the alphabet plus the time and variable set owner.
             if (infoSplit.Length != expectedLength)
                 throw new CsvParseFailedException("Expected " + expectedLength + " nodes, got " + infoSplit.Length + " instead.");
             
@@ -56,11 +56,8 @@ namespace Deltin.Deltinteger.Csv
             
             string owner = infoSplit[1];
 
-            Variable[] variables = Enum.GetValues(typeof(Variable)).Cast<Variable>().ToArray();
-            CsvPart[] variableValues = new CsvPart[variables.Length];
-            if (variables.Length != 26) throw new Exception();
-
-            for (int i = 0; i < variables.Length; i++)
+            CsvPart[] variableValues = new CsvPart[Constants.NUMBER_OF_VARIABLES];
+            for (int i = 0; i < Constants.NUMBER_OF_VARIABLES; i++)
             {
                 // Element is an array.
                 if (infoSplit[i + 2][0] == '{' && infoSplit[i + 2].Last() == '}')
@@ -83,21 +80,26 @@ namespace Deltin.Deltinteger.Csv
                     }
 
                     // Get the values
-                    CsvPart[] array = new CsvPart[arrayElements.Length];
-                    for (int a = 0; a < array.Length; a++)
-                        array[a] = ParseValue(arrayElements[a]);
+                    CsvPart[] array;
+
+                    // Check if it is an empty array
+                    if (arrayElements.Length == 1 && arrayElements[0] == "")
+                    {
+                        array = new CsvPart[0];
+                    }
+                    else
+                    {
+                        array = new CsvPart[arrayElements.Length];
+
+                        for (int a = 0; a < array.Length; a++)
+                            array[a] = ParseValue(arrayElements[a]);
+                    }
                     
                     variableValues[i] = new CsvArray(array);
                 }
                 else variableValues[i] = ParseValue(infoSplit[i + 2]);
             }
-
-            // Convert the variables array and the variableValues array to a dictionary.
-            var final = new Dictionary<Variable, CsvPart>();
-            for (int i = 0; i < variables.Length; i++)
-                final.Add(variables[i], variableValues[i]);
-
-            return new CsvFrame(time, owner, final);
+            return new CsvFrame(time, owner, variableValues);
         }
 
         private static CsvPart ParseValue(string value)
@@ -136,9 +138,9 @@ namespace Deltin.Deltinteger.Csv
 
         public double Time { get; }
         public string VariableSetOwner { get; }
-        public Dictionary<Variable, CsvPart> VariableValues { get; }
+        public CsvPart[] VariableValues { get; }
 
-        public CsvFrame(double time, string variableSetOwner, Dictionary<Variable, CsvPart> variableValues)
+        private CsvFrame(double time, string variableSetOwner, CsvPart[] variableValues)
         {
             Time = time;
             VariableSetOwner = variableSetOwner;

@@ -49,11 +49,6 @@ namespace Deltin.Deltinteger.Parse
             return new InclassDefineNode(context, this);
         }
 
-        public override Node VisitUseVar(DeltinScriptParser.UseVarContext context)
-        {
-            return new UseVarNode(context, this);
-        }
-
         public override Node VisitUser_method(DeltinScriptParser.User_methodContext context)
         {
             return new UserMethodNode(context, this);
@@ -75,7 +70,7 @@ namespace Deltin.Deltinteger.Parse
             for (int i = 0; i < statements.Length; i++)
                 statements[i] = VisitStatement(context.statement()[i]);
             
-            return new BlockNode(statements, new Location(file, Range.GetRange(context)));
+            return new BlockNode(statements, new Location(file, DocRange.GetRange(context)));
         }
 
         public override Node VisitExpr(DeltinScriptParser.ExprContext context)
@@ -89,7 +84,7 @@ namespace Deltin.Deltinteger.Parse
                 string operation = context.GetChild(1).GetText();
                 Node right = Visit(context.GetChild(2));
 
-                node = new OperationNode(left, operation, right, new Location(file, Range.GetRange(context)));
+                node = new OperationNode(left, operation, right, new Location(file, DocRange.GetRange(context)));
             }
 
             // Getting values in arrays
@@ -102,7 +97,7 @@ namespace Deltin.Deltinteger.Parse
                 Node value = Visit(context.GetChild(0));
                 Node index = Visit(context.GetChild(2));
 
-                node = new ValueInArrayNode(value, index, new Location(file, Range.GetRange(context)));
+                node = new ValueInArrayNode(value, index, new Location(file, DocRange.GetRange(context)));
             }
 
             // Seperator
@@ -117,7 +112,7 @@ namespace Deltin.Deltinteger.Parse
             && context.GetChild(1) is DeltinScriptParser.ExprContext)
             {
                 Node value = Visit(context.GetChild(1));
-                node = new NotNode(value, new Location(file, Range.GetRange(context)));
+                node = new NotNode(value, new Location(file, DocRange.GetRange(context)));
             }
 
             else if (context.ChildCount == 2
@@ -125,7 +120,7 @@ namespace Deltin.Deltinteger.Parse
             && context.GetChild(1) is DeltinScriptParser.ExprContext)
             {
                 Node value = Visit(context.GetChild(1));
-                node = new InvertNode(value, new Location(file, Range.GetRange(context)));
+                node = new InvertNode(value, new Location(file, DocRange.GetRange(context)));
             }
 
             // Ternary Condition
@@ -139,18 +134,18 @@ namespace Deltin.Deltinteger.Parse
                 Node condition = VisitExpr(context.expr(0));
                 Node consequent = VisitExpr(context.expr(1));
                 Node alternative = VisitExpr(context.expr(2));
-                node = new TernaryConditionalNode(condition, consequent, alternative, new Location(file, Range.GetRange(context)));
+                node = new TernaryConditionalNode(condition, consequent, alternative, new Location(file, DocRange.GetRange(context)));
             }
 
             // This
             else if (context.THIS() != null)
             {
-                node = new ThisNode(new Location(file, Range.GetRange(context)));
+                node = new ThisNode(new Location(file, DocRange.GetRange(context)));
             }
 
             else if (context.ROOT() != null)
             {
-                node = new RootNode(new Location(file, Range.GetRange(context)));
+                node = new RootNode(new Location(file, DocRange.GetRange(context)));
             }
 
             else if (context.typeconvert() != null)
@@ -171,39 +166,30 @@ namespace Deltin.Deltinteger.Parse
         public override Node VisitNumber(DeltinScriptParser.NumberContext context)
         {
             double value = double.Parse(context.GetText());
-            return new NumberNode(value, new Location(file, Range.GetRange(context)));
+            return new NumberNode(value, new Location(file, DocRange.GetRange(context)));
         }
 
         // "Hello <0>! Waiting game..."
         public override Node VisitString(DeltinScriptParser.StringContext context)
         {
             string value = context.STRINGLITERAL().GetText().Trim('"');
-            return new StringNode(value, null, new Location(file, Range.GetRange(context)));
+            return new StringNode(value, null, context.LOCALIZED() != null, new Location(file, DocRange.GetRange(context)));
         }
 
         // <"hello <0>! Waiting game...", EventPlayer()>
         public override Node VisitFormatted_string(DeltinScriptParser.Formatted_stringContext context)
         {
-            string value = context.@string().GetText().Trim('"');
+            string value = context.@string().STRINGLITERAL().GetText().Trim('"');
             Node[] format = new Node[context.expr().Length];
             for (int i = 0; i < format.Length; i++)
                 format[i] = VisitExpr(context.expr()[i]);
-            return new StringNode(value, format, new Location(file, Range.GetRange(context)));
+            return new StringNode(value, format, context.@string().LOCALIZED() != null, new Location(file, DocRange.GetRange(context)));
         }
 
         // Method()
         public override Node VisitMethod(DeltinScriptParser.MethodContext context)
         {
-            string methodName = context.PART().GetText();
-
-            Node[] parameters = new Node[context.call_parameters()?.expr().Length ?? 0];
-            for (int i = 0; i < parameters.Length; i++)
-                parameters[i] = Visit(context.call_parameters().expr()[i]);
-
-            Range nameRange = Range.GetRange(context.PART().Symbol);
-            Range parameterRange = Range.GetRange(context.LEFT_PAREN().Symbol, context.RIGHT_PAREN().Symbol);
-
-            return new MethodNode(methodName, parameters, nameRange, parameterRange, new Location(file, Range.GetRange(context)));
+            return new MethodNode(context, this);
         }
 
         public override Node VisitVariable(DeltinScriptParser.VariableContext context)
@@ -219,17 +205,17 @@ namespace Deltin.Deltinteger.Parse
 
         public override Node VisitTrue(DeltinScriptParser.TrueContext context)
         {
-            return new BooleanNode(true, new Location(file, Range.GetRange(context)));
+            return new BooleanNode(true, new Location(file, DocRange.GetRange(context)));
         }
 
         public override Node VisitFalse(DeltinScriptParser.FalseContext context)
         {
-            return new BooleanNode(false, new Location(file, Range.GetRange(context)));
+            return new BooleanNode(false, new Location(file, DocRange.GetRange(context)));
         }
 
         public override Node VisitNull(DeltinScriptParser.NullContext context)
         {
-            return new NullNode(new Location(file, Range.GetRange(context)));
+            return new NullNode(new Location(file, DocRange.GetRange(context)));
         }
 
         public override Node VisitEnum(DeltinScriptParser.EnumContext context)
@@ -237,7 +223,7 @@ namespace Deltin.Deltinteger.Parse
             string[] split = context.GetText().Split('.');
             string type = split[0];
             string value = split[1];
-            return new EnumNode(type, value, new Location(file, Range.GetRange(context)));
+            return new EnumNode(type, value, new Location(file, DocRange.GetRange(context)));
         }
         
         public override Node VisitCreatearray(DeltinScriptParser.CreatearrayContext context)
@@ -246,7 +232,7 @@ namespace Deltin.Deltinteger.Parse
             for (int i = 0; i < values.Length; i++)
                 values[i] = VisitExpr(context.expr()[i]);
 
-            return new CreateArrayNode(values, new Location(file, Range.GetRange(context)));
+            return new CreateArrayNode(values, new Location(file, DocRange.GetRange(context)));
         }
 
         public override Node VisitCreate_object(DeltinScriptParser.Create_objectContext context)
@@ -301,7 +287,7 @@ namespace Deltin.Deltinteger.Parse
             if (context.expr() != null)
                 returnValue = VisitExpr(context.expr());
 
-            return new ReturnNode(returnValue, new Location(file, Range.GetRange(context)));
+            return new ReturnNode(returnValue, new Location(file, DocRange.GetRange(context)));
         }
 
         public override Node VisitDelete(DeltinScriptParser.DeleteContext context)

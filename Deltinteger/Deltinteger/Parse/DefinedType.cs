@@ -128,7 +128,7 @@ namespace Deltin.Deltinteger.Parse
 
             context.AssignParameterVariables(constructorScope, constructor.Parameters, parameters, node);
             if (constructor.BlockNode != null)
-                context.ParseBlock(typeScope, constructorScope, constructor.BlockNode, true, null);
+                context.ParseBlock(constructorScope, constructorScope, constructor.BlockNode, true, null);
             constructorScope.Out(context);
             context.MethodStackNotRecursive.Remove(constructor);
         }
@@ -154,7 +154,7 @@ namespace Deltin.Deltinteger.Parse
 
         override public Element New(CreateObjectNode node, ScopeGroup getter, ScopeGroup scope, TranslateRule context)
         {
-            IndexedVar store = context.VarCollection.AssignVar(scope, Name + " store", context.IsGlobal, null);
+            IndexedVar store = IndexedVar.AssignInternalVarExt(context.VarCollection, scope, Name + " store", context.IsGlobal);
             store.Type = this;
             ScopeGroup typeScope = GetRootScope(null, store, context.ParserData);
 
@@ -192,7 +192,7 @@ namespace Deltin.Deltinteger.Parse
             context.ParserData.SetupClasses();
 
             // Get the index to store the class.
-            IndexedVar index = context.VarCollection.AssignVar(scope, "New " + Name + " class index", context.IsGlobal, null); // Assigns the index variable.
+            IndexedVar index = IndexedVar.AssignInternalVarExt(context.VarCollection, scope, "New " + Name + " class index", context.IsGlobal); // Assigns the index variable.
             Element takenIndexes = context.ParserData.ClassIndexes.GetVariable();
 
             // Get an empty index in the class array to store the new class.

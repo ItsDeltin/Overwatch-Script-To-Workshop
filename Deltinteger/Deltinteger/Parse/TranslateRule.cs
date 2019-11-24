@@ -33,6 +33,7 @@ namespace Deltin.Deltinteger.Parse
             ParserData = parserData;
 
             Rule = new Rule(ruleNode.Name, ruleNode.Event, ruleNode.Team, ruleNode.Player);
+            Rule.Disabled = ruleNode.Disabled;
             IsGlobal = Rule.IsGlobal;
 
             ContinueSkip = new ContinueSkip(IsGlobal, Actions, VarCollection);
@@ -220,10 +221,14 @@ namespace Deltin.Deltinteger.Parse
 
                 // Strings
                 case StringNode stringNode:
+
                     Element[] stringFormat = new Element[stringNode.Format?.Length ?? 0];
                     for (int i = 0; i < stringFormat.Length; i++)
                         stringFormat[i] = ParseExpression(getter, scope, stringNode.Format[i]);
-                    return V_String.ParseString(stringNode.Location, stringNode.Value, stringFormat);
+                    if (stringNode.Localized)
+                        return V_String.ParseString(stringNode.Location, stringNode.Value, stringFormat);
+                    else
+                        return V_CustomString.ParseString(stringNode.Location, stringNode.Value, stringFormat);
 
                 // Null
                 case NullNode nullNode:
@@ -314,6 +319,8 @@ namespace Deltin.Deltinteger.Parse
                     Element element = ParseExpression(getter, scope, typeConvertNode.Expression);
                     type.GetSource(this, element, typeConvertNode.Location);
                     return element;
+                
+                case RootNode rootNode: throw new SyntaxErrorException("'root' cannot be used like an expression.", rootNode.Location);
             }
 
             throw new Exception();
@@ -329,98 +336,64 @@ namespace Deltin.Deltinteger.Parse
             List<IWorkshopTree> parsedParameters = new List<IWorkshopTree>();
             for(int i = 0; i < parameters.Length; i++)
             {
-                if (parameters[i] is Parameter || parameters[i] is TypeParameter || parameters[i] is EnumParameter || parameters[i] is ConstantParameter)
-                {
-                    // Get the default parameter value if there are not enough parameters.
-                    if (values.Length <= i)
-                    {
-                        IWorkshopTree defaultValue = parameters[i].GetDefault();
-
-                        // If there is no default value, throw a syntax error.
-                        if (defaultValue == null)
-                            throw SyntaxErrorException.MissingParameter(parameters[i].Name, methodName, methodRange);
-                        
-                        parsedParameters.Add(defaultValue);
-                    }
-                    else
-                    {
-                        if (parameters[i] is Parameter || parameters[i] is TypeParameter)
-                        {
-                            // Parse the parameter
-                            Element result = ParseExpression(getter, scope, values[i]);
-                            parsedParameters.Add(result);
-
-                            if (parameters[i] is TypeParameter && result.SupportedType?.Type != ((TypeParameter)parameters[i]).Type)
-                                throw SyntaxErrorException.InvalidValueType(((TypeParameter)parameters[i]).Type.Name, result.SupportedType?.Type.Name ?? "any", values[i].Location);
-                        }
-                        else if (parameters[i] is EnumParameter)
-                        {
-                            EnumData expectedType = ((EnumParameter)parameters[i]).EnumData;
-                            // Parse the enum
-                            if (values[i] is EnumNode)
-                            {
-                                EnumNode enumNode = (EnumNode)values[i];
-
-                                if (enumNode.EnumMember.Enum != expectedType)
-                                    throw SyntaxErrorException.IncorrectEnumType(expectedType.CodeName, enumNode.EnumMember.Enum.CodeName, values[i].Location);
-
-                                parsedParameters.Add(
-                                    (IWorkshopTree)EnumData.ToElement(enumNode.EnumMember)
-                                    ?? (IWorkshopTree)enumNode.EnumMember
-                                );
-                            }
-                            else if (values[i] is VariableNode)
-                            {
-                                Var var = scope.GetVar(getter, ((VariableNode)values[i]).Name, null);
-                                
-                                if (var is ElementReferenceVar && ((ElementReferenceVar)var).Reference is EnumMember)
-                                {
-                                    EnumMember member = (EnumMember)((ElementReferenceVar)var).Reference;
-                                    if (member.Enum != expectedType)
-                                        throw SyntaxErrorException.IncorrectEnumType(expectedType.CodeName, member.Enum.CodeName, values[i].Location);
-
-                                    parsedParameters.Add(
-                                        (IWorkshopTree)EnumData.ToElement(member)
-                                        ?? (IWorkshopTree)member
-                                    );
-                                }
-                                else
-                                    throw SyntaxErrorException.ExpectedEnumGotValue(((EnumParameter)parameters[i]).EnumData.CodeName, values[i].Location);
-                            }
-                            else
-                                throw SyntaxErrorException.ExpectedEnumGotValue(((EnumParameter)parameters[i]).EnumData.CodeName, values[i].Location);
-                        }
-                        else if (parameters[i] is ConstantParameter)
-                        {
-                            if (values[i] is IConstantSupport == false)
-                                throw new SyntaxErrorException("Parameter must be a " + ((ConstantParameter)parameters[i]).Type.Name + " constant.", values[i].Location);
-                            object value = ((IConstantSupport)values[i]).GetValue();
-
-                            if (!((ConstantParameter)parameters[i]).IsValid(value))
-                                throw new SyntaxErrorException("Parameter must be a " + ((ConstantParameter)parameters[i]).Type.Name + ".", values[i].Location);
-
-                            parsedParameters.Add(new ConstantObject(value));
-                        }
-                    }
+                // Get the default parameter value if there are not enough parameters.
+                if (values.Length <= i)
+                {                    
+                    parsedParameters.Add(GetDefaultValue(parameters[i], methodName, methodRange));
                 }
-                else if (parameters[i] is VarRefParameter)
+                else
                 {
-                    // A VarRef parameter is always required, there will never be a default to fallback on.
-                    if (values.Length <= i)
-                        throw SyntaxErrorException.MissingParameter(parameters[i].Name, methodName, methodRange);
-
-                    var varData = new ParseExpressionTree(this, getter, scope, values[i]);
-                    
-                    // A VarRef parameter must be a variable
-                    if (varData.ResultingVariable == null)
-                        throw SyntaxErrorException.ExpectedVariable(values[i].Location);
-                    
-                    parsedParameters.Add(new VarRef(varData.ResultingVariable, varData.VariableIndex, varData.Target));
-                        
+                    parsedParameters.Add(parameters[i].Parse(this, getter, scope, values[i]));
                 }
-                else throw new NotImplementedException();
             }
             return parsedParameters.ToArray();
+        }
+
+        public IWorkshopTree[] ParsePickyParameters(ScopeGroup getter, ScopeGroup scope, ParameterBase[] parameters, PickyParameter[] values, string methodName, LanguageServer.Location methodRange)
+        {
+            for (int f = 0; f < values.Length; f++)
+            {
+                // Syntax error if the parameter does not exist.
+                if (!parameters.Any(param => param.Name.Replace(" ", "") == values[f].Name))
+                    throw new SyntaxErrorException(values[f].Name + " is not a parameter in the method " + methodName + ".", values[f].Location);
+
+                // Check if there are any duplicates.
+                for (int n = 0; n < values.Length; n++)
+                if (f != n && values[f].Name == values[n].Name)
+                {
+                    int use = Math.Max(f, n);
+                    throw new SyntaxErrorException(values[use].Name + " was already set.", values[use].Location);
+                }
+            }
+
+            // Parse the parameters
+            List<IWorkshopTree> parsedParameters = new List<IWorkshopTree>();
+            for(int i = 0; i < parameters.Length; i++)
+            {
+                PickyParameter setter = values.FirstOrDefault(value => value.Name == parameters[i].Name.Replace(" ", ""));
+
+                IWorkshopTree result;
+
+                if (setter == null)
+                    result = GetDefaultValue(parameters[i], methodName, methodRange);
+                else
+                    result = parameters[i].Parse(this, getter, scope, setter.Expression);
+
+                parsedParameters.Add(result);
+            }
+
+            return parsedParameters.ToArray();
+        }
+
+        private IWorkshopTree GetDefaultValue(ParameterBase parameter, string methodName, Location methodRange)
+        {
+            IWorkshopTree defaultValue = parameter.GetDefault();
+
+            // If there is no default value, throw a syntax error.
+            if (defaultValue == null)
+                throw SyntaxErrorException.MissingParameter(parameter.Name, methodName, methodRange);
+            
+            return defaultValue;
         }
 
         public Var[] AssignParameterVariables(ScopeGroup methodScope, ParameterBase[] parameters, IWorkshopTree[] values, Node methodNode)
@@ -431,7 +404,11 @@ namespace Deltin.Deltinteger.Parse
                 if (values[i] is Element)
                 {
                     // Create a new variable using the parameter.
-                    parameterVars[i] = VarCollection.AssignVar(methodScope, parameters[i].Name, IsGlobal, methodNode);
+                    if (!parameters[i].Extended)
+                        parameterVars[i] = IndexedVar.AssignVar   (VarCollection, methodScope, parameters[i].Name, IsGlobal, methodNode);
+                    else
+                        parameterVars[i] = IndexedVar.AssignVarExt(VarCollection, methodScope, parameters[i].Name, IsGlobal, methodNode);
+
                     ((IndexedVar)parameterVars[i]).Type = ((Element)values[i]).SupportedType?.Type;
                     Actions.AddRange(((IndexedVar)parameterVars[i]).SetVariable((Element)values[i]));
                 }
@@ -449,54 +426,19 @@ namespace Deltin.Deltinteger.Parse
             methodNode.RelatedScopeGroup = scope;
 
             IMethod method = scope.GetMethod(getter, methodNode.Name, methodNode.Location);
+            methodNode.Method = method;
             
             // Parse the parameters
-            IWorkshopTree[] parsedParameters = ParseParameters(getter, getter, method.Parameters, methodNode.Parameters, methodNode.Name, methodNode.Location);
+            IWorkshopTree[] parsedParameters;
+            // Normal
+            if (methodNode.Parameters != null)
+                parsedParameters = ParseParameters(getter, getter, method.Parameters, methodNode.Parameters, methodNode.Name, methodNode.Location);
+            // Picky parameters
+            else if (methodNode.PickyParameters != null)
+                parsedParameters = ParsePickyParameters(getter, getter, method.Parameters, methodNode.PickyParameters, methodNode.Name, methodNode.Location);
+            else throw new Exception();
 
-            Element result;
-            if (method is ElementList)
-            {
-                ElementList elementData = (ElementList)method;
-
-                CheckMethodType(needsToBeValue, elementData.IsValue ? CustomMethodType.Value : CustomMethodType.Action, methodNode.Name, methodNode.Location);
-
-                Element element = elementData.GetObject();
-                element.ParameterValues = parsedParameters.ToArray();
-
-                if (element.ElementData.IsValue)
-                    result = element;
-                else
-                {
-                    Actions.Add(element);
-                    result = null;
-                }
-
-                foreach (var usageDiagnostic in elementData.UsageDiagnostics)
-                    ParserData.Diagnostics.AddDiagnostic(methodNode.Location.uri, usageDiagnostic.GetDiagnostic(methodNode.Location.range));
-            }
-            else if (method is CustomMethodData)
-            {
-                CheckMethodType(needsToBeValue, ((CustomMethodData)method).CustomMethodType, methodNode.Name, methodNode.Location);
-
-                var customMethodResult = ((CustomMethodData)method)
-                    .GetObject(this, scope, parsedParameters.ToArray(), methodNode.Location, methodNode.Parameters.Select(p => p.Location).ToArray())
-                    .Result();
-
-                // Some custom methods have extra actions.
-                if (customMethodResult.Elements != null)
-                    Actions.AddRange(customMethodResult.Elements);
-
-                result = customMethodResult.Result;
-            }
-            else if (method is UserMethod)
-            {
-                result = ((UserMethod)method).Get(this, scope, methodNode, parsedParameters.ToArray());
-                if (!needsToBeValue)
-                    result = null;
-            }
-            else throw new NotImplementedException();
-
-            return result;
+            return method.Parse(this, needsToBeValue, scope, methodNode, parsedParameters);
         }
 
         public void ParseBlock(ScopeGroup getter, ScopeGroup scopeGroup, BlockNode blockNode, bool fulfillReturns, IndexedVar returnVar)
@@ -538,7 +480,7 @@ namespace Deltin.Deltinteger.Parse
 
                     Element array = ParseExpression(getter, scope, forEachNode.Array);
 
-                    IndexedVar index = VarCollection.AssignVar(scope, $"'{forEachNode.Variable.VariableName}' for index", IsGlobal, null);
+                    IndexedVar index = IndexedVar.AssignInternalVarExt(VarCollection, scope, $"'{forEachNode.Variable.VariableName}' for index", IsGlobal);
 
                     int offset = 0;
 
@@ -601,7 +543,8 @@ namespace Deltin.Deltinteger.Parse
                         if (arrayVar != null)
                         {
                             variable = arrayVar.CreateChild(tempChild, forEachNode.Variable.VariableName, new Element[]{indexer()}, forEachNode.Variable);
-                            variable.Type = ParserData.GetDefinedType(forEachNode.Variable.Type, forEachNode.Variable.Location);
+                            if (forEachNode.Variable.Type != null)
+                                variable.Type = ParserData.GetDefinedType(forEachNode.Variable.Type, forEachNode.Variable.Location);
                         }
                         else
                             variable = new ElementReferenceVar(forEachNode.Variable.VariableName, tempChild, forEachNode, getVariableReference());
@@ -835,7 +778,7 @@ namespace Deltin.Deltinteger.Parse
             }
         }
 
-        static void CheckMethodType(bool needsToBeValue, CustomMethodType type, string methodName, Location location)
+        public static void CheckMethodType(bool needsToBeValue, CustomMethodType type, string methodName, Location location)
         {
             if (type == CustomMethodType.Action)
             {
@@ -913,10 +856,10 @@ namespace Deltin.Deltinteger.Parse
         void ParseDefine(ScopeGroup getter, ScopeGroup scope, DefineNode defineNode)
         {
             IndexedVar var;
-            if (defineNode.UseVar == null)
-                var = VarCollection.AssignVar(scope, defineNode.VariableName, IsGlobal, defineNode);
+            if (!defineNode.Extended)
+                var = IndexedVar.AssignVar   (VarCollection, scope, defineNode.VariableName, IsGlobal, defineNode);
             else
-                var = VarCollection.AssignVar(scope, defineNode.VariableName, IsGlobal, defineNode.UseVar.Variable, defineNode.UseVar.Index, defineNode);
+                var = IndexedVar.AssignVarExt(VarCollection, scope, defineNode.VariableName, IsGlobal, defineNode);
 
             // Set the defined variable if the variable is defined like "define var = 1"
             Element[] inScopeActions = var.InScope(defineNode.Value != null ? ParseExpression(getter, scope, defineNode.Value) : null);
@@ -944,7 +887,7 @@ namespace Deltin.Deltinteger.Parse
             return actions.Count - index - 1;
         }
     
-        class ParseExpressionTree
+        public class ParseExpressionTree
         {
             public Var ResultingVariable { get; }
             public Element[] VariableIndex { get; }
@@ -1002,16 +945,16 @@ namespace Deltin.Deltinteger.Parse
                             ResultingVariable = var;
 
                         // Get the variable index
-                        Element[] varIndex = new Element[variableNode.Index.Length];
-                        for (int i = 0; i < varIndex.Length; i++)
-                            varIndex[i] = translator.ParseExpression(getter, scope, variableNode.Index[i]);
+                        VariableIndex = new Element[variableNode.Index.Length];
+                        for (int i = 0; i < VariableIndex.Length; i++)
+                            VariableIndex[i] = translator.ParseExpression(getter, scope, variableNode.Index[i]);
 
                         // Set the nodeResult.
                         nodeResult = var.GetVariable(Target);
 
                         // Apply the index
-                        for (int i = 0; i < varIndex.Length; i++)
-                            nodeResult = Element.Part<V_ValueInArray>(nodeResult, varIndex[i]);
+                        for (int i = 0; i < VariableIndex.Length; i++)
+                            nodeResult = Element.Part<V_ValueInArray>(nodeResult, VariableIndex[i]);
                     }
                     // If not, parse the node as an expression.
                     else

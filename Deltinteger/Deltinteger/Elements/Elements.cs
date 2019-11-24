@@ -24,6 +24,7 @@ namespace Deltin.Deltinteger.Elements
         Vector = 8,
         Player = 16,
         Team = 32,
+        Map = 64
     }
 
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
@@ -166,6 +167,19 @@ namespace Deltin.Deltinteger.Elements
             return null;
         }
 
+        public virtual Element Optimize()
+        {
+            OptimizeChildren();
+            return this;
+        }
+
+        protected void OptimizeChildren()
+        {
+            for (int i = 0; i < ParameterValues.Length; i++)
+                if (ParameterValues[i] is Element)
+                    ParameterValues[i] = ((Element)ParameterValues[i]).Optimize();
+        }
+
         protected virtual string[] AdditionalParameters()
         {
             return new string[0];
@@ -186,19 +200,6 @@ namespace Deltin.Deltinteger.Elements
             builder.AppendLine("}");
             
             return builder.ToString();
-        }
-
-        // The estimated server load of the current element.
-        public double ServerLoadWeight()
-        {
-            double weight = Weight();
-            foreach (IWorkshopTree parameter in ParameterValues)
-                weight += parameter.ServerLoadWeight();
-            return weight;
-        }
-        protected virtual double Weight()
-        {
-            return 0;
         }
 
         // Creates an array from a list of values.
@@ -283,6 +284,29 @@ namespace Deltin.Deltinteger.Elements
         public UsageDiagnostic[] UsageDiagnostics { get; }
         public WikiMethod Wiki { get; }
 
+        public Element Parse(TranslateRule context, bool needsToBeValue, ScopeGroup scope, MethodNode methodNode, IWorkshopTree[] parameters)
+        {
+            TranslateRule.CheckMethodType(needsToBeValue, IsValue ? CustomMethodType.Value : CustomMethodType.Action, methodNode.Name, methodNode.Location);
+
+            Element element = GetObject();
+            element.ParameterValues = parameters;
+
+            Element result;
+
+            if (element.ElementData.IsValue)
+                result = element;
+            else
+            {
+                context.Actions.Add(element);
+                result = null;
+            }
+
+            foreach (var usageDiagnostic in UsageDiagnostics)
+                context.ParserData.Diagnostics.AddDiagnostic(methodNode.Location.uri, usageDiagnostic.GetDiagnostic(methodNode.Location.range));
+            
+            return result;
+        }
+
         public string GetLabel(bool markdown)
         {
             return Name + "(" + Parameter.ParameterGroupToString(Parameters, markdown) + ")" 
@@ -319,7 +343,7 @@ namespace Deltin.Deltinteger.Elements
         public string Message { get; }
         public int Severity { get; }
 
-        public Diagnostic GetDiagnostic(Range range)
+        public Diagnostic GetDiagnostic(DocRange range)
         {
             return new Diagnostic(Message, range) { severity = Severity };
         }

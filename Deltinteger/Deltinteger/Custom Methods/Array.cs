@@ -39,8 +39,8 @@ namespace Deltin.Deltinteger.Elements
     {
         protected override MethodResult Get()
         {
-            IndexedVar array = TranslateContext.VarCollection.AssignVar(Scope, "OptimisedBlendedIndex: array", TranslateContext.IsGlobal, null);
-            IndexedVar index = TranslateContext.VarCollection.AssignVar(Scope, "OptimisedBlendedIndex: index", TranslateContext.IsGlobal, null);
+            IndexedVar array = IndexedVar.AssignInternalVar(TranslateContext.VarCollection, Scope, "OptimisedBlendedIndex: array", TranslateContext.IsGlobal);
+            IndexedVar index = IndexedVar.AssignInternalVar(TranslateContext.VarCollection, Scope, "OptimisedBlendedIndex: index", TranslateContext.IsGlobal);
 
             Element[] actions = ArrayBuilder<Element>.Build
             (
@@ -137,7 +137,7 @@ namespace Deltin.Deltinteger.Elements
     {
         protected override MethodResult Get()
         {
-            IndexedVar array = TranslateContext.VarCollection.AssignVar(Scope, "OptimisedRangeOfArray: array", TranslateContext.IsGlobal, null);
+            IndexedVar array = IndexedVar.AssignInternalVar(TranslateContext.VarCollection, Scope, "OptimisedRangeOfArray: array", TranslateContext.IsGlobal);
 
             Element[] actions = ArrayBuilder<Element>.Build
             (
@@ -190,8 +190,8 @@ namespace Deltin.Deltinteger.Elements
     {
         protected override MethodResult Get()
         {
-            IndexedVar array = TranslateContext.VarCollection.AssignVar(Scope, "OptimisedSortedMedian: array", TranslateContext.IsGlobal, null);
-            IndexedVar medianIndex = TranslateContext.VarCollection.AssignVar(Scope, "OptimisedSortedMedian: medianIndex", TranslateContext.IsGlobal, null);
+            IndexedVar array = IndexedVar.AssignInternalVar(TranslateContext.VarCollection, Scope, "OptimisedSortedMedian: array", TranslateContext.IsGlobal);
+            IndexedVar medianIndex = IndexedVar.AssignInternalVar(TranslateContext.VarCollection, Scope, "OptimisedSortedMedian: medianIndex", TranslateContext.IsGlobal);
 
             Element length = Element.Part<V_CountOf>(array.GetVariable());
             Element condition = Element.Part<V_Compare>(length % 2, EnumData.GetEnumValue(Operators.Equal), new V_Number(0));
@@ -248,8 +248,8 @@ namespace Deltin.Deltinteger.Elements
     {
         protected override MethodResult Get()
         {
-            IndexedVar array = TranslateContext.VarCollection.AssignVar(Scope, "OptimisedSortedMedian: array", TranslateContext.IsGlobal, null);
-            IndexedVar medianIndex = TranslateContext.VarCollection.AssignVar(Scope, "OptimisedSortedMedian: medianIndex", TranslateContext.IsGlobal, null);
+            IndexedVar array = IndexedVar.AssignInternalVar(TranslateContext.VarCollection, Scope, "OptimisedSortedMedian: array", TranslateContext.IsGlobal);
+            IndexedVar medianIndex = IndexedVar.AssignInternalVar(TranslateContext.VarCollection, Scope, "OptimisedSortedMedian: medianIndex", TranslateContext.IsGlobal);
 
             Element length = Element.Part<V_CountOf>(array.GetVariable());
             Element condition = Element.Part<V_Compare>(length % 2, EnumData.GetEnumValue(Operators.Equal), new V_Number(0));

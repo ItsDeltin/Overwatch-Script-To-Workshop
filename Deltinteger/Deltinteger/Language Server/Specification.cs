@@ -25,9 +25,9 @@ namespace Deltin.Deltinteger.LanguageServer
             return line + ", " + character;
         }
 
-        public Range ToRange()
+        public DocRange ToRange()
         {
-            return new Range(this, this);
+            return new DocRange(this, this);
         }
 
         public int CompareTo(Pos other)
@@ -57,31 +57,31 @@ namespace Deltin.Deltinteger.LanguageServer
         }
     }
 
-    public class Range : IComparable<Range>
+    public class DocRange : IComparable<DocRange>
     {
-        public static Range Zero { get { return new Range(Pos.Zero, Pos.Zero); } }
+        public static DocRange Zero { get { return new DocRange(Pos.Zero, Pos.Zero); } }
 
         public Pos start { get; private set; }
         public Pos end { get; private set; }
 
-        public Range(Pos start, Pos end)
+        public DocRange(Pos start, Pos end)
         {
             this.start = start;
             this.end = end;
         }
 
-        public static Range GetRange(ParserRuleContext context)
+        public static DocRange GetRange(ParserRuleContext context)
         {
             if (context.stop == null)
             {
                 Pos pos = new Pos(context.start.Line, context.start.Column);
-                return new Range(pos, pos);
+                return new DocRange(pos, pos);
             }
 
             if (context.start.Line == context.stop.Line &&
                 context.start.Column == context.stop.Column)
             {
-                return new Range
+                return new DocRange
                 (
                     new Pos(context.start.Line - 1, context.start.Column),
                     new Pos(context.stop.Line - 1, context.stop.Column + context.GetText().Length)
@@ -89,7 +89,7 @@ namespace Deltin.Deltinteger.LanguageServer
             }
             else
             {
-                return new Range
+                return new DocRange
                 (
                     new Pos(context.start.Line - 1, context.start.Column),
                     new Pos(context.stop.Line - 1, context.stop.Column + 1)
@@ -97,22 +97,22 @@ namespace Deltin.Deltinteger.LanguageServer
             }
         }
 
-        public static Range GetRange(IToken token)
+        public static DocRange GetRange(IToken token)
         {
-            return new Range(new Pos(token.Line - 1, token.Column), new Pos(token.Line - 1, token.Column + token.Text.Length));
+            return new DocRange(new Pos(token.Line - 1, token.Column), new Pos(token.Line - 1, token.Column + token.Text.Length));
         }
 
-        public static Range GetRange(IToken start, IToken stop)
+        public static DocRange GetRange(IToken start, IToken stop)
         {
-            return new Range(new Pos(start.Line - 1, start.Column), new Pos(stop.Line - 1, stop.Column + stop.Text.Length));
+            return new DocRange(new Pos(start.Line - 1, start.Column), new Pos(stop.Line - 1, stop.Column + stop.Text.Length));
         }
 
-        public static Range GetRange(ITerminalNode start, ITerminalNode stop)
+        public static DocRange GetRange(ITerminalNode start, ITerminalNode stop)
         {
             return GetRange(start.Symbol, stop.Symbol);
         }
 
-        public static Range GetRange(ITerminalNode node)
+        public static DocRange GetRange(ITerminalNode node)
         {
             return GetRange(node.Symbol);
         }
@@ -123,7 +123,7 @@ namespace Deltin.Deltinteger.LanguageServer
                 && (end.line > pos.line || (end.line == pos.line && pos.character <= end.character));
         }
 
-        public int CompareTo(Range other)
+        public int CompareTo(DocRange other)
         {
             // Return -1 if 'this' is less than 'other'.
             // Return 0 if 'this' is equal to 'other'.
@@ -169,15 +169,15 @@ namespace Deltin.Deltinteger.LanguageServer
         }
 
         #region Operators
-        public static bool operator <(Range r1, Range r2)  => r1.CompareTo(r2) <  0;
-        public static bool operator >(Range r1, Range r2)  => r1.CompareTo(r2) >  0;
-        public static bool operator <=(Range r1, Range r2) => r1.CompareTo(r2) <= 0;
-        public static bool operator >=(Range r1, Range r2) => r1.CompareTo(r2) >= 0;
+        public static bool operator <(DocRange r1, DocRange r2)  => r1.CompareTo(r2) <  0;
+        public static bool operator >(DocRange r1, DocRange r2)  => r1.CompareTo(r2) >  0;
+        public static bool operator <=(DocRange r1, DocRange r2) => r1.CompareTo(r2) <= 0;
+        public static bool operator >=(DocRange r1, DocRange r2) => r1.CompareTo(r2) >= 0;
         #endregion
 
-        public Range Offset(Range other)
+        public DocRange Offset(DocRange other)
         {
-            return new Range(start.Offset(other.start), end.Offset(other.end));
+            return new DocRange(start.Offset(other.start), end.Offset(other.end));
         }
 
         public override string ToString()
@@ -297,13 +297,13 @@ namespace Deltin.Deltinteger.LanguageServer
         public const int Hint = 4;
         
         public string message;
-        public Range range;
+        public DocRange range;
         public int severity;
         public object code; // string or number
         public string source;
         public DiagnosticRelatedInformation[] relatedInformation;
 
-        public Diagnostic(string message, Range range)
+        public Diagnostic(string message, DocRange range)
         {
             this.message = message;
             this.range = range;
@@ -348,7 +348,7 @@ namespace Deltin.Deltinteger.LanguageServer
     class Hover
     {
         public object contents; // TODO MarkedString support 
-        public Range range;
+        public DocRange range;
 
         public Hover(MarkupContent contents)
         {
@@ -397,9 +397,9 @@ namespace Deltin.Deltinteger.LanguageServer
     public class Location 
     {
         public string uri;
-        public Range range;
+        public DocRange range;
 
-        public Location(string uri, Range range)
+        public Location(string uri, DocRange range)
         {
             this.uri = uri;
             this.range = range;
@@ -412,7 +412,7 @@ namespace Deltin.Deltinteger.LanguageServer
         ///
         /// Used as the underlined span for mouse interaction. Defaults to the word range at
         /// the mouse position.
-        public Range originSelectionRange;
+        public DocRange originSelectionRange;
 
         /// The target resource identifier of this link.
         public string targetUri;
@@ -420,13 +420,13 @@ namespace Deltin.Deltinteger.LanguageServer
         /// The full target range of this link. If the target for example is a symbol then target range is the
 	    /// range enclosing this symbol not including leading/trailing whitespace but everything else
 	    /// like comments. This information is typically used to highlight the range in the editor.
-        public Range targetRange;
+        public DocRange targetRange;
 
         /// The range that should be selected and revealed when this link is being followed, e.g the name of a function.
 	    /// Must be contained by the the <see cref="targetRange"/>.
-        public Range targetSelectionRange;
+        public DocRange targetSelectionRange;
 
-        public LocationLink(Range originSelectionRange, string targetUri, Range targetRange, Range targetSelectionRange)
+        public LocationLink(DocRange originSelectionRange, string targetUri, DocRange targetRange, DocRange targetSelectionRange)
         {
             this.originSelectionRange = originSelectionRange;
             this.targetUri = targetUri;
@@ -437,7 +437,7 @@ namespace Deltin.Deltinteger.LanguageServer
 
     public class TextEdit
     {
-        public static TextEdit Replace(Range range, string newText)
+        public static TextEdit Replace(DocRange range, string newText)
         {
             return new TextEdit()
             {
@@ -449,11 +449,11 @@ namespace Deltin.Deltinteger.LanguageServer
         {
             return new TextEdit()
             {
-                range = new Range(pos, pos),
+                range = new DocRange(pos, pos),
                 newText = newText
             };
         }
-        public static TextEdit Delete(Range range)
+        public static TextEdit Delete(DocRange range)
         {
             return new TextEdit()
             {
@@ -462,7 +462,7 @@ namespace Deltin.Deltinteger.LanguageServer
             };
         }
 
-        public Range range;
+        public DocRange range;
         public string newText;
     }
 

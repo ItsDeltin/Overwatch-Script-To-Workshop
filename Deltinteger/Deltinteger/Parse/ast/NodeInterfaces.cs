@@ -12,6 +12,7 @@ namespace Deltin.Deltinteger.Parse
         string VariableName { get; }
         string Type { get; }
         Node Value { get; }
+        bool Extended { get; }
     }
 
     public interface IConstantSupport : INode
