@@ -315,11 +315,17 @@ namespace Deltin.Deltinteger.Pathfinder
         }
         private static Element Node1Attribute(Element segment)
         {
-            return (Element.Part<V_XOf>(segment) % 1) * 100;
+            return Element.Part<V_RoundToInteger>(
+                (Element.Part<V_XOf>(segment) % 1) * 100,
+                EnumData.GetEnumValue(Rounding.Nearest)
+            );
         }
         private static Element Node2Attribute(Element segment)
         {
-            return (Element.Part<V_YOf>(segment) % 1) * 100;
+            return Element.Part<V_RoundToInteger>(
+                (Element.Part<V_YOf>(segment) % 1) * 100,
+                EnumData.GetEnumValue(Rounding.Nearest)
+            );
         }
     
         public static void Pathfind(TranslateRule context, PathfinderInfo info, Element pathResult, Element target, Element destination, Element pathAttributes)
