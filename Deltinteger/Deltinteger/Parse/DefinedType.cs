@@ -219,7 +219,8 @@ namespace Deltin.Deltinteger.Parse
             firstFree = Element.TernaryConditional(
                 new V_Compare(Element.Part<V_CountOf>(takenIndexes), Operators.NotEqual, new V_Number(0)),
                 firstFree,
-                Element.Part<V_CountOf>(context.ParserData.ClassArray.GetVariable()) - 1
+                Element.Part<V_CountOf>(context.ParserData.ClassArray.GetVariable()) - 1,
+                false
             );
 
             context.Actions.AddRange(index.SetVariable(firstFree));
@@ -230,7 +231,8 @@ namespace Deltin.Deltinteger.Parse
                         // If the index equals -1, use the length of the class array instead.
                         new V_Compare(index.GetVariable(), Operators.Equal, new V_Number(-1)),
                         Element.Part<V_CountOf>(context.ParserData.ClassArray.GetVariable()),
-                        index.GetVariable()
+                        index.GetVariable(),
+                        false
                     )
                 )
             );

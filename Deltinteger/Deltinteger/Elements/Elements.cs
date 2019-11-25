@@ -212,13 +212,16 @@ namespace Deltin.Deltinteger.Elements
         }
 
         // Creates an ternary conditional that works in the workshop
-        public static Element TernaryConditional(Element condition, Element consequent, Element alternative)
+        public static Element TernaryConditional(Element condition, Element consequent, Element alternative, bool supportTruthyFalsey)
         {
             // This works by creating an array with the consequent (C) and the alternative (A): [C, A]
             // It creates an array that contains false and true: [false, true]
             // Then it gets the array value of the false/true array based on the condition result: IndexOfArrayValue(boolArray, condition)
             // The result is either 0 or 1. Use that index to get the value from the [C, A] array.
-            return Element.Part<V_ValueInArray>(CreateArray(alternative, consequent), Element.Part<V_IndexOfArrayValue>(CreateArray(new V_False(), new V_True()), condition));
+            if (supportTruthyFalsey)
+                return Element.Part<V_ValueInArray>(CreateArray(alternative, consequent), Element.Part<V_IndexOfArrayValue>(CreateArray(new V_False(), new V_True()), condition));
+            else 
+                return Element.Part<V_ValueInArray>(CreateArray(alternative, consequent), Element.Part<V_Add>(condition, new V_Number(0)));
 
             // Another way to do it would be to add 0 to the boolean, however this won't work with truthey/falsey values that aren't booleans.
             // return Element.Part<V_ValueInArray>(CreateArray(alternative, consequent), Element.Part<V_Add>(condition, new V_Number(0)));

@@ -292,7 +292,8 @@ namespace Deltin.Deltinteger.Parse
                     (
                         ParseExpression(getter, scope, ternaryNode.Condition),
                         ParseExpression(getter, scope, ternaryNode.Consequent),
-                        ParseExpression(getter, scope, ternaryNode.Alternative)
+                        ParseExpression(getter, scope, ternaryNode.Alternative),
+                        true
                     );
 
                 // Enums

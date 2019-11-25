@@ -35,7 +35,7 @@ namespace Deltin.Deltinteger.Pathfinder
             Element position               = (Element)Parameters[1];
             Element destination            = (Element)Parameters[2];
 
-            DijkstraNormal algorithm = new DijkstraNormal(TranslateContext, pathmap, position, destination);
+            DijkstraNormal algorithm = new DijkstraNormal(TranslateContext, pathmap, position, destination, null);
             algorithm.Get();
             return new MethodResult(
                 null,
@@ -59,6 +59,7 @@ namespace Deltin.Deltinteger.Pathfinder
     [Parameter("Player", Elements.ValueType.Player, null)]
     [VarRefParameter("Path Map")]
     [Parameter("Destination", Elements.ValueType.Vector, null)]
+    [Parameter("Attributes", Elements.ValueType.Any, typeof(V_EmptyArray))]
     class Pathfind : PathfindPlayer
     {
         override protected MethodResult Get(PathfinderInfo info)
@@ -72,9 +73,11 @@ namespace Deltin.Deltinteger.Pathfinder
             IndexedVar destination = IndexedVar.AssignInternalVarExt(TranslateContext.VarCollection, Scope, "Destination", TranslateContext.IsGlobal);
             TranslateContext.Actions.AddRange(destination.SetVariable((Element)Parameters[2]));
 
-            DijkstraNormal algorithm = new DijkstraNormal(TranslateContext, pathmap, Element.Part<V_PositionOf>(player), destination.GetVariable());
+            Element attributes = (Element)Parameters[3];
+
+            DijkstraNormal algorithm = new DijkstraNormal(TranslateContext, pathmap, Element.Part<V_PositionOf>(player), destination.GetVariable(), attributes);
             algorithm.Get();
-            DijkstraBase.Pathfind(TranslateContext, info, algorithm.finalPath.GetVariable(), player, destination.GetVariable());
+            DijkstraBase.Pathfind(TranslateContext, info, algorithm.finalPath.GetVariable(), player, destination.GetVariable(), algorithm.finalPathAttributes.GetVariable());
             return new MethodResult(null, null);
         }
 
@@ -109,7 +112,7 @@ namespace Deltin.Deltinteger.Pathfinder
             IndexedVar destination = IndexedVar.AssignInternalVarExt(TranslateContext.VarCollection, Scope, "Destination", TranslateContext.IsGlobal);
             TranslateContext.Actions.AddRange(destination.SetVariable((Element)Parameters[2]));
 
-            DijkstraMultiSource algorithm = new DijkstraMultiSource(TranslateContext, info, pathmap, players.GetVariable(), destination.GetVariable());
+            DijkstraMultiSource algorithm = new DijkstraMultiSource(TranslateContext, info, pathmap, players.GetVariable(), destination.GetVariable(), null);
             algorithm.Get();
             return new MethodResult(null, null);
         }
@@ -301,6 +304,25 @@ namespace Deltin.Deltinteger.Pathfinder
             return new CustomMethodWiki(
                 "Gets the position of the next node.",
                 "The player to get the next node of."
+            );
+        }
+    }
+
+    [CustomMethod("CurrentSegmentAttribute", CustomMethodType.Value)]
+    [Parameter("Player", Elements.ValueType.Player, null)]
+    class CurrentSegmentAttribute : PathfindPlayer
+    {
+        override protected MethodResult Get(PathfinderInfo info)
+        {
+            Element player = (Element)Parameters[0];
+            return new MethodResult(null, info.PathAttributes.GetVariable()[0]);
+        }
+
+        public override CustomMethodWiki Wiki()
+        {
+            return new CustomMethodWiki(
+                "Gets the attribute of the current pathfind segment.",
+                "The player to get the next segment attribute of."
             );
         }
     }

@@ -49,7 +49,8 @@ namespace Deltin.Deltinteger.Pathfinder
                 segments.Add(new Segment(
                     (int)segmentVector.Value.X,
                     (int)segmentVector.Value.Y,
-                    (int)segmentVector.Value.Z
+                    (int)Math.Round((segmentVector.Value.X % 1) * 100),
+                    (int)Math.Round((segmentVector.Value.Y % 1) * 100)
                 ));
             }
             
@@ -112,25 +113,26 @@ namespace Deltin.Deltinteger.Pathfinder
         [XmlAttribute]
         public int Node2 { get; set; }
         [XmlAttribute]
-        public int Attribute { get; set; }
+        public int Node1Attribute { get; set; }
+        [XmlAttribute]
+        public int Node2Attribute { get; set; }
 
-        public Segment(int node1, int node2, int attribute)
+        public Segment(int node1, int node2, int node1Attribute, int node2Attribute)
         {
             Node1 = node1;
             Node2 = node2;
-            Attribute = attribute;
+            Node1Attribute = node1Attribute;
+            Node2Attribute = node2Attribute;
         }
 
         private Segment() {}
 
-        public bool ShouldSerializeAttribute()
-        {
-            return Attribute != 0;
-        }
+        public bool ShouldSerializeNode1Attribute() => Node1Attribute != 0;
+        public bool ShouldSerializeNode2Attribute() => Node2Attribute != 0;
 
         public V_Vector AsWorkshopData()
         {
-            return new V_Vector((double)Node1, (double)Node2, (double)Attribute);
+            return new V_Vector((double)Node1 + (((double)Node1Attribute) / 100), (double)Node2 + (((double)Node2Attribute) / 100), 0);
         }
     }
 }

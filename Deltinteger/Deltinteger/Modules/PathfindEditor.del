@@ -21,6 +21,7 @@ rule: "Disable conflicting controls"
 Event.OngoingPlayer
 {
     SetAbility1Enabled(EventPlayer(), false);
+    SetAbility2Enabled(EventPlayer(), false);
     SetSecondaryFireEnabled(EventPlayer(), false);
 }
 
@@ -167,7 +168,7 @@ if (!IsButtonHeld(EventPlayer(), Button.Crouch))
         for (define l = 0; l < CountOf(Selected); l++)
             if (l != f && !SegmentExists(Selected[f], Selected[l]))
             {
-                Segments = Append(Segments, new Segment(<Node>Selected[f], <Node>Selected[l], Attribute));
+                Segments = Append(Segments, new Segment(<Node>Selected[f], <Node>Selected[l], FirstAttribute, SecondAttribute));
                 (<Segment>LastOf(Segments)).Show();
             }
 }
@@ -180,7 +181,7 @@ if (!IsButtonHeld(EventPlayer(), Button.Crouch))
     for (define i = 1; i < CountOf(Selected); i++)
         if (!SegmentExists(Selected[i - 1], Selected[i]))
         {
-            Segments = Append(Segments, new Segment(<Node>Selected[i - 1], <Node>Selected[i], Attribute));
+            Segments = Append(Segments, new Segment(<Node>Selected[i - 1], <Node>Selected[i], FirstAttribute, SecondAttribute));
             (<Segment>LastOf(Segments)).Show();
         }
 }
@@ -193,7 +194,7 @@ if (!IsButtonHeld(EventPlayer(), Button.Crouch))
     for (define i = 1; i < CountOf(Selected); i++)
         if (!SegmentExists(Selected[0], Selected[i]))
         {
-            Segments = Append(Segments, new Segment(<Node>Selected[0], <Node>Selected[i], Attribute));
+            Segments = Append(Segments, new Segment(<Node>Selected[0], <Node>Selected[i], FirstAttribute, SecondAttribute));
             (<Segment>LastOf(Segments)).Show();
         }
 }
@@ -227,20 +228,22 @@ class Segment
     public Node Node1;
     public Node Node2;    
     public define Nodes;
-    public define Attribute;
+    public define FirstAttribute;
+    public define SecondAttribute;
 
     define EffectID;
     public define visible = false;
 
-    define DirectionMarker1;
-    public define AttributeText;
+    public define AttributeText1;
+    public define AttributeText2;
 
-    public Segment(Node node1, Node node2, define attribute)
+    public Segment(Node node1, Node node2, define firstAttribute, define secondAttribute)
     {
         Node1 = node1;
         Node2 = node2;
         Nodes = [Node1, Node2];
-        Attribute = attribute;
+        FirstAttribute = firstAttribute;
+        SecondAttribute = secondAttribute;
     }
 
     public method Show()
@@ -251,12 +254,7 @@ class Segment
             EffectID = LastCreatedEntity();
             visible = true;
 
-            if (Attribute == 1)
-            {
-                CreateEffect(AllPlayers(), Effect.Sphere, Color.Purple, LinearInterpolate(Node1.ShownLocation, Node2.ShownLocation, 0.9), 0.25, EffectRev.VisibleTo);
-                DirectionMarker1 = LastCreatedEntity();
-            }
-            else if (Attribute > 1)
+            if (FirstAttribute != 0 || SecondAttribute != 0)
             {
                 root.ActivateScoper(1, this);
             }
@@ -267,8 +265,8 @@ class Segment
         if (visible)
         {
             DestroyEffect(EffectID);
-            DestroyEffect(DirectionMarker1);
-            DestroyInWorldText(AttributeText);
+            DestroyInWorldText(AttributeText1);
+            DestroyInWorldText(AttributeText2);
             visible = false;
         }
     }
@@ -304,9 +302,13 @@ if (IsCommunicating(EventPlayer(), Communication.VoiceLineUp))
     
     for (define i = 0; i < CountOf(Segments); i++)
         segmentsOut = Append(segmentsOut, Vector(
-            IndexOfArrayValue(Nodes, (<Segment>Segments[i]).Node1),
-            IndexOfArrayValue(Nodes, (<Segment>Segments[i]).Node2),
-            (<Segment>Segments[i]).Attribute
+            // X is first node
+            IndexOfArrayValue(Nodes, (<Segment>Segments[i]).Node1) + ((<Segment>Segments[i]).FirstAttribute / 100),
+            // Y is second node
+            IndexOfArrayValue(Nodes, (<Segment>Segments[i]).Node2) + ((<Segment>Segments[i]).SecondAttribute / 100),
+            // Z is unused
+            0
+            // (<Segment>Segments[i]).Attribute
         ));
 
     SmallMessage(AllPlayers(), "Compile Finished!");
@@ -322,54 +324,68 @@ if (CountOf(preloadNodes) != 0)
         Nodes = Append(Nodes, new Node(preloadNodes[i]));    
     for (define i = 0; i < CountOf(preloadSegments); i++)
         Segments = Append(Segments, new Segment(
-                <Node>Nodes[XOf(preloadSegments[i])],
-                <Node>Nodes[YOf(preloadSegments[i])],
-                ZOf(preloadSegments[i])
+                <Node>Nodes[RoundToInteger(XOf(preloadSegments[i]), Rounding.Down)],
+                <Node>Nodes[RoundToInteger(YOf(preloadSegments[i]), Rounding.Down)],
+                (XOf(preloadSegments[i]) % 1) * 100,
+                (YOf(preloadSegments[i]) % 1) * 100
             ));
 }
 
 define globalvar preloadNodes 5;
 define globalvar preloadSegments 6;
 
-define globalvar Attribute = 0;
-define globalvar AttributeHud = 0;
+define globalvar FirstAttribute = 0;
+define globalvar SecondAttribute = 0;
 
-rule: "Change attribute"
+rule: "Change Primary Attribute"
 Event.OngoingPlayer
 if (IsButtonHeld(EventPlayer(), Button.Ability1))
 if (!IsButtonHeld(EventPlayer(), Button.Crouch))
 {
-    Attribute++;
+    FirstAttribute++;
 }
-
-rule: "Reset attribute"
+rule: "Change Secondary Attribute"
+Event.OngoingPlayer
+if (IsButtonHeld(EventPlayer(), Button.Ability2))
+if (!IsButtonHeld(EventPlayer(), Button.Crouch))
+{
+    SecondAttribute++;
+}
+rule: "Reset Primary Attribute"
 Event.OngoingPlayer
 if (IsButtonHeld(EventPlayer(), Button.Ability1))
 if (IsButtonHeld(EventPlayer(), Button.Crouch))
 {
-    Attribute = 0;
+    FirstAttribute = 0;
+}
+rule: "Reset Secondary Attribute"
+Event.OngoingPlayer
+if (IsButtonHeld(EventPlayer(), Button.Ability2))
+if (IsButtonHeld(EventPlayer(), Button.Crouch))
+{
+    SecondAttribute = 0;
 }
 
-define globalvar lastAttribute = -1;
-
-rule: "Update attribute HUD"
-if (lastAttribute != Attribute)
+rule: "Create Attribute HUD"
 {
-    DestroyHudText(AttributeHud);
-
-    if (Attribute == 0)
-    {
-        CreateHudText(
-            VisibleTo: AllPlayers(),
-            Header   : "Attribute:",
-            Subheader: ["Normal", "One-Way", "Custom"][Min(Attribute, 2)],
-            Text     : Attribute,
-            TextColor: Color.Orange,
-            Location : Location.Top
-        );
-    }
-    
-    AttributeHud = LastTextID();
+    CreateHudText(
+        VisibleTo: AllPlayers(),
+        Header   : "Primary Attribute:",
+        Subheader: ["Normal", "Custom"][Min(FirstAttribute, 1)],
+        Text     : FirstAttribute,
+        TextColor: Color.Yellow,
+        Location : Location.Top,
+        SortOrder: 1
+    );
+    CreateHudText(
+        VisibleTo: AllPlayers(),
+        Header   : "Secondary Attribute:",
+        Subheader: ["Normal", "Custom"][Min(SecondAttribute, 1)],
+        Text     : SecondAttribute,
+        TextColor: Color.Orange,
+        Location : Location.Top,
+        SortOrder: 2
+    );
 }
 
 rule: "Create segment attribute text"
@@ -379,10 +395,26 @@ if (GetID() == 1)            // GetID equals expected ID
 {
     CreateInWorldText(
         AllPlayers(),
-        (<Segment>GetData()).Attribute,
-        Midpoint(
+        (<Segment>GetData()).FirstAttribute,
+        LinearInterpolate(
             (<Node>((<Segment>GetData()).Node1)).ShownLocation,
-            (<Node>((<Segment>GetData()).Node2)).ShownLocation
+            (<Node>((<Segment>GetData()).Node2)).ShownLocation,
+            0.2
+        ),
+        2.5,
+        Clipping.ClipAgainstSurfaces,
+        InworldTextRev.String,
+        Color.Yellow,
+        Spectators.VisibleAlways
+    );
+    (<Segment>GetData()).AttributeText1 = LastTextID();
+    CreateInWorldText(
+        AllPlayers(),
+        (<Segment>GetData()).SecondAttribute,
+        LinearInterpolate(
+            (<Node>((<Segment>GetData()).Node1)).ShownLocation,
+            (<Node>((<Segment>GetData()).Node2)).ShownLocation,
+            0.8
         ),
         2.5,
         Clipping.ClipAgainstSurfaces,
@@ -390,5 +422,5 @@ if (GetID() == 1)            // GetID equals expected ID
         Color.Orange,
         Spectators.VisibleAlways
     );
-    (<Segment>GetData()).AttributeText = LastTextID();
+    (<Segment>GetData()).AttributeText2 = LastTextID();
 }

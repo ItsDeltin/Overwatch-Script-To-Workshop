@@ -11,12 +11,14 @@ namespace Deltin.Deltinteger.Pathfinder
         public const double MoveToNext = 0.3;
 
         public IndexedVar Path { get; }
+        public IndexedVar PathAttributes { get; }
         public IndexedVar LastUpdate { get; }
         public IndexedVar DistanceToNext { get; }
 
         public PathfinderInfo(ParsingData parser)
         {
             Path           = IndexedVar.AssignInternalVar   (parser.VarCollection, null, "Pathfinder: Path",                  false);
+            PathAttributes = IndexedVar.AssignInternalVar   (parser.VarCollection, null, "Pathfinder: Path Attributes",       false);
             LastUpdate     = IndexedVar.AssignInternalVarExt(parser.VarCollection, null, "Pathfinder: Last Update",           false);
             DistanceToNext = IndexedVar.AssignInternalVarExt(parser.VarCollection, null, "Pathfinder: Distance To Next Node", false);
 
@@ -178,8 +180,10 @@ namespace Deltin.Deltinteger.Pathfinder
 
         private Element[] Next()
         {
-            return Path.ModifyVariable(Operation.RemoveFromArrayByIndex, 0);
-            //return Path.SetVariable(Element.Part<V_ArraySlice>(Path.GetVariable(), new V_Number(1), new V_Number(Constants.MAX_ARRAY_LENGTH)));
+            return ArrayBuilder<Element>.Build(
+                Path          .ModifyVariable(Operation.RemoveFromArrayByIndex, 0),
+                PathAttributes.ModifyVariable(Operation.RemoveFromArrayByIndex, 0)
+            );
         }
     }
 }
