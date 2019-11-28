@@ -63,6 +63,11 @@ namespace Deltin.Deltinteger
         {
             return string.Join("\n", lines);
         }
+
+        public static string RemoveQuotes(string str)
+        {
+            return str.Substring(1, str.Length - 2);
+        }
     }
 
     public class TabStringBuilder

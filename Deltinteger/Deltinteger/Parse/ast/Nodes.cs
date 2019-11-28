@@ -678,8 +678,9 @@ namespace Deltin.Deltinteger.Parse
 
         public PickyParameter(DeltinScriptParser.Picky_parameterContext context, BuildAstVisitor visitor) : base(new Location(visitor.file, DocRange.GetRange(context)))
         {
-            Name = context.PART().GetText();
-            Expression = visitor.Visit(context.expr());
+            Name = context.PART()?.GetText();
+            if (context.expr() != null)
+                Expression = visitor.Visit(context.expr());
         }
 
         public override Node[] Children()

@@ -48,6 +48,12 @@ namespace Deltin.Deltinteger.Elements
         public CustomMethodType CustomMethodType { get; }
         public Type Type { get; }
         public WikiMethod Wiki { get; }
+
+        // IScopeable defaults
+        public Location DefinedAt { get; } = null;
+        public AccessLevel AccessLevel { get; } = AccessLevel.Public;
+        public string ScopeableType { get; } = "method";
+
         public string GetLabel(bool markdown)
         {
             return Name + "(" + Parameter.ParameterGroupToString(Parameters, markdown) + ")"
@@ -120,7 +126,7 @@ namespace Deltin.Deltinteger.Elements
         }
 
         static CustomMethodData[] _customMethodData = null;
-        private static CustomMethodData[] GetCustomMethods()
+        public static CustomMethodData[] GetCustomMethods()
         {
             if (_customMethodData == null)
             {

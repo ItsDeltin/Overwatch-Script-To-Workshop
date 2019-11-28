@@ -53,36 +53,6 @@ namespace Deltin.Deltinteger.Elements
 
     public abstract class Element : IWorkshopTree
     {
-        private static ElementList[] Elements = GetElementList();
-        private static ElementList[] GetElementList()
-        {
-            Type[] methodList = Assembly.GetExecutingAssembly().GetTypes().Where(t => t.GetCustomAttribute<ElementData>() != null).ToArray();
-
-            ElementList[] elements = new ElementList[methodList.Length];
-            for (int i = 0; i < elements.Length; i++)
-                elements[i] = new ElementList(methodList[i]);
-            
-            return elements;
-        }
-        public static ElementList GetElement(string codeName)
-        {
-            return Elements.FirstOrDefault(e => e.Name == codeName);
-        }
-        public static CompletionItem[] GetCompletion(bool values, bool actions)
-        {
-            List<CompletionItem> completions = new List<CompletionItem>();
-            foreach(ElementList element in Elements)
-                if ((element.IsValue && values) || (!element.IsValue && actions))
-                {
-                    completions.Add(new CompletionItem(element.Name) {
-                        detail = element.GetObject().ToString(),
-                        kind = CompletionItem.Method,
-                        documentation = Wiki.GetWikiMethod(element.WorkshopName)?.Description
-                    });
-                }
-            return completions.ToArray();
-        }
-
         public static T Part<T>(params IWorkshopTree[] parameterValues) where T : Element, new()
         {
             T element = new T()
@@ -283,6 +253,41 @@ namespace Deltin.Deltinteger.Elements
         public ParameterBase[] Parameters { get; }
         public UsageDiagnostic[] UsageDiagnostics { get; }
         public WikiMethod Wiki { get; }
+
+        // IScopeable defaults
+        public Location DefinedAt { get; } = null;
+        public AccessLevel AccessLevel { get; } = AccessLevel.Public;
+        public string ScopeableType { get; } = "method";
+
+        public static ElementList[] Elements { get; } = GetElementList();
+        private static ElementList[] GetElementList()
+        {
+            Type[] methodList = Assembly.GetExecutingAssembly().GetTypes().Where(t => t.GetCustomAttribute<ElementData>() != null).ToArray();
+
+            ElementList[] elements = new ElementList[methodList.Length];
+            for (int i = 0; i < elements.Length; i++)
+                elements[i] = new ElementList(methodList[i]);
+            
+            return elements;
+        }
+        public static ElementList GetElement(string codeName)
+        {
+            return Elements.FirstOrDefault(e => e.Name == codeName);
+        }
+        public static CompletionItem[] GetCompletion(bool values, bool actions)
+        {
+            List<CompletionItem> completions = new List<CompletionItem>();
+            foreach(ElementList element in Elements)
+                if ((element.IsValue && values) || (!element.IsValue && actions))
+                {
+                    completions.Add(new CompletionItem(element.Name) {
+                        detail = element.GetObject().ToString(),
+                        kind = CompletionItem.Method,
+                        documentation = WorkshopWiki.Wiki.GetWikiMethod(element.WorkshopName)?.Description
+                    });
+                }
+            return completions.ToArray();
+        }
 
         public Element Parse(TranslateRule context, bool needsToBeValue, ScopeGroup scope, MethodNode methodNode, IWorkshopTree[] parameters)
         {

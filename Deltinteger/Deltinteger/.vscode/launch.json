@@ -66,6 +66,16 @@
             "console": "externalTerminal",
             "stopAtEntry": false,
             "internalConsoleOptions": "openOnSessionStart"
+        },
+        {
+            "name": "Debug ANTLR4 grammar",
+            "type": "antlr-debug",
+            "request": "launch",
+            "input": "C:/Users/Deltin/Desktop/delete later/AntlrReworkTest.del",
+            "grammar": "DeltinScript.g4",
+            "startRule": "ruleset",
+            "printParseTree": true,
+            "visualParseTree": true
         }
     ]
 }

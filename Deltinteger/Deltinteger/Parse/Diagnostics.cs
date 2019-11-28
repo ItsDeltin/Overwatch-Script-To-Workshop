@@ -10,7 +10,7 @@ namespace Deltin.Deltinteger.Parse
 {
     public class Diagnostics
     {
-        private static readonly ConsoleColor[] SeverityColors = new ConsoleColor[] 
+        public static readonly ConsoleColor[] SeverityColors = new ConsoleColor[] 
         { 
             ConsoleColor.Red,
             ConsoleColor.Yellow,
@@ -18,67 +18,82 @@ namespace Deltin.Deltinteger.Parse
             ConsoleColor.DarkGray
         };
 
-        private readonly Dictionary<string, List<Diagnostic>> diagnostics = new Dictionary<string, List<Diagnostic>>();
+        private readonly List<FileDiagnostics> diagnostics = new List<FileDiagnostics>();
 
         public Diagnostics() {}
 
         public PublishDiagnosticsParams[] GetDiagnostics()
         {
             return diagnostics.Select(diag => 
-                new PublishDiagnosticsParams(new Uri(diag.Key).AbsoluteUri, diag.Value.ToArray())
+                new PublishDiagnosticsParams(new Uri(diag.File).AbsoluteUri, diag.Diagnostics.ToArray())
             ).ToArray();
         }
 
         public bool ContainsErrors()
         {
-            return diagnostics.Any(d => d.Value.Any(diag => diag.severity == Diagnostic.Error));
+            return diagnostics.Any(d => d.Diagnostics.Any(diag => diag.severity == Diagnostic.Error));
         }
 
-        public void Error(string message, Location location)
+        public FileDiagnostics FromFile(string file)
         {
-            diagnostics[location.uri].Add(new Diagnostic(message, location.range) { severity = Diagnostic.Error });
-        }
-
-        public void Error(SyntaxErrorException ex)
-        {
-            Error(ex.GetInfo(), ex.Location);
-        }
-
-        public void Warning(string message, Location location)
-        {
-            diagnostics[location.uri].Add(new Diagnostic(message, location.range) { severity = Diagnostic.Warning });
-        }
-
-        public void Information(string message, Location location)
-        {
-            diagnostics[location.uri].Add(new Diagnostic(message, location.range) { severity = Diagnostic.Information });
-        }
-
-        public void Hint(string message, Location location)
-        {
-            diagnostics[location.uri].Add(new Diagnostic(message, location.range) { severity = Diagnostic.Hint });
-        }
-
-        public void AddDiagnostic(string file, Diagnostic diagnostic)
-        {
-            diagnostics[file].Add(diagnostic);
+            if (diagnostics.Any(diag => diag.File == file)) throw new Exception("A diagnostic tree for the file '" + file + "' was already created.");
+            FileDiagnostics fileDiagnostics = new FileDiagnostics(file);
+            diagnostics.Add(fileDiagnostics);
+            return fileDiagnostics;
         }
 
         public void PrintDiagnostics(Log log)
         {
             foreach (var fileDiagnostics in diagnostics.ToArray())
-                foreach (var diag in fileDiagnostics.Value.OrderBy(diag => diag.severity))
-                    log.Write(LogLevel.Normal, new ColorMod(diag.Info(fileDiagnostics.Key), GetDiagnosticColor(diag.severity)));
-        }
-
-        public void AddFile(string file)
-        {
-            diagnostics.Add(file, new List<Diagnostic>());
+                foreach (var diag in fileDiagnostics.Diagnostics.OrderBy(diag => diag.severity))
+                    log.Write(LogLevel.Normal, new ColorMod(diag.Info(fileDiagnostics.File), GetDiagnosticColor(diag.severity)));
         }
 
         private static ConsoleColor GetDiagnosticColor(int errorLevel)
         {
             return SeverityColors[errorLevel - 1];
+        }
+    }
+
+    public class FileDiagnostics
+    {
+        public string File { get;}
+        private List<Diagnostic> _diagnostics { get; } = new List<Diagnostic>();
+        public Diagnostic[] Diagnostics { get { return _diagnostics.ToArray(); }}
+
+        public FileDiagnostics(string file)
+        {
+            File = file;
+        }
+
+        public void Error(string message, DocRange range)
+        {
+            _diagnostics.Add(new Diagnostic(message, range) { severity = Diagnostic.Error });
+        }
+
+        public void Error(SyntaxErrorException ex)
+        {
+            Error(ex.GetInfo(), ex.Location.range);
+        }
+
+        public void Warning(string message, DocRange range)
+        {
+            _diagnostics.Add(new Diagnostic(message, range) { severity = Diagnostic.Warning });
+        }
+
+        public void Information(string message, DocRange range)
+        {
+            _diagnostics.Add(new Diagnostic(message, range) { severity = Diagnostic.Information });
+        }
+
+        public void Hint(string message, DocRange range)
+        {
+            _diagnostics.Add(new Diagnostic(message, range) { severity = Diagnostic.Hint });
+        }
+
+        public void AddDiagnostic(string file, Diagnostic diagnostic)
+        {
+            _diagnostics.Add(diagnostic);
         }
     }
 
@@ -118,21 +133,7 @@ namespace Deltin.Deltinteger.Parse
                 _diagnostics.Error("Expected parameter.", new Location(_file, DocRange.GetRange(context).end.ToRange()));
             return base.VisitCall_parameters(context);
         }
-
-        public override object VisitEnum(DeltinScriptParser.EnumContext context)
-        {
-            string type  = context.PART(0).GetText();
-            string value = context.PART(1)?.GetText();
-
-            if (value == null)
-                _diagnostics.Error("Expected enum value.", new Location(_file, DocRange.GetRange(context)));
-            
-            else if (EnumData.GetEnumValue(type, value) == null)
-                _diagnostics.Error(string.Format(SyntaxErrorException.invalidEnumValue, value, type), new Location(_file, DocRange.GetRange(context))); 
-
-            return base.VisitEnum(context);
-        }
-
+        
         public override object VisitRule_if(DeltinScriptParser.Rule_ifContext context)
         {
             if (context.expr() == null)
@@ -156,6 +157,17 @@ namespace Deltin.Deltinteger.Parse
             if (context.EQUALS() != null && context.expr() == null)
                 _diagnostics.Error("Expected expression.", new Location(_file, DocRange.GetRange(context)));
             return base.VisitDefine(context);
+        }
+
+        public override object VisitPicky_parameter(DeltinScriptParser.Picky_parameterContext context)
+        {
+            if (context.PART() == null)
+                _diagnostics.Error("Expected parameter name.", new Location(_file, DocRange.GetRange(context.TERNARY_ELSE())));
+            
+            if (context.expr() == null)
+                _diagnostics.Error("Expected expression.", new Location(_file, DocRange.GetRange(context.TERNARY_ELSE())));
+
+            return base.VisitPicky_parameter(context);
         }
     }
 

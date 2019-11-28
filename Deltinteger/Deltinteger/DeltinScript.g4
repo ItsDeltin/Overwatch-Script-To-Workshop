@@ -35,13 +35,13 @@ expr
 	| true                                        // True
 	| false                                       // False
 	| null                                        // Null
-	| variable                                    // Variables
+	| PART                                        // Variables
 	| exprgroup
 	| create_object
 	| typeconvert
 	| THIS
 	| ROOT
-	| <assoc=right> expr SEPERATOR expr           // Variable seperation
+	| <assoc=right> expr (SEPERATOR expr)+         // Variable seperation
 	| NOT expr                                     // !x
 	| '-' expr                                     // -x
 	| <assoc=right> expr ('^' | '*' | '/' | '%') expr // x^y
@@ -60,13 +60,12 @@ array : (INDEX_START expr INDEX_END)+ ;
 
 enum : PART SEPERATOR PART? ;
 
-variable : PART array? ;
 varset   : var=expr array? ((statement_operation val=expr?) | INCREMENT | DECREMENT) ;
 
 call_parameters  : expr (COMMA expr?)*    		 	         ;
-picky_parameter  : PART TERNARY_ELSE expr                    ;
+picky_parameter  : PART? TERNARY_ELSE expr?                  ;
 picky_parameters : picky_parameter (COMMA picky_parameter?)* ;
-method           : PART LEFT_PAREN (call_parameters | picky_parameters)? RIGHT_PAREN ;
+method           : PART LEFT_PAREN (picky_parameters | call_parameters)? RIGHT_PAREN ;
 
 statement :
 	( varset STATEMENT_END?
@@ -119,7 +118,7 @@ ruleset :
 	reserved_player?
 	(import_file | import_object)*
 	(rule_define | ow_rule | user_method | type_define | macro)*
-	;
+	EOF;
 
 // Classes/structs
 

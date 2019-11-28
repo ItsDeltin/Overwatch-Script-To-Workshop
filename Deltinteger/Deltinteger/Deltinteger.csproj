@@ -48,4 +48,9 @@
       <Visitor>True</Visitor>
     </Antlr4>
   </ItemGroup>
+
+  <!-- Remove later -->
+  <ItemGroup>
+    <Compile Remove="Parse/Var.cs" />
+  </ItemGroup>
 </Project>

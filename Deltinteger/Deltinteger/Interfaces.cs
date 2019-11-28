@@ -2,6 +2,7 @@ using System.Text;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.WorkshopWiki;
 using Deltin.Deltinteger.Parse;
+using Deltin.Deltinteger.LanguageServer;
 
 namespace Deltin.Deltinteger
 {
@@ -11,9 +12,8 @@ namespace Deltin.Deltinteger
         void DebugPrint(Log log, int depth = 0);
     }
 
-    public interface IMethod : ILanguageServerInfo
+    public interface IMethod : IScopeable, ILanguageServerInfo
     {
-        string Name { get; }
         ParameterBase[] Parameters { get; }
         WikiMethod Wiki { get; }
 
@@ -34,7 +34,9 @@ namespace Deltin.Deltinteger
     {
         string Name { get; }
         AccessLevel AccessLevel { get; }
-        Node Node { get; }
+        Location DefinedAt { get; }
+        string ScopeableType { get; }
+        // ExpressionAction CallAction();
     }
 
     public interface ITypeRegister
