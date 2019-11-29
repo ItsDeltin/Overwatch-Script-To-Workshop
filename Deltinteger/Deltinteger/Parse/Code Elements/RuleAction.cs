@@ -10,7 +10,7 @@ namespace Deltin.Deltinteger.Parse
         public RuleIfAction[] Conditions { get; }
         public BlockAction Block { get; }
 
-        public RuleAction(ScriptFile script, Scope scope, DeltinScriptParser.Ow_ruleContext ruleContext)
+        public RuleAction(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.Ow_ruleContext ruleContext)
         {
             Name = Extras.RemoveQuotes(ruleContext.STRINGLITERAL().GetText());
             Disabled = ruleContext.DISABLED() != null;
@@ -23,10 +23,10 @@ namespace Deltin.Deltinteger.Parse
             {
                 Conditions = new RuleIfAction[ruleContext.rule_if().Length];
                 for (int i = 0; i < Conditions.Length; i++)
-                    Conditions[i] = new RuleIfAction(script, scope, ruleContext.rule_if(i));
+                    Conditions[i] = new RuleIfAction(script, translateInfo, scope, ruleContext.rule_if(i));
             }
 
-            Block = new BlockAction(script, scope.Child(), ruleContext.block());
+            Block = new BlockAction(script, translateInfo, scope.Child(), ruleContext.block());
         }
     }
 
@@ -34,7 +34,7 @@ namespace Deltin.Deltinteger.Parse
     {
         public IExpression Expression { get; }
 
-        public RuleIfAction(ScriptFile script, Scope scope, DeltinScriptParser.Rule_ifContext ifContext)
+        public RuleIfAction(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.Rule_ifContext ifContext)
         {
             // Syntax error if there is no expression.
             if (ifContext.expr() == null)
@@ -42,7 +42,7 @@ namespace Deltin.Deltinteger.Parse
             
             // Get the expression.
             else
-                Expression = GetExpression(script, scope, ifContext.expr());
+                Expression = GetExpression(script, translateInfo, scope, ifContext.expr());
         }
     }
 }

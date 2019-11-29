@@ -11,8 +11,9 @@ namespace Deltin.Deltinteger.Parse
         private List<IScopeable> inScope { get; } = new List<IScopeable>();
         private Scope Parent { get; }
         private List<Scope> children { get; } = new List<Scope>();
+        public string ErrorName { get; set; } = "current scope";
 
-        private Scope() {}
+        public Scope() {}
         private Scope(Scope parent)
         {
             Parent = parent;
@@ -30,7 +31,7 @@ namespace Deltin.Deltinteger.Parse
             inScope.Add(element);
         }
 
-        public IScopeable GetInScope(string name)
+        public IScopeable GetInScope(string name, string type, FileDiagnostics diagnostics, DocRange range)
         {
             IScopeable element = null;
             Scope current = this;
@@ -39,12 +40,16 @@ namespace Deltin.Deltinteger.Parse
                 element = current.inScope.FirstOrDefault(element => element.Name == name);
                 current = current.Parent;
             }
+
+            if (range != null && element == null)
+                diagnostics.Error(string.Format("The {0} {1} does not exist in the {2}.", type, name, ErrorName), range);
+
             return element;
         }
 
         public bool WasDefined(string name)
         {
-            return GetInScope(name) != null;
+            return GetInScope(name, null, null, null) != null;
         }
 
         public static Scope GetGlobalScope()

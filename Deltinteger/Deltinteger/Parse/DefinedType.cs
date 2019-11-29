@@ -313,12 +313,6 @@ namespace Deltin.Deltinteger.Parse
         Struct
     }
 
-    public enum AccessLevel
-    {
-        Public,
-        Private
-    }
-
     [CustomMethod("ClassMemoryRemaining", CustomMethodType.Value)]
     public class ClassMemoryRemaining : CustomMethodBase
     {

@@ -33,7 +33,7 @@ namespace Deltin.Deltinteger.Elements
     {
         private static EnumData[] AllEnums = null;
 
-        private static EnumData[] GetEnumData()
+        public static EnumData[] GetEnumData()
         {
             if (AllEnums == null)
             {

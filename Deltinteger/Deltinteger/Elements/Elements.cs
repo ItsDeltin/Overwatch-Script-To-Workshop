@@ -64,7 +64,7 @@ namespace Deltin.Deltinteger.Elements
 
         public Element(params IWorkshopTree[] parameterValues)
         {
-            ElementList = Element.GetElement(GetType().Name.Substring(2));
+            ElementList = ElementList.FromType(GetType());
             ElementData = GetType().GetCustomAttribute<ElementData>();
             ParameterData = ElementList.Parameters;
             ParameterValues = parameterValues;
@@ -77,8 +77,6 @@ namespace Deltin.Deltinteger.Elements
 
         public string Comment { get; set; } = null;
         public IWorkshopTree[] ParameterValues { get; set; }
-
-        public Deltin.Deltinteger.Parse.IndexedVar SupportedType { get; set; }
 
         public override string ToString()
         {
@@ -333,6 +331,11 @@ namespace Deltin.Deltinteger.Elements
         public Element GetObject()
         {
             return (Element)Activator.CreateInstance(Type);
+        }
+
+        public static ElementList FromType(Type type)
+        {
+            return Elements.FirstOrDefault(element => element.Type == type);
         }
     }
 

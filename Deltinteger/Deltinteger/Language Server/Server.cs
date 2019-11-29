@@ -244,7 +244,7 @@ namespace Deltin.Deltinteger.LanguageServer
                             completion.AddRange(EnumData.GetEnum<Team>().GetCompletion());
                         
                         else if (ruleNode.IsIfSelected(posData.Caret))
-                            completion.AddRange(Element.GetCompletion(true, false));
+                            completion.AddRange(ElementList.GetCompletion(true, false));
 
                         else
                             completion.AddRange(new CompletionItem[] 
@@ -270,7 +270,7 @@ namespace Deltin.Deltinteger.LanguageServer
                             if (parserData.DefinedTypes != null)
                                 completion.AddRange(DefinedType.CollectionCompletion(parserData.DefinedTypes.ToArray()));
                         }
-                        completion.AddRange(Element.GetCompletion(true, true));
+                        completion.AddRange(ElementList.GetCompletion(true, true));
                         completion.AddRange(CustomMethodData.GetCompletion());
 
                         break;
@@ -290,7 +290,7 @@ namespace Deltin.Deltinteger.LanguageServer
                             if (parserData.UserMethods != null)
                                 completion.AddRange(UserMethod.CollectionCompletion(parserData.UserMethods.ToArray()));
                         }
-                        completion.AddRange(Element.GetCompletion(true, false));
+                        completion.AddRange(ElementList.GetCompletion(true, false));
                         completion.AddRange(EnumData.GetAllEnumCompletion());
                         completion.AddRange(CustomMethodData.GetCompletion());
 

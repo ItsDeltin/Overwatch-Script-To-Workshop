@@ -28,7 +28,6 @@ expr
       number                                      // Numbers
 	| method                                      // Methods
 	| string                                      // Strings
-	| { Deltin.Deltinteger.Elements.EnumData.IsEnum(_input.Lt(1).Text) }? enum // Enums
 	| expr INDEX_START expr INDEX_END             // Array index
 	| createarray                                 // Array creation
 	| formatted_string                            // Formatted strings

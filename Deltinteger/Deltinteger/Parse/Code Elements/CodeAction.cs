@@ -7,14 +7,16 @@ using Antlr4.Runtime;
 
 namespace Deltin.Deltinteger.Parse
 {
-    class DeltinScript
+    public class DeltinScript
     {
         public Diagnostics Diagnostics { get; }
-        private List<ScriptFile> ScriptFiles { get; }
+        private List<ScriptFile> ScriptFiles { get; } = new List<ScriptFile>();
+        private List<CodeType> types { get; } = new List<CodeType>();
 
         public DeltinScript(Diagnostics diagnostics, ScriptFile rootRuleset)
         {
             Diagnostics = diagnostics;
+            types.AddRange(CodeType.GetDefaultTypes());
             CollectScriptFiles(rootRuleset);
             Translate(Scope.GetGlobalScope());
         }
@@ -28,13 +30,13 @@ namespace Deltin.Deltinteger.Parse
             {
                 List<string> importedFiles = new List<string>();
                 foreach (var importFileContext in scriptFile.Context.import_file())
-                    GetImportedFile(importFileContext, scriptFile.File, importedFiles);
+                    GetImportedFile(scriptFile, importFileContext, importedFiles);
             }
         }
 
-        void GetImportedFile(DeltinScriptParser.Import_fileContext importFileContext, string importer, List<string> importedFiles)
+        void GetImportedFile(ScriptFile importer, DeltinScriptParser.Import_fileContext importFileContext, List<string> importedFiles)
         {
-            Importer importFile = new Importer(Diagnostics, importedFiles, importFileContext.STRINGLITERAL().GetText(), importer, new Location(importer, DocRange.GetRange(importFileContext)));
+            Importer importFile = new Importer(importer.Diagnostics, importedFiles, importFileContext.STRINGLITERAL().GetText(), importer.File, new Location(importer.File, DocRange.GetRange(importFileContext)));
             if (importFile.AlreadyImported) return;
 
             importedFiles.Add(importFile.ResultingPath);
@@ -60,22 +62,31 @@ namespace Deltin.Deltinteger.Parse
             {
                 // Get the rules
                 foreach (var ruleContext in script.Context.ow_rule())
-                    translatedRules.Add(new RuleAction(script, global, ruleContext));
+                    translatedRules.Add(new RuleAction(script, this, global, ruleContext));
             }
+        }
+
+        public CodeType GetCodeType(string name)
+        {
+            return types.FirstOrDefault(type => type.Name == name);
+        }
+        public bool IsCodeType(string name)
+        {
+            return GetCodeType(name) != null;
         }
     }
 
     public abstract class CodeAction
     {
-        public static IStatement GetStatement(ScriptFile script, Scope scope, DeltinScriptParser.StatementContext statementContext)
+        public static IStatement GetStatement(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.StatementContext statementContext)
         {
-            if (statementContext.define() != null) return new DefineAction(script, scope, statementContext.define());
-            if (statementContext.method() != null) return new CallMethodAction(script, scope, statementContext.method());
+            if (statementContext.define() != null) return new DefineAction(script, translateInfo, scope, statementContext.define());
+            if (statementContext.method() != null) return new CallMethodAction(script, translateInfo, scope, statementContext.method());
 
             throw new Exception("Could not determine the statement type.");
         }
 
-        public static IExpression GetExpression(ScriptFile script, Scope scope, DeltinScriptParser.ExprContext exprContext)
+        public static IExpression GetExpression(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.ExprContext exprContext)
         {
             if (exprContext.ChildCount == 1)
             {
@@ -88,25 +99,49 @@ namespace Deltin.Deltinteger.Parse
                 if (exprContext.PART()   != null)
                 {
                     string variableName = exprContext.PART().GetText();
-                    IScopeable element = scope.GetInScope(variableName);
+
+                    var type = translateInfo.GetCodeType(variableName);
+                    if (type != null) return type;
+
+                    IScopeable element = scope.GetInScope(variableName, "variable", script.Diagnostics, DocRange.GetRange(exprContext));
 
                     if (element == null)
-                        script.Diagnostics.Error(variableName + " does not exist in the current scope.", DocRange.GetRange(exprContext));
+                        return null;
 
-                    else if (element is Var == false)
-                        script.Diagnostics.Error(variableName + " is a " + element.ScopeableType + ", not a variable.", DocRange.GetRange(exprContext));
+                    else if (element is IMethod)
+                    {
+                        script.Diagnostics.Error(variableName + " is a method, not a variable.", DocRange.GetRange(exprContext));
+                        return null;
+                    }
                     
-                    else
+                    else if (element is Var)
                     {
                         Var var = (Var)element;
                         return var.Call(new Location(script.File, DocRange.GetRange(exprContext)));
                     }
+
+                    else if (element is ScopedEnumMember)
+                    {
+                        return (ScopedEnumMember)element;
+                    }
+
+                    else throw new NotImplementedException();
                 }
                 // Method
-                if (exprContext.method() != null) return new CallMethodAction(script, scope, exprContext.method());
+                if (exprContext.method() != null) return new CallMethodAction(script, translateInfo, scope, exprContext.method());
+            }
+            else if (exprContext.SEPERATOR() != null)
+            {
+                return new ExpressionTree(script, translateInfo, scope, exprContext);
             }
 
             throw new Exception("Could not determine the expression type.");
         }
+    }
+
+    public enum AccessLevel
+    {
+        Public,
+        Private
     }
 }

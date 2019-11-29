@@ -16,8 +16,6 @@ namespace Deltin.Deltinteger
     {
         ParameterBase[] Parameters { get; }
         WikiMethod Wiki { get; }
-
-        Element Parse(TranslateRule context, bool needsToBeValue, ScopeGroup scope, MethodNode methodNode, IWorkshopTree[] parameters);
     }
 
     public interface ILanguageServerInfo
@@ -36,12 +34,6 @@ namespace Deltin.Deltinteger
         AccessLevel AccessLevel { get; }
         Location DefinedAt { get; }
         string ScopeableType { get; }
-        // ExpressionAction CallAction();
-    }
-
-    public interface ITypeRegister
-    {
-        void RegisterParameters(ParsingData parser);
     }
 
     public interface ICallable

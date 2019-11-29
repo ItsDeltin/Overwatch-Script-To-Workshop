@@ -12,7 +12,7 @@ namespace Deltin.Deltinteger.Parse
         public string Name { get; }
         public Var Var { get; }
 
-        public DefineAction(ScriptFile script, Scope scope, DeltinScriptParser.DefineContext defineContext)
+        public DefineAction(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.DefineContext defineContext)
         {
             Name = defineContext.name.Text;
             InExtendedCollection = defineContext.NOT() != null;
@@ -23,7 +23,7 @@ namespace Deltin.Deltinteger.Parse
             
             // Get the initial value.
             if (defineContext.expr() != null)
-                InitialValue = GetExpression(script, scope, defineContext.expr());
+                InitialValue = GetExpression(script, translateInfo, scope, defineContext.expr());
             
             // Syntax error if the variable was already defined.
             if (scope.WasDefined(Name))
