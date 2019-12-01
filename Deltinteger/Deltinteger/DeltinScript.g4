@@ -18,17 +18,18 @@ null   : NULL          ;
 
 statement_operation : EQUALS | EQUALS_ADD | EQUALS_DIVIDE | EQUALS_MODULO | EQUALS_MULTIPLY | EQUALS_POW | EQUALS_SUBTRACT ;
 
-define           :                   (type=PART | DEFINE)                 name=PART               NOT?  (EQUALS expr?)? ;
-rule_define      :                   (type=PART | DEFINE) (GLOBAL|PLAYER) name=PART (id=number? | NOT?) (EQUALS expr?)? STATEMENT_END;
-inclass_define   : accessor? STATIC? (type=PART | DEFINE)                 name=PART                     (EQUALS expr?)? ;
-parameter_define :                   (type=PART | DEFINE)                 name=PART               NOT?                  ;
+define : accessor? STATIC? (type=PART | DEFINE) (GLOBAL|PLAYER)? name=PART (id=number? | NOT?) (EQUALS expr?)? ;
+// define           :                   (type=PART | DEFINE)                 name=PART               NOT?  (EQUALS expr?)? ;
+// rule_define      :                   (type=PART | DEFINE) (GLOBAL|PLAYER) name=PART (id=number? | NOT?) (EQUALS expr?)? STATEMENT_END;
+// inclass_define   : accessor? STATIC? (type=PART | DEFINE)                 name=PART                     (EQUALS expr?)? ;
+// parameter_define :                   (type=PART | DEFINE)                 name=PART               NOT?                  ;
 
 expr 
 	: 
       number                                      // Numbers
 	| method                                      // Methods
 	| string                                      // Strings
-	| expr INDEX_START expr INDEX_END             // Array index
+	| expr INDEX_START index=expr? INDEX_END      // Array index
 	| createarray                                 // Array creation
 	| formatted_string                            // Formatted strings
 	| true                                        // True
@@ -86,7 +87,7 @@ for     : FOR LEFT_PAREN
 	RIGHT_PAREN block;
 forEndStatement : varset ;
 
-foreach : FOREACH number? LEFT_PAREN parameter_define IN expr RIGHT_PAREN block ;
+foreach : FOREACH number? LEFT_PAREN define IN expr RIGHT_PAREN block ;
 
 while   : WHILE LEFT_PAREN expr RIGHT_PAREN block             ;
 
@@ -116,21 +117,21 @@ ruleset :
 	reserved_global?
 	reserved_player?
 	(import_file | import_object)*
-	(rule_define | ow_rule | user_method | type_define | macro)*
+	((define STATEMENT_END) | ow_rule | user_method | type_define | macro)*
 	EOF;
 
 // Classes/structs
 
 type_define : (STRUCT | CLASS) name=PART
 	BLOCK_START
-	((inclass_define STATEMENT_END) | constructor | user_method | macro)*
+	((define STATEMENT_END) | constructor | user_method | macro)*
 	BLOCK_END ;
 
 accessor : PRIVATE | PUBLIC;
 
 constructor : accessor? name=PART LEFT_PAREN setParameters RIGHT_PAREN block ;
 
-setParameters: (parameter_define (COMMA parameter_define)*)?;
+setParameters: (define (COMMA define)*)?;
 
 create_object : NEW type=PART LEFT_PAREN call_parameters? RIGHT_PAREN ;
 

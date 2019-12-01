@@ -19,6 +19,10 @@ namespace Deltin.Deltinteger.Parse
             Parent = parent;
             Parent.children.Add(this);
         }
+        public Scope(string name)
+        {
+            ErrorName = name;
+        }
 
         public Scope Child()
         {
@@ -27,6 +31,7 @@ namespace Deltin.Deltinteger.Parse
 
         public void In(IScopeable element)
         {
+            if (element == null) throw new Exception("element should not be null.");
             if (inScope.Contains(element)) throw new Exception("element is already in scope.");
             inScope.Add(element);
         }

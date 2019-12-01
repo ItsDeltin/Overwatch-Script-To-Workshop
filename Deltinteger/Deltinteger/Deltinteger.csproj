@@ -52,5 +52,22 @@
   <!-- Remove later -->
   <ItemGroup>
     <Compile Remove="Parse/Var.cs" />
+    <Compile Remove="Parse/ContinueSkip.cs" />
+    <Compile Remove="Parse/DefinedType.cs" />
+    <Compile Remove="Parse/Parse.cs" />
+    <Compile Remove="Parse/Scope.cs" />
+    <Compile Remove="Parse/TranslateRule.cs" />
+    <Compile Remove="Parse/UserMethod.cs" />
+    <Compile Remove="Parse/WorkshopVariableHandler.cs" />
+    <Compile Remove="Parse/ast/**" />
+    <Compile Remove="Custom Methods/**" />
+    <Compile Include="Custom Methods/CustomMethods.cs" />
+    <Compile Remove="Pathfinder/**" />
+    <Compile Remove="Models/**" />
+    <Compile Include="Models/Vertex.cs" />
+    <Compile Remove="Language Server/Server.cs" />
+    <Compile Remove="CSV.cs" />
+    <Compile Remove="Elements/LoopBuilder.cs" />
+    <Compile Remove="Exceptions.cs" />
   </ItemGroup>
 </Project>

@@ -12,6 +12,8 @@ namespace Deltin.Deltinteger.Parse
         public Diagnostics Diagnostics { get; }
         private List<ScriptFile> ScriptFiles { get; } = new List<ScriptFile>();
         private List<CodeType> types { get; } = new List<CodeType>();
+        private List<DefineAction> ruleLevelVariables = new List<DefineAction>();
+        public Scope PlayerVariableScope { get; private set; } = new Scope();
 
         public DeltinScript(Diagnostics diagnostics, ScriptFile rootRuleset)
         {
@@ -58,8 +60,22 @@ namespace Deltin.Deltinteger.Parse
 
         void Translate(Scope global)
         {
+            // Get the types
+            foreach (ScriptFile script in ScriptFiles)
+            foreach (var typeContext in script.Context.type_define())
+                types.Add(new DefinedType(script, this, global, typeContext));
+
             foreach (ScriptFile script in ScriptFiles)
             {
+                // Get the defined variables
+                foreach (var varContext in script.Context.define())
+                {
+                    var newVar = new DefineAction(VariableDefineType.RuleLevel, script, this, global, varContext);
+                    // newVar.Var can be null because of certain syntax errors that can arise from defining a variable.
+                    if (!newVar.IsGlobal && newVar.Var != null) PlayerVariableScope.In(newVar.Var);
+                    ruleLevelVariables.Add(newVar);
+                }
+
                 // Get the rules
                 foreach (var ruleContext in script.Context.ow_rule())
                     translatedRules.Add(new RuleAction(script, this, global, ruleContext));
@@ -80,8 +96,9 @@ namespace Deltin.Deltinteger.Parse
     {
         public static IStatement GetStatement(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.StatementContext statementContext)
         {
-            if (statementContext.define() != null) return new DefineAction(script, translateInfo, scope, statementContext.define());
+            if (statementContext.define() != null) return new DefineAction(VariableDefineType.Scoped, script, translateInfo, scope, statementContext.define());
             if (statementContext.method() != null) return new CallMethodAction(script, translateInfo, scope, statementContext.method());
+            if (statementContext.varset() != null) return new SetVariableAction(script, translateInfo, scope, statementContext.varset());
 
             throw new Exception("Could not determine the statement type.");
         }
@@ -117,7 +134,7 @@ namespace Deltin.Deltinteger.Parse
                     else if (element is Var)
                     {
                         Var var = (Var)element;
-                        return var.Call(new Location(script.File, DocRange.GetRange(exprContext)));
+                        return var.Call(translateInfo, new Location(script.File, DocRange.GetRange(exprContext)));
                     }
 
                     else if (element is ScopedEnumMember)
@@ -134,6 +151,7 @@ namespace Deltin.Deltinteger.Parse
             {
                 return new ExpressionTree(script, translateInfo, scope, exprContext);
             }
+            else if (exprContext.INDEX_START() != null) return new ArrayAction(script, translateInfo, scope, exprContext);
 
             throw new Exception("Could not determine the expression type.");
         }

@@ -14,6 +14,14 @@ namespace Deltin.Deltinteger.Parse
             Name = name;
         }
 
+        // Static
+        public abstract Scope ReturningScope();
+        // Object
+        public virtual Scope GetObjectScope()
+        {
+            return null;
+        }
+
         public static CodeType[] GetDefaultTypes()
         {
             var defaultTypes = new List<CodeType>();
@@ -21,8 +29,6 @@ namespace Deltin.Deltinteger.Parse
                 defaultTypes.Add(new WorkshopEnumType(enumData));
             return defaultTypes.ToArray();
         }
-
-        public abstract Scope ReturningScope();
     }
 
     public class WorkshopEnumType : CodeType
@@ -45,7 +51,7 @@ namespace Deltin.Deltinteger.Parse
         }
     }
 
-    class ScopedEnumMember : IScopeable, IExpression
+    public class ScopedEnumMember : IScopeable, IExpression
     {
         public string Name { get; }
         public AccessLevel AccessLevel { get; } = AccessLevel.Public;
@@ -66,6 +72,34 @@ namespace Deltin.Deltinteger.Parse
         public Scope ReturningScope()
         {
             return debugScope;
+        }
+    }
+
+    public class DefinedType : CodeType
+    {
+        private Scope objectScope { get; }
+        private Scope staticScope { get; }
+
+        public DefinedType(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.Type_defineContext typeContext) : base(typeContext.name.Text)
+        {
+            objectScope = new Scope("class " + Name);
+            staticScope = new Scope("class " + Name);
+
+            // Get the variables defined in the type.
+            foreach (var definedVariable in typeContext.define())
+            {
+                DefineAction newVar = new DefineAction(VariableDefineType.InClass, script, translateInfo, objectScope, definedVariable);
+            }
+        }
+
+        override public Scope ReturningScope()
+        {
+            return null;
+        }
+
+        override public Scope GetObjectScope()
+        {
+            return objectScope;
         }
     }
 }
