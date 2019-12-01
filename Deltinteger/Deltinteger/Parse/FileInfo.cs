@@ -23,6 +23,8 @@ namespace Deltin.Deltinteger.Parse
             DeltinScriptLexer lexer = new DeltinScriptLexer(inputStream);
             CommonTokenStream commonTokenStream = new CommonTokenStream(lexer);
 
+            Diagnostics = diagnostics.FromFile(File);
+
             // Parse
             DeltinScriptParser parser = new DeltinScriptParser(commonTokenStream);
             var errorListener = new ErrorListener(Diagnostics);
@@ -32,8 +34,6 @@ namespace Deltin.Deltinteger.Parse
             Context = parser.ruleset();
             // AdditionalErrorChecking aec = new AdditionalErrorChecking(file, parser, diagnostics);
             // aec.Visit(Context);
-
-            Diagnostics = diagnostics.FromFile(File);
         }
     }
 }
