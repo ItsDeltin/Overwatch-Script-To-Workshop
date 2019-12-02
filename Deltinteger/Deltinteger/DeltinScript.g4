@@ -41,7 +41,7 @@ expr
 	| typeconvert
 	| THIS
 	| ROOT
-	| <assoc=right> expr (SEPERATOR expr)+         // Variable seperation
+	| <assoc=right> expr (SEPERATOR expr?)+         // Variable seperation
 	| NOT expr                                     // !x
 	| '-' expr                                     // -x
 	| <assoc=right> expr ('^' | '*' | '/' | '%') expr // x^y
@@ -107,24 +107,24 @@ ow_rule :
 	block
 	;
 
-user_method : DOCUMENTATION* accessor? RECURSIVE? (METHOD | type=PART) name=PART LEFT_PAREN setParameters RIGHT_PAREN
+define_method : DOCUMENTATION* accessor? RECURSIVE? (METHOD | type=PART) name=PART LEFT_PAREN setParameters RIGHT_PAREN
 	block
 	;
 
-macro       : DOCUMENTATION* accessor? MACRO name=PART LEFT_PAREN setParameters RIGHT_PAREN ':' expr STATEMENT_END ;
+define_macro  : DOCUMENTATION* accessor? MACRO name=PART LEFT_PAREN setParameters RIGHT_PAREN ':' expr STATEMENT_END ;
 
 ruleset :
 	reserved_global?
 	reserved_player?
 	(import_file | import_object)*
-	((define STATEMENT_END) | ow_rule | user_method | type_define | macro)*
+	((define STATEMENT_END) | ow_rule | define_method | define_macro | type_define)*
 	EOF;
 
 // Classes/structs
 
 type_define : (STRUCT | CLASS) name=PART
 	BLOCK_START
-	((define STATEMENT_END) | constructor | user_method | macro)*
+	((define STATEMENT_END) | constructor | define_method | define_macro)*
 	BLOCK_END ;
 
 accessor : PRIVATE | PUBLIC;

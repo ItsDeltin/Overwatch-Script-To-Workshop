@@ -74,7 +74,7 @@ namespace Deltin.Deltinteger.Parse
                     else continue;
 
                     DocRange range = new DocRange(start, end);
-                    script.AddCompletionRange(new CompletionRange(treeScope, range));
+                    script.AddCompletionRange(new CompletionRange(treeScope, range, true));
                 }
             }
         }

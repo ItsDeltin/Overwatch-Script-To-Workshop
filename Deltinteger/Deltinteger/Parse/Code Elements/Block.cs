@@ -16,6 +16,9 @@ namespace Deltin.Deltinteger.Parse
                 for (int i = 0; i < Statements.Length; i++)
                     Statements[i] = GetStatement(script, translateInfo, scope, blockContext.statement(i));
             }
+
+            if (blockContext.BLOCK_START() != null && blockContext.BLOCK_END() != null)
+                script.AddCompletionRange(new CompletionRange(scope, DocRange.GetRange(blockContext.BLOCK_START(), blockContext.BLOCK_END())));
         }
     }
 }

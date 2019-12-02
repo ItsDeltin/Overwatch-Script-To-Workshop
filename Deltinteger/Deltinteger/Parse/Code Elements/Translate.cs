@@ -64,6 +64,13 @@ namespace Deltin.Deltinteger.Parse
             foreach (ScriptFile script in ScriptFiles)
             foreach (var typeContext in script.Context.type_define())
                 types.Add(new DefinedType(script, this, global, typeContext));
+            
+            // Get the methods and macros
+            foreach (ScriptFile script in ScriptFiles)
+            {
+                foreach (var defineMethodContext in script.Context.define_method())
+                    types.Add(new DefinedType(script, this, global, defineMethodContext));
+            }
 
             foreach (ScriptFile script in ScriptFiles)
             {
