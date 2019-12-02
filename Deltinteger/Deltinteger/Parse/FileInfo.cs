@@ -13,6 +13,8 @@ namespace Deltin.Deltinteger.Parse
         public DeltinScriptParser.RulesetContext Context { get; }
         public string File { get; }
         public FileDiagnostics Diagnostics { get; }
+        public IToken[] Tokens { get; }
+        private List<CompletionRange> completionRanges { get; } = new List<CompletionRange>();
 
         public ScriptFile(Diagnostics diagnostics, string file, string content)
         {
@@ -22,6 +24,9 @@ namespace Deltin.Deltinteger.Parse
             // Lexer
             DeltinScriptLexer lexer = new DeltinScriptLexer(inputStream);
             CommonTokenStream commonTokenStream = new CommonTokenStream(lexer);
+            commonTokenStream.Fill();
+            Tokens = commonTokenStream.GetTokens().ToArray();
+            commonTokenStream.Reset();
 
             Diagnostics = diagnostics.FromFile(File);
 
@@ -32,8 +37,11 @@ namespace Deltin.Deltinteger.Parse
             parser.AddErrorListener(errorListener);
 
             Context = parser.ruleset();
-            // AdditionalErrorChecking aec = new AdditionalErrorChecking(file, parser, diagnostics);
-            // aec.Visit(Context);
+        }
+
+        public void AddCompletionRange(CompletionRange completionRange)
+        {
+            completionRanges.Add(completionRange);
         }
     }
 }

@@ -192,24 +192,24 @@ namespace Deltin.Deltinteger.Elements
             // return Element.Part<V_ValueInArray>(CreateArray(alternative, consequent), Element.Part<V_Add>(condition, new V_Number(0)));
         }
 
-        public static Element[] While(ContinueSkip continueSkip, Element condition, Element[] actions)
-        {
-            List<Element> result = new List<Element>();
+        // public static Element[] While(ContinueSkip continueSkip, Element condition, Element[] actions)
+        // {
+        //     List<Element> result = new List<Element>();
 
-            continueSkip.Setup();
-            int whileStartIndex = continueSkip.GetSkipCount() + 1;
+        //     continueSkip.Setup();
+        //     int whileStartIndex = continueSkip.GetSkipCount() + 1;
 
-            A_SkipIf skipCondition = new A_SkipIf() { ParameterValues = new IWorkshopTree[2] };
-            skipCondition.ParameterValues[0] = !(condition);
-            result.Add(skipCondition);
-            result.AddRange(actions);
-            result.AddRange(continueSkip.SetSkipCountActions(whileStartIndex));
-            skipCondition.ParameterValues[1] = new V_Number(result.Count);
-            result.Add(new A_Loop());
-            result.AddRange(continueSkip.ResetSkipActions());
+        //     A_SkipIf skipCondition = new A_SkipIf() { ParameterValues = new IWorkshopTree[2] };
+        //     skipCondition.ParameterValues[0] = !(condition);
+        //     result.Add(skipCondition);
+        //     result.AddRange(actions);
+        //     result.AddRange(continueSkip.SetSkipCountActions(whileStartIndex));
+        //     skipCondition.ParameterValues[1] = new V_Number(result.Count);
+        //     result.Add(new A_Loop());
+        //     result.AddRange(continueSkip.ResetSkipActions());
 
-            return result.ToArray();
-        }
+        //     return result.ToArray();
+        // }
 
         public static V_Number[] IntToElement(params int[] numbers)
         {
@@ -287,28 +287,28 @@ namespace Deltin.Deltinteger.Elements
             return completions.ToArray();
         }
 
-        public Element Parse(TranslateRule context, bool needsToBeValue, ScopeGroup scope, MethodNode methodNode, IWorkshopTree[] parameters)
-        {
-            TranslateRule.CheckMethodType(needsToBeValue, IsValue ? CustomMethodType.Value : CustomMethodType.Action, methodNode.Name, methodNode.Location);
+        // public Element Parse(TranslateRule context, bool needsToBeValue, ScopeGroup scope, MethodNode methodNode, IWorkshopTree[] parameters)
+        // {
+        //     TranslateRule.CheckMethodType(needsToBeValue, IsValue ? CustomMethodType.Value : CustomMethodType.Action, methodNode.Name, methodNode.Location);
 
-            Element element = GetObject();
-            element.ParameterValues = parameters;
+        //     Element element = GetObject();
+        //     element.ParameterValues = parameters;
 
-            Element result;
+        //     Element result;
 
-            if (element.ElementData.IsValue)
-                result = element;
-            else
-            {
-                context.Actions.Add(element);
-                result = null;
-            }
+        //     if (element.ElementData.IsValue)
+        //         result = element;
+        //     else
+        //     {
+        //         context.Actions.Add(element);
+        //         result = null;
+        //     }
 
-            foreach (var usageDiagnostic in UsageDiagnostics)
-                context.ParserData.Diagnostics.AddDiagnostic(methodNode.Location.uri, usageDiagnostic.GetDiagnostic(methodNode.Location.range));
+        //     foreach (var usageDiagnostic in UsageDiagnostics)
+        //         context.ParserData.Diagnostics.AddDiagnostic(methodNode.Location.uri, usageDiagnostic.GetDiagnostic(methodNode.Location.range));
             
-            return result;
-        }
+        //     return result;
+        // }
 
         public string GetLabel(bool markdown)
         {

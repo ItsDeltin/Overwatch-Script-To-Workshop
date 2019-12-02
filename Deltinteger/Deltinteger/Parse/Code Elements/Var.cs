@@ -123,6 +123,8 @@ namespace Deltin.Deltinteger.Parse
                 scope.In(Var);
             }
         }
+
+        public CodeType Type() => null;
     }
 
     public enum VariableDefineType

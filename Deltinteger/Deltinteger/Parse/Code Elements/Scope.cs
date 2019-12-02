@@ -31,11 +31,11 @@ namespace Deltin.Deltinteger.Parse
             return new Scope(this);
         }
 
-        public void In(IScopeable element)
+        public void AddVariable(Var variable)
         {
-            if (element == null) throw new Exception("element should not be null.");
-            if (inScope.Contains(element)) throw new Exception("element is already in scope.");
-            inScope.Add(element);
+            if (variable == null) throw new Exception("variable should not be null.");
+            if (Variables.Contains(variable)) throw new Exception("variable is already in scope.");
+            Variables.Add(variable);
         }
 
         public void AddMethod(IMethod method)
@@ -45,11 +45,34 @@ namespace Deltin.Deltinteger.Parse
             Methods.Add(method);
         }
 
-        public void AddVariable(Var variable)
+        public Var GetVariable(string name, FileDiagnostics diagnostics, DocRange range)
         {
-            if (variable == null) throw new Exception("variable should not be null.");
-            if (Variables.Contains(variable)) throw new Exception("variable is already in scope.");
-            Methods.Add(method);
+            Var element = null;
+            Scope current = this;
+            while (current != null && element == null)
+            {
+                element = current.Variables.FirstOrDefault(element => element.Name == name);
+                current = current.Parent;
+            }
+
+            if (range != null && element == null)
+                diagnostics.Error(string.Format("The variable {0} does not exist in the {1}.", name, ErrorName), range);
+
+            return element;
+        }
+
+        public bool IsVariable(string name)
+        {
+            return GetVariable(name, null, null) != null;
+        }
+
+        // TODO: GetMethod
+
+        public void In(IScopeable element)
+        {
+            if (element == null) throw new Exception("element should not be null.");
+            if (inScope.Contains(element)) throw new Exception("element is already in scope.");
+            inScope.Add(element);
         }
 
         public IScopeable GetInScope(string name, string type, FileDiagnostics diagnostics, DocRange range)

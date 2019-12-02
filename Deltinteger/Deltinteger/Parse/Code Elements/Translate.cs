@@ -14,13 +14,17 @@ namespace Deltin.Deltinteger.Parse
         private List<CodeType> types { get; } = new List<CodeType>();
         private List<DefineAction> ruleLevelVariables = new List<DefineAction>();
         public Scope PlayerVariableScope { get; private set; } = new Scope();
+        public Scope GlobalScope { get; }
+        public Scope RulesetScope { get; }
 
         public DeltinScript(Diagnostics diagnostics, ScriptFile rootRuleset)
         {
             Diagnostics = diagnostics;
             types.AddRange(CodeType.GetDefaultTypes());
             CollectScriptFiles(rootRuleset);
-            Translate(Scope.GetGlobalScope());
+            GlobalScope = Scope.GetGlobalScope();
+            RulesetScope = GlobalScope.Child();
+            Translate();
         }
 
         void CollectScriptFiles(ScriptFile scriptFile)
@@ -58,44 +62,59 @@ namespace Deltin.Deltinteger.Parse
 
         private List<RuleAction> translatedRules { get; } = new List<RuleAction>();
 
-        void Translate(Scope global)
+        void Translate()
         {
             // Get the types
             foreach (ScriptFile script in ScriptFiles)
             foreach (var typeContext in script.Context.type_define())
-                types.Add(new DefinedType(script, this, global, typeContext));
+                types.Add(new DefinedType(script, this, GlobalScope, typeContext));
             
             // Get the methods and macros
             foreach (ScriptFile script in ScriptFiles)
             {
+                // Get the methods.
                 foreach (var defineMethodContext in script.Context.define_method())
-                    types.Add(new DefinedType(script, this, global, defineMethodContext));
-            }
-
-            foreach (ScriptFile script in ScriptFiles)
-            {
-                // Get the defined variables
-                foreach (var varContext in script.Context.define())
                 {
-                    var newVar = new DefineAction(VariableDefineType.RuleLevel, script, this, global, varContext);
-                    // newVar.Var can be null because of certain syntax errors that can arise from defining a variable.
-                    if (!newVar.IsGlobal && newVar.Var != null) PlayerVariableScope.In(newVar.Var);
-                    ruleLevelVariables.Add(newVar);
+                    var newMethod = new DefinedMethod(script, this, defineMethodContext);
+                    RulesetScope.In(newMethod);
                 }
-
-                // Get the rules
-                foreach (var ruleContext in script.Context.ow_rule())
-                    translatedRules.Add(new RuleAction(script, this, global, ruleContext));
+                
+                // Get the macros.
+                foreach (var defineMacroContext in script.Context.define_macro())
+                {
+                    var newMacro = new DefinedMacro(script, this, defineMacroContext);
+                    RulesetScope.In(newMacro);
+                }
             }
+
+            // Get the defined variables.
+            foreach (ScriptFile script in ScriptFiles)
+            foreach (var varContext in script.Context.define())
+            {
+                var newVar = new DefineAction(VariableDefineType.RuleLevel, script, this, RulesetScope, varContext);
+                // newVar.Var can be null because of certain syntax errors that can arise from defining a variable.
+                if (!newVar.IsGlobal && newVar.Var != null) PlayerVariableScope.In(newVar.Var);
+                ruleLevelVariables.Add(newVar);
+            }
+
+            // Get the rules
+            foreach (ScriptFile script in ScriptFiles)
+            foreach (var ruleContext in script.Context.ow_rule())
+                translatedRules.Add(new RuleAction(script, this, RulesetScope, ruleContext));
         }
 
-        public CodeType GetCodeType(string name)
+        public CodeType GetCodeType(string name, FileDiagnostics diagnostics, DocRange range)
         {
-            return types.FirstOrDefault(type => type.Name == name);
+            var type = types.FirstOrDefault(type => type.Name == name);
+
+            if (range != null && type == null)
+                diagnostics.Error(string.Format("The type {0} does not exist.", name), range);
+            
+            return type;
         }
         public bool IsCodeType(string name)
         {
-            return GetCodeType(name) != null;
+            return GetCodeType(name, null, null) != null;
         }
     }
 

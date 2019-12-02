@@ -96,30 +96,30 @@ namespace Deltin.Deltinteger.Elements
             }
         }
 
-        public Element Parse(TranslateRule context, bool needsToBeValue, ScopeGroup scope, MethodNode methodNode, IWorkshopTree[] parameters)
-        {
-            TranslateRule.CheckMethodType(needsToBeValue, CustomMethodType, methodNode.Name, methodNode.Location);
+        // public Element Parse(TranslateRule context, bool needsToBeValue, ScopeGroup scope, MethodNode methodNode, IWorkshopTree[] parameters)
+        // {
+        //     TranslateRule.CheckMethodType(needsToBeValue, CustomMethodType, methodNode.Name, methodNode.Location);
 
-            var customMethodResult = GetObject(context, scope, parameters, methodNode.Location, methodNode.Parameters.Select(p => p.Location).ToArray())
-                .Result();
+        //     var customMethodResult = GetObject(context, scope, parameters, methodNode.Location, methodNode.Parameters.Select(p => p.Location).ToArray())
+        //         .Result();
 
-            // Some custom methods have extra actions.
-            if (customMethodResult.Elements != null)
-                context.Actions.AddRange(customMethodResult.Elements);
+        //     // Some custom methods have extra actions.
+        //     if (customMethodResult.Elements != null)
+        //         context.Actions.AddRange(customMethodResult.Elements);
 
-            return customMethodResult.Result;
-        }
+        //     return customMethodResult.Result;
+        // }
 
-        public CustomMethodBase GetObject(TranslateRule context, ScopeGroup scope, IWorkshopTree[] parameters, Location methodLocation, Location[] parameterLocations)
-        {
-            CustomMethodBase customMethod = GetObject();
-            customMethod.TranslateContext = context;
-            customMethod.Scope = scope;
-            customMethod.Parameters = parameters;
-            customMethod.ParameterLocations = parameterLocations;
-            customMethod.MethodLocation = methodLocation;
-            return customMethod;
-        }
+        // public CustomMethodBase GetObject(TranslateRule context, ScopeGroup scope, IWorkshopTree[] parameters, Location methodLocation, Location[] parameterLocations)
+        // {
+        //     CustomMethodBase customMethod = GetObject();
+        //     customMethod.TranslateContext = context;
+        //     customMethod.Scope = scope;
+        //     customMethod.Parameters = parameters;
+        //     customMethod.ParameterLocations = parameterLocations;
+        //     customMethod.MethodLocation = methodLocation;
+        //     return customMethod;
+        // }
         private CustomMethodBase GetObject()
         {
             return (CustomMethodBase)Activator.CreateInstance(Type);
@@ -159,22 +159,22 @@ namespace Deltin.Deltinteger.Elements
 
     public abstract class CustomMethodBase
     {
-        public TranslateRule TranslateContext { get; set; }
+        // public TranslateRule TranslateContext { get; set; }
         public IWorkshopTree[] Parameters { get; set; }
-        public ScopeGroup Scope { get; set; }
+        // public ScopeGroup Scope { get; set; }
         public Location[] ParameterLocations { get; set; }
         public Location MethodLocation { get; set; }
 
         public MethodResult Result()
         {
-            if (TranslateContext == null)
-                throw new ArgumentNullException(nameof(TranslateContext));
+            // if (TranslateContext == null)
+                // throw new ArgumentNullException(nameof(TranslateContext));
             
             if (Parameters == null)
                 throw new ArgumentNullException(nameof(Parameters));
             
-            if (Scope == null)
-                throw new ArgumentNullException(nameof(Scope));
+            // if (Scope == null)
+                // throw new ArgumentNullException(nameof(Scope));
             
             if (ParameterLocations == null)
                 throw new ArgumentNullException(nameof(ParameterLocations));

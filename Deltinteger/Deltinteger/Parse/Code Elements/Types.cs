@@ -29,6 +29,8 @@ namespace Deltin.Deltinteger.Parse
                 defaultTypes.Add(new WorkshopEnumType(enumData));
             return defaultTypes.ToArray();
         }
+
+        public CodeType Type() => null;
     }
 
     public class WorkshopEnumType : CodeType
@@ -73,6 +75,8 @@ namespace Deltin.Deltinteger.Parse
         {
             return debugScope;
         }
+
+        public CodeType Type() => null;
     }
 
     public class DefinedType : CodeType

@@ -9,6 +9,7 @@ namespace Deltin.Deltinteger.Parse
     public interface IExpression
     {
         Scope ReturningScope();
+        CodeType Type();
     }
 
     public class ExpressionTree : CodeAction, IExpression
@@ -91,6 +92,8 @@ namespace Deltin.Deltinteger.Parse
             else
                 return null;
         }
+
+        public CodeType Type() => null;
     }
 
     public class NumberAction : CodeAction, IExpression
@@ -106,6 +109,8 @@ namespace Deltin.Deltinteger.Parse
         {
             return null;
         }
+
+        public CodeType Type() => null;
     }
 
     public class BoolAction : CodeAction, IExpression
@@ -121,6 +126,8 @@ namespace Deltin.Deltinteger.Parse
         {
             return null;
         }
+
+        public CodeType Type() => null;
     }
 
     // TODO: Maybe combine CallVariableAction and Var?
@@ -144,6 +151,8 @@ namespace Deltin.Deltinteger.Parse
             else
                 return Calling.Type.GetObjectScope() ?? translateInfo.PlayerVariableScope;
         }
+
+        public CodeType Type() => Calling.Type;
     }
 
     public class ArrayAction : CodeAction, IExpression
@@ -168,6 +177,8 @@ namespace Deltin.Deltinteger.Parse
             // TODO: Support class arrays.
             return null;
         }
+
+        public CodeType Type() => null;
     }
 
     public class CallMethodAction : CodeAction, IExpression, IStatement
@@ -192,5 +203,7 @@ namespace Deltin.Deltinteger.Parse
             // TODO: Return CallingMethod type.
             return null;
         }
+
+        public CodeType Type() => null;
     }
 }

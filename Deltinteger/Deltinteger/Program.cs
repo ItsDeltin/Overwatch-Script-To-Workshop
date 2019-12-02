@@ -8,7 +8,7 @@ using System.Globalization;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.Parse;
 using Deltin.Deltinteger.LanguageServer;
-using Deltin.Deltinteger.Pathfinder;
+// using Deltin.Deltinteger.Pathfinder;
 using TextCopy;
 
 namespace Deltin.Deltinteger
@@ -34,28 +34,28 @@ namespace Deltin.Deltinteger
             if (args.Contains("-quiet"))
                 Log.LogLevel = LogLevel.Quiet;
 
-            if (args.Contains("-langserver"))
-            {
-                string[] portArgs = args.FirstOrDefault(v => v.Split(' ')[0] == "-port")?.Split(' ');
-                int.TryParse(portArgs.ElementAtOrDefault(1), out int serverPort);
-                new Server().RequestLoop(serverPort);
-            }
-            else if (args.Contains("-generatealphabet"))
-            {
-                Console.Write("Output folder: ");
-                string folder = Console.ReadLine();
-                Deltin.Deltinteger.Models.Letter.Generate(folder);
-            }
-            else if (args.Contains("-editor"))
-            {
-                string pathfindEditorScript = Extras.CombinePathWithDotNotation(null, "!PathfindEditor.del");
+            // if (args.Contains("-langserver"))
+            // {
+            //     string[] portArgs = args.FirstOrDefault(v => v.Split(' ')[0] == "-port")?.Split(' ');
+            //     int.TryParse(portArgs.ElementAtOrDefault(1), out int serverPort);
+            //     new Server().RequestLoop(serverPort);
+            // }
+            // else if (args.Contains("-generatealphabet"))
+            // {
+            //     Console.Write("Output folder: ");
+            //     string folder = Console.ReadLine();
+            //     Deltin.Deltinteger.Models.Letter.Generate(folder);
+            // }
+            // else if (args.Contains("-editor"))
+            // {
+            //     string pathfindEditorScript = Extras.CombinePathWithDotNotation(null, "!PathfindEditor.del");
 
-                if (!File.Exists(pathfindEditorScript))
-                    Log.Write(LogLevel.Normal, "The PathfindEditor.del module is missing!");
-                else
-                    Script(pathfindEditorScript);
-            }
-            else
+            //     if (!File.Exists(pathfindEditorScript))
+            //         Log.Write(LogLevel.Normal, "The PathfindEditor.del module is missing!");
+            //     else
+            //         Script(pathfindEditorScript);
+            // }
+            // else
             {
                 string script = args.ElementAtOrDefault(0);
 
@@ -67,23 +67,24 @@ namespace Deltin.Deltinteger
                     #endif
 
                         string ext = Path.GetExtension(script).ToLower();
-                        if (ext == ".csv")
-                        {
-                            PathMap map = PathMap.ImportFromCSV(script);
-                            string result = map.ExportAsXML();
-                            string output = Path.ChangeExtension(script, "pathmap");
-                            using (FileStream fs = File.Create(output))
-                            {
-                                Byte[] info = Encoding.Unicode.GetBytes(result);
-                                fs.Write(info, 0, info.Length);
-                            }
-                            Log.Write(LogLevel.Normal, "Created pathmap file at '" + output + "'.");
-                        }
-                        else if (ext == ".pathmap")
-                        {
-                            Editor.FromPathmapFile(script);
-                        }
-                        else Script(script);
+                        // if (ext == ".csv")
+                        // {
+                        //     PathMap map = PathMap.ImportFromCSV(script);
+                        //     string result = map.ExportAsXML();
+                        //     string output = Path.ChangeExtension(script, "pathmap");
+                        //     using (FileStream fs = File.Create(output))
+                        //     {
+                        //         Byte[] info = Encoding.Unicode.GetBytes(result);
+                        //         fs.Write(info, 0, info.Length);
+                        //     }
+                        //     Log.Write(LogLevel.Normal, "Created pathmap file at '" + output + "'.");
+                        // }
+                        // else if (ext == ".pathmap")
+                        // {
+                        //     Editor.FromPathmapFile(script);
+                        // }
+                        // else
+                            Script(script);
                     
                     #if DEBUG == false
                     }
@@ -108,58 +109,64 @@ namespace Deltin.Deltinteger
         {
             string text = File.ReadAllText(parseFile);
 
-            ParsingData result = ParsingData.GetParser(parseFile, text);
+            Diagnostics diagnostics = new Diagnostics();
+            ScriptFile root = new ScriptFile(diagnostics, parseFile, text);
+            DeltinScript deltinScript = new DeltinScript(diagnostics, root);
+            diagnostics.PrintDiagnostics(Log);
+            Finished();
 
-            if (!result.Diagnostics.ContainsErrors())
-            {
-                ParseLog.Write(LogLevel.Normal, new ColorMod("Build succeeded.", ConsoleColor.Green));
+            // ParsingData result = ParsingData.GetParser(parseFile, text);
 
-                result.Diagnostics.PrintDiagnostics(Log);
+            // if (!result.Diagnostics.ContainsErrors())
+            // {
+            //     ParseLog.Write(LogLevel.Normal, new ColorMod("Build succeeded.", ConsoleColor.Green));
 
-                string final = RuleArrayToWorkshop(result.Rules.ToArray(), result.VarCollection);
-                WorkshopCodeResult(final);
-            }
-            else
-            {
-                Log.Write(LogLevel.Normal, new ColorMod("Build Failed.", ConsoleColor.Red));
-                result.Diagnostics.PrintDiagnostics(Log);
-            }
+            //     result.Diagnostics.PrintDiagnostics(Log);
+
+            //     string final = RuleArrayToWorkshop(result.Rules.ToArray(), result.VarCollection);
+            //     WorkshopCodeResult(final);
+            // }
+            // else
+            // {
+            //     Log.Write(LogLevel.Normal, new ColorMod("Build Failed.", ConsoleColor.Red));
+            //     result.Diagnostics.PrintDiagnostics(Log);
+            // }
         }
 
-        public static string RuleArrayToWorkshop(Rule[] rules, VarCollection varCollection)
-        {
-            var builder = new StringBuilder();
+        // public static string RuleArrayToWorkshop(Rule[] rules, VarCollection varCollection)
+        // {
+        //     var builder = new StringBuilder();
 
-            var globalCollection = varCollection.UseExtendedCollection(true);
-            for (int i = 0; i < globalCollection.Length; i++)
-            if (globalCollection[i] != null)
-                builder.AppendLine("// global [" + i + "]: " + globalCollection[i].Name);
+        //     var globalCollection = varCollection.UseExtendedCollection(true);
+        //     for (int i = 0; i < globalCollection.Length; i++)
+        //     if (globalCollection[i] != null)
+        //         builder.AppendLine("// global [" + i + "]: " + globalCollection[i].Name);
             
-            var playerCollection = varCollection.UseExtendedCollection(false);
-            for (int i = 0; i < playerCollection.Length; i++)
-            if (playerCollection[i] != null)
-                builder.AppendLine("// player [" + i + "]: " + playerCollection[i].Name);
-            builder.AppendLine();
+        //     var playerCollection = varCollection.UseExtendedCollection(false);
+        //     for (int i = 0; i < playerCollection.Length; i++)
+        //     if (playerCollection[i] != null)
+        //         builder.AppendLine("// player [" + i + "]: " + playerCollection[i].Name);
+        //     builder.AppendLine();
 
-            varCollection.ToWorkshop(builder);
-            builder.AppendLine();
+        //     varCollection.ToWorkshop(builder);
+        //     builder.AppendLine();
 
-            Log debugPrintLog = new Log("Tree");
-            foreach (var rule in rules)
-            {
-                rule.DebugPrint(debugPrintLog);
-                builder.AppendLine(rule.ToWorkshop());
-                builder.AppendLine();
-            }
-            return builder.ToString();
-        }
+        //     Log debugPrintLog = new Log("Tree");
+        //     foreach (var rule in rules)
+        //     {
+        //         rule.DebugPrint(debugPrintLog);
+        //         builder.AppendLine(rule.ToWorkshop());
+        //         builder.AppendLine();
+        //     }
+        //     return builder.ToString();
+        // }
 
-        public static void WorkshopCodeResult(string code)
-        {
-            Log.Write(LogLevel.Normal, "Press enter to copy code to clipboard, then in Overwatch click \"Paste Rule\".");
-            Console.ReadLine();
-            Clipboard.SetText(code);
-        }
+        // public static void WorkshopCodeResult(string code)
+        // {
+        //     Log.Write(LogLevel.Normal, "Press enter to copy code to clipboard, then in Overwatch click \"Paste Rule\".");
+        //     Console.ReadLine();
+        //     Clipboard.SetText(code);
+        // }
 
         public static void Finished()
         {
