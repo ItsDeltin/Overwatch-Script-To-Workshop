@@ -1,5 +1,8 @@
 using System;
+using System.Linq;
 using Deltin.Deltinteger.LanguageServer;
+using Antlr4.Runtime;
+using Antlr4.Runtime.Tree;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -13,13 +16,15 @@ namespace Deltin.Deltinteger.Parse
         public IExpression[] Tree { get; }
         public IExpression Result { get; }
         public bool Completed { get; } = true;
-        private DeltinScript translateInfo { get; }
         public DeltinScriptParser.ExprContext[] ExprContextTree { get; }
 
         public ExpressionTree(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.ExprContext exprContext)
         {
-            this.translateInfo = translateInfo;
             ExprContextTree = exprContext.expr();
+
+            for (int i = 0; i < exprContext.ChildCount; i++)
+                if (IsSeperator(exprContext.GetChild(i)) && (i == exprContext.ChildCount - 1 || exprContext.GetChild(i + 1) is DeltinScriptParser.ExprContext == false))
+                    script.Diagnostics.Error("Expected expression.", DocRange.GetRange((ITerminalNode)exprContext.GetChild(i)));
 
             Tree = new IExpression[ExprContextTree.Length];
             IExpression current = GetExpression(script, translateInfo, scope, ExprContextTree[0]);
@@ -44,11 +49,47 @@ namespace Deltin.Deltinteger.Parse
         
             if (Completed)
                 Result = Tree[Tree.Length - 1];
+            
+            // Get the completion items for each expression in the path.
+            for (int i = 0; i < Tree.Length; i++)
+            {
+                // Get the treescope. Don't get the completion items if it is null.
+                var treeScope = Tree[i].ReturningScope();
+                if (treeScope != null)
+                {
+                    Pos start;
+                    Pos end;
+                    if (i < Tree.Length - 1)
+                    {
+                        start = DocRange.GetRange(ExprContextTree[i + 1]).start;
+                        end = DocRange.GetRange(ExprContextTree[i + 1]).end;
+                    }
+                    // Expression path has a trailing '.'
+                    else if (IsSeperator(exprContext.children.Last()))
+                    {
+                        var lastAsToken = ((ITerminalNode)exprContext.children.Last()).Symbol;
+                        start = DocRange.GetRange(lastAsToken).end;
+                        end = DocRange.GetRange(script.Tokens[lastAsToken.TokenIndex + 1]).start;
+                    }
+                    else continue;
+
+                    DocRange range = new DocRange(start, end);
+                    script.AddCompletionRange(new CompletionRange(treeScope, range));
+                }
+            }
+        }
+
+        private static bool IsSeperator(IParseTree element)
+        {
+            return element is TerminalNodeImpl && ((TerminalNodeImpl)element).Symbol.Type == DeltinScriptParser.SEPERATOR;
         }
 
         public Scope ReturningScope()
         {
-            return null;
+            if (Completed)
+                return Result.ReturningScope();
+            else
+                return null;
         }
     }
 
