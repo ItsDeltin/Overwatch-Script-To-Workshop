@@ -16,20 +16,20 @@ namespace Deltin.Deltinteger.Parse
 
             DocRange notAVariableRange = null;
 
-            if (variableExpression is CallVariableAction)
+            if (variableExpression is Var)
             {
-                SetVariable = ((CallVariableAction)variableExpression).Calling;
+                SetVariable = (Var)variableExpression;
             }
             else if (variableExpression is ExpressionTree)
             {
                 var tree = (ExpressionTree)variableExpression;
                 if (tree.Completed)
                 {
-                    if (tree.Result is CallVariableAction == false)
+                    if (tree.Result is Var == false)
                         notAVariableRange = DocRange.GetRange(tree.ExprContextTree.Last());
                     else
                     {
-                        SetVariable = ((CallVariableAction)tree.Result).Calling;
+                        SetVariable = (Var)tree.Result;
                     }
                 }
             }

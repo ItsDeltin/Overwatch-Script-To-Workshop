@@ -35,7 +35,7 @@ namespace Deltin.Deltinteger.Parse
                 {
                     current = GetExpression(script, translateInfo, current.ReturningScope() ?? new Scope(), ExprContextTree[i]);
 
-                    if (current is CallVariableAction == false && current is CallMethodAction == false)
+                    if (current is Var == false && current is CallMethodAction == false)
                         script.Diagnostics.Error("Expected variable or method.", DocRange.GetRange(ExprContextTree[i]));
 
                     Tree[i] = current;
@@ -128,31 +128,6 @@ namespace Deltin.Deltinteger.Parse
         }
 
         public CodeType Type() => null;
-    }
-
-    // TODO: Maybe combine CallVariableAction and Var?
-    public class CallVariableAction : CodeAction, IExpression
-    {
-        public Var Calling { get; }
-        private DeltinScript translateInfo { get; }
-
-        public CallVariableAction(DeltinScript translateInfo, Var calling)
-        {
-            this.translateInfo = translateInfo;
-            Calling = calling;
-        }
-
-        public Scope ReturningScope()
-        {
-            // TODO: Should all variables have a type?
-            // Instead of the default type being null, it is a class that derived from CodeType?
-            if (Calling.Type == null)
-                return translateInfo.PlayerVariableScope;
-            else
-                return Calling.Type.GetObjectScope() ?? translateInfo.PlayerVariableScope;
-        }
-
-        public CodeType Type() => Calling.Type;
     }
 
     public class ArrayAction : CodeAction, IExpression

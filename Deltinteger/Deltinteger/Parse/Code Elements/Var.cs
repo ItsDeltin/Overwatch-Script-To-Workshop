@@ -4,127 +4,148 @@ using Deltin.Deltinteger.LanguageServer;
 
 namespace Deltin.Deltinteger.Parse
 {
-    public class Var : IScopeable
+    public class Var : IScopeable, IExpression, ICallable
     {
+        // IScopeable
         public string Name { get; }
-        public AccessLevel AccessLevel { get; }
+        public AccessLevel AccessLevel { get; private set; }
         public Location DefinedAt { get; }
-        public List<Location> CalledFrom { get; } = new List<Location>();
         public string ScopeableType { get; } = "variable";
-        public CodeType Type { get; }
 
-        public Var(string name, AccessLevel accessLevel, Location definedAt, CodeType type)
+        private List<Location> CalledFrom { get; } = new List<Location>();
+
+        public CodeType CodeType { get; private set; }
+
+        // Attributes
+        public bool IsGlobal { get; private set; }
+        public bool InExtendedCollection { get; private set; }
+        public VariableDefineType DefineType { get; private set; }
+        public int ID { get; private set; } = -1;
+        public bool Static { get; private set; }
+
+        private DeltinScriptParser.DefineContext context;
+        private ScriptFile script;
+        private DeltinScript translateInfo;
+        private bool finalized;
+
+        public IExpression InitialValue { get; private set; }
+
+        private Var(string name, Location definedAt)
         {
             Name = name;
-            AccessLevel = accessLevel;
             DefinedAt = definedAt;
-            Type = type;
         }
 
-        public CallVariableAction Call(DeltinScript translateInfo, Location calledFrom)
+        // IExpression
+        public Scope ReturningScope()
         {
+            ThrowIfNotFinalized();
+            if (CodeType == null) return translateInfo.PlayerVariableScope;
+            else return CodeType.GetObjectScope();
+        }
+        public CodeType Type()
+        {
+            ThrowIfNotFinalized();
+            return CodeType;
+        }
+
+        // ICallable
+        public void Call(Location calledFrom)
+        {
+            ThrowIfNotFinalized();
             CalledFrom.Add(calledFrom);
-            return new CallVariableAction(translateInfo, this);
         }
-    }
 
-    // TODO: Move IsGlobal, AccessLevel, Static, (maybe ID and DefineType) into the Var class.
-    public class DefineAction : CodeAction, IStatement
-    {
-        public string Name { get; }
-        public bool InExtendedCollection { get; }
-        public IExpression InitialValue { get; }
-        public Var Var { get; protected set; }
-
-        public bool IsGlobal { get; }
-        public AccessLevel AccessLevel { get; } = AccessLevel.Public;
-        public bool Static { get; } = false;
-        public int ID { get; }
-        public VariableDefineType DefineType { get; }
-
-        public DefineAction(VariableDefineType defineType, ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.DefineContext defineContext)
+        public static Var CreateVarFromContext(VariableDefineType defineType, ScriptFile script, DeltinScript translateInfo, DeltinScriptParser.DefineContext context)
         {
-            Name = defineContext.name.Text;
-            InExtendedCollection = defineContext.NOT() != null;
-            DefineType = defineType;
+            Var newVar = new Var(context.name.Text, new Location(script.File, DocRange.GetRange(context.name)));
+            newVar.context = context;
+            newVar.script = script;
+            newVar.translateInfo = translateInfo;
 
-            if (defineContext.id != null)
+            if (context.accessor() != null) newVar.AccessLevel = context.accessor().GetAccessLevel();
+            if (context.type != null) newVar.CodeType = translateInfo.GetCodeType(context.type.Text, script.Diagnostics, DocRange.GetRange(context.type));
+
+            newVar.InExtendedCollection = context.NOT() != null;
+            newVar.DefineType = defineType;
+
+            if (context.id != null)
             {
                 if (defineType != VariableDefineType.RuleLevel)
-                    script.Diagnostics.Error("Only defined variables at the rule level can be assigned an ID.", DocRange.GetRange(defineContext.id));
+                    script.Diagnostics.Error("Only defined variables at the rule level can be assigned an ID.", DocRange.GetRange(context.id));
                 else
-                    ID = int.Parse(defineContext.id.GetText());
+                    newVar.ID = int.Parse(context.id.GetText());
             }
 
             if (defineType == VariableDefineType.RuleLevel)
             {
-                if (defineContext.GLOBAL() != null)
-                    IsGlobal = true;
-                else if (defineContext.PLAYER() != null)
-                    IsGlobal = false;
+                if (context.GLOBAL() != null)
+                    newVar.IsGlobal = true;
+                else if (context.PLAYER() != null)
+                    newVar.IsGlobal = false;
                 else
-                    script.Diagnostics.Error("Expected the globalvar/playervar attribute.", DocRange.GetRange(defineContext));
+                    script.Diagnostics.Error("Expected the globalvar/playervar attribute.", DocRange.GetRange(context));
             }
 
             if (defineType == VariableDefineType.InClass)
             {
                 // Get the accessor
-                AccessLevel = AccessLevel.Private;
-                if (defineContext.accessor() != null)
-                {
-                    // Public
-                    if (defineContext.accessor().PUBLIC() != null)
-                        AccessLevel = AccessLevel.Public;
-                    // Private
-                    else if (defineContext.accessor().PRIVATE() != null)
-                        AccessLevel = AccessLevel.Private;
-                    else throw new NotImplementedException();
-                }
+                newVar.AccessLevel = AccessLevel.Private;
+                if (context.accessor() != null)
+                    newVar.AccessLevel = context.accessor().GetAccessLevel();
                 // Get the static attribute.
-                Static = defineContext.STATIC() != null;
+                newVar.Static = context.STATIC() != null;
 
                 // Syntax error if the variable has '!'.
-                if (!Static && InExtendedCollection)
-                    script.Diagnostics.Error("Non-static type variables can not be placed in the extended collection.", DocRange.GetRange(defineContext.NOT()));
+                if (!newVar.Static && newVar.InExtendedCollection)
+                    script.Diagnostics.Error("Non-static type variables can not be placed in the extended collection.", DocRange.GetRange(context.NOT()));
             }
             else
             {
                 // Syntax error if class only attributes is used somewhere else.
-                if (defineContext.accessor() != null)
-                    script.Diagnostics.Error("Only defined variables in classes can have an accessor.", DocRange.GetRange(defineContext.accessor()));
-                if (defineContext.STATIC() != null)
-                    script.Diagnostics.Error("Only defined variables in classes can be static.", DocRange.GetRange(defineContext.STATIC()));
+                if (context.accessor() != null)
+                    script.Diagnostics.Error("Only defined variables in classes can have an accessor.", DocRange.GetRange(context.accessor()));
+                if (context.STATIC() != null)
+                    script.Diagnostics.Error("Only defined variables in classes can be static.", DocRange.GetRange(context.STATIC()));
             }
-
-            // Syntax error if there is an '=' but no expression.
-            if (defineContext.EQUALS() != null && defineContext.expr() == null)
-                script.Diagnostics.Error("Expected expression.", DocRange.GetRange(defineContext).end.ToRange());
-            
-            // Get the initial value.
-            if (defineContext.expr() != null)
-                InitialValue = GetExpression(script, translateInfo, scope, defineContext.expr());
 
             // Get the type.
             CodeType type = null;
-            if (defineContext.type != null)
-            {
-                type = translateInfo.GetCodeType(defineContext.type.Text);
-                if (type == null)
-                    script.Diagnostics.Error(string.Format("The type {0} does not exist.", defineContext.type.Text), DocRange.GetRange(defineContext.type));
-            }
+            if (context.type != null)
+                type = translateInfo.GetCodeType(context.type.Text, script.Diagnostics, DocRange.GetRange(context.type));
+
+            // Syntax error if there is an '=' but no expression.
+            if (context.EQUALS() != null && context.expr() == null)
+                script.Diagnostics.Error("Expected expression.", DocRange.GetRange(context).end.ToRange());
             
-            // Syntax error if the variable was already defined.
-            if (scope.WasDefined(Name))
-                script.Diagnostics.Error(string.Format("A variable of the name {0} was already defined in this scope.", Name), DocRange.GetRange(defineContext.name));
-            else
-            {
-                // Add the new variable to the scope.
-                Var = new Var(Name, AccessLevel, new Location(script.File, DocRange.GetRange(defineContext.name)), type);
-                scope.In(Var);
-            }
+            return newVar;
         }
 
-        public CodeType Type() => null;
+        public void Finalize(Scope scope)
+        {
+            // Get the initial value.
+            if (context.expr() != null)
+                InitialValue = CodeAction.GetExpression(script, translateInfo, scope, context.expr());
+            
+            // Add the variable to the scope.
+            scope.AddVariable(this, script.Diagnostics, DocRange.GetRange(context.name));
+            finalized = true;
+        }
+
+        private void ThrowIfNotFinalized()
+        {
+            if (!finalized) throw new Exception("Var not finalized.");
+        }
+    }
+
+    class DefineAction : CodeAction, IStatement
+    {
+        public Var DefiningVariable { get; }
+
+        public DefineAction(Var var)
+        {
+            DefiningVariable = var;
+        }
     }
 
     public enum VariableDefineType

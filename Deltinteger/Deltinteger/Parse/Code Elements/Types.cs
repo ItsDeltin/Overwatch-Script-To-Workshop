@@ -57,7 +57,7 @@ namespace Deltin.Deltinteger.Parse
     {
         public string Name { get; }
         public AccessLevel AccessLevel { get; } = AccessLevel.Public;
-        public string ScopeableType { get; } = "enumvalue";
+        public string ScopeableType { get; } = "enum value";
         public Location DefinedAt { get; } = null;
 
         private EnumMember EnumMember { get; }
@@ -92,7 +92,11 @@ namespace Deltin.Deltinteger.Parse
             // Get the variables defined in the type.
             foreach (var definedVariable in typeContext.define())
             {
-                DefineAction newVar = new DefineAction(VariableDefineType.InClass, script, translateInfo, objectScope, definedVariable);
+                Var newVar = Var.CreateVarFromContext(VariableDefineType.InClass, script, translateInfo, definedVariable);
+                if (newVar.Static)
+                    newVar.Finalize(staticScope);
+                else
+                    newVar.Finalize(objectScope);
             }
         }
 

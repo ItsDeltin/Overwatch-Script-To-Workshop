@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Deltin.Deltinteger.LanguageServer;
+using Deltin.Deltinteger.WorkshopWiki;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -16,6 +17,8 @@ namespace Deltin.Deltinteger.Parse
 
         private DeltinScript translateInfo { get; }
         protected Scope methodScope { get; }
+
+        public WikiMethod Wiki { get; }
         
         public DefinedFunction(DeltinScript translateInfo, string name, Location definedAt)
         {
@@ -23,14 +26,6 @@ namespace Deltin.Deltinteger.Parse
             DefinedAt = definedAt;
             this.translateInfo = translateInfo;
             methodScope = translateInfo.GlobalScope.Child();
-        }
-
-        protected static AccessLevel GetAccessLevel(DeltinScriptParser.AccessorContext accessorContext)
-        {
-            if (accessorContext == null) return AccessLevel.Private;
-            else if (accessorContext.PUBLIC() != null) return AccessLevel.Public;
-            else if (accessorContext.PRIVATE() != null) return AccessLevel.Private;
-            else throw new NotImplementedException();
         }
 
         protected static CodeType GetCodeType(ScriptFile script, DeltinScript translateInfo, string name, DocRange range)
@@ -52,9 +47,9 @@ namespace Deltin.Deltinteger.Parse
             Parameters = new Parameter[context.define().Length];
             for (int i = 0; i < context.define().Length; i++)
             {
-                CodeType type = GetCodeType(script, translateInfo, context.define(i).name.Text, DocRange.GetRange(context.define(i).name));
-                new DefineAction(VariableDefineType.Parameter, script, translateInfo, methodScope, context.define(i));
-                Parameters[i] = new Parameter(context.define(i).name.Text, type);
+                var newVar = Var.CreateVarFromContext(VariableDefineType.Parameter, script, translateInfo, context.define(i));
+                newVar.Finalize(methodScope);
+                Parameters[i] = new Parameter(context.define(i).name.Text, newVar.CodeType);
             }
         }
     }
@@ -69,7 +64,7 @@ namespace Deltin.Deltinteger.Parse
         {
             IsRecursive = context.RECURSIVE() != null;
             ReturnType = GetCodeType(script, translateInfo, context.type.Text, DocRange.GetRange(context.type));
-            AccessLevel = GetAccessLevel(context.accessor());
+            AccessLevel = context.accessor().GetAccessLevel();
             SetupParameters(script, context.setParameters());
             block = new BlockAction(script, translateInfo, methodScope, context.block());
         }
@@ -82,7 +77,7 @@ namespace Deltin.Deltinteger.Parse
         public DefinedMacro(ScriptFile script, DeltinScript translateInfo, DeltinScriptParser.Define_macroContext context)
             : base(translateInfo, context.name.Text, new Location(script.File, DocRange.GetRange(context)))
         {
-            AccessLevel = GetAccessLevel(context.accessor());
+            AccessLevel = context.accessor().GetAccessLevel();
             SetupParameters(script, context.setParameters());
 
             if (context.expr() == null)

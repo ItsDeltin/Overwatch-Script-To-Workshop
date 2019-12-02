@@ -2,6 +2,7 @@ using System;
 using System.Text;
 using System.Collections.Generic;
 using System.IO;
+using Deltin.Deltinteger.Parse;
 
 namespace Deltin.Deltinteger
 {
@@ -67,6 +68,14 @@ namespace Deltin.Deltinteger
         public static string RemoveQuotes(string str)
         {
             return str.Substring(1, str.Length - 2);
+        }
+
+        public static AccessLevel GetAccessLevel(this DeltinScriptParser.AccessorContext accessorContext)
+        {
+            if (accessorContext == null) return AccessLevel.Private;
+            else if (accessorContext.PUBLIC() != null) return AccessLevel.Public;
+            else if (accessorContext.PRIVATE() != null) return AccessLevel.Private;
+            else throw new NotImplementedException();
         }
     }
 

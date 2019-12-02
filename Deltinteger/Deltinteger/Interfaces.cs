@@ -38,6 +38,6 @@ namespace Deltin.Deltinteger
 
     public interface ICallable
     {
-        
+        void Call(Location calledFrom);
     }
 }

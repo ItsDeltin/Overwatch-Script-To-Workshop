@@ -12,7 +12,6 @@ namespace Deltin.Deltinteger.Parse
         public Diagnostics Diagnostics { get; }
         private List<ScriptFile> ScriptFiles { get; } = new List<ScriptFile>();
         private List<CodeType> types { get; } = new List<CodeType>();
-        private List<DefineAction> ruleLevelVariables = new List<DefineAction>();
         public Scope PlayerVariableScope { get; private set; } = new Scope();
         public Scope GlobalScope { get; }
         public Scope RulesetScope { get; }
@@ -91,10 +90,9 @@ namespace Deltin.Deltinteger.Parse
             foreach (ScriptFile script in ScriptFiles)
             foreach (var varContext in script.Context.define())
             {
-                var newVar = new DefineAction(VariableDefineType.RuleLevel, script, this, RulesetScope, varContext);
-                // newVar.Var can be null because of certain syntax errors that can arise from defining a variable.
-                if (!newVar.IsGlobal && newVar.Var != null) PlayerVariableScope.In(newVar.Var);
-                ruleLevelVariables.Add(newVar);
+                var newVar = Var.CreateVarFromContext(VariableDefineType.RuleLevel, script, this, varContext);
+                newVar.Finalize(RulesetScope);
+                PlayerVariableScope.In(newVar);
             }
 
             // Get the rules
@@ -122,7 +120,12 @@ namespace Deltin.Deltinteger.Parse
     {
         public static IStatement GetStatement(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.StatementContext statementContext)
         {
-            if (statementContext.define() != null) return new DefineAction(VariableDefineType.Scoped, script, translateInfo, scope, statementContext.define());
+            if (statementContext.define() != null)
+            {
+                var newVar = Var.CreateVarFromContext(VariableDefineType.Scoped, script, translateInfo, statementContext.define());
+                newVar.Finalize(scope);
+                return new DefineAction(newVar);
+            }
             if (statementContext.method() != null) return new CallMethodAction(script, translateInfo, scope, statementContext.method());
             if (statementContext.varset() != null) return new SetVariableAction(script, translateInfo, scope, statementContext.varset());
 
@@ -143,7 +146,7 @@ namespace Deltin.Deltinteger.Parse
                 {
                     string variableName = exprContext.PART().GetText();
 
-                    var type = translateInfo.GetCodeType(variableName);
+                    var type = translateInfo.GetCodeType(variableName, null, null);
                     if (type != null) return type;
 
                     IScopeable element = scope.GetInScope(variableName, "variable", script.Diagnostics, DocRange.GetRange(exprContext));
@@ -160,7 +163,8 @@ namespace Deltin.Deltinteger.Parse
                     else if (element is Var)
                     {
                         Var var = (Var)element;
-                        return var.Call(translateInfo, new Location(script.File, DocRange.GetRange(exprContext)));
+                        var.Call(new Location(script.File, DocRange.GetRange(exprContext)));
+                        return var;
                     }
 
                     else if (element is ScopedEnumMember)
