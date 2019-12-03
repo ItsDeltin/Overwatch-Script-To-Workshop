@@ -44,7 +44,7 @@ namespace Deltin.Deltinteger.Elements
     public class CustomMethodData : IMethod
     {
         public string Name { get; }
-        public ParameterBase[] Parameters { get; }
+        public CodeParameter [] Parameters { get; }
         public CustomMethodType CustomMethodType { get; }
         public Type Type { get; }
         public WikiMethod Wiki { get; }
@@ -53,11 +53,15 @@ namespace Deltin.Deltinteger.Elements
         public Location DefinedAt { get; } = null;
         public AccessLevel AccessLevel { get; } = AccessLevel.Public;
         public string ScopeableType { get; } = "method";
+        
+        public CodeType ReturnType { get; } = null;
 
         public string GetLabel(bool markdown)
         {
-            return Name + "(" + Parameter.ParameterGroupToString(Parameters, markdown) + ")"
-            + (markdown && Wiki?.Description != null ? "\n\r" + Wiki.Description : "");
+            // TODO: this
+            throw new NotImplementedException();
+            // return Name + "(" + Parameter.ParameterGroupToString(Parameters, markdown) + ")"
+            // + (markdown && Wiki?.Description != null ? "\n\r" + Wiki.Description : "");
         }
 
         public CustomMethodData(Type type)
@@ -68,8 +72,9 @@ namespace Deltin.Deltinteger.Elements
             Name = data.MethodName;
             CustomMethodType = data.MethodType;
 
-            Parameters = type.GetCustomAttributes<ParameterBase>()
-                .ToArray();
+            // TODO: Fix parameters
+            Parameters = new CodeParameter[0];
+            //type.GetCustomAttributes<ParameterBase>().ToArray();
             
             CustomMethodWiki cmWiki = GetObject().Wiki();
             if (cmWiki != null)

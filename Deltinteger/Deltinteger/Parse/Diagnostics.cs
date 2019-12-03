@@ -85,11 +85,6 @@ namespace Deltin.Deltinteger.Parse
             _diagnostics.Add(new Diagnostic(message, range) { severity = Diagnostic.Error });
         }
 
-        // public void Error(SyntaxErrorException ex)
-        // {
-        //     Error(ex.GetInfo(), ex.Location.range);
-        // }
-
         public void Warning(string message, DocRange range)
         {
             _diagnostics.Add(new Diagnostic(message, range) { severity = Diagnostic.Warning });
@@ -105,9 +100,14 @@ namespace Deltin.Deltinteger.Parse
             _diagnostics.Add(new Diagnostic(message, range) { severity = Diagnostic.Hint });
         }
 
-        public void AddDiagnostic(string file, Diagnostic diagnostic)
+        public void AddDiagnostic(Diagnostic diagnostic)
         {
             _diagnostics.Add(diagnostic);
+        }
+
+        public void AddDiagnostics(Diagnostic[] diagnostics)
+        {
+            _diagnostics.AddRange(diagnostics);
         }
     }
 

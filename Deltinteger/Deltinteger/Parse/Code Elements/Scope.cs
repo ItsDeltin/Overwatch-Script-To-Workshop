@@ -9,7 +9,7 @@ namespace Deltin.Deltinteger.Parse
     public class Scope
     {
         private List<IScopeable> inScope { get; } = new List<IScopeable>();
-        private List<Var> Variables { get; } = new List<Var>();
+        private List<IScopeable> Variables { get; } = new List<IScopeable>();
         private List<IMethod> Methods { get; } = new List<IMethod>();
         private Scope Parent { get; }
         private List<Scope> children { get; } = new List<Scope>();
@@ -31,7 +31,7 @@ namespace Deltin.Deltinteger.Parse
             return new Scope(this);
         }
 
-        public void AddVariable(Var variable, FileDiagnostics diagnostics, DocRange range)
+        public void AddVariable(IScopeable variable, FileDiagnostics diagnostics, DocRange range)
         {
             if (variable == null) throw new ArgumentNullException(nameof(variable));
             if (Variables.Contains(variable)) throw new Exception("variable reference is already in scope.");
@@ -42,18 +42,9 @@ namespace Deltin.Deltinteger.Parse
                 Variables.Add(variable);
         }
 
-        public void AddMethod(IMethod method)
+        public IScopeable GetVariable(string name, FileDiagnostics diagnostics, DocRange range)
         {
-            if (method == null) throw new ArgumentNullException(nameof(method));
-            if (Methods.Contains(method)) throw new Exception("method reference is already in scope.");
-
-            // TODO: check if method signature already exists.
-            Methods.Add(method);
-        }
-
-        public Var GetVariable(string name, FileDiagnostics diagnostics, DocRange range)
-        {
-            Var element = null;
+            IScopeable element = null;
             Scope current = this;
             while (current != null && element == null)
             {
@@ -72,34 +63,61 @@ namespace Deltin.Deltinteger.Parse
             return GetVariable(name, null, null) != null;
         }
 
-        // TODO: GetMethod
-
-        public void In(IScopeable element)
+        public void AddMethod(IMethod method, FileDiagnostics diagnostics, DocRange range)
         {
-            if (element == null) throw new Exception("element should not be null.");
-            if (inScope.Contains(element)) throw new Exception("element is already in scope.");
-            inScope.Add(element);
+            var allMethods = AllMethodsInScope();
+
+            if (method == null) throw new ArgumentNullException(nameof(method));
+            if (allMethods.Contains(method)) throw new Exception("method reference is already in scope.");
+
+            foreach (var m in allMethods)
+                if (method.Name == m.Name && method.Parameters.Length == m.Parameters.Length)
+                {
+                    bool matches = true;
+                    for (int p = 0; p < method.Parameters.Length; p++)
+                        if (method.Parameters[p] != m.Parameters[p])
+                            matches = false;
+
+                    if (matches)
+                    {
+                        if (range == null) throw new Exception();
+                        diagnostics.Error("A method with the same name and parameter types was already defined in this scope.", range);
+                        return;
+                    }
+                }
+
+            // TODO: check if method signature already exists.
+            Methods.Add(method);
         }
 
-        public IScopeable GetInScope(string name, string type, FileDiagnostics diagnostics, DocRange range)
+        public IMethod[] AllMethodsInScope()
         {
-            IScopeable element = null;
+            List<IMethod> methods = new List<IMethod>();
+
             Scope current = this;
-            while (current != null && element == null)
+            while (current != null)
             {
-                element = current.inScope.FirstOrDefault(element => element.Name == name);
+                methods.AddRange(current.Methods);
                 current = current.Parent;
             }
 
-            if (range != null && element == null)
-                diagnostics.Error(string.Format("The {0} {1} does not exist in the {2}.", type, name, ErrorName), range);
-
-            return element;
+            return methods.ToArray();
         }
 
-        public bool WasDefined(string name)
+        public IMethod[] GetMethodsByName(string name)
         {
-            return GetInScope(name, null, null, null) != null;
+            List<IMethod> methods = new List<IMethod>();
+
+            Scope current = this;
+            while (current != null)
+            {
+                foreach (var method in current.Methods)
+                    if (method.Name == name)
+                        methods.Add(method);
+                current = current.Parent;
+            }
+
+            return methods.ToArray();
         }
 
         public static Scope GetGlobalScope()
@@ -108,11 +126,11 @@ namespace Deltin.Deltinteger.Parse
 
             // Add workshop methods
             foreach (var workshopMethod in ElementList.Elements)
-                globalScope.In(workshopMethod);
+                globalScope.AddMethod(workshopMethod, null, null);
             
             // Add custom methods
             foreach (var builtInMethod in CustomMethodData.GetCustomMethods())
-                globalScope.In(builtInMethod);
+                globalScope.AddMethod(builtInMethod, null, null);
 
             return globalScope;
         }

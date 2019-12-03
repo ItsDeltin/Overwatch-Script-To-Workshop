@@ -56,6 +56,11 @@ namespace Deltin.Deltinteger
             //         Script(pathfindEditorScript);
             // }
             // else
+            if (args.ElementAtOrDefault(0) == "i18n")
+            {
+                I18n.GenerateI18n.Generate(args);
+            }
+            else
             {
                 string script = args.ElementAtOrDefault(0);
 

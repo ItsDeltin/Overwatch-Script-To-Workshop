@@ -14,8 +14,9 @@ namespace Deltin.Deltinteger
 
     public interface IMethod : IScopeable, ILanguageServerInfo
     {
-        ParameterBase[] Parameters { get; }
+        Parse.CodeParameter[] Parameters { get; }
         WikiMethod Wiki { get; }
+        CodeType ReturnType { get; }
     }
 
     public interface ILanguageServerInfo

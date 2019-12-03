@@ -31,6 +31,11 @@ namespace Deltin.Deltinteger.Parse
         }
 
         public CodeType Type() => null;
+
+        public static bool TypeMatches(CodeType parameterType, CodeType valueType)
+        {
+            return parameterType == null || parameterType == valueType;
+        }
     }
 
     public class WorkshopEnumType : CodeType
@@ -42,7 +47,7 @@ namespace Deltin.Deltinteger.Parse
             foreach (var member in enumData.Members)
             {
                 var scopedMember = new ScopedEnumMember(member);
-                EnumScope.In(scopedMember);
+                EnumScope.AddVariable(scopedMember, null, null);
             }
             EnumScope.ErrorName = "enum " + Name;
         }

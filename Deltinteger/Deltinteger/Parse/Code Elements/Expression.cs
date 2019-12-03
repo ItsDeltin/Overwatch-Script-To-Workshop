@@ -155,30 +155,4 @@ namespace Deltin.Deltinteger.Parse
 
         public CodeType Type() => null;
     }
-
-    public class CallMethodAction : CodeAction, IExpression, IStatement
-    {
-        public IMethod CallingMethod { get; }
-
-        public CallMethodAction(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.MethodContext methodContext)
-        {
-            string methodName = methodContext.PART().GetText();
-            IScopeable element = scope.GetInScope(methodName, "method", script.Diagnostics, DocRange.GetRange(methodContext.PART()));
-
-            if (element == null)
-                CallingMethod = null;
-            else if (element is IMethod == false)
-                script.Diagnostics.Error(methodName + " is a " + element.ScopeableType + ", not a method.", DocRange.GetRange(methodContext.PART()));
-            else
-                CallingMethod = (IMethod)element;
-        }
-
-        public Scope ReturningScope()
-        {
-            // TODO: Return CallingMethod type.
-            return null;
-        }
-
-        public CodeType Type() => null;
-    }
 }

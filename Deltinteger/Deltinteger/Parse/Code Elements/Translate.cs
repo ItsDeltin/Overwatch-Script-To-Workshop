@@ -72,17 +72,17 @@ namespace Deltin.Deltinteger.Parse
             foreach (ScriptFile script in ScriptFiles)
             {
                 // Get the methods.
-                foreach (var defineMethodContext in script.Context.define_method())
+                foreach (var methodContext in script.Context.define_method())
                 {
-                    var newMethod = new DefinedMethod(script, this, defineMethodContext);
-                    RulesetScope.In(newMethod);
+                    var newMethod = new DefinedMethod(script, this, methodContext);
+                    RulesetScope.AddMethod(newMethod, script.Diagnostics, DocRange.GetRange(methodContext.name));
                 }
                 
                 // Get the macros.
-                foreach (var defineMacroContext in script.Context.define_macro())
+                foreach (var macroContext in script.Context.define_macro())
                 {
-                    var newMacro = new DefinedMacro(script, this, defineMacroContext);
-                    RulesetScope.In(newMacro);
+                    var newMacro = new DefinedMacro(script, this, macroContext);
+                    RulesetScope.AddMethod(newMacro, script.Diagnostics, DocRange.GetRange(macroContext.name));
                 }
             }
 
@@ -92,7 +92,7 @@ namespace Deltin.Deltinteger.Parse
             {
                 var newVar = Var.CreateVarFromContext(VariableDefineType.RuleLevel, script, this, varContext);
                 newVar.Finalize(RulesetScope);
-                PlayerVariableScope.In(newVar);
+                PlayerVariableScope.AddVariable(newVar, null, null);
             }
 
             // Get the rules
@@ -149,18 +149,11 @@ namespace Deltin.Deltinteger.Parse
                     var type = translateInfo.GetCodeType(variableName, null, null);
                     if (type != null) return type;
 
-                    IScopeable element = scope.GetInScope(variableName, "variable", script.Diagnostics, DocRange.GetRange(exprContext));
-
+                    IScopeable element = scope.GetVariable(variableName, script.Diagnostics, DocRange.GetRange(exprContext));
                     if (element == null)
                         return null;
 
-                    else if (element is IMethod)
-                    {
-                        script.Diagnostics.Error(variableName + " is a method, not a variable.", DocRange.GetRange(exprContext));
-                        return null;
-                    }
-                    
-                    else if (element is Var)
+                    if (element is Var)
                     {
                         Var var = (Var)element;
                         var.Call(new Location(script.File, DocRange.GetRange(exprContext)));

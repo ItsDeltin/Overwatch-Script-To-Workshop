@@ -11,15 +11,13 @@ using Deltin.Deltinteger.Parse;
 
 namespace Deltin.Deltinteger.Elements
 {
-    // Rule of thumb: Return values are restrictive (only 1), parameter values are loose (potentially multiple)
     [Flags]
     public enum ValueType
     {
         Any = Number | Boolean | Hero | Vector | Player | Team ,
-        VectorAndPlayer = Vector | Player, // Players can be subsituded as vectors, but not the other way around.
+        VectorAndPlayer = Vector | Player,
         Number = 1,
         Boolean = 2,
-        //String = 4,
         Hero = 4,
         Vector = 8,
         Player = 16,
@@ -66,7 +64,7 @@ namespace Deltin.Deltinteger.Elements
         {
             ElementList = ElementList.FromType(GetType());
             ElementData = GetType().GetCustomAttribute<ElementData>();
-            ParameterData = ElementList.Parameters;
+            ParameterData = ElementList.WorkshopParameters;
             ParameterValues = parameterValues;
         }
 
@@ -192,25 +190,6 @@ namespace Deltin.Deltinteger.Elements
             // return Element.Part<V_ValueInArray>(CreateArray(alternative, consequent), Element.Part<V_Add>(condition, new V_Number(0)));
         }
 
-        // public static Element[] While(ContinueSkip continueSkip, Element condition, Element[] actions)
-        // {
-        //     List<Element> result = new List<Element>();
-
-        //     continueSkip.Setup();
-        //     int whileStartIndex = continueSkip.GetSkipCount() + 1;
-
-        //     A_SkipIf skipCondition = new A_SkipIf() { ParameterValues = new IWorkshopTree[2] };
-        //     skipCondition.ParameterValues[0] = !(condition);
-        //     result.Add(skipCondition);
-        //     result.AddRange(actions);
-        //     result.AddRange(continueSkip.SetSkipCountActions(whileStartIndex));
-        //     skipCondition.ParameterValues[1] = new V_Number(result.Count);
-        //     result.Add(new A_Loop());
-        //     result.AddRange(continueSkip.ResetSkipActions());
-
-        //     return result.ToArray();
-        // }
-
         public static V_Number[] IntToElement(params int[] numbers)
         {
             V_Number[] elements = new V_Number[numbers?.Length ?? 0];
@@ -248,7 +227,8 @@ namespace Deltin.Deltinteger.Elements
         public string WorkshopName { get; }
         public Type Type { get; }
         public bool IsValue { get; } 
-        public ParameterBase[] Parameters { get; }
+        public Parse.CodeParameter[] Parameters { get; }
+        public ParameterBase[] WorkshopParameters { get; }
         public UsageDiagnostic[] UsageDiagnostics { get; }
         public WikiMethod Wiki { get; }
 
@@ -256,6 +236,8 @@ namespace Deltin.Deltinteger.Elements
         public Location DefinedAt { get; } = null;
         public AccessLevel AccessLevel { get; } = AccessLevel.Public;
         public string ScopeableType { get; } = "method";
+
+        public CodeType ReturnType { get; } = null;
 
         public static ElementList[] Elements { get; } = GetElementList();
         private static ElementList[] GetElementList()
@@ -287,33 +269,11 @@ namespace Deltin.Deltinteger.Elements
             return completions.ToArray();
         }
 
-        // public Element Parse(TranslateRule context, bool needsToBeValue, ScopeGroup scope, MethodNode methodNode, IWorkshopTree[] parameters)
-        // {
-        //     TranslateRule.CheckMethodType(needsToBeValue, IsValue ? CustomMethodType.Value : CustomMethodType.Action, methodNode.Name, methodNode.Location);
-
-        //     Element element = GetObject();
-        //     element.ParameterValues = parameters;
-
-        //     Element result;
-
-        //     if (element.ElementData.IsValue)
-        //         result = element;
-        //     else
-        //     {
-        //         context.Actions.Add(element);
-        //         result = null;
-        //     }
-
-        //     foreach (var usageDiagnostic in UsageDiagnostics)
-        //         context.ParserData.Diagnostics.AddDiagnostic(methodNode.Location.uri, usageDiagnostic.GetDiagnostic(methodNode.Location.range));
-            
-        //     return result;
-        // }
-
         public string GetLabel(bool markdown)
         {
-            return Name + "(" + Parameter.ParameterGroupToString(Parameters, markdown) + ")" 
-            + (markdown && Wiki?.Description != null ? "\n\r" + Wiki.Description : "");
+            throw new NotImplementedException();
+            // return Name + "(" + Parameter.ParameterGroupToString(Parameters, markdown) + ")" 
+            // + (markdown && Wiki?.Description != null ? "\n\r" + Wiki.Description : "");
         }
 
         public ElementList(Type type)
@@ -323,9 +283,13 @@ namespace Deltin.Deltinteger.Elements
             WorkshopName = data.ElementName;
             Type = type;
             IsValue = data.IsValue;
-            Parameters = type.GetCustomAttributes<ParameterBase>().ToArray();
+            WorkshopParameters = type.GetCustomAttributes<ParameterBase>().ToArray();
             Wiki = WorkshopWiki.Wiki.GetWikiMethod(WorkshopName);
             UsageDiagnostics = type.GetCustomAttributes<UsageDiagnostic>().ToArray();
+
+            Parameters = new Parse.CodeParameter[WorkshopParameters.Length];
+            for (int i = 0; i < Parameters.Length; i++)
+                Parameters[i] = new CodeParameter(WorkshopParameters[i].Name, null);
         }
 
         public Element GetObject()

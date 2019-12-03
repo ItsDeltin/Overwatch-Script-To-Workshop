@@ -30,7 +30,7 @@ namespace Deltin.Deltinteger.Parse
 
         public IExpression InitialValue { get; private set; }
 
-        private Var(string name, Location definedAt)
+        protected Var(string name, Location definedAt)
         {
             Name = name;
             DefinedAt = definedAt;
