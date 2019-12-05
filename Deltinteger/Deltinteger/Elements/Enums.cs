@@ -228,7 +228,6 @@ namespace Deltin.Deltinteger.Elements
         Slot9,
         Slot10,
         Slot11,
-        // Why isn't it alphabetical? we will never know.
         Reaper,
         Tracer,
         Mercy,

@@ -75,7 +75,7 @@ namespace Deltin.Deltinteger.Parse
                 {
                     bool matches = true;
                     for (int p = 0; p < method.Parameters.Length; p++)
-                        if (method.Parameters[p] != m.Parameters[p])
+                        if (method.Parameters[p].Type != m.Parameters[p].Type)
                             matches = false;
 
                     if (matches)
@@ -86,7 +86,6 @@ namespace Deltin.Deltinteger.Parse
                     }
                 }
 
-            // TODO: check if method signature already exists.
             Methods.Add(method);
         }
 

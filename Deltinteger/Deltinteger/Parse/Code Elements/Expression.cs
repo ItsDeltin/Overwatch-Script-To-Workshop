@@ -35,7 +35,8 @@ namespace Deltin.Deltinteger.Parse
                 {
                     current = GetExpression(script, translateInfo, current.ReturningScope() ?? new Scope(), ExprContextTree[i]);
 
-                    if (current is Var == false && current is CallMethodAction == false)
+                    // todo: combine CallMethodAction and IMethod, check if current is IScopeable instead. 
+                    if (current != null && current is Var == false && current is CallMethodAction == false && current is ScopedEnumMember == false)
                         script.Diagnostics.Error("Expected variable or method.", DocRange.GetRange(ExprContextTree[i]));
 
                     Tree[i] = current;
@@ -53,6 +54,7 @@ namespace Deltin.Deltinteger.Parse
             
             // Get the completion items for each expression in the path.
             for (int i = 0; i < Tree.Length; i++)
+            if (Tree[i] != null)
             {
                 // Get the treescope. Don't get the completion items if it is null.
                 var treeScope = Tree[i].ReturningScope();

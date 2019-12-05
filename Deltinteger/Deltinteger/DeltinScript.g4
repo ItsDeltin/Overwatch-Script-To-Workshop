@@ -58,8 +58,6 @@ createarray : INDEX_START (expr (COMMA expr)*)? INDEX_END;
 
 array : (INDEX_START expr INDEX_END)+ ;
 
-enum : PART SEPERATOR PART? ;
-
 varset   : var=expr array? ((statement_operation val=expr?) | INCREMENT | DECREMENT) ;
 
 call_parameters  : expr (COMMA expr?)*    		 	         ;
@@ -102,8 +100,8 @@ rule_if : IF LEFT_PAREN expr? RIGHT_PAREN;
 
 ow_rule : 
 	DISABLED? RULE_WORD ':' STRINGLITERAL
-	(enum)*
-	(rule_if)*
+	expr*
+	rule_if*
 	block
 	;
 
