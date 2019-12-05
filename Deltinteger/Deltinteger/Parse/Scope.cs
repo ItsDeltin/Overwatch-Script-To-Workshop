@@ -1,181 +1,137 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.LanguageServer;
+using Deltin.Deltinteger.Elements;
 
 namespace Deltin.Deltinteger.Parse
 {
-    public class ScopeGroup
+    public class Scope
     {
-        private readonly List<IScopeable> InScope = new List<IScopeable>();
-        private readonly List<ScopeGroup> Children = new List<ScopeGroup>();
-        private readonly ScopeGroup Parent = null;
-        private bool IsInScope = true;
+        private List<IScopeable> inScope { get; } = new List<IScopeable>();
+        private List<IScopeable> Variables { get; } = new List<IScopeable>();
+        private List<IMethod> Methods { get; } = new List<IMethod>();
+        private Scope Parent { get; }
+        private List<Scope> children { get; } = new List<Scope>();
+        public string ErrorName { get; set; } = "current scope";
 
-        public bool Recursive { get; }
-
-        public VarCollection VarCollection { get; }
-
-        public Element This { get; set; }
-
-        public ScopeGroup(VarCollection varCollection)
-        {
-            VarCollection = varCollection;
-        }
-
-        private ScopeGroup(VarCollection varCollection, ScopeGroup parent) : this(varCollection)
+        public Scope() {}
+        private Scope(Scope parent)
         {
             Parent = parent;
-            Recursive = parent.Recursive;
+            Parent.children.Add(this);
+        }
+        public Scope(string name)
+        {
+            ErrorName = name;
         }
 
-        private ScopeGroup(VarCollection varCollection, ScopeGroup parent, bool recursive) : this(varCollection)
+        public Scope Child()
         {
-            Parent = parent;
-            Recursive = recursive;
+            return new Scope(this);
         }
 
-        public void In(IScopeable var)
+        public void AddVariable(IScopeable variable, FileDiagnostics diagnostics, DocRange range)
         {
-            //if (!FullVarCollection().Any(v => var.Name == v.Name))
-            if (IsAlreadyDefined(var.Name) && var.Node != null)
-                throw SyntaxErrorException.AlreadyDefined(var.Name, var.Node.Location);
+            if (variable == null) throw new ArgumentNullException(nameof(variable));
+            if (Variables.Contains(variable)) throw new Exception("variable reference is already in scope.");
+
+            if (IsVariable(variable.Name))
+                diagnostics.Error(string.Format("A variable of the name {0} was already defined in this scope.", variable.Name), range);
             else
-                InScope.Add(var);
+                Variables.Add(variable);
         }
 
-        private bool IsAlreadyDefined(string name)
+        public IScopeable GetVariable(string name, FileDiagnostics diagnostics, DocRange range)
         {
-            int index = 0;
-            ScopeGroup check = this;
-
-            while (check != null)
+            IScopeable element = null;
+            Scope current = this;
+            while (current != null && element == null)
             {
-                if (check.This != null && index > 0)
-                    return false;
-
-                if (check.InScope.Any(v => v.Name == name))
-                    return true;
-
-                index++;
-                check = check.Parent;
+                element = current.Variables.FirstOrDefault(element => element.Name == name);
+                current = current.Parent;
             }
 
-            return false;
+            if (range != null && element == null)
+                diagnostics.Error(string.Format("The variable {0} does not exist in the {1}.", name, ErrorName), range);
+
+            return element;
         }
 
-        public void Out(TranslateRule context)
+        public bool IsVariable(string name)
         {
-            if (!IsInScope)
-                throw new Exception("ScopeGroup is already out of scope.");
+            return GetVariable(name, null, null) != null;
+        }
 
-            IsInScope = false;
+        public void AddMethod(IMethod method, FileDiagnostics diagnostics, DocRange range)
+        {
+            var allMethods = AllMethodsInScope();
 
-            foreach (IScopeable var in InScope)
-                if (var is IndexedVar)
-                    ((IndexedVar)var).OutOfScope(context);
+            if (method == null) throw new ArgumentNullException(nameof(method));
+            if (allMethods.Contains(method)) throw new Exception("method reference is already in scope.");
+
+            foreach (var m in allMethods)
+                if (method.Name == m.Name && method.Parameters.Length == m.Parameters.Length)
+                {
+                    bool matches = true;
+                    for (int p = 0; p < method.Parameters.Length; p++)
+                        if (method.Parameters[p].Type != m.Parameters[p].Type)
+                            matches = false;
+
+                    if (matches)
+                    {
+                        if (range == null) throw new Exception();
+                        diagnostics.Error("A method with the same name and parameter types was already defined in this scope.", range);
+                        return;
+                    }
+                }
+
+            Methods.Add(method);
+        }
+
+        public IMethod[] AllMethodsInScope()
+        {
+            List<IMethod> methods = new List<IMethod>();
+
+            Scope current = this;
+            while (current != null)
+            {
+                methods.AddRange(current.Methods);
+                current = current.Parent;
+            }
+
+            return methods.ToArray();
+        }
+
+        public IMethod[] GetMethodsByName(string name)
+        {
+            List<IMethod> methods = new List<IMethod>();
+
+            Scope current = this;
+            while (current != null)
+            {
+                foreach (var method in current.Methods)
+                    if (method.Name == name)
+                        methods.Add(method);
+                current = current.Parent;
+            }
+
+            return methods.ToArray();
+        }
+
+        public static Scope GetGlobalScope()
+        {
+            Scope globalScope = new Scope();
+
+            // Add workshop methods
+            foreach (var workshopMethod in ElementList.Elements)
+                globalScope.AddMethod(workshopMethod, null, null);
             
-            for (int i = 0; i < Children.Count; i++)
-                if (Children[0].IsInScope)
-                    throw new Exception();
-        }
+            // Add custom methods
+            foreach (var builtInMethod in CustomMethodData.GetCustomMethods())
+                globalScope.AddMethod(builtInMethod, null, null);
 
-        public Var GetVar(ScopeGroup getter, string name, Location location)
-        {
-            Var var = GetScopeable<Var>(getter, name);
-            if (var == null && location != null) throw SyntaxErrorException.VariableDoesNotExist(name, location);
-            return var;
-        }
-
-        public IMethod GetMethod(ScopeGroup getter, string name, Location location)
-        {
-            // Get the method by it's name.
-            IMethod method = GetScopeable<UserMethod>(getter, name)
-            // If it is not found, check if its a workshop method.
-                ?? (IMethod)Element.GetElement(name) 
-            // Then check if its a custom method.
-                ?? (IMethod)CustomMethodData.GetCustomMethod(name);
-            // Throw if not found.
-            if (method == null && location != null)
-                throw SyntaxErrorException.NonexistentMethod(name, location);
-            return method;
-        }
-
-        private T GetScopeable<T>(ScopeGroup getter, string name) where T : IScopeable
-        {
-            bool publicOnly = getter.Root() != Root();
-            IScopeable var = null;
-            ScopeGroup checkGroup = this;
-            while (var == null && checkGroup != null)
-            {
-                var = checkGroup.InScope.FirstOrDefault(v => v is T && v.Name == name && (!publicOnly || v.AccessLevel == AccessLevel.Public));
-                checkGroup = checkGroup.Parent;
-            }
-
-            return (T)var;
-        }
-
-        public ScopeGroup Child(bool recursive)
-        {
-            var newChild = new ScopeGroup(VarCollection, this, recursive);
-            Children.Add(newChild);
-            return newChild;
-        }
-
-        public ScopeGroup Child()
-        {
-            var newChild = new ScopeGroup(VarCollection, this);
-            Children.Add(newChild);
-            return newChild;
-        }
-
-        public ScopeGroup Root()
-        {
-            ScopeGroup root = this;
-            while (root.Parent != null) root = root.Parent;
-            return root;
-        }
-
-        // Get This was an Australian radio comedy show which aired on Triple M and was hosted
-        // by Tony Martin and Ed Kavalee, with contributions from panel operator, Richard Marsland.
-        // A different guest co-host was featured nearly every day on the show and included music played throughout.
-        // On the 15 October 2007 episode, the Get This team announced that Triple M/Austereo would not be renewing the show for 2008.
-        // The final broadcast was on 23 November 2007. During its lifetime and since its cancellation, Get This developed a strong cult following. 
-        public Element GetThis(Location errorLocation)
-        {
-            ScopeGroup check = this;
-            Element @this = null;
-            while (check != null && @this == null)
-            {
-                @this = check.This;
-                check = check.Parent;
-            }
-
-            if (errorLocation != null && @this == null)
-                throw SyntaxErrorException.ThisCantBeUsed(errorLocation);
-            
-            return @this;
-        }
-
-        public List<IScopeable> FullVarCollection()
-        {
-            var varCollection = new List<IScopeable>();
-            varCollection.AddRange(InScope);
-            if (Parent != null)
-                varCollection.AddRange(Parent.FullVarCollection());
-            return varCollection;
-        }
-
-        public CompletionItem[] GetCompletionItems(Pos caret)
-        {
-            return FullVarCollection().Where(var =>
-                var is Var &&
-                ((Var)var).IsDefinedVar &&
-                ((Var)var).Node.Location.range.end < caret).Select(var => new CompletionItem(var.Name)
-            {
-                kind = CompletionItem.Field
-            }).ToArray();
+            return globalScope;
         }
     }
 }
