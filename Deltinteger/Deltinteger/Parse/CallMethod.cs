@@ -50,6 +50,7 @@ namespace Deltin.Deltinteger.Parse
                     script.Diagnostics.Error(string.Format("No method by the name of {0} exists in the current context.", methodName), DocRange.GetRange(methodContext.PART()));
                 else
                 {
+                    // Remove the methods that have less parameters than the number of parameters of the method being called.
                     methods = methods.Where(m => m.Parameters.Length >= parameterValues.Length)
                         .ToList();
                     
@@ -86,6 +87,17 @@ namespace Deltin.Deltinteger.Parse
 
                         // Add the diagnostics of the chosen method.
                         script.Diagnostics.AddDiagnostics(methodDiagnostics[CallingMethod].ToArray());
+
+                        // Get the missing parameters.
+                        for (int i = parameterValues.Length; i < CallingMethod.Parameters.Length; i++)
+                        {
+                            // TODO: check if there is a default value.
+                            // Syntax error if there is no default value.
+                            script.Diagnostics.Error(
+                                string.Format("Missing the parameter \"{0}\" for method \"{1}\".", CallingMethod.Parameters[i].ToString(), CallingMethod.Name),
+                                DocRange.GetRange(methodContext.PART())
+                            );
+                        }
                     }
                 }
             }
