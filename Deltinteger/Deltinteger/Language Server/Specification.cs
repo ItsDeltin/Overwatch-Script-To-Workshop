@@ -303,10 +303,11 @@ namespace Deltin.Deltinteger.LanguageServer
         public string source;
         public DiagnosticRelatedInformation[] relatedInformation;
 
-        public Diagnostic(string message, DocRange range)
+        public Diagnostic(string message, DocRange range, int severity)
         {
             this.message = message;
             this.range = range;
+            this.severity = severity;
         }
 
         override public string ToString()

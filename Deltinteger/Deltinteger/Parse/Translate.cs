@@ -16,18 +16,21 @@ namespace Deltin.Deltinteger.Parse
         public Scope GlobalScope { get; }
         private Scope RulesetScope { get; }
         public VarCollection VarCollection { get; } = new VarCollection();
+        private List<Var> rulesetVariables { get; } = new List<Var>();
+        public VarIndexAssigner DefaultIndexAssigner { get; } = new VarIndexAssigner();
 
         public DeltinScript(Diagnostics diagnostics, ScriptFile rootRuleset)
         {
             Diagnostics = diagnostics;
-            types.AddRange(CodeType.GetDefaultTypes());
+            types.AddRange(CodeType.DefaultTypes);
             CollectScriptFiles(rootRuleset);
             
             GlobalScope = Scope.GetGlobalScope();
             RulesetScope = GlobalScope.Child();
             
             Translate();
-            ToWorkshop();
+            if (!diagnostics.ContainsErrors())
+                ToWorkshop();
         }
 
         void CollectScriptFiles(ScriptFile scriptFile)
@@ -97,6 +100,7 @@ namespace Deltin.Deltinteger.Parse
                 var newVar = Var.CreateVarFromContext(VariableDefineType.RuleLevel, script, this, varContext);
                 newVar.Finalize(RulesetScope);
                 PlayerVariableScope.AddVariable(newVar, null, null);
+                rulesetVariables.Add(newVar);
             }
 
             // Get the rules
@@ -107,6 +111,15 @@ namespace Deltin.Deltinteger.Parse
 
         void ToWorkshop()
         {
+            VarCollection.Setup();
+
+            foreach (var variable in rulesetVariables)
+            {
+                // Assign the variable an index.
+                DefaultIndexAssigner.Add(VarCollection, variable, true);
+                // TODO: set initial value
+            }
+
             foreach (var rule in rules)
             {
                 var translate = new TranslateRule(rule.Script, this, rule);
@@ -141,7 +154,7 @@ namespace Deltin.Deltinteger.Parse
             throw new Exception("Could not determine the statement type.");
         }
 
-        public static IExpression GetExpression(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.ExprContext exprContext)
+        public static IExpression GetExpression(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.ExprContext exprContext, bool selfContained = true)
         {
             if (exprContext.ChildCount == 1)
             {
@@ -156,7 +169,13 @@ namespace Deltin.Deltinteger.Parse
                     string variableName = exprContext.PART().GetText();
 
                     var type = translateInfo.GetCodeType(variableName, null, null);
-                    if (type != null) return type;
+                    if (type != null)
+                    {
+                        if (selfContained)
+                            script.Diagnostics.Error("Types can't be used as expressions.", DocRange.GetRange(exprContext));
+
+                        return type;
+                    }
 
                     IScopeable element = scope.GetVariable(variableName, script.Diagnostics, DocRange.GetRange(exprContext));
                     if (element == null)

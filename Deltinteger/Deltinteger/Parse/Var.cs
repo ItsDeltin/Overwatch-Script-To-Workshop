@@ -64,26 +64,59 @@ namespace Deltin.Deltinteger.Parse
         }
     }
 
-    public class VarScopeAssigner
+    public class VarIndexAssigner
     {
-        private readonly Dictionary<Var, IndexReference> References = new Dictionary<Var, IndexReference>();
-        private readonly VarCollection VarCollection;
-        private readonly Scope Scope;
+        private readonly Dictionary<Var, IndexReference> references = new Dictionary<Var, IndexReference>();
+        private readonly List<VarIndexAssigner> children = new List<VarIndexAssigner>();
+        private readonly VarIndexAssigner parent = null;
 
-        public VarScopeAssigner(VarCollection varCollection, Scope scope, bool isGlobal)
+        public VarIndexAssigner() {}
+        private VarIndexAssigner(VarIndexAssigner parent)
         {
-            VarCollection = varCollection;
-            Scope = scope;
-            IScopeable[] variables = Scope.AllChildVariables();
+            this.parent = parent;
+        }
+
+        public static VarIndexAssigner AssignScope(VarCollection varCollection, Scope scope, bool isGlobal)
+        {
+            VarIndexAssigner varAssigner = new VarIndexAssigner();
+            IScopeable[] variables = scope.AllChildVariables();
 
             foreach (var scopeable in variables)
             {
                 Var var = (Var)scopeable;
-
-                // variableIsGlobal will equal isGlobal if var.VariableType is dynamic. Otherwise, it will equal is var.VariableType global.
-                bool variableIsGlobal = var.VariableType == VariableType.Dynamic ? isGlobal : var.VariableType == VariableType.Global;
-                References.Add(var, varCollection.Assign(var.Name, isGlobal, var.InExtendedCollection));
+                varAssigner.Add(varCollection, (Var)var, isGlobal);
             }
+            return varAssigner;
+        }
+
+        public void Add(VarCollection varCollection, Var var, bool isGlobal)
+        {
+            references.Add(var, varCollection.Assign(var, isGlobal));
+        }
+
+        public VarIndexAssigner CreateContained()
+        {
+            VarIndexAssigner newAssigner = new VarIndexAssigner(this);
+            children.Add(newAssigner);
+            return newAssigner;
+        }
+
+        public IndexReference this[Var var]
+        {
+            get {
+
+                VarIndexAssigner current = this;
+                while (current.parent != null)
+                {
+                    if (current.references.ContainsKey(var))
+                        return current.references[var];
+
+                    current = current.parent;
+                }
+
+                throw new Exception();
+            }
+            private set {}
         }
     }
 
@@ -111,12 +144,20 @@ namespace Deltin.Deltinteger.Parse
         private DeltinScript translateInfo;
         private bool finalized;
 
+        public bool ReferenceInitialValue { get; private set; } = false;
+
         public IExpression InitialValue { get; private set; }
 
         protected Var(string name, Location definedAt)
         {
             Name = name;
             DefinedAt = definedAt;
+        }
+
+        public bool Settable()
+        {
+            if (CodeType == null) return true;
+            else return CodeType.Settable();
         }
 
         // IExpression
@@ -200,7 +241,13 @@ namespace Deltin.Deltinteger.Parse
             // Get the type.
             CodeType type = null;
             if (context.type != null)
+            {
                 type = translateInfo.GetCodeType(context.type.Text, script.Diagnostics, DocRange.GetRange(context.type));
+
+                // If variables with the type cannot be set to, set referenceInitialValue to true. 'type' can still equal null if the type name is invalid.
+                if (type != null && !type.Settable())
+                    newVar.ReferenceInitialValue = true;
+            }
 
             // Syntax error if there is an '=' but no expression.
             if (context.EQUALS() != null && context.expr() == null)
@@ -227,8 +274,10 @@ namespace Deltin.Deltinteger.Parse
     
         public IWorkshopTree Parse(ActionSet actionSet)
         {
-            // TODO: return variable index or workshop enum or constant or whatever.
-            throw new NotImplementedException();
+            if (!ReferenceInitialValue)
+                return actionSet.IndexAssigner[this].GetVariable();
+            else
+                return InitialValue.Parse(actionSet);
         }
     }
 
@@ -243,8 +292,20 @@ namespace Deltin.Deltinteger.Parse
 
         public void Translate(ActionSet actionSet)
         {
-            // TODO: Set DefiningVariable to its initial value.
-            throw new NotImplementedException();
+            if (DefiningVariable.ReferenceInitialValue) return;
+
+            actionSet.IndexAssigner.Add(actionSet.VarCollection, DefiningVariable, actionSet.IsGlobal);
+
+            Element initialValue = 0;
+            if (DefiningVariable.InitialValue != null)
+                // TODO: Don't cast to Element.
+                initialValue = (Element)DefiningVariable.InitialValue.Parse(actionSet);
+
+            actionSet.AddAction(
+                actionSet.IndexAssigner[DefiningVariable].SetVariable(
+                    initialValue
+                )
+            );
         }
     }
 

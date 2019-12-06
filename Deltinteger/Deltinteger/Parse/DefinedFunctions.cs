@@ -95,8 +95,11 @@ namespace Deltin.Deltinteger.Parse
 
         override public IWorkshopTree Parse(ActionSet actionSet, IWorkshopTree[] parameterValues)
         {
-            // TODO: Return value.
-            throw new NotImplementedException();
+            actionSet = actionSet.New(actionSet.IndexAssigner.CreateContained());
+            block.Translate(actionSet);
+
+            // todo: return values
+            return new V_Null();
         }
     }
 
@@ -123,8 +126,8 @@ namespace Deltin.Deltinteger.Parse
         override public IWorkshopTree Parse(ActionSet actionSet, IWorkshopTree[] parameterValues)
         {
             // TODO: fix this
-            throw new NotImplementedException();
-            //return Expression.Parse(actionSet);
+            return Expression.Parse(actionSet);
+            // throw new NotImplementedException();
         }
     }
 }

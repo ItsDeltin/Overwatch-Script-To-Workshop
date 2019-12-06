@@ -22,7 +22,9 @@ namespace Deltin.Deltinteger.Parse
             return null;
         }
 
-        public static CodeType[] GetDefaultTypes()
+        public static readonly CodeType[] DefaultTypes = GetDefaultTypes();
+
+        private static CodeType[] GetDefaultTypes()
         {
             var defaultTypes = new List<CodeType>();
             foreach (var enumData in EnumData.GetEnumData())
@@ -32,16 +34,20 @@ namespace Deltin.Deltinteger.Parse
 
         public CodeType Type() => null;
 
+        public IWorkshopTree Parse(ActionSet actionSet)
+        {
+            throw new Exception("Types can't be used like expressions.");
+        }
+
+        /// <summary>
+        /// Determines if variables with this type can have their value changed.
+        /// </summary>
+        /// <returns></returns>
+        public virtual bool Settable() => true;
+
         public static bool TypeMatches(CodeType parameterType, CodeType valueType)
         {
             return parameterType == null || parameterType == valueType;
-        }
-
-        public IWorkshopTree Parse(ActionSet actionSet)
-        {
-            // TODO: Maybe throw SyntaxErrorException instead?
-            actionSet.Diagnostics.Error("Types can't be used like expressions.", actionSet.GenericErrorRange);
-            return null;
         }
     }
 
@@ -64,6 +70,11 @@ namespace Deltin.Deltinteger.Parse
         override public Scope ReturningScope()
         {
             return EnumScope;
+        }
+
+        override public bool Settable()
+        {
+            return false;
         }
     }
 
@@ -92,7 +103,7 @@ namespace Deltin.Deltinteger.Parse
             return debugScope;
         }
 
-        public CodeType Type() => null;
+        public CodeType Type() => Enum;
 
         public IWorkshopTree Parse(ActionSet actionSet)
         {

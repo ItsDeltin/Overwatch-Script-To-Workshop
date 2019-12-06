@@ -82,22 +82,22 @@ namespace Deltin.Deltinteger.Parse
 
         public void Error(string message, DocRange range)
         {
-            _diagnostics.Add(new Diagnostic(message, range) { severity = Diagnostic.Error });
+            _diagnostics.Add(new Diagnostic(message, range, Diagnostic.Error));
         }
 
         public void Warning(string message, DocRange range)
         {
-            _diagnostics.Add(new Diagnostic(message, range) { severity = Diagnostic.Warning });
+            _diagnostics.Add(new Diagnostic(message, range, Diagnostic.Warning));
         }
 
         public void Information(string message, DocRange range)
         {
-            _diagnostics.Add(new Diagnostic(message, range) { severity = Diagnostic.Information });
+            _diagnostics.Add(new Diagnostic(message, range, Diagnostic.Information));
         }
 
         public void Hint(string message, DocRange range)
         {
-            _diagnostics.Add(new Diagnostic(message, range) { severity = Diagnostic.Hint });
+            _diagnostics.Add(new Diagnostic(message, range, Diagnostic.Hint));
         }
 
         public void AddDiagnostic(Diagnostic diagnostic)
@@ -110,80 +110,6 @@ namespace Deltin.Deltinteger.Parse
             _diagnostics.AddRange(diagnostics);
         }
     }
-
-    // public class AdditionalErrorChecking : DeltinScriptBaseVisitor<object>
-    // {
-    //     private readonly Diagnostics _diagnostics;
-    //     private readonly DeltinScriptParser _parser;
-    //     private readonly string _file;
-
-    //     public AdditionalErrorChecking(string file, DeltinScriptParser parser, Diagnostics diagnostics)
-    //     {
-    //         _file = file;
-    //         _parser = parser;
-    //         _diagnostics = diagnostics;
-    //     }
-
-    //     public override object VisitStatement(DeltinScriptParser.StatementContext context)
-    //     {
-    //         switch (context.GetChild(0))
-    //         {
-    //             case DeltinScriptParser.MethodContext _:
-    //             case DeltinScriptParser.DefineContext _:
-    //             case DeltinScriptParser.VarsetContext _:
-    //             case DeltinScriptParser.ExprContext _:
-    //             case DeltinScriptParser.DeleteContext _:
-    //                 if (context.ChildCount == 1)
-    //                     _diagnostics.Error("Expected ';'", new Location(_file, DocRange.GetRange(context).end.ToRange()));
-    //                 break;
-    //         }
-    //         return base.VisitStatement(context);
-    //     }
-
-    //     public override object VisitCall_parameters(DeltinScriptParser.Call_parametersContext context)
-    //     {
-    //         // Confirm there is an expression after the last ",".
-    //         if (context.children?.Last().GetText() == ",")
-    //             _diagnostics.Error("Expected parameter.", new Location(_file, DocRange.GetRange(context).end.ToRange()));
-    //         return base.VisitCall_parameters(context);
-    //     }
-        
-    //     public override object VisitRule_if(DeltinScriptParser.Rule_ifContext context)
-    //     {
-    //         if (context.expr() == null)
-    //             _diagnostics.Error("Expected expression.", new Location(_file, DocRange.GetRange(context)));
-    //         return base.VisitRule_if(context);
-    //     }
-
-    //     public override object VisitVarset(DeltinScriptParser.VarsetContext context)
-    //     {
-    //         if (context.statement_operation() != null && 
-    //             (context.expr().Length == 0 || 
-    //                 context.children.IndexOf(context.expr().Last()) < 
-    //                 context.children.IndexOf(context.statement_operation())
-    //             ))
-    //             _diagnostics.Error("Expected expression.", new Location(_file, DocRange.GetRange(context)));
-    //         return base.VisitVarset(context);
-    //     }
-
-    //     public override object VisitDefine(DeltinScriptParser.DefineContext context)
-    //     {
-    //         if (context.EQUALS() != null && context.expr() == null)
-    //             _diagnostics.Error("Expected expression.", new Location(_file, DocRange.GetRange(context)));
-    //         return base.VisitDefine(context);
-    //     }
-
-    //     public override object VisitPicky_parameter(DeltinScriptParser.Picky_parameterContext context)
-    //     {
-    //         if (context.PART() == null)
-    //             _diagnostics.Error("Expected parameter name.", new Location(_file, DocRange.GetRange(context.TERNARY_ELSE())));
-            
-    //         if (context.expr() == null)
-    //             _diagnostics.Error("Expected expression.", new Location(_file, DocRange.GetRange(context.TERNARY_ELSE())));
-
-    //         return base.VisitPicky_parameter(context);
-    //     }
-    // }
 
     public class ErrorListener : BaseErrorListener
     {

@@ -57,7 +57,7 @@ namespace Deltin.Deltinteger.Parse
                     script.Diagnostics.Error("Expected enum of type " + string.Join(", ", ValidRuleEnums.Select(vre => vre.CodeName)) + ".", DocRange.GetRange(exprContext));
                 else
                 {
-                    var alreadySet = new Diagnostic("The " + enumData.CodeName + " rule setting was already set.", DocRange.GetRange(exprContext));
+                    var alreadySet = new Diagnostic("The " + enumData.CodeName + " rule setting was already set.", DocRange.GetRange(exprContext), Diagnostic.Error);
 
                     // Get the Event option.
                     if (enumData == EnumData.GetEnum<RuleEvent>())

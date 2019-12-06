@@ -8,7 +8,7 @@ namespace Deltin.Deltinteger.Parse
 {
     public class TranslateRule
     {
-        private readonly List<IActionList> Actions = new List<IActionList>();
+        public readonly List<IActionList> Actions = new List<IActionList>();
         public DeltinScript DeltinScript { get; }
         public ScriptFile Script { get; }
         private RuleAction RuleAction { get; }
@@ -28,36 +28,50 @@ namespace Deltin.Deltinteger.Parse
 
     public class ActionSet
     {
-        public bool IsGlobal { get; }
         public TranslateRule Translate { get; }
-        public FileDiagnostics Diagnostics { get; }
         public DocRange GenericErrorRange { get; }
-        private readonly List<IActionList> actions;
+        public VarIndexAssigner IndexAssigner { get; }
+        public FileDiagnostics Diagnostics => Translate.Script.Diagnostics;
+        public bool IsGlobal               => Translate.IsGlobal;
+        private List<IActionList> actions  => Translate.Actions;
+        public VarCollection VarCollection => Translate.DeltinScript.VarCollection;
 
         public ActionSet(TranslateRule translate, DocRange genericErrorRange, List<IActionList> actions)
         {
-            this.actions = actions;
             Translate = translate;
             GenericErrorRange = genericErrorRange;
-            Diagnostics = Translate.Script.Diagnostics;
-            IsGlobal = translate.IsGlobal;
+            IndexAssigner = translate.DeltinScript.DefaultIndexAssigner;
         }
-        private ActionSet(ActionSet actionSet, DocRange genericErrorRange, List<IActionList> actions)
+        private ActionSet(ActionSet actionSet, DocRange genericErrorRange)
         {
-            this.actions = actions;
             Translate = actionSet.Translate;
-            Diagnostics = actionSet.Diagnostics;
             GenericErrorRange = genericErrorRange;
+            IndexAssigner = Translate.DeltinScript.DefaultIndexAssigner;
+        }
+        private ActionSet(ActionSet actionSet, VarIndexAssigner assigner)
+        {
+            Translate = actionSet.Translate;
+            GenericErrorRange = actionSet.GenericErrorRange;
+            IndexAssigner = assigner;
         }
 
         public ActionSet New(DocRange range)
         {
-            return new ActionSet(this, range, actions);
+            return new ActionSet(this, range);
+        }
+        public ActionSet New(VarIndexAssigner indexAssigner)
+        {
+            return new ActionSet(this, indexAssigner);
         }
 
         public void AddAction(Element action)
         {
             actions.Add((ALAction)action);
+        }
+        public void AddAction(Element[] actions)
+        {
+            foreach (var action in actions)
+                this.actions.Add((ALAction)action);
         }
         public void AddAction(IActionList action)
         {

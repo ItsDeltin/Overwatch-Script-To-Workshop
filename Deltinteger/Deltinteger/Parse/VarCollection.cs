@@ -38,6 +38,7 @@ namespace Deltin.Deltinteger.Parse
 
             IndexReference store = Assign("_arrayBuilderStore", true, true);
             arrayBuilder = new WorkshopArrayBuilder(builder, store);
+            // The store shouldn't require an instance of the WorkshopArrayBuilder, but if for some reason it does uncomment the line below.
             // store.ArrayBuilder = arrayBuilder;
         }
 
@@ -136,6 +137,31 @@ namespace Deltin.Deltinteger.Parse
         {
             if (!extended)
                 return new IndexReference(arrayBuilder, AssignWorkshopVariable(name, isGlobal));
+            else
+            {
+                int index = NextFreeExtended(isGlobal);
+                IndexReference reference = new IndexReference(arrayBuilder, isGlobal ? global : player, new V_Number(index));
+                extendedVariableList(isGlobal)[index] = reference;
+                return reference;
+            }
+        }
+
+        public IndexReference Assign(Var var, bool isGlobal)
+        {
+            // variableIsGlobal will equal isGlobal if var.VariableType is dynamic. Otherwise, it will equal is var.VariableType global.
+            bool variableIsGlobal = var.VariableType == VariableType.Dynamic ? isGlobal : var.VariableType == VariableType.Global;
+
+            if (!var.InExtendedCollection)
+            {
+                if (var.ID == -1)
+                    return new IndexReference(arrayBuilder, AssignWorkshopVariable(var.Name, variableIsGlobal));
+                else
+                {
+                    WorkshopVariable workshopVariable = new WorkshopVariable(variableIsGlobal, var.ID, WorkshopNameFromCodeName(variableIsGlobal, var.Name));
+                    variableList(isGlobal).Add(workshopVariable);
+                    return new IndexReference(arrayBuilder, workshopVariable);
+                }
+            }
             else
             {
                 int index = NextFreeExtended(isGlobal);

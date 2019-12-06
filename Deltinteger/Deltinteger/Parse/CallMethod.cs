@@ -11,10 +11,13 @@ namespace Deltin.Deltinteger.Parse
         private DeltinScript translateInfo { get; }
         private IExpression[] ParameterValues { get; }
 
+        private DocRange NameRange { get; }
+
         public CallMethodAction(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.MethodContext methodContext)
         {
             this.translateInfo = translateInfo;
             string methodName = methodContext.PART().GetText();
+            NameRange = DocRange.GetRange(methodContext.PART());
             
             // TODO: Move the signature matching code to a seperate method so that constructors can use it.
 
@@ -49,7 +52,7 @@ namespace Deltin.Deltinteger.Parse
 
                 // Syntax error if there are no methods with the name.
                 if (methods.Count == 0)
-                    script.Diagnostics.Error(string.Format("No method by the name of {0} exists in the current context.", methodName), DocRange.GetRange(methodContext.PART()));
+                    script.Diagnostics.Error(string.Format("No method by the name of {0} exists in the current context.", methodName), NameRange);
                 else
                 {
                     // Remove the methods that have less parameters than the number of parameters of the method being called.
@@ -59,7 +62,7 @@ namespace Deltin.Deltinteger.Parse
                     if (methods.Count == 0)
                         script.Diagnostics.Error(
                             string.Format("No overloads for the method {0} has {1} parameters.", methodName, ParameterValues.Length),
-                            DocRange.GetRange(methodContext.PART())
+                            NameRange
                         );
                     else
                     {
@@ -79,7 +82,7 @@ namespace Deltin.Deltinteger.Parse
                             {
                                 // The parameter type does not match.
                                 string msg = string.Format("Expected a value of type {0}.", method.Parameters[i].Type.Name);
-                                methodDiagnostics[method].Add(new Diagnostic(msg, DocRange.GetRange(parameterContexts[i])));
+                                methodDiagnostics[method].Add(new Diagnostic(msg, DocRange.GetRange(parameterContexts[i]), Diagnostic.Error));
                             }
                         }
 
@@ -125,13 +128,13 @@ namespace Deltin.Deltinteger.Parse
         // IStatement
         public void Translate(ActionSet actionSet)
         {
-            CallingMethod.Parse(actionSet, GetParameterValuesAsWorkshop(actionSet));
+            CallingMethod.Parse(actionSet.New(NameRange), GetParameterValuesAsWorkshop(actionSet));
         }
 
         // IExpression
         public IWorkshopTree Parse(ActionSet actionSet)
         {
-            return CallingMethod.Parse(actionSet, GetParameterValuesAsWorkshop(actionSet));
+            return CallingMethod.Parse(actionSet.New(NameRange), GetParameterValuesAsWorkshop(actionSet));
         }
 
         private IWorkshopTree[] GetParameterValuesAsWorkshop(ActionSet actionSet)

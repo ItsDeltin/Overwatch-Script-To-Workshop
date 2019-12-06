@@ -25,17 +25,18 @@ namespace Deltin.Deltinteger.Parse
         {
             ExprContextTree = exprContext.expr();
 
+            // Syntax error if there is a . but no expression afterwards.
             for (int i = 0; i < exprContext.ChildCount; i++)
                 if (IsSeperator(exprContext.GetChild(i)) && (i == exprContext.ChildCount - 1 || exprContext.GetChild(i + 1) is DeltinScriptParser.ExprContext == false))
                     script.Diagnostics.Error("Expected expression.", DocRange.GetRange((ITerminalNode)exprContext.GetChild(i)));
 
             Tree = new IExpression[ExprContextTree.Length];
-            IExpression current = DeltinScript.GetExpression(script, translateInfo, scope, ExprContextTree[0]);
+            IExpression current = DeltinScript.GetExpression(script, translateInfo, scope, ExprContextTree[0], false);
             Tree[0] = current;
             if (current != null)
                 for (int i = 1; i < ExprContextTree.Length; i++)
                 {
-                    current = DeltinScript.GetExpression(script, translateInfo, current.ReturningScope() ?? new Scope(), ExprContextTree[i]);
+                    current = DeltinScript.GetExpression(script, translateInfo, current.ReturningScope() ?? new Scope(), ExprContextTree[i], false);
 
                     // todo: combine CallMethodAction and IMethod, check if current is IScopeable instead. 
                     if (current != null && current is Var == false && current is CallMethodAction == false && current is ScopedEnumMember == false)
@@ -97,12 +98,11 @@ namespace Deltin.Deltinteger.Parse
                 return null;
         }
 
-        public CodeType Type() => null;
+        public CodeType Type() => Result.Type();
 
         public IWorkshopTree Parse(ActionSet actionSet)
         {
-            // todo: this
-            throw new NotImplementedException();
+            return Result.Parse(actionSet);
         }
     }
 

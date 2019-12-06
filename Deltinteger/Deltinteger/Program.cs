@@ -119,23 +119,6 @@ namespace Deltin.Deltinteger
             DeltinScript deltinScript = new DeltinScript(diagnostics, root);
             diagnostics.PrintDiagnostics(Log);
             Finished();
-
-            // ParsingData result = ParsingData.GetParser(parseFile, text);
-
-            // if (!result.Diagnostics.ContainsErrors())
-            // {
-            //     ParseLog.Write(LogLevel.Normal, new ColorMod("Build succeeded.", ConsoleColor.Green));
-
-            //     result.Diagnostics.PrintDiagnostics(Log);
-
-            //     string final = RuleArrayToWorkshop(result.Rules.ToArray(), result.VarCollection);
-            //     WorkshopCodeResult(final);
-            // }
-            // else
-            // {
-            //     Log.Write(LogLevel.Normal, new ColorMod("Build Failed.", ConsoleColor.Red));
-            //     result.Diagnostics.PrintDiagnostics(Log);
-            // }
         }
 
         // public static string RuleArrayToWorkshop(Rule[] rules, VarCollection varCollection)

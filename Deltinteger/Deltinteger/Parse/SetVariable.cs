@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Deltin.Deltinteger.LanguageServer;
+using Deltin.Deltinteger.Elements;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -46,7 +47,12 @@ namespace Deltin.Deltinteger.Parse
 
         public void Translate(ActionSet actionSet)
         {
-            
+            // TODO: Don't cast to Element.
+            actionSet.AddAction(
+                actionSet.IndexAssigner[SetVariable].SetVariable(
+                    (Element)Value.Parse(actionSet)
+                )
+            );
         }
     }
 }

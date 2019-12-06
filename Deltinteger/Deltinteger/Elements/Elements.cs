@@ -289,7 +289,15 @@ namespace Deltin.Deltinteger.Elements
 
             Parameters = new Parse.CodeParameter[WorkshopParameters.Length];
             for (int i = 0; i < Parameters.Length; i++)
-                Parameters[i] = new CodeParameter(WorkshopParameters[i].Name, null);
+            {
+                CodeType codeType = null;
+
+                if (WorkshopParameters[i] is EnumParameter)
+                    codeType = CodeType.DefaultTypes.First(t => t is WorkshopEnumType && ((WorkshopEnumType)t).EnumData == ((EnumParameter)WorkshopParameters[i]).EnumData);
+
+                // todo: Replace null with the WorkshopEnum that it is supposed to be 
+                Parameters[i] = new CodeParameter(WorkshopParameters[i].Name, codeType);
+            }
         }
 
         public Element GetObject()
@@ -330,7 +338,7 @@ namespace Deltin.Deltinteger.Elements
 
         public Diagnostic GetDiagnostic(DocRange range)
         {
-            return new Diagnostic(Message, range) { severity = Severity };
+            return new Diagnostic(Message, range, Severity);
         }
     }
 }
