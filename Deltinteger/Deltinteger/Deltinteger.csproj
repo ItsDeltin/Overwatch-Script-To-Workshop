@@ -52,7 +52,6 @@
   <!-- Remove later -->
   <ItemGroup>
     <Compile Remove="Parse/old/**" />
-    <Compile Remove="Parse/WorkshopVariableHandler.cs" />
     <Compile Remove="Parse/ast/**" />
     <Compile Remove="Custom Methods/**" />
     <Compile Include="Custom Methods/CustomMethods.cs" />

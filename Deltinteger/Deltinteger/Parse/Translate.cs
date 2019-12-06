@@ -14,16 +14,20 @@ namespace Deltin.Deltinteger.Parse
         private List<CodeType> types { get; } = new List<CodeType>();
         public Scope PlayerVariableScope { get; private set; } = new Scope();
         public Scope GlobalScope { get; }
-        public Scope RulesetScope { get; }
+        private Scope RulesetScope { get; }
+        public VarCollection VarCollection { get; } = new VarCollection();
 
         public DeltinScript(Diagnostics diagnostics, ScriptFile rootRuleset)
         {
             Diagnostics = diagnostics;
             types.AddRange(CodeType.GetDefaultTypes());
             CollectScriptFiles(rootRuleset);
+            
             GlobalScope = Scope.GetGlobalScope();
             RulesetScope = GlobalScope.Child();
+            
             Translate();
+            ToWorkshop();
         }
 
         void CollectScriptFiles(ScriptFile scriptFile)
@@ -59,7 +63,7 @@ namespace Deltin.Deltinteger.Parse
             CollectScriptFiles(importedScript);
         }
 
-        private List<RuleAction> translatedRules { get; } = new List<RuleAction>();
+        private List<RuleAction> rules { get; } = new List<RuleAction>();
 
         void Translate()
         {
@@ -98,7 +102,15 @@ namespace Deltin.Deltinteger.Parse
             // Get the rules
             foreach (ScriptFile script in ScriptFiles)
             foreach (var ruleContext in script.Context.ow_rule())
-                translatedRules.Add(new RuleAction(script, this, RulesetScope, ruleContext));
+                rules.Add(new RuleAction(script, this, RulesetScope, ruleContext));
+        }
+
+        void ToWorkshop()
+        {
+            foreach (var rule in rules)
+            {
+                var translate = new TranslateRule(rule.Script, this, rule);
+            }
         }
 
         public CodeType GetCodeType(string name, FileDiagnostics diagnostics, DocRange range)
@@ -114,10 +126,7 @@ namespace Deltin.Deltinteger.Parse
         {
             return GetCodeType(name, null, null) != null;
         }
-    }
 
-    public abstract class CodeAction
-    {
         public static IStatement GetStatement(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.StatementContext statementContext)
         {
             if (statementContext.define() != null)
@@ -174,7 +183,7 @@ namespace Deltin.Deltinteger.Parse
             {
                 return new ExpressionTree(script, translateInfo, scope, exprContext);
             }
-            else if (exprContext.INDEX_START() != null) return new ArrayAction(script, translateInfo, scope, exprContext);
+            else if (exprContext.INDEX_START() != null) return new ValueInArrayAction(script, translateInfo, scope, exprContext);
 
             throw new Exception("Could not determine the expression type.");
         }

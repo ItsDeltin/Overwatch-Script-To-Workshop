@@ -1,9 +1,92 @@
 using System;
 using System.Collections.Generic;
 using Deltin.Deltinteger.LanguageServer;
+using Deltin.Deltinteger.Elements;
 
 namespace Deltin.Deltinteger.Parse
 {
+    public class IndexReference
+    {
+        public WorkshopArrayBuilder ArrayBuilder { get; set; }
+        public WorkshopVariable WorkshopVariable { get; }
+        public Element[] Index { get; }
+
+        public IndexReference(WorkshopArrayBuilder arrayBuilder, WorkshopVariable workshopVariable, params Element[] index)
+        {
+            ArrayBuilder = arrayBuilder;
+            WorkshopVariable = workshopVariable;
+            Index = index;
+        }
+
+        public virtual Element GetVariable(Element targetPlayer = null)
+        {
+            return WorkshopArrayBuilder.GetVariable(targetPlayer, WorkshopVariable, Index);
+        }
+
+        public virtual Element[] SetVariable(Element value, Element targetPlayer = null, params Element[] index)
+        {
+            return WorkshopArrayBuilder.SetVariable(ArrayBuilder, value, targetPlayer, WorkshopVariable, false, ArrayBuilder<Element>.Build(Index, index));
+        }
+
+        public virtual Element[] ModifyVariable(Operation operation, Element value, Element targetPlayer = null, params Element[] index)
+        {
+            return WorkshopArrayBuilder.ModifyVariable(ArrayBuilder, operation, value, targetPlayer, WorkshopVariable, ArrayBuilder<Element>.Build(Index, index));
+        }
+    }
+
+    public class RecursiveIndexReference : IndexReference
+    {
+        public RecursiveIndexReference(WorkshopArrayBuilder arrayBuilder, WorkshopVariable workshopVariable, params Element[] index) : base(arrayBuilder, workshopVariable, index)
+        {
+        }
+
+        public override Element GetVariable(Element targetPlayer = null)
+        {
+            return Element.Part<V_LastOf>(base.GetVariable(targetPlayer));
+        }
+
+        public override Element[] SetVariable(Element value, Element targetPlayer = null, params Element[] index)
+        {
+            return base.SetVariable(value, targetPlayer, CurrentIndex(targetPlayer, index));
+        }
+
+        public override Element[] ModifyVariable(Operation operation, Element value, Element targetPlayer = null, params Element[] index)
+        {
+            return base.ModifyVariable(operation, value, targetPlayer, CurrentIndex(targetPlayer, index));
+        }
+
+        private Element[] CurrentIndex(Element targetPlayer, params Element[] setAtIndex)
+        {
+            return ArrayBuilder<Element>.Build(
+                Element.Part<V_CountOf>(base.GetVariable(targetPlayer)) - 1,
+                setAtIndex
+            );
+        }
+    }
+
+    public class VarScopeAssigner
+    {
+        private readonly Dictionary<Var, IndexReference> References = new Dictionary<Var, IndexReference>();
+        private readonly VarCollection VarCollection;
+        private readonly Scope Scope;
+
+        public VarScopeAssigner(VarCollection varCollection, Scope scope, bool isGlobal)
+        {
+            VarCollection = varCollection;
+            Scope = scope;
+            IScopeable[] variables = Scope.AllChildVariables();
+
+            foreach (var scopeable in variables)
+            {
+                Var var = (Var)scopeable;
+
+                // variableIsGlobal will equal isGlobal if var.VariableType is dynamic. Otherwise, it will equal is var.VariableType global.
+                bool variableIsGlobal = var.VariableType == VariableType.Dynamic ? isGlobal : var.VariableType == VariableType.Global;
+                References.Add(var, varCollection.Assign(var.Name, isGlobal, var.InExtendedCollection));
+            }
+        }
+    }
+
     public class Var : IScopeable, IExpression, ICallable
     {
         // IScopeable
@@ -17,7 +100,7 @@ namespace Deltin.Deltinteger.Parse
         public CodeType CodeType { get; private set; }
 
         // Attributes
-        public bool IsGlobal { get; private set; }
+        public VariableType VariableType { get; private set; }
         public bool InExtendedCollection { get; private set; }
         public VariableDefineType DefineType { get; private set; }
         public int ID { get; private set; } = -1;
@@ -69,22 +152,27 @@ namespace Deltin.Deltinteger.Parse
             newVar.InExtendedCollection = context.NOT() != null;
             newVar.DefineType = defineType;
 
+            // Check if global/player.
+            if (defineType == VariableDefineType.RuleLevel)
+            {
+                if (context.GLOBAL() != null)
+                    newVar.VariableType = VariableType.Global;
+                else if (context.PLAYER() != null)
+                    newVar.VariableType = VariableType.Player;
+                else
+                    script.Diagnostics.Error("Expected the globalvar/playervar attribute.", DocRange.GetRange(context));
+            }
+
+            // Get the ID
             if (context.id != null)
             {
                 if (defineType != VariableDefineType.RuleLevel)
                     script.Diagnostics.Error("Only defined variables at the rule level can be assigned an ID.", DocRange.GetRange(context.id));
                 else
+                {
                     newVar.ID = int.Parse(context.id.GetText());
-            }
-
-            if (defineType == VariableDefineType.RuleLevel)
-            {
-                if (context.GLOBAL() != null)
-                    newVar.IsGlobal = true;
-                else if (context.PLAYER() != null)
-                    newVar.IsGlobal = false;
-                else
-                    script.Diagnostics.Error("Expected the globalvar/playervar attribute.", DocRange.GetRange(context));
+                    translateInfo.VarCollection.Reserve(newVar.ID, newVar.VariableType == VariableType.Global, script.Diagnostics, DocRange.GetRange(context.id));
+                }
             }
 
             if (defineType == VariableDefineType.InClass)
@@ -125,7 +213,7 @@ namespace Deltin.Deltinteger.Parse
         {
             // Get the initial value.
             if (context.expr() != null)
-                InitialValue = CodeAction.GetExpression(script, translateInfo, scope, context.expr());
+                InitialValue = DeltinScript.GetExpression(script, translateInfo, scope, context.expr());
             
             // Add the variable to the scope.
             scope.AddVariable(this, script.Diagnostics, DocRange.GetRange(context.name));
@@ -136,15 +224,27 @@ namespace Deltin.Deltinteger.Parse
         {
             if (!finalized) throw new Exception("Var not finalized.");
         }
+    
+        public IWorkshopTree Parse(ActionSet actionSet)
+        {
+            // TODO: return variable index or workshop enum or constant or whatever.
+            throw new NotImplementedException();
+        }
     }
 
-    class DefineAction : CodeAction, IStatement
+    class DefineAction : IStatement
     {
         public Var DefiningVariable { get; }
 
         public DefineAction(Var var)
         {
             DefiningVariable = var;
+        }
+
+        public void Translate(ActionSet actionSet)
+        {
+            // TODO: Set DefiningVariable to its initial value.
+            throw new NotImplementedException();
         }
     }
 
@@ -154,5 +254,12 @@ namespace Deltin.Deltinteger.Parse
         Scoped,
         InClass,
         Parameter
+    }
+
+    public enum VariableType
+    {
+        Dynamic,
+        Global,
+        Player
     }
 }

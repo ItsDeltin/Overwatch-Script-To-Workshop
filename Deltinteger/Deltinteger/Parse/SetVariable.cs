@@ -5,14 +5,14 @@ using Deltin.Deltinteger.LanguageServer;
 
 namespace Deltin.Deltinteger.Parse
 {
-    public class SetVariableAction : CodeAction, IStatement
+    public class SetVariableAction : IStatement
     {
         public Var SetVariable { get; }
         public IExpression Value { get; }
 
         public SetVariableAction(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.VarsetContext varsetContext)
         {
-            IExpression variableExpression = GetExpression(script, translateInfo, scope, varsetContext.var);
+            IExpression variableExpression = DeltinScript.GetExpression(script, translateInfo, scope, varsetContext.var);
 
             DocRange notAVariableRange = null;
 
@@ -41,7 +41,12 @@ namespace Deltin.Deltinteger.Parse
             if (varsetContext.statement_operation() != null && varsetContext.val == null)
                 script.Diagnostics.Error("Expected an expression.", DocRange.GetRange(varsetContext).end.ToRange());
             else
-                Value = GetExpression(script, translateInfo, scope, varsetContext.val);
+                Value = DeltinScript.GetExpression(script, translateInfo, scope, varsetContext.val);
+        }
+
+        public void Translate(ActionSet actionSet)
+        {
+            
         }
     }
 }

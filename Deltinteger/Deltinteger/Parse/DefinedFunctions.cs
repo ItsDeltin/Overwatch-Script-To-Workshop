@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.WorkshopWiki;
 
@@ -65,6 +66,8 @@ namespace Deltin.Deltinteger.Parse
             // TODO: this
             throw new NotImplementedException();
         }
+
+        public abstract IWorkshopTree Parse(ActionSet actionSet, IWorkshopTree[] parameterValues);
     }
 
     public class DefinedMethod : DefinedFunction
@@ -89,6 +92,12 @@ namespace Deltin.Deltinteger.Parse
             SetupParameters(script, context.setParameters());
             block = new BlockAction(script, translateInfo, methodScope, context.block());
         }
+
+        override public IWorkshopTree Parse(ActionSet actionSet, IWorkshopTree[] parameterValues)
+        {
+            // TODO: Return value.
+            throw new NotImplementedException();
+        }
     }
 
     public class DefinedMacro : DefinedFunction
@@ -105,10 +114,17 @@ namespace Deltin.Deltinteger.Parse
                 script.Diagnostics.Error("Expected expression.", DocRange.GetRange(context.TERNARY_ELSE()));
             else
             {
-                Expression = CodeAction.GetExpression(script, translateInfo, methodScope, context.expr());
+                Expression = DeltinScript.GetExpression(script, translateInfo, methodScope, context.expr());
                 if (Expression != null)
                     ReturnType = Expression.Type();
             }
+        }
+
+        override public IWorkshopTree Parse(ActionSet actionSet, IWorkshopTree[] parameterValues)
+        {
+            // TODO: fix this
+            throw new NotImplementedException();
+            //return Expression.Parse(actionSet);
         }
     }
 }

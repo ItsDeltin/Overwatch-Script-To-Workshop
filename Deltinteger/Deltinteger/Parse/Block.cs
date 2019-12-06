@@ -3,7 +3,7 @@ using Deltin.Deltinteger.LanguageServer;
 
 namespace Deltin.Deltinteger.Parse
 {
-    public class BlockAction : CodeAction
+    public class BlockAction
     {
         public IStatement[] Statements { get; }
 
@@ -14,11 +14,17 @@ namespace Deltin.Deltinteger.Parse
             {
                 Statements = new IStatement[blockContext.statement().Length];
                 for (int i = 0; i < Statements.Length; i++)
-                    Statements[i] = GetStatement(script, translateInfo, scope, blockContext.statement(i));
+                    Statements[i] = DeltinScript.GetStatement(script, translateInfo, scope, blockContext.statement(i));
             }
 
             if (blockContext.BLOCK_START() != null && blockContext.BLOCK_END() != null)
                 script.AddCompletionRange(new CompletionRange(scope, DocRange.GetRange(blockContext.BLOCK_START(), blockContext.BLOCK_END())));
+        }
+
+        public void Translate(ActionSet actionSet)
+        {
+            foreach (var statement in Statements)
+                statement.Translate(actionSet);
         }
     }
 }

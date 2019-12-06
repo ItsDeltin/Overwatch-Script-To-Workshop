@@ -10,5 +10,11 @@ namespace Deltin.Deltinteger.Parse
             Name = name;
             Type = type;
         }
+
+        override public string ToString()
+        {
+            if (Type == null) return Name;
+            else return Type.Name + " " + Name;
+        }
     }
 }

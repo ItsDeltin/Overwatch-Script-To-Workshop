@@ -6,7 +6,7 @@ using Deltin.Deltinteger.Elements;
 
 namespace Deltin.Deltinteger.Parse
 {
-    public class RuleAction : CodeAction
+    public class RuleAction
     {
         public string Name { get; }
         public bool Disabled { get; }
@@ -16,12 +16,15 @@ namespace Deltin.Deltinteger.Parse
         public RuleEvent EventType { get; private set; }
         public Team Team { get; private set; }
         public PlayerSelector Player { get; private set; }
-        public bool _setEventType;
-        public bool _setTeam;
-        public bool _setPlayer;
+        private bool _setEventType;
+        private bool _setTeam;
+        private bool _setPlayer;
+
+        public ScriptFile Script { get; }
 
         public RuleAction(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.Ow_ruleContext ruleContext)
         {
+            Script = script;
             Name = Extras.RemoveQuotes(ruleContext.STRINGLITERAL().GetText());
             Disabled = ruleContext.DISABLED() != null;
 
@@ -47,7 +50,7 @@ namespace Deltin.Deltinteger.Parse
 
             foreach (var exprContext in ruleContext.expr())
             {
-                var enumSetting = (GetExpression(script, translateInfo, scope, exprContext) as ExpressionTree)?.Result as ScopedEnumMember;
+                var enumSetting = (DeltinScript.GetExpression(script, translateInfo, scope, exprContext) as ExpressionTree)?.Result as ScopedEnumMember;
                 var enumData = (enumSetting?.Enum as WorkshopEnumType)?.EnumData;
 
                 if (enumData == null || !ValidRuleEnums.Contains(enumData))
@@ -104,7 +107,7 @@ namespace Deltin.Deltinteger.Parse
         };
     }
 
-    public class RuleIfAction : CodeAction
+    public class RuleIfAction
     {
         public IExpression Expression { get; }
 
@@ -116,7 +119,7 @@ namespace Deltin.Deltinteger.Parse
             
             // Get the expression.
             else
-                Expression = GetExpression(script, translateInfo, scope, ifContext.expr());
+                Expression = DeltinScript.GetExpression(script, translateInfo, scope, ifContext.expr());
         }
     }
 }

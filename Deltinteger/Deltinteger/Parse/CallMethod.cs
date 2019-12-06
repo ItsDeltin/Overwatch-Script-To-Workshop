@@ -5,36 +5,38 @@ using Deltin.Deltinteger.LanguageServer;
 
 namespace Deltin.Deltinteger.Parse
 {
-    public class CallMethodAction : CodeAction, IExpression, IStatement
+    public class CallMethodAction : IExpression, IStatement
     {
         public IMethod CallingMethod { get; }
         private DeltinScript translateInfo { get; }
+        private IExpression[] ParameterValues { get; }
 
         public CallMethodAction(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.MethodContext methodContext)
         {
             this.translateInfo = translateInfo;
             string methodName = methodContext.PART().GetText();
+            
+            // TODO: Move the signature matching code to a seperate method so that constructors can use it.
 
             if (methodContext.picky_parameters() == null)
             {
                 // Get the parameter values
-                IExpression[] parameterValues;
                 DeltinScriptParser.ExprContext[] parameterContexts;
 
                 // Set parameterValues and parameterContexts.
                 if (methodContext.call_parameters() == null)
                 {
                     // If call_parameters is null, set both as empty.
-                    parameterValues = new IExpression[0];
+                    ParameterValues = new IExpression[0];
                     parameterContexts = new DeltinScriptParser.ExprContext[0];
                 }
                 else
                 {
                     // Get the parameter values.
                     parameterContexts = methodContext.call_parameters().expr();
-                    parameterValues = new IExpression[parameterContexts.Length];
-                    for (int i = 0; i < parameterValues.Length; i++)
-                        parameterValues[i] = GetExpression(script, translateInfo, scope, parameterContexts[i]);
+                    ParameterValues = new IExpression[parameterContexts.Length];
+                    for (int i = 0; i < ParameterValues.Length; i++)
+                        ParameterValues[i] = DeltinScript.GetExpression(script, translateInfo, scope, parameterContexts[i]);
                 }
 
                 // Get the best overload via types.
@@ -43,7 +45,7 @@ namespace Deltin.Deltinteger.Parse
                     .OrderBy(m => m.Parameters.Length)
                     .ToList();
                 
-                CallingMethod = methods.OrderBy(m => Math.Abs(parameterValues.Length - m.Parameters.Length)).First();
+                CallingMethod = methods.OrderBy(m => Math.Abs(ParameterValues.Length - m.Parameters.Length)).First();
 
                 // Syntax error if there are no methods with the name.
                 if (methods.Count == 0)
@@ -51,12 +53,12 @@ namespace Deltin.Deltinteger.Parse
                 else
                 {
                     // Remove the methods that have less parameters than the number of parameters of the method being called.
-                    methods = methods.Where(m => m.Parameters.Length >= parameterValues.Length)
+                    methods = methods.Where(m => m.Parameters.Length >= ParameterValues.Length)
                         .ToList();
                     
                     if (methods.Count == 0)
                         script.Diagnostics.Error(
-                            string.Format("No overloads for the method {0} has {1} parameters.", methodName, parameterValues.Length),
+                            string.Format("No overloads for the method {0} has {1} parameters.", methodName, ParameterValues.Length),
                             DocRange.GetRange(methodContext.PART())
                         );
                     else
@@ -66,10 +68,10 @@ namespace Deltin.Deltinteger.Parse
                         foreach (var method in methods) methodDiagnostics.Add(method, new List<Diagnostic>());
 
                         // Match by value types and parameter types.
-                        for (int i = 0; i < parameterValues.Length; i++)
+                        for (int i = 0; i < ParameterValues.Length; i++)
                         {
                             // Get the type of the parameter value.
-                            var valueType = parameterValues[i].Type();
+                            var valueType = ParameterValues[i].Type();
 
                             // Check each method to make sure the parameter matches.
                             foreach (var method in methods)
@@ -89,7 +91,7 @@ namespace Deltin.Deltinteger.Parse
                         script.Diagnostics.AddDiagnostics(methodDiagnostics[CallingMethod].ToArray());
 
                         // Get the missing parameters.
-                        for (int i = parameterValues.Length; i < CallingMethod.Parameters.Length; i++)
+                        for (int i = ParameterValues.Length; i < CallingMethod.Parameters.Length; i++)
                         {
                             // TODO: check if there is a default value.
                             // Syntax error if there is no default value.
@@ -119,5 +121,25 @@ namespace Deltin.Deltinteger.Parse
         }
 
         public CodeType Type() => CallingMethod?.ReturnType;
+    
+        // IStatement
+        public void Translate(ActionSet actionSet)
+        {
+            CallingMethod.Parse(actionSet, GetParameterValuesAsWorkshop(actionSet));
+        }
+
+        // IExpression
+        public IWorkshopTree Parse(ActionSet actionSet)
+        {
+            return CallingMethod.Parse(actionSet, GetParameterValuesAsWorkshop(actionSet));
+        }
+
+        private IWorkshopTree[] GetParameterValuesAsWorkshop(ActionSet actionSet)
+        {
+            IWorkshopTree[] parameterValues = new IWorkshopTree[ParameterValues.Length];
+            for (int i = 0; i < ParameterValues.Length; i++)
+                parameterValues[i] = ParameterValues[i].Parse(actionSet);
+            return parameterValues;
+        }
     }
 }

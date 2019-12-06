@@ -36,6 +36,13 @@ namespace Deltin.Deltinteger.Parse
         {
             return parameterType == null || parameterType == valueType;
         }
+
+        public IWorkshopTree Parse(ActionSet actionSet)
+        {
+            // TODO: Maybe throw SyntaxErrorException instead?
+            actionSet.Diagnostics.Error("Types can't be used like expressions.", actionSet.GenericErrorRange);
+            return null;
+        }
     }
 
     public class WorkshopEnumType : CodeType
@@ -86,6 +93,11 @@ namespace Deltin.Deltinteger.Parse
         }
 
         public CodeType Type() => null;
+
+        public IWorkshopTree Parse(ActionSet actionSet)
+        {
+            return (IWorkshopTree)EnumMember;
+        }
     }
 
     public class DefinedType : CodeType

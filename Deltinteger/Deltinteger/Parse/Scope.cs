@@ -31,6 +31,14 @@ namespace Deltin.Deltinteger.Parse
             return new Scope(this);
         }
 
+        /// <summary>
+        /// Adds a variable to the current scope.
+        /// When handling variables added by the user, supply the diagnostics and range to show the syntax error at.
+        /// When handling variables added internally, have the diagnostics and range parameters null. An exception will be thrown instead if there is a syntax error.
+        /// </summary>
+        /// <param name="variable">The variable that will be added to the current scope. If the object reference is already in the direct scope, an exception will be thrown.</param>
+        /// <param name="diagnostics"></param>
+        /// <param name="range"></param>
         public void AddVariable(IScopeable variable, FileDiagnostics diagnostics, DocRange range)
         {
             if (variable == null) throw new ArgumentNullException(nameof(variable));
@@ -40,6 +48,11 @@ namespace Deltin.Deltinteger.Parse
                 diagnostics.Error(string.Format("A variable of the name {0} was already defined in this scope.", variable.Name), range);
             else
                 Variables.Add(variable);
+        }
+
+        public bool IsVariable(string name)
+        {
+            return GetVariable(name, null, null) != null;
         }
 
         public IScopeable GetVariable(string name, FileDiagnostics diagnostics, DocRange range)
@@ -58,9 +71,13 @@ namespace Deltin.Deltinteger.Parse
             return element;
         }
 
-        public bool IsVariable(string name)
+        public IScopeable[] AllChildVariables()
         {
-            return GetVariable(name, null, null) != null;
+            List<IScopeable> allVariables = new List<IScopeable>();
+            allVariables.AddRange(Variables);
+            foreach (var child in children)
+                allVariables.AddRange(child.Variables);
+            return allVariables.ToArray();
         }
 
         public void AddMethod(IMethod method, FileDiagnostics diagnostics, DocRange range)

@@ -297,6 +297,19 @@ namespace Deltin.Deltinteger.Elements
             return (Element)Activator.CreateInstance(Type);
         }
 
+        public IWorkshopTree Parse(ActionSet actionSet, IWorkshopTree[] values)
+        {
+            Element element = GetObject();
+            element.ParameterValues = values;
+
+            if (!IsValue)
+            {
+                actionSet.AddAction(element);
+                return null;
+            }
+            else return element;
+        }
+
         public static ElementList FromType(Type type)
         {
             return Elements.FirstOrDefault(element => element.Type == type);

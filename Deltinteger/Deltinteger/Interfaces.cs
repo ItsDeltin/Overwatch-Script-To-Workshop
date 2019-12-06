@@ -17,6 +17,7 @@ namespace Deltin.Deltinteger
         Parse.CodeParameter[] Parameters { get; }
         WikiMethod Wiki { get; }
         CodeType ReturnType { get; }
+        IWorkshopTree Parse(ActionSet actionSet, IWorkshopTree[] values);
     }
 
     public interface ILanguageServerInfo

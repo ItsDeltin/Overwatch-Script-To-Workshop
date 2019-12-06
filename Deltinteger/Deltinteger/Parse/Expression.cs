@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using Deltin.Deltinteger.LanguageServer;
+using Deltin.Deltinteger.Elements;
 using Antlr4.Runtime;
 using Antlr4.Runtime.Tree;
 
@@ -10,9 +11,10 @@ namespace Deltin.Deltinteger.Parse
     {
         Scope ReturningScope();
         CodeType Type();
+        IWorkshopTree Parse(ActionSet actionSet);
     }
 
-    public class ExpressionTree : CodeAction, IExpression
+    public class ExpressionTree : IExpression
     {
         public IExpression[] Tree { get; }
         public IExpression Result { get; }
@@ -28,12 +30,12 @@ namespace Deltin.Deltinteger.Parse
                     script.Diagnostics.Error("Expected expression.", DocRange.GetRange((ITerminalNode)exprContext.GetChild(i)));
 
             Tree = new IExpression[ExprContextTree.Length];
-            IExpression current = GetExpression(script, translateInfo, scope, ExprContextTree[0]);
+            IExpression current = DeltinScript.GetExpression(script, translateInfo, scope, ExprContextTree[0]);
             Tree[0] = current;
             if (current != null)
                 for (int i = 1; i < ExprContextTree.Length; i++)
                 {
-                    current = GetExpression(script, translateInfo, current.ReturningScope() ?? new Scope(), ExprContextTree[i]);
+                    current = DeltinScript.GetExpression(script, translateInfo, current.ReturningScope() ?? new Scope(), ExprContextTree[i]);
 
                     // todo: combine CallMethodAction and IMethod, check if current is IScopeable instead. 
                     if (current != null && current is Var == false && current is CallMethodAction == false && current is ScopedEnumMember == false)
@@ -96,9 +98,15 @@ namespace Deltin.Deltinteger.Parse
         }
 
         public CodeType Type() => null;
+
+        public IWorkshopTree Parse(ActionSet actionSet)
+        {
+            // todo: this
+            throw new NotImplementedException();
+        }
     }
 
-    public class NumberAction : CodeAction, IExpression
+    public class NumberAction : IExpression
     {
         public double Value { get; }
 
@@ -113,9 +121,14 @@ namespace Deltin.Deltinteger.Parse
         }
 
         public CodeType Type() => null;
+
+        public IWorkshopTree Parse(ActionSet actionSet)
+        {
+            return new V_Number(Value);
+        }
     }
 
-    public class BoolAction : CodeAction, IExpression
+    public class BoolAction : IExpression
     {
         public bool Value { get; }
 
@@ -130,23 +143,35 @@ namespace Deltin.Deltinteger.Parse
         }
 
         public CodeType Type() => null;
+
+        public IWorkshopTree Parse(ActionSet actionSet)
+        {
+            if (Value) return new V_True();
+            else return new V_False();
+        }
     }
 
-    public class ArrayAction : CodeAction, IExpression
+    public class ValueInArrayAction : IExpression
     {
         public IExpression Expression { get; }
         public IExpression Index { get; }
+        private DocRange expressionRange { get; }
+        private DocRange indexRange { get; }
 
-        public ArrayAction(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.ExprContext exprContext)
+        public ValueInArrayAction(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.ExprContext exprContext)
         {
             if (exprContext.expr() == null) throw new Exception("Array can be determined without inital expression.");
 
-            Expression = GetExpression(script, translateInfo, scope, exprContext.expr(0));
+            Expression = DeltinScript.GetExpression(script, translateInfo, scope, exprContext.expr(0));
+            expressionRange = DocRange.GetRange(exprContext.expr(0));
 
             if (exprContext.index == null)
                 script.Diagnostics.Error("Expected an expression.", DocRange.GetRange(exprContext.INDEX_START()));
             else
-                Index = GetExpression(script, translateInfo, scope, exprContext.index);
+            {
+                Index = DeltinScript.GetExpression(script, translateInfo, scope, exprContext.index);
+                indexRange = DocRange.GetRange(exprContext.index);
+            }
         }
 
         public Scope ReturningScope()
@@ -156,5 +181,11 @@ namespace Deltin.Deltinteger.Parse
         }
 
         public CodeType Type() => null;
+
+        public IWorkshopTree Parse(ActionSet actionSet)
+        {
+            return Element.Part<V_ValueInArray>(Expression.Parse(actionSet.New(expressionRange)), Index.Parse(actionSet.New(indexRange)));
+            //return Expression.Parse(actionSet.New(expressionRange))[Index.Parse(actionSet.New(indexRange))];
+        }
     }
 }
