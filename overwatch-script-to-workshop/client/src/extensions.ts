@@ -60,6 +60,16 @@ export function activate(context: ExtensionContext) {
 
 	// Start the client. This will also launch the server
 	client.start();
+
+	client.onReady().then(() => {
+		// When the client is ready, setup the workshopCode notification.
+		client.onNotification("workshopCode", (code: string)=> {
+			// Clear the output
+			workshopOut.clear();
+			// Append the compiled result.
+			workshopOut.appendLine(code);
+		});
+	});
 }
 
 export function deactivate(): Thenable<void> | undefined {

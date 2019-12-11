@@ -94,6 +94,7 @@ namespace Deltin.Deltinteger.Parse
         public AccessLevel AccessLevel { get; } = AccessLevel.Public;
         public string ScopeableType { get; } = "enum value";
         public Location DefinedAt { get; } = null;
+        public bool WholeContext { get; } = true;
         
         public CodeType Enum { get; }
         public EnumMember EnumMember { get; }

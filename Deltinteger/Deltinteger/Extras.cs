@@ -85,11 +85,17 @@ namespace Deltin.Deltinteger
         public bool Tab { get; private set; }
         public int WhitespaceCount { get; set; } = 4;
 
-        private readonly StringBuilder StringBuilder = new StringBuilder();
+        private readonly StringBuilder StringBuilder;
 
         public TabStringBuilder(bool tab)
         {
             Tab = tab;
+            StringBuilder = new StringBuilder();
+        }
+        public TabStringBuilder(StringBuilder builder, bool tab)
+        {
+            Tab = tab;
+            StringBuilder = builder;
         }
 
         public TabStringBuilder AppendLine()

@@ -140,7 +140,7 @@ namespace Deltin.Deltinteger.Parse
         {
             get {
                 VarIndexAssigner current = this;
-                while (current.parent != null)
+                while (current != null)
                 {
                     if (current.references.ContainsKey(var))
                         return current.references[var];
@@ -160,6 +160,7 @@ namespace Deltin.Deltinteger.Parse
         public string Name { get; }
         public AccessLevel AccessLevel { get; private set; }
         public Location DefinedAt { get; }
+        public bool WholeContext { get; private set; }
         public string ScopeableType { get; } = "variable";
 
         private List<Location> CalledFrom { get; } = new List<Location>();
@@ -270,6 +271,10 @@ namespace Deltin.Deltinteger.Parse
                 if (context.STATIC() != null)
                     script.Diagnostics.Error("Only defined variables in classes can be static.", DocRange.GetRange(context.STATIC()));
             }
+
+            // If the type is InClass or RuleLevel, set WholeContext to true.
+            // WholeContext's value for parameters don't matter since parameters are defined at the start anyway.
+            newVar.WholeContext = defineType == VariableDefineType.InClass || defineType == VariableDefineType.RuleLevel;
 
             // Get the type.
             CodeType type = null;

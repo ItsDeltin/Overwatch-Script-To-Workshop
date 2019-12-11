@@ -33,6 +33,8 @@ namespace Deltin.Deltinteger.LanguageServer
 {
     public class DeltintegerLanguageServer
     {
+        public const string SendWorkshopCode = "workshopCode";
+
         public static void Run()
         {
             new DeltintegerLanguageServer();
@@ -69,6 +71,7 @@ namespace Deltin.Deltinteger.LanguageServer
 
             DocumentHandler documentHandler = new DocumentHandler(this);
             CompletionHandler completionHandler = new CompletionHandler(this);
+            SignatureHandler signatureHandler = new SignatureHandler(this);
 
             Server = await OmniSharp.Extensions.LanguageServer.Server.LanguageServer.From(options => options
                 .WithInput(Console.OpenStandardInput())
@@ -78,9 +81,17 @@ namespace Deltin.Deltinteger.LanguageServer
                     .AddLanguageServer()
                     .SetMinimumLevel(Microsoft.Extensions.Logging.LogLevel.Debug))
                 .WithHandler<DocumentHandler>(documentHandler)
-                .WithHandler<CompletionHandler>(completionHandler));
-            
+                .WithHandler<CompletionHandler>(completionHandler)
+                .WithHandler<SignatureHandler>(signatureHandler));
+                        
             await Server.WaitForExit;
         }
+
+        public static readonly DocumentSelector DocumentSelector = new DocumentSelector(
+            new DocumentFilter() {
+                Language = "ostw",
+                Pattern = "**/*.del"
+            }
+        );
     }
 }

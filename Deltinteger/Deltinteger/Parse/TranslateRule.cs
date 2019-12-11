@@ -24,6 +24,25 @@ namespace Deltin.Deltinteger.Parse
             var actionSet = new ActionSet(this, null, Actions);
             ruleAction.Block.Translate(actionSet);
         }
+
+        public Rule GetRule()
+        {
+            Rule rule = new Rule(RuleAction.Name, RuleAction.EventType, RuleAction.Team, RuleAction.Player);
+            rule.Actions = GetActions();
+            rule.Disabled = RuleAction.Disabled;
+            return rule;
+        }
+
+        private Element[] GetActions()
+        {
+            List<Element> actions = new List<Element>();
+
+            foreach (IActionList action in this.Actions)
+                if (action is ALAction)
+                    actions.Add((Element)((ALAction)action).Calling);
+
+            return actions.ToArray();
+        }
     }
 
     public class ActionSet

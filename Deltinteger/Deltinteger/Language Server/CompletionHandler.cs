@@ -15,10 +15,12 @@ namespace Deltin.Deltinteger.LanguageServer
     class CompletionHandler : ICompletionHandler
     {
         private DeltintegerLanguageServer _languageServer { get; }
+        private Scope _globalScope { get; }
 
         public CompletionHandler(DeltintegerLanguageServer languageServer)
         {
             _languageServer = languageServer;
+            _globalScope = Scope.GetGlobalScope();
         }
 
         public async Task<CompletionList> Handle(CompletionParams completionParams, CancellationToken token)
@@ -64,6 +66,7 @@ namespace Deltin.Deltinteger.LanguageServer
                 foreach (var range in inRange)
                     items.AddRange(range.Scope.GetCompletion(completionParams.Position));
             }
+            else items.AddRange(_globalScope.GetCompletion(null));
             return items;
         }
 
@@ -71,7 +74,7 @@ namespace Deltin.Deltinteger.LanguageServer
         {
             return new CompletionRegistrationOptions()
             {
-                DocumentSelector = DocumentHandler._documentSelector,
+                DocumentSelector = DeltintegerLanguageServer.DocumentSelector,
                 // Most tools trigger completion request automatically without explicitly requesting
                 // it using a keyboard shortcut (e.g. Ctrl+Space). Typically they do so when the user
                 // starts to type an identifier. For example if the user types `c` in a JavaScript file

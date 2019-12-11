@@ -114,7 +114,7 @@ namespace Deltin.Deltinteger.Parse
             var collection = variableList(isGlobal);
             for (int i = 0; i < Constants.NUMBER_OF_VARIABLES; i++)
                 // Make sure the ID is not reserved.
-                if (!variableList(isGlobal).Any(var => var.ID == id) && !reserveList(isGlobal).Contains(i))
+                if (!variableList(isGlobal).Any(var => var.ID == i) && !reserveList(isGlobal).Contains(i))
                 {
                     id = i;
                     break;
@@ -169,6 +169,21 @@ namespace Deltin.Deltinteger.Parse
                 extendedVariableList(isGlobal)[index] = reference;
                 return reference;
             }
+        }
+    
+        public void ToWorkshop(StringBuilder stringBuilder)
+        {
+            stringBuilder.AppendLine("variables");
+            stringBuilder.AppendLine("{");
+            stringBuilder.AppendLine(Extras.Indent(1, false) + "global:");
+            WriteCollection(stringBuilder, variableList(true));
+            stringBuilder.AppendLine(Extras.Indent(1, false) + "player:");
+            WriteCollection(stringBuilder, variableList(false));
+            stringBuilder.AppendLine("{");
+        }
+        private void WriteCollection(StringBuilder stringBuilder, List<WorkshopVariable> collection)
+        {
+            foreach (var var in collection) stringBuilder.AppendLine(Extras.Indent(2, false) + var.ID + ": " + var.Name);
         }
     }
 }

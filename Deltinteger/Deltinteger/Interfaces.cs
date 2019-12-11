@@ -38,7 +38,7 @@ namespace Deltin.Deltinteger
         AccessLevel AccessLevel { get; }
         Location DefinedAt { get; }
         string ScopeableType { get; }
-
+        bool WholeContext { get; }
         CompletionItem GetCompletion();
     }
 

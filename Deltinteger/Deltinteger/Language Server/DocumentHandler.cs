@@ -21,12 +21,6 @@ namespace Deltin.Deltinteger.LanguageServer
         // Static
         private static readonly TextDocumentSyncKind _syncKind = TextDocumentSyncKind.Incremental;
         private static readonly bool _sendTextOnSave = true;
-        public static readonly DocumentSelector _documentSelector = new DocumentSelector(
-            new DocumentFilter() {
-                Language = "ostw",
-                Pattern = "**/*.del"
-            }
-        );
 
         // Object
         public List<TextDocumentItem> Documents { get; } = new List<TextDocumentItem>();
@@ -46,18 +40,18 @@ namespace Deltin.Deltinteger.LanguageServer
 
         // Text document registeration options.
         TextDocumentRegistrationOptions IRegistration<TextDocumentRegistrationOptions>.GetRegistrationOptions() =>  new TextDocumentRegistrationOptions() { 
-            DocumentSelector = _documentSelector 
+            DocumentSelector = DeltintegerLanguageServer.DocumentSelector 
         };
 
         // Save options.
         TextDocumentSaveRegistrationOptions IRegistration<TextDocumentSaveRegistrationOptions>.GetRegistrationOptions() => new TextDocumentSaveRegistrationOptions() {
-            DocumentSelector = _documentSelector,
+            DocumentSelector = DeltintegerLanguageServer.DocumentSelector,
             IncludeText = _sendTextOnSave
         };
 
         // Document change options.
         TextDocumentChangeRegistrationOptions IRegistration<TextDocumentChangeRegistrationOptions>.GetRegistrationOptions() => new TextDocumentChangeRegistrationOptions() {
-            DocumentSelector = _documentSelector,
+            DocumentSelector = DeltintegerLanguageServer.DocumentSelector,
             SyncKind = _syncKind
         };
 
@@ -160,6 +154,9 @@ namespace Deltin.Deltinteger.LanguageServer
                 var publishDiagnostics = diagnostics.GetDiagnostics();
                 foreach (var publish in publishDiagnostics)
                     _languageServer.Server.Document.PublishDiagnostics(publish);
+                
+                if (deltinScript.WorkshopCode != null)
+                    _languageServer.Server.SendNotification(DeltintegerLanguageServer.SendWorkshopCode, deltinScript.WorkshopCode);
             }
             catch (Exception ex)
             {

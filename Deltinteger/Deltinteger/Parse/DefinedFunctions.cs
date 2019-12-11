@@ -17,6 +17,7 @@ namespace Deltin.Deltinteger.Parse
         public CodeParameter[] Parameters { get; private set; }
         public AccessLevel AccessLevel { get; protected set; }
         public Location DefinedAt { get; }
+        public bool WholeContext { get; } = true;
 
         public WikiMethod Wiki { get; }
 

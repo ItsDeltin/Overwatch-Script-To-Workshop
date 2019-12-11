@@ -157,14 +157,20 @@ namespace Deltin.Deltinteger.Parse
 
             var variables = AllVariablesInScope();
             for (int i = 0; i < variables.Length; i++)
-                if (variables[i].DefinedAt == null || variables[i].DefinedAt.range.start <= pos)
+                if (WasScopedAtPosition(variables[i], pos))
                     completions.Add(variables[i].GetCompletion());
 
             var methods = AllMethodsInScope();
             for (int i = 0; i < methods.Length; i++)
-                completions.Add(methods[i].GetCompletion());
+                if (WasScopedAtPosition(methods[i], pos))
+                    completions.Add(methods[i].GetCompletion());
                 
             return completions.ToArray();
+        }
+
+        private static bool WasScopedAtPosition(IScopeable element, Pos pos)
+        {
+            return pos == null || element.DefinedAt == null || element.WholeContext || element.DefinedAt.range.start <= pos;
         }
 
         public static Scope GetGlobalScope()

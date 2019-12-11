@@ -43,23 +43,23 @@ namespace Deltin.Deltinteger.Parse
                 }
 
                 // Get the best overload via types.
-                var methods = scope.GetMethodsByName(methodName)
+                var overloads = scope.GetMethodsByName(methodName)
                     // Order the list by the number of parameters in each method.
                     .OrderBy(m => m.Parameters.Length)
                     .ToList();
                 
-                CallingMethod = methods.OrderBy(m => Math.Abs(ParameterValues.Length - m.Parameters.Length)).FirstOrDefault();
+                CallingMethod = overloads.OrderBy(m => Math.Abs(ParameterValues.Length - m.Parameters.Length)).FirstOrDefault();
 
                 // Syntax error if there are no methods with the name.
-                if (methods.Count == 0)
+                if (overloads.Count == 0)
                     script.Diagnostics.Error(string.Format("No method by the name of {0} exists in the current context.", methodName), NameRange);
                 else
                 {
                     // Remove the methods that have less parameters than the number of parameters of the method being called.
-                    methods = methods.Where(m => m.Parameters.Length >= ParameterValues.Length)
+                    overloads = overloads.Where(m => m.Parameters.Length >= ParameterValues.Length)
                         .ToList();
                     
-                    if (methods.Count == 0)
+                    if (overloads.Count == 0)
                         script.Diagnostics.Error(
                             string.Format("No overloads for the method {0} has {1} parameters.", methodName, ParameterValues.Length),
                             NameRange
@@ -68,7 +68,7 @@ namespace Deltin.Deltinteger.Parse
                     {
                         var methodDiagnostics = new Dictionary<IMethod, List<Diagnostic>>();
                         // Fill methodDiagnostics.
-                        foreach (var method in methods) methodDiagnostics.Add(method, new List<Diagnostic>());
+                        foreach (var method in overloads) methodDiagnostics.Add(method, new List<Diagnostic>());
 
                         // Match by value types and parameter types.
                         for (int i = 0; i < ParameterValues.Length; i++)
@@ -77,7 +77,7 @@ namespace Deltin.Deltinteger.Parse
                             var valueType = ParameterValues[i].Type();
 
                             // Check each method to make sure the parameter matches.
-                            foreach (var method in methods)
+                            foreach (var method in overloads)
                             if (!CodeType.TypeMatches(method.Parameters[i].Type, valueType))
                             {
                                 // The parameter type does not match.
@@ -103,6 +103,14 @@ namespace Deltin.Deltinteger.Parse
                                 DocRange.GetRange(methodContext.PART())
                             );
                         }
+
+                        // Get the signature.
+                        // (Get overloads instead of just the chosen method)
+                        // ParameterRange[] parameterRanges = new ParameterRange[ParameterValues.Length];
+                        // for (int i = 0; i < parameterRanges.Length; i++)
+                        //     parameterRanges[i] = new ParameterRange(CallingMethod.Parameters[i], i, DocRange.GetRange(parameterContexts[i]));
+                        
+                        // script.AddSignatureRange(new SignatureRange(CallingMethod, DocRange.GetRange(methodContext), parameterRanges));
                     }
                 }
             }

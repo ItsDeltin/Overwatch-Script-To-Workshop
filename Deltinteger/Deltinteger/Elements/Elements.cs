@@ -238,6 +238,7 @@ namespace Deltin.Deltinteger.Elements
         public LanguageServer.Location DefinedAt { get; } = null;
         public AccessLevel AccessLevel { get; } = AccessLevel.Public;
         public string ScopeableType { get; } = "method";
+        public bool WholeContext { get; } = true;
 
         public CodeType ReturnType { get; } = null;
 

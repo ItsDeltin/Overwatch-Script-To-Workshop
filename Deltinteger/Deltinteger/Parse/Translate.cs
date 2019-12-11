@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.Elements;
 using Antlr4.Runtime;
@@ -114,6 +115,8 @@ namespace Deltin.Deltinteger.Parse
                 rules.Add(new RuleAction(script, this, RulesetScope, ruleContext));
         }
 
+        public string WorkshopCode { get; private set; }
+
         void ToWorkshop()
         {
             VarCollection.Setup();
@@ -125,10 +128,24 @@ namespace Deltin.Deltinteger.Parse
                 DefaultIndexAssigner.Add(VarCollection, variable, true, null);
             }
 
+            List<Rule> ruleElements = new List<Rule>();
             foreach (var rule in rules)
             {
                 var translate = new TranslateRule(rule.Script, this, rule);
+                ruleElements.Add(translate.GetRule());
             }
+
+            // Get the final workshop string.
+            StringBuilder result = new StringBuilder();
+            // Get the variables.
+            VarCollection.ToWorkshop(result);
+            result.AppendLine();
+
+            // Get the rules.
+            foreach (var rule in ruleElements)
+                result.AppendLine(rule.ToWorkshop());
+            
+            WorkshopCode = result.ToString();
         }
 
         public CodeType GetCodeType(string name, FileDiagnostics diagnostics, DocRange range)
