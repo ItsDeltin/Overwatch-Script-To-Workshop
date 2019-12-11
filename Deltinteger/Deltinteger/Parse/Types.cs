@@ -47,6 +47,8 @@ namespace Deltin.Deltinteger.Parse
         /// <returns></returns>
         public virtual bool Constant() => false;
 
+        public abstract CompletionItem GetCompletion();
+
         public static bool TypeMatches(CodeType parameterType, CodeType valueType)
         {
             return parameterType == null || parameterType == valueType;
@@ -75,6 +77,15 @@ namespace Deltin.Deltinteger.Parse
         }
 
         override public bool Constant() => true;
+
+        override public CompletionItem GetCompletion()
+        {
+            return new CompletionItem()
+            {
+                Label = EnumData.CodeName,
+                Kind = CompletionItemKind.Enum
+            };
+        }
     }
 
     public class ScopedEnumMember : IScopeable, IExpression
@@ -121,13 +132,25 @@ namespace Deltin.Deltinteger.Parse
 
     public class DefinedType : CodeType
     {
+        public TypeKind TypeKind { get; }
         private Scope objectScope { get; }
         private Scope staticScope { get; }
 
         public DefinedType(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.Type_defineContext typeContext) : base(typeContext.name.Text)
         {
-            objectScope = new Scope("class " + Name);
-            staticScope = new Scope("class " + Name);
+            if (typeContext.CLASS() != null) 
+            { 
+                TypeKind = TypeKind.Class;
+                objectScope = new Scope("class " + Name);
+                staticScope = new Scope("class " + Name);
+            }
+            else if (typeContext.STRUCT() != null) 
+            { 
+                TypeKind = TypeKind.Struct;
+                objectScope = new Scope("struct " + Name);
+                staticScope = new Scope("struct " + Name);
+            }
+            else throw new NotImplementedException();
 
             // Get the variables defined in the type.
             foreach (var definedVariable in typeContext.define())
@@ -149,5 +172,25 @@ namespace Deltin.Deltinteger.Parse
         {
             return objectScope;
         }
+
+        override public CompletionItem GetCompletion()
+        {
+            CompletionItemKind kind;
+            if (TypeKind == TypeKind.Class) kind = CompletionItemKind.Class;
+            else if (TypeKind == TypeKind.Struct) kind = CompletionItemKind.Struct;
+            else throw new NotImplementedException();
+
+            return new CompletionItem()
+            {
+                Label = Name,
+                Kind = kind
+            };
+        }
+    }
+    
+    public enum TypeKind
+    {
+        Class,
+        Struct
     }
 }

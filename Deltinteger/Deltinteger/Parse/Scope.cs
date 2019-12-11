@@ -72,6 +72,20 @@ namespace Deltin.Deltinteger.Parse
             return element;
         }
 
+        public IScopeable[] AllVariablesInScope()
+        {
+            List<IScopeable> variables = new List<IScopeable>();
+
+            Scope current = this;
+            while (current != null)
+            {
+                variables.AddRange(current.Variables);
+                current = current.Parent;
+            }
+
+            return variables.ToArray();
+        }
+
         public IScopeable[] AllChildVariables()
         {
             List<IScopeable> allVariables = new List<IScopeable>();
@@ -141,13 +155,14 @@ namespace Deltin.Deltinteger.Parse
         {
             List<CompletionItem> completions = new List<CompletionItem>();
 
-            for (int i = 0; i < Variables.Count; i++)
-                if (Variables[i].DefinedAt == null || Variables[i].DefinedAt.range.start <= pos)
-                    completions.Add(Variables[i].GetCompletion());
+            var variables = AllVariablesInScope();
+            for (int i = 0; i < variables.Length; i++)
+                if (variables[i].DefinedAt == null || variables[i].DefinedAt.range.start <= pos)
+                    completions.Add(variables[i].GetCompletion());
 
-            for (int i = 0; i < Methods.Count; i++)
-                if (Methods[i].DefinedAt == null || Methods[i].DefinedAt.range.start <= pos)
-                    completions.Add(Methods[i].GetCompletion());
+            var methods = AllMethodsInScope();
+            for (int i = 0; i < methods.Length; i++)
+                completions.Add(methods[i].GetCompletion());
                 
             return completions.ToArray();
         }

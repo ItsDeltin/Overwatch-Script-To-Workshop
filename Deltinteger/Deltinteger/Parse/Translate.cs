@@ -12,6 +12,7 @@ namespace Deltin.Deltinteger.Parse
         public Diagnostics Diagnostics { get; }
         public List<ScriptFile> ScriptFiles { get; } = new List<ScriptFile>();
         private List<CodeType> types { get; } = new List<CodeType>();
+        public List<CodeType> definedTypes { get; } = new List<CodeType>();
         public Scope PlayerVariableScope { get; private set; } = new Scope();
         public Scope GlobalScope { get; }
         private Scope RulesetScope { get; }
@@ -73,7 +74,11 @@ namespace Deltin.Deltinteger.Parse
             // Get the types
             foreach (ScriptFile script in ScriptFiles)
             foreach (var typeContext in script.Context.type_define())
-                types.Add(new DefinedType(script, this, GlobalScope, typeContext));
+            {
+                var newType = new DefinedType(script, this, GlobalScope, typeContext);
+                types.Add(newType);
+                definedTypes.Add(newType);
+            }
             
             // Get the methods and macros
             foreach (ScriptFile script in ScriptFiles)
