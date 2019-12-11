@@ -64,14 +64,14 @@ namespace Deltin.Deltinteger.Parse
             return new ActionSet(this, indexAssigner);
         }
 
-        public void AddAction(Element action)
+        public void AddAction(IWorkshopTree action)
         {
-            actions.Add((ALAction)action);
+            actions.Add(new ALAction(action));
         }
-        public void AddAction(Element[] actions)
+        public void AddAction(IWorkshopTree[] actions)
         {
             foreach (var action in actions)
-                this.actions.Add((ALAction)action);
+                this.actions.Add(new ALAction(action));
         }
         public void AddAction(IActionList action)
         {
@@ -89,14 +89,12 @@ namespace Deltin.Deltinteger.Parse
 
     public class ALAction : IActionList
     {
-        public Element Calling { get; }
+        public IWorkshopTree Calling { get; }
 
-        public ALAction(Element calling)
+        public ALAction(IWorkshopTree calling)
         {
             Calling = calling;
         }
-
-        public static implicit operator ALAction(Element element) => new ALAction(element);
     }
 
     public class ALSkip : IActionList

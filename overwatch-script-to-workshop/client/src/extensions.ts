@@ -6,21 +6,12 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { workspace, ExtensionContext, OutputChannel, window } from 'vscode';
-
-import {
-	LanguageClient,
-	LanguageClientOptions,
-	ServerOptions,
-	TransportKind,
-} from 'vscode-languageclient';
+import { LanguageClient, LanguageClientOptions, ServerOptions, ExecutableOptions, Executable, TransportKind } from 'vscode-languageclient';
+import request from 'request';
 
 let client: LanguageClient;
 
 let workshopOut: OutputChannel;
-
-import * as http from 'http';
-import { format } from 'util';
-const request = require('request');
 
 const config = workspace.getConfiguration("ostw", null);
 
@@ -31,25 +22,22 @@ export function activate(context: ExtensionContext) {
 	
 	addCommands(context);
 
-	ping();
-
-	// The server is implemented in node
-	let serverModule = context.asAbsolutePath(
-		path.join('server', 'out', 'server.js')
-	);
-	// The debug options for the server
-	// --inspect=6009: runs the server in Node's Inspector mode so VS Code can attach to the server for debugging
-	let debugOptions = { execArgv: ['--nolazy', '--inspect=6009'] };
-
-	// If the extension is launched in debug mode then the debug server options are used
-	// Otherwise the run options are used
-	let serverOptions: ServerOptions = {
-		run: { module: serverModule, transport: TransportKind.ipc },
-		debug: {
-			module: serverModule,
-			transport: TransportKind.ipc,
-			options: debugOptions
+	workspace.onDidChangeConfiguration((e: vscode.ConfigurationChangeEvent) => {
+		if (e.affectsConfiguration("ostw.deltintegerPath"))
+		{
+			// This block should run when the `ostw.deltintegerPath` setting is changed.
+			// TODO: Start the language server using the new filepath. Also stop the language server if it is already started.
 		}
+	});
+
+	// Gets the path to the server executable.
+	const serverModule = <string>config.get('deltintegerPath');
+
+	// It was me, stdio!
+	const options: ExecutableOptions = { stdio: "pipe", detached: false };
+	const serverOptions: ServerOptions = {
+		run:   { command: serverModule, args: ['--langserver']           , options: options },
+		debug: { command: serverModule, args: ['--langserver', '--debug'], options: options }
 	};
 
 	// Options to control the language client
@@ -81,8 +69,9 @@ export function deactivate(): Thenable<void> | undefined {
 	return client.stop();
 }
 
-var failSent : boolean;
 var lastWorkshopOutput : string = null;
+/*
+var failSent : boolean;
 function ping()
 {
 	request('http://localhost:' + config.get('port1') + '/ping', function(error, res, body) {
@@ -106,6 +95,7 @@ function ping()
 	}
 	setTimeout(ping, 1000);
 }
+*/
 
 function updateCode(file: string, code: string)
 {

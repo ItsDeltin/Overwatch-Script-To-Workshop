@@ -19,14 +19,18 @@ namespace Deltin.Deltinteger
 
         public static readonly string ExeFolder = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
 
+        public static string[] args;
+
         static Log Log = new Log(":");
         static Log ParseLog = new Log("Parse");
 
 
         static void Main(string[] args)
         {
+            Program.args = args;
+
             CultureInfo.DefaultThreadCurrentCulture = new CultureInfo("en-US");
-            Log.Write(LogLevel.Normal, "Overwatch Script To Workshop " + VERSION);
+            // Log.Write(LogLevel.Normal, "Overwatch Script To Workshop " + VERSION);
 
             Log.LogLevel = LogLevel.Normal;
             if (args.Contains("-verbose"))
@@ -34,12 +38,11 @@ namespace Deltin.Deltinteger
             if (args.Contains("-quiet"))
                 Log.LogLevel = LogLevel.Quiet;
 
-            // if (args.Contains("-langserver"))
-            // {
-            //     string[] portArgs = args.FirstOrDefault(v => v.Split(' ')[0] == "-port")?.Split(' ');
-            //     int.TryParse(portArgs.ElementAtOrDefault(1), out int serverPort);
-            //     new Server().RequestLoop(serverPort);
-            // }
+            if (args.Contains("--langserver"))
+            {
+                Log.LogLevel = LogLevel.Quiet;
+                DeltintegerLanguageServer.Run();
+            }
             // else if (args.Contains("-generatealphabet"))
             // {
             //     Console.Write("Output folder: ");
@@ -115,7 +118,7 @@ namespace Deltin.Deltinteger
             string text = File.ReadAllText(parseFile);
 
             Diagnostics diagnostics = new Diagnostics();
-            ScriptFile root = new ScriptFile(diagnostics, parseFile, text);
+            ScriptFile root = new ScriptFile(diagnostics, new Uri(parseFile), text);
             DeltinScript deltinScript = new DeltinScript(diagnostics, root);
             diagnostics.PrintDiagnostics(Log);
             Finished();

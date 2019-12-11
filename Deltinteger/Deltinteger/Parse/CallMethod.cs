@@ -48,7 +48,7 @@ namespace Deltin.Deltinteger.Parse
                     .OrderBy(m => m.Parameters.Length)
                     .ToList();
                 
-                CallingMethod = methods.OrderBy(m => Math.Abs(ParameterValues.Length - m.Parameters.Length)).First();
+                CallingMethod = methods.OrderBy(m => Math.Abs(ParameterValues.Length - m.Parameters.Length)).FirstOrDefault();
 
                 // Syntax error if there are no methods with the name.
                 if (methods.Count == 0)

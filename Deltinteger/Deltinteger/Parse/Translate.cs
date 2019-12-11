@@ -48,7 +48,7 @@ namespace Deltin.Deltinteger.Parse
 
         void GetImportedFile(ScriptFile importer, DeltinScriptParser.Import_fileContext importFileContext, List<string> importedFiles)
         {
-            Importer importFile = new Importer(importer.Diagnostics, importedFiles, importFileContext.STRINGLITERAL().GetText(), importer.File, new Location(importer.File, DocRange.GetRange(importFileContext)));
+            Importer importFile = new Importer(importer.Diagnostics, importedFiles, Extras.RemoveQuotes(importFileContext.STRINGLITERAL().GetText()), importer.Uri.AbsoluteUri, new Location(importer.Uri, DocRange.GetRange(importFileContext)));
             if (importFile.AlreadyImported) return;
 
             importedFiles.Add(importFile.ResultingPath);
@@ -58,7 +58,7 @@ namespace Deltin.Deltinteger.Parse
 
             if (cache.Update() || cache.Cache == null)
             {
-                importedScript = new ScriptFile(Diagnostics, importFile.ResultingPath, cache.Content);
+                importedScript = new ScriptFile(Diagnostics, new Uri(importFile.ResultingPath), cache.Content);
                 cache.Cache = importedScript;
             }
             else importedScript = (ScriptFile)cache.Cache;
@@ -116,8 +116,8 @@ namespace Deltin.Deltinteger.Parse
             foreach (var variable in rulesetVariables)
             {
                 // Assign the variable an index.
-                DefaultIndexAssigner.Add(VarCollection, variable, true);
                 // TODO: set initial value
+                DefaultIndexAssigner.Add(VarCollection, variable, true, null);
             }
 
             foreach (var rule in rules)
@@ -184,7 +184,7 @@ namespace Deltin.Deltinteger.Parse
                     if (element is Var)
                     {
                         Var var = (Var)element;
-                        var.Call(new Location(script.File, DocRange.GetRange(exprContext)));
+                        var.Call(new Location(script.Uri, DocRange.GetRange(exprContext)));
                         return var;
                     }
 

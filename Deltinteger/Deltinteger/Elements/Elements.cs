@@ -8,6 +8,7 @@ using System.Reflection;
 using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.WorkshopWiki;
 using Deltin.Deltinteger.Parse;
+using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 
 namespace Deltin.Deltinteger.Elements
 {
@@ -233,7 +234,7 @@ namespace Deltin.Deltinteger.Elements
         public WikiMethod Wiki { get; }
 
         // IScopeable defaults
-        public Location DefinedAt { get; } = null;
+        public LanguageServer.Location DefinedAt { get; } = null;
         public AccessLevel AccessLevel { get; } = AccessLevel.Public;
         public string ScopeableType { get; } = "method";
 
@@ -253,20 +254,6 @@ namespace Deltin.Deltinteger.Elements
         public static ElementList GetElement(string codeName)
         {
             return Elements.FirstOrDefault(e => e.Name == codeName);
-        }
-        public static CompletionItem[] GetCompletion(bool values, bool actions)
-        {
-            List<CompletionItem> completions = new List<CompletionItem>();
-            foreach(ElementList element in Elements)
-                if ((element.IsValue && values) || (!element.IsValue && actions))
-                {
-                    completions.Add(new CompletionItem(element.Name) {
-                        detail = element.GetObject().ToString(),
-                        kind = CompletionItem.Method,
-                        documentation = WorkshopWiki.Wiki.GetWikiMethod(element.WorkshopName)?.Description
-                    });
-                }
-            return completions.ToArray();
         }
 
         public string GetLabel(bool markdown)
@@ -336,9 +323,9 @@ namespace Deltin.Deltinteger.Elements
         public string Message { get; }
         public int Severity { get; }
 
-        public Diagnostic GetDiagnostic(DocRange range)
+        public LanguageServer.Diagnostic GetDiagnostic(DocRange range)
         {
-            return new Diagnostic(Message, range, Severity);
+            return new LanguageServer.Diagnostic(Message, range, Severity);
         }
     }
 }

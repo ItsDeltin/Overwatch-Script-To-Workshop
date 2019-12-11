@@ -109,10 +109,5 @@ namespace Deltin.Deltinteger.WorkshopWiki
         {
             return Name;
         }
-
-        public ParameterInformation ToParameterInformation()
-        {
-            return new ParameterInformation(Name, Description);
-        }
     }
 }

@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Reflection;
 using Deltin.Deltinteger.LanguageServer;
+using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 
 namespace Deltin.Deltinteger.Elements
 {
@@ -78,11 +79,6 @@ namespace Deltin.Deltinteger.Elements
             return GetEnum(enumValue.GetType()).GetEnumMember(enumValue.ToString());
         }
 
-        public static CompletionItem[] GetAllEnumCompletion()
-        {
-            return GetEnumData().Select(e => new CompletionItem(e.CodeName) { kind = CompletionItem.Enum }).ToArray();
-        }
-
         public static Element ToElement(EnumMember enumMember)
         {
             // This converts enums with special properties to an Element.
@@ -140,13 +136,6 @@ namespace Deltin.Deltinteger.Elements
         public EnumMember GetEnumMember(string codeName)
         {
             return Members.FirstOrDefault(m => m.CodeName == codeName);
-        }
-
-        public CompletionItem[] GetCompletion()
-        {
-            return Members.Select(value =>
-                new CompletionItem(value.CodeName) { kind = CompletionItem.EnumMember }
-            ).ToArray();
         }
     }
 

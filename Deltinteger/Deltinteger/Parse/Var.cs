@@ -5,7 +5,7 @@ using Deltin.Deltinteger.Elements;
 
 namespace Deltin.Deltinteger.Parse
 {
-    public class IndexReference
+    public class IndexReference : IGettable
     {
         public WorkshopArrayBuilder ArrayBuilder { get; set; }
         public WorkshopVariable WorkshopVariable { get; }
@@ -18,7 +18,7 @@ namespace Deltin.Deltinteger.Parse
             Index = index;
         }
 
-        public virtual Element GetVariable(Element targetPlayer = null)
+        public virtual IWorkshopTree GetVariable(Element targetPlayer = null)
         {
             return WorkshopArrayBuilder.GetVariable(targetPlayer, WorkshopVariable, Index);
         }
@@ -40,7 +40,7 @@ namespace Deltin.Deltinteger.Parse
         {
         }
 
-        public override Element GetVariable(Element targetPlayer = null)
+        public override IWorkshopTree GetVariable(Element targetPlayer = null)
         {
             return Element.Part<V_LastOf>(base.GetVariable(targetPlayer));
         }
@@ -64,9 +64,21 @@ namespace Deltin.Deltinteger.Parse
         }
     }
 
+    public class WorkshopElementReference : IGettable
+    {
+        public IWorkshopTree WorkshopElement { get; }
+
+        public WorkshopElementReference(IWorkshopTree element)
+        {
+            WorkshopElement = element;
+        }
+
+        public IWorkshopTree GetVariable(Element targetPlayer) => WorkshopElement;
+    }
+
     public class VarIndexAssigner
     {
-        private readonly Dictionary<Var, IndexReference> references = new Dictionary<Var, IndexReference>();
+        private readonly Dictionary<Var, IGettable> references = new Dictionary<Var, IGettable>();
         private readonly List<VarIndexAssigner> children = new List<VarIndexAssigner>();
         private readonly VarIndexAssigner parent = null;
 
@@ -76,23 +88,44 @@ namespace Deltin.Deltinteger.Parse
             this.parent = parent;
         }
 
-        public static VarIndexAssigner AssignScope(VarCollection varCollection, Scope scope, bool isGlobal)
-        {
-            VarIndexAssigner varAssigner = new VarIndexAssigner();
-            IScopeable[] variables = scope.AllChildVariables();
+        // TODO: remove if unused
+        // public static VarIndexAssigner AssignScope(VarCollection varCollection, Scope scope, bool isGlobal)
+        // {
+        //     VarIndexAssigner varAssigner = new VarIndexAssigner();
+        //     IScopeable[] variables = scope.AllChildVariables();
 
-            foreach (var scopeable in variables)
-            {
-                Var var = (Var)scopeable;
-                varAssigner.Add(varCollection, (Var)var, isGlobal);
-            }
-            return varAssigner;
+        //     foreach (var scopeable in variables)
+        //     {
+        //         Var var = (Var)scopeable;
+        //         varAssigner.Add(varCollection, (Var)var, isGlobal, null);
+        //     }
+        //     return varAssigner;
+        // }
+
+        public void Add(VarCollection varCollection, Var var, bool isGlobal, IWorkshopTree referenceValue)
+        {
+            if (varCollection == null) throw new ArgumentNullException(nameof(varCollection));
+            if (var == null)           throw new ArgumentNullException(nameof(var          ));
+
+            // A gettable/settable variable
+            // TODO: SetVariable initial value.
+            if (var.Settable())
+                references.Add(var, varCollection.Assign(var, isGlobal));
+            // Element reference
+            else if (var.VariableType == VariableType.ElementReference)
+                references.Add(var, new WorkshopElementReference(referenceValue));
+            
+            else throw new NotImplementedException();
         }
 
-        public void Add(VarCollection varCollection, Var var, bool isGlobal)
-        {
-            references.Add(var, varCollection.Assign(var, isGlobal));
-        }
+        // public void AddReference(VarCollection varCollection, Var var, bool isGlobal, IWorkshopTree initialValue)
+        // {
+        //     if (varCollection == null) throw new ArgumentNullException(nameof(varCollection));
+        //     if (var == null)           throw new ArgumentNullException(nameof(var          ));
+        //     if (initialValue == null)  throw new ArgumentNullException(nameof(initialValue ));
+
+        //     references.Add(var, new WorkshopElementReference(initialValue));
+        // }
 
         public VarIndexAssigner CreateContained()
         {
@@ -101,10 +134,9 @@ namespace Deltin.Deltinteger.Parse
             return newAssigner;
         }
 
-        public IndexReference this[Var var]
+        public IGettable this[Var var]
         {
             get {
-
                 VarIndexAssigner current = this;
                 while (current.parent != null)
                 {
@@ -114,7 +146,7 @@ namespace Deltin.Deltinteger.Parse
                     current = current.parent;
                 }
 
-                throw new Exception();
+                throw new Exception(string.Format("The parameter {0} is not assigned to anything.", var.Name));
             }
             private set {}
         }
@@ -144,8 +176,6 @@ namespace Deltin.Deltinteger.Parse
         private DeltinScript translateInfo;
         private bool finalized;
 
-        public bool ReferenceInitialValue { get; private set; } = false;
-
         public IExpression InitialValue { get; private set; }
 
         protected Var(string name, Location definedAt)
@@ -156,8 +186,9 @@ namespace Deltin.Deltinteger.Parse
 
         public bool Settable()
         {
-            if (CodeType == null) return true;
-            else return CodeType.Settable();
+            return (CodeType == null || !CodeType.Constant()) && (VariableType == VariableType.Global || VariableType == VariableType.Player || VariableType == VariableType.Dynamic);
+            // if (CodeType == null) return true;
+            // else return CodeType.Constant();
         }
 
         // IExpression
@@ -182,7 +213,7 @@ namespace Deltin.Deltinteger.Parse
 
         public static Var CreateVarFromContext(VariableDefineType defineType, ScriptFile script, DeltinScript translateInfo, DeltinScriptParser.DefineContext context)
         {
-            Var newVar = new Var(context.name.Text, new Location(script.File, DocRange.GetRange(context.name)));
+            Var newVar = new Var(context.name.Text, new Location(script.Uri, DocRange.GetRange(context.name)));
             newVar.context = context;
             newVar.script = script;
             newVar.translateInfo = translateInfo;
@@ -245,8 +276,11 @@ namespace Deltin.Deltinteger.Parse
                 type = translateInfo.GetCodeType(context.type.Text, script.Diagnostics, DocRange.GetRange(context.type));
 
                 // If variables with the type cannot be set to, set referenceInitialValue to true. 'type' can still equal null if the type name is invalid.
-                if (type != null && !type.Settable())
-                    newVar.ReferenceInitialValue = true;
+                if (type != null && type.Constant())
+                {
+                    // TODO: test this with workshop enums
+                    newVar.VariableType = VariableType.ElementReference;
+                }
             }
 
             // Syntax error if there is an '=' but no expression.
@@ -274,10 +308,7 @@ namespace Deltin.Deltinteger.Parse
     
         public IWorkshopTree Parse(ActionSet actionSet)
         {
-            if (!ReferenceInitialValue)
-                return actionSet.IndexAssigner[this].GetVariable();
-            else
-                return InitialValue.Parse(actionSet);
+            return actionSet.IndexAssigner[this].GetVariable();
         }
     }
 
@@ -292,20 +323,19 @@ namespace Deltin.Deltinteger.Parse
 
         public void Translate(ActionSet actionSet)
         {
-            if (DefiningVariable.ReferenceInitialValue) return;
-
-            actionSet.IndexAssigner.Add(actionSet.VarCollection, DefiningVariable, actionSet.IsGlobal);
-
             Element initialValue = 0;
             if (DefiningVariable.InitialValue != null)
                 // TODO: Don't cast to Element.
                 initialValue = (Element)DefiningVariable.InitialValue.Parse(actionSet);
+            
+            actionSet.IndexAssigner.Add(actionSet.VarCollection, DefiningVariable, actionSet.IsGlobal, initialValue);
 
-            actionSet.AddAction(
-                actionSet.IndexAssigner[DefiningVariable].SetVariable(
-                    initialValue
-                )
-            );
+            if (DefiningVariable.Settable())
+                actionSet.AddAction(
+                    ((IndexReference)actionSet.IndexAssigner[DefiningVariable]).SetVariable(
+                        initialValue
+                    )
+                );
         }
     }
 
@@ -319,8 +349,13 @@ namespace Deltin.Deltinteger.Parse
 
     public enum VariableType
     {
+        // Dynamic variables are either global or player, depending on the rule it is defined in.
         Dynamic,
+        // Global variable.
         Global,
-        Player
+        // Player variable.
+        Player,
+        // The variable references an element.
+        ElementReference
     }
 }

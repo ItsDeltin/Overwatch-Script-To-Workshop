@@ -131,21 +131,6 @@ namespace Deltin.Deltinteger.Elements
             }
             return _customMethodData;
         }
-
-        public static CustomMethodData GetCustomMethod(string name)
-        {
-            return GetCustomMethods().FirstOrDefault(method => method.Name == name);
-        }
-
-        public static CompletionItem[] GetCompletion()
-        {
-            return GetCustomMethods().Select(cm => new CompletionItem(cm.Name) 
-            { 
-                detail = cm.GetLabel(false),
-                kind = CompletionItem.Method,
-                documentation = cm.Wiki?.Description
-            }).ToArray();
-        }
     }
 
     public abstract class CustomMethodBase

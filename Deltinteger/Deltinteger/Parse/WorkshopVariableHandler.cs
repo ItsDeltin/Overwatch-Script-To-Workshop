@@ -95,7 +95,7 @@ namespace Deltin.Deltinteger.Parse
 
                 // Copy back the variable at C to the correct index
                 actions.AddRange(
-                    SetVariable(builder, builder.Store.GetVariable(targetPlayer), targetPlayer, builder.Constructor, false, index[i])
+                    SetVariable(builder, (Element)builder.Store.GetVariable(targetPlayer), targetPlayer, builder.Constructor, false, index[i])
                 );
             }
             // Set the final variable using Set At Index.
@@ -187,7 +187,7 @@ namespace Deltin.Deltinteger.Parse
 
                 // Copy back the variable at C to the correct index
                 actions.AddRange(
-                    SetVariable(builder, builder.Store.GetVariable(targetPlayer), targetPlayer, builder.Constructor, false, index[i])
+                    SetVariable(builder, (Element)builder.Store.GetVariable(targetPlayer), targetPlayer, builder.Constructor, false, index[i])
                 );
             }
             // Set the final variable using Set At Index.

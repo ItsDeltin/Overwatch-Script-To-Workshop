@@ -11,14 +11,14 @@ namespace Deltin.Deltinteger.Parse
     public class ScriptFile
     {
         public DeltinScriptParser.RulesetContext Context { get; }
-        public string File { get; }
+        public Uri Uri { get; }
         public FileDiagnostics Diagnostics { get; }
         public IToken[] Tokens { get; }
         private List<CompletionRange> completionRanges { get; } = new List<CompletionRange>();
 
-        public ScriptFile(Diagnostics diagnostics, string file, string content)
+        public ScriptFile(Diagnostics diagnostics, Uri uri, string content)
         {
-            File = file;
+            Uri = uri;
             AntlrInputStream inputStream = new AntlrInputStream(content);
 
             // Lexer
@@ -28,7 +28,7 @@ namespace Deltin.Deltinteger.Parse
             Tokens = commonTokenStream.GetTokens().ToArray();
             commonTokenStream.Reset();
 
-            Diagnostics = diagnostics.FromFile(File);
+            Diagnostics = diagnostics.FromUri(Uri);
 
             // Parse
             DeltinScriptParser parser = new DeltinScriptParser(commonTokenStream);

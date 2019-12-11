@@ -34,7 +34,8 @@ namespace Deltin.Deltinteger.Parse
                     }
                 }
             }
-            else notAVariableRange = DocRange.GetRange(varsetContext.var);
+            else if (variableExpression != null)
+                notAVariableRange = DocRange.GetRange(varsetContext.var);
 
             if (notAVariableRange != null)
                 script.Diagnostics.Error("Expected a variable.", notAVariableRange);
@@ -49,7 +50,7 @@ namespace Deltin.Deltinteger.Parse
         {
             // TODO: Don't cast to Element.
             actionSet.AddAction(
-                actionSet.IndexAssigner[SetVariable].SetVariable(
+                ((IndexReference)actionSet.IndexAssigner[SetVariable]).SetVariable(
                     (Element)Value.Parse(actionSet)
                 )
             );

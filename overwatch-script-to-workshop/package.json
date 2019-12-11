@@ -42,17 +42,31 @@
             "type": "object",
             "title": "ostw",
             "properties": {
-                "ostw.maxNumberOfProblems": {
-                    "scope": "resource",
-                    "type": "number",
-                    "default": 100,
-                    "description": "Controls the maximum number of problems produced by the server."
+                "ostw.outputLanguage": {
+                    "scope": "window",
+                    "type": "string",
+                    "enum": [
+                        "English",
+                        "German",
+                        "Spanish (Castilian)",
+                        "Spanish (Mexico)",
+                        "French",
+                        "Italian",
+                        "Japanese",
+                        "Korean",
+                        "Polish",
+                        "Portuguese",
+                        "Russian",
+                        "Chinese (S)",
+                        "Chinese (T)"
+                    ],
+                    "default": "English",
+                    "description": "The output language of the OSTW output."
                 },
-                "ostw.port1": {
-                    "scope": "resource",
-                    "type": "number",
-                    "default": 9145,
-                    "description": "The first port the language server application is using."
+                "ostw.deltintegerPath": {
+                    "scope": "machine",
+                    "type": "string",
+                    "description": "The path to Deltinteger.exe."
                 },
                 "ostw.trace.server": {
                     "scope": "window",

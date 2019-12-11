@@ -42,4 +42,9 @@ namespace Deltin.Deltinteger
     {
         void Call(Location calledFrom);
     }
+
+    public interface IGettable
+    {
+        IWorkshopTree GetVariable(Element eventPlayer = null);
+    }
 }

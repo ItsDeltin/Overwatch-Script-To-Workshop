@@ -2,6 +2,9 @@ using System;
 using Deltin.Deltinteger.Parse;
 using Antlr4.Runtime;
 using Antlr4.Runtime.Tree;
+using LSPos      = OmniSharp.Extensions.LanguageServer.Protocol.Models.Position;
+using LSRange    = OmniSharp.Extensions.LanguageServer.Protocol.Models.Range;
+using LSLocation = OmniSharp.Extensions.LanguageServer.Protocol.Models.Location;
 
 namespace Deltin.Deltinteger.LanguageServer
 {
@@ -54,6 +57,11 @@ namespace Deltin.Deltinteger.LanguageServer
         public Pos Offset(Pos other)
         {
             return new Pos(this.line + other.line, this.character + other.character);
+        }
+
+        public LSPos ToLsPos()
+        {
+            return new LSPos(line, character);
         }
     }
 
@@ -184,8 +192,14 @@ namespace Deltin.Deltinteger.LanguageServer
         {
             return start.ToString() + " - " + end.ToString();
         }
+
+        public LSRange ToLsRange()
+        {
+            return new LSRange(start.ToLsPos(), end.ToLsPos());
+        }
     }
     
+    /*
     public class CompletionItem
     {
         #region Kinds
@@ -288,6 +302,7 @@ namespace Deltin.Deltinteger.LanguageServer
             this.diagnostics = diagnostics;
         }
     }
+    */
 
     public class Diagnostic
     {
@@ -345,6 +360,7 @@ namespace Deltin.Deltinteger.LanguageServer
         }
     }
 
+    /*
     // https://microsoft.github.io/language-server-protocol/specification#textDocument_hover
     class Hover
     {
@@ -394,19 +410,21 @@ namespace Deltin.Deltinteger.LanguageServer
             this.value = value;
         }
     }
+    */
 
     public class Location 
     {
-        public string uri;
+        public Uri uri;
         public DocRange range;
 
-        public Location(string uri, DocRange range)
+        public Location(Uri uri, DocRange range)
         {
             this.uri = uri;
             this.range = range;
         }
     }
 
+    /*
     class LocationLink
     {
         /// Span of the origin of this link.
@@ -479,4 +497,5 @@ namespace Deltin.Deltinteger.LanguageServer
             this.command = command;
         }
     }
+    */
 }

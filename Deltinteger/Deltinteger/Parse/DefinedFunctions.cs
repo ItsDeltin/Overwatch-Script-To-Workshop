@@ -16,12 +16,14 @@ namespace Deltin.Deltinteger.Parse
         public AccessLevel AccessLevel { get; protected set; }
         public Location DefinedAt { get; }
 
-        private DeltinScript translateInfo { get; }
-        protected Scope methodScope { get; }
-
         public WikiMethod Wiki { get; }
 
+        // ICallable
         private List<Location> CalledFrom { get; } = new List<Location>();
+
+        private DeltinScript translateInfo { get; }
+        protected Scope methodScope { get; }
+        protected Var[] ParameterVars { get; private set; }
         
         public DefinedFunction(DeltinScript translateInfo, string name, Location definedAt)
         {
@@ -48,10 +50,12 @@ namespace Deltin.Deltinteger.Parse
             }
 
             Parameters = new CodeParameter[context.define().Length];
+            ParameterVars = new Var[Parameters.Length];
             for (int i = 0; i < context.define().Length; i++)
             {
                 var newVar = Var.CreateVarFromContext(VariableDefineType.Parameter, script, translateInfo, context.define(i));
                 newVar.Finalize(methodScope);
+                ParameterVars[i] = newVar;
                 Parameters[i] = new CodeParameter(context.define(i).name.Text, newVar.CodeType);
             }
         }
@@ -76,7 +80,7 @@ namespace Deltin.Deltinteger.Parse
         private BlockAction block { get; set; }
 
         public DefinedMethod(ScriptFile script, DeltinScript translateInfo, DeltinScriptParser.Define_methodContext context)
-            : base(translateInfo, context.name.Text, new Location(script.File, DocRange.GetRange(context)))
+            : base(translateInfo, context.name.Text, new Location(script.Uri, DocRange.GetRange(context)))
         {
             // Check if recursion is enabled.
             IsRecursive = context.RECURSIVE() != null;
@@ -96,9 +100,21 @@ namespace Deltin.Deltinteger.Parse
         override public IWorkshopTree Parse(ActionSet actionSet, IWorkshopTree[] parameterValues)
         {
             actionSet = actionSet.New(actionSet.IndexAssigner.CreateContained());
+
+            for (int i = 0; i < ParameterVars.Length; i++)
+            {
+                actionSet.IndexAssigner.Add(actionSet.VarCollection, ParameterVars[i], actionSet.IsGlobal, parameterValues[i]);
+
+                // todo: improve this
+                if (actionSet.IndexAssigner[ParameterVars[i]] is IndexReference)
+                    actionSet.AddAction(
+                        ((IndexReference)actionSet.IndexAssigner[ParameterVars[i]]).SetVariable((Element)parameterValues[i])
+                    );
+            }
+
             block.Translate(actionSet);
 
-            // todo: return values
+            // todo: return statement and stuff
             return new V_Null();
         }
     }
@@ -108,7 +124,7 @@ namespace Deltin.Deltinteger.Parse
         public IExpression Expression { get; private set; }
 
         public DefinedMacro(ScriptFile script, DeltinScript translateInfo, DeltinScriptParser.Define_macroContext context)
-            : base(translateInfo, context.name.Text, new Location(script.File, DocRange.GetRange(context)))
+            : base(translateInfo, context.name.Text, new Location(script.Uri, DocRange.GetRange(context)))
         {
             AccessLevel = context.accessor().GetAccessLevel();
             SetupParameters(script, context.setParameters());

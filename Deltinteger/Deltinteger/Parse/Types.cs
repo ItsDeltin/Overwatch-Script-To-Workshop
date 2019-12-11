@@ -43,7 +43,7 @@ namespace Deltin.Deltinteger.Parse
         /// Determines if variables with this type can have their value changed.
         /// </summary>
         /// <returns></returns>
-        public virtual bool Settable() => true;
+        public virtual bool Constant() => false;
 
         public static bool TypeMatches(CodeType parameterType, CodeType valueType)
         {
@@ -72,10 +72,7 @@ namespace Deltin.Deltinteger.Parse
             return EnumScope;
         }
 
-        override public bool Settable()
-        {
-            return false;
-        }
+        override public bool Constant() => true;
     }
 
     public class ScopedEnumMember : IScopeable, IExpression

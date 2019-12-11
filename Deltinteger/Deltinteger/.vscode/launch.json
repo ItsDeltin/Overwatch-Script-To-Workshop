@@ -40,7 +40,7 @@
             "request": "launch",
             "preLaunchTask": "build",
             "program": "${workspaceFolder}/bin/Debug/netcoreapp3.0/Deltinteger.dll",
-            "args":["-langserver", "-port 9145 9146"],
+            "args":["--langserver"],
             "console": "externalTerminal",
             "stopAtEntry": false,
             "internalConsoleOptions": "openOnSessionStart"
@@ -87,6 +87,18 @@
             "startRule": "ruleset",
             "printParseTree": true,
             "visualParseTree": true
+        },
+        {
+            "name": ".NET Core Attach to Deltinteger",
+            "type": "coreclr",
+            "request": "attach",
+            "processName": "Deltinteger"
+        },
+        {
+            "name": ".NET Core Attach",
+            "type": "coreclr",
+            "request": "attach",
+            "processId": "${command:pickProcess}"
         }
     ]
 }
