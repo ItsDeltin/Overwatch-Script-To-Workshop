@@ -47,6 +47,17 @@ namespace Deltin.Deltinteger.LanguageServer
 
         public ILanguageServer Server { get; private set; }
 
+        private DeltinScript _lastParse = null;
+        private object _lastParseLock = new object();
+        public DeltinScript LastParse {
+            get {
+                lock (_lastParseLock) return _lastParse;
+            }
+            set {
+                lock (_lastParseLock) _lastParse = value;
+            }
+        }
+
         async Task RunServer()
         {
             Serilog.Log.Logger = new LoggerConfiguration()
@@ -56,7 +67,9 @@ namespace Deltin.Deltinteger.LanguageServer
             
             Serilog.Log.Information("Deltinteger Language Server");
 
-            DocumentHandler handler = new DocumentHandler(this);
+            DocumentHandler documentHandler = new DocumentHandler(this);
+            CompletionHandler completionHandler = new CompletionHandler(this);
+
             Server = await OmniSharp.Extensions.LanguageServer.Server.LanguageServer.From(options => options
                 .WithInput(Console.OpenStandardInput())
                 .WithOutput(Console.OpenStandardOutput())
@@ -64,8 +77,8 @@ namespace Deltin.Deltinteger.LanguageServer
                     .AddSerilog()
                     .AddLanguageServer()
                     .SetMinimumLevel(Microsoft.Extensions.Logging.LogLevel.Debug))
-                .WithHandler<DocumentHandler>(handler)
-                .WithHandler<CompletionHandler>());
+                .WithHandler<DocumentHandler>(documentHandler)
+                .WithHandler<CompletionHandler>(completionHandler));
             
             await Server.WaitForExit;
         }
@@ -84,13 +97,13 @@ namespace Deltin.Deltinteger.LanguageServer
         );
 
         // Object
-        public DeltintegerLanguageServer LanguageServer { get; } 
         public List<TextDocumentItem> Documents { get; } = new List<TextDocumentItem>();
+        private DeltintegerLanguageServer _languageServer { get; } 
         private SynchronizationCapability _compatibility;
 
         public DocumentHandler(DeltintegerLanguageServer languageServer)
         {
-            LanguageServer = languageServer;
+            _languageServer = languageServer;
         }
 
         public TextDocumentAttributes GetTextDocumentAttributes(Uri uri)
@@ -119,8 +132,6 @@ namespace Deltin.Deltinteger.LanguageServer
         // Handle save.
         public Task<Unit> Handle(DidSaveTextDocumentParams saveParams, CancellationToken token)
         {
-            Serilog.Log.Information($"Document {saveParams.TextDocument.Uri.AbsolutePath} changed.");
-
             if (_sendTextOnSave)
             {
                 var document = TextDocumentFromUri(saveParams.TextDocument.Uri);
@@ -134,8 +145,6 @@ namespace Deltin.Deltinteger.LanguageServer
         // Handle close.
         public Task<Unit> Handle(DidCloseTextDocumentParams closeParams, CancellationToken token)
         {
-            Serilog.Log.Information($"Document {closeParams.TextDocument.Uri.AbsolutePath} closed.");
-
             Documents.Remove(TextDocumentFromUri(closeParams.TextDocument.Uri));
             return Unit.Task;
         }
@@ -143,21 +152,17 @@ namespace Deltin.Deltinteger.LanguageServer
         // Handle open.
         public Task<Unit> Handle(DidOpenTextDocumentParams openParams, CancellationToken token)
         {
-            Serilog.Log.Information($"Document {openParams.TextDocument.Uri.AbsolutePath} opened.");
-
             Documents.Add(openParams.TextDocument);
+            Parse(openParams.TextDocument.Uri);
             return Unit.Task;
         }
 
         // Handle change.
         public Task<Unit> Handle(DidChangeTextDocumentParams changeParams, CancellationToken token)
         {
-            Serilog.Log.Information($"Document {changeParams.TextDocument.Uri.AbsolutePath} changed.");
-
             var document = TextDocumentFromUri(changeParams.TextDocument.Uri);
             foreach (var change in changeParams.ContentChanges)
             {
-                // TODO: Test this with different line endings.
                 int start = PosIndex(document.Text, change.Range.Start);
                 int length = PosIndex(document.Text, change.Range.End) - start;
 
@@ -187,13 +192,35 @@ namespace Deltin.Deltinteger.LanguageServer
 
         private static int PosIndex(string text, Position pos)
         {
-            string[] lineSplit = text.Split('\n');
+            int line = 0;
+            int character = 0;
+            for (int i = 0; i < text.Length; i++)
+            {
+                if (text[i] == '\n')
+                {
+                    line++;
+                    character = 0;
+                }
+                else
+                {
+                    character++;
+                }
 
-            int index = 0;
-            for (int i = 0; i < pos.Line; i++) index += lineSplit[i].Length;
-            index += (int)pos.Character;
+                if (pos.Line == line && pos.Character == character)
+                    return i + 1;
+                
+                if (line > pos.Line)
+                    throw new Exception();
+            }
+            throw new Exception();
+
+            // string[] lineSplit = text.Split('\n');
+
+            // int index = 0;
+            // for (int i = 0; i < pos.Line; i++) index += lineSplit[i].Length;
+            // index += (int)pos.Character;
             
-            return index;
+            // return index;
         }
 
         void Parse(Uri uri) => Parse(TextDocumentFromUri(uri));
@@ -202,13 +229,13 @@ namespace Deltin.Deltinteger.LanguageServer
             try
             {
                 Diagnostics diagnostics = new Diagnostics();
-                // TODO: use uri instead of string for file.
                 ScriptFile root = new ScriptFile(diagnostics, document.Uri, document.Text);
                 DeltinScript deltinScript = new DeltinScript(diagnostics, root);
+                _languageServer.LastParse = deltinScript;
 
                 var publishDiagnostics = diagnostics.GetDiagnostics();
                 foreach (var publish in publishDiagnostics)
-                    LanguageServer.Server.Document.PublishDiagnostics(publish);
+                    _languageServer.Server.Document.PublishDiagnostics(publish);
             }
             catch (Exception ex)
             {
@@ -219,10 +246,50 @@ namespace Deltin.Deltinteger.LanguageServer
 
     class CompletionHandler : ICompletionHandler
     {
+        private DeltintegerLanguageServer _languageServer { get; }
+
+        public CompletionHandler(DeltintegerLanguageServer languageServer)
+        {
+            _languageServer = languageServer;
+        }
+
         public async Task<CompletionList> Handle(CompletionParams completionParams, CancellationToken token)
         {
-            Serilog.Log.Information("Getting completion.");
-            return new CompletionList(new CompletionItem() { Label = "wow this is cool", Kind = CompletionItemKind.Variable });
+            // TODO: Fill defaultCompletion with the default workshop methods and enums. 
+            CompletionList defaultCompletion = new CompletionList(new CompletionItem() { Label = "wow this is cool", Kind = CompletionItemKind.Variable });
+
+            // If the script has not been parsed yet, return the default completion.
+            if (_languageServer.LastParse == null) return defaultCompletion;
+
+            // Get the script from the uri. If it isn't parsed, return the default completion. 
+            var script = _languageServer.LastParse.ScriptFromUri(completionParams.TextDocument.Uri);
+            if (script == null) return defaultCompletion;
+
+            var completions = script.GetCompletionRanges();
+            List<CompletionRange> inRange = new List<CompletionRange>();
+            foreach (var completion in completions)
+                if (completion.Range.IsInside(completionParams.Position))
+                    inRange.Add(completion);
+            
+            if (inRange.Count > 0)
+            {
+                inRange = inRange
+                    // Order by if the completion range has priority. True is first.
+                    .OrderByDescending(range => range.Priority)
+                    // Then order by the size of the ranges.
+                    .ThenBy(range => range.Range)
+                    .ToList();
+                
+                if (inRange[0].Priority)
+                    inRange.RemoveRange(1, inRange.Count - 2);
+                
+                List<CompletionItem> items = new List<CompletionItem>();
+                foreach (var range in inRange)
+                    items.AddRange(range.Scope.GetCompletion(completionParams.Position));
+                
+                return new CompletionList(items);
+            }
+            else return defaultCompletion;
         }
 
         public CompletionRegistrationOptions GetRegistrationOptions()

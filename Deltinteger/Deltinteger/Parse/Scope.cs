@@ -3,12 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.Elements;
+using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
+using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItemKind;
 
 namespace Deltin.Deltinteger.Parse
 {
     public class Scope
     {
-        private List<IScopeable> inScope { get; } = new List<IScopeable>();
         private List<IScopeable> Variables { get; } = new List<IScopeable>();
         private List<IMethod> Methods { get; } = new List<IMethod>();
         private Scope Parent { get; }
@@ -134,6 +135,21 @@ namespace Deltin.Deltinteger.Parse
             }
 
             return methods.ToArray();
+        }
+
+        public CompletionItem[] GetCompletion(Pos pos)
+        {
+            List<CompletionItem> completions = new List<CompletionItem>();
+
+            for (int i = 0; i < Variables.Count; i++)
+                if (Variables[i].DefinedAt == null || Variables[i].DefinedAt.range.start <= pos)
+                    completions.Add(Variables[i].GetCompletion());
+
+            for (int i = 0; i < Methods.Count; i++)
+                if (Methods[i].DefinedAt == null || Methods[i].DefinedAt.range.start <= pos)
+                    completions.Add(Methods[i].GetCompletion());
+                
+            return completions.ToArray();
         }
 
         public static Scope GetGlobalScope()

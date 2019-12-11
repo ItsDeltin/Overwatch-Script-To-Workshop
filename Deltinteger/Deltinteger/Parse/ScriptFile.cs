@@ -43,5 +43,9 @@ namespace Deltin.Deltinteger.Parse
         {
             completionRanges.Add(completionRange);
         }
+        public CompletionRange[] GetCompletionRanges()
+        {
+            return completionRanges.ToArray();
+        }
     }
 }

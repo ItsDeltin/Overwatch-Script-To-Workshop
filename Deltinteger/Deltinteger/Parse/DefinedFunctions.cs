@@ -4,6 +4,8 @@ using System.Linq;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.WorkshopWiki;
+using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
+using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItemKind;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -72,6 +74,15 @@ namespace Deltin.Deltinteger.Parse
         }
 
         public abstract IWorkshopTree Parse(ActionSet actionSet, IWorkshopTree[] parameterValues);
+
+        public CompletionItem GetCompletion()
+        {
+            return new CompletionItem()
+            {
+                Label = Name,
+                Kind = CompletionItemKind.Method
+            };
+        }
     }
 
     public class DefinedMethod : DefinedFunction

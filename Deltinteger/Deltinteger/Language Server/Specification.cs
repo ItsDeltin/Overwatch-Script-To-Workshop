@@ -63,6 +63,8 @@ namespace Deltin.Deltinteger.LanguageServer
         {
             return new LSPos(line, character);
         }
+
+        public static implicit operator Pos(LSPos pos) => new Pos((int)pos.Line, (int)pos.Character);
     }
 
     public class DocRange : IComparable<DocRange>

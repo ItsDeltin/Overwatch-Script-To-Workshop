@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.Elements;
+using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
+using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItemKind;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -309,6 +311,15 @@ namespace Deltin.Deltinteger.Parse
         public IWorkshopTree Parse(ActionSet actionSet)
         {
             return actionSet.IndexAssigner[this].GetVariable();
+        }
+    
+        public CompletionItem GetCompletion()
+        {
+            return new CompletionItem()
+            {
+                Label = Name,
+                Kind = CompletionItemKind.Variable
+            };
         }
     }
 

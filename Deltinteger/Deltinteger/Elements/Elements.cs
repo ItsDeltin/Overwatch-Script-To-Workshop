@@ -8,7 +8,8 @@ using System.Reflection;
 using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.WorkshopWiki;
 using Deltin.Deltinteger.Parse;
-using OmniSharp.Extensions.LanguageServer.Protocol.Models;
+using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
+using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItemKind;
 
 namespace Deltin.Deltinteger.Elements
 {
@@ -308,6 +309,15 @@ namespace Deltin.Deltinteger.Elements
         public static ElementList FromType(Type type)
         {
             return Elements.FirstOrDefault(element => element.Type == type);
+        }
+
+        public CompletionItem GetCompletion()
+        {
+            return new CompletionItem()
+            {
+                Label = Name,
+                Kind = CompletionItemKind.Method
+            };
         }
     }
 

@@ -10,7 +10,7 @@ namespace Deltin.Deltinteger.Parse
     public class DeltinScript
     {
         public Diagnostics Diagnostics { get; }
-        private List<ScriptFile> ScriptFiles { get; } = new List<ScriptFile>();
+        public List<ScriptFile> ScriptFiles { get; } = new List<ScriptFile>();
         private List<CodeType> types { get; } = new List<CodeType>();
         public Scope PlayerVariableScope { get; private set; } = new Scope();
         public Scope GlobalScope { get; }
@@ -139,6 +139,8 @@ namespace Deltin.Deltinteger.Parse
         {
             return GetCodeType(name, null, null) != null;
         }
+
+        public ScriptFile ScriptFromUri(Uri uri) => ScriptFiles.FirstOrDefault(script => script.Uri == uri);
 
         public static IStatement GetStatement(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.StatementContext statementContext)
         {

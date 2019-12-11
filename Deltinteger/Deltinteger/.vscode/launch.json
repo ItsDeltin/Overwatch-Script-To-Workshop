@@ -24,6 +24,12 @@
             "processId": "${command:pickProcess}"
         },
         {
+            "name": "Attach to Deltinteger",
+            "type": "coreclr",
+            "request": "attach",
+            "processName": "Deltinteger"
+        },
+        {
             "name": "Debug Script",
             "type":"coreclr",
             "request": "launch",
@@ -87,18 +93,6 @@
             "startRule": "ruleset",
             "printParseTree": true,
             "visualParseTree": true
-        },
-        {
-            "name": ".NET Core Attach to Deltinteger",
-            "type": "coreclr",
-            "request": "attach",
-            "processName": "Deltinteger"
-        },
-        {
-            "name": ".NET Core Attach",
-            "type": "coreclr",
-            "request": "attach",
-            "processId": "${command:pickProcess}"
         }
     ]
 }
