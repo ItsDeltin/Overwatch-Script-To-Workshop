@@ -26,10 +26,20 @@ namespace Deltin.Deltinteger.Parse
         {
             ErrorName = name;
         }
+        private Scope(Scope parent, string name)
+        {
+            Parent = parent;
+            ErrorName = name;
+        }
 
         public Scope Child()
         {
             return new Scope(this);
+        }
+
+        public Scope Child(string name)
+        {
+            return new Scope(this, name);
         }
 
         /// <summary>

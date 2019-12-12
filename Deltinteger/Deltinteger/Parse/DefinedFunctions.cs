@@ -9,7 +9,7 @@ using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.C
 
 namespace Deltin.Deltinteger.Parse
 {
-    public abstract class DefinedFunction : IMethod, ICallable
+    public abstract class DefinedFunction : IMethod, ICallable, IParameterCallable
     {
         public string ScopeableType { get; } = "method";
         public string Name { get; }
@@ -46,21 +46,26 @@ namespace Deltin.Deltinteger.Parse
 
         protected void SetupParameters(ScriptFile script, DeltinScriptParser.SetParametersContext context)
         {
-            if (context == null) 
-            {
-                Parameters = new CodeParameter[0];
-                return;
-            }
+            var parameterInfo = CodeParameter.GetParameters(script, translateInfo, methodScope, context);
+            Parameters = parameterInfo.Parameters;
+            ParameterVars = parameterInfo.Variables;
 
-            Parameters = new CodeParameter[context.define().Length];
-            ParameterVars = new Var[Parameters.Length];
-            for (int i = 0; i < context.define().Length; i++)
-            {
-                var newVar = Var.CreateVarFromContext(VariableDefineType.Parameter, script, translateInfo, context.define(i));
-                newVar.Finalize(methodScope);
-                ParameterVars[i] = newVar;
-                Parameters[i] = new CodeParameter(context.define(i).name.Text, newVar.CodeType);
-            }
+            // todo: remove i guess
+            // if (context == null) 
+            // {
+            //     Parameters = new CodeParameter[0];
+            //     return;
+            // }
+
+            // Parameters = new CodeParameter[context.define().Length];
+            // ParameterVars = new Var[Parameters.Length];
+            // for (int i = 0; i < context.define().Length; i++)
+            // {
+            //     var newVar = Var.CreateVarFromContext(VariableDefineType.Parameter, script, translateInfo, context.define(i));
+            //     newVar.Finalize(methodScope);
+            //     ParameterVars[i] = newVar;
+            //     Parameters[i] = new CodeParameter(context.define(i).name.Text, newVar.CodeType);
+            // }
         }
 
         public void Call(Location calledFrom)

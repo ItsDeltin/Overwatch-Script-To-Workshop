@@ -9,6 +9,7 @@ namespace Deltin.Deltinteger.Parse
 
         public BlockAction(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.BlockContext blockContext)
         {
+            // TODO: Create new child scope
             if (blockContext.statement() == null) Statements = new IStatement[0];
             else
             {

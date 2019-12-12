@@ -221,6 +221,7 @@ namespace Deltin.Deltinteger.Parse
                 }
                 // Method
                 if (exprContext.method() != null) return new CallMethodAction(script, translateInfo, scope, exprContext.method());
+                if (exprContext.create_object() != null) return new CreateObjectAction(script, translateInfo, scope, exprContext.create_object());
             }
             else if (exprContext.SEPERATOR() != null)
             {

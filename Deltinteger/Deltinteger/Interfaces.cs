@@ -47,6 +47,12 @@ namespace Deltin.Deltinteger
         void Call(Location calledFrom);
     }
 
+    public interface IParameterCallable
+    {
+        CodeParameter[] Parameters { get; }
+        Location DefinedAt { get; }
+    }
+
     public interface IGettable
     {
         IWorkshopTree GetVariable(Element eventPlayer = null);

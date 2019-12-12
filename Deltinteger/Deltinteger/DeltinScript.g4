@@ -131,7 +131,7 @@ constructor : accessor? name=PART LEFT_PAREN setParameters RIGHT_PAREN block ;
 
 setParameters: (define (COMMA define)*)?;
 
-create_object : NEW type=PART LEFT_PAREN call_parameters? RIGHT_PAREN ;
+create_object : NEW (type=PART (LEFT_PAREN call_parameters? RIGHT_PAREN)) ;
 
 import_file : IMPORT STRINGLITERAL STATEMENT_END ;
 import_object : IMPORT file=STRINGLITERAL AS name=PART STATEMENT_END ;

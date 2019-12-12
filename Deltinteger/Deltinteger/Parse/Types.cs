@@ -10,6 +10,7 @@ namespace Deltin.Deltinteger.Parse
     public abstract class CodeType : IExpression
     {
         public string Name { get; }
+        public Constructor[] Constructors { get; protected set; }
 
         public CodeType(string name)
         {
@@ -142,14 +143,14 @@ namespace Deltin.Deltinteger.Parse
             if (typeContext.CLASS() != null) 
             { 
                 TypeKind = TypeKind.Class;
-                objectScope = new Scope("class " + Name);
                 staticScope = new Scope("class " + Name);
+                objectScope = staticScope.Child("class " + Name);
             }
             else if (typeContext.STRUCT() != null) 
             { 
                 TypeKind = TypeKind.Struct;
-                objectScope = new Scope("struct " + Name);
                 staticScope = new Scope("struct " + Name);
+                objectScope = staticScope.Child("struct " + Name);
             }
             else throw new NotImplementedException();
 
@@ -157,11 +158,35 @@ namespace Deltin.Deltinteger.Parse
             foreach (var definedVariable in typeContext.define())
             {
                 Var newVar = Var.CreateVarFromContext(VariableDefineType.InClass, script, translateInfo, definedVariable);
-                if (newVar.Static)
-                    newVar.Finalize(staticScope);
-                else
-                    newVar.Finalize(objectScope);
+                newVar.Finalize(UseScope(newVar.Static));
             }
+
+            // Todo: Static methods/macros.
+            foreach (var definedMethod in typeContext.define_method())
+                UseScope(false).AddMethod(new DefinedMethod(script, translateInfo, definedMethod), script.Diagnostics, DocRange.GetRange(definedMethod.name));
+
+            foreach (var definedMacro in typeContext.define_macro())
+                UseScope(false).AddMethod(new DefinedMacro(script, translateInfo, definedMacro), script.Diagnostics, DocRange.GetRange(definedMacro.name));
+            
+            // Get the constructors.
+            if (typeContext.constructor().Length > 0)
+            {
+                Constructors = new Constructor[typeContext.constructor().Length];
+                for (int i = 0; i < Constructors.Length; i++)
+                    Constructors[i] = new DefinedConstructor(script, translateInfo, this, typeContext.constructor(i));
+            }
+            else
+            {
+                // If there are no constructors, create a default constructor.
+                Constructors = new Constructor[] {
+                    new Constructor(new Location(script.Uri, DocRange.GetRange(typeContext.name)), AccessLevel.Public)
+                };
+            }
+        }
+
+        private Scope UseScope(bool isStatic)
+        {
+            return isStatic ? staticScope : objectScope;
         }
 
         override public Scope ReturningScope()
@@ -193,5 +218,56 @@ namespace Deltin.Deltinteger.Parse
     {
         Class,
         Struct
+    }
+
+    public class Constructor : IParameterCallable
+    {
+        public AccessLevel AccessLevel { get; }
+        public CodeParameter[] Parameters { get; protected set; }
+        public Location DefinedAt { get; }
+
+        public Constructor(Location definedAt, AccessLevel accessLevel)
+        {
+            DefinedAt = definedAt;
+            AccessLevel = accessLevel;
+            Parameters = new CodeParameter[0];
+        }
+
+        public Constructor(Location definedAt, AccessLevel accessLevel, CodeParameter[] parameters)
+        {
+            DefinedAt = definedAt;
+            AccessLevel = accessLevel;
+            Parameters = parameters;
+        }
+
+        public virtual void Parse(ActionSet actionSet) {}
+    }
+
+    public class DefinedConstructor : Constructor
+    {
+        public Var[] ParameterVars { get; }
+        public Scope ConstructorScope { get; }
+        public CodeType Type { get; }
+        public BlockAction Block { get; }
+
+        public DefinedConstructor(ScriptFile script, DeltinScript translateInfo, CodeType type, DeltinScriptParser.ConstructorContext context) : base(
+            new Location(script.Uri, DocRange.GetRange(context.name)),
+            context.accessor()?.GetAccessLevel() ?? AccessLevel.Private)
+        {
+            ConstructorScope = type.GetObjectScope().Child();
+            Type = type;
+
+            var parameterInfo = CodeParameter.GetParameters(script, translateInfo, ConstructorScope, context.setParameters());
+            Parameters = parameterInfo.Parameters;
+            ParameterVars = parameterInfo.Variables;
+
+            Block = new BlockAction(script, translateInfo, ConstructorScope, context.block());
+        }
+
+        public override void Parse(ActionSet actionSet)
+        {
+            // TODO: Assign parameters. Make DefinedMethod uses and this use the same method.
+            Block.Translate(actionSet);
+        }
     }
 }
