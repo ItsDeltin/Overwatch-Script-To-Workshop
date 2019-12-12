@@ -52,7 +52,7 @@ namespace Deltin.Deltinteger.Parse
         }
     }
 
-    class OverloadChooser
+    public class OverloadChooser
     {
         private ScriptFile script { get; }
         private DeltinScript translateInfo { get; }
@@ -66,7 +66,6 @@ namespace Deltin.Deltinteger.Parse
         public IExpression[] Values { get; private set; }
 
         private bool _setContext;
-        private bool Picky;
         private DeltinScriptParser.Call_parametersContext CallContext;
         private DeltinScriptParser.Picky_parametersContext PickyContext;
         private DocRange[] ParameterErrors;
@@ -118,7 +117,6 @@ namespace Deltin.Deltinteger.Parse
         {
             if (_setContext) throw new Exception("Already set the context for the overload chooser.");
             PickyContext = context;
-            Picky = true;
             _setContext = true;
 
             PickyParameter[] parameters = new PickyParameter[context.picky_parameter().Length];
@@ -201,6 +199,14 @@ namespace Deltin.Deltinteger.Parse
             }
             Values = values;
         }
+        public void SetContext()
+        {
+            if (_setContext) throw new Exception("Already set the context for the overload chooser.");
+            _setContext = true;
+
+            if (!SetParameterCount(0)) return;
+            GetBestOption();
+        }
 
         private bool SetParameterCount(int numberOfParameters)
         {
@@ -275,7 +281,7 @@ namespace Deltin.Deltinteger.Parse
         }
     }
 
-    class OverloadError
+    public class OverloadError
     {
         public string BadParameterCount { get; set; }
         public string ParameterDoesntExist { get; set; }

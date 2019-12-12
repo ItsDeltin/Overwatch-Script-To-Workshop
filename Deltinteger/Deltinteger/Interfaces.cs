@@ -14,9 +14,9 @@ namespace Deltin.Deltinteger
         void DebugPrint(Log log, int depth = 0);
     }
 
-    public interface IMethod : IScopeable, ILanguageServerInfo
+    public interface IMethod : IScopeable, IParameterCallable, ILanguageServerInfo
     {
-        Parse.CodeParameter[] Parameters { get; }
+        // CodeParameter[] Parameters { get; }
         WikiMethod Wiki { get; }
         CodeType ReturnType { get; }
         IWorkshopTree Parse(ActionSet actionSet, IWorkshopTree[] values);

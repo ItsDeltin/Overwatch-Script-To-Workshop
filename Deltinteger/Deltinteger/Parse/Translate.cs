@@ -174,8 +174,12 @@ namespace Deltin.Deltinteger.Parse
             }
             if (statementContext.method() != null) return new CallMethodAction(script, translateInfo, scope, statementContext.method());
             if (statementContext.varset() != null) return new SetVariableAction(script, translateInfo, scope, statementContext.varset());
-
-            throw new Exception("Could not determine the statement type.");
+            if (statementContext.expr() != null)
+            {
+                script.Diagnostics.Error("Expressions can't be used as statements.", DocRange.GetRange(statementContext));
+                return null;
+            }
+            else throw new Exception("Could not determine the statement type.");
         }
 
         public static IExpression GetExpression(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.ExprContext exprContext, bool selfContained = true)

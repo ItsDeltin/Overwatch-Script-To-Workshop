@@ -135,6 +135,7 @@ namespace Deltin.Deltinteger.Parse
     public class DefinedType : CodeType
     {
         public TypeKind TypeKind { get; }
+        public string KindString { get; }
         private Scope objectScope { get; }
         private Scope staticScope { get; }
 
@@ -143,16 +144,17 @@ namespace Deltin.Deltinteger.Parse
             if (typeContext.CLASS() != null) 
             { 
                 TypeKind = TypeKind.Class;
-                staticScope = new Scope("class " + Name);
-                objectScope = staticScope.Child("class " + Name);
+                KindString = "class";
             }
             else if (typeContext.STRUCT() != null) 
             { 
                 TypeKind = TypeKind.Struct;
-                staticScope = new Scope("struct " + Name);
-                objectScope = staticScope.Child("struct " + Name);
+                KindString = "struct";
             }
             else throw new NotImplementedException();
+
+            staticScope = new Scope(KindString + " " + Name);
+            objectScope = staticScope.Child(KindString + " " + Name);
 
             // Get the variables defined in the type.
             foreach (var definedVariable in typeContext.define())

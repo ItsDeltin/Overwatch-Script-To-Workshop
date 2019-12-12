@@ -9,7 +9,7 @@ using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.C
 
 namespace Deltin.Deltinteger.Parse
 {
-    public abstract class DefinedFunction : IMethod, ICallable, IParameterCallable
+    public abstract class DefinedFunction : IMethod, ICallable
     {
         public string ScopeableType { get; } = "method";
         public string Name { get; }
