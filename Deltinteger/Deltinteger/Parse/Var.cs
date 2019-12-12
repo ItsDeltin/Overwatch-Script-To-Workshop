@@ -34,6 +34,12 @@ namespace Deltin.Deltinteger.Parse
         {
             return WorkshopArrayBuilder.ModifyVariable(ArrayBuilder, operation, value, targetPlayer, WorkshopVariable, ArrayBuilder<Element>.Build(Index, index));
         }
+
+        public IndexReference CreateChild(params Element[] index)
+        {
+            // Note: `ArrayBuilder` and `ArrayBuilder<Element>` are 2 very different things.
+            return new IndexReference(ArrayBuilder, WorkshopVariable, ArrayBuilder<Element>.Build(Index, index));
+        }
     }
 
     public class RecursiveIndexReference : IndexReference
@@ -148,7 +154,7 @@ namespace Deltin.Deltinteger.Parse
                     current = current.parent;
                 }
 
-                throw new Exception(string.Format("The parameter {0} is not assigned to anything.", var.Name));
+                throw new Exception(string.Format("The variable {0} is not assigned to an index.", var.Name));
             }
             private set {}
         }
@@ -216,7 +222,13 @@ namespace Deltin.Deltinteger.Parse
 
         public static Var CreateVarFromContext(VariableDefineType defineType, ScriptFile script, DeltinScript translateInfo, DeltinScriptParser.DefineContext context)
         {
-            Var newVar = new Var(context.name.Text, new Location(script.Uri, DocRange.GetRange(context.name)));
+            Var newVar;
+            if (context.name != null)
+                newVar = new Var(context.name.Text, new Location(script.Uri, DocRange.GetRange(context.name)));
+            else
+                newVar = new Var(null, new Location(script.Uri, DocRange.GetRange(context)));
+
+
             newVar.context = context;
             newVar.script = script;
             newVar.translateInfo = translateInfo;
@@ -304,7 +316,7 @@ namespace Deltin.Deltinteger.Parse
                 InitialValue = DeltinScript.GetExpression(script, translateInfo, scope, context.expr());
             
             // Add the variable to the scope.
-            scope.AddVariable(this, script.Diagnostics, DocRange.GetRange(context.name));
+            scope.AddVariable(this, script.Diagnostics, DefinedAt.range);
             finalized = true;
         }
 

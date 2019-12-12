@@ -46,8 +46,7 @@ namespace Deltin.Deltinteger.Parse
 
         public IWorkshopTree Parse(ActionSet actionSet)
         {
-            // TODO: Create object
-            return new V_Number(0);
+            return CreatingObjectOf.New(actionSet, Constructor);
         }
     }
 }

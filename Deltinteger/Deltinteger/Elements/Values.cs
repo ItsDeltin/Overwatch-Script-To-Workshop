@@ -178,7 +178,7 @@ namespace Deltin.Deltinteger.Elements
     {
         public V_Compare() : base() {}
 
-        public V_Compare(Element left, Operators op, Element right) : base(left, EnumData.GetEnumValue(op), right) {}
+        public V_Compare(IWorkshopTree left, Operators op, IWorkshopTree right) : base(left, EnumData.GetEnumValue(op), right) {}
     }
 
     [ElementData("Control Point Scoring Percentage", ValueType.Number)]

@@ -28,12 +28,13 @@ namespace Deltin.Deltinteger.Parse
         protected Scope methodScope { get; }
         protected Var[] ParameterVars { get; private set; }
         
-        public DefinedFunction(DeltinScript translateInfo, string name, Location definedAt)
+        public DefinedFunction(DeltinScript translateInfo, Scope scope, string name, Location definedAt)
         {
             Name = name;
             DefinedAt = definedAt;
             this.translateInfo = translateInfo;
-            methodScope = translateInfo.GlobalScope.Child();
+            //methodScope = translateInfo.GlobalScope.Child();
+            methodScope = scope.Child();
         }
 
         protected static CodeType GetCodeType(ScriptFile script, DeltinScript translateInfo, string name, DocRange range)
@@ -96,8 +97,8 @@ namespace Deltin.Deltinteger.Parse
         public bool IsRecursive { get; private set; }
         private BlockAction block { get; set; }
 
-        public DefinedMethod(ScriptFile script, DeltinScript translateInfo, DeltinScriptParser.Define_methodContext context)
-            : base(translateInfo, context.name.Text, new Location(script.Uri, DocRange.GetRange(context)))
+        public DefinedMethod(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.Define_methodContext context)
+            : base(translateInfo, scope, context.name.Text, new Location(script.Uri, DocRange.GetRange(context)))
         {
             // Check if recursion is enabled.
             IsRecursive = context.RECURSIVE() != null;
@@ -140,8 +141,8 @@ namespace Deltin.Deltinteger.Parse
     {
         public IExpression Expression { get; private set; }
 
-        public DefinedMacro(ScriptFile script, DeltinScript translateInfo, DeltinScriptParser.Define_macroContext context)
-            : base(translateInfo, context.name.Text, new Location(script.Uri, DocRange.GetRange(context)))
+        public DefinedMacro(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.Define_macroContext context)
+            : base(translateInfo, scope, context.name.Text, new Location(script.Uri, DocRange.GetRange(context)))
         {
             AccessLevel = context.accessor().GetAccessLevel();
             SetupParameters(script, context.setParameters());

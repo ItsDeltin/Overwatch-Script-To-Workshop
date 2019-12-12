@@ -171,7 +171,7 @@ namespace Deltin.Deltinteger.Elements
         }
 
         // Creates an array from a list of values.
-        public static Element CreateArray(params Element[] values)
+        public static Element CreateArray(params IWorkshopTree[] values)
         {
             Element array = new V_EmptyArray();
             for (int i = 0; i < values.Length; i++)
@@ -180,7 +180,7 @@ namespace Deltin.Deltinteger.Elements
         }
 
         // Creates an ternary conditional that works in the workshop
-        public static Element TernaryConditional(Element condition, Element consequent, Element alternative)
+        public static Element TernaryConditional(IWorkshopTree condition, IWorkshopTree consequent, IWorkshopTree alternative)
         {
             // This works by creating an array with the consequent (C) and the alternative (A): [C, A]
             // It creates an array that contains false and true: [false, true]

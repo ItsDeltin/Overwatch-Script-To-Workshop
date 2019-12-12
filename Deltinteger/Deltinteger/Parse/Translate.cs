@@ -87,14 +87,14 @@ namespace Deltin.Deltinteger.Parse
                 // Get the methods.
                 foreach (var methodContext in script.Context.define_method())
                 {
-                    var newMethod = new DefinedMethod(script, this, methodContext);
+                    var newMethod = new DefinedMethod(script, this, RulesetScope, methodContext);
                     RulesetScope.AddMethod(newMethod, script.Diagnostics, DocRange.GetRange(methodContext.name));
                 }
                 
                 // Get the macros.
                 foreach (var macroContext in script.Context.define_macro())
                 {
-                    var newMacro = new DefinedMacro(script, this, macroContext);
+                    var newMacro = new DefinedMacro(script, this, RulesetScope, macroContext);
                     RulesetScope.AddMethod(newMacro, script.Diagnostics, DocRange.GetRange(macroContext.name));
                 }
             }
@@ -176,8 +176,14 @@ namespace Deltin.Deltinteger.Parse
             if (statementContext.varset() != null) return new SetVariableAction(script, translateInfo, scope, statementContext.varset());
             if (statementContext.expr() != null)
             {
-                script.Diagnostics.Error("Expressions can't be used as statements.", DocRange.GetRange(statementContext));
-                return null;
+                var expr = GetExpression(script, translateInfo, scope, statementContext.expr());
+                if (expr is ExpressionTree == false || ((ExpressionTree)expr)?.Result is IStatement == false)
+                {
+                    if (expr != null)
+                        script.Diagnostics.Error("Expressions can't be used as statements.", DocRange.GetRange(statementContext));
+                    return null;
+                }
+                else return (IStatement)((ExpressionTree)expr).Result;
             }
             else throw new Exception("Could not determine the statement type.");
         }
@@ -235,11 +241,32 @@ namespace Deltin.Deltinteger.Parse
 
             throw new Exception("Could not determine the expression type.");
         }
+    
+        private ClassData _classData = null;
+        public ClassData SetupClasses()
+        {
+            // TODO: Set class indexes as empty array.
+            if (_classData == null) _classData = new ClassData(VarCollection);
+            return _classData;
+        }
     }
 
     public enum AccessLevel
     {
         Public,
         Private
+    }
+
+    public class ClassData
+    {
+        public IndexReference ClassIndexes { get; }
+        public IndexReference ClassArray { get; }
+
+        public ClassData(VarCollection varCollection)
+        {
+            ClassArray = varCollection.Assign("_classArray", true, false);
+            if (DefinedType.CLASS_INDEX_WORKAROUND)
+                ClassIndexes = varCollection.Assign("_classIndexes", true, false);
+        }
     }
 }

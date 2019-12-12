@@ -64,10 +64,14 @@ export function activate(context: ExtensionContext) {
 	client.onReady().then(() => {
 		// When the client is ready, setup the workshopCode notification.
 		client.onNotification("workshopCode", (code: string)=> {
-			// Clear the output
-			workshopOut.clear();
-			// Append the compiled result.
-			workshopOut.appendLine(code);
+			if (code != lastWorkshopOutput)
+			{
+				// Clear the output
+				workshopOut.clear();
+				// Append the compiled result.
+				workshopOut.appendLine(code);
+				lastWorkshopOutput = code;
+			}
 		});
 	});
 }

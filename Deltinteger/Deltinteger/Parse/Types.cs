@@ -48,6 +48,12 @@ namespace Deltin.Deltinteger.Parse
         /// <returns></returns>
         public virtual bool Constant() => false;
 
+        public virtual IWorkshopTree New(ActionSet actionSet, Constructor constructor)
+        {
+            // Classes that can't be created shouldn't have constructors.
+            throw new NotImplementedException();
+        }
+
         public abstract CompletionItem GetCompletion();
 
         public static bool TypeMatches(CodeType parameterType, CodeType valueType)
@@ -138,9 +144,13 @@ namespace Deltin.Deltinteger.Parse
         public string KindString { get; }
         private Scope objectScope { get; }
         private Scope staticScope { get; }
+        private List<Var> objectVariables { get; } = new List<Var>();
 
         public DefinedType(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.Type_defineContext typeContext) : base(typeContext.name.Text)
         {
+            if (translateInfo.IsCodeType(Name))
+                script.Diagnostics.Error($"A type with the name '{Name}' already exists.", DocRange.GetRange(typeContext.name));
+
             if (typeContext.CLASS() != null) 
             { 
                 TypeKind = TypeKind.Class;
@@ -153,7 +163,7 @@ namespace Deltin.Deltinteger.Parse
             }
             else throw new NotImplementedException();
 
-            staticScope = new Scope(KindString + " " + Name);
+            staticScope = translateInfo.GlobalScope.Child(KindString + " " + Name);
             objectScope = staticScope.Child(KindString + " " + Name);
 
             // Get the variables defined in the type.
@@ -161,14 +171,15 @@ namespace Deltin.Deltinteger.Parse
             {
                 Var newVar = Var.CreateVarFromContext(VariableDefineType.InClass, script, translateInfo, definedVariable);
                 newVar.Finalize(UseScope(newVar.Static));
+                if (!newVar.Static) objectVariables.Add(newVar);
             }
 
             // Todo: Static methods/macros.
             foreach (var definedMethod in typeContext.define_method())
-                UseScope(false).AddMethod(new DefinedMethod(script, translateInfo, definedMethod), script.Diagnostics, DocRange.GetRange(definedMethod.name));
+                UseScope(false).AddMethod(new DefinedMethod(script, translateInfo, UseScope(false), definedMethod), script.Diagnostics, DocRange.GetRange(definedMethod.name));
 
             foreach (var definedMacro in typeContext.define_macro())
-                UseScope(false).AddMethod(new DefinedMacro(script, translateInfo, definedMacro), script.Diagnostics, DocRange.GetRange(definedMacro.name));
+                UseScope(false).AddMethod(new DefinedMacro(script, translateInfo, UseScope(false), definedMacro), script.Diagnostics, DocRange.GetRange(definedMacro.name));
             
             // Get the constructors.
             if (typeContext.constructor().Length > 0)
@@ -193,12 +204,130 @@ namespace Deltin.Deltinteger.Parse
 
         override public Scope ReturningScope()
         {
-            return null;
+            return staticScope;
         }
 
         override public Scope GetObjectScope()
         {
             return objectScope;
+        }
+
+        override public IWorkshopTree New(ActionSet actionSet, Constructor constructor)
+        {
+            if (TypeKind == TypeKind.Class) return NewClass(actionSet);
+            else if (TypeKind == TypeKind.Struct) return NewStruct(actionSet);
+            else throw new NotImplementedException();
+        }
+
+        public const bool CLASS_INDEX_WORKAROUND = false;
+
+        private IWorkshopTree NewClass(ActionSet actionSet)
+        {
+            var classData = actionSet.Translate.DeltinScript.SetupClasses();
+            
+            // Classes are stored in the class array (`classData.ClassArray`),
+            // this stores the index where the new class is created at.
+            var classReference = actionSet.VarCollection.Assign("_new_" + Name + "_class_index", actionSet.IsGlobal, true);
+            // GetClassIndex() is less server load intensive than GetClassIndexWorkaround,
+            // but due to a workshop bug with `Index Of Array Value`, the workaround may
+            // need to be used instead.
+            if (!CLASS_INDEX_WORKAROUND)
+                GetClassIndex(classReference, actionSet, classData);
+            else
+                GetClassIndexWorkaround(classReference, actionSet, classData);
+            
+            var classObject = classData.ClassArray.CreateChild((Element)classReference.GetVariable());
+            SetInitialVariables(classObject, actionSet);
+            return classReference.GetVariable();
+        }
+
+        private void GetClassIndexWorkaround(IndexReference classReference, ActionSet actionSet, ClassData classData)
+        {
+            // Get an empty index in the class array to store the new class.
+            Element firstFree = (
+                Element.Part<V_FirstOf>(
+                    Element.Part<V_FilteredArray>(
+                        // Sort the taken index array.
+                        Element.Part<V_SortedArray>(classData.ClassIndexes.GetVariable(), new V_ArrayElement()),
+                        // Filter
+                        Element.Part<V_And>(
+                            // If the previous index was not taken, use that index.
+                            !Element.Part<V_ArrayContains>(
+                                classData.ClassIndexes.GetVariable(),
+                                new V_ArrayElement() - 1
+                            ),
+                            // Make sure the index does not equal 0 so the resulting index is not -1.
+                            new V_Compare(new V_ArrayElement(), Operators.NotEqual, new V_Number(0))
+                        )
+                    )
+                ) - 1 // Subtract 1 to get the previous index
+            );
+            // If the taken index array has 0 elements, use the length of the class array subtracted by 1.
+            firstFree = Element.TernaryConditional(
+                new V_Compare(Element.Part<V_CountOf>(classData.ClassIndexes.GetVariable()), Operators.NotEqual, new V_Number(0)),
+                firstFree,
+                Element.Part<V_CountOf>(classData.ClassArray.GetVariable()) - 1
+            );
+
+            actionSet.AddAction(classReference.SetVariable(firstFree));
+            actionSet.AddAction(classReference.SetVariable(
+                Element.TernaryConditional(
+                    // If the index equals -1, use the length of the class array instead.
+                    new V_Compare(classReference.GetVariable(), Operators.Equal, new V_Number(-1)),
+                    Element.Part<V_CountOf>(classData.ClassArray.GetVariable()),
+                    classReference.GetVariable()
+                )
+            ));
+
+            // Add the selected index to the taken indexes array.
+            actionSet.AddAction(
+                classData.ClassIndexes.SetVariable(
+                    Element.Part<V_Append>(
+                        classData.ClassIndexes.GetVariable(),
+                        classReference.GetVariable()
+                    )
+                )
+            );
+        }
+
+        private void GetClassIndex(IndexReference classReference, ActionSet actionSet, ClassData classData)
+        {
+            // Get the index of the first null value in the class array.
+            actionSet.AddAction(classReference.SetVariable(
+                Element.Part<V_IndexOfArrayValue>(
+                    classData.ClassArray.GetVariable(),
+                    new V_Null()
+                )
+            ));
+            
+            // If the index equals -1, use the count of the class array instead.
+            // TODO: Try setting the 1000th index of the class array to null instead.
+            actionSet.AddAction(classReference.SetVariable(
+                Element.TernaryConditional(
+                    new V_Compare(classReference.GetVariable(), Operators.Equal, new V_Number(-1)),
+                    Element.Part<V_CountOf>(classData.ClassArray.GetVariable()),
+                    classReference.GetVariable()
+                )
+            ));
+        }
+
+        private IWorkshopTree NewStruct(ActionSet actionSet)
+        {
+            var structObject = actionSet.VarCollection.Assign("_new_" + Name + "_class_index", actionSet.IsGlobal, true);
+            SetInitialVariables(structObject, actionSet);
+            return structObject.GetVariable();
+        }
+
+        private void SetInitialVariables(IndexReference typeObject, ActionSet actionSet)
+        {
+            for (int i = 0; i < objectVariables.Count; i++)
+            if (objectVariables[i].InitialValue != null)
+            {
+                actionSet.AddAction(typeObject.SetVariable(
+                    value: (Element)objectVariables[i].InitialValue.Parse(actionSet),
+                    index: i
+                ));
+            }
         }
 
         override public CompletionItem GetCompletion()

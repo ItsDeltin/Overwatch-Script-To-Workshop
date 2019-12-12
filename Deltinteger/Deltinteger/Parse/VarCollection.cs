@@ -9,7 +9,7 @@ namespace Deltin.Deltinteger.Parse
 {
     public class VarCollection
     {
-        private WorkshopArrayBuilder arrayBuilder;
+        public WorkshopArrayBuilder ArrayBuilder { get; private set; }
 
         // Indicates the workshop variables to store the extended collections at.
         private WorkshopVariable global;
@@ -37,7 +37,7 @@ namespace Deltin.Deltinteger.Parse
             var builder = AssignWorkshopVariable("_arrayBuilder", true);
 
             IndexReference store = Assign("_arrayBuilderStore", true, true);
-            arrayBuilder = new WorkshopArrayBuilder(builder, store);
+            ArrayBuilder = new WorkshopArrayBuilder(builder, store);
             // The store shouldn't require an instance of the WorkshopArrayBuilder, but if for some reason it does uncomment the line below.
             // store.ArrayBuilder = arrayBuilder;
         }
@@ -136,11 +136,11 @@ namespace Deltin.Deltinteger.Parse
         public IndexReference Assign(string name, bool isGlobal, bool extended)
         {
             if (!extended)
-                return new IndexReference(arrayBuilder, AssignWorkshopVariable(name, isGlobal));
+                return new IndexReference(ArrayBuilder, AssignWorkshopVariable(name, isGlobal));
             else
             {
                 int index = NextFreeExtended(isGlobal);
-                IndexReference reference = new IndexReference(arrayBuilder, isGlobal ? global : player, new V_Number(index));
+                IndexReference reference = new IndexReference(ArrayBuilder, isGlobal ? global : player, new V_Number(index));
                 extendedVariableList(isGlobal)[index] = reference;
                 return reference;
             }
@@ -154,18 +154,18 @@ namespace Deltin.Deltinteger.Parse
             if (!var.InExtendedCollection)
             {
                 if (var.ID == -1)
-                    return new IndexReference(arrayBuilder, AssignWorkshopVariable(var.Name, variableIsGlobal));
+                    return new IndexReference(ArrayBuilder, AssignWorkshopVariable(var.Name, variableIsGlobal));
                 else
                 {
                     WorkshopVariable workshopVariable = new WorkshopVariable(variableIsGlobal, var.ID, WorkshopNameFromCodeName(variableIsGlobal, var.Name));
                     variableList(isGlobal).Add(workshopVariable);
-                    return new IndexReference(arrayBuilder, workshopVariable);
+                    return new IndexReference(ArrayBuilder, workshopVariable);
                 }
             }
             else
             {
                 int index = NextFreeExtended(isGlobal);
-                IndexReference reference = new IndexReference(arrayBuilder, isGlobal ? global : player, new V_Number(index));
+                IndexReference reference = new IndexReference(ArrayBuilder, isGlobal ? global : player, new V_Number(index));
                 extendedVariableList(isGlobal)[index] = reference;
                 return reference;
             }
