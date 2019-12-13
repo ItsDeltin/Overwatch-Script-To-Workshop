@@ -161,16 +161,16 @@ namespace Deltin.Deltinteger.Parse
             return methods.ToArray();
         }
 
-        public CompletionItem[] GetCompletion(Pos pos)
+        public CompletionItem[] GetCompletion(Pos pos, bool immediate)
         {
             List<CompletionItem> completions = new List<CompletionItem>();
 
-            var variables = AllVariablesInScope();
+            var variables = immediate ? Variables.ToArray() : AllVariablesInScope();
             for (int i = 0; i < variables.Length; i++)
                 if (WasScopedAtPosition(variables[i], pos))
                     completions.Add(variables[i].GetCompletion());
 
-            var methods = AllMethodsInScope();
+            var methods = immediate ? Methods.ToArray() : AllMethodsInScope();
             for (int i = 0; i < methods.Length; i++)
                 if (WasScopedAtPosition(methods[i], pos))
                     completions.Add(methods[i].GetCompletion());

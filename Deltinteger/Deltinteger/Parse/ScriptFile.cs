@@ -5,6 +5,7 @@ using System.IO;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.LanguageServer;
 using Antlr4.Runtime;
+using Antlr4.Runtime.Tree;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -38,6 +39,11 @@ namespace Deltin.Deltinteger.Parse
             parser.AddErrorListener(errorListener);
 
             Context = parser.ruleset();
+        }
+
+        public IToken NextToken(ITerminalNode token)
+        {
+            return Tokens[token.Symbol.TokenIndex + 1];
         }
 
         public void AddCompletionRange(CompletionRange completionRange)

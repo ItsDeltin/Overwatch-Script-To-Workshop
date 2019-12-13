@@ -8,8 +8,9 @@ namespace Deltin.Deltinteger.Parse
 {
     public class SetVariableAction : IStatement
     {
-        public Var SetVariable { get; }
-        public IExpression Value { get; }
+        private Var SetVariable { get; }
+        private ExpressionTree Tree { get; }
+        private IExpression Value { get; }
 
         public SetVariableAction(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.VarsetContext varsetContext)
         {
@@ -23,15 +24,13 @@ namespace Deltin.Deltinteger.Parse
             }
             else if (variableExpression is ExpressionTree)
             {
-                var tree = (ExpressionTree)variableExpression;
-                if (tree.Completed)
+                Tree = (ExpressionTree)variableExpression;
+                if (Tree.Completed)
                 {
-                    if (tree.Result is Var == false)
-                        notAVariableRange = DocRange.GetRange(tree.ExprContextTree.Last());
+                    if (Tree.Result is Var == false)
+                        notAVariableRange = DocRange.GetRange(Tree.ExprContextTree.Last());
                     else
-                    {
-                        SetVariable = (Var)tree.Result;
-                    }
+                        SetVariable = (Var)Tree.Result;
                 }
             }
             else if (variableExpression != null)

@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Collections.Generic;
 using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.Elements;
 using Antlr4.Runtime;
@@ -21,14 +22,16 @@ namespace Deltin.Deltinteger.Parse
         public bool Completed { get; } = true;
         public DeltinScriptParser.ExprContext[] ExprContextTree { get; }
 
+        private ITerminalNode _trailingSeperator = null;
+
         public ExpressionTree(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.ExprContext exprContext)
         {
-            ExprContextTree = exprContext.expr();
+            ExprContextTree = Flatten(script, exprContext);
 
             // Syntax error if there is a . but no expression afterwards.
-            for (int i = 0; i < exprContext.ChildCount; i++)
-                if (IsSeperator(exprContext.GetChild(i)) && (i == exprContext.ChildCount - 1 || exprContext.GetChild(i + 1) is DeltinScriptParser.ExprContext == false))
-                    script.Diagnostics.Error("Expected expression.", DocRange.GetRange((ITerminalNode)exprContext.GetChild(i)));
+            // for (int i = 0; i < exprContext.ChildCount; i++)
+            //     if (IsSeperator(exprContext.GetChild(i)) && (i == exprContext.ChildCount - 1 || exprContext.GetChild(i + 1) is DeltinScriptParser.ExprContext == false))
+            //         script.Diagnostics.Error("Expected expression.", DocRange.GetRange((ITerminalNode)exprContext.GetChild(i)));
 
             Tree = new IExpression[ExprContextTree.Length];
             IExpression current = DeltinScript.GetExpression(script, translateInfo, scope, ExprContextTree[0], false);
@@ -70,11 +73,10 @@ namespace Deltin.Deltinteger.Parse
                         end = DocRange.GetRange(ExprContextTree[i + 1]).end;
                     }
                     // Expression path has a trailing '.'
-                    else if (IsSeperator(exprContext.children.Last()))
+                    else if (_trailingSeperator != null)
                     {
-                        var lastAsToken = ((ITerminalNode)exprContext.children.Last()).Symbol;
-                        start = DocRange.GetRange(lastAsToken).end;
-                        end = DocRange.GetRange(script.Tokens[lastAsToken.TokenIndex + 1]).start;
+                        start = DocRange.GetRange(_trailingSeperator).end;
+                        end = DocRange.GetRange(script.NextToken(_trailingSeperator)).start;
                     }
                     else continue;
 
@@ -84,9 +86,32 @@ namespace Deltin.Deltinteger.Parse
             }
         }
 
-        private static bool IsSeperator(IParseTree element)
+        private DeltinScriptParser.ExprContext[] Flatten(ScriptFile script, DeltinScriptParser.ExprContext exprContext)
         {
-            return element is TerminalNodeImpl && ((TerminalNodeImpl)element).Symbol.Type == DeltinScriptParser.SEPERATOR;
+            var exprList = new List<DeltinScriptParser.ExprContext>();
+            Flatten(script, exprContext, exprList);
+            return exprList.ToArray();
+        }
+
+        private void Flatten(ScriptFile script, DeltinScriptParser.ExprContext exprContext, List<DeltinScriptParser.ExprContext> exprList)
+        {            
+            if (exprContext.expr(0).SEPERATOR() != null)
+                throw new Exception("Bad list order.");
+            
+            exprList.Add(exprContext.expr(0));
+
+            if (exprContext.expr().Length == 1)
+            {
+                script.Diagnostics.Error("Expected expression.", DocRange.GetRange(exprContext.SEPERATOR()));
+                _trailingSeperator = exprContext.SEPERATOR();
+            }
+            else
+            {
+                if (exprContext.expr(1).SEPERATOR() != null)
+                    Flatten(script, exprContext.expr(1), exprList);
+                else
+                    exprList.Add(exprContext.expr(1));
+            }
         }
 
         public Scope ReturningScope()
@@ -101,7 +126,53 @@ namespace Deltin.Deltinteger.Parse
 
         public IWorkshopTree Parse(ActionSet actionSet)
         {
-            return Result.Parse(actionSet);
+            IGettable resultingVariable = null;
+
+            IWorkshopTree target = null;
+            IWorkshopTree result = null;
+            VarIndexAssigner currentAssigner = actionSet.IndexAssigner;
+
+            for (int i = 0; i < Tree.Length; i++)
+            {
+                bool isLast = i == Tree.Length - 1;
+                IWorkshopTree current;
+                if (Tree[i] is Var)
+                {
+                    var reference = currentAssigner[(Var)Tree[i]];
+                    current = reference.GetVariable((Element)target);
+
+                    // If this is the last node in the tree, set the resulting variable.
+                    if (isLast)
+                        resultingVariable = reference;
+                }
+                else
+                    current = Tree[i].Parse(actionSet);
+
+                if (Tree[i].Type() == null)
+                {
+                    // If this isn't the last in the tree, set it as the target.
+                    if (!isLast)
+                        target = current;
+                }
+                else
+                {
+                    if (Tree[i].Type() is DefinedType)
+                    {
+                        currentAssigner = actionSet.IndexAssigner.CreateContained();
+                        var definedType = ((DefinedType)Tree[i].Type());
+
+                        // Assign the object variables indexes.
+                        var source = definedType.GetObjectSource(actionSet.Translate.DeltinScript, current);
+                        definedType.AddObjectVariablesToAssigner(source, currentAssigner);
+                    }
+                    else throw new NotImplementedException();
+                }
+
+                result = current;
+            }
+
+            if (result == null) throw new Exception("Expression tree result is null");
+            return result;
         }
     }
 

@@ -41,7 +41,7 @@ expr
 	| typeconvert
 	| THIS
 	| ROOT
-	| <assoc=right> expr (SEPERATOR expr?)+         // Variable seperation
+	| <assoc=right> expr (SEPERATOR expr?)         // Variable seperation
 	| NOT expr                                     // !x
 	| '-' expr                                     // -x
 	| <assoc=right> expr ('^' | '*' | '/' | '%') expr // x^y

@@ -330,6 +330,25 @@ namespace Deltin.Deltinteger.Parse
             }
         }
 
+        // TODO: Should this be moved to the base class CodeType?
+        public IndexReference GetObjectSource(DeltinScript translateInfo, IWorkshopTree element)
+        {
+            if (TypeKind == TypeKind.Struct) throw new NotImplementedException();
+            return translateInfo.SetupClasses().ClassArray.CreateChild((Element)element);
+        }
+
+        // TODO: Should this be moved to the base class CodeType?
+        /// <summary>
+        /// Adds the class objects to the index assigner.
+        /// </summary>
+        /// <param name="source">The source of the type.</param>
+        /// <param name="assigner">The assigner that the object variables will be added to.</param>
+        public void AddObjectVariablesToAssigner(IndexReference source, VarIndexAssigner assigner)
+        {
+            for (int i = 0; i < objectVariables.Count; i++)
+                assigner.Add(objectVariables[i], source.CreateChild(i));
+        }
+
         override public CompletionItem GetCompletion()
         {
             CompletionItemKind kind;

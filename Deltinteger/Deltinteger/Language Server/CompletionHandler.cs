@@ -60,13 +60,13 @@ namespace Deltin.Deltinteger.LanguageServer
                 if (inRange[0].Priority)
                 {
                     items.Clear();
-                    inRange.RemoveRange(1, inRange.Count - 1);
+                    items.AddRange(inRange[0].Scope.GetCompletion(completionParams.Position, true));
                 }
-                
-                foreach (var range in inRange)
-                    items.AddRange(range.Scope.GetCompletion(completionParams.Position));
+                else
+                    foreach (var range in inRange)
+                        items.AddRange(range.Scope.GetCompletion(completionParams.Position, false));
             }
-            else items.AddRange(_globalScope.GetCompletion(null));
+            else items.AddRange(_globalScope.GetCompletion(null, false));
             return items;
         }
 

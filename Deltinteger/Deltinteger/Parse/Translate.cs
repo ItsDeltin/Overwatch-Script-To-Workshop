@@ -105,8 +105,10 @@ namespace Deltin.Deltinteger.Parse
             {
                 var newVar = Var.CreateVarFromContext(VariableDefineType.RuleLevel, script, this, varContext);
                 newVar.Finalize(RulesetScope);
-                PlayerVariableScope.AddVariable(newVar, null, null);
                 rulesetVariables.Add(newVar);
+                // Add the variable to the player variables scope if it is a player variable.
+                if (newVar.VariableType == VariableType.Player)
+                    PlayerVariableScope.AddVariable(newVar, null, null);
             }
 
             // Get the rules

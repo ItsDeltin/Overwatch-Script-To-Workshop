@@ -96,44 +96,29 @@ namespace Deltin.Deltinteger.Parse
             this.parent = parent;
         }
 
-        // TODO: remove if unused
-        // public static VarIndexAssigner AssignScope(VarCollection varCollection, Scope scope, bool isGlobal)
-        // {
-        //     VarIndexAssigner varAssigner = new VarIndexAssigner();
-        //     IScopeable[] variables = scope.AllChildVariables();
-
-        //     foreach (var scopeable in variables)
-        //     {
-        //         Var var = (Var)scopeable;
-        //         varAssigner.Add(varCollection, (Var)var, isGlobal, null);
-        //     }
-        //     return varAssigner;
-        // }
-
         public void Add(VarCollection varCollection, Var var, bool isGlobal, IWorkshopTree referenceValue)
         {
             if (varCollection == null) throw new ArgumentNullException(nameof(varCollection));
             if (var == null)           throw new ArgumentNullException(nameof(var          ));
 
             // A gettable/settable variable
-            // TODO: SetVariable initial value.
             if (var.Settable())
                 references.Add(var, varCollection.Assign(var, isGlobal));
+            
             // Element reference
             else if (var.VariableType == VariableType.ElementReference)
+            {
+                if (referenceValue == null) throw new ArgumentNullException(nameof(referenceValue));
                 references.Add(var, new WorkshopElementReference(referenceValue));
+            }
             
             else throw new NotImplementedException();
         }
 
-        // public void AddReference(VarCollection varCollection, Var var, bool isGlobal, IWorkshopTree initialValue)
-        // {
-        //     if (varCollection == null) throw new ArgumentNullException(nameof(varCollection));
-        //     if (var == null)           throw new ArgumentNullException(nameof(var          ));
-        //     if (initialValue == null)  throw new ArgumentNullException(nameof(initialValue ));
-
-        //     references.Add(var, new WorkshopElementReference(initialValue));
-        // }
+        public void Add(Var var, IndexReference reference)
+        {
+            references.Add(var, reference);
+        }
 
         public VarIndexAssigner CreateContained()
         {
@@ -248,6 +233,13 @@ namespace Deltin.Deltinteger.Parse
                     newVar.VariableType = VariableType.Player;
                 else
                     script.Diagnostics.Error("Expected the globalvar/playervar attribute.", DocRange.GetRange(context));
+            }
+            else
+            {
+                if (context.GLOBAL() != null)
+                    script.Diagnostics.Error("The globalvar attribute is only allowed on variables defined at the rule level.", DocRange.GetRange(context.GLOBAL()));
+                if (context.PLAYER() != null)
+                    script.Diagnostics.Error("The playervar attribute is only allowed on variables defined at the rule level.", DocRange.GetRange(context.PLAYER()));
             }
 
             // Get the ID
