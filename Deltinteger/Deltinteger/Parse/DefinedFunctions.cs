@@ -50,23 +50,6 @@ namespace Deltin.Deltinteger.Parse
             var parameterInfo = CodeParameter.GetParameters(script, translateInfo, methodScope, context);
             Parameters = parameterInfo.Parameters;
             ParameterVars = parameterInfo.Variables;
-
-            // todo: remove i guess
-            // if (context == null) 
-            // {
-            //     Parameters = new CodeParameter[0];
-            //     return;
-            // }
-
-            // Parameters = new CodeParameter[context.define().Length];
-            // ParameterVars = new Var[Parameters.Length];
-            // for (int i = 0; i < context.define().Length; i++)
-            // {
-            //     var newVar = Var.CreateVarFromContext(VariableDefineType.Parameter, script, translateInfo, context.define(i));
-            //     newVar.Finalize(methodScope);
-            //     ParameterVars[i] = newVar;
-            //     Parameters[i] = new CodeParameter(context.define(i).name.Text, newVar.CodeType);
-            // }
         }
 
         public void Call(Location calledFrom)
@@ -118,22 +101,25 @@ namespace Deltin.Deltinteger.Parse
         override public IWorkshopTree Parse(ActionSet actionSet, IWorkshopTree[] parameterValues)
         {
             actionSet = actionSet.New(actionSet.IndexAssigner.CreateContained());
-
-            for (int i = 0; i < ParameterVars.Length; i++)
-            {
-                actionSet.IndexAssigner.Add(actionSet.VarCollection, ParameterVars[i], actionSet.IsGlobal, parameterValues[i]);
-
-                // todo: improve this
-                if (actionSet.IndexAssigner[ParameterVars[i]] is IndexReference)
-                    actionSet.AddAction(
-                        ((IndexReference)actionSet.IndexAssigner[ParameterVars[i]]).SetVariable((Element)parameterValues[i])
-                    );
-            }
-
+            AssignParameters(actionSet, ParameterVars, parameterValues);
             block.Translate(actionSet);
 
             // todo: return statement and stuff
             return new V_Null();
+        }
+
+        public static void AssignParameters(ActionSet actionSet, Var[] parameterVars, IWorkshopTree[] parameterValues)
+        {
+            for (int i = 0; i < parameterVars.Length; i++)
+            {
+                actionSet.IndexAssigner.Add(actionSet.VarCollection, parameterVars[i], actionSet.IsGlobal, parameterValues[i]);
+
+                // todo: improve this
+                if (actionSet.IndexAssigner[parameterVars[i]] is IndexReference)
+                    actionSet.AddAction(
+                        ((IndexReference)actionSet.IndexAssigner[parameterVars[i]]).SetVariable((Element)parameterValues[i])
+                    );
+            }
         }
     }
 

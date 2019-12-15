@@ -10,6 +10,7 @@ namespace Deltin.Deltinteger.Parse
         private CodeType CreatingObjectOf { get; }
         private OverloadChooser OverloadChooser { get; }
         private Constructor Constructor { get; }
+        private IExpression[] ConstructorValues { get; }
 
         public CreateObjectAction(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.Create_objectContext context)
         {
@@ -21,6 +22,7 @@ namespace Deltin.Deltinteger.Parse
             
             if (CreatingObjectOf != null)
             {
+                // Get the constructor to use.
                 OverloadChooser = new OverloadChooser(
                     CreatingObjectOf.Constructors, script, translateInfo, scope, DocRange.GetRange(context.type), new OverloadError("type " + CreatingObjectOf.Name)
                 );
@@ -31,6 +33,7 @@ namespace Deltin.Deltinteger.Parse
                     OverloadChooser.SetContext();
 
                 Constructor = (Constructor)OverloadChooser.Overload;
+                ConstructorValues = OverloadChooser.Values;
             }
         }
 

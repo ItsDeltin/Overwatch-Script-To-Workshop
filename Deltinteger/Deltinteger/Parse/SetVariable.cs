@@ -47,12 +47,16 @@ namespace Deltin.Deltinteger.Parse
 
         public void Translate(ActionSet actionSet)
         {
+            IGettable var;
+            if (Tree != null)
+                var = Tree.ParseTree(actionSet).ResultingVariable;
+            else
+                var = actionSet.IndexAssigner[SetVariable];
+
             // TODO: Don't cast to Element.
-            actionSet.AddAction(
-                ((IndexReference)actionSet.IndexAssigner[SetVariable]).SetVariable(
-                    (Element)Value.Parse(actionSet)
-                )
-            );
+            actionSet.AddAction(((IndexReference)var).SetVariable(
+                (Element)Value.Parse(actionSet)
+            ));
         }
     }
 }

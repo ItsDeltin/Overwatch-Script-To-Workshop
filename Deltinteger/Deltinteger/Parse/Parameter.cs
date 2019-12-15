@@ -206,6 +206,9 @@ namespace Deltin.Deltinteger.Parse
 
             if (!SetParameterCount(0)) return;
             GetBestOption();
+
+            for (int i = 0; i < Overload.Parameters.Length; i++)
+                MissingParameter(Overload.Parameters[i].ToString());
         }
 
         private bool SetParameterCount(int numberOfParameters)

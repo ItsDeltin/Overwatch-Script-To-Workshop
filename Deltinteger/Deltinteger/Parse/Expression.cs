@@ -28,11 +28,6 @@ namespace Deltin.Deltinteger.Parse
         {
             ExprContextTree = Flatten(script, exprContext);
 
-            // Syntax error if there is a . but no expression afterwards.
-            // for (int i = 0; i < exprContext.ChildCount; i++)
-            //     if (IsSeperator(exprContext.GetChild(i)) && (i == exprContext.ChildCount - 1 || exprContext.GetChild(i + 1) is DeltinScriptParser.ExprContext == false))
-            //         script.Diagnostics.Error("Expected expression.", DocRange.GetRange((ITerminalNode)exprContext.GetChild(i)));
-
             Tree = new IExpression[ExprContextTree.Length];
             IExpression current = DeltinScript.GetExpression(script, translateInfo, scope, ExprContextTree[0], false);
             Tree[0] = current;
@@ -126,8 +121,12 @@ namespace Deltin.Deltinteger.Parse
 
         public IWorkshopTree Parse(ActionSet actionSet)
         {
-            IGettable resultingVariable = null;
+            return ParseTree(actionSet).Result;
+        }
 
+        public ExpressionTreeParseResult ParseTree(ActionSet actionSet)
+        {
+            IGettable resultingVariable = null;
             IWorkshopTree target = null;
             IWorkshopTree result = null;
             VarIndexAssigner currentAssigner = actionSet.IndexAssigner;
@@ -142,12 +141,11 @@ namespace Deltin.Deltinteger.Parse
                     current = reference.GetVariable((Element)target);
 
                     // If this is the last node in the tree, set the resulting variable.
-                    if (isLast)
-                        resultingVariable = reference;
+                    if (isLast) resultingVariable = reference;
                 }
                 else
                     current = Tree[i].Parse(actionSet);
-
+                
                 if (Tree[i].Type() == null)
                 {
                     // If this isn't the last in the tree, set it as the target.
@@ -165,6 +163,7 @@ namespace Deltin.Deltinteger.Parse
                         var source = definedType.GetObjectSource(actionSet.Translate.DeltinScript, current);
                         definedType.AddObjectVariablesToAssigner(source, currentAssigner);
                     }
+                    // Implement this if pre-built classes are added.
                     else throw new NotImplementedException();
                 }
 
@@ -172,7 +171,22 @@ namespace Deltin.Deltinteger.Parse
             }
 
             if (result == null) throw new Exception("Expression tree result is null");
-            return result;
+            return new ExpressionTreeParseResult(result, target, resultingVariable);
+        }
+    }
+
+    public class ExpressionTreeParseResult
+    {
+        public IWorkshopTree Result { get; }
+        public IWorkshopTree Target { get; }
+        public IGettable ResultingVariable { get; }
+        public IWorkshopTree[] ResultingIndex { get; }
+
+        public ExpressionTreeParseResult(IWorkshopTree result, IWorkshopTree target, IGettable resultingVariable)
+        {
+            Result = result;
+            Target = target;
+            ResultingVariable = resultingVariable;
         }
     }
 

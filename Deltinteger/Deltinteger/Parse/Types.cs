@@ -48,7 +48,7 @@ namespace Deltin.Deltinteger.Parse
         /// <returns></returns>
         public virtual bool Constant() => false;
 
-        public virtual IWorkshopTree New(ActionSet actionSet, Constructor constructor)
+        public virtual IWorkshopTree New(ActionSet actionSet, Constructor constructor, IWorkshopTree[] constructorValues)
         {
             // Classes that can't be created shouldn't have constructors.
             throw new NotImplementedException();
@@ -212,16 +212,16 @@ namespace Deltin.Deltinteger.Parse
             return objectScope;
         }
 
-        override public IWorkshopTree New(ActionSet actionSet, Constructor constructor)
+        override public IWorkshopTree New(ActionSet actionSet, Constructor constructor, IWorkshopTree[] constructorValues)
         {
-            if (TypeKind == TypeKind.Class) return NewClass(actionSet);
-            else if (TypeKind == TypeKind.Struct) return NewStruct(actionSet);
+            if (TypeKind == TypeKind.Class) return NewClass(actionSet.New(actionSet.IndexAssigner.CreateContained()), constructor, constructorValues);
+            else if (TypeKind == TypeKind.Struct) return NewStruct(actionSet.New(actionSet.IndexAssigner.CreateContained()), constructor, constructorValues);
             else throw new NotImplementedException();
         }
 
         public const bool CLASS_INDEX_WORKAROUND = false;
 
-        private IWorkshopTree NewClass(ActionSet actionSet)
+        private IWorkshopTree NewClass(ActionSet actionSet, Constructor constructor, IWorkshopTree[] constructorValues)
         {
             var classData = actionSet.Translate.DeltinScript.SetupClasses();
             
@@ -238,6 +238,11 @@ namespace Deltin.Deltinteger.Parse
             
             var classObject = classData.ClassArray.CreateChild((Element)classReference.GetVariable());
             SetInitialVariables(classObject, actionSet);
+
+            // Run the constructor.
+            AddObjectVariablesToAssigner(classObject, actionSet.IndexAssigner);
+            constructor.Parse(actionSet, constructorValues);
+
             return classReference.GetVariable();
         }
 
@@ -311,10 +316,15 @@ namespace Deltin.Deltinteger.Parse
             ));
         }
 
-        private IWorkshopTree NewStruct(ActionSet actionSet)
+        private IWorkshopTree NewStruct(ActionSet actionSet, Constructor constructor, IWorkshopTree[] constructorValues)
         {
             var structObject = actionSet.VarCollection.Assign("_new_" + Name + "_class_index", actionSet.IsGlobal, true);
             SetInitialVariables(structObject, actionSet);
+
+            // Run the constructor.
+            AddObjectVariablesToAssigner(structObject, actionSet.IndexAssigner);
+            constructor.Parse(actionSet, constructorValues);
+
             return structObject.GetVariable();
         }
 
@@ -390,7 +400,7 @@ namespace Deltin.Deltinteger.Parse
             Parameters = parameters;
         }
 
-        public virtual void Parse(ActionSet actionSet) {}
+        public virtual void Parse(ActionSet actionSet, IWorkshopTree[] parameterValues) {}
     }
 
     public class DefinedConstructor : Constructor
@@ -414,9 +424,10 @@ namespace Deltin.Deltinteger.Parse
             Block = new BlockAction(script, translateInfo, ConstructorScope, context.block());
         }
 
-        public override void Parse(ActionSet actionSet)
+        public override void Parse(ActionSet actionSet, IWorkshopTree[] parameterValues)
         {
-            // TODO: Assign parameters. Make DefinedMethod uses and this use the same method.
+            actionSet = actionSet.New(actionSet.IndexAssigner.CreateContained());
+            DefinedMethod.AssignParameters(actionSet, ParameterVars, parameterValues);
             Block.Translate(actionSet);
         }
     }
