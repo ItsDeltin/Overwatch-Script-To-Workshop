@@ -22,7 +22,7 @@ namespace Deltin.Deltinteger.Parse
 
             var options = scope.GetMethodsByName(methodName);
             
-            OverloadChooser = new OverloadChooser(options, script, translateInfo, scope, NameRange, new OverloadError("method '" + methodName + "'"));
+            OverloadChooser = new OverloadChooser(options, script, translateInfo, scope, NameRange, DocRange.GetRange(methodContext), new OverloadError("method '" + methodName + "'"));
 
             if (methodContext.call_parameters() != null)
                 OverloadChooser.SetContext(methodContext.call_parameters());

@@ -181,11 +181,11 @@ namespace Deltin.Deltinteger.Elements
         public V_Compare(IWorkshopTree left, Operators op, IWorkshopTree right) : base(left, EnumData.GetEnumValue(op), right) {}
     }
 
-    [ElementData("Control Point Scoring Percentage", ValueType.Number)]
+    [ElementData("Control Mode Scoring Percentage", ValueType.Number)]
     [Parameter("Team", ValueType.Team, typeof(V_TeamVar))]
     public class V_ControlPointScoringPercentage : Element {}
 
-    [ElementData("Control Point Scoring Team", ValueType.Team)]
+    [ElementData("Control Mode Scoring Team", ValueType.Team)]
     public class V_ControlPointScoringTeam : Element {}
 
     [ElementData("Count Of", ValueType.Number)]
@@ -1289,11 +1289,11 @@ namespace Deltin.Deltinteger.Elements
     [EnumParameter("Team", typeof(Team))]
     public class V_TeamVar : Element {}
 
-    [ElementData("TeamOf", ValueType.Team)]
+    [ElementData("Team Of", ValueType.Team)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     public class V_TeamOf : Element {}
 
-    [ElementData("TeamScore", ValueType.Team)]
+    [ElementData("Team Score", ValueType.Team)]
     [Parameter("Team", ValueType.Team, typeof(V_TeamVar))]
     public class V_TeamScore : Element {}
 

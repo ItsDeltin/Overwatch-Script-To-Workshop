@@ -2,6 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Deltin.Deltinteger.LanguageServer;
+using SignatureHelp = OmniSharp.Extensions.LanguageServer.Protocol.Models.SignatureHelp;
+using SignatureInformation = OmniSharp.Extensions.LanguageServer.Protocol.Models.SignatureInformation;
+using ParameterInformation = OmniSharp.Extensions.LanguageServer.Protocol.Models.ParameterInformation;
+using StringOrMarkupContent = OmniSharp.Extensions.LanguageServer.Protocol.Models.StringOrMarkupContent;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -9,11 +13,19 @@ namespace Deltin.Deltinteger.Parse
     {
         public string Name { get; }
         public CodeType Type { get; }
+        public StringOrMarkupContent Documentation { get; }
 
         public CodeParameter(string name, CodeType type)
         {
             Name = name;
             Type = type;
+        }
+
+        public CodeParameter(string name, CodeType type, StringOrMarkupContent documentation)
+        {
+            Name = name;
+            Type = type;
+            Documentation = documentation;
         }
 
         override public string ToString()
@@ -38,6 +50,21 @@ namespace Deltin.Deltinteger.Parse
 
             return new ParameterParseResult(parameters, vars);
         }
+
+        public string GetLabel(bool markdown)
+        {
+            string type;
+            if (Type == null) type = "define";
+            else type = Type.Name;
+
+            if (!markdown) return $"{type} {Name}";
+            else return $"**{type}** {Name}";
+        }
+
+        public static string GetLabels(CodeParameter[] parameters, bool markdown)
+        {
+            return "(" + string.Join(", ", parameters.Select(p => p.GetLabel(markdown))) + ")";
+        }
     }
 
     public class ParameterParseResult
@@ -58,6 +85,7 @@ namespace Deltin.Deltinteger.Parse
         private DeltinScript translateInfo { get; }
         private Scope scope { get; }
         private DocRange genericErrorRange { get; }
+        public DocRange CallRange { get; }
         private OverloadError ErrorMessages { get; }
 
         private IParameterCallable[] AllOverloads { get; }
@@ -69,10 +97,11 @@ namespace Deltin.Deltinteger.Parse
         private DeltinScriptParser.Call_parametersContext CallContext;
         private DeltinScriptParser.Picky_parametersContext PickyContext;
         private DocRange[] ParameterErrors;
+        public DocRange[] ParameterRanges { get; private set; }
 
         private Dictionary<IParameterCallable, List<Diagnostic>> optionDiagnostics;
 
-        public OverloadChooser(IParameterCallable[] overloads, ScriptFile script, DeltinScript translateInfo, Scope scope, DocRange genericErrorRange, OverloadError errorMessages)
+        public OverloadChooser(IParameterCallable[] overloads, ScriptFile script, DeltinScript translateInfo, Scope scope, DocRange genericErrorRange, DocRange callRange, OverloadError errorMessages)
         {
             AllOverloads = overloads
                 .OrderBy(overload => overload.Parameters.Length)
@@ -82,6 +111,7 @@ namespace Deltin.Deltinteger.Parse
             this.translateInfo = translateInfo;
             this.scope = scope;
             this.genericErrorRange = genericErrorRange;
+            CallRange = callRange;
             this.ErrorMessages = errorMessages;
         }
 
@@ -93,10 +123,12 @@ namespace Deltin.Deltinteger.Parse
 
             IExpression[] values = new IExpression[context.expr().Length];
             ParameterErrors = new DocRange[values.Length];
+            ParameterRanges = new DocRange[values.Length];
             for (int i = 0; i < values.Length; i++)
             {
                 values[i] = DeltinScript.GetExpression(script, translateInfo, scope, context.expr(i));
                 ParameterErrors[i] = DocRange.GetRange(context.expr(i));
+                ParameterRanges[i] = ParameterErrors[i];
             }
             
             if (!SetParameterCount(values.Length)) return;
@@ -138,7 +170,7 @@ namespace Deltin.Deltinteger.Parse
                 var nameRange = DocRange.GetRange(context.picky_parameter(i).PART());
 
                 // Syntax error if the parameter was already set.
-                if (parameters.Any(p => p.Name == name))
+                if (parameters.Any(p => p != null && p.Name == name))
                 {
                     script.Diagnostics.Error($"The parameter {name} was already set.", nameRange);
                 }
@@ -148,6 +180,7 @@ namespace Deltin.Deltinteger.Parse
                     parameters[i] = new PickyParameter(
                         name,
                         expression,
+                        DocRange.GetRange(context.picky_parameter(i)),
                         nameRange
                     );
                 }
@@ -159,8 +192,6 @@ namespace Deltin.Deltinteger.Parse
             foreach (var parameter in parameters)
             foreach (var option in CurrentOptions)
             {
-                // Syntax error if the parameter does not exist.
-
                 int index = -1;
                 for (int i = 0; i < option.Parameters.Length; i++)
                 if (option.Parameters[i].Name == parameter.Name)
@@ -178,7 +209,9 @@ namespace Deltin.Deltinteger.Parse
                         Diagnostic.Error
                     ));
                 }
-                else
+                // parameter.Value is null if there is no expression.
+                // A syntax error for this was already thrown earlier.
+                else if (parameter.Value != null)
                 {
                     // Check the types.
                     CompareParameterTypes(parameter.Value.Type(), option, index);
@@ -186,14 +219,22 @@ namespace Deltin.Deltinteger.Parse
             }
             GetBestOption();
 
+            // todo: picky parameter ranges
+            ParameterRanges = new DocRange[Overload.Parameters.Length];
             IExpression[] values = new IExpression[Overload.Parameters.Length];
             for (int i = 0; i < values.Length; i++)
             {
-                var value = parameters.FirstOrDefault(p => p.Name == Overload.Parameters[i].Name)?.Value;
-                values[i] = value;
+                int parameterIndex = -1;
+                for (int p = 0; p < parameters.Length && parameterIndex == -1; p++)
+                    if (parameters[p].Name == Overload.Parameters[i].Name)
+                        parameterIndex = p;
 
-                // Value is null if the parameter is missing.
-                if (value == null)
+                if (parameterIndex != -1)
+                {
+                    values[i] = parameters[parameterIndex].Value;
+                    ParameterRanges[i] = parameters[parameterIndex].FullRange;
+                }
+                else
                     // Syntax error if there is no default value.
                     MissingParameter(Overload.Parameters[i].ToString());
             }
@@ -259,6 +300,8 @@ namespace Deltin.Deltinteger.Parse
 
             // Add the diagnostics of the best option.
             script.Diagnostics.AddDiagnostics(optionDiagnostics[Overload].ToArray());
+
+            script.AddOverloadData(this);
         }
     
         private void MissingParameter(string parameterName)
@@ -268,18 +311,53 @@ namespace Deltin.Deltinteger.Parse
                 genericErrorRange
             );
         }
+    
+        public SignatureHelp GetSignatureHelp(Pos caretPos)
+        {
+            int activeParameter = -1;
+            if (ParameterRanges != null)
+                for (int i = 0; i < ParameterRanges.Length && activeParameter == -1; i++)
+                    if (ParameterRanges[i] != null && ParameterRanges[i].IsInside(caretPos))
+                        activeParameter = i;
+            
+            SignatureInformation[] overloads = new SignatureInformation[CurrentOptions.Count];
+            for (int i = 0; i < overloads.Length; i++)
+            {
+                var parameters = new ParameterInformation[CurrentOptions[i].Parameters.Length];
+                for (int p = 0; p < parameters.Length; p++)
+                    parameters[p] = new ParameterInformation() {
+                        Label = CurrentOptions[i].Parameters[p].GetLabel(false),
+                        Documentation = CurrentOptions[i].Parameters[p].Documentation
+                    };
+
+                overloads[i] = new SignatureInformation() {
+                    Label = CurrentOptions[i].GetLabel(false),
+                    Parameters = parameters,
+                    Documentation = CurrentOptions[i].Documentation
+                };
+            }
+
+            return new SignatureHelp()
+            {
+                ActiveParameter = activeParameter,
+                ActiveSignature = CurrentOptions.IndexOf(Overload),
+                Signatures = overloads
+            };
+        }
     }
 
     class PickyParameter
     {
         public string Name { get; }
         public IExpression Value { get; }
+        public DocRange FullRange { get; }
         public DocRange NameRange { get; }
 
-        public PickyParameter(string name, IExpression value, DocRange nameRange)
+        public PickyParameter(string name, IExpression value, DocRange fullRange, DocRange nameRange)
         {
             Name = name;
             Value = value;
+            FullRange = fullRange;
             NameRange = nameRange;
         }
     }

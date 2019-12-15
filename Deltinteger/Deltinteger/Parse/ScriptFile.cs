@@ -16,7 +16,7 @@ namespace Deltin.Deltinteger.Parse
         public FileDiagnostics Diagnostics { get; }
         public IToken[] Tokens { get; }
         private List<CompletionRange> completionRanges { get; } = new List<CompletionRange>();
-        private List<SignatureRange> signatureRanges { get; } = new List<SignatureRange>();
+        private List<OverloadChooser> overloads { get; } = new List<OverloadChooser>();
 
         public ScriptFile(Diagnostics diagnostics, Uri uri, string content)
         {
@@ -52,10 +52,10 @@ namespace Deltin.Deltinteger.Parse
         }
         public CompletionRange[] GetCompletionRanges() => completionRanges.ToArray();
 
-        public void AddSignatureRange(SignatureRange signatureRange)
+        public void AddOverloadData(OverloadChooser overload)
         {
-            signatureRanges.Add(signatureRange);
+            overloads.Add(overload);
         }
-        public SignatureRange[] GetSignatureRanges() => signatureRanges.ToArray();
+        public OverloadChooser[] GetSignatures() => overloads.ToArray();
     }
 }

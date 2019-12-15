@@ -36,7 +36,7 @@ namespace Deltin.Deltinteger.Parse
                 {
                     current = DeltinScript.GetExpression(script, translateInfo, current.ReturningScope() ?? new Scope(), ExprContextTree[i], false);
 
-                    if (current != null && current is IScopeable == false)
+                    if (current != null && current is IScopeable == false && current is CallMethodAction == false)
                         script.Diagnostics.Error("Expected variable or method.", DocRange.GetRange(ExprContextTree[i]));
 
                     Tree[i] = current;

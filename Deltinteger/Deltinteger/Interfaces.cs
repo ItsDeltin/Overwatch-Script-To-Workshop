@@ -5,6 +5,8 @@ using Deltin.Deltinteger.Parse;
 using Deltin.Deltinteger.LanguageServer;
 using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
 using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItemKind;
+using SignatureInformation = OmniSharp.Extensions.LanguageServer.Protocol.Models.SignatureInformation;
+using StringOrMarkupContent = OmniSharp.Extensions.LanguageServer.Protocol.Models.StringOrMarkupContent;
 
 namespace Deltin.Deltinteger
 {
@@ -16,12 +18,11 @@ namespace Deltin.Deltinteger
 
     public interface IMethod : IScopeable, IParameterCallable, ILanguageServerInfo
     {
-        // CodeParameter[] Parameters { get; }
-        WikiMethod Wiki { get; }
         CodeType ReturnType { get; }
         IWorkshopTree Parse(ActionSet actionSet, IWorkshopTree[] values);
     }
 
+    // TODO: Remove this interface
     public interface ILanguageServerInfo
     {
         string GetLabel(bool markdown);
@@ -51,6 +52,8 @@ namespace Deltin.Deltinteger
     {
         CodeParameter[] Parameters { get; }
         Location DefinedAt { get; }
+        string GetLabel(bool markdown);
+        StringOrMarkupContent Documentation { get; }
     }
 
     public interface IGettable

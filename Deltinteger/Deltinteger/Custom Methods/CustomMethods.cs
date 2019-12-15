@@ -9,6 +9,7 @@ using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.WorkshopWiki;
 using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
 using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItemKind;
+using StringOrMarkupContent = OmniSharp.Extensions.LanguageServer.Protocol.Models.StringOrMarkupContent;
 
 namespace Deltin.Deltinteger.Elements
 {
@@ -49,7 +50,6 @@ namespace Deltin.Deltinteger.Elements
         public CodeParameter [] Parameters { get; }
         public CustomMethodType CustomMethodType { get; }
         public Type Type { get; }
-        public WikiMethod Wiki { get; }
 
         // IScopeable defaults
         public Location DefinedAt { get; } = null;
@@ -59,13 +59,8 @@ namespace Deltin.Deltinteger.Elements
         
         public CodeType ReturnType { get; } = null;
 
-        public string GetLabel(bool markdown)
-        {
-            // TODO: this
-            throw new NotImplementedException();
-            // return Name + "(" + Parameter.ParameterGroupToString(Parameters, markdown) + ")"
-            // + (markdown && Wiki?.Description != null ? "\n\r" + Wiki.Description : "");
-        }
+        public string GetLabel(bool markdown) => Name + CodeParameter.GetLabels(Parameters, markdown);
+        public StringOrMarkupContent Documentation => null;
 
         public CustomMethodData(Type type)
         {
@@ -100,7 +95,7 @@ namespace Deltin.Deltinteger.Elements
                         description = "This method cannot be used in conditions.";
                 }
 
-                Wiki = new WikiMethod(Name, description, parameters);
+                //Wiki = new WikiMethod(Name, description, parameters);
             }
         }
 
@@ -119,6 +114,17 @@ namespace Deltin.Deltinteger.Elements
             return (CustomMethodBase)Activator.CreateInstance(Type);
         }
 
+        public CompletionItem GetCompletion()
+        {
+            return new CompletionItem()
+            {
+                Label = Name,
+                Kind = CompletionItemKind.Method
+            };
+        }
+
+        public string GetSignatureName() => Name;
+
         static CustomMethodData[] _customMethodData = null;
         public static CustomMethodData[] GetCustomMethods()
         {
@@ -133,15 +139,6 @@ namespace Deltin.Deltinteger.Elements
                     _customMethodData[i] = new CustomMethodData(types[i]);
             }
             return _customMethodData;
-        }
-
-        public CompletionItem GetCompletion()
-        {
-            return new CompletionItem()
-            {
-                Label = Name,
-                Kind = CompletionItemKind.Method
-            };
         }
     }
 

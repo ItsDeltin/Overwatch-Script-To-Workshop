@@ -10,6 +10,7 @@ using Deltin.Deltinteger.WorkshopWiki;
 using Deltin.Deltinteger.Parse;
 using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
 using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItemKind;
+using StringOrMarkupContent = OmniSharp.Extensions.LanguageServer.Protocol.Models.StringOrMarkupContent;
 
 namespace Deltin.Deltinteger.Elements
 {
@@ -233,6 +234,7 @@ namespace Deltin.Deltinteger.Elements
         public ParameterBase[] WorkshopParameters { get; }
         public UsageDiagnostic[] UsageDiagnostics { get; }
         public WikiMethod Wiki { get; }
+        public StringOrMarkupContent Documentation => Wiki.Description;
 
         // IScopeable defaults
         public LanguageServer.Location DefinedAt { get; } = null;
@@ -258,12 +260,13 @@ namespace Deltin.Deltinteger.Elements
             return Elements.FirstOrDefault(e => e.Name == codeName);
         }
 
-        public string GetLabel(bool markdown)
-        {
-            throw new NotImplementedException();
-            // return Name + "(" + Parameter.ParameterGroupToString(Parameters, markdown) + ")" 
-            // + (markdown && Wiki?.Description != null ? "\n\r" + Wiki.Description : "");
-        }
+        // public string GetLabel(bool markdown)
+        // {
+        //     return Name + "(" + Parameter.ParameterGroupToString(Parameters, markdown) + ")" 
+        //         + (markdown && Wiki?.Description != null ? "\n\r" + Wiki.Description : "");
+        // }
+
+        public string GetLabel(bool markdown) => Name + CodeParameter.GetLabels(Parameters, markdown);
 
         public ElementList(Type type)
         {
@@ -273,8 +276,9 @@ namespace Deltin.Deltinteger.Elements
             Type = type;
             IsValue = data.IsValue;
             WorkshopParameters = type.GetCustomAttributes<ParameterBase>().ToArray();
-            Wiki = WorkshopWiki.Wiki.GetWikiMethod(WorkshopName);
             UsageDiagnostics = type.GetCustomAttributes<UsageDiagnostic>().ToArray();
+
+            Wiki = WorkshopWiki.Wiki.GetWiki().GetMethod(WorkshopName);
 
             Parameters = new Parse.CodeParameter[WorkshopParameters.Length];
             for (int i = 0; i < Parameters.Length; i++)
@@ -284,8 +288,7 @@ namespace Deltin.Deltinteger.Elements
                 if (WorkshopParameters[i] is EnumParameter)
                     codeType = CodeType.DefaultTypes.First(t => t is WorkshopEnumType && ((WorkshopEnumType)t).EnumData == ((EnumParameter)WorkshopParameters[i]).EnumData);
 
-                // todo: Replace null with the WorkshopEnum that it is supposed to be 
-                Parameters[i] = new CodeParameter(WorkshopParameters[i].Name, codeType);
+                Parameters[i] = new CodeParameter(WorkshopParameters[i].Name, codeType, Wiki?.GetWikiParameter(WorkshopParameters[i].Name)?.Description);
             }
         }
 

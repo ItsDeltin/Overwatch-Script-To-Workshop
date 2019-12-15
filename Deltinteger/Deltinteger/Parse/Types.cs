@@ -4,6 +4,7 @@ using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.LanguageServer;
 using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
 using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItemKind;
+using StringOrMarkupContent = OmniSharp.Extensions.LanguageServer.Protocol.Models.StringOrMarkupContent;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -192,7 +193,7 @@ namespace Deltin.Deltinteger.Parse
             {
                 // If there are no constructors, create a default constructor.
                 Constructors = new Constructor[] {
-                    new Constructor(new Location(script.Uri, DocRange.GetRange(typeContext.name)), AccessLevel.Public)
+                    new Constructor(this, new Location(script.Uri, DocRange.GetRange(typeContext.name)), AccessLevel.Public)
                 };
             }
         }
@@ -385,37 +386,34 @@ namespace Deltin.Deltinteger.Parse
         public AccessLevel AccessLevel { get; }
         public CodeParameter[] Parameters { get; protected set; }
         public Location DefinedAt { get; }
+        public CodeType Type { get; }
+        public StringOrMarkupContent Documentation => null;
 
-        public Constructor(Location definedAt, AccessLevel accessLevel)
+        public Constructor(CodeType type, Location definedAt, AccessLevel accessLevel)
         {
+            Type = type;
             DefinedAt = definedAt;
             AccessLevel = accessLevel;
             Parameters = new CodeParameter[0];
         }
 
-        public Constructor(Location definedAt, AccessLevel accessLevel, CodeParameter[] parameters)
-        {
-            DefinedAt = definedAt;
-            AccessLevel = accessLevel;
-            Parameters = parameters;
-        }
-
         public virtual void Parse(ActionSet actionSet, IWorkshopTree[] parameterValues) {}
+
+        public string GetLabel(bool markdown) => Type.Name + CodeParameter.GetLabels(Parameters, markdown);
     }
 
     public class DefinedConstructor : Constructor
     {
         public Var[] ParameterVars { get; }
         public Scope ConstructorScope { get; }
-        public CodeType Type { get; }
         public BlockAction Block { get; }
 
         public DefinedConstructor(ScriptFile script, DeltinScript translateInfo, CodeType type, DeltinScriptParser.ConstructorContext context) : base(
+            type,
             new Location(script.Uri, DocRange.GetRange(context.name)),
             context.accessor()?.GetAccessLevel() ?? AccessLevel.Private)
         {
             ConstructorScope = type.GetObjectScope().Child();
-            Type = type;
 
             var parameterInfo = CodeParameter.GetParameters(script, translateInfo, ConstructorScope, context.setParameters());
             Parameters = parameterInfo.Parameters;

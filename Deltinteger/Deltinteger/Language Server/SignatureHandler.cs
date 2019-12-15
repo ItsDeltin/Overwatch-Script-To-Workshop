@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Deltin.Deltinteger.Parse;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using ISignatureHelpHandler = OmniSharp.Extensions.LanguageServer.Protocol.Server.ISignatureHelpHandler;
 using SignatureHelpCapability = OmniSharp.Extensions.LanguageServer.Protocol.Client.Capabilities.SignatureHelpCapability;
@@ -27,14 +28,16 @@ namespace Deltin.Deltinteger.LanguageServer
             if (script == null) return def;
 
             // Get all signatures in the file.
-            var signatures = script.GetSignatureRanges()
+            OverloadChooser signature = script.GetSignatures()
                 // Only get the ranges that have the caret inside them.
-                .Where(sig => sig.Range.IsInside(signatureHelpParams.Position))
+                .Where(sig => sig.CallRange.IsInside(signatureHelpParams.Position))
                 // Order by the size of the ranges.
-                .OrderBy(sig => sig.Range)
-                .ToArray();
+                .OrderBy(sig => sig.CallRange)
+                // Choose the first signature.
+                .FirstOrDefault();
             
-            // TODO: Finish signatures
+            if (signature != null)
+                return signature.GetSignatureHelp(signatureHelpParams.Position);
             return def;
         }
 

@@ -6,6 +6,7 @@ using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.WorkshopWiki;
 using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
 using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItemKind;
+using StringOrMarkupContent = OmniSharp.Extensions.LanguageServer.Protocol.Models.StringOrMarkupContent;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -18,8 +19,7 @@ namespace Deltin.Deltinteger.Parse
         public AccessLevel AccessLevel { get; protected set; }
         public Location DefinedAt { get; }
         public bool WholeContext { get; } = true;
-
-        public WikiMethod Wiki { get; }
+        public StringOrMarkupContent Documentation { get; } = null;
 
         // ICallable
         private List<Location> CalledFrom { get; } = new List<Location>();
@@ -57,11 +57,7 @@ namespace Deltin.Deltinteger.Parse
             CalledFrom.Add(calledFrom);
         }
 
-        public string GetLabel(bool markdown)
-        {
-            // TODO: this
-            throw new NotImplementedException();
-        }
+        public string GetLabel(bool markdown) => Name + CodeParameter.GetLabels(Parameters, markdown);
 
         public abstract IWorkshopTree Parse(ActionSet actionSet, IWorkshopTree[] parameterValues);
 
