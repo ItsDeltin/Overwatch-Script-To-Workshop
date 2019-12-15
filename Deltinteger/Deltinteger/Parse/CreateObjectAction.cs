@@ -49,7 +49,11 @@ namespace Deltin.Deltinteger.Parse
 
         public IWorkshopTree Parse(ActionSet actionSet)
         {
-            return CreatingObjectOf.New(actionSet, Constructor);
+            IWorkshopTree[] parameterValues = new IWorkshopTree[ConstructorValues.Length];
+            for (int i = 0; i < parameterValues.Length; i++)
+                parameterValues[i] = ConstructorValues[i].Parse(actionSet);
+
+            return CreatingObjectOf.New(actionSet, Constructor, parameterValues);
         }
     }
 }
