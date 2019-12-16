@@ -102,8 +102,7 @@ namespace Deltin.Deltinteger.Elements
 
             parameters.AddRange(elementParameters.Select(p => p.ToWorkshop(language)));
 
-            // string result = I18n.I18n.Translate(language, Name);
-            string result = Name;
+            string result = I18n.I18n.Translate(language, Name);
             if (parameters.Count != 0) result += "(" + string.Join(", ", parameters) + ")";
             if (!ElementList.IsValue) result += ";";
             return result;

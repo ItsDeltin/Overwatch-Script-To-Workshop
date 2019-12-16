@@ -1,0 +1,343 @@
+<?xml version="1.0" encoding="utf-8"?>
+<I18nLanguage xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <Methods>
+    <method name="Abort" alt="中止" />
+    <method name="Abort If" alt="根据条件中止" />
+    <method name="Abort If Condition Is False" alt="如条件为“假”则中止" />
+    <method name="Abort If Condition Is True" alt="如条件为”真“则中止" />
+    <method name="Allow Button" alt="可用按钮" />
+    <method name="Apply Impulse" alt="施加推力" />
+    <method name="Big Message" alt="大字体信息" />
+    <method name="Chase Global Variable At Rate" alt="追踪全局变量频率" />
+    <method name="Chase Global Variable Over Time" alt="持续追踪全局变量" />
+    <method name="Chase Player Variable At Rate" alt="追踪玩家变量频率" />
+    <method name="Chase Player Variable Over Time" alt="持续追踪玩家变量" />
+    <method name="Clear Status" alt="清除状态" />
+    <method name="Communicate" alt="交流" />
+    <method name="Create Beam Effect" alt="创建光束效果" />
+    <method name="Create Dummy Bot" alt="生成机器人" />
+    <method name="Create Effect" alt="创建效果" />
+    <method name="Create Hud Text" alt="创建HUD文本" />
+    <method name="Create Icon" alt="创建图标" />
+    <method name="Create In-World Text" alt="创建地图文本" />
+    <method name="Damage" alt="伤害" />
+    <method name="Declare Match Draw" alt="宣布比赛为平局" />
+    <method name="Declare Player Victory" alt="宣告玩家胜利" />
+    <method name="Declare Round Victory" alt="宣告回合胜利" />
+    <method name="Declare team Victory" alt="宣告队伍胜利" />
+    <method name="Destroy All Dummy Bots" alt="移除所有机器人" />
+    <method name="Destroy All Effects" alt="消除所有效果" />
+    <method name="Destroy All HUD Text" alt="消除所有HUD文本" />
+    <method name="Destroy All Icons" alt="消除所有图标" />
+    <method name="Destroy All In-World Text" alt="消除所有地图文本" />
+    <method name="Destroy Dummy Bot" alt="移除机器人" />
+    <method name="Destroy Effect" alt="消除效果" />
+    <method name="Destroy Hud Text" alt="消除HUD文本" />
+    <method name="Destroy Effect" alt="消除效果" />
+    <method name="Destroy In-World Text" alt="消除地图文本" />
+    <method name="Disable Built-In Game Mode Announcer" alt="关闭游戏预设通告模式" />
+    <method name="Disable Built-In Game Mode Completion" alt="关闭游戏预设完成条件" />
+    <method name="Disable Built-In Game Mode Music" alt="关闭游戏预设音乐模式" />
+    <method name="Disable Built-In Game Mode Respawning" alt="关闭游戏预设重生模式" />
+    <method name="Disable Built-In Game Mode Scoring" alt="关闭游戏预设计分模式" />
+    <method name="Disable Death Spectate All Players" alt="对所有玩家禁用死亡回放" />
+    <method name="Disable Death Spectate Target HUD" alt="禁用死亡回放时目标的HUD" />
+    <method name="Disallow Button" alt="禁用按钮" />
+    <method name="Enable Built-In Game Mode Announcer" alt="开启游戏预设通告模式" />
+    <method name="Enable Built-In Game Mode Completion" alt="开启游戏预设完成条件" />
+    <method name="Enable Built-In Game Mode Music" alt="开启游戏预设音乐模式" />
+    <method name="Enable Built-In Game Mode Respawning" alt="开启游戏预设重生模式" />
+    <method name="Enable Built-In Game Mode Scoring" alt="开启游戏预设计分模式" />
+    <method name="Enable Death Spectate All Players" alt="对所有玩家启用死亡回放" />
+    <method name="Enable Death Spectate Target HUD" alt="启用死亡回放时目标的HUD" />
+    <method name="Go To Assemble Heroes" alt="前往集结英雄" />
+    <method name="Heal" alt="治疗" />
+    <method name="Kill" alt="击杀" />
+    <method name="Loop" alt="循环" />
+    <method name="Loop If" alt="根据条件循环" />
+    <method name="Loop If Condition Is False" alt="如条件为“假”则循环" />
+    <method name="Loop If Condition Is True" alt="如条件为”真“则循环" />
+    <method name="Modify Global Variable" alt="修改全局变量" />
+    <method name="Modify Global Variable At Index" alt="在索引处修改全局变量" />
+    <method name="Modify Player Score" alt="修改玩家分数" />
+    <method name="Modify Player Variable" alt="修改玩家变量" />
+    <method name="Modify Player Variable At Index" alt="在索引处修改玩家变量" />
+    <method name="Modify Team Score" alt="修改队伍分数" />
+    <method name="Pause Match Time" alt="比赛时间暂停" />
+    <method name="Play Effect" alt="播放效果" />
+    <method name="Preload Hero" alt="预加载英雄" />
+    <method name="Press Button" alt="按下按键" />
+    <method name="Reset Player Hero Availability" alt="重置玩家英雄可选状态" />
+    <method name="Respawn" alt="重生" />
+    <method name="Resurrect" alt="重生" />
+    <method name="Set Ability 1 Enabled" alt="设置启用技能 1" />
+    <method name="Set Ability 2 Enabled" alt="设置启用技能 2" />
+    <method name="Set Aim Speed" alt="设置瞄准速度" />
+    <method name="Set Damage Dealt" alt="设置造成伤害" />
+    <method name="Set Damage Received" alt="设置受到伤害" />
+    <method name="Set Facing" alt="设置朝向" />
+    <method name="Set Global Variable" alt="设置全局变量" />
+    <method name="Set Global Variable At Index" alt="在索引处设置全局变量" />
+    <method name="Set Gravity" alt="设置引力" />
+    <method name="Set Healing Dealt" alt="设置造成治疗" />
+    <method name="Set Healing Received" alt="设置受到治疗" />
+    <method name="Set Invisible" alt="设置不可见" />
+    <method name="Set Match Time" alt="设置比赛时间" />
+    <method name="Set Max Health" alt="设置最大生命值" />
+    <method name="Set Move Speed" alt="设置移动速度" />
+    <method name="Set Objective Description" alt="设置目标点描述" />
+    <method name="Set Player Allowed Heroes" alt="设置玩家可选的英雄" />
+    <method name="Set Player Score" alt="设置玩家分数" />
+    <method name="Set Player Variable" alt="设置玩家变量" />
+    <method name="Set Player Variable At Index" alt="在索引处设置玩家变量" />
+    <method name="Set Primary Fire Enabled" alt="设置主要攻击模式启用" />
+    <method name="Set Projectile Gravity" alt="设置弹道引力" />
+    <method name="Set Projectile Speed" alt="设置弹道速度" />
+    <method name="Set Respawn Max Time" alt="设置最大重生时间" />
+    <method name="Set Secondary Fire Enabled" alt="设置辅助攻击模式启用" />
+    <method name="Set Slow Motion" alt="设置慢动作" />
+    <method name="Set Status" alt="设置状态" />
+    <method name="Set Team Score" alt="设置队伍分数" />
+    <method name="Set Ultimate Ability Enabled" alt="设置启用终极技能" />
+    <method name="Set Ultimate Charge" alt="设置终极技能充能" />
+    <method name="Skip" alt="跳过" />
+    <method name="Skip If" alt="根据条件跳过" />
+    <method name="Small Message" alt="小字体信息" />
+    <method name="Start Accelerating" alt="开始加速" />
+    <method name="Start Camera" alt="开始镜头" />
+    <method name="Start Damage Modification" alt="开始伤害调整" />
+    <method name="Start Damage Over Time" alt="开始持续伤害" />
+    <method name="Start Facing" alt="开始朝向" />
+    <method name="Start Forcing Player To Be Hero" alt="开始强制玩家选择英雄" />
+    <method name="Start Forcing Spawn Room" alt="开始强制重生室" />
+    <method name="Start Forcing Throttle" alt="开始限制阈值" />
+    <method name="Start Heal Over Time" alt="开始持续治疗" />
+    <method name="Start Holding Button" alt="开始按下按钮" />
+    <method name="Start Throttle In Direction" alt="开始定向阈值" />
+    <method name="Start Transforming Throttle" alt="开始转换阈值" />
+    <method name="Stop Accelerating" alt="停止加速" />
+    <method name="Stop All Damage Modifications" alt="停止所有伤害调整" />
+    <method name="Stop All Damage Over Time" alt="停止所有持续伤害" />
+    <method name="Stop All Heal Over Time" alt="停止所有持续治疗" />
+    <method name="Stop Camera" alt="停止镜头" />
+    <method name="Stop Chasing Global Variable" alt="停止追踪全局变量" />
+    <method name="Stop Chasing Player Variable" alt="停止追踪玩家变量" />
+    <method name="Stop Damage Modification" alt="停止伤害调整" />
+    <method name="Stop Damage Over Time" alt="停止持续伤害" />
+    <method name="Stop Facing" alt="停止朝向" />
+    <method name="Stop Forcing Player To Be Hero" alt="停止强制玩家选择英雄" />
+    <method name="Stop Forcing Spawn Room" alt="停止强制重生室" />
+    <method name="Stop Forcing Throttle" alt="停止限制阈值" />
+    <method name="Stop Heal Over Time" alt="停止持续治疗" />
+    <method name="Stop Holding Button" alt="停止按下按钮" />
+    <method name="Stop Throttle In Direction" alt="停止定向阈值" />
+    <method name="Stop Transforming Throttle" alt="停止转换阈值" />
+    <method name="Teleport" alt="传送" />
+    <method name="Unpause Match Time" alt="比赛时间继续" />
+    <method name="Wait" alt="等待" />
+    <method name="Absolute Value" alt="绝对值" />
+    <method name="Add" alt="加" />
+    <method name="All Dead Players" alt="所有死亡玩家" />
+    <method name="All Heroes" alt="全部英雄" />
+    <method name="All Living Players" alt="所有存活玩家" />
+    <method name="All Players" alt="所有玩家" />
+    <method name="All Players Not On Objective" alt="所有目标点外玩家" />
+    <method name="All Players On Objective" alt="所有目标点内玩家" />
+    <method name="Allowed Heroes" alt="可用英雄" />
+    <method name="Altitude Of" alt="高度" />
+    <method name="And" alt="与" />
+    <method name="Angle Between Vectors" alt="矢量间夹角" />
+    <method name="Angle Difference" alt="角度差" />
+    <method name="Append To Array" alt="添加至数组" />
+    <method name="Arccosine In Degrees" alt="以角度为单位的反余弦值" />
+    <method name="Arccosine In Radians" alt="以弧度为单位的反余弦值" />
+    <method name="Arcsine In Degrees" alt="以角度为单位的反正弦值" />
+    <method name="Arcsine In Radians" alt="以弧度为单位的反正弦值" />
+    <method name="Arctangent In Degrees" alt="以角度为单位的反正切值" />
+    <method name="Arctangent In Radians" alt="以弧度为单位的反正切值" />
+    <method name="Array Contains" alt="数组包含" />
+    <method name="Array Slice" alt="数组分割" />
+    <method name="Attacker" alt="攻击方" />
+    <method name="Backward" alt="后" />
+    <method name="Closest Player To" alt="距离最近的玩家" />
+    <method name="Compare" alt="比较" />
+    <method name="Control Mode Scoring Percentage" alt="占领要点模式得分百分比" />
+    <method name="Control Mode Scoring Team" alt="占领要点模式正在得分的队伍" />
+    <method name="Count Of" alt="数量" />
+    <method name="Cosine From Degrees" alt="角度的余弦值" />
+    <method name="Cosine From Radians" alt="弧度的余弦值" />
+    <method name="Cross Product" alt="矢量积" />
+    <method name="Current Map" alt="当前地图" />
+    <method name="Current Array Element" alt="当前数组元素" />
+    <method name="Direction From Angles" alt="与此角度的相对方向" />
+    <method name="Direction Towards" alt="方向" />
+    <method name="Distance Between" alt="相距距离" />
+    <method name="Divide" alt="除" />
+    <method name="Dot Product" alt="标量积" />
+    <method name="Down" alt="下" />
+    <method name="Empty Array" alt="空数组" />
+    <method name="Entity Exists" alt="实体存在" />
+    <method name="Event Damage" alt="事件伤害" />
+    <method name="Event Healing" alt="事件治疗" />
+    <method name="Event Player" alt="事件玩家" />
+    <method name="Event Was Critical Hit" alt="事件暴击" />
+    <method name="Eye Position" alt="眼睛位置" />
+    <method name="Facing Direction Of" alt="面朝方向" />
+    <method name="False" alt="假" />
+    <method name="Farthest Player From" alt="距离最远的玩家" />
+    <method name="Filtered Array" alt="已过滤的数组" />
+    <method name="First Of" alt="首个" />
+    <method name="Flag Position" alt="旗帜位置" />
+    <method name="Forward" alt="前" />
+    <method name="Game Mode" alt="比赛模式" />
+    <method name="Current Game Mode" alt="当前比赛模式" />
+    <method name="Global Variable" alt="全局变量" />
+    <method name="Has Spawned" alt="已重生" />
+    <method name="Has Status" alt="具有状态" />
+    <method name="Healee" alt="受治疗者" />
+    <method name="Healer" alt="治疗者" />
+    <method name="Health" alt="生命值" />
+    <method name="Hero" alt="英雄" />
+    <method name="Hero Icon String" alt="英雄图标字符串" />
+    <method name="Hero Of" alt="所用英雄" />
+    <method name="Horizontal Angle From Direction" alt="与此方向的水平角度" />
+    <method name="Horizontal Angle Towards" alt="水平方向夹角" />
+    <method name="Horizontal Facing Angle Of" alt="水平朝向角度" />
+    <method name="Horizontal Speed Of" alt="水平速度" />
+    <method name="Host Player" alt="主机玩家" />
+    <method name="Index Of Array Value" alt="数组值的索引" />
+    <method name="Is Alive" alt="存活" />
+    <method name="Is Assembling Heroes" alt="正在集结英雄" />
+    <method name="Is Between Rounds" alt="处于回合之间" />
+    <method name="Is Button Held" alt="按钮被按下" />
+    <method name="Is Communicating" alt="正在交流" />
+    <method name="Is Communicating Any" alt="正在与人交流" />
+    <method name="Is Communicating Any Emote" alt="正在使用表情交流" />
+    <method name="Is Communicating Any Voice Line" alt="正在使用语音交流" />
+    <method name="Is Control Mode Point Locked" alt="占领要点模式占领点解锁" />
+    <method name="Is Crouching" alt="正在蹲下" />
+    <method name="Is CTF Mode In Sudden Death" alt="在夺旗模式中开始绝杀局" />
+    <method name="Is Dead" alt="死亡" />
+    <method name="Is Dummy Bot" alt="是否是机器人" />
+    <method name="Is Firing Primary" alt="正在使用主要武器" />
+    <method name="Is Firing Secondary" alt="正在使用辅助武器" />
+    <method name="Is Flag At Base" alt="旗帜是否在基地中" />
+    <method name="Is Game In Progress" alt="游戏正在进行中" />
+    <method name="Is Hero Being Played" alt="正在使用英雄" />
+    <method name="Is In Air" alt="正在空中" />
+    <method name="Is In Line Of Sight" alt="在视线内" />
+    <method name="Is In Setup" alt="正在设置" />
+    <method name="Is In Spawn Room" alt="在重生室中" />
+    <method name="Is In View Angle" alt="在视野内" />
+    <method name="Is Match Complete" alt="比赛结束" />
+    <method name="Is Moving" alt="正在移动" />
+    <method name="Is Objective Complete" alt="目标是否完成" />
+    <method name="Is On Ground" alt="在地面上" />
+    <method name="Is On Objective" alt="在目标点上" />
+    <method name="Is On Wall" alt="在墙上" />
+    <method name="Is Portrait On Fire" alt="头像火力全开" />
+    <method name="Is Standing" alt="正在站立" />
+    <method name="Is Team On Defense" alt="正在防守" />
+    <method name="Is Team On Offense" alt="作为进攻队伍" />
+    <method name="Is True For All" alt="对全部为”真“" />
+    <method name="Is True For Any" alt="对任意为”真“" />
+    <method name="Is Using Ability 1" alt="正在使用技能 1" />
+    <method name="Is Using Ability 2" alt="正在使用技能 2" />
+    <method name="Is Using Ultimate" alt="正在使用终极技能" />
+    <method name="Is Waiting For Players" alt="正在等待玩家" />
+    <method name="Last Created Entity" alt="最后创建的实体" />
+    <method name="Last Damage Modification ID" alt="上一个伤害调整ID" />
+    <method name="Last Damage Over Time ID" alt="上一个持续伤害效果ID" />
+    <method name="Last Heal Over Time ID" alt="上一个持续治疗效果ID" />
+    <method name="Last Of" alt="最后" />
+    <method name="Last Text ID" alt="上一个文本ID" />
+    <method name="Left" alt="左" />
+    <method name="Local Vector Of" alt="本地矢量" />
+    <method name="Map" alt="地图" />
+    <method name="Match Round" alt="比赛回合" />
+    <method name="Match Time" alt="比赛时间" />
+    <method name="Max" alt="最大" />
+    <method name="Max Health" alt="最大生命值" />
+    <method name="Min" alt="最小" />
+    <method name="Modulo" alt="余数" />
+    <method name="Multiply" alt="乘" />
+    <method name="Nearest Walkable Position" alt="最近的可行走位置" />
+    <method name="Normalize" alt="归一化" />
+    <method name="Normalized Health" alt="标准化生命值" />
+    <method name="Not" alt="非" />
+    <method name="Null" alt="无" />
+    <method name="Number" alt="数字" />
+    <method name="Number Of Dead Players" alt="死亡玩家数量" />
+    <method name="Number Of Deaths" alt="死亡数" />
+    <method name="Number Of Eliminations" alt="消灭数" />
+    <method name="Number Of Final Blows" alt="最后一击数" />
+    <method name="Number Of Heroes" alt="英雄数量" />
+    <method name="Number Of Living Players" alt="存活玩家数量" />
+    <method name="Number Of Players" alt="玩家数量" />
+    <method name="Number Of Players On Objective" alt="目标点上玩家数量" />
+    <method name="Objective Index" alt="对象索引" />
+    <method name="Objective Position" alt="目标位置" />
+    <method name="Opposite Team Of" alt="对方队伍" />
+    <method name="Or" alt="或" />
+    <method name="Payload Position" alt="运载目标位置" />
+    <method name="Payload Progress Percentage" alt="运载目标进度百分比" />
+    <method name="Player Carrying Flag" alt="携带旗帜的玩家" />
+    <method name="Player Closest To Reticle" alt="距离准星最近的玩家" />
+    <method name="Player Variable" alt="玩家变量" />
+    <method name="Players In Slot" alt="此位置的玩家" />
+    <method name="Players In View Angle" alt="视角中的玩家" />
+    <method name="Players On Hero" alt="选择英雄的玩家" />
+    <method name="Players Within Radius" alt="范围内玩家" />
+    <method name="Point Capture Percentage" alt="目标点占领百分比" />
+    <method name="Position of" alt="所选位置" />
+    <method name="Raise To Power" alt="乘方" />
+    <method name="Random Integer" alt="随机整数" />
+    <method name="Random Real" alt="随机实数" />
+    <method name="Random Value In Array" alt="数组随机取值" />
+    <method name="Randomized Array" alt="随机数组" />
+    <method name="Ray Cast Hit Normal" alt="射线命中法线" />
+    <method name="Ray Cast Hit Player" alt="射线命中玩家" />
+    <method name="Ray Cast Hit Position" alt="射线命中位置" />
+    <method name="Remove From Array" alt="从数组中移除" />
+    <method name="Right" alt="右" />
+    <method name="Round To Integer" alt="取整" />
+    <method name="Score Of" alt="分数" />
+    <method name="Server Load" alt="服务器负载" />
+    <method name="Server Load Average" alt="服务器负载平均值" />
+    <method name="Server Load Peak" alt="服务器负载峰值" />
+    <method name="Sine From Degrees" alt="角度的正弦值" />
+    <method name="Sine From Radians" alt="弧度的正弦值" />
+    <method name="Slot Of" alt="位置" />
+    <method name="Sorted Array" alt="已排序的数组" />
+    <method name="Speed Of" alt="速度" />
+    <method name="Speed Of In Direction" alt="指定方向速度" />
+    <method name="Square Root" alt="平方根" />
+    <method name="String" alt="字符串" />
+    <method name="Custom String" alt="自定义字符串" />
+    <method name="Icon String" alt="图标字符串" />
+    <method name="Subtract" alt="减" />
+    <method name="Tangent From Degrees" alt="角度的正切值" />
+    <method name="Tangent From Radians" alt="弧度的正切值" />
+    <method name="Team" alt="队伍" />
+    <method name="Team Of" alt="所在队伍" />
+    <method name="Team Score" alt="团队得分" />
+    <method name="Throttle Of" alt="阈值" />
+    <method name="Total Time Elapsed" alt="总计消耗时间" />
+    <method name="True" alt="真" />
+    <method name="Ultimate Charge Percent" alt="终极技能充能百分比" />
+    <method name="Up" alt="上" />
+    <method name="Value In Array" alt="数组中的值" />
+    <method name="Vector" alt="矢量" />
+    <method name="Vector Towards" alt="向量" />
+    <method name="Velocity Of" alt="速率" />
+    <method name="Vertical Angle From Direction" alt="与此方向的垂直角度" />
+    <method name="Vertical Angle Towards" alt="垂直方向夹角" />
+    <method name="Vertical Facing Angle Of" alt="垂直朝向角度" />
+    <method name="Vertical Speed Of" alt="垂直速度" />
+    <method name="Victim" alt="被攻击方" />
+    <method name="World Vector Of" alt="地图矢量" />
+    <method name="X Component Of" alt="X方向分量" />
+    <method name="Y Component Of" alt="Y方向分量" />
+    <method name="Z Component Of" alt="Z方向分量" />
+  </Methods>
+</I18nLanguage>

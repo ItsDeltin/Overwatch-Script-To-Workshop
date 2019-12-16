@@ -29,16 +29,16 @@ namespace Deltin.Deltinteger.I18n
 
         public static void LoadLanguage(OutputLanguage language)
         {
-            if (language != OutputLanguage.enUS)
             lock (LanguageLock)
-            if (CurrentLanguage != language)
             {
-                string languageFile = Path.Combine(Program.ExeFolder, "Languages", "i18n-" + language.ToString() + ".xml");
-                XmlSerializer serializer = new XmlSerializer(typeof(I18nLanguage));
+                if (CurrentLanguage != language && language != OutputLanguage.enUS)
+                {
+                    string languageFile = Path.Combine(Program.ExeFolder, "Languages", "i18n-" + language.ToString() + ".xml");
+                    XmlSerializer serializer = new XmlSerializer(typeof(I18nLanguage));
 
-                using (var fileStream = File.OpenRead(languageFile))
-                    Language = (I18nLanguage)serializer.Deserialize(fileStream);
-
+                    using (var fileStream = File.OpenRead(languageFile))
+                        Language = (I18nLanguage)serializer.Deserialize(fileStream);
+                }
                 CurrentLanguage = language;
             }
         }

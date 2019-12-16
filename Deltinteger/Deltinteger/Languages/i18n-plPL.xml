@@ -14,8 +14,8 @@
     <method name="Chase Player Variable Over Time" alt="Chase Player Variable Over Time" />
     <method name="Clear Status" alt="Clear Status" />
     <method name="Communicate" alt="Communicate" />
-    <method name="Create Beam Effect" alt="Create Beam Effect" />
-    <method name="Create Dummy Bot" alt="Crea bot di prova" />
+    <method name="Create Beam Effect" alt="Stwórz efekt wiązki" />
+    <method name="Create Dummy Bot" alt="Stwórz atrapę bota" />
     <method name="Create Effect" alt="Create Effect" />
     <method name="Create Hud Text" alt="Create HUD Text" />
     <method name="Create Icon" alt="Create Icon" />
@@ -25,12 +25,12 @@
     <method name="Declare Player Victory" alt="Declare Player Victory" />
     <method name="Declare Round Victory" alt="Declare Round Victory" />
     <method name="Declare team Victory" alt="Declare Team Victory" />
-    <method name="Destroy All Dummy Bots" alt="Distrugge tutti i bot di prova." />
+    <method name="Destroy All Dummy Bots" alt="Destroy All Dummy Bots" />
     <method name="Destroy All Effects" alt="Destroy All Effects" />
     <method name="Destroy All HUD Text" alt="Destroy All HUD Text" />
     <method name="Destroy All Icons" alt="Destroy All Icons" />
     <method name="Destroy All In-World Text" alt="Destroy All In-World Text" />
-    <method name="Destroy Dummy Bot" alt="Distruggi bot di prova" />
+    <method name="Destroy Dummy Bot" alt="Zniszcz atrapę bota" />
     <method name="Destroy Effect" alt="Destroy Effect" />
     <method name="Destroy Hud Text" alt="Destroy HUD Text" />
     <method name="Destroy Effect" alt="Destroy Effect" />
@@ -167,7 +167,7 @@
     <method name="Cosine From Degrees" alt="Cosine From Degrees" />
     <method name="Cosine From Radians" alt="Cosine From Radians" />
     <method name="Cross Product" alt="Cross Product" />
-    <method name="Current Map" alt="Current Map" />
+    <method name="Current Map" alt="Aktualna mapa" />
     <method name="Current Array Element" alt="Current Array Element" />
     <method name="Direction From Angles" alt="Direction From Angles" />
     <method name="Direction Towards" alt="Direction Towards" />
@@ -178,7 +178,7 @@
     <method name="Empty Array" alt="Empty Array" />
     <method name="Entity Exists" alt="Entity Exists" />
     <method name="Event Damage" alt="Event Damage" />
-    <method name="Event Healing" alt="Event Healing" />
+    <method name="Event Healing" alt="Zdarzenie leczenia" />
     <method name="Event Player" alt="Event Player" />
     <method name="Event Was Critical Hit" alt="Event Was Critical Hit" />
     <method name="Eye Position" alt="Eye Position" />
@@ -189,13 +189,13 @@
     <method name="First Of" alt="First Of" />
     <method name="Flag Position" alt="Flag Position" />
     <method name="Forward" alt="Forward" />
-    <method name="Game Mode" alt="Game Mode" />
-    <method name="Current Game Mode" alt="Current Game Mode" />
+    <method name="Game Mode" alt="Tryb gry" />
+    <method name="Current Game Mode" alt="Bieżący tryb gry" />
     <method name="Global Variable" alt="Global Variable" />
     <method name="Has Spawned" alt="Has Spawned" />
     <method name="Has Status" alt="Has Status" />
-    <method name="Healee" alt="Healee" />
-    <method name="Healer" alt="Healer" />
+    <method name="Healee" alt="Leczony" />
+    <method name="Healer" alt="Leczący" />
     <method name="Health" alt="Health" />
     <method name="Hero" alt="Hero" />
     <method name="Hero Icon String" alt="Hero Icon String" />
@@ -204,7 +204,7 @@
     <method name="Horizontal Angle Towards" alt="Horizontal Angle Towards" />
     <method name="Horizontal Facing Angle Of" alt="Horizontal Facing Angle Of" />
     <method name="Horizontal Speed Of" alt="Horizontal Speed Of" />
-    <method name="Host Player" alt="Host Player" />
+    <method name="Host Player" alt="Gracz gospodarz" />
     <method name="Index Of Array Value" alt="Index Of Array Value" />
     <method name="Is Alive" alt="Is Alive" />
     <method name="Is Assembling Heroes" alt="Is Assembling Heroes" />
@@ -218,7 +218,7 @@
     <method name="Is Crouching" alt="Is Crouching" />
     <method name="Is CTF Mode In Sudden Death" alt="Is CTF Mode In Sudden Death" />
     <method name="Is Dead" alt="Is Dead" />
-    <method name="Is Dummy Bot" alt="Is Dummy Bot" />
+    <method name="Is Dummy Bot" alt="Jest atrapą bota." />
     <method name="Is Firing Primary" alt="Is Firing Primary" />
     <method name="Is Firing Secondary" alt="Is Firing Secondary" />
     <method name="Is Flag At Base" alt="Is Flag At Base" />
@@ -253,10 +253,10 @@
     <method name="Last Text ID" alt="Last Text ID" />
     <method name="Left" alt="Left" />
     <method name="Local Vector Of" alt="Local Vector Of" />
-    <method name="Map" alt="Map" />
+    <method name="Map" alt="Mapa" />
     <method name="Match Round" alt="Match Round" />
     <method name="Match Time" alt="Match Time" />
-    <method name="Max" alt="Massimo" />
+    <method name="Max" alt="Maksimum" />
     <method name="Max Health" alt="Max Health" />
     <method name="Min" alt="Min" />
     <method name="Modulo" alt="Modulo" />
@@ -302,9 +302,9 @@
     <method name="Right" alt="Right" />
     <method name="Round To Integer" alt="Round To Integer" />
     <method name="Score Of" alt="Score Of" />
-    <method name="Server Load" alt="Server Load" />
-    <method name="Server Load Average" alt="Server Load Average" />
-    <method name="Server Load Peak" alt="Server Load Peak" />
+    <method name="Server Load" alt="Obciążenie serwera" />
+    <method name="Server Load Average" alt="Średnie obciążenie serwera" />
+    <method name="Server Load Peak" alt="Szczytowe obciążenie serwera" />
     <method name="Sine From Degrees" alt="Sine From Degrees" />
     <method name="Sine From Radians" alt="Sine From Radians" />
     <method name="Slot Of" alt="Slot Of" />
@@ -313,8 +313,8 @@
     <method name="Speed Of In Direction" alt="Speed Of In Direction" />
     <method name="Square Root" alt="Square Root" />
     <method name="String" alt="String" />
-    <method name="Custom String" alt="Custom String" />
-    <method name="Icon String" alt="Icona" />
+    <method name="Custom String" alt="Niestandardowy ciąg" />
+    <method name="Icon String" alt="Symbol w ciągu" />
     <method name="Subtract" alt="Subtract" />
     <method name="Tangent From Degrees" alt="Tangent From Degrees" />
     <method name="Tangent From Radians" alt="Tangent From Radians" />
@@ -327,7 +327,7 @@
     <method name="Ultimate Charge Percent" alt="Ultimate Charge Percent" />
     <method name="Up" alt="Up" />
     <method name="Value In Array" alt="Value In Array" />
-    <method name="Vector" alt="Vettore" />
+    <method name="Vector" alt="Vector" />
     <method name="Vector Towards" alt="Vector Towards" />
     <method name="Velocity Of" alt="Velocity Of" />
     <method name="Vertical Angle From Direction" alt="Vertical Angle From Direction" />

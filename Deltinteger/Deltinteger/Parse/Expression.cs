@@ -24,7 +24,7 @@ namespace Deltin.Deltinteger.Parse
 
         private ITerminalNode _trailingSeperator = null;
 
-        public ExpressionTree(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.ExprContext exprContext)
+        public ExpressionTree(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.E_expr_treeContext exprContext)
         {
             ExprContextTree = Flatten(script, exprContext);
 
@@ -81,16 +81,16 @@ namespace Deltin.Deltinteger.Parse
             }
         }
 
-        private DeltinScriptParser.ExprContext[] Flatten(ScriptFile script, DeltinScriptParser.ExprContext exprContext)
+        private DeltinScriptParser.ExprContext[] Flatten(ScriptFile script, DeltinScriptParser.E_expr_treeContext exprContext)
         {
             var exprList = new List<DeltinScriptParser.ExprContext>();
             Flatten(script, exprContext, exprList);
             return exprList.ToArray();
         }
 
-        private void Flatten(ScriptFile script, DeltinScriptParser.ExprContext exprContext, List<DeltinScriptParser.ExprContext> exprList)
+        private void Flatten(ScriptFile script, DeltinScriptParser.E_expr_treeContext exprContext, List<DeltinScriptParser.ExprContext> exprList)
         {            
-            if (exprContext.expr(0).SEPERATOR() != null)
+            if (exprContext.expr(0) is DeltinScriptParser.E_expr_treeContext)
                 throw new Exception("Bad list order.");
             
             exprList.Add(exprContext.expr(0));
@@ -102,8 +102,8 @@ namespace Deltin.Deltinteger.Parse
             }
             else
             {
-                if (exprContext.expr(1).SEPERATOR() != null)
-                    Flatten(script, exprContext.expr(1), exprList);
+                if (exprContext.expr(1) is DeltinScriptParser.E_expr_treeContext)
+                    Flatten(script, (DeltinScriptParser.E_expr_treeContext)exprContext.expr(1), exprList);
                 else
                     exprList.Add(exprContext.expr(1));
             }
@@ -242,12 +242,10 @@ namespace Deltin.Deltinteger.Parse
         private DocRange expressionRange { get; }
         private DocRange indexRange { get; }
 
-        public ValueInArrayAction(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.ExprContext exprContext)
+        public ValueInArrayAction(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.E_array_indexContext exprContext)
         {
-            if (exprContext.expr() == null) throw new Exception("Array can be determined without inital expression.");
-
-            Expression = DeltinScript.GetExpression(script, translateInfo, scope, exprContext.expr(0));
-            expressionRange = DocRange.GetRange(exprContext.expr(0));
+            Expression = DeltinScript.GetExpression(script, translateInfo, scope, exprContext.array);
+            expressionRange = DocRange.GetRange(exprContext.array);
 
             if (exprContext.index == null)
                 script.Diagnostics.Error("Expected an expression.", DocRange.GetRange(exprContext.INDEX_START()));

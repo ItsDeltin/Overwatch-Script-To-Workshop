@@ -19,36 +19,32 @@ null   : NULL          ;
 statement_operation : EQUALS | EQUALS_ADD | EQUALS_DIVIDE | EQUALS_MODULO | EQUALS_MULTIPLY | EQUALS_POW | EQUALS_SUBTRACT ;
 
 define : accessor? STATIC? (type=PART | DEFINE) (GLOBAL|PLAYER)? name=PART (id=number? | NOT?) (EQUALS expr?)? ;
-// define           :                   (type=PART | DEFINE)                 name=PART               NOT?  (EQUALS expr?)? ;
-// rule_define      :                   (type=PART | DEFINE) (GLOBAL|PLAYER) name=PART (id=number? | NOT?) (EQUALS expr?)? STATEMENT_END;
-// inclass_define   : accessor? STATIC? (type=PART | DEFINE)                 name=PART                     (EQUALS expr?)? ;
-// parameter_define :                   (type=PART | DEFINE)                 name=PART               NOT?                  ;
 
 expr 
 	: 
-      number                                      // Numbers
-	| method                                      // Methods
-	| string                                      // Strings
-	| expr INDEX_START index=expr? INDEX_END      // Array index
-	| createarray                                 // Array creation
-	| formatted_string                            // Formatted strings
-	| true                                        // True
-	| false                                       // False
-	| null                                        // Null
-	| PART                                        // Variables
-	| exprgroup
-	| create_object
-	| typeconvert
-	| THIS
-	| ROOT
-	| <assoc=right> expr (SEPERATOR expr?)         // Variable seperation
-	| NOT expr                                     // !x
-	| '-' expr                                     // -x
-	| <assoc=right> expr ('^' | '*' | '/' | '%') expr // x^y
-	| expr ('+' | '-') expr                           // x+y
-	| expr ('<' | '<=' | '==' | '>=' | '>' | '!=') expr // x == y
-	| expr TERNARY expr TERNARY_ELSE expr
-	| expr BOOL expr                              // x & y
+      number                                            #e_number
+	| method                                            #e_method
+	| string                                            #e_string
+	| array=expr INDEX_START index=expr? INDEX_END      #e_array_index
+	| createarray                                       #e_create_array
+	| formatted_string                                  #e_formatted_string
+	| true                                              #e_true
+	| false                                             #e_false
+	| null                                              #e_null
+	| PART                                              #e_variable
+	| exprgroup								            #e_expr_group
+	| create_object							            #e_new_object
+	| typeconvert							            #e_type_convert
+	| THIS									            #e_this
+	| ROOT								                #e_root
+	| <assoc=right> expr (SEPERATOR expr?)              #e_expr_tree
+	| NOT expr                                          #e_not
+	| '-' expr                                          #e_inverse
+	| <assoc=right> expr ('^' | '*' | '/' | '%') expr   #e_op_1
+	| expr ('+' | '-') expr                             #e_op_2
+	| expr ('<' | '<=' | '==' | '>=' | '>' | '!=') expr #e_op_compare
+	| expr TERNARY expr TERNARY_ELSE expr				#e_ternary_conditional
+	| expr BOOL expr                              		#e_op_bool
 	;
 
 typeconvert : '<' PART '>' expr ;

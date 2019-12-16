@@ -192,53 +192,42 @@ namespace Deltin.Deltinteger.Parse
 
         public static IExpression GetExpression(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.ExprContext exprContext, bool selfContained = true)
         {
-            if (exprContext.ChildCount == 1)
+            switch (exprContext)
             {
-                // Number
-                if (exprContext.number() != null) return new NumberAction(script, exprContext.number());
-                // True/false
-                if (exprContext.@true()  != null) return new BoolAction  (script, true);
-                if (exprContext.@false() != null) return new BoolAction  (script, false);
-                // Variable
-                if (exprContext.PART()   != null)
-                {
-                    string variableName = exprContext.PART().GetText();
+                case DeltinScriptParser.E_numberContext number: return new NumberAction(script, number.number());
+                case DeltinScriptParser.E_trueContext @true: return new BoolAction(script, true);
+                case DeltinScriptParser.E_falseContext @false: return new BoolAction(script, false);
+                case DeltinScriptParser.E_variableContext variable: {
+                    string variableName = variable.PART().GetText();
 
                     var type = translateInfo.GetCodeType(variableName, null, null);
                     if (type != null)
                     {
                         if (selfContained)
-                            script.Diagnostics.Error("Types can't be used as expressions.", DocRange.GetRange(exprContext));
+                            script.Diagnostics.Error("Types can't be used as expressions.", DocRange.GetRange(variable));
 
                         return type;
                     }
 
-                    IScopeable element = scope.GetVariable(variableName, script.Diagnostics, DocRange.GetRange(exprContext));
+                    IScopeable element = scope.GetVariable(variableName, script.Diagnostics, DocRange.GetRange(variable));
                     if (element == null)
                         return null;
 
                     if (element is Var)
                     {
                         Var var = (Var)element;
-                        var.Call(new Location(script.Uri, DocRange.GetRange(exprContext)));
+                        var.Call(new Location(script.Uri, DocRange.GetRange(variable)));
                         return var;
                     }
-
-                    else if (element is ScopedEnumMember)
-                    {
-                        return (ScopedEnumMember)element;
-                    }
-
+                    else if (element is ScopedEnumMember) return (ScopedEnumMember)element;
                     else throw new NotImplementedException();
                 }
-                // Method
-                if (exprContext.method() != null) return new CallMethodAction(script, translateInfo, scope, exprContext.method());
-                if (exprContext.create_object() != null) return new CreateObjectAction(script, translateInfo, scope, exprContext.create_object());
+                case DeltinScriptParser.E_methodContext method: return new CallMethodAction(script, translateInfo, scope, method.method());
+                case DeltinScriptParser.E_new_objectContext newObject: return new CreateObjectAction(script, translateInfo, scope, newObject.create_object());
+                case DeltinScriptParser.E_expr_treeContext exprTree: return new ExpressionTree(script, translateInfo, scope, exprTree);
+                case DeltinScriptParser.E_array_indexContext arrayIndex: return new ValueInArrayAction(script, translateInfo, scope, arrayIndex);
+                default: throw new Exception($"Could not determine the expression type '{exprContext.GetType().Name}'.");
             }
-            else if (exprContext.SEPERATOR() != null) return new ExpressionTree(script, translateInfo, scope, exprContext);
-            else if (exprContext.INDEX_START() != null) return new ValueInArrayAction(script, translateInfo, scope, exprContext);
-
-            throw new Exception("Could not determine the expression type.");
         }
     
         private ClassData _classData = null;

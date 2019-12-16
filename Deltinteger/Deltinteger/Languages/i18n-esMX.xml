@@ -1,0 +1,343 @@
+<?xml version="1.0" encoding="utf-8"?>
+<I18nLanguage xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <Methods>
+    <method name="Abort" alt="Abortar" />
+    <method name="Abort If" alt="Abortar si" />
+    <method name="Abort If Condition Is False" alt="Abortar si la condición es falsa" />
+    <method name="Abort If Condition Is True" alt="Abortar si la condición es verdadera" />
+    <method name="Allow Button" alt="Habilitar botón" />
+    <method name="Apply Impulse" alt="Aplicar impulso" />
+    <method name="Big Message" alt="Mensaje grande" />
+    <method name="Chase Global Variable At Rate" alt="Seguir variable global según la tasa" />
+    <method name="Chase Global Variable Over Time" alt="Seguir variable global con el tiempo" />
+    <method name="Chase Player Variable At Rate" alt="Seguir variable de jugador según la tasa" />
+    <method name="Chase Player Variable Over Time" alt="Seguir variable del jugador con el tiempo" />
+    <method name="Clear Status" alt="Eliminar estado" />
+    <method name="Communicate" alt="Comunicar" />
+    <method name="Create Beam Effect" alt="Crear efecto de rayo" />
+    <method name="Create Dummy Bot" alt="Crear robot de entrenamiento" />
+    <method name="Create Effect" alt="Crear efecto" />
+    <method name="Create Hud Text" alt="Crear texto del HUD" />
+    <method name="Create Icon" alt="Crear ícono" />
+    <method name="Create In-World Text" alt="Crear texto dentro del mundo" />
+    <method name="Damage" alt="Infligir daño" />
+    <method name="Declare Match Draw" alt="Declarar empate de la partida" />
+    <method name="Declare Player Victory" alt="Declarar victoria del jugador" />
+    <method name="Declare Round Victory" alt="Declarar victoria de la ronda" />
+    <method name="Declare team Victory" alt="Declarar la victoria del equipo" />
+    <method name="Destroy All Dummy Bots" alt="Destruir todos los robots de entrenamiento" />
+    <method name="Destroy All Effects" alt="Destruir todos los efectos" />
+    <method name="Destroy All HUD Text" alt="Destruir todo el texto del HUD" />
+    <method name="Destroy All Icons" alt="Destruir todos los íconos" />
+    <method name="Destroy All In-World Text" alt="Destruir todo el texto dentro del mundo" />
+    <method name="Destroy Dummy Bot" alt="Destruir robot de entrenamiento" />
+    <method name="Destroy Effect" alt="Destruir efecto" />
+    <method name="Destroy Hud Text" alt="Destruir texto del HUD" />
+    <method name="Destroy Effect" alt="Destruir efecto" />
+    <method name="Destroy In-World Text" alt="Destruir texto dentro del mundo" />
+    <method name="Disable Built-In Game Mode Announcer" alt="Deshabilitar el presentador integrado del modo de juego" />
+    <method name="Disable Built-In Game Mode Completion" alt="Deshabilitar la finalización integrada del modo de juego" />
+    <method name="Disable Built-In Game Mode Music" alt="Deshabilitar la música integrada del modo de juego" />
+    <method name="Disable Built-In Game Mode Respawning" alt="Deshabilitar la reaparición integrada del modo de juego" />
+    <method name="Disable Built-In Game Mode Scoring" alt="Deshabilitar el sistema de puntuación integrado del modo de juego" />
+    <method name="Disable Death Spectate All Players" alt="Deshabilitar la observación de todos los jugadores como espectador muerto" />
+    <method name="Disable Death Spectate Target HUD" alt="Deshabilitar la observación del HUD objetivo como espectador muerto" />
+    <method name="Disallow Button" alt="Deshabilitar botón" />
+    <method name="Enable Built-In Game Mode Announcer" alt="Habilitar presentador integrado del modo de juego" />
+    <method name="Enable Built-In Game Mode Completion" alt="Habilitar la finalización integrada del modo de juego" />
+    <method name="Enable Built-In Game Mode Music" alt="Habilitar la música integrada del modo de juego" />
+    <method name="Enable Built-In Game Mode Respawning" alt="Habilitar la reaparición integrada del modo de juego" />
+    <method name="Enable Built-In Game Mode Scoring" alt="Habilitar el sistema de puntuación integrado del modo de juego" />
+    <method name="Enable Death Spectate All Players" alt="Habilitar la observación de todos los jugadores como espectador muerto" />
+    <method name="Enable Death Spectate Target HUD" alt="Habilitar la observación del HUD objetivo como espectador muerto" />
+    <method name="Go To Assemble Heroes" alt="Ir a Forma tu equipo" />
+    <method name="Heal" alt="Sanar" />
+    <method name="Kill" alt="Matar" />
+    <method name="Loop" alt="Bucle" />
+    <method name="Loop If" alt="Repetir si" />
+    <method name="Loop If Condition Is False" alt="Repetir si la condición es falsa" />
+    <method name="Loop If Condition Is True" alt="Repetir si la condición es verdadera" />
+    <method name="Modify Global Variable" alt="Modificar variable global" />
+    <method name="Modify Global Variable At Index" alt="Modificar variable global según el índice" />
+    <method name="Modify Player Score" alt="Modificar puntuación del jugador" />
+    <method name="Modify Player Variable" alt="Modificar variable de jugador" />
+    <method name="Modify Player Variable At Index" alt="Modificar variable de jugador según el índice" />
+    <method name="Modify Team Score" alt="Modificar puntuación del equipo" />
+    <method name="Pause Match Time" alt="Pausar tiempo de la partida" />
+    <method name="Play Effect" alt="Reproducir efecto" />
+    <method name="Preload Hero" alt="Precargar héroe" />
+    <method name="Press Button" alt="Presionar botón" />
+    <method name="Reset Player Hero Availability" alt="Restablecer disponibilidad de héroes de los jugadores" />
+    <method name="Respawn" alt="Reaparecer" />
+    <method name="Resurrect" alt="Resucitar" />
+    <method name="Set Ability 1 Enabled" alt="Establecer habilidad 1 habilitada" />
+    <method name="Set Ability 2 Enabled" alt="Establecer habilidad 2 habilitada" />
+    <method name="Set Aim Speed" alt="Establecer velocidad al apuntar" />
+    <method name="Set Damage Dealt" alt="Establecer daño infligido" />
+    <method name="Set Damage Received" alt="Establecer daño recibido" />
+    <method name="Set Facing" alt="Establecer orientación" />
+    <method name="Set Global Variable" alt="Establecer variable global" />
+    <method name="Set Global Variable At Index" alt="Establecer variable global según el índice" />
+    <method name="Set Gravity" alt="Establecer gravedad" />
+    <method name="Set Healing Dealt" alt="Establecer sanación realizada" />
+    <method name="Set Healing Received" alt="Establecer sanación recibida" />
+    <method name="Set Invisible" alt="Establecer invisibilidad" />
+    <method name="Set Match Time" alt="Establecer tiempo de la partida" />
+    <method name="Set Max Health" alt="Establecer salud máxima" />
+    <method name="Set Move Speed" alt="Establecer velocidad de movimiento" />
+    <method name="Set Objective Description" alt="Establecer descripción de objetivo" />
+    <method name="Set Player Allowed Heroes" alt="Establecer héroes permitidos para los jugadores" />
+    <method name="Set Player Score" alt="Establecer puntuación del jugador" />
+    <method name="Set Player Variable" alt="Establecer variable de jugador" />
+    <method name="Set Player Variable At Index" alt="Establecer variable de jugador según el índice" />
+    <method name="Set Primary Fire Enabled" alt="Establecer disparo principal habilitado" />
+    <method name="Set Projectile Gravity" alt="Establecer gravedad del proyectil" />
+    <method name="Set Projectile Speed" alt="Establecer velocidad del proyectil" />
+    <method name="Set Respawn Max Time" alt="Establecer tiempo máximo de reaparición" />
+    <method name="Set Secondary Fire Enabled" alt="Establecer disparo secundario habilitado" />
+    <method name="Set Slow Motion" alt="Establecer cámara lenta" />
+    <method name="Set Status" alt="Establecer estado" />
+    <method name="Set Team Score" alt="Establecer puntuación del equipo" />
+    <method name="Set Ultimate Ability Enabled" alt="Establecer habilidad máxima habilitada" />
+    <method name="Set Ultimate Charge" alt="Establecer carga de habilidad máxima" />
+    <method name="Skip" alt="Omitir" />
+    <method name="Skip If" alt="Omitir si" />
+    <method name="Small Message" alt="Mensaje pequeño" />
+    <method name="Start Accelerating" alt="Comenzar la aceleración" />
+    <method name="Start Camera" alt="Comenzar cámara" />
+    <method name="Start Damage Modification" alt="Comenzar modificación de daño" />
+    <method name="Start Damage Over Time" alt="Comenzar daño con el tiempo" />
+    <method name="Start Facing" alt="Comenzar orientación" />
+    <method name="Start Forcing Player To Be Hero" alt="Comenzar a forzar a un jugador a usar un héroe" />
+    <method name="Start Forcing Spawn Room" alt="Comenzar a forzar cuarto de reaparición" />
+    <method name="Start Forcing Throttle" alt="Comenzar a forzar la aceleración" />
+    <method name="Start Heal Over Time" alt="Comenzar sanación con el tiempo" />
+    <method name="Start Holding Button" alt="Comenzar a mantener el botón presionado" />
+    <method name="Start Throttle In Direction" alt="Comenzar aceleración en dirección" />
+    <method name="Start Transforming Throttle" alt="Comenzar a transformar la aceleración" />
+    <method name="Stop Accelerating" alt="Detener la aceleración" />
+    <method name="Stop All Damage Modifications" alt="Detener todas las modificaciones de daño" />
+    <method name="Stop All Damage Over Time" alt="Detener todo el daño con el tiempo" />
+    <method name="Stop All Heal Over Time" alt="Detener toda la sanación con el tiempo" />
+    <method name="Stop Camera" alt="Detener cámara" />
+    <method name="Stop Chasing Global Variable" alt="Detener seguimiento de variable global" />
+    <method name="Stop Chasing Player Variable" alt="Detener seguimiento de variable de jugador" />
+    <method name="Stop Damage Modification" alt="Detener modificación de daño" />
+    <method name="Stop Damage Over Time" alt="Detener daño con el tiempo" />
+    <method name="Stop Facing" alt="Detener orientación" />
+    <method name="Stop Forcing Player To Be Hero" alt="Dejar de forzar a un jugador a usar un héroe" />
+    <method name="Stop Forcing Spawn Room" alt="Dejar de forzar cuarto de reaparición" />
+    <method name="Stop Forcing Throttle" alt="Dejar de forzar la aceleración" />
+    <method name="Stop Heal Over Time" alt="Detener sanación con el tiempo" />
+    <method name="Stop Holding Button" alt="Dejar de mantener el botón presionado" />
+    <method name="Stop Throttle In Direction" alt="Detener aceleración en dirección" />
+    <method name="Stop Transforming Throttle" alt="Dejar de transformar la aceleración" />
+    <method name="Teleport" alt="Transportar" />
+    <method name="Unpause Match Time" alt="Despausar tiempo de la partida" />
+    <method name="Wait" alt="Esperar" />
+    <method name="Absolute Value" alt="Valor absoluto" />
+    <method name="Add" alt="Agregar" />
+    <method name="All Dead Players" alt="Todos los jugadores muertos" />
+    <method name="All Heroes" alt="Todos los héroes" />
+    <method name="All Living Players" alt="Todos los jugadores vivos" />
+    <method name="All Players" alt="Todos los jugadores" />
+    <method name="All Players Not On Objective" alt="Todos los jugadores que no están en el objetivo" />
+    <method name="All Players On Objective" alt="Todos los jugadores que están en el objetivo" />
+    <method name="Allowed Heroes" alt="Héroes permitidos" />
+    <method name="Altitude Of" alt="Altitud de" />
+    <method name="And" alt="Y" />
+    <method name="Angle Between Vectors" alt="Ángulo entre vectores" />
+    <method name="Angle Difference" alt="Diferencia de ángulo" />
+    <method name="Append To Array" alt="Anexar a la matriz" />
+    <method name="Arccosine In Degrees" alt="Arcocoseno en grados" />
+    <method name="Arccosine In Radians" alt="Arcocoseno en radianes" />
+    <method name="Arcsine In Degrees" alt="Arcoseno en grados" />
+    <method name="Arcsine In Radians" alt="Arcoseno en radianes" />
+    <method name="Arctangent In Degrees" alt="Arcotangente en grados" />
+    <method name="Arctangent In Radians" alt="Arcotangente en radianes" />
+    <method name="Array Contains" alt="La matriz contiene" />
+    <method name="Array Slice" alt="Extracción de matriz" />
+    <method name="Attacker" alt="Atacante" />
+    <method name="Backward" alt="Atrás" />
+    <method name="Closest Player To" alt="Jugador más cercano a" />
+    <method name="Compare" alt="Comparar" />
+    <method name="Control Mode Scoring Percentage" alt="Porcentaje de puntuación en el modo Control" />
+    <method name="Control Mode Scoring Team" alt="Equipo que anota en el modo Control" />
+    <method name="Count Of" alt="Conteo de" />
+    <method name="Cosine From Degrees" alt="Coseno en grados" />
+    <method name="Cosine From Radians" alt="Coseno en radianes" />
+    <method name="Cross Product" alt="Producto vectorial" />
+    <method name="Current Map" alt="Mapa actual" />
+    <method name="Current Array Element" alt="Elemento de matriz actual" />
+    <method name="Direction From Angles" alt="Dirección desde los ángulos" />
+    <method name="Direction Towards" alt="Dirección hacia" />
+    <method name="Distance Between" alt="Distancia entre" />
+    <method name="Divide" alt="Dividir" />
+    <method name="Dot Product" alt="Producto escalar" />
+    <method name="Down" alt="Abajo" />
+    <method name="Empty Array" alt="Matriz vacía" />
+    <method name="Entity Exists" alt="La entidad existe" />
+    <method name="Event Damage" alt="Daño de evento" />
+    <method name="Event Healing" alt="Sanación de evento" />
+    <method name="Event Player" alt="Jugador del evento" />
+    <method name="Event Was Critical Hit" alt="El evento fue un golpe crítico" />
+    <method name="Eye Position" alt="Posición de la vista" />
+    <method name="Facing Direction Of" alt="Dirección de orientación de" />
+    <method name="False" alt="Falso" />
+    <method name="Farthest Player From" alt="Jugador más lejos de" />
+    <method name="Filtered Array" alt="Matriz filtrada" />
+    <method name="First Of" alt="Primero de" />
+    <method name="Flag Position" alt="Posición de la bandera" />
+    <method name="Forward" alt="Adelante" />
+    <method name="Game Mode" alt="Modo de juego" />
+    <method name="Current Game Mode" alt="Modo de juego actual" />
+    <method name="Global Variable" alt="Variable global" />
+    <method name="Has Spawned" alt="Ha aparecido" />
+    <method name="Has Status" alt="Tiene estado" />
+    <method name="Healee" alt="Sanado" />
+    <method name="Healer" alt="Sanador" />
+    <method name="Health" alt="Salud" />
+    <method name="Hero" alt="Héroe" />
+    <method name="Hero Icon String" alt="Cadena de ícono de héroe" />
+    <method name="Hero Of" alt="Héroe de" />
+    <method name="Horizontal Angle From Direction" alt="Ángulo horizontal desde la dirección" />
+    <method name="Horizontal Angle Towards" alt="Ángulo horizontal en dirección a" />
+    <method name="Horizontal Facing Angle Of" alt="Ángulo horizontal de orientación de" />
+    <method name="Horizontal Speed Of" alt="Velocidad horizontal de" />
+    <method name="Host Player" alt="Jugador anfitrión" />
+    <method name="Index Of Array Value" alt="Índice del valor de la matriz" />
+    <method name="Is Alive" alt="Está vivo" />
+    <method name="Is Assembling Heroes" alt="En Forma tu equipo" />
+    <method name="Is Between Rounds" alt="Entre rondas" />
+    <method name="Is Button Held" alt="Botón presionado" />
+    <method name="Is Communicating" alt="Se está comunicando" />
+    <method name="Is Communicating Any" alt="Comunica algo" />
+    <method name="Is Communicating Any Emote" alt="Comunica un gesto" />
+    <method name="Is Communicating Any Voice Line" alt="Comunica una línea de voz" />
+    <method name="Is Control Mode Point Locked" alt="Punto bloqueado en el modo Control" />
+    <method name="Is Crouching" alt="Agachado" />
+    <method name="Is CTF Mode In Sudden Death" alt="Modo CLB en muerte súbita" />
+    <method name="Is Dead" alt="Está muerto" />
+    <method name="Is Dummy Bot" alt="Robot de entrenamiento" />
+    <method name="Is Firing Primary" alt="Está usando el disparo principal" />
+    <method name="Is Firing Secondary" alt="Está usando el disparo secundario" />
+    <method name="Is Flag At Base" alt="La bandera está en la base" />
+    <method name="Is Game In Progress" alt="Partida en curso" />
+    <method name="Is Hero Being Played" alt="Jugando con el héroe" />
+    <method name="Is In Air" alt="En el aire" />
+    <method name="Is In Line Of Sight" alt="En la línea de visión" />
+    <method name="Is In Setup" alt="En preparación" />
+    <method name="Is In Spawn Room" alt="En el cuarto de reaparición" />
+    <method name="Is In View Angle" alt="En el ángulo de vista" />
+    <method name="Is Match Complete" alt="Partida Completada" />
+    <method name="Is Moving" alt="En movimiento" />
+    <method name="Is Objective Complete" alt="Objetivo completado" />
+    <method name="Is On Ground" alt="En el suelo" />
+    <method name="Is On Objective" alt="En el objetivo" />
+    <method name="Is On Wall" alt="En el muro" />
+    <method name="Is Portrait On Fire" alt="Retrato en llamas" />
+    <method name="Is Standing" alt="De pie" />
+    <method name="Is Team On Defense" alt="Equipo defensor" />
+    <method name="Is Team On Offense" alt="Equipo atacante" />
+    <method name="Is True For All" alt="Es verdadero para todos" />
+    <method name="Is True For Any" alt="Es verdadero para cualquiera" />
+    <method name="Is Using Ability 1" alt="Está utilizando la habilidad 1" />
+    <method name="Is Using Ability 2" alt="Está utilizando la habilidad 2" />
+    <method name="Is Using Ultimate" alt="Está usando la habilidad máxima" />
+    <method name="Is Waiting For Players" alt="Esperando jugadores" />
+    <method name="Last Created Entity" alt="Última entidad creada" />
+    <method name="Last Damage Modification ID" alt="ID de modificación de daño anterior" />
+    <method name="Last Damage Over Time ID" alt="ID de daño con el tiempo anterior" />
+    <method name="Last Heal Over Time ID" alt="ID de sanación con el tiempo anterior" />
+    <method name="Last Of" alt="Último de" />
+    <method name="Last Text ID" alt="ID de texto anterior" />
+    <method name="Left" alt="Izquierda" />
+    <method name="Local Vector Of" alt="Vector local de" />
+    <method name="Map" alt="Mapa" />
+    <method name="Match Round" alt="Ronda de la partida" />
+    <method name="Match Time" alt="Tiempo de la partida" />
+    <method name="Max" alt="Máximo" />
+    <method name="Max Health" alt="Salud máxima" />
+    <method name="Min" alt="Mínimo" />
+    <method name="Modulo" alt="Módulo" />
+    <method name="Multiply" alt="Multiplicar" />
+    <method name="Nearest Walkable Position" alt="Posición caminable más cercana" />
+    <method name="Normalize" alt="Normalizar" />
+    <method name="Normalized Health" alt="Salud normalizada" />
+    <method name="Not" alt="No" />
+    <method name="Null" alt="Nulo" />
+    <method name="Number" alt="Número" />
+    <method name="Number Of Dead Players" alt="Cantidad de jugadores muertos" />
+    <method name="Number Of Deaths" alt="Cantidad de muertes" />
+    <method name="Number Of Eliminations" alt="Cantidad de eliminaciones" />
+    <method name="Number Of Final Blows" alt="Cantidad de golpes de gracia" />
+    <method name="Number Of Heroes" alt="Cantidad de héroes" />
+    <method name="Number Of Living Players" alt="Cantidad de jugadores vivos" />
+    <method name="Number Of Players" alt="Cantidad de jugadores" />
+    <method name="Number Of Players On Objective" alt="Cantidad de jugadores en el objetivo" />
+    <method name="Objective Index" alt="Índice de objetivo" />
+    <method name="Objective Position" alt="Posición del objetivo" />
+    <method name="Opposite Team Of" alt="Equipo contrario de" />
+    <method name="Or" alt="O" />
+    <method name="Payload Position" alt="Posición de la carga" />
+    <method name="Payload Progress Percentage" alt="Porcentaje de progreso de la carga" />
+    <method name="Player Carrying Flag" alt="Jugador que transporta la bandera" />
+    <method name="Player Closest To Reticle" alt="Jugador más cercano al retículo" />
+    <method name="Player Variable" alt="Variable de jugador" />
+    <method name="Players In Slot" alt="Jugadores en la posición" />
+    <method name="Players In View Angle" alt="Jugadores en el ángulo de vista" />
+    <method name="Players On Hero" alt="Jugadores con el héroe" />
+    <method name="Players Within Radius" alt="Jugadores dentro del radio" />
+    <method name="Point Capture Percentage" alt="Porcentaje de captura de punto" />
+    <method name="Position of" alt="Posición de" />
+    <method name="Raise To Power" alt="Elevar a la potencia" />
+    <method name="Random Integer" alt="Número entero aleatorio" />
+    <method name="Random Real" alt="Número real aleatorio" />
+    <method name="Random Value In Array" alt="Valor aleatorio en matriz" />
+    <method name="Randomized Array" alt="Matriz aleatorizada" />
+    <method name="Ray Cast Hit Normal" alt="Estándar de impacto de lanzamiento de rayo" />
+    <method name="Ray Cast Hit Player" alt="Jugador de impacto de lanzamiento de rayo" />
+    <method name="Ray Cast Hit Position" alt="Posición de impacto de lanzamiento de rayo" />
+    <method name="Remove From Array" alt="Eliminar de la matriz" />
+    <method name="Right" alt="Derecha" />
+    <method name="Round To Integer" alt="Redondear a número entero" />
+    <method name="Score Of" alt="Puntuación de" />
+    <method name="Server Load" alt="Uso del servidor" />
+    <method name="Server Load Average" alt="Uso promedio del servidor" />
+    <method name="Server Load Peak" alt="Uso máximo del servidor" />
+    <method name="Sine From Degrees" alt="Seno en grados" />
+    <method name="Sine From Radians" alt="Seno en radianes" />
+    <method name="Slot Of" alt="Posición de" />
+    <method name="Sorted Array" alt="Matriz ordenada" />
+    <method name="Speed Of" alt="Velocidad de" />
+    <method name="Speed Of In Direction" alt="Velocidad de/en dirección" />
+    <method name="Square Root" alt="Raíz cuadrada" />
+    <method name="String" alt="Cadena" />
+    <method name="Custom String" alt="Cadena personalizada" />
+    <method name="Icon String" alt="Cadena de ícono" />
+    <method name="Subtract" alt="Restar" />
+    <method name="Tangent From Degrees" alt="Tangente en grados" />
+    <method name="Tangent From Radians" alt="Tangente en radianes" />
+    <method name="Team" alt="Equipo" />
+    <method name="Team Of" alt="Equipo de" />
+    <method name="Team Score" alt="Puntuación del equipo" />
+    <method name="Throttle Of" alt="Aceleración de" />
+    <method name="Total Time Elapsed" alt="Tiempo total transcurrido" />
+    <method name="True" alt="Verdadero" />
+    <method name="Ultimate Charge Percent" alt="Porcentaje de carga de la habilidad máxima" />
+    <method name="Up" alt="Arriba" />
+    <method name="Value In Array" alt="Valor en la matriz" />
+    <method name="Vector" alt="Vector" />
+    <method name="Vector Towards" alt="Vector hacia" />
+    <method name="Velocity Of" alt="Velocidad de" />
+    <method name="Vertical Angle From Direction" alt="Ángulo vertical desde la dirección" />
+    <method name="Vertical Angle Towards" alt="Ángulo vertical en dirección a" />
+    <method name="Vertical Facing Angle Of" alt="Ángulo vertical de orientación de" />
+    <method name="Vertical Speed Of" alt="Velocidad vertical de" />
+    <method name="Victim" alt="Víctima" />
+    <method name="World Vector Of" alt="Vector global de" />
+    <method name="X Component Of" alt="Componente X de" />
+    <method name="Y Component Of" alt="Componente Y de" />
+    <method name="Z Component Of" alt="Componente Z de" />
+  </Methods>
+</I18nLanguage>

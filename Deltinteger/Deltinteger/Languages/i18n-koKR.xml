@@ -15,7 +15,7 @@
     <method name="Clear Status" alt="Clear Status" />
     <method name="Communicate" alt="Communicate" />
     <method name="Create Beam Effect" alt="Create Beam Effect" />
-    <method name="Create Dummy Bot" alt="Crea bot di prova" />
+    <method name="Create Dummy Bot" alt="Create Dummy Bot" />
     <method name="Create Effect" alt="Create Effect" />
     <method name="Create Hud Text" alt="Create HUD Text" />
     <method name="Create Icon" alt="Create Icon" />
@@ -25,12 +25,12 @@
     <method name="Declare Player Victory" alt="Declare Player Victory" />
     <method name="Declare Round Victory" alt="Declare Round Victory" />
     <method name="Declare team Victory" alt="Declare Team Victory" />
-    <method name="Destroy All Dummy Bots" alt="Distrugge tutti i bot di prova." />
+    <method name="Destroy All Dummy Bots" alt="Destroy All Dummy Bots" />
     <method name="Destroy All Effects" alt="Destroy All Effects" />
     <method name="Destroy All HUD Text" alt="Destroy All HUD Text" />
     <method name="Destroy All Icons" alt="Destroy All Icons" />
     <method name="Destroy All In-World Text" alt="Destroy All In-World Text" />
-    <method name="Destroy Dummy Bot" alt="Distruggi bot di prova" />
+    <method name="Destroy Dummy Bot" alt="Destroy Dummy Bot" />
     <method name="Destroy Effect" alt="Destroy Effect" />
     <method name="Destroy Hud Text" alt="Destroy HUD Text" />
     <method name="Destroy Effect" alt="Destroy Effect" />
@@ -256,7 +256,7 @@
     <method name="Map" alt="Map" />
     <method name="Match Round" alt="Match Round" />
     <method name="Match Time" alt="Match Time" />
-    <method name="Max" alt="Massimo" />
+    <method name="Max" alt="Max" />
     <method name="Max Health" alt="Max Health" />
     <method name="Min" alt="Min" />
     <method name="Modulo" alt="Modulo" />
@@ -314,7 +314,7 @@
     <method name="Square Root" alt="Square Root" />
     <method name="String" alt="String" />
     <method name="Custom String" alt="Custom String" />
-    <method name="Icon String" alt="Icona" />
+    <method name="Icon String" alt="Icon String" />
     <method name="Subtract" alt="Subtract" />
     <method name="Tangent From Degrees" alt="Tangent From Degrees" />
     <method name="Tangent From Radians" alt="Tangent From Radians" />
@@ -327,7 +327,7 @@
     <method name="Ultimate Charge Percent" alt="Ultimate Charge Percent" />
     <method name="Up" alt="Up" />
     <method name="Value In Array" alt="Value In Array" />
-    <method name="Vector" alt="Vettore" />
+    <method name="Vector" alt="Vector" />
     <method name="Vector Towards" alt="Vector Towards" />
     <method name="Velocity Of" alt="Velocity Of" />
     <method name="Vertical Angle From Direction" alt="Vertical Angle From Direction" />
