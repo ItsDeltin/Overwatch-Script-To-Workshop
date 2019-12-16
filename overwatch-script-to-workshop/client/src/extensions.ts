@@ -46,7 +46,8 @@ export function activate(context: ExtensionContext) {
 		documentSelector: [{ scheme: 'file', language: 'plaintext' }, { scheme: 'file', language: 'ostw' }],
 		synchronize: {
 			// Notify the server about file changes to '.clientrc files contained in the workspace
-			fileEvents: workspace.createFileSystemWatcher('**/.clientrc')
+			// fileEvents: workspace.createFileSystemWatcher('**/.clientrc')
+			configurationSection: 'ostw'
 		}
 	};
 

@@ -72,6 +72,7 @@ namespace Deltin.Deltinteger.LanguageServer
             DocumentHandler documentHandler = new DocumentHandler(this);
             CompletionHandler completionHandler = new CompletionHandler(this);
             SignatureHandler signatureHandler = new SignatureHandler(this);
+            ConfigurationHandler configurationHandler = new ConfigurationHandler(this);
 
             Server = await OmniSharp.Extensions.LanguageServer.Server.LanguageServer.From(options => options
                 .WithInput(Console.OpenStandardInput())
@@ -82,8 +83,9 @@ namespace Deltin.Deltinteger.LanguageServer
                     .SetMinimumLevel(Microsoft.Extensions.Logging.LogLevel.Debug))
                 .WithHandler<DocumentHandler>(documentHandler)
                 .WithHandler<CompletionHandler>(completionHandler)
-                .WithHandler<SignatureHandler>(signatureHandler));
-                        
+                .WithHandler<SignatureHandler>(signatureHandler)
+                .WithHandler<ConfigurationHandler>(configurationHandler));
+            
             await Server.WaitForExit;
         }
 

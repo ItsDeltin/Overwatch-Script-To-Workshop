@@ -20,6 +20,7 @@ namespace Deltin.Deltinteger.Parse
         public VarCollection VarCollection { get; } = new VarCollection();
         private List<Var> rulesetVariables { get; } = new List<Var>();
         public VarIndexAssigner DefaultIndexAssigner { get; } = new VarIndexAssigner();
+        public OutputLanguage OutputLanguage { get; } = OutputLanguage.itIT;
 
         public DeltinScript(Diagnostics diagnostics, ScriptFile rootRuleset)
         {
@@ -145,7 +146,7 @@ namespace Deltin.Deltinteger.Parse
 
             // Get the rules.
             foreach (var rule in ruleElements)
-                result.AppendLine(rule.ToWorkshop());
+                result.AppendLine(rule.ToWorkshop(OutputLanguage));
             
             WorkshopCode = result.ToString();
         }

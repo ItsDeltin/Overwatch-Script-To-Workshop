@@ -12,8 +12,7 @@ namespace Deltin.Deltinteger
 {
     public interface IWorkshopTree
     {
-        string ToWorkshop();
-        void DebugPrint(Log log, int depth = 0);
+        string ToWorkshop(OutputLanguage language);
     }
 
     public interface IMethod : IScopeable, IParameterCallable, ILanguageServerInfo

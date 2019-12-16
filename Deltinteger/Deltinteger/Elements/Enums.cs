@@ -156,8 +156,9 @@ namespace Deltin.Deltinteger.Elements
             Value = value;
         }
 
-        public string ToWorkshop()
+        public string ToWorkshop(OutputLanguage language)
         {
+            // TODO: Translate!
             return WorkshopName;
         }
 

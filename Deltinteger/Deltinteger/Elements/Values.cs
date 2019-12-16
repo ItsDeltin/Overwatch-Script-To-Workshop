@@ -686,21 +686,9 @@ namespace Deltin.Deltinteger.Elements
         }
         public V_Number() : this(0) {}
 
-        public override string ToWorkshop()
+        public override string ToWorkshop(OutputLanguage language)
         {
             return Math.Round(Value, MAX_LENGTH).ToString();
-        }
-
-        public override void DebugPrint(Log log, int depth = 0)
-        {
-            log.Write(LogLevel.Verbose, 
-                new ColorMod(new string(' ', depth * 4) + "Number ", ConsoleColor.White), 
-                new ColorMod(Value.ToString(), ConsoleColor.DarkYellow));
-        }
-
-        protected override string DebugInfo()
-        {
-            return $"{ElementData.ElementName} {Value}";
         }
 
         override public bool ConstantSupported<T>()

@@ -2,6 +2,7 @@ using System;
 using System.Text;
 using System.Collections.Generic;
 using System.IO;
+using System.Xml.Serialization;
 using Deltin.Deltinteger.Parse;
 
 namespace Deltin.Deltinteger
@@ -76,6 +77,21 @@ namespace Deltin.Deltinteger
             else if (accessorContext.PUBLIC() != null) return AccessLevel.Public;
             else if (accessorContext.PRIVATE() != null) return AccessLevel.Private;
             else throw new NotImplementedException();
+        }
+
+        public static string SerializeToXML<T>(object o)
+        {
+            XmlSerializer serializer = new XmlSerializer(typeof(T));
+            XmlSerializerNamespaces ns = new XmlSerializerNamespaces();
+            ns.Add("","");
+
+            string result;
+            using (StringWriter stringWriter = new StringWriter())
+            {
+                serializer.Serialize(stringWriter, o, ns);
+                result = stringWriter.ToString();
+            }
+            return result;
         }
     }
 

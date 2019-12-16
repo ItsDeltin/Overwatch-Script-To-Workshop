@@ -83,27 +83,8 @@ namespace Deltin.Deltinteger.Elements
         {
             return ElementList.GetLabel(false);
         }
-
-        public virtual void DebugPrint(Log log, int depth = 0)
-        {
-            if (ElementData.IsValue)
-                log.Write(LogLevel.Verbose, new ColorMod(Extras.Indent(depth, false) + DebugInfo(), ConsoleColor.Cyan));
-            else
-                log.Write(LogLevel.Verbose, new ColorMod(Extras.Indent(depth, false) + DebugInfo(), ConsoleColor.White));
-
-            for (int i = 0; i < ParameterData.Length; i++)
-            {
-                log.Write(LogLevel.Verbose, new ColorMod(Extras.Indent(depth, false) + ParameterData[i].Name + ":", ConsoleColor.Magenta));
-
-                if (i < ParameterValues.Length)
-                {
-                    ParameterValues[i]?.DebugPrint(log, depth + 1);
-                }
-            }
-        }
-        protected virtual string DebugInfo() { return ElementData.ElementName; }
-
-        public virtual string ToWorkshop()
+        
+        public virtual string ToWorkshop(OutputLanguage language)
         {
             List<IWorkshopTree> elementParameters = new List<IWorkshopTree>();
 
@@ -120,7 +101,7 @@ namespace Deltin.Deltinteger.Elements
 
             List<string> parameters = AdditionalParameters().ToList();
 
-            parameters.AddRange(elementParameters.Select(p => p.ToWorkshop()));
+            parameters.AddRange(elementParameters.Select(p => p.ToWorkshop(language)));
 
             return ElementData.ElementName + 
                 (parameters.Count == 0 ? "" : "(" + string.Join(", ", parameters) + ")")
@@ -152,23 +133,6 @@ namespace Deltin.Deltinteger.Elements
         protected virtual string[] AdditionalParameters()
         {
             return new string[0];
-        }
-
-        // Converts an array of actions to a workshop
-        public static string ToWorkshop(Element[] actions)
-        {
-            var builder = new TabStringBuilder(true);
-            builder.AppendLine("actions");
-            builder.AppendLine("{");
-            builder.Indent = 1;
-            foreach(Element action in actions)
-            {
-                builder.AppendLine(action.ToWorkshop());
-            }
-            builder.Indent = 0;
-            builder.AppendLine("}");
-            
-            return builder.ToString();
         }
 
         // Creates an array from a list of values.

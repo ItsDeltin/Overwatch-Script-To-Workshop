@@ -37,20 +37,7 @@ namespace Deltin.Deltinteger.Elements
             return Name;
         }
 
-        public void DebugPrint(Log log, int depth = 0)
-        {
-            log.Write(LogLevel.Verbose, new ColorMod("Conditions:", ConsoleColor.DarkYellow));
-            if (Conditions != null)
-                foreach (var condition in Conditions)
-                    condition.DebugPrint(log, 1);
-            
-            log.Write(LogLevel.Verbose, new ColorMod("Actions:", ConsoleColor.DarkCyan));
-            if (Actions != null)
-                foreach (var action in Actions)
-                    action.DebugPrint(log, 1);
-        }
-
-        public string ToWorkshop()
+        public string ToWorkshop(OutputLanguage language)
         {            
             var builder = new TabStringBuilder(true);
 
@@ -65,11 +52,14 @@ namespace Deltin.Deltinteger.Elements
             builder.AppendLine("event");                                              //     event
             builder.AppendLine("{");                                                  //     {
             builder.Indent = 2;                                                       //     (indent)
-            builder.AppendLine(EnumData.GetEnumValue(RuleEvent).ToWorkshop() + ";");  //         Ongoing - Each Player
+            builder.AppendLine(EnumData.GetEnumValue(RuleEvent)
+                .ToWorkshop(language) + ";");                                         //         Ongoing - Each Player
             if (!IsGlobal)                                                            //       --(only if the event is a player event)
             {                                                                         //       |  
-                builder.AppendLine(EnumData.GetEnumValue(Team).ToWorkshop() + ";");   //       | Team 1
-                builder.AppendLine(EnumData.GetEnumValue(Player).ToWorkshop() + ";"); //       | Bastion
+                builder.AppendLine(EnumData.GetEnumValue(Team)
+                    .ToWorkshop(language) + ";");                                     //       | Team 1
+                builder.AppendLine(EnumData.GetEnumValue(Player)
+                    .ToWorkshop(language) + ";");                                     //       | Bastion
             }                                                                         //
             builder.Indent = 1;                                                       //     (outdent)
             builder.AppendLine("}");                                                  //     }
@@ -81,7 +71,7 @@ namespace Deltin.Deltinteger.Elements
                 builder.AppendLine("{");                                              // |   {
                 builder.Indent = 2;                                                   // |   (indent)
                 foreach (var condition in Conditions)                                 // |       
-                    builder.AppendLine(condition.ToWorkshop() + ";");                 // |       Number Of Players >= 3;
+                    builder.AppendLine(condition.ToWorkshop(language) + ";");         // |       Number Of Players >= 3;
                 builder.Indent = 1;                                                   // |   (outdent)
                 builder.AppendLine("}");                                              // |   }
             }                                                                         //
@@ -94,7 +84,7 @@ namespace Deltin.Deltinteger.Elements
                 builder.AppendLine("{");                                              // |   {
                 builder.Indent = 2;                                                   // |   (indent)
                 foreach (var action in Actions)                                       // |       
-                    builder.AppendLine(action.Optimize().ToWorkshop());               // |       Set Global Variable(A, true);
+                    builder.AppendLine(action.Optimize().ToWorkshop(language));       // |       Set Global Variable(A, true);
                 builder.Indent = 1;                                                   // |   (outdent)
                 builder.AppendLine("}");                                              // |   }
             }                                                                         //
