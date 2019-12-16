@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<I18nLanguage xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <Methods>
+    <method name="Damage" alt="DAÑO" />
+    <method name="Heal" alt="SANACIÓN" />
+    <method name="Loop" alt="Bucle" />
+    <method name="Resurrect" alt="Resurrección" />
+    <method name="Teleport" alt="TELETRANSPORTARSE" />
+    <method name="Add" alt="AÑADIR" />
+    <method name="All Heroes" alt="Todos los héroes" />
+    <method name="Attacker" alt="Atacante" />
+    <method name="Current Map" alt="Mapa actual" />
+    <method name="Down" alt="ABAJO" />
+    <method name="Eye Position" alt="Posición de los ojos" />
+    <method name="Forward" alt="ADELANTE" />
+    <method name="Game Mode" alt="Modo de juego" />
+    <method name="Current Game Mode" alt="Modo de juego actual" />
+    <method name="Healer" alt="Sanador" />
+    <method name="Health" alt="SALUD" />
+    <method name="Hero" alt="Héroe" />
+    <method name="Left" alt="IZQUIERDA" />
+    <method name="Map" alt="MAPA" />
+    <method name="Max" alt="MÁX" />
+    <method name="Not" alt="No" />
+    <method name="Or" alt="O" />
+    <method name="Right" alt="DERECHA" />
+    <method name="Server Load Average" alt="Carga media del servidor" />
+    <method name="Server Load Peak" alt="Carga máxima del servidor" />
+    <method name="Team" alt="Equipo" />
+    <method name="Team Score" alt="Puntuación del equipo" />
+    <method name="Up" alt="ARRIBA" />
+    <method name="Victim" alt="Víctima" />
+  </Methods>
+</I18nLanguage>

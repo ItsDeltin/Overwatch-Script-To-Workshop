@@ -74,9 +74,8 @@ namespace Deltin.Deltinteger.Elements
         public ElementList ElementList { get; private set; }
         public ElementData ElementData { get; private set; }
         public ParameterBase[] ParameterData { get; private set; }
-        public string Name { get { return ElementList.Name; } }
+        public string Name { get { return ElementList.WorkshopName; } }
 
-        public string Comment { get; set; } = null;
         public IWorkshopTree[] ParameterValues { get; set; }
 
         public override string ToString()
@@ -103,9 +102,11 @@ namespace Deltin.Deltinteger.Elements
 
             parameters.AddRange(elementParameters.Select(p => p.ToWorkshop(language)));
 
-            return ElementData.ElementName + 
-                (parameters.Count == 0 ? "" : "(" + string.Join(", ", parameters) + ")")
-                + (!ElementData.IsValue ? (";" + (Comment != null ? " // " + Comment : "")) : "");
+            // string result = I18n.I18n.Translate(language, Name);
+            string result = Name;
+            if (parameters.Count != 0) result += "(" + string.Join(", ", parameters) + ")";
+            if (!ElementList.IsValue) result += ";";
+            return result;
         }
 
         public virtual bool ConstantSupported<T>()

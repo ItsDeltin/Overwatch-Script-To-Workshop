@@ -1,13 +1,9 @@
 using System;
-using System.Linq;
 using System.Collections.Generic;
+using System.Linq;
 using System.IO;
-using System.Xml;
-using System.Xml.Linq;
 using System.Xml.Serialization;
 using System.Diagnostics;
-using System.Text.RegularExpressions;
-using Deltin.Deltinteger.Elements;
 
 namespace Deltin.Deltinteger.I18n
 {
@@ -152,42 +148,6 @@ namespace Deltin.Deltinteger.I18n
             }
 
             return keys;
-        }
-    }
-
-    public class I18nLanguage
-    {
-        public I18nLanguage() {}
-        public I18nLanguage(Log log, StringKeyGroup engKeys, StringKeyGroup altKeys)
-        {
-            foreach (var element in ElementList.Elements)
-            {
-                string engName = element.WorkshopName;
-                var engPair = engKeys.FromValue(engName);
-
-                if (engPair == null) throw new Exception($"Could not find key pair for value '{engName}'.");
-
-                var altPair = altKeys.FromKey(engPair.Key);
-                Methods.Add(new WorkshopMethod(engName, altPair.Value));
-            }
-        }
-
-        [XmlArrayItem("method")]
-        public List<WorkshopMethod> Methods { get; } = new List<WorkshopMethod>();
-
-        public class WorkshopMethod
-        {
-            public WorkshopMethod() {}
-            public WorkshopMethod(string englishName, string translation)
-            {
-                EnglishName = englishName;
-                Translation = translation;
-            }
-
-            [XmlAttribute("name")]
-            public string EnglishName { get; set; }
-            [XmlAttribute("alt")]
-            public string Translation { get; set; }
         }
     }
 

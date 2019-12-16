@@ -20,7 +20,6 @@ namespace Deltin.Deltinteger.Parse
         public VarCollection VarCollection { get; } = new VarCollection();
         private List<Var> rulesetVariables { get; } = new List<Var>();
         public VarIndexAssigner DefaultIndexAssigner { get; } = new VarIndexAssigner();
-        public OutputLanguage OutputLanguage { get; } = OutputLanguage.itIT;
 
         public DeltinScript(Diagnostics diagnostics, ScriptFile rootRuleset)
         {
@@ -146,7 +145,7 @@ namespace Deltin.Deltinteger.Parse
 
             // Get the rules.
             foreach (var rule in ruleElements)
-                result.AppendLine(rule.ToWorkshop(OutputLanguage));
+                result.AppendLine(rule.ToWorkshop(I18n.I18n.CurrentLanguage));
             
             WorkshopCode = result.ToString();
         }
@@ -236,10 +235,7 @@ namespace Deltin.Deltinteger.Parse
                 if (exprContext.method() != null) return new CallMethodAction(script, translateInfo, scope, exprContext.method());
                 if (exprContext.create_object() != null) return new CreateObjectAction(script, translateInfo, scope, exprContext.create_object());
             }
-            else if (exprContext.SEPERATOR() != null)
-            {
-                return new ExpressionTree(script, translateInfo, scope, exprContext);
-            }
+            else if (exprContext.SEPERATOR() != null) return new ExpressionTree(script, translateInfo, scope, exprContext);
             else if (exprContext.INDEX_START() != null) return new ValueInArrayAction(script, translateInfo, scope, exprContext);
 
             throw new Exception("Could not determine the expression type.");

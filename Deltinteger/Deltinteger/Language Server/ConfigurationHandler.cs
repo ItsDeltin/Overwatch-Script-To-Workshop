@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Deltin.Deltinteger.Parse;
+using Deltin.Deltinteger.I18n;
+using Deltin.Deltinteger.Elements;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
@@ -29,6 +30,7 @@ namespace Deltin.Deltinteger.LanguageServer
             if (json != null)
             {
                 var config = json.ToObject<RawConfiguration>();
+                I18n.I18n.LoadLanguage(config.GetOutputLanguage());
             }
 
             return Unit.Task;
@@ -50,6 +52,27 @@ namespace Deltin.Deltinteger.LanguageServer
         {
             public string outputLanguage;
             public string deltintegerPath;
+
+            public OutputLanguage GetOutputLanguage()
+            {
+                switch (outputLanguage)
+                {
+                    case "English": return OutputLanguage.enUS;
+                    case "German": return OutputLanguage.deDE;
+                    case "Spanish (Castilian)": return OutputLanguage.esES;
+                    case "Spanish (Mexico)": return OutputLanguage.esMX;
+                    case "French": return OutputLanguage.frFR;
+                    case "Italian": return OutputLanguage.itIT;
+                    case "Japanese": return OutputLanguage.jaJP;
+                    case "Korean": return OutputLanguage.koKR;
+                    case "Polish": return OutputLanguage.plPL;
+                    case "Portuguese": return OutputLanguage.ptBR;
+                    case "Russian": return OutputLanguage.ruRU;
+                    case "Chinese (S)": return OutputLanguage.zhCN;
+                    case "Chinese (T)": return OutputLanguage.zhTW;
+                    default: return OutputLanguage.enUS;
+                }
+            }
         }
     }
 }
