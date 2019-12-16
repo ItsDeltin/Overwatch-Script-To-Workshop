@@ -68,57 +68,33 @@ namespace Deltin.Deltinteger.I18n
         }
 
         readonly string datatoolPath;
-        readonly string lang;
-        readonly string file;
         readonly string overwatchPath;
 
-        public GenerateI18n(string datatoolPath, string lang, string file, string overwatchPath)
+        private GenerateI18n(string datatoolPath, string lang, string directory, string overwatchPath)
         {
             this.datatoolPath = datatoolPath;
-            this.lang = lang;
-            this.file = file;
             this.overwatchPath = overwatchPath;
 
-            XmlSerializer serializer = new XmlSerializer(typeof(WorkshopI18n));
-            WorkshopI18n xml;
-
-            if (File.Exists(file))
-            {
-                using (FileStream fileStream = File.OpenRead(file))
-                    xml = (WorkshopI18n)serializer.Deserialize(fileStream);
-                
-                xml.AddMissing(this);
-            }
-            else
-            {
-                var engKeys = EnglishKeys();
-
-                xml = new WorkshopI18n();
-                xml.AddMissing(this);
-                foreach (var method in xml.Methods)
-                {
-                    var key = engKeys.FirstOrDefault(engKey => engKey.Value.ToLower() == method.EnglishName.ToLower());
-                    method.Key = key.Key;
-                    if (key.Key == null)
-                        Log.Write(LogLevel.Normal, $"Couldn't find the key for the value '{method.EnglishName}'.");
-                }
-            }
+            Log.Write(LogLevel.Normal, "Getting enUS keys...");
+            var engKeys = CreateKeysFromDump(DumpStrings("enUS"));
+            Log.Write(LogLevel.Normal, "Got enUS keys.");
 
             Log.Write(LogLevel.Normal, $"Getting {lang} keys...");
             var languageKeys = CreateKeysFromDump(DumpStrings(lang));
             Log.Write(LogLevel.Normal, $"Got {lang} keys.");
 
-            foreach (var method in xml.Methods)
-            {
-                method.Translations.RemoveAll(t => t.Language == lang);
-                method.Translations.Add(new WorkshopI18n.WorkshopMethod.LanguageName(lang, languageKeys[method.Key]));
-            }
+            XmlSerializer serializer = new XmlSerializer(typeof(I18nLanguage));
+            I18nLanguage xml = new I18nLanguage(Log, engKeys, languageKeys);
 
-            // Add the language to the language list if it isn't added yet.
-            if (!xml.Languages.Contains(lang)) xml.Languages.Add(lang);
+            serializer = new XmlSerializer(typeof(I18nLanguage));
 
-            serializer = new XmlSerializer(typeof(WorkshopI18n));
-            using (StreamWriter writer = new StreamWriter(file))
+            string file = Path.Combine(directory, "i18n-" + lang + ".xml");
+
+            if (File.Exists(file))
+                File.Delete(file);
+            
+            using (var fileStream = File.Create(file))
+            using (StreamWriter writer = new StreamWriter(fileStream))
                 serializer.Serialize(writer, xml);
             
             Log.Write(LogLevel.Normal, "Finished.");
@@ -152,9 +128,9 @@ namespace Deltin.Deltinteger.I18n
             return RunCommand("dump-strings --language=" + language);
         }
 
-        static Dictionary<string, string> CreateKeysFromDump(string stringDump)
+        static StringKeyGroup CreateKeysFromDump(string stringDump)
         {
-            var keys = new Dictionary<string, string>();
+            StringKeyGroup keys = new StringKeyGroup();
 
             string[] lines = stringDump.Split(
                 new[] { "\r\n", "\r", "\n" },
@@ -177,71 +153,71 @@ namespace Deltin.Deltinteger.I18n
 
             return keys;
         }
-
-        private Dictionary<string, string> _englishKeys;
-        public Dictionary<string, string> EnglishKeys()
-        {
-            if (_englishKeys == null)
-            {
-                Log.Write(LogLevel.Normal, "Getting english keys...");
-                _englishKeys = CreateKeysFromDump(DumpStrings("enUS"));
-                Log.Write(LogLevel.Normal, "Got english keys.");
-            }
-            return _englishKeys;
-        }
     }
 
-    public class WorkshopI18n
+    public class I18nLanguage
     {
-        public WorkshopI18n()
+        public I18nLanguage() {}
+        public I18nLanguage(Log log, StringKeyGroup engKeys, StringKeyGroup altKeys)
         {
+            foreach (var element in ElementList.Elements)
+            {
+                string engName = element.WorkshopName;
+                var engPair = engKeys.FromValue(engName);
+
+                if (engPair == null) throw new Exception($"Could not find key pair for value '{engName}'.");
+
+                var altPair = altKeys.FromKey(engPair.Key);
+                Methods.Add(new WorkshopMethod(engName, altPair.Value));
+            }
         }
 
-        public void AddMissing(GenerateI18n i18n)
-        {
-            for (int i = 0; i < ElementList.Elements.Length; i++)
-                if (!Methods.Any(m => m.EnglishName.ToLower() == ElementList.Elements[i].WorkshopName.ToLower()))
-                {
-                    Methods.Add(new WorkshopMethod(ElementList.Elements[i].WorkshopName) {
-                        Key = i18n.EnglishKeys().First(key => key.Value.ToLower() == ElementList.Elements[i].WorkshopName.ToLower()).Key
-                    });
-                }
-        }
-
-        [XmlArrayItem("language")]
-        public List<string> Languages { get; } = new List<string>();
         [XmlArrayItem("method")]
         public List<WorkshopMethod> Methods { get; } = new List<WorkshopMethod>();
 
         public class WorkshopMethod
         {
             public WorkshopMethod() {}
-            public WorkshopMethod(string englishName)
+            public WorkshopMethod(string englishName, string translation)
             {
                 EnglishName = englishName;
+                Translation = translation;
             }
 
-            [XmlAttribute]
+            [XmlAttribute("name")]
             public string EnglishName { get; set; }
-            [XmlAttribute]
-            public string Key { get; set; }
-            [XmlElement("lang")]
-            public List<LanguageName> Translations { get; } = new List<LanguageName>();
+            [XmlAttribute("alt")]
+            public string Translation { get; set; }
+        }
+    }
 
-            public class LanguageName
-            {
-                public LanguageName() {}
-                public LanguageName(string language, string name)
-                {
-                    Language = language;
-                    Name = name;
-                }
+    public class StringKeyGroup
+    {
+        private readonly List<StringKey> _keys = new List<StringKey>();
 
-                [XmlAttribute("id")]
-                public string Language { get; set; }
-                [XmlAttribute]
-                public string Name { get; set; }
-            }
+        public void Add(StringKey key)
+        {
+            _keys.Add(key);
+        }
+        public void Add(string key, string value)
+        {
+            Add(new StringKey(key, value));
+        }
+
+        public StringKey FromKey(string key) => _keys.FirstOrDefault(k => k.Key.ToLower() == key.ToLower());
+        public StringKey FromValue(string value) => _keys.FirstOrDefault(k => k.Value.ToLower() == value.ToLower());
+        public bool ContainsKey(string key) => _keys.Any(k => k.Key == key);
+    }
+    
+    public class StringKey
+    {
+        public string Key { get; }
+        public string Value { get; }
+
+        public StringKey(string key, string value)
+        {
+            Key = key;
+            Value = value;
         }
     }
 }
