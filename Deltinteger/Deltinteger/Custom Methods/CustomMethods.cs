@@ -58,7 +58,7 @@ namespace Deltin.Deltinteger.Elements
         
         public CodeType ReturnType { get; } = null;
 
-        public string GetLabel(bool markdown) => Name + CodeParameter.GetLabels(Parameters, markdown);
+        public string GetLabel(bool markdown) => HoverHandler.GetLabel(Name, Parameters, markdown, null);
         public StringOrMarkupContent Documentation => null;
 
         public CustomMethodData(Type type)

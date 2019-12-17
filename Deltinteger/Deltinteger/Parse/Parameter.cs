@@ -371,8 +371,8 @@ namespace Deltin.Deltinteger.Parse
         public OverloadError(string errorName)
         {
             BadParameterCount    = $"No overloads for the {errorName} has {{0}} parameters.";
-            ParameterDoesntExist = $"The parameter {{0}} does not exist in the {errorName}.";
-            MissingParameter     = $"The parameter {{0}} is missing in the {errorName}.";
+            ParameterDoesntExist = $"The parameter '{{0}}' does not exist in the {errorName}.";
+            MissingParameter     = $"The '{{0}}' parameter is missing in the {errorName}.";
         }
     }
 }

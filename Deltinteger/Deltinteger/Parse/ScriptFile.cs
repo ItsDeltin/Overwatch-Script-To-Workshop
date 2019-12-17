@@ -20,6 +20,7 @@ namespace Deltin.Deltinteger.Parse
         private List<CompletionRange> completionRanges { get; } = new List<CompletionRange>();
         private List<OverloadChooser> overloads { get; } = new List<OverloadChooser>();
         private List<LocationLink> callLinks { get; } = new List<LocationLink>();
+        private List<HoverRange> hoverRanges { get; } = new List<HoverRange>();
 
         public ScriptFile(Diagnostics diagnostics, Uri uri, string content)
         {
@@ -74,5 +75,39 @@ namespace Deltin.Deltinteger.Parse
             });
         }
         public LocationLink[] GetDefinitionLinks() => callLinks.ToArray();
+
+        public void AddHover(DocRange range, string content)
+        {
+            if (range == null) throw new ArgumentNullException(nameof(range));
+            if (content == null) throw new ArgumentNullException(nameof(content));
+
+            hoverRanges.Add(new HoverRange(range, content));
+        }
+        public HoverRange[] GetHoverRanges() => hoverRanges.ToArray(); 
+    }
+
+    public class CompletionRange
+    {
+        public Scope Scope { get; }
+        public DocRange Range { get; }
+        public bool Priority { get; }
+
+        public CompletionRange(Scope scope, DocRange range, bool priority = false)
+        {
+            Priority = priority;
+            Scope = scope;
+            Range = range;
+        }
+    }
+    public class HoverRange
+    {
+        public DocRange Range { get; }
+        public string Content { get; }
+
+        public HoverRange(DocRange range, string content)
+        {
+            Range = range;
+            Content = content;
+        }
     }
 }

@@ -411,7 +411,7 @@ namespace Deltin.Deltinteger.Parse
             script.AddDefinitionLink(callRange, DefinedAt);
         }
 
-        public string GetLabel(bool markdown) => Type.Name + CodeParameter.GetLabels(Parameters, markdown);
+        public string GetLabel(bool markdown) => HoverHandler.GetLabel(Type.Name, Parameters, markdown, null);
     }
 
     public class DefinedConstructor : Constructor
@@ -432,6 +432,8 @@ namespace Deltin.Deltinteger.Parse
             ParameterVars = parameterInfo.Variables;
 
             Block = new BlockAction(script, translateInfo, ConstructorScope, context.block());
+
+            script.AddHover(DocRange.GetRange(context.name), GetLabel(true));
         }
 
         public override void Parse(ActionSet actionSet, IWorkshopTree[] parameterValues)

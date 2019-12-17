@@ -56,7 +56,7 @@ namespace Deltin.Deltinteger.Parse
             script.AddDefinitionLink(callRange, DefinedAt);
         }
 
-        public string GetLabel(bool markdown) => Name + CodeParameter.GetLabels(Parameters, markdown);
+        public string GetLabel(bool markdown) => HoverHandler.GetLabel(Name, Parameters, markdown, null);
 
         public abstract IWorkshopTree Parse(ActionSet actionSet, IWorkshopTree[] parameterValues);
 
@@ -91,6 +91,8 @@ namespace Deltin.Deltinteger.Parse
             // Setup the parameters and parse the block.
             SetupParameters(script, context.setParameters());
             block = new BlockAction(script, translateInfo, methodScope, context.block());
+
+            script.AddHover(DocRange.GetRange(context.name), GetLabel(true));
         }
 
         override public IWorkshopTree Parse(ActionSet actionSet, IWorkshopTree[] parameterValues)
@@ -136,6 +138,8 @@ namespace Deltin.Deltinteger.Parse
                 if (Expression != null)
                     ReturnType = Expression.Type();
             }
+
+            script.AddHover(DocRange.GetRange(context.name), GetLabel(true));
         }
 
         override public IWorkshopTree Parse(ActionSet actionSet, IWorkshopTree[] parameterValues)

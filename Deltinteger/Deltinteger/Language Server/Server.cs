@@ -74,6 +74,7 @@ namespace Deltin.Deltinteger.LanguageServer
             CompletionHandler completionHandler = new CompletionHandler(this);
             SignatureHandler signatureHandler = new SignatureHandler(this);
             DefinitionHandler definitionHandler = new DefinitionHandler(this);
+            HoverHandler hoverHandler = new HoverHandler(this);
 
             Server = await OmniSharp.Extensions.LanguageServer.Server.LanguageServer.From(options => options
                 .WithInput(Console.OpenStandardInput())
@@ -86,7 +87,8 @@ namespace Deltin.Deltinteger.LanguageServer
                 .WithHandler<CompletionHandler>(completionHandler)
                 .WithHandler<SignatureHandler>(signatureHandler)
                 .WithHandler<ConfigurationHandler>(configurationHandler)
-                .WithHandler<DefinitionHandler>(definitionHandler));
+                .WithHandler<DefinitionHandler>(definitionHandler)
+                .WithHandler<HoverHandler>(hoverHandler));
             
             await Server.WaitForExit;
         }

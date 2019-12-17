@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.Elements;
 
@@ -36,7 +37,10 @@ namespace Deltin.Deltinteger.Parse
                 ConstructorValues = OverloadChooser.Values ?? new IExpression[0];
 
                 if (Constructor != null)
+                {
                     Constructor.Call(script, DocRange.GetRange(context.type));
+                    script.AddHover(DocRange.GetRange(context), Constructor.GetLabel(true));
+                }
             }
         }
 

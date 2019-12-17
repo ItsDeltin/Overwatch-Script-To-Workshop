@@ -25,7 +25,6 @@ namespace Deltin.Deltinteger.LanguageServer
         public async Task<LocationOrLocationLinks> Handle(DefinitionParams definitionParams, CancellationToken token)
         {
             var links = _languageServer.LastParse?.ScriptFromUri(definitionParams.TextDocument.Uri)?.GetDefinitionLinks();
-
             if (links == null) return new LocationOrLocationLinks();
 
             links = links.Where(link => ((DocRange)link.OriginSelectionRange).IsInside(definitionParams.Position)).ToArray();

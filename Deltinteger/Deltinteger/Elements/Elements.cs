@@ -223,13 +223,7 @@ namespace Deltin.Deltinteger.Elements
             return Elements.FirstOrDefault(e => e.Name == codeName);
         }
 
-        // public string GetLabel(bool markdown)
-        // {
-        //     return Name + "(" + Parameter.ParameterGroupToString(Parameters, markdown) + ")" 
-        //         + (markdown && Wiki?.Description != null ? "\n\r" + Wiki.Description : "");
-        // }
-
-        public string GetLabel(bool markdown) => Name + CodeParameter.GetLabels(Parameters, markdown);
+        public string GetLabel(bool markdown) => HoverHandler.GetLabel(Name, Parameters, markdown, Wiki?.Description);
 
         public ElementList(Type type)
         {
@@ -283,7 +277,9 @@ namespace Deltin.Deltinteger.Elements
             return new CompletionItem()
             {
                 Label = Name,
-                Kind = CompletionItemKind.Method
+                Kind = CompletionItemKind.Method,
+                Detail = GetLabel(false),
+                Documentation = Wiki?.Description
             };
         }
     }
