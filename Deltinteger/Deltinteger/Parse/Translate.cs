@@ -166,6 +166,17 @@ namespace Deltin.Deltinteger.Parse
 
         public ScriptFile ScriptFromUri(Uri uri) => ScriptFiles.FirstOrDefault(script => script.Uri == uri);
 
+        private Dictionary<ICallable, List<Location>> callRanges { get; } = new Dictionary<ICallable, List<Location>>();
+        public void AddSymbolLink(ICallable callable, Location calledFrom)
+        {
+            if (callable == null) throw new ArgumentNullException(nameof(callable));
+            if (calledFrom == null) throw new ArgumentNullException(nameof(calledFrom));
+
+            if (!callRanges.ContainsKey(callable)) callRanges.Add(callable, new List<Location>());
+            callRanges[callable].Add(calledFrom);
+        }
+        public Dictionary<ICallable, List<Location>> GetSymbolLinks() => callRanges;
+
         public static IStatement GetStatement(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.StatementContext statementContext)
         {
             if (statementContext.define() != null)

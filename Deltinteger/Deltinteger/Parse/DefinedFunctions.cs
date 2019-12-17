@@ -20,9 +20,6 @@ namespace Deltin.Deltinteger.Parse
         public bool WholeContext { get; } = true;
         public StringOrMarkupContent Documentation { get; } = null;
 
-        // ICallable
-        private List<Location> CalledFrom { get; } = new List<Location>();
-
         private DeltinScript translateInfo { get; }
         protected Scope methodScope { get; }
         protected Var[] ParameterVars { get; private set; }
@@ -33,6 +30,7 @@ namespace Deltin.Deltinteger.Parse
             DefinedAt = definedAt;
             this.translateInfo = translateInfo;
             methodScope = scope.Child();
+            translateInfo.AddSymbolLink(this, definedAt);
         }
 
         protected static CodeType GetCodeType(ScriptFile script, DeltinScript translateInfo, string name, DocRange range)
@@ -52,8 +50,8 @@ namespace Deltin.Deltinteger.Parse
 
         public void Call(ScriptFile script, DocRange callRange)
         {
-            CalledFrom.Add(new Location(script.Uri, callRange));
             script.AddDefinitionLink(callRange, DefinedAt);
+            translateInfo.AddSymbolLink(this, new Location(script.Uri, callRange));
         }
 
         public string GetLabel(bool markdown) => HoverHandler.GetLabel(Name, Parameters, markdown, null);

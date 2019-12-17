@@ -16,7 +16,7 @@ using MediatR;
 
 namespace Deltin.Deltinteger.LanguageServer
 {
-    class DocumentHandler : ITextDocumentSyncHandler
+    public class DocumentHandler : ITextDocumentSyncHandler
     {
         // Static
         private static readonly TextDocumentSyncKind _syncKind = TextDocumentSyncKind.Incremental;
@@ -34,7 +34,6 @@ namespace Deltin.Deltinteger.LanguageServer
 
         public TextDocumentAttributes GetTextDocumentAttributes(Uri uri)
         {
-            // TODO: confirm if this is correct
             return new TextDocumentAttributes(uri, "ostw");
         }
 
@@ -97,6 +96,7 @@ namespace Deltin.Deltinteger.LanguageServer
                 rep.Insert(start, change.Text);
 
                 document.Text = rep.ToString();
+                document.Version = changeParams.TextDocument.Version;
             }
             Parse(document);
             return Unit.Task;

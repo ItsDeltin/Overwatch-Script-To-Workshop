@@ -60,6 +60,8 @@ namespace Deltin.Deltinteger.LanguageServer
             }
         }
 
+        public DocumentHandler DocumentHandler { get; private set; }
+
         async Task RunServer()
         {
             Serilog.Log.Logger = new LoggerConfiguration()
@@ -69,12 +71,13 @@ namespace Deltin.Deltinteger.LanguageServer
             
             Serilog.Log.Information("Deltinteger Language Server");
 
-            DocumentHandler documentHandler = new DocumentHandler(this);
+            DocumentHandler = new DocumentHandler(this);
             ConfigurationHandler configurationHandler = new ConfigurationHandler(this);
             CompletionHandler completionHandler = new CompletionHandler(this);
             SignatureHandler signatureHandler = new SignatureHandler(this);
             DefinitionHandler definitionHandler = new DefinitionHandler(this);
             HoverHandler hoverHandler = new HoverHandler(this);
+            RenameHandler renameHandler = new RenameHandler(this);
 
             Server = await OmniSharp.Extensions.LanguageServer.Server.LanguageServer.From(options => options
                 .WithInput(Console.OpenStandardInput())
@@ -83,12 +86,13 @@ namespace Deltin.Deltinteger.LanguageServer
                     .AddSerilog()
                     .AddLanguageServer()
                     .SetMinimumLevel(Microsoft.Extensions.Logging.LogLevel.Debug))
-                .WithHandler<DocumentHandler>(documentHandler)
+                .WithHandler<DocumentHandler>(DocumentHandler)
                 .WithHandler<CompletionHandler>(completionHandler)
                 .WithHandler<SignatureHandler>(signatureHandler)
                 .WithHandler<ConfigurationHandler>(configurationHandler)
                 .WithHandler<DefinitionHandler>(definitionHandler)
-                .WithHandler<HoverHandler>(hoverHandler));
+                .WithHandler<HoverHandler>(hoverHandler)
+                .WithHandler<RenameHandler>(renameHandler));
             
             await Server.WaitForExit;
         }

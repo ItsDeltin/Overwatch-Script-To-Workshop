@@ -38,6 +38,7 @@ namespace Deltin.Deltinteger
     public interface ICallable
     {
         void Call(ScriptFile script, DocRange callRange);
+        string Name { get; }
     }
 
     public interface IParameterCallable

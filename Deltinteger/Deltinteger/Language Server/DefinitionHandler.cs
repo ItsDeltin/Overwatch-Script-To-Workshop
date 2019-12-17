@@ -29,7 +29,7 @@ namespace Deltin.Deltinteger.LanguageServer
 
             links = links.Where(link => ((DocRange)link.OriginSelectionRange).IsInside(definitionParams.Position)).ToArray();
             LocationOrLocationLink[] items = new LocationOrLocationLink[links.Length];
-            for (int i = 0; i < items.Length;i ++) items[i] = new LocationOrLocationLink(links[i]);
+            for (int i = 0; i < items.Length; i++) items[i] = new LocationOrLocationLink(links[i]);
 
             return new LocationOrLocationLinks(items);
         }

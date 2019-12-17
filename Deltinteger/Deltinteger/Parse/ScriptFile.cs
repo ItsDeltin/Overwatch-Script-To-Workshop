@@ -83,7 +83,7 @@ namespace Deltin.Deltinteger.Parse
 
             hoverRanges.Add(new HoverRange(range, content));
         }
-        public HoverRange[] GetHoverRanges() => hoverRanges.ToArray(); 
+        public HoverRange[] GetHoverRanges() => hoverRanges.ToArray();
     }
 
     public class CompletionRange

@@ -146,6 +146,7 @@ namespace Deltin.Deltinteger.Parse
         private Scope objectScope { get; }
         private Scope staticScope { get; }
         private List<Var> objectVariables { get; } = new List<Var>();
+        private DeltinScript translateInfo { get; }
 
         public DefinedType(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.Type_defineContext typeContext) : base(typeContext.name.Text)
         {
@@ -153,6 +154,8 @@ namespace Deltin.Deltinteger.Parse
                 script.Diagnostics.Error($"A type with the name '{Name}' already exists.", DocRange.GetRange(typeContext.name));
             
             DefinedAt = new Location(script.Uri, DocRange.GetRange(typeContext.name));
+            translateInfo.AddSymbolLink(this, DefinedAt);
+            this.translateInfo = translateInfo;
 
             if (typeContext.CLASS() != null) 
             { 
@@ -365,6 +368,7 @@ namespace Deltin.Deltinteger.Parse
         public void Call(ScriptFile script, DocRange callRange)
         {
             script.AddDefinitionLink(callRange, DefinedAt);
+            translateInfo.AddSymbolLink(this, new Location(script.Uri, callRange));
         }
 
         override public CompletionItem GetCompletion()
@@ -390,6 +394,7 @@ namespace Deltin.Deltinteger.Parse
 
     public class Constructor : IParameterCallable, ICallable
     {
+        public string Name => Type.Name;
         public AccessLevel AccessLevel { get; }
         public CodeParameter[] Parameters { get; protected set; }
         public Location DefinedAt { get; }

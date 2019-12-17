@@ -153,8 +153,6 @@ namespace Deltin.Deltinteger.Parse
         public Location DefinedAt { get; }
         public bool WholeContext { get; private set; }
 
-        private List<Location> CalledFrom { get; } = new List<Location>();
-
         public CodeType CodeType { get; private set; }
 
         // Attributes
@@ -201,18 +199,20 @@ namespace Deltin.Deltinteger.Parse
         public void Call(ScriptFile script, DocRange callRange)
         {
             ThrowIfNotFinalized();
-            CalledFrom.Add(new Location(script.Uri, callRange));
             script.AddDefinitionLink(callRange, DefinedAt);
+            translateInfo.AddSymbolLink(this, new Location(script.Uri, callRange));
         }
 
         public static Var CreateVarFromContext(VariableDefineType defineType, ScriptFile script, DeltinScript translateInfo, DeltinScriptParser.DefineContext context)
         {
             Var newVar;
             if (context.name != null)
+            {
                 newVar = new Var(context.name.Text, new Location(script.Uri, DocRange.GetRange(context.name)));
+                translateInfo.AddSymbolLink(newVar, new Location(script.Uri, DocRange.GetRange(context.name)));
+            }
             else
                 newVar = new Var(null, new Location(script.Uri, DocRange.GetRange(context)));
-
 
             newVar.context = context;
             newVar.script = script;
