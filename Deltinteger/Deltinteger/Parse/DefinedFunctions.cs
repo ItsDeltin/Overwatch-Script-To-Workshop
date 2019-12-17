@@ -12,7 +12,6 @@ namespace Deltin.Deltinteger.Parse
 {
     public abstract class DefinedFunction : IMethod, ICallable
     {
-        public string ScopeableType { get; } = "method";
         public string Name { get; }
         public CodeType ReturnType { get; protected set; }
         public CodeParameter[] Parameters { get; private set; }
@@ -33,7 +32,6 @@ namespace Deltin.Deltinteger.Parse
             Name = name;
             DefinedAt = definedAt;
             this.translateInfo = translateInfo;
-            //methodScope = translateInfo.GlobalScope.Child();
             methodScope = scope.Child();
         }
 
@@ -52,9 +50,10 @@ namespace Deltin.Deltinteger.Parse
             ParameterVars = parameterInfo.Variables;
         }
 
-        public void Call(Location calledFrom)
+        public void Call(ScriptFile script, DocRange callRange)
         {
-            CalledFrom.Add(calledFrom);
+            CalledFrom.Add(new Location(script.Uri, callRange));
+            script.AddDefinitionLink(callRange, DefinedAt);
         }
 
         public string GetLabel(bool markdown) => Name + CodeParameter.GetLabels(Parameters, markdown);
@@ -77,7 +76,7 @@ namespace Deltin.Deltinteger.Parse
         private BlockAction block { get; set; }
 
         public DefinedMethod(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.Define_methodContext context)
-            : base(translateInfo, scope, context.name.Text, new Location(script.Uri, DocRange.GetRange(context)))
+            : base(translateInfo, scope, context.name.Text, new Location(script.Uri, DocRange.GetRange(context.name)))
         {
             // Check if recursion is enabled.
             IsRecursive = context.RECURSIVE() != null;

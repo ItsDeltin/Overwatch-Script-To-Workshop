@@ -70,9 +70,10 @@ namespace Deltin.Deltinteger.LanguageServer
             Serilog.Log.Information("Deltinteger Language Server");
 
             DocumentHandler documentHandler = new DocumentHandler(this);
+            ConfigurationHandler configurationHandler = new ConfigurationHandler(this);
             CompletionHandler completionHandler = new CompletionHandler(this);
             SignatureHandler signatureHandler = new SignatureHandler(this);
-            ConfigurationHandler configurationHandler = new ConfigurationHandler(this);
+            DefinitionHandler definitionHandler = new DefinitionHandler(this);
 
             Server = await OmniSharp.Extensions.LanguageServer.Server.LanguageServer.From(options => options
                 .WithInput(Console.OpenStandardInput())
@@ -84,7 +85,8 @@ namespace Deltin.Deltinteger.LanguageServer
                 .WithHandler<DocumentHandler>(documentHandler)
                 .WithHandler<CompletionHandler>(completionHandler)
                 .WithHandler<SignatureHandler>(signatureHandler)
-                .WithHandler<ConfigurationHandler>(configurationHandler));
+                .WithHandler<ConfigurationHandler>(configurationHandler)
+                .WithHandler<DefinitionHandler>(definitionHandler));
             
             await Server.WaitForExit;
         }

@@ -235,6 +235,18 @@ namespace Deltin.Deltinteger.Parse
         }
     }
 
+    public class NullAction : IExpression
+    {
+        public NullAction() {}
+        public Scope ReturningScope() => null;
+        public CodeType Type() => null;
+
+        public IWorkshopTree Parse(ActionSet actionSet)
+        {
+            return new V_Null();
+        }
+    }
+
     public class ValueInArrayAction : IExpression
     {
         public IExpression Expression { get; }

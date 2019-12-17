@@ -197,6 +197,7 @@ namespace Deltin.Deltinteger.Parse
                 case DeltinScriptParser.E_numberContext number: return new NumberAction(script, number.number());
                 case DeltinScriptParser.E_trueContext @true: return new BoolAction(script, true);
                 case DeltinScriptParser.E_falseContext @false: return new BoolAction(script, false);
+                case DeltinScriptParser.E_nullContext @null: return new NullAction();
                 case DeltinScriptParser.E_variableContext variable: {
                     string variableName = variable.PART().GetText();
 
@@ -216,7 +217,7 @@ namespace Deltin.Deltinteger.Parse
                     if (element is Var)
                     {
                         Var var = (Var)element;
-                        var.Call(new Location(script.Uri, DocRange.GetRange(variable)));
+                        var.Call(script, DocRange.GetRange(variable));
                         return var;
                     }
                     else if (element is ScopedEnumMember) return (ScopedEnumMember)element;

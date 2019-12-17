@@ -6,6 +6,7 @@ using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.LanguageServer;
 using Antlr4.Runtime;
 using Antlr4.Runtime.Tree;
+using LocationLink = OmniSharp.Extensions.LanguageServer.Protocol.Models.LocationLink;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -15,8 +16,10 @@ namespace Deltin.Deltinteger.Parse
         public Uri Uri { get; }
         public FileDiagnostics Diagnostics { get; }
         public IToken[] Tokens { get; }
+
         private List<CompletionRange> completionRanges { get; } = new List<CompletionRange>();
         private List<OverloadChooser> overloads { get; } = new List<OverloadChooser>();
+        private List<LocationLink> callLinks { get; } = new List<LocationLink>();
 
         public ScriptFile(Diagnostics diagnostics, Uri uri, string content)
         {
@@ -57,5 +60,19 @@ namespace Deltin.Deltinteger.Parse
             overloads.Add(overload);
         }
         public OverloadChooser[] GetSignatures() => overloads.ToArray();
+
+        public void AddDefinitionLink(DocRange callRange, Location definedAt)
+        {
+            if (callRange == null) throw new ArgumentNullException(nameof(callRange));
+            if (definedAt == null) throw new ArgumentNullException(nameof(definedAt));
+
+            callLinks.Add(new LocationLink() {
+                OriginSelectionRange = callRange.ToLsRange(),
+                TargetUri = definedAt.uri,
+                TargetRange = definedAt.range.ToLsRange(),
+                TargetSelectionRange = definedAt.range.ToLsRange()
+            });
+        }
+        public LocationLink[] GetDefinitionLinks() => callLinks.ToArray();
     }
 }

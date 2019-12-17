@@ -33,6 +33,9 @@ namespace Deltin.Deltinteger.Parse
             
             CallingMethod = (IMethod)OverloadChooser.Overload;
             ParameterValues = OverloadChooser.Values;
+
+            if (CallingMethod is DefinedFunction)
+                ((DefinedFunction)CallingMethod).Call(script, NameRange);
         }
 
         public Scope ReturningScope()

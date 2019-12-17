@@ -15,16 +15,10 @@ namespace Deltin.Deltinteger
         string ToWorkshop(OutputLanguage language);
     }
 
-    public interface IMethod : IScopeable, IParameterCallable, ILanguageServerInfo
+    public interface IMethod : IScopeable, IParameterCallable
     {
         CodeType ReturnType { get; }
         IWorkshopTree Parse(ActionSet actionSet, IWorkshopTree[] values);
-    }
-
-    // TODO: Remove this interface
-    public interface ILanguageServerInfo
-    {
-        string GetLabel(bool markdown);
     }
 
     public interface ISkip
@@ -37,14 +31,13 @@ namespace Deltin.Deltinteger
         string Name { get; }
         AccessLevel AccessLevel { get; }
         Location DefinedAt { get; }
-        string ScopeableType { get; }
         bool WholeContext { get; }
         CompletionItem GetCompletion();
     }
 
     public interface ICallable
     {
-        void Call(Location calledFrom);
+        void Call(ScriptFile script, DocRange callRange);
     }
 
     public interface IParameterCallable

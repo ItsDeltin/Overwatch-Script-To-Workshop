@@ -100,7 +100,6 @@ namespace Deltin.Deltinteger.Parse
     {
         public string Name { get; }
         public AccessLevel AccessLevel { get; } = AccessLevel.Public;
-        public string ScopeableType { get; } = "enum value";
         public Location DefinedAt { get; } = null;
         public bool WholeContext { get; } = true;
         
@@ -139,10 +138,11 @@ namespace Deltin.Deltinteger.Parse
         }
     }
 
-    public class DefinedType : CodeType
+    public class DefinedType : CodeType, ICallable
     {
         public TypeKind TypeKind { get; }
         public string KindString { get; }
+        public Location DefinedAt { get; }
         private Scope objectScope { get; }
         private Scope staticScope { get; }
         private List<Var> objectVariables { get; } = new List<Var>();
@@ -151,6 +151,8 @@ namespace Deltin.Deltinteger.Parse
         {
             if (translateInfo.IsCodeType(Name))
                 script.Diagnostics.Error($"A type with the name '{Name}' already exists.", DocRange.GetRange(typeContext.name));
+            
+            DefinedAt = new Location(script.Uri, DocRange.GetRange(typeContext.name));
 
             if (typeContext.CLASS() != null) 
             { 
@@ -360,6 +362,11 @@ namespace Deltin.Deltinteger.Parse
                 assigner.Add(objectVariables[i], source.CreateChild(i));
         }
 
+        public void Call(ScriptFile script, DocRange callRange)
+        {
+            script.AddDefinitionLink(callRange, DefinedAt);
+        }
+
         override public CompletionItem GetCompletion()
         {
             CompletionItemKind kind;
@@ -381,7 +388,7 @@ namespace Deltin.Deltinteger.Parse
         Struct
     }
 
-    public class Constructor : IParameterCallable
+    public class Constructor : IParameterCallable, ICallable
     {
         public AccessLevel AccessLevel { get; }
         public CodeParameter[] Parameters { get; protected set; }
@@ -398,6 +405,11 @@ namespace Deltin.Deltinteger.Parse
         }
 
         public virtual void Parse(ActionSet actionSet, IWorkshopTree[] parameterValues) {}
+
+        public void Call(ScriptFile script, DocRange callRange)
+        {
+            script.AddDefinitionLink(callRange, DefinedAt);
+        }
 
         public string GetLabel(bool markdown) => Type.Name + CodeParameter.GetLabels(Parameters, markdown);
     }

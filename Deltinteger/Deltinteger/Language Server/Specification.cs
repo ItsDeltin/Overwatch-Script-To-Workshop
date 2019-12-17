@@ -183,6 +183,7 @@ namespace Deltin.Deltinteger.LanguageServer
         public static bool operator >(DocRange r1, DocRange r2)  => r1.CompareTo(r2) >  0;
         public static bool operator <=(DocRange r1, DocRange r2) => r1.CompareTo(r2) <= 0;
         public static bool operator >=(DocRange r1, DocRange r2) => r1.CompareTo(r2) >= 0;
+        public static implicit operator DocRange(LSRange range) => new DocRange(range.Start, range.End);
         #endregion
 
         public DocRange Offset(DocRange other)

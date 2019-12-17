@@ -152,7 +152,6 @@ namespace Deltin.Deltinteger.Parse
         public AccessLevel AccessLevel { get; private set; }
         public Location DefinedAt { get; }
         public bool WholeContext { get; private set; }
-        public string ScopeableType { get; } = "variable";
 
         private List<Location> CalledFrom { get; } = new List<Location>();
 
@@ -199,10 +198,11 @@ namespace Deltin.Deltinteger.Parse
         }
 
         // ICallable
-        public void Call(Location calledFrom)
+        public void Call(ScriptFile script, DocRange callRange)
         {
             ThrowIfNotFinalized();
-            CalledFrom.Add(calledFrom);
+            CalledFrom.Add(new Location(script.Uri, callRange));
+            script.AddDefinitionLink(callRange, DefinedAt);
         }
 
         public static Var CreateVarFromContext(VariableDefineType defineType, ScriptFile script, DeltinScript translateInfo, DeltinScriptParser.DefineContext context)
@@ -286,11 +286,13 @@ namespace Deltin.Deltinteger.Parse
             {
                 type = translateInfo.GetCodeType(context.type.Text, script.Diagnostics, DocRange.GetRange(context.type));
 
-                // If variables with the type cannot be set to, set referenceInitialValue to true. 'type' can still equal null if the type name is invalid.
-                if (type != null && type.Constant())
+                if (type != null)
                 {
-                    // TODO: test this with workshop enums
-                    newVar.VariableType = VariableType.ElementReference;
+                    if (type is DefinedType)
+                        ((DefinedType)type).Call(script, DocRange.GetRange(context.type));
+                    // If variables with the type cannot be set to, set referenceInitialValue to true. 'type' can still equal null if the type name is invalid.
+                    if (type.Constant())
+                        newVar.VariableType = VariableType.ElementReference;
                 }
             }
 

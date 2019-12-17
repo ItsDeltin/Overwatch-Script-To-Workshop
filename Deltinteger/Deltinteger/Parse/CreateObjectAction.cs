@@ -33,7 +33,10 @@ namespace Deltin.Deltinteger.Parse
                     OverloadChooser.SetContext();
 
                 Constructor = (Constructor)OverloadChooser.Overload;
-                ConstructorValues = OverloadChooser.Values;
+                ConstructorValues = OverloadChooser.Values ?? new IExpression[0];
+
+                if (Constructor != null)
+                    Constructor.Call(script, DocRange.GetRange(context.type));
             }
         }
 
