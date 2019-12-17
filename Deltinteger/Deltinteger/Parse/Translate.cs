@@ -209,6 +209,8 @@ namespace Deltin.Deltinteger.Parse
                 case DeltinScriptParser.E_trueContext @true: return new BoolAction(script, true);
                 case DeltinScriptParser.E_falseContext @false: return new BoolAction(script, false);
                 case DeltinScriptParser.E_nullContext @null: return new NullAction();
+                case DeltinScriptParser.E_stringContext @string: return new StringAction(script, @string.@string());
+                case DeltinScriptParser.E_formatted_stringContext formattedString: return new StringAction(script, translateInfo, scope, formattedString.formatted_string());
                 case DeltinScriptParser.E_variableContext variable: {
                     string variableName = variable.PART().GetText();
 
@@ -238,6 +240,15 @@ namespace Deltin.Deltinteger.Parse
                 case DeltinScriptParser.E_new_objectContext newObject: return new CreateObjectAction(script, translateInfo, scope, newObject.create_object());
                 case DeltinScriptParser.E_expr_treeContext exprTree: return new ExpressionTree(script, translateInfo, scope, exprTree);
                 case DeltinScriptParser.E_array_indexContext arrayIndex: return new ValueInArrayAction(script, translateInfo, scope, arrayIndex);
+                case DeltinScriptParser.E_create_arrayContext createArray: return new CreateArrayAction(script, translateInfo, scope, createArray.createarray());
+                case DeltinScriptParser.E_expr_groupContext group: return GetExpression(script, translateInfo, scope, group.exprgroup().expr());
+                case DeltinScriptParser.E_type_convertContext typeConvert: return new TypeConvertAction(script, translateInfo, scope, typeConvert.typeconvert());
+                case DeltinScriptParser.E_notContext not: return new NotAction(script, translateInfo, scope, not.expr());
+                case DeltinScriptParser.E_inverseContext inverse: return new NotAction(script, translateInfo, scope, inverse.expr());
+                case DeltinScriptParser.E_op_1Context             op1: return new OperatorAction(script, translateInfo, scope, op1);
+                case DeltinScriptParser.E_op_2Context             op2: return new OperatorAction(script, translateInfo, scope, op2);
+                case DeltinScriptParser.E_op_boolContext       opBool: return new OperatorAction(script, translateInfo, scope, opBool);
+                case DeltinScriptParser.E_op_compareContext opCompare: return new OperatorAction(script, translateInfo, scope, opCompare);
                 default: throw new Exception($"Could not determine the expression type '{exprContext.GetType().Name}'.");
             }
         }

@@ -71,6 +71,5 @@
     <Compile Remove="Language Server/Old/**"/>
     <Compile Remove="CSV.cs"/>
     <Compile Remove="Elements/LoopBuilder.cs"/>
-    <Compile Remove="Exceptions.cs"/>
   </ItemGroup>
 </Project>

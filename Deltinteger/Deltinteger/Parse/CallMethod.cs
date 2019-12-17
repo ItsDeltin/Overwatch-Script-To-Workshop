@@ -21,25 +21,29 @@ namespace Deltin.Deltinteger.Parse
             NameRange = DocRange.GetRange(methodContext.PART());
 
             var options = scope.GetMethodsByName(methodName);
-            
-            OverloadChooser = new OverloadChooser(options, script, translateInfo, scope, NameRange, DocRange.GetRange(methodContext), new OverloadError("method '" + methodName + "'"));
-
-            if (methodContext.call_parameters() != null)
-                OverloadChooser.SetContext(methodContext.call_parameters());
-            else if (methodContext.picky_parameters() != null)
-                OverloadChooser.SetContext(methodContext.picky_parameters());
+            if (options.Length == 0)
+                script.Diagnostics.Error($"No method by the name of '{methodName}' exists in the current context.", NameRange);
             else
-                OverloadChooser.SetContext();
-            
-            CallingMethod = (IMethod)OverloadChooser.Overload;
-            ParameterValues = OverloadChooser.Values;
-
-            if (CallingMethod != null)
             {
-                if (CallingMethod is DefinedFunction)
-                    ((DefinedFunction)CallingMethod).Call(script, NameRange);
-                
-                script.AddHover(DocRange.GetRange(methodContext), CallingMethod.GetLabel(true));
+                OverloadChooser = new OverloadChooser(options, script, translateInfo, scope, NameRange, DocRange.GetRange(methodContext), new OverloadError("method '" + methodName + "'"));
+
+                if (methodContext.call_parameters() != null)
+                    OverloadChooser.SetContext(methodContext.call_parameters());
+                else if (methodContext.picky_parameters() != null)
+                    OverloadChooser.SetContext(methodContext.picky_parameters());
+                else
+                    OverloadChooser.SetContext();
+            
+                CallingMethod = (IMethod)OverloadChooser.Overload;
+                ParameterValues = OverloadChooser.Values;
+
+                if (CallingMethod != null)
+                {
+                    if (CallingMethod is DefinedFunction)
+                        ((DefinedFunction)CallingMethod).Call(script, NameRange);
+                    
+                    script.AddHover(DocRange.GetRange(methodContext), CallingMethod.GetLabel(true));
+                }
             }
         }
 

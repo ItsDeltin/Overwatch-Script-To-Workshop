@@ -11,7 +11,7 @@ reserved_list : (PART | NUMBER) (COMMA (PART | NUMBER))* ;
 number : NUMBER | neg  ;
 neg    : '-'NUMBER     ;
 string : LOCALIZED? STRINGLITERAL ;
-formatted_string: '<' string (COMMA expr)* '>' ;
+formatted_string: LESS_THAN string (COMMA expr)* GREATER_THAN ;
 true   : TRUE          ;
 false  : FALSE         ;
 null   : NULL          ;
@@ -22,32 +22,32 @@ define : accessor? STATIC? (type=PART | DEFINE) (GLOBAL|PLAYER)? name=PART (id=n
 
 expr 
 	: 
-      number                                            #e_number
-	| method                                            #e_method
-	| string                                            #e_string
-	| array=expr INDEX_START index=expr? INDEX_END      #e_array_index
-	| createarray                                       #e_create_array
-	| formatted_string                                  #e_formatted_string
-	| true                                              #e_true
-	| false                                             #e_false
-	| null                                              #e_null
-	| PART                                              #e_variable
-	| exprgroup								            #e_expr_group
-	| create_object							            #e_new_object
-	| typeconvert							            #e_type_convert
-	| THIS									            #e_this
-	| ROOT								                #e_root
-	| <assoc=right> expr (SEPERATOR expr?)              #e_expr_tree
-	| NOT expr                                          #e_not
-	| '-' expr                                          #e_inverse
-	| <assoc=right> expr ('^' | '*' | '/' | '%') expr   #e_op_1
-	| expr ('+' | '-') expr                             #e_op_2
-	| expr ('<' | '<=' | '==' | '>=' | '>' | '!=') expr #e_op_compare
-	| expr TERNARY expr TERNARY_ELSE expr				#e_ternary_conditional
-	| expr BOOL expr                              		#e_op_bool
+      number                                                                           #e_number
+	| method                                                                           #e_method
+	| string                                                                           #e_string
+	| array=expr INDEX_START index=expr? INDEX_END                                     #e_array_index
+	| createarray                                                                      #e_create_array
+	| formatted_string                                                                 #e_formatted_string
+	| true                                                                             #e_true
+	| false                                                                            #e_false
+	| null                                                                             #e_null
+	| PART                                                                             #e_variable
+	| exprgroup								                                           #e_expr_group
+	| create_object							                                           #e_new_object
+	| typeconvert							                                           #e_type_convert
+	| THIS									                                           #e_this
+	| ROOT								                                               #e_root
+	| <assoc=right> expr (SEPERATOR expr?)                                             #e_expr_tree
+	| NOT expr                                                                         #e_not
+	| '-' expr                                                                         #e_inverse
+	| <assoc=right> left=expr op=('^' | '*' | '/' | '%') right=expr                    #e_op_1
+	| left=expr op=('+' | '-') right=expr?                                             #e_op_2
+	| left=expr op=(LESS_THAN | '<=' | '==' | '>=' | GREATER_THAN | '!=') right=expr?  #e_op_compare
+	| condition=expr TERNARY consequent=expr? TERNARY_ELSE alternative=expr?		   #e_ternary_conditional
+	| left=expr BOOL right=expr                              		                   #e_op_bool
 	;
 
-typeconvert : '<' PART '>' expr ;
+typeconvert : LESS_THAN PART? GREATER_THAN expr ;
 
 exprgroup   : LEFT_PAREN expr RIGHT_PAREN ;
 createarray : INDEX_START (expr (COMMA expr)*)? INDEX_END;
@@ -215,6 +215,9 @@ DIV   : '/';
 MOD   : '%';
 ADD   : '+';
 MINUS : '-';
+
+LESS_THAN    : '<' ;
+GREATER_THAN : '>';
 
 BOOL : '&&' | '||';
 NOT : '!';
