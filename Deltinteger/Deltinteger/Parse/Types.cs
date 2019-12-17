@@ -368,7 +368,11 @@ namespace Deltin.Deltinteger.Parse
         public void Call(ScriptFile script, DocRange callRange)
         {
             script.AddDefinitionLink(callRange, DefinedAt);
-            translateInfo.AddSymbolLink(this, new Location(script.Uri, callRange));
+            AddLink(new Location(script.Uri, callRange));
+        }
+        public void AddLink(Location location)
+        {
+            translateInfo.AddSymbolLink(this, location);
         }
 
         override public CompletionItem GetCompletion()
@@ -414,6 +418,8 @@ namespace Deltin.Deltinteger.Parse
         public void Call(ScriptFile script, DocRange callRange)
         {
             script.AddDefinitionLink(callRange, DefinedAt);
+            if (Type is DefinedType)
+                ((DefinedType)Type).AddLink(new Location(script.Uri, callRange));
         }
 
         public string GetLabel(bool markdown) => HoverHandler.GetLabel(Type.Name, Parameters, markdown, null);
@@ -439,6 +445,9 @@ namespace Deltin.Deltinteger.Parse
             Block = new BlockAction(script, translateInfo, ConstructorScope, context.block());
 
             script.AddHover(DocRange.GetRange(context.name), GetLabel(true));
+            
+            if (Type is DefinedType)
+                ((DefinedType)Type).AddLink(DefinedAt);
         }
 
         public override void Parse(ActionSet actionSet, IWorkshopTree[] parameterValues)
