@@ -14,18 +14,21 @@ namespace Deltin.Deltinteger.Parse
         public string Name { get; }
         public CodeType Type { get; }
         public StringOrMarkupContent Documentation { get; }
+        public ExpressionOrWorkshopValue DefaultValue { get; }
 
-        public CodeParameter(string name, CodeType type)
+        public CodeParameter(string name, CodeType type, ExpressionOrWorkshopValue defaultValue)
         {
             Name = name;
             Type = type;
+            DefaultValue = defaultValue;
         }
 
-        public CodeParameter(string name, CodeType type, StringOrMarkupContent documentation)
+        public CodeParameter(string name, CodeType type, ExpressionOrWorkshopValue defaultValue, StringOrMarkupContent documentation)
         {
             Name = name;
             Type = type;
             Documentation = documentation;
+            DefaultValue = defaultValue;
         }
 
         override public string ToString()
@@ -45,7 +48,7 @@ namespace Deltin.Deltinteger.Parse
                 var newVar = Var.CreateVarFromContext(VariableDefineType.Parameter, script, translateInfo, context.define(i));
                 newVar.Finalize(methodScope);
                 vars[i] = newVar;
-                parameters[i] = new CodeParameter(context.define(i).name.Text, newVar.CodeType);
+                parameters[i] = new CodeParameter(context.define(i).name.Text, newVar.CodeType, new ExpressionOrWorkshopValue(newVar.InitialValue));
             }
 
             return new ParameterParseResult(parameters, vars);
@@ -77,6 +80,30 @@ namespace Deltin.Deltinteger.Parse
             Parameters = parameters;
             Variables = parameterVariables;
         }
+    }
+
+    public class ExpressionOrWorkshopValue : IExpression
+    {
+        public IExpression Expression { get; }
+        public IWorkshopTree WorkshopValue { get; }
+
+        public ExpressionOrWorkshopValue(IExpression expression)
+        {
+            Expression = expression;
+        }
+        public ExpressionOrWorkshopValue(IWorkshopTree workshopValue)
+        {
+            WorkshopValue = workshopValue;
+        }
+
+        public IWorkshopTree Parse(ActionSet actionSet)
+        {
+            if (Expression != null) return Expression.Parse(actionSet);
+            return WorkshopValue;
+        }
+
+        public Scope ReturningScope() => null;
+        public CodeType Type() => null;
     }
 
     public class OverloadChooser
@@ -123,12 +150,12 @@ namespace Deltin.Deltinteger.Parse
 
             IExpression[] values = new IExpression[context.expr().Length];
             ParameterErrors = new DocRange[values.Length];
-            ParameterRanges = new DocRange[values.Length];
+            var parameterRanges = new List<DocRange>();
             for (int i = 0; i < values.Length; i++)
             {
                 values[i] = DeltinScript.GetExpression(script, translateInfo, scope, context.expr(i));
                 ParameterErrors[i] = DocRange.GetRange(context.expr(i));
-                ParameterRanges[i] = ParameterErrors[i];
+                parameterRanges.Add(ParameterErrors[i]);
             }
             
             if (!SetParameterCount(values.Length)) return;
@@ -139,11 +166,21 @@ namespace Deltin.Deltinteger.Parse
                 CompareParameterTypes(values[i].Type(), option, i);
             GetBestOption();
 
+            Values = new IExpression[Overload.Parameters.Length];
+            for (int i = 0; i < values.Length; i++)
+                Values[i] = values[i];
+            
+            if (values.Length < Overload.Parameters.Length)
+                parameterRanges.Add(new DocRange(
+                    DocRange.GetRange(context).end,
+                    CallRange.end
+                ));
+            
+            ParameterRanges = parameterRanges.ToArray();
+
             // Get the missing parameters.
-            for (int i = values.Length; i < Overload.Parameters.Length; i++)
-                // Syntax error if there is no default value.
-                MissingParameter(Overload.Parameters[i].ToString());
-            Values = values;
+            for (int i = values.Length; i < Values.Length; i++)
+                Values[i] = MissingParameter(Overload.Parameters[i]);
         }
         public void SetContext(DeltinScriptParser.Picky_parametersContext context)
         {
@@ -235,8 +272,7 @@ namespace Deltin.Deltinteger.Parse
                     ParameterRanges[i] = parameters[parameterIndex].FullRange;
                 }
                 else
-                    // Syntax error if there is no default value.
-                    MissingParameter(Overload.Parameters[i].ToString());
+                    values[i] = MissingParameter(Overload.Parameters[i]);
             }
             Values = values;
         }
@@ -248,8 +284,16 @@ namespace Deltin.Deltinteger.Parse
             if (!SetParameterCount(0)) return;
             GetBestOption();
 
+            Values = new IExpression[Overload.Parameters.Length];
             for (int i = 0; i < Overload.Parameters.Length; i++)
-                MissingParameter(Overload.Parameters[i].ToString());
+                Values[i] = MissingParameter(Overload.Parameters[i]);
+            
+            ParameterRanges = new DocRange[] {
+                new DocRange(
+                    genericErrorRange.end,
+                    CallRange.end
+                )
+            };
         }
 
         private bool SetParameterCount(int numberOfParameters)
@@ -304,12 +348,16 @@ namespace Deltin.Deltinteger.Parse
             script.AddOverloadData(this);
         }
     
-        private void MissingParameter(string parameterName)
+        private IExpression MissingParameter(CodeParameter parameter)
         {
+            if (parameter.DefaultValue != null) return parameter.DefaultValue;
+
+            // Parameter is missing.
             script.Diagnostics.Error(
-                string.Format(ErrorMessages.MissingParameter, parameterName),
+                string.Format(ErrorMessages.MissingParameter, parameter.ToString()),
                 genericErrorRange
             );
+            return null;
         }
     
         public SignatureHelp GetSignatureHelp(Pos caretPos)

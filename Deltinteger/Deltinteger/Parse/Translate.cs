@@ -181,14 +181,14 @@ namespace Deltin.Deltinteger.Parse
         {
             switch (statementContext)
             {
-                case DeltinScriptParser.S_defineContext define: {
+                case DeltinScriptParser.S_defineContext define    : {
                     var newVar = Var.CreateVarFromContext(VariableDefineType.Scoped, script, translateInfo, define.define());
                     newVar.Finalize(scope);
                     return new DefineAction(newVar);
                 }
-                case DeltinScriptParser.S_methodContext method: return new CallMethodAction(script, translateInfo, scope, method.method());
-                case DeltinScriptParser.S_varsetContext varset: return new SetVariableAction(script, translateInfo, scope, varset.varset());
-                case DeltinScriptParser.S_exprContext s_expr  : {
+                case DeltinScriptParser.S_methodContext method    : return new CallMethodAction(script, translateInfo, scope, method.method());
+                case DeltinScriptParser.S_varsetContext varset    : return new SetVariableAction(script, translateInfo, scope, varset.varset());
+                case DeltinScriptParser.S_exprContext s_expr      : {
                     var expr = GetExpression(script, translateInfo, scope, s_expr.expr());
                     if (expr is ExpressionTree == false || ((ExpressionTree)expr)?.Result is IStatement == false)
                     {
@@ -198,9 +198,10 @@ namespace Deltin.Deltinteger.Parse
                     }
                     else return (IStatement)((ExpressionTree)expr).Result;
                 }
-                case DeltinScriptParser.S_ifContext s_if      : return new IfAction(script, translateInfo, scope, s_if.@if());
-                case DeltinScriptParser.S_whileContext s_while: return new WhileAction(script, translateInfo, scope, s_while.@while());
-                case DeltinScriptParser.S_forContext s_for    : return new ForAction(script, translateInfo, scope, s_for.@for());
+                case DeltinScriptParser.S_ifContext s_if          : return new IfAction(script, translateInfo, scope, s_if.@if());
+                case DeltinScriptParser.S_whileContext s_while    : return new WhileAction(script, translateInfo, scope, s_while.@while());
+                case DeltinScriptParser.S_forContext s_for        : return new ForAction(script, translateInfo, scope, s_for.@for());
+                case DeltinScriptParser.S_foreachContext s_foreach: return new ForeachAction(script, translateInfo, scope, s_foreach.@foreach());
                 default: throw new Exception($"Could not determine the statement type '{statementContext.GetType().Name}'.");
             }
         }
@@ -256,6 +257,8 @@ namespace Deltin.Deltinteger.Parse
                 default: throw new Exception($"Could not determine the expression type '{exprContext.GetType().Name}'.");
             }
         }
+
+        // public static bool IsExpression(DeltinScriptParser.ExprContext exprContext) => exprContext != null && exprContext.GetType() != typeof(DeltinScriptParser.ExprContext);
     
         private ClassData _classData = null;
         public ClassData SetupClasses()

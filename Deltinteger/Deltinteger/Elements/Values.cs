@@ -930,11 +930,11 @@ namespace Deltin.Deltinteger.Elements
         }
         public V_String() : this(null) {}
 
-        public string Text { get; private set; }
+        public string Text { get; }
 
         protected override string[] AdditionalParameters()
         {
-            return new string[] { "\"" + Text.Replace("_", " ") + "\"" };
+            return new string[] { "\"" + (Text?.Replace("_", " ") ?? "Hello") + "\"" };
         }
 
         private static Log Log = new Log("String Parse");

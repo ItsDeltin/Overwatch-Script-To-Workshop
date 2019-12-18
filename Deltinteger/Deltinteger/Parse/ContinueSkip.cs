@@ -9,8 +9,8 @@ namespace Deltin.Deltinteger.Parse
     {
         private TranslateRule Rule { get; }
         private bool IsSetup;
-        private IndexReference SkipCount { get; }
-        private IndexReference TempHolder { get; }
+        private IndexReference SkipCount { get; set; }
+        private IndexReference TempHolder { get; set; }
         private SkipStartMarker Skipper { get; set; }
 
         public ContinueSkip(TranslateRule rule)
@@ -23,8 +23,8 @@ namespace Deltin.Deltinteger.Parse
             if (IsSetup) return;
             IsSetup = true;
 
-            Rule.DeltinScript.VarCollection.Assign("continueSkip", Rule.IsGlobal, true);
-            Rule.DeltinScript.VarCollection.Assign("continueSkipTemp", Rule.IsGlobal, true);
+            SkipCount = Rule.DeltinScript.VarCollection.Assign("continueSkip", Rule.IsGlobal, true);
+            TempHolder = Rule.DeltinScript.VarCollection.Assign("continueSkipTemp", Rule.IsGlobal, true);
 
             A_SkipIf skipAction = Element.Part<A_SkipIf>
             (

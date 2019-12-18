@@ -10,7 +10,8 @@ namespace Deltin.Deltinteger.Parse
         protected ActionSet ActionSet { get; }
         public bool WasSetup { get; private set; }
         // Start of the loop, using End to mark the end that the continue skip will jump to.
-        private SkipEndMarker Start { get; set; }
+        private SkipEndMarker LoopStart { get; set; }
+        private SkipStartMarker LoopSkipStart { get; set; }
         public IWorkshopTree Condition { get; protected set; }
 
         public WhileBuilder(ActionSet actionSet, IWorkshopTree condition)
@@ -29,21 +30,23 @@ namespace Deltin.Deltinteger.Parse
             WasSetup = true;
             ActionSet.ContinueSkip.Setup(ActionSet);
 
-            Start = new SkipEndMarker();
-            ActionSet.AddAction(Start);
+            LoopStart = new SkipEndMarker();
+            ActionSet.AddAction(LoopStart);
+
+            LoopSkipStart = new SkipStartMarker(ActionSet, Condition);
+            ActionSet.AddAction(LoopSkipStart);
         }
 
         public virtual void Finish()
         {
             if (!WasSetup) throw new Exception("Pattern builder not set up yet.");
-            ActionSet.ContinueSkip.SetSkipCount(ActionSet, Start);
-            
-            if (Condition != null)
-                ActionSet.AddAction(Element.Part<A_LoopIf>(Element.Part<V_Not>(Condition)));
-            else
-                ActionSet.AddAction(Element.Part<A_Loop>());
-
+            ActionSet.ContinueSkip.SetSkipCount(ActionSet, LoopStart);
+            ActionSet.AddAction(Element.Part<A_Loop>());
             ActionSet.ContinueSkip.ResetSkipCount(ActionSet);
+
+            SkipEndMarker loopEnd = new SkipEndMarker();
+            ActionSet.AddAction(loopEnd);
+            LoopSkipStart.SkipCount = LoopSkipStart.GetSkipCount(loopEnd);
         }
     }
 

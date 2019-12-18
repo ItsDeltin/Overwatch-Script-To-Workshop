@@ -31,6 +31,8 @@ namespace Deltin.Deltinteger.Parse
     class ForAction : IStatement
     {
         private Var DefinedVariable { get; }
+        private SetVariableAction InitialVarSet { get; }
+
         private IExpression Condition { get; }
         private SetVariableAction SetVariableAction { get; }
         private BlockAction Block { get; }
@@ -44,16 +46,20 @@ namespace Deltin.Deltinteger.Parse
                 DefinedVariable = Var.CreateVarFromContext(VariableDefineType.Scoped, script, translateInfo, forContext.define());
                 DefinedVariable.Finalize(varScope);
             }
+            else if (forContext.initialVarset != null)
+                InitialVarSet = new SetVariableAction(script, translateInfo, varScope, forContext.initialVarset);
 
             if (forContext.expr() != null)
                 Condition = DeltinScript.GetExpression(script, translateInfo, varScope, forContext.expr());
             
-            if (forContext.varset() != null)
-                SetVariableAction = new SetVariableAction(script, translateInfo, varScope, forContext.varset());
+            if (forContext.endingVarset != null)
+                SetVariableAction = new SetVariableAction(script, translateInfo, varScope, forContext.endingVarset);
 
             // Get the block.
-            Scope blockScope = varScope.Child();
-            Block = new BlockAction(script, translateInfo, blockScope, forContext.block());
+            if (forContext.block() != null)
+                Block = new BlockAction(script, translateInfo, varScope, forContext.block());
+            else
+                script.Diagnostics.Error("Expected a block.", DocRange.GetRange(forContext.RIGHT_PAREN()));
         }
 
         public void Translate(ActionSet actionSet)
@@ -64,11 +70,13 @@ namespace Deltin.Deltinteger.Parse
                 actionSet.IndexAssigner.Add(actionSet.VarCollection, DefinedVariable, actionSet.IsGlobal, null);
 
                 // Set the initial variable.
-                if (actionSet.IndexAssigner[DefinedVariable] is IndexReference)
+                if (actionSet.IndexAssigner[DefinedVariable] is IndexReference && DefinedVariable.InitialValue != null)
                     actionSet.AddAction(((IndexReference)actionSet.IndexAssigner[DefinedVariable]).SetVariable(
                         (Element)DefinedVariable.InitialValue.Parse(actionSet)
                     ));
             }
+            else if (InitialVarSet != null)
+                InitialVarSet.Translate(actionSet);
             
             WhileBuilder whileBuilder = new WhileBuilder(actionSet, Condition?.Parse(actionSet));
             whileBuilder.Setup();
@@ -79,6 +87,48 @@ namespace Deltin.Deltinteger.Parse
                 SetVariableAction.Translate(actionSet);
             
             whileBuilder.Finish();
+        }
+    }
+
+    class ForeachAction : IStatement
+    {
+        private Var ForeachVar { get; }
+        private IExpression Array { get; }
+        private BlockAction Block { get; }
+
+        public ForeachAction(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.ForeachContext foreachContext)
+        {
+            Scope varScope = scope.Child();
+
+            ForeachVar = new Var(foreachContext.name.Text, new Location(script.Uri, DocRange.GetRange(foreachContext.name)), script, translateInfo);
+            ForeachVar.VariableType = VariableType.ElementReference;
+            
+            if (foreachContext.type != null)
+            {
+                ForeachVar.CodeType = translateInfo.GetCodeType(foreachContext.type.Text, script.Diagnostics, DocRange.GetRange(foreachContext.type));
+                if (ForeachVar.CodeType is DefinedType)
+                    ((DefinedType)ForeachVar.CodeType).Call(script, DocRange.GetRange(foreachContext.type));
+            }
+            ForeachVar.Finalize(varScope);
+
+            if (foreachContext.expr() != null)
+                Array = DeltinScript.GetExpression(script, translateInfo, scope, foreachContext.expr());
+            else
+                script.Diagnostics.Error("Expected expression.", DocRange.GetRange(foreachContext.IN()));
+
+            if (foreachContext.block() != null)
+                Block = new BlockAction(script, translateInfo, varScope, foreachContext.block());
+            else
+                script.Diagnostics.Error("Expected block.", DocRange.GetRange(foreachContext.RIGHT_PAREN()));
+        }
+
+        public void Translate(ActionSet actionSet)
+        {
+            ForeachBuilder foreachBuilder = new ForeachBuilder(actionSet, Array.Parse(actionSet));
+            actionSet.IndexAssigner.Add(actionSet.VarCollection, ForeachVar, actionSet.IsGlobal, foreachBuilder.IndexValue);
+            foreachBuilder.Setup();
+            Block.Translate(actionSet);
+            foreachBuilder.Finish();
         }
     }
 }

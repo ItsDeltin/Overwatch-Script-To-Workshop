@@ -190,11 +190,34 @@ namespace Deltin.Deltinteger.Elements
 
     public class ElementList : IMethod
     {
+        private static ElementList[] _elementList;
+        public static ElementList[] Elements { 
+            get {
+                if (_elementList == null) GetElementList();
+                return _elementList;
+            }
+        }
+        private static void GetElementList()
+        {
+            Type[] methodList = Assembly.GetExecutingAssembly().GetTypes().Where(t => t.GetCustomAttribute<ElementData>() != null).ToArray();
+
+            _elementList = new ElementList[methodList.Length];
+            for (int i = 0; i < _elementList.Length; i++)
+                _elementList[i] = new ElementList(methodList[i]);
+
+            for (int i = 0; i < _elementList.Length; i++)
+                _elementList[i].ApplyParameters();
+        }
+        public static ElementList GetElement(string codeName)
+        {
+            return Elements.FirstOrDefault(e => e.Name == codeName);
+        }
+
         public string Name { get; }
         public string WorkshopName { get; }
         public Type Type { get; }
         public bool IsValue { get; } 
-        public Parse.CodeParameter[] Parameters { get; }
+        public CodeParameter[] Parameters { get; private set; }
         public ParameterBase[] WorkshopParameters { get; }
         public UsageDiagnostic[] UsageDiagnostics { get; }
         public WikiMethod Wiki { get; }
@@ -207,24 +230,6 @@ namespace Deltin.Deltinteger.Elements
 
         public CodeType ReturnType { get; } = null;
 
-        public static ElementList[] Elements { get; } = GetElementList();
-        private static ElementList[] GetElementList()
-        {
-            Type[] methodList = Assembly.GetExecutingAssembly().GetTypes().Where(t => t.GetCustomAttribute<ElementData>() != null).ToArray();
-
-            ElementList[] elements = new ElementList[methodList.Length];
-            for (int i = 0; i < elements.Length; i++)
-                elements[i] = new ElementList(methodList[i]);
-            
-            return elements;
-        }
-        public static ElementList GetElement(string codeName)
-        {
-            return Elements.FirstOrDefault(e => e.Name == codeName);
-        }
-
-        public string GetLabel(bool markdown) => HoverHandler.GetLabel(Name, Parameters, markdown, Wiki?.Description);
-
         public ElementList(Type type)
         {
             ElementData data = type.GetCustomAttribute<ElementData>();
@@ -236,7 +241,10 @@ namespace Deltin.Deltinteger.Elements
             UsageDiagnostics = type.GetCustomAttributes<UsageDiagnostic>().ToArray();
 
             Wiki = WorkshopWiki.Wiki.GetWiki().GetMethod(WorkshopName);
+        }
 
+        public void ApplyParameters()
+        {
             Parameters = new Parse.CodeParameter[WorkshopParameters.Length];
             for (int i = 0; i < Parameters.Length; i++)
             {
@@ -245,7 +253,14 @@ namespace Deltin.Deltinteger.Elements
                 if (WorkshopParameters[i] is EnumParameter)
                     codeType = CodeType.DefaultTypes.First(t => t is WorkshopEnumType && ((WorkshopEnumType)t).EnumData == ((EnumParameter)WorkshopParameters[i]).EnumData);
 
-                Parameters[i] = new CodeParameter(WorkshopParameters[i].Name, codeType, Wiki?.GetWikiParameter(WorkshopParameters[i].Name)?.Description);
+                var defaultValue = WorkshopParameters[i].GetDefault();
+
+                Parameters[i] = new CodeParameter(
+                    WorkshopParameters[i].Name,
+                    codeType,
+                    defaultValue == null ? null : new ExpressionOrWorkshopValue(defaultValue),
+                    Wiki?.GetWikiParameter(WorkshopParameters[i].Name)?.Description
+                );
             }
         }
 
@@ -271,6 +286,8 @@ namespace Deltin.Deltinteger.Elements
         {
             return Elements.FirstOrDefault(element => element.Type == type);
         }
+
+        public string GetLabel(bool markdown) => HoverHandler.GetLabel(Name, Parameters, markdown, Wiki?.Description);
 
         public CompletionItem GetCompletion()
         {

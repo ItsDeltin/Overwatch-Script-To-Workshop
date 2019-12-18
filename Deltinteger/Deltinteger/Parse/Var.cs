@@ -153,12 +153,11 @@ namespace Deltin.Deltinteger.Parse
         public Location DefinedAt { get; }
         public bool WholeContext { get; private set; }
 
-        public CodeType CodeType { get; private set; }
+        public CodeType CodeType { get; set; }
 
         // Attributes
-        public VariableType VariableType { get; private set; }
+        public VariableType VariableType { get; set; }
         public bool InExtendedCollection { get; private set; }
-        public VariableDefineType DefineType { get; private set; }
         public int ID { get; private set; } = -1;
         public bool Static { get; private set; }
 
@@ -169,10 +168,12 @@ namespace Deltin.Deltinteger.Parse
 
         public IExpression InitialValue { get; private set; }
 
-        protected Var(string name, Location definedAt)
+        public Var(string name, Location definedAt, ScriptFile script, DeltinScript translateInfo)
         {
             Name = name;
             DefinedAt = definedAt;
+            this.script = script;
+            this.translateInfo = translateInfo;
         }
 
         public bool Settable()
@@ -208,21 +209,14 @@ namespace Deltin.Deltinteger.Parse
             Var newVar;
             if (context.name != null)
             {
-                newVar = new Var(context.name.Text, new Location(script.Uri, DocRange.GetRange(context.name)));
+                newVar = new Var(context.name.Text, new Location(script.Uri, DocRange.GetRange(context.name)), script, translateInfo);
                 translateInfo.AddSymbolLink(newVar, new Location(script.Uri, DocRange.GetRange(context.name)));
             }
             else
-                newVar = new Var(null, new Location(script.Uri, DocRange.GetRange(context)));
+                newVar = new Var(null, new Location(script.Uri, DocRange.GetRange(context)), script, translateInfo);
 
             newVar.context = context;
-            newVar.script = script;
-            newVar.translateInfo = translateInfo;
-
-            if (context.accessor() != null) newVar.AccessLevel = context.accessor().GetAccessLevel();
-            if (context.type != null) newVar.CodeType = translateInfo.GetCodeType(context.type.Text, script.Diagnostics, DocRange.GetRange(context.type));
-
             newVar.InExtendedCollection = context.NOT() != null;
-            newVar.DefineType = defineType;
 
             // Check if global/player.
             if (defineType == VariableDefineType.RuleLevel)
@@ -281,10 +275,9 @@ namespace Deltin.Deltinteger.Parse
             newVar.WholeContext = defineType == VariableDefineType.InClass || defineType == VariableDefineType.RuleLevel;
 
             // Get the type.
-            CodeType type = null;
             if (context.type != null)
             {
-                type = translateInfo.GetCodeType(context.type.Text, script.Diagnostics, DocRange.GetRange(context.type));
+                CodeType type = translateInfo.GetCodeType(context.type.Text, script.Diagnostics, DocRange.GetRange(context.type));
 
                 if (type != null)
                 {
@@ -294,6 +287,8 @@ namespace Deltin.Deltinteger.Parse
                     if (type.Constant())
                         newVar.VariableType = VariableType.ElementReference;
                 }
+
+                newVar.CodeType = type;
             }
 
             // Syntax error if there is an '=' but no expression.
@@ -306,7 +301,7 @@ namespace Deltin.Deltinteger.Parse
         public void Finalize(Scope scope)
         {
             // Get the initial value.
-            if (context.expr() != null)
+            if (context?.expr() != null)
                 InitialValue = DeltinScript.GetExpression(script, translateInfo, scope, context.expr());
             
             // Add the variable to the scope.

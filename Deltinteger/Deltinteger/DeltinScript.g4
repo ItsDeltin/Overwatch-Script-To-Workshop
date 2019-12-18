@@ -76,11 +76,10 @@ statement :
 block : (BLOCK_START statement* BLOCK_END) | statement | STATEMENT_END  ;
 
 for     : FOR LEFT_PAREN 
-	((define | varset)? STATEMENT_END expr? STATEMENT_END forEndStatement?)
+	((define | initialVarset=varset)? STATEMENT_END expr? STATEMENT_END endingVarset=varset?)
 	RIGHT_PAREN block;
-forEndStatement : varset ;
 
-foreach : FOREACH number? LEFT_PAREN define IN expr RIGHT_PAREN block ;
+foreach : FOREACH number? LEFT_PAREN (type=PART | DEFINE) name=PART IN expr? RIGHT_PAREN block ;
 
 while   : WHILE LEFT_PAREN expr RIGHT_PAREN block             ;
 
