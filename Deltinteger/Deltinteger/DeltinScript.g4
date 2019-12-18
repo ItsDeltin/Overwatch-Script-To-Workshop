@@ -61,17 +61,17 @@ picky_parameters : picky_parameter (COMMA picky_parameter?)* ;
 method           : PART LEFT_PAREN (picky_parameters | call_parameters)? RIGHT_PAREN ;
 
 statement :
-	( varset STATEMENT_END?
-	| method STATEMENT_END?
-	| if
-	| for
-	| foreach
-	| while
-	| define STATEMENT_END?
-	| return
-	| expr STATEMENT_END?
-	| delete STATEMENT_END?
-	);
+	  varset STATEMENT_END? #s_varset
+	| method STATEMENT_END? #s_method
+	| if 					#s_if
+	| for					#s_for
+	| foreach				#s_foreach
+	| while					#s_while
+	| define STATEMENT_END? #s_define
+	| return				#s_return
+	| expr STATEMENT_END?	#s_expr
+	| delete STATEMENT_END?	#s_delete
+	;
 
 block : (BLOCK_START statement* BLOCK_END) | statement | STATEMENT_END  ;
 

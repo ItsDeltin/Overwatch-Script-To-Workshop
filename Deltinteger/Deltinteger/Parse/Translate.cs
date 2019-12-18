@@ -179,27 +179,30 @@ namespace Deltin.Deltinteger.Parse
 
         public static IStatement GetStatement(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.StatementContext statementContext)
         {
-            if (statementContext.define() != null)
+            switch (statementContext)
             {
-                var newVar = Var.CreateVarFromContext(VariableDefineType.Scoped, script, translateInfo, statementContext.define());
-                newVar.Finalize(scope);
-                return new DefineAction(newVar);
-            }
-            if (statementContext.method() != null) return new CallMethodAction(script, translateInfo, scope, statementContext.method());
-            if (statementContext.varset() != null) return new SetVariableAction(script, translateInfo, scope, statementContext.varset());
-            if (statementContext.expr() != null)
-            {
-                var expr = GetExpression(script, translateInfo, scope, statementContext.expr());
-                if (expr is ExpressionTree == false || ((ExpressionTree)expr)?.Result is IStatement == false)
-                {
-                    if (expr != null)
-                        script.Diagnostics.Error("Expressions can't be used as statements.", DocRange.GetRange(statementContext));
-                    return null;
+                case DeltinScriptParser.S_defineContext define: {
+                    var newVar = Var.CreateVarFromContext(VariableDefineType.Scoped, script, translateInfo, define.define());
+                    newVar.Finalize(scope);
+                    return new DefineAction(newVar);
                 }
-                else return (IStatement)((ExpressionTree)expr).Result;
+                case DeltinScriptParser.S_methodContext method: return new CallMethodAction(script, translateInfo, scope, method.method());
+                case DeltinScriptParser.S_varsetContext varset: return new SetVariableAction(script, translateInfo, scope, varset.varset());
+                case DeltinScriptParser.S_exprContext s_expr  : {
+                    var expr = GetExpression(script, translateInfo, scope, s_expr.expr());
+                    if (expr is ExpressionTree == false || ((ExpressionTree)expr)?.Result is IStatement == false)
+                    {
+                        if (expr != null)
+                            script.Diagnostics.Error("Expressions can't be used as statements.", DocRange.GetRange(statementContext));
+                        return null;
+                    }
+                    else return (IStatement)((ExpressionTree)expr).Result;
+                }
+                case DeltinScriptParser.S_ifContext s_if      : return new IfAction(script, translateInfo, scope, s_if.@if());
+                case DeltinScriptParser.S_whileContext s_while: return new WhileAction(script, translateInfo, scope, s_while.@while());
+                case DeltinScriptParser.S_forContext s_for    : return new ForAction(script, translateInfo, scope, s_for.@for());
+                default: throw new Exception($"Could not determine the statement type '{statementContext.GetType().Name}'.");
             }
-            if (statementContext.@if() != null) return new IfAction(script, translateInfo, scope, statementContext.@if());
-            else throw new Exception("Could not determine the statement type.");
         }
 
         public static IExpression GetExpression(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.ExprContext exprContext, bool selfContained = true)

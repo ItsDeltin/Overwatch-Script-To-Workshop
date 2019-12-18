@@ -37,7 +37,12 @@ namespace Deltin.Deltinteger.Parse
         {
             if (!WasSetup) throw new Exception("Pattern builder not set up yet.");
             ActionSet.ContinueSkip.SetSkipCount(ActionSet, Start);
-            ActionSet.AddAction(Element.Part<A_LoopIf>(Element.Part<V_Not>(Condition)));
+            
+            if (Condition != null)
+                ActionSet.AddAction(Element.Part<A_LoopIf>(Element.Part<V_Not>(Condition)));
+            else
+                ActionSet.AddAction(Element.Part<A_Loop>());
+
             ActionSet.ContinueSkip.ResetSkipCount(ActionSet);
         }
     }
