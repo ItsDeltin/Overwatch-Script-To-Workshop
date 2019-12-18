@@ -10,6 +10,7 @@ namespace Deltin.Deltinteger.Parse
     {
         private Var SetVariable { get; }
         private ExpressionTree Tree { get; }
+        private string Operation { get; }
         private IExpression Value { get; }
 
         public SetVariableAction(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.VarsetContext varsetContext)
@@ -39,24 +40,54 @@ namespace Deltin.Deltinteger.Parse
             if (notAVariableRange != null)
                 script.Diagnostics.Error("Expected a variable.", notAVariableRange);
             
-            if (varsetContext.statement_operation() != null && varsetContext.val == null)
-                script.Diagnostics.Error("Expected an expression.", DocRange.GetRange(varsetContext).end.ToRange());
-            else
-                Value = DeltinScript.GetExpression(script, translateInfo, scope, varsetContext.val);
+            if (varsetContext.statement_operation() != null)
+            {
+                Operation = varsetContext.statement_operation().GetText();
+                if (varsetContext.val == null)
+                    script.Diagnostics.Error("Expected an expression.", DocRange.GetRange(varsetContext).end.ToRange());
+                else
+                    Value = DeltinScript.GetExpression(script, translateInfo, scope, varsetContext.val);
+            }
+            else if (varsetContext.INCREMENT() != null) Operation = "++";
+            else if (varsetContext.DECREMENT() != null) Operation = "--";
         }
 
         public void Translate(ActionSet actionSet)
         {
             IGettable var;
+            Element target = null;
             if (Tree != null)
-                var = Tree.ParseTree(actionSet).ResultingVariable;
+            {
+                ExpressionTreeParseResult treeParseResult = Tree.ParseTree(actionSet);
+                var = treeParseResult.ResultingVariable;
+                target = (Element)treeParseResult.Target;
+            }
             else
                 var = actionSet.IndexAssigner[SetVariable];
 
-            // TODO: Don't cast to Element.
-            actionSet.AddAction(((IndexReference)var).SetVariable(
-                (Element)Value.Parse(actionSet)
-            ));
+            Element value = null;
+            if (Value != null) value = (Element)Value.Parse(actionSet);
+
+            Elements.Operation? modifyOperation = null;
+            switch (Operation)
+            {
+                case "=": break;
+                case "^=": modifyOperation = Elements.Operation.RaiseToPower; break;
+                case "*=": modifyOperation = Elements.Operation.Multiply;     break;
+                case "/=": modifyOperation = Elements.Operation.Divide;       break;
+                case "%=": modifyOperation = Elements.Operation.Modulo;       break;
+                case "+=": modifyOperation = Elements.Operation.Add;          break;
+                case "-=": modifyOperation = Elements.Operation.Subtract;     break;
+                case "++": value = 1; modifyOperation = Elements.Operation.Add;      break;
+                case "--": value = 1; modifyOperation = Elements.Operation.Subtract; break;
+                default: throw new Exception($"Unknown operation {Operation}.");
+            }
+
+            if (modifyOperation == null)
+                actionSet.AddAction(((IndexReference)var).SetVariable(value, target));
+            else
+                actionSet.AddAction(((IndexReference)var).ModifyVariable((Elements.Operation)modifyOperation, value, target));
+
         }
     }
 }

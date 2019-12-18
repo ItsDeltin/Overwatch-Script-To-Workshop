@@ -62,9 +62,7 @@ namespace Deltin.Deltinteger.LanguageServer
                     items.Clear();
                     items.AddRange(inRange[0].Scope.GetCompletion(completionParams.Position, true));
                 }
-                else
-                    foreach (var range in inRange)
-                        items.AddRange(range.Scope.GetCompletion(completionParams.Position, false));
+                else items.AddRange(inRange[0].Scope.GetCompletion(completionParams.Position, false));
             }
             else items.AddRange(_globalScope.GetCompletion(null, false));
             return items;

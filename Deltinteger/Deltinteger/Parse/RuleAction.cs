@@ -39,7 +39,7 @@ namespace Deltin.Deltinteger.Parse
                     Conditions[i] = new RuleIfAction(script, translateInfo, scope, ruleContext.rule_if(i));
             }
 
-            Block = new BlockAction(script, translateInfo, scope.Child(), ruleContext.block());
+            Block = new BlockAction(script, translateInfo, scope, ruleContext.block());
         }
 
         private void GetRuleSettings(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.Ow_ruleContext ruleContext)

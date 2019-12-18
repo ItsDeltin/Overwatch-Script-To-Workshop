@@ -198,6 +198,7 @@ namespace Deltin.Deltinteger.Parse
                 }
                 else return (IStatement)((ExpressionTree)expr).Result;
             }
+            if (statementContext.@if() != null) return new IfAction(script, translateInfo, scope, statementContext.@if());
             else throw new Exception("Could not determine the statement type.");
         }
 
@@ -244,7 +245,7 @@ namespace Deltin.Deltinteger.Parse
                 case DeltinScriptParser.E_expr_groupContext group: return GetExpression(script, translateInfo, scope, group.exprgroup().expr());
                 case DeltinScriptParser.E_type_convertContext typeConvert: return new TypeConvertAction(script, translateInfo, scope, typeConvert.typeconvert());
                 case DeltinScriptParser.E_notContext not: return new NotAction(script, translateInfo, scope, not.expr());
-                case DeltinScriptParser.E_inverseContext inverse: return new NotAction(script, translateInfo, scope, inverse.expr());
+                case DeltinScriptParser.E_inverseContext inverse: return new InverseAction(script, translateInfo, scope, inverse.expr());
                 case DeltinScriptParser.E_op_1Context             op1: return new OperatorAction(script, translateInfo, scope, op1);
                 case DeltinScriptParser.E_op_2Context             op2: return new OperatorAction(script, translateInfo, scope, op2);
                 case DeltinScriptParser.E_op_boolContext       opBool: return new OperatorAction(script, translateInfo, scope, opBool);

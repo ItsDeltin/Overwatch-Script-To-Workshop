@@ -13,6 +13,7 @@ namespace Deltin.Deltinteger.Parse
         public ScriptFile Script { get; }
         private RuleAction RuleAction { get; }
         public bool IsGlobal { get; }
+        public ContinueSkip ContinueSkip { get; }
 
         public TranslateRule(ScriptFile script, DeltinScript deltinScript, RuleAction ruleAction)
         {
@@ -20,6 +21,7 @@ namespace Deltin.Deltinteger.Parse
             Script = script;
             RuleAction = ruleAction;
             IsGlobal = RuleAction.EventType == RuleEvent.OngoingGlobal;
+            ContinueSkip = new ContinueSkip(this);
 
             var actionSet = new ActionSet(this, null, Actions);
             ruleAction.Block.Translate(actionSet);
@@ -38,8 +40,8 @@ namespace Deltin.Deltinteger.Parse
             List<Element> actions = new List<Element>();
 
             foreach (IActionList action in this.Actions)
-                if (action is ALAction)
-                    actions.Add((Element)((ALAction)action).Calling);
+                if (action.IsAction)
+                    actions.Add(action.GetAction());
 
             return actions.ToArray();
         }
@@ -50,10 +52,10 @@ namespace Deltin.Deltinteger.Parse
         public TranslateRule Translate { get; }
         public DocRange GenericErrorRange { get; }
         public VarIndexAssigner IndexAssigner { get; }
-        public FileDiagnostics Diagnostics => Translate.Script.Diagnostics;
-        public bool IsGlobal               => Translate.IsGlobal;
-        private List<IActionList> actions  => Translate.Actions;
-        public VarCollection VarCollection => Translate.DeltinScript.VarCollection;
+        public bool IsGlobal                => Translate.IsGlobal;
+        public List<IActionList> ActionList => Translate.Actions;
+        public VarCollection VarCollection  => Translate.DeltinScript.VarCollection;
+        public ContinueSkip ContinueSkip    => Translate.ContinueSkip;
 
         public ActionSet(TranslateRule translate, DocRange genericErrorRange, List<IActionList> actions)
         {
@@ -85,58 +87,100 @@ namespace Deltin.Deltinteger.Parse
 
         public void AddAction(IWorkshopTree action)
         {
-            actions.Add(new ALAction(action));
+            ActionList.Add(new ALAction(action));
         }
         public void AddAction(IWorkshopTree[] actions)
         {
             foreach (var action in actions)
-                this.actions.Add(new ALAction(action));
+                ActionList.Add(new ALAction(action));
         }
         public void AddAction(IActionList action)
         {
-            actions.Add(action);
+            ActionList.Add(action);
         }
         public void AddAction(IActionList[] actions)
         {
-            this.actions.AddRange(actions);
+            ActionList.AddRange(actions);
         }
     }
 
     public interface IActionList
     {
+        bool IsAction { get; }
+        Element GetAction();
     }
 
     public class ALAction : IActionList
     {
         public IWorkshopTree Calling { get; }
+        public bool IsAction { get; } = true;
 
         public ALAction(IWorkshopTree calling)
         {
             Calling = calling;
         }
+
+        public Element GetAction()
+        {
+            return (Element)Calling;
+        }
     }
 
-    public class ALSkip : IActionList
+    public class SkipStartMarker : IActionList
     {
-        public ALSkipMarker SkipTo { get; }
-        public Element Condition { get; }
+        public IWorkshopTree Condition { get; }
+        private ActionSet ActionSet { get; }
+        public IWorkshopTree SkipCount { get; set; }
+        public bool IsAction { get; } = true;
 
-        public ALSkip(ALSkipMarker skipTo, Element condition)
+        public SkipStartMarker(ActionSet actionSet, IWorkshopTree condition)
         {
-            SkipTo = skipTo;
+            ActionSet = actionSet;
             Condition = condition;
         }
-        public ALSkip(ALSkipMarker skipTo)
+        public SkipStartMarker(ActionSet actionSet)
         {
-            SkipTo = skipTo;
+            ActionSet = actionSet;
         }
 
-        public Element GetSkip()
+        public V_Number GetSkipCount(SkipEndMarker marker)
         {
-            // todo: this
-            throw new NotImplementedException();
+            int count = 0;
+            bool foundStart = false;
+            for (int i = 0; i < ActionSet.ActionList.Count; i++)
+            {
+                if (object.ReferenceEquals(ActionSet.ActionList[i], this))
+                {
+                    if (foundStart) throw new Exception("Skip start marker is on the action list multiple times.");
+                    foundStart = true;
+                }
+
+                if (object.ReferenceEquals(ActionSet.ActionList[i], marker))
+                {
+                    if (!foundStart) throw new Exception("Skip start marker not found.");
+                    break;
+                }
+
+                if (foundStart && ActionSet.ActionList[i].IsAction)
+                    count++;
+            }
+
+            return new V_Number(count - 1);
+        }
+
+        public Element GetAction()
+        {
+            if (Condition == null)
+                return Element.Part<A_Skip>(SkipCount);
+            else
+                return Element.Part<A_SkipIf>(Element.Part<V_Not>(Condition), SkipCount);
         }
     }
 
-    public class ALSkipMarker : IActionList {}
+    public class SkipEndMarker : IActionList
+    {
+        public bool IsAction { get; } = false;
+
+        public Element GetAction() => throw new NotImplementedException();
+    }
 }

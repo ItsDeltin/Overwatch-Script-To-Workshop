@@ -16,8 +16,6 @@ true   : TRUE          ;
 false  : FALSE         ;
 null   : NULL          ;
 
-statement_operation : EQUALS | EQUALS_ADD | EQUALS_DIVIDE | EQUALS_MODULO | EQUALS_MULTIPLY | EQUALS_POW | EQUALS_SUBTRACT ;
-
 define : accessor? STATIC? (type=PART | DEFINE) (GLOBAL|PLAYER)? name=PART (id=number? | NOT?) (EQUALS expr?)? ;
 
 expr 
@@ -55,6 +53,7 @@ createarray : INDEX_START (expr (COMMA expr)*)? INDEX_END;
 array : (INDEX_START expr INDEX_END)+ ;
 
 varset   : var=expr array? ((statement_operation val=expr?) | INCREMENT | DECREMENT) ;
+statement_operation : EQUALS | EQUALS_ADD | EQUALS_DIVIDE | EQUALS_MODULO | EQUALS_MULTIPLY | EQUALS_POW | EQUALS_SUBTRACT ;
 
 call_parameters  : expr (COMMA expr?)*    		 	         ;
 picky_parameter  : PART? TERNARY_ELSE expr?                  ;
@@ -85,8 +84,8 @@ foreach : FOREACH number? LEFT_PAREN define IN expr RIGHT_PAREN block ;
 
 while   : WHILE LEFT_PAREN expr RIGHT_PAREN block             ;
 
-if      : IF LEFT_PAREN expr RIGHT_PAREN block else_if* else? ;
-else_if : ELSE IF LEFT_PAREN expr RIGHT_PAREN block           ;
+if      : IF LEFT_PAREN expr? RIGHT_PAREN block else_if* else? ;
+else_if : ELSE IF LEFT_PAREN expr? RIGHT_PAREN block           ;
 else    : ELSE block                                          ;
 
 return  : RETURN expr? STATEMENT_END                          ;
