@@ -192,7 +192,7 @@ namespace Deltin.Deltinteger.Parse
                 globalScope.AddMethod(workshopMethod, null, null);
             
             // Add custom methods
-            foreach (var builtInMethod in CustomMethodData.GetCustomMethods())
+            foreach (var builtInMethod in CustomMethods.CustomMethodData.GetCustomMethods())
                 globalScope.AddMethod(builtInMethod, null, null);
 
             return globalScope;

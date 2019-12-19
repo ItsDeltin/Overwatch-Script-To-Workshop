@@ -11,30 +11,21 @@ using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.Compl
 using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItemKind;
 using StringOrMarkupContent = OmniSharp.Extensions.LanguageServer.Protocol.Models.StringOrMarkupContent;
 
-namespace Deltin.Deltinteger.Elements
+namespace Deltin.Deltinteger.CustomMethods
 {
     [AttributeUsage(AttributeTargets.Class)]
     public class CustomMethod : Attribute
     {
-        public CustomMethod(string elementName, CustomMethodType methodType)
+        public CustomMethod(string methodName, string description, CustomMethodType methodType)
         {
-            MethodName = elementName;
+            MethodName = methodName;
+            Description = description;
             MethodType = methodType;
         }
 
-        public string MethodName { get; private set; }
-        public CustomMethodType MethodType { get; private set; }
-    }
-
-    public class MethodResult
-    {
-        public MethodResult(Element[] elements, Element result)
-        {
-            Elements = elements;
-            Result = result;
-        }
-        public Element[] Elements { get; private set; }
-        public Element Result { get; private set; }
+        public string MethodName { get; }
+        public string Description { get; }
+        public CustomMethodType MethodType { get; }
     }
 
     public enum CustomMethodType
@@ -58,8 +49,7 @@ namespace Deltin.Deltinteger.Elements
         
         public CodeType ReturnType { get; } = null;
 
-        public string GetLabel(bool markdown) => HoverHandler.GetLabel(Name, Parameters, markdown, null);
-        public StringOrMarkupContent Documentation => null;
+        public StringOrMarkupContent Documentation { get; }
 
         public CustomMethodData(Type type)
         {
@@ -68,32 +58,10 @@ namespace Deltin.Deltinteger.Elements
             CustomMethod data = type.GetCustomAttribute<CustomMethod>();
             Name = data.MethodName;
             CustomMethodType = data.MethodType;
+            Documentation = data.Description;
 
-            // TODO: Fix parameters
-            Parameters = new CodeParameter[0];
-            //type.GetCustomAttributes<ParameterBase>().ToArray();
-            
-            CustomMethodWiki cmWiki = GetObject().Wiki();
-            if (cmWiki != null)
-            {
-                WikiParameter[] parameters = null;
-
-                if (cmWiki.ParameterDescriptions != null)
-                {
-                    parameters = new WikiParameter[cmWiki.ParameterDescriptions.Length];
-                    for (int i = 0; i < parameters.Length; i++)
-                        parameters[i] = new WikiParameter(Parameters[i].Name, cmWiki.ParameterDescriptions[i]);
-                }
-
-                string description = cmWiki.Description;
-                if (CustomMethodType == CustomMethodType.MultiAction_Value)
-                {
-                    if (description != null)
-                        description += "\nThis method cannot be used in conditions.";
-                    else
-                        description = "This method cannot be used in conditions.";
-                }
-            }
+            var obj = GetObject();
+            Parameters = obj.Parameters() ?? new CodeParameter[0];
         }
 
         private CustomMethodBase GetObject()
@@ -105,24 +73,20 @@ namespace Deltin.Deltinteger.Elements
 
         public IWorkshopTree Parse(ActionSet actionSet, IWorkshopTree[] values)
         {
-            CustomMethodBase customMethod = GetObject();
-            customMethod.Parameters = values;
-            // TODO: Set customMethod.MethodLocation and customMethod.ParameterLocations.
-            // TODO: Add an ActionSet property to CustomMethodBase.
-            // TODO: Get the custom method result.
-            return null;
+            return GetObject().Get(actionSet, values);
         }
 
+        public string GetLabel(bool markdown) => HoverHandler.GetLabel(Name, Parameters, markdown, Documentation.HasString ? Documentation.String : Documentation.MarkupContent.Value);
         public CompletionItem GetCompletion()
         {
             return new CompletionItem()
             {
                 Label = Name,
-                Kind = CompletionItemKind.Method
+                Kind = CompletionItemKind.Method,
+                Detail = GetLabel(false),
+                Documentation = Documentation
             };
         }
-
-        public string GetSignatureName() => Name;
 
         static CustomMethodData[] _customMethodData = null;
         public static CustomMethodData[] GetCustomMethods()
@@ -143,39 +107,9 @@ namespace Deltin.Deltinteger.Elements
 
     public abstract class CustomMethodBase
     {
-        // public TranslateRule TranslateContext { get; set; }
-        public IWorkshopTree[] Parameters { get; set; }
-        // public ScopeGroup Scope { get; set; }
-        public Location[] ParameterLocations { get; set; }
-        public Location MethodLocation { get; set; }
+        protected virtual void ValidateParameters() {}
 
-        public MethodResult Result()
-        {            
-            if (Parameters == null)
-                throw new ArgumentNullException(nameof(Parameters));
-                        
-            if (ParameterLocations == null)
-                throw new ArgumentNullException(nameof(ParameterLocations));
-            
-            if (MethodLocation == null)
-                throw new ArgumentNullException(nameof(MethodLocation));
-            
-            return Get();
-        }
-
-        protected abstract MethodResult Get();
-
-        public abstract CustomMethodWiki Wiki();
-    }
-
-    public class CustomMethodWiki
-    {
-        public string Description { get; }
-        public string[] ParameterDescriptions { get; }
-        public CustomMethodWiki(string description, params string[] parameterDescriptions)
-        {
-            Description = description;
-            ParameterDescriptions = parameterDescriptions;
-        }
+        public abstract CodeParameter[] Parameters();
+        public abstract IWorkshopTree Get(ActionSet actionSet, IWorkshopTree[] parameterValues);
     }
 }

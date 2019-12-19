@@ -228,7 +228,7 @@ namespace Deltin.Deltinteger.Elements
         public ParameterBase[] WorkshopParameters { get; }
         public UsageDiagnostic[] UsageDiagnostics { get; }
         public WikiMethod Wiki { get; }
-        public StringOrMarkupContent Documentation => Wiki.Description;
+        public StringOrMarkupContent Documentation => Wiki?.Description;
 
         // IScopeable defaults
         public LanguageServer.Location DefinedAt { get; } = null;

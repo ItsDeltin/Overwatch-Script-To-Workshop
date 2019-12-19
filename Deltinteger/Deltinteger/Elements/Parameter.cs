@@ -8,14 +8,13 @@ namespace Deltin.Deltinteger.Elements
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
     public abstract class ParameterBase : Attribute
     {
-        public string Name { get; private set; }
+        public string Name { get; }
 
         protected ParameterBase(string name)
         {
             Name = name;
         }
 
-        // public abstract IWorkshopTree Parse(TranslateRule context, ScopeGroup getter, ScopeGroup scope, Node node);
         public virtual IWorkshopTree GetDefault()
         {
             return null;
@@ -29,8 +28,8 @@ namespace Deltin.Deltinteger.Elements
 
     class Parameter : ParameterBase
     {
-        public ValueType ReturnType { get; private set; }
-        public Type DefaultType { get; private set; } // The value that the variable is set to use by default
+        public ValueType ReturnType { get; }
+        public Type DefaultType { get; }
 
         public Parameter(string name, ValueType returnType, Type defaultType) : base (name)
         {
@@ -48,8 +47,8 @@ namespace Deltin.Deltinteger.Elements
 
     class EnumParameter : ParameterBase
     {
-        public Type EnumType { get; private set; }
-        public EnumData EnumData { get; private set; }
+        public Type EnumType { get; }
+        public EnumData EnumData { get; }
 
         public EnumParameter(string name, Type enumType) : base (name)
         {

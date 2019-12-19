@@ -26,16 +26,6 @@ namespace Deltin.Deltinteger.Parse
             return null;
         }
 
-        public static readonly CodeType[] DefaultTypes = GetDefaultTypes();
-
-        private static CodeType[] GetDefaultTypes()
-        {
-            var defaultTypes = new List<CodeType>();
-            foreach (var enumData in EnumData.GetEnumData())
-                defaultTypes.Add(new WorkshopEnumType(enumData));
-            return defaultTypes.ToArray();
-        }
-
         public CodeType Type() => null;
 
         public IWorkshopTree Parse(ActionSet actionSet)
@@ -60,6 +50,20 @@ namespace Deltin.Deltinteger.Parse
         public static bool TypeMatches(CodeType parameterType, CodeType valueType)
         {
             return parameterType == null || parameterType == valueType;
+        }
+
+        public static readonly CodeType[] DefaultTypes = GetDefaultTypes();
+
+        private static CodeType[] GetDefaultTypes()
+        {
+            var defaultTypes = new List<CodeType>();
+            foreach (var enumData in EnumData.GetEnumData())
+                defaultTypes.Add(new WorkshopEnumType(enumData));
+
+            // Add custom classes here.
+            defaultTypes.Add(new PathmapClass());
+            
+            return defaultTypes.ToArray();
         }
     }
 
@@ -235,13 +239,7 @@ namespace Deltin.Deltinteger.Parse
             // Classes are stored in the class array (`classData.ClassArray`),
             // this stores the index where the new class is created at.
             var classReference = actionSet.VarCollection.Assign("_new_" + Name + "_class_index", actionSet.IsGlobal, true);
-            // GetClassIndex() is less server load intensive than GetClassIndexWorkaround,
-            // but due to a workshop bug with `Index Of Array Value`, the workaround may
-            // need to be used instead.
-            if (!CLASS_INDEX_WORKAROUND)
-                GetClassIndex(classReference, actionSet, classData);
-            else
-                GetClassIndexWorkaround(classReference, actionSet, classData);
+            GetClassIndex(classReference, actionSet, classData);
             
             var classObject = classData.ClassArray.CreateChild((Element)classReference.GetVariable());
             SetInitialVariables(classObject, actionSet);
@@ -253,74 +251,80 @@ namespace Deltin.Deltinteger.Parse
             return classReference.GetVariable();
         }
 
-        private void GetClassIndexWorkaround(IndexReference classReference, ActionSet actionSet, ClassData classData)
+        public static void GetClassIndex(IndexReference classReference, ActionSet actionSet, ClassData classData)
         {
-            // Get an empty index in the class array to store the new class.
-            Element firstFree = (
-                Element.Part<V_FirstOf>(
-                    Element.Part<V_FilteredArray>(
-                        // Sort the taken index array.
-                        Element.Part<V_SortedArray>(classData.ClassIndexes.GetVariable(), new V_ArrayElement()),
-                        // Filter
-                        Element.Part<V_And>(
-                            // If the previous index was not taken, use that index.
-                            !Element.Part<V_ArrayContains>(
-                                classData.ClassIndexes.GetVariable(),
-                                new V_ArrayElement() - 1
-                            ),
-                            // Make sure the index does not equal 0 so the resulting index is not -1.
-                            new V_Compare(new V_ArrayElement(), Operators.NotEqual, new V_Number(0))
-                        )
+            // GetClassIndex() is less server load intensive than GetClassIndexWorkaround,
+            // but due to a workshop bug with `Index Of Array Value`, the workaround may
+            // need to be used instead.
+
+            if (!CLASS_INDEX_WORKAROUND)
+            {
+                // Get the index of the first null value in the class array.
+                actionSet.AddAction(classReference.SetVariable(
+                    Element.Part<V_IndexOfArrayValue>(
+                        classData.ClassArray.GetVariable(),
+                        new V_Null()
                     )
-                ) - 1 // Subtract 1 to get the previous index
-            );
-            // If the taken index array has 0 elements, use the length of the class array subtracted by 1.
-            firstFree = Element.TernaryConditional(
-                new V_Compare(Element.Part<V_CountOf>(classData.ClassIndexes.GetVariable()), Operators.NotEqual, new V_Number(0)),
-                firstFree,
-                Element.Part<V_CountOf>(classData.ClassArray.GetVariable()) - 1
-            );
-
-            actionSet.AddAction(classReference.SetVariable(firstFree));
-            actionSet.AddAction(classReference.SetVariable(
-                Element.TernaryConditional(
-                    // If the index equals -1, use the length of the class array instead.
-                    new V_Compare(classReference.GetVariable(), Operators.Equal, new V_Number(-1)),
-                    Element.Part<V_CountOf>(classData.ClassArray.GetVariable()),
-                    classReference.GetVariable()
-                )
-            ));
-
-            // Add the selected index to the taken indexes array.
-            actionSet.AddAction(
-                classData.ClassIndexes.SetVariable(
-                    Element.Part<V_Append>(
-                        classData.ClassIndexes.GetVariable(),
+                ));
+                
+                // If the index equals -1, use the count of the class array instead.
+                // TODO: Try setting the 1000th index of the class array to null instead.
+                actionSet.AddAction(classReference.SetVariable(
+                    Element.TernaryConditional(
+                        new V_Compare(classReference.GetVariable(), Operators.Equal, new V_Number(-1)),
+                        Element.Part<V_CountOf>(classData.ClassArray.GetVariable()),
                         classReference.GetVariable()
                     )
-                )
-            );
-        }
+                ));
+            }
+            else
+            {
+                // Get an empty index in the class array to store the new class.
+                Element firstFree = (
+                    Element.Part<V_FirstOf>(
+                        Element.Part<V_FilteredArray>(
+                            // Sort the taken index array.
+                            Element.Part<V_SortedArray>(classData.ClassIndexes.GetVariable(), new V_ArrayElement()),
+                            // Filter
+                            Element.Part<V_And>(
+                                // If the previous index was not taken, use that index.
+                                !Element.Part<V_ArrayContains>(
+                                    classData.ClassIndexes.GetVariable(),
+                                    new V_ArrayElement() - 1
+                                ),
+                                // Make sure the index does not equal 0 so the resulting index is not -1.
+                                new V_Compare(new V_ArrayElement(), Operators.NotEqual, new V_Number(0))
+                            )
+                        )
+                    ) - 1 // Subtract 1 to get the previous index
+                );
+                // If the taken index array has 0 elements, use the length of the class array subtracted by 1.
+                firstFree = Element.TernaryConditional(
+                    new V_Compare(Element.Part<V_CountOf>(classData.ClassIndexes.GetVariable()), Operators.NotEqual, new V_Number(0)),
+                    firstFree,
+                    Element.Part<V_CountOf>(classData.ClassArray.GetVariable()) - 1
+                );
 
-        private void GetClassIndex(IndexReference classReference, ActionSet actionSet, ClassData classData)
-        {
-            // Get the index of the first null value in the class array.
-            actionSet.AddAction(classReference.SetVariable(
-                Element.Part<V_IndexOfArrayValue>(
-                    classData.ClassArray.GetVariable(),
-                    new V_Null()
-                )
-            ));
-            
-            // If the index equals -1, use the count of the class array instead.
-            // TODO: Try setting the 1000th index of the class array to null instead.
-            actionSet.AddAction(classReference.SetVariable(
-                Element.TernaryConditional(
-                    new V_Compare(classReference.GetVariable(), Operators.Equal, new V_Number(-1)),
-                    Element.Part<V_CountOf>(classData.ClassArray.GetVariable()),
-                    classReference.GetVariable()
-                )
-            ));
+                actionSet.AddAction(classReference.SetVariable(firstFree));
+                actionSet.AddAction(classReference.SetVariable(
+                    Element.TernaryConditional(
+                        // If the index equals -1, use the length of the class array instead.
+                        new V_Compare(classReference.GetVariable(), Operators.Equal, new V_Number(-1)),
+                        Element.Part<V_CountOf>(classData.ClassArray.GetVariable()),
+                        classReference.GetVariable()
+                    )
+                ));
+
+                // Add the selected index to the taken indexes array.
+                actionSet.AddAction(
+                    classData.ClassIndexes.SetVariable(
+                        Element.Part<V_Append>(
+                            classData.ClassIndexes.GetVariable(),
+                            classReference.GetVariable()
+                        )
+                    )
+                );
+            }
         }
 
         private IWorkshopTree NewStruct(ActionSet actionSet, Constructor constructor, IWorkshopTree[] constructorValues)
