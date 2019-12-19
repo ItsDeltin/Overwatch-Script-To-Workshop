@@ -93,6 +93,8 @@ namespace Deltin.Deltinteger.Parse
             // Get the access level.
             AccessLevel = context.accessor().GetAccessLevel();
 
+            scope.AddMethod(this, script.Diagnostics, DocRange.GetRange(context.name));
+
             // Setup the parameters and parse the block.
             SetupParameters(script, context.setParameters());
             block = new BlockAction(script, translateInfo, methodScope, context.block());
@@ -187,6 +189,8 @@ namespace Deltin.Deltinteger.Parse
             actionSet = actionSet
                 .New(actionSet.IndexAssigner.CreateContained());
             
+            if (IsRecursive) return ParseRecursive(actionSet, parameterValues);
+            
             ReturnHandler returnHandler = null;
             if (doesReturnValue)
             {
@@ -199,15 +203,114 @@ namespace Deltin.Deltinteger.Parse
 
             returnHandler.ApplyReturnSkips();
 
-            if (returnHandler == null) return null;
-            else return returnHandler.GetReturnedValue();
+            return returnHandler?.GetReturnedValue();
         }
 
-        public static void AssignParameters(ActionSet actionSet, Var[] parameterVars, IWorkshopTree[] parameterValues)
+        private IWorkshopTree ParseRecursive(ActionSet actionSet, IWorkshopTree[] parameterValues)
+        {
+            // Check the method stack to see if this method was already called.
+            RecursiveMethodStack lastCall = actionSet.Translate.MethodStack.FirstOrDefault(ms => ms.Function == this) as RecursiveMethodStack;
+
+            // If not, set up the stack and call the method.
+            if (lastCall == null)
+            {
+                // Assign the parameters.
+                AssignParameters(actionSet, ParameterVars, parameterValues, true);
+
+                // Get the return handler if a value is returned.
+                ReturnHandler returnHandler = null;
+                if (doesReturnValue) returnHandler = new ReturnHandler(actionSet, Name, true);
+
+                // Set up the condinue skip array.
+                IndexReference continueSkipArray = actionSet.VarCollection.Assign("recursiveContinueArray", actionSet.IsGlobal, false);
+
+                SkipEndMarker methodStart = new SkipEndMarker();
+                actionSet.AddAction(methodStart);
+
+                // Add the method to the stack.
+                var stack = new RecursiveMethodStack(this, returnHandler, continueSkipArray, methodStart);
+                actionSet.Translate.MethodStack.Add(stack);
+
+                // Parse the method block.
+                block.Translate(actionSet);
+
+                // Apply the returns.
+                if (returnHandler != null)
+                    returnHandler.ApplyReturnSkips();
+                
+                // Pop the recursive parameters
+                // TODO: Make this work with all sub scoped variables somehow
+                for (int i = 0; i < ParameterVars.Length; i++)
+                {
+                    var pop = (actionSet.IndexAssigner[ParameterVars[i]] as RecursiveIndexReference)?.Pop();
+                    if (pop != null) actionSet.AddAction(pop);
+                }
+
+                // Setup the continue skip
+                actionSet.ContinueSkip.Setup(actionSet);
+                actionSet.ContinueSkip.SetSkipCount(actionSet, Element.Part<V_LastOf>(continueSkipArray.GetVariable()));
+
+                // Remove the last recursive continue skip.
+                actionSet.AddAction(continueSkipArray.SetVariable(
+                    // Pop
+                    Element.Part<V_ArraySlice>(
+                        continueSkipArray.GetVariable(), 
+                        new V_Number(0),
+                        Element.Part<V_CountOf>(continueSkipArray.GetVariable()) - 1
+                    )
+                ));
+
+                // Loop if there are any values in the continue skip array.
+                actionSet.AddAction(Element.Part<A_LoopIf>(
+                    Element.Part<V_CountOf>(continueSkipArray.GetVariable()) > 0
+                ));
+
+                // Reset the continue skip.
+                actionSet.ContinueSkip.ResetSkipCount(actionSet);
+                actionSet.AddAction(continueSkipArray.SetVariable(0));
+
+                // Remove the method from the stack.
+                actionSet.Translate.MethodStack.Remove(stack);
+
+                return returnHandler?.GetReturnedValue();
+            }
+            // If it is, push the parameters to the stack.
+            else
+            {
+                for (int i = 0; i < ParameterVars.Length; i++)
+                {
+                    var varReference = actionSet.IndexAssigner[ParameterVars[i]];
+                    if (varReference is RecursiveIndexReference)
+                    {
+                        actionSet.AddAction(((RecursiveIndexReference)varReference).Push(
+                            (Element)parameterValues[i]
+                        ));
+                    }
+                }
+
+                // Add to the continue skip array.
+                V_Number skipLength = new V_Number();
+                actionSet.AddAction(lastCall.ContinueSkipArray.SetVariable(
+                    Element.Part<V_Append>(lastCall.ContinueSkipArray.GetVariable(), skipLength)
+                ));
+
+                actionSet.ContinueSkip.Setup(actionSet);
+                actionSet.ContinueSkip.SetSkipCount(actionSet, lastCall.MethodStart);
+                actionSet.AddAction(new A_Loop());
+
+                SkipEndMarker continueAt = new SkipEndMarker();
+                actionSet.AddAction(continueAt);
+                skipLength.Value = actionSet.ContinueSkip.GetSkipCount(continueAt).Value;
+
+                return lastCall.ReturnHandler?.GetReturnedValue();
+            }
+        }
+
+        public static void AssignParameters(ActionSet actionSet, Var[] parameterVars, IWorkshopTree[] parameterValues, bool recursive = false)
         {
             for (int i = 0; i < parameterVars.Length; i++)
             {
-                actionSet.IndexAssigner.Add(actionSet.VarCollection, parameterVars[i], actionSet.IsGlobal, parameterValues[i]);
+                actionSet.IndexAssigner.Add(actionSet.VarCollection, parameterVars[i], actionSet.IsGlobal, parameterValues[i], recursive);
 
                 // todo: improve this
                 if (actionSet.IndexAssigner[parameterVars[i]] is IndexReference)
@@ -309,9 +412,37 @@ namespace Deltin.Deltinteger.Parse
 
         override public IWorkshopTree Parse(ActionSet actionSet, IWorkshopTree[] parameterValues)
         {
-            // TODO: fix this
+            // Assign the parameters.
+            actionSet = actionSet.New(actionSet.IndexAssigner.CreateContained());
+            for (int i = 0; i < ParameterVars.Length; i++)
+                actionSet.IndexAssigner.Add(ParameterVars[i], parameterValues[i]);
+
+            // Parse the expression.
             return Expression.Parse(actionSet);
-            // throw new NotImplementedException();
+        }
+    }
+
+    public class MethodStack
+    {
+        public IParameterCallable Function { get; }
+
+        public MethodStack(IParameterCallable function)
+        {
+            Function = function;
+        }
+    }
+
+    public class RecursiveMethodStack : MethodStack
+    {
+        public ReturnHandler ReturnHandler { get; }
+        public IndexReference ContinueSkipArray { get; }
+        public SkipEndMarker MethodStart { get; }
+
+        public RecursiveMethodStack(DefinedMethod method, ReturnHandler returnHandler, IndexReference continueSkipArray, SkipEndMarker methodStart) : base(method)
+        {
+            ReturnHandler = returnHandler;
+            ContinueSkipArray = continueSkipArray;
+            MethodStart = methodStart;
         }
     }
 }

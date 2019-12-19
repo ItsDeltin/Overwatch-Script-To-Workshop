@@ -149,7 +149,7 @@ namespace Deltin.Deltinteger.Parse
         public void Translate(ActionSet actionSet)
         {
             ForeachBuilder foreachBuilder = new ForeachBuilder(actionSet, Array.Parse(actionSet));
-            actionSet.IndexAssigner.Add(actionSet.VarCollection, ForeachVar, actionSet.IsGlobal, foreachBuilder.IndexValue);
+            actionSet.IndexAssigner.Add(ForeachVar, foreachBuilder.IndexValue);
             foreachBuilder.Setup();
             Block.Translate(actionSet);
             foreachBuilder.Finish();

@@ -88,7 +88,7 @@ namespace Deltin.Deltinteger.Parse
                 foreach (var methodContext in script.Context.define_method())
                 {
                     var newMethod = new DefinedMethod(script, this, RulesetScope, methodContext);
-                    RulesetScope.AddMethod(newMethod, script.Diagnostics, DocRange.GetRange(methodContext.name));
+                    //RulesetScope.AddMethod(newMethod, script.Diagnostics, DocRange.GetRange(methodContext.name));
                 }
                 
                 // Get the macros.

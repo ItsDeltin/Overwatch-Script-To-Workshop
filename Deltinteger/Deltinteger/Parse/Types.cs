@@ -182,7 +182,8 @@ namespace Deltin.Deltinteger.Parse
 
             // Todo: Static methods/macros.
             foreach (var definedMethod in typeContext.define_method())
-                UseScope(false).AddMethod(new DefinedMethod(script, translateInfo, UseScope(false), definedMethod), script.Diagnostics, DocRange.GetRange(definedMethod.name));
+                new DefinedMethod(script, translateInfo, UseScope(false), definedMethod);
+                //UseScope(false).AddMethod(new DefinedMethod(script, translateInfo, UseScope(false), definedMethod), script.Diagnostics, DocRange.GetRange(definedMethod.name));
 
             foreach (var definedMacro in typeContext.define_macro())
                 UseScope(false).AddMethod(new DefinedMacro(script, translateInfo, UseScope(false), definedMacro), script.Diagnostics, DocRange.GetRange(definedMacro.name));

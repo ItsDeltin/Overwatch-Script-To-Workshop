@@ -48,7 +48,11 @@ namespace Deltin.Deltinteger.Parse
                 var newVar = Var.CreateVarFromContext(VariableDefineType.Parameter, script, translateInfo, context.define(i));
                 newVar.Finalize(methodScope);
                 vars[i] = newVar;
-                parameters[i] = new CodeParameter(context.define(i).name.Text, newVar.CodeType, new ExpressionOrWorkshopValue(newVar.InitialValue));
+
+                ExpressionOrWorkshopValue initialValue = null;
+                if (newVar.InitialValue != null) initialValue = new ExpressionOrWorkshopValue(newVar.InitialValue);
+
+                parameters[i] = new CodeParameter(context.define(i).name.Text, newVar.CodeType, initialValue);
             }
 
             return new ParameterParseResult(parameters, vars);

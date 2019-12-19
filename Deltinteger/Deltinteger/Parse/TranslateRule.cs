@@ -14,6 +14,7 @@ namespace Deltin.Deltinteger.Parse
         private RuleAction RuleAction { get; }
         public bool IsGlobal { get; }
         public ContinueSkip ContinueSkip { get; }
+        public List<MethodStack> MethodStack { get; } = new List<MethodStack>();
 
         public TranslateRule(ScriptFile script, DeltinScript deltinScript, RuleAction ruleAction)
         {

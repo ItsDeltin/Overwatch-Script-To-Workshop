@@ -10,8 +10,8 @@ namespace Deltin.Deltinteger.Parse
     public class IndexReference : IGettable
     {
         public WorkshopArrayBuilder ArrayBuilder { get; set; }
-        public WorkshopVariable WorkshopVariable { get; }
-        public Element[] Index { get; }
+        public WorkshopVariable WorkshopVariable { get; protected set; }
+        public Element[] Index { get; protected set; }
 
         public IndexReference(WorkshopArrayBuilder arrayBuilder, WorkshopVariable workshopVariable, params Element[] index)
         {
@@ -19,6 +19,7 @@ namespace Deltin.Deltinteger.Parse
             WorkshopVariable = workshopVariable;
             Index = index;
         }
+        protected IndexReference() {}
 
         public virtual IWorkshopTree GetVariable(Element targetPlayer = null)
         {
@@ -47,6 +48,12 @@ namespace Deltin.Deltinteger.Parse
         public RecursiveIndexReference(WorkshopArrayBuilder arrayBuilder, WorkshopVariable workshopVariable, params Element[] index) : base(arrayBuilder, workshopVariable, index)
         {
         }
+        public RecursiveIndexReference(IndexReference reference)
+        {
+            this.WorkshopVariable = reference.WorkshopVariable;
+            this.Index = reference.Index;
+            this.ArrayBuilder = reference.ArrayBuilder;
+        }
 
         public override IWorkshopTree GetVariable(Element targetPlayer = null)
         {
@@ -63,12 +70,27 @@ namespace Deltin.Deltinteger.Parse
             return base.ModifyVariable(operation, value, targetPlayer, CurrentIndex(targetPlayer, index));
         }
 
+        public Element[] Push(Element value)
+        {
+            return base.SetVariable(value, null, StackLength());
+        }
+
+        public Element[] Pop()
+        {
+            return base.SetVariable(Element.Part<V_ArraySlice>(base.GetVariable(), new V_Number(0), StackLength() - 1));
+        }
+
         private Element[] CurrentIndex(Element targetPlayer, params Element[] setAtIndex)
         {
             return ArrayBuilder<Element>.Build(
-                Element.Part<V_CountOf>(base.GetVariable(targetPlayer)) - 1,
+                StackLength() - 1,
                 setAtIndex
             );
+        }
+
+        private Element StackLength()
+        {
+            return Element.Part<V_CountOf>(base.GetVariable());
         }
     }
 
@@ -96,14 +118,18 @@ namespace Deltin.Deltinteger.Parse
             this.parent = parent;
         }
 
-        public void Add(VarCollection varCollection, Var var, bool isGlobal, IWorkshopTree referenceValue)
+        public void Add(VarCollection varCollection, Var var, bool isGlobal, IWorkshopTree referenceValue, bool recursive = false)
         {
             if (varCollection == null) throw new ArgumentNullException(nameof(varCollection));
             if (var == null)           throw new ArgumentNullException(nameof(var          ));
 
             // A gettable/settable variable
             if (var.Settable())
-                references.Add(var, varCollection.Assign(var, isGlobal));
+            {
+                var assigned = varCollection.Assign(var, isGlobal);
+                if (recursive) assigned = new RecursiveIndexReference(assigned);
+                references.Add(var, assigned);
+            }
             
             // Element reference
             else if (var.VariableType == VariableType.ElementReference)
@@ -117,7 +143,14 @@ namespace Deltin.Deltinteger.Parse
 
         public void Add(Var var, IndexReference reference)
         {
+            if (reference == null) throw new ArgumentNullException(nameof(reference));
             references.Add(var, reference);
+        }
+
+        public void Add(Var var, IWorkshopTree reference)
+        {
+            if (reference == null) throw new ArgumentNullException(nameof(reference));
+            references.Add(var, new WorkshopElementReference(reference));
         }
 
         public VarIndexAssigner CreateContained()
