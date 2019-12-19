@@ -202,6 +202,7 @@ namespace Deltin.Deltinteger.Parse
                 case DeltinScriptParser.S_whileContext s_while    : return new WhileAction(script, translateInfo, scope, s_while.@while());
                 case DeltinScriptParser.S_forContext s_for        : return new ForAction(script, translateInfo, scope, s_for.@for());
                 case DeltinScriptParser.S_foreachContext s_foreach: return new ForeachAction(script, translateInfo, scope, s_foreach.@foreach());
+                case DeltinScriptParser.S_returnContext s_return  : return new ReturnAction(script, translateInfo, scope, s_return.@return());
                 default: throw new Exception($"Could not determine the statement type '{statementContext.GetType().Name}'.");
             }
         }

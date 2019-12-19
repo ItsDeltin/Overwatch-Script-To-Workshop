@@ -49,9 +49,10 @@ namespace Deltin.Deltinteger.Parse
 
     public class ActionSet
     {
-        public TranslateRule Translate { get; }
-        public DocRange GenericErrorRange { get; }
-        public VarIndexAssigner IndexAssigner { get; }
+        public TranslateRule Translate { get; private set; }
+        public DocRange GenericErrorRange { get; private set; }
+        public VarIndexAssigner IndexAssigner { get; private set; }
+        public ReturnHandler ReturnHandler { get; private set; }
         public bool IsGlobal                => Translate.IsGlobal;
         public List<IActionList> ActionList => Translate.Actions;
         public VarCollection VarCollection  => Translate.DeltinScript.VarCollection;
@@ -63,26 +64,35 @@ namespace Deltin.Deltinteger.Parse
             GenericErrorRange = genericErrorRange;
             IndexAssigner = translate.DeltinScript.DefaultIndexAssigner;
         }
-        private ActionSet(ActionSet actionSet, DocRange genericErrorRange)
+        private ActionSet(ActionSet other)
         {
-            Translate = actionSet.Translate;
-            GenericErrorRange = genericErrorRange;
-            IndexAssigner = Translate.DeltinScript.DefaultIndexAssigner;
+            Translate = other.Translate;
+            GenericErrorRange = other.GenericErrorRange;
+            IndexAssigner = other.IndexAssigner;
+            ReturnHandler = other.ReturnHandler;
         }
-        private ActionSet(ActionSet actionSet, VarIndexAssigner assigner)
+        private ActionSet Clone()
         {
-            Translate = actionSet.Translate;
-            GenericErrorRange = actionSet.GenericErrorRange;
-            IndexAssigner = assigner;
+            return new ActionSet(this);
         }
 
         public ActionSet New(DocRange range)
         {
-            return new ActionSet(this, range);
+            var newActionSet = Clone();
+            newActionSet.GenericErrorRange = range ?? throw new ArgumentNullException(nameof(range));
+            return newActionSet;
         }
         public ActionSet New(VarIndexAssigner indexAssigner)
         {
-            return new ActionSet(this, indexAssigner);
+            var newActionSet = Clone();
+            newActionSet.IndexAssigner = indexAssigner ?? throw new ArgumentNullException(nameof(indexAssigner));
+            return newActionSet;
+        }
+        public ActionSet New(ReturnHandler returnHandler)
+        {
+            var newActionSet = Clone();
+            newActionSet.ReturnHandler = returnHandler ?? throw new ArgumentNullException(nameof(returnHandler));
+            return newActionSet;
         }
 
         public void AddAction(IWorkshopTree action)

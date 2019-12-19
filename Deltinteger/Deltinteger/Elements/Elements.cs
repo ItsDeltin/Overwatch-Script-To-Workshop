@@ -77,6 +77,7 @@ namespace Deltin.Deltinteger.Elements
         public string Name { get { return ElementList.WorkshopName; } }
 
         public IWorkshopTree[] ParameterValues { get; set; }
+        public bool Disabled { get; set; }
 
         public override string ToString()
         {
@@ -102,7 +103,9 @@ namespace Deltin.Deltinteger.Elements
 
             parameters.AddRange(elementParameters.Select(p => p.ToWorkshop(language)));
 
-            string result = I18n.I18n.Translate(language, Name);
+            string result = "";
+            if (!ElementList.IsValue && Disabled) result += "disabled ";
+            result += I18n.I18n.Translate(language, Name);
             if (parameters.Count != 0) result += "(" + string.Join(", ", parameters) + ")";
             if (!ElementList.IsValue) result += ";";
             return result;

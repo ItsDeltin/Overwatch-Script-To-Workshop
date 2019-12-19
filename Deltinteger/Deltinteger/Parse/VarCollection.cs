@@ -179,6 +179,7 @@ namespace Deltin.Deltinteger.Parse
             WriteCollection(stringBuilder, variableList(true));
             stringBuilder.AppendLine(Extras.Indent(1, false) + "player:");
             WriteCollection(stringBuilder, variableList(false));
+            stringBuilder.AppendLine("}");
         }
         private void WriteCollection(StringBuilder stringBuilder, List<WorkshopVariable> collection)
         {

@@ -4,10 +4,11 @@ using Deltin.Deltinteger.Elements;
 
 namespace Deltin.Deltinteger.Parse
 {
-    class WhileAction : IStatement
+    class WhileAction : IStatement, IBlockContainer
     {
-        public IExpression Condition { get; }
-        public BlockAction Block { get; }
+        private IExpression Condition { get; }
+        private BlockAction Block { get; }
+        private PathInfo Path { get; }
 
         public WhileAction(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.WhileContext whileContext)
         {
@@ -17,6 +18,7 @@ namespace Deltin.Deltinteger.Parse
                 Condition = DeltinScript.GetExpression(script, translateInfo, scope, whileContext.expr());
             
             Block = new BlockAction(script, translateInfo, scope, whileContext.block());
+            Path = new PathInfo(Block, DocRange.GetRange(whileContext.WHILE()), false);
         }
 
         public void Translate(ActionSet actionSet)
@@ -26,9 +28,14 @@ namespace Deltin.Deltinteger.Parse
             Block.Translate(actionSet);
             whileBuilder.Finish();
         }
+
+        public PathInfo[] GetPaths()
+        {
+            return new PathInfo[] { Path };
+        }
     }
 
-    class ForAction : IStatement
+    class ForAction : IStatement, IBlockContainer
     {
         private Var DefinedVariable { get; }
         private SetVariableAction InitialVarSet { get; }
@@ -36,6 +43,7 @@ namespace Deltin.Deltinteger.Parse
         private IExpression Condition { get; }
         private SetVariableAction SetVariableAction { get; }
         private BlockAction Block { get; }
+        private PathInfo Path { get; }
 
         public ForAction(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.ForContext forContext)
         {
@@ -57,10 +65,14 @@ namespace Deltin.Deltinteger.Parse
 
             // Get the block.
             if (forContext.block() != null)
+            {
                 Block = new BlockAction(script, translateInfo, varScope, forContext.block());
+                // Get the path info.
+                Path = new PathInfo(Block, DocRange.GetRange(forContext.FOR()), false);
+            }
             else
                 script.Diagnostics.Error("Expected a block.", DocRange.GetRange(forContext.RIGHT_PAREN()));
-        }
+            }
 
         public void Translate(ActionSet actionSet)
         {
@@ -88,6 +100,11 @@ namespace Deltin.Deltinteger.Parse
             
             whileBuilder.Finish();
         }
+
+        public PathInfo[] GetPaths()
+        {
+            return new PathInfo[] { Path };
+        }
     }
 
     class ForeachAction : IStatement
@@ -95,6 +112,7 @@ namespace Deltin.Deltinteger.Parse
         private Var ForeachVar { get; }
         private IExpression Array { get; }
         private BlockAction Block { get; }
+        private PathInfo Path { get; }
 
         public ForeachAction(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.ForeachContext foreachContext)
         {
@@ -111,13 +129,19 @@ namespace Deltin.Deltinteger.Parse
             }
             ForeachVar.Finalize(varScope);
 
+            // Get the array that will be iterated on. Syntax error if it is missing.
             if (foreachContext.expr() != null)
                 Array = DeltinScript.GetExpression(script, translateInfo, scope, foreachContext.expr());
             else
                 script.Diagnostics.Error("Expected expression.", DocRange.GetRange(foreachContext.IN()));
 
+            // Get the foreach block. Syntax error if it is missing.
             if (foreachContext.block() != null)
+            {
                 Block = new BlockAction(script, translateInfo, varScope, foreachContext.block());
+                // Get the path info.
+                Path = new PathInfo(Block, DocRange.GetRange(foreachContext.FOREACH()), false);
+            }
             else
                 script.Diagnostics.Error("Expected block.", DocRange.GetRange(foreachContext.RIGHT_PAREN()));
         }
