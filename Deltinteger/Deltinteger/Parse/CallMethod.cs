@@ -14,7 +14,7 @@ namespace Deltin.Deltinteger.Parse
 
         private DocRange NameRange { get; }
 
-        public CallMethodAction(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.MethodContext methodContext)
+        public CallMethodAction(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.MethodContext methodContext, bool usedAsExpression)
         {
             this.translateInfo = translateInfo;
             string methodName = methodContext.PART().GetText();
@@ -43,6 +43,9 @@ namespace Deltin.Deltinteger.Parse
                         ((DefinedFunction)CallingMethod).Call(script, NameRange);
                     
                     script.AddHover(DocRange.GetRange(methodContext), CallingMethod.GetLabel(true));
+
+                    if (usedAsExpression && !CallingMethod.DoesReturnValue())
+                        script.Diagnostics.Error("The chosen overload for " + methodName + " does not return a value.", NameRange);
                 }
             }
         }

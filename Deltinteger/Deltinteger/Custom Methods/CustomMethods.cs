@@ -47,7 +47,7 @@ namespace Deltin.Deltinteger.Elements
     public class CustomMethodData : IMethod
     {
         public string Name { get; }
-        public CodeParameter [] Parameters { get; }
+        public CodeParameter[] Parameters { get; }
         public CustomMethodType CustomMethodType { get; }
         public Type Type { get; }
 
@@ -93,10 +93,15 @@ namespace Deltin.Deltinteger.Elements
                     else
                         description = "This method cannot be used in conditions.";
                 }
-
-                //Wiki = new WikiMethod(Name, description, parameters);
             }
         }
+
+        private CustomMethodBase GetObject()
+        {
+            return (CustomMethodBase)Activator.CreateInstance(Type);
+        }
+
+        public bool DoesReturnValue() => CustomMethodType == CustomMethodType.Value || CustomMethodType == CustomMethodType.MultiAction_Value;
 
         public IWorkshopTree Parse(ActionSet actionSet, IWorkshopTree[] values)
         {
@@ -106,11 +111,6 @@ namespace Deltin.Deltinteger.Elements
             // TODO: Add an ActionSet property to CustomMethodBase.
             // TODO: Get the custom method result.
             return null;
-        }
-
-        private CustomMethodBase GetObject()
-        {
-            return (CustomMethodBase)Activator.CreateInstance(Type);
         }
 
         public CompletionItem GetCompletion()

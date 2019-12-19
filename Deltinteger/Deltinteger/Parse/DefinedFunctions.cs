@@ -54,6 +54,8 @@ namespace Deltin.Deltinteger.Parse
             translateInfo.AddSymbolLink(this, new Location(script.Uri, callRange));
         }
 
+        public virtual bool DoesReturnValue() => true;
+
         public string GetLabel(bool markdown) => HoverHandler.GetLabel(Name, Parameters, markdown, null);
 
         public abstract IWorkshopTree Parse(ActionSet actionSet, IWorkshopTree[] parameterValues);
@@ -183,6 +185,8 @@ namespace Deltin.Deltinteger.Parse
         {
             foreach (var path in container.GetPaths()) CheckPath(script, path);
         }
+
+        override public bool DoesReturnValue() => doesReturnValue;
 
         override public IWorkshopTree Parse(ActionSet actionSet, IWorkshopTree[] parameterValues)
         {

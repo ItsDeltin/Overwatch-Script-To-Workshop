@@ -215,6 +215,10 @@ namespace Deltin.Deltinteger.Elements
         {
             return Elements.FirstOrDefault(e => e.Name == codeName);
         }
+        public static ElementList FromType(Type type)
+        {
+            return Elements.FirstOrDefault(element => element.Type == type);
+        }
 
         public string Name { get; }
         public string WorkshopName { get; }
@@ -272,6 +276,8 @@ namespace Deltin.Deltinteger.Elements
             return (Element)Activator.CreateInstance(Type);
         }
 
+        public bool DoesReturnValue() => IsValue;
+
         public IWorkshopTree Parse(ActionSet actionSet, IWorkshopTree[] values)
         {
             Element element = GetObject();
@@ -283,11 +289,6 @@ namespace Deltin.Deltinteger.Elements
                 return null;
             }
             else return element;
-        }
-
-        public static ElementList FromType(Type type)
-        {
-            return Elements.FirstOrDefault(element => element.Type == type);
         }
 
         public string GetLabel(bool markdown) => HoverHandler.GetLabel(Name, Parameters, markdown, Wiki?.Description);

@@ -9,30 +9,55 @@ namespace Deltin.Deltinteger.Parse
     public class TranslateRule
     {
         public readonly List<IActionList> Actions = new List<IActionList>();
+        public ActionSet ActionSet { get; }
         public DeltinScript DeltinScript { get; }
-        public ScriptFile Script { get; }
-        private RuleAction RuleAction { get; }
         public bool IsGlobal { get; }
         public ContinueSkip ContinueSkip { get; }
         public List<MethodStack> MethodStack { get; } = new List<MethodStack>();
 
-        public TranslateRule(ScriptFile script, DeltinScript deltinScript, RuleAction ruleAction)
+        private string Name { get; }
+        private RuleEvent EventType { get; }
+        private Team Team { get; }
+        private PlayerSelector Player { get; }
+        private bool Disabled { get; }
+
+        public TranslateRule(DeltinScript deltinScript, RuleAction ruleAction)
         {
             DeltinScript = deltinScript;
-            Script = script;
-            RuleAction = ruleAction;
-            IsGlobal = RuleAction.EventType == RuleEvent.OngoingGlobal;
+            IsGlobal = ruleAction.EventType == RuleEvent.OngoingGlobal;
+            Name = ruleAction.Name;
+            EventType = ruleAction.EventType;
+            Team = ruleAction.Team;
+            Player = ruleAction.Player;
+            Disabled = ruleAction.Disabled;
             ContinueSkip = new ContinueSkip(this);
 
-            var actionSet = new ActionSet(this, null, Actions);
-            ruleAction.Block.Translate(actionSet);
+            ActionSet = new ActionSet(this, null, Actions);
+            ruleAction.Block.Translate(ActionSet);
+        }
+
+        public TranslateRule(DeltinScript deltinScript, string name, RuleEvent eventType, Team team, PlayerSelector player, bool disabled = false)
+        {
+            DeltinScript = deltinScript;
+            IsGlobal = eventType == RuleEvent.OngoingGlobal;
+            Name = name;
+            EventType = eventType;
+            Team = team;
+            Player = player;
+            Disabled = disabled;
+            ContinueSkip = new ContinueSkip(this);
+            ActionSet = new ActionSet(this, null, Actions);
+        }
+
+        public TranslateRule(DeltinScript deltinScript, string name, RuleEvent eventType) : this(deltinScript, name, eventType, Team.All, PlayerSelector.All)
+        {
         }
 
         public Rule GetRule()
         {
-            Rule rule = new Rule(RuleAction.Name, RuleAction.EventType, RuleAction.Team, RuleAction.Player);
+            Rule rule = new Rule(Name, EventType, Team, Player);
             rule.Actions = GetActions();
-            rule.Disabled = RuleAction.Disabled;
+            rule.Disabled = Disabled;
             return rule;
         }
 

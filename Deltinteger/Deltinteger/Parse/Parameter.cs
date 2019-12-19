@@ -260,7 +260,6 @@ namespace Deltin.Deltinteger.Parse
             }
             GetBestOption();
 
-            // todo: picky parameter ranges
             ParameterRanges = new DocRange[Overload.Parameters.Length];
             IExpression[] values = new IExpression[Overload.Parameters.Length];
             for (int i = 0; i < values.Length; i++)

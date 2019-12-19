@@ -19,6 +19,7 @@ namespace Deltin.Deltinteger
     {
         CodeType ReturnType { get; }
         IWorkshopTree Parse(ActionSet actionSet, IWorkshopTree[] values);
+        bool DoesReturnValue();
     }
 
     public interface ISkip

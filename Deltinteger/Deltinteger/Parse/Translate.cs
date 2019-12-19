@@ -20,6 +20,8 @@ namespace Deltin.Deltinteger.Parse
         public VarCollection VarCollection { get; } = new VarCollection();
         private List<Var> rulesetVariables { get; } = new List<Var>();
         public VarIndexAssigner DefaultIndexAssigner { get; } = new VarIndexAssigner();
+        public TranslateRule InitialGlobal { get; private set; }
+        public TranslateRule InitialPlayer { get; private set; }
 
         public DeltinScript(Diagnostics diagnostics, ScriptFile rootRuleset)
         {
@@ -122,18 +124,36 @@ namespace Deltin.Deltinteger.Parse
         void ToWorkshop()
         {
             VarCollection.Setup();
+            InitialGlobal = new TranslateRule(this, "Initial Global", RuleEvent.OngoingGlobal);
+            InitialPlayer = new TranslateRule(this, "Initial Player", RuleEvent.OngoingPlayer);
 
             foreach (var variable in rulesetVariables)
             {
                 // Assign the variable an index.
-                // TODO: set initial value
                 DefaultIndexAssigner.Add(VarCollection, variable, true, null);
+
+                var assigner = DefaultIndexAssigner[variable] as IndexReference;
+                if (assigner != null)
+                {
+                    var addToInitialRule = GetInitialRule(variable.VariableType == VariableType.Global);
+
+                    addToInitialRule.ActionSet.AddAction(assigner.SetVariable(
+                        (Element)variable.InitialValue.Parse(addToInitialRule.ActionSet)
+                    ));
+                }
             }
 
             List<Rule> ruleElements = new List<Rule>();
+
+            if (InitialGlobal.Actions.Count > 0)
+                ruleElements.Add(InitialGlobal.GetRule());
+            
+            if (InitialPlayer.Actions.Count > 0)
+                ruleElements.Add(InitialPlayer.GetRule());
+
             foreach (var rule in rules)
             {
-                var translate = new TranslateRule(rule.Script, this, rule);
+                var translate = new TranslateRule(this, rule);
                 ruleElements.Add(translate.GetRule());
             }
 
@@ -177,6 +197,11 @@ namespace Deltin.Deltinteger.Parse
         }
         public Dictionary<ICallable, List<Location>> GetSymbolLinks() => callRanges;
 
+        private TranslateRule GetInitialRule(bool isGlobal)
+        {
+            return isGlobal ? InitialGlobal : InitialPlayer;
+        }
+
         public static IStatement GetStatement(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.StatementContext statementContext)
         {
             switch (statementContext)
@@ -186,7 +211,7 @@ namespace Deltin.Deltinteger.Parse
                     newVar.Finalize(scope);
                     return new DefineAction(newVar);
                 }
-                case DeltinScriptParser.S_methodContext method    : return new CallMethodAction(script, translateInfo, scope, method.method());
+                case DeltinScriptParser.S_methodContext method    : return new CallMethodAction(script, translateInfo, scope, method.method(), false);
                 case DeltinScriptParser.S_varsetContext varset    : return new SetVariableAction(script, translateInfo, scope, varset.varset());
                 case DeltinScriptParser.S_exprContext s_expr      : {
                     var expr = GetExpression(script, translateInfo, scope, s_expr.expr());
@@ -242,7 +267,7 @@ namespace Deltin.Deltinteger.Parse
                     else if (element is ScopedEnumMember) return (ScopedEnumMember)element;
                     else throw new NotImplementedException();
                 }
-                case DeltinScriptParser.E_methodContext method: return new CallMethodAction(script, translateInfo, scope, method.method());
+                case DeltinScriptParser.E_methodContext method: return new CallMethodAction(script, translateInfo, scope, method.method(), true);
                 case DeltinScriptParser.E_new_objectContext newObject: return new CreateObjectAction(script, translateInfo, scope, newObject.create_object());
                 case DeltinScriptParser.E_expr_treeContext exprTree: return new ExpressionTree(script, translateInfo, scope, exprTree);
                 case DeltinScriptParser.E_array_indexContext arrayIndex: return new ValueInArrayAction(script, translateInfo, scope, arrayIndex);
