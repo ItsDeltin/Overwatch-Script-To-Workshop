@@ -111,6 +111,7 @@ namespace Deltin.Deltinteger.LanguageServer
         public TextDocumentItem TextDocumentFromUri(Uri uri)
         {
             for (int i = 0; i < Documents.Count; i++)
+                // TODO-URI: Should use Uri.Compare? 
                 if (Documents[i].Uri == uri)
                     return Documents[i];
             return null;

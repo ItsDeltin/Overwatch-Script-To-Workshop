@@ -206,8 +206,7 @@ namespace Deltin.Deltinteger.Parse
             AssignParameters(actionSet, ParameterVars, parameterValues);
             block.Translate(actionSet);
 
-            returnHandler.ApplyReturnSkips();
-
+            returnHandler?.ApplyReturnSkips();
             return returnHandler?.GetReturnedValue();
         }
 

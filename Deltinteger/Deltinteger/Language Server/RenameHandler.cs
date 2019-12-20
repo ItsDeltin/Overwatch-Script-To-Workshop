@@ -82,6 +82,7 @@ namespace Deltin.Deltinteger.LanguageServer
 
             foreach (var link in links)
                 foreach (var loc in link.Value)
+                    // TODO-URI: Should use Uri.Compare?
                     if (loc.uri == uri && loc.range.IsInside(position))
                         return new SymbolLink(link, loc.range);
             

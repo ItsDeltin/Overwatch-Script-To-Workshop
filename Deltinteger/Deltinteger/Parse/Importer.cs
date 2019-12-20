@@ -24,6 +24,7 @@ namespace Deltin.Deltinteger.Parse
 
         public ScriptParseInfo GetScript(Uri uri)
         {
+            // TODO-URI: Should use Uri.Compare?
             string doc = DocumentHandler?.Documents.FirstOrDefault(td => td.Uri == uri)?.Text;
 
             if (doc != null)
@@ -43,6 +44,7 @@ namespace Deltin.Deltinteger.Parse
         private ImportedScript GetImportedFile(Uri uri)
         {
             foreach (ImportedScript importedFile in ImportedFiles)
+                // TODO-URI: Should use Uri.Compare?
                 if (importedFile.Uri == uri)
                     return importedFile;
             var newImportedFile = new ImportedScript(uri);
@@ -53,6 +55,7 @@ namespace Deltin.Deltinteger.Parse
         private DocumentScript GetImportedEditingFile(Uri uri)
         {
             foreach (DocumentScript importedFile in EditingImportedFiles)
+                // TODO-URI: Should use Uri.Compare?
                 if (importedFile.Uri == uri)
                     return importedFile;
             var newImportedFile = new DocumentScript(uri);

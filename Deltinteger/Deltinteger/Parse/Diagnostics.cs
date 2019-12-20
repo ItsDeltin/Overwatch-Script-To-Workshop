@@ -51,6 +51,7 @@ namespace Deltin.Deltinteger.Parse
 
         private void ThrowIfFileIsAlreadyAdded(Uri uri)
         {
+            // TODO-URI: Should use Uri.Compare?
             if (diagnosticFiles.Any(diag => diag.Uri == uri))
                 throw new Exception("A diagnostic tree for the file '" + uri + "' was already created.");
         }
