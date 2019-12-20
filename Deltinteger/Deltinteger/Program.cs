@@ -117,7 +117,8 @@ namespace Deltin.Deltinteger
 
             Diagnostics diagnostics = new Diagnostics();
             ScriptFile root = new ScriptFile(diagnostics, new Uri(parseFile), text);
-            DeltinScript deltinScript = new DeltinScript(diagnostics, root);
+            // TODO: Replace null with a filegetter.
+            DeltinScript deltinScript = new DeltinScript(null, diagnostics, root);
             diagnostics.PrintDiagnostics(Log);
             Finished();
         }

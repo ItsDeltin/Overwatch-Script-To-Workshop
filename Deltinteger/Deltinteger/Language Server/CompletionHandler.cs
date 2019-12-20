@@ -60,9 +60,9 @@ namespace Deltin.Deltinteger.LanguageServer
                 if (inRange[0].Priority)
                 {
                     items.Clear();
-                    items.AddRange(inRange[0].Scope.GetCompletion(completionParams.Position, true));
+                    items.AddRange(inRange[0].GetCompletion(completionParams.Position, true));
                 }
-                else items.AddRange(inRange[0].Scope.GetCompletion(completionParams.Position, false));
+                else items.AddRange(inRange[0].GetCompletion(completionParams.Position, false));
             }
             else items.AddRange(_globalScope.GetCompletion(null, false));
             return items;

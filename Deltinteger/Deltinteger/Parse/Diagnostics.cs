@@ -143,16 +143,13 @@ namespace Deltin.Deltinteger.Parse
 
     public class ErrorListener : BaseErrorListener
     {
-        private readonly FileDiagnostics diagnostics;
+        public List<Diagnostic> Diagnostics { get; } = new List<Diagnostic>();
 
-        public ErrorListener(FileDiagnostics diagnostics)
-        {
-            this.diagnostics = diagnostics;
-        }
+        public ErrorListener() {}
 
         public override void SyntaxError(IRecognizer recognizer, IToken offendingSymbol, int line, int charPositionInLine, string msg, RecognitionException e)
         {
-            diagnostics.Error(msg, DocRange.GetRange(offendingSymbol));
+            Diagnostics.Add(new Diagnostic(msg, DocRange.GetRange(offendingSymbol), Diagnostic.Error));
         }
     }
 }

@@ -2,14 +2,18 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.IO;
 using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.Elements;
-using Antlr4.Runtime;
+using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
+using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItemKind;
 
 namespace Deltin.Deltinteger.Parse
 {
     public class DeltinScript
     {
+        private FileGetter FileGetter { get; }
+        private Importer Importer { get; } = new Importer();
         public Diagnostics Diagnostics { get; }
         public List<ScriptFile> ScriptFiles { get; } = new List<ScriptFile>();
         private List<CodeType> types { get; } = new List<CodeType>();
@@ -23,8 +27,9 @@ namespace Deltin.Deltinteger.Parse
         public TranslateRule InitialGlobal { get; private set; }
         public TranslateRule InitialPlayer { get; private set; }
 
-        public DeltinScript(Diagnostics diagnostics, ScriptFile rootRuleset)
+        public DeltinScript(FileGetter fileGetter, Diagnostics diagnostics, ScriptFile rootRuleset)
         {
+            FileGetter = fileGetter;
             Diagnostics = diagnostics;
             types.AddRange(CodeType.DefaultTypes);
             CollectScriptFiles(rootRuleset);
@@ -41,33 +46,54 @@ namespace Deltin.Deltinteger.Parse
         {
             ScriptFiles.Add(scriptFile);
 
+            FileImporter importer = new FileImporter(scriptFile.Diagnostics, Importer);
+
             // Get the imported files.
             if (scriptFile.Context.import_file() != null)
             {
-                List<string> importedFiles = new List<string>();
                 foreach (var importFileContext in scriptFile.Context.import_file())
-                    GetImportedFile(scriptFile, importFileContext, importedFiles);
+                {
+                    string directory = GetImportedFile(scriptFile, importer, importFileContext);
+                    AddImportCompletion(scriptFile, directory, DocRange.GetRange(importFileContext.STRINGLITERAL()));
+                }
             }
         }
 
-        void GetImportedFile(ScriptFile importer, DeltinScriptParser.Import_fileContext importFileContext, List<string> importedFiles)
+        static void AddImportCompletion(ScriptFile script, string directory, DocRange range)
         {
-            Importer importFile = new Importer(importer.Diagnostics, importedFiles, Extras.RemoveQuotes(importFileContext.STRINGLITERAL().GetText()), importer.Uri.AbsoluteUri, new Location(importer.Uri, DocRange.GetRange(importFileContext)));
-            if (importFile.AlreadyImported) return;
+            List<CompletionItem> completionItems = new List<CompletionItem>();
+            var directories = Directory.GetDirectories(directory);
+            var files = Directory.GetFiles(directory);
 
-            importedFiles.Add(importFile.ResultingPath);
+            foreach (var dir in directories)
+                completionItems.Add(new CompletionItem() {
+                    Label = Path.GetFileName(dir),
+                    Detail = dir,
+                    Kind = CompletionItemKind.Folder
+                });
+            
+            foreach (var file in files)
+                completionItems.Add(new CompletionItem() {
+                    Label = Path.GetFileName(file),
+                    Detail = file,
+                    Kind = CompletionItemKind.File
+                });
+            
+            script.AddCompletionRange(new CompletionRange(completionItems.ToArray(), range, true));
+        }
 
-            var cache = importFile.FileData;
-            ScriptFile importedScript;
+        string GetImportedFile(ScriptFile script, FileImporter importer, DeltinScriptParser.Import_fileContext importFileContext)
+        {
+            var importResult = importer.Import(
+                DocRange.GetRange(importFileContext.STRINGLITERAL()),
+                Extras.RemoveQuotes(importFileContext.STRINGLITERAL().GetText()),
+                script.Uri
+            );
+            if (!importResult.Successful) return importResult.Directory;
 
-            if (cache.Update() || cache.Cache == null)
-            {
-                importedScript = new ScriptFile(Diagnostics, new Uri(importFile.ResultingPath), cache.Content);
-                cache.Cache = importedScript;
-            }
-            else importedScript = (ScriptFile)cache.Cache;
-
+            ScriptFile importedScript = new ScriptFile(Diagnostics, importResult.Uri, FileGetter.GetScript(importResult.Uri));
             CollectScriptFiles(importedScript);
+            return importResult.Directory;
         }
 
         private List<RuleAction> rules { get; } = new List<RuleAction>();
@@ -184,7 +210,7 @@ namespace Deltin.Deltinteger.Parse
             return GetCodeType(name, null, null) != null;
         }
 
-        public ScriptFile ScriptFromUri(Uri uri) => ScriptFiles.FirstOrDefault(script => script.Uri == uri);
+        public ScriptFile ScriptFromUri(Uri uri) => ScriptFiles.FirstOrDefault(script => script.Uri == uri.Clean());
 
         private Dictionary<ICallable, List<Location>> callRanges { get; } = new Dictionary<ICallable, List<Location>>();
         public void AddSymbolLink(ICallable callable, Location calledFrom)

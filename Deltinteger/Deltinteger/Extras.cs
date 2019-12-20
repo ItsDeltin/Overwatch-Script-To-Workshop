@@ -93,6 +93,17 @@ namespace Deltin.Deltinteger
             }
             return result;
         }
+
+        public static string FilePath(this Uri uri)
+        {
+            //return Uri.UnescapeDataString(uri.AbsolutePath);
+            return uri.LocalPath.TrimStart('/');
+        }
+
+        public static Uri Clean(this Uri uri)
+        {
+            return new Uri(uri.FilePath());
+        }
     }
 
     public class TabStringBuilder

@@ -37,7 +37,7 @@ namespace Deltin.Deltinteger.Parse
         public PathmapClassConstructor(PathmapClass pathMapClass) : base(pathMapClass, null, AccessLevel.Public)
         {
             Parameters = new CodeParameter[] {
-                new CodeParameter("pathmapFile", null, null, "A string that resolves to the file path to use.")
+                new CodeParameter("pathmapFile", null, null, "File path of the pathmap to use.")
             };
         }
 

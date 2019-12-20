@@ -61,6 +61,7 @@ namespace Deltin.Deltinteger.LanguageServer
         }
 
         public DocumentHandler DocumentHandler { get; private set; }
+        public FileGetter FileGetter { get; private set; }
 
         async Task RunServer()
         {
@@ -72,6 +73,7 @@ namespace Deltin.Deltinteger.LanguageServer
             Serilog.Log.Information("Deltinteger Language Server");
 
             DocumentHandler = new DocumentHandler(this);
+            FileGetter = new FileGetter(DocumentHandler);
             ConfigurationHandler configurationHandler = new ConfigurationHandler(this);
             CompletionHandler completionHandler = new CompletionHandler(this);
             SignatureHandler signatureHandler = new SignatureHandler(this);

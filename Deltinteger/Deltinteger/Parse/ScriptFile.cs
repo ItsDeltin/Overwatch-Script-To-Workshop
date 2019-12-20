@@ -7,14 +7,18 @@ using Deltin.Deltinteger.LanguageServer;
 using Antlr4.Runtime;
 using Antlr4.Runtime.Tree;
 using LocationLink = OmniSharp.Extensions.LanguageServer.Protocol.Models.LocationLink;
+using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
+using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItemKind;
 
 namespace Deltin.Deltinteger.Parse
 {
     public class ScriptFile
     {
-        public DeltinScriptParser.RulesetContext Context { get; }
         public Uri Uri { get; }
         public FileDiagnostics Diagnostics { get; }
+
+        private ScriptParseInfo ScriptParseInfo { get; }
+        public DeltinScriptParser.RulesetContext Context { get; }
         public IToken[] Tokens { get; }
 
         private List<CompletionRange> completionRanges { get; } = new List<CompletionRange>();
@@ -22,27 +26,17 @@ namespace Deltin.Deltinteger.Parse
         private List<LocationLink> callLinks { get; } = new List<LocationLink>();
         private List<HoverRange> hoverRanges { get; } = new List<HoverRange>();
 
-        public ScriptFile(Diagnostics diagnostics, Uri uri, string content)
+        public ScriptFile(Diagnostics diagnostics, Uri uri, ScriptParseInfo scriptParseInfo)
         {
             Uri = uri;
-            AntlrInputStream inputStream = new AntlrInputStream(content);
-
-            // Lexer
-            DeltinScriptLexer lexer = new DeltinScriptLexer(inputStream);
-            CommonTokenStream commonTokenStream = new CommonTokenStream(lexer);
-            commonTokenStream.Fill();
-            Tokens = commonTokenStream.GetTokens().ToArray();
-            commonTokenStream.Reset();
-
             Diagnostics = diagnostics.FromUri(Uri);
-
-            // Parse
-            DeltinScriptParser parser = new DeltinScriptParser(commonTokenStream);
-            var errorListener = new ErrorListener(Diagnostics);
-            parser.RemoveErrorListeners();
-            parser.AddErrorListener(errorListener);
-
-            Context = parser.ruleset();
+            Diagnostics.AddDiagnostics(scriptParseInfo.StructuralDiagnostics.ToArray());
+            ScriptParseInfo = scriptParseInfo;
+            Context = ScriptParseInfo.Context;
+            Tokens = scriptParseInfo.Tokens;
+        }
+        public ScriptFile(Diagnostics diagnostics, Uri uri, string content) : this(diagnostics, uri, new ScriptParseInfo(content))
+        {
         }
 
         public IToken NextToken(ITerminalNode token)
@@ -88,15 +82,29 @@ namespace Deltin.Deltinteger.Parse
 
     public class CompletionRange
     {
-        public Scope Scope { get; }
+        private Scope Scope { get; }
+        private CompletionItem[] CompletionItems { get; }
         public DocRange Range { get; }
         public bool Priority { get; }
 
         public CompletionRange(Scope scope, DocRange range, bool priority = false)
         {
+            Scope = scope ?? throw new ArgumentNullException(nameof(scope));
             Priority = priority;
-            Scope = scope;
             Range = range;
+        }
+
+        public CompletionRange(CompletionItem[] completionItems, DocRange range, bool priority = false)
+        {
+            CompletionItems = completionItems ?? throw new ArgumentNullException(nameof(completionItems));
+            Priority = priority;
+            Range = range;
+        }
+
+        public CompletionItem[] GetCompletion(Pos pos, bool immediate)
+        {
+            return Scope?.GetCompletion(pos, immediate) ?? CompletionItems;
+
         }
     }
     public class HoverRange

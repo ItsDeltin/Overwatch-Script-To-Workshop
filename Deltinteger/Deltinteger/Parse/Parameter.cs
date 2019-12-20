@@ -31,6 +31,16 @@ namespace Deltin.Deltinteger.Parse
             DefaultValue = defaultValue;
         }
 
+        public string GetLabel(bool markdown)
+        {
+            string type;
+            if (Type == null) type = "define";
+            else type = Type.Name;
+
+            if (!markdown) return $"{type} {Name}";
+            else return $"**{type}** {Name}";
+        }
+
         override public string ToString()
         {
             if (Type == null) return Name;
@@ -56,16 +66,6 @@ namespace Deltin.Deltinteger.Parse
             }
 
             return new ParameterParseResult(parameters, vars);
-        }
-
-        public string GetLabel(bool markdown)
-        {
-            string type;
-            if (Type == null) type = "define";
-            else type = Type.Name;
-
-            if (!markdown) return $"{type} {Name}";
-            else return $"**{type}** {Name}";
         }
 
         public static string GetLabels(CodeParameter[] parameters, bool markdown)
