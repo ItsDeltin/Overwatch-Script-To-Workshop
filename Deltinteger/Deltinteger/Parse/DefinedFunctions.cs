@@ -20,18 +20,22 @@ namespace Deltin.Deltinteger.Parse
         public bool WholeContext { get; } = true;
         public StringOrMarkupContent Documentation { get; } = null;
 
-        private DeltinScript translateInfo { get; }
+        protected ScriptFile script { get; }
+        protected DeltinScript translateInfo { get; }
         protected Scope methodScope { get; }
         protected Var[] ParameterVars { get; private set; }
         
-        public DefinedFunction(DeltinScript translateInfo, Scope scope, string name, Location definedAt)
+        public DefinedFunction(ScriptFile script, DeltinScript translateInfo, Scope scope, string name, Location definedAt)
         {
             Name = name;
             DefinedAt = definedAt;
+            this.script = script;
             this.translateInfo = translateInfo;
             methodScope = scope.Child();
             translateInfo.AddSymbolLink(this, definedAt);
         }
+
+        public virtual void SetupBlock() {}
 
         protected static CodeType GetCodeType(ScriptFile script, DeltinScript translateInfo, string name, DocRange range)
         {
@@ -72,8 +76,9 @@ namespace Deltin.Deltinteger.Parse
 
     public class DefinedMethod : DefinedFunction
     {
+        private DeltinScriptParser.Define_methodContext context;
         public bool IsRecursive { get; }
-        private BlockAction block { get; }
+        private BlockAction block { get; set; }
         private bool doesReturnValue { get; set; }
         /// <summary>
         /// If there is only one return statement, return the reference to
@@ -83,8 +88,10 @@ namespace Deltin.Deltinteger.Parse
         private bool multiplePaths { get; set; }
 
         public DefinedMethod(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.Define_methodContext context)
-            : base(translateInfo, scope, context.name.Text, new Location(script.Uri, DocRange.GetRange(context.name)))
+            : base(script, translateInfo, scope, context.name.Text, new Location(script.Uri, DocRange.GetRange(context.name)))
         {
+            this.context = context;
+
             // Check if recursion is enabled.
             IsRecursive = context.RECURSIVE() != null;
 
@@ -100,11 +107,13 @@ namespace Deltin.Deltinteger.Parse
 
             scope.AddMethod(this, script.Diagnostics, DocRange.GetRange(context.name));
 
-            block = new BlockAction(script, translateInfo, methodScope, context.block());
-
             // Add the hover info.
             script.AddHover(DocRange.GetRange(context.name), GetLabel(true));
+        }
 
+        public override void SetupBlock()
+        {
+            block = new BlockAction(script, translateInfo, methodScope, context.block());
             ValidateReturns(script, context);
         }
 
@@ -397,7 +406,7 @@ namespace Deltin.Deltinteger.Parse
         public IExpression Expression { get; private set; }
 
         public DefinedMacro(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.Define_macroContext context)
-            : base(translateInfo, scope, context.name.Text, new Location(script.Uri, DocRange.GetRange(context)))
+            : base(script, translateInfo, scope, context.name.Text, new Location(script.Uri, DocRange.GetRange(context)))
         {
             AccessLevel = context.accessor().GetAccessLevel();
             SetupParameters(script, context.setParameters());

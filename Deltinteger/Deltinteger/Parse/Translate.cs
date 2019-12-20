@@ -111,11 +111,13 @@ namespace Deltin.Deltinteger.Parse
 
         void Translate()
         {
+            List<DefinedMethod> applyMethods = new List<DefinedMethod>();
+
             // Get the types
             foreach (ScriptFile script in ScriptFiles)
             foreach (var typeContext in script.Context.type_define())
             {
-                var newType = new DefinedType(script, this, GlobalScope, typeContext);
+                var newType = new DefinedType(script, this, GlobalScope, typeContext, applyMethods);
                 types.Add(newType);
                 definedTypes.Add(newType);
             }
@@ -127,6 +129,7 @@ namespace Deltin.Deltinteger.Parse
                 foreach (var methodContext in script.Context.define_method())
                 {
                     var newMethod = new DefinedMethod(script, this, RulesetScope, methodContext);
+                    applyMethods.Add(newMethod);
                     //RulesetScope.AddMethod(newMethod, script.Diagnostics, DocRange.GetRange(methodContext.name));
                 }
                 
@@ -149,6 +152,9 @@ namespace Deltin.Deltinteger.Parse
                 if (newVar.VariableType == VariableType.Player)
                     PlayerVariableScope.AddVariable(newVar, null, null);
             }
+
+            foreach (var apply in applyMethods)
+                apply.SetupBlock();
 
             // Get the rules
             foreach (ScriptFile script in ScriptFiles)
