@@ -3,40 +3,37 @@
 	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
 	"name": "Overwatch Script To Workshop",
 	"patterns": [
-		{
-			"include": "#keywords"
-		},
-		{
-			"include": "#strings"
-		},
-		{
-			"include": "#comments"
-		},
-		{
-			"include": "#numbers"
-		},
-		{
-			"include": "#methods"
-		},
-		{
-			"include": "#variables"
-		}
+		{ "include": "#methods" },
+		{ "include": "#keywords" },
+		{ "include": "#strings" },
+		{ "include": "#comments" },
+		{ "include": "#numbers" },
+		{ "include": "#variables" }
 	],
 	"repository": {
+		"methods": {
+			"name": "entity.name.function",
+			"begin": "[a-zA-Z_0-9]+\\(",
+			"end": "\\)",
+			"patterns": [{"include": "#parameter"}, {"include": "#expressions"}]
+		},
+		"parameter": {
+			"match": "((define)|([a-zA-Z_0-9]+)) +([a-zA-Z_0-9]+)",
+			"captures": {
+				"2": { "name": "keyword.control" },
+				"3": { "name": "entity.name.type" },
+				"4": { "name": "variable.parameter" }
+			}
+		},
 		"expressions": {
 			"patterns": [
+				{"include": "#methods"},
 				{"include": "#keywords"}, 
-				{"include": "#strings"}, 
+				{"include": "#strings"},
 				{"include": "#comments"}, 
-				{"include": "#numbers"}, 
-				{"include": "#methods"}, 
+				{"include": "#numbers"},
 				{"include": "#variables"}
 			]
-		},
-		
-		"keywords": {
-			"name": "keyword.control",
-			"match": "\\b(if|else|while|for|foreach|return|in|define|rule|true|false|usevar|method|recursive|playervar|globalvar|buildervar|null|struct|class|public|private|static|new|this|import|as|delete|root|macro)\\b"
 		},
 		"strings": {
 			"name": "string.quoted.double",
@@ -64,11 +61,9 @@
 			"name": "constant.numeric",
 			"match": "\\b-?[0-9]+(.[0-9]+)?\\b"
 		},
-		"methods": {
-			"name": "entity.name.function",
-			"begin": "[a-zA-Z_0-9]+\\(",
-			"end": "\\)",
-			"patterns": [{"include": "#expressions"}]
+		"keywords": {
+			"name": "keyword.control",
+			"match": "\\b(if|else|while|for|foreach|return|in|define|rule|true|false|usevar|method|recursive|playervar|globalvar|buildervar|null|struct|class|public|private|static|new|this|import|as|delete|root|macro)\\b"
 		},
 		"variables": {
 			"name": "variable",

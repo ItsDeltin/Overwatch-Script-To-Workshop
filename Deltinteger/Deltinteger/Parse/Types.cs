@@ -425,6 +425,8 @@ namespace Deltin.Deltinteger.Parse
 
         public void Call(ScriptFile script, DocRange callRange)
         {
+            if (DefinedAt == null) return;
+            
             script.AddDefinitionLink(callRange, DefinedAt);
             if (Type is DefinedType)
                 ((DefinedType)Type).AddLink(new Location(script.Uri, callRange));
