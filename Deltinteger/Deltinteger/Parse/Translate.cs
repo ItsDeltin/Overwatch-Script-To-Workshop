@@ -13,7 +13,7 @@ namespace Deltin.Deltinteger.Parse
     public class DeltinScript
     {
         private FileGetter FileGetter { get; }
-        private Importer Importer { get; } = new Importer();
+        private Importer Importer { get; }
         public Diagnostics Diagnostics { get; }
         public List<ScriptFile> ScriptFiles { get; } = new List<ScriptFile>();
         private List<CodeType> types { get; } = new List<CodeType>();
@@ -31,7 +31,10 @@ namespace Deltin.Deltinteger.Parse
         {
             FileGetter = fileGetter;
             Diagnostics = diagnostics;
+
             types.AddRange(CodeType.DefaultTypes);
+            Importer = new Importer(rootRuleset.Uri);
+
             CollectScriptFiles(rootRuleset);
             
             GlobalScope = Scope.GetGlobalScope();
@@ -84,15 +87,23 @@ namespace Deltin.Deltinteger.Parse
 
         string GetImportedFile(ScriptFile script, FileImporter importer, DeltinScriptParser.Import_fileContext importFileContext)
         {
+            DocRange stringRange = DocRange.GetRange(importFileContext.STRINGLITERAL());
+
             var importResult = importer.Import(
-                DocRange.GetRange(importFileContext.STRINGLITERAL()),
+                stringRange,
                 Extras.RemoveQuotes(importFileContext.STRINGLITERAL().GetText()),
                 script.Uri
             );
-            if (!importResult.Successful) return importResult.Directory;
+            if (!importResult.SuccessfulReference) return importResult.Directory;
 
-            ScriptFile importedScript = new ScriptFile(Diagnostics, importResult.Uri, FileGetter.GetScript(importResult.Uri));
-            CollectScriptFiles(importedScript);
+            script.AddDefinitionLink(stringRange, new Location(importResult.Uri, DocRange.Zero));
+            script.AddHover(stringRange, importResult.FilePath);
+
+            if (importResult.ShouldImport)
+            {
+                ScriptFile importedScript = new ScriptFile(Diagnostics, importResult.Uri, FileGetter.GetScript(importResult.Uri));
+                CollectScriptFiles(importedScript);
+            }
             return importResult.Directory;
         }
 
@@ -210,7 +221,7 @@ namespace Deltin.Deltinteger.Parse
             return GetCodeType(name, null, null) != null;
         }
 
-        public ScriptFile ScriptFromUri(Uri uri) => ScriptFiles.FirstOrDefault(script => script.Uri == uri.Clean());
+        public ScriptFile ScriptFromUri(Uri uri) => ScriptFiles.FirstOrDefault(script => script.Uri.Compare(uri));
 
         private Dictionary<ICallable, List<Location>> callRanges { get; } = new Dictionary<ICallable, List<Location>>();
         public void AddSymbolLink(ICallable callable, Location calledFrom)

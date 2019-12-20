@@ -147,7 +147,7 @@ namespace Deltin.Deltinteger.LanguageServer
             try
             {
                 Diagnostics diagnostics = new Diagnostics();
-                ScriptFile root = new ScriptFile(diagnostics, new Uri(document.Uri.FilePath()), document.Text);
+                ScriptFile root = new ScriptFile(diagnostics, document.Uri, document.Text);
                 DeltinScript deltinScript = new DeltinScript(_languageServer.FileGetter, diagnostics, root);
                 _languageServer.LastParse = deltinScript;
 

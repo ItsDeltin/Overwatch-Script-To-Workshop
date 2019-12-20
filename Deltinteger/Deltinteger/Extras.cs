@@ -96,7 +96,6 @@ namespace Deltin.Deltinteger
 
         public static string FilePath(this Uri uri)
         {
-            //return Uri.UnescapeDataString(uri.AbsolutePath);
             return uri.LocalPath.TrimStart('/');
         }
 
@@ -104,6 +103,8 @@ namespace Deltin.Deltinteger
         {
             return new Uri(uri.FilePath());
         }
+
+        public static bool Compare(this Uri uri, Uri other) => uri.Clean().FilePath() == other.Clean().FilePath();
     }
 
     public class TabStringBuilder

@@ -185,8 +185,9 @@ namespace Deltin.Deltinteger.Parse
     {
         public List<Uri> ImportedFiles { get; } = new List<Uri>();
 
-        public Importer()
+        public Importer(Uri initial)
         {
+            ImportedFiles.Add(initial);
         }
     }
 
@@ -211,15 +212,13 @@ namespace Deltin.Deltinteger.Parse
     class ImportResult
     {
         public Uri Uri { get; }
-        public bool Successful { get; }
-        private string FileName { get; }
-        private string FileType { get; }
+        public bool SuccessfulReference { get; }
+        public bool ShouldImport { get; }
         public string Directory { get; }
+        public string FilePath { get; }
 
         public ImportResult(FileImporter fileImporter, DocRange importRange, string relativePath, Uri referencingFile)
         {
-            FileName = Path.GetFileName(relativePath);
-            FileType = Path.GetExtension(relativePath);
             string resultingPath = Extras.CombinePathWithDotNotation(referencingFile.FilePath(), relativePath);
             
             // Syntax error if the filename has invalid characters.
@@ -228,15 +227,10 @@ namespace Deltin.Deltinteger.Parse
                 fileImporter.Diagnostics.Error("File path contains invalid characters.", importRange);
                 return;
             }
-            Uri = new Uri(resultingPath);
+            string enc = "file:///" + resultingPath.Replace('\\', '/').Replace(" ","%20").Replace(":", "%3A");
+            Uri = new Uri(enc);
             Directory = Path.GetDirectoryName(resultingPath);
-
-            // Syntax error if the file is importing itself.
-            if (Uri == referencingFile)
-            {
-                fileImporter.Diagnostics.Warning("File is importing itself.", importRange);
-                return;
-            }
+            FilePath = resultingPath;
 
             // Syntax error if the file does not exist.
             if (!System.IO.File.Exists(resultingPath))
@@ -245,17 +239,26 @@ namespace Deltin.Deltinteger.Parse
                 return;
             }
 
+            // Syntax error if the file is importing itself.
+            if (Uri.Compare(referencingFile))
+            {
+                fileImporter.Diagnostics.Warning("File is importing itself.", importRange);
+                return;
+            }
+
+            SuccessfulReference = true;
+
             // Warning if the file was already imported.
-            if (fileImporter.ImportedInThisScope.Contains(Uri))
+            if (fileImporter.ImportedInThisScope.Any(u => u.Compare(Uri)))
             {
                 fileImporter.Diagnostics.Warning("This file was already imported.", importRange);
                 return;
             }
 
             // Silently fail if another file already imported the file being imported.
-            if (fileImporter.Importer.ImportedFiles.Contains(Uri)) return;
+            if (fileImporter.Importer.ImportedFiles.Any(u => u.Compare(Uri))) return;
 
-            Successful = true;
+            ShouldImport = true;
             fileImporter.ImportedInThisScope.Add(Uri);
             fileImporter.Importer.ImportedFiles.Add(Uri);
         }

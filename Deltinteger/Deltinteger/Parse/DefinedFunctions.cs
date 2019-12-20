@@ -95,10 +95,11 @@ namespace Deltin.Deltinteger.Parse
             // Get the access level.
             AccessLevel = context.accessor().GetAccessLevel();
 
-            scope.AddMethod(this, script.Diagnostics, DocRange.GetRange(context.name));
-
             // Setup the parameters and parse the block.
             SetupParameters(script, context.setParameters());
+
+            scope.AddMethod(this, script.Diagnostics, DocRange.GetRange(context.name));
+
             block = new BlockAction(script, translateInfo, methodScope, context.block());
 
             // Add the hover info.
