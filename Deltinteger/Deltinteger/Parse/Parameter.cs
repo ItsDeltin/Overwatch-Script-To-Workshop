@@ -31,6 +31,8 @@ namespace Deltin.Deltinteger.Parse
             DefaultValue = defaultValue;
         }
 
+        public virtual object Validate(ScriptFile script, IExpression value, DocRange valueRange) => null;
+
         public string GetLabel(bool markdown)
         {
             string type;
@@ -130,6 +132,8 @@ namespace Deltin.Deltinteger.Parse
         private DocRange[] ParameterErrors;
         public DocRange[] ParameterRanges { get; private set; }
 
+        public object[] AdditionalParameterData { get; private set; }
+
         private Dictionary<IParameterCallable, List<Diagnostic>> optionDiagnostics;
 
         public OverloadChooser(IParameterCallable[] overloads, ScriptFile script, DeltinScript translateInfo, Scope scope, DocRange genericErrorRange, DocRange callRange, OverloadError errorMessages)
@@ -163,6 +167,7 @@ namespace Deltin.Deltinteger.Parse
             }
             
             if (!SetParameterCount(values.Length)) return;
+            if (values.Any(v => v == null)) return;
 
             // Match by value types and parameter types.
             for (int i = 0; i < values.Length; i++)
@@ -185,6 +190,7 @@ namespace Deltin.Deltinteger.Parse
             // Get the missing parameters.
             for (int i = values.Length; i < Values.Length; i++)
                 Values[i] = MissingParameter(Overload.Parameters[i]);
+            GetAdditionalData();
         }
         public void SetContext(DeltinScriptParser.Picky_parametersContext context)
         {
@@ -278,6 +284,7 @@ namespace Deltin.Deltinteger.Parse
                     values[i] = MissingParameter(Overload.Parameters[i]);
             }
             Values = values;
+            GetAdditionalData();
         }
         public void SetContext()
         {
@@ -297,6 +304,7 @@ namespace Deltin.Deltinteger.Parse
                     CallRange.end
                 )
             };
+            GetAdditionalData();
         }
 
         private bool SetParameterCount(int numberOfParameters)
@@ -363,6 +371,13 @@ namespace Deltin.Deltinteger.Parse
             return null;
         }
     
+        private void GetAdditionalData()
+        {
+            AdditionalParameterData = new object[Overload.Parameters.Length];
+            for (int i = 0; i < Overload.Parameters.Length; i++)
+                AdditionalParameterData[i] = Overload.Parameters[i].Validate(script, Values[i], ParameterRanges[i]);
+        }
+
         public SignatureHelp GetSignatureHelp(Pos caretPos)
         {
             int activeParameter = -1;

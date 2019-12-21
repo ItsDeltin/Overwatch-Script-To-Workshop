@@ -180,6 +180,13 @@ namespace Deltin.Deltinteger.Parse
             stringBuilder.AppendLine(Extras.Indent(1, false) + "player:");
             WriteCollection(stringBuilder, variableList(false));
             stringBuilder.AppendLine("}");
+
+            bool anyExtendedGlobal = extendedVariableList(true).Any(v => v != null);
+            bool anyExtendedPlayer = extendedVariableList(false).Any(v => v != null);
+            if (anyExtendedGlobal || anyExtendedPlayer)
+            {
+                // TODO: Write extended variables.
+            }
         }
         private void WriteCollection(StringBuilder stringBuilder, List<WorkshopVariable> collection)
         {

@@ -79,20 +79,36 @@ namespace Deltin.Deltinteger.Parse
         public DocRange GenericErrorRange { get; private set; }
         public VarIndexAssigner IndexAssigner { get; private set; }
         public ReturnHandler ReturnHandler { get; private set; }
-        public bool IsGlobal                => Translate.IsGlobal;
-        public List<IActionList> ActionList => Translate.Actions;
-        public VarCollection VarCollection  => Translate.DeltinScript.VarCollection;
-        public ContinueSkip ContinueSkip    => Translate.ContinueSkip;
+        public bool IsGlobal { get; }
+        public List<IActionList> ActionList { get; }
+        public VarCollection VarCollection { get; }
+        public ContinueSkip ContinueSkip { get; }
 
+        public ActionSet(bool isGlobal, VarCollection varCollection)
+        {
+            IsGlobal = isGlobal;
+            VarCollection = varCollection;
+            ActionList = new List<IActionList>();
+        }
         public ActionSet(TranslateRule translate, DocRange genericErrorRange, List<IActionList> actions)
         {
             Translate = translate;
+            IsGlobal = translate.IsGlobal;
+            ActionList = translate.Actions;
+            VarCollection = translate.DeltinScript.VarCollection;
+            ContinueSkip = translate.ContinueSkip;
+
             GenericErrorRange = genericErrorRange;
             IndexAssigner = translate.DeltinScript.DefaultIndexAssigner;
         }
         private ActionSet(ActionSet other)
         {
             Translate = other.Translate;
+            IsGlobal = other.IsGlobal;
+            ActionList = other.ActionList;
+            VarCollection = other.VarCollection;
+            ContinueSkip = other.ContinueSkip;
+
             GenericErrorRange = other.GenericErrorRange;
             IndexAssigner = other.IndexAssigner;
             ReturnHandler = other.ReturnHandler;

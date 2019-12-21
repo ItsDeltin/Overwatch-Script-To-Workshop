@@ -61,12 +61,16 @@
     <Compile Remove="Custom Methods/**"/>
     <Compile Include="Custom Methods/CustomMethods.cs"/>
     <Compile Include="Custom Methods/MinWait.cs"/>
+    
     <Compile Remove="Pathfinder/**"/>
     <Compile Include="Pathfinder/PathfindClass.cs"/>
+    <Compile Include="Pathfinder/PathMap.cs"/>
+    <Compile Include="Pathfinder/Algorithm.cs"/>
+    <Compile Include="Pathfinder/PathfinderRules.cs"/>
+
     <Compile Remove="Models/**"/>
     <Compile Include="Models/Vertex.cs"/>
     <Compile Remove="Language Server/Old/**"/>
-    <Compile Remove="CSV.cs"/>
     <Compile Remove="Elements/LoopBuilder.cs"/>
   </ItemGroup>
 </Project>

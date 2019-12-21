@@ -39,7 +39,7 @@ namespace Deltin.Deltinteger.Parse
         /// <returns></returns>
         public virtual bool Constant() => false;
 
-        public virtual IWorkshopTree New(ActionSet actionSet, Constructor constructor, IWorkshopTree[] constructorValues)
+        public virtual IWorkshopTree New(ActionSet actionSet, Constructor constructor, IWorkshopTree[] constructorValues, object[] additionalParameterData)
         {
             // Classes that can't be created shouldn't have constructors.
             throw new NotImplementedException();
@@ -61,7 +61,7 @@ namespace Deltin.Deltinteger.Parse
                 defaultTypes.Add(new WorkshopEnumType(enumData));
 
             // Add custom classes here.
-            defaultTypes.Add(new PathmapClass());
+            defaultTypes.Add(new Pathfinder.PathmapClass());
             
             return defaultTypes.ToArray();
         }
@@ -226,7 +226,7 @@ namespace Deltin.Deltinteger.Parse
             return objectScope;
         }
 
-        override public IWorkshopTree New(ActionSet actionSet, Constructor constructor, IWorkshopTree[] constructorValues)
+        override public IWorkshopTree New(ActionSet actionSet, Constructor constructor, IWorkshopTree[] constructorValues, object[] additionalParameterData)
         {
             if (TypeKind == TypeKind.Class) return NewClass(actionSet.New(actionSet.IndexAssigner.CreateContained()), constructor, constructorValues);
             else if (TypeKind == TypeKind.Struct) return NewStruct(actionSet.New(actionSet.IndexAssigner.CreateContained()), constructor, constructorValues);
@@ -465,6 +465,40 @@ namespace Deltin.Deltinteger.Parse
             actionSet = actionSet.New(actionSet.IndexAssigner.CreateContained());
             DefinedMethod.AssignParameters(actionSet, ParameterVars, parameterValues);
             Block.Translate(actionSet);
+        }
+    }
+
+    public class ClassData
+    {
+        public IndexReference ClassIndexes { get; }
+        public IndexReference ClassArray { get; }
+
+        public ClassData(VarCollection varCollection)
+        {
+            ClassArray = varCollection.Assign("_classArray", true, false);
+            if (DefinedType.CLASS_INDEX_WORKAROUND)
+                ClassIndexes = varCollection.Assign("_classIndexes", true, false);
+        }
+
+        public ClassObjectResult CreateObject(ActionSet actionSet, string internalName)
+        {
+            var classReference = actionSet.VarCollection.Assign(internalName, actionSet.IsGlobal, true);
+            DefinedType.GetClassIndex(classReference, actionSet, this);
+            var classObject = ClassArray.CreateChild((Element)classReference.GetVariable());
+
+            return new ClassObjectResult(classReference, classObject);
+        }
+    }
+
+    public class ClassObjectResult
+    {
+        public IndexReference ClassReference { get; }
+        public IndexReference ClassObject { get; }
+
+        public ClassObjectResult(IndexReference classReference, IndexReference classObject)
+        {
+            ClassReference = classReference;
+            ClassObject = classObject;
         }
     }
 }

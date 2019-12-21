@@ -10,48 +10,45 @@ namespace Deltin.Deltinteger.Pathfinder
     {
         public const double MoveToNext = 0.3;
 
-        public IndexedVar Path { get; }
-        public IndexedVar LastUpdate { get; }
-        public IndexedVar DistanceToNext { get; }
+        public IndexReference Path { get; }
+        public IndexReference LastUpdate { get; }
+        public IndexReference DistanceToNext { get; }
 
-        public PathfinderInfo(ParsingData parser)
+        public PathfinderInfo(DeltinScript translateInfo)
         {
-            Path           = IndexedVar.AssignInternalVar   (parser.VarCollection, null, "Pathfinder: Path",                  false);
-            LastUpdate     = IndexedVar.AssignInternalVarExt(parser.VarCollection, null, "Pathfinder: Last Update",           false);
-            DistanceToNext = IndexedVar.AssignInternalVarExt(parser.VarCollection, null, "Pathfinder: Distance To Next Node", false);
+            Path           = translateInfo.VarCollection.Assign("Pathfinder: Path", false, false);
+            LastUpdate     = translateInfo.VarCollection.Assign("Pathfinder: Last Update", false, true);
+            DistanceToNext = translateInfo.VarCollection.Assign("Pathfinder: Distance To Next Node", false, true);
 
-            parser.Rules.Add(GetStartRule());
-            parser.Rules.Add(GetUpdateRule());
-            parser.Rules.Add(GetStopRule());
+            translateInfo.WorkshopRules.Add(GetStartRule(translateInfo));
+            translateInfo.WorkshopRules.Add(GetUpdateRule());
+            translateInfo.WorkshopRules.Add(GetStopRule());
         }
 
-        private Rule GetStartRule()
+        private Rule GetStartRule(DeltinScript deltinScript)
         {
-            Rule pathfind = new Rule(Constants.INTERNAL_ELEMENT + "Pathfinder: Move", RuleEvent.OngoingPlayer);
-            pathfind.Conditions = new Condition[]
-            {
-                new Condition(
-                    Element.Part<V_CountOf>(Path.GetVariable()),
-                    Operators.GreaterThan,
-                    0
-                )
-            };
+            var condition = new Condition(
+                Element.Part<V_CountOf>(Path.GetVariable()),
+                Operators.GreaterThan,
+                0
+            );
 
             Element eventPlayer = new V_EventPlayer();
             Element eventPlayerPos = Element.Part<V_PositionOf>(eventPlayer);
 
-            List<Element> actions = new List<Element>();
-            IfBuilder isBetween = new IfBuilder(actions, 
+            TranslateRule rule = new TranslateRule(deltinScript, Constants.INTERNAL_ELEMENT + "Pathfinder: Move", RuleEvent.OngoingPlayer);
+
+            IfBuilder isBetween = new IfBuilder(rule.ActionSet, 
                 Element.Part<V_And>(
                     Element.Part<V_CountOf>(Path.GetVariable()) >= 2,
                     IsBetween(eventPlayerPos, NextPosition(eventPlayer), PositionAt(eventPlayer, 1))
                 )
             );
             isBetween.Setup();
-            actions.AddRange(Next());
+            rule.ActionSet.AddAction(Next());
             isBetween.Finish();
 
-            actions.AddRange(ArrayBuilder<Element>.Build
+            rule.ActionSet.AddAction(ArrayBuilder<Element>.Build
             (
                 LastUpdate.SetVariable(new V_TotalTimeElapsed()),
                 DistanceToNext.SetVariable(Element.Part<V_DistanceBetween>(Element.Part<V_PositionOf>(new V_EventPlayer()), NextPosition(new V_EventPlayer()))),
@@ -79,8 +76,10 @@ namespace Deltin.Deltinteger.Pathfinder
                     EnumData.GetEnumValue(ThrottleRev.DirectionAndMagnitude)
                 )
             ));
-            pathfind.Actions = actions.ToArray();
-            return pathfind;
+            
+            var result = rule.GetRule();
+            result.Conditions = new Condition[] { condition };
+            return result;
         }
 
         private Rule GetUpdateRule()
@@ -93,9 +92,10 @@ namespace Deltin.Deltinteger.Pathfinder
             // start traveling to the next node. (5)
 
             Element position = Element.Part<V_PositionOf>(new V_EventPlayer());
-            Rule updateIndex = new Rule(Constants.INTERNAL_ELEMENT + "Pathfinder: Update", RuleEvent.OngoingPlayer);
-            updateIndex.Conditions = new Condition[]
-            {
+            
+            Rule rule = new Rule(Constants.INTERNAL_ELEMENT + "Pathfinder: Update", RuleEvent.OngoingPlayer);
+
+            rule.Conditions = new Condition[] {
                 new Condition(
                     Element.Part<V_CountOf>(Path.GetVariable()),
                     Operators.GreaterThan,
@@ -117,7 +117,7 @@ namespace Deltin.Deltinteger.Pathfinder
                             new V_Compare(
                                 Element.Part<V_CountOf>(Path.GetVariable()),
                                 Operators.Equal,
-                                2
+                                new V_Number(2)
                             ),
                             Element.Part<V_And>(
                                 // (3)
@@ -129,14 +129,16 @@ namespace Deltin.Deltinteger.Pathfinder
                     )
                 )
             };
-            updateIndex.Actions = ArrayBuilder<Element>.Build(
+
+            rule.Actions = ArrayBuilder<Element>.Build(
                 LastUpdate.SetVariable(new V_TotalTimeElapsed()),
                 Next(), // (5)
                 DistanceToNext.SetVariable(Element.Part<V_DistanceBetween>(Element.Part<V_PositionOf>(new V_EventPlayer()), NextPosition(new V_EventPlayer()))),
                 A_Wait.MinimumWait,
                 new A_LoopIfConditionIsTrue()
             );
-            return updateIndex;
+
+            return rule;
         }
 
         private Rule GetStopRule()
@@ -164,7 +166,7 @@ namespace Deltin.Deltinteger.Pathfinder
 
         public Element PositionAt(Element player, Element index)
         {
-            return Path.GetVariable(player)[index];
+            return ((Element)Path.GetVariable(player))[index];
         }
 
         private Element IsBetween(Element position, Element start, Element end)

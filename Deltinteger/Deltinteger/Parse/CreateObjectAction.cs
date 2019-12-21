@@ -60,7 +60,7 @@ namespace Deltin.Deltinteger.Parse
             for (int i = 0; i < parameterValues.Length; i++)
                 parameterValues[i] = ConstructorValues[i].Parse(actionSet);
 
-            return CreatingObjectOf.New(actionSet, Constructor, parameterValues);
+            return CreatingObjectOf.New(actionSet, Constructor, parameterValues, OverloadChooser.AdditionalParameterData);
         }
     }
 }

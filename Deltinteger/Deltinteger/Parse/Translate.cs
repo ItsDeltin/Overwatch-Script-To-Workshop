@@ -5,6 +5,7 @@ using System.Text;
 using System.IO;
 using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.Elements;
+using Deltin.Deltinteger.Pathfinder;
 using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
 using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItemKind;
 
@@ -163,12 +164,14 @@ namespace Deltin.Deltinteger.Parse
         }
 
         public string WorkshopCode { get; private set; }
+        public List<Rule> WorkshopRules { get; private set; }
 
         void ToWorkshop()
         {
             VarCollection.Setup();
             InitialGlobal = new TranslateRule(this, "Initial Global", RuleEvent.OngoingGlobal);
             InitialPlayer = new TranslateRule(this, "Initial Player", RuleEvent.OngoingPlayer);
+            WorkshopRules = new List<Rule>();
 
             foreach (var variable in rulesetVariables)
             {
@@ -186,18 +189,16 @@ namespace Deltin.Deltinteger.Parse
                 }
             }
 
-            List<Rule> ruleElements = new List<Rule>();
-
             if (InitialGlobal.Actions.Count > 0)
-                ruleElements.Add(InitialGlobal.GetRule());
+                WorkshopRules.Add(InitialGlobal.GetRule());
             
             if (InitialPlayer.Actions.Count > 0)
-                ruleElements.Add(InitialPlayer.GetRule());
+                WorkshopRules.Add(InitialPlayer.GetRule());
 
             foreach (var rule in rules)
             {
                 var translate = new TranslateRule(this, rule);
-                ruleElements.Add(translate.GetRule());
+                WorkshopRules.Add(translate.GetRule());
             }
 
             // Get the final workshop string.
@@ -207,7 +208,7 @@ namespace Deltin.Deltinteger.Parse
             result.AppendLine();
 
             // Get the rules.
-            foreach (var rule in ruleElements)
+            foreach (var rule in WorkshopRules)
                 result.AppendLine(rule.ToWorkshop(I18n.I18n.CurrentLanguage));
             
             WorkshopCode = result.ToString();
@@ -326,15 +327,24 @@ namespace Deltin.Deltinteger.Parse
                 default: throw new Exception($"Could not determine the expression type '{exprContext.GetType().Name}'.");
             }
         }
-
-        // public static bool IsExpression(DeltinScriptParser.ExprContext exprContext) => exprContext != null && exprContext.GetType() != typeof(DeltinScriptParser.ExprContext);
     
         private ClassData _classData = null;
         public ClassData SetupClasses()
         {
-            // TODO: Set class indexes as empty array.
-            if (_classData == null) _classData = new ClassData(VarCollection);
+            if (_classData == null)
+            {
+                _classData = new ClassData(VarCollection);
+                InitialGlobal.ActionSet.AddAction(_classData.ClassArray.SetVariable(new V_EmptyArray()));
+                InitialGlobal.ActionSet.AddAction(_classData.ClassIndexes.SetVariable(new V_EmptyArray()));
+            }
             return _classData;
+        }
+
+        private PathfinderInfo _pathfinderInfo = null;
+        public PathfinderInfo SetupPathfinder()
+        {
+            if (_pathfinderInfo == null) _pathfinderInfo = new PathfinderInfo(this);
+            return _pathfinderInfo;
         }
     }
 
@@ -342,18 +352,5 @@ namespace Deltin.Deltinteger.Parse
     {
         Public,
         Private
-    }
-
-    public class ClassData
-    {
-        public IndexReference ClassIndexes { get; }
-        public IndexReference ClassArray { get; }
-
-        public ClassData(VarCollection varCollection)
-        {
-            ClassArray = varCollection.Assign("_classArray", true, false);
-            if (DefinedType.CLASS_INDEX_WORKAROUND)
-                ClassIndexes = varCollection.Assign("_classIndexes", true, false);
-        }
     }
 }
