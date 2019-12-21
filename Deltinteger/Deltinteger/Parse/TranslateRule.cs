@@ -33,7 +33,10 @@ namespace Deltin.Deltinteger.Parse
             ContinueSkip = new ContinueSkip(this);
 
             ActionSet = new ActionSet(this, null, Actions);
-            ruleAction.Block.Translate(ActionSet);
+
+            ReturnHandler returnHandler = new ReturnHandler(ActionSet, Name, false);
+            ruleAction.Block.Translate(ActionSet.New(returnHandler));
+            returnHandler.ApplyReturnSkips();
         }
 
         public TranslateRule(DeltinScript deltinScript, string name, RuleEvent eventType, Team team, PlayerSelector player, bool disabled = false)

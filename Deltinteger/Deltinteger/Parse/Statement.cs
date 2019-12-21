@@ -51,4 +51,33 @@ namespace Deltin.Deltinteger.Parse
             actionSet.ReturnHandler.Return();
         }
     }
+
+    public class DeleteAction : IStatement
+    {
+        private IExpression DeleteValue { get; }
+
+        public DeleteAction(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.DeleteContext deleteContext)
+        {
+            DeleteValue = DeltinScript.GetExpression(script, translateInfo, scope, deleteContext.expr());
+        }
+
+        public void Translate(ActionSet actionSet)
+        {
+            Element delete = (Element)DeleteValue.Parse(actionSet);
+
+            var classData = actionSet.Translate.DeltinScript.SetupClasses();
+
+            actionSet.AddAction(
+                classData.ClassArray.SetVariable(new V_Null(), null, delete)
+            );
+
+            if (DefinedType.CLASS_INDEX_WORKAROUND)
+                actionSet.AddAction(classData.ClassIndexes.SetVariable(
+                    Element.Part<V_RemoveFromArray>(
+                        classData.ClassIndexes.GetVariable(),
+                        delete
+                    )
+                ));
+        }
+    }
 }

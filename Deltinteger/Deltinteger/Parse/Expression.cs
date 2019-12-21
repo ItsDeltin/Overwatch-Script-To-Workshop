@@ -399,6 +399,8 @@ namespace Deltin.Deltinteger.Parse
                 case ">=": return new V_Compare(left, Operators.GreaterThanOrEqual, right);
                 case ">": return new V_Compare(left, Operators.GreaterThan, right);
                 case "!=": return new V_Compare(left, Operators.NotEqual, right);
+                case "&&": return Element.Part<V_And>(left,right);
+                case "||": return Element.Part<V_Or>(left,right);
                 default: throw new Exception($"Unrecognized operator {Operator}.");
             }
         }

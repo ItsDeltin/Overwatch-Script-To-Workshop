@@ -205,18 +205,14 @@ namespace Deltin.Deltinteger.Parse
             
             if (IsRecursive) return ParseRecursive(actionSet, parameterValues);
             
-            ReturnHandler returnHandler = null;
-            if (doesReturnValue)
-            {
-                returnHandler = new ReturnHandler(actionSet, Name, multiplePaths);
-                actionSet = actionSet.New(returnHandler);
-            }
+            ReturnHandler returnHandler = new ReturnHandler(actionSet, Name, multiplePaths);
+            actionSet = actionSet.New(returnHandler);
             
             AssignParameters(actionSet, ParameterVars, parameterValues);
             block.Translate(actionSet);
 
-            returnHandler?.ApplyReturnSkips();
-            return returnHandler?.GetReturnedValue();
+            returnHandler.ApplyReturnSkips();
+            return returnHandler.GetReturnedValue();
         }
 
         private IWorkshopTree ParseRecursive(ActionSet actionSet, IWorkshopTree[] parameterValues)
@@ -404,6 +400,7 @@ namespace Deltin.Deltinteger.Parse
     public class DefinedMacro : DefinedFunction
     {
         public IExpression Expression { get; private set; }
+        private DeltinScriptParser.ExprContext ExpressionToParse { get; }
 
         public DefinedMacro(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.Define_macroContext context)
             : base(script, translateInfo, scope, context.name.Text, new Location(script.Uri, DocRange.GetRange(context)))
@@ -414,13 +411,16 @@ namespace Deltin.Deltinteger.Parse
             if (context.expr() == null)
                 script.Diagnostics.Error("Expected expression.", DocRange.GetRange(context.TERNARY_ELSE()));
             else
-            {
-                Expression = DeltinScript.GetExpression(script, translateInfo, methodScope, context.expr());
-                if (Expression != null)
-                    ReturnType = Expression.Type();
-            }
+                ExpressionToParse = context.expr();
 
             script.AddHover(DocRange.GetRange(context.name), GetLabel(true));
+        }
+
+        override public void SetupBlock()
+        {
+            Expression = DeltinScript.GetExpression(script, translateInfo, methodScope, ExpressionToParse);
+            if (Expression != null)
+                ReturnType = Expression.Type();
         }
 
         override public IWorkshopTree Parse(ActionSet actionSet, IWorkshopTree[] parameterValues)

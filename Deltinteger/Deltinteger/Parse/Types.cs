@@ -152,7 +152,7 @@ namespace Deltin.Deltinteger.Parse
         private List<Var> objectVariables { get; } = new List<Var>();
         private DeltinScript translateInfo { get; }
 
-        public DefinedType(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.Type_defineContext typeContext, List<DefinedMethod> applyMethods) : base(typeContext.name.Text)
+        public DefinedType(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.Type_defineContext typeContext, List<DefinedFunction> applyMethods) : base(typeContext.name.Text)
         {
             if (translateInfo.IsCodeType(Name))
                 script.Diagnostics.Error($"A type with the name '{Name}' already exists.", DocRange.GetRange(typeContext.name));
@@ -193,8 +193,12 @@ namespace Deltin.Deltinteger.Parse
             }
 
             foreach (var definedMacro in typeContext.define_macro())
-                UseScope(false).AddMethod(new DefinedMacro(script, translateInfo, UseScope(false), definedMacro), script.Diagnostics, DocRange.GetRange(definedMacro.name));
-            
+            {
+                var newMacro = new DefinedMacro(script, translateInfo, UseScope(false), definedMacro);
+                UseScope(false).AddMethod(newMacro, script.Diagnostics, DocRange.GetRange(definedMacro.name));
+                applyMethods.Add(newMacro);
+            }
+
             // Get the constructors.
             if (typeContext.constructor().Length > 0)
             {

@@ -112,7 +112,7 @@ namespace Deltin.Deltinteger.Parse
 
         void Translate()
         {
-            List<DefinedMethod> applyMethods = new List<DefinedMethod>();
+            List<DefinedFunction> applyMethods = new List<DefinedFunction>();
 
             // Get the types
             foreach (ScriptFile script in ScriptFiles)
@@ -139,6 +139,7 @@ namespace Deltin.Deltinteger.Parse
                 {
                     var newMacro = new DefinedMacro(script, this, RulesetScope, macroContext);
                     RulesetScope.AddMethod(newMacro, script.Diagnostics, DocRange.GetRange(macroContext.name));
+                    applyMethods.Add(newMacro);
                 }
             }
 
@@ -179,7 +180,7 @@ namespace Deltin.Deltinteger.Parse
                 DefaultIndexAssigner.Add(VarCollection, variable, true, null);
 
                 var assigner = DefaultIndexAssigner[variable] as IndexReference;
-                if (assigner != null)
+                if (assigner != null && variable.InitialValue != null)
                 {
                     var addToInitialRule = GetInitialRule(variable.VariableType == VariableType.Global);
 
@@ -272,6 +273,7 @@ namespace Deltin.Deltinteger.Parse
                 case DeltinScriptParser.S_forContext s_for        : return new ForAction(script, translateInfo, scope, s_for.@for());
                 case DeltinScriptParser.S_foreachContext s_foreach: return new ForeachAction(script, translateInfo, scope, s_foreach.@foreach());
                 case DeltinScriptParser.S_returnContext s_return  : return new ReturnAction(script, translateInfo, scope, s_return.@return());
+                case DeltinScriptParser.S_deleteContext s_delete  : return new DeleteAction(script, translateInfo, scope, s_delete.delete());
                 default: throw new Exception($"Could not determine the statement type '{statementContext.GetType().Name}'.");
             }
         }
@@ -335,7 +337,9 @@ namespace Deltin.Deltinteger.Parse
             {
                 _classData = new ClassData(VarCollection);
                 InitialGlobal.ActionSet.AddAction(_classData.ClassArray.SetVariable(new V_EmptyArray()));
-                InitialGlobal.ActionSet.AddAction(_classData.ClassIndexes.SetVariable(new V_EmptyArray()));
+
+                if (DefinedType.CLASS_INDEX_WORKAROUND)
+                    InitialGlobal.ActionSet.AddAction(_classData.ClassIndexes.SetVariable(new V_EmptyArray()));
             }
             return _classData;
         }
