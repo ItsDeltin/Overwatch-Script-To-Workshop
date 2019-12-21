@@ -1,33 +1,28 @@
+using System;
 using Deltin.Deltinteger.Parse;
-using Deltin.Deltinteger.WorkshopWiki;
+using Deltin.Deltinteger.Elements;
 
-namespace Deltin.Deltinteger.Elements
+namespace Deltin.Deltinteger.CustomMethods
 {
-    [CustomMethod("RemoveFromArrayAtIndex", CustomMethodType.Value)]
-    [Parameter("Array", ValueType.Any, null)]
-    [Parameter("Index", ValueType.Number, null)]
+    [CustomMethod("RemoveFromArrayAtIndex", "Removes a value from an array by its index.", CustomMethodType.Value)]
     class RemoveFromArrayAtIndex : CustomMethodBase
     {
-        protected override MethodResult Get()
+        public override CodeParameter[] Parameters()
         {
-            Element array = (Element)Parameters[0];
-            Element index = (Element)Parameters[1];
-
-            return new MethodResult(null, 
-                Element.Part<V_Append>(
-                    Element.Part<V_ArraySlice>(array, new V_Number(0), index),
-                    Element.Part<V_ArraySlice>(array, index + 1, V_Number.LargeArbitraryNumber)
-                )
-            );
+            return new CodeParameter[] {
+                new CodeParameter("array", "The array to modify."),
+                new CodeParameter("index", "The index to remove.")
+            };
         }
 
-        public override CustomMethodWiki Wiki()
+        public override IWorkshopTree Get(ActionSet actionSet, IWorkshopTree[] parameters)
         {
-            return new CustomMethodWiki(
-                "Removes a value from an array by its index.",
-                // Parameters
-                "The array to modify.",
-                "The index to remove."
+            Element array = (Element)parameters[0];
+            Element index = (Element)parameters[1];
+
+            return Element.Part<V_Append>(
+                Element.Part<V_ArraySlice>(array, new V_Number(0), index),
+                Element.Part<V_ArraySlice>(array, index + 1, V_Number.LargeArbitraryNumber)
             );
         }
     }

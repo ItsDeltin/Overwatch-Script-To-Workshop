@@ -1,38 +1,36 @@
 ﻿using System;
 using Deltin.Deltinteger.Parse;
-using Deltin.Deltinteger.WorkshopWiki;
+using Deltin.Deltinteger.Elements;
 
-namespace Deltin.Deltinteger.Elements
+namespace Deltin.Deltinteger.CustomMethods
 {
-    [CustomMethod("LinearInterpolate", CustomMethodType.Value)]
-    [Parameter("point1", ValueType.Vector, null)]
-    [Parameter("point2", ValueType.Vector, null)]
-    [Parameter("fraction", ValueType.Number, null)]
+    [CustomMethod("LinearInterpolate", "Gets a point on a line with a fraction.", CustomMethodType.Value)]
     class LinearInterpolate : CustomMethodBase
     {
-        protected override MethodResult Get()
+        public override CodeParameter[] Parameters()
         {
-            Element point1 = (Element)Parameters[0];
-            Element point2 = (Element)Parameters[1];
-            Element fraction = (Element)Parameters[2];
+            return new CodeParameter[] {
+                new CodeParameter("point1", "The first point."),
+                new CodeParameter("point2", "The second point."),
+                new CodeParameter("fraction", "The fraction. 0 will return the first point, 1 will return the second point, 0.5 will return the midpoint, etc.")
+            };
+        }
+
+        public override IWorkshopTree Get(ActionSet actionSet, IWorkshopTree[] parameters)
+        {
+            Element point1 = (Element)parameters[0];
+            Element point2 = (Element)parameters[1];
+            Element fraction = (Element)parameters[2];
+
             Element p1 = point1 * (1 - fraction);
             Element p2 = point2 * fraction;
 
-            return new MethodResult(null, p1 + p2);
-        }
-
-        public override CustomMethodWiki Wiki()
-        {
-            return new CustomMethodWiki(
-                "A point a fraction along the distance between 2 points.",
-                // Parameters
-                "The first point.",
-                "The second point.",
-                "The fraction. 0 will return the first point, 1 will return the second point, 0.5 will return the midpoint, etc."
-            );
+            return p1 + p2;
         }
     }
 
+    // TODO: OptimisedLinearInterpolate
+    /*
     [CustomMethod("OptimisedLinearInterpolate", CustomMethodType.MultiAction_Value)]
     [Parameter("point1", ValueType.Vector, null)]
     [Parameter("point2", ValueType.Vector, null)]
@@ -67,36 +65,36 @@ namespace Deltin.Deltinteger.Elements
             );
         }
     }
+    */
 
-    [CustomMethod("LinearInterpolateDistance", CustomMethodType.Value)]
-    [Parameter("point1", ValueType.Vector, null)]
-    [Parameter("point2", ValueType.Vector, null)]
-    [Parameter("distance", ValueType.Number, null)]
+    [CustomMethod("LinearInterpolateDistance", "Gets a point on a line by distance.", CustomMethodType.Value)]
     class LinearInterpolateDistance : CustomMethodBase
     {
-        protected override MethodResult Get()
+        public override CodeParameter[] Parameters()
         {
-            Element point1 = (Element)Parameters[0];
-            Element point2 = (Element)Parameters[1];
-            Element distance = (Element)Parameters[2];
+            return new CodeParameter[] {
+                new CodeParameter("point1", "The first point."),
+                new CodeParameter("point2", "The second point."),
+                new CodeParameter("distance", "The distance.")
+            };
+        }
+
+        public override IWorkshopTree Get(ActionSet actionSet, IWorkshopTree[] parameters)
+        {
+            Element point1 = (Element)parameters[0];
+            Element point2 = (Element)parameters[1];
+            Element distance = (Element)parameters[2];
+
             Element fraction = distance / Element.Part<V_DistanceBetween>(point1, point2);
             Element p1 = point1 * (1 - fraction);
             Element p2 = point2 * fraction;
-            return new MethodResult(null, p1 + p2);
-        }
 
-        public override CustomMethodWiki Wiki()
-        {
-            return new CustomMethodWiki(
-                "A point a distance along a straight line between 2 points.",
-                // Parameters
-                "The first point.",
-                "The second point.",
-                "The distance."
-            );
+            return p1 + p2;
         }
     }
 
+    // TODO: OptimisedLinearInterpolateDistance
+    /*
     [CustomMethod("OptimisedLinearInterpolateDistance", CustomMethodType.MultiAction_Value)]
     [Parameter("point1", ValueType.Vector, null)]
     [Parameter("point2", ValueType.Vector, null)]
@@ -133,4 +131,5 @@ namespace Deltin.Deltinteger.Elements
             );
         }
     }
+    */
 }
