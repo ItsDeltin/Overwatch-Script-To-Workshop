@@ -263,7 +263,7 @@ namespace Deltin.Deltinteger.Elements
                 var defaultValue = WorkshopParameters[i].GetDefault();
 
                 Parameters[i] = new CodeParameter(
-                    WorkshopParameters[i].Name,
+                    WorkshopParameters[i].Name.Replace(" ", ""),
                     codeType,
                     defaultValue == null ? null : new ExpressionOrWorkshopValue(defaultValue),
                     Wiki?.GetWikiParameter(WorkshopParameters[i].Name)?.Description

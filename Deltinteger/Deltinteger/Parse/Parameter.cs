@@ -31,6 +31,12 @@ namespace Deltin.Deltinteger.Parse
             DefaultValue = defaultValue;
         }
 
+        public CodeParameter(string name, StringOrMarkupContent documentation)
+        {
+            Name = name;
+            Documentation = documentation;
+        }
+
         public virtual object Validate(ScriptFile script, IExpression value, DocRange valueRange) => null;
 
         public string GetLabel(bool markdown)
@@ -375,7 +381,7 @@ namespace Deltin.Deltinteger.Parse
         {
             AdditionalParameterData = new object[Overload.Parameters.Length];
             for (int i = 0; i < Overload.Parameters.Length; i++)
-                AdditionalParameterData[i] = Overload.Parameters[i].Validate(script, Values[i], ParameterRanges[i]);
+                AdditionalParameterData[i] = Overload.Parameters[i].Validate(script, Values[i], ParameterRanges.ElementAtOrDefault(i));
         }
 
         public SignatureHelp GetSignatureHelp(Pos caretPos)
