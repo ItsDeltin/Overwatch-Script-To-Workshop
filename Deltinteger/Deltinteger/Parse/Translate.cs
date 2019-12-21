@@ -259,6 +259,7 @@ namespace Deltin.Deltinteger.Parse
                 case DeltinScriptParser.S_methodContext method    : return new CallMethodAction(script, translateInfo, scope, method.method(), false);
                 case DeltinScriptParser.S_varsetContext varset    : return new SetVariableAction(script, translateInfo, scope, varset.varset());
                 case DeltinScriptParser.S_exprContext s_expr      : {
+
                     var expr = GetExpression(script, translateInfo, scope, s_expr.expr());
                     if (expr is ExpressionTree == false || ((ExpressionTree)expr)?.Result is IStatement == false)
                     {
@@ -266,7 +267,7 @@ namespace Deltin.Deltinteger.Parse
                             script.Diagnostics.Error("Expressions can't be used as statements.", DocRange.GetRange(statementContext));
                         return null;
                     }
-                    else return (IStatement)((ExpressionTree)expr).Result;
+                    else return (ExpressionTree)expr;
                 }
                 case DeltinScriptParser.S_ifContext s_if          : return new IfAction(script, translateInfo, scope, s_if.@if());
                 case DeltinScriptParser.S_whileContext s_while    : return new WhileAction(script, translateInfo, scope, s_while.@while());

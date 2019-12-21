@@ -58,7 +58,7 @@ namespace Deltin.Deltinteger.Parse
             Element target = null;
             if (Tree != null)
             {
-                ExpressionTreeParseResult treeParseResult = Tree.ParseTree(actionSet);
+                ExpressionTreeParseResult treeParseResult = Tree.ParseTree(actionSet, true);
                 var = treeParseResult.ResultingVariable;
                 target = (Element)treeParseResult.Target;
             }

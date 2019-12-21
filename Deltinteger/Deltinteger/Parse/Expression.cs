@@ -15,7 +15,7 @@ namespace Deltin.Deltinteger.Parse
         IWorkshopTree Parse(ActionSet actionSet);
     }
 
-    public class ExpressionTree : IExpression
+    public class ExpressionTree : IExpression, IStatement
     {
         public IExpression[] Tree { get; }
         public IExpression Result { get; }
@@ -121,10 +121,15 @@ namespace Deltin.Deltinteger.Parse
 
         public IWorkshopTree Parse(ActionSet actionSet)
         {
-            return ParseTree(actionSet).Result;
+            return ParseTree(actionSet, true).Result;
         }
 
-        public ExpressionTreeParseResult ParseTree(ActionSet actionSet)
+        public void Translate(ActionSet actionSet)
+        {
+            ParseTree(actionSet, false);
+        }
+
+        public ExpressionTreeParseResult ParseTree(ActionSet actionSet, bool expectingValue)
         {
             IGettable resultingVariable = null;
             IWorkshopTree target = null;
@@ -170,7 +175,7 @@ namespace Deltin.Deltinteger.Parse
                 result = current;
             }
 
-            if (result == null) throw new Exception("Expression tree result is null");
+            if (result == null && expectingValue) throw new Exception("Expression tree result is null");
             return new ExpressionTreeParseResult(result, target, resultingVariable);
         }
     }
