@@ -35,14 +35,14 @@ expr
 	| typeconvert							                                           #e_type_convert
 	| THIS									                                           #e_this
 	| ROOT								                                               #e_root
-	| <assoc=right> expr (SEPERATOR expr?)                                             #e_expr_tree
+	| <assoc=right> expr SEPERATOR expr?                                               #e_expr_tree
 	| NOT expr                                                                         #e_not
 	| '-' expr                                                                         #e_inverse
 	| <assoc=right> left=expr op=('^' | '*' | '/' | '%') right=expr                    #e_op_1
 	| left=expr op=('+' | '-') right=expr?                                             #e_op_2
 	| left=expr op=(LESS_THAN | '<=' | '==' | '>=' | GREATER_THAN | '!=') right=expr?  #e_op_compare
 	| condition=expr TERNARY consequent=expr? TERNARY_ELSE alternative=expr?		   #e_ternary_conditional
-	| left=expr BOOL right=expr                              		                   #e_op_bool
+	| left=expr BOOL right=expr                                                        #e_op_bool
 	;
 
 typeconvert : LESS_THAN PART? GREATER_THAN expr ;

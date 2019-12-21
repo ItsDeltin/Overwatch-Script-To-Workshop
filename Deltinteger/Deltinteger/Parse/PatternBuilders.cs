@@ -54,7 +54,7 @@ namespace Deltin.Deltinteger.Parse
             ActionSet = actionSet;
         }
 
-        public void Setup()
+        public virtual void Setup()
         {
             if (WasSetup) throw new Exception("Pattern builder already set up.");
             WasSetup = true;
@@ -94,6 +94,12 @@ namespace Deltin.Deltinteger.Parse
             Condition = new V_Compare(IndexStore.GetVariable(), Operators.LessThan, Element.Part<V_CountOf>(Array));
             Index = (Element)IndexStore.GetVariable();
             IndexValue = Element.Part<V_ValueInArray>(Array, IndexStore.GetVariable());
+        }
+
+        public override void Setup()
+        {
+            ActionSet.AddAction(IndexStore.SetVariable(0));
+            base.Setup();
         }
 
         public override void Finish()

@@ -14,6 +14,8 @@ namespace Deltin.Deltinteger.Parse
         public bool IsGlobal { get; }
         public ContinueSkip ContinueSkip { get; }
         public List<MethodStack> MethodStack { get; } = new List<MethodStack>();
+        
+        public List<Condition> Conditions { get; } = new List<Condition>();
 
         private string Name { get; }
         private RuleEvent EventType { get; }
@@ -34,9 +36,38 @@ namespace Deltin.Deltinteger.Parse
 
             ActionSet = new ActionSet(this, null, Actions);
 
+            GetConditions(ruleAction);
+
             ReturnHandler returnHandler = new ReturnHandler(ActionSet, Name, false);
             ruleAction.Block.Translate(ActionSet.New(returnHandler));
             returnHandler.ApplyReturnSkips();
+        }
+
+        private void GetConditions(RuleAction ruleAction)
+        {
+            foreach (var condition in ruleAction.Conditions)
+            {
+                var conditionParse = condition.Expression.Parse(ActionSet);
+
+                Element value1;
+                EnumMember compareOperator;
+                Element value2;
+
+                if (conditionParse is V_Compare)
+                {
+                    value1 = (Element)((Element)conditionParse).ParameterValues[0];
+                    compareOperator = (EnumMember)((Element)conditionParse).ParameterValues[1];
+                    value2 = (Element)((Element)conditionParse).ParameterValues[2];
+                }
+                else
+                {
+                    value1 = (Element)conditionParse;
+                    compareOperator = EnumData.GetEnumValue(Operators.Equal);
+                    value2 = new V_True();
+                }
+
+                Conditions.Add(new Condition(value1, compareOperator, value2));
+            }
         }
 
         public TranslateRule(DeltinScript deltinScript, string name, RuleEvent eventType, Team team, PlayerSelector player, bool disabled = false)
@@ -52,14 +83,13 @@ namespace Deltin.Deltinteger.Parse
             ActionSet = new ActionSet(this, null, Actions);
         }
 
-        public TranslateRule(DeltinScript deltinScript, string name, RuleEvent eventType) : this(deltinScript, name, eventType, Team.All, PlayerSelector.All)
-        {
-        }
+        public TranslateRule(DeltinScript deltinScript, string name, RuleEvent eventType) : this(deltinScript, name, eventType, Team.All, PlayerSelector.All) {}
 
         public Rule GetRule()
         {
             Rule rule = new Rule(Name, EventType, Team, Player);
             rule.Actions = GetActions();
+            rule.Conditions = Conditions.ToArray();
             rule.Disabled = Disabled;
             return rule;
         }

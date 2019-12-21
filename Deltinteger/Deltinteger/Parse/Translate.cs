@@ -190,17 +190,17 @@ namespace Deltin.Deltinteger.Parse
                 }
             }
 
-            if (InitialGlobal.Actions.Count > 0)
-                WorkshopRules.Add(InitialGlobal.GetRule());
-            
-            if (InitialPlayer.Actions.Count > 0)
-                WorkshopRules.Add(InitialPlayer.GetRule());
-
             foreach (var rule in rules)
             {
                 var translate = new TranslateRule(this, rule);
                 WorkshopRules.Add(translate.GetRule());
             }
+
+            if (InitialPlayer.Actions.Count > 0)
+                WorkshopRules.Insert(0, InitialPlayer.GetRule());
+
+            if (InitialGlobal.Actions.Count > 0)
+                WorkshopRules.Insert(0, InitialGlobal.GetRule());
 
             // Get the final workshop string.
             StringBuilder result = new StringBuilder();

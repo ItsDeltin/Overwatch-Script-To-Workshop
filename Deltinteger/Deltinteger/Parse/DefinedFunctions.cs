@@ -227,8 +227,7 @@ namespace Deltin.Deltinteger.Parse
                 AssignParameters(actionSet, ParameterVars, parameterValues, true);
 
                 // Get the return handler if a value is returned.
-                ReturnHandler returnHandler = null;
-                if (doesReturnValue) returnHandler = new ReturnHandler(actionSet, Name, true);
+                ReturnHandler returnHandler = new ReturnHandler(actionSet, Name, true);
 
                 // Set up the condinue skip array.
                 IndexReference continueSkipArray = actionSet.VarCollection.Assign("recursiveContinueArray", actionSet.IsGlobal, false);
@@ -241,7 +240,7 @@ namespace Deltin.Deltinteger.Parse
                 actionSet.Translate.MethodStack.Add(stack);
 
                 // Parse the method block.
-                block.Translate(actionSet);
+                block.Translate(actionSet.New(returnHandler));
 
                 // Apply the returns.
                 if (returnHandler != null)
@@ -281,7 +280,7 @@ namespace Deltin.Deltinteger.Parse
                 // Remove the method from the stack.
                 actionSet.Translate.MethodStack.Remove(stack);
 
-                return returnHandler?.GetReturnedValue();
+                return returnHandler.GetReturnedValue();
             }
             // If it is, push the parameters to the stack.
             else
@@ -311,7 +310,7 @@ namespace Deltin.Deltinteger.Parse
                 actionSet.AddAction(continueAt);
                 skipLength.Value = actionSet.ContinueSkip.GetSkipCount(continueAt).Value;
 
-                return lastCall.ReturnHandler?.GetReturnedValue();
+                return lastCall.ReturnHandler.GetReturnedValue();
             }
         }
 

@@ -237,7 +237,7 @@ namespace Deltin.Deltinteger.Parse
             else throw new NotImplementedException();
         }
 
-        public const bool CLASS_INDEX_WORKAROUND = false;
+        public const bool CLASS_INDEX_WORKAROUND = true;
 
         private IWorkshopTree NewClass(ActionSet actionSet, Constructor constructor, IWorkshopTree[] constructorValues)
         {
