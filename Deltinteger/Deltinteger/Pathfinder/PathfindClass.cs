@@ -82,6 +82,10 @@ namespace Deltin.Deltinteger.Pathfinder
                 return null;
             }
 
+            string dir = Path.GetDirectoryName(resultingPath);
+            if (Directory.Exists(dir))
+                DeltinScript.AddImportCompletion(script, dir, valueRange);
+
             if (!File.Exists(resultingPath))
             {
                 script.Diagnostics.Error($"No file was found at '{resultingPath}'.", valueRange);
