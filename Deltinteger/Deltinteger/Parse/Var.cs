@@ -316,7 +316,6 @@ namespace Deltin.Deltinteger.Parse
                 {
                     if (type is DefinedType)
                         ((DefinedType)type).Call(script, DocRange.GetRange(context.type));
-                    // If variables with the type cannot be set to, set referenceInitialValue to true. 'type' can still equal null if the type name is invalid.
                     if (type.Constant())
                         newVar.VariableType = VariableType.ElementReference;
                 }
@@ -335,7 +334,11 @@ namespace Deltin.Deltinteger.Parse
         {
             // Get the initial value.
             if (context?.expr() != null)
+            {
                 InitialValue = DeltinScript.GetExpression(script, translateInfo, scope, context.expr());
+                if (InitialValue.Type() != null && InitialValue.Type().Constant() && CodeType != InitialValue.Type())
+                    script.Diagnostics.Error($"The type '{InitialValue.Type().Name}' cannot be stored.", DocRange.GetRange(context.expr()));
+            }
             
             // Add the variable to the scope.
             scope.AddVariable(this, script.Diagnostics, DefinedAt.range);
@@ -347,7 +350,7 @@ namespace Deltin.Deltinteger.Parse
             if (!finalized) throw new Exception("Var not finalized.");
         }
     
-        public IWorkshopTree Parse(ActionSet actionSet)
+        public IWorkshopTree Parse(ActionSet actionSet, bool asElement = true)
         {
             return actionSet.IndexAssigner[this].GetVariable();
         }

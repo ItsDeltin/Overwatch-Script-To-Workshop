@@ -54,7 +54,7 @@ namespace Deltin.Deltinteger.Parse
             return CreatingObjectOf.GetObjectScope();
         }
 
-        public IWorkshopTree Parse(ActionSet actionSet)
+        public IWorkshopTree Parse(ActionSet actionSet, bool asElement = true)
         {
             IWorkshopTree[] parameterValues = new IWorkshopTree[ConstructorValues.Length];
             for (int i = 0; i < parameterValues.Length; i++)

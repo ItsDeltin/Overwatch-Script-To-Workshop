@@ -28,7 +28,7 @@ namespace Deltin.Deltinteger.Parse
 
         public CodeType Type() => null;
 
-        public IWorkshopTree Parse(ActionSet actionSet)
+        public IWorkshopTree Parse(ActionSet actionSet, bool asElement = true)
         {
             throw new Exception("Types can't be used like expressions.");
         }
@@ -88,7 +88,7 @@ namespace Deltin.Deltinteger.Parse
             return EnumScope;
         }
 
-        override public bool Constant() => true;
+        override public bool Constant() => !EnumData.ConvertableToElement();
 
         override public CompletionItem GetCompletion()
         {
@@ -127,8 +127,9 @@ namespace Deltin.Deltinteger.Parse
 
         public CodeType Type() => Enum;
 
-        public IWorkshopTree Parse(ActionSet actionSet)
+        public IWorkshopTree Parse(ActionSet actionSet, bool asElement = true)
         {
+            if (asElement) return EnumData.ToElement(EnumMember);
             return (IWorkshopTree)EnumMember;
         }
 

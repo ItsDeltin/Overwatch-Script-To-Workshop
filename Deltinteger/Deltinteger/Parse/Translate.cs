@@ -58,16 +58,23 @@ namespace Deltin.Deltinteger.Parse
                 foreach (var importFileContext in scriptFile.Context.import_file())
                 {
                     string directory = GetImportedFile(scriptFile, importer, importFileContext);
-                    AddImportCompletion(scriptFile, directory, DocRange.GetRange(importFileContext.STRINGLITERAL()));
+                    if (Directory.Exists(directory))
+                        AddImportCompletion(scriptFile, directory, DocRange.GetRange(importFileContext.STRINGLITERAL()));
                 }
             }
         }
 
-        static void AddImportCompletion(ScriptFile script, string directory, DocRange range)
+        public static void AddImportCompletion(ScriptFile script, string directory, DocRange range)
         {
             List<CompletionItem> completionItems = new List<CompletionItem>();
             var directories = Directory.GetDirectories(directory);
             var files = Directory.GetFiles(directory);
+
+            completionItems.Add(new CompletionItem() {
+                Label = "../",
+                Detail = Directory.GetParent(directory).FullName,
+                Kind = CompletionItemKind.Folder
+            });
 
             foreach (var dir in directories)
                 completionItems.Add(new CompletionItem() {
@@ -279,7 +286,7 @@ namespace Deltin.Deltinteger.Parse
             }
         }
 
-        public static IExpression GetExpression(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.ExprContext exprContext, bool selfContained = true)
+        public static IExpression GetExpression(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.ExprContext exprContext, bool selfContained = true, bool usedAsValue = true)
         {
             switch (exprContext)
             {
@@ -314,9 +321,9 @@ namespace Deltin.Deltinteger.Parse
                     else if (element is ScopedEnumMember) return (ScopedEnumMember)element;
                     else throw new NotImplementedException();
                 }
-                case DeltinScriptParser.E_methodContext method: return new CallMethodAction(script, translateInfo, scope, method.method(), true);
+                case DeltinScriptParser.E_methodContext method: return new CallMethodAction(script, translateInfo, scope, method.method(), usedAsValue);
                 case DeltinScriptParser.E_new_objectContext newObject: return new CreateObjectAction(script, translateInfo, scope, newObject.create_object());
-                case DeltinScriptParser.E_expr_treeContext exprTree: return new ExpressionTree(script, translateInfo, scope, exprTree);
+                case DeltinScriptParser.E_expr_treeContext exprTree: return new ExpressionTree(script, translateInfo, scope, exprTree, usedAsValue);
                 case DeltinScriptParser.E_array_indexContext arrayIndex: return new ValueInArrayAction(script, translateInfo, scope, arrayIndex);
                 case DeltinScriptParser.E_create_arrayContext createArray: return new CreateArrayAction(script, translateInfo, scope, createArray.createarray());
                 case DeltinScriptParser.E_expr_groupContext group: return GetExpression(script, translateInfo, scope, group.exprgroup().expr());
@@ -327,6 +334,7 @@ namespace Deltin.Deltinteger.Parse
                 case DeltinScriptParser.E_op_2Context             op2: return new OperatorAction(script, translateInfo, scope, op2);
                 case DeltinScriptParser.E_op_boolContext       opBool: return new OperatorAction(script, translateInfo, scope, opBool);
                 case DeltinScriptParser.E_op_compareContext opCompare: return new OperatorAction(script, translateInfo, scope, opCompare);
+                case DeltinScriptParser.E_ternary_conditionalContext ternary: return new TernaryConditionalAction(script, translateInfo, scope, ternary);
                 default: throw new Exception($"Could not determine the expression type '{exprContext.GetType().Name}'.");
             }
         }

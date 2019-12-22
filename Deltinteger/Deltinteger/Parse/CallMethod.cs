@@ -43,7 +43,7 @@ namespace Deltin.Deltinteger.Parse
                         ((DefinedFunction)CallingMethod).Call(script, NameRange);
                     
                     script.AddHover(DocRange.GetRange(methodContext), CallingMethod.GetLabel(true));
-
+                    
                     if (usedAsExpression && !CallingMethod.DoesReturnValue())
                         script.Diagnostics.Error("The chosen overload for " + methodName + " does not return a value.", NameRange);
                 }
@@ -69,7 +69,7 @@ namespace Deltin.Deltinteger.Parse
         }
 
         // IExpression
-        public IWorkshopTree Parse(ActionSet actionSet)
+        public IWorkshopTree Parse(ActionSet actionSet, bool asElement = true)
         {
             return CallingMethod.Parse(actionSet.New(NameRange), GetParameterValuesAsWorkshop(actionSet));
         }
@@ -80,7 +80,7 @@ namespace Deltin.Deltinteger.Parse
 
             IWorkshopTree[] parameterValues = new IWorkshopTree[ParameterValues.Length];
             for (int i = 0; i < ParameterValues.Length; i++)
-                parameterValues[i] = ParameterValues[i].Parse(actionSet);
+                parameterValues[i] = ParameterValues[i].Parse(actionSet, !OverloadChooser.Overload.Parameters[i].Type?.Constant() ?? true);
             return parameterValues;
         }
     }

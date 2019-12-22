@@ -108,7 +108,7 @@ namespace Deltin.Deltinteger.Parse
             WorkshopValue = workshopValue;
         }
 
-        public IWorkshopTree Parse(ActionSet actionSet)
+        public IWorkshopTree Parse(ActionSet actionSet, bool asElement = true)
         {
             if (Expression != null) return Expression.Parse(actionSet);
             return WorkshopValue;
@@ -178,7 +178,7 @@ namespace Deltin.Deltinteger.Parse
             // Match by value types and parameter types.
             for (int i = 0; i < values.Length; i++)
             foreach (var option in CurrentOptions)
-                CompareParameterTypes(values[i].Type(), option, i);
+                CompareParameterTypes(values[i], option, i);
             GetBestOption();
 
             Values = new IExpression[Overload.Parameters.Length];
@@ -267,7 +267,7 @@ namespace Deltin.Deltinteger.Parse
                 else if (parameter.Value != null)
                 {
                     // Check the types.
-                    CompareParameterTypes(parameter.Value.Type(), option, index);
+                    CompareParameterTypes(parameter.Value, option, index);
                 }
             }
             GetBestOption();
@@ -343,12 +343,17 @@ namespace Deltin.Deltinteger.Parse
             foreach (var option in CurrentOptions) optionDiagnostics.Add(option, new List<Diagnostic>());
         }
 
-        private void CompareParameterTypes(CodeType valueType, IParameterCallable option, int parameter)
+        private void CompareParameterTypes(IExpression value, IParameterCallable option, int parameter)
         {
-            if (!CodeType.TypeMatches(option.Parameters[parameter].Type, valueType))
+            if (!CodeType.TypeMatches(option.Parameters[parameter].Type, value.Type()))
             {
                 // The parameter type does not match.
                 string msg = string.Format("Expected a value of type {0}.", option.Parameters[parameter].Type.Name);
+                optionDiagnostics[option].Add(new Diagnostic(msg, ParameterErrors[parameter], Diagnostic.Error));
+            }
+            else if (value.Type() != null && option.Parameters[parameter].Type == null && value.Type().Constant())
+            {
+                string msg = string.Format($"The type '{value.Type().Name}' cannot be used here.");
                 optionDiagnostics[option].Add(new Diagnostic(msg, ParameterErrors[parameter], Diagnostic.Error));
             }
         }
@@ -371,7 +376,7 @@ namespace Deltin.Deltinteger.Parse
 
             // Parameter is missing.
             script.Diagnostics.Error(
-                string.Format(ErrorMessages.MissingParameter, parameter.ToString()),
+                string.Format(ErrorMessages.MissingParameter, parameter.Name),
                 genericErrorRange
             );
             return null;
@@ -444,7 +449,7 @@ namespace Deltin.Deltinteger.Parse
         {
             BadParameterCount    = $"No overloads for the {errorName} has {{0}} parameters.";
             ParameterDoesntExist = $"The parameter '{{0}}' does not exist in the {errorName}.";
-            MissingParameter     = $"The '{{0}}' parameter is missing in the {errorName}.";
+            MissingParameter     = $"The {{0}} parameter is missing in the {errorName}.";
         }
     }
 }

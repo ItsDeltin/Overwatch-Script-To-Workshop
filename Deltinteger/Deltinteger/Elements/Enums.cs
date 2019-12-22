@@ -128,6 +128,11 @@ namespace Deltin.Deltinteger.Elements
             }
         }
 
+        public bool ConvertableToElement()
+        {
+            return new string[] { "Hero", "Team", "Map", "GameMode" }.Contains(CodeName);
+        }
+
         public bool IsEnumMember(string codeName)
         {
             return GetEnumMember(codeName) != null;
@@ -160,11 +165,6 @@ namespace Deltin.Deltinteger.Elements
         {
             // TODO: Translate!
             return WorkshopName;
-        }
-
-        public void DebugPrint(Log log, int depth)
-        {
-            log.Write(LogLevel.Verbose, Extras.Indent(depth, false) + WorkshopName);
         }
     }
 
