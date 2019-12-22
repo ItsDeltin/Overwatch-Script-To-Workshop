@@ -267,7 +267,7 @@ namespace Deltin.Deltinteger.Parse
                 case DeltinScriptParser.S_varsetContext varset    : return new SetVariableAction(script, translateInfo, scope, varset.varset());
                 case DeltinScriptParser.S_exprContext s_expr      : {
 
-                    var expr = GetExpression(script, translateInfo, scope, s_expr.expr());
+                    var expr = GetExpression(script, translateInfo, scope, s_expr.expr(), true, false);
                     if (expr is ExpressionTree == false || ((ExpressionTree)expr)?.Result is IStatement == false)
                     {
                         if (expr != null)

@@ -34,7 +34,7 @@ namespace Deltin.Deltinteger.Parse
             if (current != null)
                 for (int i = 1; i < ExprContextTree.Length; i++)
                 {
-                    current = DeltinScript.GetExpression(script, translateInfo, current.ReturningScope() ?? new Scope(), ExprContextTree[i], false, usedAsValue);
+                    current = DeltinScript.GetExpression(script, translateInfo, current.ReturningScope() ?? new Scope(), ExprContextTree[i], false, i < ExprContextTree.Length - 1 || usedAsValue);
 
                     if (current != null && current is IScopeable == false && current is CallMethodAction == false)
                         script.Diagnostics.Error("Expected variable or method.", DocRange.GetRange(ExprContextTree[i]));
@@ -98,7 +98,11 @@ namespace Deltin.Deltinteger.Parse
                     if (i < Tree.Length - 1)
                     {
                         start = DocRange.GetRange(ExprContextTree[i + 1]).start;
-                        end = DocRange.GetRange(ExprContextTree[i + 1]).end;
+
+                        if (ExprContextTree[i + 1] is DeltinScriptParser.E_methodContext)
+                            end = DocRange.GetRange(((DeltinScriptParser.E_methodContext)ExprContextTree[i + 1]).method().PART()).end;
+                        else
+                            end = DocRange.GetRange(ExprContextTree[i + 1]).end;
                     }
                     // Expression path has a trailing '.'
                     else if (_trailingSeperator != null)
