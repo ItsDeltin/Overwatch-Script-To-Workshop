@@ -34,7 +34,7 @@ namespace Deltin.Deltinteger.Parse
             if (current != null)
                 for (int i = 1; i < ExprContextTree.Length; i++)
                 {
-                    current = DeltinScript.GetExpression(script, translateInfo, current.ReturningScope() ?? new Scope(), ExprContextTree[i], false, i < ExprContextTree.Length - 1 || usedAsValue);
+                    current = DeltinScript.GetExpression(script, translateInfo, current.ReturningScope() ?? new Scope(), ExprContextTree[i], false, i < ExprContextTree.Length - 1 || usedAsValue, scope);
 
                     if (current != null && current is IScopeable == false && current is CallMethodAction == false)
                         script.Diagnostics.Error("Expected variable or method.", DocRange.GetRange(ExprContextTree[i]));
@@ -144,6 +144,7 @@ namespace Deltin.Deltinteger.Parse
             IWorkshopTree target = null;
             IWorkshopTree result = null;
             VarIndexAssigner currentAssigner = actionSet.IndexAssigner;
+            IndexReference currentObject = null;
 
             for (int i = 0; i < Tree.Length; i++)
             {
@@ -157,30 +158,28 @@ namespace Deltin.Deltinteger.Parse
                     // If this is the last node in the tree, set the resulting variable.
                     if (isLast) resultingVariable = reference;
                 }
-                // ! TODO: More elegant way of doing the following line
                 else if (Tree[i] is CodeType == false)
-                // !
-                    current = Tree[i].Parse(actionSet.New(currentAssigner), asElement);
+                    current = Tree[i].Parse(actionSet.New(currentAssigner).New(currentObject), asElement);
                 
                 if (Tree[i].Type() == null)
                 {
                     // If this isn't the last in the tree, set it as the target.
                     if (!isLast)
                         target = current;
+                    currentObject = null;
                 }
                 else
                 {
+                    currentObject = Tree[i].Type().GetObjectSource(actionSet.Translate.DeltinScript, current);
+
                     if (Tree[i].Type() is DefinedType)
                     {
                         currentAssigner = actionSet.IndexAssigner.CreateContained();
                         var definedType = ((DefinedType)Tree[i].Type());
 
                         // Assign the object variables indexes.
-                        var source = definedType.GetObjectSource(actionSet.Translate.DeltinScript, current);
-                        definedType.AddObjectVariablesToAssigner(source, currentAssigner);
+                        definedType.AddObjectVariablesToAssigner(currentObject, currentAssigner);
                     }
-                    // todo: remove this commented line
-                    // else throw new NotImplementedException();
                 }
 
                 result = current;

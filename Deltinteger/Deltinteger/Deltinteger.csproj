@@ -64,6 +64,7 @@
     <Compile Include="Custom Methods/LinearInterpolate.cs"/>
     <Compile Include="Custom Methods/InsertValueInArray.cs"/>
     <Compile Include="Custom Methods/RemoveFromArrayAtIndex.cs"/>
+    <Compile Include="Custom Methods/Destination.cs"/>
     
     <Compile Remove="Pathfinder/**"/>
     <Compile Include="Pathfinder/PathfindClass.cs"/>

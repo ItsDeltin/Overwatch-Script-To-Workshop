@@ -14,7 +14,7 @@ namespace Deltin.Deltinteger.Parse
 
         private DocRange NameRange { get; }
 
-        public CallMethodAction(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.MethodContext methodContext, bool usedAsExpression)
+        public CallMethodAction(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.MethodContext methodContext, bool usedAsExpression, Scope getter)
         {
             this.translateInfo = translateInfo;
             string methodName = methodContext.PART().GetText();
@@ -25,7 +25,7 @@ namespace Deltin.Deltinteger.Parse
                 script.Diagnostics.Error($"No method by the name of '{methodName}' exists in the current context.", NameRange);
             else
             {
-                OverloadChooser = new OverloadChooser(options, script, translateInfo, scope, NameRange, DocRange.GetRange(methodContext), new OverloadError("method '" + methodName + "'"));
+                OverloadChooser = new OverloadChooser(options, script, translateInfo, getter, NameRange, DocRange.GetRange(methodContext), new OverloadError("method '" + methodName + "'"));
 
                 if (methodContext.call_parameters() != null)
                     OverloadChooser.SetContext(methodContext.call_parameters());

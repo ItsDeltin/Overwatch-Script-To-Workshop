@@ -1,31 +1,27 @@
 ﻿using System;
-using Deltin.Deltinteger.WorkshopWiki;
+using Deltin.Deltinteger.Parse;
+using Deltin.Deltinteger.Elements;
 
-namespace Deltin.Deltinteger.Elements
+namespace Deltin.Deltinteger.CustomMethods
 {
-    [CustomMethod("Destination", CustomMethodType.Value)]
-    [Parameter("startingPoint", ValueType.Vector, null)]
-    [Parameter("direction", ValueType.Vector, null)]
-    [Parameter("distance", ValueType.Number, null)]
+    [CustomMethod("Destination", "Calculates a destination given a starting point, distance and direction", CustomMethodType.Value)]
     class Destination : CustomMethodBase
     {
-        protected override MethodResult Get()
+        public override CodeParameter[] Parameters()
         {
-            Element startingPoint = (Element)Parameters[0];
-            Element direction = (Element)Parameters[1];
-            Element distance = (Element)Parameters[2];
-            return new MethodResult(null, startingPoint + direction * distance);
+            return new CodeParameter[] {
+                new CodeParameter("startingPoint", "The starting point."),
+                new CodeParameter("direction", "The direction to move."),
+                new CodeParameter("distance", "The distance to move.")
+            };
         }
 
-        public override CustomMethodWiki Wiki()
+        public override IWorkshopTree Get(ActionSet actionSet, IWorkshopTree[] parameters)
         {
-            return new CustomMethodWiki(
-                "Calculates a destination given a starting point, distance and direction",
-                // Parameters
-                "The starting point.",
-                "The direction to move.",
-                "The distance to move."
-            );
+            Element startingPoint = (Element)parameters[0];
+            Element direction = (Element)parameters[1];
+            Element distance = (Element)parameters[2];
+            return startingPoint + direction * distance;
         }
     }
 }

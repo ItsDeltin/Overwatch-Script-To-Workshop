@@ -268,5 +268,13 @@ namespace Deltin.Deltinteger.LanguageServer
             this.uri = uri;
             this.range = range;
         }
+
+        public LSLocation ToLsLocation()
+        {
+            return new LSLocation() {
+                Uri = uri,
+                Range = range.ToLsRange()
+            };
+        }
     }
 }

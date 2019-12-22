@@ -47,6 +47,8 @@ namespace Deltin.Deltinteger.Parse
             throw new NotImplementedException();
         }
 
+        public virtual IndexReference GetObjectSource(DeltinScript translateInfo, IWorkshopTree element) => null;
+
         public virtual void Call(ScriptFile script, DocRange callRange)
         {
             if (Description != null)
@@ -60,8 +62,13 @@ namespace Deltin.Deltinteger.Parse
             return parameterType == null || parameterType == valueType;
         }
 
-        public static readonly CodeType[] DefaultTypes = GetDefaultTypes();
-
+        static CodeType[] _defaultTypes;
+        public static CodeType[] DefaultTypes {
+            get {
+                if (_defaultTypes == null) _defaultTypes = GetDefaultTypes();
+                return _defaultTypes;
+            }
+        }
         private static CodeType[] GetDefaultTypes()
         {
             var defaultTypes = new List<CodeType>();
@@ -369,7 +376,7 @@ namespace Deltin.Deltinteger.Parse
         }
 
         // TODO: Should this be moved to the base class CodeType?
-        public IndexReference GetObjectSource(DeltinScript translateInfo, IWorkshopTree element)
+        public override IndexReference GetObjectSource(DeltinScript translateInfo, IWorkshopTree element)
         {
             if (TypeKind == TypeKind.Struct) throw new NotImplementedException();
             return translateInfo.SetupClasses().ClassArray.CreateChild((Element)element);

@@ -263,7 +263,7 @@ namespace Deltin.Deltinteger.Parse
                     newVar.Finalize(scope);
                     return new DefineAction(newVar);
                 }
-                case DeltinScriptParser.S_methodContext method    : return new CallMethodAction(script, translateInfo, scope, method.method(), false);
+                case DeltinScriptParser.S_methodContext method    : return new CallMethodAction(script, translateInfo, scope, method.method(), false, scope);
                 case DeltinScriptParser.S_varsetContext varset    : return new SetVariableAction(script, translateInfo, scope, varset.varset());
                 case DeltinScriptParser.S_exprContext s_expr      : {
 
@@ -286,8 +286,10 @@ namespace Deltin.Deltinteger.Parse
             }
         }
 
-        public static IExpression GetExpression(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.ExprContext exprContext, bool selfContained = true, bool usedAsValue = true)
+        public static IExpression GetExpression(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.ExprContext exprContext, bool selfContained = true, bool usedAsValue = true, Scope getter = null)
         {
+            if (getter == null) getter = scope;
+
             switch (exprContext)
             {
                 case DeltinScriptParser.E_numberContext number: return new NumberAction(script, number.number());
@@ -321,7 +323,7 @@ namespace Deltin.Deltinteger.Parse
                     else if (element is ScopedEnumMember) return (ScopedEnumMember)element;
                     else throw new NotImplementedException();
                 }
-                case DeltinScriptParser.E_methodContext method: return new CallMethodAction(script, translateInfo, scope, method.method(), usedAsValue);
+                case DeltinScriptParser.E_methodContext method: return new CallMethodAction(script, translateInfo, scope, method.method(), usedAsValue, getter);
                 case DeltinScriptParser.E_new_objectContext newObject: return new CreateObjectAction(script, translateInfo, scope, newObject.create_object());
                 case DeltinScriptParser.E_expr_treeContext exprTree: return new ExpressionTree(script, translateInfo, scope, exprTree, usedAsValue);
                 case DeltinScriptParser.E_array_indexContext arrayIndex: return new ValueInArrayAction(script, translateInfo, scope, arrayIndex);

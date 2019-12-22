@@ -16,16 +16,18 @@ namespace Deltin.Deltinteger.CustomMethods
     [AttributeUsage(AttributeTargets.Class)]
     public class CustomMethod : Attribute
     {
-        public CustomMethod(string methodName, string description, CustomMethodType methodType)
+        public CustomMethod(string methodName, string description, CustomMethodType methodType, bool global = true)
         {
             MethodName = methodName;
             Description = description;
             MethodType = methodType;
+            Global = global;
         }
 
         public string MethodName { get; }
         public string Description { get; }
         public CustomMethodType MethodType { get; }
+        public bool Global { get; }
     }
 
     public enum CustomMethodType
@@ -41,6 +43,7 @@ namespace Deltin.Deltinteger.CustomMethods
         public CodeParameter[] Parameters { get; }
         public CustomMethodType CustomMethodType { get; }
         public Type Type { get; }
+        public bool Global { get; }
 
         // IScopeable defaults
         public Location DefinedAt { get; } = null;
@@ -59,6 +62,7 @@ namespace Deltin.Deltinteger.CustomMethods
             Name = data.MethodName;
             CustomMethodType = data.MethodType;
             Documentation = data.Description;
+            Global = data.Global;
 
             var obj = GetObject();
             Parameters = obj.Parameters() ?? new CodeParameter[0];
@@ -103,12 +107,17 @@ namespace Deltin.Deltinteger.CustomMethods
             }
             return _customMethodData;
         }
+        public static CustomMethodData GetCustomMethod<T>() where T: CustomMethodBase
+        {
+            foreach (CustomMethodData customMethod in GetCustomMethods())
+                if (customMethod.Type == typeof(T))
+                    return customMethod;
+            return null;
+        }
     }
 
     public abstract class CustomMethodBase
     {
-        protected virtual void ValidateParameters() {}
-
         public abstract CodeParameter[] Parameters();
         public abstract IWorkshopTree Get(ActionSet actionSet, IWorkshopTree[] parameterValues);
     }
