@@ -8,10 +8,12 @@ using StringOrMarkupContent = OmniSharp.Extensions.LanguageServer.Protocol.Model
 
 namespace Deltin.Deltinteger.Parse
 {
-    public abstract class CodeType : IExpression
+    public abstract class CodeType : IExpression, ICallable
     {
         public string Name { get; }
         public Constructor[] Constructors { get; protected set; }
+        public string Description { get; protected set; }
+        protected abstract string TypeKindString { get; }
 
         public CodeType(string name)
         {
@@ -45,6 +47,12 @@ namespace Deltin.Deltinteger.Parse
             throw new NotImplementedException();
         }
 
+        public virtual void Call(ScriptFile script, DocRange callRange)
+        {
+            if (Description != null)
+                script.AddHover(callRange, Description);
+        }
+
         public abstract CompletionItem GetCompletion();
 
         public static bool TypeMatches(CodeType parameterType, CodeType valueType)
@@ -71,6 +79,7 @@ namespace Deltin.Deltinteger.Parse
     {
         private Scope EnumScope { get; } = new Scope();
         public EnumData EnumData { get; }
+        override protected string TypeKindString { get; } = "enum";
 
         public WorkshopEnumType(EnumData enumData) : base(enumData.CodeName)
         {
@@ -146,7 +155,7 @@ namespace Deltin.Deltinteger.Parse
     public class DefinedType : CodeType, ICallable
     {
         public TypeKind TypeKind { get; }
-        public string KindString { get; }
+        protected override string TypeKindString { get; }
         public Location DefinedAt { get; }
         private Scope objectScope { get; }
         private Scope staticScope { get; }
@@ -165,17 +174,17 @@ namespace Deltin.Deltinteger.Parse
             if (typeContext.CLASS() != null) 
             { 
                 TypeKind = TypeKind.Class;
-                KindString = "class";
+                TypeKindString = "class";
             }
             else if (typeContext.STRUCT() != null) 
             { 
                 TypeKind = TypeKind.Struct;
-                KindString = "struct";
+                TypeKindString = "struct";
             }
             else throw new NotImplementedException();
 
-            staticScope = translateInfo.GlobalScope.Child(KindString + " " + Name);
-            objectScope = staticScope.Child(KindString + " " + Name);
+            staticScope = translateInfo.GlobalScope.Child(TypeKindString + " " + Name);
+            objectScope = staticScope.Child(TypeKindString + " " + Name);
 
             // Get the variables defined in the type.
             foreach (var definedVariable in typeContext.define())
@@ -378,8 +387,9 @@ namespace Deltin.Deltinteger.Parse
                 assigner.Add(objectVariables[i], source.CreateChild(i));
         }
 
-        public void Call(ScriptFile script, DocRange callRange)
+        public override void Call(ScriptFile script, DocRange callRange)
         {
+            base.Call(script, callRange);
             script.AddDefinitionLink(callRange, DefinedAt);
             AddLink(new Location(script.Uri, callRange));
         }
@@ -437,7 +447,7 @@ namespace Deltin.Deltinteger.Parse
                 ((DefinedType)Type).AddLink(new Location(script.Uri, callRange));
         }
 
-        public string GetLabel(bool markdown) => HoverHandler.GetLabel("new " + Type.Name, Parameters, markdown, Documentation.String);
+        public string GetLabel(bool markdown) => HoverHandler.GetLabel("new " + Type.Name, Parameters, markdown, Documentation);
     }
 
     public class DefinedConstructor : Constructor

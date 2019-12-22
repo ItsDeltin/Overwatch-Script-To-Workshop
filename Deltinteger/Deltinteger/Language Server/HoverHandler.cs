@@ -55,7 +55,7 @@ namespace Deltin.Deltinteger.LanguageServer
             _capability = capability;
         }
 
-        public static string GetLabel(string name, CodeParameter[] parameters, bool markdown, string description)
+        public static string GetLabel(string name, CodeParameter[] parameters, bool markdown, StringOrMarkupContent description)
         {
             if (name == null) throw new ArgumentNullException(nameof(name));
             if (parameters == null) throw new ArgumentNullException(nameof(parameters));
@@ -64,7 +64,17 @@ namespace Deltin.Deltinteger.LanguageServer
             if (markdown) result += "```ostw\n";
             result += name + CodeParameter.GetLabels(parameters, false);
             if (markdown) result += "\n\r```";
-            if (markdown && description != null) result += "\n\r ----- \n\r" + description;
+            if (markdown && description != null) result += "\n\r ----- \n\r" + (description.HasString ? description.String : description.MarkupContent.Value);
+            return result;
+        }
+
+        public static string Sectioned(string title, string description)
+        {
+            string result = "";
+            result += "```ostw\n";
+            result += title;
+            result += "\n\r```";
+            if (description != null) result += "\n\r ----- \n\r" + description;
             return result;
         }
     }

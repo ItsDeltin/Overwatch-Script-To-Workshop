@@ -314,8 +314,7 @@ namespace Deltin.Deltinteger.Parse
 
                 if (type != null)
                 {
-                    if (type is DefinedType)
-                        ((DefinedType)type).Call(script, DocRange.GetRange(context.type));
+                    type.Call(script, DocRange.GetRange(context.type));
                     if (type.Constant())
                         newVar.VariableType = VariableType.ElementReference;
                 }

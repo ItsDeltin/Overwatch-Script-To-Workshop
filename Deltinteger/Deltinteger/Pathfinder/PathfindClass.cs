@@ -11,11 +11,14 @@ namespace Deltin.Deltinteger.Pathfinder
 {
     public class PathmapClass : CodeType
     {
+        protected override string TypeKindString => "class";
+
         public PathmapClass() : base("Pathmap")
         {
             this.Constructors = new Constructor[] {
                 new PathmapClassConstructor(this)
             };
+            Description = "A pathmap can be used for pathfinding.";
         }
 
         public override IWorkshopTree New(ActionSet actionSet, Constructor constructor, IWorkshopTree[] constructorValues, object[] additionalParameterData)

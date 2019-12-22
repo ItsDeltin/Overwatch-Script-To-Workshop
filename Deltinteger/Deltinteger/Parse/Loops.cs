@@ -124,8 +124,7 @@ namespace Deltin.Deltinteger.Parse
             if (foreachContext.type != null)
             {
                 ForeachVar.CodeType = translateInfo.GetCodeType(foreachContext.type.Text, script.Diagnostics, DocRange.GetRange(foreachContext.type));
-                if (ForeachVar.CodeType is DefinedType)
-                    ((DefinedType)ForeachVar.CodeType).Call(script, DocRange.GetRange(foreachContext.type));
+                ForeachVar.CodeType?.Call(script, DocRange.GetRange(foreachContext.type));
             }
             ForeachVar.Finalize(varScope);
 

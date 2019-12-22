@@ -97,7 +97,10 @@ namespace Deltin.Deltinteger.Parse
 
             // Get the type.
             if (context.type != null)
+            {
                 ReturnType = GetCodeType(script, translateInfo, context.type.Text, DocRange.GetRange(context.type));
+                ReturnType?.Call(script, DocRange.GetRange(context.type));
+            }
 
             // Get the access level.
             AccessLevel = context.accessor().GetAccessLevel();

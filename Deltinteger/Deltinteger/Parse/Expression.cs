@@ -442,6 +442,7 @@ namespace Deltin.Deltinteger.Parse
         public Scope ReturningScope() => Type()?.GetObjectScope();
         public CodeType Type()
         {
+            // Consequent or Alternative can equal null on GetExpression failure.
             if (Consequent != null && Alternative != null && Consequent.Type() == Alternative.Type()) return Consequent.Type();
             return null;
         }
