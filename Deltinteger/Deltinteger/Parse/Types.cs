@@ -416,7 +416,7 @@ namespace Deltin.Deltinteger.Parse
         public CodeParameter[] Parameters { get; protected set; }
         public Location DefinedAt { get; }
         public CodeType Type { get; }
-        public StringOrMarkupContent Documentation => null;
+        public StringOrMarkupContent Documentation { get; protected set; }
 
         public Constructor(CodeType type, Location definedAt, AccessLevel accessLevel)
         {
@@ -437,7 +437,7 @@ namespace Deltin.Deltinteger.Parse
                 ((DefinedType)Type).AddLink(new Location(script.Uri, callRange));
         }
 
-        public string GetLabel(bool markdown) => HoverHandler.GetLabel(Type.Name, Parameters, markdown, null);
+        public string GetLabel(bool markdown) => HoverHandler.GetLabel("new " + Type.Name, Parameters, markdown, Documentation.String);
     }
 
     public class DefinedConstructor : Constructor

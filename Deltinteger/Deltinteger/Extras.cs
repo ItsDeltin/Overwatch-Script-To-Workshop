@@ -4,6 +4,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Xml.Serialization;
 using Deltin.Deltinteger.Parse;
+using StringOrMarkupContent = OmniSharp.Extensions.LanguageServer.Protocol.Models.StringOrMarkupContent;
+using MarkupContent = OmniSharp.Extensions.LanguageServer.Protocol.Models.MarkupContent;
+using MarkupKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.MarkupKind;
 
 namespace Deltin.Deltinteger
 {
@@ -105,6 +108,11 @@ namespace Deltin.Deltinteger
         }
 
         public static bool Compare(this Uri uri, Uri other) => uri.Clean().FilePath() == other.Clean().FilePath();
+
+        public static StringOrMarkupContent GetMarkupContent(string text) => new StringOrMarkupContent(new MarkupContent() {
+            Kind = MarkupKind.Markdown,
+            Value = text
+        });
     }
 
     public class TabStringBuilder
