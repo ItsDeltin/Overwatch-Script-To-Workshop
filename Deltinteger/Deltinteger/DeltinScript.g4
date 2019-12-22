@@ -16,7 +16,7 @@ true   : TRUE          ;
 false  : FALSE         ;
 null   : NULL          ;
 
-define : accessor? STATIC? (type=PART | DEFINE) (GLOBAL|PLAYER)? name=PART (id=number? | NOT?) (EQUALS expr?)? ;
+define : accessor? STATIC? (GLOBAL|PLAYER)? (type=PART | DEFINE) name=PART (id=number? | NOT?) (EQUALS expr?)? ;
 
 expr 
 	: 
