@@ -18,10 +18,12 @@ namespace Deltin.Deltinteger.Parse
             IExpression variableExpression = DeltinScript.GetExpression(script, translateInfo, scope, varsetContext.var);
 
             DocRange notAVariableRange = null;
+            DocRange variableRange = null;
 
             if (variableExpression is Var)
             {
                 SetVariable = (Var)variableExpression;
+                variableRange = DocRange.GetRange(varsetContext.var);
             }
             else if (variableExpression is ExpressionTree)
             {
@@ -31,7 +33,10 @@ namespace Deltin.Deltinteger.Parse
                     if (Tree.Result is Var == false)
                         notAVariableRange = DocRange.GetRange(Tree.ExprContextTree.Last());
                     else
+                    {   
                         SetVariable = (Var)Tree.Result;
+                        variableRange = DocRange.GetRange(Tree.ExprContextTree.Last());
+                    }
                 }
             }
             else if (variableExpression != null)
@@ -39,6 +44,9 @@ namespace Deltin.Deltinteger.Parse
 
             if (notAVariableRange != null)
                 script.Diagnostics.Error("Expected a variable.", notAVariableRange);
+            
+            if (SetVariable != null && !SetVariable.Settable())
+                script.Diagnostics.Error($"The variable '{SetVariable.Name}' cannot be set to.", variableRange);
             
             if (varsetContext.statement_operation() != null)
             {
