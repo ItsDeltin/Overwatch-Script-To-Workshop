@@ -11,7 +11,7 @@
 			"patterns": [
 				{"include": "#rule"},
 				{"include": "#strings"},
-				{"include": "#rule_if"},
+				{"include": "#if"},
 				{"include": "#rule_option"},
 				{"include": "#block"},
 				{"include": "#new"},
@@ -27,8 +27,8 @@
 				"1": {"name":"keyword.other"}
 			}
 		},
-		"rule_if": {
-			"begin": "(if)\\s*\\(",
+		"if": {
+			"begin": "((else\\s+)?if)\\s*\\(",
 			"beginCaptures": {
 				"1": {"name": "keyword.other"}
 			},
@@ -87,12 +87,13 @@
 		"block": {
 			"begin": "{",
 			"end": "}",
-			"patterns": [{"include": "#define_method"}, {"include": "#statement"}, {"include": "#comments"}, {"include": "#expressions"}]
+			"patterns": [{"include": "#statement"}, {"include": "#comments"}, {"include": "#expressions"}, {"include": "#define_method"}]
 		},
 		"statement": {
 			"patterns": [
-				{"include": "#define_variable"},
-				{"include": "#methods"}
+				{"include": "#methods"},
+				{"include": "#if"},
+				{"include": "#define_variable"}
 			]
 		},
 		"expressions": {
