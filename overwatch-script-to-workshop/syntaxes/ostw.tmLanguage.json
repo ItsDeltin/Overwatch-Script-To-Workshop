@@ -15,22 +15,22 @@
 				{"include": "#rule_option"},
 				{"include": "#block"},
 				{"include": "#new"},
+				{"include": "#define_type"},
 				{"include": "#define_method"},
 				{"include": "#define_variable"},
 				{"include": "#keywords"}
 			]
 		},
-
 		"rule": {
 			"match": "\\b(rule)\\s*:",
 			"captures": {
-				"1": {"name":"keyword.control"}
+				"1": {"name":"keyword.other"}
 			}
 		},
 		"rule_if": {
 			"begin": "(if)\\s*\\(",
 			"beginCaptures": {
-				"1": {"name": "keyword.control"}
+				"1": {"name": "keyword.other"}
 			},
 			"end": "\\)",
 			"patterns": [{"include": "#expressions"}]
@@ -42,24 +42,11 @@
 				"2": {"name": "variable.other"}
 			}
 		},
-
-		"block": {
-			"begin": "{",
-			"end": "}",
-			"patterns": [{"include": "#statement"}, {"include": "#comments"}, {"include": "#expressions"}]
-		},
-		"statement": {
-			"patterns": [
-				{"include": "#define_variable"},
-				{"include": "#methods"}
-			]
-		},
-
 		"define_variable": {
 			"begin": "((public|private|static|globalvar|playervar)\\s+)*((define)|([_[:alnum:]]+))(\\s+[_[:alnum:]]+)(\\s*(\\!|([0-9]+)))?(\\s*=)?",
 			"beginCaptures": {
-				"2": {"name":"keyword.control"},
-				"4": {"name":"keyword.control"},
+				"2": {"name":"keyword.other"},
+				"4": {"name":"keyword.other"},
 				"5": {"name":"entity.name.class"},
 				"6": {"name":"variable.name"},
 				"9": {"name":"constant.numeric"}
@@ -68,10 +55,10 @@
 			"patterns": [{"include": "#expressions"}]
 		},
 		"define_method": {
-			"begin": "((public|private|static|recursive)\\s+)*(((method)|([_[:alnum:]]+))\\s+)?([_[:alnum:]]+\\s*\\()",
+			"begin": "((public|private|static|recursive)\\s+)*(((method)|([_[:alnum:]]+))\\s+)([_[:alnum:]]+\\s*\\()",
 			"beginCaptures": {
-				"2": {"name":"keyword.control"},
-				"5": {"name":"keyword.control"},
+				"2": {"name":"keyword.other"},
+				"5": {"name":"keyword.other"},
 				"6": {"name":"entity.name.class"},
 				"7": {"name":"entity.name.function"}
 			},
@@ -84,12 +71,30 @@
 		"parameter": {
 			"match": "((define)|([_[:alnum:]]+)) +([_[:alnum:]]+)",
 			"captures": {
-				"2": { "name": "keyword.control" },
+				"2": { "name": "keyword.other" },
 				"3": { "name": "entity.name.type" },
 				"4": { "name": "variable.parameter" }
 			}
 		},
+		"define_type": {
+			"match": "(class|struct|enum)\\s+([_[:alnum:]]+)",
+			"captures": {
+				"1": {"name": "keyword.other"},
+				"2": {"name": "entity.name.class"}
+			}
+		},
 
+		"block": {
+			"begin": "{",
+			"end": "}",
+			"patterns": [{"include": "#define_method"}, {"include": "#statement"}, {"include": "#comments"}, {"include": "#expressions"}]
+		},
+		"statement": {
+			"patterns": [
+				{"include": "#define_variable"},
+				{"include": "#methods"}
+			]
+		},
 		"expressions": {
 			"patterns": [
 				{"include": "#new"},
@@ -111,7 +116,7 @@
 			"begin": "(new)\\s+([_[:alnum:]]+)\\s*\\(",
 			"end": "\\)",
 			"beginCaptures": {
-				"1": {"name":"keyword.control"},
+				"1": {"name":"keyword.other"},
 				"2": {"name":"entity.name.class"}
 			},
 			"patterns": [{"include": "#expressions"}]
@@ -144,7 +149,7 @@
 		},
 
 		"keywords": {
-			"name": "keyword.control",
+			"name": "keyword.other",
 			"match": "\\b(if|else|while|for|foreach|return|in|define|rule|true|false|usevar|method|recursive|playervar|globalvar|buildervar|null|struct|class|public|private|static|new|this|import|as|delete|root|macro)\\b"
 		},
 		"variables": {
