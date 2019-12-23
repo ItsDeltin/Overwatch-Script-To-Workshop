@@ -24,13 +24,13 @@
 		"rule": {
 			"match": "\\b(rule)\\s*:",
 			"captures": {
-				"1": {"name":"keyword.other"}
+				"1": {"name":"keyword.control"}
 			}
 		},
 		"if": {
 			"begin": "((else\\s+)?if)\\s*\\(",
 			"beginCaptures": {
-				"1": {"name": "keyword.other"}
+				"1": {"name": "keyword.control"}
 			},
 			"end": "\\)",
 			"patterns": [{"include": "#expressions"}]
@@ -150,8 +150,18 @@
 		},
 
 		"keywords": {
+			"patterns": [
+				{"include": "#keywords_control"},
+				{"include": "#keywords_other"}
+			]
+		},
+		"keywords_control": {
+			"name": "keyword.control",
+			"match": "\\b(if|else|while|for|foreach|return|rule)\\b"
+		},
+		"keywords_other": {
 			"name": "keyword.other",
-			"match": "\\b(if|else|while|for|foreach|return|in|define|rule|true|false|usevar|method|recursive|playervar|globalvar|buildervar|null|struct|class|public|private|static|new|this|import|as|delete|root|macro)\\b"
+			"match": "\\b(in|define|true|false|method|recursive|playervar|globalvar|buildervar|null|struct|class|public|private|static|new|this|import|as|delete|root|macro)\\b"
 		},
 		"variables": {
 			"name": "variable",

@@ -47,20 +47,6 @@ namespace Deltin.Deltinteger.I18n
     public class I18nLanguage
     {
         public I18nLanguage() {}
-        public I18nLanguage(Log log, StringKeyGroup engKeys, StringKeyGroup altKeys)
-        {
-            foreach (var element in ElementList.Elements)
-            {
-                string engName = element.WorkshopName;
-                var engPair = engKeys.FromValue(engName);
-
-                if (engPair == null) throw new Exception($"Could not find key pair for value '{engName}'.");
-
-                var altPair = altKeys.FromKey(engPair.Key);
-                if (engName.ToLower() != altPair.Value.ToLower())
-                    Methods.Add(new I18nMethod(engName, altPair.Value));
-            }
-        }
 
         [XmlArrayItem("method")]
         public List<I18nMethod> Methods { get; } = new List<I18nMethod>();

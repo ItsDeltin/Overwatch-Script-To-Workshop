@@ -18,6 +18,32 @@ namespace Deltin.Deltinteger.I18n
             "deDE", "esES", "esMX", "frFR", "itIT", "jaJP", "koKR", "plPL", "ptBR", "ruRU", "zhCN", "zhTW"
         };
 
+        public static string[] Keywords()
+        {
+            var keywords = new List<string>();
+            // Add keywords
+            keywords.AddRange(new string[] {
+                "variables",
+                "global",
+                "player",
+                "rule",
+                "event",
+                "conditions",
+                "actions",
+                "disabled"
+            });
+
+            // Add methods
+            keywords.AddRange(ElementList.Elements.Select(e => e.WorkshopName));
+
+            // Add enums
+            foreach(var enumData in EnumData.GetEnumData())
+                foreach (var member in enumData.Members)
+                    keywords.Add(member.WorkshopName);
+
+            return keywords.ToArray();
+        }
+
         public static void Generate(string[] args)
         {
             string datatoolPath  = args.ElementAtOrDefault(1);
@@ -60,20 +86,26 @@ namespace Deltin.Deltinteger.I18n
             XmlSerializer serializer = new XmlSerializer(typeof(I18nLanguage));
             foreach (string lang in ProcLanguages)
             {
-                var languageKeys = datatool.KeysFromLang(Log, lang);
+                // Dump the strings for the language.
+                StringKeyGroup strings = new StringKeyGroup();
+                datatool.DumpStrings(strings, lang, true, Log);
+
                 I18nLanguage xml = new I18nLanguage();
 
-                foreach (var element in ElementList.Elements)
+                // Translate
+                foreach (var keyword in Keywords())
                     xml.Methods.Add(new I18nMethod(
-                        element.WorkshopName,
-                        languageKeys.FromKey(keyLinks.First(m => m.MethodName == element.WorkshopName).Key).Value
+                        keyword,
+                        strings.ValueFromKeyAndLang(keyLinks.First(m => m.MethodName == keyword).Key, lang)
                     ));
 
+                // Get the file
                 string file = Path.Combine(outputFile, "i18n-" + lang + ".xml");
 
                 if (File.Exists(file))
                     File.Delete(file);
                 
+                // Serialize
                 using (var fileStream = File.Create(file))
                 using (StreamWriter writer = new StreamWriter(fileStream))
                     serializer.Serialize(writer, xml);
@@ -86,16 +118,18 @@ namespace Deltin.Deltinteger.I18n
         {
             string datatoolPath = "C:/Users/Deltin/Downloads/toolchain-release/DataTool.exe";
             string overwatchPath = "C:/Program Files (x86)/Overwatch";
-            DataTool datatool = new DataTool(datatoolPath, overwatchPath);
             Console.OutputEncoding = System.Text.Encoding.Unicode;
 
-            var engKeys = datatool.KeysFromLang(Log, "enUS");
-            var spKeys = datatool.KeysFromLang(Log, "esES");
-            var cKeys = datatool.KeysFromLang(Log, "zhCN");
+            DataTool datatool = new DataTool(datatoolPath, overwatchPath);
+            StringKeyGroup strings = new StringKeyGroup();
+
+            datatool.DumpStrings(strings, "enUS", true, Log);
+            datatool.DumpStrings(strings, "esES", false, Log);
+            datatool.DumpStrings(strings, "zhCN", false, Log);
 
             List<KeyLink> links = new List<KeyLink>();
-            foreach (var element in ElementList.Elements)
-                links.Add(GetKeyLink(element.WorkshopName, 5, engKeys, spKeys, cKeys));
+            foreach (var keyword in Keywords())
+                links.Add(GetKeyLink(keyword, 5, strings));
             
             Console.Write("Save key links to file: ");
             string saveAt = Console.ReadLine();
@@ -106,18 +140,17 @@ namespace Deltin.Deltinteger.I18n
                 serializer.Serialize(writer, new KeyLinkList(links.ToArray()));
         }
 
-        static KeyLink GetKeyLink(string name, int surroundRange, StringKeyGroup engKeys, params StringKeyGroup[] compareTo)
+        static KeyLink GetKeyLink(string name, int surroundRange, StringKeyGroup strings)
         {
-            var pairs = engKeys.AllIndexesFromValue(name);
+            var pairs = strings.KeysFromEnglishName(name);
             int chosen = 0;
             if (pairs.Length > 1)
             {
-                KeyLinkTable table = new KeyLinkTable(5, engKeys, compareTo);
                 List<KeyLinkRow> rows = new List<KeyLinkRow>();
 
                 for (int i = 0; i < pairs.Length; i++)
                 {
-                    KeyLinkRow row = new KeyLinkRow(table, pairs[i], i);
+                    KeyLinkRow row = new KeyLinkRow(strings, pairs[i], i, 5);
                     rows.Add(row);
                 }
 
@@ -127,38 +160,26 @@ namespace Deltin.Deltinteger.I18n
                 while (!int.TryParse(Console.ReadLine(), out chosen) || chosen >= pairs.Length);
             }
 
-            return new KeyLink(name, engKeys.FromIndex(pairs[chosen]).Key);
-        }
-
-        class KeyLinkTable
-        {
-            public StringKeyGroup EngKeys { get; }
-            public StringKeyGroup[] AltKeys { get; }
-            public int Range { get; }
-
-            public KeyLinkTable(int range, StringKeyGroup engKeys, params StringKeyGroup[] altKeys)
-            {
-                EngKeys = engKeys;
-                AltKeys = altKeys;
-                Range = range;
-            }
+            return new KeyLink(name, pairs[chosen].Key);
         }
 
         class KeyLinkRow
         {
-            private readonly KeyLinkTable _table;
+            private readonly StringKeyGroup _strings;
+            private readonly StringKey _pair;
             private readonly int _index;
             private readonly int _optionIndex;
             private readonly int _start;
             private readonly int _end;
 
-            public KeyLinkRow(KeyLinkTable table, int index, int optionIndex)
+            public KeyLinkRow(StringKeyGroup strings, StringKey pair, int optionIndex, int range)
             {
-                _table = table;
-                _index = index;
+                _strings = strings;
+                _pair = pair;
+                _index = strings.IndexOf(pair);
                 _optionIndex = optionIndex;
-                _start = Math.Max(0, index - table.Range);
-                _end = Math.Min(table.EngKeys.List.Count, index + table.Range + 1);
+                _start = Math.Max(0, _index - range);
+                _end = Math.Min(strings.List.Count, _index + range + 1);
             }
 
             public void Write()
@@ -173,17 +194,17 @@ namespace Deltin.Deltinteger.I18n
                     else
                         lineBuilder.Append(new string(' ', _optionIndex.ToString().Length) + "  ");
 
-                    for (int c = 0; c < _table.AltKeys.Length + 1; c++)
+                    for (int c = 0; c < _strings.Languages.Count; c++)
                     {
                         int columnLength = ColumnLength(c);
-                        var columnKeys = KeysFromColumn(c);
-                        string value = columnKeys.FromKey(_table.EngKeys.FromIndex(i).Key).Value;
+                        
+                        string value = _strings.FromIndex(i).Translations[c].Text;
                         if (value.Length > 20) value = value.Substring(0, 20);
                         
                         lineBuilder.Append(value);
                         lineBuilder.Append(new string(' ', columnLength - value.Length));
 
-                        if (c < _table.AltKeys.Length)
+                        if (c < _strings.Languages.Count - 1)
                             lineBuilder.Append(" | ");
                     }
 
@@ -195,19 +216,11 @@ namespace Deltin.Deltinteger.I18n
 
             public int ColumnLength(int column)
             {
-                StringKeyGroup useKeys = KeysFromColumn(column);
-
                 int length = 0;
                 for (int i = _start; i < _end; i++)
-                    length = Math.Min(20, Math.Max(length, useKeys.FromKey(_table.EngKeys.FromIndex(i).Key).Value.Length));
+                    length = Math.Min(20, Math.Max(length, _strings.FromIndex(i).Translations[column].Text.Length));
                 
                 return length;
-            }
-
-            private StringKeyGroup KeysFromColumn(int column)
-            {
-                if (column == 0) return _table.EngKeys;
-                return _table.AltKeys[column - 1];
             }
         }
     }
@@ -276,89 +289,33 @@ namespace Deltin.Deltinteger.I18n
             return output;
         }
 
-        public StringKeyGroup KeysFromLang(Log log, string language)
+        public void DumpStrings(StringKeyGroup group, string language, bool addNewKeys, Log log)
         {
-            if (log != null) log.Write(LogLevel.Normal, $"Getting {language} keys...");
-            var r = CreateKeysFromDump(DumpStrings(language));
-            if (log != null) log.Write(LogLevel.Normal, $"Got {language} keys.");
-            return r;
-        }
-
-        public string DumpStrings(string language)
-        {
+            if (group == null) throw new ArgumentNullException(nameof(group));
             if (language == null) throw new ArgumentNullException(nameof(language));
             if (!Languages.Contains(language)) throw new ArgumentException(language + " is not a valid language.", nameof(language));
-            return RunCommand("dump-strings --language=" + language);
-        }
 
-        public static StringKeyGroup CreateKeysFromDump(string stringDump)
-        {
-            StringKeyGroup keys = new StringKeyGroup();
+            if (log != null) log.Write(LogLevel.Normal, $"Getting {language} keys...");
 
-            string[] lines = stringDump.Split(
+            string commandResult = RunCommand("dump-strings --language=" + language);
+
+            string[] lines = commandResult.Split(
                 new[] { "\r\n", "\r", "\n" },
                 StringSplitOptions.None
             );
 
             for (int i = 0; i < lines.Length; i++)
-                ParseLine(keys, lines[i]);
-
-            return keys;
-        }
-
-        static void ParseLine(StringKeyGroup keys, string line)
-        {
-            string[] lineSplit = line.Split(':', 2);
-            if (lineSplit.Length == 2)
             {
-                string key = lineSplit[0];
-                if (!keys.ContainsKey(key) && lineSplit[1].Length > 0)
+                string[] lineSplit = lines[i].Split(':', 2);
+                if (lineSplit.Length == 2 && lineSplit[1].Length > 0)
                 {
+                    string key = lineSplit[0];
                     string str = lineSplit[1].Substring(1);
-                    keys.Add(key, str);
+                    group.Add(key, language, str, addNewKeys);
                 }
             }
-        }
-    }
 
-    public class StringKeyGroup
-    {
-        public List<StringKey> List { get; } = new List<StringKey>();
-
-        public void Add(StringKey key)
-        {
-            List.Add(key);
-        }
-        public void Add(string key, string value)
-        {
-            Add(new StringKey(key, value));
-        }
-
-        public StringKey FromKey(string key) => List.FirstOrDefault(k => k.Key.ToLower() == key.ToLower());
-        public StringKey FromValue(string value) => List.FirstOrDefault(k => k.Value.ToLower() == value.ToLower());
-        public StringKey[] AllFromValue(string value) => List.Where(k => k.Value.ToLower() == value.ToLower()).ToArray();
-        public int[] AllIndexesFromValue(string value)
-        {
-            List<int> indexes = new List<int>();
-            for (int i = 0; i < List.Count; i++)
-                if (List[i].Value.ToLower() == value.ToLower())
-                    indexes.Add(i);
-            return indexes.ToArray();
-        }
-        public bool ContainsKey(string key) => List.Any(k => k.Key.ToLower() == key.ToLower());
-        public bool ContainsValue(string value) => List.Any(k => k.Value.ToLower() == value.ToLower());
-        public StringKey FromIndex(int index) => List[index];
-    }
-    
-    public class StringKey
-    {
-        public string Key { get; }
-        public string Value { get; }
-
-        public StringKey(string key, string value)
-        {
-            Key = key;
-            Value = value;
+            if (log != null) log.Write(LogLevel.Normal, $"Got {language} keys.");
         }
     }
 }
