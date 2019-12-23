@@ -357,7 +357,7 @@
     <method name="Player Received Healing" alt="Jogador Recebeu Cura" />
     <method name="Player Joined Match" alt="Jogador Entrou na Partida" />
     <method name="Player Left Match" alt="Jogador Saiu da Partida" />
-    <method name="All" alt="Todos" />
+    <method name="All" alt="Todas" />
     <method name="Slot" alt="Espaço" />
     <method name="Reaper" alt="Reaper" />
     <method name="Tracer" alt="Tracer" />

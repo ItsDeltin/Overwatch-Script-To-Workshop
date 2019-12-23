@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 using System.Xml.Serialization;
 using Deltin.Deltinteger.Elements;
 
@@ -41,6 +42,15 @@ namespace Deltin.Deltinteger.I18n
                 }
                 CurrentLanguage = language;
             }
+        }
+
+        public static void I18nWarningMessage(StringBuilder builder, OutputLanguage outputLanguage)
+        {
+            if (outputLanguage == OutputLanguage.enUS) return;
+            builder.AppendLine($"// Outputting to the language {outputLanguage.ToString()}.");
+            builder.AppendLine($"// Not all languages are tested. If a value is not outputting correctly, you can change");
+            builder.AppendLine($"// the keyword info in the Languages/i18n-{outputLanguage.ToString()}.xml file.");
+            builder.AppendLine();
         }
     }
 

@@ -357,7 +357,7 @@
     <method name="Player Received Healing" alt="Player Received Healing" />
     <method name="Player Joined Match" alt="Player Joined Match" />
     <method name="Player Left Match" alt="Player Left Match" />
-    <method name="All" alt="All" />
+    <method name="All" alt="Todos" />
     <method name="Slot" alt="Ranura" />
     <method name="Reaper" alt="Reaper" />
     <method name="Tracer" alt="Tracer" />

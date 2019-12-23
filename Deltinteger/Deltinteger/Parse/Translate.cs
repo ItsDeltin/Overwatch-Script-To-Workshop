@@ -211,6 +211,8 @@ namespace Deltin.Deltinteger.Parse
 
             // Get the final workshop string.
             StringBuilder result = new StringBuilder();
+            I18n.I18n.I18nWarningMessage(result, I18n.I18n.CurrentLanguage);
+
             // Get the variables.
             VarCollection.ToWorkshop(result, I18n.I18n.CurrentLanguage);
             result.AppendLine();

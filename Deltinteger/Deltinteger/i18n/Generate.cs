@@ -118,7 +118,7 @@ namespace Deltin.Deltinteger.I18n
         {
             string datatoolPath = "C:/Users/Deltin/Downloads/toolchain-release/DataTool.exe";
             string overwatchPath = "C:/Program Files (x86)/Overwatch";
-            string previous = "C:/Users/Deltin/Downloads/toolchain-release/out/result2.xml";
+            string previous = "C:/Users/Deltin/Documents/GitHub/Overwatch-Script-To-Workshop/Deltinteger/Deltinteger/bin/Debug/netcoreapp3.0/Languages/key_links.xml";
 
             Console.OutputEncoding = System.Text.Encoding.Unicode;
 
@@ -127,7 +127,7 @@ namespace Deltin.Deltinteger.I18n
 
             datatool.DumpStrings(strings, "enUS", true, Log);
             datatool.DumpStrings(strings, "esES", false, Log);
-            datatool.DumpStrings(strings, "zhCN", false, Log);
+            datatool.DumpStrings(strings, "itIT", false, Log);
 
             List<KeyLink> links = new List<KeyLink>();
             var serializer = new XmlSerializer(typeof(KeyLinkList));
@@ -142,6 +142,20 @@ namespace Deltin.Deltinteger.I18n
             foreach (var keyword in Keywords())
                 if (!links.Any(link => link.MethodName.ToLower() == keyword.ToLower()))
                     GetKeyLink(links, keyword, 5, strings);
+            
+            while (true)
+            {
+                string input = Console.ReadLine();
+                if (input == "") break;
+
+                KeyLink link = links.FirstOrDefault(l => l.MethodName == input);
+                if (link == null) Console.WriteLine($"No keywords by that name exists.");
+                else
+                {
+                    links.Remove(link);
+                    GetKeyLink(links, input, 5, strings);
+                }
+            }
             
             Console.Write("Save key links to file: ");
             string saveAt = Console.ReadLine();

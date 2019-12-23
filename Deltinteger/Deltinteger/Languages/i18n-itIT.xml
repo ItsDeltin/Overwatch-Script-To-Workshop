@@ -334,7 +334,7 @@
     <method name="Ultimate Charge Percent" alt="Ultimate Charge Percent" />
     <method name="Up" alt="Up" />
     <method name="Value In Array" alt="Value In Array" />
-    <method name="Vector" alt="Vettore" />
+    <method name="Vector" alt="Vector" />
     <method name="Vector Towards" alt="Vector Towards" />
     <method name="Velocity Of" alt="Velocity Of" />
     <method name="Vertical Angle From Direction" alt="Vertical Angle From Direction" />
@@ -357,7 +357,7 @@
     <method name="Player Received Healing" alt="Player Received Healing" />
     <method name="Player Joined Match" alt="Player Joined Match" />
     <method name="Player Left Match" alt="Player Left Match" />
-    <method name="All" alt="All" />
+    <method name="All" alt="Tutti" />
     <method name="Slot" alt="Slot" />
     <method name="Reaper" alt="Reaper" />
     <method name="Tracer" alt="Tracer" />

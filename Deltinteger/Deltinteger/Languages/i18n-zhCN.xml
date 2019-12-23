@@ -357,7 +357,7 @@
     <method name="Player Received Healing" alt="玩家受到治疗" />
     <method name="Player Joined Match" alt="玩家加入比赛" />
     <method name="Player Left Match" alt="玩家离开比赛" />
-    <method name="All" alt="全部" />
+    <method name="All" alt="双方" />
     <method name="Slot" alt="位置" />
     <method name="Reaper" alt="死神" />
     <method name="Tracer" alt="猎空" />

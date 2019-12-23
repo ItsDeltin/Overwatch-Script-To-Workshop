@@ -357,7 +357,7 @@
     <method name="Player Received Healing" alt="Gracz otrzymał leczenie" />
     <method name="Player Joined Match" alt="Gracz dołączył do meczu" />
     <method name="Player Left Match" alt="Gracz opuścił mecz" />
-    <method name="All" alt="All" />
+    <method name="All" alt="Wszystkie" />
     <method name="Slot" alt="Miejsce" />
     <method name="Reaper" alt="Żniwiarz" />
     <method name="Tracer" alt="Smuga" />

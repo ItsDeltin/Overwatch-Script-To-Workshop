@@ -357,7 +357,7 @@
     <method name="Player Received Healing" alt="Un joueur a reçu des soins" />
     <method name="Player Joined Match" alt="Un joueur a rejoint la partie" />
     <method name="Player Left Match" alt="Un joueur a quitté la partie" />
-    <method name="All" alt="Tous" />
+    <method name="All" alt="Les deux" />
     <method name="Slot" alt="Emplacement" />
     <method name="Reaper" alt="Faucheur" />
     <method name="Tracer" alt="Tracer" />
