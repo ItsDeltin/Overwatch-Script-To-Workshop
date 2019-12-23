@@ -16,8 +16,10 @@
 				{"include": "#block"},
 				{"include": "#new"},
 				{"include": "#define_type"},
+				{"include": "#define_macro"},
 				{"include": "#define_method"},
 				{"include": "#define_variable"},
+				{"include": "#expressions"},
 				{"include": "#keywords"}
 			]
 		},
@@ -68,6 +70,19 @@
 			},
 			"patterns": [{"include": "#parameter"}]
 		},
+		"define_macro": {
+			"begin": "((public|private|static)\\s+)*(macro)\\s+([_[:alnum:]]+)\\s*\\(",
+			"beginCaptures": {
+				"0": {"name":"entity.name.function"},
+				"2": {"name":"keyword.other"},
+				"3": {"name":"keyword.other"}
+			},
+			"end": "\\)",
+			"endCaptures": {
+				"0": {"name":"entity.name.function"}
+			},
+			"patterns": [{"include": "#parameter"}]
+		},
 		"parameter": {
 			"match": "((define)|([_[:alnum:]]+)) +([_[:alnum:]]+)",
 			"captures": {
@@ -87,7 +102,13 @@
 		"block": {
 			"begin": "{",
 			"end": "}",
-			"patterns": [{"include": "#statement"}, {"include": "#comments"}, {"include": "#expressions"}, {"include": "#define_method"}]
+			"patterns": [
+				{"include": "#comments"},
+				{"include": "#define_macro"},
+				{"include": "#define_method"},
+				{"include": "#statement"},
+				{"include": "#expressions"}
+		]
 		},
 		"statement": {
 			"patterns": [

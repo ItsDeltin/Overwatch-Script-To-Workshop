@@ -212,8 +212,6 @@ namespace Deltin.Deltinteger.Parse
         public bool Settable()
         {
             return (CodeType == null || CodeType.Constant() == TypeSettable.Normal) && (VariableType == VariableType.Global || VariableType == VariableType.Player || VariableType == VariableType.Dynamic);
-            // if (CodeType == null) return true;
-            // else return CodeType.Constant();
         }
 
         // IExpression
