@@ -1,73 +1,41 @@
 ﻿using System;
+using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.Parse;
-using Deltin.Deltinteger.WorkshopWiki;
+using Deltin.Deltinteger.Elements;
+using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 
-namespace Deltin.Deltinteger.Elements
+namespace Deltin.Deltinteger.CustomMethods
 {
-    [CustomMethod("IsAIUnintrusive", CustomMethodType.MultiAction_Value)]
-    [Parameter("player", ValueType.Player, typeof(V_EventPlayer))]
-    class IsAIUnintrusive : CustomMethodBase
+    [CustomMethod("IsAI", "Whether the player is an AI or not.", CustomMethodType.MultiAction_Value)]
+    class IsAI : CustomMethodBase
     {
-        protected override MethodResult Get()
+        public override IWorkshopTree Get(ActionSet actionSet, IWorkshopTree[] parameterValues, object[] additionalParameterData)
         {
-            IndexedVar player = IndexedVar.AssignInternalVar(TranslateContext.VarCollection, Scope, "IsAIUnintrusive: player", TranslateContext.IsGlobal);
+            Element player = (Element)parameterValues[0];
 
-            Element[] actions = ArrayBuilder<Element>.Build
+            IndexReference originalHero = actionSet.VarCollection.Assign("isAI_originalHero", actionSet.IsGlobal, true);
+            IndexReference isAI = actionSet.VarCollection.Assign("isAI_originalHero", actionSet.IsGlobal, true);
+
+            actionSet.AddAction(ArrayBuilder<Element>.Build
             (
-                player.SetVariable((Element)Parameters[0]),
-                Element.Part<A_Communicate>(player.GetVariable(), EnumData.GetEnumValue(Communication.VoiceLineUp))
-            );
-
-            Element result = !(Element.Part<V_IsCommunicating>(player.GetVariable(), EnumData.GetEnumValue(Communication.VoiceLineUp)));
-
-            return new MethodResult(actions, result);
-        }
-
-        public override CustomMethodWiki Wiki()
-        {
-            return new CustomMethodWiki(
-                "Whether the player is an AI or not. Works in less situations but much less intrusive. Requires the player to be spawned in.",
-                // Parameters
-                "The player to check."
-            );
-        }
-    }
-
-    [CustomMethod("IsAIAccurate", CustomMethodType.MultiAction_Value)]
-    [Parameter("player", ValueType.Player, typeof(V_EventPlayer))]
-    class IsAIAccurate : CustomMethodBase
-    {
-        protected override MethodResult Get()
-        {
-            IndexedVar player       = IndexedVar.AssignInternalVar(TranslateContext.VarCollection, Scope, "IsAIAccurate: player", TranslateContext.IsGlobal);
-            IndexedVar originalHero = IndexedVar.AssignInternalVar(TranslateContext.VarCollection, Scope, "IsAIAccurate: originalHero", TranslateContext.IsGlobal);
-            IndexedVar isAI         = IndexedVar.AssignInternalVar(TranslateContext.VarCollection, Scope, "IsAIAccurate: isAI", TranslateContext.IsGlobal);
-
-            Element[] actions = ArrayBuilder<Element>.Build
-            (
-                player.SetVariable((Element)Parameters[0]),
-                originalHero.SetVariable(Element.Part<V_HeroOf>(player.GetVariable())),
-                Element.Part<A_SkipIf>(!(Element.Part<V_Compare>(originalHero.GetVariable(), EnumData.GetEnumValue(Operators.Equal), new V_Null())), new V_Number(2)),
+                originalHero.SetVariable(Element.Part<V_HeroOf>(player)),
+                Element.Part<A_SkipIf>(Element.Part<V_Compare>(originalHero.GetVariable(), EnumData.GetEnumValue(Operators.NotEqual), new V_Null()), new V_Number(2)),
                 isAI.SetVariable(new V_False()),
                 Element.Part<A_Skip>(new V_Number(4)),
-                Element.Part<A_ForcePlayerHero>(player.GetVariable(), EnumData.GetEnumValue(Hero.Ashe)),
-                isAI.SetVariable(Element.Part<V_Compare>(Element.Part<V_HeroOf>(player.GetVariable()), EnumData.GetEnumValue(Operators.NotEqual), EnumData.GetEnumValue(Hero.Ashe))),
-                Element.Part<A_ForcePlayerHero>(player.GetVariable(), originalHero.GetVariable()),
-                Element.Part<A_StopForcingHero>(player.GetVariable())
-            );
-
-            Element result = isAI.GetVariable();
+                Element.Part<A_ForcePlayerHero>(player, EnumData.GetEnumValue(Hero.Ashe)),
+                isAI.SetVariable(Element.Part<V_Compare>(Element.Part<V_HeroOf>(player), EnumData.GetEnumValue(Operators.NotEqual), EnumData.GetEnumValue(Hero.Ashe))),
+                Element.Part<A_ForcePlayerHero>(player, originalHero.GetVariable()),
+                Element.Part<A_StopForcingHero>(player)
+            ));
             
-            return new MethodResult(actions, result);
+            return isAI.GetVariable();
         }
 
-        public override CustomMethodWiki Wiki()
+        public override CodeParameter[] Parameters()
         {
-            return new CustomMethodWiki(
-                "Whether the player is an AI or not. Works in more situations but it is more intrusive.",
-                // Parameters
-                "The player to check."
-            );
+            return new CodeParameter[] {
+                new CodeParameter("player", "The player to check.")
+            };
         }
     }
 }

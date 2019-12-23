@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Deltin.Deltinteger.LanguageServer;
+using Deltin.Deltinteger.Elements;
 using SignatureHelp = OmniSharp.Extensions.LanguageServer.Protocol.Models.SignatureHelp;
 using SignatureInformation = OmniSharp.Extensions.LanguageServer.Protocol.Models.SignatureInformation;
 using ParameterInformation = OmniSharp.Extensions.LanguageServer.Protocol.Models.ParameterInformation;
@@ -16,6 +17,12 @@ namespace Deltin.Deltinteger.Parse
         public StringOrMarkupContent Documentation { get; }
         public ExpressionOrWorkshopValue DefaultValue { get; }
 
+        public CodeParameter(string name, CodeType type)
+        {
+            Name = name;
+            Type = type;
+        }
+
         public CodeParameter(string name, CodeType type, ExpressionOrWorkshopValue defaultValue)
         {
             Name = name;
@@ -27,14 +34,21 @@ namespace Deltin.Deltinteger.Parse
         {
             Name = name;
             Type = type;
-            Documentation = documentation;
             DefaultValue = defaultValue;
+            Documentation = documentation;
         }
 
         public CodeParameter(string name, StringOrMarkupContent documentation)
         {
             Name = name;
             Documentation = documentation;
+        }
+
+        public CodeParameter(string name, StringOrMarkupContent documentation, ExpressionOrWorkshopValue defaultValue)
+        {
+            Name = name;
+            Documentation = documentation;
+            DefaultValue = defaultValue;
         }
 
         public virtual object Validate(ScriptFile script, IExpression value, DocRange valueRange) => null;
@@ -351,7 +365,7 @@ namespace Deltin.Deltinteger.Parse
                 string msg = string.Format("Expected a value of type {0}.", option.Parameters[parameter].Type.Name);
                 optionDiagnostics[option].Add(new Diagnostic(msg, ParameterErrors[parameter], Diagnostic.Error));
             }
-            else if (value.Type() != null && option.Parameters[parameter].Type == null && value.Type().Constant())
+            else if (value.Type() != null && option.Parameters[parameter].Type == null && value.Type().Constant() == TypeSettable.Constant)
             {
                 string msg = string.Format($"The type '{value.Type().Name}' cannot be used here.");
                 optionDiagnostics[option].Add(new Diagnostic(msg, ParameterErrors[parameter], Diagnostic.Error));
@@ -450,6 +464,31 @@ namespace Deltin.Deltinteger.Parse
             BadParameterCount    = $"No overloads for the {errorName} has {{0}} parameters.";
             ParameterDoesntExist = $"The parameter '{{0}}' does not exist in the {errorName}.";
             MissingParameter     = $"The {{0}} parameter is missing in the {errorName}.";
+        }
+    }
+
+    class ConstBoolParameter : CodeParameter
+    {
+        private bool DefaultConstValue { get; }
+
+        public ConstBoolParameter(string name, StringOrMarkupContent documentation) : base(name, documentation) {}
+        public ConstBoolParameter(string name, StringOrMarkupContent documentation, bool defaultValue)
+            : base(name, documentation, new ExpressionOrWorkshopValue(defaultValue ? (Element)new V_True() : new V_False()))
+        {
+            DefaultConstValue = defaultValue;
+        }
+
+        public override object Validate(ScriptFile script, IExpression value, DocRange valueRange)
+        {
+            if (value == null) return DefaultConstValue;
+
+            if (value is BoolAction == false)
+            {
+                script.Diagnostics.Error("Expected a boolean constant.", valueRange);
+                return null;
+            }
+
+            return ((BoolAction)value).Value;
         }
     }
 }

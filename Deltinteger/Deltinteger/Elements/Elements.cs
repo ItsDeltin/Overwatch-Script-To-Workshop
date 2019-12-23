@@ -258,7 +258,7 @@ namespace Deltin.Deltinteger.Elements
                 CodeType codeType = null;
 
                 if (WorkshopParameters[i] is EnumParameter)
-                    codeType = CodeType.DefaultTypes.First(t => t is WorkshopEnumType && ((WorkshopEnumType)t).EnumData == ((EnumParameter)WorkshopParameters[i]).EnumData);
+                    codeType = WorkshopEnumType.GetEnumType(((EnumParameter)WorkshopParameters[i]).EnumData);
 
                 var defaultValue = WorkshopParameters[i].GetDefault();
 
@@ -278,7 +278,7 @@ namespace Deltin.Deltinteger.Elements
 
         public bool DoesReturnValue() => IsValue;
 
-        public IWorkshopTree Parse(ActionSet actionSet, IWorkshopTree[] values)
+        public IWorkshopTree Parse(ActionSet actionSet, IWorkshopTree[] values, object[] additionalParameterData)
         {
             Element element = GetObject();
             element.ParameterValues = values;
@@ -291,7 +291,7 @@ namespace Deltin.Deltinteger.Elements
             else return element;
         }
 
-        public string GetLabel(bool markdown) => HoverHandler.GetLabel(Name, Parameters, markdown, Wiki?.Description);
+        public string GetLabel(bool markdown) => HoverHandler.GetLabel(ReturnType, Name, Parameters, markdown, Wiki?.Description);
 
         public CompletionItem GetCompletion()
         {

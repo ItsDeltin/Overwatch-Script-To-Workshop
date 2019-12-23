@@ -60,9 +60,9 @@ namespace Deltin.Deltinteger.Parse
 
         public virtual bool DoesReturnValue() => true;
 
-        public string GetLabel(bool markdown) => HoverHandler.GetLabel(Name, Parameters, markdown, null);
+        public string GetLabel(bool markdown) => HoverHandler.GetLabel(ReturnType, Name, Parameters, markdown, null);
 
-        public abstract IWorkshopTree Parse(ActionSet actionSet, IWorkshopTree[] parameterValues);
+        public abstract IWorkshopTree Parse(ActionSet actionSet, IWorkshopTree[] parameterValues, object[] additionalParameterData);
 
         public CompletionItem GetCompletion()
         {
@@ -201,7 +201,7 @@ namespace Deltin.Deltinteger.Parse
 
         override public bool DoesReturnValue() => doesReturnValue;
 
-        override public IWorkshopTree Parse(ActionSet actionSet, IWorkshopTree[] parameterValues)
+        override public IWorkshopTree Parse(ActionSet actionSet, IWorkshopTree[] parameterValues, object[] additionalParameterData)
         {
             actionSet = actionSet
                 .New(actionSet.IndexAssigner.CreateContained());
@@ -425,7 +425,7 @@ namespace Deltin.Deltinteger.Parse
                 ReturnType = Expression.Type();
         }
 
-        override public IWorkshopTree Parse(ActionSet actionSet, IWorkshopTree[] parameterValues)
+        override public IWorkshopTree Parse(ActionSet actionSet, IWorkshopTree[] parameterValues, object[] additionalParameterData)
         {
             // Assign the parameters.
             actionSet = actionSet.New(actionSet.IndexAssigner.CreateContained());

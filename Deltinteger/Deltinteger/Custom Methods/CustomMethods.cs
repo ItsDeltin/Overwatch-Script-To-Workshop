@@ -75,12 +75,12 @@ namespace Deltin.Deltinteger.CustomMethods
 
         public bool DoesReturnValue() => CustomMethodType == CustomMethodType.Value || CustomMethodType == CustomMethodType.MultiAction_Value;
 
-        public IWorkshopTree Parse(ActionSet actionSet, IWorkshopTree[] values)
+        public IWorkshopTree Parse(ActionSet actionSet, IWorkshopTree[] values, object[] additionalParameterData)
         {
-            return GetObject().Get(actionSet, values);
+            return GetObject().Get(actionSet, values, additionalParameterData);
         }
 
-        public string GetLabel(bool markdown) => HoverHandler.GetLabel(Name, Parameters, markdown, Documentation.HasString ? Documentation.String : Documentation.MarkupContent.Value);
+        public string GetLabel(bool markdown) => HoverHandler.GetLabel(ReturnType, Name, Parameters, markdown, Documentation.HasString ? Documentation.String : Documentation.MarkupContent.Value);
         public CompletionItem GetCompletion()
         {
             return new CompletionItem()
@@ -119,6 +119,10 @@ namespace Deltin.Deltinteger.CustomMethods
     public abstract class CustomMethodBase
     {
         public abstract CodeParameter[] Parameters();
-        public abstract IWorkshopTree Get(ActionSet actionSet, IWorkshopTree[] parameterValues);
+        public virtual IWorkshopTree Get(ActionSet actionSet, IWorkshopTree[] parameterValues) => throw new NotImplementedException();
+        public virtual IWorkshopTree Get(ActionSet actionSet, IWorkshopTree[] parameterValues, object[] additionalParameterData)
+        {
+            return Get(actionSet, parameterValues);
+        }
     }
 }

@@ -126,7 +126,7 @@ namespace Deltin.Deltinteger.Parse
                 return null;
         }
 
-        public CodeType Type() => Result.Type();
+        public CodeType Type() => Result?.Type();
 
         public IWorkshopTree Parse(ActionSet actionSet, bool asElement = true)
         {

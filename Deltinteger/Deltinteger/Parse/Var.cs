@@ -211,7 +211,7 @@ namespace Deltin.Deltinteger.Parse
 
         public bool Settable()
         {
-            return (CodeType == null || !CodeType.Constant()) && (VariableType == VariableType.Global || VariableType == VariableType.Player || VariableType == VariableType.Dynamic);
+            return (CodeType == null || CodeType.Constant() != TypeSettable.Normal) && (VariableType == VariableType.Global || VariableType == VariableType.Player || VariableType == VariableType.Dynamic);
             // if (CodeType == null) return true;
             // else return CodeType.Constant();
         }
@@ -315,7 +315,7 @@ namespace Deltin.Deltinteger.Parse
                 if (type != null)
                 {
                     type.Call(script, DocRange.GetRange(context.type));
-                    if (type.Constant())
+                    if (type.Constant() != TypeSettable.Normal)
                         newVar.VariableType = VariableType.ElementReference;
                 }
 
@@ -335,7 +335,7 @@ namespace Deltin.Deltinteger.Parse
             if (context?.expr() != null)
             {
                 InitialValue = DeltinScript.GetExpression(script, translateInfo, scope, context.expr());
-                if (InitialValue.Type() != null && InitialValue.Type().Constant() && CodeType != InitialValue.Type())
+                if (InitialValue.Type() != null && InitialValue.Type().Constant() == TypeSettable.Constant && CodeType != InitialValue.Type())
                     script.Diagnostics.Error($"The type '{InitialValue.Type().Name}' cannot be stored.", DocRange.GetRange(context.expr()));
             }
             

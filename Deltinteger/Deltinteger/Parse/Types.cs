@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.LanguageServer;
 using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
@@ -39,7 +40,7 @@ namespace Deltin.Deltinteger.Parse
         /// Determines if variables with this type can have their value changed.
         /// </summary>
         /// <returns></returns>
-        public virtual bool Constant() => false;
+        public virtual TypeSettable Constant() => TypeSettable.Normal;
 
         public virtual IWorkshopTree New(ActionSet actionSet, Constructor constructor, IWorkshopTree[] constructorValues, object[] additionalParameterData)
         {
@@ -59,7 +60,7 @@ namespace Deltin.Deltinteger.Parse
 
         public static bool TypeMatches(CodeType parameterType, CodeType valueType)
         {
-            return parameterType == null || parameterType == valueType;
+            return parameterType == null || parameterType.Name == valueType?.Name;
         }
 
         static CodeType[] _defaultTypes;
@@ -80,6 +81,11 @@ namespace Deltin.Deltinteger.Parse
             
             return defaultTypes.ToArray();
         }
+    }
+
+    public enum TypeSettable
+    {
+        Normal, Convertable, Constant
     }
 
     public class WorkshopEnumType : CodeType
@@ -104,7 +110,7 @@ namespace Deltin.Deltinteger.Parse
             return EnumScope;
         }
 
-        override public bool Constant() => !EnumData.ConvertableToElement();
+        override public TypeSettable Constant() => EnumData.ConvertableToElement() ? TypeSettable.Convertable : TypeSettable.Constant;
 
         override public CompletionItem GetCompletion()
         {
@@ -113,6 +119,11 @@ namespace Deltin.Deltinteger.Parse
                 Label = EnumData.CodeName,
                 Kind = CompletionItemKind.Enum
             };
+        }
+    
+        public static WorkshopEnumType GetEnumType(EnumData enumData)
+        {
+            return (WorkshopEnumType)CodeType.DefaultTypes.First(t => t is WorkshopEnumType && ((WorkshopEnumType)t).EnumData == enumData);
         }
     }
 

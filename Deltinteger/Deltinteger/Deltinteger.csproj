@@ -58,13 +58,7 @@
   <ItemGroup>
     <Compile Remove="Parse/old/**"/>
     <Compile Remove="Parse/ast/**"/>
-    <Compile Remove="Custom Methods/**"/>
-    <Compile Include="Custom Methods/CustomMethods.cs"/>
-    <Compile Include="Custom Methods/MinWait.cs"/>
-    <Compile Include="Custom Methods/LinearInterpolate.cs"/>
-    <Compile Include="Custom Methods/InsertValueInArray.cs"/>
-    <Compile Include="Custom Methods/RemoveFromArrayAtIndex.cs"/>
-    <Compile Include="Custom Methods/Destination.cs"/>
+    <Compile Remove="Custom Methods/Old/**"/>
     
     <Compile Remove="Pathfinder/**"/>
     <Compile Include="Pathfinder/PathfindClass.cs"/>

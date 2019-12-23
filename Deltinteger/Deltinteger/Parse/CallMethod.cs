@@ -65,13 +65,13 @@ namespace Deltin.Deltinteger.Parse
         // IStatement
         public void Translate(ActionSet actionSet)
         {
-            CallingMethod.Parse(actionSet.New(NameRange), GetParameterValuesAsWorkshop(actionSet));
+            CallingMethod.Parse(actionSet.New(NameRange), GetParameterValuesAsWorkshop(actionSet), OverloadChooser.AdditionalParameterData);
         }
 
         // IExpression
         public IWorkshopTree Parse(ActionSet actionSet, bool asElement = true)
         {
-            return CallingMethod.Parse(actionSet.New(NameRange), GetParameterValuesAsWorkshop(actionSet));
+            return CallingMethod.Parse(actionSet.New(NameRange), GetParameterValuesAsWorkshop(actionSet), OverloadChooser.AdditionalParameterData);
         }
 
         private IWorkshopTree[] GetParameterValuesAsWorkshop(ActionSet actionSet)
@@ -80,7 +80,7 @@ namespace Deltin.Deltinteger.Parse
 
             IWorkshopTree[] parameterValues = new IWorkshopTree[ParameterValues.Length];
             for (int i = 0; i < ParameterValues.Length; i++)
-                parameterValues[i] = ParameterValues[i].Parse(actionSet, !OverloadChooser.Overload.Parameters[i].Type?.Constant() ?? true);
+                parameterValues[i] = ParameterValues[i].Parse(actionSet, OverloadChooser.Overload.Parameters[i].Type == null);
             return parameterValues;
         }
     }
