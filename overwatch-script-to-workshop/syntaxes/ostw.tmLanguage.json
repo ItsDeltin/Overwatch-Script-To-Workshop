@@ -104,17 +104,12 @@
 			"end": "}",
 			"patterns": [
 				{"include": "#comments"},
+				{"include": "#if"},
 				{"include": "#define_macro"},
 				{"include": "#define_method"},
-				{"include": "#statement"},
-				{"include": "#expressions"}
-		]
-		},
-		"statement": {
-			"patterns": [
 				{"include": "#methods"},
-				{"include": "#if"},
-				{"include": "#define_variable"}
+				{"include": "#define_variable"},
+				{"include": "#expressions"}
 			]
 		},
 		"expressions": {
