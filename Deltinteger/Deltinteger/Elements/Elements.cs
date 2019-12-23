@@ -104,7 +104,7 @@ namespace Deltin.Deltinteger.Elements
             parameters.AddRange(elementParameters.Select(p => p.ToWorkshop(language)));
 
             string result = "";
-            if (!ElementList.IsValue && Disabled) result += "disabled ";
+            if (!ElementList.IsValue && Disabled) result += I18n.I18n.Translate(language, "disabled") + " ";
             result += I18n.I18n.Translate(language, Name);
             if (parameters.Count != 0) result += "(" + string.Join(", ", parameters) + ")";
             if (!ElementList.IsValue) result += ";";

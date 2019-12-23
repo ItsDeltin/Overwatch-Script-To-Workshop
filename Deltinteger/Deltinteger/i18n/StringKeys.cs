@@ -14,16 +14,18 @@ namespace Deltin.Deltinteger.I18n
             foreach (var sk in List)
                 if (sk.Key == key)
                 {
+                    if (!Languages.Contains(lang))
+                        Languages.Add(lang);
+
                     sk.Translations.Add(new StringKeyLang(lang, text));
                     return;
                 }
 
             if (!addNewKeys) return;
-            
+
             var newKey = new StringKey(key);
             newKey.Translations.Add(new StringKeyLang(lang, text));
             List.Add(newKey);
-            Languages.Add(lang);
         }
 
         public string ValueFromKeyAndLang(string key, string lang) => List.First(strKey => strKey.Key == key).Translations.First(tr => tr.Lang == lang).Text;

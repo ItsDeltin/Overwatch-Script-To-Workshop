@@ -1,6 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <I18nLanguage xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <Methods>
+    <method name="variables" alt="变量" />
+    <method name="global" alt="全局" />
+    <method name="player" alt="玩家" />
+    <method name="rule" alt="规则" />
+    <method name="event" alt="事件" />
+    <method name="conditions" alt="条件" />
+    <method name="actions" alt="动作" />
+    <method name="disabled" alt="禁用" />
     <method name="Abort" alt="中止" />
     <method name="Abort If" alt="根据条件中止" />
     <method name="Abort If Condition Is False" alt="如条件为“假”则中止" />
@@ -33,7 +41,6 @@
     <method name="Destroy Dummy Bot" alt="移除机器人" />
     <method name="Destroy Effect" alt="消除效果" />
     <method name="Destroy Hud Text" alt="消除HUD文本" />
-    <method name="Destroy Effect" alt="消除效果" />
     <method name="Destroy In-World Text" alt="消除地图文本" />
     <method name="Disable Built-In Game Mode Announcer" alt="关闭游戏预设通告模式" />
     <method name="Disable Built-In Game Mode Completion" alt="关闭游戏预设完成条件" />
@@ -339,5 +346,276 @@
     <method name="X Component Of" alt="X方向分量" />
     <method name="Y Component Of" alt="Y方向分量" />
     <method name="Z Component Of" alt="Z方向分量" />
+    <method name="Ongoing - Global" alt="持续 - 全局" />
+    <method name="Ongoing - Each Player" alt="持续 - 每名玩家" />
+    <method name="Player earned elimination" alt="玩家参与消灭" />
+    <method name="Player dealt final blow" alt="玩家造成最后一击" />
+    <method name="Player dealt damage" alt="玩家造成伤害" />
+    <method name="Player took damage" alt="玩家受到伤害" />
+    <method name="Player died" alt="玩家阵亡" />
+    <method name="Player Dealt Healing" alt="玩家造成治疗" />
+    <method name="Player Received Healing" alt="玩家受到治疗" />
+    <method name="Player Joined Match" alt="玩家加入比赛" />
+    <method name="Player Left Match" alt="玩家离开比赛" />
+    <method name="All" alt="全部" />
+    <method name="Slot" alt="位置" />
+    <method name="Reaper" alt="死神" />
+    <method name="Tracer" alt="猎空" />
+    <method name="Mercy" alt="天使" />
+    <method name="Hanzo" alt="半藏" />
+    <method name="Torbjörn" alt="托比昂" />
+    <method name="Reinhardt" alt="莱因哈特" />
+    <method name="Pharah" alt="法老之鹰" />
+    <method name="Winston" alt="温斯顿" />
+    <method name="Widowmaker" alt="黑百合" />
+    <method name="Bastion" alt="堡垒" />
+    <method name="Symmetra" alt="秩序之光" />
+    <method name="Zenyatta" alt="禅雅塔" />
+    <method name="Genji" alt="源氏" />
+    <method name="Roadhog" alt="路霸" />
+    <method name="Mccree" alt="麦克雷" />
+    <method name="Junkrat" alt="狂鼠" />
+    <method name="Zarya" alt="查莉娅" />
+    <method name="Soldier: 76" alt="士兵：76" />
+    <method name="Lúcio" alt="卢西奥" />
+    <method name="D.va" alt="D.Va" />
+    <method name="Mei" alt="美" />
+    <method name="Sombra" alt="黑影" />
+    <method name="Doomfist" alt="末日铁拳" />
+    <method name="Ana" alt="安娜" />
+    <method name="Orisa" alt="奥丽莎" />
+    <method name="Brigitte" alt="布丽吉塔" />
+    <method name="Moira" alt="莫伊拉" />
+    <method name="Wrecking Ball" alt="破坏球" />
+    <method name="Ashe" alt="艾什" />
+    <method name="Baptiste" alt="巴蒂斯特" />
+    <method name="Sigma" alt="西格玛" />
+    <method name="==" alt="==" />
+    <method name="!=" alt="!=" />
+    <method name="&lt;" alt="&lt;" />
+    <method name="&lt;=" alt="&lt;=" />
+    <method name="&gt;" alt="&gt;" />
+    <method name="&gt;=" alt="&gt;=" />
+    <method name="Remove From Array By Value" alt="根据值从数组中移除" />
+    <method name="Remove From Array By Index" alt="根据索引从数组中移除" />
+    <method name="Primary Fire" alt="主要攻击模式" />
+    <method name="Secondary Fire" alt="辅助攻击模式" />
+    <method name="Ability" alt="技能" />
+    <method name="Ultimate" alt="终极技能" />
+    <method name="Interact" alt="互动" />
+    <method name="Jump" alt="跳跃" />
+    <method name="Crouch" alt="蹲下" />
+    <method name="To World" alt="至地图" />
+    <method name="To Player" alt="至玩家" />
+    <method name="Cancel Contrary Motion" alt="取消相反运动" />
+    <method name="Incorporate Contrary Motion" alt="合并相反运动" />
+    <method name="Destination And Rate" alt="速率及最终值" />
+    <method name="None" alt="无" />
+    <method name="Destination And Duration" alt="终点及持续时间" />
+    <method name="Hacked" alt="被入侵" />
+    <method name="Burning" alt="点燃" />
+    <method name="Knocked Down" alt="击倒" />
+    <method name="Asleep" alt="沉睡" />
+    <method name="Frozen" alt="冻结" />
+    <method name="Unkillable" alt="无法杀死" />
+    <method name="Invincible" alt="无敌" />
+    <method name="Phased Out" alt="消散" />
+    <method name="Rooted" alt="定身" />
+    <method name="Stunned" alt="昏迷" />
+    <method name="Ignore Condition" alt="无视条件" />
+    <method name="Abort When False" alt="当为“假”时中止" />
+    <method name="Restart When True" alt="当为“真”时重新开始" />
+    <method name="Sphere" alt="球体" />
+    <method name="Light Shaft" alt="光柱" />
+    <method name="Orb" alt="球" />
+    <method name="Ring" alt="环" />
+    <method name="Cloud" alt="云" />
+    <method name="Sparkles" alt="火花" />
+    <method name="Good Aura" alt="有益光环" />
+    <method name="Bad Aura" alt="有害光环" />
+    <method name="Energy Sound" alt="能量声音" />
+    <method name="Pick-up Sound" alt="拾取音效" />
+    <method name="Good Aura Sound" alt="有益光环声音" />
+    <method name="Bad Aura Sound" alt="负面光环音效" />
+    <method name="Sparkles Sound" alt="火花声音" />
+    <method name="Smoke Sound" alt="烟雾声音" />
+    <method name="Decal Sound" alt="诱饵声音" />
+    <method name="Beacon Sound" alt="信标声音" />
+    <method name="White" alt="白色" />
+    <method name="Yellow" alt="黄色" />
+    <method name="Green" alt="绿色" />
+    <method name="Purple" alt="紫色" />
+    <method name="Red" alt="红色" />
+    <method name="Blue" alt="蓝色" />
+    <method name="Aqua" alt="水绿色" />
+    <method name="Orange" alt="橙色" />
+    <method name="Sky Blue" alt="天蓝色" />
+    <method name="Turquoise" alt="青绿色" />
+    <method name="Lime Green" alt="灰绿色" />
+    <method name="Visible To, Position, and Radius" alt="可见，位置和半径" />
+    <method name="Position And Radius" alt="位置和半径" />
+    <method name="Visible To" alt="可见" />
+    <method name="To Nearest" alt="至最近" />
+    <method name="Voice Line Up" alt="语音（上）" />
+    <method name="Voice Line Left" alt="语音（左）" />
+    <method name="Voice Line Right" alt="语音（右）" />
+    <method name="Voice Line Down" alt="语音（下）" />
+    <method name="Emote Up" alt="表情（上）" />
+    <method name="Emote Left" alt="表情（左）" />
+    <method name="Emote Right" alt="表情（右）" />
+    <method name="Emote Down" alt="表情（下）" />
+    <method name="Ultimate Status" alt="终极技能状态" />
+    <method name="Hello" alt="问候" />
+    <method name="Need Healing" alt="需要治疗" />
+    <method name="Group Up" alt="集合" />
+    <method name="Thanks" alt="感谢" />
+    <method name="Acknowledge" alt="收到" />
+    <method name="Top" alt="顶部" />
+    <method name="Visible To And String" alt="可见和字符串" />
+    <method name="Arrow: Down" alt="箭头：向下" />
+    <method name="Arrow: Left" alt="箭头：向左" />
+    <method name="Arrow: Right" alt="箭头：向右" />
+    <method name="Arrow: Up" alt="箭头：向上" />
+    <method name="Asterisk" alt="星形" />
+    <method name="Bolt" alt="箭矢" />
+    <method name="Checkmark" alt="对号" />
+    <method name="Circle" alt="圆圈" />
+    <method name="Club" alt="梅花" />
+    <method name="Diamond" alt="方块" />
+    <method name="Dizzy" alt="晕眩" />
+    <method name="Exclamation Mark" alt="感叹号" />
+    <method name="Eye" alt="眼睛" />
+    <method name="Fire" alt="火焰" />
+    <method name="Flag" alt="旗帜" />
+    <method name="Halo" alt="光晕" />
+    <method name="Happy" alt="高兴" />
+    <method name="Heart" alt="红桃" />
+    <method name="Moon" alt="满月" />
+    <method name="No" alt="拒绝" />
+    <method name="Plus" alt="加号" />
+    <method name="Poison" alt="剧毒" />
+    <method name="Poison 2" alt="剧毒2" />
+    <method name="Question Mark" alt="问号" />
+    <method name="Radioactive" alt="辐射" />
+    <method name="Recycle" alt="回收" />
+    <method name="Ring Thick" alt="宽环" />
+    <method name="Ring Thin" alt="细环" />
+    <method name="Sad" alt="难过" />
+    <method name="Skull" alt="骷髅" />
+    <method name="Spade" alt="黑桃" />
+    <method name="Spiral" alt="螺旋" />
+    <method name="Stop" alt="停止" />
+    <method name="Trashcan" alt="垃圾箱" />
+    <method name="Warning" alt="警告" />
+    <method name="X" alt="X" />
+    <method name="Visible To And Position" alt="可见和位置" />
+    <method name="Position" alt="位置" />
+    <method name="Good Explosion" alt="有益爆炸" />
+    <method name="Bad Explosion" alt="有害爆炸" />
+    <method name="Ring Explosion" alt="环状爆炸" />
+    <method name="Good Pickup Effect" alt="有益选择效果 " />
+    <method name="Bad Pickup Effect" alt="有害选择效果 " />
+    <method name="Debuff Impact Sound" alt="负面状态施加声音" />
+    <method name="Buff Impact Sound" alt="正面状态施加声音" />
+    <method name="Ring Explosion Sound" alt="环状爆炸声音" />
+    <method name="Buff Explosion Sound" alt="状态爆炸声音" />
+    <method name="Explosion Sound" alt="爆炸声音" />
+    <method name="Enemies" alt="敌人" />
+    <method name="Direction, Rate, and Max Speed" alt="方向，速率，及最大速度" />
+    <method name="Receivers, Damagers, and Damage Percent" alt="受伤害者，伤害者及伤害百分比" />
+    <method name="Receivers And Damagers" alt="受伤害者和伤害者" />
+    <method name="Direction And Turn Rate" alt="方向及角速率" />
+    <method name="Barriers Do Not Block LOS" alt="屏障不会阻挡视线" />
+    <method name="Enemy Barriers Block LOS" alt="敌方屏障阻挡视线" />
+    <method name="All Barriers Block LOS" alt="所有屏障阻挡视线" />
+    <method name="Rotation" alt="旋转" />
+    <method name="Rotation And Translation" alt="旋转并转换" />
+    <method name="Off" alt="关闭" />
+    <method name="Surfaces" alt="表面" />
+    <method name="Surfaces And Enemy Barriers" alt="表面及敌方屏障" />
+    <method name="Surfaces And All Barriers" alt="表面及全部屏障" />
+    <method name="Clip Against Surfaces" alt="根据表面截取" />
+    <method name="Do Not Clip" alt="不要截取" />
+    <method name="Visible To, Position, and String" alt="可见，位置和字符串" />
+    <method name="Good Beam" alt="有益光束" />
+    <method name="Bad Beam" alt="有害光束" />
+    <method name="Grapple Beam" alt="抓钩光束" />
+    <method name="Default Visibility" alt="默认可见度" />
+    <method name="Visible Always" alt="始终可见" />
+    <method name="Visible Never" alt="始终不可见" />
+    <method name="Replace Existing Throttle" alt="替换现有阈值" />
+    <method name="Add To Existing Throttle" alt="添加至现有阈值" />
+    <method name="Direction And Magnitude" alt="方向和幅度" />
+    <method name="Ayutthaya" alt="阿育陀耶" />
+    <method name="Black Forest" alt="黑森林" />
+    <method name="Black Forest (Winter)" alt="圣诞节黑森林" />
+    <method name="Blizzard World" alt="暴雪世界" />
+    <method name="Blizzard World (Winter)" alt="圣诞节暴雪世界" />
+    <method name="Busan" alt="釜山" />
+    <method name="Busan Downtown (Lunar New Year)" alt="春节釜山城区" />
+    <method name="Busan Sanctuary (Lunar New Year)" alt="春节釜山寺院" />
+    <method name="Busan Stadium" alt="釜山体育场" />
+    <method name="Castillo" alt="城堡" />
+    <method name="Château Guillard" alt="吉拉德堡" />
+    <method name="Château Guillard (Halloween)" alt="万圣节吉拉德堡" />
+    <method name="Dorado" alt="多拉多" />
+    <method name="Ecopoint: Antarctica" alt="生态监测站：南极洲" />
+    <method name="Ecopoint: Antarctica (Winter)" alt="圣诞节生态监测站：南极洲" />
+    <method name="Eichenwalde" alt="艾兴瓦尔德" />
+    <method name="Eichenwalde (Halloween)" alt="万圣节艾兴瓦尔德" />
+    <method name="Estádio das Rãs" alt="弗格体育场" />
+    <method name="Hanamura" alt="花村" />
+    <method name="Hanamura (Winter)" alt="圣诞节花村" />
+    <method name="Havana" alt="哈瓦那" />
+    <method name="Hollywood" alt="好莱坞" />
+    <method name="Hollywood (Halloween)" alt="万圣节好莱坞" />
+    <method name="Horizon Lunar Colony" alt="“地平线”月球基地" />
+    <method name="Ilios" alt="伊利奥斯" />
+    <method name="Ilios Lighthouse" alt="伊利奥斯灯塔" />
+    <method name="Ilios Ruins" alt="伊利奥斯废墟" />
+    <method name="Ilios Well" alt="伊利奥斯深井" />
+    <method name="Junkenstein's Revenge" alt="怪鼠复仇" />
+    <method name="Junkertown" alt="渣客镇" />
+    <method name="King's Row" alt="国王大道" />
+    <method name="King's Row (Winter)" alt="圣诞节国王大道" />
+    <method name="Lijiang Control Center" alt="漓江塔控制中心" />
+    <method name="Lijiang Control Center (Lunar New Year)" alt="春节漓江塔控制中心" />
+    <method name="Lijiang Garden" alt="漓江塔庭院" />
+    <method name="Lijiang Garden (Lunar New Year)" alt="春节漓江塔庭院" />
+    <method name="Lijiang Night Market" alt="漓江塔夜市" />
+    <method name="Lijiang Night Market (Lunar New Year)" alt="春节漓江塔夜市" />
+    <method name="Lijiang Tower" alt="漓江塔" />
+    <method name="Lijiang Tower (Lunar New Year)" alt="春节漓江塔" />
+    <method name="Necropolis" alt="墓园" />
+    <method name="Nepal" alt="尼泊尔" />
+    <method name="Nepal Sanctum" alt="尼泊尔圣所" />
+    <method name="Nepal Shrine" alt="尼泊尔圣坛" />
+    <method name="Nepal Village" alt="尼泊尔村庄" />
+    <method name="Numbani" alt="努巴尼" />
+    <method name="Oasis" alt="绿洲" />
+    <method name="Oasis City Center" alt="绿洲城中心" />
+    <method name="Oasis Gardens" alt="绿洲城花园" />
+    <method name="Oasis University" alt="绿洲城大学" />
+    <method name="Paris" alt="巴黎" />
+    <method name="Petra" alt="佩特拉" />
+    <method name="Rialto" alt="里阿尔托" />
+    <method name="Route 66" alt="66号公路" />
+    <method name="Sydney Harbour Arena" alt="悉尼海港竞技场" />
+    <method name="Temple of Anubis" alt="阿努比斯神殿" />
+    <method name="Volskaya Industries" alt="沃斯卡娅工业区" />
+    <method name="Watchpoint: Gibraltar" alt="监测站：直布罗陀" />
+    <method name="Assault" alt="攻防作战" />
+    <method name="Capture The Flag" alt="勇夺锦旗" />
+    <method name="Control" alt="占领要点" />
+    <method name="Deathmatch" alt="死斗" />
+    <method name="Elimination" alt="决斗先锋" />
+    <method name="Escort" alt="运载目标" />
+    <method name="Hybrid" alt="攻击/护送" />
+    <method name="Lúcioball" alt="动感斗球" />
+    <method name="Mei's Snowball Offensive" alt="雪球攻势" />
+    <method name="Practice Range" alt="训练靶场" />
+    <method name="Skirmish" alt="突击模式" />
+    <method name="Team Deathmatch" alt="团队死斗" />
+    <method name="Yeti Hunter" alt="雪域猎手" />
   </Methods>
 </I18nLanguage>

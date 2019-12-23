@@ -74,12 +74,23 @@
             "internalConsoleOptions": "openOnSessionStart"
         },
         {
+            "name": "i18n link",
+            "type":"coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/bin/Debug/netcoreapp3.0/Deltinteger.dll",
+            "args":["i18nlink"],
+            "console": "externalTerminal",
+            "stopAtEntry": false,
+            "internalConsoleOptions": "openOnSessionStart"
+        },
+        {
             "name": "i18n generator",
             "type":"coreclr",
             "request": "launch",
             "preLaunchTask": "build",
             "program": "${workspaceFolder}/bin/Debug/netcoreapp3.0/Deltinteger.dll",
-            "args":["i18n", "C:/Users/Deltin/Downloads/toolchain-release/DataTool.exe", "C:/Users/Deltin/Downloads/toolchain-release/out/result.xml", "C:/Users/Deltin/Documents/GitHub/Overwatch-Script-To-Workshop/Deltinteger/Deltinteger/Languages/"],
+            "args":["i18n", "C:/Users/Deltin/Downloads/toolchain-release/DataTool.exe", "C:/Users/Deltin/Downloads/toolchain-release/out/result3.xml", "C:/Users/Deltin/Documents/GitHub/Overwatch-Script-To-Workshop/Deltinteger/Deltinteger/Languages/"],
             "console": "externalTerminal",
             "stopAtEntry": false,
             "internalConsoleOptions": "openOnSessionStart"
@@ -88,7 +99,7 @@
             "name": "Debug ANTLR4 grammar",
             "type": "antlr-debug",
             "request": "launch",
-            "input": "C:/Users/Deltin/Desktop/delete later/AntlrReworkTest.del",
+            "input": "C:/Users/Deltin/Documents/GitHub/Overwatch-Script-To-Workshop/Deltinteger/Deltinteger/Modules/PathfindEditor.del",
             "grammar": "DeltinScript.g4",
             "startRule": "ruleset",
             "printParseTree": true,

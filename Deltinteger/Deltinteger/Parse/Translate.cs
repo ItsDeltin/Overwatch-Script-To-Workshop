@@ -212,7 +212,7 @@ namespace Deltin.Deltinteger.Parse
             // Get the final workshop string.
             StringBuilder result = new StringBuilder();
             // Get the variables.
-            VarCollection.ToWorkshop(result);
+            VarCollection.ToWorkshop(result, I18n.I18n.CurrentLanguage);
             result.AppendLine();
 
             // Get the rules.

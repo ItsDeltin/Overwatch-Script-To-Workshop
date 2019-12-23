@@ -39,9 +39,9 @@ namespace Deltin.Deltinteger.I18n
             // Add enums
             foreach(var enumData in EnumData.GetEnumData())
                 foreach (var member in enumData.Members)
-                    keywords.Add(member.WorkshopName);
+                    keywords.Add(member.GetI18nKeyword());
 
-            return keywords.ToArray();
+            return keywords.Distinct().ToArray();
         }
 
         public static void Generate(string[] args)
@@ -118,6 +118,8 @@ namespace Deltin.Deltinteger.I18n
         {
             string datatoolPath = "C:/Users/Deltin/Downloads/toolchain-release/DataTool.exe";
             string overwatchPath = "C:/Program Files (x86)/Overwatch";
+            string previous = "C:/Users/Deltin/Downloads/toolchain-release/out/result2.xml";
+
             Console.OutputEncoding = System.Text.Encoding.Unicode;
 
             DataTool datatool = new DataTool(datatoolPath, overwatchPath);
@@ -128,39 +130,62 @@ namespace Deltin.Deltinteger.I18n
             datatool.DumpStrings(strings, "zhCN", false, Log);
 
             List<KeyLink> links = new List<KeyLink>();
+            var serializer = new XmlSerializer(typeof(KeyLinkList));
+
+            if (previous != null)
+                using (var lastStream = File.OpenRead(previous))
+                {
+                    var last = ((KeyLinkList)serializer.Deserialize(lastStream)).Methods;
+                    links.AddRange(last);
+                }
+
             foreach (var keyword in Keywords())
-                links.Add(GetKeyLink(keyword, 5, strings));
+                if (!links.Any(link => link.MethodName.ToLower() == keyword.ToLower()))
+                    GetKeyLink(links, keyword, 5, strings);
             
             Console.Write("Save key links to file: ");
             string saveAt = Console.ReadLine();
 
-            var serializer = new XmlSerializer(typeof(KeyLinkList));
             using (var fileStream = File.Create(saveAt))
             using (StreamWriter writer = new StreamWriter(fileStream))
                 serializer.Serialize(writer, new KeyLinkList(links.ToArray()));
         }
 
-        static KeyLink GetKeyLink(string name, int surroundRange, StringKeyGroup strings)
+        static void GetKeyLink(List<KeyLink> links, string name, int surroundRange, StringKeyGroup strings)
         {
             var pairs = strings.KeysFromEnglishName(name);
             int chosen = 0;
             if (pairs.Length > 1)
             {
-                List<KeyLinkRow> rows = new List<KeyLinkRow>();
-
-                for (int i = 0; i < pairs.Length; i++)
+                bool allEqual = true;
+                for (int i = 1; i < pairs.Length && allEqual; i++)
+                    for (int c = 0; c < pairs[i].Translations.Count && allEqual; c++)
+                        foreach (var pair in pairs)
+                            if (pair.Translations[c].Text != pairs[0].Translations[c].Text)
+                                allEqual = false;
+                if (!allEqual)
                 {
-                    KeyLinkRow row = new KeyLinkRow(strings, pairs[i], i, 5);
-                    rows.Add(row);
+                    List<KeyLinkRow> rows = new List<KeyLinkRow>();
+
+                    for (int i = 0; i < pairs.Length; i++)
+                    {
+                        KeyLinkRow row = new KeyLinkRow(strings, pairs[i], i, 5);
+                        rows.Add(row);
+                    }
+
+                    foreach (var row in rows)
+                        row.Write();
+
+                    while (!int.TryParse(Console.ReadLine(), out chosen) || chosen >= pairs.Length);
                 }
-
-                foreach (var row in rows)
-                    row.Write();
-
-                while (!int.TryParse(Console.ReadLine(), out chosen) || chosen >= pairs.Length);
             }
-
-            return new KeyLink(name, pairs[chosen].Key);
+            else if (pairs.Length == 0)
+            {
+                Console.WriteLine($"Error: no pairs found for '{name}'.");
+                Console.ReadLine();
+                return;
+            }
+            links.Add(new KeyLink(name, pairs[chosen].Key));
         }
 
         class KeyLinkRow
@@ -208,7 +233,10 @@ namespace Deltin.Deltinteger.I18n
                             lineBuilder.Append(" | ");
                     }
 
+                    if (i == _index) Console.ForegroundColor = ConsoleColor.Green;
+
                     Console.WriteLine(lineBuilder);
+                    Console.ForegroundColor = ConsoleColor.White;
                     rowLength = Math.Max(rowLength, lineBuilder.Length);
                 }
                 Console.WriteLine(new string('-', rowLength));
@@ -271,12 +299,28 @@ namespace Deltin.Deltinteger.I18n
         string RunCommand(string arguments)
         {
             var startInfo = new ProcessStartInfo();
+            startInfo.FileName = "cmd.exe";
+            startInfo.Arguments = $"/C datatool \"{overwatchPath}\" {arguments} > out_result.txt";
+            startInfo.WorkingDirectory = Path.GetDirectoryName(datatoolPath);
+            startInfo.WindowStyle = ProcessWindowStyle.Hidden;
+
+            using (Process dataToolProcess = Process.Start(startInfo))
+            {
+                dataToolProcess.WaitForExit();
+            }
+
+            string file = Path.Join(Path.GetDirectoryName(datatoolPath), "out_result.txt");
+            return File.ReadAllText(file);
+
+            /*
+            var startInfo = new ProcessStartInfo();
             startInfo.FileName = datatoolPath;
             startInfo.Arguments = string.Format("\"{0}\" {1}", overwatchPath, arguments);
             startInfo.WorkingDirectory = Path.GetDirectoryName(datatoolPath);
             
-            startInfo.UseShellExecute = false;
+            //startInfo.UseShellExecute = false;
             startInfo.RedirectStandardOutput = true;
+            startInfo.StandardOutputEncoding = Encoding.Unicode;
 
             string output;
 
@@ -287,6 +331,7 @@ namespace Deltin.Deltinteger.I18n
             }
 
             return output;
+            */
         }
 
         public void DumpStrings(StringKeyGroup group, string language, bool addNewKeys, Log log)

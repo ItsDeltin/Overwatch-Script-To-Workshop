@@ -1,6 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <I18nLanguage xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <Methods>
+    <method name="variables" alt="variables" />
+    <method name="global" alt="global" />
+    <method name="player" alt="jugador" />
+    <method name="rule" alt="regla" />
+    <method name="event" alt="evento" />
+    <method name="conditions" alt="condiciones" />
+    <method name="actions" alt="acciones" />
+    <method name="disabled" alt="deshabilitado" />
     <method name="Abort" alt="Abortar" />
     <method name="Abort If" alt="Abortar si" />
     <method name="Abort If Condition Is False" alt="Abortar si la condición es falsa" />
@@ -33,7 +41,6 @@
     <method name="Destroy Dummy Bot" alt="Destruir robot de entrenamiento" />
     <method name="Destroy Effect" alt="Destruir efecto" />
     <method name="Destroy Hud Text" alt="Destruir texto del HUD" />
-    <method name="Destroy Effect" alt="Destruir efecto" />
     <method name="Destroy In-World Text" alt="Destruir texto dentro del mundo" />
     <method name="Disable Built-In Game Mode Announcer" alt="Deshabilitar el presentador integrado del modo de juego" />
     <method name="Disable Built-In Game Mode Completion" alt="Deshabilitar la finalización integrada del modo de juego" />
@@ -339,5 +346,276 @@
     <method name="X Component Of" alt="Componente X de" />
     <method name="Y Component Of" alt="Componente Y de" />
     <method name="Z Component Of" alt="Componente Z de" />
+    <method name="Ongoing - Global" alt="En curso - Global" />
+    <method name="Ongoing - Each Player" alt="En curso - Cada jugador" />
+    <method name="Player earned elimination" alt="El jugador obtuvo una eliminación" />
+    <method name="Player dealt final blow" alt="El jugador asestó un golpe de gracia" />
+    <method name="Player dealt damage" alt="El jugador infligió daño" />
+    <method name="Player took damage" alt="El jugador recibió daño" />
+    <method name="Player died" alt="El jugador murió" />
+    <method name="Player Dealt Healing" alt="El jugador realizó una sanación" />
+    <method name="Player Received Healing" alt="El jugador recibió una sanación" />
+    <method name="Player Joined Match" alt="El jugador se unió a la partida" />
+    <method name="Player Left Match" alt="El jugador abandonó la partida" />
+    <method name="All" alt="Todos" />
+    <method name="Slot" alt="Posición" />
+    <method name="Reaper" alt="Reaper" />
+    <method name="Tracer" alt="Tracer" />
+    <method name="Mercy" alt="Mercy" />
+    <method name="Hanzo" alt="Hanzo" />
+    <method name="Torbjörn" alt="Torbjörn" />
+    <method name="Reinhardt" alt="Reinhardt" />
+    <method name="Pharah" alt="Pharah" />
+    <method name="Winston" alt="Winston" />
+    <method name="Widowmaker" alt="Widowmaker" />
+    <method name="Bastion" alt="Bastion" />
+    <method name="Symmetra" alt="Symmetra" />
+    <method name="Zenyatta" alt="Zenyatta" />
+    <method name="Genji" alt="Genji" />
+    <method name="Roadhog" alt="Roadhog" />
+    <method name="Mccree" alt="McCree" />
+    <method name="Junkrat" alt="Junkrat" />
+    <method name="Zarya" alt="Zarya" />
+    <method name="Soldier: 76" alt="Soldado: 76" />
+    <method name="Lúcio" alt="Lúcio" />
+    <method name="D.va" alt="D.VA" />
+    <method name="Mei" alt="Mei" />
+    <method name="Sombra" alt="Sombra" />
+    <method name="Doomfist" alt="Doomfist" />
+    <method name="Ana" alt="Ana" />
+    <method name="Orisa" alt="Orisa" />
+    <method name="Brigitte" alt="Brigitte" />
+    <method name="Moira" alt="Moira" />
+    <method name="Wrecking Ball" alt="Wrecking Ball" />
+    <method name="Ashe" alt="Ashe" />
+    <method name="Baptiste" alt="Baptiste" />
+    <method name="Sigma" alt="Sigma" />
+    <method name="==" alt="==" />
+    <method name="!=" alt="!=" />
+    <method name="&lt;" alt="&lt;" />
+    <method name="&lt;=" alt="&lt;=" />
+    <method name="&gt;" alt="&gt;" />
+    <method name="&gt;=" alt="&gt;=" />
+    <method name="Remove From Array By Value" alt="Eliminar de la matriz por valor" />
+    <method name="Remove From Array By Index" alt="Eliminar de la matriz por índice" />
+    <method name="Primary Fire" alt="Disparo principal" />
+    <method name="Secondary Fire" alt="Disparo secundario" />
+    <method name="Ability" alt="Habilidad" />
+    <method name="Ultimate" alt="Habilidad máxima" />
+    <method name="Interact" alt="Interactuar" />
+    <method name="Jump" alt="Saltar" />
+    <method name="Crouch" alt="Agacharse" />
+    <method name="To World" alt="Al mundo" />
+    <method name="To Player" alt="Al jugador" />
+    <method name="Cancel Contrary Motion" alt="Cancelar movimiento contrario" />
+    <method name="Incorporate Contrary Motion" alt="Incorporar movimiento contrario" />
+    <method name="Destination And Rate" alt="Destino y tasa" />
+    <method name="None" alt="Ninguno" />
+    <method name="Destination And Duration" alt="Destino y duración" />
+    <method name="Hacked" alt="Hackeado" />
+    <method name="Burning" alt="En llamas" />
+    <method name="Knocked Down" alt="Derribado" />
+    <method name="Asleep" alt="Dormido" />
+    <method name="Frozen" alt="Congelado" />
+    <method name="Unkillable" alt="Inmortal" />
+    <method name="Invincible" alt="Invencible" />
+    <method name="Phased Out" alt="Forma etérea" />
+    <method name="Rooted" alt="Arraigado" />
+    <method name="Stunned" alt="Aturdido" />
+    <method name="Ignore Condition" alt="Ignorar condición" />
+    <method name="Abort When False" alt="Cancelar cuando es falso" />
+    <method name="Restart When True" alt="Reiniciar cuando es verdadero" />
+    <method name="Sphere" alt="Esfera" />
+    <method name="Light Shaft" alt="Haz de luz" />
+    <method name="Orb" alt="Orbe" />
+    <method name="Ring" alt="Anillo" />
+    <method name="Cloud" alt="Nube" />
+    <method name="Sparkles" alt="Chispas" />
+    <method name="Good Aura" alt="Buena aura" />
+    <method name="Bad Aura" alt="Mala Aura" />
+    <method name="Energy Sound" alt="Sonido de energía" />
+    <method name="Pick-up Sound" alt="Sonido de objeto recogido" />
+    <method name="Good Aura Sound" alt="Sonido de aura buena" />
+    <method name="Bad Aura Sound" alt="Sonido de aura mala" />
+    <method name="Sparkles Sound" alt="Sonido de chispas" />
+    <method name="Smoke Sound" alt="Sonido de humo" />
+    <method name="Decal Sound" alt="Sonido de calcomanía" />
+    <method name="Beacon Sound" alt="Sonido de baliza" />
+    <method name="White" alt="Blanco" />
+    <method name="Yellow" alt="Amarillo" />
+    <method name="Green" alt="Verde" />
+    <method name="Purple" alt="Morado" />
+    <method name="Red" alt="Rojo" />
+    <method name="Blue" alt="Azul" />
+    <method name="Aqua" alt="Aguamarina" />
+    <method name="Orange" alt="Naranja" />
+    <method name="Sky Blue" alt="Azul cielo" />
+    <method name="Turquoise" alt="Turquesa" />
+    <method name="Lime Green" alt="Verde lima" />
+    <method name="Visible To, Position, and Radius" alt="Visible para, posición y radio" />
+    <method name="Position And Radius" alt="Posición y radio" />
+    <method name="Visible To" alt="Visible para" />
+    <method name="To Nearest" alt="Al más cercano" />
+    <method name="Voice Line Up" alt="Línea de voz hacia arriba" />
+    <method name="Voice Line Left" alt="Línea de voz hacia la izquierda" />
+    <method name="Voice Line Right" alt="Línea de voz hacia la derecha" />
+    <method name="Voice Line Down" alt="Línea de voz hacia abajo" />
+    <method name="Emote Up" alt="Gesto hacia arriba" />
+    <method name="Emote Left" alt="Gesto hacia la izquierda" />
+    <method name="Emote Right" alt="Gesto hacia la derecha" />
+    <method name="Emote Down" alt="Gesto hacia abajo" />
+    <method name="Ultimate Status" alt="Estado de habilidad máxima" />
+    <method name="Hello" alt="Hola" />
+    <method name="Need Healing" alt="Necesito sanación" />
+    <method name="Group Up" alt="Agrúpense" />
+    <method name="Thanks" alt="Gracias" />
+    <method name="Acknowledge" alt="De acuerdo" />
+    <method name="Top" alt="Arriba" />
+    <method name="Visible To And String" alt="Visible para y cadena" />
+    <method name="Arrow: Down" alt="Flecha: Hacia abajo" />
+    <method name="Arrow: Left" alt="Flecha: Hacia la izquierda" />
+    <method name="Arrow: Right" alt="Flecha: Hacia la derecha" />
+    <method name="Arrow: Up" alt="Flecha: Hacia arriba" />
+    <method name="Asterisk" alt="Asterisco" />
+    <method name="Bolt" alt="Rayo" />
+    <method name="Checkmark" alt="Marca de control" />
+    <method name="Circle" alt="Círculo" />
+    <method name="Club" alt="Trébol" />
+    <method name="Diamond" alt="Diamante" />
+    <method name="Dizzy" alt="Mareado" />
+    <method name="Exclamation Mark" alt="Signo de exclamación" />
+    <method name="Eye" alt="Ojo" />
+    <method name="Fire" alt="Fuego" />
+    <method name="Flag" alt="Bandera" />
+    <method name="Halo" alt="Halo" />
+    <method name="Happy" alt="Feliz" />
+    <method name="Heart" alt="Corazón" />
+    <method name="Moon" alt="Luna" />
+    <method name="No" alt="No" />
+    <method name="Plus" alt="Signo de suma" />
+    <method name="Poison" alt="Veneno" />
+    <method name="Poison 2" alt="Veneno 2" />
+    <method name="Question Mark" alt="Signo de interrogación" />
+    <method name="Radioactive" alt="Radiactivo" />
+    <method name="Recycle" alt="Reciclaje" />
+    <method name="Ring Thick" alt="Anillo grueso" />
+    <method name="Ring Thin" alt="Anillo delgado" />
+    <method name="Sad" alt="Triste" />
+    <method name="Skull" alt="Cráneo" />
+    <method name="Spade" alt="Pica" />
+    <method name="Spiral" alt="Espiral" />
+    <method name="Stop" alt="Alto" />
+    <method name="Trashcan" alt="Tacho de basura" />
+    <method name="Warning" alt="Advertencia" />
+    <method name="X" alt="X" />
+    <method name="Visible To And Position" alt="Visible para y posición" />
+    <method name="Position" alt="Posición" />
+    <method name="Good Explosion" alt="Buena explosión" />
+    <method name="Bad Explosion" alt="Mala explosión" />
+    <method name="Ring Explosion" alt="Explosión en anillo" />
+    <method name="Good Pickup Effect" alt="Buen efecto de captura" />
+    <method name="Bad Pickup Effect" alt="Mal efecto de captura" />
+    <method name="Debuff Impact Sound" alt="Sonido de impacto de despotenciamiento" />
+    <method name="Buff Impact Sound" alt="Sonido de impacto de potenciamiento" />
+    <method name="Ring Explosion Sound" alt="Sonido de explosión en anillo" />
+    <method name="Buff Explosion Sound" alt="Sonido de explosión de potenciamiento" />
+    <method name="Explosion Sound" alt="Sonido de explosión" />
+    <method name="Enemies" alt="Enemigos" />
+    <method name="Direction, Rate, and Max Speed" alt="Dirección, aceleración y velocidad máxima" />
+    <method name="Receivers, Damagers, and Damage Percent" alt="Receptores, infligidores de daño y porcentaje de daño" />
+    <method name="Receivers And Damagers" alt="Receptores e infligidores de daño" />
+    <method name="Direction And Turn Rate" alt="Dirección y velocidad de giro" />
+    <method name="Barriers Do Not Block LOS" alt="Las barreras no bloquean la LDV" />
+    <method name="Enemy Barriers Block LOS" alt="Las barreras enemigas bloquean la LDV" />
+    <method name="All Barriers Block LOS" alt="Todas las barreras bloquean la LDV" />
+    <method name="Rotation" alt="Rotación" />
+    <method name="Rotation And Translation" alt="Rotación y traslación" />
+    <method name="Off" alt="Apagado" />
+    <method name="Surfaces" alt="Superficies" />
+    <method name="Surfaces And Enemy Barriers" alt="Superficies y barreras enemigas" />
+    <method name="Surfaces And All Barriers" alt="Superficies y todas las barreras" />
+    <method name="Clip Against Surfaces" alt="Atravesar las superficies" />
+    <method name="Do Not Clip" alt="No atravesar" />
+    <method name="Visible To, Position, and String" alt="Visible para, posición y cadena" />
+    <method name="Good Beam" alt="Rayo bueno" />
+    <method name="Bad Beam" alt="Rayo malo" />
+    <method name="Grapple Beam" alt="Rayo de arpeo" />
+    <method name="Default Visibility" alt="Visibilidad predeterminada" />
+    <method name="Visible Always" alt="Siempre visible" />
+    <method name="Visible Never" alt="Nunca visible" />
+    <method name="Replace Existing Throttle" alt="Reemplazar aceleración preexistente" />
+    <method name="Add To Existing Throttle" alt="Agregar a aceleración preexistente" />
+    <method name="Direction And Magnitude" alt="Dirección y magnitud" />
+    <method name="Ayutthaya" alt="Ayutthaya" />
+    <method name="Black Forest" alt="Selva negra" />
+    <method name="Black Forest (Winter)" alt="Selva Negra (Invierno)" />
+    <method name="Blizzard World" alt="Blizzard World" />
+    <method name="Blizzard World (Winter)" alt="Blizzard World (invierno)" />
+    <method name="Busan" alt="Busan" />
+    <method name="Busan Downtown (Lunar New Year)" alt="Centro de Busan (Año Nuevo Lunar)" />
+    <method name="Busan Sanctuary (Lunar New Year)" alt="Santuario de Busan (Año Nuevo Lunar)" />
+    <method name="Busan Stadium" alt="Estadio de Busan" />
+    <method name="Castillo" alt="Castillo" />
+    <method name="Château Guillard" alt="Château Guillard" />
+    <method name="Château Guillard (Halloween)" alt="Château Guillard (Halloween)" />
+    <method name="Dorado" alt="Dorado" />
+    <method name="Ecopoint: Antarctica" alt="Ecopunto: Antártida" />
+    <method name="Ecopoint: Antarctica (Winter)" alt="Ecopunto: Antártida (Invierno)" />
+    <method name="Eichenwalde" alt="Eichenwalde" />
+    <method name="Eichenwalde (Halloween)" alt="Eichenwalde (Halloween)" />
+    <method name="Estádio das Rãs" alt="Estadio de Rãs" />
+    <method name="Hanamura" alt="Hanamura" />
+    <method name="Hanamura (Winter)" alt="Hanamura (Invierno)" />
+    <method name="Havana" alt="La Habana" />
+    <method name="Hollywood" alt="Hollywood" />
+    <method name="Hollywood (Halloween)" alt="Hollywood (Halloween)" />
+    <method name="Horizon Lunar Colony" alt="Colonia lunar Horizonte" />
+    <method name="Ilios" alt="Ilios" />
+    <method name="Ilios Lighthouse" alt="Faro de Ilios" />
+    <method name="Ilios Ruins" alt="Ruinas de Ilios" />
+    <method name="Ilios Well" alt="Pozo de Ilios" />
+    <method name="Junkenstein's Revenge" alt="La venganza de Junkenstein" />
+    <method name="Junkertown" alt="Junkertown" />
+    <method name="King's Row" alt="King's Row" />
+    <method name="King's Row (Winter)" alt="King's Row (Invierno)" />
+    <method name="Lijiang Control Center" alt="Centro de control de Lijiang" />
+    <method name="Lijiang Control Center (Lunar New Year)" alt="Centro de control de Lijiang (Año Nuevo Lunar)" />
+    <method name="Lijiang Garden" alt="Jardín Lijiang" />
+    <method name="Lijiang Garden (Lunar New Year)" alt="Jardín Lijiang (Año Nuevo Lunar)" />
+    <method name="Lijiang Night Market" alt="Mercado nocturno de Lijiang" />
+    <method name="Lijiang Night Market (Lunar New Year)" alt="Mercado nocturno de Lijiang (Año Nuevo Lunar)" />
+    <method name="Lijiang Tower" alt="Torre Lijiang" />
+    <method name="Lijiang Tower (Lunar New Year)" alt="Torre Lijiang (Año Nuevo Lunar)" />
+    <method name="Necropolis" alt="Necrópolis" />
+    <method name="Nepal" alt="Nepal" />
+    <method name="Nepal Sanctum" alt="Santuario de Nepal" />
+    <method name="Nepal Shrine" alt="Sagrario de Nepal" />
+    <method name="Nepal Village" alt="Pueblo de Nepal" />
+    <method name="Numbani" alt="Numbani" />
+    <method name="Oasis" alt="Oasis" />
+    <method name="Oasis City Center" alt="Centro de la ciudad de Oasis" />
+    <method name="Oasis Gardens" alt="Jardines de Oasis" />
+    <method name="Oasis University" alt="Universidad de Oasis" />
+    <method name="Paris" alt="París" />
+    <method name="Petra" alt="Petra" />
+    <method name="Rialto" alt="Rialto" />
+    <method name="Route 66" alt="Ruta 66" />
+    <method name="Sydney Harbour Arena" alt="Arena Sydney Harbour" />
+    <method name="Temple of Anubis" alt="Templo de Anubis" />
+    <method name="Volskaya Industries" alt="Industrias Volskaya" />
+    <method name="Watchpoint: Gibraltar" alt="Observatorio: Gibraltar" />
+    <method name="Assault" alt="Asalto" />
+    <method name="Capture The Flag" alt="Captura la bandera" />
+    <method name="Control" alt="Control" />
+    <method name="Deathmatch" alt="Combate a muerte" />
+    <method name="Elimination" alt="Eliminación" />
+    <method name="Escort" alt="Escolta" />
+    <method name="Hybrid" alt="Híbrido" />
+    <method name="Lúcioball" alt="Lúciobol" />
+    <method name="Mei's Snowball Offensive" alt="Mei: Operación Bola de Nieve" />
+    <method name="Practice Range" alt="Campo de pruebas" />
+    <method name="Skirmish" alt="Escaramuza" />
+    <method name="Team Deathmatch" alt="Combate a muerte por equipos" />
+    <method name="Yeti Hunter" alt="Cazadora de yetis" />
   </Methods>
 </I18nLanguage>

@@ -171,13 +171,13 @@ namespace Deltin.Deltinteger.Parse
             }
         }
     
-        public void ToWorkshop(StringBuilder stringBuilder)
+        public void ToWorkshop(StringBuilder stringBuilder, OutputLanguage language)
         {
-            stringBuilder.AppendLine("variables");
+            stringBuilder.AppendLine(I18n.I18n.Translate(language, "variables"));
             stringBuilder.AppendLine("{");
-            stringBuilder.AppendLine(Extras.Indent(1, false) + "global:");
+            stringBuilder.AppendLine(Extras.Indent(1, false) + I18n.I18n.Translate(language, "global") + ":");
             WriteCollection(stringBuilder, variableList(true));
-            stringBuilder.AppendLine(Extras.Indent(1, false) + "player:");
+            stringBuilder.AppendLine(Extras.Indent(1, false) + I18n.I18n.Translate(language, "player") + ":");
             WriteCollection(stringBuilder, variableList(false));
             stringBuilder.AppendLine("}");
 
