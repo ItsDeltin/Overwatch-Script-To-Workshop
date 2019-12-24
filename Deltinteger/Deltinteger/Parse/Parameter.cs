@@ -46,6 +46,13 @@ namespace Deltin.Deltinteger.Parse
             Documentation = documentation;
         }
 
+        public CodeParameter(string name, string documentation, CodeType type)
+        {
+            Name = name;
+            Type = type;
+            Documentation = documentation;
+        }
+
         public CodeParameter(string name, string documentation, ExpressionOrWorkshopValue defaultValue)
         {
             Name = name;
@@ -54,6 +61,7 @@ namespace Deltin.Deltinteger.Parse
         }
 
         public virtual object Validate(ScriptFile script, IExpression value, DocRange valueRange) => null;
+        public virtual IWorkshopTree Parse(ActionSet actionSet, IExpression expression, bool asElement) => expression.Parse(actionSet, asElement);
 
         public string GetLabel(bool markdown)
         {
@@ -470,6 +478,51 @@ namespace Deltin.Deltinteger.Parse
             ParameterDoesntExist = $"The parameter '{{0}}' does not exist in the {errorName}.";
             MissingParameter     = $"The {{0}} parameter is missing in the {errorName}.";
         }
+    }
+
+    class WorkshopVariableParameter : CodeParameter
+    {
+        public WorkshopVariableParameter(string name, string documentation) : base(name, documentation) {}
+
+        public override object Validate(ScriptFile script, IExpression value, DocRange valueRange)
+        {
+            CallVariableAction call = value as CallVariableAction;
+            if (call == null || call.Calling.DefineType != VariableDefineType.RuleLevel)
+                script.Diagnostics.Error("Expected a variable defined on the rule level.", valueRange);
+            
+            if (call != null && call.Index.Length > 0)
+                script.Diagnostics.Error("Variable cannot be indexed.", valueRange);
+
+            return null;
+        }
+
+        public override IWorkshopTree Parse(ActionSet actionSet, IExpression expression, bool asElement)
+        {
+            return ((IndexReference)actionSet.IndexAssigner[((CallVariableAction)expression).Calling]).WorkshopVariable;
+        }
+    }
+
+    class VariableParameter : CodeParameter
+    {
+        public VariableParameter(string name, string documentation) : base(name, documentation) {}
+
+        public override object Validate(ScriptFile script, IExpression value, DocRange valueRange)
+        {
+            CallVariableAction call = value as CallVariableAction;
+
+            // Syntax error if the expression is not a variable.
+            if (call == null)
+                script.Diagnostics.Error("Expected a variable.", valueRange);
+            
+            // Syntax error if the variable is not settable.
+            else if (!call.Calling.Settable())
+                script.Diagnostics.Error($"The {call.Calling.Name} variable cannot be set to.", valueRange);
+            
+            else return call;
+            return null;
+        }
+
+        public override IWorkshopTree Parse(ActionSet actionSet, IExpression expression, bool asElement) => null;
     }
 
     class ConstBoolParameter : CodeParameter

@@ -34,11 +34,7 @@ namespace Deltin.Deltinteger.Parse
             if (current != null)
                 for (int i = 1; i < ExprContextTree.Length; i++)
                 {
-                    //current = DeltinScript.GetExpression(script, translateInfo, current.ReturningScope() ?? new Scope(), ExprContextTree[i], false, i < ExprContextTree.Length - 1 || usedAsValue, scope);
                     current = ExprContextTree[i].Parse(script, translateInfo, current.ReturningScope() ?? new Scope(), scope, i < ExprContextTree.Length - 1 || usedAsValue);
-
-                    if (current != null && current is IScopeable == false && current is CallMethodAction == false)
-                        script.Diagnostics.Error("Expected variable or method.", ExprContextTree[i].Range);
 
                     Tree[i] = current;
 
@@ -62,26 +58,26 @@ namespace Deltin.Deltinteger.Parse
             var exprList = new List<TreeContextPart>();
             Flatten(script, exprContext, exprList);
             return exprList.ToArray();
-        }
 
-        private void Flatten(ScriptFile script, DeltinScriptParser.E_expr_treeContext exprContext, List<TreeContextPart> exprList)
-        {
-            if (exprContext.expr() is DeltinScriptParser.E_expr_treeContext)
-                Flatten(script, (DeltinScriptParser.E_expr_treeContext)exprContext.expr(), exprList);
-            else
-                exprList.Add(new TreeContextPart(exprContext.expr()));
+            void Flatten(ScriptFile script, DeltinScriptParser.E_expr_treeContext exprContext, List<TreeContextPart> exprList)
+            {
+                if (exprContext.expr() is DeltinScriptParser.E_expr_treeContext)
+                    Flatten(script, (DeltinScriptParser.E_expr_treeContext)exprContext.expr(), exprList);
+                else
+                    exprList.Add(new TreeContextPart(exprContext.expr()));
 
-            if (exprContext.method() == null && exprContext.variable() == null)
-            {
-                script.Diagnostics.Error("Expected expression.", DocRange.GetRange(exprContext.SEPERATOR()));
-                _trailingSeperator = exprContext.SEPERATOR();
-            }
-            else
-            {
-                if (exprContext.method() != null)
-                    exprList.Add(new TreeContextPart(exprContext.method()));
-                if (exprContext.variable() != null)
-                    exprList.Add(new TreeContextPart(exprContext.variable()));
+                if (exprContext.method() == null && exprContext.variable() == null)
+                {
+                    script.Diagnostics.Error("Expected expression.", DocRange.GetRange(exprContext.SEPERATOR()));
+                    _trailingSeperator = exprContext.SEPERATOR();
+                }
+                else
+                {
+                    if (exprContext.method() != null)
+                        exprList.Add(new TreeContextPart(exprContext.method()));
+                    if (exprContext.variable() != null)
+                        exprList.Add(new TreeContextPart(exprContext.variable()));
+                }
             }
         }
 
@@ -141,21 +137,35 @@ namespace Deltin.Deltinteger.Parse
             IWorkshopTree result = null;
             VarIndexAssigner currentAssigner = actionSet.IndexAssigner;
             IndexReference currentObject = null;
+            Element[] resultIndex = new Element[0];
 
             for (int i = 0; i < Tree.Length; i++)
             {
                 bool isLast = i == Tree.Length - 1;
                 IWorkshopTree current = null;
-                if (Tree[i] is Var)
+                if (Tree[i] is CallVariableAction)
                 {
-                    var reference = currentAssigner[(Var)Tree[i]];
+                    var callVariableAction = (CallVariableAction)Tree[i];
+
+                    var reference = currentAssigner[callVariableAction.Calling];
                     current = reference.GetVariable((Element)target);
+
+                    resultIndex = new Element[callVariableAction.Index.Length];
+                    for (int ai = 0; ai < callVariableAction.Index.Length; ai++)
+                    {
+                        var workshopIndex = callVariableAction.Index[ai].Parse(actionSet);
+                        resultIndex[ai] = (Element)workshopIndex;
+                        current = Element.Part<V_ValueInArray>(current, workshopIndex);
+                    }
 
                     // If this is the last node in the tree, set the resulting variable.
                     if (isLast) resultingVariable = reference;
                 }
                 else if (Tree[i] is CodeType == false)
+                {
                     current = Tree[i].Parse(actionSet.New(currentAssigner).New(currentObject), asElement);
+                    resultIndex = new Element[0];
+                }
                 
                 if (Tree[i].Type() == null)
                 {
@@ -182,7 +192,7 @@ namespace Deltin.Deltinteger.Parse
             }
 
             if (result == null && expectingValue) throw new Exception("Expression tree result is null");
-            return new ExpressionTreeParseResult(result, target, resultingVariable);
+            return new ExpressionTreeParseResult(result, resultIndex, target, resultingVariable);
         }
     
         public class TreeContextPart
@@ -229,13 +239,14 @@ namespace Deltin.Deltinteger.Parse
     public class ExpressionTreeParseResult
     {
         public IWorkshopTree Result { get; }
+        public Element[] ResultingIndex { get; }
         public IWorkshopTree Target { get; }
         public IGettable ResultingVariable { get; }
-        public IWorkshopTree[] ResultingIndex { get; }
 
-        public ExpressionTreeParseResult(IWorkshopTree result, IWorkshopTree target, IGettable resultingVariable)
+        public ExpressionTreeParseResult(IWorkshopTree result, Element[] index, IWorkshopTree target, IGettable resultingVariable)
         {
             Result = result;
+            ResultingIndex = index;
             Target = target;
             ResultingVariable = resultingVariable;
         }

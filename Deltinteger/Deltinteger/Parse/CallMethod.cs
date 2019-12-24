@@ -80,7 +80,7 @@ namespace Deltin.Deltinteger.Parse
 
             IWorkshopTree[] parameterValues = new IWorkshopTree[ParameterValues.Length];
             for (int i = 0; i < ParameterValues.Length; i++)
-                parameterValues[i] = ParameterValues[i].Parse(actionSet, OverloadChooser.Overload.Parameters[i].Type == null);
+                parameterValues[i] = OverloadChooser.Overload.Parameters[i].Parse(actionSet, ParameterValues[i], OverloadChooser.Overload.Parameters[i].Type == null);
             return parameterValues;
         }
     }

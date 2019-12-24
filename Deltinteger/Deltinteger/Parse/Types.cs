@@ -125,6 +125,11 @@ namespace Deltin.Deltinteger.Parse
         {
             return (WorkshopEnumType)CodeType.DefaultTypes.First(t => t is WorkshopEnumType && ((WorkshopEnumType)t).EnumData == enumData);
         }
+        public static WorkshopEnumType GetEnumType<T>()
+        {
+            var enumData = EnumData.GetEnum<T>();
+            return (WorkshopEnumType)CodeType.DefaultTypes.First(t => t is WorkshopEnumType && ((WorkshopEnumType)t).EnumData == enumData);
+        }
     }
 
     public class ScopedEnumMember : IScopeable, IExpression

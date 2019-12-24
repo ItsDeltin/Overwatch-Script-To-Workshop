@@ -255,19 +255,33 @@ namespace Deltin.Deltinteger.Elements
             Parameters = new Parse.CodeParameter[WorkshopParameters.Length];
             for (int i = 0; i < Parameters.Length; i++)
             {
-                CodeType codeType = null;
+                string name = WorkshopParameters[i].Name.Replace(" ", "");
+                string description = Wiki?.GetWikiParameter(WorkshopParameters[i].Name)?.Description;
 
-                if (WorkshopParameters[i] is EnumParameter)
-                    codeType = WorkshopEnumType.GetEnumType(((EnumParameter)WorkshopParameters[i]).EnumData);
+                if (WorkshopParameters[i] is VarRefParameter)
+                {
+                    Parameters[i] = new WorkshopVariableParameter(
+                        name,
+                        description
+                    );
+                }
+                else
+                {
+                    CodeType codeType = null;
 
-                var defaultValue = WorkshopParameters[i].GetDefault();
+                    // If the parameter is an enum, get the enum CodeType.
+                    if (WorkshopParameters[i] is EnumParameter)
+                        codeType = WorkshopEnumType.GetEnumType(((EnumParameter)WorkshopParameters[i]).EnumData);
 
-                Parameters[i] = new CodeParameter(
-                    WorkshopParameters[i].Name.Replace(" ", ""),
-                    codeType,
-                    defaultValue == null ? null : new ExpressionOrWorkshopValue(defaultValue),
-                    Wiki?.GetWikiParameter(WorkshopParameters[i].Name)?.Description
-                );
+                    var defaultValue = WorkshopParameters[i].GetDefault();
+
+                    Parameters[i] = new CodeParameter(
+                        name,
+                        codeType,
+                        defaultValue == null ? null : new ExpressionOrWorkshopValue(defaultValue),
+                        description
+                    );
+                }
             }
         }
 

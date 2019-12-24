@@ -328,6 +328,9 @@ namespace Deltin.Deltinteger.Parse
             {
                 if (selfContained)
                     script.Diagnostics.Error("Types can't be used as expressions.", DocRange.GetRange(variableContext.PART()));
+                
+                if (variableContext.array() != null)
+                    script.Diagnostics.Error("Indexers cannot be used with types.", DocRange.GetRange(variableContext.array()));
 
                 return type;
             }
@@ -340,7 +343,17 @@ namespace Deltin.Deltinteger.Parse
             {
                 Var var = (Var)element;
                 var.Call(script, DocRange.GetRange(variableContext.PART()));
-                return var;
+
+                IExpression[] index;
+                if (variableContext.array() == null) index = new IExpression[0];
+                else
+                {
+                    index = new IExpression[variableContext.array().expr().Length];
+                    for (int i = 0; i < index.Length; i++)
+                        index[i] = GetExpression(script, translateInfo, scope, variableContext.array().expr(i));
+                }
+
+                return new CallVariableAction(var, index);
             }
             else if (element is ScopedEnumMember) return (ScopedEnumMember)element;
             else throw new NotImplementedException();

@@ -190,6 +190,7 @@ namespace Deltin.Deltinteger.Parse
 
         // Attributes
         public VariableType VariableType { get; set; }
+        public VariableDefineType DefineType { get; private set; }
         public bool InExtendedCollection { get; private set; }
         public int ID { get; private set; } = -1;
         public bool Static { get; private set; }
@@ -248,6 +249,7 @@ namespace Deltin.Deltinteger.Parse
 
             newVar.context = context;
             newVar.InExtendedCollection = context.NOT() != null;
+            newVar.DefineType = defineType;
 
             // Check if global/player.
             if (defineType == VariableDefineType.RuleLevel)
@@ -407,5 +409,25 @@ namespace Deltin.Deltinteger.Parse
         Player,
         // The variable references an element.
         ElementReference
+    }
+
+    class CallVariableAction : IExpression
+    {
+        public Var Calling { get; }
+        public IExpression[] Index { get; }
+
+        public CallVariableAction(Var calling, IExpression[] index)
+        {
+            Calling = calling;
+            Index = index;
+        }
+
+        public IWorkshopTree Parse(ActionSet actionSet, bool asElement = true) => Calling.Parse(actionSet, asElement);
+
+        public Element[] ParseIndex(ActionSet actionSet) => Array.ConvertAll(Index, index => (Element)index.Parse(actionSet));
+
+        public Scope ReturningScope() => Calling.ReturningScope();
+
+        public CodeType Type() => Calling.Type();
     }
 }

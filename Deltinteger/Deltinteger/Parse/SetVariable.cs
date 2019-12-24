@@ -8,7 +8,7 @@ namespace Deltin.Deltinteger.Parse
 {
     public class SetVariableAction : IStatement
     {
-        private Var SetVariable { get; }
+        private CallVariableAction SetVariable { get; }
         private ExpressionTree Tree { get; }
         private string Operation { get; }
         private IExpression Value { get; }
@@ -20,9 +20,9 @@ namespace Deltin.Deltinteger.Parse
             DocRange notAVariableRange = null;
             DocRange variableRange = null;
 
-            if (variableExpression is Var)
+            if (variableExpression is CallVariableAction)
             {
-                SetVariable = (Var)variableExpression;
+                SetVariable = (CallVariableAction)variableExpression;
                 variableRange = DocRange.GetRange(varsetContext.var);
             }
             else if (variableExpression is ExpressionTree)
@@ -30,11 +30,11 @@ namespace Deltin.Deltinteger.Parse
                 Tree = (ExpressionTree)variableExpression;
                 if (Tree.Completed)
                 {
-                    if (Tree.Result is Var == false)
+                    if (Tree.Result is CallVariableAction == false)
                         notAVariableRange = Tree.ExprContextTree.Last().Range;
                     else
                     {   
-                        SetVariable = (Var)Tree.Result;
+                        SetVariable = (CallVariableAction)Tree.Result;
                         variableRange = Tree.ExprContextTree.Last().Range;
                     }
                 }
@@ -45,8 +45,8 @@ namespace Deltin.Deltinteger.Parse
             if (notAVariableRange != null)
                 script.Diagnostics.Error("Expected a variable.", notAVariableRange);
             
-            if (SetVariable != null && !SetVariable.Settable())
-                script.Diagnostics.Error($"The variable '{SetVariable.Name}' cannot be set to.", variableRange);
+            if (SetVariable != null && !SetVariable.Calling.Settable())
+                script.Diagnostics.Error($"The variable '{SetVariable.Calling.Name}' cannot be set to.", variableRange);
             
             if (varsetContext.statement_operation() != null)
             {
@@ -64,14 +64,19 @@ namespace Deltin.Deltinteger.Parse
         {
             IGettable var;
             Element target = null;
+            Element[] index;
             if (Tree != null)
             {
                 ExpressionTreeParseResult treeParseResult = Tree.ParseTree(actionSet, true, true);
                 var = treeParseResult.ResultingVariable;
                 target = (Element)treeParseResult.Target;
+                index = treeParseResult.ResultingIndex;
             }
             else
-                var = actionSet.IndexAssigner[SetVariable];
+            {
+                var = actionSet.IndexAssigner[SetVariable.Calling];
+                index = Array.ConvertAll(SetVariable.Index, index => (Element)index.Parse(actionSet));
+            }
 
             Element value = null;
             if (Value != null) value = (Element)Value.Parse(actionSet);
@@ -92,9 +97,9 @@ namespace Deltin.Deltinteger.Parse
             }
 
             if (modifyOperation == null)
-                actionSet.AddAction(((IndexReference)var).SetVariable(value, target));
+                actionSet.AddAction(((IndexReference)var).SetVariable(value, target, index));
             else
-                actionSet.AddAction(((IndexReference)var).ModifyVariable((Elements.Operation)modifyOperation, value, target));
+                actionSet.AddAction(((IndexReference)var).ModifyVariable((Elements.Operation)modifyOperation, value, target, index));
 
         }
     }
