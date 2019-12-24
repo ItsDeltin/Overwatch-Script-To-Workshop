@@ -7,6 +7,8 @@ using SignatureHelp = OmniSharp.Extensions.LanguageServer.Protocol.Models.Signat
 using SignatureInformation = OmniSharp.Extensions.LanguageServer.Protocol.Models.SignatureInformation;
 using ParameterInformation = OmniSharp.Extensions.LanguageServer.Protocol.Models.ParameterInformation;
 using StringOrMarkupContent = OmniSharp.Extensions.LanguageServer.Protocol.Models.StringOrMarkupContent;
+using MarkupContent = OmniSharp.Extensions.LanguageServer.Protocol.Models.MarkupContent;
+using MarkupKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.MarkupKind;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -14,7 +16,7 @@ namespace Deltin.Deltinteger.Parse
     {
         public string Name { get; }
         public CodeType Type { get; }
-        public StringOrMarkupContent Documentation { get; }
+        public string Documentation { get; }
         public ExpressionOrWorkshopValue DefaultValue { get; }
 
         public CodeParameter(string name, CodeType type)
@@ -30,7 +32,7 @@ namespace Deltin.Deltinteger.Parse
             DefaultValue = defaultValue;
         }
 
-        public CodeParameter(string name, CodeType type, ExpressionOrWorkshopValue defaultValue, StringOrMarkupContent documentation)
+        public CodeParameter(string name, CodeType type, ExpressionOrWorkshopValue defaultValue, string documentation)
         {
             Name = name;
             Type = type;
@@ -38,13 +40,13 @@ namespace Deltin.Deltinteger.Parse
             Documentation = documentation;
         }
 
-        public CodeParameter(string name, StringOrMarkupContent documentation)
+        public CodeParameter(string name, string documentation)
         {
             Name = name;
             Documentation = documentation;
         }
 
-        public CodeParameter(string name, StringOrMarkupContent documentation, ExpressionOrWorkshopValue defaultValue)
+        public CodeParameter(string name, string documentation, ExpressionOrWorkshopValue defaultValue)
         {
             Name = name;
             Documentation = documentation;
@@ -418,7 +420,10 @@ namespace Deltin.Deltinteger.Parse
                 for (int p = 0; p < parameters.Length; p++)
                     parameters[p] = new ParameterInformation() {
                         Label = CurrentOptions[i].Parameters[p].GetLabel(false),
-                        Documentation = CurrentOptions[i].Parameters[p].Documentation
+                        Documentation = new StringOrMarkupContent(new MarkupContent() {
+                            Kind = MarkupKind.Markdown,
+                            Value = CurrentOptions[i].Parameters[p].Documentation
+                        })
                     };
 
                 overloads[i] = new SignatureInformation() {
@@ -471,8 +476,8 @@ namespace Deltin.Deltinteger.Parse
     {
         private bool DefaultConstValue { get; }
 
-        public ConstBoolParameter(string name, StringOrMarkupContent documentation) : base(name, documentation) {}
-        public ConstBoolParameter(string name, StringOrMarkupContent documentation, bool defaultValue)
+        public ConstBoolParameter(string name, string documentation) : base(name, documentation) {}
+        public ConstBoolParameter(string name, string documentation, bool defaultValue)
             : base(name, documentation, new ExpressionOrWorkshopValue(defaultValue ? (Element)new V_True() : new V_False()))
         {
             DefaultConstValue = defaultValue;

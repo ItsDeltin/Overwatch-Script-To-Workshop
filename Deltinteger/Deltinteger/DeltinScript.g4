@@ -35,7 +35,7 @@ expr
 	| typeconvert							                                           #e_type_convert
 	| THIS									                                           #e_this
 	| ROOT								                                               #e_root
-	| expr SEPERATOR (method | variable)                                               #e_expr_tree
+	| expr SEPERATOR (method | variable)?											   #e_expr_tree
 	| NOT expr                                                                         #e_not
 	| '-' expr                                                                         #e_inverse
 	| <assoc=right> left=expr op=('^' | '*' | '/' | '%') right=expr                    #e_op_1

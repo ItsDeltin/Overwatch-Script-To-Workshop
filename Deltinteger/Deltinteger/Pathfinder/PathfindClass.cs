@@ -68,7 +68,7 @@ namespace Deltin.Deltinteger.Pathfinder
         public PathmapClassConstructor(PathmapClass pathMapClass) : base(pathMapClass, null, AccessLevel.Public)
         {
             Parameters = new CodeParameter[] {
-                new PathmapFileParameter("pathmapFile", Extras.GetMarkupContent("File path of the pathmap to use. Must be a `.pathmap` file."))
+                new PathmapFileParameter("pathmapFile", "File path of the pathmap to use. Must be a `.pathmap` file.")
             };
             Documentation = Extras.GetMarkupContent("Creates a pathmap from a `.pathmap` file.");
         }
@@ -86,7 +86,7 @@ namespace Deltin.Deltinteger.Pathfinder
         /// <param name="fileType">The expected file type. Can be null.</param>
         /// <param name="parameterName">The name of the parameter.</param>
         /// <param name="description">The parameter's description. Can be null.</param>
-        public FileParameter(string fileType, string parameterName, StringOrMarkupContent description) : base(parameterName, null, null, description)
+        public FileParameter(string fileType, string parameterName, string description) : base(parameterName, null, null, description)
         {
             FileType = fileType?.ToLower();
         }
@@ -130,7 +130,7 @@ namespace Deltin.Deltinteger.Pathfinder
 
     class PathmapFileParameter : FileParameter
     {
-        public PathmapFileParameter(string file, StringOrMarkupContent description) : base("pathmap", file, description)
+        public PathmapFileParameter(string file, string description) : base("pathmap", file, description)
         {
         }
 

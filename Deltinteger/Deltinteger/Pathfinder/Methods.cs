@@ -112,7 +112,7 @@ namespace Deltin.Deltinteger.Pathfinder
             new CodeParameter("player", "The player to check."),
             new CodeParameter(
                 "speedScalar",
-                "The speed scalar of the player. 1 is the default speed of all heroes except Gengi and Tracer, which is 1.1. Default value is 1.",
+                "The speed scalar of the player. `1` is the default speed of all heroes except Gengi and Tracer, which is `1.1`. Default value is `1`.",
                 new ExpressionOrWorkshopValue(new V_Number(1))
             )
         };
@@ -138,7 +138,7 @@ namespace Deltin.Deltinteger.Pathfinder
         }
     }
 
-    [CustomMethod("FixPathfind", "Fixes pathfinding for a player by teleporting them to the next node. Use in conjunction with IsPathfindStuck().", CustomMethodType.Action, false)]
+    [CustomMethod("FixPathfind", "Fixes pathfinding for a player by teleporting them to the next node. Use in conjunction with `IsPathfindStuck()`.", CustomMethodType.Action, false)]
     class FixPathfind : CustomMethodBase
     {
         public override CodeParameter[] Parameters() => new CodeParameter[] {
