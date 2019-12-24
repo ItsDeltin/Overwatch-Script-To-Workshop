@@ -23,6 +23,7 @@ namespace Deltin.Deltinteger.Pathfinder
             Description = "A pathmap can be used for pathfinding.";
             ObjectScope = new Scope("Pathmap");
             ObjectScope.AddMethod(CustomMethodData.GetCustomMethod<Pathfind>(), null, null);
+            ObjectScope.AddMethod(CustomMethodData.GetCustomMethod<PathfindAll>(), null, null);
         }
 
         public override IWorkshopTree New(ActionSet actionSet, Constructor constructor, IWorkshopTree[] constructorValues, object[] additionalParameterData)
@@ -143,31 +144,6 @@ namespace Deltin.Deltinteger.Pathfinder
             }
 
             return map;
-        }
-    }
-
-    [CustomMethod("Pathfind", "Pathfinds a player.", CustomMethodType.Action, false)]
-    class Pathfind : CustomMethodBase
-    {
-        public override CodeParameter[] Parameters()
-        {
-            return new CodeParameter[] {
-                new CodeParameter("player", "The player to mdve."),
-                new CodeParameter("destination", "the destination to move the player to.")
-            };
-        }
-
-        public override IWorkshopTree Get(ActionSet actionSet, IWorkshopTree[] parameterValues)
-        {
-            DijkstraNormal algorithm = new DijkstraNormal(
-                actionSet, (Element)actionSet.CurrentObject.GetVariable(), Element.Part<V_PositionOf>(parameterValues[0]), (Element)parameterValues[1]
-            );
-            algorithm.Get();
-            DijkstraBase.Pathfind(
-                actionSet, actionSet.Translate.DeltinScript.SetupPathfinder(), (Element)algorithm.finalPath.GetVariable(), (Element)parameterValues[0], (Element)parameterValues[1]
-            );
-
-            return null;
         }
     }
 }

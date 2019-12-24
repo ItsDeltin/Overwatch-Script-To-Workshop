@@ -65,10 +65,10 @@
     <Compile Include="Pathfinder/PathMap.cs"/>
     <Compile Include="Pathfinder/Algorithm.cs"/>
     <Compile Include="Pathfinder/PathfinderRules.cs"/>
+    <Compile Include="Pathfinder/Methods.cs"/>
 
     <Compile Remove="Models/**"/>
     <Compile Include="Models/Vertex.cs"/>
     <Compile Remove="Language Server/Old/**"/>
-    <Compile Remove="Elements/LoopBuilder.cs"/>
   </ItemGroup>
 </Project>

@@ -31,11 +31,11 @@ namespace Deltin.Deltinteger.Parse
                 if (Tree.Completed)
                 {
                     if (Tree.Result is Var == false)
-                        notAVariableRange = DocRange.GetRange(Tree.ExprContextTree.Last());
+                        notAVariableRange = Tree.ExprContextTree.Last().Range;
                     else
                     {   
                         SetVariable = (Var)Tree.Result;
-                        variableRange = DocRange.GetRange(Tree.ExprContextTree.Last());
+                        variableRange = Tree.ExprContextTree.Last().Range;
                     }
                 }
             }

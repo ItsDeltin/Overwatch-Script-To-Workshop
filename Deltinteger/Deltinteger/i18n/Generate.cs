@@ -325,27 +325,6 @@ namespace Deltin.Deltinteger.I18n
 
             string file = Path.Join(Path.GetDirectoryName(datatoolPath), "out_result.txt");
             return File.ReadAllText(file);
-
-            /*
-            var startInfo = new ProcessStartInfo();
-            startInfo.FileName = datatoolPath;
-            startInfo.Arguments = string.Format("\"{0}\" {1}", overwatchPath, arguments);
-            startInfo.WorkingDirectory = Path.GetDirectoryName(datatoolPath);
-            
-            //startInfo.UseShellExecute = false;
-            startInfo.RedirectStandardOutput = true;
-            startInfo.StandardOutputEncoding = Encoding.Unicode;
-
-            string output;
-
-            using (Process dataToolProcess = Process.Start(startInfo))
-            {
-                output = dataToolProcess.StandardOutput.ReadToEnd();
-                dataToolProcess.WaitForExit();
-            }
-
-            return output;
-            */
         }
 
         public void DumpStrings(StringKeyGroup group, string language, bool addNewKeys, Log log)

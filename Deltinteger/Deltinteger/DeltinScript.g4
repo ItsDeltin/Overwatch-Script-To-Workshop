@@ -29,13 +29,13 @@ expr
 	| true                                                                             #e_true
 	| false                                                                            #e_false
 	| null                                                                             #e_null
-	| PART                                                                             #e_variable
+	| variable                                                                         #e_variable
 	| exprgroup								                                           #e_expr_group
 	| create_object							                                           #e_new_object
 	| typeconvert							                                           #e_type_convert
 	| THIS									                                           #e_this
 	| ROOT								                                               #e_root
-	| <assoc=right> expr SEPERATOR expr?                                               #e_expr_tree
+	| expr SEPERATOR (variable | method)                                               #e_expr_tree
 	| NOT expr                                                                         #e_not
 	| '-' expr                                                                         #e_inverse
 	| <assoc=right> left=expr op=('^' | '*' | '/' | '%') right=expr                    #e_op_1
@@ -59,6 +59,8 @@ call_parameters  : expr (COMMA expr?)*    		 	         ;
 picky_parameter  : PART? TERNARY_ELSE expr?                  ;
 picky_parameters : picky_parameter (COMMA picky_parameter?)* ;
 method           : PART LEFT_PAREN (picky_parameters | call_parameters)? RIGHT_PAREN ;
+
+variable : PART array? ;
 
 statement :
 	  varset STATEMENT_END? #s_varset

@@ -24,7 +24,7 @@
 			]
 		},
 		"rule": {
-			"match": "\\b(rule)\\s*:",
+			"match": "\\b((disabled\\s+)?rule)\\s*:",
 			"captures": {
 				"1": {"name":"keyword.control"}
 			}

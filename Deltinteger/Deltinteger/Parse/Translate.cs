@@ -300,31 +300,7 @@ namespace Deltin.Deltinteger.Parse
                 case DeltinScriptParser.E_nullContext @null: return new NullAction();
                 case DeltinScriptParser.E_stringContext @string: return new StringAction(script, @string.@string());
                 case DeltinScriptParser.E_formatted_stringContext formattedString: return new StringAction(script, translateInfo, scope, formattedString.formatted_string());
-                case DeltinScriptParser.E_variableContext variable: {
-                    string variableName = variable.PART().GetText();
-
-                    var type = translateInfo.GetCodeType(variableName, null, null);
-                    if (type != null)
-                    {
-                        if (selfContained)
-                            script.Diagnostics.Error("Types can't be used as expressions.", DocRange.GetRange(variable));
-
-                        return type;
-                    }
-
-                    IScopeable element = scope.GetVariable(variableName, script.Diagnostics, DocRange.GetRange(variable));
-                    if (element == null)
-                        return null;
-
-                    if (element is Var)
-                    {
-                        Var var = (Var)element;
-                        var.Call(script, DocRange.GetRange(variable));
-                        return var;
-                    }
-                    else if (element is ScopedEnumMember) return (ScopedEnumMember)element;
-                    else throw new NotImplementedException();
-                }
+                case DeltinScriptParser.E_variableContext variable: return GetVariable(script, translateInfo, scope, variable.variable(), selfContained);
                 case DeltinScriptParser.E_methodContext method: return new CallMethodAction(script, translateInfo, scope, method.method(), usedAsValue, getter);
                 case DeltinScriptParser.E_new_objectContext newObject: return new CreateObjectAction(script, translateInfo, scope, newObject.create_object());
                 case DeltinScriptParser.E_expr_treeContext exprTree: return new ExpressionTree(script, translateInfo, scope, exprTree, usedAsValue);
@@ -341,6 +317,33 @@ namespace Deltin.Deltinteger.Parse
                 case DeltinScriptParser.E_ternary_conditionalContext ternary: return new TernaryConditionalAction(script, translateInfo, scope, ternary);
                 default: throw new Exception($"Could not determine the expression type '{exprContext.GetType().Name}'.");
             }
+        }
+
+        public static IExpression GetVariable(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.VariableContext variableContext, bool selfContained)
+        {
+            string variableName = variableContext.PART().GetText();
+
+            var type = translateInfo.GetCodeType(variableName, null, null);
+            if (type != null)
+            {
+                if (selfContained)
+                    script.Diagnostics.Error("Types can't be used as expressions.", DocRange.GetRange(variableContext.PART()));
+
+                return type;
+            }
+
+            IScopeable element = scope.GetVariable(variableName, script.Diagnostics, DocRange.GetRange(variableContext.PART()));
+            if (element == null)
+                return null;
+
+            if (element is Var)
+            {
+                Var var = (Var)element;
+                var.Call(script, DocRange.GetRange(variableContext.PART()));
+                return var;
+            }
+            else if (element is ScopedEnumMember) return (ScopedEnumMember)element;
+            else throw new NotImplementedException();
         }
     
         private ClassData _classData = null;

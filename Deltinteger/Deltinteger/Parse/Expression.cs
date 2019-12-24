@@ -20,7 +20,7 @@ namespace Deltin.Deltinteger.Parse
         public IExpression[] Tree { get; }
         public IExpression Result { get; }
         public bool Completed { get; } = true;
-        public DeltinScriptParser.ExprContext[] ExprContextTree { get; }
+        public TreeContextPart[] ExprContextTree { get; }
 
         private ITerminalNode _trailingSeperator = null;
 
@@ -29,15 +29,16 @@ namespace Deltin.Deltinteger.Parse
             ExprContextTree = Flatten(script, exprContext);
 
             Tree = new IExpression[ExprContextTree.Length];
-            IExpression current = DeltinScript.GetExpression(script, translateInfo, scope, ExprContextTree[0], false);
+            IExpression current = ExprContextTree[0].Parse(script, translateInfo, scope, scope, true);
             Tree[0] = current;
             if (current != null)
                 for (int i = 1; i < ExprContextTree.Length; i++)
                 {
-                    current = DeltinScript.GetExpression(script, translateInfo, current.ReturningScope() ?? new Scope(), ExprContextTree[i], false, i < ExprContextTree.Length - 1 || usedAsValue, scope);
+                    //current = DeltinScript.GetExpression(script, translateInfo, current.ReturningScope() ?? new Scope(), ExprContextTree[i], false, i < ExprContextTree.Length - 1 || usedAsValue, scope);
+                    current = ExprContextTree[i].Parse(script, translateInfo, current.ReturningScope() ?? new Scope(), scope, i < ExprContextTree.Length - 1 || usedAsValue);
 
                     if (current != null && current is IScopeable == false && current is CallMethodAction == false)
-                        script.Diagnostics.Error("Expected variable or method.", DocRange.GetRange(ExprContextTree[i]));
+                        script.Diagnostics.Error("Expected variable or method.", ExprContextTree[i].Range);
 
                     Tree[i] = current;
 
@@ -56,31 +57,31 @@ namespace Deltin.Deltinteger.Parse
             GetCompletion(script);
         }
 
-        private DeltinScriptParser.ExprContext[] Flatten(ScriptFile script, DeltinScriptParser.E_expr_treeContext exprContext)
+        private TreeContextPart[] Flatten(ScriptFile script, DeltinScriptParser.E_expr_treeContext exprContext)
         {
-            var exprList = new List<DeltinScriptParser.ExprContext>();
+            var exprList = new List<TreeContextPart>();
             Flatten(script, exprContext, exprList);
             return exprList.ToArray();
         }
 
-        private void Flatten(ScriptFile script, DeltinScriptParser.E_expr_treeContext exprContext, List<DeltinScriptParser.ExprContext> exprList)
-        {            
-            if (exprContext.expr(0) is DeltinScriptParser.E_expr_treeContext)
-                throw new Exception("Bad list order.");
-            
-            exprList.Add(exprContext.expr(0));
+        private void Flatten(ScriptFile script, DeltinScriptParser.E_expr_treeContext exprContext, List<TreeContextPart> exprList)
+        {
+            if (exprContext.expr() is DeltinScriptParser.E_expr_treeContext)
+                Flatten(script, (DeltinScriptParser.E_expr_treeContext)exprContext.expr(), exprList);
+            else
+                exprList.Add(new TreeContextPart(exprContext.expr()));
 
-            if (exprContext.expr().Length == 1)
+            if (exprContext.method() == null && exprContext.variable() == null)
             {
                 script.Diagnostics.Error("Expected expression.", DocRange.GetRange(exprContext.SEPERATOR()));
                 _trailingSeperator = exprContext.SEPERATOR();
             }
             else
             {
-                if (exprContext.expr(1) is DeltinScriptParser.E_expr_treeContext)
-                    Flatten(script, (DeltinScriptParser.E_expr_treeContext)exprContext.expr(1), exprList);
-                else
-                    exprList.Add(exprContext.expr(1));
+                if (exprContext.method() != null)
+                    exprList.Add(new TreeContextPart(exprContext.method()));
+                if (exprContext.variable() != null)
+                    exprList.Add(new TreeContextPart(exprContext.variable()));
             }
         }
 
@@ -93,26 +94,21 @@ namespace Deltin.Deltinteger.Parse
                 var treeScope = Tree[i].ReturningScope();
                 if (treeScope != null)
                 {
-                    Pos start;
-                    Pos end;
+                    DocRange range;
                     if (i < Tree.Length - 1)
                     {
-                        start = DocRange.GetRange(ExprContextTree[i + 1]).start;
-
-                        if (ExprContextTree[i + 1] is DeltinScriptParser.E_methodContext)
-                            end = DocRange.GetRange(((DeltinScriptParser.E_methodContext)ExprContextTree[i + 1]).method().PART()).end;
-                        else
-                            end = DocRange.GetRange(ExprContextTree[i + 1]).end;
+                        range = ExprContextTree[i + 1].CompletionRange;
                     }
                     // Expression path has a trailing '.'
                     else if (_trailingSeperator != null)
                     {
-                        start = DocRange.GetRange(_trailingSeperator).end;
-                        end = DocRange.GetRange(script.NextToken(_trailingSeperator)).start;
+                        range = new DocRange(
+                            DocRange.GetRange(_trailingSeperator).end,
+                            DocRange.GetRange(script.NextToken(_trailingSeperator)).start
+                        );
                     }
                     else continue;
 
-                    DocRange range = new DocRange(start, end);
                     script.AddCompletionRange(new CompletionRange(treeScope, range, true));
                 }
             }
@@ -187,6 +183,46 @@ namespace Deltin.Deltinteger.Parse
 
             if (result == null && expectingValue) throw new Exception("Expression tree result is null");
             return new ExpressionTreeParseResult(result, target, resultingVariable);
+        }
+    
+        public class TreeContextPart
+        {
+            public DocRange Range { get; }
+            public DocRange CompletionRange { get; }
+            private readonly DeltinScriptParser.VariableContext variable;
+            private readonly DeltinScriptParser.MethodContext method;
+            private readonly DeltinScriptParser.ExprContext expression;
+
+            public TreeContextPart(DeltinScriptParser.VariableContext variable)
+            {
+                this.variable = variable ?? throw new ArgumentNullException(nameof(variable));
+                Range = DocRange.GetRange(variable);
+                CompletionRange = Range;
+            }
+            public TreeContextPart(DeltinScriptParser.MethodContext method)
+            {
+                this.method = method ?? throw new ArgumentNullException(nameof(method));
+                Range = DocRange.GetRange(method);
+                CompletionRange = DocRange.GetRange(method.PART());
+            }
+            public TreeContextPart(DeltinScriptParser.ExprContext expression)
+            {
+                this.expression = expression ?? throw new ArgumentNullException(nameof(expression));
+                Range = DocRange.GetRange(expression);
+                CompletionRange = Range;
+            }
+
+            public IExpression Parse(ScriptFile script, DeltinScript translateInfo, Scope scope, Scope getter, bool usedAsValue)
+            {
+                if (variable != null)
+                    return DeltinScript.GetVariable(script, translateInfo, scope, variable, false);
+                if (method != null)
+                    return new CallMethodAction(script, translateInfo, scope, method, usedAsValue, getter);
+                if (expression != null)
+                    return DeltinScript.GetExpression(script, translateInfo, scope, expression, false, usedAsValue, getter);
+                
+                throw new Exception();
+            }
         }
     }
 
