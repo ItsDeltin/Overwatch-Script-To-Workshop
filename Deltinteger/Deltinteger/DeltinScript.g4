@@ -98,7 +98,7 @@ ow_rule :
 	DISABLED? RULE_WORD ':' STRINGLITERAL
 	expr*
 	rule_if*
-	block
+	block?
 	;
 
 define_method : DOCUMENTATION* accessor? RECURSIVE? (METHOD | type=PART) name=PART LEFT_PAREN setParameters RIGHT_PAREN

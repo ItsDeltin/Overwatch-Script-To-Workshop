@@ -20,13 +20,13 @@ namespace Deltin.Deltinteger.Parse
         private bool _setTeam;
         private bool _setPlayer;
 
-        public ScriptFile Script { get; }
+        private DocRange _missingBlockRange;
 
         public RuleAction(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.Ow_ruleContext ruleContext)
         {
-            Script = script;
             Name = Extras.RemoveQuotes(ruleContext.STRINGLITERAL().GetText());
             Disabled = ruleContext.DISABLED() != null;
+            _missingBlockRange = DocRange.GetRange(ruleContext.RULE_WORD());
 
             GetRuleSettings(script, translateInfo, scope, ruleContext);
 
@@ -36,10 +36,16 @@ namespace Deltin.Deltinteger.Parse
             {
                 Conditions = new RuleIfAction[ruleContext.rule_if().Length];
                 for (int i = 0; i < Conditions.Length; i++)
+                {
                     Conditions[i] = new RuleIfAction(script, translateInfo, scope, ruleContext.rule_if(i));
+                    _missingBlockRange = DocRange.GetRange(ruleContext.rule_if(i));
+                }
             }
 
-            Block = new BlockAction(script, translateInfo, scope, ruleContext.block());
+            if (ruleContext.block() != null)
+                Block = new BlockAction(script, translateInfo, scope, ruleContext.block());
+            else
+                script.Diagnostics.Error("Missing block.", _missingBlockRange);
         }
 
         private void GetRuleSettings(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.Ow_ruleContext ruleContext)
@@ -50,6 +56,8 @@ namespace Deltin.Deltinteger.Parse
 
             foreach (var exprContext in ruleContext.expr())
             {
+                _missingBlockRange = DocRange.GetRange(exprContext);
+
                 var enumSetting = (DeltinScript.GetExpression(script, translateInfo, scope, exprContext) as ExpressionTree)?.Result as ScopedEnumMember;
                 var enumData = (enumSetting?.Enum as WorkshopEnumType)?.EnumData;
 

@@ -496,4 +496,28 @@ namespace Deltin.Deltinteger.Parse
             return ((BoolAction)value).Value;
         }
     }
+
+    class ConstNumberParameter : CodeParameter
+    {
+        private double DefaultConstValue { get; }
+
+        public ConstNumberParameter(string name, string documentation) : base(name, documentation) {}
+        public ConstNumberParameter(string name, string documentation, double defaultValue) : base(name, documentation, new ExpressionOrWorkshopValue(new V_Number(defaultValue)))
+        {
+            DefaultConstValue = defaultValue;
+        }
+
+        public override object Validate(ScriptFile script, IExpression value, DocRange valueRange)
+        {
+            if (value == null) return DefaultConstValue;
+
+            if (value is NumberAction == false)
+            {
+                script.Diagnostics.Error("Expected a number constant.", valueRange);
+                return null;
+            }
+
+            return ((NumberAction)value).Value;
+        }
+    }
 }
