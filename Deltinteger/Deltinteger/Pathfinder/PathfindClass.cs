@@ -14,6 +14,7 @@ namespace Deltin.Deltinteger.Pathfinder
     {
         protected override string TypeKindString => "class";
         private Scope ObjectScope { get; }
+        private Scope StaticScope { get; }
 
         public PathmapClass() : base("Pathmap")
         {
@@ -21,9 +22,17 @@ namespace Deltin.Deltinteger.Pathfinder
                 new PathmapClassConstructor(this)
             };
             Description = "A pathmap can be used for pathfinding.";
-            ObjectScope = new Scope("Pathmap");
+
+            ObjectScope = new Scope("class Pathmap");
             ObjectScope.AddMethod(CustomMethodData.GetCustomMethod<Pathfind>(), null, null);
             ObjectScope.AddMethod(CustomMethodData.GetCustomMethod<PathfindAll>(), null, null);
+
+            StaticScope = new Scope("class Pathmap");
+            StaticScope.AddMethod(CustomMethodData.GetCustomMethod<StopPathfind>(), null, null);
+            StaticScope.AddMethod(CustomMethodData.GetCustomMethod<IsPathfinding>(), null, null);
+            StaticScope.AddMethod(CustomMethodData.GetCustomMethod<IsPathfindStuck>(), null, null);
+            StaticScope.AddMethod(CustomMethodData.GetCustomMethod<FixPathfind>(), null, null);
+            StaticScope.AddMethod(CustomMethodData.GetCustomMethod<NextNode>(), null, null);
         }
 
         public override IWorkshopTree New(ActionSet actionSet, Constructor constructor, IWorkshopTree[] constructorValues, object[] additionalParameterData)
@@ -45,11 +54,9 @@ namespace Deltin.Deltinteger.Pathfinder
             return translateInfo.SetupClasses().ClassArray.CreateChild((Element)element);
         }
 
-        public override Scope GetObjectScope()
-        {
-            return ObjectScope;
-        }
-        public override Scope ReturningScope() => null;
+        public override Scope GetObjectScope() => ObjectScope;
+        public override Scope ReturningScope() => StaticScope;
+
         public override CompletionItem GetCompletion() => new CompletionItem() {
             Label = "Pathmap",
             Kind = CompletionItemKind.Class

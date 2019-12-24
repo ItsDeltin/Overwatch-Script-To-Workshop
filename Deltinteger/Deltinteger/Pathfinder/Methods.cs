@@ -58,4 +58,116 @@ namespace Deltin.Deltinteger.Pathfinder
             return null;
         }
     }
+
+    // Pathmap static methods
+
+    [CustomMethod("StopPathfind", "Stops pathfinding for the specified players.", CustomMethodType.Action, false)]
+    class StopPathfind : CustomMethodBase
+    {
+        public override CodeParameter[] Parameters()
+        {
+            return new CodeParameter[] {
+                new CodeParameter("players", "The players that will stop pathfinding. Can be a single player or an array of players.")
+            };
+        }
+
+        public override IWorkshopTree Get(ActionSet actionSet, IWorkshopTree[] parameterValues)
+        {
+            actionSet.AddAction(
+                actionSet.Translate.DeltinScript.SetupPathfinder().Path.SetVariable(
+                    new V_EmptyArray(), (Element)parameterValues[0]
+                )
+            );
+
+            return null;
+        }
+    }
+
+    [CustomMethod("IsPathfinding", "Checks if the target player is currently pathfinding.", CustomMethodType.Value, false)]
+    class IsPathfinding : CustomMethodBase
+    {
+        public override CodeParameter[] Parameters() => new CodeParameter[] {
+            new CodeParameter("players", "The player to check.")
+        };
+
+        public override IWorkshopTree Get(ActionSet actionSet, IWorkshopTree[] parameterValues)
+        {
+            return Get(actionSet.Translate.DeltinScript.SetupPathfinder(), (Element)parameterValues[0]);
+        }
+
+        public static Element Get(PathfinderInfo info, Element player)
+        {
+            return new V_Compare(
+                Element.Part<V_CountOf>(info.Path.GetVariable(player)),
+                Operators.GreaterThan,
+                new V_Number(0)
+            );
+        }
+    }
+
+    [CustomMethod("IsPathfindStuck", "Returns true if the specified player takes longer than expected to reach the next pathfind node.", CustomMethodType.Value, false)]
+    class IsPathfindStuck : CustomMethodBase
+    {
+        public override CodeParameter[] Parameters() => new CodeParameter[] {
+            new CodeParameter("player", "The player to check."),
+            new CodeParameter(
+                "speedScalar",
+                "The speed scalar of the player. 1 is the default speed of all heroes except Gengi and Tracer, which is 1.1. Default value is 1.",
+                new ExpressionOrWorkshopValue(new V_Number(1))
+            )
+        };
+
+        public override IWorkshopTree Get(ActionSet actionSet, IWorkshopTree[] parameterValues)
+        {
+            PathfinderInfo info = actionSet.Translate.DeltinScript.SetupPathfinder();
+
+            Element leniency = 2;
+
+            Element player = (Element)parameterValues[0];
+            Element scalar = (Element)parameterValues[1];
+            Element defaultSpeed = 5.5;
+            Element nodeDistance = (Element)info.DistanceToNext.GetVariable(player);
+            Element timeSinceLastNode = new V_TotalTimeElapsed() - (Element)info.LastUpdate.GetVariable(player);
+            
+            Element isStuck = new V_Compare(
+                nodeDistance - ((defaultSpeed * scalar * timeSinceLastNode) / leniency),
+                Operators.LessThanOrEqual,
+                new V_Number(0)
+            );
+            return Element.Part<V_And>(IsPathfinding.Get(info, player), isStuck);
+        }
+    }
+
+    [CustomMethod("FixPathfind", "Fixes pathfinding for a player by teleporting them to the next node. Use in conjunction with IsPathfindStuck().", CustomMethodType.Action, false)]
+    class FixPathfind : CustomMethodBase
+    {
+        public override CodeParameter[] Parameters() => new CodeParameter[] {
+            new CodeParameter("player", "The player to fix pathfinding for."),
+        };
+
+        public override IWorkshopTree Get(ActionSet actionSet, IWorkshopTree[] parameterValues)
+        {
+            Element player = (Element)parameterValues[0];
+
+            actionSet.AddAction(Element.Part<A_Teleport>(
+                player,
+                actionSet.Translate.DeltinScript.SetupPathfinder().NextPosition(player)
+            ));
+
+            return null;
+        }
+    }
+
+    [CustomMethod("NextNode", "Gets the position of the next node.", CustomMethodType.Value, false)]
+    class NextNode : CustomMethodBase
+    {
+        public override CodeParameter[] Parameters() => new CodeParameter[] {
+            new CodeParameter("player", "The player to get the next node of."),
+        };
+
+        public override IWorkshopTree Get(ActionSet actionSet, IWorkshopTree[] parameterValues)
+        {
+            return actionSet.Translate.DeltinScript.SetupPathfinder().NextPosition((Element)parameterValues[0]);
+        }
+    }
 }
