@@ -24,9 +24,11 @@ namespace Deltin.Deltinteger.Parse
         // Variables
         private readonly List<WorkshopVariable> globalVariables = new List<WorkshopVariable>();
         private readonly List<WorkshopVariable> playerVariables = new List<WorkshopVariable>();
+        List<WorkshopVariable> variableList(bool isGlobal) => isGlobal ? globalVariables : playerVariables;
         // Variables in the extended collections
-        private readonly IndexReference[] extendedGlobalVariables = new IndexReference[Constants.MAX_ARRAY_LENGTH];
-        private readonly IndexReference[] extendedPlayerVariables = new IndexReference[Constants.MAX_ARRAY_LENGTH];
+        private readonly List<ExtendedVariable> extendedGlobalVariables = new List<ExtendedVariable>();
+        private readonly List<ExtendedVariable> extendedPlayerVariables = new List<ExtendedVariable>();
+        List<ExtendedVariable> extendedVariableList(bool isGlobal) => isGlobal ? extendedGlobalVariables : extendedPlayerVariables;
 
         public VarCollection() {}
 
@@ -60,8 +62,6 @@ namespace Deltin.Deltinteger.Parse
         }
 
         List<int> reserveList(bool isGlobal) => isGlobal ? reservedGlobalIDs : reservedPlayerIDs;
-        List<WorkshopVariable> variableList(bool isGlobal) => isGlobal ? globalVariables : playerVariables;
-        IndexReference[] extendedVariableList(bool isGlobal) => isGlobal ? extendedGlobalVariables : extendedPlayerVariables;
 
         public string WorkshopNameFromCodeName(bool isGlobal, string name)
         {
@@ -121,6 +121,7 @@ namespace Deltin.Deltinteger.Parse
                 }
 
             // If ID still equals -1, there are no more free variables.
+            // TODO: Handle running out of variables
             if (id == -1)
                 throw new Exception();
             return id;
@@ -128,9 +129,12 @@ namespace Deltin.Deltinteger.Parse
 
         private int NextFreeExtended(bool isGlobal)
         {
-            int index = Array.IndexOf(extendedVariableList(isGlobal), null);
-            if (index == -1) throw new Exception();
-            return index;
+            for (int i = 0; i < Constants.MAX_ARRAY_LENGTH; i++)
+                if (!extendedVariableList(isGlobal).Any(ex => ex.Index == i))
+                    return i;
+
+            // TODO: Handle running out of extended variables.
+            throw new Exception();
         }
     
         public IndexReference Assign(string name, bool isGlobal, bool extended)
@@ -141,7 +145,7 @@ namespace Deltin.Deltinteger.Parse
             {
                 int index = NextFreeExtended(isGlobal);
                 IndexReference reference = new IndexReference(ArrayBuilder, isGlobal ? global : player, new V_Number(index));
-                extendedVariableList(isGlobal)[index] = reference;
+                extendedVariableList(isGlobal).Add(new ExtendedVariable(name, reference, index));
                 return reference;
             }
         }
@@ -166,7 +170,7 @@ namespace Deltin.Deltinteger.Parse
             {
                 int index = NextFreeExtended(isGlobal);
                 IndexReference reference = new IndexReference(ArrayBuilder, isGlobal ? global : player, new V_Number(index));
-                extendedVariableList(isGlobal)[index] = reference;
+                extendedVariableList(isGlobal).Add(new ExtendedVariable(var.Name, reference, index));
                 return reference;
             }
         }
@@ -185,12 +189,32 @@ namespace Deltin.Deltinteger.Parse
             bool anyExtendedPlayer = extendedVariableList(false).Any(v => v != null);
             if (anyExtendedGlobal || anyExtendedPlayer)
             {
-                // TODO: Write extended variables.
+                stringBuilder.AppendLine();
+                stringBuilder.AppendLine($"// Extended collection variables:");
+
+                foreach (var ex in extendedVariableList(true))
+                    stringBuilder.AppendLine($"// global [{ex.Index}]: {ex.DebugName}");
+                foreach (var ex in extendedVariableList(false))
+                    stringBuilder.AppendLine($"// player [{ex.Index}]: {ex.DebugName}");
             }
         }
         private void WriteCollection(StringBuilder stringBuilder, List<WorkshopVariable> collection)
         {
             foreach (var var in collection) stringBuilder.AppendLine(Extras.Indent(2, false) + var.ID + ": " + var.Name);
+        }
+    }
+
+    class ExtendedVariable
+    {
+        public string DebugName { get; }
+        public IndexReference Reference { get; }
+        public int Index { get; }
+
+        public ExtendedVariable(string debugName, IndexReference reference, int index)
+        {
+            DebugName = debugName;
+            Reference = reference;
+            Index = index;
         }
     }
 }
