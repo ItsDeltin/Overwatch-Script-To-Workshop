@@ -4,6 +4,22 @@ using Deltin.Deltinteger.Elements;
 
 namespace Deltin.Deltinteger.CustomMethods
 {
+    [CustomMethod("Midpoint", "The midpoint between 2 vectors.", CustomMethodType.Value)]
+    class Midpoint : CustomMethodBase
+    {
+        public override CodeParameter[] Parameters() => new CodeParameter[] {
+            new CodeParameter("point1", "The first point."),
+            new CodeParameter("point2", "The second point.")
+        };
+
+        public override IWorkshopTree Get(ActionSet actionSet, IWorkshopTree[] parameterValues)
+        {
+            Element point1 = (Element)parameterValues[0];
+            Element point2 = (Element)parameterValues[1];
+            return (point1 + point2) / 2;
+        }
+    }
+
     [CustomMethod("LinearInterpolate", "Gets a point on a line with a fraction.", CustomMethodType.Value)]
     class LinearInterpolate : CustomMethodBase
     {
