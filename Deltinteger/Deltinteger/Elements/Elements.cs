@@ -262,7 +262,8 @@ namespace Deltin.Deltinteger.Elements
                 {
                     Parameters[i] = new WorkshopVariableParameter(
                         name,
-                        description
+                        description,
+                        ((VarRefParameter)WorkshopParameters[i]).IsGlobal
                     );
                 }
                 else

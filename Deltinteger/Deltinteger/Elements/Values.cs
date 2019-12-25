@@ -330,8 +330,7 @@ namespace Deltin.Deltinteger.Elements
     public class V_CurrentGameMode : Element {}
 
     [ElementData("Global Variable", ValueType.Any)]
-    [VarRefParameter("Variable")]
-    //[EnumParameter("Variable", typeof(Variable))]
+    [VarRefParameter("Variable", true)]
     public class V_GlobalVariable : Element {}
 
     [ElementData("Has Spawned", ValueType.Boolean)]
@@ -768,8 +767,7 @@ namespace Deltin.Deltinteger.Elements
 
     [ElementData("Player Variable", ValueType.Any)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
-    [VarRefParameter("Variable")]
-    // [EnumParameter("Variable", typeof(Variable))]
+    [VarRefParameter("Variable", false)]
     public class V_PlayerVariable : Element {}
 
     [ElementData("Players In Slot", ValueType.Player)]

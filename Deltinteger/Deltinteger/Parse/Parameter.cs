@@ -482,13 +482,21 @@ namespace Deltin.Deltinteger.Parse
 
     class WorkshopVariableParameter : CodeParameter
     {
-        public WorkshopVariableParameter(string name, string documentation) : base(name, documentation) {}
+        public bool IsGlobal { get; }
+
+        public WorkshopVariableParameter(string name, string documentation, bool isGlobal) : base(name, documentation)
+        {
+            IsGlobal = isGlobal;
+        }
 
         public override object Validate(ScriptFile script, IExpression value, DocRange valueRange)
         {
             CallVariableAction call = value as CallVariableAction;
             if (call == null || call.Calling.DefineType != VariableDefineType.RuleLevel)
                 script.Diagnostics.Error("Expected a variable defined on the rule level.", valueRange);
+
+            if (call != null && (call.Calling.VariableType == VariableType.Global) != IsGlobal)
+                script.Diagnostics.Error($"Expected a {(IsGlobal ? "global" : "player")} variable.", valueRange);
             
             if (call != null && call.Index.Length > 0)
                 script.Diagnostics.Error("Variable cannot be indexed.", valueRange);

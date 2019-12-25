@@ -467,7 +467,7 @@ namespace Deltin.Deltinteger.Elements
     [WorkshopEnum]
     public enum EffectRev
     {
-        [EnumOverride(null, "Visible To, Position, and Radius")]
+        [EnumOverride(null, null, "Visible To, Position, and Radius")]
         VisibleToPositionAndRadius,
         PositionAndRadius,
         VisibleTo,
@@ -599,7 +599,7 @@ namespace Deltin.Deltinteger.Elements
     [WorkshopEnum]
     public enum AccelerateRev
     {
-        [EnumOverride(null, "Direction, Rate, and Max Speed")]
+        [EnumOverride(null, null, "Direction, Rate, and Max Speed")]
         DirectionRateAndMaxSpeed,
         None
     }
@@ -607,7 +607,7 @@ namespace Deltin.Deltinteger.Elements
     [WorkshopEnum]
     public enum ModRev
     {
-        [EnumOverride(null, "Receivers, Damagers, and Damage Percent")]
+        [EnumOverride(null, null, "Receivers, Damagers, and Damage Percent")]
         ReceiversDamagersAndDamagePercent,
         ReceiversAndDamagers,
         None
@@ -664,7 +664,7 @@ namespace Deltin.Deltinteger.Elements
     [WorkshopEnum]
     public enum InworldTextRev
     {
-        [EnumOverride(null, "Visible To, Position, and String")]
+        [EnumOverride(null, null, "Visible To, Position, and String")]
         VisibleToPositionAndString,
         VisibleToAndString,
         String

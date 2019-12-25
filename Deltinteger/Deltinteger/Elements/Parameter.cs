@@ -64,6 +64,11 @@ namespace Deltin.Deltinteger.Elements
 
     class VarRefParameter : ParameterBase 
     {
-        public VarRefParameter(string name) : base(name) {}
+        public bool IsGlobal { get; }
+
+        public VarRefParameter(string name, bool isGlobal) : base(name)
+        {
+            IsGlobal = isGlobal;
+        }
     }
 }
