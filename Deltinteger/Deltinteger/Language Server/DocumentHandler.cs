@@ -119,6 +119,8 @@ namespace Deltin.Deltinteger.LanguageServer
 
         private static int PosIndex(string text, Position pos)
         {
+            if (pos.Line == 0 && pos.Character == 0) return 0;
+
             int line = 0;
             int character = 0;
             for (int i = 0; i < text.Length; i++)
