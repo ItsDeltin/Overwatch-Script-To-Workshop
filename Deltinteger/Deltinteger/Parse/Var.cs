@@ -422,7 +422,15 @@ namespace Deltin.Deltinteger.Parse
             Index = index;
         }
 
-        public IWorkshopTree Parse(ActionSet actionSet, bool asElement = true) => Calling.Parse(actionSet, asElement);
+        public IWorkshopTree Parse(ActionSet actionSet, bool asElement = true)
+        {
+            IWorkshopTree result = Calling.Parse(actionSet);
+
+            for (int i = 0; i < Index.Length; i++)
+                result = Element.Part<V_ValueInArray>(result, Index[i].Parse(actionSet));
+
+            return result;
+        }
 
         public Element[] ParseIndex(ActionSet actionSet) => Array.ConvertAll(Index, index => (Element)index.Parse(actionSet));
 
