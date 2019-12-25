@@ -28,18 +28,9 @@
     <PackageReference Include="Serilog.Extensions.Logging" Version="3.0.1"/>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Start Language Server.bat">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Fonts\BigNoodleTooOblique.ttf">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Modules\*.*">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Languages\*.*">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
+    <Content Include="Languages\*.*"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
+    <Content Include="Modules\*.*"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
+    <Content Include="Fonts\BigNoodleTooOblique.ttf"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Antlr4.Runtime" Version="4.6.4"/>
@@ -66,6 +57,7 @@
     <Compile Include="Pathfinder/Algorithm.cs"/>
     <Compile Include="Pathfinder/PathfinderRules.cs"/>
     <Compile Include="Pathfinder/Methods.cs"/>
+    <Compile Include="Pathfinder/Editor.cs"/>
 
     <Compile Remove="Models/**"/>
     <Compile Include="Models/Vertex.cs"/>

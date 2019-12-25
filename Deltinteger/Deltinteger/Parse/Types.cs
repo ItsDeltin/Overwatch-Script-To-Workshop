@@ -79,23 +79,21 @@ namespace Deltin.Deltinteger.Parse
             return parameterType == null || parameterType.Name == valueType?.Name;
         }
 
-        static CodeType[] _defaultTypes;
-        public static CodeType[] DefaultTypes {
+        static List<CodeType> _defaultTypes;
+        public static List<CodeType> DefaultTypes {
             get {
-                if (_defaultTypes == null) _defaultTypes = GetDefaultTypes();
+                if (_defaultTypes == null) GetDefaultTypes();
                 return _defaultTypes;
             }
         }
-        private static CodeType[] GetDefaultTypes()
+        private static void GetDefaultTypes()
         {
-            var defaultTypes = new List<CodeType>();
+            _defaultTypes = new List<CodeType>();
             foreach (var enumData in EnumData.GetEnumData())
-                defaultTypes.Add(new WorkshopEnumType(enumData));
-
-            // Add custom classes here.
-            defaultTypes.Add(new Pathfinder.PathmapClass());
+                _defaultTypes.Add(new WorkshopEnumType(enumData));
             
-            return defaultTypes.ToArray();
+            // Add custom classes here.
+            _defaultTypes.Add(new Pathfinder.PathmapClass());
         }
     }
 

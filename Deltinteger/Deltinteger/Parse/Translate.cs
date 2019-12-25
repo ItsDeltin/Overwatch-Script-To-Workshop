@@ -28,7 +28,7 @@ namespace Deltin.Deltinteger.Parse
         public TranslateRule InitialGlobal { get; private set; }
         public TranslateRule InitialPlayer { get; private set; }
 
-        public DeltinScript(FileGetter fileGetter, Diagnostics diagnostics, ScriptFile rootRuleset)
+        public DeltinScript(FileGetter fileGetter, Diagnostics diagnostics, ScriptFile rootRuleset, Func<VarCollection, Rule[]> addRules = null)
         {
             FileGetter = fileGetter;
             Diagnostics = diagnostics;
@@ -43,7 +43,7 @@ namespace Deltin.Deltinteger.Parse
             
             Translate();
             if (!diagnostics.ContainsErrors())
-                ToWorkshop();
+                ToWorkshop(addRules);
         }
 
         void CollectScriptFiles(ScriptFile scriptFile)
@@ -189,7 +189,7 @@ namespace Deltin.Deltinteger.Parse
         public string WorkshopCode { get; private set; }
         public List<Rule> WorkshopRules { get; private set; }
 
-        void ToWorkshop()
+        void ToWorkshop(Func<VarCollection, Rule[]> addRules)
         {
             VarCollection.Setup();
             InitialGlobal = new TranslateRule(this, "Initial Global", RuleEvent.OngoingGlobal);
@@ -223,6 +223,9 @@ namespace Deltin.Deltinteger.Parse
 
             if (InitialGlobal.Actions.Count > 0)
                 WorkshopRules.Insert(0, InitialGlobal.GetRule());
+            
+            if (addRules != null)
+                WorkshopRules.AddRange(addRules.Invoke(VarCollection).Where(rule => rule != null));
 
             // Get the final workshop string.
             StringBuilder result = new StringBuilder();

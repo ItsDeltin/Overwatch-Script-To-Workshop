@@ -8,7 +8,7 @@ using System.Globalization;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.Parse;
 using Deltin.Deltinteger.LanguageServer;
-// using Deltin.Deltinteger.Pathfinder;
+using Deltin.Deltinteger.Pathfinder;
 using TextCopy;
 
 namespace Deltin.Deltinteger
@@ -49,18 +49,17 @@ namespace Deltin.Deltinteger
             //     string folder = Console.ReadLine();
             //     Deltin.Deltinteger.Models.Letter.Generate(folder);
             // }
-            // else if (args.Contains("-editor"))
-            // {
-            //     string pathfindEditorScript = Extras.CombinePathWithDotNotation(null, "!PathfindEditor.del");
+            else if (args.Contains("--editor"))
+            {
+                string pathfindEditorScript = Extras.CombinePathWithDotNotation(null, "!PathfindEditor.del");
 
-            //     if (!File.Exists(pathfindEditorScript))
-            //         Log.Write(LogLevel.Normal, "The PathfindEditor.del module is missing!");
-            //     else
-            //         Script(pathfindEditorScript);
-            // }
-            // else
-            if (args.ElementAtOrDefault(0) == "i18n") I18n.GenerateI18n.Generate(args);
-            else if (args.ElementAtOrDefault(0) == "i18nlink") I18n.GenerateI18n.GenerateKeyLink();
+                if (!File.Exists(pathfindEditorScript))
+                    Log.Write(LogLevel.Normal, "The PathfindEditor.del module is missing!");
+                else
+                    Script(pathfindEditorScript);
+            }
+            else if (args.ElementAtOrDefault(0) == "--i18n") I18n.GenerateI18n.Generate(args);
+            else if (args.ElementAtOrDefault(0) == "--i18nlink") I18n.GenerateI18n.GenerateKeyLink();
             else
             {
                 string script = args.ElementAtOrDefault(0);
@@ -73,23 +72,23 @@ namespace Deltin.Deltinteger
                     #endif
 
                         string ext = Path.GetExtension(script).ToLower();
-                        // if (ext == ".csv")
-                        // {
-                        //     PathMap map = PathMap.ImportFromCSV(script);
-                        //     string result = map.ExportAsXML();
-                        //     string output = Path.ChangeExtension(script, "pathmap");
-                        //     using (FileStream fs = File.Create(output))
-                        //     {
-                        //         Byte[] info = Encoding.Unicode.GetBytes(result);
-                        //         fs.Write(info, 0, info.Length);
-                        //     }
-                        //     Log.Write(LogLevel.Normal, "Created pathmap file at '" + output + "'.");
-                        // }
-                        // else if (ext == ".pathmap")
-                        // {
-                        //     Editor.FromPathmapFile(script);
-                        // }
-                        // else
+                        if (ext == ".csv")
+                        {
+                            PathMap map = PathMap.ImportFromCSV(script);
+                            string result = map.ExportAsXML();
+                            string output = Path.ChangeExtension(script, "pathmap");
+                            using (FileStream fs = File.Create(output))
+                            {
+                                Byte[] info = Encoding.Unicode.GetBytes(result);
+                                fs.Write(info, 0, info.Length);
+                            }
+                            Log.Write(LogLevel.Normal, "Created pathmap file at '" + output + "'.");
+                        }
+                        else if (ext == ".pathmap")
+                        {
+                            Editor.FromPathmapFile(script);
+                        }
+                        else
                             Script(script);
                     
                     #if DEBUG == false
@@ -123,40 +122,12 @@ namespace Deltin.Deltinteger
             Finished();
         }
 
-        // public static string RuleArrayToWorkshop(Rule[] rules, VarCollection varCollection)
-        // {
-        //     var builder = new StringBuilder();
-
-        //     var globalCollection = varCollection.UseExtendedCollection(true);
-        //     for (int i = 0; i < globalCollection.Length; i++)
-        //     if (globalCollection[i] != null)
-        //         builder.AppendLine("// global [" + i + "]: " + globalCollection[i].Name);
-            
-        //     var playerCollection = varCollection.UseExtendedCollection(false);
-        //     for (int i = 0; i < playerCollection.Length; i++)
-        //     if (playerCollection[i] != null)
-        //         builder.AppendLine("// player [" + i + "]: " + playerCollection[i].Name);
-        //     builder.AppendLine();
-
-        //     varCollection.ToWorkshop(builder);
-        //     builder.AppendLine();
-
-        //     Log debugPrintLog = new Log("Tree");
-        //     foreach (var rule in rules)
-        //     {
-        //         rule.DebugPrint(debugPrintLog);
-        //         builder.AppendLine(rule.ToWorkshop());
-        //         builder.AppendLine();
-        //     }
-        //     return builder.ToString();
-        // }
-
-        // public static void WorkshopCodeResult(string code)
-        // {
-        //     Log.Write(LogLevel.Normal, "Press enter to copy code to clipboard, then in Overwatch click \"Paste Rule\".");
-        //     Console.ReadLine();
-        //     Clipboard.SetText(code);
-        // }
+        public static void WorkshopCodeResult(string code)
+        {
+            Log.Write(LogLevel.Normal, "Press enter to copy code to clipboard, then in Overwatch click \"Paste Rule\".");
+            Console.ReadLine();
+            Clipboard.SetText(code);
+        }
 
         public static void Finished()
         {

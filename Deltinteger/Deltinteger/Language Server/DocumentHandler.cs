@@ -164,6 +164,7 @@ namespace Deltin.Deltinteger.LanguageServer
             catch (Exception ex)
             {
                 Serilog.Log.Error(ex, "An exception was thrown while parsing.");
+                _languageServer.Server.SendNotification(DeltintegerLanguageServer.SendWorkshopCode, "An exception was thrown while parsing.\r\n" + ex.ToString());
             }
         }
     }

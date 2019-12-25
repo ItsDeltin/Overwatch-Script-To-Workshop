@@ -1,4 +1,4 @@
-import "!Debug Tools.del";
+// import "!Debug Tools.del";
 
 rule: "Commands"
 {
@@ -17,7 +17,7 @@ rule: "Commands"
 }
 
 macro GetClosestNode(): FirstOf(SortedArray(Nodes, DistanceBetween(EyePosition(EventPlayer()), (<Node>ArrayElement()).ShownLocation)));
-macro IsNodeSelectable(Node node): DistanceBetween(node.Location, EyePosition(EventPlayer())) < 5;
+macro IsNodeSelectable(Node node): DistanceBetween(node.Pos, EyePosition(EventPlayer())) < 5;
 
 rule: "Create node"
 Event.OngoingPlayer
@@ -80,12 +80,12 @@ if (IsButtonHeld(EventPlayer(), Button.Crouch))
     Selected = EmptyArray();
 }
 
-define globalvar Nodes = EmptyArray();
-define globalvar Selected = EmptyArray();
+globalvar define Nodes = EmptyArray();
+globalvar define Selected = EmptyArray();
 
 class Node
 {
-    public define Location;
+    public define Pos;
     public define ShownLocation;
     private define EffectID;
     public define Selected = false;
@@ -93,8 +93,8 @@ class Node
 
     public Node(define pos)
     {
-        Location = pos;
-        ShownLocation = Location + Vector(0, 1.25, 0);
+        Pos = pos;
+        ShownLocation = Pos + Vector(0, 1.25, 0);
     }
 
     public method Show()
@@ -157,7 +157,7 @@ if (!IsButtonHeld(EventPlayer(), Button.Crouch))
 {
     for (define f = 0; f < CountOf(Selected); f++)
         for (define l = 0; l < CountOf(Selected); l++)
-            if (l != f && !SegmentExists(Selected[f], Selected[l]))
+            if ((l != f) && !SegmentExists(Selected[f], Selected[l]))
             {
                 Segments = Append(Segments, new Segment(<Node>Selected[f], <Node>Selected[l], Attribute));
                 (<Segment>LastOf(Segments)).Show();
@@ -212,7 +212,7 @@ if (IsButtonHeld(EventPlayer(), Button.Crouch))
         }
 }
 
-define globalvar Segments = EmptyArray();
+globalvar define Segments = EmptyArray();
 
 class Segment
 {
@@ -244,7 +244,7 @@ class Segment
 
             if (Attribute == 1)
             {
-                CreateEffect(AllPlayers(), Effect.Sphere, Color.Purple, LinearInterpolate(Node1.ShownLocation, Node2.ShownLocation, 0.9), 0.25, EffectRev.VisibleTo);
+                CreateEffect(AllPlayers(), Effect.Sphere, Color.Purple, LinearInterpolate(Node1.ShownLocation, Node2.ShownLocation, 0.8), 0.25, EffectRev.VisibleTo);
                 DirectionMarker1 = LastCreatedEntity();
             }
         }
@@ -271,7 +271,7 @@ if (IsCommunicating(EventPlayer(), Communication.Hello))
         segment.Node2.UpdateVisible();
 
         segment.Hide();
-        if (segment.Node1.visible || segment.Node2.visible)
+        if ((segment.Node1.visible) || segment.Node2.visible)
             segment.Show();
     }
 }
@@ -286,7 +286,7 @@ if (IsCommunicating(EventPlayer(), Communication.VoiceLineUp))
     segmentsOut = EmptyArray();
 
     for (define i = 0; i < CountOf(Nodes); i++)
-        nodesOut = Append(nodesOut, (<Node>Nodes[i]).Location);
+        nodesOut = Append(nodesOut, (<Node>Nodes[i]).Pos);
     
     for (define i = 0; i < CountOf(Segments); i++)
         segmentsOut = Append(segmentsOut, Vector(
@@ -298,8 +298,8 @@ if (IsCommunicating(EventPlayer(), Communication.VoiceLineUp))
     SmallMessage(AllPlayers(), "Compile Finished!");
 }
 
-define globalvar nodesOut    3;
-define globalvar segmentsOut 4;
+globalvar define nodesOut    3;
+globalvar define segmentsOut 4;
 
 rule: "Preload"
 if (CountOf(preloadNodes) != 0)
@@ -314,11 +314,11 @@ if (CountOf(preloadNodes) != 0)
             ));
 }
 
-define globalvar preloadNodes 5;
-define globalvar preloadSegments 6;
+globalvar define preloadNodes 5;
+globalvar define preloadSegments 6;
 
-define globalvar Attribute = 0;
-define globalvar AttributeHud = 0;
+globalvar define Attribute = 0;
+globalvar define AttributeHud = 0;
 
 rule: "Change attribute"
 Event.OngoingPlayer
