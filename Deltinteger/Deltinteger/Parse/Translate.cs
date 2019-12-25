@@ -121,6 +121,21 @@ namespace Deltin.Deltinteger.Parse
         {
             List<DefinedFunction> applyMethods = new List<DefinedFunction>();
 
+            // Get the reserved variables and IDs
+            foreach (ScriptFile script in ScriptFiles)
+            {
+                if (script.Context.reserved_global()?.reserved_list() != null)
+                {
+                    foreach (var name in script.Context.reserved_global().reserved_list().PART()) VarCollection.Reserve(name.GetText(), true);
+                    foreach (var id in script.Context.reserved_global().reserved_list().NUMBER()) VarCollection.Reserve(int.Parse(id.GetText()), true, null, null);
+                }
+                if (script.Context.reserved_player()?.reserved_list() != null)
+                {
+                    foreach (var name in script.Context.reserved_player().reserved_list().PART()) VarCollection.Reserve(name.GetText(), false);
+                    foreach (var id in script.Context.reserved_player().reserved_list().NUMBER()) VarCollection.Reserve(int.Parse(id.GetText()), false, null, null);
+                }
+            }
+
             // Get the types
             foreach (ScriptFile script in ScriptFiles)
             foreach (var typeContext in script.Context.type_define())

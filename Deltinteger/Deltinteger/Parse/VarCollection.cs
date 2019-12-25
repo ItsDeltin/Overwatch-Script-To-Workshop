@@ -18,8 +18,10 @@ namespace Deltin.Deltinteger.Parse
         // Reserved IDs and names.
         private readonly List<int> reservedGlobalIDs = new List<int>();
         private readonly List<int> reservedPlayerIDs = new List<int>();
+        List<int> reservedIDs(bool isGlobal) => isGlobal ? reservedGlobalIDs : reservedPlayerIDs;
         private readonly List<string> reservedGlobalNames = new List<string>();
         private readonly List<string> reservedPlayerNames = new List<string>();
+        List<string> reservedNames(bool isGlobal) => isGlobal ? reservedGlobalNames : reservedPlayerNames;
 
         // Variables
         private readonly List<WorkshopVariable> globalVariables = new List<WorkshopVariable>();
@@ -47,21 +49,21 @@ namespace Deltin.Deltinteger.Parse
         public void Reserve(int id, bool isGlobal, FileDiagnostics diagnostics, DocRange range)
         {
             // Throw a syntax error if the ID was already reserved.
-            if (reserveList(isGlobal).Contains(id))
+            if (reservedIDs(isGlobal).Contains(id))
             {
                 string msg = string.Format("The id {0} is already reserved in the {1} collection.", id, isGlobal ? "global" : "player");
 
                 if (range != null)
                     diagnostics.Error(msg, range);
-                else
-                    throw new Exception(msg);
             }
-        
             // Add the ID to the reserved list.
-            reserveList(isGlobal).Add(id);
+            else reservedIDs(isGlobal).Add(id);
         }
-
-        List<int> reserveList(bool isGlobal) => isGlobal ? reservedGlobalIDs : reservedPlayerIDs;
+        public void Reserve(string name, bool isGlobal)
+        {
+            // Add the ID to the reserved list.
+            if (!reservedNames(isGlobal).Contains(name)) reservedNames(isGlobal).Add(name);
+        }
 
         public string WorkshopNameFromCodeName(bool isGlobal, string name)
         {
@@ -91,7 +93,7 @@ namespace Deltin.Deltinteger.Parse
 
         private bool NameTaken(bool isGlobal, string name)
         {
-            return variableList(isGlobal).Any(gv => gv != null && gv.Name == name) || (isGlobal ? reservedGlobalNames : reservedPlayerNames).Contains(name);
+            return variableList(isGlobal).Any(gv => gv != null && gv.Name == name) || reservedNames(isGlobal).Contains(name);
         }
 
         private string NewName(string baseName, int indent)
@@ -114,7 +116,7 @@ namespace Deltin.Deltinteger.Parse
             var collection = variableList(isGlobal);
             for (int i = 0; i < Constants.NUMBER_OF_VARIABLES; i++)
                 // Make sure the ID is not reserved.
-                if (!variableList(isGlobal).Any(var => var.ID == i) && !reserveList(isGlobal).Contains(i))
+                if (!variableList(isGlobal).Any(var => var.ID == i) && !reservedIDs(isGlobal).Contains(i))
                 {
                     id = i;
                     break;
