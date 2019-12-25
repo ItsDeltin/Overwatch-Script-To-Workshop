@@ -120,12 +120,7 @@ namespace Deltin.Deltinteger.Parse
 
             ForeachVar = new Var(foreachContext.name.Text, new Location(script.Uri, DocRange.GetRange(foreachContext.name)), script, translateInfo);
             ForeachVar.VariableType = VariableType.ElementReference;
-            
-            if (foreachContext.type != null)
-            {
-                ForeachVar.CodeType = translateInfo.GetCodeType(foreachContext.type.Text, script.Diagnostics, DocRange.GetRange(foreachContext.type));
-                ForeachVar.CodeType?.Call(script, DocRange.GetRange(foreachContext.type));
-            }
+            ForeachVar.CodeType = CodeType.GetCodeTypeFromContext(translateInfo, script, foreachContext.code_type());
             ForeachVar.Finalize(varScope);
 
             // Get the array that will be iterated on. Syntax error if it is missing.

@@ -16,7 +16,7 @@ true   : TRUE          ;
 false  : FALSE         ;
 null   : NULL          ;
 
-define : accessor? STATIC? (GLOBAL|PLAYER)? (type=PART | DEFINE) name=PART (id=number? | NOT?) (EQUALS expr?)? ;
+define : accessor? STATIC? (GLOBAL|PLAYER)? (code_type | DEFINE) name=PART (id=number? | NOT?) (EQUALS expr?)? ;
 
 expr 
 	: 
@@ -61,6 +61,7 @@ picky_parameters : picky_parameter (COMMA picky_parameter?)* ;
 method           : PART LEFT_PAREN (picky_parameters | call_parameters)? RIGHT_PAREN ;
 
 variable : PART array? ;
+code_type: PART (INDEX_START INDEX_END)*;
 
 statement :
 	  varset STATEMENT_END? #s_varset
@@ -81,7 +82,7 @@ for     : FOR LEFT_PAREN
 	((define | initialVarset=varset)? STATEMENT_END expr? STATEMENT_END endingVarset=varset?)
 	RIGHT_PAREN block;
 
-foreach : FOREACH number? LEFT_PAREN (type=PART | DEFINE) name=PART IN expr? RIGHT_PAREN block ;
+foreach : FOREACH number? LEFT_PAREN (code_type | DEFINE) name=PART IN expr? RIGHT_PAREN block ;
 
 while   : WHILE LEFT_PAREN expr RIGHT_PAREN block             ;
 
@@ -101,7 +102,7 @@ ow_rule :
 	block?
 	;
 
-define_method : DOCUMENTATION* accessor? RECURSIVE? (METHOD | type=PART) name=PART LEFT_PAREN setParameters RIGHT_PAREN
+define_method : DOCUMENTATION* accessor? RECURSIVE? (METHOD | code_type) name=PART LEFT_PAREN setParameters RIGHT_PAREN
 	block
 	;
 

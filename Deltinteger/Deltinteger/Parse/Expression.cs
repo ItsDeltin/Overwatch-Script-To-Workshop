@@ -322,9 +322,8 @@ namespace Deltin.Deltinteger.Parse
             }
         }
 
-        // TODO: Support class arrays.
-        public Scope ReturningScope() => null;
-        public CodeType Type() => null;
+        public Scope ReturningScope() => Type()?.GetObjectScope();
+        public CodeType Type() => (Expression.Type() as ArrayType)?.ArrayOfType;
 
         public IWorkshopTree Parse(ActionSet actionSet, bool asElement = true)
         {

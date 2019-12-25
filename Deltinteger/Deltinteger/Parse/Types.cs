@@ -58,6 +58,22 @@ namespace Deltin.Deltinteger.Parse
 
         public abstract CompletionItem GetCompletion();
 
+        public static CodeType GetCodeTypeFromContext(DeltinScript translateInfo, ScriptFile script, DeltinScriptParser.Code_typeContext typeContext)
+        {
+            if (typeContext == null) return null;
+            CodeType type = translateInfo.GetCodeType(typeContext.PART().GetText(), script.Diagnostics, DocRange.GetRange(typeContext));
+
+            if (type != null)
+            {
+                type.Call(script, DocRange.GetRange(typeContext));
+
+                if (typeContext.INDEX_START() != null)
+                    for (int i = 0; i < typeContext.INDEX_START().Length; i++)
+                        type = new ArrayType(type);
+            }
+            return type;
+        }
+
         public static bool TypeMatches(CodeType parameterType, CodeType valueType)
         {
             return parameterType == null || parameterType.Name == valueType?.Name;
@@ -136,7 +152,7 @@ namespace Deltin.Deltinteger.Parse
     {
         public string Name { get; }
         public AccessLevel AccessLevel { get; } = AccessLevel.Public;
-        public Location DefinedAt { get; } = null;
+        public LanguageServer.Location DefinedAt { get; } = null;
         public bool WholeContext { get; } = true;
         
         public CodeType Enum { get; }
@@ -175,11 +191,25 @@ namespace Deltin.Deltinteger.Parse
         }
     }
 
-    public class DefinedType : CodeType, ICallable
+    public class ArrayType : CodeType
+    {
+        public CodeType ArrayOfType { get; }
+
+        public ArrayType(CodeType arrayOfType) : base(arrayOfType.Name + "[]")
+        {
+            ArrayOfType = arrayOfType;
+        }
+
+        protected override string TypeKindString => "array";
+        public override Scope ReturningScope() => null;
+        public override CompletionItem GetCompletion() => throw new NotImplementedException();
+    }
+
+    public class DefinedType : CodeType
     {
         public TypeKind TypeKind { get; }
         protected override string TypeKindString { get; }
-        public Location DefinedAt { get; }
+        public LanguageServer.Location DefinedAt { get; }
         private Scope objectScope { get; }
         private Scope staticScope { get; }
         private List<Var> objectVariables { get; } = new List<Var>();
@@ -190,7 +220,7 @@ namespace Deltin.Deltinteger.Parse
             if (translateInfo.IsCodeType(Name))
                 script.Diagnostics.Error($"A type with the name '{Name}' already exists.", DocRange.GetRange(typeContext.name));
             
-            DefinedAt = new Location(script.Uri, DocRange.GetRange(typeContext.name));
+            DefinedAt = new LanguageServer.Location(script.Uri, DocRange.GetRange(typeContext.name));
             translateInfo.AddSymbolLink(this, DefinedAt);
             this.translateInfo = translateInfo;
 
@@ -243,7 +273,7 @@ namespace Deltin.Deltinteger.Parse
             {
                 // If there are no constructors, create a default constructor.
                 Constructors = new Constructor[] {
-                    new Constructor(this, new Location(script.Uri, DocRange.GetRange(typeContext.name)), AccessLevel.Public)
+                    new Constructor(this, new LanguageServer.Location(script.Uri, DocRange.GetRange(typeContext.name)), AccessLevel.Public)
                 };
             }
         }
@@ -391,14 +421,12 @@ namespace Deltin.Deltinteger.Parse
             }
         }
 
-        // TODO: Should this be moved to the base class CodeType?
         public override IndexReference GetObjectSource(DeltinScript translateInfo, IWorkshopTree element)
         {
             if (TypeKind == TypeKind.Struct) throw new NotImplementedException();
             return translateInfo.SetupClasses().ClassArray.CreateChild((Element)element);
         }
 
-        // TODO: Should this be moved to the base class CodeType?
         /// <summary>
         /// Adds the class objects to the index assigner.
         /// </summary>
@@ -414,9 +442,9 @@ namespace Deltin.Deltinteger.Parse
         {
             base.Call(script, callRange);
             script.AddDefinitionLink(callRange, DefinedAt);
-            AddLink(new Location(script.Uri, callRange));
+            AddLink(new LanguageServer.Location(script.Uri, callRange));
         }
-        public void AddLink(Location location)
+        public void AddLink(LanguageServer.Location location)
         {
             translateInfo.AddSymbolLink(this, location);
         }
@@ -447,11 +475,11 @@ namespace Deltin.Deltinteger.Parse
         public string Name => Type.Name;
         public AccessLevel AccessLevel { get; }
         public CodeParameter[] Parameters { get; protected set; }
-        public Location DefinedAt { get; }
+        public LanguageServer.Location DefinedAt { get; }
         public CodeType Type { get; }
         public StringOrMarkupContent Documentation { get; protected set; }
 
-        public Constructor(CodeType type, Location definedAt, AccessLevel accessLevel)
+        public Constructor(CodeType type, LanguageServer.Location definedAt, AccessLevel accessLevel)
         {
             Type = type;
             DefinedAt = definedAt;
@@ -467,7 +495,7 @@ namespace Deltin.Deltinteger.Parse
             
             script.AddDefinitionLink(callRange, DefinedAt);
             if (Type is DefinedType)
-                ((DefinedType)Type).AddLink(new Location(script.Uri, callRange));
+                ((DefinedType)Type).AddLink(new LanguageServer.Location(script.Uri, callRange));
         }
 
         public string GetLabel(bool markdown) => HoverHandler.GetLabel("new " + Type.Name, Parameters, markdown, Documentation);
@@ -481,7 +509,7 @@ namespace Deltin.Deltinteger.Parse
 
         public DefinedConstructor(ScriptFile script, DeltinScript translateInfo, CodeType type, DeltinScriptParser.ConstructorContext context) : base(
             type,
-            new Location(script.Uri, DocRange.GetRange(context.name)),
+            new LanguageServer.Location(script.Uri, DocRange.GetRange(context.name)),
             context.accessor()?.GetAccessLevel() ?? AccessLevel.Private)
         {
             ConstructorScope = type.GetObjectScope().Child();

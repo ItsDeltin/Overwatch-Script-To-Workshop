@@ -308,19 +308,10 @@ namespace Deltin.Deltinteger.Parse
             newVar.WholeContext = defineType == VariableDefineType.InClass || defineType == VariableDefineType.RuleLevel;
 
             // Get the type.
-            if (context.type != null)
-            {
-                CodeType type = translateInfo.GetCodeType(context.type.Text, script.Diagnostics, DocRange.GetRange(context.type));
-
-                if (type != null)
-                {
-                    type.Call(script, DocRange.GetRange(context.type));
-                    if (type.Constant() != TypeSettable.Normal)
-                        newVar.VariableType = VariableType.ElementReference;
-                }
-
-                newVar.CodeType = type;
-            }
+            newVar.CodeType = CodeType.GetCodeTypeFromContext(translateInfo, script, context.code_type());
+            
+            if (newVar.CodeType != null && newVar.CodeType.Constant() != TypeSettable.Normal)
+                newVar.VariableType = VariableType.ElementReference;
 
             // Syntax error if there is an '=' but no expression.
             if (context.EQUALS() != null && context.expr() == null)
@@ -335,7 +326,7 @@ namespace Deltin.Deltinteger.Parse
             if (context?.expr() != null)
             {
                 InitialValue = DeltinScript.GetExpression(script, translateInfo, scope, context.expr());
-                if (InitialValue.Type() != null && InitialValue.Type().Constant() == TypeSettable.Constant && CodeType != InitialValue.Type())
+                if (InitialValue?.Type() != null && InitialValue.Type().Constant() == TypeSettable.Constant && CodeType != InitialValue.Type())
                     script.Diagnostics.Error($"The type '{InitialValue.Type().Name}' cannot be stored.", DocRange.GetRange(context.expr()));
             }
             
@@ -434,8 +425,26 @@ namespace Deltin.Deltinteger.Parse
 
         public Element[] ParseIndex(ActionSet actionSet) => Array.ConvertAll(Index, index => (Element)index.Parse(actionSet));
 
-        public Scope ReturningScope() => Calling.ReturningScope();
+        public Scope ReturningScope()
+        {
+            if (Calling.Type() == null) return Calling.ReturningScope();
+            else return Type()?.GetObjectScope();
+        }
 
-        public CodeType Type() => Calling.Type();
+        public CodeType Type()
+        {
+            var type = Calling.Type();
+            for (int i = 0; i < Index.Length; i++)
+            {
+                if (type is ArrayType)
+                    type = ((ArrayType)type).ArrayOfType;
+                else
+                {
+                    type = null;
+                    break;
+                }
+            }
+            return type;
+        }
     }
 }
