@@ -39,9 +39,9 @@ expr
 	| NOT expr                                                                         #e_not
 	| '-' expr                                                                         #e_inverse
 	| <assoc=right> left=expr op=('^' | '*' | '/' | '%') right=expr                    #e_op_1
-	| left=expr op=('+' | '-') right=expr?                                             #e_op_2
-	| left=expr op=(LESS_THAN | '<=' | '==' | '>=' | GREATER_THAN | '!=') right=expr?  #e_op_compare
-	| condition=expr TERNARY consequent=expr? TERNARY_ELSE alternative=expr?		   #e_ternary_conditional
+	| left=expr op=('+' | '-') right=expr                                              #e_op_2
+	| left=expr op=(LESS_THAN | '<=' | '==' | '>=' | GREATER_THAN | '!=') right=expr   #e_op_compare
+	| condition=expr TERNARY consequent=expr? TERNARY_ELSE alternative=expr 		   #e_ternary_conditional
 	| left=expr BOOL right=expr                                                        #e_op_bool
 	;
 
