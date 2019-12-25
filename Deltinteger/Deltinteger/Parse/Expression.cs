@@ -486,7 +486,7 @@ namespace Deltin.Deltinteger.Parse
             if (ternaryContext.alternative == null)
                 script.Diagnostics.Error("Expected expression.", DocRange.GetRange(ternaryContext.TERNARY_ELSE()));
             else
-                Alternative = DeltinScript.GetExpression(script, translateInfo, scope, ternaryContext.consequent);
+                Alternative = DeltinScript.GetExpression(script, translateInfo, scope, ternaryContext.alternative);
         }
 
         public Scope ReturningScope() => Type()?.GetObjectScope();
