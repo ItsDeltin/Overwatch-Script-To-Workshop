@@ -50,17 +50,7 @@
     <Compile Remove="Parse/old/**"/>
     <Compile Remove="Parse/ast/**"/>
     <Compile Remove="Custom Methods/Old/**"/>
-    
-    <Compile Remove="Pathfinder/**"/>
-    <Compile Include="Pathfinder/PathfindClass.cs"/>
-    <Compile Include="Pathfinder/PathMap.cs"/>
-    <Compile Include="Pathfinder/Algorithm.cs"/>
-    <Compile Include="Pathfinder/PathfinderRules.cs"/>
-    <Compile Include="Pathfinder/Methods.cs"/>
-    <Compile Include="Pathfinder/Editor.cs"/>
-
-    <Compile Remove="Models/**"/>
-    <Compile Include="Models/Vertex.cs"/>
+    <Compile Remove="Pathfinder/Old_Methods.cs"/>
     <Compile Remove="Language Server/Old/**"/>
   </ItemGroup>
 </Project>

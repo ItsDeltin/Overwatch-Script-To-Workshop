@@ -78,61 +78,9 @@ namespace Deltin.Deltinteger.Pathfinder
         public override void Parse(ActionSet actionSet, IWorkshopTree[] parameterValues) => throw new NotImplementedException();
     }
 
-    class FileParameter : CodeParameter
-    {
-        public string FileType { get; }
-
-        /// <summary>
-        /// A parameter that resolves to a file. AdditionalParameterData will return the file path.
-        /// </summary>
-        /// <param name="fileType">The expected file type. Can be null.</param>
-        /// <param name="parameterName">The name of the parameter.</param>
-        /// <param name="description">The parameter's description. Can be null.</param>
-        public FileParameter(string fileType, string parameterName, string description) : base(parameterName, null, null, description)
-        {
-            FileType = fileType?.ToLower();
-        }
-
-        public override object Validate(ScriptFile script, IExpression value, DocRange valueRange)
-        {
-            StringAction str = value as StringAction;
-            if (str == null)
-            {
-                script.Diagnostics.Error("Expected string constant.", valueRange);
-                return null;
-            }
-
-            string resultingPath = Extras.CombinePathWithDotNotation(script.Uri.FilePath(), str.Value);
-            
-            if (resultingPath == null)
-            {
-                script.Diagnostics.Error("File path contains invalid characters.", valueRange);
-                return null;
-            }
-
-            string dir = Path.GetDirectoryName(resultingPath);
-            if (Directory.Exists(dir))
-                DeltinScript.AddImportCompletion(script, dir, valueRange);
-
-            if (!File.Exists(resultingPath))
-            {
-                script.Diagnostics.Error($"No file was found at '{resultingPath}'.", valueRange);
-                return null;
-            }
-
-            if (FileType != null && Path.GetExtension(resultingPath).ToLower() != "." + FileType)
-            {
-                script.Diagnostics.Error($"Expected a file with the file type '{FileType}'.", valueRange);
-                return null;
-            }
-
-            return resultingPath;
-        }
-    }
-
     class PathmapFileParameter : FileParameter
     {
-        public PathmapFileParameter(string file, string description) : base("pathmap", file, description)
+        public PathmapFileParameter(string parameterName, string description) : base("pathmap", parameterName, description)
         {
         }
 
