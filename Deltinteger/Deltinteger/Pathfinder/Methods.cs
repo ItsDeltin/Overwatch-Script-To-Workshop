@@ -59,6 +59,28 @@ namespace Deltin.Deltinteger.Pathfinder
         }
     }
 
+    [CustomMethod("GetPath", "Returns an array of vectors forming a path from the starting point to the destination.", CustomMethodType.MultiAction_Value, false)]
+    class GetPath : CustomMethodBase
+    {
+        public override CodeParameter[] Parameters() => new CodeParameter[] {
+            new CodeParameter("position", "The initial position."),
+            new CodeParameter("destination", "The final destination.")
+        };
+
+        public override IWorkshopTree Get(ActionSet actionSet, IWorkshopTree[] parameterValues)
+        {
+            Element position = (Element)parameterValues[0];
+            Element destination = (Element)parameterValues[1];
+
+            DijkstraNormal algorithm = new DijkstraNormal(
+                actionSet, (Element)actionSet.CurrentObject.GetVariable(), position, destination
+            );
+            algorithm.Get();
+
+            return Element.Part<V_Append>(algorithm.finalPath.GetVariable(), destination);
+        }
+    }
+
     // Pathmap static methods
 
     [CustomMethod("StopPathfind", "Stops pathfinding for the specified players.", CustomMethodType.Action, false)]
@@ -168,6 +190,24 @@ namespace Deltin.Deltinteger.Pathfinder
         public override IWorkshopTree Get(ActionSet actionSet, IWorkshopTree[] parameterValues)
         {
             return actionSet.Translate.DeltinScript.SetupPathfinder().NextPosition((Element)parameterValues[0]);
+        }
+    }
+
+    [CustomMethod("WalkPath", "Input players will walk to each position in the path.", CustomMethodType.Action, false)]
+    class WalkPath : CustomMethodBase
+    {
+        public override CodeParameter[] Parameters() => new CodeParameter[] {
+            new CodeParameter("players", "Players that will follow the path."),
+            new CodeParameter("path", "The array of positions to walk to.")
+        };
+
+        public override IWorkshopTree Get(ActionSet actionSet, IWorkshopTree[] parameterValues)
+        {
+            actionSet.AddAction(actionSet.Translate.DeltinScript.SetupPathfinder().Path.SetVariable(
+                (Element)parameterValues[1],
+                (Element)parameterValues[0]
+            ));
+            return null;
         }
     }
 }

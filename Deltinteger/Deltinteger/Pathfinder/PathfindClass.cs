@@ -26,6 +26,7 @@ namespace Deltin.Deltinteger.Pathfinder
             ObjectScope = new Scope("class Pathmap");
             ObjectScope.AddMethod(CustomMethodData.GetCustomMethod<Pathfind>(), null, null);
             ObjectScope.AddMethod(CustomMethodData.GetCustomMethod<PathfindAll>(), null, null);
+            ObjectScope.AddMethod(CustomMethodData.GetCustomMethod<GetPath>(), null, null);
 
             StaticScope = new Scope("class Pathmap");
             StaticScope.AddMethod(CustomMethodData.GetCustomMethod<StopPathfind>(), null, null);
@@ -33,6 +34,7 @@ namespace Deltin.Deltinteger.Pathfinder
             StaticScope.AddMethod(CustomMethodData.GetCustomMethod<IsPathfindStuck>(), null, null);
             StaticScope.AddMethod(CustomMethodData.GetCustomMethod<FixPathfind>(), null, null);
             StaticScope.AddMethod(CustomMethodData.GetCustomMethod<NextNode>(), null, null);
+            StaticScope.AddMethod(CustomMethodData.GetCustomMethod<WalkPath>(), null, null);
         }
 
         public override IWorkshopTree New(ActionSet actionSet, Constructor constructor, IWorkshopTree[] constructorValues, object[] additionalParameterData)
