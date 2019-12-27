@@ -11,9 +11,35 @@ using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.Parse;
 using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.CustomMethods;
+using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
+using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItemKind;
+using StringOrMarkupContent = OmniSharp.Extensions.LanguageServer.Protocol.Models.StringOrMarkupContent;
 
 namespace Deltin.Deltinteger.Models
 {
+    public class AssetClass : CodeType
+    {
+        protected override string TypeKindString => "class";
+
+        private Scope StaticScope { get; } = new Scope("class Asset");
+
+        public AssetClass() : base("Asset")
+        {
+            Description = "Contains functions for displaying assets in the world.";
+            StaticScope.AddMethod(CustomMethodData.GetCustomMethod<ShowModel>(), null, null);
+            StaticScope.AddMethod(CustomMethodData.GetCustomMethod<CreateTextWithFont>(), null, null);
+            StaticScope.AddMethod(CustomMethodData.GetCustomMethod<CreateTextFancy>(), null, null);
+            StaticScope.AddMethod(CustomMethodData.GetCustomMethod<CreateText>(), null, null);
+        }
+
+        public override Scope ReturningScope() => StaticScope;
+
+        public override CompletionItem GetCompletion() => new CompletionItem() {
+            Label = "Asset",
+            Kind = CompletionItemKind.Class
+        };
+    }
+
     abstract class ModelCreator : CustomMethodBase
     {
         protected const bool GET_EFFECT_IDS_BY_DEFAULT = true;
@@ -247,7 +273,6 @@ namespace Deltin.Deltinteger.Models
             new ModelParameter("model", "File path of the model to use. Must be a `.obj` file."),
             new CodeParameter("visibleTo", "The array of players that the model will be visible to."),
             new CodeParameter("location", "The location that the model will be shown."),
-            // TODO: Rotation parameter
             new CodeParameter("rotation", "The rotation of the model."),
             new CodeParameter("scale", "The scale of the model."),
             new CodeParameter("reevaluation", "Specifies which of this methods' inputs will be continuously reevaluated, the model will keep asking for and using new values from reevaluated inputs.", WorkshopEnumType.GetEnumType<EffectRev>()),
@@ -294,7 +319,7 @@ namespace Deltin.Deltinteger.Models
         public override IWorkshopTree Parse(ActionSet actionSet, IExpression expression, bool asElement) => null;
     }
 
-    [CustomMethod("CreateTextFont", "Creates in-world text using any custom text.", CustomMethodType.MultiAction_Value)]
+    [CustomMethod("CreateTextFont", "Creates in-world text using any custom text.", CustomMethodType.MultiAction_Value, false)]
     class CreateTextWithFont : ModelCreator
     {
         public override CodeParameter[] Parameters() => new CodeParameter[] {
@@ -335,7 +360,7 @@ namespace Deltin.Deltinteger.Models
         }
     }
 
-    [CustomMethod("CreateTextFancy", "Creates in-world text using any custom text. Uses the BigNoodleTooOblique font, Overwatch's main font.", CustomMethodType.MultiAction_Value)]
+    [CustomMethod("CreateTextFancy", "Creates in-world text using any custom text. Uses the BigNoodleTooOblique font, Overwatch's main font.", CustomMethodType.MultiAction_Value, false)]
     class CreateTextFancy : ModelCreator
     {
         public override CodeParameter[] Parameters() => new CodeParameter[] {
@@ -362,7 +387,7 @@ namespace Deltin.Deltinteger.Models
         }
     }
 
-    [CustomMethod("CreateText", "The text to display. This is a string constant.", CustomMethodType.MultiAction_Value)]
+    [CustomMethod("CreateText", "The text to display. This is a string constant.", CustomMethodType.MultiAction_Value, false)]
     class CreateText : ModelCreator
     {
         public override CodeParameter[] Parameters() => new CodeParameter[] {
@@ -402,5 +427,55 @@ namespace Deltin.Deltinteger.Models
             if (lines == null) return null;
             return new Model(lines);
         }
+    }
+
+    class VertexParameter : CodeParameter
+    {
+        public VertexParameter(string name, string documentation) : base(name, documentation) {}
+
+        public override object Validate(ScriptFile script, IExpression value, DocRange valueRange)
+        {
+            if (value is NullAction) return new Vertex();
+            else if (value is NumberAction) return new Vertex(((NumberAction)value).Value, 0);
+            else if (value is CallMethodAction && GetVertex((CallMethodAction)value, out Vertex vertex)) return vertex;
+
+            script.Diagnostics.Error("Expected a vector constant, number constant, or null.", valueRange);
+            return null;
+        }
+
+        private static bool GetVertex(CallMethodAction callMethod, out Vertex vertex)
+        {
+            vertex = null;
+
+            if (callMethod.CallingMethod == ElementList.GetElement<V_Vector>())
+            {
+                double x = 0, y = 0, z = 0;
+
+                if (callMethod.ParameterValues[0] != null)
+                {
+                    var num = callMethod.ParameterValues[0] as NumberAction;
+                    if (num == null) return false;
+                    x = num.Value;
+                }
+                if (callMethod.ParameterValues[1] != null)
+                {
+                    var num = callMethod.ParameterValues[1] as NumberAction;
+                    if (num == null) return false;
+                    y = num.Value;
+                }
+                if (callMethod.ParameterValues[2] != null)
+                {
+                    var num = callMethod.ParameterValues[2] as NumberAction;
+                    if (num == null) return false;
+                    z = num.Value;
+                }
+
+                vertex = new Vertex(x, y, z);
+                return true;
+            }
+            return false;
+        }
+
+        public override IWorkshopTree Parse(ActionSet actionSet, IExpression expression, bool asElement) => null;
     }
 }

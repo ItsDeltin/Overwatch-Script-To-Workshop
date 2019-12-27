@@ -215,6 +215,10 @@ namespace Deltin.Deltinteger.Elements
         {
             return Elements.FirstOrDefault(e => e.Name == codeName);
         }
+        public static ElementList GetElement<T>() where T: Element
+        {
+            return Elements.FirstOrDefault(e => e.Type == typeof(T));
+        }
         public static ElementList FromType(Type type)
         {
             return Elements.FirstOrDefault(element => element.Type == type);

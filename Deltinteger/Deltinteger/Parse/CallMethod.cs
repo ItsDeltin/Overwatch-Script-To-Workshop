@@ -10,7 +10,7 @@ namespace Deltin.Deltinteger.Parse
         private DeltinScript translateInfo { get; }
         public IMethod CallingMethod { get; }
         private OverloadChooser OverloadChooser { get; }
-        private IExpression[] ParameterValues { get; }
+        public IExpression[] ParameterValues { get; }
 
         private DocRange NameRange { get; }
 

@@ -89,7 +89,8 @@ namespace Deltin.Deltinteger.Parse
 
         public override object Validate(ScriptFile script, IExpression value, DocRange valueRange)
         {
-            if (value == null) return DefaultConstValue;
+            if (value is ExpressionOrWorkshopValue)
+                return ((ExpressionOrWorkshopValue)value).WorkshopValue is V_True;
 
             if (value is BoolAction == false)
             {
