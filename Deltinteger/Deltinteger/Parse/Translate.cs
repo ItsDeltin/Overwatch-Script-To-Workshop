@@ -90,7 +90,7 @@ namespace Deltin.Deltinteger.Parse
                     Kind = CompletionItemKind.File
                 });
             
-            script.AddCompletionRange(new CompletionRange(completionItems.ToArray(), range, true));
+            script.AddCompletionRange(new CompletionRange(completionItems.ToArray(), range, CompletionRangeKind.ClearRest));
         }
 
         string GetImportedFile(ScriptFile script, FileImporter importer, DeltinScriptParser.Import_fileContext importFileContext)
@@ -302,7 +302,7 @@ namespace Deltin.Deltinteger.Parse
                 case DeltinScriptParser.S_foreachContext s_foreach: return new ForeachAction(script, translateInfo, scope, s_foreach.@foreach());
                 case DeltinScriptParser.S_returnContext s_return  : return new ReturnAction(script, translateInfo, scope, s_return.@return());
                 case DeltinScriptParser.S_deleteContext s_delete  : return new DeleteAction(script, translateInfo, scope, s_delete.delete());
-                default: throw new Exception($"Could not determine the statement type '{statementContext.GetType().Name}'.");
+                default: return null;
             }
         }
 

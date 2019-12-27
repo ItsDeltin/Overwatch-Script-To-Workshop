@@ -51,18 +51,29 @@ namespace Deltin.Deltinteger.LanguageServer
             if (inRange.Count > 0)
             {
                 inRange = inRange
-                    // Order by if the completion range has priority. True is first.
-                    .OrderByDescending(range => range.Priority)
-                    // Then order by the size of the ranges.
-                    .ThenBy(range => range.Range)
+                    // Order by the size of the ranges.
+                    .OrderBy(range => range.Range)
                     .ToList();
                 
-                if (inRange[0].Priority)
+                for (int i = 0; i < inRange.Count; i++)
                 {
-                    items.Clear();
-                    items.AddRange(inRange[0].GetCompletion(completionParams.Position, true));
+                    // Additive
+                    if (inRange[i].Kind == CompletionRangeKind.Additive)
+                        items.AddRange(inRange[i].GetCompletion(completionParams.Position, false));
+                    // Catch
+                    else if (inRange[i].Kind == CompletionRangeKind.Catch)
+                    {
+                        items.AddRange(inRange[i].GetCompletion(completionParams.Position, false));
+                        break;
+                    }
+                    // ClearRest
+                    else if (inRange[i].Kind == CompletionRangeKind.ClearRest)
+                    {
+                        items.Clear();
+                        items.AddRange(inRange[0].GetCompletion(completionParams.Position, true));
+                        break;
+                    }
                 }
-                else items.AddRange(inRange[0].GetCompletion(completionParams.Position, false));
             }
             else items.AddRange(_globalScope.GetCompletion(null, false));
             return items;

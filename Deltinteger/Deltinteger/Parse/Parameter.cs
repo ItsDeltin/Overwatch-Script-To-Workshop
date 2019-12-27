@@ -9,6 +9,8 @@ using ParameterInformation = OmniSharp.Extensions.LanguageServer.Protocol.Models
 using StringOrMarkupContent = OmniSharp.Extensions.LanguageServer.Protocol.Models.StringOrMarkupContent;
 using MarkupContent = OmniSharp.Extensions.LanguageServer.Protocol.Models.MarkupContent;
 using MarkupKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.MarkupKind;
+using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
+using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItemKind;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -159,7 +161,6 @@ namespace Deltin.Deltinteger.Parse
         private bool _setContext;
         private DeltinScriptParser.Call_parametersContext CallContext;
         private DeltinScriptParser.Picky_parametersContext PickyContext;
-        private DocRange[] ParameterErrors;
         public DocRange[] ParameterRanges { get; private set; }
 
         public object[] AdditionalParameterData { get; private set; }
@@ -187,13 +188,13 @@ namespace Deltin.Deltinteger.Parse
             _setContext = true;
 
             IExpression[] values = new IExpression[context.expr().Length];
-            ParameterErrors = new DocRange[values.Length];
+            DocRange[] errorRanges = new DocRange[values.Length];
             var parameterRanges = new List<DocRange>();
             for (int i = 0; i < values.Length; i++)
             {
                 values[i] = DeltinScript.GetExpression(script, translateInfo, scope, context.expr(i));
-                ParameterErrors[i] = DocRange.GetRange(context.expr(i));
-                parameterRanges.Add(ParameterErrors[i]);
+                errorRanges[i] = DocRange.GetRange(context.expr(i));
+                parameterRanges.Add(errorRanges[i]);
             }
             
             if (!SetParameterCount(values.Length)) return;
@@ -202,7 +203,7 @@ namespace Deltin.Deltinteger.Parse
             // Match by value types and parameter types.
             for (int i = 0; i < values.Length; i++)
             foreach (var option in CurrentOptions)
-                CompareParameterTypes(values[i], option, i);
+                CompareParameterTypes(values[i], option, i, errorRanges[i]);
             GetBestOption();
 
             Values = new IExpression[Overload.Parameters.Length];
@@ -229,17 +230,18 @@ namespace Deltin.Deltinteger.Parse
             _setContext = true;
 
             PickyParameter[] parameters = new PickyParameter[context.picky_parameter().Length];
-            ParameterErrors = new DocRange[parameters.Length];
             for (int i = 0; i < parameters.Length; i++)
             {
                 string name = context.picky_parameter(i).PART().GetText();
                 IExpression expression = null;
 
+                DocRange expressionRange = null;
+
                 // Get the expression. If it doesn't exist, add a syntax error.
                 if (context.picky_parameter(i).expr() != null)
                 {
                     expression = DeltinScript.GetExpression(script, translateInfo, scope, context.picky_parameter(i).expr());
-                    ParameterErrors[i] = DocRange.GetRange(context.picky_parameter(i).expr());
+                    expressionRange = DocRange.GetRange(context.picky_parameter(i).expr());
                 }
                 else
                     script.Diagnostics.Error("Expected expression.", DocRange.GetRange(context.picky_parameter(i).TERNARY_ELSE()));
@@ -258,7 +260,8 @@ namespace Deltin.Deltinteger.Parse
                         name,
                         expression,
                         DocRange.GetRange(context.picky_parameter(i)),
-                        nameRange
+                        nameRange,
+                        expressionRange
                     );
                 }
             }
@@ -291,10 +294,12 @@ namespace Deltin.Deltinteger.Parse
                 else if (parameter.Value != null)
                 {
                     // Check the types.
-                    CompareParameterTypes(parameter.Value, option, index);
+                    CompareParameterTypes(parameter.Value, option, index, parameter.ExpressionRange);
                 }
             }
             GetBestOption();
+
+            List<string> pickyParameterCompletion = Overload.Parameters.Select(p => p.Name).ToList();
 
             ParameterRanges = new DocRange[Overload.Parameters.Length];
             IExpression[] values = new IExpression[Overload.Parameters.Length];
@@ -303,7 +308,10 @@ namespace Deltin.Deltinteger.Parse
                 int parameterIndex = -1;
                 for (int p = 0; p < parameters.Length && parameterIndex == -1; p++)
                     if (parameters[p].Name == Overload.Parameters[i].Name)
+                    {
                         parameterIndex = p;
+                        pickyParameterCompletion.Remove(parameters[p].Name);
+                    }
 
                 if (parameterIndex != -1)
                 {
@@ -314,6 +322,13 @@ namespace Deltin.Deltinteger.Parse
                     values[i] = MissingParameter(Overload.Parameters[i]);
             }
             Values = values;
+
+            // Add the picky parameter completion.
+            script.AddCompletionRange(new CompletionRange(pickyParameterCompletion.Select(p => new CompletionItem() {
+                Label = p + ":",
+                Kind = CompletionItemKind.Field
+            }).ToArray(), CallRange, CompletionRangeKind.Additive));
+
             GetAdditionalData();
         }
         public void SetContext()
@@ -367,18 +382,18 @@ namespace Deltin.Deltinteger.Parse
             foreach (var option in CurrentOptions) optionDiagnostics.Add(option, new List<Diagnostic>());
         }
 
-        private void CompareParameterTypes(IExpression value, IParameterCallable option, int parameter)
+        private void CompareParameterTypes(IExpression value, IParameterCallable option, int parameter, DocRange errorRange)
         {
             if (!CodeType.TypeMatches(option.Parameters[parameter].Type, value.Type()))
             {
                 // The parameter type does not match.
                 string msg = string.Format("Expected a value of type {0}.", option.Parameters[parameter].Type.Name);
-                optionDiagnostics[option].Add(new Diagnostic(msg, ParameterErrors[parameter], Diagnostic.Error));
+                optionDiagnostics[option].Add(new Diagnostic(msg, errorRange, Diagnostic.Error));
             }
             else if (value.Type() != null && option.Parameters[parameter].Type == null && value.Type().Constant() == TypeSettable.Constant)
             {
                 string msg = string.Format($"The type '{value.Type().Name}' cannot be used here.");
-                optionDiagnostics[option].Add(new Diagnostic(msg, ParameterErrors[parameter], Diagnostic.Error));
+                optionDiagnostics[option].Add(new Diagnostic(msg, errorRange, Diagnostic.Error));
             }
         }
     
@@ -456,13 +471,15 @@ namespace Deltin.Deltinteger.Parse
         public IExpression Value { get; }
         public DocRange FullRange { get; }
         public DocRange NameRange { get; }
+        public DocRange ExpressionRange { get; }
 
-        public PickyParameter(string name, IExpression value, DocRange fullRange, DocRange nameRange)
+        public PickyParameter(string name, IExpression value, DocRange fullRange, DocRange nameRange, DocRange expressionRange)
         {
             Name = name;
             Value = value;
             FullRange = fullRange;
             NameRange = nameRange;
+            ExpressionRange = expressionRange;
         }
     }
 

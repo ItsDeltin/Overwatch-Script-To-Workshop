@@ -105,7 +105,7 @@ namespace Deltin.Deltinteger.Parse
                     }
                     else continue;
 
-                    script.AddCompletionRange(new CompletionRange(treeScope, range, true));
+                    script.AddCompletionRange(new CompletionRange(treeScope, range, CompletionRangeKind.ClearRest));
                 }
             }
         }

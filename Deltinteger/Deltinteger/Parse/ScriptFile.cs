@@ -85,19 +85,19 @@ namespace Deltin.Deltinteger.Parse
         private Scope Scope { get; }
         private CompletionItem[] CompletionItems { get; }
         public DocRange Range { get; }
-        public bool Priority { get; }
+        public CompletionRangeKind Kind { get; }
 
-        public CompletionRange(Scope scope, DocRange range, bool priority = false)
+        public CompletionRange(Scope scope, DocRange range, CompletionRangeKind kind)
         {
             Scope = scope ?? throw new ArgumentNullException(nameof(scope));
-            Priority = priority;
+            Kind = kind;
             Range = range;
         }
 
-        public CompletionRange(CompletionItem[] completionItems, DocRange range, bool priority = false)
+        public CompletionRange(CompletionItem[] completionItems, DocRange range, CompletionRangeKind kind)
         {
             CompletionItems = completionItems ?? throw new ArgumentNullException(nameof(completionItems));
-            Priority = priority;
+            Kind = kind;
             Range = range;
         }
 
@@ -107,6 +107,14 @@ namespace Deltin.Deltinteger.Parse
 
         }
     }
+
+    public enum CompletionRangeKind
+    {
+        Additive,
+        Catch,
+        ClearRest
+    }
+
     public class HoverRange
     {
         public DocRange Range { get; }

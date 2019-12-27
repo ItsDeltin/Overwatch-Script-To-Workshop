@@ -20,7 +20,7 @@ namespace Deltin.Deltinteger.Parse
             }
 
             if (blockContext.BLOCK_START() != null && blockContext.BLOCK_END() != null)
-                script.AddCompletionRange(new CompletionRange(blockScope, DocRange.GetRange(blockContext.BLOCK_START(), blockContext.BLOCK_END())));
+                script.AddCompletionRange(new CompletionRange(blockScope, DocRange.GetRange(blockContext.BLOCK_START(), blockContext.BLOCK_END()), CompletionRangeKind.Catch));
         }
 
         public void Translate(ActionSet actionSet)
