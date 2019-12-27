@@ -136,6 +136,14 @@ namespace Deltin.Deltinteger.Parse
                 }
             }
 
+            // Get the enums
+            foreach (ScriptFile script in ScriptFiles)
+            foreach (var enumContext in script.Context.enum_define())
+            {
+                var newEnum = new DefinedEnum(script, this, enumContext);
+                types.Add(newEnum); 
+            }
+
             // Get the types
             foreach (ScriptFile script in ScriptFiles)
             foreach (var typeContext in script.Context.type_define())
@@ -340,28 +348,31 @@ namespace Deltin.Deltinteger.Parse
         public static IExpression GetVariable(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.VariableContext variableContext, bool selfContained)
         {
             string variableName = variableContext.PART().GetText();
+            DocRange variableRange = DocRange.GetRange(variableContext.PART());
 
             var type = translateInfo.GetCodeType(variableName, null, null);
             if (type != null)
             {
                 if (selfContained)
-                    script.Diagnostics.Error("Types can't be used as expressions.", DocRange.GetRange(variableContext.PART()));
+                    script.Diagnostics.Error("Types can't be used as expressions.", variableRange);
                 
                 if (variableContext.array() != null)
                     script.Diagnostics.Error("Indexers cannot be used with types.", DocRange.GetRange(variableContext.array()));
 
+                type.Call(script, variableRange);
                 return type;
             }
 
-            IScopeable element = scope.GetVariable(variableName, script.Diagnostics, DocRange.GetRange(variableContext.PART()));
+            IScopeable element = scope.GetVariable(variableName, script.Diagnostics, variableRange);
             if (element == null)
                 return null;
+            
+            if (element is ICallable)
+                ((ICallable)element).Call(script, variableRange);
 
             if (element is Var)
             {
                 Var var = (Var)element;
-                var.Call(script, DocRange.GetRange(variableContext.PART()));
-
                 IExpression[] index;
                 if (variableContext.array() == null) index = new IExpression[0];
                 else
@@ -374,6 +385,7 @@ namespace Deltin.Deltinteger.Parse
                 return new CallVariableAction(var, index);
             }
             else if (element is ScopedEnumMember) return (ScopedEnumMember)element;
+            else if (element is DefinedEnumMember) return (DefinedEnumMember)element;
             else throw new NotImplementedException();
         }
     

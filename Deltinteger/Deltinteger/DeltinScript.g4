@@ -112,7 +112,7 @@ ruleset :
 	reserved_global?
 	reserved_player?
 	(import_file | import_object)*
-	((define STATEMENT_END) | ow_rule | define_method | define_macro | type_define)*
+	((define STATEMENT_END) | ow_rule | define_method | define_macro | type_define | enum_define)*
 	EOF;
 
 // Classes/structs
@@ -121,6 +121,9 @@ type_define : (STRUCT | CLASS) name=PART
 	BLOCK_START
 	((define STATEMENT_END) | constructor | define_method | define_macro)*
 	BLOCK_END ;
+
+enum_define : ENUM name=PART BLOCK_START (firstMember=PART enum_element*)? BLOCK_END ;
+enum_element : COMMA PART ;
 
 accessor : PRIVATE | PUBLIC;
 
@@ -201,6 +204,7 @@ AS        : 'as'        ;
 DELETE    : 'delete'    ;
 MACRO     : 'macro'     ;
 DISABLED  : 'disabled'  ;
+ENUM      : 'enum'      ;
 
 EQUALS          : '='  ;
 EQUALS_POW      : '^=' ;
