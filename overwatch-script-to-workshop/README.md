@@ -1,17 +1,18 @@
-# overwatch-script-to-workshop
+# Overwatch Script To Workshop vscode
 
 ## Features
+Syntax highlighting and language server for [Overwatch Script To Workshop](https://github.com/ItsDeltin/Overwatch-Script-To-Workshop).
 
-Syntax highlighting and language server for OSTW.
+## Getting Started
+Download the [latest OSTW release](https://github.com/ItsDeltin/Overwatch-Script-To-Workshop/releases). Set the `ostw.deltintegerPath` to the `deltinteger` executable.
 
 ## Extension Settings
-* `ostw.port1`
-* `ostw.port2`
+* `ostw.outputLanguage`: The output language of the workshop code.
 
-Set these to mirror the ports the language server uses. Is 3000 and 3001 by default.
+* `ostw.deltintegerPath`: The path to [Deltinteger.exe](https://github.com/ItsDeltin/Overwatch-Script-To-Workshop/releases).
+
 
 ## Release Notes
-
 
 ### 1.0.0
 
