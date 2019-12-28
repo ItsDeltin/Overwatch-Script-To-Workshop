@@ -6,14 +6,12 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { workspace, ExtensionContext, OutputChannel, window } from 'vscode';
-import { LanguageClient, LanguageClientOptions, ServerOptions, ExecutableOptions, Executable, TransportKind } from 'vscode-languageclient';
-import request from 'request';
+import { LanguageClient, LanguageClientOptions, ServerOptions, ExecutableOptions, Executable, TransportKind, InitializationFailedHandler, ErrorHandler } from 'vscode-languageclient';
 
 let client: LanguageClient;
-
 let workshopOut: OutputChannel;
-
-const config = workspace.getConfiguration("ostw", null);
+let config = workspace.getConfiguration("ostw", null);
+let isServerRunning = false;
 
 export function activate(context: ExtensionContext) {
 
@@ -25,19 +23,43 @@ export function activate(context: ExtensionContext) {
 	workspace.onDidChangeConfiguration((e: vscode.ConfigurationChangeEvent) => {
 		if (e.affectsConfiguration("ostw.deltintegerPath"))
 		{
-			// This block should run when the `ostw.deltintegerPath` setting is changed.
-			// TODO: Start the language server using the new filepath. Also stop the language server if it is already started.
+			config = workspace.getConfiguration("ostw", null);
+
+			client.outputChannel.hide();
+			client.outputChannel.dispose();
+			lastWorkshopOutput = "";
+			if (isServerRunning) {
+				client.stop();
+				isServerRunning = false;
+			}
+			startLanguageServer();
 		}
 	});
+	startLanguageServer();
+}
 
+function startLanguageServer()
+{
 	// Gets the path to the server executable.
 	const serverModule = <string>config.get('deltintegerPath');
+	var serverPath: path.ParsedPath = path.parse(serverModule);
+
+	if (serverPath.name.toLowerCase() != "deltinteger")
+	{
+		workshopOut.clear();
+		workshopOut.appendLine("The ostw.deltintegerPath does not resolve to deltinteger.exe.");
+		return;
+	}
 
 	// It was me, stdio!
 	const options: ExecutableOptions = { stdio: "pipe", detached: false };
 	const serverOptions: ServerOptions = {
 		run:   { command: serverModule, args: ['--langserver']           , options: options },
 		debug: { command: serverModule, args: ['--langserver', '--debug'], options: options }
+	};
+
+	let initFail: InitializationFailedHandler = function(error: any): boolean {
+		return true;
 	};
 
 	// Options to control the language client
@@ -48,7 +70,8 @@ export function activate(context: ExtensionContext) {
 			// Notify the server about file changes to '.clientrc files contained in the workspace
 			// fileEvents: workspace.createFileSystemWatcher('**/.clientrc')
 			configurationSection: 'ostw'
-		}
+		},
+		initializationFailedHandler: initFail
 	};
 
 	// Create the language client and start the client.
@@ -60,9 +83,9 @@ export function activate(context: ExtensionContext) {
 	);
 
 	// Start the client. This will also launch the server
-	client.start();
-
 	client.onReady().then(() => {
+		isServerRunning = true;
+
 		// When the client is ready, setup the workshopCode notification.
 		client.onNotification("workshopCode", (code: string)=> {
 			if (code != lastWorkshopOutput)
@@ -74,7 +97,12 @@ export function activate(context: ExtensionContext) {
 				lastWorkshopOutput = code;
 			}
 		});
+	}).catch((reason) => {
+		workshopOut.clear();
+		workshopOut.appendLine(reason);
 	});
+
+	client.start();
 }
 
 export function deactivate(): Thenable<void> | undefined {
@@ -85,179 +113,7 @@ export function deactivate(): Thenable<void> | undefined {
 }
 
 var lastWorkshopOutput : string = null;
-/*
-var failSent : boolean;
-function ping()
-{
-	request('http://localhost:' + config.get('port1') + '/ping', function(error, res, body) {
-		if (!error && res.statusCode == 200 && body == 'OK') {
-			if (failSent)
-			{
-				window.showInformationMessage('Connected to the OSTW language server on port ' + config.get('port1') + '.');
-				failSent = false;
-			}
-		}
-		else if (!failSent) {
-			window.showWarningMessage('Failed to connect to the OSTW language server on port ' + config.get('port1') + '.');
-			failSent = true;
-		}
-	});
-
-	if (window.activeTextEditor != null)
-	{
-		let file = window.activeTextEditor.document.fileName;
-		getCode(file, (code) => updateCode(file, code));
-	}
-	setTimeout(ping, 1000);
-}
-*/
-
-function updateCode(file: string, code: string)
-{
-	if (lastWorkshopOutput != code && code != "")
-	{
-		// Clear the output
-		workshopOut.clear();
-		// Append the compiled result.
-		workshopOut.appendLine(code);
-		lastWorkshopOutput = code;
-	}
-
-	for (var i = 0; i < panels.length; i++)
-		if (panels[i].fullPath == file)
-			panels[i].setCode(code);
-}
-
-function getCode(uri:string, callback)
-{
-	request.post({url:'http://localhost:' + config.port1 + '/code', body: JSON.stringify({uri: uri})}, function (error, res, body) {
-		if (!error) callback(body);
-		res.end();
-	});
-}
 
 function addCommands(context: ExtensionContext)
 {
-	context.subscriptions.push(
-		vscode.commands.registerCommand('ostw.webviewOutput', webviewOutput, this)
-	);
 }
-
-function webviewOutput()
-{
-	if (vscode.window.activeTextEditor == null)
-		return;
-
-	let fullPath = vscode.window.activeTextEditor.document.fileName;
-
-	for (var i = 0; i < panels.length; i++)
-		if (panels[i].fullPath == fullPath)
-		{
-			panels[i].panel.reveal();
-			return;
-		}
-
-	let panel: OutputPanel = new OutputPanel(fullPath);
-	panel.panel.reveal();
-	panels.push(panel);
-}
-
-class OutputPanel
-{
-	panel: vscode.WebviewPanel;
-	fileName: string;
-	fullPath: string;
-	lastWorkshopOutput : string = null;
-
-	constructor(fullPath: string)
-	{
-		this.fullPath = fullPath;
-		this.fileName = path.basename(fullPath);
-
-		this.panel = window.createWebviewPanel(
-			'ostw',
-			this.fileName + ' Workshop Output',
-			vscode.ViewColumn.Active,
-			{
-				enableScripts: true,
-				retainContextWhenHidden: true
-			}
-		);
-
-		this.panel.onDidDispose(() => this.dispose());
-
-		getCode(fullPath, (code) => this.setCode(code));
-	}
-
-	setCode(code: string)
-	{
-		if (this.lastWorkshopOutput != code)
-		{
-			this.panel.webview.html = this.getContent(code);
-			this.lastWorkshopOutput = code;
-		}
-	}
-
-	getContent(code: string)
-	{
-		if (code == null) code = lastWorkshopOutput;
-
-		return `<!DOCTYPE html>
-<html lang="en">
-<head>
-	<meta charset="UTF-8">
-	<title>OSTW Output</title>
-	<style>
-		pre{
-			counter-reset: line;
-		}
-		code{
-			counter-increment: line;
-			color: var(--vscode-editor-foreground);
-		}
-		code:before{
-			content: counter(line);
-			-webkit-user-select: none;
-
-			display: inline-block;
-			text-align: right;
-			width: 25px;
-			margin-right: 15px;
-			font-family: Consolas;
-			color: var(--vscode-editorLineNumber-foreground);
-			font-size: 14px;
-		}
-		button {
-			color: var(--vscode-button-foreground);
-			background-color: var(--vscode-button-background);
-			border: none;
-			padding: 5px 25px 5px 25px;
-			font-family: sans-serif;
-		}
-		button:hover {
-			background-color: var(--vscode-button-hoverBackground);
-		}
-	</style>
-</head>
-<body>
-	${this.formatCode(code)}
-</body>
-</html>`;
-	}
-
-	formatCode(code: string) {
-		var final: string = '<pre id="workshop-code">';
-		var lines: string[] = code.split('\n');
-		for (var i = 0; i < lines.length; i++)
-			final += '<code>' + lines[i] + '</code>';
-		final += '</pre>';
-		return final;
-	}
-
-	dispose()
-	{
-		var index = panels.indexOf(this);
-		panels.splice(index, 1);
-	}
-}
-var panels : OutputPanel[] = [];
