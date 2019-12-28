@@ -43,12 +43,12 @@ namespace Deltin.Deltinteger
                 Log.LogLevel = LogLevel.Quiet;
                 DeltintegerLanguageServer.Run();
             }
-            // else if (args.Contains("-generatealphabet"))
-            // {
-            //     Console.Write("Output folder: ");
-            //     string folder = Console.ReadLine();
-            //     Deltin.Deltinteger.Models.Letter.Generate(folder);
-            // }
+            else if (args.Contains("--generatealphabet"))
+            {
+                Console.Write("Output folder: ");
+                string folder = Console.ReadLine();
+                Deltin.Deltinteger.Models.Letter.Generate(folder);
+            }
             else if (args.Contains("--editor"))
             {
                 string pathfindEditorScript = Extras.CombinePathWithDotNotation(null, "!PathfindEditor.del");
@@ -116,10 +116,10 @@ namespace Deltin.Deltinteger
 
             Diagnostics diagnostics = new Diagnostics();
             ScriptFile root = new ScriptFile(diagnostics, new Uri(parseFile), text);
-            // TODO: Replace null with a filegetter.
-            DeltinScript deltinScript = new DeltinScript(null, diagnostics, root);
+            DeltinScript deltinScript = new DeltinScript(new FileGetter(null), diagnostics, root);
             diagnostics.PrintDiagnostics(Log);
-            Finished();
+            if (deltinScript.WorkshopCode != null)
+                WorkshopCodeResult(deltinScript.WorkshopCode);
         }
 
         public static void WorkshopCodeResult(string code)
