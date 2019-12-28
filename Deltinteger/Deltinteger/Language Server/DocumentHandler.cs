@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Diagnostics;
 using Deltin.Deltinteger.Parse;
 using OmniSharp.Extensions.LanguageServer.Protocol;
 using OmniSharp.Extensions.LanguageServer.Protocol.Server;
@@ -147,24 +148,54 @@ namespace Deltin.Deltinteger.LanguageServer
         void Parse(Uri uri) => Parse(TextDocumentFromUri(uri));
         void Parse(TextDocumentItem document)
         {
-            try
+            lock (_parseLock)
             {
-                Diagnostics diagnostics = new Diagnostics();
-                ScriptFile root = new ScriptFile(diagnostics, document.Uri, document.Text);
-                DeltinScript deltinScript = new DeltinScript(_languageServer.FileGetter, diagnostics, root);
-                _languageServer.LastParse = deltinScript;
-
-                var publishDiagnostics = diagnostics.GetDiagnostics();
-                foreach (var publish in publishDiagnostics)
-                    _languageServer.Server.Document.PublishDiagnostics(publish);
-                
-                if (deltinScript.WorkshopCode != null)
-                    _languageServer.Server.SendNotification(DeltintegerLanguageServer.SendWorkshopCode, deltinScript.WorkshopCode);
+                _typeWait.Restart();
+                _parseItem = document;
+                if (!_updateTaskIsRunning) Task.Run(Update);
             }
-            catch (Exception ex)
+        }
+
+        private const int TimeToUpdate = 250;
+        private TextDocumentItem _parseItem;
+        private Stopwatch _typeWait = new Stopwatch();
+        private object _parseLock = new object();
+        private bool _updateTaskIsRunning = false;
+
+        void Update()
+        {
+            lock (_parseLock) _updateTaskIsRunning = true;
+
+            SpinWait.SpinUntil(() => {
+                lock (_parseLock) return _typeWait.ElapsedMilliseconds >= TimeToUpdate;
+            });
+
+            lock (_parseLock)
             {
-                Serilog.Log.Error(ex, "An exception was thrown while parsing.");
-                _languageServer.Server.SendNotification(DeltintegerLanguageServer.SendWorkshopCode, "An exception was thrown while parsing.\r\n" + ex.ToString());
+                try
+                {
+                    Diagnostics diagnostics = new Diagnostics();
+                    ScriptFile root = new ScriptFile(diagnostics, _parseItem.Uri, _parseItem.Text);
+                    DeltinScript deltinScript = new DeltinScript(_languageServer.FileGetter, diagnostics, root);
+                    _languageServer.LastParse = deltinScript;
+
+                    var publishDiagnostics = diagnostics.GetDiagnostics();
+                    foreach (var publish in publishDiagnostics)
+                        _languageServer.Server.Document.PublishDiagnostics(publish);
+                    
+                    if (deltinScript.WorkshopCode != null)
+                        _languageServer.Server.SendNotification(DeltintegerLanguageServer.SendWorkshopCode, deltinScript.WorkshopCode);
+                }
+                catch (Exception ex)
+                {
+                    Serilog.Log.Error(ex, "An exception was thrown while parsing.");
+                    _languageServer.Server.SendNotification(DeltintegerLanguageServer.SendWorkshopCode, "An exception was thrown while parsing.\r\n" + ex.ToString());
+                }
+                finally
+                {
+                    _updateTaskIsRunning = false;
+                    _typeWait.Stop();
+                }
             }
         }
     }
