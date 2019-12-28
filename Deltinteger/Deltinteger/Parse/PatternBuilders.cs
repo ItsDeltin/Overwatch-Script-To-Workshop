@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Deltin.Deltinteger.Elements;
 
 namespace Deltin.Deltinteger.Parse
@@ -43,11 +44,17 @@ namespace Deltin.Deltinteger.Parse
         private SkipEndMarker LoopStart { get; set; }
         private SkipStartMarker LoopSkipStart { get; set; }
         public IWorkshopTree Condition { get; protected set; }
+        private Func<IWorkshopTree> GetCondition { get; }
 
         public WhileBuilder(ActionSet actionSet, IWorkshopTree condition)
         {
             ActionSet = actionSet;
             Condition = condition;
+        }
+        public WhileBuilder(ActionSet actionSet, Func<IWorkshopTree> getCondition)
+        {
+            ActionSet = actionSet;
+            GetCondition = getCondition;
         }
         protected WhileBuilder(ActionSet actionSet)
         {
@@ -62,6 +69,9 @@ namespace Deltin.Deltinteger.Parse
 
             LoopStart = new SkipEndMarker();
             ActionSet.AddAction(LoopStart);
+
+            if (GetCondition != null)
+                Condition = GetCondition();
 
             LoopSkipStart = new SkipStartMarker(ActionSet, Condition);
             ActionSet.AddAction(LoopSkipStart);

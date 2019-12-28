@@ -23,7 +23,7 @@ namespace Deltin.Deltinteger.Parse
 
         public void Translate(ActionSet actionSet)
         {
-            WhileBuilder whileBuilder = new WhileBuilder(actionSet, Condition.Parse(actionSet));
+            WhileBuilder whileBuilder = new WhileBuilder(actionSet, () => { return Condition.Parse(actionSet); });
             whileBuilder.Setup();
             Block.Translate(actionSet);
             whileBuilder.Finish();

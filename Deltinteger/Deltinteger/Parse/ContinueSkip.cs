@@ -59,6 +59,11 @@ namespace Deltin.Deltinteger.Parse
             SetSkipCount(actionSet, GetSkipCount(endMarker));
         }
 
+        public void SetSkipCount(ActionSet actionSet, int skipCount)
+        {
+            SetSkipCount(actionSet, new V_Number(skipCount));
+        }
+
         public void ResetSkipCount(ActionSet actionSet)
         {
             SetSkipCount(actionSet, 0);
@@ -68,6 +73,12 @@ namespace Deltin.Deltinteger.Parse
         {
             CheckSetup();
             return Skipper.GetSkipCount(endMarker);
+        }
+
+        public int GetSkipCount(ActionSet actionSet)
+        {
+            CheckSetup();
+            return actionSet.ActionList.Count - 5;
         }
 
         private void CheckSetup()
