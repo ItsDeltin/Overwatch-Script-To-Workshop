@@ -13,7 +13,7 @@
     "activationEvents": [
         "onLanguage:ostw"
     ],
-    "main": "./client/out/extensions.js",
+    "main": "./dist/extension",
     "contributes": {
         "languages": [
             {
@@ -89,20 +89,28 @@
         ]
     },
     "scripts": {
-        "vscode:prepublish": "cd client && npm run update-vscode && cd .. && npm run compile",
+        "vscode:prepublish": "npm run compile && webpack --mode production",
         "compile": "tsc -b",
         "watch": "tsc -b -w",
-        "postinstall": "cd client && npm install && cd ..",
-        "test": "sh ./scripts/e2e.sh"
+        "postinstall": "npm install",
+        "test": "sh ./scripts/e2e.sh",
+        "webpack": "webpack --mode development",
+        "webpack-dev": "webpack --mode development --watch",
+        "test-compile": "tsc -p ./"
     },
     "devDependencies": {
         "@types/mocha": "^5.2.0",
         "@types/node": "^8.10.52",
+        "ts-loader": "^6.2.1",
         "tslint": "^5.19.0",
-        "typescript": "^3.5.3"
+        "typescript": "^3.5.3",
+        "webpack": "^4.41.5",
+        "webpack-cli": "^3.3.10",
+        "vscode": "^1.1.36"
     },
     "dependencies": {
         "async": "^3.1.0",
-        "request": "^2.88.0"
+        "request": "^2.88.0",
+        "vscode-languageclient": "^5.2.1"
     }
 }
