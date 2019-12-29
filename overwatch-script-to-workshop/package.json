@@ -90,7 +90,7 @@
     },
     "scripts": {
         "vscode:prepublish": "npm run compile && webpack --mode production",
-        "compile": "tsc -b",
+        "compile": "tsc -b && webpack --mode development",
         "watch": "tsc -b -w",
         "postinstall": "npm install",
         "test": "sh ./scripts/e2e.sh",
