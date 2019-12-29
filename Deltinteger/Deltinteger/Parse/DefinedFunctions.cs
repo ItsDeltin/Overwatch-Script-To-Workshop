@@ -10,7 +10,7 @@ using StringOrMarkupContent = OmniSharp.Extensions.LanguageServer.Protocol.Model
 
 namespace Deltin.Deltinteger.Parse
 {
-    public abstract class DefinedFunction : IMethod, ICallable
+    public abstract class DefinedFunction : IMethod, ICallable, IApplyBlock
     {
         public string Name { get; }
         public CodeType ReturnType { get; protected set; }
@@ -401,7 +401,7 @@ namespace Deltin.Deltinteger.Parse
         private DeltinScriptParser.ExprContext ExpressionToParse { get; }
 
         public DefinedMacro(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.Define_macroContext context)
-            : base(script, translateInfo, scope, context.name.Text, new Location(script.Uri, DocRange.GetRange(context)))
+            : base(script, translateInfo, scope, context.name.Text, new LanguageServer.Location(script.Uri, DocRange.GetRange(context)))
         {
             AccessLevel = context.accessor().GetAccessLevel();
             SetupParameters(script, context.setParameters());
@@ -416,9 +416,9 @@ namespace Deltin.Deltinteger.Parse
 
         override public void SetupBlock()
         {
+            if (ExpressionToParse == null) return;
             Expression = DeltinScript.GetExpression(script, translateInfo, methodScope, ExpressionToParse);
-            if (Expression != null)
-                ReturnType = Expression.Type();
+            ReturnType = Expression?.Type();
         }
 
         override public IWorkshopTree Parse(ActionSet actionSet, IWorkshopTree[] parameterValues, object[] additionalParameterData)
@@ -454,6 +454,64 @@ namespace Deltin.Deltinteger.Parse
             ReturnHandler = returnHandler;
             ContinueSkipArray = continueSkipArray;
             MethodStart = methodStart;
+        }
+    }
+
+    public class MacroVar : IScopeable, IExpression, ICallable, IApplyBlock
+    {
+        public string Name { get; }
+        public AccessLevel AccessLevel { get; }
+        public LanguageServer.Location DefinedAt { get; }
+        public bool WholeContext => true;
+
+        public IExpression Expression { get; private set; }
+        public CodeType ReturnType { get; private set; }
+
+        private DeltinScriptParser.ExprContext ExpressionToParse { get; }
+        private Scope scope { get; }
+        private ScriptFile script { get; }
+        private DeltinScript translateInfo { get; }
+
+        public MacroVar(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.Define_macroContext macroContext)
+        {
+            Name = macroContext.name.Text;
+            AccessLevel = macroContext.accessor()?.GetAccessLevel() ?? AccessLevel.Private;
+            DefinedAt = new Location(script.Uri, DocRange.GetRange(macroContext));
+
+            ExpressionToParse = macroContext.expr();
+            if (ExpressionToParse == null)
+                script.Diagnostics.Error("Expected expression.", DocRange.GetRange(macroContext.TERNARY_ELSE()));
+
+            this.scope = scope;
+            this.script = script;
+            this.translateInfo = translateInfo;
+        }
+
+        public void SetupBlock()
+        {
+            if (ExpressionToParse == null) return;
+            Expression = DeltinScript.GetExpression(script, translateInfo, scope, ExpressionToParse);
+            ReturnType = Expression?.Type();
+        }
+
+        public IWorkshopTree Parse(ActionSet actionSet, bool asElement = true) => Expression.Parse(actionSet);
+
+        public Scope ReturningScope() => ReturnType?.GetObjectScope();
+
+        public CodeType Type() => ReturnType;
+
+        public void Call(ScriptFile script, DocRange callRange)
+        {
+            script.AddDefinitionLink(callRange, DefinedAt);
+            translateInfo.AddSymbolLink(this, new Location(script.Uri, callRange));
+        }
+
+        public CompletionItem GetCompletion()
+        {
+            return new CompletionItem() {
+                Label = Name,
+                Kind = CompletionItemKind.Property
+            };
         }
     }
 }

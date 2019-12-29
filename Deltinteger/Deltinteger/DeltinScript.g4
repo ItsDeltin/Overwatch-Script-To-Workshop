@@ -86,9 +86,9 @@ foreach : FOREACH number? LEFT_PAREN (code_type | DEFINE) name=PART IN expr? RIG
 
 while   : WHILE LEFT_PAREN expr RIGHT_PAREN block             ;
 
-if      : IF LEFT_PAREN expr? RIGHT_PAREN block else_if* else? ;
-else_if : ELSE IF LEFT_PAREN expr? RIGHT_PAREN block           ;
-else    : ELSE block                                          ;
+if      : IF LEFT_PAREN expr? RIGHT_PAREN block? else_if* else? ;
+else_if : ELSE IF LEFT_PAREN expr? RIGHT_PAREN block?           ;
+else    : ELSE block?                                           ;
 
 return  : RETURN expr? STATEMENT_END                          ;
 delete  : DELETE LEFT_PAREN expr RIGHT_PAREN                  ;
@@ -106,7 +106,7 @@ define_method : DOCUMENTATION* accessor? RECURSIVE? (METHOD | code_type) name=PA
 	block
 	;
 
-define_macro  : DOCUMENTATION* accessor? MACRO name=PART LEFT_PAREN setParameters RIGHT_PAREN TERNARY_ELSE expr? STATEMENT_END ;
+define_macro  : DOCUMENTATION* accessor? MACRO name=PART (LEFT_PAREN setParameters RIGHT_PAREN)? TERNARY_ELSE expr? STATEMENT_END ;
 
 ruleset :
 	reserved_global?

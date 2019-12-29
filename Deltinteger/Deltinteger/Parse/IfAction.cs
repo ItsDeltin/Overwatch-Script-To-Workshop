@@ -22,7 +22,10 @@ namespace Deltin.Deltinteger.Parse
             
             var paths = new List<PathInfo>();
 
-            Block = new BlockAction(script, translateInfo, scope, ifContext.block());
+            if (ifContext.block() == null)
+                script.Diagnostics.Error("Expected block.", DocRange.GetRange(ifContext.IF()));
+            else
+                Block = new BlockAction(script, translateInfo, scope, ifContext.block());
             paths.Add(new PathInfo(Block, DocRange.GetRange(ifContext.IF()), false));
 
             if (ifContext.else_if() != null)
@@ -39,7 +42,10 @@ namespace Deltin.Deltinteger.Parse
             // If there is an else statement, get the else block.
             if (ifContext.@else() != null)
             {
-                ElseBlock = new BlockAction(script, translateInfo, scope, ifContext.@else().block());
+                if (ifContext.block() == null)
+                    script.Diagnostics.Error("Expected block.", DocRange.GetRange(ifContext.@else().block()));
+                else
+                    ElseBlock = new BlockAction(script, translateInfo, scope, ifContext.@else().block());
                 // Add the else path info.
                 paths.Add(new PathInfo(ElseBlock, DocRange.GetRange(ifContext.@else().ELSE()), true));
             }
@@ -111,7 +117,10 @@ namespace Deltin.Deltinteger.Parse
             else
                 Expression = DeltinScript.GetExpression(script, translateInfo, scope, elseIfContext.expr());
             
-            Block = new BlockAction(script, translateInfo, scope, elseIfContext.block());
+            if (elseIfContext.block() == null)
+                script.Diagnostics.Error("Expected block.", DocRange.GetRange(elseIfContext.ELSE(), elseIfContext.IF()));
+            else
+                Block = new BlockAction(script, translateInfo, scope, elseIfContext.block());
         }
     }
 }

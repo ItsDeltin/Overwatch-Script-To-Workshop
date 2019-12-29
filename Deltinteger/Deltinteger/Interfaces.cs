@@ -54,4 +54,9 @@ namespace Deltin.Deltinteger
     {
         IWorkshopTree GetVariable(Element eventPlayer = null);
     }
+
+    public interface IApplyBlock
+    {
+        void SetupBlock();
+    }
 }

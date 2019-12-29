@@ -214,7 +214,7 @@ namespace Deltin.Deltinteger.Parse
         private List<Var> objectVariables { get; } = new List<Var>();
         private DeltinScript translateInfo { get; }
 
-        public DefinedType(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.Type_defineContext typeContext, List<DefinedFunction> applyMethods) : base(typeContext.name.Text)
+        public DefinedType(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.Type_defineContext typeContext, List<IApplyBlock> applyMethods) : base(typeContext.name.Text)
         {
             if (translateInfo.IsCodeType(Name))
                 script.Diagnostics.Error($"A type with the name '{Name}' already exists.", DocRange.GetRange(typeContext.name));
@@ -249,16 +249,13 @@ namespace Deltin.Deltinteger.Parse
             // Todo: Static methods/macros.
             foreach (var definedMethod in typeContext.define_method())
             {
-                //UseScope(false).AddMethod(new DefinedMethod(script, translateInfo, UseScope(false), definedMethod), script.Diagnostics, DocRange.GetRange(definedMethod.name));
                 var newMethod = new DefinedMethod(script, translateInfo, UseScope(false), definedMethod);
                 applyMethods.Add(newMethod);
             }
 
-            foreach (var definedMacro in typeContext.define_macro())
+            foreach (var macroContext in typeContext.define_macro())
             {
-                var newMacro = new DefinedMacro(script, translateInfo, UseScope(false), definedMacro);
-                UseScope(false).AddMethod(newMacro, script.Diagnostics, DocRange.GetRange(definedMacro.name));
-                applyMethods.Add(newMacro);
+                DeltinScript.GetMacro(script, translateInfo, UseScope(false), macroContext, applyMethods);
             }
 
             // Get the constructors.

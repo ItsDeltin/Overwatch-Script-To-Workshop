@@ -119,7 +119,7 @@ namespace Deltin.Deltinteger.Parse
 
         void Translate()
         {
-            List<DefinedFunction> applyMethods = new List<DefinedFunction>();
+            List<IApplyBlock> applyMethods = new List<IApplyBlock>();
 
             // Get the reserved variables and IDs
             foreach (ScriptFile script in ScriptFiles)
@@ -167,9 +167,7 @@ namespace Deltin.Deltinteger.Parse
                 // Get the macros.
                 foreach (var macroContext in script.Context.define_macro())
                 {
-                    var newMacro = new DefinedMacro(script, this, RulesetScope, macroContext);
-                    RulesetScope.AddMethod(newMacro, script.Diagnostics, DocRange.GetRange(macroContext.name));
-                    applyMethods.Add(newMacro);
+                    GetMacro(script, this, RulesetScope, macroContext, applyMethods);
                 }
             }
 
@@ -386,9 +384,26 @@ namespace Deltin.Deltinteger.Parse
             }
             else if (element is ScopedEnumMember) return (ScopedEnumMember)element;
             else if (element is DefinedEnumMember) return (DefinedEnumMember)element;
+            else if (element is MacroVar) return (MacroVar)element;
             else throw new NotImplementedException();
         }
     
+        public static void GetMacro(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.Define_macroContext macroContext, List<IApplyBlock> applyMethods)
+        {
+            if (macroContext.LEFT_PAREN() != null || macroContext.RIGHT_PAREN() != null)
+            {
+                var newMacro = new DefinedMacro(script, translateInfo, scope, macroContext);
+                scope.AddMethod(newMacro, script.Diagnostics, DocRange.GetRange(macroContext.name));
+                applyMethods.Add(newMacro);
+            }
+            else
+            {
+                var newMacro = new MacroVar(script, translateInfo, scope, macroContext);
+                scope.AddVariable(newMacro, script.Diagnostics, DocRange.GetRange(macroContext.name));
+                applyMethods.Add(newMacro);
+            }
+        }
+
         private ClassData _classData = null;
         public ClassData SetupClasses()
         {

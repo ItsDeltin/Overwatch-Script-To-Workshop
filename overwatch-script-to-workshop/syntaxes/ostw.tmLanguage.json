@@ -15,12 +15,14 @@
 				{"include": "#rule_option"},
 				{"include": "#block"},
 				{"include": "#new"},
+				{"include": "#keywords_control"},
 				{"include": "#define_type"},
 				{"include": "#define_macro"},
+				{"include": "#define_macro_var"},
 				{"include": "#define_method"},
 				{"include": "#define_variable"},
 				{"include": "#expressions"},
-				{"include": "#keywords"}
+				{"include": "#keywords_other"}
 			]
 		},
 		"rule": {
@@ -83,6 +85,14 @@
 			},
 			"patterns": [{"include": "#parameter"}]
 		},
+		"define_macro_var": {
+			"match": "((public|private|static)\\s+)*(macro)\\s+([_[:alnum:]]+)",
+			"captures": {
+				"0": {"name":"variable.other"},
+				"2": {"name":"keyword.other"},
+				"3": {"name":"keyword.other"}
+			}
+		},
 		"parameter": {
 			"match": "((define)|([_[:alnum:]]+)(\\s*\\[\\s*\\])*)\\s+([_[:alnum:]]+)",
 			"captures": {
@@ -105,7 +115,9 @@
 			"patterns": [
 				{"include": "#comments"},
 				{"include": "#if"},
+				{"include": "#keywords_control"},
 				{"include": "#define_macro"},
+				{"include": "#define_macro_var"},
 				{"include": "#define_method"},
 				{"include": "#methods"},
 				{"include": "#define_variable"},
