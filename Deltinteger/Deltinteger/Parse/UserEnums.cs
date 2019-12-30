@@ -14,15 +14,15 @@ namespace Deltin.Deltinteger.Parse
         private Scope Scope { get; }
         private DeltinScript _translateInfo { get; }
 
-        public DefinedEnum(ScriptFile script, DeltinScript translateInfo, DeltinScriptParser.Enum_defineContext enumContext) : base(enumContext.name.Text)
+        public DefinedEnum(ParseInfo parseInfo, DeltinScriptParser.Enum_defineContext enumContext) : base(enumContext.name.Text)
         {
-            if (translateInfo.IsCodeType(Name))
-                script.Diagnostics.Error($"A type with the name '{Name}' already exists.", DocRange.GetRange(enumContext.name));
+            if (parseInfo.TranslateInfo.IsCodeType(Name))
+                parseInfo.Script.Diagnostics.Error($"A type with the name '{Name}' already exists.", DocRange.GetRange(enumContext.name));
             
-            _translateInfo = translateInfo;
+            _translateInfo = parseInfo.TranslateInfo;
             
-            DefinedAt = new LanguageServer.Location(script.Uri, DocRange.GetRange(enumContext.name));
-            translateInfo.AddSymbolLink(this, DefinedAt);
+            DefinedAt = new LanguageServer.Location(parseInfo.Script.Uri, DocRange.GetRange(enumContext.name));
+            _translateInfo.AddSymbolLink(this, DefinedAt);
 
             Scope = new Scope("enum " + Name);
 
@@ -30,13 +30,13 @@ namespace Deltin.Deltinteger.Parse
             List<DefinedEnumMember> members = new List<DefinedEnumMember>();
             if (enumContext.firstMember != null)
             {
-                members.Add(new DefinedEnumMember(translateInfo, this, enumContext.firstMember.Text, 0, new Location(script.Uri, DocRange.GetRange(enumContext.firstMember))));
+                members.Add(new DefinedEnumMember(_translateInfo, this, enumContext.firstMember.Text, 0, new Location(parseInfo.Script.Uri, DocRange.GetRange(enumContext.firstMember))));
 
                 if (enumContext.enum_element() != null)
                     for (int i = 0; i < enumContext.enum_element().Length; i++)
                         members.Add(
                             new DefinedEnumMember(
-                                translateInfo, this, enumContext.enum_element(i).PART().GetText(), i + 1, new Location(script.Uri, DocRange.GetRange(enumContext.enum_element(i).PART()))
+                                _translateInfo, this, enumContext.enum_element(i).PART().GetText(), i + 1, new Location(parseInfo.Script.Uri, DocRange.GetRange(enumContext.enum_element(i).PART()))
                             )
                         );
             }

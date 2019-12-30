@@ -13,19 +13,21 @@ namespace Deltin.Deltinteger.Parse
         private Constructor Constructor { get; }
         private IExpression[] ConstructorValues { get; }
 
-        public CreateObjectAction(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.Create_objectContext context)
+        public CreateObjectAction(ParseInfo parseInfo, Scope scope, DeltinScriptParser.Create_objectContext context)
         {
             // Get the type. Syntax error if there is no type name.
             if (context.type == null)
-                script.Diagnostics.Error("Expected a type name.", DocRange.GetRange(context.NEW()));
+                parseInfo.Script.Diagnostics.Error("Expected a type name.", DocRange.GetRange(context.NEW()));
             else
-                CreatingObjectOf = translateInfo.GetCodeType(context.type.Text, script.Diagnostics, DocRange.GetRange(context.type));
+                CreatingObjectOf = parseInfo.TranslateInfo.GetCodeType(context.type.Text, parseInfo.Script.Diagnostics, DocRange.GetRange(context.type));
             
             if (CreatingObjectOf != null)
             {
+                DocRange nameRange = DocRange.GetRange(context.type);
+
                 // Get the constructor to use.
                 OverloadChooser = new OverloadChooser(
-                    CreatingObjectOf.Constructors, script, translateInfo, scope, DocRange.GetRange(context.type), DocRange.GetRange(context), new OverloadError("type " + CreatingObjectOf.Name)
+                    CreatingObjectOf.Constructors, parseInfo, scope, nameRange, DocRange.GetRange(context), new OverloadError("type " + CreatingObjectOf.Name)
                 );
 
                 if (context.call_parameters() != null)
@@ -38,8 +40,8 @@ namespace Deltin.Deltinteger.Parse
 
                 if (Constructor != null)
                 {
-                    Constructor.Call(script, DocRange.GetRange(context.type));
-                    script.AddHover(DocRange.GetRange(context), Constructor.GetLabel(true));
+                    Constructor.Call(parseInfo.Script, DocRange.GetRange(context.type));
+                    parseInfo.Script.AddHover(DocRange.GetRange(context), Constructor.GetLabel(true));
                 }
             }
         }

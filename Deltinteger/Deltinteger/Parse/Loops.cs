@@ -10,14 +10,14 @@ namespace Deltin.Deltinteger.Parse
         private BlockAction Block { get; }
         private PathInfo Path { get; }
 
-        public WhileAction(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.WhileContext whileContext)
+        public WhileAction(ParseInfo parseInfo, Scope scope, DeltinScriptParser.WhileContext whileContext)
         {
             if (whileContext.expr() == null)
-                script.Diagnostics.Error("Expected expression.", DocRange.GetRange(whileContext.LEFT_PAREN()));
+                parseInfo.Script.Diagnostics.Error("Expected expression.", DocRange.GetRange(whileContext.LEFT_PAREN()));
             else
-                Condition = DeltinScript.GetExpression(script, translateInfo, scope, whileContext.expr());
+                Condition = DeltinScript.GetExpression(parseInfo, scope, whileContext.expr());
             
-            Block = new BlockAction(script, translateInfo, scope, whileContext.block());
+            Block = new BlockAction(parseInfo, scope, whileContext.block());
             Path = new PathInfo(Block, DocRange.GetRange(whileContext.WHILE()), false);
         }
 
@@ -45,33 +45,33 @@ namespace Deltin.Deltinteger.Parse
         private BlockAction Block { get; }
         private PathInfo Path { get; }
 
-        public ForAction(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.ForContext forContext)
+        public ForAction(ParseInfo parseInfo, Scope scope, DeltinScriptParser.ForContext forContext)
         {
             Scope varScope = scope.Child();
 
             if (forContext.define() != null)
             {
-                DefinedVariable = Var.CreateVarFromContext(VariableDefineType.Scoped, script, translateInfo, forContext.define());
+                DefinedVariable = Var.CreateVarFromContext(VariableDefineType.Scoped, parseInfo, forContext.define());
                 DefinedVariable.Finalize(varScope);
             }
             else if (forContext.initialVarset != null)
-                InitialVarSet = new SetVariableAction(script, translateInfo, varScope, forContext.initialVarset);
+                InitialVarSet = new SetVariableAction(parseInfo, varScope, forContext.initialVarset);
 
             if (forContext.expr() != null)
-                Condition = DeltinScript.GetExpression(script, translateInfo, varScope, forContext.expr());
+                Condition = DeltinScript.GetExpression(parseInfo, varScope, forContext.expr());
             
             if (forContext.endingVarset != null)
-                SetVariableAction = new SetVariableAction(script, translateInfo, varScope, forContext.endingVarset);
+                SetVariableAction = new SetVariableAction(parseInfo, varScope, forContext.endingVarset);
 
             // Get the block.
             if (forContext.block() != null)
             {
-                Block = new BlockAction(script, translateInfo, varScope, forContext.block());
+                Block = new BlockAction(parseInfo, varScope, forContext.block());
                 // Get the path info.
                 Path = new PathInfo(Block, DocRange.GetRange(forContext.FOR()), false);
             }
             else
-                script.Diagnostics.Error("Expected a block.", DocRange.GetRange(forContext.RIGHT_PAREN()));
+                parseInfo.Script.Diagnostics.Error("Expected a block.", DocRange.GetRange(forContext.RIGHT_PAREN()));
             }
 
         public void Translate(ActionSet actionSet)
@@ -114,30 +114,30 @@ namespace Deltin.Deltinteger.Parse
         private BlockAction Block { get; }
         private PathInfo Path { get; }
 
-        public ForeachAction(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.ForeachContext foreachContext)
+        public ForeachAction(ParseInfo parseInfo, Scope scope, DeltinScriptParser.ForeachContext foreachContext)
         {
             Scope varScope = scope.Child();
 
-            ForeachVar = new Var(foreachContext.name.Text, new Location(script.Uri, DocRange.GetRange(foreachContext.name)), script, translateInfo);
+            ForeachVar = new Var(foreachContext.name.Text, new Location(parseInfo.Script.Uri, DocRange.GetRange(foreachContext.name)), parseInfo);
             ForeachVar.VariableType = VariableType.ElementReference;
-            ForeachVar.CodeType = CodeType.GetCodeTypeFromContext(translateInfo, script, foreachContext.code_type());
+            ForeachVar.CodeType = CodeType.GetCodeTypeFromContext(parseInfo, foreachContext.code_type());
             ForeachVar.Finalize(varScope);
 
             // Get the array that will be iterated on. Syntax error if it is missing.
             if (foreachContext.expr() != null)
-                Array = DeltinScript.GetExpression(script, translateInfo, scope, foreachContext.expr());
+                Array = DeltinScript.GetExpression(parseInfo, scope, foreachContext.expr());
             else
-                script.Diagnostics.Error("Expected expression.", DocRange.GetRange(foreachContext.IN()));
+                parseInfo.Script.Diagnostics.Error("Expected expression.", DocRange.GetRange(foreachContext.IN()));
 
             // Get the foreach block. Syntax error if it is missing.
             if (foreachContext.block() != null)
             {
-                Block = new BlockAction(script, translateInfo, varScope, foreachContext.block());
+                Block = new BlockAction(parseInfo, varScope, foreachContext.block());
                 // Get the path info.
                 Path = new PathInfo(Block, DocRange.GetRange(foreachContext.FOREACH()), false);
             }
             else
-                script.Diagnostics.Error("Expected block.", DocRange.GetRange(foreachContext.RIGHT_PAREN()));
+                parseInfo.Script.Diagnostics.Error("Expected block.", DocRange.GetRange(foreachContext.RIGHT_PAREN()));
         }
 
         public void Translate(ActionSet actionSet)

@@ -24,17 +24,17 @@ namespace Deltin.Deltinteger.Parse
 
         private ITerminalNode _trailingSeperator = null;
 
-        public ExpressionTree(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.E_expr_treeContext exprContext, bool usedAsValue)
+        public ExpressionTree(ParseInfo parseInfo, Scope scope, DeltinScriptParser.E_expr_treeContext exprContext, bool usedAsValue)
         {
-            ExprContextTree = Flatten(script, exprContext);
+            ExprContextTree = Flatten(parseInfo.Script, exprContext);
 
             Tree = new IExpression[ExprContextTree.Length];
-            IExpression current = ExprContextTree[0].Parse(script, translateInfo, scope, scope, true);
+            IExpression current = ExprContextTree[0].Parse(parseInfo, scope, scope, true);
             Tree[0] = current;
             if (current != null)
                 for (int i = 1; i < ExprContextTree.Length; i++)
                 {
-                    current = ExprContextTree[i].Parse(script, translateInfo, current.ReturningScope() ?? new Scope(), scope, i < ExprContextTree.Length - 1 || usedAsValue);
+                    current = ExprContextTree[i].Parse(parseInfo, current.ReturningScope() ?? new Scope(), scope, i < ExprContextTree.Length - 1 || usedAsValue);
 
                     Tree[i] = current;
 
@@ -50,7 +50,7 @@ namespace Deltin.Deltinteger.Parse
                 Result = Tree[Tree.Length - 1];
             
             // Get the completion items for each expression in the path.
-            GetCompletion(script);
+            GetCompletion(parseInfo.Script);
         }
 
         private TreeContextPart[] Flatten(ScriptFile script, DeltinScriptParser.E_expr_treeContext exprContext)
@@ -161,10 +161,14 @@ namespace Deltin.Deltinteger.Parse
                     // If this is the last node in the tree, set the resulting variable.
                     if (isLast) resultingVariable = reference;
                 }
-                else if (Tree[i] is CodeType == false)
+                else
                 {
-                    current = Tree[i].Parse(actionSet.New(currentAssigner).New(currentObject), asElement);
-                    resultIndex = new Element[0];
+                    var newCurrent = Tree[i].Parse(actionSet.New(currentAssigner).New(currentObject), asElement);
+                    if (newCurrent != null)
+                    {
+                        current = newCurrent;
+                        resultIndex = new Element[0];
+                    }
                 }
                 
                 if (Tree[i].Type() == null)
@@ -222,14 +226,14 @@ namespace Deltin.Deltinteger.Parse
                 CompletionRange = Range;
             }
 
-            public IExpression Parse(ScriptFile script, DeltinScript translateInfo, Scope scope, Scope getter, bool usedAsValue)
+            public IExpression Parse(ParseInfo parseInfo, Scope scope, Scope getter, bool usedAsValue)
             {
                 if (variable != null)
-                    return DeltinScript.GetVariable(script, translateInfo, scope, variable, false);
+                    return DeltinScript.GetVariable(parseInfo, scope, variable, false);
                 if (method != null)
-                    return new CallMethodAction(script, translateInfo, scope, method, usedAsValue, getter);
+                    return new CallMethodAction(parseInfo, scope, method, usedAsValue, getter);
                 if (expression != null)
-                    return DeltinScript.GetExpression(script, translateInfo, scope, expression, false, usedAsValue, getter);
+                    return DeltinScript.GetExpression(parseInfo, scope, expression, false, usedAsValue, getter);
                 
                 throw new Exception();
             }
@@ -308,16 +312,16 @@ namespace Deltin.Deltinteger.Parse
         private DocRange expressionRange { get; }
         private DocRange indexRange { get; }
 
-        public ValueInArrayAction(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.E_array_indexContext exprContext)
+        public ValueInArrayAction(ParseInfo parseInfo, Scope scope, DeltinScriptParser.E_array_indexContext exprContext)
         {
-            Expression = DeltinScript.GetExpression(script, translateInfo, scope, exprContext.array);
+            Expression = DeltinScript.GetExpression(parseInfo, scope, exprContext.array);
             expressionRange = DocRange.GetRange(exprContext.array);
 
             if (exprContext.index == null)
-                script.Diagnostics.Error("Expected an expression.", DocRange.GetRange(exprContext.INDEX_START()));
+                parseInfo.Script.Diagnostics.Error("Expected an expression.", DocRange.GetRange(exprContext.INDEX_START()));
             else
             {
-                Index = DeltinScript.GetExpression(script, translateInfo, scope, exprContext.index);
+                Index = DeltinScript.GetExpression(parseInfo, scope, exprContext.index);
                 indexRange = DocRange.GetRange(exprContext.index);
             }
         }
@@ -335,11 +339,11 @@ namespace Deltin.Deltinteger.Parse
     {
         public IExpression[] Values { get; }
 
-        public CreateArrayAction(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.CreatearrayContext createArrayContext)
+        public CreateArrayAction(ParseInfo parseInfo, Scope scope, DeltinScriptParser.CreatearrayContext createArrayContext)
         {
             Values = new IExpression[createArrayContext.expr().Length];
             for (int i = 0; i < Values.Length; i++)
-                Values[i] = DeltinScript.GetExpression(script,translateInfo, scope, createArrayContext.expr(i));
+                Values[i] = DeltinScript.GetExpression(parseInfo, scope, createArrayContext.expr(i));
         }
 
         public Scope ReturningScope() => null;
@@ -360,15 +364,15 @@ namespace Deltin.Deltinteger.Parse
         public IExpression Expression { get; }
         public CodeType ConvertingTo { get; }
 
-        public TypeConvertAction(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.TypeconvertContext typeConvert)
+        public TypeConvertAction(ParseInfo parseInfo, Scope scope, DeltinScriptParser.TypeconvertContext typeConvert)
         {
-            Expression = DeltinScript.GetExpression(script, translateInfo, scope, typeConvert.expr());
+            Expression = DeltinScript.GetExpression(parseInfo, scope, typeConvert.expr());
 
             // Get the type. Syntax error if there is none.
             if (typeConvert.PART() == null)
-                script.Diagnostics.Error("Expected type name.", DocRange.GetRange(typeConvert.LESS_THAN()));
+                parseInfo.Script.Diagnostics.Error("Expected type name.", DocRange.GetRange(typeConvert.LESS_THAN()));
             else
-                ConvertingTo = translateInfo.GetCodeType(typeConvert.PART().GetText(), script.Diagnostics, DocRange.GetRange(typeConvert.PART()));
+                ConvertingTo = parseInfo.TranslateInfo.GetCodeType(typeConvert.PART().GetText(), parseInfo.Script.Diagnostics, DocRange.GetRange(typeConvert.PART()));
         }
 
         public Scope ReturningScope() => ConvertingTo.GetObjectScope();
@@ -380,9 +384,9 @@ namespace Deltin.Deltinteger.Parse
     {
         public IExpression Expression { get; }
 
-        public NotAction(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.ExprContext exprContext)
+        public NotAction(ParseInfo parseInfo, Scope scope, DeltinScriptParser.ExprContext exprContext)
         {
-            Expression = DeltinScript.GetExpression(script, translateInfo, scope, exprContext);
+            Expression = DeltinScript.GetExpression(parseInfo, scope, exprContext);
         }
 
         public Scope ReturningScope() => null;
@@ -394,9 +398,9 @@ namespace Deltin.Deltinteger.Parse
     {
         public IExpression Expression { get; }
 
-        public InverseAction(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.ExprContext exprContext)
+        public InverseAction(ParseInfo parseInfo, Scope scope, DeltinScriptParser.ExprContext exprContext)
         {
-            Expression = DeltinScript.GetExpression(script, translateInfo, scope, exprContext);
+            Expression = DeltinScript.GetExpression(parseInfo, scope, exprContext);
         }
 
         public Scope ReturningScope() => null;
@@ -410,32 +414,32 @@ namespace Deltin.Deltinteger.Parse
         public IExpression Right { get; private set; }
         public string Operator { get; private set; }
 
-        public OperatorAction(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.E_op_1Context context)
+        public OperatorAction(ParseInfo parseInfo, Scope scope, DeltinScriptParser.E_op_1Context context)
         {
-            GetParts(script, translateInfo, scope, context.left, context.op.Text, DocRange.GetRange(context.op), context.right);
+            GetParts(parseInfo, scope, context.left, context.op.Text, DocRange.GetRange(context.op), context.right);
         }
-        public OperatorAction(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.E_op_2Context context)
+        public OperatorAction(ParseInfo parseInfo, Scope scope, DeltinScriptParser.E_op_2Context context)
         {
-            GetParts(script, translateInfo, scope, context.left, context.op.Text, DocRange.GetRange(context.op), context.right);
+            GetParts(parseInfo, scope, context.left, context.op.Text, DocRange.GetRange(context.op), context.right);
         }
-        public OperatorAction(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.E_op_boolContext context)
+        public OperatorAction(ParseInfo parseInfo, Scope scope, DeltinScriptParser.E_op_boolContext context)
         {
-            GetParts(script, translateInfo, scope, context.left, context.BOOL().GetText(), DocRange.GetRange(context.BOOL()), context.right);
+            GetParts(parseInfo, scope, context.left, context.BOOL().GetText(), DocRange.GetRange(context.BOOL()), context.right);
         }
-        public OperatorAction(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.E_op_compareContext context)
+        public OperatorAction(ParseInfo parseInfo, Scope scope, DeltinScriptParser.E_op_compareContext context)
         {
-            GetParts(script, translateInfo, scope, context.left, context.op.Text, DocRange.GetRange(context.op), context.right);
+            GetParts(parseInfo, scope, context.left, context.op.Text, DocRange.GetRange(context.op), context.right);
         }
 
-        private void GetParts(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.ExprContext left, string op, DocRange opRange, DeltinScriptParser.ExprContext right)
+        private void GetParts(ParseInfo parseInfo, Scope scope, DeltinScriptParser.ExprContext left, string op, DocRange opRange, DeltinScriptParser.ExprContext right)
         {
             // Left operator.
-            if (left == null) script.Diagnostics.Error("Missing left operator.", opRange);
-            else Left = DeltinScript.GetExpression(script, translateInfo, scope, left);
+            if (left == null) parseInfo.Script.Diagnostics.Error("Missing left operator.", opRange);
+            else Left = DeltinScript.GetExpression(parseInfo, scope, left);
 
             // Right operator.
-            if (right == null) script.Diagnostics.Error("Missing right operator.", opRange);
-            else Right = DeltinScript.GetExpression(script, translateInfo, scope, right);
+            if (right == null) parseInfo.Script.Diagnostics.Error("Missing right operator.", opRange);
+            else Right = DeltinScript.GetExpression(parseInfo, scope, right);
 
             Operator = op;
         }
@@ -473,19 +477,19 @@ namespace Deltin.Deltinteger.Parse
         public IExpression Consequent { get; }
         public IExpression Alternative { get; }
 
-        public TernaryConditionalAction(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.E_ternary_conditionalContext ternaryContext)
+        public TernaryConditionalAction(ParseInfo parseInfo, Scope scope, DeltinScriptParser.E_ternary_conditionalContext ternaryContext)
         {
-            Condition = DeltinScript.GetExpression(script, translateInfo, scope, ternaryContext.condition);
+            Condition = DeltinScript.GetExpression(parseInfo, scope, ternaryContext.condition);
 
             if (ternaryContext.consequent == null)
-                script.Diagnostics.Error("Expected expression.", DocRange.GetRange(ternaryContext.TERNARY()));
+                parseInfo.Script.Diagnostics.Error("Expected expression.", DocRange.GetRange(ternaryContext.TERNARY()));
             else
-                Consequent = DeltinScript.GetExpression(script, translateInfo, scope, ternaryContext.consequent);
+                Consequent = DeltinScript.GetExpression(parseInfo, scope, ternaryContext.consequent);
             
             if (ternaryContext.alternative == null)
-                script.Diagnostics.Error("Expected expression.", DocRange.GetRange(ternaryContext.TERNARY_ELSE()));
+                parseInfo.Script.Diagnostics.Error("Expected expression.", DocRange.GetRange(ternaryContext.TERNARY_ELSE()));
             else
-                Alternative = DeltinScript.GetExpression(script, translateInfo, scope, ternaryContext.alternative);
+                Alternative = DeltinScript.GetExpression(parseInfo, scope, ternaryContext.alternative);
         }
 
         public Scope ReturningScope() => Type()?.GetObjectScope();
@@ -496,5 +500,19 @@ namespace Deltin.Deltinteger.Parse
             return null;
         }
         public IWorkshopTree Parse(ActionSet actionSet, bool asElement = true) => Element.TernaryConditional(Condition.Parse(actionSet), Consequent.Parse(actionSet), Alternative.Parse(actionSet));
+    }
+
+    public class RootAction : IExpression
+    {
+        private DeltinScript DeltinScript { get; }
+
+        public RootAction(DeltinScript deltinScript)
+        {
+            DeltinScript = deltinScript;
+        }
+
+        public Scope ReturningScope() => DeltinScript.RulesetScope;
+        public CodeType Type() => null;
+        public IWorkshopTree Parse(ActionSet actionSet, bool asElement = true) => null;
     }
 }

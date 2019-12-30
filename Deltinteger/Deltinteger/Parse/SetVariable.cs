@@ -13,9 +13,9 @@ namespace Deltin.Deltinteger.Parse
         private string Operation { get; }
         private IExpression Value { get; }
 
-        public SetVariableAction(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.VarsetContext varsetContext)
+        public SetVariableAction(ParseInfo parseInfo, Scope scope, DeltinScriptParser.VarsetContext varsetContext)
         {
-            IExpression variableExpression = DeltinScript.GetExpression(script, translateInfo, scope, varsetContext.var);
+            IExpression variableExpression = DeltinScript.GetExpression(parseInfo, scope, varsetContext.var);
 
             DocRange notAVariableRange = null;
             DocRange variableRange = null;
@@ -43,18 +43,18 @@ namespace Deltin.Deltinteger.Parse
                 notAVariableRange = DocRange.GetRange(varsetContext.var);
 
             if (notAVariableRange != null)
-                script.Diagnostics.Error("Expected a variable.", notAVariableRange);
+                parseInfo.Script.Diagnostics.Error("Expected a variable.", notAVariableRange);
             
             if (SetVariable != null && !SetVariable.Calling.Settable())
-                script.Diagnostics.Error($"The variable '{SetVariable.Calling.Name}' cannot be set to.", variableRange);
+                parseInfo.Script.Diagnostics.Error($"The variable '{SetVariable.Calling.Name}' cannot be set to.", variableRange);
             
             if (varsetContext.statement_operation() != null)
             {
                 Operation = varsetContext.statement_operation().GetText();
                 if (varsetContext.val == null)
-                    script.Diagnostics.Error("Expected an expression.", DocRange.GetRange(varsetContext).end.ToRange());
+                    parseInfo.Script.Diagnostics.Error("Expected an expression.", DocRange.GetRange(varsetContext).end.ToRange());
                 else
-                    Value = DeltinScript.GetExpression(script, translateInfo, scope, varsetContext.val);
+                    Value = DeltinScript.GetExpression(parseInfo, scope, varsetContext.val);
             }
             else if (varsetContext.INCREMENT() != null) Operation = "++";
             else if (varsetContext.DECREMENT() != null) Operation = "--";

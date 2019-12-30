@@ -13,19 +13,19 @@ namespace Deltin.Deltinteger.Parse
         public BlockAction ElseBlock { get; }
         private PathInfo[] Paths { get; }
 
-        public IfAction(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.IfContext ifContext)
+        public IfAction(ParseInfo parseInfo, Scope scope, DeltinScriptParser.IfContext ifContext)
         {
             if (ifContext.expr() == null)
-                script.Diagnostics.Error("Expected expression.", DocRange.GetRange(ifContext.LEFT_PAREN()));
+                parseInfo.Script.Diagnostics.Error("Expected expression.", DocRange.GetRange(ifContext.LEFT_PAREN()));
             else
-                Expression = DeltinScript.GetExpression(script, translateInfo, scope, ifContext.expr());
+                Expression = DeltinScript.GetExpression(parseInfo, scope, ifContext.expr());
             
             var paths = new List<PathInfo>();
 
             if (ifContext.block() == null)
-                script.Diagnostics.Error("Expected block.", DocRange.GetRange(ifContext.IF()));
+                parseInfo.Script.Diagnostics.Error("Expected block.", DocRange.GetRange(ifContext.IF()));
             else
-                Block = new BlockAction(script, translateInfo, scope, ifContext.block());
+                Block = new BlockAction(parseInfo, scope, ifContext.block());
             paths.Add(new PathInfo(Block, DocRange.GetRange(ifContext.IF()), false));
 
             if (ifContext.else_if() != null)
@@ -33,7 +33,7 @@ namespace Deltin.Deltinteger.Parse
                 ElseIfs = new ElseIf[ifContext.else_if().Length];
                 for (int i = 0; i < ElseIfs.Length; i++)
                 {
-                    ElseIfs[i] = new ElseIf(script, translateInfo, scope, ifContext.else_if(i));
+                    ElseIfs[i] = new ElseIf(parseInfo, scope, ifContext.else_if(i));
                     paths.Add(new PathInfo(Block, DocRange.GetRange(ifContext.else_if(i).ELSE(), ifContext.else_if(i).IF()), false));
                 }
             }
@@ -43,9 +43,9 @@ namespace Deltin.Deltinteger.Parse
             if (ifContext.@else() != null)
             {
                 if (ifContext.block() == null)
-                    script.Diagnostics.Error("Expected block.", DocRange.GetRange(ifContext.@else().block()));
+                    parseInfo.Script.Diagnostics.Error("Expected block.", DocRange.GetRange(ifContext.@else().block()));
                 else
-                    ElseBlock = new BlockAction(script, translateInfo, scope, ifContext.@else().block());
+                    ElseBlock = new BlockAction(parseInfo, scope, ifContext.@else().block());
                 // Add the else path info.
                 paths.Add(new PathInfo(ElseBlock, DocRange.GetRange(ifContext.@else().ELSE()), true));
             }
@@ -110,17 +110,17 @@ namespace Deltin.Deltinteger.Parse
         public IExpression Expression { get; }
         public BlockAction Block { get; }
 
-        public ElseIf(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.Else_ifContext elseIfContext)
+        public ElseIf(ParseInfo parseInfo, Scope scope, DeltinScriptParser.Else_ifContext elseIfContext)
         {
             if (elseIfContext.expr() == null)
-                script.Diagnostics.Error("Expected expression.", DocRange.GetRange(elseIfContext.LEFT_PAREN()));
+                parseInfo.Script.Diagnostics.Error("Expected expression.", DocRange.GetRange(elseIfContext.LEFT_PAREN()));
             else
-                Expression = DeltinScript.GetExpression(script, translateInfo, scope, elseIfContext.expr());
+                Expression = DeltinScript.GetExpression(parseInfo, scope, elseIfContext.expr());
             
             if (elseIfContext.block() == null)
-                script.Diagnostics.Error("Expected block.", DocRange.GetRange(elseIfContext.ELSE(), elseIfContext.IF()));
+                parseInfo.Script.Diagnostics.Error("Expected block.", DocRange.GetRange(elseIfContext.ELSE(), elseIfContext.IF()));
             else
-                Block = new BlockAction(script, translateInfo, scope, elseIfContext.block());
+                Block = new BlockAction(parseInfo, scope, elseIfContext.block());
         }
     }
 }

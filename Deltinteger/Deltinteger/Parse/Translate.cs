@@ -21,7 +21,7 @@ namespace Deltin.Deltinteger.Parse
         public List<CodeType> definedTypes { get; } = new List<CodeType>();
         public Scope PlayerVariableScope { get; private set; } = new Scope();
         public Scope GlobalScope { get; }
-        private Scope RulesetScope { get; }
+        public Scope RulesetScope { get; }
         public VarCollection VarCollection { get; } = new VarCollection();
         private List<Var> rulesetVariables { get; } = new List<Var>();
         public VarIndexAssigner DefaultIndexAssigner { get; } = new VarIndexAssigner();
@@ -140,7 +140,7 @@ namespace Deltin.Deltinteger.Parse
             foreach (ScriptFile script in ScriptFiles)
             foreach (var enumContext in script.Context.enum_define())
             {
-                var newEnum = new DefinedEnum(script, this, enumContext);
+                var newEnum = new DefinedEnum(new ParseInfo(script, this), enumContext);
                 types.Add(newEnum); 
             }
 
@@ -148,7 +148,7 @@ namespace Deltin.Deltinteger.Parse
             foreach (ScriptFile script in ScriptFiles)
             foreach (var typeContext in script.Context.type_define())
             {
-                var newType = new DefinedType(script, this, GlobalScope, typeContext, applyMethods);
+                var newType = new DefinedType(new ParseInfo(script, this), GlobalScope, typeContext, applyMethods);
                 types.Add(newType);
                 definedTypes.Add(newType);
             }
@@ -159,7 +159,7 @@ namespace Deltin.Deltinteger.Parse
                 // Get the methods.
                 foreach (var methodContext in script.Context.define_method())
                 {
-                    var newMethod = new DefinedMethod(script, this, RulesetScope, methodContext);
+                    var newMethod = new DefinedMethod(new ParseInfo(script, this), RulesetScope, methodContext);
                     applyMethods.Add(newMethod);
                     //RulesetScope.AddMethod(newMethod, script.Diagnostics, DocRange.GetRange(methodContext.name));
                 }
@@ -167,7 +167,7 @@ namespace Deltin.Deltinteger.Parse
                 // Get the macros.
                 foreach (var macroContext in script.Context.define_macro())
                 {
-                    GetMacro(script, this, RulesetScope, macroContext, applyMethods);
+                    GetMacro(new ParseInfo(script, this), RulesetScope, macroContext, applyMethods);
                 }
             }
 
@@ -175,7 +175,7 @@ namespace Deltin.Deltinteger.Parse
             foreach (ScriptFile script in ScriptFiles)
             foreach (var varContext in script.Context.define())
             {
-                var newVar = Var.CreateVarFromContext(VariableDefineType.RuleLevel, script, this, varContext);
+                var newVar = Var.CreateVarFromContext(VariableDefineType.RuleLevel, new ParseInfo(script, this), varContext);
                 newVar.Finalize(RulesetScope);
                 rulesetVariables.Add(newVar);
                 // Add the variable to the player variables scope if it is a player variable.
@@ -189,7 +189,7 @@ namespace Deltin.Deltinteger.Parse
             // Get the rules
             foreach (ScriptFile script in ScriptFiles)
             foreach (var ruleContext in script.Context.ow_rule())
-                rules.Add(new RuleAction(script, this, RulesetScope, ruleContext));
+                rules.Add(new RuleAction(new ParseInfo(script, this), RulesetScope, ruleContext));
         }
 
         public string WorkshopCode { get; private set; }
@@ -280,93 +280,94 @@ namespace Deltin.Deltinteger.Parse
             return isGlobal ? InitialGlobal : InitialPlayer;
         }
 
-        public static IStatement GetStatement(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.StatementContext statementContext)
+        public static IStatement GetStatement(ParseInfo parseInfo, Scope scope, DeltinScriptParser.StatementContext statementContext)
         {
             switch (statementContext)
             {
                 case DeltinScriptParser.S_defineContext define    : {
-                    var newVar = Var.CreateVarFromContext(VariableDefineType.Scoped, script, translateInfo, define.define());
+                    var newVar = Var.CreateVarFromContext(VariableDefineType.Scoped, parseInfo, define.define());
                     newVar.Finalize(scope);
                     return new DefineAction(newVar);
                 }
-                case DeltinScriptParser.S_methodContext method    : return new CallMethodAction(script, translateInfo, scope, method.method(), false, scope);
-                case DeltinScriptParser.S_varsetContext varset    : return new SetVariableAction(script, translateInfo, scope, varset.varset());
+                case DeltinScriptParser.S_methodContext method    : return new CallMethodAction(parseInfo, scope, method.method(), false, scope);
+                case DeltinScriptParser.S_varsetContext varset    : return new SetVariableAction(parseInfo, scope, varset.varset());
                 case DeltinScriptParser.S_exprContext s_expr      : {
 
-                    var expr = GetExpression(script, translateInfo, scope, s_expr.expr(), true, false);
+                    var expr = GetExpression(parseInfo, scope, s_expr.expr(), true, false);
                     if (expr is ExpressionTree == false || ((ExpressionTree)expr)?.Result is IStatement == false)
                     {
                         if (expr != null)
-                            script.Diagnostics.Error("Expressions can't be used as statements.", DocRange.GetRange(statementContext));
+                            parseInfo.Script.Diagnostics.Error("Expressions can't be used as statements.", DocRange.GetRange(statementContext));
                         return null;
                     }
                     else return (ExpressionTree)expr;
                 }
-                case DeltinScriptParser.S_ifContext s_if          : return new IfAction(script, translateInfo, scope, s_if.@if());
-                case DeltinScriptParser.S_whileContext s_while    : return new WhileAction(script, translateInfo, scope, s_while.@while());
-                case DeltinScriptParser.S_forContext s_for        : return new ForAction(script, translateInfo, scope, s_for.@for());
-                case DeltinScriptParser.S_foreachContext s_foreach: return new ForeachAction(script, translateInfo, scope, s_foreach.@foreach());
-                case DeltinScriptParser.S_returnContext s_return  : return new ReturnAction(script, translateInfo, scope, s_return.@return());
-                case DeltinScriptParser.S_deleteContext s_delete  : return new DeleteAction(script, translateInfo, scope, s_delete.delete());
+                case DeltinScriptParser.S_ifContext s_if          : return new IfAction(parseInfo, scope, s_if.@if());
+                case DeltinScriptParser.S_whileContext s_while    : return new WhileAction(parseInfo, scope, s_while.@while());
+                case DeltinScriptParser.S_forContext s_for        : return new ForAction(parseInfo, scope, s_for.@for());
+                case DeltinScriptParser.S_foreachContext s_foreach: return new ForeachAction(parseInfo, scope, s_foreach.@foreach());
+                case DeltinScriptParser.S_returnContext s_return  : return new ReturnAction(parseInfo, scope, s_return.@return());
+                case DeltinScriptParser.S_deleteContext s_delete  : return new DeleteAction(parseInfo, scope, s_delete.delete());
                 default: return null;
             }
         }
 
-        public static IExpression GetExpression(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.ExprContext exprContext, bool selfContained = true, bool usedAsValue = true, Scope getter = null)
+        public static IExpression GetExpression(ParseInfo parseInfo, Scope scope, DeltinScriptParser.ExprContext exprContext, bool selfContained = true, bool usedAsValue = true, Scope getter = null)
         {
             if (getter == null) getter = scope;
 
             switch (exprContext)
             {
-                case DeltinScriptParser.E_numberContext number: return new NumberAction(script, number.number());
-                case DeltinScriptParser.E_trueContext @true: return new BoolAction(script, true);
-                case DeltinScriptParser.E_falseContext @false: return new BoolAction(script, false);
+                case DeltinScriptParser.E_numberContext number: return new NumberAction(parseInfo.Script, number.number());
+                case DeltinScriptParser.E_trueContext @true: return new BoolAction(parseInfo.Script, true);
+                case DeltinScriptParser.E_falseContext @false: return new BoolAction(parseInfo.Script, false);
                 case DeltinScriptParser.E_nullContext @null: return new NullAction();
-                case DeltinScriptParser.E_stringContext @string: return new StringAction(script, @string.@string());
-                case DeltinScriptParser.E_formatted_stringContext formattedString: return new StringAction(script, translateInfo, scope, formattedString.formatted_string());
-                case DeltinScriptParser.E_variableContext variable: return GetVariable(script, translateInfo, scope, variable.variable(), selfContained);
-                case DeltinScriptParser.E_methodContext method: return new CallMethodAction(script, translateInfo, scope, method.method(), usedAsValue, getter);
-                case DeltinScriptParser.E_new_objectContext newObject: return new CreateObjectAction(script, translateInfo, scope, newObject.create_object());
-                case DeltinScriptParser.E_expr_treeContext exprTree: return new ExpressionTree(script, translateInfo, scope, exprTree, usedAsValue);
-                case DeltinScriptParser.E_array_indexContext arrayIndex: return new ValueInArrayAction(script, translateInfo, scope, arrayIndex);
-                case DeltinScriptParser.E_create_arrayContext createArray: return new CreateArrayAction(script, translateInfo, scope, createArray.createarray());
-                case DeltinScriptParser.E_expr_groupContext group: return GetExpression(script, translateInfo, scope, group.exprgroup().expr());
-                case DeltinScriptParser.E_type_convertContext typeConvert: return new TypeConvertAction(script, translateInfo, scope, typeConvert.typeconvert());
-                case DeltinScriptParser.E_notContext not: return new NotAction(script, translateInfo, scope, not.expr());
-                case DeltinScriptParser.E_inverseContext inverse: return new InverseAction(script, translateInfo, scope, inverse.expr());
-                case DeltinScriptParser.E_op_1Context             op1: return new OperatorAction(script, translateInfo, scope, op1);
-                case DeltinScriptParser.E_op_2Context             op2: return new OperatorAction(script, translateInfo, scope, op2);
-                case DeltinScriptParser.E_op_boolContext       opBool: return new OperatorAction(script, translateInfo, scope, opBool);
-                case DeltinScriptParser.E_op_compareContext opCompare: return new OperatorAction(script, translateInfo, scope, opCompare);
-                case DeltinScriptParser.E_ternary_conditionalContext ternary: return new TernaryConditionalAction(script, translateInfo, scope, ternary);
+                case DeltinScriptParser.E_stringContext @string: return new StringAction(parseInfo.Script, @string.@string());
+                case DeltinScriptParser.E_formatted_stringContext formattedString: return new StringAction(parseInfo, scope, formattedString.formatted_string());
+                case DeltinScriptParser.E_variableContext variable: return GetVariable(parseInfo, scope, variable.variable(), selfContained);
+                case DeltinScriptParser.E_methodContext method: return new CallMethodAction(parseInfo, scope, method.method(), usedAsValue, getter);
+                case DeltinScriptParser.E_new_objectContext newObject: return new CreateObjectAction(parseInfo, scope, newObject.create_object());
+                case DeltinScriptParser.E_expr_treeContext exprTree: return new ExpressionTree(parseInfo, scope, exprTree, usedAsValue);
+                case DeltinScriptParser.E_array_indexContext arrayIndex: return new ValueInArrayAction(parseInfo, scope, arrayIndex);
+                case DeltinScriptParser.E_create_arrayContext createArray: return new CreateArrayAction(parseInfo, scope, createArray.createarray());
+                case DeltinScriptParser.E_expr_groupContext group: return GetExpression(parseInfo, scope, group.exprgroup().expr());
+                case DeltinScriptParser.E_type_convertContext typeConvert: return new TypeConvertAction(parseInfo, scope, typeConvert.typeconvert());
+                case DeltinScriptParser.E_notContext not: return new NotAction(parseInfo, scope, not.expr());
+                case DeltinScriptParser.E_inverseContext inverse: return new InverseAction(parseInfo, scope, inverse.expr());
+                case DeltinScriptParser.E_op_1Context             op1: return new OperatorAction(parseInfo, scope, op1);
+                case DeltinScriptParser.E_op_2Context             op2: return new OperatorAction(parseInfo, scope, op2);
+                case DeltinScriptParser.E_op_boolContext       opBool: return new OperatorAction(parseInfo, scope, opBool);
+                case DeltinScriptParser.E_op_compareContext opCompare: return new OperatorAction(parseInfo, scope, opCompare);
+                case DeltinScriptParser.E_ternary_conditionalContext ternary: return new TernaryConditionalAction(parseInfo, scope, ternary);
+                case DeltinScriptParser.E_rootContext root: return new RootAction(parseInfo.TranslateInfo);
                 default: throw new Exception($"Could not determine the expression type '{exprContext.GetType().Name}'.");
             }
         }
 
-        public static IExpression GetVariable(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.VariableContext variableContext, bool selfContained)
+        public static IExpression GetVariable(ParseInfo parseInfo, Scope scope, DeltinScriptParser.VariableContext variableContext, bool selfContained)
         {
             string variableName = variableContext.PART().GetText();
             DocRange variableRange = DocRange.GetRange(variableContext.PART());
 
-            var type = translateInfo.GetCodeType(variableName, null, null);
+            var type = parseInfo.TranslateInfo.GetCodeType(variableName, null, null);
             if (type != null)
             {
                 if (selfContained)
-                    script.Diagnostics.Error("Types can't be used as expressions.", variableRange);
+                    parseInfo.Script.Diagnostics.Error("Types can't be used as expressions.", variableRange);
                 
                 if (variableContext.array() != null)
-                    script.Diagnostics.Error("Indexers cannot be used with types.", DocRange.GetRange(variableContext.array()));
+                    parseInfo.Script.Diagnostics.Error("Indexers cannot be used with types.", DocRange.GetRange(variableContext.array()));
 
-                type.Call(script, variableRange);
+                type.Call(parseInfo.Script, variableRange);
                 return type;
             }
 
-            IScopeable element = scope.GetVariable(variableName, script.Diagnostics, variableRange);
+            IScopeable element = scope.GetVariable(variableName, parseInfo.Script.Diagnostics, variableRange);
             if (element == null)
                 return null;
             
             if (element is ICallable)
-                ((ICallable)element).Call(script, variableRange);
+                ((ICallable)element).Call(parseInfo.Script, variableRange);
 
             if (element is Var)
             {
@@ -377,7 +378,7 @@ namespace Deltin.Deltinteger.Parse
                 {
                     index = new IExpression[variableContext.array().expr().Length];
                     for (int i = 0; i < index.Length; i++)
-                        index[i] = GetExpression(script, translateInfo, scope, variableContext.array().expr(i));
+                        index[i] = GetExpression(parseInfo, scope, variableContext.array().expr(i));
                 }
 
                 return new CallVariableAction(var, index);
@@ -388,18 +389,18 @@ namespace Deltin.Deltinteger.Parse
             else throw new NotImplementedException();
         }
     
-        public static void GetMacro(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.Define_macroContext macroContext, List<IApplyBlock> applyMethods)
+        public static void GetMacro(ParseInfo parseInfo, Scope scope, DeltinScriptParser.Define_macroContext macroContext, List<IApplyBlock> applyMethods)
         {
             if (macroContext.LEFT_PAREN() != null || macroContext.RIGHT_PAREN() != null)
             {
-                var newMacro = new DefinedMacro(script, translateInfo, scope, macroContext);
-                scope.AddMethod(newMacro, script.Diagnostics, DocRange.GetRange(macroContext.name));
+                var newMacro = new DefinedMacro(parseInfo, scope, macroContext);
+                scope.AddMethod(newMacro, parseInfo.Script.Diagnostics, DocRange.GetRange(macroContext.name));
                 applyMethods.Add(newMacro);
             }
             else
             {
-                var newMacro = new MacroVar(script, translateInfo, scope, macroContext);
-                scope.AddVariable(newMacro, script.Diagnostics, DocRange.GetRange(macroContext.name));
+                var newMacro = new MacroVar(parseInfo, scope, macroContext);
+                scope.AddVariable(newMacro, parseInfo.Script.Diagnostics, DocRange.GetRange(macroContext.name));
                 applyMethods.Add(newMacro);
             }
         }
@@ -430,5 +431,22 @@ namespace Deltin.Deltinteger.Parse
     {
         Public,
         Private
+    }
+
+    public class ParseInfo
+    {
+        public ScriptFile Script { get; }
+        public DeltinScript TranslateInfo { get; }
+
+        public ParseInfo(ScriptFile script, DeltinScript translateInfo)
+        {
+            Script = script;
+            TranslateInfo = translateInfo;
+        }
+        private ParseInfo(ParseInfo other)
+        {
+            Script = other.Script;
+            TranslateInfo = other.TranslateInfo;
+        }
     }
 }

@@ -81,7 +81,7 @@ namespace Deltin.Deltinteger.Parse
             else return Type.Name + " " + Name;
         }
 
-        public static ParameterParseResult GetParameters(ScriptFile script, DeltinScript translateInfo, Scope methodScope, DeltinScriptParser.SetParametersContext context)
+        public static ParameterParseResult GetParameters(ParseInfo parseInfo, Scope methodScope, DeltinScriptParser.SetParametersContext context)
         {
             if (context == null) return new ParameterParseResult(new CodeParameter[0], new Var[0]);
 
@@ -89,7 +89,7 @@ namespace Deltin.Deltinteger.Parse
             var vars = new Var[parameters.Length];
             for (int i = 0; i < context.define().Length; i++)
             {
-                var newVar = Var.CreateVarFromContext(VariableDefineType.Parameter, script, translateInfo, context.define(i));
+                var newVar = Var.CreateVarFromContext(VariableDefineType.Parameter, parseInfo, context.define(i));
                 newVar.Finalize(methodScope);
                 vars[i] = newVar;
 
@@ -146,8 +146,7 @@ namespace Deltin.Deltinteger.Parse
 
     public class OverloadChooser
     {
-        private ScriptFile script { get; }
-        private DeltinScript translateInfo { get; }
+        private ParseInfo parseInfo { get; }
         private Scope scope { get; }
         private DocRange genericErrorRange { get; }
         public DocRange CallRange { get; }
@@ -167,14 +166,13 @@ namespace Deltin.Deltinteger.Parse
 
         private Dictionary<IParameterCallable, List<Diagnostic>> optionDiagnostics;
 
-        public OverloadChooser(IParameterCallable[] overloads, ScriptFile script, DeltinScript translateInfo, Scope scope, DocRange genericErrorRange, DocRange callRange, OverloadError errorMessages)
+        public OverloadChooser(IParameterCallable[] overloads, ParseInfo parseInfo, Scope scope, DocRange genericErrorRange, DocRange callRange, OverloadError errorMessages)
         {
             AllOverloads = overloads
                 .OrderBy(overload => overload.Parameters.Length)
                 .ToArray();
             CurrentOptions = AllOverloads.ToList();
-            this.script = script;
-            this.translateInfo = translateInfo;
+            this.parseInfo = parseInfo;
             this.scope = scope;
             this.genericErrorRange = genericErrorRange;
             CallRange = callRange;
@@ -192,7 +190,7 @@ namespace Deltin.Deltinteger.Parse
             var parameterRanges = new List<DocRange>();
             for (int i = 0; i < values.Length; i++)
             {
-                values[i] = DeltinScript.GetExpression(script, translateInfo, scope, context.expr(i));
+                values[i] = DeltinScript.GetExpression(parseInfo, scope, context.expr(i));
                 errorRanges[i] = DocRange.GetRange(context.expr(i));
                 parameterRanges.Add(errorRanges[i]);
             }
@@ -240,18 +238,18 @@ namespace Deltin.Deltinteger.Parse
                 // Get the expression. If it doesn't exist, add a syntax error.
                 if (context.picky_parameter(i).expr() != null)
                 {
-                    expression = DeltinScript.GetExpression(script, translateInfo, scope, context.picky_parameter(i).expr());
+                    expression = DeltinScript.GetExpression(parseInfo, scope, context.picky_parameter(i).expr());
                     expressionRange = DocRange.GetRange(context.picky_parameter(i).expr());
                 }
                 else
-                    script.Diagnostics.Error("Expected expression.", DocRange.GetRange(context.picky_parameter(i).TERNARY_ELSE()));
+                    parseInfo.Script.Diagnostics.Error("Expected expression.", DocRange.GetRange(context.picky_parameter(i).TERNARY_ELSE()));
                 
                 var nameRange = DocRange.GetRange(context.picky_parameter(i).PART());
 
                 // Syntax error if the parameter was already set.
                 if (parameters.Any(p => p != null && p.Name == name))
                 {
-                    script.Diagnostics.Error($"The parameter {name} was already set.", nameRange);
+                    parseInfo.Script.Diagnostics.Error($"The parameter {name} was already set.", nameRange);
                 }
                 else
                 {
@@ -324,7 +322,7 @@ namespace Deltin.Deltinteger.Parse
             Values = values;
 
             // Add the picky parameter completion.
-            script.AddCompletionRange(new CompletionRange(pickyParameterCompletion.Select(p => new CompletionItem() {
+            parseInfo.Script.AddCompletionRange(new CompletionRange(pickyParameterCompletion.Select(p => new CompletionItem() {
                 Label = p + ":",
                 Kind = CompletionItemKind.Field
             }).ToArray(), CallRange, CompletionRangeKind.Additive));
@@ -366,7 +364,7 @@ namespace Deltin.Deltinteger.Parse
             
             if (CurrentOptions.Count == 0)
             {
-                script.Diagnostics.Error(
+                parseInfo.Script.Diagnostics.Error(
                     string.Format(ErrorMessages.BadParameterCount, numberOfParameters),
                     genericErrorRange
                 );
@@ -404,9 +402,9 @@ namespace Deltin.Deltinteger.Parse
             if (optionWithNoErrors != null) Overload = optionWithNoErrors;
 
             // Add the diagnostics of the best option.
-            script.Diagnostics.AddDiagnostics(optionDiagnostics[Overload].ToArray());
+            parseInfo.Script.Diagnostics.AddDiagnostics(optionDiagnostics[Overload].ToArray());
 
-            script.AddOverloadData(this);
+            parseInfo.Script.AddOverloadData(this);
         }
     
         private IExpression MissingParameter(CodeParameter parameter)
@@ -414,7 +412,7 @@ namespace Deltin.Deltinteger.Parse
             if (parameter.DefaultValue != null) return parameter.DefaultValue;
 
             // Parameter is missing.
-            script.Diagnostics.Error(
+            parseInfo.Script.Diagnostics.Error(
                 string.Format(ErrorMessages.MissingParameter, parameter.Name),
                 genericErrorRange
             );
@@ -425,7 +423,7 @@ namespace Deltin.Deltinteger.Parse
         {
             AdditionalParameterData = new object[Overload.Parameters.Length];
             for (int i = 0; i < Overload.Parameters.Length; i++)
-                AdditionalParameterData[i] = Overload.Parameters[i].Validate(script, Values[i], ParameterRanges.ElementAtOrDefault(i));
+                AdditionalParameterData[i] = Overload.Parameters[i].Validate(parseInfo.Script, Values[i], ParameterRanges.ElementAtOrDefault(i));
         }
 
         public SignatureHelp GetSignatureHelp(Pos caretPos)

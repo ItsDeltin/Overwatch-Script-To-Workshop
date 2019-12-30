@@ -14,18 +14,18 @@ namespace Deltin.Deltinteger.Parse
 
         private DocRange NameRange { get; }
 
-        public CallMethodAction(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.MethodContext methodContext, bool usedAsExpression, Scope getter)
+        public CallMethodAction(ParseInfo parseInfo, Scope scope, DeltinScriptParser.MethodContext methodContext, bool usedAsExpression, Scope getter)
         {
-            this.translateInfo = translateInfo;
+            this.translateInfo = parseInfo.TranslateInfo;
             string methodName = methodContext.PART().GetText();
             NameRange = DocRange.GetRange(methodContext.PART());
 
             var options = scope.GetMethodsByName(methodName);
             if (options.Length == 0)
-                script.Diagnostics.Error($"No method by the name of '{methodName}' exists in the current context.", NameRange);
+                parseInfo.Script.Diagnostics.Error($"No method by the name of '{methodName}' exists in the current context.", NameRange);
             else
             {
-                OverloadChooser = new OverloadChooser(options, script, translateInfo, getter, NameRange, DocRange.GetRange(methodContext), new OverloadError("method '" + methodName + "'"));
+                OverloadChooser = new OverloadChooser(options, parseInfo, getter, NameRange, DocRange.GetRange(methodContext), new OverloadError("method '" + methodName + "'"));
 
                 if (methodContext.call_parameters() != null)
                     OverloadChooser.SetContext(methodContext.call_parameters());
@@ -40,12 +40,12 @@ namespace Deltin.Deltinteger.Parse
                 if (CallingMethod != null)
                 {
                     if (CallingMethod is DefinedFunction)
-                        ((DefinedFunction)CallingMethod).Call(script, NameRange);
+                        ((DefinedFunction)CallingMethod).Call(parseInfo.Script, NameRange);
                     
-                    script.AddHover(DocRange.GetRange(methodContext), CallingMethod.GetLabel(true));
+                    parseInfo.Script.AddHover(DocRange.GetRange(methodContext), CallingMethod.GetLabel(true));
                     
                     if (usedAsExpression && !CallingMethod.DoesReturnValue())
-                        script.Diagnostics.Error("The chosen overload for " + methodName + " does not return a value.", NameRange);
+                        parseInfo.Script.Diagnostics.Error("The chosen overload for " + methodName + " does not return a value.", NameRange);
                 }
             }
         }

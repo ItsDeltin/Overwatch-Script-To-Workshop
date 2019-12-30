@@ -20,34 +20,32 @@ namespace Deltin.Deltinteger.Parse
         public bool WholeContext { get; } = true;
         public StringOrMarkupContent Documentation { get; } = null;
 
-        protected ScriptFile script { get; }
-        protected DeltinScript translateInfo { get; }
+        protected ParseInfo parseInfo { get; }
         protected Scope methodScope { get; }
         protected Var[] ParameterVars { get; private set; }
-        
-        public DefinedFunction(ScriptFile script, DeltinScript translateInfo, Scope scope, string name, Location definedAt)
+
+        public DefinedFunction(ParseInfo parseInfo, Scope scope, string name, Location definedAt)
         {
             Name = name;
             DefinedAt = definedAt;
-            this.script = script;
-            this.translateInfo = translateInfo;
+            this.parseInfo = parseInfo;
             methodScope = scope.Child();
-            translateInfo.AddSymbolLink(this, definedAt);
+            parseInfo.TranslateInfo.AddSymbolLink(this, definedAt);
         }
 
         public virtual void SetupBlock() {}
 
-        protected static CodeType GetCodeType(ScriptFile script, DeltinScript translateInfo, string name, DocRange range)
+        protected static CodeType GetCodeType(ParseInfo parseInfo, string name, DocRange range)
         {
             if (name == null)
                 return null;
             else
-                return translateInfo.GetCodeType(name, script.Diagnostics, range);
+                return parseInfo.TranslateInfo.GetCodeType(name, parseInfo.Script.Diagnostics, range);
         }
 
-        protected void SetupParameters(ScriptFile script, DeltinScriptParser.SetParametersContext context)
+        protected void SetupParameters(DeltinScriptParser.SetParametersContext context)
         {
-            var parameterInfo = CodeParameter.GetParameters(script, translateInfo, methodScope, context);
+            var parameterInfo = CodeParameter.GetParameters(parseInfo, methodScope, context);
             Parameters = parameterInfo.Parameters;
             ParameterVars = parameterInfo.Variables;
         }
@@ -55,7 +53,7 @@ namespace Deltin.Deltinteger.Parse
         public void Call(ScriptFile script, DocRange callRange)
         {
             script.AddDefinitionLink(callRange, DefinedAt);
-            translateInfo.AddSymbolLink(this, new Location(script.Uri, callRange));
+            parseInfo.TranslateInfo.AddSymbolLink(this, new Location(script.Uri, callRange));
         }
 
         public virtual bool DoesReturnValue() => true;
@@ -87,8 +85,8 @@ namespace Deltin.Deltinteger.Parse
         /// <value></value>
         private bool multiplePaths { get; set; }
 
-        public DefinedMethod(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.Define_methodContext context)
-            : base(script, translateInfo, scope, context.name.Text, new Location(script.Uri, DocRange.GetRange(context.name)))
+        public DefinedMethod(ParseInfo parseInfo, Scope scope, DeltinScriptParser.Define_methodContext context)
+            : base(parseInfo, scope, context.name.Text, new Location(parseInfo.Script.Uri, DocRange.GetRange(context.name)))
         {
             this.context = context;
 
@@ -96,24 +94,24 @@ namespace Deltin.Deltinteger.Parse
             IsRecursive = context.RECURSIVE() != null;
 
             // Get the type.
-            ReturnType = CodeType.GetCodeTypeFromContext(translateInfo, script, context.code_type());
+            ReturnType = CodeType.GetCodeTypeFromContext(parseInfo, context.code_type());
 
             // Get the access level.
             AccessLevel = context.accessor().GetAccessLevel();
 
             // Setup the parameters and parse the block.
-            SetupParameters(script, context.setParameters());
+            SetupParameters(context.setParameters());
 
-            scope.AddMethod(this, script.Diagnostics, DocRange.GetRange(context.name));
+            scope.AddMethod(this, parseInfo.Script.Diagnostics, DocRange.GetRange(context.name));
 
             // Add the hover info.
-            script.AddHover(DocRange.GetRange(context.name), GetLabel(true));
+            parseInfo.Script.AddHover(DocRange.GetRange(context.name), GetLabel(true));
         }
 
         public override void SetupBlock()
         {
-            block = new BlockAction(script, translateInfo, methodScope, context.block());
-            ValidateReturns(script, context);
+            block = new BlockAction(parseInfo, methodScope, context.block());
+            ValidateReturns(parseInfo.Script, context);
         }
 
         private void ValidateReturns(ScriptFile script, DeltinScriptParser.Define_methodContext context)
@@ -400,24 +398,24 @@ namespace Deltin.Deltinteger.Parse
         public IExpression Expression { get; private set; }
         private DeltinScriptParser.ExprContext ExpressionToParse { get; }
 
-        public DefinedMacro(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.Define_macroContext context)
-            : base(script, translateInfo, scope, context.name.Text, new LanguageServer.Location(script.Uri, DocRange.GetRange(context)))
+        public DefinedMacro(ParseInfo parseInfo, Scope scope, DeltinScriptParser.Define_macroContext context)
+            : base(parseInfo, scope, context.name.Text, new LanguageServer.Location(parseInfo.Script.Uri, DocRange.GetRange(context)))
         {
             AccessLevel = context.accessor().GetAccessLevel();
-            SetupParameters(script, context.setParameters());
+            SetupParameters(context.setParameters());
 
             if (context.expr() == null)
-                script.Diagnostics.Error("Expected expression.", DocRange.GetRange(context.TERNARY_ELSE()));
+                parseInfo.Script.Diagnostics.Error("Expected expression.", DocRange.GetRange(context.TERNARY_ELSE()));
             else
                 ExpressionToParse = context.expr();
 
-            script.AddHover(DocRange.GetRange(context.name), GetLabel(true));
+            parseInfo.Script.AddHover(DocRange.GetRange(context.name), GetLabel(true));
         }
 
         override public void SetupBlock()
         {
             if (ExpressionToParse == null) return;
-            Expression = DeltinScript.GetExpression(script, translateInfo, methodScope, ExpressionToParse);
+            Expression = DeltinScript.GetExpression(parseInfo, methodScope, ExpressionToParse);
             ReturnType = Expression?.Type();
         }
 
@@ -469,28 +467,26 @@ namespace Deltin.Deltinteger.Parse
 
         private DeltinScriptParser.ExprContext ExpressionToParse { get; }
         private Scope scope { get; }
-        private ScriptFile script { get; }
-        private DeltinScript translateInfo { get; }
+        private ParseInfo parseInfo { get; }
 
-        public MacroVar(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.Define_macroContext macroContext)
+        public MacroVar(ParseInfo parseInfo, Scope scope, DeltinScriptParser.Define_macroContext macroContext)
         {
             Name = macroContext.name.Text;
             AccessLevel = macroContext.accessor()?.GetAccessLevel() ?? AccessLevel.Private;
-            DefinedAt = new Location(script.Uri, DocRange.GetRange(macroContext));
+            DefinedAt = new Location(parseInfo.Script.Uri, DocRange.GetRange(macroContext));
 
             ExpressionToParse = macroContext.expr();
             if (ExpressionToParse == null)
-                script.Diagnostics.Error("Expected expression.", DocRange.GetRange(macroContext.TERNARY_ELSE()));
+                parseInfo.Script.Diagnostics.Error("Expected expression.", DocRange.GetRange(macroContext.TERNARY_ELSE()));
 
             this.scope = scope;
-            this.script = script;
-            this.translateInfo = translateInfo;
+            this.parseInfo = parseInfo;
         }
 
         public void SetupBlock()
         {
             if (ExpressionToParse == null) return;
-            Expression = DeltinScript.GetExpression(script, translateInfo, scope, ExpressionToParse);
+            Expression = DeltinScript.GetExpression(parseInfo, scope, ExpressionToParse);
             ReturnType = Expression?.Type();
         }
 
@@ -503,7 +499,7 @@ namespace Deltin.Deltinteger.Parse
         public void Call(ScriptFile script, DocRange callRange)
         {
             script.AddDefinitionLink(callRange, DefinedAt);
-            translateInfo.AddSymbolLink(this, new Location(script.Uri, callRange));
+            parseInfo.TranslateInfo.AddSymbolLink(this, new Location(script.Uri, callRange));
         }
 
         public CompletionItem GetCompletion()

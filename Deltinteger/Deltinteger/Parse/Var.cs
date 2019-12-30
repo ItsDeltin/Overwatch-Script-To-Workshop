@@ -196,18 +196,16 @@ namespace Deltin.Deltinteger.Parse
         public bool Static { get; private set; }
 
         private DeltinScriptParser.DefineContext context;
-        private ScriptFile script;
-        private DeltinScript translateInfo;
+        private ParseInfo parseInfo { get; }
         private bool finalized;
 
         public IExpression InitialValue { get; private set; }
 
-        public Var(string name, Location definedAt, ScriptFile script, DeltinScript translateInfo)
+        public Var(string name, Location definedAt, ParseInfo parseInfo)
         {
             Name = name;
             DefinedAt = definedAt;
-            this.script = script;
-            this.translateInfo = translateInfo;
+            this.parseInfo = parseInfo;
         }
 
         public bool Settable()
@@ -219,7 +217,7 @@ namespace Deltin.Deltinteger.Parse
         public Scope ReturningScope()
         {
             ThrowIfNotFinalized();
-            if (CodeType == null) return translateInfo.PlayerVariableScope;
+            if (CodeType == null) return parseInfo.TranslateInfo.PlayerVariableScope;
             else return CodeType.GetObjectScope();
         }
         public CodeType Type()
@@ -233,19 +231,19 @@ namespace Deltin.Deltinteger.Parse
         {
             ThrowIfNotFinalized();
             script.AddDefinitionLink(callRange, DefinedAt);
-            translateInfo.AddSymbolLink(this, new Location(script.Uri, callRange));
+            parseInfo.TranslateInfo.AddSymbolLink(this, new Location(script.Uri, callRange));
         }
 
-        public static Var CreateVarFromContext(VariableDefineType defineType, ScriptFile script, DeltinScript translateInfo, DeltinScriptParser.DefineContext context)
+        public static Var CreateVarFromContext(VariableDefineType defineType, ParseInfo parseInfo, DeltinScriptParser.DefineContext context)
         {
             Var newVar;
             if (context.name != null)
             {
-                newVar = new Var(context.name.Text, new Location(script.Uri, DocRange.GetRange(context.name)), script, translateInfo);
-                translateInfo.AddSymbolLink(newVar, new Location(script.Uri, DocRange.GetRange(context.name)));
+                newVar = new Var(context.name.Text, new Location(parseInfo.Script.Uri, DocRange.GetRange(context.name)), parseInfo);
+                parseInfo.TranslateInfo.AddSymbolLink(newVar, new Location(parseInfo.Script.Uri, DocRange.GetRange(context.name)));
             }
             else
-                newVar = new Var(null, new Location(script.Uri, DocRange.GetRange(context)), script, translateInfo);
+                newVar = new Var(null, new Location(parseInfo.Script.Uri, DocRange.GetRange(context)), parseInfo);
 
             newVar.context = context;
             newVar.InExtendedCollection = context.NOT() != null;
@@ -259,25 +257,25 @@ namespace Deltin.Deltinteger.Parse
                 else if (context.PLAYER() != null)
                     newVar.VariableType = VariableType.Player;
                 else
-                    script.Diagnostics.Error("Expected the globalvar/playervar attribute.", DocRange.GetRange(context));
+                    parseInfo.Script.Diagnostics.Error("Expected the globalvar/playervar attribute.", DocRange.GetRange(context));
             }
             else
             {
                 if (context.GLOBAL() != null)
-                    script.Diagnostics.Error("The globalvar attribute is only allowed on variables defined at the rule level.", DocRange.GetRange(context.GLOBAL()));
+                    parseInfo.Script.Diagnostics.Error("The globalvar attribute is only allowed on variables defined at the rule level.", DocRange.GetRange(context.GLOBAL()));
                 if (context.PLAYER() != null)
-                    script.Diagnostics.Error("The playervar attribute is only allowed on variables defined at the rule level.", DocRange.GetRange(context.PLAYER()));
+                    parseInfo.Script.Diagnostics.Error("The playervar attribute is only allowed on variables defined at the rule level.", DocRange.GetRange(context.PLAYER()));
             }
 
             // Get the ID
             if (context.id != null)
             {
                 if (defineType != VariableDefineType.RuleLevel)
-                    script.Diagnostics.Error("Only defined variables at the rule level can be assigned an ID.", DocRange.GetRange(context.id));
+                    parseInfo.Script.Diagnostics.Error("Only defined variables at the rule level can be assigned an ID.", DocRange.GetRange(context.id));
                 else
                 {
                     newVar.ID = int.Parse(context.id.GetText());
-                    translateInfo.VarCollection.Reserve(newVar.ID, newVar.VariableType == VariableType.Global, script.Diagnostics, DocRange.GetRange(context.id));
+                    parseInfo.TranslateInfo.VarCollection.Reserve(newVar.ID, newVar.VariableType == VariableType.Global, parseInfo.Script.Diagnostics, DocRange.GetRange(context.id));
                 }
             }
 
@@ -292,15 +290,15 @@ namespace Deltin.Deltinteger.Parse
 
                 // Syntax error if the variable has '!'.
                 if (!newVar.Static && newVar.InExtendedCollection)
-                    script.Diagnostics.Error("Non-static type variables can not be placed in the extended collection.", DocRange.GetRange(context.NOT()));
+                    parseInfo.Script.Diagnostics.Error("Non-static type variables can not be placed in the extended collection.", DocRange.GetRange(context.NOT()));
             }
             else
             {
                 // Syntax error if class only attributes is used somewhere else.
                 if (context.accessor() != null)
-                    script.Diagnostics.Error("Only defined variables in classes can have an accessor.", DocRange.GetRange(context.accessor()));
+                    parseInfo.Script.Diagnostics.Error("Only defined variables in classes can have an accessor.", DocRange.GetRange(context.accessor()));
                 if (context.STATIC() != null)
-                    script.Diagnostics.Error("Only defined variables in classes can be static.", DocRange.GetRange(context.STATIC()));
+                    parseInfo.Script.Diagnostics.Error("Only defined variables in classes can be static.", DocRange.GetRange(context.STATIC()));
             }
 
             // If the type is InClass or RuleLevel, set WholeContext to true.
@@ -308,14 +306,14 @@ namespace Deltin.Deltinteger.Parse
             newVar.WholeContext = defineType == VariableDefineType.InClass || defineType == VariableDefineType.RuleLevel;
 
             // Get the type.
-            newVar.CodeType = CodeType.GetCodeTypeFromContext(translateInfo, script, context.code_type());
+            newVar.CodeType = CodeType.GetCodeTypeFromContext(parseInfo, context.code_type());
             
             if (newVar.CodeType != null && newVar.CodeType.Constant() != TypeSettable.Normal)
                 newVar.VariableType = VariableType.ElementReference;
 
             // Syntax error if there is an '=' but no expression.
             if (context.EQUALS() != null && context.expr() == null)
-                script.Diagnostics.Error("Expected expression.", DocRange.GetRange(context).end.ToRange());
+                parseInfo.Script.Diagnostics.Error("Expected expression.", DocRange.GetRange(context).end.ToRange());
             
             return newVar;
         }
@@ -325,13 +323,13 @@ namespace Deltin.Deltinteger.Parse
             // Get the initial value.
             if (context?.expr() != null)
             {
-                InitialValue = DeltinScript.GetExpression(script, translateInfo, scope, context.expr());
+                InitialValue = DeltinScript.GetExpression(parseInfo, scope, context.expr());
                 if (InitialValue?.Type() != null && InitialValue.Type().Constant() == TypeSettable.Constant && CodeType != InitialValue.Type())
-                    script.Diagnostics.Error($"The type '{InitialValue.Type().Name}' cannot be stored.", DocRange.GetRange(context.expr()));
+                    parseInfo.Script.Diagnostics.Error($"The type '{InitialValue.Type().Name}' cannot be stored.", DocRange.GetRange(context.expr()));
             }
             
             // Add the variable to the scope.
-            scope.AddVariable(this, script.Diagnostics, DefinedAt.range);
+            scope.AddVariable(this, parseInfo.Script.Diagnostics, DefinedAt.range);
             finalized = true;
         }
 

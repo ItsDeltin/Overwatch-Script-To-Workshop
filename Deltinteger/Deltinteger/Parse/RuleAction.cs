@@ -22,13 +22,13 @@ namespace Deltin.Deltinteger.Parse
 
         private DocRange _missingBlockRange;
 
-        public RuleAction(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.Ow_ruleContext ruleContext)
+        public RuleAction(ParseInfo parseInfo, Scope scope, DeltinScriptParser.Ow_ruleContext ruleContext)
         {
             Name = Extras.RemoveQuotes(ruleContext.STRINGLITERAL().GetText());
             Disabled = ruleContext.DISABLED() != null;
             _missingBlockRange = DocRange.GetRange(ruleContext.RULE_WORD());
 
-            GetRuleSettings(script, translateInfo, scope, ruleContext);
+            GetRuleSettings(parseInfo, scope, ruleContext);
 
             // Get the conditions
             if (ruleContext.rule_if() == null) Conditions = new RuleIfAction[0];
@@ -37,18 +37,18 @@ namespace Deltin.Deltinteger.Parse
                 Conditions = new RuleIfAction[ruleContext.rule_if().Length];
                 for (int i = 0; i < Conditions.Length; i++)
                 {
-                    Conditions[i] = new RuleIfAction(script, translateInfo, scope, ruleContext.rule_if(i));
+                    Conditions[i] = new RuleIfAction(parseInfo, scope, ruleContext.rule_if(i));
                     _missingBlockRange = DocRange.GetRange(ruleContext.rule_if(i));
                 }
             }
 
             if (ruleContext.block() != null)
-                Block = new BlockAction(script, translateInfo, scope, ruleContext.block());
+                Block = new BlockAction(parseInfo, scope, ruleContext.block());
             else
-                script.Diagnostics.Error("Missing block.", _missingBlockRange);
+                parseInfo.Script.Diagnostics.Error("Missing block.", _missingBlockRange);
         }
 
-        private void GetRuleSettings(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.Ow_ruleContext ruleContext)
+        private void GetRuleSettings(ParseInfo parseInfo, Scope scope, DeltinScriptParser.Ow_ruleContext ruleContext)
         {
             DeltinScriptParser.ExprContext eventContext = null;
             DeltinScriptParser.ExprContext teamContext = null;
@@ -58,11 +58,11 @@ namespace Deltin.Deltinteger.Parse
             {
                 _missingBlockRange = DocRange.GetRange(exprContext);
 
-                var enumSetting = (DeltinScript.GetExpression(script, translateInfo, scope, exprContext) as ExpressionTree)?.Result as ScopedEnumMember;
+                var enumSetting = (DeltinScript.GetExpression(parseInfo, scope, exprContext) as ExpressionTree)?.Result as ScopedEnumMember;
                 var enumData = (enumSetting?.Enum as WorkshopEnumType)?.EnumData;
 
                 if (enumData == null || !ValidRuleEnums.Contains(enumData))
-                    script.Diagnostics.Error("Expected enum of type " + string.Join(", ", ValidRuleEnums.Select(vre => vre.CodeName)) + ".", DocRange.GetRange(exprContext));
+                    parseInfo.Script.Diagnostics.Error("Expected enum of type " + string.Join(", ", ValidRuleEnums.Select(vre => vre.CodeName)) + ".", DocRange.GetRange(exprContext));
                 else
                 {
                     var alreadySet = new Diagnostic("The " + enumData.CodeName + " rule setting was already set.", DocRange.GetRange(exprContext), Diagnostic.Error);
@@ -71,7 +71,7 @@ namespace Deltin.Deltinteger.Parse
                     if (enumData == EnumData.GetEnum<RuleEvent>())
                     {
                         if (_setEventType)
-                            script.Diagnostics.AddDiagnostic(alreadySet);
+                            parseInfo.Script.Diagnostics.AddDiagnostic(alreadySet);
                         EventType = (RuleEvent)enumSetting.EnumMember.Value;
                         _setEventType = true;
                         eventContext = exprContext;
@@ -80,7 +80,7 @@ namespace Deltin.Deltinteger.Parse
                     if (enumData == EnumData.GetEnum<Team>())
                     {
                         if (_setTeam)
-                            script.Diagnostics.AddDiagnostic(alreadySet);
+                            parseInfo.Script.Diagnostics.AddDiagnostic(alreadySet);
                         Team = (Team)enumSetting.EnumMember.Value;
                         _setTeam = true;
                         teamContext = exprContext;
@@ -89,7 +89,7 @@ namespace Deltin.Deltinteger.Parse
                     if (enumData == EnumData.GetEnum<PlayerSelector>())
                     {
                         if (_setPlayer)
-                            script.Diagnostics.AddDiagnostic(alreadySet);
+                            parseInfo.Script.Diagnostics.AddDiagnostic(alreadySet);
                         Player = (PlayerSelector)enumSetting.EnumMember.Value;
                         _setPlayer = true;
                         playerContext = exprContext;
@@ -101,9 +101,9 @@ namespace Deltin.Deltinteger.Parse
             if (_setEventType && EventType == RuleEvent.OngoingGlobal)
             {
                 if (Team != Team.All)
-                    script.Diagnostics.Error("Can't change rule Team type with an event type of Ongoing Global.", DocRange.GetRange(teamContext));
+                    parseInfo.Script.Diagnostics.Error("Can't change rule Team type with an event type of Ongoing Global.", DocRange.GetRange(teamContext));
                 if (Player != PlayerSelector.All)
-                    script.Diagnostics.Error("Can't change rule Player type with an event type of Ongoing Global.", DocRange.GetRange(playerContext));
+                    parseInfo.Script.Diagnostics.Error("Can't change rule Player type with an event type of Ongoing Global.", DocRange.GetRange(playerContext));
             }
         }
 
@@ -119,15 +119,15 @@ namespace Deltin.Deltinteger.Parse
     {
         public IExpression Expression { get; }
 
-        public RuleIfAction(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.Rule_ifContext ifContext)
+        public RuleIfAction(ParseInfo parseInfo, Scope scope, DeltinScriptParser.Rule_ifContext ifContext)
         {
             // Syntax error if there is no expression.
             if (ifContext.expr() == null)
-                script.Diagnostics.Error("Expected expression.", DocRange.GetRange(ifContext.RIGHT_PAREN()));
+                parseInfo.Script.Diagnostics.Error("Expected expression.", DocRange.GetRange(ifContext.RIGHT_PAREN()));
             
             // Get the expression.
             else
-                Expression = DeltinScript.GetExpression(script, translateInfo, scope, ifContext.expr());
+                Expression = DeltinScript.GetExpression(parseInfo, scope, ifContext.expr());
         }
     }
 }

@@ -25,12 +25,12 @@ namespace Deltin.Deltinteger.Parse
             if (parse) ParseString(script);
         }
         // Formatted
-        public StringAction(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.Formatted_stringContext stringContext) : this(script, stringContext.@string(), false)
+        public StringAction(ParseInfo parseInfo, Scope scope, DeltinScriptParser.Formatted_stringContext stringContext) : this(parseInfo.Script, stringContext.@string(), false)
         {
             FormatParameters = new IExpression[stringContext.expr().Length];
             for (int i = 0; i < FormatParameters.Length; i++)
-                FormatParameters[i] = DeltinScript.GetExpression(script, translateInfo, scope, stringContext.expr(i));
-            ParseString(script);
+                FormatParameters[i] = DeltinScript.GetExpression(parseInfo, scope, stringContext.expr(i));
+            ParseString(parseInfo.Script);
         }
 
         private void ParseString(ScriptFile script)

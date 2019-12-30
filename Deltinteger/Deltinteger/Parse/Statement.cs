@@ -38,10 +38,10 @@ namespace Deltin.Deltinteger.Parse
         public IExpression ReturningValue { get; }
         public DocRange ErrorRange { get; }
 
-        public ReturnAction(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.ReturnContext returnContext)
+        public ReturnAction(ParseInfo parseInfo, Scope scope, DeltinScriptParser.ReturnContext returnContext)
         {
             ErrorRange = DocRange.GetRange(returnContext.RETURN());
-            if (returnContext.expr() != null) ReturningValue = DeltinScript.GetExpression(script, translateInfo, scope, returnContext.expr());
+            if (returnContext.expr() != null) ReturningValue = DeltinScript.GetExpression(parseInfo, scope, returnContext.expr());
         }
 
         public void Translate(ActionSet actionSet)
@@ -56,9 +56,9 @@ namespace Deltin.Deltinteger.Parse
     {
         private IExpression DeleteValue { get; }
 
-        public DeleteAction(ScriptFile script, DeltinScript translateInfo, Scope scope, DeltinScriptParser.DeleteContext deleteContext)
+        public DeleteAction(ParseInfo parseInfo, Scope scope, DeltinScriptParser.DeleteContext deleteContext)
         {
-            DeleteValue = DeltinScript.GetExpression(script, translateInfo, scope, deleteContext.expr());
+            DeleteValue = DeltinScript.GetExpression(parseInfo, scope, deleteContext.expr());
         }
 
         public void Translate(ActionSet actionSet)
