@@ -24,12 +24,15 @@ namespace Deltin.Deltinteger.Parse
         protected Scope methodScope { get; }
         protected Var[] ParameterVars { get; private set; }
 
+        public CallInfo CallInfo { get; }
+
         public DefinedFunction(ParseInfo parseInfo, Scope scope, string name, Location definedAt)
         {
             Name = name;
             DefinedAt = definedAt;
             this.parseInfo = parseInfo;
             methodScope = scope.Child();
+            CallInfo = new CallInfo(this, parseInfo.Script);
             parseInfo.TranslateInfo.AddSymbolLink(this, definedAt);
         }
 
@@ -110,7 +113,7 @@ namespace Deltin.Deltinteger.Parse
 
         public override void SetupBlock()
         {
-            block = new BlockAction(parseInfo, methodScope, context.block());
+            block = new BlockAction(parseInfo.SetCallInfo(CallInfo), methodScope, context.block());
             ValidateReturns(parseInfo.Script, context);
         }
 
@@ -415,7 +418,7 @@ namespace Deltin.Deltinteger.Parse
         override public void SetupBlock()
         {
             if (ExpressionToParse == null) return;
-            Expression = DeltinScript.GetExpression(parseInfo, methodScope, ExpressionToParse);
+            Expression = DeltinScript.GetExpression(parseInfo.SetCallInfo(CallInfo), methodScope, ExpressionToParse);
             ReturnType = Expression?.Type();
         }
 
@@ -433,9 +436,9 @@ namespace Deltin.Deltinteger.Parse
 
     public class MethodStack
     {
-        public IParameterCallable Function { get; }
+        public IApplyBlock Function { get; }
 
-        public MethodStack(IParameterCallable function)
+        public MethodStack(IApplyBlock function)
         {
             Function = function;
         }
@@ -469,11 +472,14 @@ namespace Deltin.Deltinteger.Parse
         private Scope scope { get; }
         private ParseInfo parseInfo { get; }
 
+        public CallInfo CallInfo { get; }
+
         public MacroVar(ParseInfo parseInfo, Scope scope, DeltinScriptParser.Define_macroContext macroContext)
         {
             Name = macroContext.name.Text;
             AccessLevel = macroContext.accessor()?.GetAccessLevel() ?? AccessLevel.Private;
             DefinedAt = new Location(parseInfo.Script.Uri, DocRange.GetRange(macroContext));
+            CallInfo = new CallInfo(this, parseInfo.Script);
 
             ExpressionToParse = macroContext.expr();
             if (ExpressionToParse == null)
@@ -486,7 +492,7 @@ namespace Deltin.Deltinteger.Parse
         public void SetupBlock()
         {
             if (ExpressionToParse == null) return;
-            Expression = DeltinScript.GetExpression(parseInfo, scope, ExpressionToParse);
+            Expression = DeltinScript.GetExpression(parseInfo.SetCallInfo(CallInfo), scope, ExpressionToParse);
             ReturnType = Expression?.Type();
         }
 

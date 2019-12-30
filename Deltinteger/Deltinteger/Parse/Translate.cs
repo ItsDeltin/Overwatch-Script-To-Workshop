@@ -183,8 +183,8 @@ namespace Deltin.Deltinteger.Parse
                     PlayerVariableScope.AddVariable(newVar, null, null);
             }
 
-            foreach (var apply in applyMethods)
-                apply.SetupBlock();
+            foreach (var apply in applyMethods) apply.SetupBlock();
+            foreach (var apply in applyMethods) apply.CallInfo.CheckRecursion();
 
             // Get the rules
             foreach (ScriptFile script in ScriptFiles)
@@ -438,6 +438,8 @@ namespace Deltin.Deltinteger.Parse
         public ScriptFile Script { get; }
         public DeltinScript TranslateInfo { get; }
 
+        public CallInfo CurrentCallInfo { get; private set; }
+
         public ParseInfo(ScriptFile script, DeltinScript translateInfo)
         {
             Script = script;
@@ -447,6 +449,8 @@ namespace Deltin.Deltinteger.Parse
         {
             Script = other.Script;
             TranslateInfo = other.TranslateInfo;
+            CurrentCallInfo = other.CurrentCallInfo;
         }
+        public ParseInfo SetCallInfo(CallInfo currentCallInfo) => new ParseInfo(this) { CurrentCallInfo = currentCallInfo };
     }
 }

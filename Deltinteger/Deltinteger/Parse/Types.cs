@@ -505,15 +505,18 @@ namespace Deltin.Deltinteger.Parse
         private ParseInfo parseInfo { get; }
         private DeltinScriptParser.ConstructorContext context { get; }
 
+        public CallInfo CallInfo { get; }
+
         public DefinedConstructor(ParseInfo parseInfo, CodeType type, DeltinScriptParser.ConstructorContext context) : base(
             type,
             new LanguageServer.Location(parseInfo.Script.Uri, DocRange.GetRange(context.name)),
             context.accessor()?.GetAccessLevel() ?? AccessLevel.Private)
         {
-            ConstructorScope = type.GetObjectScope().Child();
-
             this.parseInfo = parseInfo;
             this.context = context;
+            CallInfo = new CallInfo(this, parseInfo.Script);
+
+            ConstructorScope = type.GetObjectScope().Child();
 
             if (Type is DefinedType)
                 ((DefinedType)Type).AddLink(DefinedAt);

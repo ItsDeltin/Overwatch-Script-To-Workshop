@@ -58,5 +58,6 @@ namespace Deltin.Deltinteger
     public interface IApplyBlock
     {
         void SetupBlock();
+        CallInfo CallInfo { get; }
     }
 }

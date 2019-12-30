@@ -40,7 +40,11 @@ namespace Deltin.Deltinteger.Parse
                 if (CallingMethod != null)
                 {
                     if (CallingMethod is DefinedFunction)
-                        ((DefinedFunction)CallingMethod).Call(parseInfo.Script, NameRange);
+                    {
+                        var definedFunction = (DefinedFunction)CallingMethod;
+                        definedFunction.Call(parseInfo.Script, NameRange);
+                        parseInfo.CurrentCallInfo?.Call(definedFunction, NameRange);
+                    }
                     
                     parseInfo.Script.AddHover(DocRange.GetRange(methodContext), CallingMethod.GetLabel(true));
                     

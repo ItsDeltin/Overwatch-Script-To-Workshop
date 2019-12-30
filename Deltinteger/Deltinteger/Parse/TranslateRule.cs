@@ -105,7 +105,7 @@ namespace Deltin.Deltinteger.Parse
             return actions.ToArray();
         }
     
-        public bool WasCalled(IParameterCallable callable) => MethodStack.Any(ms => ms.Function == this);
+        public bool WasCalled(IApplyBlock callable) => MethodStack.Any(ms => ms.Function == this);
     }
 
     public class ActionSet
