@@ -152,7 +152,7 @@
 		},
 		"strings": {
 			"name": "string.quoted.double",
-			"begin": "\"",
+			"begin": "@?\"",
 			"end": "\"",
 			"patterns": [
 				{
