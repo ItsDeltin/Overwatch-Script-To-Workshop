@@ -105,6 +105,9 @@ namespace Deltin.Deltinteger.Parse
             // Setup the parameters and parse the block.
             SetupParameters(context.setParameters());
 
+            if (context.block() == null)
+                parseInfo.Script.Diagnostics.Error("Expected block.", DocRange.GetRange(context.name));
+
             scope.AddMethod(this, parseInfo.Script.Diagnostics, DocRange.GetRange(context.name));
 
             // Add the hover info.
@@ -113,8 +116,11 @@ namespace Deltin.Deltinteger.Parse
 
         public override void SetupBlock()
         {
-            block = new BlockAction(parseInfo.SetCallInfo(CallInfo), methodScope, context.block());
-            ValidateReturns(parseInfo.Script, context);
+            if (context.block() != null)
+            {
+                block = new BlockAction(parseInfo.SetCallInfo(CallInfo), methodScope, context.block());
+                ValidateReturns(parseInfo.Script, context);
+            }
         }
 
         private void ValidateReturns(ScriptFile script, DeltinScriptParser.Define_methodContext context)
@@ -402,15 +408,21 @@ namespace Deltin.Deltinteger.Parse
         private DeltinScriptParser.ExprContext ExpressionToParse { get; }
 
         public DefinedMacro(ParseInfo parseInfo, Scope scope, DeltinScriptParser.Define_macroContext context)
-            : base(parseInfo, scope, context.name.Text, new LanguageServer.Location(parseInfo.Script.Uri, DocRange.GetRange(context)))
+            : base(parseInfo, scope, context.name.Text, new LanguageServer.Location(parseInfo.Script.Uri, DocRange.GetRange(context.name)))
         {
             AccessLevel = context.accessor().GetAccessLevel();
             SetupParameters(context.setParameters());
 
-            if (context.expr() == null)
-                parseInfo.Script.Diagnostics.Error("Expected expression.", DocRange.GetRange(context.TERNARY_ELSE()));
+            if (context.TERNARY_ELSE() == null)
+            {
+                parseInfo.Script.Diagnostics.Error("Expected :", DocRange.GetRange(context).end.ToRange());
+            }
             else
+            {
                 ExpressionToParse = context.expr();
+                if (ExpressionToParse == null)
+                    parseInfo.Script.Diagnostics.Error("Expected expression.", DocRange.GetRange(context.TERNARY_ELSE()));
+            }
 
             parseInfo.Script.AddHover(DocRange.GetRange(context.name), GetLabel(true));
         }
@@ -478,12 +490,19 @@ namespace Deltin.Deltinteger.Parse
         {
             Name = macroContext.name.Text;
             AccessLevel = macroContext.accessor()?.GetAccessLevel() ?? AccessLevel.Private;
-            DefinedAt = new Location(parseInfo.Script.Uri, DocRange.GetRange(macroContext));
+            DefinedAt = new Location(parseInfo.Script.Uri, DocRange.GetRange(macroContext.name));
             CallInfo = new CallInfo(this, parseInfo.Script);
 
-            ExpressionToParse = macroContext.expr();
-            if (ExpressionToParse == null)
-                parseInfo.Script.Diagnostics.Error("Expected expression.", DocRange.GetRange(macroContext.TERNARY_ELSE()));
+            if (macroContext.TERNARY_ELSE() == null)
+            {
+                parseInfo.Script.Diagnostics.Error("Expected :", DocRange.GetRange(macroContext).end.ToRange());
+            }
+            else
+            {
+                ExpressionToParse = macroContext.expr();
+                if (ExpressionToParse == null)
+                    parseInfo.Script.Diagnostics.Error("Expected expression.", DocRange.GetRange(macroContext.TERNARY_ELSE()));
+            }
 
             this.scope = scope;
             this.parseInfo = parseInfo;

@@ -103,10 +103,10 @@ ow_rule :
 	;
 
 define_method : DOCUMENTATION* accessor? RECURSIVE? (METHOD | code_type) name=PART LEFT_PAREN setParameters RIGHT_PAREN
-	block
+	block?
 	;
 
-define_macro  : DOCUMENTATION* accessor? MACRO name=PART (LEFT_PAREN setParameters RIGHT_PAREN)? TERNARY_ELSE expr? STATEMENT_END ;
+define_macro  : DOCUMENTATION* accessor? MACRO name=PART (LEFT_PAREN setParameters RIGHT_PAREN)? TERNARY_ELSE? expr? STATEMENT_END ;
 
 ruleset :
 	reserved_global?
