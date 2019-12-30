@@ -42,11 +42,10 @@ namespace Deltin.Deltinteger
         string Name { get; }
     }
 
-    public interface IParameterCallable
+    public interface IParameterCallable : ILabeled
     {
         CodeParameter[] Parameters { get; }
         Location DefinedAt { get; }
-        string GetLabel(bool markdown);
         StringOrMarkupContent Documentation { get; }
     }
 
@@ -55,7 +54,12 @@ namespace Deltin.Deltinteger
         IWorkshopTree GetVariable(Element eventPlayer = null);
     }
 
-    public interface IApplyBlock
+    public interface ILabeled
+    {
+        string GetLabel(bool markdown);
+    }
+
+    public interface IApplyBlock : ILabeled
     {
         void SetupBlock();
         CallInfo CallInfo { get; }

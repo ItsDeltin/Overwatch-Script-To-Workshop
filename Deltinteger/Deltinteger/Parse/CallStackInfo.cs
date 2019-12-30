@@ -28,11 +28,13 @@ namespace Deltin.Deltinteger.Parse
             foreach (var call in Calls)
                 if (DoesTreeCall(Function, call.Key))
                     foreach (DocRange range in call.Value)
-                        Script.Diagnostics.Error("Recursion is not allowed here.", range);
+                        Script.Diagnostics.Error($"Recursion is not allowed here, the function '{call.Key.GetLabel(false)}' calls '{Function.GetLabel(false)}'.", range);
         }
 
-        private bool DoesTreeCall(IApplyBlock function, IApplyBlock currentCheck)
+        private bool DoesTreeCall(IApplyBlock function, IApplyBlock currentCheck, List<IApplyBlock> check = null)
         {
+            if (check == null) check = new List<IApplyBlock>();
+
             if (function == currentCheck)
             {
                 if (function is DefinedMethod && ((DefinedMethod)function).IsRecursive)
@@ -41,8 +43,11 @@ namespace Deltin.Deltinteger.Parse
                     return true;
             }
 
+            if (check.Contains(currentCheck)) return false;
+            check.Add(currentCheck);
+
             foreach (var call in currentCheck.CallInfo.Calls)
-                if (DoesTreeCall(function, call.Key))
+                if (DoesTreeCall(function, call.Key, check))
                     return true;
             return false;
         }

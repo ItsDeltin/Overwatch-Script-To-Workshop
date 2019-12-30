@@ -515,5 +515,7 @@ namespace Deltin.Deltinteger.Parse
                 Kind = CompletionItemKind.Property
             };
         }
+
+        public string GetLabel(bool markdown) => Name;
     }
 }

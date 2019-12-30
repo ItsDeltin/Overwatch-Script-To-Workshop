@@ -528,7 +528,7 @@ namespace Deltin.Deltinteger.Parse
             Parameters = parameterInfo.Parameters;
             ParameterVars = parameterInfo.Variables;
 
-            Block = new BlockAction(parseInfo, ConstructorScope, context.block());
+            Block = new BlockAction(parseInfo.SetCallInfo(CallInfo), ConstructorScope, context.block());
             parseInfo.Script.AddHover(DocRange.GetRange(context.name), GetLabel(true));
         }
 
