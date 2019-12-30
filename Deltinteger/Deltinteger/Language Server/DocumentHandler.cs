@@ -198,5 +198,10 @@ namespace Deltin.Deltinteger.LanguageServer
                 }
             }
         }
+
+        public void WaitForNextUpdate()
+        {
+            SpinWait.SpinUntil(() => { lock(_parseLock) return !_updateTaskIsRunning; });
+        }
     }
 }

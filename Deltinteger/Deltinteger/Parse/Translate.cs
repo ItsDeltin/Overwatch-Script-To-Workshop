@@ -142,6 +142,7 @@ namespace Deltin.Deltinteger.Parse
             {
                 var newEnum = new DefinedEnum(new ParseInfo(script, this), enumContext);
                 types.Add(newEnum); 
+                definedTypes.Add(newEnum);
             }
 
             // Get the types

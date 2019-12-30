@@ -27,6 +27,8 @@ namespace Deltin.Deltinteger.LanguageServer
         {
             List<CompletionItem> items = new List<CompletionItem>();
 
+            _languageServer.DocumentHandler.WaitForNextUpdate();
+
             // Get default type completion.
             foreach (var defaultType in CodeType.DefaultTypes)
                 items.Add(defaultType.GetCompletion());
