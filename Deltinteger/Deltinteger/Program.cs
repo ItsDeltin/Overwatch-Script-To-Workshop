@@ -15,7 +15,7 @@ namespace Deltin.Deltinteger
 {
     public class Program
     {
-        public const string VERSION = "v0.7.3";
+        public const string VERSION = "v1.0 prerelease 1";
 
         public static readonly string ExeFolder = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
 
@@ -30,7 +30,7 @@ namespace Deltin.Deltinteger
             Program.args = args;
 
             CultureInfo.DefaultThreadCurrentCulture = new CultureInfo("en-US");
-            // Log.Write(LogLevel.Normal, "Overwatch Script To Workshop " + VERSION);
+            if (!args.Contains("--langserver")) Log.Write(LogLevel.Normal, "Overwatch Script To Workshop " + VERSION);
 
             Log.LogLevel = LogLevel.Normal;
             if (args.Contains("-verbose"))
