@@ -991,6 +991,20 @@ namespace Deltin.Deltinteger.Elements
             }
             return list[0];
         }
+    
+        public static V_CustomString SplitLength(string str, int length = 128)
+        {
+            List<V_CustomString> strings = new List<V_CustomString>();
+            for (int i = 0; i < str.Length; i += length)
+            {
+                if (i < str.Length - length)
+                    strings.Add(new V_CustomString(str.Substring(i, length)));
+                else
+                    strings.Add(new V_CustomString(str.Substring(i)));
+            }
+
+            return (V_CustomString)Join(strings.ToArray());
+        }
     }
 
     [ElementData("Icon String", ValueType.Any)]

@@ -1,5 +1,7 @@
 using System;
 using System.IO;
+using System.Collections.Generic;
+using System.Linq;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.LanguageServer;
 
@@ -142,17 +144,23 @@ namespace Deltin.Deltinteger.Parse
 
     class FileParameter : CodeParameter
     {
-        public string FileType { get; }
+        public string[] FileTypes { get; }
 
         /// <summary>
         /// A parameter that resolves to a file. AdditionalParameterData will return the file path.
         /// </summary>
-        /// <param name="fileType">The expected file type. Can be null.</param>
         /// <param name="parameterName">The name of the parameter.</param>
         /// <param name="description">The parameter's description. Can be null.</param>
-        public FileParameter(string fileType, string parameterName, string description) : base(parameterName, description)
+        /// <param name="fileTypes">The expected file types. Can be null.</param>
+        public FileParameter(string parameterName, string description, params string[] fileTypes) : base(parameterName, description)
         {
-            FileType = fileType?.ToLower();
+            if (fileTypes != null)
+            {
+                if (fileTypes.Length == 0)
+                    FileTypes = null;
+                else
+                    FileTypes = fileTypes.Select(f => f.ToLower()).ToArray();
+            }
         }
 
         public override object Validate(ScriptFile script, IExpression value, DocRange valueRange)
@@ -182,9 +190,9 @@ namespace Deltin.Deltinteger.Parse
                 return null;
             }
 
-            if (FileType != null && Path.GetExtension(resultingPath).ToLower() != "." + FileType)
+            if (FileTypes != null && !FileTypes.Contains(Path.GetExtension(resultingPath).ToLower()))
             {
-                script.Diagnostics.Error($"Expected a file with the file type '{FileType}'.", valueRange);
+                script.Diagnostics.Error($"Expected a file with the file type '{string.Join(", ", FileTypes)}'.", valueRange);
                 return null;
             }
 
