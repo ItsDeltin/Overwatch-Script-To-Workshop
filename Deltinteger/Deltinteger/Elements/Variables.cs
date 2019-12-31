@@ -19,7 +19,7 @@ namespace Deltin.Deltinteger.Elements
             IsGlobal = isGlobal;
         }
 
-        public string ToWorkshop()
+        public string ToWorkshop(OutputLanguage language)
         {
             return Name;
         }

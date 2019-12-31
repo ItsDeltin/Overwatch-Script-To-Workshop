@@ -22,29 +22,35 @@ namespace Deltin.Deltinteger.Pathfinder
         {
             PathMap map = PathMap.ImportFromXML(file);
 
-            string baseEditorLoc = Extras.CombinePathWithDotNotation(null, "!PathfindEditor.del");
-            string baseEditor = File.ReadAllText(baseEditorLoc);
-            ParsingData result = ParsingData.GetParser(baseEditorLoc, baseEditor);
+            string baseEditorFile = Extras.CombinePathWithDotNotation(null, "!PathfindEditor.del");
+            string baseEditorContent = File.ReadAllText(baseEditorFile);
+            Diagnostics diagnostics = new Diagnostics();
 
-            List<Rule> rules = new List<Rule>();
-            rules.AddRange(result.Rules);
-            
-            Rule initialNodes = new Rule("Initial Nodes");
-            initialNodes.Actions = ArrayBuilder<Element>.Build(
-                WorkshopArrayBuilder.SetVariable(null, map.NodesAsWorkshopData(), null, LoadNodes, false),
-                WorkshopArrayBuilder.SetVariable(null, map.SegmentsAsWorkshopData(), null, LoadSegments, false)
+            DeltinScript deltinScript = new DeltinScript(
+                new FileGetter(null),
+                diagnostics,
+                new ScriptFile(diagnostics, new Uri(baseEditorFile), baseEditorContent),
+                (varCollection) => {
+                    // Set the initial nodes.
+                    Rule initialNodes = new Rule("Initial Nodes");
+                    initialNodes.Actions = ArrayBuilder<Element>.Build(
+                        WorkshopArrayBuilder.SetVariable(null, map.NodesAsWorkshopData(), null, LoadNodes, false),
+                        WorkshopArrayBuilder.SetVariable(null, map.SegmentsAsWorkshopData(), null, LoadSegments, false)
+                    );
+
+                    return new Rule[] { initialNodes };
+                }
             );
-            rules.Add(initialNodes);
+            string code = deltinScript.WorkshopCode;
 
-            if (!result.Diagnostics.ContainsErrors())
+            if (code != null)
             {
-                string final = Program.RuleArrayToWorkshop(rules.ToArray(), result.VarCollection);
-                Program.WorkshopCodeResult(final);
+                Program.WorkshopCodeResult(code);
             }
             else
             {
                 Log.Write(LogLevel.Normal, new ColorMod("Build Failed.", ConsoleColor.Red));
-                result.Diagnostics.PrintDiagnostics(Log);
+                diagnostics.PrintDiagnostics(Log);
             }
         }
     }

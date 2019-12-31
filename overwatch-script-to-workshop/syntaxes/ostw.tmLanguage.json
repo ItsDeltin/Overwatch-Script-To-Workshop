@@ -3,44 +3,156 @@
 	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
 	"name": "Overwatch Script To Workshop",
 	"patterns": [
-		{
-			"include": "#keywords"
-		},
-		{
-			"include": "#strings"
-		},
-		{
-			"include": "#comments"
-		},
-		{
-			"include": "#numbers"
-		},
-		{
-			"include": "#methods"
-		},
-		{
-			"include": "#variables"
-		}
+		{ "include": "#ruleset" },
+		{ "include": "#comments" }
 	],
 	"repository": {
+		"ruleset": {
+			"patterns": [
+				{"include": "#rule"},
+				{"include": "#strings"},
+				{"include": "#if"},
+				{"include": "#rule_option"},
+				{"include": "#block"},
+				{"include": "#new"},
+				{"include": "#keywords_control"},
+				{"include": "#define_type"},
+				{"include": "#define_macro"},
+				{"include": "#define_macro_var"},
+				{"include": "#define_method"},
+				{"include": "#define_variable"},
+				{"include": "#expressions"},
+				{"include": "#keywords_other"}
+			]
+		},
+		"rule": {
+			"match": "\\b((disabled\\s+)?rule)\\s*:",
+			"captures": {
+				"1": {"name":"keyword.control"}
+			}
+		},
+		"if": {
+			"begin": "((else\\s+)?if)\\s*\\(",
+			"beginCaptures": {
+				"1": {"name": "keyword.control"}
+			},
+			"end": "\\)",
+			"patterns": [{"include": "#expressions"}]
+		},
+		"rule_option": {
+			"match": "([a-zA-Z]+)\\s*\\.\\s*([a-zA-Z0-9]+)",
+			"captures": {
+				"1": {"name": "entity.name.type"},
+				"2": {"name": "variable.other"}
+			}
+		},
+		"define_variable": {
+			"begin": "((public|private|static|globalvar|playervar)\\s+)*((define)|([_[:alnum:]]+)(\\s*\\[\\s*\\])*)(\\s+[_[:alnum:]]+)(\\s*(\\!|([0-9]+)))?(\\s*=)?",
+			"beginCaptures": {
+				"2": {"name":"keyword.other"},
+				"4": {"name":"keyword.other"},
+				"5": {"name":"entity.name.type"},
+				"7": {"name":"variable.name"},
+				"10": {"name":"constant.numeric"}
+			},
+			"end": ";",
+			"patterns": [{"include": "#expressions"}]
+		},
+		"define_method": {
+			"begin": "((public|private|static|recursive)\\s+)*(((method)|([_[:alnum:]]+)(\\s*\\[\\s*\\])*)\\s+)([_[:alnum:]]+\\s*\\()",
+			"beginCaptures": {
+				"2": {"name":"keyword.other"},
+				"5": {"name":"keyword.other"},
+				"6": {"name":"entity.name.class"},
+				"8": {"name":"entity.name.function"}
+			},
+			"end": "\\)",
+			"endCaptures": {
+				"0": {"name":"entity.name.function"}
+			},
+			"patterns": [{"include": "#parameter"}]
+		},
+		"define_macro": {
+			"begin": "((public|private|static)\\s+)*(macro)\\s+([_[:alnum:]]+)\\s*\\(",
+			"beginCaptures": {
+				"0": {"name":"entity.name.function"},
+				"2": {"name":"keyword.other"},
+				"3": {"name":"keyword.other"}
+			},
+			"end": "\\)",
+			"endCaptures": {
+				"0": {"name":"entity.name.function"}
+			},
+			"patterns": [{"include": "#parameter"}]
+		},
+		"define_macro_var": {
+			"match": "((public|private|static)\\s+)*(macro)\\s+([_[:alnum:]]+)",
+			"captures": {
+				"0": {"name":"variable.other"},
+				"2": {"name":"keyword.other"},
+				"3": {"name":"keyword.other"}
+			}
+		},
+		"parameter": {
+			"match": "((define)|([_[:alnum:]]+)(\\s*\\[\\s*\\])*)\\s+([_[:alnum:]]+)",
+			"captures": {
+				"2": { "name": "keyword.other" },
+				"3": { "name": "entity.name.type" },
+				"5": { "name": "variable.parameter" }
+			}
+		},
+		"define_type": {
+			"match": "(class|struct|enum)\\s+([_[:alnum:]]+)",
+			"captures": {
+				"1": {"name": "keyword.other"},
+				"2": {"name": "entity.name.class"}
+			}
+		},
+
+		"block": {
+			"begin": "{",
+			"end": "}",
+			"patterns": [
+				{"include": "#comments"},
+				{"include": "#if"},
+				{"include": "#keywords_control"},
+				{"include": "#define_macro"},
+				{"include": "#define_macro_var"},
+				{"include": "#define_method"},
+				{"include": "#methods"},
+				{"include": "#define_variable"},
+				{"include": "#expressions"}
+			]
+		},
 		"expressions": {
 			"patterns": [
+				{"include": "#new"},
+				{"include": "#methods"},
 				{"include": "#keywords"}, 
-				{"include": "#strings"}, 
+				{"include": "#strings"},
 				{"include": "#comments"}, 
-				{"include": "#numbers"}, 
-				{"include": "#methods"}, 
+				{"include": "#numbers"},
 				{"include": "#variables"}
 			]
 		},
-		
-		"keywords": {
-			"name": "keyword.control",
-			"match": "\\b(if|else|while|for|foreach|return|in|define|rule|true|false|usevar|method|recursive|playervar|globalvar|buildervar|null|struct|class|public|private|static|new|this|import|as|delete|root|macro)\\b"
+		"methods": {
+			"name": "entity.name.function",
+			"begin": "[_[:alnum:]]+\\(",
+			"end": "\\)",
+			"patterns": [{"include": "#expressions"}]
+		},
+		"new": {
+			"begin": "(new)\\s+([_[:alnum:]]+)\\s*\\(",
+			"end": "\\)",
+			"beginCaptures": {
+				"1": {"name":"keyword.other"},
+				"2": {"name":"entity.name.class"}
+			},
+			"patterns": [{"include": "#expressions"}]
 		},
 		"strings": {
 			"name": "string.quoted.double",
-			"begin": "\"",
+			"begin": "@?\"",
 			"end": "\"",
 			"patterns": [
 				{
@@ -64,11 +176,20 @@
 			"name": "constant.numeric",
 			"match": "\\b-?[0-9]+(.[0-9]+)?\\b"
 		},
-		"methods": {
-			"name": "entity.name.function",
-			"begin": "[a-zA-Z_0-9]+\\(",
-			"end": "\\)",
-			"patterns": [{"include": "#expressions"}]
+
+		"keywords": {
+			"patterns": [
+				{"include": "#keywords_control"},
+				{"include": "#keywords_other"}
+			]
+		},
+		"keywords_control": {
+			"name": "keyword.control",
+			"match": "\\b(if|else|while|for|foreach|return|rule|import)\\b"
+		},
+		"keywords_other": {
+			"name": "keyword.other",
+			"match": "\\b(in|define|true|false|method|recursive|playervar|globalvar|buildervar|null|struct|class|public|private|static|new|this|as|delete|root|macro)\\b"
 		},
 		"variables": {
 			"name": "variable",

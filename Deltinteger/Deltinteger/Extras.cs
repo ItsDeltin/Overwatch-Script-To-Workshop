@@ -2,6 +2,11 @@ using System;
 using System.Text;
 using System.Collections.Generic;
 using System.IO;
+using System.Xml.Serialization;
+using Deltin.Deltinteger.Parse;
+using StringOrMarkupContent = OmniSharp.Extensions.LanguageServer.Protocol.Models.StringOrMarkupContent;
+using MarkupContent = OmniSharp.Extensions.LanguageServer.Protocol.Models.MarkupContent;
+using MarkupKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.MarkupKind;
 
 namespace Deltin.Deltinteger
 {
@@ -63,6 +68,51 @@ namespace Deltin.Deltinteger
         {
             return string.Join("\n", lines);
         }
+
+        public static string RemoveQuotes(string str)
+        {
+            return str.Substring(1, str.Length - 2);
+        }
+
+        public static AccessLevel GetAccessLevel(this DeltinScriptParser.AccessorContext accessorContext)
+        {
+            if (accessorContext == null) return AccessLevel.Private;
+            else if (accessorContext.PUBLIC() != null) return AccessLevel.Public;
+            else if (accessorContext.PRIVATE() != null) return AccessLevel.Private;
+            else throw new NotImplementedException();
+        }
+
+        public static string SerializeToXML<T>(object o)
+        {
+            XmlSerializer serializer = new XmlSerializer(typeof(T));
+            XmlSerializerNamespaces ns = new XmlSerializerNamespaces();
+            ns.Add("","");
+
+            string result;
+            using (StringWriter stringWriter = new StringWriter())
+            {
+                serializer.Serialize(stringWriter, o, ns);
+                result = stringWriter.ToString();
+            }
+            return result;
+        }
+
+        public static string FilePath(this Uri uri)
+        {
+            return uri.LocalPath.TrimStart('/');
+        }
+
+        public static Uri Clean(this Uri uri)
+        {
+            return new Uri(uri.FilePath());
+        }
+
+        public static bool Compare(this Uri uri, Uri other) => uri.Clean().FilePath() == other.Clean().FilePath();
+
+        public static StringOrMarkupContent GetMarkupContent(string text) => new StringOrMarkupContent(new MarkupContent() {
+            Kind = MarkupKind.Markdown,
+            Value = text
+        });
     }
 
     public class TabStringBuilder
@@ -71,11 +121,17 @@ namespace Deltin.Deltinteger
         public bool Tab { get; private set; }
         public int WhitespaceCount { get; set; } = 4;
 
-        private readonly StringBuilder StringBuilder = new StringBuilder();
+        private readonly StringBuilder StringBuilder;
 
         public TabStringBuilder(bool tab)
         {
             Tab = tab;
+            StringBuilder = new StringBuilder();
+        }
+        public TabStringBuilder(StringBuilder builder, bool tab)
+        {
+            Tab = tab;
+            StringBuilder = builder;
         }
 
         public TabStringBuilder AppendLine()

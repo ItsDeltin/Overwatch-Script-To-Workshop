@@ -8,18 +8,19 @@ using System.Reflection;
 using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.WorkshopWiki;
 using Deltin.Deltinteger.Parse;
+using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
+using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItemKind;
+using StringOrMarkupContent = OmniSharp.Extensions.LanguageServer.Protocol.Models.StringOrMarkupContent;
 
 namespace Deltin.Deltinteger.Elements
 {
-    // Rule of thumb: Return values are restrictive (only 1), parameter values are loose (potentially multiple)
     [Flags]
     public enum ValueType
     {
         Any = Number | Boolean | Hero | Vector | Player | Team ,
-        VectorAndPlayer = Vector | Player, // Players can be subsituded as vectors, but not the other way around.
+        VectorAndPlayer = Vector | Player,
         Number = 1,
         Boolean = 2,
-        //String = 4,
         Hero = 4,
         Vector = 8,
         Player = 16,
@@ -53,36 +54,6 @@ namespace Deltin.Deltinteger.Elements
 
     public abstract class Element : IWorkshopTree
     {
-        private static ElementList[] Elements = GetElementList();
-        private static ElementList[] GetElementList()
-        {
-            Type[] methodList = Assembly.GetExecutingAssembly().GetTypes().Where(t => t.GetCustomAttribute<ElementData>() != null).ToArray();
-
-            ElementList[] elements = new ElementList[methodList.Length];
-            for (int i = 0; i < elements.Length; i++)
-                elements[i] = new ElementList(methodList[i]);
-            
-            return elements;
-        }
-        public static ElementList GetElement(string codeName)
-        {
-            return Elements.FirstOrDefault(e => e.Name == codeName);
-        }
-        public static CompletionItem[] GetCompletion(bool values, bool actions)
-        {
-            List<CompletionItem> completions = new List<CompletionItem>();
-            foreach(ElementList element in Elements)
-                if ((element.IsValue && values) || (!element.IsValue && actions))
-                {
-                    completions.Add(new CompletionItem(element.Name) {
-                        detail = element.GetObject().ToString(),
-                        kind = CompletionItem.Method,
-                        documentation = Wiki.GetWikiMethod(element.WorkshopName)?.Description
-                    });
-                }
-            return completions.ToArray();
-        }
-
         public static T Part<T>(params IWorkshopTree[] parameterValues) where T : Element, new()
         {
             T element = new T()
@@ -94,47 +65,26 @@ namespace Deltin.Deltinteger.Elements
 
         public Element(params IWorkshopTree[] parameterValues)
         {
-            ElementList = Element.GetElement(GetType().Name.Substring(2));
+            ElementList = ElementList.FromType(GetType());
             ElementData = GetType().GetCustomAttribute<ElementData>();
-            ParameterData = ElementList.Parameters;
+            ParameterData = ElementList.WorkshopParameters;
             ParameterValues = parameterValues;
         }
 
         public ElementList ElementList { get; private set; }
         public ElementData ElementData { get; private set; }
         public ParameterBase[] ParameterData { get; private set; }
-        public string Name { get { return ElementList.Name; } }
+        public string Name { get { return ElementList.WorkshopName; } }
 
-        public string Comment { get; set; } = null;
         public IWorkshopTree[] ParameterValues { get; set; }
-
-        public Deltin.Deltinteger.Parse.IndexedVar SupportedType { get; set; }
+        public bool Disabled { get; set; }
 
         public override string ToString()
         {
             return ElementList.GetLabel(false);
         }
-
-        public virtual void DebugPrint(Log log, int depth = 0)
-        {
-            if (ElementData.IsValue)
-                log.Write(LogLevel.Verbose, new ColorMod(Extras.Indent(depth, false) + DebugInfo(), ConsoleColor.Cyan));
-            else
-                log.Write(LogLevel.Verbose, new ColorMod(Extras.Indent(depth, false) + DebugInfo(), ConsoleColor.White));
-
-            for (int i = 0; i < ParameterData.Length; i++)
-            {
-                log.Write(LogLevel.Verbose, new ColorMod(Extras.Indent(depth, false) + ParameterData[i].Name + ":", ConsoleColor.Magenta));
-
-                if (i < ParameterValues.Length)
-                {
-                    ParameterValues[i]?.DebugPrint(log, depth + 1);
-                }
-            }
-        }
-        protected virtual string DebugInfo() { return ElementData.ElementName; }
-
-        public virtual string ToWorkshop()
+        
+        public virtual string ToWorkshop(OutputLanguage language)
         {
             List<IWorkshopTree> elementParameters = new List<IWorkshopTree>();
 
@@ -151,11 +101,14 @@ namespace Deltin.Deltinteger.Elements
 
             List<string> parameters = AdditionalParameters().ToList();
 
-            parameters.AddRange(elementParameters.Select(p => p.ToWorkshop()));
+            parameters.AddRange(elementParameters.Select(p => p.ToWorkshop(language)));
 
-            return ElementData.ElementName + 
-                (parameters.Count == 0 ? "" : "(" + string.Join(", ", parameters) + ")")
-                + (!ElementData.IsValue ? (";" + (Comment != null ? " // " + Comment : "")) : "");
+            string result = "";
+            if (!ElementList.IsValue && Disabled) result += I18n.I18n.Translate(language, "disabled") + " ";
+            result += I18n.I18n.Translate(language, Name);
+            if (parameters.Count != 0) result += "(" + string.Join(", ", parameters) + ")";
+            if (!ElementList.IsValue) result += ";";
+            return result;
         }
 
         public virtual bool ConstantSupported<T>()
@@ -185,25 +138,8 @@ namespace Deltin.Deltinteger.Elements
             return new string[0];
         }
 
-        // Converts an array of actions to a workshop
-        public static string ToWorkshop(Element[] actions)
-        {
-            var builder = new TabStringBuilder(true);
-            builder.AppendLine("actions");
-            builder.AppendLine("{");
-            builder.Indent = 1;
-            foreach(Element action in actions)
-            {
-                builder.AppendLine(action.ToWorkshop());
-            }
-            builder.Indent = 0;
-            builder.AppendLine("}");
-            
-            return builder.ToString();
-        }
-
         // Creates an array from a list of values.
-        public static Element CreateArray(params Element[] values)
+        public static Element CreateArray(params IWorkshopTree[] values)
         {
             Element array = new V_EmptyArray();
             for (int i = 0; i < values.Length; i++)
@@ -212,38 +148,16 @@ namespace Deltin.Deltinteger.Elements
         }
 
         // Creates an ternary conditional that works in the workshop
-        public static Element TernaryConditional(Element condition, Element consequent, Element alternative, bool supportTruthyFalsey)
+        public static Element TernaryConditional(IWorkshopTree condition, IWorkshopTree consequent, IWorkshopTree alternative)
         {
             // This works by creating an array with the consequent (C) and the alternative (A): [C, A]
             // It creates an array that contains false and true: [false, true]
             // Then it gets the array value of the false/true array based on the condition result: IndexOfArrayValue(boolArray, condition)
             // The result is either 0 or 1. Use that index to get the value from the [C, A] array.
-            if (supportTruthyFalsey)
-                return Element.Part<V_ValueInArray>(CreateArray(alternative, consequent), Element.Part<V_IndexOfArrayValue>(CreateArray(new V_False(), new V_True()), condition));
-            else 
-                return Element.Part<V_ValueInArray>(CreateArray(alternative, consequent), Element.Part<V_Add>(condition, new V_Number(0)));
+            return Element.Part<V_ValueInArray>(CreateArray(alternative, consequent), Element.Part<V_Add>(condition, new V_Number(0)));
 
             // Another way to do it would be to add 0 to the boolean, however this won't work with truthey/falsey values that aren't booleans.
             // return Element.Part<V_ValueInArray>(CreateArray(alternative, consequent), Element.Part<V_Add>(condition, new V_Number(0)));
-        }
-
-        public static Element[] While(ContinueSkip continueSkip, Element condition, Element[] actions)
-        {
-            List<Element> result = new List<Element>();
-
-            continueSkip.Setup();
-            int whileStartIndex = continueSkip.GetSkipCount() + 1;
-
-            A_SkipIf skipCondition = new A_SkipIf() { ParameterValues = new IWorkshopTree[2] };
-            skipCondition.ParameterValues[0] = !(condition);
-            result.Add(skipCondition);
-            result.AddRange(actions);
-            result.AddRange(continueSkip.SetSkipCountActions(whileStartIndex));
-            skipCondition.ParameterValues[1] = new V_Number(result.Count);
-            result.Add(new A_Loop());
-            result.AddRange(continueSkip.ResetSkipActions());
-
-            return result.ToArray();
         }
 
         public static V_Number[] IntToElement(params int[] numbers)
@@ -279,42 +193,53 @@ namespace Deltin.Deltinteger.Elements
 
     public class ElementList : IMethod
     {
+        private static ElementList[] _elementList;
+        public static ElementList[] Elements { 
+            get {
+                if (_elementList == null) GetElementList();
+                return _elementList;
+            }
+        }
+        private static void GetElementList()
+        {
+            Type[] methodList = Assembly.GetExecutingAssembly().GetTypes().Where(t => t.GetCustomAttribute<ElementData>() != null).ToArray();
+
+            _elementList = new ElementList[methodList.Length];
+            for (int i = 0; i < _elementList.Length; i++)
+                _elementList[i] = new ElementList(methodList[i]);
+
+            for (int i = 0; i < _elementList.Length; i++)
+                _elementList[i].ApplyParameters();
+        }
+        public static ElementList GetElement(string codeName)
+        {
+            return Elements.FirstOrDefault(e => e.Name == codeName);
+        }
+        public static ElementList GetElement<T>() where T: Element
+        {
+            return Elements.FirstOrDefault(e => e.Type == typeof(T));
+        }
+        public static ElementList FromType(Type type)
+        {
+            return Elements.FirstOrDefault(element => element.Type == type);
+        }
+
         public string Name { get; }
         public string WorkshopName { get; }
         public Type Type { get; }
         public bool IsValue { get; } 
-        public ParameterBase[] Parameters { get; }
+        public CodeParameter[] Parameters { get; private set; }
+        public ParameterBase[] WorkshopParameters { get; }
         public UsageDiagnostic[] UsageDiagnostics { get; }
         public WikiMethod Wiki { get; }
+        public StringOrMarkupContent Documentation => Wiki?.Description;
 
-        public Element Parse(TranslateRule context, bool needsToBeValue, ScopeGroup scope, MethodNode methodNode, IWorkshopTree[] parameters)
-        {
-            TranslateRule.CheckMethodType(needsToBeValue, IsValue ? CustomMethodType.Value : CustomMethodType.Action, methodNode.Name, methodNode.Location);
+        // IScopeable defaults
+        public LanguageServer.Location DefinedAt { get; } = null;
+        public AccessLevel AccessLevel { get; } = AccessLevel.Public;
+        public bool WholeContext { get; } = true;
 
-            Element element = GetObject();
-            element.ParameterValues = parameters;
-
-            Element result;
-
-            if (element.ElementData.IsValue)
-                result = element;
-            else
-            {
-                context.Actions.Add(element);
-                result = null;
-            }
-
-            foreach (var usageDiagnostic in UsageDiagnostics)
-                context.ParserData.Diagnostics.AddDiagnostic(methodNode.Location.uri, usageDiagnostic.GetDiagnostic(methodNode.Location.range));
-            
-            return result;
-        }
-
-        public string GetLabel(bool markdown)
-        {
-            return Name + "(" + Parameter.ParameterGroupToString(Parameters, markdown) + ")" 
-            + (markdown && Wiki?.Description != null ? "\n\r" + Wiki.Description : "");
-        }
+        public CodeType ReturnType { get; } = null;
 
         public ElementList(Type type)
         {
@@ -323,14 +248,79 @@ namespace Deltin.Deltinteger.Elements
             WorkshopName = data.ElementName;
             Type = type;
             IsValue = data.IsValue;
-            Parameters = type.GetCustomAttributes<ParameterBase>().ToArray();
-            Wiki = WorkshopWiki.Wiki.GetWikiMethod(WorkshopName);
+            WorkshopParameters = type.GetCustomAttributes<ParameterBase>().ToArray();
             UsageDiagnostics = type.GetCustomAttributes<UsageDiagnostic>().ToArray();
+
+            Wiki = WorkshopWiki.Wiki.GetWiki().GetMethod(WorkshopName);
+        }
+
+        public void ApplyParameters()
+        {
+            Parameters = new Parse.CodeParameter[WorkshopParameters.Length];
+            for (int i = 0; i < Parameters.Length; i++)
+            {
+                string name = WorkshopParameters[i].Name.Replace(" ", "");
+                string description = Wiki?.GetWikiParameter(WorkshopParameters[i].Name)?.Description;
+
+                if (WorkshopParameters[i] is VarRefParameter)
+                {
+                    Parameters[i] = new WorkshopVariableParameter(
+                        name,
+                        description,
+                        ((VarRefParameter)WorkshopParameters[i]).IsGlobal
+                    );
+                }
+                else
+                {
+                    CodeType codeType = null;
+
+                    // If the parameter is an enum, get the enum CodeType.
+                    if (WorkshopParameters[i] is EnumParameter)
+                        codeType = WorkshopEnumType.GetEnumType(((EnumParameter)WorkshopParameters[i]).EnumData);
+
+                    var defaultValue = WorkshopParameters[i].GetDefault();
+
+                    Parameters[i] = new CodeParameter(
+                        name,
+                        codeType,
+                        defaultValue == null ? null : new ExpressionOrWorkshopValue(defaultValue),
+                        description
+                    );
+                }
+            }
         }
 
         public Element GetObject()
         {
             return (Element)Activator.CreateInstance(Type);
+        }
+
+        public bool DoesReturnValue() => IsValue;
+
+        public IWorkshopTree Parse(ActionSet actionSet, IWorkshopTree[] values, object[] additionalParameterData)
+        {
+            Element element = GetObject();
+            element.ParameterValues = values;
+
+            if (!IsValue)
+            {
+                actionSet.AddAction(element);
+                return null;
+            }
+            else return element;
+        }
+
+        public string GetLabel(bool markdown) => HoverHandler.GetLabel(ReturnType, Name, Parameters, markdown, Wiki?.Description);
+
+        public CompletionItem GetCompletion()
+        {
+            return new CompletionItem()
+            {
+                Label = Name,
+                Kind = CompletionItemKind.Method,
+                Detail = GetLabel(false),
+                Documentation = Wiki?.Description
+            };
         }
     }
 
@@ -346,9 +336,9 @@ namespace Deltin.Deltinteger.Elements
         public string Message { get; }
         public int Severity { get; }
 
-        public Diagnostic GetDiagnostic(DocRange range)
+        public LanguageServer.Diagnostic GetDiagnostic(DocRange range)
         {
-            return new Diagnostic(Message, range) { severity = Severity };
+            return new LanguageServer.Diagnostic(Message, range, Severity);
         }
     }
 }

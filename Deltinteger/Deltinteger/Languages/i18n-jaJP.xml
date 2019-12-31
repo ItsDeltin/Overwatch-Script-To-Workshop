@@ -1,0 +1,621 @@
+<?xml version="1.0" encoding="utf-8"?>
+<I18nLanguage xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <Methods>
+    <method name="variables" alt="変数" />
+    <method name="global" alt="グローバル" />
+    <method name="player" alt="プレイヤー" />
+    <method name="rule" alt="ルール" />
+    <method name="event" alt="イベント" />
+    <method name="conditions" alt="条件" />
+    <method name="actions" alt="アクション" />
+    <method name="disabled" alt="無効" />
+    <method name="Abort" alt="中止" />
+    <method name="Abort If" alt="中止する条件" />
+    <method name="Abort If Condition Is False" alt="条件が「FALSE」の場合中止" />
+    <method name="Abort If Condition Is True" alt="条件が「TRUE」の場合中止" />
+    <method name="Allow Button" alt="ボタンを有効化" />
+    <method name="Apply Impulse" alt="推進力を適用" />
+    <method name="Big Message" alt="大きなメッセージ" />
+    <method name="Chase Global Variable At Rate" alt="グローバル変数を特定のレートで追跡" />
+    <method name="Chase Global Variable Over Time" alt="グローバル変数を継続的に追跡" />
+    <method name="Chase Player Variable At Rate" alt="プレイヤー変数を特定のレートで追跡" />
+    <method name="Chase Player Variable Over Time" alt="プレイヤー変数を継続的に追跡" />
+    <method name="Clear Status" alt="ステータスをクリア" />
+    <method name="Communicate" alt="コミュニケーション" />
+    <method name="Create Beam Effect" alt="ビーム・エフェクトを作成" />
+    <method name="Create Dummy Bot" alt="ダミーボットを作成" />
+    <method name="Create Effect" alt="エフェクトを作成" />
+    <method name="Create Hud Text" alt="HUDテキストを作成" />
+    <method name="Create Icon" alt="アイコンを作成" />
+    <method name="Create In-World Text" alt="ワールド内テキストを作成" />
+    <method name="Damage" alt="ダメージ" />
+    <method name="Declare Match Draw" alt="マッチの引き分けを宣言" />
+    <method name="Declare Player Victory" alt="チームの勝利を宣言" />
+    <method name="Declare Round Victory" alt="ラウンドの勝利を宣言" />
+    <method name="Declare team Victory" alt="チームの勝利を宣言" />
+    <method name="Destroy All Dummy Bots" alt="すべてのダミーボットを破棄" />
+    <method name="Destroy All Effects" alt="すべてのエフェクトを破棄" />
+    <method name="Destroy All HUD Text" alt="すべてのHUDテキストを破棄" />
+    <method name="Destroy All Icons" alt="すべてのアイコンを破棄" />
+    <method name="Destroy All In-World Text" alt="すべてのワールド内テキストを破棄" />
+    <method name="Destroy Dummy Bot" alt="ダミーボットを破壊する" />
+    <method name="Destroy Effect" alt="エフェクトを破棄" />
+    <method name="Destroy Hud Text" alt="HUDテキストを破棄" />
+    <method name="Destroy In-World Text" alt="ワールド内テキストを破棄" />
+    <method name="Disable Built-In Game Mode Announcer" alt="ゲーム・モードの通知を無効化" />
+    <method name="Disable Built-In Game Mode Completion" alt="ゲーム・モードの標準完了を無効化" />
+    <method name="Disable Built-In Game Mode Music" alt="ゲーム・モードのBGMを無効化" />
+    <method name="Disable Built-In Game Mode Respawning" alt="ゲーム・モードの標準リスポーンを無効化" />
+    <method name="Disable Built-In Game Mode Scoring" alt="ゲーム・モードの標準スコアリングを無効化" />
+    <method name="Disable Death Spectate All Players" alt="観戦時に全プレイヤー選択可能を無効化" />
+    <method name="Disable Death Spectate Target HUD" alt="観戦中のターゲットHUD表示を無効化" />
+    <method name="Disallow Button" alt="ボタンを無効化" />
+    <method name="Enable Built-In Game Mode Announcer" alt="ゲーム・モードの通知を有効化" />
+    <method name="Enable Built-In Game Mode Completion" alt="ゲーム・モードの標準完了を有効化" />
+    <method name="Enable Built-In Game Mode Music" alt="ゲーム・モードのBGMを有効化" />
+    <method name="Enable Built-In Game Mode Respawning" alt="ゲーム・モードの標準リスポーンを有効化" />
+    <method name="Enable Built-In Game Mode Scoring" alt="ゲーム・モードの標準スコアリングを有効化" />
+    <method name="Enable Death Spectate All Players" alt="観戦時に全プレイヤー選択可能を有効化" />
+    <method name="Enable Death Spectate Target HUD" alt="観戦中のターゲットHUD表示を有効化" />
+    <method name="Go To Assemble Heroes" alt="「ヒーローを編成しよう」に移行" />
+    <method name="Heal" alt="回復" />
+    <method name="Kill" alt="キル" />
+    <method name="Loop" alt="ループ" />
+    <method name="Loop If" alt="ループする条件" />
+    <method name="Loop If Condition Is False" alt="条件が「FALSE」の場合ループ" />
+    <method name="Loop If Condition Is True" alt="条件が「TRUE」の場合ループ" />
+    <method name="Modify Global Variable" alt="グローバル変数を変更" />
+    <method name="Modify Global Variable At Index" alt="インデックスのグローバル変数を変更" />
+    <method name="Modify Player Score" alt="プレイヤー・スコアを変更" />
+    <method name="Modify Player Variable" alt="プレイヤー変数を変更" />
+    <method name="Modify Player Variable At Index" alt="インデックスのプレイヤー変数を変更" />
+    <method name="Modify Team Score" alt="チーム・スコアを変更" />
+    <method name="Pause Match Time" alt="マッチ時間をポーズする" />
+    <method name="Play Effect" alt="エフェクトを再生" />
+    <method name="Preload Hero" alt="ヒーローをプリロード" />
+    <method name="Press Button" alt="ボタンを押してください" />
+    <method name="Reset Player Hero Availability" alt="プレイヤーが使用できるヒーローをリセット" />
+    <method name="Respawn" alt="リスポーン" />
+    <method name="Resurrect" alt="蘇生" />
+    <method name="Set Ability 1 Enabled" alt="アビリティ1を有効化" />
+    <method name="Set Ability 2 Enabled" alt="アビリティ2を有効化" />
+    <method name="Set Aim Speed" alt="照準速度を設定" />
+    <method name="Set Damage Dealt" alt="与えるダメージを設定" />
+    <method name="Set Damage Received" alt="受けるダメージを設定" />
+    <method name="Set Facing" alt="向き変更を設定" />
+    <method name="Set Global Variable" alt="グローバル変数を設定" />
+    <method name="Set Global Variable At Index" alt="インデックスのグローバル変数を設定" />
+    <method name="Set Gravity" alt="重力を設定" />
+    <method name="Set Healing Dealt" alt="与える回復を設定" />
+    <method name="Set Healing Received" alt="受けるヒール量を設定" />
+    <method name="Set Invisible" alt="目視可否を設定" />
+    <method name="Set Match Time" alt="マッチ時間を設定" />
+    <method name="Set Max Health" alt="最大ライフを設定" />
+    <method name="Set Move Speed" alt="移動速度を設定" />
+    <method name="Set Objective Description" alt="目標の説明を設定" />
+    <method name="Set Player Allowed Heroes" alt="プレイヤーが使用できるヒーローを設定" />
+    <method name="Set Player Score" alt="プレイヤー・スコアを設定する" />
+    <method name="Set Player Variable" alt="プレイヤー変数を設定" />
+    <method name="Set Player Variable At Index" alt="インデックスのプレイヤー変数を設定" />
+    <method name="Set Primary Fire Enabled" alt="メイン攻撃を許可" />
+    <method name="Set Projectile Gravity" alt="弾の重力を設定" />
+    <method name="Set Projectile Speed" alt="弾速を設定" />
+    <method name="Set Respawn Max Time" alt="最大リスポーン時間を設定" />
+    <method name="Set Secondary Fire Enabled" alt="サブ攻撃を許可" />
+    <method name="Set Slow Motion" alt="スローモーションを設定" />
+    <method name="Set Status" alt="ステータスを設定" />
+    <method name="Set Team Score" alt="チーム・スコアを設定" />
+    <method name="Set Ultimate Ability Enabled" alt="アルティメット・アビリティを有効化" />
+    <method name="Set Ultimate Charge" alt="アルティメット・チャージを設定" />
+    <method name="Skip" alt="スキップ" />
+    <method name="Skip If" alt="スキップする条件" />
+    <method name="Small Message" alt="小さなメッセージ" />
+    <method name="Start Accelerating" alt="加速の開始" />
+    <method name="Start Camera" alt="カメラの始動" />
+    <method name="Start Damage Modification" alt="ダメージ変更を開始" />
+    <method name="Start Damage Over Time" alt="継続ダメージを開始" />
+    <method name="Start Facing" alt="向き変更を開始" />
+    <method name="Start Forcing Player To Be Hero" alt="プレイヤーへのヒーロー強制を開始" />
+    <method name="Start Forcing Spawn Room" alt="リスポーンエリアの強制を開始" />
+    <method name="Start Forcing Throttle" alt="強制スロットル開始" />
+    <method name="Start Heal Over Time" alt="継続ヒールを開始" />
+    <method name="Start Holding Button" alt="ボタン長押し開始" />
+    <method name="Start Throttle In Direction" alt="指定方向にスロットル開始" />
+    <method name="Start Transforming Throttle" alt="スロットルの変化を開始" />
+    <method name="Stop Accelerating" alt="加速の中止" />
+    <method name="Stop All Damage Modifications" alt="すべてのダメージ変更を停止" />
+    <method name="Stop All Damage Over Time" alt="すべての継続ダメージを停止" />
+    <method name="Stop All Heal Over Time" alt="すべての継続ヒールを停止" />
+    <method name="Stop Camera" alt="カメラの停止" />
+    <method name="Stop Chasing Global Variable" alt="グローバル変数の追跡を中止" />
+    <method name="Stop Chasing Player Variable" alt="プレイヤー変数の追跡を中止" />
+    <method name="Stop Damage Modification" alt="ダメージ変更を停止" />
+    <method name="Stop Damage Over Time" alt="継続ダメージを停止" />
+    <method name="Stop Facing" alt="向き変更を停止" />
+    <method name="Stop Forcing Player To Be Hero" alt="プレイヤーへのヒーロー強制を停止" />
+    <method name="Stop Forcing Spawn Room" alt="リスポーンエリアの強制を停止" />
+    <method name="Stop Forcing Throttle" alt="強制スロットル中止" />
+    <method name="Stop Heal Over Time" alt="継続ヒールを停止" />
+    <method name="Stop Holding Button" alt="ボタン長押し解除" />
+    <method name="Stop Throttle In Direction" alt="指定方向にスロットル終了" />
+    <method name="Stop Transforming Throttle" alt="スロットルの変化を停止" />
+    <method name="Teleport" alt="テレポート" />
+    <method name="Unpause Match Time" alt="マッチ時間のポーズを解除" />
+    <method name="Wait" alt="待機" />
+    <method name="Absolute Value" alt="絶対値" />
+    <method name="Add" alt="追加" />
+    <method name="All Dead Players" alt="倒れたプレイヤー全員" />
+    <method name="All Heroes" alt="全ヒーロー" />
+    <method name="All Living Players" alt="生存プレイヤー全員" />
+    <method name="All Players" alt="すべてのプレイヤー" />
+    <method name="All Players Not On Objective" alt="プレイヤー全員が目標を確保中ではない" />
+    <method name="All Players On Objective" alt="プレイヤー全員が目標を確保中" />
+    <method name="Allowed Heroes" alt="許可されたヒーロー" />
+    <method name="Altitude Of" alt="高度: " />
+    <method name="And" alt="AND" />
+    <method name="Angle Between Vectors" alt="ベクトル間角度" />
+    <method name="Angle Difference" alt="角度差" />
+    <method name="Append To Array" alt="追加" />
+    <method name="Arccosine In Degrees" alt="度単位のアークコサイン" />
+    <method name="Arccosine In Radians" alt="ラジアンのアークコサイン" />
+    <method name="Arcsine In Degrees" alt="度単位のアークサイン" />
+    <method name="Arcsine In Radians" alt="ラジアンのアークサイン" />
+    <method name="Arctangent In Degrees" alt="度単位のアークタンジェント" />
+    <method name="Arctangent In Radians" alt="ラジアンのアークタンジェント" />
+    <method name="Array Contains" alt="含む配列" />
+    <method name="Array Slice" alt="配列のスライス" />
+    <method name="Attacker" alt="攻撃者" />
+    <method name="Backward" alt="後方" />
+    <method name="Closest Player To" alt="最も近いプレイヤー。基準: " />
+    <method name="Compare" alt="COMPARE" />
+    <method name="Control Mode Scoring Percentage" alt="コントロール・モードのスコア・パーセンテージ" />
+    <method name="Control Mode Scoring Team" alt="コントロール・モードの得点チーム" />
+    <method name="Count Of" alt="カウント: " />
+    <method name="Cosine From Degrees" alt="度のコサイン" />
+    <method name="Cosine From Radians" alt="ラジアンのコサイン" />
+    <method name="Cross Product" alt="クロス積" />
+    <method name="Current Map" alt="現在のマップ" />
+    <method name="Current Array Element" alt="現在の配列の要素" />
+    <method name="Direction From Angles" alt="角度による方向" />
+    <method name="Direction Towards" alt="指す方向: " />
+    <method name="Distance Between" alt="2点間の距離" />
+    <method name="Divide" alt="割る" />
+    <method name="Dot Product" alt="ドット積" />
+    <method name="Down" alt="下" />
+    <method name="Empty Array" alt="空の配列" />
+    <method name="Entity Exists" alt="エンティティが存在している" />
+    <method name="Event Damage" alt="イベント・ダメージ" />
+    <method name="Event Healing" alt="イベント・ヒール" />
+    <method name="Event Player" alt="イベント・プレイヤー" />
+    <method name="Event Was Critical Hit" alt="イベントがクリティカル・ヒットだった" />
+    <method name="Eye Position" alt="目の位置" />
+    <method name="Facing Direction Of" alt="プレイヤーが向いている方向: " />
+    <method name="False" alt="False" />
+    <method name="Farthest Player From" alt="最も遠いプレイヤー。基準: " />
+    <method name="Filtered Array" alt="フィルタリングされた配列" />
+    <method name="First Of" alt="1番目。最大数は" />
+    <method name="Flag Position" alt="フラッグの位置" />
+    <method name="Forward" alt="前方向" />
+    <method name="Game Mode" alt="ゲーム・モード" />
+    <method name="Current Game Mode" alt="現在のゲーム・モード" />
+    <method name="Global Variable" alt="グローバル変数" />
+    <method name="Has Spawned" alt="スポーンした" />
+    <method name="Has Status" alt="ステータスがある" />
+    <method name="Healee" alt="ヒール対象" />
+    <method name="Healer" alt="ヒーラー" />
+    <method name="Health" alt="ライフ" />
+    <method name="Hero" alt="ヒーロー" />
+    <method name="Hero Icon String" alt="ヒーローアイコン文字列" />
+    <method name="Hero Of" alt="ヒーロー" />
+    <method name="Horizontal Angle From Direction" alt="方向からの水平角" />
+    <method name="Horizontal Angle Towards" alt="水平角の方向: " />
+    <method name="Horizontal Facing Angle Of" alt="対面水平角: " />
+    <method name="Horizontal Speed Of" alt="水平速度: " />
+    <method name="Host Player" alt="ホスト・プレイヤー" />
+    <method name="Index Of Array Value" alt="配列値のインデックス" />
+    <method name="Is Alive" alt="生存している" />
+    <method name="Is Assembling Heroes" alt="ヒーローを編成中" />
+    <method name="Is Between Rounds" alt="ラウンドの間" />
+    <method name="Is Button Held" alt="ボタンが長押しされている" />
+    <method name="Is Communicating" alt="コミュニケーションしている" />
+    <method name="Is Communicating Any" alt="任意の方法でコミュニケーションしている" />
+    <method name="Is Communicating Any Emote" alt="エモートでコミュニケーションしている" />
+    <method name="Is Communicating Any Voice Line" alt="ボイス・ラインでコミュニケーションしている" />
+    <method name="Is Control Mode Point Locked" alt="コントロール・モードでポイントがロックされている" />
+    <method name="Is Crouching" alt="しゃがんでいる" />
+    <method name="Is CTF Mode In Sudden Death" alt="キャプチャー・ザ・フラッグ・モードがサドンデス中" />
+    <method name="Is Dead" alt="倒れている" />
+    <method name="Is Dummy Bot" alt="ダミーボットである" />
+    <method name="Is Firing Primary" alt="メイン攻撃を使用中" />
+    <method name="Is Firing Secondary" alt="サブ攻撃を使用中" />
+    <method name="Is Flag At Base" alt="フラッグが陣地にある" />
+    <method name="Is Game In Progress" alt="進行中のゲーム" />
+    <method name="Is Hero Being Played" alt="ヒーローがプレイされているか" />
+    <method name="Is In Air" alt="空中にいる" />
+    <method name="Is In Line Of Sight" alt="射線が通っている" />
+    <method name="Is In Setup" alt="セットアップ中" />
+    <method name="Is In Spawn Room" alt="リスポーンエリアにいる" />
+    <method name="Is In View Angle" alt="視角範囲内" />
+    <method name="Is Match Complete" alt="マッチが完了している" />
+    <method name="Is Moving" alt="移動している" />
+    <method name="Is Objective Complete" alt="目標をクリアした" />
+    <method name="Is On Ground" alt="地上にいる" />
+    <method name="Is On Objective" alt="目標にいる" />
+    <method name="Is On Wall" alt="壁の上にいる" />
+    <method name="Is Portrait On Fire" alt="ポートレートに炎エフェクトがついている" />
+    <method name="Is Standing" alt="立っている" />
+    <method name="Is Team On Defense" alt="防衛側のチーム" />
+    <method name="Is Team On Offense" alt="攻撃側のチーム" />
+    <method name="Is True For All" alt="すべてに対して「TRUE」" />
+    <method name="Is True For Any" alt="いずれに対しても「TRUE」" />
+    <method name="Is Using Ability 1" alt="アビリティ1を使用" />
+    <method name="Is Using Ability 2" alt="アビリティ2を使用" />
+    <method name="Is Using Ultimate" alt="アルティメットを使用している" />
+    <method name="Is Waiting For Players" alt="ほかのプレイヤーを待っている" />
+    <method name="Last Created Entity" alt="最新のエンティティ" />
+    <method name="Last Damage Modification ID" alt="最新のダメージ変更ID" />
+    <method name="Last Damage Over Time ID" alt="最新の継続ダメージID" />
+    <method name="Last Heal Over Time ID" alt="最新の継続ヒールID" />
+    <method name="Last Of" alt="最後。全体数は" />
+    <method name="Last Text ID" alt="最新のテキストID" />
+    <method name="Left" alt="左" />
+    <method name="Local Vector Of" alt="ローカルのベクトル: " />
+    <method name="Map" alt="マップ" />
+    <method name="Match Round" alt="マッチのラウンド" />
+    <method name="Match Time" alt="マッチ時間" />
+    <method name="Max" alt="最大" />
+    <method name="Max Health" alt="最大ライフ" />
+    <method name="Min" alt="分" />
+    <method name="Modulo" alt="剰余" />
+    <method name="Multiply" alt="掛ける" />
+    <method name="Nearest Walkable Position" alt="最も近い歩行可能な位置" />
+    <method name="Normalize" alt="正規化" />
+    <method name="Normalized Health" alt="正規化ライフ" />
+    <method name="Not" alt="NOT" />
+    <method name="Null" alt="NULL" />
+    <method name="Number" alt="数値" />
+    <method name="Number Of Dead Players" alt="倒れたプレイヤーの数" />
+    <method name="Number Of Deaths" alt="デス数" />
+    <method name="Number Of Eliminations" alt="キル数" />
+    <method name="Number Of Final Blows" alt="ファイナル・ブロウ数" />
+    <method name="Number Of Heroes" alt="ヒーローの数" />
+    <method name="Number Of Living Players" alt="生存プレイヤーの数" />
+    <method name="Number Of Players" alt="プレイヤーの数" />
+    <method name="Number Of Players On Objective" alt="目標を確保中のプレイヤーの数" />
+    <method name="Objective Index" alt="コントロール・モードのサブマップ番号" />
+    <method name="Objective Position" alt="目標の位置" />
+    <method name="Opposite Team Of" alt="相手チーム: " />
+    <method name="Or" alt="OR" />
+    <method name="Payload Position" alt="ペイロードの位置" />
+    <method name="Payload Progress Percentage" alt="ペイロード進行のパーセンテージ" />
+    <method name="Player Carrying Flag" alt="フラッグを運んでいる" />
+    <method name="Player Closest To Reticle" alt="照準に最も近いプレイヤー" />
+    <method name="Player Variable" alt="プレイヤー変数" />
+    <method name="Players In Slot" alt="スロットに入ったプレイヤー" />
+    <method name="Players In View Angle" alt="視角範囲内のプレイヤー" />
+    <method name="Players On Hero" alt="ヒーローを使用中のプレイヤー" />
+    <method name="Players Within Radius" alt="範囲内のプレイヤー" />
+    <method name="Point Capture Percentage" alt="ポイント・キャプチャーのパーセンテージ" />
+    <method name="Position of" alt="位置: " />
+    <method name="Raise To Power" alt="冪乗" />
+    <method name="Random Integer" alt="ランダムな整数" />
+    <method name="Random Real" alt="ランダムな実数" />
+    <method name="Random Value In Array" alt="配列内のランダムな値" />
+    <method name="Randomized Array" alt="ランダム化された配列" />
+    <method name="Ray Cast Hit Normal" alt="レイ・キャストが当たった法線" />
+    <method name="Ray Cast Hit Player" alt="レイ・キャストが当たったプレイヤー" />
+    <method name="Ray Cast Hit Position" alt="レイ・キャストのヒット位置" />
+    <method name="Remove From Array" alt="配列から削除" />
+    <method name="Right" alt="右" />
+    <method name="Round To Integer" alt="整数への四捨五入" />
+    <method name="Score Of" alt="スコア: " />
+    <method name="Server Load" alt="サーバー負荷" />
+    <method name="Server Load Average" alt="サーバー負荷平均" />
+    <method name="Server Load Peak" alt="サーバー負荷ピーク" />
+    <method name="Sine From Degrees" alt="度のサイン" />
+    <method name="Sine From Radians" alt="ラジアンのサイン" />
+    <method name="Slot Of" alt="スロット: " />
+    <method name="Sorted Array" alt="ソートされた配列" />
+    <method name="Speed Of" alt="速さ: " />
+    <method name="Speed Of In Direction" alt="速さと方向: " />
+    <method name="Square Root" alt="平方根" />
+    <method name="String" alt="文字列" />
+    <method name="Custom String" alt="カスタムストリング" />
+    <method name="Icon String" alt="アイコンストリング" />
+    <method name="Subtract" alt="引く" />
+    <method name="Tangent From Degrees" alt="度のタンジェント" />
+    <method name="Tangent From Radians" alt="ラジアンのタンジェント" />
+    <method name="Team" alt="チーム" />
+    <method name="Team Of" alt="チーム: " />
+    <method name="Team Score" alt="チーム・スコア" />
+    <method name="Throttle Of" alt="スロットル: " />
+    <method name="Total Time Elapsed" alt="合計経過時間" />
+    <method name="True" alt="True" />
+    <method name="Ultimate Charge Percent" alt="アルティメット・チャージのパーセンテージ" />
+    <method name="Up" alt="上" />
+    <method name="Value In Array" alt="配列内の値" />
+    <method name="Vector" alt="ベクトル" />
+    <method name="Vector Towards" alt="ベクトルの方向: " />
+    <method name="Velocity Of" alt="速度: " />
+    <method name="Vertical Angle From Direction" alt="方向からの頂角" />
+    <method name="Vertical Angle Towards" alt="頂角の方向: " />
+    <method name="Vertical Facing Angle Of" alt="対面頂角: " />
+    <method name="Vertical Speed Of" alt="垂直速度: " />
+    <method name="Victim" alt="犠牲者" />
+    <method name="World Vector Of" alt="ワールド座標のベクトル: " />
+    <method name="X Component Of" alt="X成分: " />
+    <method name="Y Component Of" alt="Y成分: " />
+    <method name="Z Component Of" alt="Z成分: " />
+    <method name="Ongoing - Global" alt="進行中 - グローバル" />
+    <method name="Ongoing - Each Player" alt="進行中 - 各プレイヤー" />
+    <method name="Player earned elimination" alt="プレイヤーがキルを獲得" />
+    <method name="Player dealt final blow" alt="ファイナル・ブロウを獲得" />
+    <method name="Player dealt damage" alt="プレイヤーがダメージを与えた" />
+    <method name="Player took damage" alt="プレイヤーがダメージを受けた" />
+    <method name="Player died" alt="プレイヤーが倒れた" />
+    <method name="Player Dealt Healing" alt="プレイヤーがヒールを与えた" />
+    <method name="Player Received Healing" alt="プレイヤーがヒールを受けた" />
+    <method name="Player Joined Match" alt="プレイヤーがマッチに参加" />
+    <method name="Player Left Match" alt="プレイヤーがマッチから離脱" />
+    <method name="All" alt="すべて" />
+    <method name="Slot" alt="スロット" />
+    <method name="Reaper" alt="リーパー" />
+    <method name="Tracer" alt="トレーサー" />
+    <method name="Mercy" alt="マーシー" />
+    <method name="Hanzo" alt="ハンゾー" />
+    <method name="Torbjörn" alt="トールビョーン" />
+    <method name="Reinhardt" alt="ラインハルト" />
+    <method name="Pharah" alt="ファラ" />
+    <method name="Winston" alt="ウィンストン" />
+    <method name="Widowmaker" alt="ウィドウメイカー" />
+    <method name="Bastion" alt="バスティオン" />
+    <method name="Symmetra" alt="シンメトラ" />
+    <method name="Zenyatta" alt="ゼニヤッタ" />
+    <method name="Genji" alt="ゲンジ" />
+    <method name="Roadhog" alt="ロードホッグ" />
+    <method name="Mccree" alt="マクリー" />
+    <method name="Junkrat" alt="ジャンクラット" />
+    <method name="Zarya" alt="ザリア" />
+    <method name="Soldier: 76" alt="ソルジャー76" />
+    <method name="Lúcio" alt="ルシオ" />
+    <method name="D.va" alt="D.Va" />
+    <method name="Mei" alt="メイ" />
+    <method name="Sombra" alt="ソンブラ" />
+    <method name="Doomfist" alt="ドゥームフィスト" />
+    <method name="Ana" alt="ベレー" />
+    <method name="Orisa" alt="オリーサ" />
+    <method name="Brigitte" alt="ブリギッテ" />
+    <method name="Moira" alt="モイラ" />
+    <method name="Wrecking Ball" alt="レッキング・ボール" />
+    <method name="Ashe" alt="アッシュ" />
+    <method name="Baptiste" alt="バティスト" />
+    <method name="Sigma" alt="シグマ" />
+    <method name="==" alt=" ==" />
+    <method name="!=" alt="!=" />
+    <method name="&lt;" alt="&lt;" />
+    <method name="&lt;=" alt="&lt;=" />
+    <method name="&gt;" alt="&gt;" />
+    <method name="&gt;=" alt="&gt;=" />
+    <method name="Remove From Array By Value" alt="削除" />
+    <method name="Remove From Array By Index" alt="インデックスを配列から削除" />
+    <method name="Primary Fire" alt="メイン攻撃" />
+    <method name="Secondary Fire" alt="サブ攻撃" />
+    <method name="Ability" alt="アビリティ" />
+    <method name="Ultimate" alt="アルティメット" />
+    <method name="Interact" alt="インタラクト" />
+    <method name="Jump" alt="ジャンプ" />
+    <method name="Crouch" alt="しゃがみ" />
+    <method name="To World" alt="対ワールド: " />
+    <method name="To Player" alt="対プレイヤー: " />
+    <method name="Cancel Contrary Motion" alt="逆モーションをキャンセル" />
+    <method name="Incorporate Contrary Motion" alt="逆モーションを組み込む" />
+    <method name="Destination And Rate" alt="目的とレート" />
+    <method name="None" alt="なし" />
+    <method name="Destination And Duration" alt="目的と持続時間" />
+    <method name="Hacked" alt="ハックされている" />
+    <method name="Burning" alt="燃焼中" />
+    <method name="Knocked Down" alt="ノックダウンされている" />
+    <method name="Asleep" alt="眠っている" />
+    <method name="Frozen" alt="凍っている" />
+    <method name="Unkillable" alt="キル不可" />
+    <method name="Invincible" alt="無敵" />
+    <method name="Phased Out" alt="フェーズアウト中" />
+    <method name="Rooted" alt="固定されている" />
+    <method name="Stunned" alt="スタンされている" />
+    <method name="Ignore Condition" alt="条件無視" />
+    <method name="Abort When False" alt="「FALSE」の場合中止" />
+    <method name="Restart When True" alt="「TRUE」の場合リスタート" />
+    <method name="Sphere" alt="球体" />
+    <method name="Light Shaft" alt="光の筋" />
+    <method name="Orb" alt="オーブ" />
+    <method name="Ring" alt="リング" />
+    <method name="Cloud" alt="雲" />
+    <method name="Sparkles" alt="スパークル" />
+    <method name="Good Aura" alt="いいオーラ" />
+    <method name="Bad Aura" alt="悪いオーラ" />
+    <method name="Energy Sound" alt="エネルギー音" />
+    <method name="Pick-up Sound" alt="ピックアップ音" />
+    <method name="Good Aura Sound" alt="いいオーラ音" />
+    <method name="Bad Aura Sound" alt="悪いオーラ音" />
+    <method name="Sparkles Sound" alt="スパークル音" />
+    <method name="Smoke Sound" alt="スモーク音" />
+    <method name="Decal Sound" alt="デカール音" />
+    <method name="Beacon Sound" alt="ビーコン音" />
+    <method name="White" alt="白" />
+    <method name="Yellow" alt="黄色" />
+    <method name="Green" alt="緑" />
+    <method name="Purple" alt="紫" />
+    <method name="Red" alt="赤" />
+    <method name="Blue" alt="青" />
+    <method name="Aqua" alt="アクア" />
+    <method name="Orange" alt="オレンジ" />
+    <method name="Sky Blue" alt="スカイブルー" />
+    <method name="Turquoise" alt="ターコイズ" />
+    <method name="Lime Green" alt="ライムグリーン" />
+    <method name="Visible To, Position, and Radius" alt="表示される相手、位置、範囲" />
+    <method name="Position And Radius" alt="位置と範囲" />
+    <method name="Visible To" alt="目視可能: " />
+    <method name="To Nearest" alt="最も近い数値へ" />
+    <method name="Voice Line Up" alt="ボイス・ライン上" />
+    <method name="Voice Line Left" alt="ボイス・ライン左" />
+    <method name="Voice Line Right" alt="ボイス・ライン右" />
+    <method name="Voice Line Down" alt="ボイス・ライン下" />
+    <method name="Emote Up" alt="エモート上" />
+    <method name="Emote Left" alt="エモート左" />
+    <method name="Emote Right" alt="エモート右" />
+    <method name="Emote Down" alt="エモート下" />
+    <method name="Ultimate Status" alt="アルティメットの状態" />
+    <method name="Hello" alt="こんにちは" />
+    <method name="Need Healing" alt="回復が必要" />
+    <method name="Group Up" alt="集合" />
+    <method name="Thanks" alt="ありがとう" />
+    <method name="Acknowledge" alt="了解" />
+    <method name="Top" alt="トップ" />
+    <method name="Visible To And String" alt="表示される相手、文字列" />
+    <method name="Arrow: Down" alt="矢印:下" />
+    <method name="Arrow: Left" alt="矢印:左" />
+    <method name="Arrow: Right" alt="矢印:右" />
+    <method name="Arrow: Up" alt="矢印:上" />
+    <method name="Asterisk" alt="アスタリスク" />
+    <method name="Bolt" alt="雷光の弓" />
+    <method name="Checkmark" alt="チェックマーク" />
+    <method name="Circle" alt="サークル" />
+    <method name="Club" alt="棍棒" />
+    <method name="Diamond" alt="ダイヤモンド" />
+    <method name="Dizzy" alt="めまい" />
+    <method name="Exclamation Mark" alt="エクスクラメーションマーク" />
+    <method name="Eye" alt="の眼差し" />
+    <method name="Fire" alt="砲撃" />
+    <method name="Flag" alt="通報" />
+    <method name="Halo" alt="光輪" />
+    <method name="Happy" alt="ハッピー" />
+    <method name="Heart" alt="ハート" />
+    <method name="Moon" alt="月" />
+    <method name="No" alt="いいえ" />
+    <method name="Plus" alt="プラス" />
+    <method name="Poison" alt="ポイズン" />
+    <method name="Poison 2" alt="ポイズン2" />
+    <method name="Question Mark" alt="クエスチョンマーク" />
+    <method name="Radioactive" alt="レディオアクティブ" />
+    <method name="Recycle" alt="リサイクル" />
+    <method name="Ring Thick" alt="リング(太)" />
+    <method name="Ring Thin" alt="リング(細)" />
+    <method name="Sad" alt="サッド" />
+    <method name="Skull" alt="スカル" />
+    <method name="Spade" alt="スペード" />
+    <method name="Spiral" alt="螺旋を描く" />
+    <method name="Stop" alt="停止" />
+    <method name="Trashcan" alt="ゴミ箱" />
+    <method name="Warning" alt="警告" />
+    <method name="X" alt="X" />
+    <method name="Visible To And Position" alt="表示される相手、位置" />
+    <method name="Position" alt="位置" />
+    <method name="Good Explosion" alt="いい爆発" />
+    <method name="Bad Explosion" alt="悪い爆発" />
+    <method name="Ring Explosion" alt="リングの爆発" />
+    <method name="Good Pickup Effect" alt="いいピックアップ効果" />
+    <method name="Bad Pickup Effect" alt="悪いピックアップ効果" />
+    <method name="Debuff Impact Sound" alt="衝撃音（デバフ）" />
+    <method name="Buff Impact Sound" alt="衝撃音（バフ）" />
+    <method name="Ring Explosion Sound" alt="爆発音（リング）" />
+    <method name="Buff Explosion Sound" alt="爆発音（バフ）" />
+    <method name="Explosion Sound" alt="爆発音" />
+    <method name="Enemies" alt="敵" />
+    <method name="Direction, Rate, and Max Speed" alt="方向、レート、最大の速さ" />
+    <method name="Receivers, Damagers, and Damage Percent" alt="レシーバー、ダメージャー、ダメージのパーセンテージ" />
+    <method name="Receivers And Damagers" alt="レシーバーとダメージャー" />
+    <method name="Direction And Turn Rate" alt="方向と回転レート" />
+    <method name="Barriers Do Not Block LOS" alt="バリアは射線を妨げない" />
+    <method name="Enemy Barriers Block LOS" alt="敵のバリアが射線を妨げる" />
+    <method name="All Barriers Block LOS" alt="すべてのバリアが射線を妨げる" />
+    <method name="Rotation" alt="回転" />
+    <method name="Rotation And Translation" alt="回転と平行移動" />
+    <method name="Off" alt="オフ" />
+    <method name="Surfaces" alt="表面" />
+    <method name="Surfaces And Enemy Barriers" alt="表面と敵のバリア" />
+    <method name="Surfaces And All Barriers" alt="表面とすべてのバリア" />
+    <method name="Clip Against Surfaces" alt="表面に対してクリップ" />
+    <method name="Do Not Clip" alt="クリップしない" />
+    <method name="Visible To, Position, and String" alt="表示される相手、位置、文字列" />
+    <method name="Good Beam" alt="プラス効果のビーム" />
+    <method name="Bad Beam" alt="マイナス効果のビーム" />
+    <method name="Grapple Beam" alt="グラップリング・ビーム" />
+    <method name="Default Visibility" alt="デフォルト表示" />
+    <method name="Visible Always" alt="常に表示" />
+    <method name="Visible Never" alt="表示されない" />
+    <method name="Replace Existing Throttle" alt="既存のスロットルと入れ替え" />
+    <method name="Add To Existing Throttle" alt="既存のスロットルに追加" />
+    <method name="Direction And Magnitude" alt="方向と変化の大きさ" />
+    <method name="Ayutthaya" alt="AYUTTHAYA" />
+    <method name="Black Forest" alt="BLACK FOREST" />
+    <method name="Black Forest (Winter)" alt="BLACK FOREST （ウィンター）" />
+    <method name="Blizzard World" alt="BLIZZARD WORLD" />
+    <method name="Blizzard World (Winter)" alt="BLIZZARD WORLD （ウィンター）" />
+    <method name="Busan" alt="BUSAN" />
+    <method name="Busan Downtown (Lunar New Year)" alt="BUSAN DOWNTOWN (旧正月)" />
+    <method name="Busan Sanctuary (Lunar New Year)" alt="BUSAN SANCTUARY (旧正月)" />
+    <method name="Busan Stadium" alt="BUSAN STADIUM" />
+    <method name="Castillo" alt="CASTILLO" />
+    <method name="Château Guillard" alt="CHATEAU GUILLARD" />
+    <method name="Château Guillard (Halloween)" alt="CHATEAU GUILLARD (ハロウィン)" />
+    <method name="Dorado" alt="DORADO" />
+    <method name="Ecopoint: Antarctica" alt="ECOPOINT: ANTARCTICA" />
+    <method name="Ecopoint: Antarctica (Winter)" alt="ECOPOINT: ANTARCTICA （ウィンター）" />
+    <method name="Eichenwalde" alt="EICHENWALDE" />
+    <method name="Eichenwalde (Halloween)" alt="EICHENWALDE （ハロウィン）" />
+    <method name="Estádio das Rãs" alt="ESTADIO DAS RAS" />
+    <method name="Hanamura" alt="HANAMURA" />
+    <method name="Hanamura (Winter)" alt="HANAMURA （ウィンター）" />
+    <method name="Havana" alt="HAVANA" />
+    <method name="Hollywood" alt="HOLLYWOOD" />
+    <method name="Hollywood (Halloween)" alt="HOLLYWOOD （ハロウィン）" />
+    <method name="Horizon Lunar Colony" alt="HORIZON LUNAR COLONY" />
+    <method name="Ilios" alt="ILIOS" />
+    <method name="Ilios Lighthouse" alt="ILIOS LIGHTHOUSE" />
+    <method name="Ilios Ruins" alt="ILIOS RUINS" />
+    <method name="Ilios Well" alt="ILIOS WELL" />
+    <method name="Junkenstein's Revenge" alt="ジャンケン&lt;br&gt;シュタインの&lt;br&gt;復讐" />
+    <method name="Junkertown" alt="JUNKERTOWN" />
+    <method name="King's Row" alt="KING'S ROW" />
+    <method name="King's Row (Winter)" alt="KING'S ROW （ウィンター）" />
+    <method name="Lijiang Control Center" alt="LIJIANG CONTROL CENTER" />
+    <method name="Lijiang Control Center (Lunar New Year)" alt="LIJIANG CONTROL CENTER (旧正月)" />
+    <method name="Lijiang Garden" alt="LIJIANG GARDEN" />
+    <method name="Lijiang Garden (Lunar New Year)" alt="LIJIANG GARDEN (旧正月)" />
+    <method name="Lijiang Night Market" alt="LIJIANG NIGHT MARKET" />
+    <method name="Lijiang Night Market (Lunar New Year)" alt="LIJIANG NIGHT MARKET (旧正月)" />
+    <method name="Lijiang Tower" alt="LIJIANG TOWER" />
+    <method name="Lijiang Tower (Lunar New Year)" alt="LIJIANG TOWER (LUNAR NEW YEAR)" />
+    <method name="Necropolis" alt="NECROPOLIS" />
+    <method name="Nepal" alt="NEPAL" />
+    <method name="Nepal Sanctum" alt="NEPAL SANCTUM" />
+    <method name="Nepal Shrine" alt="NEPAL SHRINE" />
+    <method name="Nepal Village" alt="NEPAL VILLAGE" />
+    <method name="Numbani" alt="NUMBANI" />
+    <method name="Oasis" alt="オアシス" />
+    <method name="Oasis City Center" alt="OASIS CITY CENTER" />
+    <method name="Oasis Gardens" alt="OASIS GARDENS" />
+    <method name="Oasis University" alt="OASIS UNIVERSITY" />
+    <method name="Paris" alt="PARIS" />
+    <method name="Petra" alt="PETRA" />
+    <method name="Rialto" alt="RIALTO" />
+    <method name="Route 66" alt="ROUTE 66" />
+    <method name="Sydney Harbour Arena" alt="SYDNEY HARBOUR ARENA" />
+    <method name="Temple of Anubis" alt="TEMPLE OF ANUBIS" />
+    <method name="Volskaya Industries" alt="VOLSKAYA INDUSTRIES" />
+    <method name="Watchpoint: Gibraltar" alt="WATCHPOINT: GIBRALTAR" />
+    <method name="Assault" alt="アサルト" />
+    <method name="Capture The Flag" alt="キャプチャー・ザ・フラッグ" />
+    <method name="Control" alt="コントロール" />
+    <method name="Deathmatch" alt="デスマッチ" />
+    <method name="Elimination" alt="エリミネーション" />
+    <method name="Escort" alt="エスコート" />
+    <method name="Hybrid" alt="ハイブリッド" />
+    <method name="Lúcioball" alt="ルシオボール" />
+    <method name="Mei's Snowball Offensive" alt="メイの雪合戦" />
+    <method name="Practice Range" alt="練習場" />
+    <method name="Skirmish" alt="スカーミッシュ" />
+    <method name="Team Deathmatch" alt="チーム・デスマッチ" />
+    <method name="Yeti Hunter" alt="イエティ・ハンター" />
+  </Methods>
+</I18nLanguage>

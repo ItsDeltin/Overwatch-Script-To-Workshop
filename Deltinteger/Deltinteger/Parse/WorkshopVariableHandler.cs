@@ -9,15 +9,15 @@ namespace Deltin.Deltinteger.Parse
     public class WorkshopArrayBuilder
     {
         private WorkshopVariable Constructor { get; }
-        IndexedVar Store;
+        private readonly IndexReference Store;
 
-        public WorkshopArrayBuilder(WorkshopVariable constructor, IndexedVar store)
+        public WorkshopArrayBuilder(WorkshopVariable constructor, IndexReference store)
         {
             Constructor = constructor;
             Store = store;
         }
 
-        public static Element[] SetVariable(WorkshopArrayBuilder builder, Element value, Element targetPlayer, WorkshopVariable variable, bool optimize2ndDim, params Element[] index)
+        public static Element[] SetVariable(WorkshopArrayBuilder builder, Element value, Element targetPlayer, WorkshopVariable variable, bool flat2ndDim, params Element[] index)
         {
             if (index == null || index.Length == 0)
             {
@@ -35,9 +35,9 @@ namespace Deltin.Deltinteger.Parse
                     return new Element[] { Element.Part<A_SetPlayerVariableAtIndex>(targetPlayer, variable, index[0], value) };
             }
 
-            if (optimize2ndDim && index.Length > 2) throw new ArgumentOutOfRangeException("index", "Can't set more than 2 dimensions if optimizeIndexSet is true.");
+            if (flat2ndDim && index.Length > 2) throw new ArgumentOutOfRangeException("index", "Can't set more than 2 dimensions if flat2ndDim is true.");
 
-            if (index.Length == 2 && optimize2ndDim)
+            if (index.Length == 2 && flat2ndDim)
             {
                 Element baseArray = GetVariable(targetPlayer, variable, index[0]);
                 Element baseArrayValue = Element.Part<V_Append>(
@@ -95,7 +95,7 @@ namespace Deltin.Deltinteger.Parse
 
                 // Copy back the variable at C to the correct index
                 actions.AddRange(
-                    SetVariable(builder, builder.Store.GetVariable(targetPlayer), targetPlayer, builder.Constructor, false, index[i])
+                    SetVariable(builder, (Element)builder.Store.GetVariable(targetPlayer), targetPlayer, builder.Constructor, false, index[i])
                 );
             }
             // Set the final variable using Set At Index.
@@ -187,7 +187,7 @@ namespace Deltin.Deltinteger.Parse
 
                 // Copy back the variable at C to the correct index
                 actions.AddRange(
-                    SetVariable(builder, builder.Store.GetVariable(targetPlayer), targetPlayer, builder.Constructor, false, index[i])
+                    SetVariable(builder, (Element)builder.Store.GetVariable(targetPlayer), targetPlayer, builder.Constructor, false, index[i])
                 );
             }
             // Set the final variable using Set At Index.

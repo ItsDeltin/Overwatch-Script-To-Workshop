@@ -3,6 +3,7 @@ using System.Net;
 using System.Linq;
 using System.Text;
 using System.Collections.Generic;
+using System.IO;
 using HtmlAgilityPack;
 using Deltin.Deltinteger.LanguageServer;
 
@@ -13,9 +14,9 @@ namespace Deltin.Deltinteger.WorkshopWiki
         public const string URL = "https://us.forums.blizzard.com/en/overwatch/t/wiki-workshop-syntax-script-database/";
         private static Log Log = new Log("Wiki");
 
-        private static WikiMethod[] wiki = null; 
+        private static Wiki wiki = null; 
         private static bool gotWiki = false;
-        private static WikiMethod[] GetWiki()
+        public static Wiki GetWiki()
         {
             try
             {
@@ -56,7 +57,7 @@ namespace Deltin.Deltinteger.WorkshopWiki
                     methods.Add(new WikiMethod(name, description, parameters.ToArray()));
                 }
 
-                wiki = methods.ToArray();
+                wiki = new Wiki(methods.ToArray());
                 return wiki;
             }
             catch (Exception ex)
@@ -66,17 +67,28 @@ namespace Deltin.Deltinteger.WorkshopWiki
             }
         }
 
-        public static WikiMethod GetWikiMethod(string name)
+        public WikiMethod[] Methods { get; }
+        public Wiki(WikiMethod[] methods)
         {
-            return GetWiki()?.FirstOrDefault(w => w.Name.ToLower() == name.ToLower());
+            Methods = methods;
+        }
+
+        public WikiMethod GetMethod(string methodName)
+        {
+            return Methods.FirstOrDefault(m => m.Name.ToLower() == methodName.ToLower());
+        }
+
+        public string ToXML()
+        {
+            return Extras.SerializeToXML<Wiki>(this);
         }
     }
 
     public class WikiMethod
     {
-        public string Name;
-        public string Description;
-        public WikiParameter[] Parameters;
+        public string Name { get; }
+        public string Description { get; }
+        public WikiParameter[] Parameters { get; }
         public WikiMethod(string name, string description, WikiParameter[] parameters)
         {
             Name = name;
@@ -97,8 +109,8 @@ namespace Deltin.Deltinteger.WorkshopWiki
 
     public class WikiParameter
     {
-        public string Name;
-        public string Description;
+        public string Name { get; }
+        public string Description { get; }
         public WikiParameter(string name, string description)
         {
             Name = name;
@@ -108,11 +120,6 @@ namespace Deltin.Deltinteger.WorkshopWiki
         public override string ToString()
         {
             return Name;
-        }
-
-        public ParameterInformation ToParameterInformation()
-        {
-            return new ParameterInformation(Name, Description);
         }
     }
 }

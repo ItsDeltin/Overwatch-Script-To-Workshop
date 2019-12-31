@@ -1,40 +1,30 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Deltin.Deltinteger.Elements;
 
 namespace Deltin.Deltinteger.Parse
 {
     public class ContinueSkip
     {
-        private const int ExpectedActionCount = 5;
+        private TranslateRule Rule { get; }
+        private bool IsSetup;
+        private IndexReference SkipCount { get; set; }
+        private IndexReference TempHolder { get; set; }
+        private SkipStartMarker Skipper { get; set; }
 
-        private readonly bool IsGlobal;
-        private readonly List<Element> Actions;
-        private readonly VarCollection VarCollection;
-
-        private IndexedVar SkipCount;
-        private IndexedVar TempHolder;
-
-        private bool IsSetup = false;
-
-        public ContinueSkip(bool isGlobal, List<Element> actions, VarCollection varCollection)
+        public ContinueSkip(TranslateRule rule)
         {
-            IsGlobal = isGlobal;
-            Actions = actions;
-            VarCollection = varCollection;
+            Rule = rule;
         }
 
-        public void Setup()
+        public void Setup(ActionSet actionSet)
         {
-            if (IsSetup)
-                return;
+            if (IsSetup) return;
             IsSetup = true;
 
-            SkipCount = IndexedVar.AssignInternalVarExt(VarCollection, null, "ContinueSkip", IsGlobal);
-            TempHolder = IndexedVar.AssignInternalVarExt(VarCollection, null, "ContinueSkip temp holder", IsGlobal);
-            
-            A_Wait waitAction = A_Wait.MinimumWait;
-            waitAction.Comment = "ContinueSkip Wait";
+            SkipCount = Rule.DeltinScript.VarCollection.Assign("continueSkip", Rule.IsGlobal, true);
+            TempHolder = Rule.DeltinScript.VarCollection.Assign("continueSkipTemp", Rule.IsGlobal, true);
 
             A_SkipIf skipAction = Element.Part<A_SkipIf>
             (
@@ -43,63 +33,57 @@ namespace Deltin.Deltinteger.Parse
                 // Number of actions
                 new V_Number(3)
             );
-            skipAction.Comment = "ContinueSkip Skipper";
 
-            Element[] actions = ArrayBuilder<Element>.Build(
-                waitAction,
-                skipAction,
-                TempHolder.SetVariable(SkipCount.GetVariable()),
-                SkipCount.SetVariable(0),
-                Element.Part<A_Skip>(TempHolder.GetVariable())
+            Skipper = new SkipStartMarker(actionSet);
+            Skipper.SkipCount = TempHolder.GetVariable();
+
+            IActionList[] actions = ArrayBuilder<IActionList>.Build(
+                new ALAction(A_Wait.MinimumWait),
+                new ALAction(skipAction),
+                new ALAction(TempHolder.SetVariable((Element)SkipCount.GetVariable())[0]),
+                new ALAction(SkipCount.SetVariable(0)[0]),
+                Skipper
             );
 
-            if (actions.Length != ExpectedActionCount)
-                throw new Exception($"Expected {ExpectedActionCount} actions for the Continue Skip, got {actions.Length} instead.");
-
-            Actions.InsertRange(0, actions);
+            Rule.Actions.InsertRange(0, actions);
         }
-        
 
-        public void SetSkipCount(int number)
+        public void SetSkipCount(ActionSet actionSet, Element skipCount)
         {
             CheckSetup();
-            Actions.AddRange(SetSkipCountActions(number));
+            actionSet.AddAction(SkipCount.SetVariable(skipCount));
         }
 
-        public Element[] SetSkipCountActions(int number)
+        public void SetSkipCount(ActionSet actionSet, SkipEndMarker endMarker)
         {
-            return SkipCount.SetVariable(number);
+            SetSkipCount(actionSet, GetSkipCount(endMarker));
         }
 
-        public void SetSkipCount(Element element)
+        public void SetSkipCount(ActionSet actionSet, int skipCount)
         {
-            CheckSetup();
-            Actions.AddRange(SkipCount.SetVariable(element));
+            SetSkipCount(actionSet, new V_Number(skipCount));
         }
 
-        public void ResetSkip()
+        public void ResetSkipCount(ActionSet actionSet)
         {
-            CheckSetup();
-            SetSkipCount(0);
+            SetSkipCount(actionSet, 0);
         }
 
-        public Element[] ResetSkipActions()
+        public V_Number GetSkipCount(SkipEndMarker endMarker)
         {
             CheckSetup();
-            return SetSkipCountActions(0);
+            return Skipper.GetSkipCount(endMarker);
         }
 
-        public int GetSkipCount()
+        public int GetSkipCount(ActionSet actionSet)
         {
-            // Gets the skip count based on the number of actions and the position of the coninue skip's skip-if.
-            // This will need to be changed if any other components are added that insert actions into the ruleset.
-            return Actions.Count - (IsSetup ? ExpectedActionCount : 0);
+            CheckSetup();
+            return actionSet.ActionList.Count - 5;
         }
 
         private void CheckSetup()
         {
-            if (!IsSetup)
-                throw new Exception("ContinueSkip not set up.");
+            if (!IsSetup) throw new Exception("ContinueSkip not set up.");
         }
     }
 }

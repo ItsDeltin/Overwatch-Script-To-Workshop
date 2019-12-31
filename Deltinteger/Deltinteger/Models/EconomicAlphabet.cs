@@ -4,6 +4,7 @@ using System.Linq;
 using System.Collections.Generic;
 using System.IO;
 using Deltin.Deltinteger.Models.Import;
+using Deltin.Deltinteger.Parse;
 using Deltin.Deltinteger.LanguageServer;
 
 namespace Deltin.Deltinteger.Models
@@ -66,14 +67,15 @@ namespace Deltin.Deltinteger.Models
             Console.ReadLine();
         }
 
-        public static Line[] Create(string text, bool exactLetter, Location location)
+        public static Line[] Create(string text, bool exactLetter, ScriptFile script, DocRange range)
         {
             double offset = 0;
             List<Line> result = new List<Line>();
 
             foreach (char character in text)
             {
-                Letter letter = GetLetter(character, exactLetter, location);
+                Letter letter = GetLetter(character, exactLetter, script, range);
+                if (letter == null) return null;
 
                 if (letter.Lines != null)
                     foreach (var line in letter.Lines)
@@ -103,7 +105,7 @@ namespace Deltin.Deltinteger.Models
             return result.ToArray();
         }
 
-        private static Letter GetLetter(char character, bool exactLetter, Location location)
+        private static Letter GetLetter(char character, bool exactLetter, ScriptFile script, DocRange range)
         {
             foreach (Letter letter in Alphabet)
                 if (character == letter.Character)
@@ -114,7 +116,8 @@ namespace Deltin.Deltinteger.Models
                     if (Char.ToLower(character) == char.ToLower(letter.Character))
                         return letter;
             
-            throw new SyntaxErrorException(character + " is not a valid character.", location);
+            script.Diagnostics.Error(character + " is not a valid character.", range);
+            return null;
         }
 
         private static Letter[] Alphabet { get; } = new Letter[]

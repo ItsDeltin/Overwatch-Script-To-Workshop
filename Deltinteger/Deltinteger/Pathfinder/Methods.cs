@@ -1,193 +1,120 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using Deltin.Deltinteger.Pathfinder;
+using System.IO;
 using Deltin.Deltinteger.Elements;
+using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.Parse;
+using Deltin.Deltinteger.CustomMethods;
+using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
+using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItemKind;
+using StringOrMarkupContent = OmniSharp.Extensions.LanguageServer.Protocol.Models.StringOrMarkupContent;
 
 namespace Deltin.Deltinteger.Pathfinder
 {
-    public abstract class PathfindPlayer : CustomMethodBase
+    // Pathmap object methods
+    
+    [CustomMethod("Pathfind", "Pathfinds a player.", CustomMethodType.Action, false)]
+    class Pathfind : CustomMethodBase
     {
-        protected override MethodResult Get()
+        public override CodeParameter[] Parameters()
         {
-            if (TranslateContext.ParserData.PathfinderInfo == null)
-                TranslateContext.ParserData.PathfinderInfo = new PathfinderInfo(TranslateContext.ParserData);
-            PathfinderInfo info = TranslateContext.ParserData.PathfinderInfo;
-            return Get(info);
+            return new CodeParameter[] {
+                new CodeParameter("player", "The player to move."),
+                new CodeParameter("destination", "the destination to move the player to.")
+            };
         }
 
-        protected abstract MethodResult Get(PathfinderInfo info);
-    }
-
-    [CustomMethod("GetPath", CustomMethodType.MultiAction_Value)]
-    [VarRefParameter("Path Map")]
-    [Parameter("Position", Elements.ValueType.Vector, null)]
-    [Parameter("Destination", Elements.ValueType.Vector, null)]
-    public class GetPath : CustomMethodBase
-    {
-        protected override MethodResult Get()
+        public override IWorkshopTree Get(ActionSet actionSet, IWorkshopTree[] parameterValues)
         {
-            if (((VarRef)Parameters[0]).Var is PathMapVar == false)
-                throw SyntaxErrorException.InvalidVarRefType(((VarRef)Parameters[0]).Var.Name, VarType.PathMap, ParameterLocations[0]);
-            
-            PathMapVar pathmap = (PathMapVar)((VarRef)Parameters[0]).Var;
-            Element position               = (Element)Parameters[1];
-            Element destination            = (Element)Parameters[2];
-
-            DijkstraNormal algorithm = new DijkstraNormal(TranslateContext, pathmap, position, destination, null);
+            DijkstraNormal algorithm = new DijkstraNormal(
+                actionSet, (Element)actionSet.CurrentObject.GetVariable(), Element.Part<V_PositionOf>(parameterValues[0]), (Element)parameterValues[1]
+            );
             algorithm.Get();
-            return new MethodResult(
-                null,
-                Element.Part<V_Append>(algorithm.finalPath.GetVariable(), destination)
+            DijkstraBase.Pathfind(
+                actionSet, actionSet.Translate.DeltinScript.SetupPathfinder(), (Element)algorithm.finalPath.GetVariable(), (Element)parameterValues[0], (Element)parameterValues[1]
             );
-        }
 
-        public override CustomMethodWiki Wiki()
-        {
-            return new CustomMethodWiki(
-                "Gets the path to the destination.",
-                // Parameters
-                "The path to use during pathfinding.",
-                "The initial position.",
-                "The final destination."
-            );
+            return null;
         }
     }
 
-    [CustomMethod("Pathfind", CustomMethodType.Action)]
-    [Parameter("Player", Elements.ValueType.Player, null)]
-    [VarRefParameter("Path Map")]
-    [Parameter("Destination", Elements.ValueType.Vector, null)]
-    [Parameter("Attributes", Elements.ValueType.Any, typeof(V_EmptyArray))]
-    class Pathfind : PathfindPlayer
+    [CustomMethod("PathfindAll", "Moves an array of players to the specified position by pathfinding.", CustomMethodType.Action, false)]
+    class PathfindAll : CustomMethodBase
     {
-        override protected MethodResult Get(PathfinderInfo info)
+        public override CodeParameter[] Parameters()
         {
-            if (((VarRef)Parameters[1]).Var is PathMapVar == false)
-                throw SyntaxErrorException.InvalidVarRefType(((VarRef)Parameters[1]).Var.Name, VarType.PathMap, ParameterLocations[1]);
-            
-            Element player                 = (Element)Parameters[0];
-            PathMapVar pathmap = (PathMapVar)((VarRef)Parameters[1]).Var;
+            return new CodeParameter[] {
+                new CodeParameter("player", "The array of players to move."),
+                new CodeParameter("destination", "The destination to move the players to.")
+            };
+        }
 
-            IndexedVar destination = IndexedVar.AssignInternalVarExt(TranslateContext.VarCollection, Scope, "Destination", TranslateContext.IsGlobal);
-            TranslateContext.Actions.AddRange(destination.SetVariable((Element)Parameters[2]));
-
-            Element attributes = (Element)Parameters[3];
-
-            DijkstraNormal algorithm = new DijkstraNormal(TranslateContext, pathmap, Element.Part<V_PositionOf>(player), destination.GetVariable(), attributes);
+        public override IWorkshopTree Get(ActionSet actionSet, IWorkshopTree[] parameterValues)
+        {
+            DijkstraMultiSource algorithm = new DijkstraMultiSource(
+                actionSet, actionSet.Translate.DeltinScript.SetupPathfinder(), (Element)actionSet.CurrentObject.GetVariable(), (Element)parameterValues[0], (Element)parameterValues[1]
+            );
             algorithm.Get();
-            DijkstraBase.Pathfind(TranslateContext, info, algorithm.finalPath.GetVariable(), player, destination.GetVariable(), algorithm.finalPathAttributes.GetVariable());
-            return new MethodResult(null, null);
-        }
 
-        override public CustomMethodWiki Wiki()
-        {
-            return new CustomMethodWiki(
-                "Moves a player to the specified position by pathfinding.",
-                // Parameters
-                "The player to move.",
-                "The path to use during pathfinding.",
-                "The destination to move the player to."
-            );
+            return null;
         }
     }
 
-    [CustomMethod("PathfindAll", CustomMethodType.Action)]
-    [Parameter("Players", Elements.ValueType.Player, null)]
-    [VarRefParameter("Path Map")]
-    [Parameter("Destination", Elements.ValueType.Vector, null)]
-    class PathfindAll : PathfindPlayer
+    [CustomMethod("GetPath", "Returns an array of vectors forming a path from the starting point to the destination.", CustomMethodType.MultiAction_Value, false)]
+    class GetPath : CustomMethodBase
     {
-        protected override MethodResult Get(PathfinderInfo info)
+        public override CodeParameter[] Parameters() => new CodeParameter[] {
+            new CodeParameter("position", "The initial position."),
+            new CodeParameter("destination", "The final destination.")
+        };
+
+        public override IWorkshopTree Get(ActionSet actionSet, IWorkshopTree[] parameterValues)
         {
-            if (((VarRef)Parameters[1]).Var is PathMapVar == false)
-                throw SyntaxErrorException.InvalidVarRefType(((VarRef)Parameters[1]).Var.Name, VarType.PathMap, ParameterLocations[1]);
+            Element position = (Element)parameterValues[0];
+            Element destination = (Element)parameterValues[1];
 
-            IndexedVar players = IndexedVar.AssignInternalVarExt(TranslateContext.VarCollection, Scope, "Players", TranslateContext.IsGlobal);
-            TranslateContext.Actions.AddRange(players.SetVariable((Element)Parameters[0]));
-
-            PathMapVar pathmap = (PathMapVar)((VarRef)Parameters[1]).Var;
-
-            IndexedVar destination = IndexedVar.AssignInternalVarExt(TranslateContext.VarCollection, Scope, "Destination", TranslateContext.IsGlobal);
-            TranslateContext.Actions.AddRange(destination.SetVariable((Element)Parameters[2]));
-
-            DijkstraMultiSource algorithm = new DijkstraMultiSource(TranslateContext, info, pathmap, players.GetVariable(), destination.GetVariable(), null);
+            DijkstraNormal algorithm = new DijkstraNormal(
+                actionSet, (Element)actionSet.CurrentObject.GetVariable(), position, destination
+            );
             algorithm.Get();
-            return new MethodResult(null, null);
-        }
 
-        public override CustomMethodWiki Wiki()
-        {
-            return new CustomMethodWiki(
-                "Moves an array of players to the specified position by pathfinding.",
-                // Parameters
-                "The array of players to move.",
-                "The path to use during pathfinding.",
-                "The destination to move the players to."
-            );
+            return Element.Part<V_Append>(algorithm.finalPath.GetVariable(), destination);
         }
     }
 
-    [CustomMethod("WalkPath", CustomMethodType.Action)]
-    [Parameter("Players", Elements.ValueType.Player, null)]
-    [Parameter("Path", Elements.ValueType.Any, null)]
-    class WalkPath : PathfindPlayer
+    // Pathmap static methods
+
+    [CustomMethod("StopPathfind", "Stops pathfinding for the specified players.", CustomMethodType.Action, false)]
+    class StopPathfind : CustomMethodBase
     {
-        protected override MethodResult Get(PathfinderInfo info)
+        public override CodeParameter[] Parameters()
         {
-            TranslateContext.Actions.AddRange(info.Path.SetVariable((Element)Parameters[1], (Element)Parameters[0]));
-            return new MethodResult(null, null);
+            return new CodeParameter[] {
+                new CodeParameter("players", "The players that will stop pathfinding. Can be a single player or an array of players.")
+            };
         }
 
-        public override CustomMethodWiki Wiki()
+        public override IWorkshopTree Get(ActionSet actionSet, IWorkshopTree[] parameterValues)
         {
-            return new CustomMethodWiki(
-                "Input players will walk to each position in the path.",
-                "Players that will follow the path.",
-                "The array of positions to walk to."
+            actionSet.AddAction(
+                actionSet.Translate.DeltinScript.SetupPathfinder().Path.SetVariable(
+                    new V_EmptyArray(), (Element)parameterValues[0]
+                )
             );
+
+            return null;
         }
     }
 
-    [CustomMethod("StopPathfind", CustomMethodType.Action)]
-    [Parameter("Players", Elements.ValueType.Player, null)]
-    class StopPathfind : PathfindPlayer
+    [CustomMethod("IsPathfinding", "Checks if the target player is currently pathfinding.", CustomMethodType.Value, false)]
+    class IsPathfinding : CustomMethodBase
     {
-        protected override MethodResult Get(PathfinderInfo info)
-        {
-            Element player = (Element)Parameters[0];
+        public override CodeParameter[] Parameters() => new CodeParameter[] {
+            new CodeParameter("players", "The player to check.")
+        };
 
-            return new MethodResult(ArrayBuilder<Element>.Build(
-                info.Path.SetVariable(new V_EmptyArray(), player)
-            ), null);
-        }
-
-        public override CustomMethodWiki Wiki()
+        public override IWorkshopTree Get(ActionSet actionSet, IWorkshopTree[] parameterValues)
         {
-            return new CustomMethodWiki(
-                "Stops pathfinding for the specified players.",
-                "The players that will stop pathfinding."
-            );
-        }
-    }
-
-    [CustomMethod("IsPathfinding", CustomMethodType.Value)]
-    [Parameter("Player", Elements.ValueType.Player, null)]
-    class IsPathfinding : PathfindPlayer
-    {
-        override protected MethodResult Get(PathfinderInfo info)
-        {
-            Element player = (Element)Parameters[0];
-            return new MethodResult(null, Get(info, player));
-        }
-
-        override public CustomMethodWiki Wiki()
-        {
-            return new CustomMethodWiki(
-                "Checks if the target player is currently pathfinding.",
-                "The player to check."
-            );
+            return Get(actionSet.Translate.DeltinScript.SetupPathfinder(), (Element)parameterValues[0]);
         }
 
         public static Element Get(PathfinderInfo info, Element player)
@@ -200,111 +127,87 @@ namespace Deltin.Deltinteger.Pathfinder
         }
     }
 
-    [CustomMethod("IsPathfindUpdateSafe", CustomMethodType.Value)]
-    [Parameter("Player", Elements.ValueType.Player, null)]
-    class IsPathfindUpdateSafe : PathfindPlayer
+    [CustomMethod("IsPathfindStuck", "Returns true if the specified player takes longer than expected to reach the next pathfind node.", CustomMethodType.Value, false)]
+    class IsPathfindStuck : CustomMethodBase
     {
-        override protected MethodResult Get(PathfinderInfo info)
+        public override CodeParameter[] Parameters() => new CodeParameter[] {
+            new CodeParameter("player", "The player to check."),
+            new CodeParameter(
+                "speedScalar",
+                "The speed scalar of the player. `1` is the default speed of all heroes except Gengi and Tracer, which is `1.1`. Default value is `1`.",
+                new ExpressionOrWorkshopValue(new V_Number(1))
+            )
+        };
+
+        public override IWorkshopTree Get(ActionSet actionSet, IWorkshopTree[] parameterValues)
         {
-            Element player = (Element)Parameters[0];
+            PathfinderInfo info = actionSet.Translate.DeltinScript.SetupPathfinder();
 
-            Element isPathfinding = IsPathfinding.Get(info, player);
-
-            Element isSafe = Element.Part<V_Or>(
-                Element.Part<V_Not>(isPathfinding),
-                Element.Part<V_IsTrueForAny>(
-                    info.Path.GetVariable(player),
-                    new V_Compare(
-                        Element.Part<V_DistanceBetween>(Element.Part<V_PositionOf>(player), new V_ArrayElement()),
-                        Operators.LessThanOrEqual,
-                        PathfinderInfo.MoveToNext
-                    )
-                )
-            );
-            return new MethodResult(null, isSafe);
-        }
-
-        public override CustomMethodWiki Wiki()
-        {
-            return new CustomMethodWiki(
-                "Checks if updating the pathfinding of a player is currently safe.",
-                "The player to check."
-            );
-        }
-    }
-
-    [CustomMethod("IsPathfindStuck", CustomMethodType.Value)]
-    [Parameter("Player", Elements.ValueType.Player, null)]
-    [Parameter("Speed Scalar", Elements.ValueType.Number, null)]
-    class IsPathfindStuck : PathfindPlayer
-    {
-        override protected MethodResult Get(PathfinderInfo info)
-        {
             Element leniency = 2;
 
-            Element player = (Element)Parameters[0];
-            Element scalar = (Element)Parameters[1];
+            Element player = (Element)parameterValues[0];
+            Element scalar = (Element)parameterValues[1];
             Element defaultSpeed = 5.5;
-            Element nodeDistance = info.DistanceToNext.GetVariable(player);
-            Element timeSinceLastNode = new V_TotalTimeElapsed() - info.LastUpdate.GetVariable(player);
+            Element nodeDistance = (Element)info.DistanceToNext.GetVariable(player);
+            Element timeSinceLastNode = new V_TotalTimeElapsed() - (Element)info.LastUpdate.GetVariable(player);
             
             Element isStuck = new V_Compare(
                 nodeDistance - ((defaultSpeed * scalar * timeSinceLastNode) / leniency),
                 Operators.LessThanOrEqual,
-                0
+                new V_Number(0)
             );
-            isStuck = Element.Part<V_And>(IsPathfinding.Get(info, player), isStuck);
-            return new MethodResult(null, isStuck);
-        }
-
-        public override CustomMethodWiki Wiki()
-        {
-            return new CustomMethodWiki(
-                "Returns true if the specified player takes longer than expected to reach the next pathfind node.",
-                "The player to check.",
-                "The speed scalar of the player."
-            );
+            return Element.Part<V_And>(IsPathfinding.Get(info, player), isStuck);
         }
     }
 
-    [CustomMethod("FixPathfind", CustomMethodType.Action)]
-    [Parameter("Player", Elements.ValueType.Player, null)]
-    class FixPathfind : PathfindPlayer
+    [CustomMethod("FixPathfind", "Fixes pathfinding for a player by teleporting them to the next node. Use in conjunction with `IsPathfindStuck()`.", CustomMethodType.Action, false)]
+    class FixPathfind : CustomMethodBase
     {
-        override protected MethodResult Get(PathfinderInfo info)
+        public override CodeParameter[] Parameters() => new CodeParameter[] {
+            new CodeParameter("player", "The player to fix pathfinding for."),
+        };
+
+        public override IWorkshopTree Get(ActionSet actionSet, IWorkshopTree[] parameterValues)
         {
-            Element player = (Element)Parameters[0];
-            TranslateContext.Actions.AddRange(ArrayBuilder<Element>.Build(
-                Element.Part<A_Teleport>(player, info.NextPosition(player))
+            Element player = (Element)parameterValues[0];
+
+            actionSet.AddAction(Element.Part<A_Teleport>(
+                player,
+                actionSet.Translate.DeltinScript.SetupPathfinder().NextPosition(player)
             ));
-            return new MethodResult(null, null);
-        }
 
-        public override CustomMethodWiki Wiki()
-        {
-            return new CustomMethodWiki(
-                "Fixes pathfinding for a player by teleporting them to the next node. Use in conjunction with IsPathfindStuck().",
-                "The player to fix pathfinding for."
-            );
+            return null;
         }
     }
 
-    [CustomMethod("NextNode", CustomMethodType.Value)]
-    [Parameter("Player", Elements.ValueType.Player, null)]
-    class NextNode : PathfindPlayer
+    [CustomMethod("NextNode", "Gets the position of the next node.", CustomMethodType.Value, false)]
+    class NextNode : CustomMethodBase
     {
-        override protected MethodResult Get(PathfinderInfo info)
-        {
-            Element player = (Element)Parameters[0];
-            return new MethodResult(null, info.NextPosition(player));
-        }
+        public override CodeParameter[] Parameters() => new CodeParameter[] {
+            new CodeParameter("player", "The player to get the next node of."),
+        };
 
-        public override CustomMethodWiki Wiki()
+        public override IWorkshopTree Get(ActionSet actionSet, IWorkshopTree[] parameterValues)
         {
-            return new CustomMethodWiki(
-                "Gets the position of the next node.",
-                "The player to get the next node of."
-            );
+            return actionSet.Translate.DeltinScript.SetupPathfinder().NextPosition((Element)parameterValues[0]);
+        }
+    }
+
+    [CustomMethod("WalkPath", "Input players will walk to each position in the path.", CustomMethodType.Action, false)]
+    class WalkPath : CustomMethodBase
+    {
+        public override CodeParameter[] Parameters() => new CodeParameter[] {
+            new CodeParameter("players", "Players that will follow the path."),
+            new CodeParameter("path", "The array of positions to walk to.")
+        };
+
+        public override IWorkshopTree Get(ActionSet actionSet, IWorkshopTree[] parameterValues)
+        {
+            actionSet.AddAction(actionSet.Translate.DeltinScript.SetupPathfinder().Path.SetVariable(
+                (Element)parameterValues[1],
+                (Element)parameterValues[0]
+            ));
+            return null;
         }
     }
 

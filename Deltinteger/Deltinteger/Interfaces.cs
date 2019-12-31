@@ -2,27 +2,24 @@ using System.Text;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.WorkshopWiki;
 using Deltin.Deltinteger.Parse;
+using Deltin.Deltinteger.LanguageServer;
+using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
+using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItemKind;
+using SignatureInformation = OmniSharp.Extensions.LanguageServer.Protocol.Models.SignatureInformation;
+using StringOrMarkupContent = OmniSharp.Extensions.LanguageServer.Protocol.Models.StringOrMarkupContent;
 
 namespace Deltin.Deltinteger
 {
     public interface IWorkshopTree
     {
-        string ToWorkshop();
-        void DebugPrint(Log log, int depth = 0);
+        string ToWorkshop(OutputLanguage language);
     }
 
-    public interface IMethod : ILanguageServerInfo
+    public interface IMethod : IScopeable, IParameterCallable
     {
-        string Name { get; }
-        ParameterBase[] Parameters { get; }
-        WikiMethod Wiki { get; }
-
-        Element Parse(TranslateRule context, bool needsToBeValue, ScopeGroup scope, MethodNode methodNode, IWorkshopTree[] parameters);
-    }
-
-    public interface ILanguageServerInfo
-    {
-        string GetLabel(bool markdown);
+        CodeType ReturnType { get; }
+        IWorkshopTree Parse(ActionSet actionSet, IWorkshopTree[] values, object[] additionalParameterData);
+        bool DoesReturnValue();
     }
 
     public interface ISkip
@@ -34,16 +31,37 @@ namespace Deltin.Deltinteger
     {
         string Name { get; }
         AccessLevel AccessLevel { get; }
-        Node Node { get; }
-    }
-
-    public interface ITypeRegister
-    {
-        void RegisterParameters(ParsingData parser);
+        Location DefinedAt { get; }
+        bool WholeContext { get; }
+        CompletionItem GetCompletion();
     }
 
     public interface ICallable
     {
-        
+        void Call(ScriptFile script, DocRange callRange);
+        string Name { get; }
+    }
+
+    public interface IParameterCallable : ILabeled
+    {
+        CodeParameter[] Parameters { get; }
+        Location DefinedAt { get; }
+        StringOrMarkupContent Documentation { get; }
+    }
+
+    public interface IGettable
+    {
+        IWorkshopTree GetVariable(Element eventPlayer = null);
+    }
+
+    public interface ILabeled
+    {
+        string GetLabel(bool markdown);
+    }
+
+    public interface IApplyBlock : ILabeled
+    {
+        void SetupBlock();
+        CallInfo CallInfo { get; }
     }
 }

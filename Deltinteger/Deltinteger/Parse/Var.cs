@@ -1,507 +1,448 @@
 using System;
-using System.Text;
 using System.Collections.Generic;
-using System.Linq;
-using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.LanguageServer;
-using Deltin.Deltinteger.Models;
-using Deltin.Deltinteger.Pathfinder;
+using Deltin.Deltinteger.Elements;
+using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
+using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItemKind;
 
 namespace Deltin.Deltinteger.Parse
 {
-    public class VarCollection
+    public class IndexReference : IGettable
     {
-        public WorkshopVariable Global { get; }
-        public WorkshopVariable Player { get; }
-
-        public WorkshopArrayBuilder WorkshopArrayBuilder { get; }
-
-        private int[] ReservedGlobalIDs { get; }
-        private string[] ReservedGlobalNames { get; }
-        private int[] ReservedPlayerIDs { get; }
-        private string[] ReservedPlayerNames { get; }
-
-        public VarCollection(int[] reservedGlobalIDs, string[] reservedGlobalNames, int[] reservedPlayerIDs, string[] reservedPlayerNames)
-        {
-            ReservedGlobalIDs   = reservedGlobalIDs;
-            ReservedPlayerIDs   = reservedPlayerIDs;
-            ReservedGlobalNames = reservedGlobalNames;
-            ReservedPlayerNames = reservedPlayerNames;
-
-            Global      = Assign("_extendedGlobalCollection", true);
-            Player      = Assign("_extendedPlayerCollection", false);
-            var builder = Assign("_arrayBuilder", true);
-
-            IndexedVar tempArrayBuilderVar = IndexedVar.AssignInternalVar(this, null, "_arrayBuilderStore", true);
-            WorkshopArrayBuilder = new WorkshopArrayBuilder(builder, tempArrayBuilderVar);
-            tempArrayBuilderVar.ArrayBuilder = WorkshopArrayBuilder;
-        }
-
-        public WorkshopVariable Assign(string name, bool isGlobal)
-        {
-            int index = NextFree(isGlobal);
-
-            WorkshopVariable workshopVariable = new WorkshopVariable(isGlobal, index, WorkshopNameFromCodeName(isGlobal, name));
-
-            UseCollection(isGlobal)[index] = workshopVariable;
-
-            return workshopVariable;
-        }
-
-        public WorkshopVariable FromID(bool isGlobal, int id) 
-        {
-            return UseCollection(isGlobal).FirstOrDefault(var => var != null && var.ID == id);
-        }
-
-        public int NextFree(bool isGlobal)
-        {
-            // Get the next free ID.
-            int id = -1;
-            var collection = UseCollection(isGlobal);
-            for (int i = 0; i < Constants.NUMBER_OF_VARIABLES; i++)
-                // Make sure the ID is not reserved.
-                if (collection[i] == null && !(isGlobal ? ReservedGlobalIDs : ReservedPlayerIDs).Contains(i))
-                {
-                    id = i;
-                    break;
-                }
-
-            // If ID still equals -1, there are no more free variables.
-            if (id == -1)
-                throw new Exception();
-            return id;
-        }
-
-        public int NextFreeExtended(bool isGlobal)
-        {
-            int index = Array.IndexOf(isGlobal ? ExtendedGlobalCollection : ExtendedPlayerCollection, null);
-
-            if (index == -1)
-                throw new Exception();
-            return index;
-        }
-
-        public string WorkshopNameFromCodeName(bool isGlobal, string name)
-        {
-            StringBuilder valid = new StringBuilder();
-
-            // Remove invalid characters and replace ' ' with '_'.
-            for (int i = 0; i < name.Length; i++)
-                if (name[i] == ' ')
-                    valid.Append('_');
-                else if (WorkshopVariable.ValidVariableCharacters.Contains(name[i]))
-                    valid.Append(name[i]);
-                
-            string newName = valid.ToString();
-
-            if (newName.Length > Constants.MAX_VARIABLE_NAME_LENGTH)
-                newName = newName.Substring(0, Constants.MAX_VARIABLE_NAME_LENGTH);
-
-            // Add a number to the end of the variable name if a variable with the same name was already created.
-            if (NameTaken(isGlobal, newName))
-            {
-                int num = 0;
-                while (NameTaken(isGlobal, NewName(newName, num))) num++;
-                newName = NewName(newName, num);
-            }
-            return newName.ToString();
-        }
-
-        private bool NameTaken(bool isGlobal, string name)
-        {
-            return UseCollection(isGlobal).Any(gv => gv != null && gv.Name == name) || (isGlobal ? ReservedGlobalNames : ReservedPlayerNames).Contains(name);
-        }
-
-        private string NewName(string baseName, int indent)
-        {
-            return baseName.Substring(0, Math.Min(baseName.Length, Constants.MAX_VARIABLE_NAME_LENGTH - (indent.ToString().Length + 1))) + "_" + indent;
-        }
-
-        private void Add(WorkshopVariable variable)
-        {
-            UseCollection(variable.IsGlobal)[variable.ID] = variable;
-        }
-
-        public WorkshopVariable UseVariable(bool isGlobal) => isGlobal ? Global : Player;
-        public WorkshopVariable[] UseCollection(bool isGlobal) => isGlobal ? GlobalVariables : PlayerVariables;
-        public IndexedVar[] UseExtendedCollection(bool isGlobal) => isGlobal ? ExtendedGlobalCollection : ExtendedPlayerCollection;
-
-        public readonly List<Var> AllVars = new List<Var>();
-
-        private readonly WorkshopVariable[] GlobalVariables = new WorkshopVariable[Constants.NUMBER_OF_VARIABLES]; 
-        private readonly WorkshopVariable[] PlayerVariables = new WorkshopVariable[Constants.NUMBER_OF_VARIABLES]; 
-        private readonly IndexedVar[] ExtendedGlobalCollection = new IndexedVar[Constants.MAX_ARRAY_LENGTH];
-        private readonly IndexedVar[] ExtendedPlayerCollection = new IndexedVar[Constants.MAX_ARRAY_LENGTH];
-
-        public void ToWorkshop(StringBuilder builder)
-        {
-            builder.AppendLine("variables");
-            builder.AppendLine("{");
-            builder.AppendLine("    global:");
-            WriteCollection(builder, UseCollection(true));
-            builder.AppendLine("    player:");
-            WriteCollection(builder, UseCollection(false));
-            builder.AppendLine("}");
-        }
-
-        private void WriteCollection(StringBuilder builder, WorkshopVariable[] variables)
-        {
-            for (int i = 0; i < Constants.NUMBER_OF_VARIABLES; i++)
-                if (variables[i] != null)
-                    builder.AppendLine("        " + variables[i].ID + ": " + variables[i].Name);
-
-        }
-    }
-
-    public abstract class Var : IScopeable
-    {
-        public string Name { get; }
-        public ScopeGroup Scope { get; private set; }
-        public bool IsDefinedVar { get; }
-        public Node Node { get; }
-
-        public DefinedType Type { get; set; }
-
-        public AccessLevel AccessLevel { get; set; } = AccessLevel.Public;
-
-        public Var(string name, ScopeGroup scope, Node node = null)
-        {
-            Name = name;
-            Scope = scope;
-            Node = node;
-            IsDefinedVar = node != null;
-
-            scope?./* we're */ In(this) /* together! */;
-        }
-
-        public abstract Element GetVariable(Element targetPlayer = null);
-
-        public abstract bool Gettable();
-        public abstract bool Settable();
-
-        public override string ToString()
-        {
-            return Name;
-        }
-    }
-
-    public class IndexedVar : Var
-    {
-        public static IndexedVar AssignVar(VarCollection collection, ScopeGroup scope, string name, bool isGlobal, Node node)
-        {
-            WorkshopVariable assignedVariable = collection.Assign(name, isGlobal);
-            IndexedVar var = CreateVar(collection.WorkshopArrayBuilder, scope, name, isGlobal, assignedVariable, null, node);
-            collection.AllVars.Add(var);
-            return var;
-        }
-        public static IndexedVar AssignInternalVar(VarCollection collection, ScopeGroup scope, string name, bool isGlobal)
-            => AssignVar(collection, scope, name, isGlobal, null);
-
-        public static IndexedVar AssignVar(VarCollection collection, ScopeGroup scope, string name, bool isGlobal, WorkshopVariable variable, Node node)
-        {
-            string workshopName = variable.Name;
-
-            if (workshopName == null)
-                workshopName = collection.WorkshopNameFromCodeName(isGlobal, name);
-            
-            int id = variable.ID;
-
-            if (id == -1)
-                id = collection.NextFree(isGlobal);
-            else 
-            {
-                WorkshopVariable assigned = collection.FromID(isGlobal, variable.ID);
-                if (assigned != null)
-                    throw new SyntaxErrorException("Variable ID '" + variable.ID + "' has already been assigned by '" + assigned.Name + "'.", node.Location);
-            }
-            
-            WorkshopVariable use = new WorkshopVariable(isGlobal, id, workshopName);
-
-            IndexedVar var = CreateVar(
-                collection.WorkshopArrayBuilder,
-                scope,
-                name,
-                isGlobal,
-                use,
-                null,
-                node
-            );
-            collection.AllVars.Add(var);
-            collection.UseCollection(isGlobal)[id] = use;
-            return var;
-        }
-        
-        public static IndexedVar AssignVarExt(VarCollection collection, ScopeGroup scope, string name, bool isGlobal, Node node)
-        {
-            int index = collection.NextFreeExtended(isGlobal);
-            IndexedVar var = CreateVar(
-                collection.WorkshopArrayBuilder,
-                scope,
-                name,
-                isGlobal,
-                collection.UseVariable(isGlobal),
-                new Element[] { new V_Number(index) },
-                node
-            );
-            collection.AllVars.Add(var);
-            collection.UseExtendedCollection(isGlobal)[index] = var;
-            return var;
-        }
-        public static IndexedVar AssignInternalVarExt(VarCollection collection, ScopeGroup scope, string name, bool isGlobal)
-            => AssignVarExt(collection, scope, name, isGlobal, null);
-
-        private static IndexedVar CreateVar(WorkshopArrayBuilder builder, ScopeGroup scope, string name, bool isGlobal, WorkshopVariable variable, Element[] index, Node node)
-        {
-            if (scope == null || !scope.Recursive)
-                return new IndexedVar(builder, scope, name, isGlobal, variable, index, node);
-            else
-                return new RecursiveVar(builder, scope, name, isGlobal, variable, index, node);
-        }
-
         public WorkshopArrayBuilder ArrayBuilder { get; set; }
-        public bool IsGlobal { get; }
-        public WorkshopVariable Variable { get; private set; }
-        public Element[] Index { get; private set; }
-        public bool UsesIndex { get { return Index != null && Index.Length > 0; } }
-        public Element DefaultTarget { get; set; } = new V_EventPlayer();
-        public bool Optimize2ndDim { get; set; } = false;
+        public WorkshopVariable WorkshopVariable { get; protected set; }
+        public Element[] Index { get; protected set; }
 
-        public IndexedVar(WorkshopArrayBuilder arrayBuilder, ScopeGroup scopeGroup, string name, bool isGlobal, WorkshopVariable variable, Element[] index, Node node)
-            : base (name, scopeGroup, node)
+        public IndexReference(WorkshopArrayBuilder arrayBuilder, WorkshopVariable workshopVariable, params Element[] index)
         {
-            this.ArrayBuilder = arrayBuilder;
-            IsGlobal = isGlobal;
-            Variable = variable;
+            ArrayBuilder = arrayBuilder;
+            WorkshopVariable = workshopVariable;
             Index = index;
         }
+        protected IndexReference() {}
 
-        override public bool Gettable() { return true; }
-        override public bool Settable() { return true; }
-
-        public override Element GetVariable(Element targetPlayer = null)
+        public virtual IWorkshopTree GetVariable(Element targetPlayer = null)
         {
-            if (targetPlayer == null) targetPlayer = DefaultTarget;
-            Element element = Get(targetPlayer);
-            if (Type != null)
-                element.SupportedType = this;
-            return element;
+            return WorkshopArrayBuilder.GetVariable(targetPlayer, WorkshopVariable, Index);
         }
 
-        protected virtual Element Get(Element targetPlayer = null)
+        public virtual Element[] SetVariable(Element value, Element targetPlayer = null, params Element[] index)
         {
-            return WorkshopArrayBuilder.GetVariable(targetPlayer, Variable, Index);
+            return WorkshopArrayBuilder.SetVariable(ArrayBuilder, value, targetPlayer, WorkshopVariable, false, ArrayBuilder<Element>.Build(Index, index));
         }
 
-        public virtual Element[] SetVariable(Element value, Element targetPlayer = null, params Element[] setAtIndex)
+        public virtual Element[] ModifyVariable(Operation operation, Element value, Element targetPlayer = null, params Element[] index)
         {
-            return WorkshopArrayBuilder.SetVariable(ArrayBuilder, value, targetPlayer, Variable, Optimize2ndDim, ArrayBuilder<Element>.Build(Index, setAtIndex));
+            return WorkshopArrayBuilder.ModifyVariable(ArrayBuilder, operation, value, targetPlayer, WorkshopVariable, ArrayBuilder<Element>.Build(Index, index));
         }
 
-        public virtual Element[] ModifyVariable(Operation operation, Element value, Element targetPlayer = null, params Element[] setAtIndex)
+        public IndexReference CreateChild(params Element[] index)
         {
-            return WorkshopArrayBuilder.ModifyVariable(ArrayBuilder, operation, value, targetPlayer, Variable, ArrayBuilder<Element>.Build(Index, setAtIndex));
-        }
-        
-        public virtual Element[] InScope(Element initialValue, Element targetPlayer = null)
-        {
-            if (initialValue != null)
-                return SetVariable(initialValue, targetPlayer);
-            return null;
-        }
-
-        public virtual void OutOfScope(TranslateRule context, Element targetPlayer = null)
-        {
-        }
-
-        public IndexedVar CreateChild(ScopeGroup scope, string name, Element[] index, Node node)
-        {
-            return new IndexedVar(ArrayBuilder, scope, name, IsGlobal, Variable, ArrayBuilder<Element>.Build(Index, index), node);
-        }
-
-        public override string ToString()
-        {
-            return 
-            (IsGlobal ? "global" : "player") + " " + Variable.ID + ":" + Variable.Name + 
-            (UsesIndex ? 
-                "[" + string.Join(", ", Index.Select(i => i is V_Number ? ((V_Number)i).Value.ToString() : "?")) + "]"
-            : "") + " "
-            + (AdditionalToStringInfo != null ? AdditionalToStringInfo + " " : "")
-            + Name;
-        }
-
-        protected virtual string AdditionalToStringInfo { get; } = null;
-    }
-
-    class ElementOrigin
-    {
-        public bool IsGlobal { get; }
-        public Element Player { get; }
-        public WorkshopVariable Variable { get; }
-        public Element[] Index { get; }
-
-        private ElementOrigin(bool isGlobal, Element player, WorkshopVariable variable, Element[] index)
-        {
-            IsGlobal = isGlobal;
-            Player = player;
-            Variable = variable;
-            Index = index;
-        }
-
-        public IndexedVar OriginVar(VarCollection varCollection, ScopeGroup scope, string name)
-        {
-            return new IndexedVar(varCollection.WorkshopArrayBuilder, scope, name, IsGlobal, Variable, Index, null);
-        }
-
-        public static ElementOrigin GetElementOrigin(Element element)
-        {
-            bool isGlobal = false;
-            Element player = null;
-            WorkshopVariable variable = null;
-
-            Element checking = element;
-            List<Element> index = new List<Element>();
-            while (checking != null)
-            {
-                if (checking is V_GlobalVariable)
-                {
-                    isGlobal = true;
-                    player = null;
-                    variable = (WorkshopVariable)checking.ParameterValues[0];
-                    checking = null;
-                }
-                else if (checking is V_PlayerVariable)
-                {
-                    isGlobal = false;
-                    player = (Element)checking.ParameterValues[0];
-                    variable = (WorkshopVariable)checking.ParameterValues[1];
-                    checking = null;
-                }
-                else if (checking is V_ValueInArray)
-                {
-                    index.Add((Element)checking.ParameterValues[1]);
-                    checking = (Element)checking.ParameterValues[0];
-                }
-                else return null;
-            }
-            
-            return new ElementOrigin(isGlobal, player, variable, index.ToArray());
+            // Note: `ArrayBuilder` and `ArrayBuilder<Element>` are 2 very different things.
+            return new IndexReference(ArrayBuilder, WorkshopVariable, ArrayBuilder<Element>.Build(Index, index));
         }
     }
 
-    public class RecursiveVar : IndexedVar
+    public class RecursiveIndexReference : IndexReference
     {
-        public RecursiveVar(WorkshopArrayBuilder arrayBuilder, ScopeGroup scopeGroup, string name, bool isGlobal, WorkshopVariable variable, Element[] index, Node node)
-            : base (arrayBuilder, scopeGroup, name, isGlobal, variable, index, node)
+        public RecursiveIndexReference(WorkshopArrayBuilder arrayBuilder, WorkshopVariable workshopVariable, params Element[] index) : base(arrayBuilder, workshopVariable, index)
         {
         }
-
-        protected override Element Get(Element targetPlayer = null)
+        public RecursiveIndexReference(IndexReference reference)
         {
-            return Element.Part<V_LastOf>(base.Get(targetPlayer));
+            this.WorkshopVariable = reference.WorkshopVariable;
+            this.Index = reference.Index;
+            this.ArrayBuilder = reference.ArrayBuilder;
         }
 
-        public override Element[] SetVariable(Element value, Element targetPlayer = null, params Element[] setAtIndex)
+        public override IWorkshopTree GetVariable(Element targetPlayer = null)
         {
-            return base.SetVariable(value, targetPlayer, CurrentIndex(targetPlayer, setAtIndex));
+            return Element.Part<V_LastOf>(base.GetVariable(targetPlayer));
         }
 
-        public override Element[] ModifyVariable(Operation operation, Element value, Element targetPlayer = null, params Element[] setAtIndex)
+        public override Element[] SetVariable(Element value, Element targetPlayer = null, params Element[] index)
         {
-            return base.ModifyVariable(operation, value, targetPlayer, CurrentIndex(targetPlayer, setAtIndex));
+            return base.SetVariable(value, targetPlayer, CurrentIndex(targetPlayer, index));
+        }
+
+        public override Element[] ModifyVariable(Operation operation, Element value, Element targetPlayer = null, params Element[] index)
+        {
+            return base.ModifyVariable(operation, value, targetPlayer, CurrentIndex(targetPlayer, index));
+        }
+
+        public Element[] Push(Element value)
+        {
+            return base.SetVariable(value, null, StackLength());
+        }
+
+        public Element[] Pop()
+        {
+            return base.SetVariable(Element.Part<V_ArraySlice>(base.GetVariable(), new V_Number(0), StackLength() - 1));
         }
 
         private Element[] CurrentIndex(Element targetPlayer, params Element[] setAtIndex)
         {
             return ArrayBuilder<Element>.Build(
-                Element.Part<V_CountOf>(base.Get(targetPlayer)) - 1,
+                StackLength() - 1,
                 setAtIndex
             );
         }
 
-        public override Element[] InScope(Element initialValue, Element targetPlayer = null)
+        private Element StackLength()
         {
-            return base.SetVariable(initialValue, targetPlayer, Element.Part<V_CountOf>(base.Get(targetPlayer)));
-        }
-
-        public override void OutOfScope(TranslateRule context, Element targetPlayer = null)
-        {
-            Element get = base.Get(targetPlayer);
-            context.Actions.AddRange(base.SetVariable(
-                Element.Part<V_ArraySlice>(
-                    get,
-                    new V_Number(0),
-                    Element.Part<V_CountOf>(get) - 1
-                ),
-                targetPlayer
-            ));
-
-            base.OutOfScope(context, targetPlayer);
-        }
-
-        protected override string AdditionalToStringInfo { get; } = "RECURSIVE";
-
-        public Element DebugStack(Element targetPlayer = null)
-        {
-            return base.Get(targetPlayer);
+            return Element.Part<V_CountOf>(base.GetVariable());
         }
     }
 
-    public class ElementReferenceVar : Var
+    public class WorkshopElementReference : IGettable
     {
-        public IWorkshopTree Reference { get; set; }
+        public IWorkshopTree WorkshopElement { get; }
 
-        public ElementReferenceVar(string name, ScopeGroup scope, Node node, IWorkshopTree reference) : base (name, scope, node)
+        public WorkshopElementReference(IWorkshopTree element)
         {
-            Reference = reference;
+            WorkshopElement = element;
         }
 
-        public override Element GetVariable(Element targetPlayer = null)
+        public IWorkshopTree GetVariable(Element targetPlayer) => WorkshopElement;
+    }
+
+    public class VarIndexAssigner
+    {
+        private readonly Dictionary<Var, IGettable> references = new Dictionary<Var, IGettable>();
+        private readonly List<VarIndexAssigner> children = new List<VarIndexAssigner>();
+        private readonly VarIndexAssigner parent = null;
+
+        public VarIndexAssigner() {}
+        private VarIndexAssigner(VarIndexAssigner parent)
         {
-            if (targetPlayer != null && !(targetPlayer is V_EventPlayer))
-                throw new Exception($"{nameof(targetPlayer)} must be null or EventPlayer.");
-            
-            if (targetPlayer == null)
-                targetPlayer = new V_EventPlayer();
-            
-            if (Reference == null)
-                throw new ArgumentNullException(nameof(Reference));
-
-            if (Reference is Element == false)
-                throw new Exception("Reference is not an element, can't get the variable.");
-
-            return (Element)Reference;
+            this.parent = parent;
         }
 
-        override public bool Gettable() { return Reference is Element; }
-        override public bool Settable() { return false; }
-
-        public override string ToString()
+        public void Add(VarCollection varCollection, Var var, bool isGlobal, IWorkshopTree referenceValue, bool recursive = false)
         {
-            return "element reference : " + Name;
+            if (varCollection == null) throw new ArgumentNullException(nameof(varCollection));
+            if (var == null)           throw new ArgumentNullException(nameof(var          ));
+
+            // A gettable/settable variable
+            if (var.Settable())
+            {
+                var assigned = varCollection.Assign(var, isGlobal);
+                if (recursive) assigned = new RecursiveIndexReference(assigned);
+                references.Add(var, assigned);
+            }
+            
+            // Element reference
+            else if (var.VariableType == VariableType.ElementReference)
+            {
+                if (referenceValue == null) throw new ArgumentNullException(nameof(referenceValue));
+                references.Add(var, new WorkshopElementReference(referenceValue));
+            }
+            
+            else throw new NotImplementedException();
+        }
+
+        public void Add(Var var, IndexReference reference)
+        {
+            if (reference == null) throw new ArgumentNullException(nameof(reference));
+            references.Add(var, reference);
+        }
+
+        public void Add(Var var, IWorkshopTree reference)
+        {
+            if (reference == null) throw new ArgumentNullException(nameof(reference));
+            references.Add(var, new WorkshopElementReference(reference));
+        }
+
+        public VarIndexAssigner CreateContained()
+        {
+            VarIndexAssigner newAssigner = new VarIndexAssigner(this);
+            children.Add(newAssigner);
+            return newAssigner;
+        }
+
+        public IGettable this[Var var]
+        {
+            get {
+                VarIndexAssigner current = this;
+                while (current != null)
+                {
+                    if (current.references.ContainsKey(var))
+                        return current.references[var];
+
+                    current = current.parent;
+                }
+
+                throw new Exception(string.Format("The variable {0} is not assigned to an index.", var.Name));
+            }
+            private set {}
         }
     }
 
-    public class VarRef : IWorkshopTree
+    public class Var : IScopeable, IExpression, ICallable
     {
-        public Var Var { get; }
-        public Element[] Index { get; }
-        public Element Target { get; }
+        // IScopeable
+        public string Name { get; }
+        public AccessLevel AccessLevel { get; private set; }
+        public Location DefinedAt { get; }
+        public bool WholeContext { get; private set; }
 
-        public VarRef(Var var, Element[] index, Element target)
+        public CodeType CodeType { get; set; }
+
+        // Attributes
+        public VariableType VariableType { get; set; }
+        public VariableDefineType DefineType { get; private set; }
+        public bool InExtendedCollection { get; private set; }
+        public int ID { get; private set; } = -1;
+        public bool Static { get; private set; }
+
+        private DeltinScriptParser.DefineContext context;
+        private ParseInfo parseInfo { get; }
+        private bool finalized;
+
+        public IExpression InitialValue { get; private set; }
+
+        public Var(string name, Location definedAt, ParseInfo parseInfo)
         {
-            Var = var;
+            Name = name;
+            DefinedAt = definedAt;
+            this.parseInfo = parseInfo;
+        }
+
+        public bool Settable()
+        {
+            return (CodeType == null || CodeType.Constant() == TypeSettable.Normal) && (VariableType == VariableType.Global || VariableType == VariableType.Player || VariableType == VariableType.Dynamic);
+        }
+
+        // IExpression
+        public Scope ReturningScope()
+        {
+            ThrowIfNotFinalized();
+            if (CodeType == null) return parseInfo.TranslateInfo.PlayerVariableScope;
+            else return CodeType.GetObjectScope();
+        }
+        public CodeType Type()
+        {
+            ThrowIfNotFinalized();
+            return CodeType;
+        }
+
+        // ICallable
+        public void Call(ScriptFile script, DocRange callRange)
+        {
+            ThrowIfNotFinalized();
+            script.AddDefinitionLink(callRange, DefinedAt);
+            parseInfo.TranslateInfo.AddSymbolLink(this, new Location(script.Uri, callRange));
+        }
+
+        public static Var CreateVarFromContext(VariableDefineType defineType, ParseInfo parseInfo, DeltinScriptParser.DefineContext context)
+        {
+            Var newVar;
+            if (context.name != null)
+            {
+                newVar = new Var(context.name.Text, new Location(parseInfo.Script.Uri, DocRange.GetRange(context.name)), parseInfo);
+                parseInfo.TranslateInfo.AddSymbolLink(newVar, new Location(parseInfo.Script.Uri, DocRange.GetRange(context.name)));
+            }
+            else
+                newVar = new Var(null, new Location(parseInfo.Script.Uri, DocRange.GetRange(context)), parseInfo);
+
+            newVar.context = context;
+            newVar.InExtendedCollection = context.NOT() != null;
+            newVar.DefineType = defineType;
+
+            // Check if global/player.
+            if (defineType == VariableDefineType.RuleLevel)
+            {
+                if (context.GLOBAL() != null)
+                    newVar.VariableType = VariableType.Global;
+                else if (context.PLAYER() != null)
+                    newVar.VariableType = VariableType.Player;
+                else
+                    parseInfo.Script.Diagnostics.Error("Expected the globalvar/playervar attribute.", DocRange.GetRange(context));
+            }
+            else
+            {
+                if (context.GLOBAL() != null)
+                    parseInfo.Script.Diagnostics.Error("The globalvar attribute is only allowed on variables defined at the rule level.", DocRange.GetRange(context.GLOBAL()));
+                if (context.PLAYER() != null)
+                    parseInfo.Script.Diagnostics.Error("The playervar attribute is only allowed on variables defined at the rule level.", DocRange.GetRange(context.PLAYER()));
+            }
+
+            // Get the ID
+            if (context.id != null)
+            {
+                if (defineType != VariableDefineType.RuleLevel)
+                    parseInfo.Script.Diagnostics.Error("Only defined variables at the rule level can be assigned an ID.", DocRange.GetRange(context.id));
+                else
+                {
+                    newVar.ID = int.Parse(context.id.GetText());
+                    parseInfo.TranslateInfo.VarCollection.Reserve(newVar.ID, newVar.VariableType == VariableType.Global, parseInfo.Script.Diagnostics, DocRange.GetRange(context.id));
+                }
+            }
+
+            if (defineType == VariableDefineType.InClass)
+            {
+                // Get the accessor
+                newVar.AccessLevel = AccessLevel.Private;
+                if (context.accessor() != null)
+                    newVar.AccessLevel = context.accessor().GetAccessLevel();
+                // Get the static attribute.
+                newVar.Static = context.STATIC() != null;
+
+                // Syntax error if the variable has '!'.
+                if (!newVar.Static && newVar.InExtendedCollection)
+                    parseInfo.Script.Diagnostics.Error("Non-static type variables can not be placed in the extended collection.", DocRange.GetRange(context.NOT()));
+            }
+            else
+            {
+                // Syntax error if class only attributes is used somewhere else.
+                if (context.accessor() != null)
+                    parseInfo.Script.Diagnostics.Error("Only defined variables in classes can have an accessor.", DocRange.GetRange(context.accessor()));
+                if (context.STATIC() != null)
+                    parseInfo.Script.Diagnostics.Error("Only defined variables in classes can be static.", DocRange.GetRange(context.STATIC()));
+            }
+
+            // If the type is InClass or RuleLevel, set WholeContext to true.
+            // WholeContext's value for parameters don't matter since parameters are defined at the start anyway.
+            newVar.WholeContext = defineType == VariableDefineType.InClass || defineType == VariableDefineType.RuleLevel;
+
+            // Get the type.
+            newVar.CodeType = CodeType.GetCodeTypeFromContext(parseInfo, context.code_type());
+            
+            if (newVar.CodeType != null && newVar.CodeType.Constant() != TypeSettable.Normal)
+                newVar.VariableType = VariableType.ElementReference;
+
+            // Syntax error if there is an '=' but no expression.
+            if (context.EQUALS() != null && context.expr() == null)
+                parseInfo.Script.Diagnostics.Error("Expected expression.", DocRange.GetRange(context).end.ToRange());
+            
+            return newVar;
+        }
+
+        public void Finalize(Scope scope)
+        {
+            // Get the initial value.
+            if (context?.expr() != null)
+            {
+                InitialValue = DeltinScript.GetExpression(parseInfo, scope, context.expr());
+                if (InitialValue?.Type() != null && InitialValue.Type().Constant() == TypeSettable.Constant && CodeType != InitialValue.Type())
+                    parseInfo.Script.Diagnostics.Error($"The type '{InitialValue.Type().Name}' cannot be stored.", DocRange.GetRange(context.expr()));
+            }
+            
+            // Add the variable to the scope.
+            scope.AddVariable(this, parseInfo.Script.Diagnostics, DefinedAt.range);
+            finalized = true;
+        }
+
+        private void ThrowIfNotFinalized()
+        {
+            if (!finalized) throw new Exception("Var not finalized.");
+        }
+    
+        public IWorkshopTree Parse(ActionSet actionSet, bool asElement = true)
+        {
+            return actionSet.IndexAssigner[this].GetVariable();
+        }
+    
+        public CompletionItem GetCompletion()
+        {
+            return new CompletionItem()
+            {
+                Label = Name,
+                Kind = CompletionItemKind.Variable
+            };
+        }
+    }
+
+    class DefineAction : IStatement
+    {
+        public Var DefiningVariable { get; }
+
+        public DefineAction(Var var)
+        {
+            DefiningVariable = var;
+        }
+
+        public void Translate(ActionSet actionSet)
+        {
+            Element initialValue = 0;
+            if (DefiningVariable.InitialValue != null)
+                // TODO: Don't cast to Element.
+                initialValue = (Element)DefiningVariable.InitialValue.Parse(actionSet);
+            
+            actionSet.IndexAssigner.Add(actionSet.VarCollection, DefiningVariable, actionSet.IsGlobal, initialValue);
+
+            if (DefiningVariable.Settable())
+                actionSet.AddAction(
+                    ((IndexReference)actionSet.IndexAssigner[DefiningVariable]).SetVariable(
+                        initialValue
+                    )
+                );
+        }
+    }
+
+    public enum VariableDefineType
+    {
+        RuleLevel,
+        Scoped,
+        InClass,
+        Parameter
+    }
+
+    public enum VariableType
+    {
+        // Dynamic variables are either global or player, depending on the rule it is defined in.
+        Dynamic,
+        // Global variable.
+        Global,
+        // Player variable.
+        Player,
+        // The variable references an element.
+        ElementReference
+    }
+
+    class CallVariableAction : IExpression
+    {
+        public Var Calling { get; }
+        public IExpression[] Index { get; }
+
+        public CallVariableAction(Var calling, IExpression[] index)
+        {
+            Calling = calling;
             Index = index;
-            Target = target;
         }
 
-        public string ToWorkshop()
+        public IWorkshopTree Parse(ActionSet actionSet, bool asElement = true)
         {
-            return ((IndexedVar)Var).Variable.Name;
+            IWorkshopTree result = Calling.Parse(actionSet);
+
+            for (int i = 0; i < Index.Length; i++)
+                result = Element.Part<V_ValueInArray>(result, Index[i].Parse(actionSet));
+
+            return result;
         }
 
-        public void DebugPrint(Log log, int depth)
+        public Element[] ParseIndex(ActionSet actionSet) => Array.ConvertAll(Index, index => (Element)index.Parse(actionSet));
+
+        public Scope ReturningScope()
         {
-            // throw new NotImplementedException();
+            if (Calling.Type() == null) return Calling.ReturningScope();
+            else return Type()?.GetObjectScope();
+        }
+
+        public CodeType Type()
+        {
+            var type = Calling.Type();
+            for (int i = 0; i < Index.Length; i++)
+            {
+                if (type is ArrayType)
+                    type = ((ArrayType)type).ArrayOfType;
+                else
+                {
+                    type = null;
+                    break;
+                }
+            }
+            return type;
         }
     }
 }

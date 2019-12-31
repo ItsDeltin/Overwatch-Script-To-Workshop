@@ -1,59 +1,44 @@
 using System;
 using System.Collections.Generic;
 using Deltin.Deltinteger.Parse;
-using Deltin.Deltinteger.WorkshopWiki;
+using Deltin.Deltinteger.Elements;
 
-namespace Deltin.Deltinteger.Elements
+namespace Deltin.Deltinteger.CustomMethods
 {
-    [CustomMethod("DestroyEffectArray", CustomMethodType.Action)]
-    [Parameter("Effect Array", ValueType.Any, null)]
-    [ConstantParameter("Destroy Per Loop", typeof(double), 1.0)]
+    [CustomMethod("DestroyEffectArray", "Destroys an array of effects.", CustomMethodType.Action)]
     class DestroyEffectArray : CustomMethodBase
     {
-        protected override MethodResult Get()
+        public override CodeParameter[] Parameters()
         {
-            Element effectArray = (Element)Parameters[0];
-            int destroyPerLoop = 1;
-            if (Parameters[1] != null)
-                destroyPerLoop = (int)(double)((ConstantObject)Parameters[1]).Value;
+            return new CodeParameter[] {
+                new CodeParameter("effectArray", "The array of effects."),
+                new ConstNumberParameter("destroyPerLoop", "The number of effects to destroy per iteration.")
+            };
+        }
 
-            List<Element> actions = new List<Element>();
+        public override IWorkshopTree Get(ActionSet actionSet, IWorkshopTree[] parameterValues, object[] additionalParameterData)
+        {
+            Element effectArray = (Element)parameterValues[0];
+            double destroyPerLoop = (double)additionalParameterData[1];
 
-            IndexedVar index = IndexedVar.AssignInternalVar(TranslateContext.VarCollection, Scope, "DestroyEffectArray index", TranslateContext.IsGlobal);
-            actions.AddRange(index.SetVariable(0));
+            ForeachBuilder foreachBuilder = new ForeachBuilder(actionSet, effectArray);
+            foreachBuilder.Setup();
 
-            Element[] destroyActions = new Element[destroyPerLoop];
             for (int i = 0; i < destroyPerLoop; i++)
             {
                 if (i == 0)
-                    destroyActions[i] = Element.Part<A_DestroyEffect>(Element.Part<V_ValueInArray>(effectArray, index.GetVariable()));
+                    actionSet.AddAction(
+                        Element.Part<A_DestroyEffect>(foreachBuilder.IndexValue)
+                    );
                 else
-                    destroyActions[i] = Element.Part<A_DestroyEffect>(Element.Part<V_ValueInArray>(effectArray, index.GetVariable() + i));
+                    actionSet.AddAction(
+                        Element.Part<A_DestroyEffect>(Element.Part<V_ValueInArray>(effectArray, foreachBuilder.Index + i))
+                    );
             }
 
-            actions.AddRange(
-                Element.While(
-                    TranslateContext.ContinueSkip,
-                    index.GetVariable() < Element.Part<V_CountOf>(effectArray),
-                    ArrayBuilder<Element>.Build
-                    (
-                        destroyActions,
-                        index.SetVariable(index.GetVariable() + destroyPerLoop)
-                    )
-                )
-            );
+            foreachBuilder.Finish();
 
-            return new MethodResult(actions.ToArray(), null);
-        }
-
-        public override CustomMethodWiki Wiki()
-        {
-            return new CustomMethodWiki(
-                "Destroys an array of effects.",
-                // Parameters
-                "The array of effects.",
-                "The number of effects to destroy per iteration."
-            );
+            return null;
         }
     }
 }

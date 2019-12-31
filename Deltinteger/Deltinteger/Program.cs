@@ -15,9 +15,11 @@ namespace Deltin.Deltinteger
 {
     public class Program
     {
-        public const string VERSION = "v0.7.3";
+        public const string VERSION = "v1.0 prerelease 1";
 
         public static readonly string ExeFolder = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+
+        public static string[] args;
 
         static Log Log = new Log(":");
         static Log ParseLog = new Log("Parse");
@@ -25,8 +27,10 @@ namespace Deltin.Deltinteger
 
         static void Main(string[] args)
         {
+            Program.args = args;
+
             CultureInfo.DefaultThreadCurrentCulture = new CultureInfo("en-US");
-            Log.Write(LogLevel.Normal, "Overwatch Script To Workshop " + VERSION);
+            if (!args.Contains("--langserver")) Log.Write(LogLevel.Normal, "Overwatch Script To Workshop " + VERSION);
 
             Log.LogLevel = LogLevel.Normal;
             if (args.Contains("-verbose"))
@@ -34,19 +38,18 @@ namespace Deltin.Deltinteger
             if (args.Contains("-quiet"))
                 Log.LogLevel = LogLevel.Quiet;
 
-            if (args.Contains("-langserver"))
+            if (args.Contains("--langserver"))
             {
-                string[] portArgs = args.FirstOrDefault(v => v.Split(' ')[0] == "-port")?.Split(' ');
-                int.TryParse(portArgs.ElementAtOrDefault(1), out int serverPort);
-                new Server().RequestLoop(serverPort);
+                Log.LogLevel = LogLevel.Quiet;
+                DeltintegerLanguageServer.Run();
             }
-            else if (args.Contains("-generatealphabet"))
+            else if (args.Contains("--generatealphabet"))
             {
                 Console.Write("Output folder: ");
                 string folder = Console.ReadLine();
                 Deltin.Deltinteger.Models.Letter.Generate(folder);
             }
-            else if (args.Contains("-editor"))
+            else if (args.Contains("--editor"))
             {
                 string pathfindEditorScript = Extras.CombinePathWithDotNotation(null, "!PathfindEditor.del");
 
@@ -55,6 +58,8 @@ namespace Deltin.Deltinteger
                 else
                     Script(pathfindEditorScript);
             }
+            else if (args.ElementAtOrDefault(0) == "--i18n") I18n.GenerateI18n.Generate(args);
+            else if (args.ElementAtOrDefault(0) == "--i18nlink") I18n.GenerateI18n.GenerateKeyLink();
             else
             {
                 string script = args.ElementAtOrDefault(0);
@@ -83,7 +88,8 @@ namespace Deltin.Deltinteger
                         {
                             Editor.FromPathmapFile(script);
                         }
-                        else Script(script);
+                        else
+                            Script(script);
                     
                     #if DEBUG == false
                     }
@@ -108,50 +114,12 @@ namespace Deltin.Deltinteger
         {
             string text = File.ReadAllText(parseFile);
 
-            ParsingData result = ParsingData.GetParser(parseFile, text);
-
-            if (!result.Diagnostics.ContainsErrors())
-            {
-                ParseLog.Write(LogLevel.Normal, new ColorMod("Build succeeded.", ConsoleColor.Green));
-
-                result.Diagnostics.PrintDiagnostics(Log);
-
-                string final = RuleArrayToWorkshop(result.Rules.ToArray(), result.VarCollection);
-                WorkshopCodeResult(final);
-            }
-            else
-            {
-                Log.Write(LogLevel.Normal, new ColorMod("Build Failed.", ConsoleColor.Red));
-                result.Diagnostics.PrintDiagnostics(Log);
-            }
-        }
-
-        public static string RuleArrayToWorkshop(Rule[] rules, VarCollection varCollection)
-        {
-            var builder = new StringBuilder();
-
-            var globalCollection = varCollection.UseExtendedCollection(true);
-            for (int i = 0; i < globalCollection.Length; i++)
-            if (globalCollection[i] != null)
-                builder.AppendLine("// global [" + i + "]: " + globalCollection[i].Name);
-            
-            var playerCollection = varCollection.UseExtendedCollection(false);
-            for (int i = 0; i < playerCollection.Length; i++)
-            if (playerCollection[i] != null)
-                builder.AppendLine("// player [" + i + "]: " + playerCollection[i].Name);
-            builder.AppendLine();
-
-            varCollection.ToWorkshop(builder);
-            builder.AppendLine();
-
-            Log debugPrintLog = new Log("Tree");
-            foreach (var rule in rules)
-            {
-                rule.DebugPrint(debugPrintLog);
-                builder.AppendLine(rule.ToWorkshop());
-                builder.AppendLine();
-            }
-            return builder.ToString();
+            Diagnostics diagnostics = new Diagnostics();
+            ScriptFile root = new ScriptFile(diagnostics, new Uri(parseFile), text);
+            DeltinScript deltinScript = new DeltinScript(new FileGetter(null), diagnostics, root);
+            diagnostics.PrintDiagnostics(Log);
+            if (deltinScript.WorkshopCode != null)
+                WorkshopCodeResult(deltinScript.WorkshopCode);
         }
 
         public static void WorkshopCodeResult(string code)

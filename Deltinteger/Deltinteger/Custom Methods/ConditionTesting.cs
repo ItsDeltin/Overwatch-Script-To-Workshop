@@ -1,33 +1,30 @@
 using System;
-using Deltin.Deltinteger.WorkshopWiki;
 using Deltin.Deltinteger.Parse;
+using Deltin.Deltinteger.Elements;
 
-namespace Deltin.Deltinteger.Elements
+namespace Deltin.Deltinteger.CustomMethods
 {
     abstract class TestCondition : CustomMethodBase
     {
         protected bool TestingIfTrue;
-        private string Name { get; }
 
         protected TestCondition(bool testingIfTrue)
         {
             TestingIfTrue = testingIfTrue;
-            Name = $"IsCondition{TestingIfTrue.ToString()}";
         }
 
-        protected override MethodResult Get()
+        public override CodeParameter[] Parameters() => null;
+
+        public override IWorkshopTree Get(ActionSet actionSet, IWorkshopTree[] parameterValues)
         {
             // Setup the continue skip.
-            ContinueSkip continueSkip = TranslateContext.ContinueSkip;
-            continueSkip.Setup();
+            ContinueSkip continueSkip = actionSet.ContinueSkip;
+            continueSkip.Setup(actionSet);
 
-            IndexedVar result = IndexedVar.AssignInternalVar(TranslateContext.VarCollection, Scope, $"{Name} result", TranslateContext.IsGlobal);
+            IndexReference result = actionSet.VarCollection.Assign($"_conditionTestResult", actionSet.IsGlobal, true);
 
-            Element[] actions = ArrayBuilder<Element>.Build(
-
-                // Set the continue skip.
-                continueSkip.SetSkipCountActions(continueSkip.GetSkipCount() + 4),
-
+            continueSkip.SetSkipCount(actionSet, continueSkip.GetSkipCount(actionSet) + 3);
+            actionSet.AddAction(ArrayBuilder<Element>.Build(
                 // This will continue at (0) if the rule loops.
                 new A_LoopIfConditionIsFalse(),
                 // Set the result to true.
@@ -35,31 +32,24 @@ namespace Deltin.Deltinteger.Elements
                 Element.Part<A_Skip>(new V_Number(1)),
 
                 // The rule will loop back here (0) if false.
-                result.SetVariable(new V_False()),
-
-                // Reset the continueskip
-                continueSkip.ResetSkipActions()
-            );
+                result.SetVariable(new V_False())
+            ));
+            continueSkip.ResetSkipCount(actionSet);
 
             if (TestingIfTrue)
-                return new MethodResult(actions, result.GetVariable());
+                return result.GetVariable();
             else
-                return new MethodResult(actions, !result.GetVariable());
-        }
-
-        public override CustomMethodWiki Wiki()
-        {
-            return new CustomMethodWiki($"Determines if the condition is {TestingIfTrue.ToString().ToLower()}. Has a {Constants.MINIMUM_WAIT} second delay.");
+                return Element.Part<V_Not>(result.GetVariable());
         }
     }
 
-    [CustomMethod("IsConditionTrue", CustomMethodType.MultiAction_Value)]
+    [CustomMethod("IsConditionTrue", "Determines if the conditions is true. Has a 0.016 second delay.", CustomMethodType.MultiAction_Value)]
     class IsConditionTrue : TestCondition
     {
         public IsConditionTrue() : base(true) {}
     }
 
-    [CustomMethod("IsConditionFalse", CustomMethodType.MultiAction_Value)]
+    [CustomMethod("IsConditionFalse", "Determines if the conditions is false. Has a 0.016 second delay.", CustomMethodType.MultiAction_Value)]
     class IsConditionFalse : TestCondition
     {
         public IsConditionFalse() : base(false) {}

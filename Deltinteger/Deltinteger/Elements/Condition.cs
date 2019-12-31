@@ -30,17 +30,10 @@ namespace Deltin.Deltinteger.Elements
         public Condition(Element value1, Elements.Operators compareOperator, Element value2) : this(value1, EnumData.GetEnumValue(compareOperator), value2) {}
         public Condition(V_Compare condition) : this((Element)condition.ParameterValues[0], (EnumMember)condition.ParameterValues[1], (Element)condition.ParameterValues[2]) {}
         public Condition(Element condition) : this(condition, Operators.Equal, new V_True()) {}
-        
-        public void DebugPrint(Log log, int depth = 0)
-        {
-            Value1.DebugPrint(log, depth);
-            log.Write(LogLevel.Verbose, new ColorMod(new string(' ', depth * 4) + CompareOperator.ToWorkshop(), ConsoleColor.DarkYellow));
-            Value2.DebugPrint(log, depth);
-        }
 
-        public string ToWorkshop()
+        public string ToWorkshop(OutputLanguage language)
         {
-            return Value1.Optimize().ToWorkshop() + " " + CompareOperator.ToWorkshop() + " " + Value2.Optimize().ToWorkshop();
+            return Value1.Optimize().ToWorkshop(language) + " " + CompareOperator.ToWorkshop(language) + " " + Value2.Optimize().ToWorkshop(language);
         }
     }
 }

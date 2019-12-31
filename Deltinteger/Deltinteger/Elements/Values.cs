@@ -178,14 +178,14 @@ namespace Deltin.Deltinteger.Elements
     {
         public V_Compare() : base() {}
 
-        public V_Compare(Element left, Operators op, Element right) : base(left, EnumData.GetEnumValue(op), right) {}
+        public V_Compare(IWorkshopTree left, Operators op, IWorkshopTree right) : base(left, EnumData.GetEnumValue(op), right) {}
     }
 
-    [ElementData("Control Point Scoring Percentage", ValueType.Number)]
+    [ElementData("Control Mode Scoring Percentage", ValueType.Number)]
     [Parameter("Team", ValueType.Team, typeof(V_TeamVar))]
     public class V_ControlPointScoringPercentage : Element {}
 
-    [ElementData("Control Point Scoring Team", ValueType.Team)]
+    [ElementData("Control Mode Scoring Team", ValueType.Team)]
     public class V_ControlPointScoringTeam : Element {}
 
     [ElementData("Count Of", ValueType.Number)]
@@ -330,8 +330,7 @@ namespace Deltin.Deltinteger.Elements
     public class V_CurrentGameMode : Element {}
 
     [ElementData("Global Variable", ValueType.Any)]
-    [VarRefParameter("Variable")]
-    //[EnumParameter("Variable", typeof(Variable))]
+    [VarRefParameter("Variable", true)]
     public class V_GlobalVariable : Element {}
 
     [ElementData("Has Spawned", ValueType.Boolean)]
@@ -686,21 +685,9 @@ namespace Deltin.Deltinteger.Elements
         }
         public V_Number() : this(0) {}
 
-        public override string ToWorkshop()
+        public override string ToWorkshop(OutputLanguage language)
         {
             return Math.Round(Value, MAX_LENGTH).ToString();
-        }
-
-        public override void DebugPrint(Log log, int depth = 0)
-        {
-            log.Write(LogLevel.Verbose, 
-                new ColorMod(new string(' ', depth * 4) + "Number ", ConsoleColor.White), 
-                new ColorMod(Value.ToString(), ConsoleColor.DarkYellow));
-        }
-
-        protected override string DebugInfo()
-        {
-            return $"{ElementData.ElementName} {Value}";
         }
 
         override public bool ConstantSupported<T>()
@@ -780,8 +767,7 @@ namespace Deltin.Deltinteger.Elements
 
     [ElementData("Player Variable", ValueType.Any)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
-    [VarRefParameter("Variable")]
-    // [EnumParameter("Variable", typeof(Variable))]
+    [VarRefParameter("Variable", false)]
     public class V_PlayerVariable : Element {}
 
     [ElementData("Players In Slot", ValueType.Player)]
@@ -936,152 +922,17 @@ namespace Deltin.Deltinteger.Elements
     [Parameter("{2}", ValueType.Any, typeof(V_Null))]
     public class V_String : Element
     {
-        public V_String(LanguageServer.Location location, string text, params Element[] stringValues) : base(NullifyEmptyValues(stringValues))
+        public V_String(string text, params Element[] stringValues) : base(NullifyEmptyValues(stringValues))
         {
-            TextID = Array.IndexOf(Constants.Strings, text);
-            if (TextID == -1)
-                throw SyntaxErrorException.InvalidString(text, location);
+            Text = text;
         }
-        public V_String() : this(null, Constants.DEFAULT_STRING) {}
+        public V_String() : this(null) {}
 
-        public int TextID { get; private set; }
+        public string Text { get; }
 
         protected override string[] AdditionalParameters()
         {
-            return new string[] { "\"" + Constants.Strings[TextID].Replace("_", " ") + "\"" };
-        }
-
-        protected override string DebugInfo()
-        {
-            return $"{ElementData.ElementName} {Constants.Strings[TextID]}";
-        }
-
-        private static Log Log = new Log("String Parse");
-
-        /*
-         The order of string search:
-         - Has Parameters?
-         - Has a symbol?
-         - Length
-        */
-        private static readonly string[] searchOrder = Constants.Strings
-            .OrderByDescending(str => str.Contains("{0}"))
-            .ThenByDescending(str => str.IndexOfAny("-></*-+=()!?".ToCharArray()) != -1)
-            .ThenByDescending(str => str.Length)
-            .ToArray();
-        
-        //private static readonly string[] multiwordStrings = Constants.Strings.Where(str => str.Contains("_")).ToArray();
-
-        public static Element ParseString(LanguageServer.Location location, string value, Element[] parameters, int depth = 0)
-        {
-            value = value.ToLower();
-
-            Stopwatch time = null;
-            if (depth == 0 && Log.LogLevel == LogLevel.Verbose)
-            {
-                Log.Write(LogLevel.Verbose, $"Parsing String ", new ColorMod(value, ConsoleColor.Cyan));
-                time = new Stopwatch();
-                time.Start();
-            }
-            
-            //if (depth == 0)
-                //foreach(string multiword in multiwordStrings)
-                    //value = value.Replace(multiword.Replace('_', ' '), multiword);
-
-            string debug = new string(' ', depth * 4);
-
-            // Loop through every string to search for.
-            for (int i = 0; i < searchOrder.Length; i++)
-            {
-                string searchString = searchOrder[i];
-
-                // Converts string parameters ({0}, {1}, {2}) to regex expressions to get the values.
-                // {#} -> (.+)
-                string regex =
-                    Regex.Replace(Escape(searchString)
-                    , "({[0-9]})", @"(([a-z_.<>0-9-]+ ?)|(.+))");
-
-                // Add the regex expressions start-of-line and end-of-line to ensure that the entire string is parsed.
-                regex = "^" + regex + "$";
-
-                // Match
-                var match = Regex.Match(value, regex);
-                if (match.Success)
-                {
-                    Log.Write(LogLevel.Verbose, new ColorMod(debug + searchString, ConsoleColor.Gray));
-
-                    // Create a string element with the found string.
-                    V_String str = new V_String(location, searchString);
-
-                    bool valid = true; // Confirms that the arguments were able to successfully parse.
-                    List<Element> parsedParameters = new List<Element>(); // The parameters that were successfully parsed.
-
-                    // Iterate through the parameters.
-                    for (int g = 1; g < match.Groups.Count; g+=3)
-                    {
-                        string currentParameterValue = match.Groups[g].Captures[0].Value;
-
-                        // Test if the parameter is a format parameter, for example <0>, <1>, <2>, <3>...
-                        Match parameterString = Regex.Match(currentParameterValue, "^<([0-9]+)>$");
-                        if (parameters != null && parameterString.Success)
-                        {
-                            int index = int.Parse(parameterString.Groups[1].Value);
-
-                            // Throw syntax error if the number of parameters is less than the parameter index being set.
-                            if (index >= parameters.Length)
-                                throw SyntaxErrorException.StringParameterCount(index, parameters.Length, location);
-
-                            Log.Write(LogLevel.Verbose, $"{debug}    <param {index}>");
-                            parsedParameters.Add(parameters[index]);
-                        }
-                        else
-                        {
-                            // Parse the parameter. If it fails it will return null and the string being checked is probably false.
-                            var p = ParseString(location, currentParameterValue, parameters, depth + 1);
-                            if (p == null)
-                            {
-                                Log.Write(LogLevel.Verbose, $"{debug}{searchString} ", new ColorMod("combo fail", ConsoleColor.DarkRed));
-                                valid = false;
-                                break;
-                            }
-                            parsedParameters.Add(p);
-                        }
-                    }
-                    str.ParameterValues = parsedParameters.ToArray();
-
-                    if (!valid)
-                        continue;
-
-                    if (depth == 0 && time != null)
-                        Log.Write(LogLevel.Verbose, 
-                            $"String build ", 
-                            new ColorMod("completed", ConsoleColor.DarkGreen), 
-                            " in ", 
-                            new ColorMod(time.ElapsedMilliseconds.ToString(), ConsoleColor.DarkCyan), 
-                            " ms.");
-                    
-                    return str;
-                }
-            }
-
-            if (depth > 0)
-                return null;
-            else
-                // If the depth is 0, throw a syntax error.
-                throw SyntaxErrorException.StringParseFailed(value, location);
-        }
-
-        private static string Escape(string value)
-        {
-            return value
-                .Replace("?", @"\?")
-                .Replace("*", @"\*")
-                .Replace("(", @"\(")
-                .Replace(")", @"\)")
-                .Replace(".", @"\.")
-                .Replace("/", @"\/")
-                .Replace("+", @"\+")
-                ;
+            return new string[] { "\"" + (Text?.Replace("_", " ") ?? "Hello") + "\"" };
         }
 
         private static Element[] NullifyEmptyValues(Element[] stringValues)
@@ -1102,7 +953,7 @@ namespace Deltin.Deltinteger.Elements
     {
         public string Text { get; }
 
-        public V_CustomString(string text, params Element[] format) : base(format)
+        public V_CustomString(string text, params IWorkshopTree[] format) : base(format)
         {
             Text = text;
         }
@@ -1116,90 +967,14 @@ namespace Deltin.Deltinteger.Elements
             return new string[] { "\"" + Text + "\"" };
         }
 
-        public static Element ParseString(LanguageServer.Location location, string value, Element[] parameters)
-        {
-            // Look for <#>s
-            var formats = Regex.Matches(value, "<([0-9]+)>").ToArray();
-
-            // If there are no formats, return the custom string normally.
-            if (formats.Length == 0)
-                return new V_CustomString(value);
-            
-            // The Overwatch workshop only supports 3 formats in a string.
-            // The following code will split the string into multiple sections so it can support more.
-            // Split the string after every 3 unique formats, for example:
-            //                                    v split here
-            //           <0> this <1> <0> is a <3> custom <4> string <5>
-
-            List<FormatParameter> stringGroupParameters = new List<FormatParameter>(); // The current group of formats.
-            List<StringGroup> stringGroups = new List<StringGroup>(); // Stores information about each section in the string.
-            List<int> unique = new List<int>(); // Stores the list of each unique format id. The count shouldn't go above 3.
-            for (int i = 0; i < formats.Length; i++)
-            {
-                FormatParameter parameter = new FormatParameter(formats[i]);
-
-                // If the format id is more than the number of parameters, throw a syntax error.
-                if (parameter.Parameter >= parameters.Length)
-                    throw SyntaxErrorException.StringParameterCount(parameter.Parameter, parameters.Length, location);
-
-                // If there is already 3 unique IDs, create a new section.
-                if (unique.Count == 3 && !unique.Contains(parameter.Parameter))
-                {
-                    stringGroups.Add(new StringGroup(stringGroupParameters.ToArray()));
-                    stringGroupParameters.Clear();
-                    unique.Clear();
-                }
-
-                stringGroupParameters.Add(parameter);
-
-                // If the current format ID is new, add it to the unique list.
-                if (!unique.Contains(parameter.Parameter))
-                    unique.Add(parameter.Parameter);
-            }
-
-            // Add tailing formats to a new section.
-            stringGroups.Add(new StringGroup(stringGroupParameters.ToArray()));
-
-            // Convert each section to a custom string.
-            V_CustomString[] strings = new V_CustomString[stringGroups.Count];
-            for (int i = 0; i < strings.Length; i++)
-            {
-                // start is either the start of the string or the end of the last section.
-                int start = i == 0                  ? 0            : stringGroups[i - 1].EndIndex;
-                // end is the index of last format in the section unless this is the last section, then it will be the end of the string.
-                int end   = i == strings.Length - 1 ? value.Length : stringGroups[i]    .EndIndex;
-
-                string groupString = value.Substring(start, end - start);
-                
-                // Returns an array of all unique formats in the current section.
-                var formatGroups = stringGroups[i].Formats
-                    .GroupBy(g => g.Parameter)
-                    .Select(g => g.First())
-                    .ToArray();
-                
-                // groupParameters is {0}, {1}, and {2}. Length should be between 1 and 3.
-                Element[] groupParameters = new Element[formatGroups.Length];
-                for (int g = 0; g < formatGroups.Length; g++)
-                {
-                    int parameter = formatGroups[g].Parameter;
-                    groupString = groupString.Replace("<" + parameter + ">", "{" + g + "}");
-                    groupParameters[g] = parameters[parameter];
-                }
-                strings[i] = new V_CustomString(groupString, groupParameters);
-            }
-            
-            // Join the sections together.
-            return Join(strings);
-        }
-
-        public static Element Join(params Element[] elements)
+        public static IWorkshopTree Join(params IWorkshopTree[] elements)
         {
             if (elements.Length == 0) throw new Exception();
 
             const string join2 = "{0}{1}";
             const string join3 = "{0}{1}{2}";
 
-            List<Element> list = elements.ToList();
+            List<IWorkshopTree> list = elements.ToList();
             while (list.Count > 1)
             {
                 if (list.Count >= 3)
@@ -1215,30 +990,6 @@ namespace Deltin.Deltinteger.Elements
                 else throw new Exception();
             }
             return list[0];
-        }
-
-        class FormatParameter
-        {
-            public Match Match { get; }
-            public int Parameter { get; } 
-
-            public FormatParameter(Match match)
-            {
-                Match = match;
-                Parameter = int.Parse(match.Groups[1].Value);
-            }
-        }
-
-        class StringGroup
-        {
-            public FormatParameter[] Formats { get; }
-            public int EndIndex { get; }
-
-            public StringGroup(FormatParameter[] formats)
-            {
-                Formats = formats;
-                EndIndex = formats.Last().Match.Index + formats.Last().Match.Length;
-            }
         }
     }
 
@@ -1289,11 +1040,11 @@ namespace Deltin.Deltinteger.Elements
     [EnumParameter("Team", typeof(Team))]
     public class V_TeamVar : Element {}
 
-    [ElementData("TeamOf", ValueType.Team)]
+    [ElementData("Team Of", ValueType.Team)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     public class V_TeamOf : Element {}
 
-    [ElementData("TeamScore", ValueType.Team)]
+    [ElementData("Team Score", ValueType.Team)]
     [Parameter("Team", ValueType.Team, typeof(V_TeamVar))]
     public class V_TeamScore : Element {}
 

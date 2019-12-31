@@ -2,6 +2,9 @@ using System;
 using Deltin.Deltinteger.Parse;
 using Antlr4.Runtime;
 using Antlr4.Runtime.Tree;
+using LSPos      = OmniSharp.Extensions.LanguageServer.Protocol.Models.Position;
+using LSRange    = OmniSharp.Extensions.LanguageServer.Protocol.Models.Range;
+using LSLocation = OmniSharp.Extensions.LanguageServer.Protocol.Models.Location;
 
 namespace Deltin.Deltinteger.LanguageServer
 {
@@ -55,6 +58,13 @@ namespace Deltin.Deltinteger.LanguageServer
         {
             return new Pos(this.line + other.line, this.character + other.character);
         }
+
+        public LSPos ToLsPos()
+        {
+            return new LSPos(line, character);
+        }
+
+        public static implicit operator Pos(LSPos pos) => new Pos((int)pos.Line, (int)pos.Character);
     }
 
     public class DocRange : IComparable<DocRange>
@@ -173,6 +183,7 @@ namespace Deltin.Deltinteger.LanguageServer
         public static bool operator >(DocRange r1, DocRange r2)  => r1.CompareTo(r2) >  0;
         public static bool operator <=(DocRange r1, DocRange r2) => r1.CompareTo(r2) <= 0;
         public static bool operator >=(DocRange r1, DocRange r2) => r1.CompareTo(r2) >= 0;
+        public static implicit operator DocRange(LSRange range) => new DocRange(range.Start, range.End);
         #endregion
 
         public DocRange Offset(DocRange other)
@@ -184,108 +195,10 @@ namespace Deltin.Deltinteger.LanguageServer
         {
             return start.ToString() + " - " + end.ToString();
         }
-    }
-    
-    public class CompletionItem
-    {
-        #region Kinds
-        public const int Text = 1;
-        public const int Method = 2;
-        public const int Function = 3;
-        public const int Constructor = 4;
-        public const int Field = 5;
-        public const int Variable = 6;
-        public const int Class = 7;
-        public const int Interface = 8;
-        public const int Module = 9;
-        public const int Property = 10;
-        public const int Unit = 11;
-        public const int Value = 12;
-        public const int Enum = 13;
-        public const int Keyword = 14;
-        public const int Snippet = 15;
-        public const int Color = 16;
-        public const int File = 17;
-        public const int Reference = 18;
-        public const int Folder = 19;
-        public const int EnumMember = 20;
-        public const int Constant = 21;
-        public const int Struct = 22;
-        public const int Event = 23;
-        public const int Operator = 24;
-        public const int TypeParameter = 25;
-        #endregion
 
-        public CompletionItem(string label)
+        public LSRange ToLsRange()
         {
-            this.label = label;
-        }
-
-        public string label;
-        public int kind;
-        public string detail;
-        public object documentation;
-        public bool deprecated;
-        public string sortText;
-        public string filterText;
-        public int insertTextFormat;
-        public TextEdit textEdit;
-        public TextEdit[] additionalTextEdits;
-        public string[] commitCharacters;
-        public Command command;
-        public object data;
-    }
-
-    class SignatureHelp
-    {
-        public SignatureInformation[] signatures;
-        public int activeSignature;
-        public int activeParameter;
-
-        public SignatureHelp(SignatureInformation[] signatures, int activeSignature, int activeParameter)
-        {
-            this.signatures = signatures;
-            this.activeSignature = activeSignature;
-            this.activeParameter = activeParameter;
-        }
-    }
-
-    class SignatureInformation
-    {
-        public string label;
-        public object documentation; // string or markup
-        public ParameterInformation[] parameters;
-
-        public SignatureInformation(string label, object documentation, ParameterInformation[] parameters)
-        {
-            this.label = label;
-            this.documentation = documentation;
-            this.parameters = parameters;
-        }
-    }
-
-    public class ParameterInformation
-    {
-        public object label; // string or int[]
-
-        public object documentation; // string or markup
-
-        public ParameterInformation(object label, object documentation)
-        {
-            this.label = label;
-            this.documentation = documentation;
-        }
-    }
-
-    public class PublishDiagnosticsParams
-    {
-        public string uri;
-        public Diagnostic[] diagnostics;
-
-        public PublishDiagnosticsParams(string uri, Diagnostic[] diagnostics)
-        {
-            this.uri = uri;
-            this.diagnostics = diagnostics;
+            return new LSRange(start.ToLsPos(), end.ToLsPos());
         }
     }
 
@@ -303,10 +216,11 @@ namespace Deltin.Deltinteger.LanguageServer
         public string source;
         public DiagnosticRelatedInformation[] relatedInformation;
 
-        public Diagnostic(string message, DocRange range)
+        public Diagnostic(string message, DocRange range, int severity)
         {
             this.message = message;
             this.range = range;
+            this.severity = severity;
         }
 
         override public string ToString()
@@ -344,138 +258,23 @@ namespace Deltin.Deltinteger.LanguageServer
         }
     }
 
-    // https://microsoft.github.io/language-server-protocol/specification#textDocument_hover
-    class Hover
-    {
-        public object contents; // TODO MarkedString support 
-        public DocRange range;
-
-        public Hover(MarkupContent contents)
-        {
-            this.contents = contents;
-        }
-        #pragma warning disable 0618
-        public Hover(MarkedString contents)
-        {
-            this.contents = contents;
-        }
-        public Hover(MarkedString[] contents)
-        {
-            this.contents = contents;
-        }
-        #pragma warning restore 0618
-    }
-
-    public class MarkupContent
-    {
-        public string kind;
-        public string value;
-
-        public const string PlainText = "plaintext";
-        public const string Markdown = "markdown";
-
-        public MarkupContent(string kind, string value)
-        {
-            this.kind = kind;
-            this.value = value;
-        }
-    }
-
-    [Obsolete("MarkedString is obsolete, use MarkupContent instead.")]
-    public class MarkedString
-    {
-        public string language;
-        public string value;
-
-        public MarkedString(string language, string value)
-        {
-            this.language = language;
-            this.value = value;
-        }
-    }
-
     public class Location 
     {
-        public string uri;
+        public Uri uri;
         public DocRange range;
 
-        public Location(string uri, DocRange range)
+        public Location(Uri uri, DocRange range)
         {
             this.uri = uri;
             this.range = range;
         }
-    }
 
-    class LocationLink
-    {
-        /// Span of the origin of this link.
-        ///
-        /// Used as the underlined span for mouse interaction. Defaults to the word range at
-        /// the mouse position.
-        public DocRange originSelectionRange;
-
-        /// The target resource identifier of this link.
-        public string targetUri;
-
-        /// The full target range of this link. If the target for example is a symbol then target range is the
-	    /// range enclosing this symbol not including leading/trailing whitespace but everything else
-	    /// like comments. This information is typically used to highlight the range in the editor.
-        public DocRange targetRange;
-
-        /// The range that should be selected and revealed when this link is being followed, e.g the name of a function.
-	    /// Must be contained by the the <see cref="targetRange"/>.
-        public DocRange targetSelectionRange;
-
-        public LocationLink(DocRange originSelectionRange, string targetUri, DocRange targetRange, DocRange targetSelectionRange)
+        public LSLocation ToLsLocation()
         {
-            this.originSelectionRange = originSelectionRange;
-            this.targetUri = targetUri;
-            this.targetRange = targetRange;
-            this.targetSelectionRange = targetSelectionRange;
-        }
-    }
-
-    public class TextEdit
-    {
-        public static TextEdit Replace(DocRange range, string newText)
-        {
-            return new TextEdit()
-            {
-                range = range,
-                newText = newText
+            return new LSLocation() {
+                Uri = uri,
+                Range = range.ToLsRange()
             };
-        }
-        public static TextEdit Insert(Pos pos, string newText)
-        {
-            return new TextEdit()
-            {
-                range = new DocRange(pos, pos),
-                newText = newText
-            };
-        }
-        public static TextEdit Delete(DocRange range)
-        {
-            return new TextEdit()
-            {
-                range = range,
-                newText = string.Empty
-            };
-        }
-
-        public DocRange range;
-        public string newText;
-    }
-
-    public class Command
-    {
-        public string title;
-        public string command;
-        public object[] arguments;
-
-        public Command(string title, string command)
-        {
-            this.title = title;
-            this.command = command;
         }
     }
 }
