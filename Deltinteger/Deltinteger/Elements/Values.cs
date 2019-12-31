@@ -950,7 +950,20 @@ namespace Deltin.Deltinteger.Elements
 
     [ElementData("Square Root", ValueType.Number)]
     [Parameter("Value", ValueType.Number, typeof(V_Number))]
-    public class V_SquareRoot : Element {}
+    public class V_SquareRoot : Element
+    {
+        public override Element Optimize()
+        {
+            OptimizeChildren();
+
+            Element a = (Element)ParameterValues[0];
+
+            if (a is V_Number)
+                return Math.Sqrt((double)a.GetConstant());
+
+            return this;
+        }
+    }
 
     [ElementData("String", ValueType.Any)]
     [Parameter("{0}", ValueType.Any, typeof(V_Null))]
@@ -1200,13 +1213,52 @@ namespace Deltin.Deltinteger.Elements
 
     [ElementData("X Component Of", ValueType.Number)]
     [Parameter("Value", ValueType.VectorAndPlayer, typeof(V_Vector))]
-    public class V_XOf : Element {}
+    public class V_XOf : Element
+    {
+        public override Element Optimize()
+        {
+            OptimizeChildren();
+
+            Element a = (Element)ParameterValues[0];
+
+            if (a is V_Vector)
+                return (Element)a.ParameterValues[0];
+
+            return this;
+        }
+    }
 
     [ElementData("Y Component Of", ValueType.Number)]
     [Parameter("Value", ValueType.VectorAndPlayer, typeof(V_Vector))]
-    public class V_YOf : Element {}
+    public class V_YOf : Element
+    {
+        public override Element Optimize()
+        {
+            OptimizeChildren();
+
+            Element a = (Element)ParameterValues[0];
+
+            if (a is V_Vector)
+                return (Element)a.ParameterValues[1];
+
+            return this;
+        }
+    }
 
     [ElementData("Z Component Of", ValueType.Number)]
     [Parameter("Value", ValueType.VectorAndPlayer, typeof(V_Vector))]
-    public class V_ZOf : Element {}
+    public class V_ZOf : Element
+    {
+        public override Element Optimize()
+        {
+            OptimizeChildren();
+
+            Element a = (Element)ParameterValues[0];
+
+            if (a is V_Vector)
+                return (Element)a.ParameterValues[2];
+
+            return this;
+        }
+    }
 }
