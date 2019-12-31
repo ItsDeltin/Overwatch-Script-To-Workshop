@@ -69,12 +69,12 @@ namespace Deltin.Deltinteger.Elements
 
             if (a is V_Number)
             {
-                if ((double)a.GetConstant() == 0)
+                if (((V_Number)a).Value == 0)
                     return b;
             }
             else if (b is V_Number)
             {
-                if ((double)b.GetConstant() == 0)
+                if (((V_Number)b).Value == 0)
                     return a;
             }
 
@@ -183,7 +183,7 @@ namespace Deltin.Deltinteger.Elements
             Element a = (Element)ParameterValues[0];
 
             if (a is V_Number)
-                return Math.Acos((double)a.GetConstant()) * (180 / Math.PI);
+                return Math.Acos(((V_Number)a).Value) * (180 / Math.PI);
 
             return this;
         }
@@ -200,7 +200,7 @@ namespace Deltin.Deltinteger.Elements
             Element a = (Element)ParameterValues[0];
 
             if (a is V_Number)
-                return Math.Acos((double)a.GetConstant());
+                return Math.Acos(((V_Number)a).Value);
 
             return this;
         }
@@ -217,7 +217,7 @@ namespace Deltin.Deltinteger.Elements
             Element a = (Element)ParameterValues[0];
 
             if (a is V_Number)
-                return Math.Asin((double)a.GetConstant()) * (180 / Math.PI);
+                return Math.Asin(((V_Number)a).Value) * (180 / Math.PI);
 
             return this;
         }
@@ -234,7 +234,7 @@ namespace Deltin.Deltinteger.Elements
             Element a = (Element)ParameterValues[0];
 
             if (a is V_Number)
-                return Math.Asin((double)a.GetConstant());
+                return Math.Asin(((V_Number)a).Value);
 
             return this;
         }
@@ -359,7 +359,7 @@ namespace Deltin.Deltinteger.Elements
             Element a = (Element)ParameterValues[0];
 
             if (a is V_Number)
-                return Math.Cos((double)a.GetConstant() * (Math.PI / 180));
+                return Math.Cos(((V_Number)a).Value * (Math.PI / 180));
 
             return this;
         }
@@ -376,7 +376,7 @@ namespace Deltin.Deltinteger.Elements
             Element a = (Element)ParameterValues[0];
 
             if (a is V_Number)
-                return Math.Cos((double)a.GetConstant());
+                return Math.Cos(((V_Number)a).Value);
 
             return this;
         }
@@ -443,14 +443,14 @@ namespace Deltin.Deltinteger.Elements
 
             if (b is V_Number)
             {
-                if ((double)b.GetConstant() == 1)
+                if (((V_Number)b).Value == 1)
                     return a;
-                if ((double)b.GetConstant() == 0)
+                if (((V_Number)b).Value == 0)
                     return 0;
             }
 
             if (a is V_Number)
-                if ((double)a.GetConstant() == 0)
+                if (((V_Number)a).Value == 0)
                     return 0;
 
             return this;
@@ -809,17 +809,17 @@ namespace Deltin.Deltinteger.Elements
 
             if (a is V_Number)
             {
-                if ((double)a.GetConstant() == 0)
+                if (((V_Number)a).Value == 0)
                     return 0;
-                if ((double)a.GetConstant() == 1)
+                if (((V_Number)a).Value == 1)
                     return 1;
             }
 
             if (b is V_Number)
             {
-                if ((double)b.GetConstant() == 0)
+                if (((V_Number)b).Value == 0)
                     return 0;
-                if ((double)b.GetConstant() == 1)
+                if (((V_Number)b).Value == 1)
                     return 0;
             }
 
@@ -865,17 +865,17 @@ namespace Deltin.Deltinteger.Elements
 
             if (a is V_Number)
             {
-                if ((double)a.GetConstant() == 1)
+                if (((V_Number)a).Value == 1)
                     return b;
-                if ((double)a.GetConstant() == 0)
+                if (((V_Number)a).Value == 0)
                     return 0;
             }
 
             if (b is V_Number)
             {
-                if ((double)b.GetConstant() == 1)
+                if (((V_Number)b).Value == 1)
                     return a;
-                if ((double)b.GetConstant() == 0)
+                if (((V_Number)b).Value == 0)
                     return 0;
             }
 
@@ -1054,19 +1054,19 @@ namespace Deltin.Deltinteger.Elements
 
             if (a is V_Number)
             {
-                if ((double)a.GetConstant() == 0)
+                if (((V_Number)a).Value == 0)
                     return 0;
-                if ((double)a.GetConstant() == 1)
+                if (((V_Number)a).Value == 1)
                     return 1;
-                if ((double)a.GetConstant() < 0) //this has to exist because workshop
+                if (((V_Number)a).Value < 0) //this has to exist because workshop
                     return 0;
             }
 
             if (b is V_Number)
             {
-                if ((double)b.GetConstant() == 0)
+                if (((V_Number)b).Value == 0)
                     return 1;
-                if ((double)b.GetConstant() == 1)
+                if (((V_Number)b).Value == 1)
                     return a;
             }
             
@@ -1153,7 +1153,7 @@ namespace Deltin.Deltinteger.Elements
             Element a = (Element)ParameterValues[0];
 
             if (a is V_Number)
-                return Math.Sin((double)a.GetConstant() * (Math.PI / 180));
+                return Math.Sin(((V_Number)a).Value * (Math.PI / 180));
 
             return this;
         }
@@ -1170,7 +1170,7 @@ namespace Deltin.Deltinteger.Elements
             Element a = (Element)ParameterValues[0];
 
             if (a is V_Number)
-                return Math.Sin((double)a.GetConstant());
+                return Math.Sin(((V_Number)a).Value);
 
             return this;
         }
@@ -1205,7 +1205,7 @@ namespace Deltin.Deltinteger.Elements
             Element a = (Element)ParameterValues[0];
 
             if (a is V_Number)
-                return Math.Sqrt((double)a.GetConstant());
+                return Math.Sqrt(((V_Number)a).Value);
 
             return this;
         }
@@ -1320,7 +1320,7 @@ namespace Deltin.Deltinteger.Elements
             }
 
             if (b is V_Number)
-                if ((double)b.GetConstant() == 0)
+                if (((V_Number)b).Value == 0)
                     return a;
 
             if (a.Equals(b))
@@ -1341,7 +1341,7 @@ namespace Deltin.Deltinteger.Elements
             Element a = (Element)ParameterValues[0];
 
             if (a is V_Number)
-                return Math.Tan((double)a.GetConstant() * (Math.PI / 180));
+                return Math.Tan(((V_Number)a).Value * (Math.PI / 180));
 
             return this;
         }
@@ -1358,7 +1358,7 @@ namespace Deltin.Deltinteger.Elements
             Element a = (Element)ParameterValues[0];
 
             if (a is V_Number)
-                return Math.Tan((double)a.GetConstant());
+                return Math.Tan(((V_Number)a).Value);
 
             return this;
         }
