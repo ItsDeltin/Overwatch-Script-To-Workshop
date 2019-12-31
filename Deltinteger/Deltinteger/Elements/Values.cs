@@ -49,16 +49,16 @@ namespace Deltin.Deltinteger.Elements
         {
             OptimizeChildren();
 
-            IWorkshopTree a = ParameterValues[0];
-            IWorkshopTree b = ParameterValues[1];
+            Element a = (Element)ParameterValues[0];
+            Element b = (Element)ParameterValues[1];
 
             if (a is V_Number && ParameterValues[1] is V_Number)
                 return ((V_Number)a).Value + ((V_Number)b).Value;
             
-            if (((Element)a).ConstantSupported<Models.Vertex>() && ((Element)b).ConstantSupported<Models.Vertex>())
+            if (a.ConstantSupported<Models.Vertex>() && b.ConstantSupported<Models.Vertex>())
             {
-                var aVertex = (Models.Vertex)(((Element)a).GetConstant());
-                var bVertex = (Models.Vertex)(((Element)b).GetConstant());
+                var aVertex = (Models.Vertex)a.GetConstant();
+                var bVertex = (Models.Vertex)b.GetConstant();
 
                 return new V_Vector(
                     aVertex.X + bVertex.X,
@@ -66,6 +66,20 @@ namespace Deltin.Deltinteger.Elements
                     aVertex.Z + bVertex.Z
                 );
             }
+
+            if (a is V_Number)
+            {
+                if ((double)a.GetConstant() == 0)
+                    return b;
+            }
+            else if (b is V_Number)
+            {
+                if ((double)b.GetConstant() == 0)
+                    return a;
+            }
+
+            if (a.Equals(b))
+                return a * 2;
             
             return this;
         }
@@ -267,6 +281,60 @@ namespace Deltin.Deltinteger.Elements
         public V_Compare() : base() {}
 
         public V_Compare(IWorkshopTree left, Operators op, IWorkshopTree right) : base(left, EnumData.GetEnumValue(op), right) {}
+
+        public override Element Optimize()
+        {
+            OptimizeChildren();
+
+            Element left = (Element)ParameterValues[0];
+            Operators op = (Operators)((EnumMember)ParameterValues[1]).Value;
+            Element right = (Element)ParameterValues[0];
+
+            if (op == Operators.Equal)
+            {
+                if (left.Equals(right))
+                    return true;
+                if (left is V_Number && right is V_Number)
+                    return (double)left.GetConstant() == (double)right.GetConstant();
+            }
+            else if (op == Operators.GreaterThan)
+            {
+                if (left.Equals(right))
+                    return false;
+                if (left is V_Number && right is V_Number)
+                    return (double)left.GetConstant() > (double)right.GetConstant();
+            }
+            else if (op == Operators.GreaterThanOrEqual)
+            {
+                if (left.Equals(right))
+                    return true;
+                if (left is V_Number && right is V_Number)
+                    return (double)left.GetConstant() >= (double)right.GetConstant();
+            }
+            else if (op == Operators.LessThan)
+            {
+                if (left.Equals(right))
+                    return false;
+                if (left is V_Number && right is V_Number)
+                    return (double)left.GetConstant() < (double)right.GetConstant();
+            }
+            else if (op == Operators.LessThanOrEqual)
+            {
+                if (left.Equals(right))
+                    return true;
+                if (left is V_Number && right is V_Number)
+                    return (double)left.GetConstant() <= (double)right.GetConstant();
+            }
+            else if (op == Operators.NotEqual)
+            {
+                if (left.Equals(right))
+                    return false;
+                if (left is V_Number && right is V_Number)
+                    return (double)left.GetConstant() != (double)right.GetConstant();
+            }
+
+            return this;
+        }
     }
 
     [ElementData("Control Mode Scoring Percentage", ValueType.Number)]
@@ -349,8 +417,8 @@ namespace Deltin.Deltinteger.Elements
         {
             OptimizeChildren();
 
-            IWorkshopTree a = ParameterValues[0];
-            IWorkshopTree b = ParameterValues[1];
+            Element a = (Element)ParameterValues[0];
+            Element b = (Element)ParameterValues[1];
 
             // Divide number and number
             if (a is V_Number && b is V_Number)
@@ -372,6 +440,18 @@ namespace Deltin.Deltinteger.Elements
                     );
                 }
             }
+
+            if (b is V_Number)
+            {
+                if ((double)b.GetConstant() == 1)
+                    return a;
+                if ((double)b.GetConstant() == 0)
+                    return 0;
+            }
+
+            if (a is V_Number)
+                if ((double)a.GetConstant() == 0)
+                    return 0;
 
             return this;
         }
@@ -721,8 +801,30 @@ namespace Deltin.Deltinteger.Elements
         {
             OptimizeChildren();
 
-            if (ParameterValues[0] is V_Number && ParameterValues[1] is V_Number)
-                return ((V_Number)ParameterValues[0]).Value % ((V_Number)ParameterValues[1]).Value;
+            Element a = (Element)ParameterValues[0];
+            Element b = (Element)ParameterValues[1];
+
+            if (a is V_Number && b is V_Number)
+                return ((V_Number)a).Value % ((V_Number)b).Value;
+
+            if (a is V_Number)
+            {
+                if ((double)a.GetConstant() == 0)
+                    return 0;
+                if ((double)a.GetConstant() == 1)
+                    return 1;
+            }
+
+            if (b is V_Number)
+            {
+                if ((double)b.GetConstant() == 0)
+                    return 0;
+                if ((double)b.GetConstant() == 1)
+                    return 0;
+            }
+
+            if (a.Equals(b))
+                return 0;
             
             return this;
         }
@@ -737,8 +839,8 @@ namespace Deltin.Deltinteger.Elements
         {
             OptimizeChildren();
 
-            IWorkshopTree a = ParameterValues[0];
-            IWorkshopTree b = ParameterValues[1];
+            Element a = (Element)ParameterValues[0];
+            Element b = (Element)ParameterValues[1];
 
             // Multiply number and number
             if (a is V_Number && b is V_Number)
@@ -760,6 +862,25 @@ namespace Deltin.Deltinteger.Elements
                     );
                 }
             }
+
+            if (a is V_Number)
+            {
+                if ((double)a.GetConstant() == 1)
+                    return b;
+                if ((double)a.GetConstant() == 0)
+                    return 0;
+            }
+
+            if (b is V_Number)
+            {
+                if ((double)b.GetConstant() == 1)
+                    return a;
+                if ((double)b.GetConstant() == 0)
+                    return 0;
+            }
+
+            if (a.Equals(b))
+                return Element.Part<V_RaiseToPower>(a, new V_Number(2));
             
             return this;
         }
@@ -923,10 +1044,31 @@ namespace Deltin.Deltinteger.Elements
         {
             OptimizeChildren();
 
-            if (ParameterValues[0] is V_Number && ParameterValues[1] is V_Number)
+            Element a = (Element)ParameterValues[0];
+            Element b = (Element)ParameterValues[1];
+
+            if (a is V_Number && b is V_Number)
                 return Math.Pow(
-                    ((V_Number)ParameterValues[0]).Value,
-                    ((V_Number)ParameterValues[1]).Value);
+                    ((V_Number)a).Value,
+                    ((V_Number)b).Value);
+
+            if (a is V_Number)
+            {
+                if ((double)a.GetConstant() == 0)
+                    return 0;
+                if ((double)a.GetConstant() == 1)
+                    return 1;
+                if ((double)a.GetConstant() < 0) //this has to exist because workshop
+                    return 0;
+            }
+
+            if (b is V_Number)
+            {
+                if ((double)b.GetConstant() == 0)
+                    return 1;
+                if ((double)b.GetConstant() == 1)
+                    return a;
+            }
             
             return this;
         }
@@ -1159,16 +1301,16 @@ namespace Deltin.Deltinteger.Elements
         {
             OptimizeChildren();
 
-            IWorkshopTree a = ParameterValues[0];
-            IWorkshopTree b = ParameterValues[1];
+            Element a = (Element)ParameterValues[0];
+            Element b = (Element)ParameterValues[1];
 
             if (a is V_Number && ParameterValues[1] is V_Number)
                 return ((V_Number)a).Value - ((V_Number)b).Value;
             
-            if (((Element)a).ConstantSupported<Models.Vertex>() && ((Element)b).ConstantSupported<Models.Vertex>())
+            if (a.ConstantSupported<Models.Vertex>() && b.ConstantSupported<Models.Vertex>())
             {
-                var aVertex = (Models.Vertex)(((Element)a).GetConstant());
-                var bVertex = (Models.Vertex)(((Element)b).GetConstant());
+                var aVertex = (Models.Vertex)a.GetConstant();
+                var bVertex = (Models.Vertex)b.GetConstant();
 
                 return new V_Vector(
                     aVertex.X - bVertex.X,
@@ -1176,6 +1318,13 @@ namespace Deltin.Deltinteger.Elements
                     aVertex.Z - bVertex.Z
                 );
             }
+
+            if (b is V_Number)
+                if ((double)b.GetConstant() == 0)
+                    return a;
+
+            if (a.Equals(b))
+                return 0;
             
             return this;
         }
