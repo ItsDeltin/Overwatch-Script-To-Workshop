@@ -160,19 +160,71 @@ namespace Deltin.Deltinteger.Elements
 
     [ElementData("Arccosine In Degrees", ValueType.Number)]
     [Parameter("Value", ValueType.Number, typeof(V_Number))]
-    public class V_ArccosineInDegrees : Element {}
+    public class V_ArccosineInDegrees : Element
+    {
+        public override Element Optimize()
+        {
+            OptimizeChildren();
+
+            Element a = (Element)ParameterValues[0];
+
+            if (a is V_Number)
+                return Math.Acos((double)a.GetConstant()) * (180 / Math.PI);
+
+            return this;
+        }
+    }
 
     [ElementData("Arccosine In Radians", ValueType.Number)]
     [Parameter("Value", ValueType.Number, typeof(V_Number))]
-    public class V_ArccosineInRadians : Element {}
+    public class V_ArccosineInRadians : Element
+    {
+        public override Element Optimize()
+        {
+            OptimizeChildren();
+
+            Element a = (Element)ParameterValues[0];
+
+            if (a is V_Number)
+                return Math.Acos((double)a.GetConstant());
+
+            return this;
+        }
+    }
 
     [ElementData("Arcsine In Degrees", ValueType.Number)]
     [Parameter("Value", ValueType.Number, typeof(V_Number))]
-    public class V_ArcsineInDegrees : Element {}
+    public class V_ArcsineInDegrees : Element
+    {
+        public override Element Optimize()
+        {
+            OptimizeChildren();
+
+            Element a = (Element)ParameterValues[0];
+
+            if (a is V_Number)
+                return Math.Asin((double)a.GetConstant()) * (180 / Math.PI);
+
+            return this;
+        }
+    }
 
     [ElementData("Arcsine In Radians", ValueType.Number)]
     [Parameter("Value", ValueType.Number, typeof(V_Number))]
-    public class V_ArcsineInRadians : Element {}
+    public class V_ArcsineInRadians : Element
+    {
+        public override Element Optimize()
+        {
+            OptimizeChildren();
+
+            Element a = (Element)ParameterValues[0];
+
+            if (a is V_Number)
+                return Math.Asin((double)a.GetConstant());
+
+            return this;
+        }
+    }
 
     [ElementData("Arctangent In Degrees", ValueType.Number)]
     [Parameter("Numerator", ValueType.Number, typeof(V_Number))]
@@ -230,11 +282,37 @@ namespace Deltin.Deltinteger.Elements
 
     [ElementData("Cosine From Degrees", ValueType.Number)]
     [Parameter("Angle", ValueType.Number, typeof(V_Number))]
-    public class V_CosineFromDegrees : Element{}
+    public class V_CosineFromDegrees : Element
+    {
+        public override Element Optimize()
+        {
+            OptimizeChildren();
+
+            Element a = (Element)ParameterValues[0];
+
+            if (a is V_Number)
+                return Math.Cos((double)a.GetConstant() * (Math.PI / 180));
+
+            return this;
+        }
+    }
 
     [ElementData("Cosine From Radians", ValueType.Number)]
     [Parameter("Angle", ValueType.Number, typeof(V_Number))]
-    public class V_CosineFromRadians : Element{}
+    public class V_CosineFromRadians : Element
+    {
+        public override Element Optimize()
+        {
+            OptimizeChildren();
+
+            Element a = (Element)ParameterValues[0];
+
+            if (a is V_Number)
+                return Math.Cos((double)a.GetConstant());
+
+            return this;
+        }
+    }
 
     [ElementData("Cross Product", ValueType.Vector)]
     [Parameter("Value", ValueType.VectorAndPlayer, typeof(V_Vector))]
@@ -924,11 +1002,37 @@ namespace Deltin.Deltinteger.Elements
 
     [ElementData("Sine From Degrees", ValueType.Number)]
     [Parameter("Angle", ValueType.Number, typeof(V_Number))]
-    public class V_SineFromDegrees : Element {}
+    public class V_SineFromDegrees : Element
+    {
+        public override Element Optimize()
+        {
+            OptimizeChildren();
+
+            Element a = (Element)ParameterValues[0];
+
+            if (a is V_Number)
+                return Math.Sin((double)a.GetConstant() * (Math.PI / 180));
+
+            return this;
+        }
+    }
 
     [ElementData("Sine From Radians", ValueType.Number)]
     [Parameter("Angle", ValueType.Number, typeof(V_Number))]
-    public class V_SineFromRadians : Element {}
+    public class V_SineFromRadians : Element
+    {
+        public override Element Optimize()
+        {
+            OptimizeChildren();
+
+            Element a = (Element)ParameterValues[0];
+
+            if (a is V_Number)
+                return Math.Sin((double)a.GetConstant());
+
+            return this;
+        }
+    }
 
     [ElementData("Slot Of", ValueType.Number)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
@@ -1079,11 +1183,37 @@ namespace Deltin.Deltinteger.Elements
 
     [ElementData("Tangent From Degrees", ValueType.Number)]
     [Parameter("Angle", ValueType.Number, typeof(V_Number))]
-    public class V_TangentFromDegrees : Element {}
+    public class V_TangentFromDegrees : Element
+    {
+        public override Element Optimize()
+        {
+            OptimizeChildren();
+
+            Element a = (Element)ParameterValues[0];
+
+            if (a is V_Number)
+                return Math.Tan((double)a.GetConstant() * (Math.PI / 180));
+
+            return this;
+        }
+    }
 
     [ElementData("Tangent From Radians", ValueType.Number)]
     [Parameter("Angle", ValueType.Number, typeof(V_Number))]
-    public class V_TangentFromRadians : Element {}
+    public class V_TangentFromRadians : Element
+    {
+        public override Element Optimize()
+        {
+            OptimizeChildren();
+
+            Element a = (Element)ParameterValues[0];
+
+            if (a is V_Number)
+                return Math.Tan((double)a.GetConstant());
+
+            return this;
+        }
+    }
 
     [ElementData("Team", ValueType.Team)]
     [EnumParameter("Team", typeof(Team))]
@@ -1169,11 +1299,11 @@ namespace Deltin.Deltinteger.Elements
             return new Models.Vertex(x, y, z);
         }
 
-        public Element X { get { return (Element)ParameterValues[0]; } }
-        public Element Y { get { return (Element)ParameterValues[1]; } }
-        public Element Z { get { return (Element)ParameterValues[2]; } }
+        public Element X => (Element)ParameterValues[0];
+        public Element Y => (Element)ParameterValues[1];
+        public Element Z => (Element)ParameterValues[2];
 
-        public static V_Vector Zero { get { return Element.Part<V_Vector>(new V_Number(0), new V_Number(0), new V_Number(0)); }}
+        public static V_Vector Zero => new V_Vector(0, 0, 0);
     }
 
     [ElementData("Vector Towards", ValueType.Vector)]

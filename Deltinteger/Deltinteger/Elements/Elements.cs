@@ -200,6 +200,12 @@ namespace Deltin.Deltinteger.Elements
 
         public bool Equals(Element b) => //this is terrible and needs to be updated
             ToWorkshop(OutputLanguage.enUS) == b.ToWorkshop(OutputLanguage.enUS);
+
+        public Element ToRadians() =>
+            (this * new V_Number(Math.PI / 180)).Optimize();
+
+        public Element ToDegrees() =>
+            (this * new V_Number(180 / Math.PI)).Optimize();
     }
 
     public class ElementList : IMethod
