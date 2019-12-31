@@ -264,14 +264,14 @@ namespace Deltin.Deltinteger.Pathfinder
             Element isValid;
             if (useAttributes)
                 isValid = Element.Part<V_Or>(
-                    new V_Compare(useAttribute, Operators.Equal, (V_Number)0),
+                    new V_Compare(useAttribute, Operators.Equal, new V_Number(0)),
                     Element.Part<V_ArrayContains>(
                         attributes,
                         useAttribute
                     )
                 );
             else
-                isValid = new V_Compare(useAttribute, Operators.Equal, (V_Number)0);
+                isValid = new V_Compare(useAttribute, Operators.Equal, new V_Number(0));
 
             return Element.Part<V_FilteredArray>(
                 segments,
@@ -301,7 +301,7 @@ namespace Deltin.Deltinteger.Pathfinder
         {
             // Return infinity if the distance is unassigned.
             return Element.TernaryConditional(
-                new V_Compare(distances[index], Operators.NotEqual, (V_Number)0),
+                new V_Compare(distances[index], Operators.NotEqual, new V_Number(0)),
                 distances[index],
                 Infinity
             );

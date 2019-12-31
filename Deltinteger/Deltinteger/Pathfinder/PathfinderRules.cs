@@ -104,31 +104,33 @@ namespace Deltin.Deltinteger.Pathfinder
                     0
                 ),
                 new Condition(
-                    Element.Part<V_Or>(
+                    // Element.Part<V_Or>(
                         // (1)
                         new V_Compare(
                             Element.Part<V_DistanceBetween>(
                                 NextPosition(new V_EventPlayer()),
                                 position
+                                // NextPosition(new V_EventPlayer()) - Element.Part<V_YOf>(NextPosition(new V_EventPlayer())),
+                                // position - Element.Part<V_YOf>(position)
                             ),
                             Operators.LessThan,
                             new V_Number(MoveToNext)
-                        ),
-                        Element.Part<V_And>(
-                            // (2)
-                            new V_Compare(
-                                Element.Part<V_CountOf>(Path.GetVariable()),
-                                Operators.Equal,
-                                new V_Number(2)
-                            ),
-                            Element.Part<V_And>(
-                                // (3)
-                                IsBetween(position, PositionAt(new V_EventPlayer(), 0), PositionAt(new V_EventPlayer(), 1)),
-                                // (4)
-                                Element.Part<V_IsInLineOfSight>(position + new V_Vector(0, 1.5, 0), PositionAt(new V_EventPlayer(), 1) + new V_Vector(0, 1.5, 0))
-                            )
                         )
-                    )
+                        // Element.Part<V_And>(
+                        //     // (2)
+                        //     new V_Compare(
+                        //         Element.Part<V_CountOf>(Path.GetVariable()),
+                        //         Operators.Equal,
+                        //         2
+                        //     ),
+                        //     Element.Part<V_And>(
+                        //         // (3)
+                        //         IsBetween(position, PositionAt(new V_EventPlayer(), 0), PositionAt(new V_EventPlayer(), 1)),
+                        //         // (4)
+                        //         Element.Part<V_IsInLineOfSight>(position + new V_Vector(0, 1.5, 0), PositionAt(new V_EventPlayer(), 1) + new V_Vector(0, 1.5, 0))
+                        //     )
+                        // )
+                    // )
                 )
             };
 
@@ -186,6 +188,11 @@ namespace Deltin.Deltinteger.Pathfinder
                 Path          .ModifyVariable(Operation.RemoveFromArrayByIndex, 0),
                 PathAttributes.ModifyVariable(Operation.RemoveFromArrayByIndex, 0)
             );
+        }
+
+        public Element NumberOfNodes(Element player)
+        {
+            return Element.Part<V_CountOf>(Path.GetVariable(player));
         }
     }
 }

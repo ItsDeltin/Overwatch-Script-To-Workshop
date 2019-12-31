@@ -19,18 +19,24 @@ namespace Deltin.Deltinteger.Pathfinder
         {
             return new CodeParameter[] {
                 new CodeParameter("player", "The player to move."),
-                new CodeParameter("destination", "the destination to move the player to.")
+                new CodeParameter("destination", "The destination to move the player to."),
+                new CodeParameter("attributes", "An array of attributes to pathfind with.", new ExpressionOrWorkshopValue(new V_Null()))
             };
         }
 
         public override IWorkshopTree Get(ActionSet actionSet, IWorkshopTree[] parameterValues)
         {
+            Element player = (Element)parameterValues[0];
+            Element destination = (Element)parameterValues[1];
+            Element attributes = (Element)parameterValues[2];
+            if (attributes is V_Null || attributes is V_EmptyArray) attributes = null;
+
             DijkstraNormal algorithm = new DijkstraNormal(
-                actionSet, (Element)actionSet.CurrentObject.GetVariable(), Element.Part<V_PositionOf>(parameterValues[0]), (Element)parameterValues[1]
+                actionSet, (Element)actionSet.CurrentObject.GetVariable(), Element.Part<V_PositionOf>(player), destination, attributes
             );
             algorithm.Get();
             DijkstraBase.Pathfind(
-                actionSet, actionSet.Translate.DeltinScript.SetupPathfinder(), (Element)algorithm.finalPath.GetVariable(), (Element)parameterValues[0], (Element)parameterValues[1]
+                actionSet, actionSet.Translate.DeltinScript.SetupPathfinder(), (Element)algorithm.finalPath.GetVariable(), player, destination, (Element)algorithm.finalPathAttributes.GetVariable()
             );
 
             return null;
@@ -43,15 +49,21 @@ namespace Deltin.Deltinteger.Pathfinder
         public override CodeParameter[] Parameters()
         {
             return new CodeParameter[] {
-                new CodeParameter("player", "The array of players to move."),
-                new CodeParameter("destination", "The destination to move the players to.")
+                new CodeParameter("players", "The array of players to move."),
+                new CodeParameter("destination", "The destination to move the players to."),
+                new CodeParameter("attributes", "An array of attributes to pathfind with.", new ExpressionOrWorkshopValue(new V_Null()))
             };
         }
 
         public override IWorkshopTree Get(ActionSet actionSet, IWorkshopTree[] parameterValues)
         {
+            Element players = (Element)parameterValues[0];
+            Element destination = (Element)parameterValues[1];
+            Element attributes = (Element)parameterValues[2];
+            if (attributes is V_Null || attributes is V_EmptyArray) attributes = null;
+
             DijkstraMultiSource algorithm = new DijkstraMultiSource(
-                actionSet, actionSet.Translate.DeltinScript.SetupPathfinder(), (Element)actionSet.CurrentObject.GetVariable(), (Element)parameterValues[0], (Element)parameterValues[1]
+                actionSet, actionSet.Translate.DeltinScript.SetupPathfinder(), (Element)actionSet.CurrentObject.GetVariable(), players, destination, attributes
             );
             algorithm.Get();
 
@@ -73,7 +85,7 @@ namespace Deltin.Deltinteger.Pathfinder
             Element destination = (Element)parameterValues[1];
 
             DijkstraNormal algorithm = new DijkstraNormal(
-                actionSet, (Element)actionSet.CurrentObject.GetVariable(), position, destination
+                actionSet, (Element)actionSet.CurrentObject.GetVariable(), position, destination, null
             );
             algorithm.Get();
 
@@ -211,22 +223,39 @@ namespace Deltin.Deltinteger.Pathfinder
         }
     }
 
-    [CustomMethod("CurrentSegmentAttribute", CustomMethodType.Value)]
-    [Parameter("Player", Elements.ValueType.Player, null)]
-    class CurrentSegmentAttribute : PathfindPlayer
+    [CustomMethod("CurrentSegmentAttribute", "Gets the attribute of the current pathfind segment.", CustomMethodType.Value)]
+    class CurrentSegmentAttribute : CustomMethodBase
     {
-        override protected MethodResult Get(PathfinderInfo info)
-        {
-            Element player = (Element)Parameters[0];
-            return new MethodResult(null, info.PathAttributes.GetVariable()[0]);
-        }
+        public override CodeParameter[] Parameters() => new CodeParameter[] {
+            new CodeParameter("player", "The player to get the next segment attribute of."),
+        };
 
-        public override CustomMethodWiki Wiki()
+        public override IWorkshopTree Get(ActionSet actionSet, IWorkshopTree[] parameterValues)
         {
-            return new CustomMethodWiki(
-                "Gets the attribute of the current pathfind segment.",
-                "The player to get the next segment attribute of."
-            );
+            PathfinderInfo pathfindInfo = actionSet.Translate.DeltinScript.SetupPathfinder();
+            Element player = (Element)parameterValues[0];
+
+            return Element.TernaryConditional(pathfindInfo.NumberOfNodes(player) > 1, ((Element)pathfindInfo.PathAttributes.GetVariable(player))[0], new V_Number(-1));
+        }
+    }
+
+    [CustomMethod("SegmentAttribute", "Gets the attribute of a pathfind segment.", CustomMethodType.Value)]
+    [Parameter("player", Elements.ValueType.Player, null)]
+    [Parameter("segment", Elements.ValueType.Number, null)]
+    class SegmentAttribute : CustomMethodBase
+    {
+        public override CodeParameter[] Parameters() => new CodeParameter[] {
+            new CodeParameter("player", "The player to get the segment attribute of."),
+            new CodeParameter("segment", "The index of the segment.")
+        };
+
+        public override IWorkshopTree Get(ActionSet actionSet, IWorkshopTree[] parameterValues)
+        {
+            PathfinderInfo pathfindInfo = actionSet.Translate.DeltinScript.SetupPathfinder();
+            Element player  = (Element)parameterValues[0];
+            Element segment = (Element)parameterValues[1];
+
+            return ((Element)pathfindInfo.PathAttributes.GetVariable(player))[segment];
         }
     }
 }
