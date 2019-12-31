@@ -105,7 +105,43 @@ namespace Deltin.Deltinteger.Elements
     [ElementData("And", ValueType.Boolean)]
     [Parameter("Value", ValueType.Boolean, typeof(V_True))]
     [Parameter("Value", ValueType.Boolean, typeof(V_True))]
-    public class V_And : Element {}
+    public class V_And : Element
+    {
+        public override Element Optimize()
+        {
+            OptimizeChildren();
+
+            Element a = (Element)ParameterValues[0];
+            Element b = (Element)ParameterValues[1];
+
+            if (a is V_False || b is V_False)
+                return false;
+
+            if (a is V_True)
+                return b;
+            else if (b is V_True)
+                return a;
+
+            if (a is V_True && b is V_True)
+                return true;
+
+            if (a.Equals(b))
+                return a;
+
+            if (a is V_Not)
+            {
+                if (((Element)a.ParameterValues[0]).Equals(b))
+                    return false;
+            }
+            else if (b is V_Not)
+            {
+                if (((Element)b.ParameterValues[0]).Equals(a))
+                    return false;
+            }
+
+            return this;
+        }
+    }
 
     [ElementData("Angle Between Vectors", ValueType.Vector)]
     [Parameter("Vector", ValueType.Vector, typeof(V_Vector))]

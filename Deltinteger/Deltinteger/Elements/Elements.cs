@@ -187,8 +187,19 @@ namespace Deltin.Deltinteger.Elements
         }
         public static implicit operator Element(double number) => new V_Number(number);
         public static implicit operator Element(int number) => new V_Number(number);
+        public static implicit operator Element(bool a)
+        {
+            if (a == true)
+                return new V_True();
+            if (a == false)
+                return new V_False();
+            return null;
+        }
 
         public static readonly Element DefaultElement = 0;
+
+        public bool Equals(Element b) => //this is terrible and needs to be updated
+            ToWorkshop(OutputLanguage.enUS) == b.ToWorkshop(OutputLanguage.enUS);
     }
 
     public class ElementList : IMethod
