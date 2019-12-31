@@ -150,7 +150,7 @@ namespace Deltin.Deltinteger.Parse
         /// <param name="fileType">The expected file type. Can be null.</param>
         /// <param name="parameterName">The name of the parameter.</param>
         /// <param name="description">The parameter's description. Can be null.</param>
-        public FileParameter(string fileType, string parameterName, string description) : base(parameterName, null, null, description)
+        public FileParameter(string fileType, string parameterName, string description) : base(parameterName, description)
         {
             FileType = fileType?.ToLower();
         }

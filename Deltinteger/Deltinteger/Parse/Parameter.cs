@@ -34,14 +34,6 @@ namespace Deltin.Deltinteger.Parse
             DefaultValue = defaultValue;
         }
 
-        public CodeParameter(string name, CodeType type, ExpressionOrWorkshopValue defaultValue, string documentation)
-        {
-            Name = name;
-            Type = type;
-            DefaultValue = defaultValue;
-            Documentation = documentation;
-        }
-
         public CodeParameter(string name, string documentation)
         {
             Name = name;
@@ -59,6 +51,14 @@ namespace Deltin.Deltinteger.Parse
         {
             Name = name;
             Documentation = documentation;
+            DefaultValue = defaultValue;
+        }
+
+        public CodeParameter(string name, string documentation, CodeType type, ExpressionOrWorkshopValue defaultValue)
+        {
+            Name = name;
+            Documentation = documentation;
+            Type = type;
             DefaultValue = defaultValue;
         }
 

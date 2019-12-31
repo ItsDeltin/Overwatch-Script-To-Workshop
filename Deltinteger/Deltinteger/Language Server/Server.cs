@@ -80,6 +80,7 @@ namespace Deltin.Deltinteger.LanguageServer
             DefinitionHandler definitionHandler = new DefinitionHandler(this);
             HoverHandler hoverHandler = new HoverHandler(this);
             RenameHandler renameHandler = new RenameHandler(this);
+            ReferenceHandler referenceHandler = new ReferenceHandler(this);
 
             Server = await OmniSharp.Extensions.LanguageServer.Server.LanguageServer.From(options => options
                 .WithInput(Console.OpenStandardInput())
@@ -94,7 +95,8 @@ namespace Deltin.Deltinteger.LanguageServer
                 .WithHandler<ConfigurationHandler>(configurationHandler)
                 .WithHandler<DefinitionHandler>(definitionHandler)
                 .WithHandler<HoverHandler>(hoverHandler)
-                .WithHandler<RenameHandler>(renameHandler));
+                .WithHandler<RenameHandler>(renameHandler)
+                .WithHandler<ReferenceHandler>(referenceHandler));
             
             await Server.WaitForExit;
         }

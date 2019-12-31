@@ -282,9 +282,9 @@ namespace Deltin.Deltinteger.Elements
 
                     Parameters[i] = new CodeParameter(
                         name,
+                        description,
                         codeType,
-                        defaultValue == null ? null : new ExpressionOrWorkshopValue(defaultValue),
-                        description
+                        defaultValue == null ? null : new ExpressionOrWorkshopValue(defaultValue)
                     );
                 }
             }
