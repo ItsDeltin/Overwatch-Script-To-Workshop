@@ -369,6 +369,9 @@ namespace Deltin.Deltinteger.Parse
             
             if (element is ICallable)
                 ((ICallable)element).Call(parseInfo.Script, variableRange);
+            
+            if (element is IApplyBlock)
+                parseInfo.CurrentCallInfo?.Call((IApplyBlock)element, variableRange);
 
             if (element is Var)
             {
