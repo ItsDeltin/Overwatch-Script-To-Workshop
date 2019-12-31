@@ -44,7 +44,7 @@ namespace Deltin.Deltinteger.Parse
                     parseInfo.Script.AddHover(DocRange.GetRange(context), Constructor.GetLabel(true));
 
                     if (Constructor is DefinedConstructor)
-                        parseInfo.CurrentCallInfo.Call((DefinedConstructor)Constructor, nameRange);
+                        parseInfo.CurrentCallInfo?.Call((DefinedConstructor)Constructor, nameRange);
                 }
             }
         }
