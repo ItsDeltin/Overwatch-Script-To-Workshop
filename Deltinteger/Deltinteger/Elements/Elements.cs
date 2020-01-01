@@ -200,36 +200,21 @@ namespace Deltin.Deltinteger.Elements
 
         public bool EqualTo(Element b)
         {
-            if (ParameterValues.Length != b.ParameterValues.Length) //checks whether the amount of parameters are different
+            string codeA = ToWorkshop(OutputLanguage.enUS);
+            string codeB = b.ToWorkshop(OutputLanguage.enUS);
+
+            string[] randomMethods = new string[] {
+                new V_RandomInteger().Name,
+                new V_RandomizedArray().Name,
+                new V_RandomReal().Name,
+                new V_RandomValueInArray().Name
+            };
+
+            if (randomMethods.Any(s => codeA.Contains(s)) || randomMethods.Any(s => codeB.Contains(s)))
                 return false;
 
-            if (GetType() != b.GetType()) //checks whether the element types are the same
-                return false;
-
-            if (IsARandomMethod() || b.IsARandomMethod()) //checks whether either of the elements are random 
-                return false;
-
-            if (this is V_Number && b is V_Number) //checks if both elements are number constants
-                return ((V_Number)this).Value == ((V_Number)b).Value;
-
-            for (int i = 0; i < ParameterValues.Length; i++)
-            {
-                if (ParameterValues[i].GetType() == typeof(WorkshopVariable) && b.ParameterValues[i].GetType() == typeof(WorkshopVariable)) //checks if both elements are variables
-                {
-                    WorkshopVariable varA = (WorkshopVariable)ParameterValues[i];
-                    WorkshopVariable varB = (WorkshopVariable)b.ParameterValues[i];
-                    if (varA.ID != varB.ID || varA.IsGlobal != varB.IsGlobal || varA.Name != varB.Name)
-                        return false;
-                }
-                else if (!((Element)ParameterValues[i]).EqualTo((Element)b.ParameterValues[i]))
-                    return false;
-            }
-
-            return true; //if the elements pass all checks true is returned
+            return codeA == codeB;
         }
-
-        private bool IsARandomMethod() =>
-            this is V_RandomInteger || this is V_RandomizedArray || this is V_RandomReal || this is V_RandomValueInArray;
 
         public Element ToRadians() =>
             (this * new V_Number(Math.PI / 180)).Optimize();
