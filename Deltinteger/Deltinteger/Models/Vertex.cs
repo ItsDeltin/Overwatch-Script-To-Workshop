@@ -126,8 +126,13 @@ namespace Deltin.Deltinteger.Models
             double x = Y * vert2.Z - vert2.Y * Z;
             double y = -(X * vert2.Z - vert2.X * Z);
             double z = X * vert2.Y - vert2.X * Y;
-            return new Vertex(x, y, z).Normalize();
+            return new Vertex(x, y, z);
         }
+
+        public Vertex RemoveNaNs() => new Vertex(
+            double.IsNaN(X) ? 0 : X,
+            double.IsNaN(Y) ? 0 : Y,
+            double.IsNaN(Z) ? 0 : Z);
 
         //public double DotProduct(Vertex vert2)
         //{

@@ -431,7 +431,7 @@ namespace Deltin.Deltinteger.Elements
                 Vertex vertexA = (Vertex)a.GetConstant();
                 Vertex vertexB = (Vertex)b.GetConstant();
 
-                return vertexA.CrossProduct(vertexB).ToVector();
+                return vertexA.CrossProduct(vertexB).RemoveNaNs().ToVector();
             }
 
             return this;
