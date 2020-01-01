@@ -84,7 +84,7 @@ namespace Deltin.Deltinteger.Parse
             if (element != null && getter != null && !DoShareGroup(getter) && element.AccessLevel != AccessLevel.Public)
             {
                 if (range == null) throw new Exception();
-                diagnostics.Error(string.Format("'{0}' is inaccessable due to its access level.", name, ErrorName), range);
+                diagnostics.Error(string.Format("'{0}' is inaccessable due to its access level.", name), range);
             }
 
             return element;

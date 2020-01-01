@@ -27,7 +27,7 @@ namespace Deltin.Deltinteger.Parse
 
                 // Get the constructor to use.
                 OverloadChooser = new OverloadChooser(
-                    CreatingObjectOf.Constructors, parseInfo, scope, nameRange, DocRange.GetRange(context), new OverloadError("type " + CreatingObjectOf.Name)
+                    CreatingObjectOf.Constructors, parseInfo, CreatingObjectOf.ReturningScope(), scope, nameRange, DocRange.GetRange(context), new OverloadError("type " + CreatingObjectOf.Name)
                 );
 
                 if (context.call_parameters() != null)

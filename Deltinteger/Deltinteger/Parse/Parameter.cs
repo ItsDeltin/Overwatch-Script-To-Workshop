@@ -148,6 +148,7 @@ namespace Deltin.Deltinteger.Parse
     {
         private ParseInfo parseInfo { get; }
         private Scope scope { get; }
+        private Scope getter { get; }
         private DocRange genericErrorRange { get; }
         public DocRange CallRange { get; }
         private OverloadError ErrorMessages { get; }
@@ -166,14 +167,15 @@ namespace Deltin.Deltinteger.Parse
 
         private Dictionary<IParameterCallable, List<Diagnostic>> optionDiagnostics;
 
-        public OverloadChooser(IParameterCallable[] overloads, ParseInfo parseInfo, Scope scope, DocRange genericErrorRange, DocRange callRange, OverloadError errorMessages)
+        public OverloadChooser(IParameterCallable[] overloads, ParseInfo parseInfo, Scope elementScope, Scope getter, DocRange genericErrorRange, DocRange callRange, OverloadError errorMessages)
         {
             AllOverloads = overloads
                 .OrderBy(overload => overload.Parameters.Length)
                 .ToArray();
             CurrentOptions = AllOverloads.ToList();
             this.parseInfo = parseInfo;
-            this.scope = scope;
+            this.scope = elementScope;
+            this.getter = getter;
             this.genericErrorRange = genericErrorRange;
             CallRange = callRange;
             this.ErrorMessages = errorMessages;
@@ -190,7 +192,7 @@ namespace Deltin.Deltinteger.Parse
             var parameterRanges = new List<DocRange>();
             for (int i = 0; i < values.Length; i++)
             {
-                values[i] = DeltinScript.GetExpression(parseInfo, scope, context.expr(i));
+                values[i] = DeltinScript.GetExpression(parseInfo, getter, context.expr(i));
                 errorRanges[i] = DocRange.GetRange(context.expr(i));
                 parameterRanges.Add(errorRanges[i]);
             }
@@ -238,7 +240,7 @@ namespace Deltin.Deltinteger.Parse
                 // Get the expression. If it doesn't exist, add a syntax error.
                 if (context.picky_parameter(i).expr() != null)
                 {
-                    expression = DeltinScript.GetExpression(parseInfo, scope, context.picky_parameter(i).expr());
+                    expression = DeltinScript.GetExpression(parseInfo, getter, context.picky_parameter(i).expr());
                     expressionRange = DocRange.GetRange(context.picky_parameter(i).expr());
                 }
                 else
@@ -405,6 +407,10 @@ namespace Deltin.Deltinteger.Parse
             parseInfo.Script.Diagnostics.AddDiagnostics(optionDiagnostics[Overload].ToArray());
 
             parseInfo.Script.AddOverloadData(this);
+
+            // Check the access level.
+            if (Overload.AccessLevel != AccessLevel.Public && !scope.DoShareGroup(getter))
+                parseInfo.Script.Diagnostics.Error(string.Format("'{0}' is inaccessable due to its access level.", Overload.GetLabel(false)), genericErrorRange);
         }
     
         private IExpression MissingParameter(CodeParameter parameter)
