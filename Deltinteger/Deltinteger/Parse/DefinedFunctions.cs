@@ -517,7 +517,7 @@ namespace Deltin.Deltinteger.Parse
 
         public IWorkshopTree Parse(ActionSet actionSet, bool asElement = true) => Expression.Parse(actionSet);
 
-        public Scope ReturningScope() => ReturnType?.GetObjectScope();
+        public Scope ReturningScope() => ReturnType?.GetObjectScope() ?? parseInfo.TranslateInfo.PlayerVariableScope;
 
         public CodeType Type() => ReturnType;
 

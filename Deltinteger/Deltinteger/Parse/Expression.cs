@@ -311,11 +311,13 @@ namespace Deltin.Deltinteger.Parse
         public IExpression Index { get; }
         private DocRange expressionRange { get; }
         private DocRange indexRange { get; }
+        private ParseInfo parseInfo { get; }
 
         public ValueInArrayAction(ParseInfo parseInfo, Scope scope, DeltinScriptParser.E_array_indexContext exprContext)
         {
             Expression = DeltinScript.GetExpression(parseInfo, scope, exprContext.array);
             expressionRange = DocRange.GetRange(exprContext.array);
+            this.parseInfo = parseInfo;
 
             if (exprContext.index == null)
                 parseInfo.Script.Diagnostics.Error("Expected an expression.", DocRange.GetRange(exprContext.INDEX_START()));
@@ -326,7 +328,7 @@ namespace Deltin.Deltinteger.Parse
             }
         }
 
-        public Scope ReturningScope() => Type()?.GetObjectScope();
+        public Scope ReturningScope() => Type()?.GetObjectScope() ?? parseInfo.TranslateInfo.PlayerVariableScope;
         public CodeType Type() => (Expression.Type() as ArrayType)?.ArrayOfType;
 
         public IWorkshopTree Parse(ActionSet actionSet, bool asElement = true)
@@ -476,9 +478,11 @@ namespace Deltin.Deltinteger.Parse
         public IExpression Condition { get; }
         public IExpression Consequent { get; }
         public IExpression Alternative { get; }
+        private ParseInfo parseInfo { get; }
 
         public TernaryConditionalAction(ParseInfo parseInfo, Scope scope, DeltinScriptParser.E_ternary_conditionalContext ternaryContext)
         {
+            this.parseInfo = parseInfo;
             Condition = DeltinScript.GetExpression(parseInfo, scope, ternaryContext.condition);
 
             if (ternaryContext.consequent == null)
@@ -492,7 +496,7 @@ namespace Deltin.Deltinteger.Parse
                 Alternative = DeltinScript.GetExpression(parseInfo, scope, ternaryContext.alternative);
         }
 
-        public Scope ReturningScope() => Type()?.GetObjectScope();
+        public Scope ReturningScope() => Type()?.GetObjectScope() ?? parseInfo.TranslateInfo.PlayerVariableScope;
         public CodeType Type()
         {
             // Consequent or Alternative can equal null on GetExpression failure.
