@@ -15,6 +15,8 @@ namespace Deltin.Deltinteger.CustomMethods
         public override CodeParameter[] Parameters() => new CodeParameter[] {
             new HudFileParameter("imageFile", "The image to render."),
             new CodeParameter("visibleTo", "Who the image is visible to."),
+            new CodeParameter("foregroundColor", "The foreground color.", WorkshopEnumType.GetEnumType<Elements.Color>()),
+            new CodeParameter("backgroundColor", "The background color.", WorkshopEnumType.GetEnumType<Elements.Color>()),
             new CodeParameter("reevaluation", "Which inputs will be reevaluated.", WorkshopEnumType.GetEnumType<StringRev>()),
             new CodeParameter("spectators", "Determines if spectators can see the rendered hud.", WorkshopEnumType.GetEnumType<Spectators>(), new ExpressionOrWorkshopValue(EnumData.GetEnumValue(Spectators.DefaultVisibility))),
             new ConstBoolParameter("getTextIDs", "If true, the method will return the text IDs used to create the image. Use `DestroyHudArray()` to destroy the hud. This is a boolean constant.", false)
@@ -24,9 +26,11 @@ namespace Deltin.Deltinteger.CustomMethods
         {
             HudFile hudInfo = (HudFile)additionalParameterData[0];
             Element visibleTo = (Element)parameterValues[1];
-            IWorkshopTree reevaluation = parameterValues[2];
-            IWorkshopTree spectators = parameterValues[3];
-            bool getIDs = (bool)additionalParameterData[4];
+            IWorkshopTree foregroundColor = parameterValues[2];
+            IWorkshopTree backgroundColor = parameterValues[3];
+            IWorkshopTree reevaluation = parameterValues[4];
+            IWorkshopTree spectators = parameterValues[5];
+            bool getIDs = (bool)additionalParameterData[6];
 
             IndexReference ids = null;
             if (getIDs)
@@ -35,9 +39,9 @@ namespace Deltin.Deltinteger.CustomMethods
                 actionSet.AddAction(ids.SetVariable(new V_EmptyArray()));
             }
 
-            hudInfo.Print(actionSet, ids, false, visibleTo, reevaluation, spectators, Elements.Color.Red);
+            hudInfo.Print(actionSet, ids, false, visibleTo, reevaluation, spectators, backgroundColor);
             CreateHud(actionSet, HudLocation.Left, "_", -2, visibleTo, reevaluation, spectators);
-            hudInfo.Print(actionSet, ids, true, visibleTo, reevaluation, spectators, Elements.Color.Orange);
+            hudInfo.Print(actionSet, ids, true, visibleTo, reevaluation, spectators, foregroundColor);
             return ids?.GetVariable();
         }
 
@@ -105,7 +109,7 @@ namespace Deltin.Deltinteger.CustomMethods
             }
         }
 
-        public void Print(ActionSet actionSet, IndexReference ids, bool bg, IWorkshopTree visibleTo, IWorkshopTree reevaluation, IWorkshopTree spectators, Elements.Color color)
+        public void Print(ActionSet actionSet, IndexReference ids, bool bg, IWorkshopTree visibleTo, IWorkshopTree reevaluation, IWorkshopTree spectators, IWorkshopTree color)
         {
             foreach (HudLine line in Lines)
                 line.Print(actionSet, ids, bg, visibleTo, reevaluation, spectators, color);
@@ -126,7 +130,7 @@ namespace Deltin.Deltinteger.CustomMethods
         static V_Null nul = new V_Null();
         static IWorkshopTree white = EnumData.GetEnumValue(Elements.Color.White);
 
-        public void Print(ActionSet actionSet, IndexReference ids, bool right, IWorkshopTree visibleTo, IWorkshopTree reevaluation, IWorkshopTree spectators, Elements.Color color)
+        public void Print(ActionSet actionSet, IndexReference ids, bool right, IWorkshopTree visibleTo, IWorkshopTree reevaluation, IWorkshopTree spectators, IWorkshopTree color)
         {
             List<V_CustomString> strings = new List<V_CustomString>();
 
@@ -163,7 +167,7 @@ namespace Deltin.Deltinteger.CustomMethods
                 /* sort order      */ -1 + new V_Number(Line + 1) / 100,
                 /* header color    */ white,
                 /* subheader color */ white,
-                /* text color      */ EnumData.GetEnumValue(color),
+                /* text color      */ color,
                 /* reevaluation    */ reevaluation,
                 /* spectators      */ spectators
             ));
