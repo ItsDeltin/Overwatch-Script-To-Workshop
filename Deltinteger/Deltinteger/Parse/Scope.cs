@@ -15,6 +15,7 @@ namespace Deltin.Deltinteger.Parse
         private Scope Parent { get; }
         private List<Scope> children { get; } = new List<Scope>();
         public string ErrorName { get; set; } = "current scope";
+        public CodeType This { get; set; }
 
         public Scope() {}
         private Scope(Scope parent)
@@ -159,6 +160,20 @@ namespace Deltin.Deltinteger.Parse
             }
 
             return methods.ToArray();
+        }
+
+        public CodeType GetThis()
+        {
+            CodeType @this = null;
+            Scope current = this;
+
+            while (@this == null && current != null)
+            {
+                @this = current.This;
+                current = current.Parent;
+            }
+
+            return @this;
         }
 
         public CompletionItem[] GetCompletion(Pos pos, bool immediate)

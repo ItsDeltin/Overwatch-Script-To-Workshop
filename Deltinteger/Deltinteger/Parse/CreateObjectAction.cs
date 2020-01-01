@@ -49,15 +49,8 @@ namespace Deltin.Deltinteger.Parse
             }
         }
 
-        public CodeType Type()
-        {
-            return CreatingObjectOf;
-        }
-
-        public Scope ReturningScope()
-        {
-            return CreatingObjectOf.GetObjectScope();
-        }
+        public CodeType Type() => CreatingObjectOf;
+        public Scope ReturningScope() => CreatingObjectOf.GetObjectScope();
 
         public IWorkshopTree Parse(ActionSet actionSet, bool asElement = true)
         {

@@ -519,4 +519,20 @@ namespace Deltin.Deltinteger.Parse
         public CodeType Type() => null;
         public IWorkshopTree Parse(ActionSet actionSet, bool asElement = true) => null;
     }
+
+    public class ThisAction : IExpression
+    {
+        private CodeType ThisType { get; }
+
+        public ThisAction(ParseInfo parseInfo, Scope scope, DeltinScriptParser.E_thisContext context)
+        {
+            ThisType = scope.GetThis();
+            if (ThisType == null)
+                parseInfo.Script.Diagnostics.Error("Keyword 'this' cannot be used here.", DocRange.GetRange(context));
+        }
+
+        public IWorkshopTree Parse(ActionSet actionSet, bool asElement = true) => actionSet.CurrentObject.Index[0];
+        public CodeType Type() => ThisType;
+        public Scope ReturningScope() => ThisType?.GetObjectScope();
+    }
 }

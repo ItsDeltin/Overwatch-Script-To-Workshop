@@ -341,6 +341,7 @@ namespace Deltin.Deltinteger.Parse
                 case DeltinScriptParser.E_op_compareContext opCompare: return new OperatorAction(parseInfo, scope, opCompare);
                 case DeltinScriptParser.E_ternary_conditionalContext ternary: return new TernaryConditionalAction(parseInfo, scope, ternary);
                 case DeltinScriptParser.E_rootContext root: return new RootAction(parseInfo.TranslateInfo);
+                case DeltinScriptParser.E_thisContext @this: return new ThisAction(parseInfo, scope, @this);
                 default: throw new Exception($"Could not determine the expression type '{exprContext.GetType().Name}'.");
             }
         }

@@ -196,6 +196,9 @@ namespace Deltin.Deltinteger.Parse
                 return null;
             }
 
+            script.AddDefinitionLink(valueRange, new Location(Extras.Definition(resultingPath), DocRange.Zero));
+            script.AddHover(valueRange, resultingPath);
+
             return resultingPath;
         }
     }

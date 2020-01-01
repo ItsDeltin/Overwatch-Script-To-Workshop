@@ -230,8 +230,7 @@ namespace Deltin.Deltinteger.Parse
                 fileImporter.Diagnostics.Error("File path contains invalid characters.", importRange);
                 return;
             }
-            string enc = "file:///" + resultingPath.Replace('\\', '/').Replace(" ","%20").Replace(":", "%3A");
-            Uri = new Uri(enc);
+            Uri = Extras.Definition(resultingPath);
             Directory = Path.GetDirectoryName(resultingPath);
             FilePath = resultingPath;
 
