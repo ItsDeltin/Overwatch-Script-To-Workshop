@@ -40,6 +40,7 @@ namespace Deltin.Deltinteger.Parse
             
             GlobalScope = Scope.GetGlobalScope();
             RulesetScope = GlobalScope.Child();
+            RulesetScope.GroupCatch = true;
             
             Translate();
             if (!diagnostics.ContainsErrors())
@@ -364,7 +365,7 @@ namespace Deltin.Deltinteger.Parse
                 return type;
             }
 
-            IScopeable element = scope.GetVariable(variableName, parseInfo.Script.Diagnostics, variableRange);
+            IScopeable element = scope.GetVariable(variableName, getter, parseInfo.Script.Diagnostics, variableRange);
             if (element == null)
                 return null;
             

@@ -232,6 +232,7 @@ namespace Deltin.Deltinteger.Parse
             else throw new NotImplementedException();
 
             staticScope = translateInfo.GlobalScope.Child(TypeKindString + " " + Name);
+            staticScope.GroupCatch = true;
             objectScope = staticScope.Child(TypeKindString + " " + Name);
             objectScope.This = this;
 

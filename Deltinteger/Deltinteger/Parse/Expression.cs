@@ -50,7 +50,7 @@ namespace Deltin.Deltinteger.Parse
                 Result = Tree[Tree.Length - 1];
             
             // Get the completion items for each expression in the path.
-            GetCompletion(parseInfo.Script);
+            GetCompletion(parseInfo.Script, scope);
         }
 
         private TreeContextPart[] Flatten(ScriptFile script, DeltinScriptParser.E_expr_treeContext exprContext)
@@ -81,7 +81,7 @@ namespace Deltin.Deltinteger.Parse
             }
         }
 
-        private void GetCompletion(ScriptFile script)
+        private void GetCompletion(ScriptFile script, Scope scope)
         {
             for (int i = 0; i < Tree.Length; i++)
             if (Tree[i] != null)
@@ -105,7 +105,7 @@ namespace Deltin.Deltinteger.Parse
                     }
                     else continue;
 
-                    script.AddCompletionRange(new CompletionRange(treeScope, range, CompletionRangeKind.ClearRest));
+                    script.AddCompletionRange(new CompletionRange(treeScope, scope, range, CompletionRangeKind.ClearRest));
                 }
             }
         }
