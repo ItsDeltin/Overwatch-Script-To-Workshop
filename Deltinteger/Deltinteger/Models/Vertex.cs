@@ -1,4 +1,5 @@
 using System;
+using System.Numerics;
 using System.Xml.Serialization;
 using Deltin.Deltinteger.Elements;
 
@@ -100,12 +101,40 @@ namespace Deltin.Deltinteger.Models
 
             double res = abNorm[0] * bcNorm[0] + abNorm[1] * bcNorm[1] + abNorm[2] * bcNorm[2];
 
-            return Math.Acos(res)*180.0/ 3.141592653589793;
+            return Math.Acos(res) * (180.0 / Math.PI);
         }
 
         public bool EqualTo(Vertex other)
         {
             return X == other.X && Y == other.Y && Z == other.Z;
         }
+
+        public Vertex Normalize()
+        {
+            double distance = DistanceTo(new Vertex());
+            return new Vertex(X / distance, Y / distance, Z / distance);
+        }
+
+        public double DistanceTo(Vertex point2)
+        {
+            Vertex offset = new Vertex(point2.X - this.X, point2.Y - this.Y, point2.Z - this.Z);
+            return Math.Sqrt(Math.Pow(offset.X, 2) + Math.Pow(offset.Y, 2) + Math.Pow(offset.Z, 2));
+        }
+
+        public Vertex CrossProduct(Vertex vert2)
+        {
+            double x = Y * vert2.Z - vert2.Y * Z;
+            double y = -(X * vert2.Z - vert2.X * Z);
+            double z = X * vert2.Y - vert2.X * Y;
+            return new Vertex(x, y, z).Normalize();
+        }
+
+        //public double DotProduct(Vertex vert2)
+        //{
+        //    return Vector.Dot<double>(ToNumericsVector(), vert2.ToNumericsVector());
+        //}
+
+        //private Vector<double> ToNumericsVector() =>
+        //    new Vector<double>(new double[] {X,Y,Z});
     }
 }

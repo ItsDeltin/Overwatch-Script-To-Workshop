@@ -8,6 +8,7 @@ using System.Text.RegularExpressions;
 using System.Diagnostics;
 using Deltin.Deltinteger.Parse;
 using Antlr4.Runtime;
+using Deltin.Deltinteger.Models;
 
 namespace Deltin.Deltinteger.Elements
 {
@@ -52,7 +53,7 @@ namespace Deltin.Deltinteger.Elements
             Element a = (Element)ParameterValues[0];
             Element b = (Element)ParameterValues[1];
 
-            if (a is V_Number && ParameterValues[1] is V_Number)
+            if (a is V_Number && b is V_Number)
                 return ((V_Number)a).Value + ((V_Number)b).Value;
             
             if (a.ConstantSupported<Models.Vertex>() && b.ConstantSupported<Models.Vertex>())
@@ -78,7 +79,7 @@ namespace Deltin.Deltinteger.Elements
                     return a;
             }
 
-            if (a.Equals(b))
+            if (a.EqualTo(b))
                 return a * 2;
             
             return this;
@@ -139,17 +140,17 @@ namespace Deltin.Deltinteger.Elements
             if (a is V_True && b is V_True)
                 return true;
 
-            if (a.Equals(b))
+            if (a.EqualTo(b))
                 return a;
 
             if (a is V_Not)
             {
-                if (((Element)a.ParameterValues[0]).Equals(b))
+                if (((Element)a.ParameterValues[0]).EqualTo(b))
                     return false;
             }
             else if (b is V_Not)
             {
-                if (((Element)b.ParameterValues[0]).Equals(a))
+                if (((Element)b.ParameterValues[0]).EqualTo(a))
                     return false;
             }
 
@@ -243,12 +244,40 @@ namespace Deltin.Deltinteger.Elements
     [ElementData("Arctangent In Degrees", ValueType.Number)]
     [Parameter("Numerator", ValueType.Number, typeof(V_Number))]
     [Parameter("Denominator", ValueType.Number, typeof(V_Number))]
-    public class V_ArctangentInDegrees : Element {}
+    public class V_ArctangentInDegrees : Element
+    {
+        public override Element Optimize()
+        {
+            OptimizeChildren();
+
+            Element a = (Element)ParameterValues[0];
+            Element b = (Element)ParameterValues[1];
+
+            if (a is V_Number && b is V_Number)
+                return Math.Atan2(((V_Number)a).Value, ((V_Number)b).Value) * (180 / Math.PI);
+
+            return this;
+        }
+    }
 
     [ElementData("Arctangent In Radians", ValueType.Number)]
     [Parameter("Numerator", ValueType.Number, typeof(V_Number))]
     [Parameter("Denominator", ValueType.Number, typeof(V_Number))]
-    public class V_ArctangentInRadians : Element {}
+    public class V_ArctangentInRadians : Element
+    {
+        public override Element Optimize()
+        {
+            OptimizeChildren();
+
+            Element a = (Element)ParameterValues[0];
+            Element b = (Element)ParameterValues[1];
+
+            if (a is V_Number && b is V_Number)
+                return Math.Atan2(((V_Number)a).Value, ((V_Number)b).Value);
+
+            return this;
+        }
+    }
 
     [ElementData("Array Contains", ValueType.Boolean)]
     [Parameter("Array", ValueType.Any, typeof(V_AllPlayers))]
@@ -288,49 +317,49 @@ namespace Deltin.Deltinteger.Elements
 
             Element left = (Element)ParameterValues[0];
             Operators op = (Operators)((EnumMember)ParameterValues[1]).Value;
-            Element right = (Element)ParameterValues[0];
+            Element right = (Element)ParameterValues[2];
 
             if (op == Operators.Equal)
             {
-                if (left.Equals(right))
+                if (left.EqualTo(right))
                     return true;
                 if (left is V_Number && right is V_Number)
-                    return (double)left.GetConstant() == (double)right.GetConstant();
+                    return ((V_Number)left).Value == ((V_Number)right).Value;
             }
             else if (op == Operators.GreaterThan)
             {
-                if (left.Equals(right))
+                if (left.EqualTo(right))
                     return false;
                 if (left is V_Number && right is V_Number)
-                    return (double)left.GetConstant() > (double)right.GetConstant();
+                    return ((V_Number)left).Value > ((V_Number)right).Value;
             }
             else if (op == Operators.GreaterThanOrEqual)
             {
-                if (left.Equals(right))
+                if (left.EqualTo(right))
                     return true;
                 if (left is V_Number && right is V_Number)
-                    return (double)left.GetConstant() >= (double)right.GetConstant();
+                    return ((V_Number)left).Value >= ((V_Number)right).Value;
             }
             else if (op == Operators.LessThan)
             {
-                if (left.Equals(right))
+                if (left.EqualTo(right))
                     return false;
                 if (left is V_Number && right is V_Number)
-                    return (double)left.GetConstant() < (double)right.GetConstant();
+                    return ((V_Number)left).Value < ((V_Number)right).Value;
             }
             else if (op == Operators.LessThanOrEqual)
             {
-                if (left.Equals(right))
+                if (left.EqualTo(right))
                     return true;
                 if (left is V_Number && right is V_Number)
-                    return (double)left.GetConstant() <= (double)right.GetConstant();
+                    return ((V_Number)left).Value <= ((V_Number)right).Value;
             }
             else if (op == Operators.NotEqual)
             {
-                if (left.Equals(right))
+                if (left.EqualTo(right))
                     return false;
                 if (left is V_Number && right is V_Number)
-                    return (double)left.GetConstant() != (double)right.GetConstant();
+                    return ((V_Number)left).Value != ((V_Number)right).Value;
             }
 
             return this;
@@ -385,7 +414,26 @@ namespace Deltin.Deltinteger.Elements
     [ElementData("Cross Product", ValueType.Vector)]
     [Parameter("Value", ValueType.VectorAndPlayer, typeof(V_Vector))]
     [Parameter("Value", ValueType.VectorAndPlayer, typeof(V_Vector))]
-    public class V_CrossProduct : Element {}
+    public class V_CrossProduct : Element
+    {
+        public override Element Optimize()
+        {
+            OptimizeChildren();
+
+            Element a = (Element)ParameterValues[0];
+            Element b = (Element)ParameterValues[1];
+
+            if (a.ConstantSupported<Vertex>() && b.ConstantSupported<Vertex>())
+            {
+                Vertex vertexA = (Vertex)a.GetConstant();
+                Vertex vertexB = (Vertex)b.GetConstant();
+
+                return vertexA.CrossProduct(vertexB).ToVector();
+            }
+
+            return this;
+        }
+    }
 
     [ElementData("Current Map", ValueType.Map)]
     public class V_CurrentMap : Element {}
@@ -406,7 +454,26 @@ namespace Deltin.Deltinteger.Elements
     [ElementData("Distance Between", ValueType.Number)]
     [Parameter("Start Pos", ValueType.VectorAndPlayer, typeof(V_Vector))]
     [Parameter("End Pos", ValueType.VectorAndPlayer, typeof(V_Vector))]
-    public class V_DistanceBetween : Element {}
+    public class V_DistanceBetween : Element
+    {
+        public override Element Optimize()
+        {
+            OptimizeChildren();
+
+            Element a = (Element)ParameterValues[0];
+            Element b = (Element)ParameterValues[1];
+
+            if (a.ConstantSupported<Vertex>() && b.ConstantSupported<Vertex>())
+            {
+                Vertex vertexA = (Vertex)a.GetConstant();
+                Vertex vertexB = (Vertex)b.GetConstant();
+
+                return vertexA.DistanceTo(vertexB);
+            }
+
+            return this;
+        }
+    }
 
     [ElementData("Divide", ValueType.Any)]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
@@ -823,7 +890,7 @@ namespace Deltin.Deltinteger.Elements
                     return 0;
             }
 
-            if (a.Equals(b))
+            if (a.EqualTo(b))
                 return 0;
             
             return this;
@@ -879,7 +946,7 @@ namespace Deltin.Deltinteger.Elements
                     return 0;
             }
 
-            if (a.Equals(b))
+            if (a.EqualTo(b))
                 return Element.Part<V_RaiseToPower>(a, new V_Number(2));
             
             return this;
@@ -892,7 +959,24 @@ namespace Deltin.Deltinteger.Elements
 
     [ElementData("Normalize", ValueType.Number)]
     [Parameter("Vector", ValueType.VectorAndPlayer, typeof(V_Vector))]
-    public class V_Normalize : Element {}
+    public class V_Normalize : Element
+    {
+        public override Element Optimize()
+        {
+            OptimizeChildren();
+
+            Element a = (Element)ParameterValues[0];
+
+            if (a.ConstantSupported<Vertex>())
+            {
+                Vertex vertexA = (Vertex)a.GetConstant();
+
+                return vertexA.Normalize().ToVector();
+            }
+
+            return this;
+        }
+    }
 
     [ElementData("Normalized Health", ValueType.Number)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
@@ -1323,7 +1407,7 @@ namespace Deltin.Deltinteger.Elements
                 if (((V_Number)b).Value == 0)
                     return a;
 
-            if (a.Equals(b))
+            if (a.EqualTo(b))
                 return 0;
             
             return this;

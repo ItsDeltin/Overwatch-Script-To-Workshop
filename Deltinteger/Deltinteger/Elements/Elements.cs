@@ -198,7 +198,7 @@ namespace Deltin.Deltinteger.Elements
 
         public static readonly Element DefaultElement = 0;
 
-        public bool Equals(Element b) => //this is terrible and needs to be updated
+        public bool EqualTo(Element b) => //this is terrible and needs to be updated
             ToWorkshop(OutputLanguage.enUS) == b.ToWorkshop(OutputLanguage.enUS);
 
         public Element ToRadians() =>
