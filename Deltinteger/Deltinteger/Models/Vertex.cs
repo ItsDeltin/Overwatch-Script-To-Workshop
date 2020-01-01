@@ -121,6 +121,11 @@ namespace Deltin.Deltinteger.Models
             return Math.Sqrt(Math.Pow(offset.X, 2) + Math.Pow(offset.Y, 2) + Math.Pow(offset.Z, 2));
         }
 
+        public Vertex DirectionTowards(Vertex point2)
+        {
+            return new Vertex(point2.X - this.X, point2.Y - this.Y, point2.Z - this.Z).Normalize();
+        }
+
         public Vertex CrossProduct(Vertex vert2)
         {
             double x = Y * vert2.Z - vert2.Y * Z;

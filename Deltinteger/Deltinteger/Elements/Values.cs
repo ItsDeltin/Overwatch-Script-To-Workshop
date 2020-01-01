@@ -129,16 +129,11 @@ namespace Deltin.Deltinteger.Elements
             Element a = (Element)ParameterValues[0];
             Element b = (Element)ParameterValues[1];
 
-            if (a is V_False || b is V_False)
-                return false;
-
-            if (a is V_True)
-                return b;
-            else if (b is V_True)
-                return a;
-
             if (a is V_True && b is V_True)
                 return true;
+
+            if (a is V_False && b is V_False)
+                return false;
 
             if (a.EqualTo(b))
                 return a;
@@ -452,7 +447,26 @@ namespace Deltin.Deltinteger.Elements
     [ElementData("Direction Towards", ValueType.Vector)]
     [Parameter("Start Pos", ValueType.VectorAndPlayer, typeof(V_Vector))]
     [Parameter("End Pos", ValueType.VectorAndPlayer, typeof(V_Vector))]
-    public class V_DirectionTowards : Element {}
+    public class V_DirectionTowards : Element
+    {
+        public override Element Optimize()
+        {
+            OptimizeChildren();
+
+            Element a = (Element)ParameterValues[0];
+            Element b = (Element)ParameterValues[1];
+
+            if (a.ConstantSupported<Vertex>() && b.ConstantSupported<Vertex>())
+            {
+                Vertex vertexA = (Vertex)a.GetConstant();
+                Vertex vertexB = (Vertex)b.GetConstant();
+
+                return vertexA.DirectionTowards(vertexB).RemoveNaNs().ToVector();
+            }
+
+            return this;
+        }
+    }
 
     [ElementData("Distance Between", ValueType.Number)]
     [Parameter("Start Pos", ValueType.VectorAndPlayer, typeof(V_Vector))]
@@ -987,7 +1001,26 @@ namespace Deltin.Deltinteger.Elements
 
     [ElementData("Not", ValueType.Boolean)]
     [Parameter("Value", ValueType.Boolean, typeof(V_True))]
-    public class V_Not : Element {}
+    public class V_Not : Element
+    {
+        public override Element Optimize()
+        {
+            OptimizeChildren();
+
+            Element a = (Element)ParameterValues[0];
+
+            if (a is V_True)
+                return false;
+
+            if (a is V_False)
+                return true;
+
+            if (a is V_Not)
+                return (Element)a.ParameterValues[0];
+
+            return this;
+        }
+    }
 
     [ElementData("Null", ValueType.Any)]
     public class V_Null : Element {}
@@ -1070,7 +1103,37 @@ namespace Deltin.Deltinteger.Elements
     [ElementData("Or", ValueType.Boolean)]
     [Parameter("Value", ValueType.Boolean, typeof(V_True))]
     [Parameter("Value", ValueType.Boolean, typeof(V_True))]
-    public class V_Or : Element {}
+    public class V_Or : Element
+    {
+        public override Element Optimize()
+        {
+            OptimizeChildren();
+
+            Element a = (Element)ParameterValues[0];
+            Element b = (Element)ParameterValues[1];
+
+            if (a is V_True)
+                if (b is V_True || b is V_False)
+                    return true;
+
+            if (b is V_True)
+                if (a is V_True || a is V_False)
+                    return true;
+
+            if (a.EqualTo(b))
+                return a;
+
+            if (a is V_Not)
+                if (b.EqualTo((Element)a.ParameterValues[0]))
+                    return true;
+
+            if (b is V_Not)
+                if (a.EqualTo((Element)b.ParameterValues[0]))
+                    return true;
+
+            return this;
+        }
+    }
 
     [ElementData("Payload Position", ValueType.Vector)]
     public class V_PayloadPosition : Element {}
