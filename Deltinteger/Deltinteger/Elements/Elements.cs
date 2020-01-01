@@ -198,8 +198,38 @@ namespace Deltin.Deltinteger.Elements
 
         public static readonly Element DefaultElement = 0;
 
-        public bool EqualTo(Element b) => //this is terrible and needs to be updated
-            ToWorkshop(OutputLanguage.enUS) == b.ToWorkshop(OutputLanguage.enUS);
+        public bool EqualTo(Element b)
+        {
+            if (ParameterValues.Length != b.ParameterValues.Length) //checks whether the amount of parameters are different
+                return false;
+
+            if (GetType() != b.GetType()) //checks whether the element types are the same
+                return false;
+
+            if (IsARandomMethod() || b.IsARandomMethod()) //checks whether either of the elements are random 
+                return false;
+
+            if (this is V_Number && b is V_Number) //checks if both elements are number constants
+                return ((V_Number)this).Value == ((V_Number)b).Value;
+
+            for (int i = 0; i < ParameterValues.Length; i++)
+            {
+                if (ParameterValues[i].GetType() == typeof(WorkshopVariable) && b.ParameterValues[i].GetType() == typeof(WorkshopVariable)) //checks if both elements are variables
+                {
+                    WorkshopVariable varA = (WorkshopVariable)ParameterValues[i];
+                    WorkshopVariable varB = (WorkshopVariable)b.ParameterValues[i];
+                    if (varA.ID != varB.ID || varA.IsGlobal != varB.IsGlobal || varA.Name != varB.Name)
+                        return false;
+                }
+                else if (!((Element)ParameterValues[i]).EqualTo((Element)b.ParameterValues[i]))
+                    return false;
+            }
+
+            return true; //if the elements pass all checks true is returned
+        }
+
+        private bool IsARandomMethod() =>
+            this is V_RandomInteger || this is V_RandomizedArray || this is V_RandomReal || this is V_RandomValueInArray;
 
         public Element ToRadians() =>
             (this * new V_Number(Math.PI / 180)).Optimize();

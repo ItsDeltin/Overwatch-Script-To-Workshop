@@ -315,6 +315,9 @@ namespace Deltin.Deltinteger.Elements
         {
             OptimizeChildren();
 
+            if (ParameterValues.Length == 0) //this stops a weird index out of bounds exception with methods that take V_Compare as a parameter
+                return this;
+
             Element left = (Element)ParameterValues[0];
             Operators op = (Operators)((EnumMember)ParameterValues[1]).Value;
             Element right = (Element)ParameterValues[2];
