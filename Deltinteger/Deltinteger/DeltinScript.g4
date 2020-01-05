@@ -102,9 +102,11 @@ ow_rule :
 	block?
 	;
 
-define_method : DOCUMENTATION* accessor? RECURSIVE? (METHOD | code_type) name=PART LEFT_PAREN setParameters RIGHT_PAREN
+define_method : DOCUMENTATION* accessor? method_attribute* (METHOD | code_type) name=PART LEFT_PAREN setParameters RIGHT_PAREN
 	block?
 	;
+
+method_attribute : RECURSIVE | RULE_WORD ;
 
 define_macro  : DOCUMENTATION* accessor? MACRO name=PART (LEFT_PAREN setParameters RIGHT_PAREN)? TERNARY_ELSE? expr? STATEMENT_END ;
 

@@ -308,8 +308,16 @@ namespace Deltin.Deltinteger.Parse
             // Get the type.
             newVar.CodeType = CodeType.GetCodeTypeFromContext(parseInfo, context.code_type());
             
-            if (newVar.CodeType != null && newVar.CodeType.Constant() != TypeSettable.Normal)
-                newVar.VariableType = VariableType.ElementReference;
+            if (newVar.CodeType != null)
+            {
+                if (defineType == VariableDefineType.RuleParameter)
+                {
+                    if (newVar.CodeType.Constant() == TypeSettable.Constant)
+                        parseInfo.Script.Diagnostics.Error($"Constant types cannot be used as a parameter's type in methods with the 'rule' attribute.", DocRange.GetRange(context.code_type()));
+                }
+                else if (newVar.CodeType.Constant() != TypeSettable.Normal)
+                    newVar.VariableType = VariableType.ElementReference;
+            }
 
             // Syntax error if there is an '=' but no expression.
             if (context.EQUALS() != null && context.expr() == null)
@@ -385,7 +393,8 @@ namespace Deltin.Deltinteger.Parse
         RuleLevel,
         Scoped,
         InClass,
-        Parameter
+        Parameter,
+        RuleParameter
     }
 
     public enum VariableType

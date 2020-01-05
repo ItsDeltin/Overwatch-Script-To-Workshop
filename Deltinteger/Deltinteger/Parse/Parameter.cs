@@ -81,7 +81,7 @@ namespace Deltin.Deltinteger.Parse
             else return Type.Name + " " + Name;
         }
 
-        public static ParameterParseResult GetParameters(ParseInfo parseInfo, Scope methodScope, DeltinScriptParser.SetParametersContext context)
+        public static ParameterParseResult GetParameters(ParseInfo parseInfo, Scope methodScope, DeltinScriptParser.SetParametersContext context, VariableDefineType defineType = VariableDefineType.Parameter)
         {
             if (context == null) return new ParameterParseResult(new CodeParameter[0], new Var[0]);
 
@@ -89,7 +89,7 @@ namespace Deltin.Deltinteger.Parse
             var vars = new Var[parameters.Length];
             for (int i = 0; i < context.define().Length; i++)
             {
-                var newVar = Var.CreateVarFromContext(VariableDefineType.Parameter, parseInfo, context.define(i));
+                var newVar = Var.CreateVarFromContext(defineType, parseInfo, context.define(i));
                 newVar.Finalize(methodScope);
                 vars[i] = newVar;
 

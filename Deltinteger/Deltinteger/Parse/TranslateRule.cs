@@ -84,6 +84,7 @@ namespace Deltin.Deltinteger.Parse
         }
 
         public TranslateRule(DeltinScript deltinScript, string name, RuleEvent eventType) : this(deltinScript, name, eventType, Team.All, PlayerSelector.All) {}
+        public TranslateRule(DeltinScript deltinScript, string name) : this(deltinScript, name, RuleEvent.OngoingGlobal, Team.All, PlayerSelector.All) {}
 
         public Rule GetRule()
         {
