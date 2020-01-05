@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Deltin.Deltinteger.Elements
 {
-    public class Rule : IWorkshopTree
+    public class Rule
     {
         public string Name { get; }
         public RuleEvent RuleEvent { get; }

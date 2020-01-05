@@ -196,24 +196,25 @@ namespace Deltin.Deltinteger.Elements
             return null;
         }
 
-        public static readonly Element DefaultElement = 0;
-
-        public bool EqualTo(Element b)
+        public bool EqualTo(IWorkshopTree b)
         {
-            string codeA = ToWorkshop(OutputLanguage.enUS);
-            string codeB = b.ToWorkshop(OutputLanguage.enUS);
+            if (this.GetType() != b.GetType()) return false;
 
-            string[] randomMethods = new string[] {
-                new V_RandomInteger().Name,
-                new V_RandomizedArray().Name,
-                new V_RandomReal().Name,
-                new V_RandomValueInArray().Name
+            Element bElement = (Element)b;
+            if (ParameterValues.Length != bElement.ParameterValues.Length) return false;
+
+            Type[] createsRandom = new Type[] {
+                typeof(V_RandomInteger),
+                typeof(V_RandomizedArray),
+                typeof(V_RandomReal),
+                typeof(V_RandomValueInArray)
             };
 
-            if (randomMethods.Any(s => codeA.Contains(s)) || randomMethods.Any(s => codeB.Contains(s)))
-                return false;
-
-            return codeA == codeB;
+            for (int i = 0; i < ParameterValues.Length; i++)
+                if (!ParameterValues[i].EqualTo(bElement.ParameterValues[i]) || createsRandom.Contains(ParameterValues[i].GetType()))
+                    return false;
+            
+            return true;
         }
 
         public Element ToRadians() =>
