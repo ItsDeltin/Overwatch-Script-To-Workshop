@@ -36,15 +36,7 @@ namespace Deltin.Deltinteger.Parse
             parseInfo.TranslateInfo.AddSymbolLink(this, definedAt);
         }
 
-        public virtual void SetupBlock() {}
-
-        protected static CodeType GetCodeType(ParseInfo parseInfo, string name, DocRange range)
-        {
-            if (name == null)
-                return null;
-            else
-                return parseInfo.TranslateInfo.GetCodeType(name, parseInfo.Script.Diagnostics, range);
-        }
+        public abstract void SetupBlock();
 
         protected void SetupParameters(DeltinScriptParser.SetParametersContext context, VariableDefineType defineType = VariableDefineType.Parameter)
         {
@@ -82,14 +74,15 @@ namespace Deltin.Deltinteger.Parse
         public bool RuleContained { get; private set; }
         public bool IsRecursive { get; private set; }
         // Block data
-        private BlockAction block { get; set; }
-        private bool doesReturnValue { get; set; }
+        private BlockAction block;
+        private bool doesReturnValue;
         /// <summary>
         /// If there is only one return statement, return the reference to
         /// the return expression instead of assigning it to a variable to reduce the number of actions.
         /// </summary>
         /// <value></value>
-        private bool multiplePaths { get; set; }
+        private bool multiplePaths;
+        private SingleInstanceInfo singleInstanceInfo;
 
         public DefinedMethod(ParseInfo parseInfo, Scope scope, DeltinScriptParser.Define_methodContext context)
             : base(parseInfo, scope, context.name.Text, new Location(parseInfo.Script.Uri, DocRange.GetRange(context.name)))
@@ -109,7 +102,10 @@ namespace Deltin.Deltinteger.Parse
             if (!RuleContained)
                 SetupParameters(context.setParameters());
             else
+            {
                 SetupParameters(context.setParameters(), VariableDefineType.RuleParameter);
+                parseInfo.TranslateInfo.AddSingleInstanceMethod(this);
+            }
 
             if (context.block() == null)
                 parseInfo.Script.Diagnostics.Error("Expected block.", DocRange.GetRange(context.name));
@@ -364,41 +360,64 @@ namespace Deltin.Deltinteger.Parse
         {
             for (int i = 0; i < parameterVars.Length; i++)
             {
-                actionSet.IndexAssigner.Add(actionSet.VarCollection, parameterVars[i], actionSet.IsGlobal, parameterValues[i], recursive);
+                actionSet.IndexAssigner.Add(actionSet.VarCollection, parameterVars[i], actionSet.IsGlobal, parameterValues?[i], recursive);
 
-                if (actionSet.IndexAssigner[parameterVars[i]] is IndexReference)
+                if (actionSet.IndexAssigner[parameterVars[i]] is IndexReference && parameterValues?[i] != null)
                     actionSet.AddAction(
                         ((IndexReference)actionSet.IndexAssigner[parameterVars[i]]).SetVariable((Element)parameterValues[i])
                     );
             }
         }
     
-        public void SetupSingleInstance(DeltinScript deltinScript)
+        public void SetupSingleInstance()
         {
-            //IndexReference ready = deltinScript.VarCollection.Assign("_" + Name + "_ready", true, true);
+            if (!RuleContained) throw new Exception(Name + " does not have the rule attribute.");
+
             IndexReference[] variableStacks = new IndexReference[ParameterVars.Length];
 
             for (int i = 0; i < ParameterVars.Length; i++)
             {
-                IndexReference variableStack = deltinScript.VarCollection.Assign(ParameterVars[i].Name, true, true);
+                IndexReference variableStack = parseInfo.TranslateInfo.VarCollection.Assign(ParameterVars[i].Name, true, true);
                 IndexReference variableReference = variableStack.CreateChild(0);
-                deltinScript.DefaultIndexAssigner.Add(ParameterVars[i], variableReference);
+                parseInfo.TranslateInfo.DefaultIndexAssigner.Add(ParameterVars[i], variableReference);
                 variableStacks[i] = variableStack;
             }
 
-            TranslateRule instanceRule = new TranslateRule(deltinScript, Name);
+            TranslateRule instanceRule = new TranslateRule(parseInfo.TranslateInfo, Name);
+
+            // TODO: returnHandler may need to not be null.
+            ActionSet actionSet = instanceRule.ActionSet;
+            ReturnHandler returnHandler = null;
+            if (doesReturnValue)
+            {
+                returnHandler = new ReturnHandler(instanceRule.ActionSet, Name, true);
+                actionSet = instanceRule.ActionSet.New(returnHandler);
+            }
+            AssignParameters(actionSet, ParameterVars, null, false);
+            block.Translate(actionSet);
+
+            returnHandler?.ApplyReturnSkips();
+
+            // TODO: Signal to caller that method has completed.
+
+            parseInfo.TranslateInfo.WorkshopRules.Add(instanceRule.GetRule());
+            singleInstanceInfo = new SingleInstanceInfo(variableStacks, returnHandler?.GetReturnedValue());
         }
 
         private IWorkshopTree ParseSingleInstance(ActionSet actionSet, IWorkshopTree[] parameterValues)
         {
-            ReturnHandler returnHandler = new ReturnHandler(actionSet, Name, multiplePaths);
-            actionSet = actionSet.New(returnHandler);
-            
-            AssignParameters(actionSet, ParameterVars, parameterValues);
-            block.Translate(actionSet);
+            for (int i = 0; i < ParameterVars.Length; i++)
+            {
+                // Push the parameters to the parameter list.
+                actionSet.AddAction(singleInstanceInfo.VariableStacks[i].ModifyVariable(
+                    Operation.AppendToArray,
+                    (Element)parameterValues[i]
+                ));
+            }
 
-            returnHandler.ApplyReturnSkips();
-            return returnHandler.GetReturnedValue();
+            // Wait for the method to return the value.
+
+            return singleInstanceInfo.ReturningValue;
         }
     }
 
@@ -471,11 +490,13 @@ namespace Deltin.Deltinteger.Parse
 
     public class SingleInstanceInfo
     {
-        public TranslateRule Rule { get; }
+        public IndexReference[] VariableStacks { get; }
+        public IWorkshopTree ReturningValue { get; }
         
-        public SingleInstanceInfo(TranslateRule rule)
+        public SingleInstanceInfo(IndexReference[] variableStacks, IWorkshopTree returningValue)
         {
-            Rule = rule;
+            VariableStacks = variableStacks;
+            ReturningValue = returningValue;
         }
     }
 

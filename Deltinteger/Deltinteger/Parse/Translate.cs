@@ -220,6 +220,8 @@ namespace Deltin.Deltinteger.Parse
                 }
             }
 
+            foreach (var method in singleInstanceMethods) method.SetupSingleInstance();
+
             foreach (var rule in rules)
             {
                 var translate = new TranslateRule(this, rule);
@@ -280,6 +282,12 @@ namespace Deltin.Deltinteger.Parse
         private TranslateRule GetInitialRule(bool isGlobal)
         {
             return isGlobal ? InitialGlobal : InitialPlayer;
+        }
+
+        private List<DefinedMethod> singleInstanceMethods = new List<DefinedMethod>();
+        public void AddSingleInstanceMethod(DefinedMethod method)
+        {
+            singleInstanceMethods.Add(method);
         }
 
         public static IStatement GetStatement(ParseInfo parseInfo, Scope scope, DeltinScriptParser.StatementContext statementContext)

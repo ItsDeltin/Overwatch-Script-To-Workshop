@@ -1,21 +1,20 @@
 ﻿// Map must be eichenwalde!
 
-define globalvar map;
+globalvar define map;
 
 rule: "Setup Death Spheres."
 {
-    map = GetMap();
     radius = 8; // The radius of the spheres
 
-    if (map == Map.Eichenwalde)
+    if (CurrentMap() == Map.Eichenwalde)
         locations = [Vector(56.64, 21.00, -67.14), Vector(50.46, 9.15, -92.95), Vector(30.00, 14.00, -77.91), Vector(82.59, 12.68, -88.21)];
 
     // Create the effects
     foreach (define loc in locations)
         CreateEffect(AllPlayers(), Effect.Sphere, Color.Red, loc, radius, EffectRev.VisibleTo);
 }
-define globalvar locations;
-define globalvar radius;
+globalvar define locations;
+globalvar define radius;
 
 rule: "Kill players in sphere."
 Event.OngoingPlayer
@@ -27,7 +26,7 @@ if (IsAlive())
         if (DistanceBetween(EventPlayer(), loc) < radius)
         {
             deathCount += 1;
-            SmallMessage(EventPlayer(), <"Danger! ... dead, try_again and survive! sudden_death: <0>", deathCount>);
+            SmallMessage(EventPlayer(), <"Dead! <0>", deathCount>);
             Kill();
         }
     }
@@ -36,4 +35,4 @@ if (IsAlive())
     Wait(0.06);
     LoopIfConditionIsTrue();
 }
-define playervar deathCount;
+playervar define deathCount;
