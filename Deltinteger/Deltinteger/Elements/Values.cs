@@ -1281,7 +1281,29 @@ namespace Deltin.Deltinteger.Elements
     [ElementData("Round To Integer", ValueType.Number)]
     [Parameter("Value", ValueType.Number, typeof(V_Number))]
     [EnumParameter("Rounding Type", typeof(Rounding))]
-    public class V_RoundToInteger : Element {}
+    public class V_RoundToInteger : Element
+    {
+        public override Element Optimize()
+        {
+            OptimizeChildren();
+
+            Element a = (Element)ParameterValues[0];
+            Rounding type = (Rounding)((EnumMember)ParameterValues[1]).Value;
+
+            if (a is V_Number)
+            {
+                double num = ((V_Number)a).Value;
+                if (type == Rounding.Down)
+                    return Math.Floor(num);
+                if (type == Rounding.Nearest)
+                    return Math.Round(num);
+                if (type == Rounding.Up)
+                    return Math.Ceiling(num);
+            }
+
+            return this;
+        }
+    }
 
     [ElementData("Score Of", ValueType.Number)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
