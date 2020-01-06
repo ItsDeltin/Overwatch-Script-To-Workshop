@@ -1,5 +1,4 @@
 using System;
-using System.Numerics;
 using System.Xml.Serialization;
 using Deltin.Deltinteger.Elements;
 
@@ -111,7 +110,7 @@ namespace Deltin.Deltinteger.Models
 
         public Vertex Normalize()
         {
-            double distance = DistanceTo(new Vertex());
+            double distance = Length;
             return new Vertex(X / distance, Y / distance, Z / distance);
         }
 
@@ -139,12 +138,10 @@ namespace Deltin.Deltinteger.Models
             double.IsNaN(Y) ? 0 : Y,
             double.IsNaN(Z) ? 0 : Z);
 
-        //public double DotProduct(Vertex vert2)
-        //{
-        //    return Vector.Dot<double>(ToNumericsVector(), vert2.ToNumericsVector());
-        //}
+        public double Length =>
+            DistanceTo(new Vertex());
 
-        //private Vector<double> ToNumericsVector() =>
-        //    new Vector<double>(new double[] {X,Y,Z});
+        public double DotProduct(Vertex vert2) =>
+            X * vert2.X + Y * vert2.Y + Z * vert2.Z;
     }
 }

@@ -548,7 +548,26 @@ namespace Deltin.Deltinteger.Elements
     [ElementData("Dot Product", ValueType.Number)]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
-    public class V_DotProduct : Element {}
+    public class V_DotProduct : Element
+    {
+        public override Element Optimize()
+        {
+            OptimizeChildren();
+
+            Element a = (Element)ParameterValues[0];
+            Element b = (Element)ParameterValues[1];
+
+            if (a.ConstantSupported<Vertex>() && b.ConstantSupported<Vertex>())
+            {
+                Vertex vertexA = (Vertex)a.GetConstant();
+                Vertex vertexB = (Vertex)b.GetConstant();
+
+                return vertexA.DotProduct(vertexB);
+            }
+
+            return this;
+        }
+    }
 
     [ElementData("Down", ValueType.Vector)]
     public class V_Down : Element {}
