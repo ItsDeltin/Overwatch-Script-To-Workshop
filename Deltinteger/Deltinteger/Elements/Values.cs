@@ -323,6 +323,8 @@ namespace Deltin.Deltinteger.Elements
                     return true;
                 if (left is V_Number && right is V_Number)
                     return ((V_Number)left).Value == ((V_Number)right).Value;
+                if (left.EqualTo(right))
+                    return true;
             }
             else if (op == Operators.GreaterThan)
             {
@@ -358,6 +360,8 @@ namespace Deltin.Deltinteger.Elements
                     return false;
                 if (left is V_Number && right is V_Number)
                     return ((V_Number)left).Value != ((V_Number)right).Value;
+                if (left.EqualTo(right))
+                    return false;
             }
 
             return this;
