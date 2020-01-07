@@ -409,6 +409,8 @@ namespace Deltin.Deltinteger.Parse
             returnHandler.ApplyReturnSkips();
 
             actionSet.AddAction(callers.SetVariable(new V_False(), null, (Element)currentCall.GetVariable()));
+            actionSet.AddAction(A_Wait.MinimumWait);
+            actionSet.AddAction(new A_LoopIfConditionIsTrue());
 
             parseInfo.TranslateInfo.WorkshopRules.Add(instanceRule.GetRule());
             singleInstanceInfo = new SingleInstanceInfo(parameterStacks, callers, returnHandler.GetReturnedValue());
