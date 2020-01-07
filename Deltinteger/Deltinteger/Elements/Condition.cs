@@ -35,5 +35,7 @@ namespace Deltin.Deltinteger.Elements
         {
             return Value1.Optimize().ToWorkshop(language) + " " + CompareOperator.ToWorkshop(language) + " " + Value2.Optimize().ToWorkshop(language);
         }
+
+        public static implicit operator Condition(Element element) => new Condition(element);
     }
 }

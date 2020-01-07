@@ -118,4 +118,16 @@ namespace Deltin.Deltinteger.Parse
             base.Finish();
         }
     }
+
+    public class SpinWhileBuilder
+    {
+        public static void Build(ActionSet actionSet, IWorkshopTree spinUntil)
+        {
+            actionSet.ContinueSkip.Setup(actionSet);
+            SkipEndMarker spinAt = new SkipEndMarker();
+            actionSet.ContinueSkip.SetSkipCount(actionSet, spinAt);
+            actionSet.AddAction(Element.Part<A_LoopIf>(spinUntil));
+            actionSet.ContinueSkip.ResetSkipCount(actionSet);
+        }
+    }
 }

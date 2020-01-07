@@ -80,7 +80,6 @@ namespace Deltin.Deltinteger.Parse
         /// If there is only one return statement, return the reference to
         /// the return expression instead of assigning it to a variable to reduce the number of actions.
         /// </summary>
-        /// <value></value>
         private bool multiplePaths;
         private SingleInstanceInfo singleInstanceInfo;
 
@@ -373,49 +372,71 @@ namespace Deltin.Deltinteger.Parse
         {
             if (!RuleContained) throw new Exception(Name + " does not have the rule attribute.");
 
-            IndexReference[] variableStacks = new IndexReference[ParameterVars.Length];
+            IndexReference[] parameterStacks = new IndexReference[ParameterVars.Length];
+
+            IndexReference currentCall = parseInfo.TranslateInfo.VarCollection.Assign("_" + Name + "_currentCall", true, true);
+            parseInfo.TranslateInfo.InitialGlobal.ActionSet.AddAction(currentCall.SetVariable(-1));
 
             for (int i = 0; i < ParameterVars.Length; i++)
             {
                 IndexReference variableStack = parseInfo.TranslateInfo.VarCollection.Assign(ParameterVars[i].Name, true, true);
-                IndexReference variableReference = variableStack.CreateChild(0);
+                IndexReference variableReference = variableStack.CreateChild((Element)currentCall.GetVariable());
                 parseInfo.TranslateInfo.DefaultIndexAssigner.Add(ParameterVars[i], variableReference);
-                variableStacks[i] = variableStack;
+                parameterStacks[i] = variableStack;
             }
+
+            IndexReference callers = parseInfo.TranslateInfo.VarCollection.Assign("_" + Name + "_calls", true, false);
+            // Set the 1000th value as null.
+            parseInfo.TranslateInfo.InitialGlobal.ActionSet.AddAction(callers.SetVariable(new V_Null(), null, Constants.MAX_ARRAY_LENGTH));
 
             TranslateRule instanceRule = new TranslateRule(parseInfo.TranslateInfo, Name);
+            // Run the rule if there are any callers.
+            instanceRule.Conditions.Add(
+                Element.Part<V_ArrayContains>(callers.GetVariable(), new V_True())
+            );
 
-            // TODO: returnHandler may need to not be null.
-            ActionSet actionSet = instanceRule.ActionSet;
-            ReturnHandler returnHandler = null;
-            if (doesReturnValue)
-            {
-                returnHandler = new ReturnHandler(instanceRule.ActionSet, Name, true);
-                actionSet = instanceRule.ActionSet.New(returnHandler);
-            }
+            ReturnHandler returnHandler = new ReturnHandler(instanceRule.ActionSet, Name, multiplePaths);
+            ActionSet actionSet = instanceRule.ActionSet.New(returnHandler);
+
+            // Get the next caller.
+            actionSet.AddAction(currentCall.SetVariable(
+                Element.Part<V_IndexOfArrayValue>(callers.GetVariable(), new V_True())
+            ));
+
             AssignParameters(actionSet, ParameterVars, null, false);
             block.Translate(actionSet);
 
-            returnHandler?.ApplyReturnSkips();
+            returnHandler.ApplyReturnSkips();
 
-            // TODO: Signal to caller that method has completed.
+            actionSet.AddAction(callers.SetVariable(new V_False(), null, (Element)currentCall.GetVariable()));
 
             parseInfo.TranslateInfo.WorkshopRules.Add(instanceRule.GetRule());
-            singleInstanceInfo = new SingleInstanceInfo(variableStacks, returnHandler?.GetReturnedValue());
+            singleInstanceInfo = new SingleInstanceInfo(parameterStacks, callers, returnHandler.GetReturnedValue());
         }
 
         private IWorkshopTree ParseSingleInstance(ActionSet actionSet, IWorkshopTree[] parameterValues)
         {
+            IndexReference callID = actionSet.VarCollection.Assign("_" + Name + "_callID", true, true);
+            actionSet.AddAction(callID.SetVariable(
+                Element.Part<V_IndexOfArrayValue>(singleInstanceInfo.Callers.GetVariable(), new V_False())
+            ));
+            actionSet.AddAction(singleInstanceInfo.Callers.SetVariable(new V_True(), null, (Element)callID.GetVariable()));
+
             for (int i = 0; i < ParameterVars.Length; i++)
             {
                 // Push the parameters to the parameter list.
-                actionSet.AddAction(singleInstanceInfo.VariableStacks[i].ModifyVariable(
-                    Operation.AppendToArray,
-                    (Element)parameterValues[i]
+                actionSet.AddAction(singleInstanceInfo.ParameterStacks[i].SetVariable(
+                    (Element)parameterValues[i],
+                    null,
+                    (Element)callID.GetVariable()
                 ));
             }
 
             // Wait for the method to return the value.
+            SpinWhileBuilder.Build(actionSet, Element.Part<V_ValueInArray>(
+                singleInstanceInfo.Callers.GetVariable(),
+                callID.GetVariable()
+            ));
 
             return singleInstanceInfo.ReturningValue;
         }
@@ -490,12 +511,14 @@ namespace Deltin.Deltinteger.Parse
 
     public class SingleInstanceInfo
     {
-        public IndexReference[] VariableStacks { get; }
+        public IndexReference[] ParameterStacks { get; }
+        public IndexReference Callers { get; }
         public IWorkshopTree ReturningValue { get; }
         
-        public SingleInstanceInfo(IndexReference[] variableStacks, IWorkshopTree returningValue)
+        public SingleInstanceInfo(IndexReference[] parameterStacks, IndexReference callers, IWorkshopTree returningValue)
         {
-            VariableStacks = variableStacks;
+            ParameterStacks = parameterStacks;
+            Callers = callers;
             ReturningValue = returningValue;
         }
     }
