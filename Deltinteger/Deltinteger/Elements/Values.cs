@@ -369,8 +369,6 @@ namespace Deltin.Deltinteger.Elements
 
             if (op == Operators.Equal)
             {
-                if (left.EqualTo(right))
-                    return true;
                 if (left is V_Number && right is V_Number)
                     return ((V_Number)left).Value == ((V_Number)right).Value;
                 if (left.EqualTo(right))
@@ -406,8 +404,6 @@ namespace Deltin.Deltinteger.Elements
             }
             else if (op == Operators.NotEqual)
             {
-                if (left.EqualTo(right))
-                    return false;
                 if (left is V_Number && right is V_Number)
                     return ((V_Number)left).Value != ((V_Number)right).Value;
                 if (left.EqualTo(right))
