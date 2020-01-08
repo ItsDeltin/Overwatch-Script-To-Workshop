@@ -453,7 +453,33 @@ namespace Deltin.Deltinteger.Elements
     [ElementData("Direction From Angles", ValueType.Vector)]
     [Parameter("Horizontal Angle", ValueType.Number, typeof(V_Number))]
     [Parameter("Vertical Angle", ValueType.Number, typeof(V_Number))]
-    public class V_DirectionFromAngles : Element {}
+    public class V_DirectionFromAngles : Element
+    {
+        public override Element Optimize()
+        {
+            OptimizeChildren();
+
+            Element a = (Element)ParameterValues[0];
+            Element b = (Element)ParameterValues[1];
+
+            if (a is V_Number && b is V_Number)
+            {
+                double h = ((V_Number)a).Value;
+                double v = ((V_Number)b).Value;
+
+                double x = Math.Sin(h * (Math.PI / 180));
+                double y = -Math.Sin(v * (Math.PI / 180));
+                double z = Math.Cos(h * (Math.PI / 180));
+
+                if (y.ToString() == "-0")
+                    y = 0;
+
+                return new V_Vector(x, y, z);
+            }
+
+            return this;
+        }
+    }
 
     [ElementData("Direction Towards", ValueType.Vector)]
     [Parameter("Start Pos", ValueType.VectorAndPlayer, typeof(V_Vector))]
@@ -701,7 +727,29 @@ namespace Deltin.Deltinteger.Elements
 
     [ElementData("Horizontal Angle From Direction", ValueType.Number)]
     [Parameter("Direction", ValueType.Vector, typeof(V_Vector))]
-    public class V_HorizontalAngleFromDirection : Element {}
+    public class V_HorizontalAngleFromDirection : Element
+    {
+        public override Element Optimize()
+        {
+            OptimizeChildren();
+
+            Element a = (Element)ParameterValues[0];
+
+            if (a.ConstantSupported<Vertex>())
+            {
+                Vertex vert = (Vertex)a.GetConstant();
+                double gradient = vert.X / vert.Z;
+                if (double.IsNaN(gradient))
+                    gradient = 0;
+                double result = Math.Atan(gradient) * (180 / Math.PI);
+                if (result.ToString() == "-0") //no idea why this has to exist
+                    result = 180;
+                return result;
+            }
+
+            return this;
+        }
+    }
 
     [ElementData("Horizontal Angle Towards", ValueType.Number)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
@@ -1116,6 +1164,8 @@ namespace Deltin.Deltinteger.Elements
 
         public override string ToWorkshop(OutputLanguage language)
         {
+            if (double.IsNaN(Value))
+                Value = 0;
             return Math.Round(Value, MAX_LENGTH).ToString();
         }
 
@@ -1683,7 +1733,7 @@ namespace Deltin.Deltinteger.Elements
 
         override public bool ConstantSupported<T>()
         {
-            if (typeof(T) != typeof(Models.Vertex)) return false;
+            if (typeof(T) != typeof(Vertex)) return false;
 
             for (int i = 0; i < ParameterValues.Length && i < 3; i++)
             {
@@ -1711,7 +1761,7 @@ namespace Deltin.Deltinteger.Elements
             if (ParameterValues.Length > 2)
                 z = (double)((Element)ParameterValues[2]).GetConstant();
             
-            return new Models.Vertex(x, y, z);
+            return new Vertex(x, y, z);
         }
 
         public Element X => (Element)ParameterValues[0];
@@ -1724,7 +1774,26 @@ namespace Deltin.Deltinteger.Elements
     [ElementData("Vector Towards", ValueType.Vector)]
     [Parameter("Start Pos", ValueType.VectorAndPlayer, typeof(V_Vector))]
     [Parameter("End Pos", ValueType.VectorAndPlayer, typeof(V_Vector))]
-    public class V_VectorTowards : Element {}
+    public class V_VectorTowards : Element
+    {
+        public override Element Optimize()
+        {
+            OptimizeChildren();
+
+            Element a = (Element)ParameterValues[0];
+            Element b = (Element)ParameterValues[1];
+
+            if (a.ConstantSupported<Vertex>() && b.ConstantSupported<Vertex>())
+            {
+                Vertex vertA = (Vertex)a.GetConstant();
+                Vertex vertB = (Vertex)b.GetConstant();
+
+                return vertA.VectorTowards(vertB).ToVector();
+            }
+
+            return this;
+        }
+    }
 
     [ElementData("Velocity Of", ValueType.Vector)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
@@ -1732,7 +1801,25 @@ namespace Deltin.Deltinteger.Elements
 
     [ElementData("Vertical Angle From Direction", ValueType.Vector)]
     [Parameter("Direction", ValueType.VectorAndPlayer, typeof(V_Vector))]
-    public class V_VerticalAngleFromDirection : Element {}
+    public class V_VerticalAngleFromDirection : Element
+    {
+        public override Element Optimize()
+        {
+            OptimizeChildren();
+
+            Element a = (Element)ParameterValues[0];
+
+            if (a.ConstantSupported<Vertex>())
+            {
+                double result = -Math.Asin(((Vertex)a.GetConstant()).Y) * (180 / Math.PI);
+                if (result == -0)
+                    result = 0;
+                return result;
+            }
+
+            return this;
+        }
+    }
 
     [ElementData("Vertical Angle Towards", ValueType.Number)]
     [Parameter("Position", ValueType.VectorAndPlayer, typeof(V_Vector))]
