@@ -518,6 +518,18 @@ namespace Deltin.Deltinteger.Elements
             // Divide number and number
             if (a is V_Number && b is V_Number)
                 return ((V_Number)ParameterValues[0]).Value / ((V_Number)ParameterValues[1]).Value;
+
+            // Divide vector and a vector
+            if (a.ConstantSupported<Vertex>() && b.ConstantSupported<Vertex>())
+            {
+                Vertex vertA = (Vertex)a.GetConstant();
+                Vertex vertB = (Vertex)b.GetConstant();
+                return new V_Vector(
+                    vertA.X / vertB.X,
+                    vertA.Y / vertB.Y,
+                    vertA.Z / vertB.Z
+                );
+            }
             
             // Divide vector and number
             if ((a.ConstantSupported<Vertex>() && b is V_Number) || (a is V_Number && b.ConstantSupported<Vertex>()))
@@ -984,6 +996,18 @@ namespace Deltin.Deltinteger.Elements
             // Multiply number and number
             if (a is V_Number && b is V_Number)
                 return ((V_Number)ParameterValues[0]).Value * ((V_Number)ParameterValues[1]).Value;
+
+            // Multiply vector and a vector
+            if (a.ConstantSupported<Vertex>() && b.ConstantSupported<Vertex>())
+            {
+                Vertex vertA = (Vertex)a.GetConstant();
+                Vertex vertB = (Vertex)b.GetConstant();
+                return new V_Vector(
+                    vertA.X * vertB.X,
+                    vertA.Y * vertB.Y,
+                    vertA.Z * vertB.Z
+                );
+            }
 
             // Multiply vector and number
             if ((a.ConstantSupported<Vertex>() && b is V_Number) || (a is V_Number && b.ConstantSupported<Vertex>()))
