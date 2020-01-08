@@ -152,12 +152,55 @@ namespace Deltin.Deltinteger.Elements
     [ElementData("Angle Between Vectors", ValueType.Vector)]
     [Parameter("Vector", ValueType.Vector, typeof(V_Vector))]
     [Parameter("Vector", ValueType.Vector, typeof(V_Vector))]
-    public class V_AngleBetweenVectors : Element {}
+    public class V_AngleBetweenVectors : Element
+    {
+        public override Element Optimize()
+        {
+            OptimizeChildren();
+
+            Element a = (Element)ParameterValues[0];
+            Element b = (Element)ParameterValues[1];
+
+            if (a.ConstantSupported<Vertex>() && b.ConstantSupported<Vertex>())
+            {
+                Vertex vertexA = (Vertex)a.GetConstant();
+                Vertex vertexB = (Vertex)b.GetConstant();
+
+                double dot = vertexA.DotProduct(vertexB);
+
+                return Math.Acos(vertexA.DotProduct(vertexB) / (vertexA.Length * vertexB.Length)) * (180 / Math.PI);
+            }
+
+            return this;
+        }
+    }
 
     [ElementData("Angle Difference", ValueType.Number)]
     [Parameter("Angle", ValueType.Number, typeof(V_Number))]
     [Parameter("Angle", ValueType.Number, typeof(V_Number))]
-    public class V_AngleDifference : Element {}
+    public class V_AngleDifference : Element
+    {
+        public override Element Optimize()
+        {
+            OptimizeChildren();
+
+            Element a = (Element)ParameterValues[0];
+            Element b = (Element)ParameterValues[1];
+
+            if (a is V_Number && b is V_Number)
+            {
+                double angA = ((((V_Number)a).Value + 540) % 360) - 180;
+                double angB = ((((V_Number)b).Value + 540) % 360) - 180;
+
+                double result = -(angA - angB);
+                if (result.ToString() == "-0")
+                    result = 0;
+                return result;
+            }
+
+            return this;
+        }
+    }
 
     [ElementData("Append To Array", ValueType.Any)]
     [Parameter("Array", ValueType.Any, typeof(V_AllPlayers))]
