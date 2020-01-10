@@ -1,5 +1,4 @@
 using System;
-using System.Numerics;
 using System.Xml.Serialization;
 using Deltin.Deltinteger.Elements;
 
@@ -111,20 +110,18 @@ namespace Deltin.Deltinteger.Models
 
         public Vertex Normalize()
         {
-            double distance = DistanceTo(new Vertex());
+            double distance = Length;
             return new Vertex(X / distance, Y / distance, Z / distance);
         }
 
         public double DistanceTo(Vertex point2)
         {
-            Vertex offset = new Vertex(point2.X - this.X, point2.Y - this.Y, point2.Z - this.Z);
+            Vertex offset = VectorTowards(point2);
             return Math.Sqrt(Math.Pow(offset.X, 2) + Math.Pow(offset.Y, 2) + Math.Pow(offset.Z, 2));
         }
 
-        public Vertex DirectionTowards(Vertex point2)
-        {
-            return new Vertex(point2.X - this.X, point2.Y - this.Y, point2.Z - this.Z).Normalize();
-        }
+        public Vertex DirectionTowards(Vertex point2) =>
+            VectorTowards(point2).Normalize();
 
         public Vertex CrossProduct(Vertex vert2)
         {
@@ -139,12 +136,13 @@ namespace Deltin.Deltinteger.Models
             double.IsNaN(Y) ? 0 : Y,
             double.IsNaN(Z) ? 0 : Z);
 
-        //public double DotProduct(Vertex vert2)
-        //{
-        //    return Vector.Dot<double>(ToNumericsVector(), vert2.ToNumericsVector());
-        //}
+        public double Length =>
+            DistanceTo(new Vertex());
 
-        //private Vector<double> ToNumericsVector() =>
-        //    new Vector<double>(new double[] {X,Y,Z});
+        public double DotProduct(Vertex vert2) =>
+            X * vert2.X + Y * vert2.Y + Z * vert2.Z;
+
+        public Vertex VectorTowards(Vertex vert2) =>
+            new Vertex(vert2.X - X, vert2.Y - Y, vert2.Z - Z);
     }
 }

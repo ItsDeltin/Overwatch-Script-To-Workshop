@@ -56,10 +56,10 @@ namespace Deltin.Deltinteger.Elements
             if (a is V_Number && b is V_Number)
                 return ((V_Number)a).Value + ((V_Number)b).Value;
             
-            if (a.ConstantSupported<Models.Vertex>() && b.ConstantSupported<Models.Vertex>())
+            if (a.ConstantSupported<Vertex>() && b.ConstantSupported<Vertex>())
             {
-                var aVertex = (Models.Vertex)a.GetConstant();
-                var bVertex = (Models.Vertex)b.GetConstant();
+                var aVertex = (Vertex)a.GetConstant();
+                var bVertex = (Vertex)b.GetConstant();
 
                 return new V_Vector(
                     aVertex.X + bVertex.X,
@@ -69,15 +69,11 @@ namespace Deltin.Deltinteger.Elements
             }
 
             if (a is V_Number)
-            {
                 if (((V_Number)a).Value == 0)
                     return b;
-            }
-            else if (b is V_Number)
-            {
+            if (b is V_Number)
                 if (((V_Number)b).Value == 0)
                     return a;
-            }
 
             if (a.EqualTo(b))
                 return a * 2;
@@ -156,12 +152,55 @@ namespace Deltin.Deltinteger.Elements
     [ElementData("Angle Between Vectors", ValueType.Vector)]
     [Parameter("Vector", ValueType.Vector, typeof(V_Vector))]
     [Parameter("Vector", ValueType.Vector, typeof(V_Vector))]
-    public class V_AngleBetweenVectors : Element {}
+    public class V_AngleBetweenVectors : Element
+    {
+        public override Element Optimize()
+        {
+            OptimizeChildren();
+
+            Element a = (Element)ParameterValues[0];
+            Element b = (Element)ParameterValues[1];
+
+            if (a.ConstantSupported<Vertex>() && b.ConstantSupported<Vertex>())
+            {
+                Vertex vertexA = (Vertex)a.GetConstant();
+                Vertex vertexB = (Vertex)b.GetConstant();
+
+                double dot = vertexA.DotProduct(vertexB);
+
+                return Math.Acos(vertexA.DotProduct(vertexB) / (vertexA.Length * vertexB.Length)) * (180 / Math.PI);
+            }
+
+            return this;
+        }
+    }
 
     [ElementData("Angle Difference", ValueType.Number)]
     [Parameter("Angle", ValueType.Number, typeof(V_Number))]
     [Parameter("Angle", ValueType.Number, typeof(V_Number))]
-    public class V_AngleDifference : Element {}
+    public class V_AngleDifference : Element
+    {
+        public override Element Optimize()
+        {
+            OptimizeChildren();
+
+            Element a = (Element)ParameterValues[0];
+            Element b = (Element)ParameterValues[1];
+
+            if (a is V_Number && b is V_Number)
+            {
+                double angA = ((((V_Number)a).Value + 540) % 360) - 180;
+                double angB = ((((V_Number)b).Value + 540) % 360) - 180;
+
+                double result = -(angA - angB);
+                if (result.ToString() == "-0")
+                    result = 0;
+                return result;
+            }
+
+            return this;
+        }
+    }
 
     [ElementData("Append To Array", ValueType.Any)]
     [Parameter("Array", ValueType.Any, typeof(V_AllPlayers))]
@@ -289,7 +328,18 @@ namespace Deltin.Deltinteger.Elements
     public class V_Attacker : Element {}
 
     [ElementData("Backward", ValueType.Vector)]
-    public class V_Backward : Element {}
+    public class V_Backward : Element
+    {
+        public override bool ConstantSupported<T>()
+        {
+            if (typeof(T) != typeof(Vertex)) return false;
+            return true;
+        }
+
+
+        public override object GetConstant() =>
+            new Vertex(0, 0, -1);
+    }
 
     [ElementData("Closest Player To", ValueType.Player)]
     [Parameter("Center", ValueType.VectorAndPlayer, typeof(V_Vector))]
@@ -319,10 +369,10 @@ namespace Deltin.Deltinteger.Elements
 
             if (op == Operators.Equal)
             {
-                if (left.EqualTo(right))
-                    return true;
                 if (left is V_Number && right is V_Number)
                     return ((V_Number)left).Value == ((V_Number)right).Value;
+                if (left.EqualTo(right))
+                    return true;
             }
             else if (op == Operators.GreaterThan)
             {
@@ -354,10 +404,10 @@ namespace Deltin.Deltinteger.Elements
             }
             else if (op == Operators.NotEqual)
             {
-                if (left.EqualTo(right))
-                    return false;
                 if (left is V_Number && right is V_Number)
                     return ((V_Number)left).Value != ((V_Number)right).Value;
+                if (left.EqualTo(right))
+                    return false;
             }
 
             return this;
@@ -442,7 +492,33 @@ namespace Deltin.Deltinteger.Elements
     [ElementData("Direction From Angles", ValueType.Vector)]
     [Parameter("Horizontal Angle", ValueType.Number, typeof(V_Number))]
     [Parameter("Vertical Angle", ValueType.Number, typeof(V_Number))]
-    public class V_DirectionFromAngles : Element {}
+    public class V_DirectionFromAngles : Element
+    {
+        public override Element Optimize()
+        {
+            OptimizeChildren();
+
+            Element a = (Element)ParameterValues[0];
+            Element b = (Element)ParameterValues[1];
+
+            if (a is V_Number && b is V_Number)
+            {
+                double h = ((V_Number)a).Value;
+                double v = ((V_Number)b).Value;
+
+                double x = Math.Sin(h * (Math.PI / 180));
+                double y = -Math.Sin(v * (Math.PI / 180));
+                double z = Math.Cos(h * (Math.PI / 180));
+
+                if (y.ToString() == "-0")
+                    y = 0;
+
+                return new V_Vector(x, y, z);
+            }
+
+            return this;
+        }
+    }
 
     [ElementData("Direction Towards", ValueType.Vector)]
     [Parameter("Start Pos", ValueType.VectorAndPlayer, typeof(V_Vector))]
@@ -507,22 +583,29 @@ namespace Deltin.Deltinteger.Elements
             // Divide number and number
             if (a is V_Number && b is V_Number)
                 return ((V_Number)ParameterValues[0]).Value / ((V_Number)ParameterValues[1]).Value;
+
+            // Divide vector and a vector
+            if (a.ConstantSupported<Vertex>() && b.ConstantSupported<Vertex>())
+            {
+                Vertex vertA = (Vertex)a.GetConstant();
+                Vertex vertB = (Vertex)b.GetConstant();
+                return new V_Vector(
+                    vertA.X / vertB.X,
+                    vertA.Y / vertB.Y,
+                    vertA.Z / vertB.Z
+                );
+            }
             
             // Divide vector and number
-            if ((a is V_Vector && b is V_Number) || (a is V_Number && b is V_Vector))
+            if ((a.ConstantSupported<Vertex>() && b is V_Number) || (a is V_Number && b.ConstantSupported<Vertex>()))
             {
-                V_Vector vector = a is V_Vector ? (V_Vector)a : (V_Vector)b;
+                Vertex vector = a.ConstantSupported<Vertex>() ? (Vertex)a.GetConstant() : (Vertex)b.GetConstant();
                 V_Number number = a is V_Number ? (V_Number)a : (V_Number)b;
-
-                if (vector.ConstantSupported<Models.Vertex>())
-                {
-                    Models.Vertex vertex = (Models.Vertex)vector.GetConstant();
-                    return new V_Vector(
-                        vertex.X / number.Value,
-                        vertex.Y / number.Value,
-                        vertex.Z / number.Value
-                    );
-                }
+                return new V_Vector(
+                    vector.X / number.Value,
+                    vector.Y / number.Value,
+                    vector.Z / number.Value
+                );
             }
 
             if (b is V_Number)
@@ -544,10 +627,39 @@ namespace Deltin.Deltinteger.Elements
     [ElementData("Dot Product", ValueType.Number)]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
-    public class V_DotProduct : Element {}
+    public class V_DotProduct : Element
+    {
+        public override Element Optimize()
+        {
+            OptimizeChildren();
+
+            Element a = (Element)ParameterValues[0];
+            Element b = (Element)ParameterValues[1];
+
+            if (a.ConstantSupported<Vertex>() && b.ConstantSupported<Vertex>())
+            {
+                Vertex vertexA = (Vertex)a.GetConstant();
+                Vertex vertexB = (Vertex)b.GetConstant();
+
+                return vertexA.DotProduct(vertexB);
+            }
+
+            return this;
+        }
+    }
 
     [ElementData("Down", ValueType.Vector)]
-    public class V_Down : Element {}
+    public class V_Down : Element
+    {
+        public override bool ConstantSupported<T>()
+        {
+            if (typeof(T) != typeof(Vertex)) return false;
+            return true;
+        }
+
+        public override object GetConstant() =>
+            new Vertex(0, -1, 0);
+    }
 
     [ElementData("Empty Array", ValueType.Any)]
     public class V_EmptyArray : Element {}
@@ -598,7 +710,17 @@ namespace Deltin.Deltinteger.Elements
     public class V_FlagPosition : Element {}
 
     [ElementData("Forward", ValueType.Vector)]
-    public class V_Forward : Element {}
+    public class V_Forward : Element
+    {
+        public override bool ConstantSupported<T>()
+        {
+            if (typeof(T) != typeof(Vertex)) return false;
+            return true;
+        }
+
+        public override object GetConstant() =>
+            new Vertex(0, 0, 1);
+    }
 
     [ElementData("Game Mode", ValueType.Vector)]
     [EnumParameter("Gamemode", typeof(GameMode))]
@@ -644,7 +766,29 @@ namespace Deltin.Deltinteger.Elements
 
     [ElementData("Horizontal Angle From Direction", ValueType.Number)]
     [Parameter("Direction", ValueType.Vector, typeof(V_Vector))]
-    public class V_HorizontalAngleFromDirection : Element {}
+    public class V_HorizontalAngleFromDirection : Element
+    {
+        public override Element Optimize()
+        {
+            OptimizeChildren();
+
+            Element a = (Element)ParameterValues[0];
+
+            if (a.ConstantSupported<Vertex>())
+            {
+                Vertex vert = (Vertex)a.GetConstant();
+                double gradient = vert.X / vert.Z;
+                if (double.IsNaN(gradient))
+                    gradient = 0;
+                double result = Math.Atan(gradient) * (180 / Math.PI);
+                if (result.ToString() == "-0") //no idea why this has to exist
+                    result = 180;
+                return result;
+            }
+
+            return this;
+        }
+    }
 
     [ElementData("Horizontal Angle Towards", ValueType.Number)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
@@ -844,7 +988,17 @@ namespace Deltin.Deltinteger.Elements
     public class V_LastTextID : Element {}
 
     [ElementData("Left", ValueType.Vector)]
-    public class V_Left : Element {}
+    public class V_Left : Element
+    {
+        public override bool ConstantSupported<T>()
+        {
+            if (typeof(T) != typeof(Vertex)) return false;
+            return true;
+        }
+
+        public override object GetConstant() =>
+            new Vertex(1, 0, 0);
+    }
 
     [ElementData("Local Vector Of", ValueType.Vector)]
     [Parameter("World Vector", ValueType.VectorAndPlayer, typeof(V_Vector))]
@@ -929,22 +1083,29 @@ namespace Deltin.Deltinteger.Elements
             // Multiply number and number
             if (a is V_Number && b is V_Number)
                 return ((V_Number)ParameterValues[0]).Value * ((V_Number)ParameterValues[1]).Value;
-            
-            // Multiply vector and number
-            if ((a is V_Vector && b is V_Number) || (a is V_Number && b is V_Vector))
-            {
-                V_Vector vector = a is V_Vector ? (V_Vector)a : (V_Vector)b;
-                V_Number number = a is V_Number ? (V_Number)a : (V_Number)b;
 
-                if (vector.ConstantSupported<Models.Vertex>())
-                {
-                    Models.Vertex vertex = (Models.Vertex)vector.GetConstant();
-                    return new V_Vector(
-                        vertex.X * number.Value,
-                        vertex.Y * number.Value,
-                        vertex.Z * number.Value
-                    );
-                }
+            // Multiply vector and a vector
+            if (a.ConstantSupported<Vertex>() && b.ConstantSupported<Vertex>())
+            {
+                Vertex vertA = (Vertex)a.GetConstant();
+                Vertex vertB = (Vertex)b.GetConstant();
+                return new V_Vector(
+                    vertA.X * vertB.X,
+                    vertA.Y * vertB.Y,
+                    vertA.Z * vertB.Z
+                );
+            }
+
+            // Multiply vector and number
+            if ((a.ConstantSupported<Vertex>() && b is V_Number) || (a is V_Number && b.ConstantSupported<Vertex>()))
+            {
+                Vertex vector = a.ConstantSupported<Vertex>() ? (Vertex)a.GetConstant() : (Vertex)b.GetConstant();
+                V_Number number = a is V_Number ? (V_Number)a : (V_Number)b;
+                return new V_Vector(
+                    vector.X * number.Value,
+                    vector.Y * number.Value,
+                    vector.Z * number.Value
+                );
             }
 
             if (a is V_Number)
@@ -1042,6 +1203,8 @@ namespace Deltin.Deltinteger.Elements
 
         public override string ToWorkshop(OutputLanguage language)
         {
+            if (double.IsNaN(Value))
+                Value = 0;
             return Math.Round(Value, MAX_LENGTH).ToString();
         }
 
@@ -1272,12 +1435,44 @@ namespace Deltin.Deltinteger.Elements
     public class V_RemoveFromArray : Element {}
 
     [ElementData("Right", ValueType.Vector)]
-    public class V_Right : Element {}
+    public class V_Right : Element
+    {
+        public override bool ConstantSupported<T>()
+        {
+            if (typeof(T) != typeof(Vertex)) return false;
+            return true;
+        }
+
+        public override object GetConstant() =>
+            new Vertex(-1, 0, 0);
+    }
 
     [ElementData("Round To Integer", ValueType.Number)]
     [Parameter("Value", ValueType.Number, typeof(V_Number))]
     [EnumParameter("Rounding Type", typeof(Rounding))]
-    public class V_RoundToInteger : Element {}
+    public class V_RoundToInteger : Element
+    {
+        public override Element Optimize()
+        {
+            OptimizeChildren();
+
+            Element a = (Element)ParameterValues[0];
+            Rounding type = (Rounding)((EnumMember)ParameterValues[1]).Value;
+
+            if (a is V_Number)
+            {
+                double num = ((V_Number)a).Value;
+                if (type == Rounding.Down)
+                    return Math.Floor(num);
+                if (type == Rounding.Nearest)
+                    return Math.Round(num);
+                if (type == Rounding.Up)
+                    return Math.Ceiling(num);
+            }
+
+            return this;
+        }
+    }
 
     [ElementData("Score Of", ValueType.Number)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
@@ -1454,13 +1649,13 @@ namespace Deltin.Deltinteger.Elements
             Element a = (Element)ParameterValues[0];
             Element b = (Element)ParameterValues[1];
 
-            if (a is V_Number && ParameterValues[1] is V_Number)
+            if (a is V_Number && b is V_Number)
                 return ((V_Number)a).Value - ((V_Number)b).Value;
             
-            if (a.ConstantSupported<Models.Vertex>() && b.ConstantSupported<Models.Vertex>())
+            if (a.ConstantSupported<Vertex>() && b.ConstantSupported<Vertex>())
             {
-                var aVertex = (Models.Vertex)a.GetConstant();
-                var bVertex = (Models.Vertex)b.GetConstant();
+                var aVertex = (Vertex)a.GetConstant();
+                var bVertex = (Vertex)b.GetConstant();
 
                 return new V_Vector(
                     aVertex.X - bVertex.X,
@@ -1541,7 +1736,17 @@ namespace Deltin.Deltinteger.Elements
     public class V_UltimateChargePercent : Element {}
 
     [ElementData("Up", ValueType.Vector)]
-    public class V_Up : Element {}
+    public class V_Up : Element
+    {
+        public override bool ConstantSupported<T>()
+        {
+            if (typeof(T) != typeof(Vertex)) return false;
+            return true;
+        }
+
+        public override object GetConstant() =>
+            new Vertex(0, 1, 0);
+    }
 
     [ElementData("Value In Array", ValueType.Any)]
     [Parameter("Array", ValueType.Any, null)]
@@ -1567,7 +1772,7 @@ namespace Deltin.Deltinteger.Elements
 
         override public bool ConstantSupported<T>()
         {
-            if (typeof(T) != typeof(Models.Vertex)) return false;
+            if (typeof(T) != typeof(Vertex)) return false;
 
             for (int i = 0; i < ParameterValues.Length && i < 3; i++)
             {
@@ -1595,7 +1800,7 @@ namespace Deltin.Deltinteger.Elements
             if (ParameterValues.Length > 2)
                 z = (double)((Element)ParameterValues[2]).GetConstant();
             
-            return new Models.Vertex(x, y, z);
+            return new Vertex(x, y, z);
         }
 
         public Element X => (Element)ParameterValues[0];
@@ -1608,7 +1813,26 @@ namespace Deltin.Deltinteger.Elements
     [ElementData("Vector Towards", ValueType.Vector)]
     [Parameter("Start Pos", ValueType.VectorAndPlayer, typeof(V_Vector))]
     [Parameter("End Pos", ValueType.VectorAndPlayer, typeof(V_Vector))]
-    public class V_VectorTowards : Element {}
+    public class V_VectorTowards : Element
+    {
+        public override Element Optimize()
+        {
+            OptimizeChildren();
+
+            Element a = (Element)ParameterValues[0];
+            Element b = (Element)ParameterValues[1];
+
+            if (a.ConstantSupported<Vertex>() && b.ConstantSupported<Vertex>())
+            {
+                Vertex vertA = (Vertex)a.GetConstant();
+                Vertex vertB = (Vertex)b.GetConstant();
+
+                return vertA.VectorTowards(vertB).ToVector();
+            }
+
+            return this;
+        }
+    }
 
     [ElementData("Velocity Of", ValueType.Vector)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
@@ -1616,7 +1840,25 @@ namespace Deltin.Deltinteger.Elements
 
     [ElementData("Vertical Angle From Direction", ValueType.Vector)]
     [Parameter("Direction", ValueType.VectorAndPlayer, typeof(V_Vector))]
-    public class V_VerticalAngleFromDirection : Element {}
+    public class V_VerticalAngleFromDirection : Element
+    {
+        public override Element Optimize()
+        {
+            OptimizeChildren();
+
+            Element a = (Element)ParameterValues[0];
+
+            if (a.ConstantSupported<Vertex>())
+            {
+                double result = -Math.Asin(((Vertex)a.GetConstant()).Y) * (180 / Math.PI);
+                if (result == -0)
+                    result = 0;
+                return result;
+            }
+
+            return this;
+        }
+    }
 
     [ElementData("Vertical Angle Towards", ValueType.Number)]
     [Parameter("Position", ValueType.VectorAndPlayer, typeof(V_Vector))]
@@ -1650,6 +1892,9 @@ namespace Deltin.Deltinteger.Elements
 
             Element a = (Element)ParameterValues[0];
 
+            if (a.ConstantSupported<Vertex>())
+                return ((Vertex)a.GetConstant()).X;
+
             if (a is V_Vector)
                 return (Element)a.ParameterValues[0];
 
@@ -1667,6 +1912,9 @@ namespace Deltin.Deltinteger.Elements
 
             Element a = (Element)ParameterValues[0];
 
+            if (a.ConstantSupported<Vertex>())
+                return ((Vertex)a.GetConstant()).Y;
+
             if (a is V_Vector)
                 return (Element)a.ParameterValues[1];
 
@@ -1683,6 +1931,9 @@ namespace Deltin.Deltinteger.Elements
             OptimizeChildren();
 
             Element a = (Element)ParameterValues[0];
+
+            if (a.ConstantSupported<Vertex>())
+                return ((Vertex)a.GetConstant()).Z;
 
             if (a is V_Vector)
                 return (Element)a.ParameterValues[2];
