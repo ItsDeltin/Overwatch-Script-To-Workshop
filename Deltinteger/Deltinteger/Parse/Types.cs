@@ -232,7 +232,9 @@ namespace Deltin.Deltinteger.Parse
             else throw new NotImplementedException();
 
             staticScope = translateInfo.GlobalScope.Child(TypeKindString + " " + Name);
+            staticScope.GroupCatch = true;
             objectScope = staticScope.Child(TypeKindString + " " + Name);
+            objectScope.This = this;
 
             // Get the variables defined in the type.
             foreach (var definedVariable in typeContext.define())
@@ -311,7 +313,7 @@ namespace Deltin.Deltinteger.Parse
 
             // Run the constructor.
             AddObjectVariablesToAssigner(classObject, actionSet.IndexAssigner);
-            constructor.Parse(actionSet, constructorValues);
+            constructor.Parse(actionSet.New(classObject), constructorValues);
 
             return classReference.GetVariable();
         }

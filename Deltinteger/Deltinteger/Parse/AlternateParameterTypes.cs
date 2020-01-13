@@ -7,11 +7,19 @@ namespace Deltin.Deltinteger.Parse
 {
     class WorkshopVariableParameter : CodeParameter
     {
-        public bool IsGlobal { get; }
+        public VariableType VariableType { get; }
 
         public WorkshopVariableParameter(string name, string documentation, bool isGlobal) : base(name, documentation)
         {
-            IsGlobal = isGlobal;
+            if (isGlobal)
+                VariableType = VariableType.Global;
+            else
+                VariableType = VariableType.Player;
+        }
+        public WorkshopVariableParameter(string name, string documentation, VariableType variableType) : base(name, documentation)
+        {
+            if (variableType == VariableType.ElementReference) throw new Exception("Only the variable types Dynamic, Global, and Player is valid.");
+            VariableType = variableType;
         }
 
         public override object Validate(ScriptFile script, IExpression value, DocRange valueRange)
@@ -20,8 +28,8 @@ namespace Deltin.Deltinteger.Parse
             if (call == null || call.Calling.DefineType != VariableDefineType.RuleLevel)
                 script.Diagnostics.Error("Expected a variable defined on the rule level.", valueRange);
 
-            if (call != null && (call.Calling.VariableType == VariableType.Global) != IsGlobal)
-                script.Diagnostics.Error($"Expected a {(IsGlobal ? "global" : "player")} variable.", valueRange);
+            if (call != null && VariableType != VariableType.Dynamic && call.Calling.VariableType != VariableType)
+                script.Diagnostics.Error($"Expected a {(VariableType == VariableType.Global ? "global" : "player")} variable.", valueRange);
             
             if (call != null && call.Index.Length > 0)
                 script.Diagnostics.Error("Variable cannot be indexed.", valueRange);
@@ -187,6 +195,9 @@ namespace Deltin.Deltinteger.Parse
                 script.Diagnostics.Error($"Expected a file with the file type '{FileType}'.", valueRange);
                 return null;
             }
+
+            script.AddDefinitionLink(valueRange, new Location(Extras.Definition(resultingPath), DocRange.Zero));
+            script.AddHover(valueRange, resultingPath);
 
             return resultingPath;
         }

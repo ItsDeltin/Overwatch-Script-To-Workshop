@@ -36,19 +36,11 @@ namespace Deltin.Deltinteger.Parse
             parseInfo.TranslateInfo.AddSymbolLink(this, definedAt);
         }
 
-        public virtual void SetupBlock() {}
+        public abstract void SetupBlock();
 
-        protected static CodeType GetCodeType(ParseInfo parseInfo, string name, DocRange range)
+        protected void SetupParameters(DeltinScriptParser.SetParametersContext context, VariableDefineType defineType = VariableDefineType.Parameter)
         {
-            if (name == null)
-                return null;
-            else
-                return parseInfo.TranslateInfo.GetCodeType(name, parseInfo.Script.Diagnostics, range);
-        }
-
-        protected void SetupParameters(DeltinScriptParser.SetParametersContext context)
-        {
-            var parameterInfo = CodeParameter.GetParameters(parseInfo, methodScope, context);
+            var parameterInfo = CodeParameter.GetParameters(parseInfo, methodScope, context, defineType);
             Parameters = parameterInfo.Parameters;
             ParameterVars = parameterInfo.Variables;
         }
@@ -78,23 +70,26 @@ namespace Deltin.Deltinteger.Parse
     public class DefinedMethod : DefinedFunction
     {
         private DeltinScriptParser.Define_methodContext context;
-        public bool IsRecursive { get; }
-        private BlockAction block { get; set; }
-        private bool doesReturnValue { get; set; }
+        // Attributes
+        public bool RuleContained { get; private set; }
+        public bool IsRecursive { get; private set; }
+        // Block data
+        private BlockAction block;
+        private bool doesReturnValue;
         /// <summary>
         /// If there is only one return statement, return the reference to
         /// the return expression instead of assigning it to a variable to reduce the number of actions.
         /// </summary>
-        /// <value></value>
-        private bool multiplePaths { get; set; }
+        private bool multiplePaths;
+        private SingleInstanceInfo singleInstanceInfo;
 
         public DefinedMethod(ParseInfo parseInfo, Scope scope, DeltinScriptParser.Define_methodContext context)
             : base(parseInfo, scope, context.name.Text, new Location(parseInfo.Script.Uri, DocRange.GetRange(context.name)))
         {
             this.context = context;
 
-            // Check if recursion is enabled.
-            IsRecursive = context.RECURSIVE() != null;
+            // Get the attributes.
+            GetAttributes(context.method_attribute());
 
             // Get the type.
             ReturnType = CodeType.GetCodeTypeFromContext(parseInfo, context.code_type());
@@ -103,7 +98,13 @@ namespace Deltin.Deltinteger.Parse
             AccessLevel = context.accessor().GetAccessLevel();
 
             // Setup the parameters and parse the block.
-            SetupParameters(context.setParameters());
+            if (!RuleContained)
+                SetupParameters(context.setParameters());
+            else
+            {
+                SetupParameters(context.setParameters(), VariableDefineType.RuleParameter);
+                parseInfo.TranslateInfo.AddSingleInstanceMethod(this);
+            }
 
             if (context.block() == null)
                 parseInfo.Script.Diagnostics.Error("Expected block.", DocRange.GetRange(context.name));
@@ -112,6 +113,39 @@ namespace Deltin.Deltinteger.Parse
 
             // Add the hover info.
             parseInfo.Script.AddHover(DocRange.GetRange(context.name), GetLabel(true));
+        }
+
+        private void GetAttributes(DeltinScriptParser.Method_attributeContext[] attributeContexts)
+        {
+            if (attributeContexts == null)
+            {
+                IsRecursive = false;
+                RuleContained = false;
+                return;
+            }
+
+            bool setRecursiveAttribute = false;
+            bool setRuleContainedAttribute = false;
+
+            foreach (var attribute in attributeContexts)
+            {
+                // Recursive attribute.
+                if (attribute.RECURSIVE() != null)
+                {
+                    IsRecursive = true;
+                    if (setRecursiveAttribute) parseInfo.Script.Diagnostics.Error("'recursive' attribute was already set.", DocRange.GetRange(attribute.RECURSIVE()));
+                    setRecursiveAttribute = true;
+                }
+                // Rule attribute.
+                else if (attribute.RULE_WORD() != null)
+                {
+                    RuleContained = true;
+                    if (setRuleContainedAttribute) parseInfo.Script.Diagnostics.Error("'rule' attribute was already set.", DocRange.GetRange(attribute.RULE_WORD()));
+                    setRuleContainedAttribute = true;
+                }
+                // Unimplemented attribute option
+                else throw new NotImplementedException();
+            }
         }
 
         public override void SetupBlock()
@@ -209,6 +243,7 @@ namespace Deltin.Deltinteger.Parse
             actionSet = actionSet
                 .New(actionSet.IndexAssigner.CreateContained());
             
+            if (RuleContained) return ParseSingleInstance(actionSet, parameterValues);
             if (IsRecursive) return ParseRecursive(actionSet, parameterValues);
             
             ReturnHandler returnHandler = new ReturnHandler(actionSet, Name, multiplePaths);
@@ -324,14 +359,88 @@ namespace Deltin.Deltinteger.Parse
         {
             for (int i = 0; i < parameterVars.Length; i++)
             {
-                actionSet.IndexAssigner.Add(actionSet.VarCollection, parameterVars[i], actionSet.IsGlobal, parameterValues[i], recursive);
+                actionSet.IndexAssigner.Add(actionSet.VarCollection, parameterVars[i], actionSet.IsGlobal, parameterValues?[i], recursive);
 
-                // todo: improve this
-                if (actionSet.IndexAssigner[parameterVars[i]] is IndexReference)
+                if (actionSet.IndexAssigner[parameterVars[i]] is IndexReference && parameterValues?[i] != null)
                     actionSet.AddAction(
                         ((IndexReference)actionSet.IndexAssigner[parameterVars[i]]).SetVariable((Element)parameterValues[i])
                     );
             }
+        }
+    
+        public void SetupSingleInstance()
+        {
+            if (!RuleContained) throw new Exception(Name + " does not have the rule attribute.");
+
+            IndexReference[] parameterStacks = new IndexReference[ParameterVars.Length];
+
+            IndexReference currentCall = parseInfo.TranslateInfo.VarCollection.Assign("_" + Name + "_currentCall", true, true);
+            parseInfo.TranslateInfo.InitialGlobal.ActionSet.AddAction(currentCall.SetVariable(-1));
+
+            for (int i = 0; i < ParameterVars.Length; i++)
+            {
+                IndexReference variableStack = parseInfo.TranslateInfo.VarCollection.Assign(ParameterVars[i].Name, true, true);
+                IndexReference variableReference = variableStack.CreateChild((Element)currentCall.GetVariable());
+                parseInfo.TranslateInfo.DefaultIndexAssigner.Add(ParameterVars[i], variableReference);
+                parameterStacks[i] = variableStack;
+            }
+
+            IndexReference callers = parseInfo.TranslateInfo.VarCollection.Assign("_" + Name + "_calls", true, false);
+            // Set the 1000th value as null.
+            parseInfo.TranslateInfo.InitialGlobal.ActionSet.AddAction(callers.SetVariable(new V_Null(), null, Constants.MAX_ARRAY_LENGTH));
+
+            TranslateRule instanceRule = new TranslateRule(parseInfo.TranslateInfo, Name);
+            // Run the rule if there are any callers.
+            instanceRule.Conditions.Add(
+                Element.Part<V_ArrayContains>(callers.GetVariable(), new V_True())
+            );
+
+            ReturnHandler returnHandler = new ReturnHandler(instanceRule.ActionSet, Name, multiplePaths);
+            ActionSet actionSet = instanceRule.ActionSet.New(returnHandler);
+
+            // Get the next caller.
+            actionSet.AddAction(currentCall.SetVariable(
+                Element.Part<V_IndexOfArrayValue>(callers.GetVariable(), new V_True())
+            ));
+
+            AssignParameters(actionSet, ParameterVars, null, false);
+            block.Translate(actionSet);
+
+            returnHandler.ApplyReturnSkips();
+
+            actionSet.AddAction(callers.SetVariable(new V_False(), null, (Element)currentCall.GetVariable()));
+            actionSet.AddAction(A_Wait.MinimumWait);
+            actionSet.AddAction(new A_LoopIfConditionIsTrue());
+
+            parseInfo.TranslateInfo.WorkshopRules.Add(instanceRule.GetRule());
+            singleInstanceInfo = new SingleInstanceInfo(parameterStacks, callers, returnHandler.GetReturnedValue());
+        }
+
+        private IWorkshopTree ParseSingleInstance(ActionSet actionSet, IWorkshopTree[] parameterValues)
+        {
+            IndexReference callID = actionSet.VarCollection.Assign("_" + Name + "_callID", true, true);
+            actionSet.AddAction(callID.SetVariable(
+                Element.Part<V_IndexOfArrayValue>(singleInstanceInfo.Callers.GetVariable(), new V_False())
+            ));
+            actionSet.AddAction(singleInstanceInfo.Callers.SetVariable(new V_True(), null, (Element)callID.GetVariable()));
+
+            for (int i = 0; i < ParameterVars.Length; i++)
+            {
+                // Push the parameters to the parameter list.
+                actionSet.AddAction(singleInstanceInfo.ParameterStacks[i].SetVariable(
+                    (Element)parameterValues[i],
+                    null,
+                    (Element)callID.GetVariable()
+                ));
+            }
+
+            // Wait for the method to return the value.
+            SpinWhileBuilder.Build(actionSet, Element.Part<V_ValueInArray>(
+                singleInstanceInfo.Callers.GetVariable(),
+                callID.GetVariable()
+            ));
+
+            return singleInstanceInfo.ReturningValue;
         }
     }
 
@@ -399,6 +508,20 @@ namespace Deltin.Deltinteger.Parse
                 return ReturnStore.GetVariable();
             else
                 return ReturningValue;
+        }
+    }
+
+    public class SingleInstanceInfo
+    {
+        public IndexReference[] ParameterStacks { get; }
+        public IndexReference Callers { get; }
+        public IWorkshopTree ReturningValue { get; }
+        
+        public SingleInstanceInfo(IndexReference[] parameterStacks, IndexReference callers, IWorkshopTree returningValue)
+        {
+            ParameterStacks = parameterStacks;
+            Callers = callers;
+            ReturningValue = returningValue;
         }
     }
 
@@ -517,7 +640,7 @@ namespace Deltin.Deltinteger.Parse
 
         public IWorkshopTree Parse(ActionSet actionSet, bool asElement = true) => Expression.Parse(actionSet);
 
-        public Scope ReturningScope() => ReturnType?.GetObjectScope();
+        public Scope ReturningScope() => ReturnType?.GetObjectScope() ?? parseInfo.TranslateInfo.PlayerVariableScope;
 
         public CodeType Type() => ReturnType;
 

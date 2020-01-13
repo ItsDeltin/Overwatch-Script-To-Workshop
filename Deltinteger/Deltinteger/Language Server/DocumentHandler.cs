@@ -185,6 +185,8 @@ namespace Deltin.Deltinteger.LanguageServer
                     
                     if (deltinScript.WorkshopCode != null)
                         _languageServer.Server.SendNotification(DeltintegerLanguageServer.SendWorkshopCode, deltinScript.WorkshopCode);
+                    else
+                        _languageServer.Server.SendNotification(DeltintegerLanguageServer.SendWorkshopCode, diagnostics.OutputDiagnostics());
                 }
                 catch (Exception ex)
                 {

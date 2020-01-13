@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.Elements;
 using Antlr4.Runtime;
@@ -75,6 +76,16 @@ namespace Deltin.Deltinteger.Parse
                 publishDiagnostics[i] = diagnosticFiles[i].GetDiagnostics();
             return publishDiagnostics;
         }
+
+        public string OutputDiagnostics()
+        {
+            StringBuilder builder = new StringBuilder();
+
+            foreach (var file in diagnosticFiles)
+                file.OutputDiagnostics(builder);
+            
+            return builder.ToString();
+        }
     }
 
     public class FileDiagnostics
@@ -139,6 +150,13 @@ namespace Deltin.Deltinteger.Parse
                 Uri = Uri,
                 Diagnostics = lsDiagnostics
             };
+        }
+    
+        public void OutputDiagnostics(StringBuilder builder)
+        {
+            var sorted = Diagnostics.OrderBy(d => d.severity);
+            foreach (var diagnostic in sorted)
+                builder.AppendLine(diagnostic.Info(Uri.AbsolutePath));
         }
     }
 

@@ -109,6 +109,12 @@ namespace Deltin.Deltinteger
 
         public static bool Compare(this Uri uri, Uri other) => uri.Clean().FilePath() == other.Clean().FilePath();
 
+        public static Uri Definition(string path)
+        {
+            string enc = "file:///" + path.Replace('\\', '/').Replace(" ","%20").Replace(":", "%3A");
+            return new Uri(enc);
+        }
+
         public static StringOrMarkupContent GetMarkupContent(string text) => new StringOrMarkupContent(new MarkupContent() {
             Kind = MarkupKind.Markdown,
             Value = text

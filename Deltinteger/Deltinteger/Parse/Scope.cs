@@ -15,6 +15,8 @@ namespace Deltin.Deltinteger.Parse
         private Scope Parent { get; }
         private List<Scope> children { get; } = new List<Scope>();
         public string ErrorName { get; set; } = "current scope";
+        public CodeType This { get; set; }
+        public bool GroupCatch { get; set; }
 
         public Scope() {}
         private Scope(Scope parent)
@@ -63,10 +65,10 @@ namespace Deltin.Deltinteger.Parse
 
         public bool IsVariable(string name)
         {
-            return GetVariable(name, null, null) != null;
+            return GetVariable(name, null, null, null) != null;
         }
 
-        public IScopeable GetVariable(string name, FileDiagnostics diagnostics, DocRange range)
+        public IScopeable GetVariable(string name, Scope getter, FileDiagnostics diagnostics, DocRange range)
         {
             IScopeable element = null;
             Scope current = this;
@@ -78,6 +80,12 @@ namespace Deltin.Deltinteger.Parse
 
             if (range != null && element == null)
                 diagnostics.Error(string.Format("The variable {0} does not exist in the {1}.", name, ErrorName), range);
+            
+            if (element != null && getter != null && !DoShareGroup(getter) && element.AccessLevel != AccessLevel.Public)
+            {
+                if (range == null) throw new Exception();
+                diagnostics.Error(string.Format("'{0}' is inaccessable due to its access level.", name), range);
+            }
 
             return element;
         }
@@ -161,26 +169,54 @@ namespace Deltin.Deltinteger.Parse
             return methods.ToArray();
         }
 
-        public CompletionItem[] GetCompletion(Pos pos, bool immediate)
+        public CodeType GetThis()
+        {
+            CodeType @this = null;
+            Scope current = this;
+
+            while (@this == null && current != null)
+            {
+                @this = current.This;
+                current = current.Parent;
+            }
+
+            return @this;
+        }
+
+        public bool DoShareGroup(Scope other)
+        {
+            Scope thisGroup = GroupScope();
+            Scope otherGroup = other.GroupScope();
+            return thisGroup == otherGroup;
+        }
+        
+        public Scope GroupScope()
+        {
+            Scope current = this;
+            while (current.Parent != null && !current.GroupCatch) current = current.Parent;
+            return current;
+        }
+
+        public CompletionItem[] GetCompletion(Pos pos, bool immediate, Scope getter = null)
         {
             List<CompletionItem> completions = new List<CompletionItem>();
 
             var variables = immediate ? Variables.ToArray() : AllVariablesInScope();
             for (int i = 0; i < variables.Length; i++)
-                if (WasScopedAtPosition(variables[i], pos))
+                if (WasScopedAtPosition(variables[i], pos, getter))
                     completions.Add(variables[i].GetCompletion());
 
             var methods = immediate ? Methods.ToArray() : AllMethodsInScope();
             for (int i = 0; i < methods.Length; i++)
-                if (WasScopedAtPosition(methods[i], pos))
+                if (WasScopedAtPosition(methods[i], pos, getter))
                     completions.Add(methods[i].GetCompletion());
                 
             return completions.ToArray();
         }
 
-        private static bool WasScopedAtPosition(IScopeable element, Pos pos)
+        private bool WasScopedAtPosition(IScopeable element, Pos pos, Scope getter)
         {
-            return pos == null || element.DefinedAt == null || element.WholeContext || element.DefinedAt.range.start <= pos;
+            return (pos == null || element.DefinedAt == null || element.WholeContext || element.DefinedAt.range.start <= pos) && (element.AccessLevel == AccessLevel.Public || getter == null || DoShareGroup(getter));
         }
 
         public static Scope GetGlobalScope()

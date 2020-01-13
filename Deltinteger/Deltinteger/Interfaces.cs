@@ -46,6 +46,7 @@ namespace Deltin.Deltinteger
     {
         CodeParameter[] Parameters { get; }
         Location DefinedAt { get; }
+        AccessLevel AccessLevel { get; }
         StringOrMarkupContent Documentation { get; }
     }
 

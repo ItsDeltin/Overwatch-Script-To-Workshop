@@ -40,6 +40,7 @@ namespace Deltin.Deltinteger.Parse
             
             GlobalScope = Scope.GetGlobalScope();
             RulesetScope = GlobalScope.Child();
+            RulesetScope.GroupCatch = true;
             
             Translate();
             if (!diagnostics.ContainsErrors())
@@ -219,6 +220,8 @@ namespace Deltin.Deltinteger.Parse
                 }
             }
 
+            foreach (var method in singleInstanceMethods) method.SetupSingleInstance();
+
             foreach (var rule in rules)
             {
                 var translate = new TranslateRule(this, rule);
@@ -281,6 +284,12 @@ namespace Deltin.Deltinteger.Parse
             return isGlobal ? InitialGlobal : InitialPlayer;
         }
 
+        private List<DefinedMethod> singleInstanceMethods = new List<DefinedMethod>();
+        public void AddSingleInstanceMethod(DefinedMethod method)
+        {
+            singleInstanceMethods.Add(method);
+        }
+
         public static IStatement GetStatement(ParseInfo parseInfo, Scope scope, DeltinScriptParser.StatementContext statementContext)
         {
             switch (statementContext)
@@ -325,7 +334,7 @@ namespace Deltin.Deltinteger.Parse
                 case DeltinScriptParser.E_nullContext @null: return new NullAction();
                 case DeltinScriptParser.E_stringContext @string: return new StringAction(parseInfo.Script, @string.@string());
                 case DeltinScriptParser.E_formatted_stringContext formattedString: return new StringAction(parseInfo, scope, formattedString.formatted_string());
-                case DeltinScriptParser.E_variableContext variable: return GetVariable(parseInfo, scope, variable.variable(), selfContained);
+                case DeltinScriptParser.E_variableContext variable: return GetVariable(parseInfo, scope, getter, variable.variable(), selfContained);
                 case DeltinScriptParser.E_methodContext method: return new CallMethodAction(parseInfo, scope, method.method(), usedAsValue, getter);
                 case DeltinScriptParser.E_new_objectContext newObject: return new CreateObjectAction(parseInfo, scope, newObject.create_object());
                 case DeltinScriptParser.E_expr_treeContext exprTree: return new ExpressionTree(parseInfo, scope, exprTree, usedAsValue);
@@ -341,11 +350,12 @@ namespace Deltin.Deltinteger.Parse
                 case DeltinScriptParser.E_op_compareContext opCompare: return new OperatorAction(parseInfo, scope, opCompare);
                 case DeltinScriptParser.E_ternary_conditionalContext ternary: return new TernaryConditionalAction(parseInfo, scope, ternary);
                 case DeltinScriptParser.E_rootContext root: return new RootAction(parseInfo.TranslateInfo);
+                case DeltinScriptParser.E_thisContext @this: return new ThisAction(parseInfo, scope, @this);
                 default: throw new Exception($"Could not determine the expression type '{exprContext.GetType().Name}'.");
             }
         }
 
-        public static IExpression GetVariable(ParseInfo parseInfo, Scope scope, DeltinScriptParser.VariableContext variableContext, bool selfContained)
+        public static IExpression GetVariable(ParseInfo parseInfo, Scope scope, Scope getter, DeltinScriptParser.VariableContext variableContext, bool selfContained)
         {
             string variableName = variableContext.PART().GetText();
             DocRange variableRange = DocRange.GetRange(variableContext.PART());
@@ -363,12 +373,15 @@ namespace Deltin.Deltinteger.Parse
                 return type;
             }
 
-            IScopeable element = scope.GetVariable(variableName, parseInfo.Script.Diagnostics, variableRange);
+            IScopeable element = scope.GetVariable(variableName, getter, parseInfo.Script.Diagnostics, variableRange);
             if (element == null)
                 return null;
             
             if (element is ICallable)
                 ((ICallable)element).Call(parseInfo.Script, variableRange);
+            
+            if (element is IApplyBlock)
+                parseInfo.CurrentCallInfo?.Call((IApplyBlock)element, variableRange);
 
             if (element is Var)
             {
@@ -379,7 +392,7 @@ namespace Deltin.Deltinteger.Parse
                 {
                     index = new IExpression[variableContext.array().expr().Length];
                     for (int i = 0; i < index.Length; i++)
-                        index[i] = GetExpression(parseInfo, scope, variableContext.array().expr(i));
+                        index[i] = GetExpression(parseInfo, getter, variableContext.array().expr(i));
                 }
 
                 return new CallVariableAction(var, index);
