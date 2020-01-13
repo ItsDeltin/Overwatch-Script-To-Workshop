@@ -12,7 +12,6 @@ namespace Deltin.Deltinteger.Pathfinder
 {
     public class PathmapClass : CodeType
     {
-        protected override string TypeKindString => "class";
         private Scope ObjectScope { get; }
         private Scope StaticScope { get; }
 

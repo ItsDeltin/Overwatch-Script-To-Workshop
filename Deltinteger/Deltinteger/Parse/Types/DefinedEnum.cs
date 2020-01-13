@@ -10,7 +10,6 @@ namespace Deltin.Deltinteger.Parse
     public class DefinedEnum : CodeType
     {
         public LanguageServer.Location DefinedAt { get; }
-        protected override string TypeKindString => "enum";
         private Scope Scope { get; }
         private DeltinScript _translateInfo { get; }
 

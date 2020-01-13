@@ -612,7 +612,7 @@ namespace Deltin.Deltinteger.Parse
         public MacroVar(ParseInfo parseInfo, Scope scope, DeltinScriptParser.Define_macroContext macroContext)
         {
             Name = macroContext.name.Text;
-            AccessLevel = macroContext.accessor()?.GetAccessLevel() ?? AccessLevel.Private;
+            AccessLevel = macroContext.accessor().GetAccessLevel();
             DefinedAt = new Location(parseInfo.Script.Uri, DocRange.GetRange(macroContext.name));
             CallInfo = new CallInfo(this, parseInfo.Script);
 

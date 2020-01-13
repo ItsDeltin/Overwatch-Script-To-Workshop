@@ -47,10 +47,7 @@
     </Antlr4>
   </ItemGroup>
   <ItemGroup>
-    <Compile Remove="Parse/old/**"/>
-    <Compile Remove="Parse/ast/**"/>
     <Compile Remove="Custom Methods/Old/**"/>
     <Compile Remove="Pathfinder/Old_Methods.cs"/>
-    <Compile Remove="Language Server/Old/**"/>
   </ItemGroup>
 </Project>

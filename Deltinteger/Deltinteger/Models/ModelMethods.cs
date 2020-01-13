@@ -19,8 +19,6 @@ namespace Deltin.Deltinteger.Models
 {
     public class AssetClass : CodeType
     {
-        protected override string TypeKindString => "class";
-
         private Scope StaticScope { get; } = new Scope("class Asset");
 
         public AssetClass() : base("Asset")
