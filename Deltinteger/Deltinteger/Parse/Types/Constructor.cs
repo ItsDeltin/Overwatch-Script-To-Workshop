@@ -26,7 +26,7 @@ namespace Deltin.Deltinteger.Parse
             Parameters = new CodeParameter[0];
         }
 
-        public virtual void Parse(ActionSet actionSet, IWorkshopTree[] parameterValues) {}
+        public virtual void Parse(ActionSet actionSet, IWorkshopTree[] parameterValues, object[] additionalParameterData) {}
 
         public void Call(ScriptFile script, DocRange callRange)
         {
@@ -76,7 +76,7 @@ namespace Deltin.Deltinteger.Parse
             parseInfo.Script.AddHover(DocRange.GetRange(context.name), GetLabel(true));
         }
 
-        public override void Parse(ActionSet actionSet, IWorkshopTree[] parameterValues)
+        public override void Parse(ActionSet actionSet, IWorkshopTree[] parameterValues, object[] additionalParameterData)
         {
             actionSet = actionSet.New(actionSet.IndexAssigner.CreateContained());
             DefinedMethod.AssignParameters(actionSet, ParameterVars, parameterValues);

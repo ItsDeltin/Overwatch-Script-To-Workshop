@@ -121,7 +121,7 @@ namespace Deltin.Deltinteger.Parse
 
             // Run the constructor.
             AddObjectVariablesToAssigner(classObject, actionSet.IndexAssigner);
-            constructor.Parse(actionSet.New(classObject), constructorValues);
+            constructor.Parse(actionSet.New(classObject), constructorValues, null);
 
             return classReference.GetVariable();
         }
@@ -209,7 +209,7 @@ namespace Deltin.Deltinteger.Parse
 
             // Run the constructor.
             AddObjectVariablesToAssigner(structObject, actionSet.IndexAssigner);
-            constructor.Parse(actionSet, constructorValues);
+            constructor.Parse(actionSet, constructorValues, null);
 
             return structObject.GetVariable();
         }

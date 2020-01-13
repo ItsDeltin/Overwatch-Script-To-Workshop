@@ -41,6 +41,7 @@ namespace Deltin.Deltinteger.Parse
 
         public virtual IndexReference GetObjectSource(DeltinScript translateInfo, IWorkshopTree element) => null;
 
+        public virtual void AddStaticVariablesToAssigner(VarIndexAssigner assigner) {}
         public virtual void AddObjectVariablesToAssigner(IndexReference source, VarIndexAssigner assigner) {}
 
         public virtual void Call(ScriptFile script, DocRange callRange)

@@ -108,7 +108,7 @@ namespace Deltin.Deltinteger.Parse
 
     public class VarIndexAssigner
     {
-        private readonly Dictionary<Var, IGettable> references = new Dictionary<Var, IGettable>();
+        private readonly Dictionary<IIndexReferencer, IGettable> references = new Dictionary<IIndexReferencer, IGettable>();
         private readonly List<VarIndexAssigner> children = new List<VarIndexAssigner>();
         private readonly VarIndexAssigner parent = null;
 
@@ -141,13 +141,13 @@ namespace Deltin.Deltinteger.Parse
             else throw new NotImplementedException();
         }
 
-        public void Add(Var var, IndexReference reference)
+        public void Add(IIndexReferencer var, IndexReference reference)
         {
             if (reference == null) throw new ArgumentNullException(nameof(reference));
             references.Add(var, reference);
         }
 
-        public void Add(Var var, IWorkshopTree reference)
+        public void Add(IIndexReferencer var, IWorkshopTree reference)
         {
             if (reference == null) throw new ArgumentNullException(nameof(reference));
             references.Add(var, new WorkshopElementReference(reference));
@@ -160,7 +160,7 @@ namespace Deltin.Deltinteger.Parse
             return newAssigner;
         }
 
-        public IGettable this[Var var]
+        public IGettable this[IIndexReferencer var]
         {
             get {
                 VarIndexAssigner current = this;
@@ -178,7 +178,7 @@ namespace Deltin.Deltinteger.Parse
         }
     }
 
-    public class Var : IScopeable, IExpression, ICallable
+    public class Var : IIndexReferencer
     {
         // IScopeable
         public string Name { get; }
@@ -411,10 +411,10 @@ namespace Deltin.Deltinteger.Parse
 
     class CallVariableAction : IExpression
     {
-        public Var Calling { get; }
+        public IIndexReferencer Calling { get; }
         public IExpression[] Index { get; }
 
-        public CallVariableAction(Var calling, IExpression[] index)
+        public CallVariableAction(IIndexReferencer calling, IExpression[] index)
         {
             Calling = calling;
             Index = index;

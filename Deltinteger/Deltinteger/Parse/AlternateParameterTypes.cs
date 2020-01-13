@@ -25,7 +25,9 @@ namespace Deltin.Deltinteger.Parse
         public override object Validate(ScriptFile script, IExpression value, DocRange valueRange)
         {
             CallVariableAction call = value as CallVariableAction;
-            if (call == null || call.Calling.DefineType != VariableDefineType.RuleLevel)
+            Var asVar = call?.Calling as Var;
+
+            if (asVar == null || asVar.DefineType != VariableDefineType.RuleLevel)
                 script.Diagnostics.Error("Expected a variable defined on the rule level.", valueRange);
 
             if (call != null && VariableType != VariableType.Dynamic && call.Calling.VariableType != VariableType)
