@@ -5,8 +5,9 @@
 
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { workspace, ExtensionContext, OutputChannel, window } from 'vscode';
+import { workspace, ExtensionContext, OutputChannel, window, Uri, Position, Location } from 'vscode';
 import { LanguageClient, LanguageClientOptions, ServerOptions, ExecutableOptions, Executable, TransportKind, InitializationFailedHandler, ErrorHandler } from 'vscode-languageclient';
+import { setTimeout } from 'timers';
 
 let client: LanguageClient;
 let workshopOut: OutputChannel;
@@ -23,16 +24,7 @@ export function activate(context: ExtensionContext) {
 	workspace.onDidChangeConfiguration((e: vscode.ConfigurationChangeEvent) => {
 		if (e.affectsConfiguration("ostw.deltintegerPath"))
 		{
-			config = workspace.getConfiguration("ostw", null);
-
-			client.outputChannel.hide();
-			client.outputChannel.dispose();
-			lastWorkshopOutput = "";
-			if (isServerRunning) {
-				client.stop();
-				isServerRunning = false;
-			}
-			startLanguageServer();
+			restartServer();
 		}
 	});
 	startLanguageServer();
@@ -58,10 +50,6 @@ function startLanguageServer()
 		debug: { command: serverModule, args: ['--langserver', '--debug'], options: options }
 	};
 
-	let initFail: InitializationFailedHandler = function(error: any): boolean {
-		return true;
-	};
-
 	// Options to control the language client
 	let clientOptions: LanguageClientOptions = {
 		// Register the server for plain text documents
@@ -70,8 +58,7 @@ function startLanguageServer()
 			// Notify the server about file changes to '.clientrc files contained in the workspace
 			// fileEvents: workspace.createFileSystemWatcher('**/.clientrc')
 			configurationSection: 'ostw'
-		},
-		initializationFailedHandler: initFail
+		}
 	};
 
 	// Create the language client and start the client.
@@ -116,4 +103,34 @@ var lastWorkshopOutput : string = null;
 
 function addCommands(context: ExtensionContext)
 {
+	context.subscriptions.push(
+		vscode.commands.registerCommand('ostw.restartLanguageServer', restartServer, this)
+	);
+	context.subscriptions.push(
+		vscode.commands.registerCommand('ostw.testCommand', (uriStr: string, posStr: string, locationsStr: string[]) => {
+			let uri: Uri = Uri.parse(uriStr);
+			let pos: Position = <Position>JSON.parse(posStr);
+			let locations: Location[] = [];
+
+			for (var i = 0; i < locationsStr.length; i++)
+				locations.push(<Location>JSON.parse(locationsStr[i]));
+
+			vscode.commands.executeCommand('editor.action.showReferences', uri.toString(), pos, locations[0]);
+		}, this)
+	);
+}
+
+function restartServer()
+{
+	config = workspace.getConfiguration("ostw", null);
+	client.outputChannel.hide();
+	client.outputChannel.dispose();
+	lastWorkshopOutput = "";
+	workshopOut.clear();
+	if (isServerRunning) {
+		client.stop();
+		isServerRunning = false;
+	}
+	setTimeout(() => startLanguageServer, 5000);
+	//startLanguageServer();
 }

@@ -5,6 +5,7 @@ using Antlr4.Runtime.Tree;
 using LSPos      = OmniSharp.Extensions.LanguageServer.Protocol.Models.Position;
 using LSRange    = OmniSharp.Extensions.LanguageServer.Protocol.Models.Range;
 using LSLocation = OmniSharp.Extensions.LanguageServer.Protocol.Models.Location;
+using System.Collections.Generic;
 
 namespace Deltin.Deltinteger.LanguageServer
 {

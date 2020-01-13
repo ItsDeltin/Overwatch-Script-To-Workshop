@@ -271,6 +271,8 @@ namespace Deltin.Deltinteger.Parse
                     new Constructor(this, new Location(parseInfo.Script.Uri, DocRange.GetRange(typeContext.name)), AccessLevel.Public)
                 };
             }
+
+            parseInfo.Script.AddCodeLensRange(new ReferenceCodeLensRange(this, parseInfo, CodeLensSourceType.Type, DefinedAt.range));
         }
 
         private Scope UseScope(bool isStatic)

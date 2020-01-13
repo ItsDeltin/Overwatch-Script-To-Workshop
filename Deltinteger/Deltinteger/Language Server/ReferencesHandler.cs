@@ -24,17 +24,27 @@ namespace Deltin.Deltinteger.LanguageServer
             bool includeDeclaration = request.Context.IncludeDeclaration;
 
             var allSymbolLinks = _languageServer.LastParse?.GetSymbolLinks();
+            if (allSymbolLinks == null) return new LocationContainer();
 
             ICallable use = null;
+            Location declaredAt = null;
 
             foreach (var link in allSymbolLinks)
                 foreach (var location in link.Value)
                     if (location.uri.Compare(request.TextDocument.Uri) && location.range.IsInside(request.Position))
+                    {
                         use = link.Key;
+                        declaredAt = location;
+                    }
             
             if (use == null) return new LocationContainer();
 
-            return allSymbolLinks[use].Select(loc => loc.ToLsLocation()).ToArray();
+            return allSymbolLinks[use]
+                // If includeDeclaration is false, remove declaration from list.
+                .Where(loc => includeDeclaration || loc != declaredAt)
+                // Convert to Language Server API location.
+                .Select(loc => loc.ToLsLocation())
+                .ToArray();
         }
 
         public TextDocumentRegistrationOptions GetRegistrationOptions()

@@ -82,8 +82,13 @@
         },
         "commands": [
             {
-                "command": "ostw.webviewOutput",
-                "title": "Create webview panel for workshop code output.",
+                "command": "ostw.restartLanguageServer",
+                "title": "Restarts the OSTW Language Server.",
+                "category": "Overwatch Script To Workshop"
+            },
+            {
+                "command": "ostw.testCommand",
+                "title": "Test Command",
                 "category": "Overwatch Script To Workshop"
             }
         ]

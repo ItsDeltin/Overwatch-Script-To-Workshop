@@ -315,6 +315,9 @@ namespace Deltin.Deltinteger.Parse
             if (context.EQUALS() != null && context.expr() == null)
                 parseInfo.Script.Diagnostics.Error("Expected expression.", DocRange.GetRange(context).end.ToRange());
             
+            if (newVar.DefineType == VariableDefineType.RuleLevel || newVar.DefineType == VariableDefineType.InClass)
+                parseInfo.Script.AddCodeLensRange(new ReferenceCodeLensRange(newVar, parseInfo, CodeLensSourceType.Variable, newVar.DefinedAt.range));
+            
             return newVar;
         }
 

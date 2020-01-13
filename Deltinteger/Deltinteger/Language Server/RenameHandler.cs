@@ -17,7 +17,7 @@ using OmniSharp.Extensions.LanguageServer.Protocol;
 
 namespace Deltin.Deltinteger.LanguageServer
 {
-    public class RenameHandler : BaseRenameHandler, IPrepareRenameHandler
+    public class RenameHandler : BaseRenameHandler//, IPrepareRenameHandler
     {
         private DeltintegerLanguageServer _languageServer;
 
@@ -64,6 +64,8 @@ namespace Deltin.Deltinteger.LanguageServer
             };
         }
 
+        // IPrepareRename
+        /*
         public async Task<RangeOrPlaceholderRange> Handle(PrepareRenameParams request, CancellationToken cancellationToken)
         {
             var link = GetLink(request.TextDocument.Uri, request.Position);
@@ -74,6 +76,7 @@ namespace Deltin.Deltinteger.LanguageServer
                 Placeholder = link.Name
             });
         }
+        */
 
         SymbolLink GetLink(Uri uri, Position position)
         {
@@ -89,7 +92,7 @@ namespace Deltin.Deltinteger.LanguageServer
             return null;
         }
 
-        object IRegistration<object>.GetRegistrationOptions() => null;
+        // object IRegistration<object>.GetRegistrationOptions() => null;
     }
 
     class SymbolLink
