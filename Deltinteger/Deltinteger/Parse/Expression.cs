@@ -180,16 +180,11 @@ namespace Deltin.Deltinteger.Parse
                 }
                 else
                 {
-                    currentObject = Tree[i].Type().GetObjectSource(actionSet.Translate.DeltinScript, current);
+                    var type = Tree[i].Type();
 
-                    if (Tree[i].Type() is DefinedType)
-                    {
-                        currentAssigner = actionSet.IndexAssigner.CreateContained();
-                        var definedType = ((DefinedType)Tree[i].Type());
-
-                        // Assign the object variables indexes.
-                        definedType.AddObjectVariablesToAssigner(currentObject, currentAssigner);
-                    }
+                    currentObject = type.GetObjectSource(actionSet.Translate.DeltinScript, current);
+                    currentAssigner = actionSet.IndexAssigner.CreateContained();
+                    type.AddObjectVariablesToAssigner(currentObject, currentAssigner);
                 }
 
                 result = current;

@@ -204,6 +204,7 @@ namespace Deltin.Deltinteger.Parse
             InitialPlayer = new TranslateRule(this, "Initial Player", RuleEvent.OngoingPlayer);
             WorkshopRules = new List<Rule>();
 
+            // Assign variables at the rule-set level.
             foreach (var variable in rulesetVariables)
             {
                 // Assign the variable an index.
@@ -220,8 +221,13 @@ namespace Deltin.Deltinteger.Parse
                 }
             }
 
+            // Assign static variables.
+            foreach (var type in types) type.AddStaticVariablesToAssigner(this, DefaultIndexAssigner);
+
+            // Setup single-instance methods.
             foreach (var method in singleInstanceMethods) method.SetupSingleInstance();
 
+            // Parse the rules.
             foreach (var rule in rules)
             {
                 var translate = new TranslateRule(this, rule);
@@ -383,9 +389,8 @@ namespace Deltin.Deltinteger.Parse
             if (element is IApplyBlock)
                 parseInfo.CurrentCallInfo?.Call((IApplyBlock)element, variableRange);
 
-            if (element is Var)
+            if (element is IIndexReferencer var)
             {
-                Var var = (Var)element;
                 IExpression[] index;
                 if (variableContext.array() == null) index = new IExpression[0];
                 else
