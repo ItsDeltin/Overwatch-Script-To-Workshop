@@ -12,7 +12,7 @@ namespace Deltin.Deltinteger.Parse
     public abstract class CodeType : IExpression, ICallable
     {
         public string Name { get; }
-        public Constructor[] Constructors { get; protected set; }
+        public Constructor[] Constructors { get; protected set; } = new Constructor[0];
         public string Description { get; protected set; }
 
         public CodeType(string name)
@@ -41,7 +41,7 @@ namespace Deltin.Deltinteger.Parse
 
         public virtual IndexReference GetObjectSource(DeltinScript translateInfo, IWorkshopTree element) => null;
 
-        public virtual void AddStaticVariablesToAssigner(VarIndexAssigner assigner) {}
+        public virtual void AddStaticVariablesToAssigner(DeltinScript translateInfo, VarIndexAssigner assigner) {}
         public virtual void AddObjectVariablesToAssigner(IndexReference source, VarIndexAssigner assigner) {}
 
         public virtual void Call(ScriptFile script, DocRange callRange)

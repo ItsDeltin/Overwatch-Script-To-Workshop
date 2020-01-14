@@ -222,7 +222,7 @@ namespace Deltin.Deltinteger.Parse
             }
 
             // Assign static variables.
-            foreach (var type in types) type.AddStaticVariablesToAssigner(DefaultIndexAssigner);
+            foreach (var type in types) type.AddStaticVariablesToAssigner(this, DefaultIndexAssigner);
 
             // Setup single-instance methods.
             foreach (var method in singleInstanceMethods) method.SetupSingleInstance();
@@ -389,9 +389,8 @@ namespace Deltin.Deltinteger.Parse
             if (element is IApplyBlock)
                 parseInfo.CurrentCallInfo?.Call((IApplyBlock)element, variableRange);
 
-            if (element is Var)
+            if (element is IIndexReferencer var)
             {
-                Var var = (Var)element;
                 IExpression[] index;
                 if (variableContext.array() == null) index = new IExpression[0];
                 else

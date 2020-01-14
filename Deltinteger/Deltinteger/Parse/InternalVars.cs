@@ -1,7 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.LanguageServer;
 using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
 using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItemKind;
@@ -18,7 +15,7 @@ namespace Deltin.Deltinteger.Parse
         public string Detail { get; set; }
         public string Documentation { get; set; }
         public CodeType CodeType { get; set; }
-        public bool IsSettable { get; set; }
+        public bool IsSettable { get; set; } = true;
         public VariableType VariableType => VariableType.Global;
 
         public InternalVar(string name, CompletionItemKind completionItemKind = CompletionItemKind.Variable)
@@ -45,7 +42,7 @@ namespace Deltin.Deltinteger.Parse
             Label = Name,
             Kind = CompletionItemKind,
             Detail = Detail,
-            Documentation = Documentation
+            Documentation = Extras.GetMarkupContent(Documentation)
         };
     }
 }

@@ -1,8 +1,51 @@
 using System;
 using Deltin.Deltinteger.Elements;
+using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 
 namespace Deltin.Deltinteger.Parse
 {
+    public abstract class ClassType : CodeType
+    {
+        protected Scope ObjectScope { get; }
+        protected Scope StaticScope { get; }
+
+        public ClassType(string name) : base(name)
+        {
+            StaticScope = new Scope("class " + name);
+            ObjectScope = StaticScope.Child("class " + name);
+        }
+
+        public override IWorkshopTree New(ActionSet actionSet, Constructor constructor, IWorkshopTree[] constructorValues, object[] additionalParameterData)
+        {
+            // Create the class.
+            ClassObjectResult objectData = actionSet.Translate.DeltinScript.SetupClasses().CreateObject(actionSet, "_new_PathMap");
+
+            New(actionSet, objectData, constructor, constructorValues, additionalParameterData);
+
+            // Return the reference.
+            return objectData.ClassReference.GetVariable();
+        }
+
+        protected virtual void New(ActionSet actionSet, ClassObjectResult objectData, Constructor constructor, IWorkshopTree[] constructorValues, object[] additionalParameterData)
+        {
+            // Parse the constructor.
+            constructor.Parse(actionSet, constructorValues, additionalParameterData);
+        }
+
+        public override IndexReference GetObjectSource(DeltinScript translateInfo, IWorkshopTree element)
+        {
+            return translateInfo.SetupClasses().ClassArray.CreateChild((Element)element);
+        }
+
+        public override Scope GetObjectScope() => ObjectScope;
+        public override Scope ReturningScope() => StaticScope;
+
+        public override CompletionItem GetCompletion() => new CompletionItem() {
+            Label = Name,
+            Kind = CompletionItemKind.Class
+        };
+    }
+
     public class ClassData
     {
         public IndexReference ClassIndexes { get; }
