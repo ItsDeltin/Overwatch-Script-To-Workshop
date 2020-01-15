@@ -8,6 +8,7 @@ using System.Reflection;
 using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.WorkshopWiki;
 using Deltin.Deltinteger.Parse;
+using Deltin.Deltinteger.Models;
 using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
 using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItemKind;
 using StringOrMarkupContent = OmniSharp.Extensions.LanguageServer.Protocol.Models.StringOrMarkupContent;
@@ -160,15 +161,6 @@ namespace Deltin.Deltinteger.Elements
             // return Element.Part<V_ValueInArray>(CreateArray(alternative, consequent), Element.Part<V_Add>(condition, new V_Number(0)));
         }
 
-        public static V_Number[] IntToElement(params int[] numbers)
-        {
-            V_Number[] elements = new V_Number[numbers?.Length ?? 0];
-            for (int i = 0; i < elements.Length; i++)
-                elements[i] = new V_Number(numbers[i]);
-
-            return elements;
-        }
-
         public static Element operator +(Element a, Element b) => Element.Part<V_Add>(a, b);
         public static Element operator -(Element a, Element b) => Element.Part<V_Subtract>(a, b);
         public static Element operator *(Element a, Element b) => Element.Part<V_Multiply>(a, b);
@@ -187,14 +179,7 @@ namespace Deltin.Deltinteger.Elements
         }
         public static implicit operator Element(double number) => new V_Number(number);
         public static implicit operator Element(int number) => new V_Number(number);
-        public static implicit operator Element(bool a)
-        {
-            if (a == true)
-                return new V_True();
-            if (a == false)
-                return new V_False();
-            return null;
-        }
+        public static implicit operator Element(bool boolean) => boolean ? (Element)new V_True() : new V_False();
 
         public bool EqualTo(IWorkshopTree b)
         {
@@ -217,11 +202,49 @@ namespace Deltin.Deltinteger.Elements
             return true;
         }
 
-        public Element ToRadians() =>
-            (this * new V_Number(Math.PI / 180)).Optimize();
+        public Element OptimizeOperation(
+            Func<double, double, double> op,
+            Func<Element, Element, Element> areEqual,
+            bool returnBIf0
+            )
+        {
+            OptimizeChildren();
 
-        public Element ToDegrees() =>
-            (this * new V_Number(180 / Math.PI)).Optimize();
+            Element a = (Element)ParameterValues[0];
+            Element b = (Element)ParameterValues[1];
+
+            V_Number aAsNumber = a as V_Number;
+            V_Number bAsNumber = b as V_Number;
+
+            // If a and b are numbers, operate them.
+            if (aAsNumber != null && bAsNumber != null)
+                return op(aAsNumber.Value, bAsNumber.Value);
+            
+            // If a is 0, return b.
+            if (aAsNumber != null && aAsNumber.Value == 0 && returnBIf0)
+                return b;
+            
+            // If b is 0, return a.
+            if (bAsNumber != null && bAsNumber.Value == 0)
+                return a;
+
+            if (a.EqualTo(b))
+                return areEqual(a, b);
+            
+            if (a.ConstantSupported<Vertex>() && b.ConstantSupported<Vertex>())
+            {
+                var aVertex = (Vertex)a.GetConstant();
+                var bVertex = (Vertex)b.GetConstant();
+
+                return new V_Vector(
+                    op(aVertex.X, bVertex.X),
+                    op(aVertex.Y, bVertex.Y),
+                    op(aVertex.Z, bVertex.Z)
+                );
+            }
+            
+            return this;
+        }
     }
 
     public class ElementList : IMethod
