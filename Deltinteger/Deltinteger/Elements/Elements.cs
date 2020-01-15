@@ -202,11 +202,11 @@ namespace Deltin.Deltinteger.Elements
             return true;
         }
 
-        public Element OptimizeOperation(
+        public Element OptimizeAddOperation(
             Func<double, double, double> op,
             Func<Element, Element, Element> areEqual,
             bool returnBIf0
-            )
+        )
         {
             OptimizeChildren();
 
@@ -242,6 +242,66 @@ namespace Deltin.Deltinteger.Elements
                     op(aVertex.Z, bVertex.Z)
                 );
             }
+            
+            return this;
+        }
+
+        public Element OptimizeMultiplyOperation(
+            Func<double, double, double> op,
+            Func<Element, Element, Element> areEqual,
+            bool returnBIf1
+        )
+        {
+            OptimizeChildren();
+
+            Element a = (Element)ParameterValues[0];
+            Element b = (Element)ParameterValues[1];
+
+            V_Number aAsNumber = a as V_Number;
+            V_Number bAsNumber = b as V_Number;
+
+            // Multiply number and number
+            if (aAsNumber != null && bAsNumber != null)
+                return op(aAsNumber.Value, bAsNumber.Value);
+
+            // Multiply vector and a vector
+            if (a.ConstantSupported<Vertex>() && b.ConstantSupported<Vertex>())
+            {
+                Vertex vertexA = (Vertex)a.GetConstant();
+                Vertex vertexB = (Vertex)b.GetConstant();
+                return new V_Vector(
+                    op(vertexA.X, vertexB.X),
+                    op(vertexA.Y, vertexB.Y),
+                    op(vertexA.Z, vertexB.Z)
+                );
+            }
+
+            // Multiply vector and number
+            if ((a.ConstantSupported<Vertex>() && b is V_Number) || (a is V_Number && b.ConstantSupported<Vertex>()))
+            {
+                Vertex vector = a.ConstantSupported<Vertex>() ? (Vertex)a.GetConstant() : (Vertex)b.GetConstant();
+                V_Number number = a is V_Number ? (V_Number)a : (V_Number)b;
+                return new V_Vector(
+                    op(vector.X, number.Value),
+                    op(vector.Y, number.Value),
+                    op(vector.Z, number.Value)
+                );
+            }
+
+            if (aAsNumber != null)
+            {
+                if (aAsNumber.Value == 1 && returnBIf1) return b;
+                if (aAsNumber.Value == 0) return 0;
+            }
+
+            if (bAsNumber != null)
+            {
+                if (bAsNumber.Value == 1) return a;
+                if (bAsNumber.Value == 0) return 0;
+            }
+
+            if (a.EqualTo(b))
+                return areEqual(a, b);
             
             return this;
         }
