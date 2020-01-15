@@ -188,6 +188,14 @@ namespace Deltin.Deltinteger.Elements
             if ((@Enum.Type == typeof(Team) || @Enum.Type == typeof(Color)) && WorkshopName.StartsWith("Team")) return "Team";
             return I18nKeyword;
         }
+
+        public bool EqualTo(IWorkshopTree b)
+        {
+            if (this.GetType() != b.GetType()) return false;
+
+            EnumMember bAsEnum = (EnumMember)b;
+            return WorkshopName == bAsEnum.WorkshopName && Enum == bAsEnum.Enum;
+        }
     }
 
     [WorkshopEnum]

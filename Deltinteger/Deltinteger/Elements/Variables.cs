@@ -24,11 +24,6 @@ namespace Deltin.Deltinteger.Elements
             return Name;
         }
 
-        public void DebugPrint(Log log, int depth)
-        {
-            log.Write(LogLevel.Verbose, Extras.Indent(depth, false) + Name);
-        }
-
         public bool IsValidName()
         {
             for (int c = 0; c < Name.Length; c++)
@@ -40,6 +35,14 @@ namespace Deltin.Deltinteger.Elements
         public bool IsValidID()
         {
             return 0 <= ID && ID < Constants.NUMBER_OF_VARIABLES;
+        }
+
+        public bool EqualTo(IWorkshopTree b)
+        {
+            if (this.GetType() != b.GetType()) return false;
+            
+            WorkshopVariable bAsVariable = (WorkshopVariable)b;
+            return Name == bAsVariable.Name && IsGlobal == bAsVariable.IsGlobal;
         }
     }
 }

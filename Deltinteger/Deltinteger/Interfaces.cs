@@ -13,6 +13,7 @@ namespace Deltin.Deltinteger
     public interface IWorkshopTree
     {
         string ToWorkshop(OutputLanguage language);
+        bool EqualTo(IWorkshopTree other);
     }
 
     public interface IMethod : IScopeable, IParameterCallable

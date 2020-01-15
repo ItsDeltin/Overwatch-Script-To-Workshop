@@ -8,7 +8,7 @@ using Deltin.Deltinteger;
 
 namespace Deltin.Deltinteger.Elements
 {
-    public class Condition : IWorkshopTree
+    public class Condition
     {
         public Element Value1 { get; private set; }
         public EnumMember CompareOperator { get; private set; }

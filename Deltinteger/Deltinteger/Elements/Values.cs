@@ -34,8 +34,8 @@ namespace Deltin.Deltinteger.Elements
         {
             OptimizeChildren();
 
-            if (ParameterValues[0] is V_Number)
-                return Math.Abs(((V_Number)ParameterValues[0]).Value);
+            if (ParameterValues[0] is V_Number a)
+                return Math.Abs(a.Value);
             
             return this;
         }
@@ -48,37 +48,11 @@ namespace Deltin.Deltinteger.Elements
     {
         override public Element Optimize()
         {
-            OptimizeChildren();
-
-            Element a = (Element)ParameterValues[0];
-            Element b = (Element)ParameterValues[1];
-
-            if (a is V_Number && b is V_Number)
-                return ((V_Number)a).Value + ((V_Number)b).Value;
-            
-            if (a.ConstantSupported<Vertex>() && b.ConstantSupported<Vertex>())
-            {
-                var aVertex = (Vertex)a.GetConstant();
-                var bVertex = (Vertex)b.GetConstant();
-
-                return new V_Vector(
-                    aVertex.X + bVertex.X,
-                    aVertex.Y + bVertex.Y,
-                    aVertex.Z + bVertex.Z
-                );
-            }
-
-            if (a is V_Number)
-                if (((V_Number)a).Value == 0)
-                    return b;
-            if (b is V_Number)
-                if (((V_Number)b).Value == 0)
-                    return a;
-
-            if (a.EqualTo(b))
-                return a * 2;
-            
-            return this;
+            return OptimizeAddOperation(
+                op       : (a, b) => a + b,
+                areEqual : (a, b) => a * 2,
+                true
+            );
         }
     }
 
@@ -128,12 +102,13 @@ namespace Deltin.Deltinteger.Elements
             if (a is V_True && b is V_True)
                 return true;
 
-            if (a is V_False && b is V_False)
+            if (a is V_False || b is V_False)
                 return false;
 
             if (a.EqualTo(b))
                 return a;
 
+            // todo: check
             if (a is V_Not)
             {
                 if (((Element)a.ParameterValues[0]).EqualTo(b))
@@ -184,18 +159,11 @@ namespace Deltin.Deltinteger.Elements
         {
             OptimizeChildren();
 
-            Element a = (Element)ParameterValues[0];
-            Element b = (Element)ParameterValues[1];
-
-            if (a is V_Number && b is V_Number)
+            if (ParameterValues[0] is V_Number a && ParameterValues[1] is V_Number b)
             {
-                double angA = ((((V_Number)a).Value + 540) % 360) - 180;
-                double angB = ((((V_Number)b).Value + 540) % 360) - 180;
-
-                double result = -(angA - angB);
-                if (result.ToString() == "-0")
-                    result = 0;
-                return result;
+                double diff = Math.Abs(a.Value - b.Value) % 360;
+                if (diff > 180) diff = 360 - diff;
+                return diff;
             }
 
             return this;
@@ -215,10 +183,8 @@ namespace Deltin.Deltinteger.Elements
         {
             OptimizeChildren();
 
-            Element a = (Element)ParameterValues[0];
-
-            if (a is V_Number)
-                return Math.Acos(((V_Number)a).Value) * (180 / Math.PI);
+            if (ParameterValues[0] is V_Number a)
+                return Math.Acos(a.Value) * (180.0 / Math.PI);
 
             return this;
         }
@@ -232,10 +198,8 @@ namespace Deltin.Deltinteger.Elements
         {
             OptimizeChildren();
 
-            Element a = (Element)ParameterValues[0];
-
-            if (a is V_Number)
-                return Math.Acos(((V_Number)a).Value);
+            if (ParameterValues[0] is V_Number a)
+                return Math.Acos(a.Value);
 
             return this;
         }
@@ -249,10 +213,8 @@ namespace Deltin.Deltinteger.Elements
         {
             OptimizeChildren();
 
-            Element a = (Element)ParameterValues[0];
-
-            if (a is V_Number)
-                return Math.Asin(((V_Number)a).Value) * (180 / Math.PI);
+            if (ParameterValues[0] is V_Number a)
+                return Math.Asin(a.Value) * (180 / Math.PI);
 
             return this;
         }
@@ -266,10 +228,8 @@ namespace Deltin.Deltinteger.Elements
         {
             OptimizeChildren();
 
-            Element a = (Element)ParameterValues[0];
-
-            if (a is V_Number)
-                return Math.Asin(((V_Number)a).Value);
+            if (ParameterValues[0] is V_Number a)
+                return Math.Asin(a.Value);
 
             return this;
         }
@@ -284,11 +244,8 @@ namespace Deltin.Deltinteger.Elements
         {
             OptimizeChildren();
 
-            Element a = (Element)ParameterValues[0];
-            Element b = (Element)ParameterValues[1];
-
-            if (a is V_Number && b is V_Number)
-                return Math.Atan2(((V_Number)a).Value, ((V_Number)b).Value) * (180 / Math.PI);
+            if (ParameterValues[0] is V_Number a && ParameterValues[1] is V_Number b)
+                return Math.Atan2(a.Value, b.Value) * (180 / Math.PI);
 
             return this;
         }
@@ -303,11 +260,8 @@ namespace Deltin.Deltinteger.Elements
         {
             OptimizeChildren();
 
-            Element a = (Element)ParameterValues[0];
-            Element b = (Element)ParameterValues[1];
-
-            if (a is V_Number && b is V_Number)
-                return Math.Atan2(((V_Number)a).Value, ((V_Number)b).Value);
+            if (ParameterValues[0] is V_Number a && ParameterValues[1] is V_Number b)
+                return Math.Atan2(a.Value, b.Value);
 
             return this;
         }
@@ -332,8 +286,7 @@ namespace Deltin.Deltinteger.Elements
     {
         public override bool ConstantSupported<T>()
         {
-            if (typeof(T) != typeof(Vertex)) return false;
-            return true;
+            return typeof(T) == typeof(Vertex);
         }
 
 
@@ -369,43 +322,43 @@ namespace Deltin.Deltinteger.Elements
 
             if (op == Operators.Equal)
             {
-                if (left is V_Number && right is V_Number)
-                    return ((V_Number)left).Value == ((V_Number)right).Value;
                 if (left.EqualTo(right))
                     return true;
+                if (left is V_Number a && right is V_Number b)
+                    return a.Value == b.Value;
             }
             else if (op == Operators.GreaterThan)
             {
                 if (left.EqualTo(right))
                     return false;
-                if (left is V_Number && right is V_Number)
-                    return ((V_Number)left).Value > ((V_Number)right).Value;
+                if (left is V_Number a && right is V_Number b)
+                    return a.Value > b.Value;
             }
             else if (op == Operators.GreaterThanOrEqual)
             {
                 if (left.EqualTo(right))
                     return true;
-                if (left is V_Number && right is V_Number)
-                    return ((V_Number)left).Value >= ((V_Number)right).Value;
+                if (left is V_Number a && right is V_Number b)
+                    return a.Value >= b.Value;
             }
             else if (op == Operators.LessThan)
             {
                 if (left.EqualTo(right))
                     return false;
-                if (left is V_Number && right is V_Number)
-                    return ((V_Number)left).Value < ((V_Number)right).Value;
+                if (left is V_Number a && right is V_Number b)
+                    return a.Value < b.Value;
             }
             else if (op == Operators.LessThanOrEqual)
             {
                 if (left.EqualTo(right))
                     return true;
-                if (left is V_Number && right is V_Number)
-                    return ((V_Number)left).Value <= ((V_Number)right).Value;
+                if (left is V_Number a && right is V_Number b)
+                    return a.Value <= b.Value;
             }
             else if (op == Operators.NotEqual)
             {
-                if (left is V_Number && right is V_Number)
-                    return ((V_Number)left).Value != ((V_Number)right).Value;
+                if (left is V_Number a && right is V_Number b)
+                    return a.Value != b.Value;
                 if (left.EqualTo(right))
                     return false;
             }
@@ -433,10 +386,8 @@ namespace Deltin.Deltinteger.Elements
         {
             OptimizeChildren();
 
-            Element a = (Element)ParameterValues[0];
-
-            if (a is V_Number)
-                return Math.Cos(((V_Number)a).Value * (Math.PI / 180));
+            if (ParameterValues[0] is V_Number a)
+                return Math.Cos(a.Value * (Math.PI / 180));
 
             return this;
         }
@@ -450,9 +401,7 @@ namespace Deltin.Deltinteger.Elements
         {
             OptimizeChildren();
 
-            Element a = (Element)ParameterValues[0];
-
-            if (a is V_Number)
+            if (ParameterValues[0] is V_Number a)
                 return Math.Cos(((V_Number)a).Value);
 
             return this;
@@ -498,13 +447,10 @@ namespace Deltin.Deltinteger.Elements
         {
             OptimizeChildren();
 
-            Element a = (Element)ParameterValues[0];
-            Element b = (Element)ParameterValues[1];
-
-            if (a is V_Number && b is V_Number)
+            if (ParameterValues[0] is V_Number a && ParameterValues[1] is V_Number b)
             {
-                double h = ((V_Number)a).Value;
-                double v = ((V_Number)b).Value;
+                double h = a.Value;
+                double v = b.Value;
 
                 double x = Math.Sin(h * (Math.PI / 180));
                 double y = -Math.Sin(v * (Math.PI / 180));
@@ -575,52 +521,11 @@ namespace Deltin.Deltinteger.Elements
     {
         override public Element Optimize()
         {
-            OptimizeChildren();
-
-            Element a = (Element)ParameterValues[0];
-            Element b = (Element)ParameterValues[1];
-
-            // Divide number and number
-            if (a is V_Number && b is V_Number)
-                return ((V_Number)ParameterValues[0]).Value / ((V_Number)ParameterValues[1]).Value;
-
-            // Divide vector and a vector
-            if (a.ConstantSupported<Vertex>() && b.ConstantSupported<Vertex>())
-            {
-                Vertex vertA = (Vertex)a.GetConstant();
-                Vertex vertB = (Vertex)b.GetConstant();
-                return new V_Vector(
-                    vertA.X / vertB.X,
-                    vertA.Y / vertB.Y,
-                    vertA.Z / vertB.Z
-                );
-            }
-            
-            // Divide vector and number
-            if ((a.ConstantSupported<Vertex>() && b is V_Number) || (a is V_Number && b.ConstantSupported<Vertex>()))
-            {
-                Vertex vector = a.ConstantSupported<Vertex>() ? (Vertex)a.GetConstant() : (Vertex)b.GetConstant();
-                V_Number number = a is V_Number ? (V_Number)a : (V_Number)b;
-                return new V_Vector(
-                    vector.X / number.Value,
-                    vector.Y / number.Value,
-                    vector.Z / number.Value
-                );
-            }
-
-            if (b is V_Number)
-            {
-                if (((V_Number)b).Value == 1)
-                    return a;
-                if (((V_Number)b).Value == 0)
-                    return 0;
-            }
-
-            if (a is V_Number)
-                if (((V_Number)a).Value == 0)
-                    return 0;
-
-            return this;
+            return OptimizeMultiplyOperation(
+                op      : (a, b) => a / b,
+                areEqual: (a, b) => 1,
+                false
+            );
         }
     }
 
@@ -653,8 +558,7 @@ namespace Deltin.Deltinteger.Elements
     {
         public override bool ConstantSupported<T>()
         {
-            if (typeof(T) != typeof(Vertex)) return false;
-            return true;
+            return typeof(T) == typeof(Vertex);
         }
 
         public override object GetConstant() =>
@@ -714,8 +618,7 @@ namespace Deltin.Deltinteger.Elements
     {
         public override bool ConstantSupported<T>()
         {
-            if (typeof(T) != typeof(Vertex)) return false;
-            return true;
+            return typeof(T) == typeof(Vertex);
         }
 
         public override object GetConstant() =>
@@ -992,8 +895,7 @@ namespace Deltin.Deltinteger.Elements
     {
         public override bool ConstantSupported<T>()
         {
-            if (typeof(T) != typeof(Vertex)) return false;
-            return true;
+            return typeof(T) == typeof(Vertex);
         }
 
         public override object GetConstant() =>
@@ -1039,30 +941,21 @@ namespace Deltin.Deltinteger.Elements
         {
             OptimizeChildren();
 
-            Element a = (Element)ParameterValues[0];
-            Element b = (Element)ParameterValues[1];
+            V_Number a = ParameterValues[0] as V_Number;
+            V_Number b = ParameterValues[1] as V_Number;
 
-            if (a is V_Number && b is V_Number)
-                return ((V_Number)a).Value % ((V_Number)b).Value;
+            if (a != null && b != null)
+                return a.Value % b.Value;
 
-            if (a is V_Number)
+            if (a != null)
             {
-                if (((V_Number)a).Value == 0)
-                    return 0;
-                if (((V_Number)a).Value == 1)
-                    return 1;
+                if (a.Value == 0) return 0;
+                if (a.Value == 1) return 1;
             }
 
-            if (b is V_Number)
-            {
-                if (((V_Number)b).Value == 0)
-                    return 0;
-                if (((V_Number)b).Value == 1)
-                    return 0;
-            }
+            if (b != null && (b.Value == 0 || b.Value == 1)) return 0;
 
-            if (a.EqualTo(b))
-                return 0;
+            if (((Element)ParameterValues[0]).EqualTo(ParameterValues[1])) return 0;
             
             return this;
         }
@@ -1075,59 +968,11 @@ namespace Deltin.Deltinteger.Elements
     {
         override public Element Optimize()
         {
-            OptimizeChildren();
-
-            Element a = (Element)ParameterValues[0];
-            Element b = (Element)ParameterValues[1];
-
-            // Multiply number and number
-            if (a is V_Number && b is V_Number)
-                return ((V_Number)ParameterValues[0]).Value * ((V_Number)ParameterValues[1]).Value;
-
-            // Multiply vector and a vector
-            if (a.ConstantSupported<Vertex>() && b.ConstantSupported<Vertex>())
-            {
-                Vertex vertA = (Vertex)a.GetConstant();
-                Vertex vertB = (Vertex)b.GetConstant();
-                return new V_Vector(
-                    vertA.X * vertB.X,
-                    vertA.Y * vertB.Y,
-                    vertA.Z * vertB.Z
-                );
-            }
-
-            // Multiply vector and number
-            if ((a.ConstantSupported<Vertex>() && b is V_Number) || (a is V_Number && b.ConstantSupported<Vertex>()))
-            {
-                Vertex vector = a.ConstantSupported<Vertex>() ? (Vertex)a.GetConstant() : (Vertex)b.GetConstant();
-                V_Number number = a is V_Number ? (V_Number)a : (V_Number)b;
-                return new V_Vector(
-                    vector.X * number.Value,
-                    vector.Y * number.Value,
-                    vector.Z * number.Value
-                );
-            }
-
-            if (a is V_Number)
-            {
-                if (((V_Number)a).Value == 1)
-                    return b;
-                if (((V_Number)a).Value == 0)
-                    return 0;
-            }
-
-            if (b is V_Number)
-            {
-                if (((V_Number)b).Value == 1)
-                    return a;
-                if (((V_Number)b).Value == 0)
-                    return 0;
-            }
-
-            if (a.EqualTo(b))
-                return Element.Part<V_RaiseToPower>(a, new V_Number(2));
-            
-            return this;
+            return OptimizeMultiplyOperation(
+                op      : (a, b) => a * b,
+                areEqual: (a, b) => Element.Part<V_RaiseToPower>(a, new V_Number(2)),
+                true
+            );
         }
     }
 
@@ -1275,16 +1120,10 @@ namespace Deltin.Deltinteger.Elements
             Element a = (Element)ParameterValues[0];
             Element b = (Element)ParameterValues[1];
 
-            if (a is V_True)
-                if (b is V_True || b is V_False)
-                    return true;
-
-            if (b is V_True)
-                if (a is V_True || a is V_False)
-                    return true;
-
-            if (a.EqualTo(b))
-                return a;
+            // If either condition is already true, return true.
+            if (a is V_True || b is V_True) return true;
+            
+            if (a.EqualTo(b)) return a;
 
             if (a is V_Not)
                 if (b.EqualTo((Element)a.ParameterValues[0]))
@@ -1357,30 +1196,28 @@ namespace Deltin.Deltinteger.Elements
         {
             OptimizeChildren();
 
-            Element a = (Element)ParameterValues[0];
-            Element b = (Element)ParameterValues[1];
+            V_Number a = ParameterValues[0] as V_Number;
+            V_Number b = ParameterValues[1] as V_Number;
 
-            if (a is V_Number && b is V_Number)
+            if (a != null && b != null)
                 return Math.Pow(
-                    ((V_Number)a).Value,
-                    ((V_Number)b).Value);
+                    a.Value,
+                    b.Value
+                );
 
-            if (a is V_Number)
+            if (a != null)
             {
-                if (((V_Number)a).Value == 0)
-                    return 0;
-                if (((V_Number)a).Value == 1)
-                    return 1;
-                if (((V_Number)a).Value < 0) //this has to exist because workshop
-                    return 0;
+                if (a.Value == 0) return 0;
+                if (a.Value == 1) return 1;
+                
+                // ! Workshop Bug: Pow on values less than 0 always equals 0.
+                if (a.Value < 0) return 0;
             }
 
-            if (b is V_Number)
+            if (b != null)
             {
-                if (((V_Number)b).Value == 0)
-                    return 1;
-                if (((V_Number)b).Value == 1)
-                    return a;
+                if (b.Value == 0) return 1;
+                if (b.Value == 1) return a;
             }
             
             return this;
@@ -1439,8 +1276,7 @@ namespace Deltin.Deltinteger.Elements
     {
         public override bool ConstantSupported<T>()
         {
-            if (typeof(T) != typeof(Vertex)) return false;
-            return true;
+            return typeof(T) == typeof(Vertex);
         }
 
         public override object GetConstant() =>
@@ -1456,18 +1292,14 @@ namespace Deltin.Deltinteger.Elements
         {
             OptimizeChildren();
 
-            Element a = (Element)ParameterValues[0];
             Rounding type = (Rounding)((EnumMember)ParameterValues[1]).Value;
 
-            if (a is V_Number)
+            if (ParameterValues[0] is V_Number a)
             {
-                double num = ((V_Number)a).Value;
-                if (type == Rounding.Down)
-                    return Math.Floor(num);
-                if (type == Rounding.Nearest)
-                    return Math.Round(num);
-                if (type == Rounding.Up)
-                    return Math.Ceiling(num);
+                double num = a.Value;
+                if (type == Rounding.Down) return Math.Floor(num);
+                if (type == Rounding.Nearest) return Math.Round(num);
+                if (type == Rounding.Up) return Math.Ceiling(num);
             }
 
             return this;
@@ -1495,10 +1327,8 @@ namespace Deltin.Deltinteger.Elements
         {
             OptimizeChildren();
 
-            Element a = (Element)ParameterValues[0];
-
-            if (a is V_Number)
-                return Math.Sin(((V_Number)a).Value * (Math.PI / 180));
+            if (ParameterValues[0] is V_Number a)
+                return Math.Sin(a.Value * (Math.PI / 180));
 
             return this;
         }
@@ -1512,10 +1342,8 @@ namespace Deltin.Deltinteger.Elements
         {
             OptimizeChildren();
 
-            Element a = (Element)ParameterValues[0];
-
-            if (a is V_Number)
-                return Math.Sin(((V_Number)a).Value);
+            if (ParameterValues[0] is V_Number a)
+                return Math.Sin(a.Value);
 
             return this;
         }
@@ -1547,10 +1375,8 @@ namespace Deltin.Deltinteger.Elements
         {
             OptimizeChildren();
 
-            Element a = (Element)ParameterValues[0];
-
-            if (a is V_Number)
-                return Math.Sqrt(((V_Number)a).Value);
+            if (ParameterValues[0] is V_Number a)
+                return Math.Sqrt(a.Value);
 
             return this;
         }
@@ -1644,34 +1470,11 @@ namespace Deltin.Deltinteger.Elements
     {
         override public Element Optimize()
         {
-            OptimizeChildren();
-
-            Element a = (Element)ParameterValues[0];
-            Element b = (Element)ParameterValues[1];
-
-            if (a is V_Number && b is V_Number)
-                return ((V_Number)a).Value - ((V_Number)b).Value;
-            
-            if (a.ConstantSupported<Vertex>() && b.ConstantSupported<Vertex>())
-            {
-                var aVertex = (Vertex)a.GetConstant();
-                var bVertex = (Vertex)b.GetConstant();
-
-                return new V_Vector(
-                    aVertex.X - bVertex.X,
-                    aVertex.Y - bVertex.Y,
-                    aVertex.Z - bVertex.Z
-                );
-            }
-
-            if (b is V_Number)
-                if (((V_Number)b).Value == 0)
-                    return a;
-
-            if (a.EqualTo(b))
-                return 0;
-            
-            return this;
+            return OptimizeAddOperation(
+                op       : (a, b) => a - b,
+                areEqual : (a, b) => 0,
+                false
+            );
         }
     }
 
@@ -1740,8 +1543,7 @@ namespace Deltin.Deltinteger.Elements
     {
         public override bool ConstantSupported<T>()
         {
-            if (typeof(T) != typeof(Vertex)) return false;
-            return true;
+            return typeof(T) == typeof(Vertex);
         }
 
         public override object GetConstant() =>
@@ -1770,7 +1572,7 @@ namespace Deltin.Deltinteger.Elements
         {
         }
 
-        override public bool ConstantSupported<T>()
+        public override bool ConstantSupported<T>()
         {
             if (typeof(T) != typeof(Vertex)) return false;
 
@@ -1786,7 +1588,7 @@ namespace Deltin.Deltinteger.Elements
             return true;
         }
 
-        override public object GetConstant()
+        public override object GetConstant()
         {
             double x = 0;
             if (ParameterValues.Length > 0)
@@ -1801,6 +1603,25 @@ namespace Deltin.Deltinteger.Elements
                 z = (double)((Element)ParameterValues[2]).GetConstant();
             
             return new Vertex(x, y, z);
+        }
+
+        public override Element Optimize()
+        {
+            OptimizeChildren();
+
+            if (X is V_Number xNum && Y is V_Number yNum && Z is V_Number zNum)
+            {
+                double x = xNum.Value, y = yNum.Value, z = zNum.Value;
+
+                if (x == 0  && y == 0  && z == 1 ) return new V_Up();
+                if (x == 0  && y == 0  && z == -1) return new V_Down();
+                if (x == -1 && y == 0  && z == 0 ) return new V_Right();
+                if (x == 1  && y == 0  && z == 0 ) return new V_Left();
+                if (x == 0  && y == 1  && z == 0 ) return new V_Forward();
+                if (x == 0  && y == -1 && z == 0 ) return new V_Backward();
+            }
+
+            return this;
         }
 
         public Element X => (Element)ParameterValues[0];
