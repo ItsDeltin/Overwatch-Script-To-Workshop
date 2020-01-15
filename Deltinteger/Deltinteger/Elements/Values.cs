@@ -111,12 +111,12 @@ namespace Deltin.Deltinteger.Elements
             // todo: check
             if (a is V_Not)
             {
-                if (((Element)a.ParameterValues[0]).EqualTo(b))
+                if (b.EqualTo(a.ParameterValues[0]))
                     return false;
             }
             else if (b is V_Not)
             {
-                if (((Element)b.ParameterValues[0]).EqualTo(a))
+                if (a.EqualTo(b.ParameterValues[0]))
                     return false;
             }
 
@@ -140,8 +140,6 @@ namespace Deltin.Deltinteger.Elements
             {
                 Vertex vertexA = (Vertex)a.GetConstant();
                 Vertex vertexB = (Vertex)b.GetConstant();
-
-                double dot = vertexA.DotProduct(vertexB);
 
                 return Math.Acos(vertexA.DotProduct(vertexB) / (vertexA.Length * vertexB.Length)) * (180 / Math.PI);
             }
@@ -284,11 +282,8 @@ namespace Deltin.Deltinteger.Elements
     [ElementData("Backward", ValueType.Vector)]
     public class V_Backward : Element
     {
-        public override bool ConstantSupported<T>()
-        {
-            return typeof(T) == typeof(Vertex);
-        }
-
+        public override bool ConstantSupported<T>() =>
+            typeof(T) == typeof(Vertex);
 
         public override object GetConstant() =>
             new Vertex(0, 0, -1);
@@ -556,10 +551,8 @@ namespace Deltin.Deltinteger.Elements
     [ElementData("Down", ValueType.Vector)]
     public class V_Down : Element
     {
-        public override bool ConstantSupported<T>()
-        {
-            return typeof(T) == typeof(Vertex);
-        }
+        public override bool ConstantSupported<T>() =>
+            typeof(T) == typeof(Vertex);
 
         public override object GetConstant() =>
             new Vertex(0, -1, 0);
@@ -616,10 +609,8 @@ namespace Deltin.Deltinteger.Elements
     [ElementData("Forward", ValueType.Vector)]
     public class V_Forward : Element
     {
-        public override bool ConstantSupported<T>()
-        {
-            return typeof(T) == typeof(Vertex);
-        }
+        public override bool ConstantSupported<T>() =>
+            typeof(T) == typeof(Vertex);
 
         public override object GetConstant() =>
             new Vertex(0, 0, 1);
@@ -684,7 +675,7 @@ namespace Deltin.Deltinteger.Elements
                 if (double.IsNaN(gradient))
                     gradient = 0;
                 double result = Math.Atan(gradient) * (180 / Math.PI);
-                if (result.ToString() == "-0") //no idea why this has to exist
+                if (result.ToString() == "-0") //thank you c# for -0 being a thing
                     result = 180;
                 return result;
             }
@@ -893,10 +884,8 @@ namespace Deltin.Deltinteger.Elements
     [ElementData("Left", ValueType.Vector)]
     public class V_Left : Element
     {
-        public override bool ConstantSupported<T>()
-        {
-            return typeof(T) == typeof(Vertex);
-        }
+        public override bool ConstantSupported<T>() =>
+            typeof(T) == typeof(Vertex);
 
         public override object GetConstant() =>
             new Vertex(1, 0, 0);
@@ -921,7 +910,21 @@ namespace Deltin.Deltinteger.Elements
     [ElementData("Max", ValueType.Number)]
     [Parameter("Value", ValueType.Number, typeof(V_Number))]
     [Parameter("Value", ValueType.Number, typeof(V_Number))]
-    public class V_Max : Element {}
+    public class V_Max : Element
+    {
+        public override Element Optimize()
+        {
+            OptimizeChildren();
+
+            Element a = (Element)ParameterValues[0];
+            Element b = (Element)ParameterValues[1];
+
+            if (a is V_Number aNum && b is V_Number bNum)
+                return Math.Max(aNum.Value, bNum.Value);
+
+            return this;
+        }
+    }
 
     [ElementData("Max Health", ValueType.Number)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
@@ -930,7 +933,21 @@ namespace Deltin.Deltinteger.Elements
     [ElementData("Min", ValueType.Number)]
     [Parameter("Value", ValueType.Number, typeof(V_Number))]
     [Parameter("Value", ValueType.Number, typeof(V_Number))]
-    public class V_Min : Element {}
+    public class V_Min : Element
+    {
+        public override Element Optimize()
+        {
+            OptimizeChildren();
+
+            Element a = (Element)ParameterValues[0];
+            Element b = (Element)ParameterValues[1];
+
+            if (a is V_Number aNum && b is V_Number bNum)
+                return Math.Min(aNum.Value, bNum.Value);
+
+            return this;
+        }
+    }
 
     [ElementData("Modulo", ValueType.Number)]
     [Parameter("Value", ValueType.Number, typeof(V_Number))]
@@ -1024,6 +1041,25 @@ namespace Deltin.Deltinteger.Elements
             if (a is V_Not)
                 return (Element)a.ParameterValues[0];
 
+            if (a is V_Compare)
+            {
+                Operators op = (Operators)((EnumMember)a.ParameterValues[1]).Value;
+                IWorkshopTree left = a.ParameterValues[0];
+                IWorkshopTree right = a.ParameterValues[2];
+                if (op == Operators.Equal)
+                    return new V_Compare(left, Operators.NotEqual, right);
+                else if (op == Operators.GreaterThan)
+                    return new V_Compare(left, Operators.LessThanOrEqual, right);
+                else if (op == Operators.GreaterThanOrEqual)
+                    return new V_Compare(left, Operators.LessThan, right);
+                else if (op == Operators.LessThan)
+                    return new V_Compare(left, Operators.GreaterThanOrEqual, right);
+                else if (op == Operators.LessThanOrEqual)
+                    return new V_Compare(left, Operators.GreaterThan, right);
+                else if (op == Operators.NotEqual)
+                    return new V_Compare(left, Operators.Equal, right);
+            }
+
             return this;
         }
     }
@@ -1053,15 +1089,10 @@ namespace Deltin.Deltinteger.Elements
             return Math.Round(Value, MAX_LENGTH).ToString();
         }
 
-        override public bool ConstantSupported<T>()
-        {
-            return typeof(T) == typeof(double);
-        }
+        override public bool ConstantSupported<T>() =>
+            typeof(T) == typeof(double);
 
-        override public object GetConstant()
-        {
-            return Value;
-        }
+        override public object GetConstant() => Value;
     }
 
     [ElementData("Number Of Dead Players", ValueType.Number)]
@@ -1120,17 +1151,17 @@ namespace Deltin.Deltinteger.Elements
             Element a = (Element)ParameterValues[0];
             Element b = (Element)ParameterValues[1];
 
-            // If either condition is already true, return true.
+            // If either condition is already true, return true. This may or may not work due to short-circuiting.
             if (a is V_True || b is V_True) return true;
             
             if (a.EqualTo(b)) return a;
 
             if (a is V_Not)
-                if (b.EqualTo((Element)a.ParameterValues[0]))
+                if (b.EqualTo(a.ParameterValues[0]))
                     return true;
 
             if (b is V_Not)
-                if (a.EqualTo((Element)b.ParameterValues[0]))
+                if (a.EqualTo(b.ParameterValues[0]))
                     return true;
 
             return this;
@@ -1274,10 +1305,8 @@ namespace Deltin.Deltinteger.Elements
     [ElementData("Right", ValueType.Vector)]
     public class V_Right : Element
     {
-        public override bool ConstantSupported<T>()
-        {
-            return typeof(T) == typeof(Vertex);
-        }
+        public override bool ConstantSupported<T>() =>
+            typeof(T) == typeof(Vertex);
 
         public override object GetConstant() =>
             new Vertex(-1, 0, 0);
@@ -1486,10 +1515,8 @@ namespace Deltin.Deltinteger.Elements
         {
             OptimizeChildren();
 
-            Element a = (Element)ParameterValues[0];
-
-            if (a is V_Number)
-                return Math.Tan(((V_Number)a).Value * (Math.PI / 180));
+            if (ParameterValues[0] is V_Number a)
+                return Math.Tan(a.Value * (Math.PI / 180));
 
             return this;
         }
@@ -1503,10 +1530,8 @@ namespace Deltin.Deltinteger.Elements
         {
             OptimizeChildren();
 
-            Element a = (Element)ParameterValues[0];
-
-            if (a is V_Number)
-                return Math.Tan(((V_Number)a).Value);
+            if (ParameterValues[0] is V_Number a)
+                return Math.Tan(a.Value);
 
             return this;
         }
@@ -1541,10 +1566,8 @@ namespace Deltin.Deltinteger.Elements
     [ElementData("Up", ValueType.Vector)]
     public class V_Up : Element
     {
-        public override bool ConstantSupported<T>()
-        {
-            return typeof(T) == typeof(Vertex);
-        }
+        public override bool ConstantSupported<T>() =>
+            typeof(T) == typeof(Vertex);
 
         public override object GetConstant() =>
             new Vertex(0, 1, 0);
@@ -1716,8 +1739,8 @@ namespace Deltin.Deltinteger.Elements
             if (a.ConstantSupported<Vertex>())
                 return ((Vertex)a.GetConstant()).X;
 
-            if (a is V_Vector)
-                return (Element)a.ParameterValues[0];
+            if (a is V_Vector aVect)
+                return aVect.X;
 
             return this;
         }
@@ -1736,8 +1759,8 @@ namespace Deltin.Deltinteger.Elements
             if (a.ConstantSupported<Vertex>())
                 return ((Vertex)a.GetConstant()).Y;
 
-            if (a is V_Vector)
-                return (Element)a.ParameterValues[1];
+            if (a is V_Vector aVect)
+                return aVect.Y;
 
             return this;
         }
@@ -1756,8 +1779,8 @@ namespace Deltin.Deltinteger.Elements
             if (a.ConstantSupported<Vertex>())
                 return ((Vertex)a.GetConstant()).Z;
 
-            if (a is V_Vector)
-                return (Element)a.ParameterValues[2];
+            if (a is V_Vector aVect)
+                return aVect.Z;
 
             return this;
         }
