@@ -99,11 +99,8 @@ namespace Deltin.Deltinteger.Elements
             Element a = (Element)ParameterValues[0];
             Element b = (Element)ParameterValues[1];
 
-            if (a is V_True && b is V_True)
-                return true;
-
-            if (a is V_False || b is V_False)
-                return false;
+            if (a.ConstantSupported<bool>() && b.ConstantSupported<bool>())
+                return (bool)a.GetConstant() && (bool)b.GetConstant();
 
             if (a.EqualTo(b))
                 return a;
@@ -586,7 +583,13 @@ namespace Deltin.Deltinteger.Elements
     public class V_FacingDirectionOf : Element {}
 
     [ElementData("False", ValueType.Boolean)]
-    public class V_False : Element {}
+    public class V_False : Element
+    {
+        public override bool ConstantSupported<T>() =>
+            typeof(T) == typeof(bool);
+
+        public override object GetConstant() => false;
+    }
 
     [ElementData("Farthest Player From", ValueType.Player)]
     [Parameter("Center", ValueType.Vector, typeof(V_Vector))]
@@ -1151,6 +1154,9 @@ namespace Deltin.Deltinteger.Elements
             Element a = (Element)ParameterValues[0];
             Element b = (Element)ParameterValues[1];
 
+            if (a.ConstantSupported<bool>() && b.ConstantSupported<bool>())
+                return (bool)a.GetConstant() || (bool)b.GetConstant();
+
             // If either condition is already true, return true. This may or may not work due to short-circuiting.
             if (a is V_True || b is V_True) return true;
             
@@ -1557,7 +1563,13 @@ namespace Deltin.Deltinteger.Elements
     public class V_TotalTimeElapsed : Element {}
 
     [ElementData("True", ValueType.Boolean)]
-    public class V_True : Element {}
+    public class V_True : Element
+    {
+        public override bool ConstantSupported<T>() =>
+            typeof(T) == typeof(bool);
+
+        public override object GetConstant() => true;
+    }
 
     [ElementData("Ultimate Charge Percent", ValueType.Number)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
