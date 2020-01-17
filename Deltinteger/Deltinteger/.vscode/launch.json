@@ -96,6 +96,17 @@
             "internalConsoleOptions": "openOnSessionStart"
         },
         {
+            "name": "Wiki",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/bin/Debug/netcoreapp3.0/Deltinteger.dll",
+            "args":["--wiki"],
+            "console": "externalTerminal",
+            "stopAtEntry": false,
+            "internalConsoleOptions": "openOnSessionStart"
+        },
+        {
             "name": "Debug ANTLR4 grammar",
             "type": "antlr-debug",
             "request": "launch",

@@ -327,7 +327,7 @@ namespace Deltin.Deltinteger.Models
             new CodeParameter("location", "The location to display the text."),
             new CodeParameter("rotation", "The rotation of the text."),
             new CodeParameter("scale", "The scale of the text."),
-            new CodeParameter("reevaluation", "Specifies which of this methods inputs will be continuously reevaluated, the text will keep asking for and using new values from reevaluated inputs."),
+            new CodeParameter("reevaluation", "Specifies which of this methods inputs will be continuously reevaluated, the text will keep asking for and using new values from reevaluated inputs.", WorkshopEnumType.GetEnumType<EffectRev>()),
             new ConstBoolParameter("getEffectIDs", "If true, the method will return the effect IDs used to create the text. Use `DestroyEffectArray()` to destroy the effect. This is a boolean constant.", false)
         };
 
@@ -367,7 +367,7 @@ namespace Deltin.Deltinteger.Models
             new CodeParameter("location", "The location to display the text."),
             new CodeParameter("rotation", "The rotation of the text."),
             new CodeParameter("scale", "The scale of the text."),
-            new CodeParameter("reevaluation", "Specifies which of this methods inputs will be continuously reevaluated, the text will keep asking for and using new values from reevaluated inputs."),
+            new CodeParameter("reevaluation", "Specifies which of this methods inputs will be continuously reevaluated, the text will keep asking for and using new values from reevaluated inputs.", WorkshopEnumType.GetEnumType<EffectRev>()),
             new ConstBoolParameter("getEffectIDs", "If true, the method will return the effect IDs used to create the text. Use `DestroyEffectArray()` to destroy the effect. This is a boolean constant.", false)
         };
 
@@ -394,7 +394,7 @@ namespace Deltin.Deltinteger.Models
             new CodeParameter("location", "The location to display the text."),
             new CodeParameter("rotation", "The rotation of the text."),
             new CodeParameter("scale", "The scale of the text."),
-            new CodeParameter("reevaluation", "Specifies which of this methods inputs will be continuously reevaluated, the text will keep asking for and using new values from reevaluated inputs."),
+            new CodeParameter("reevaluation", "Specifies which of this methods inputs will be continuously reevaluated, the text will keep asking for and using new values from reevaluated inputs.", WorkshopEnumType.GetEnumType<EffectRev>()),
             new ConstBoolParameter("getEffectIDs", "If true, the method will return the effect IDs used to create the text. Use `DestroyEffectArray()` to destroy the effect. This is a boolean constant.", false)
         };
 

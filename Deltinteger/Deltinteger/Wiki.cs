@@ -4,8 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Collections.Generic;
 using System.IO;
+using System.Xml;
+using System.Xml.Serialization;
 using HtmlAgilityPack;
-using Deltin.Deltinteger.LanguageServer;
 
 namespace Deltin.Deltinteger.WorkshopWiki
 {
@@ -57,6 +58,11 @@ namespace Deltin.Deltinteger.WorkshopWiki
                     methods.Add(new WikiMethod(name, description, parameters.ToArray()));
                 }
 
+                string[] keywords = I18n.GenerateI18n.Keywords();
+                for (int i = methods.Count - 1; i >= 0; i--)
+                    if (!keywords.Any(keyword => keyword.ToLower() == methods[i].Name.ToLower()))
+                        methods.RemoveAt(i);
+
                 wiki = new Wiki(methods.ToArray());
                 return wiki;
             }
@@ -67,34 +73,46 @@ namespace Deltin.Deltinteger.WorkshopWiki
             }
         }
 
-        public WikiMethod[] Methods { get; }
+        [XmlElement("method")]
+        public WikiMethod[] Methods { get; set; }
+
         public Wiki(WikiMethod[] methods)
         {
             Methods = methods;
         }
+        public Wiki() {}
 
         public WikiMethod GetMethod(string methodName)
         {
             return Methods.FirstOrDefault(m => m.Name.ToLower() == methodName.ToLower());
         }
 
-        public string ToXML()
+        public void ToXML(string file)
         {
-            return Extras.SerializeToXML<Wiki>(this);
+            XmlSerializer serializer = new XmlSerializer(typeof(Wiki));
+
+            using (var fileStream = File.Create(file))
+                using (StreamWriter writer = new StreamWriter(fileStream))
+                    serializer.Serialize(writer, this);
         }
     }
 
     public class WikiMethod
     {
-        public string Name { get; }
-        public string Description { get; }
-        public WikiParameter[] Parameters { get; }
+        [XmlAttribute("name")]
+        public string Name { get; set; }
+        [XmlAttribute("description")]
+        public string Description { get; set; }
+        [XmlElement("parameter")]
+        public WikiParameter[] Parameters { get; set; }
+
         public WikiMethod(string name, string description, WikiParameter[] parameters)
         {
             Name = name;
             Description = description;
             Parameters = parameters;
         }
+        public WikiMethod() {}
 
         public override string ToString()
         {
@@ -109,13 +127,17 @@ namespace Deltin.Deltinteger.WorkshopWiki
 
     public class WikiParameter
     {
-        public string Name { get; }
-        public string Description { get; }
+        [XmlAttribute("name")]
+        public string Name { get; set; }
+        [XmlAttribute("description")]
+        public string Description { get; set; }
+
         public WikiParameter(string name, string description)
         {
             Name = name;
             Description = description;
         }
+        public WikiParameter() {}
 
         public override string ToString()
         {
