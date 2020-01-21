@@ -55,7 +55,7 @@ namespace Deltin.Deltinteger.Parse
             // Todo: Static methods/macros.
             foreach (var definedMethod in typeContext.define_method())
             {
-                var newMethod = new DefinedMethod(parseInfo, UseScope(false), definedMethod);
+                var newMethod = new DefinedMethod(parseInfo, UseScope(false), definedMethod, this);
                 applyMethods.Add(newMethod);
             }
 

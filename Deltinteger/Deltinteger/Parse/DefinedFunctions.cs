@@ -70,9 +70,13 @@ namespace Deltin.Deltinteger.Parse
     public class DefinedMethod : DefinedFunction
     {
         private DeltinScriptParser.Define_methodContext context;
+
+        public CodeType ContainingType { get; }
+
         // Attributes
         public bool RuleContained { get; private set; }
         public bool IsRecursive { get; private set; }
+
         // Block data
         private BlockAction block;
         private bool doesReturnValue;
@@ -83,10 +87,11 @@ namespace Deltin.Deltinteger.Parse
         private bool multiplePaths;
         private SingleInstanceInfo singleInstanceInfo;
 
-        public DefinedMethod(ParseInfo parseInfo, Scope scope, DeltinScriptParser.Define_methodContext context)
+        public DefinedMethod(ParseInfo parseInfo, Scope scope, DeltinScriptParser.Define_methodContext context, CodeType containingType)
             : base(parseInfo, scope, context.name.Text, new Location(parseInfo.Script.Uri, DocRange.GetRange(context.name)))
         {
             this.context = context;
+            ContainingType = containingType;
 
             // Get the attributes.
             GetAttributes(context.method_attribute());
@@ -372,20 +377,34 @@ namespace Deltin.Deltinteger.Parse
         {
             if (!RuleContained) throw new Exception(Name + " does not have the rule attribute.");
 
+            // Single instance methods are contained in their own rule.
+            // Unlike normal methods, the block is only translated once making it effective for big, complicated methods.
+            // There is a 0.016 second delay when calling single instance methods.
+            // Callers of the method store the data of their call into arrays.
+
+            VarCollection varCollection = parseInfo.TranslateInfo.VarCollection;
+
+            // Each value in the `parameterStacks` array stores an array containing the parameter values for method callers.
             IndexReference[] parameterStacks = new IndexReference[ParameterVars.Length];
 
-            IndexReference currentCall = parseInfo.TranslateInfo.VarCollection.Assign("_" + Name + "_currentCall", true, true);
+            // `currentCall` is the current call index.
+            IndexReference currentCall = varCollection.Assign("_" + Name + "_currentCall", true, true);
             parseInfo.TranslateInfo.InitialGlobal.ActionSet.AddAction(currentCall.SetVariable(-1));
 
+            // Setup the parameters.
             for (int i = 0; i < ParameterVars.Length; i++)
             {
-                IndexReference variableStack = parseInfo.TranslateInfo.VarCollection.Assign(ParameterVars[i].Name, true, true);
+                IndexReference variableStack = varCollection.Assign(ParameterVars[i].Name, true, true);
                 IndexReference variableReference = variableStack.CreateChild((Element)currentCall.GetVariable());
                 parseInfo.TranslateInfo.DefaultIndexAssigner.Add(ParameterVars[i], variableReference);
                 parameterStacks[i] = variableStack;
             }
 
-            IndexReference callers = parseInfo.TranslateInfo.VarCollection.Assign("_" + Name + "_calls", true, false);
+            // Each caller gets a number.
+            // When a callers' index is true, that means the number is taken.
+            // When it goes from true to false, the rule-method completed the call.
+            IndexReference callers = varCollection.Assign("_" + Name + "_calls", true, false);
+
             // Set the 1000th value as null.
             parseInfo.TranslateInfo.InitialGlobal.ActionSet.AddAction(callers.SetVariable(new V_Null(), null, Constants.MAX_ARRAY_LENGTH));
 
@@ -395,8 +414,22 @@ namespace Deltin.Deltinteger.Parse
                 Element.Part<V_ArrayContains>(callers.GetVariable(), new V_True())
             );
 
+            // Setup the return handler.
             ReturnHandler returnHandler = new ReturnHandler(instanceRule.ActionSet, Name, multiplePaths);
             ActionSet actionSet = instanceRule.ActionSet.New(returnHandler);
+
+            // Stores the current object the method is being called for.
+            IndexReference currentObject = null;
+            if (ContainingType != null)
+            {
+                // If there is a type, assign the current object variable.
+                currentObject = varCollection.Assign("_" + Name + "_currentObject", true, true);
+
+                IndexReference source = ContainingType.GetObjectSource(parseInfo.TranslateInfo, Element.Part<V_ValueInArray>(currentObject.GetVariable(), currentCall.GetVariable()));
+
+                // Add the object variables to the assigner.
+                ContainingType.AddObjectVariablesToAssigner(source, actionSet.IndexAssigner);
+            }
 
             // Get the next caller.
             actionSet.AddAction(currentCall.SetVariable(
@@ -413,7 +446,7 @@ namespace Deltin.Deltinteger.Parse
             actionSet.AddAction(new A_LoopIfConditionIsTrue());
 
             parseInfo.TranslateInfo.WorkshopRules.Add(instanceRule.GetRule());
-            singleInstanceInfo = new SingleInstanceInfo(parameterStacks, callers, returnHandler.GetReturnedValue());
+            singleInstanceInfo = new SingleInstanceInfo(parameterStacks, callers, returnHandler.GetReturnedValue(), currentObject);
         }
 
         private IWorkshopTree ParseSingleInstance(ActionSet actionSet, IWorkshopTree[] parameterValues)
@@ -428,9 +461,17 @@ namespace Deltin.Deltinteger.Parse
             {
                 // Push the parameters to the parameter list.
                 actionSet.AddAction(singleInstanceInfo.ParameterStacks[i].SetVariable(
-                    (Element)parameterValues[i],
-                    null,
-                    (Element)callID.GetVariable()
+                    value: (Element)parameterValues[i],
+                    index: (Element)callID.GetVariable()
+                ));
+            }
+
+            // Set the object to modify.
+            if (ContainingType != null)
+            {
+                actionSet.AddAction(singleInstanceInfo.CurrentObject.SetVariable(
+                    value: (Element)actionSet.CurrentObject.GetVariable(),
+                    index: (Element)callID.GetVariable()
                 ));
             }
 
@@ -516,12 +557,14 @@ namespace Deltin.Deltinteger.Parse
         public IndexReference[] ParameterStacks { get; }
         public IndexReference Callers { get; }
         public IWorkshopTree ReturningValue { get; }
+        public IndexReference CurrentObject { get; }
         
-        public SingleInstanceInfo(IndexReference[] parameterStacks, IndexReference callers, IWorkshopTree returningValue)
+        public SingleInstanceInfo(IndexReference[] parameterStacks, IndexReference callers, IWorkshopTree returningValue, IndexReference currentObject)
         {
             ParameterStacks = parameterStacks;
             Callers = callers;
             ReturningValue = returningValue;
+            CurrentObject = currentObject;
         }
     }
 
