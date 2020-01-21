@@ -22,6 +22,7 @@ namespace Deltin.Deltinteger.Parse
         private Team Team { get; }
         private PlayerSelector Player { get; }
         private bool Disabled { get; }
+        private double Priority { get; }
 
         public TranslateRule(DeltinScript deltinScript, RuleAction ruleAction)
         {
@@ -32,6 +33,7 @@ namespace Deltin.Deltinteger.Parse
             Team = ruleAction.Team;
             Player = ruleAction.Player;
             Disabled = ruleAction.Disabled;
+            Priority = ruleAction.Priority;
             ContinueSkip = new ContinueSkip(this);
 
             ActionSet = new ActionSet(this, null, Actions);
@@ -92,6 +94,7 @@ namespace Deltin.Deltinteger.Parse
             rule.Actions = GetActions();
             rule.Conditions = Conditions.ToArray();
             rule.Disabled = Disabled;
+            rule.Priority = Priority;
             return rule;
         }
 

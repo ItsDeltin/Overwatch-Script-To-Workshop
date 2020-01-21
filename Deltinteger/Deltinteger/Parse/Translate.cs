@@ -242,6 +242,9 @@ namespace Deltin.Deltinteger.Parse
             
             if (addRules != null)
                 WorkshopRules.AddRange(addRules.Invoke(VarCollection).Where(rule => rule != null));
+            
+            // Order the workshop rules by priority.
+            WorkshopRules = WorkshopRules.OrderBy(wr => wr.Priority).ToList();
 
             // Get the final workshop string.
             StringBuilder result = new StringBuilder();

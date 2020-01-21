@@ -20,6 +20,8 @@ namespace Deltin.Deltinteger.Parse
         private bool _setTeam;
         private bool _setPlayer;
 
+        public double Priority;
+
         private DocRange _missingBlockRange;
 
         public RuleAction(ParseInfo parseInfo, Scope scope, DeltinScriptParser.Ow_ruleContext ruleContext)
@@ -30,7 +32,7 @@ namespace Deltin.Deltinteger.Parse
 
             GetRuleSettings(parseInfo, scope, ruleContext);
 
-            // Get the conditions
+            // Get the conditions.
             if (ruleContext.rule_if() == null) Conditions = new RuleIfAction[0];
             else
             {
@@ -42,10 +44,15 @@ namespace Deltin.Deltinteger.Parse
                 }
             }
 
+            // Get the block.
             if (ruleContext.block() != null)
                 Block = new BlockAction(parseInfo, scope, ruleContext.block());
             else
                 parseInfo.Script.Diagnostics.Error("Missing block.", _missingBlockRange);
+            
+            // Get the rule order priority.
+            if (ruleContext.number() != null)
+                Priority = double.Parse(ruleContext.number().GetText());
         }
 
         private void GetRuleSettings(ParseInfo parseInfo, Scope scope, DeltinScriptParser.Ow_ruleContext ruleContext)

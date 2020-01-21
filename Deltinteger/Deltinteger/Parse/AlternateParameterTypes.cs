@@ -5,8 +5,16 @@ using Deltin.Deltinteger.LanguageServer;
 
 namespace Deltin.Deltinteger.Parse
 {
+    /// <summary>
+    /// `WorkshopVariableParameter` takes raw workshop variables as parameters.
+    /// 
+    /// Returns a value with the type `WorkshopVariable` when parsed for a parameter value.
+    /// </summary>
     class WorkshopVariableParameter : CodeParameter
     {
+        /// <summary>
+        /// The expected variable type. Dynamic allows both global and player. `VariableType.ElementReference` cannot be used here.
+        /// </summary>
         public VariableType VariableType { get; }
 
         public WorkshopVariableParameter(string name, string documentation, bool isGlobal) : base(name, documentation)
@@ -27,12 +35,16 @@ namespace Deltin.Deltinteger.Parse
             CallVariableAction call = value as CallVariableAction;
             Var asVar = call?.Calling as Var;
 
+            // Syntax error if `value` is not a var or the variable is not defined on the rule level.
             if (asVar == null || asVar.DefineType != VariableDefineType.RuleLevel)
                 script.Diagnostics.Error("Expected a variable defined on the rule level.", valueRange);
 
+            // Syntax error if the variable type is not equal to the expected type.
+            // Dynamic allows both global and player variables.
             if (call != null && VariableType != VariableType.Dynamic && call.Calling.VariableType != VariableType)
                 script.Diagnostics.Error($"Expected a {(VariableType == VariableType.Global ? "global" : "player")} variable.", valueRange);
             
+            // Syntax error if the variable is indexed like `variable[0]`.
             if (call != null && call.Index.Length > 0)
                 script.Diagnostics.Error("Variable cannot be indexed.", valueRange);
 
@@ -45,6 +57,9 @@ namespace Deltin.Deltinteger.Parse
         }
     }
 
+    /// <summary>
+    /// `VariableParameter` takes indexed variables as parameters.
+    /// </summary>
     class VariableParameter : CodeParameter
     {
         private VariableType VariableType { get; }

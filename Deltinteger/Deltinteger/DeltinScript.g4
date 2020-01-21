@@ -96,7 +96,7 @@ delete  : DELETE LEFT_PAREN expr RIGHT_PAREN                  ;
 rule_if : IF LEFT_PAREN expr? RIGHT_PAREN;
 
 ow_rule : 
-	DISABLED? RULE_WORD ':' STRINGLITERAL
+	DISABLED? RULE_WORD ':' STRINGLITERAL number?
 	expr*
 	rule_if*
 	block?
