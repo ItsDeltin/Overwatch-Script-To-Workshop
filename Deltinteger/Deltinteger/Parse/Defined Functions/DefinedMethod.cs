@@ -3,70 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.LanguageServer;
-using Deltin.Deltinteger.WorkshopWiki;
-using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
-using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItemKind;
-using StringOrMarkupContent = OmniSharp.Extensions.LanguageServer.Protocol.Models.StringOrMarkupContent;
 
 namespace Deltin.Deltinteger.Parse
 {
-    public abstract class DefinedFunction : IMethod, ICallable, IApplyBlock
-    {
-        public string Name { get; }
-        public CodeType ReturnType { get; protected set; }
-        public CodeParameter[] Parameters { get; private set; }
-        public AccessLevel AccessLevel { get; protected set; }
-        public Location DefinedAt { get; }
-        public bool WholeContext { get; } = true;
-        public StringOrMarkupContent Documentation { get; } = null;
-
-        protected ParseInfo parseInfo { get; }
-        protected Scope methodScope { get; }
-        protected Var[] ParameterVars { get; private set; }
-
-        public CallInfo CallInfo { get; }
-
-        public DefinedFunction(ParseInfo parseInfo, Scope scope, string name, Location definedAt)
-        {
-            Name = name;
-            DefinedAt = definedAt;
-            this.parseInfo = parseInfo;
-            methodScope = scope.Child();
-            CallInfo = new CallInfo(this, parseInfo.Script);
-            parseInfo.TranslateInfo.AddSymbolLink(this, definedAt);
-        }
-
-        public abstract void SetupBlock();
-
-        protected void SetupParameters(DeltinScriptParser.SetParametersContext context, VariableDefineType defineType = VariableDefineType.Parameter)
-        {
-            var parameterInfo = CodeParameter.GetParameters(parseInfo, methodScope, context, defineType);
-            Parameters = parameterInfo.Parameters;
-            ParameterVars = parameterInfo.Variables;
-        }
-
-        public void Call(ScriptFile script, DocRange callRange)
-        {
-            script.AddDefinitionLink(callRange, DefinedAt);
-            parseInfo.TranslateInfo.AddSymbolLink(this, new Location(script.Uri, callRange));
-        }
-
-        public virtual bool DoesReturnValue() => true;
-
-        public string GetLabel(bool markdown) => HoverHandler.GetLabel(ReturnType, Name, Parameters, markdown, null);
-
-        public abstract IWorkshopTree Parse(ActionSet actionSet, IWorkshopTree[] parameterValues, object[] additionalParameterData);
-
-        public CompletionItem GetCompletion()
-        {
-            return new CompletionItem()
-            {
-                Label = Name,
-                Kind = CompletionItemKind.Method
-            };
-        }
-    }
-
     public class DefinedMethod : DefinedFunction
     {
         private DeltinScriptParser.Define_methodContext context;
@@ -120,6 +59,7 @@ namespace Deltin.Deltinteger.Parse
             parseInfo.Script.AddHover(DocRange.GetRange(context.name), GetLabel(true));
         }
 
+        // Gets the method attributes ('rule', 'recursive').
         private void GetAttributes(DeltinScriptParser.Method_attributeContext[] attributeContexts)
         {
             if (attributeContexts == null)
@@ -153,6 +93,7 @@ namespace Deltin.Deltinteger.Parse
             }
         }
 
+        // Sets up the method's block.
         public override void SetupBlock()
         {
             if (context.block() != null)
@@ -162,6 +103,7 @@ namespace Deltin.Deltinteger.Parse
             }
         }
 
+        // Makes sure each return statement returns a value if the method returns a value and that each path returns a value.
         private void ValidateReturns(ScriptFile script, DeltinScriptParser.Define_methodContext context)
         {
             ReturnAction[] returns = GetReturns();
@@ -183,17 +125,7 @@ namespace Deltin.Deltinteger.Parse
             }
         }
 
-        private static bool HasReturnStatement(BlockAction block)
-        {
-            foreach (var statement in block.Statements)
-                if (statement is ReturnAction) return true;
-                else if (statement is IBlockContainer)
-                    foreach (var path in ((IBlockContainer)statement).GetPaths())
-                        if (HasReturnStatement(path.Block))
-                            return true;
-            return false;
-        }
-
+        // Gets all return statements in a method.
         private ReturnAction[] GetReturns()
         {
             List<ReturnAction> returns = new List<ReturnAction>();
@@ -202,14 +134,19 @@ namespace Deltin.Deltinteger.Parse
 
             void getReturns(List<ReturnAction> actions, BlockAction block)
             {
+                // Loop through each statement in the block.
                 foreach (var statement in block.Statements)
-                if (statement is ReturnAction) actions.Add((ReturnAction)statement);
-                else if (statement is IBlockContainer)
-                    foreach (var path in ((IBlockContainer)statement).GetPaths())
-                        getReturns(actions, path.Block);
+                    // If the current statement is a return statement, add it to the list.
+                    if (statement is ReturnAction) actions.Add((ReturnAction)statement);
+
+                    // If the current statement contains sub-blocks, get the return statements in those blocks recursively.
+                    else if (statement is IBlockContainer)
+                        foreach (var path in ((IBlockContainer)statement).GetPaths())
+                            getReturns(actions, path.Block);
             }
         }
 
+        // Makes sure each path returns a value.
         private static void CheckPath(ScriptFile script, PathInfo path)
         {
             bool blockReturns = false;
@@ -241,8 +178,10 @@ namespace Deltin.Deltinteger.Parse
             foreach (var path in container.GetPaths()) CheckPath(script, path);
         }
 
+        // Checks if the method returns a value.
         override public bool DoesReturnValue() => doesReturnValue;
 
+        // Parses the method.
         override public IWorkshopTree Parse(ActionSet actionSet, IWorkshopTree[] parameterValues, object[] additionalParameterData)
         {
             actionSet = actionSet
@@ -261,6 +200,7 @@ namespace Deltin.Deltinteger.Parse
             return returnHandler.GetReturnedValue();
         }
 
+        // Parses the method recursively.
         private IWorkshopTree ParseRecursive(ActionSet actionSet, IWorkshopTree[] parameterValues)
         {
             // Check the method stack to see if this method was already called.
@@ -359,20 +299,8 @@ namespace Deltin.Deltinteger.Parse
                 return lastCall.ReturnHandler.GetReturnedValue();
             }
         }
-
-        public static void AssignParameters(ActionSet actionSet, Var[] parameterVars, IWorkshopTree[] parameterValues, bool recursive = false)
-        {
-            for (int i = 0; i < parameterVars.Length; i++)
-            {
-                actionSet.IndexAssigner.Add(actionSet.VarCollection, parameterVars[i], actionSet.IsGlobal, parameterValues?[i], recursive);
-
-                if (actionSet.IndexAssigner[parameterVars[i]] is IndexReference && parameterValues?[i] != null)
-                    actionSet.AddAction(
-                        ((IndexReference)actionSet.IndexAssigner[parameterVars[i]]).SetVariable((Element)parameterValues[i])
-                    );
-            }
-        }
     
+        // Sets up single-instance methods for methods with the 'rule' attribute.
         public void SetupSingleInstance()
         {
             if (!RuleContained) throw new Exception(Name + " does not have the rule attribute.");
@@ -449,8 +377,10 @@ namespace Deltin.Deltinteger.Parse
             singleInstanceInfo = new SingleInstanceInfo(parameterStacks, callers, returnHandler.GetReturnedValue(), currentObject);
         }
 
+        // Calls single-instance methods.
         private IWorkshopTree ParseSingleInstance(ActionSet actionSet, IWorkshopTree[] parameterValues)
         {
+            // `callID` stores the index that this call will store data in.
             IndexReference callID = actionSet.VarCollection.Assign("_" + Name + "_callID", true, true);
             actionSet.AddAction(callID.SetVariable(
                 Element.Part<V_IndexOfArrayValue>(singleInstanceInfo.Callers.GetVariable(), new V_False())
@@ -483,80 +413,39 @@ namespace Deltin.Deltinteger.Parse
 
             return singleInstanceInfo.ReturningValue;
         }
-    }
-
-    public class ReturnHandler
-    {
-        private readonly ActionSet ActionSet;
-        private readonly bool MultiplePaths;
-
-        // If `MultiplePaths` is true, use `ReturnStore`. Else use `ReturningValue`.
-        private readonly IndexReference ReturnStore;
-        private IWorkshopTree ReturningValue;
-
-        private bool ValueWasReturned;
-
-        private readonly List<SkipStartMarker> skips = new List<SkipStartMarker>();
-
-        public ReturnHandler(ActionSet actionSet, string methodName, bool multiplePaths)
+    
+        // Assigns parameters to the index assigner. TODO: Move to OverloadChooser.
+        public static void AssignParameters(ActionSet actionSet, Var[] parameterVars, IWorkshopTree[] parameterValues, bool recursive = false)
         {
-            ActionSet = actionSet;
-            MultiplePaths = multiplePaths;
+            for (int i = 0; i < parameterVars.Length; i++)
+            {
+                actionSet.IndexAssigner.Add(actionSet.VarCollection, parameterVars[i], actionSet.IsGlobal, parameterValues?[i], recursive);
 
-            if (multiplePaths)
-                ReturnStore = actionSet.VarCollection.Assign("_" + methodName + "ReturnValue", actionSet.IsGlobal, true);
-        }
-
-        public void ReturnValue(IWorkshopTree value)
-        {
-            if (!MultiplePaths && ValueWasReturned)
-                throw new Exception("_multiplePaths is set as false and 2 expressions were returned.");
-            ValueWasReturned = true;
-
-            // Multiple return paths.
-            if (MultiplePaths)
-                ActionSet.AddAction(ReturnStore.SetVariable((Element)value));
-            // One return path.
-            else
-                ReturningValue = value;
-        }
-
-        public void Return()
-        {
-            SkipStartMarker returnSkipStart = new SkipStartMarker(ActionSet);
-            ActionSet.AddAction(returnSkipStart);
-
-            // 0 skip workaround.
-            ActionSet.AddAction(new A_Abort() { Disabled = true });
-
-            skips.Add(returnSkipStart);
-        }
-
-        public void ApplyReturnSkips()
-        {
-            if (!MultiplePaths) return;
-
-            SkipEndMarker methodEndMarker = new SkipEndMarker();
-            ActionSet.AddAction(methodEndMarker);
-
-            foreach (var returnSkip in skips)
-                returnSkip.SkipCount = returnSkip.GetSkipCount(methodEndMarker);
-        }
-
-        public IWorkshopTree GetReturnedValue()
-        {
-            if (MultiplePaths)
-                return ReturnStore.GetVariable();
-            else
-                return ReturningValue;
+                if (actionSet.IndexAssigner[parameterVars[i]] is IndexReference && parameterValues?[i] != null)
+                    actionSet.AddAction(
+                        ((IndexReference)actionSet.IndexAssigner[parameterVars[i]]).SetVariable((Element)parameterValues[i])
+                    );
+            }
         }
     }
 
     public class SingleInstanceInfo
     {
+        /// <summary>
+        /// Stores data about each parameter input array.
+        /// </summary>
         public IndexReference[] ParameterStacks { get; }
+        /// <summary>
+        /// A boolean array that indicates which call indexes were taken. 
+        /// </summary>
         public IndexReference Callers { get; }
+        /// <summary>
+        /// A reference to the value that is returned. This may need to be changed to an array for each caller.
+        /// </summary>
         public IWorkshopTree ReturningValue { get; }
+        /// <summary>
+        /// A reference to the current object to run the method for. Should be null for rule-level methods and should not be null for class-level methods.
+        /// </summary>
         public IndexReference CurrentObject { get; }
         
         public SingleInstanceInfo(IndexReference[] parameterStacks, IndexReference callers, IWorkshopTree returningValue, IndexReference currentObject)
@@ -566,141 +455,5 @@ namespace Deltin.Deltinteger.Parse
             ReturningValue = returningValue;
             CurrentObject = currentObject;
         }
-    }
-
-    public class DefinedMacro : DefinedFunction
-    {
-        public IExpression Expression { get; private set; }
-        private DeltinScriptParser.ExprContext ExpressionToParse { get; }
-
-        public DefinedMacro(ParseInfo parseInfo, Scope scope, DeltinScriptParser.Define_macroContext context)
-            : base(parseInfo, scope, context.name.Text, new LanguageServer.Location(parseInfo.Script.Uri, DocRange.GetRange(context.name)))
-        {
-            AccessLevel = context.accessor().GetAccessLevel();
-            SetupParameters(context.setParameters());
-
-            if (context.TERNARY_ELSE() == null)
-            {
-                parseInfo.Script.Diagnostics.Error("Expected :", DocRange.GetRange(context).end.ToRange());
-            }
-            else
-            {
-                ExpressionToParse = context.expr();
-                if (ExpressionToParse == null)
-                    parseInfo.Script.Diagnostics.Error("Expected expression.", DocRange.GetRange(context.TERNARY_ELSE()));
-            }
-
-            parseInfo.Script.AddHover(DocRange.GetRange(context.name), GetLabel(true));
-        }
-
-        override public void SetupBlock()
-        {
-            if (ExpressionToParse == null) return;
-            Expression = DeltinScript.GetExpression(parseInfo.SetCallInfo(CallInfo), methodScope, ExpressionToParse);
-            ReturnType = Expression?.Type();
-        }
-
-        override public IWorkshopTree Parse(ActionSet actionSet, IWorkshopTree[] parameterValues, object[] additionalParameterData)
-        {
-            // Assign the parameters.
-            actionSet = actionSet.New(actionSet.IndexAssigner.CreateContained());
-            for (int i = 0; i < ParameterVars.Length; i++)
-                actionSet.IndexAssigner.Add(ParameterVars[i], parameterValues[i]);
-
-            // Parse the expression.
-            return Expression.Parse(actionSet);
-        }
-    }
-
-    public class MethodStack
-    {
-        public IApplyBlock Function { get; }
-
-        public MethodStack(IApplyBlock function)
-        {
-            Function = function;
-        }
-    }
-
-    public class RecursiveMethodStack : MethodStack
-    {
-        public ReturnHandler ReturnHandler { get; }
-        public IndexReference ContinueSkipArray { get; }
-        public SkipEndMarker MethodStart { get; }
-
-        public RecursiveMethodStack(DefinedMethod method, ReturnHandler returnHandler, IndexReference continueSkipArray, SkipEndMarker methodStart) : base(method)
-        {
-            ReturnHandler = returnHandler;
-            ContinueSkipArray = continueSkipArray;
-            MethodStart = methodStart;
-        }
-    }
-
-    public class MacroVar : IScopeable, IExpression, ICallable, IApplyBlock
-    {
-        public string Name { get; }
-        public AccessLevel AccessLevel { get; }
-        public LanguageServer.Location DefinedAt { get; }
-        public bool WholeContext => true;
-
-        public IExpression Expression { get; private set; }
-        public CodeType ReturnType { get; private set; }
-
-        private DeltinScriptParser.ExprContext ExpressionToParse { get; }
-        private Scope scope { get; }
-        private ParseInfo parseInfo { get; }
-
-        public CallInfo CallInfo { get; }
-
-        public MacroVar(ParseInfo parseInfo, Scope scope, DeltinScriptParser.Define_macroContext macroContext)
-        {
-            Name = macroContext.name.Text;
-            AccessLevel = macroContext.accessor().GetAccessLevel();
-            DefinedAt = new Location(parseInfo.Script.Uri, DocRange.GetRange(macroContext.name));
-            CallInfo = new CallInfo(this, parseInfo.Script);
-
-            if (macroContext.TERNARY_ELSE() == null)
-            {
-                parseInfo.Script.Diagnostics.Error("Expected :", DocRange.GetRange(macroContext).end.ToRange());
-            }
-            else
-            {
-                ExpressionToParse = macroContext.expr();
-                if (ExpressionToParse == null)
-                    parseInfo.Script.Diagnostics.Error("Expected expression.", DocRange.GetRange(macroContext.TERNARY_ELSE()));
-            }
-
-            this.scope = scope;
-            this.parseInfo = parseInfo;
-        }
-
-        public void SetupBlock()
-        {
-            if (ExpressionToParse == null) return;
-            Expression = DeltinScript.GetExpression(parseInfo.SetCallInfo(CallInfo), scope, ExpressionToParse);
-            ReturnType = Expression?.Type();
-        }
-
-        public IWorkshopTree Parse(ActionSet actionSet, bool asElement = true) => Expression.Parse(actionSet);
-
-        public Scope ReturningScope() => ReturnType?.GetObjectScope() ?? parseInfo.TranslateInfo.PlayerVariableScope;
-
-        public CodeType Type() => ReturnType;
-
-        public void Call(ScriptFile script, DocRange callRange)
-        {
-            script.AddDefinitionLink(callRange, DefinedAt);
-            parseInfo.TranslateInfo.AddSymbolLink(this, new Location(script.Uri, callRange));
-        }
-
-        public CompletionItem GetCompletion()
-        {
-            return new CompletionItem() {
-                Label = Name,
-                Kind = CompletionItemKind.Property
-            };
-        }
-
-        public string GetLabel(bool markdown) => Name;
     }
 }
