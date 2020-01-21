@@ -20,6 +20,8 @@ namespace Deltin.Deltinteger.Elements
 
         public bool Disabled { get; set; }
 
+        public double Priority { get; set; }
+
         public Rule(string name, RuleEvent ruleEvent = RuleEvent.OngoingGlobal, Team team = Team.All, PlayerSelector player = PlayerSelector.All) // Creates a rule.
         {
             if (ruleEvent == RuleEvent.OngoingGlobal && (team != Team.All || player != PlayerSelector.All))

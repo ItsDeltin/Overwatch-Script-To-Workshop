@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Deltin.Deltinteger.LanguageServer;
-using Deltin.Deltinteger.Elements;
 using SignatureHelp = OmniSharp.Extensions.LanguageServer.Protocol.Models.SignatureHelp;
 using SignatureInformation = OmniSharp.Extensions.LanguageServer.Protocol.Models.SignatureInformation;
 using ParameterInformation = OmniSharp.Extensions.LanguageServer.Protocol.Models.ParameterInformation;
@@ -14,140 +13,11 @@ using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.C
 
 namespace Deltin.Deltinteger.Parse
 {
-    public class CodeParameter
-    {
-        public string Name { get; }
-        public CodeType Type { get; }
-        public string Documentation { get; }
-        public ExpressionOrWorkshopValue DefaultValue { get; }
-
-        public CodeParameter(string name, CodeType type)
-        {
-            Name = name;
-            Type = type;
-        }
-
-        public CodeParameter(string name, CodeType type, ExpressionOrWorkshopValue defaultValue)
-        {
-            Name = name;
-            Type = type;
-            DefaultValue = defaultValue;
-        }
-
-        public CodeParameter(string name, string documentation)
-        {
-            Name = name;
-            Documentation = documentation;
-        }
-
-        public CodeParameter(string name, string documentation, CodeType type)
-        {
-            Name = name;
-            Type = type;
-            Documentation = documentation;
-        }
-
-        public CodeParameter(string name, string documentation, ExpressionOrWorkshopValue defaultValue)
-        {
-            Name = name;
-            Documentation = documentation;
-            DefaultValue = defaultValue;
-        }
-
-        public CodeParameter(string name, string documentation, CodeType type, ExpressionOrWorkshopValue defaultValue)
-        {
-            Name = name;
-            Documentation = documentation;
-            Type = type;
-            DefaultValue = defaultValue;
-        }
-
-        public virtual object Validate(ScriptFile script, IExpression value, DocRange valueRange) => null;
-        public virtual IWorkshopTree Parse(ActionSet actionSet, IExpression expression, bool asElement) => expression.Parse(actionSet, asElement);
-
-        public string GetLabel(bool markdown)
-        {
-            string type;
-            if (Type == null) type = "define";
-            else type = Type.Name;
-
-            if (!markdown) return $"{type} {Name}";
-            else return $"**{type}** {Name}";
-        }
-
-        override public string ToString()
-        {
-            if (Type == null) return Name;
-            else return Type.Name + " " + Name;
-        }
-
-        public static ParameterParseResult GetParameters(ParseInfo parseInfo, Scope methodScope, DeltinScriptParser.SetParametersContext context)
-        {
-            if (context == null) return new ParameterParseResult(new CodeParameter[0], new Var[0]);
-
-            var parameters = new CodeParameter[context.define().Length];
-            var vars = new Var[parameters.Length];
-            for (int i = 0; i < context.define().Length; i++)
-            {
-                var newVar = Var.CreateVarFromContext(VariableDefineType.Parameter, parseInfo, context.define(i));
-                newVar.Finalize(methodScope);
-                vars[i] = newVar;
-
-                ExpressionOrWorkshopValue initialValue = null;
-                if (newVar.InitialValue != null) initialValue = new ExpressionOrWorkshopValue(newVar.InitialValue);
-
-                parameters[i] = new CodeParameter(context.define(i).name.Text, newVar.CodeType, initialValue);
-            }
-
-            return new ParameterParseResult(parameters, vars);
-        }
-
-        public static string GetLabels(CodeParameter[] parameters, bool markdown)
-        {
-            return "(" + string.Join(", ", parameters.Select(p => p.GetLabel(markdown))) + ")";
-        }
-    }
-
-    public class ParameterParseResult
-    {
-        public CodeParameter[] Parameters { get; }
-        public Var[] Variables { get; }
-
-        public ParameterParseResult(CodeParameter[] parameters, Var[] parameterVariables)
-        {
-            Parameters = parameters;
-            Variables = parameterVariables;
-        }
-    }
-
-    public class ExpressionOrWorkshopValue : IExpression
-    {
-        public IExpression Expression { get; }
-        public IWorkshopTree WorkshopValue { get; }
-
-        public ExpressionOrWorkshopValue(IExpression expression)
-        {
-            Expression = expression;
-        }
-        public ExpressionOrWorkshopValue(IWorkshopTree workshopValue)
-        {
-            WorkshopValue = workshopValue;
-        }
-
-        public IWorkshopTree Parse(ActionSet actionSet, bool asElement = true)
-        {
-            if (Expression != null) return Expression.Parse(actionSet);
-            return WorkshopValue;
-        }
-
-        public Scope ReturningScope() => null;
-        public CodeType Type() => null;
-    }
-
     public class OverloadChooser
     {
         private ParseInfo parseInfo { get; }
         private Scope scope { get; }
+        private Scope getter { get; }
         private DocRange genericErrorRange { get; }
         public DocRange CallRange { get; }
         private OverloadError ErrorMessages { get; }
@@ -166,14 +36,15 @@ namespace Deltin.Deltinteger.Parse
 
         private Dictionary<IParameterCallable, List<Diagnostic>> optionDiagnostics;
 
-        public OverloadChooser(IParameterCallable[] overloads, ParseInfo parseInfo, Scope scope, DocRange genericErrorRange, DocRange callRange, OverloadError errorMessages)
+        public OverloadChooser(IParameterCallable[] overloads, ParseInfo parseInfo, Scope elementScope, Scope getter, DocRange genericErrorRange, DocRange callRange, OverloadError errorMessages)
         {
             AllOverloads = overloads
                 .OrderBy(overload => overload.Parameters.Length)
                 .ToArray();
             CurrentOptions = AllOverloads.ToList();
             this.parseInfo = parseInfo;
-            this.scope = scope;
+            this.scope = elementScope;
+            this.getter = getter;
             this.genericErrorRange = genericErrorRange;
             CallRange = callRange;
             this.ErrorMessages = errorMessages;
@@ -190,7 +61,7 @@ namespace Deltin.Deltinteger.Parse
             var parameterRanges = new List<DocRange>();
             for (int i = 0; i < values.Length; i++)
             {
-                values[i] = DeltinScript.GetExpression(parseInfo, scope, context.expr(i));
+                values[i] = DeltinScript.GetExpression(parseInfo, getter, context.expr(i));
                 errorRanges[i] = DocRange.GetRange(context.expr(i));
                 parameterRanges.Add(errorRanges[i]);
             }
@@ -238,7 +109,7 @@ namespace Deltin.Deltinteger.Parse
                 // Get the expression. If it doesn't exist, add a syntax error.
                 if (context.picky_parameter(i).expr() != null)
                 {
-                    expression = DeltinScript.GetExpression(parseInfo, scope, context.picky_parameter(i).expr());
+                    expression = DeltinScript.GetExpression(parseInfo, getter, context.picky_parameter(i).expr());
                     expressionRange = DocRange.GetRange(context.picky_parameter(i).expr());
                 }
                 else
@@ -405,6 +276,10 @@ namespace Deltin.Deltinteger.Parse
             parseInfo.Script.Diagnostics.AddDiagnostics(optionDiagnostics[Overload].ToArray());
 
             parseInfo.Script.AddOverloadData(this);
+
+            // Check the access level.
+            if (Overload.AccessLevel != AccessLevel.Public && !scope.DoShareGroup(getter))
+                parseInfo.Script.Diagnostics.Error(string.Format("'{0}' is inaccessable due to its access level.", Overload.GetLabel(false)), genericErrorRange);
         }
     
         private IExpression MissingParameter(CodeParameter parameter)

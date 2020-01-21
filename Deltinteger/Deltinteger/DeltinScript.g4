@@ -96,15 +96,17 @@ delete  : DELETE LEFT_PAREN expr RIGHT_PAREN                  ;
 rule_if : IF LEFT_PAREN expr? RIGHT_PAREN;
 
 ow_rule : 
-	DISABLED? RULE_WORD ':' STRINGLITERAL
+	DISABLED? RULE_WORD ':' STRINGLITERAL number?
 	expr*
 	rule_if*
 	block?
 	;
 
-define_method : DOCUMENTATION* accessor? RECURSIVE? (METHOD | code_type) name=PART LEFT_PAREN setParameters RIGHT_PAREN
+define_method : DOCUMENTATION* accessor? method_attribute* (METHOD | code_type) name=PART LEFT_PAREN setParameters RIGHT_PAREN
 	block?
 	;
+
+method_attribute : RECURSIVE | RULE_WORD ;
 
 define_macro  : DOCUMENTATION* accessor? MACRO name=PART (LEFT_PAREN setParameters RIGHT_PAREN)? TERNARY_ELSE? expr? STATEMENT_END ;
 

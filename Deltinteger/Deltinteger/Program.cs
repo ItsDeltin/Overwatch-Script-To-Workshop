@@ -15,7 +15,7 @@ namespace Deltin.Deltinteger
 {
     public class Program
     {
-        public const string VERSION = "v1.0 prerelease 1";
+        public const string VERSION = "v1.0 prerelease 1.3";
 
         public static readonly string ExeFolder = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
 
@@ -60,6 +60,16 @@ namespace Deltin.Deltinteger
             }
             else if (args.ElementAtOrDefault(0) == "--i18n") I18n.GenerateI18n.Generate(args);
             else if (args.ElementAtOrDefault(0) == "--i18nlink") I18n.GenerateI18n.GenerateKeyLink();
+            else if (args.ElementAtOrDefault(0) == "--wiki")
+            {
+                var wiki = WorkshopWiki.Wiki.GetWiki();
+                if (wiki != null)
+                {
+                    Console.Write("Output file: ");
+                    string outputPath = Console.ReadLine();
+                    wiki.ToXML(outputPath);
+                }
+            }
             else
             {
                 string script = args.ElementAtOrDefault(0);

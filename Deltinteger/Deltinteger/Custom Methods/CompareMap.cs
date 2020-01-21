@@ -23,7 +23,7 @@ namespace Deltin.Deltinteger.CustomMethods
             MapLink mapLink = MapLink.GetMapLink(map);
 
             if (mapLink == null)
-                return new V_Compare(new V_CurrentMap(), Operators.Equal, enumData);
+                return new V_Compare(new V_CurrentMap(), Operators.Equal, Element.Part<V_MapVar>(enumData));
             else
                 return Element.Part<V_ArrayContains>(mapLink.GetArray(), new V_CurrentMap());
         }
@@ -40,7 +40,11 @@ namespace Deltin.Deltinteger.CustomMethods
 
         public Element GetArray()
         {
-            return Element.CreateArray(Maps.Select(m => EnumData.GetEnumValue(m)).ToArray());
+            return Element.CreateArray(
+                // Convert the maps to EnumMembers encased in V_MapVar.
+                Maps.Select(m => Element.Part<V_MapVar>(EnumData.GetEnumValue(m)))
+                .ToArray()
+            );
         }
 
         public static MapLink GetMapLink(Map map)

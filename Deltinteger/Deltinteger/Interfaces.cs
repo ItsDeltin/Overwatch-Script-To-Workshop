@@ -27,31 +27,41 @@ namespace Deltin.Deltinteger
         int SkipParameterIndex();
     }
 
-    public interface IScopeable
+    public interface INamed
     {
         string Name { get; }
+    }
+
+    public interface IScopeable : INamed
+    {
         AccessLevel AccessLevel { get; }
         Location DefinedAt { get; }
         bool WholeContext { get; }
         CompletionItem GetCompletion();
     }
 
-    public interface ICallable
+    public interface ICallable : INamed
     {
         void Call(ScriptFile script, DocRange callRange);
-        string Name { get; }
     }
 
     public interface IParameterCallable : ILabeled
     {
         CodeParameter[] Parameters { get; }
         Location DefinedAt { get; }
+        AccessLevel AccessLevel { get; }
         StringOrMarkupContent Documentation { get; }
     }
 
     public interface IGettable
     {
         IWorkshopTree GetVariable(Element eventPlayer = null);
+    }
+
+    public interface IIndexReferencer : IScopeable, IExpression, ICallable
+    {
+        bool Settable();
+        VariableType VariableType { get; }
     }
 
     public interface ILabeled

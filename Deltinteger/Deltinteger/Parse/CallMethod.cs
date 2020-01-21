@@ -25,7 +25,7 @@ namespace Deltin.Deltinteger.Parse
                 parseInfo.Script.Diagnostics.Error($"No method by the name of '{methodName}' exists in the current context.", NameRange);
             else
             {
-                OverloadChooser = new OverloadChooser(options, parseInfo, getter, NameRange, DocRange.GetRange(methodContext), new OverloadError("method '" + methodName + "'"));
+                OverloadChooser = new OverloadChooser(options, parseInfo, scope, getter, NameRange, DocRange.GetRange(methodContext), new OverloadError("method '" + methodName + "'"));
 
                 if (methodContext.call_parameters() != null)
                     OverloadChooser.SetContext(methodContext.call_parameters());

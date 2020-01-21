@@ -251,7 +251,7 @@ namespace Deltin.Deltinteger.Elements
             WorkshopParameters = type.GetCustomAttributes<ParameterBase>().ToArray();
             UsageDiagnostics = type.GetCustomAttributes<UsageDiagnostic>().ToArray();
 
-            Wiki = WorkshopWiki.Wiki.GetWiki().GetMethod(WorkshopName);
+            Wiki = WorkshopWiki.Wiki.GetWiki()?.GetMethod(WorkshopName);
         }
 
         public void ApplyParameters()

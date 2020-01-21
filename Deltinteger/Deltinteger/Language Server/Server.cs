@@ -107,6 +107,14 @@ namespace Deltin.Deltinteger.LanguageServer
             new DocumentFilter() {
                 Language = "ostw",
                 Pattern = "**/*.del"
+            },
+            new DocumentFilter() {
+                Language = "ostw",
+                Pattern = "**/*.ostw"
+            },
+            new DocumentFilter() {
+                Language = "ostw",
+                Pattern = "**/*.workshop"
             }
         );
     }

@@ -94,6 +94,7 @@ namespace Deltin.Deltinteger.Parse
     public class CompletionRange
     {
         private Scope Scope { get; }
+        private Scope Getter { get; }
         private CompletionItem[] CompletionItems { get; }
         public DocRange Range { get; }
         public CompletionRangeKind Kind { get; }
@@ -101,6 +102,14 @@ namespace Deltin.Deltinteger.Parse
         public CompletionRange(Scope scope, DocRange range, CompletionRangeKind kind)
         {
             Scope = scope ?? throw new ArgumentNullException(nameof(scope));
+            Kind = kind;
+            Range = range;
+        }
+
+        public CompletionRange(Scope scope, Scope getter, DocRange range, CompletionRangeKind kind)
+        {
+            Scope = scope ?? throw new ArgumentNullException(nameof(scope));
+            Getter = getter;
             Kind = kind;
             Range = range;
         }
@@ -114,7 +123,7 @@ namespace Deltin.Deltinteger.Parse
 
         public CompletionItem[] GetCompletion(Pos pos, bool immediate)
         {
-            return Scope?.GetCompletion(pos, immediate) ?? CompletionItems;
+            return Scope?.GetCompletion(pos, immediate, Getter) ?? CompletionItems;
 
         }
     }
