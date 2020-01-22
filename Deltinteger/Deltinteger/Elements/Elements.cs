@@ -8,6 +8,7 @@ using System.Reflection;
 using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.WorkshopWiki;
 using Deltin.Deltinteger.Parse;
+using Deltin.Deltinteger.Models;
 using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
 using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItemKind;
 using StringOrMarkupContent = OmniSharp.Extensions.LanguageServer.Protocol.Models.StringOrMarkupContent;
@@ -160,15 +161,6 @@ namespace Deltin.Deltinteger.Elements
             // return Element.Part<V_ValueInArray>(CreateArray(alternative, consequent), Element.Part<V_Add>(condition, new V_Number(0)));
         }
 
-        public static V_Number[] IntToElement(params int[] numbers)
-        {
-            V_Number[] elements = new V_Number[numbers?.Length ?? 0];
-            for (int i = 0; i < elements.Length; i++)
-                elements[i] = new V_Number(numbers[i]);
-
-            return elements;
-        }
-
         public static Element operator +(Element a, Element b) => Element.Part<V_Add>(a, b);
         public static Element operator -(Element a, Element b) => Element.Part<V_Subtract>(a, b);
         public static Element operator *(Element a, Element b) => Element.Part<V_Multiply>(a, b);
@@ -187,8 +179,132 @@ namespace Deltin.Deltinteger.Elements
         }
         public static implicit operator Element(double number) => new V_Number(number);
         public static implicit operator Element(int number) => new V_Number(number);
+        public static implicit operator Element(bool boolean) => boolean ? (Element)new V_True() : new V_False();
 
-        public static readonly Element DefaultElement = 0;
+        public bool EqualTo(IWorkshopTree b)
+        {
+            if (this.GetType() != b.GetType()) return false;
+
+            Element bElement = (Element)b;
+            if (ParameterValues.Length != bElement.ParameterValues.Length) return false;
+
+            Type[] createsRandom = new Type[] {
+                typeof(V_RandomInteger),
+                typeof(V_RandomizedArray),
+                typeof(V_RandomReal),
+                typeof(V_RandomValueInArray)
+            };
+
+            for (int i = 0; i < ParameterValues.Length; i++)
+                if (!ParameterValues[i].EqualTo(bElement.ParameterValues[i]) || createsRandom.Contains(ParameterValues[i].GetType()))
+                    return false;
+            
+            return true;
+        }
+
+        public Element OptimizeAddOperation(
+            Func<double, double, double> op,
+            Func<Element, Element, Element> areEqual,
+            bool returnBIf0
+        )
+        {
+            OptimizeChildren();
+
+            Element a = (Element)ParameterValues[0];
+            Element b = (Element)ParameterValues[1];
+
+            V_Number aAsNumber = a as V_Number;
+            V_Number bAsNumber = b as V_Number;
+
+            // If a and b are numbers, operate them.
+            if (aAsNumber != null && bAsNumber != null)
+                return op(aAsNumber.Value, bAsNumber.Value);
+            
+            // If a is 0, return b.
+            if (aAsNumber != null && aAsNumber.Value == 0 && returnBIf0)
+                return b;
+            
+            // If b is 0, return a.
+            if (bAsNumber != null && bAsNumber.Value == 0)
+                return a;
+
+            if (a.EqualTo(b))
+                return areEqual(a, b);
+            
+            if (a.ConstantSupported<Vertex>() && b.ConstantSupported<Vertex>())
+            {
+                var aVertex = (Vertex)a.GetConstant();
+                var bVertex = (Vertex)b.GetConstant();
+
+                return new V_Vector(
+                    op(aVertex.X, bVertex.X),
+                    op(aVertex.Y, bVertex.Y),
+                    op(aVertex.Z, bVertex.Z)
+                );
+            }
+            
+            return this;
+        }
+
+        public Element OptimizeMultiplyOperation(
+            Func<double, double, double> op,
+            Func<Element, Element, Element> areEqual,
+            bool returnBIf1
+        )
+        {
+            OptimizeChildren();
+
+            Element a = (Element)ParameterValues[0];
+            Element b = (Element)ParameterValues[1];
+
+            V_Number aAsNumber = a as V_Number;
+            V_Number bAsNumber = b as V_Number;
+
+            // Multiply number and number
+            if (aAsNumber != null && bAsNumber != null)
+                return op(aAsNumber.Value, bAsNumber.Value);
+
+            // Multiply vector and a vector
+            if (a.ConstantSupported<Vertex>() && b.ConstantSupported<Vertex>())
+            {
+                Vertex vertexA = (Vertex)a.GetConstant();
+                Vertex vertexB = (Vertex)b.GetConstant();
+                return new V_Vector(
+                    op(vertexA.X, vertexB.X),
+                    op(vertexA.Y, vertexB.Y),
+                    op(vertexA.Z, vertexB.Z)
+                );
+            }
+
+            // Multiply vector and number
+            if ((a.ConstantSupported<Vertex>() && b is V_Number) || (a is V_Number && b.ConstantSupported<Vertex>()))
+            {
+                Vertex vector = a.ConstantSupported<Vertex>() ? (Vertex)a.GetConstant() : (Vertex)b.GetConstant();
+                V_Number number = a is V_Number ? (V_Number)a : (V_Number)b;
+                return new V_Vector(
+                    op(vector.X, number.Value),
+                    op(vector.Y, number.Value),
+                    op(vector.Z, number.Value)
+                );
+            }
+
+            if (aAsNumber != null)
+            {
+                if (aAsNumber.Value == 1 && returnBIf1) return b;
+                if (aAsNumber.Value == 0) return 0;
+            }
+
+            if (bAsNumber != null)
+            {
+                if (bAsNumber.Value == 1) return a;
+                if (bAsNumber.Value == 0) return 0;
+            }
+
+            if (a.EqualTo(b))
+                return areEqual(a, b);
+            
+            return this;
+        }
     }
 
     public class ElementList : IMethod
