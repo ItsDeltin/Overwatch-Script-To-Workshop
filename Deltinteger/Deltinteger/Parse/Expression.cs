@@ -184,7 +184,7 @@ namespace Deltin.Deltinteger.Parse
 
                     currentObject = type.GetObjectSource(actionSet.Translate.DeltinScript, current);
                     currentAssigner = actionSet.IndexAssigner.CreateContained();
-                    type.AddObjectVariablesToAssigner(currentObject, currentAssigner);
+                    type.AddObjectVariablesToAssigner(current, actionSet.Translate.DeltinScript, currentAssigner);
                 }
 
                 result = current;

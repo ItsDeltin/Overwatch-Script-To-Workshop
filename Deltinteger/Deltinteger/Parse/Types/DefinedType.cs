@@ -101,7 +101,6 @@ namespace Deltin.Deltinteger.Parse
         override public IWorkshopTree New(ActionSet actionSet, Constructor constructor, IWorkshopTree[] constructorValues, object[] additionalParameterData)
         {
             if (TypeKind == TypeKind.Class) return NewClass(actionSet.New(actionSet.IndexAssigner.CreateContained()), constructor, constructorValues);
-            else if (TypeKind == TypeKind.Struct) return NewStruct(actionSet.New(actionSet.IndexAssigner.CreateContained()), constructor, constructorValues);
             else throw new NotImplementedException();
         }
 
@@ -116,11 +115,11 @@ namespace Deltin.Deltinteger.Parse
             var classReference = actionSet.VarCollection.Assign("_new_" + Name + "_class_index", actionSet.IsGlobal, true);
             GetClassIndex(classReference, actionSet, classData);
             
-            var classObject = classData.ClassArray.CreateChild((Element)classReference.GetVariable());
+            var classObject = GetObjectSource(translateInfo, classReference.GetVariable());
             SetInitialVariables(classObject, actionSet);
 
             // Run the constructor.
-            AddObjectVariablesToAssigner(classObject, actionSet.IndexAssigner);
+            AddObjectVariablesToAssigner(classReference.GetVariable(), translateInfo, actionSet.IndexAssigner);
             constructor.Parse(actionSet.New(classObject), constructorValues, null);
 
             return classReference.GetVariable();
@@ -202,18 +201,6 @@ namespace Deltin.Deltinteger.Parse
             }
         }
 
-        private IWorkshopTree NewStruct(ActionSet actionSet, Constructor constructor, IWorkshopTree[] constructorValues)
-        {
-            var structObject = actionSet.VarCollection.Assign("_new_" + Name + "_class_index", actionSet.IsGlobal, true);
-            SetInitialVariables(structObject, actionSet);
-
-            // Run the constructor.
-            AddObjectVariablesToAssigner(structObject, actionSet.IndexAssigner);
-            constructor.Parse(actionSet, constructorValues, null);
-
-            return structObject.GetVariable();
-        }
-
         private void SetInitialVariables(IndexReference typeObject, ActionSet actionSet)
         {
             for (int i = 0; i < objectVariables.Count; i++)
@@ -235,12 +222,14 @@ namespace Deltin.Deltinteger.Parse
         /// <summary>
         /// Adds the class objects to the index assigner.
         /// </summary>
-        /// <param name="source">The source of the type.</param>
+        /// <param name="element">The source of the type.</param>
         /// <param name="assigner">The assigner that the object variables will be added to.</param>
-        public override void AddObjectVariablesToAssigner(IndexReference source, VarIndexAssigner assigner)
+        public override void AddObjectVariablesToAssigner(IWorkshopTree element, DeltinScript translateInfo, VarIndexAssigner assigner)
         {
+            IndexReference objectSource = GetObjectSource(translateInfo, element);
+
             for (int i = 0; i < objectVariables.Count; i++)
-                assigner.Add(objectVariables[i], source.CreateChild(i));
+                assigner.Add(objectVariables[i], objectSource.CreateChild(i));
         }
 
         public override void Call(ScriptFile script, DocRange callRange)

@@ -52,7 +52,7 @@ namespace Deltin.Deltinteger.Parse
         {
             string typeName = "define";
             if (CodeType != null) typeName = CodeType.Name;
-            return HoverHandler.Sectioned(typeName + " " + Name, null);
+            return HoverHandler.Sectioned(typeName + " " + Name, Documentation);
         }
     }
 }

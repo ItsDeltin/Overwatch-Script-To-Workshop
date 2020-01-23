@@ -356,10 +356,10 @@ namespace Deltin.Deltinteger.Parse
                 // If there is a type, assign the current object variable.
                 currentObject = varCollection.Assign("_" + Name + "_currentObject", true, true);
 
-                IndexReference source = ContainingType.GetObjectSource(parseInfo.TranslateInfo, Element.Part<V_ValueInArray>(currentObject.GetVariable(), currentCall.GetVariable()));
+                Element workingObject = Element.Part<V_ValueInArray>(currentObject.GetVariable(), currentCall.GetVariable()); 
 
                 // Add the object variables to the assigner.
-                ContainingType.AddObjectVariablesToAssigner(source, actionSet.IndexAssigner);
+                ContainingType.AddObjectVariablesToAssigner(workingObject, parseInfo.TranslateInfo, actionSet.IndexAssigner);
             }
 
             // Get the next caller.

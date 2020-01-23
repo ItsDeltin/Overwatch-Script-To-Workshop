@@ -42,7 +42,7 @@ namespace Deltin.Deltinteger.Parse
         public virtual IndexReference GetObjectSource(DeltinScript translateInfo, IWorkshopTree element) => null;
 
         public virtual void AddStaticVariablesToAssigner(DeltinScript translateInfo, VarIndexAssigner assigner) {}
-        public virtual void AddObjectVariablesToAssigner(IndexReference source, VarIndexAssigner assigner) {}
+        public virtual void AddObjectVariablesToAssigner(IWorkshopTree source, DeltinScript translateInfo, VarIndexAssigner assigner) {}
 
         public virtual void Call(ScriptFile script, DocRange callRange)
         {
@@ -55,16 +55,18 @@ namespace Deltin.Deltinteger.Parse
         public static CodeType GetCodeTypeFromContext(ParseInfo parseInfo, DeltinScriptParser.Code_typeContext typeContext)
         {
             if (typeContext == null) return null;
-            CodeType type = parseInfo.TranslateInfo.GetCodeType(typeContext.PART().GetText(), parseInfo.Script.Diagnostics, DocRange.GetRange(typeContext));
+
+            CodeType type = null;
+            if (typeContext.PART() != null)
+                parseInfo.TranslateInfo.GetCodeType(typeContext.PART().GetText(), parseInfo.Script.Diagnostics, DocRange.GetRange(typeContext));
 
             if (type != null)
-            {
                 type.Call(parseInfo.Script, DocRange.GetRange(typeContext));
 
-                if (typeContext.INDEX_START() != null)
-                    for (int i = 0; i < typeContext.INDEX_START().Length; i++)
-                        type = new ArrayType(type);
-            }
+            if (typeContext.INDEX_START() != null)
+                for (int i = 0; i < typeContext.INDEX_START().Length; i++)
+                    type = new ArrayType(type);
+            
             return type;
         }
 
@@ -100,12 +102,35 @@ namespace Deltin.Deltinteger.Parse
     public class ArrayType : CodeType
     {
         public CodeType ArrayOfType { get; }
+        public Scope ObjectScope { get; }
+        private InternalVar Length { get; } = new InternalVar("Length", CompletionItemKind.Property) {
+            Detail = "Length",
+            Documentation = "Gets the length of the array."
+        };
+        private InternalVar First { get; } = new InternalVar("First", CompletionItemKind.Property) {
+            Detail = "First",
+            Documentation = "Gets the first element in the array."
+        };
+        private InternalVar Last { get; } = new InternalVar("Last", CompletionItemKind.Property) {
+            Detail = "Last",
+            Documentation = "Gets the last element in the array."
+        };
 
-        public ArrayType(CodeType arrayOfType) : base(arrayOfType.Name + "[]")
+        public ArrayType(CodeType arrayOfType) : base((arrayOfType?.Name ?? "define") + "[]")
         {
             ArrayOfType = arrayOfType;
+            ObjectScope = new Scope(Name);
+            ObjectScope.AddNativeVariable(Length);
         }
 
+        public override void AddObjectVariablesToAssigner(IWorkshopTree source, DeltinScript translateInfo, VarIndexAssigner assigner)
+        {
+            assigner.Add(Length, Element.Part<V_CountOf>(source));
+            assigner.Add(First, Element.Part<V_FirstOf>(source));
+            assigner.Add(Last, Element.Part<V_LastOf>(source));
+        }
+
+        public override Scope GetObjectScope() => ObjectScope;
         public override Scope ReturningScope() => null;
         public override CompletionItem GetCompletion() => throw new NotImplementedException();
     }
