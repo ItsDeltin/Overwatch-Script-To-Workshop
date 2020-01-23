@@ -59,6 +59,7 @@ namespace Deltin.Deltinteger.Parse
         {
             ThrowIfNotFinalized();
             script.AddDefinitionLink(callRange, DefinedAt);
+            script.AddHover(callRange, GetLabel(true));
             parseInfo.TranslateInfo.AddSymbolLink(this, new Location(script.Uri, callRange));
         }
 
@@ -167,6 +168,8 @@ namespace Deltin.Deltinteger.Parse
             // Add the variable to the scope.
             scope.AddVariable(this, parseInfo.Script.Diagnostics, DefinedAt.range);
             finalized = true;
+
+            parseInfo.Script.AddHover(DefinedAt.range, GetLabel(true));
         }
 
         private void ThrowIfNotFinalized()
@@ -187,6 +190,13 @@ namespace Deltin.Deltinteger.Parse
                 Kind = CompletionItemKind.Variable
             };
         }
+
+        public string GetLabel(bool markdown)
+        {
+            string typeName = "define";
+            if (CodeType != null) typeName = CodeType.Name;
+            return HoverHandler.Sectioned(typeName + " " + Name, null);
+        }
     }
 
     class DefineAction : IStatement
@@ -201,20 +211,22 @@ namespace Deltin.Deltinteger.Parse
         public void Translate(ActionSet actionSet)
         {
             // Get the initial value.
-            Element initialValue = 0;
+            IWorkshopTree initialValue = new V_Number(0);
             if (DefiningVariable.InitialValue != null)
-                initialValue = (Element)DefiningVariable.InitialValue.Parse(actionSet);
+                initialValue = DefiningVariable.InitialValue.Parse(actionSet);
             
             // Add the variable to the assigner.
             actionSet.IndexAssigner.Add(actionSet.VarCollection, DefiningVariable, actionSet.IsGlobal, initialValue);
 
             // Set the initial value.
             if (DefiningVariable.Settable())
+            {
                 actionSet.AddAction(
                     ((IndexReference)actionSet.IndexAssigner[DefiningVariable]).SetVariable(
-                        initialValue
+                        (Element)initialValue
                     )
                 );
+            }
         }
     }
 

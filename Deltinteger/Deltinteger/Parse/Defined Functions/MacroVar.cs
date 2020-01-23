@@ -40,6 +40,8 @@ namespace Deltin.Deltinteger.Parse
 
             this.scope = scope;
             this.parseInfo = parseInfo;
+
+            parseInfo.Script.AddHover(DocRange.GetRange(macroContext.name), GetLabel(true));
         }
 
         public void SetupBlock()
@@ -58,6 +60,7 @@ namespace Deltin.Deltinteger.Parse
         public void Call(ScriptFile script, DocRange callRange)
         {
             script.AddDefinitionLink(callRange, DefinedAt);
+            script.AddHover(callRange, GetLabel(true));
             parseInfo.TranslateInfo.AddSymbolLink(this, new Location(script.Uri, callRange));
         }
 
@@ -69,6 +72,6 @@ namespace Deltin.Deltinteger.Parse
             };
         }
 
-        public string GetLabel(bool markdown) => Name;
+        public string GetLabel(bool markdown) => HoverHandler.Sectioned("macro " + Name, null);
     }
 }

@@ -57,12 +57,9 @@ namespace Deltin.Deltinteger.Parse
 
         public string GetLabel(bool markdown)
         {
-            string type;
-            if (Type == null) type = "define";
-            else type = Type.Name;
-
-            if (!markdown) return $"{type} {Name}";
-            else return $"**{type}** {Name}";
+            string typeName = "define";
+            if (Type != null) typeName = Type.Name;
+            return typeName + " " + Name;
         }
 
         override public string ToString()

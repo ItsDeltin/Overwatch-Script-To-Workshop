@@ -83,13 +83,10 @@ namespace Deltin.Deltinteger.Parse
             return (IWorkshopTree)EnumMember;
         }
 
-        public CompletionItem GetCompletion()
+        public CompletionItem GetCompletion() => new CompletionItem()
         {
-            return new CompletionItem()
-            {
-                Label = Name,
-                Kind = CompletionItemKind.EnumMember
-            };
-        }
+            Label = Name,
+            Kind = CompletionItemKind.EnumMember
+        };
     }
 }

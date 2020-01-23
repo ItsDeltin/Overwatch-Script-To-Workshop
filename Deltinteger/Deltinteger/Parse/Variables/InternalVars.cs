@@ -36,7 +36,10 @@ namespace Deltin.Deltinteger.Parse
 
         public bool Settable() => IsSettable;
 
-        public virtual void Call(ScriptFile script, DocRange callRange) {}
+        public virtual void Call(ScriptFile script, DocRange callRange)
+        {
+            script.AddHover(callRange, GetLabel(true));
+        }
 
         public virtual CompletionItem GetCompletion() => new CompletionItem() {
             Label = Name,
@@ -44,5 +47,12 @@ namespace Deltin.Deltinteger.Parse
             Detail = Detail,
             Documentation = Extras.GetMarkupContent(Documentation)
         };
+
+        public string GetLabel(bool markdown)
+        {
+            string typeName = "define";
+            if (CodeType != null) typeName = CodeType.Name;
+            return HoverHandler.Sectioned(typeName + " " + Name, null);
+        }
     }
 }
