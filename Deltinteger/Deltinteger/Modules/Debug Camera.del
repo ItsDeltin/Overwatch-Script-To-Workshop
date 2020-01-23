@@ -1,0 +1,87 @@
+method CameraSpeed()
+{
+    return !IsButtonHeld(HostPlayer(), Button.SecondaryFire) ? 0.5 : 0.1; // Go slower if secondary fire is held.
+}
+macro ToggleKey: IsCommunicating(HostPlayer(), Communication.VoiceLineDown);
+
+globalvar define cam = false;
+globalvar define cameraPos;
+globalvar define cameraHUD !;
+
+rule: "Free cam"
+if (ToggleKey)
+{
+    cam = !cam;
+}
+
+rule: "Start Camera"
+if (cam)
+{
+    CreateHudText(HostPlayer(), null, "Camera Position:", cameraPos, Location.Left, 4, Color.White, Color.White, Color.Blue);
+    cameraHUD = LastTextID();
+
+    cameraPos = EyePosition(HostPlayer());
+    StartCamera(HostPlayer(), cameraPos, cameraPos + FacingDirectionOf(HostPlayer()), 25);
+    SetMoveSpeed(HostPlayer(), 0);
+}
+
+rule: "Stop Camera"
+if (!cam)
+{
+    DestroyHudText(cameraHUD);
+    StopCamera(HostPlayer());
+    SetMoveSpeed(HostPlayer(), 100);
+}
+
+rule: "TP to camera"
+if (cam)
+if (IsCommunicating(HostPlayer(), Communication.VoiceLineLeft))
+{
+    cam = false;
+    define storeFacing = FacingDirectionOf(HostPlayer());
+    Teleport(HostPlayer(), cameraPos);
+    SetFacing(HostPlayer(), storeFacing, Relative.ToWorld);
+}
+
+rule: "Move camera"
+if (cam)
+if (DistanceBetween(Vector(), ThrottleOf(HostPlayer())) > 0)
+{
+    define x = XOf(ThrottleOf(HostPlayer()));
+    define z = ZOf(ThrottleOf(HostPlayer()));
+
+    define right = CrossProduct(FacingDirectionOf(HostPlayer()), Up());
+
+    define scalar ! = CameraSpeed();
+
+    if (x < 0)
+        cameraPos += right * scalar;
+    else if (x > 0)
+        cameraPos -= right * scalar;
+    
+    if (z > 0)
+        cameraPos += FacingDirectionOf(HostPlayer()) * scalar;
+    else if (z < 0)
+        cameraPos -= FacingDirectionOf(HostPlayer()) * scalar;
+
+    MinWait();
+    LoopIfConditionIsTrue();
+}
+
+rule: "Move camera down"
+if (cam)
+if (IsButtonHeld(HostPlayer(), Button.Crouch))
+{
+    cameraPos += Down() * CameraSpeed();
+    MinWait();
+    LoopIfConditionIsTrue();
+}
+
+rule: "Move camera up"
+if (cam)
+if (IsButtonHeld(HostPlayer(), Button.Jump))
+{
+    cameraPos += Up() * CameraSpeed();
+    MinWait();
+    LoopIfConditionIsTrue();
+}

@@ -95,8 +95,8 @@ namespace Deltin.Deltinteger.LanguageServer
                 .WithHandler<ConfigurationHandler>(configurationHandler)
                 .WithHandler<DefinitionHandler>(definitionHandler)
                 .WithHandler<HoverHandler>(hoverHandler)
-                .WithHandler<RenameHandler>(renameHandler)
-                .WithHandler<ReferenceHandler>(referenceHandler));
+                .WithHandler<ReferenceHandler>(referenceHandler)
+                .WithHandler<RenameHandler>(renameHandler));
             
             await Server.WaitForExit;
         }

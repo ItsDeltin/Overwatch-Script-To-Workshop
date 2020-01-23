@@ -8,15 +8,6 @@
     <Antlr4UseCSharpGenerator>True</Antlr4UseCSharpGenerator>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="System"/>
-    <Reference Include="System.Core"/>
-    <Reference Include="System.Drawing"/>
-    <Reference Include="System.Xml.Linq"/>
-    <Reference Include="System.Data.DataSetExtensions"/>
-    <Reference Include="Microsoft.CSharp"/>
-    <Reference Include="System.Data"/>
-    <Reference Include="System.Net.Http"/>
-    <Reference Include="System.Xml"/>
     <PackageReference Include="HtmlAgilityPack" Version="1.11.16"/>
     <PackageReference Include="Newtonsoft.Json" Version="12.0.2"/>
     <PackageReference Include="Antlr4.Runtime" Version="4.6.6"/>
@@ -31,6 +22,7 @@
     <Content Include="Languages\*.*"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
     <Content Include="Modules\*.*"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
     <Content Include="Fonts\BigNoodleTooOblique.ttf"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
+    <Content Include="Wiki.xml"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Antlr4.Runtime" Version="4.6.4"/>

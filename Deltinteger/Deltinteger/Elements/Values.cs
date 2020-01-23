@@ -1587,8 +1587,25 @@ namespace Deltin.Deltinteger.Elements
 
     [ElementData("Value In Array", ValueType.Any)]
     [Parameter("Array", ValueType.Any, null)]
-    [Parameter("Index", ValueType.Number, typeof(V_EventPlayer))]
-    public class V_ValueInArray : Element {}
+    [Parameter("Index", ValueType.Number, typeof(V_Number))]
+    public class V_ValueInArray : Element
+    {
+        public override Element Optimize()
+        {
+            OptimizeChildren();
+
+            Element array = (Element)ParameterValues[0];
+            Element index = (Element)ParameterValues[1];
+
+            if (index is V_Number num)
+            if (num.Value == 0) // Needs to be in a seperate if or else the compiler will complain.
+            {
+                return Element.Part<V_FirstOf>(array);
+            }
+
+            return this;
+        }
+    }
 
     [ElementData("Vector", ValueType.Vector)]
     [Parameter("X", ValueType.Number, typeof(V_Number))]

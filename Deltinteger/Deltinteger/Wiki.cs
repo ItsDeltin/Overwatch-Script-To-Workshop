@@ -16,15 +16,30 @@ namespace Deltin.Deltinteger.WorkshopWiki
         private static Log Log = new Log("Wiki");
 
         private static Wiki wiki = null; 
-        private static bool gotWiki = false;
         public static Wiki GetWiki()
+        {
+            if (wiki == null)
+            {
+                try
+                {
+                    string languageFile = Path.Combine(Program.ExeFolder, "Wiki.xml");
+                    XmlSerializer serializer = new XmlSerializer(typeof(Wiki));
+
+                    using (var fileStream = File.OpenRead(languageFile))
+                        wiki = (Wiki)serializer.Deserialize(fileStream);
+                }
+                catch (Exception ex)
+                {
+                    Log.Write(LogLevel.Normal, "Failed to load Workshop Wiki: ", new ColorMod(ex.Message, ConsoleColor.Red));
+                }
+            }
+            return wiki;
+        }
+
+        public static Wiki GenerateWiki()
         {
             try
             {
-                if (gotWiki)
-                    return wiki;
-                gotWiki = true;
-                
                 HtmlDocument htmlDoc = new HtmlDocument();
                 htmlDoc.OptionFixNestedTags = true;
             
@@ -63,12 +78,11 @@ namespace Deltin.Deltinteger.WorkshopWiki
                     if (!keywords.Any(keyword => keyword.ToLower() == methods[i].Name.ToLower()))
                         methods.RemoveAt(i);
 
-                wiki = new Wiki(methods.ToArray());
-                return wiki;
+                return new Wiki(methods.ToArray());
             }
             catch (Exception ex)
             {
-                Log.Write(LogLevel.Normal, "Failed to load Workshop Wiki: ", new ColorMod(ex.Message, ConsoleColor.Red));
+                Log.Write(LogLevel.Normal, "Failed to generate the Workshop Wiki: ", new ColorMod(ex.Message, ConsoleColor.Red));
                 return null;
             }
         }
