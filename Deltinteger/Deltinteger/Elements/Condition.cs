@@ -31,9 +31,17 @@ namespace Deltin.Deltinteger.Elements
         public Condition(V_Compare condition) : this((Element)condition.ParameterValues[0], (EnumMember)condition.ParameterValues[1], (Element)condition.ParameterValues[2]) {}
         public Condition(Element condition) : this(condition, Operators.Equal, new V_True()) {}
 
-        public string ToWorkshop(OutputLanguage language)
+        public string ToWorkshop(OutputLanguage language, bool optimize)
         {
-            return Value1.Optimize().ToWorkshop(language) + " " + CompareOperator.ToWorkshop(language) + " " + Value2.Optimize().ToWorkshop(language);
+            Element a = Value1;
+            Element b = Value2;
+            if (optimize)
+            {
+                a = a.Optimize();
+                b = b.Optimize();
+            }
+            
+            return a.ToWorkshop(language) + " " + CompareOperator.ToWorkshop(language) + " " + b.ToWorkshop(language);
         }
 
         public static implicit operator Condition(Element element) => new Condition(element);

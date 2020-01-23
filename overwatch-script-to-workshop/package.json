@@ -62,6 +62,12 @@
                     "default": "English",
                     "description": "The output language of the OSTW output."
                 },
+                "ostw.optimizeOutput": {
+                    "scope": "window",
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Determines if the workshop output will be optimized."
+                },
                 "ostw.deltintegerPath": {
                     "scope": "machine",
                     "type": "string",
@@ -81,11 +87,6 @@
             }
         },
         "commands": [
-            {
-                "command": "ostw.webviewOutput",
-                "title": "Create webview panel for workshop code output.",
-                "category": "Overwatch Script To Workshop"
-            }
         ]
     },
     "scripts": {

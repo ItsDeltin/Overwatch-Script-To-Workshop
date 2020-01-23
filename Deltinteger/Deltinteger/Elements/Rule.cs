@@ -39,7 +39,7 @@ namespace Deltin.Deltinteger.Elements
             return Name;
         }
 
-        public string ToWorkshop(OutputLanguage language)
+        public string ToWorkshop(OutputLanguage language, bool optimize)
         {            
             var builder = new TabStringBuilder(true);
 
@@ -73,7 +73,7 @@ namespace Deltin.Deltinteger.Elements
                 builder.AppendLine("{");                                                // |   {
                 builder.Indent = 2;                                                     // |   (indent)
                 foreach (var condition in Conditions)                                   // |       
-                    builder.AppendLine(condition.ToWorkshop(language) + ";");           // |       Number Of Players >= 3;
+                    builder.AppendLine(condition.ToWorkshop(language, optimize) + ";"); // |       Number Of Players >= 3;
                 builder.Indent = 1;                                                     // |   (outdent)
                 builder.AppendLine("}");                                                // |   }
             }                                                                           //
@@ -86,7 +86,10 @@ namespace Deltin.Deltinteger.Elements
                 builder.AppendLine("{");                                                // |   {
                 builder.Indent = 2;                                                     // |   (indent)
                 foreach (var action in Actions)                                         // |       
-                    builder.AppendLine(action.Optimize().ToWorkshop(language));         // |       Set Global Variable(A, true);
+                    if (optimize)                                                       // |
+                        builder.AppendLine(action.Optimize().ToWorkshop(language));     // |       Set Global Variable(A, true);
+                    else                                                                // |
+                        builder.AppendLine(action.ToWorkshop(language));                // |
                 builder.Indent = 1;                                                     // |   (outdent)
                 builder.AppendLine("}");                                                // |   }
             }                                                                           //

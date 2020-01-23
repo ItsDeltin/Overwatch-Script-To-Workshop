@@ -448,7 +448,7 @@ namespace Deltin.Deltinteger.Elements
                 double y = -Math.Sin(v * (Math.PI / 180));
                 double z = Math.Cos(h * (Math.PI / 180));
 
-                if (y.ToString() == "-0")
+                if (y == -0)
                     y = 0;
 
                 return new V_Vector(x, y, z);
@@ -678,7 +678,7 @@ namespace Deltin.Deltinteger.Elements
                 if (double.IsNaN(gradient))
                     gradient = 0;
                 double result = Math.Atan(gradient) * (180 / Math.PI);
-                if (result.ToString() == "-0") //thank you c# for -0 being a thing
+                if (result == -0) //thank you c# for -0 being a thing
                     result = 180;
                 return result;
             }

@@ -255,7 +255,7 @@ namespace Deltin.Deltinteger.Parse
 
             // Get the rules.
             foreach (var rule in WorkshopRules)
-                result.AppendLine(rule.ToWorkshop(I18n.I18n.CurrentLanguage));
+                result.AppendLine(rule.ToWorkshop(I18n.I18n.CurrentLanguage, ConfigurationHandler.OptimizeOutput));
             
             WorkshopCode = result.ToString();
         }

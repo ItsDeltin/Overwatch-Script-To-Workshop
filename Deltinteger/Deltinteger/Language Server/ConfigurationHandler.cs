@@ -16,6 +16,8 @@ namespace Deltin.Deltinteger.LanguageServer
 {
     public class ConfigurationHandler : IDidChangeConfigurationHandler
     {
+        public static bool OptimizeOutput = true;
+
         private DeltintegerLanguageServer _languageServer { get; }
 
         public ConfigurationHandler(DeltintegerLanguageServer languageServer)
@@ -31,6 +33,7 @@ namespace Deltin.Deltinteger.LanguageServer
             {
                 var config = json.ToObject<RawConfiguration>();
                 I18n.I18n.LoadLanguage(config.GetOutputLanguage());
+                OptimizeOutput = config.optimizeOutput;
             }
 
             return Unit.Task;
@@ -50,8 +53,11 @@ namespace Deltin.Deltinteger.LanguageServer
     
         class RawConfiguration
         {
+#pragma warning disable CS0649
             public string outputLanguage;
             public string deltintegerPath;
+            public bool optimizeOutput;
+#pragma warning restore CS0649
 
             public OutputLanguage GetOutputLanguage()
             {
