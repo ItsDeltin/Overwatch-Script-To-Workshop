@@ -69,28 +69,31 @@ namespace Deltin.Deltinteger.Parse
                 return;
             }
 
-            bool setRecursiveAttribute = false;
-            bool setRuleContainedAttribute = false;
+            DocRange recursiveAttributeRange = null;
+            DocRange ruleAttributeRange = null;
 
             foreach (var attribute in attributeContexts)
             {
                 // Recursive attribute.
                 if (attribute.RECURSIVE() != null)
                 {
+                    if (IsRecursive) parseInfo.Script.Diagnostics.Error("'recursive' attribute was already set.", DocRange.GetRange(attribute.RECURSIVE()));
                     IsRecursive = true;
-                    if (setRecursiveAttribute) parseInfo.Script.Diagnostics.Error("'recursive' attribute was already set.", DocRange.GetRange(attribute.RECURSIVE()));
-                    setRecursiveAttribute = true;
+                    recursiveAttributeRange = DocRange.GetRange(attribute.RECURSIVE());
                 }
                 // Rule attribute.
                 else if (attribute.RULE_WORD() != null)
                 {
+                    if (RuleContained) parseInfo.Script.Diagnostics.Error("'rule' attribute was already set.", DocRange.GetRange(attribute.RULE_WORD()));
                     RuleContained = true;
-                    if (setRuleContainedAttribute) parseInfo.Script.Diagnostics.Error("'rule' attribute was already set.", DocRange.GetRange(attribute.RULE_WORD()));
-                    setRuleContainedAttribute = true;
+                    ruleAttributeRange = DocRange.GetRange(attribute.RULE_WORD());
                 }
                 // Unimplemented attribute option
                 else throw new NotImplementedException();
             }
+
+            if (RuleContained && IsRecursive)
+                parseInfo.Script.Diagnostics.Error("Functions with the 'rule' attribute cannot be recursive.", recursiveAttributeRange);
         }
 
         // Sets up the method's block.
