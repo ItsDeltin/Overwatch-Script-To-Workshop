@@ -196,8 +196,13 @@ namespace Deltin.Deltinteger.Elements
             };
 
             for (int i = 0; i < ParameterValues.Length; i++)
+            {
+                if (ParameterValues[i] == null || bElement.ParameterValues[i] == null)
+                    return ParameterValues[i] == bElement.ParameterValues[i];
+
                 if (!ParameterValues[i].EqualTo(bElement.ParameterValues[i]) || createsRandom.Contains(ParameterValues[i].GetType()))
                     return false;
+            }
             
             return true;
         }
