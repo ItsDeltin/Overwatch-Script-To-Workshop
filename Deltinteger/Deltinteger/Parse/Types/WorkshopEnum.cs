@@ -79,7 +79,7 @@ namespace Deltin.Deltinteger.Parse
 
         public IWorkshopTree Parse(ActionSet actionSet, bool asElement = true)
         {
-            if (asElement) return EnumData.ToElement(EnumMember);
+            if (asElement) return EnumData.ToElement(EnumMember) ?? (IWorkshopTree)EnumMember;
             return (IWorkshopTree)EnumMember;
         }
 
