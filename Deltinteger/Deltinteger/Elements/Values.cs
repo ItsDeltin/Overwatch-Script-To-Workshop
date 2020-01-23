@@ -1665,12 +1665,12 @@ namespace Deltin.Deltinteger.Elements
             {
                 double x = xNum.Value, y = yNum.Value, z = zNum.Value;
 
-                if (x == 0  && y == 0  && z == 1 ) return new V_Up();
-                if (x == 0  && y == 0  && z == -1) return new V_Down();
+                if (x == 0  && y == 1  && z == 0 ) return new V_Up();
+                if (x == 0  && y == -1 && z == 0 ) return new V_Down();
                 if (x == -1 && y == 0  && z == 0 ) return new V_Right();
                 if (x == 1  && y == 0  && z == 0 ) return new V_Left();
-                if (x == 0  && y == 1  && z == 0 ) return new V_Forward();
-                if (x == 0  && y == -1 && z == 0 ) return new V_Backward();
+                if (x == 0  && y == 0  && z == 1 ) return new V_Forward();
+                if (x == 0  && y == 0  && z == -1) return new V_Backward();
             }
 
             return this;
