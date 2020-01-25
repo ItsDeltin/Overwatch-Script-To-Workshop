@@ -164,15 +164,15 @@ namespace Deltin.Deltinteger.Parse
                 else
                 {
                     WorkshopVariable workshopVariable = new WorkshopVariable(variableIsGlobal, var.ID, WorkshopNameFromCodeName(variableIsGlobal, var.Name));
-                    variableList(isGlobal).Add(workshopVariable);
+                    variableList(variableIsGlobal).Add(workshopVariable);
                     return new IndexReference(ArrayBuilder, workshopVariable);
                 }
             }
             else
             {
-                int index = NextFreeExtended(isGlobal);
-                IndexReference reference = new IndexReference(ArrayBuilder, isGlobal ? global : player, new V_Number(index));
-                extendedVariableList(isGlobal).Add(new ExtendedVariable(var.Name, reference, index));
+                int index = NextFreeExtended(variableIsGlobal);
+                IndexReference reference = new IndexReference(ArrayBuilder, variableIsGlobal ? global : player, new V_Number(index));
+                extendedVariableList(variableIsGlobal).Add(new ExtendedVariable(var.Name, reference, index));
                 return reference;
             }
         }
