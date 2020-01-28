@@ -78,7 +78,7 @@ namespace Deltin.Deltinteger.CustomMethods
             new WorkshopVariableParameter("variable", "The variable to manipulate. Player variables will chase the event player's variable. Must be a variable defined on the rule level.", VariableType.Dynamic),
             new CodeParameter("destination", "The value that the variable will eventually reach. The type of this value may be either a number or a vector, through the variable’s existing value must be of the same type before the chase begins. Can use number or vector based values."),
             new CodeParameter("duration", "The amount of time, in seconds, over which the variable's value will approach the destination."),
-            new CodeParameter("reevaluation", "Specifies which of this action's inputs will be continuously reevaluated. This action will keep asking for and using new values from reevaluated inputs.", WorkshopEnumType.GetEnumType<RateChaseReevaluation>())
+            new CodeParameter("reevaluation", "Specifies which of this action's inputs will be continuously reevaluated. This action will keep asking for and using new values from reevaluated inputs.", WorkshopEnumType.GetEnumType<TimeChaseReevaluation>())
         };
 
         public override IWorkshopTree Get(ActionSet actionSet, IWorkshopTree[] parameterValues)
@@ -116,7 +116,7 @@ namespace Deltin.Deltinteger.CustomMethods
             new CodeParameter("player", "The player whose variable will gradually change. If multiple players are provided, each of their variables will change independently."),
             new CodeParameter("destination", "The value that the variable will eventually reach. The type of this value may be either a number or a vector, through the variable’s existing value must be of the same type before the chase begins. Can use number or vector based values."),
             new CodeParameter("duration", "The amount of time, in seconds, over which the variable's value will approach the destination."),
-            new CodeParameter("reevaluation", "Specifies which of this action's inputs will be continuously reevaluated. This action will keep asking for and using new values from reevaluated inputs.", WorkshopEnumType.GetEnumType<RateChaseReevaluation>())
+            new CodeParameter("reevaluation", "Specifies which of this action's inputs will be continuously reevaluated. This action will keep asking for and using new values from reevaluated inputs.", WorkshopEnumType.GetEnumType<TimeChaseReevaluation>())
         };
 
         public override IWorkshopTree Get(ActionSet actionSet, IWorkshopTree[] parameterValues)
