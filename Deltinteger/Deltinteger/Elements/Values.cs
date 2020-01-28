@@ -1044,25 +1044,6 @@ namespace Deltin.Deltinteger.Elements
             if (a is V_Not)
                 return (Element)a.ParameterValues[0];
 
-            if (a is V_Compare)
-            {
-                Operators op = (Operators)((EnumMember)a.ParameterValues[1]).Value;
-                IWorkshopTree left = a.ParameterValues[0];
-                IWorkshopTree right = a.ParameterValues[2];
-                if (op == Operators.Equal)
-                    return new V_Compare(left, Operators.NotEqual, right);
-                else if (op == Operators.GreaterThan)
-                    return new V_Compare(left, Operators.LessThanOrEqual, right);
-                else if (op == Operators.GreaterThanOrEqual)
-                    return new V_Compare(left, Operators.LessThan, right);
-                else if (op == Operators.LessThan)
-                    return new V_Compare(left, Operators.GreaterThanOrEqual, right);
-                else if (op == Operators.LessThanOrEqual)
-                    return new V_Compare(left, Operators.GreaterThan, right);
-                else if (op == Operators.NotEqual)
-                    return new V_Compare(left, Operators.Equal, right);
-            }
-
             return this;
         }
     }
