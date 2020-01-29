@@ -87,22 +87,11 @@ namespace Deltin.Deltinteger.Elements
         
         public virtual string ToWorkshop(OutputLanguage language)
         {
-            List<IWorkshopTree> elementParameters = new List<IWorkshopTree>();
-
-            for (int i = 0; i < ParameterData.Length; i++)
-            {
-                IWorkshopTree parameter = ParameterValues?.ElementAtOrDefault(i);
-
-                // If the parameter is null, get the default variable.
-                if (parameter == null)
-                    parameter = ParameterData[i].GetDefault();
-
-                elementParameters.Add(parameter);
-            }
+            AddMissingParameters();
 
             List<string> parameters = AdditionalParameters().ToList();
 
-            parameters.AddRange(elementParameters.Select(p => p.ToWorkshop(language)));
+            parameters.AddRange(ParameterValues.Select(p => p.ToWorkshop(language)));
 
             string result = "";
             if (!ElementList.IsValue && Disabled) result += I18n.I18n.Translate(language, "disabled") + " ";
@@ -110,6 +99,16 @@ namespace Deltin.Deltinteger.Elements
             if (parameters.Count != 0) result += "(" + string.Join(", ", parameters) + ")";
             if (!ElementList.IsValue) result += ";";
             return result;
+        }
+
+        private void AddMissingParameters()
+        {
+            List<IWorkshopTree> parameters = new List<IWorkshopTree>();
+
+            for (int i = 0; i < ParameterData.Length; i++)
+                parameters.Add(ParameterValues?.ElementAtOrDefault(i) ?? ParameterData[i].GetDefault());
+            
+            ParameterValues = parameters.ToArray();
         }
 
         public virtual bool ConstantSupported<T>()
@@ -129,6 +128,7 @@ namespace Deltin.Deltinteger.Elements
 
         protected void OptimizeChildren()
         {
+            AddMissingParameters();
             for (int i = 0; i < ParameterValues.Length; i++)
                 if (ParameterValues[i] is Element)
                     ParameterValues[i] = ((Element)ParameterValues[i]).Optimize();
@@ -197,10 +197,10 @@ namespace Deltin.Deltinteger.Elements
 
             for (int i = 0; i < ParameterValues.Length; i++)
             {
-                if (ParameterValues[i] == null || bElement.ParameterValues[i] == null)
-                    return ParameterValues[i] == bElement.ParameterValues[i];
+                if ((ParameterValues[i] == null) != (bElement.ParameterValues[i] == null))
+                    return false;
 
-                if (!ParameterValues[i].EqualTo(bElement.ParameterValues[i]) || createsRandom.Contains(ParameterValues[i].GetType()))
+                if (ParameterValues[i] != null && (!ParameterValues[i].EqualTo(bElement.ParameterValues[i]) || createsRandom.Contains(ParameterValues[i].GetType())))
                     return false;
             }
             

@@ -1,6 +1,5 @@
 using System;
 using Deltin.Deltinteger.LanguageServer;
-using Deltin.Deltinteger.Elements;
 using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
 using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItemKind;
 
@@ -196,37 +195,6 @@ namespace Deltin.Deltinteger.Parse
             string typeName = "define";
             if (CodeType != null) typeName = CodeType.Name;
             return HoverHandler.Sectioned(typeName + " " + Name, null);
-        }
-    }
-
-    class DefineAction : IStatement
-    {
-        public Var DefiningVariable { get; }
-
-        public DefineAction(Var var)
-        {
-            DefiningVariable = var;
-        }
-
-        public void Translate(ActionSet actionSet)
-        {
-            // Get the initial value.
-            IWorkshopTree initialValue = new V_Number(0);
-            if (DefiningVariable.InitialValue != null)
-                initialValue = DefiningVariable.InitialValue.Parse(actionSet);
-            
-            // Add the variable to the assigner.
-            actionSet.IndexAssigner.Add(actionSet.VarCollection, DefiningVariable, actionSet.IsGlobal, initialValue);
-
-            // Set the initial value.
-            if (DefiningVariable.Settable())
-            {
-                actionSet.AddAction(
-                    ((IndexReference)actionSet.IndexAssigner[DefiningVariable]).SetVariable(
-                        (Element)initialValue
-                    )
-                );
-            }
         }
     }
 
