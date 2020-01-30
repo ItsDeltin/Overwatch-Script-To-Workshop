@@ -6,12 +6,13 @@ namespace Deltin.Deltinteger.Parse
     {
         public IExpression Expression { get; private set; }
         private DeltinScriptParser.ExprContext ExpressionToParse { get; }
+        private DeltinScriptParser.Define_macroContext context { get; }
 
         public DefinedMacro(ParseInfo parseInfo, Scope scope, DeltinScriptParser.Define_macroContext context)
             : base(parseInfo, scope, context.name.Text, new LanguageServer.Location(parseInfo.Script.Uri, DocRange.GetRange(context.name)))
         {
+            this.context = context;
             AccessLevel = context.accessor().GetAccessLevel();
-            SetupParameters(context.setParameters());
 
             if (context.TERNARY_ELSE() == null)
             {
@@ -23,15 +24,22 @@ namespace Deltin.Deltinteger.Parse
                 if (ExpressionToParse == null)
                     parseInfo.Script.Diagnostics.Error("Expected expression.", DocRange.GetRange(context.TERNARY_ELSE()));
             }
+        }
 
+        public override void SetupParameters()
+        {
+            SetupParameters(context.setParameters());
             parseInfo.Script.AddHover(DocRange.GetRange(context.name), GetLabel(true));
         }
 
         override public void SetupBlock()
         {
-            if (ExpressionToParse == null) return;
-            Expression = DeltinScript.GetExpression(parseInfo.SetCallInfo(CallInfo), methodScope, ExpressionToParse);
-            ReturnType = Expression?.Type();
+            if (ExpressionToParse != null)
+            {
+                Expression = DeltinScript.GetExpression(parseInfo.SetCallInfo(CallInfo), methodScope, ExpressionToParse);
+                ReturnType = Expression?.Type();
+            }
+            foreach (var listener in listeners) listener.Applied();
         }
 
         override public IWorkshopTree Parse(ActionSet actionSet, IWorkshopTree[] parameterValues, object[] additionalParameterData)

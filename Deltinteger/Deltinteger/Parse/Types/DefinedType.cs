@@ -16,16 +16,19 @@ namespace Deltin.Deltinteger.Parse
         private Scope objectScope { get; }
         private Scope staticScope { get; }
         private List<Var> objectVariables { get; } = new List<Var>();
-        private DeltinScript translateInfo { get; }
+        private ParseInfo parseInfo { get; }
+        private DeltinScriptParser.Type_defineContext typeContext { get; }
 
         public DefinedType(ParseInfo parseInfo, Scope scope, DeltinScriptParser.Type_defineContext typeContext, List<IApplyBlock> applyMethods) : base(typeContext.name.Text)
         {
-            this.translateInfo = parseInfo.TranslateInfo;
-            if (translateInfo.IsCodeType(Name))
+            this.typeContext = typeContext;
+            this.parseInfo = parseInfo;
+
+            if (parseInfo.TranslateInfo.IsCodeType(Name))
                 parseInfo.Script.Diagnostics.Error($"A type with the name '{Name}' already exists.", DocRange.GetRange(typeContext.name));
             
             DefinedAt = new LanguageServer.Location(parseInfo.Script.Uri, DocRange.GetRange(typeContext.name));
-            translateInfo.AddSymbolLink(this, DefinedAt);
+            parseInfo.TranslateInfo.AddSymbolLink(this, DefinedAt);
 
             if (typeContext.CLASS() != null) 
             { 
@@ -39,18 +42,10 @@ namespace Deltin.Deltinteger.Parse
             }
             else throw new NotImplementedException();
 
-            staticScope = translateInfo.GlobalScope.Child(TypeKindString + " " + Name);
+            staticScope = parseInfo.TranslateInfo.GlobalScope.Child(TypeKindString + " " + Name);
             staticScope.GroupCatch = true;
             objectScope = staticScope.Child(TypeKindString + " " + Name);
             objectScope.This = this;
-
-            // Get the variables defined in the type.
-            foreach (var definedVariable in typeContext.define())
-            {
-                Var newVar = Var.CreateVarFromContext(VariableDefineType.InClass, parseInfo, definedVariable);
-                newVar.Finalize(UseScope(newVar.Static));
-                if (!newVar.Static) objectVariables.Add(newVar);
-            }
 
             // Todo: Static methods/macros.
             foreach (var definedMethod in typeContext.define_method())
@@ -80,6 +75,17 @@ namespace Deltin.Deltinteger.Parse
                 Constructors = new Constructor[] {
                     new Constructor(this, new Location(parseInfo.Script.Uri, DocRange.GetRange(typeContext.name)), AccessLevel.Public)
                 };
+            }
+        }
+
+        public void ResolveElements()
+        {
+            // Get the variables defined in the type.
+            foreach (var definedVariable in typeContext.define())
+            {
+                Var newVar = Var.CreateVarFromContext(VariableDefineType.InClass, parseInfo, definedVariable);
+                newVar.Finalize(UseScope(newVar.Static));
+                if (!newVar.Static) objectVariables.Add(newVar);
             }
         }
 
@@ -251,7 +257,7 @@ namespace Deltin.Deltinteger.Parse
         }
         public void AddLink(LanguageServer.Location location)
         {
-            translateInfo.AddSymbolLink(this, location);
+            parseInfo.TranslateInfo.AddSymbolLink(this, location);
         }
 
         override public CompletionItem GetCompletion()

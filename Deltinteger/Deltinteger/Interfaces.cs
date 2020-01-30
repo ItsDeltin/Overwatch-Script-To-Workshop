@@ -72,7 +72,14 @@ namespace Deltin.Deltinteger
 
     public interface IApplyBlock : ILabeled
     {
+        void SetupParameters();
         void SetupBlock();
+        void OnBlockApply(IOnBlockApplied onBlockApplied);
         CallInfo CallInfo { get; }
+    }
+
+    public interface IOnBlockApplied
+    {
+        void Applied();
     }
 }

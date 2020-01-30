@@ -184,6 +184,8 @@ namespace Deltin.Deltinteger.Parse
                     PlayerVariableScope.AddVariable(newVar, null, null);
             }
 
+            foreach (var applyType in types) if (applyType is DefinedType definedType) definedType.ResolveElements();
+            foreach (var apply in applyMethods) apply.SetupParameters();
             foreach (var apply in applyMethods) apply.SetupBlock();
             foreach (var apply in applyMethods) apply.CallInfo.CheckRecursion();
 
