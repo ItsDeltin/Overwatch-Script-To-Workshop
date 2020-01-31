@@ -372,7 +372,7 @@ namespace Deltin.Deltinteger.Parse
                 ConvertingTo = parseInfo.TranslateInfo.GetCodeType(typeConvert.PART().GetText(), parseInfo.Script.Diagnostics, DocRange.GetRange(typeConvert.PART()));
         }
 
-        public Scope ReturningScope() => ConvertingTo.GetObjectScope();
+        public Scope ReturningScope() => ConvertingTo?.GetObjectScope();
         public CodeType Type() => ConvertingTo;
         public IWorkshopTree Parse(ActionSet actionSet, bool asElement = true) => Expression.Parse(actionSet);
     }
