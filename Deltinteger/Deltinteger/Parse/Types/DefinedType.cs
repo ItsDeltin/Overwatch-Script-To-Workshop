@@ -98,6 +98,8 @@ namespace Deltin.Deltinteger.Parse
 
         override public IWorkshopTree New(ActionSet actionSet, Constructor constructor, IWorkshopTree[] constructorValues, object[] additionalParameterData)
         {
+            actionSet = actionSet.New(actionSet.IndexAssigner.CreateContained());
+
             var classData = actionSet.Translate.DeltinScript.SetupClasses();
             
             // Classes are stored in the class array (`classData.ClassArray`),
@@ -132,10 +134,10 @@ namespace Deltin.Deltinteger.Parse
         /// </summary>
         /// <param name="source">The source of the type.</param>
         /// <param name="assigner">The assigner that the object variables will be added to.</param>
-        public override void AddObjectVariablesToAssigner(Element reference, VarIndexAssigner assigner)
+        public override void AddObjectVariablesToAssigner(IWorkshopTree reference, VarIndexAssigner assigner)
         {
             for (int i = 0; i < objectVariables.Count; i++)
-                objectVariables[i].AddToAssigner(reference, assigner);
+                objectVariables[i].AddToAssigner((Element)reference, assigner);
         }
 
         public override void Call(ScriptFile script, DocRange callRange)

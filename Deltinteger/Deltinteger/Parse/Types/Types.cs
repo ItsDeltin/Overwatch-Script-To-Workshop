@@ -40,7 +40,7 @@ namespace Deltin.Deltinteger.Parse
         }
 
         public virtual void WorkshopInit(DeltinScript translateInfo) {}
-        public virtual void AddObjectVariablesToAssigner(Element reference, VarIndexAssigner assigner) {}
+        public virtual void AddObjectVariablesToAssigner(IWorkshopTree reference, VarIndexAssigner assigner) {}
 
         public virtual void Call(ScriptFile script, DocRange callRange)
         {

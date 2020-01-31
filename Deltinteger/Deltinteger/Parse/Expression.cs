@@ -182,7 +182,7 @@ namespace Deltin.Deltinteger.Parse
                 {
                     var type = Tree[i].Type();
 
-                    currentObject = (Element)current;
+                    currentObject = current as Element;
                     currentAssigner = actionSet.IndexAssigner.CreateContained();
                     type.AddObjectVariablesToAssigner(currentObject, currentAssigner);
                 }
