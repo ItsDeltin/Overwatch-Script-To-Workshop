@@ -107,24 +107,22 @@ namespace Deltin.Deltinteger.Parse
             var classReference = actionSet.VarCollection.Assign("_new_" + Name + "_class_index", actionSet.IsGlobal, true);
             classData.GetClassIndex(classReference, actionSet);
             
-            var classObject = classData.ClassArray.CreateChild((Element)classReference.GetVariable());
-            SetInitialVariables(classObject, actionSet);
-
             // Run the constructor.
+            SetInitialVariables(actionSet, (Element)classReference.GetVariable());
             AddObjectVariablesToAssigner((Element)classReference.GetVariable(), actionSet.IndexAssigner);
             constructor.Parse(actionSet.New((Element)classReference.GetVariable()), constructorValues, null);
 
             return classReference.GetVariable();
         }
 
-        private void SetInitialVariables(IndexReference typeObject, ActionSet actionSet)
+        private void SetInitialVariables(ActionSet actionSet, Element reference)
         {
-            for (int i = 0; i < objectVariables.Count; i++)
-            if (objectVariables[i].Variable.InitialValue != null)
+            foreach (ObjectVariable variable in objectVariables)
+            if (variable.Variable.InitialValue != null)
             {
-                actionSet.AddAction(typeObject.SetVariable(
-                    value: (Element)objectVariables[i].Variable.InitialValue.Parse(actionSet),
-                    index: i
+                actionSet.AddAction(variable.ArrayStore.SetVariable(
+                    value: (Element)variable.Variable.InitialValue.Parse(actionSet),
+                    index: reference
                 ));
             }
         }

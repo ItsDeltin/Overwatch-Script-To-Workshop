@@ -434,10 +434,7 @@ namespace Deltin.Deltinteger.Parse
             if (_classData == null)
             {
                 _classData = new ClassData(VarCollection);
-                InitialGlobal.ActionSet.AddAction(_classData.ClassArray.SetVariable(new V_EmptyArray()));
-
-                if (ClassData.CLASS_INDEX_WORKAROUND)
-                    InitialGlobal.ActionSet.AddAction(_classData.ClassIndexes.SetVariable(new V_EmptyArray()));
+                InitialGlobal.ActionSet.AddAction(_classData.ClassIndexes.SetVariable(0, null, Constants.MAX_ARRAY_LENGTH));
             }
             return _classData;
         }

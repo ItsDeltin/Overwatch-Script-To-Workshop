@@ -67,17 +67,11 @@ namespace Deltin.Deltinteger.Parse
 
             var classData = actionSet.Translate.DeltinScript.SetupClasses();
 
-            actionSet.AddAction(
-                classData.ClassArray.SetVariable(new V_Null(), null, delete)
-            );
-
-            if (ClassData.CLASS_INDEX_WORKAROUND)
-                actionSet.AddAction(classData.ClassIndexes.SetVariable(
-                    Element.Part<V_RemoveFromArray>(
-                        classData.ClassIndexes.GetVariable(),
-                        delete
-                    )
-                ));
+            actionSet.AddAction(classData.ClassIndexes.SetVariable(
+                new V_Number(0),
+                null,
+                delete
+            ));
         }
     }
 }
