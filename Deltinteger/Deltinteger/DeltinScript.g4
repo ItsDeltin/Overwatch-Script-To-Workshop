@@ -16,7 +16,7 @@ true   : TRUE          ;
 false  : FALSE         ;
 null   : NULL          ;
 
-define : accessor? STATIC? (GLOBAL|PLAYER)? (code_type | DEFINE) name=PART (id=number? | NOT?) (EQUALS expr?)? ;
+define : accessor? STATIC? (GLOBAL|PLAYER)? REF? (code_type | DEFINE) name=PART (id=number? | NOT?) (EQUALS expr?)? ;
 
 expr 
 	: 
@@ -207,6 +207,7 @@ DELETE    : 'delete'    ;
 MACRO     : 'macro'     ;
 DISABLED  : 'disabled'  ;
 ENUM      : 'enum'      ;
+REF       : 'ref'       ;
 
 EQUALS          : '='  ;
 EQUALS_POW      : '^=' ;
