@@ -39,10 +39,8 @@ namespace Deltin.Deltinteger.Parse
             throw new NotImplementedException();
         }
 
-        public virtual IndexReference GetObjectSource(DeltinScript translateInfo, IWorkshopTree element) => null;
-
-        public virtual void AddStaticVariablesToAssigner(DeltinScript translateInfo, VarIndexAssigner assigner) {}
-        public virtual void AddObjectVariablesToAssigner(IndexReference source, VarIndexAssigner assigner) {}
+        public virtual void WorkshopInit(DeltinScript translateInfo) {}
+        public virtual void AddObjectVariablesToAssigner(Element reference, VarIndexAssigner assigner) {}
 
         public virtual void Call(ScriptFile script, DocRange callRange)
         {

@@ -50,11 +50,6 @@ namespace Deltin.Deltinteger.Pathfinder
             return objectData.ClassReference.GetVariable();
         }
 
-        public override IndexReference GetObjectSource(DeltinScript translateInfo, IWorkshopTree element)
-        {
-            return translateInfo.SetupClasses().ClassArray.CreateChild((Element)element);
-        }
-
         public override Scope GetObjectScope() => ObjectScope;
         public override Scope ReturningScope() => StaticScope;
 

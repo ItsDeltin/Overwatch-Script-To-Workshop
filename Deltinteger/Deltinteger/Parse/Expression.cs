@@ -136,7 +136,7 @@ namespace Deltin.Deltinteger.Parse
             IWorkshopTree target = null;
             IWorkshopTree result = null;
             VarIndexAssigner currentAssigner = actionSet.IndexAssigner;
-            IndexReference currentObject = null;
+            Element currentObject = null;
             Element[] resultIndex = new Element[0];
 
             for (int i = 0; i < Tree.Length; i++)
@@ -182,7 +182,7 @@ namespace Deltin.Deltinteger.Parse
                 {
                     var type = Tree[i].Type();
 
-                    currentObject = type.GetObjectSource(actionSet.Translate.DeltinScript, current);
+                    currentObject = (Element)current;
                     currentAssigner = actionSet.IndexAssigner.CreateContained();
                     type.AddObjectVariablesToAssigner(currentObject, currentAssigner);
                 }
@@ -526,7 +526,7 @@ namespace Deltin.Deltinteger.Parse
                 parseInfo.Script.Diagnostics.Error("Keyword 'this' cannot be used here.", DocRange.GetRange(context));
         }
 
-        public IWorkshopTree Parse(ActionSet actionSet, bool asElement = true) => actionSet.CurrentObject.Index[0];
+        public IWorkshopTree Parse(ActionSet actionSet, bool asElement = true) => actionSet.CurrentObject;
         public CodeType Type() => ThisType;
         public Scope ReturningScope() => ThisType?.GetObjectScope();
     }

@@ -71,7 +71,7 @@ namespace Deltin.Deltinteger.Parse
                 classData.ClassArray.SetVariable(new V_Null(), null, delete)
             );
 
-            if (DefinedType.CLASS_INDEX_WORKAROUND)
+            if (ClassData.CLASS_INDEX_WORKAROUND)
                 actionSet.AddAction(classData.ClassIndexes.SetVariable(
                     Element.Part<V_RemoveFromArray>(
                         classData.ClassIndexes.GetVariable(),

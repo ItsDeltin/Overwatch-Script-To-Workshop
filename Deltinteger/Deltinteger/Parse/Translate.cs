@@ -223,7 +223,7 @@ namespace Deltin.Deltinteger.Parse
             }
 
             // Assign static variables.
-            foreach (var type in types) type.AddStaticVariablesToAssigner(this, DefaultIndexAssigner);
+            foreach (var type in types) type.WorkshopInit(this);
 
             // Setup single-instance methods.
             foreach (var method in singleInstanceMethods) method.SetupSingleInstance();
@@ -436,7 +436,7 @@ namespace Deltin.Deltinteger.Parse
                 _classData = new ClassData(VarCollection);
                 InitialGlobal.ActionSet.AddAction(_classData.ClassArray.SetVariable(new V_EmptyArray()));
 
-                if (DefinedType.CLASS_INDEX_WORKAROUND)
+                if (ClassData.CLASS_INDEX_WORKAROUND)
                     InitialGlobal.ActionSet.AddAction(_classData.ClassIndexes.SetVariable(new V_EmptyArray()));
             }
             return _classData;

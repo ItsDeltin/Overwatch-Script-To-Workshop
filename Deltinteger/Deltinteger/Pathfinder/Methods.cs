@@ -26,7 +26,7 @@ namespace Deltin.Deltinteger.Pathfinder
         public override IWorkshopTree Get(ActionSet actionSet, IWorkshopTree[] parameterValues)
         {
             DijkstraNormal algorithm = new DijkstraNormal(
-                actionSet, (Element)actionSet.CurrentObject.GetVariable(), Element.Part<V_PositionOf>(parameterValues[0]), (Element)parameterValues[1]
+                actionSet, (Element)actionSet.CurrentObject, Element.Part<V_PositionOf>(parameterValues[0]), (Element)parameterValues[1]
             );
             algorithm.Get();
             DijkstraBase.Pathfind(
@@ -51,7 +51,7 @@ namespace Deltin.Deltinteger.Pathfinder
         public override IWorkshopTree Get(ActionSet actionSet, IWorkshopTree[] parameterValues)
         {
             DijkstraMultiSource algorithm = new DijkstraMultiSource(
-                actionSet, actionSet.Translate.DeltinScript.SetupPathfinder(), (Element)actionSet.CurrentObject.GetVariable(), (Element)parameterValues[0], (Element)parameterValues[1]
+                actionSet, actionSet.Translate.DeltinScript.SetupPathfinder(), (Element)actionSet.CurrentObject, (Element)parameterValues[0], (Element)parameterValues[1]
             );
             algorithm.Get();
 
@@ -73,7 +73,7 @@ namespace Deltin.Deltinteger.Pathfinder
             Element destination = (Element)parameterValues[1];
 
             DijkstraNormal algorithm = new DijkstraNormal(
-                actionSet, (Element)actionSet.CurrentObject.GetVariable(), position, destination
+                actionSet, (Element)actionSet.CurrentObject, position, destination
             );
             algorithm.Get();
 
