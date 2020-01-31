@@ -3,7 +3,7 @@ using Deltin.Deltinteger.Elements;
 
 namespace Deltin.Deltinteger.Parse
 {
-    class CallVariableAction : IExpression
+    public class CallVariableAction : IExpression
     {
         public IIndexReferencer Calling { get; }
         public IExpression[] Index { get; }
@@ -23,8 +23,6 @@ namespace Deltin.Deltinteger.Parse
 
             return result;
         }
-
-        public Element[] ParseIndex(ActionSet actionSet) => Array.ConvertAll(Index, index => (Element)index.Parse(actionSet));
 
         public Scope ReturningScope()
         {

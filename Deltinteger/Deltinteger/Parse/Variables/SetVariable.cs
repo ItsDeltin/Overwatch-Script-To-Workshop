@@ -8,8 +8,7 @@ namespace Deltin.Deltinteger.Parse
 {
     public class SetVariableAction : IStatement
     {
-        private CallVariableAction SetVariable { get; }
-        private ExpressionTree Tree { get; }
+        private VariableResolve VariableResolve { get; }
         private string Operation { get; }
         private IExpression Value { get; }
 
@@ -17,42 +16,19 @@ namespace Deltin.Deltinteger.Parse
         {
             IExpression variableExpression = DeltinScript.GetExpression(parseInfo, scope, varsetContext.var);
 
-            DocRange notAVariableRange = null;
-            DocRange variableRange = null;
-
-            if (variableExpression is CallVariableAction)
-            {
-                SetVariable = (CallVariableAction)variableExpression;
-                variableRange = DocRange.GetRange(varsetContext.var);
-            }
-            else if (variableExpression is ExpressionTree)
-            {
-                Tree = (ExpressionTree)variableExpression;
-                if (Tree.Completed)
-                {
-                    if (Tree.Result is CallVariableAction == false)
-                        notAVariableRange = Tree.ExprContextTree.Last().Range;
-                    else
-                    {   
-                        SetVariable = (CallVariableAction)Tree.Result;
-                        variableRange = Tree.ExprContextTree.Last().Range;
-                    }
-                }
-            }
-            else if (variableExpression != null)
-                notAVariableRange = DocRange.GetRange(varsetContext.var);
-
-            if (notAVariableRange != null)
-                parseInfo.Script.Diagnostics.Error("Expected a variable.", notAVariableRange);
+            // Get the variable being set.
+            VariableResolve = new VariableResolve(variableExpression, DocRange.GetRange(varsetContext), parseInfo.Script.Diagnostics);
             
-            if (SetVariable != null && !SetVariable.Calling.Settable())
-                parseInfo.Script.Diagnostics.Error($"The variable '{SetVariable.Calling.Name}' cannot be set to.", variableRange);
-            
+            // Get the operation.
             if (varsetContext.statement_operation() != null)
             {
                 Operation = varsetContext.statement_operation().GetText();
+
+                // If there is no value, syntax error.
                 if (varsetContext.val == null)
                     parseInfo.Script.Diagnostics.Error("Expected an expression.", DocRange.GetRange(varsetContext).end.ToRange());
+                
+                // Parse the value.
                 else
                     Value = DeltinScript.GetExpression(parseInfo, scope, varsetContext.val);
             }
@@ -62,21 +38,7 @@ namespace Deltin.Deltinteger.Parse
 
         public void Translate(ActionSet actionSet)
         {
-            IGettable var;
-            Element target = null;
-            Element[] index;
-            if (Tree != null)
-            {
-                ExpressionTreeParseResult treeParseResult = Tree.ParseTree(actionSet, true, true);
-                var = treeParseResult.ResultingVariable;
-                target = (Element)treeParseResult.Target;
-                index = treeParseResult.ResultingIndex;
-            }
-            else
-            {
-                var = actionSet.IndexAssigner[SetVariable.Calling];
-                index = Array.ConvertAll(SetVariable.Index, index => (Element)index.Parse(actionSet));
-            }
+            VariableElements elements = VariableResolve.ParseElements(actionSet);
 
             Element value = null;
             if (Value != null) value = (Element)Value.Parse(actionSet);
@@ -97,9 +59,9 @@ namespace Deltin.Deltinteger.Parse
             }
 
             if (modifyOperation == null)
-                actionSet.AddAction(((IndexReference)var).SetVariable(value, target, index));
+                actionSet.AddAction(elements.IndexReference.SetVariable(value, elements.Target, elements.Index));
             else
-                actionSet.AddAction(((IndexReference)var).ModifyVariable((Elements.Operation)modifyOperation, value, target, index));
+                actionSet.AddAction(elements.IndexReference.ModifyVariable((Elements.Operation)modifyOperation, value, elements.Target, elements.Index));
 
         }
     }
