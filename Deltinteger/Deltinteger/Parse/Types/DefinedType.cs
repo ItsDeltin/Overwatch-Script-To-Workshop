@@ -19,6 +19,7 @@ namespace Deltin.Deltinteger.Parse
 
         public DefinedType(ParseInfo parseInfo, Scope scope, DeltinScriptParser.Type_defineContext typeContext, List<IApplyBlock> applyMethods) : base(typeContext.name.Text)
         {
+            CanBeDeleted = true;
             this.typeContext = typeContext;
             this.parseInfo = parseInfo;
 
@@ -136,6 +137,20 @@ namespace Deltin.Deltinteger.Parse
         {
             for (int i = 0; i < objectVariables.Count; i++)
                 objectVariables[i].AddToAssigner((Element)reference, assigner);
+        }
+
+        /// <summary>
+        /// Deletes a variable from memory.
+        /// </summary>
+        /// <param name="actionSet">The action set to add the actions to.</param>
+        /// <param name="reference">The object reference.</param>
+        public override void Delete(ActionSet actionSet, Element reference)
+        {
+            foreach (ObjectVariable objectVariable in objectVariables)
+                actionSet.AddAction(objectVariable.ArrayStore.SetVariable(
+                    value: new V_Number(0),
+                    index: reference
+                ));
         }
 
         public override void Call(ScriptFile script, DocRange callRange)

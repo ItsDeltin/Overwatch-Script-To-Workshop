@@ -14,6 +14,7 @@ namespace Deltin.Deltinteger.Parse
         public string Name { get; }
         public Constructor[] Constructors { get; protected set; } = new Constructor[0];
         public string Description { get; protected set; }
+        public bool CanBeDeleted { get; protected set; } = false;
 
         public CodeType(string name)
         {
@@ -41,6 +42,8 @@ namespace Deltin.Deltinteger.Parse
 
         public virtual void WorkshopInit(DeltinScript translateInfo) {}
         public virtual void AddObjectVariablesToAssigner(IWorkshopTree reference, VarIndexAssigner assigner) {}
+
+        public virtual void Delete(ActionSet actionSet, Element reference) {}
 
         public virtual void Call(ScriptFile script, DocRange callRange)
         {

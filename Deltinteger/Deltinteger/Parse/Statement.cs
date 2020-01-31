@@ -59,19 +59,29 @@ namespace Deltin.Deltinteger.Parse
         public DeleteAction(ParseInfo parseInfo, Scope scope, DeltinScriptParser.DeleteContext deleteContext)
         {
             DeleteValue = DeltinScript.GetExpression(parseInfo, scope, deleteContext.expr());
+
+            if (DeleteValue.Type() == null)
+                parseInfo.Script.Diagnostics.Error("Expression has no type.", DocRange.GetRange(deleteContext.expr()));
+            else if (!DeleteValue.Type().CanBeDeleted)
+                parseInfo.Script.Diagnostics.Error($"Type '{DeleteValue.Type().Name}' cannot be deleted.", DocRange.GetRange(deleteContext.expr()));
         }
 
         public void Translate(ActionSet actionSet)
         {
+            // Object reference to delete.
             Element delete = (Element)DeleteValue.Parse(actionSet);
 
+            // Class data.
             var classData = actionSet.Translate.DeltinScript.SetupClasses();
 
+            // Remove the variable from the list of classes.
             actionSet.AddAction(classData.ClassIndexes.SetVariable(
-                new V_Number(0),
-                null,
-                delete
+                value: new V_Number(0),
+                index: delete
             ));
+
+            // Delete the object.
+            DeleteValue.Type().Delete(actionSet, delete);
         }
     }
 }

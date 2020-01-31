@@ -11,6 +11,7 @@ namespace Deltin.Deltinteger.Parse
 
         public ClassType(string name) : base(name)
         {
+            CanBeDeleted = true;
             StaticScope = new Scope("class " + name);
             ObjectScope = StaticScope.Child("class " + name);
         }
