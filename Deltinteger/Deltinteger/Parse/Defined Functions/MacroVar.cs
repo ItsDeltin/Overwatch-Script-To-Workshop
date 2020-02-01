@@ -43,6 +43,7 @@ namespace Deltin.Deltinteger.Parse
             this.scope = scope;
             this.parseInfo = parseInfo;
 
+            scope.AddVariable(this, parseInfo.Script.Diagnostics, DocRange.GetRange(macroContext.name));
             parseInfo.Script.AddHover(DocRange.GetRange(macroContext.name), GetLabel(true));
         }
 

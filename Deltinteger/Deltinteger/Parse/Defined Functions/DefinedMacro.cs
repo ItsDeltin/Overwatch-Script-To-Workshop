@@ -30,6 +30,7 @@ namespace Deltin.Deltinteger.Parse
         {
             SetupParameters(context.setParameters());
             parseInfo.Script.AddHover(DocRange.GetRange(context.name), GetLabel(true));
+            containingScope.AddMethod(this, parseInfo.Script.Diagnostics, DefinedAt.range);
         }
 
         override public void SetupBlock()

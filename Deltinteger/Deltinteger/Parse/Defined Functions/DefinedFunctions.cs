@@ -20,6 +20,7 @@ namespace Deltin.Deltinteger.Parse
 
         protected ParseInfo parseInfo { get; }
         protected Scope methodScope { get; }
+        protected Scope containingScope { get; }
         protected Var[] ParameterVars { get; private set; }
 
         public CallInfo CallInfo { get; }
@@ -30,6 +31,7 @@ namespace Deltin.Deltinteger.Parse
             DefinedAt = definedAt;
             this.parseInfo = parseInfo;
             methodScope = scope.Child();
+            containingScope = scope;
             CallInfo = new CallInfo(this, parseInfo.Script);
             parseInfo.TranslateInfo.AddSymbolLink(this, definedAt);
         }

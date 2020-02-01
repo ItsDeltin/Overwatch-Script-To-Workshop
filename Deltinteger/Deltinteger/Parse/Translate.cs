@@ -417,13 +417,11 @@ namespace Deltin.Deltinteger.Parse
             if (macroContext.LEFT_PAREN() != null || macroContext.RIGHT_PAREN() != null)
             {
                 var newMacro = new DefinedMacro(parseInfo, scope, macroContext);
-                scope.AddMethod(newMacro, parseInfo.Script.Diagnostics, DocRange.GetRange(macroContext.name));
                 applyMethods.Add(newMacro);
             }
             else
             {
                 var newMacro = new MacroVar(parseInfo, scope, macroContext);
-                scope.AddVariable(newMacro, parseInfo.Script.Diagnostics, DocRange.GetRange(macroContext.name));
                 applyMethods.Add(newMacro);
             }
         }
