@@ -191,8 +191,8 @@ namespace Deltin.Deltinteger.Elements
     [Parameter("Text ID", ValueType.Number, null)]
     public class A_DestroyHudText : Element {}
 
-    [ElementData("Destroy Effect")]
-    [Parameter("Effect ID", ValueType.Player, null)]
+    [ElementData("Destroy Icon")]
+    [Parameter("Icon ID", ValueType.Number, null)]
     public class A_DestroyIcon : Element {}
 
     [ElementData("Destroy In-World Text")]
