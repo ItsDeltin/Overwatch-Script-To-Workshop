@@ -16,7 +16,7 @@ namespace Deltin.Deltinteger.Parse
         private List<Scope> children { get; } = new List<Scope>();
         public string ErrorName { get; set; } = "current scope";
         public CodeType This { get; set; }
-        public bool GroupCatch { get; set; }
+        public bool PrivateCatch { get; set; }
 
         public Scope() {}
         private Scope(Scope parent)
@@ -224,7 +224,7 @@ namespace Deltin.Deltinteger.Parse
         public Scope GroupScope()
         {
             Scope current = this;
-            while (current.Parent != null && !current.GroupCatch) current = current.Parent;
+            while (current.Parent != null && !current.PrivateCatch) current = current.Parent;
             return current;
         }
 

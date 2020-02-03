@@ -119,7 +119,7 @@ ruleset :
 
 // Classes/structs
 
-type_define : (STRUCT | CLASS) name=PART
+type_define : (STRUCT | CLASS) name=PART (TERNARY_ELSE extends=PART?)?
 	BLOCK_START
 	((define STATEMENT_END) | constructor | define_method | define_macro)*
 	BLOCK_END ;
@@ -127,7 +127,7 @@ type_define : (STRUCT | CLASS) name=PART
 enum_define : ENUM name=PART BLOCK_START (firstMember=PART enum_element*)? BLOCK_END ;
 enum_element : COMMA PART ;
 
-accessor : PRIVATE | PUBLIC;
+accessor : PRIVATE | PUBLIC | PROTECTED;
 
 constructor : accessor? name=PART LEFT_PAREN setParameters RIGHT_PAREN block ;
 
@@ -197,6 +197,7 @@ STRUCT    : 'struct'    ;
 CLASS     : 'class'     ;
 PRIVATE   : 'private'   ;
 PUBLIC    : 'public'    ;
+PROTECTED : 'protected' ;
 THIS      : 'this'      ;
 ROOT      : 'root'      ;
 NEW       : 'new'       ;

@@ -11,40 +11,25 @@ namespace Deltin.Deltinteger.Parse
     public class DefinedType : CodeType
     {
         public LanguageServer.Location DefinedAt { get; }
-        private Scope objectScope { get; }
-        private Scope staticScope { get; }
+        private Scope objectScope { get; set; }
+        private Scope staticScope { get; set; }
         private List<ObjectVariable> objectVariables { get; } = new List<ObjectVariable>();
-        private ParseInfo parseInfo { get; }
-        private DeltinScriptParser.Type_defineContext typeContext { get; }
+        private ParseInfo parseInfo;
+        private DeltinScriptParser.Type_defineContext typeContext;
+        private List<IApplyBlock> applyBlocks;
 
-        public DefinedType(ParseInfo parseInfo, Scope scope, DeltinScriptParser.Type_defineContext typeContext, List<IApplyBlock> applyMethods) : base(typeContext.name.Text)
+        public DefinedType(ParseInfo parseInfo, Scope scope, DeltinScriptParser.Type_defineContext typeContext, List<IApplyBlock> applyBlocks) : base(typeContext.name.Text)
         {
             CanBeDeleted = true;
             this.typeContext = typeContext;
             this.parseInfo = parseInfo;
+            this.applyBlocks = applyBlocks;
 
             if (parseInfo.TranslateInfo.IsCodeType(Name))
                 parseInfo.Script.Diagnostics.Error($"A type with the name '{Name}' already exists.", DocRange.GetRange(typeContext.name));
             
             DefinedAt = new LanguageServer.Location(parseInfo.Script.Uri, DocRange.GetRange(typeContext.name));
             parseInfo.TranslateInfo.AddSymbolLink(this, DefinedAt);
-
-            staticScope = parseInfo.TranslateInfo.GlobalScope.Child("class " + Name);
-            staticScope.GroupCatch = true;
-            objectScope = staticScope.Child("class " + Name);
-            objectScope.This = this;
-
-            // Todo: Static methods/macros.
-            foreach (var definedMethod in typeContext.define_method())
-            {
-                var newMethod = new DefinedMethod(parseInfo, UseScope(false), definedMethod, this);
-                applyMethods.Add(newMethod);
-            }
-
-            foreach (var macroContext in typeContext.define_macro())
-            {
-                DeltinScript.GetMacro(parseInfo, UseScope(false), macroContext, applyMethods);
-            }
 
             // Get the constructors.
             if (typeContext.constructor().Length > 0)
@@ -53,7 +38,7 @@ namespace Deltin.Deltinteger.Parse
                 for (int i = 0; i < Constructors.Length; i++)
                 {
                     Constructors[i] = new DefinedConstructor(parseInfo, this, typeContext.constructor(i));
-                    applyMethods.Add((DefinedConstructor)Constructors[i]);
+                    applyBlocks.Add((DefinedConstructor)Constructors[i]);
                 }
             }
             else
@@ -67,6 +52,44 @@ namespace Deltin.Deltinteger.Parse
 
         public void ResolveElements()
         {
+            // Get the type being extended.
+            if (typeContext.TERNARY_ELSE() != null)
+            {
+                // If there is no type name, error.
+                if (typeContext.extends == null)
+                    parseInfo.Script.Diagnostics.Error("Expected type name.", DocRange.GetRange(typeContext.TERNARY_ELSE()));
+                else
+                {
+                    // Get the type being inherited.
+                    CodeType inheriting = parseInfo.TranslateInfo.GetCodeType(typeContext.extends.Text, parseInfo.Script.Diagnostics, DocRange.GetRange(typeContext.extends));
+
+                    // GetCodeType will return null if the type is not found.
+                    if (inheriting != null)
+                        Inherit(inheriting, parseInfo.Script.Diagnostics, DocRange.GetRange(typeContext.extends));
+                }
+            }
+
+            if (Extends == null)
+                staticScope = parseInfo.TranslateInfo.GlobalScope.Child("class " + Name);
+            else
+                staticScope = Extends.GetObjectScope().Child("class " + Name);
+            
+            staticScope.PrivateCatch = true;
+            objectScope = staticScope.Child("class " + Name);
+            objectScope.This = this;
+
+            // Todo: Static methods/macros.
+            foreach (var definedMethod in typeContext.define_method())
+            {
+                var newMethod = new DefinedMethod(parseInfo, UseScope(false), definedMethod, this);
+                applyBlocks.Add(newMethod);
+            }
+
+            foreach (var macroContext in typeContext.define_macro())
+            {
+                DeltinScript.GetMacro(parseInfo, UseScope(false), macroContext, applyBlocks);
+            }
+
             // Get the variables defined in the type.
             foreach (var definedVariable in typeContext.define())
             {
@@ -76,10 +99,21 @@ namespace Deltin.Deltinteger.Parse
             }
         }
 
+        private int StackStart(bool inclusive)
+        {
+            int extStack = 0;
+            if (Extends != null) extStack = ((DefinedType)Extends).StackStart(true);
+            if (inclusive) extStack += objectVariables.Count;
+            return extStack;
+        }
+
         public override void WorkshopInit(DeltinScript translateInfo)
         {
-            foreach (ObjectVariable variable in objectVariables)
-                variable.SetArrayStore(translateInfo.VarCollection);
+            ClassData classData = translateInfo.SetupClasses();
+            int stackOffset = StackStart(false);
+
+            for (int i = 0; i < objectVariables.Count; i++)
+                objectVariables[i].SetArrayStore(classData.GetClassVariableStack(translateInfo.VarCollection, i + stackOffset));
         }
 
         private Scope UseScope(bool isStatic)
@@ -109,15 +143,18 @@ namespace Deltin.Deltinteger.Parse
             classData.GetClassIndex(classReference, actionSet);
             
             // Run the constructor.
-            SetInitialVariables(actionSet, (Element)classReference.GetVariable());
+            BaseSetup(actionSet, (Element)classReference.GetVariable());
             AddObjectVariablesToAssigner((Element)classReference.GetVariable(), actionSet.IndexAssigner);
             constructor.Parse(actionSet.New((Element)classReference.GetVariable()), constructorValues, null);
 
             return classReference.GetVariable();
         }
 
-        private void SetInitialVariables(ActionSet actionSet, Element reference)
+        public override void BaseSetup(ActionSet actionSet, Element reference)
         {
+            if (Extends != null)
+                Extends.BaseSetup(actionSet, reference);
+
             foreach (ObjectVariable variable in objectVariables)
             if (variable.Variable.InitialValue != null)
             {
@@ -135,6 +172,7 @@ namespace Deltin.Deltinteger.Parse
         /// <param name="assigner">The assigner that the object variables will be added to.</param>
         public override void AddObjectVariablesToAssigner(IWorkshopTree reference, VarIndexAssigner assigner)
         {
+            Extends?.AddObjectVariablesToAssigner(reference, assigner);
             for (int i = 0; i < objectVariables.Count; i++)
                 objectVariables[i].AddToAssigner((Element)reference, assigner);
         }
@@ -146,6 +184,9 @@ namespace Deltin.Deltinteger.Parse
         /// <param name="reference">The object reference.</param>
         public override void Delete(ActionSet actionSet, Element reference)
         {
+            if (Extends != null && Extends.CanBeDeleted)
+                Extends.Delete(actionSet, reference);
+
             foreach (ObjectVariable objectVariable in objectVariables)
                 actionSet.AddAction(objectVariable.ArrayStore.SetVariable(
                     value: new V_Number(0),
@@ -184,9 +225,9 @@ namespace Deltin.Deltinteger.Parse
             Variable = variable;
         }
 
-        public void SetArrayStore(VarCollection varCollection)
+        public void SetArrayStore(IndexReference store)
         {
-            ArrayStore = varCollection.Assign(Variable.Name, true, false);
+            ArrayStore = store;
         }
 
         public void AddToAssigner(Element reference, VarIndexAssigner assigner)

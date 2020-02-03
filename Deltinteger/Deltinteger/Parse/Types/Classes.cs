@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using Deltin.Deltinteger.Elements;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 
@@ -45,6 +47,7 @@ namespace Deltin.Deltinteger.Parse
     public class ClassData
     {
         public IndexReference ClassIndexes { get; }
+        private List<IndexReference> VariableStacks { get; } = new List<IndexReference>();
 
         public ClassData(VarCollection varCollection)
         {
@@ -71,6 +74,15 @@ namespace Deltin.Deltinteger.Parse
                 null,
                 (Element)classReference.GetVariable()
             ));
+        }
+
+        public IndexReference GetClassVariableStack(VarCollection collection, int index)
+        {
+            if (index > VariableStacks.Count) throw new Exception("Variable stack skipped");
+            if (index == VariableStacks.Count)
+                VariableStacks.Add(collection.Assign("_objectVariable_" + index, true, false));
+            
+            return VariableStacks[index];
         }
     }
 }

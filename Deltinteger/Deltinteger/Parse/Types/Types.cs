@@ -13,12 +13,40 @@ namespace Deltin.Deltinteger.Parse
     {
         public string Name { get; }
         public Constructor[] Constructors { get; protected set; } = new Constructor[0];
+        public CodeType Extends { get; private set; }
         public string Description { get; protected set; }
+
+        /// <summary>Determines if the class can be deleted with the delete keyword.</summary>
         public bool CanBeDeleted { get; protected set; } = false;
+
+        /// <summary>Determines if other classes can inherit this class.</summary>
+        public bool CanBeExtended { get; private set; } = false;
+
+        /// <summary>Should be true if the class was called in the script.</summary>
+        public bool ShouldInit { get; private set; } = false;
 
         public CodeType(string name)
         {
             Name = name;
+        }
+
+        protected void Inherit(CodeType extend, FileDiagnostics diagnostics, DocRange range)
+        {
+            if (extend == null) throw new ArgumentNullException(nameof(extend));
+
+            if (extend.CanBeExtended)
+            {
+                string errorMessage = "Type '" + extend.Name + "' cannot be inherited.";
+
+                if (diagnostics == null || range == null) throw new Exception(errorMessage);
+                else
+                {
+                    diagnostics.Error(errorMessage, range);
+                    return;
+                }
+            }
+
+            Extends = extend;
         }
 
         // Static
@@ -39,6 +67,7 @@ namespace Deltin.Deltinteger.Parse
             // Classes that can't be created shouldn't have constructors.
             throw new NotImplementedException();
         }
+        public virtual void BaseSetup(ActionSet actionSet, Element reference) { throw new NotImplementedException(); }
 
         public virtual void WorkshopInit(DeltinScript translateInfo) {}
         public virtual void AddObjectVariablesToAssigner(IWorkshopTree reference, VarIndexAssigner assigner) {}

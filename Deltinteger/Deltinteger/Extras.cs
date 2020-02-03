@@ -79,6 +79,7 @@ namespace Deltin.Deltinteger
             if (accessorContext == null) return AccessLevel.Private;
             else if (accessorContext.PUBLIC() != null) return AccessLevel.Public;
             else if (accessorContext.PRIVATE() != null) return AccessLevel.Private;
+            else if (accessorContext.PROTECTED() != null) return AccessLevel.Protected;
             else throw new NotImplementedException();
         }
 

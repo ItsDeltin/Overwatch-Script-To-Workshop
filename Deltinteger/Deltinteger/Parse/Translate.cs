@@ -40,7 +40,7 @@ namespace Deltin.Deltinteger.Parse
             
             GlobalScope = Scope.GetGlobalScope();
             RulesetScope = GlobalScope.Child();
-            RulesetScope.GroupCatch = true;
+            RulesetScope.PrivateCatch = true;
             
             Translate();
             if (!diagnostics.ContainsErrors())
@@ -451,7 +451,8 @@ namespace Deltin.Deltinteger.Parse
     public enum AccessLevel
     {
         Public,
-        Private
+        Private,
+        Protected
     }
 
     public class ParseInfo
