@@ -181,7 +181,10 @@ namespace Deltin.Deltinteger.Parse
                 rulesetVariables.Add(newVar);
                 // Add the variable to the player variables scope if it is a player variable.
                 if (newVar.VariableType == VariableType.Player)
-                    PlayerVariableScope.AddVariable(newVar, null, null);
+                    // Syntax error will throw an exception. If there was a syntax error, it would be added by finalize.
+                    try {
+                        PlayerVariableScope.AddVariable(newVar, null, null);
+                    } catch (Exception) {}
             }
 
             foreach (var applyType in types) if (applyType is DefinedType definedType) definedType.ResolveElements();

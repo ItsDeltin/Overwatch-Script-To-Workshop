@@ -49,6 +49,18 @@ namespace Deltin.Deltinteger.LanguageServer
                 }
 
                 var document = _languageServer.DocumentHandler.TextDocumentFromUri(group.Uri);
+
+                // document will be null if the editor doesn't have the document of the group opened.
+                if (document == null)
+                {
+                    ImportedScript importedScript = _languageServer.FileGetter.GetImportedFile(group.Uri);
+                    document = new TextDocumentItem() {
+                        Uri = group.Uri,
+                        Text = importedScript.Content,
+                        LanguageId = "ostw"
+                    };
+                }
+
                 WorkspaceEditDocumentChange edit = new WorkspaceEditDocumentChange(new TextDocumentEdit() {
                     Edits = edits.ToArray(),
                     TextDocument = new VersionedTextDocumentIdentifier() {

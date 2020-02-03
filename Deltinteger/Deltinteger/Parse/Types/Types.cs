@@ -47,8 +47,7 @@ namespace Deltin.Deltinteger.Parse
 
         public virtual void Call(ScriptFile script, DocRange callRange)
         {
-            if (Description != null)
-                script.AddHover(callRange, Description);
+            script.AddHover(callRange, HoverHandler.Sectioned("class " + Name, Description));
         }
 
         public abstract CompletionItem GetCompletion();

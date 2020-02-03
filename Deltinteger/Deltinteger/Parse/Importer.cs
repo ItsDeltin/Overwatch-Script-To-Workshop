@@ -41,7 +41,7 @@ namespace Deltin.Deltinteger.Parse
             }
         }
 
-        private ImportedScript GetImportedFile(Uri uri)
+        public ImportedScript GetImportedFile(Uri uri)
         {
             foreach (ImportedScript importedFile in ImportedFiles)
                 // TODO-URI: Should use Uri.Compare?
@@ -64,7 +64,7 @@ namespace Deltin.Deltinteger.Parse
         }
     }
 
-    class ImportedFile
+    public class ImportedFile
     {
         public Uri Uri { get; }
         public string Content { get; private set; }
@@ -118,7 +118,7 @@ namespace Deltin.Deltinteger.Parse
 
         protected virtual void OnUpdate() {}
     }
-    class ImportedScript : ImportedFile
+    public class ImportedScript : ImportedFile
     {
         public ScriptParseInfo ScriptParseInfo { get; } = new ScriptParseInfo();
 
