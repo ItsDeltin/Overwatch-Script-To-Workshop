@@ -356,9 +356,10 @@ namespace Deltin.Deltinteger.Elements
         public StringOrMarkupContent Documentation => Wiki?.Description;
 
         // IScopeable defaults
-        public LanguageServer.Location DefinedAt { get; } = null;
-        public AccessLevel AccessLevel { get; } = AccessLevel.Public;
-        public bool WholeContext { get; } = true;
+        public LanguageServer.Location DefinedAt => null;
+        public AccessLevel AccessLevel => AccessLevel.Public;
+        public bool WholeContext => true;
+        public bool Static => true;
 
         public CodeType ReturnType { get; } = null;
 

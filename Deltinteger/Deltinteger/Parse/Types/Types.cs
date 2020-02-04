@@ -49,10 +49,11 @@ namespace Deltin.Deltinteger.Parse
             Extends = extend;
         }
 
-        // Static
-        public abstract Scope ReturningScope();
-        // Object
-        public virtual Scope GetObjectScope() => null;
+        public virtual Scope ReturningScope() => null;
+        public virtual Scope GetObjectScope()
+        {
+            return ReturningScope()?.Child(true);
+        }
 
         public CodeType Type() => null;
         public IWorkshopTree Parse(ActionSet actionSet, bool asElement = true) => null;

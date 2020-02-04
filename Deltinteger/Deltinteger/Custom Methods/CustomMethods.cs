@@ -15,18 +15,20 @@ namespace Deltin.Deltinteger.CustomMethods
     [AttributeUsage(AttributeTargets.Class)]
     public class CustomMethod : Attribute
     {
-        public CustomMethod(string methodName, string description, CustomMethodType methodType, bool global = true)
+        public string MethodName { get; }
+        public string Description { get; }
+        public CustomMethodType MethodType { get; }
+        public bool Global { get; }
+        public bool Static { get; }
+
+        public CustomMethod(string methodName, string description, CustomMethodType methodType, bool global = true, bool isStatic = true)
         {
             MethodName = methodName;
             Description = description;
             MethodType = methodType;
             Global = global;
+            Static = isStatic;
         }
-
-        public string MethodName { get; }
-        public string Description { get; }
-        public CustomMethodType MethodType { get; }
-        public bool Global { get; }
     }
 
     public enum CustomMethodType
@@ -45,9 +47,10 @@ namespace Deltin.Deltinteger.CustomMethods
         public bool Global { get; }
 
         // IScopeable defaults
-        public Location DefinedAt { get; } = null;
-        public AccessLevel AccessLevel { get; } = AccessLevel.Public;
-        public bool WholeContext { get; } = true;
+        public Location DefinedAt => null;
+        public AccessLevel AccessLevel => AccessLevel.Public;
+        public bool WholeContext => true;
+        public bool Static { get; }
         
         public CodeType ReturnType { get; } = null;
 
@@ -62,6 +65,7 @@ namespace Deltin.Deltinteger.CustomMethods
             CustomMethodType = data.MethodType;
             Documentation = data.Description;
             Global = data.Global;
+            Static = data.Static;
 
             var obj = GetObject();
             Parameters = obj.Parameters() ?? new CodeParameter[0];

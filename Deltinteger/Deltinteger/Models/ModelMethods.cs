@@ -19,18 +19,18 @@ namespace Deltin.Deltinteger.Models
 {
     public class AssetClass : CodeType
     {
-        private Scope StaticScope { get; } = new Scope("class Asset");
+        private Scope scope { get; } = new Scope("class Asset");
 
         public AssetClass() : base("Asset")
         {
             Description = "Contains functions for displaying assets in the world.";
-            StaticScope.AddMethod(CustomMethodData.GetCustomMethod<ShowModel>(), null, null);
-            StaticScope.AddMethod(CustomMethodData.GetCustomMethod<CreateTextWithFont>(), null, null);
-            StaticScope.AddMethod(CustomMethodData.GetCustomMethod<CreateTextFancy>(), null, null);
-            StaticScope.AddMethod(CustomMethodData.GetCustomMethod<CreateText>(), null, null);
+            scope.AddMethod(CustomMethodData.GetCustomMethod<ShowModel>(), null, null);
+            scope.AddMethod(CustomMethodData.GetCustomMethod<CreateTextWithFont>(), null, null);
+            scope.AddMethod(CustomMethodData.GetCustomMethod<CreateTextFancy>(), null, null);
+            scope.AddMethod(CustomMethodData.GetCustomMethod<CreateText>(), null, null);
         }
 
-        public override Scope ReturningScope() => StaticScope;
+        public override Scope ReturningScope() => scope;
 
         public override CompletionItem GetCompletion() => new CompletionItem() {
             Label = "Asset",

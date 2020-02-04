@@ -243,6 +243,9 @@ namespace Deltin.Deltinteger.Parse
         }
     }
 
+    /// <summary>
+    /// Gets the variable in an expression.
+    /// </summary>
     public class VariableResolve
     {
         public bool DoesResolveToVariable { get; }

@@ -17,6 +17,8 @@ namespace Deltin.Deltinteger.Parse
         public string ErrorName { get; set; } = "current scope";
         public CodeType This { get; set; }
         public bool PrivateCatch { get; set; }
+        public bool ProtectedCatch { get; set; }
+        public bool IsObjectScope { get; set; }
 
         public Scope() {}
         private Scope(Scope parent)
@@ -42,6 +44,62 @@ namespace Deltin.Deltinteger.Parse
         public Scope Child(string name)
         {
             return new Scope(this, name);
+        }
+
+        public Scope Child(bool isObjectScope)
+        {
+            Scope newScope = new Scope(this);
+            newScope.IsObjectScope = isObjectScope;
+            return newScope;
+        }
+
+        private void AllInScope(Scope getter, Func<ScopeIterate, ScopeIterateAction> element)
+        {
+            Scope current = this;
+
+            while (current != null)
+            {
+                List<IScopeable> checkScopeables = new List<IScopeable>();
+                checkScopeables.AddRange(current.Variables);
+                checkScopeables.AddRange(current.Methods);
+
+                bool stopAfterScope = false;
+
+                foreach (IScopeable check in checkScopeables)
+                {
+                    // Check if the accessor is valid.
+                    // bool accessorMatches = check.AccessLevel == AccessLevel.Public ||
+                    //     getter == null ||
+                    //     (check.AccessLevel == AccessLevel.Private && current.DoSharePrivateGroup(getter)) ||
+                    //     (check.AccessLevel == AccessLevel.Protected && current.DoShareProtectedGroup(getter));
+                    bool accessorMatches = current.AccessorMatches(getter, check);
+                    
+                    // Check if the static/object accessor is valid.
+                    //bool objectMatches = check.Static || getter.IsObjectScope;
+                    bool objectMatches = StaticMatches(getter, check);
+
+                    ScopeIterateAction action = element(new ScopeIterate(current, check, accessorMatches, objectMatches));
+                    if (action == ScopeIterateAction.Stop) return;
+                    if (action == ScopeIterateAction.StopAfterScope) stopAfterScope = true;
+                }
+
+                if (stopAfterScope) return;
+
+                current = current.Parent;
+            }
+        }
+
+        public bool AccessorMatches(Scope getter, IAccessable element)
+        {
+            return element.AccessLevel == AccessLevel.Public ||
+                getter == null ||
+                (element.AccessLevel == AccessLevel.Private && DoSharePrivateGroup(getter)) ||
+                (element.AccessLevel == AccessLevel.Protected && DoShareProtectedGroup(getter));
+        }
+
+        public bool StaticMatches(Scope getter, IScopeable element)
+        {
+            return (element.Static != IsObjectScope) || getter == null || DoShareProtectedGroup(getter);
         }
 
         /// <summary>
@@ -82,47 +140,33 @@ namespace Deltin.Deltinteger.Parse
 
         public IScopeable GetVariable(string name, Scope getter, FileDiagnostics diagnostics, DocRange range)
         {
-            IScopeable element = null;
-            Scope current = this;
-            while (current != null && element == null)
+            ScopeIterate elementAccessInfo = null;
+
+            AllInScope(getter, (it) => {
+                if (it.Element.Name == name && it.Element is IMethod == false)
+                {
+                    elementAccessInfo = it;
+                    return ScopeIterateAction.Stop;
+                }
+                return ScopeIterateAction.Continue;
+            });
+
+            if (diagnostics != null && range != null)
             {
-                element = current.Variables.FirstOrDefault(element => element.Name == name);
-                current = current.Parent;
+                // Syntax error if the variable was not found.
+                if (elementAccessInfo == null)
+                    diagnostics.Error(string.Format("The variable {0} does not exist in the {1}.", name, ErrorName), range);
+                
+                // Syntax error if the variable can't be obtained because of its access level.
+                else if (!elementAccessInfo.AccessorMatches)
+                    diagnostics.Error(string.Format("'{0}' is inaccessable due to its access level.", name), range);
+                
+                // Object variable is being accessed in a static way.
+                else if (!elementAccessInfo.ObjectMatches)
+                    diagnostics.Error(string.Format("'{0}' requires an object reference to access.", name), range);
             }
 
-            if (range != null && element == null)
-                diagnostics.Error(string.Format("The variable {0} does not exist in the {1}.", name, ErrorName), range);
-            
-            if (element != null && getter != null && !DoShareGroup(getter) && element.AccessLevel != AccessLevel.Public)
-            {
-                if (range == null) throw new Exception();
-                diagnostics.Error(string.Format("'{0}' is inaccessable due to its access level.", name), range);
-            }
-
-            return element;
-        }
-
-        public IScopeable[] AllVariablesInScope()
-        {
-            List<IScopeable> variables = new List<IScopeable>();
-
-            Scope current = this;
-            while (current != null)
-            {
-                variables.AddRange(current.Variables);
-                current = current.Parent;
-            }
-
-            return variables.ToArray();
-        }
-
-        public IScopeable[] AllChildVariables()
-        {
-            List<IScopeable> allVariables = new List<IScopeable>();
-            allVariables.AddRange(Variables);
-            foreach (var child in children)
-                allVariables.AddRange(child.Variables);
-            return allVariables.ToArray();
+            return elementAccessInfo?.Element;
         }
 
         /// <summary>
@@ -170,16 +214,15 @@ namespace Deltin.Deltinteger.Parse
             AddMethod(method, null, null);
         }
 
-        public IMethod[] AllMethodsInScope()
+        private IMethod[] AllMethodsInScope()
         {
             List<IMethod> methods = new List<IMethod>();
 
-            Scope current = this;
-            while (current != null)
-            {
-                methods.AddRange(current.Methods);
-                current = current.Parent;
-            }
+            AllInScope(null, (it) => {
+                if (it.Element is IMethod method)
+                    methods.Add(method);
+                return ScopeIterateAction.Continue;
+            });
 
             return methods.ToArray();
         }
@@ -214,17 +257,30 @@ namespace Deltin.Deltinteger.Parse
             return @this;
         }
 
-        public bool DoShareGroup(Scope other)
+        private bool DoSharePrivateGroup(Scope other)
         {
-            Scope thisGroup = GroupScope();
-            Scope otherGroup = other.GroupScope();
+            Scope thisGroup = RootPrivateScope();
+            Scope otherGroup = other.RootPrivateScope();
+            return thisGroup == otherGroup;
+        }
+
+        private bool DoShareProtectedGroup(Scope other)
+        {
+            Scope thisGroup = RootProtectedScope();
+            Scope otherGroup = other.RootProtectedScope();
             return thisGroup == otherGroup;
         }
         
-        public Scope GroupScope()
+        private Scope RootPrivateScope()
         {
             Scope current = this;
             while (current.Parent != null && !current.PrivateCatch) current = current.Parent;
+            return current;
+        }
+        private Scope RootProtectedScope()
+        {
+            Scope current = this;
+            while (current.Parent != null && !current.ProtectedCatch) current = current.Parent;
             return current;
         }
 
@@ -232,22 +288,21 @@ namespace Deltin.Deltinteger.Parse
         {
             List<CompletionItem> completions = new List<CompletionItem>();
 
-            var variables = immediate ? Variables.ToArray() : AllVariablesInScope();
-            for (int i = 0; i < variables.Length; i++)
-                if (WasScopedAtPosition(variables[i], pos, getter))
-                    completions.Add(variables[i].GetCompletion());
-
-            var methods = immediate ? Methods.ToArray() : AllMethodsInScope();
-            for (int i = 0; i < methods.Length; i++)
-                if (WasScopedAtPosition(methods[i], pos, getter))
-                    completions.Add(methods[i].GetCompletion());
+            // Iterate through all scopeables.
+            AllInScope(getter, (it) => {
+                if (it.AccessorMatches && it.ObjectMatches && WasScopedAtPosition(it.Element, pos, getter))
+                    completions.Add(it.Element.GetCompletion());
+                
+                if (it.Container.ProtectedCatch) return ScopeIterateAction.StopAfterScope;
+                return ScopeIterateAction.Continue;
+            });
                 
             return completions.ToArray();
         }
 
         private bool WasScopedAtPosition(IScopeable element, Pos pos, Scope getter)
         {
-            return (pos == null || element.DefinedAt == null || element.WholeContext || element.DefinedAt.range.start <= pos) && (element.AccessLevel == AccessLevel.Public || getter == null || DoShareGroup(getter));
+            return pos == null || element.DefinedAt == null || element.WholeContext || element.DefinedAt.range.start <= pos;
         }
 
         public static Scope GetGlobalScope()
@@ -265,5 +320,28 @@ namespace Deltin.Deltinteger.Parse
 
             return globalScope;
         }
+    }
+
+    class ScopeIterate
+    {
+        public Scope Container { get; }
+        public IScopeable Element { get; }
+        public bool AccessorMatches { get; }
+        public bool ObjectMatches { get; }
+
+        public ScopeIterate(Scope container, IScopeable element, bool accessorMatches, bool objectMatches)
+        {
+            Container = container;
+            Element = element;
+            AccessorMatches = accessorMatches;
+            ObjectMatches = objectMatches;
+        }
+    }
+
+    enum ScopeIterateAction
+    {
+        Continue,
+        Stop,
+        StopAfterScope
     }
 }

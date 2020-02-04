@@ -22,16 +22,16 @@ namespace Deltin.Deltinteger.Pathfinder
             };
             Description = "A pathmap can be used for pathfinding.";
 
-            ObjectScope.AddMethod(CustomMethodData.GetCustomMethod<Pathfind>(), null, null);
-            ObjectScope.AddMethod(CustomMethodData.GetCustomMethod<PathfindAll>(), null, null);
-            ObjectScope.AddMethod(CustomMethodData.GetCustomMethod<GetPath>(), null, null);
+            Scope.AddNativeMethod(CustomMethodData.GetCustomMethod<Pathfind>());
+            Scope.AddNativeMethod(CustomMethodData.GetCustomMethod<PathfindAll>());
+            Scope.AddNativeMethod(CustomMethodData.GetCustomMethod<GetPath>());
 
-            StaticScope.AddMethod(CustomMethodData.GetCustomMethod<StopPathfind>(), null, null);
-            StaticScope.AddMethod(CustomMethodData.GetCustomMethod<IsPathfinding>(), null, null);
-            StaticScope.AddMethod(CustomMethodData.GetCustomMethod<IsPathfindStuck>(), null, null);
-            StaticScope.AddMethod(CustomMethodData.GetCustomMethod<FixPathfind>(), null, null);
-            StaticScope.AddMethod(CustomMethodData.GetCustomMethod<NextNode>(), null, null);
-            StaticScope.AddMethod(CustomMethodData.GetCustomMethod<WalkPath>(), null, null);
+            Scope.AddNativeMethod(CustomMethodData.GetCustomMethod<StopPathfind>());
+            Scope.AddNativeMethod(CustomMethodData.GetCustomMethod<IsPathfinding>());
+            Scope.AddNativeMethod(CustomMethodData.GetCustomMethod<IsPathfindStuck>());
+            Scope.AddNativeMethod(CustomMethodData.GetCustomMethod<FixPathfind>());
+            Scope.AddNativeMethod(CustomMethodData.GetCustomMethod<NextNode>());
+            Scope.AddNativeMethod(CustomMethodData.GetCustomMethod<WalkPath>());
         }
 
         public override void WorkshopInit(DeltinScript translateInfo)

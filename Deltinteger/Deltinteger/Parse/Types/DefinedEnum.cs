@@ -68,6 +68,7 @@ namespace Deltin.Deltinteger.Parse
 
         public AccessLevel AccessLevel => AccessLevel.Public;
         public bool WholeContext => true;
+        public bool Static => true;
 
         private DeltinScript _translateInfo { get; }
 

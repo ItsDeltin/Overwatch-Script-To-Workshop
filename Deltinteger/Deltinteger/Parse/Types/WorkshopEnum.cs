@@ -53,15 +53,14 @@ namespace Deltin.Deltinteger.Parse
     public class ScopedEnumMember : IScopeable, IExpression
     {
         public string Name { get; }
-        public AccessLevel AccessLevel { get; } = AccessLevel.Public;
-        public LanguageServer.Location DefinedAt { get; } = null;
-        public bool WholeContext { get; } = true;
-        
+        public AccessLevel AccessLevel => AccessLevel.Public;
+        public LanguageServer.Location DefinedAt => null;
+        public bool WholeContext => true;
+        public bool Static => true;
         public CodeType Enum { get; }
         public EnumMember EnumMember { get; }
-
         private Scope debugScope { get; } = new Scope();
-        
+
         public ScopedEnumMember(CodeType parent, EnumMember enumMember)
         {
             Enum = parent;

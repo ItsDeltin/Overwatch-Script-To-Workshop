@@ -8,14 +8,12 @@ namespace Deltin.Deltinteger.Parse
 {
     public abstract class ClassType : CodeType
     {
-        protected Scope ObjectScope { get; }
-        protected Scope StaticScope { get; }
+        protected Scope Scope { get; }
 
         public ClassType(string name) : base(name)
         {
             CanBeDeleted = true;
-            StaticScope = new Scope("class " + name);
-            ObjectScope = StaticScope.Child("class " + name);
+            Scope = new Scope("class " + name);
         }
 
         public override IWorkshopTree New(ActionSet actionSet, Constructor constructor, IWorkshopTree[] constructorValues, object[] additionalParameterData)
@@ -35,8 +33,7 @@ namespace Deltin.Deltinteger.Parse
             constructor.Parse(actionSet, constructorValues, additionalParameterData);
         }
 
-        public override Scope GetObjectScope() => ObjectScope;
-        public override Scope ReturningScope() => StaticScope;
+        public override Scope ReturningScope() => Scope;
 
         public override CompletionItem GetCompletion() => new CompletionItem() {
             Label = Name,

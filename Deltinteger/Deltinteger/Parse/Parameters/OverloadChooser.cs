@@ -278,8 +278,11 @@ namespace Deltin.Deltinteger.Parse
             parseInfo.Script.AddOverloadData(this);
 
             // Check the access level.
-            if (Overload.AccessLevel != AccessLevel.Public && !scope.DoShareGroup(getter))
+            if (!scope.AccessorMatches(getter, Overload))
                 parseInfo.Script.Diagnostics.Error(string.Format("'{0}' is inaccessable due to its access level.", Overload.GetLabel(false)), genericErrorRange);
+            
+            else if (Overload is IScopeable overloadScopeable && !scope.StaticMatches(getter, overloadScopeable))
+                parseInfo.Script.Diagnostics.Error(string.Format("'{0}' requires an object reference to access.", Overload.GetLabel(false)), genericErrorRange);
         }
     
         private IExpression MissingParameter(CodeParameter parameter)

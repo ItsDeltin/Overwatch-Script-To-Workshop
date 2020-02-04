@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using Deltin.Deltinteger.LanguageServer;
-using Deltin.Deltinteger.WorkshopWiki;
 using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
 using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItemKind;
 using StringOrMarkupContent = OmniSharp.Extensions.LanguageServer.Protocol.Models.StringOrMarkupContent;
@@ -14,6 +13,7 @@ namespace Deltin.Deltinteger.Parse
         public CodeType ReturnType { get; protected set; }
         public CodeParameter[] Parameters { get; private set; }
         public AccessLevel AccessLevel { get; protected set; }
+        public bool Static { get; } = false;
         public Location DefinedAt { get; }
         public bool WholeContext { get; } = true;
         public StringOrMarkupContent Documentation { get; } = null;
@@ -27,10 +27,12 @@ namespace Deltin.Deltinteger.Parse
 
         public DefinedFunction(ParseInfo parseInfo, Scope scope, string name, Location definedAt)
         {
+            // TODO: Static
+
             Name = name;
             DefinedAt = definedAt;
             this.parseInfo = parseInfo;
-            methodScope = scope.Child();
+            methodScope = scope.Child(!Static);
             containingScope = scope;
             CallInfo = new CallInfo(this, parseInfo.Script);
             parseInfo.TranslateInfo.AddSymbolLink(this, definedAt);

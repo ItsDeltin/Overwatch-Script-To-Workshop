@@ -122,6 +122,8 @@ namespace Deltin.Deltinteger.Parse
             }
             else
             {
+                newVar.Static = true;
+
                 // Syntax error if class only attributes is used somewhere else.
                 if (context.accessor() != null)
                     parseInfo.Script.Diagnostics.Error("Only defined variables in classes can have an accessor.", DocRange.GetRange(context.accessor()));
