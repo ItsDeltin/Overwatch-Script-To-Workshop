@@ -99,7 +99,7 @@ namespace Deltin.Deltinteger.Parse
 
         public bool StaticMatches(Scope getter, IScopeable element)
         {
-            return (element.Static != IsObjectScope) || getter == null || DoShareProtectedGroup(getter);
+            return (element.Static != IsObjectScope) && (getter == null || DoShareProtectedGroup(getter) || element.AccessLevel == AccessLevel.Public);
         }
 
         /// <summary>

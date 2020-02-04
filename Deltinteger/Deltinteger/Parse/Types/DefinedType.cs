@@ -29,24 +29,6 @@ namespace Deltin.Deltinteger.Parse
             
             DefinedAt = new LanguageServer.Location(parseInfo.Script.Uri, DocRange.GetRange(typeContext.name));
             parseInfo.TranslateInfo.AddSymbolLink(this, DefinedAt);
-
-            // Get the constructors.
-            if (typeContext.constructor().Length > 0)
-            {
-                Constructors = new Constructor[typeContext.constructor().Length];
-                for (int i = 0; i < Constructors.Length; i++)
-                {
-                    Constructors[i] = new DefinedConstructor(parseInfo, this, typeContext.constructor(i));
-                    applyBlocks.Add((DefinedConstructor)Constructors[i]);
-                }
-            }
-            else
-            {
-                // If there are no constructors, create a default constructor.
-                Constructors = new Constructor[] {
-                    new Constructor(this, new Location(parseInfo.Script.Uri, DocRange.GetRange(typeContext.name)), AccessLevel.Public)
-                };
-            }
         }
 
         public void ResolveElements()
@@ -79,6 +61,7 @@ namespace Deltin.Deltinteger.Parse
             else
                 scope = Extends.ReturningScope().Child("class " + Name);
             scope.PrivateCatch = true;
+            scope.This = this;
 
             // Todo: Static methods/macros.
             foreach (var definedMethod in typeContext.define_method())
@@ -99,6 +82,24 @@ namespace Deltin.Deltinteger.Parse
                 Var newVar = Var.CreateVarFromContext(VariableDefineType.InClass, parseInfo, definedVariable);
                 newVar.Finalize(scope);
                 if (!newVar.Static) objectVariables.Add(new ObjectVariable(newVar));
+            }
+
+            // Get the constructors.
+            if (typeContext.constructor().Length > 0)
+            {
+                Constructors = new Constructor[typeContext.constructor().Length];
+                for (int i = 0; i < Constructors.Length; i++)
+                {
+                    Constructors[i] = new DefinedConstructor(parseInfo, this, typeContext.constructor(i));
+                    applyBlocks.Add((DefinedConstructor)Constructors[i]);
+                }
+            }
+            else
+            {
+                // If there are no constructors, create a default constructor.
+                Constructors = new Constructor[] {
+                    new Constructor(this, new Location(parseInfo.Script.Uri, DocRange.GetRange(typeContext.name)), AccessLevel.Public)
+                };
             }
         }
 

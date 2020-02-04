@@ -415,17 +415,19 @@ namespace Deltin.Deltinteger.Parse
             else throw new NotImplementedException();
         }
     
-        public static void GetMacro(ParseInfo parseInfo, Scope scope, DeltinScriptParser.Define_macroContext macroContext, List<IApplyBlock> applyMethods)
+        public static IScopeable GetMacro(ParseInfo parseInfo, Scope scope, DeltinScriptParser.Define_macroContext macroContext, List<IApplyBlock> applyMethods)
         {
             if (macroContext.LEFT_PAREN() != null || macroContext.RIGHT_PAREN() != null)
             {
                 var newMacro = new DefinedMacro(parseInfo, scope, macroContext);
                 applyMethods.Add(newMacro);
+                return newMacro;
             }
             else
             {
                 var newMacro = new MacroVar(parseInfo, scope, macroContext);
                 applyMethods.Add(newMacro);
+                return newMacro;
             }
         }
 
