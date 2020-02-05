@@ -13,8 +13,7 @@ namespace Deltin.Deltinteger.Parse
         public CodeType ContainingType { get; }
 
         // Attributes
-        public bool RuleContained { get; private set; }
-        public bool IsRecursive { get; private set; }
+        public bool IsSubroutine { get; private set; }
 
         // Block data
         private BlockAction block;
@@ -42,7 +41,7 @@ namespace Deltin.Deltinteger.Parse
             AccessLevel = context.accessor().GetAccessLevel();
 
             // Setup the parameters and parse the block.
-            if (!RuleContained)
+            if (!IsSubroutine)
                 SetupParameters(context.setParameters(), false);
             else
             {
@@ -66,36 +65,24 @@ namespace Deltin.Deltinteger.Parse
         {
             if (attributeContexts == null)
             {
-                IsRecursive = false;
-                RuleContained = false;
+                IsSubroutine = false;
                 return;
             }
 
-            DocRange recursiveAttributeRange = null;
             DocRange ruleAttributeRange = null;
 
             foreach (var attribute in attributeContexts)
             {
-                // Recursive attribute.
-                if (attribute.RECURSIVE() != null)
-                {
-                    if (IsRecursive) parseInfo.Script.Diagnostics.Error("'recursive' attribute was already set.", DocRange.GetRange(attribute.RECURSIVE()));
-                    IsRecursive = true;
-                    recursiveAttributeRange = DocRange.GetRange(attribute.RECURSIVE());
-                }
                 // Rule attribute.
-                else if (attribute.RULE_WORD() != null)
+                if (attribute.RULE_WORD() != null)
                 {
-                    if (RuleContained) parseInfo.Script.Diagnostics.Error("'rule' attribute was already set.", DocRange.GetRange(attribute.RULE_WORD()));
-                    RuleContained = true;
+                    if (IsSubroutine) parseInfo.Script.Diagnostics.Error("'rule' attribute was already set.", DocRange.GetRange(attribute.RULE_WORD()));
+                    IsSubroutine = true;
                     ruleAttributeRange = DocRange.GetRange(attribute.RULE_WORD());
                 }
                 // Unimplemented attribute option
                 else throw new NotImplementedException();
             }
-
-            if (RuleContained && IsRecursive)
-                parseInfo.Script.Diagnostics.Error("Functions with the 'rule' attribute cannot be recursive.", recursiveAttributeRange);
         }
 
         public override void SetupParameters()
@@ -197,8 +184,7 @@ namespace Deltin.Deltinteger.Parse
             actionSet = actionSet
                 .New(actionSet.IndexAssigner.CreateContained());
             
-            if (RuleContained) return ParseSingleInstance(actionSet, parameterValues);
-            if (IsRecursive) return ParseRecursive(actionSet, parameterValues);
+            if (IsSubroutine) return ParseSingleInstance(actionSet, parameterValues);
             
             ReturnHandler returnHandler = new ReturnHandler(actionSet, Name, multiplePaths);
             actionSet = actionSet.New(returnHandler);
@@ -210,110 +196,10 @@ namespace Deltin.Deltinteger.Parse
             return returnHandler.GetReturnedValue();
         }
 
-        // Parses the method recursively.
-        private IWorkshopTree ParseRecursive(ActionSet actionSet, IWorkshopTree[] parameterValues)
-        {
-            // Check the method stack to see if this method was already called.
-            RecursiveMethodStack lastCall = actionSet.Translate.MethodStack.FirstOrDefault(ms => ms.Function == this) as RecursiveMethodStack;
-
-            // If not, set up the stack and call the method.
-            if (lastCall == null)
-            {
-                // Assign the parameters.
-                AssignParameters(actionSet, ParameterVars, parameterValues, true);
-
-                // Get the return handler if a value is returned.
-                ReturnHandler returnHandler = new ReturnHandler(actionSet, Name, true);
-
-                // Set up the condinue skip array.
-                IndexReference continueSkipArray = actionSet.VarCollection.Assign("recursiveContinueArray", actionSet.IsGlobal, false);
-
-                SkipEndMarker methodStart = new SkipEndMarker();
-                actionSet.AddAction(methodStart);
-
-                // Add the method to the stack.
-                var stack = new RecursiveMethodStack(this, returnHandler, continueSkipArray, methodStart);
-                actionSet.Translate.MethodStack.Add(stack);
-
-                // Parse the method block.
-                block.Translate(actionSet.New(returnHandler));
-
-                // Apply the returns.
-                if (returnHandler != null)
-                    returnHandler.ApplyReturnSkips();
-                
-                // Pop the recursive parameters
-                // TODO: Make this work with all sub scoped variables somehow
-                for (int i = 0; i < ParameterVars.Length; i++)
-                {
-                    var pop = (actionSet.IndexAssigner[ParameterVars[i]] as RecursiveIndexReference)?.Pop();
-                    if (pop != null) actionSet.AddAction(pop);
-                }
-
-                // Setup the continue skip
-                actionSet.ContinueSkip.Setup(actionSet);
-                actionSet.ContinueSkip.SetSkipCount(actionSet, Element.Part<V_LastOf>(continueSkipArray.GetVariable()));
-
-                // Remove the last recursive continue skip.
-                actionSet.AddAction(continueSkipArray.SetVariable(
-                    // Pop
-                    Element.Part<V_ArraySlice>(
-                        continueSkipArray.GetVariable(), 
-                        new V_Number(0),
-                        Element.Part<V_CountOf>(continueSkipArray.GetVariable()) - 1
-                    )
-                ));
-
-                // Loop if there are any values in the continue skip array.
-                actionSet.AddAction(Element.Part<A_LoopIf>(
-                    Element.Part<V_CountOf>(continueSkipArray.GetVariable()) > 0
-                ));
-
-                // Reset the continue skip.
-                actionSet.ContinueSkip.ResetSkipCount(actionSet);
-                actionSet.AddAction(continueSkipArray.SetVariable(0));
-
-                // Remove the method from the stack.
-                actionSet.Translate.MethodStack.Remove(stack);
-
-                return returnHandler.GetReturnedValue();
-            }
-            // If it is, push the parameters to the stack.
-            else
-            {
-                for (int i = 0; i < ParameterVars.Length; i++)
-                {
-                    var varReference = actionSet.IndexAssigner[ParameterVars[i]];
-                    if (varReference is RecursiveIndexReference)
-                    {
-                        actionSet.AddAction(((RecursiveIndexReference)varReference).Push(
-                            (Element)parameterValues[i]
-                        ));
-                    }
-                }
-
-                // Add to the continue skip array.
-                V_Number skipLength = new V_Number();
-                actionSet.AddAction(lastCall.ContinueSkipArray.SetVariable(
-                    Element.Part<V_Append>(lastCall.ContinueSkipArray.GetVariable(), skipLength)
-                ));
-
-                actionSet.ContinueSkip.Setup(actionSet);
-                actionSet.ContinueSkip.SetSkipCount(actionSet, lastCall.MethodStart);
-                actionSet.AddAction(new A_Loop());
-
-                SkipEndMarker continueAt = new SkipEndMarker();
-                actionSet.AddAction(continueAt);
-                skipLength.Value = actionSet.ContinueSkip.GetSkipCount(continueAt).Value;
-
-                return lastCall.ReturnHandler.GetReturnedValue();
-            }
-        }
-    
         // Sets up single-instance methods for methods with the 'rule' attribute.
         public void SetupSingleInstance()
         {
-            if (!RuleContained) throw new Exception(Name + " does not have the rule attribute.");
+            if (!IsSubroutine) throw new Exception(Name + " does not have the rule attribute.");
 
             // Single instance methods are contained in their own rule.
             // Unlike normal methods, the block is only translated once making it effective for big, complicated methods.

@@ -12,7 +12,6 @@ namespace Deltin.Deltinteger.Parse
         public ActionSet ActionSet { get; }
         public DeltinScript DeltinScript { get; }
         public bool IsGlobal { get; }
-        public ContinueSkip ContinueSkip { get; }
         public List<MethodStack> MethodStack { get; } = new List<MethodStack>();
         
         public List<Condition> Conditions { get; } = new List<Condition>();
@@ -34,7 +33,6 @@ namespace Deltin.Deltinteger.Parse
             Player = ruleAction.Player;
             Disabled = ruleAction.Disabled;
             Priority = ruleAction.Priority;
-            ContinueSkip = new ContinueSkip(this);
 
             ActionSet = new ActionSet(this, null, Actions);
 
@@ -81,7 +79,6 @@ namespace Deltin.Deltinteger.Parse
             Team = team;
             Player = player;
             Disabled = disabled;
-            ContinueSkip = new ContinueSkip(this);
             ActionSet = new ActionSet(this, null, Actions);
         }
 
@@ -139,7 +136,6 @@ namespace Deltin.Deltinteger.Parse
         public bool IsGlobal { get; }
         public List<IActionList> ActionList { get; }
         public VarCollection VarCollection { get; }
-        public ContinueSkip ContinueSkip { get; }
 
         public int ActionCount {
             get {
@@ -159,7 +155,6 @@ namespace Deltin.Deltinteger.Parse
             IsGlobal = translate.IsGlobal;
             ActionList = translate.Actions;
             VarCollection = translate.DeltinScript.VarCollection;
-            ContinueSkip = translate.ContinueSkip;
 
             GenericErrorRange = genericErrorRange;
             IndexAssigner = translate.DeltinScript.DefaultIndexAssigner;
@@ -170,7 +165,6 @@ namespace Deltin.Deltinteger.Parse
             IsGlobal = other.IsGlobal;
             ActionList = other.ActionList;
             VarCollection = other.VarCollection;
-            ContinueSkip = other.ContinueSkip;
 
             GenericErrorRange = other.GenericErrorRange;
             IndexAssigner = other.IndexAssigner;

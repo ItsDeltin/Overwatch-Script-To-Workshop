@@ -119,16 +119,16 @@ namespace Deltin.Deltinteger.Parse
             }
             else if (InitialVarSet != null)
                 InitialVarSet.Translate(actionSet);
-            
-            WhileBuilder whileBuilder = new WhileBuilder(actionSet, Condition?.Parse(actionSet));
-            whileBuilder.Setup();
+
+            Element condition = (Element)Condition.Parse(actionSet) ?? new V_True();
+            actionSet.AddAction(Element.Part<A_While>(condition));
 
             Block.Translate(actionSet);
 
             if (SetVariableAction != null)
                 SetVariableAction.Translate(actionSet);
             
-            whileBuilder.Finish();
+            actionSet.AddAction(new A_End());
         }
 
         public PathInfo[] GetPaths()
@@ -282,7 +282,6 @@ namespace Deltin.Deltinteger.Parse
         {
             ForeachBuilder foreachBuilder = new ForeachBuilder(actionSet, Array.Parse(actionSet));
             actionSet.IndexAssigner.Add(ForeachVar, foreachBuilder.IndexValue);
-            foreachBuilder.Setup();
             Block.Translate(actionSet);
             foreachBuilder.Finish();
         }
