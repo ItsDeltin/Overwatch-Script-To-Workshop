@@ -23,6 +23,7 @@ namespace Deltin.Deltinteger.Parse
         public Scope GlobalScope { get; }
         public Scope RulesetScope { get; }
         public VarCollection VarCollection { get; } = new VarCollection();
+        public SubroutineCollection SubroutineCollection { get; } = new SubroutineCollection();
         private List<Var> rulesetVariables { get; } = new List<Var>();
         public VarIndexAssigner DefaultIndexAssigner { get; } = new VarIndexAssigner();
         public TranslateRule InitialGlobal { get; private set; }
