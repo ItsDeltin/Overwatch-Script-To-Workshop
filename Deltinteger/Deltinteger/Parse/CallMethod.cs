@@ -10,7 +10,7 @@ namespace Deltin.Deltinteger.Parse
         public IMethod CallingMethod { get; }
         private OverloadChooser OverloadChooser { get; }
         public IExpression[] ParameterValues { get; }
-        public bool Parallel { get; }
+        public CallParallel Parallel { get; }
 
         private ParseInfo parseInfo { get; }
         private DocRange NameRange { get; }
@@ -24,7 +24,11 @@ namespace Deltin.Deltinteger.Parse
 
             UsedAsExpression = usedAsExpression;
 
-            Parallel = methodContext.ASYNC() != null;
+            if (methodContext.ASYNC() != null)
+            {
+                if (methodContext.NOT() == null) Parallel = CallParallel.AlreadyRunning_RestartRule;
+                else Parallel = CallParallel.AlreadyRunning_DoNothing;
+            }
 
             var options = scope.GetMethodsByName(methodName);
             if (options.Length == 0)
@@ -52,7 +56,7 @@ namespace Deltin.Deltinteger.Parse
                         parseInfo.CurrentCallInfo?.Call(definedFunction, NameRange);
                     }
 
-                    if (Parallel && !CallingMethod.Asyncable)
+                    if (Parallel != CallParallel.NoParallel && !CallingMethod.Asyncable)
                         parseInfo.Script.Diagnostics.Error($"The method '{CallingMethod.Name}' cannot be called in parallel.", NameRange);
                     
                     parseInfo.Script.AddHover(DocRange.GetRange(methodContext), CallingMethod.GetLabel(true));
@@ -99,5 +103,12 @@ namespace Deltin.Deltinteger.Parse
                 parameterValues[i] = OverloadChooser.Overload.Parameters[i].Parse(actionSet, ParameterValues[i], OverloadChooser.AdditionalParameterData[i], OverloadChooser.Overload.Parameters[i].Type == null);
             return parameterValues;
         }
+    }
+
+    public enum CallParallel
+    {
+        NoParallel,
+        AlreadyRunning_RestartRule,
+        AlreadyRunning_DoNothing
     }
 }

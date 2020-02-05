@@ -43,7 +43,7 @@ namespace Deltin.Deltinteger.Parse
             foreach (var listener in listeners) listener.Applied();
         }
 
-        override public IWorkshopTree Parse(ActionSet actionSet, bool parallel, IWorkshopTree[] parameterValues, object[] additionalParameterData)
+        override public IWorkshopTree Parse(ActionSet actionSet, CallParallel parallel, IWorkshopTree[] parameterValues, object[] additionalParameterData)
         {
             // Assign the parameters.
             actionSet = actionSet.New(actionSet.IndexAssigner.CreateContained());

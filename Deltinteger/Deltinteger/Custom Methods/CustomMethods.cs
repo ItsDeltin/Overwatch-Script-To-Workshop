@@ -75,7 +75,7 @@ namespace Deltin.Deltinteger.CustomMethods
 
         public bool DoesReturnValue() => CustomMethodType == CustomMethodType.Value || CustomMethodType == CustomMethodType.MultiAction_Value;
 
-        public IWorkshopTree Parse(ActionSet actionSet, bool parallel, IWorkshopTree[] values, object[] additionalParameterData)
+        public IWorkshopTree Parse(ActionSet actionSet, CallParallel parallel, IWorkshopTree[] values, object[] additionalParameterData)
         {
             return GetObject().Get(actionSet, values, additionalParameterData);
         }

@@ -175,7 +175,7 @@ namespace Deltin.Deltinteger.Parse
         override public bool DoesReturnValue() => doesReturnValue;
 
         // Parses the method.
-        override public IWorkshopTree Parse(ActionSet actionSet, bool parallel, IWorkshopTree[] parameterValues, object[] additionalParameterData)
+        override public IWorkshopTree Parse(ActionSet actionSet, CallParallel parallel, IWorkshopTree[] parameterValues, object[] additionalParameterData)
         {
             actionSet = actionSet
                 .New(actionSet.IndexAssigner.CreateContained());
@@ -220,13 +220,27 @@ namespace Deltin.Deltinteger.Parse
         }
 
         // Calls single-instance methods.
-        private IWorkshopTree ParseSubroutine(ActionSet actionSet, bool parallel, IWorkshopTree[] parameterValues)
+        private IWorkshopTree ParseSubroutine(ActionSet actionSet, CallParallel parallel, IWorkshopTree[] parameterValues)
         {
-            if (!parallel)
-                actionSet.AddAction(Element.Part<A_CallSubroutine>(subroutineInfo.Subroutine));
-            else
-                actionSet.AddAction(Element.Part<A_CallSubroutine>(subroutineInfo.Subroutine));
-            return subroutineInfo.ReturnHandler.GetReturnedValue();
+            switch (parallel)
+            {
+                // No parallel, call subroutine normally.
+                case CallParallel.NoParallel:
+                    actionSet.AddAction(Element.Part<A_CallSubroutine>(subroutineInfo.Subroutine));
+                    return subroutineInfo.ReturnHandler.GetReturnedValue();
+                
+                // Restart the subroutine if it is already running.
+                case CallParallel.AlreadyRunning_RestartRule:
+                    actionSet.AddAction(Element.Part<A_StartRule>(subroutineInfo.Subroutine, EnumData.GetEnumValue(IfAlreadyExecuting.RestartRule)));
+                    return null;
+                
+                // Do nothing if the subroutine is already running.
+                case CallParallel.AlreadyRunning_DoNothing:
+                    actionSet.AddAction(Element.Part<A_StartRule>(subroutineInfo.Subroutine, EnumData.GetEnumValue(IfAlreadyExecuting.DoNothing)));
+                    return null;
+                
+                default: throw new NotImplementedException();
+            }
         }
     
         // Assigns parameters to the index assigner. TODO: Move to OverloadChooser.

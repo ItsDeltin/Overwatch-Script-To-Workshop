@@ -58,7 +58,7 @@ statement_operation : EQUALS | EQUALS_ADD | EQUALS_DIVIDE | EQUALS_MODULO | EQUA
 call_parameters  : expr (COMMA expr?)*    		 	         ;
 picky_parameter  : PART? TERNARY_ELSE expr?                  ;
 picky_parameters : picky_parameter (COMMA picky_parameter?)* ;
-method           : ASYNC? PART LEFT_PAREN (picky_parameters | call_parameters)? RIGHT_PAREN ;
+method           : (ASYNC NOT?)? PART LEFT_PAREN (picky_parameters | call_parameters)? RIGHT_PAREN ;
 
 variable : PART array? ;
 code_type: PART (INDEX_START INDEX_END)*;

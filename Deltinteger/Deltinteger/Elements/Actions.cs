@@ -48,6 +48,7 @@ namespace Deltin.Deltinteger.Elements
 
     [ElementData("Start Rule")]
     [Parameter("Subroutine", ValueType.Any, null)]
+    [EnumParameter("If Already Executing", typeof(IfAlreadyExecuting))]
     [HideElement]
     public class A_StartRule : Element {}
 

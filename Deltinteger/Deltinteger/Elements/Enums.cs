@@ -648,6 +648,13 @@ namespace Deltin.Deltinteger.Elements
     }
 
     [WorkshopEnum]
+    public enum IfAlreadyExecuting
+    {
+        RestartRule,
+        DoNothing
+    }
+
+    [WorkshopEnum]
     public enum FacingRev
     {
         DirectionAndTurnRate,
