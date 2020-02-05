@@ -25,6 +25,7 @@ namespace Deltin.Deltinteger.Parse
             {
                 var assigned = varCollection.Assign(var, isGlobal);
                 if (recursive) assigned = new RecursiveIndexReference(assigned);
+                if (references.ContainsKey(var)) throw new Exception(var.Name + " was already added into the variable index assigner.");
                 references.Add(var, assigned);
             }
             
@@ -32,6 +33,7 @@ namespace Deltin.Deltinteger.Parse
             else if (var.VariableType == VariableType.ElementReference)
             {
                 if (referenceValue == null) throw new ArgumentNullException(nameof(referenceValue));
+                if (references.ContainsKey(var)) throw new Exception(var.Name + " was already added into the variable index assigner.");
                 references.Add(var, new WorkshopElementReference(referenceValue));
             }
             
@@ -41,12 +43,14 @@ namespace Deltin.Deltinteger.Parse
         public void Add(IIndexReferencer var, IndexReference reference)
         {
             if (reference == null) throw new ArgumentNullException(nameof(reference));
+            if (references.ContainsKey(var)) throw new Exception(var.Name + " was already added into the variable index assigner.");
             references.Add(var, reference);
         }
 
         public void Add(IIndexReferencer var, IWorkshopTree reference)
         {
             if (reference == null) throw new ArgumentNullException(nameof(reference));
+            if (references.ContainsKey(var)) throw new Exception(var.Name + " was already added into the variable index assigner.");
             references.Add(var, new WorkshopElementReference(reference));
         }
 

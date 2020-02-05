@@ -134,7 +134,7 @@ namespace Deltin.Deltinteger.Parse
         public DocRange GenericErrorRange { get; private set; }
         public VarIndexAssigner IndexAssigner { get; private set; }
         public ReturnHandler ReturnHandler { get; private set; }
-        public IndexReference CurrentObject { get; private set; }
+        public Element CurrentObject { get; private set; }
         public int IndentCount { get; private set; }
         public bool IsGlobal { get; }
         public List<IActionList> ActionList { get; }
@@ -201,7 +201,7 @@ namespace Deltin.Deltinteger.Parse
             newActionSet.ReturnHandler = returnHandler ?? throw new ArgumentNullException(nameof(returnHandler));
             return newActionSet;
         }
-        public ActionSet New(IndexReference currentObject)
+        public ActionSet New(Element currentObject)
         {
             var newActionSet = Clone();
             newActionSet.CurrentObject = currentObject;

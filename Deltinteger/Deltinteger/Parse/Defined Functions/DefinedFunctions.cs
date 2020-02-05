@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.WorkshopWiki;
 using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
@@ -18,6 +20,7 @@ namespace Deltin.Deltinteger.Parse
 
         protected ParseInfo parseInfo { get; }
         protected Scope methodScope { get; }
+        protected Scope containingScope { get; }
         protected Var[] ParameterVars { get; private set; }
 
         public CallInfo CallInfo { get; }
@@ -28,10 +31,13 @@ namespace Deltin.Deltinteger.Parse
             DefinedAt = definedAt;
             this.parseInfo = parseInfo;
             methodScope = scope.Child();
+            containingScope = scope;
             CallInfo = new CallInfo(this, parseInfo.Script);
             parseInfo.TranslateInfo.AddSymbolLink(this, definedAt);
         }
 
+        // IApplyBlock
+        public abstract void SetupParameters();
         public abstract void SetupBlock();
 
         protected void SetupParameters(DeltinScriptParser.SetParametersContext context, VariableDefineType defineType = VariableDefineType.Parameter)
@@ -60,6 +66,12 @@ namespace Deltin.Deltinteger.Parse
                 Label = Name,
                 Kind = CompletionItemKind.Method
             };
+        }
+
+        protected List<IOnBlockApplied> listeners = new List<IOnBlockApplied>();
+        public void OnBlockApply(IOnBlockApplied onBlockApplied)
+        {
+            listeners.Add(onBlockApplied);
         }
     }
 }

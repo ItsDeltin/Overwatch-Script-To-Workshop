@@ -5,20 +5,23 @@ using Deltin.Deltinteger.LanguageServer;
 
 namespace Deltin.Deltinteger.Parse
 {
-    public class CallMethodAction : IExpression, IStatement
+    public class CallMethodAction : IExpression, IStatement, IOnBlockApplied
     {
-        private DeltinScript translateInfo { get; }
         public IMethod CallingMethod { get; }
         private OverloadChooser OverloadChooser { get; }
         public IExpression[] ParameterValues { get; }
 
+        private ParseInfo parseInfo { get; }
         private DocRange NameRange { get; }
+        private bool UsedAsExpression { get; }
 
         public CallMethodAction(ParseInfo parseInfo, Scope scope, DeltinScriptParser.MethodContext methodContext, bool usedAsExpression, Scope getter)
         {
-            this.translateInfo = parseInfo.TranslateInfo;
+            this.parseInfo = parseInfo;
             string methodName = methodContext.PART().GetText();
             NameRange = DocRange.GetRange(methodContext.PART());
+
+            UsedAsExpression = usedAsExpression;
 
             var options = scope.GetMethodsByName(methodName);
             if (options.Length == 0)
@@ -39,19 +42,22 @@ namespace Deltin.Deltinteger.Parse
 
                 if (CallingMethod != null)
                 {
-                    if (CallingMethod is DefinedFunction)
+                    if (CallingMethod is DefinedFunction definedFunction)
                     {
-                        var definedFunction = (DefinedFunction)CallingMethod;
+                        definedFunction.OnBlockApply(this);
                         definedFunction.Call(parseInfo.Script, NameRange);
                         parseInfo.CurrentCallInfo?.Call(definedFunction, NameRange);
                     }
                     
                     parseInfo.Script.AddHover(DocRange.GetRange(methodContext), CallingMethod.GetLabel(true));
-                    
-                    if (usedAsExpression && !CallingMethod.DoesReturnValue())
-                        parseInfo.Script.Diagnostics.Error("The chosen overload for " + methodName + " does not return a value.", NameRange);
                 }
             }
+        }
+
+        public void Applied()
+        {
+            if (UsedAsExpression && !CallingMethod.DoesReturnValue())
+                parseInfo.Script.Diagnostics.Error("The chosen overload for " + CallingMethod.Name + " does not return a value.", NameRange);
         }
 
         public Scope ReturningScope()
@@ -59,7 +65,7 @@ namespace Deltin.Deltinteger.Parse
             if (CallingMethod == null) return null;
 
             if (CallingMethod.ReturnType == null)
-                return translateInfo.PlayerVariableScope;
+                return parseInfo.TranslateInfo.PlayerVariableScope;
             else
                 return CallingMethod.ReturnType.GetObjectScope();
         }

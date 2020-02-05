@@ -66,14 +66,19 @@ namespace Deltin.Deltinteger.Parse
                 ((DefinedType)Type).AddLink(DefinedAt);
         }
 
-        public void SetupBlock()
+        public void SetupParameters()
         {
             var parameterInfo = CodeParameter.GetParameters(parseInfo, ConstructorScope, context.setParameters());
             Parameters = parameterInfo.Parameters;
             ParameterVars = parameterInfo.Variables;
 
-            Block = new BlockAction(parseInfo.SetCallInfo(CallInfo), ConstructorScope, context.block());
             parseInfo.Script.AddHover(DocRange.GetRange(context.name), GetLabel(true));
+        }
+
+        public void SetupBlock()
+        {
+            Block = new BlockAction(parseInfo.SetCallInfo(CallInfo), ConstructorScope, context.block());
+            foreach (var listener in listeners) listener.Applied();
         }
 
         public override void Parse(ActionSet actionSet, IWorkshopTree[] parameterValues, object[] additionalParameterData)
@@ -81,6 +86,12 @@ namespace Deltin.Deltinteger.Parse
             actionSet = actionSet.New(actionSet.IndexAssigner.CreateContained());
             DefinedMethod.AssignParameters(actionSet, ParameterVars, parameterValues);
             Block.Translate(actionSet);
+        }
+
+        private List<IOnBlockApplied> listeners = new List<IOnBlockApplied>();
+        public void OnBlockApply(IOnBlockApplied onBlockApplied)
+        {
+            listeners.Add(onBlockApplied);
         }
     }
 }

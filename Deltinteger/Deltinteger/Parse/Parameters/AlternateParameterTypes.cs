@@ -76,17 +76,13 @@ namespace Deltin.Deltinteger.Parse
 
         public override object Validate(ScriptFile script, IExpression value, DocRange valueRange)
         {
-            CallVariableAction call = value as CallVariableAction;
+            VariableResolve resolvedVariable = new VariableResolve(value, valueRange, script.Diagnostics);
 
             // Syntax error if the expression is not a variable.
-            if (call == null)
+            if (!resolvedVariable.DoesResolveToVariable)
                 script.Diagnostics.Error("Expected a variable.", valueRange);
-            
-            // Syntax error if the variable is not settable.
-            else if (!call.Calling.Settable())
-                script.Diagnostics.Error($"The {call.Calling.Name} variable cannot be set to.", valueRange);
-            
-            else if (VariableType != VariableType.Dynamic && call.Calling.VariableType != VariableType)
+                        
+            else if (VariableType != VariableType.Dynamic && resolvedVariable.SetVariable.Calling.VariableType != VariableType)
             {
                 if (VariableType == VariableType.Global)
                     script.Diagnostics.Error($"Expected a global variable.", valueRange);
@@ -94,7 +90,7 @@ namespace Deltin.Deltinteger.Parse
                     script.Diagnostics.Error($"Expected a player variable.", valueRange);
             }
             
-            else return call;
+            else return resolvedVariable;
             return null;
         }
 

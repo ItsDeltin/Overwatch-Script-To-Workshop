@@ -147,6 +147,15 @@ namespace Deltin.Deltinteger.Parse
                     newVar.VariableType = VariableType.ElementReference;
             }
 
+            // Get the 'ref' attribute.
+            if (context.REF() != null)
+            {
+                if (defineType == VariableDefineType.Parameter)
+                    newVar.VariableType = VariableType.ElementReference;
+                else
+                    parseInfo.Script.Diagnostics.Error("'ref' attribute is not valid here.", DocRange.GetRange(context.REF()));
+            }
+
             // Syntax error if there is an '=' but no expression.
             if (context.EQUALS() != null && context.expr() == null)
                 parseInfo.Script.Diagnostics.Error("Expected expression.", DocRange.GetRange(context).end.ToRange());

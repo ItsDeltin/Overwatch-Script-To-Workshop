@@ -96,6 +96,10 @@ namespace Deltin.Deltinteger.Parse
                 parseInfo.Script.Diagnostics.Error("Functions with the 'rule' attribute cannot be recursive.", recursiveAttributeRange);
         }
 
+        public override void SetupParameters()
+        {
+            // TODO: Check if parameters need to be added here.
+        }
         // Sets up the method's block.
         public override void SetupBlock()
         {
@@ -104,6 +108,7 @@ namespace Deltin.Deltinteger.Parse
                 block = new BlockAction(parseInfo.SetCallInfo(CallInfo), methodScope, context.block());
                 ValidateReturns(parseInfo.Script, context);
             }
+            foreach (var listener in listeners) listener.Applied();
         }
 
         // Makes sure each return statement returns a value if the method returns a value and that each path returns a value.
@@ -356,10 +361,8 @@ namespace Deltin.Deltinteger.Parse
                 // If there is a type, assign the current object variable.
                 currentObject = varCollection.Assign("_" + Name + "_currentObject", true, true);
 
-                IndexReference source = ContainingType.GetObjectSource(parseInfo.TranslateInfo, Element.Part<V_ValueInArray>(currentObject.GetVariable(), currentCall.GetVariable()));
-
                 // Add the object variables to the assigner.
-                ContainingType.AddObjectVariablesToAssigner(source, actionSet.IndexAssigner);
+                ContainingType.AddObjectVariablesToAssigner(Element.Part<V_ValueInArray>(currentObject.GetVariable(), currentCall.GetVariable()), actionSet.IndexAssigner);
             }
 
             // Get the next caller.
@@ -367,7 +370,8 @@ namespace Deltin.Deltinteger.Parse
                 Element.Part<V_IndexOfArrayValue>(callers.GetVariable(), new V_True())
             ));
 
-            AssignParameters(actionSet, ParameterVars, null, false);
+            // AssignParameters(actionSet, ParameterVars, null, false);
+            // TODO: Assign intial values
             block.Translate(actionSet);
 
             returnHandler.ApplyReturnSkips();
@@ -403,7 +407,7 @@ namespace Deltin.Deltinteger.Parse
             if (ContainingType != null)
             {
                 actionSet.AddAction(singleInstanceInfo.CurrentObject.SetVariable(
-                    value: (Element)actionSet.CurrentObject.GetVariable(),
+                    value: (Element)actionSet.CurrentObject,
                     index: (Element)callID.GetVariable()
                 ));
             }

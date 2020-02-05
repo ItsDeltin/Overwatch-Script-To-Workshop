@@ -11,6 +11,7 @@ namespace Deltin.Deltinteger.Parse
 
         public ClassType(string name) : base(name)
         {
+            CanBeDeleted = true;
             StaticScope = new Scope("class " + name);
             ObjectScope = StaticScope.Child("class " + name);
         }
@@ -18,23 +19,18 @@ namespace Deltin.Deltinteger.Parse
         public override IWorkshopTree New(ActionSet actionSet, Constructor constructor, IWorkshopTree[] constructorValues, object[] additionalParameterData)
         {
             // Create the class.
-            ClassObjectResult objectData = actionSet.Translate.DeltinScript.SetupClasses().CreateObject(actionSet, "_new_PathMap");
+            IndexReference objectReference = actionSet.Translate.DeltinScript.SetupClasses().CreateObject(actionSet, "_new_PathMap");
 
-            New(actionSet, objectData, constructor, constructorValues, additionalParameterData);
+            New(actionSet, objectReference, constructor, constructorValues, additionalParameterData);
 
             // Return the reference.
-            return objectData.ClassReference.GetVariable();
+            return objectReference.GetVariable();
         }
 
-        protected virtual void New(ActionSet actionSet, ClassObjectResult objectData, Constructor constructor, IWorkshopTree[] constructorValues, object[] additionalParameterData)
+        protected virtual void New(ActionSet actionSet, IndexReference objectReference, Constructor constructor, IWorkshopTree[] constructorValues, object[] additionalParameterData)
         {
             // Parse the constructor.
             constructor.Parse(actionSet, constructorValues, additionalParameterData);
-        }
-
-        public override IndexReference GetObjectSource(DeltinScript translateInfo, IWorkshopTree element)
-        {
-            return translateInfo.SetupClasses().ClassArray.CreateChild((Element)element);
         }
 
         public override Scope GetObjectScope() => ObjectScope;
@@ -49,34 +45,32 @@ namespace Deltin.Deltinteger.Parse
     public class ClassData
     {
         public IndexReference ClassIndexes { get; }
-        public IndexReference ClassArray { get; }
 
         public ClassData(VarCollection varCollection)
         {
-            ClassArray = varCollection.Assign("_classArray", true, false);
-            if (DefinedType.CLASS_INDEX_WORKAROUND)
-                ClassIndexes = varCollection.Assign("_classIndexes", true, false);
+            ClassIndexes = varCollection.Assign("_classIndexes", true, false);
         }
 
-        public ClassObjectResult CreateObject(ActionSet actionSet, string internalName)
+        public IndexReference CreateObject(ActionSet actionSet, string internalName)
         {
             var classReference = actionSet.VarCollection.Assign(internalName, actionSet.IsGlobal, true);
-            DefinedType.GetClassIndex(classReference, actionSet, this);
-            var classObject = ClassArray.CreateChild((Element)classReference.GetVariable());
-
-            return new ClassObjectResult(classReference, classObject);
+            GetClassIndex(classReference, actionSet);
+            return classReference;
         }
-    }
 
-    public class ClassObjectResult
-    {
-        public IndexReference ClassReference { get; }
-        public IndexReference ClassObject { get; }
-
-        public ClassObjectResult(IndexReference classReference, IndexReference classObject)
+        public void GetClassIndex(IndexReference classReference, ActionSet actionSet)
         {
-            ClassReference = classReference;
-            ClassObject = classObject;
+            actionSet.AddAction(classReference.SetVariable(
+                Element.Part<V_IndexOfArrayValue>(
+                    ClassIndexes.GetVariable(),
+                    new V_Number(0)
+                )
+            ));
+            actionSet.AddAction(ClassIndexes.SetVariable(
+                1,
+                null,
+                (Element)classReference.GetVariable()
+            ));
         }
     }
 }

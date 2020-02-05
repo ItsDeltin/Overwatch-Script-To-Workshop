@@ -19,7 +19,10 @@ namespace Deltin.Deltinteger.CustomMethods
     {
         public override IWorkshopTree Get(ActionSet actionSet, IWorkshopTree[] parameterValues)
         {
-            return Element.Part<V_CountOf>(actionSet.Translate.DeltinScript.SetupClasses().ClassIndexes.GetVariable());
+            return Element.Part<V_CountOf>(Element.Part<V_FilteredArray>(
+                actionSet.Translate.DeltinScript.SetupClasses().ClassIndexes.GetVariable(),
+                new V_Compare(new V_ArrayElement(), Operators.Equal, new V_Number(1))
+            ));
         }
 
         public override CodeParameter[] Parameters() => null;

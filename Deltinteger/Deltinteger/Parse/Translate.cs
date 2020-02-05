@@ -181,9 +181,14 @@ namespace Deltin.Deltinteger.Parse
                 rulesetVariables.Add(newVar);
                 // Add the variable to the player variables scope if it is a player variable.
                 if (newVar.VariableType == VariableType.Player)
-                    PlayerVariableScope.AddVariable(newVar, null, null);
+                    // Syntax error will throw an exception. If there was a syntax error, it would be added by finalize.
+                    try {
+                        PlayerVariableScope.AddVariable(newVar, null, null);
+                    } catch (Exception) {}
             }
 
+            foreach (var applyType in types) if (applyType is DefinedType definedType) definedType.ResolveElements();
+            foreach (var apply in applyMethods) apply.SetupParameters();
             foreach (var apply in applyMethods) apply.SetupBlock();
             foreach (var apply in applyMethods) apply.CallInfo.CheckRecursion();
 
@@ -221,7 +226,7 @@ namespace Deltin.Deltinteger.Parse
             }
 
             // Assign static variables.
-            foreach (var type in types) type.AddStaticVariablesToAssigner(this, DefaultIndexAssigner);
+            foreach (var type in types) type.WorkshopInit(this);
 
             // Setup single-instance methods.
             foreach (var method in singleInstanceMethods) method.SetupSingleInstance();
@@ -416,13 +421,11 @@ namespace Deltin.Deltinteger.Parse
             if (macroContext.LEFT_PAREN() != null || macroContext.RIGHT_PAREN() != null)
             {
                 var newMacro = new DefinedMacro(parseInfo, scope, macroContext);
-                scope.AddMethod(newMacro, parseInfo.Script.Diagnostics, DocRange.GetRange(macroContext.name));
                 applyMethods.Add(newMacro);
             }
             else
             {
                 var newMacro = new MacroVar(parseInfo, scope, macroContext);
-                scope.AddVariable(newMacro, parseInfo.Script.Diagnostics, DocRange.GetRange(macroContext.name));
                 applyMethods.Add(newMacro);
             }
         }
@@ -433,10 +436,7 @@ namespace Deltin.Deltinteger.Parse
             if (_classData == null)
             {
                 _classData = new ClassData(VarCollection);
-                InitialGlobal.ActionSet.AddAction(_classData.ClassArray.SetVariable(new V_EmptyArray()));
-
-                if (DefinedType.CLASS_INDEX_WORKAROUND)
-                    InitialGlobal.ActionSet.AddAction(_classData.ClassIndexes.SetVariable(new V_EmptyArray()));
+                InitialGlobal.ActionSet.AddAction(_classData.ClassIndexes.SetVariable(0, null, Constants.MAX_ARRAY_LENGTH));
             }
             return _classData;
         }

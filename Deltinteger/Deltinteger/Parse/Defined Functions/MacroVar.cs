@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using Deltin.Deltinteger.LanguageServer;
 using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
 using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItemKind;
@@ -41,14 +43,20 @@ namespace Deltin.Deltinteger.Parse
             this.scope = scope;
             this.parseInfo = parseInfo;
 
+            scope.AddVariable(this, parseInfo.Script.Diagnostics, DocRange.GetRange(macroContext.name));
             parseInfo.Script.AddHover(DocRange.GetRange(macroContext.name), GetLabel(true));
         }
 
+        public void SetupParameters() {}
+
         public void SetupBlock()
         {
-            if (ExpressionToParse == null) return;
-            Expression = DeltinScript.GetExpression(parseInfo.SetCallInfo(CallInfo), scope, ExpressionToParse);
-            ReturnType = Expression?.Type();
+            if (ExpressionToParse != null)
+            {
+                Expression = DeltinScript.GetExpression(parseInfo.SetCallInfo(CallInfo), scope, ExpressionToParse);
+                ReturnType = Expression?.Type();
+            }
+            foreach (var listener in listeners) listener.Applied();
         }
 
         public IWorkshopTree Parse(ActionSet actionSet, bool asElement = true) => Expression.Parse(actionSet);
@@ -73,5 +81,11 @@ namespace Deltin.Deltinteger.Parse
         }
 
         public string GetLabel(bool markdown) => HoverHandler.Sectioned("macro " + Name, null);
+
+        private List<IOnBlockApplied> listeners = new List<IOnBlockApplied>();
+        public void OnBlockApply(IOnBlockApplied onBlockApplied)
+        {
+            listeners.Add(onBlockApplied);
+        }
     }
 }
