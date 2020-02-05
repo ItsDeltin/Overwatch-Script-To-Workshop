@@ -36,7 +36,7 @@ namespace Deltin.Deltinteger.Parse
             Var asVar = call?.Calling as Var;
 
             // Syntax error if `value` is not a var or the variable is not defined on the rule level.
-            if (asVar == null || asVar.DefineType != VariableDefineType.RuleLevel)
+            if (asVar == null || asVar.StoreType != StoreType.FullVariable)
                 script.Diagnostics.Error("Expected a variable defined on the rule level.", valueRange);
 
             // Syntax error if the variable type is not equal to the expected type.

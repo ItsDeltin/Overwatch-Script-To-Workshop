@@ -160,7 +160,7 @@ namespace Deltin.Deltinteger.Parse
                 VariableResolve = new VariableResolve(new VariableResolveOptions() {
                     // The for cannot be indexed and should be on the rule-level.
                     CanBeIndexed = false,
-                    RuleLevel = true
+                    FullVariable = true
                 }, variable, DocRange.GetRange(autoForContext.forVariable), parseInfo.Script.Diagnostics);
             }
 

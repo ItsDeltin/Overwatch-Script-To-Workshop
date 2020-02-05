@@ -293,10 +293,10 @@ namespace Deltin.Deltinteger.Parse
                 if (!SetVariable.Calling.Settable())
                     diagnostics.Error($"The variable '{SetVariable.Calling.Name}' cannot be set to.", VariableRange);
                 
-                if (options.RuleLevel)
+                if (options.FullVariable)
                 {
                     Var asVar = SetVariable.Calling as Var;
-                    if (asVar == null || asVar.DefineType != VariableDefineType.RuleLevel)
+                    if (asVar == null || asVar.StoreType != StoreType.FullVariable)
                         diagnostics.Error($"The variable '{SetVariable.Calling.Name}' must be defined on the rule-level.", VariableRange);
                 }
 
@@ -352,7 +352,7 @@ namespace Deltin.Deltinteger.Parse
 
     public class VariableResolveOptions
     {
-        public bool RuleLevel = false;
+        public bool FullVariable = false;
         public bool CanBeIndexed = true;
     }
 }

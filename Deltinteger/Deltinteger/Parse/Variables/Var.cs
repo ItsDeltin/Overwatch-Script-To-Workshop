@@ -17,12 +17,12 @@ namespace Deltin.Deltinteger.Parse
 
         // Attributes
         public VariableType VariableType { get; set; }
-        public VariableDefineType DefineType { get; private set; }
+        public StoreType StoreType { get; private set; }
         public bool InExtendedCollection { get; private set; }
         public int ID { get; private set; } = -1;
         public bool Static { get; private set; }
 
-        private DeltinScriptParser.DefineContext context;
+        private DeltinScriptParser.ExprContext initalValueContext;
         private ParseInfo parseInfo { get; }
         private bool finalized;
 
@@ -73,9 +73,8 @@ namespace Deltin.Deltinteger.Parse
             else
                 newVar = new Var(null, new Location(parseInfo.Script.Uri, DocRange.GetRange(context)), parseInfo);
 
-            newVar.context = context;
+            newVar.initalValueContext = context.expr();
             newVar.InExtendedCollection = context.NOT() != null;
-            newVar.DefineType = defineType;
 
             // Check if global/player.
             if (defineType == VariableDefineType.RuleLevel)
@@ -156,6 +155,11 @@ namespace Deltin.Deltinteger.Parse
                     parseInfo.Script.Diagnostics.Error("'ref' attribute is not valid here.", DocRange.GetRange(context.REF()));
             }
 
+            // Set the store type.
+            if (newVar.VariableType == VariableType.ElementReference) newVar.StoreType = StoreType.None;
+            else if (newVar.InExtendedCollection) newVar.StoreType = StoreType.Indexed;
+            else newVar.StoreType = StoreType.FullVariable;
+
             // Syntax error if there is an '=' but no expression.
             if (context.EQUALS() != null && context.expr() == null)
                 parseInfo.Script.Diagnostics.Error("Expected expression.", DocRange.GetRange(context).end.ToRange());
@@ -166,11 +170,11 @@ namespace Deltin.Deltinteger.Parse
         public void Finalize(Scope scope)
         {
             // Get the initial value.
-            if (context?.expr() != null)
+            if (initalValueContext != null)
             {
-                InitialValue = DeltinScript.GetExpression(parseInfo, scope, context.expr());
+                InitialValue = DeltinScript.GetExpression(parseInfo, scope, initalValueContext);
                 if (InitialValue?.Type() != null && InitialValue.Type().Constant() == TypeSettable.Constant && CodeType != InitialValue.Type())
-                    parseInfo.Script.Diagnostics.Error($"The type '{InitialValue.Type().Name}' cannot be stored.", DocRange.GetRange(context.expr()));
+                    parseInfo.Script.Diagnostics.Error($"The type '{InitialValue.Type().Name}' cannot be stored.", DocRange.GetRange(initalValueContext));
             }
             
             // Add the variable to the scope.
@@ -207,6 +211,21 @@ namespace Deltin.Deltinteger.Parse
         }
     }
 
+    public class VarInfo
+    {
+        public VarInfo() {}
+
+        public CodeType Type;
+        public bool Static;
+        public bool InExtendedCollection;
+        public int ID;
+        public DeltinScriptParser.ExprContext InitialValueContext;
+        public AccessLevel AccessLevel;
+        public bool IsWorkshopReference;
+        public VariableType VariableType;
+        public StoreType StoreType;
+    }
+
     public enum VariableDefineType
     {
         RuleLevel,
@@ -226,5 +245,12 @@ namespace Deltin.Deltinteger.Parse
         Player,
         // The variable references an element.
         ElementReference
+    }
+
+    public enum StoreType
+    {
+        None,
+        FullVariable,
+        Indexed
     }
 }
