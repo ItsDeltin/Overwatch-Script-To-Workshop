@@ -257,6 +257,21 @@ namespace Deltin.Deltinteger.Elements
     [ElementData("End")]
     public class A_End : Element {}
 
+    [ElementData("For Global Variable")]
+    [VarRefParameter("Control Variable", true)]
+    [Parameter("Range Start", ValueType.Number, typeof(V_Number))]
+    [Parameter("Range Stop", ValueType.Number, typeof(V_Number))]
+    [Parameter("Step", ValueType.Number, typeof(V_Number))]
+    public class A_ForGlobalVariable : Element {}
+
+    [ElementData("For Player Variable")]
+    [Parameter("Control Player", ValueType.Player, typeof(V_EventPlayer))]
+    [VarRefParameter("Control Variable", false)]
+    [Parameter("Range Start", ValueType.Number, typeof(V_Number))]
+    [Parameter("Range Stop", ValueType.Number, typeof(V_Number))]
+    [Parameter("Step", ValueType.Number, typeof(V_Number))]
+    public class A_ForPlayerVariable : Element {}
+
     [ElementData("Go To Assemble Heroes")]
     public class A_GoToAssembleHeroes : Element {}
 

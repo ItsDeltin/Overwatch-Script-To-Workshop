@@ -68,6 +68,7 @@ statement :
 	| method STATEMENT_END? #s_method
 	| if 					#s_if
 	| for					#s_for
+	| for_auto              #s_for_auto
 	| foreach				#s_foreach
 	| while					#s_while
 	| define STATEMENT_END? #s_define
@@ -80,6 +81,10 @@ block : (BLOCK_START statement* BLOCK_END) | statement | STATEMENT_END  ;
 
 for     : FOR LEFT_PAREN 
 	((define | initialVarset=varset)? STATEMENT_END expr? STATEMENT_END endingVarset=varset?)
+	RIGHT_PAREN block;
+
+for_auto : FOR LEFT_PAREN
+	(forVariable=expr? STATEMENT_END start=expr? STATEMENT_END stop=expr? STATEMENT_END step=expr?)
 	RIGHT_PAREN block;
 
 foreach : FOREACH number? LEFT_PAREN (code_type | DEFINE) name=PART IN expr? RIGHT_PAREN block ;

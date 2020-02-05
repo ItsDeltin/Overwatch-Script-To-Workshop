@@ -323,6 +323,7 @@ namespace Deltin.Deltinteger.Parse
                 case DeltinScriptParser.S_ifContext s_if          : return new IfAction(parseInfo, scope, s_if.@if());
                 case DeltinScriptParser.S_whileContext s_while    : return new WhileAction(parseInfo, scope, s_while.@while());
                 case DeltinScriptParser.S_forContext s_for        : return new ForAction(parseInfo, scope, s_for.@for());
+                case DeltinScriptParser.S_for_autoContext s_forAuto: return new AutoForAction(parseInfo, scope, s_forAuto.for_auto());
                 case DeltinScriptParser.S_foreachContext s_foreach: return new ForeachAction(parseInfo, scope, s_foreach.@foreach());
                 case DeltinScriptParser.S_returnContext s_return  : return new ReturnAction(parseInfo, scope, s_return.@return());
                 case DeltinScriptParser.S_deleteContext s_delete  : return new DeleteAction(parseInfo, scope, s_delete.delete());

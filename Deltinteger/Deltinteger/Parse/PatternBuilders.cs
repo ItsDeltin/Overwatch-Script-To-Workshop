@@ -10,36 +10,6 @@ using Deltin.Deltinteger.Elements;
 
 namespace Deltin.Deltinteger.Parse
 {
-    public class IfBuilder
-    {
-        protected ActionSet ActionSet { get; }
-        public IWorkshopTree Condition { get; protected set; }
-        public bool WasSetup { get; private set; }
-        private SkipStartMarker SkipMarker;
-
-        public IfBuilder(ActionSet actionSet, IWorkshopTree condition)
-        {
-            ActionSet = actionSet;
-            Condition = condition;
-        }
-
-        public void Setup()
-        {
-            if (WasSetup) throw new Exception("Pattern builder already set up.");
-            WasSetup = true;
-
-            SkipMarker = new SkipStartMarker(ActionSet, Condition);
-            ActionSet.AddAction(SkipMarker);
-        }
-
-        public void Finish()
-        {
-            SkipEndMarker endMarker = new SkipEndMarker();
-            ActionSet.AddAction(endMarker);
-            //SkipMarker.SkipCount = SkipMarker.GetSkipCount(endMarker);
-        }
-    }
-
     public class WhileBuilder
     {
         protected ActionSet ActionSet { get; }

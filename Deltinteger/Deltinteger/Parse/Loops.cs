@@ -138,6 +138,29 @@ namespace Deltin.Deltinteger.Parse
         }
     }
 
+    class AutoForAction : IStatement, IBlockContainer
+    {
+        public AutoForAction(ParseInfo parseInfo, Scope scope, DeltinScriptParser.For_autoContext autoForContext)
+        {
+            if (autoForContext.forVariable == null)
+                parseInfo.Script.Diagnostics.Error("Expected variable.", DocRange.GetRange(autoForContext.FOR()));
+            else
+            {
+                
+            }
+        }
+
+        public void Translate(ActionSet actionSet)
+        {
+            throw new NotImplementedException();
+        }
+
+        public PathInfo[] GetPaths()
+        {
+            throw new NotImplementedException();
+        }
+    }
+
     class ForeachAction : IStatement
     {
         private Var ForeachVar { get; }
