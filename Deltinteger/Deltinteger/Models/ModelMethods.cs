@@ -314,7 +314,7 @@ namespace Deltin.Deltinteger.Models
             return newModel;
         }
 
-        public override IWorkshopTree Parse(ActionSet actionSet, IExpression expression, bool asElement) => null;
+        public override IWorkshopTree Parse(ActionSet actionSet, IExpression expression, object additionalParameterData, bool asElement) => null;
     }
 
     [CustomMethod("CreateTextFont", "Creates in-world text using any custom text.", CustomMethodType.MultiAction_Value, false)]
@@ -474,6 +474,6 @@ namespace Deltin.Deltinteger.Models
             return false;
         }
 
-        public override IWorkshopTree Parse(ActionSet actionSet, IExpression expression, bool asElement) => null;
+        public override IWorkshopTree Parse(ActionSet actionSet, IExpression expression, object additionalParameterData, bool asElement) => null;
     }
 }

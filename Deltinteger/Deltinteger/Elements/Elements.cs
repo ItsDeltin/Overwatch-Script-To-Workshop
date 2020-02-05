@@ -386,10 +386,13 @@ namespace Deltin.Deltinteger.Elements
 
                 if (WorkshopParameters[i] is VarRefParameter)
                 {
-                    Parameters[i] = new WorkshopVariableParameter(
+                    Parameters[i] = new VariableParameter(
                         name,
                         description,
-                        ((VarRefParameter)WorkshopParameters[i]).IsGlobal
+                        ((VarRefParameter)WorkshopParameters[i]).IsGlobal ? VariableType.Global : VariableType.Player,
+                        new VariableResolveOptions() {
+                            CanBeIndexed = false, FullVariable = true
+                        }
                     );
                 }
                 else

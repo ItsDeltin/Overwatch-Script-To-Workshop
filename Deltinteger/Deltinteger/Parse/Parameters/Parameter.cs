@@ -53,7 +53,7 @@ namespace Deltin.Deltinteger.Parse
         }
 
         public virtual object Validate(ScriptFile script, IExpression value, DocRange valueRange) => null;
-        public virtual IWorkshopTree Parse(ActionSet actionSet, IExpression expression, bool asElement) => expression.Parse(actionSet, asElement);
+        public virtual IWorkshopTree Parse(ActionSet actionSet, IExpression expression, object additionalParameterData, bool asElement) => expression.Parse(actionSet, asElement);
 
         public string GetLabel(bool markdown)
         {
