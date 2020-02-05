@@ -227,7 +227,7 @@ namespace Deltin.Deltinteger.Parse
             foreach (var type in types) type.WorkshopInit(this);
 
             // Setup single-instance methods.
-            foreach (var method in singleInstanceMethods) method.SetupSingleInstance();
+            foreach (var method in subroutines) method.SetupSubroutine();
 
             // Parse the rules.
             foreach (var rule in rules)
@@ -255,6 +255,9 @@ namespace Deltin.Deltinteger.Parse
             // Get the variables.
             VarCollection.ToWorkshop(result, I18n.I18n.CurrentLanguage);
             result.AppendLine();
+
+            // Get the subroutines.
+            SubroutineCollection.ToWorkshop(result, I18n.I18n.CurrentLanguage);
 
             // Get the rules.
             foreach (var rule in WorkshopRules)
@@ -295,10 +298,10 @@ namespace Deltin.Deltinteger.Parse
             return isGlobal ? InitialGlobal : InitialPlayer;
         }
 
-        private List<DefinedMethod> singleInstanceMethods = new List<DefinedMethod>();
-        public void AddSingleInstanceMethod(DefinedMethod method)
+        private List<DefinedMethod> subroutines = new List<DefinedMethod>();
+        public void AddSubroutine(DefinedMethod method)
         {
-            singleInstanceMethods.Add(method);
+            subroutines.Add(method);
         }
 
         private List<IApplyBlock> applyBlocks = new List<IApplyBlock>();

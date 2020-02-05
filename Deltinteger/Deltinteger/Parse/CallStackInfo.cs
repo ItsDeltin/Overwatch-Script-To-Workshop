@@ -38,7 +38,7 @@ namespace Deltin.Deltinteger.Parse
 
             if (function == currentCheck)
             {
-                if (function is DefinedMethod && ((DefinedMethod)function).IsSubroutine)
+                if (function is DefinedMethod && ((DefinedMethod)function).SubroutineName != null)
                     return false;
                 else
                     return true;

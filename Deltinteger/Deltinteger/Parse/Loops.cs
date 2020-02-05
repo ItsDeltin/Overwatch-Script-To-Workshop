@@ -213,11 +213,14 @@ namespace Deltin.Deltinteger.Parse
             // New variable being use in for.
             else
             {
-                // Todo: remove
-                //variable = actionSet.VarCollection.Assign(DefinedVariable, actionSet.IsGlobal).WorkshopVariable;
                 actionSet.IndexAssigner.Add(actionSet.VarCollection, DefinedVariable, actionSet.IsGlobal, null);
                 variable = ((IndexReference)actionSet.IndexAssigner[DefinedVariable]).WorkshopVariable;
                 target = new V_EventPlayer();
+
+                if (DefinedVariable.InitialValue != null)
+                    actionSet.AddAction(((IndexReference)actionSet.IndexAssigner[DefinedVariable]).SetVariable(
+                        (Element)DefinedVariable.InitialValue.Parse(actionSet)
+                    ));
             }
 
             Element start = (Element)Start.Parse(actionSet);

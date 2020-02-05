@@ -58,7 +58,7 @@ statement_operation : EQUALS | EQUALS_ADD | EQUALS_DIVIDE | EQUALS_MODULO | EQUA
 call_parameters  : expr (COMMA expr?)*    		 	         ;
 picky_parameter  : PART? TERNARY_ELSE expr?                  ;
 picky_parameters : picky_parameter (COMMA picky_parameter?)* ;
-method           : PART LEFT_PAREN (picky_parameters | call_parameters)? RIGHT_PAREN ;
+method           : ASYNC? PART LEFT_PAREN (picky_parameters | call_parameters)? RIGHT_PAREN ;
 
 variable : PART array? ;
 code_type: PART (INDEX_START INDEX_END)*;
@@ -107,11 +107,9 @@ ow_rule :
 	block?
 	;
 
-define_method : DOCUMENTATION* accessor? method_attribute* (METHOD | code_type) name=PART LEFT_PAREN setParameters RIGHT_PAREN
+define_method : DOCUMENTATION* accessor? (VOID | code_type) name=PART LEFT_PAREN setParameters RIGHT_PAREN subroutineRuleName=STRINGLITERAL?
 	block?
 	;
-
-method_attribute : RECURSIVE | RULE_WORD ;
 
 define_macro  : DOCUMENTATION* accessor? MACRO name=PART (LEFT_PAREN setParameters RIGHT_PAREN)? TERNARY_ELSE? expr? STATEMENT_END ;
 
@@ -194,7 +192,7 @@ PLAYER    : 'playervar' ;
 TRUE      : 'true'      ;
 FALSE     : 'false'     ;
 NULL      : 'null'      ;
-METHOD    : 'method'    ;
+//METHOD    : 'method'    ;
 RECURSIVE : 'recursive' ;
 RETURN    : 'return'    ;
 WHILE     : 'while'     ;
@@ -213,6 +211,9 @@ MACRO     : 'macro'     ;
 DISABLED  : 'disabled'  ;
 ENUM      : 'enum'      ;
 REF       : 'ref'       ;
+//SUBROUTINE: 'subroutine';
+VOID      : 'void'		;
+ASYNC     : 'async'		;
 
 EQUALS          : '='  ;
 EQUALS_POW      : '^=' ;

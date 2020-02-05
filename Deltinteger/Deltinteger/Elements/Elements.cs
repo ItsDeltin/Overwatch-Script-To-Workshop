@@ -329,6 +329,7 @@ namespace Deltin.Deltinteger.Elements
         public bool Hidden { get; }
         public CodeParameter[] Parameters { get; private set; }
         public ParameterBase[] WorkshopParameters { get; }
+        public bool Asyncable => false;
         public UsageDiagnostic[] UsageDiagnostics { get; }
         public WikiMethod Wiki { get; }
         public StringOrMarkupContent Documentation => Wiki?.Description;
@@ -400,7 +401,7 @@ namespace Deltin.Deltinteger.Elements
 
         public bool DoesReturnValue() => IsValue;
 
-        public IWorkshopTree Parse(ActionSet actionSet, IWorkshopTree[] values, object[] additionalParameterData)
+        public IWorkshopTree Parse(ActionSet actionSet, bool parallel, IWorkshopTree[] values, object[] additionalParameterData)
         {
             Element element = GetObject();
             element.ParameterValues = values;

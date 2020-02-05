@@ -17,6 +17,7 @@ namespace Deltin.Deltinteger.Parse
         public Location DefinedAt { get; }
         public bool WholeContext { get; } = true;
         public StringOrMarkupContent Documentation { get; } = null;
+        public bool Asyncable { get; protected set; }
 
         protected ParseInfo parseInfo { get; }
         protected Scope methodScope { get; }
@@ -57,7 +58,7 @@ namespace Deltin.Deltinteger.Parse
 
         public string GetLabel(bool markdown) => HoverHandler.GetLabel(ReturnType, Name, Parameters, markdown, null);
 
-        public abstract IWorkshopTree Parse(ActionSet actionSet, IWorkshopTree[] parameterValues, object[] additionalParameterData);
+        public abstract IWorkshopTree Parse(ActionSet actionSet, bool parallel, IWorkshopTree[] parameterValues, object[] additionalParameterData);
 
         public CompletionItem GetCompletion()
         {

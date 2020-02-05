@@ -10,6 +10,7 @@ namespace Deltin.Deltinteger.Parse
         public IMethod CallingMethod { get; }
         private OverloadChooser OverloadChooser { get; }
         public IExpression[] ParameterValues { get; }
+        public bool Parallel { get; }
 
         private ParseInfo parseInfo { get; }
         private DocRange NameRange { get; }
@@ -22,6 +23,8 @@ namespace Deltin.Deltinteger.Parse
             NameRange = DocRange.GetRange(methodContext.PART());
 
             UsedAsExpression = usedAsExpression;
+
+            Parallel = methodContext.ASYNC() != null;
 
             var options = scope.GetMethodsByName(methodName);
             if (options.Length == 0)
@@ -48,6 +51,9 @@ namespace Deltin.Deltinteger.Parse
                         definedFunction.Call(parseInfo.Script, NameRange);
                         parseInfo.CurrentCallInfo?.Call(definedFunction, NameRange);
                     }
+
+                    if (Parallel && !CallingMethod.Asyncable)
+                        parseInfo.Script.Diagnostics.Error($"The method '{CallingMethod.Name}' cannot be called in parallel.", NameRange);
                     
                     parseInfo.Script.AddHover(DocRange.GetRange(methodContext), CallingMethod.GetLabel(true));
                 }
@@ -75,13 +81,13 @@ namespace Deltin.Deltinteger.Parse
         // IStatement
         public void Translate(ActionSet actionSet)
         {
-            CallingMethod.Parse(actionSet.New(NameRange), GetParameterValuesAsWorkshop(actionSet), OverloadChooser.AdditionalParameterData);
+            CallingMethod.Parse(actionSet.New(NameRange), Parallel, GetParameterValuesAsWorkshop(actionSet), OverloadChooser.AdditionalParameterData);
         }
 
         // IExpression
         public IWorkshopTree Parse(ActionSet actionSet, bool asElement = true)
         {
-            return CallingMethod.Parse(actionSet.New(NameRange), GetParameterValuesAsWorkshop(actionSet), OverloadChooser.AdditionalParameterData);
+            return CallingMethod.Parse(actionSet.New(NameRange), Parallel, GetParameterValuesAsWorkshop(actionSet), OverloadChooser.AdditionalParameterData);
         }
 
         private IWorkshopTree[] GetParameterValuesAsWorkshop(ActionSet actionSet)

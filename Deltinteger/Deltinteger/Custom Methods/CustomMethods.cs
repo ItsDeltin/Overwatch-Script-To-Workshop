@@ -43,6 +43,7 @@ namespace Deltin.Deltinteger.CustomMethods
         public CustomMethodType CustomMethodType { get; }
         public Type Type { get; }
         public bool Global { get; }
+        public bool Asyncable => false;
 
         // IScopeable defaults
         public Location DefinedAt { get; } = null;
@@ -74,7 +75,7 @@ namespace Deltin.Deltinteger.CustomMethods
 
         public bool DoesReturnValue() => CustomMethodType == CustomMethodType.Value || CustomMethodType == CustomMethodType.MultiAction_Value;
 
-        public IWorkshopTree Parse(ActionSet actionSet, IWorkshopTree[] values, object[] additionalParameterData)
+        public IWorkshopTree Parse(ActionSet actionSet, bool parallel, IWorkshopTree[] values, object[] additionalParameterData)
         {
             return GetObject().Get(actionSet, values, additionalParameterData);
         }
