@@ -102,6 +102,22 @@ namespace Deltin.Deltinteger.Parse
         {
             List<Element> actions = new List<Element>();
 
+            bool doLoop = false;
+            do
+            {
+                bool anyRemoved = false;
+
+                for (int i = 0; i < Actions.Count && !anyRemoved; i++)
+                    if (Actions[i].ShouldRemove())
+                    {
+                        Actions.RemoveAt(i);
+                        anyRemoved = true;
+                    }
+                
+                doLoop = anyRemoved;
+            }
+            while (doLoop);
+
             foreach (IActionList action in this.Actions)
                 if (action.IsAction)
                     actions.Add(action.GetAction());
@@ -124,6 +140,12 @@ namespace Deltin.Deltinteger.Parse
         public List<IActionList> ActionList { get; }
         public VarCollection VarCollection { get; }
         public ContinueSkip ContinueSkip { get; }
+
+        public int ActionCount {
+            get {
+                return ActionList.Count;
+            }
+        }
 
         public ActionSet(bool isGlobal, VarCollection varCollection)
         {
@@ -194,12 +216,18 @@ namespace Deltin.Deltinteger.Parse
 
         public void AddAction(IWorkshopTree action)
         {
+            if (action is Element element) element.Indent = IndentCount;
+
             ActionList.Add(new ALAction(action));
         }
         public void AddAction(IWorkshopTree[] actions)
         {
             foreach (var action in actions)
+            {
+                if (action is Element element) element.Indent = IndentCount;
+
                 ActionList.Add(new ALAction(action));
+            }
         }
         public void AddAction(IActionList action)
         {
@@ -214,6 +242,7 @@ namespace Deltin.Deltinteger.Parse
     public interface IActionList
     {
         bool IsAction { get; }
+        bool ShouldRemove();
         Element GetAction();
     }
 
@@ -231,13 +260,16 @@ namespace Deltin.Deltinteger.Parse
         {
             return (Element)Calling;
         }
+
+        public bool ShouldRemove() => false;
     }
 
     public class SkipStartMarker : IActionList
     {
         public IWorkshopTree Condition { get; }
         private ActionSet ActionSet { get; }
-        public IWorkshopTree SkipCount { get; set; }
+        //public IWorkshopTree SkipCount { get; set; }
+        public SkipEndMarker EndMarker { get; private set; }
         public bool IsAction { get; } = true;
 
         public SkipStartMarker(ActionSet actionSet, IWorkshopTree condition)
@@ -275,19 +307,32 @@ namespace Deltin.Deltinteger.Parse
             return new V_Number(count - 1);
         }
 
+        public void SetEndMarker(SkipEndMarker endMarker)
+        {
+            //if (SkipCount != null) throw new Exception("SkipCount not null.");
+            EndMarker = endMarker;
+        }
+
         public Element GetAction()
         {
+            //Element skipCount;
+            //if (SkipCount != null) skipCount = (Element)SkipCount;
+            //else skipCount = GetSkipCount(EndMarker);
+            Element skipCount = GetSkipCount(EndMarker);
+
             if (Condition == null)
-                return Element.Part<A_Skip>(SkipCount);
+                return Element.Part<A_Skip>(skipCount);
             else
-                return Element.Part<A_SkipIf>(Element.Part<V_Not>(Condition), SkipCount);
+                return Element.Part<A_SkipIf>(Element.Part<V_Not>(Condition), skipCount);
         }
+
+        public bool ShouldRemove() => GetSkipCount(EndMarker).Value == 0;
     }
 
     public class SkipEndMarker : IActionList
     {
         public bool IsAction { get; } = false;
-
         public Element GetAction() => throw new NotImplementedException();
+        public bool ShouldRemove() => false;
     }
 }

@@ -46,20 +46,18 @@ namespace Deltin.Deltinteger.Parse
             ActionSet.AddAction(returnSkipStart);
 
             // 0 skip workaround.
-            ActionSet.AddAction(new A_Abort() { Disabled = true });
+            // ActionSet.AddAction(new A_Abort() { Disabled = true });
 
             skips.Add(returnSkipStart);
         }
 
         public void ApplyReturnSkips()
         {
-            if (!MultiplePaths) return;
-
             SkipEndMarker methodEndMarker = new SkipEndMarker();
             ActionSet.AddAction(methodEndMarker);
 
             foreach (var returnSkip in skips)
-                returnSkip.SkipCount = returnSkip.GetSkipCount(methodEndMarker);
+                returnSkip.SetEndMarker(methodEndMarker);
         }
 
         public IWorkshopTree GetReturnedValue()

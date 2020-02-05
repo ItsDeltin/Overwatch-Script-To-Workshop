@@ -4,6 +4,10 @@ using System.Linq;
 using System.Threading.Tasks;
 using Deltin.Deltinteger.Elements;
 
+// !
+// TODO: remove
+// !
+
 namespace Deltin.Deltinteger.Parse
 {
     public class IfBuilder
@@ -32,7 +36,7 @@ namespace Deltin.Deltinteger.Parse
         {
             SkipEndMarker endMarker = new SkipEndMarker();
             ActionSet.AddAction(endMarker);
-            SkipMarker.SkipCount = SkipMarker.GetSkipCount(endMarker);
+            //SkipMarker.SkipCount = SkipMarker.GetSkipCount(endMarker);
         }
     }
 
@@ -86,7 +90,7 @@ namespace Deltin.Deltinteger.Parse
 
             SkipEndMarker loopEnd = new SkipEndMarker();
             ActionSet.AddAction(loopEnd);
-            LoopSkipStart.SkipCount = LoopSkipStart.GetSkipCount(loopEnd);
+            //LoopSkipStart.SkipCount = LoopSkipStart.GetSkipCount(loopEnd);
         }
     }
 

@@ -724,4 +724,8 @@ namespace Deltin.Deltinteger.Elements
     {
         public static A_Wait MinimumWait { get { return Element.Part<A_Wait>(new V_Number(Constants.MINIMUM_WAIT)); } }
     }
+
+    [ElementData("While")]
+    [Parameter("Condition", ValueType.Boolean, typeof(V_Compare))]
+    public class A_While : Element {}
 }

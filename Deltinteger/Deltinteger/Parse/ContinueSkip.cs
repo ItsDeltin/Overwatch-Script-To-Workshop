@@ -35,7 +35,10 @@ namespace Deltin.Deltinteger.Parse
             );
 
             Skipper = new SkipStartMarker(actionSet);
-            Skipper.SkipCount = TempHolder.GetVariable();
+            // !
+            // TODO
+            // !
+            //Skipper.SkipCount = TempHolder.GetVariable();
 
             IActionList[] actions = ArrayBuilder<IActionList>.Build(
                 new ALAction(A_Wait.MinimumWait),

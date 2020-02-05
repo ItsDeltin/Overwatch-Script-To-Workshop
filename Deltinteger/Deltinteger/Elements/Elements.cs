@@ -75,10 +75,11 @@ namespace Deltin.Deltinteger.Elements
         public ElementList ElementList { get; private set; }
         public ElementData ElementData { get; private set; }
         public ParameterBase[] ParameterData { get; private set; }
-        public string Name { get { return ElementList.WorkshopName; } }
+        public string Name => ElementList.WorkshopName;
 
         public IWorkshopTree[] ParameterValues { get; set; }
         public bool Disabled { get; set; }
+        public int Indent { get; set; }
 
         public override string ToString()
         {
@@ -93,7 +94,7 @@ namespace Deltin.Deltinteger.Elements
 
             parameters.AddRange(ParameterValues.Select(p => p.ToWorkshop(language)));
 
-            string result = "";
+            string result = Extras.Indent(Indent, true); // TODO: option for spaces or tab output.
             if (!ElementList.IsValue && Disabled) result += I18n.I18n.Translate(language, "disabled") + " ";
             result += I18n.I18n.Translate(language, Name);
             if (parameters.Count != 0) result += "(" + string.Join(", ", parameters) + ")";

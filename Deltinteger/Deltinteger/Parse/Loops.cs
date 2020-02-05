@@ -23,10 +23,41 @@ namespace Deltin.Deltinteger.Parse
 
         public void Translate(ActionSet actionSet)
         {
-            WhileBuilder whileBuilder = new WhileBuilder(actionSet, () => { return Condition.Parse(actionSet); });
-            whileBuilder.Setup();
-            Block.Translate(actionSet);
-            whileBuilder.Finish();
+            int actionCountPreCondition = actionSet.ActionCount;
+
+            Element condition = (Element)Condition.Parse(actionSet);
+            bool actionsAdded = actionSet.ActionCount > actionCountPreCondition;
+
+            if (!actionsAdded)
+            {
+                // Create a normal while loop.
+                actionSet.AddAction(Element.Part<A_While>());
+                
+                // Translate the block.
+                Block.Translate(actionSet);
+
+                // Cap the block.
+                actionSet.AddAction(new A_End());
+            }
+            else
+            {
+                // The while condition requires actions to get the value.
+                actionSet.ActionList.Insert(actionCountPreCondition, new ALAction(Element.Part<A_While>(new V_True())));
+
+                SkipStartMarker whileEndSkip = new SkipStartMarker(actionSet, condition);
+                actionSet.AddAction(whileEndSkip);
+
+                // Translate the block.
+                Block.Translate(actionSet);
+
+                // Cap the block.
+                actionSet.AddAction(new A_End());
+
+                // Skip to the end when the condition is false.
+                SkipEndMarker whileEnd = new SkipEndMarker();
+                whileEndSkip.SetEndMarker(whileEnd);
+                actionSet.AddAction(whileEnd);
+            }
         }
 
         public PathInfo[] GetPaths()
