@@ -76,7 +76,7 @@ namespace Deltin.Deltinteger.Parse
 
         public override object Validate(ScriptFile script, IExpression value, DocRange valueRange)
         {
-            VariableResolve resolvedVariable = new VariableResolve(value, valueRange, script.Diagnostics);
+            VariableResolve resolvedVariable = new VariableResolve(new VariableResolveOptions(), value, valueRange, script.Diagnostics);
 
             // Syntax error if the expression is not a variable.
             if (!resolvedVariable.DoesResolveToVariable)

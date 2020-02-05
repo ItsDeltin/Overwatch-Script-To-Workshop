@@ -88,17 +88,16 @@ namespace Deltin.Deltinteger.Pathfinder
             ));
 
             // Set the current neighbor's distance if the new distance is less than what it is now.
-            IfBuilder ifBuilder = new IfBuilder(actionSet,
+            actionSet.AddAction(Element.Part<A_If>(
                 (Element)neighborDistance.GetVariable()
                 <
                 WorkingDistance((Element)distances.GetVariable(), (Element)neighborIndex.GetVariable())
-            );
-            ifBuilder.Setup();
+            ));
 
             actionSet.AddAction(distances.SetVariable((Element)neighborDistance.GetVariable(), null, (Element)neighborIndex.GetVariable()));
             actionSet.AddAction(parentArray.SetVariable((Element)current.GetVariable() + 1, null, (Element)neighborIndex.GetVariable()));
 
-            ifBuilder.Finish();
+            actionSet.AddAction(new A_End());
             forBuilder.Finish();
 
             actionSet.AddAction(ArrayBuilder<Element>.Build(

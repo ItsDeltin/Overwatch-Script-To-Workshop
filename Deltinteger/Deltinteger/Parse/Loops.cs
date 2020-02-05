@@ -140,25 +140,87 @@ namespace Deltin.Deltinteger.Parse
 
     class AutoForAction : IStatement, IBlockContainer
     {
+        private VariableResolve VariableResolve { get; }
+        private ExpressionOrWorkshopValue Start { get; }
+        private IExpression Stop { get; }
+        private ExpressionOrWorkshopValue Step { get; }
+        private BlockAction Block { get; }
+        private PathInfo PathInfo { get; }
+
         public AutoForAction(ParseInfo parseInfo, Scope scope, DeltinScriptParser.For_autoContext autoForContext)
         {
+            // Get the auto-for variable. (Required)
             if (autoForContext.forVariable == null)
                 parseInfo.Script.Diagnostics.Error("Expected variable.", DocRange.GetRange(autoForContext.FOR()));
             else
             {
-                
+                IExpression variable = DeltinScript.GetExpression(parseInfo, scope, autoForContext.forVariable);
+
+                // Get the variable being set.
+                VariableResolve = new VariableResolve(new VariableResolveOptions() {
+                    // The for cannot be indexed and should be on the rule-level.
+                    CanBeIndexed = false,
+                    RuleLevel = true
+                }, variable, DocRange.GetRange(autoForContext.forVariable), parseInfo.Script.Diagnostics);
+            }
+
+            // Get the auto-for start. (Not Required)
+            if (autoForContext.start == null)
+                Start = new ExpressionOrWorkshopValue(new V_Number(0));
+            else
+                Start = new ExpressionOrWorkshopValue(DeltinScript.GetExpression(parseInfo, scope, autoForContext.start));
+            
+            // Get the auto-for end. (Required)
+            if (autoForContext.stop == null)
+                parseInfo.Script.Diagnostics.Error("Expected end expression.", DocRange.GetRange(autoForContext.startSep));
+            else
+                Stop = DeltinScript.GetExpression(parseInfo, scope, autoForContext.stop);
+            
+            // Get the auto-for step. (Not Required)
+            if (autoForContext.step == null)
+                Step = new ExpressionOrWorkshopValue(new V_Number(1));
+            else
+                Step = new ExpressionOrWorkshopValue(DeltinScript.GetExpression(parseInfo, scope, autoForContext.step));
+            
+            // Get the block.
+            if (autoForContext.block() == null)
+                parseInfo.Script.Diagnostics.Error("Missing block.", DocRange.GetRange(autoForContext.RIGHT_PAREN()));
+            else
+            {
+                Block = new BlockAction(parseInfo, scope, autoForContext.block());
+                PathInfo = new PathInfo(Block, DocRange.GetRange(autoForContext.block()), false);
             }
         }
 
         public void Translate(ActionSet actionSet)
         {
-            throw new NotImplementedException();
+            VariableElements elements = VariableResolve.ParseElements(actionSet);
+            Element start = (Element)Start.Parse(actionSet);
+            Element stop = (Element)Start.Parse(actionSet);
+            Element step = (Element)Start.Parse(actionSet);
+
+            // Global
+            if (elements.IndexReference.WorkshopVariable.IsGlobal)
+                actionSet.AddAction(Element.Part<A_ForGlobalVariable>(
+                    elements.IndexReference.WorkshopVariable,
+                    start, stop, step
+                ));
+            // Player
+            else
+                actionSet.AddAction(Element.Part<A_ForPlayerVariable>(
+                    elements.Target,
+                    elements.IndexReference.WorkshopVariable,
+                    start, stop, step
+                ));
+            
+            // Translate the block.
+            Block.Translate(actionSet);
+
+            // Cap the for.
+            actionSet.AddAction(new A_End());
         }
 
-        public PathInfo[] GetPaths()
-        {
-            throw new NotImplementedException();
-        }
+        public PathInfo[] GetPaths() => new PathInfo[] { PathInfo };
     }
 
     class ForeachAction : IStatement

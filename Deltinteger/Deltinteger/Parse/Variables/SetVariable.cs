@@ -17,7 +17,7 @@ namespace Deltin.Deltinteger.Parse
             IExpression variableExpression = DeltinScript.GetExpression(parseInfo, scope, varsetContext.var);
 
             // Get the variable being set.
-            VariableResolve = new VariableResolve(variableExpression, DocRange.GetRange(varsetContext), parseInfo.Script.Diagnostics);
+            VariableResolve = new VariableResolve(new VariableResolveOptions(), variableExpression, DocRange.GetRange(varsetContext), parseInfo.Script.Diagnostics);
             
             // Get the operation.
             if (varsetContext.statement_operation() != null)
