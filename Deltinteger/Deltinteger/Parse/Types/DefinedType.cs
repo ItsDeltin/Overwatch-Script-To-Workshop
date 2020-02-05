@@ -17,7 +17,7 @@ namespace Deltin.Deltinteger.Parse
         private ParseInfo parseInfo { get; }
         private DeltinScriptParser.Type_defineContext typeContext { get; }
 
-        public DefinedType(ParseInfo parseInfo, Scope scope, DeltinScriptParser.Type_defineContext typeContext, List<IApplyBlock> applyMethods) : base(typeContext.name.Text)
+        public DefinedType(ParseInfo parseInfo, Scope scope, DeltinScriptParser.Type_defineContext typeContext) : base(typeContext.name.Text)
         {
             CanBeDeleted = true;
             this.typeContext = typeContext;
@@ -38,12 +38,11 @@ namespace Deltin.Deltinteger.Parse
             foreach (var definedMethod in typeContext.define_method())
             {
                 var newMethod = new DefinedMethod(parseInfo, UseScope(false), definedMethod, this);
-                applyMethods.Add(newMethod);
             }
 
             foreach (var macroContext in typeContext.define_macro())
             {
-                DeltinScript.GetMacro(parseInfo, UseScope(false), macroContext, applyMethods);
+                DeltinScript.GetMacro(parseInfo, UseScope(false), macroContext);
             }
 
             // Get the constructors.
@@ -53,7 +52,6 @@ namespace Deltin.Deltinteger.Parse
                 for (int i = 0; i < Constructors.Length; i++)
                 {
                     Constructors[i] = new DefinedConstructor(parseInfo, this, typeContext.constructor(i));
-                    applyMethods.Add((DefinedConstructor)Constructors[i]);
                 }
             }
             else

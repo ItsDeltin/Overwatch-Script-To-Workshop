@@ -30,6 +30,8 @@ namespace Deltin.Deltinteger.Parse
         {
             _varInfo.WholeContext = true;
             _varInfo.OperationalScope = _operationalScope;
+            _varInfo.AccessLevel = AccessLevel.Public;
+            _varInfo.InitialValueResolve = InitialValueResolve.ApplyBlock;
         }
     }
 

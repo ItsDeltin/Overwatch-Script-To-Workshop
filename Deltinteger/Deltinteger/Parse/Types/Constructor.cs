@@ -64,6 +64,8 @@ namespace Deltin.Deltinteger.Parse
 
             if (Type is DefinedType)
                 ((DefinedType)Type).AddLink(DefinedAt);
+            
+            parseInfo.TranslateInfo.ApplyBlock(this);
         }
 
         public void SetupParameters()

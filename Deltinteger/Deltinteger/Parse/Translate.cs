@@ -120,8 +120,6 @@ namespace Deltin.Deltinteger.Parse
 
         void Translate()
         {
-            List<IApplyBlock> applyMethods = new List<IApplyBlock>();
-
             // Get the reserved variables and IDs
             foreach (ScriptFile script in ScriptFiles)
             {
@@ -150,7 +148,7 @@ namespace Deltin.Deltinteger.Parse
             foreach (ScriptFile script in ScriptFiles)
             foreach (var typeContext in script.Context.type_define())
             {
-                var newType = new DefinedType(new ParseInfo(script, this), GlobalScope, typeContext, applyMethods);
+                var newType = new DefinedType(new ParseInfo(script, this), GlobalScope, typeContext);
                 types.Add(newType);
                 definedTypes.Add(newType);
             }
@@ -162,13 +160,12 @@ namespace Deltin.Deltinteger.Parse
                 foreach (var methodContext in script.Context.define_method())
                 {
                     var newMethod = new DefinedMethod(new ParseInfo(script, this), RulesetScope, methodContext, null);
-                    applyMethods.Add(newMethod);
                 }
                 
                 // Get the macros.
                 foreach (var macroContext in script.Context.define_macro())
                 {
-                    GetMacro(new ParseInfo(script, this), RulesetScope, macroContext, applyMethods);
+                    GetMacro(new ParseInfo(script, this), RulesetScope, macroContext);
                 }
             }
 
@@ -188,9 +185,9 @@ namespace Deltin.Deltinteger.Parse
             }
 
             foreach (var applyType in types) if (applyType is DefinedType definedType) definedType.ResolveElements();
-            foreach (var apply in applyMethods) apply.SetupParameters();
-            foreach (var apply in applyMethods) apply.SetupBlock();
-            foreach (var apply in applyMethods) apply.CallInfo.CheckRecursion();
+            foreach (var apply in applyBlocks) apply.SetupParameters();
+            foreach (var apply in applyBlocks) apply.SetupBlock();
+            foreach (var apply in applyBlocks) apply.CallInfo?.CheckRecursion();
 
             // Get the rules
             foreach (ScriptFile script in ScriptFiles)
@@ -301,6 +298,12 @@ namespace Deltin.Deltinteger.Parse
         public void AddSingleInstanceMethod(DefinedMethod method)
         {
             singleInstanceMethods.Add(method);
+        }
+
+        private List<IApplyBlock> applyBlocks = new List<IApplyBlock>();
+        public void ApplyBlock(IApplyBlock apply)
+        {
+            applyBlocks.Add(apply);
         }
 
         public static IStatement GetStatement(ParseInfo parseInfo, Scope scope, DeltinScriptParser.StatementContext statementContext)
@@ -415,17 +418,17 @@ namespace Deltin.Deltinteger.Parse
             else throw new NotImplementedException();
         }
     
-        public static void GetMacro(ParseInfo parseInfo, Scope scope, DeltinScriptParser.Define_macroContext macroContext, List<IApplyBlock> applyMethods)
+        public static void GetMacro(ParseInfo parseInfo, Scope scope, DeltinScriptParser.Define_macroContext macroContext)
         {
             if (macroContext.LEFT_PAREN() != null || macroContext.RIGHT_PAREN() != null)
             {
                 var newMacro = new DefinedMacro(parseInfo, scope, macroContext);
-                applyMethods.Add(newMacro);
+                parseInfo.TranslateInfo.ApplyBlock(newMacro);
             }
             else
             {
                 var newMacro = new MacroVar(parseInfo, scope, macroContext);
-                applyMethods.Add(newMacro);
+                parseInfo.TranslateInfo.ApplyBlock(newMacro);
             }
         }
 

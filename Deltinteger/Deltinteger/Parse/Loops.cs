@@ -203,15 +203,20 @@ namespace Deltin.Deltinteger.Parse
             WorkshopVariable variable;
             Element target;
 
+            // Existing variable being used in for.
             if (VariableResolve != null)
             {
                 VariableElements elements = VariableResolve.ParseElements(actionSet);
                 variable = elements.IndexReference.WorkshopVariable;
                 target = elements.Target;
             }
+            // New variable being use in for.
             else
             {
-                variable = actionSet.VarCollection.Assign(DefinedVariable, actionSet.IsGlobal).WorkshopVariable;
+                // Todo: remove
+                //variable = actionSet.VarCollection.Assign(DefinedVariable, actionSet.IsGlobal).WorkshopVariable;
+                actionSet.IndexAssigner.Add(actionSet.VarCollection, DefinedVariable, actionSet.IsGlobal, null);
+                variable = ((IndexReference)actionSet.IndexAssigner[DefinedVariable]).WorkshopVariable;
                 target = new V_EventPlayer();
             }
 

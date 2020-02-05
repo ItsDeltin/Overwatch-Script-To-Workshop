@@ -5,7 +5,7 @@ using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.C
 
 namespace Deltin.Deltinteger.Parse
 {
-    public class Var : IIndexReferencer
+    public class Var : IIndexReferencer, IApplyBlock
     {
         private ParseInfo parseInfo { get; }
 
@@ -24,10 +24,14 @@ namespace Deltin.Deltinteger.Parse
         public int ID { get; }
         public bool Static { get; }
 
-        private DeltinScriptParser.ExprContext initalValueContext;
-        private bool finalized;
+        private readonly Scope _operationalScope;
+        private readonly InitialValueResolve _initialValueResolve;
+        private readonly DeltinScriptParser.ExprContext _initalValueContext;
+        private bool _finalized;
 
         public IExpression InitialValue { get; private set; }
+
+        public CallInfo CallInfo => null;
 
         public Var(VarInfo varInfo)
         {
@@ -43,21 +47,31 @@ namespace Deltin.Deltinteger.Parse
             InExtendedCollection = varInfo.InExtendedCollection;
             ID = varInfo.ID;
             Static = varInfo.Static;
-            initalValueContext = varInfo.InitialValueContext;
+            _initalValueContext = varInfo.InitialValueContext;
+            _initialValueResolve = varInfo.InitialValueResolve;
+            _operationalScope = varInfo.OperationalScope;
 
-            // Get the initial value.
-            if (initalValueContext != null)
-            {
-                InitialValue = DeltinScript.GetExpression(parseInfo, varInfo.OperationalScope, initalValueContext);
-                if (InitialValue?.Type() != null && InitialValue.Type().Constant() == TypeSettable.Constant && CodeType != InitialValue.Type())
-                    parseInfo.Script.Diagnostics.Error($"The type '{InitialValue.Type().Name}' cannot be stored.", DocRange.GetRange(initalValueContext));
-            }
-            
             // Add the variable to the scope.
-            varInfo.OperationalScope.AddVariable(this, parseInfo.Script.Diagnostics, DefinedAt.range);
-            finalized = true;
+            _operationalScope.AddVariable(this, parseInfo.Script.Diagnostics, DefinedAt.range);
+            _finalized = true;
 
             parseInfo.Script.AddHover(DefinedAt.range, GetLabel(true));
+
+            if (_initialValueResolve == InitialValueResolve.Instant)
+                GetInitialValue();
+            else
+                parseInfo.TranslateInfo.ApplyBlock(this);
+        }
+
+        private void GetInitialValue()
+        {
+            // Get the initial value.
+            if (_initalValueContext != null)
+            {
+                InitialValue = DeltinScript.GetExpression(parseInfo, _operationalScope, _initalValueContext);
+                if (InitialValue?.Type() != null && InitialValue.Type().Constant() == TypeSettable.Constant && CodeType != InitialValue.Type())
+                    parseInfo.Script.Diagnostics.Error($"The type '{InitialValue.Type().Name}' cannot be stored.", DocRange.GetRange(_initalValueContext));
+            }
         }
 
         public bool Settable()
@@ -89,7 +103,7 @@ namespace Deltin.Deltinteger.Parse
 
         private void ThrowIfNotFinalized()
         {
-            if (!finalized) throw new Exception("Var not finalized.");
+            if (!_finalized) throw new Exception("Var not finalized.");
         }
     
         public IWorkshopTree Parse(ActionSet actionSet, bool asElement = true)
@@ -112,6 +126,15 @@ namespace Deltin.Deltinteger.Parse
             if (CodeType != null) typeName = CodeType.Name;
             return HoverHandler.Sectioned(typeName + " " + Name, null);
         }
+
+        public void SetupParameters() {}
+
+        public void SetupBlock()
+        {
+            GetInitialValue();
+        }
+
+        public void OnBlockApply(IOnBlockApplied onBlockApplied) => throw new NotImplementedException();
     }
 
     public class VarInfo
@@ -130,6 +153,7 @@ namespace Deltin.Deltinteger.Parse
         public bool IsWorkshopReference = false;
         public VariableType VariableType = VariableType.Dynamic;
         public StoreType StoreType;
+        public InitialValueResolve InitialValueResolve = InitialValueResolve.Instant;
 
         public Scope OperationalScope;
 
@@ -158,5 +182,11 @@ namespace Deltin.Deltinteger.Parse
         None,
         FullVariable,
         Indexed
+    }
+
+    public enum InitialValueResolve
+    {
+        Instant,
+        ApplyBlock
     }
 }

@@ -57,6 +57,8 @@ namespace Deltin.Deltinteger.Parse
 
             // Add the hover info.
             parseInfo.Script.AddHover(DocRange.GetRange(context.name), GetLabel(true));
+
+            parseInfo.TranslateInfo.ApplyBlock(this);
         }
 
         // Gets the method attributes ('rule', 'recursive').
