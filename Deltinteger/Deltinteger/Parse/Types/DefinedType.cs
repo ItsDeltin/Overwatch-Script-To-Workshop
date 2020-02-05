@@ -11,12 +11,32 @@ namespace Deltin.Deltinteger.Parse
     public class DefinedType : CodeType
     {
         public LanguageServer.Location DefinedAt { get; }
-        private Scope objectScope { get; set; }
-        private Scope staticScope { get; set; }
+
+        /*
+Static scope, static members only.
+> Give to returning scope
+> static methods
+
+Operational scope. All object and static members.
+> object methods
+
+Object-serve scope. Only object members.
+> Give to object scope.
+        */
+
+        /// <summary>Used in object methods and constructors.</summary>
+        private Scope operationalScope;
+        /// <summary>Used in static methods and returned when ReturningScope() is called. Contains all static members in the inheritance tree.</summary>
+        private Scope staticScope;
+        /// <summary>Contains all object members in the inheritance tree. Returned when GetObjectScope() is called.</summary>
+        private Scope serveObjectScope;
+
         private List<ObjectVariable> objectVariables { get; } = new List<ObjectVariable>();
         private ParseInfo parseInfo;
         private DeltinScriptParser.Type_defineContext typeContext;
         private List<IApplyBlock> applyBlocks;
+
+        private bool elementsResolved;
 
         public DefinedType(ParseInfo parseInfo, Scope scope, DeltinScriptParser.Type_defineContext typeContext, List<IApplyBlock> applyBlocks) : base(typeContext.name.Text)
         {
@@ -52,6 +72,9 @@ namespace Deltin.Deltinteger.Parse
 
         public void ResolveElements()
         {
+            if (elementsResolved) return;
+            elementsResolved = true;
+
             // Get the type being extended.
             if (typeContext.TERNARY_ELSE() != null)
             {
@@ -65,37 +88,65 @@ namespace Deltin.Deltinteger.Parse
 
                     // GetCodeType will return null if the type is not found.
                     if (inheriting != null)
+                    {
                         Inherit(inheriting, parseInfo.Script.Diagnostics, DocRange.GetRange(typeContext.extends));
+                        (Extends as DefinedType)?.ResolveElements();
+                    }
                 }
             }
 
+            // Set operationalScope, staticScope, and serveObjectScope.
+            // TODO: Do not cast to DefinedType.
+
+            string scopeName = "class " + Name;
+
             if (Extends == null)
-                staticScope = parseInfo.TranslateInfo.GlobalScope.Child("class " + Name);
+            {
+                Scope global = parseInfo.TranslateInfo.GlobalScope;
+
+                operationalScope = global.Child(scopeName);
+                staticScope = global.Child(scopeName);
+                serveObjectScope = new Scope(scopeName);
+            }
             else
-                staticScope = Extends.GetObjectScope().Child("class " + Name);
+            {
+                operationalScope = ((DefinedType)Extends).operationalScope.Child(scopeName);
+                staticScope      = ((DefinedType)Extends).staticScope.Child(scopeName);
+                serveObjectScope = ((DefinedType)Extends).serveObjectScope.Child(scopeName);
+            }
             
             staticScope.PrivateCatch = true;
-            objectScope = staticScope.Child("class " + Name);
-            objectScope.This = this;
+            operationalScope = staticScope.Child("class " + Name);
+            operationalScope.This = this;
 
-            // Todo: Static methods/macros.
+            // Todo: Add static methods and macros to scopes.
             foreach (var definedMethod in typeContext.define_method())
             {
-                var newMethod = new DefinedMethod(parseInfo, UseScope(false), definedMethod, this);
+                var newMethod = new DefinedMethod(parseInfo, operationalScope, definedMethod, this);
                 applyBlocks.Add(newMethod);
             }
 
             foreach (var macroContext in typeContext.define_macro())
             {
-                DeltinScript.GetMacro(parseInfo, UseScope(false), macroContext, applyBlocks);
+                DeltinScript.GetMacro(parseInfo, operationalScope, macroContext, applyBlocks);
             }
 
             // Get the variables defined in the type.
             foreach (var definedVariable in typeContext.define())
             {
                 Var newVar = Var.CreateVarFromContext(VariableDefineType.InClass, parseInfo, definedVariable);
-                newVar.Finalize(UseScope(newVar.Static));
-                if (!newVar.Static) objectVariables.Add(new ObjectVariable(newVar));
+                newVar.Finalize(operationalScope);
+
+                if (!newVar.Static)
+                {
+                    objectVariables.Add(new ObjectVariable(newVar));
+                    serveObjectScope.CopyVariable(newVar);
+                }
+                else
+                {
+                    objectVariables.Add(new ObjectVariable(newVar));
+                    staticScope.CopyVariable(newVar);
+                }
             }
         }
 
@@ -116,11 +167,6 @@ namespace Deltin.Deltinteger.Parse
                 objectVariables[i].SetArrayStore(classData.GetClassVariableStack(translateInfo.VarCollection, i + stackOffset));
         }
 
-        private Scope UseScope(bool isStatic)
-        {
-            return isStatic ? staticScope : objectScope;
-        }
-
         override public Scope ReturningScope()
         {
             return staticScope;
@@ -128,7 +174,7 @@ namespace Deltin.Deltinteger.Parse
 
         override public Scope GetObjectScope()
         {
-            return objectScope;
+            return serveObjectScope;
         }
 
         override public IWorkshopTree New(ActionSet actionSet, Constructor constructor, IWorkshopTree[] constructorValues, object[] additionalParameterData)

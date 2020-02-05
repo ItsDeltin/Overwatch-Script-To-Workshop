@@ -75,6 +75,13 @@ namespace Deltin.Deltinteger.Parse
             AddVariable(variable, null, null);
         }
 
+        /// <summary>Adds a variable to the scope that already belongs to another scope.</summary>
+        public void CopyVariable(IScopeable variable)
+        {
+            if (variable == null) throw new ArgumentNullException(nameof(variable));
+            Variables.Add(variable);
+        }
+
         public bool IsVariable(string name)
         {
             return GetVariable(name, null, null, null) != null;
