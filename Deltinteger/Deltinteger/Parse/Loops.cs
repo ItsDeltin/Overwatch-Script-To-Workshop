@@ -196,8 +196,8 @@ namespace Deltin.Deltinteger.Parse
         {
             VariableElements elements = VariableResolve.ParseElements(actionSet);
             Element start = (Element)Start.Parse(actionSet);
-            Element stop = (Element)Start.Parse(actionSet);
-            Element step = (Element)Start.Parse(actionSet);
+            Element stop = (Element)Stop.Parse(actionSet);
+            Element step = (Element)Step.Parse(actionSet);
 
             // Global
             if (elements.IndexReference.WorkshopVariable.IsGlobal)
