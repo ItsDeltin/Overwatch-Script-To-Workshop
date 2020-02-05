@@ -119,6 +119,7 @@ namespace Deltin.Deltinteger.Parse
         public VarIndexAssigner IndexAssigner { get; private set; }
         public ReturnHandler ReturnHandler { get; private set; }
         public IndexReference CurrentObject { get; private set; }
+        public int IndentCount { get; private set; }
         public bool IsGlobal { get; }
         public List<IActionList> ActionList { get; }
         public VarCollection VarCollection { get; }
@@ -153,6 +154,7 @@ namespace Deltin.Deltinteger.Parse
             IndexAssigner = other.IndexAssigner;
             ReturnHandler = other.ReturnHandler;
             CurrentObject = other.CurrentObject;
+            IndentCount = other.IndentCount;
         }
         private ActionSet Clone()
         {
@@ -181,6 +183,12 @@ namespace Deltin.Deltinteger.Parse
         {
             var newActionSet = Clone();
             newActionSet.CurrentObject = currentObject;
+            return newActionSet;
+        }
+        public ActionSet Indent()
+        {
+            var newActionSet = Clone();
+            newActionSet.IndentCount++;
             return newActionSet;
         }
 

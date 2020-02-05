@@ -64,69 +64,36 @@ namespace Deltin.Deltinteger.Parse
 
         public void Translate(ActionSet actionSet)
         {
-            // Create the skip for the start of the if statement.
-            SkipStartMarker ifStart = new SkipStartMarker(actionSet, Expression.Parse(actionSet));
-            actionSet.AddAction(ifStart);
+            // Add the if action.
+            actionSet.AddAction(Element.Part<A_If>(Expression.Parse(actionSet)));
 
             // Translate the if block.
-            Block.Translate(actionSet);
-            
-            // 'block caps' are skips that are added to the end of the if block and each else-if block.
-            // The skips skip to the end of the entire if/else-if/else.
-            List<SkipStartMarker> blockCaps = new List<SkipStartMarker>();
+            Block.Translate(actionSet.Indent());
 
-            // Add the if cap if there is an else block or there is an else-if block. 
-            if (ElseBlock != null || ElseIfs.Length > 0)
-            {
-                SkipStartMarker ifCap = new SkipStartMarker(actionSet);
-                actionSet.AddAction(ifCap);
-                blockCaps.Add(ifCap);
-            }
-
-            // Marks the end of the if statement. If the if-condition is false, `ifStart` will skip to here.
-            SkipEndMarker ifEnd = new SkipEndMarker();
-            actionSet.AddAction(ifEnd);
-
-            // Set the if-skip's count.
-            ifStart.SkipCount = ifStart.GetSkipCount(ifEnd);
-
-            // Get the else-ifs.
+            // Add the else-ifs.
             for (int i = 0; i < ElseIfs.Length; i++)
             {
-                // This will equal true if this is at the last else-if and there is no else.
-                bool isLast = i == ElseIfs.Length - 1 && ElseBlock == null;
-
-                // Create the skip for the start of the else-if.
-                SkipStartMarker elseIfStart = new SkipStartMarker(actionSet, ElseIfs[i].Expression.Parse(actionSet));
-                actionSet.AddAction(elseIfStart);
+                // Add the else-if action.
+                actionSet.AddAction(Element.Part<A_ElseIf>(ElseIfs[i].Expression.Parse(actionSet)));
 
                 // Translate the else-if block.
-                ElseIfs[i].Block.Translate(actionSet);
+                ElseIfs[i].Block.Translate(actionSet.Indent());
 
-                // If this is not the last block in the entire if/else-if/else list, add the 'block cap'.
-                if (!isLast)
-                {
-                    SkipStartMarker elseIfCap = new SkipStartMarker(actionSet);
-                    actionSet.AddAction(elseIfCap);
-                    blockCaps.Add(elseIfCap);
-                }
-
-                // Marks the end of the else-if statement. If the condition is false, `elseIfStart` will skip to here.
-                SkipEndMarker elseIfEnd = new SkipEndMarker();
-                actionSet.AddAction(elseIfEnd);
-                elseIfStart.SkipCount = elseIfStart.GetSkipCount(elseIfEnd);
+                // Do not add the end action for the last else-if if there is an else block.
+                if (i != ElseIfs.Length - 1 || ElseBlock == null)
+                    // End the else-if.
+                    actionSet.AddAction(new A_End());
             }
 
             // If there is an else block, translate it.
-            if (ElseBlock != null) ElseBlock.Translate(actionSet);
+            if (ElseBlock != null)
+            {
+                actionSet.AddAction(new A_Else());
+                ElseBlock.Translate(actionSet.Indent());
+            }
 
-            // contextCap marks the end of the entire if/else-if/list.
-            SkipEndMarker contextCap = new SkipEndMarker();
-            actionSet.AddAction(contextCap);
-
-            // Set all the block caps so they skip to the end of the list.
-            foreach (var blockCap in blockCaps)
-                blockCap.SkipCount = blockCap.GetSkipCount(contextCap);
+            // Add the end of the if.
+            actionSet.AddAction(new A_End());
         }
     }
 

@@ -254,15 +254,28 @@ namespace Deltin.Deltinteger.Elements
     [Parameter("Players", ValueType.Player, typeof(V_EventPlayer))]
     public class A_EnableSpectateHUD : Element {}
 
+    [ElementData("End")]
+    public class A_End : Element {}
 
     [ElementData("Go To Assemble Heroes")]
-    public class A_AssembleHeroes : Element {}
+    public class A_GoToAssembleHeroes : Element {}
 
     [ElementData("Heal")]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     [Parameter("Healer", ValueType.Player, typeof(V_Null))]
     [Parameter("Amount", ValueType.Number, typeof(V_Number))]
     public class A_Heal : Element {}
+
+    [ElementData("If")]
+    [Parameter("Condition", ValueType.Boolean, typeof(V_Compare))]
+    public class A_If : Element {}
+
+    [ElementData("Else If")]
+    [Parameter("Condition", ValueType.Boolean, typeof(V_Compare))]
+    public class A_ElseIf : Element {}
+
+    [ElementData("Else")]
+    public class A_Else : Element {}
 
     [ElementData("Kill")]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
