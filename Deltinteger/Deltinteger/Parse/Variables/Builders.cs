@@ -6,7 +6,12 @@ namespace Deltin.Deltinteger.Parse
 {
     class RuleLevelVariable : VarBuilder
     {
-        public RuleLevelVariable(IVarContextHandler contextHandler) : base(contextHandler) {}
+        private readonly Scope _operationalScope;
+
+        public RuleLevelVariable(Scope operationalScope, IVarContextHandler contextHandler) : base(contextHandler)
+        {
+            _operationalScope = operationalScope;
+        }
 
         protected override void MissingAttribute(AttributeType[] attributeTypes)
         {
@@ -19,11 +24,22 @@ namespace Deltin.Deltinteger.Parse
         {
             RejectAttributes(AttributeType.Ref, AttributeType.Static);
         }
+
+        protected override void Apply()
+        {
+            _varInfo.WholeContext = true;
+            _varInfo.OperationalScope = _operationalScope;
+        }
     }
 
     class ScopedVariable : VarBuilder
     {
-        public ScopedVariable(IVarContextHandler contextHandler) : base(contextHandler) {}
+        private readonly Scope _operationalScope;
+
+        public ScopedVariable(Scope operationalScope, IVarContextHandler contextHandler) : base(contextHandler)
+        {
+            _operationalScope = operationalScope;
+        }
 
         protected override void CheckAttributes()
         {
@@ -35,11 +51,24 @@ namespace Deltin.Deltinteger.Parse
                 AttributeType.ID
             );
         }
+
+        protected override void Apply()
+        {
+            _varInfo.WholeContext = false;
+            _varInfo.OperationalScope = _operationalScope;
+        }
     }
 
     class ClassVariable : VarBuilder
     {
-        public ClassVariable(IVarContextHandler contextHandler) : base(contextHandler) {}
+        private readonly Scope _objectScope;
+        private readonly Scope _staticScope;
+
+        public ClassVariable(Scope objectScope, Scope staticScope, IVarContextHandler contextHandler) : base(contextHandler)
+        {
+            _objectScope = objectScope;
+            _staticScope = staticScope;
+        }
 
         protected override void CheckAttributes()
         {
@@ -49,11 +78,22 @@ namespace Deltin.Deltinteger.Parse
                 AttributeType.Ref
             );
         }
+
+        protected override void Apply()
+        {
+            _varInfo.WholeContext = true;
+            _varInfo.OperationalScope = _varInfo.Static ? _staticScope : _objectScope;
+        }
     }
 
     class ParameterVariable : VarBuilder
     {
-        public ParameterVariable(IVarContextHandler contextHandler) : base(contextHandler) {}
+        private readonly Scope _operationalScope;
+
+        public ParameterVariable(Scope operationalScope, IVarContextHandler contextHandler) : base(contextHandler)
+        {
+            _operationalScope = operationalScope;
+        }
 
         protected override void CheckAttributes()
         {
@@ -64,11 +104,22 @@ namespace Deltin.Deltinteger.Parse
                 AttributeType.ID
             );
         }
+
+        protected override void Apply()
+        {
+            _varInfo.WholeContext = true; // Shouldn't matter.
+            _varInfo.OperationalScope = _operationalScope;
+        }
     }
 
     class ForeachVariable : VarBuilder
     {
-        public ForeachVariable(IVarContextHandler contextHandler) : base(contextHandler) {}
+        private readonly Scope _operationalScope;
+
+        public ForeachVariable(Scope operationalScope, IVarContextHandler contextHandler) : base(contextHandler)
+        {
+            _operationalScope = operationalScope;
+        }
 
         protected override void CheckAttributes()
         {
@@ -82,11 +133,22 @@ namespace Deltin.Deltinteger.Parse
                 AttributeType.Ref
             );
         }
+
+        protected override void Apply()
+        {
+            _varInfo.WholeContext = false;
+            _varInfo.OperationalScope = _operationalScope;
+        }
     }
 
     class AutoForVariable : VarBuilder
     {
-        public AutoForVariable(IVarContextHandler contextHandler) : base(contextHandler) {}
+        private readonly Scope _operationalScope;
+
+        public AutoForVariable(Scope operationalScope, IVarContextHandler contextHandler) : base(contextHandler)
+        {
+            _operationalScope = operationalScope;
+        }
 
         protected override void CheckAttributes()
         {
@@ -98,6 +160,12 @@ namespace Deltin.Deltinteger.Parse
                 AttributeType.Ext,
                 AttributeType.Ref
             );
+        }
+
+        protected override void Apply()
+        {
+            _varInfo.WholeContext = false;
+            _varInfo.OperationalScope = _operationalScope;
         }
     }
 }

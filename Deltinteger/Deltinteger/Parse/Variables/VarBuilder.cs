@@ -15,6 +15,8 @@ namespace Deltin.Deltinteger.Parse
         protected VarBuilderAttribute[] _attributes;
         protected VarInfo _varInfo;
 
+        public Var Var { get; }
+
         public VarBuilder(IVarContextHandler contextHandler)
         {
             _contextHandler = contextHandler;
@@ -39,7 +41,7 @@ namespace Deltin.Deltinteger.Parse
             CheckAttributes();
 
             // Create the varinfo.
-            _varInfo = new VarInfo();
+            _varInfo = new VarInfo(_contextHandler.GetName(), _contextHandler.GetDefineLocation(), _parseInfo);
 
             // Get the variable type.
             GetCodeType();
@@ -65,6 +67,8 @@ namespace Deltin.Deltinteger.Parse
             {
                 _varInfo.StoreType = StoreType.FullVariable;
             }
+
+            Var = new Var(_varInfo);
         }
 
         protected void RejectAttributes(params AttributeType[] types)
@@ -88,6 +92,7 @@ namespace Deltin.Deltinteger.Parse
 
         protected virtual void MissingAttribute(AttributeType[] attributeTypes) {}
         protected abstract void CheckAttributes();
+        protected abstract void Apply();
     }
 
     public interface IVarContextHandler
@@ -248,6 +253,11 @@ namespace Deltin.Deltinteger.Parse
                 // ref
                 case AttributeType.Ref:
                     varInfo.IsWorkshopReference = true;
+                    break;
+                
+                // Static
+                case AttributeType.Static:
+                    varInfo.Static = true;
                     break;
                 
                 // Should be handled by overrides.
