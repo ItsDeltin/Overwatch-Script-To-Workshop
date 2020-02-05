@@ -7,19 +7,21 @@ namespace Deltin.Deltinteger.Parse
 {
     public abstract class VarBuilder
     {
-        protected readonly ParseInfo _parseInfo;
-        protected readonly FileDiagnostics _diagnostics;
         protected readonly IVarContextHandler _contextHandler;
-        protected readonly DocRange _nameRange;
+        protected ParseInfo _parseInfo;
+        protected FileDiagnostics _diagnostics;
+        protected DocRange _nameRange;
 
         protected VarBuilderAttribute[] _attributes;
         protected VarInfo _varInfo;
 
-        public Var Var { get; }
-
         public VarBuilder(IVarContextHandler contextHandler)
         {
             _contextHandler = contextHandler;
+        }
+
+        public Var GetVar()
+        {
             _parseInfo = _contextHandler.ParseInfo;
             _diagnostics = _parseInfo.Script.Diagnostics;
             _nameRange = _contextHandler.GetNameRange();
@@ -50,6 +52,8 @@ namespace Deltin.Deltinteger.Parse
             foreach (VarBuilderAttribute attribute in _attributes)
                 attribute.Apply(_varInfo);
             
+            Apply();
+            
             // Set the variable and store types.
             if (_varInfo.IsWorkshopReference)
             {
@@ -68,7 +72,7 @@ namespace Deltin.Deltinteger.Parse
                 _varInfo.StoreType = StoreType.FullVariable;
             }
 
-            Var = new Var(_varInfo);
+            return new Var(_varInfo);
         }
 
         protected void RejectAttributes(params AttributeType[] types)
@@ -93,6 +97,8 @@ namespace Deltin.Deltinteger.Parse
         protected virtual void MissingAttribute(AttributeType[] attributeTypes) {}
         protected abstract void CheckAttributes();
         protected abstract void Apply();
+
+        public static implicit operator Var(VarBuilder builder) => builder.GetVar();
     }
 
     public interface IVarContextHandler

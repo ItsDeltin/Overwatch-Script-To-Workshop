@@ -40,9 +40,9 @@ namespace Deltin.Deltinteger.Parse
         public abstract void SetupParameters();
         public abstract void SetupBlock();
 
-        protected void SetupParameters(DeltinScriptParser.SetParametersContext context, VariableDefineType defineType = VariableDefineType.Parameter)
+        protected void SetupParameters(DeltinScriptParser.SetParametersContext context, bool subroutineParameter)
         {
-            var parameterInfo = CodeParameter.GetParameters(parseInfo, methodScope, context, defineType);
+            var parameterInfo = CodeParameter.GetParameters(parseInfo, methodScope, context, subroutineParameter);
             Parameters = parameterInfo.Parameters;
             ParameterVars = parameterInfo.Variables;
         }

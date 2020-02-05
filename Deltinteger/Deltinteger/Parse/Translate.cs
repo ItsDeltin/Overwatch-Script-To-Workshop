@@ -176,9 +176,9 @@ namespace Deltin.Deltinteger.Parse
             foreach (ScriptFile script in ScriptFiles)
             foreach (var varContext in script.Context.define())
             {
-                var newVar = Var.CreateVarFromContext(VariableDefineType.RuleLevel, new ParseInfo(script, this), varContext);
-                newVar.Finalize(RulesetScope);
+                Var newVar = new RuleLevelVariable(RulesetScope, new DefineContextHandler(new ParseInfo(script, this), varContext));
                 rulesetVariables.Add(newVar);
+
                 // Add the variable to the player variables scope if it is a player variable.
                 if (newVar.VariableType == VariableType.Player)
                     // Syntax error will throw an exception. If there was a syntax error, it would be added by finalize.
@@ -308,8 +308,7 @@ namespace Deltin.Deltinteger.Parse
             switch (statementContext)
             {
                 case DeltinScriptParser.S_defineContext define    : {
-                    var newVar = Var.CreateVarFromContext(VariableDefineType.Scoped, parseInfo, define.define());
-                    newVar.Finalize(scope);
+                    var newVar = new ScopedVariable(scope, new DefineContextHandler(parseInfo, define.define()));
                     return new DefineAction(newVar);
                 }
                 case DeltinScriptParser.S_methodContext method    : return new CallMethodAction(parseInfo, scope, method.method(), false, scope);

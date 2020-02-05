@@ -43,10 +43,10 @@ namespace Deltin.Deltinteger.Parse
 
             // Setup the parameters and parse the block.
             if (!RuleContained)
-                SetupParameters(context.setParameters());
+                SetupParameters(context.setParameters(), false);
             else
             {
-                SetupParameters(context.setParameters(), VariableDefineType.RuleParameter);
+                SetupParameters(context.setParameters(), true);
                 parseInfo.TranslateInfo.AddSingleInstanceMethod(this);
             }
 

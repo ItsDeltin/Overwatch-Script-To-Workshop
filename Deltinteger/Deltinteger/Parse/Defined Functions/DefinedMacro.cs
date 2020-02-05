@@ -28,7 +28,7 @@ namespace Deltin.Deltinteger.Parse
 
         public override void SetupParameters()
         {
-            SetupParameters(context.setParameters());
+            SetupParameters(context.setParameters(), false);
             parseInfo.Script.AddHover(DocRange.GetRange(context.name), GetLabel(true));
             containingScope.AddMethod(this, parseInfo.Script.Diagnostics, DefinedAt.range);
         }

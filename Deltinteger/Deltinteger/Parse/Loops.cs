@@ -82,8 +82,7 @@ namespace Deltin.Deltinteger.Parse
 
             if (forContext.define() != null)
             {
-                DefinedVariable = Var.CreateVarFromContext(VariableDefineType.Scoped, parseInfo, forContext.define());
-                DefinedVariable.Finalize(varScope);
+                DefinedVariable = new ScopedVariable(scope, new DefineContextHandler(parseInfo, forContext.define()));
             }
             else if (forContext.initialVarset != null)
                 InitialVarSet = new SetVariableAction(parseInfo, varScope, forContext.initialVarset);
@@ -141,6 +140,8 @@ namespace Deltin.Deltinteger.Parse
     class AutoForAction : IStatement, IBlockContainer
     {
         private VariableResolve VariableResolve { get; }
+        private Var DefinedVariable { get; }
+
         private ExpressionOrWorkshopValue Start { get; }
         private IExpression Stop { get; }
         private ExpressionOrWorkshopValue Step { get; }
@@ -150,9 +151,7 @@ namespace Deltin.Deltinteger.Parse
         public AutoForAction(ParseInfo parseInfo, Scope scope, DeltinScriptParser.For_autoContext autoForContext)
         {
             // Get the auto-for variable. (Required)
-            if (autoForContext.forVariable == null)
-                parseInfo.Script.Diagnostics.Error("Expected variable.", DocRange.GetRange(autoForContext.FOR()));
-            else
+            if (autoForContext.forVariable != null)
             {
                 IExpression variable = DeltinScript.GetExpression(parseInfo, scope, autoForContext.forVariable);
 
@@ -163,6 +162,13 @@ namespace Deltin.Deltinteger.Parse
                     FullVariable = true
                 }, variable, DocRange.GetRange(autoForContext.forVariable), parseInfo.Script.Diagnostics);
             }
+            // Get the defined variable.
+            else if (autoForContext.forDefine != null)
+            {
+                DefinedVariable = new AutoForVariable(scope, new DefineContextHandler(parseInfo, autoForContext.forDefine));
+            }
+            else
+                parseInfo.Script.Diagnostics.Error("Expected define or variable.", DocRange.GetRange(autoForContext.FOR()));
 
             // Get the auto-for start. (Not Required)
             if (autoForContext.start == null)
@@ -194,22 +200,36 @@ namespace Deltin.Deltinteger.Parse
 
         public void Translate(ActionSet actionSet)
         {
-            VariableElements elements = VariableResolve.ParseElements(actionSet);
+            WorkshopVariable variable;
+            Element target;
+
+            if (VariableResolve != null)
+            {
+                VariableElements elements = VariableResolve.ParseElements(actionSet);
+                variable = elements.IndexReference.WorkshopVariable;
+                target = elements.Target;
+            }
+            else
+            {
+                variable = actionSet.VarCollection.Assign(DefinedVariable, actionSet.IsGlobal).WorkshopVariable;
+                target = new V_EventPlayer();
+            }
+
             Element start = (Element)Start.Parse(actionSet);
             Element stop = (Element)Stop.Parse(actionSet);
             Element step = (Element)Step.Parse(actionSet);
 
             // Global
-            if (elements.IndexReference.WorkshopVariable.IsGlobal)
+            if (variable.IsGlobal)
                 actionSet.AddAction(Element.Part<A_ForGlobalVariable>(
-                    elements.IndexReference.WorkshopVariable,
+                    variable,
                     start, stop, step
                 ));
             // Player
             else
                 actionSet.AddAction(Element.Part<A_ForPlayerVariable>(
-                    elements.Target,
-                    elements.IndexReference.WorkshopVariable,
+                    target,
+                    variable,
                     start, stop, step
                 ));
             
@@ -234,10 +254,7 @@ namespace Deltin.Deltinteger.Parse
         {
             Scope varScope = scope.Child();
 
-            ForeachVar = new Var(foreachContext.name.Text, new Location(parseInfo.Script.Uri, DocRange.GetRange(foreachContext.name)), parseInfo);
-            ForeachVar.VariableType = VariableType.ElementReference;
-            ForeachVar.CodeType = CodeType.GetCodeTypeFromContext(parseInfo, foreachContext.code_type());
-            ForeachVar.Finalize(varScope);
+            ForeachVar = new ForeachVariable(scope, new ForeachContextHandler(parseInfo, foreachContext));
 
             // Get the array that will be iterated on. Syntax error if it is missing.
             if (foreachContext.expr() != null)
@@ -263,6 +280,44 @@ namespace Deltin.Deltinteger.Parse
             foreachBuilder.Setup();
             Block.Translate(actionSet);
             foreachBuilder.Finish();
+        }
+
+        class ForeachContextHandler : IVarContextHandler
+        {
+            public ParseInfo ParseInfo { get; }
+            private readonly DeltinScriptParser.ForeachContext _foreachContext;
+
+            public ForeachContextHandler(ParseInfo parseInfo, DeltinScriptParser.ForeachContext foreachContext)
+            {
+                ParseInfo = parseInfo;
+                _foreachContext = foreachContext;
+            }
+
+            public VarBuilderAttribute[] GetAttributes()
+            {
+                return new VarBuilderAttribute[0];
+            }
+
+            public DeltinScriptParser.Code_typeContext GetCodeType()
+            {
+                return _foreachContext.code_type();
+            }
+
+            public Location GetDefineLocation()
+            {
+                return new Location(ParseInfo.Script.Uri, GetNameRange());
+            }
+
+            public string GetName()
+            {
+                return _foreachContext.name?.Text;
+            }
+
+            public DocRange GetNameRange()
+            {
+                if (_foreachContext.name != null) return DocRange.GetRange(_foreachContext.name);
+                return DocRange.GetRange(_foreachContext);
+            }
         }
     }
 }

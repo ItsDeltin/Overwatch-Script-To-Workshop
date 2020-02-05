@@ -68,7 +68,7 @@ namespace Deltin.Deltinteger.Parse
 
         public void SetupParameters()
         {
-            var parameterInfo = CodeParameter.GetParameters(parseInfo, ConstructorScope, context.setParameters());
+            var parameterInfo = CodeParameter.GetParameters(parseInfo, ConstructorScope, context.setParameters(), false);
             Parameters = parameterInfo.Parameters;
             ParameterVars = parameterInfo.Variables;
 

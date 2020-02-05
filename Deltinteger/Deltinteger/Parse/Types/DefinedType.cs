@@ -70,8 +70,7 @@ namespace Deltin.Deltinteger.Parse
             // Get the variables defined in the type.
             foreach (var definedVariable in typeContext.define())
             {
-                Var newVar = Var.CreateVarFromContext(VariableDefineType.InClass, parseInfo, definedVariable);
-                newVar.Finalize(UseScope(newVar.Static));
+                Var newVar = new ClassVariable(objectScope, staticScope, new DefineContextHandler(parseInfo, definedVariable));
                 if (!newVar.Static) objectVariables.Add(new ObjectVariable(newVar));
             }
         }

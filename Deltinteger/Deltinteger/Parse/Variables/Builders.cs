@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Deltin.Deltinteger.LanguageServer;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -112,6 +113,34 @@ namespace Deltin.Deltinteger.Parse
         }
     }
 
+    class SubroutineParameterVariable : ParameterVariable
+    {
+        public SubroutineParameterVariable(Scope operationalScope, IVarContextHandler contextHandler) : base(operationalScope, contextHandler)
+        {
+        }
+
+        protected override void CheckAttributes()
+        {
+            RejectAttributes(
+                AttributeType.Public, AttributeType.Protected, AttributeType.Private,
+                AttributeType.Static,
+                AttributeType.Globalvar, AttributeType.Playervar,
+                AttributeType.ID, AttributeType.Ext
+            );
+        }
+
+        protected override void GetCodeType()
+        {
+            var context = _contextHandler.GetCodeType();
+            CodeType type = CodeType.GetCodeTypeFromContext(_parseInfo, context);
+            
+            if (type != null && type.Constant() == TypeSettable.Constant)
+                _diagnostics.Error($"Constant types cannot be used in subroutine parameters.", DocRange.GetRange(context));
+            
+            _varInfo.Type = type;
+        }
+    }
+
     class ForeachVariable : VarBuilder
     {
         private readonly Scope _operationalScope;
@@ -137,6 +166,7 @@ namespace Deltin.Deltinteger.Parse
         protected override void Apply()
         {
             _varInfo.WholeContext = false;
+            _varInfo.IsWorkshopReference = true;
             _varInfo.OperationalScope = _operationalScope;
         }
     }
