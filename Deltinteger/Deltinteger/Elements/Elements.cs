@@ -29,30 +29,6 @@ namespace Deltin.Deltinteger.Elements
         Map = 64
     }
 
-    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
-    public class ElementData : Attribute
-    {
-        // No value type == action
-        public ElementData(string elementName)
-        {
-            IsValue = false;
-            ElementName = elementName;
-        }
-
-        // Value type == value
-        public ElementData(string elementName, ValueType elementType)
-        {
-            IsValue = true;
-            ElementName = elementName;
-            ValueType = elementType;
-        }
-
-        public string ElementName { get; private set; }
-
-        public bool IsValue { get; private set; }
-        public ValueType ValueType { get; private set; }
-    }
-
     public abstract class Element : IWorkshopTree
     {
         public static T Part<T>(params IWorkshopTree[] parameterValues) where T : Element, new()
@@ -350,6 +326,7 @@ namespace Deltin.Deltinteger.Elements
         public string WorkshopName { get; }
         public Type Type { get; }
         public bool IsValue { get; } 
+        public bool Hidden { get; }
         public CodeParameter[] Parameters { get; private set; }
         public ParameterBase[] WorkshopParameters { get; }
         public UsageDiagnostic[] UsageDiagnostics { get; }
@@ -372,6 +349,7 @@ namespace Deltin.Deltinteger.Elements
             IsValue = data.IsValue;
             WorkshopParameters = type.GetCustomAttributes<ParameterBase>().ToArray();
             UsageDiagnostics = type.GetCustomAttributes<UsageDiagnostic>().ToArray();
+            Hidden = type.GetCustomAttribute<HideElement>() != null;
 
             Wiki = WorkshopWiki.Wiki.GetWiki()?.GetMethod(WorkshopName);
         }
