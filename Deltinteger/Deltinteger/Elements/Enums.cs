@@ -126,8 +126,9 @@ namespace Deltin.Deltinteger.Elements
                 string fieldCodeName     = fieldData?.CodeName     ?? fields[v].Name;
                 string fieldWorkshopName = fieldData?.WorkshopName ?? Extras.AddSpacesToSentence(fields[v].Name.Replace('_', ' '), false);
                 string i18nKeyword = fieldData?.I18nKeyword ?? fieldWorkshopName;
+                bool isHidden = fields[v].GetCustomAttribute<HideElement>() != null;
 
-                Members[v] = new EnumMember(this, fieldCodeName, fieldWorkshopName, values.GetValue(v)) {
+                Members[v] = new EnumMember(this, fieldCodeName, fieldWorkshopName, values.GetValue(v), isHidden) {
                     I18nKeyword = i18nKeyword
                 };
             }
@@ -157,14 +158,16 @@ namespace Deltin.Deltinteger.Elements
         public object UnderlyingValue { get; }
         public object Value { get; }
         public string I18nKeyword { get; set; }
+        public bool IsHidden { get; }
 
-        public EnumMember(EnumData @enum, string codeName, string workshopName, object value)
+        public EnumMember(EnumData @enum, string codeName, string workshopName, object value, bool isHidden)
         {
             @Enum = @enum;
             CodeName = codeName;
             WorkshopName = workshopName;
             UnderlyingValue = System.Convert.ChangeType(value, @Enum.UnderlyingType);
             Value = value;
+            IsHidden = isHidden;
         }
 
         public string ToWorkshop(OutputLanguage language)
@@ -229,6 +232,8 @@ namespace Deltin.Deltinteger.Elements
         OnPlayerJoin,
         [EnumOverride(null, "Player Left Match")]
         OnPlayerLeave,
+        [HideElement]
+        Subroutine
     }
 
     [WorkshopEnum]

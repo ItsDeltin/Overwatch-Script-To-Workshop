@@ -4,37 +4,31 @@ using System.Collections.Generic;
 
 namespace Deltin.Deltinteger.Elements
 {
-    public class WorkshopVariable : IWorkshopTree
+    public abstract class MetaElement
     {
         public static readonly char[] ValidVariableCharacters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_".ToCharArray();
-        
         public int ID { get; }
         public string Name { get; }
-        public bool IsGlobal { get; }
 
-        public WorkshopVariable(bool isGlobal, int id, string name)
-        {            
+        protected MetaElement(int id, string name)
+        {
             ID = id;
             Name = name;
+        }
+    }
+
+    public class WorkshopVariable : MetaElement, IWorkshopTree
+    {
+        public bool IsGlobal { get; }
+
+        public WorkshopVariable(bool isGlobal, int id, string name) : base(id, name)
+        {            
             IsGlobal = isGlobal;
         }
 
         public string ToWorkshop(OutputLanguage language)
         {
             return Name;
-        }
-
-        public bool IsValidName()
-        {
-            for (int c = 0; c < Name.Length; c++)
-                if (!ValidVariableCharacters.Contains(Name[c]))
-                    return false;
-            return true;
-        }
-
-        public bool IsValidID()
-        {
-            return 0 <= ID && ID < Constants.NUMBER_OF_VARIABLES;
         }
 
         public bool EqualTo(IWorkshopTree b)

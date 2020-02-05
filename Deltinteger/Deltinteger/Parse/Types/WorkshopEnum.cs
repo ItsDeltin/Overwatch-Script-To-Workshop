@@ -16,6 +16,7 @@ namespace Deltin.Deltinteger.Parse
         {
             EnumData = enumData;
             foreach (var member in enumData.Members)
+            if (!member.IsHidden)
             {
                 var scopedMember = new ScopedEnumMember(this, member);
                 EnumScope.AddVariable(scopedMember, null, null);
