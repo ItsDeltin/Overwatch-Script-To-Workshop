@@ -64,6 +64,73 @@ namespace Deltin.Deltinteger.Parse
 
         public void Translate(ActionSet actionSet)
         {
+            // Create the skip for the start of the if statement.
+            SkipStartMarker ifStart = new SkipStartMarker(actionSet, Expression.Parse(actionSet));
+            actionSet.AddAction(ifStart);
+
+            // Translate the if block.
+            Block.Translate(actionSet);
+            
+            // 'block caps' are skips that are added to the end of the if block and each else-if block.
+            // The skips skip to the end of the entire if/else-if/else.
+            List<SkipStartMarker> blockCaps = new List<SkipStartMarker>();
+
+            // Add the if cap if there is an else block or there is an else-if block. 
+            if (ElseBlock != null || ElseIfs.Length > 0)
+            {
+                SkipStartMarker ifCap = new SkipStartMarker(actionSet);
+                actionSet.AddAction(ifCap);
+                blockCaps.Add(ifCap);
+            }
+
+            // Marks the end of the if statement. If the if-condition is false, `ifStart` will skip to here.
+            SkipEndMarker ifEnd = new SkipEndMarker();
+            actionSet.AddAction(ifEnd);
+
+            // Set the if-skip's count.
+            ifStart.SetEndMarker(ifEnd);
+
+            // Get the else-ifs.
+            for (int i = 0; i < ElseIfs.Length; i++)
+            {
+                // This will equal true if this is at the last else-if and there is no else.
+                bool isLast = i == ElseIfs.Length - 1 && ElseBlock == null;
+
+                // Create the skip for the start of the else-if.
+                SkipStartMarker elseIfStart = new SkipStartMarker(actionSet, ElseIfs[i].Expression.Parse(actionSet));
+                actionSet.AddAction(elseIfStart);
+
+                // Translate the else-if block.
+                ElseIfs[i].Block.Translate(actionSet);
+
+                // If this is not the last block in the entire if/else-if/else list, add the 'block cap'.
+                if (!isLast)
+                {
+                    SkipStartMarker elseIfCap = new SkipStartMarker(actionSet);
+                    actionSet.AddAction(elseIfCap);
+                    blockCaps.Add(elseIfCap);
+                }
+
+                // Marks the end of the else-if statement. If the condition is false, `elseIfStart` will skip to here.
+                SkipEndMarker elseIfEnd = new SkipEndMarker();
+                actionSet.AddAction(elseIfEnd);
+                elseIfStart.SetEndMarker(elseIfEnd);
+            }
+
+            // If there is an else block, translate it.
+            if (ElseBlock != null) ElseBlock.Translate(actionSet);
+
+            // contextCap marks the end of the entire if/else-if/list.
+            SkipEndMarker contextCap = new SkipEndMarker();
+            actionSet.AddAction(contextCap);
+
+            // Set all the block caps so they skip to the end of the list.
+            foreach (var blockCap in blockCaps)
+                blockCap.SetEndMarker(contextCap);
+        }
+
+        public void TranslateWorkshopIf(ActionSet actionSet)
+        {
             // Add the if action.
             actionSet.AddAction(Element.Part<A_If>(Expression.Parse(actionSet)));
 

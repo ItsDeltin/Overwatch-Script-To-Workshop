@@ -192,7 +192,6 @@ PLAYER    : 'playervar' ;
 TRUE      : 'true'      ;
 FALSE     : 'false'     ;
 NULL      : 'null'      ;
-//METHOD    : 'method'    ;
 RECURSIVE : 'recursive' ;
 RETURN    : 'return'    ;
 WHILE     : 'while'     ;
@@ -211,8 +210,7 @@ MACRO     : 'macro'     ;
 DISABLED  : 'disabled'  ;
 ENUM      : 'enum'      ;
 REF       : 'ref'       ;
-//SUBROUTINE: 'subroutine';
-VOID      : 'void'		;
+VOID      : 'method'	;
 ASYNC     : 'async'		;
 
 EQUALS          : '='  ;
