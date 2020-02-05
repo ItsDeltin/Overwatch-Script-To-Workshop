@@ -41,6 +41,16 @@ namespace Deltin.Deltinteger.Elements
     [Parameter("Header", ValueType.Any, typeof(V_String))]
     public class A_BigMessage : Element {}
 
+    [ElementData("Call Subroutine")]
+    [Parameter("Subroutine", ValueType.Any, null)]
+    [HideElement]
+    public class A_CallSubroutine : Element {}
+
+    [ElementData("Start Rule")]
+    [Parameter("Subroutine", ValueType.Any, null)]
+    [HideElement]
+    public class A_StartRule : Element {}
+
     [ElementData("Chase Global Variable At Rate")]
     [VarRefParameter("Variable", true)]
     [Parameter("Destination", ValueType.Any, typeof(V_Number))]
@@ -227,18 +237,22 @@ namespace Deltin.Deltinteger.Elements
     [Parameter("Players", ValueType.Player, typeof(V_EventPlayer))]
     public class A_DisableSpectateHUD : Element {}
 
+    [ElementData("Disable Inspector Recording")]
+    public class A_DisableInspectorRecording : Element {}
+
     [ElementData("Disallow Button")]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     [EnumParameter("Button", typeof(Button))]
     public class A_DisallowButton : Element {}
-
-
 
     [ElementData("Enable Built-In Game Mode Announcer")]
     public class A_EnableAnnouncer : Element {}
 
     [ElementData("Enable Built-In Game Mode Completion")]
     public class A_EnableCompletion : Element {}
+
+    [ElementData("Enable Inspector Recording")]
+    public class A_EnableInspectorRecording : Element {}
 
     [ElementData("Enable Built-In Game Mode Music")]
     public class A_EnableMusic : Element {}
@@ -604,7 +618,7 @@ namespace Deltin.Deltinteger.Elements
     [Parameter("Receivers", ValueType.Player, typeof(V_EventPlayer))]
     [Parameter("Damagers", ValueType.Player, typeof(V_AllPlayers))]
     [Parameter("Damage Percent", ValueType.Number, typeof(V_Number))]
-    [EnumParameter("Reevaluation", typeof(ModRev))]
+    [EnumParameter("Reevaluation", typeof(DamageModificationRev))]
     public class A_StartDamageModification : Element {}
 
     [ElementData("Start Damage Over Time")]
@@ -641,6 +655,17 @@ namespace Deltin.Deltinteger.Elements
     [Parameter("Min Sideways", ValueType.Number, typeof(V_Number))]
     [Parameter("Max Sideways", ValueType.Number, typeof(V_Number))]
     public class A_ForceThrottle : Element {}
+
+    [ElementData("Start Healing Modification")]
+    [Parameter("Recievers", ValueType.Player, typeof(V_EventPlayer))]
+    [Parameter("Healers", ValueType.Player, typeof(V_AllPlayers))]
+    [Parameter("Healing Percent", ValueType.Number, typeof(V_Number))]
+    [EnumParameter("Reevaluation", typeof(HealingModificationRev))]
+    public class A_StartHealingModification : Element {}
+
+    [ElementData("Stop Healing Modification")]
+    [Parameter("Healing Modification ID", ValueType.Number, typeof(V_LastHealingModificationID))]
+    public class A_StopHealingModification : Element {}
 
     [ElementData("Start Heal Over Time")]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]

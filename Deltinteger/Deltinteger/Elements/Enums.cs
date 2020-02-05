@@ -373,7 +373,9 @@ namespace Deltin.Deltinteger.Elements
         Ultimate,
         Interact,
         Jump,
-        Crouch
+        Crouch,
+        Melee,
+        Reload
     }
 
     [WorkshopEnum]
@@ -532,6 +534,16 @@ namespace Deltin.Deltinteger.Elements
     }
 
     [WorkshopEnum]
+    public enum HudTextRev
+    {
+        VisibleToAndString,
+        String,
+        [EnumOverride("Visible To, Sort Order, and String")]
+        VisibleToSortOrderAndString,
+        SortOrderAndString
+    }
+
+    [WorkshopEnum]
     public enum Icon
     {
         [EnumOverride(null, "Arrow: Down")]
@@ -618,11 +630,20 @@ namespace Deltin.Deltinteger.Elements
     }
 
     [WorkshopEnum]
-    public enum ModRev
+    public enum DamageModificationRev
     {
         [EnumOverride(null, null, "Receivers, Damagers, and Damage Percent")]
         ReceiversDamagersAndDamagePercent,
         ReceiversAndDamagers,
+        None
+    }
+
+    [WorkshopEnum]
+    public enum HealingModificationRev
+    {
+        [EnumOverride(null, null, "Receivers, Healers, and Heal Percent")]
+        ReceiversDamagersAndDamagePercent,
+        ReceiversAndHealers,
         None
     }
 
