@@ -47,6 +47,7 @@ namespace Deltin.Deltinteger.Parse
 
         public override IWorkshopTree Parse(ActionSet actionSet, IExpression expression, object additionalParameterData, bool asElement)
         {
+            return null;
             VariableResolve resolvedVariable = (VariableResolve)additionalParameterData;
             return ((IndexReference)actionSet.IndexAssigner[resolvedVariable.SetVariable.Calling]).WorkshopVariable;
         }

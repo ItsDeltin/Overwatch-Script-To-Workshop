@@ -14,10 +14,10 @@ namespace Deltin.Deltinteger.Parse
             _operationalScope = operationalScope;
         }
 
-        protected override void MissingAttribute(AttributeType[] attributeTypes)
+        protected override void MissingAttribute(AttributeType[] missing)
         {
             // Syntax error if both the globalvar and playervar attributes are missing.
-            if (!attributeTypes.Contains(AttributeType.Globalvar) && !attributeTypes.Contains(AttributeType.Playervar))
+            if (missing.Contains(AttributeType.Globalvar) && missing.Contains(AttributeType.Playervar))
                 _diagnostics.Error("Expected the globalvar/playervar attribute.", _nameRange);
         }
 

@@ -31,7 +31,7 @@ namespace Deltin.Deltinteger.Parse
             if (!actionsAdded)
             {
                 // Create a normal while loop.
-                actionSet.AddAction(Element.Part<A_While>());
+                actionSet.AddAction(Element.Part<A_While>(condition));
                 
                 // Translate the block.
                 Block.Translate(actionSet);
@@ -82,7 +82,7 @@ namespace Deltin.Deltinteger.Parse
 
             if (forContext.define() != null)
             {
-                DefinedVariable = new ScopedVariable(scope, new DefineContextHandler(parseInfo, forContext.define()));
+                DefinedVariable = new ScopedVariable(varScope, new DefineContextHandler(parseInfo, forContext.define()));
             }
             else if (forContext.initialVarset != null)
                 InitialVarSet = new SetVariableAction(parseInfo, varScope, forContext.initialVarset);
@@ -216,11 +216,6 @@ namespace Deltin.Deltinteger.Parse
                 actionSet.IndexAssigner.Add(actionSet.VarCollection, DefinedVariable, actionSet.IsGlobal, null);
                 variable = ((IndexReference)actionSet.IndexAssigner[DefinedVariable]).WorkshopVariable;
                 target = new V_EventPlayer();
-
-                if (DefinedVariable.InitialValue != null)
-                    actionSet.AddAction(((IndexReference)actionSet.IndexAssigner[DefinedVariable]).SetVariable(
-                        (Element)DefinedVariable.InitialValue.Parse(actionSet)
-                    ));
             }
 
             Element start = (Element)Start.Parse(actionSet);
@@ -262,7 +257,7 @@ namespace Deltin.Deltinteger.Parse
         {
             Scope varScope = scope.Child();
 
-            ForeachVar = new ForeachVariable(scope, new ForeachContextHandler(parseInfo, foreachContext));
+            ForeachVar = new ForeachVariable(varScope, new ForeachContextHandler(parseInfo, foreachContext));
 
             // Get the array that will be iterated on. Syntax error if it is missing.
             if (foreachContext.expr() != null)
