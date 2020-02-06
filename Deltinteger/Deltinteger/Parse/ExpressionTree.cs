@@ -297,7 +297,7 @@ namespace Deltin.Deltinteger.Parse
                 {
                     Var asVar = SetVariable.Calling as Var;
                     if (asVar == null || asVar.StoreType != StoreType.FullVariable)
-                        diagnostics.Error($"The variable '{SetVariable.Calling.Name}' must be defined on the rule-level.", VariableRange);
+                        diagnostics.Error($"The variable '{SetVariable.Calling.Name}' cannot be indexed.", VariableRange);
                 }
 
                 if (!options.CanBeIndexed && SetVariable.Index.Length != 0)

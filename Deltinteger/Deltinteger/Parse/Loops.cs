@@ -140,9 +140,10 @@ namespace Deltin.Deltinteger.Parse
     class AutoForAction : IStatement, IBlockContainer
     {
         private VariableResolve VariableResolve { get; }
+        private IExpression InitialResolveValue { get; }
         private Var DefinedVariable { get; }
 
-        private ExpressionOrWorkshopValue Start { get; }
+        //private ExpressionOrWorkshopValue Start { get; }
         private IExpression Stop { get; }
         private ExpressionOrWorkshopValue Step { get; }
         private BlockAction Block { get; }
@@ -161,6 +162,14 @@ namespace Deltin.Deltinteger.Parse
                     CanBeIndexed = false,
                     FullVariable = true
                 }, variable, DocRange.GetRange(autoForContext.forVariable), parseInfo.Script.Diagnostics);
+
+                if (autoForContext.EQUALS() != null)
+                {
+                    if (autoForContext.start == null)
+                        parseInfo.Script.Diagnostics.Error("Expected expression.", DocRange.GetRange(autoForContext.EQUALS()));
+                    else
+                        InitialResolveValue = DeltinScript.GetExpression(parseInfo, scope, autoForContext.start);
+                }
             }
             // Get the defined variable.
             else if (autoForContext.forDefine != null)
@@ -169,12 +178,6 @@ namespace Deltin.Deltinteger.Parse
             }
             else
                 parseInfo.Script.Diagnostics.Error("Expected define or variable.", DocRange.GetRange(autoForContext.FOR()));
-
-            // Get the auto-for start. (Not Required)
-            if (autoForContext.start == null)
-                Start = new ExpressionOrWorkshopValue(new V_Number(0));
-            else
-                Start = new ExpressionOrWorkshopValue(DeltinScript.GetExpression(parseInfo, scope, autoForContext.start));
             
             // Get the auto-for end. (Required)
             if (autoForContext.stop == null)
@@ -202,6 +205,7 @@ namespace Deltin.Deltinteger.Parse
         {
             WorkshopVariable variable;
             Element target;
+            Element start;
 
             // Existing variable being used in for.
             if (VariableResolve != null)
@@ -209,6 +213,7 @@ namespace Deltin.Deltinteger.Parse
                 VariableElements elements = VariableResolve.ParseElements(actionSet);
                 variable = elements.IndexReference.WorkshopVariable;
                 target = elements.Target;
+                start = (Element)InitialResolveValue?.Parse(actionSet) ?? new V_Number(0);
             }
             // New variable being use in for.
             else
@@ -216,9 +221,10 @@ namespace Deltin.Deltinteger.Parse
                 actionSet.IndexAssigner.Add(actionSet.VarCollection, DefinedVariable, actionSet.IsGlobal, null);
                 variable = ((IndexReference)actionSet.IndexAssigner[DefinedVariable]).WorkshopVariable;
                 target = new V_EventPlayer();
+                start = (Element)DefinedVariable.InitialValue?.Parse(actionSet) ?? new V_Number(0);
             }
 
-            Element start = (Element)Start.Parse(actionSet);
+            //Element start = (Element)Start.Parse(actionSet);
             Element stop = (Element)Stop.Parse(actionSet);
             Element step = (Element)Step.Parse(actionSet);
 

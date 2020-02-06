@@ -84,7 +84,7 @@ for     : FOR LEFT_PAREN
 	RIGHT_PAREN block;
 
 for_auto : FOR LEFT_PAREN
-	((forVariable=expr | forDefine=define)? varSep=STATEMENT_END start=expr? startSep=STATEMENT_END stop=expr? stopSep=STATEMENT_END step=expr?)
+	((forVariable=expr (EQUALS start=expr?) | forDefine=define)? startSep=STATEMENT_END stop=expr? stopSep=STATEMENT_END step=expr?)
 	RIGHT_PAREN block?;
 
 foreach : FOREACH number? LEFT_PAREN (code_type | DEFINE) name=PART IN expr? RIGHT_PAREN block ;
