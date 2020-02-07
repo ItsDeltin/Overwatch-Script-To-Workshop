@@ -278,7 +278,7 @@ namespace Deltin.Deltinteger.Parse
             parseInfo.Script.AddOverloadData(this);
 
             // Check the access level.
-            if (Overload.AccessLevel != AccessLevel.Public && !scope.DoShareGroup(getter))
+            if (!scope.DoShareGroup(getter, Overload.AccessLevel))
                 parseInfo.Script.Diagnostics.Error(string.Format("'{0}' is inaccessable due to its access level.", Overload.GetLabel(false)), genericErrorRange);
         }
     

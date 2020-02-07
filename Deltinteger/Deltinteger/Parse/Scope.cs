@@ -16,6 +16,8 @@ namespace Deltin.Deltinteger.Parse
         public string ErrorName { get; set; } = "current scope";
         public CodeType This { get; set; }
         public bool PrivateCatch { get; set; }
+        public bool ProtectedCatch { get; set; }
+        public bool CompletionCatch { get; set; }
 
         public Scope() {}
         private Scope(Scope parent)
@@ -40,6 +42,34 @@ namespace Deltin.Deltinteger.Parse
         public Scope Child(string name)
         {
             return new Scope(this, name);
+        }
+
+        private void IterateElements(Scope getter, Func<ScopeIterate, ScopeIterateAction> element)
+        {
+            Scope current = this;
+
+            while (current != null)
+            {
+                List<IScopeable> checkScopeables = new List<IScopeable>();
+                checkScopeables.AddRange(current.Variables);
+                checkScopeables.AddRange(current.Methods);
+
+                bool stopAfterScope = false;
+
+                foreach (IScopeable check in checkScopeables)
+                {
+                    // Check if the accessor is valid.
+                    bool accessorMatches = current.DoShareGroup(getter, check.AccessLevel);
+
+                    ScopeIterateAction action = element(new ScopeIterate(current, check, accessorMatches));
+                    if (action == ScopeIterateAction.Stop) return;
+                    if (action == ScopeIterateAction.StopAfterScope) stopAfterScope = true;
+                }
+
+                if (stopAfterScope) return;
+
+                current = current.Parent;
+            }
         }
 
         /// <summary>
@@ -99,7 +129,7 @@ namespace Deltin.Deltinteger.Parse
             if (range != null && element == null)
                 diagnostics.Error(string.Format("The variable {0} does not exist in the {1}.", name, ErrorName), range);
             
-            if (element != null && getter != null && !DoShareGroup(getter) && element.AccessLevel != AccessLevel.Public)
+            if (element != null && !DoShareGroup(getter, element.AccessLevel))
             {
                 if (range == null) throw new Exception();
                 diagnostics.Error(string.Format("'{0}' is inaccessable due to its access level.", name), range);
@@ -218,17 +248,19 @@ namespace Deltin.Deltinteger.Parse
             return @this;
         }
 
-        public bool DoShareGroup(Scope other)
+        public bool DoShareGroup(Scope other, AccessLevel accessLevel)
         {
-            Scope thisGroup = GroupScope();
-            Scope otherGroup = other.GroupScope();
+            if (other == null || accessLevel == AccessLevel.Public) return true;
+            
+            Scope thisGroup = GroupScope(accessLevel == AccessLevel.Private);
+            Scope otherGroup = other.GroupScope(accessLevel == AccessLevel.Private);
             return thisGroup == otherGroup;
         }
         
-        public Scope GroupScope()
+        public Scope GroupScope(bool isPrivate)
         {
             Scope current = this;
-            while (current.Parent != null && !current.PrivateCatch) current = current.Parent;
+            while (current.Parent != null && ((isPrivate && !current.PrivateCatch) || (!isPrivate && !current.ProtectedCatch))) current = current.Parent;
             return current;
         }
 
@@ -236,22 +268,24 @@ namespace Deltin.Deltinteger.Parse
         {
             List<CompletionItem> completions = new List<CompletionItem>();
 
-            var variables = immediate ? Variables.ToArray() : AllVariablesInScope();
-            for (int i = 0; i < variables.Length; i++)
-                if (WasScopedAtPosition(variables[i], pos, getter))
-                    completions.Add(variables[i].GetCompletion());
+            IterateElements(getter, (itElement) => {
+                // Add the completion of the current element.
+                if (WasScopedAtPosition(itElement.Element, pos, getter))
+                    completions.Add(itElement.Element.GetCompletion());
 
-            var methods = immediate ? Methods.ToArray() : AllMethodsInScope();
-            for (int i = 0; i < methods.Length; i++)
-                if (WasScopedAtPosition(methods[i], pos, getter))
-                    completions.Add(methods[i].GetCompletion());
+                // If the container is a completion catcher, stop iterating after the scope.
+                if (itElement.Container.CompletionCatch) return ScopeIterateAction.StopAfterScope;
+
+                // Otherwise, continue.
+                return ScopeIterateAction.Continue;
+            });
                 
             return completions.ToArray();
         }
 
         private bool WasScopedAtPosition(IScopeable element, Pos pos, Scope getter)
         {
-            return (pos == null || element.DefinedAt == null || element.WholeContext || element.DefinedAt.range.start <= pos) && (element.AccessLevel == AccessLevel.Public || getter == null || DoShareGroup(getter));
+            return (pos == null || element.DefinedAt == null || element.WholeContext || element.DefinedAt.range.start <= pos) && (getter == null || DoShareGroup(getter, element.AccessLevel));
         }
 
         public static Scope GetGlobalScope()
@@ -270,5 +304,26 @@ namespace Deltin.Deltinteger.Parse
 
             return globalScope;
         }
+    }
+
+    class ScopeIterate
+    {
+        public Scope Container { get; }
+        public IScopeable Element { get; }
+        public bool AccessorMatches { get; }
+
+        public ScopeIterate(Scope container, IScopeable element, bool accessorMatches)
+        {
+            Container = container;
+            Element = element;
+            AccessorMatches = accessorMatches;
+        }
+    }
+
+    enum ScopeIterateAction
+    {
+        Continue,
+        Stop,
+        StopAfterScope
     }
 }

@@ -36,6 +36,7 @@ Object-serve scope. Only object members.
         private DeltinScriptParser.Type_defineContext typeContext;
 
         private bool elementsResolved;
+        private bool workshopInitialized;
 
         public DefinedType(ParseInfo parseInfo, Scope scope, DeltinScriptParser.Type_defineContext typeContext) : base(typeContext.name.Text)
         {
@@ -102,19 +103,21 @@ Object-serve scope. Only object members.
             {
                 Scope global = parseInfo.TranslateInfo.GlobalScope;
 
-                operationalScope = global.Child(scopeName);
                 staticScope = global.Child(scopeName);
+                operationalScope = global.Child(scopeName);
                 serveObjectScope = new Scope(scopeName);
+
+                staticScope.CompletionCatch = true;
+                serveObjectScope.CompletionCatch = true;
             }
             else
             {
-                operationalScope = ((DefinedType)Extends).operationalScope.Child(scopeName);
                 staticScope      = ((DefinedType)Extends).staticScope.Child(scopeName);
+                operationalScope = ((DefinedType)Extends).operationalScope.Child(scopeName);
                 serveObjectScope = ((DefinedType)Extends).serveObjectScope.Child(scopeName);
             }
             
             staticScope.PrivateCatch = true;
-            operationalScope = staticScope.Child("class " + Name);
             operationalScope.This = this;
 
             // Todo: Add static methods and macros to scopes.
@@ -159,7 +162,10 @@ Object-serve scope. Only object members.
                 }
                 // Add to static scope.
                 else
+                {
                     staticScope.CopyVariable(newVar);
+                    operationalScope.CopyVariable(newVar);
+                }
             }
         }
 
@@ -173,8 +179,13 @@ Object-serve scope. Only object members.
 
         public override void WorkshopInit(DeltinScript translateInfo)
         {
+            if (workshopInitialized) return;
+            workshopInitialized = true;
+
             ClassData classData = translateInfo.SetupClasses();
             int stackOffset = StackStart(false);
+
+            Extends?.WorkshopInit(translateInfo);
 
             for (int i = 0; i < objectVariables.Count; i++)
                 objectVariables[i].SetArrayStore(classData.GetClassVariableStack(translateInfo.VarCollection, i + stackOffset));
