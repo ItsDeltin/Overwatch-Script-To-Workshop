@@ -28,6 +28,7 @@ namespace Deltin.Deltinteger.Parse
             Index = (Element)IndexStore.GetVariable();
             IndexValue = Element.Part<V_ValueInArray>(Array, IndexStore.GetVariable());
 
+            actionSet.AddAction(IndexStore.SetVariable(0));
             actionSet.AddAction(Element.Part<A_While>(Condition));
         }
 
