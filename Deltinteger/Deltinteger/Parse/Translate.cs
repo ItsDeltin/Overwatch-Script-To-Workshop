@@ -23,6 +23,7 @@ namespace Deltin.Deltinteger.Parse
         public Scope GlobalScope { get; }
         public Scope RulesetScope { get; }
         public VarCollection VarCollection { get; } = new VarCollection();
+        public SubroutineCollection SubroutineCollection { get; } = new SubroutineCollection();
         private List<Var> rulesetVariables { get; } = new List<Var>();
         public VarIndexAssigner DefaultIndexAssigner { get; } = new VarIndexAssigner();
         public TranslateRule InitialGlobal { get; private set; }
@@ -120,8 +121,6 @@ namespace Deltin.Deltinteger.Parse
 
         void Translate()
         {
-            List<IApplyBlock> applyMethods = new List<IApplyBlock>();
-
             // Get the reserved variables and IDs
             foreach (ScriptFile script in ScriptFiles)
             {
@@ -150,7 +149,7 @@ namespace Deltin.Deltinteger.Parse
             foreach (ScriptFile script in ScriptFiles)
             foreach (var typeContext in script.Context.type_define())
             {
-                var newType = new DefinedType(new ParseInfo(script, this), GlobalScope, typeContext, applyMethods);
+                var newType = new DefinedType(new ParseInfo(script, this), GlobalScope, typeContext);
                 types.Add(newType);
                 definedTypes.Add(newType);
             }
@@ -162,13 +161,12 @@ namespace Deltin.Deltinteger.Parse
                 foreach (var methodContext in script.Context.define_method())
                 {
                     var newMethod = new DefinedMethod(new ParseInfo(script, this), RulesetScope, methodContext, null);
-                    applyMethods.Add(newMethod);
                 }
                 
                 // Get the macros.
                 foreach (var macroContext in script.Context.define_macro())
                 {
-                    GetMacro(new ParseInfo(script, this), RulesetScope, macroContext, applyMethods);
+                    GetMacro(new ParseInfo(script, this), RulesetScope, macroContext);
                 }
             }
 
@@ -176,18 +174,18 @@ namespace Deltin.Deltinteger.Parse
             foreach (ScriptFile script in ScriptFiles)
             foreach (var varContext in script.Context.define())
             {
-                var newVar = Var.CreateVarFromContext(VariableDefineType.RuleLevel, new ParseInfo(script, this), varContext);
-                newVar.Finalize(RulesetScope);
+                Var newVar = new RuleLevelVariable(RulesetScope, new DefineContextHandler(new ParseInfo(script, this), varContext));
                 rulesetVariables.Add(newVar);
+
                 // Add the variable to the player variables scope if it is a player variable.
                 if (newVar.VariableType == VariableType.Player)
                     PlayerVariableScope.CopyVariable(newVar);
             }
 
             foreach (var applyType in types) if (applyType is DefinedType definedType) definedType.ResolveElements();
-            foreach (var apply in applyMethods) apply.SetupParameters();
-            foreach (var apply in applyMethods) apply.SetupBlock();
-            foreach (var apply in applyMethods) apply.CallInfo.CheckRecursion();
+            foreach (var apply in applyBlocks) apply.SetupParameters();
+            foreach (var apply in applyBlocks) apply.SetupBlock();
+            foreach (var apply in applyBlocks) apply.CallInfo?.CheckRecursion();
 
             // Get the rules
             foreach (ScriptFile script in ScriptFiles)
@@ -226,7 +224,7 @@ namespace Deltin.Deltinteger.Parse
             foreach (var type in types) type.WorkshopInit(this);
 
             // Setup single-instance methods.
-            foreach (var method in singleInstanceMethods) method.SetupSingleInstance();
+            foreach (var method in subroutines) method.SetupSubroutine();
 
             // Parse the rules.
             foreach (var rule in rules)
@@ -254,6 +252,9 @@ namespace Deltin.Deltinteger.Parse
             // Get the variables.
             VarCollection.ToWorkshop(result, I18n.I18n.CurrentLanguage);
             result.AppendLine();
+
+            // Get the subroutines.
+            SubroutineCollection.ToWorkshop(result, I18n.I18n.CurrentLanguage);
 
             // Get the rules.
             foreach (var rule in WorkshopRules)
@@ -294,10 +295,16 @@ namespace Deltin.Deltinteger.Parse
             return isGlobal ? InitialGlobal : InitialPlayer;
         }
 
-        private List<DefinedMethod> singleInstanceMethods = new List<DefinedMethod>();
-        public void AddSingleInstanceMethod(DefinedMethod method)
+        private List<DefinedMethod> subroutines = new List<DefinedMethod>();
+        public void AddSubroutine(DefinedMethod method)
         {
-            singleInstanceMethods.Add(method);
+            subroutines.Add(method);
+        }
+
+        private List<IApplyBlock> applyBlocks = new List<IApplyBlock>();
+        public void ApplyBlock(IApplyBlock apply)
+        {
+            applyBlocks.Add(apply);
         }
 
         public static IStatement GetStatement(ParseInfo parseInfo, Scope scope, DeltinScriptParser.StatementContext statementContext)
@@ -305,8 +312,7 @@ namespace Deltin.Deltinteger.Parse
             switch (statementContext)
             {
                 case DeltinScriptParser.S_defineContext define    : {
-                    var newVar = Var.CreateVarFromContext(VariableDefineType.Scoped, parseInfo, define.define());
-                    newVar.Finalize(scope);
+                    var newVar = new ScopedVariable(scope, new DefineContextHandler(parseInfo, define.define()));
                     return new DefineAction(newVar);
                 }
                 case DeltinScriptParser.S_methodContext method    : return new CallMethodAction(parseInfo, scope, method.method(), false, scope);
@@ -325,6 +331,7 @@ namespace Deltin.Deltinteger.Parse
                 case DeltinScriptParser.S_ifContext s_if          : return new IfAction(parseInfo, scope, s_if.@if());
                 case DeltinScriptParser.S_whileContext s_while    : return new WhileAction(parseInfo, scope, s_while.@while());
                 case DeltinScriptParser.S_forContext s_for        : return new ForAction(parseInfo, scope, s_for.@for());
+                case DeltinScriptParser.S_for_autoContext s_forAuto: return new AutoForAction(parseInfo, scope, s_forAuto.for_auto());
                 case DeltinScriptParser.S_foreachContext s_foreach: return new ForeachAction(parseInfo, scope, s_foreach.@foreach());
                 case DeltinScriptParser.S_returnContext s_return  : return new ReturnAction(parseInfo, scope, s_return.@return());
                 case DeltinScriptParser.S_deleteContext s_delete  : return new DeleteAction(parseInfo, scope, s_delete.delete());
@@ -412,17 +419,17 @@ namespace Deltin.Deltinteger.Parse
             else throw new NotImplementedException();
         }
     
-        public static void GetMacro(ParseInfo parseInfo, Scope scope, DeltinScriptParser.Define_macroContext macroContext, List<IApplyBlock> applyMethods)
+        public static void GetMacro(ParseInfo parseInfo, Scope scope, DeltinScriptParser.Define_macroContext macroContext)
         {
             if (macroContext.LEFT_PAREN() != null || macroContext.RIGHT_PAREN() != null)
             {
                 var newMacro = new DefinedMacro(parseInfo, scope, macroContext);
-                applyMethods.Add(newMacro);
+                parseInfo.TranslateInfo.ApplyBlock(newMacro);
             }
             else
             {
                 var newMacro = new MacroVar(parseInfo, scope, macroContext);
-                applyMethods.Add(newMacro);
+                parseInfo.TranslateInfo.ApplyBlock(newMacro);
             }
         }
 

@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-
-namespace Deltin.Deltinteger.Elements
+﻿namespace Deltin.Deltinteger.Elements
 {
     public class Rule
     {
@@ -13,7 +6,8 @@ namespace Deltin.Deltinteger.Elements
         public RuleEvent RuleEvent { get; }
         public Team Team { get; }
         public PlayerSelector Player { get; }
-        public bool IsGlobal { get; }
+        public Subroutine Subroutine { get; }
+        public RuleType RuleType { get; }
 
         public Condition[] Conditions { get; set; }
         public Element[] Actions { get; set; }
@@ -31,7 +25,18 @@ namespace Deltin.Deltinteger.Elements
             RuleEvent = ruleEvent;
             Team = team;
             Player = player;
-            IsGlobal = ruleEvent == RuleEvent.OngoingGlobal;
+
+            if (RuleEvent == RuleEvent.OngoingGlobal) RuleType = RuleType.Global;
+            else if (RuleEvent == RuleEvent.Subroutine) RuleType = RuleType.Subroutine;
+            else RuleType = RuleType.PlayerBased;
+        }
+
+        public Rule(string name, Subroutine subroutine)
+        {
+            Name = name;
+            RuleEvent = RuleEvent.Subroutine;
+            RuleType = RuleType.Subroutine;
+            Subroutine = subroutine;
         }
 
         public override string ToString()
@@ -40,63 +45,80 @@ namespace Deltin.Deltinteger.Elements
         }
 
         public string ToWorkshop(OutputLanguage language, bool optimize)
-        {            
+        {
             var builder = new TabStringBuilder(true);
 
             builder.Indent = 0;
             if (Disabled)
                 builder.Append(I18n.I18n.Translate(language, "disabled") + " ");
-            builder.AppendLine($"{I18n.I18n.Translate(language, "rule")}(\"{Name}\")"); // rule("this is the name of the rule!")
-            builder.AppendLine("{");                                                    // {
-            builder.AppendLine();                                                       //
-                                                                                        //
-            builder.Indent = 1;                                                         // (indent)
-            builder.AppendLine(I18n.I18n.Translate(language, "event"));                 //     event
-            builder.AppendLine("{");                                                    //     {
-            builder.Indent = 2;                                                         //     (indent)
-            builder.AppendLine(EnumData.GetEnumValue(RuleEvent)                         //
-                .ToWorkshop(language) + ";");                                           //         Ongoing - Each Player
-            if (!IsGlobal)                                                              //       --(only if the event is a player event)
-            {                                                                           //       |  
-                builder.AppendLine(EnumData.GetEnumValue(Team)                          //       |
-                    .ToWorkshop(language) + ";");                                       //       | Team 1
-                builder.AppendLine(EnumData.GetEnumValue(Player)                        //       |
-                    .ToWorkshop(language) + ";");                                       //       | Bastion
-            }                                                                           //
-            builder.Indent = 1;                                                         //     (outdent)
-            builder.AppendLine("}");                                                    //     }
-                                                                                        //
-            if (Conditions?.Length > 0)                                                 // (only if there are 1 or more conditions)
-            {                                                                           // |
-                builder.AppendLine();                                                   // |
-                builder.AppendLine(I18n.I18n.Translate(language, "conditions"));        // |   conditions
-                builder.AppendLine("{");                                                // |   {
-                builder.Indent = 2;                                                     // |   (indent)
-                foreach (var condition in Conditions)                                   // |       
-                    builder.AppendLine(condition.ToWorkshop(language, optimize) + ";"); // |       Number Of Players >= 3;
-                builder.Indent = 1;                                                     // |   (outdent)
-                builder.AppendLine("}");                                                // |   }
-            }                                                                           //
-                                                                                        //
-            if (Actions?.Length > 0)                                                    // (only if there are 1 or more actions)
-            {                                                                           // |
-                builder.AppendLine();                                                   // |
-                builder.AppendLine("// Action count: " + Actions.Length);               // |   // Action count: #
-                builder.AppendLine(I18n.I18n.Translate(language, "actions"));           // |   actions
-                builder.AppendLine("{");                                                // |   {
-                builder.Indent = 2;                                                     // |   (indent)
-                foreach (var action in Actions)                                         // |       
-                    if (optimize)                                                       // |
-                        builder.AppendLine(action.Optimize().ToWorkshop(language));     // |       Set Global Variable(A, true);
-                    else                                                                // |
-                        builder.AppendLine(action.ToWorkshop(language));                // |
-                builder.Indent = 1;                                                     // |   (outdent)
-                builder.AppendLine("}");                                                // |   }
-            }                                                                           //
-            builder.Indent = 0;                                                         // (outdent)
-            builder.AppendLine("}");                                                    // }
+            builder.AppendLine($"{I18n.I18n.Translate(language, "rule")}(\"{Name}\")");
+            builder.AppendLine("{");
+            builder.AppendLine();
+
+            builder.Indent = 1;
+            builder.AppendLine(I18n.I18n.Translate(language, "event"));
+            builder.AppendLine("{");
+            builder.Indent = 2;
+            builder.AppendLine(EnumData.GetEnumValue(RuleEvent)
+                .ToWorkshop(language) + ";");
+            
+            // Add attributes.
+            switch (RuleType)
+            {
+                case RuleType.PlayerBased:
+                    // Player based attributes
+                    builder.AppendLine(EnumData.GetEnumValue(Team).ToWorkshop(language) + ";"); // Team attribute
+                    builder.AppendLine(EnumData.GetEnumValue(Player).ToWorkshop(language) + ";"); // Player attribute
+                    break;
+                
+                case RuleType.Subroutine:
+                    builder.AppendLine(Subroutine.ToWorkshop(language) + ";"); // Attribute name
+                    break;
+            }
+            builder.Indent = 1;
+            builder.AppendLine("}");
+
+            if (Conditions?.Length > 0)
+            {
+                builder.AppendLine();
+                builder.AppendLine(I18n.I18n.Translate(language, "conditions"));
+                builder.AppendLine("{");
+                builder.Indent = 2;
+                foreach (var condition in Conditions)
+                    builder.AppendLine(condition.ToWorkshop(language, optimize) + ";");
+                builder.Indent = 1;
+                builder.AppendLine("}");
+            }
+
+            // Add actions.
+            if (Actions?.Length > 0)
+            {
+                builder.AppendLine();
+                builder.AppendLine("// Action count: " + Actions.Length); // Action count comment.
+                builder.AppendLine(I18n.I18n.Translate(language, "actions"));
+                builder.AppendLine("{");
+                builder.Indent = 2;
+
+                foreach (var action in Actions)
+                    if (optimize)
+                        builder.AppendLine(action.Optimize().ToWorkshop(language));
+                    else
+                        builder.AppendLine(action.ToWorkshop(language));
+                
+                builder.Indent = 1;
+                builder.AppendLine("}");
+            }
+            builder.Indent = 0;
+            builder.AppendLine("}");
 
             return builder.ToString();
         }
+    }
+
+    public enum RuleType
+    {
+        Global,
+        PlayerBased,
+        Subroutine
     }
 }

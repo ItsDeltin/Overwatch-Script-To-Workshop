@@ -127,6 +127,7 @@
 		"expressions": {
 			"patterns": [
 				{"include": "#new"},
+				{"include": "#cast"},
 				{"include": "#methods"},
 				{"include": "#keywords"}, 
 				{"include": "#strings"},
@@ -149,6 +150,12 @@
 				"2": {"name":"entity.name.class"}
 			},
 			"patterns": [{"include": "#expressions"}]
+		},
+		"cast": {
+			"match": "<\\s*([_[:alnum:]]+)\\s*>",
+			"captures": {
+				"1": {"name": "entity.name.class"}
+			}
 		},
 		"strings": {
 			"name": "string.quoted.double",
@@ -174,7 +181,7 @@
 		},
 		"numbers": {
 			"name": "constant.numeric",
-			"match": "\\b-?[0-9]+(.[0-9]+)?\\b"
+			"match": "\\b-?[0-9]+(\\.[0-9]+)?\\b"
 		},
 
 		"keywords": {

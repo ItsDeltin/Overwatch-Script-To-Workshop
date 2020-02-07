@@ -29,30 +29,6 @@ namespace Deltin.Deltinteger.Elements
         Map = 64
     }
 
-    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
-    public class ElementData : Attribute
-    {
-        // No value type == action
-        public ElementData(string elementName)
-        {
-            IsValue = false;
-            ElementName = elementName;
-        }
-
-        // Value type == value
-        public ElementData(string elementName, ValueType elementType)
-        {
-            IsValue = true;
-            ElementName = elementName;
-            ValueType = elementType;
-        }
-
-        public string ElementName { get; private set; }
-
-        public bool IsValue { get; private set; }
-        public ValueType ValueType { get; private set; }
-    }
-
     public abstract class Element : IWorkshopTree
     {
         public static T Part<T>(params IWorkshopTree[] parameterValues) where T : Element, new()
@@ -75,10 +51,11 @@ namespace Deltin.Deltinteger.Elements
         public ElementList ElementList { get; private set; }
         public ElementData ElementData { get; private set; }
         public ParameterBase[] ParameterData { get; private set; }
-        public string Name { get { return ElementList.WorkshopName; } }
+        public string Name => ElementList.WorkshopName;
 
         public IWorkshopTree[] ParameterValues { get; set; }
         public bool Disabled { get; set; }
+        public int Indent { get; set; }
 
         public override string ToString()
         {
@@ -93,7 +70,7 @@ namespace Deltin.Deltinteger.Elements
 
             parameters.AddRange(ParameterValues.Select(p => p.ToWorkshop(language)));
 
-            string result = "";
+            string result = Extras.Indent(Indent, true); // TODO: option for spaces or tab output.
             if (!ElementList.IsValue && Disabled) result += I18n.I18n.Translate(language, "disabled") + " ";
             result += I18n.I18n.Translate(language, Name);
             if (parameters.Count != 0) result += "(" + string.Join(", ", parameters) + ")";
@@ -349,8 +326,10 @@ namespace Deltin.Deltinteger.Elements
         public string WorkshopName { get; }
         public Type Type { get; }
         public bool IsValue { get; } 
+        public bool Hidden { get; }
         public CodeParameter[] Parameters { get; private set; }
         public ParameterBase[] WorkshopParameters { get; }
+        public bool Asyncable => false;
         public UsageDiagnostic[] UsageDiagnostics { get; }
         public WikiMethod Wiki { get; }
         public StringOrMarkupContent Documentation => Wiki?.Description;
@@ -371,6 +350,7 @@ namespace Deltin.Deltinteger.Elements
             IsValue = data.IsValue;
             WorkshopParameters = type.GetCustomAttributes<ParameterBase>().ToArray();
             UsageDiagnostics = type.GetCustomAttributes<UsageDiagnostic>().ToArray();
+            Hidden = type.GetCustomAttribute<HideElement>() != null;
 
             Wiki = WorkshopWiki.Wiki.GetWiki()?.GetMethod(WorkshopName);
         }
@@ -385,10 +365,13 @@ namespace Deltin.Deltinteger.Elements
 
                 if (WorkshopParameters[i] is VarRefParameter)
                 {
-                    Parameters[i] = new WorkshopVariableParameter(
+                    Parameters[i] = new VariableParameter(
                         name,
                         description,
-                        ((VarRefParameter)WorkshopParameters[i]).IsGlobal
+                        ((VarRefParameter)WorkshopParameters[i]).IsGlobal ? VariableType.Global : VariableType.Player,
+                        new VariableResolveOptions() {
+                            CanBeIndexed = false, FullVariable = true
+                        }
                     );
                 }
                 else
@@ -418,7 +401,7 @@ namespace Deltin.Deltinteger.Elements
 
         public bool DoesReturnValue() => IsValue;
 
-        public IWorkshopTree Parse(ActionSet actionSet, IWorkshopTree[] values, object[] additionalParameterData)
+        public IWorkshopTree Parse(ActionSet actionSet, CallParallel parallel, IWorkshopTree[] values, object[] additionalParameterData)
         {
             Element element = GetObject();
             element.ParameterValues = values;

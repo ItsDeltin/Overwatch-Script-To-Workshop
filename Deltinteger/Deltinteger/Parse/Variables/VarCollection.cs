@@ -65,46 +65,18 @@ namespace Deltin.Deltinteger.Parse
             if (!reservedNames(isGlobal).Contains(name)) reservedNames(isGlobal).Add(name);
         }
 
-        public string WorkshopNameFromCodeName(bool isGlobal, string name)
+        private string[] NamesTaken(bool isGlobal)
         {
-            StringBuilder valid = new StringBuilder();
-
-            // Remove invalid characters and replace ' ' with '_'.
-            for (int i = 0; i < name.Length; i++)
-                if (name[i] == ' ')
-                    valid.Append('_');
-                else if (WorkshopVariable.ValidVariableCharacters.Contains(name[i]))
-                    valid.Append(name[i]);
-                
-            string newName = valid.ToString();
-
-            if (newName.Length > Constants.MAX_VARIABLE_NAME_LENGTH)
-                newName = newName.Substring(0, Constants.MAX_VARIABLE_NAME_LENGTH);
-
-            // Add a number to the end of the variable name if a variable with the same name was already created.
-            if (NameTaken(isGlobal, newName))
-            {
-                int num = 0;
-                while (NameTaken(isGlobal, NewName(newName, num))) num++;
-                newName = NewName(newName, num);
-            }
-            return newName.ToString();
-        }
-
-        private bool NameTaken(bool isGlobal, string name)
-        {
-            return variableList(isGlobal).Any(gv => gv != null && gv.Name == name) || reservedNames(isGlobal).Contains(name);
-        }
-
-        private string NewName(string baseName, int indent)
-        {
-            return baseName.Substring(0, Math.Min(baseName.Length, Constants.MAX_VARIABLE_NAME_LENGTH - (indent.ToString().Length + 1))) + "_" + indent;
+            List<string> names = new List<string>();
+            names.AddRange(variableList(isGlobal).Where(v => v != null).Select(v => v.Name));
+            names.AddRange(reservedNames(isGlobal));
+            return names.ToArray();
         }
     
         private WorkshopVariable AssignWorkshopVariable(string name, bool isGlobal)
         {
             int id = NextFreeID(isGlobal);
-            WorkshopVariable workshopVariable = new WorkshopVariable(isGlobal, id, WorkshopNameFromCodeName(isGlobal, name));
+            WorkshopVariable workshopVariable = new WorkshopVariable(isGlobal, id, MetaElement.WorkshopNameFromCodeName(name, NamesTaken(isGlobal)));
             variableList(isGlobal).Add(workshopVariable);
             return workshopVariable;
         }
@@ -163,7 +135,7 @@ namespace Deltin.Deltinteger.Parse
                     return new IndexReference(ArrayBuilder, AssignWorkshopVariable(var.Name, variableIsGlobal));
                 else
                 {
-                    WorkshopVariable workshopVariable = new WorkshopVariable(variableIsGlobal, var.ID, WorkshopNameFromCodeName(variableIsGlobal, var.Name));
+                    WorkshopVariable workshopVariable = new WorkshopVariable(variableIsGlobal, var.ID, MetaElement.WorkshopNameFromCodeName(var.Name, NamesTaken(variableIsGlobal)));
                     variableList(variableIsGlobal).Add(workshopVariable);
                     return new IndexReference(ArrayBuilder, workshopVariable);
                 }

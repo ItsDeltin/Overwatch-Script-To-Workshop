@@ -58,7 +58,7 @@ statement_operation : EQUALS | EQUALS_ADD | EQUALS_DIVIDE | EQUALS_MODULO | EQUA
 call_parameters  : expr (COMMA expr?)*    		 	         ;
 picky_parameter  : PART? TERNARY_ELSE expr?                  ;
 picky_parameters : picky_parameter (COMMA picky_parameter?)* ;
-method           : PART LEFT_PAREN (picky_parameters | call_parameters)? RIGHT_PAREN ;
+method           : (ASYNC NOT?)? PART LEFT_PAREN (picky_parameters | call_parameters)? RIGHT_PAREN ;
 
 variable : PART array? ;
 code_type: PART (INDEX_START INDEX_END)*;
@@ -68,6 +68,7 @@ statement :
 	| method STATEMENT_END? #s_method
 	| if 					#s_if
 	| for					#s_for
+	| for_auto              #s_for_auto
 	| foreach				#s_foreach
 	| while					#s_while
 	| define STATEMENT_END? #s_define
@@ -81,6 +82,10 @@ block : (BLOCK_START statement* BLOCK_END) | statement | STATEMENT_END  ;
 for     : FOR LEFT_PAREN 
 	((define | initialVarset=varset)? STATEMENT_END expr? STATEMENT_END endingVarset=varset?)
 	RIGHT_PAREN block;
+
+for_auto : FOR LEFT_PAREN
+	((forVariable=expr (EQUALS start=expr?)? | forDefine=define)? startSep=STATEMENT_END stop=expr? stopSep=STATEMENT_END step=expr?)
+	RIGHT_PAREN block?;
 
 foreach : FOREACH number? LEFT_PAREN (code_type | DEFINE) name=PART IN expr? RIGHT_PAREN block ;
 
@@ -102,11 +107,9 @@ ow_rule :
 	block?
 	;
 
-define_method : DOCUMENTATION* accessor? method_attribute* (METHOD | code_type) name=PART LEFT_PAREN setParameters RIGHT_PAREN
+define_method : DOCUMENTATION* accessor? (VOID | code_type) name=PART LEFT_PAREN setParameters RIGHT_PAREN subroutineRuleName=STRINGLITERAL?
 	block?
 	;
-
-method_attribute : RECURSIVE | RULE_WORD ;
 
 define_macro  : DOCUMENTATION* accessor? MACRO name=PART (LEFT_PAREN setParameters RIGHT_PAREN)? TERNARY_ELSE? expr? STATEMENT_END ;
 
@@ -189,7 +192,6 @@ PLAYER    : 'playervar' ;
 TRUE      : 'true'      ;
 FALSE     : 'false'     ;
 NULL      : 'null'      ;
-METHOD    : 'method'    ;
 RECURSIVE : 'recursive' ;
 RETURN    : 'return'    ;
 WHILE     : 'while'     ;
@@ -209,6 +211,8 @@ MACRO     : 'macro'     ;
 DISABLED  : 'disabled'  ;
 ENUM      : 'enum'      ;
 REF       : 'ref'       ;
+VOID      : 'method'	;
+ASYNC     : 'async'		;
 
 EQUALS          : '='  ;
 EQUALS_POW      : '^=' ;

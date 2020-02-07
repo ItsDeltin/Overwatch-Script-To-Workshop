@@ -263,7 +263,8 @@ namespace Deltin.Deltinteger.Parse
 
             // Add workshop methods
             foreach (var workshopMethod in ElementList.Elements)
-                globalScope.AddMethod(workshopMethod, null, null);
+                if (!workshopMethod.Hidden)
+                    globalScope.AddMethod(workshopMethod, null, null);
             
             // Add custom methods
             foreach (var builtInMethod in CustomMethods.CustomMethodData.GetCustomMethods())

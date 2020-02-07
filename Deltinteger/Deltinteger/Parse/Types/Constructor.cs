@@ -64,11 +64,13 @@ namespace Deltin.Deltinteger.Parse
 
             if (Type is DefinedType)
                 ((DefinedType)Type).AddLink(DefinedAt);
+            
+            parseInfo.TranslateInfo.ApplyBlock(this);
         }
 
         public void SetupParameters()
         {
-            var parameterInfo = CodeParameter.GetParameters(parseInfo, ConstructorScope, context.setParameters());
+            var parameterInfo = CodeParameter.GetParameters(parseInfo, ConstructorScope, context.setParameters(), false);
             Parameters = parameterInfo.Parameters;
             ParameterVars = parameterInfo.Variables;
 

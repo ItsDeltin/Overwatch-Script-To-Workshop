@@ -34,10 +34,11 @@ namespace Deltin.Deltinteger.Parse
         private bool DoesTreeCall(IApplyBlock function, IApplyBlock currentCheck, List<IApplyBlock> check = null)
         {
             if (check == null) check = new List<IApplyBlock>();
+            if (currentCheck.CallInfo == null) return false;
 
             if (function == currentCheck)
             {
-                if (function is DefinedMethod && ((DefinedMethod)function).IsRecursive)
+                if (function is DefinedMethod && ((DefinedMethod)function).SubroutineName != null)
                     return false;
                 else
                     return true;

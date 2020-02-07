@@ -38,15 +38,14 @@ namespace Deltin.Deltinteger.Pathfinder
 
             TranslateRule rule = new TranslateRule(deltinScript, Constants.INTERNAL_ELEMENT + "Pathfinder: Move", RuleEvent.OngoingPlayer);
 
-            IfBuilder isBetween = new IfBuilder(rule.ActionSet, 
+            rule.ActionSet.AddAction(Element.Part<A_If>( 
                 Element.Part<V_And>(
                     Element.Part<V_CountOf>(Path.GetVariable()) >= 2,
                     IsBetween(eventPlayerPos, NextPosition(eventPlayer), PositionAt(eventPlayer, 1))
                 )
-            );
-            isBetween.Setup();
+            ));
             rule.ActionSet.AddAction(Next());
-            isBetween.Finish();
+            rule.ActionSet.AddAction(new A_End());
 
             rule.ActionSet.AddAction(ArrayBuilder<Element>.Build
             (

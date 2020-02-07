@@ -34,16 +34,14 @@ Object-serve scope. Only object members.
         private List<ObjectVariable> objectVariables { get; } = new List<ObjectVariable>();
         private ParseInfo parseInfo;
         private DeltinScriptParser.Type_defineContext typeContext;
-        private List<IApplyBlock> applyBlocks;
 
         private bool elementsResolved;
 
-        public DefinedType(ParseInfo parseInfo, Scope scope, DeltinScriptParser.Type_defineContext typeContext, List<IApplyBlock> applyBlocks) : base(typeContext.name.Text)
+        public DefinedType(ParseInfo parseInfo, Scope scope, DeltinScriptParser.Type_defineContext typeContext) : base(typeContext.name.Text)
         {
             CanBeDeleted = true;
             this.typeContext = typeContext;
             this.parseInfo = parseInfo;
-            this.applyBlocks = applyBlocks;
 
             if (parseInfo.TranslateInfo.IsCodeType(Name))
                 parseInfo.Script.Diagnostics.Error($"A type with the name '{Name}' already exists.", DocRange.GetRange(typeContext.name));
@@ -58,7 +56,6 @@ Object-serve scope. Only object members.
                 for (int i = 0; i < Constructors.Length; i++)
                 {
                     Constructors[i] = new DefinedConstructor(parseInfo, this, typeContext.constructor(i));
-                    applyBlocks.Add((DefinedConstructor)Constructors[i]);
                 }
             }
             else
@@ -123,19 +120,17 @@ Object-serve scope. Only object members.
             foreach (var definedMethod in typeContext.define_method())
             {
                 var newMethod = new DefinedMethod(parseInfo, operationalScope, definedMethod, this);
-                applyBlocks.Add(newMethod);
             }
 
             foreach (var macroContext in typeContext.define_macro())
             {
-                DeltinScript.GetMacro(parseInfo, operationalScope, macroContext, applyBlocks);
+                DeltinScript.GetMacro(parseInfo, operationalScope, macroContext);
             }
 
             // Get the variables defined in the type.
             foreach (var definedVariable in typeContext.define())
             {
-                Var newVar = Var.CreateVarFromContext(VariableDefineType.InClass, parseInfo, definedVariable);
-                newVar.Finalize(operationalScope);
+                Var newVar = new ClassVariable(operationalScope, staticScope, new DefineContextHandler(parseInfo, definedVariable));
 
                 if (!newVar.Static)
                 {

@@ -22,7 +22,6 @@ namespace Deltin.Deltinteger.CustomMethods
             double destroyPerLoop = (double)additionalParameterData[1];
 
             ForeachBuilder foreachBuilder = new ForeachBuilder(actionSet, effectArray);
-            foreachBuilder.Setup();
 
             for (int i = 0; i < destroyPerLoop; i++)
             {

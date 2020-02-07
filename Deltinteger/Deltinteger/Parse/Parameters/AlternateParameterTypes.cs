@@ -6,77 +6,28 @@ using Deltin.Deltinteger.LanguageServer;
 namespace Deltin.Deltinteger.Parse
 {
     /// <summary>
-    /// `WorkshopVariableParameter` takes raw workshop variables as parameters.
-    /// 
-    /// Returns a value with the type `WorkshopVariable` when parsed for a parameter value.
-    /// </summary>
-    class WorkshopVariableParameter : CodeParameter
-    {
-        /// <summary>
-        /// The expected variable type. Dynamic allows both global and player. `VariableType.ElementReference` cannot be used here.
-        /// </summary>
-        public VariableType VariableType { get; }
-
-        public WorkshopVariableParameter(string name, string documentation, bool isGlobal) : base(name, documentation)
-        {
-            if (isGlobal)
-                VariableType = VariableType.Global;
-            else
-                VariableType = VariableType.Player;
-        }
-        public WorkshopVariableParameter(string name, string documentation, VariableType variableType) : base(name, documentation)
-        {
-            if (variableType == VariableType.ElementReference) throw new Exception("Only the variable types Dynamic, Global, and Player is valid.");
-            VariableType = variableType;
-        }
-
-        public override object Validate(ScriptFile script, IExpression value, DocRange valueRange)
-        {
-            CallVariableAction call = value as CallVariableAction;
-            Var asVar = call?.Calling as Var;
-
-            // Syntax error if `value` is not a var or the variable is not defined on the rule level.
-            if (asVar == null || asVar.DefineType != VariableDefineType.RuleLevel)
-                script.Diagnostics.Error("Expected a variable defined on the rule level.", valueRange);
-
-            // Syntax error if the variable type is not equal to the expected type.
-            // Dynamic allows both global and player variables.
-            if (call != null && VariableType != VariableType.Dynamic && call.Calling.VariableType != VariableType)
-                script.Diagnostics.Error($"Expected a {(VariableType == VariableType.Global ? "global" : "player")} variable.", valueRange);
-            
-            // Syntax error if the variable is indexed like `variable[0]`.
-            if (call != null && call.Index.Length > 0)
-                script.Diagnostics.Error("Variable cannot be indexed.", valueRange);
-
-            return null;
-        }
-
-        public override IWorkshopTree Parse(ActionSet actionSet, IExpression expression, bool asElement)
-        {
-            return ((IndexReference)actionSet.IndexAssigner[((CallVariableAction)expression).Calling]).WorkshopVariable;
-        }
-    }
-
-    /// <summary>
     /// `VariableParameter` takes indexed variables as parameters.
     /// </summary>
     class VariableParameter : CodeParameter
     {
         private VariableType VariableType { get; }
+        private VariableResolveOptions Options { get; }
 
-        public VariableParameter(string name, string documentation) : base(name, documentation)
+        public VariableParameter(string name, string documentation, VariableResolveOptions options = null) : base(name, documentation)
         {
             VariableType = VariableType.Dynamic;
+            Options = options ?? new VariableResolveOptions();
         }
-        public VariableParameter(string name, string documentation, VariableType variableType) : base(name, documentation)
+        public VariableParameter(string name, string documentation, VariableType variableType, VariableResolveOptions options = null) : base(name, documentation)
         {
             if (variableType == VariableType.ElementReference) throw new Exception("Only the variable types Dynamic, Global, and Player is valid.");
             VariableType = variableType;
+            Options = options ?? new VariableResolveOptions();
         }
 
         public override object Validate(ScriptFile script, IExpression value, DocRange valueRange)
         {
-            VariableResolve resolvedVariable = new VariableResolve(value, valueRange, script.Diagnostics);
+            VariableResolve resolvedVariable = new VariableResolve(Options, value, valueRange, script.Diagnostics);
 
             // Syntax error if the expression is not a variable.
             if (!resolvedVariable.DoesResolveToVariable)
@@ -94,7 +45,12 @@ namespace Deltin.Deltinteger.Parse
             return null;
         }
 
-        public override IWorkshopTree Parse(ActionSet actionSet, IExpression expression, bool asElement) => null;
+        public override IWorkshopTree Parse(ActionSet actionSet, IExpression expression, object additionalParameterData, bool asElement)
+        {
+            return null;
+            VariableResolve resolvedVariable = (VariableResolve)additionalParameterData;
+            return ((IndexReference)actionSet.IndexAssigner[resolvedVariable.SetVariable.Calling]).WorkshopVariable;
+        }
     }
 
     class ConstBoolParameter : CodeParameter
@@ -158,7 +114,7 @@ namespace Deltin.Deltinteger.Parse
             return str?.Value;
         }
 
-        public override IWorkshopTree Parse(ActionSet actionSet, IExpression expression, bool asElement) => null;
+        public override IWorkshopTree Parse(ActionSet actionSet, IExpression expression, object additionalParameterData, bool asElement) => null;
     }
 
     class FileParameter : CodeParameter

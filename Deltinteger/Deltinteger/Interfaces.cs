@@ -19,7 +19,8 @@ namespace Deltin.Deltinteger
     public interface IMethod : IScopeable, IParameterCallable
     {
         CodeType ReturnType { get; }
-        IWorkshopTree Parse(ActionSet actionSet, IWorkshopTree[] values, object[] additionalParameterData);
+        bool Asyncable { get; }
+        IWorkshopTree Parse(ActionSet actionSet, CallParallel parallel, IWorkshopTree[] values, object[] additionalParameterData);
         bool DoesReturnValue();
     }
 

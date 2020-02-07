@@ -17,6 +17,7 @@ namespace Deltin.Deltinteger.Parse
         public Location DefinedAt { get; }
         public bool WholeContext { get; } = true;
         public StringOrMarkupContent Documentation { get; } = null;
+        public bool Asyncable { get; protected set; }
 
         protected ParseInfo parseInfo { get; }
         protected Scope methodScope { get; }
@@ -40,9 +41,9 @@ namespace Deltin.Deltinteger.Parse
         public abstract void SetupParameters();
         public abstract void SetupBlock();
 
-        protected void SetupParameters(DeltinScriptParser.SetParametersContext context, VariableDefineType defineType = VariableDefineType.Parameter)
+        protected void SetupParameters(DeltinScriptParser.SetParametersContext context, bool subroutineParameter)
         {
-            var parameterInfo = CodeParameter.GetParameters(parseInfo, methodScope, context, defineType);
+            var parameterInfo = CodeParameter.GetParameters(parseInfo, methodScope, context, subroutineParameter);
             Parameters = parameterInfo.Parameters;
             ParameterVars = parameterInfo.Variables;
         }
@@ -57,7 +58,7 @@ namespace Deltin.Deltinteger.Parse
 
         public string GetLabel(bool markdown) => HoverHandler.GetLabel(ReturnType, Name, Parameters, markdown, null);
 
-        public abstract IWorkshopTree Parse(ActionSet actionSet, IWorkshopTree[] parameterValues, object[] additionalParameterData);
+        public abstract IWorkshopTree Parse(ActionSet actionSet, CallParallel parallel, IWorkshopTree[] parameterValues, object[] additionalParameterData);
 
         public CompletionItem GetCompletion()
         {

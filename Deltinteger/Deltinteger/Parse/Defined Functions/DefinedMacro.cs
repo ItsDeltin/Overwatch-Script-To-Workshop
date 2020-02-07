@@ -28,7 +28,7 @@ namespace Deltin.Deltinteger.Parse
 
         public override void SetupParameters()
         {
-            SetupParameters(context.setParameters());
+            SetupParameters(context.setParameters(), false);
             parseInfo.Script.AddHover(DocRange.GetRange(context.name), GetLabel(true));
             containingScope.AddMethod(this, parseInfo.Script.Diagnostics, DefinedAt.range);
         }
@@ -43,7 +43,7 @@ namespace Deltin.Deltinteger.Parse
             foreach (var listener in listeners) listener.Applied();
         }
 
-        override public IWorkshopTree Parse(ActionSet actionSet, IWorkshopTree[] parameterValues, object[] additionalParameterData)
+        override public IWorkshopTree Parse(ActionSet actionSet, CallParallel parallel, IWorkshopTree[] parameterValues, object[] additionalParameterData)
         {
             // Assign the parameters.
             actionSet = actionSet.New(actionSet.IndexAssigner.CreateContained());

@@ -253,7 +253,7 @@ namespace Deltin.Deltinteger.Parse
         public CallVariableAction SetVariable { get; }
         private ExpressionTree Tree { get; }
 
-        public VariableResolve(IExpression expression, DocRange expressionRange, FileDiagnostics diagnostics)
+        public VariableResolve(VariableResolveOptions options, IExpression expression, DocRange expressionRange, FileDiagnostics diagnostics)
         {
             // The expression is a variable.
             if (expression is CallVariableAction)
@@ -288,8 +288,21 @@ namespace Deltin.Deltinteger.Parse
                 diagnostics.Error("Expected a variable.", NotAVariableRange);
             
             // Make sure the variable can be set to.
-            if (SetVariable != null && !SetVariable.Calling.Settable())
-                diagnostics.Error($"The variable '{SetVariable.Calling.Name}' cannot be set to.", VariableRange);
+            if (SetVariable != null)
+            {
+                if (!SetVariable.Calling.Settable())
+                    diagnostics.Error($"The variable '{SetVariable.Calling.Name}' cannot be set to.", VariableRange);
+                
+                if (options.FullVariable)
+                {
+                    Var asVar = SetVariable.Calling as Var;
+                    if (asVar == null || asVar.StoreType != StoreType.FullVariable)
+                        diagnostics.Error($"The variable '{SetVariable.Calling.Name}' cannot be indexed.", VariableRange);
+                }
+
+                if (!options.CanBeIndexed && SetVariable.Index.Length != 0)
+                    diagnostics.Error($"The variable '{SetVariable.Calling.Name}' cannot be indexed.", VariableRange);
+            }
             
             DoesResolveToVariable = SetVariable != null;
         }
@@ -335,5 +348,11 @@ namespace Deltin.Deltinteger.Parse
             Target = target;
             Index = index;
         }
+    }
+
+    public class VariableResolveOptions
+    {
+        public bool FullVariable = false;
+        public bool CanBeIndexed = true;
     }
 }

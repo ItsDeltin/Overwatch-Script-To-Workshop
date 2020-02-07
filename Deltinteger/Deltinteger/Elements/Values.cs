@@ -571,6 +571,9 @@ namespace Deltin.Deltinteger.Elements
     [ElementData("Event Was Critical Hit", ValueType.Boolean)]
     public class V_EventWasCriticalHit : Element {}
 
+    [ElementData("Event Was Health Pack", ValueType.Boolean)]
+    public class V_EventWasHealthPack : Element {}
+
     [ElementData("Eye Position", ValueType.Vector)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     public class V_EyePosition : Element {}
@@ -873,6 +876,9 @@ namespace Deltin.Deltinteger.Elements
 
     [ElementData("Last Heal Over Time ID", ValueType.Number)]
     public class V_LastHealOverTime : Element {}
+
+    [ElementData("Last Healing Modification ID", ValueType.Number)]
+    public class V_LastHealingModificationID : Element {}
 
     [ElementData("Last Of", ValueType.Any)]
     [Parameter("Array", ValueType.Any, null)]

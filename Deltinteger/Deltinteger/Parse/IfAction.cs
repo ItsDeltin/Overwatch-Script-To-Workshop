@@ -88,7 +88,7 @@ namespace Deltin.Deltinteger.Parse
             actionSet.AddAction(ifEnd);
 
             // Set the if-skip's count.
-            ifStart.SkipCount = ifStart.GetSkipCount(ifEnd);
+            ifStart.SetEndMarker(ifEnd);
 
             // Get the else-ifs.
             for (int i = 0; i < ElseIfs.Length; i++)
@@ -114,7 +114,7 @@ namespace Deltin.Deltinteger.Parse
                 // Marks the end of the else-if statement. If the condition is false, `elseIfStart` will skip to here.
                 SkipEndMarker elseIfEnd = new SkipEndMarker();
                 actionSet.AddAction(elseIfEnd);
-                elseIfStart.SkipCount = elseIfStart.GetSkipCount(elseIfEnd);
+                elseIfStart.SetEndMarker(elseIfEnd);
             }
 
             // If there is an else block, translate it.
@@ -126,7 +126,41 @@ namespace Deltin.Deltinteger.Parse
 
             // Set all the block caps so they skip to the end of the list.
             foreach (var blockCap in blockCaps)
-                blockCap.SkipCount = blockCap.GetSkipCount(contextCap);
+                blockCap.SetEndMarker(contextCap);
+        }
+
+        public void TranslateWorkshopIf(ActionSet actionSet)
+        {
+            // Add the if action.
+            actionSet.AddAction(Element.Part<A_If>(Expression.Parse(actionSet)));
+
+            // Translate the if block.
+            Block.Translate(actionSet.Indent());
+
+            // Add the else-ifs.
+            for (int i = 0; i < ElseIfs.Length; i++)
+            {
+                // Add the else-if action.
+                actionSet.AddAction(Element.Part<A_ElseIf>(ElseIfs[i].Expression.Parse(actionSet)));
+
+                // Translate the else-if block.
+                ElseIfs[i].Block.Translate(actionSet.Indent());
+
+                // Do not add the end action for the last else-if if there is an else block.
+                if (i != ElseIfs.Length - 1 || ElseBlock == null)
+                    // End the else-if.
+                    actionSet.AddAction(new A_End());
+            }
+
+            // If there is an else block, translate it.
+            if (ElseBlock != null)
+            {
+                actionSet.AddAction(new A_Else());
+                ElseBlock.Translate(actionSet.Indent());
+            }
+
+            // Add the end of the if.
+            actionSet.AddAction(new A_End());
         }
     }
 

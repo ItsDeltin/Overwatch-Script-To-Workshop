@@ -53,7 +53,7 @@ namespace Deltin.Deltinteger.Parse
         }
 
         public virtual object Validate(ScriptFile script, IExpression value, DocRange valueRange) => null;
-        public virtual IWorkshopTree Parse(ActionSet actionSet, IExpression expression, bool asElement) => expression.Parse(actionSet, asElement);
+        public virtual IWorkshopTree Parse(ActionSet actionSet, IExpression expression, object additionalParameterData, bool asElement) => expression.Parse(actionSet, asElement);
 
         public string GetLabel(bool markdown)
         {
@@ -68,7 +68,7 @@ namespace Deltin.Deltinteger.Parse
             else return Type.Name + " " + Name;
         }
 
-        public static ParameterParseResult GetParameters(ParseInfo parseInfo, Scope methodScope, DeltinScriptParser.SetParametersContext context, VariableDefineType defineType = VariableDefineType.Parameter)
+        public static ParameterParseResult GetParameters(ParseInfo parseInfo, Scope methodScope, DeltinScriptParser.SetParametersContext context, bool subroutineParameter)
         {
             if (context == null) return new ParameterParseResult(new CodeParameter[0], new Var[0]);
 
@@ -76,8 +76,18 @@ namespace Deltin.Deltinteger.Parse
             var vars = new Var[parameters.Length];
             for (int i = 0; i < context.define().Length; i++)
             {
-                var newVar = Var.CreateVarFromContext(defineType, parseInfo, context.define(i));
-                newVar.Finalize(methodScope);
+                Var newVar;
+
+                // Set up the context handler.
+                IVarContextHandler contextHandler = new DefineContextHandler(parseInfo, context.define(i));
+
+                // Normal parameter
+                if (!subroutineParameter)
+                    newVar = new ParameterVariable(methodScope, contextHandler);
+                // Subroutine parameter.
+                else
+                    newVar = new SubroutineParameterVariable(methodScope, contextHandler);
+
                 vars[i] = newVar;
 
                 ExpressionOrWorkshopValue initialValue = null;
