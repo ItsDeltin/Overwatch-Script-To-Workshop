@@ -17,6 +17,7 @@ namespace Deltin.Deltinteger.Parse
         public CodeType CodeType { get; set; }
         public bool IsSettable { get; set; } = true;
         public VariableType VariableType => VariableType.Global;
+        public bool Static => true;
 
         public InternalVar(string name, CompletionItemKind completionItemKind = CompletionItemKind.Variable)
         {

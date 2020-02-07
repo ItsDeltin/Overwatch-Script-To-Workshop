@@ -46,11 +46,12 @@ namespace Deltin.Deltinteger.CustomMethods
         public bool Asyncable => false;
 
         // IScopeable defaults
-        public Location DefinedAt { get; } = null;
-        public AccessLevel AccessLevel { get; } = AccessLevel.Public;
-        public bool WholeContext { get; } = true;
+        public Location DefinedAt => null;
+        public AccessLevel AccessLevel => AccessLevel.Public;
+        public bool WholeContext => true;
+        public bool Static => true;
         
-        public CodeType ReturnType { get; } = null;
+        public CodeType ReturnType => null;
 
         public StringOrMarkupContent Documentation { get; }
 

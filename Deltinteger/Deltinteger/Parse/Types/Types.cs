@@ -20,7 +20,7 @@ namespace Deltin.Deltinteger.Parse
         public bool CanBeDeleted { get; protected set; } = false;
 
         /// <summary>Determines if other classes can inherit this class.</summary>
-        public bool CanBeExtended { get; private set; } = false;
+        public bool CanBeExtended { get; protected set; } = false;
 
         /// <summary>Should be true if the class was called in the script.</summary>
         public bool ShouldInit { get; private set; } = false;
@@ -34,7 +34,7 @@ namespace Deltin.Deltinteger.Parse
         {
             if (extend == null) throw new ArgumentNullException(nameof(extend));
 
-            if (extend.CanBeExtended)
+            if (!extend.CanBeExtended)
             {
                 string errorMessage = "Type '" + extend.Name + "' cannot be inherited.";
 
@@ -67,11 +67,22 @@ namespace Deltin.Deltinteger.Parse
             // Classes that can't be created shouldn't have constructors.
             throw new NotImplementedException();
         }
-        public virtual void BaseSetup(ActionSet actionSet, Element reference) { throw new NotImplementedException(); }
+        public virtual void BaseSetup(ActionSet actionSet, Element reference) => throw new NotImplementedException();
 
         public virtual void WorkshopInit(DeltinScript translateInfo) {}
+
+        /// <summary>
+        /// Adds the class objects to the index assigner.
+        /// </summary>
+        /// <param name="source">The source of the type.</param>
+        /// <param name="assigner">The assigner that the object variables will be added to.</param>
         public virtual void AddObjectVariablesToAssigner(IWorkshopTree reference, VarIndexAssigner assigner) {}
 
+        /// <summary>
+        /// Deletes a variable from memory.
+        /// </summary>
+        /// <param name="actionSet">The action set to add the actions to.</param>
+        /// <param name="reference">The object reference.</param>
         public virtual void Delete(ActionSet actionSet, Element reference) {}
 
         public virtual void Call(ScriptFile script, DocRange callRange)

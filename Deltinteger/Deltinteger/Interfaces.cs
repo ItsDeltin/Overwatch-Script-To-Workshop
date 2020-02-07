@@ -37,6 +37,7 @@ namespace Deltin.Deltinteger
     public interface IScopeable : INamed
     {
         AccessLevel AccessLevel { get; }
+        bool Static { get; }
         Location DefinedAt { get; }
         bool WholeContext { get; }
         CompletionItem GetCompletion();

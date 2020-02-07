@@ -338,6 +338,7 @@ namespace Deltin.Deltinteger.Elements
         public LanguageServer.Location DefinedAt { get; } = null;
         public AccessLevel AccessLevel { get; } = AccessLevel.Public;
         public bool WholeContext { get; } = true;
+        public bool Static => true;
 
         public CodeType ReturnType { get; } = null;
 

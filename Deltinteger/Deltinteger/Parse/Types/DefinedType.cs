@@ -40,6 +40,7 @@ Object-serve scope. Only object members.
         public DefinedType(ParseInfo parseInfo, Scope scope, DeltinScriptParser.Type_defineContext typeContext) : base(typeContext.name.Text)
         {
             CanBeDeleted = true;
+            CanBeExtended = true;
             this.typeContext = typeContext;
             this.parseInfo = parseInfo;
 
@@ -117,14 +118,32 @@ Object-serve scope. Only object members.
             operationalScope.This = this;
 
             // Todo: Add static methods and macros to scopes.
+            // Give DefinedMethod and GetMacro a scope to use in case of the static attribute.
             foreach (var definedMethod in typeContext.define_method())
             {
                 var newMethod = new DefinedMethod(parseInfo, operationalScope, definedMethod, this);
+
+                // Copy to serving scopes.
+                if (newMethod.Static) staticScope.CopyMethod(newMethod);
+                else serveObjectScope.CopyMethod(newMethod);
             }
 
+            // Get the macros.
             foreach (var macroContext in typeContext.define_macro())
             {
-                DeltinScript.GetMacro(parseInfo, operationalScope, macroContext);
+                var newMacro = DeltinScript.GetMacro(parseInfo, operationalScope, macroContext);
+
+                // Copy to serving scopes.
+                if (newMacro is IMethod asMethod)
+                {
+                    if (newMacro.Static) staticScope.CopyMethod(asMethod);
+                    else serveObjectScope.CopyMethod(asMethod);
+                }
+                else
+                {
+                    if (newMacro.Static) staticScope.CopyVariable(newMacro);
+                    else serveObjectScope.CopyVariable(newMacro);
+                }
             }
 
             // Get the variables defined in the type.
@@ -132,16 +151,15 @@ Object-serve scope. Only object members.
             {
                 Var newVar = new ClassVariable(operationalScope, staticScope, new DefineContextHandler(parseInfo, definedVariable));
 
+                // Copy to serving scopes.
                 if (!newVar.Static)
                 {
                     objectVariables.Add(new ObjectVariable(newVar));
                     serveObjectScope.CopyVariable(newVar);
                 }
+                // Add to static scope.
                 else
-                {
-                    objectVariables.Add(new ObjectVariable(newVar));
                     staticScope.CopyVariable(newVar);
-                }
             }
         }
 
@@ -206,11 +224,6 @@ Object-serve scope. Only object members.
             }
         }
 
-        /// <summary>
-        /// Adds the class objects to the index assigner.
-        /// </summary>
-        /// <param name="source">The source of the type.</param>
-        /// <param name="assigner">The assigner that the object variables will be added to.</param>
         public override void AddObjectVariablesToAssigner(IWorkshopTree reference, VarIndexAssigner assigner)
         {
             Extends?.AddObjectVariablesToAssigner(reference, assigner);
@@ -218,11 +231,6 @@ Object-serve scope. Only object members.
                 objectVariables[i].AddToAssigner((Element)reference, assigner);
         }
 
-        /// <summary>
-        /// Deletes a variable from memory.
-        /// </summary>
-        /// <param name="actionSet">The action set to add the actions to.</param>
-        /// <param name="reference">The object reference.</param>
         public override void Delete(ActionSet actionSet, Element reference)
         {
             if (Extends != null && Extends.CanBeDeleted)

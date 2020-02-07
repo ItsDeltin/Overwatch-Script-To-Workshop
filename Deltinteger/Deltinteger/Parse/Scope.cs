@@ -13,7 +13,6 @@ namespace Deltin.Deltinteger.Parse
         private List<IScopeable> Variables { get; } = new List<IScopeable>();
         private List<IMethod> Methods { get; } = new List<IMethod>();
         private Scope Parent { get; }
-        private List<Scope> children { get; } = new List<Scope>();
         public string ErrorName { get; set; } = "current scope";
         public CodeType This { get; set; }
         public bool PrivateCatch { get; set; }
@@ -22,7 +21,6 @@ namespace Deltin.Deltinteger.Parse
         private Scope(Scope parent)
         {
             Parent = parent;
-            Parent.children.Add(this);
         }
         public Scope(string name)
         {
@@ -79,7 +77,8 @@ namespace Deltin.Deltinteger.Parse
         public void CopyVariable(IScopeable variable)
         {
             if (variable == null) throw new ArgumentNullException(nameof(variable));
-            Variables.Add(variable);
+            if (!Variables.Contains(variable))
+                Variables.Add(variable);
         }
 
         public bool IsVariable(string name)
@@ -121,15 +120,6 @@ namespace Deltin.Deltinteger.Parse
             }
 
             return variables.ToArray();
-        }
-
-        public IScopeable[] AllChildVariables()
-        {
-            List<IScopeable> allVariables = new List<IScopeable>();
-            allVariables.AddRange(Variables);
-            foreach (var child in children)
-                allVariables.AddRange(child.Variables);
-            return allVariables.ToArray();
         }
 
         /// <summary>
@@ -175,6 +165,13 @@ namespace Deltin.Deltinteger.Parse
         public void AddNativeMethod(IMethod method)
         {
             AddMethod(method, null, null);
+        }
+
+        public void CopyMethod(IMethod method)
+        {
+            if (method == null) throw new ArgumentNullException(nameof(method));
+            if (!Methods.Contains(method))
+                Variables.Add(method);
         }
 
         public IMethod[] AllMethodsInScope()

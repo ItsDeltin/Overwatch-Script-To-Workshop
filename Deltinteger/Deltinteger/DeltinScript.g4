@@ -107,11 +107,11 @@ ow_rule :
 	block?
 	;
 
-define_method : DOCUMENTATION* accessor? (VOID | code_type) name=PART LEFT_PAREN setParameters RIGHT_PAREN subroutineRuleName=STRINGLITERAL?
+define_method : DOCUMENTATION* accessor? STATIC? (VOID | code_type) name=PART LEFT_PAREN setParameters RIGHT_PAREN subroutineRuleName=STRINGLITERAL?
 	block?
 	;
 
-define_macro  : DOCUMENTATION* accessor? MACRO name=PART (LEFT_PAREN setParameters RIGHT_PAREN)? TERNARY_ELSE? expr? STATEMENT_END ;
+define_macro  : DOCUMENTATION* accessor? STATIC? MACRO name=PART (LEFT_PAREN setParameters RIGHT_PAREN)? TERNARY_ELSE? expr? STATEMENT_END ;
 
 ruleset :
 	reserved_global?

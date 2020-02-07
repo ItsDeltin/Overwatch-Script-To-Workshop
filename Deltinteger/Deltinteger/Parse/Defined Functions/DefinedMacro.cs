@@ -13,6 +13,7 @@ namespace Deltin.Deltinteger.Parse
         {
             this.context = context;
             AccessLevel = context.accessor().GetAccessLevel();
+            Static = context.STATIC() != null;
 
             if (context.TERNARY_ELSE() == null)
             {

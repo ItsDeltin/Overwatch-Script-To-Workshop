@@ -57,6 +57,7 @@ namespace Deltin.Deltinteger.Parse
         public AccessLevel AccessLevel { get; } = AccessLevel.Public;
         public LanguageServer.Location DefinedAt { get; } = null;
         public bool WholeContext { get; } = true;
+        public bool Static => true;
         
         public CodeType Enum { get; }
         public EnumMember EnumMember { get; }

@@ -19,11 +19,11 @@ namespace Deltin.Deltinteger.Parse
                 parseInfo.Script.Diagnostics.Error($"A type with the name '{Name}' already exists.", DocRange.GetRange(enumContext.name));
             
             _translateInfo = parseInfo.TranslateInfo;
+            CanBeExtended = false;
+            Scope = new Scope("enum " + Name);
             
             DefinedAt = new LanguageServer.Location(parseInfo.Script.Uri, DocRange.GetRange(enumContext.name));
             _translateInfo.AddSymbolLink(this, DefinedAt);
-
-            Scope = new Scope("enum " + Name);
 
             // Get the enum members.
             List<DefinedEnumMember> members = new List<DefinedEnumMember>();
@@ -67,6 +67,7 @@ namespace Deltin.Deltinteger.Parse
         public int ID { get; }
 
         public AccessLevel AccessLevel => AccessLevel.Public;
+        public bool Static => true;
         public bool WholeContext => true;
 
         private DeltinScript _translateInfo { get; }

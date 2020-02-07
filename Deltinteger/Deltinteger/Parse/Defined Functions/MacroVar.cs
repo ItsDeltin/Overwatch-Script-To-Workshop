@@ -11,6 +11,7 @@ namespace Deltin.Deltinteger.Parse
         public string Name { get; }
         public AccessLevel AccessLevel { get; }
         public LanguageServer.Location DefinedAt { get; }
+        public bool Static { get; }
         public bool WholeContext => true;
 
         public IExpression Expression { get; private set; }
@@ -28,6 +29,7 @@ namespace Deltin.Deltinteger.Parse
             AccessLevel = macroContext.accessor().GetAccessLevel();
             DefinedAt = new Location(parseInfo.Script.Uri, DocRange.GetRange(macroContext.name));
             CallInfo = new CallInfo(this, parseInfo.Script);
+            Static = macroContext.STATIC() != null;
 
             if (macroContext.TERNARY_ELSE() == null)
             {
