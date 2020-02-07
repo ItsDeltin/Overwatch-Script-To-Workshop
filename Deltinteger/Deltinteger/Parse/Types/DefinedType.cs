@@ -108,6 +108,7 @@ Object-serve scope. Only object members.
                 serveObjectScope = new Scope(scopeName);
 
                 staticScope.CompletionCatch = true;
+                staticScope.ProtectedCatch = true;
                 serveObjectScope.CompletionCatch = true;
             }
             else
@@ -118,6 +119,7 @@ Object-serve scope. Only object members.
             }
             
             staticScope.PrivateCatch = true;
+            operationalScope.PrivateCatch = true;
             operationalScope.This = this;
 
             // Todo: Add static methods and macros to scopes.

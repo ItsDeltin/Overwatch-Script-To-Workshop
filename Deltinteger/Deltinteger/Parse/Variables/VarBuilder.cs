@@ -150,6 +150,8 @@ namespace Deltin.Deltinteger.Parse
                     attributes.Add(new VarBuilderAttribute(AttributeType.Public, accessorRange));
                 else if (_defineContext.accessor().PRIVATE() != null)
                     attributes.Add(new VarBuilderAttribute(AttributeType.Private, accessorRange));
+                else if (_defineContext.accessor().PROTECTED() != null)
+                    attributes.Add(new VarBuilderAttribute(AttributeType.Protected, accessorRange));
             }
             
             // Get the static attribute.
@@ -243,7 +245,7 @@ namespace Deltin.Deltinteger.Parse
                 
                 // Access levels
                 case AttributeType.Public: varInfo.AccessLevel = AccessLevel.Public; break;
-                //case AttributeType.Protected: varInfo.AccessLevel = AccessLevel.Protected; break;
+                case AttributeType.Protected: varInfo.AccessLevel = AccessLevel.Protected; break;
                 case AttributeType.Private: varInfo.AccessLevel = AccessLevel.Private; break;
 
                 // globalvar
