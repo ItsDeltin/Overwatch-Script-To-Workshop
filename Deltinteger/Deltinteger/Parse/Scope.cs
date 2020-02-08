@@ -295,23 +295,25 @@ namespace Deltin.Deltinteger.Parse
             return matches;
         }
 
-        public bool AccessorMatches(Scope getter, AccessLevel accessLevel)
+        public bool AccessorMatches(Scope lookingForScope, AccessLevel accessLevel)
         {
-            bool getPrivate = true;
-            bool getProtected = true;
+            // Just return true if the access level is true.
+            if (accessLevel == AccessLevel.Public) return true;
 
             Scope current = Parent;
             while (current != null)
             {
-                if (current == this)
-                {
-                    if (accessLevel == AccessLevel.Private && getPrivate) return true;
-                    if (accessLevel == AccessLevel.Protected && getProtected) return true;
-                    return false;
-                }
+                // If the current scope is the scope being looked for, return true.
+                if (current == lookingForScope)
+                    return true;
 
-                if (current.PrivateCatch) getPrivate = false;
-                if (current.ProtectedCatch) getProtected = false;
+                // If the current scope catches private elements and the target access level is private, return false.
+                if (current.PrivateCatch && accessLevel == AccessLevel.Private) return false;
+
+                // If the current scope catches protected elements and the target access level is protected, return false.
+                if (current.ProtectedCatch && accessLevel == AccessLevel.Protected) return false;
+
+                // Next current is parent.
                 current = current.Parent;
             }
 
