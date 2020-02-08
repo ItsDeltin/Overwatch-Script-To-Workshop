@@ -17,7 +17,7 @@ namespace Deltin.Deltinteger.Parse
         public Location DefinedAt { get; }
         public bool WholeContext { get; } = true;
         public StringOrMarkupContent Documentation { get; } = null;
-        public bool Asyncable { get; protected set; }
+        public MethodAttributes Attributes { get; } = new MethodAttributes();
         public bool Static { get; protected set; }
 
         protected ParseInfo parseInfo { get; }

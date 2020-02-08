@@ -329,7 +329,7 @@ namespace Deltin.Deltinteger.Elements
         public bool Hidden { get; }
         public CodeParameter[] Parameters { get; private set; }
         public ParameterBase[] WorkshopParameters { get; }
-        public bool Asyncable => false;
+        public MethodAttributes Attributes { get; } = new MethodAttributes();
         public UsageDiagnostic[] UsageDiagnostics { get; }
         public WikiMethod Wiki { get; }
         public StringOrMarkupContent Documentation => Wiki?.Description;

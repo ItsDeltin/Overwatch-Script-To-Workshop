@@ -56,7 +56,7 @@ namespace Deltin.Deltinteger.Parse
                         parseInfo.CurrentCallInfo?.Call(definedFunction, NameRange);
                     }
 
-                    if (Parallel != CallParallel.NoParallel && !CallingMethod.Asyncable)
+                    if (Parallel != CallParallel.NoParallel && !CallingMethod.Attributes.Parallelable)
                         parseInfo.Script.Diagnostics.Error($"The method '{CallingMethod.Name}' cannot be called in parallel.", NameRange);
                     
                     parseInfo.Script.AddHover(DocRange.GetRange(methodContext), CallingMethod.GetLabel(true));

@@ -11,8 +11,6 @@ namespace Deltin.Deltinteger.Parse
         private DeltinScriptParser.Define_methodContext context;
 
         public CodeType ContainingType { get; }
-        public bool Virtual { get; private set; }
-        public bool Override { get; private set; }
 
         // Attributes
         public string SubroutineName { get; private set; }
@@ -47,21 +45,21 @@ namespace Deltin.Deltinteger.Parse
                 SetupParameters(context.setParameters(), false);
             else
             {
-                Asyncable = true;
+                Attributes.Parallelable = true;
                 parseInfo.TranslateInfo.AddSubroutine(this);
 
                 // Subroutines should not have parameters.
                 SetupParameters(context.setParameters(), false);
             }
 
-            if (Override)
+            if (Attributes.Override)
             {
                 // TODO: Don't cast
-                DefinedMethod overriding = scope.GetMethodOverload(this) as DefinedMethod;
+                IMethod overriding = scope.GetMethodOverload(this);
 
                 // No method with the name and parameters found.
                 if (overriding == null) parseInfo.Script.Diagnostics.Error("Could not find a method to override.", errorRange);
-                if (overriding.Virtual == false) parseInfo.Script.Diagnostics.Error("The specified method is not marked as virtual.", errorRange);
+                if (!overriding.Attributes.Virtual) parseInfo.Script.Diagnostics.Error("The specified method is not marked as virtual.", errorRange);
             }
 
             if (SubroutineName != null)
@@ -93,18 +91,21 @@ namespace Deltin.Deltinteger.Parse
 
         private void GetAttributes()
         {
+            // If the STRINGLITERAL is not null, the method will be stored in a subroutine.
+            // Get the name of the rule the method will be stored in.
             if (context.STRINGLITERAL() != null)
                 SubroutineName = Extras.RemoveQuotes(context.STRINGLITERAL().GetText());
             
+            // method_attributes will ne null if there are no attributes.
             if (context.method_attributes() == null) return;
 
             int numberOfAttributes = context.method_attributes().Length;
-            MethodAttribute[] attributes = new MethodAttribute[numberOfAttributes];
+            MethodAttributeHandler[] attributes = new MethodAttributeHandler[numberOfAttributes];
 
             // Loop through all attributes.
             for (int i = 0; i < numberOfAttributes; i++)
             {
-                var newAttribute = new MethodAttribute(context.method_attributes(i));
+                var newAttribute = new MethodAttributeHandler(context.method_attributes(i));
                 attributes[i] = newAttribute;
 
                 // If the attribute already exists, syntax error.
@@ -127,12 +128,12 @@ namespace Deltin.Deltinteger.Parse
                     
                     // Apply virtual
                     case MethodAttributeType.Virtual:
-                        Virtual = true;
+                        Attributes.Virtual = true;
                         break;
                     
                     // Apply override
                     case MethodAttributeType.Override:
-                        Override = true;
+                        Attributes.Override = true;
                         break;
                 }
             }
@@ -327,13 +328,13 @@ namespace Deltin.Deltinteger.Parse
         }
     }
 
-    class MethodAttribute
+    class MethodAttributeHandler
     {
         public MethodAttributeType Type { get; }
         public DocRange Range { get; }
         public DeltinScriptParser.Method_attributesContext AttributeContext { get; }
 
-        public MethodAttribute(DeltinScriptParser.Method_attributesContext attributeContext)
+        public MethodAttributeHandler(DeltinScriptParser.Method_attributesContext attributeContext)
         {
             Range = DocRange.GetRange(attributeContext);
 

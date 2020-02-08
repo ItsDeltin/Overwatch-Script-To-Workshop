@@ -43,7 +43,7 @@ namespace Deltin.Deltinteger.CustomMethods
         public CustomMethodType CustomMethodType { get; }
         public Type Type { get; }
         public bool Global { get; }
-        public bool Asyncable => false;
+        public MethodAttributes Attributes { get; } = new MethodAttributes();
 
         // IScopeable defaults
         public Location DefinedAt => null;
