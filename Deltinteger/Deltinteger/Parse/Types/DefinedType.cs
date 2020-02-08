@@ -50,23 +50,6 @@ Object-serve scope. Only object members.
             
             DefinedAt = new LanguageServer.Location(parseInfo.Script.Uri, DocRange.GetRange(typeContext.name));
             parseInfo.TranslateInfo.AddSymbolLink(this, DefinedAt);
-
-            // Get the constructors.
-            if (typeContext.constructor().Length > 0)
-            {
-                Constructors = new Constructor[typeContext.constructor().Length];
-                for (int i = 0; i < Constructors.Length; i++)
-                {
-                    Constructors[i] = new DefinedConstructor(parseInfo, this, typeContext.constructor(i));
-                }
-            }
-            else
-            {
-                // If there are no constructors, create a default constructor.
-                Constructors = new Constructor[] {
-                    new Constructor(this, new Location(parseInfo.Script.Uri, DocRange.GetRange(typeContext.name)), AccessLevel.Public)
-                };
-            }
         }
 
         public void ResolveElements()
@@ -88,6 +71,8 @@ Object-serve scope. Only object members.
                     // GetCodeType will return null if the type is not found.
                     if (inheriting != null)
                     {
+                        inheriting.Call(parseInfo.Script, DocRange.GetRange(typeContext.extends));
+
                         Inherit(inheriting, parseInfo.Script.Diagnostics, DocRange.GetRange(typeContext.extends));
                         (Extends as DefinedType)?.ResolveElements();
                     }
@@ -168,6 +153,23 @@ Object-serve scope. Only object members.
                     staticScope.CopyVariable(newVar);
                     operationalScope.CopyVariable(newVar);
                 }
+            }
+
+            // Get the constructors.
+            if (typeContext.constructor().Length > 0)
+            {
+                Constructors = new Constructor[typeContext.constructor().Length];
+                for (int i = 0; i < Constructors.Length; i++)
+                {
+                    Constructors[i] = new DefinedConstructor(parseInfo, operationalScope, this, typeContext.constructor(i));
+                }
+            }
+            else
+            {
+                // If there are no constructors, create a default constructor.
+                Constructors = new Constructor[] {
+                    new Constructor(this, new Location(parseInfo.Script.Uri, DocRange.GetRange(typeContext.name)), AccessLevel.Public)
+                };
             }
         }
 
