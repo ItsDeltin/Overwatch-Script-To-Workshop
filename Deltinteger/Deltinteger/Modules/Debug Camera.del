@@ -1,87 +1,63 @@
-method CameraSpeed()
-{
-    return !IsButtonHeld(HostPlayer(), Button.SecondaryFire) ? 0.5 : 0.1; // Go slower if secondary fire is held.
-}
-macro ToggleKey: IsCommunicating(HostPlayer(), Communication.VoiceLineDown);
+macro CameraSpeed: IsButtonHeld(EventPlayer(), Button.Ability1) ? 30 : 0.2;
+macro ToggleKey: IsCommunicating(EventPlayer(), Communication.VoiceLineDown);
 
-globalvar define cam = false;
-globalvar define cameraPos;
-globalvar define cameraHUD !;
+playervar define cam = false;
+playervar define cameraPos;
+playervar define cameraHUD;
 
 rule: "Free cam"
+Event.OngoingPlayer
 if (ToggleKey)
 {
     cam = !cam;
 }
 
 rule: "Start Camera"
+Event.OngoingPlayer
 if (cam)
 {
-    CreateHudText(HostPlayer(), null, "Camera Position:", cameraPos, Location.Left, 4, Color.White, Color.White, Color.Blue);
+    CreateHudText(EventPlayer(), null, "Camera Position:", cameraPos, Location.Left, 4, Color.White, Color.White, Color.Blue);
     cameraHUD = LastTextID();
 
-    cameraPos = EyePosition(HostPlayer());
-    StartCamera(HostPlayer(), cameraPos, cameraPos + FacingDirectionOf(HostPlayer()), 25);
-    SetMoveSpeed(HostPlayer(), 0);
+    cameraPos = EyePosition(EventPlayer());
+
+    ChaseVariableAtRate(
+        cameraPos,
+        cameraPos +
+            ((FacingDirectionOf() * ZOf(ThrottleOf())) + // Forward
+            (CrossProduct(FacingDirectionOf(), Up()) * -XOf(ThrottleOf())) + // Left
+            Vector(0,
+                [0, 1, -1][IndexOfArrayValue([IsButtonHeld(EventPlayer(), Button.Jump), IsButtonHeld(EventPlayer(), Button.Crouch)], true) + 1],
+            0))
+            * CameraSpeed,
+        30,
+        RateChaseReevaluation.DestinationAndRate
+    );
+
+    StartCamera(EventPlayer(), cameraPos, cameraPos + FacingDirectionOf(EventPlayer()), 25);
+    SetMoveSpeed(EventPlayer(), 0);
+    DisallowButton(EventPlayer(), Button.Ability1);
 }
 
 rule: "Stop Camera"
+Event.OngoingPlayer
 if (!cam)
 {
+    StopChasingVariable(EventPlayer().cameraPos);
+    StopCamera(EventPlayer());
+    SetMoveSpeed(EventPlayer(), 100);
+    AllowButton(EventPlayer(), Button.Ability1);
+    
     DestroyHudText(cameraHUD);
-    StopCamera(HostPlayer());
-    SetMoveSpeed(HostPlayer(), 100);
 }
 
 rule: "TP to camera"
+Event.OngoingPlayer
 if (cam)
-if (IsCommunicating(HostPlayer(), Communication.VoiceLineLeft))
+if (IsCommunicating(EventPlayer(), Communication.VoiceLineLeft))
 {
     cam = false;
-    define storeFacing = FacingDirectionOf(HostPlayer());
-    Teleport(HostPlayer(), cameraPos);
-    SetFacing(HostPlayer(), storeFacing, Relative.ToWorld);
-}
-
-rule: "Move camera"
-if (cam)
-if (DistanceBetween(Vector(), ThrottleOf(HostPlayer())) > 0)
-{
-    define x = XOf(ThrottleOf(HostPlayer()));
-    define z = ZOf(ThrottleOf(HostPlayer()));
-
-    define right = CrossProduct(FacingDirectionOf(HostPlayer()), Up());
-
-    define scalar ! = CameraSpeed();
-
-    if (x < 0)
-        cameraPos += right * scalar;
-    else if (x > 0)
-        cameraPos -= right * scalar;
-    
-    if (z > 0)
-        cameraPos += FacingDirectionOf(HostPlayer()) * scalar;
-    else if (z < 0)
-        cameraPos -= FacingDirectionOf(HostPlayer()) * scalar;
-
-    MinWait();
-    LoopIfConditionIsTrue();
-}
-
-rule: "Move camera down"
-if (cam)
-if (IsButtonHeld(HostPlayer(), Button.Crouch))
-{
-    cameraPos += Down() * CameraSpeed();
-    MinWait();
-    LoopIfConditionIsTrue();
-}
-
-rule: "Move camera up"
-if (cam)
-if (IsButtonHeld(HostPlayer(), Button.Jump))
-{
-    cameraPos += Up() * CameraSpeed();
-    MinWait();
-    LoopIfConditionIsTrue();
+    define storeFacing = FacingDirectionOf(EventPlayer());
+    Teleport(EventPlayer(), cameraPos);
+    SetFacing(EventPlayer(), storeFacing, Relative.ToWorld);
 }
