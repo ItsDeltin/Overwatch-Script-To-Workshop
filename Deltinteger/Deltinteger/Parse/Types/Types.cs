@@ -34,10 +34,15 @@ namespace Deltin.Deltinteger.Parse
         {
             if (extend == null) throw new ArgumentNullException(nameof(extend));
 
-            if (!extend.CanBeExtended)
-            {
-                string errorMessage = "Type '" + extend.Name + "' cannot be inherited.";
+            string errorMessage = null;
 
+            if (!extend.CanBeExtended)
+                errorMessage = "Type '" + extend.Name + "' cannot be inherited.";
+            else if (extend == this)
+                errorMessage = "Cannot extend self.";
+
+            if (errorMessage != null)
+            {
                 if (diagnostics == null || range == null) throw new Exception(errorMessage);
                 else
                 {
@@ -47,6 +52,21 @@ namespace Deltin.Deltinteger.Parse
             }
 
             Extends = extend;
+        }
+
+        public bool Implements(CodeType type)
+        {
+            if (type == null) return false;
+
+            // Iterate through all extended classes.
+            CodeType checkType = this;
+            while (checkType != null)
+            {
+                if (checkType == type) return true;
+                checkType = checkType.Extends;
+            }
+
+            return false;
         }
 
         // Static
@@ -106,11 +126,6 @@ namespace Deltin.Deltinteger.Parse
                         type = new ArrayType(type);
             }
             return type;
-        }
-
-        public static bool TypeMatches(CodeType parameterType, CodeType valueType)
-        {
-            return parameterType == null || parameterType.Name == valueType?.Name;
         }
 
         static List<CodeType> _defaultTypes;
