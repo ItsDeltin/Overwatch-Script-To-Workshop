@@ -107,9 +107,11 @@ ow_rule :
 	block?
 	;
 
-define_method : DOCUMENTATION* accessor? STATIC? (VOID | code_type) name=PART LEFT_PAREN setParameters RIGHT_PAREN subroutineRuleName=STRINGLITERAL?
+define_method : DOCUMENTATION* method_attributes* (VOID | code_type) name=PART LEFT_PAREN setParameters RIGHT_PAREN subroutineRuleName=STRINGLITERAL?
 	block?
 	;
+
+method_attributes : accessor | STATIC | OVERRIDE | VIRTUAL ;
 
 define_macro  : DOCUMENTATION* accessor? STATIC? MACRO name=PART (LEFT_PAREN setParameters RIGHT_PAREN)? TERNARY_ELSE? expr? STATEMENT_END ;
 
@@ -213,6 +215,8 @@ ENUM      : 'enum'      ;
 REF       : 'ref'       ;
 VOID      : 'method'	;
 ASYNC     : 'async'		;
+OVERRIDE  : 'override'  ;
+VIRTUAL   : 'virtual'   ;
 
 EQUALS          : '='  ;
 EQUALS_POW      : '^=' ;

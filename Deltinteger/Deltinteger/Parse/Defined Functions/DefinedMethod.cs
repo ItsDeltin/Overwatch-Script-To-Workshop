@@ -11,6 +11,8 @@ namespace Deltin.Deltinteger.Parse
         private DeltinScriptParser.Define_methodContext context;
 
         public CodeType ContainingType { get; }
+        public bool Virtual { get; private set; }
+        public bool Override { get; private set; }
 
         // Attributes
         public string SubroutineName { get; private set; }
@@ -32,15 +34,13 @@ namespace Deltin.Deltinteger.Parse
             this.context = context;
             ContainingType = containingType;
 
-            // Get the type.
-            ReturnType = CodeType.GetCodeTypeFromContext(parseInfo, context.code_type());
-
-            // Get the access level.
-            AccessLevel = context.accessor().GetAccessLevel();
+            DocRange errorRange = DocRange.GetRange(context.name);
 
             // Get the attributes.
-            if (context.STRINGLITERAL() != null)
-                SubroutineName = Extras.RemoveQuotes(context.STRINGLITERAL().GetText());
+            GetAttributes();
+
+            // Get the type.
+            ReturnType = CodeType.GetCodeTypeFromContext(parseInfo, context.code_type());
 
             // Setup the parameters and parse the block.
             if (SubroutineName == null)
@@ -54,31 +54,88 @@ namespace Deltin.Deltinteger.Parse
                 SetupParameters(context.setParameters(), false);
             }
 
+            if (Override)
+            {
+                // TODO: Don't cast
+                DefinedMethod overriding = scope.GetMethodOverload(this) as DefinedMethod;
+
+                // No method with the name and parameters found.
+                if (overriding == null) parseInfo.Script.Diagnostics.Error("Could not find a method to override.", errorRange);
+                if (overriding.Virtual == false) parseInfo.Script.Diagnostics.Error("The specified method is not marked as virtual.", errorRange);
+            }
+
             if (SubroutineName != null)
             {
                 // Syntax error if the method is a subroutine and there are parameters.
                 if (Parameters.Length > 0)
-                    parseInfo.Script.Diagnostics.Error("Subroutines cannot have parameters.", DocRange.GetRange(context.name));
+                    parseInfo.Script.Diagnostics.Error("Subroutines cannot have parameters.", errorRange);
             
                 // Syntax error if the method is a subroutine and there is a return type.
                 //if (ReturnType != null)
-                  //  parseInfo.Script.Diagnostics.Error("Subroutines cannot return a value.", DocRange.GetRange(context.name));
+                  //  parseInfo.Script.Diagnostics.Error("Subroutines cannot return a value.", errorRange);
                 
                 // Syntax error if the method is a subroutine and the method is defined in a class.
                 if (ContainingType != null)
-                    parseInfo.Script.Diagnostics.Error("Subroutines cannot be defined in types.", DocRange.GetRange(context.name));
+                    parseInfo.Script.Diagnostics.Error("Subroutines cannot be defined in types.", errorRange);
             }
             
             // Syntax error if the block is missing.
             if (context.block() == null)
-                parseInfo.Script.Diagnostics.Error("Expected block.", DocRange.GetRange(context.name));
+                parseInfo.Script.Diagnostics.Error("Expected block.", errorRange);
 
-            scope.AddMethod(this, parseInfo.Script.Diagnostics, DocRange.GetRange(context.name));
+            scope.AddMethod(this, parseInfo.Script.Diagnostics, errorRange);
 
             // Add the hover info.
             parseInfo.Script.AddHover(DocRange.GetRange(context.name), GetLabel(true));
 
             parseInfo.TranslateInfo.ApplyBlock(this);
+        }
+
+        private void GetAttributes()
+        {
+            if (context.STRINGLITERAL() != null)
+                SubroutineName = Extras.RemoveQuotes(context.STRINGLITERAL().GetText());
+            
+            if (context.method_attributes() == null) return;
+
+            int numberOfAttributes = context.method_attributes().Length;
+            MethodAttribute[] attributes = new MethodAttribute[numberOfAttributes];
+
+            // Loop through all attributes.
+            for (int i = 0; i < numberOfAttributes; i++)
+            {
+                var newAttribute = new MethodAttribute(context.method_attributes(i));
+                attributes[i] = newAttribute;
+
+                // If the attribute already exists, syntax error.
+                for (int c = i - 1; c >= 0; c--)
+                    if (attributes[c].Type == newAttribute.Type)
+                        newAttribute.Copy(parseInfo.Script.Diagnostics);
+                
+                // Apply the attribute.
+                switch (newAttribute.Type)
+                {
+                    // Apply accessor
+                    case MethodAttributeType.Accessor:
+                        AccessLevel = newAttribute.AttributeContext.accessor().GetAccessLevel();
+                        break;
+                    
+                    // Apply static
+                    case MethodAttributeType.Static:
+                        Static = true;
+                        break;
+                    
+                    // Apply virtual
+                    case MethodAttributeType.Virtual:
+                        Virtual = true;
+                        break;
+                    
+                    // Apply override
+                    case MethodAttributeType.Override:
+                        Override = true;
+                        break;
+                }
+            }
         }
 
         public override void SetupParameters()
@@ -268,5 +325,36 @@ namespace Deltin.Deltinteger.Parse
             Subroutine = routine;
             ReturnHandler = returnHandler;
         }
+    }
+
+    class MethodAttribute
+    {
+        public MethodAttributeType Type { get; }
+        public DocRange Range { get; }
+        public DeltinScriptParser.Method_attributesContext AttributeContext { get; }
+
+        public MethodAttribute(DeltinScriptParser.Method_attributesContext attributeContext)
+        {
+            Range = DocRange.GetRange(attributeContext);
+
+            if (attributeContext.accessor() != null) Type = MethodAttributeType.Accessor;
+            else if (attributeContext.STATIC() != null) Type = MethodAttributeType.Static;
+            else if (attributeContext.VIRTUAL() != null) Type = MethodAttributeType.Virtual;
+            else if (attributeContext.OVERRIDE() != null) Type = MethodAttributeType.Override;
+            else throw new NotImplementedException();
+        }
+
+        public void Copy(FileDiagnostics diagnostics)
+        {
+            diagnostics.Error($"Multiple '{Type.ToString().ToLower()}' attributes.", Range);
+        }
+    }
+
+    enum MethodAttributeType
+    {
+        Accessor,
+        Static,
+        Override,
+        Virtual
     }
 }
