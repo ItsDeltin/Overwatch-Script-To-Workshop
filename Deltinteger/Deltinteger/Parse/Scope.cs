@@ -179,11 +179,16 @@ namespace Deltin.Deltinteger.Parse
             AddMethod(method, null, null);
         }
 
+        /// <summary>
+        /// Blindly copies a method to the current scope without doing any syntax checking.
+        /// Use this to link to a method that already belongs to another scope. The other scope should have already handled the syntax checking.
+        /// </summary>
+        /// <param name="method">The method to copy.</param>
         public void CopyMethod(IMethod method)
         {
             if (method == null) throw new ArgumentNullException(nameof(method));
             if (!Methods.Contains(method))
-                Variables.Add(method);
+                Methods.Add(method);
         }
 
         /// <summary>Checks if a method conflicts with another method in the scope.</summary>
@@ -191,11 +196,27 @@ namespace Deltin.Deltinteger.Parse
         /// <returns>Returns true if the current scope already has the same name and parameters as the input method.</returns>
         public bool HasConflict(IMethod method)
         {
-            return GetMethodOverload(method.Name, method.Parameters.Select(p => p.Type).ToArray()) != null;
+            return GetMethodOverload(method) != null;
         }
 
+        /// <summary>Gets a method in the scope that has the same name and parameter types. Can potentially resolve to itself if the method being tested is in the scope.</summary>
+        /// <param name="method">The method to get a matching overload.</param>
+        /// <returns>A method with the matching overload, or null if none is found.</returns>
+        public IMethod GetMethodOverload(IMethod method)
+        {
+            if (method == null) throw new ArgumentNullException(nameof(method));
+            return GetMethodOverload(method.Name, method.Parameters.Select(p => p.Type).ToArray());
+        }
+
+        /// <summary>Gets a method overload in the scope that has the same name and parameter types.</summary>
+        /// <param name="name">The name of the method.</param>
+        /// <param name="parameterTypes">The types of the parameters.</param>
+        /// <returns>A method with the name and parameter types, or null if none is found.</returns>
         public IMethod GetMethodOverload(string name, CodeType[] parameterTypes)
         {
+            if (name == null) throw new ArgumentNullException(nameof(name));
+            if (parameterTypes == null) throw new ArgumentNullException(nameof(parameterTypes));
+
             IMethod method = null;
 
             IterateElements(null, false, true, itElement => {
@@ -219,6 +240,9 @@ namespace Deltin.Deltinteger.Parse
             return method;
         }
 
+        /// <summary>Gets all methods in the scope with the provided name.</summary>
+        /// <param name="name">The name of the methods.</param>
+        /// <returns>An array of methods with the matching name.</returns>
         public IMethod[] GetMethodsByName(string name)
         {
             List<IMethod> methods = new List<IMethod>();
