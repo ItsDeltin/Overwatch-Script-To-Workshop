@@ -44,28 +44,35 @@ namespace Deltin.Deltinteger.Parse
             return new Scope(this, name);
         }
 
-        private void IterateElements(Scope getter, Func<ScopeIterate, ScopeIterateAction> element)
+        private void IterateElements(Scope getter, bool iterateVariables, bool iterateMethods, Func<ScopeIterate, ScopeIterateAction> element)
         {
             Scope current = this;
+
+            bool getPrivate = true;
+            bool getProtected = true;
 
             while (current != null)
             {
                 List<IScopeable> checkScopeables = new List<IScopeable>();
-                checkScopeables.AddRange(current.Variables);
-                checkScopeables.AddRange(current.Methods);
+                if (iterateVariables) checkScopeables.AddRange(current.Variables);
+                if (iterateMethods) checkScopeables.AddRange(current.Methods);
 
                 bool stopAfterScope = false;
 
                 foreach (IScopeable check in checkScopeables)
                 {
                     // Check if the accessor is valid.
-                    bool accessorMatches = current.DoShareGroup(getter, check.AccessLevel);
+                    bool accessorMatches = check.AccessLevel == AccessLevel.Public ||
+                        (getPrivate   && check.AccessLevel == AccessLevel.Private) ||
+                        (getProtected && check.AccessLevel == AccessLevel.Protected);
 
                     ScopeIterateAction action = element(new ScopeIterate(current, check, accessorMatches));
                     if (action == ScopeIterateAction.Stop) return;
                     if (action == ScopeIterateAction.StopAfterScope) stopAfterScope = true;
                 }
 
+                if (current.PrivateCatch) getPrivate = false;
+                if (current.ProtectedCatch) getProtected = false;
                 if (stopAfterScope) return;
 
                 current = current.Parent;
@@ -129,27 +136,13 @@ namespace Deltin.Deltinteger.Parse
             if (range != null && element == null)
                 diagnostics.Error(string.Format("The variable {0} does not exist in the {1}.", name, ErrorName), range);
             
-            if (element != null && !DoShareGroup(getter, element.AccessLevel))
+            if (element != null && getter != null && !getter.AccessorMatches(element))
             {
                 if (range == null) throw new Exception();
                 diagnostics.Error(string.Format("'{0}' is inaccessable due to its access level.", name), range);
             }
 
             return element;
-        }
-
-        public IScopeable[] AllVariablesInScope()
-        {
-            List<IScopeable> variables = new List<IScopeable>();
-
-            Scope current = this;
-            while (current != null)
-            {
-                variables.AddRange(current.Variables);
-                current = current.Parent;
-            }
-
-            return variables.ToArray();
         }
 
         /// <summary>
@@ -162,32 +155,21 @@ namespace Deltin.Deltinteger.Parse
         /// <param name="range">The document range to throw errors at. Should be null when adding methods internally.</param>
         public void AddMethod(IMethod method, FileDiagnostics diagnostics, DocRange range)
         {
-            var allMethods = AllMethodsInScope();
-
             if (method == null) throw new ArgumentNullException(nameof(method));
-            if (allMethods.Contains(method)) throw new Exception("method reference is already in scope.");
+            if (Methods.Contains(method)) throw new Exception("method reference is already in scope.");
 
-            foreach (var m in allMethods)
-                if (method.Name == m.Name && method.Parameters.Length == m.Parameters.Length)
+            if (HasConflict(method))
+            {
+                string message = "A method with the same name and parameter types was already defined in this scope.";
+
+                if (diagnostics != null && range != null)
                 {
-                    bool matches = true;
-                    for (int p = 0; p < method.Parameters.Length; p++)
-                        if (method.Parameters[p].Type != m.Parameters[p].Type)
-                            matches = false;
-
-                    if (matches)
-                    {
-                        string message = "A method with the same name and parameter types was already defined in this scope.";
-
-                        if (diagnostics != null && range != null)
-                        {
-                            diagnostics.Error(message, range);
-                            return;
-                        }
-                        else
-                            throw new Exception(message);
-                    }
+                    diagnostics.Error(message, range);
+                    return;
                 }
+                else
+                    throw new Exception(message);
+            }
 
             Methods.Add(method);
         }
@@ -204,18 +186,37 @@ namespace Deltin.Deltinteger.Parse
                 Variables.Add(method);
         }
 
-        public IMethod[] AllMethodsInScope()
+        /// <summary>Checks if a method conflicts with another method in the scope.</summary>
+        /// <param name="method">The method to check.</param>
+        /// <returns>Returns true if the current scope already has the same name and parameters as the input method.</returns>
+        public bool HasConflict(IMethod method)
         {
-            List<IMethod> methods = new List<IMethod>();
+            return GetMethodOverload(method.Name, method.Parameters.Select(p => p.Type).ToArray()) != null;
+        }
 
-            Scope current = this;
-            while (current != null)
-            {
-                methods.AddRange(current.Methods);
-                current = current.Parent;
-            }
+        public IMethod GetMethodOverload(string name, CodeType[] parameterTypes)
+        {
+            IMethod method = null;
 
-            return methods.ToArray();
+            IterateElements(null, false, true, itElement => {
+                // Convert the current element to an IMethod for checking.
+                IMethod checking = (IMethod)itElement.Element;
+
+                // If the name does not match or the number of parameters are not equal, continue.
+                if (checking.Name != name || checking.Parameters.Length != parameterTypes.Length) return ScopeIterateAction.Continue;
+
+                // Loop through all parameters.
+                for (int p = 0; p < method.Parameters.Length; p++)
+                    // If the parameter types do not match, continue.
+                    if (method.Parameters[p].Type != checking.Parameters[p].Type)
+                        return ScopeIterateAction.Continue;
+                
+                // Parameter overload matches.
+                method = checking;
+                return ScopeIterateAction.Stop;
+            });
+
+            return method;
         }
 
         public IMethod[] GetMethodsByName(string name)
@@ -248,27 +249,33 @@ namespace Deltin.Deltinteger.Parse
             return @this;
         }
 
-        public bool DoShareGroup(Scope other, AccessLevel accessLevel)
+        public bool AccessorMatches(IScopeable element)
         {
-            if (other == null || accessLevel == AccessLevel.Public) return true;
-            
-            Scope thisGroup = GroupScope(accessLevel == AccessLevel.Private);
-            Scope otherGroup = other.GroupScope(accessLevel == AccessLevel.Private);
-            return thisGroup == otherGroup;
-        }
-        
-        public Scope GroupScope(bool isPrivate)
-        {
-            Scope current = this;
-            while (current.Parent != null && ((isPrivate && !current.PrivateCatch) || (!isPrivate && !current.ProtectedCatch))) current = current.Parent;
-            return current;
+            if (element.AccessLevel == AccessLevel.Public) return true;
+
+            bool matches = false;
+
+            IterateElements(null, true, true, itElement => {
+                if (element == itElement.Element)
+                {
+                    matches = true;
+                    return ScopeIterateAction.Stop;
+                }
+
+                if ((itElement.Container.PrivateCatch && element.AccessLevel == AccessLevel.Private) ||
+                    (itElement.Container.ProtectedCatch && element.AccessLevel == AccessLevel.Protected))
+                    return ScopeIterateAction.StopAfterScope;
+                return ScopeIterateAction.Continue;
+            });
+
+            return matches;
         }
 
         public CompletionItem[] GetCompletion(Pos pos, bool immediate, Scope getter = null)
         {
             List<CompletionItem> completions = new List<CompletionItem>();
 
-            IterateElements(getter, (itElement) => {
+            IterateElements(getter, true, true, (itElement) => {
                 // Add the completion of the current element.
                 if (WasScopedAtPosition(itElement.Element, pos, getter))
                     completions.Add(itElement.Element.GetCompletion());
@@ -285,7 +292,7 @@ namespace Deltin.Deltinteger.Parse
 
         private bool WasScopedAtPosition(IScopeable element, Pos pos, Scope getter)
         {
-            return (pos == null || element.DefinedAt == null || element.WholeContext || element.DefinedAt.range.start <= pos) && (getter == null || DoShareGroup(getter, element.AccessLevel));
+            return (pos == null || element.DefinedAt == null || element.WholeContext || element.DefinedAt.range.start <= pos) && (getter == null || getter.AccessorMatches(element));
         }
 
         public static Scope GetGlobalScope()
