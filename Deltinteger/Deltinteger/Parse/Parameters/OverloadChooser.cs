@@ -253,13 +253,15 @@ namespace Deltin.Deltinteger.Parse
 
         private void CompareParameterTypes(IExpression value, IParameterCallable option, int parameter, DocRange errorRange)
         {
-            if (!CodeType.TypeMatches(option.Parameters[parameter].Type, value.Type()))
+            CodeType parameterType = option.Parameters[parameter].Type;
+
+            if (parameterType != null && (value.Type() == null || !value.Type().Implements(parameterType)))
             {
                 // The parameter type does not match.
                 string msg = string.Format("Expected a value of type {0}.", option.Parameters[parameter].Type.Name);
                 optionDiagnostics[option].Add(new Diagnostic(msg, errorRange, Diagnostic.Error));
             }
-            else if (value.Type() != null && option.Parameters[parameter].Type == null && value.Type().Constant() == TypeSettable.Constant)
+            else if (value.Type() != null && parameterType == null && value.Type().Constant() == TypeSettable.Constant)
             {
                 string msg = string.Format($"The type '{value.Type().Name}' cannot be used here.");
                 optionDiagnostics[option].Add(new Diagnostic(msg, errorRange, Diagnostic.Error));
