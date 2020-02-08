@@ -295,6 +295,29 @@ namespace Deltin.Deltinteger.Parse
             return matches;
         }
 
+        public bool AccessorMatches(Scope getter, AccessLevel accessLevel)
+        {
+            bool getPrivate = true;
+            bool getProtected = true;
+
+            Scope current = Parent;
+            while (current != null)
+            {
+                if (current == this)
+                {
+                    if (accessLevel == AccessLevel.Private && getPrivate) return true;
+                    if (accessLevel == AccessLevel.Protected && getProtected) return true;
+                    return false;
+                }
+
+                if (current.PrivateCatch) getPrivate = false;
+                if (current.ProtectedCatch) getProtected = false;
+                current = current.Parent;
+            }
+
+            return false;
+        }
+
         public CompletionItem[] GetCompletion(Pos pos, bool immediate, Scope getter = null)
         {
             List<CompletionItem> completions = new List<CompletionItem>();
