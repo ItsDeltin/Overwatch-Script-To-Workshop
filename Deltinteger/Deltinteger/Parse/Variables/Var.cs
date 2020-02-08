@@ -56,6 +56,7 @@ namespace Deltin.Deltinteger.Parse
             _finalized = true;
 
             parseInfo.Script.AddHover(DefinedAt.range, GetLabel(true));
+            parseInfo.TranslateInfo.AddSymbolLink(this, DefinedAt);
 
             if (_initialValueResolve == InitialValueResolve.Instant)
                 GetInitialValue();
