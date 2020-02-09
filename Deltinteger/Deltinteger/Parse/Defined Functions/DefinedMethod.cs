@@ -52,15 +52,18 @@ namespace Deltin.Deltinteger.Parse
                 SetupParameters(context.setParameters(), false);
             }
 
+            // Override attribute.
             if (Attributes.Override)
             {
-                // TODO: Don't cast
                 IMethod overriding = scope.GetMethodOverload(this);
 
                 // No method with the name and parameters found.
                 if (overriding == null) parseInfo.Script.Diagnostics.Error("Could not find a method to override.", errorRange);
                 if (!overriding.Attributes.Virtual) parseInfo.Script.Diagnostics.Error("The specified method is not marked as virtual.", errorRange);
             }
+
+            if (Attributes.IsOverrideable && AccessLevel == AccessLevel.Private)
+                parseInfo.Script.Diagnostics.Error("A method marked as virtual or abstract must have the protection level 'public' or 'protected'.", errorRange);
 
             if (SubroutineName != null)
             {
