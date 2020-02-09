@@ -48,6 +48,8 @@ namespace Deltin.Deltinteger.Parse
             this.genericErrorRange = genericErrorRange;
             CallRange = callRange;
             this.ErrorMessages = errorMessages;
+
+            parseInfo.Script.AddOverloadData(this);
         }
 
         public void SetContext(DeltinScriptParser.Call_parametersContext context)
@@ -277,8 +279,6 @@ namespace Deltin.Deltinteger.Parse
             // Add the diagnostics of the best option.
             parseInfo.Script.Diagnostics.AddDiagnostics(optionDiagnostics[Overload].ToArray());
 
-            parseInfo.Script.AddOverloadData(this);
-
             // Check the access level.
             if (!getter.AccessorMatches(scope, Overload.AccessLevel))
                 parseInfo.Script.Diagnostics.Error(string.Format("'{0}' is inaccessable due to its access level.", Overload.GetLabel(false)), genericErrorRange);
@@ -305,36 +305,43 @@ namespace Deltin.Deltinteger.Parse
 
         public SignatureHelp GetSignatureHelp(Pos caretPos)
         {
+            // Get the active parameter.
             int activeParameter = -1;
             if (ParameterRanges != null)
+                // Loop through parameter ranges while activeParameter is -1.
                 for (int i = 0; i < ParameterRanges.Length && activeParameter == -1; i++)
+                    // If the proved caret position is inside the parameter range, set it as the active parameter.
                     if (ParameterRanges[i] != null && ParameterRanges[i].IsInside(caretPos))
                         activeParameter = i;
             
-            SignatureInformation[] overloads = new SignatureInformation[CurrentOptions.Count];
+            // Get the signature information.
+            SignatureInformation[] overloads = new SignatureInformation[AllOverloads.Length];
             for (int i = 0; i < overloads.Length; i++)
             {
-                var parameters = new ParameterInformation[CurrentOptions[i].Parameters.Length];
+                // Get the parameter information for the signature.
+                var parameters = new ParameterInformation[AllOverloads[i].Parameters.Length];
+
+                // Convert parameters to parameter information.
                 for (int p = 0; p < parameters.Length; p++)
                     parameters[p] = new ParameterInformation() {
-                        Label = CurrentOptions[i].Parameters[p].GetLabel(false),
-                        Documentation = new StringOrMarkupContent(new MarkupContent() {
-                            Kind = MarkupKind.Markdown,
-                            Value = CurrentOptions[i].Parameters[p].Documentation
-                        })
+                        // Get the label to show in the signature.
+                        Label = AllOverloads[i].Parameters[p].GetLabel(false),
+                        // Get the documentation.
+                        Documentation = Extras.GetMarkupContent(AllOverloads[i].Parameters[p].Documentation)
                     };
 
+                // Create the signature information.
                 overloads[i] = new SignatureInformation() {
-                    Label = CurrentOptions[i].GetLabel(false),
+                    Label = AllOverloads[i].GetLabel(false),
                     Parameters = parameters,
-                    Documentation = CurrentOptions[i].Documentation
+                    Documentation = AllOverloads[i].Documentation
                 };
             }
 
             return new SignatureHelp()
             {
                 ActiveParameter = activeParameter,
-                ActiveSignature = CurrentOptions.IndexOf(Overload),
+                ActiveSignature = Array.IndexOf(AllOverloads, Overload),
                 Signatures = overloads
             };
         }
