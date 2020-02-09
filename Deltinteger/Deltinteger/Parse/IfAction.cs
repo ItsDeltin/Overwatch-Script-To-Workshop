@@ -62,7 +62,7 @@ namespace Deltin.Deltinteger.Parse
 
         public PathInfo[] GetPaths() => Paths;
 
-        public void Translate(ActionSet actionSet)
+        public void TranslateSkip(ActionSet actionSet)
         {
             // Create the skip for the start of the if statement.
             SkipStartMarker ifStart = new SkipStartMarker(actionSet, Expression.Parse(actionSet));
@@ -129,7 +129,7 @@ namespace Deltin.Deltinteger.Parse
                 blockCap.SetEndMarker(contextCap);
         }
 
-        public void TranslateWorkshopIf(ActionSet actionSet)
+        public void Translate(ActionSet actionSet)
         {
             // Add the if action.
             actionSet.AddAction(Element.Part<A_If>(Expression.Parse(actionSet)));
