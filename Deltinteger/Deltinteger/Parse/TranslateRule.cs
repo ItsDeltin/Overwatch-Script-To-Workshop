@@ -269,7 +269,7 @@ namespace Deltin.Deltinteger.Parse
     {
         public IWorkshopTree Condition { get; }
         private ActionSet ActionSet { get; }
-        //public IWorkshopTree SkipCount { get; set; }
+        public Element SkipCount { get; private set; }
         public SkipEndMarker EndMarker { get; private set; }
         public bool IsAction { get; } = true;
 
@@ -310,16 +310,21 @@ namespace Deltin.Deltinteger.Parse
 
         public void SetEndMarker(SkipEndMarker endMarker)
         {
-            //if (SkipCount != null) throw new Exception("SkipCount not null.");
+            if (SkipCount != null) throw new Exception("SkipCount not null.");
             EndMarker = endMarker;
+        }
+
+        public void SetSkipCount(Element count)
+        {
+            if (EndMarker != null) throw new Exception("EndMarker not null.");
+            SkipCount = count;
         }
 
         public Element GetAction()
         {
-            //Element skipCount;
-            //if (SkipCount != null) skipCount = (Element)SkipCount;
-            //else skipCount = GetSkipCount(EndMarker);
-            Element skipCount = GetSkipCount(EndMarker);
+            Element skipCount;
+            if (SkipCount != null) skipCount = SkipCount;
+            else skipCount = GetSkipCount(EndMarker);
 
             if (Condition == null)
                 return Element.Part<A_Skip>(skipCount);
