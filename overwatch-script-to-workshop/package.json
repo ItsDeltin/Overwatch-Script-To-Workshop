@@ -109,6 +109,11 @@
                 "command": "ostw.virtualDocumentOutput",
                 "title": "Create a panel for workshop code output.",
                 "category": "Overwatch Script To Workshop"
+            },
+            {
+                "command": "ostw.showReferences",
+                "title": "Show References",
+                "category": "Overwatch Script To Workshop"
             }
         ]
     },

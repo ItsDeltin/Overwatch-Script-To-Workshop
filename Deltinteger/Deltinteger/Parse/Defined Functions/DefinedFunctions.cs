@@ -35,7 +35,9 @@ namespace Deltin.Deltinteger.Parse
             methodScope = scope.Child();
             containingScope = scope;
             CallInfo = new CallInfo(this, parseInfo.Script);
+
             parseInfo.TranslateInfo.AddSymbolLink(this, definedAt);
+            parseInfo.Script.AddCodeLensRange(new ReferenceCodeLensRange(this, parseInfo, CodeLensSourceType.Function, DefinedAt.range));
         }
 
         // IApplyBlock

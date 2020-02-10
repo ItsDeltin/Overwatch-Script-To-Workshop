@@ -172,6 +172,8 @@ Object-serve scope. Only object members.
                     new Constructor(this, new Location(parseInfo.Script.Uri, DocRange.GetRange(typeContext.name)), AccessLevel.Public)
                 };
             }
+
+            parseInfo.Script.AddCodeLensRange(new ReferenceCodeLensRange(this, parseInfo, CodeLensSourceType.Type, DefinedAt.range));
         }
 
         private int StackStart(bool inclusive)

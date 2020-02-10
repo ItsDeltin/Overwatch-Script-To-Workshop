@@ -74,13 +74,15 @@ namespace Deltin.Deltinteger.LanguageServer
 
             DocumentHandler = new DocumentHandler(this);
             FileGetter = new FileGetter(DocumentHandler);
-            ConfigurationHandler configurationHandler = new ConfigurationHandler(this);
             CompletionHandler completionHandler = new CompletionHandler(this);
             SignatureHandler signatureHandler = new SignatureHandler(this);
+            ConfigurationHandler configurationHandler = new ConfigurationHandler(this);
             DefinitionHandler definitionHandler = new DefinitionHandler(this);
             HoverHandler hoverHandler = new HoverHandler(this);
-            RenameHandler renameHandler = new RenameHandler(this);
             ReferenceHandler referenceHandler = new ReferenceHandler(this);
+            CodeLensHandler codeLensHandler = new CodeLensHandler(this);
+            DoRenameHandler renameHandler = new DoRenameHandler(this);
+            PrepareRenameHandler prepareRenameHandler = new PrepareRenameHandler(this);
 
             Server = await OmniSharp.Extensions.LanguageServer.Server.LanguageServer.From(options => options
                 .WithInput(Console.OpenStandardInput())
@@ -96,7 +98,9 @@ namespace Deltin.Deltinteger.LanguageServer
                 .WithHandler<DefinitionHandler>(definitionHandler)
                 .WithHandler<HoverHandler>(hoverHandler)
                 .WithHandler<ReferenceHandler>(referenceHandler)
-                .WithHandler<RenameHandler>(renameHandler));
+                .WithHandler<CodeLensHandler>(codeLensHandler)
+                .WithHandler<DoRenameHandler>(renameHandler)
+                .WithHandler<PrepareRenameHandler>(prepareRenameHandler));
             
             await Server.WaitForExit;
         }

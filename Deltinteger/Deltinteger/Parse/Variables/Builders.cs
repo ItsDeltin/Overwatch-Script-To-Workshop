@@ -29,9 +29,10 @@ namespace Deltin.Deltinteger.Parse
         protected override void Apply()
         {
             _varInfo.WholeContext = true;
-            _varInfo.OperationalScope = _operationalScope;
-            _varInfo.AccessLevel = AccessLevel.Public;
-            _varInfo.InitialValueResolve = InitialValueResolve.ApplyBlock;
+            _varInfo.OperationalScope = _operationalScope; // Set the operational scope.
+            _varInfo.AccessLevel = AccessLevel.Public; // Set the access level.
+            _varInfo.InitialValueResolve = InitialValueResolve.ApplyBlock; // Get the inital value after elements have been resolved.
+            _varInfo.CodeLensType = CodeLensSourceType.RuleVariable; // Set the code lens type.
         }
     }
 
@@ -59,6 +60,7 @@ namespace Deltin.Deltinteger.Parse
         {
             _varInfo.WholeContext = false;
             _varInfo.OperationalScope = _operationalScope;
+            _varInfo.CodeLensType = CodeLensSourceType.ScopedVariable;
         }
     }
 
@@ -86,6 +88,7 @@ namespace Deltin.Deltinteger.Parse
         {
             _varInfo.WholeContext = true;
             _varInfo.OperationalScope = _varInfo.Static ? _staticScope : _objectScope;
+            _varInfo.CodeLensType = CodeLensSourceType.ClassVariable;
         }
     }
 
@@ -112,6 +115,7 @@ namespace Deltin.Deltinteger.Parse
         {
             _varInfo.WholeContext = true; // Shouldn't matter.
             _varInfo.OperationalScope = _operationalScope;
+            _varInfo.CodeLensType = CodeLensSourceType.ParameterVariable;
         }
     }
 
@@ -170,6 +174,7 @@ namespace Deltin.Deltinteger.Parse
             _varInfo.WholeContext = false;
             _varInfo.IsWorkshopReference = true;
             _varInfo.OperationalScope = _operationalScope;
+            _varInfo.CodeLensType = CodeLensSourceType.ScopedVariable;
         }
     }
 
@@ -198,6 +203,7 @@ namespace Deltin.Deltinteger.Parse
         {
             _varInfo.WholeContext = false;
             _varInfo.OperationalScope = _operationalScope;
+            _varInfo.CodeLensType = CodeLensSourceType.ScopedVariable;
         }
     }
 }

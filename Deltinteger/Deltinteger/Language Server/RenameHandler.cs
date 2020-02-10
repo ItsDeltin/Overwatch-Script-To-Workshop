@@ -17,11 +17,28 @@ using OmniSharp.Extensions.LanguageServer.Protocol;
 
 namespace Deltin.Deltinteger.LanguageServer
 {
-    public class RenameHandler : BaseRenameHandler, IPrepareRenameHandler
+    static class RenameInfo
+    {
+        public static SymbolLink GetLink(DeltintegerLanguageServer languageServer, Uri uri, Position position)
+        {
+            var links = languageServer.LastParse?.GetSymbolLinks();
+            if (links == null) return null;
+
+            foreach (var link in links)
+                foreach (var loc in link.Value)
+                    // TODO-URI: Should use Uri.Compare?
+                    if (loc.uri == uri && loc.range.IsInside(position))
+                        return new SymbolLink(link, loc.range);
+            
+            return null;
+        }
+    }
+
+    class DoRenameHandler : BaseRenameHandler
     {
         private DeltintegerLanguageServer _languageServer;
 
-        public RenameHandler(DeltintegerLanguageServer languageServer) : base (new RenameRegistrationOptions() {
+        public DoRenameHandler(DeltintegerLanguageServer languageServer) : base (new RenameRegistrationOptions() {
             DocumentSelector = DeltintegerLanguageServer.DocumentSelector,
             PrepareProvider = true
         })
@@ -31,7 +48,7 @@ namespace Deltin.Deltinteger.LanguageServer
 
         public override async Task<WorkspaceEdit> Handle(RenameParams request, CancellationToken cancellationToken)
         {
-            var link = GetLink(request.TextDocument.Uri, request.Position);
+            var link = RenameInfo.GetLink(_languageServer, request.TextDocument.Uri, request.Position);
             if (link == null) return new WorkspaceEdit();
 
             var grouped = link.Group();
@@ -76,10 +93,31 @@ namespace Deltin.Deltinteger.LanguageServer
             };
         }
 
+        public override void SetCapability(RenameCapability capability)
+        {
+            base.SetCapability(capability);
+        }
+
+        public override string ToString()
+        {
+            return base.ToString();
+        }
+    }
+
+    class PrepareRenameHandler : IPrepareRenameHandler
+    {
+        private DeltintegerLanguageServer _languageServer;
+        private RenameCapability _capability;
+
+        public PrepareRenameHandler(DeltintegerLanguageServer languageServer)
+        {
+            _languageServer = languageServer;
+        }
+
         // IPrepareRename
         public async Task<RangeOrPlaceholderRange> Handle(PrepareRenameParams request, CancellationToken cancellationToken)
         {
-            var link = GetLink(request.TextDocument.Uri, request.Position);
+            var link = RenameInfo.GetLink(_languageServer, request.TextDocument.Uri, request.Position);
             if (link == null) return new RangeOrPlaceholderRange(new PlaceholderRange());
 
             return new RangeOrPlaceholderRange(new PlaceholderRange() {
@@ -88,21 +126,12 @@ namespace Deltin.Deltinteger.LanguageServer
             });
         }
 
-        SymbolLink GetLink(Uri uri, Position position)
+        public object GetRegistrationOptions() => null;
+
+        public void SetCapability(RenameCapability capability)
         {
-            var links = _languageServer.LastParse?.GetSymbolLinks();
-            if (links == null) return null;
-
-            foreach (var link in links)
-                foreach (var loc in link.Value)
-                    // TODO-URI: Should use Uri.Compare?
-                    if (loc.uri == uri && loc.range.IsInside(position))
-                        return new SymbolLink(link, loc.range);
-            
-            return null;
+            _capability = capability;
         }
-
-        object IRegistration<object>.GetRegistrationOptions() => null;
     }
 
     class SymbolLink

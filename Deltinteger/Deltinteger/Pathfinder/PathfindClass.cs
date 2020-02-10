@@ -69,7 +69,7 @@ namespace Deltin.Deltinteger.Pathfinder
 
     class PathmapFileParameter : FileParameter
     {
-        public PathmapFileParameter(string parameterName, string description) : base("pathmap", parameterName, description)
+        public PathmapFileParameter(string parameterName, string description) : base(parameterName, description, ".pathmap")
         {
         }
 

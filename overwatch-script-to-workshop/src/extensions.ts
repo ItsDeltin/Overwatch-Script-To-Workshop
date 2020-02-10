@@ -5,8 +5,8 @@
 
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { workspace, ExtensionContext, OutputChannel, window } from 'vscode';
-import { LanguageClient, LanguageClientOptions, ServerOptions, ExecutableOptions, Executable, TransportKind, InitializationFailedHandler, ErrorHandler, TextDocument, RequestType } from 'vscode-languageclient';
+import { workspace, ExtensionContext, OutputChannel, window, Uri, Position, Location } from 'vscode';
+import { LanguageClient, LanguageClientOptions, ServerOptions, ExecutableOptions, Executable, TransportKind, InitializationFailedHandler, ErrorHandler, TextDocument, RequestType, Position as LSPosition, Location as LSLocation } from 'vscode-languageclient';
 
 let client: LanguageClient;
 let workshopOut: OutputChannel;
@@ -58,10 +58,6 @@ function startLanguageServer()
 		debug: { command: serverModule, args: ['--langserver', '--debug'], options: options }
 	};
 
-	let initFail: InitializationFailedHandler = function(error: any): boolean {
-		return true;
-	};
-
 	// Options to control the language client
 	let clientOptions: LanguageClientOptions = {
 		// Register the server for plain text documents
@@ -70,8 +66,7 @@ function startLanguageServer()
 			// Notify the server about file changes to '.clientrc files contained in the workspace
 			// fileEvents: workspace.createFileSystemWatcher('**/.clientrc')
 			configurationSection: 'ostw'
-		},
-		initializationFailedHandler: initFail
+		}
 	};
 
 	// Create the language client and start the client.
@@ -91,7 +86,7 @@ function startLanguageServer()
 			if (code != lastWorkshopOutput)
 			{
 				lastWorkshopOutput = code;
-				workshopPanelProvider.onDidChangeEmitter.fire(this.uri);
+				workshopPanelProvider.onDidChangeEmitter.fire();
 
 				// Clear the output
 				workshopOut.clear();
@@ -127,6 +122,14 @@ function addCommands(context: ExtensionContext)
 
 		let doc : vscode.TextDocument = await vscode.workspace.openTextDocument(uri);
 		await vscode.window.showTextDocument(doc, { preview: false });
+	}, this));
+
+	context.subscriptions.push(vscode.commands.registerCommand('ostw.showReferences', (uriStr: string, position: LSPosition, locations: LSLocation[]) => {
+		let uri : Uri = Uri.parse(uriStr);
+		let pos: Position = client.protocol2CodeConverter.asPosition(position);
+		let locs: Location[] = locations.map(client.protocol2CodeConverter.asLocation);
+
+		vscode.commands.executeCommand('editor.action.showReferences', uri, pos, locs);
 	}, this));
 }
 

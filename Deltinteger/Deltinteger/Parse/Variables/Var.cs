@@ -62,6 +62,8 @@ namespace Deltin.Deltinteger.Parse
                 GetInitialValue();
             else
                 parseInfo.TranslateInfo.ApplyBlock(this);
+            
+            parseInfo.Script.AddCodeLensRange(new ReferenceCodeLensRange(this, parseInfo, CodeLensSourceType.Variable, DefinedAt.range));
         }
 
         private void GetInitialValue()
@@ -155,8 +157,9 @@ namespace Deltin.Deltinteger.Parse
         public VariableType VariableType = VariableType.Dynamic;
         public StoreType StoreType;
         public InitialValueResolve InitialValueResolve = InitialValueResolve.Instant;
-
         public Scope OperationalScope;
+
+        public CodeLensSourceType CodeLensType = CodeLensSourceType.Variable;
 
         public VarInfo(string name, Location definedAt, ParseInfo parseInfo)
         {

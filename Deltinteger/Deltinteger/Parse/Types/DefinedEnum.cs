@@ -29,13 +29,13 @@ namespace Deltin.Deltinteger.Parse
             List<DefinedEnumMember> members = new List<DefinedEnumMember>();
             if (enumContext.firstMember != null)
             {
-                members.Add(new DefinedEnumMember(_translateInfo, this, enumContext.firstMember.Text, 0, new Location(parseInfo.Script.Uri, DocRange.GetRange(enumContext.firstMember))));
+                members.Add(new DefinedEnumMember(parseInfo, this, enumContext.firstMember.Text, 0, new Location(parseInfo.Script.Uri, DocRange.GetRange(enumContext.firstMember))));
 
                 if (enumContext.enum_element() != null)
                     for (int i = 0; i < enumContext.enum_element().Length; i++)
                         members.Add(
                             new DefinedEnumMember(
-                                _translateInfo, this, enumContext.enum_element(i).PART().GetText(), i + 1, new Location(parseInfo.Script.Uri, DocRange.GetRange(enumContext.enum_element(i).PART()))
+                                parseInfo, this, enumContext.enum_element(i).PART().GetText(), i + 1, new Location(parseInfo.Script.Uri, DocRange.GetRange(enumContext.enum_element(i).PART()))
                             )
                         );
             }
@@ -72,14 +72,16 @@ namespace Deltin.Deltinteger.Parse
 
         private DeltinScript _translateInfo { get; }
 
-        public DefinedEnumMember(DeltinScript translateInfo, DefinedEnum type, string name, int id, Location definedAt)
+        public DefinedEnumMember(ParseInfo parseInfo, DefinedEnum type, string name, int id, Location definedAt)
         {
             Enum = type;
             Name = name;
             DefinedAt = definedAt;
             ID = id;
-            _translateInfo = translateInfo;
-            translateInfo.AddSymbolLink(this, definedAt);
+            _translateInfo = parseInfo.TranslateInfo;
+
+            _translateInfo.AddSymbolLink(this, definedAt);
+            parseInfo.Script.AddCodeLensRange(new ReferenceCodeLensRange(this, parseInfo, CodeLensSourceType.EnumValue, DefinedAt.range));
         }
 
         public CodeType Type() => Enum;

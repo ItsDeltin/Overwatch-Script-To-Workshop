@@ -293,7 +293,7 @@ namespace Deltin.Deltinteger.Models
 
     class ModelParameter : FileParameter
     {
-        public ModelParameter(string parameterName, string description) : base("obj", parameterName, description) {}
+        public ModelParameter(string parameterName, string description) : base(parameterName, description, ".obj") {}
     
         public override object Validate(ScriptFile script, IExpression value, DocRange valueRange)
         {
