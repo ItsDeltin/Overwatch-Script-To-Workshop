@@ -11,7 +11,8 @@
         "Programming Languages"
     ],
     "activationEvents": [
-        "onLanguage:ostw"
+        "onLanguage:ostw",
+        "onLanguage:ow_ostw"
     ],
     "main": "./dist/extension",
     "contributes": {
@@ -28,6 +29,18 @@
                     ".workshop"
                 ],
                 "configuration": "./language-configuration.json"
+            },
+            {
+                "id": "ow_ostw",
+                "aliases": [
+                    "Overwatch Output",
+                    "ow"
+                ],
+                "extensions": [
+                    ".ow",
+                    ".overwatch"
+                ],
+                "configuration": "./language-configuration.json"
             }
         ],
         "grammars": [
@@ -35,6 +48,11 @@
                 "language": "ostw",
                 "scopeName": "source.del",
                 "path": "./syntaxes/ostw.tmLanguage.json"
+            },
+            {
+                "language": "ow_ostw",
+                "scopeName": "ow_source.del",
+                "path": "./syntaxes/ow.tmLanguage.json"
             }
         ],
         "configuration": {
@@ -87,6 +105,11 @@
             }
         },
         "commands": [
+            {
+                "command": "ostw.virtualDocumentOutput",
+                "title": "Create a panel for workshop code output.",
+                "category": "Overwatch Script To Workshop"
+            }
         ]
     },
     "scripts": {
