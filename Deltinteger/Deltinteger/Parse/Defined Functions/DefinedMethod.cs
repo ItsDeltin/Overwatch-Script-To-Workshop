@@ -67,6 +67,7 @@ namespace Deltin.Deltinteger.Parse
             if (Attributes.IsOverrideable && AccessLevel == AccessLevel.Private)
                 parseInfo.Script.Diagnostics.Error("A method marked as virtual or abstract must have the protection level 'public' or 'protected'.", errorRange);
 
+            /*
             if (SubroutineName != null)
             {
                 // Syntax error if the method is a subroutine and there are parameters.
@@ -74,13 +75,14 @@ namespace Deltin.Deltinteger.Parse
                     parseInfo.Script.Diagnostics.Error("Subroutines cannot have parameters.", errorRange);
             
                 // Syntax error if the method is a subroutine and there is a return type.
-                //if (ReturnType != null)
-                  //  parseInfo.Script.Diagnostics.Error("Subroutines cannot return a value.", errorRange);
+                if (ReturnType != null)
+                   parseInfo.Script.Diagnostics.Error("Subroutines cannot return a value.", errorRange);
                 
                 // Syntax error if the method is a subroutine and the method is defined in a class.
                 if (Attributes.ContainingType != null)
                     parseInfo.Script.Diagnostics.Error("Subroutines cannot be defined in types.", errorRange);
             }
+            */
             
             // Syntax error if the block is missing.
             if (context.block() == null)
@@ -247,7 +249,7 @@ namespace Deltin.Deltinteger.Parse
                 return ParseVirtual(actionSet, methodCall);
 
             if (SubroutineName != null)
-                return ParseSubroutine(actionSet, methodCall.CallParallel, methodCall.ParameterValues);
+                return ParseSubroutine(actionSet, methodCall);
             
             return ParseNormal(actionSet, methodCall);
         }
@@ -292,8 +294,10 @@ namespace Deltin.Deltinteger.Parse
                 option.Parse(actionSet, callSettings);
             }
 
+            ClassData classData = actionSet.Translate.DeltinScript.SetupClasses();
+
             // Finish the switch.
-            typeSwitch.Finish(actionSet.CurrentObject);
+            typeSwitch.Finish(Element.Part<V_ValueInArray>(classData.ClassIndexes.GetVariable(), actionSet.CurrentObject));
 
             callSettings.ReturnHandler.ApplyReturnSkips();
             return callSettings.ReturnHandler.GetReturnedValue();
@@ -327,9 +331,9 @@ namespace Deltin.Deltinteger.Parse
         }
 
         // Calls single-instance methods.
-        private IWorkshopTree ParseSubroutine(ActionSet actionSet, CallParallel parallel, IWorkshopTree[] parameterValues)
+        private IWorkshopTree ParseSubroutine(ActionSet actionSet, MethodCall methodCall)
         {
-            switch (parallel)
+            switch (methodCall.CallParallel)
             {
                 // No parallel, call subroutine normally.
                 case CallParallel.NoParallel:
