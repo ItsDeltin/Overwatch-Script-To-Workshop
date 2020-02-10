@@ -44,12 +44,12 @@ namespace Deltin.Deltinteger.Parse
             foreach (var listener in listeners) listener.Applied();
         }
 
-        override public IWorkshopTree Parse(ActionSet actionSet, CallParallel parallel, IWorkshopTree[] parameterValues, object[] additionalParameterData)
+        override public IWorkshopTree Parse(ActionSet actionSet, MethodCall methodCall)
         {
             // Assign the parameters.
             actionSet = actionSet.New(actionSet.IndexAssigner.CreateContained());
             for (int i = 0; i < ParameterVars.Length; i++)
-                actionSet.IndexAssigner.Add(ParameterVars[i], parameterValues[i]);
+                actionSet.IndexAssigner.Add(ParameterVars[i], methodCall.ParameterValues[i]);
 
             // Parse the expression.
             return Expression.Parse(actionSet);

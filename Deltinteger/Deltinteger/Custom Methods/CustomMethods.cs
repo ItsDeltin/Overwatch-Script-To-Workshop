@@ -76,9 +76,9 @@ namespace Deltin.Deltinteger.CustomMethods
 
         public bool DoesReturnValue() => CustomMethodType == CustomMethodType.Value || CustomMethodType == CustomMethodType.MultiAction_Value;
 
-        public IWorkshopTree Parse(ActionSet actionSet, CallParallel parallel, IWorkshopTree[] values, object[] additionalParameterData)
+        public IWorkshopTree Parse(ActionSet actionSet, MethodCall methodCall)
         {
-            return GetObject().Get(actionSet, values, additionalParameterData);
+            return GetObject().Get(actionSet, methodCall.ParameterValues, methodCall.AdditionalParameterData);
         }
 
         public string GetLabel(bool markdown) => HoverHandler.GetLabel(ReturnType, Name, Parameters, markdown, Documentation.HasString ? Documentation.String : Documentation.MarkupContent.Value);

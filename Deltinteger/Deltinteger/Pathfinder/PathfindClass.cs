@@ -43,7 +43,8 @@ namespace Deltin.Deltinteger.Pathfinder
         protected override void New(ActionSet actionSet, IndexReference objectReference, Constructor constructor, IWorkshopTree[] constructorValues, object[] additionalParameterData)
         {
             // Create the class.
-            var objectData = actionSet.Translate.DeltinScript.SetupClasses().CreateObject(actionSet, "_new_PathMap");
+            // TODO: Identifier
+            var objectData = actionSet.Translate.DeltinScript.SetupClasses().CreateObject(1, actionSet, "_new_PathMap");
 
             // Get the pathmap data.
             PathMap pathMap = (PathMap)additionalParameterData[0];

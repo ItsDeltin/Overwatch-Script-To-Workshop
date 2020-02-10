@@ -20,7 +20,7 @@ namespace Deltin.Deltinteger
     {
         CodeType ReturnType { get; }
         MethodAttributes Attributes { get; }
-        IWorkshopTree Parse(ActionSet actionSet, CallParallel parallel, IWorkshopTree[] values, object[] additionalParameterData);
+        IWorkshopTree Parse(ActionSet actionSet, MethodCall methodCall);
         bool DoesReturnValue();
     }
 

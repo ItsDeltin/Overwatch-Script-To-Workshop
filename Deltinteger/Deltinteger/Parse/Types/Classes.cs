@@ -21,7 +21,8 @@ namespace Deltin.Deltinteger.Parse
         public override IWorkshopTree New(ActionSet actionSet, Constructor constructor, IWorkshopTree[] constructorValues, object[] additionalParameterData)
         {
             // Create the class.
-            IndexReference objectReference = actionSet.Translate.DeltinScript.SetupClasses().CreateObject(actionSet, "_new_PathMap");
+            // TODO: Class identifier
+            IndexReference objectReference = actionSet.Translate.DeltinScript.SetupClasses().CreateObject(1, actionSet, "_new_PathMap");
 
             New(actionSet, objectReference, constructor, constructorValues, additionalParameterData);
 
@@ -48,20 +49,21 @@ namespace Deltin.Deltinteger.Parse
     {
         public IndexReference ClassIndexes { get; }
         private List<IndexReference> VariableStacks { get; } = new List<IndexReference>();
+        private int AssignClassID = 0;
 
         public ClassData(VarCollection varCollection)
         {
             ClassIndexes = varCollection.Assign("_classIndexes", true, false);
         }
 
-        public IndexReference CreateObject(ActionSet actionSet, string internalName)
+        public IndexReference CreateObject(int classIdentifier, ActionSet actionSet, string internalName)
         {
             var classReference = actionSet.VarCollection.Assign(internalName, actionSet.IsGlobal, true);
-            GetClassIndex(classReference, actionSet);
+            GetClassIndex(classIdentifier, classReference, actionSet);
             return classReference;
         }
 
-        public void GetClassIndex(IndexReference classReference, ActionSet actionSet)
+        public void GetClassIndex(int classIdentifier, IndexReference classReference, ActionSet actionSet)
         {
             actionSet.AddAction(classReference.SetVariable(
                 Element.Part<V_IndexOfArrayValue>(
@@ -70,7 +72,7 @@ namespace Deltin.Deltinteger.Parse
                 )
             ));
             actionSet.AddAction(ClassIndexes.SetVariable(
-                1,
+                classIdentifier,
                 null,
                 (Element)classReference.GetVariable()
             ));
@@ -83,6 +85,12 @@ namespace Deltin.Deltinteger.Parse
                 VariableStacks.Add(collection.Assign("_objectVariable_" + index, true, false));
             
             return VariableStacks[index];
+        }
+
+        public int AssignID()
+        {
+            AssignClassID++;
+            return AssignClassID;
         }
     }
 }

@@ -402,10 +402,10 @@ namespace Deltin.Deltinteger.Elements
 
         public bool DoesReturnValue() => IsValue;
 
-        public IWorkshopTree Parse(ActionSet actionSet, CallParallel parallel, IWorkshopTree[] values, object[] additionalParameterData)
+        public IWorkshopTree Parse(ActionSet actionSet, MethodCall methodCall)
         {
             Element element = GetObject();
-            element.ParameterValues = values;
+            element.ParameterValues = methodCall.ParameterValues;
 
             if (!IsValue)
             {

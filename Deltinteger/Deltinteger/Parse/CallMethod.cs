@@ -85,13 +85,24 @@ namespace Deltin.Deltinteger.Parse
         // IStatement
         public void Translate(ActionSet actionSet)
         {
-            CallingMethod.Parse(actionSet.New(NameRange), Parallel, GetParameterValuesAsWorkshop(actionSet), OverloadChooser.AdditionalParameterData);
+            CallingMethod.Parse(actionSet.New(NameRange), GetMethodCall(actionSet));
         }
 
         // IExpression
         public IWorkshopTree Parse(ActionSet actionSet, bool asElement = true)
         {
-            return CallingMethod.Parse(actionSet.New(NameRange), Parallel, GetParameterValuesAsWorkshop(actionSet), OverloadChooser.AdditionalParameterData);
+            return CallingMethod.Parse(actionSet.New(NameRange), GetMethodCall(actionSet));
+        }
+
+        private MethodCall GetMethodCall(ActionSet actionSet)
+        {
+            return new MethodCall(
+                GetParameterValuesAsWorkshop(actionSet),
+                OverloadChooser.AdditionalParameterData
+            )
+            {
+                CallParallel = Parallel
+            };
         }
 
         private IWorkshopTree[] GetParameterValuesAsWorkshop(ActionSet actionSet)

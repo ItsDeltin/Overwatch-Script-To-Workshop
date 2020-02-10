@@ -153,12 +153,12 @@ namespace Deltin.Deltinteger.Parse
         /// <param name="method">The method that will be added to the current scope. If the object reference is already in the direct scope, an exception will be thrown.</param>
         /// <param name="diagnostics">The file diagnostics to throw errors with. Should be null when adding methods internally.</param>
         /// <param name="range">The document range to throw errors at. Should be null when adding methods internally.</param>
-        public void AddMethod(IMethod method, FileDiagnostics diagnostics, DocRange range)
+        public void AddMethod(IMethod method, FileDiagnostics diagnostics, DocRange range, bool checkConflicts = true)
         {
             if (method == null) throw new ArgumentNullException(nameof(method));
             if (Methods.Contains(method)) throw new Exception("method reference is already in scope.");
 
-            if (HasConflict(method))
+            if (checkConflicts && HasConflict(method))
             {
                 string message = "A method with the same name and parameter types was already defined in this scope.";
 
@@ -227,9 +227,9 @@ namespace Deltin.Deltinteger.Parse
                 if (checking.Name != name || checking.Parameters.Length != parameterTypes.Length) return ScopeIterateAction.Continue;
 
                 // Loop through all parameters.
-                for (int p = 0; p < method.Parameters.Length; p++)
+                for (int p = 0; p < checking.Parameters.Length; p++)
                     // If the parameter types do not match, continue.
-                    if (method.Parameters[p].Type != checking.Parameters[p].Type)
+                    if (checking.Parameters[p].Type != checking.Parameters[p].Type)
                         return ScopeIterateAction.Continue;
                 
                 // Parameter overload matches.

@@ -10,8 +10,6 @@ namespace Deltin.Deltinteger.Parse
     {
         private DeltinScriptParser.Define_methodContext context;
 
-        public CodeType ContainingType { get; }
-
         // Attributes
         public string SubroutineName { get; private set; }
 
@@ -30,7 +28,7 @@ namespace Deltin.Deltinteger.Parse
             : base(parseInfo, scope, context.name.Text, new Location(parseInfo.Script.Uri, DocRange.GetRange(context.name)))
         {
             this.context = context;
-            ContainingType = containingType;
+            Attributes.ContainingType = containingType;
 
             DocRange errorRange = DocRange.GetRange(context.name);
 
@@ -59,7 +57,11 @@ namespace Deltin.Deltinteger.Parse
 
                 // No method with the name and parameters found.
                 if (overriding == null) parseInfo.Script.Diagnostics.Error("Could not find a method to override.", errorRange);
-                if (!overriding.Attributes.Virtual) parseInfo.Script.Diagnostics.Error("The specified method is not marked as virtual.", errorRange);
+                else if (!overriding.Attributes.IsOverrideable) parseInfo.Script.Diagnostics.Error("The specified method is not marked as virtual.", errorRange);
+                else
+                {
+                    overriding.Attributes.AddOverride(this);
+                }
             }
 
             if (Attributes.IsOverrideable && AccessLevel == AccessLevel.Private)
@@ -76,7 +78,7 @@ namespace Deltin.Deltinteger.Parse
                   //  parseInfo.Script.Diagnostics.Error("Subroutines cannot return a value.", errorRange);
                 
                 // Syntax error if the method is a subroutine and the method is defined in a class.
-                if (ContainingType != null)
+                if (Attributes.ContainingType != null)
                     parseInfo.Script.Diagnostics.Error("Subroutines cannot be defined in types.", errorRange);
             }
             
@@ -84,7 +86,8 @@ namespace Deltin.Deltinteger.Parse
             if (context.block() == null)
                 parseInfo.Script.Diagnostics.Error("Expected block.", errorRange);
 
-            scope.AddMethod(this, parseInfo.Script.Diagnostics, errorRange);
+            // Add to the scope. Check for conflicts if the method is not overriding.
+            scope.AddMethod(this, parseInfo.Script.Diagnostics, errorRange, !Attributes.Override);
 
             // Add the hover info.
             parseInfo.Script.AddHover(DocRange.GetRange(context.name), GetLabel(true));
@@ -236,21 +239,64 @@ namespace Deltin.Deltinteger.Parse
         override public bool DoesReturnValue() => doesReturnValue;
 
         // Parses the method.
-        override public IWorkshopTree Parse(ActionSet actionSet, CallParallel parallel, IWorkshopTree[] parameterValues, object[] additionalParameterData)
+        override public IWorkshopTree Parse(ActionSet actionSet, MethodCall methodCall)
         {
-            actionSet = actionSet
-                .New(actionSet.IndexAssigner.CreateContained());
+            actionSet = actionSet.New(actionSet.IndexAssigner.CreateContained());
             
-            if (SubroutineName != null) return ParseSubroutine(actionSet, parallel, parameterValues);
+            if (Attributes.WasOverriden && methodCall.ResolveOverrides)
+                return ParseVirtual(actionSet, methodCall);
+
+            if (SubroutineName != null)
+                return ParseSubroutine(actionSet, methodCall.CallParallel, methodCall.ParameterValues);
             
-            ReturnHandler returnHandler = new ReturnHandler(actionSet, Name, multiplePaths);
+            return ParseNormal(actionSet, methodCall);
+        }
+
+        private IWorkshopTree ParseNormal(ActionSet actionSet, MethodCall methodCall)
+        {
+            // Create the return handler.
+            ReturnHandler returnHandler = methodCall.ReturnHandler ?? new ReturnHandler(actionSet, Name, multiplePaths);
             actionSet = actionSet.New(returnHandler);
             
-            AssignParameters(actionSet, ParameterVars, parameterValues);
+            // Assign the parameters and translate the block.
+            AssignParameters(actionSet, ParameterVars, methodCall.ParameterValues);
             block.Translate(actionSet);
 
-            returnHandler.ApplyReturnSkips();
+            if (methodCall.ResolveReturnHandler) returnHandler.ApplyReturnSkips();
             return returnHandler.GetReturnedValue();
+        }
+
+        private IWorkshopTree ParseVirtual(ActionSet actionSet, MethodCall methodCall)
+        {
+            // Create the switch that chooses the overload.
+            SwitchBuilder typeSwitch = new SwitchBuilder(actionSet);
+
+            // Loop through all potential methods.
+            IMethod[] options = Attributes.AllOverrideOptions();
+
+            // Get the call settings.
+            MethodCall callSettings = new MethodCall(methodCall.ParameterValues, methodCall.AdditionalParameterData) {
+                ResolveOverrides = false,
+                ResolveReturnHandler = false,
+                ReturnHandler = new ReturnHandler(actionSet, Name, true)
+            };
+
+            // Parse the current overload.
+            typeSwitch.NextCase(((DefinedType)Attributes.ContainingType).Identifier);
+            Parse(actionSet, callSettings);
+
+            foreach (IMethod option in options)
+            {
+                // Go to next case then parse the block.
+                typeSwitch.NextCase(((DefinedType)option.Attributes.ContainingType).Identifier); // TODO: Don't cast.
+                option.Parse(actionSet, callSettings);
+            }
+
+            // Finish the switch.
+            typeSwitch.Finish(actionSet.CurrentObject);
+
+            callSettings.ReturnHandler.ApplyReturnSkips();
+            return callSettings.ReturnHandler.GetReturnedValue();
         }
 
         // Sets up single-instance methods for methods with the 'rule' attribute.

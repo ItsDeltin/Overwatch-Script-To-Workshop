@@ -59,7 +59,7 @@ namespace Deltin.Deltinteger.Parse
 
         public string GetLabel(bool markdown) => HoverHandler.GetLabel(ReturnType, Name, Parameters, markdown, null);
 
-        public abstract IWorkshopTree Parse(ActionSet actionSet, CallParallel parallel, IWorkshopTree[] parameterValues, object[] additionalParameterData);
+        public abstract IWorkshopTree Parse(ActionSet actionSet, MethodCall methodCall);
 
         public CompletionItem GetCompletion()
         {

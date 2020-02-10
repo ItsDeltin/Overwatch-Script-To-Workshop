@@ -37,6 +37,7 @@ Object-serve scope. Only object members.
 
         private bool elementsResolved;
         private bool workshopInitialized;
+        public int Identifier { get; private set; }
 
         public DefinedType(ParseInfo parseInfo, Scope scope, DeltinScriptParser.Type_defineContext typeContext) : base(typeContext.name.Text)
         {
@@ -187,6 +188,8 @@ Object-serve scope. Only object members.
             workshopInitialized = true;
 
             ClassData classData = translateInfo.SetupClasses();
+
+            Identifier = classData.AssignID();
             int stackOffset = StackStart(false);
 
             Extends?.WorkshopInit(translateInfo);
@@ -214,7 +217,7 @@ Object-serve scope. Only object members.
             // Classes are stored in the class array (`classData.ClassArray`),
             // this stores the index where the new class is created at.
             var classReference = actionSet.VarCollection.Assign("_new_" + Name + "_class_index", actionSet.IsGlobal, true);
-            classData.GetClassIndex(classReference, actionSet);
+            classData.GetClassIndex(Identifier, classReference, actionSet);
             
             // Run the constructor.
             BaseSetup(actionSet, (Element)classReference.GetVariable());
