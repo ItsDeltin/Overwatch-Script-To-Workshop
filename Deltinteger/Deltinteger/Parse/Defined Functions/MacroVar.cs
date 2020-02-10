@@ -45,6 +45,7 @@ namespace Deltin.Deltinteger.Parse
             this.scope = scope;
             this.parseInfo = parseInfo;
 
+            parseInfo.TranslateInfo.AddSymbolLink(this, DefinedAt, true);
             scope.AddVariable(this, parseInfo.Script.Diagnostics, DocRange.GetRange(macroContext.name));
             parseInfo.Script.AddHover(DocRange.GetRange(macroContext.name), GetLabel(true));
         }

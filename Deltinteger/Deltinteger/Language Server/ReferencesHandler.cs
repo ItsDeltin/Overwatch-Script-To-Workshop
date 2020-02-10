@@ -29,21 +29,20 @@ namespace Deltin.Deltinteger.LanguageServer
             ICallable use = null;
             Location declaredAt = null;
 
-            foreach (var link in allSymbolLinks)
-                foreach (var location in link.Value)
-                    if (location.uri.Compare(request.TextDocument.Uri) && location.range.IsInside(request.Position))
+            foreach (var pair in allSymbolLinks)
+                foreach (var link in pair.Value)
+                    if (link.Location.uri.Compare(request.TextDocument.Uri) && link.Location.range.IsInside(request.Position))
                     {
-                        use = link.Key;
-                        declaredAt = location;
+                        use = pair.Key;
+                        declaredAt = link.Location;
                     }
             
             if (use == null) return new LocationContainer();
 
             return allSymbolLinks[use]
-                // If includeDeclaration is false, remove declaration from list.
-                .Where(loc => includeDeclaration || loc != declaredAt)
+                .GetSymbolLinks(includeDeclaration)
                 // Convert to Language Server API location.
-                .Select(loc => loc.ToLsLocation())
+                .Select(loc => loc.Location.ToLsLocation())
                 .ToArray();
         }
 

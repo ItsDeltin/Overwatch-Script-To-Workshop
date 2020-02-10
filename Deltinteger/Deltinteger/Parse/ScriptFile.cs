@@ -197,7 +197,7 @@ namespace Deltin.Deltinteger.Parse
             _parseInfo = parseInfo;
         }
 
-        public override string GetTitle() => (_parseInfo.TranslateInfo.GetSymbolLinks()[Callable].Count - 1).ToString() + " references";
+        public override string GetTitle() => (_parseInfo.TranslateInfo.GetSymbolLinks(Callable).Count - 1).ToString() + " references";
 
         public override JArray GetArguments() => new JArray {
             // Uri
@@ -205,7 +205,7 @@ namespace Deltin.Deltinteger.Parse
             // Range
             JToken.FromObject(Range.start),
             // Locations
-            JToken.FromObject(_parseInfo.TranslateInfo.GetSymbolLinks()[Callable].ToArray())
+            JToken.FromObject(_parseInfo.TranslateInfo.GetSymbolLinks(Callable).GetSymbolLinks(false).Select(sl => sl.Location))
         };
     }
 }

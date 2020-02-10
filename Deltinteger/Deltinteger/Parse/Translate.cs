@@ -279,28 +279,32 @@ namespace Deltin.Deltinteger.Parse
 
         public ScriptFile ScriptFromUri(Uri uri) => ScriptFiles.FirstOrDefault(script => script.Uri.Compare(uri));
 
-        private Dictionary<ICallable, List<Location>> callRanges { get; } = new Dictionary<ICallable, List<Location>>();
-        public void AddSymbolLink(ICallable callable, Location calledFrom)
+        // Symbol links
+        private Dictionary<ICallable, SymbolLinkCollection> callRanges { get; } = new Dictionary<ICallable, SymbolLinkCollection>();
+        public void AddSymbolLink(ICallable callable, Location calledFrom, bool isDeclarer = false)
         {
             if (callable == null) throw new ArgumentNullException(nameof(callable));
             if (calledFrom == null) throw new ArgumentNullException(nameof(calledFrom));
 
-            if (!callRanges.ContainsKey(callable)) callRanges.Add(callable, new List<Location>());
-            callRanges[callable].Add(calledFrom);
+            if (!callRanges.ContainsKey(callable)) callRanges.Add(callable, new SymbolLinkCollection());
+            callRanges[callable].Add(new SymbolLink(calledFrom, isDeclarer));
         }
-        public Dictionary<ICallable, List<Location>> GetSymbolLinks() => callRanges;
+        public Dictionary<ICallable, SymbolLinkCollection> GetSymbolLinks() => callRanges;
+        public SymbolLinkCollection GetSymbolLinks(ICallable callable) => callRanges[callable];
 
         private TranslateRule GetInitialRule(bool isGlobal)
         {
             return isGlobal ? InitialGlobal : InitialPlayer;
         }
 
+        // Subroutine methods
         private List<DefinedMethod> subroutines = new List<DefinedMethod>();
         public void AddSubroutine(DefinedMethod method)
         {
             subroutines.Add(method);
         }
 
+        // Applyable blocks
         private List<IApplyBlock> applyBlocks = new List<IApplyBlock>();
         public void ApplyBlock(IApplyBlock apply)
         {

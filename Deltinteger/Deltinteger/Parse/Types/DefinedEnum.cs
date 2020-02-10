@@ -23,7 +23,7 @@ namespace Deltin.Deltinteger.Parse
             Scope = new Scope("enum " + Name);
             
             DefinedAt = new LanguageServer.Location(parseInfo.Script.Uri, DocRange.GetRange(enumContext.name));
-            _translateInfo.AddSymbolLink(this, DefinedAt);
+            _translateInfo.AddSymbolLink(this, DefinedAt, true);
 
             // Get the enum members.
             List<DefinedEnumMember> members = new List<DefinedEnumMember>();
@@ -80,7 +80,7 @@ namespace Deltin.Deltinteger.Parse
             ID = id;
             _translateInfo = parseInfo.TranslateInfo;
 
-            _translateInfo.AddSymbolLink(this, definedAt);
+            _translateInfo.AddSymbolLink(this, definedAt, true);
             parseInfo.Script.AddCodeLensRange(new ReferenceCodeLensRange(this, parseInfo, CodeLensSourceType.EnumValue, DefinedAt.range));
         }
 

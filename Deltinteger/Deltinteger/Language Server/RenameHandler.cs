@@ -19,16 +19,16 @@ namespace Deltin.Deltinteger.LanguageServer
 {
     static class RenameInfo
     {
-        public static SymbolLink GetLink(DeltintegerLanguageServer languageServer, Uri uri, Position position)
+        public static RenameLink GetLink(DeltintegerLanguageServer languageServer, Uri uri, Position position)
         {
             var links = languageServer.LastParse?.GetSymbolLinks();
             if (links == null) return null;
 
-            foreach (var link in links)
-                foreach (var loc in link.Value)
+            foreach (var linkPair in links)
+                foreach (var link in linkPair.Value)
                     // TODO-URI: Should use Uri.Compare?
-                    if (loc.uri == uri && loc.range.IsInside(position))
-                        return new SymbolLink(link, loc.range);
+                    if (link.Location.uri == uri && link.Location.range.IsInside(position))
+                        return new RenameLink(linkPair, link.Location.range);
             
             return null;
         }
@@ -134,16 +134,16 @@ namespace Deltin.Deltinteger.LanguageServer
         }
     }
 
-    class SymbolLink
+    class RenameLink
     {
         public string Name { get; }
         public Location[] Links { get; }
         public DocRange Range { get; }
 
-        public SymbolLink(KeyValuePair<ICallable, List<Location>> link, DocRange range)
+        public RenameLink(KeyValuePair<ICallable, SymbolLinkCollection> link, DocRange range)
         {
             Name = link.Key.Name;
-            Links = link.Value.ToArray();
+            Links = link.Value.Select(sl => sl.Location).ToArray();
             Range = range;
         }
 

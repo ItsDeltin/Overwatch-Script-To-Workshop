@@ -50,7 +50,7 @@ Object-serve scope. Only object members.
                 parseInfo.Script.Diagnostics.Error($"A type with the name '{Name}' already exists.", DocRange.GetRange(typeContext.name));
             
             DefinedAt = new LanguageServer.Location(parseInfo.Script.Uri, DocRange.GetRange(typeContext.name));
-            parseInfo.TranslateInfo.AddSymbolLink(this, DefinedAt);
+            parseInfo.TranslateInfo.AddSymbolLink(this, DefinedAt, true);
         }
 
         public void ResolveElements()
