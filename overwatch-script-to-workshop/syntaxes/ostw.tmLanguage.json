@@ -59,7 +59,7 @@
 			"patterns": [{"include": "#expressions"}]
 		},
 		"define_method": {
-			"begin": "((public|private|static|recursive)\\s+)*(((method)|([_[:alnum:]]+)(\\s*\\[\\s*\\])*)\\s+)([_[:alnum:]]+\\s*\\()",
+			"begin": "((public|private|protected|override|virtual|static)\\s+)*(((method)|([_[:alnum:]]+)(\\s*\\[\\s*\\])*)\\s+)([_[:alnum:]]+\\s*\\()",
 			"beginCaptures": {
 				"2": {"name":"keyword.other"},
 				"5": {"name":"keyword.other"},
