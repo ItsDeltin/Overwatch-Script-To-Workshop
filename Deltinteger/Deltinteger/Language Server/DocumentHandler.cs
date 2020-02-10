@@ -179,6 +179,7 @@ namespace Deltin.Deltinteger.LanguageServer
                     DeltinScript deltinScript = new DeltinScript(_languageServer.FileGetter, diagnostics, root);
                     _languageServer.LastParse = deltinScript;
 
+                    // Publish the diagnostics.
                     var publishDiagnostics = diagnostics.GetDiagnostics();
                     foreach (var publish in publishDiagnostics)
                         _languageServer.Server.Document.PublishDiagnostics(publish);

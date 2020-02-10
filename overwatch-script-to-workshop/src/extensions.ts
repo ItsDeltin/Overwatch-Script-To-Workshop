@@ -6,7 +6,7 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { workspace, ExtensionContext, OutputChannel, window } from 'vscode';
-import { LanguageClient, LanguageClientOptions, ServerOptions, ExecutableOptions, Executable, TransportKind, InitializationFailedHandler, ErrorHandler } from 'vscode-languageclient';
+import { LanguageClient, LanguageClientOptions, ServerOptions, ExecutableOptions, Executable, TransportKind, InitializationFailedHandler, ErrorHandler, TextDocument, RequestType } from 'vscode-languageclient';
 
 let client: LanguageClient;
 let workshopOut: OutputChannel;
@@ -90,11 +90,13 @@ function startLanguageServer()
 		client.onNotification("workshopCode", (code: string)=> {
 			if (code != lastWorkshopOutput)
 			{
+				lastWorkshopOutput = code;
+				workshopPanelProvider.onDidChangeEmitter.fire(this.uri);
+
 				// Clear the output
 				workshopOut.clear();
 				// Append the compiled result.
 				workshopOut.appendLine(code);
-				lastWorkshopOutput = code;
 			}
 		});
 	}).catch((reason) => {
@@ -116,4 +118,25 @@ var lastWorkshopOutput : string = null;
 
 function addCommands(context: ExtensionContext)
 {
+	// Push provider.
+	context.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider('ow_ostw', workshopPanelProvider));
+
+	context.subscriptions.push(vscode.commands.registerCommand('ostw.virtualDocumentOutput', async () => {
+		// Encode uri.
+		let uri = vscode.Uri.parse('ow_ostw:Workshop Output.ow');
+
+		let doc : vscode.TextDocument = await vscode.workspace.openTextDocument(uri);
+		await vscode.window.showTextDocument(doc, { preview: false });
+	}, this));
 }
+
+const workshopPanelProvider = new class implements vscode.TextDocumentContentProvider {
+	// emitter and its event
+	onDidChangeEmitter = new vscode.EventEmitter<vscode.Uri>();
+	onDidChange = this.onDidChangeEmitter.event;
+
+	provideTextDocumentContent(uri: vscode.Uri): string {
+		if (lastWorkshopOutput == null) return "";
+		return lastWorkshopOutput;
+	}
+};

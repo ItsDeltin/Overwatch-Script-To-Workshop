@@ -58,10 +58,7 @@ namespace Deltin.Deltinteger.Parse
                 // No method with the name and parameters found.
                 if (overriding == null) parseInfo.Script.Diagnostics.Error("Could not find a method to override.", errorRange);
                 else if (!overriding.Attributes.IsOverrideable) parseInfo.Script.Diagnostics.Error("The specified method is not marked as virtual.", errorRange);
-                else
-                {
-                    overriding.Attributes.AddOverride(this);
-                }
+                else overriding.Attributes.AddOverride(this);
             }
 
             if (Attributes.IsOverrideable && AccessLevel == AccessLevel.Private)
