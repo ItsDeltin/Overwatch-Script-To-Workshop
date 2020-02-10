@@ -41,4 +41,85 @@ namespace Deltin.Deltinteger.Parse
             stringBuilder.AppendLine();
         }
     }
+
+    public class SubroutineStack
+    {
+        private readonly DeltinScript _deltinScript;
+        public ReturnHandler ReturnHandler { get; }
+        public Subroutine Subroutine { get; }
+        public TranslateRule Rule { get; }
+        public ActionSet ActionSet { get; }
+
+        private IndexReference GlobalRunning;
+        private IndexReference PlayerRunning;
+        private IndexReference CurrentCallPlayer;
+        private IndexReference CurrentCallGlobal;
+        private IndexReference GlobalIndexAssigner;
+        private IndexReference PlayerIndexAssigner;
+
+        public SubroutineStack(DeltinScript deltinScript, string subroutineName, string ruleName)
+        {
+            _deltinScript = deltinScript;
+
+            // Setup the subroutine element.
+            Subroutine = deltinScript.SubroutineCollection.NewSubroutine(subroutineName);
+
+            // Create the rule.
+            Rule = new TranslateRule(deltinScript, subroutineName, Subroutine);
+
+            // Setup the return handler.
+            ReturnHandler = new ReturnHandler(Rule.ActionSet, subroutineName, true);
+            ActionSet = Rule.ActionSet.New(ReturnHandler);
+
+            AsyncLock();
+
+
+        }
+
+        private void AsyncLock()
+        {
+            V_EventPlayer eventPlayer = new V_EventPlayer();
+
+            ActionSet.AddAction(Element.Part<A_While>(
+                Element.Part<V_Or>(
+                    Element.Part<V_And>(
+                        // The subroutine is executing on a global context,
+                        new V_Compare(eventPlayer, Operators.Equal, new V_Null()),
+                        // ...and the subroutine is running.
+                        GlobalRunning.GetVariable()
+                    ),
+                    // OR
+                    Element.Part<V_And>(
+                        // The subroutine is executing on a player context,
+                        new V_Compare(eventPlayer, Operators.NotEqual, new V_Null()),
+                        // ...and the subroutine is running on the player context.
+                        PlayerRunning.GetVariable(eventPlayer)
+                    )
+                )
+            ));
+
+            // While the above while is running, wait.
+            ActionSet.AddAction(A_Wait.MinimumWait);
+            ActionSet.AddAction(new A_End());
+
+            // When it ends, set the context to true.
+            ActionSet.AddAction(PlayerRunning.SetVariable(true, eventPlayer)); // Shouldn't do anything on a global context.
+            ActionSet.AddAction(Element.Part<A_If>(new V_Compare(eventPlayer, Operators.Equal, new V_Null())));
+            ActionSet.AddAction(GlobalRunning.SetVariable(true));
+        }
+
+        public void Apply()
+        {
+            // Apply returns.
+            ReturnHandler.ApplyReturnSkips();
+
+            // Add the subroutine.
+            _deltinScript.WorkshopRules.Add(Rule.GetRule());
+        }
+
+        public void Call()
+        {
+
+        }
+    }
 }
