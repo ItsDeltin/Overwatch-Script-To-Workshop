@@ -17,8 +17,8 @@ namespace Deltin.Deltinteger.LanguageServer
     public class ConfigurationHandler : IDidChangeConfigurationHandler
     {
         public static bool OptimizeOutput = true;
-
         private DeltintegerLanguageServer _languageServer { get; }
+        public bool ReferencesCodeLens { get; private set; }
 
         public ConfigurationHandler(DeltintegerLanguageServer languageServer)
         {
@@ -32,6 +32,7 @@ namespace Deltin.Deltinteger.LanguageServer
             if (json != null)
             {
                 var config = json.ToObject<RawConfiguration>();
+                ReferencesCodeLens = config.referencesCodeLens;
                 I18n.I18n.LoadLanguage(config.GetOutputLanguage());
                 OptimizeOutput = config.optimizeOutput;
             }
@@ -50,34 +51,35 @@ namespace Deltin.Deltinteger.LanguageServer
         {
             _capability = capability;
         }
-    
-        class RawConfiguration
-        {
+    }
+
+    public class RawConfiguration
+    {
 #pragma warning disable CS0649
-            public string outputLanguage;
-            public string deltintegerPath;
-            public bool optimizeOutput;
+        public string outputLanguage;
+        public string deltintegerPath;
+        public bool optimizeOutput;
+        public bool referencesCodeLens;
 #pragma warning restore CS0649
 
-            public OutputLanguage GetOutputLanguage()
+        public OutputLanguage GetOutputLanguage()
+        {
+            switch (outputLanguage)
             {
-                switch (outputLanguage)
-                {
-                    case "English": return OutputLanguage.enUS;
-                    case "German": return OutputLanguage.deDE;
-                    case "Spanish (Castilian)": return OutputLanguage.esES;
-                    case "Spanish (Mexico)": return OutputLanguage.esMX;
-                    case "French": return OutputLanguage.frFR;
-                    case "Italian": return OutputLanguage.itIT;
-                    case "Japanese": return OutputLanguage.jaJP;
-                    case "Korean": return OutputLanguage.koKR;
-                    case "Polish": return OutputLanguage.plPL;
-                    case "Portuguese": return OutputLanguage.ptBR;
-                    case "Russian": return OutputLanguage.ruRU;
-                    case "Chinese (S)": return OutputLanguage.zhCN;
-                    case "Chinese (T)": return OutputLanguage.zhTW;
-                    default: return OutputLanguage.enUS;
-                }
+                case "English": return OutputLanguage.enUS;
+                case "German": return OutputLanguage.deDE;
+                case "Spanish (Castilian)": return OutputLanguage.esES;
+                case "Spanish (Mexico)": return OutputLanguage.esMX;
+                case "French": return OutputLanguage.frFR;
+                case "Italian": return OutputLanguage.itIT;
+                case "Japanese": return OutputLanguage.jaJP;
+                case "Korean": return OutputLanguage.koKR;
+                case "Polish": return OutputLanguage.plPL;
+                case "Portuguese": return OutputLanguage.ptBR;
+                case "Russian": return OutputLanguage.ruRU;
+                case "Chinese (S)": return OutputLanguage.zhCN;
+                case "Chinese (T)": return OutputLanguage.zhTW;
+                default: return OutputLanguage.enUS;
             }
         }
     }

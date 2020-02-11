@@ -63,7 +63,7 @@ namespace Deltin.Deltinteger.Parse
             else
                 parseInfo.TranslateInfo.ApplyBlock(this);
             
-            parseInfo.Script.AddCodeLensRange(new ReferenceCodeLensRange(this, parseInfo, CodeLensSourceType.Variable, DefinedAt.range));
+            parseInfo.Script.AddCodeLensRange(new ReferenceCodeLensRange(this, parseInfo, varInfo.CodeLensType, DefinedAt.range));
         }
 
         private void GetInitialValue()

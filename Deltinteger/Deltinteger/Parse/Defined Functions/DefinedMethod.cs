@@ -8,7 +8,8 @@ namespace Deltin.Deltinteger.Parse
 {
     public class DefinedMethod : DefinedFunction
     {
-        private DeltinScriptParser.Define_methodContext context;
+        private readonly DeltinScriptParser.Define_methodContext context;
+        private MethodAttributeHandler[] attributes;
 
         // Attributes
         public string SubroutineName { get; private set; }
@@ -30,7 +31,7 @@ namespace Deltin.Deltinteger.Parse
             this.context = context;
             Attributes.ContainingType = containingType;
 
-            DocRange errorRange = DocRange.GetRange(context.name);
+            DocRange nameRange = DocRange.GetRange(context.name);
 
             // Get the attributes.
             GetAttributes();
@@ -56,13 +57,22 @@ namespace Deltin.Deltinteger.Parse
                 IMethod overriding = scope.GetMethodOverload(this);
 
                 // No method with the name and parameters found.
-                if (overriding == null) parseInfo.Script.Diagnostics.Error("Could not find a method to override.", errorRange);
-                else if (!overriding.Attributes.IsOverrideable) parseInfo.Script.Diagnostics.Error("The specified method is not marked as virtual.", errorRange);
+                if (overriding == null) parseInfo.Script.Diagnostics.Error("Could not find a method to override.", nameRange);
+                else if (!overriding.Attributes.IsOverrideable) parseInfo.Script.Diagnostics.Error("The specified method is not marked as virtual.", nameRange);
                 else overriding.Attributes.AddOverride(this);
+
+                if (overriding != null && overriding.DefinedAt != null)
+                {
+                    // Make the override keyword go to the base method.
+                    parseInfo.Script.AddDefinitionLink(
+                        attributes.First(at => at.Type == MethodAttributeType.Override).Range,
+                        overriding.DefinedAt
+                    );
+                }
             }
 
             if (Attributes.IsOverrideable && AccessLevel == AccessLevel.Private)
-                parseInfo.Script.Diagnostics.Error("A method marked as virtual or abstract must have the protection level 'public' or 'protected'.", errorRange);
+                parseInfo.Script.Diagnostics.Error("A method marked as virtual or abstract must have the protection level 'public' or 'protected'.", nameRange);
 
             /*
             if (SubroutineName != null)
@@ -83,13 +93,16 @@ namespace Deltin.Deltinteger.Parse
             
             // Syntax error if the block is missing.
             if (context.block() == null)
-                parseInfo.Script.Diagnostics.Error("Expected block.", errorRange);
+                parseInfo.Script.Diagnostics.Error("Expected block.", nameRange);
 
             // Add to the scope. Check for conflicts if the method is not overriding.
-            scope.AddMethod(this, parseInfo.Script.Diagnostics, errorRange, !Attributes.Override);
+            scope.AddMethod(this, parseInfo.Script.Diagnostics, nameRange, !Attributes.Override);
 
             // Add the hover info.
             parseInfo.Script.AddHover(DocRange.GetRange(context.name), GetLabel(true));
+
+            if (Attributes.IsOverrideable)
+                parseInfo.Script.AddCodeLensRange(new ImplementsCodeLensRange(this, parseInfo.Script, CodeLensSourceType.Function, nameRange));
 
             parseInfo.TranslateInfo.ApplyBlock(this);
         }
@@ -105,7 +118,7 @@ namespace Deltin.Deltinteger.Parse
             if (context.method_attributes() == null) return;
 
             int numberOfAttributes = context.method_attributes().Length;
-            MethodAttributeHandler[] attributes = new MethodAttributeHandler[numberOfAttributes];
+            attributes = new MethodAttributeHandler[numberOfAttributes];
 
             // Loop through all attributes.
             for (int i = 0; i < numberOfAttributes; i++)

@@ -153,7 +153,6 @@ namespace Deltin.Deltinteger.Parse
         Function = 1,
         Type = 2,
         EnumValue = 4,
-
         Variable = RuleVariable | ClassVariable | ScopedVariable | ParameterVariable,
         RuleVariable = 8,
         ClassVariable = 16,
@@ -175,6 +174,8 @@ namespace Deltin.Deltinteger.Parse
         }
 
         public abstract string GetTitle();
+
+        public virtual bool ShouldUse() => true;
 
         public virtual JArray GetArguments() => new JArray();
     }
@@ -206,6 +207,35 @@ namespace Deltin.Deltinteger.Parse
             JToken.FromObject(Range.start),
             // Locations
             JToken.FromObject(_parseInfo.TranslateInfo.GetSymbolLinks(Callable).GetSymbolLinks(false).Select(sl => sl.Location))
+        };
+    }
+
+    class ImplementsCodeLensRange : CodeLensRange
+    {
+        public IMethod Method { get; }
+        private readonly ScriptFile _script;
+
+        public ImplementsCodeLensRange(IMethod method, ScriptFile script, CodeLensSourceType sourceType, DocRange range) : base(sourceType, range, "ostw.showReferences")
+        {
+            Method = method;
+            _script = script;
+        }
+
+        public override bool ShouldUse()
+        {
+            // Only show the codelens if the method is overriden.
+            return Method.Attributes.Overriders.Length > 0;
+        }
+
+        public override string GetTitle() => Method.Attributes.Overriders.Length + " implements";
+
+        public override JArray GetArguments() => new JArray {
+            // Uri
+            JToken.FromObject(_script.Uri.ToString()),
+            // Range
+            JToken.FromObject(Range.start),
+            // Locations
+            JToken.FromObject(Method.Attributes.Overriders.Select(overrider => overrider.DefinedAt))
         };
     }
 }

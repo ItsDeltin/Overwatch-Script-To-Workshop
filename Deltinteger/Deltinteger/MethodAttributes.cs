@@ -28,6 +28,9 @@ namespace Deltin.Deltinteger
         /// <summary>Determines if the method was overriden.</summary>
         public bool WasOverriden => AllOverrideOptions().Length > 0;
 
+        /// <summary>An array of methods that directly overrides the function. Call `AllOverrideOptions` instead for all child overriders.</summary>
+        public IMethod[] Overriders => _overriders.ToArray();
+
         private readonly List<IMethod> _overriders = new List<IMethod>();
 
         public MethodAttributes() {}

@@ -34,11 +34,9 @@ namespace Deltin.Deltinteger
         string Name { get; }
     }
 
-    public interface IScopeable : INamed
+    public interface IScopeable : INamed, IAccessable
     {
-        AccessLevel AccessLevel { get; }
         bool Static { get; }
-        Location DefinedAt { get; }
         bool WholeContext { get; }
         CompletionItem GetCompletion();
     }
@@ -48,12 +46,16 @@ namespace Deltin.Deltinteger
         void Call(ScriptFile script, DocRange callRange);
     }
 
-    public interface IParameterCallable : ILabeled
+    public interface IParameterCallable : ILabeled, IAccessable
     {
         CodeParameter[] Parameters { get; }
+        StringOrMarkupContent Documentation { get; }
+    }
+
+    public interface IAccessable
+    {
         Location DefinedAt { get; }
         AccessLevel AccessLevel { get; }
-        StringOrMarkupContent Documentation { get; }
     }
 
     public interface IGettable

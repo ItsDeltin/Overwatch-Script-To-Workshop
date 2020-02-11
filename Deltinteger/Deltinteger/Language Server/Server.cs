@@ -62,6 +62,7 @@ namespace Deltin.Deltinteger.LanguageServer
 
         public DocumentHandler DocumentHandler { get; private set; }
         public FileGetter FileGetter { get; private set; }
+        public ConfigurationHandler ConfigurationHandler { get; private set; }
 
         async Task RunServer()
         {
@@ -76,7 +77,7 @@ namespace Deltin.Deltinteger.LanguageServer
             FileGetter = new FileGetter(DocumentHandler);
             CompletionHandler completionHandler = new CompletionHandler(this);
             SignatureHandler signatureHandler = new SignatureHandler(this);
-            ConfigurationHandler configurationHandler = new ConfigurationHandler(this);
+            ConfigurationHandler = new ConfigurationHandler(this);
             DefinitionHandler definitionHandler = new DefinitionHandler(this);
             HoverHandler hoverHandler = new HoverHandler(this);
             ReferenceHandler referenceHandler = new ReferenceHandler(this);
@@ -94,7 +95,7 @@ namespace Deltin.Deltinteger.LanguageServer
                 .WithHandler<DocumentHandler>(DocumentHandler)
                 .WithHandler<CompletionHandler>(completionHandler)
                 .WithHandler<SignatureHandler>(signatureHandler)
-                .WithHandler<ConfigurationHandler>(configurationHandler)
+                .WithHandler<ConfigurationHandler>(ConfigurationHandler)
                 .WithHandler<DefinitionHandler>(definitionHandler)
                 .WithHandler<HoverHandler>(hoverHandler)
                 .WithHandler<ReferenceHandler>(referenceHandler)

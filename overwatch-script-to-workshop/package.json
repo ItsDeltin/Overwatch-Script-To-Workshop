@@ -91,6 +91,12 @@
                     "type": "string",
                     "description": "The path to Deltinteger.exe."
                 },
+                "ostw.referencesCodeLens": {
+                    "scope": "window",
+                    "type": "boolean",
+                    "description": "Determines if the references code lens is shown.",
+                    "default": true
+                },
                 "ostw.trace.server": {
                     "scope": "window",
                     "type": "string",
