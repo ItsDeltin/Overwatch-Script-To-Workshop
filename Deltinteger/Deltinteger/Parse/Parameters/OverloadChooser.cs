@@ -280,7 +280,15 @@ namespace Deltin.Deltinteger.Parse
             parseInfo.Script.Diagnostics.AddDiagnostics(optionDiagnostics[Overload].ToArray());
 
             // Check the access level.
-            if (!getter.AccessorMatches(scope, Overload.AccessLevel))
+            bool accessable = true;
+
+            if (Overload is IMethod asMethod)
+            {
+                if (!getter.AccessorMatches(asMethod)) accessable = false;
+            }
+            else if (!getter.AccessorMatches(scope, Overload.AccessLevel)) accessable = false;
+
+            if (!accessable)
                 parseInfo.Script.Diagnostics.Error(string.Format("'{0}' is inaccessable due to its access level.", Overload.GetLabel(false)), genericErrorRange);
         }
     

@@ -297,7 +297,7 @@ namespace Deltin.Deltinteger.Parse
 
         public bool AccessorMatches(Scope lookingForScope, AccessLevel accessLevel)
         {
-            // Just return true if the access level is true.
+            // Just return true if the access level is public.
             if (accessLevel == AccessLevel.Public) return true;
 
             Scope current = Parent;
@@ -341,7 +341,7 @@ namespace Deltin.Deltinteger.Parse
 
         private bool WasScopedAtPosition(IScopeable element, Pos pos, Scope getter)
         {
-            return (pos == null || element.DefinedAt == null || element.WholeContext || element.DefinedAt.range.start <= pos) && (getter == null || getter.AccessorMatches(element));
+            return (pos == null || element.DefinedAt == null || element.WholeContext || element.DefinedAt.range.start <= pos) && (getter == null || getter.AccessorMatches(this, element.AccessLevel));
         }
 
         public static Scope GetGlobalScope()

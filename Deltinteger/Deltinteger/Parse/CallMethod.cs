@@ -37,12 +37,9 @@ namespace Deltin.Deltinteger.Parse
             {
                 OverloadChooser = new OverloadChooser(options, parseInfo, scope, getter, NameRange, DocRange.GetRange(methodContext), new OverloadError("method '" + methodName + "'"));
 
-                if (methodContext.call_parameters() != null)
-                    OverloadChooser.SetContext(methodContext.call_parameters());
-                else if (methodContext.picky_parameters() != null)
-                    OverloadChooser.SetContext(methodContext.picky_parameters());
-                else
-                    OverloadChooser.SetContext();
+                if (methodContext.call_parameters() != null) OverloadChooser.SetContext(methodContext.call_parameters());
+                else if (methodContext.picky_parameters() != null) OverloadChooser.SetContext(methodContext.picky_parameters());
+                else OverloadChooser.SetContext();
             
                 CallingMethod = (IMethod)OverloadChooser.Overload;
                 ParameterValues = OverloadChooser.Values;
