@@ -23,13 +23,18 @@ namespace Deltin.Deltinteger.LanguageServer
             _languageServer.DocumentHandler.WaitForNextUpdate();
 
             var codeLenses = _languageServer.LastParse?.ScriptFromUri(request.TextDocument.Uri)?.GetCodeLensRanges();
-            if (codeLenses == null || !_languageServer.ConfigurationHandler.ReferencesCodeLens) return new CodeLensContainer();
+            if (codeLenses == null) return new CodeLensContainer();
 
             List<CodeLens> finalLenses = new List<CodeLens>();
             foreach (var lens in codeLenses)
                 // Do not show references for scoped variables and parameters.
                 if (lens.SourceType != CodeLensSourceType.ScopedVariable && lens.SourceType != CodeLensSourceType.ParameterVariable
-                    && lens.ShouldUse()) // Check if the lens should be used.
+                    // Check if the lens should be used.
+                    && lens.ShouldUse() 
+                    // Check if the code lens type is enabled.
+                    && ((_languageServer.ConfigurationHandler.ReferencesCodeLens && lens is ReferenceCodeLensRange)
+                    || (_languageServer.ConfigurationHandler.ImplementsCodeLens && lens is ImplementsCodeLensRange))
+                    )
                     // Create the CodeLens.
                     finalLenses.Add(new CodeLens() {
                         Command = new Command() {

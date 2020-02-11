@@ -19,6 +19,7 @@ namespace Deltin.Deltinteger.LanguageServer
         public static bool OptimizeOutput = true;
         private DeltintegerLanguageServer _languageServer { get; }
         public bool ReferencesCodeLens { get; private set; }
+        public bool ImplementsCodeLens { get; private set; }
 
         public ConfigurationHandler(DeltintegerLanguageServer languageServer)
         {
@@ -31,9 +32,12 @@ namespace Deltin.Deltinteger.LanguageServer
 
             if (json != null)
             {
-                var config = json.ToObject<RawConfiguration>();
-                ReferencesCodeLens = config.referencesCodeLens;
-                I18n.I18n.LoadLanguage(config.GetOutputLanguage());
+                dynamic config = json;
+
+                ReferencesCodeLens = config.codelens.references;
+                ImplementsCodeLens = config.codelens.implements;
+
+                I18n.I18n.LoadLanguage(GetOutputLanguage(config.outputLanguage));
                 OptimizeOutput = config.optimizeOutput;
             }
 
@@ -51,20 +55,10 @@ namespace Deltin.Deltinteger.LanguageServer
         {
             _capability = capability;
         }
-    }
 
-    public class RawConfiguration
-    {
-#pragma warning disable CS0649
-        public string outputLanguage;
-        public string deltintegerPath;
-        public bool optimizeOutput;
-        public bool referencesCodeLens;
-#pragma warning restore CS0649
-
-        public OutputLanguage GetOutputLanguage()
+        private OutputLanguage GetOutputLanguage(string languageString)
         {
-            switch (outputLanguage)
+            switch (languageString)
             {
                 case "English": return OutputLanguage.enUS;
                 case "German": return OutputLanguage.deDE;
