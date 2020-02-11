@@ -145,11 +145,6 @@ namespace Deltin.Deltinteger.Parse
 
                 // Translate the else-if block.
                 ElseIfs[i].Block.Translate(actionSet.Indent());
-
-                // Do not add the end action for the last else-if if there is an else block.
-                if (i != ElseIfs.Length - 1 || ElseBlock == null)
-                    // End the else-if.
-                    actionSet.AddAction(new A_End());
             }
 
             // If there is an else block, translate it.
