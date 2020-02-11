@@ -40,7 +40,7 @@
 			"patterns": [{"include": "#expressions"}]
 		},
 		"rule_option": {
-			"match": "([a-zA-Z]+)\\s*\\.\\s*([a-zA-Z0-9]+)",
+			"match": "(Player|Event|Team)\\s*\\.\\s*([a-zA-Z0-9]+)\\s*;",
 			"captures": {
 				"1": {"name": "entity.name.type"},
 				"2": {"name": "variable.other"}
