@@ -399,6 +399,7 @@ namespace Deltin.Deltinteger.Parse
 
         public MethodAttributeHandler(DeltinScriptParser.Method_attributesContext attributeContext)
         {
+            AttributeContext = attributeContext; 
             Range = DocRange.GetRange(attributeContext);
 
             if (attributeContext.accessor() != null) Type = MethodAttributeType.Accessor;
