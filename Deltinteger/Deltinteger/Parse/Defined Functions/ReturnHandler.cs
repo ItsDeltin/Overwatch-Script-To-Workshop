@@ -6,7 +6,7 @@ namespace Deltin.Deltinteger.Parse
 {
     public class ReturnHandler
     {
-        private readonly ActionSet ActionSet;
+        protected readonly ActionSet ActionSet;
         private readonly bool MultiplePaths;
 
         // If `MultiplePaths` is true, use `ReturnStore`. Else use `ReturningValue`.
@@ -26,7 +26,7 @@ namespace Deltin.Deltinteger.Parse
                 ReturnStore = actionSet.VarCollection.Assign("_" + methodName + "ReturnValue", actionSet.IsGlobal, true);
         }
 
-        public void ReturnValue(IWorkshopTree value)
+        public virtual void ReturnValue(IWorkshopTree value)
         {
             if (!MultiplePaths && ValueWasReturned)
                 throw new Exception("_multiplePaths is set as false and 2 expressions were returned.");
@@ -40,7 +40,7 @@ namespace Deltin.Deltinteger.Parse
                 ReturningValue = value;
         }
 
-        public void Return()
+        public virtual void Return()
         {
             SkipStartMarker returnSkipStart = new SkipStartMarker(ActionSet);
             ActionSet.AddAction(returnSkipStart);
@@ -51,7 +51,7 @@ namespace Deltin.Deltinteger.Parse
             skips.Add(returnSkipStart);
         }
 
-        public void ApplyReturnSkips()
+        public virtual void ApplyReturnSkips()
         {
             SkipEndMarker methodEndMarker = new SkipEndMarker();
             ActionSet.AddAction(methodEndMarker);
@@ -60,12 +60,26 @@ namespace Deltin.Deltinteger.Parse
                 returnSkip.SetEndMarker(methodEndMarker);
         }
 
-        public IWorkshopTree GetReturnedValue()
+        public virtual IWorkshopTree GetReturnedValue()
         {
             if (MultiplePaths)
                 return ReturnStore.GetVariable();
             else
                 return ReturningValue;
+        }
+    }
+
+    public class RuleReturnHandler : ReturnHandler
+    {
+        public RuleReturnHandler(ActionSet actionSet) : base(actionSet, null, false) {}
+
+        public override void ApplyReturnSkips() => throw new Exception("Can't apply return skips in a rule.");
+        public override IWorkshopTree GetReturnedValue() => throw new Exception("Can't get the returned value of a rule.");
+        public override void ReturnValue(IWorkshopTree value) => throw new Exception("Can't return a value in a rule..");
+
+        public override void Return()
+        {
+            ActionSet.AddAction(Element.Part<A_Abort>());
         }
     }
 }

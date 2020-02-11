@@ -64,17 +64,19 @@ variable : PART array? ;
 code_type: PART (INDEX_START INDEX_END)*;
 
 statement :
-	  varset STATEMENT_END? #s_varset
-	| method STATEMENT_END? #s_method
-	| if 					#s_if
-	| for					#s_for
-	| for_auto              #s_for_auto
-	| foreach				#s_foreach
-	| while					#s_while
-	| define STATEMENT_END? #s_define
-	| return				#s_return
-	| expr STATEMENT_END?	#s_expr
-	| delete STATEMENT_END?	#s_delete
+	  varset STATEMENT_END?   #s_varset
+	| method STATEMENT_END?   #s_method
+	| if 					  #s_if
+	| for					  #s_for
+	| for_auto                #s_for_auto
+	| foreach				  #s_foreach
+	| while					  #s_while
+	| define STATEMENT_END?   #s_define
+	| return				  #s_return
+	| expr STATEMENT_END?	  #s_expr
+	| delete STATEMENT_END?	  #s_delete
+	| CONTINUE STATEMENT_END? #s_continue
+	| BREAK STATEMENT_END?    #s_break
 	;
 
 block : (BLOCK_START statement* BLOCK_END) | statement | STATEMENT_END  ;
@@ -212,6 +214,8 @@ ENUM      : 'enum'      ;
 REF       : 'ref'       ;
 VOID      : 'method'	;
 ASYNC     : 'async'		;
+BREAK     : 'break'     ;
+CONTINUE  : 'continue'  ;
 
 EQUALS          : '='  ;
 EQUALS_POW      : '^=' ;

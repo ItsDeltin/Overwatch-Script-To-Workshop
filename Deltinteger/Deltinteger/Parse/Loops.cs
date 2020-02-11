@@ -1,14 +1,61 @@
 using System;
+using System.Collections.Generic;
 using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.Elements;
 
 namespace Deltin.Deltinteger.Parse
 {
-    class WhileAction : IStatement, IBlockContainer
+    public abstract class LoopAction : IStatement, IBlockContainer
+    {
+        /// <summary>The path info of the loop block.</summary>
+        protected PathInfo Path;
+
+        /// <summary>Stores skips that continue the loop.</summary>
+        private readonly List<SkipStartMarker> Continue = new List<SkipStartMarker>();
+
+        /// <summary>Stores skips that break the loop.</summary>
+        private readonly List<SkipStartMarker> Break = new List<SkipStartMarker>();
+
+        public abstract void Translate(ActionSet actionSet);
+
+        public PathInfo[] GetPaths() => new PathInfo[] { Path };
+
+        public void AddContinue(SkipStartMarker continueMarker)
+        {
+            Continue.Add(continueMarker);
+        }
+
+        public void AddBreak(SkipStartMarker breakMarker)
+        {
+            Break.Add(breakMarker);
+        }
+
+        protected void ResolveContinues(ActionSet actionSet)
+        {
+            Resolve(actionSet, Continue);
+        }
+        protected void ResolveBreaks(ActionSet actionSet)
+        {
+            Resolve(actionSet, Break);
+        }
+        private void Resolve(ActionSet actionSet, List<SkipStartMarker> skips)
+        {
+            // Create the end marker that marks the spot right before the End action (if continuing) or right after the End action (if breaking).
+            SkipEndMarker endMarker = new SkipEndMarker();
+
+            // Add the end marker to the action set.
+            actionSet.AddAction(endMarker);
+
+            // Assign the end marker to the continue/break skips.
+            foreach (SkipStartMarker startMarker in skips)
+                startMarker.SetEndMarker(endMarker);
+        }
+    }
+
+    class WhileAction : LoopAction
     {
         private IExpression Condition { get; }
         private BlockAction Block { get; }
-        private PathInfo Path { get; }
 
         public WhileAction(ParseInfo parseInfo, Scope scope, DeltinScriptParser.WhileContext whileContext)
         {
@@ -17,11 +64,11 @@ namespace Deltin.Deltinteger.Parse
             else
                 Condition = DeltinScript.GetExpression(parseInfo, scope, whileContext.expr());
             
-            Block = new BlockAction(parseInfo, scope, whileContext.block());
+            Block = new BlockAction(parseInfo.SetLoop(this), scope, whileContext.block());
             Path = new PathInfo(Block, DocRange.GetRange(whileContext.WHILE()), false);
         }
 
-        public void Translate(ActionSet actionSet)
+        public override void Translate(ActionSet actionSet)
         {
             int actionCountPreCondition = actionSet.ActionCount;
 
@@ -34,10 +81,16 @@ namespace Deltin.Deltinteger.Parse
                 actionSet.AddAction(Element.Part<A_While>(condition));
                 
                 // Translate the block.
-                Block.Translate(actionSet);
+                Block.Translate(actionSet.Indent());
+
+                // Resolve continues.
+                ResolveContinues(actionSet);
 
                 // Cap the block.
                 actionSet.AddAction(new A_End());
+
+                // Resolve breaks.
+                ResolveBreaks(actionSet);
             }
             else
             {
@@ -45,10 +98,13 @@ namespace Deltin.Deltinteger.Parse
                 actionSet.ActionList.Insert(actionCountPreCondition, new ALAction(Element.Part<A_While>(new V_True())));
 
                 SkipStartMarker whileEndSkip = new SkipStartMarker(actionSet, condition);
-                actionSet.AddAction(whileEndSkip);
+                actionSet.Indent().AddAction(whileEndSkip);
 
                 // Translate the block.
-                Block.Translate(actionSet);
+                Block.Translate(actionSet.Indent());
+
+                // Resolve continues.
+                ResolveContinues(actionSet);
 
                 // Cap the block.
                 actionSet.AddAction(new A_End());
@@ -57,16 +113,14 @@ namespace Deltin.Deltinteger.Parse
                 SkipEndMarker whileEnd = new SkipEndMarker();
                 whileEndSkip.SetEndMarker(whileEnd);
                 actionSet.AddAction(whileEnd);
-            }
-        }
 
-        public PathInfo[] GetPaths()
-        {
-            return new PathInfo[] { Path };
+                // Resolve breaks.
+                ResolveBreaks(actionSet);
+            }
         }
     }
 
-    class ForAction : IStatement, IBlockContainer
+    class ForAction : LoopAction
     {
         private Var DefinedVariable { get; }
         private SetVariableAction InitialVarSet { get; }
@@ -74,7 +128,6 @@ namespace Deltin.Deltinteger.Parse
         private IExpression Condition { get; }
         private SetVariableAction SetVariableAction { get; }
         private BlockAction Block { get; }
-        private PathInfo Path { get; }
 
         public ForAction(ParseInfo parseInfo, Scope scope, DeltinScriptParser.ForContext forContext)
         {
@@ -96,7 +149,7 @@ namespace Deltin.Deltinteger.Parse
             // Get the block.
             if (forContext.block() != null)
             {
-                Block = new BlockAction(parseInfo, varScope, forContext.block());
+                Block = new BlockAction(parseInfo.SetLoop(this), varScope, forContext.block());
                 // Get the path info.
                 Path = new PathInfo(Block, DocRange.GetRange(forContext.FOR()), false);
             }
@@ -104,7 +157,7 @@ namespace Deltin.Deltinteger.Parse
                 parseInfo.Script.Diagnostics.Error("Expected a block.", DocRange.GetRange(forContext.RIGHT_PAREN()));
             }
 
-        public void Translate(ActionSet actionSet)
+        public override void Translate(ActionSet actionSet)
         {
             if (DefinedVariable != null)
             {
@@ -123,31 +176,30 @@ namespace Deltin.Deltinteger.Parse
             Element condition = (Element)Condition.Parse(actionSet) ?? new V_True();
             actionSet.AddAction(Element.Part<A_While>(condition));
 
-            Block.Translate(actionSet);
+            Block.Translate(actionSet.Indent());
+
+            // Resolve continues.
+            ResolveContinues(actionSet);
 
             if (SetVariableAction != null)
-                SetVariableAction.Translate(actionSet);
-            
+                SetVariableAction.Translate(actionSet.Indent());
+                        
             actionSet.AddAction(new A_End());
-        }
 
-        public PathInfo[] GetPaths()
-        {
-            return new PathInfo[] { Path };
+            // Resolve breaks.
+            ResolveBreaks(actionSet);
         }
     }
 
-    class AutoForAction : IStatement, IBlockContainer
+    class AutoForAction : LoopAction
     {
         private VariableResolve VariableResolve { get; }
         private IExpression InitialResolveValue { get; }
         private Var DefinedVariable { get; }
 
-        //private ExpressionOrWorkshopValue Start { get; }
         private IExpression Stop { get; }
         private ExpressionOrWorkshopValue Step { get; }
         private BlockAction Block { get; }
-        private PathInfo PathInfo { get; }
 
         public AutoForAction(ParseInfo parseInfo, Scope scope, DeltinScriptParser.For_autoContext autoForContext)
         {
@@ -196,12 +248,12 @@ namespace Deltin.Deltinteger.Parse
                 parseInfo.Script.Diagnostics.Error("Missing block.", DocRange.GetRange(autoForContext.RIGHT_PAREN()));
             else
             {
-                Block = new BlockAction(parseInfo, scope, autoForContext.block());
-                PathInfo = new PathInfo(Block, DocRange.GetRange(autoForContext.block()), false);
+                Block = new BlockAction(parseInfo.SetLoop(this), scope, autoForContext.block());
+                Path = new PathInfo(Block, DocRange.GetRange(autoForContext.block()), false);
             }
         }
 
-        public void Translate(ActionSet actionSet)
+        public override void Translate(ActionSet actionSet)
         {
             WorkshopVariable variable;
             Element target;
@@ -224,7 +276,6 @@ namespace Deltin.Deltinteger.Parse
                 start = (Element)DefinedVariable.InitialValue?.Parse(actionSet) ?? new V_Number(0);
             }
 
-            //Element start = (Element)Start.Parse(actionSet);
             Element stop = (Element)Stop.Parse(actionSet);
             Element step = (Element)Step.Parse(actionSet);
 
@@ -243,21 +294,24 @@ namespace Deltin.Deltinteger.Parse
                 ));
             
             // Translate the block.
-            Block.Translate(actionSet);
+            Block.Translate(actionSet.Indent());
+
+            // Resolve continues.
+            ResolveContinues(actionSet);
 
             // Cap the for.
             actionSet.AddAction(new A_End());
-        }
 
-        public PathInfo[] GetPaths() => new PathInfo[] { PathInfo };
+            // Resolve breaks.
+            ResolveBreaks(actionSet);
+        }
     }
 
-    class ForeachAction : IStatement
+    class ForeachAction : LoopAction
     {
         private Var ForeachVar { get; }
         private IExpression Array { get; }
         private BlockAction Block { get; }
-        private PathInfo Path { get; }
 
         public ForeachAction(ParseInfo parseInfo, Scope scope, DeltinScriptParser.ForeachContext foreachContext)
         {
@@ -274,7 +328,7 @@ namespace Deltin.Deltinteger.Parse
             // Get the foreach block. Syntax error if it is missing.
             if (foreachContext.block() != null)
             {
-                Block = new BlockAction(parseInfo, varScope, foreachContext.block());
+                Block = new BlockAction(parseInfo.SetLoop(this), varScope, foreachContext.block());
                 // Get the path info.
                 Path = new PathInfo(Block, DocRange.GetRange(foreachContext.FOREACH()), false);
             }
@@ -282,12 +336,24 @@ namespace Deltin.Deltinteger.Parse
                 parseInfo.Script.Diagnostics.Error("Expected block.", DocRange.GetRange(foreachContext.RIGHT_PAREN()));
         }
 
-        public void Translate(ActionSet actionSet)
+        public override void Translate(ActionSet actionSet)
         {
             ForeachBuilder foreachBuilder = new ForeachBuilder(actionSet, Array.Parse(actionSet));
+
+            // Add the foreach value to the assigner.
             actionSet.IndexAssigner.Add(ForeachVar, foreachBuilder.IndexValue);
-            Block.Translate(actionSet);
+
+            // Translate the block.
+            Block.Translate(actionSet.Indent());
+
+            // Resolve continues.
+            ResolveContinues(actionSet);
+
+            // Finish the foreach.
             foreachBuilder.Finish();
+
+            // Resolve breaks.
+            ResolveBreaks(actionSet);
         }
 
         class ForeachContextHandler : IVarContextHandler
