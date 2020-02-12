@@ -341,7 +341,7 @@ namespace Deltin.Deltinteger.Parse
 
         private bool WasScopedAtPosition(IScopeable element, Pos pos, Scope getter)
         {
-            return (pos == null || element.DefinedAt == null || element.WholeContext || element.DefinedAt.range.start <= pos) && (getter == null || getter.AccessorMatches(this, element.AccessLevel));
+            return (pos == null || element.DefinedAt == null || element.WholeContext || element.DefinedAt.range.start <= pos) && (getter == null || getter.AccessorMatches(element));
         }
 
         public static Scope GetGlobalScope()
