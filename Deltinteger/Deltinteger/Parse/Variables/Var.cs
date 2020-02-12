@@ -51,6 +51,14 @@ namespace Deltin.Deltinteger.Parse
             _initialValueResolve = varInfo.InitialValueResolve;
             _operationalScope = varInfo.OperationalScope;
 
+            if (ID != -1)
+            {
+                if (VariableType == VariableType.Global)
+                    parseInfo.TranslateInfo.VarCollection.Reserve(ID, true, parseInfo.Script.Diagnostics, DefinedAt.range);
+                else if (VariableType == VariableType.Player)
+                    parseInfo.TranslateInfo.VarCollection.Reserve(ID, false, parseInfo.Script.Diagnostics, DefinedAt.range);
+            }
+
             // Add the variable to the scope.
             _operationalScope.AddVariable(this, parseInfo.Script.Diagnostics, DefinedAt.range);
             _finalized = true;
