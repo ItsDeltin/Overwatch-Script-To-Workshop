@@ -40,7 +40,7 @@ if (IsButtonHeld(EventPlayer(), Button.Crouch))
         if (ArrayContains((<Segment>Segments[i]).Nodes, selected))
         {
             (<Segment>Segments[i]).Hide();
-            delete(Segments[i]);
+            delete(<Segment>Segments[i]);
             Segments = RemoveFromArrayAtIndex(Segments, i);
         }
     PlayEffect(AllPlayers(), PlayEffect.BadExplosion, Color.Blue, selected.ShownLocation, 0.25);
@@ -207,7 +207,7 @@ if (IsButtonHeld(EventPlayer(), Button.Crouch))
         if (IsTrueForAll((<Segment>Segments[i]).Nodes, ArrayContains(Selected, ArrayElement())))
         {
             (<Segment>Segments[i]).Hide();
-            delete(Segments[i]);
+            delete(<Segment>Segments[i]);
             Segments = RemoveFromArrayAtIndex(Segments, i);
         }
 }
