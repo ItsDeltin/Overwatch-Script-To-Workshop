@@ -194,7 +194,7 @@
 		},
 		"keywords_control": {
 			"name": "keyword.control",
-			"match": "\\b(if|else|while|for|foreach|return|rule|import)\\b"
+			"match": "\\b(if|else|while|for|foreach|return|rule|import|continue|break)\\b"
 		},
 		"keywords_other": {
 			"name": "keyword.other",
