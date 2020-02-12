@@ -181,8 +181,10 @@ namespace Deltin.Deltinteger.Elements
                     return false;
             }
             
-            return true;
+            return OverrideEquals(b);
         }
+
+        protected virtual bool OverrideEquals(IWorkshopTree other) => true;
 
         public Element OptimizeAddOperation(
             Func<double, double, double> op,

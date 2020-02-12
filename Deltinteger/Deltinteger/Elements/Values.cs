@@ -1099,6 +1099,11 @@ namespace Deltin.Deltinteger.Elements
             typeof(T) == typeof(double);
 
         override public object GetConstant() => Value;
+
+        protected override bool OverrideEquals(IWorkshopTree other)
+        {
+            return ((V_Number)other).Value == Value;
+        }
     }
 
     [ElementData("Number Of Dead Players", ValueType.Number)]
@@ -1447,6 +1452,11 @@ namespace Deltin.Deltinteger.Elements
 
             return stringList.ToArray();
         }
+
+        protected override bool OverrideEquals(IWorkshopTree other)
+        {
+            return ((V_String)other).Text == Text;
+        }
     }
 
     [ElementData("Custom String", ValueType.Any)]
@@ -1494,6 +1504,11 @@ namespace Deltin.Deltinteger.Elements
                 else throw new Exception();
             }
             return list[0];
+        }
+
+        protected override bool OverrideEquals(IWorkshopTree other)
+        {
+            return ((V_CustomString)other).Text == Text;
         }
     }
 
