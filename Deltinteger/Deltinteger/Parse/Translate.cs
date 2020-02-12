@@ -182,7 +182,7 @@ namespace Deltin.Deltinteger.Parse
                     PlayerVariableScope.CopyVariable(newVar);
             }
 
-            foreach (var applyType in types) if (applyType is DefinedType definedType) definedType.ResolveElements();
+            foreach (var applyType in types) if (applyType is ClassType classType) classType.ResolveElements();
             foreach (var apply in applyBlocks) apply.SetupParameters();
             foreach (var apply in applyBlocks) apply.SetupBlock();
             foreach (var apply in applyBlocks) apply.CallInfo?.CheckRecursion();
@@ -203,7 +203,13 @@ namespace Deltin.Deltinteger.Parse
             InitialPlayer = new TranslateRule(this, "Initial Player", RuleEvent.OngoingPlayer);
             WorkshopRules = new List<Rule>();
 
-            // Assign variables at the rule-set level.
+            // Assign static variables.
+            foreach (var type in types) type.WorkshopInit(this);
+
+            // Setup single-instance methods.
+            foreach (var method in subroutines) method.SetupSubroutine();
+
+             // Assign variables at the rule-set level.
             foreach (var variable in rulesetVariables)
             {
                 // Assign the variable an index.
@@ -219,12 +225,6 @@ namespace Deltin.Deltinteger.Parse
                     ));
                 }
             }
-
-            // Assign static variables.
-            foreach (var type in types) type.WorkshopInit(this);
-
-            // Setup single-instance methods.
-            foreach (var method in subroutines) method.SetupSubroutine();
 
             // Parse the rules.
             foreach (var rule in rules)
@@ -276,6 +276,7 @@ namespace Deltin.Deltinteger.Parse
         {
             return GetCodeType(name, null, null) != null;
         }
+        public T GetCodeType<T>() where T: CodeType => (T)types.FirstOrDefault(type => type.GetType() == typeof(T));
 
         public ScriptFile ScriptFromUri(Uri uri) => ScriptFiles.FirstOrDefault(script => script.Uri.Compare(uri));
 

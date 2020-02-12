@@ -26,8 +26,11 @@ namespace Deltin.Deltinteger.Pathfinder
             this.pathmapObject = pathmapObject;
             this.position = position;
             this.reversed = reversed;
-            Nodes = pathmapObject[0];
-            Segments = pathmapObject[1];
+
+            PathmapClass pathmapClass = actionSet.Translate.DeltinScript.GetCodeType<PathmapClass>();
+
+            Nodes = ((Element)pathmapClass.Nodes.GetVariable())[pathmapObject];
+            Segments = ((Element)pathmapClass.Segments.GetVariable())[pathmapObject];
         }
 
         public void Get()

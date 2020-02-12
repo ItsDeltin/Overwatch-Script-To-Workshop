@@ -12,8 +12,8 @@ namespace Deltin.Deltinteger.Pathfinder
 {
     public class PathmapClass : ClassType
     {
-        IndexReference nodes;
-        IndexReference segments;
+        public IndexReference Nodes { get; private set; }
+        public IndexReference Segments { get; private set; }
 
         public PathmapClass() : base("Pathmap")
         {
@@ -21,36 +21,44 @@ namespace Deltin.Deltinteger.Pathfinder
                 new PathmapClassConstructor(this)
             };
             Description = "A pathmap can be used for pathfinding.";
+        }
 
-            ObjectScope.AddMethod(CustomMethodData.GetCustomMethod<Pathfind>(), null, null);
-            ObjectScope.AddMethod(CustomMethodData.GetCustomMethod<PathfindAll>(), null, null);
-            ObjectScope.AddMethod(CustomMethodData.GetCustomMethod<GetPath>(), null, null);
+        public override void ResolveElements()
+        {
+            if (elementsResolved) return;
+            base.ResolveElements();
 
-            StaticScope.AddMethod(CustomMethodData.GetCustomMethod<StopPathfind>(), null, null);
-            StaticScope.AddMethod(CustomMethodData.GetCustomMethod<IsPathfinding>(), null, null);
-            StaticScope.AddMethod(CustomMethodData.GetCustomMethod<IsPathfindStuck>(), null, null);
-            StaticScope.AddMethod(CustomMethodData.GetCustomMethod<FixPathfind>(), null, null);
-            StaticScope.AddMethod(CustomMethodData.GetCustomMethod<NextNode>(), null, null);
-            StaticScope.AddMethod(CustomMethodData.GetCustomMethod<WalkPath>(), null, null);
+            serveObjectScope.AddMethod(CustomMethodData.GetCustomMethod<Pathfind>(), null, null);
+            serveObjectScope.AddMethod(CustomMethodData.GetCustomMethod<PathfindAll>(), null, null);
+            serveObjectScope.AddMethod(CustomMethodData.GetCustomMethod<GetPath>(), null, null);
+
+            staticScope.AddMethod(CustomMethodData.GetCustomMethod<StopPathfind>(), null, null);
+            staticScope.AddMethod(CustomMethodData.GetCustomMethod<IsPathfinding>(), null, null);
+            staticScope.AddMethod(CustomMethodData.GetCustomMethod<IsPathfindStuck>(), null, null);
+            staticScope.AddMethod(CustomMethodData.GetCustomMethod<FixPathfind>(), null, null);
+            staticScope.AddMethod(CustomMethodData.GetCustomMethod<NextNode>(), null, null);
+            staticScope.AddMethod(CustomMethodData.GetCustomMethod<WalkPath>(), null, null);
         }
 
         public override void WorkshopInit(DeltinScript translateInfo)
         {
-            nodes = translateInfo.VarCollection.Assign("Nodes", true, false);
-            segments = translateInfo.VarCollection.Assign("Segments", true, false);
+            Nodes = translateInfo.VarCollection.Assign("Nodes", true, false);
+            Segments = translateInfo.VarCollection.Assign("Segments", true, false);
         }
 
-        protected override void New(ActionSet actionSet, IndexReference objectReference, Constructor constructor, IWorkshopTree[] constructorValues, object[] additionalParameterData)
+        protected override void New(ActionSet actionSet, NewClassInfo newClassInfo)
         {
-            // Create the class.
-            // TODO: Identifier
-            var objectData = actionSet.Translate.DeltinScript.SetupClasses().CreateObject(1, actionSet, "_new_PathMap");
-
             // Get the pathmap data.
-            PathMap pathMap = (PathMap)additionalParameterData[0];
+            PathMap pathMap = (PathMap)newClassInfo.AdditionalParameterData[0];
 
-            actionSet.AddAction(nodes.SetVariable(pathMap.NodesAsWorkshopData(), null, (Element)objectReference.GetVariable()));
-            actionSet.AddAction(segments.SetVariable(pathMap.SegmentsAsWorkshopData(), null, (Element)objectReference.GetVariable()));
+            actionSet.AddAction(Nodes.SetVariable(
+                value: pathMap.NodesAsWorkshopData(),
+                index: (Element)newClassInfo.ObjectReference.GetVariable()
+            ));
+            actionSet.AddAction(Segments.SetVariable(
+                value: pathMap.SegmentsAsWorkshopData(),
+                index: (Element)newClassInfo.ObjectReference.GetVariable()
+            ));
         }
     }
 
@@ -69,9 +77,7 @@ namespace Deltin.Deltinteger.Pathfinder
 
     class PathmapFileParameter : FileParameter
     {
-        public PathmapFileParameter(string parameterName, string description) : base(parameterName, description, ".pathmap")
-        {
-        }
+        public PathmapFileParameter(string parameterName, string description) : base(parameterName, description, ".pathmap") {}
 
         public override object Validate(ScriptFile script, IExpression value, DocRange valueRange)
         {

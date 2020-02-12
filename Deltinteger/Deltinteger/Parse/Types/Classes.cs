@@ -8,41 +8,204 @@ namespace Deltin.Deltinteger.Parse
 {
     public abstract class ClassType : CodeType
     {
-        protected Scope ObjectScope { get; }
-        protected Scope StaticScope { get; }
+        /*
+Static scope, static members only.
+> Give to returning scope
+> static methods
+
+Operational scope. All object and static members.
+> object methods
+
+Object-serve scope. Only object members.
+> Give to object scope.
+        */
+
+        /// <summary>Used in object methods and constructors.</summary>
+        protected Scope operationalScope;
+        /// <summary>Used in static methods and returned when ReturningScope() is called. Contains all static members in the inheritance tree.</summary>
+        protected Scope staticScope;
+        /// <summary>Contains all object members in the inheritance tree. Returned when GetObjectScope() is called.</summary>
+        protected Scope serveObjectScope;
+
+        /// <summary>Determines if the class elements were resolved.</summary>
+        protected bool elementsResolved { get; private set; } = false;
+
+        /// <summary>pee pee</summary>
+        protected bool workshopInitialized { get; private set; } = false;
+
+        public int Identifier { get; private set; } = -1;
+
+        protected readonly List<ObjectVariable> ObjectVariables = new List<ObjectVariable>();
 
         public ClassType(string name) : base(name)
         {
             CanBeDeleted = true;
-            StaticScope = new Scope("class " + name);
-            ObjectScope = StaticScope.Child("class " + name);
+            CanBeExtended = true;
+        }
+
+        public virtual void ResolveElements()
+        {
+            if (elementsResolved) return;
+            elementsResolved = true;
+
+            string scopeName = "class " + Name;
+
+            if (Extends == null)
+            {
+                BaseScopes(scopeName);
+
+                staticScope.CompletionCatch = true;
+                staticScope.ProtectedCatch = true;
+                serveObjectScope.CompletionCatch = true;
+            }
+            else
+            {
+                ((ClassType)Extends).ResolveElements();
+
+                staticScope      = ((ClassType)Extends).staticScope.Child(scopeName);
+                operationalScope = ((ClassType)Extends).operationalScope.Child(scopeName);
+                serveObjectScope = ((ClassType)Extends).serveObjectScope.Child(scopeName);
+            }
+
+            staticScope.PrivateCatch = true;
+            operationalScope.PrivateCatch = true;
+            operationalScope.This = this;
+        }
+
+        protected virtual void BaseScopes(string scopeName)
+        {
+            staticScope = new Scope(scopeName);
+            operationalScope = new Scope(scopeName);
+            serveObjectScope = new Scope(scopeName);
+        }
+
+        private int StackStart(bool inclusive)
+        {
+            int extStack = 0;
+            if (Extends != null) extStack = ((ClassType)Extends).StackStart(true);
+            if (inclusive) extStack += ObjectVariables.Count;
+            return extStack;
+        }
+
+        public override void WorkshopInit(DeltinScript translateInfo)
+        {
+            if (workshopInitialized) return;
+            workshopInitialized = true;
+
+            ClassData classData = translateInfo.SetupClasses();
+
+            Identifier = classData.AssignID();
+            int stackOffset = StackStart(false);
+
+            Extends?.WorkshopInit(translateInfo);
+
+            for (int i = 0; i < ObjectVariables.Count; i++)
+                ObjectVariables[i].SetArrayStore(classData.GetClassVariableStack(translateInfo.VarCollection, i + stackOffset));
         }
 
         public override IWorkshopTree New(ActionSet actionSet, Constructor constructor, IWorkshopTree[] constructorValues, object[] additionalParameterData)
         {
-            // Create the class.
-            // TODO: Class identifier
-            IndexReference objectReference = actionSet.Translate.DeltinScript.SetupClasses().CreateObject(1, actionSet, "_new_PathMap");
+            actionSet = actionSet.New(actionSet.IndexAssigner.CreateContained());
 
-            New(actionSet, objectReference, constructor, constructorValues, additionalParameterData);
+            ClassData classData = actionSet.Translate.DeltinScript.SetupClasses();
+
+            // Classes are stored in the class array (`classData.ClassArray`),
+            // this stores the index where the new class is created at.
+            var classReference = actionSet.VarCollection.Assign("_new_" + Name + "_class_index", actionSet.IsGlobal, true);
+            classData.GetClassIndex(Identifier, classReference, actionSet);
+
+            // Get object variables.
+            BaseSetup(actionSet, (Element)classReference.GetVariable());
+            New(actionSet, new NewClassInfo(classReference, constructor, constructorValues, additionalParameterData));
 
             // Return the reference.
-            return objectReference.GetVariable();
+            return classReference.GetVariable();
         }
 
-        protected virtual void New(ActionSet actionSet, IndexReference objectReference, Constructor constructor, IWorkshopTree[] constructorValues, object[] additionalParameterData)
+        public override void BaseSetup(ActionSet actionSet, Element reference)
+        {
+            if (Extends != null)
+                Extends.BaseSetup(actionSet, reference);
+
+            foreach (ObjectVariable variable in ObjectVariables)
+            if (variable.Variable.InitialValue != null)
+            {
+                actionSet.AddAction(variable.ArrayStore.SetVariable(
+                    value: (Element)variable.Variable.InitialValue.Parse(actionSet),
+                    index: reference
+                ));
+            }
+        }
+
+        protected virtual void New(ActionSet actionSet, NewClassInfo newClassInfo)
         {
             // Parse the constructor.
-            constructor.Parse(actionSet, constructorValues, additionalParameterData);
+            newClassInfo.Constructor.Parse(actionSet, newClassInfo.ConstructorValues, newClassInfo.AdditionalParameterData);
         }
 
-        public override Scope GetObjectScope() => ObjectScope;
-        public override Scope ReturningScope() => StaticScope;
+        public override void Delete(ActionSet actionSet, Element reference)
+        {
+            if (Extends != null && Extends.CanBeDeleted)
+                Extends.Delete(actionSet, reference);
+
+            foreach (ObjectVariable objectVariable in ObjectVariables)
+                actionSet.AddAction(objectVariable.ArrayStore.SetVariable(
+                    value: new V_Number(0),
+                    index: reference
+                ));
+        }
+
+        public override void AddObjectVariablesToAssigner(IWorkshopTree reference, VarIndexAssigner assigner)
+        {
+            Extends?.AddObjectVariablesToAssigner(reference, assigner);
+            for (int i = 0; i < ObjectVariables.Count; i++)
+                ObjectVariables[i].AddToAssigner((Element)reference, assigner);
+        }
+
+        public override Scope GetObjectScope() => serveObjectScope;
+        public override Scope ReturningScope() => staticScope;
 
         public override CompletionItem GetCompletion() => new CompletionItem() {
             Label = Name,
             Kind = CompletionItemKind.Class
         };
+    }
+
+    public class NewClassInfo
+    {
+        public IndexReference ObjectReference { get; }
+        public Constructor Constructor { get; }
+        public IWorkshopTree[] ConstructorValues { get; }
+        public object[] AdditionalParameterData { get; }
+        
+        public NewClassInfo(IndexReference objectReference, Constructor constructor, IWorkshopTree[] constructorValues, object[] additionalParameterData)
+        {
+            ObjectReference = objectReference;
+            Constructor = constructor;
+            ConstructorValues = constructorValues;
+            AdditionalParameterData = additionalParameterData;
+        }
+    }
+
+    public class ObjectVariable
+    {
+        public Var Variable { get; }
+        public IndexReference ArrayStore { get; private set; }
+
+        public ObjectVariable(Var variable)
+        {
+            Variable = variable;
+        }
+
+        public void SetArrayStore(IndexReference store)
+        {
+            ArrayStore = store;
+        }
+
+        public void AddToAssigner(Element reference, VarIndexAssigner assigner)
+        {
+            assigner.Add(Variable, ArrayStore.CreateChild(reference));
+        }
     }
 
     public class ClassData

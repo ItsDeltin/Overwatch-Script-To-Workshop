@@ -294,13 +294,13 @@ namespace Deltin.Deltinteger.Parse
             };
 
             // Parse the current overload.
-            typeSwitch.NextCase(((DefinedType)Attributes.ContainingType).Identifier);
+            typeSwitch.NextCase(((ClassType)Attributes.ContainingType).Identifier);
             Parse(actionSet, callSettings);
 
             foreach (IMethod option in options)
             {
                 // Go to next case then parse the block.
-                typeSwitch.NextCase(((DefinedType)option.Attributes.ContainingType).Identifier); // TODO: Don't cast.
+                typeSwitch.NextCase(((ClassType)option.Attributes.ContainingType).Identifier); // TODO: Don't cast.
                 option.Parse(actionSet, callSettings);
             }
 
