@@ -131,7 +131,17 @@ namespace Deltin.Deltinteger.Pathfinder
 
             rule.Actions = ArrayBuilder<Element>.Build(
                 LastUpdate.SetVariable(new V_TotalTimeElapsed()),
+
+                A_Wait.MinimumWait,
+                Element.Part<A_SmallMessage>(new V_AllPlayers(), Element.Part<V_CountOf>(Path.GetVariable())),
+                A_Wait.MinimumWait,
+
                 Next(), // (5)
+                
+                A_Wait.MinimumWait,
+                Element.Part<A_SmallMessage>(new V_AllPlayers(), Element.Part<V_CountOf>(Path.GetVariable())),
+                A_Wait.MinimumWait,
+
                 DistanceToNext.SetVariable(Element.Part<V_DistanceBetween>(Element.Part<V_PositionOf>(new V_EventPlayer()), NextPosition(new V_EventPlayer()))),
                 A_Wait.MinimumWait,
                 new A_LoopIfConditionIsTrue()

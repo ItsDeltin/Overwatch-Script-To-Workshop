@@ -20,6 +20,8 @@ namespace Deltin.Deltinteger.Pathfinder
         private IndexReference current { get; set; }
         private IndexReference parentArray { get; set; }
 
+        protected static bool assignExtended = false;
+
         public DijkstraBase(ActionSet actionSet, Element pathmapObject, Element position, bool reversed)
         {
             this.actionSet = actionSet;
@@ -39,12 +41,12 @@ namespace Deltin.Deltinteger.Pathfinder
 
             Assign();
             
-            current                          = actionSet.VarCollection.Assign("Dijkstra: Current", actionSet.IsGlobal, true);
+            current                          = actionSet.VarCollection.Assign("Dijkstra: Current", actionSet.IsGlobal, assignExtended);
             IndexReference distances         = actionSet.VarCollection.Assign("Dijkstra: Distances", actionSet.IsGlobal, false);
             unvisited                        = actionSet.VarCollection.Assign("Dijkstra: Unvisited", actionSet.IsGlobal, false);
-            IndexReference connectedSegments = actionSet.VarCollection.Assign("Dijkstra: Connected Segments", actionSet.IsGlobal, true);
-            IndexReference neighborIndex     = actionSet.VarCollection.Assign("Dijkstra: Neighbor Index", actionSet.IsGlobal, true);
-            IndexReference neighborDistance  = actionSet.VarCollection.Assign("Dijkstra: Distance", actionSet.IsGlobal, true);
+            IndexReference connectedSegments = actionSet.VarCollection.Assign("Dijkstra: Connected Segments", actionSet.IsGlobal, assignExtended);
+            IndexReference neighborIndex     = actionSet.VarCollection.Assign("Dijkstra: Neighbor Index", actionSet.IsGlobal, assignExtended);
+            IndexReference neighborDistance  = actionSet.VarCollection.Assign("Dijkstra: Distance", actionSet.IsGlobal, assignExtended);
             parentArray                      = actionSet.VarCollection.Assign("Dijkstra: Parent Array", actionSet.IsGlobal, false);
 
             // Set the current variable as the first node.
@@ -53,6 +55,8 @@ namespace Deltin.Deltinteger.Pathfinder
             SetInitialUnvisited(actionSet, Nodes, unvisited);
 
             actionSet.AddAction(Element.Part<A_While>(LoopCondition()));
+
+            actionSet.AddAction(A_Wait.MinimumWait);
 
             // Get neighboring indexes
             actionSet.AddAction(connectedSegments.SetVariable(GetConnectedSegments(
@@ -64,6 +68,8 @@ namespace Deltin.Deltinteger.Pathfinder
 
             // Loop through neighboring indexes
             ForeachBuilder forBuilder = new ForeachBuilder(actionSet, connectedSegments.GetVariable());
+
+            actionSet.AddAction(A_Wait.MinimumWait);
 
             actionSet.AddAction(ArrayBuilder<Element>.Build(
                 // Get the index from the segment data
@@ -142,6 +148,8 @@ namespace Deltin.Deltinteger.Pathfinder
                 new V_Number(-1)
             )));
 
+            actionSet.AddAction(A_Wait.MinimumWait);
+
             Element next = Nodes[(Element)current.GetVariable()];
             Element array = (Element)finalPath.GetVariable();
             Element first;
@@ -193,7 +201,7 @@ namespace Deltin.Deltinteger.Pathfinder
             // Empty the unvisited array.
             actionSet.AddAction(unvisitedVar.SetVariable(new V_EmptyArray()));
             
-            IndexReference current = actionSet.VarCollection.Assign("unvisitedBuilder", actionSet.IsGlobal, true);
+            IndexReference current = actionSet.VarCollection.Assign("unvisitedBuilder", actionSet.IsGlobal, assignExtended);
             actionSet.AddAction(current.SetVariable(0));
 
             // While current < the count of the node array.
@@ -296,7 +304,7 @@ namespace Deltin.Deltinteger.Pathfinder
         {
             var lastNode = ClosestNodeToPosition(Nodes, destination);
 
-            finalNode = actionSet.VarCollection.Assign("Dijkstra: Last", actionSet.IsGlobal, true);
+            finalNode = actionSet.VarCollection.Assign("Dijkstra: Last", actionSet.IsGlobal, assignExtended);
             finalPath = actionSet.VarCollection.Assign("Dijkstra: Final Path", actionSet.IsGlobal, false);
             actionSet.AddAction(finalNode.SetVariable(lastNode));
             actionSet.AddAction(finalPath.SetVariable(new V_EmptyArray()));
@@ -366,6 +374,7 @@ namespace Deltin.Deltinteger.Pathfinder
         override protected void GetResult()
         {
             ForeachBuilder assignPlayerPaths = new ForeachBuilder(actionSet, players);
+            actionSet.AddAction(A_Wait.MinimumWait);
 
             IndexReference finalPath = actionSet.VarCollection.Assign("Dijkstra: Final Path", actionSet.IsGlobal, false);
 
