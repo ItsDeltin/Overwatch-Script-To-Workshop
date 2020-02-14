@@ -56,7 +56,7 @@ namespace Deltin.Deltinteger.Pathfinder
 
             actionSet.AddAction(Element.Part<A_While>(LoopCondition()));
 
-            actionSet.AddAction(A_Wait.MinimumWait);
+            // !WAIT actionSet.AddAction(A_Wait.MinimumWait);
 
             // Get neighboring indexes
             actionSet.AddAction(connectedSegments.SetVariable(GetConnectedSegments(
@@ -148,7 +148,7 @@ namespace Deltin.Deltinteger.Pathfinder
                 new V_Number(-1)
             )));
 
-            actionSet.AddAction(A_Wait.MinimumWait);
+            // !WAIT actionSet.AddAction(A_Wait.MinimumWait);
 
             Element next = Nodes[(Element)current.GetVariable()];
             Element array = (Element)finalPath.GetVariable();
