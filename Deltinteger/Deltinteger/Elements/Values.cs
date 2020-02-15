@@ -44,6 +44,7 @@ namespace Deltin.Deltinteger.Elements
     [ElementData("Add", ValueType.Any)]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
+    [HideElement]
     public class V_Add : Element
     {
         override public Element Optimize()
@@ -90,6 +91,7 @@ namespace Deltin.Deltinteger.Elements
     [ElementData("And", ValueType.Boolean)]
     [Parameter("Value", ValueType.Boolean, typeof(V_True))]
     [Parameter("Value", ValueType.Boolean, typeof(V_True))]
+    [HideElement]
     public class V_And : Element
     {
         public override Element Optimize()
@@ -295,6 +297,7 @@ namespace Deltin.Deltinteger.Elements
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
     [EnumParameter("", typeof(Operators))]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
+    [HideElement]
     public class V_Compare : Element 
     {
         public V_Compare() : base() {}
@@ -506,6 +509,7 @@ namespace Deltin.Deltinteger.Elements
     [ElementData("Divide", ValueType.Any)]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
+    [HideElement]
     public class V_Divide : Element
     {
         override public Element Optimize()
@@ -651,6 +655,7 @@ namespace Deltin.Deltinteger.Elements
 
     [ElementData("Hero", ValueType.Hero)]
     [EnumParameter("Hero", typeof(Hero))]
+    [HideElement]
     public class V_HeroVar : Element {}
 
     [ElementData("Hero Icon String", ValueType.Any)]
@@ -905,6 +910,7 @@ namespace Deltin.Deltinteger.Elements
 
     [ElementData("Map", ValueType.Map)]
     [EnumParameter("Map", typeof(Map))]
+    [HideElement]
     public class V_MapVar : Element {}
 
     [ElementData("Match Round", ValueType.Number)]
@@ -987,6 +993,7 @@ namespace Deltin.Deltinteger.Elements
     [ElementData("Multiply", ValueType.Any)]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
+    [HideElement]
     public class V_Multiply : Element
     {
         override public Element Optimize()
@@ -1153,6 +1160,7 @@ namespace Deltin.Deltinteger.Elements
     [ElementData("Or", ValueType.Boolean)]
     [Parameter("Value", ValueType.Boolean, typeof(V_True))]
     [Parameter("Value", ValueType.Boolean, typeof(V_True))]
+    [HideElement]
     public class V_Or : Element
     {
         public override Element Optimize()
@@ -1519,6 +1527,7 @@ namespace Deltin.Deltinteger.Elements
     [ElementData("Subtract", ValueType.Any)]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
+    [HideElement]
     public class V_Subtract : Element
     {
         override public Element Optimize()
@@ -1563,6 +1572,7 @@ namespace Deltin.Deltinteger.Elements
 
     [ElementData("Team", ValueType.Team)]
     [EnumParameter("Team", typeof(Team))]
+    [HideElement]
     public class V_TeamVar : Element {}
 
     [ElementData("Team Of", ValueType.Team)]
