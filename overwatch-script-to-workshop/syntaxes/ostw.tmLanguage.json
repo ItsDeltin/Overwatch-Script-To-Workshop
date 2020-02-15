@@ -11,11 +11,11 @@
 			"patterns": [
 				{"include": "#rule"},
 				{"include": "#strings"},
+				{"include": "#new"},
 				{"include": "#if"},
 				{"include": "#rule_option"},
 				{"include": "#keywords_control"},
 				{"include": "#block"},
-				{"include": "#new"},
 				{"include": "#define_type"},
 				{"include": "#define_macro"},
 				{"include": "#define_macro_var"},
@@ -117,6 +117,7 @@
 			"patterns": [
 				{"include": "#comments"},
 				{"include": "#if"},
+				{"include": "#new"},
 				{"include": "#keywords_control"},
 				{"include": "#define_macro"},
 				{"include": "#define_macro_var"},
