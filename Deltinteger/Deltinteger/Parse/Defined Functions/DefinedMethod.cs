@@ -299,9 +299,15 @@ namespace Deltin.Deltinteger.Parse
 
             foreach (IMethod option in options)
             {
+                // The action set for the overload.
+                ActionSet optionSet = actionSet.New(actionSet.IndexAssigner.CreateContained());
+
+                // Add the object variables of the selected method.
+                option.Attributes.ContainingType.AddObjectVariablesToAssigner(optionSet.CurrentObject, optionSet.IndexAssigner);
+
                 // Go to next case then parse the block.
-                typeSwitch.NextCase(((ClassType)option.Attributes.ContainingType).Identifier); // TODO: Don't cast.
-                option.Parse(actionSet, callSettings);
+                typeSwitch.NextCase(((ClassType)option.Attributes.ContainingType).Identifier);
+                option.Parse(optionSet, callSettings);
             }
 
             ClassData classData = actionSet.Translate.DeltinScript.SetupClasses();
