@@ -36,13 +36,8 @@ namespace Deltin.Deltinteger.Parse
             if (check == null) check = new List<IApplyBlock>();
             if (currentCheck.CallInfo == null) return false;
 
-            if (function == currentCheck)
-            {
-                if (function is DefinedMethod && ((DefinedMethod)function).SubroutineName != null)
-                    return false;
-                else
-                    return true;
-            }
+            if (function is DefinedMethod dm && currentCheck is IMethod asMethod && (dm == asMethod || asMethod.Attributes.AllOverrideOptions().Contains(dm)))
+                return !asMethod.Attributes.Recursive;
 
             if (check.Contains(currentCheck)) return false;
             check.Add(currentCheck);

@@ -30,6 +30,9 @@ namespace Deltin.Deltinteger
 
         /// <summary>An array of methods that directly overrides the function. Call `AllOverrideOptions` instead for all child overriders.</summary>
         public IMethod[] Overriders => _overriders.ToArray();
+        
+        /// <summary>Determines if the method can be called recursively.</summary>
+        public bool Recursive => false;
 
         private readonly List<IMethod> _overriders = new List<IMethod>();
 
