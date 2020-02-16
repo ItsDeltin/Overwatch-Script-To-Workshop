@@ -146,6 +146,17 @@ namespace Deltin.Deltinteger.Parse
         }
 
         public void OnBlockApply(IOnBlockApplied onBlockApplied) => throw new NotImplementedException();
+
+        public override string ToString()
+        {
+            string name = "[" + Name;
+
+            if (CodeType != null) name += ", Type:" + CodeType.Name;
+            name += ", Access:" + AccessLevel.ToString();
+            name += ", Store:" + StoreType.ToString();
+            name += "]";
+            return name;
+        }
     }
 
     public class VarInfo
