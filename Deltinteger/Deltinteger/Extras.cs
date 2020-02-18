@@ -120,6 +120,22 @@ namespace Deltin.Deltinteger
             Kind = MarkupKind.Markdown,
             Value = text
         });
+
+        public static string ListJoin(string collectionName, params string[] elements)
+        {
+            if (elements.Length == 0) return collectionName;
+            if (elements.Length == 1) return elements[0] + " " + collectionName;
+
+            string result = "";
+            for (int i = 0; i < elements.Length; i++)
+            {
+                if (i < elements.Length - 2) result += elements[i] + ", ";
+                else if (i < elements.Length - 1) result += elements[i] + " and ";
+                else result += elements[i];
+            }
+            result += " " + collectionName + "s";
+            return result;
+        }
     }
 
     public class TabStringBuilder

@@ -32,6 +32,11 @@ namespace Deltin.Deltinteger.Parse
         private readonly List<ExtendedVariable> extendedPlayerVariables = new List<ExtendedVariable>();
         List<ExtendedVariable> extendedVariableList(bool isGlobal) => isGlobal ? extendedGlobalVariables : extendedPlayerVariables;
 
+        private bool globalLimitReached = false;
+        private bool playerLimitReached = false;
+        private bool extGlobalLimitReached = false;
+        private bool extPlayerLimitReached = false;
+
         public VarCollection() {}
 
         public void Setup()
@@ -84,31 +89,33 @@ namespace Deltin.Deltinteger.Parse
         private int NextFreeID(bool isGlobal)
         {
             // Get the next free ID.
-            int id = -1;
-            var collection = variableList(isGlobal);
-            for (int i = 0; i < Constants.NUMBER_OF_VARIABLES; i++)
+            for (int i = 0;; i++)
                 // Make sure the ID is not reserved.
                 if (!variableList(isGlobal).Any(var => var.ID == i) && !reservedIDs(isGlobal).Contains(i))
                 {
-                    id = i;
-                    break;
+                    // Set 'globalLimitReached' or 'playerLimitReached' to true when the variable limit is reached.
+                    if (i > Constants.NUMBER_OF_VARIABLES)
+                    {
+                        if (isGlobal) globalLimitReached = true;
+                        else playerLimitReached = true;
+                    }
+                    return i;
                 }
-
-            // If ID still equals -1, there are no more free variables.
-            // TODO: Handle running out of variables
-            if (id == -1)
-                throw new Exception();
-            return id;
         }
 
         private int NextFreeExtended(bool isGlobal)
         {
-            for (int i = 0; i < Constants.MAX_ARRAY_LENGTH; i++)
+            for (int i = 0;; i++)
                 if (!extendedVariableList(isGlobal).Any(ex => ex.Index == i))
+                {
+                    // Set 'extGlobalLimitReached' or 'extPlayerLimitReached' to true when the variable limit is reached.
+                    if (i > Constants.MAX_ARRAY_LENGTH)
+                    {
+                        if (isGlobal) extGlobalLimitReached = true;
+                        else extPlayerLimitReached = true;
+                    }
                     return i;
-
-            // TODO: Handle running out of extended variables.
-            throw new Exception();
+                }
         }
     
         public IndexReference Assign(string name, bool isGlobal, bool extended)
@@ -151,6 +158,23 @@ namespace Deltin.Deltinteger.Parse
     
         public void ToWorkshop(StringBuilder stringBuilder, OutputLanguage language)
         {
+            if (globalLimitReached || playerLimitReached || extGlobalLimitReached || extPlayerLimitReached)
+            {
+                List<string> collectionLimitsReached = new List<string>();
+
+                // Add names of the collections that exceed their variable limit.
+                if (globalLimitReached) collectionLimitsReached.Add("global");
+                if (playerLimitReached) collectionLimitsReached.Add("player");
+                if (extGlobalLimitReached) collectionLimitsReached.Add("ext. global");
+                if (extPlayerLimitReached) collectionLimitsReached.Add("ext. player");
+
+                stringBuilder.AppendLine(string.Format(
+                    "// The {0} reached the variable limit. Only a maximum of 128 variables and 1000 extended variables can be assigned.",
+                    Extras.ListJoin("variable collection", collectionLimitsReached.ToArray())
+                ));
+                stringBuilder.AppendLine();
+            }
+
             stringBuilder.AppendLine(I18n.I18n.Translate(language, "variables"));
             stringBuilder.AppendLine("{");
             stringBuilder.AppendLine(Extras.Indent(1, false) + I18n.I18n.Translate(language, "global") + ":");

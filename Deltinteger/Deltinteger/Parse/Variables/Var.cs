@@ -122,14 +122,12 @@ namespace Deltin.Deltinteger.Parse
             return actionSet.IndexAssigner[this].GetVariable();
         }
     
-        public CompletionItem GetCompletion()
+        public CompletionItem GetCompletion() => new CompletionItem()
         {
-            return new CompletionItem()
-            {
-                Label = Name,
-                Kind = CompletionItemKind.Variable
-            };
-        }
+            Label = Name,
+            Kind = CompletionItemKind.Variable,
+            Detail = (CodeType?.Name ?? "define") + " " + Name
+        };
 
         public string GetLabel(bool markdown)
         {
