@@ -168,7 +168,7 @@ namespace Deltin.Deltinteger.Parse
 
         public Scope ReturningScope() => null;
         public CodeType Type() => null;
-        public IWorkshopTree Parse(ActionSet actionSet, bool asElement = true) => Element.Part<V_Subtract>(new V_Number(0), Expression.Parse(actionSet));
+        public IWorkshopTree Parse(ActionSet actionSet, bool asElement = true) => Element.Part<V_Multiply>(Expression.Parse(actionSet), new V_Number(-1));
     }
     
     public class OperatorAction : IExpression
