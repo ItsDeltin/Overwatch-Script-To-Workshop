@@ -45,7 +45,7 @@ expr
 	| left=expr BOOL right=expr                                                        #e_op_bool
 	;
 
-typeconvert : LESS_THAN PART? GREATER_THAN expr ;
+typeconvert : LESS_THAN code_type? GREATER_THAN expr? ;
 
 exprgroup   : LEFT_PAREN expr RIGHT_PAREN ;
 createarray : INDEX_START (expr (COMMA expr)*)? INDEX_END;

@@ -125,13 +125,17 @@ namespace Deltin.Deltinteger.Parse
 
         public TypeConvertAction(ParseInfo parseInfo, Scope scope, DeltinScriptParser.TypeconvertContext typeConvert)
         {
-            Expression = DeltinScript.GetExpression(parseInfo, scope, typeConvert.expr());
+            // Get the expression. Syntax error if there is none.
+            if (typeConvert.expr() == null)
+                parseInfo.Script.Diagnostics.Error("Expected expression.", DocRange.GetRange(typeConvert.GREATER_THAN()));
+            else
+                Expression = DeltinScript.GetExpression(parseInfo, scope, typeConvert.expr());
 
             // Get the type. Syntax error if there is none.
-            if (typeConvert.PART() == null)
+            if (typeConvert.code_type() == null)
                 parseInfo.Script.Diagnostics.Error("Expected type name.", DocRange.GetRange(typeConvert.LESS_THAN()));
             else
-                ConvertingTo = parseInfo.TranslateInfo.GetCodeType(typeConvert.PART().GetText(), parseInfo.Script.Diagnostics, DocRange.GetRange(typeConvert.PART()));
+                ConvertingTo = CodeType.GetCodeTypeFromContext(parseInfo, typeConvert.code_type());
         }
 
         public Scope ReturningScope() => ConvertingTo?.GetObjectScope();
