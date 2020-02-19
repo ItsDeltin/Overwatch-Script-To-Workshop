@@ -22,9 +22,6 @@ namespace Deltin.Deltinteger.Parse
         /// <summary>Determines if other classes can inherit this class.</summary>
         public bool CanBeExtended { get; protected set; } = false;
 
-        /// <summary>Should be true if the class was called in the script.</summary>
-        public bool ShouldInit { get; private set; } = false;
-
         public CodeType(string name)
         {
             Name = name;
@@ -77,39 +74,47 @@ namespace Deltin.Deltinteger.Parse
         public CodeType Type() => null;
         public IWorkshopTree Parse(ActionSet actionSet, bool asElement = true) => null;
 
-        /// <summary>
-        /// Determines if variables with this type can have their value changed.
-        /// </summary>
+        /// <summary>Determines if variables with this type can have their value changed.</summary>
         public virtual TypeSettable Constant() => TypeSettable.Normal;
 
+        /// <summary>The returning value when `new TypeName` is called.</summary>
+        /// <param name="actionSet">The actionset to use.</param>
+        /// <param name="constructor">The constuctor that was called.</param>
+        /// <param name="constructorValues">The parameter values of the constructor.</param>
+        /// <param name="additionalParameterData">Additional parameter data.</param>
         public virtual IWorkshopTree New(ActionSet actionSet, Constructor constructor, IWorkshopTree[] constructorValues, object[] additionalParameterData)
         {
             // Classes that can't be created shouldn't have constructors.
             throw new NotImplementedException();
         }
+        
+        /// <summary>Sets up an object reference when a new object is created. Is also called when a new object of a class extending this type is created.</summary>
+        /// <param name="actionSet">The actionset to use.</param>
+        /// <param name="reference">The reference of the object.</param>
         public virtual void BaseSetup(ActionSet actionSet, Element reference) => throw new NotImplementedException();
 
+        /// <summary>Assigns workshop elements so the class can function. Implementers should check if `wasCalled` is true.</summary>
         public virtual void WorkshopInit(DeltinScript translateInfo) {}
 
-        /// <summary>
-        /// Adds the class objects to the index assigner.
-        /// </summary>
+        /// <summary>Adds the class objects to the index assigner.</summary>
         /// <param name="source">The source of the type.</param>
         /// <param name="assigner">The assigner that the object variables will be added to.</param>
         public virtual void AddObjectVariablesToAssigner(IWorkshopTree reference, VarIndexAssigner assigner) {}
 
-        /// <summary>
-        /// Deletes a variable from memory.
-        /// </summary>
+        /// <summary>Deletes a variable from memory.</summary>
         /// <param name="actionSet">The action set to add the actions to.</param>
         /// <param name="reference">The object reference.</param>
         public virtual void Delete(ActionSet actionSet, Element reference) {}
 
+        /// <summary>Calls a type from the specified document range.</summary>
+        /// <param name="script">The script that the type was called from.</param>
+        /// <param name="callRange">The range of the call.</param>
         public virtual void Call(ScriptFile script, DocRange callRange)
         {
             script.AddHover(callRange, HoverHandler.Sectioned("class " + Name, Description));
         }
 
+        /// <summary>Gets the completion that will show up for the language server.</summary>
         public abstract CompletionItem GetCompletion();
 
         public static CodeType GetCodeTypeFromContext(ParseInfo parseInfo, DeltinScriptParser.Code_typeContext typeContext)
