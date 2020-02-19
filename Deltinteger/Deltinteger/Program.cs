@@ -126,7 +126,7 @@ namespace Deltin.Deltinteger
 
             Diagnostics diagnostics = new Diagnostics();
             ScriptFile root = new ScriptFile(diagnostics, new Uri(parseFile), text);
-            DeltinScript deltinScript = new DeltinScript(new FileGetter(null), diagnostics, root);
+            DeltinScript deltinScript = new DeltinScript(new TranslateSettings(diagnostics, root));
             diagnostics.PrintDiagnostics(Log);
             if (deltinScript.WorkshopCode != null)
                 WorkshopCodeResult(deltinScript.WorkshopCode);

@@ -23,14 +23,10 @@ namespace Deltin.Deltinteger.Pathfinder
             PathMap map = PathMap.ImportFromXML(file);
 
             string baseEditorFile = Extras.CombinePathWithDotNotation(null, "!PathfindEditor.del");
-            string baseEditorContent = File.ReadAllText(baseEditorFile);
             Diagnostics diagnostics = new Diagnostics();
 
-            DeltinScript deltinScript = new DeltinScript(
-                new FileGetter(null),
-                diagnostics,
-                new ScriptFile(diagnostics, new Uri(baseEditorFile), baseEditorContent),
-                (varCollection) => {
+            DeltinScript deltinScript = new DeltinScript(new TranslateSettings(diagnostics, baseEditorFile) {
+                AdditionalRules = (varCollection) => {
                     // Set the initial nodes.
                     Rule initialNodes = new Rule("Initial Nodes");
                     initialNodes.Actions = ArrayBuilder<Element>.Build(
@@ -40,7 +36,8 @@ namespace Deltin.Deltinteger.Pathfinder
 
                     return new Rule[] { initialNodes };
                 }
-            );
+            });
+
             string code = deltinScript.WorkshopCode;
 
             if (code != null)

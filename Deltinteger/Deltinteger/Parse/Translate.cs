@@ -29,23 +29,23 @@ namespace Deltin.Deltinteger.Parse
         public TranslateRule InitialGlobal { get; private set; }
         public TranslateRule InitialPlayer { get; private set; }
 
-        public DeltinScript(FileGetter fileGetter, Diagnostics diagnostics, ScriptFile rootRuleset, Func<VarCollection, Rule[]> addRules = null)
+        public DeltinScript(TranslateSettings translateSettings)
         {
-            FileGetter = fileGetter;
-            Diagnostics = diagnostics;
+            FileGetter = translateSettings.FileGetter;
+            Diagnostics = translateSettings.Diagnostics;
 
             types.AddRange(CodeType.DefaultTypes);
-            Importer = new Importer(rootRuleset.Uri);
+            Importer = new Importer(translateSettings.Root.Uri);
 
-            CollectScriptFiles(rootRuleset);
+            CollectScriptFiles(translateSettings.Root);
             
             GlobalScope = Scope.GetGlobalScope();
             RulesetScope = GlobalScope.Child();
             RulesetScope.PrivateCatch = true;
             
             Translate();
-            if (!diagnostics.ContainsErrors())
-                ToWorkshop(addRules);
+            if (!Diagnostics.ContainsErrors())
+                ToWorkshop(translateSettings.AdditionalRules);
         }
 
         void CollectScriptFiles(ScriptFile scriptFile)

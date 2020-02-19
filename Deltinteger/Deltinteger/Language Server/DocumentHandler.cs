@@ -176,7 +176,7 @@ namespace Deltin.Deltinteger.LanguageServer
                 {
                     Diagnostics diagnostics = new Diagnostics();
                     ScriptFile root = new ScriptFile(diagnostics, _parseItem.Uri, _parseItem.Text);
-                    DeltinScript deltinScript = new DeltinScript(_languageServer.FileGetter, diagnostics, root);
+                    DeltinScript deltinScript = new DeltinScript(new TranslateSettings(diagnostics, root, _languageServer.FileGetter));
                     _languageServer.LastParse = deltinScript;
 
                     // Publish the diagnostics.
