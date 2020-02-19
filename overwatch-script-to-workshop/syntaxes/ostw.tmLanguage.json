@@ -13,6 +13,7 @@
 				{"include": "#strings"},
 				{"include": "#new"},
 				{"include": "#if"},
+				{"include": "#modifiers"},
 				{"include": "#rule_option"},
 				{"include": "#keywords_control"},
 				{"include": "#block"},
@@ -47,24 +48,22 @@
 			}
 		},
 		"define_variable": {
-			"begin": "((public|private|static|globalvar|playervar)\\s+)*((define)|([_[:alnum:]]+)(\\s*\\[\\s*\\])*)(\\s+[_[:alnum:]]+)(\\s*(\\!|([0-9]+)))?(\\s*=)?",
+			"begin": "((define)|([_[:alnum:]]+)(\\s*\\[\\s*\\])*)(\\s+[_[:alnum:]]+)(\\s*(\\!|([0-9]+)))?(\\s*=)?",
 			"beginCaptures": {
 				"2": {"name":"keyword.other"},
-				"4": {"name":"keyword.other"},
-				"5": {"name":"entity.name.type"},
-				"7": {"name":"variable.name"},
-				"10": {"name":"constant.numeric"}
+				"3": {"name":"entity.name.type"},
+				"5": {"name":"variable.name"},
+				"8": {"name":"constant.numeric"}
 			},
 			"end": ";",
 			"patterns": [{"include": "#expressions"}]
 		},
 		"define_method": {
-			"begin": "((public|private|protected|override|virtual|static)\\s+)*(((method)|([_[:alnum:]]+)(\\s*\\[\\s*\\])*)\\s+)([_[:alnum:]]+\\s*\\()",
+			"begin": "((method)|([_[:alnum:]]+)(\\s*\\[\\s*\\])*)\\s+([_[:alnum:]]+\\s*\\()",
 			"beginCaptures": {
 				"2": {"name":"keyword.other"},
-				"5": {"name":"keyword.other"},
-				"6": {"name":"entity.name.class"},
-				"8": {"name":"entity.name.function"}
+				"3": {"name":"entity.name.class"},
+				"5": {"name":"entity.name.function"}
 			},
 			"end": "\\)",
 			"endCaptures": {
@@ -73,11 +72,10 @@
 			"patterns": [{"include": "#parameter"}]
 		},
 		"define_macro": {
-			"begin": "((public|private|static)\\s+)*(macro)\\s+([_[:alnum:]]+)\\s*\\(",
+			"begin": "(macro)\\s+(([_[:alnum:]]+)\\s*\\()",
 			"beginCaptures": {
-				"0": {"name":"entity.name.function"},
-				"2": {"name":"keyword.other"},
-				"3": {"name":"keyword.other"}
+				"1": {"name":"keyword.other"},
+				"2": {"name":"entity.name.function"}
 			},
 			"end": "\\)",
 			"endCaptures": {
@@ -92,6 +90,10 @@
 				"2": {"name":"keyword.other"},
 				"3": {"name":"keyword.other"}
 			}
+		},
+		"modifiers": {
+			"match": "public|private|protected|static|globalvar|playervar|ref|override|virtual",
+			"name": "keyword.other"
 		},
 		"parameter": {
 			"match": "((define)|([_[:alnum:]]+)(\\s*\\[\\s*\\])*)\\s+([_[:alnum:]]+)",
@@ -110,7 +112,6 @@
 				"6": {"name": "entity.name.class"}
 			}
 		},
-
 		"block": {
 			"begin": "{",
 			"end": "}",
@@ -118,6 +119,7 @@
 				{"include": "#comments"},
 				{"include": "#if"},
 				{"include": "#new"},
+				{"include": "#modifiers"},
 				{"include": "#keywords_control"},
 				{"include": "#define_macro"},
 				{"include": "#define_macro_var"},
