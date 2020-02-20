@@ -428,18 +428,32 @@ namespace Deltin.Deltinteger.Parse
     
         public static IScopeable GetMacro(ParseInfo parseInfo, Scope scope, DeltinScriptParser.Define_macroContext macroContext)
         {
-            if (macroContext.LEFT_PAREN() != null || macroContext.RIGHT_PAREN() != null)
-            {
-                var newMacro = new DefinedMacro(parseInfo, scope, macroContext);
-                parseInfo.TranslateInfo.ApplyBlock(newMacro);
-                return newMacro;
-            }
+            // If the ; is missing, syntax error.
+            if (macroContext.STATEMENT_END() == null)
+                parseInfo.Script.Diagnostics.Error("Expected ;", DocRange.GetRange((object)macroContext.TERNARY_ELSE() ?? (object)macroContext.name ?? (object)macroContext).end.ToRange());
+
+            // If the : is missing, syntax error.
+            if (macroContext.TERNARY_ELSE() == null)
+                parseInfo.Script.Diagnostics.Error("Expected :", DocRange.GetRange(macroContext).end.ToRange());
             else
             {
-                var newMacro = new MacroVar(parseInfo, scope, macroContext);
-                parseInfo.TranslateInfo.ApplyBlock(newMacro);
-                return newMacro;
+                // Get the expression that will be parsed.
+                if (macroContext.expr() == null)
+                    parseInfo.Script.Diagnostics.Error("Expected expression.", DocRange.GetRange(macroContext.TERNARY_ELSE()));
             }
+
+            // Get the return type.
+            CodeType returnType = CodeType.GetCodeTypeFromContext(parseInfo, macroContext.code_type());
+
+            IScopeable newMacro;
+
+            if (macroContext.LEFT_PAREN() != null || macroContext.RIGHT_PAREN() != null)
+                newMacro = new DefinedMacro(parseInfo, scope, macroContext, returnType);
+            else
+                newMacro = new MacroVar(parseInfo, scope, macroContext, returnType);
+
+            parseInfo.TranslateInfo.ApplyBlock((IApplyBlock)newMacro);
+            return newMacro;
         }
 
         private ClassData _classData = null;

@@ -23,7 +23,7 @@ namespace Deltin.Deltinteger.Parse
 
         public CallInfo CallInfo { get; }
 
-        public MacroVar(ParseInfo parseInfo, Scope scope, DeltinScriptParser.Define_macroContext macroContext)
+        public MacroVar(ParseInfo parseInfo, Scope scope, DeltinScriptParser.Define_macroContext macroContext, CodeType returnType)
         {
             Name = macroContext.name.Text;
             AccessLevel = macroContext.accessor().GetAccessLevel();
@@ -31,16 +31,8 @@ namespace Deltin.Deltinteger.Parse
             CallInfo = new CallInfo(this, parseInfo.Script);
             Static = macroContext.STATIC() != null;
 
-            if (macroContext.TERNARY_ELSE() == null)
-            {
-                parseInfo.Script.Diagnostics.Error("Expected :", DocRange.GetRange(macroContext).end.ToRange());
-            }
-            else
-            {
-                ExpressionToParse = macroContext.expr();
-                if (ExpressionToParse == null)
-                    parseInfo.Script.Diagnostics.Error("Expected expression.", DocRange.GetRange(macroContext.TERNARY_ELSE()));
-            }
+            ReturnType = returnType;
+            ExpressionToParse = macroContext.expr();
 
             this.scope = scope;
             this.parseInfo = parseInfo;
@@ -54,17 +46,13 @@ namespace Deltin.Deltinteger.Parse
 
         public void SetupBlock()
         {
-            if (ExpressionToParse != null)
-            {
-                Expression = DeltinScript.GetExpression(parseInfo.SetCallInfo(CallInfo), scope, ExpressionToParse);
-                ReturnType = Expression?.Type();
-            }
+            if (ExpressionToParse != null) Expression = DeltinScript.GetExpression(parseInfo.SetCallInfo(CallInfo), scope, ExpressionToParse);
             foreach (var listener in listeners) listener.Applied();
         }
 
         public IWorkshopTree Parse(ActionSet actionSet, bool asElement = true) => Expression.Parse(actionSet);
 
-        public Scope ReturningScope() => ReturnType?.GetObjectScope() ?? parseInfo.TranslateInfo.PlayerVariableScope;
+        public Scope ReturningScope() => ReturnType.GetObjectScope(parseInfo.TranslateInfo);
 
         public CodeType Type() => ReturnType;
 
