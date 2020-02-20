@@ -109,7 +109,7 @@ ow_rule :
 	block?
 	;
 
-define_method : DOCUMENTATION* method_attributes* (VOID | code_type) name=PART LEFT_PAREN setParameters RIGHT_PAREN subroutineRuleName=STRINGLITERAL?
+define_method : DOCUMENTATION* method_attributes* (VOID | DEFINE | code_type) name=PART LEFT_PAREN setParameters RIGHT_PAREN subroutineRuleName=STRINGLITERAL?
 	block?
 	;
 
@@ -215,7 +215,7 @@ MACRO     : 'macro'     ;
 DISABLED  : 'disabled'  ;
 ENUM      : 'enum'      ;
 REF       : 'ref'       ;
-VOID      : 'method'	;
+VOID      : 'void'		;
 ASYNC     : 'async'		;
 OVERRIDE  : 'override'  ;
 VIRTUAL   : 'virtual'   ;

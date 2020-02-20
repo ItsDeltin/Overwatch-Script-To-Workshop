@@ -16,11 +16,9 @@ namespace Deltin.Deltinteger.Parse
 
         // Block data
         private BlockAction block;
-        private bool doesReturnValue;
-        /// <summary>
-        /// If there is only one return statement, return the reference to
-        /// the return expression instead of assigning it to a variable to reduce the number of actions.
-        /// </summary>
+        private readonly bool doesReturnValue;
+        /// <summary>If there is only one return statement, return the reference to
+        /// the return expression instead of assigning it to a variable to reduce the number of actions.</summary>
         private bool multiplePaths;
 
         private SubroutineInfo subroutineInfo;
@@ -37,7 +35,11 @@ namespace Deltin.Deltinteger.Parse
             GetAttributes();
 
             // Get the type.
-            ReturnType = CodeType.GetCodeTypeFromContext(parseInfo, context.code_type());
+            if (context.VOID() == null)
+            {
+                doesReturnValue = true;
+                ReturnType = CodeType.GetCodeTypeFromContext(parseInfo, context.code_type());
+            }
 
             // Setup the parameters and parse the block.
             if (SubroutineName == null)
@@ -92,8 +94,7 @@ namespace Deltin.Deltinteger.Parse
             */
             
             // Syntax error if the block is missing.
-            if (context.block() == null)
-                parseInfo.Script.Diagnostics.Error("Expected block.", nameRange);
+            if (context.block() == null) parseInfo.Script.Diagnostics.Error("Expected block.", nameRange);
 
             // Add to the scope. Check for conflicts if the method is not overriding.
             scope.AddMethod(this, parseInfo.Script.Diagnostics, nameRange, !Attributes.Override);
@@ -157,40 +158,41 @@ namespace Deltin.Deltinteger.Parse
             }
         }
 
-        public override void SetupParameters()
-        {
-            // TODO: Check if parameters need to be added here.
-        }
         // Sets up the method's block.
         public override void SetupBlock()
         {
             if (context.block() != null)
             {
                 block = new BlockAction(parseInfo.SetCallInfo(CallInfo), methodScope, context.block());
-                ValidateReturns(parseInfo.Script, context);
+                ValidateReturns();
             }
             foreach (var listener in listeners) listener.Applied();
         }
 
         // Makes sure each return statement returns a value if the method returns a value and that each path returns a value.
-        private void ValidateReturns(ScriptFile script, DeltinScriptParser.Define_methodContext context)
+        private void ValidateReturns()
         {
             ReturnAction[] returns = GetReturns();
-            if (returns.Any(ret => ret.ReturningValue != null))
+            if (doesReturnValue)
             {
-                doesReturnValue = true;
-
                 // If there is only one return statement, return the reference to
                 // the return statement to reduce the number of actions.
                 multiplePaths = returns.Length > 1;
 
                 // Syntax error if there are any paths that don't return a value.
-                CheckPath(script, new PathInfo(block, DocRange.GetRange(context.name), true));
+                CheckPath(parseInfo.Script, new PathInfo(block, DocRange.GetRange(context.name), true));
 
-                // If one return statement returns a value, the rest must as well.
+                // Syntax error if a return statement does not return a value.
                 foreach (var ret in returns)
                     if (ret.ReturningValue == null)
-                        script.Diagnostics.Error("Must return a value.", ret.ErrorRange);
+                        parseInfo.Script.Diagnostics.Error("Must return a value.", ret.ErrorRange);
+            }
+            else
+            {
+                // Syntax error on any return statement that returns a value.
+                foreach (var ret in returns)
+                    if (ret.ReturningValue != null)
+                        parseInfo.Script.Diagnostics.Error(Name + " is void, so no value can be returned.", ret.ErrorRange);
             }
         }
 

@@ -59,7 +59,7 @@
 			"patterns": [{"include": "#expressions"}]
 		},
 		"define_method": {
-			"begin": "((method)|([_[:alnum:]]+)(\\s*\\[\\s*\\])*)\\s+([_[:alnum:]]+\\s*\\()",
+			"begin": "((void|define)|([_[:alnum:]]+)(\\s*\\[\\s*\\])*)\\s+([_[:alnum:]]+\\s*\\()",
 			"beginCaptures": {
 				"2": {"name":"keyword.other"},
 				"3": {"name":"entity.name.class"},
@@ -201,7 +201,7 @@
 		},
 		"keywords_other": {
 			"name": "keyword.other",
-			"match": "\\b(in|define|true|false|method|recursive|playervar|globalvar|buildervar|null|struct|class|public|private|static|protected|new|this|as|delete|root|macro)\\b"
+			"match": "\\b(in|define|true|false|recursive|playervar|globalvar|buildervar|null|struct|class|public|private|static|protected|new|this|as|delete|root|macro)\\b"
 		},
 		"variables": {
 			"name": "variable",
