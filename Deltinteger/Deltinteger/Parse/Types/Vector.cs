@@ -8,6 +8,8 @@ namespace Deltin.Deltinteger.Parse
 {
     public class VectorType : CodeType
     {
+        public static VectorType Instance { get; } = new VectorType();
+
         private Scope objectScope = new Scope("Vector");
         private Scope staticScope = new Scope("Vector");
 
@@ -20,7 +22,7 @@ namespace Deltin.Deltinteger.Parse
 
         private InternalVar Zero;
 
-        public VectorType() : base("Vector")
+        private VectorType() : base("Vector")
         {
             CanBeDeleted = false;
             CanBeExtended = false;

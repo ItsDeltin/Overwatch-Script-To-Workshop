@@ -336,6 +336,7 @@ namespace Deltin.Deltinteger.Elements
         public UsageDiagnostic[] UsageDiagnostics { get; }
         public WikiMethod Wiki { get; }
         public StringOrMarkupContent Documentation => Wiki?.Description;
+        private ValueType ElementValueType { get; }
 
         // IScopeable defaults
         public LanguageServer.Location DefinedAt { get; } = null;
@@ -352,6 +353,7 @@ namespace Deltin.Deltinteger.Elements
             WorkshopName = data.ElementName;
             Type = type;
             IsValue = data.IsValue;
+            ElementValueType = data.ValueType;
             WorkshopParameters = type.GetCustomAttributes<ParameterBase>().ToArray();
             UsageDiagnostics = type.GetCustomAttributes<UsageDiagnostic>().ToArray();
             Hidden = type.GetCustomAttribute<HideElement>() != null;
@@ -361,6 +363,10 @@ namespace Deltin.Deltinteger.Elements
 
         public void ApplyParameters()
         {
+            // Set the return type to the Vector class if the value returns a vector.
+            if (ElementValueType == ValueType.Vector) ReturnType = VectorType.Instance;
+
+            // Get the parameters.
             Parameters = new Parse.CodeParameter[WorkshopParameters.Length];
             for (int i = 0; i < Parameters.Length; i++)
             {
