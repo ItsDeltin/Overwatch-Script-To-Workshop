@@ -623,11 +623,11 @@ namespace Deltin.Deltinteger.Elements
             new Vertex(0, 0, 1);
     }
 
-    [ElementData("Game Mode", ValueType.Vector)]
+    [ElementData("Game Mode", ValueType.Gamemode)]
     [EnumParameter("Gamemode", typeof(GameMode))]
     public class V_GameModeVar : Element {}
 
-    [ElementData("Current Game Mode", ValueType.Vector)]
+    [ElementData("Current Game Mode", ValueType.Gamemode)]
     public class V_CurrentGameMode : Element {}
 
     [ElementData("Global Variable", ValueType.Any)]

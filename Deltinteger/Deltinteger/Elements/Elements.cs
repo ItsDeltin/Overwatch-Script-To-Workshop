@@ -26,7 +26,8 @@ namespace Deltin.Deltinteger.Elements
         Vector = 8,
         Player = 16,
         Team = 32,
-        Map = 64
+        Map = 64,
+        Gamemode = 128
     }
 
     public abstract class Element : IWorkshopTree
