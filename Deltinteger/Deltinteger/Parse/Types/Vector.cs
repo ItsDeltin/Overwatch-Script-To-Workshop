@@ -36,6 +36,12 @@ namespace Deltin.Deltinteger.Parse
             objectScope.AddNativeMethod(CustomMethodData.GetCustomMethod<CrossProduct>());
             objectScope.AddNativeMethod(CustomMethodData.GetCustomMethod<Normalize>());
             objectScope.AddNativeMethod(CustomMethodData.GetCustomMethod<DirectionTowards>());
+            objectScope.AddNativeMethod(CustomMethodData.GetCustomMethod<FarthestPlayer>());
+            objectScope.AddNativeMethod(CustomMethodData.GetCustomMethod<ClosestPlayer>());
+            objectScope.AddNativeMethod(CustomMethodData.GetCustomMethod<IsInLineOfSight>());
+            objectScope.AddNativeMethod(CustomMethodData.GetCustomMethod<Towards>());
+            objectScope.AddNativeMethod(CustomMethodData.GetCustomMethod<AsLocalVector>());
+            objectScope.AddNativeMethod(CustomMethodData.GetCustomMethod<AsWorldVector>());
         }
 
         private InternalVar CreateInternalVar(string name, string documentation, bool isStatic = false)
@@ -120,6 +126,72 @@ namespace Deltin.Deltinteger.Parse
             };
 
             public override IWorkshopTree Get(ActionSet actionSet, IWorkshopTree[] parameterValues) => Element.Part<V_DirectionTowards>(actionSet.CurrentObject, parameterValues[0]);
+        }
+
+        // FarthestPlayer() method
+        [CustomMethod("FarthestPlayer", "The farthest player from the vector, optionally restricted by team.", CustomMethodType.Value, false)]
+        class FarthestPlayer : CustomMethodBase
+        {
+            public override CodeParameter[] Parameters() => new CodeParameter[] {
+                new CodeParameter("team", "The team to get the farthest player with.", new ExpressionOrWorkshopValue(Element.Part<V_TeamVar>(EnumData.GetEnumValue(Team.All))))
+            };
+
+            public override IWorkshopTree Get(ActionSet actionSet, IWorkshopTree[] parameterValues) => Element.Part<V_FarthestPlayerFrom>(actionSet.CurrentObject, parameterValues[0]);
+        }
+
+        // ClosestPlayer() method
+        [CustomMethod("ClosestPlayer", "The closest player to the vector, optionally restricted by team.", CustomMethodType.Value, false)]
+        class ClosestPlayer : CustomMethodBase
+        {
+            public override CodeParameter[] Parameters() => new CodeParameter[] {
+                new CodeParameter("team", "The team to get the closest player with.", new ExpressionOrWorkshopValue(Element.Part<V_TeamVar>(EnumData.GetEnumValue(Team.All))))
+            };
+
+            public override IWorkshopTree Get(ActionSet actionSet, IWorkshopTree[] parameterValues) => Element.Part<V_ClosestPlayerTo>(actionSet.CurrentObject, parameterValues[0]);
+        }
+
+        // InLineOfSight() method
+        [CustomMethod("IsInLineOfSight", "Whether the vector has line of sight with the specified vector.", CustomMethodType.Value, false)]
+        class IsInLineOfSight : CustomMethodBase
+        {
+            public override CodeParameter[] Parameters() => new CodeParameter[] {
+                new CodeParameter("other", "The vector to determine line of site."),
+                new CodeParameter("barriers", "Defines how barriers affect line of sight.", WorkshopEnumType.GetEnumType<BarrierLOS>(), new ExpressionOrWorkshopValue(EnumData.GetEnumValue(BarrierLOS.NoBarriersBlock))),
+            };
+
+            public override IWorkshopTree Get(ActionSet actionSet, IWorkshopTree[] parameterValues) => Element.Part<V_IsInLineOfSight>(actionSet.CurrentObject, parameterValues[0], parameterValues[1]);
+        }
+    
+        [CustomMethod("Towards", "The displacement vector from the vector to another.", CustomMethodType.Value, false)]
+        class Towards : CustomMethodBase
+        {
+            public override CodeParameter[] Parameters() => new CodeParameter[] {
+                new CodeParameter("other", "The vector to get the displacement towards.")
+            };
+
+            public override IWorkshopTree Get(ActionSet actionSet, IWorkshopTree[] parameterValues) => Element.Part<V_VectorTowards>(actionSet.CurrentObject, parameterValues[0]);
+        }
+    
+        [CustomMethod("AsLocalVector", "The vector in local coordinates corresponding to the vector in world coordinates.", CustomMethodType.Value, false)]
+        class AsLocalVector : CustomMethodBase
+        {
+            public override CodeParameter[] Parameters() => new CodeParameter[] {
+                new CodeParameter("relativePlayer", "The player to whom the resulting vector will be relative."),
+                new CodeParameter("transformation", "Specifies whether the vector should receive a rotation and a translation (usually applied to positions) or only a rotation (usually applied to directions and velocities).", WorkshopEnumType.GetEnumType<Transformation>())
+            };
+
+            public override IWorkshopTree Get(ActionSet actionSet, IWorkshopTree[] parameterValues) => Element.Part<V_LocalVectorOf>(actionSet.CurrentObject, parameterValues[0], parameterValues[1]);
+        }
+
+        [CustomMethod("AsWorldVector", "The vector in world coordinates corresponding to the vector in local coordinates.", CustomMethodType.Value, false)]
+        class AsWorldVector : CustomMethodBase
+        {
+            public override CodeParameter[] Parameters() => new CodeParameter[] {
+                new CodeParameter("relativePlayer", "The player to whom the resulting vector will be relative."),
+                new CodeParameter("transformation", "Specifies whether the vector should receive a rotation and a translation (usually applied to positions) or only a rotation (usually applied to directions and velocities).", WorkshopEnumType.GetEnumType<Transformation>())
+            };
+
+            public override IWorkshopTree Get(ActionSet actionSet, IWorkshopTree[] parameterValues) => Element.Part<V_WorldVectorOf>(actionSet.CurrentObject, parameterValues[0], parameterValues[1]);
         }
     }
 }
