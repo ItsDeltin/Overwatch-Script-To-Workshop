@@ -42,6 +42,27 @@ namespace Deltin.Deltinteger.LanguageServer
             }
 
             return Unit.Task;
+
+            OutputLanguage GetOutputLanguage(string languageString)
+            {
+                switch (languageString)
+                {
+                    case "English": return OutputLanguage.enUS;
+                    case "German": return OutputLanguage.deDE;
+                    case "Spanish (Castilian)": return OutputLanguage.esES;
+                    case "Spanish (Mexico)": return OutputLanguage.esMX;
+                    case "French": return OutputLanguage.frFR;
+                    case "Italian": return OutputLanguage.itIT;
+                    case "Japanese": return OutputLanguage.jaJP;
+                    case "Korean": return OutputLanguage.koKR;
+                    case "Polish": return OutputLanguage.plPL;
+                    case "Portuguese": return OutputLanguage.ptBR;
+                    case "Russian": return OutputLanguage.ruRU;
+                    case "Chinese (S)": return OutputLanguage.zhCN;
+                    case "Chinese (T)": return OutputLanguage.zhTW;
+                    default: return OutputLanguage.enUS;
+                }
+            }
         }
 
         public object GetRegistrationOptions()
@@ -54,27 +75,6 @@ namespace Deltin.Deltinteger.LanguageServer
         public void SetCapability(DidChangeConfigurationCapability capability)
         {
             _capability = capability;
-        }
-
-        private OutputLanguage GetOutputLanguage(string languageString)
-        {
-            switch (languageString)
-            {
-                case "English": return OutputLanguage.enUS;
-                case "German": return OutputLanguage.deDE;
-                case "Spanish (Castilian)": return OutputLanguage.esES;
-                case "Spanish (Mexico)": return OutputLanguage.esMX;
-                case "French": return OutputLanguage.frFR;
-                case "Italian": return OutputLanguage.itIT;
-                case "Japanese": return OutputLanguage.jaJP;
-                case "Korean": return OutputLanguage.koKR;
-                case "Polish": return OutputLanguage.plPL;
-                case "Portuguese": return OutputLanguage.ptBR;
-                case "Russian": return OutputLanguage.ruRU;
-                case "Chinese (S)": return OutputLanguage.zhCN;
-                case "Chinese (T)": return OutputLanguage.zhTW;
-                default: return OutputLanguage.enUS;
-            }
         }
     }
 }
