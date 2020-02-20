@@ -30,7 +30,7 @@ Object-serve scope. Only object members.
         /// <summary>Determines if the class elements were resolved.</summary>
         protected bool elementsResolved { get; private set; } = false;
 
-        /// <summary>pee pee</summary>
+        /// <summary>Determines if the class was initialized for the workshop output.</summary>
         protected bool workshopInitialized { get; private set; } = false;
 
         public int Identifier { get; private set; } = -1;

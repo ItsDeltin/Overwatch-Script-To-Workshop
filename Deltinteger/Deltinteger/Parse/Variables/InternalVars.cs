@@ -12,7 +12,6 @@ namespace Deltin.Deltinteger.Parse
         public Location DefinedAt => null;
         public bool WholeContext => true;
         public CompletionItemKind CompletionItemKind { get; set; } = CompletionItemKind.Variable;
-        public string Detail { get; set; }
         public string Documentation { get; set; }
         public CodeType CodeType { get; set; }
         public bool IsSettable { get; set; } = true;
@@ -45,7 +44,7 @@ namespace Deltin.Deltinteger.Parse
         public virtual CompletionItem GetCompletion() => new CompletionItem() {
             Label = Name,
             Kind = CompletionItemKind,
-            Detail = Detail,
+            Detail = GetLabel(false),
             Documentation = Extras.GetMarkupContent(Documentation)
         };
 
@@ -53,7 +52,8 @@ namespace Deltin.Deltinteger.Parse
         {
             string typeName = "define";
             if (CodeType != null) typeName = CodeType.Name;
-            return HoverHandler.Sectioned(typeName + " " + Name, null);
+            if (markdown) return HoverHandler.Sectioned(typeName + " " + Name, Documentation);
+            else return typeName + " " + Name;
         }
     }
 }

@@ -149,6 +149,7 @@ namespace Deltin.Deltinteger.Parse
             // Add custom classes here.
             _defaultTypes.Add(new Pathfinder.PathmapClass());
             _defaultTypes.Add(new Models.AssetClass());
+            _defaultTypes.Add(new VectorType());
         }
     }
 
