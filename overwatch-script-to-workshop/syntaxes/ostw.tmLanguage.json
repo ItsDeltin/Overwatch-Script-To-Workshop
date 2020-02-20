@@ -84,15 +84,14 @@
 			"patterns": [{"include": "#parameter"}]
 		},
 		"define_macro_var": {
-			"match": "((public|private|static)\\s+)*(macro)\\s+([_[:alnum:]]+)",
+			"match": "(macro)\\s+([_[:alnum:]]+)",
 			"captures": {
-				"0": {"name":"variable.other"},
-				"2": {"name":"keyword.other"},
-				"3": {"name":"keyword.other"}
+				"0": {"name":"keyword.other"},
+				"1": {"name":"variable.other"}
 			}
 		},
 		"modifiers": {
-			"match": "public|private|protected|static|globalvar|playervar|ref|override|virtual",
+			"match": "\\b(public|private|protected|static|globalvar|playervar|ref|override|virtual)\\b",
 			"name": "keyword.other"
 		},
 		"parameter": {
