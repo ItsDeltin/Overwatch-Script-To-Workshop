@@ -7,11 +7,13 @@ namespace Deltin.Deltinteger.Parse
     {
         public IIndexReferencer Calling { get; }
         public IExpression[] Index { get; }
+        private readonly DeltinScript translateInfo;
 
-        public CallVariableAction(IIndexReferencer calling, IExpression[] index)
+        public CallVariableAction(DeltinScript translateInfo, IIndexReferencer calling, IExpression[] index)
         {
             Calling = calling;
             Index = index;
+            this.translateInfo = translateInfo;
         }
 
         public IWorkshopTree Parse(ActionSet actionSet, bool asElement = true)
@@ -26,8 +28,7 @@ namespace Deltin.Deltinteger.Parse
 
         public Scope ReturningScope()
         {
-            if (Calling.Type() == null) return Calling.ReturningScope();
-            else return Type()?.GetObjectScope();
+            return Type()?.GetObjectScope(translateInfo);
         }
 
         public CodeType Type()

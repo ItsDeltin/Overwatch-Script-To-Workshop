@@ -51,7 +51,7 @@ namespace Deltin.Deltinteger.CustomMethods
         public bool WholeContext => true;
         public bool Static => true;
         
-        public CodeType ReturnType => null;
+        public CodeType ReturnType => DefaultType.Instance;
 
         public StringOrMarkupContent Documentation { get; }
 

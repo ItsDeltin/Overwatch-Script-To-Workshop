@@ -7,7 +7,7 @@ namespace Deltin.Deltinteger.Parse
     public class CodeParameter
     {
         public string Name { get; }
-        public CodeType Type { get; }
+        public CodeType Type { get; } = DefaultType.Instance;
         public string Documentation { get; }
         public ExpressionOrWorkshopValue DefaultValue { get; }
 

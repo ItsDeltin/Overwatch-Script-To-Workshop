@@ -162,7 +162,7 @@ Object-serve scope. Only object members.
                 ObjectVariables[i].AddToAssigner((Element)reference, assigner);
         }
 
-        public override Scope GetObjectScope() => serveObjectScope;
+        public override Scope GetObjectScope(DeltinScript translateInfo) => serveObjectScope;
         public override Scope ReturningScope() => staticScope;
 
         public override CompletionItem GetCompletion() => new CompletionItem() {

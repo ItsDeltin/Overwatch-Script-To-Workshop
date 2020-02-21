@@ -22,6 +22,8 @@ namespace Deltin.Deltinteger.Parse
         /// <summary>Determines if other classes can inherit this class.</summary>
         public bool CanBeExtended { get; protected set; } = false;
 
+        protected bool Default { get; set; } = false;
+
         public CodeType(string name)
         {
             Name = name;
@@ -53,7 +55,7 @@ namespace Deltin.Deltinteger.Parse
 
         public bool Implements(CodeType type)
         {
-            if (type == null) return false;
+            if (Default || type.Default) return true;
 
             // Iterate through all extended classes.
             CodeType checkType = this;
@@ -67,9 +69,9 @@ namespace Deltin.Deltinteger.Parse
         }
 
         // Static
-        public abstract Scope ReturningScope();
+        public virtual Scope ReturningScope() => null;
         // Object
-        public virtual Scope GetObjectScope() => null;
+        public virtual Scope GetObjectScope(DeltinScript translateInfo) => null;
 
         public CodeType Type() => null;
         public IWorkshopTree Parse(ActionSet actionSet, bool asElement = true) => null;
@@ -119,7 +121,7 @@ namespace Deltin.Deltinteger.Parse
 
         public static CodeType GetCodeTypeFromContext(ParseInfo parseInfo, DeltinScriptParser.Code_typeContext typeContext)
         {
-            if (typeContext == null) return null;
+            if (typeContext == null) return DefaultType.Instance;
             CodeType type = parseInfo.TranslateInfo.GetCodeType(typeContext.PART().GetText(), parseInfo.Script.Diagnostics, DocRange.GetRange(typeContext));
 
             if (type != null)
@@ -130,7 +132,7 @@ namespace Deltin.Deltinteger.Parse
                     for (int i = 0; i < typeContext.INDEX_START().Length; i++)
                         type = new ArrayType(type);
             }
-            return type;
+            return type ?? DefaultType.Instance;
         }
 
         static List<CodeType> _defaultTypes;
@@ -149,7 +151,7 @@ namespace Deltin.Deltinteger.Parse
             // Add custom classes here.
             _defaultTypes.Add(new Pathfinder.PathmapClass());
             _defaultTypes.Add(new Models.AssetClass());
-            _defaultTypes.Add(new VectorType());
+            _defaultTypes.Add(VectorType.Instance);
         }
     }
 

@@ -76,7 +76,7 @@ namespace Deltin.Deltinteger.LanguageServer
             if (markdown)
             {
                 result += "```ostw\n";
-                result += type?.Name ?? "method";
+                result += type?.Name ?? "void";
                 result += " ";
             }
             result += name + CodeParameter.GetLabels(parameters, false);

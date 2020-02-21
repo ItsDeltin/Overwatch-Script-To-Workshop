@@ -80,7 +80,7 @@ namespace Deltin.Deltinteger.Parse
             assigner.Add(VerticalAngle, Element.Part<V_VerticalAngleFromDirection>(reference));
         }
 
-        public override Scope GetObjectScope() => objectScope;
+        public override Scope GetObjectScope(DeltinScript translateInfo) => objectScope;
         public override Scope ReturningScope() => staticScope;
 
         public override CompletionItem GetCompletion() => new CompletionItem() {

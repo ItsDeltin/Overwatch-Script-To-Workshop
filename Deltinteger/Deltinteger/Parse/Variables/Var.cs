@@ -91,12 +91,6 @@ namespace Deltin.Deltinteger.Parse
         }
 
         // IExpression
-        public Scope ReturningScope()
-        {
-            ThrowIfNotFinalized();
-            if (CodeType == null) return parseInfo.TranslateInfo.PlayerVariableScope;
-            else return CodeType.GetObjectScope();
-        }
         public CodeType Type()
         {
             ThrowIfNotFinalized();

@@ -12,9 +12,12 @@ namespace Deltin.Deltinteger.Parse
         private OverloadChooser OverloadChooser { get; }
         private Constructor Constructor { get; }
         private IExpression[] ConstructorValues { get; }
+        private DeltinScript TranslateInfo { get; }
 
         public CreateObjectAction(ParseInfo parseInfo, Scope scope, DeltinScriptParser.Create_objectContext context)
         {
+            TranslateInfo = parseInfo.TranslateInfo;
+
             // Get the type. Syntax error if there is no type name.
             if (context.type == null)
                 parseInfo.Script.Diagnostics.Error("Expected a type name.", DocRange.GetRange(context.NEW()));
@@ -50,7 +53,7 @@ namespace Deltin.Deltinteger.Parse
         }
 
         public CodeType Type() => CreatingObjectOf;
-        public Scope ReturningScope() => CreatingObjectOf.GetObjectScope();
+        public Scope ReturningScope() => CreatingObjectOf.GetObjectScope(TranslateInfo);
 
         public IWorkshopTree Parse(ActionSet actionSet, bool asElement = true)
         {

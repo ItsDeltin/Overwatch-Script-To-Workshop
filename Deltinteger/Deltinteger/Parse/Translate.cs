@@ -418,7 +418,7 @@ namespace Deltin.Deltinteger.Parse
                         index[i] = GetExpression(parseInfo, getter, variableContext.array().expr(i));
                 }
 
-                return new CallVariableAction(var, index);
+                return new CallVariableAction(parseInfo.TranslateInfo, var, index);
             }
             else if (element is ScopedEnumMember) return (ScopedEnumMember)element;
             else if (element is DefinedEnumMember) return (DefinedEnumMember)element;

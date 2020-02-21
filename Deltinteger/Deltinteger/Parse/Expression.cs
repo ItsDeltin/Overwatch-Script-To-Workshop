@@ -85,7 +85,7 @@ namespace Deltin.Deltinteger.Parse
             }
         }
 
-        public Scope ReturningScope() => Type()?.GetObjectScope() ?? parseInfo.TranslateInfo.PlayerVariableScope;
+        public Scope ReturningScope() => Type()?.GetObjectScope(parseInfo.TranslateInfo);
         public CodeType Type() => (Expression.Type() as ArrayType)?.ArrayOfType;
 
         public IWorkshopTree Parse(ActionSet actionSet, bool asElement = true)
@@ -122,9 +122,12 @@ namespace Deltin.Deltinteger.Parse
     {
         public IExpression Expression { get; }
         public CodeType ConvertingTo { get; }
+        private readonly DeltinScript translateInfo;
 
         public TypeConvertAction(ParseInfo parseInfo, Scope scope, DeltinScriptParser.TypeconvertContext typeConvert)
         {
+            translateInfo = parseInfo.TranslateInfo;
+
             // Get the expression. Syntax error if there is none.
             if (typeConvert.expr() == null)
                 parseInfo.Script.Diagnostics.Error("Expected expression.", DocRange.GetRange(typeConvert.GREATER_THAN()));
@@ -138,7 +141,7 @@ namespace Deltin.Deltinteger.Parse
                 ConvertingTo = CodeType.GetCodeTypeFromContext(parseInfo, typeConvert.code_type());
         }
 
-        public Scope ReturningScope() => ConvertingTo?.GetObjectScope();
+        public Scope ReturningScope() => ConvertingTo?.GetObjectScope(translateInfo);
         public CodeType Type() => ConvertingTo;
         public IWorkshopTree Parse(ActionSet actionSet, bool asElement = true) => Expression.Parse(actionSet);
     }
@@ -257,12 +260,12 @@ namespace Deltin.Deltinteger.Parse
                 Alternative = DeltinScript.GetExpression(parseInfo, scope, ternaryContext.alternative);
         }
 
-        public Scope ReturningScope() => Type()?.GetObjectScope() ?? parseInfo.TranslateInfo.PlayerVariableScope;
+        public Scope ReturningScope() => Type()?.GetObjectScope(parseInfo.TranslateInfo);
         public CodeType Type()
         {
             // Consequent or Alternative can equal null on GetExpression failure.
             if (Consequent != null && Alternative != null && Consequent.Type() == Alternative.Type()) return Consequent.Type();
-            return null;
+            return DefaultType.Instance;
         }
         public IWorkshopTree Parse(ActionSet actionSet, bool asElement = true) => Element.TernaryConditional(Condition.Parse(actionSet), Consequent.Parse(actionSet), Alternative.Parse(actionSet));
     }
@@ -283,17 +286,19 @@ namespace Deltin.Deltinteger.Parse
 
     public class ThisAction : IExpression
     {
-        private CodeType ThisType { get; }
+        private readonly CodeType thisType;
+        private readonly DeltinScript translateInfo;
 
         public ThisAction(ParseInfo parseInfo, Scope scope, DeltinScriptParser.E_thisContext context)
         {
-            ThisType = scope.GetThis();
-            if (ThisType == null)
+            translateInfo = parseInfo.TranslateInfo;
+            thisType = scope.GetThis();
+            if (thisType == null)
                 parseInfo.Script.Diagnostics.Error("Keyword 'this' cannot be used here.", DocRange.GetRange(context));
         }
 
         public IWorkshopTree Parse(ActionSet actionSet, bool asElement = true) => actionSet.CurrentObject;
-        public CodeType Type() => ThisType;
-        public Scope ReturningScope() => ThisType?.GetObjectScope();
+        public CodeType Type() => thisType;
+        public Scope ReturningScope() => thisType?.GetObjectScope(translateInfo);
     }
 }

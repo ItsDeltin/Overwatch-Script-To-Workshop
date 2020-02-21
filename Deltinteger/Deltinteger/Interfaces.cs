@@ -63,8 +63,10 @@ namespace Deltin.Deltinteger
         IWorkshopTree GetVariable(Element eventPlayer = null);
     }
 
-    public interface IIndexReferencer : IScopeable, IExpression, ICallable, ILabeled
+    public interface IIndexReferencer : IScopeable, ICallable, ILabeled
     {
+        CodeType Type();
+        IWorkshopTree Parse(ActionSet actionSet, bool asElement = true);
         bool Settable();
         VariableType VariableType { get; }
     }

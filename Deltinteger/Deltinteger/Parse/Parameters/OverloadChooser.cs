@@ -257,16 +257,19 @@ namespace Deltin.Deltinteger.Parse
         {
             CodeType parameterType = option.Parameters[parameter].Type;
 
-            if (parameterType != null && (value.Type() != null && !value.Type().Implements(parameterType)))
+            if (value.Type() != null)
             {
-                // The parameter type does not match.
-                string msg = string.Format("Expected a value of type {0}.", option.Parameters[parameter].Type.Name);
-                optionDiagnostics[option].Add(new Diagnostic(msg, errorRange, Diagnostic.Error));
-            }
-            else if (value.Type() != null && parameterType == null && value.Type().Constant() == TypeSettable.Constant)
-            {
-                string msg = string.Format($"The type '{value.Type().Name}' cannot be used here.");
-                optionDiagnostics[option].Add(new Diagnostic(msg, errorRange, Diagnostic.Error));
+                if (!value.Type().Implements(parameterType))
+                {
+                    // The parameter type does not match.
+                    string msg = string.Format("Expected a value of type {0}.", option.Parameters[parameter].Type.Name);
+                    optionDiagnostics[option].Add(new Diagnostic(msg, errorRange, Diagnostic.Error));
+                }
+                else if (value.Type().Constant() == TypeSettable.Constant && value.Type() != parameterType)
+                {
+                    string msg = string.Format($"The type '{value.Type().Name}' cannot be used here.");
+                    optionDiagnostics[option].Add(new Diagnostic(msg, errorRange, Diagnostic.Error));
+                }
             }
         }
     

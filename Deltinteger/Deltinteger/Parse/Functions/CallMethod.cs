@@ -74,7 +74,7 @@ namespace Deltin.Deltinteger.Parse
             if (CallingMethod.ReturnType == null)
                 return parseInfo.TranslateInfo.PlayerVariableScope;
             else
-                return CallingMethod.ReturnType.GetObjectScope();
+                return CallingMethod.ReturnType.GetObjectScope(parseInfo.TranslateInfo);
         }
 
         public CodeType Type() => CallingMethod?.ReturnType;

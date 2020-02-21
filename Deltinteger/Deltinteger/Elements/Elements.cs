@@ -344,7 +344,7 @@ namespace Deltin.Deltinteger.Elements
         public bool WholeContext { get; } = true;
         public bool Static => true;
 
-        public CodeType ReturnType { get; } = null;
+        public CodeType ReturnType { get; private set; }
 
         public ElementList(Type type)
         {
@@ -364,7 +364,12 @@ namespace Deltin.Deltinteger.Elements
         public void ApplyParameters()
         {
             // Set the return type to the Vector class if the value returns a vector.
-            if (ElementValueType == ValueType.Vector) ReturnType = VectorType.Instance;
+            if (!IsValue)
+                ReturnType = null;
+            else if (ElementValueType == ValueType.Vector)
+                ReturnType = VectorType.Instance;
+            else
+                ReturnType = DefaultType.Instance;
 
             // Get the parameters.
             Parameters = new Parse.CodeParameter[WorkshopParameters.Length];
@@ -386,7 +391,7 @@ namespace Deltin.Deltinteger.Elements
                 }
                 else
                 {
-                    CodeType codeType = null;
+                    CodeType codeType = DefaultType.Instance;
 
                     // If the parameter is an enum, get the enum CodeType.
                     if (WorkshopParameters[i] is EnumParameter)
