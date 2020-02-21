@@ -344,7 +344,7 @@ namespace Deltin.Deltinteger.Elements
         public bool WholeContext { get; } = true;
         public bool Static => true;
 
-        public CodeType ReturnType { get; } = null;
+        public CodeType ReturnType { get; private set; }
 
         public ElementList(Type type)
         {
