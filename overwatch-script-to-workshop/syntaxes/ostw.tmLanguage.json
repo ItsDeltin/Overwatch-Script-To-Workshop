@@ -95,11 +95,12 @@
 			"name": "keyword.other"
 		},
 		"parameter": {
-			"match": "((define)|([_[:alnum:]]+)(\\s*\\[\\s*\\])*)\\s+([_[:alnum:]]+)",
+			"match": "(ref\\s+)?((define)|([_[:alnum:]]+)(\\s*\\[\\s*\\])*)\\s+([_[:alnum:]]+)",
 			"captures": {
-				"2": { "name": "keyword.other" },
-				"3": { "name": "entity.name.type" },
-				"5": { "name": "variable.parameter" }
+				"1": { "name": "keyword.other" },
+				"3": { "name": "keyword.other" },
+				"4": { "name": "entity.name.type" },
+				"6": { "name": "variable.parameter" }
 			}
 		},
 		"define_type": {
@@ -144,7 +145,7 @@
 			"name": "entity.name.function",
 			"begin": "[_[:alnum:]]+\\(",
 			"end": "\\)",
-			"patterns": [{"include": "#expressions"}]
+			"patterns": [{"include": "#parameter"}, {"include": "#expressions"}]
 		},
 		"new": {
 			"begin": "(new)\\s+([_[:alnum:]]+)\\s*\\(",
