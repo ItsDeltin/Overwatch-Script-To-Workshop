@@ -71,7 +71,7 @@ namespace Deltin.Deltinteger.Parse
             };
         }
 
-        public string GetLabel(bool markdown) => HoverHandler.Sectioned("macro " + Name, null);
+        public string GetLabel(bool markdown) => HoverHandler.Sectioned(ReturnType.Name + " " + Name, null);
 
         private List<IOnBlockApplied> listeners = new List<IOnBlockApplied>();
         public void OnBlockApply(IOnBlockApplied onBlockApplied)
