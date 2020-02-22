@@ -67,7 +67,7 @@ namespace Deltin.Deltinteger.LanguageServer
             if (markdown && description != null) result += "\n\r ----- \n\r" + (description.HasString ? description.String : description.MarkupContent.Value);
             return result;
         }
-        public static string GetLabel(CodeType type, string name, CodeParameter[] parameters, bool markdown, StringOrMarkupContent description)
+        public static string GetLabel(string type, string name, CodeParameter[] parameters, bool markdown, StringOrMarkupContent description)
         {
             if (name == null) throw new ArgumentNullException(nameof(name));
             if (parameters == null) throw new ArgumentNullException(nameof(parameters));
@@ -76,7 +76,7 @@ namespace Deltin.Deltinteger.LanguageServer
             if (markdown)
             {
                 result += "```ostw\n";
-                result += type?.Name ?? "method";
+                result += type ?? "void";
                 result += " ";
             }
             result += name + CodeParameter.GetLabels(parameters, false);

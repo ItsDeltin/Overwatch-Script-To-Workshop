@@ -16,7 +16,6 @@ namespace Deltin.Deltinteger.Parse
 
         // Block data
         private BlockAction block;
-        private readonly bool doesReturnValue;
         /// <summary>If there is only one return statement, return the reference to
         /// the return expression instead of assigning it to a variable to reduce the number of actions.</summary>
         private bool multiplePaths;

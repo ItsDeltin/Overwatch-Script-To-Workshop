@@ -367,31 +367,17 @@ namespace Deltin.Deltinteger.Parse
                 _foreachContext = foreachContext;
             }
 
-            public VarBuilderAttribute[] GetAttributes()
-            {
-                return new VarBuilderAttribute[0];
-            }
-
-            public DeltinScriptParser.Code_typeContext GetCodeType()
-            {
-                return _foreachContext.code_type();
-            }
-
-            public Location GetDefineLocation()
-            {
-                return new Location(ParseInfo.Script.Uri, GetNameRange());
-            }
-
-            public string GetName()
-            {
-                return _foreachContext.name?.Text;
-            }
+            public VarBuilderAttribute[] GetAttributes() => new VarBuilderAttribute[0];
+            public DeltinScriptParser.Code_typeContext GetCodeType() => _foreachContext.code_type();
+            public Location GetDefineLocation() => new Location(ParseInfo.Script.Uri, GetNameRange());
+            public string GetName() => _foreachContext.name?.Text;
 
             public DocRange GetNameRange()
             {
                 if (_foreachContext.name != null) return DocRange.GetRange(_foreachContext.name);
                 return DocRange.GetRange(_foreachContext);
             }
+            public DocRange GetTypeRange() => DocRange.GetRange((object)_foreachContext.code_type() ?? _foreachContext.DEFINE());
         }
     }
 }

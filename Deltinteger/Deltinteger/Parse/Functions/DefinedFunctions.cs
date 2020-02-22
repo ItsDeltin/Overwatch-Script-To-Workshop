@@ -24,6 +24,7 @@ namespace Deltin.Deltinteger.Parse
         protected Scope methodScope { get; }
         protected Scope containingScope { get; }
         protected Var[] ParameterVars { get; private set; }
+        protected bool doesReturnValue;
 
         public CallInfo CallInfo { get; }
 
@@ -59,7 +60,7 @@ namespace Deltin.Deltinteger.Parse
 
         public virtual bool DoesReturnValue() => true;
 
-        public string GetLabel(bool markdown) => HoverHandler.GetLabel(ReturnType, Name, Parameters, markdown, null);
+        public string GetLabel(bool markdown) => HoverHandler.GetLabel(!doesReturnValue ? null : ReturnType?.Name ?? "define", Name, Parameters, markdown, null);
 
         public abstract IWorkshopTree Parse(ActionSet actionSet, MethodCall methodCall);
 

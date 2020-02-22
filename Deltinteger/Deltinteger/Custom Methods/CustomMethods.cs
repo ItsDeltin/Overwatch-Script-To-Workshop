@@ -81,7 +81,7 @@ namespace Deltin.Deltinteger.CustomMethods
             return GetObject().Get(actionSet, methodCall.ParameterValues, methodCall.AdditionalParameterData);
         }
 
-        public string GetLabel(bool markdown) => HoverHandler.GetLabel(ReturnType, Name, Parameters, markdown, Documentation.HasString ? Documentation.String : Documentation.MarkupContent.Value);
+        public string GetLabel(bool markdown) => HoverHandler.GetLabel(CustomMethodType == CustomMethodType.Action ? null : ReturnType?.Name ?? "define", Name, Parameters, markdown, Documentation.HasString ? Documentation.String : Documentation.MarkupContent.Value);
         public CompletionItem GetCompletion()
         {
             return new CompletionItem()

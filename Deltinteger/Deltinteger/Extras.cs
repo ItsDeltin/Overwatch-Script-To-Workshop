@@ -211,4 +211,39 @@ namespace Deltin.Deltinteger
             return valueList.ToArray();
         }
     }
+
+    class MarkupBuilder
+    {
+        StringBuilder result = new StringBuilder();
+
+        public MarkupBuilder() {}
+
+        public MarkupBuilder Add(string line)
+        {
+            result.Append(line);
+            return this;
+        }
+        public MarkupBuilder NewLine()
+        {
+            result.Append("\n\r");
+            return this;
+        }
+        public MarkupBuilder StartCodeLine()
+        {
+            result.Append("```ostw\n");
+            return this;
+        }
+        public MarkupBuilder EndCodeLine()
+        {
+            result.Append("\n\r```");
+            return this;
+        }
+        public MarkupBuilder NewSection()
+        {
+            result.Append("\n\r ----- \n\r");
+            return this;
+        }
+
+        public override string ToString() => result.ToString();
+    }
 }

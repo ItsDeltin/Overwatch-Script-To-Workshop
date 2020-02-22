@@ -76,5 +76,7 @@ namespace Deltin.Deltinteger.Parse
             
             return attributes.ToArray();
         }
+
+        public DocRange GetTypeRange() => DocRange.GetRange((object)_defineContext.code_type() ?? _defineContext.DEFINE());
     }
 }

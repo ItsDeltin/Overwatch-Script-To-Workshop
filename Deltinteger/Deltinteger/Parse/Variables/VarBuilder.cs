@@ -11,6 +11,7 @@ namespace Deltin.Deltinteger.Parse
         protected ParseInfo _parseInfo;
         protected FileDiagnostics _diagnostics;
         protected DocRange _nameRange;
+        protected DocRange _typeRange;
 
         protected VarBuilderAttribute[] _attributes;
         protected VarInfo _varInfo;
@@ -46,6 +47,7 @@ namespace Deltin.Deltinteger.Parse
             _varInfo = new VarInfo(_contextHandler.GetName(), _contextHandler.GetDefineLocation(), _parseInfo);
 
             // Get the variable type.
+            _typeRange = _contextHandler.GetTypeRange();
             GetCodeType();
 
             // Apply attributes.
@@ -71,6 +73,8 @@ namespace Deltin.Deltinteger.Parse
             {
                 _varInfo.StoreType = StoreType.FullVariable;
             }
+
+            TypeCheck();
 
             return new Var(_varInfo);
         }
@@ -98,6 +102,13 @@ namespace Deltin.Deltinteger.Parse
         protected abstract void CheckAttributes();
         protected abstract void Apply();
 
+        protected virtual void TypeCheck()
+        {
+            // If the type of the variable is a constant workshop value and there is no initial value, throw a syntax error.
+            if (_varInfo.Type != null && _varInfo.Type.Constant() == TypeSettable.Constant && _varInfo.InitialValueContext == null)
+                _diagnostics.Error("Variables with constant workshop types must have an initial value.", _nameRange);
+        }
+
         public static implicit operator Var(VarBuilder builder) => builder.GetVar();
     }
 
@@ -109,6 +120,7 @@ namespace Deltin.Deltinteger.Parse
         DocRange GetNameRange();
         VarBuilderAttribute[] GetAttributes();
         DeltinScriptParser.Code_typeContext GetCodeType();
+        DocRange GetTypeRange();
     }
 
     public class VarBuilderAttribute

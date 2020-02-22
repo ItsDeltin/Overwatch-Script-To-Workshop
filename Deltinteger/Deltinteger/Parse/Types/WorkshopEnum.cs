@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Deltin.Deltinteger.Elements;
+using Deltin.Deltinteger.LanguageServer;
 using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
 using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItemKind;
 
@@ -24,20 +25,34 @@ namespace Deltin.Deltinteger.Parse
             EnumScope.ErrorName = "enum " + Name;
         }
 
-        override public Scope ReturningScope()
+        public override Scope ReturningScope() => EnumScope;
+        public override TypeSettable Constant() => EnumData.ConvertableToElement() ? TypeSettable.Convertable : TypeSettable.Constant;
+        public override CompletionItem GetCompletion() => new CompletionItem() {
+            Label = EnumData.CodeName,
+            Kind = CompletionItemKind.Enum
+        };
+        public override void Call(ScriptFile script, DocRange callRange)
         {
-            return EnumScope;
-        }
+            MarkupBuilder hoverContents = new MarkupBuilder();
 
-        override public TypeSettable Constant() => EnumData.ConvertableToElement() ? TypeSettable.Convertable : TypeSettable.Constant;
-
-        override public CompletionItem GetCompletion()
-        {
-            return new CompletionItem()
+            if (Constant() == TypeSettable.Convertable)
             {
-                Label = EnumData.CodeName,
-                Kind = CompletionItemKind.Enum
-            };
+                hoverContents
+                    .StartCodeLine()
+                    .Add("enum " + Name)
+                    .EndCodeLine();
+            }
+            else if (Constant() == TypeSettable.Constant)
+            {
+                hoverContents
+                    .StartCodeLine()
+                    .Add("constant " + Name)
+                    .EndCodeLine()
+                    .NewSection()
+                    .Add("Constant workshop types cannot be stored. Variables with this type cannot be changed from their initial value.");
+            }
+
+            script.AddHover(callRange, hoverContents.ToString());
         }
     
         public static WorkshopEnumType GetEnumType(EnumData enumData)

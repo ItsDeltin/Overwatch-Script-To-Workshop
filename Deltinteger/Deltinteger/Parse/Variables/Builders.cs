@@ -86,6 +86,9 @@ namespace Deltin.Deltinteger.Parse
 
         protected override void Apply()
         {
+            if (!_varInfo.Static && _varInfo.Type != null && _varInfo.Type.Constant() == TypeSettable.Constant)
+                _diagnostics.Error("Non-static variables with workshop constant types are not allowed.", _typeRange);
+
             _varInfo.WholeContext = true;
             _varInfo.OperationalScope = _varInfo.Static ? _staticScope : _objectScope;
             _varInfo.CodeLensType = CodeLensSourceType.ClassVariable;
@@ -117,6 +120,8 @@ namespace Deltin.Deltinteger.Parse
             _varInfo.OperationalScope = _operationalScope;
             _varInfo.CodeLensType = CodeLensSourceType.ParameterVariable;
         }
+
+        protected override void TypeCheck() {}
     }
 
     class SubroutineParameterVariable : ParameterVariable

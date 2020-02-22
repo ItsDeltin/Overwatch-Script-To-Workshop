@@ -424,7 +424,7 @@ namespace Deltin.Deltinteger.Elements
             else return element;
         }
 
-        public string GetLabel(bool markdown) => HoverHandler.GetLabel(ReturnType, Name, Parameters, markdown, Wiki?.Description);
+        public string GetLabel(bool markdown) => HoverHandler.GetLabel(!IsValue ? null : ReturnType?.Name ?? "define", Name, Parameters, markdown, Wiki?.Description);
 
         public CompletionItem GetCompletion()
         {
