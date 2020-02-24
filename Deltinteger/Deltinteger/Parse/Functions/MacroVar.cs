@@ -52,7 +52,7 @@ namespace Deltin.Deltinteger.Parse
 
         public IWorkshopTree Parse(ActionSet actionSet, bool asElement = true) => Expression.Parse(actionSet);
 
-        public Scope ReturningScope() => ReturnType.GetObjectScope();
+        public Scope ReturningScope() => ReturnType?.GetObjectScope() ?? parseInfo.TranslateInfo.PlayerVariableScope;
 
         public CodeType Type() => ReturnType;
 
@@ -71,7 +71,7 @@ namespace Deltin.Deltinteger.Parse
             };
         }
 
-        public string GetLabel(bool markdown) => HoverHandler.Sectioned(ReturnType.Name + " " + Name, null);
+        public string GetLabel(bool markdown) => HoverHandler.Sectioned((ReturnType?.Name ?? "define") + " " + Name, null);
 
         private List<IOnBlockApplied> listeners = new List<IOnBlockApplied>();
         public void OnBlockApply(IOnBlockApplied onBlockApplied)
