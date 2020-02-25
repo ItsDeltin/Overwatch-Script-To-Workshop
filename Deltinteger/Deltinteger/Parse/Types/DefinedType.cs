@@ -12,8 +12,9 @@ namespace Deltin.Deltinteger.Parse
     {
         public Location DefinedAt { get; }
 
-        private ParseInfo parseInfo;
-        private DeltinScriptParser.Type_defineContext typeContext;
+        private readonly ParseInfo parseInfo;
+        private readonly DeltinScriptParser.Type_defineContext typeContext;
+        private readonly List<Var> staticVariables = new List<Var>();
 
         public DefinedType(ParseInfo parseInfo, Scope scope, DeltinScriptParser.Type_defineContext typeContext) : base(typeContext.name.Text)
         {
@@ -98,6 +99,7 @@ namespace Deltin.Deltinteger.Parse
                 // Add to static scope.
                 else
                 {
+                    staticVariables.Add(newVar);
                     staticScope.CopyVariable(newVar);
                     operationalScope.CopyVariable(newVar);
                 }
@@ -130,6 +132,15 @@ namespace Deltin.Deltinteger.Parse
             staticScope = global.Child(scopeName);
             operationalScope = global.Child(scopeName);
             serveObjectScope = new Scope(scopeName);
+        }
+
+        public override void WorkshopInit(DeltinScript translateInfo)
+        {
+            if (workshopInitialized) return;
+            base.WorkshopInit(translateInfo);
+
+            foreach (Var staticVariable in staticVariables)
+                DefineAction.Assign(translateInfo.InitialGlobal.ActionSet, staticVariable);
         }
 
         protected override void New(ActionSet actionSet, NewClassInfo newClassInfo)

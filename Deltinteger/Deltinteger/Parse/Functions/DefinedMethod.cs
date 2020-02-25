@@ -131,10 +131,28 @@ namespace Deltin.Deltinteger.Parse
                 var newAttribute = new MethodAttributeHandler(context.method_attributes(i));
                 attributes[i] = newAttribute;
 
+                bool wasCopy = false;
+
                 // If the attribute already exists, syntax error.
                 for (int c = i - 1; c >= 0; c--)
                     if (attributes[c].Type == newAttribute.Type)
+                    {
                         newAttribute.Copy(parseInfo.Script.Diagnostics);
+                        wasCopy = true;
+                        break;
+                    }
+                
+                // Additonal syntax errors. Only throw if the attribute is not a copy.
+                if (!wasCopy)
+                {
+                    // Virtual attribute on a static method (static attribute was first.)
+                    if (Static && newAttribute.Type == MethodAttributeType.Virtual)
+                        parseInfo.Script.Diagnostics.Error("Static methods cannot be virtual.", newAttribute.Range);
+                    
+                    // Static attribute on a virtual method (virtual attribute was first.)
+                    if (Attributes.Virtual && newAttribute.Type == MethodAttributeType.Static)
+                        parseInfo.Script.Diagnostics.Error("Virtual methods cannot be static.", newAttribute.Range);
+                }
                 
                 // Apply the attribute.
                 switch (newAttribute.Type)
@@ -151,7 +169,7 @@ namespace Deltin.Deltinteger.Parse
                     // Apply override
                     case MethodAttributeType.Override: Attributes.Override = true; break;
                     
-                    // Appl Recursive
+                    // Apply Recursive
                     case MethodAttributeType.Recursive: Attributes.Recursive = true; break;
                 }
             }

@@ -13,19 +13,24 @@ namespace Deltin.Deltinteger.Parse
 
         public void Translate(ActionSet actionSet)
         {
+            Assign(actionSet, DefiningVariable);
+        }
+
+        public static void Assign(ActionSet actionSet, Var var)
+        {
             // Get the initial value.
             IWorkshopTree initialValue = new V_Number(0);
-            if (DefiningVariable.InitialValue != null)
-                initialValue = DefiningVariable.InitialValue.Parse(actionSet);
+            if (var.InitialValue != null)
+                initialValue = var.InitialValue.Parse(actionSet);
             
             // Add the variable to the assigner.
-            actionSet.IndexAssigner.Add(actionSet.VarCollection, DefiningVariable, actionSet.IsGlobal, initialValue);
+            actionSet.IndexAssigner.Add(actionSet.VarCollection, var, actionSet.IsGlobal, initialValue);
 
             // Set the initial value.
-            if (DefiningVariable.Settable())
+            if (var.Settable())
             {
                 actionSet.AddAction(
-                    ((IndexReference)actionSet.IndexAssigner[DefiningVariable]).SetVariable(
+                    ((IndexReference)actionSet.IndexAssigner[var]).SetVariable(
                         (Element)initialValue
                     )
                 );
