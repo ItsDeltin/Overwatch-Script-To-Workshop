@@ -91,7 +91,7 @@
 			}
 		},
 		"modifiers": {
-			"match": "\\b(public|private|protected|static|globalvar|playervar|ref|override|virtual)\\b",
+			"match": "\\b(public|private|protected|static|globalvar|playervar|ref|override|virtual|recursive)\\b",
 			"name": "keyword.other"
 		},
 		"parameter": {

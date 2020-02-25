@@ -23,7 +23,7 @@ namespace Deltin.Deltinteger.Parse
         protected ParseInfo parseInfo { get; }
         protected Scope methodScope { get; }
         protected Scope containingScope { get; }
-        protected Var[] ParameterVars { get; private set; }
+        public Var[] ParameterVars { get; private set; }
         protected bool doesReturnValue;
 
         public CallInfo CallInfo { get; }

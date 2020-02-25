@@ -237,6 +237,12 @@ namespace Deltin.Deltinteger.Parse
         {
             ActionList.AddRange(actions);
         }
+
+        public ActionSet InitialSet()
+        {
+            if (IsGlobal) return Translate.DeltinScript.InitialGlobal.ActionSet;
+            else return Translate.DeltinScript.InitialPlayer.ActionSet;
+        }
     }
 
     public interface IActionList

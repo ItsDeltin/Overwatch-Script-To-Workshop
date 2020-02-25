@@ -15,7 +15,7 @@ namespace Deltin.Deltinteger.Parse
             this.parent = parent;
         }
 
-        public void Add(VarCollection varCollection, Var var, bool isGlobal, IWorkshopTree referenceValue, bool recursive = false)
+        public IGettable Add(VarCollection varCollection, Var var, bool isGlobal, IWorkshopTree referenceValue, bool recursive = false)
         {
             if (varCollection == null) throw new ArgumentNullException(nameof(varCollection));
             if (var == null)           throw new ArgumentNullException(nameof(var          ));
@@ -27,6 +27,7 @@ namespace Deltin.Deltinteger.Parse
                 if (recursive) assigned = new RecursiveIndexReference(assigned);
                 if (references.ContainsKey(var)) throw new Exception(var.Name + " was already added into the variable index assigner.");
                 references.Add(var, assigned);
+                return assigned;
             }
             
             // Element reference
@@ -34,7 +35,9 @@ namespace Deltin.Deltinteger.Parse
             {
                 if (referenceValue == null) throw new ArgumentNullException(nameof(referenceValue));
                 if (references.ContainsKey(var)) throw new Exception(var.Name + " was already added into the variable index assigner.");
-                references.Add(var, new WorkshopElementReference(referenceValue));
+                var reference = new WorkshopElementReference(referenceValue);
+                references.Add(var, reference);
+                return reference;
             }
             
             else throw new NotImplementedException();

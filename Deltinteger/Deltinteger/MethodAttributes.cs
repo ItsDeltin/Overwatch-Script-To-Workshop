@@ -32,7 +32,7 @@ namespace Deltin.Deltinteger
         public IMethod[] Overriders => _overriders.ToArray();
         
         /// <summary>Determines if the method can be called recursively.</summary>
-        public bool Recursive => false;
+        public bool Recursive { get; set; }
 
         private readonly List<IMethod> _overriders = new List<IMethod>();
 

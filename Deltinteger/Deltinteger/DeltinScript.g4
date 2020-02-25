@@ -113,7 +113,7 @@ define_method : DOCUMENTATION* method_attributes* (VOID | DEFINE | code_type) na
 	block?
 	;
 
-method_attributes : accessor | STATIC | OVERRIDE | VIRTUAL ;
+method_attributes : accessor | STATIC | OVERRIDE | VIRTUAL | RECURSIVE;
 
 define_macro  : DOCUMENTATION* accessor? STATIC? (DEFINE | code_type) name=PART (LEFT_PAREN setParameters RIGHT_PAREN)? TERNARY_ELSE? expr? STATEMENT_END? ;
 
@@ -211,7 +211,6 @@ STATIC    : 'static'    ;
 IMPORT    : 'import'    ;
 AS        : 'as'        ;
 DELETE    : 'delete'    ;
-MACRO     : 'macro'     ;
 DISABLED  : 'disabled'  ;
 ENUM      : 'enum'      ;
 REF       : 'ref'       ;

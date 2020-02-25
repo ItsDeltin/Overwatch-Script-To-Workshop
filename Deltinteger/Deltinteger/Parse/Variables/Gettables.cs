@@ -68,12 +68,12 @@ namespace Deltin.Deltinteger.Parse
 
         public Element[] Push(Element value)
         {
-            return base.SetVariable(value, null, StackLength());
+            return base.ModifyVariable(Operation.AppendToArray, value);
         }
 
         public Element[] Pop()
         {
-            return base.SetVariable(Element.Part<V_ArraySlice>(base.GetVariable(), new V_Number(0), StackLength() - 1));
+            return base.ModifyVariable(Operation.RemoveFromArrayByIndex, StackLength() - 1);
         }
 
         private Element[] CurrentIndex(Element targetPlayer, params Element[] setAtIndex)

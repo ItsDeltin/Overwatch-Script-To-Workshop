@@ -12,15 +12,17 @@ namespace Deltin.Deltinteger.Parse
         private MethodAttributeHandler[] attributes;
 
         // Attributes
+        public bool IsSubroutine { get; private set; }
         public string SubroutineName { get; private set; }
 
         // Block data
-        private BlockAction block;
+        public BlockAction block { get; private set; }
+
         /// <summary>If there is only one return statement, return the reference to
         /// the return expression instead of assigning it to a variable to reduce the number of actions.</summary>
-        private bool multiplePaths;
+        public bool multiplePaths;
 
-        private SubroutineInfo subroutineInfo;
+        public SubroutineInfo subroutineInfo { get; private set; }
 
         public DefinedMethod(ParseInfo parseInfo, Scope scope, DeltinScriptParser.Define_methodContext context, CodeType containingType)
             : base(parseInfo, scope, context.name.Text, new Location(parseInfo.Script.Uri, DocRange.GetRange(context.name)))
@@ -41,7 +43,7 @@ namespace Deltin.Deltinteger.Parse
             }
 
             // Setup the parameters and parse the block.
-            if (SubroutineName == null)
+            if (!IsSubroutine)
                 SetupParameters(context.setParameters(), false);
             else
             {
@@ -49,7 +51,7 @@ namespace Deltin.Deltinteger.Parse
                 parseInfo.TranslateInfo.AddSubroutine(this);
 
                 // Subroutines should not have parameters.
-                SetupParameters(context.setParameters(), false);
+                SetupParameters(context.setParameters(), true);
             }
 
             // Override attribute.
@@ -112,7 +114,10 @@ namespace Deltin.Deltinteger.Parse
             // If the STRINGLITERAL is not null, the method will be stored in a subroutine.
             // Get the name of the rule the method will be stored in.
             if (context.STRINGLITERAL() != null)
+            {
                 SubroutineName = Extras.RemoveQuotes(context.STRINGLITERAL().GetText());
+                IsSubroutine = true;
+            }
             
             // method_attributes will ne null if there are no attributes.
             if (context.method_attributes() == null) return;
@@ -135,24 +140,19 @@ namespace Deltin.Deltinteger.Parse
                 switch (newAttribute.Type)
                 {
                     // Apply accessor
-                    case MethodAttributeType.Accessor:
-                        AccessLevel = newAttribute.AttributeContext.accessor().GetAccessLevel();
-                        break;
+                    case MethodAttributeType.Accessor: AccessLevel = newAttribute.AttributeContext.accessor().GetAccessLevel(); break;
                     
                     // Apply static
-                    case MethodAttributeType.Static:
-                        Static = true;
-                        break;
+                    case MethodAttributeType.Static: Static = true; break;
                     
                     // Apply virtual
-                    case MethodAttributeType.Virtual:
-                        Attributes.Virtual = true;
-                        break;
+                    case MethodAttributeType.Virtual: Attributes.Virtual = true; break;
                     
                     // Apply override
-                    case MethodAttributeType.Override:
-                        Attributes.Override = true;
-                        break;
+                    case MethodAttributeType.Override: Attributes.Override = true; break;
+                    
+                    // Appl Recursive
+                    case MethodAttributeType.Recursive: Attributes.Recursive = true; break;
                 }
             }
         }
@@ -258,8 +258,11 @@ namespace Deltin.Deltinteger.Parse
             
             if (Attributes.WasOverriden && methodCall.ResolveOverrides)
                 return ParseVirtual(actionSet, methodCall);
+            
+            if (Attributes.Recursive && !IsSubroutine)
+                return RecursiveStack.Call(this, methodCall, actionSet);
 
-            if (SubroutineName != null)
+            if (IsSubroutine)
                 return ParseSubroutine(actionSet, methodCall);
             
             return ParseNormal(actionSet, methodCall);
@@ -323,7 +326,7 @@ namespace Deltin.Deltinteger.Parse
         // Sets up single-instance methods for methods with the 'rule' attribute.
         public void SetupSubroutine()
         {
-            if (SubroutineName == null) throw new Exception(Name + " does not have the subroutine attribute.");
+            if (!IsSubroutine) throw new Exception(Name + " does not have the subroutine attribute.");
 
             // Setup the subroutine element.
             Subroutine subroutine = parseInfo.TranslateInfo.SubroutineCollection.NewSubroutine(Name);
@@ -335,6 +338,14 @@ namespace Deltin.Deltinteger.Parse
             ReturnHandler returnHandler = new ReturnHandler(subroutineRule.ActionSet, Name, multiplePaths);
             ActionSet actionSet = subroutineRule.ActionSet.New(returnHandler);
 
+            // Get the variables that will be used to store the parameters.
+            IndexReference[] parameterStores = new IndexReference[ParameterVars.Length];
+            for (int i = 0; i < ParameterVars.Length; i++)
+                parameterStores[i] = actionSet.IndexAssigner.Add(actionSet.VarCollection, ParameterVars[i], actionSet.IsGlobal, null, Attributes.Recursive) as IndexReference;
+            
+            // Set the subroutine info.
+            subroutineInfo = new SubroutineInfo(subroutine, returnHandler, subroutineRule, parameterStores);
+
             // Parse the block.
             block.Translate(actionSet);
 
@@ -343,8 +354,6 @@ namespace Deltin.Deltinteger.Parse
 
             // Add the subroutine.
             parseInfo.TranslateInfo.WorkshopRules.Add(subroutineRule.GetRule());
-
-            subroutineInfo = new SubroutineInfo(subroutine, returnHandler);
         }
 
         // Calls single-instance methods.
@@ -386,18 +395,6 @@ namespace Deltin.Deltinteger.Parse
         }
     }
 
-    class SubroutineInfo
-    {
-        public Subroutine Subroutine { get; }
-        public ReturnHandler ReturnHandler { get; }
-
-        public SubroutineInfo(Subroutine routine, ReturnHandler returnHandler)
-        {
-            Subroutine = routine;
-            ReturnHandler = returnHandler;
-        }
-    }
-
     class MethodAttributeHandler
     {
         public MethodAttributeType Type { get; }
@@ -413,6 +410,7 @@ namespace Deltin.Deltinteger.Parse
             else if (attributeContext.STATIC() != null) Type = MethodAttributeType.Static;
             else if (attributeContext.VIRTUAL() != null) Type = MethodAttributeType.Virtual;
             else if (attributeContext.OVERRIDE() != null) Type = MethodAttributeType.Override;
+            else if (attributeContext.RECURSIVE() != null) Type = MethodAttributeType.Recursive;
             else throw new NotImplementedException();
         }
 
@@ -427,6 +425,7 @@ namespace Deltin.Deltinteger.Parse
         Accessor,
         Static,
         Override,
-        Virtual
+        Virtual,
+        Recursive
     }
 }
