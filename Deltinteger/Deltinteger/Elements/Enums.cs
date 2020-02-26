@@ -538,7 +538,7 @@ namespace Deltin.Deltinteger.Elements
     {
         VisibleToAndString,
         String,
-        [EnumOverride("Visible To, Sort Order, and String")]
+        [EnumOverride(null, "Visible To, Sort Order, and String")]
         VisibleToSortOrderAndString,
         SortOrderAndString
     }
