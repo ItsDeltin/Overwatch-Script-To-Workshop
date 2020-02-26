@@ -121,7 +121,15 @@ namespace Deltin.Deltinteger.Parse
             _varInfo.CodeLensType = CodeLensSourceType.ParameterVariable;
         }
 
-        protected override void TypeCheck() {}
+        protected override void TypeCheck()
+        {
+            // Get the 'ref' attribute.
+            VarBuilderAttribute refAttribute = _attributes.FirstOrDefault(attribute => attribute.Type == AttributeType.Ref);
+
+            // If the type is constant and the variable has the ref parameter, show a warning.
+            if (refAttribute != null && _varInfo.Type != null && _varInfo.Type.Constant() == TypeSettable.Constant)
+                _diagnostics.Warning("Constant workshop types have the 'ref' attribute by default.", refAttribute.Range);
+        }
     }
 
     class SubroutineParameterVariable : ParameterVariable
