@@ -316,7 +316,7 @@ namespace Deltin.Deltinteger.Parse
             };
 
             // Parse the current overload.
-            typeSwitch.NextCase(((ClassType)Attributes.ContainingType).Identifier);
+            typeSwitch.NextCase(new V_Number(((ClassType)Attributes.ContainingType).Identifier));
             Parse(actionSet, callSettings);
 
             foreach (IMethod option in options)
@@ -328,7 +328,7 @@ namespace Deltin.Deltinteger.Parse
                 option.Attributes.ContainingType.AddObjectVariablesToAssigner(optionSet.CurrentObject, optionSet.IndexAssigner);
 
                 // Go to next case then parse the block.
-                typeSwitch.NextCase(((ClassType)option.Attributes.ContainingType).Identifier);
+                typeSwitch.NextCase(new V_Number(((ClassType)option.Attributes.ContainingType).Identifier));
                 option.Parse(optionSet, callSettings);
             }
 

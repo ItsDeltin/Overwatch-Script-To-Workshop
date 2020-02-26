@@ -20,27 +20,29 @@ namespace Deltin.Deltinteger.Parse
             if (varCollection == null) throw new ArgumentNullException(nameof(varCollection));
             if (var == null)           throw new ArgumentNullException(nameof(var          ));
 
+            if (references.ContainsKey(var)) throw new Exception(var.Name + " was already added into the variable index assigner.");
+
+            IGettable assigned;
+
             // A gettable/settable variable
             if (var.Settable())
             {
-                var assigned = varCollection.Assign(var, isGlobal);
-                if (recursive) assigned = new RecursiveIndexReference(assigned);
-                if (references.ContainsKey(var)) throw new Exception(var.Name + " was already added into the variable index assigner.");
+                assigned = varCollection.Assign(var, isGlobal);
+                if (recursive) assigned = new RecursiveIndexReference((IndexReference)assigned);
                 references.Add(var, assigned);
-                return assigned;
             }
             
             // Element reference
             else if (var.VariableType == VariableType.ElementReference)
             {
                 if (referenceValue == null) throw new ArgumentNullException(nameof(referenceValue));
-                if (references.ContainsKey(var)) throw new Exception(var.Name + " was already added into the variable index assigner.");
-                var reference = new WorkshopElementReference(referenceValue);
-                references.Add(var, reference);
-                return reference;
+                assigned = new WorkshopElementReference(referenceValue);
+                references.Add(var, assigned);
             }
             
             else throw new NotImplementedException();
+
+            return assigned;
         }
 
         public void Add(IIndexReferencer var, IndexReference reference)

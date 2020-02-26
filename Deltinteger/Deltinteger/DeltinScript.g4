@@ -77,6 +77,8 @@ statement :
 	| delete STATEMENT_END?	  #s_delete
 	| CONTINUE STATEMENT_END? #s_continue
 	| BREAK STATEMENT_END?    #s_break
+	| switch 				  #s_switch
+	| (BLOCK_START statement* BLOCK_END) #s_block
 	;
 
 block : (BLOCK_START statement* BLOCK_END) | statement | STATEMENT_END  ;
@@ -99,6 +101,13 @@ else    : ELSE block?                                           ;
 
 return  : RETURN expr? STATEMENT_END                          ;
 delete  : DELETE LEFT_PAREN expr RIGHT_PAREN                  ;
+
+switch  : SWITCH LEFT_PAREN expr? RIGHT_PAREN
+	BLOCK_START switch_element* BLOCK_END;
+
+switch_element:  (DEFAULT TERNARY_ELSE?) | case | statement;
+
+case    : CASE expr? TERNARY_ELSE?;
 
 rule_if : IF LEFT_PAREN expr? RIGHT_PAREN;
 
@@ -220,6 +229,9 @@ OVERRIDE  : 'override'  ;
 VIRTUAL   : 'virtual'   ;
 BREAK     : 'break'     ;
 CONTINUE  : 'continue'  ;
+SWITCH    : 'switch'	;
+CASE      : 'case'		;
+DEFAULT   : 'default'   ;
 
 EQUALS          : '='  ;
 EQUALS_POW      : '^=' ;

@@ -342,6 +342,8 @@ namespace Deltin.Deltinteger.Parse
                 case DeltinScriptParser.S_deleteContext s_delete    : return new DeleteAction(parseInfo, scope, s_delete.delete());
                 case DeltinScriptParser.S_continueContext s_continue: return new ContinueAction(parseInfo, DocRange.GetRange(s_continue));
                 case DeltinScriptParser.S_breakContext s_break      : return new BreakAction(parseInfo, DocRange.GetRange(s_break));
+                case DeltinScriptParser.S_switchContext s_switch    : return new SwitchAction(parseInfo, scope, s_switch.@switch());
+                case DeltinScriptParser.S_blockContext s_block: return new BlockAction(parseInfo, scope, s_block);
                 default: return null;
             }
         }
@@ -488,7 +490,8 @@ namespace Deltin.Deltinteger.Parse
         public DeltinScript TranslateInfo { get; }
 
         public CallInfo CurrentCallInfo { get; private set; }
-        public LoopAction Loop { get; private set; }
+        public IBreakContainer BreakHandler { get; private set; }
+        public IContinueContainer ContinueHandler { get; private set; }
 
         public ParseInfo(ScriptFile script, DeltinScript translateInfo)
         {
@@ -500,9 +503,12 @@ namespace Deltin.Deltinteger.Parse
             Script = other.Script;
             TranslateInfo = other.TranslateInfo;
             CurrentCallInfo = other.CurrentCallInfo;
-            Loop = other.Loop;
+            BreakHandler = other.BreakHandler;
+            ContinueHandler = other.ContinueHandler;
         }
         public ParseInfo SetCallInfo(CallInfo currentCallInfo) => new ParseInfo(this) { CurrentCallInfo = currentCallInfo };
-        public ParseInfo SetLoop(LoopAction loop) => new ParseInfo(this) { Loop = loop };
+        public ParseInfo SetLoop(LoopAction loop) => new ParseInfo(this) { BreakHandler = loop, ContinueHandler = loop };
+        public ParseInfo SetBreakHandler(IBreakContainer handler) => new ParseInfo(this) { BreakHandler = handler };
+        public ParseInfo SetContinueHandler(IContinueContainer handler) => new ParseInfo(this) { ContinueHandler = handler };
     }
 }

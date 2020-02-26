@@ -100,7 +100,7 @@ namespace Deltin.Deltinteger.Parse
 
             SkipEndMarker continueAtMarker = new SkipEndMarker();
             actionSet.AddAction(continueAtMarker);
-            skipLength.Value = continueAt.GetSkipCount(continueAtMarker).Value;
+            skipLength.Value = continueAt.NumberOfActionsToMarker(continueAtMarker);
 
             return returnHandler.GetReturnedValue();
         }

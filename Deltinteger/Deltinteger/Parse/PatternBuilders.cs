@@ -37,13 +37,16 @@ namespace Deltin.Deltinteger.Parse
 
     public class SwitchBuilder
     {
+        public bool AutoBreak = true;
+
         readonly SkipStartMarker Skipper;
-        readonly List<Element> skipCounts = new List<Element>();
-        readonly List<Element> skipValues = new List<Element>();
-        readonly List<SkipStartMarker> SkipToEnd = new List<SkipStartMarker>();
+        readonly List<IWorkshopTree> skipCounts = new List<IWorkshopTree>();
+        readonly List<IWorkshopTree> skipValues = new List<IWorkshopTree>();
+        public readonly List<SkipStartMarker> SkipToEnd = new List<SkipStartMarker>();
         readonly ActionSet actionSet;
         int LastCaseStart = -1;
         SwitchBuilderState State = SwitchBuilderState.Start;
+        bool defaultAdded;
 
         public SwitchBuilder(ActionSet actionSet)
         {
@@ -54,10 +57,10 @@ namespace Deltin.Deltinteger.Parse
             actionSet.AddAction(Skipper);
         }
 
-        public void NextCase(Element value)
+        public void NextCase(IWorkshopTree value)
         {
             // If the state is on a case and the action count was changed, create new skip that will skip to the end of the switch.
-            if (State == SwitchBuilderState.OnCase && actionSet.ActionCount != LastCaseStart)
+            if (AutoBreak && State == SwitchBuilderState.OnCase && actionSet.ActionCount != LastCaseStart)
             {
                 // Create the skip and add it to the actionset.
                 SkipStartMarker skipToEnd = new SkipStartMarker(actionSet);
@@ -84,6 +87,17 @@ namespace Deltin.Deltinteger.Parse
             LastCaseStart = actionSet.ActionCount;
         }
 
+        public void AddDefault()
+        {
+            if (defaultAdded) throw new Exception("Default already added.");
+            defaultAdded = true;
+
+            // Mark the start of the case.
+            SkipEndMarker startCase = new SkipEndMarker();
+            actionSet.AddAction(startCase);
+            skipCounts.Insert(0, Skipper.GetSkipCount(startCase));
+        }
+
         public void Finish(Element switchValue)
         {
             // Set state to finished.
@@ -99,7 +113,8 @@ namespace Deltin.Deltinteger.Parse
             
             // Default insert.
             // TODO: Default case
-            skipCounts.Insert(0, Skipper.GetSkipCount(switchEnd));
+            if (!defaultAdded)
+                skipCounts.Insert(0, Skipper.GetSkipCount(switchEnd));
             
             // Skip to the case.
             Skipper.SetSkipCount(

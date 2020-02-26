@@ -5,7 +5,7 @@ using Deltin.Deltinteger.Elements;
 
 namespace Deltin.Deltinteger.Parse
 {
-    public abstract class LoopAction : IStatement, IBlockContainer
+    public abstract class LoopAction : IStatement, IBlockContainer, IContinueContainer, IBreakContainer
     {
         /// <summary>The path info of the loop block.</summary>
         protected PathInfo Path;

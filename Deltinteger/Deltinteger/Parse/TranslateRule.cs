@@ -288,7 +288,9 @@ namespace Deltin.Deltinteger.Parse
             ActionSet = actionSet;
         }
 
-        public V_Number GetSkipCount(SkipEndMarker marker)
+        public DynamicSkip GetSkipCount(SkipEndMarker marker) => new DynamicSkip(this, marker);
+
+        public int NumberOfActionsToMarker(SkipEndMarker marker)
         {
             int count = 0;
             bool foundStart = false;
@@ -310,7 +312,7 @@ namespace Deltin.Deltinteger.Parse
                     count++;
             }
 
-            return new V_Number(count - 1);
+            return count - 1;
         }
 
         public void SetEndMarker(SkipEndMarker endMarker)
@@ -327,7 +329,7 @@ namespace Deltin.Deltinteger.Parse
 
         public Element GetAction()
         {
-            Element skipCount;
+            IWorkshopTree skipCount;
             if (SkipCount != null) skipCount = SkipCount;
             else skipCount = GetSkipCount(EndMarker);
 
@@ -337,7 +339,23 @@ namespace Deltin.Deltinteger.Parse
                 return Element.Part<A_SkipIf>(Element.Part<V_Not>(Condition), skipCount);
         }
 
-        public bool ShouldRemove() => GetSkipCount(EndMarker).Value == 0;
+        public bool ShouldRemove() => NumberOfActionsToMarker(EndMarker) == 0;
+    }
+
+    public class DynamicSkip : IWorkshopTree
+    {
+        public SkipStartMarker StartMarker { get; set; }
+        public SkipEndMarker EndMarker { get; set; }
+
+        public DynamicSkip(SkipStartMarker startMarker, SkipEndMarker endMarker)
+        {
+            StartMarker = startMarker;
+            EndMarker = endMarker;
+        }
+
+        public string ToWorkshop(OutputLanguage language) => StartMarker.NumberOfActionsToMarker(EndMarker).ToString();
+
+        public bool EqualTo(IWorkshopTree other) => false;
     }
 
     public class SkipEndMarker : IActionList
