@@ -1,5 +1,5 @@
-macro CameraSpeed: IsButtonHeld(EventPlayer(), Button.Ability1) ? 30 : 0.2;
-macro ToggleKey: IsCommunicating(EventPlayer(), Communication.VoiceLineDown);
+define CameraSpeed: IsButtonHeld(EventPlayer(), Button.Ability1) ? 30 : 0.2;
+define ToggleKey: IsCommunicating(EventPlayer(), Communication.VoiceLineDown);
 
 playervar define cam = false;
 playervar define cameraPos;

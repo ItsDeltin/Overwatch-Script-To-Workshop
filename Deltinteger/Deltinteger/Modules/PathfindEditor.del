@@ -16,8 +16,8 @@ rule: "Commands"
     CreateHudText(VisibleTo:AllPlayers(), Subheader:"Voice Line Up: Compile pathmap."                                           , SubheaderColor:Color.SkyBlue, Location:Location.Right, SortOrder:11);
 }
 
-macro GetClosestNode(): FirstOf(SortedArray(Nodes, DistanceBetween(EyePosition(EventPlayer()), (<Node>ArrayElement()).ShownLocation)));
-macro IsNodeSelectable(Node node): DistanceBetween(node.Pos, EyePosition(EventPlayer())) < 5;
+define GetClosestNode(): FirstOf(SortedArray(Nodes, DistanceBetween(EyePosition(EventPlayer()), (<Node>ArrayElement()).ShownLocation)));
+define IsNodeSelectable(Node node): DistanceBetween(node.Pos, EyePosition(EventPlayer())) < 5;
 
 rule: "Create node"
 Event.OngoingPlayer
@@ -97,7 +97,7 @@ class Node
         ShownLocation = Pos + Vector(0, 1.25, 0);
     }
 
-    public method Show()
+    public void Show()
     {
         if (!visible)
         {
@@ -106,7 +106,7 @@ class Node
         }
     }
 
-    public method Hide()
+    public void Hide()
     {
         if (visible)
         {
@@ -115,19 +115,19 @@ class Node
         }
     }
     
-    public method Select()
+    public void Select()
     {
         Selected = true;
         Update();
     }
 
-    public method Deselect()
+    public void Deselect()
     {
         Selected = false;
         Update();
     }
 
-    private method Update()
+    private void Update()
     {
         DestroyEffect(EffectID);
         if (!Selected)
@@ -137,12 +137,12 @@ class Node
         EffectID = LastCreatedEntity();
     }
 
-    private method Make(Color color)
+    private void Make(Color color)
     {
         CreateEffect(AllPlayers(), Effect.Sphere, color, ShownLocation, 0.25, EffectRev.VisibleTo);
     }
 
-    public method UpdateVisible()
+    public void UpdateVisible()
     {
         Hide();
         if (DistanceBetween(EventPlayer(), ShownLocation) < 35)
@@ -190,7 +190,7 @@ if (!IsButtonHeld(EventPlayer(), Button.Crouch))
         }
 }
 
-macro SegmentExists(define node1, define node2):
+define SegmentExists(define node1, define node2):
     IsTrueForAny(
         Segments,
         ArrayContains((<Segment>ArrayElement()).Nodes, node1)
@@ -234,7 +234,7 @@ class Segment
         Attribute = attribute;
     }
 
-    public method Show()
+    public void Show()
     {
         if (!visible)
         {
@@ -249,7 +249,7 @@ class Segment
             }
         }
     }
-    public method Hide()
+    public void Hide()
     {
         if (visible)
         {
