@@ -15,11 +15,14 @@ namespace Deltin.Deltinteger.Parse
 
         public DefinedEnum(ParseInfo parseInfo, DeltinScriptParser.Enum_defineContext enumContext) : base(enumContext.name.Text)
         {
+            CanBeExtended = false;
+            CanBeDeleted = false;
+            Kind = "enum";
+
             if (parseInfo.TranslateInfo.IsCodeType(Name))
                 parseInfo.Script.Diagnostics.Error($"A type with the name '{Name}' already exists.", DocRange.GetRange(enumContext.name));
             
             _translateInfo = parseInfo.TranslateInfo;
-            CanBeExtended = false;
             Scope = new Scope("enum " + Name);
             
             DefinedAt = new LanguageServer.Location(parseInfo.Script.Uri, DocRange.GetRange(enumContext.name));

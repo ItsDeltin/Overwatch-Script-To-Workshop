@@ -26,6 +26,7 @@ namespace Deltin.Deltinteger.Parse
         {
             CanBeDeleted = false;
             CanBeExtended = false;
+            Kind = "struct";
 
             X = CreateInternalVar("X", "The X component of the vector.");
             Y = CreateInternalVar("Y", "The Y component of the vector.");
@@ -85,7 +86,7 @@ namespace Deltin.Deltinteger.Parse
 
         public override CompletionItem GetCompletion() => new CompletionItem() {
             Label = Name,
-            Kind = CompletionItemKind.Class
+            Kind = CompletionItemKind.Struct
         };
 
         // DistanceTo() method

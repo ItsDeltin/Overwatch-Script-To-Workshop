@@ -15,6 +15,7 @@ namespace Deltin.Deltinteger.Parse
         public Constructor[] Constructors { get; protected set; } = new Constructor[0];
         public CodeType Extends { get; private set; }
         public string Description { get; protected set; }
+        protected string Kind = "class";
 
         /// <summary>Determines if the class can be deleted with the delete keyword.</summary>
         public bool CanBeDeleted { get; protected set; } = false;
@@ -111,7 +112,7 @@ namespace Deltin.Deltinteger.Parse
         /// <param name="callRange">The range of the call.</param>
         public virtual void Call(ScriptFile script, DocRange callRange)
         {
-            script.AddHover(callRange, HoverHandler.Sectioned("class " + Name, Description));
+            script.AddHover(callRange, HoverHandler.Sectioned(Kind + " " + Name, Description));
         }
 
         /// <summary>Gets the completion that will show up for the language server.</summary>
