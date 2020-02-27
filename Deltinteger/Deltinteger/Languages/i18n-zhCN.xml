@@ -9,6 +9,7 @@
     <method name="conditions" alt="条件" />
     <method name="actions" alt="动作" />
     <method name="disabled" alt="禁用" />
+    <method name="subroutines" alt="子程序" />
     <method name="Abort" alt="中止" />
     <method name="Abort If" alt="根据条件中止" />
     <method name="Abort If Condition Is False" alt="如条件为“假”则中止" />
@@ -16,6 +17,8 @@
     <method name="Allow Button" alt="可用按钮" />
     <method name="Apply Impulse" alt="施加推力" />
     <method name="Big Message" alt="大字体信息" />
+    <method name="Call Subroutine" alt="调用子程序" />
+    <method name="Start Rule" alt="开始规则" />
     <method name="Chase Global Variable At Rate" alt="追踪全局变量频率" />
     <method name="Chase Global Variable Over Time" alt="持续追踪全局变量" />
     <method name="Chase Player Variable At Rate" alt="追踪玩家变量频率" />
@@ -41,6 +44,7 @@
     <method name="Destroy Dummy Bot" alt="移除机器人" />
     <method name="Destroy Effect" alt="消除效果" />
     <method name="Destroy Hud Text" alt="消除HUD文本" />
+    <method name="Destroy Icon" alt="消除图标" />
     <method name="Destroy In-World Text" alt="消除地图文本" />
     <method name="Disable Built-In Game Mode Announcer" alt="关闭游戏预设通告模式" />
     <method name="Disable Built-In Game Mode Completion" alt="关闭游戏预设完成条件" />
@@ -49,16 +53,24 @@
     <method name="Disable Built-In Game Mode Scoring" alt="关闭游戏预设计分模式" />
     <method name="Disable Death Spectate All Players" alt="对所有玩家禁用死亡回放" />
     <method name="Disable Death Spectate Target HUD" alt="禁用死亡回放时目标的HUD" />
+    <method name="Disable Inspector Recording" alt="禁用查看器录制" />
     <method name="Disallow Button" alt="禁用按钮" />
     <method name="Enable Built-In Game Mode Announcer" alt="开启游戏预设通告模式" />
     <method name="Enable Built-In Game Mode Completion" alt="开启游戏预设完成条件" />
+    <method name="Enable Inspector Recording" alt="启用查看器录制" />
     <method name="Enable Built-In Game Mode Music" alt="开启游戏预设音乐模式" />
     <method name="Enable Built-In Game Mode Respawning" alt="开启游戏预设重生模式" />
     <method name="Enable Built-In Game Mode Scoring" alt="开启游戏预设计分模式" />
     <method name="Enable Death Spectate All Players" alt="对所有玩家启用死亡回放" />
     <method name="Enable Death Spectate Target HUD" alt="启用死亡回放时目标的HUD" />
+    <method name="End" alt="End" />
+    <method name="For Global Variable" alt="For 全局变量" />
+    <method name="For Player Variable" alt="For 玩家变量" />
     <method name="Go To Assemble Heroes" alt="前往集结英雄" />
     <method name="Heal" alt="治疗" />
+    <method name="If" alt="If" />
+    <method name="Else If" alt="Else If" />
+    <method name="Else" alt="Else" />
     <method name="Kill" alt="击杀" />
     <method name="Loop" alt="循环" />
     <method name="Loop If" alt="根据条件循环" />
@@ -118,6 +130,8 @@
     <method name="Start Forcing Player To Be Hero" alt="开始强制玩家选择英雄" />
     <method name="Start Forcing Spawn Room" alt="开始强制重生室" />
     <method name="Start Forcing Throttle" alt="开始限制阈值" />
+    <method name="Start Healing Modification" alt="开始治疗调整" />
+    <method name="Stop Healing Modification" alt="停止治疗调整" />
     <method name="Start Heal Over Time" alt="开始持续治疗" />
     <method name="Start Holding Button" alt="开始按下按钮" />
     <method name="Start Throttle In Direction" alt="开始定向阈值" />
@@ -142,6 +156,7 @@
     <method name="Teleport" alt="传送" />
     <method name="Unpause Match Time" alt="比赛时间继续" />
     <method name="Wait" alt="等待" />
+    <method name="While" alt="While" />
     <method name="Absolute Value" alt="绝对值" />
     <method name="Add" alt="加" />
     <method name="All Dead Players" alt="所有死亡玩家" />
@@ -188,6 +203,7 @@
     <method name="Event Healing" alt="事件治疗" />
     <method name="Event Player" alt="事件玩家" />
     <method name="Event Was Critical Hit" alt="事件暴击" />
+    <method name="Event Was Health Pack" alt="事件为急救包" />
     <method name="Eye Position" alt="眼睛位置" />
     <method name="Facing Direction Of" alt="面朝方向" />
     <method name="False" alt="假" />
@@ -256,6 +272,7 @@
     <method name="Last Damage Modification ID" alt="上一个伤害调整ID" />
     <method name="Last Damage Over Time ID" alt="上一个持续伤害效果ID" />
     <method name="Last Heal Over Time ID" alt="上一个持续治疗效果ID" />
+    <method name="Last Healing Modification ID" alt="上一个治疗调整ID" />
     <method name="Last Of" alt="最后" />
     <method name="Last Text ID" alt="上一个文本ID" />
     <method name="Left" alt="左" />
@@ -357,6 +374,7 @@
     <method name="Player Received Healing" alt="玩家受到治疗" />
     <method name="Player Joined Match" alt="玩家加入比赛" />
     <method name="Player Left Match" alt="玩家离开比赛" />
+    <method name="Subroutine" alt="子程序" />
     <method name="All" alt="双方" />
     <method name="Slot" alt="位置" />
     <method name="Reaper" alt="死神" />
@@ -405,6 +423,8 @@
     <method name="Interact" alt="互动" />
     <method name="Jump" alt="跳跃" />
     <method name="Crouch" alt="蹲下" />
+    <method name="Melee" alt="近身攻击" />
+    <method name="Reload" alt="装填" />
     <method name="To World" alt="至地图" />
     <method name="To Player" alt="至玩家" />
     <method name="Cancel Contrary Motion" alt="取消相反运动" />
@@ -472,6 +492,8 @@
     <method name="Acknowledge" alt="收到" />
     <method name="Top" alt="顶部" />
     <method name="Visible To And String" alt="可见和字符串" />
+    <method name="Visible To, Sort Order, and String" alt="可见性，排序规则，以及字符串" />
+    <method name="Sort Order And String" alt="排序规则与字符串" />
     <method name="Arrow: Down" alt="箭头：向下" />
     <method name="Arrow: Left" alt="箭头：向左" />
     <method name="Arrow: Right" alt="箭头：向右" />
@@ -524,6 +546,10 @@
     <method name="Direction, Rate, and Max Speed" alt="方向，速率，及最大速度" />
     <method name="Receivers, Damagers, and Damage Percent" alt="受伤害者，伤害者及伤害百分比" />
     <method name="Receivers And Damagers" alt="受伤害者和伤害者" />
+    <method name="Receivers, Healers, and Healing Percent" alt="受治疗者，治疗者及治疗百分比" />
+    <method name="Receivers And Healers" alt="受治疗者和治疗者" />
+    <method name="Restart Rule" alt="重新开始规则" />
+    <method name="Do Nothing" alt="无动作" />
     <method name="Direction And Turn Rate" alt="方向及角速率" />
     <method name="Barriers Do Not Block LOS" alt="屏障不会阻挡视线" />
     <method name="Enemy Barriers Block LOS" alt="敌方屏障阻挡视线" />

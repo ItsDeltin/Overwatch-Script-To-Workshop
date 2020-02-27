@@ -617,4 +617,30 @@
   <method name="Lijiang Tower (Lunar New Year)" key="000000005A33.07C" />
   <method name="Vector" key="00000000B0F1.07C" />
   <method name="All" key="000000007804.07C" />
+  <method name="subroutines" key="00000000FFFA.07C" />
+  <method name="Call Subroutine" key="00000001001E.07C" />
+  <method name="Start Rule" key="000000010022.07C" />
+  <method name="Destroy Icon" key="00000000B4E7.07C" />
+  <method name="Disable Inspector Recording" key="00000000FB2F.07C" />
+  <method name="Enable Inspector Recording" key="00000000FB2E.07C" />
+  <method name="End" key="00000000FB37.07C" />
+  <method name="For Global Variable" key="00000000FEE2.07C" />
+  <method name="For Player Variable" key="00000000FEE1.07C" />
+  <method name="If" key="00000000FB32.07C" />
+  <method name="Else If" key="00000000FB33.07C" />
+  <method name="Else" key="00000000FB34.07C" />
+  <method name="Start Healing Modification" key="00000000FD40.07C" />
+  <method name="Stop Healing Modification" key="00000000FD37.07C" />
+  <method name="While" key="00000000FB35.07C" />
+  <method name="Event Was Health Pack" key="00000000FC80.07C" />
+  <method name="Last Healing Modification ID" key="00000000FD2A.07C" />
+  <method name="Subroutine" key="00000001001F.07C" />
+  <method name="Melee" key="00000000FC8D.07C" />
+  <method name="Reload" key="00000000FC8E.07C" />
+  <method name="Visible To, Sort Order, and String" key="00000000FCA5.07C" />
+  <method name="Sort Order And String" key="00000000FCA6.07C" />
+  <method name="Receivers, Healers, and Healing Percent" key="00000000FD27.07C" />
+  <method name="Receivers And Healers" key="00000000FD26.07C" />
+  <method name="Restart Rule" key="000000010025.07C" />
+  <method name="Do Nothing" key="000000010026.07C" />
 </KeyLinkList>

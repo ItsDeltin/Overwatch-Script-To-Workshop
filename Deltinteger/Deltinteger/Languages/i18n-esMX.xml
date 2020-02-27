@@ -9,6 +9,7 @@
     <method name="conditions" alt="condiciones" />
     <method name="actions" alt="acciones" />
     <method name="disabled" alt="deshabilitado" />
+    <method name="subroutines" alt="Subrutinas" />
     <method name="Abort" alt="Abortar" />
     <method name="Abort If" alt="Abortar si" />
     <method name="Abort If Condition Is False" alt="Abortar si la condición es falsa" />
@@ -16,6 +17,8 @@
     <method name="Allow Button" alt="Habilitar botón" />
     <method name="Apply Impulse" alt="Aplicar impulso" />
     <method name="Big Message" alt="Mensaje grande" />
+    <method name="Call Subroutine" alt="Llamada a subrutina" />
+    <method name="Start Rule" alt="Comenzar regla" />
     <method name="Chase Global Variable At Rate" alt="Seguir variable global según la tasa" />
     <method name="Chase Global Variable Over Time" alt="Seguir variable global con el tiempo" />
     <method name="Chase Player Variable At Rate" alt="Seguir variable de jugador según la tasa" />
@@ -41,6 +44,7 @@
     <method name="Destroy Dummy Bot" alt="Destruir robot de entrenamiento" />
     <method name="Destroy Effect" alt="Destruir efecto" />
     <method name="Destroy Hud Text" alt="Destruir texto del HUD" />
+    <method name="Destroy Icon" alt="Destruir ícono" />
     <method name="Destroy In-World Text" alt="Destruir texto dentro del mundo" />
     <method name="Disable Built-In Game Mode Announcer" alt="Deshabilitar el presentador integrado del modo de juego" />
     <method name="Disable Built-In Game Mode Completion" alt="Deshabilitar la finalización integrada del modo de juego" />
@@ -49,16 +53,24 @@
     <method name="Disable Built-In Game Mode Scoring" alt="Deshabilitar el sistema de puntuación integrado del modo de juego" />
     <method name="Disable Death Spectate All Players" alt="Deshabilitar la observación de todos los jugadores como espectador muerto" />
     <method name="Disable Death Spectate Target HUD" alt="Deshabilitar la observación del HUD objetivo como espectador muerto" />
+    <method name="Disable Inspector Recording" alt="Desactivar registro de Inspector" />
     <method name="Disallow Button" alt="Deshabilitar botón" />
     <method name="Enable Built-In Game Mode Announcer" alt="Habilitar presentador integrado del modo de juego" />
     <method name="Enable Built-In Game Mode Completion" alt="Habilitar la finalización integrada del modo de juego" />
+    <method name="Enable Inspector Recording" alt="Activar registro de Inspector" />
     <method name="Enable Built-In Game Mode Music" alt="Habilitar la música integrada del modo de juego" />
     <method name="Enable Built-In Game Mode Respawning" alt="Habilitar la reaparición integrada del modo de juego" />
     <method name="Enable Built-In Game Mode Scoring" alt="Habilitar el sistema de puntuación integrado del modo de juego" />
     <method name="Enable Death Spectate All Players" alt="Habilitar la observación de todos los jugadores como espectador muerto" />
     <method name="Enable Death Spectate Target HUD" alt="Habilitar la observación del HUD objetivo como espectador muerto" />
+    <method name="End" alt="Fin" />
+    <method name="For Global Variable" alt="Para variable global" />
+    <method name="For Player Variable" alt="Para variable de jugador" />
     <method name="Go To Assemble Heroes" alt="Ir a Forma tu equipo" />
     <method name="Heal" alt="Sanar" />
+    <method name="If" alt="Si" />
+    <method name="Else If" alt="Si no si" />
+    <method name="Else" alt="Si no" />
     <method name="Kill" alt="Matar" />
     <method name="Loop" alt="Bucle" />
     <method name="Loop If" alt="Repetir si" />
@@ -118,6 +130,8 @@
     <method name="Start Forcing Player To Be Hero" alt="Comenzar a forzar a un jugador a usar un héroe" />
     <method name="Start Forcing Spawn Room" alt="Comenzar a forzar cuarto de reaparición" />
     <method name="Start Forcing Throttle" alt="Comenzar a forzar la aceleración" />
+    <method name="Start Healing Modification" alt="Comenzar modificación de sanación" />
+    <method name="Stop Healing Modification" alt="Detener modificación de sanación" />
     <method name="Start Heal Over Time" alt="Comenzar sanación con el tiempo" />
     <method name="Start Holding Button" alt="Comenzar a mantener el botón presionado" />
     <method name="Start Throttle In Direction" alt="Comenzar aceleración en dirección" />
@@ -142,6 +156,7 @@
     <method name="Teleport" alt="Transportar" />
     <method name="Unpause Match Time" alt="Despausar tiempo de la partida" />
     <method name="Wait" alt="Esperar" />
+    <method name="While" alt="Mientras" />
     <method name="Absolute Value" alt="Valor absoluto" />
     <method name="Add" alt="Agregar" />
     <method name="All Dead Players" alt="Todos los jugadores muertos" />
@@ -188,6 +203,7 @@
     <method name="Event Healing" alt="Sanación de evento" />
     <method name="Event Player" alt="Jugador del evento" />
     <method name="Event Was Critical Hit" alt="El evento fue un golpe crítico" />
+    <method name="Event Was Health Pack" alt="Evento fue suministro de salud" />
     <method name="Eye Position" alt="Posición de la vista" />
     <method name="Facing Direction Of" alt="Dirección de orientación de" />
     <method name="False" alt="Falso" />
@@ -256,6 +272,7 @@
     <method name="Last Damage Modification ID" alt="ID de modificación de daño anterior" />
     <method name="Last Damage Over Time ID" alt="ID de daño con el tiempo anterior" />
     <method name="Last Heal Over Time ID" alt="ID de sanación con el tiempo anterior" />
+    <method name="Last Healing Modification ID" alt="ID de modificación de sanación anterior" />
     <method name="Last Of" alt="Último de" />
     <method name="Last Text ID" alt="ID de texto anterior" />
     <method name="Left" alt="Izquierda" />
@@ -357,6 +374,7 @@
     <method name="Player Received Healing" alt="El jugador recibió una sanación" />
     <method name="Player Joined Match" alt="El jugador se unió a la partida" />
     <method name="Player Left Match" alt="El jugador abandonó la partida" />
+    <method name="Subroutine" alt="Subrutina" />
     <method name="All" alt="Todos" />
     <method name="Slot" alt="Posición" />
     <method name="Reaper" alt="Reaper" />
@@ -405,6 +423,8 @@
     <method name="Interact" alt="Interactuar" />
     <method name="Jump" alt="Saltar" />
     <method name="Crouch" alt="Agacharse" />
+    <method name="Melee" alt="Melé" />
+    <method name="Reload" alt="Recargar" />
     <method name="To World" alt="Al mundo" />
     <method name="To Player" alt="Al jugador" />
     <method name="Cancel Contrary Motion" alt="Cancelar movimiento contrario" />
@@ -472,6 +492,8 @@
     <method name="Acknowledge" alt="De acuerdo" />
     <method name="Top" alt="Arriba" />
     <method name="Visible To And String" alt="Visible para y cadena" />
+    <method name="Visible To, Sort Order, and String" alt="Visible para, clasificar orden y cadena" />
+    <method name="Sort Order And String" alt="Clasificar orden y cadena" />
     <method name="Arrow: Down" alt="Flecha: Hacia abajo" />
     <method name="Arrow: Left" alt="Flecha: Hacia la izquierda" />
     <method name="Arrow: Right" alt="Flecha: Hacia la derecha" />
@@ -524,6 +546,10 @@
     <method name="Direction, Rate, and Max Speed" alt="Dirección, aceleración y velocidad máxima" />
     <method name="Receivers, Damagers, and Damage Percent" alt="Receptores, infligidores de daño y porcentaje de daño" />
     <method name="Receivers And Damagers" alt="Receptores e infligidores de daño" />
+    <method name="Receivers, Healers, and Healing Percent" alt="Receptores, sanadores y porcentaje de sanación" />
+    <method name="Receivers And Healers" alt="Receptores y sanadores" />
+    <method name="Restart Rule" alt="Reiniciar regla" />
+    <method name="Do Nothing" alt="Hacer nada" />
     <method name="Direction And Turn Rate" alt="Dirección y velocidad de giro" />
     <method name="Barriers Do Not Block LOS" alt="Las barreras no bloquean la LDV" />
     <method name="Enemy Barriers Block LOS" alt="Las barreras enemigas bloquean la LDV" />

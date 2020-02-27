@@ -641,7 +641,7 @@ namespace Deltin.Deltinteger.Elements
     [WorkshopEnum]
     public enum HealingModificationRev
     {
-        [EnumOverride(null, null, "Receivers, Healers, and Heal Percent")]
+        [EnumOverride(null, null, "Receivers, Healers, and Healing Percent")]
         ReceiversDamagersAndDamagePercent,
         ReceiversAndHealers,
         None

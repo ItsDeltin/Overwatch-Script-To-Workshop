@@ -30,7 +30,8 @@ namespace Deltin.Deltinteger.I18n
                 "event",
                 "conditions",
                 "actions",
-                "disabled"
+                "disabled",
+                "subroutines"
             });
 
             // Add methods

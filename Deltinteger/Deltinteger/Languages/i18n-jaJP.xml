@@ -9,6 +9,7 @@
     <method name="conditions" alt="条件" />
     <method name="actions" alt="アクション" />
     <method name="disabled" alt="無効" />
+    <method name="subroutines" alt="サブルーチン" />
     <method name="Abort" alt="中止" />
     <method name="Abort If" alt="中止する条件" />
     <method name="Abort If Condition Is False" alt="条件が「FALSE」の場合中止" />
@@ -16,6 +17,8 @@
     <method name="Allow Button" alt="ボタンを有効化" />
     <method name="Apply Impulse" alt="推進力を適用" />
     <method name="Big Message" alt="大きなメッセージ" />
+    <method name="Call Subroutine" alt="サブルーチンの呼び出し" />
+    <method name="Start Rule" alt="ルールを開始" />
     <method name="Chase Global Variable At Rate" alt="グローバル変数を特定のレートで追跡" />
     <method name="Chase Global Variable Over Time" alt="グローバル変数を継続的に追跡" />
     <method name="Chase Player Variable At Rate" alt="プレイヤー変数を特定のレートで追跡" />
@@ -41,6 +44,7 @@
     <method name="Destroy Dummy Bot" alt="ダミーボットを破壊する" />
     <method name="Destroy Effect" alt="エフェクトを破棄" />
     <method name="Destroy Hud Text" alt="HUDテキストを破棄" />
+    <method name="Destroy Icon" alt="アイコンを破棄" />
     <method name="Destroy In-World Text" alt="ワールド内テキストを破棄" />
     <method name="Disable Built-In Game Mode Announcer" alt="ゲーム・モードの通知を無効化" />
     <method name="Disable Built-In Game Mode Completion" alt="ゲーム・モードの標準完了を無効化" />
@@ -49,16 +53,24 @@
     <method name="Disable Built-In Game Mode Scoring" alt="ゲーム・モードの標準スコアリングを無効化" />
     <method name="Disable Death Spectate All Players" alt="観戦時に全プレイヤー選択可能を無効化" />
     <method name="Disable Death Spectate Target HUD" alt="観戦中のターゲットHUD表示を無効化" />
+    <method name="Disable Inspector Recording" alt="インスペクターでの記録を無効化" />
     <method name="Disallow Button" alt="ボタンを無効化" />
     <method name="Enable Built-In Game Mode Announcer" alt="ゲーム・モードの通知を有効化" />
     <method name="Enable Built-In Game Mode Completion" alt="ゲーム・モードの標準完了を有効化" />
+    <method name="Enable Inspector Recording" alt="インスペクターでの記録を有効化" />
     <method name="Enable Built-In Game Mode Music" alt="ゲーム・モードのBGMを有効化" />
     <method name="Enable Built-In Game Mode Respawning" alt="ゲーム・モードの標準リスポーンを有効化" />
     <method name="Enable Built-In Game Mode Scoring" alt="ゲーム・モードの標準スコアリングを有効化" />
     <method name="Enable Death Spectate All Players" alt="観戦時に全プレイヤー選択可能を有効化" />
     <method name="Enable Death Spectate Target HUD" alt="観戦中のターゲットHUD表示を有効化" />
+    <method name="End" alt="終了" />
+    <method name="For Global Variable" alt="グローバル変数" />
+    <method name="For Player Variable" alt="プレイヤー変数" />
     <method name="Go To Assemble Heroes" alt="「ヒーローを編成しよう」に移行" />
     <method name="Heal" alt="回復" />
+    <method name="If" alt="IF" />
+    <method name="Else If" alt="ELSE IF" />
+    <method name="Else" alt="ELSE" />
     <method name="Kill" alt="キル" />
     <method name="Loop" alt="ループ" />
     <method name="Loop If" alt="ループする条件" />
@@ -87,7 +99,7 @@
     <method name="Set Global Variable At Index" alt="インデックスのグローバル変数を設定" />
     <method name="Set Gravity" alt="重力を設定" />
     <method name="Set Healing Dealt" alt="与える回復を設定" />
-    <method name="Set Healing Received" alt="受けるヒール量を設定" />
+    <method name="Set Healing Received" alt="受ける回復量を設定" />
     <method name="Set Invisible" alt="目視可否を設定" />
     <method name="Set Match Time" alt="マッチ時間を設定" />
     <method name="Set Max Health" alt="最大ライフを設定" />
@@ -118,14 +130,16 @@
     <method name="Start Forcing Player To Be Hero" alt="プレイヤーへのヒーロー強制を開始" />
     <method name="Start Forcing Spawn Room" alt="リスポーンエリアの強制を開始" />
     <method name="Start Forcing Throttle" alt="強制スロットル開始" />
-    <method name="Start Heal Over Time" alt="継続ヒールを開始" />
+    <method name="Start Healing Modification" alt="回復変更を開始" />
+    <method name="Stop Healing Modification" alt="回復変更を停止" />
+    <method name="Start Heal Over Time" alt="継続回復を開始" />
     <method name="Start Holding Button" alt="ボタン長押し開始" />
     <method name="Start Throttle In Direction" alt="指定方向にスロットル開始" />
     <method name="Start Transforming Throttle" alt="スロットルの変化を開始" />
     <method name="Stop Accelerating" alt="加速の中止" />
     <method name="Stop All Damage Modifications" alt="すべてのダメージ変更を停止" />
     <method name="Stop All Damage Over Time" alt="すべての継続ダメージを停止" />
-    <method name="Stop All Heal Over Time" alt="すべての継続ヒールを停止" />
+    <method name="Stop All Heal Over Time" alt="すべての継続回復を停止" />
     <method name="Stop Camera" alt="カメラの停止" />
     <method name="Stop Chasing Global Variable" alt="グローバル変数の追跡を中止" />
     <method name="Stop Chasing Player Variable" alt="プレイヤー変数の追跡を中止" />
@@ -135,13 +149,14 @@
     <method name="Stop Forcing Player To Be Hero" alt="プレイヤーへのヒーロー強制を停止" />
     <method name="Stop Forcing Spawn Room" alt="リスポーンエリアの強制を停止" />
     <method name="Stop Forcing Throttle" alt="強制スロットル中止" />
-    <method name="Stop Heal Over Time" alt="継続ヒールを停止" />
+    <method name="Stop Heal Over Time" alt="継続回復を停止" />
     <method name="Stop Holding Button" alt="ボタン長押し解除" />
     <method name="Stop Throttle In Direction" alt="指定方向にスロットル終了" />
     <method name="Stop Transforming Throttle" alt="スロットルの変化を停止" />
     <method name="Teleport" alt="テレポート" />
     <method name="Unpause Match Time" alt="マッチ時間のポーズを解除" />
     <method name="Wait" alt="待機" />
+    <method name="While" alt="WHILE" />
     <method name="Absolute Value" alt="絶対値" />
     <method name="Add" alt="追加" />
     <method name="All Dead Players" alt="倒れたプレイヤー全員" />
@@ -185,15 +200,16 @@
     <method name="Empty Array" alt="空の配列" />
     <method name="Entity Exists" alt="エンティティが存在している" />
     <method name="Event Damage" alt="イベント・ダメージ" />
-    <method name="Event Healing" alt="イベント・ヒール" />
+    <method name="Event Healing" alt="イベント回復" />
     <method name="Event Player" alt="イベント・プレイヤー" />
     <method name="Event Was Critical Hit" alt="イベントがクリティカル・ヒットだった" />
+    <method name="Event Was Health Pack" alt="ライフ・パックのイベントだった" />
     <method name="Eye Position" alt="目の位置" />
     <method name="Facing Direction Of" alt="プレイヤーが向いている方向: " />
     <method name="False" alt="False" />
     <method name="Farthest Player From" alt="最も遠いプレイヤー。基準: " />
     <method name="Filtered Array" alt="フィルタリングされた配列" />
-    <method name="First Of" alt="1番目。最大数は" />
+    <method name="First Of" alt="1番目の値" />
     <method name="Flag Position" alt="フラッグの位置" />
     <method name="Forward" alt="前方向" />
     <method name="Game Mode" alt="ゲーム・モード" />
@@ -201,12 +217,12 @@
     <method name="Global Variable" alt="グローバル変数" />
     <method name="Has Spawned" alt="スポーンした" />
     <method name="Has Status" alt="ステータスがある" />
-    <method name="Healee" alt="ヒール対象" />
+    <method name="Healee" alt="回復対象" />
     <method name="Healer" alt="ヒーラー" />
     <method name="Health" alt="ライフ" />
     <method name="Hero" alt="ヒーロー" />
     <method name="Hero Icon String" alt="ヒーローアイコン文字列" />
-    <method name="Hero Of" alt="ヒーロー" />
+    <method name="Hero Of" alt="ヒーロー: " />
     <method name="Horizontal Angle From Direction" alt="方向からの水平角" />
     <method name="Horizontal Angle Towards" alt="水平角の方向: " />
     <method name="Horizontal Facing Angle Of" alt="対面水平角: " />
@@ -255,8 +271,9 @@
     <method name="Last Created Entity" alt="最新のエンティティ" />
     <method name="Last Damage Modification ID" alt="最新のダメージ変更ID" />
     <method name="Last Damage Over Time ID" alt="最新の継続ダメージID" />
-    <method name="Last Heal Over Time ID" alt="最新の継続ヒールID" />
-    <method name="Last Of" alt="最後。全体数は" />
+    <method name="Last Heal Over Time ID" alt="最新の継続回復ID" />
+    <method name="Last Healing Modification ID" alt="最新の回復変更ID" />
+    <method name="Last Of" alt="最後の値" />
     <method name="Last Text ID" alt="最新のテキストID" />
     <method name="Left" alt="左" />
     <method name="Local Vector Of" alt="ローカルのベクトル: " />
@@ -353,10 +370,11 @@
     <method name="Player dealt damage" alt="プレイヤーがダメージを与えた" />
     <method name="Player took damage" alt="プレイヤーがダメージを受けた" />
     <method name="Player died" alt="プレイヤーが倒れた" />
-    <method name="Player Dealt Healing" alt="プレイヤーがヒールを与えた" />
-    <method name="Player Received Healing" alt="プレイヤーがヒールを受けた" />
+    <method name="Player Dealt Healing" alt="プレイヤーが回復を与えた" />
+    <method name="Player Received Healing" alt="プレイヤーが回復を受けた" />
     <method name="Player Joined Match" alt="プレイヤーがマッチに参加" />
     <method name="Player Left Match" alt="プレイヤーがマッチから離脱" />
+    <method name="Subroutine" alt="サブルーチン" />
     <method name="All" alt="すべて" />
     <method name="Slot" alt="スロット" />
     <method name="Reaper" alt="リーパー" />
@@ -405,6 +423,8 @@
     <method name="Interact" alt="インタラクト" />
     <method name="Jump" alt="ジャンプ" />
     <method name="Crouch" alt="しゃがみ" />
+    <method name="Melee" alt="近接" />
+    <method name="Reload" alt="リロード" />
     <method name="To World" alt="対ワールド: " />
     <method name="To Player" alt="対プレイヤー: " />
     <method name="Cancel Contrary Motion" alt="逆モーションをキャンセル" />
@@ -472,6 +492,8 @@
     <method name="Acknowledge" alt="了解" />
     <method name="Top" alt="トップ" />
     <method name="Visible To And String" alt="表示される相手、文字列" />
+    <method name="Visible To, Sort Order, and String" alt="表示される相手、ソート順、文字列" />
+    <method name="Sort Order And String" alt="ソート順、文字列" />
     <method name="Arrow: Down" alt="矢印:下" />
     <method name="Arrow: Left" alt="矢印:左" />
     <method name="Arrow: Right" alt="矢印:右" />
@@ -484,7 +506,7 @@
     <method name="Diamond" alt="ダイヤモンド" />
     <method name="Dizzy" alt="めまい" />
     <method name="Exclamation Mark" alt="エクスクラメーションマーク" />
-    <method name="Eye" alt="の眼差し" />
+    <method name="Eye" alt="眼差し" />
     <method name="Fire" alt="砲撃" />
     <method name="Flag" alt="通報" />
     <method name="Halo" alt="光輪" />
@@ -524,13 +546,17 @@
     <method name="Direction, Rate, and Max Speed" alt="方向、レート、最大の速さ" />
     <method name="Receivers, Damagers, and Damage Percent" alt="レシーバー、ダメージャー、ダメージのパーセンテージ" />
     <method name="Receivers And Damagers" alt="レシーバーとダメージャー" />
+    <method name="Receivers, Healers, and Healing Percent" alt="レシーバー、ヒーラー、回復量のパーセンテージ" />
+    <method name="Receivers And Healers" alt="レシーバーとヒーラー" />
+    <method name="Restart Rule" alt="ルールをやり直す" />
+    <method name="Do Nothing" alt="何もしない" />
     <method name="Direction And Turn Rate" alt="方向と回転レート" />
     <method name="Barriers Do Not Block LOS" alt="バリアは射線を妨げない" />
     <method name="Enemy Barriers Block LOS" alt="敵のバリアが射線を妨げる" />
     <method name="All Barriers Block LOS" alt="すべてのバリアが射線を妨げる" />
     <method name="Rotation" alt="回転" />
     <method name="Rotation And Translation" alt="回転と平行移動" />
-    <method name="Off" alt="オフ" />
+    <method name="Off" alt="OFF" />
     <method name="Surfaces" alt="表面" />
     <method name="Surfaces And Enemy Barriers" alt="表面と敵のバリア" />
     <method name="Surfaces And All Barriers" alt="表面とすべてのバリア" />

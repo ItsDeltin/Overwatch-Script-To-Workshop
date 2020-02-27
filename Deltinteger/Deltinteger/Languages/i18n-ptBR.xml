@@ -9,6 +9,7 @@
     <method name="conditions" alt="condições" />
     <method name="actions" alt="ações" />
     <method name="disabled" alt="desabilitado" />
+    <method name="subroutines" alt="sub-rotinas" />
     <method name="Abort" alt="Anular" />
     <method name="Abort If" alt="Anular se" />
     <method name="Abort If Condition Is False" alt="Anular se a Condição for Falsa" />
@@ -16,6 +17,8 @@
     <method name="Allow Button" alt="Permitir Botão" />
     <method name="Apply Impulse" alt="Aplicar Impulso" />
     <method name="Big Message" alt="Mensagem Grande" />
+    <method name="Call Subroutine" alt="Chamar sub-rotina" />
+    <method name="Start Rule" alt="Regra de início" />
     <method name="Chase Global Variable At Rate" alt="Acompanhar Variável Global na Medida" />
     <method name="Chase Global Variable Over Time" alt="Acompanhar Variável Global ao Longo do Tempo" />
     <method name="Chase Player Variable At Rate" alt="Acompanhar Variável de Jogador na Medida" />
@@ -41,6 +44,7 @@
     <method name="Destroy Dummy Bot" alt="Destruir Bot" />
     <method name="Destroy Effect" alt="Destruir Efeito" />
     <method name="Destroy Hud Text" alt="Destruir Texto de HUD" />
+    <method name="Destroy Icon" alt="Destruir Ícone" />
     <method name="Destroy In-World Text" alt="Destruir Texto no Mundo" />
     <method name="Disable Built-In Game Mode Announcer" alt="Desativar Narração Integrada ao Modo de Jogo" />
     <method name="Disable Built-In Game Mode Completion" alt="Desativar Conclusão Integrada ao Modo de Jogo" />
@@ -49,16 +53,24 @@
     <method name="Disable Built-In Game Mode Scoring" alt="Desativar Pontuação Integrada ao Modo de Jogo" />
     <method name="Disable Death Spectate All Players" alt="Desativar Visualização de Todos os Jogadores na Morte" />
     <method name="Disable Death Spectate Target HUD" alt="Desativar HUD do Alvo de Visualização na Morte" />
+    <method name="Disable Inspector Recording" alt="Desativar gravação do Inspetor" />
     <method name="Disallow Button" alt="Proibir Botão" />
     <method name="Enable Built-In Game Mode Announcer" alt="Ativar Narração Integrada ao Modo de Jogo" />
     <method name="Enable Built-In Game Mode Completion" alt="Ativar Conclusão Integrada ao Modo de Jogo" />
+    <method name="Enable Inspector Recording" alt="Ativar gravação do Inspetor" />
     <method name="Enable Built-In Game Mode Music" alt="Ativar Música Integrada ao Modo de Jogo" />
     <method name="Enable Built-In Game Mode Respawning" alt="Ativar Ressurgimento Integrado ao Modo de Jogo" />
     <method name="Enable Built-In Game Mode Scoring" alt="Ativar Pontuação Integrada ao Modo de Jogo" />
     <method name="Enable Death Spectate All Players" alt="Ativar Visualização de Todos os Jogadores na Morte" />
     <method name="Enable Death Spectate Target HUD" alt="Ativar HUD do Alvo de Visualização na Morte" />
+    <method name="End" alt="Término" />
+    <method name="For Global Variable" alt="For variável global" />
+    <method name="For Player Variable" alt="For variável de jogador" />
     <method name="Go To Assemble Heroes" alt="Ir para Escolher Heróis" />
     <method name="Heal" alt="Cura" />
+    <method name="If" alt="If" />
+    <method name="Else If" alt="Else If" />
+    <method name="Else" alt="Else" />
     <method name="Kill" alt="Abater" />
     <method name="Loop" alt="Gerar Loop" />
     <method name="Loop If" alt="Gerar Loop se" />
@@ -118,6 +130,8 @@
     <method name="Start Forcing Player To Be Hero" alt="Começar a Forçar Jogador a Ser o Herói" />
     <method name="Start Forcing Spawn Room" alt="Começar a Forçar Sala de Ressurgimento" />
     <method name="Start Forcing Throttle" alt="Começar a Forçar Aceleração" />
+    <method name="Start Healing Modification" alt="Começar modificação de cura" />
+    <method name="Stop Healing Modification" alt="Parar modificação de cura" />
     <method name="Start Heal Over Time" alt="Começar Cura ao Longo do Tempo" />
     <method name="Start Holding Button" alt="Começar a Segurar Botão" />
     <method name="Start Throttle In Direction" alt="Iniciar Aceleração na Direção" />
@@ -142,6 +156,7 @@
     <method name="Teleport" alt="Teletransportar" />
     <method name="Unpause Match Time" alt="Retomar Tempo da Partida" />
     <method name="Wait" alt="Esperar" />
+    <method name="While" alt="While" />
     <method name="Absolute Value" alt="Valor Absoluto" />
     <method name="Add" alt="Adicionar" />
     <method name="All Dead Players" alt="Todos os Jogadores Mortos" />
@@ -188,6 +203,7 @@
     <method name="Event Healing" alt="Cura no Evento" />
     <method name="Event Player" alt="Jogador do Evento" />
     <method name="Event Was Critical Hit" alt="Evento foi Golpe Crítico" />
+    <method name="Event Was Health Pack" alt="Evento foi kit Médico" />
     <method name="Eye Position" alt="Posição do Olho" />
     <method name="Facing Direction Of" alt="Direção Frontal de" />
     <method name="False" alt="False" />
@@ -256,6 +272,7 @@
     <method name="Last Damage Modification ID" alt="ID de Modificação de Dano Mais Recente" />
     <method name="Last Damage Over Time ID" alt="ID de Dano ao Longo do Tempo Mais Recente" />
     <method name="Last Heal Over Time ID" alt="ID de Cura ao Longo do Tempo Mais Recente" />
+    <method name="Last Healing Modification ID" alt="ID da última modificação de cura" />
     <method name="Last Of" alt="Último de" />
     <method name="Last Text ID" alt="ID de Texto Mais Recente" />
     <method name="Left" alt="Esquerda" />
@@ -357,6 +374,7 @@
     <method name="Player Received Healing" alt="Jogador Recebeu Cura" />
     <method name="Player Joined Match" alt="Jogador Entrou na Partida" />
     <method name="Player Left Match" alt="Jogador Saiu da Partida" />
+    <method name="Subroutine" alt="Sub-rotina" />
     <method name="All" alt="Todas" />
     <method name="Slot" alt="Espaço" />
     <method name="Reaper" alt="Reaper" />
@@ -405,6 +423,8 @@
     <method name="Interact" alt="Interagir" />
     <method name="Jump" alt="Pular" />
     <method name="Crouch" alt="Agachar" />
+    <method name="Melee" alt="Corpo a corpo" />
+    <method name="Reload" alt="Recarregar" />
     <method name="To World" alt="Ao Mundo" />
     <method name="To Player" alt="Ao Jogador" />
     <method name="Cancel Contrary Motion" alt="Cancelar Deslocamento Contrário" />
@@ -472,6 +492,8 @@
     <method name="Acknowledge" alt="Reconhecer" />
     <method name="Top" alt="Topo" />
     <method name="Visible To And String" alt="Visível para e String" />
+    <method name="Visible To, Sort Order, and String" alt="Visível para, ordem de classificação e string" />
+    <method name="Sort Order And String" alt="Ordem de classificação e string" />
     <method name="Arrow: Down" alt="Seta: Baixo" />
     <method name="Arrow: Left" alt="Seta: Esquerda" />
     <method name="Arrow: Right" alt="Seta: Direita" />
@@ -524,6 +546,10 @@
     <method name="Direction, Rate, and Max Speed" alt="Direção, Taxa e Velocidade Máx." />
     <method name="Receivers, Damagers, and Damage Percent" alt="Receptores, Danificadores e Porcentagem de Dano" />
     <method name="Receivers And Damagers" alt="Receptores e Danificadores" />
+    <method name="Receivers, Healers, and Healing Percent" alt="Receptores, Curandeiros e percentual de cura" />
+    <method name="Receivers And Healers" alt="Receptores e Curandeiros" />
+    <method name="Restart Rule" alt="Regra de reinício" />
+    <method name="Do Nothing" alt="Não fazer nada" />
     <method name="Direction And Turn Rate" alt="Direção e Taxa de Giro" />
     <method name="Barriers Do Not Block LOS" alt="Barreiras Não Bloqueiam LdV" />
     <method name="Enemy Barriers Block LOS" alt="Barreiras Inimigas Bloqueiam LdV" />
