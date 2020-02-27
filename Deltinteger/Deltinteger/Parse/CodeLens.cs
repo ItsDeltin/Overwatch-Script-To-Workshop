@@ -16,6 +16,7 @@ namespace Deltin.Deltinteger.Parse
         ClassVariable = 16,
         ScopedVariable = 32,
         ParameterVariable = 64,
+        Constructor = 128
     }
 
     public abstract class CodeLensRange
