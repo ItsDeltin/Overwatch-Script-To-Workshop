@@ -296,4 +296,28 @@ namespace Deltin.Deltinteger.Parse
         public CodeType Type() => ThisType;
         public Scope ReturningScope() => ThisType?.GetObjectScope();
     }
+
+    public class BaseAction : IExpression
+    {
+        readonly CodeType baseType;
+
+        public BaseAction(ParseInfo parseInfo, Scope scope, DeltinScriptParser.E_baseContext context)
+        {
+            CodeType thisType = scope.GetThis();
+
+            // Syntax error if the 'base' keyword is used outside of classes.
+            if (thisType == null)
+                parseInfo.Script.Diagnostics.Error("Keyword 'base' cannot be used here.", DocRange.GetRange(context));
+            
+            // Syntax error if the current class does not extend anything.
+            else if (thisType.Extends == null)
+                parseInfo.Script.Diagnostics.Error("The current type does not extend a class.", DocRange.GetRange(context));
+            
+            else baseType = thisType.Extends;
+        }
+
+        public IWorkshopTree Parse(ActionSet actionSet, bool asElement = true) => null;
+        public Scope ReturningScope() => baseType?.GetObjectScope();
+        public CodeType Type() => baseType;
+    }
 }

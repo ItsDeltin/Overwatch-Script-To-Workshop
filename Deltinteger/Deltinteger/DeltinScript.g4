@@ -35,6 +35,7 @@ expr
 	| typeconvert							                                           #e_type_convert
 	| THIS									                                           #e_this
 	| ROOT								                                               #e_root
+	| BASE                                                                             #e_base
 	| expr SEPERATOR (method | variable)?											   #e_expr_tree
 	| NOT expr                                                                         #e_not
 	| '-' expr                                                                         #e_inverse
@@ -232,6 +233,7 @@ CONTINUE  : 'continue'  ;
 SWITCH    : 'switch'	;
 CASE      : 'case'		;
 DEFAULT   : 'default'   ;
+BASE      : 'base'      ;
 
 EQUALS          : '='  ;
 EQUALS_POW      : '^=' ;

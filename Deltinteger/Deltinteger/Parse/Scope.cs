@@ -229,7 +229,7 @@ namespace Deltin.Deltinteger.Parse
                 // Loop through all parameters.
                 for (int p = 0; p < checking.Parameters.Length; p++)
                     // If the parameter types do not match, continue.
-                    if (checking.Parameters[p].Type != checking.Parameters[p].Type)
+                    if (checking.Parameters[p].Type != parameterTypes[p])
                         return ScopeIterateAction.Continue;
                 
                 // Parameter overload matches.

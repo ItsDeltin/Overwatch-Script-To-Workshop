@@ -201,7 +201,7 @@
 		},
 		"keywords_other": {
 			"name": "keyword.other",
-			"match": "\\b(in|define|true|false|recursive|playervar|globalvar|buildervar|null|struct|class|public|private|static|protected|new|this|as|delete|root|macro)\\b"
+			"match": "\\b(in|define|true|false|recursive|playervar|globalvar|buildervar|null|struct|class|public|private|static|protected|new|this|as|delete|root|base|macro)\\b"
 		},
 		"variables": {
 			"name": "variable",
