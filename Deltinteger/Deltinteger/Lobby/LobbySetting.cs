@@ -22,12 +22,10 @@ namespace Deltin.Deltinteger.Lobby
     class SelectValue : LobbySetting
     {
         public string[] Values { get; }
-        public string Default { get; }
 
-        public SelectValue(string name, string defaultValue, params string[] values) : base(name)
+        public SelectValue(string name, params string[] values) : base(name)
         {
             Values = values;
-            Default = defaultValue;
         }
 
         public override RootSchema GetSchema()
@@ -35,7 +33,7 @@ namespace Deltin.Deltinteger.Lobby
             RootSchema schema = new RootSchema();
             schema.Type = SchemaObjectType.String;
             schema.Enum = Values;
-            schema.Default = Default;
+            schema.Default = Values[0];
             return schema;
         }
     }
