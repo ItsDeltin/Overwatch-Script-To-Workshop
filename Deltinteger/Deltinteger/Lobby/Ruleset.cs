@@ -93,9 +93,17 @@ namespace Deltin.Deltinteger.Lobby
         private static readonly LobbySetting ProjectileSpeed = new RangeValue("Projectile Speed", 0, 300);
         private static readonly LobbySetting ProjectileGravity = new RangeValue("Projectile Gravity", 0, 500);
 
+        // ****************
+        // * ULT DURATION *
+        // ****************
+        private static readonly LobbySetting UltimateDuration = new RangeValue("Ultimate Duration", 25, 500);
+        private static readonly LobbySetting InfiniteDuration = new SwitchValue("Infinite Ultimate Duration", false);
+
         /// <summary>An array of all heroes + general and their settings.</summary>
         public static readonly LobbySettingCollection[] AllHeroSettings = new LobbySettingCollection[] {
-            new LobbySettingCollection("Ana").AddGlobals().AddHealer().AddProjectile(false)
+            new LobbySettingCollection("General").AddUlt(null, true).AddGlobals().AddHealer().AddProjectile(true),
+            new LobbySettingCollection("Ana").AddUlt("Nano Boost").AddGlobals().AddHealer().AddProjectile(false),
+            new LobbySettingCollection("Ashe").AddUlt("B.O.B.", true).AddGlobals().AddProjectile(true)
         };
 
 
@@ -107,7 +115,7 @@ namespace Deltin.Deltinteger.Lobby
         {
             HeroName = heroName;
         }
-
+        
         public LobbySettingCollection AddGlobals()
         {
             Add(QuickMelee);
@@ -135,6 +143,39 @@ namespace Deltin.Deltinteger.Lobby
         {
             Add(ProjectileSpeed);
             if (hasGravity) Add(ProjectileGravity);
+            return this;
+        }
+
+        public LobbySettingCollection AddUlt(string name, bool hasDuration = false)
+        {
+            // Get the names of the settings to be added.
+            string isEnabled = "Ultimate Ability";
+            string generation = "Ultimate Generation";
+            string passive = "Ultimate Generation - Passive";
+            string combat = "Ultimate Generation - Combat";
+
+            if (name != null)
+            {
+                // Add the (name) suffix if 'name' is not null.
+                isEnabled += " (" + name + ")";
+                generation += " (" + name + ")";
+                passive += " (" + name + ")";
+                combat += " (" + name + ")";
+            }
+
+            // Add the settings.
+            Add(new SwitchValue(isEnabled, true));
+            Add(new RangeValue(generation, 10, 500));
+            Add(new RangeValue(passive, 0, 500));
+            Add(new RangeValue(combat, 0, 500));
+
+            if (hasDuration)
+            {
+                // Add duration info if it can be changed.
+                Add(UltimateDuration);
+                Add(InfiniteDuration);
+            }
+
             return this;
         }
 
