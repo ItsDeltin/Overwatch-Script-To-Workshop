@@ -1,57 +1,83 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using Deltin.Deltinteger.Elements;
+using System.Runtime.Serialization;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Schema;
-using Newtonsoft.Json.Schema.Generation;
 using Newtonsoft.Json.Serialization;
+using Newtonsoft.Json.Converters;
 
 namespace Deltin.Deltinteger.Lobby
 {
-    public class RulesetSchema
+    public class RootSchema
     {
-        // Generates the schema.
-        public static JSchema GenerateSchema()
+        [JsonProperty("$schema")]
+        public string Schema;
+
+        [JsonProperty("$ref")]
+        public string Ref;
+
+        [JsonProperty("$comment")]
+        public string Comment;
+
+        [JsonProperty("description")]
+        public string Description;
+
+        [JsonProperty("definitions")]
+        public Dictionary<string, RootSchema> Definitions;
+
+        [JsonProperty("properties")]
+        public Dictionary<string, RootSchema> Properties;
+
+        [JsonProperty("default")]
+        public object Default;
+
+        [JsonProperty("type")]
+        [JsonConverter(typeof(StringEnumConverter))]
+        public SchemaObjectType Type;
+
+        [JsonProperty("minimum")]
+        public double Minimum;
+
+        [JsonProperty("maximum")]
+        public double Maximum;
+
+        [JsonProperty("enum")]
+        public object[] Enum;
+
+        public RootSchema() {}
+
+        public RootSchema(string description)
         {
-            JSchemaGenerator generator = new JSchemaGenerator();
-            // generator.GenerationProviders.Add(new StringEnumGenerationProvider());
-            generator.GenerationProviders.Add(new HeroSchemaProvider());
-            generator.DefaultRequired = Required.Default;
-            generator.ContractResolver = new HeroContractResolver();
-
-            JSchema schema = generator.Generate(typeof(RulesetSchema));
-
-            string result = schema.ToString();
-            Console.WriteLine(result);
-            return schema;
+            Description = description;
         }
 
-        public HeroesRoot Heroes { get; set; }
+        public RootSchema InitDefinitions()
+        {
+            Definitions = new Dictionary<string, RootSchema>();
+            return this;
+        }
+
+        public RootSchema InitProperties()
+        {
+            Properties = new Dictionary<string, RootSchema>();
+            return this;
+        }
     }
 
-    public class HeroesRoot
+    public enum SchemaObjectType
     {
-        [JsonProperty("General")]
-        public HeroList General { get; set; }
-
-        [JsonProperty("Team 1")]
-        public HeroList Team1 { get; set; }
-
-        [JsonProperty("Team 2")]
-        public HeroList Team2 { get; set; }
+        [EnumMember(Value = "object")]
+        Object,
+        [EnumMember(Value = "array")]
+        Array,
+        [EnumMember(Value = "boolean")]
+        Boolean,
+        [EnumMember(Value = "integer")]
+        Integer,
+        [EnumMember(Value = "null")]
+        Null,
+        [EnumMember(Value = "number")]
+        Number,
+        [EnumMember(Value = "string")]
+        String
     }
-
-    public class HeroList
-    {
-        public AnaSettings Ana { get; set; }
-    }
-
-    // class HeroProvider : JSchemaGenerationProvider
-    // {
-    //     public override JSchema GetSchema(JSchemaTypeGenerationContext context)
-    //     {
-    //         return null;
-    //     }
-    // }
 }

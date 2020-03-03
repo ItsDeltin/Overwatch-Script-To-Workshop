@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Xml;
-using System.Xml.Serialization;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 
 namespace Deltin.Deltinteger.Lobby
 {
@@ -15,28 +15,48 @@ namespace Deltin.Deltinteger.Lobby
             Name = name;
         }
 
-        public abstract string[] Options();
+        public abstract RootSchema GetSchema();
     }
 
     /// <summary>Enum lobby setting.</summary>
     class SelectValue : LobbySetting
     {
         public string[] Values { get; }
+        public string Default { get; }
 
-        public SelectValue(string name, params string[] values) : base(name)
+        public SelectValue(string name, string defaultValue, params string[] values) : base(name)
         {
             Values = values;
+            Default = defaultValue;
         }
 
-        public override string[] Options() => Values;
+        public override RootSchema GetSchema()
+        {
+            RootSchema schema = new RootSchema();
+            schema.Type = SchemaObjectType.String;
+            schema.Enum = Values;
+            schema.Default = Default;
+            return schema;
+        }
     }
 
     /// <summary>Boolean lobby setting.</summary>
     class SwitchValue : LobbySetting
     {
-        public SwitchValue(string name) : base(name) {}
+        public bool Default { get; }
 
-        public override string[] Options() => new string[] { "true", "false" };
+        public SwitchValue(string name, bool defaultValue) : base(name)
+        {
+            Default = defaultValue;
+        }
+
+        public override RootSchema GetSchema()
+        {
+            RootSchema schema = new RootSchema();
+            schema.Type = SchemaObjectType.Boolean;
+            schema.Default = Default;
+            return schema;
+        }
     }
 
     /// <summary>Number range lobby setting.</summary>
@@ -46,13 +66,21 @@ namespace Deltin.Deltinteger.Lobby
         public double Max { get; }
         public double Default { get; }
 
-        public RangeValue(string name, double min, double max, double defaultValue) : base(name)
+        public RangeValue(string name, double min, double max, double defaultValue = 100) : base(name)
         {
             Min = min;
             Max = max;
             Default = defaultValue;
         }
 
-        public override string[] Options() => new string[] { Default.ToString() };
+        public override RootSchema GetSchema()
+        {
+            RootSchema schema = new RootSchema();
+            schema.Type = SchemaObjectType.Number;
+            schema.Minimum = Min;
+            schema.Maximum = Max;
+            schema.Default = Default;
+            return schema;
+        }
     }
 }
