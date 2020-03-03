@@ -76,8 +76,8 @@ namespace Deltin.Deltinteger.Lobby
         private static readonly LobbySetting MovementGravity = new RangeValue("Movement Gravity", 25, 400);
         private static readonly LobbySetting MovementSpeed = new RangeValue("Movement Speed", 50, 300);
         private static readonly LobbySetting RecieveHeadshotsOnly = new SwitchValue("Recieve Headshots Only", false);
-        // * Generic Ammunition Info *
         private static readonly LobbySetting PrimaryFire = new SwitchValue("Primary Fire", true);
+        // * Generic Ammunition Info *
         private static readonly LobbySetting AmmunitionClipSizeScalar = new RangeValue("Ammunition Clip Size Scalar", 25, 500);
         private static readonly LobbySetting NoAmmunitionRequirement = new SwitchValue("No Ammunition Requirement", false);
 
@@ -101,19 +101,23 @@ namespace Deltin.Deltinteger.Lobby
 
         /// <summary>An array of all heroes + general and their settings.</summary>
         public static readonly LobbySettingCollection[] AllHeroSettings = new LobbySettingCollection[] {
-            new LobbySettingCollection("General").AddUlt(null, true).AddGlobals().AddHealer().AddProjectile(true),
-            new LobbySettingCollection("Ana").AddUlt("Nano Boost").AddGlobals().AddHealer().AddProjectile(false),
-            new LobbySettingCollection("Ashe").AddUlt("B.O.B.", true).AddGlobals().AddProjectile(true)
+            new LobbySettingCollection("General").AddUlt(null, true).AddProjectile(true).AddHealer(),
+            new LobbySettingCollection("Ana").AddUlt("Nano Boost").AddProjectile(false).AddHealer().AddAbility("Biotic Grenade").AddAbility("Sleep Dart"),
+            new LobbySettingCollection("Ashe").AddUlt("B.O.B.", true).AddProjectile(true).AddAbility("Coach Gun").AddAbility("Dynamite"),
+            new LobbySettingCollection("Baptiste").AddUlt("Amplification Matrix", true).AddProjectile(false).AddHealer().AddAbility("Immortality Field").AddAbility("Regenerative Burst"),
+            new LobbySettingCollection("Bastion").AddUlt("Configuration: Tank", true).AddProjectile(false).AddHealer().AddAbility("Reconfigure", hasCooldown: false).AddAbility("Self-Repair", rechargeable: true),
+            new LobbySettingCollection("Brigitte").AddUlt("Rally", true).AddHealer().AddAbility("Repair Pack").AddAbility("Shield Bash", hasKnockback: true).AddAbility("Whip Shot", hasKnockback: true).RemoveAmmunition(),
+            new LobbySettingCollection("D.va").AddUlt("Self-Destruct", true).AddAbility("Micro Missiles").AddAbility("Boosters", hasKnockback: true).AddAbility("Defense Matrix", rechargeable: true).RemoveAmmunition()
         };
 
 
         /// <summary>The name of the hero.</summary>
-        [JsonIgnore]
         public string HeroName { get; }
 
         public LobbySettingCollection(string heroName)
         {
             HeroName = heroName;
+            AddGlobals();
         }
         
         public LobbySettingCollection AddGlobals()
@@ -179,9 +183,27 @@ namespace Deltin.Deltinteger.Lobby
             return this;
         }
 
+        public LobbySettingCollection AddAbility(string name, bool hasCooldown = true, bool hasKnockback = false, bool rechargeable = false)
+        {
+            Add(new SwitchValue(name, true));
+
+            // If the ability has a cooldown, add the cooldown options.
+            if (hasCooldown && !rechargeable) Add(new RangeValue(name + " Cooldown Time", 0, 500));
+
+            // If the ability has a knockback scalar, add the knockback option.
+            if (hasKnockback) Add(new RangeValue(name + " Knockback Scalar", 0, 500));
+
+            // If the ability is rechargeable, add the max time and recharge rate.
+            if (rechargeable)
+            {
+                Add(new RangeValue(name + " Maximum Time", 20, 500));
+                Add(new RangeValue(name + " Recharge Rate", 0, 500));
+            }
+            return this;
+        }
+
         public LobbySettingCollection RemoveAmmunition()
         {
-            Remove(PrimaryFire);
             Remove(AmmunitionClipSizeScalar);
             Remove(NoAmmunitionRequirement);
             return this;
