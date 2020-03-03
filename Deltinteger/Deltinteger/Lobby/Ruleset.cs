@@ -37,6 +37,7 @@ namespace Deltin.Deltinteger.Lobby
             root.Schema = "http://json-schema.org/schema";
 
             root.Properties.Add("Lobby", GetLobby());
+            root.Properties.Add("Modes", GetModes());
             root.Definitions.Add("HeroList", GetHeroList());
 
             // Get the hero settings.
@@ -53,7 +54,8 @@ namespace Deltin.Deltinteger.Lobby
                 Formatting = Formatting.Indented
             });
 
-            Console.WriteLine(result);
+            Program.WorkshopCodeResult(result);
+            //Console.WriteLine(result);
         }
 
         private static RootSchema GetHeroListReference(string description)
@@ -66,7 +68,7 @@ namespace Deltin.Deltinteger.Lobby
         private static RootSchema GetHeroList()
         {
             RootSchema schema = new RootSchema().InitProperties();
-            foreach (var heroSettings in LobbySettingCollection.AllHeroSettings) schema.Properties.Add(heroSettings.HeroName, heroSettings.GetSchema());
+            foreach (var heroSettings in HeroSettingCollection.AllHeroSettings) schema.Properties.Add(heroSettings.HeroName, heroSettings.GetSchema());
             return schema;
         }
 
@@ -74,6 +76,13 @@ namespace Deltin.Deltinteger.Lobby
         {
             RootSchema schema = new RootSchema().InitProperties();
             foreach (var lobbySetting in LobbySettings) schema.Properties.Add(lobbySetting.Name, lobbySetting.GetSchema());
+            return schema;
+        }
+
+        private static RootSchema GetModes()
+        {
+            RootSchema schema = new RootSchema().InitProperties();
+            foreach (var mode in ModeSettingCollection.AllModeSettings) schema.Properties.Add(mode.ModeName, mode.GetSchema());
             return schema;
         }
     }
@@ -93,7 +102,49 @@ namespace Deltin.Deltinteger.Lobby
     public class WorkshopValuePair : Dictionary<String, object> {}
     public class HeroList : Dictionary<String, WorkshopValuePair> {}
 
-    public class LobbySettingCollection : List<LobbySetting>
+    public class LobbySettingCollection<T> : List<LobbySetting>
+    {
+        protected string Title;
+
+        public new T Add(LobbySetting lobbySetting)
+        {
+            base.Add(lobbySetting);
+            return (T)(object)this;
+        }
+
+        public T AddRange(string name, double min = 0, double max = 500, double defaultValue = 100)
+        {
+            Add(new RangeValue(name, min, max, defaultValue));
+            return (T)(object)this;
+        }
+
+        public T AddIntRange(string name, int min, int max, int defaultValue)
+        {
+            Add(new RangeValue(true, name, min, max, defaultValue));
+            return (T)(object)this;
+        }
+
+        public T AddSwitch(string name, bool defaultValue)
+        {
+            Add(new SwitchValue(name, defaultValue));
+            return (T)(object)this;
+        }
+
+        public T AddSelect(string name, params string[] values)
+        {
+            Add(new SelectValue(name, values));
+            return (T)(object)this;
+        }
+
+        public RootSchema GetSchema()
+        {
+            RootSchema schema = new RootSchema(Title).InitProperties();
+            foreach (var value in this) schema.Properties.Add(value.Name, value.GetSchema());
+            return schema;
+        }
+    }
+
+    public class HeroSettingCollection : LobbySettingCollection<HeroSettingCollection>
     {
         // ***********
         // * GLOBALS *
@@ -133,27 +184,28 @@ namespace Deltin.Deltinteger.Lobby
         private static readonly LobbySetting SecondaryFire = new SwitchValue("Secondary Fire", true);
 
         /// <summary>An array of all heroes + general and their settings.</summary>
-        public static readonly LobbySettingCollection[] AllHeroSettings = new LobbySettingCollection[] {
-            new LobbySettingCollection("General").AddUlt(null, true).AddProjectile(true).AddHealer(),
-            new LobbySettingCollection("Ana").AddUlt("Nano Boost").AddProjectile(false).AddHealer().AddScope().AddAbility("Biotic Grenade").AddAbility("Sleep Dart"),
-            new LobbySettingCollection("Ashe").AddUlt("B.O.B.", true).AddProjectile(true).AddScope().AddAbility("Coach Gun", hasKnockback: true, selfKnockback: true).AddAbility("Dynamite").AddRange("Dynamite Fuse Time Scalar", 1),
-            new LobbySettingCollection("Baptiste").AddUlt("Amplification Matrix", true).AddProjectile(false).AddHealer().AddAbility("Immortality Field").AddAbility("Regenerative Burst").AddSecondaryFire(),
-            new LobbySettingCollection("Bastion").AddUlt("Configuration: Tank", true).AddProjectile(false).AddHealer().AddAbility("Reconfigure", hasCooldown: false).AddAbility("Self-Repair", rechargeable: true),
-            new LobbySettingCollection("Brigitte").AddUlt("Rally", true).AddHealer().AddAbility("Repair Pack").AddAbility("Shield Bash", hasKnockback: true).AddAbility("Whip Shot", hasKnockback: true).RemoveAmmunition(),
-            new LobbySettingCollection("D.va").AddUlt("Self-Destruct", true).AddAbility("Micro Missiles").AddAbility("Boosters", hasKnockback: true).AddAbility("Defense Matrix", rechargeable: true).RemoveAmmunition()
+        public static readonly HeroSettingCollection[] AllHeroSettings = new HeroSettingCollection[] {
+            new HeroSettingCollection("General").AddUlt(null, true).AddProjectile(true).AddHealer(),
+            new HeroSettingCollection("Ana").AddUlt("Nano Boost").AddProjectile(false).AddHealer().AddScope().AddAbility("Biotic Grenade").AddAbility("Sleep Dart"),
+            new HeroSettingCollection("Ashe").AddUlt("B.O.B.", true).AddProjectile(true).AddScope().AddAbility("Coach Gun", hasKnockback: true, selfKnockback: true).AddAbility("Dynamite").AddRange("Dynamite Fuse Time Scalar", 1),
+            new HeroSettingCollection("Baptiste").AddUlt("Amplification Matrix", true).AddProjectile(false).AddHealer().AddAbility("Immortality Field").AddAbility("Regenerative Burst").AddSecondaryFire(),
+            new HeroSettingCollection("Bastion").AddUlt("Configuration: Tank", true).AddProjectile(false).AddHealer().AddAbility("Reconfigure", hasCooldown: false).AddAbility("Self-Repair", rechargeable: true),
+            new HeroSettingCollection("Brigitte").AddUlt("Rally", true).AddHealer().AddAbility("Repair Pack").AddAbility("Shield Bash", hasKnockback: true).AddAbility("Whip Shot", hasKnockback: true).RemoveAmmunition(),
+            new HeroSettingCollection("D.va").AddUlt("Self-Destruct", true).AddAbility("Micro Missiles").AddAbility("Boosters", hasKnockback: true).AddAbility("Defense Matrix", rechargeable: true).RemoveAmmunition()
         };
 
 
         /// <summary>The name of the hero.</summary>
         public string HeroName { get; }
 
-        public LobbySettingCollection(string heroName)
+        public HeroSettingCollection(string heroName)
         {
             HeroName = heroName;
+            Title = $"'{HeroName}' hero settings.";
             AddGlobals();
         }
         
-        public LobbySettingCollection AddGlobals()
+        public HeroSettingCollection AddGlobals()
         {
             Add(QuickMelee);
             Add(SpawnWithUlt);
@@ -170,20 +222,20 @@ namespace Deltin.Deltinteger.Lobby
             return this;
         }
 
-        public LobbySettingCollection AddHealer()
+        public HeroSettingCollection AddHealer()
         {
             Add(HealingDealt);
             return this;
         }
 
-        public LobbySettingCollection AddProjectile(bool hasGravity)
+        public HeroSettingCollection AddProjectile(bool hasGravity)
         {
             Add(ProjectileSpeed);
             if (hasGravity) Add(ProjectileGravity);
             return this;
         }
 
-        public LobbySettingCollection AddUlt(string name, bool hasDuration = false, bool hasKnockback = false)
+        public HeroSettingCollection AddUlt(string name, bool hasDuration = false, bool hasKnockback = false)
         {
             // Get the names of the settings to be added.
             string isEnabled = "Ultimate Ability";
@@ -220,7 +272,7 @@ namespace Deltin.Deltinteger.Lobby
             return this;
         }
 
-        public LobbySettingCollection AddAbility(string name, bool hasCooldown = true, bool hasKnockback = false, bool rechargeable = false, bool selfKnockback = false)
+        public HeroSettingCollection AddAbility(string name, bool hasCooldown = true, bool hasKnockback = false, bool rechargeable = false, bool selfKnockback = false)
         {
             Add(new SwitchValue(name, true));
 
@@ -248,49 +300,24 @@ namespace Deltin.Deltinteger.Lobby
             return this;
         }
 
-        public LobbySettingCollection AddSecondaryFire()
+        public HeroSettingCollection AddSecondaryFire()
         {
             Add(SecondaryFire);
             return this;
         }
 
-        public LobbySettingCollection AddScope()
+        public HeroSettingCollection AddScope()
         {
             Add(NoAutomaticFire);
             Add(NoScope);
             return this;
         }
 
-        public LobbySettingCollection AddRange(string name, double min = 0, double max = 500, double defaultValue = 100)
-        {
-            Add(new RangeValue(name, min, max, defaultValue));
-            return this;
-        }
-
-        public LobbySettingCollection AddSwitch(string name, bool defaultValue)
-        {
-            Add(new SwitchValue(name, defaultValue));
-            return this;
-        }
-
-        public LobbySettingCollection RemoveAmmunition()
+        public HeroSettingCollection RemoveAmmunition()
         {
             Remove(AmmunitionClipSizeScalar);
             Remove(NoAmmunitionRequirement);
             return this;
-        }
-
-        public new LobbySettingCollection Add(LobbySetting lobbySetting)
-        {
-            base.Add(lobbySetting);
-            return this;
-        }
-
-        public RootSchema GetSchema()
-        {
-            RootSchema schema = new RootSchema($"'{HeroName}' hero settings.").InitProperties();
-            foreach (var value in this) schema.Properties.Add(value.Name, value.GetSchema());
-            return schema;
         }
     }
 }

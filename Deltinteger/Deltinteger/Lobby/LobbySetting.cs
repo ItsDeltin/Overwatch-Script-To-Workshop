@@ -63,6 +63,7 @@ namespace Deltin.Deltinteger.Lobby
         public double Min { get; }
         public double Max { get; }
         public double Default { get; }
+        public bool Integer { get; }
 
         public RangeValue(string name, double min, double max, double defaultValue = 100) : base(name)
         {
@@ -71,10 +72,16 @@ namespace Deltin.Deltinteger.Lobby
             Default = defaultValue;
         }
 
+        public RangeValue(bool integer, string name, double min, double max, double defaultValue = 100) : this(name, min, max, defaultValue)
+        {
+            Integer = integer;
+        }
+
         public override RootSchema GetSchema()
         {
             RootSchema schema = new RootSchema();
-            schema.Type = SchemaObjectType.Number;
+            if (Integer) schema.Type = SchemaObjectType.Integer;
+            else schema.Type = SchemaObjectType.Number;
             schema.Minimum = Min;
             schema.Maximum = Max;
             schema.Default = Default;
