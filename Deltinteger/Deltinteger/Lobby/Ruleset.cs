@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Text;
 using Deltin.Deltinteger.Elements;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
+using Newtonsoft.Json.Linq;
 
 namespace Deltin.Deltinteger.Lobby
 {
@@ -25,9 +27,17 @@ namespace Deltin.Deltinteger.Lobby
 
         public HeroesRoot Heroes { get; set; }
         public WorkshopValuePair Lobby { get; set; }
+        public ModesRoot Modes { get; set; }
 
         public void ToWorkshop(StringBuilder builder, OutputLanguage outputLanguage)
         {
+        }
+
+        public static Ruleset Parse(string json)
+        {
+            Ruleset result = JsonConvert.DeserializeObject<Ruleset>(json);
+            result.Modes?.MergeModeSettings();
+            return result;
         }
 
         public static void GenerateSchema()
@@ -55,7 +65,6 @@ namespace Deltin.Deltinteger.Lobby
             });
 
             Program.WorkshopCodeResult(result);
-            //Console.WriteLine(result);
         }
 
         private static RootSchema GetHeroListReference(string description)

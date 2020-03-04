@@ -1,9 +1,63 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 
 namespace Deltin.Deltinteger.Lobby
 {
+    public class ModesRoot
+    {
+        public HeroList All { get; set; }
+        
+        public HeroList Assault { get; set; }
+        
+        public HeroList Control { get; set; }
+        
+        public HeroList Escort { get; set; }
+        
+        public HeroList Hybrid { get; set; }
+        
+        [JsonProperty("Capture The Flag")]
+        public HeroList CaptureTheFlag { get; set; }
+        
+        public HeroList Deathmatch { get; set; }
+        
+        public HeroList Elimination { get; set; }
+        
+        [JsonProperty("Team Deathmatch")]
+        public HeroList TeamDeathmatch { get; set; }
+        
+        public HeroList Skirmish { get; set; }
+        
+        [JsonProperty("Practice Range")]
+        public HeroList PracticeRange { get; set; }
+
+        public void MergeModeSettings()
+        {
+            if (All == null) return;
+            foreach (var value in All)
+            {
+                MergeTo(value, Assault);
+                MergeTo(value, CaptureTheFlag);
+                MergeTo(value, Control);
+                MergeTo(value, Deathmatch);
+                MergeTo(value, Elimination);
+                MergeTo(value, Escort);
+                MergeTo(value, Hybrid);
+                MergeTo(value, PracticeRange);
+                MergeTo(value, Skirmish);
+                MergeTo(value, TeamDeathmatch);
+            }
+        }
+
+        private void MergeTo(KeyValuePair<string, WorkshopValuePair> pair, HeroList set)
+        {
+            if (set == null || set.ContainsKey(pair.Key)) return;
+            set.Add(pair.Key, pair.Value);
+        }
+    }
+    
     public class ModeSettingCollection : LobbySettingCollection<ModeSettingCollection>
     {
         private static LobbySetting[] DefaultModeSettings = new LobbySetting[]
@@ -26,7 +80,7 @@ namespace Deltin.Deltinteger.Lobby
         private static LobbySetting CompetitiveRules = new SwitchValue("Competitive Rules", false);
 
         public static ModeSettingCollection[] AllModeSettings = new ModeSettingCollection[] {
-            new ModeSettingCollection("General"),
+            new ModeSettingCollection("All"),
             new ModeSettingCollection("Assault", true).Competitive().AddCaptureSpeed(),
             new ModeSettingCollection("Control", true).Competitive().AddCaptureSpeed().AddSelect("Limit Valid Control Points", "All", "First", "Second", "Third").AddIntRange("Score To Win", 1, 3, 2).AddRange("Scoring Speed Modifier", 10, 500),
             new ModeSettingCollection("Escort", true).Competitive().AddPayloadSpeed(),
