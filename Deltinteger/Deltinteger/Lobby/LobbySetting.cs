@@ -9,13 +9,30 @@ namespace Deltin.Deltinteger.Lobby
     public abstract class LobbySetting
     {
         public string Name { get; }
+        public string ReferenceName { get; set; }
+        private RootSchema Reference;
 
         public LobbySetting(string name)
         {
             Name = name;
+            ReferenceName = Name;
         }
 
-        public abstract RootSchema GetSchema();
+        public RootSchema GetSchema(SchemaGenerate generate)
+        {
+            if (Reference == null)
+            {
+                RootSchema definition = GetSchema();
+                generate.Definitions.Add(ReferenceName, definition);
+
+                Reference = new RootSchema();
+                Reference.Ref = "#/definitions/" + ReferenceName;
+            }
+
+            return Reference;
+        }
+
+        protected abstract RootSchema GetSchema();
     }
 
     /// <summary>Enum lobby setting.</summary>
@@ -28,7 +45,7 @@ namespace Deltin.Deltinteger.Lobby
             Values = values;
         }
 
-        public override RootSchema GetSchema()
+        protected override RootSchema GetSchema()
         {
             RootSchema schema = new RootSchema();
             schema.Type = SchemaObjectType.String;
@@ -48,7 +65,7 @@ namespace Deltin.Deltinteger.Lobby
             Default = defaultValue;
         }
 
-        public override RootSchema GetSchema()
+        protected override RootSchema GetSchema()
         {
             RootSchema schema = new RootSchema();
             schema.Type = SchemaObjectType.Boolean;
@@ -77,7 +94,7 @@ namespace Deltin.Deltinteger.Lobby
             Integer = integer;
         }
 
-        public override RootSchema GetSchema()
+        protected override RootSchema GetSchema()
         {
             RootSchema schema = new RootSchema();
             if (Integer) schema.Type = SchemaObjectType.Integer;

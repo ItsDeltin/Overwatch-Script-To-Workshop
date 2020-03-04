@@ -78,6 +78,8 @@ namespace Deltin.Deltinteger.Lobby
         private static LobbySetting CaptureSpeed = new RangeValue("Capture Speed Modifier", 10, 500);
         private static LobbySetting PayloadSpeed = new RangeValue("Payload Speed Modifier", 10, 500);
         private static LobbySetting CompetitiveRules = new SwitchValue("Competitive Rules", false);
+        public static LobbySetting Enabled_DefaultOn = new SwitchValue("Enabled", true) { ReferenceName = "Enabled_DefaultOn" };
+        public static LobbySetting Enabled_DefaultOff = new SwitchValue("Enabled", false) { ReferenceName = "Enabled_DefaultOff" };
 
         public static ModeSettingCollection[] AllModeSettings = new ModeSettingCollection[] {
             new ModeSettingCollection("All"),
@@ -100,7 +102,10 @@ namespace Deltin.Deltinteger.Lobby
         {
             ModeName = modeName;
             Title = $"{ModeName} settings.";
-            Add(new SwitchValue("Enabled", defaultEnabled));
+
+            if (defaultEnabled) Add(Enabled_DefaultOn);
+            else Add(Enabled_DefaultOff);
+
             AddRange(DefaultModeSettings);
         }
 

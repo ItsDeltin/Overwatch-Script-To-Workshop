@@ -46,9 +46,11 @@ namespace Deltin.Deltinteger.Lobby
             RootSchema root = new RootSchema().InitDefinitions().InitProperties();
             root.Schema = "http://json-schema.org/schema";
 
-            root.Properties.Add("Lobby", GetLobby());
-            root.Properties.Add("Modes", GetModes());
-            root.Definitions.Add("HeroList", GetHeroList());
+            SchemaGenerate generate = new SchemaGenerate(root.Definitions);
+
+            root.Properties.Add("Lobby", GetLobby(generate));
+            root.Properties.Add("Modes", GetModes(generate));
+            root.Definitions.Add("HeroList", GetHeroList(generate));
 
             // Get the hero settings.
             RootSchema heroesRoot = new RootSchema("Hero settings.").InitProperties();
@@ -74,25 +76,35 @@ namespace Deltin.Deltinteger.Lobby
             return schema;
         }
 
-        private static RootSchema GetHeroList()
+        private static RootSchema GetHeroList(SchemaGenerate generate)
         {
             RootSchema schema = new RootSchema().InitProperties();
-            foreach (var heroSettings in HeroSettingCollection.AllHeroSettings) schema.Properties.Add(heroSettings.HeroName, heroSettings.GetSchema());
+            foreach (var heroSettings in HeroSettingCollection.AllHeroSettings) schema.Properties.Add(heroSettings.HeroName, heroSettings.GetSchema(generate));
             return schema;
         }
 
-        private static RootSchema GetLobby()
+        private static RootSchema GetLobby(SchemaGenerate generate)
         {
             RootSchema schema = new RootSchema().InitProperties();
-            foreach (var lobbySetting in LobbySettings) schema.Properties.Add(lobbySetting.Name, lobbySetting.GetSchema());
+            foreach (var lobbySetting in LobbySettings) schema.Properties.Add(lobbySetting.Name, lobbySetting.GetSchema(generate));
             return schema;
         }
 
-        private static RootSchema GetModes()
+        private static RootSchema GetModes(SchemaGenerate generate)
         {
             RootSchema schema = new RootSchema().InitProperties();
-            foreach (var mode in ModeSettingCollection.AllModeSettings) schema.Properties.Add(mode.ModeName, mode.GetSchema());
+            foreach (var mode in ModeSettingCollection.AllModeSettings) schema.Properties.Add(mode.ModeName, mode.GetSchema(generate));
             return schema;
+        }
+    }
+
+    public class SchemaGenerate
+    {
+        public Dictionary<string, RootSchema> Definitions { get; }
+
+        public SchemaGenerate(Dictionary<string, RootSchema> definitions)
+        {
+            Definitions = definitions;
         }
     }
 
@@ -145,10 +157,10 @@ namespace Deltin.Deltinteger.Lobby
             return (T)(object)this;
         }
 
-        public RootSchema GetSchema()
+        public RootSchema GetSchema(SchemaGenerate generate)
         {
             RootSchema schema = new RootSchema(Title).InitProperties();
-            foreach (var value in this) schema.Properties.Add(value.Name, value.GetSchema());
+            foreach (var value in this) schema.Properties.Add(value.Name, value.GetSchema(generate));
             return schema;
         }
     }
