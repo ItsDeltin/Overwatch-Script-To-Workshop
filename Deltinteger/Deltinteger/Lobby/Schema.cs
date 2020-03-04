@@ -18,6 +18,9 @@ namespace Deltin.Deltinteger.Lobby
         [JsonProperty("$comment")]
         public string Comment;
 
+        [JsonProperty("title")]
+        public string Title;
+
         [JsonProperty("description")]
         public string Description;
 
@@ -32,7 +35,7 @@ namespace Deltin.Deltinteger.Lobby
 
         [JsonProperty("type")]
         [JsonConverter(typeof(StringEnumConverter))]
-        public SchemaObjectType Type;
+        public SchemaObjectType? Type;
 
         [JsonProperty("minimum")]
         public double Minimum;

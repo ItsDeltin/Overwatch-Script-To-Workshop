@@ -44,7 +44,9 @@ namespace Deltin.Deltinteger.Lobby
         {
             // Initialize the root.
             RootSchema root = new RootSchema().InitDefinitions().InitProperties();
-            root.Schema = "http://json-schema.org/schema";
+            root.Schema = "http://json-schema.org/draft-04/schema#";
+            root.Type = SchemaObjectType.Object;
+            root.Title = "JSON schema for OSTW lobby setting files.";
 
             SchemaGenerate generate = new SchemaGenerate(root.Definitions);
 

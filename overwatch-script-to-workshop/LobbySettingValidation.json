@@ -1,0 +1,1462 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "JSON schema for OSTW lobby setting files.",
+  "definitions": {
+    "Map Rotation": {
+      "default": "After A Mirror Match",
+      "type": "string",
+      "enum": [
+        "After A Mirror Match",
+        "After A Game",
+        "Paused"
+      ]
+    },
+    "Return To Lobby": {
+      "default": "After A Mirror Match",
+      "type": "string",
+      "enum": [
+        "After A Mirror Match",
+        "After A Game",
+        "Never"
+      ]
+    },
+    "Team Balancing": {
+      "default": "Off",
+      "type": "string",
+      "enum": [
+        "Off",
+        "After A Mirror Match",
+        "After A Game"
+      ]
+    },
+    "Swap Teams After Match": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Max Team 1 Players": {
+      "default": 6.0,
+      "type": "number",
+      "maximum": 6.0
+    },
+    "Max Team 2 Players": {
+      "default": 6.0,
+      "type": "number",
+      "maximum": 6.0
+    },
+    "Max FFA Players": {
+      "default": 0.0,
+      "type": "number",
+      "maximum": 12.0
+    },
+    "Max Spectators": {
+      "default": 2.0,
+      "type": "number",
+      "maximum": 12.0
+    },
+    "Allow Players Who Are In Queue": {
+      "default": false,
+      "type": "boolean"
+    },
+    "Use Experimental Update If Available": {
+      "default": false,
+      "type": "boolean"
+    },
+    "Match Voice Chat": {
+      "default": false,
+      "type": "boolean"
+    },
+    "Pause Game On Player Disconnect": {
+      "default": false,
+      "type": "boolean"
+    },
+    "Enemy Health Bars": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Game Mode Start": {
+      "default": "All Slots Filled",
+      "type": "string",
+      "enum": [
+        "All Slots Filled",
+        "Immediately",
+        "Manual"
+      ]
+    },
+    "Health Pack Respawn Time Scalar": {
+      "default": 100.0,
+      "type": "number",
+      "minimum": 10.0,
+      "maximum": 500.0
+    },
+    "Kill Cam": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Kill Feed": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Skins": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Spawn Health Packs": {
+      "default": "Determined By Mode",
+      "type": "string",
+      "enum": [
+        "Determined By Mode",
+        "Enabled",
+        "Disabled"
+      ]
+    },
+    "Allow Hero Switching": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Hero Limit": {
+      "default": "1 Per Team",
+      "type": "string",
+      "enum": [
+        "1 Per Team",
+        "2 Per Team",
+        "1 Per Game",
+        "2 Per Game"
+      ]
+    },
+    "Limit Roles": {
+      "default": "2 Of Each Role Per Team",
+      "type": "string",
+      "enum": [
+        "2 Of Each Role Per Team",
+        "Off"
+      ]
+    },
+    "Respawn As Random Hero": {
+      "default": false,
+      "type": "boolean"
+    },
+    "Respawn Time Scalar": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 100.0
+    },
+    "Enabled_DefaultOn": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Competitive Rules": {
+      "default": false,
+      "type": "boolean"
+    },
+    "Capture Speed Modifier": {
+      "default": 100.0,
+      "type": "number",
+      "minimum": 10.0,
+      "maximum": 500.0
+    },
+    "Limit Valid Control Points": {
+      "default": "All",
+      "type": "string",
+      "enum": [
+        "All",
+        "First",
+        "Second",
+        "Third"
+      ]
+    },
+    "Score To Win": {
+      "default": 2.0,
+      "type": "integer",
+      "minimum": 1.0,
+      "maximum": 3.0
+    },
+    "Scoring Speed Modifier": {
+      "default": 100.0,
+      "type": "number",
+      "minimum": 10.0,
+      "maximum": 500.0
+    },
+    "Payload Speed Modifier": {
+      "default": 100.0,
+      "type": "number",
+      "minimum": 10.0,
+      "maximum": 500.0
+    },
+    "Quick Melee": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Spawn With Ultimate Ready": {
+      "default": false,
+      "type": "boolean"
+    },
+    "Damage Dealt": {
+      "default": 100.0,
+      "type": "number",
+      "minimum": 10.0,
+      "maximum": 500.0
+    },
+    "Damage Recieved": {
+      "default": 100.0,
+      "type": "number",
+      "minimum": 10.0,
+      "maximum": 500.0
+    },
+    "Healing Recieved": {
+      "default": 100.0,
+      "type": "number",
+      "minimum": 10.0,
+      "maximum": 500.0
+    },
+    "Jump Vertical Speed": {
+      "default": 100.0,
+      "type": "number",
+      "minimum": 25.0,
+      "maximum": 800.0
+    },
+    "Movement Gravity": {
+      "default": 100.0,
+      "type": "number",
+      "minimum": 25.0,
+      "maximum": 400.0
+    },
+    "Movement Speed": {
+      "default": 100.0,
+      "type": "number",
+      "minimum": 50.0,
+      "maximum": 300.0
+    },
+    "Recieve Headshots Only": {
+      "default": false,
+      "type": "boolean"
+    },
+    "Primary Fire": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Ammunition Clip Size Scalar": {
+      "default": 100.0,
+      "type": "number",
+      "minimum": 25.0,
+      "maximum": 500.0
+    },
+    "No Ammunition Requirement": {
+      "default": false,
+      "type": "boolean"
+    },
+    "Ultimate Ability": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Ultimate Generation": {
+      "default": 100.0,
+      "type": "number",
+      "minimum": 10.0,
+      "maximum": 500.0
+    },
+    "Ultimate Generation - Passive": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Ultimate Generation - Combat": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Ultimate Duration": {
+      "default": 100.0,
+      "type": "number",
+      "minimum": 25.0,
+      "maximum": 500.0
+    },
+    "Infinite Ultimate Duration": {
+      "default": false,
+      "type": "boolean"
+    },
+    "Projectile Speed": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 300.0
+    },
+    "Projectile Gravity": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Healing Dealt": {
+      "default": 100.0,
+      "type": "number",
+      "minimum": 10.0,
+      "maximum": 500.0
+    },
+    "Ultimate Ability (Nano Boost)": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Ultimate Generation (Nano Boost)": {
+      "default": 100.0,
+      "type": "number",
+      "minimum": 10.0,
+      "maximum": 500.0
+    },
+    "Ultimate Generation - Passive (Nano Boost)": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Ultimate Generation - Combat (Nano Boost)": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "No Automatic Fire": {
+      "default": false,
+      "type": "boolean"
+    },
+    "No Scope": {
+      "default": false,
+      "type": "boolean"
+    },
+    "Biotic Grenade": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Biotic Grenade Cooldown Time": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Sleep Dart": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Sleep Dart Cooldown Time": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Ultimate Ability (B.O.B.)": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Ultimate Generation (B.O.B.)": {
+      "default": 100.0,
+      "type": "number",
+      "minimum": 10.0,
+      "maximum": 500.0
+    },
+    "Ultimate Generation - Passive (B.O.B.)": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Ultimate Generation - Combat (B.O.B.)": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Coach Gun": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Coach Gun Cooldown Time": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Coach Gun Knockback Scalar (Enemy)": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 300.0
+    },
+    "Coach Gun Knockback Scalar (Self)": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 300.0
+    },
+    "Dynamite": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Dynamite Cooldown Time": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Dynamite Fuse Time Scalar": {
+      "default": 100.0,
+      "type": "number",
+      "minimum": 1.0,
+      "maximum": 500.0
+    },
+    "Ultimate Ability (Amplification Matrix)": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Ultimate Generation (Amplification Matrix)": {
+      "default": 100.0,
+      "type": "number",
+      "minimum": 10.0,
+      "maximum": 500.0
+    },
+    "Ultimate Generation - Passive (Amplification Matrix)": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Ultimate Generation - Combat (Amplification Matrix)": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Immortality Field": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Immortality Field Cooldown Time": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Regenerative Burst": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Regenerative Burst Cooldown Time": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Secondary Fire": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Ultimate Ability (Configuration: Tank)": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Ultimate Generation (Configuration: Tank)": {
+      "default": 100.0,
+      "type": "number",
+      "minimum": 10.0,
+      "maximum": 500.0
+    },
+    "Ultimate Generation - Passive (Configuration: Tank)": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Ultimate Generation - Combat (Configuration: Tank)": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Reconfigure": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Self-Repair": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Self-Repair Maximum Time": {
+      "default": 100.0,
+      "type": "number",
+      "minimum": 20.0,
+      "maximum": 500.0
+    },
+    "Self-Repair Recharge Rate": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Ultimate Ability (Rally)": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Ultimate Generation (Rally)": {
+      "default": 100.0,
+      "type": "number",
+      "minimum": 10.0,
+      "maximum": 500.0
+    },
+    "Ultimate Generation - Passive (Rally)": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Ultimate Generation - Combat (Rally)": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Repair Pack": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Repair Pack Cooldown Time": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Shield Bash": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Shield Bash Cooldown Time": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Shield Bash Knockback Scalar": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Whip Shot": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Whip Shot Cooldown Time": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Whip Shot Knockback Scalar": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Ultimate Ability (Self-Destruct)": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Ultimate Generation (Self-Destruct)": {
+      "default": 100.0,
+      "type": "number",
+      "minimum": 10.0,
+      "maximum": 500.0
+    },
+    "Ultimate Generation - Passive (Self-Destruct)": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Ultimate Generation - Combat (Self-Destruct)": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Micro Missiles": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Micro Missiles Cooldown Time": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Boosters": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Boosters Cooldown Time": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Boosters Knockback Scalar": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Defense Matrix": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Defense Matrix Maximum Time": {
+      "default": 100.0,
+      "type": "number",
+      "minimum": 20.0,
+      "maximum": 500.0
+    },
+    "Defense Matrix Recharge Rate": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "HeroList": {
+      "properties": {
+        "General": {
+          "description": "'General' hero settings.",
+          "properties": {
+            "Quick Melee": {
+              "$ref": "#/definitions/Quick Melee"
+            },
+            "Spawn With Ultimate Ready": {
+              "$ref": "#/definitions/Spawn With Ultimate Ready"
+            },
+            "Damage Dealt": {
+              "$ref": "#/definitions/Damage Dealt"
+            },
+            "Damage Recieved": {
+              "$ref": "#/definitions/Damage Recieved"
+            },
+            "Healing Recieved": {
+              "$ref": "#/definitions/Healing Recieved"
+            },
+            "Jump Vertical Speed": {
+              "$ref": "#/definitions/Jump Vertical Speed"
+            },
+            "Movement Gravity": {
+              "$ref": "#/definitions/Movement Gravity"
+            },
+            "Movement Speed": {
+              "$ref": "#/definitions/Movement Speed"
+            },
+            "Recieve Headshots Only": {
+              "$ref": "#/definitions/Recieve Headshots Only"
+            },
+            "Primary Fire": {
+              "$ref": "#/definitions/Primary Fire"
+            },
+            "Ammunition Clip Size Scalar": {
+              "$ref": "#/definitions/Ammunition Clip Size Scalar"
+            },
+            "No Ammunition Requirement": {
+              "$ref": "#/definitions/No Ammunition Requirement"
+            },
+            "Ultimate Ability": {
+              "$ref": "#/definitions/Ultimate Ability"
+            },
+            "Ultimate Generation": {
+              "$ref": "#/definitions/Ultimate Generation"
+            },
+            "Ultimate Generation - Passive": {
+              "$ref": "#/definitions/Ultimate Generation - Passive"
+            },
+            "Ultimate Generation - Combat": {
+              "$ref": "#/definitions/Ultimate Generation - Combat"
+            },
+            "Ultimate Duration": {
+              "$ref": "#/definitions/Ultimate Duration"
+            },
+            "Infinite Ultimate Duration": {
+              "$ref": "#/definitions/Infinite Ultimate Duration"
+            },
+            "Projectile Speed": {
+              "$ref": "#/definitions/Projectile Speed"
+            },
+            "Projectile Gravity": {
+              "$ref": "#/definitions/Projectile Gravity"
+            },
+            "Healing Dealt": {
+              "$ref": "#/definitions/Healing Dealt"
+            }
+          }
+        },
+        "Ana": {
+          "description": "'Ana' hero settings.",
+          "properties": {
+            "Quick Melee": {
+              "$ref": "#/definitions/Quick Melee"
+            },
+            "Spawn With Ultimate Ready": {
+              "$ref": "#/definitions/Spawn With Ultimate Ready"
+            },
+            "Damage Dealt": {
+              "$ref": "#/definitions/Damage Dealt"
+            },
+            "Damage Recieved": {
+              "$ref": "#/definitions/Damage Recieved"
+            },
+            "Healing Recieved": {
+              "$ref": "#/definitions/Healing Recieved"
+            },
+            "Jump Vertical Speed": {
+              "$ref": "#/definitions/Jump Vertical Speed"
+            },
+            "Movement Gravity": {
+              "$ref": "#/definitions/Movement Gravity"
+            },
+            "Movement Speed": {
+              "$ref": "#/definitions/Movement Speed"
+            },
+            "Recieve Headshots Only": {
+              "$ref": "#/definitions/Recieve Headshots Only"
+            },
+            "Primary Fire": {
+              "$ref": "#/definitions/Primary Fire"
+            },
+            "Ammunition Clip Size Scalar": {
+              "$ref": "#/definitions/Ammunition Clip Size Scalar"
+            },
+            "No Ammunition Requirement": {
+              "$ref": "#/definitions/No Ammunition Requirement"
+            },
+            "Ultimate Ability (Nano Boost)": {
+              "$ref": "#/definitions/Ultimate Ability (Nano Boost)"
+            },
+            "Ultimate Generation (Nano Boost)": {
+              "$ref": "#/definitions/Ultimate Generation (Nano Boost)"
+            },
+            "Ultimate Generation - Passive (Nano Boost)": {
+              "$ref": "#/definitions/Ultimate Generation - Passive (Nano Boost)"
+            },
+            "Ultimate Generation - Combat (Nano Boost)": {
+              "$ref": "#/definitions/Ultimate Generation - Combat (Nano Boost)"
+            },
+            "Projectile Speed": {
+              "$ref": "#/definitions/Projectile Speed"
+            },
+            "Healing Dealt": {
+              "$ref": "#/definitions/Healing Dealt"
+            },
+            "No Automatic Fire": {
+              "$ref": "#/definitions/No Automatic Fire"
+            },
+            "No Scope": {
+              "$ref": "#/definitions/No Scope"
+            },
+            "Biotic Grenade": {
+              "$ref": "#/definitions/Biotic Grenade"
+            },
+            "Biotic Grenade Cooldown Time": {
+              "$ref": "#/definitions/Biotic Grenade Cooldown Time"
+            },
+            "Sleep Dart": {
+              "$ref": "#/definitions/Sleep Dart"
+            },
+            "Sleep Dart Cooldown Time": {
+              "$ref": "#/definitions/Sleep Dart Cooldown Time"
+            }
+          }
+        },
+        "Ashe": {
+          "description": "'Ashe' hero settings.",
+          "properties": {
+            "Quick Melee": {
+              "$ref": "#/definitions/Quick Melee"
+            },
+            "Spawn With Ultimate Ready": {
+              "$ref": "#/definitions/Spawn With Ultimate Ready"
+            },
+            "Damage Dealt": {
+              "$ref": "#/definitions/Damage Dealt"
+            },
+            "Damage Recieved": {
+              "$ref": "#/definitions/Damage Recieved"
+            },
+            "Healing Recieved": {
+              "$ref": "#/definitions/Healing Recieved"
+            },
+            "Jump Vertical Speed": {
+              "$ref": "#/definitions/Jump Vertical Speed"
+            },
+            "Movement Gravity": {
+              "$ref": "#/definitions/Movement Gravity"
+            },
+            "Movement Speed": {
+              "$ref": "#/definitions/Movement Speed"
+            },
+            "Recieve Headshots Only": {
+              "$ref": "#/definitions/Recieve Headshots Only"
+            },
+            "Primary Fire": {
+              "$ref": "#/definitions/Primary Fire"
+            },
+            "Ammunition Clip Size Scalar": {
+              "$ref": "#/definitions/Ammunition Clip Size Scalar"
+            },
+            "No Ammunition Requirement": {
+              "$ref": "#/definitions/No Ammunition Requirement"
+            },
+            "Ultimate Ability (B.O.B.)": {
+              "$ref": "#/definitions/Ultimate Ability (B.O.B.)"
+            },
+            "Ultimate Generation (B.O.B.)": {
+              "$ref": "#/definitions/Ultimate Generation (B.O.B.)"
+            },
+            "Ultimate Generation - Passive (B.O.B.)": {
+              "$ref": "#/definitions/Ultimate Generation - Passive (B.O.B.)"
+            },
+            "Ultimate Generation - Combat (B.O.B.)": {
+              "$ref": "#/definitions/Ultimate Generation - Combat (B.O.B.)"
+            },
+            "Ultimate Duration": {
+              "$ref": "#/definitions/Ultimate Duration"
+            },
+            "Infinite Ultimate Duration": {
+              "$ref": "#/definitions/Infinite Ultimate Duration"
+            },
+            "Projectile Speed": {
+              "$ref": "#/definitions/Projectile Speed"
+            },
+            "Projectile Gravity": {
+              "$ref": "#/definitions/Projectile Gravity"
+            },
+            "No Automatic Fire": {
+              "$ref": "#/definitions/No Automatic Fire"
+            },
+            "No Scope": {
+              "$ref": "#/definitions/No Scope"
+            },
+            "Coach Gun": {
+              "$ref": "#/definitions/Coach Gun"
+            },
+            "Coach Gun Cooldown Time": {
+              "$ref": "#/definitions/Coach Gun Cooldown Time"
+            },
+            "Coach Gun Knockback Scalar (Enemy)": {
+              "$ref": "#/definitions/Coach Gun Knockback Scalar (Enemy)"
+            },
+            "Coach Gun Knockback Scalar (Self)": {
+              "$ref": "#/definitions/Coach Gun Knockback Scalar (Self)"
+            },
+            "Dynamite": {
+              "$ref": "#/definitions/Dynamite"
+            },
+            "Dynamite Cooldown Time": {
+              "$ref": "#/definitions/Dynamite Cooldown Time"
+            },
+            "Dynamite Fuse Time Scalar": {
+              "$ref": "#/definitions/Dynamite Fuse Time Scalar"
+            }
+          }
+        },
+        "Baptiste": {
+          "description": "'Baptiste' hero settings.",
+          "properties": {
+            "Quick Melee": {
+              "$ref": "#/definitions/Quick Melee"
+            },
+            "Spawn With Ultimate Ready": {
+              "$ref": "#/definitions/Spawn With Ultimate Ready"
+            },
+            "Damage Dealt": {
+              "$ref": "#/definitions/Damage Dealt"
+            },
+            "Damage Recieved": {
+              "$ref": "#/definitions/Damage Recieved"
+            },
+            "Healing Recieved": {
+              "$ref": "#/definitions/Healing Recieved"
+            },
+            "Jump Vertical Speed": {
+              "$ref": "#/definitions/Jump Vertical Speed"
+            },
+            "Movement Gravity": {
+              "$ref": "#/definitions/Movement Gravity"
+            },
+            "Movement Speed": {
+              "$ref": "#/definitions/Movement Speed"
+            },
+            "Recieve Headshots Only": {
+              "$ref": "#/definitions/Recieve Headshots Only"
+            },
+            "Primary Fire": {
+              "$ref": "#/definitions/Primary Fire"
+            },
+            "Ammunition Clip Size Scalar": {
+              "$ref": "#/definitions/Ammunition Clip Size Scalar"
+            },
+            "No Ammunition Requirement": {
+              "$ref": "#/definitions/No Ammunition Requirement"
+            },
+            "Ultimate Ability (Amplification Matrix)": {
+              "$ref": "#/definitions/Ultimate Ability (Amplification Matrix)"
+            },
+            "Ultimate Generation (Amplification Matrix)": {
+              "$ref": "#/definitions/Ultimate Generation (Amplification Matrix)"
+            },
+            "Ultimate Generation - Passive (Amplification Matrix)": {
+              "$ref": "#/definitions/Ultimate Generation - Passive (Amplification Matrix)"
+            },
+            "Ultimate Generation - Combat (Amplification Matrix)": {
+              "$ref": "#/definitions/Ultimate Generation - Combat (Amplification Matrix)"
+            },
+            "Ultimate Duration": {
+              "$ref": "#/definitions/Ultimate Duration"
+            },
+            "Infinite Ultimate Duration": {
+              "$ref": "#/definitions/Infinite Ultimate Duration"
+            },
+            "Projectile Speed": {
+              "$ref": "#/definitions/Projectile Speed"
+            },
+            "Healing Dealt": {
+              "$ref": "#/definitions/Healing Dealt"
+            },
+            "Immortality Field": {
+              "$ref": "#/definitions/Immortality Field"
+            },
+            "Immortality Field Cooldown Time": {
+              "$ref": "#/definitions/Immortality Field Cooldown Time"
+            },
+            "Regenerative Burst": {
+              "$ref": "#/definitions/Regenerative Burst"
+            },
+            "Regenerative Burst Cooldown Time": {
+              "$ref": "#/definitions/Regenerative Burst Cooldown Time"
+            },
+            "Secondary Fire": {
+              "$ref": "#/definitions/Secondary Fire"
+            }
+          }
+        },
+        "Bastion": {
+          "description": "'Bastion' hero settings.",
+          "properties": {
+            "Quick Melee": {
+              "$ref": "#/definitions/Quick Melee"
+            },
+            "Spawn With Ultimate Ready": {
+              "$ref": "#/definitions/Spawn With Ultimate Ready"
+            },
+            "Damage Dealt": {
+              "$ref": "#/definitions/Damage Dealt"
+            },
+            "Damage Recieved": {
+              "$ref": "#/definitions/Damage Recieved"
+            },
+            "Healing Recieved": {
+              "$ref": "#/definitions/Healing Recieved"
+            },
+            "Jump Vertical Speed": {
+              "$ref": "#/definitions/Jump Vertical Speed"
+            },
+            "Movement Gravity": {
+              "$ref": "#/definitions/Movement Gravity"
+            },
+            "Movement Speed": {
+              "$ref": "#/definitions/Movement Speed"
+            },
+            "Recieve Headshots Only": {
+              "$ref": "#/definitions/Recieve Headshots Only"
+            },
+            "Primary Fire": {
+              "$ref": "#/definitions/Primary Fire"
+            },
+            "Ammunition Clip Size Scalar": {
+              "$ref": "#/definitions/Ammunition Clip Size Scalar"
+            },
+            "No Ammunition Requirement": {
+              "$ref": "#/definitions/No Ammunition Requirement"
+            },
+            "Ultimate Ability (Configuration: Tank)": {
+              "$ref": "#/definitions/Ultimate Ability (Configuration: Tank)"
+            },
+            "Ultimate Generation (Configuration: Tank)": {
+              "$ref": "#/definitions/Ultimate Generation (Configuration: Tank)"
+            },
+            "Ultimate Generation - Passive (Configuration: Tank)": {
+              "$ref": "#/definitions/Ultimate Generation - Passive (Configuration: Tank)"
+            },
+            "Ultimate Generation - Combat (Configuration: Tank)": {
+              "$ref": "#/definitions/Ultimate Generation - Combat (Configuration: Tank)"
+            },
+            "Ultimate Duration": {
+              "$ref": "#/definitions/Ultimate Duration"
+            },
+            "Infinite Ultimate Duration": {
+              "$ref": "#/definitions/Infinite Ultimate Duration"
+            },
+            "Projectile Speed": {
+              "$ref": "#/definitions/Projectile Speed"
+            },
+            "Healing Dealt": {
+              "$ref": "#/definitions/Healing Dealt"
+            },
+            "Reconfigure": {
+              "$ref": "#/definitions/Reconfigure"
+            },
+            "Self-Repair": {
+              "$ref": "#/definitions/Self-Repair"
+            },
+            "Self-Repair Maximum Time": {
+              "$ref": "#/definitions/Self-Repair Maximum Time"
+            },
+            "Self-Repair Recharge Rate": {
+              "$ref": "#/definitions/Self-Repair Recharge Rate"
+            }
+          }
+        },
+        "Brigitte": {
+          "description": "'Brigitte' hero settings.",
+          "properties": {
+            "Quick Melee": {
+              "$ref": "#/definitions/Quick Melee"
+            },
+            "Spawn With Ultimate Ready": {
+              "$ref": "#/definitions/Spawn With Ultimate Ready"
+            },
+            "Damage Dealt": {
+              "$ref": "#/definitions/Damage Dealt"
+            },
+            "Damage Recieved": {
+              "$ref": "#/definitions/Damage Recieved"
+            },
+            "Healing Recieved": {
+              "$ref": "#/definitions/Healing Recieved"
+            },
+            "Jump Vertical Speed": {
+              "$ref": "#/definitions/Jump Vertical Speed"
+            },
+            "Movement Gravity": {
+              "$ref": "#/definitions/Movement Gravity"
+            },
+            "Movement Speed": {
+              "$ref": "#/definitions/Movement Speed"
+            },
+            "Recieve Headshots Only": {
+              "$ref": "#/definitions/Recieve Headshots Only"
+            },
+            "Primary Fire": {
+              "$ref": "#/definitions/Primary Fire"
+            },
+            "Ultimate Ability (Rally)": {
+              "$ref": "#/definitions/Ultimate Ability (Rally)"
+            },
+            "Ultimate Generation (Rally)": {
+              "$ref": "#/definitions/Ultimate Generation (Rally)"
+            },
+            "Ultimate Generation - Passive (Rally)": {
+              "$ref": "#/definitions/Ultimate Generation - Passive (Rally)"
+            },
+            "Ultimate Generation - Combat (Rally)": {
+              "$ref": "#/definitions/Ultimate Generation - Combat (Rally)"
+            },
+            "Ultimate Duration": {
+              "$ref": "#/definitions/Ultimate Duration"
+            },
+            "Infinite Ultimate Duration": {
+              "$ref": "#/definitions/Infinite Ultimate Duration"
+            },
+            "Healing Dealt": {
+              "$ref": "#/definitions/Healing Dealt"
+            },
+            "Repair Pack": {
+              "$ref": "#/definitions/Repair Pack"
+            },
+            "Repair Pack Cooldown Time": {
+              "$ref": "#/definitions/Repair Pack Cooldown Time"
+            },
+            "Shield Bash": {
+              "$ref": "#/definitions/Shield Bash"
+            },
+            "Shield Bash Cooldown Time": {
+              "$ref": "#/definitions/Shield Bash Cooldown Time"
+            },
+            "Shield Bash Knockback Scalar": {
+              "$ref": "#/definitions/Shield Bash Knockback Scalar"
+            },
+            "Whip Shot": {
+              "$ref": "#/definitions/Whip Shot"
+            },
+            "Whip Shot Cooldown Time": {
+              "$ref": "#/definitions/Whip Shot Cooldown Time"
+            },
+            "Whip Shot Knockback Scalar": {
+              "$ref": "#/definitions/Whip Shot Knockback Scalar"
+            }
+          }
+        },
+        "D.va": {
+          "description": "'D.va' hero settings.",
+          "properties": {
+            "Quick Melee": {
+              "$ref": "#/definitions/Quick Melee"
+            },
+            "Spawn With Ultimate Ready": {
+              "$ref": "#/definitions/Spawn With Ultimate Ready"
+            },
+            "Damage Dealt": {
+              "$ref": "#/definitions/Damage Dealt"
+            },
+            "Damage Recieved": {
+              "$ref": "#/definitions/Damage Recieved"
+            },
+            "Healing Recieved": {
+              "$ref": "#/definitions/Healing Recieved"
+            },
+            "Jump Vertical Speed": {
+              "$ref": "#/definitions/Jump Vertical Speed"
+            },
+            "Movement Gravity": {
+              "$ref": "#/definitions/Movement Gravity"
+            },
+            "Movement Speed": {
+              "$ref": "#/definitions/Movement Speed"
+            },
+            "Recieve Headshots Only": {
+              "$ref": "#/definitions/Recieve Headshots Only"
+            },
+            "Primary Fire": {
+              "$ref": "#/definitions/Primary Fire"
+            },
+            "Ultimate Ability (Self-Destruct)": {
+              "$ref": "#/definitions/Ultimate Ability (Self-Destruct)"
+            },
+            "Ultimate Generation (Self-Destruct)": {
+              "$ref": "#/definitions/Ultimate Generation (Self-Destruct)"
+            },
+            "Ultimate Generation - Passive (Self-Destruct)": {
+              "$ref": "#/definitions/Ultimate Generation - Passive (Self-Destruct)"
+            },
+            "Ultimate Generation - Combat (Self-Destruct)": {
+              "$ref": "#/definitions/Ultimate Generation - Combat (Self-Destruct)"
+            },
+            "Ultimate Duration": {
+              "$ref": "#/definitions/Ultimate Duration"
+            },
+            "Infinite Ultimate Duration": {
+              "$ref": "#/definitions/Infinite Ultimate Duration"
+            },
+            "Micro Missiles": {
+              "$ref": "#/definitions/Micro Missiles"
+            },
+            "Micro Missiles Cooldown Time": {
+              "$ref": "#/definitions/Micro Missiles Cooldown Time"
+            },
+            "Boosters": {
+              "$ref": "#/definitions/Boosters"
+            },
+            "Boosters Cooldown Time": {
+              "$ref": "#/definitions/Boosters Cooldown Time"
+            },
+            "Boosters Knockback Scalar": {
+              "$ref": "#/definitions/Boosters Knockback Scalar"
+            },
+            "Defense Matrix": {
+              "$ref": "#/definitions/Defense Matrix"
+            },
+            "Defense Matrix Maximum Time": {
+              "$ref": "#/definitions/Defense Matrix Maximum Time"
+            },
+            "Defense Matrix Recharge Rate": {
+              "$ref": "#/definitions/Defense Matrix Recharge Rate"
+            }
+          }
+        }
+      }
+    }
+  },
+  "properties": {
+    "Lobby": {
+      "properties": {
+        "Map Rotation": {
+          "$ref": "#/definitions/Map Rotation"
+        },
+        "Return To Lobby": {
+          "$ref": "#/definitions/Return To Lobby"
+        },
+        "Team Balancing": {
+          "$ref": "#/definitions/Team Balancing"
+        },
+        "Swap Teams After Match": {
+          "$ref": "#/definitions/Swap Teams After Match"
+        },
+        "Max Team 1 Players": {
+          "$ref": "#/definitions/Max Team 1 Players"
+        },
+        "Max Team 2 Players": {
+          "$ref": "#/definitions/Max Team 2 Players"
+        },
+        "Max FFA Players": {
+          "$ref": "#/definitions/Max FFA Players"
+        },
+        "Max Spectators": {
+          "$ref": "#/definitions/Max Spectators"
+        },
+        "Allow Players Who Are In Queue": {
+          "$ref": "#/definitions/Allow Players Who Are In Queue"
+        },
+        "Use Experimental Update If Available": {
+          "$ref": "#/definitions/Use Experimental Update If Available"
+        },
+        "Match Voice Chat": {
+          "$ref": "#/definitions/Match Voice Chat"
+        },
+        "Pause Game On Player Disconnect": {
+          "$ref": "#/definitions/Pause Game On Player Disconnect"
+        }
+      }
+    },
+    "Modes": {
+      "properties": {
+        "All": {
+          "description": "All",
+          "properties": {
+            "Enemy Health Bars": {
+              "$ref": "#/definitions/Enemy Health Bars"
+            },
+            "Game Mode Start": {
+              "$ref": "#/definitions/Game Mode Start"
+            },
+            "Health Pack Respawn Time Scalar": {
+              "$ref": "#/definitions/Health Pack Respawn Time Scalar"
+            },
+            "Kill Cam": {
+              "$ref": "#/definitions/Kill Cam"
+            },
+            "Kill Feed": {
+              "$ref": "#/definitions/Kill Feed"
+            },
+            "Skins": {
+              "$ref": "#/definitions/Skins"
+            },
+            "Spawn Health Packs": {
+              "$ref": "#/definitions/Spawn Health Packs"
+            },
+            "Allow Hero Switching": {
+              "$ref": "#/definitions/Allow Hero Switching"
+            },
+            "Hero Limit": {
+              "$ref": "#/definitions/Hero Limit"
+            },
+            "Limit Roles": {
+              "$ref": "#/definitions/Limit Roles"
+            },
+            "Respawn As Random Hero": {
+              "$ref": "#/definitions/Respawn As Random Hero"
+            },
+            "Respawn Time Scalar": {
+              "$ref": "#/definitions/Respawn Time Scalar"
+            }
+          }
+        },
+        "Assault": {
+          "description": "Assault settings.",
+          "properties": {
+            "Enabled": {
+              "$ref": "#/definitions/Enabled_DefaultOn"
+            },
+            "Enemy Health Bars": {
+              "$ref": "#/definitions/Enemy Health Bars"
+            },
+            "Game Mode Start": {
+              "$ref": "#/definitions/Game Mode Start"
+            },
+            "Health Pack Respawn Time Scalar": {
+              "$ref": "#/definitions/Health Pack Respawn Time Scalar"
+            },
+            "Kill Cam": {
+              "$ref": "#/definitions/Kill Cam"
+            },
+            "Kill Feed": {
+              "$ref": "#/definitions/Kill Feed"
+            },
+            "Skins": {
+              "$ref": "#/definitions/Skins"
+            },
+            "Spawn Health Packs": {
+              "$ref": "#/definitions/Spawn Health Packs"
+            },
+            "Allow Hero Switching": {
+              "$ref": "#/definitions/Allow Hero Switching"
+            },
+            "Hero Limit": {
+              "$ref": "#/definitions/Hero Limit"
+            },
+            "Limit Roles": {
+              "$ref": "#/definitions/Limit Roles"
+            },
+            "Respawn As Random Hero": {
+              "$ref": "#/definitions/Respawn As Random Hero"
+            },
+            "Respawn Time Scalar": {
+              "$ref": "#/definitions/Respawn Time Scalar"
+            },
+            "Competitive Rules": {
+              "$ref": "#/definitions/Competitive Rules"
+            },
+            "Capture Speed Modifier": {
+              "$ref": "#/definitions/Capture Speed Modifier"
+            }
+          }
+        },
+        "Control": {
+          "description": "Control settings.",
+          "properties": {
+            "Enabled": {
+              "$ref": "#/definitions/Enabled_DefaultOn"
+            },
+            "Enemy Health Bars": {
+              "$ref": "#/definitions/Enemy Health Bars"
+            },
+            "Game Mode Start": {
+              "$ref": "#/definitions/Game Mode Start"
+            },
+            "Health Pack Respawn Time Scalar": {
+              "$ref": "#/definitions/Health Pack Respawn Time Scalar"
+            },
+            "Kill Cam": {
+              "$ref": "#/definitions/Kill Cam"
+            },
+            "Kill Feed": {
+              "$ref": "#/definitions/Kill Feed"
+            },
+            "Skins": {
+              "$ref": "#/definitions/Skins"
+            },
+            "Spawn Health Packs": {
+              "$ref": "#/definitions/Spawn Health Packs"
+            },
+            "Allow Hero Switching": {
+              "$ref": "#/definitions/Allow Hero Switching"
+            },
+            "Hero Limit": {
+              "$ref": "#/definitions/Hero Limit"
+            },
+            "Limit Roles": {
+              "$ref": "#/definitions/Limit Roles"
+            },
+            "Respawn As Random Hero": {
+              "$ref": "#/definitions/Respawn As Random Hero"
+            },
+            "Respawn Time Scalar": {
+              "$ref": "#/definitions/Respawn Time Scalar"
+            },
+            "Competitive Rules": {
+              "$ref": "#/definitions/Competitive Rules"
+            },
+            "Capture Speed Modifier": {
+              "$ref": "#/definitions/Capture Speed Modifier"
+            },
+            "Limit Valid Control Points": {
+              "$ref": "#/definitions/Limit Valid Control Points"
+            },
+            "Score To Win": {
+              "$ref": "#/definitions/Score To Win"
+            },
+            "Scoring Speed Modifier": {
+              "$ref": "#/definitions/Scoring Speed Modifier"
+            }
+          }
+        },
+        "Escort": {
+          "description": "Escort settings.",
+          "properties": {
+            "Enabled": {
+              "$ref": "#/definitions/Enabled_DefaultOn"
+            },
+            "Enemy Health Bars": {
+              "$ref": "#/definitions/Enemy Health Bars"
+            },
+            "Game Mode Start": {
+              "$ref": "#/definitions/Game Mode Start"
+            },
+            "Health Pack Respawn Time Scalar": {
+              "$ref": "#/definitions/Health Pack Respawn Time Scalar"
+            },
+            "Kill Cam": {
+              "$ref": "#/definitions/Kill Cam"
+            },
+            "Kill Feed": {
+              "$ref": "#/definitions/Kill Feed"
+            },
+            "Skins": {
+              "$ref": "#/definitions/Skins"
+            },
+            "Spawn Health Packs": {
+              "$ref": "#/definitions/Spawn Health Packs"
+            },
+            "Allow Hero Switching": {
+              "$ref": "#/definitions/Allow Hero Switching"
+            },
+            "Hero Limit": {
+              "$ref": "#/definitions/Hero Limit"
+            },
+            "Limit Roles": {
+              "$ref": "#/definitions/Limit Roles"
+            },
+            "Respawn As Random Hero": {
+              "$ref": "#/definitions/Respawn As Random Hero"
+            },
+            "Respawn Time Scalar": {
+              "$ref": "#/definitions/Respawn Time Scalar"
+            },
+            "Competitive Rules": {
+              "$ref": "#/definitions/Competitive Rules"
+            },
+            "Payload Speed Modifier": {
+              "$ref": "#/definitions/Payload Speed Modifier"
+            }
+          }
+        },
+        "Hybrid": {
+          "description": "Hybrid settings.",
+          "properties": {
+            "Enabled": {
+              "$ref": "#/definitions/Enabled_DefaultOn"
+            },
+            "Enemy Health Bars": {
+              "$ref": "#/definitions/Enemy Health Bars"
+            },
+            "Game Mode Start": {
+              "$ref": "#/definitions/Game Mode Start"
+            },
+            "Health Pack Respawn Time Scalar": {
+              "$ref": "#/definitions/Health Pack Respawn Time Scalar"
+            },
+            "Kill Cam": {
+              "$ref": "#/definitions/Kill Cam"
+            },
+            "Kill Feed": {
+              "$ref": "#/definitions/Kill Feed"
+            },
+            "Skins": {
+              "$ref": "#/definitions/Skins"
+            },
+            "Spawn Health Packs": {
+              "$ref": "#/definitions/Spawn Health Packs"
+            },
+            "Allow Hero Switching": {
+              "$ref": "#/definitions/Allow Hero Switching"
+            },
+            "Hero Limit": {
+              "$ref": "#/definitions/Hero Limit"
+            },
+            "Limit Roles": {
+              "$ref": "#/definitions/Limit Roles"
+            },
+            "Respawn As Random Hero": {
+              "$ref": "#/definitions/Respawn As Random Hero"
+            },
+            "Respawn Time Scalar": {
+              "$ref": "#/definitions/Respawn Time Scalar"
+            },
+            "Competitive Rules": {
+              "$ref": "#/definitions/Competitive Rules"
+            },
+            "Capture Speed Modifier": {
+              "$ref": "#/definitions/Capture Speed Modifier"
+            },
+            "Payload Speed Modifier": {
+              "$ref": "#/definitions/Payload Speed Modifier"
+            }
+          }
+        }
+      }
+    },
+    "Heroes": {
+      "description": "Hero settings.",
+      "properties": {
+        "General": {
+          "$ref": "#/definitions/HeroList",
+          "description": "The list of hero settings that affects both teams."
+        },
+        "Team 1": {
+          "$ref": "#/definitions/HeroList",
+          "description": "The list of hero settings that affects team 1."
+        },
+        "Team 2": {
+          "$ref": "#/definitions/HeroList",
+          "description": "The list of hero settings that affects team 2."
+        }
+      }
+    }
+  },
+  "type": "object"
+}

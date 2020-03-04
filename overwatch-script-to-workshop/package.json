@@ -12,7 +12,8 @@
     ],
     "activationEvents": [
         "onLanguage:ostw",
-        "onLanguage:ow_ostw"
+        "onLanguage:ow_ostw",
+        "workspaceContains:**/customGameSettings.json"
     ],
     "main": "./dist/extension",
     "contributes": {
@@ -126,6 +127,12 @@
                 "command": "ostw.showReferences",
                 "title": "Show References",
                 "category": "Overwatch Script To Workshop"
+            }
+        ],
+        "jsonValidation": [
+            {
+                "fileMatch": "customGameSettings.json",
+                "url": "./LobbySettingValidation.json"
             }
         ]
     },
