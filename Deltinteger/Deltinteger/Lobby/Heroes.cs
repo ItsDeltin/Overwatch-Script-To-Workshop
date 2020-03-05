@@ -45,15 +45,34 @@ namespace Deltin.Deltinteger.Lobby
             new HeroSettingCollection("Ana").AddUlt("Nano Boost").AddProjectile(false).AddHealer().AddScope().AddAbility("Biotic Grenade").AddAbility("Sleep Dart"),
             new HeroSettingCollection("Ashe").AddUlt("B.O.B.", true).AddProjectile(true).AddScope().AddAbility("Coach Gun", hasKnockback: true, selfKnockback: true).AddAbility("Dynamite").AddRange("Dynamite Fuse Time Scalar", 1),
             new HeroSettingCollection("Baptiste").AddUlt("Amplification Matrix", true).AddProjectile(false).AddHealer().AddAbility("Immortality Field").AddAbility("Regenerative Burst").AddSecondaryFire(),
-            new HeroSettingCollection("Bastion").AddUlt("Configuration: Tank", true).AddProjectile(false).AddHealer().AddAbility("Reconfigure", hasCooldown: false).AddAbility("Self-Repair", rechargeable: true),
+            new HeroSettingCollection("Bastion").AddUlt("Configuration: Tank", true).AddProjectile(false).AddHealer().AddAbility("Reconfigure", hasCooldown: false).AddAbility("Self-Repair", hasCooldown: false, rechargeable: true),
             new HeroSettingCollection("Brigitte").AddUlt("Rally", true).AddHealer().AddAbility("Repair Pack").AddAbility("Shield Bash", hasKnockback: true).AddAbility("Whip Shot", hasKnockback: true).RemoveAmmunition(),
-            new HeroSettingCollection("D.va").AddUlt("Self-Destruct", true).AddAbility("Micro Missiles").AddAbility("Boosters", hasKnockback: true).AddAbility("Defense Matrix", rechargeable: true).RemoveAmmunition(),
+            new HeroSettingCollection("D.va").AddUlt("Self-Destruct", true).AddAbility("Micro Missiles").AddAbility("Boosters", hasKnockback: true).AddAbility("Defense Matrix", hasCooldown: false, rechargeable: true).RemoveAmmunition(),
             new HeroSettingCollection("Doomfist").AddUlt("Meteor Strike", hasKnockback: true, hasDuration: true).AddProjectile(false).AddAbility("Rising Uppercut", hasKnockback: true).AddAbility("Rocket Punch", hasKnockback: true).AddAbility("Seismic Slam").AddRange("Ammunition Regeneration Time Scalar", 33, 500),
             new HeroSettingCollection("Genji").AddUlt("Dragonblade", hasDuration: true).AddProjectile(false).AddSecondaryFire().AddAbility("Deflect").AddAbility("Swift Strike"),
             new HeroSettingCollection("Hanzo").AddUlt("Dragonstrike").AddProjectile(true).RemoveAmmunition().AddAbility("Lunge").AddRange("Lunge Distance Scalar", 20, 300).AddAbility("Sonic Arrow").AddAbility("Storm Arrow").AddIntRange("Storm Arrows Quantity", 3, 12, 5),
             new HeroSettingCollection("Junkrat").AddUlt("Rip-Tire", hasDuration: true).AddProjectile(true).AddAbility("Concussion Mine", hasKnockback: true).AddAbility("Steel Trap").AddRange("Frag Launcher Knockback Scalar", 0, 400),
             new HeroSettingCollection("Lúcio").AddUlt("Sound Barrier").AddHealer().AddProjectile(false).AddAbility("Amp It Up").AddAbility("Crossfade", hasCooldown: false).AddAbility("Soundwave", hasKnockback: true),
-            new HeroSettingCollection("Mccree").AddUlt("Deadeye").AddProjectile(false).AddSecondaryFire().AddAbility("Combat Roll").AddAbility("Flashbang")
+            new HeroSettingCollection("Mccree").AddUlt("Deadeye").AddProjectile(false).AddSecondaryFire().AddAbility("Combat Roll").AddAbility("Flashbang"),
+            new HeroSettingCollection("Mei").AddUlt("Blizzard").AddProjectile(true).AddSecondaryFire().AddHealer().AddAbility("Cyro-Freeze").AddAbility("Ice Wall").AddRange("Blizzard Freeze Minimum", 0, 100, 50).AddRange("Blizzard Freeze Rate Scalar").AddSwitch("Freeze Stacking", false).AddRange("Weapon Freeze Duration Scalar", 20).AddRange("Weapon Freeze Minimum", 0, 100, 30).AddRange("Weapon Freeze Rate Scalar", 25),
+            new HeroSettingCollection("Mercy").AddUlt("Valkyrie").AddProjectile(false).AddSecondaryFire().AddHealer().AddAbility("Guardian Angle").AddAbility("Regeneration", hasCooldown: false).AddAbility("Resurrect").AddSelect("Weapons Enabled", "All", "Caduceus Staff Only", "Caduceus Blaster Only"),
+            new HeroSettingCollection("Moira").AddUlt("Coalescence", hasDuration: true).AddProjectile(false).AddSecondaryFire().RemoveAmmunition().AddHealer().AddAbility("Fade").AddAbility("Biotic Orb").AddRange("Biotic Orb Max Damage Scalar", 10).AddRange("Biotic Orb Max Healing Scalar", 10).AddRange("Biotic Energy Maximum", 20).AddRange("Biotic Energy Recharge Rate"),
+            new HeroSettingCollection("Orisa").AddUlt("Supercharger").AddProjectile(true).AddAbility("Fortify").AddAbility("Halt!").AddAbility("Protective Barrier"),
+            new HeroSettingCollection("Pharah").AddUlt("Barrage").AddProjectile(false).AddAbility("Concussive Blast", hasKnockback: true).AddAbility("Hover Jets", hasCooldown: false, rechargeable: true).AddRange("Hover Jets Vertical Speed Scalar", 25, 300).AddSwitch("Hover Jets Unlimited Fuel", false).AddAbility("Jump Jet").AddRange("Jump Jet Acceleration Scalar", 25, 300).AddRange("Rocket Launcher Knockback Scalar", 0, 400),
+            new HeroSettingCollection("Reaper").AddUlt("Death Blossom").AddHealer().AddAbility("Shadow Step").AddAbility("Wraith Form"),
+            new HeroSettingCollection("Reinhardt").AddUlt("Earthshatter").AddProjectile(false).RemoveAmmunition().AddAbility("Barrier Field", rechargeable: true, noMaximumTime: true).AddAbility("Charge", hasKnockback: true).AddAbility("Fire Strike").AddRange("Rocket Hammer Knockback Scalar", 0, 400),
+            new HeroSettingCollection("Roadhog").AddUlt("Whole Hog", hasKnockback: true).AddHealer().AddProjectile(false).AddSecondaryFire().AddAbility("Chain Hook").AddAbility("Take A Breather"),
+            new HeroSettingCollection("Sigma").AddUlt("Gravitic Flux").RemoveAmmunition().AddProjectile(true).AddAbility("Accretion", hasKnockback: true).AddAbility("Experimental Barrier", rechargeable: true).AddAbility("Kinetic Grasp"),
+            new HeroSettingCollection("Soldier: 76").AddUlt("Tactical Visor", hasDuration: true).AddHealer().AddProjectile(false).AddAbility("Biotic Field").AddAbility("Helix Rockets", hasKnockback: true).AddAbility("Sprint", hasCooldown: false),
+            new HeroSettingCollection("Sombra").AddUlt("EMP").AddProjectile(true).AddAbility("Hack").AddAbility("Stealth").AddAbility("Translocator"),
+            new HeroSettingCollection("Symmetra").AddUlt("Photon Barrier").AddProjectile(false).AddSecondaryFire().AddAbility("Sentry Turret").AddAbility("Teleporter"),
+            new HeroSettingCollection("Torbjörn").AddUlt("Molten Core", hasDuration: true).AddProjectile(true).AddSecondaryFire().AddAbility("Deploy Turret").AddAbility("Overload").AddRange("Overload Duration Scalar").AddSelect("Weapons Enabled", "All", "Rivet Gun Only", "Hammer Only"),
+            new HeroSettingCollection("Tracer").AddUlt("Pulse Bomb").AddProjectile(true).AddAbility("Blink").AddAbility("Recall"),
+            new HeroSettingCollection("Widowmaker").AddUlt("Infra-sight", hasDuration: true).AddProjectile(true).AddScope().AddAbility("Grappling Hook").AddAbility("Venom Mine"),
+            new HeroSettingCollection("Winston").AddUlt("Primal Rage", hasDuration: true, hasKnockback: true).AddAbility("Barrier Projector").AddAbility("Jump Pack", hasKnockback: true).AddRange("Jump Pack Acceleration Scalar", 25, 300),
+            new HeroSettingCollection("Wrecking Ball").AddUlt("Minefield", hasDuration: true, hasKnockback: true).AddProjectile(true).AddAbility("Adaptive Shield").AddAbility("Grappling Claw", hasKnockback: true).AddAbility("Piledriver").AddAbility("Roll", hasCooldown: false).AddSwitch("Roll Always Active", false),
+            new HeroSettingCollection("Zarya").AddUlt("Graviton Surge").AddProjectile(true).AddSecondaryFire().AddAbility("Particle Barrier").AddAbility("Projected Barrier").AddRange("Particle Cannon Secondary Knockback Scalar", 0, 400),
+            new HeroSettingCollection("Zenyatta").AddUlt("Transcendence").AddProjectile(false).AddSecondaryFire().AddHealer().AddAbility("Orb Of Harmony", hasCooldown: false).AddAbility("Orb Of Discord", hasCooldown: false)
         };
 
 
@@ -140,12 +159,12 @@ namespace Deltin.Deltinteger.Lobby
             return this;
         }
 
-        public HeroSettingCollection AddAbility(string name, bool hasCooldown = true, bool hasKnockback = false, bool rechargeable = false, bool selfKnockback = false)
+        public HeroSettingCollection AddAbility(string name, bool hasCooldown = true, bool hasKnockback = false, bool rechargeable = false, bool noMaximumTime = false, bool selfKnockback = false)
         {
             Add(new SwitchValue(name, true));
 
             // If the ability has a cooldown, add the cooldown options.
-            if (hasCooldown && !rechargeable)
+            if (hasCooldown)
             {
                 string cooldownTimeTitle = name + " Cooldown Time";
                 Add(new RangeValue(cooldownTimeTitle, 0, 500));
@@ -167,14 +186,16 @@ namespace Deltin.Deltinteger.Lobby
             // If the ability is rechargeable, add the max time and recharge rate.
             if (rechargeable)
             {
-                string maximumTimeTitle = name + " Maximum Time";
                 string rechargeRateTitle = name + " Recharge Rate";
-
-                Add(new RangeValue(maximumTimeTitle, 20, 500));
                 Add(new RangeValue(rechargeRateTitle, 0, 500));
-
-                SettingNameResolver.AddResolver(new AbilityNameResolver(AbilityNameType.CooldownTime, maximumTimeTitle, name));
                 SettingNameResolver.AddResolver(new AbilityNameResolver(AbilityNameType.CooldownTime, rechargeRateTitle, name));
+
+                if (!noMaximumTime)
+                {
+                    string maximumTimeTitle = name + " Maximum Time";
+                    Add(new RangeValue(maximumTimeTitle, 20, 500));
+                    SettingNameResolver.AddResolver(new AbilityNameResolver(AbilityNameType.CooldownTime, maximumTimeTitle, name));
+                }
             }
             return this;
         }
