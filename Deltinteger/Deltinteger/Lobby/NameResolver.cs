@@ -27,7 +27,7 @@ namespace Deltin.Deltinteger.Lobby
             foreach (SettingNameResolver resolver in NameResolvers)
                 if (resolver.Title == title)
                     return resolver.ResolveName(builder);
-            return title;
+            return builder.Translate(title);
         }
 
         public static string[] Keywords(string title)

@@ -482,7 +482,7 @@ namespace Deltin.Deltinteger.Elements
     [WorkshopEnum]
     public enum EffectRev
     {
-        [EnumOverride(null, null, "Visible To, Position, and Radius")]
+        [EnumOverride(null, "Visible To, Position, and Radius")]
         VisibleToPositionAndRadius,
         PositionAndRadius,
         VisibleTo,

@@ -28,8 +28,10 @@ namespace Deltin.Deltinteger
         static void Main(string[] args)
         {
             Program.args = args;
-
             CultureInfo.DefaultThreadCurrentCulture = new CultureInfo("en-US");
+            Lobby.HeroSettingCollection.Init();
+            Lobby.ModeSettingCollection.Init();
+
             if (!args.Contains("--langserver")) Log.Write(LogLevel.Normal, "Overwatch Script To Workshop " + VERSION);
 
             Log.LogLevel = LogLevel.Normal;
