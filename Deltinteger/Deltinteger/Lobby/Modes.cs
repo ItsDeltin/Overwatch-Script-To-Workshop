@@ -120,8 +120,8 @@ namespace Deltin.Deltinteger.Lobby
             new ModeSettingCollection("Deathmatch", false).Add(GameLengthInMinutes).Add(SelfInitiatedRespawn).AddIntRange("Score To Win", 1, 50, 20),
             new ModeSettingCollection("Elimination", false).AddRange("Hero Selection Time", 20, 60, 20).Add(ScoreToWin_1to9).AddSelect("Restrict Previously Used Heroes", "Off", "After Round Won", "After Round Played")
                 .AddSelect("Hero Selection", "Any", "Limited", "Random", "Random (Mirrored)").AddSelect("Limited Choice Pool", "Team Size +2", "Team Size", "Team Size +1", "Team Size +3")
-                .AddSwitch("Capture Objective Tiebreaker", true).AddIntRange("Tiebreaker After Match Time Elapsed", 30, 300, 105).AddIntRange("Time To Capture", 1, 7, 3).AddIntRange("Draw After Match Time Elasped With No Tiebreaker", 60, 300, 135)
-                .AddSwitch("Reveal Heroes", false).AddIntRange("Reveal Heroes After Match Time Elasped", 0, 180, 75),
+                .AddSwitch("Capture Objective Tiebreaker", true).AddIntRange("Tiebreaker After Match Time Elapsed", 30, 300, 105).AddIntRange("Time To Capture", 1, 7, 3).AddIntRange("Draw After Match Time Elapsed With No Tiebreaker", 60, 300, 135)
+                .AddSwitch("Reveal Heroes", false).AddIntRange("Reveal Heroes After Match Time Elapsed", 0, 180, 75),
             new ModeSettingCollection("Team Deathmatch", false).Add(GameLengthInMinutes).AddSwitch("Mercy Resurrect Counteracts Kills", true).AddIntRange("Score To Win", 1, 200, 30).Add(SelfInitiatedRespawn).AddSwitch("Imbalanced Team Score To Win", false)
                 .AddIntRange("Team 1 Score To Win", 1, 200, 30).AddIntRange("Team 2 Score To Win", 1, 200, 30),
             new ModeSettingCollection("Skirmish", false),

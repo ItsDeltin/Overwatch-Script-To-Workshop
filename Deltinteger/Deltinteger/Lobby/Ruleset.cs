@@ -190,8 +190,9 @@ namespace Deltin.Deltinteger.Lobby
         {
             foreach (var setting in this)
             {
-                string name = builder.Translate(setting.Key);
+                string name = SettingNameResolver.ResolveName(builder, setting.Key);
                 string value;
+
                 if (setting.Value is string asString) value = builder.Translate(asString);
                 else value = setting.Value.ToString();
 
@@ -261,9 +262,17 @@ namespace Deltin.Deltinteger.Lobby
         {
             List<string> keywords = new List<string>();
 
+            keywords.Add(AbilityNameResolver.CooldownTime);
+            keywords.Add(AbilityNameResolver.RechargeRate);
+            keywords.Add(AbilityNameResolver.MaximumTime);
+            keywords.Add(AbilityNameResolver.UltimateAbility);
+            keywords.Add(AbilityNameResolver.UltimateGeneration);
+            keywords.Add(AbilityNameResolver.UltimateGenerationCombat);
+            keywords.Add(AbilityNameResolver.UltimateGenerationPassive);
+
             foreach (LobbySetting setting in this)
             {
-                keywords.Add(setting.Name);
+                keywords.AddRange(SettingNameResolver.Keywords(setting.Name));
                 keywords.AddRange(setting.AdditionalKeywords());
             }
 
@@ -320,8 +329,8 @@ namespace Deltin.Deltinteger.Lobby
             new HeroSettingCollection("Brigitte").AddUlt("Rally", true).AddHealer().AddAbility("Repair Pack").AddAbility("Shield Bash", hasKnockback: true).AddAbility("Whip Shot", hasKnockback: true).RemoveAmmunition(),
             new HeroSettingCollection("D.va").AddUlt("Self-Destruct", true).AddAbility("Micro Missiles").AddAbility("Boosters", hasKnockback: true).AddAbility("Defense Matrix", rechargeable: true).RemoveAmmunition(),
             new HeroSettingCollection("Doomfist").AddUlt("Meteor Strike", hasKnockback: true, hasDuration: true).AddProjectile(false).AddAbility("Rising Uppercut", hasKnockback: true).AddAbility("Rocket Punch", hasKnockback: true).AddAbility("Seismic Slam").AddRange("Ammunition Regeneration Time Scalar", 33, 500),
-            new HeroSettingCollection("Genji").AddUlt("Dragonblade", hasDuration: true).AddProjectile(false).AddSecondaryFire().AddAbility("Deflect").AddAbility("Switch Strike"),
-            new HeroSettingCollection("Hanzo").AddUlt("Dragonstrike").AddProjectile(true).RemoveAmmunition().AddAbility("Lunge").AddRange("Lunge Distance Scalar", 20, 300).AddAbility("Sonic Arrow").AddAbility("Storm Arrow").AddIntRange("Storm Arrow Quanity", 3, 12, 5),
+            new HeroSettingCollection("Genji").AddUlt("Dragonblade", hasDuration: true).AddProjectile(false).AddSecondaryFire().AddAbility("Deflect").AddAbility("Swift Strike"),
+            new HeroSettingCollection("Hanzo").AddUlt("Dragonstrike").AddProjectile(true).RemoveAmmunition().AddAbility("Lunge").AddRange("Lunge Distance Scalar", 20, 300).AddAbility("Sonic Arrow").AddAbility("Storm Arrow").AddIntRange("Storm Arrows Quantity", 3, 12, 5),
             new HeroSettingCollection("Junkrat").AddUlt("Rip-Tire", hasDuration: true).AddProjectile(true).AddAbility("Concussion Mine", hasKnockback: true).AddAbility("Steel Trap").AddRange("Frag Launcher Knockback Scalar", 0, 400),
             new HeroSettingCollection("Lúcio").AddUlt("Sound Barrier").AddHealer().AddProjectile(false).AddAbility("Amp It Up").AddAbility("Crossfade", hasCooldown: false).AddAbility("Soundwave", hasKnockback: true),
             new HeroSettingCollection("Mccree").AddUlt("Deadeye").AddProjectile(false).AddSecondaryFire().AddAbility("Combat Roll").AddAbility("Flashbang")
@@ -393,6 +402,12 @@ namespace Deltin.Deltinteger.Lobby
             Add(new RangeValue(passive, 0, 500));
             Add(new RangeValue(combat, 0, 500));
 
+            // Add i18n name resolvers.
+            SettingNameResolver.AddResolver(new AbilityNameResolver(AbilityNameType.UltimateSwitchSetting    , isEnabled , name ?? isEnabled )); // Toggle
+            SettingNameResolver.AddResolver(new AbilityNameResolver(AbilityNameType.UltimateGeneration       , generation, name ?? generation)); // Generation
+            SettingNameResolver.AddResolver(new AbilityNameResolver(AbilityNameType.UltimateGenerationPassive, passive   , name ?? passive   )); // Passive Generation
+            SettingNameResolver.AddResolver(new AbilityNameResolver(AbilityNameType.UltimateGenerationCombat , combat    , name ?? combat    )); // Combat Generation
+
             if (hasDuration)
             {
                 // Add duration info if it can be changed.
@@ -410,7 +425,12 @@ namespace Deltin.Deltinteger.Lobby
             Add(new SwitchValue(name, true));
 
             // If the ability has a cooldown, add the cooldown options.
-            if (hasCooldown && !rechargeable) Add(new RangeValue(name + " Cooldown Time", 0, 500));
+            if (hasCooldown && !rechargeable)
+            {
+                string cooldownTimeTitle = name + " Cooldown Time";
+                Add(new RangeValue(cooldownTimeTitle, 0, 500));
+                SettingNameResolver.AddResolver(new AbilityNameResolver(AbilityNameType.CooldownTime, cooldownTimeTitle, name));
+            }
 
             // If the ability has a knockback scalar, add the knockback option.
             if (hasKnockback)
@@ -427,8 +447,14 @@ namespace Deltin.Deltinteger.Lobby
             // If the ability is rechargeable, add the max time and recharge rate.
             if (rechargeable)
             {
-                Add(new RangeValue(name + " Maximum Time", 20, 500));
-                Add(new RangeValue(name + " Recharge Rate", 0, 500));
+                string maximumTimeTitle = name + " Maximum Time";
+                string rechargeRateTitle = name + " Recharge Rate";
+
+                Add(new RangeValue(maximumTimeTitle, 20, 500));
+                Add(new RangeValue(rechargeRateTitle, 0, 500));
+
+                SettingNameResolver.AddResolver(new AbilityNameResolver(AbilityNameType.CooldownTime, maximumTimeTitle, name));
+                SettingNameResolver.AddResolver(new AbilityNameResolver(AbilityNameType.CooldownTime, rechargeRateTitle, name));
             }
             return this;
         }

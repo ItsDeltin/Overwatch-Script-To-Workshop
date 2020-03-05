@@ -46,7 +46,7 @@ namespace Deltin.Deltinteger.I18n
             // Add settings
             keywords.AddRange(Lobby.Ruleset.Keywords());
 
-            return keywords.Distinct().ToArray();
+            return keywords.Distinct().Where(k => k != null).ToArray();
         }
 
         public static void Generate(string[] args)

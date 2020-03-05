@@ -28,6 +28,11 @@ namespace Deltin.Deltinteger.I18n
             }
         }
 
+        public static bool IsKeyword(string keyword)
+        {
+            lock (LanguageLock) return Language.Methods.Any(m => m.EnglishName == keyword);
+        }
+
         public static void LoadLanguage(OutputLanguage language)
         {
             lock (LanguageLock)
