@@ -9,6 +9,7 @@ using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.WorkshopWiki;
 using Deltin.Deltinteger.Parse;
 using Deltin.Deltinteger.Models;
+using Deltin.Deltinteger.I18n;
 using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
 using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItemKind;
 using StringOrMarkupContent = OmniSharp.Extensions.LanguageServer.Protocol.Models.StringOrMarkupContent;
@@ -72,8 +73,8 @@ namespace Deltin.Deltinteger.Elements
             parameters.AddRange(ParameterValues.Select(p => p.ToWorkshop(language)));
 
             string result = Extras.Indent(Indent, true); // TODO: option for spaces or tab output.
-            if (!ElementList.IsValue && Disabled) result += I18n.I18n.Translate(language, "disabled") + " ";
-            result += I18n.I18n.Translate(language, Name);
+            if (!ElementList.IsValue && Disabled) result += LanguageInfo.Translate(language, "disabled") + " ";
+            result += LanguageInfo.Translate(language, Name);
             if (parameters.Count != 0) result += "(" + string.Join(", ", parameters) + ")";
             if (!ElementList.IsValue) result += ";";
             return result;

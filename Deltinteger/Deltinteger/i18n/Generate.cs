@@ -42,6 +42,9 @@ namespace Deltin.Deltinteger.I18n
             foreach(var enumData in EnumData.GetEnumData())
                 foreach (var member in enumData.Members)
                     keywords.Add(member.GetI18nKeyword());
+            
+            // Add settings
+            keywords.AddRange(Lobby.Ruleset.Keywords());
 
             return keywords.Distinct().ToArray();
         }

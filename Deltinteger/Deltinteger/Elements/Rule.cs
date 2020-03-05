@@ -1,4 +1,6 @@
-﻿namespace Deltin.Deltinteger.Elements
+﻿using Deltin.Deltinteger.I18n;
+
+namespace Deltin.Deltinteger.Elements
 {
     public class Rule
     {
@@ -50,13 +52,13 @@
 
             builder.Indent = 0;
             if (Disabled)
-                builder.Append(I18n.I18n.Translate(language, "disabled") + " ");
-            builder.AppendLine($"{I18n.I18n.Translate(language, "rule")}(\"{Name}\")");
+                builder.Append(LanguageInfo.Translate(language, "disabled") + " ");
+            builder.AppendLine($"{LanguageInfo.Translate(language, "rule")}(\"{Name}\")");
             builder.AppendLine("{");
             builder.AppendLine();
 
             builder.Indent = 1;
-            builder.AppendLine(I18n.I18n.Translate(language, "event"));
+            builder.AppendLine(LanguageInfo.Translate(language, "event"));
             builder.AppendLine("{");
             builder.Indent = 2;
             builder.AppendLine(EnumData.GetEnumValue(RuleEvent)
@@ -81,7 +83,7 @@
             if (Conditions?.Length > 0)
             {
                 builder.AppendLine();
-                builder.AppendLine(I18n.I18n.Translate(language, "conditions"));
+                builder.AppendLine(LanguageInfo.Translate(language, "conditions"));
                 builder.AppendLine("{");
                 builder.Indent = 2;
                 foreach (var condition in Conditions)
@@ -95,7 +97,7 @@
             {
                 builder.AppendLine();
                 builder.AppendLine("// Action count: " + Actions.Length); // Action count comment.
-                builder.AppendLine(I18n.I18n.Translate(language, "actions"));
+                builder.AppendLine(LanguageInfo.Translate(language, "actions"));
                 builder.AppendLine("{");
                 builder.Indent = 2;
 

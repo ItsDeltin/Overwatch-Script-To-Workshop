@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using Deltin.Deltinteger.Elements;
+using Deltin.Deltinteger.I18n;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using Newtonsoft.Json.Linq;
@@ -25,17 +26,40 @@ namespace Deltin.Deltinteger.Lobby
             new SwitchValue("Pause Game On Player Disconnect", false)
         };
 
-        public HeroesRoot Heroes { get; set; }
         public WorkshopValuePair Lobby { get; set; }
         public ModesRoot Modes { get; set; }
+        public HeroesRoot Heroes { get; set; }
 
-        public void ToWorkshop(StringBuilder builder, OutputLanguage outputLanguage)
+        public void ToWorkshop(WorkshopBuilder builder)
         {
+            builder.AppendKeywordLine("settings");
+            builder.AppendLine("{");
+            builder.Indent();
+
+            // Get the lobby settings.
+            if (Lobby != null)
+            {
+                builder.AppendKeywordLine("lobby");
+                builder.AppendLine("{");
+                builder.Indent();
+                Lobby.ToWorkshop(builder);
+                builder.Unindent();
+                builder.AppendLine("}");
+            }
+            
+            // Get the mode settings.
+            if (Modes != null) Modes.ToWorkshop(builder);
+
+            // Get the hero settings.
+            if (Heroes != null) Heroes.ToWorkshop(builder);
+
+            builder.Unindent();
+            builder.AppendLine("}");
         }
 
-        public static Ruleset Parse(string json)
+        public static Ruleset Parse(JObject json)
         {
-            Ruleset result = JsonConvert.DeserializeObject<Ruleset>(json);
+            Ruleset result = json.ToObject<Ruleset>();
             result.Modes?.MergeModeSettings();
             return result;
         }
@@ -98,6 +122,30 @@ namespace Deltin.Deltinteger.Lobby
             foreach (var mode in ModeSettingCollection.AllModeSettings) schema.Properties.Add(mode.ModeName, mode.GetSchema(generate));
             return schema;
         }
+    
+        /// <summary>Gets the keywords used for translation.</summary>
+        public static string[] Keywords()
+        {
+            List<string> keywords = new List<string>();
+
+            keywords.Add("settings");
+            keywords.Add("lobby");
+            keywords.Add("modes");
+            keywords.Add("heroes");
+
+            // Get hero keywords.
+            foreach (var heroCollection in HeroSettingCollection.AllHeroSettings)
+                keywords.AddRange(heroCollection.GetKeywords());
+            
+            // Get mode keywords.
+            foreach (var modeCollection in ModeSettingCollection.AllModeSettings)
+            {
+                keywords.Add(modeCollection.ModeName);
+                keywords.AddRange(modeCollection.GetKeywords());
+            }
+
+            return keywords.ToArray();
+        }
     }
 
     public class SchemaGenerate
@@ -120,12 +168,55 @@ namespace Deltin.Deltinteger.Lobby
 
         [JsonProperty("Team 2")]
         public HeroList Team2 { get; set; }
+
+        public void ToWorkshop(WorkshopBuilder builder)
+        {
+            builder.AppendKeywordLine("heroes");
+            builder.AppendLine("{");
+            builder.Indent();
+
+            General?.ToWorkshop(builder);
+            Team1  ?.ToWorkshop(builder);
+            Team2  ?.ToWorkshop(builder);
+
+            builder.Unindent();
+            builder.AppendLine("}");
+        }
     }
 
-    public class WorkshopValuePair : Dictionary<String, object> {}
-    public class HeroList : Dictionary<String, WorkshopValuePair> {}
+    public class WorkshopValuePair : Dictionary<String, object>
+    {
+        public void ToWorkshop(WorkshopBuilder builder)
+        {
+            foreach (var setting in this)
+            {
+                string name = builder.Translate(setting.Key);
+                string value;
+                if (setting.Value is string asString) value = builder.Translate(asString);
+                else value = setting.Value.ToString();
 
-    public class LobbySettingCollection<T> : List<LobbySetting>
+                builder.AppendLine($"{name}: {value}");
+            }
+        }
+    }
+
+    public class HeroList : Dictionary<String, WorkshopValuePair>
+    {
+        public void ToWorkshop(WorkshopBuilder builder)
+        {
+            foreach (var hero in this)
+            {
+                builder.AppendLine($"{hero.Key}");
+                builder.AppendLine("{");
+                builder.Indent();
+                hero.Value.ToWorkshop(builder);
+                builder.Unindent();
+                builder.AppendLine("}");
+            }
+        }
+    }
+
+    public abstract class LobbySettingCollection<T> : List<LobbySetting>
     {
         protected string Title;
 
@@ -164,6 +255,19 @@ namespace Deltin.Deltinteger.Lobby
             RootSchema schema = new RootSchema(Title).InitProperties();
             foreach (var value in this) schema.Properties.Add(value.Name, value.GetSchema(generate));
             return schema;
+        }
+
+        public string[] GetKeywords()
+        {
+            List<string> keywords = new List<string>();
+
+            foreach (LobbySetting setting in this)
+            {
+                keywords.Add(setting.Name);
+                keywords.AddRange(setting.AdditionalKeywords());
+            }
+
+            return keywords.ToArray();
         }
     }
 

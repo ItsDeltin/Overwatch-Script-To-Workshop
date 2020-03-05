@@ -156,7 +156,7 @@ namespace Deltin.Deltinteger.Parse
             }
         }
     
-        public void ToWorkshop(StringBuilder stringBuilder, OutputLanguage language)
+        public void ToWorkshop(WorkshopBuilder builder)
         {
             if (globalLimitReached || playerLimitReached || extGlobalLimitReached || extPlayerLimitReached)
             {
@@ -168,37 +168,44 @@ namespace Deltin.Deltinteger.Parse
                 if (extGlobalLimitReached) collectionLimitsReached.Add("ext. global");
                 if (extPlayerLimitReached) collectionLimitsReached.Add("ext. player");
 
-                stringBuilder.AppendLine(string.Format(
+                builder.AppendLine(string.Format(
                     "// The {0} reached the variable limit. Only a maximum of 128 variables and 1000 extended variables can be assigned.",
                     Extras.ListJoin("variable collection", collectionLimitsReached.ToArray())
                 ));
-                stringBuilder.AppendLine();
+                builder.AppendLine();
             }
 
-            stringBuilder.AppendLine(I18n.I18n.Translate(language, "variables"));
-            stringBuilder.AppendLine("{");
-            stringBuilder.AppendLine(Extras.Indent(1, false) + I18n.I18n.Translate(language, "global") + ":");
-            WriteCollection(stringBuilder, variableList(true));
-            stringBuilder.AppendLine(Extras.Indent(1, false) + I18n.I18n.Translate(language, "player") + ":");
-            WriteCollection(stringBuilder, variableList(false));
-            stringBuilder.AppendLine("}");
+            builder.AppendKeywordLine("variables");
+            builder.AppendLine("{");
+            builder.Indent();
+            builder.AppendKeyword("global"); builder.Append(":"); builder.AppendLine();
+            builder.Indent();
+            WriteCollection(builder, variableList(true));
+            builder.Unindent();
+
+            builder.AppendKeyword("player"); builder.Append(":"); builder.AppendLine();
+            builder.Indent();
+            WriteCollection(builder, variableList(false));
+            builder.Unindent();
+            builder.Unindent();
+            builder.AppendLine("}");
 
             bool anyExtendedGlobal = extendedVariableList(true).Any(v => v != null);
             bool anyExtendedPlayer = extendedVariableList(false).Any(v => v != null);
             if (anyExtendedGlobal || anyExtendedPlayer)
             {
-                stringBuilder.AppendLine();
-                stringBuilder.AppendLine($"// Extended collection variables:");
+                builder.AppendLine();
+                builder.AppendLine($"// Extended collection variables:");
 
                 foreach (var ex in extendedVariableList(true))
-                    stringBuilder.AppendLine($"// global [{ex.Index}]: {ex.DebugName}");
+                    builder.AppendLine($"// global [{ex.Index}]: {ex.DebugName}");
                 foreach (var ex in extendedVariableList(false))
-                    stringBuilder.AppendLine($"// player [{ex.Index}]: {ex.DebugName}");
+                    builder.AppendLine($"// player [{ex.Index}]: {ex.DebugName}");
             }
         }
-        private void WriteCollection(StringBuilder stringBuilder, List<WorkshopVariable> collection)
+        private void WriteCollection(WorkshopBuilder builder, List<WorkshopVariable> collection)
         {
-            foreach (var var in collection) stringBuilder.AppendLine(Extras.Indent(2, false) + var.ID + ": " + var.Name);
+            foreach (var var in collection) builder.AppendLine(var.ID + ": " + var.Name);
         }
     }
 

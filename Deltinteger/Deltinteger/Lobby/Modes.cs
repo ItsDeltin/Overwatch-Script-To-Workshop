@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.Text;
+using Deltin.Deltinteger.Elements;
+using Deltin.Deltinteger.I18n;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 
@@ -8,30 +10,30 @@ namespace Deltin.Deltinteger.Lobby
 {
     public class ModesRoot
     {
-        public HeroList All { get; set; }
+        public WorkshopValuePair All { get; set; }
         
-        public HeroList Assault { get; set; }
+        public WorkshopValuePair Assault { get; set; }
         
-        public HeroList Control { get; set; }
+        public WorkshopValuePair Control { get; set; }
         
-        public HeroList Escort { get; set; }
+        public WorkshopValuePair Escort { get; set; }
         
-        public HeroList Hybrid { get; set; }
+        public WorkshopValuePair Hybrid { get; set; }
         
         [JsonProperty("Capture The Flag")]
-        public HeroList CaptureTheFlag { get; set; }
+        public WorkshopValuePair CaptureTheFlag { get; set; }
         
-        public HeroList Deathmatch { get; set; }
+        public WorkshopValuePair Deathmatch { get; set; }
         
-        public HeroList Elimination { get; set; }
+        public WorkshopValuePair Elimination { get; set; }
         
         [JsonProperty("Team Deathmatch")]
-        public HeroList TeamDeathmatch { get; set; }
+        public WorkshopValuePair TeamDeathmatch { get; set; }
         
-        public HeroList Skirmish { get; set; }
+        public WorkshopValuePair Skirmish { get; set; }
         
         [JsonProperty("Practice Range")]
-        public HeroList PracticeRange { get; set; }
+        public WorkshopValuePair PracticeRange { get; set; }
 
         public void MergeModeSettings()
         {
@@ -51,10 +53,31 @@ namespace Deltin.Deltinteger.Lobby
             }
         }
 
-        private void MergeTo(KeyValuePair<string, WorkshopValuePair> pair, HeroList set)
+        private void MergeTo(KeyValuePair<string, object> pair, WorkshopValuePair set)
         {
             if (set == null || set.ContainsKey(pair.Key)) return;
             set.Add(pair.Key, pair.Value);
+        }
+
+        public void ToWorkshop(WorkshopBuilder builder)
+        {
+            builder.AppendKeywordLine("modes");
+            builder.AppendLine("{");
+            builder.Indent();
+            
+            Assault       ?.ToWorkshop(builder);
+            CaptureTheFlag?.ToWorkshop(builder);
+            Control       ?.ToWorkshop(builder);
+            Deathmatch    ?.ToWorkshop(builder);
+            Elimination   ?.ToWorkshop(builder);
+            Escort        ?.ToWorkshop(builder);
+            Hybrid        ?.ToWorkshop(builder);
+            PracticeRange ?.ToWorkshop(builder);
+            Skirmish      ?.ToWorkshop(builder);
+            TeamDeathmatch?.ToWorkshop(builder);
+
+            builder.Unindent();
+            builder.AppendLine("}");
         }
     }
     

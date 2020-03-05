@@ -33,6 +33,8 @@ namespace Deltin.Deltinteger.Lobby
         }
 
         protected abstract RootSchema GetSchema();
+
+        public virtual string[] AdditionalKeywords() => null;
     }
 
     /// <summary>Enum lobby setting.</summary>
@@ -53,6 +55,8 @@ namespace Deltin.Deltinteger.Lobby
             schema.Default = Values[0];
             return schema;
         }
+
+        public override string[] AdditionalKeywords() => Values;
     }
 
     /// <summary>Boolean lobby setting.</summary>

@@ -6,8 +6,13 @@ using System.IO;
 using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.Pathfinder;
+using Deltin.Deltinteger.Lobby;
+using Deltin.Deltinteger.I18n;
 using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
 using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItemKind;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
+using Newtonsoft.Json.Linq;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -28,11 +33,14 @@ namespace Deltin.Deltinteger.Parse
         public VarIndexAssigner DefaultIndexAssigner { get; } = new VarIndexAssigner();
         public TranslateRule InitialGlobal { get; private set; }
         public TranslateRule InitialPlayer { get; private set; }
+        private readonly OutputLanguage Language;
+        private JObject MergedLobbySettings;
 
         public DeltinScript(TranslateSettings translateSettings)
         {
             FileGetter = translateSettings.FileGetter;
             Diagnostics = translateSettings.Diagnostics;
+            Language = translateSettings.OutputLanguage;
 
             types.AddRange(CodeType.DefaultTypes);
             Importer = new Importer(translateSettings.Root.Uri);
@@ -99,20 +107,63 @@ namespace Deltin.Deltinteger.Parse
         {
             DocRange stringRange = DocRange.GetRange(importFileContext.STRINGLITERAL());
 
-            var importResult = importer.Import(
+            ImportResult importResult = importer.Import(
                 stringRange,
                 Extras.RemoveQuotes(importFileContext.STRINGLITERAL().GetText()),
                 script.Uri
             );
             if (!importResult.SuccessfulReference) return importResult.Directory;
 
+            // Add hover and definition info.
             script.AddDefinitionLink(stringRange, new Location(importResult.Uri, DocRange.Zero));
             script.AddHover(stringRange, importResult.FilePath);
 
             if (importResult.ShouldImport)
             {
-                ScriptFile importedScript = new ScriptFile(Diagnostics, importResult.Uri, FileGetter.GetScript(importResult.Uri));
-                CollectScriptFiles(importedScript);
+                // Import the file if it should be imported.
+                switch (importResult.FileType)
+                {
+                    // Get script file.
+                    case ".del":
+                    case ".ostw":
+                    case ".workshop":
+                        ScriptFile importedScript = new ScriptFile(Diagnostics, importResult.Uri, FileGetter.GetScript(importResult.Uri));
+                        CollectScriptFiles(importedScript);
+                        break;
+                    
+                    // Get lobby settings.
+                    case ".json":
+                        JObject lobbySettings = null;
+
+                        // Make sure the json is in the correct format.
+                        try
+                        {
+                            // Convert the json to a jobject.
+                            lobbySettings = JObject.Parse(FileGetter.GetImportedFile(importResult.Uri).Content);
+
+                            // An exception will be thrown if the jobject cannot be converted to a Ruleset.
+                            lobbySettings.ToObject(typeof(Ruleset));
+                        }
+                        catch
+                        {
+                            // Error if the json failed to parse.
+                            script.Diagnostics.Error("Failed to parse the settings file.", stringRange);
+                            break;
+                        }
+
+                        // If no lobby settings were imported yet, set MergedLobbySettings to the jobject.
+                        if (MergedLobbySettings == null) MergedLobbySettings = lobbySettings;
+                        else
+                        {
+                            // Otherwise, merge current lobby settings.
+                            lobbySettings.Merge(MergedLobbySettings, new JsonMergeSettings {
+                                MergeArrayHandling = MergeArrayHandling.Union,
+                                MergeNullValueHandling = MergeNullValueHandling.Ignore
+                            });
+                            MergedLobbySettings = lobbySettings;
+                        }
+                        break;
+                }
             }
             return importResult.Directory;
         }
@@ -198,7 +249,10 @@ namespace Deltin.Deltinteger.Parse
 
         void ToWorkshop(Func<VarCollection, Rule[]> addRules)
         {
+            // Set up the variable collection.
             VarCollection.Setup();
+
+            // Set up initial global and player rules.
             InitialGlobal = new TranslateRule(this, "Initial Global", RuleEvent.OngoingGlobal);
             InitialPlayer = new TranslateRule(this, "Initial Player", RuleEvent.OngoingPlayer);
             WorkshopRules = new List<Rule>();
@@ -246,19 +300,27 @@ namespace Deltin.Deltinteger.Parse
             WorkshopRules = WorkshopRules.OrderBy(wr => wr.Priority).ToList();
 
             // Get the final workshop string.
-            StringBuilder result = new StringBuilder();
-            I18n.I18n.I18nWarningMessage(result, I18n.I18n.CurrentLanguage);
+            WorkshopBuilder result = new WorkshopBuilder(Language);
+            LanguageInfo.I18nWarningMessage(result, Language);
+
+            // Get the custom game settings.
+            if (MergedLobbySettings != null)
+            {
+                Ruleset settings = Ruleset.Parse(MergedLobbySettings);
+                settings.ToWorkshop(result);
+                result.AppendLine();
+            }
 
             // Get the variables.
-            VarCollection.ToWorkshop(result, I18n.I18n.CurrentLanguage);
+            VarCollection.ToWorkshop(result);
             result.AppendLine();
 
             // Get the subroutines.
-            SubroutineCollection.ToWorkshop(result, I18n.I18n.CurrentLanguage);
+            SubroutineCollection.ToWorkshop(result);
 
             // Get the rules.
             foreach (var rule in WorkshopRules)
-                result.AppendLine(rule.ToWorkshop(I18n.I18n.CurrentLanguage, ConfigurationHandler.OptimizeOutput));
+                result.AppendLine(rule.ToWorkshop(Language, ConfigurationHandler.OptimizeOutput));
             
             WorkshopCode = result.ToString();
         }

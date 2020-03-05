@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Reflection;
-using Deltin.Deltinteger.LanguageServer;
+using Deltin.Deltinteger.I18n;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 
 namespace Deltin.Deltinteger.Elements
@@ -174,14 +174,14 @@ namespace Deltin.Deltinteger.Elements
         {
             string numTranslate(string name)
             {
-                return I18n.I18n.Translate(language, name) + WorkshopName.Substring(name.Length);
+                return LanguageInfo.Translate(language, name) + WorkshopName.Substring(name.Length);
             }
 
             if (@Enum.Type == typeof(PlayerSelector) && WorkshopName.StartsWith("Slot")) return numTranslate("Slot");
             if (@Enum.Type == typeof(Button) && WorkshopName.StartsWith("Ability")) return numTranslate("Ability");
             if ((@Enum.Type == typeof(Team) || @Enum.Type == typeof(Color)) && WorkshopName.StartsWith("Team")) return numTranslate("Team");
             
-            return I18n.I18n.Translate(language, WorkshopName);
+            return LanguageInfo.Translate(language, WorkshopName);
         }
 
         public string GetI18nKeyword()

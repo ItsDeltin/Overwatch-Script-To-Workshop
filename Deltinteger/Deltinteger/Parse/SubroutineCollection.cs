@@ -23,22 +23,20 @@ namespace Deltin.Deltinteger.Parse
             return newRoutine;
         }
 
-        public void ToWorkshop(StringBuilder stringBuilder, OutputLanguage language)
+        public void ToWorkshop(WorkshopBuilder builder)
         {
             if (Subroutines.Count == 0) return;
 
-            stringBuilder.AppendLine(I18n.I18n.Translate(language, "subroutines"));
-            stringBuilder.AppendLine("{");
+            builder.AppendKeywordLine("subroutines");
+            builder.AppendLine("{");
+            builder.Indent();
 
             foreach (Subroutine routine in Subroutines)
-            {
-                stringBuilder.AppendLine(Extras.Indent(1, false) +
-                    routine.ID.ToString() + ": " + routine.Name
-                );
-            }
+                builder.AppendLine(routine.ID.ToString() + ": " + routine.Name);
 
-            stringBuilder.AppendLine("}");
-            stringBuilder.AppendLine();
+            builder.Unindent();
+            builder.AppendLine("}");
+            builder.AppendLine();
         }
     }
 

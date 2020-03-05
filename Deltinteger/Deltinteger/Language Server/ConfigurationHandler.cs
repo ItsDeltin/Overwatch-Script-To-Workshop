@@ -37,7 +37,7 @@ namespace Deltin.Deltinteger.LanguageServer
                 ReferencesCodeLens = config.codelens.references;
                 ImplementsCodeLens = config.codelens.implements;
 
-                I18n.I18n.LoadLanguage(GetOutputLanguage(config.outputLanguage));
+                LanguageInfo.LoadLanguage(GetOutputLanguage(config.outputLanguage));
                 OptimizeOutput = config.optimizeOutput;
             }
 

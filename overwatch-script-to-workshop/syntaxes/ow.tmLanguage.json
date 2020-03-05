@@ -70,7 +70,7 @@
 		},
 		"keywords_control": {
 			"name": "keyword.control",
-			"match": "\\b(If|Else|While|For|Rule|variables|actions|conditions|event|global|player|End)\\b"
+			"match": "\\b(If|Else|While|For|Rule|variables|actions|conditions|event|global|player|End|settings|modes|heroes)\\b"
 		},
 		"keywords_other": {
 			"name": "keyword.other",

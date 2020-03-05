@@ -42,6 +42,7 @@ namespace Deltin.Deltinteger.Parse
         public bool ShouldImport { get; }
         public string Directory { get; }
         public string FilePath { get; }
+        public string FileType { get; }
 
         public ImportResult(FileImporter fileImporter, DocRange importRange, string relativePath, Uri referencingFile)
         {
@@ -56,6 +57,7 @@ namespace Deltin.Deltinteger.Parse
             Uri = Extras.Definition(resultingPath);
             Directory = Path.GetDirectoryName(resultingPath);
             FilePath = resultingPath;
+            FileType = Path.GetExtension(FilePath).ToLower();
 
             // Syntax error if the file does not exist.
             if (!System.IO.File.Exists(resultingPath))
