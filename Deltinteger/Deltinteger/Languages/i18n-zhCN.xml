@@ -643,5 +643,263 @@
     <method name="Skirmish" alt="突击模式" />
     <method name="Team Deathmatch" alt="团队死斗" />
     <method name="Yeti Hunter" alt="雪域猎手" />
+    <method name="settings" alt="设置" />
+    <method name="lobby" alt="大厅" />
+    <method name="modes" alt="模式" />
+    <method name="heroes" alt="英雄" />
+    <method name="%1$s Cooldown Time" alt="%1$s 冷却时间" />
+    <method name="%1$s Recharge Rate" alt="%1$s充能速度" />
+    <method name="%1$s Maximum Time" alt="%1$s最长时间" />
+    <method name="Ultimate Ability (%1$s)" alt="终极技能（%1$s）" />
+    <method name="Ultimate Generation (%1$s)" alt="终极技能充能速度（%1$s）" />
+    <method name="Ultimate Generation - Combat (%1$s)" alt="战斗时终极技能充能速度 (%1$s)" />
+    <method name="Ultimate Generation - Passive (%1$s)" alt="终极技能自动充能速度 (%1$s)" />
+    <method name="Quick Melee" alt="近身攻击" />
+    <method name="Spawn With Ultimate Ready" alt="重生时终极技能充能完毕" />
+    <method name="Damage Dealt" alt="伤害量" />
+    <method name="Damage Received" alt="受到伤害量" />
+    <method name="Healing Received" alt="受到治疗量" />
+    <method name="Jump Vertical Speed" alt="垂直跳跃速度" />
+    <method name="Movement Gravity" alt="移动重力" />
+    <method name="Movement Speed" alt="移动速度" />
+    <method name="Receive Headshots Only" alt="仅爆头有效" />
+    <method name="Ammunition Clip Size Scalar" alt="弹夹容量倍率" />
+    <method name="No Ammunition Requirement" alt="无需装弹" />
+    <method name="Ultimate Ability" alt="终极技能" />
+    <method name="Ultimate Generation" alt="终极技能充能速度" />
+    <method name="Ultimate Generation - Passive" alt="终极技能自动充能速度" />
+    <method name="Ultimate Generation - Combat" alt="战斗时终极技能充能速度" />
+    <method name="Ultimate Duration" alt="终极技能持续时间" />
+    <method name="Infinite Ultimate Duration" alt="终极技能持续时间无限" />
+    <method name="Projectile Speed" alt="弹道速度" />
+    <method name="Projectile Gravity" alt="投射物重力" />
+    <method name="Healing Dealt" alt="治疗量" />
+    <method name="Nano Boost" alt="纳米激素" />
+    <method name="No Automatic Fire" alt="禁止自动射击" />
+    <method name="No Scope" alt="禁止开镜狙击" />
+    <method name="Biotic Grenade" alt="生物手雷" />
+    <method name="Sleep Dart" alt="麻醉镖" />
+    <method name="B.O.B." alt="召唤鲍勃" />
+    <method name="Coach Gun" alt="短筒猎枪" />
+    <method name="Coach Gun Knockback Scalar (Enemy)" alt="双筒猎枪击退距离（敌方）" />
+    <method name="Coach Gun Knockback Scalar (Self)" alt="双筒猎枪击退距离（自身）" />
+    <method name="Dynamite" alt="延时雷管" />
+    <method name="Dynamite Fuse Time Scalar" alt="延时雷管引爆时间" />
+    <method name="Amplification Matrix" alt="增幅矩阵" />
+    <method name="Immortality Field" alt="维生力场" />
+    <method name="Regenerative Burst" alt="愈合冲击" />
+    <method name="Configuration: Tank" alt="坦克模式" />
+    <method name="Reconfigure" alt="切换模式" />
+    <method name="Self-Repair" alt="自我修复" />
+    <method name="Rally" alt="集结" />
+    <method name="Repair Pack" alt="恢复包" />
+    <method name="Shield Bash" alt="能量盾击" />
+    <method name="Shield Bash Knockback Scalar" alt="能量盾击击退距离" />
+    <method name="Whip Shot" alt="流星飞锤" />
+    <method name="Whip Shot Knockback Scalar" alt="流星飞锤击退距离" />
+    <method name="Self-Destruct" alt="自毁" />
+    <method name="Micro Missiles" alt="微型飞弹" />
+    <method name="Boosters" alt="推进器" />
+    <method name="Boosters Knockback Scalar" alt="推进器击退倍率" />
+    <method name="Defense Matrix" alt="防御矩阵" />
+    <method name="Meteor Strike" alt="毁天灭地" />
+    <method name="Meteor Strike Knockback Scalar" alt="毁天灭地击退倍率" />
+    <method name="Rising Uppercut" alt="上勾重拳" />
+    <method name="Rising Uppercut Knockback Scalar" alt="上勾重拳击退倍率" />
+    <method name="Rocket Punch" alt="火箭重拳" />
+    <method name="Rocket Punch Knockback Scalar" alt="火箭重拳击退倍率" />
+    <method name="Seismic Slam" alt="裂地重拳" />
+    <method name="Ammunition Regeneration Time Scalar" alt="弹药恢复时间速率" />
+    <method name="Dragonblade" alt="斩" />
+    <method name="Deflect" alt="闪" />
+    <method name="Swift Strike" alt="影" />
+    <method name="Dragonstrike" alt="竜" />
+    <method name="Lunge" alt="跃" />
+    <method name="Lunge Distance Scalar" alt="“跃”距离设置" />
+    <method name="Sonic Arrow" alt="音" />
+    <method name="Storm Arrow" alt="箭出如岚" />
+    <method name="Storm Arrows Quantity" alt="“岚”数量" />
+    <method name="Rip-Tire" alt="炸弹轮胎" />
+    <method name="Concussion Mine" alt="震荡地雷" />
+    <method name="Concussion Mine Knockback Scalar" alt="震荡地雷击退倍率" />
+    <method name="Steel Trap" alt="捕兽夹" />
+    <method name="Frag Launcher Knockback Scalar" alt="榴弹发射器击退倍率" />
+    <method name="Sound Barrier" alt="音障" />
+    <method name="Amp It Up" alt="强音" />
+    <method name="Crossfade" alt="切歌" />
+    <method name="Soundwave" alt="音波" />
+    <method name="Soundwave Knockback Scalar" alt="音波击退倍率" />
+    <method name="Deadeye" alt="神射手" />
+    <method name="Combat Roll" alt="战术翻滚" />
+    <method name="Flashbang" alt="闪光弹" />
+    <method name="Blizzard" alt="暴雪" />
+    <method name="Cryo-Freeze" alt="急冻" />
+    <method name="Ice Wall" alt="冰墙" />
+    <method name="Blizzard Freeze Minimum" alt="暴雪冰冻最小值" />
+    <method name="Blizzard Freeze Rate Scalar" alt="暴雪冰冻敌人的速度" />
+    <method name="Freeze Stacking" alt="冰冻叠加" />
+    <method name="Weapon Freeze Duration Scalar" alt="冰霜枪冰冻敌人的时长" />
+    <method name="Weapon Freeze Minimum" alt="冰霜枪冰冻最小值" />
+    <method name="Weapon Freeze Rate Scalar" alt="冰霜枪冰冻敌人的速度" />
+    <method name="Valkyrie" alt="瓦尔基里" />
+    <method name="Guardian Angel" alt="守护天使" />
+    <method name="Regeneration" alt="自动恢复" />
+    <method name="Weapons Enabled" alt="可用武器" />
+    <method name="Caduceus Staff Only" alt="仅限天使之杖" />
+    <method name="Caduceus Blaster Only" alt="仅限天使冲击枪" />
+    <method name="Coalescence" alt="聚合射线" />
+    <method name="Fade" alt="消散" />
+    <method name="Biotic Orb" alt="生化之球" />
+    <method name="Biotic Orb Max Damage Scalar" alt="生化之球伤害最大值" />
+    <method name="Biotic Orb Max Healing Scalar" alt="生化之球治疗最大值" />
+    <method name="Biotic Energy Maximum" alt="最大生化能量值" />
+    <method name="Biotic Energy Recharge Rate" alt="生化能量回复速度" />
+    <method name="Supercharger" alt="超充能器" />
+    <method name="Fortify" alt="强固防御" />
+    <method name="Halt!" alt="别动" />
+    <method name="Protective Barrier" alt="防护屏障" />
+    <method name="Barrage" alt="火箭弹幕" />
+    <method name="Concussive Blast" alt="震荡冲击" />
+    <method name="Concussive Blast Knockback Scalar" alt="震荡冲击击退倍率" />
+    <method name="Hover Jets" alt="悬浮背包" />
+    <method name="Hover Jets Vertical Speed Scalar" alt="悬浮背包垂直速度" />
+    <method name="Hover Jets Unlimited Fuel" alt="悬浮背包无限燃料" />
+    <method name="Jump Jet" alt="推进背包" />
+    <method name="Jump Jet Acceleration Scalar" alt="推进背包加速" />
+    <method name="Rocket Launcher Knockback Scalar" alt="火箭发射器击退倍率" />
+    <method name="Death Blossom" alt="死亡绽放" />
+    <method name="Shadow Step" alt="暗影步" />
+    <method name="Wraith Form" alt="幽灵形态" />
+    <method name="Earthshatter" alt="裂地猛击" />
+    <method name="Barrier Field" alt="屏障力场" />
+    <method name="Charge" alt="冲锋" />
+    <method name="Charge Knockback Scalar" alt="冲锋击退倍率" />
+    <method name="Fire Strike" alt="烈焰打击" />
+    <method name="Rocket Hammer Knockback Scalar" alt="火箭重锤击退倍率" />
+    <method name="Whole Hog" alt="鸡飞狗跳" />
+    <method name="Whole Hog Knockback Scalar" alt="鸡飞狗跳击退倍率" />
+    <method name="Chain Hook" alt="链钩" />
+    <method name="Take A Breather" alt="呼吸器" />
+    <method name="Gravitic Flux" alt="引力乱流" />
+    <method name="Accretion" alt="质量吸附" />
+    <method name="Accretion Knockback Scalar" alt="质量吸附击退距离" />
+    <method name="Experimental Barrier" alt="实验屏障" />
+    <method name="Kinetic Grasp" alt="动能俘获" />
+    <method name="Tactical Visor" alt="战术目镜" />
+    <method name="Biotic Field" alt="生物力场" />
+    <method name="Helix Rockets" alt="螺旋飞弹" />
+    <method name="Helix Rockets Knockback Scalar" alt="螺旋飞弹击退倍率" />
+    <method name="Sprint" alt="疾跑" />
+    <method name="EMP" alt="电磁脉冲" />
+    <method name="Hack" alt="黑客入侵" />
+    <method name="Stealth" alt="隐秘堡垒" />
+    <method name="Translocator" alt="位移传动" />
+    <method name="Photon Barrier" alt="光子屏障" />
+    <method name="Sentry Turret" alt="哨戒炮" />
+    <method name="Teleporter" alt="传送面板" />
+    <method name="Molten Core" alt="熔火核心" />
+    <method name="Deploy Turret" alt="部署炮台" />
+    <method name="Overload" alt="热力过载" />
+    <method name="Overload Duration Scalar" alt="热力过载持续时间" />
+    <method name="Rivet Gun Only" alt="仅限铆钉枪" />
+    <method name="Forge Hammer Only" alt="仅限锻造锤" />
+    <method name="Pulse Bomb" alt="脉冲炸弹" />
+    <method name="Blink" alt="闪现" />
+    <method name="Recall" alt="闪回" />
+    <method name="Infra-sight" alt="红外侦测" />
+    <method name="Grappling Hook" alt="抓钩" />
+    <method name="Venom Mine" alt="剧毒诡雷" />
+    <method name="Primal Rage" alt="原始暴怒" />
+    <method name="Primal Rage Melee Knockback Scalar" alt="原始暴怒近身攻击击退倍率" />
+    <method name="Barrier Projector" alt="屏障发射器" />
+    <method name="Jump Pack" alt="喷射背包" />
+    <method name="Jump Pack Knockback Scalar" alt="喷射背包击退倍率" />
+    <method name="Jump Pack Acceleration Scalar" alt="喷射背包加速" />
+    <method name="Minefield" alt="地雷禁区" />
+    <method name="Minefield Knockback Scalar" alt="地雷禁区击退距离" />
+    <method name="Adaptive Shield" alt="感应护盾" />
+    <method name="Grappling Claw" alt="工程抓钩" />
+    <method name="Grappling Claw Knockback Scalar" alt="工程抓钩击退距离" />
+    <method name="Piledriver" alt="重力坠击" />
+    <method name="Roll" alt="动力铁球" />
+    <method name="Roll Always Active" alt="动力铁球始终激活" />
+    <method name="Graviton Surge" alt="重力喷涌" />
+    <method name="Particle Barrier" alt="粒子屏障" />
+    <method name="Projected Barrier" alt="投射屏障" />
+    <method name="Particle Cannon Secondary Knockback Scalar" alt="粒子炮辅助攻击击退倍率" />
+    <method name="Transcendence" alt="圣" />
+    <method name="Orb Of Harmony" alt="谐" />
+    <method name="Orb Of Discord" alt="乱" />
+    <method name="Enemy Health Bars" alt="敌方生命条" />
+    <method name="Game Mode Start" alt="比赛模式开始" />
+    <method name="All Slots Filled" alt="比赛人满后" />
+    <method name="Immediately" alt="即时" />
+    <method name="Manual" alt="手动" />
+    <method name="Health Pack Respawn Time Scalar" alt="急救包刷新时间" />
+    <method name="Kill Cam" alt="消灭镜头" />
+    <method name="Kill Feed" alt="消灭提示" />
+    <method name="Skins" alt="皮肤" />
+    <method name="Spawn Health Packs" alt="急救包刷新" />
+    <method name="Determined By Mode" alt="依据比赛模式而定" />
+    <method name="Enabled" alt="开启" />
+    <method name="Disabled" alt="禁用" />
+    <method name="Allow Hero Switching" alt="允许切换英雄" />
+    <method name="Hero Limit" alt="英雄限制" />
+    <method name="1 Per Team" alt="每队同一英雄最多1名" />
+    <method name="2 Per Team" alt="每队同一英雄最多2名" />
+    <method name="1 Per Game" alt="每场同一英雄最多1名" />
+    <method name="2 Per Game" alt="每场同一英雄最多2名" />
+    <method name="Limit Roles" alt="定位限制" />
+    <method name="2 Of Each Role Per Team" alt="每队同一角色类型最多2名" />
+    <method name="Respawn As Random Hero" alt="随机英雄重生" />
+    <method name="Respawn Time Scalar" alt="复活时间" />
+    <method name="Competitive Rules" alt="竞技比赛规则" />
+    <method name="Capture Speed Modifier" alt="占领速度" />
+    <method name="Limit Valid Control Points" alt="有效控制点选择" />
+    <method name="First" alt="第一个" />
+    <method name="Second" alt="二" />
+    <method name="Third" alt="三" />
+    <method name="Score To Win" alt="获胜得分" />
+    <method name="Scoring Speed Modifier" alt="计分速度" />
+    <method name="Payload Speed Modifier" alt="运载目标速度" />
+    <method name="Blitz Flag Locations" alt="闪电赛旗帜位置" />
+    <method name="Damage Interrupts Flag Interaction" alt="受到伤害打断夺旗" />
+    <method name="Flag Carrier Abilities" alt="旗手技能" />
+    <method name="Restricted" alt="受限制" />
+    <method name="Flag Dropped Lock Time" alt="旗帜掉落后锁定时间" />
+    <method name="Flag Pickup Time" alt="旗帜拾取时间" />
+    <method name="Flag Return Time" alt="旗帜归还时间" />
+    <method name="Flag Score Respawn Time" alt="得分后旗帜重生时间" />
+    <method name="Game Length (Minutes)" alt="比赛时长（分）" />
+    <method name="Respawn Speed Buff Duration" alt="重生加速增益时间" />
+    <method name="Team Needs Flag At Base To Score" alt="得分需我方旗帜在基地中" />
+    <method name="Game Length In Minutes" alt="比赛时长（分钟）" />
+    <method name="Self Initiated Respawn" alt="主动重生" />
+    <method name="Hero Selection Time" alt="选择英雄时间" />
+    <method name="Restrict Previously Used Heroes" alt="锁定使用过的英雄" />
+    <method name="After Round Won" alt="回合胜利后" />
+    <method name="After Round Played" alt="回合结束后" />
+    <method name="Hero Selection" alt="英雄选择" />
+    <method name="Any" alt="任意" />
+    <method name="Limited" alt="限定" />
+    <method name="Random" alt="随机英雄" />
+    <method name="Random (Mirrored)" alt="随机英雄（相同）" />
+    <method name="Limited Choice Pool" alt="英雄池上限" />
+    <method name="Team Size +2" alt="队伍人数+2" />
+    <method name="Team Size" alt="队伍人数" />
+    <method name="Team Size +1" alt="队伍人数+1" />
+    <method name="Team Size +3" alt="队伍人数+3" />
+    <method name="Capture Objective Tiebreaker" alt="目标点决胜机制" />
+    <method name="Tiebreaker After Match Time Elapsed" alt="目标点决胜机制激活时间" />
+    <method name="Time To Capture" alt="占领时间" />
+    <method name="Draw After Match Time Elapsed With No Tiebreaker" alt="无目标点决胜机制时平局时限" />
+    <method name="Reveal Heroes" alt="显示英雄位置" />
+    <method name="Reveal Heroes After Match Time Elapsed" alt="比赛开始后显示英雄位置时间" />
+    <method name="Mercy Resurrect Counteracts Kills" alt="“天使”复活抵消消灭次数" />
+    <method name="Imbalanced Team Score To Win" alt="双方队伍获胜得分差异" />
+    <method name="Team 1 Score To Win" alt="队伍1获胜所需分数" />
+    <method name="Team 2 Score To Win" alt="队伍2获胜所需分数" />
+    <method name="Spawn Training Bots" alt="刷新训练机器人" />
+    <method name="Training Bot Respawn Time Scalar" alt="训练机器人刷新时间" />
   </Methods>
 </I18nLanguage>

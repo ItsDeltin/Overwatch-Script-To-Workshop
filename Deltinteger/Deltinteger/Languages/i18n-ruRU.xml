@@ -643,5 +643,263 @@
     <method name="Skirmish" alt="Разминка" />
     <method name="Team Deathmatch" alt="Командная схватка" />
     <method name="Yeti Hunter" alt="Охотница на йети" />
+    <method name="settings" alt="settings" />
+    <method name="lobby" alt="lobby" />
+    <method name="modes" alt="modes" />
+    <method name="heroes" alt="heroes" />
+    <method name="%1$s Cooldown Time" alt="Время восстановления: %1$s" />
+    <method name="%1$s Recharge Rate" alt="Скорость зарядки: %1$s" />
+    <method name="%1$s Maximum Time" alt="Макс. время: %1$s" />
+    <method name="Ultimate Ability (%1$s)" alt="Суперспособность (%1$s)" />
+    <method name="Ultimate Generation (%1$s)" alt="Зарядка суперспособности (%1$s)" />
+    <method name="Ultimate Generation - Combat (%1$s)" alt="Зарядка суперспособности в бою (%1$s)" />
+    <method name="Ultimate Generation - Passive (%1$s)" alt="Пассивная зарядка суперспособности (%1$s)" />
+    <method name="Quick Melee" alt="Быстрый удар" />
+    <method name="Spawn With Ultimate Ready" alt="Появление с готовой суперспособностью" />
+    <method name="Damage Dealt" alt="Наносимый урон" />
+    <method name="Damage Received" alt="Получаемый урон" />
+    <method name="Healing Received" alt="Получаемое исцеление" />
+    <method name="Jump Vertical Speed" alt="Вертикальная скорость при прыжке" />
+    <method name="Movement Gravity" alt="Гравитация: движение" />
+    <method name="Movement Speed" alt="Скорость передвижения" />
+    <method name="Receive Headshots Only" alt="Получать только выстрелы в голову" />
+    <method name="Ammunition Clip Size Scalar" alt="Размер боекомплекта" />
+    <method name="No Ammunition Requirement" alt="Бесконечный боекомплект" />
+    <method name="Ultimate Ability" alt="Суперспособности" />
+    <method name="Ultimate Generation" alt="Зарядка суперспособностей" />
+    <method name="Ultimate Generation - Passive" alt="Зарядка суперспособности (пассивная)" />
+    <method name="Ultimate Generation - Combat" alt="Зарядка суперспособности (в бою)" />
+    <method name="Ultimate Duration" alt="Длительность суперспособности" />
+    <method name="Infinite Ultimate Duration" alt="Бесконечные суперспособности" />
+    <method name="Projectile Speed" alt="Скорость снарядов" />
+    <method name="Projectile Gravity" alt="Гравитация: снаряды" />
+    <method name="Healing Dealt" alt="Эффективность исходящего исцеления" />
+    <method name="Nano Boost" alt="Стимулятор" />
+    <method name="No Automatic Fire" alt="Без автоматического режима стрельбы" />
+    <method name="No Scope" alt="Без оптического прицела" />
+    <method name="Biotic Grenade" alt="Биотическая граната" />
+    <method name="Sleep Dart" alt="Транквилизатор" />
+    <method name="B.O.B." alt="БОБ" />
+    <method name="Coach Gun" alt="Обрез" />
+    <method name="Coach Gun Knockback Scalar (Enemy)" alt="Сила отбрасывания «Обрезом» (враг)" />
+    <method name="Coach Gun Knockback Scalar (Self)" alt="Сила отбрасывания «Обрезом» (на себя)" />
+    <method name="Dynamite" alt="Динамит" />
+    <method name="Dynamite Fuse Time Scalar" alt="Время горения фитиля у «Динамита»" />
+    <method name="Amplification Matrix" alt="Усиливающая матрица" />
+    <method name="Immortality Field" alt="Поле бессмертия" />
+    <method name="Regenerative Burst" alt="Стимулятор регенерации" />
+    <method name="Configuration: Tank" alt="Режим танка" />
+    <method name="Reconfigure" alt="Смена режима" />
+    <method name="Self-Repair" alt="Саморемонт" />
+    <method name="Rally" alt="Общий сбор" />
+    <method name="Repair Pack" alt="Ремкомплект" />
+    <method name="Shield Bash" alt="Удар щитом" />
+    <method name="Shield Bash Knockback Scalar" alt="Удар щитом: сила отбрасывания" />
+    <method name="Whip Shot" alt="Хлесткий удар" />
+    <method name="Whip Shot Knockback Scalar" alt="Хлесткий удар: сила отбрасывания" />
+    <method name="Self-Destruct" alt="Самоуничтожение" />
+    <method name="Micro Missiles" alt="Микроракеты" />
+    <method name="Boosters" alt="Ускорители" />
+    <method name="Boosters Knockback Scalar" alt="Ускорители: сила отбрасывания" />
+    <method name="Defense Matrix" alt="Защитная матрица" />
+    <method name="Meteor Strike" alt="Удар метеора" />
+    <method name="Meteor Strike Knockback Scalar" alt="Удар метеора: сила отбрасывания" />
+    <method name="Rising Uppercut" alt="Апперкот" />
+    <method name="Rising Uppercut Knockback Scalar" alt="Апперкот: сила отбрасывания" />
+    <method name="Rocket Punch" alt="Реактивный удар" />
+    <method name="Rocket Punch Knockback Scalar" alt="Реактивный удар: сила отбрасывания" />
+    <method name="Seismic Slam" alt="Дрожь земли" />
+    <method name="Ammunition Regeneration Time Scalar" alt="Время восстановления боекомплекта" />
+    <method name="Dragonblade" alt="Клинок дракона" />
+    <method name="Deflect" alt="Отражение атак" />
+    <method name="Swift Strike" alt="Молниеносный удар" />
+    <method name="Dragonstrike" alt="Удар дракона" />
+    <method name="Lunge" alt="Выпад" />
+    <method name="Lunge Distance Scalar" alt="Дистанция «Выпада»" />
+    <method name="Sonic Arrow" alt="Звуковая стрела" />
+    <method name="Storm Arrow" alt="Шквал" />
+    <method name="Storm Arrows Quantity" alt="Количество стрел «Шквала»" />
+    <method name="Rip-Tire" alt="Адская шина" />
+    <method name="Concussion Mine" alt="Фугасная мина" />
+    <method name="Concussion Mine Knockback Scalar" alt="Фугасная мина: сила отбрасывания" />
+    <method name="Steel Trap" alt="Капкан" />
+    <method name="Frag Launcher Knockback Scalar" alt="Гранатомет: сила отбрасывания" />
+    <method name="Sound Barrier" alt="Звуковой барьер" />
+    <method name="Amp It Up" alt="Громкость на полную!" />
+    <method name="Crossfade" alt="Кроссфейд" />
+    <method name="Soundwave" alt="Звуковая волна" />
+    <method name="Soundwave Knockback Scalar" alt="Звуковая волна: сила отбрасывания" />
+    <method name="Deadeye" alt="Меткий стрелок" />
+    <method name="Combat Roll" alt="Кувырок" />
+    <method name="Flashbang" alt="Светошумовая граната" />
+    <method name="Blizzard" alt="Вьюга" />
+    <method name="Cryo-Freeze" alt="Криостазис" />
+    <method name="Ice Wall" alt="Ледяная стена" />
+    <method name="Blizzard Freeze Minimum" alt="Мин. время заморозки «Вьюгой»" />
+    <method name="Blizzard Freeze Rate Scalar" alt="Скорость заморозки «Вьюгой»" />
+    <method name="Freeze Stacking" alt="Суммирование заморозки" />
+    <method name="Weapon Freeze Duration Scalar" alt="Длительность заморозки бластером" />
+    <method name="Weapon Freeze Minimum" alt="Мин. время заморозки бластером" />
+    <method name="Weapon Freeze Rate Scalar" alt="Скорость заморозки бластером" />
+    <method name="Valkyrie" alt="Валькирия" />
+    <method name="Guardian Angel" alt="Ангел-хранитель" />
+    <method name="Regeneration" alt="Регенерация" />
+    <method name="Weapons Enabled" alt="Доступное оружие" />
+    <method name="Caduceus Staff Only" alt="Только Кадуцей" />
+    <method name="Caduceus Blaster Only" alt="Только Кадуцей-бластер" />
+    <method name="Coalescence" alt="Коалесценция" />
+    <method name="Fade" alt="Уход в тень" />
+    <method name="Biotic Orb" alt="Биотическая сфера" />
+    <method name="Biotic Orb Max Damage Scalar" alt="Макс. количество урона от «Биотической сферы»" />
+    <method name="Biotic Orb Max Healing Scalar" alt="Макс. исцеление «Биотической сферой»" />
+    <method name="Biotic Energy Maximum" alt="Макс. биотической энергии" />
+    <method name="Biotic Energy Recharge Rate" alt="Скорость восполнения биотической энергии" />
+    <method name="Supercharger" alt="Катализатор" />
+    <method name="Fortify" alt="Защитное поле" />
+    <method name="Halt!" alt="Стоять!" />
+    <method name="Protective Barrier" alt="Силовой барьер" />
+    <method name="Barrage" alt="Ракетный залп" />
+    <method name="Concussive Blast" alt="Взрывная волна" />
+    <method name="Concussive Blast Knockback Scalar" alt="Взрывная волна: сила отбрасывания" />
+    <method name="Hover Jets" alt="Парение" />
+    <method name="Hover Jets Vertical Speed Scalar" alt="Парение: вертикальная скорость" />
+    <method name="Hover Jets Unlimited Fuel" alt="Бесконечное топливо" />
+    <method name="Jump Jet" alt="Реактивный ранец" />
+    <method name="Jump Jet Acceleration Scalar" alt="Реактивный ранец: ускорение" />
+    <method name="Rocket Launcher Knockback Scalar" alt="Ракетомет: сила отбрасывания" />
+    <method name="Death Blossom" alt="Цветок смерти" />
+    <method name="Shadow Step" alt="Шаг сквозь тень" />
+    <method name="Wraith Form" alt="Бестелесность" />
+    <method name="Earthshatter" alt="Землетрясение" />
+    <method name="Barrier Field" alt="Энергетический барьер" />
+    <method name="Charge" alt="Рывок" />
+    <method name="Charge Knockback Scalar" alt="Рывок: сила отбрасывания" />
+    <method name="Fire Strike" alt="Огненный удар" />
+    <method name="Rocket Hammer Knockback Scalar" alt="Ракетный молот: сила отбрасывания" />
+    <method name="Whole Hog" alt="Турбосвинство" />
+    <method name="Whole Hog Knockback Scalar" alt="Турбосвинство: сила отбрасывания" />
+    <method name="Chain Hook" alt="Цепной крюк" />
+    <method name="Take A Breather" alt="Передышка" />
+    <method name="Gravitic Flux" alt="Гравитационный колодец" />
+    <method name="Accretion" alt="Аккреция" />
+    <method name="Accretion Knockback Scalar" alt="Аккреция: сила отбрасывания" />
+    <method name="Experimental Barrier" alt="Экспериментальный барьер" />
+    <method name="Kinetic Grasp" alt="Кинетический захват" />
+    <method name="Tactical Visor" alt="Тактический визор" />
+    <method name="Biotic Field" alt="Биотическое поле" />
+    <method name="Helix Rockets" alt="Ракетный удар" />
+    <method name="Helix Rockets Knockback Scalar" alt="Ракетный удар: сила отбрасывания" />
+    <method name="Sprint" alt="Спринт" />
+    <method name="EMP" alt="Импульс" />
+    <method name="Hack" alt="Взлом" />
+    <method name="Stealth" alt="Невидимка" />
+    <method name="Translocator" alt="Транслокатор" />
+    <method name="Photon Barrier" alt="Фотонный барьер" />
+    <method name="Sentry Turret" alt="Защитная турель" />
+    <method name="Teleporter" alt="Телепортер" />
+    <method name="Molten Core" alt="Перегрев" />
+    <method name="Deploy Turret" alt="Установка турели" />
+    <method name="Overload" alt="Перегрузка" />
+    <method name="Overload Duration Scalar" alt="Длительность перегрузки" />
+    <method name="Rivet Gun Only" alt="Только гвоздестрел" />
+    <method name="Forge Hammer Only" alt="Только кузнечный молот" />
+    <method name="Pulse Bomb" alt="Импульсная бомба" />
+    <method name="Blink" alt="Скачок" />
+    <method name="Recall" alt="Возврат" />
+    <method name="Infra-sight" alt="Инфразрение" />
+    <method name="Grappling Hook" alt="Крюк" />
+    <method name="Venom Mine" alt="Ядовитая мина" />
+    <method name="Primal Rage" alt="Ярость зверя" />
+    <method name="Primal Rage Melee Knockback Scalar" alt="Ярость зверя: сила отбрасывания ударами" />
+    <method name="Barrier Projector" alt="Защитный купол" />
+    <method name="Jump Pack" alt="Прыжковый ранец" />
+    <method name="Jump Pack Knockback Scalar" alt="Прыжковый ранец: сила отбрасывания" />
+    <method name="Jump Pack Acceleration Scalar" alt="Прыжковый ранец: ускорение" />
+    <method name="Minefield" alt="Минное поле" />
+    <method name="Minefield Knockback Scalar" alt="Минное поле: сила отбрасывания" />
+    <method name="Adaptive Shield" alt="Адаптивный щит" />
+    <method name="Grappling Claw" alt="«Кошка»" />
+    <method name="Grappling Claw Knockback Scalar" alt="«Кошка»: сила отбрасывания" />
+    <method name="Piledriver" alt="Копер" />
+    <method name="Roll" alt="Каток" />
+    <method name="Roll Always Active" alt="«Каток» всегда активен" />
+    <method name="Graviton Surge" alt="Гравитонный импульс" />
+    <method name="Particle Barrier" alt="Защитный барьер" />
+    <method name="Projected Barrier" alt="Дистанционный барьер" />
+    <method name="Particle Cannon Secondary Knockback Scalar" alt="Лучевая пушка: сила отбрасывания взрывом" />
+    <method name="Transcendence" alt="Трансцендентность" />
+    <method name="Orb Of Harmony" alt="Сфера гармонии" />
+    <method name="Orb Of Discord" alt="Сфера диссонанса" />
+    <method name="Enemy Health Bars" alt="Индикаторы здоровья врагов" />
+    <method name="Game Mode Start" alt="Начало матча в режиме" />
+    <method name="All Slots Filled" alt="Все места заполнены" />
+    <method name="Immediately" alt="Сразу" />
+    <method name="Manual" alt="Вручную" />
+    <method name="Health Pack Respawn Time Scalar" alt="Время восстановления медкомплектов" />
+    <method name="Kill Cam" alt="Повторы" />
+    <method name="Kill Feed" alt="Лента убийств" />
+    <method name="Skins" alt="Облики" />
+    <method name="Spawn Health Packs" alt="Медкомплекты" />
+    <method name="Determined By Mode" alt="В зависимости от режима" />
+    <method name="Enabled" alt="Вкл." />
+    <method name="Disabled" alt="disabled" />
+    <method name="Allow Hero Switching" alt="Смена героев" />
+    <method name="Hero Limit" alt="Лимит героев" />
+    <method name="1 Per Team" alt="1 на команду" />
+    <method name="2 Per Team" alt="2 на команду" />
+    <method name="1 Per Game" alt="1 на матч" />
+    <method name="2 Per Game" alt="2 на матч" />
+    <method name="Limit Roles" alt="Ограничение ролей" />
+    <method name="2 Of Each Role Per Team" alt="2 героя каждой роли на команду" />
+    <method name="Respawn As Random Hero" alt="Случайный герой при возрождении" />
+    <method name="Respawn Time Scalar" alt="Время возрождения" />
+    <method name="Competitive Rules" alt="Соревновательные правила" />
+    <method name="Capture Speed Modifier" alt="Скорость захвата" />
+    <method name="Limit Valid Control Points" alt="Ограничение контрольных точек" />
+    <method name="First" alt="Первый" />
+    <method name="Second" alt="Второе" />
+    <method name="Third" alt="Третье" />
+    <method name="Score To Win" alt="Очков для победы" />
+    <method name="Scoring Speed Modifier" alt="Скорость набора очков с объекта" />
+    <method name="Payload Speed Modifier" alt="Скорость груза" />
+    <method name="Blitz Flag Locations" alt="Быстрый ЗФ: расположение флагов" />
+    <method name="Damage Interrupts Flag Interaction" alt="Урон прерывает действия с флагом" />
+    <method name="Flag Carrier Abilities" alt="Способности флагоносца" />
+    <method name="Restricted" alt="Ограничены" />
+    <method name="Flag Dropped Lock Time" alt="Блокировка брошенного флага" />
+    <method name="Flag Pickup Time" alt="Время на подбор флага" />
+    <method name="Flag Return Time" alt="Время возврата флага" />
+    <method name="Flag Score Respawn Time" alt="Появление флага после захвата" />
+    <method name="Game Length (Minutes)" alt="Время матча в минутах" />
+    <method name="Respawn Speed Buff Duration" alt="Длительность бонуса к скорости после возрождения" />
+    <method name="Team Needs Flag At Base To Score" alt="Для сдачи нужен свой флаг" />
+    <method name="Game Length In Minutes" alt="Время матча в минутах" />
+    <method name="Self Initiated Respawn" alt="Возрождение вручную" />
+    <method name="Hero Selection Time" alt="Время на выбор героев" />
+    <method name="Restrict Previously Used Heroes" alt="Запрет ранее выбранных героев" />
+    <method name="After Round Won" alt="После победы в раунде" />
+    <method name="After Round Played" alt="После раунда" />
+    <method name="Hero Selection" alt="Выбор героя" />
+    <method name="Any" alt="Любой" />
+    <method name="Limited" alt="С ограничениями" />
+    <method name="Random" alt="Случайно" />
+    <method name="Random (Mirrored)" alt="Случайно (зеркально)" />
+    <method name="Limited Choice Pool" alt="Ограниченный выбор героев" />
+    <method name="Team Size +2" alt="Величина команды +2" />
+    <method name="Team Size" alt="Величина команды" />
+    <method name="Team Size +1" alt="Величина команды +1" />
+    <method name="Team Size +3" alt="Величина команды +3" />
+    <method name="Capture Objective Tiebreaker" alt="Захват объекта при тай-брейке" />
+    <method name="Tiebreaker After Match Time Elapsed" alt="Тай-брейк по истечении времени" />
+    <method name="Time To Capture" alt="Время для захвата" />
+    <method name="Draw After Match Time Elapsed With No Tiebreaker" alt="Ничья по истечении времени, без тай-брейка" />
+    <method name="Reveal Heroes" alt="Обнаружение героев" />
+    <method name="Reveal Heroes After Match Time Elapsed" alt="Обнаружение героев по окончании времени матча" />
+    <method name="Mercy Resurrect Counteracts Kills" alt="«Воскрешение» Ангела отменяет убийства" />
+    <method name="Imbalanced Team Score To Win" alt="Разное количество очков для победы" />
+    <method name="Team 1 Score To Win" alt="Очков для победы команды 1" />
+    <method name="Team 2 Score To Win" alt="Очков для победы команды 2" />
+    <method name="Spawn Training Bots" alt="Возродить тренировочных роботов" />
+    <method name="Training Bot Respawn Time Scalar" alt="Время возрождения тренировочных роботов" />
   </Methods>
 </I18nLanguage>

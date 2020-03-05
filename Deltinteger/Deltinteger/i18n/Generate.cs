@@ -101,7 +101,7 @@ namespace Deltin.Deltinteger.I18n
                 foreach (var keyword in Keywords())
                     xml.Methods.Add(new I18nMethod(
                         keyword,
-                        strings.ValueFromKeyAndLang(keyLinks.First(m => m.MethodName == keyword).Key, lang)
+                        strings.ValueFromKeyAndLang(keyLinks.First(m => m.MethodName.ToLower() == keyword.ToLower()).Key, lang)
                     ));
 
                 // Get the file
