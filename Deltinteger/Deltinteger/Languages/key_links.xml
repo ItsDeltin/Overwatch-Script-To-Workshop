@@ -803,4 +803,102 @@
   <method name="Training Bot Respawn Time Scalar" key="00000000F0CC.07C" />
   <method name="%1$s Recharge Rate" key="000000005B3F.07C" />
   <method name="%1$s Maximum Time" key="000000005B45.07C" />
+  <method name="Blizzard" key="000000001789.07C" />
+  <method name="Cryo-Freeze" key="00000000178B.07C" />
+  <method name="Ice Wall" key="00000000178D.07C" />
+  <method name="Blizzard Freeze Minimum" key="0000000070D4.07C" />
+  <method name="Blizzard Freeze Rate Scalar" key="0000000070D3.07C" />
+  <method name="Freeze Stacking" key="000000007113.07C" />
+  <method name="Weapon Freeze Duration Scalar" key="000000007100.07C" />
+  <method name="Weapon Freeze Minimum" key="0000000070D2.07C" />
+  <method name="Weapon Freeze Rate Scalar" key="0000000070CF.07C" />
+  <method name="Valkyrie" key="000000002465.07C" />
+  <method name="Guardian Angel" key="000000000410.07C" />
+  <method name="Regeneration" key="000000006DA7.07C" />
+  <method name="Weapons Enabled" key="000000006017.07C" />
+  <method name="Caduceus Staff Only" key="000000006018.07C" />
+  <method name="Caduceus Blaster Only" key="00000000601A.07C" />
+  <method name="Coalescence" key="000000006630.07C" />
+  <method name="Fade" key="000000006629.07C" />
+  <method name="Biotic Orb" key="000000006E54.07C" />
+  <method name="Biotic Orb Max Damage Scalar" key="0000000073E7.07C" />
+  <method name="Biotic Orb Max Healing Scalar" key="0000000073E6.07C" />
+  <method name="Biotic Energy Maximum" key="00000000705C.07C" />
+  <method name="Biotic Energy Recharge Rate" key="00000000705B.07C" />
+  <method name="Supercharger" key="000000004EDB.07C" />
+  <method name="Fortify" key="000000004ED3.07C" />
+  <method name="Halt!" key="0000000059B0.07C" />
+  <method name="Protective Barrier" key="000000004ED7.07C" />
+  <method name="Barrage" key="0000000003AD.07C" />
+  <method name="Concussive Blast" key="0000000003B3.07C" />
+  <method name="Concussive Blast Knockback Scalar" key="00000000633D.07C" />
+  <method name="Hover Jets" key="0000000003B1.07C" />
+  <method name="Hover Jets Vertical Speed Scalar" key="00000000631C.07C" />
+  <method name="Hover Jets Unlimited Fuel" key="000000005B51.07C" />
+  <method name="Jump Jet" key="0000000003AF.07C" />
+  <method name="Jump Jet Acceleration Scalar" key="00000000631B.07C" />
+  <method name="Rocket Launcher Knockback Scalar" key="000000006341.07C" />
+  <method name="Death Blossom" key="0000000003B7.07C" />
+  <method name="Shadow Step" key="0000000003BF.07C" />
+  <method name="Wraith Form" key="0000000003BB.07C" />
+  <method name="Earthshatter" key="0000000003E6.07C" />
+  <method name="Barrier Field" key="0000000003EC.07C" />
+  <method name="Charge" key="0000000003E8.07C" />
+  <method name="Charge Knockback Scalar" key="000000006371.07C" />
+  <method name="Fire Strike" key="0000000003EA.07C" />
+  <method name="Rocket Hammer Knockback Scalar" key="0000000065A4.07C" />
+  <method name="Whole Hog" key="000000000795.07C" />
+  <method name="Whole Hog Knockback Scalar" key="00000000633E.07C" />
+  <method name="Chain Hook" key="00000000079D.07C" />
+  <method name="Take A Breather" key="00000000079B.07C" />
+  <method name="Gravitic Flux" key="00000000B352.07C" />
+  <method name="Accretion" key="00000000B345.07C" />
+  <method name="Accretion Knockback Scalar" key="00000000C865.07C" />
+  <method name="Experimental Barrier" key="00000000B350.07C" />
+  <method name="Kinetic Grasp" key="00000000B347.07C" />
+  <method name="Tactical Visor" key="000000000C89.07C" />
+  <method name="Biotic Field" key="000000000C87.07C" />
+  <method name="Helix Rockets" key="000000000C83.07C" />
+  <method name="Helix Rockets Knockback Scalar" key="000000006362.07C" />
+  <method name="Sprint" key="000000000C85.07C" />
+  <method name="EMP" key="00000000470C.07C" />
+  <method name="Hack" key="000000004711.07C" />
+  <method name="Stealth" key="000000007FFC.07C" />
+  <method name="Translocator" key="000000004700.07C" />
+  <method name="Photon Barrier" key="000000005462.07C" />
+  <method name="Sentry Turret" key="00000000018D.07C" />
+  <method name="Teleporter" key="000000000404.07C" />
+  <method name="Molten Core" key="0000000003CB.07C" />
+  <method name="Deploy Turret" key="000000009295.07C" />
+  <method name="Overload" key="000000009297.07C" />
+  <method name="Overload Duration Scalar" key="00000000A43D.07C" />
+  <method name="Rivet Gun Only" key="000000006025.07C" />
+  <method name="Pulse Bomb" key="000000000398.07C" />
+  <method name="Blink" key="000000000393.07C" />
+  <method name="Recall" key="000000000396.07C" />
+  <method name="Infra-sight" key="0000000003DD.07C" />
+  <method name="Grappling Hook" key="0000000003E0.07C" />
+  <method name="Venom Mine" key="00000000018A.07C" />
+  <method name="Primal Rage" key="0000000003F0.07C" />
+  <method name="Barrier Projector" key="0000000003F4.07C" />
+  <method name="Jump Pack" key="0000000003F2.07C" />
+  <method name="Jump Pack Knockback Scalar" key="000000006373.07C" />
+  <method name="Jump Pack Acceleration Scalar" key="00000000631D.07C" />
+  <method name="Minefield" key="00000000866F.07C" />
+  <method name="Minefield Knockback Scalar" key="00000000928B.07C" />
+  <method name="Adaptive Shield" key="000000008B75.07C" />
+  <method name="Grappling Claw" key="0000000082A6.07C" />
+  <method name="Grappling Claw Knockback Scalar" key="000000009288.07C" />
+  <method name="Piledriver" key="000000007547.07C" />
+  <method name="Roll" key="0000000072E4.07C" />
+  <method name="Roll Always Active" key="00000000928D.07C" />
+  <method name="Graviton Surge" key="000000000496.07C" />
+  <method name="Particle Barrier" key="00000000036B.07C" />
+  <method name="Projected Barrier" key="000000000494.07C" />
+  <method name="Particle Cannon Secondary Knockback Scalar" key="000000006340.07C" />
+  <method name="Transcendence" key="0000000003F9.07C" />
+  <method name="Orb Of Harmony" key="0000000003FC.07C" />
+  <method name="Orb Of Discord" key="0000000003FE.07C" />
+  <method name="Forge Hammer Only" key="000000006026.07C" />
+  <method name="Primal Rage Melee Knockback Scalar" key="00000000633F.07C" />
 </KeyLinkList>
