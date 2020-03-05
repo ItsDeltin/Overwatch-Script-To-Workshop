@@ -232,9 +232,9 @@ namespace Deltin.Deltinteger.Lobby
             return (T)(object)this;
         }
 
-        public T AddIntRange(string name, int min, int max, int defaultValue)
+        public T AddIntRange(string name, int min, int max, int defaultValue, string referenceName = null)
         {
-            Add(new RangeValue(true, name, min, max, defaultValue));
+            Add(new RangeValue(true, name, min, max, defaultValue) { ReferenceName = referenceName ?? name });
             return (T)(object)this;
         }
 
@@ -279,13 +279,13 @@ namespace Deltin.Deltinteger.Lobby
         private static readonly LobbySetting QuickMelee = new SwitchValue("Quick Melee", true);
         private static readonly LobbySetting SpawnWithUlt = new SwitchValue("Spawn With Ultimate Ready", false);
         private static readonly LobbySetting DamageDealt = new RangeValue("Damage Dealt", 10, 500);
-        private static readonly LobbySetting DamageRecieved = new RangeValue("Damage Recieved", 10, 500);
+        private static readonly LobbySetting DamageReceived = new RangeValue("Damage Received", 10, 500);
         private static readonly LobbySetting HealingDealt = new RangeValue("Healing Dealt", 10, 500);
-        private static readonly LobbySetting HealingRecieved = new RangeValue("Healing Recieved", 10, 500);
+        private static readonly LobbySetting HealingReceived = new RangeValue("Healing Received", 10, 500);
         private static readonly LobbySetting JumpVerticalSpeed = new RangeValue("Jump Vertical Speed", 25, 800);
         private static readonly LobbySetting MovementGravity = new RangeValue("Movement Gravity", 25, 400);
         private static readonly LobbySetting MovementSpeed = new RangeValue("Movement Speed", 50, 300);
-        private static readonly LobbySetting RecieveHeadshotsOnly = new SwitchValue("Recieve Headshots Only", false);
+        private static readonly LobbySetting ReceiveHeadshotsOnly = new SwitchValue("Receive Headshots Only", false);
         private static readonly LobbySetting PrimaryFire = new SwitchValue("Primary Fire", true);
         // * Generic Ammunition Info (Add to global) *
         private static readonly LobbySetting AmmunitionClipSizeScalar = new RangeValue("Ammunition Clip Size Scalar", 25, 500);
@@ -318,7 +318,13 @@ namespace Deltin.Deltinteger.Lobby
             new HeroSettingCollection("Baptiste").AddUlt("Amplification Matrix", true).AddProjectile(false).AddHealer().AddAbility("Immortality Field").AddAbility("Regenerative Burst").AddSecondaryFire(),
             new HeroSettingCollection("Bastion").AddUlt("Configuration: Tank", true).AddProjectile(false).AddHealer().AddAbility("Reconfigure", hasCooldown: false).AddAbility("Self-Repair", rechargeable: true),
             new HeroSettingCollection("Brigitte").AddUlt("Rally", true).AddHealer().AddAbility("Repair Pack").AddAbility("Shield Bash", hasKnockback: true).AddAbility("Whip Shot", hasKnockback: true).RemoveAmmunition(),
-            new HeroSettingCollection("D.va").AddUlt("Self-Destruct", true).AddAbility("Micro Missiles").AddAbility("Boosters", hasKnockback: true).AddAbility("Defense Matrix", rechargeable: true).RemoveAmmunition()
+            new HeroSettingCollection("D.va").AddUlt("Self-Destruct", true).AddAbility("Micro Missiles").AddAbility("Boosters", hasKnockback: true).AddAbility("Defense Matrix", rechargeable: true).RemoveAmmunition(),
+            new HeroSettingCollection("Doomfist").AddUlt("Meteor Strike", hasKnockback: true, hasDuration: true).AddProjectile(false).AddAbility("Rising Uppercut", hasKnockback: true).AddAbility("Rocket Punch", hasKnockback: true).AddAbility("Seismic Slam").AddRange("Ammunition Regeneration Time Scalar", 33, 500),
+            new HeroSettingCollection("Genji").AddUlt("Dragonblade", hasDuration: true).AddProjectile(false).AddSecondaryFire().AddAbility("Deflect").AddAbility("Switch Strike"),
+            new HeroSettingCollection("Hanzo").AddUlt("Dragonstrike").AddProjectile(true).RemoveAmmunition().AddAbility("Lunge").AddRange("Lunge Distance Scalar", 20, 300).AddAbility("Sonic Arrow").AddAbility("Storm Arrow").AddIntRange("Storm Arrow Quanity", 3, 12, 5),
+            new HeroSettingCollection("Junkrat").AddUlt("Rip-Tire", hasDuration: true).AddProjectile(true).AddAbility("Concussion Mine", hasKnockback: true).AddAbility("Steel Trap").AddRange("Frag Launcher Knockback Scalar", 0, 400),
+            new HeroSettingCollection("Lúcio").AddUlt("Sound Barrier").AddHealer().AddProjectile(false).AddAbility("Amp It Up").AddAbility("Crossfade", hasCooldown: false).AddAbility("Soundwave", hasKnockback: true),
+            new HeroSettingCollection("Mccree").AddUlt("Deadeye").AddProjectile(false).AddSecondaryFire().AddAbility("Combat Roll").AddAbility("Flashbang")
         };
 
 
@@ -337,12 +343,12 @@ namespace Deltin.Deltinteger.Lobby
             Add(QuickMelee);
             Add(SpawnWithUlt);
             Add(DamageDealt);
-            Add(DamageRecieved);
-            Add(HealingRecieved);
+            Add(DamageReceived);
+            Add(HealingReceived);
             Add(JumpVerticalSpeed);
             Add(MovementGravity);
             Add(MovementSpeed);
-            Add(RecieveHeadshotsOnly);
+            Add(ReceiveHeadshotsOnly);
             Add(PrimaryFire);
             Add(AmmunitionClipSizeScalar);
             Add(NoAmmunitionRequirement);

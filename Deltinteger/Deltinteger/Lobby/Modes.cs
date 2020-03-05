@@ -101,8 +101,11 @@ namespace Deltin.Deltinteger.Lobby
         private static LobbySetting CaptureSpeed = new RangeValue("Capture Speed Modifier", 10, 500);
         private static LobbySetting PayloadSpeed = new RangeValue("Payload Speed Modifier", 10, 500);
         private static LobbySetting CompetitiveRules = new SwitchValue("Competitive Rules", false);
-        private static LobbySetting Enabled_DefaultOn = new SwitchValue("Enabled", true) { ReferenceName = "Enabled_DefaultOn" };
-        private static LobbySetting Enabled_DefaultOff = new SwitchValue("Enabled", false) { ReferenceName = "Enabled_DefaultOff" };
+        private static LobbySetting Enabled_DefaultOn = new SwitchValue("Enabled", true) { ReferenceName = "Enabled On" };
+        private static LobbySetting Enabled_DefaultOff = new SwitchValue("Enabled", false) { ReferenceName = "Enabled Off" };
+        private static LobbySetting GameLengthInMinutes = new RangeValue(false, "Game Length In Minutes", 5, 15, 10);
+        private static LobbySetting SelfInitiatedRespawn = new SwitchValue("Self Initiated Respawn", true);
+        private static LobbySetting ScoreToWin_1to9 = new RangeValue(false, "Score To Win", 1, 9, 3) { ReferenceName = "Score To Win 1-9" };
 
         public static ModeSettingCollection[] AllModeSettings = new ModeSettingCollection[] {
             new ModeSettingCollection("All"),
@@ -110,6 +113,19 @@ namespace Deltin.Deltinteger.Lobby
             new ModeSettingCollection("Control", true).Competitive().AddCaptureSpeed().AddSelect("Limit Valid Control Points", "All", "First", "Second", "Third").AddIntRange("Score To Win", 1, 3, 2).AddRange("Scoring Speed Modifier", 10, 500),
             new ModeSettingCollection("Escort", true).Competitive().AddPayloadSpeed(),
             new ModeSettingCollection("Hybrid", true).Competitive().AddCaptureSpeed().AddPayloadSpeed(),
+            new ModeSettingCollection("Capture The Flag", false).AddSwitch("Blitz Flag Locations", false).AddSwitch("Damage Interrupts Flag Interaction", false)
+                .AddSelect("Flag Carrier Abilities", "Restricted", "All", "None").AddRange("Flag Dropped Lock Time", 0, 10, 5).AddRange("Flag Pickup Time", 0, 5, 0).AddRange("Flag Return Time", 0, 5, 4)
+                .AddRange("Flag Score Respawn Time", 0, 20, 15).AddIntRange("Game Length (Minutes)", 5, 15, 8).AddRange("Respawn Speed Buff Duration", 0, 60, 0).Add(ScoreToWin_1to9)
+                .AddSwitch("Team Needs Flag At Base To Score", false),
+            new ModeSettingCollection("Deathmatch", false).Add(GameLengthInMinutes).Add(SelfInitiatedRespawn).AddIntRange("Score To Win", 1, 50, 20),
+            new ModeSettingCollection("Elimination", false).AddRange("Hero Selection Time", 20, 60, 20).Add(ScoreToWin_1to9).AddSelect("Restrict Previously Used Heroes", "Off", "After Round Won", "After Round Played")
+                .AddSelect("Hero Selection", "Any", "Limited", "Random", "Random (Mirrored)").AddSelect("Limited Choice Pool", "Team Size +2", "Team Size", "Team Size +1", "Team Size +3")
+                .AddSwitch("Capture Objective Tiebreaker", true).AddIntRange("Tiebreaker After Match Time Elapsed", 30, 300, 105).AddIntRange("Time To Capture", 1, 7, 3).AddIntRange("Draw After Match Time Elasped With No Tiebreaker", 60, 300, 135)
+                .AddSwitch("Reveal Heroes", false).AddIntRange("Reveal Heroes After Match Time Elasped", 0, 180, 75),
+            new ModeSettingCollection("Team Deathmatch", false).Add(GameLengthInMinutes).AddSwitch("Mercy Resurrect Counteracts Kills", true).AddIntRange("Score To Win", 1, 200, 30).Add(SelfInitiatedRespawn).AddSwitch("Imbalanced Team Score To Win", false)
+                .AddIntRange("Team 1 Score To Win", 1, 200, 30).AddIntRange("Team 2 Score To Win", 1, 200, 30),
+            new ModeSettingCollection("Skirmish", false),
+            new ModeSettingCollection("Practice Range", false).AddSwitch("Spawn Training Bots", true).AddRange("Training Bot Respawn Time Scalar", 10, 500)
         };
 
         public string ModeName { get; }

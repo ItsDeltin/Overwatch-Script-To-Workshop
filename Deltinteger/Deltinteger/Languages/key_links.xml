@@ -643,4 +643,80 @@
   <method name="Receivers And Healers" key="00000000FD26.07C" />
   <method name="Restart Rule" key="000000010025.07C" />
   <method name="Do Nothing" key="000000010026.07C" />
+  <method name="settings" key="000000010030.07C" />
+  <method name="lobby" key="000000010031.07C" />
+  <method name="modes" key="000000010044.07C" />
+  <method name="heroes" key="000000010046.07C" />
+  <method name="Quick Melee" key="000000005B4C.07C" />
+  <method name="Spawn With Ultimate Ready" key="00000000765F.07C" />
+  <method name="Damage Dealt" key="0000000058A1.07C" />
+  <method name="Damage Received" key="0000000058A2.07C" />
+  <method name="Jump Vertical Speed" key="00000000631A.07C" />
+  <method name="Movement Gravity" key="0000000058C0.07C" />
+  <method name="Movement Speed" key="0000000058A6.07C" />
+  <method name="Ammunition Clip Size Scalar" key="000000005ECC.07C" />
+  <method name="No Ammunition Requirement" key="000000005ECD.07C" />
+  <method name="Ultimate Ability" key="0000000058A9.07C" />
+  <method name="Ultimate Generation" key="0000000058AA.07C" />
+  <method name="Ultimate Generation - Passive" key="00000000765C.07C" />
+  <method name="Ultimate Generation - Combat" key="00000000765B.07C" />
+  <method name="Ultimate Duration" key="000000007671.07C" />
+  <method name="Infinite Ultimate Duration" key="000000007672.07C" />
+  <method name="Projectile Speed" key="0000000058A7.07C" />
+  <method name="Projectile Gravity" key="0000000058C1.07C" />
+  <method name="Healing Dealt" key="0000000058A3.07C" />
+  <method name="No Automatic Fire" key="0000000060EB.07C" />
+  <method name="No Scope" key="0000000060F8.07C" />
+  <method name="Biotic Grenade" key="0000000046B2.07C" />
+  <method name="Sleep Dart" key="0000000046AE.07C" />
+  <method name="Coach Gun" key="000000008A5C.07C" />
+  <method name="Coach Gun Knockback Scalar (Enemy)" key="00000000A2E7.07C" />
+  <method name="Coach Gun Knockback Scalar (Self)" key="00000000A2E5.07C" />
+  <method name="Dynamite" key="000000008A5D.07C" />
+  <method name="Dynamite Fuse Time Scalar" key="00000000A2E6.07C" />
+  <method name="Immortality Field" key="00000000A3FF.07C" />
+  <method name="Regenerative Burst" key="00000000A7AB.07C" />
+  <method name="Reconfigure" key="0000000003C3.07C" />
+  <method name="Self-Repair" key="0000000003C5.07C" />
+  <method name="Repair Pack" key="0000000076C2.07C" />
+  <method name="Shield Bash" key="000000008030.07C" />
+  <method name="Shield Bash Cooldown Time" key="00000000819C.07C" />
+  <method name="Shield Bash Knockback Scalar" key="00000000819F.07C" />
+  <method name="Whip Shot" key="0000000076BE.07C" />
+  <method name="Whip Shot Knockback Scalar" key="0000000081A0.07C" />
+  <method name="Micro Missiles" key="000000006E30.07C" />
+  <method name="Boosters" key="000000001704.07C" />
+  <method name="Boosters Knockback Scalar" key="000000006333.07C" />
+  <method name="Defense Matrix" key="000000001706.07C" />
+  <method name="Enemy Health Bars" key="000000005888.07C" />
+  <method name="Game Mode Start" key="000000005A10.07C" />
+  <method name="All Slots Filled" key="000000005A11.07C" />
+  <method name="Immediately" key="000000005A12.07C" />
+  <method name="Manual" key="000000005A13.07C" />
+  <method name="Health Pack Respawn Time Scalar" key="000000005889.07C" />
+  <method name="Kill Cam" key="00000000596B.07C" />
+  <method name="Kill Feed" key="00000000588B.07C" />
+  <method name="Skins" key="00000000588C.07C" />
+  <method name="Spawn Health Packs" key="00000000588A.07C" />
+  <method name="Determined By Mode" key="0000000059FC.07C" />
+  <method name="Enabled" key="00000000EC7F.07C" />
+  <method name="Allow Hero Switching" key="00000000588D.07C" />
+  <method name="Hero Limit" key="000000005890.07C" />
+  <method name="1 Per Team" key="000000005892.07C" />
+  <method name="2 Per Team" key="000000005894.07C" />
+  <method name="1 Per Game" key="000000005893.07C" />
+  <method name="2 Per Game" key="000000005895.07C" />
+  <method name="Limit Roles" key="00000000596D.07C" />
+  <method name="2 Of Each Role Per Team" key="000000002C63.07C" />
+  <method name="Respawn As Random Hero" key="00000000588F.07C" />
+  <method name="Respawn Time Scalar" key="0000000058A8.07C" />
+  <method name="Competitive Rules" key="000000005897.07C" />
+  <method name="Capture Speed Modifier" key="000000005898.07C" />
+  <method name="Limit Valid Control Points" key="0000000058ED.07C" />
+  <method name="First" key="000000004371.07C" />
+  <method name="Second" key="000000005038.07C" />
+  <method name="Third" key="000000005039.07C" />
+  <method name="Score To Win" key="00000000589A.07C" />
+  <method name="Scoring Speed Modifier" key="000000005899.07C" />
+  <method name="Payload Speed Modifier" key="00000000589F.07C" />
 </KeyLinkList>

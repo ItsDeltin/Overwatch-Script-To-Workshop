@@ -34,7 +34,7 @@ namespace Deltin.Deltinteger.Lobby
 
         protected abstract RootSchema GetSchema();
 
-        public virtual string[] AdditionalKeywords() => null;
+        public virtual string[] AdditionalKeywords() => new string[0];
     }
 
     /// <summary>Enum lobby setting.</summary>

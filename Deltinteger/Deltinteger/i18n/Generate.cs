@@ -124,6 +124,7 @@ namespace Deltin.Deltinteger.I18n
             string datatoolPath = "C:/Users/Deltin/Downloads/toolchain-release/DataTool.exe";
             string overwatchPath = "C:/Program Files (x86)/Overwatch";
             string previous = "C:/Users/Deltin/Documents/GitHub/Overwatch-Script-To-Workshop/Deltinteger/Deltinteger/bin/Debug/netcoreapp3.0/Languages/key_links.xml";
+            string saveAt = previous;
 
             Console.OutputEncoding = System.Text.Encoding.Unicode;
 
@@ -150,6 +151,7 @@ namespace Deltin.Deltinteger.I18n
             
             while (true)
             {
+                Console.WriteLine("Write name of link to redo.");
                 string input = Console.ReadLine();
                 if (input == "") break;
 
@@ -162,9 +164,6 @@ namespace Deltin.Deltinteger.I18n
                 }
             }
             
-            Console.Write("Save key links to file: ");
-            string saveAt = Console.ReadLine();
-
             using (var fileStream = File.Create(saveAt))
             using (StreamWriter writer = new StreamWriter(fileStream))
                 serializer.Serialize(writer, new KeyLinkList(links.ToArray()));
