@@ -107,6 +107,17 @@
             "internalConsoleOptions": "openOnSessionStart"
         },
         {
+            "name": "Setting schema",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/bin/Debug/netcoreapp3.0/Deltinteger.dll",
+            "args":["--schema"],
+            "console": "integratedTerminal",
+            "stopAtEntry": false,
+            "internalConsoleOptions": "openOnSessionStart"
+        },
+        {
             "name": "Debug ANTLR4 grammar",
             "type": "antlr-debug",
             "request": "launch",

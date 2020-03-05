@@ -16,10 +16,11 @@ namespace Deltin.Deltinteger.LanguageServer
 {
     public class ConfigurationHandler : IDidChangeConfigurationHandler
     {
-        public static bool OptimizeOutput = true;
+        public bool OptimizeOutput { get; private set; } = true;
         private DeltintegerLanguageServer _languageServer { get; }
         public bool ReferencesCodeLens { get; private set; }
         public bool ImplementsCodeLens { get; private set; }
+        public OutputLanguage OutputLanguage { get; private set; }
 
         public ConfigurationHandler(DeltintegerLanguageServer languageServer)
         {
@@ -36,8 +37,8 @@ namespace Deltin.Deltinteger.LanguageServer
 
                 ReferencesCodeLens = config.codelens.references;
                 ImplementsCodeLens = config.codelens.implements;
-
-                LanguageInfo.LoadLanguage(GetOutputLanguage(config.outputLanguage));
+                OutputLanguage = GetOutputLanguage(config.outputLanguage);
+                LanguageInfo.LoadLanguage(OutputLanguage);
                 OptimizeOutput = config.optimizeOutput;
             }
 

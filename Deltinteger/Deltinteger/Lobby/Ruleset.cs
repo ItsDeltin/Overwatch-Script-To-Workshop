@@ -245,6 +245,12 @@ namespace Deltin.Deltinteger.Lobby
             return (T)(object)this;
         }
 
+        public T AddSelectRef(string referenceName, string name, params string[] values)
+        {
+            Add(new SelectValue(name, values) { ReferenceName = referenceName });
+            return (T)(object)this;
+        }
+
         public T AddSelect(string name, params string[] values)
         {
             Add(new SelectValue(name, values));

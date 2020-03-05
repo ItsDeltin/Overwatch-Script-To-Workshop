@@ -70,6 +70,7 @@ namespace Deltin.Deltinteger
                     wiki.ToXML(outputPath);
                 }
             }
+            else if (args.ElementAtOrDefault(0) == "--schema") Deltin.Deltinteger.Lobby.Ruleset.GenerateSchema();
             else
             {
                 string script = args.ElementAtOrDefault(0);

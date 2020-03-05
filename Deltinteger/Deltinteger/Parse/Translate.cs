@@ -34,6 +34,7 @@ namespace Deltin.Deltinteger.Parse
         public TranslateRule InitialGlobal { get; private set; }
         public TranslateRule InitialPlayer { get; private set; }
         private readonly OutputLanguage Language;
+        private readonly bool OptimizeOutput;
         private JObject MergedLobbySettings;
 
         public DeltinScript(TranslateSettings translateSettings)
@@ -41,6 +42,7 @@ namespace Deltin.Deltinteger.Parse
             FileGetter = translateSettings.FileGetter;
             Diagnostics = translateSettings.Diagnostics;
             Language = translateSettings.OutputLanguage;
+            OptimizeOutput = translateSettings.OptimizeOutput;
 
             types.AddRange(CodeType.DefaultTypes);
             Importer = new Importer(translateSettings.Root.Uri);
@@ -320,7 +322,7 @@ namespace Deltin.Deltinteger.Parse
 
             // Get the rules.
             foreach (var rule in WorkshopRules)
-                result.AppendLine(rule.ToWorkshop(Language, ConfigurationHandler.OptimizeOutput));
+                result.AppendLine(rule.ToWorkshop(Language, OptimizeOutput));
             
             WorkshopCode = result.ToString();
         }
