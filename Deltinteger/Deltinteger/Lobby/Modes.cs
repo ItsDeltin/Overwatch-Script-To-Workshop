@@ -83,7 +83,8 @@ namespace Deltin.Deltinteger.Lobby
         private static void PrintMode(WorkshopBuilder builder, string modeName, WorkshopValuePair mode)
         {
             if (mode == null) return;
-
+            if (!mode.TryGetValue("Enabled", out object value) || value as bool? == false) return;
+            mode.Remove("Enabled");
             builder.AppendKeywordLine(modeName);
             builder.AppendLine("{");
             builder.Indent();

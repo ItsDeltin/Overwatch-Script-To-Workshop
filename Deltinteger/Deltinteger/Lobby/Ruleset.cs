@@ -194,6 +194,7 @@ namespace Deltin.Deltinteger.Lobby
                 string value;
 
                 if (setting.Value is string asString) value = builder.Translate(asString);
+                else if (setting.Value is bool asBool) value = builder.Translate(asBool ? "True" : "False");
                 else value = setting.Value.ToString();
 
                 builder.AppendLine($"{name}: {value}");
