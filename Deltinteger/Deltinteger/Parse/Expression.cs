@@ -320,4 +320,47 @@ namespace Deltin.Deltinteger.Parse
         public Scope ReturningScope() => baseType?.GetObjectScope();
         public CodeType Type() => baseType;
     }
+
+    public class IsAction : IExpression
+    {
+        readonly IExpression expression;
+        readonly ClassType checkingIfType;
+
+        public IsAction(ParseInfo parseInfo, Scope scope, DeltinScriptParser.E_isContext isContext)
+        {
+            // Get the expression.
+            expression = DeltinScript.GetExpression(parseInfo, scope, isContext.expr());
+
+            // Get the type.
+            if (isContext.type == null)
+                parseInfo.Script.Diagnostics.Error("Expected type name.", DocRange.GetRange(isContext.IS()));
+            else
+            {
+                CodeType type = parseInfo.TranslateInfo.GetCodeType(isContext.type.Text, parseInfo.Script.Diagnostics, DocRange.GetRange(isContext.type));
+
+                // Make sure the received type is a class.
+                if (type != null && type is ClassType == false)
+                    parseInfo.Script.Diagnostics.Error("Expected a class type.", DocRange.GetRange(isContext.type));
+                else
+                    checkingIfType = (ClassType)type;
+            }
+        }
+
+        public IWorkshopTree Parse(ActionSet actionSet, bool asElement = true)
+        {
+            ClassData classData = actionSet.Translate.DeltinScript.SetupClasses();
+
+            // Parse the expression.
+            IWorkshopTree expressionResult = expression.Parse(actionSet);
+
+            // Get the class identifier of the input expression.
+            IWorkshopTree classIdentifier = Element.Part<V_ValueInArray>(classData.ClassIndexes.GetVariable(), expressionResult);
+
+            // Check if the expression's class identifier and the type are equal.
+            return new V_Compare(classIdentifier, Operators.Equal, new V_Number(checkingIfType.Identifier));
+        }
+
+        public Scope ReturningScope() => null;
+        public CodeType Type() => null;
+    }
 }

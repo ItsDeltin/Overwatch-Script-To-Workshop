@@ -39,6 +39,7 @@ expr
 	| expr SEPERATOR (method | variable)?											   #e_expr_tree
 	| NOT expr                                                                         #e_not
 	| '-' expr                                                                         #e_inverse
+	| expr IS type=PART?                                                               #e_is
 	| <assoc=right> left=expr op=('^' | '*' | '/' | '%') right=expr                    #e_op_1
 	| left=expr op=('+' | '-') right=expr                                              #e_op_2
 	| left=expr op=(LESS_THAN | '<=' | '==' | '>=' | GREATER_THAN | '!=') right=expr   #e_op_compare
@@ -234,6 +235,7 @@ SWITCH    : 'switch'	;
 CASE      : 'case'		;
 DEFAULT   : 'default'   ;
 BASE      : 'base'      ;
+IS        : 'is'		;
 
 EQUALS          : '='  ;
 EQUALS_POW      : '^=' ;
