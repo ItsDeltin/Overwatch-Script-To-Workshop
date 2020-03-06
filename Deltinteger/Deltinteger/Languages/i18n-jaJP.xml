@@ -647,6 +647,9 @@
     <method name="lobby" alt="ロビー" />
     <method name="modes" alt="モード" />
     <method name="heroes" alt="ヒーロー" />
+    <method name="General" alt="一般" />
+    <method name="Team 1" alt="チーム1" />
+    <method name="Team 2" alt="チーム2" />
     <method name="%1$s Cooldown Time" alt="%1$s クールダウン時間" />
     <method name="%1$s Recharge Rate" alt="%1$s リチャージ・レート" />
     <method name="%1$s Maximum Time" alt="%1$s 最大時間" />

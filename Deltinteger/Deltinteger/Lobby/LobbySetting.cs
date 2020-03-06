@@ -10,6 +10,7 @@ namespace Deltin.Deltinteger.Lobby
     {
         public string Name { get; }
         public string ReferenceName { get; set; }
+        public SettingNameResolver TitleResolver { get; set; }
         private RootSchema Reference;
 
         public LobbySetting(string name)
@@ -34,6 +35,14 @@ namespace Deltin.Deltinteger.Lobby
 
         protected abstract RootSchema GetSchema();
 
+        public abstract string GetValue(WorkshopBuilder builder, object value);
+
+        public string ResolveName(WorkshopBuilder builder)
+        {
+            if (TitleResolver == null) return builder.Translate(Name);
+            else return TitleResolver.ResolveName(builder);
+        }
+
         public virtual string[] AdditionalKeywords() => new string[0];
     }
 
@@ -56,6 +65,8 @@ namespace Deltin.Deltinteger.Lobby
             return schema;
         }
 
+        public override string GetValue(WorkshopBuilder builder, object value) => builder.Translate(value.ToString());
+
         public override string[] AdditionalKeywords() => Values;
     }
 
@@ -68,6 +79,8 @@ namespace Deltin.Deltinteger.Lobby
         {
             Default = defaultValue;
         }
+
+        public override string GetValue(WorkshopBuilder builder, object value) => builder.Translate((bool)value ? "On" : "Off");
 
         protected override RootSchema GetSchema()
         {
@@ -91,6 +104,12 @@ namespace Deltin.Deltinteger.Lobby
             Min = min;
             Max = max;
             Default = defaultValue;
+        }
+
+        public override string GetValue(WorkshopBuilder builder, object value)
+        {
+            if (Integer) return value.ToString();
+            else return value.ToString() + "%";
         }
 
         public RangeValue(bool integer, string name, double min, double max, double defaultValue = 100) : this(name, min, max, defaultValue)

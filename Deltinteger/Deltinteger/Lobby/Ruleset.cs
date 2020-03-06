@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Linq;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.I18n;
 using Newtonsoft.Json;
@@ -32,6 +33,8 @@ namespace Deltin.Deltinteger.Lobby
 
         public void ToWorkshop(WorkshopBuilder builder)
         {
+            List<LobbySetting> allSettings = GetAllSettings();
+
             builder.AppendKeywordLine("settings");
             builder.AppendLine("{");
             builder.Indent();
@@ -42,25 +45,36 @@ namespace Deltin.Deltinteger.Lobby
                 builder.AppendKeywordLine("lobby");
                 builder.AppendLine("{");
                 builder.Indent();
-                Lobby.ToWorkshop(builder);
+                Lobby.ToWorkshop(builder, allSettings);
                 builder.Unindent();
                 builder.AppendLine("}");
             }
             
             // Get the mode settings.
-            if (Modes != null) Modes.ToWorkshop(builder);
+            if (Modes != null) Modes.ToWorkshop(builder, allSettings);
 
             // Get the hero settings.
-            if (Heroes != null) Heroes.ToWorkshop(builder);
+            if (Heroes != null) Heroes.ToWorkshop(builder, allSettings);
 
             builder.Unindent();
             builder.AppendLine("}");
         }
 
+        public static List<LobbySetting> GetAllSettings()
+        {
+            List<LobbySetting> settings = new List<LobbySetting>();
+            settings.AddRange(LobbySettings);
+
+            foreach (var heroSettings in HeroSettingCollection.AllHeroSettings) settings.AddRange(heroSettings);
+            foreach (var modeSettings in ModeSettingCollection.AllModeSettings) settings.AddRange(modeSettings);
+
+            return settings;
+        }
+
         public static Ruleset Parse(JObject json)
         {
             Ruleset result = json.ToObject<Ruleset>();
-            result.Modes?.MergeModeSettings();
+            //result.Modes?.MergeModeSettings();
             return result;
         }
 
@@ -169,15 +183,39 @@ namespace Deltin.Deltinteger.Lobby
         [JsonProperty("Team 2")]
         public HeroList Team2 { get; set; }
 
-        public void ToWorkshop(WorkshopBuilder builder)
+        public void ToWorkshop(WorkshopBuilder builder, List<LobbySetting> allSettings)
         {
             builder.AppendKeywordLine("heroes");
             builder.AppendLine("{");
             builder.Indent();
 
-            General?.ToWorkshop(builder);
-            Team1  ?.ToWorkshop(builder);
-            Team2  ?.ToWorkshop(builder);
+            if (General != null)
+            {
+                builder.AppendKeywordLine("General");
+                builder.AppendLine("{");
+                builder.Indent();
+                General.ToWorkshop(builder, allSettings);
+                builder.Unindent();
+                builder.AppendLine("}");
+            }
+            if (Team1 != null)
+            {
+                builder.AppendKeywordLine("Team 1");
+                builder.AppendLine("{");
+                builder.Indent();
+                Team1.ToWorkshop(builder, allSettings);
+                builder.Unindent();
+                builder.AppendLine("}");
+            }
+            if (Team2 != null)
+            {
+                builder.AppendKeywordLine("Team 2");
+                builder.AppendLine("{");
+                builder.Indent();
+                Team2.ToWorkshop(builder, allSettings);
+                builder.Unindent();
+                builder.AppendLine("}");
+            }
 
             builder.Unindent();
             builder.AppendLine("}");
@@ -186,16 +224,15 @@ namespace Deltin.Deltinteger.Lobby
 
     public class WorkshopValuePair : Dictionary<String, object>
     {
-        public void ToWorkshop(WorkshopBuilder builder)
+        public void ToWorkshop(WorkshopBuilder builder, List<LobbySetting> allSettings)
         {
             foreach (var setting in this)
             {
-                string name = SettingNameResolver.ResolveName(builder, setting.Key);
-                string value;
+                // Get the related setting.
+                LobbySetting relatedSetting = allSettings.FirstOrDefault(ls => ls.Name == setting.Key);
 
-                if (setting.Value is string asString) value = builder.Translate(asString);
-                else if (setting.Value is bool asBool) value = builder.Translate(asBool ? "True" : "False");
-                else value = setting.Value.ToString();
+                string name = relatedSetting.ResolveName(builder);
+                string value = relatedSetting.GetValue(builder, setting.Value);
 
                 builder.AppendLine($"{name}: {value}");
             }
@@ -204,14 +241,14 @@ namespace Deltin.Deltinteger.Lobby
 
     public class HeroList : Dictionary<String, WorkshopValuePair>
     {
-        public void ToWorkshop(WorkshopBuilder builder)
+        public void ToWorkshop(WorkshopBuilder builder, List<LobbySetting> allSettings)
         {
             foreach (var hero in this)
             {
                 builder.AppendLine($"{hero.Key}");
                 builder.AppendLine("{");
                 builder.Indent();
-                hero.Value.ToWorkshop(builder);
+                hero.Value.ToWorkshop(builder, allSettings);
                 builder.Unindent();
                 builder.AppendLine("}");
             }
@@ -269,6 +306,9 @@ namespace Deltin.Deltinteger.Lobby
         {
             List<string> keywords = new List<string>();
 
+            keywords.Add("General");
+            keywords.Add("Team 1");
+            keywords.Add("Team 2");
             keywords.Add(AbilityNameResolver.CooldownTime);
             keywords.Add(AbilityNameResolver.RechargeRate);
             keywords.Add(AbilityNameResolver.MaximumTime);

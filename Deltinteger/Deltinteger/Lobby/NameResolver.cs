@@ -6,7 +6,6 @@ namespace Deltin.Deltinteger.Lobby
 {
     public class SettingNameResolver
     {
-        private static readonly List<SettingNameResolver> NameResolvers = new List<SettingNameResolver>();
         public string Title { get; }
 
         public SettingNameResolver(string title)
@@ -17,24 +16,17 @@ namespace Deltin.Deltinteger.Lobby
         public virtual string ResolveName(WorkshopBuilder builder) => builder.Translate(Title);
         public virtual string[] KeywordInfo() => new string[] { Title };
 
-        public static void AddResolver(SettingNameResolver resolver)
-        {
-            NameResolvers.Add(resolver);
-        }
-
-        public static string ResolveName(WorkshopBuilder builder, string title)
-        {
-            foreach (SettingNameResolver resolver in NameResolvers)
-                if (resolver.Title == title)
-                    return resolver.ResolveName(builder);
-            return builder.Translate(title);
-        }
-
         public static string[] Keywords(string title)
         {
-            foreach (SettingNameResolver resolver in NameResolvers)
-                if (resolver.Title == title)
-                    return resolver.KeywordInfo();
+            List<LobbySetting> allSettings = Ruleset.GetAllSettings();
+
+            foreach (LobbySetting setting in allSettings)
+                if (setting.Name == title)
+                {
+                    if (setting.TitleResolver == null) return new string[] { title };
+                    return setting.TitleResolver.KeywordInfo();
+                }
+            
             return new string[] { title };
         }
     }
@@ -96,8 +88,8 @@ namespace Deltin.Deltinteger.Lobby
 
         private string SegmentTranslate(WorkshopBuilder builder, string segmentTitle) 
         {
-            if (LanguageInfo.IsKeyword(Title)) return builder.Translate(Title);
-            return builder.Translate(segmentTitle).Replace("%1$s", builder.Translate(AbilityName));
+            if (LanguageInfo.IsKeyword(Title)) return builder.Translate(Title).Replace("(", "").Replace(")", "");
+            return builder.Translate(segmentTitle).Replace("%1$s", builder.Translate(AbilityName)).Replace("(", "").Replace(")", "");
         }
 
         public override string[] KeywordInfo() => new string[] { AbilityName };

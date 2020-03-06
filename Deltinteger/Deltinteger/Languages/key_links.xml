@@ -901,4 +901,7 @@
   <method name="Orb Of Discord" key="0000000003FE.07C" />
   <method name="Forge Hammer Only" key="000000006026.07C" />
   <method name="Primal Rage Melee Knockback Scalar" key="00000000633F.07C" />
+  <method name="General" key="0000000059A7.07C" />
+  <method name="Team 1" key="000000009AB9.07C" />
+  <method name="Team 2" key="000000009ABA.07C" />
 </KeyLinkList>

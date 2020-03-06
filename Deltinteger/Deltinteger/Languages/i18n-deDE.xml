@@ -647,6 +647,9 @@
     <method name="lobby" alt="Lobby" />
     <method name="modes" alt="modi" />
     <method name="heroes" alt="helden" />
+    <method name="General" alt="Allgemein" />
+    <method name="Team 1" alt="Team 1" />
+    <method name="Team 2" alt="Team 2" />
     <method name="%1$s Cooldown Time" alt="%1$s – Abklingzeit" />
     <method name="%1$s Recharge Rate" alt="%1$s – Aufladungsrate" />
     <method name="%1$s Maximum Time" alt="%1$s – Maximale Dauer" />

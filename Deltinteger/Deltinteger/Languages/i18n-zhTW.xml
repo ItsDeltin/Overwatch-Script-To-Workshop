@@ -647,6 +647,9 @@
     <method name="lobby" alt="大廳" />
     <method name="modes" alt="模式" />
     <method name="heroes" alt="英雄" />
+    <method name="General" alt="一般" />
+    <method name="Team 1" alt="隊伍1" />
+    <method name="Team 2" alt="隊伍2" />
     <method name="%1$s Cooldown Time" alt="%1$s的冷卻時間" />
     <method name="%1$s Recharge Rate" alt="%1$s的能量補充速度" />
     <method name="%1$s Maximum Time" alt="%1$s的最大持續時間" />

@@ -102,17 +102,17 @@ namespace Deltin.Deltinteger.Lobby
                 knockback = name + " " + knockback;
             }
 
-            // Add the settings.
-            Add(new SwitchValue(isEnabled, true));
-            Add(new RangeValue(generation, 10, 500));
-            Add(new RangeValue(passive, 0, 500));
-            Add(new RangeValue(combat, 0, 500));
+            // i18n name resolvers.
+            AbilityNameResolver enabledResolver           = new AbilityNameResolver(AbilityNameType.UltimateSwitchSetting    , isEnabled , name ?? isEnabled ); // Toggle
+            AbilityNameResolver generationResolver        = new AbilityNameResolver(AbilityNameType.UltimateGeneration       , generation, name ?? generation); // Generation
+            AbilityNameResolver passiveGenerationResolver = new AbilityNameResolver(AbilityNameType.UltimateGenerationPassive, passive   , name ?? passive   ); // Passive Generation
+            AbilityNameResolver combatGenerationResolver  = new AbilityNameResolver(AbilityNameType.UltimateGenerationCombat , combat    , name ?? combat    ); // Combat Generation
 
-            // Add i18n name resolvers.
-            SettingNameResolver.AddResolver(new AbilityNameResolver(AbilityNameType.UltimateSwitchSetting    , isEnabled , name ?? isEnabled )); // Toggle
-            SettingNameResolver.AddResolver(new AbilityNameResolver(AbilityNameType.UltimateGeneration       , generation, name ?? generation)); // Generation
-            SettingNameResolver.AddResolver(new AbilityNameResolver(AbilityNameType.UltimateGenerationPassive, passive   , name ?? passive   )); // Passive Generation
-            SettingNameResolver.AddResolver(new AbilityNameResolver(AbilityNameType.UltimateGenerationCombat , combat    , name ?? combat    )); // Combat Generation
+            // Add the settings.
+            Add(new SwitchValue(isEnabled, true) { TitleResolver = enabledResolver });
+            Add(new RangeValue(generation, 10, 500) { TitleResolver = generationResolver });
+            Add(new RangeValue(passive, 0, 500) { TitleResolver = passiveGenerationResolver });
+            Add(new RangeValue(combat, 0, 500) { TitleResolver = combatGenerationResolver });
 
             if (hasDuration)
             {
@@ -134,8 +134,9 @@ namespace Deltin.Deltinteger.Lobby
             if (hasCooldown)
             {
                 string cooldownTimeTitle = name + " Cooldown Time";
-                Add(new RangeValue(cooldownTimeTitle, 0, 500));
-                SettingNameResolver.AddResolver(new AbilityNameResolver(AbilityNameType.CooldownTime, cooldownTimeTitle, name));
+                Add(new RangeValue(cooldownTimeTitle, 0, 500) {
+                    TitleResolver = new AbilityNameResolver(AbilityNameType.CooldownTime, cooldownTimeTitle, name)
+                });
             }
 
             // If the ability has a knockback scalar, add the knockback option.
@@ -154,14 +155,16 @@ namespace Deltin.Deltinteger.Lobby
             if (rechargeable)
             {
                 string rechargeRateTitle = name + " Recharge Rate";
-                Add(new RangeValue(rechargeRateTitle, 0, 500));
-                SettingNameResolver.AddResolver(new AbilityNameResolver(AbilityNameType.CooldownTime, rechargeRateTitle, name));
+                Add(new RangeValue(rechargeRateTitle, 0, 500) {
+                    TitleResolver = new AbilityNameResolver(AbilityNameType.CooldownTime, rechargeRateTitle, name)
+                });
 
                 if (!noMaximumTime)
                 {
                     string maximumTimeTitle = name + " Maximum Time";
-                    Add(new RangeValue(maximumTimeTitle, 20, 500));
-                    SettingNameResolver.AddResolver(new AbilityNameResolver(AbilityNameType.CooldownTime, maximumTimeTitle, name));
+                    Add(new RangeValue(maximumTimeTitle, 20, 500) {
+                        TitleResolver = new AbilityNameResolver(AbilityNameType.CooldownTime, maximumTimeTitle, name)
+                    });
                 }
             }
             return this;

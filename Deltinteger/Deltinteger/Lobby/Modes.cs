@@ -59,38 +59,49 @@ namespace Deltin.Deltinteger.Lobby
             set.Add(pair.Key, pair.Value);
         }
 
-        public void ToWorkshop(WorkshopBuilder builder)
+        public void ToWorkshop(WorkshopBuilder builder, List<LobbySetting> allSettings)
         {
             builder.AppendKeywordLine("modes");
             builder.AppendLine("{");
             builder.Indent();
             
-            PrintMode(builder, "Assault", Assault);
-            PrintMode(builder, "CaptureTheFlag", CaptureTheFlag);
-            PrintMode(builder, "Control", Control);
-            PrintMode(builder, "Deathmatch", Deathmatch);
-            PrintMode(builder, "Elimination", Elimination);
-            PrintMode(builder, "Escort", Escort);
-            PrintMode(builder, "Hybrid", Hybrid);
-            PrintMode(builder, "PracticeRange", PracticeRange);
-            PrintMode(builder, "Skirmish", Skirmish);
-            PrintMode(builder, "TeamDeathmatch", TeamDeathmatch);
+            PrintMode(builder, allSettings, "General", All);
+            EnabledCheck(builder, allSettings, "Assault", Assault);
+            EnabledCheck(builder, allSettings, "CaptureTheFlag", CaptureTheFlag);
+            EnabledCheck(builder, allSettings, "Control", Control);
+            EnabledCheck(builder, allSettings, "Deathmatch", Deathmatch);
+            EnabledCheck(builder, allSettings, "Elimination", Elimination);
+            EnabledCheck(builder, allSettings, "Escort", Escort);
+            EnabledCheck(builder, allSettings, "Hybrid", Hybrid);
+            EnabledCheck(builder, allSettings, "PracticeRange", PracticeRange);
+            EnabledCheck(builder, allSettings, "Skirmish", Skirmish);
+            EnabledCheck(builder, allSettings, "TeamDeathmatch", TeamDeathmatch);
 
             builder.Unindent();
             builder.AppendLine("}");
         }
 
-        private static void PrintMode(WorkshopBuilder builder, string modeName, WorkshopValuePair mode)
+        public static void EnabledCheck(WorkshopBuilder builder, List<LobbySetting> allSettings, string modeName, WorkshopValuePair mode)
         {
             if (mode == null) return;
             if (!mode.TryGetValue("Enabled", out object value) || value as bool? == false) return;
             mode.Remove("Enabled");
+            PrintMode(builder, allSettings, modeName, mode);
+        }
+
+        private static void PrintMode(WorkshopBuilder builder, List<LobbySetting> allSettings, string modeName, WorkshopValuePair mode)
+        {
+            if (mode == null) return;
             builder.AppendKeywordLine(modeName);
-            builder.AppendLine("{");
-            builder.Indent();
-            mode.ToWorkshop(builder);
-            builder.Unindent();
-            builder.AppendLine("}");
+
+            if (mode.Count > 0)
+            {
+                builder.AppendLine("{");
+                builder.Indent();
+                mode.ToWorkshop(builder, allSettings);
+                builder.Unindent();
+                builder.AppendLine("}");
+            }
         }
     }
     

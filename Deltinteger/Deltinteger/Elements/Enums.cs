@@ -181,7 +181,7 @@ namespace Deltin.Deltinteger.Elements
             if (@Enum.Type == typeof(Button) && WorkshopName.StartsWith("Ability")) return numTranslate("Ability");
             if ((@Enum.Type == typeof(Team) || @Enum.Type == typeof(Color)) && WorkshopName.StartsWith("Team")) return numTranslate("Team");
             
-            return LanguageInfo.Translate(language, WorkshopName);
+            return LanguageInfo.Translate(language, I18nKeyword);
         }
 
         public string GetI18nKeyword()

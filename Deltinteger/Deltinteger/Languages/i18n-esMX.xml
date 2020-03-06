@@ -647,6 +647,9 @@
     <method name="lobby" alt="sala de espera" />
     <method name="modes" alt="modos" />
     <method name="heroes" alt="héroes" />
+    <method name="General" alt="General" />
+    <method name="Team 1" alt="Equipo 1" />
+    <method name="Team 2" alt="Equipo 2" />
     <method name="%1$s Cooldown Time" alt="Tiempo de reutilización de %1$s" />
     <method name="%1$s Recharge Rate" alt="%1$s Velocidad de recarga" />
     <method name="%1$s Maximum Time" alt="%1$s Tiempo máximo" />

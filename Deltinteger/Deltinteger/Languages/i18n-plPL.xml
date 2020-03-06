@@ -647,6 +647,9 @@
     <method name="lobby" alt="poczekalnia" />
     <method name="modes" alt="tryby gry" />
     <method name="heroes" alt="bohaterowie" />
+    <method name="General" alt="Ogólne" />
+    <method name="Team 1" alt="Drużyna 1" />
+    <method name="Team 2" alt="Drużyna 2" />
     <method name="%1$s Cooldown Time" alt="Czas odnowienia: %1$s" />
     <method name="%1$s Recharge Rate" alt="Tempo doładowania (%1$s)" />
     <method name="%1$s Maximum Time" alt="Maksymalny czas (%1$s)" />

@@ -647,6 +647,9 @@
     <method name="lobby" alt="lobby" />
     <method name="modes" alt="modes" />
     <method name="heroes" alt="heroes" />
+    <method name="General" alt="Общие" />
+    <method name="Team 1" alt="Команда 1" />
+    <method name="Team 2" alt="Команда 2" />
     <method name="%1$s Cooldown Time" alt="Время восстановления: %1$s" />
     <method name="%1$s Recharge Rate" alt="Скорость зарядки: %1$s" />
     <method name="%1$s Maximum Time" alt="Макс. время: %1$s" />
