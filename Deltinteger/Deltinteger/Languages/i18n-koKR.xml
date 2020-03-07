@@ -652,6 +652,8 @@
     <method name="Team 2" alt="2팀" />
     <method name="enabled maps" alt="enabled maps" />
     <method name="disabled maps" alt="disabled maps" />
+    <method name="enabled heroes" alt="enabled heroes" />
+    <method name="disabled heroes" alt="disabled heroes" />
     <method name="%1$s Cooldown Time" alt="%1$s 재사용 대기시간" />
     <method name="%1$s Recharge Rate" alt="%1$s 충전율" />
     <method name="%1$s Maximum Time" alt="%1$s 최대 시간" />

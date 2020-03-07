@@ -119,7 +119,31 @@ namespace Deltin.Deltinteger.Lobby
         private static RootSchema GetHeroList(SchemaGenerate generate)
         {
             RootSchema schema = new RootSchema().InitProperties();
-            foreach (var heroSettings in HeroSettingCollection.AllHeroSettings) schema.Properties.Add(heroSettings.HeroName, heroSettings.GetSchema(generate));
+            List<string> heroNames = new List<string>();
+            foreach (var heroSettings in HeroSettingCollection.AllHeroSettings)
+            {
+                schema.Properties.Add(heroSettings.HeroName, heroSettings.GetSchema(generate));
+                heroNames.Add(heroSettings.HeroName);
+            }
+
+            // Create the map schema.
+            RootSchema heroes = new RootSchema {
+                Type = SchemaObjectType.Array,
+                UniqueItems = true,
+                Items = new RootSchema() {
+                    Type = SchemaObjectType.String,
+                    Enum = heroNames.ToArray()
+                }
+            };
+            // Add the map schema to the list of definitions.
+            generate.Definitions.Add("All Heroes", heroes);
+
+            RootSchema allHeroesReference = new RootSchema() { Ref = "#/definitions/All Heroes" };
+
+            // Add the map schema reference to the current schema. 
+            schema.Properties.Add("Enabled Heroes", allHeroesReference);
+            schema.Properties.Add("Disabled Heroes", allHeroesReference);
+
             return schema;
         }
 
@@ -151,6 +175,8 @@ namespace Deltin.Deltinteger.Lobby
             keywords.Add("Team 2");
             keywords.Add("enabled maps");
             keywords.Add("disabled maps");
+            keywords.Add("enabled heroes");
+            keywords.Add("disabled heroes");
             keywords.Add(AbilityNameResolver.CooldownTime);
             keywords.Add(AbilityNameResolver.RechargeRate);
             keywords.Add(AbilityNameResolver.MaximumTime);
@@ -171,6 +197,18 @@ namespace Deltin.Deltinteger.Lobby
             }
 
             return keywords.ToArray();
+        }
+
+        public static void WriteList(WorkshopBuilder builder, string[] maps)
+        {
+            builder.AppendLine("{");
+            builder.Indent();
+
+            foreach (string map in maps)
+                builder.AppendLine(builder.Translate(map).RemoveStructuralChars());
+
+            builder.Unindent();
+            builder.AppendLine("}");
         }
     }
 
@@ -256,16 +294,36 @@ namespace Deltin.Deltinteger.Lobby
         }
     }
 
-    public class HeroList : Dictionary<String, WorkshopValuePair>
+    public class HeroList
     {
+        [JsonProperty("Enabled Heroes")]
+        public string[] EnabledHeroes { get; set; }
+
+        [JsonProperty("Disabled Heroes")]
+        public string[] DisabledHeroes { get; set; }
+
+        [JsonExtensionData]
+        public Dictionary<string, object> Settings { get; set; }
+
         public void ToWorkshop(WorkshopBuilder builder, List<LobbySetting> allSettings)
         {
-            foreach (var hero in this)
+            if (EnabledHeroes != null)
+            {
+                builder.AppendKeywordLine("enabled heroes");
+                Ruleset.WriteList(builder, EnabledHeroes);
+            }
+            if (DisabledHeroes != null)
+            {
+                builder.AppendKeywordLine("disabled heroes");
+                Ruleset.WriteList(builder, DisabledHeroes);
+            }
+
+            foreach (var hero in Settings)
             {
                 builder.AppendLine($"{hero.Key}");
                 builder.AppendLine("{");
                 builder.Indent();
-                hero.Value.ToWorkshop(builder, allSettings);
+                WorkshopValuePair.ToWorkshop(((JObject)hero.Value).ToObject<Dictionary<string, object>>(), builder, allSettings);
                 builder.Unindent();
                 builder.AppendLine("}");
             }

@@ -652,6 +652,8 @@
     <method name="Team 2" alt="Команда 2" />
     <method name="enabled maps" alt="enabled maps" />
     <method name="disabled maps" alt="disabled maps" />
+    <method name="enabled heroes" alt="enabled heroes" />
+    <method name="disabled heroes" alt="disabled heroes" />
     <method name="%1$s Cooldown Time" alt="Время восстановления: %1$s" />
     <method name="%1$s Recharge Rate" alt="Скорость зарядки: %1$s" />
     <method name="%1$s Maximum Time" alt="Макс. время: %1$s" />

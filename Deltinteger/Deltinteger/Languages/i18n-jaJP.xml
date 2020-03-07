@@ -652,6 +652,8 @@
     <method name="Team 2" alt="チーム2" />
     <method name="enabled maps" alt="有効なマップ" />
     <method name="disabled maps" alt="無効なマップ" />
+    <method name="enabled heroes" alt="有効なヒーロー" />
+    <method name="disabled heroes" alt="無効なヒーロー" />
     <method name="%1$s Cooldown Time" alt="%1$s クールダウン時間" />
     <method name="%1$s Recharge Rate" alt="%1$s リチャージ・レート" />
     <method name="%1$s Maximum Time" alt="%1$s 最大時間" />

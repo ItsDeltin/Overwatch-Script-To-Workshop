@@ -652,6 +652,8 @@
     <method name="Team 2" alt="隊伍2" />
     <method name="enabled maps" alt="啟用的地圖" />
     <method name="disabled maps" alt="停用的地圖" />
+    <method name="enabled heroes" alt="啟用的英雄" />
+    <method name="disabled heroes" alt="停用的英雄" />
     <method name="%1$s Cooldown Time" alt="%1$s的冷卻時間" />
     <method name="%1$s Recharge Rate" alt="%1$s的能量補充速度" />
     <method name="%1$s Maximum Time" alt="%1$s的最大持續時間" />

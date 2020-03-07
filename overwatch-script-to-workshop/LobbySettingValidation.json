@@ -2275,6 +2275,47 @@
       "default": true,
       "type": "boolean"
     },
+    "All Heroes": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "enum": [
+          "General",
+          "Ana",
+          "Ashe",
+          "Baptiste",
+          "Bastion",
+          "Brigitte",
+          "D.va",
+          "Doomfist",
+          "Genji",
+          "Hanzo",
+          "Junkrat",
+          "Lúcio",
+          "Mccree",
+          "Mei",
+          "Mercy",
+          "Moira",
+          "Orisa",
+          "Pharah",
+          "Reaper",
+          "Reinhardt",
+          "Roadhog",
+          "Sigma",
+          "Soldier: 76",
+          "Sombra",
+          "Symmetra",
+          "Torbjörn",
+          "Tracer",
+          "Widowmaker",
+          "Winston",
+          "Wrecking Ball",
+          "Zarya",
+          "Zenyatta"
+        ]
+      }
+    },
     "HeroList": {
       "properties": {
         "General": {
@@ -4827,6 +4868,12 @@
               "$ref": "#/definitions/Orb Of Discord"
             }
           }
+        },
+        "Enabled Heroes": {
+          "$ref": "#/definitions/All Heroes"
+        },
+        "Disabled Heroes": {
+          "$ref": "#/definitions/All Heroes"
         }
       }
     }

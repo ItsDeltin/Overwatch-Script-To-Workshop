@@ -95,12 +95,12 @@ namespace Deltin.Deltinteger.Lobby
                 if (EnabledMaps != null)
                 {
                     builder.AppendKeywordLine("enabled maps");
-                    WriteMapList(builder, EnabledMaps);
+                    Ruleset.WriteList(builder, EnabledMaps);
                 }
                 if (DisabledMaps != null)
                 {
                     builder.AppendKeywordLine("disabled maps");
-                    WriteMapList(builder, DisabledMaps);
+                    Ruleset.WriteList(builder, DisabledMaps);
                 }
 
                 builder.Unindent();
@@ -108,7 +108,7 @@ namespace Deltin.Deltinteger.Lobby
             }
         }
 
-        private static void WriteMapList(WorkshopBuilder builder, string[] maps)
+        public static void WriteList(WorkshopBuilder builder, string[] maps)
         {
             builder.AppendLine("{");
             builder.Indent();

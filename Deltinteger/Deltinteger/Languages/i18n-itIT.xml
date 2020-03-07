@@ -652,6 +652,8 @@
     <method name="Team 2" alt="Squadra 2" />
     <method name="enabled maps" alt="mappe abilitate" />
     <method name="disabled maps" alt="mappe disabilitate" />
+    <method name="enabled heroes" alt="eroi abilitati" />
+    <method name="disabled heroes" alt="eroi disabilitati" />
     <method name="%1$s Cooldown Time" alt="%1$s - Tempo di recupero" />
     <method name="%1$s Recharge Rate" alt="%1$s - Velocità di ricarica" />
     <method name="%1$s Maximum Time" alt="%1$s - Tempo massimo" />
