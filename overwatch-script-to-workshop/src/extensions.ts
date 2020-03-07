@@ -86,7 +86,7 @@ function startLanguageServer()
 			if (code != lastWorkshopOutput)
 			{
 				lastWorkshopOutput = code;
-				workshopPanelProvider.onDidChangeEmitter.fire();
+				workshopPanelProvider.onDidChangeEmitter.fire(vscode.Uri.parse('ow_ostw:Workshop Output.ow'));
 
 				// Clear the output
 				workshopOut.clear();
