@@ -73,6 +73,7 @@ namespace Deltin.Deltinteger
                 }
             }
             else if (args.ElementAtOrDefault(0) == "--schema") Deltin.Deltinteger.Lobby.Ruleset.GenerateSchema();
+            else if (args.ElementAtOrDefault(0) == "--maps") Deltin.Deltinteger.Lobby.LobbyMap.GetMaps(args[1], args[2], args[3]);
             else
             {
                 string script = args.ElementAtOrDefault(0);

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Linq;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.I18n;
 using Newtonsoft.Json;
@@ -12,96 +13,111 @@ namespace Deltin.Deltinteger.Lobby
     {
         public WorkshopValuePair All { get; set; }
         
-        public WorkshopValuePair Assault { get; set; }
+        public ModeSettings Assault { get; set; }
         
-        public WorkshopValuePair Control { get; set; }
+        public ModeSettings Control { get; set; }
         
-        public WorkshopValuePair Escort { get; set; }
+        public ModeSettings Escort { get; set; }
         
-        public WorkshopValuePair Hybrid { get; set; }
+        public ModeSettings Hybrid { get; set; }
         
         [JsonProperty("Capture The Flag")]
-        public WorkshopValuePair CaptureTheFlag { get; set; }
+        public ModeSettings CaptureTheFlag { get; set; }
         
-        public WorkshopValuePair Deathmatch { get; set; }
+        public ModeSettings Deathmatch { get; set; }
         
-        public WorkshopValuePair Elimination { get; set; }
+        public ModeSettings Elimination { get; set; }
         
         [JsonProperty("Team Deathmatch")]
-        public WorkshopValuePair TeamDeathmatch { get; set; }
+        public ModeSettings TeamDeathmatch { get; set; }
         
-        public WorkshopValuePair Skirmish { get; set; }
+        public ModeSettings Skirmish { get; set; }
         
         [JsonProperty("Practice Range")]
-        public WorkshopValuePair PracticeRange { get; set; }
-
-        public void MergeModeSettings()
-        {
-            if (All == null) return;
-            foreach (var value in All)
-            {
-                MergeTo(value, Assault);
-                MergeTo(value, CaptureTheFlag);
-                MergeTo(value, Control);
-                MergeTo(value, Deathmatch);
-                MergeTo(value, Elimination);
-                MergeTo(value, Escort);
-                MergeTo(value, Hybrid);
-                MergeTo(value, PracticeRange);
-                MergeTo(value, Skirmish);
-                MergeTo(value, TeamDeathmatch);
-            }
-        }
-
-        private void MergeTo(KeyValuePair<string, object> pair, WorkshopValuePair set)
-        {
-            if (set == null || set.ContainsKey(pair.Key)) return;
-            set.Add(pair.Key, pair.Value);
-        }
+        public ModeSettings PracticeRange { get; set; }
 
         public void ToWorkshop(WorkshopBuilder builder, List<LobbySetting> allSettings)
         {
             builder.AppendKeywordLine("modes");
             builder.AppendLine("{");
             builder.Indent();
+
+            if (All != null)
+            {
+                builder.AppendKeywordLine("General");
+                builder.AppendLine("{");
+                builder.Indent();
+                All.ToWorkshop(builder, allSettings);
+                builder.Unindent();
+                builder.AppendLine("}");
+            }
             
-            PrintMode(builder, allSettings, "General", All);
-            EnabledCheck(builder, allSettings, "Assault", Assault);
-            EnabledCheck(builder, allSettings, "CaptureTheFlag", CaptureTheFlag);
-            EnabledCheck(builder, allSettings, "Control", Control);
-            EnabledCheck(builder, allSettings, "Deathmatch", Deathmatch);
-            EnabledCheck(builder, allSettings, "Elimination", Elimination);
-            EnabledCheck(builder, allSettings, "Escort", Escort);
-            EnabledCheck(builder, allSettings, "Hybrid", Hybrid);
-            EnabledCheck(builder, allSettings, "PracticeRange", PracticeRange);
-            EnabledCheck(builder, allSettings, "Skirmish", Skirmish);
-            EnabledCheck(builder, allSettings, "TeamDeathmatch", TeamDeathmatch);
+            Assault?.ToWorkshop(builder, allSettings, "Assault");
+            CaptureTheFlag?.ToWorkshop(builder, allSettings, "CaptureTheFlag");
+            Control?.ToWorkshop(builder, allSettings, "Control");
+            Deathmatch?.ToWorkshop(builder, allSettings, "Deathmatch");
+            Elimination?.ToWorkshop(builder, allSettings, "Elimination");
+            Escort?.ToWorkshop(builder, allSettings, "Escort");
+            Hybrid?.ToWorkshop(builder, allSettings, "Hybrid");
+            PracticeRange?.ToWorkshop(builder, allSettings, "PracticeRange");
+            Skirmish?.ToWorkshop(builder, allSettings, "Skirmish");
+            TeamDeathmatch?.ToWorkshop(builder, allSettings, "TeamDeathmatch");
 
             builder.Unindent();
             builder.AppendLine("}");
         }
+    }
 
-        public static void EnabledCheck(WorkshopBuilder builder, List<LobbySetting> allSettings, string modeName, WorkshopValuePair mode)
-        {
-            if (mode == null) return;
-            if (!mode.TryGetValue("Enabled", out object value) || value as bool? == false) return;
-            mode.Remove("Enabled");
-            PrintMode(builder, allSettings, modeName, mode);
-        }
+    public class ModeSettings
+    {
+        [JsonProperty("Enabled Maps")]
+        public string[] EnabledMaps { get; set; }
 
-        private static void PrintMode(WorkshopBuilder builder, List<LobbySetting> allSettings, string modeName, WorkshopValuePair mode)
+        [JsonProperty("Disabled Maps")]
+        public string[] DisabledMaps { get; set; }
+
+        [JsonExtensionData]
+        public Dictionary<string, object> Settings { get; set; }
+
+        public void ToWorkshop(WorkshopBuilder builder, List<LobbySetting> allSettings, string modeName)
         {
-            if (mode == null) return;
             builder.AppendKeywordLine(modeName);
 
-            if (mode.Count > 0)
+            Settings?.Remove("Enabled");
+
+            if (EnabledMaps != null || DisabledMaps != null || (Settings != null && Settings.Count > 0))
             {
                 builder.AppendLine("{");
                 builder.Indent();
-                mode.ToWorkshop(builder, allSettings);
+
+                if (Settings != null) WorkshopValuePair.ToWorkshop(Settings, builder, allSettings);
+
+                if (EnabledMaps != null)
+                {
+                    builder.AppendKeywordLine("enabled maps");
+                    WriteMapList(builder, EnabledMaps);
+                }
+                if (DisabledMaps != null)
+                {
+                    builder.AppendKeywordLine("disabled maps");
+                    WriteMapList(builder, DisabledMaps);
+                }
+
                 builder.Unindent();
                 builder.AppendLine("}");
             }
+        }
+
+        private static void WriteMapList(WorkshopBuilder builder, string[] maps)
+        {
+            builder.AppendLine("{");
+            builder.Indent();
+
+            foreach (string map in maps)
+                builder.AppendLine(builder.Translate(map).Replace("(", "").Replace(")", ""));
+
+            builder.Unindent();
+            builder.AppendLine("}");
         }
     }
     
@@ -169,6 +185,38 @@ namespace Deltin.Deltinteger.Lobby
         {
             Add(CompetitiveRules);
             return this;
+        }
+
+        public override RootSchema GetSchema(SchemaGenerate generate)
+        {
+            RootSchema schema = base.GetSchema(generate);
+
+            // Get the mode's maps.
+            string[] modeMaps = LobbyMap.AllMaps.Where(map => map.GameModes.Contains(ModeName)).Select(map => map.Name).ToArray();
+            if (modeMaps.Length == 0) return schema;
+
+            // Create the map schema.
+            RootSchema maps = new RootSchema {
+                Type = SchemaObjectType.Array,
+                UniqueItems = true,
+                Items = new RootSchema() {
+                    Type = SchemaObjectType.String,
+                    Enum = modeMaps
+                }
+            };
+            // Add the map schema to the list of definitions.
+            generate.Definitions.Add(ModeName + " Maps", maps);
+
+            // Add the map schema reference to the current schema. 
+            schema.Properties.Add("Enabled Maps", GetMapReference("An array of enabled maps for the '" + ModeName + "' mode."));
+            schema.Properties.Add("Disabled Maps", GetMapReference("An array of disabled maps for the '" + ModeName + "' mode."));
+            
+            return schema;
+        }
+
+        private RootSchema GetMapReference(string description)
+        {
+            return new RootSchema() { Ref = "#/definitions/" + ModeName + " Maps", Description = description };
         }
 
         public static void Init()

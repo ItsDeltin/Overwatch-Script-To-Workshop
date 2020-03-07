@@ -42,21 +42,6 @@ namespace Deltin.Deltinteger.Dump
             return File.ReadAllText(outFile);
         }
 
-        public string RunCommandStd(string arguments)
-        {
-            var startInfo = new ProcessStartInfo();
-            startInfo.FileName = "cmd.exe";
-            startInfo.Arguments = $"/C datatool \"{overwatchPath}\" {arguments}";
-            startInfo.WorkingDirectory = Path.GetDirectoryName(datatoolPath);
-            startInfo.WindowStyle = ProcessWindowStyle.Hidden;
-
-            using (Process dataToolProcess = Process.Start(startInfo))
-            {
-                dataToolProcess.WaitForExit();
-                return dataToolProcess.StandardOutput.ReadToEnd();
-            }
-        }
-
         /// <summary>Dumps strings for a language.</summary>
         /// <param name="language">The language to get the strings of.</param>
         public string DumpStrings(string language)
@@ -66,13 +51,6 @@ namespace Deltin.Deltinteger.Dump
             if (!Languages.Contains(language)) throw new ArgumentException(language + " is not a valid language.", nameof(language));
 
             return RunCommand("dump-strings --language=" + language, "strings_" + language);
-        }
-
-        /// <summary>Dumps game settings.</summary>
-        public string GetRulesets(string language = null)
-        {
-            if (language == null) return RunCommandStd("list-game-rulesets --json");
-            else return RunCommandStd("list-game-rulesets --json --language=" + language);
         }
     }
 }

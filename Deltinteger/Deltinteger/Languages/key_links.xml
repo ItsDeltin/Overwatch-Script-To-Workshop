@@ -904,4 +904,6 @@
   <method name="General" key="0000000059A7.07C" />
   <method name="Team 1" key="000000009AB9.07C" />
   <method name="Team 2" key="000000009ABA.07C" />
+  <method name="enabled maps" key="000000010045.07C" />
+  <method name="disabled maps" key="000000010041.07C" />
 </KeyLinkList>

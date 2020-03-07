@@ -154,6 +154,21 @@
       "minimum": 10.0,
       "maximum": 500.0
     },
+    "Assault Maps": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "enum": [
+          "Temple of Anubis",
+          "Hanamura",
+          "Volskaya Industries",
+          "Hanamura (Winter)",
+          "Horizon Lunar Colony",
+          "Paris"
+        ]
+      }
+    },
     "Limit Valid Control Points": {
       "default": "All",
       "type": "string",
@@ -176,11 +191,58 @@
       "minimum": 10.0,
       "maximum": 500.0
     },
+    "Control Maps": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "enum": [
+          "Nepal",
+          "Lijiang Tower",
+          "Ilios",
+          "Oasis",
+          "Lijiang Tower (Lunar New Year)",
+          "Busan"
+        ]
+      }
+    },
     "Payload Speed Modifier": {
       "default": 100.0,
       "type": "number",
       "minimum": 10.0,
       "maximum": 500.0
+    },
+    "Escort Maps": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "enum": [
+          "Watchpoint: Gibraltar",
+          "Dorado",
+          "Route 66",
+          "Junkertown",
+          "Havana"
+        ]
+      }
+    },
+    "Hybrid Maps": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "enum": [
+          "King's Row",
+          "Numbani",
+          "Hollywood",
+          "Eichenwalde",
+          "Hollywood (Halloween)",
+          "King's Row (Winter)",
+          "Blizzard World",
+          "Eichenwalde (Halloween)",
+          "Blizzard World (Winter)"
+        ]
+      }
     },
     "Enabled Off": {
       "default": false,
@@ -260,6 +322,58 @@
       "minimum": 1.0,
       "maximum": 50.0
     },
+    "Deathmatch Maps": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "enum": [
+          "Temple of Anubis",
+          "King's Row",
+          "Hanamura",
+          "Volskaya Industries",
+          "Hollywood",
+          "Dorado",
+          "Eichenwalde",
+          "Hollywood (Halloween)",
+          "King's Row (Winter)",
+          "Hanamura (Winter)",
+          "Ecopoint: Antarctica",
+          "Horizon Lunar Colony",
+          "Necropolis",
+          "Black Forest",
+          "Ecopoint: Antarctica (Winter)",
+          "Lijiang Garden (Lunar New Year)",
+          "Lijiang Night Market (Lunar New Year)",
+          "Nepal Sanctum",
+          "Lijiang Control Center (Lunar New Year)",
+          "Castillo",
+          "Nepal Village",
+          "Nepal Shrine",
+          "Ilios Well",
+          "Ilios Lighthouse",
+          "Ilios Ruins",
+          "Lijiang Control Center",
+          "Lijiang Garden",
+          "Lijiang Night Market",
+          "Oasis City Center",
+          "Oasis Gardens",
+          "Oasis University",
+          "Blizzard World",
+          "Château Guillard",
+          "Eichenwalde (Halloween)",
+          "Black Forest (Winter)",
+          "Château Guillard (Halloween)",
+          "Petra",
+          "Paris",
+          "Havana",
+          "Blizzard World (Winter)",
+          "Workshop Island",
+          "Workshop Expanse",
+          "Workshop Chamber"
+        ]
+      }
+    },
     "Hero Selection Time": {
       "default": 20.0,
       "type": "number",
@@ -326,6 +440,40 @@
       "type": "integer",
       "maximum": 180.0
     },
+    "Elimination Maps": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "enum": [
+          "Ecopoint: Antarctica",
+          "Necropolis",
+          "Black Forest",
+          "Ecopoint: Antarctica (Winter)",
+          "Lijiang Garden (Lunar New Year)",
+          "Lijiang Night Market (Lunar New Year)",
+          "Nepal Sanctum",
+          "Lijiang Control Center (Lunar New Year)",
+          "Castillo",
+          "Nepal Village",
+          "Nepal Shrine",
+          "Ilios Well",
+          "Ilios Lighthouse",
+          "Ilios Ruins",
+          "Lijiang Control Center",
+          "Lijiang Garden",
+          "Lijiang Night Market",
+          "Oasis City Center",
+          "Oasis Gardens",
+          "Oasis University",
+          "Ayutthaya",
+          "Black Forest (Winter)",
+          "Workshop Island",
+          "Workshop Expanse",
+          "Workshop Chamber"
+        ]
+      }
+    },
     "Mercy Resurrect Counteracts Kills": {
       "default": true,
       "type": "boolean"
@@ -352,6 +500,95 @@
       "minimum": 1.0,
       "maximum": 200.0
     },
+    "Team Deathmatch Maps": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "enum": [
+          "Temple of Anubis",
+          "King's Row",
+          "Hanamura",
+          "Volskaya Industries",
+          "Hollywood",
+          "Dorado",
+          "Eichenwalde",
+          "Hollywood (Halloween)",
+          "King's Row (Winter)",
+          "Hanamura (Winter)",
+          "Ecopoint: Antarctica",
+          "Horizon Lunar Colony",
+          "Necropolis",
+          "Black Forest",
+          "Ecopoint: Antarctica (Winter)",
+          "Lijiang Garden (Lunar New Year)",
+          "Lijiang Night Market (Lunar New Year)",
+          "Nepal Sanctum",
+          "Lijiang Control Center (Lunar New Year)",
+          "Castillo",
+          "Nepal Village",
+          "Nepal Shrine",
+          "Ilios Well",
+          "Ilios Lighthouse",
+          "Ilios Ruins",
+          "Lijiang Control Center",
+          "Lijiang Garden",
+          "Lijiang Night Market",
+          "Oasis City Center",
+          "Oasis Gardens",
+          "Oasis University",
+          "Blizzard World",
+          "Château Guillard",
+          "Eichenwalde (Halloween)",
+          "Black Forest (Winter)",
+          "Château Guillard (Halloween)",
+          "Petra",
+          "Paris",
+          "Blizzard World (Winter)",
+          "Workshop Island",
+          "Workshop Expanse",
+          "Workshop Chamber"
+        ]
+      }
+    },
+    "Skirmish Maps": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "enum": [
+          "Temple of Anubis",
+          "King's Row",
+          "Hanamura",
+          "Watchpoint: Gibraltar",
+          "Numbani",
+          "Volskaya Industries",
+          "Hollywood",
+          "Dorado",
+          "Nepal",
+          "Route 66",
+          "Lijiang Tower",
+          "Ilios",
+          "Eichenwalde",
+          "Oasis",
+          "Hollywood (Halloween)",
+          "King's Row (Winter)",
+          "Hanamura (Winter)",
+          "Lijiang Tower (Lunar New Year)",
+          "Horizon Lunar Colony",
+          "Junkertown",
+          "Blizzard World",
+          "Busan",
+          "Eichenwalde (Halloween)",
+          "Paris",
+          "Havana",
+          "Blizzard World (Winter)",
+          "Workshop Island",
+          "Workshop Expanse",
+          "Workshop Chamber"
+        ]
+      }
+    },
     "Spawn Training Bots": {
       "default": true,
       "type": "boolean"
@@ -361,6 +598,16 @@
       "type": "number",
       "minimum": 10.0,
       "maximum": 500.0
+    },
+    "Practice Range Maps": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "enum": [
+          "Practice Range"
+        ]
+      }
     },
     "Quick Melee": {
       "default": true,
@@ -4715,6 +4962,14 @@
             },
             "Capture Speed Modifier": {
               "$ref": "#/definitions/Capture Speed Modifier"
+            },
+            "Enabled Maps": {
+              "$ref": "#/definitions/Assault Maps",
+              "description": "An array of enabled maps for the 'Assault' mode."
+            },
+            "Disabled Maps": {
+              "$ref": "#/definitions/Assault Maps",
+              "description": "An array of disabled maps for the 'Assault' mode."
             }
           }
         },
@@ -4774,6 +5029,14 @@
             },
             "Scoring Speed Modifier": {
               "$ref": "#/definitions/Scoring Speed Modifier"
+            },
+            "Enabled Maps": {
+              "$ref": "#/definitions/Control Maps",
+              "description": "An array of enabled maps for the 'Control' mode."
+            },
+            "Disabled Maps": {
+              "$ref": "#/definitions/Control Maps",
+              "description": "An array of disabled maps for the 'Control' mode."
             }
           }
         },
@@ -4824,6 +5087,14 @@
             },
             "Payload Speed Modifier": {
               "$ref": "#/definitions/Payload Speed Modifier"
+            },
+            "Enabled Maps": {
+              "$ref": "#/definitions/Escort Maps",
+              "description": "An array of enabled maps for the 'Escort' mode."
+            },
+            "Disabled Maps": {
+              "$ref": "#/definitions/Escort Maps",
+              "description": "An array of disabled maps for the 'Escort' mode."
             }
           }
         },
@@ -4877,6 +5148,14 @@
             },
             "Payload Speed Modifier": {
               "$ref": "#/definitions/Payload Speed Modifier"
+            },
+            "Enabled Maps": {
+              "$ref": "#/definitions/Hybrid Maps",
+              "description": "An array of enabled maps for the 'Hybrid' mode."
+            },
+            "Disabled Maps": {
+              "$ref": "#/definitions/Hybrid Maps",
+              "description": "An array of disabled maps for the 'Hybrid' mode."
             }
           }
         },
@@ -5007,6 +5286,14 @@
             },
             "Score To Win": {
               "$ref": "#/definitions/Score To Win 1-50"
+            },
+            "Enabled Maps": {
+              "$ref": "#/definitions/Deathmatch Maps",
+              "description": "An array of enabled maps for the 'Deathmatch' mode."
+            },
+            "Disabled Maps": {
+              "$ref": "#/definitions/Deathmatch Maps",
+              "description": "An array of disabled maps for the 'Deathmatch' mode."
             }
           }
         },
@@ -5084,6 +5371,14 @@
             },
             "Reveal Heroes After Match Time Elapsed": {
               "$ref": "#/definitions/Reveal Heroes After Match Time Elapsed"
+            },
+            "Enabled Maps": {
+              "$ref": "#/definitions/Elimination Maps",
+              "description": "An array of enabled maps for the 'Elimination' mode."
+            },
+            "Disabled Maps": {
+              "$ref": "#/definitions/Elimination Maps",
+              "description": "An array of disabled maps for the 'Elimination' mode."
             }
           }
         },
@@ -5149,6 +5444,14 @@
             },
             "Team 2 Score To Win": {
               "$ref": "#/definitions/Team 2 Score To Win"
+            },
+            "Enabled Maps": {
+              "$ref": "#/definitions/Team Deathmatch Maps",
+              "description": "An array of enabled maps for the 'Team Deathmatch' mode."
+            },
+            "Disabled Maps": {
+              "$ref": "#/definitions/Team Deathmatch Maps",
+              "description": "An array of disabled maps for the 'Team Deathmatch' mode."
             }
           }
         },
@@ -5193,6 +5496,14 @@
             },
             "Respawn Time Scalar": {
               "$ref": "#/definitions/Respawn Time Scalar"
+            },
+            "Enabled Maps": {
+              "$ref": "#/definitions/Skirmish Maps",
+              "description": "An array of enabled maps for the 'Skirmish' mode."
+            },
+            "Disabled Maps": {
+              "$ref": "#/definitions/Skirmish Maps",
+              "description": "An array of disabled maps for the 'Skirmish' mode."
             }
           }
         },
@@ -5243,6 +5554,14 @@
             },
             "Training Bot Respawn Time Scalar": {
               "$ref": "#/definitions/Training Bot Respawn Time Scalar"
+            },
+            "Enabled Maps": {
+              "$ref": "#/definitions/Practice Range Maps",
+              "description": "An array of enabled maps for the 'Practice Range' mode."
+            },
+            "Disabled Maps": {
+              "$ref": "#/definitions/Practice Range Maps",
+              "description": "An array of disabled maps for the 'Practice Range' mode."
             }
           }
         }

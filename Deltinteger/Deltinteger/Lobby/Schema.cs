@@ -46,6 +46,18 @@ namespace Deltin.Deltinteger.Lobby
         [JsonProperty("enum")]
         public object[] Enum;
 
+        [JsonProperty("uniqueItems")]
+        public bool UniqueItems;
+
+        [JsonProperty("items")]
+        public RootSchema Items;
+
+        [JsonProperty("oneOf")]
+        public RootSchema[] OneOf;
+
+        [JsonProperty("required")]
+        public string[] Required;
+
         public RootSchema() {}
 
         public RootSchema(string description)

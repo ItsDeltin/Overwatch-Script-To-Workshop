@@ -146,6 +146,18 @@ namespace Deltin.Deltinteger.Lobby
             keywords.Add("lobby");
             keywords.Add("modes");
             keywords.Add("heroes");
+            keywords.Add("General");
+            keywords.Add("Team 1");
+            keywords.Add("Team 2");
+            keywords.Add("enabled maps");
+            keywords.Add("disabled maps");
+            keywords.Add(AbilityNameResolver.CooldownTime);
+            keywords.Add(AbilityNameResolver.RechargeRate);
+            keywords.Add(AbilityNameResolver.MaximumTime);
+            keywords.Add(AbilityNameResolver.UltimateAbility);
+            keywords.Add(AbilityNameResolver.UltimateGeneration);
+            keywords.Add(AbilityNameResolver.UltimateGenerationCombat);
+            keywords.Add(AbilityNameResolver.UltimateGenerationPassive);
 
             // Get hero keywords.
             foreach (var heroCollection in HeroSettingCollection.AllHeroSettings)
@@ -226,7 +238,12 @@ namespace Deltin.Deltinteger.Lobby
     {
         public void ToWorkshop(WorkshopBuilder builder, List<LobbySetting> allSettings)
         {
-            foreach (var setting in this)
+            ToWorkshop(this, builder, allSettings);
+        }
+
+        public static void ToWorkshop(Dictionary<String, object> dict, WorkshopBuilder builder, List<LobbySetting> allSettings)
+        {
+            foreach (var setting in dict)
             {
                 // Get the related setting.
                 LobbySetting relatedSetting = allSettings.FirstOrDefault(ls => ls.Name == setting.Key);
@@ -295,7 +312,7 @@ namespace Deltin.Deltinteger.Lobby
             return (T)(object)this;
         }
 
-        public RootSchema GetSchema(SchemaGenerate generate)
+        public virtual RootSchema GetSchema(SchemaGenerate generate)
         {
             RootSchema schema = new RootSchema(Title).InitProperties();
             foreach (var value in this) schema.Properties.Add(value.Name, value.GetSchema(generate));
@@ -305,17 +322,6 @@ namespace Deltin.Deltinteger.Lobby
         public string[] GetKeywords()
         {
             List<string> keywords = new List<string>();
-
-            keywords.Add("General");
-            keywords.Add("Team 1");
-            keywords.Add("Team 2");
-            keywords.Add(AbilityNameResolver.CooldownTime);
-            keywords.Add(AbilityNameResolver.RechargeRate);
-            keywords.Add(AbilityNameResolver.MaximumTime);
-            keywords.Add(AbilityNameResolver.UltimateAbility);
-            keywords.Add(AbilityNameResolver.UltimateGeneration);
-            keywords.Add(AbilityNameResolver.UltimateGenerationCombat);
-            keywords.Add(AbilityNameResolver.UltimateGenerationPassive);
 
             foreach (LobbySetting setting in this)
             {

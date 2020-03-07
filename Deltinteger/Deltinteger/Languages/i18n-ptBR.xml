@@ -650,6 +650,8 @@
     <method name="General" alt="Geral" />
     <method name="Team 1" alt="Equipe 1" />
     <method name="Team 2" alt="Equipe 2" />
+    <method name="enabled maps" alt="mapas ativados" />
+    <method name="disabled maps" alt="mapas desativados" />
     <method name="%1$s Cooldown Time" alt="Tempo de recarga de %1$s" />
     <method name="%1$s Recharge Rate" alt="Taxa de recarga de %1$s " />
     <method name="%1$s Maximum Time" alt="Tempo máximo de %1$s" />

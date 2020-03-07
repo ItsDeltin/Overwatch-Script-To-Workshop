@@ -23,6 +23,7 @@
     <Content Include="Modules\*.*"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
     <Content Include="Fonts\BigNoodleTooOblique.ttf"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
     <Content Include="Wiki.xml"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
+    <Content Include="Maps.json"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Antlr4.Runtime" Version="4.6.4"/>
