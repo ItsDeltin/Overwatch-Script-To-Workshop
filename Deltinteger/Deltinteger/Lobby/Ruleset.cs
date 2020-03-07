@@ -307,17 +307,6 @@ namespace Deltin.Deltinteger.Lobby
 
         public void ToWorkshop(WorkshopBuilder builder, List<LobbySetting> allSettings)
         {
-            if (EnabledHeroes != null)
-            {
-                builder.AppendKeywordLine("enabled heroes");
-                Ruleset.WriteList(builder, EnabledHeroes);
-            }
-            if (DisabledHeroes != null)
-            {
-                builder.AppendKeywordLine("disabled heroes");
-                Ruleset.WriteList(builder, DisabledHeroes);
-            }
-
             foreach (var hero in Settings)
             {
                 builder.AppendLine($"{hero.Key}");
@@ -326,6 +315,18 @@ namespace Deltin.Deltinteger.Lobby
                 WorkshopValuePair.ToWorkshop(((JObject)hero.Value).ToObject<Dictionary<string, object>>(), builder, allSettings);
                 builder.Unindent();
                 builder.AppendLine("}");
+            }
+            if (EnabledHeroes != null)
+            {
+                builder.AppendLine();
+                builder.AppendKeywordLine("enabled heroes");
+                Ruleset.WriteList(builder, EnabledHeroes);
+            }
+            if (DisabledHeroes != null)
+            {
+                builder.AppendLine();
+                builder.AppendKeywordLine("disabled heroes");
+                Ruleset.WriteList(builder, DisabledHeroes);
             }
         }
     }
