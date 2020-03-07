@@ -88,8 +88,8 @@ namespace Deltin.Deltinteger.Lobby
 
         private string SegmentTranslate(WorkshopBuilder builder, string segmentTitle) 
         {
-            if (LanguageInfo.IsKeyword(Title)) return builder.Translate(Title).Replace("(", "").Replace(")", "");
-            return builder.Translate(segmentTitle).Replace("%1$s", builder.Translate(AbilityName)).Replace("(", "").Replace(")", "");
+            if (LanguageInfo.IsKeyword(Title)) return builder.Translate(Title).RemoveStructuralChars();
+            return builder.Translate(segmentTitle).Replace("%1$s", builder.Translate(AbilityName)).RemoveStructuralChars();
         }
 
         public override string[] KeywordInfo() => new string[] { AbilityName };

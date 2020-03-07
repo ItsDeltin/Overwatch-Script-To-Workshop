@@ -23,8 +23,9 @@ namespace Deltin.Deltinteger.I18n
                 if (CurrentLanguage != language)
                     throw new Exception($"The '{language.ToString()}' language is not loaded.");
                 
-                return Language.Methods.FirstOrDefault(m => m.EnglishName == methodName)?.Translation
-                    ?? throw new Exception($"Could not find '{methodName}' in the language file.");
+                string translation = Language.Methods.FirstOrDefault(m => m.EnglishName == methodName)?.Translation;
+                if (translation != null) return translation;
+                throw new Exception($"Could not find '{methodName}' in the language file.");
             }
         }
 

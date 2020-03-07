@@ -136,6 +136,8 @@ namespace Deltin.Deltinteger
             result += " " + collectionName + "s";
             return result;
         }
+
+        public static string RemoveStructuralChars(this string str) => str.Replace(",", "").Replace("(", "").Replace(")", "");
     }
 
     public class TabStringBuilder

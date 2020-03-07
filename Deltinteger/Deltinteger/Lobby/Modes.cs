@@ -114,7 +114,7 @@ namespace Deltin.Deltinteger.Lobby
             builder.Indent();
 
             foreach (string map in maps)
-                builder.AppendLine(builder.Translate(map).Replace("(", "").Replace(")", ""));
+                builder.AppendLine(builder.Translate(map).RemoveStructuralChars());
 
             builder.Unindent();
             builder.AppendLine("}");

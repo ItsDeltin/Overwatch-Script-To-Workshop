@@ -21,15 +21,13 @@ namespace Deltin.Deltinteger.Elements
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Enum)]
     public class EnumOverride : Attribute
     {
-        public EnumOverride(string codeName = null, string workshopName = null, string i18nKeyword = null)
+        public EnumOverride(string codeName = null, string workshopName = null)
         {
             CodeName = codeName;
             WorkshopName = workshopName;
-            I18nKeyword = i18nKeyword;
         }
         public string CodeName { get; }
         public string WorkshopName { get; }
-        public string I18nKeyword { get; }
     }
 
     public class EnumData
@@ -125,12 +123,9 @@ namespace Deltin.Deltinteger.Elements
                 EnumOverride fieldData = fields[v].GetCustomAttribute<EnumOverride>();
                 string fieldCodeName     = fieldData?.CodeName     ?? fields[v].Name;
                 string fieldWorkshopName = fieldData?.WorkshopName ?? Extras.AddSpacesToSentence(fields[v].Name.Replace('_', ' '), false);
-                string i18nKeyword = fieldData?.I18nKeyword ?? fieldWorkshopName;
                 bool isHidden = fields[v].GetCustomAttribute<HideElement>() != null;
 
-                Members[v] = new EnumMember(this, fieldCodeName, fieldWorkshopName, values.GetValue(v), isHidden) {
-                    I18nKeyword = i18nKeyword
-                };
+                Members[v] = new EnumMember(this, fieldCodeName, fieldWorkshopName, values.GetValue(v), isHidden);
             }
         }
 
@@ -157,7 +152,6 @@ namespace Deltin.Deltinteger.Elements
         public string WorkshopName { get; }
         public object UnderlyingValue { get; }
         public object Value { get; }
-        public string I18nKeyword { get; set; }
         public bool IsHidden { get; }
 
         public EnumMember(EnumData @enum, string codeName, string workshopName, object value, bool isHidden)
@@ -181,7 +175,7 @@ namespace Deltin.Deltinteger.Elements
             if (@Enum.Type == typeof(Button) && WorkshopName.StartsWith("Ability")) return numTranslate("Ability");
             if ((@Enum.Type == typeof(Team) || @Enum.Type == typeof(Color)) && WorkshopName.StartsWith("Team")) return numTranslate("Team");
             
-            return LanguageInfo.Translate(language, I18nKeyword);
+            return LanguageInfo.Translate(language, WorkshopName).RemoveStructuralChars();
         }
 
         public string GetI18nKeyword()
@@ -189,7 +183,7 @@ namespace Deltin.Deltinteger.Elements
             if (@Enum.Type == typeof(PlayerSelector) && WorkshopName.StartsWith("Slot")) return "Slot";
             if (@Enum.Type == typeof(Button) && WorkshopName.StartsWith("Ability")) return "Ability";
             if ((@Enum.Type == typeof(Team) || @Enum.Type == typeof(Color)) && WorkshopName.StartsWith("Team")) return "Team";
-            return I18nKeyword;
+            return WorkshopName;
         }
 
         public bool EqualTo(IWorkshopTree b)
@@ -482,7 +476,7 @@ namespace Deltin.Deltinteger.Elements
     [WorkshopEnum]
     public enum EffectRev
     {
-        [EnumOverride(null, null, "Visible To, Position, and Radius")]
+        [EnumOverride(null, "Visible To, Position, and Radius")]
         VisibleToPositionAndRadius,
         PositionAndRadius,
         VisibleTo,
@@ -624,7 +618,7 @@ namespace Deltin.Deltinteger.Elements
     [WorkshopEnum]
     public enum AccelerateRev
     {
-        [EnumOverride(null, null, "Direction, Rate, and Max Speed")]
+        [EnumOverride(null, "Direction, Rate, and Max Speed")]
         DirectionRateAndMaxSpeed,
         None
     }
@@ -632,7 +626,7 @@ namespace Deltin.Deltinteger.Elements
     [WorkshopEnum]
     public enum DamageModificationRev
     {
-        [EnumOverride(null, null, "Receivers, Damagers, and Damage Percent")]
+        [EnumOverride(null, "Receivers, Damagers, and Damage Percent")]
         ReceiversDamagersAndDamagePercent,
         ReceiversAndDamagers,
         None
@@ -641,7 +635,7 @@ namespace Deltin.Deltinteger.Elements
     [WorkshopEnum]
     public enum HealingModificationRev
     {
-        [EnumOverride(null, null, "Receivers, Healers, and Healing Percent")]
+        [EnumOverride(null, "Receivers, Healers, and Healing Percent")]
         ReceiversDamagersAndDamagePercent,
         ReceiversAndHealers,
         None
@@ -705,7 +699,7 @@ namespace Deltin.Deltinteger.Elements
     [WorkshopEnum]
     public enum InworldTextRev
     {
-        [EnumOverride(null, null, "Visible To, Position, and String")]
+        [EnumOverride(null, "Visible To, Position, and String")]
         VisibleToPositionAndString,
         VisibleToAndString,
         String
@@ -746,38 +740,38 @@ namespace Deltin.Deltinteger.Elements
     {
         Ayutthaya,
         Black_Forest,
-        [EnumOverride(null, null, "Black Forest (Winter)")]
+        [EnumOverride(null, "Black Forest (Winter)")]
         Black_Forest_Winter,
         Blizzard_World,
-        [EnumOverride(null, null, "Blizzard World (Winter)")]
+        [EnumOverride(null, "Blizzard World (Winter)")]
         Blizzard_World_Winter,
         Busan,
-        [EnumOverride(null, "Busan Downtown Lunar New Year", "Busan Downtown (Lunar New Year)")]
+        [EnumOverride(null, "Busan Downtown (Lunar New Year)")]
         Busan_Downtown_Lunar,
-        [EnumOverride(null, "Busan Sanctuary Lunar New Year", "Busan Sanctuary (Lunar New Year)")]
+        [EnumOverride(null, "Busan Sanctuary (Lunar New Year)")]
         Busan_Sanctuary_Lunar,
         Busan_Stadium,
         Castillo,
         [EnumOverride(null, "Château Guillard")]
         Chateau_Guillard,
-        [EnumOverride(null, "Château Guillard Halloween", "Château Guillard (Halloween)")]
+        [EnumOverride(null, "Château Guillard (Halloween)")]
         Chateau_Guillard_Halloween,
         Dorado,
         [EnumOverride(null, "Ecopoint: Antarctica")]
         Ecopoint_Antarctica,
-        [EnumOverride(null, "Ecopoint: Antarctica Winter", "Ecopoint: Antarctica (Winter)")]
+        [EnumOverride(null, "Ecopoint: Antarctica (Winter)")]
         Ecopoint_Antarctica_Winter,
         Eichenwalde,
-        [EnumOverride(null, null, "Eichenwalde (Halloween)")]
+        [EnumOverride(null, "Eichenwalde (Halloween)")]
         Eichenwalde_Halloween,
         [EnumOverride(null, "Estádio das Rãs")]
         Estadio_Das_Ras,
         Hanamura,
-        [EnumOverride(null, null, "Hanamura (Winter)")]
+        [EnumOverride(null, "Hanamura (Winter)")]
         Hanamura_Winter,
         Havana,
         Hollywood,
-        [EnumOverride(null, null, "Hollywood (Halloween)")]
+        [EnumOverride(null, "Hollywood (Halloween)")]
         Hollywood_Halloween,
         Horizon_Lunar_Colony,
         Ilios,
@@ -789,19 +783,19 @@ namespace Deltin.Deltinteger.Elements
         Junkertown,
         [EnumOverride(null, "King's Row")]
         Kings_Row,
-        [EnumOverride(null, "King's Row Winter", "King's Row (Winter)")]
+        [EnumOverride(null, "King's Row (Winter)")]
         Kings_Row_Winter,
         Lijiang_Control_Center,
-        [EnumOverride(null, "Lijiang Control Center Lunar New Year", "Lijiang Control Center (Lunar New Year)")]
+        [EnumOverride(null, "Lijiang Control Center (Lunar New Year)")]
         Lijiang_Control_Center_Lunar,
         Lijiang_Garden,
-        [EnumOverride(null, "Lijiang Garden Lunar New Year", "Lijiang Garden (Lunar New Year)")]
+        [EnumOverride(null, "Lijiang Garden (Lunar New Year)")]
         Lijiang_Garden_Lunar,
         Lijiang_Night_Market,
-        [EnumOverride(null, "Lijiang Night Market Lunar New Year", "Lijiang Night Market (Lunar New Year)")]
+        [EnumOverride(null, "Lijiang Night Market (Lunar New Year)")]
         Lijiang_Night_Market_Lunar,
         Lijiang_Tower,
-        [EnumOverride(null, "Lijiang Tower Lunar New Year", "Lijiang Tower (Lunar New Year)")]
+        [EnumOverride(null, "Lijiang Tower (Lunar New Year)")]
         Lijiang_Tower_Lunar,
         Necropolis,
         Nepal,
