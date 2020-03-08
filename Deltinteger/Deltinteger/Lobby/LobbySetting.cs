@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
+using Newtonsoft.Json.Linq;
 
 namespace Deltin.Deltinteger.Lobby
 {
@@ -44,6 +45,8 @@ namespace Deltin.Deltinteger.Lobby
         }
 
         public virtual string[] AdditionalKeywords() => new string[0];
+
+        public abstract void CheckValue(SettingValidation validation, JToken value);
     }
 
     /// <summary>Enum lobby setting.</summary>
@@ -68,6 +71,20 @@ namespace Deltin.Deltinteger.Lobby
         public override string GetValue(WorkshopBuilder builder, object value) => builder.Translate(value.ToString());
 
         public override string[] AdditionalKeywords() => Values;
+
+        public override void CheckValue(SettingValidation validation, JToken value)
+        {
+            try
+            {
+                string str = value.ToObject<string>();
+                if (!Values.Contains(str))
+                    validation.Error($"Expected one of the following values for property '{Name}': {string.Join(", ", Values.Select(v => "'" + v + "'"))}");
+            }
+            catch
+            {
+                validation.IncorrectType(Name, "string");
+            }
+        }
     }
 
     /// <summary>Boolean lobby setting.</summary>
@@ -88,6 +105,12 @@ namespace Deltin.Deltinteger.Lobby
             schema.Type = SchemaObjectType.Boolean;
             schema.Default = Default;
             return schema;
+        }
+
+        public override void CheckValue(SettingValidation validation, JToken value)
+        {
+            if (value.ToObject<object>() is bool == false)
+                validation.IncorrectType(Name, "boolean");
         }
     }
 
@@ -126,6 +149,20 @@ namespace Deltin.Deltinteger.Lobby
             schema.Maximum = Max;
             schema.Default = Default;
             return schema;
+        }
+
+        public override void CheckValue(SettingValidation validation, JToken value)
+        {
+            try
+            {
+                double number = value.ToObject<double>();
+                if (number < Min) validation.Error($"The property '{Name}' requires a number above {Min}, got {number}.");
+                if (number > Max) validation.Error($"The property '{Name}' requires a number below {Max}, got {number}.");
+            }
+            catch
+            {
+                validation.IncorrectType(Name, "number");
+            }
         }
     }
 }

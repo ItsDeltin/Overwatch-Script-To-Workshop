@@ -1,3 +1,6 @@
+using System.Linq;
+using Newtonsoft.Json.Linq;
+
 namespace Deltin.Deltinteger.Lobby
 {
     public class HeroSettingCollection : LobbySettingCollection<HeroSettingCollection>
@@ -226,6 +229,22 @@ namespace Deltin.Deltinteger.Lobby
                 new HeroSettingCollection("Zarya").AddUlt("Graviton Surge").AddProjectile(true).AddSecondaryFire().AddAbility("Particle Barrier").AddAbility("Projected Barrier").AddRange("Particle Cannon Secondary Knockback Scalar", 0, 400),
                 new HeroSettingCollection("Zenyatta").AddUlt("Transcendence").AddProjectile(false).AddSecondaryFire().AddHealer().AddAbility("Orb Of Harmony", hasCooldown: false).AddAbility("Orb Of Discord", hasCooldown: false)
             };
+        }
+    
+        public static void Validate(SettingValidation validation, JObject heroes)
+        {
+            foreach (JProperty property in heroes.Properties())
+            {
+                if (property.Name == "Enabled Heroes" || property.Name == "Disabled Heroes") continue;
+                HeroSettingCollection relatedHeroCollection = AllHeroSettings.FirstOrDefault(hs => hs.HeroName == property.Name);
+
+                if (relatedHeroCollection == null) validation.InvalidSetting(property.Name);
+                else Ruleset.ValidateSetting(validation, relatedHeroCollection, property.Value);
+            }
+
+            // foreach (var heroCollection in AllHeroSettings)
+            //     if (heroes.TryGetValue(heroCollection.HeroName, out JToken heroSettingsToken))
+            //         Ruleset.ValidateSetting(validation, heroCollection, heroSettingsToken);
         }
     }
 }

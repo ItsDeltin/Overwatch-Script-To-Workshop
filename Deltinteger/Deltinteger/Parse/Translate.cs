@@ -148,6 +148,8 @@ namespace Deltin.Deltinteger.Parse
 
                             // An exception will be thrown if the jobject cannot be converted to a Ruleset.
                             lobbySettings.ToObject(typeof(Ruleset));
+
+                            if (!Ruleset.Validate(lobbySettings, script.Diagnostics, stringRange)) break;
                         }
                         catch
                         {

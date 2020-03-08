@@ -4,9 +4,12 @@ using System.Text;
 using System.Linq;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.I18n;
+using Deltin.Deltinteger.Parse;
+using Deltin.Deltinteger.LanguageServer;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using Newtonsoft.Json.Linq;
+
 
 namespace Deltin.Deltinteger.Lobby
 {
@@ -215,6 +218,48 @@ namespace Deltin.Deltinteger.Lobby
             builder.Unindent();
             builder.AppendLine("}");
         }
+    
+        public static bool Validate(JObject jobject, FileDiagnostics diagnostics, DocRange range)
+        {
+            SettingValidation validation = new SettingValidation();
+
+            // Check for invalid properties.
+            foreach (JProperty setting in jobject.Properties())
+                if (!new string[] { "Lobby", "Modes", "Heroes" }.Contains(setting.Name))
+                    validation.InvalidSetting(setting.Name);
+            
+            // Check lobby settings.
+            if (jobject.TryGetValue("Lobby", out JToken lobbySettings))
+                ValidateSetting(validation, LobbySettings, lobbySettings);
+            
+            // Check modes.
+            if (jobject.TryGetValue("Modes", out JToken modes))
+                ModeSettingCollection.Validate(validation, (JObject)modes);
+            
+            // Check heroes.
+            if (jobject.TryGetValue("Heroes", out JToken heroes))
+                HeroesRoot.Validate(validation, (JObject)heroes);
+
+            validation.Dump(diagnostics, range);
+            return !validation.HasErrors();
+        }
+
+        public static void ValidateSetting(SettingValidation validation, IEnumerable<LobbySetting> lobbySettings, JToken jobjectSettingContainer, params string[] additional)
+        {
+            // Iterate through all input lobby settings.
+            foreach (JProperty lobbySetting in jobjectSettingContainer.Children<JProperty>())
+            {
+                if (additional != null && additional.Contains(lobbySetting.Name)) continue;
+
+                // Get the related setting.
+                LobbySetting relatedSetting = lobbySettings.FirstOrDefault(ls => ls.Name == lobbySetting.Name);
+
+                // relatedSetting will be null if there are no settings with the name.
+                if (relatedSetting == null) validation.InvalidSetting(lobbySetting.Name);
+                // Validate the input value.
+                else relatedSetting.CheckValue(validation, lobbySetting.Value);
+            }
+        }
     }
 
     public class SchemaGenerate
@@ -274,6 +319,13 @@ namespace Deltin.Deltinteger.Lobby
 
             builder.Unindent();
             builder.AppendLine("}");
+        }
+
+        public static void Validate(SettingValidation validation, JObject heroRoot)
+        {
+            if (heroRoot.TryGetValue("General", out JToken generalToken)) HeroSettingCollection.Validate(validation, (JObject)generalToken);
+            if (heroRoot.TryGetValue("Team 1", out JToken team1Token)) HeroSettingCollection.Validate(validation, (JObject)team1Token);
+            if (heroRoot.TryGetValue("Team 2", out JToken team2Token)) HeroSettingCollection.Validate(validation, (JObject)team2Token);
         }
     }
 
@@ -395,6 +447,35 @@ namespace Deltin.Deltinteger.Lobby
             }
 
             return keywords.ToArray();
+        }
+    }
+
+    public class SettingValidation
+    {
+        private readonly List<string> _errors = new List<string>();
+        
+        public SettingValidation() {}
+
+        public void Error(string error)
+        {
+            _errors.Add(error);
+        }
+
+        public void InvalidSetting(string propertyName)
+        {
+            _errors.Add($"The setting '{propertyName}' is not valid.");
+        }
+
+        public void IncorrectType(string propertyName, string expectedType)
+        {
+            _errors.Add($"The setting '{propertyName}' requires a value of type " + expectedType + ".");
+        }
+
+        public bool HasErrors() => _errors.Count > 0;
+
+        public void Dump(FileDiagnostics diagnostics, DocRange range)
+        {
+            foreach (string error in _errors) diagnostics.Error(error, range);
         }
     }
 }

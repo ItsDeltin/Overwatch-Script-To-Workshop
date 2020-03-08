@@ -6,6 +6,7 @@ using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.I18n;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
+using Newtonsoft.Json.Linq;
 
 namespace Deltin.Deltinteger.Lobby
 {
@@ -242,6 +243,13 @@ namespace Deltin.Deltinteger.Lobby
                 new ModeSettingCollection("Skirmish", false),
                 new ModeSettingCollection("Practice Range", false).AddSwitch("Spawn Training Bots", true).AddRange("Training Bot Respawn Time Scalar", 10, 500)
             };
+        }
+    
+        public static void Validate(SettingValidation validation, JObject modes)
+        {
+            foreach (var modeCollection in AllModeSettings)
+                if (modes.TryGetValue(modeCollection.ModeName, out JToken modeSettingsToken))
+                    Ruleset.ValidateSetting(validation, modeCollection, modeSettingsToken, "Enabled Maps", "Disabled Maps");
         }
     }
 }
