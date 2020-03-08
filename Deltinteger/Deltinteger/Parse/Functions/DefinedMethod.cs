@@ -256,6 +256,7 @@ namespace Deltin.Deltinteger.Parse
                         blockReturns = true;
 
                     CheckContainer(script, (IBlockContainer)path.Block.Statements[i]);
+                    break;
                 }
             }
             if (!blockReturns)
