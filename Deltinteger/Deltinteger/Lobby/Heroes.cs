@@ -241,10 +241,6 @@ namespace Deltin.Deltinteger.Lobby
                 if (relatedHeroCollection == null) validation.InvalidSetting(property.Name);
                 else Ruleset.ValidateSetting(validation, relatedHeroCollection, property.Value);
             }
-
-            // foreach (var heroCollection in AllHeroSettings)
-            //     if (heroes.TryGetValue(heroCollection.HeroName, out JToken heroSettingsToken))
-            //         Ruleset.ValidateSetting(validation, heroCollection, heroSettingsToken);
         }
     }
 }
