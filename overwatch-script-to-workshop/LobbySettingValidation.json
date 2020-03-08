@@ -2384,7 +2384,8 @@
             "Healing Dealt": {
               "$ref": "#/definitions/Healing Dealt"
             }
-          }
+          },
+          "additionalProperties": false
         },
         "Ana": {
           "description": "'Ana' hero settings.",
@@ -2461,7 +2462,8 @@
             "Sleep Dart Cooldown Time": {
               "$ref": "#/definitions/Sleep Dart Cooldown Time"
             }
-          }
+          },
+          "additionalProperties": false
         },
         "Ashe": {
           "description": "'Ashe' hero settings.",
@@ -2553,7 +2555,8 @@
             "Dynamite Fuse Time Scalar": {
               "$ref": "#/definitions/Dynamite Fuse Time Scalar"
             }
-          }
+          },
+          "additionalProperties": false
         },
         "Baptiste": {
           "description": "'Baptiste' hero settings.",
@@ -2633,7 +2636,8 @@
             "Secondary Fire": {
               "$ref": "#/definitions/Secondary Fire"
             }
-          }
+          },
+          "additionalProperties": false
         },
         "Bastion": {
           "description": "'Bastion' hero settings.",
@@ -2710,7 +2714,8 @@
             "Self-Repair Maximum Time": {
               "$ref": "#/definitions/Self-Repair Maximum Time"
             }
-          }
+          },
+          "additionalProperties": false
         },
         "Brigitte": {
           "description": "'Brigitte' hero settings.",
@@ -2790,7 +2795,8 @@
             "Whip Shot Knockback Scalar": {
               "$ref": "#/definitions/Whip Shot Knockback Scalar"
             }
-          }
+          },
+          "additionalProperties": false
         },
         "D.va": {
           "description": "'D.va' hero settings.",
@@ -2867,7 +2873,8 @@
             "Defense Matrix Maximum Time": {
               "$ref": "#/definitions/Defense Matrix Maximum Time"
             }
-          }
+          },
+          "additionalProperties": false
         },
         "Doomfist": {
           "description": "'Doomfist' hero settings.",
@@ -2959,7 +2966,8 @@
             "Ammunition Regeneration Time Scalar": {
               "$ref": "#/definitions/Ammunition Regeneration Time Scalar"
             }
-          }
+          },
+          "additionalProperties": false
         },
         "Genji": {
           "description": "'Genji' hero settings.",
@@ -3036,7 +3044,8 @@
             "Swift Strike Cooldown Time": {
               "$ref": "#/definitions/Swift Strike Cooldown Time"
             }
-          }
+          },
+          "additionalProperties": false
         },
         "Hanzo": {
           "description": "'Hanzo' hero settings.",
@@ -3113,7 +3122,8 @@
             "Storm Arrows Quantity": {
               "$ref": "#/definitions/Storm Arrows Quantity"
             }
-          }
+          },
+          "additionalProperties": false
         },
         "Junkrat": {
           "description": "'Junkrat' hero settings.",
@@ -3196,7 +3206,8 @@
             "Frag Launcher Knockback Scalar": {
               "$ref": "#/definitions/Frag Launcher Knockback Scalar"
             }
-          }
+          },
+          "additionalProperties": false
         },
         "Lúcio": {
           "description": "'Lúcio' hero settings.",
@@ -3273,7 +3284,8 @@
             "Soundwave Knockback Scalar": {
               "$ref": "#/definitions/Soundwave Knockback Scalar"
             }
-          }
+          },
+          "additionalProperties": false
         },
         "Mccree": {
           "description": "'Mccree' hero settings.",
@@ -3344,7 +3356,8 @@
             "Flashbang Cooldown Time": {
               "$ref": "#/definitions/Flashbang Cooldown Time"
             }
-          }
+          },
+          "additionalProperties": false
         },
         "Mei": {
           "description": "'Mei' hero settings.",
@@ -3439,7 +3452,8 @@
             "Weapon Freeze Rate Scalar": {
               "$ref": "#/definitions/Weapon Freeze Rate Scalar"
             }
-          }
+          },
+          "additionalProperties": false
         },
         "Mercy": {
           "description": "'Mercy' hero settings.",
@@ -3519,7 +3533,8 @@
             "Weapons Enabled": {
               "$ref": "#/definitions/Weapons Enabled Mercy"
             }
-          }
+          },
+          "additionalProperties": false
         },
         "Moira": {
           "description": "'Moira' hero settings.",
@@ -3605,7 +3620,8 @@
             "Biotic Energy Recharge Rate": {
               "$ref": "#/definitions/Biotic Energy Recharge Rate"
             }
-          }
+          },
+          "additionalProperties": false
         },
         "Orisa": {
           "description": "'Orisa' hero settings.",
@@ -3682,7 +3698,8 @@
             "Protective Barrier Cooldown Time": {
               "$ref": "#/definitions/Protective Barrier Cooldown Time"
             }
-          }
+          },
+          "additionalProperties": false
         },
         "Pharah": {
           "description": "'Pharah' hero settings.",
@@ -3774,7 +3791,8 @@
             "Rocket Launcher Knockback Scalar": {
               "$ref": "#/definitions/Rocket Launcher Knockback Scalar"
             }
-          }
+          },
+          "additionalProperties": false
         },
         "Reaper": {
           "description": "'Reaper' hero settings.",
@@ -3842,7 +3860,8 @@
             "Wraith Form Cooldown Time": {
               "$ref": "#/definitions/Wraith Form Cooldown Time"
             }
-          }
+          },
+          "additionalProperties": false
         },
         "Reinhardt": {
           "description": "'Reinhardt' hero settings.",
@@ -3919,7 +3938,8 @@
             "Rocket Hammer Knockback Scalar": {
               "$ref": "#/definitions/Rocket Hammer Knockback Scalar"
             }
-          }
+          },
+          "additionalProperties": false
         },
         "Roadhog": {
           "description": "'Roadhog' hero settings.",
@@ -3996,7 +4016,8 @@
             "Take A Breather Cooldown Time": {
               "$ref": "#/definitions/Take A Breather Cooldown Time"
             }
-          }
+          },
+          "additionalProperties": false
         },
         "Sigma": {
           "description": "'Sigma' hero settings.",
@@ -4076,7 +4097,8 @@
             "Kinetic Grasp Cooldown Time": {
               "$ref": "#/definitions/Kinetic Grasp Cooldown Time"
             }
-          }
+          },
+          "additionalProperties": false
         },
         "Soldier: 76": {
           "description": "'Soldier: 76' hero settings.",
@@ -4159,7 +4181,8 @@
             "Sprint": {
               "$ref": "#/definitions/Sprint"
             }
-          }
+          },
+          "additionalProperties": false
         },
         "Sombra": {
           "description": "'Sombra' hero settings.",
@@ -4236,7 +4259,8 @@
             "Translocator Cooldown Time": {
               "$ref": "#/definitions/Translocator Cooldown Time"
             }
-          }
+          },
+          "additionalProperties": false
         },
         "Symmetra": {
           "description": "'Symmetra' hero settings.",
@@ -4307,7 +4331,8 @@
             "Teleporter Cooldown Time": {
               "$ref": "#/definitions/Teleporter Cooldown Time"
             }
-          }
+          },
+          "additionalProperties": false
         },
         "Torbjörn": {
           "description": "'Torbjörn' hero settings.",
@@ -4393,7 +4418,8 @@
             "Weapons Enabled": {
               "$ref": "#/definitions/Weapons Enabled Torbjörn"
             }
-          }
+          },
+          "additionalProperties": false
         },
         "Tracer": {
           "description": "'Tracer' hero settings.",
@@ -4464,7 +4490,8 @@
             "Recall Cooldown Time": {
               "$ref": "#/definitions/Recall Cooldown Time"
             }
-          }
+          },
+          "additionalProperties": false
         },
         "Widowmaker": {
           "description": "'Widowmaker' hero settings.",
@@ -4547,7 +4574,8 @@
             "Venom Mine Cooldown Time": {
               "$ref": "#/definitions/Venom Mine Cooldown Time"
             }
-          }
+          },
+          "additionalProperties": false
         },
         "Winston": {
           "description": "'Winston' hero settings.",
@@ -4627,7 +4655,8 @@
             "Jump Pack Acceleration Scalar": {
               "$ref": "#/definitions/Jump Pack Acceleration Scalar"
             }
-          }
+          },
+          "additionalProperties": false
         },
         "Wrecking Ball": {
           "description": "'Wrecking Ball' hero settings.",
@@ -4722,7 +4751,8 @@
             "Roll Always Active": {
               "$ref": "#/definitions/Roll Always Active"
             }
-          }
+          },
+          "additionalProperties": false
         },
         "Zarya": {
           "description": "'Zarya' hero settings.",
@@ -4799,7 +4829,8 @@
             "Particle Cannon Secondary Knockback Scalar": {
               "$ref": "#/definitions/Particle Cannon Secondary Knockback Scalar"
             }
-          }
+          },
+          "additionalProperties": false
         },
         "Zenyatta": {
           "description": "'Zenyatta' hero settings.",
@@ -4867,7 +4898,8 @@
             "Orb Of Discord": {
               "$ref": "#/definitions/Orb Of Discord"
             }
-          }
+          },
+          "additionalProperties": false
         },
         "Enabled Heroes": {
           "$ref": "#/definitions/All Heroes"
@@ -4875,7 +4907,8 @@
         "Disabled Heroes": {
           "$ref": "#/definitions/All Heroes"
         }
-      }
+      },
+      "additionalProperties": false
     }
   },
   "properties": {
@@ -4917,7 +4950,8 @@
         "Pause Game On Player Disconnect": {
           "$ref": "#/definitions/Pause Game On Player Disconnect"
         }
-      }
+      },
+      "additionalProperties": false
     },
     "Modes": {
       "properties": {
@@ -4960,7 +4994,8 @@
             "Respawn Time Scalar": {
               "$ref": "#/definitions/Respawn Time Scalar"
             }
-          }
+          },
+          "additionalProperties": false
         },
         "Assault": {
           "description": "Assault settings.",
@@ -5018,7 +5053,8 @@
               "$ref": "#/definitions/Assault Maps",
               "description": "An array of disabled maps for the 'Assault' mode."
             }
-          }
+          },
+          "additionalProperties": false
         },
         "Control": {
           "description": "Control settings.",
@@ -5085,7 +5121,8 @@
               "$ref": "#/definitions/Control Maps",
               "description": "An array of disabled maps for the 'Control' mode."
             }
-          }
+          },
+          "additionalProperties": false
         },
         "Escort": {
           "description": "Escort settings.",
@@ -5143,7 +5180,8 @@
               "$ref": "#/definitions/Escort Maps",
               "description": "An array of disabled maps for the 'Escort' mode."
             }
-          }
+          },
+          "additionalProperties": false
         },
         "Hybrid": {
           "description": "Hybrid settings.",
@@ -5204,7 +5242,8 @@
               "$ref": "#/definitions/Hybrid Maps",
               "description": "An array of disabled maps for the 'Hybrid' mode."
             }
-          }
+          },
+          "additionalProperties": false
         },
         "Capture The Flag": {
           "description": "Capture The Flag settings.",
@@ -5281,7 +5320,8 @@
             "Team Needs Flag At Base To Score": {
               "$ref": "#/definitions/Team Needs Flag At Base To Score"
             }
-          }
+          },
+          "additionalProperties": false
         },
         "Deathmatch": {
           "description": "Deathmatch settings.",
@@ -5342,7 +5382,8 @@
               "$ref": "#/definitions/Deathmatch Maps",
               "description": "An array of disabled maps for the 'Deathmatch' mode."
             }
-          }
+          },
+          "additionalProperties": false
         },
         "Elimination": {
           "description": "Elimination settings.",
@@ -5427,7 +5468,8 @@
               "$ref": "#/definitions/Elimination Maps",
               "description": "An array of disabled maps for the 'Elimination' mode."
             }
-          }
+          },
+          "additionalProperties": false
         },
         "Team Deathmatch": {
           "description": "Team Deathmatch settings.",
@@ -5500,7 +5542,8 @@
               "$ref": "#/definitions/Team Deathmatch Maps",
               "description": "An array of disabled maps for the 'Team Deathmatch' mode."
             }
-          }
+          },
+          "additionalProperties": false
         },
         "Skirmish": {
           "description": "Skirmish settings.",
@@ -5552,7 +5595,8 @@
               "$ref": "#/definitions/Skirmish Maps",
               "description": "An array of disabled maps for the 'Skirmish' mode."
             }
-          }
+          },
+          "additionalProperties": false
         },
         "Practice Range": {
           "description": "Practice Range settings.",
@@ -5610,9 +5654,11 @@
               "$ref": "#/definitions/Practice Range Maps",
               "description": "An array of disabled maps for the 'Practice Range' mode."
             }
-          }
+          },
+          "additionalProperties": false
         }
-      }
+      },
+      "additionalProperties": false
     },
     "Heroes": {
       "description": "Hero settings.",
@@ -5629,8 +5675,10 @@
           "$ref": "#/definitions/HeroList",
           "description": "The list of hero settings that affects team 2."
         }
-      }
+      },
+      "additionalProperties": false
     }
   },
-  "type": "object"
+  "type": "object",
+  "additionalProperties": false
 }

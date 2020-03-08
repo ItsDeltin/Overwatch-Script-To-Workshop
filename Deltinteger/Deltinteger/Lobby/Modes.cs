@@ -190,6 +190,7 @@ namespace Deltin.Deltinteger.Lobby
         public override RootSchema GetSchema(SchemaGenerate generate)
         {
             RootSchema schema = base.GetSchema(generate);
+            schema.AdditionalProperties = false;
 
             // Get the mode's maps.
             string[] modeMaps = LobbyMap.AllMaps.Where(map => map.GameModes.Contains(ModeName)).Select(map => map.Name).ToArray();
@@ -216,7 +217,7 @@ namespace Deltin.Deltinteger.Lobby
 
         private RootSchema GetMapReference(string description)
         {
-            return new RootSchema() { Ref = "#/definitions/" + ModeName + " Maps", Description = description };
+            return new RootSchema(description) { Ref = "#/definitions/" + ModeName + " Maps" };
         }
 
         public static void Init()

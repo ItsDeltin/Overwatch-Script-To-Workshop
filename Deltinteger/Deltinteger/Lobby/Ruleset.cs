@@ -85,6 +85,7 @@ namespace Deltin.Deltinteger.Lobby
             root.Schema = "http://json-schema.org/draft-04/schema#";
             root.Type = SchemaObjectType.Object;
             root.Title = "JSON schema for OSTW lobby setting files.";
+            root.AdditionalProperties = false;
 
             SchemaGenerate generate = new SchemaGenerate(root.Definitions);
 
@@ -99,6 +100,7 @@ namespace Deltin.Deltinteger.Lobby
             heroesRoot.Properties.Add("General", GetHeroListReference("The list of hero settings that affects both teams."));
             heroesRoot.Properties.Add("Team 1", GetHeroListReference("The list of hero settings that affects team 1."));
             heroesRoot.Properties.Add("Team 2", GetHeroListReference("The list of hero settings that affects team 2."));
+            heroesRoot.AdditionalProperties = false;
             
             // Get the result.
             string result = JsonConvert.SerializeObject(root, new JsonSerializerSettings() {
@@ -119,6 +121,7 @@ namespace Deltin.Deltinteger.Lobby
         private static RootSchema GetHeroList(SchemaGenerate generate)
         {
             RootSchema schema = new RootSchema().InitProperties();
+            schema.AdditionalProperties = false;
             List<string> heroNames = new List<string>();
             foreach (var heroSettings in HeroSettingCollection.AllHeroSettings)
             {
@@ -150,6 +153,7 @@ namespace Deltin.Deltinteger.Lobby
         private static RootSchema GetLobby(SchemaGenerate generate)
         {
             RootSchema schema = new RootSchema().InitProperties();
+            schema.AdditionalProperties = false;
             foreach (var lobbySetting in LobbySettings) schema.Properties.Add(lobbySetting.Name, lobbySetting.GetSchema(generate));
             return schema;
         }
@@ -157,6 +161,7 @@ namespace Deltin.Deltinteger.Lobby
         private static RootSchema GetModes(SchemaGenerate generate)
         {
             RootSchema schema = new RootSchema().InitProperties();
+            schema.AdditionalProperties = false;
             foreach (var mode in ModeSettingCollection.AllModeSettings) schema.Properties.Add(mode.ModeName, mode.GetSchema(generate));
             return schema;
         }
@@ -374,6 +379,7 @@ namespace Deltin.Deltinteger.Lobby
         public virtual RootSchema GetSchema(SchemaGenerate generate)
         {
             RootSchema schema = new RootSchema(Title).InitProperties();
+            schema.AdditionalProperties = false;
             foreach (var value in this) schema.Properties.Add(value.Name, value.GetSchema(generate));
             return schema;
         }

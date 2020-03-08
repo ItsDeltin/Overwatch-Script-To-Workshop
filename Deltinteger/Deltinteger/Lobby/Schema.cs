@@ -58,6 +58,9 @@ namespace Deltin.Deltinteger.Lobby
         [JsonProperty("required")]
         public string[] Required;
 
+        [JsonProperty("additionalProperties")]
+        public bool? AdditionalProperties;
+
         public RootSchema() {}
 
         public RootSchema(string description)

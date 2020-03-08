@@ -140,8 +140,11 @@ namespace Deltin.Deltinteger.Parse
                         // Make sure the json is in the correct format.
                         try
                         {
+                            ImportedScript file = FileGetter.GetImportedFile(importResult.Uri);
+                            file.Update();
+
                             // Convert the json to a jobject.
-                            lobbySettings = JObject.Parse(FileGetter.GetImportedFile(importResult.Uri).Content);
+                            lobbySettings = JObject.Parse(file.Content);
 
                             // An exception will be thrown if the jobject cannot be converted to a Ruleset.
                             lobbySettings.ToObject(typeof(Ruleset));
