@@ -56,7 +56,6 @@ namespace Deltin.Deltinteger.Parse
 
             base.ResolveElements();
 
-            // Todo: Add static methods and macros to scopes.
             // Give DefinedMethod and GetMacro a scope to use in case of the static attribute.
             foreach (var definedMethod in typeContext.define_method())
             {

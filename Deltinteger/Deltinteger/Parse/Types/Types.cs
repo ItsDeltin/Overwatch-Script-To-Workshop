@@ -36,8 +36,12 @@ namespace Deltin.Deltinteger.Parse
 
             if (!extend.CanBeExtended)
                 errorMessage = "Type '" + extend.Name + "' cannot be inherited.";
+            
             else if (extend == this)
                 errorMessage = "Cannot extend self.";
+            
+            else if (extend.Implements(this))
+                errorMessage = $"The class {extend.Name} extends this class.";
 
             if (errorMessage != null)
             {
