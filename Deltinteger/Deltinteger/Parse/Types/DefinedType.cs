@@ -122,6 +122,19 @@ namespace Deltin.Deltinteger.Parse
                 };
             }
 
+            // If the extend token exists, add completion that only contains all extendable classes.
+            if (typeContext.TERNARY_ELSE() != null)
+                parseInfo.Script.AddCompletionRange(new CompletionRange(
+                    // Get the completion items of all types.
+                    parseInfo.TranslateInfo.types
+                        .Where(t => t is ClassType ct && ct.CanBeExtended)
+                        .Select(t => t.GetCompletion())
+                        .ToArray(),
+                    // Get the completion range.
+                    DocRange.GetRange(typeContext.TERNARY_ELSE(), parseInfo.Script.NextToken(typeContext.TERNARY_ELSE())),
+                    // This completion takes priority.
+                    CompletionRangeKind.ClearRest
+                ));
             parseInfo.Script.AddCodeLensRange(new ReferenceCodeLensRange(this, parseInfo, CodeLensSourceType.Type, DefinedAt.range));
         }
 

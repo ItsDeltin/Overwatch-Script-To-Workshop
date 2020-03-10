@@ -136,6 +136,8 @@ namespace Deltin.Deltinteger.LanguageServer
             throw new ArgumentException("Cannot get range of type '" + node.GetType().Name + "'.");
         }
 
+        public static DocRange GetRange(object start, object stop) => new DocRange(DocRange.GetRange(start).start, DocRange.GetRange(stop).end);
+
         public bool IsInside(Pos pos)
         {
             return (start.line < pos.line || (start.line == pos.line && pos.character >= start.character))

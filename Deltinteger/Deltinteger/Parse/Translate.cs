@@ -22,7 +22,7 @@ namespace Deltin.Deltinteger.Parse
         private Importer Importer { get; }
         public Diagnostics Diagnostics { get; }
         public List<ScriptFile> ScriptFiles { get; } = new List<ScriptFile>();
-        private List<CodeType> types { get; } = new List<CodeType>();
+        public List<CodeType> types { get; } = new List<CodeType>();
         public List<CodeType> definedTypes { get; } = new List<CodeType>();
         public Scope PlayerVariableScope { get; private set; } = new Scope();
         public Scope GlobalScope { get; }
