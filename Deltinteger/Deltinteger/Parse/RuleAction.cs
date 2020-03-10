@@ -39,6 +39,12 @@ namespace Deltin.Deltinteger.Parse
                 Conditions = new RuleIfAction[ruleContext.rule_if().Length];
                 for (int i = 0; i < Conditions.Length; i++)
                 {
+                    parseInfo.Script.AddCompletionRange(new CompletionRange(
+                        scope,
+                        DocRange.GetRange(ruleContext.rule_if(i).LEFT_PAREN(), ruleContext.rule_if(i).RIGHT_PAREN()),
+                        CompletionRangeKind.Catch
+                    ));
+
                     Conditions[i] = new RuleIfAction(parseInfo, scope, ruleContext.rule_if(i));
                     _missingBlockRange = DocRange.GetRange(ruleContext.rule_if(i));
                 }
