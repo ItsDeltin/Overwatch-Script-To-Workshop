@@ -140,12 +140,8 @@ namespace Deltin.Deltinteger.Parse
 
         protected override void CheckAttributes()
         {
-            RejectAttributes(
-                AttributeType.Public, AttributeType.Protected, AttributeType.Private,
-                AttributeType.Static,
-                AttributeType.Globalvar, AttributeType.Playervar,
-                AttributeType.ID, AttributeType.Ext
-            );
+            base.CheckAttributes();
+            RejectAttributes(AttributeType.Ext, AttributeType.Ref);
         }
 
         protected override void GetCodeType()

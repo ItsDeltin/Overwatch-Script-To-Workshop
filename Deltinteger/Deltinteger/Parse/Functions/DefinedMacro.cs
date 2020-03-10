@@ -8,12 +8,13 @@ namespace Deltin.Deltinteger.Parse
         private DeltinScriptParser.ExprContext ExpressionToParse { get; }
         private DeltinScriptParser.Define_macroContext context { get; }
 
-        public DefinedMacro(ParseInfo parseInfo, Scope scope, DeltinScriptParser.Define_macroContext context, CodeType returnType)
-            : base(parseInfo, scope, context.name.Text, new LanguageServer.Location(parseInfo.Script.Uri, DocRange.GetRange(context.name)))
+        public DefinedMacro(ParseInfo parseInfo, Scope objectScope, Scope staticScope, DeltinScriptParser.Define_macroContext context, CodeType returnType)
+            : base(parseInfo, context.name.Text, new LanguageServer.Location(parseInfo.Script.Uri, DocRange.GetRange(context.name)))
         {
             this.context = context;
-            AccessLevel = context.accessor().GetAccessLevel();
             Static = context.STATIC() != null;
+            SetupScope(Static ? staticScope : objectScope);
+            AccessLevel = context.accessor().GetAccessLevel();
             ReturnType = returnType;
             ExpressionToParse = context.expr();
         }
@@ -22,7 +23,7 @@ namespace Deltin.Deltinteger.Parse
         {
             SetupParameters(context.setParameters(), false);
             parseInfo.Script.AddHover(DocRange.GetRange(context.name), GetLabel(true));
-            containingScope.AddMethod(this, parseInfo.Script.Diagnostics, DefinedAt.range);
+            if (!containingScope.IsAlreadyInScope(this)) containingScope.AddMethod(this, parseInfo.Script.Diagnostics, DefinedAt.range);
         }
 
         override public void SetupBlock()

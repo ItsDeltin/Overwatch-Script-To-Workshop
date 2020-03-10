@@ -218,13 +218,13 @@ namespace Deltin.Deltinteger.Parse
                 // Get the methods.
                 foreach (var methodContext in script.Context.define_method())
                 {
-                    var newMethod = new DefinedMethod(new ParseInfo(script, this), RulesetScope, methodContext, null);
+                    var newMethod = new DefinedMethod(new ParseInfo(script, this), RulesetScope, RulesetScope, methodContext, null);
                 }
                 
                 // Get the macros.
                 foreach (var macroContext in script.Context.define_macro())
                 {
-                    GetMacro(new ParseInfo(script, this), RulesetScope, macroContext);
+                    GetMacro(new ParseInfo(script, this), RulesetScope, RulesetScope, macroContext);
                 }
             }
 
@@ -499,7 +499,7 @@ namespace Deltin.Deltinteger.Parse
             else throw new NotImplementedException();
         }
     
-        public static IScopeable GetMacro(ParseInfo parseInfo, Scope scope, DeltinScriptParser.Define_macroContext macroContext)
+        public static IScopeable GetMacro(ParseInfo parseInfo, Scope objectScope, Scope staticScope, DeltinScriptParser.Define_macroContext macroContext)
         {
             // If the ; is missing, syntax error.
             if (macroContext.STATEMENT_END() == null)
@@ -521,9 +521,9 @@ namespace Deltin.Deltinteger.Parse
             IScopeable newMacro;
 
             if (macroContext.LEFT_PAREN() != null || macroContext.RIGHT_PAREN() != null)
-                newMacro = new DefinedMacro(parseInfo, scope, macroContext, returnType);
+                newMacro = new DefinedMacro(parseInfo, objectScope, staticScope, macroContext, returnType);
             else
-                newMacro = new MacroVar(parseInfo, scope, macroContext, returnType);
+                newMacro = new MacroVar(parseInfo, objectScope, staticScope, macroContext, returnType);
 
             parseInfo.TranslateInfo.ApplyBlock((IApplyBlock)newMacro);
             return newMacro;

@@ -360,6 +360,9 @@ namespace Deltin.Deltinteger.Parse
 
             return globalScope;
         }
+
+        public bool IsAlreadyInScope(IMethod method) => Methods.Contains(method);
+        public bool IsAlreadyInScope(IScopeable scopeable) => Variables.Contains(scopeable);
     }
 
     class ScopeIterate

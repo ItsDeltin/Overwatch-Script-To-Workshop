@@ -21,24 +21,28 @@ namespace Deltin.Deltinteger.Parse
         public bool Static { get; protected set; }
 
         protected ParseInfo parseInfo { get; }
-        protected Scope methodScope { get; }
-        protected Scope containingScope { get; }
+        protected Scope methodScope { get; private set; }
+        protected Scope containingScope { get; private set; }
         public Var[] ParameterVars { get; private set; }
         protected bool doesReturnValue;
 
         public CallInfo CallInfo { get; }
 
-        public DefinedFunction(ParseInfo parseInfo, Scope scope, string name, Location definedAt)
+        public DefinedFunction(ParseInfo parseInfo, string name, Location definedAt)
         {
             Name = name;
             DefinedAt = definedAt;
             this.parseInfo = parseInfo;
-            methodScope = scope.Child();
-            containingScope = scope;
             CallInfo = new CallInfo(this, parseInfo.Script);
 
             parseInfo.TranslateInfo.AddSymbolLink(this, definedAt, true);
             parseInfo.Script.AddCodeLensRange(new ReferenceCodeLensRange(this, parseInfo, CodeLensSourceType.Function, DefinedAt.range));
+        }
+
+        protected void SetupScope(Scope chosenScope)
+        {
+            methodScope = chosenScope.Child();
+            containingScope = chosenScope;
         }
 
         // IApplyBlock

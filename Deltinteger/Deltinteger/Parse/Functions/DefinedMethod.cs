@@ -24,8 +24,8 @@ namespace Deltin.Deltinteger.Parse
 
         public SubroutineInfo subroutineInfo { get; private set; }
 
-        public DefinedMethod(ParseInfo parseInfo, Scope scope, DeltinScriptParser.Define_methodContext context, CodeType containingType)
-            : base(parseInfo, scope, context.name.Text, new Location(parseInfo.Script.Uri, DocRange.GetRange(context.name)))
+        public DefinedMethod(ParseInfo parseInfo, Scope objectScope, Scope staticScope, DeltinScriptParser.Define_methodContext context, CodeType containingType)
+            : base(parseInfo, context.name.Text, new Location(parseInfo.Script.Uri, DocRange.GetRange(context.name)))
         {
             this.context = context;
             Attributes.ContainingType = containingType;
@@ -34,6 +34,8 @@ namespace Deltin.Deltinteger.Parse
 
             // Get the attributes.
             GetAttributes();
+
+            SetupScope(Static ? staticScope : objectScope);
 
             // Get the type.
             if (context.VOID() == null)
@@ -57,7 +59,7 @@ namespace Deltin.Deltinteger.Parse
             // Override attribute.
             if (Attributes.Override)
             {
-                IMethod overriding = scope.GetMethodOverload(this);
+                IMethod overriding = objectScope.GetMethodOverload(this);
 
                 // No method with the name and parameters found.
                 if (overriding == null) parseInfo.Script.Diagnostics.Error("Could not find a method to override.", nameRange);
@@ -77,28 +79,11 @@ namespace Deltin.Deltinteger.Parse
             if (Attributes.IsOverrideable && AccessLevel == AccessLevel.Private)
                 parseInfo.Script.Diagnostics.Error("A method marked as virtual or abstract must have the protection level 'public' or 'protected'.", nameRange);
 
-            /*
-            if (SubroutineName != null)
-            {
-                // Syntax error if the method is a subroutine and there are parameters.
-                if (Parameters.Length > 0)
-                    parseInfo.Script.Diagnostics.Error("Subroutines cannot have parameters.", errorRange);
-            
-                // Syntax error if the method is a subroutine and there is a return type.
-                if (ReturnType != null)
-                   parseInfo.Script.Diagnostics.Error("Subroutines cannot return a value.", errorRange);
-                
-                // Syntax error if the method is a subroutine and the method is defined in a class.
-                if (Attributes.ContainingType != null)
-                    parseInfo.Script.Diagnostics.Error("Subroutines cannot be defined in types.", errorRange);
-            }
-            */
-            
             // Syntax error if the block is missing.
             if (context.block() == null) parseInfo.Script.Diagnostics.Error("Expected block.", nameRange);
 
             // Add to the scope. Check for conflicts if the method is not overriding.
-            scope.AddMethod(this, parseInfo.Script.Diagnostics, nameRange, !Attributes.Override);
+            objectScope.AddMethod(this, parseInfo.Script.Diagnostics, nameRange, !Attributes.Override);
 
             // Add the hover info.
             parseInfo.Script.AddHover(DocRange.GetRange(context.name), GetLabel(true));
@@ -360,10 +345,18 @@ namespace Deltin.Deltinteger.Parse
             // Get the variables that will be used to store the parameters.
             IndexReference[] parameterStores = new IndexReference[ParameterVars.Length];
             for (int i = 0; i < ParameterVars.Length; i++)
-                parameterStores[i] = actionSet.IndexAssigner.Add(actionSet.VarCollection, ParameterVars[i], actionSet.IsGlobal, null, Attributes.Recursive) as IndexReference;
+                parameterStores[i] = actionSet.IndexAssigner.Add(actionSet.VarCollection, ParameterVars[i], true, null, Attributes.Recursive) as IndexReference;
+            
+            // If the subroutine is an object function inside a class, create a variable to store the class object.
+            IndexReference objectStore = null;
+            if (Attributes.ContainingType != null && !Static)
+            {
+                objectStore = actionSet.VarCollection.Assign("_" + Name + "_subroutineStore", true, true);
+                Attributes.ContainingType.AddObjectVariablesToAssigner(objectStore.GetVariable(), actionSet.IndexAssigner);
+            }
             
             // Set the subroutine info.
-            subroutineInfo = new SubroutineInfo(subroutine, returnHandler, subroutineRule, parameterStores);
+            subroutineInfo = new SubroutineInfo(subroutine, returnHandler, subroutineRule, parameterStores, objectStore);
 
             // Parse the block.
             block.Translate(actionSet);
@@ -378,6 +371,11 @@ namespace Deltin.Deltinteger.Parse
         // Calls single-instance methods.
         private IWorkshopTree ParseSubroutine(ActionSet actionSet, MethodCall methodCall)
         {
+            for (int i = 0; i < subroutineInfo.ParameterStores.Length; i++)
+                actionSet.AddAction(subroutineInfo.ParameterStores[i].SetVariable((Element)methodCall.ParameterValues[i]));
+            
+            actionSet.AddAction(subroutineInfo.ObjectStore.SetVariable(actionSet.CurrentObject));
+
             switch (methodCall.CallParallel)
             {
                 // No parallel, call subroutine normally.

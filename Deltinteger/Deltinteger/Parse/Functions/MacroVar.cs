@@ -23,7 +23,7 @@ namespace Deltin.Deltinteger.Parse
 
         public CallInfo CallInfo { get; }
 
-        public MacroVar(ParseInfo parseInfo, Scope scope, DeltinScriptParser.Define_macroContext macroContext, CodeType returnType)
+        public MacroVar(ParseInfo parseInfo, Scope objectScope, Scope staticScope, DeltinScriptParser.Define_macroContext macroContext, CodeType returnType)
         {
             Name = macroContext.name.Text;
             AccessLevel = macroContext.accessor().GetAccessLevel();
@@ -34,7 +34,7 @@ namespace Deltin.Deltinteger.Parse
             ReturnType = returnType;
             ExpressionToParse = macroContext.expr();
 
-            this.scope = scope;
+            scope = Static ? staticScope : objectScope;
             this.parseInfo = parseInfo;
 
             parseInfo.TranslateInfo.AddSymbolLink(this, DefinedAt, true);
