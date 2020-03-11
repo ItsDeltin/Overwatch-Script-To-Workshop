@@ -373,8 +373,9 @@ namespace Deltin.Deltinteger.Parse
         {
             for (int i = 0; i < subroutineInfo.ParameterStores.Length; i++)
                 actionSet.AddAction(subroutineInfo.ParameterStores[i].SetVariable((Element)methodCall.ParameterValues[i]));
-            
-            actionSet.AddAction(subroutineInfo.ObjectStore.SetVariable(actionSet.CurrentObject));
+
+            if (subroutineInfo.ObjectStore != null) 
+                actionSet.AddAction(subroutineInfo.ObjectStore.SetVariable(actionSet.CurrentObject));
 
             switch (methodCall.CallParallel)
             {
