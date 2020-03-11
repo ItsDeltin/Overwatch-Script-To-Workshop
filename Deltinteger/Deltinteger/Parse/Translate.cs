@@ -267,9 +267,6 @@ namespace Deltin.Deltinteger.Parse
             // Assign static variables.
             foreach (var type in types) type.WorkshopInit(this);
 
-            // Setup single-instance methods.
-            foreach (var method in subroutines) method.SetupSubroutine();
-
              // Assign variables at the rule-set level.
             foreach (var variable in rulesetVariables)
             {
@@ -286,6 +283,9 @@ namespace Deltin.Deltinteger.Parse
                     ));
                 }
             }
+
+            // Setup single-instance methods.
+            foreach (var method in subroutines) method.SetupSubroutine();
 
             // Parse the rules.
             foreach (var rule in rules)
