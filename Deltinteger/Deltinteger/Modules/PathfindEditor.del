@@ -3,18 +3,22 @@ import "!Debug Tools.del";
 rule: "Commands" -1
 {
     DisableInspectorRecording();
-    CreateHudText(VisibleTo:AllPlayers(), Text:"https://github.com/ItsDeltin/Overwatch-Script-To-Workshop/wiki/Pathfinding"     , TextColor     :Color.Blue   , Location:Location.Right, SortOrder:0 );
-    CreateHudText(VisibleTo:AllPlayers(), Subheader:"Ultimate: Create node."                                                    , SubheaderColor:Color.Aqua   , Location:Location.Right, SortOrder:1 );
-    CreateHudText(VisibleTo:AllPlayers(), Subheader:"Crouch + Ultimate: Destroy node."                                          , SubheaderColor:Color.Aqua   , Location:Location.Right, SortOrder:2 );
-    CreateHudText(VisibleTo:AllPlayers(), Subheader:"Interact: Select node."                                                    , SubheaderColor:Color.Green  , Location:Location.Right, SortOrder:3 );
-    CreateHudText(VisibleTo:AllPlayers(), Subheader:"Crouch + Interact: Deselect all nodes."                                    , SubheaderColor:Color.Green  , Location:Location.Right, SortOrder:4 );
-    CreateHudText(VisibleTo:AllPlayers(), Subheader:"Secondary Fire: Connect all selected nodes."                               , SubheaderColor:Color.Orange , Location:Location.Right, SortOrder:5 );
-    CreateHudText(VisibleTo:AllPlayers(), Subheader:"Crouch + Secondary Fire: Disconnect all selected nodes."                   , SubheaderColor:Color.Orange , Location:Location.Right, SortOrder:6 );
-    CreateHudText(VisibleTo:AllPlayers(), Subheader:"Voice Line Right: Create a path from the first to the last selected nodes.", SubheaderColor:Color.Orange , Location:Location.Right, SortOrder:7 );
-    CreateHudText(VisibleTo:AllPlayers(), Subheader:"Voice Line Left: Connect all selected nodes to the first selected node."   , SubheaderColor:Color.Orange , Location:Location.Right, SortOrder:8 );
-    CreateHudText(VisibleTo:AllPlayers(), Subheader:"Shift: Switch attribute."                                                  , SubheaderColor:Color.Purple , Location:Location.Right, SortOrder:9 );
-    CreateHudText(VisibleTo:AllPlayers(), Subheader:"Hello: Update shown nodes."                                                , SubheaderColor:Color.SkyBlue, Location:Location.Right, SortOrder:10);
-    CreateHudText(VisibleTo:AllPlayers(), Subheader:"Voice Line Up: Compile pathmap."                                           , SubheaderColor:Color.SkyBlue, Location:Location.Right, SortOrder:11);
+    CreateHudText(VisibleTo:AllPlayers(), Text:"https://github.com/ItsDeltin/Overwatch-Script-To-Workshop/wiki/Pathfinding", TextColor:Color.Blue, Location:Location.Right, SortOrder:0);
+    HelpText("Ultimate: Create node."                                                    , 1 );
+    HelpText("Crouch + Ultimate: Destroy node."                                          , 2 );
+    HelpText("Interact: Select node."                                                    , 3 );
+    HelpText("Crouch + Interact: Deselect all nodes."                                    , 4 );
+    HelpText("Secondary Fire: Connect all selected nodes."                               , 5 );
+    HelpText("Crouch + Secondary Fire: Disconnect all selected nodes."                   , 6 );
+    HelpText("Voice Line Right: Create a path from the first to the last selected nodes.", 7 );
+    HelpText("Voice Line Left: Connect all selected nodes to the first selected node."   , 8 );
+    HelpText("Shift: Switch attribute."                                                  , 9 );
+    HelpText("Voice Line Up: Compile pathmap."                                           , 11);
+}
+
+void HelpText(ref define text, ref define order)
+{
+    CreateHudText(VisibleTo:AllPlayers(), Subheader:text, SubheaderColor:Color.SkyBlue, Location:Location.Right, SortOrder:order);
 }
 
 define GetClosestNode(): FirstOf(SortedArray(Nodes, DistanceBetween(EyePosition(EventPlayer()), (<Node>ArrayElement()).ShownLocation)));
