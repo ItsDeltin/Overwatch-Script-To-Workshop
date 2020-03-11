@@ -29,6 +29,7 @@ namespace Deltin.Deltinteger
         {
             Program.args = args;
             CultureInfo.DefaultThreadCurrentCulture = new CultureInfo("en-US");
+            ElementList.InitElements();
             Lobby.HeroSettingCollection.Init();
             Lobby.ModeSettingCollection.Init();
 
@@ -89,14 +90,17 @@ namespace Deltin.Deltinteger
                         if (ext == ".csv")
                         {
                             PathMap map = PathMap.ImportFromCSV(script);
-                            string result = map.ExportAsXML();
-                            string output = Path.ChangeExtension(script, "pathmap");
-                            using (FileStream fs = File.Create(output))
+                            if (map != null)
                             {
-                                Byte[] info = Encoding.Unicode.GetBytes(result);
-                                fs.Write(info, 0, info.Length);
+                                string result = map.ExportAsXML();
+                                string output = Path.ChangeExtension(script, "pathmap");
+                                using (FileStream fs = File.Create(output))
+                                {
+                                    Byte[] info = Encoding.Unicode.GetBytes(result);
+                                    fs.Write(info, 0, info.Length);
+                                }
+                                Log.Write(LogLevel.Normal, "Created pathmap file at '" + output + "'.");
                             }
-                            Log.Write(LogLevel.Normal, "Created pathmap file at '" + output + "'.");
                         }
                         else if (ext == ".pathmap")
                         {

@@ -295,23 +295,18 @@ namespace Deltin.Deltinteger.Elements
 
     public class ElementList : IMethod
     {
-        private static ElementList[] _elementList;
-        public static ElementList[] Elements { 
-            get {
-                if (_elementList == null) GetElementList();
-                return _elementList;
-            }
-        }
-        private static void GetElementList()
+        public static ElementList[] Elements { get; private set; }
+
+        public static void InitElements()
         {
             Type[] methodList = Assembly.GetExecutingAssembly().GetTypes().Where(t => t.GetCustomAttribute<ElementData>() != null).ToArray();
 
-            _elementList = new ElementList[methodList.Length];
-            for (int i = 0; i < _elementList.Length; i++)
-                _elementList[i] = new ElementList(methodList[i]);
+            Elements = new ElementList[methodList.Length];
+            for (int i = 0; i < Elements.Length; i++)
+                Elements[i] = new ElementList(methodList[i]);
 
-            for (int i = 0; i < _elementList.Length; i++)
-                _elementList[i].ApplyParameters();
+            for (int i = 0; i < Elements.Length; i++)
+                Elements[i].ApplyParameters();
         }
         public static ElementList GetElement(string codeName)
         {
