@@ -1,7 +1,8 @@
-// import "!Debug Tools.del";
+import "!Debug Tools.del";
 
-rule: "Commands"
+rule: "Commands" -1
 {
+    DisableInspectorRecording();
     CreateHudText(VisibleTo:AllPlayers(), Text:"https://github.com/ItsDeltin/Overwatch-Script-To-Workshop/wiki/Pathfinding"     , TextColor     :Color.Blue   , Location:Location.Right, SortOrder:0 );
     CreateHudText(VisibleTo:AllPlayers(), Subheader:"Ultimate: Create node."                                                    , SubheaderColor:Color.Aqua   , Location:Location.Right, SortOrder:1 );
     CreateHudText(VisibleTo:AllPlayers(), Subheader:"Crouch + Ultimate: Destroy node."                                          , SubheaderColor:Color.Aqua   , Location:Location.Right, SortOrder:2 );
@@ -144,9 +145,10 @@ class Node
 
     public void UpdateVisible()
     {
-        Hide();
-        if (DistanceBetween(EventPlayer(), ShownLocation) < 35)
+        if (DistanceBetween(HostPlayer(), ShownLocation) < 35 && IsInViewAngle(HostPlayer(), ShownLocation, 50))
             Show();
+        else
+            Hide();
     }
 }
 
@@ -260,26 +262,39 @@ class Segment
     }
 }
 
+globalvar define updateVisibleLook;
+globalvar define updateVisiblePosition;
+
 rule: "Update visible"
-Event.OngoingPlayer
-if (HostPlayer() == EventPlayer())
-if (IsCommunicating(EventPlayer(), Communication.Hello))
+if (updateVisibleLook == null || DistanceBetween(updateVisiblePosition, HostPlayer()) > 3 || AngleBetweenVectors(updateVisibleLook, FacingDirectionOf(HostPlayer())) > 10)
 {
+    updateVisibleLook = FacingDirectionOf(HostPlayer());
+    updateVisiblePosition = PositionOf(HostPlayer());
+
     foreach (Segment segment in Segments)
     {
         segment.Node1.UpdateVisible();
         segment.Node2.UpdateVisible();
 
-        segment.Hide();
         if ((segment.Node1.visible) || segment.Node2.visible)
             segment.Show();
+        else
+            segment.Hide();
+        
+        MinWait();
     }
+    Wait(0.2);
+    LoopIfConditionIsTrue();
 }
+
+globalvar define compiling = false;
 
 rule: "CSV out"
 Event.OngoingPlayer
 if (IsCommunicating(EventPlayer(), Communication.VoiceLineUp))
 {
+    compiling = true;
+    EnableInspectorRecording();
     SmallMessage(AllPlayers(), "Compiling...");
 
     nodesOut = EmptyArray();
@@ -296,6 +311,8 @@ if (IsCommunicating(EventPlayer(), Communication.VoiceLineUp))
         ));
 
     SmallMessage(AllPlayers(), "Compile Finished!");
+    DisableInspectorRecording();
+    compiling = false;
 }
 
 globalvar define nodesOut    3;
