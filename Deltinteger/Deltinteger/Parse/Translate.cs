@@ -107,6 +107,18 @@ namespace Deltin.Deltinteger.Parse
 
         string GetImportedFile(ScriptFile script, FileImporter importer, DeltinScriptParser.Import_fileContext importFileContext)
         {
+            // If the file being imported is being imported as an object, get the variable name.
+            string variableName = null;
+            if (importFileContext.AS() != null)
+            {
+                // Syntax error if there is an 'as' keyword but no variable name.
+                if (importFileContext.name == null)
+                    script.Diagnostics.Error("Expected variable name.", DocRange.GetRange(importFileContext.AS()));
+                // Get the variable name.
+                else
+                    variableName = importFileContext.name.Text;
+            }
+
             DocRange stringRange = DocRange.GetRange(importFileContext.STRINGLITERAL());
 
             ImportResult importResult = importer.Import(

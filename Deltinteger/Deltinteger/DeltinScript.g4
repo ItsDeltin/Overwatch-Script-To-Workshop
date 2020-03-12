@@ -131,7 +131,7 @@ define_macro  : DOCUMENTATION* accessor? STATIC? (DEFINE | code_type) name=PART 
 ruleset :
 	reserved_global?
 	reserved_player?
-	(import_file | import_object)*
+	import_file*
 	((define STATEMENT_END) | ow_rule | define_method | define_macro | type_define | enum_define)*
 	EOF;
 
@@ -153,8 +153,7 @@ setParameters: (define (COMMA define)*)?;
 
 create_object : NEW (type=PART (LEFT_PAREN call_parameters? RIGHT_PAREN)) ;
 
-import_file : IMPORT STRINGLITERAL STATEMENT_END ;
-import_object : IMPORT file=STRINGLITERAL AS name=PART STATEMENT_END ;
+import_file : IMPORT STRINGLITERAL (AS name=PART?)? STATEMENT_END ;
 
 /*
  * Lexer Rules
@@ -236,6 +235,7 @@ CASE      : 'case'		;
 DEFAULT   : 'default'   ;
 BASE      : 'base'      ;
 IS        : 'is'		;
+INTERFACE : 'interface' ;
 
 EQUALS          : '='  ;
 EQUALS_POW      : '^=' ;
