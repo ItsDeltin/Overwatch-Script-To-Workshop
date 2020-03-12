@@ -9,10 +9,12 @@ using System.Collections.Generic;
 using System.IO;
 
 class JSONType: CodeType {
-    List<JSONType> Children = new List<JSONType>();
+    List<InternalVar> Children = new List<InternalVar>();
     List<(InternalVar var, JProperty prop)> Properties = new List<(InternalVar var, JProperty prop)>();
 
     private Scope staticScope = new Scope("JSON");
+    private Scope objectScope = new Scope("JSON");
+
 
     public JSONType(JObject jsonData) : base("JSON"){
         foreach(JProperty prop in jsonData.Children<JProperty>()){
@@ -27,7 +29,7 @@ class JSONType: CodeType {
                     Properties.Add((CreateInternalVar(prop.Name, "A JSON Property."), prop));
                     break;
                 default:
-                    InternalVar child = new InternalVar(prop.Name);
+                    InternalVar child = CreateInternalVar(prop.Name, "A JSON Object.");
                     child.CodeType = new JSONType((JObject)prop.Value);
                     Children.Add(child);
                     break;
@@ -36,7 +38,7 @@ class JSONType: CodeType {
     }
 
 
-    private InternalVar CreateInternalVar(string name, string documentation)
+    private InternalVar CreateInternalVar(string name, string documentation, bool isStatic = false)
     {
         // Create the variable.
         InternalVar newInternalVar = new InternalVar(name, CompletionItemKind.Property);
@@ -47,7 +49,10 @@ class JSONType: CodeType {
         // Set the documentation.
         newInternalVar.Documentation = documentation;
 
-        staticScope.AddNativeVariable(newInternalVar);
+        // Add the variable to the object scope.
+        if (!isStatic) objectScope.AddNativeVariable(newInternalVar);
+        // Add the variable to the static scope.
+        else staticScope.AddNativeVariable(newInternalVar);
 
         return newInternalVar;
     }
@@ -81,7 +86,8 @@ class JSONType: CodeType {
         Kind = CompletionItemKind.Struct
     };
 
-
+    public override Scope GetObjectScope() => objectScope;
+        
     public override Scope ReturningScope() => staticScope;
 }
 
