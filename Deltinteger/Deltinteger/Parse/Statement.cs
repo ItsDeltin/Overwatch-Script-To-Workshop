@@ -60,10 +60,13 @@ namespace Deltin.Deltinteger.Parse
         {
             DeleteValue = DeltinScript.GetExpression(parseInfo, scope, deleteContext.expr());
 
-            if (DeleteValue.Type() == null)
-                parseInfo.Script.Diagnostics.Error("Expression has no type.", DocRange.GetRange(deleteContext.expr()));
-            else if (!DeleteValue.Type().CanBeDeleted)
-                parseInfo.Script.Diagnostics.Error($"Type '{DeleteValue.Type().Name}' cannot be deleted.", DocRange.GetRange(deleteContext.expr()));
+            if (DeleteValue != null)
+            {
+                if (DeleteValue.Type() == null)
+                    parseInfo.Script.Diagnostics.Error("Expression has no type.", DocRange.GetRange(deleteContext.expr()));
+                else if (!DeleteValue.Type().CanBeDeleted)
+                    parseInfo.Script.Diagnostics.Error($"Type '{DeleteValue.Type().Name}' cannot be deleted.", DocRange.GetRange(deleteContext.expr()));
+            }
         }
 
         public void Translate(ActionSet actionSet)
