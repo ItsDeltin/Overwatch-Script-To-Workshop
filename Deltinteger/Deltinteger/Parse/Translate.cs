@@ -135,41 +135,60 @@ namespace Deltin.Deltinteger.Parse
                     
                     // Get lobby settings.
                     case ".json":
-                        JObject lobbySettings = null;
 
-                        // Make sure the json is in the correct format.
-                        try
+                        if (Path.GetFileName(importResult.FilePath) == "lobby.json")
+                        {
+                            JObject lobbySettings = null;
+
+                            // Make sure the json is in the correct format.
+                            try
+                            {
+                                ImportedScript file = FileGetter.GetImportedFile(importResult.Uri);
+                                file.Update();
+
+                                // Convert the json to a jobject.
+                                lobbySettings = JObject.Parse(file.Content);
+
+                                // An exception will be thrown if the jobject cannot be converted to a Ruleset.
+                                lobbySettings.ToObject(typeof(Ruleset));
+
+                                if (!Ruleset.Validate(lobbySettings, script.Diagnostics, stringRange)) break;
+                            }
+                            catch
+                            {
+                                // Error if the json failed to parse.
+                                script.Diagnostics.Error("Failed to parse the settings file.", stringRange);
+                                break;
+                            }
+
+                            // If no lobby settings were imported yet, set MergedLobbySettings to the jobject.
+                            if (MergedLobbySettings == null) MergedLobbySettings = lobbySettings;
+                            else
+                            {
+                                // Otherwise, merge current lobby settings.
+                                lobbySettings.Merge(MergedLobbySettings, new JsonMergeSettings
+                                {
+                                    MergeArrayHandling = MergeArrayHandling.Union,
+                                    MergeNullValueHandling = MergeNullValueHandling.Ignore
+                                });
+                                MergedLobbySettings = lobbySettings;
+                            }
+                            break;
+                        } else
                         {
                             ImportedScript file = FileGetter.GetImportedFile(importResult.Uri);
                             file.Update();
 
-                            // Convert the json to a jobject.
-                            lobbySettings = JObject.Parse(file.Content);
+                            JObject jsonData = JObject.Parse(file.Content);
 
-                            // An exception will be thrown if the jobject cannot be converted to a Ruleset.
-                            lobbySettings.ToObject(typeof(Ruleset));
+                            InternalVar jsonVar = new InternalVar(importFileContext.STATEMENT_END().GetText());
+                            jsonVar.CodeType = new JSONType(jsonData);
 
-                            if (!Ruleset.Validate(lobbySettings, script.Diagnostics, stringRange)) break;
-                        }
-                        catch
-                        {
-                            // Error if the json failed to parse.
-                            script.Diagnostics.Error("Failed to parse the settings file.", stringRange);
+                            GlobalScope.AddVariable(jsonVar, script.Diagnostics, DocRange.GetRange(importFileContext.name));
+                            DefaultIndexAssigner.Add(jsonVar, new V_Null());
+
                             break;
                         }
-
-                        // If no lobby settings were imported yet, set MergedLobbySettings to the jobject.
-                        if (MergedLobbySettings == null) MergedLobbySettings = lobbySettings;
-                        else
-                        {
-                            // Otherwise, merge current lobby settings.
-                            lobbySettings.Merge(MergedLobbySettings, new JsonMergeSettings {
-                                MergeArrayHandling = MergeArrayHandling.Union,
-                                MergeNullValueHandling = MergeNullValueHandling.Ignore
-                            });
-                            MergedLobbySettings = lobbySettings;
-                        }
-                        break;
                 }
             }
             return importResult.Directory;
