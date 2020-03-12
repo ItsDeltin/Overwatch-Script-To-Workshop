@@ -9,7 +9,7 @@ namespace Deltin.Deltinteger.Parse
     {
         public string Name { get; }
         public AccessLevel AccessLevel { get; set; } = AccessLevel.Public;
-        public Location DefinedAt => null;
+        public Location DefinedAt { get; set; }
         public bool WholeContext => true;
         public CompletionItemKind CompletionItemKind { get; set; } = CompletionItemKind.Variable;
         public string Documentation { get; set; }
