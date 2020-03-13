@@ -54,8 +54,11 @@ namespace Deltin.Deltinteger.Pathfinder
 
         public override IWorkshopTree Get(ActionSet actionSet, IWorkshopTree[] parameterValues)
         {
+            IndexReference destinationStore = actionSet.VarCollection.Assign("_pathfindDestinationStore", actionSet.IsGlobal, true);
+            actionSet.AddAction(destinationStore.SetVariable((Element)parameterValues[1]));
+
             DijkstraMultiSource algorithm = new DijkstraMultiSource(
-                actionSet, actionSet.Translate.DeltinScript.SetupPathfinder(), (Element)actionSet.CurrentObject, (Element)parameterValues[0], (Element)parameterValues[1]
+                actionSet, actionSet.Translate.DeltinScript.SetupPathfinder(), (Element)actionSet.CurrentObject, (Element)parameterValues[0], (Element)destinationStore.GetVariable()
             );
             algorithm.Get();
 
@@ -73,15 +76,15 @@ namespace Deltin.Deltinteger.Pathfinder
 
         public override IWorkshopTree Get(ActionSet actionSet, IWorkshopTree[] parameterValues)
         {
-            Element position = (Element)parameterValues[0];
-            Element destination = (Element)parameterValues[1];
+            IndexReference destinationStore = actionSet.VarCollection.Assign("_pathfindDestinationStore", actionSet.IsGlobal, true);
+            actionSet.AddAction(destinationStore.SetVariable((Element)parameterValues[1]));
 
             DijkstraNormal algorithm = new DijkstraNormal(
-                actionSet, (Element)actionSet.CurrentObject, position, destination
+                actionSet, (Element)actionSet.CurrentObject, (Element)parameterValues[0], (Element)destinationStore.GetVariable()
             );
             algorithm.Get();
 
-            return Element.Part<V_Append>(algorithm.finalPath.GetVariable(), destination);
+            return Element.Part<V_Append>(algorithm.finalPath.GetVariable(), destinationStore.GetVariable());
         }
     }
 
