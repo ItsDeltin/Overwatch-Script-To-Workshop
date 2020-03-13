@@ -27,8 +27,7 @@
     <Content Include="Maps.json"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Antlr4.Runtime" Version="4.6.6" />
-    <PackageReference Include="Antlr4.CodeGenerator" Version="4.6.6">
+      <PackageReference Include="Antlr4.CodeGenerator" Version="4.6.5-beta001">
       <PrivateAssets>All</PrivateAssets>
     </PackageReference>
   </ItemGroup>

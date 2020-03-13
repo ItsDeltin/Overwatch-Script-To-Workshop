@@ -61,7 +61,7 @@ class JSONType: CodeType {
 
     public override void AddObjectVariablesToAssigner(IWorkshopTree reference, VarIndexAssigner assigner) {
         foreach (var p in Properties) {
-            switch (p.prop.Type)
+            switch (p.prop.Value.Type)
             {
                 case JTokenType.String:
                     assigner.Add(p.var, new V_CustomString(p.prop.Value.ToObject<string>()));
@@ -78,6 +78,10 @@ class JSONType: CodeType {
                     assigner.Add(p.var, new V_Null());
                     break;
             }
+        }
+        foreach (var c in Children)
+        {
+            assigner.Add(c, new V_Null());
         }
     }
     public override CompletionItem GetCompletion() => new CompletionItem()

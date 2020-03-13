@@ -13,6 +13,7 @@ using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.C
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using Newtonsoft.Json.Linq;
+using System.Diagnostics;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -47,11 +48,12 @@ namespace Deltin.Deltinteger.Parse
             types.AddRange(CodeType.DefaultTypes);
             Importer = new Importer(translateSettings.Root.Uri);
 
-            CollectScriptFiles(translateSettings.Root);
-            
             GlobalScope = Scope.GetGlobalScope();
             RulesetScope = GlobalScope.Child();
             RulesetScope.PrivateCatch = true;
+
+            CollectScriptFiles(translateSettings.Root);
+            
             
             Translate();
             if (!Diagnostics.ContainsErrors())
@@ -192,13 +194,13 @@ namespace Deltin.Deltinteger.Parse
                             file.Update();
 
                             JObject jsonData = JObject.Parse(file.Content);
-
-                            InternalVar jsonVar = new InternalVar(importFileContext.STATEMENT_END().GetText());
+                            InternalVar jsonVar = new InternalVar(importFileContext.name.Text);
                             jsonVar.CodeType = new JSONType(jsonData);
 
-                            GlobalScope.AddVariable(jsonVar, script.Diagnostics, DocRange.GetRange(importFileContext.name));
-                            DefaultIndexAssigner.Add(jsonVar, new V_Null());
 
+                            RulesetScope.AddVariable(jsonVar, script.Diagnostics, DocRange.GetRange(importFileContext.name));
+                            DefaultIndexAssigner.Add(jsonVar, new V_Null());
+                            
                             break;
                         }
                 }
