@@ -120,7 +120,8 @@
         "1 Per Team",
         "2 Per Team",
         "1 Per Game",
-        "2 Per Game"
+        "2 Per Game",
+        "Off"
       ]
     },
     "Limit Roles": {
