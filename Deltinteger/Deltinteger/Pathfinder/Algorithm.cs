@@ -144,8 +144,8 @@ namespace Deltin.Deltinteger.Pathfinder
             // Get the path.
             actionSet.AddAction(Element.Part<A_While>(new V_Compare(
                 current.GetVariable(),
-                Operators.NotEqual,
-                new V_Number(-1)
+                Operators.GreaterThanOrEqual,
+                new V_Number(0)
             )));
 
             // !WAIT actionSet.AddAction(A_Wait.MinimumWait);
@@ -164,6 +164,16 @@ namespace Deltin.Deltinteger.Pathfinder
                 first = array;
                 second = next;
             }
+
+            // For debugging generated path.
+            // actionSet.AddAction(Element.Part<A_CreateEffect>(
+            //     Element.Part<V_AllPlayers>(),
+            //     EnumData.GetEnumValue(Effect.Orb),
+            //     EnumData.GetEnumValue(Color.SkyBlue),
+            //     next,
+            //     new V_Number(0.5),
+            //     EnumData.GetEnumValue(EffectRev.VisibleTo)
+            // ));
 
             actionSet.AddAction(ArrayBuilder<Element>.Build(
                 finalPath.SetVariable(Element.Part<V_Append>(first, second)),

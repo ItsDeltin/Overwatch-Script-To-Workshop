@@ -25,12 +25,16 @@ namespace Deltin.Deltinteger.Pathfinder
 
         public override IWorkshopTree Get(ActionSet actionSet, IWorkshopTree[] parameterValues)
         {
+            // Store the pathfind destination.
+            IndexReference destinationStore = actionSet.VarCollection.Assign("_pathfindDestinationStore", actionSet.IsGlobal, true);
+            actionSet.AddAction(destinationStore.SetVariable((Element)parameterValues[1]));
+
             DijkstraNormal algorithm = new DijkstraNormal(
-                actionSet, (Element)actionSet.CurrentObject, Element.Part<V_PositionOf>(parameterValues[0]), (Element)parameterValues[1]
+                actionSet, (Element)actionSet.CurrentObject, Element.Part<V_PositionOf>(parameterValues[0]), (Element)destinationStore.GetVariable()
             );
             algorithm.Get();
             DijkstraBase.Pathfind(
-                actionSet, actionSet.Translate.DeltinScript.SetupPathfinder(), (Element)algorithm.finalPath.GetVariable(), (Element)parameterValues[0], (Element)parameterValues[1]
+                actionSet, actionSet.Translate.DeltinScript.SetupPathfinder(), (Element)algorithm.finalPath.GetVariable(), (Element)parameterValues[0], (Element)destinationStore.GetVariable()
             );
 
             return null;
