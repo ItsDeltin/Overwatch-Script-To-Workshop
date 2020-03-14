@@ -80,6 +80,15 @@ namespace Deltin.Deltinteger.Elements
     [Parameter("Team", ValueType.Team, typeof(V_TeamVar))]
     public class V_AllPlayersOnObjective : Element {}
 
+    [ElementData("All Tank Heroes", ValueType.Hero)]
+    public class V_AllTankHeroes : Element {}
+
+    [ElementData("All Damage Heroes", ValueType.Hero)]
+    public class V_AllDamageHeroes : Element {}
+
+    [ElementData("All Support Heroes", ValueType.Hero)]
+    public class V_AllSupportHeroes : Element {}
+
     [ElementData("Allowed Heroes", ValueType.Hero)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     public class V_AllowedHeroes : Element {}
