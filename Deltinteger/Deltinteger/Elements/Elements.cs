@@ -140,18 +140,18 @@ namespace Deltin.Deltinteger.Elements
             // return Element.Part<V_ValueInArray>(CreateArray(alternative, consequent), Element.Part<V_Add>(condition, new V_Number(0)));
         }
 
-        public static Element operator +(Element a, Element b) => Element.Part<V_Add>(a, b);
-        public static Element operator -(Element a, Element b) => Element.Part<V_Subtract>(a, b);
-        public static Element operator *(Element a, Element b) => Element.Part<V_Multiply>(a, b);
-        public static Element operator /(Element a, Element b) => Element.Part<V_Divide>(a, b);
-        public static Element operator %(Element a, Element b) => Element.Part<V_Modulo>(a, b);
-        public static Element operator <(Element a, Element b) => new V_Compare(a, Operators.LessThan, b);
-        public static Element operator >(Element a, Element b) => new V_Compare(a, Operators.GreaterThan, b);
-        public static Element operator <=(Element a, Element b) => new V_Compare(a, Operators.LessThanOrEqual, b);
-        public static Element operator >=(Element a, Element b) => new V_Compare(a, Operators.GreaterThanOrEqual, b);
-        public static Element operator !(Element a) => Element.Part<V_Not>(a);
-        public static Element operator -(Element a) => a * -1;
-        public Element this[Element i]
+        public static V_Add operator +(Element a, Element b) => Element.Part<V_Add>(a, b);
+        public static V_Subtract operator -(Element a, Element b) => Element.Part<V_Subtract>(a, b);
+        public static V_Multiply operator *(Element a, Element b) => Element.Part<V_Multiply>(a, b);
+        public static V_Divide operator /(Element a, Element b) => Element.Part<V_Divide>(a, b);
+        public static V_Modulo operator %(Element a, Element b) => Element.Part<V_Modulo>(a, b);
+        public static V_Compare operator <(Element a, Element b) => new V_Compare(a, Operators.LessThan, b);
+        public static V_Compare operator >(Element a, Element b) => new V_Compare(a, Operators.GreaterThan, b);
+        public static V_Compare operator <=(Element a, Element b) => new V_Compare(a, Operators.LessThanOrEqual, b);
+        public static V_Compare operator >=(Element a, Element b) => new V_Compare(a, Operators.GreaterThanOrEqual, b);
+        public static V_Not operator !(Element a) => Element.Part<V_Not>(a);
+        public static V_Multiply operator -(Element a) => a * -1;
+        public V_ValueInArray this[Element i]
         {
             get { return Element.Part<V_ValueInArray>(this, i); }
             private set {}
