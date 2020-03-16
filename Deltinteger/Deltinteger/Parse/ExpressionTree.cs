@@ -128,7 +128,7 @@ namespace Deltin.Deltinteger.Parse
             IWorkshopTree target = null;
             IWorkshopTree result = null;
             VarIndexAssigner currentAssigner = actionSet.IndexAssigner;
-            Element currentObject = null;
+            IWorkshopTree currentObject = null;
             Element[] resultIndex = new Element[0];
 
             for (int i = 0; i < Tree.Length; i++)
@@ -174,7 +174,7 @@ namespace Deltin.Deltinteger.Parse
                 {
                     var type = Tree[i].Type();
 
-                    currentObject = current as Element;
+                    currentObject = current;
                     currentAssigner = actionSet.IndexAssigner.CreateContained();
                     type.AddObjectVariablesToAssigner(currentObject, currentAssigner);
                 }

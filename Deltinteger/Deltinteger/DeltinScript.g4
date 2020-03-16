@@ -40,6 +40,7 @@ expr
 	| NOT expr                                                                         #e_not
 	| '-' expr                                                                         #e_inverse
 	| expr IS type=PART?                                                               #e_is
+	| lambda                                                                           #e_lambda
 	| <assoc=right> left=expr op=('^' | '*' | '/' | '%') right=expr                    #e_op_1
 	| left=expr op=('+' | '-') right=expr                                              #e_op_2
 	| left=expr op=(LESS_THAN | '<=' | '==' | '>=' | GREATER_THAN | '!=') right=expr   #e_op_compare
@@ -63,7 +64,10 @@ picky_parameters : picky_parameter (COMMA picky_parameter?)* ;
 method           : (ASYNC NOT?)? PART LEFT_PAREN (picky_parameters | call_parameters)? RIGHT_PAREN ;
 
 variable : PART array? ;
-code_type: PART (INDEX_START INDEX_END)*;
+code_type: PART (INDEX_START INDEX_END)* generics?;
+generics : LESS_THAN (code_type (COMMA code_type)*)? GREATER_THAN;
+
+lambda: (define | LEFT_PAREN (define (COMMA define)*)? RIGHT_PAREN) INS (expr | block) ;
 
 statement :
 	  varset STATEMENT_END?   #s_varset
@@ -237,6 +241,7 @@ BASE      : 'base'      ;
 IS        : 'is'		;
 INTERFACE : 'interface' ;
 
+INS             : '=>'  ;
 EQUALS          : '='  ;
 EQUALS_POW      : '^=' ;
 EQUALS_MULTIPLY : '*=' ;

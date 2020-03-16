@@ -8,7 +8,7 @@ namespace Deltin.Deltinteger.Parse
 {
     public class DefinedMethod : DefinedFunction
     {
-        private readonly DeltinScriptParser.Define_methodContext context;
+        public readonly DeltinScriptParser.Define_methodContext context;
         private MethodAttributeHandler[] attributes;
 
         // Attributes
@@ -166,94 +166,12 @@ namespace Deltin.Deltinteger.Parse
             if (context.block() != null)
             {
                 block = new BlockAction(parseInfo.SetCallInfo(CallInfo), methodScope, context.block());
-                ValidateReturns();
+
+                MethodBlockScan validate = new MethodBlockScan(doesReturnValue, parseInfo, this);
+                multiplePaths = validate.MultiplePaths;
             }
             foreach (var listener in listeners) listener.Applied();
         }
-
-        // Makes sure each return statement returns a value if the method returns a value and that each path returns a value.
-        private void ValidateReturns()
-        {
-            ReturnAction[] returns = GetReturns();
-            if (doesReturnValue)
-            {
-                // If there is only one return statement, return the reference to
-                // the return statement to reduce the number of actions.
-                multiplePaths = returns.Length > 1;
-
-                // Syntax error if there are any paths that don't return a value.
-                CheckPath(parseInfo.Script, new PathInfo(block, DocRange.GetRange(context.name), true));
-
-                // Syntax error if a return statement does not return a value.
-                foreach (var ret in returns)
-                    if (ret.ReturningValue == null)
-                        parseInfo.Script.Diagnostics.Error("Must return a value.", ret.ErrorRange);
-            }
-            else
-            {
-                // Syntax error on any return statement that returns a value.
-                foreach (var ret in returns)
-                    if (ret.ReturningValue != null)
-                        parseInfo.Script.Diagnostics.Error(Name + " is void, so no value can be returned.", ret.ErrorRange);
-            }
-        }
-
-        // Gets all return statements in a method.
-        private ReturnAction[] GetReturns()
-        {
-            List<ReturnAction> returns = new List<ReturnAction>();
-            getReturns(returns, block);
-            return returns.ToArray();
-
-            void getReturns(List<ReturnAction> actions, BlockAction block)
-            {
-                // Loop through each statement in the block.
-                foreach (var statement in block.Statements)
-                    // If the current statement is a return statement, add it to the list.
-                    if (statement is ReturnAction) actions.Add((ReturnAction)statement);
-
-                    // If the current statement contains sub-blocks, get the return statements in those blocks recursively.
-                    else if (statement is IBlockContainer)
-                        foreach (var path in ((IBlockContainer)statement).GetPaths())
-                            getReturns(actions, path.Block);
-            }
-        }
-
-        // Makes sure each path returns a value.
-        private static void CheckPath(ScriptFile script, PathInfo path)
-        {
-            bool blockReturns = false;
-            // Check the statements backwards.
-            for (int i = path.Block.Statements.Length - 1; i >= 0; i--)
-            {
-                if (path.Block.Statements[i] is ReturnAction)
-                {
-                    blockReturns = true;
-                    break;
-                }
-                
-                if (path.Block.Statements[i] is IBlockContainer)
-                {
-                    // If any of the paths in the block container has WillRun set to true,
-                    // set blockReturns to true. The responsibility of checking if this
-                    // block will run is given to the block container.
-                    if (((IBlockContainer)path.Block.Statements[i]).GetPaths().Any(containerPath => containerPath.WillRun))
-                        blockReturns = true;
-
-                    CheckContainer(script, (IBlockContainer)path.Block.Statements[i]);
-                    break;
-                }
-            }
-            if (!blockReturns)
-                script.Diagnostics.Error("Path does not return a value.", path.ErrorRange);
-        }
-        private static void CheckContainer(ScriptFile script, IBlockContainer container)
-        {
-            foreach (var path in container.GetPaths()) CheckPath(script, path);
-        }
-
-        // Checks if the method returns a value.
-        override public bool DoesReturnValue() => doesReturnValue;
 
         // Parses the method.
         override public IWorkshopTree Parse(ActionSet actionSet, MethodCall methodCall)
@@ -375,7 +293,7 @@ namespace Deltin.Deltinteger.Parse
                 actionSet.AddAction(subroutineInfo.ParameterStores[i].SetVariable((Element)methodCall.ParameterValues[i]));
 
             if (subroutineInfo.ObjectStore != null) 
-                actionSet.AddAction(subroutineInfo.ObjectStore.SetVariable(actionSet.CurrentObject));
+                actionSet.AddAction(subroutineInfo.ObjectStore.SetVariable((Element)actionSet.CurrentObject));
 
             switch (methodCall.CallParallel)
             {

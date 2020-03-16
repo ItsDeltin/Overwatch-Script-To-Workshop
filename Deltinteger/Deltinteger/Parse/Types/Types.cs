@@ -56,7 +56,7 @@ namespace Deltin.Deltinteger.Parse
             Extends = extend;
         }
 
-        public bool Implements(CodeType type)
+        public virtual bool Implements(CodeType type)
         {
             if (type == null) return false;
 
@@ -127,6 +127,24 @@ namespace Deltin.Deltinteger.Parse
             if (typeContext == null) return null;
             CodeType type = parseInfo.TranslateInfo.GetCodeType(typeContext.PART().GetText(), parseInfo.Script.Diagnostics, DocRange.GetRange(typeContext));
 
+            // Get generics
+            if (typeContext.generics()?.code_type() != null)
+            {
+                // Create a list to store the generics.
+                List<CodeType> generics = new List<CodeType>();
+
+                // Get the generics.
+                foreach (var genericContext in typeContext.generics().code_type())
+                    generics.Add(GetCodeTypeFromContext(parseInfo, genericContext));
+                
+                if (type is Lambda.BlockLambda)
+                    type = new Lambda.BlockLambda(generics.ToArray());
+                else if (type is Lambda.ValueBlockLambda)
+                    type = new Lambda.ValueBlockLambda(generics[0], generics.Skip(1).ToArray());
+                else if (type is Lambda.MacroLambda)
+                    type = new Lambda.MacroLambda(generics[0], generics.Skip(1).ToArray());
+            }
+
             if (type != null)
             {
                 type.Call(parseInfo.Script, DocRange.GetRange(typeContext));
@@ -154,6 +172,9 @@ namespace Deltin.Deltinteger.Parse
             // Add custom classes here.
             _defaultTypes.Add(new Pathfinder.PathmapClass());
             _defaultTypes.Add(new Models.AssetClass());
+            _defaultTypes.Add(new Lambda.BlockLambda());
+            _defaultTypes.Add(new Lambda.ValueBlockLambda());
+            _defaultTypes.Add(new Lambda.MacroLambda());
             _defaultTypes.Add(VectorType.Instance);
         }
     }

@@ -460,6 +460,7 @@ namespace Deltin.Deltinteger.Parse
                 case DeltinScriptParser.E_thisContext @this: return new ThisAction(parseInfo, scope, @this);
                 case DeltinScriptParser.E_baseContext @base: return new BaseAction(parseInfo, scope, @base);
                 case DeltinScriptParser.E_isContext @is: return new IsAction(parseInfo, scope, @is);
+                case DeltinScriptParser.E_lambdaContext lambda: return new Lambda.LambdaAction(parseInfo, scope, lambda.lambda());
                 default: throw new Exception($"Could not determine the expression type '{exprContext.GetType().Name}'.");
             }
         }

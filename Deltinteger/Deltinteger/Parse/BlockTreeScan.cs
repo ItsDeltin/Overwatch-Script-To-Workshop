@@ -1,0 +1,132 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using Deltin.Deltinteger.LanguageServer;
+
+namespace Deltin.Deltinteger.Parse
+{
+    public class BlockTreeScan
+    {
+        private readonly ParseInfo _parseInfo;
+        private readonly string _objectName;
+        private readonly DocRange _genericErrorRange;
+        public BlockAction Block { get; }
+        public ReturnAction[] Returns { get; }
+        public bool ReturnsValue { get; protected set; }
+        public bool MultiplePaths { get; private set; }
+        public CodeType ReturnType { get; private set; }
+
+        public BlockTreeScan(ParseInfo parseInfo, BlockAction block, string objectName, DocRange genericErrorRange)
+        {
+            _parseInfo = parseInfo;
+            _objectName = objectName;
+            _genericErrorRange = genericErrorRange;
+            Block = block;
+            Returns = GetReturns();
+            SetDoesReturnValue();
+            ValidateReturns();
+        }
+
+        // Makes sure each return statement returns a value if the method returns a value and that each path returns a value.
+        private void ValidateReturns()
+        {
+            if (ReturnsValue)
+            {
+                // If there is only one return statement, return the reference to
+                // the return statement to reduce the number of actions.
+                MultiplePaths = Returns.Length > 1;
+
+                // Syntax error if there are any paths that don't return a value.
+                CheckPath(new PathInfo(Block, _genericErrorRange, true));
+
+                // Syntax error if a return statement does not return a value.
+                foreach (var ret in Returns)
+                    if (ret.ReturningValue == null)
+                        _parseInfo.Script.Diagnostics.Error("Must return a value.", ret.ErrorRange);
+            }
+            else
+            {
+                // Syntax error on any return statement that returns a value.
+                foreach (var ret in Returns)
+                    if (ret.ReturningValue != null)
+                        _parseInfo.Script.Diagnostics.Error(_objectName + " is void, so no value can be returned.", ret.ErrorRange);
+            }
+        }
+
+        // Gets all return statements in a method.
+        private ReturnAction[] GetReturns()
+        {
+            List<ReturnAction> returns = new List<ReturnAction>();
+            getReturns(returns, Block);
+            return returns.ToArray();
+
+            void getReturns(List<ReturnAction> actions, BlockAction block)
+            {
+                // Loop through each statement in the block.
+                foreach (var statement in block.Statements)
+                    // If the current statement is a return statement, add it to the list.
+                    if (statement is ReturnAction returnAction)
+                    {
+                        actions.Add(returnAction);
+
+                        if (returnAction.ReturningValue != null && ReturnType == null)
+                            ReturnType = returnAction.ReturningValue.Type();
+                    }
+
+                    // If the current statement contains sub-blocks, get the return statements in those blocks recursively.
+                    else if (statement is IBlockContainer)
+                        foreach (var path in ((IBlockContainer)statement).GetPaths())
+                            getReturns(actions, path.Block);
+            }
+        }
+        
+        protected virtual void SetDoesReturnValue()
+        { 
+            ReturnsValue = Returns.Any(r => r.ReturningValue != null);
+        }
+
+        // Makes sure each path returns a value.
+        private void CheckPath(PathInfo path)
+        {
+            bool blockReturns = false;
+            // Check the statements backwards.
+            for (int i = path.Block.Statements.Length - 1; i >= 0; i--)
+            {
+                if (path.Block.Statements[i] is ReturnAction)
+                {
+                    blockReturns = true;
+                    break;
+                }
+                
+                if (path.Block.Statements[i] is IBlockContainer)
+                {
+                    // If any of the paths in the block container has WillRun set to true,
+                    // set blockReturns to true. The responsibility of checking if this
+                    // block will run is given to the block container.
+                    if (((IBlockContainer)path.Block.Statements[i]).GetPaths().Any(containerPath => containerPath.WillRun))
+                        blockReturns = true;
+
+                    CheckContainer((IBlockContainer)path.Block.Statements[i]);
+                    break;
+                }
+            }
+            if (!blockReturns)
+                _parseInfo.Script.Diagnostics.Error("Path does not return a value.", path.ErrorRange);
+        }
+
+        private void CheckContainer(IBlockContainer container)
+        {
+            foreach (var path in container.GetPaths()) CheckPath(path);
+        }
+    }
+
+    class MethodBlockScan : BlockTreeScan
+    {
+        public MethodBlockScan(bool doesReturnValue, ParseInfo parseInfo, DefinedMethod method) : base(parseInfo, method.block, method.Name, DocRange.GetRange(method.context.name))
+        {
+            ReturnsValue = doesReturnValue;
+        }
+
+        protected override void SetDoesReturnValue() {}
+    }
+}
