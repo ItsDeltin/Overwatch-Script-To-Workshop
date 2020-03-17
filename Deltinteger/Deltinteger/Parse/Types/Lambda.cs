@@ -4,6 +4,7 @@ using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.Elements;
 using StringOrMarkupContent = OmniSharp.Extensions.LanguageServer.Protocol.Models.StringOrMarkupContent;
 using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
+using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItemKind;
 
 namespace Deltin.Deltinteger.Parse.Lambda
 {
@@ -113,7 +114,8 @@ namespace Deltin.Deltinteger.Parse.Lambda
         public bool DoesReturnValue() => LambdaType is MacroLambda || LambdaType is ValueBlockLambda;
 
         public CompletionItem GetCompletion() => new CompletionItem() {
-            Label = "Invoke"
+            Label = "Invoke",
+            Kind = CompletionItemKind.Method
         };
         public string GetLabel(bool markdown) => HoverHandler.GetLabel(DoesReturnValue() ? ReturnType?.Name ?? "define" : "void", Name, Parameters, markdown, Documentation);
 
@@ -139,6 +141,9 @@ namespace Deltin.Deltinteger.Parse.Lambda
         protected BaseLambda(string name) : base(name) {}
         protected BaseLambda(string name, CodeType[] argumentTypes) : base(name)
         {
+            CanBeDeleted = false;
+            CanBeExtended = false;
+            Kind = "constant";
             ArgumentTypes = argumentTypes;
             _objectScope = new Scope("lambda");
             _objectScope.AddNativeMethod(new LambdaInvoke(this));
@@ -154,7 +159,8 @@ namespace Deltin.Deltinteger.Parse.Lambda
         public override Scope ReturningScope() => null;
         public override TypeSettable Constant() => TypeSettable.Constant;
         public override CompletionItem GetCompletion() => new CompletionItem() {
-            Label = Name
+            Label = Name,
+            Kind = CompletionItemKind.Constant
         };
     }
 
