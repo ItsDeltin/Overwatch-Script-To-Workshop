@@ -340,7 +340,7 @@ namespace Deltin.Deltinteger.Parse
 
             // Setup the return handler.
             ReturnHandler returnHandler = new ReturnHandler(subroutineRule.ActionSet, Name, multiplePaths);
-            ActionSet actionSet = subroutineRule.ActionSet.New(returnHandler);
+            ActionSet actionSet = subroutineRule.ActionSet.New(returnHandler).New(subroutineRule.ActionSet.IndexAssigner.CreateContained());
 
             // Get the variables that will be used to store the parameters.
             IndexReference[] parameterStores = new IndexReference[ParameterVars.Length];
@@ -371,6 +371,8 @@ namespace Deltin.Deltinteger.Parse
         // Calls single-instance methods.
         private IWorkshopTree ParseSubroutine(ActionSet actionSet, MethodCall methodCall)
         {
+            if (subroutineInfo == null) SetupSubroutine();
+
             for (int i = 0; i < subroutineInfo.ParameterStores.Length; i++)
                 actionSet.AddAction(subroutineInfo.ParameterStores[i].SetVariable((Element)methodCall.ParameterValues[i]));
 
