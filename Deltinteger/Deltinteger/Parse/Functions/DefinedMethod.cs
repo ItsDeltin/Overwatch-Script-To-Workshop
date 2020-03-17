@@ -167,8 +167,9 @@ namespace Deltin.Deltinteger.Parse
             {
                 block = new BlockAction(parseInfo.SetCallInfo(CallInfo), methodScope, context.block());
 
-                MethodBlockScan validate = new MethodBlockScan(doesReturnValue, parseInfo, this);
-                multiplePaths = validate.MultiplePaths;
+                BlockTreeScan validation = new BlockTreeScan(doesReturnValue, parseInfo, this);
+                validation.ValidateReturns();
+                multiplePaths = validation.MultiplePaths;
             }
             foreach (var listener in listeners) listener.Applied();
         }

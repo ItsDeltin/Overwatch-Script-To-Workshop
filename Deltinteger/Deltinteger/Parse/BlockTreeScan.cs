@@ -23,12 +23,15 @@ namespace Deltin.Deltinteger.Parse
             _genericErrorRange = genericErrorRange;
             Block = block;
             Returns = GetReturns();
-            SetDoesReturnValue();
-            ValidateReturns();
+            ReturnsValue = Returns.Any(r => r.ReturningValue != null);
+        }
+        public BlockTreeScan(bool doesReturnValue, ParseInfo parseInfo, DefinedMethod method) : this(parseInfo, method.block, method.Name, DocRange.GetRange(method.context.name))
+        {
+            ReturnsValue = doesReturnValue;
         }
 
         // Makes sure each return statement returns a value if the method returns a value and that each path returns a value.
-        private void ValidateReturns()
+        public void ValidateReturns()
         {
             if (ReturnsValue)
             {
@@ -80,11 +83,6 @@ namespace Deltin.Deltinteger.Parse
             }
         }
         
-        protected virtual void SetDoesReturnValue()
-        { 
-            ReturnsValue = Returns.Any(r => r.ReturningValue != null);
-        }
-
         // Makes sure each path returns a value.
         private void CheckPath(PathInfo path)
         {
@@ -118,15 +116,5 @@ namespace Deltin.Deltinteger.Parse
         {
             foreach (var path in container.GetPaths()) CheckPath(path);
         }
-    }
-
-    class MethodBlockScan : BlockTreeScan
-    {
-        public MethodBlockScan(bool doesReturnValue, ParseInfo parseInfo, DefinedMethod method) : base(parseInfo, method.block, method.Name, DocRange.GetRange(method.context.name))
-        {
-            ReturnsValue = doesReturnValue;
-        }
-
-        protected override void SetDoesReturnValue() {}
     }
 }

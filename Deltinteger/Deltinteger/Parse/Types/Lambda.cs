@@ -40,6 +40,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
 
                 // Validate the block.
                 BlockTreeScan validation = new BlockTreeScan(parseInfo, Block, "lambda", DocRange.GetRange(context.INS()));
+                validation.ValidateReturns();
 
                 if (validation.ReturnsValue)
                 {
