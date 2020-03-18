@@ -49,7 +49,7 @@ namespace Deltin.Deltinteger.Parse
             continueAt.SetSkipCount((Element)nextContinue.GetVariable());
             actionSet.AddAction(continueAt);
 
-            method.block.Translate(actionSet);
+            method.block.Translate(actionSet.New(returnHandler));
 
             PopParameterStacks(actionSet);
 

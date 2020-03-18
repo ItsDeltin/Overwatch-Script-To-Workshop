@@ -75,7 +75,7 @@ namespace Deltin.Deltinteger.Parse
 
         public override void ApplyReturnSkips() => throw new Exception("Can't apply return skips in a rule.");
         public override IWorkshopTree GetReturnedValue() => throw new Exception("Can't get the returned value of a rule.");
-        public override void ReturnValue(IWorkshopTree value) => throw new Exception("Can't return a value in a rule..");
+        public override void ReturnValue(IWorkshopTree value) => throw new Exception("Can't return a value in a rule.");
 
         public override void Return()
         {
