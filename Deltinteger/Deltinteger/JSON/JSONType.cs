@@ -2,6 +2,7 @@ using Deltin.Deltinteger;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.Parse;
+using Deltin.JSON;
 using Newtonsoft.Json.Linq;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using System;
@@ -10,6 +11,8 @@ using System.IO;
 
 class JSONType: CodeType {
     List<InternalVar> Children = new List<InternalVar>();
+    public List<InternalVar> Arrays = new List<InternalVar>();
+
     List<(InternalVar var, JProperty prop)> Properties = new List<(InternalVar var, JProperty prop)>();
 
     private Scope staticScope = new Scope("JSON");
@@ -22,12 +25,18 @@ class JSONType: CodeType {
             {
                 case JTokenType.String:
                 case JTokenType.Boolean:
-                //case JTokenType.Array:
                 case JTokenType.Integer:
                 case JTokenType.Float:
                 case JTokenType.Null:
                     Properties.Add((CreateInternalVar(prop.Name, "A JSON Property."), prop));
                     break;
+                case JTokenType.Array:
+                    InternalVar array = CreateInternalVar(prop.Name, "A JSON Array.");
+                    array.CodeType = new ArrayType(new JSONArray(prop.Name + "Arr" + Arrays.Count, (JArray)prop.Value));
+                    //ArrayType array = new ArrayType(new JSONArray(prop.Name + "Arr" + Arrays.Count, (JArray)prop.Value));
+                    Arrays.Add(array);
+                    break;
+
                 default:
                     InternalVar child = CreateInternalVar(prop.Name, "A JSON Object.");
                     child.CodeType = new JSONType((JObject)prop.Value);
@@ -35,6 +44,28 @@ class JSONType: CodeType {
                     break;
             }
         }
+    }
+
+    public bool ContainsDeepArrays()
+    {
+        foreach(InternalVar arr in Arrays)
+        {
+            if(((JSONArray)((ArrayType)arr.CodeType).ArrayOfType).Arrays.Count > 0)
+            {
+                return true;
+            }
+            if (((JSONArray)((ArrayType)arr.CodeType).ArrayOfType).Children.Count > 0)
+            {
+                return true;
+            }
+        }
+        foreach(InternalVar arr in Children)
+        {
+            bool containsDeepArrays = ((JSONType)arr.CodeType).ContainsDeepArrays();
+            if (containsDeepArrays)
+                return true;
+        }
+        return false;
     }
 
 
@@ -67,7 +98,12 @@ class JSONType: CodeType {
                     assigner.Add(p.var, new V_CustomString(p.prop.Value.ToObject<string>()));
                     break;
                 case JTokenType.Boolean:
-                    throw new NotImplementedException();
+                    bool val = (bool)p.prop.Value;
+                    if (val) assigner.Add(p.var, new V_True());
+                    else assigner.Add(p.var, new V_False());
+
+                    break;
+
                 case JTokenType.Float:
                     assigner.Add(p.var, new V_Number(p.prop.Value.ToObject<float>()));
                     break;
@@ -82,6 +118,11 @@ class JSONType: CodeType {
         foreach (var c in Children)
         {
             assigner.Add(c, new V_Null());
+        }
+
+        foreach (var a in Arrays)
+        {
+            assigner.Add(a, ((JSONArray)((ArrayType)a.CodeType).ArrayOfType).ConvertValuesToElementArray());
         }
     }
     public override CompletionItem GetCompletion() => new CompletionItem()

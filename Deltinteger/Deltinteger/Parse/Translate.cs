@@ -14,6 +14,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using Newtonsoft.Json.Linq;
 using System.Diagnostics;
+using Deltin.JSON;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -147,9 +148,9 @@ namespace Deltin.Deltinteger.Parse
                         CollectScriptFiles(importedScript);
                         break;
                     
-                    // Get lobby settings.
+                    // Get JSON file.
                     case ".json":
-
+                        //If the file is called "lobby.json", load the lobby settings
                         if (Path.GetFileName(importResult.FilePath) == "lobby.json")
                         {
                             JObject lobbySettings = null;
@@ -196,6 +197,11 @@ namespace Deltin.Deltinteger.Parse
                             JObject jsonData = JObject.Parse(file.Content);
                             InternalVar jsonVar = new InternalVar(importFileContext.name.Text);
                             jsonVar.CodeType = new JSONType(jsonData);
+
+                            if (((JSONType)jsonVar.CodeType).ContainsDeepArrays())
+                            {
+                                script.Diagnostics.Error("JSON Arrays cannot include objects or arrays.", stringRange);
+                            }
 
 
                             RulesetScope.AddVariable(jsonVar, script.Diagnostics, DocRange.GetRange(importFileContext.name));
