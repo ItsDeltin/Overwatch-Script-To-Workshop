@@ -24,11 +24,18 @@ namespace Deltin.Deltinteger.Parse
         public int ID { get; }
         public bool Static { get; }
 
-        private readonly Scope _operationalScope;
-        private readonly InitialValueResolve _initialValueResolve;
-        private readonly DeltinScriptParser.ExprContext _initalValueContext;
-        private bool _finalized;
+        public bool WasCalled { get; private set; }
 
+        /// <summary>The scope the variable and initial value will use.</summary>
+        private readonly Scope _operationalScope;
+        /// <summary>Determines when the initial value should be resolved.</summary>
+        private readonly InitialValueResolve _initialValueResolve;
+        /// <summary>Stores the context of the initial value.</summary>
+        private readonly DeltinScriptParser.ExprContext _initalValueContext;
+
+        /// <summary>The resulting intial value. This will be null if there is no initial value.
+        /// If _initialValueResolve is Instant, this will be set when the Var object is created.
+        /// If it is ApplyBlock, this will be set when SetupBlock runs.</summary>
         public IExpression InitialValue { get; private set; }
 
         public CallInfo CallInfo => null;
@@ -61,7 +68,6 @@ namespace Deltin.Deltinteger.Parse
 
             // Add the variable to the scope.
             _operationalScope.AddVariable(this, parseInfo.Script.Diagnostics, DefinedAt.range);
-            _finalized = true;
 
             parseInfo.Script.AddHover(DefinedAt.range, GetLabel(true));
             parseInfo.TranslateInfo.AddSymbolLink(this, DefinedAt, true);
@@ -93,28 +99,18 @@ namespace Deltin.Deltinteger.Parse
         // IExpression
         public Scope ReturningScope()
         {
-            ThrowIfNotFinalized();
             if (CodeType == null) return parseInfo.TranslateInfo.PlayerVariableScope;
             else return CodeType.GetObjectScope();
         }
-        public CodeType Type()
-        {
-            ThrowIfNotFinalized();
-            return CodeType;
-        }
+        public CodeType Type() => CodeType;
 
         // ICallable
         public void Call(ScriptFile script, DocRange callRange)
         {
-            ThrowIfNotFinalized();
+            WasCalled = true;
             script.AddDefinitionLink(callRange, DefinedAt);
             script.AddHover(callRange, GetLabel(true));
             parseInfo.TranslateInfo.AddSymbolLink(this, new Location(script.Uri, callRange));
-        }
-
-        private void ThrowIfNotFinalized()
-        {
-            if (!_finalized) throw new Exception("Var not finalized.");
         }
     
         public IWorkshopTree Parse(ActionSet actionSet, bool asElement = true)

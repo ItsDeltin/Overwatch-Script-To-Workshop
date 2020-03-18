@@ -116,7 +116,7 @@ namespace Deltin.Deltinteger.Parse
 
         public static IWorkshopTree Call(DefinedMethod method, MethodCall call, ActionSet actionSet)
         {
-            RecursiveStack lastCall = actionSet.Translate.MethodStack.FirstOrDefault(ms => ms.Function == method) as RecursiveStack;
+            RecursiveStack lastCall = GetRecursiveCall(actionSet.Translate.MethodStack, method);
 
             if (lastCall == null)
             {
@@ -133,5 +133,8 @@ namespace Deltin.Deltinteger.Parse
                 return lastCall.RecursiveCall(actionSet, call);
             }
         }
+
+        private static RecursiveStack GetRecursiveCall(List<MethodStack> stack, DefinedMethod method)
+            => stack.FirstOrDefault(ms => ms is RecursiveStack && ms.Function is DefinedMethod dm && dm.Attributes.AllOverrideOptions().Contains(method)) as RecursiveStack;
     }
 }
