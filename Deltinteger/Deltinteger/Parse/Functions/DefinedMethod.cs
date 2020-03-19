@@ -22,7 +22,11 @@ namespace Deltin.Deltinteger.Parse
         /// the return expression instead of assigning it to a variable to reduce the number of actions.</summary>
         public bool multiplePaths;
 
+        public DefinedMethod virtualSubroutineAssigned { get; set; }
+
         public SubroutineInfo subroutineInfo { get; private set; }
+
+        private readonly bool subroutineDefaultGlobal;
 
         public DefinedMethod(ParseInfo parseInfo, Scope objectScope, Scope staticScope, DeltinScriptParser.Define_methodContext context, CodeType containingType)
             : base(parseInfo, context.name.Text, new Location(parseInfo.Script.Uri, DocRange.GetRange(context.name)))
@@ -49,6 +53,7 @@ namespace Deltin.Deltinteger.Parse
                 SetupParameters(context.setParameters(), false);
             else
             {
+                subroutineDefaultGlobal = context.PLAYER() == null;
                 Attributes.Parallelable = true;
                 parseInfo.TranslateInfo.AddSubroutine(this);
 
@@ -178,87 +183,23 @@ namespace Deltin.Deltinteger.Parse
         override public IWorkshopTree Parse(ActionSet actionSet, MethodCall methodCall)
         {
             actionSet = actionSet.New(actionSet.IndexAssigner.CreateContained());
-            
-            if (Attributes.WasOverriden && methodCall.ResolveOverrides)
-                return ParseVirtual(actionSet, methodCall);
-            
-            if (Attributes.Recursive && !IsSubroutine)
-                return RecursiveStack.Call(this, methodCall, actionSet);
-
-            if (IsSubroutine)
-                return ParseSubroutine(actionSet, methodCall);
-            
-            return ParseNormal(actionSet, methodCall);
-        }
-
-        private IWorkshopTree ParseNormal(ActionSet actionSet, MethodCall methodCall)
-        {
-            // Create the return handler.
-            ReturnHandler returnHandler = methodCall.ReturnHandler ?? new ReturnHandler(actionSet, Name, multiplePaths);
-            actionSet = actionSet.New(returnHandler);
-            
-            // Assign the parameters and translate the block.
-            AssignParameters(actionSet, ParameterVars, methodCall.ParameterValues);
-            block.Translate(actionSet);
-
-            if (methodCall.ResolveReturnHandler) returnHandler.ApplyReturnSkips();
-            return returnHandler.GetReturnedValue();
-        }
-
-        private IWorkshopTree ParseVirtual(ActionSet actionSet, MethodCall methodCall)
-        {
-            // Create the switch that chooses the overload.
-            SwitchBuilder typeSwitch = new SwitchBuilder(actionSet);
-
-            // Loop through all potential methods.
-            IMethod[] options = Attributes.AllOverrideOptions();
-
-            // Get the call settings.
-            MethodCall callSettings = new MethodCall(methodCall.ParameterValues, methodCall.AdditionalParameterData) {
-                ResolveOverrides = false,
-                ResolveReturnHandler = false,
-                ReturnHandler = new ReturnHandler(actionSet, Name, true)
-            };
-
-            // Parse the current overload.
-            typeSwitch.NextCase(new V_Number(((ClassType)Attributes.ContainingType).Identifier));
-            Parse(actionSet, callSettings);
-
-            foreach (IMethod option in options)
-            {
-                // The action set for the overload.
-                ActionSet optionSet = actionSet.New(actionSet.IndexAssigner.CreateContained());
-
-                // Add the object variables of the selected method.
-                option.Attributes.ContainingType.AddObjectVariablesToAssigner(optionSet.CurrentObject, optionSet.IndexAssigner);
-
-                // Go to next case then parse the block.
-                typeSwitch.NextCase(new V_Number(((ClassType)option.Attributes.ContainingType).Identifier));
-                option.Parse(optionSet, callSettings);
-            }
-
-            ClassData classData = actionSet.Translate.DeltinScript.SetupClasses();
-
-            // Finish the switch.
-            typeSwitch.Finish(Element.Part<V_ValueInArray>(classData.ClassIndexes.GetVariable(), actionSet.CurrentObject));
-
-            callSettings.ReturnHandler.ApplyReturnSkips();
-            return callSettings.ReturnHandler.GetReturnedValue();
+            return MethodBuilder.Call(this, methodCall, actionSet);
         }
 
         // Sets up single-instance methods for methods with the 'rule' attribute.
         public void SetupSubroutine()
         {
+            if (subroutineInfo != null) return;
             if (!IsSubroutine) throw new Exception(Name + " does not have the subroutine attribute.");
 
             // Setup the subroutine element.
             Subroutine subroutine = parseInfo.TranslateInfo.SubroutineCollection.NewSubroutine(Name);
 
             // Create the rule.
-            TranslateRule subroutineRule = new TranslateRule(parseInfo.TranslateInfo, SubroutineName, subroutine);
+            TranslateRule subroutineRule = new TranslateRule(parseInfo.TranslateInfo, subroutine, SubroutineName, subroutineDefaultGlobal);
 
             // Setup the return handler.
-            ReturnHandler returnHandler = new ReturnHandler(subroutineRule.ActionSet, Name, multiplePaths);
+            ReturnHandler returnHandler = new ReturnHandler(subroutineRule.ActionSet, Name, multiplePaths || Attributes.Virtual);
             ActionSet actionSet = subroutineRule.ActionSet.New(returnHandler).New(subroutineRule.ActionSet.IndexAssigner.CreateContained());
 
             // Get the variables that will be used to store the parameters.
@@ -270,53 +211,40 @@ namespace Deltin.Deltinteger.Parse
             IndexReference objectStore = null;
             if (Attributes.ContainingType != null && !Static)
             {
-                objectStore = actionSet.VarCollection.Assign("_" + Name + "_subroutineStore", true, true);
-                Attributes.ContainingType.AddObjectVariablesToAssigner(objectStore.GetVariable(), actionSet.IndexAssigner);
+                objectStore = actionSet.VarCollection.Assign("_" + Name + "_subroutineStore", true, !Attributes.Recursive);
+
+                // Set the objectStore as an empty array if the subroutine is recursive.
+                if (Attributes.Recursive)
+                {
+                    actionSet.InitialSet().AddAction(objectStore.SetVariable(new V_EmptyArray()));
+                    Attributes.ContainingType.AddObjectVariablesToAssigner(Element.Part<V_LastOf>(objectStore.GetVariable()), actionSet.IndexAssigner);
+                    actionSet = actionSet.New(Element.Part<V_LastOf>(objectStore.GetVariable()));
+                }
+                else
+                {
+                    Attributes.ContainingType.AddObjectVariablesToAssigner(objectStore.GetVariable(), actionSet.IndexAssigner);
+                    actionSet = actionSet.New(objectStore.GetVariable());
+                }
             }
             
             // Set the subroutine info.
             subroutineInfo = new SubroutineInfo(subroutine, returnHandler, subroutineRule, parameterStores, objectStore);
 
-            // Parse the block.
-            block.Translate(actionSet);
+            MethodBuilder builder = new MethodBuilder(this, actionSet, returnHandler);
+            builder.ParseInner();
 
             // Apply returns.
             returnHandler.ApplyReturnSkips();
 
+            // Pop object array and parameters if recursive.
+            if (Attributes.Recursive)
+            {
+                actionSet.AddAction(objectStore.ModifyVariable(Operation.RemoveFromArrayByIndex, Element.Part<V_CountOf>(objectStore.GetVariable()) - 1));
+                RecursiveStack.PopParameterStacks(actionSet, ParameterVars);
+            }
+
             // Add the subroutine.
             parseInfo.TranslateInfo.WorkshopRules.Add(subroutineRule.GetRule());
-        }
-
-        // Calls single-instance methods.
-        private IWorkshopTree ParseSubroutine(ActionSet actionSet, MethodCall methodCall)
-        {
-            if (subroutineInfo == null) SetupSubroutine();
-
-            for (int i = 0; i < subroutineInfo.ParameterStores.Length; i++)
-                actionSet.AddAction(subroutineInfo.ParameterStores[i].SetVariable((Element)methodCall.ParameterValues[i]));
-
-            if (subroutineInfo.ObjectStore != null) 
-                actionSet.AddAction(subroutineInfo.ObjectStore.SetVariable((Element)actionSet.CurrentObject));
-
-            switch (methodCall.CallParallel)
-            {
-                // No parallel, call subroutine normally.
-                case CallParallel.NoParallel:
-                    actionSet.AddAction(Element.Part<A_CallSubroutine>(subroutineInfo.Subroutine));
-                    return subroutineInfo.ReturnHandler.GetReturnedValue();
-                
-                // Restart the subroutine if it is already running.
-                case CallParallel.AlreadyRunning_RestartRule:
-                    actionSet.AddAction(Element.Part<A_StartRule>(subroutineInfo.Subroutine, EnumData.GetEnumValue(IfAlreadyExecuting.RestartRule)));
-                    return null;
-                
-                // Do nothing if the subroutine is already running.
-                case CallParallel.AlreadyRunning_DoNothing:
-                    actionSet.AddAction(Element.Part<A_StartRule>(subroutineInfo.Subroutine, EnumData.GetEnumValue(IfAlreadyExecuting.DoNothing)));
-                    return null;
-                
-                default: throw new NotImplementedException();
-            }
         }
     
         // Assigns parameters to the index assigner. TODO: Move to OverloadChooser.

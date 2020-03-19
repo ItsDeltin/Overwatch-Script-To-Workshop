@@ -82,5 +82,12 @@ namespace Deltin.Deltinteger.Parse
         {
             listeners.Add(onBlockApplied);
         }
+
+        public override string ToString()
+        {
+            string name = GetLabel(false);
+            if (Attributes.ContainingType != null) name = Attributes.ContainingType.Name + "." + name;
+            return name;
+        }
     }
 }

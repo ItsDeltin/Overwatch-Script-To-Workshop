@@ -53,12 +53,16 @@ namespace Deltin.Deltinteger.Parse
             Disabled = disabled;
             ActionSet = new ActionSet(this, null, Actions);
         }
-        public TranslateRule(DeltinScript deltinScript, string name, RuleEvent eventType) : this(deltinScript, name, eventType, Team.All, PlayerSelector.All) {}
-        public TranslateRule(DeltinScript deltinScript, string name) : this(deltinScript, name, RuleEvent.OngoingGlobal, Team.All, PlayerSelector.All) {}
-        public TranslateRule(DeltinScript deltinScript, string name, Subroutine subroutine) : this(deltinScript, name, RuleEvent.Subroutine)
+        public TranslateRule(DeltinScript deltinScript, Subroutine subroutine, string name, bool defaultGlobal)
         {
+            DeltinScript = deltinScript;
+            IsGlobal = defaultGlobal;
+            Name = name;
+            EventType = RuleEvent.Subroutine;
             Subroutine = subroutine;
+            ActionSet = new ActionSet(this, null, Actions);
         }
+        public TranslateRule(DeltinScript deltinScript, string name, RuleEvent eventType) : this(deltinScript, name, eventType, Team.All, PlayerSelector.All) {}
 
         private void GetConditions(RuleAction ruleAction)
         {
@@ -141,11 +145,7 @@ namespace Deltin.Deltinteger.Parse
         public List<IActionList> ActionList { get; }
         public VarCollection VarCollection { get; }
 
-        public int ActionCount {
-            get {
-                return ActionList.Count;
-            }
-        }
+        public int ActionCount => ActionList.Count;
 
         public ActionSet(bool isGlobal, VarCollection varCollection)
         {
