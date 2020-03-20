@@ -32,6 +32,7 @@ namespace Deltin.Deltinteger.Parse
                         builder.AssignParameters(call);
                         builder.SetupReturnHandler();
                         builder.ParseInner();
+                        builder.ReturnHandler.ApplyReturnSkips();
                         return builder.ReturnHandler.GetReturnedValue();
                     }
                 }
@@ -138,7 +139,7 @@ namespace Deltin.Deltinteger.Parse
         private void ParseVirtual()
         {
             // Loop through all potential methods.
-            IMethod[] options = Method.Attributes.AllOverrideOptions();
+            DefinedMethod[] options = Array.ConvertAll(Method.Attributes.AllOverrideOptions(), iMethod => (DefinedMethod)iMethod);
 
             // Create the switch that chooses the overload.
             SwitchBuilder typeSwitch = new SwitchBuilder(BuilderSet);
@@ -147,7 +148,7 @@ namespace Deltin.Deltinteger.Parse
             typeSwitch.NextCase(new V_Number(((ClassType)Method.Attributes.ContainingType).Identifier));
             TranslateSegment(BuilderSet, Method);
 
-            foreach (IMethod option in options)
+            foreach (DefinedMethod option in options)
             {
                 // The action set for the overload.
                 ActionSet optionSet = BuilderSet.New(BuilderSet.IndexAssigner.CreateContained());
@@ -157,9 +158,9 @@ namespace Deltin.Deltinteger.Parse
 
                 // Go to next case then parse the block.
                 typeSwitch.NextCase(new V_Number(((ClassType)option.Attributes.ContainingType).Identifier));
-                TranslateSegment(optionSet, (DefinedMethod)option);
+                TranslateSegment(optionSet, option);
 
-                if (Method.IsSubroutine) ((DefinedMethod)option).virtualSubroutineAssigned = Method;
+                if (Method.IsSubroutine) option.virtualSubroutineAssigned = Method;
             }
 
             ClassData classData = BuilderSet.Translate.DeltinScript.SetupClasses();
