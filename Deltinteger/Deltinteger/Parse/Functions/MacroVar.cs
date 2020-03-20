@@ -37,9 +37,10 @@ namespace Deltin.Deltinteger.Parse
             scope = Static ? staticScope : objectScope;
             this.parseInfo = parseInfo;
 
-            parseInfo.TranslateInfo.AddSymbolLink(this, DefinedAt, true);
             scope.AddVariable(this, parseInfo.Script.Diagnostics, DocRange.GetRange(macroContext.name));
+            parseInfo.TranslateInfo.AddSymbolLink(this, DefinedAt, true);
             parseInfo.Script.AddHover(DocRange.GetRange(macroContext.name), GetLabel(true));
+            parseInfo.Script.AddCodeLensRange(new ReferenceCodeLensRange(this, parseInfo, CodeLensSourceType.Variable, DefinedAt.range));
         }
 
         public void SetupParameters() {}

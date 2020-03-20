@@ -60,6 +60,7 @@ namespace Deltin.Deltinteger.Lobby
         {
             Add(QuickMelee);
             Add(SpawnWithUlt);
+            Add(Health);
             Add(DamageDealt);
             Add(DamageReceived);
             Add(HealingReceived);
