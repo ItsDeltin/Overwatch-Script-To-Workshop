@@ -364,15 +364,16 @@ namespace Deltin.Deltinteger.Lobby
 
         public void ToWorkshop(WorkshopBuilder builder, List<LobbySetting> allSettings)
         {
-            foreach (var hero in Settings)
-            {
-                builder.AppendLine($"{hero.Key}");
-                builder.AppendLine("{");
-                builder.Indent();
-                WorkshopValuePair.ToWorkshop(((JObject)hero.Value).ToObject<Dictionary<string, object>>(), builder, allSettings);
-                builder.Unindent();
-                builder.AppendLine("}");
-            }
+            if (Settings != null)
+                foreach (var hero in Settings)
+                {
+                    builder.AppendLine($"{hero.Key}");
+                    builder.AppendLine("{");
+                    builder.Indent();
+                    WorkshopValuePair.ToWorkshop(((JObject)hero.Value).ToObject<Dictionary<string, object>>(), builder, allSettings);
+                    builder.Unindent();
+                    builder.AppendLine("}");
+                }
             if (EnabledHeroes != null)
             {
                 builder.AppendLine();
