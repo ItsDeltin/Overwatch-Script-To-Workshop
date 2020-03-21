@@ -63,7 +63,8 @@ namespace Deltin.Deltinteger.Parse
 
             Builder.BuilderSet.ReturnHandler.ApplyReturnSkips();
 
-            Builder.BuilderSet.AddAction(objectStore.ModifyVariable(Operation.RemoveFromArrayByIndex, Element.Part<V_CountOf>(objectStore.GetVariable()) - 1));
+            if (Builder.Method.Attributes.Virtual)
+                Builder.BuilderSet.AddAction(objectStore.ModifyVariable(Operation.RemoveFromArrayByIndex, Element.Part<V_CountOf>(objectStore.GetVariable()) - 1));
 
             // Pop the parameters.
             PopParameterStacks();
