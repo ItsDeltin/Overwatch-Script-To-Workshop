@@ -46,7 +46,7 @@ namespace Deltin.Deltinteger.Parse
             }
 
             // Assign the parameters.
-            DefinedMethod.AssignParameters(Builder.BuilderSet, Builder.Method.ParameterVars, call.ParameterValues, true);
+            Builder.Method.AssignParameters(Builder.BuilderSet, call.ParameterValues, true);
 
             Builder.SetupReturnHandler();
 

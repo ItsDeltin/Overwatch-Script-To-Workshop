@@ -205,7 +205,15 @@ namespace Deltin.Deltinteger.Parse
             // Get the variables that will be used to store the parameters.
             IndexReference[] parameterStores = new IndexReference[ParameterVars.Length];
             for (int i = 0; i < ParameterVars.Length; i++)
-                parameterStores[i] = actionSet.IndexAssigner.Add(actionSet.VarCollection, ParameterVars[i], true, null, Attributes.Recursive) as IndexReference;
+            {
+                // Create the workshop variable the parameter will be stored as.
+                IndexReference indexResult = actionSet.IndexAssigner.AddIndexReference(actionSet.VarCollection, ParameterVars[i], subroutineDefaultGlobal, Attributes.Recursive);
+                parameterStores[i] = indexResult;
+
+                // Assign virtual variables to the index reference.
+                foreach (Var virtualParameterOption in VirtualVarGroup(i))
+                    actionSet.IndexAssigner.Add(virtualParameterOption, indexResult);
+            }
             
             // If the subroutine is an object function inside a class, create a variable to store the class object.
             IndexReference objectStore = null;
@@ -245,6 +253,30 @@ namespace Deltin.Deltinteger.Parse
 
             // Add the subroutine.
             parseInfo.TranslateInfo.WorkshopRules.Add(subroutineRule.GetRule());
+        }
+
+        public Var[] VirtualVarGroup(int i)
+        {
+            List<Var> parameters = new List<Var>();
+
+            foreach (var overrider in Attributes.AllOverrideOptions())
+                parameters.Add(((DefinedMethod)overrider).ParameterVars[i]);
+            
+            return parameters.ToArray();
+        }
+
+        public void AssignParameters(ActionSet actionSet, IWorkshopTree[] parameterValues, bool recursive)
+        {
+            for (int i = 0; i < ParameterVars.Length; i++)
+            {
+                IGettable indexResult = actionSet.IndexAssigner.Add(actionSet.VarCollection, ParameterVars[i], actionSet.IsGlobal, parameterValues?[i], recursive);
+
+                if (indexResult is IndexReference indexReference && parameterValues?[i] != null)
+                    actionSet.AddAction(indexReference.SetVariable((Element)parameterValues[i]));
+
+                foreach (Var virtualParameterOption in VirtualVarGroup(i))
+                    actionSet.IndexAssigner.Add(virtualParameterOption, indexResult);
+            }
         }
     
         // Assigns parameters to the index assigner. TODO: Move to OverloadChooser.

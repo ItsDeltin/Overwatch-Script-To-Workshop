@@ -118,7 +118,7 @@ namespace Deltin.Deltinteger.Parse
 
         public void AssignParameters(MethodCall methodCall)
         {
-            DefinedMethod.AssignParameters(BuilderSet, Method.ParameterVars, methodCall.ParameterValues);
+            Method.AssignParameters(BuilderSet, methodCall.ParameterValues, false);
         }
 
         public void SetupReturnHandler()
