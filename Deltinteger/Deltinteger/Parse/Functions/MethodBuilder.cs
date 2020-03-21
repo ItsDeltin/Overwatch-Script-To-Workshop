@@ -145,7 +145,10 @@ namespace Deltin.Deltinteger.Parse
             SwitchBuilder typeSwitch = new SwitchBuilder(BuilderSet);
 
             // Parse the current overload.
-            typeSwitch.NextCase(new V_Number(((ClassType)Method.Attributes.ContainingType).Identifier));
+            if (Method.Attributes.Virtual)
+                typeSwitch.AddDefault();
+            else
+                typeSwitch.NextCase(new V_Number(((ClassType)Method.Attributes.ContainingType).Identifier));
             TranslateSegment(BuilderSet, Method);
 
             foreach (DefinedMethod option in options)
