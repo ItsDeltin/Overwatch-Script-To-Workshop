@@ -339,7 +339,7 @@ namespace Deltin.Deltinteger.Parse
 
             // Get the rules.
             foreach (var rule in WorkshopRules)
-                result.AppendLine(rule.ToWorkshop(Language, OptimizeOutput));
+                rule.ToWorkshop(result, OptimizeOutput);
             
             WorkshopCode = result.ToString();
         }
