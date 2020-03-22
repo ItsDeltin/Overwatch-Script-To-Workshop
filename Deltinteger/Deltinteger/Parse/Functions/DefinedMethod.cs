@@ -247,7 +247,7 @@ namespace Deltin.Deltinteger.Parse
             // Pop object array and parameters if recursive.
             if (Attributes.Recursive)
             {
-                actionSet.AddAction(objectStore.ModifyVariable(Operation.RemoveFromArrayByIndex, Element.Part<V_CountOf>(objectStore.GetVariable()) - 1));
+                if (objectStore != null) actionSet.AddAction(objectStore.ModifyVariable(Operation.RemoveFromArrayByIndex, Element.Part<V_CountOf>(objectStore.GetVariable()) - 1));
                 RecursiveStack.PopParameterStacks(actionSet, ParameterVars);
             }
 
