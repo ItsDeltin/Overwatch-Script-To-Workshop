@@ -1,9 +1,10 @@
 using System;
+using System.Collections.Generic;
 using Deltin.Deltinteger.Elements;
 
 namespace Deltin.Deltinteger.Parse
 {
-    class MethodBuilder
+    public class MethodBuilder
     {
         public static IWorkshopTree Call(DefinedMethod method, MethodCall call, ActionSet callerSet)
         {
@@ -105,7 +106,7 @@ namespace Deltin.Deltinteger.Parse
             }
         }
 
-        public readonly DefinedMethod Method;
+        public DefinedMethod Method { get; }
         public ActionSet BuilderSet { get; set; }
         public ReturnHandler ReturnHandler { get; private set; }
 
@@ -161,7 +162,7 @@ namespace Deltin.Deltinteger.Parse
 
                 // Go to next case then parse the block.
                 typeSwitch.NextCase(new V_Number(((ClassType)option.Attributes.ContainingType).Identifier));
-                TranslateSegment(optionSet, option);
+                TranslateSegment(optionSet, option);      
 
                 if (Method.IsSubroutine) option.virtualSubroutineAssigned = Method;
             }

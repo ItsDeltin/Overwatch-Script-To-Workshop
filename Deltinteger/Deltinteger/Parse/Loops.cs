@@ -338,7 +338,7 @@ namespace Deltin.Deltinteger.Parse
 
         public override void Translate(ActionSet actionSet)
         {
-            ForeachBuilder foreachBuilder = new ForeachBuilder(actionSet, Array.Parse(actionSet));
+            ForeachBuilder foreachBuilder = new ForeachBuilder(actionSet, Array.Parse(actionSet), actionSet.IsRecursive);
 
             // Add the foreach value to the assigner.
             actionSet.IndexAssigner.Add(ForeachVar, foreachBuilder.IndexValue);

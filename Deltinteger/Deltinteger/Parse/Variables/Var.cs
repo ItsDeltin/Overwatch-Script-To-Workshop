@@ -23,6 +23,7 @@ namespace Deltin.Deltinteger.Parse
         public bool InExtendedCollection { get; }
         public int ID { get; }
         public bool Static { get; }
+        public bool Recursive { get; }
 
         public bool WasCalled { get; private set; }
 
@@ -54,6 +55,7 @@ namespace Deltin.Deltinteger.Parse
             InExtendedCollection = varInfo.InExtendedCollection;
             ID = varInfo.ID;
             Static = varInfo.Static;
+            Recursive = varInfo.Recursive;
             _initalValueContext = varInfo.InitialValueContext;
             _initialValueResolve = varInfo.InitialValueResolve;
             _operationalScope = varInfo.OperationalScope;
@@ -78,6 +80,7 @@ namespace Deltin.Deltinteger.Parse
                 parseInfo.TranslateInfo.ApplyBlock(this);
             
             parseInfo.Script.AddCodeLensRange(new ReferenceCodeLensRange(this, parseInfo, varInfo.CodeLensType, DefinedAt.range));
+            parseInfo.TranslateInfo.DefinedVariables.Add(this);
         }
 
         private void GetInitialValue()
@@ -171,6 +174,7 @@ namespace Deltin.Deltinteger.Parse
         public StoreType StoreType;
         public InitialValueResolve InitialValueResolve = InitialValueResolve.Instant;
         public Scope OperationalScope;
+        public bool Recursive;
 
         public CodeLensSourceType CodeLensType = CodeLensSourceType.Variable;
 

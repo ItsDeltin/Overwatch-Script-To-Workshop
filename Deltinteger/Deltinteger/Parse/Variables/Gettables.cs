@@ -66,6 +66,11 @@ namespace Deltin.Deltinteger.Parse
             return base.ModifyVariable(operation, value, targetPlayer, CurrentIndex(targetPlayer, index));
         }
 
+        public Element[] Reset()
+        {
+            return base.SetVariable(new V_EmptyArray());
+        }
+
         public Element[] Push(Element value)
         {
             return base.ModifyVariable(Operation.AppendToArray, value);

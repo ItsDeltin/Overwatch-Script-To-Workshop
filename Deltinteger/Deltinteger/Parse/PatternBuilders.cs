@@ -9,22 +9,35 @@ namespace Deltin.Deltinteger.Parse
     public class ForeachBuilder
     {
         private ActionSet ActionSet { get; }
-        private IndexReference IndexStore { get; }
+        public IndexReference IndexStore { get; }
         private Element Condition { get; }
         public IWorkshopTree Array { get; }
         public Element Index { get; }
         public Element IndexValue { get; }
+        private bool Recursive { get; }
 
-        public ForeachBuilder(ActionSet actionSet, IWorkshopTree array)
+        public ForeachBuilder(ActionSet actionSet, IWorkshopTree array, bool recursive = false)
         {
             ActionSet = actionSet;
-            IndexStore = actionSet.VarCollection.Assign("foreachIndex,", actionSet.IsGlobal, true);
+            IndexStore = actionSet.VarCollection.Assign("foreachIndex,", actionSet.IsGlobal, !recursive);
+            Recursive = recursive;
+
+            if (recursive)
+            {
+                RecursiveIndexReference recursiveStore = new RecursiveIndexReference(IndexStore);
+                IndexStore = recursiveStore;
+
+                actionSet.InitialSet().AddAction(recursiveStore.Reset());
+                actionSet.AddAction(recursiveStore.Push(0));
+            }
+            else
+                actionSet.AddAction(IndexStore.SetVariable(0));
+
             Array = array;
             Condition = new V_Compare(IndexStore.GetVariable(), Operators.LessThan, Element.Part<V_CountOf>(Array));
             Index = (Element)IndexStore.GetVariable();
             IndexValue = Element.Part<V_ValueInArray>(Array, IndexStore.GetVariable());
-
-            actionSet.AddAction(IndexStore.SetVariable(0));
+            
             actionSet.AddAction(Element.Part<A_While>(Condition));
         }
 
@@ -32,6 +45,8 @@ namespace Deltin.Deltinteger.Parse
         {
             ActionSet.AddAction(IndexStore.ModifyVariable(Operation.Add, 1));
             ActionSet.AddAction(new A_End());
+
+            if (Recursive) ActionSet.AddAction(((RecursiveIndexReference)IndexStore).Pop());
         }
     }
 

@@ -29,11 +29,15 @@ namespace Deltin.Deltinteger.Parse
             // Set the initial value.
             if (var.Settable())
             {
-                actionSet.AddAction(
-                    ((IndexReference)actionSet.IndexAssigner[var]).SetVariable(
-                        (Element)initialValue
-                    )
-                );
+                IndexReference reference = (IndexReference)actionSet.IndexAssigner[var];
+
+                if (reference is RecursiveIndexReference recursive)
+                {
+                    actionSet.InitialSet().AddAction(recursive.Reset());
+                    actionSet.AddAction(recursive.Push((Element)initialValue));
+                }
+                else
+                    actionSet.AddAction(reference.SetVariable((Element)initialValue));
             }
         }
     }

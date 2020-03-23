@@ -141,6 +141,7 @@ namespace Deltin.Deltinteger.Parse
         public ReturnHandler ReturnHandler { get; private set; }
         public IWorkshopTree CurrentObject { get; private set; }
         public int IndentCount { get; private set; }
+        public bool IsRecursive { get; private set; }
         public bool IsGlobal { get; }
         public List<IActionList> ActionList { get; }
         public VarCollection VarCollection { get; }
@@ -175,6 +176,7 @@ namespace Deltin.Deltinteger.Parse
             ReturnHandler = other.ReturnHandler;
             CurrentObject = other.CurrentObject;
             IndentCount = other.IndentCount;
+            IsRecursive = other.IsRecursive;
         }
         private ActionSet Clone()
         {
@@ -205,6 +207,12 @@ namespace Deltin.Deltinteger.Parse
             newActionSet.CurrentObject = currentObject;
             return newActionSet;
         }
+        public ActionSet New(bool isRecursive)
+        {
+            var newActionSet = Clone();
+            newActionSet.IsRecursive = isRecursive;
+            return newActionSet;
+        }
         public ActionSet Indent()
         {
             var newActionSet = Clone();
@@ -215,7 +223,6 @@ namespace Deltin.Deltinteger.Parse
         public void AddAction(IWorkshopTree action)
         {
             if (action is Element element) element.Indent = IndentCount;
-
             ActionList.Add(new ALAction(action));
         }
         public void AddAction(IWorkshopTree[] actions)
@@ -223,7 +230,6 @@ namespace Deltin.Deltinteger.Parse
             foreach (var action in actions)
             {
                 if (action is Element element) element.Indent = IndentCount;
-
                 ActionList.Add(new ALAction(action));
             }
         }

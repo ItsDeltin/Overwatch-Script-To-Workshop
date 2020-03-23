@@ -363,6 +363,16 @@ namespace Deltin.Deltinteger.Parse
 
         public bool IsAlreadyInScope(IMethod method) => Methods.Contains(method);
         public bool IsAlreadyInScope(IScopeable scopeable) => Variables.Contains(scopeable);
+    
+        public void EndScope(ActionSet actionSet)
+        {
+            foreach (IScopeable variable in Variables)
+                if (variable is IIndexReferencer referencer && // If the current scopeable is an IIndexReferencer,
+                    actionSet.IndexAssigner.TryGet(referencer, out IGettable gettable) && // and the current scopeable is assigned to an index,
+                    gettable is RecursiveIndexReference recursiveIndexReference) // and the assigned index is a RecursiveIndexReference,
+                    // Pop the variable stack.
+                    actionSet.AddAction(recursiveIndexReference.Pop());
+        }
     }
 
     class ScopeIterate

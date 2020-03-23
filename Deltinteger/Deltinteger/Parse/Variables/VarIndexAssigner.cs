@@ -27,7 +27,7 @@ namespace Deltin.Deltinteger.Parse
             if (var.Settable())
             {
                 assigned = varCollection.Assign(var, isGlobal);
-                if (recursive) assigned = new RecursiveIndexReference((IndexReference)assigned);
+                if (recursive || var.Recursive) assigned = new RecursiveIndexReference((IndexReference)assigned);
                 references.Add(var, assigned);
             }
             
@@ -94,18 +94,27 @@ namespace Deltin.Deltinteger.Parse
         public IGettable this[IIndexReferencer var]
         {
             get {
-                VarIndexAssigner current = this;
-                while (current != null)
-                {
-                    if (current.references.ContainsKey(var))
-                        return current.references[var];
-
-                    current = current.parent;
-                }
-
+                if (TryGet(var, out IGettable gettable)) return gettable;
                 throw new Exception(string.Format("The variable {0} is not assigned to an index.", var.Name));
             }
             private set {}
+        }
+
+        public bool TryGet(IIndexReferencer var, out IGettable gettable)
+        {
+            VarIndexAssigner current = this;
+            while (current != null)
+            {
+                if (current.references.ContainsKey(var))
+                {
+                    gettable = current.references[var];
+                    return true;
+                }
+
+                current = current.parent;
+            }
+            gettable = null;
+            return false;
         }
     }
 }
