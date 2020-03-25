@@ -68,9 +68,6 @@ namespace Deltin.Deltinteger
         public IWorkshopTree[] ParameterValues { get; }
         public object[] AdditionalParameterData { get; }
         public CallParallel CallParallel { get; set; } = CallParallel.NoParallel;
-        public ReturnHandler ReturnHandler { get; set; } = null;
-        public bool ResolveOverrides { get; set; } = true;
-        public bool ResolveReturnHandler { get; set; } = true;
 
         public MethodCall(IWorkshopTree[] parameterValues, object[] additionalParameterData)
         {
