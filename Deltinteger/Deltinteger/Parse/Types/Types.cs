@@ -155,6 +155,7 @@ namespace Deltin.Deltinteger.Parse
             _defaultTypes.Add(new Pathfinder.PathmapClass());
             _defaultTypes.Add(new Models.AssetClass());
             _defaultTypes.Add(VectorType.Instance);
+            //_defaultTypes.Add(new JSON.JSONClass(????));
         }
     }
 
