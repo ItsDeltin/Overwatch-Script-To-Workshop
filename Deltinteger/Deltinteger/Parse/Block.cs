@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using Deltin.Deltinteger.LanguageServer;
 
 namespace Deltin.Deltinteger.Parse
@@ -49,7 +50,8 @@ namespace Deltin.Deltinteger.Parse
             foreach (var statement in Statements)
                 statement.Translate(actionSet);
             
-            BlockScope?.EndScope(actionSet);
+            if (!Statements.Any(s => s is ReturnAction))
+                BlockScope?.EndScope(actionSet, false);
         }
 
         public PathInfo[] GetPaths() => new PathInfo[] { new PathInfo(this, null, true) };

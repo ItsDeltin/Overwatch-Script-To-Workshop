@@ -37,18 +37,20 @@ namespace Deltin.Deltinteger.Parse
     {
         public IExpression ReturningValue { get; }
         public DocRange ErrorRange { get; }
+        private readonly Scope ReturningFromScope;
 
         public ReturnAction(ParseInfo parseInfo, Scope scope, DeltinScriptParser.ReturnContext returnContext)
         {
             ErrorRange = DocRange.GetRange(returnContext.RETURN());
             if (returnContext.expr() != null) ReturningValue = DeltinScript.GetExpression(parseInfo, scope, returnContext.expr());
+            ReturningFromScope = scope;
         }
 
         public void Translate(ActionSet actionSet)
         {
             if (ReturningValue != null)
                 actionSet.ReturnHandler.ReturnValue(ReturningValue.Parse(actionSet));
-            actionSet.ReturnHandler.Return();
+            actionSet.ReturnHandler.Return(ReturningFromScope, actionSet);
         }
     }
 

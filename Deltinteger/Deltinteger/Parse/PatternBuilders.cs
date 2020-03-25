@@ -29,6 +29,7 @@ namespace Deltin.Deltinteger.Parse
 
                 actionSet.InitialSet().AddAction(recursiveStore.Reset());
                 actionSet.AddAction(recursiveStore.Push(0));
+                actionSet.ReturnHandler.AdditionalPopOnReturn.Add(recursiveStore);
             }
             else
                 actionSet.AddAction(IndexStore.SetVariable(0));
@@ -46,7 +47,11 @@ namespace Deltin.Deltinteger.Parse
             ActionSet.AddAction(IndexStore.ModifyVariable(Operation.Add, 1));
             ActionSet.AddAction(new A_End());
 
-            if (Recursive) ActionSet.AddAction(((RecursiveIndexReference)IndexStore).Pop());
+            if (Recursive)
+            {
+                ActionSet.AddAction(((RecursiveIndexReference)IndexStore).Pop());
+                ActionSet.ReturnHandler.AdditionalPopOnReturn.Remove((RecursiveIndexReference)IndexStore);
+            }
         }
     }
 
