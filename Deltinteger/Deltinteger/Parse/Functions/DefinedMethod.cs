@@ -83,6 +83,9 @@ namespace Deltin.Deltinteger.Parse
                         overriding.DefinedAt
                     );
                 }
+
+                if (!Attributes.Recursive)
+                    Attributes.Recursive = overriding.Attributes.Recursive;
             }
 
             if (Attributes.IsOverrideable && AccessLevel == AccessLevel.Private)
