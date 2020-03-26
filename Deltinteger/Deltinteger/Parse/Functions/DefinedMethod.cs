@@ -26,6 +26,8 @@ namespace Deltin.Deltinteger.Parse
 
         public SubroutineInfo subroutineInfo { get; private set; }
 
+        public Scope BlockScope { get; }
+
         private readonly bool subroutineDefaultGlobal;
 
         public DefinedMethod(ParseInfo parseInfo, Scope objectScope, Scope staticScope, DeltinScriptParser.Define_methodContext context, CodeType containingType)
@@ -40,6 +42,8 @@ namespace Deltin.Deltinteger.Parse
             GetAttributes();
 
             SetupScope(Static ? staticScope : objectScope);
+            methodScope.MethodContainer = true;
+            BlockScope = methodScope.Child();
 
             // Get the type.
             if (context.VOID() == null)
@@ -170,7 +174,7 @@ namespace Deltin.Deltinteger.Parse
         {
             if (context.block() != null)
             {
-                block = new BlockAction(parseInfo.SetCallInfo(CallInfo), methodScope, context.block());
+                block = new BlockAction(parseInfo.SetCallInfo(CallInfo), BlockScope, context.block());
 
                 BlockTreeScan validation = new BlockTreeScan(doesReturnValue, parseInfo, this);
                 validation.ValidateReturns();
