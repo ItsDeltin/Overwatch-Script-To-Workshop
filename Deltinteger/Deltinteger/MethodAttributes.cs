@@ -2,6 +2,8 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 using Deltin.Deltinteger.Parse;
+using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
+using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItemKind;
 
 namespace Deltin.Deltinteger
 {
@@ -61,6 +63,14 @@ namespace Deltin.Deltinteger
             
             return options.ToArray();
         }
+
+        public static CompletionItem GetFunctionCompletion(IMethod function) => new CompletionItem()
+        {
+            Label = function.Name,
+            Kind = CompletionItemKind.Method,
+            Detail = function.GetLabel(false),
+            Documentation = function.Documentation
+        };
     }
 
     public class MethodCall

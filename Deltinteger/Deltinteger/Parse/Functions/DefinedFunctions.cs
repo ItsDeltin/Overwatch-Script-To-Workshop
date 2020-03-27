@@ -16,7 +16,7 @@ namespace Deltin.Deltinteger.Parse
         public AccessLevel AccessLevel { get; protected set; }
         public Location DefinedAt { get; }
         public bool WholeContext { get; } = true;
-        public StringOrMarkupContent Documentation { get; } = null;
+        public string Documentation { get; } = null;
         public MethodAttributes Attributes { get; } = new MethodAttributes();
         public bool Static { get; protected set; }
 
@@ -68,14 +68,7 @@ namespace Deltin.Deltinteger.Parse
 
         public abstract IWorkshopTree Parse(ActionSet actionSet, MethodCall methodCall);
 
-        public CompletionItem GetCompletion()
-        {
-            return new CompletionItem()
-            {
-                Label = Name,
-                Kind = CompletionItemKind.Method
-            };
-        }
+        public CompletionItem GetCompletion() => MethodAttributes.GetFunctionCompletion(this);
 
         protected List<IOnBlockApplied> listeners = new List<IOnBlockApplied>();
         public void OnBlockApply(IOnBlockApplied onBlockApplied)

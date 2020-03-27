@@ -77,7 +77,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
         public MethodAttributes Attributes => new MethodAttributes();
         public bool Static => false;
         public bool WholeContext => true;
-        public StringOrMarkupContent Documentation => Extras.GetMarkupContent("Invokes the lambda expression.");
+        public string Documentation => "Invokes the lambda expression.";
         public Location DefinedAt => null;
         public AccessLevel AccessLevel => AccessLevel.Public;
 
@@ -114,10 +114,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
 
         public bool DoesReturnValue() => LambdaType is MacroLambda || LambdaType is ValueBlockLambda;
 
-        public CompletionItem GetCompletion() => new CompletionItem() {
-            Label = "Invoke",
-            Kind = CompletionItemKind.Method
-        };
+        public CompletionItem GetCompletion() => MethodAttributes.GetFunctionCompletion(this);
         public string GetLabel(bool markdown) => HoverHandler.GetLabel(DoesReturnValue() ? ReturnType?.Name ?? "define" : "void", Name, Parameters, markdown, Documentation);
 
         /// <summary>Gets the 'Invoke' parameters from an array of CodeTypes.</summary>

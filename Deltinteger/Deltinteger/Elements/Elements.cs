@@ -331,7 +331,7 @@ namespace Deltin.Deltinteger.Elements
         public MethodAttributes Attributes { get; } = new MethodAttributes();
         public UsageDiagnostic[] UsageDiagnostics { get; }
         public WikiMethod Wiki { get; }
-        public StringOrMarkupContent Documentation => Wiki?.Description;
+        public string Documentation => Wiki?.Description;
         private ValueType ElementValueType { get; }
 
         // IScopeable defaults
@@ -422,16 +422,7 @@ namespace Deltin.Deltinteger.Elements
 
         public string GetLabel(bool markdown) => HoverHandler.GetLabel(!IsValue ? null : ReturnType?.Name ?? "define", Name, Parameters, markdown, Wiki?.Description);
 
-        public CompletionItem GetCompletion()
-        {
-            return new CompletionItem()
-            {
-                Label = Name,
-                Kind = CompletionItemKind.Method,
-                Detail = GetLabel(false),
-                Documentation = Wiki?.Description
-            };
-        }
+        public CompletionItem GetCompletion() => MethodAttributes.GetFunctionCompletion(this);
     }
 
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]

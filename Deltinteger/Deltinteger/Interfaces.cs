@@ -49,7 +49,7 @@ namespace Deltin.Deltinteger
     public interface IParameterCallable : ILabeled, IAccessable
     {
         CodeParameter[] Parameters { get; }
-        StringOrMarkupContent Documentation { get; }
+        string Documentation { get; }
     }
 
     public interface IAccessable
