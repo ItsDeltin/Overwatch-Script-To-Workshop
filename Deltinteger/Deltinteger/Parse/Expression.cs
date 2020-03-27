@@ -292,7 +292,7 @@ namespace Deltin.Deltinteger.Parse
                 parseInfo.Script.Diagnostics.Error("Keyword 'this' cannot be used here.", DocRange.GetRange(context));
         }
 
-        public IWorkshopTree Parse(ActionSet actionSet, bool asElement = true) => actionSet.CurrentObject;
+        public IWorkshopTree Parse(ActionSet actionSet, bool asElement = true) => actionSet.This;
         public CodeType Type() => ThisType;
         public Scope ReturningScope() => ThisType?.GetObjectScope();
     }

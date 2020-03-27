@@ -51,7 +51,7 @@ namespace Deltin.Deltinteger.Parse
             {
                 objectStore = ActionSet.VarCollection.Assign("_" + Builder.Method.Name + "_objectStack", ActionSet.IsGlobal, false);
                 ActionSet.AddAction(objectStore.SetVariable(Element.CreateArray(ActionSet.CurrentObject)));
-                ActionSet = ActionSet.New(Element.Part<V_LastOf>(objectStore.GetVariable()));
+                ActionSet = ActionSet.New(Element.Part<V_LastOf>(objectStore.GetVariable())).PackThis();
             }
             ActionSet = ActionSet.New(true);
 

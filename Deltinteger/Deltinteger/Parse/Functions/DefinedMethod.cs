@@ -233,12 +233,12 @@ namespace Deltin.Deltinteger.Parse
                 {
                     actionSet.InitialSet().AddAction(objectStore.SetVariable(new V_EmptyArray()));
                     Attributes.ContainingType.AddObjectVariablesToAssigner(Element.Part<V_LastOf>(objectStore.GetVariable()), actionSet.IndexAssigner);
-                    actionSet = actionSet.New(Element.Part<V_LastOf>(objectStore.GetVariable()));
+                    actionSet = actionSet.New(Element.Part<V_LastOf>(objectStore.GetVariable())).PackThis();
                 }
                 else
                 {
                     Attributes.ContainingType.AddObjectVariablesToAssigner(objectStore.GetVariable(), actionSet.IndexAssigner);
-                    actionSet = actionSet.New(objectStore.GetVariable());
+                    actionSet = actionSet.New(objectStore.GetVariable()).PackThis();
                 }
             }
             

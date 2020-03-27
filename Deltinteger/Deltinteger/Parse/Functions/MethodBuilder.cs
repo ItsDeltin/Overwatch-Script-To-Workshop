@@ -30,6 +30,7 @@ namespace Deltin.Deltinteger.Parse
                     else
                     {
                         // Normal
+                        builder.BuilderSet = builder.BuilderSet.PackThis();
                         builder.AssignParameters(call);
                         builder.SetupReturnHandler();
                         builder.ParseInner();

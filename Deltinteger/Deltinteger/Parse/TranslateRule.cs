@@ -140,6 +140,7 @@ namespace Deltin.Deltinteger.Parse
         public VarIndexAssigner IndexAssigner { get; private set; }
         public ReturnHandler ReturnHandler { get; private set; }
         public IWorkshopTree CurrentObject { get; private set; }
+        public IWorkshopTree This { get; private set; }
         public int IndentCount { get; private set; }
         public bool IsRecursive { get; private set; }
         public bool IsGlobal { get; }
@@ -175,6 +176,7 @@ namespace Deltin.Deltinteger.Parse
             IndexAssigner = other.IndexAssigner;
             ReturnHandler = other.ReturnHandler;
             CurrentObject = other.CurrentObject;
+            This = other.This;
             IndentCount = other.IndentCount;
             IsRecursive = other.IsRecursive;
         }
@@ -217,6 +219,12 @@ namespace Deltin.Deltinteger.Parse
         {
             var newActionSet = Clone();
             newActionSet.IndentCount++;
+            return newActionSet;
+        }
+        public ActionSet PackThis()
+        {            
+            var newActionSet = Clone();
+            newActionSet.This = CurrentObject;
             return newActionSet;
         }
 

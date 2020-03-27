@@ -87,7 +87,7 @@ namespace Deltin.Deltinteger.Parse
 
         public override void Parse(ActionSet actionSet, IWorkshopTree[] parameterValues, object[] additionalParameterData)
         {
-            actionSet = actionSet.New(actionSet.IndexAssigner.CreateContained());
+            actionSet = actionSet.New(actionSet.IndexAssigner.CreateContained()).PackThis();
             DefinedMethod.AssignParameters(actionSet, ParameterVars, parameterValues);
             Block.Translate(actionSet);
         }
