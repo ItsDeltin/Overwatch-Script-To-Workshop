@@ -1,4 +1,4 @@
-﻿using Deltin.Deltinteger.I18n;
+using Deltin.Deltinteger.I18n;
 
 namespace Deltin.Deltinteger.Elements
 {
@@ -113,6 +113,19 @@ namespace Deltin.Deltinteger.Elements
             }
             builder.Unindent()
                 .AppendLine("}");
+        }
+    
+        public int ElementCount()
+        {
+            int count = 1;
+
+            foreach (Condition condition in Conditions)
+                count += condition.ElementCount();
+
+            foreach (Element action in Actions)
+                count += action.ElementCount(0);
+            
+            return count;
         }
     }
 

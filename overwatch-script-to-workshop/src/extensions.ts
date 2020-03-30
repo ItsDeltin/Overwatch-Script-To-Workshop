@@ -5,18 +5,25 @@
 
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { workspace, ExtensionContext, OutputChannel, window, Uri, Position, Location } from 'vscode';
+import { workspace, ExtensionContext, OutputChannel, window, Uri, Position, Location, StatusBarItem } from 'vscode';
 import { LanguageClient, LanguageClientOptions, ServerOptions, ExecutableOptions, Executable, TransportKind, InitializationFailedHandler, ErrorHandler, TextDocument, RequestType, Position as LSPosition, Location as LSLocation } from 'vscode-languageclient';
 
 let client: LanguageClient;
 let workshopOut: OutputChannel;
+let elementCountStatus: vscode.StatusBarItem;
 let config = workspace.getConfiguration("ostw", null);
 let isServerRunning = false;
 
 export function activate(context: ExtensionContext) {
 
 	// Shows the compiled result in an output window.
-	workshopOut = window.createOutputChannel("Workshop Code"); // Create the channel.
+	workshopOut = window.createOutputChannel("Workshop Code");
+
+	// Shows element count.
+	elementCountStatus = window.createStatusBarItem(vscode.StatusBarAlignment.Left, 0);
+	elementCountStatus.tooltip = "The number of elements in the workshop output. The workshop will accept a maximum of 20,000.";
+	elementCountStatus.show();
+	setElementCount(0);
 	
 	addCommands(context);
 
@@ -36,6 +43,11 @@ export function activate(context: ExtensionContext) {
 		}
 	});
 	startLanguageServer();
+}
+
+function setElementCount(count)
+{
+	elementCountStatus.text = "Element count: " + count + " / 20000";
 }
 
 function startLanguageServer()
@@ -93,6 +105,10 @@ function startLanguageServer()
 				// Append the compiled result.
 				workshopOut.appendLine(code);
 			}
+		});
+
+		client.onNotification("elementCount", (count: string) => {
+			setElementCount(count);
 		});
 	}).catch((reason) => {
 		workshopOut.clear();

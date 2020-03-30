@@ -264,6 +264,7 @@ namespace Deltin.Deltinteger.Parse
         }
 
         public string WorkshopCode { get; private set; }
+        public int ElementCount { get; private set; }
         public List<Rule> WorkshopRules { get; private set; }
 
         void ToWorkshop(Func<VarCollection, Rule[]> addRules)
@@ -338,8 +339,12 @@ namespace Deltin.Deltinteger.Parse
             SubroutineCollection.ToWorkshop(result);
 
             // Get the rules.
-            foreach (var rule in WorkshopRules)
-                rule.ToWorkshop(result, OptimizeOutput);
+            for (int i = 0; i < WorkshopRules.Count; i++)
+            {
+                WorkshopRules[i].ToWorkshop(result, OptimizeOutput);
+                ElementCount += WorkshopRules[i].ElementCount();
+                if (i != WorkshopRules.Count - 1) result.AppendLine();
+            }
             
             WorkshopCode = result.ToString();
         }

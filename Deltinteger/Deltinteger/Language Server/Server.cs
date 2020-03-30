@@ -34,6 +34,7 @@ namespace Deltin.Deltinteger.LanguageServer
     public class DeltintegerLanguageServer
     {
         public const string SendWorkshopCode = "workshopCode";
+        public const string SendElementCount = "elementCount";
 
         public static void Run()
         {
