@@ -7,6 +7,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { workspace, ExtensionContext, OutputChannel, window, Uri, Position, Location, StatusBarItem } from 'vscode';
 import { LanguageClient, LanguageClientOptions, ServerOptions, ExecutableOptions, Executable, TransportKind, InitializationFailedHandler, ErrorHandler, TextDocument, RequestType, Position as LSPosition, Location as LSLocation } from 'vscode-languageclient';
+const fetch = require('node-fetch').default;
 
 let client: LanguageClient;
 let workshopOut: OutputChannel;
@@ -39,10 +40,10 @@ export function activate(context: ExtensionContext) {
 				client.stop();
 				isServerRunning = false;
 			}
-			startLanguageServer();
+			startLanguageServer(context);
 		}
 	});
-	startLanguageServer();
+	startLanguageServer(context);
 }
 
 function setElementCount(count)
@@ -50,7 +51,7 @@ function setElementCount(count)
 	elementCountStatus.text = "Element count: " + count + " / 20000";
 }
 
-function startLanguageServer()
+function startLanguageServer(context: ExtensionContext)
 {
 	// Gets the path to the server executable.
 	const serverModule = <string>config.get('deltintegerPath');
@@ -107,8 +108,39 @@ function startLanguageServer()
 			}
 		});
 
+		// Update element count in window.
 		client.onNotification("elementCount", (count: string) => {
 			setElementCount(count);
+		});
+
+		// Check version.
+		client.onNotification("version", (version: string) => {
+			// Do not show the message if the newRelease config is false.
+			if (!config.get('newRelease')) return;
+
+			fetch('https://api.github.com/repos/ItsDeltin/Overwatch-Script-To-Workshop/releases/latest')
+				.then(res => res.json())
+				.then(json => {
+					let latest: string = json.tag_name;
+					let url: string = json.html_url;
+
+					if (version != latest && config.get('ignoreRelease') != latest)
+					{
+						window.showInformationMessage(
+							// Message
+							"A new version of Overwatch Script To Workshop (" + latest + ") is now available. (Current: " + version + ")",
+							// Options
+							"Ignore release", "View release"
+						).then(chosenOption => {
+							// Open the release.
+							if (chosenOption == "View release")
+								vscode.env.openExternal(Uri.parse(url));
+							// Don't show again for this version.
+							else if (chosenOption == "Ignore release")
+								config.update('ignoreRelease', latest, vscode.ConfigurationTarget.Global);
+						});
+					}
+				});
 		});
 	}).catch((reason) => {
 		workshopOut.clear();

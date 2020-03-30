@@ -35,18 +35,14 @@ namespace Deltin.Deltinteger.LanguageServer
     {
         public const string SendWorkshopCode = "workshopCode";
         public const string SendElementCount = "elementCount";
+        public const string Version = "version";
 
         public static void Run()
         {
-            new DeltintegerLanguageServer();
+            new DeltintegerLanguageServer().RunServer().Wait();
         }
 
         private static string LogFile() => Path.Combine(Program.ExeFolder, "Log", "log.txt");
-
-        private DeltintegerLanguageServer()
-        {
-            RunServer().Wait();
-        }
 
         public ILanguageServer Server { get; private set; }
 
@@ -103,6 +99,8 @@ namespace Deltin.Deltinteger.LanguageServer
                 .WithHandler<CodeLensHandler>(codeLensHandler)
                 .WithHandler<DoRenameHandler>(renameHandler)
                 .WithHandler<PrepareRenameHandler>(prepareRenameHandler));
+            
+            Server.SendNotification(Version, Program.VERSION);
             
             await Server.WaitForExit;
         }
