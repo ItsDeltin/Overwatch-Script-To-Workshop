@@ -304,7 +304,9 @@ namespace Deltin.Deltinteger.Parse
             foreach (var rule in rules)
             {
                 var translate = new TranslateRule(this, rule);
-                WorkshopRules.Add(translate.GetRule());
+                Rule newRule = translate.GetRule();
+                WorkshopRules.Add(newRule);
+                rule.ElementCountLens.RuleParsed(newRule);
             }
 
             if (InitialPlayer.Actions.Count > 0)

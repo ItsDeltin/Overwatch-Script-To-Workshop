@@ -140,7 +140,8 @@ function startLanguageServer(context: ExtensionContext)
 								config.update('ignoreRelease', latest, vscode.ConfigurationTarget.Global);
 						});
 					}
-				});
+				})
+				.catch(error => {});
 		});
 	}).catch((reason) => {
 		workshopOut.clear();

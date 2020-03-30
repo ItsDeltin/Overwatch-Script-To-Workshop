@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.LanguageServer;
 using Newtonsoft.Json.Linq;
 
@@ -8,6 +9,7 @@ namespace Deltin.Deltinteger.Parse
     [Flags]
     public enum CodeLensSourceType
     {
+        None = 0,
         Function = 1,
         Type = 2,
         EnumValue = 4,
@@ -89,5 +91,25 @@ namespace Deltin.Deltinteger.Parse
             // Locations
             JToken.FromObject(Method.Attributes.Overriders.Select(overrider => overrider.DefinedAt))
         };
+    }
+
+    public class ElementCountCodeLens : CodeLensRange
+    {
+        private int elementCount = -1;
+        private int actionCount = -1;
+
+        public ElementCountCodeLens(DocRange range) : base(CodeLensSourceType.None, range, null) {}
+
+        public void RuleParsed(Rule rule)
+        {
+            elementCount = rule.ElementCount();
+            actionCount = rule.Actions.Length;
+        }
+
+        public override string GetTitle()
+        {
+            if (elementCount == -1) return "- actions, - elements";
+            return actionCount + " actions, " + elementCount + " elements";
+        }
     }
 }
