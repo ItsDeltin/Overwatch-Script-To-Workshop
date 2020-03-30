@@ -15,7 +15,12 @@
         "onLanguage:ow_ostw",
         "workspaceContains:**/customGameSettings.json"
     ],
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/ItsDeltin/Overwatch-Script-To-Workshop.git"
+    },
     "main": "./dist/extension",
+    "icon": "icon.png",
     "contributes": {
         "languages": [
             {
