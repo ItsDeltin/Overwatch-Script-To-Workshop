@@ -69,6 +69,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
         public int ElementCount(int depth) => throw new NotImplementedException();
     }
 
+    /// <summary>Lambda invoke function.</summary>
     public class LambdaInvoke : IMethod
     {
         public string Name => "Invoke";
@@ -130,6 +131,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
         }
     }
 
+    /// <summary>The base class for lambda CodeTypes.</summary>
     public abstract class BaseLambda : CodeType
     {
         public bool ReturnsValue { get; protected set; }
@@ -151,6 +153,19 @@ namespace Deltin.Deltinteger.Parse.Lambda
         public override bool Implements(CodeType type)
         {
             if (type == null || type.GetType() != this.GetType()) return false;
+
+            BaseLambda otherLambda = (BaseLambda)type;
+
+            // If the argument length is not the same, return false.
+            if (ArgumentTypes.Length != otherLambda.ArgumentTypes.Length) return false;
+
+            // If the other's return type does not implement this return type, return false.
+            if (ReturnType != null && !otherLambda.ReturnType.Implements(ReturnType)) return false;
+
+            // If any of the other's parameters to not implement this respective parameters, return false.
+            for (int i = 0; i < ArgumentTypes.Length; i++)
+                if (!otherLambda.ArgumentTypes[i].Implements(ArgumentTypes[i])) return false;
+            
             return true;
         }
 
