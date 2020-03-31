@@ -77,7 +77,7 @@ namespace Deltin.Deltinteger.Parse
         public virtual Scope GetObjectScope() => null;
 
         public CodeType Type() => null;
-        public IWorkshopTree Parse(ActionSet actionSet, bool asElement = true) => null;
+        public IWorkshopTree Parse(ActionSet actionSet) => null;
 
         /// <summary>Determines if variables with this type can have their value changed.</summary>
         public virtual TypeSettable Constant() => TypeSettable.Normal;
@@ -172,7 +172,10 @@ namespace Deltin.Deltinteger.Parse
         {
             _defaultTypes = new List<CodeType>();
             foreach (var enumData in EnumData.GetEnumData())
-                _defaultTypes.Add(new WorkshopEnumType(enumData));
+                if (enumData.ConvertableToElement())
+                    _defaultTypes.Add(new ValueGroupType(enumData));
+                else
+                    _defaultTypes.Add(new WorkshopEnumType(enumData));
             
             // Add custom classes here.
             _defaultTypes.Add(new Pathfinder.PathmapClass());

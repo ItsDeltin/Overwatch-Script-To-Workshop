@@ -10,13 +10,7 @@ using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 namespace Deltin.Deltinteger.Elements
 {
     [AttributeUsage(AttributeTargets.Enum)]
-    public class WorkshopEnum : Attribute
-    {
-        public WorkshopEnum() 
-        { 
-
-        }
-    }
+    public class WorkshopEnum : Attribute {}
 
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Enum)]
     public class EnumOverride : Attribute

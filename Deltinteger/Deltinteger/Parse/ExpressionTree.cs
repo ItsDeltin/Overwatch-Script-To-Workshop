@@ -112,17 +112,17 @@ namespace Deltin.Deltinteger.Parse
 
         public CodeType Type() => Result?.Type();
 
-        public IWorkshopTree Parse(ActionSet actionSet, bool asElement = true)
+        public IWorkshopTree Parse(ActionSet actionSet)
         {
-            return ParseTree(actionSet, true, asElement).Result;
+            return ParseTree(actionSet, true).Result;
         }
 
         public void Translate(ActionSet actionSet)
         {
-            ParseTree(actionSet, false, true);
+            ParseTree(actionSet, false);
         }
 
-        public ExpressionTreeParseResult ParseTree(ActionSet actionSet, bool expectingValue, bool asElement)
+        public ExpressionTreeParseResult ParseTree(ActionSet actionSet, bool expectingValue)
         {
             IGettable resultingVariable = null;
             IWorkshopTree target = null;
@@ -155,7 +155,7 @@ namespace Deltin.Deltinteger.Parse
                 }
                 else
                 {
-                    var newCurrent = Tree[i].Parse(actionSet.New(currentAssigner).New(currentObject), asElement);
+                    var newCurrent = Tree[i].Parse(actionSet.New(currentAssigner).New(currentObject));
                     if (newCurrent != null)
                     {
                         current = newCurrent;
@@ -184,6 +184,12 @@ namespace Deltin.Deltinteger.Parse
 
             if (result == null && expectingValue) throw new Exception("Expression tree result is null");
             return new ExpressionTreeParseResult(result, resultIndex, target, resultingVariable);
+        }
+    
+        public static IExpression ResultingExpression(IExpression expression)
+        {
+            if (expression is ExpressionTree expressionTree) return expressionTree.Result;
+            return expression;
         }
     }
 
@@ -316,7 +322,7 @@ namespace Deltin.Deltinteger.Parse
             if (Tree != null)
             {
                 // Parse the tree.
-                ExpressionTreeParseResult treeParseResult = Tree.ParseTree(actionSet, true, true);
+                ExpressionTreeParseResult treeParseResult = Tree.ParseTree(actionSet, true);
                 // Get the variable.
                 var = (IndexReference)treeParseResult.ResultingVariable;
                 // Get the target.

@@ -90,7 +90,7 @@ namespace Deltin.Deltinteger.Parse
         public CodeType Type() => Enum;
         public Scope ReturningScope() => null;
 
-        public IWorkshopTree Parse(ActionSet actionSet, bool asElement = true)
+        public IWorkshopTree Parse(ActionSet actionSet)
         {
             return new V_Number(ID);
         }

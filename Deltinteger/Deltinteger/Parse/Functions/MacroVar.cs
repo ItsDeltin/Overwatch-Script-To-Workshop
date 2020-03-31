@@ -51,7 +51,7 @@ namespace Deltin.Deltinteger.Parse
             foreach (var listener in listeners) listener.Applied();
         }
 
-        public IWorkshopTree Parse(ActionSet actionSet, bool asElement = true) => Expression.Parse(actionSet);
+        public IWorkshopTree Parse(ActionSet actionSet) => Expression.Parse(actionSet);
 
         public Scope ReturningScope() => ReturnType?.GetObjectScope() ?? parseInfo.TranslateInfo.PlayerVariableScope;
 

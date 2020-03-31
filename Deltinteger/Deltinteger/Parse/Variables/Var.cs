@@ -115,7 +115,7 @@ namespace Deltin.Deltinteger.Parse
             parseInfo.TranslateInfo.AddSymbolLink(this, new Location(script.Uri, callRange));
         }
     
-        public IWorkshopTree Parse(ActionSet actionSet, bool asElement = true)
+        public IWorkshopTree Parse(ActionSet actionSet)
         {
             return actionSet.IndexAssigner[this].GetVariable();
         }

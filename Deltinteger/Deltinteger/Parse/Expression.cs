@@ -10,7 +10,7 @@ namespace Deltin.Deltinteger.Parse
     {
         Scope ReturningScope();
         CodeType Type();
-        IWorkshopTree Parse(ActionSet actionSet, bool asElement = true);
+        IWorkshopTree Parse(ActionSet actionSet);
     }
 
     public class NumberAction : IExpression
@@ -25,7 +25,7 @@ namespace Deltin.Deltinteger.Parse
         public Scope ReturningScope() => null;
         public CodeType Type() => null;
 
-        public IWorkshopTree Parse(ActionSet actionSet, bool asElement = true)
+        public IWorkshopTree Parse(ActionSet actionSet)
         {
             return new V_Number(Value);
         }
@@ -43,7 +43,7 @@ namespace Deltin.Deltinteger.Parse
         public Scope ReturningScope() => null;
         public CodeType Type() => null;
 
-        public IWorkshopTree Parse(ActionSet actionSet, bool asElement = true)
+        public IWorkshopTree Parse(ActionSet actionSet)
         {
             if (Value) return new V_True();
             else return new V_False();
@@ -56,7 +56,7 @@ namespace Deltin.Deltinteger.Parse
         public Scope ReturningScope() => null;
         public CodeType Type() => null;
 
-        public IWorkshopTree Parse(ActionSet actionSet, bool asElement = true)
+        public IWorkshopTree Parse(ActionSet actionSet)
         {
             return new V_Null();
         }
@@ -88,7 +88,7 @@ namespace Deltin.Deltinteger.Parse
         public Scope ReturningScope() => Type()?.GetObjectScope() ?? parseInfo.TranslateInfo.PlayerVariableScope;
         public CodeType Type() => (Expression.Type() as ArrayType)?.ArrayOfType;
 
-        public IWorkshopTree Parse(ActionSet actionSet, bool asElement = true)
+        public IWorkshopTree Parse(ActionSet actionSet)
         {
             return Element.Part<V_ValueInArray>(Expression.Parse(actionSet.New(expressionRange)), Index.Parse(actionSet.New(indexRange)));
         }
@@ -108,7 +108,7 @@ namespace Deltin.Deltinteger.Parse
         public Scope ReturningScope() => null;
         public CodeType Type() => null;
 
-        public IWorkshopTree Parse(ActionSet actionSet, bool asElement = true)
+        public IWorkshopTree Parse(ActionSet actionSet)
         {
             IWorkshopTree[] asWorkshop = new IWorkshopTree[Values.Length];
             for (int i = 0; i < asWorkshop.Length; i++)
@@ -140,7 +140,7 @@ namespace Deltin.Deltinteger.Parse
 
         public Scope ReturningScope() => ConvertingTo?.GetObjectScope();
         public CodeType Type() => ConvertingTo;
-        public IWorkshopTree Parse(ActionSet actionSet, bool asElement = true) => Expression.Parse(actionSet);
+        public IWorkshopTree Parse(ActionSet actionSet) => Expression.Parse(actionSet);
     }
 
     public class NotAction : IExpression
@@ -154,7 +154,7 @@ namespace Deltin.Deltinteger.Parse
 
         public Scope ReturningScope() => null;
         public CodeType Type() => null;
-        public IWorkshopTree Parse(ActionSet actionSet, bool asElement = true) => Element.Part<V_Not>(Expression.Parse(actionSet));
+        public IWorkshopTree Parse(ActionSet actionSet) => Element.Part<V_Not>(Expression.Parse(actionSet));
     }
     
     public class InverseAction : IExpression
@@ -168,7 +168,7 @@ namespace Deltin.Deltinteger.Parse
 
         public Scope ReturningScope() => null;
         public CodeType Type() => null;
-        public IWorkshopTree Parse(ActionSet actionSet, bool asElement = true) => Element.Part<V_Multiply>(Expression.Parse(actionSet), new V_Number(-1));
+        public IWorkshopTree Parse(ActionSet actionSet) => Element.Part<V_Multiply>(Expression.Parse(actionSet), new V_Number(-1));
     }
     
     public class OperatorAction : IExpression
@@ -209,7 +209,7 @@ namespace Deltin.Deltinteger.Parse
 
         public Scope ReturningScope() => null;
         public CodeType Type() => null;
-        public IWorkshopTree Parse(ActionSet actionSet, bool asElement = true)
+        public IWorkshopTree Parse(ActionSet actionSet)
         {
             var left = Left.Parse(actionSet);
             var right = Right.Parse(actionSet);
@@ -264,7 +264,7 @@ namespace Deltin.Deltinteger.Parse
             if (Consequent != null && Alternative != null && Consequent.Type() == Alternative.Type()) return Consequent.Type();
             return null;
         }
-        public IWorkshopTree Parse(ActionSet actionSet, bool asElement = true) => Element.TernaryConditional(Condition.Parse(actionSet), Consequent.Parse(actionSet), Alternative.Parse(actionSet));
+        public IWorkshopTree Parse(ActionSet actionSet) => Element.TernaryConditional(Condition.Parse(actionSet), Consequent.Parse(actionSet), Alternative.Parse(actionSet));
     }
 
     public class RootAction : IExpression
@@ -278,7 +278,7 @@ namespace Deltin.Deltinteger.Parse
 
         public Scope ReturningScope() => DeltinScript.RulesetScope;
         public CodeType Type() => null;
-        public IWorkshopTree Parse(ActionSet actionSet, bool asElement = true) => null;
+        public IWorkshopTree Parse(ActionSet actionSet) => null;
     }
 
     public class ThisAction : IExpression
@@ -292,7 +292,7 @@ namespace Deltin.Deltinteger.Parse
                 parseInfo.Script.Diagnostics.Error("Keyword 'this' cannot be used here.", DocRange.GetRange(context));
         }
 
-        public IWorkshopTree Parse(ActionSet actionSet, bool asElement = true) => actionSet.This;
+        public IWorkshopTree Parse(ActionSet actionSet) => actionSet.This;
         public CodeType Type() => ThisType;
         public Scope ReturningScope() => ThisType?.GetObjectScope();
     }
@@ -316,7 +316,7 @@ namespace Deltin.Deltinteger.Parse
             else baseType = thisType.Extends;
         }
 
-        public IWorkshopTree Parse(ActionSet actionSet, bool asElement = true) => null;
+        public IWorkshopTree Parse(ActionSet actionSet) => null;
         public Scope ReturningScope() => baseType?.GetObjectScope();
         public CodeType Type() => baseType;
     }
@@ -346,7 +346,7 @@ namespace Deltin.Deltinteger.Parse
             }
         }
 
-        public IWorkshopTree Parse(ActionSet actionSet, bool asElement = true)
+        public IWorkshopTree Parse(ActionSet actionSet)
         {
             ClassData classData = actionSet.Translate.DeltinScript.SetupClasses();
 

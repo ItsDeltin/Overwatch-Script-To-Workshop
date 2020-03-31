@@ -94,16 +94,51 @@ namespace Deltin.Deltinteger.Parse
 
         public CodeType Type() => Enum;
 
-        public IWorkshopTree Parse(ActionSet actionSet, bool asElement = true)
+        public IWorkshopTree Parse(ActionSet actionSet) => EnumMember;
+
+        public CompletionItem GetCompletion() => new CompletionItem() {
+            Label = Name,
+            Kind = CompletionItemKind.Constant
+        };
+    }
+
+    class ValueGroupType : CodeType
+    {
+        private Scope Scope { get; } = new Scope();
+        private List<EnumValuePair> ValuePairs { get; } = new List<EnumValuePair>();
+
+        public ValueGroupType(EnumData enumData) : base(enumData.CodeName)
         {
-            if (asElement) return EnumData.ToElement(EnumMember) ?? (IWorkshopTree)EnumMember;
-            return (IWorkshopTree)EnumMember;
+            foreach (EnumMember member in enumData.Members)
+            {
+                InternalVar newVar = new InternalVar(member.CodeName, CompletionItemKind.EnumMember);
+                ValuePairs.Add(new EnumValuePair(newVar, EnumData.ToElement(member)));
+            }
         }
 
-        public CompletionItem GetCompletion() => new CompletionItem()
+        public override void AddObjectVariablesToAssigner(IWorkshopTree reference, VarIndexAssigner assigner)
         {
+            foreach (EnumValuePair pair in ValuePairs)
+                assigner.Add(pair.Var, pair.Value);
+        }
+
+        public override Scope ReturningScope() => Scope;
+
+        public override CompletionItem GetCompletion() => new CompletionItem() {
             Label = Name,
-            Kind = CompletionItemKind.EnumMember
+            Kind = CompletionItemKind.Enum
         };
+
+        private class EnumValuePair
+        {
+            public InternalVar Var { get; }
+            public Element Value { get; }
+
+            public EnumValuePair(InternalVar var, Element value)
+            {
+                Var = var;
+                Value = value;
+            }
+        }
     }
 }

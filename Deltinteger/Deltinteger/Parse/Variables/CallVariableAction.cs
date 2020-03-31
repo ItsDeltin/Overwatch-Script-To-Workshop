@@ -14,7 +14,7 @@ namespace Deltin.Deltinteger.Parse
             Index = index;
         }
 
-        public IWorkshopTree Parse(ActionSet actionSet, bool asElement = true)
+        public IWorkshopTree Parse(ActionSet actionSet)
         {
             IWorkshopTree result = Calling.Parse(actionSet);
 

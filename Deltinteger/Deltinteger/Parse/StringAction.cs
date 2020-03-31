@@ -253,7 +253,7 @@ namespace Deltin.Deltinteger.Parse
         public Scope ReturningScope() => null;
         public CodeType Type() => null;
 
-        public IWorkshopTree Parse(ActionSet actionSet, bool asElement = true)
+        public IWorkshopTree Parse(ActionSet actionSet)
         {
             if (!Localized)
             {

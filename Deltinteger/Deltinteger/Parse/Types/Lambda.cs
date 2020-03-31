@@ -60,7 +60,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
             }
         }
 
-        public IWorkshopTree Parse(ActionSet actionSet, bool asElement = true) => this;
+        public IWorkshopTree Parse(ActionSet actionSet) => this;
         public Scope ReturningScope() => LambdaType.GetObjectScope();
         public CodeType Type() => LambdaType;
 
