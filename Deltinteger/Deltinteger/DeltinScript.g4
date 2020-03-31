@@ -65,7 +65,8 @@ method           : (ASYNC NOT?)? PART LEFT_PAREN (picky_parameters | call_parame
 
 variable : PART array? ;
 code_type: PART (INDEX_START INDEX_END)* generics?;
-generics : LESS_THAN (code_type (COMMA code_type)*)? GREATER_THAN;
+generics : LESS_THAN (generic_option (COMMA generic_option)*)? GREATER_THAN;
+generic_option: code_type | DEFINE;
 
 lambda: (define | LEFT_PAREN (define (COMMA define)*)? RIGHT_PAREN) INS (expr | block) ;
 

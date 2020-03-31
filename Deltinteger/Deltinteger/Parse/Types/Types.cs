@@ -128,14 +128,19 @@ namespace Deltin.Deltinteger.Parse
             CodeType type = parseInfo.TranslateInfo.GetCodeType(typeContext.PART().GetText(), parseInfo.Script.Diagnostics, DocRange.GetRange(typeContext));
 
             // Get generics
-            if (typeContext.generics()?.code_type() != null)
+            if (typeContext.generics()?.generic_option() != null)
             {
                 // Create a list to store the generics.
                 List<CodeType> generics = new List<CodeType>();
 
                 // Get the generics.
-                foreach (var genericContext in typeContext.generics().code_type())
-                    generics.Add(GetCodeTypeFromContext(parseInfo, genericContext));
+                foreach (var genericContext in typeContext.generics().generic_option())
+                {
+                    if (genericContext.DEFINE() != null)
+                        generics.Add(null);
+                    else
+                        generics.Add(GetCodeTypeFromContext(parseInfo, genericContext.code_type()));
+                }
                 
                 if (type is Lambda.BlockLambda)
                     type = new Lambda.BlockLambda(generics.ToArray());

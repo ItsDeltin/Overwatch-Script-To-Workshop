@@ -139,7 +139,15 @@ namespace Deltin.Deltinteger.Parse.Lambda
         public CodeType[] ArgumentTypes { get; }
         private readonly Scope _objectScope;
 
-        protected BaseLambda(string name) : base(name) {}
+        protected BaseLambda(string name) : base(name)
+        {
+            CanBeDeleted = false;
+            CanBeExtended = false;
+            Kind = "constant";
+            ArgumentTypes = new CodeType[0];
+            _objectScope = new Scope("lambda");
+            _objectScope.AddNativeMethod(new LambdaInvoke(this));
+        }
         protected BaseLambda(string name, CodeType[] argumentTypes) : base(name)
         {
             CanBeDeleted = false;
@@ -164,7 +172,10 @@ namespace Deltin.Deltinteger.Parse.Lambda
 
             // If any of the other's parameters to not implement this respective parameters, return false.
             for (int i = 0; i < ArgumentTypes.Length; i++)
-                if (!otherLambda.ArgumentTypes[i].Implements(ArgumentTypes[i])) return false;
+            {
+                if ((ArgumentTypes[i] == null) != (otherLambda.ArgumentTypes[i] == null)) return false;
+                if (ArgumentTypes[i] != null && !otherLambda.ArgumentTypes[i].Implements(ArgumentTypes[i])) return false;
+            }
             
             return true;
         }
