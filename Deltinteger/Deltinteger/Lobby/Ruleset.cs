@@ -367,12 +367,16 @@ namespace Deltin.Deltinteger.Lobby
             if (Settings != null)
                 foreach (var hero in Settings)
                 {
-                    builder.AppendLine($"{hero.Key}");
-                    builder.AppendLine("{");
-                    builder.Indent();
-                    WorkshopValuePair.ToWorkshop(((JObject)hero.Value).ToObject<Dictionary<string, object>>(), builder, allSettings);
-                    builder.Unindent();
-                    builder.AppendLine("}");
+                    if (hero.Key != "General")
+                    {
+                        builder.AppendLine($"{hero.Key}");
+                        builder.AppendLine("{");
+                        builder.Indent();
+                        WorkshopValuePair.ToWorkshop(((JObject)hero.Value).ToObject<Dictionary<string, object>>(), builder, allSettings);
+                        builder.Unindent();
+                        builder.AppendLine("}");
+                    }
+                    else WorkshopValuePair.ToWorkshop(((JObject)hero.Value).ToObject<Dictionary<string, object>>(), builder, allSettings);
                 }
             if (EnabledHeroes != null)
             {
