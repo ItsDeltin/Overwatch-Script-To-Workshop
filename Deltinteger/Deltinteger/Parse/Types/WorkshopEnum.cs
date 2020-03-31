@@ -55,9 +55,10 @@ namespace Deltin.Deltinteger.Parse
             script.AddHover(callRange, hoverContents.ToString());
         }
     
-        public static WorkshopEnumType GetEnumType(EnumData enumData)
+        public static CodeType GetEnumType(EnumData enumData)
         {
-            return (WorkshopEnumType)CodeType.DefaultTypes.First(t => t is WorkshopEnumType && ((WorkshopEnumType)t).EnumData == enumData);
+            if (enumData.ConvertableToElement()) return CodeType.DefaultTypes.First(t => t is ValueGroupType valueGroupType && valueGroupType.EnumData == enumData);
+            return (WorkshopEnumType)CodeType.DefaultTypes.First(t => t is WorkshopEnumType workshopEnum && workshopEnum.EnumData == enumData);
         }
         public static WorkshopEnumType GetEnumType<T>()
         {
@@ -104,22 +105,25 @@ namespace Deltin.Deltinteger.Parse
 
     class ValueGroupType : CodeType
     {
+        public EnumData EnumData { get; }
         private Scope Scope { get; } = new Scope();
         private List<EnumValuePair> ValuePairs { get; } = new List<EnumValuePair>();
 
         public ValueGroupType(EnumData enumData) : base(enumData.CodeName)
         {
+            EnumData = enumData;
             foreach (EnumMember member in enumData.Members)
             {
-                InternalVar newVar = new InternalVar(member.CodeName, CompletionItemKind.EnumMember);
-                ValuePairs.Add(new EnumValuePair(newVar, EnumData.ToElement(member)));
+                EnumValuePair newPair = new EnumValuePair(member);
+                ValuePairs.Add(newPair);
+                Scope.AddNativeVariable(newPair);
             }
         }
 
-        public override void AddObjectVariablesToAssigner(IWorkshopTree reference, VarIndexAssigner assigner)
+        public override void WorkshopInit(DeltinScript translateInfo)
         {
             foreach (EnumValuePair pair in ValuePairs)
-                assigner.Add(pair.Var, pair.Value);
+                translateInfo.DefaultIndexAssigner.Add(pair, EnumData.ToElement(pair.Member));
         }
 
         public override Scope ReturningScope() => Scope;
@@ -128,17 +132,15 @@ namespace Deltin.Deltinteger.Parse
             Label = Name,
             Kind = CompletionItemKind.Enum
         };
+    }
 
-        private class EnumValuePair
+    class EnumValuePair : InternalVar
+    {
+        public EnumMember Member { get; }
+
+        public EnumValuePair(EnumMember member) : base(member.CodeName, CompletionItemKind.EnumMember)
         {
-            public InternalVar Var { get; }
-            public Element Value { get; }
-
-            public EnumValuePair(InternalVar var, Element value)
-            {
-                Var = var;
-                Value = value;
-            }
+            Member = member;
         }
     }
 }
