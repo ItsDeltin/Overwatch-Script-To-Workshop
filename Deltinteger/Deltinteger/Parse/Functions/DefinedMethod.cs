@@ -260,7 +260,12 @@ namespace Deltin.Deltinteger.Parse
             }
 
             // Add the subroutine.
-            parseInfo.TranslateInfo.WorkshopRules.Add(subroutineRule.GetRule());
+            Rule translatedRule = subroutineRule.GetRule();
+            parseInfo.TranslateInfo.WorkshopRules.Add(translatedRule);
+
+            var codeLens = new ElementCountCodeLens(DefinedAt.range);
+            parseInfo.Script.AddCodeLensRange(codeLens);
+            codeLens.RuleParsed(translatedRule);
         }
 
         public Var[] VirtualVarGroup(int i)
