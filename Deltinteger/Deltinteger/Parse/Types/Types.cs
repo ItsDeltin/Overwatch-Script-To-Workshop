@@ -191,17 +191,4 @@ namespace Deltin.Deltinteger.Parse
     {
         Normal, Convertable, Constant
     }
-
-    public class ArrayType : CodeType
-    {
-        public CodeType ArrayOfType { get; }
-
-        public ArrayType(CodeType arrayOfType) : base(arrayOfType.Name + "[]")
-        {
-            ArrayOfType = arrayOfType;
-        }
-
-        public override Scope ReturningScope() => null;
-        public override CompletionItem GetCompletion() => throw new NotImplementedException();
-    }
 }

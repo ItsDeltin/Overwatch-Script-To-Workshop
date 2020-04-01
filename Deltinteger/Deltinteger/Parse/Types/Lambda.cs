@@ -67,6 +67,26 @@ namespace Deltin.Deltinteger.Parse.Lambda
         public string ToWorkshop(OutputLanguage outputLanguage) => throw new NotImplementedException();
         public bool EqualTo(IWorkshopTree other) => throw new NotImplementedException();
         public int ElementCount(int depth) => throw new NotImplementedException();
+
+        public IWorkshopTree Invoke(ActionSet actionSet, params IWorkshopTree[] parameterValues)
+        {
+            for (int i = 0; i < parameterValues.Length; i++)
+                actionSet.IndexAssigner.Add(Parameters[i], parameterValues[i]);
+            
+            if (Block != null)
+            {
+                ReturnHandler returnHandler = new ReturnHandler(actionSet, "lambda", MultiplePaths);
+                Block.Translate(actionSet.New(returnHandler));
+                returnHandler.ApplyReturnSkips();
+                
+                return returnHandler.GetReturnedValue();
+            }
+            else if (Expression != null)
+            {
+                return Expression.Parse(actionSet);
+            }
+            else throw new NotImplementedException();
+        }
     }
 
     /// <summary>Lambda invoke function.</summary>
@@ -95,23 +115,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
         public IWorkshopTree Parse(ActionSet actionSet, MethodCall methodCall)
         {
             LambdaAction lambda = (LambdaAction)actionSet.CurrentObject;
-
-            for (int i = 0; i < methodCall.ParameterValues.Length; i++)
-                actionSet.IndexAssigner.Add(lambda.Parameters[i], methodCall.ParameterValues[i]);
-            
-            if (lambda.Block != null)
-            {
-                ReturnHandler returnHandler = new ReturnHandler(actionSet, "lambda", lambda.MultiplePaths);
-                lambda.Block.Translate(actionSet.New(returnHandler));
-                returnHandler.ApplyReturnSkips();
-                
-                return returnHandler.GetReturnedValue();
-            }
-            else if (lambda.Expression != null)
-            {
-                return lambda.Expression.Parse(actionSet);
-            }
-            else throw new NotImplementedException();
+            return lambda.Invoke(actionSet, methodCall.ParameterValues);
         }
 
         public bool DoesReturnValue() => LambdaType is MacroLambda || LambdaType is ValueBlockLambda;
@@ -168,7 +172,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
             if (ArgumentTypes.Length != otherLambda.ArgumentTypes.Length) return false;
 
             // If the other's return type does not implement this return type, return false.
-            if (ReturnType != null && !otherLambda.ReturnType.Implements(ReturnType)) return false;
+            if (ReturnType != null && (otherLambda.ReturnType == null || !otherLambda.ReturnType.Implements(ReturnType))) return false;
 
             // If any of the other's parameters to not implement this respective parameters, return false.
             for (int i = 0; i < ArgumentTypes.Length; i++)
@@ -192,7 +196,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
     public class BlockLambda : BaseLambda
     {
         public BlockLambda() : base("BlockLambda") {}
-        public BlockLambda(CodeType[] argumentTypes) : base("BlockLambda", argumentTypes) {}
+        public BlockLambda(params CodeType[] argumentTypes) : base("BlockLambda", argumentTypes) {}
         protected BlockLambda(string name) : base(name) {}
         protected BlockLambda(string name, CodeType[] argumentTypes) : base(name, argumentTypes) {}
     }
@@ -203,7 +207,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
         {
             ReturnsValue = true;
         }
-        public ValueBlockLambda(CodeType returnType, CodeType[] argumentTypes) : base("ValueLambda", argumentTypes)
+        public ValueBlockLambda(CodeType returnType, params CodeType[] argumentTypes) : base("ValueLambda", argumentTypes)
         {
             ReturnType = returnType;
         }
@@ -216,7 +220,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
             ReturnsValue = true;
         }
 
-        public MacroLambda(CodeType returnType, CodeType[] argumentTypes) : base("MacroLambda", argumentTypes)
+        public MacroLambda(CodeType returnType, params CodeType[] argumentTypes) : base("MacroLambda", argumentTypes)
         {
             ReturnType = returnType;
         }
