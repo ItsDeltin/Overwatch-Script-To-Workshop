@@ -116,6 +116,7 @@ namespace Deltin.Deltinteger.Parse
             SkipEndMarker startCase = new SkipEndMarker();
             actionSet.AddAction(startCase);
             skipCounts.Insert(0, Skipper.GetSkipCount(startCase));
+            State = SwitchBuilderState.OnCase;
         }
 
         public void Finish(Element switchValue)
