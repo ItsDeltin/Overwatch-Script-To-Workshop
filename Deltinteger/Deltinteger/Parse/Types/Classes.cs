@@ -217,8 +217,8 @@ Object-serve scope. Only object members.
 
         public void Init()
         {
-            DeltinScript.InitialGlobal.ActionSet.AddAction(ClassIndexes.SetVariable(0, null, Constants.MAX_ARRAY_LENGTH));
             ClassIndexes = DeltinScript.VarCollection.Assign("_classIndexes", true, false);
+            DeltinScript.InitialGlobal.ActionSet.AddAction(ClassIndexes.SetVariable(0, null, Constants.MAX_ARRAY_LENGTH));
         }
 
         public IndexReference CreateObject(int classIdentifier, ActionSet actionSet, string internalName)
