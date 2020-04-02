@@ -21,12 +21,12 @@ namespace Deltin.Deltinteger.Parse
         public bool Localized { get; }
         public IExpression[] FormatParameters { get; }
         private DocRange StringRange { get; }
-        private CustomStringParse[] Sectioned;
-        private LocalizedString LocalizedString;
+        private IStringParse String;
 
         // Normal
         public StringAction(ScriptFile script, DeltinScriptParser.StringContext stringContext, bool parse = true)
         {
+            FormatParameters = new IExpression[0];
             Value = Extras.RemoveQuotes(stringContext.STRINGLITERAL().GetText());
             Localized = stringContext.LOCALIZED() != null;
             StringRange = DocRange.GetRange(stringContext.STRINGLITERAL());
@@ -48,16 +48,17 @@ namespace Deltin.Deltinteger.Parse
 
         private void ParseString(ScriptFile script)
         {
+            String = GetCachedString(Value, Localized);
+            if (String != null) return;
+
             try
             {
                 if (!Localized)
-                {
-                    Sectioned = ParseCustomString(Value, FormatParameters);
-                }
+                    String = CustomStringGroup.ParseCustomString(Value, FormatParameters.Length);
                 else
-                {
-                    LocalizedString = ParseLocalizedString(Value, FormatParameters);
-                }
+                    String = LocalizedString.ParseLocalizedString(Value, 0, Value, FormatParameters.Length);
+                
+                lock (_cacheLock) _cache.Add(String);
             }
             catch (StringParseFailedException ex)
             {
@@ -76,14 +77,71 @@ namespace Deltin.Deltinteger.Parse
             }
         }
 
-        static CustomStringParse[] ParseCustomString(string value, IExpression[] parameters)
+        public Scope ReturningScope() => null;
+        public CodeType Type() => null;
+        public IWorkshopTree Parse(ActionSet actionSet) => String.Parse(actionSet, FormatParameters.Select(fp => fp.Parse(actionSet)).ToArray());
+
+        private static readonly object _cacheLock = new object();
+        private static readonly List<IStringParse> _cache = new List<IStringParse>();
+
+        private static IStringParse GetCachedString(string str, bool localized)
+        {
+            lock (_cacheLock)
+                foreach(var cachedString in _cache)
+                    if ((localized && cachedString is LocalizedString) || (!localized && cachedString is CustomStringGroup))
+                        return cachedString;
+            return null;
+        }
+
+        public static void RemoveUnused(List<IStringParse> strings)
+        {
+            lock (_cacheLock)
+                for (int i = _cache.Count - 1; i >= 0; i--)
+                    if (strings.Contains(_cache[i]))
+                        _cache.RemoveAt(i);
+        }
+    }
+
+    public interface IStringParse
+    {
+        string Original { get; }
+        IWorkshopTree Parse(ActionSet actionSet, IWorkshopTree[] parameters);
+    }
+
+    class CustomStringGroup : IStringParse
+    {
+        public string Original { get; }
+        public CustomStringSegment[] Segments { get; private set; }
+
+        CustomStringGroup(string original)
+        {
+            Original = original;
+        }
+
+        public IWorkshopTree Parse(ActionSet actionSet, IWorkshopTree[] parameters)
+        {
+            IWorkshopTree[] parsed = new IWorkshopTree[Segments.Length];
+            for (int i = 0; i < parsed.Length; i++)
+                parsed[i] = Segments[i].Parse(actionSet, parameters);
+            
+            return V_CustomString.Join(parsed);
+        }
+
+        public static CustomStringGroup ParseCustomString(string value, int parameterCount)
         {
             // Look for <#>s
             var formats = Regex.Matches(value, "<([0-9]+)>").ToArray();
 
+            CustomStringGroup customStringGroup = new CustomStringGroup(value);
+
             // If there are no formats, return the custom string normally.
             if (formats.Length == 0)
-                return new CustomStringParse[] { new CustomStringParse(value) };
+            {
+                customStringGroup.Segments = new CustomStringSegment[] {
+                    new CustomStringSegment(value)
+                };
+                return customStringGroup;
+            }
             
             // The Overwatch workshop only supports 3 formats in a string.
             // The following code will split the string into multiple sections so it can support more.
@@ -99,9 +157,9 @@ namespace Deltin.Deltinteger.Parse
                 FormatParameter parameter = new FormatParameter(formats[i]);
 
                 // If the format id is more than the number of parameters, throw a syntax error.
-                if (parameter.Parameter >= parameters.Length)
+                if (parameter.Parameter >= parameterCount)
                     throw new StringParseFailedException(
-                        $"Can't set the <{parameter.Parameter}> format, there are only {parameters.Length} parameters.",
+                        $"Can't set the <{parameter.Parameter}> format, there are only {parameterCount} parameters.",
                         parameter.Match.Index,
                         parameter.Match.Length
                     );
@@ -125,13 +183,13 @@ namespace Deltin.Deltinteger.Parse
             stringGroups.Add(new StringGroup(stringGroupParameters.ToArray()));
 
             // Convert each section to a custom string.
-            CustomStringParse[] strings = new CustomStringParse[stringGroups.Count];
-            for (int i = 0; i < strings.Length; i++)
+            customStringGroup.Segments = new CustomStringSegment[stringGroups.Count];
+            for (int i = 0; i < stringGroups.Count; i++)
             {
                 // start is either the start of the string or the end of the last section.
-                int start = i == 0                  ? 0            : stringGroups[i - 1].EndIndex;
+                int start = i == 0                      ? 0            : stringGroups[i - 1].EndIndex;
                 // end is the index of last format in the section unless this is the last section, then it will be the end of the string.
-                int end   = i == strings.Length - 1 ? value.Length : stringGroups[i]    .EndIndex;
+                int end   = i == stringGroups.Count - 1 ? value.Length : stringGroups[i]    .EndIndex;
 
                 string groupString = value.Substring(start, end - start);
                 
@@ -142,25 +200,87 @@ namespace Deltin.Deltinteger.Parse
                     .ToArray();
                 
                 // groupParameters is {0}, {1}, and {2}. Length should be between 1 and 3.
-                IExpression[] groupParameters = new IExpression[formatGroups.Length];
+                int[] groupParameters = new int[formatGroups.Length];
                 for (int g = 0; g < formatGroups.Length; g++)
                 {
                     int parameter = formatGroups[g].Parameter;
                     groupString = groupString.Replace("<" + parameter + ">", "{" + g + "}");
-                    groupParameters[g] = parameters[parameter];
+                    groupParameters[g] = g;
                 }
-                strings[i] = new CustomStringParse(groupString, groupParameters);
+                customStringGroup.Segments[i] = new CustomStringSegment(groupString, groupParameters);
             }
-            return strings;
+            return customStringGroup;
         }
-        
+    }
+
+    class CustomStringSegment
+    {
+        public string Text { get; }
+        public int[] ParameterIndexes { get; } = new int[0];
+
+        public CustomStringSegment(string text)
+        {
+            Text = text;
+        }
+        public CustomStringSegment(string text, int[] parameterIndexes)
+        {
+            Text = text;
+            ParameterIndexes = parameterIndexes;
+        }
+
+        public V_CustomString Parse(ActionSet actionSet, IWorkshopTree[] parameters)
+        {
+            IWorkshopTree[] resultingParameters = new IWorkshopTree[ParameterIndexes.Length];
+            for (int i = 0; i < resultingParameters.Length; i++)
+                resultingParameters[i] = parameters[ParameterIndexes[i]];
+            
+            return new V_CustomString(Text, resultingParameters);
+        }
+    }
+
+    class FormatParameter
+    {
+        public Match Match { get; }
+        public int Parameter { get; } 
+
+        public FormatParameter(Match match)
+        {
+            Match = match;
+            Parameter = int.Parse(match.Groups[1].Value);
+        }
+    }
+
+    class StringGroup
+    {
+        public FormatParameter[] Formats { get; }
+        public int EndIndex { get; }
+
+        public StringGroup(FormatParameter[] formats)
+        {
+            Formats = formats;
+            EndIndex = formats.Last().Match.Index + formats.Last().Match.Length;
+        }
+    }
+
+    class LocalizedString : IStringParse
+    {
+        public string Original { get; }
+        public string String { get; }
+        public LocalizedStringOrExpression[] ParameterValues { get; set; }
+
+        public LocalizedString(string original, string str)
+        {
+            Original = original;
+            String = str;
+        }
+
         private static readonly string[] searchOrder = Constants.Strings
             .OrderByDescending(str => str.Contains("{0}"))
             .ThenByDescending(str => str.IndexOfAny("-></*-+=()!?".ToCharArray()) != -1)
             .ThenByDescending(str => str.Length)
             .ToArray();
 
-        static LocalizedString ParseLocalizedString(string value, IExpression[] parameters, int depth = 0)
+        public static LocalizedString ParseLocalizedString(string original, int charOffset, string value, int parameterCount, int depth = 0)
         {
             value = value.ToLower();
             
@@ -187,7 +307,7 @@ namespace Deltin.Deltinteger.Parse
                 if (match.Success)
                 {
                     // Create a string element with the found string.
-                    LocalizedString str = new LocalizedString(searchString);
+                    LocalizedString str = new LocalizedString(original, searchString);
 
                     bool valid = true; // Confirms that the arguments were able to successfully parse.
                     List<LocalizedStringOrExpression> formatParameters = new List<LocalizedStringOrExpression>(); // The parameters that were successfully parsed.
@@ -195,24 +315,25 @@ namespace Deltin.Deltinteger.Parse
                     // Iterate through the parameters.
                     for (int g = 1; g < match.Groups.Count; g+=3)
                     {
-                        string currentParameterValue = match.Groups[g].Captures[0].Value;
+                        Capture capture = match.Groups[g].Captures[0];
+                        string currentParameterValue = capture.Value;
 
                         // Test if the parameter is a format parameter, for example <0>, <1>, <2>, <3>...
                         Match parameterString = Regex.Match(currentParameterValue, "^<([0-9]+)>$");
-                        if (parameters != null && parameterString.Success)
+                        if (parameterString.Success)
                         {
                             int index = int.Parse(parameterString.Groups[1].Value);
 
                             // Throw syntax error if the number of parameters is less than the parameter index being set.
-                            if (index >= parameters.Length)
-                                throw new StringParseFailedException($"Can't set the <{index}> format, there are only {parameters.Length} parameters.");
+                            if (index >= parameterCount)
+                                throw new StringParseFailedException($"Can't set the <{index}> format, there are only {parameterCount} parameters.", charOffset + capture.Index, parameterString.Length);
 
-                            formatParameters.Add(new LocalizedStringOrExpression(parameters[index]));
+                            formatParameters.Add(new LocalizedStringOrExpression(index));
                         }
                         else
                         {
                             // Parse the parameter. If it fails it will return null and the string being checked is probably false.
-                            var p = ParseLocalizedString(currentParameterValue, parameters, depth + 1);
+                            var p = ParseLocalizedString(original, charOffset + capture.Index, currentParameterValue, parameterCount, depth + 1);
                             if (p == null)
                             {
                                 valid = false;
@@ -250,98 +371,27 @@ namespace Deltin.Deltinteger.Parse
                 ;
         }
 
-        public Scope ReturningScope() => null;
-        public CodeType Type() => null;
-
-        public IWorkshopTree Parse(ActionSet actionSet)
-        {
-            if (!Localized)
-            {
-                IWorkshopTree[] parsed = new IWorkshopTree[Sectioned.Length];
-                for (int i = 0; i < parsed.Length; i++)
-                    parsed[i] = Sectioned[i].Parse(actionSet);
-                
-                return V_CustomString.Join(parsed);
-            }
-            else
-            {
-                return LocalizedString.Parse(actionSet);
-            }
-        }
-    }
-
-    class CustomStringParse
-    {
-        public string Text { get; }
-        public IExpression[] Parameters { get; } = new IExpression[0];
-
-        public CustomStringParse(string text)
-        {
-            Text = text;
-        }
-        public CustomStringParse(string text, IExpression[] parameters) : this(text)
-        {
-            Parameters = parameters;
-        }
-
-        public V_CustomString Parse(ActionSet actionSet) => new V_CustomString(Text, Parameters.Select(p => p.Parse(actionSet)).ToArray());
-    }
-
-    class FormatParameter
-    {
-        public Match Match { get; }
-        public int Parameter { get; } 
-
-        public FormatParameter(Match match)
-        {
-            Match = match;
-            Parameter = int.Parse(match.Groups[1].Value);
-        }
-    }
-
-    class StringGroup
-    {
-        public FormatParameter[] Formats { get; }
-        public int EndIndex { get; }
-
-        public StringGroup(FormatParameter[] formats)
-        {
-            Formats = formats;
-            EndIndex = formats.Last().Match.Index + formats.Last().Match.Length;
-        }
-    }
-
-    class LocalizedString
-    {
-        public string String { get; }
-        public LocalizedStringOrExpression[] ParameterValues { get; set; }
-
-        public LocalizedString(string str)
-        {
-            String = str;
-        }
-
-        public IWorkshopTree Parse(ActionSet actionSet) => new V_String(String, ParameterValues.Select(pv => (Element)pv.Parse(actionSet)).ToArray());
+        public IWorkshopTree Parse(ActionSet actionSet, IWorkshopTree[] parameters) => new V_String(String, ParameterValues.Select(pv => (Element)pv.Parse(actionSet, parameters)).ToArray());
     }
 
     class LocalizedStringOrExpression
     {
         public LocalizedString LocalizedString { get; }
-        public IExpression Expression { get; }
+        public int ParameterIndex { get; }
 
         public LocalizedStringOrExpression(LocalizedString str)
         {
             LocalizedString = str;
         }
-        public LocalizedStringOrExpression(IExpression expression)
+        public LocalizedStringOrExpression(int parameterIndex)
         {
-            Expression = expression;
+            ParameterIndex = parameterIndex;
         }
 
-        public IWorkshopTree Parse(ActionSet actionSet)
+        public IWorkshopTree Parse(ActionSet actionSet, IWorkshopTree[] parameters)
         {
-            if (LocalizedString != null) return LocalizedString.Parse(actionSet);
-            else return Expression.Parse(actionSet);
+            if (LocalizedString != null) return LocalizedString.Parse(actionSet, parameters);
+            else return parameters[ParameterIndex];
         }
     }
 }

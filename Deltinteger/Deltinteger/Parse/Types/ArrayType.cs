@@ -22,9 +22,6 @@ namespace Deltin.Deltinteger.Parse
             AddConditionalFunction<V_SortedArray>("SortedArray", "A copy of the specified array with the values sorted according to the value rank that is evaluated for each element.", ArrayOfType, "The value that is evaluated for each element of the copied array. The array is sorted by this rank in ascending order.");
             AddConditionalFunction<V_IsTrueForAny>("IsTrueForAny", "Whether the specified condition evaluates to true for any value in the specified array.", null);
             AddConditionalFunction<V_IsTrueForAll>("IsTrueForAll", "Whether the specified condition evaluates to true for every value in the specified array.", null);
-            // _scope.AddNativeMethod(new FilteredArray(this));
-            // _scope.AddNativeMethod(new IsTrueForAny(this));
-            // _scope.AddNativeMethod(new IsTrueForAll(this));
         }
 
         private void AddConditionalFunction<T>(string name, string description, CodeType returnType, string parameterDescription = "The condition that is evaluated for each element of the specified array.") where T: Element, new()

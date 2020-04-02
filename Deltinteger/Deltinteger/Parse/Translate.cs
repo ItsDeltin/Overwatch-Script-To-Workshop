@@ -36,6 +36,7 @@ namespace Deltin.Deltinteger.Parse
         private readonly OutputLanguage Language;
         private readonly bool OptimizeOutput;
         private JObject MergedLobbySettings;
+        public List<IStringParse> Strings { get; } = new List<IStringParse>();
 
         public DeltinScript(TranslateSettings translateSettings)
         {
@@ -56,6 +57,8 @@ namespace Deltin.Deltinteger.Parse
             Translate();
             if (!Diagnostics.ContainsErrors())
                 ToWorkshop(translateSettings.AdditionalRules);
+            
+            StringAction.RemoveUnused(Strings);
         }
 
         void CollectScriptFiles(ScriptFile scriptFile)
