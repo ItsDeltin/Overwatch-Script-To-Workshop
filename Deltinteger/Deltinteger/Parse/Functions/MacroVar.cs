@@ -47,7 +47,7 @@ namespace Deltin.Deltinteger.Parse
 
         public void SetupBlock()
         {
-            if (ExpressionToParse != null) Expression = DeltinScript.GetExpression(parseInfo.SetCallInfo(CallInfo), scope, ExpressionToParse);
+            if (ExpressionToParse != null) Expression = parseInfo.SetCallInfo(CallInfo).GetExpression(scope, ExpressionToParse);
             foreach (var listener in listeners) listener.Applied();
         }
 

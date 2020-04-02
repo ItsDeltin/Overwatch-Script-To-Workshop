@@ -18,7 +18,7 @@ namespace Deltin.Deltinteger.Parse
             {
                 Statements = new IStatement[blockContext.statement().Length];
                 for (int i = 0; i < Statements.Length; i++)
-                    Statements[i] = DeltinScript.GetStatement(parseInfo, BlockScope, blockContext.statement(i));
+                    Statements[i] = parseInfo.GetStatement(BlockScope, blockContext.statement(i));
             }
 
             if (blockContext.BLOCK_START() != null && blockContext.BLOCK_END() != null)
@@ -34,7 +34,7 @@ namespace Deltin.Deltinteger.Parse
             {
                 Statements = new IStatement[blockContext.statement().Length];
                 for (int i = 0; i < Statements.Length; i++)
-                    Statements[i] = DeltinScript.GetStatement(parseInfo, BlockScope, blockContext.statement(i));
+                    Statements[i] = parseInfo.GetStatement(BlockScope, blockContext.statement(i));
             }
 
             parseInfo.Script.AddCompletionRange(new CompletionRange(BlockScope, DocRange.GetRange(blockContext.BLOCK_START(), blockContext.BLOCK_END()), CompletionRangeKind.Catch));

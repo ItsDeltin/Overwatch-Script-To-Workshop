@@ -55,7 +55,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
             else if (context.expr() != null)
             {
                 // Get the lambda expression.
-                Expression = DeltinScript.GetExpression(parseInfo, lambdaScope, context.expr());
+                Expression = parseInfo.GetExpression(lambdaScope, context.expr());
                 LambdaType = new MacroLambda(Expression.Type(), argumentTypes);
             }
         }

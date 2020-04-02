@@ -223,11 +223,11 @@ namespace Deltin.Deltinteger.Parse
         public IExpression Parse(ParseInfo parseInfo, Scope scope, Scope getter, bool usedAsValue)
         {
             if (variable != null)
-                return DeltinScript.GetVariable(parseInfo, scope, getter, variable, false);
+                return parseInfo.GetVariable(scope, getter, variable, false);
             if (method != null)
                 return new CallMethodAction(parseInfo, scope, method, usedAsValue, getter);
             if (expression != null)
-                return DeltinScript.GetExpression(parseInfo, scope, expression, false, usedAsValue, getter);
+                return parseInfo.GetExpression(scope, expression, false, usedAsValue, getter);
             
             throw new Exception();
         }

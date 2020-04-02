@@ -42,7 +42,7 @@ namespace Deltin.Deltinteger.Parse
         public ReturnAction(ParseInfo parseInfo, Scope scope, DeltinScriptParser.ReturnContext returnContext)
         {
             ErrorRange = DocRange.GetRange(returnContext.RETURN());
-            if (returnContext.expr() != null) ReturningValue = DeltinScript.GetExpression(parseInfo, scope, returnContext.expr());
+            if (returnContext.expr() != null) ReturningValue = parseInfo.GetExpression(scope, returnContext.expr());
             ReturningFromScope = scope;
         }
 
@@ -60,7 +60,7 @@ namespace Deltin.Deltinteger.Parse
 
         public DeleteAction(ParseInfo parseInfo, Scope scope, DeltinScriptParser.DeleteContext deleteContext)
         {
-            DeleteValue = DeltinScript.GetExpression(parseInfo, scope, deleteContext.expr());
+            DeleteValue = parseInfo.GetExpression(scope, deleteContext.expr());
 
             if (DeleteValue != null)
             {

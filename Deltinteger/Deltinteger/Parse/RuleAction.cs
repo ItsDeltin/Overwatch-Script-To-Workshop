@@ -75,7 +75,7 @@ namespace Deltin.Deltinteger.Parse
             {
                 missingBlockRange = DocRange.GetRange(exprContext);
 
-                var enumSetting = (DeltinScript.GetExpression(parseInfo, scope, exprContext) as ExpressionTree)?.Result as ScopedEnumMember;
+                var enumSetting = (parseInfo.GetExpression(scope, exprContext) as ExpressionTree)?.Result as ScopedEnumMember;
                 var enumData = (enumSetting?.Enum as WorkshopEnumType)?.EnumData;
 
                 if (enumData == null || !ValidRuleEnums.Contains(enumData))
@@ -144,7 +144,7 @@ namespace Deltin.Deltinteger.Parse
             
             // Get the expression.
             else
-                Expression = DeltinScript.GetExpression(parseInfo, scope, ifContext.expr());
+                Expression = parseInfo.GetExpression(scope, ifContext.expr());
         }
     }
 }

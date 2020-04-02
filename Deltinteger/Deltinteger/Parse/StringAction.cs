@@ -38,7 +38,7 @@ namespace Deltin.Deltinteger.Parse
             Init(parseInfo, stringContext.@string());
             FormatParameters = new IExpression[stringContext.expr().Length];
             for (int i = 0; i < FormatParameters.Length; i++)
-                FormatParameters[i] = DeltinScript.GetExpression(parseInfo, scope, stringContext.expr(i));
+                FormatParameters[i] = parseInfo.GetExpression(scope, stringContext.expr(i));
             ParseString();
         }
 

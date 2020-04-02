@@ -17,7 +17,7 @@ namespace Deltin.Deltinteger.Parse
         {
             // Get the if condition.
             if (ifContext.expr() != null)
-                Expression = DeltinScript.GetExpression(parseInfo, scope, ifContext.expr());
+                Expression = parseInfo.GetExpression(scope, ifContext.expr());
             else
                 parseInfo.Script.Diagnostics.Error("Expected expression.", DocRange.GetRange(ifContext.LEFT_PAREN()));
             
@@ -168,7 +168,7 @@ namespace Deltin.Deltinteger.Parse
         {
             // Get the else-if's expression.
             if (elseIfContext.expr() != null)
-                Expression = DeltinScript.GetExpression(parseInfo, scope, elseIfContext.expr());
+                Expression = parseInfo.GetExpression(scope, elseIfContext.expr());
             else
                 parseInfo.Script.Diagnostics.Error("Expected expression.", DocRange.GetRange(elseIfContext.LEFT_PAREN()));
             

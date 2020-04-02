@@ -69,7 +69,7 @@ namespace Deltin.Deltinteger.Parse
             // Get the macros.
             foreach (var macroContext in typeContext.define_macro())
             {
-                var newMacro = DeltinScript.GetMacro(parseInfo, operationalScope, staticScope, macroContext);
+                var newMacro = parseInfo.GetMacro(operationalScope, staticScope, macroContext);
 
                 // Copy to serving scopes.
                 if (newMacro is IMethod asMethod)
