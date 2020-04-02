@@ -31,29 +31,7 @@ namespace Deltin.Deltinteger.Parse
         public override void ResolveElements()
         {
             if (elementsResolved) return;
-
-            // Get the type being extended.
-            if (typeContext.TERNARY_ELSE() != null)
-            {
-                // If there is no type name, error.
-                if (typeContext.extends == null)
-                    parseInfo.Script.Diagnostics.Error("Expected type name.", DocRange.GetRange(typeContext.TERNARY_ELSE()));
-                else
-                {
-                    // Get the type being inherited.
-                    CodeType inheriting = parseInfo.TranslateInfo.Types.GetCodeType(typeContext.extends.Text, parseInfo.Script.Diagnostics, DocRange.GetRange(typeContext.extends));
-
-                    // GetCodeType will return null if the type is not found.
-                    if (inheriting != null)
-                    {
-                        inheriting.Call(parseInfo.Script, DocRange.GetRange(typeContext.extends));
-
-                        Inherit(inheriting, parseInfo.Script.Diagnostics, DocRange.GetRange(typeContext.extends));
-                        (Extends as ClassType)?.ResolveElements();
-                    }
-                }
-            }
-
+            InheritContext.InheritFromContext(this, parseInfo, typeContext.inherit());
             base.ResolveElements();
 
             // Give DefinedMethod and GetMacro a scope to use in case of the static attribute.
@@ -121,19 +99,6 @@ namespace Deltin.Deltinteger.Parse
                 };
             }
 
-            // If the extend token exists, add completion that only contains all extendable classes.
-            if (typeContext.TERNARY_ELSE() != null)
-                parseInfo.Script.AddCompletionRange(new CompletionRange(
-                    // Get the completion items of all types.
-                    parseInfo.TranslateInfo.Types.AllTypes
-                        .Where(t => t is ClassType ct && ct.CanBeExtended)
-                        .Select(t => t.GetCompletion())
-                        .ToArray(),
-                    // Get the completion range.
-                    DocRange.GetRange(typeContext.TERNARY_ELSE(), parseInfo.Script.NextToken(typeContext.TERNARY_ELSE())),
-                    // This completion takes priority.
-                    CompletionRangeKind.ClearRest
-                ));
             parseInfo.Script.AddCodeLensRange(new ReferenceCodeLensRange(this, parseInfo, CodeLensSourceType.Type, DefinedAt.range));
         }
 

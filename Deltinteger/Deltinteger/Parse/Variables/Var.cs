@@ -88,7 +88,7 @@ namespace Deltin.Deltinteger.Parse
             if (_initalValueContext != null)
             {
                 InitialValue = parseInfo.GetExpression(_operationalScope, _initalValueContext);
-                if (InitialValue?.Type() != null && InitialValue.Type().Constant() == TypeSettable.Constant && !InitialValue.Type().Implements(CodeType))
+                if (InitialValue?.Type() != null && InitialValue.Type().Constant() == TypeSettable.Constant && !InitialValue.Type().DoesImplement(CodeType))
                     parseInfo.Script.Diagnostics.Error($"The type '{InitialValue.Type().Name}' cannot be stored.", DocRange.GetRange(_initalValueContext));
             }
         }

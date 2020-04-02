@@ -152,7 +152,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
             _objectScope = new Scope("lambda");
             _objectScope.AddNativeMethod(new LambdaInvoke(this));
         }
-        protected BaseLambda(string name, CodeType[] argumentTypes) : base(name)
+        protected BaseLambda(string name, CodeType[] argumentTypes) : base(GetName(name, argumentTypes))
         {
             CanBeDeleted = false;
             CanBeExtended = false;
@@ -162,7 +162,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
             _objectScope.AddNativeMethod(new LambdaInvoke(this));
         }
 
-        public override bool Implements(CodeType type)
+        public override bool DoesImplement(CodeType type)
         {
             if (type == null || type.GetType() != this.GetType()) return false;
 
@@ -172,13 +172,13 @@ namespace Deltin.Deltinteger.Parse.Lambda
             if (ArgumentTypes.Length != otherLambda.ArgumentTypes.Length) return false;
 
             // If the other's return type does not implement this return type, return false.
-            if (ReturnType != null && (otherLambda.ReturnType == null || !otherLambda.ReturnType.Implements(ReturnType))) return false;
+            if (ReturnType != null && (otherLambda.ReturnType == null || !otherLambda.ReturnType.DoesImplement(ReturnType))) return false;
 
             // If any of the other's parameters to not implement this respective parameters, return false.
             for (int i = 0; i < ArgumentTypes.Length; i++)
             {
                 if ((ArgumentTypes[i] == null) != (otherLambda.ArgumentTypes[i] == null)) return false;
-                if (ArgumentTypes[i] != null && !otherLambda.ArgumentTypes[i].Implements(ArgumentTypes[i])) return false;
+                if (ArgumentTypes[i] != null && !otherLambda.ArgumentTypes[i].DoesImplement(ArgumentTypes[i])) return false;
             }
             
             return true;
@@ -191,6 +191,23 @@ namespace Deltin.Deltinteger.Parse.Lambda
             Label = Name,
             Kind = CompletionItemKind.Constant
         };
+
+        private static string GetName(string name, CodeType[] argumentTypes)
+        {
+            if (argumentTypes == null || argumentTypes.Length == 0) return name;
+
+            name += "<";
+            for (int i = 0; i < argumentTypes.Length; i++)
+            {
+                if (argumentTypes[i] == null) name += "define";
+                else name += argumentTypes[i].Name;
+                
+                if (i != argumentTypes.Length - 1)
+                    name += ", ";
+            }
+            name += ">";
+            return name;
+        }
     }
 
     public class BlockLambda : BaseLambda

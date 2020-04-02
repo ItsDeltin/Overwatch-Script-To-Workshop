@@ -257,7 +257,7 @@ namespace Deltin.Deltinteger.Parse
         {
             CodeType parameterType = option.Parameters[parameter].Type;
 
-            if (parameterType != null && (value.Type() != null && !value.Type().Implements(parameterType)))
+            if (parameterType != null && (value.Type() != null && !value.Type().DoesImplement(parameterType)))
             {
                 // The parameter type does not match.
                 string msg = string.Format("Expected a value of type {0}.", option.Parameters[parameter].Type.Name);

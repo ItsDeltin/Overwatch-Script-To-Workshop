@@ -13,7 +13,7 @@ namespace Deltin.Deltinteger.Parse
     {
         public string Name { get; }
         public Constructor[] Constructors { get; protected set; } = new Constructor[0];
-        public CodeType Extends { get; private set; }
+        public CodeType Extends { get; set; }
         public string Description { get; protected set; }
         protected string Kind = "class";
 
@@ -28,46 +28,11 @@ namespace Deltin.Deltinteger.Parse
             Name = name;
         }
 
-        protected void Inherit(CodeType extend, FileDiagnostics diagnostics, DocRange range)
-        {
-            if (extend == null) throw new ArgumentNullException(nameof(extend));
-
-            string errorMessage = null;
-
-            if (!extend.CanBeExtended)
-                errorMessage = "Type '" + extend.Name + "' cannot be inherited.";
-            
-            else if (extend == this)
-                errorMessage = "Cannot extend self.";
-            
-            else if (extend.Implements(this))
-                errorMessage = $"The class {extend.Name} extends this class.";
-
-            if (errorMessage != null)
-            {
-                if (diagnostics == null || range == null) throw new Exception(errorMessage);
-                else
-                {
-                    diagnostics.Error(errorMessage, range);
-                    return;
-                }
-            }
-
-            Extends = extend;
-        }
-
-        public virtual bool Implements(CodeType type)
+        public virtual bool DoesImplement(CodeType type)
         {
             if (type == null) return false;
-
-            // Iterate through all extended classes.
-            CodeType checkType = this;
-            while (checkType != null)
-            {
-                if (checkType == type) return true;
-                checkType = checkType.Extends;
-            }
-
+            if (type == this) return true;
+            if (Extends.DoesImplement(type)) return true;
             return false;
         }
 
@@ -97,6 +62,9 @@ namespace Deltin.Deltinteger.Parse
         /// <param name="actionSet">The actionset to use.</param>
         /// <param name="reference">The reference of the object.</param>
         public virtual void BaseSetup(ActionSet actionSet, Element reference) => throw new NotImplementedException();
+
+        /// <summary>Resolve code actions.</summary>
+        public virtual void ResolveElements() {}
 
         /// <summary>Assigns workshop elements so the class can function. Implementers should check if `wasCalled` is true.</summary>
         public virtual void WorkshopInit(DeltinScript translateInfo) {}

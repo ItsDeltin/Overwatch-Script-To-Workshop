@@ -2,11 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Deltin.Deltinteger.Elements;
+using Deltin.Deltinteger.LanguageServer;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 
 namespace Deltin.Deltinteger.Parse
 {
-    public abstract class ClassType : CodeType
+    public abstract class ClassType : CodeType, IImplementer
     {
         /*
 Static scope, static members only.
@@ -33,6 +34,7 @@ Object-serve scope. Only object members.
         /// <summary>Determines if the class was initialized for the workshop output.</summary>
         protected bool workshopInitialized { get; private set; } = false;
 
+        public List<Interface> Contracts { get; } = new List<Interface>();
         public int Identifier { get; private set; } = -1;
 
         protected readonly List<ObjectVariable> ObjectVariables = new List<ObjectVariable>();
@@ -43,7 +45,7 @@ Object-serve scope. Only object members.
             CanBeExtended = true;
         }
 
-        public virtual void ResolveElements()
+        public override void ResolveElements()
         {
             if (elementsResolved) return;
             elementsResolved = true;
@@ -85,6 +87,15 @@ Object-serve scope. Only object members.
             if (Extends != null) extStack = ((ClassType)Extends).StackStart(true);
             if (inclusive) extStack += ObjectVariables.Count;
             return extStack;
+        }
+
+        public override bool DoesImplement(CodeType type)
+        {
+            if (base.DoesImplement(type)) return true;
+            if (type is Interface)
+                foreach (Interface implements in Contracts)
+                    if (implements.DoesImplement(type)) return true;
+            return false;
         }
 
         public override void WorkshopInit(DeltinScript translateInfo)

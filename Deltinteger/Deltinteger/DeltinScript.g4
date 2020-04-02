@@ -137,15 +137,21 @@ ruleset :
 	reserved_global?
 	reserved_player?
 	import_file*
-	((define STATEMENT_END) | ow_rule | define_method | define_macro | type_define | enum_define)*
+	((define STATEMENT_END) | ow_rule | define_method | define_macro | type_define | enum_define | interface)*
 	EOF;
 
 // Classes/structs
 
-type_define : (STRUCT | CLASS) name=PART (TERNARY_ELSE extends=PART?)?
+type_define : (STRUCT | CLASS) name=PART inherit?
 	BLOCK_START
 	((define STATEMENT_END) | constructor | define_method | define_macro)*
 	BLOCK_END ;
+
+interface          : INTERFACE name=PART inherit? BLOCK_START (interface_variable | interface_function)* BLOCK_END ;
+interface_function : (VOID | code_type) name=PART LEFT_PAREN setParameters RIGHT_PAREN STATEMENT_END? ;
+interface_variable : (define | code_type) name=PART STATEMENT_END? ;
+
+inherit : TERNARY_ELSE first=PART? (COMMA PART)* ;
 
 enum_define : ENUM name=PART BLOCK_START (firstMember=PART enum_element*)? BLOCK_END ;
 enum_element : COMMA PART ;

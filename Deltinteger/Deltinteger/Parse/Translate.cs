@@ -100,6 +100,13 @@ namespace Deltin.Deltinteger.Parse
                 Types.AllTypes.Add(newType);
                 Types.DefinedTypes.Add(newType);
             }
+
+            // Get the interfaces
+            foreach (ScriptFile script in Importer.ScriptFiles)
+            foreach (var interfaceContext in script.Context.@interface())
+            {
+                
+            }
             
             // Get the methods and macros
             foreach (ScriptFile script in Importer.ScriptFiles)
