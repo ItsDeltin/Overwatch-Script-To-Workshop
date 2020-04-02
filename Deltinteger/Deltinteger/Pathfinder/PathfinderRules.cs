@@ -6,23 +6,24 @@ using Deltin.Deltinteger.Parse;
 
 namespace Deltin.Deltinteger.Pathfinder
 {
-    public class PathfinderInfo
+    public class PathfinderInfo : IComponent
     {
         public const double MoveToNext = 0.3;
 
-        public IndexReference Path { get; }
-        public IndexReference LastUpdate { get; }
-        public IndexReference DistanceToNext { get; }
+        public IndexReference Path { get; private set; }
+        public IndexReference LastUpdate { get; private set; }
+        public IndexReference DistanceToNext { get; private set; }
+        public DeltinScript DeltinScript { get; set; }
 
-        public PathfinderInfo(DeltinScript translateInfo)
+        public void Init()
         {
-            Path           = translateInfo.VarCollection.Assign("Pathfinder: Path", false, false);
-            LastUpdate     = translateInfo.VarCollection.Assign("Pathfinder: Last Update", false, true);
-            DistanceToNext = translateInfo.VarCollection.Assign("Pathfinder: Distance To Next Node", false, true);
+            Path           = DeltinScript.VarCollection.Assign("Pathfinder: Path", false, false);
+            LastUpdate     = DeltinScript.VarCollection.Assign("Pathfinder: Last Update", false, true);
+            DistanceToNext = DeltinScript.VarCollection.Assign("Pathfinder: Distance To Next Node", false, true);
 
-            translateInfo.WorkshopRules.Add(GetStartRule(translateInfo));
-            translateInfo.WorkshopRules.Add(GetUpdateRule());
-            translateInfo.WorkshopRules.Add(GetStopRule());
+            DeltinScript.WorkshopRules.Add(GetStartRule(DeltinScript));
+            DeltinScript.WorkshopRules.Add(GetUpdateRule());
+            DeltinScript.WorkshopRules.Add(GetStopRule());
         }
 
         private Rule GetStartRule(DeltinScript deltinScript)

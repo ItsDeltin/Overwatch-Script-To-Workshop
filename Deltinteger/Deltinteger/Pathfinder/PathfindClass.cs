@@ -69,7 +69,7 @@ namespace Deltin.Deltinteger.Pathfinder
             Parameters = new CodeParameter[] {
                 new PathmapFileParameter("pathmapFile", "File path of the pathmap to use. Must be a `.pathmap` file.")
             };
-            Documentation = Extras.GetMarkupContent("Creates a pathmap from a `.pathmap` file.");
+            Documentation = "Creates a pathmap from a `.pathmap` file.";
         }
 
         public override void Parse(ActionSet actionSet, IWorkshopTree[] parameterValues, object[] additionalParameterData) => throw new NotImplementedException();

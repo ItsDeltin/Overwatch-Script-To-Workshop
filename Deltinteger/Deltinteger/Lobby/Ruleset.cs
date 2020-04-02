@@ -20,10 +20,10 @@ namespace Deltin.Deltinteger.Lobby
             new SelectValue("Return To Lobby", "After A Mirror Match", "After A Game", "Never"),
             new SelectValue("Team Balancing", "Off", "After A Mirror Match", "After A Game"),
             new SwitchValue("Swap Teams After Match", true),
-            new RangeValue("Max Team 1 Players", 0, 6, 6),
-            new RangeValue("Max Team 2 Players", 0, 6, 6),
-            new RangeValue("Max FFA Players", 0, 12, 0),
-            new RangeValue("Max Spectators", 0, 12, 2),
+            new RangeValue(true, "Max Team 1 Players", 0, 6, 6),
+            new RangeValue(true, "Max Team 2 Players", 0, 6, 6),
+            new RangeValue(true, "Max FFA Players", 0, 12, 0),
+            new RangeValue(true, "Max Spectators", 0, 12, 2),
             new SwitchValue("Allow Players Who Are In Queue", false),
             new SwitchValue("Use Experimental Update If Available", false),
             new SwitchValue("Match Voice Chat", false),
@@ -364,15 +364,20 @@ namespace Deltin.Deltinteger.Lobby
 
         public void ToWorkshop(WorkshopBuilder builder, List<LobbySetting> allSettings)
         {
-            foreach (var hero in Settings)
-            {
-                builder.AppendLine($"{hero.Key}");
-                builder.AppendLine("{");
-                builder.Indent();
-                WorkshopValuePair.ToWorkshop(((JObject)hero.Value).ToObject<Dictionary<string, object>>(), builder, allSettings);
-                builder.Unindent();
-                builder.AppendLine("}");
-            }
+            if (Settings != null)
+                foreach (var hero in Settings)
+                {
+                    if (hero.Key != "General")
+                    {
+                        builder.AppendLine($"{hero.Key}");
+                        builder.AppendLine("{");
+                        builder.Indent();
+                        WorkshopValuePair.ToWorkshop(((JObject)hero.Value).ToObject<Dictionary<string, object>>(), builder, allSettings);
+                        builder.Unindent();
+                        builder.AppendLine("}");
+                    }
+                    else WorkshopValuePair.ToWorkshop(((JObject)hero.Value).ToObject<Dictionary<string, object>>(), builder, allSettings);
+                }
             if (EnabledHeroes != null)
             {
                 builder.AppendLine();

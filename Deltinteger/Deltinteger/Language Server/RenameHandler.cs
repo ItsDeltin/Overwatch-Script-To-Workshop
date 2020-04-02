@@ -21,7 +21,7 @@ namespace Deltin.Deltinteger.LanguageServer
     {
         public static RenameLink GetLink(DeltintegerLanguageServer languageServer, Uri uri, Position position)
         {
-            var links = languageServer.LastParse?.GetSymbolLinks();
+            var links = languageServer.LastParse?.GetComponent<SymbolLinkComponent>().GetSymbolLinks();
             if (links == null) return null;
 
             foreach (var linkPair in links)

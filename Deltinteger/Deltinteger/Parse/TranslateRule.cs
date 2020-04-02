@@ -53,12 +53,16 @@ namespace Deltin.Deltinteger.Parse
             Disabled = disabled;
             ActionSet = new ActionSet(this, null, Actions);
         }
-        public TranslateRule(DeltinScript deltinScript, string name, RuleEvent eventType) : this(deltinScript, name, eventType, Team.All, PlayerSelector.All) {}
-        public TranslateRule(DeltinScript deltinScript, string name) : this(deltinScript, name, RuleEvent.OngoingGlobal, Team.All, PlayerSelector.All) {}
-        public TranslateRule(DeltinScript deltinScript, string name, Subroutine subroutine) : this(deltinScript, name, RuleEvent.Subroutine)
+        public TranslateRule(DeltinScript deltinScript, Subroutine subroutine, string name, bool defaultGlobal)
         {
+            DeltinScript = deltinScript;
+            IsGlobal = defaultGlobal;
+            Name = name;
+            EventType = RuleEvent.Subroutine;
             Subroutine = subroutine;
+            ActionSet = new ActionSet(this, null, Actions);
         }
+        public TranslateRule(DeltinScript deltinScript, string name, RuleEvent eventType) : this(deltinScript, name, eventType, Team.All, PlayerSelector.All) {}
 
         private void GetConditions(RuleAction ruleAction)
         {
@@ -127,8 +131,6 @@ namespace Deltin.Deltinteger.Parse
 
             return actions.ToArray();
         }
-    
-        public bool WasCalled(IApplyBlock callable) => MethodStack.Any(ms => ms.Function == this);
     }
 
     public class ActionSet
@@ -137,17 +139,15 @@ namespace Deltin.Deltinteger.Parse
         public DocRange GenericErrorRange { get; private set; }
         public VarIndexAssigner IndexAssigner { get; private set; }
         public ReturnHandler ReturnHandler { get; private set; }
-        public Element CurrentObject { get; private set; }
+        public IWorkshopTree CurrentObject { get; private set; }
+        public IWorkshopTree This { get; private set; }
         public int IndentCount { get; private set; }
+        public bool IsRecursive { get; private set; }
         public bool IsGlobal { get; }
         public List<IActionList> ActionList { get; }
         public VarCollection VarCollection { get; }
 
-        public int ActionCount {
-            get {
-                return ActionList.Count;
-            }
-        }
+        public int ActionCount => ActionList.Count;
 
         public ActionSet(bool isGlobal, VarCollection varCollection)
         {
@@ -176,7 +176,9 @@ namespace Deltin.Deltinteger.Parse
             IndexAssigner = other.IndexAssigner;
             ReturnHandler = other.ReturnHandler;
             CurrentObject = other.CurrentObject;
+            This = other.This;
             IndentCount = other.IndentCount;
+            IsRecursive = other.IsRecursive;
         }
         private ActionSet Clone()
         {
@@ -201,10 +203,16 @@ namespace Deltin.Deltinteger.Parse
             newActionSet.ReturnHandler = returnHandler ?? throw new ArgumentNullException(nameof(returnHandler));
             return newActionSet;
         }
-        public ActionSet New(Element currentObject)
+        public ActionSet New(IWorkshopTree currentObject)
         {
             var newActionSet = Clone();
             newActionSet.CurrentObject = currentObject;
+            return newActionSet;
+        }
+        public ActionSet New(bool isRecursive)
+        {
+            var newActionSet = Clone();
+            newActionSet.IsRecursive = isRecursive;
             return newActionSet;
         }
         public ActionSet Indent()
@@ -213,11 +221,16 @@ namespace Deltin.Deltinteger.Parse
             newActionSet.IndentCount++;
             return newActionSet;
         }
+        public ActionSet PackThis()
+        {            
+            var newActionSet = Clone();
+            newActionSet.This = CurrentObject;
+            return newActionSet;
+        }
 
         public void AddAction(IWorkshopTree action)
         {
             if (action is Element element) element.Indent = IndentCount;
-
             ActionList.Add(new ALAction(action));
         }
         public void AddAction(IWorkshopTree[] actions)
@@ -225,7 +238,6 @@ namespace Deltin.Deltinteger.Parse
             foreach (var action in actions)
             {
                 if (action is Element element) element.Indent = IndentCount;
-
                 ActionList.Add(new ALAction(action));
             }
         }
@@ -356,6 +368,8 @@ namespace Deltin.Deltinteger.Parse
         public string ToWorkshop(OutputLanguage language) => StartMarker.NumberOfActionsToMarker(EndMarker).ToString();
 
         public bool EqualTo(IWorkshopTree other) => false;
+
+        public int ElementCount(int depth) => V_Number.NumberElementCount(depth);
     }
 
     public class SkipEndMarker : IActionList

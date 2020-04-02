@@ -140,49 +140,6 @@ namespace Deltin.Deltinteger
         public static string RemoveStructuralChars(this string str) => str.Replace(",", "").Replace("(", "").Replace(")", "");
     }
 
-    public class TabStringBuilder
-    {
-        public int Indent { get; set; }
-        public bool Tab { get; private set; }
-        public int WhitespaceCount { get; set; } = 4;
-
-        private readonly StringBuilder StringBuilder;
-
-        public TabStringBuilder(bool tab)
-        {
-            Tab = tab;
-            StringBuilder = new StringBuilder();
-        }
-        public TabStringBuilder(StringBuilder builder, bool tab)
-        {
-            Tab = tab;
-            StringBuilder = builder;
-        }
-
-        public TabStringBuilder AppendLine()
-        {
-            StringBuilder.AppendLine(Extras.Indent(Indent, Tab));
-            return this;
-        }
-
-        public TabStringBuilder AppendLine(string text)
-        {
-            StringBuilder.AppendLine(Extras.Indent(Indent, Tab) + text);
-            return this;
-        }
-
-        public TabStringBuilder Append(string text)
-        {
-            StringBuilder.Append(text);
-            return this;
-        }
-
-        public override string ToString()
-        {
-            return StringBuilder.ToString();
-        }
-    }
-
     class ArrayBuilder<T>
     {
         private readonly T[] values;

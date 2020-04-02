@@ -190,14 +190,21 @@ namespace Deltin.Deltinteger.LanguageServer
                         _languageServer.Server.Document.PublishDiagnostics(publish);
                     
                     if (deltinScript.WorkshopCode != null)
+                    {
                         _languageServer.Server.SendNotification(DeltintegerLanguageServer.SendWorkshopCode, deltinScript.WorkshopCode);
+                        _languageServer.Server.SendNotification(DeltintegerLanguageServer.SendElementCount, deltinScript.ElementCount.ToString());
+                    }
                     else
+                    {
                         _languageServer.Server.SendNotification(DeltintegerLanguageServer.SendWorkshopCode, diagnostics.OutputDiagnostics());
+                        _languageServer.Server.SendNotification(DeltintegerLanguageServer.SendElementCount, "-");
+                    }
                 }
                 catch (Exception ex)
                 {
                     Serilog.Log.Error(ex, "An exception was thrown while parsing.");
                     _languageServer.Server.SendNotification(DeltintegerLanguageServer.SendWorkshopCode, "An exception was thrown while parsing.\r\n" + ex.ToString());
+                    _languageServer.Server.SendNotification(DeltintegerLanguageServer.SendElementCount, "-");
                 }
                 finally
                 {

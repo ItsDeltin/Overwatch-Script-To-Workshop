@@ -63,7 +63,7 @@ namespace Deltin.Deltinteger.Parse
             var parameterRanges = new List<DocRange>();
             for (int i = 0; i < values.Length; i++)
             {
-                values[i] = DeltinScript.GetExpression(parseInfo, getter, context.expr(i));
+                values[i] = parseInfo.GetExpression(getter, context.expr(i));
                 errorRanges[i] = DocRange.GetRange(context.expr(i));
                 parameterRanges.Add(errorRanges[i]);
             }
@@ -111,7 +111,7 @@ namespace Deltin.Deltinteger.Parse
                 // Get the expression. If it doesn't exist, add a syntax error.
                 if (context.picky_parameter(i).expr() != null)
                 {
-                    expression = DeltinScript.GetExpression(parseInfo, getter, context.picky_parameter(i).expr());
+                    expression = parseInfo.GetExpression(getter, context.picky_parameter(i).expr());
                     expressionRange = DocRange.GetRange(context.picky_parameter(i).expr());
                 }
                 else

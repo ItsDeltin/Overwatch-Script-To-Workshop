@@ -37,6 +37,7 @@ namespace Deltin.Deltinteger.Parse
 
             objectScope.AddNativeMethod(CustomMethodData.GetCustomMethod<DistanceTo>());
             objectScope.AddNativeMethod(CustomMethodData.GetCustomMethod<CrossProduct>());
+            objectScope.AddNativeMethod(CustomMethodData.GetCustomMethod<DotProduct>());
             objectScope.AddNativeMethod(CustomMethodData.GetCustomMethod<Normalize>());
             objectScope.AddNativeMethod(CustomMethodData.GetCustomMethod<DirectionTowards>());
             objectScope.AddNativeMethod(CustomMethodData.GetCustomMethod<FarthestPlayer>());
@@ -109,6 +110,17 @@ namespace Deltin.Deltinteger.Parse
             };
 
             public override IWorkshopTree Get(ActionSet actionSet, IWorkshopTree[] parameterValues) => Element.Part<V_CrossProduct>(actionSet.CurrentObject, parameterValues[0]);
+        }
+
+        // DotProduct() method
+        [CustomMethod("DotProduct", "Returns what amount of one vector goes in the direction of another.", CustomMethodType.Value, false)]
+        class DotProduct : CustomMethodBase
+        {
+            public override CodeParameter[] Parameters() => new CodeParameter[] {
+                new CodeParameter("other", "The vector to get the dot product to.")
+            };
+
+            public override IWorkshopTree Get(ActionSet actionSet, IWorkshopTree[] parameterValues) => Element.Part<V_DotProduct>(actionSet.CurrentObject, parameterValues[0]);
         }
 
         // Normalize() method

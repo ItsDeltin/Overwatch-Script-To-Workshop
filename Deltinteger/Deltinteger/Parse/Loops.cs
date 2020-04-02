@@ -62,7 +62,7 @@ namespace Deltin.Deltinteger.Parse
             if (whileContext.expr() == null)
                 parseInfo.Script.Diagnostics.Error("Expected expression.", DocRange.GetRange(whileContext.LEFT_PAREN()));
             else
-                Condition = DeltinScript.GetExpression(parseInfo, scope, whileContext.expr());
+                Condition = parseInfo.GetExpression(scope, whileContext.expr());
             
             Block = new BlockAction(parseInfo.SetLoop(this), scope, whileContext.block());
             Path = new PathInfo(Block, DocRange.GetRange(whileContext.WHILE()), false);
@@ -141,7 +141,7 @@ namespace Deltin.Deltinteger.Parse
                 InitialVarSet = new SetVariableAction(parseInfo, varScope, forContext.initialVarset);
 
             if (forContext.expr() != null)
-                Condition = DeltinScript.GetExpression(parseInfo, varScope, forContext.expr());
+                Condition = parseInfo.GetExpression(varScope, forContext.expr());
             
             if (forContext.endingVarset != null)
                 SetVariableAction = new SetVariableAction(parseInfo, varScope, forContext.endingVarset);
@@ -206,7 +206,7 @@ namespace Deltin.Deltinteger.Parse
             // Get the auto-for variable. (Required)
             if (autoForContext.forVariable != null)
             {
-                IExpression variable = DeltinScript.GetExpression(parseInfo, scope, autoForContext.forVariable);
+                IExpression variable = parseInfo.GetExpression(scope, autoForContext.forVariable);
 
                 // Get the variable being set.
                 VariableResolve = new VariableResolve(new VariableResolveOptions() {
@@ -220,7 +220,7 @@ namespace Deltin.Deltinteger.Parse
                     if (autoForContext.start == null)
                         parseInfo.Script.Diagnostics.Error("Expected expression.", DocRange.GetRange(autoForContext.EQUALS()));
                     else
-                        InitialResolveValue = DeltinScript.GetExpression(parseInfo, scope, autoForContext.start);
+                        InitialResolveValue = parseInfo.GetExpression(scope, autoForContext.start);
                 }
             }
             // Get the defined variable.
@@ -235,13 +235,13 @@ namespace Deltin.Deltinteger.Parse
             if (autoForContext.stop == null)
                 parseInfo.Script.Diagnostics.Error("Expected end expression.", DocRange.GetRange(autoForContext.startSep));
             else
-                Stop = DeltinScript.GetExpression(parseInfo, scope, autoForContext.stop);
+                Stop = parseInfo.GetExpression(scope, autoForContext.stop);
             
             // Get the auto-for step. (Not Required)
             if (autoForContext.step == null)
                 Step = new ExpressionOrWorkshopValue(new V_Number(1));
             else
-                Step = new ExpressionOrWorkshopValue(DeltinScript.GetExpression(parseInfo, scope, autoForContext.step));
+                Step = new ExpressionOrWorkshopValue(parseInfo.GetExpression(scope, autoForContext.step));
             
             // Get the block.
             if (autoForContext.block() == null)
@@ -321,7 +321,7 @@ namespace Deltin.Deltinteger.Parse
 
             // Get the array that will be iterated on. Syntax error if it is missing.
             if (foreachContext.expr() != null)
-                Array = DeltinScript.GetExpression(parseInfo, scope, foreachContext.expr());
+                Array = parseInfo.GetExpression(scope, foreachContext.expr());
             else
                 parseInfo.Script.Diagnostics.Error("Expected expression.", DocRange.GetRange(foreachContext.IN()));
 
@@ -338,7 +338,7 @@ namespace Deltin.Deltinteger.Parse
 
         public override void Translate(ActionSet actionSet)
         {
-            ForeachBuilder foreachBuilder = new ForeachBuilder(actionSet, Array.Parse(actionSet));
+            ForeachBuilder foreachBuilder = new ForeachBuilder(actionSet, Array.Parse(actionSet), actionSet.IsRecursive);
 
             // Add the foreach value to the assigner.
             actionSet.IndexAssigner.Add(ForeachVar, foreachBuilder.IndexValue);
