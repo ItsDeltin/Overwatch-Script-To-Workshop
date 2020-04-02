@@ -19,7 +19,7 @@ namespace Deltin.Deltinteger.Parse
             if (context.type == null)
                 parseInfo.Script.Diagnostics.Error("Expected a type name.", DocRange.GetRange(context.NEW()));
             else
-                CreatingObjectOf = parseInfo.TranslateInfo.GetCodeType(context.type.Text, parseInfo.Script.Diagnostics, DocRange.GetRange(context.type));
+                CreatingObjectOf = parseInfo.TranslateInfo.Types.GetCodeType(context.type.Text, parseInfo.Script.Diagnostics, DocRange.GetRange(context.type));
             
             if (CreatingObjectOf != null)
             {

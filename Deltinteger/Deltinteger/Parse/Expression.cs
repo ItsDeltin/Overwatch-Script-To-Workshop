@@ -336,7 +336,7 @@ namespace Deltin.Deltinteger.Parse
                 parseInfo.Script.Diagnostics.Error("Expected type name.", DocRange.GetRange(isContext.IS()));
             else
             {
-                CodeType type = parseInfo.TranslateInfo.GetCodeType(isContext.type.Text, parseInfo.Script.Diagnostics, DocRange.GetRange(isContext.type));
+                CodeType type = parseInfo.TranslateInfo.Types.GetCodeType(isContext.type.Text, parseInfo.Script.Diagnostics, DocRange.GetRange(isContext.type));
 
                 // Make sure the received type is a class.
                 if (type != null && type is ClassType == false)

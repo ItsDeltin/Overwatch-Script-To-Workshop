@@ -123,7 +123,7 @@ namespace Deltin.Deltinteger.Parse
             string variableName = variableContext.PART().GetText();
             DocRange variableRange = DocRange.GetRange(variableContext.PART());
 
-            var type = TranslateInfo.GetCodeType(variableName, null, null);
+            var type = TranslateInfo.Types.GetCodeType(variableName, null, null);
             if (type != null)
             {
                 if (selfContained)

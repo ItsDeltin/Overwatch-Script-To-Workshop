@@ -19,7 +19,7 @@ namespace Deltin.Deltinteger.Parse
             CanBeDeleted = false;
             Kind = "enum";
 
-            if (parseInfo.TranslateInfo.IsCodeType(Name))
+            if (parseInfo.TranslateInfo.Types.IsCodeType(Name))
                 parseInfo.Script.Diagnostics.Error($"A type with the name '{Name}' already exists.", DocRange.GetRange(enumContext.name));
             
             _translateInfo = parseInfo.TranslateInfo;

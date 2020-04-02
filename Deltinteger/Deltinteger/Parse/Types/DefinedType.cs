@@ -21,7 +21,7 @@ namespace Deltin.Deltinteger.Parse
             this.typeContext = typeContext;
             this.parseInfo = parseInfo;
 
-            if (parseInfo.TranslateInfo.IsCodeType(Name))
+            if (parseInfo.TranslateInfo.Types.IsCodeType(Name))
                 parseInfo.Script.Diagnostics.Error($"A type with the name '{Name}' already exists.", DocRange.GetRange(typeContext.name));
             
             DefinedAt = new LanguageServer.Location(parseInfo.Script.Uri, DocRange.GetRange(typeContext.name));
@@ -41,7 +41,7 @@ namespace Deltin.Deltinteger.Parse
                 else
                 {
                     // Get the type being inherited.
-                    CodeType inheriting = parseInfo.TranslateInfo.GetCodeType(typeContext.extends.Text, parseInfo.Script.Diagnostics, DocRange.GetRange(typeContext.extends));
+                    CodeType inheriting = parseInfo.TranslateInfo.Types.GetCodeType(typeContext.extends.Text, parseInfo.Script.Diagnostics, DocRange.GetRange(typeContext.extends));
 
                     // GetCodeType will return null if the type is not found.
                     if (inheriting != null)
@@ -125,7 +125,7 @@ namespace Deltin.Deltinteger.Parse
             if (typeContext.TERNARY_ELSE() != null)
                 parseInfo.Script.AddCompletionRange(new CompletionRange(
                     // Get the completion items of all types.
-                    parseInfo.TranslateInfo.types
+                    parseInfo.TranslateInfo.Types.AllTypes
                         .Where(t => t is ClassType ct && ct.CanBeExtended)
                         .Select(t => t.GetCompletion())
                         .ToArray(),

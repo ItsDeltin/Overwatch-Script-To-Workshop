@@ -13,8 +13,7 @@ namespace Deltin.Deltinteger.Parse
         private FileGetter FileGetter { get; }
         private Importer Importer { get; }
         public Diagnostics Diagnostics { get; }
-        public List<CodeType> types { get; } = new List<CodeType>();
-        public List<CodeType> definedTypes { get; } = new List<CodeType>();
+        public ScriptTypes Types { get; } = new ScriptTypes();
         public Scope PlayerVariableScope { get; private set; } = new Scope();
         public Scope GlobalScope { get; }
         public Scope RulesetScope { get; }
@@ -35,7 +34,7 @@ namespace Deltin.Deltinteger.Parse
             Language = translateSettings.OutputLanguage;
             OptimizeOutput = translateSettings.OptimizeOutput;
 
-            types.AddRange(CodeType.DefaultTypes);
+            Types.AllTypes.AddRange(CodeType.DefaultTypes);
             Importer = new Importer(Diagnostics, FileGetter, translateSettings.Root.Uri);
             Importer.CollectScriptFiles(translateSettings.Root);
             
@@ -89,8 +88,8 @@ namespace Deltin.Deltinteger.Parse
             foreach (var enumContext in script.Context.enum_define())
             {
                 var newEnum = new DefinedEnum(new ParseInfo(script, this), enumContext);
-                types.Add(newEnum); 
-                definedTypes.Add(newEnum);
+                Types.AllTypes.Add(newEnum); 
+                Types.DefinedTypes.Add(newEnum);
             }
 
             // Get the types
@@ -98,8 +97,8 @@ namespace Deltin.Deltinteger.Parse
             foreach (var typeContext in script.Context.type_define())
             {
                 var newType = new DefinedType(new ParseInfo(script, this), GlobalScope, typeContext);
-                types.Add(newType);
-                definedTypes.Add(newType);
+                Types.AllTypes.Add(newType);
+                Types.DefinedTypes.Add(newType);
             }
             
             // Get the methods and macros
@@ -128,7 +127,7 @@ namespace Deltin.Deltinteger.Parse
                     PlayerVariableScope.CopyVariable(newVar);
             }
 
-            foreach (var applyType in types) if (applyType is ClassType classType) classType.ResolveElements();
+            foreach (var applyType in Types.AllTypes) if (applyType is ClassType classType) classType.ResolveElements();
             foreach (var apply in applyBlocks) apply.SetupParameters();
             foreach (var apply in applyBlocks) apply.SetupBlock();
             foreach (var apply in applyBlocks) apply.CallInfo?.CheckRecursion();
@@ -154,7 +153,7 @@ namespace Deltin.Deltinteger.Parse
             WorkshopRules = new List<Rule>();
 
             // Assign static variables.
-            foreach (var type in types) type.WorkshopInit(this);
+            foreach (var type in Types.AllTypes) type.WorkshopInit(this);
 
              // Assign variables at the rule-set level.
             foreach (var variable in rulesetVariables)
@@ -227,21 +226,6 @@ namespace Deltin.Deltinteger.Parse
             WorkshopCode = result.ToString();
         }
 
-        public CodeType GetCodeType(string name, FileDiagnostics diagnostics, DocRange range)
-        {
-            var type = types.FirstOrDefault(type => type.Name == name);
-
-            if (range != null && type == null)
-                diagnostics.Error(string.Format("The type {0} does not exist.", name), range);
-            
-            return type;
-        }
-        public bool IsCodeType(string name)
-        {
-            return GetCodeType(name, null, null) != null;
-        }
-        public T GetCodeType<T>() where T: CodeType => (T)types.FirstOrDefault(type => type.GetType() == typeof(T));
-
         public ScriptFile ScriptFromUri(Uri uri) => Importer.ScriptFiles.FirstOrDefault(script => script.Uri.Compare(uri));
 
         private TranslateRule GetInitialRule(bool isGlobal)
@@ -262,6 +246,27 @@ namespace Deltin.Deltinteger.Parse
         {
             applyBlocks.Add(apply);
         }
+    }
+
+    public class ScriptTypes
+    {
+        public List<CodeType> AllTypes { get; } = new List<CodeType>();
+        public List<CodeType> DefinedTypes { get; } = new List<CodeType>();
+
+        public CodeType GetCodeType(string name, FileDiagnostics diagnostics, DocRange range)
+        {
+            var type = AllTypes.FirstOrDefault(type => type.Name == name);
+
+            if (range != null && type == null)
+                diagnostics.Error(string.Format("The type {0} does not exist.", name), range);
+            
+            return type;
+        }
+        public bool IsCodeType(string name)
+        {
+            return GetCodeType(name, null, null) != null;
+        }
+        public T GetCodeType<T>() where T: CodeType => (T)AllTypes.FirstOrDefault(type => type.GetType() == typeof(T));
     }
 
     public interface IComponent
