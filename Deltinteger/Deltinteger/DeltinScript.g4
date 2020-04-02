@@ -71,14 +71,14 @@ generic_option: code_type | DEFINE;
 lambda: (define | LEFT_PAREN (define (COMMA define)*)? RIGHT_PAREN) INS (expr | block) ;
 
 statement :
-	  varset STATEMENT_END?   #s_varset
+	  define STATEMENT_END?   #s_define
+	| varset STATEMENT_END?   #s_varset
 	| method STATEMENT_END?   #s_method
 	| if 					  #s_if
 	| for					  #s_for
 	| for_auto                #s_for_auto
 	| foreach				  #s_foreach
 	| while					  #s_while
-	| define STATEMENT_END?   #s_define
 	| return				  #s_return
 	| expr STATEMENT_END?	  #s_expr
 	| delete STATEMENT_END?	  #s_delete
