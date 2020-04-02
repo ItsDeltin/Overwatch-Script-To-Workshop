@@ -38,7 +38,7 @@ namespace Deltin.Deltinteger.Parse
             this.parseInfo = parseInfo;
 
             scope.AddVariable(this, parseInfo.Script.Diagnostics, DocRange.GetRange(macroContext.name));
-            parseInfo.TranslateInfo.AddSymbolLink(this, DefinedAt, true);
+            parseInfo.TranslateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, DefinedAt, true);
             parseInfo.Script.AddHover(DocRange.GetRange(macroContext.name), GetLabel(true));
             parseInfo.Script.AddCodeLensRange(new ReferenceCodeLensRange(this, parseInfo, CodeLensSourceType.Variable, DefinedAt.range));
         }
@@ -61,7 +61,7 @@ namespace Deltin.Deltinteger.Parse
         {
             script.AddDefinitionLink(callRange, DefinedAt);
             script.AddHover(callRange, GetLabel(true));
-            parseInfo.TranslateInfo.AddSymbolLink(this, new Location(script.Uri, callRange));
+            parseInfo.TranslateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, new Location(script.Uri, callRange));
         }
 
         public CompletionItem GetCompletion()

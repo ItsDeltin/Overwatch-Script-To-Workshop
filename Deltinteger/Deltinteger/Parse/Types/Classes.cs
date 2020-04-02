@@ -92,7 +92,7 @@ Object-serve scope. Only object members.
             if (workshopInitialized) return;
             workshopInitialized = true;
 
-            ClassData classData = translateInfo.SetupClasses();
+            ClassData classData = translateInfo.GetComponent<ClassData>();
 
             Identifier = classData.AssignID();
             int stackOffset = StackStart(false);
@@ -107,7 +107,7 @@ Object-serve scope. Only object members.
         {
             actionSet = actionSet.New(actionSet.IndexAssigner.CreateContained());
 
-            ClassData classData = actionSet.Translate.DeltinScript.SetupClasses();
+            ClassData classData = actionSet.Translate.DeltinScript.GetComponent<ClassData>();
 
             // Classes are stored in the class array (`classData.ClassArray`),
             // this stores the index where the new class is created at.
@@ -208,15 +208,17 @@ Object-serve scope. Only object members.
         }
     }
 
-    public class ClassData
+    public class ClassData : IComponent
     {
-        public IndexReference ClassIndexes { get; }
+        public DeltinScript DeltinScript { get; set; }
+        public IndexReference ClassIndexes { get; private set; }
         private List<IndexReference> VariableStacks { get; } = new List<IndexReference>();
         private int AssignClassID = 0;
 
-        public ClassData(VarCollection varCollection)
+        public void Init()
         {
-            ClassIndexes = varCollection.Assign("_classIndexes", true, false);
+            DeltinScript.InitialGlobal.ActionSet.AddAction(ClassIndexes.SetVariable(0, null, Constants.MAX_ARRAY_LENGTH));
+            ClassIndexes = DeltinScript.VarCollection.Assign("_classIndexes", true, false);
         }
 
         public IndexReference CreateObject(int classIdentifier, ActionSet actionSet, string internalName)

@@ -35,7 +35,7 @@ namespace Deltin.Deltinteger.Parse
             this.parseInfo = parseInfo;
             CallInfo = new CallInfo(this, parseInfo.Script);
 
-            parseInfo.TranslateInfo.AddSymbolLink(this, definedAt, true);
+            parseInfo.TranslateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, definedAt, true);
             parseInfo.Script.AddCodeLensRange(new ReferenceCodeLensRange(this, parseInfo, CodeLensSourceType.Function, DefinedAt.range));
         }
 
@@ -59,7 +59,7 @@ namespace Deltin.Deltinteger.Parse
         public void Call(ScriptFile script, DocRange callRange)
         {
             script.AddDefinitionLink(callRange, DefinedAt);
-            parseInfo.TranslateInfo.AddSymbolLink(this, new Location(script.Uri, callRange));
+            parseInfo.TranslateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, new Location(script.Uri, callRange));
         }
 
         public virtual bool DoesReturnValue() => true;

@@ -168,7 +168,7 @@ namespace Deltin.Deltinteger.Parse
                 if (Method.IsSubroutine) option.virtualSubroutineAssigned = Method;
             }
 
-            ClassData classData = BuilderSet.Translate.DeltinScript.SetupClasses();
+            ClassData classData = BuilderSet.Translate.DeltinScript.GetComponent<ClassData>();
 
             // Finish the switch.
             typeSwitch.Finish(Element.Part<V_ValueInArray>(classData.ClassIndexes.GetVariable(), BuilderSet.CurrentObject));

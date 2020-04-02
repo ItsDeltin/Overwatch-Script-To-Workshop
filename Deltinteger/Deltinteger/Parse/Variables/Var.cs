@@ -72,7 +72,7 @@ namespace Deltin.Deltinteger.Parse
             _operationalScope.AddVariable(this, parseInfo.Script.Diagnostics, DefinedAt.range);
 
             parseInfo.Script.AddHover(DefinedAt.range, GetLabel(true));
-            parseInfo.TranslateInfo.AddSymbolLink(this, DefinedAt, true);
+            parseInfo.TranslateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, DefinedAt, true);
 
             if (_initialValueResolve == InitialValueResolve.Instant)
                 GetInitialValue();
@@ -112,7 +112,7 @@ namespace Deltin.Deltinteger.Parse
             WasCalled = true;
             script.AddDefinitionLink(callRange, DefinedAt);
             script.AddHover(callRange, GetLabel(true));
-            parseInfo.TranslateInfo.AddSymbolLink(this, new Location(script.Uri, callRange));
+            parseInfo.TranslateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, new Location(script.Uri, callRange));
         }
     
         public IWorkshopTree Parse(ActionSet actionSet)

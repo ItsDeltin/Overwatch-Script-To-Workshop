@@ -26,7 +26,7 @@ namespace Deltin.Deltinteger.Parse
             Scope = new Scope("enum " + Name);
             
             DefinedAt = new LanguageServer.Location(parseInfo.Script.Uri, DocRange.GetRange(enumContext.name));
-            _translateInfo.AddSymbolLink(this, DefinedAt, true);
+            _translateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, DefinedAt, true);
 
             // Get the enum members.
             List<DefinedEnumMember> members = new List<DefinedEnumMember>();
@@ -53,7 +53,7 @@ namespace Deltin.Deltinteger.Parse
         {
             base.Call(script, callRange);
             script.AddDefinitionLink(callRange, DefinedAt);
-            _translateInfo.AddSymbolLink(this, new Location(script.Uri, callRange));
+            _translateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, new Location(script.Uri, callRange));
         }
 
         public override CompletionItem GetCompletion() => new CompletionItem() {
@@ -83,7 +83,7 @@ namespace Deltin.Deltinteger.Parse
             ID = id;
             _translateInfo = parseInfo.TranslateInfo;
 
-            _translateInfo.AddSymbolLink(this, definedAt, true);
+            _translateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, definedAt, true);
             parseInfo.Script.AddCodeLensRange(new ReferenceCodeLensRange(this, parseInfo, CodeLensSourceType.EnumValue, DefinedAt.range));
         }
 
@@ -103,7 +103,7 @@ namespace Deltin.Deltinteger.Parse
         public void Call(ScriptFile script, DocRange callRange)
         {
             script.AddDefinitionLink(callRange, DefinedAt);
-            _translateInfo.AddSymbolLink(this, new Location(script.Uri, callRange));
+            _translateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, new Location(script.Uri, callRange));
         }
     }
 }

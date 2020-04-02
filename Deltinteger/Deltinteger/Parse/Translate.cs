@@ -1,18 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.IO;
 using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.Elements;
-using Deltin.Deltinteger.Pathfinder;
 using Deltin.Deltinteger.Lobby;
 using Deltin.Deltinteger.I18n;
-using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
-using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItemKind;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
-using Newtonsoft.Json.Linq;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -21,7 +13,6 @@ namespace Deltin.Deltinteger.Parse
         private FileGetter FileGetter { get; }
         private Importer Importer { get; }
         public Diagnostics Diagnostics { get; }
-        public List<ScriptFile> ScriptFiles { get; } = new List<ScriptFile>();
         public List<CodeType> types { get; } = new List<CodeType>();
         public List<CodeType> definedTypes { get; } = new List<CodeType>();
         public Scope PlayerVariableScope { get; private set; } = new Scope();
@@ -35,8 +26,7 @@ namespace Deltin.Deltinteger.Parse
         public TranslateRule InitialPlayer { get; private set; }
         private readonly OutputLanguage Language;
         private readonly bool OptimizeOutput;
-        private JObject MergedLobbySettings;
-        public List<IStringParse> Strings { get; } = new List<IStringParse>();
+        private List<IComponent> Components { get; } = new List<IComponent>(); 
 
         public DeltinScript(TranslateSettings translateSettings)
         {
@@ -46,9 +36,8 @@ namespace Deltin.Deltinteger.Parse
             OptimizeOutput = translateSettings.OptimizeOutput;
 
             types.AddRange(CodeType.DefaultTypes);
-            Importer = new Importer(translateSettings.Root.Uri);
-
-            CollectScriptFiles(translateSettings.Root);
+            Importer = new Importer(Diagnostics, FileGetter, translateSettings.Root.Uri);
+            Importer.CollectScriptFiles(translateSettings.Root);
             
             GlobalScope = Scope.GetGlobalScope();
             RulesetScope = GlobalScope.Child();
@@ -58,136 +47,22 @@ namespace Deltin.Deltinteger.Parse
             if (!Diagnostics.ContainsErrors())
                 ToWorkshop(translateSettings.AdditionalRules);
             
-            StringAction.RemoveUnused(Strings);
+            foreach (IComponent component in Components)
+                if (component is IDisposable disposable)
+                    disposable.Dispose();
         }
 
-        void CollectScriptFiles(ScriptFile scriptFile)
+        public T GetComponent<T>() where T: IComponent, new()
         {
-            ScriptFiles.Add(scriptFile);
-
-            FileImporter importer = new FileImporter(scriptFile.Diagnostics, Importer);
-
-            // Get the imported files.
-            if (scriptFile.Context.import_file() != null)
-            {
-                foreach (var importFileContext in scriptFile.Context.import_file())
-                {
-                    string directory = GetImportedFile(scriptFile, importer, importFileContext);
-                    if (Directory.Exists(directory))
-                        AddImportCompletion(scriptFile, directory, DocRange.GetRange(importFileContext.STRINGLITERAL()));
-                }
-            }
-        }
-
-        public static void AddImportCompletion(ScriptFile script, string directory, DocRange range)
-        {
-            List<CompletionItem> completionItems = new List<CompletionItem>();
-            var directories = Directory.GetDirectories(directory);
-            var files = Directory.GetFiles(directory);
-
-            completionItems.Add(new CompletionItem() {
-                Label = "../",
-                Detail = Directory.GetParent(directory).FullName,
-                Kind = CompletionItemKind.Folder
-            });
-
-            foreach (var dir in directories)
-                completionItems.Add(new CompletionItem() {
-                    Label = Path.GetFileName(dir),
-                    Detail = dir,
-                    Kind = CompletionItemKind.Folder
-                });
+            foreach (IComponent component in Components)
+                if (component is T t)
+                    return t;
             
-            foreach (var file in files)
-                completionItems.Add(new CompletionItem() {
-                    Label = Path.GetFileName(file),
-                    Detail = file,
-                    Kind = CompletionItemKind.File
-                });
-            
-            script.AddCompletionRange(new CompletionRange(completionItems.ToArray(), range, CompletionRangeKind.ClearRest));
-        }
-
-        string GetImportedFile(ScriptFile script, FileImporter importer, DeltinScriptParser.Import_fileContext importFileContext)
-        {
-            // If the file being imported is being imported as an object, get the variable name.
-            string variableName = null;
-            if (importFileContext.AS() != null)
-            {
-                // Syntax error if there is an 'as' keyword but no variable name.
-                if (importFileContext.name == null)
-                    script.Diagnostics.Error("Expected variable name.", DocRange.GetRange(importFileContext.AS()));
-                // Get the variable name.
-                else
-                    variableName = importFileContext.name.Text;
-            }
-
-            DocRange stringRange = DocRange.GetRange(importFileContext.STRINGLITERAL());
-
-            ImportResult importResult = importer.Import(
-                stringRange,
-                Extras.RemoveQuotes(importFileContext.STRINGLITERAL().GetText()),
-                script.Uri
-            );
-            if (!importResult.SuccessfulReference) return importResult.Directory;
-
-            // Add hover and definition info.
-            script.AddDefinitionLink(stringRange, new Location(importResult.Uri, DocRange.Zero));
-            script.AddHover(stringRange, importResult.FilePath);
-
-            if (importResult.ShouldImport)
-            {
-                // Import the file if it should be imported.
-                switch (importResult.FileType)
-                {
-                    // Get script file.
-                    case ".del":
-                    case ".ostw":
-                    case ".workshop":
-                        ScriptFile importedScript = new ScriptFile(Diagnostics, importResult.Uri, FileGetter.GetScript(importResult.Uri));
-                        CollectScriptFiles(importedScript);
-                        break;
-                    
-                    // Get lobby settings.
-                    case ".json":
-                        JObject lobbySettings = null;
-
-                        // Make sure the json is in the correct format.
-                        try
-                        {
-                            ImportedScript file = FileGetter.GetImportedFile(importResult.Uri);
-                            file.Update();
-
-                            // Convert the json to a jobject.
-                            lobbySettings = JObject.Parse(file.Content);
-
-                            // An exception will be thrown if the jobject cannot be converted to a Ruleset.
-                            lobbySettings.ToObject(typeof(Ruleset));
-
-                            if (!Ruleset.Validate(lobbySettings, script.Diagnostics, stringRange)) break;
-                        }
-                        catch
-                        {
-                            // Error if the json failed to parse.
-                            script.Diagnostics.Error("Failed to parse the settings file.", stringRange);
-                            break;
-                        }
-
-                        // If no lobby settings were imported yet, set MergedLobbySettings to the jobject.
-                        if (MergedLobbySettings == null) MergedLobbySettings = lobbySettings;
-                        else
-                        {
-                            // Otherwise, merge current lobby settings.
-                            lobbySettings.Merge(MergedLobbySettings, new JsonMergeSettings {
-                                MergeArrayHandling = MergeArrayHandling.Union,
-                                MergeNullValueHandling = MergeNullValueHandling.Ignore
-                            });
-                            MergedLobbySettings = lobbySettings;
-                        }
-                        break;
-                }
-            }
-            return importResult.Directory;
+            T newT = new T();
+            newT.DeltinScript = this;
+            Components.Add(newT);
+            newT.Init();
+            return newT;
         }
 
         private List<RuleAction> rules { get; } = new List<RuleAction>();
@@ -195,7 +70,7 @@ namespace Deltin.Deltinteger.Parse
         void Translate()
         {
             // Get the reserved variables and IDs
-            foreach (ScriptFile script in ScriptFiles)
+            foreach (ScriptFile script in Importer.ScriptFiles)
             {
                 if (script.Context.reserved_global()?.reserved_list() != null)
                 {
@@ -210,7 +85,7 @@ namespace Deltin.Deltinteger.Parse
             }
 
             // Get the enums
-            foreach (ScriptFile script in ScriptFiles)
+            foreach (ScriptFile script in Importer.ScriptFiles)
             foreach (var enumContext in script.Context.enum_define())
             {
                 var newEnum = new DefinedEnum(new ParseInfo(script, this), enumContext);
@@ -219,7 +94,7 @@ namespace Deltin.Deltinteger.Parse
             }
 
             // Get the types
-            foreach (ScriptFile script in ScriptFiles)
+            foreach (ScriptFile script in Importer.ScriptFiles)
             foreach (var typeContext in script.Context.type_define())
             {
                 var newType = new DefinedType(new ParseInfo(script, this), GlobalScope, typeContext);
@@ -228,7 +103,7 @@ namespace Deltin.Deltinteger.Parse
             }
             
             // Get the methods and macros
-            foreach (ScriptFile script in ScriptFiles)
+            foreach (ScriptFile script in Importer.ScriptFiles)
             {
                 // Get the methods.
                 foreach (var methodContext in script.Context.define_method())
@@ -244,7 +119,7 @@ namespace Deltin.Deltinteger.Parse
             }
 
             // Get the defined variables.
-            foreach (ScriptFile script in ScriptFiles)
+            foreach (ScriptFile script in Importer.ScriptFiles)
             foreach (var varContext in script.Context.define())
             {
                 Var newVar = new RuleLevelVariable(RulesetScope, new DefineContextHandler(new ParseInfo(script, this), varContext));
@@ -261,7 +136,7 @@ namespace Deltin.Deltinteger.Parse
             foreach (var apply in applyBlocks) apply.CallInfo?.CheckRecursion();
 
             // Get the rules
-            foreach (ScriptFile script in ScriptFiles)
+            foreach (ScriptFile script in Importer.ScriptFiles)
             foreach (var ruleContext in script.Context.ow_rule())
                 rules.Add(new RuleAction(new ParseInfo(script, this), RulesetScope, ruleContext));
         }
@@ -329,9 +204,9 @@ namespace Deltin.Deltinteger.Parse
             LanguageInfo.I18nWarningMessage(result, Language);
 
             // Get the custom game settings.
-            if (MergedLobbySettings != null)
+            if (Importer.MergedLobbySettings != null)
             {
-                Ruleset settings = Ruleset.Parse(MergedLobbySettings);
+                Ruleset settings = Ruleset.Parse(Importer.MergedLobbySettings);
                 settings.ToWorkshop(result);
                 result.AppendLine();
             }
@@ -369,20 +244,7 @@ namespace Deltin.Deltinteger.Parse
         }
         public T GetCodeType<T>() where T: CodeType => (T)types.FirstOrDefault(type => type.GetType() == typeof(T));
 
-        public ScriptFile ScriptFromUri(Uri uri) => ScriptFiles.FirstOrDefault(script => script.Uri.Compare(uri));
-
-        // Symbol links
-        private Dictionary<ICallable, SymbolLinkCollection> callRanges { get; } = new Dictionary<ICallable, SymbolLinkCollection>();
-        public void AddSymbolLink(ICallable callable, Location calledFrom, bool isDeclarer = false)
-        {
-            if (callable == null) throw new ArgumentNullException(nameof(callable));
-            if (calledFrom == null) throw new ArgumentNullException(nameof(calledFrom));
-
-            if (!callRanges.ContainsKey(callable)) callRanges.Add(callable, new SymbolLinkCollection());
-            callRanges[callable].Add(new SymbolLink(calledFrom, isDeclarer));
-        }
-        public Dictionary<ICallable, SymbolLinkCollection> GetSymbolLinks() => callRanges;
-        public SymbolLinkCollection GetSymbolLinks(ICallable callable) => callRanges[callable];
+        public ScriptFile ScriptFromUri(Uri uri) => Importer.ScriptFiles.FirstOrDefault(script => script.Uri.Compare(uri));
 
         private TranslateRule GetInitialRule(bool isGlobal)
         {
@@ -449,7 +311,7 @@ namespace Deltin.Deltinteger.Parse
                 case DeltinScriptParser.E_trueContext @true: return new BoolAction(parseInfo.Script, true);
                 case DeltinScriptParser.E_falseContext @false: return new BoolAction(parseInfo.Script, false);
                 case DeltinScriptParser.E_nullContext @null: return new NullAction();
-                case DeltinScriptParser.E_stringContext @string: return new StringAction(parseInfo.Script, @string.@string());
+                case DeltinScriptParser.E_stringContext @string: return new StringAction(parseInfo, @string.@string());
                 case DeltinScriptParser.E_formatted_stringContext formattedString: return new StringAction(parseInfo, scope, formattedString.formatted_string());
                 case DeltinScriptParser.E_variableContext variable: return GetVariable(parseInfo, scope, getter, variable.variable(), selfContained);
                 case DeltinScriptParser.E_methodContext method: return new CallMethodAction(parseInfo, scope, method.method(), usedAsValue, getter);
@@ -551,31 +413,12 @@ namespace Deltin.Deltinteger.Parse
             parseInfo.TranslateInfo.ApplyBlock((IApplyBlock)newMacro);
             return newMacro;
         }
-
-        private ClassData _classData = null;
-        public ClassData SetupClasses()
-        {
-            if (_classData == null)
-            {
-                _classData = new ClassData(VarCollection);
-                InitialGlobal.ActionSet.AddAction(_classData.ClassIndexes.SetVariable(0, null, Constants.MAX_ARRAY_LENGTH));
-            }
-            return _classData;
-        }
-
-        private PathfinderInfo _pathfinderInfo = null;
-        public PathfinderInfo SetupPathfinder()
-        {
-            if (_pathfinderInfo == null) _pathfinderInfo = new PathfinderInfo(this);
-            return _pathfinderInfo;
-        }
     }
 
-    public enum AccessLevel
+    public interface IComponent
     {
-        Public,
-        Private,
-        Protected
+        DeltinScript DeltinScript { get; set; }
+        void Init();
     }
 
     public class ParseInfo

@@ -154,7 +154,7 @@ namespace Deltin.Deltinteger.Parse
 
             string dir = Path.GetDirectoryName(resultingPath);
             if (Directory.Exists(dir))
-                DeltinScript.AddImportCompletion(script, dir, valueRange);
+                Importer.AddImportCompletion(script, dir, valueRange);
 
             if (!File.Exists(resultingPath))
             {

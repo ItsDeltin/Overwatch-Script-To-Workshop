@@ -63,7 +63,7 @@ namespace Deltin.Deltinteger.Parse
                 ((DefinedType)Type).AddLink(DefinedAt);
             
             parseInfo.TranslateInfo.ApplyBlock(this);
-            parseInfo.TranslateInfo.AddSymbolLink(this, DefinedAt, true);
+            parseInfo.TranslateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, DefinedAt, true);
             parseInfo.Script.AddCodeLensRange(new ReferenceCodeLensRange(this, parseInfo, CodeLensSourceType.Constructor, DefinedAt.range));
         }
 

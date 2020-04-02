@@ -348,7 +348,7 @@ namespace Deltin.Deltinteger.Parse
 
         public IWorkshopTree Parse(ActionSet actionSet)
         {
-            ClassData classData = actionSet.Translate.DeltinScript.SetupClasses();
+            ClassData classData = actionSet.Translate.DeltinScript.GetComponent<ClassData>();
 
             // Parse the expression.
             IWorkshopTree expressionResult = expression.Parse(actionSet);

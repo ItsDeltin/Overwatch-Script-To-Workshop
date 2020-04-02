@@ -17,64 +17,73 @@ namespace Deltin.Deltinteger.Parse
             Kind = CompletionItemKind.Text
         }).ToArray();
 
-        public string Value { get; }
-        public bool Localized { get; }
+        private ParseInfo _parseInfo;
+        private DocRange _stringRange;
+        public string Value { get; private set; }
+        public bool Localized { get; private set; }
         public IExpression[] FormatParameters { get; }
-        private DocRange StringRange { get; }
         private IStringParse String;
 
         // Normal
-        public StringAction(ScriptFile script, DeltinScriptParser.StringContext stringContext, bool parse = true)
+        public StringAction(ParseInfo parseInfo, DeltinScriptParser.StringContext stringContext)
         {
+            Init(parseInfo, stringContext);
             FormatParameters = new IExpression[0];
-            Value = Extras.RemoveQuotes(stringContext.STRINGLITERAL().GetText());
-            Localized = stringContext.LOCALIZED() != null;
-            StringRange = DocRange.GetRange(stringContext.STRINGLITERAL());
-            if (parse) ParseString(script);
-
-            if (Localized)
-            {
-                script.AddCompletionRange(new CompletionRange(StringCompletion, StringRange, CompletionRangeKind.ClearRest));
-            }
+            ParseString();
         }
+
         // Formatted
-        public StringAction(ParseInfo parseInfo, Scope scope, DeltinScriptParser.Formatted_stringContext stringContext) : this(parseInfo.Script, stringContext.@string(), false)
+        public StringAction(ParseInfo parseInfo, Scope scope, DeltinScriptParser.Formatted_stringContext stringContext)
         {
+            Init(parseInfo, stringContext.@string());
             FormatParameters = new IExpression[stringContext.expr().Length];
             for (int i = 0; i < FormatParameters.Length; i++)
                 FormatParameters[i] = DeltinScript.GetExpression(parseInfo, scope, stringContext.expr(i));
-            ParseString(parseInfo.Script);
+            ParseString();
         }
 
-        private void ParseString(ScriptFile script)
+        private void Init(ParseInfo parseInfo, DeltinScriptParser.StringContext stringContext)
+        {
+            _parseInfo = parseInfo;
+            Value = Extras.RemoveQuotes(stringContext.STRINGLITERAL().GetText());
+            Localized = stringContext.LOCALIZED() != null;
+            _stringRange = DocRange.GetRange(stringContext.STRINGLITERAL());
+
+            if (Localized)
+                _parseInfo.Script.AddCompletionRange(new CompletionRange(StringCompletion, _stringRange, CompletionRangeKind.ClearRest));
+        }
+
+        private void ParseString()
         {
             String = GetCachedString(Value, Localized);
-            if (String != null) return;
-
-            try
+            if (String == null)
             {
-                if (!Localized)
-                    String = CustomStringGroup.ParseCustomString(Value, FormatParameters.Length);
-                else
-                    String = LocalizedString.ParseLocalizedString(Value, 0, Value, FormatParameters.Length);
-                
-                lock (_cacheLock) _cache.Add(String);
-            }
-            catch (StringParseFailedException ex)
-            {
-                if (ex.StringIndex == -1)
+                try
                 {
-                     script.Diagnostics.Error(ex.Message, StringRange);
+                    if (!Localized)
+                        String = CustomStringGroup.ParseCustomString(Value, FormatParameters.Length);
+                    else
+                        String = LocalizedString.ParseLocalizedString(Value, 0, Value, FormatParameters.Length);
+                    
+                    lock (_cacheLock) _cache.Add(String);
                 }
-                else
+                catch (StringParseFailedException ex)
                 {
-                    int errorStart = StringRange.start.character + 1 + ex.StringIndex;
-                    script.Diagnostics.Error(ex.Message, new DocRange(
-                        new Pos(StringRange.start.line, errorStart),
-                        new Pos(StringRange.start.line, errorStart + ex.Length)
-                    ));
+                    if (ex.StringIndex == -1)
+                    {
+                        _parseInfo.Script.Diagnostics.Error(ex.Message, _stringRange);
+                    }
+                    else
+                    {
+                        int errorStart = _stringRange.start.character + 1 + ex.StringIndex;
+                        _parseInfo.Script.Diagnostics.Error(ex.Message, new DocRange(
+                            new Pos(_stringRange.start.line, errorStart),
+                            new Pos(_stringRange.start.line, errorStart + ex.Length)
+                        ));
+                    }
                 }
             }
+            _parseInfo.TranslateInfo.GetComponent<StringSaverComponent>().Strings.Add(String);
         }
 
         public Scope ReturningScope() => null;
@@ -99,6 +108,19 @@ namespace Deltin.Deltinteger.Parse
                 for (int i = _cache.Count - 1; i >= 0; i--)
                     if (strings.Contains(_cache[i]))
                         _cache.RemoveAt(i);
+        }
+    }
+
+    class StringSaverComponent : IComponent, IDisposable
+    {
+        public DeltinScript DeltinScript { get; set; }
+        public List<IStringParse> Strings { get; } = new List<IStringParse>();
+        
+        public void Init() {}
+
+        public void Dispose()
+        {
+            StringAction.RemoveUnused(Strings);
         }
     }
 

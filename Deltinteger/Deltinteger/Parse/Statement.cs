@@ -77,7 +77,7 @@ namespace Deltin.Deltinteger.Parse
             Element delete = (Element)DeleteValue.Parse(actionSet);
 
             // Class data.
-            var classData = actionSet.Translate.DeltinScript.SetupClasses();
+            var classData = actionSet.Translate.DeltinScript.GetComponent<ClassData>();
 
             // Remove the variable from the list of classes.
             actionSet.AddAction(classData.ClassIndexes.SetVariable(

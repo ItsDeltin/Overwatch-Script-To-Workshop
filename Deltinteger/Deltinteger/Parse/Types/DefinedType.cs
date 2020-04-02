@@ -25,7 +25,7 @@ namespace Deltin.Deltinteger.Parse
                 parseInfo.Script.Diagnostics.Error($"A type with the name '{Name}' already exists.", DocRange.GetRange(typeContext.name));
             
             DefinedAt = new LanguageServer.Location(parseInfo.Script.Uri, DocRange.GetRange(typeContext.name));
-            parseInfo.TranslateInfo.AddSymbolLink(this, DefinedAt, true);
+            parseInfo.TranslateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, DefinedAt, true);
         }
 
         public override void ResolveElements()
@@ -170,7 +170,7 @@ namespace Deltin.Deltinteger.Parse
         }
         public void AddLink(LanguageServer.Location location)
         {
-            parseInfo.TranslateInfo.AddSymbolLink(this, location);
+            parseInfo.TranslateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, location);
         }
     }    
 }
