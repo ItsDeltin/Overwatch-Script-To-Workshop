@@ -97,7 +97,7 @@ namespace Deltin.Deltinteger.Parse
         {
             lock (_cacheLock)
                 foreach(var cachedString in _cache)
-                    if ((localized && cachedString is LocalizedString) || (!localized && cachedString is CustomStringGroup))
+                    if (cachedString.Original == str && ((localized && cachedString is LocalizedString) || (!localized && cachedString is CustomStringGroup)))
                         return cachedString;
             return null;
         }
@@ -106,7 +106,7 @@ namespace Deltin.Deltinteger.Parse
         {
             lock (_cacheLock)
                 for (int i = _cache.Count - 1; i >= 0; i--)
-                    if (strings.Contains(_cache[i]))
+                    if (!strings.Contains(_cache[i]))
                         _cache.RemoveAt(i);
         }
     }
