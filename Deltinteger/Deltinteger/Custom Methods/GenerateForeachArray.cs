@@ -17,8 +17,7 @@ namespace Deltin.Deltinteger.CustomMethods
         {
             if (parameterValues[0] is V_Number n)
             {
-                //throw an error here if length is less than 0
-                V_Number[] indexes = new V_Number[(int)n.Value];
+                V_Number[] indexes = new V_Number[n.Value < 0 ? 0 : (int)n.Value];
                 for (int i = 0; i < indexes.Length; i++)
                     indexes[i] = new V_Number(i);
                 return Element.CreateArray(indexes);
