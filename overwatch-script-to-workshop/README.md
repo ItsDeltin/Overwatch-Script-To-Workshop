@@ -1,19 +1,22 @@
-# Overwatch Script To Workshop vscode
+# Overwatch Script To Workshop
+
+OSTW is a high-level programming language for Overwatch's workshop.
+
+[Repository](https://github.com/ItsDeltin/Overwatch-Script-To-Workshop)
+
+[Wiki](https://github.com/ItsDeltin/Overwatch-Script-To-Workshop/wiki)
 
 ## Features
-Syntax highlighting and language server for [Overwatch Script To Workshop](https://github.com/ItsDeltin/Overwatch-Script-To-Workshop).
 
-## Getting Started
-Download the [latest OSTW release](https://github.com/ItsDeltin/Overwatch-Script-To-Workshop/releases). Set the `ostw.deltintegerPath` to the `deltinteger` executable.
+- Syntax highlighting and autocompletion
+- If...else
+- Switch
+- Loops (while, for, foreach)
+- Easy string creation
+- Easy operation trees
+- Functions
+- Classes
 
-## Extension Settings
-* `ostw.outputLanguage`: The output language of the workshop code.
+## Installing
 
-* `ostw.deltintegerPath`: The path to [Deltinteger.exe](https://github.com/ItsDeltin/Overwatch-Script-To-Workshop/releases).
-
-
-## Release Notes
-
-### 1.0.0
-
-Initial release of the OSTW extension.
+Download the latest release from the [releases](https://github.com/ItsDeltin/Overwatch-Script-To-Workshop/releases) section. Set the `ostw.deltintegerPath` setting to the `deltinteger.exe` file.

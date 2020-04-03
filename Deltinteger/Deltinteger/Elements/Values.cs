@@ -83,6 +83,15 @@ namespace Deltin.Deltinteger.Elements
     [Parameter("Team", ValueType.Team, typeof(V_TeamVar))]
     public class V_AllPlayersOnObjective : Element {}
 
+    [ElementData("All Tank Heroes", ValueType.Hero)]
+    public class V_AllTankHeroes : Element {}
+
+    [ElementData("All Damage Heroes", ValueType.Hero)]
+    public class V_AllDamageHeroes : Element {}
+
+    [ElementData("All Support Heroes", ValueType.Hero)]
+    public class V_AllSupportHeroes : Element {}
+
     [ElementData("Allowed Heroes", ValueType.Hero)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     public class V_AllowedHeroes : Element {}
@@ -1120,6 +1129,14 @@ namespace Deltin.Deltinteger.Elements
         {
             return ((V_Number)other).Value == Value;
         }
+
+        public override int ElementCount(int depth) => NumberElementCount(depth);
+
+        public static int NumberElementCount(int depth)
+        {
+            if (depth <= 1) return 2;
+            else return 4;
+        }
     }
 
     [ElementData("Number Of Dead Players", ValueType.Number)]
@@ -1474,6 +1491,8 @@ namespace Deltin.Deltinteger.Elements
         {
             return ((V_String)other).Text == Text;
         }
+
+        public override int ElementCount(int depth) => base.ElementCount(depth) + 2;
     }
 
     [ElementData("Custom String", ValueType.Any)]
@@ -1527,6 +1546,8 @@ namespace Deltin.Deltinteger.Elements
         {
             return ((V_CustomString)other).Text == Text;
         }
+
+        public override int ElementCount(int depth) => base.ElementCount(depth) + 2;
     }
 
     [ElementData("Icon String", ValueType.Any)]

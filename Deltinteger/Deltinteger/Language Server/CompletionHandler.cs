@@ -37,7 +37,7 @@ namespace Deltin.Deltinteger.LanguageServer
             if (_languageServer.LastParse == null) return items;
 
             // Add the user defined types.
-            foreach (var definedType in _languageServer.LastParse.definedTypes)
+            foreach (var definedType in _languageServer.LastParse.Types.DefinedTypes)
                 items.Add(definedType.GetCompletion());
 
             // Get the script from the uri. If it isn't parsed, return the default completion. 

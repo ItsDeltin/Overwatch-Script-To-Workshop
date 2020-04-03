@@ -17,6 +17,8 @@ namespace Deltin.Deltinteger.Parse
 
         private readonly List<SkipStartMarker> skips = new List<SkipStartMarker>();
 
+        public List<RecursiveIndexReference> AdditionalPopOnReturn { get; } = new List<RecursiveIndexReference>();
+
         public ReturnHandler(ActionSet actionSet, string methodName, bool multiplePaths)
         {
             ActionSet = actionSet;
@@ -40,14 +42,18 @@ namespace Deltin.Deltinteger.Parse
                 ReturningValue = value;
         }
 
-        public virtual void Return()
+        public virtual void Return(Scope returningFromScope, ActionSet returningSet)
         {
-            SkipStartMarker returnSkipStart = new SkipStartMarker(ActionSet);
-            ActionSet.AddAction(returnSkipStart);
+            if (returningSet.IsRecursive)
+            {
+                returningFromScope.EndScope(returningSet, true);
 
-            // 0 skip workaround.
-            // ActionSet.AddAction(new A_Abort() { Disabled = true });
+                foreach (var recursiveIndexReference in AdditionalPopOnReturn)
+                    returningSet.AddAction(recursiveIndexReference.Pop());
+            }
 
+            SkipStartMarker returnSkipStart = new SkipStartMarker(returningSet);
+            returningSet.AddAction(returnSkipStart);
             skips.Add(returnSkipStart);
         }
 
@@ -75,9 +81,9 @@ namespace Deltin.Deltinteger.Parse
 
         public override void ApplyReturnSkips() => throw new Exception("Can't apply return skips in a rule.");
         public override IWorkshopTree GetReturnedValue() => throw new Exception("Can't get the returned value of a rule.");
-        public override void ReturnValue(IWorkshopTree value) => throw new Exception("Can't return a value in a rule..");
+        public override void ReturnValue(IWorkshopTree value) => throw new Exception("Can't return a value in a rule.");
 
-        public override void Return()
+        public override void Return(Scope returningFromScope, ActionSet returningSet)
         {
             ActionSet.AddAction(Element.Part<A_Abort>());
         }

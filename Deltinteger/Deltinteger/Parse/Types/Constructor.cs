@@ -3,9 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.LanguageServer;
-using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
-using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItemKind;
-using StringOrMarkupContent = OmniSharp.Extensions.LanguageServer.Protocol.Models.StringOrMarkupContent;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -16,7 +13,7 @@ namespace Deltin.Deltinteger.Parse
         public CodeParameter[] Parameters { get; protected set; }
         public LanguageServer.Location DefinedAt { get; }
         public CodeType Type { get; }
-        public StringOrMarkupContent Documentation { get; protected set; }
+        public string Documentation { get; protected set; }
 
         public Constructor(CodeType type, LanguageServer.Location definedAt, AccessLevel accessLevel)
         {
@@ -66,7 +63,7 @@ namespace Deltin.Deltinteger.Parse
                 ((DefinedType)Type).AddLink(DefinedAt);
             
             parseInfo.TranslateInfo.ApplyBlock(this);
-            parseInfo.TranslateInfo.AddSymbolLink(this, DefinedAt, true);
+            parseInfo.TranslateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, DefinedAt, true);
             parseInfo.Script.AddCodeLensRange(new ReferenceCodeLensRange(this, parseInfo, CodeLensSourceType.Constructor, DefinedAt.range));
         }
 
@@ -87,7 +84,7 @@ namespace Deltin.Deltinteger.Parse
 
         public override void Parse(ActionSet actionSet, IWorkshopTree[] parameterValues, object[] additionalParameterData)
         {
-            actionSet = actionSet.New(actionSet.IndexAssigner.CreateContained());
+            actionSet = actionSet.New(actionSet.IndexAssigner.CreateContained()).PackThis();
             DefinedMethod.AssignParameters(actionSet, ParameterVars, parameterValues);
             Block.Translate(actionSet);
         }

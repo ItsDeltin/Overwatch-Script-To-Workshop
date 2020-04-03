@@ -40,6 +40,7 @@ expr
 	| NOT expr                                                                         #e_not
 	| '-' expr                                                                         #e_inverse
 	| expr IS type=PART?                                                               #e_is
+	| lambda                                                                           #e_lambda
 	| <assoc=right> left=expr op=('^' | '*' | '/' | '%') right=expr                    #e_op_1
 	| left=expr op=('+' | '-') right=expr                                              #e_op_2
 	| left=expr op=(LESS_THAN | '<=' | '==' | '>=' | GREATER_THAN | '!=') right=expr   #e_op_compare
@@ -63,17 +64,21 @@ picky_parameters : picky_parameter (COMMA picky_parameter?)* ;
 method           : (ASYNC NOT?)? PART LEFT_PAREN (picky_parameters | call_parameters)? RIGHT_PAREN ;
 
 variable : PART array? ;
-code_type: PART (INDEX_START INDEX_END)*;
+code_type: PART (INDEX_START INDEX_END)* generics?;
+generics : LESS_THAN (generic_option (COMMA generic_option)*)? GREATER_THAN;
+generic_option: code_type | DEFINE;
+
+lambda: (define | LEFT_PAREN (define (COMMA define)*)? RIGHT_PAREN) INS (expr | block) ;
 
 statement :
-	  varset STATEMENT_END?   #s_varset
+	  define STATEMENT_END?   #s_define
+	| varset STATEMENT_END?   #s_varset
 	| method STATEMENT_END?   #s_method
 	| if 					  #s_if
 	| for					  #s_for
 	| for_auto                #s_for_auto
 	| foreach				  #s_foreach
 	| while					  #s_while
-	| define STATEMENT_END?   #s_define
 	| return				  #s_return
 	| expr STATEMENT_END?	  #s_expr
 	| delete STATEMENT_END?	  #s_delete
@@ -120,7 +125,7 @@ ow_rule :
 	block?
 	;
 
-define_method : DOCUMENTATION* method_attributes* (VOID | DEFINE | code_type) name=PART LEFT_PAREN setParameters RIGHT_PAREN subroutineRuleName=STRINGLITERAL?
+define_method : DOCUMENTATION* method_attributes* (VOID | DEFINE | code_type) name=PART LEFT_PAREN setParameters RIGHT_PAREN ((GLOBAL | PLAYER)? subroutineRuleName=STRINGLITERAL)?
 	block?
 	;
 
@@ -237,6 +242,7 @@ BASE      : 'base'      ;
 IS        : 'is'		;
 INTERFACE : 'interface' ;
 
+INS             : '=>'  ;
 EQUALS          : '='  ;
 EQUALS_POW      : '^=' ;
 EQUALS_MULTIPLY : '*=' ;

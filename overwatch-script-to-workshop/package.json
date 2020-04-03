@@ -15,7 +15,12 @@
         "onLanguage:ow_ostw",
         "workspaceContains:**/customGameSettings.json"
     ],
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/ItsDeltin/Overwatch-Script-To-Workshop.git"
+    },
     "main": "./dist/extension",
+    "icon": "icon.png",
     "contributes": {
         "languages": [
             {
@@ -92,6 +97,17 @@
                     "type": "string",
                     "description": "The path to Deltinteger.exe."
                 },
+                "ostw.newRelease": {
+                    "scope": "machine",
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Determines if the new release notification is shown."
+                },
+                "ostw.ignoreRelease": {
+                    "scope": "machine",
+                    "type": "string",
+                    "description": "Ignores a release tag."
+                },
                 "ostw.codelens.references": {
                     "scope": "window",
                     "type": "boolean",
@@ -102,6 +118,12 @@
                     "scope": "window",
                     "type": "boolean",
                     "description": "Determines if the implements code lens is shown.",
+                    "default": true
+                },
+                "ostw.codelens.elementCount": {
+                    "scope": "window",
+                    "type": "boolean",
+                    "description": "Determines if the element count code lens is shown.",
                     "default": true
                 },
                 "ostw.trace.server": {
@@ -148,17 +170,18 @@
     },
     "devDependencies": {
         "@types/mocha": "^5.2.0",
-        "@types/node": "^8.10.52",
-        "ts-loader": "^6.2.1",
-        "tslint": "^5.19.0",
-        "typescript": "^3.5.3",
-        "webpack": "^4.41.5",
-        "webpack-cli": "^3.3.10",
-        "vscode": "^1.1.36"
+        "@types/node": "^8.10.59",
+        "node-fetch": "^2.6.0",
+        "ts-loader": "^6.2.2",
+        "tslint": "^5.20.1",
+        "typescript": "^3.8.3",
+        "vscode": "^1.1.36",
+        "webpack": "^4.42.1",
+        "webpack-cli": "^3.3.11"
     },
     "dependencies": {
-        "async": "^3.1.0",
-        "request": "^2.88.0",
+        "async": "^3.2.0",
+        "node-fetch": "^2.6.0",
         "vscode-languageclient": "^5.2.1"
     }
 }

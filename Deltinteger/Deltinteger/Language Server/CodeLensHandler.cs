@@ -32,9 +32,7 @@ namespace Deltin.Deltinteger.LanguageServer
                     // Check if the lens should be used.
                     && lens.ShouldUse() 
                     // Check if the code lens type is enabled.
-                    && ((_languageServer.ConfigurationHandler.ReferencesCodeLens && lens is ReferenceCodeLensRange)
-                    || (_languageServer.ConfigurationHandler.ImplementsCodeLens && lens is ImplementsCodeLensRange))
-                    )
+                    && LensIsEnabled(lens))
                     // Create the CodeLens.
                     finalLenses.Add(new CodeLens() {
                         Command = new Command() {
@@ -46,6 +44,14 @@ namespace Deltin.Deltinteger.LanguageServer
                     });
             
             return finalLenses;
+        }
+
+        public bool LensIsEnabled(CodeLensRange lens)
+        {
+            return
+                (_languageServer.ConfigurationHandler.ReferencesCodeLens   && lens is ReferenceCodeLensRange ) ||
+                (_languageServer.ConfigurationHandler.ImplementsCodeLens   && lens is ImplementsCodeLensRange) ||
+                (_languageServer.ConfigurationHandler.ElementCountCodeLens && lens is ElementCountCodeLens);
         }
 
         public CodeLensRegistrationOptions GetRegistrationOptions()

@@ -37,20 +37,21 @@ namespace Deltin.Deltinteger.Parse
             scope = Static ? staticScope : objectScope;
             this.parseInfo = parseInfo;
 
-            parseInfo.TranslateInfo.AddSymbolLink(this, DefinedAt, true);
             scope.AddVariable(this, parseInfo.Script.Diagnostics, DocRange.GetRange(macroContext.name));
+            parseInfo.TranslateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, DefinedAt, true);
             parseInfo.Script.AddHover(DocRange.GetRange(macroContext.name), GetLabel(true));
+            parseInfo.Script.AddCodeLensRange(new ReferenceCodeLensRange(this, parseInfo, CodeLensSourceType.Variable, DefinedAt.range));
         }
 
         public void SetupParameters() {}
 
         public void SetupBlock()
         {
-            if (ExpressionToParse != null) Expression = DeltinScript.GetExpression(parseInfo.SetCallInfo(CallInfo), scope, ExpressionToParse);
+            if (ExpressionToParse != null) Expression = parseInfo.SetCallInfo(CallInfo).GetExpression(scope, ExpressionToParse);
             foreach (var listener in listeners) listener.Applied();
         }
 
-        public IWorkshopTree Parse(ActionSet actionSet, bool asElement = true) => Expression.Parse(actionSet);
+        public IWorkshopTree Parse(ActionSet actionSet) => Expression.Parse(actionSet);
 
         public Scope ReturningScope() => ReturnType?.GetObjectScope() ?? parseInfo.TranslateInfo.PlayerVariableScope;
 
@@ -60,7 +61,7 @@ namespace Deltin.Deltinteger.Parse
         {
             script.AddDefinitionLink(callRange, DefinedAt);
             script.AddHover(callRange, GetLabel(true));
-            parseInfo.TranslateInfo.AddSymbolLink(this, new Location(script.Uri, callRange));
+            parseInfo.TranslateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, new Location(script.Uri, callRange));
         }
 
         public CompletionItem GetCompletion()
