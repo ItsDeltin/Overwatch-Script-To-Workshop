@@ -32,7 +32,7 @@ namespace Deltin.Deltinteger.Parse
         {
             if (type == null) return false;
             if (type == this) return true;
-            if (Extends.DoesImplement(type)) return true;
+            if (Extends != null && Extends.DoesImplement(type)) return true;
             return false;
         }
 

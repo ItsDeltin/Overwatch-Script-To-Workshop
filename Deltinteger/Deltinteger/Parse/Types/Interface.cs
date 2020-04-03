@@ -1,11 +1,59 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Deltin.Deltinteger.LanguageServer;
 using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
 using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItemKind;
 
 namespace Deltin.Deltinteger.Parse
 {
+    class InterfaceLinkComponent : IComponent, IWorkshopInitComponent
+    {
+        public DeltinScript DeltinScript { get; set; }
+        public List<InterfaceLink> Links { get; } = new List<InterfaceLink>();
+
+        public void Init() {}
+
+        public void Add(string variableName)
+        {
+            if (!Links.Any(link => link.VariableName == variableName)) Links.Add(new InterfaceLink(variableName));
+        }
+
+        public void WorkshopInit()
+        {
+            foreach (var link in Links)
+                link.SetArrayStore(DeltinScript.VarCollection.Assign(link.VariableName, true, false));
+        }
+
+        public bool TryGet(string variableName, out IndexReference arrayStore)
+        {
+            foreach (var link in Links)
+                if (variableName == link.VariableName)
+                {
+                    arrayStore = link.ArrayStore;
+                    return true;
+                }
+            arrayStore = null;
+            return false;
+        }
+    }
+
+    class InterfaceLink
+    {
+        public string VariableName { get; }
+        public IndexReference ArrayStore { get; private set; }
+
+        public InterfaceLink(string variableName)
+        {
+            VariableName = variableName;
+        }
+
+        public void SetArrayStore(IndexReference indexReference)
+        {
+            ArrayStore = indexReference;
+        }
+    }
+
     public interface IImplementer : INamed
     {
         List<Interface> Contracts { get; }
@@ -17,11 +65,39 @@ namespace Deltin.Deltinteger.Parse
         public List<Interface> Contracts { get; } = new List<Interface>();
         protected Scope ObjectScope { get; } = new Scope();
         protected List<InterfaceVariable> Variables { get; } = new List<InterfaceVariable>();
+        protected ParseInfo ParseInfo { get; }
 
-        public Interface(string name) : base(name)
+        public Interface(ParseInfo parseInfo, string name) : base(name)
         {
+            ParseInfo = parseInfo;
             CanBeExtended = true;
             CanBeDeleted = true;
+        }
+
+        public void SetupImplementer(ClassType classType)
+        {
+            foreach (var variable in classType.ObjectVariables)
+                if (variable.ArrayStore == null && ParseInfo.TranslateInfo.GetComponent<InterfaceLinkComponent>().TryGet(variable.Variable.Name, out IndexReference reference))
+                    variable.SetArrayStore(reference);
+            
+            if (classType.Extends != null)
+                SetupImplementer((ClassType)classType.Extends);
+        }
+
+        protected void AddVariable(InterfaceVariable variable, DocRange range)
+        {
+            Variables.Add(variable);
+            ObjectScope.AddVariable(variable, ParseInfo.Script.Diagnostics, range);
+            ParseInfo.TranslateInfo.GetComponent<InterfaceLinkComponent>().Add(variable.Name);
+        }
+
+        public override bool DoesImplement(CodeType type)
+        {
+            if (this == type) return true;
+            foreach (Interface contract in Contracts)
+                if (contract.DoesImplement(type))
+                    return true;
+            return false;
         }
 
         public override Scope GetObjectScope() => ObjectScope;
@@ -36,14 +112,12 @@ namespace Deltin.Deltinteger.Parse
     public class DefinedInterface : Interface
     {
         public LanguageServer.Location DefinedAt { get; }
-        private readonly ParseInfo _parseInfo;
         private readonly DeltinScriptParser.InterfaceContext _context;
         private bool _elementsResolved = false;
 
-        public DefinedInterface(ParseInfo parseInfo, DeltinScriptParser.InterfaceContext context) : base(context.name.Text)
+        public DefinedInterface(ParseInfo parseInfo, DeltinScriptParser.InterfaceContext context) : base(parseInfo, context.name.Text)
         {
             _context = context;
-            _parseInfo = parseInfo;
 
             if (parseInfo.TranslateInfo.Types.IsCodeType(Name))
                 parseInfo.Script.Diagnostics.Error($"A type with the name '{Name}' already exists.", DocRange.GetRange(context.name));
@@ -58,36 +132,31 @@ namespace Deltin.Deltinteger.Parse
             _elementsResolved = true;
 
             // Get implementing interfaces.
-            InheritContext.InheritFromContext(this, _parseInfo, _context.inherit());
+            InheritContext.InheritFromContext(this, ParseInfo, _context.inherit());
 
             // Get interface variables.
             foreach (var variable in _context.interface_variable())
             {
                 // Get the variable's type.
-                CodeType variableType = CodeType.GetCodeTypeFromContext(_parseInfo, variable.code_type());
+                CodeType variableType = CodeType.GetCodeTypeFromContext(ParseInfo, variable.code_type());
 
                 // Interface variables cannot be constants.
-                if (variableType.Constant() == TypeSettable.Constant)
+                if (variableType != null && variableType.Constant() == TypeSettable.Constant)
                 {
-                    _parseInfo.Script.Diagnostics.Error("Interface variables cannot have a constant type.", DocRange.GetRange(variable.code_type()));
+                    ParseInfo.Script.Diagnostics.Error("Interface variables cannot have a constant type.", DocRange.GetRange(variable.code_type()));
                     continue;
                 }
 
-                InterfaceVariable newVariable = new InterfaceVariable(variableType, variable.name.Text, new Location(_parseInfo.Script.Uri, DocRange.GetRange(variable.name)));
-                Variables.Add(newVariable);
+                InterfaceVariable newVariable = new InterfaceVariable(variableType, variable.name.Text, new Location(ParseInfo.Script.Uri, DocRange.GetRange(variable.name)));
+                AddVariable(newVariable, DocRange.GetRange(variable.name));
             }
-        }
-
-        public override void WorkshopInit(DeltinScript translateInfo)
-        {
-
         }
 
         public override void Call(ScriptFile script, DocRange callRange)
         {
             base.Call(script, callRange);
             script.AddDefinitionLink(callRange, DefinedAt);
-            _parseInfo.TranslateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, new LanguageServer.Location(script.Uri, callRange));
+            ParseInfo.TranslateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, new LanguageServer.Location(script.Uri, callRange));
         }
     }
 

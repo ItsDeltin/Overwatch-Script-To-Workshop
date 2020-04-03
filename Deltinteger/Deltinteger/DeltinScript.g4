@@ -149,7 +149,7 @@ type_define : (STRUCT | CLASS) name=PART inherit?
 
 interface          : INTERFACE name=PART inherit? BLOCK_START (interface_variable | interface_function)* BLOCK_END ;
 interface_function : (VOID | code_type) name=PART LEFT_PAREN setParameters RIGHT_PAREN STATEMENT_END? ;
-interface_variable : (define | code_type) name=PART STATEMENT_END? ;
+interface_variable : (DEFINE | code_type) name=PART STATEMENT_END? ;
 
 inherit : TERNARY_ELSE first=PART? (COMMA PART)* ;
 

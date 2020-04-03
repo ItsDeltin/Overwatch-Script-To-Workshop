@@ -34,10 +34,13 @@ Object-serve scope. Only object members.
         /// <summary>Determines if the class was initialized for the workshop output.</summary>
         protected bool workshopInitialized { get; private set; } = false;
 
+        /// <summary>The interfaces that the class implements.</summary>
         public List<Interface> Contracts { get; } = new List<Interface>();
+
+        /// <summary>The unique identifier for the class. This is set after WorkshopInit runs.</summary>
         public int Identifier { get; private set; } = -1;
 
-        protected readonly List<ObjectVariable> ObjectVariables = new List<ObjectVariable>();
+        public readonly List<ObjectVariable> ObjectVariables = new List<ObjectVariable>();
 
         public ClassType(string name) : base(name)
         {
@@ -104,8 +107,11 @@ Object-serve scope. Only object members.
             workshopInitialized = true;
 
             ClassData classData = translateInfo.GetComponent<ClassData>();
-
             Identifier = classData.AssignID();
+
+            foreach (Interface contract in Contracts)
+                contract.SetupImplementer(this);
+
             int stackOffset = StackStart(false);
 
             Extends?.WorkshopInit(translateInfo);
@@ -210,7 +216,8 @@ Object-serve scope. Only object members.
 
         public void SetArrayStore(IndexReference store)
         {
-            ArrayStore = store;
+            if (ArrayStore == null)
+                ArrayStore = store;
         }
 
         public void AddToAssigner(Element reference, VarIndexAssigner assigner)

@@ -105,7 +105,9 @@ namespace Deltin.Deltinteger.Parse
             foreach (ScriptFile script in Importer.ScriptFiles)
             foreach (var interfaceContext in script.Context.@interface())
             {
-                
+                var newInterface = new DefinedInterface(new ParseInfo(script, this), interfaceContext);
+                Types.AllTypes.Add(newInterface);
+                Types.DefinedTypes.Add(newInterface);
             }
             
             // Get the methods and macros
@@ -134,7 +136,7 @@ namespace Deltin.Deltinteger.Parse
                     PlayerVariableScope.CopyVariable(newVar);
             }
 
-            foreach (var applyType in Types.AllTypes) if (applyType is ClassType classType) classType.ResolveElements();
+            foreach (var applyType in Types.AllTypes) applyType.ResolveElements();
             foreach (var apply in applyBlocks) apply.SetupParameters();
             foreach (var apply in applyBlocks) apply.SetupBlock();
             foreach (var apply in applyBlocks) apply.CallInfo?.CheckRecursion();
@@ -158,6 +160,8 @@ namespace Deltin.Deltinteger.Parse
             InitialGlobal = new TranslateRule(this, "Initial Global", RuleEvent.OngoingGlobal);
             InitialPlayer = new TranslateRule(this, "Initial Player", RuleEvent.OngoingPlayer);
             WorkshopRules = new List<Rule>();
+
+            foreach (var component in Components) if (component is IWorkshopInitComponent workshopInit) workshopInit.WorkshopInit();
 
             // Assign static variables.
             foreach (var type in Types.AllTypes) type.WorkshopInit(this);
@@ -280,5 +284,10 @@ namespace Deltin.Deltinteger.Parse
     {
         DeltinScript DeltinScript { get; set; }
         void Init();
+    }
+
+    public interface IWorkshopInitComponent
+    {
+        void WorkshopInit();
     }
 }
