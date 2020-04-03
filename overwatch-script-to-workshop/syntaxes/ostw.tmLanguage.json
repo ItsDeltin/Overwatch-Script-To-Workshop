@@ -104,7 +104,7 @@
 			}
 		},
 		"define_type": {
-			"match": "(class|struct|enum)\\s+([_[:alnum:]]+)(\\s*:\\s*([_[:alnum:]]+)(\\s*,\\s*([_[:alnum:]]+))*)?",
+			"match": "(class|struct|enum|interface)\\s+([_[:alnum:]]+)(\\s*:\\s*([_[:alnum:]]+)(\\s*,\\s*([_[:alnum:]]+))*)?",
 			"captures": {
 				"1": {"name": "keyword.other"},
 				"2": {"name": "entity.name.class"},
@@ -201,7 +201,7 @@
 		},
 		"keywords_other": {
 			"name": "keyword.other",
-			"match": "\\b(in|define|true|false|recursive|playervar|globalvar|buildervar|null|struct|class|public|private|static|protected|new|this|as|delete|root|base|macro)\\b"
+			"match": "\\b(in|define|true|false|recursive|playervar|globalvar|buildervar|null|struct|class|public|private|static|protected|new|this|as|delete|root|base|interface)\\b"
 		},
 		"variables": {
 			"name": "variable",

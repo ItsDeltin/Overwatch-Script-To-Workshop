@@ -88,7 +88,12 @@ Object-serve scope. Only object members.
         {
             int extStack = 0;
             if (Extends != null) extStack = ((ClassType)Extends).StackStart(true);
-            if (inclusive) extStack += ObjectVariables.Count;
+            if (inclusive)
+            {
+                foreach (var ov in ObjectVariables)
+                    if (ov.ArrayStore == null)
+                        extStack++;
+            }
             return extStack;
         }
 
@@ -116,8 +121,14 @@ Object-serve scope. Only object members.
 
             Extends?.WorkshopInit(translateInfo);
 
-            for (int i = 0; i < ObjectVariables.Count; i++)
-                ObjectVariables[i].SetArrayStore(classData.GetClassVariableStack(translateInfo.VarCollection, i + stackOffset));
+            for (int i = 0, c = 0; i < ObjectVariables.Count; i++)
+            {
+                if (ObjectVariables[i].ArrayStore == null)
+                {
+                    ObjectVariables[i].SetArrayStore(classData.GetClassVariableStack(translateInfo.VarCollection, c + stackOffset));
+                    c++;
+                }
+            }
         }
 
         public override IWorkshopTree New(ActionSet actionSet, Constructor constructor, IWorkshopTree[] constructorValues, object[] additionalParameterData)

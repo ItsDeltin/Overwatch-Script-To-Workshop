@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Deltin.Deltinteger.LanguageServer;
+using Deltin.Deltinteger.Elements;
 using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
 using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItemKind;
 
@@ -23,6 +24,15 @@ namespace Deltin.Deltinteger.Parse
         {
             foreach (var link in Links)
                 link.SetArrayStore(DeltinScript.VarCollection.Assign(link.VariableName, true, false));
+        }
+
+        public IndexReference Get(string variableName)
+        {
+            foreach (var link in Links)
+                if (link.VariableName == variableName)
+                    return link.ArrayStore;
+            
+            throw new KeyNotFoundException("'" + variableName + "' is not a linked interface variable.");
         }
 
         public bool TryGet(string variableName, out IndexReference arrayStore)
@@ -91,6 +101,12 @@ namespace Deltin.Deltinteger.Parse
             ParseInfo.TranslateInfo.GetComponent<InterfaceLinkComponent>().Add(variable.Name);
         }
 
+        public override void AddObjectVariablesToAssigner(IWorkshopTree reference, VarIndexAssigner assigner)
+        {
+            foreach (InterfaceVariable variable in Variables)
+                assigner.Add(variable, ParseInfo.TranslateInfo.GetComponent<InterfaceLinkComponent>().Get(variable.Name).CreateChild((Element)reference));
+        }
+
         public override bool DoesImplement(CodeType type)
         {
             if (this == type) return true;
@@ -147,8 +163,13 @@ namespace Deltin.Deltinteger.Parse
                     continue;
                 }
 
-                InterfaceVariable newVariable = new InterfaceVariable(variableType, variable.name.Text, new Location(ParseInfo.Script.Uri, DocRange.GetRange(variable.name)));
+                InterfaceVariable newVariable = new InterfaceVariable(variableType, variable.name.Text, new LanguageServer.Location(ParseInfo.Script.Uri, DocRange.GetRange(variable.name)));
                 AddVariable(newVariable, DocRange.GetRange(variable.name));
+            }
+
+            foreach (var method in _context.interface_function())
+            {
+
             }
         }
 
@@ -170,7 +191,7 @@ namespace Deltin.Deltinteger.Parse
         public bool WholeContext => true;
         public AccessLevel AccessLevel => AccessLevel.Public;
 
-        public InterfaceVariable(CodeType type, string name, Location definedAt)
+        public InterfaceVariable(CodeType type, string name, LanguageServer.Location definedAt)
         {
             CodeType = type;
             Name = name;
@@ -182,7 +203,7 @@ namespace Deltin.Deltinteger.Parse
             Label = Name,
             Kind = CompletionItemKind.Variable
         };
-        public Scope ReturningScope() => Type().GetObjectScope();
+        public Scope ReturningScope() => Type()?.GetObjectScope();
         public CodeType Type() => CodeType;
         public IWorkshopTree Parse(ActionSet actionSet) => throw new NotImplementedException();
 
@@ -192,5 +213,33 @@ namespace Deltin.Deltinteger.Parse
         }
 
         public string GetLabel(bool markdown) => "todo";
+    }
+
+    public class InterfaceFunction : IMethod
+    {
+        public string Name { get; }
+        public CodeParameter[] Parameters { get; }
+        public CodeType ReturnType { get; }
+        public MethodAttributes Attributes { get; }
+        public LanguageServer.Location DefinedAt { get; }
+        public bool Static => false;
+        public bool WholeContext => true;
+        public string Documentation => ""; // TODO
+        public AccessLevel AccessLevel => AccessLevel.Public;
+        private bool ReturnsValue { get; }
+
+        public InterfaceFunction(ParseInfo parseInfo, DeltinScriptParser.Interface_functionContext context)
+        {
+            ReturnsValue = context.VOID() != null;
+        }
+
+        public bool DoesReturnValue() => ReturnsValue;
+        public CompletionItem GetCompletion() => MethodAttributes.GetFunctionCompletion(this);
+        public string GetLabel(bool markdown) => "todo";
+
+        public IWorkshopTree Parse(ActionSet actionSet, MethodCall methodCall)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
