@@ -188,6 +188,19 @@ namespace Deltin.Deltinteger.Elements
 
         protected virtual bool OverrideEquals(IWorkshopTree other) => true;
 
+        public virtual int ElementCount(int depth)
+        {
+            AddMissingParameters();
+            int count = 0;
+            if (depth == 0) count = 1;
+            if (depth >= 2) count = 2;
+            
+            foreach (var parameter in ParameterValues)
+                count += parameter.ElementCount(depth + 1);
+            
+            return count;
+        }
+
         public Element OptimizeAddOperation(
             Func<double, double, double> op,
             Func<Element, Element, Element> areEqual,
@@ -331,7 +344,7 @@ namespace Deltin.Deltinteger.Elements
         public MethodAttributes Attributes { get; } = new MethodAttributes();
         public UsageDiagnostic[] UsageDiagnostics { get; }
         public WikiMethod Wiki { get; }
-        public StringOrMarkupContent Documentation => Wiki?.Description;
+        public string Documentation => Wiki?.Description;
         private ValueType ElementValueType { get; }
 
         // IScopeable defaults
@@ -422,16 +435,7 @@ namespace Deltin.Deltinteger.Elements
 
         public string GetLabel(bool markdown) => HoverHandler.GetLabel(!IsValue ? null : ReturnType?.Name ?? "define", Name, Parameters, markdown, Wiki?.Description);
 
-        public CompletionItem GetCompletion()
-        {
-            return new CompletionItem()
-            {
-                Label = Name,
-                Kind = CompletionItemKind.Method,
-                Detail = GetLabel(false),
-                Documentation = Wiki?.Description
-            };
-        }
+        public CompletionItem GetCompletion() => MethodAttributes.GetFunctionCompletion(this);
     }
 
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]

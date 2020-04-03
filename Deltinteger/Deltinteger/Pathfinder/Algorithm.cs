@@ -29,7 +29,7 @@ namespace Deltin.Deltinteger.Pathfinder
             this.position = position;
             this.reversed = reversed;
 
-            PathmapClass pathmapClass = actionSet.Translate.DeltinScript.GetCodeType<PathmapClass>();
+            PathmapClass pathmapClass = actionSet.Translate.DeltinScript.Types.GetCodeType<PathmapClass>();
 
             Nodes = ((Element)pathmapClass.Nodes.GetVariable())[pathmapObject];
             Segments = ((Element)pathmapClass.Segments.GetVariable())[pathmapObject];

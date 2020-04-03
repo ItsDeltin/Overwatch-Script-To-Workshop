@@ -618,6 +618,12 @@
       "default": false,
       "type": "boolean"
     },
+    "Health": {
+      "default": 100.0,
+      "type": "number",
+      "minimum": 10.0,
+      "maximum": 500.0
+    },
     "Damage Dealt": {
       "default": 100.0,
       "type": "number",
@@ -2328,6 +2334,9 @@
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
             },
+            "Health": {
+              "$ref": "#/definitions/Health"
+            },
             "Damage Dealt": {
               "$ref": "#/definitions/Damage Dealt"
             },
@@ -2396,6 +2405,9 @@
             },
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
+            },
+            "Health": {
+              "$ref": "#/definitions/Health"
             },
             "Damage Dealt": {
               "$ref": "#/definitions/Damage Dealt"
@@ -2474,6 +2486,9 @@
             },
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
+            },
+            "Health": {
+              "$ref": "#/definitions/Health"
             },
             "Damage Dealt": {
               "$ref": "#/definitions/Damage Dealt"
@@ -2568,6 +2583,9 @@
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
             },
+            "Health": {
+              "$ref": "#/definitions/Health"
+            },
             "Damage Dealt": {
               "$ref": "#/definitions/Damage Dealt"
             },
@@ -2649,6 +2667,9 @@
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
             },
+            "Health": {
+              "$ref": "#/definitions/Health"
+            },
             "Damage Dealt": {
               "$ref": "#/definitions/Damage Dealt"
             },
@@ -2726,6 +2747,9 @@
             },
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
+            },
+            "Health": {
+              "$ref": "#/definitions/Health"
             },
             "Damage Dealt": {
               "$ref": "#/definitions/Damage Dealt"
@@ -2808,6 +2832,9 @@
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
             },
+            "Health": {
+              "$ref": "#/definitions/Health"
+            },
             "Damage Dealt": {
               "$ref": "#/definitions/Damage Dealt"
             },
@@ -2885,6 +2912,9 @@
             },
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
+            },
+            "Health": {
+              "$ref": "#/definitions/Health"
             },
             "Damage Dealt": {
               "$ref": "#/definitions/Damage Dealt"
@@ -2979,6 +3009,9 @@
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
             },
+            "Health": {
+              "$ref": "#/definitions/Health"
+            },
             "Damage Dealt": {
               "$ref": "#/definitions/Damage Dealt"
             },
@@ -3057,6 +3090,9 @@
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
             },
+            "Health": {
+              "$ref": "#/definitions/Health"
+            },
             "Damage Dealt": {
               "$ref": "#/definitions/Damage Dealt"
             },
@@ -3134,6 +3170,9 @@
             },
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
+            },
+            "Health": {
+              "$ref": "#/definitions/Health"
             },
             "Damage Dealt": {
               "$ref": "#/definitions/Damage Dealt"
@@ -3219,6 +3258,9 @@
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
             },
+            "Health": {
+              "$ref": "#/definitions/Health"
+            },
             "Damage Dealt": {
               "$ref": "#/definitions/Damage Dealt"
             },
@@ -3297,6 +3339,9 @@
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
             },
+            "Health": {
+              "$ref": "#/definitions/Health"
+            },
             "Damage Dealt": {
               "$ref": "#/definitions/Damage Dealt"
             },
@@ -3368,6 +3413,9 @@
             },
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
+            },
+            "Health": {
+              "$ref": "#/definitions/Health"
             },
             "Damage Dealt": {
               "$ref": "#/definitions/Damage Dealt"
@@ -3465,6 +3513,9 @@
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
             },
+            "Health": {
+              "$ref": "#/definitions/Health"
+            },
             "Damage Dealt": {
               "$ref": "#/definitions/Damage Dealt"
             },
@@ -3545,6 +3596,9 @@
             },
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
+            },
+            "Health": {
+              "$ref": "#/definitions/Health"
             },
             "Damage Dealt": {
               "$ref": "#/definitions/Damage Dealt"
@@ -3633,6 +3687,9 @@
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
             },
+            "Health": {
+              "$ref": "#/definitions/Health"
+            },
             "Damage Dealt": {
               "$ref": "#/definitions/Damage Dealt"
             },
@@ -3710,6 +3767,9 @@
             },
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
+            },
+            "Health": {
+              "$ref": "#/definitions/Health"
             },
             "Damage Dealt": {
               "$ref": "#/definitions/Damage Dealt"
@@ -3804,6 +3864,9 @@
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
             },
+            "Health": {
+              "$ref": "#/definitions/Health"
+            },
             "Damage Dealt": {
               "$ref": "#/definitions/Damage Dealt"
             },
@@ -3872,6 +3935,9 @@
             },
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
+            },
+            "Health": {
+              "$ref": "#/definitions/Health"
             },
             "Damage Dealt": {
               "$ref": "#/definitions/Damage Dealt"
@@ -3951,6 +4017,9 @@
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
             },
+            "Health": {
+              "$ref": "#/definitions/Health"
+            },
             "Damage Dealt": {
               "$ref": "#/definitions/Damage Dealt"
             },
@@ -4028,6 +4097,9 @@
             },
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
+            },
+            "Health": {
+              "$ref": "#/definitions/Health"
             },
             "Damage Dealt": {
               "$ref": "#/definitions/Damage Dealt"
@@ -4109,6 +4181,9 @@
             },
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
+            },
+            "Health": {
+              "$ref": "#/definitions/Health"
             },
             "Damage Dealt": {
               "$ref": "#/definitions/Damage Dealt"
@@ -4194,6 +4269,9 @@
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
             },
+            "Health": {
+              "$ref": "#/definitions/Health"
+            },
             "Damage Dealt": {
               "$ref": "#/definitions/Damage Dealt"
             },
@@ -4272,6 +4350,9 @@
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
             },
+            "Health": {
+              "$ref": "#/definitions/Health"
+            },
             "Damage Dealt": {
               "$ref": "#/definitions/Damage Dealt"
             },
@@ -4343,6 +4424,9 @@
             },
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
+            },
+            "Health": {
+              "$ref": "#/definitions/Health"
             },
             "Damage Dealt": {
               "$ref": "#/definitions/Damage Dealt"
@@ -4431,6 +4515,9 @@
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
             },
+            "Health": {
+              "$ref": "#/definitions/Health"
+            },
             "Damage Dealt": {
               "$ref": "#/definitions/Damage Dealt"
             },
@@ -4502,6 +4589,9 @@
             },
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
+            },
+            "Health": {
+              "$ref": "#/definitions/Health"
             },
             "Damage Dealt": {
               "$ref": "#/definitions/Damage Dealt"
@@ -4587,6 +4677,9 @@
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
             },
+            "Health": {
+              "$ref": "#/definitions/Health"
+            },
             "Damage Dealt": {
               "$ref": "#/definitions/Damage Dealt"
             },
@@ -4667,6 +4760,9 @@
             },
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
+            },
+            "Health": {
+              "$ref": "#/definitions/Health"
             },
             "Damage Dealt": {
               "$ref": "#/definitions/Damage Dealt"
@@ -4764,6 +4860,9 @@
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
             },
+            "Health": {
+              "$ref": "#/definitions/Health"
+            },
             "Damage Dealt": {
               "$ref": "#/definitions/Damage Dealt"
             },
@@ -4841,6 +4940,9 @@
             },
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
+            },
+            "Health": {
+              "$ref": "#/definitions/Health"
             },
             "Damage Dealt": {
               "$ref": "#/definitions/Damage Dealt"

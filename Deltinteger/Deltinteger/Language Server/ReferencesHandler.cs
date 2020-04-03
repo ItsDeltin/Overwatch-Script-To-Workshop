@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Linq;
 using System.Collections.Generic;
+using Deltin.Deltinteger.Parse;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using LSLocation = OmniSharp.Extensions.LanguageServer.Protocol.Models.Location;
 using IReferencesHandler = OmniSharp.Extensions.LanguageServer.Protocol.Server.IReferencesHandler;
@@ -23,7 +24,7 @@ namespace Deltin.Deltinteger.LanguageServer
         {
             bool includeDeclaration = request.Context.IncludeDeclaration;
 
-            var allSymbolLinks = _languageServer.LastParse?.GetSymbolLinks();
+            var allSymbolLinks = _languageServer.LastParse?.GetComponent<SymbolLinkComponent>().GetSymbolLinks();
             if (allSymbolLinks == null) return new LocationContainer();
 
             ICallable use = null;

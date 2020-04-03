@@ -16,19 +16,20 @@ namespace Deltin.Deltinteger.Parse
         public RuleEvent EventType { get; private set; }
         public Team Team { get; private set; }
         public PlayerSelector Player { get; private set; }
+        public ElementCountCodeLens ElementCountLens { get; }
         private bool _setEventType;
         private bool _setTeam;
         private bool _setPlayer;
 
         public double Priority;
-
-        private DocRange _missingBlockRange;
+        private DocRange missingBlockRange;
 
         public RuleAction(ParseInfo parseInfo, Scope scope, DeltinScriptParser.Ow_ruleContext ruleContext)
         {
             Name = Extras.RemoveQuotes(ruleContext.STRINGLITERAL().GetText());
             Disabled = ruleContext.DISABLED() != null;
-            _missingBlockRange = DocRange.GetRange(ruleContext.RULE_WORD());
+            DocRange ruleInfoRange = DocRange.GetRange(ruleContext.RULE_WORD());
+            missingBlockRange = ruleInfoRange;
 
             GetRuleSettings(parseInfo, scope, ruleContext);
 
@@ -46,7 +47,7 @@ namespace Deltin.Deltinteger.Parse
                     ));
 
                     Conditions[i] = new RuleIfAction(parseInfo, scope, ruleContext.rule_if(i));
-                    _missingBlockRange = DocRange.GetRange(ruleContext.rule_if(i));
+                    missingBlockRange = DocRange.GetRange(ruleContext.rule_if(i));
                 }
             }
 
@@ -54,11 +55,14 @@ namespace Deltin.Deltinteger.Parse
             if (ruleContext.block() != null)
                 Block = new BlockAction(parseInfo, scope, ruleContext.block());
             else
-                parseInfo.Script.Diagnostics.Error("Missing block.", _missingBlockRange);
+                parseInfo.Script.Diagnostics.Error("Missing block.", missingBlockRange);
             
             // Get the rule order priority.
             if (ruleContext.number() != null)
                 Priority = double.Parse(ruleContext.number().GetText());
+            
+            ElementCountLens = new ElementCountCodeLens(ruleInfoRange);
+            parseInfo.Script.AddCodeLensRange(ElementCountLens);
         }
 
         private void GetRuleSettings(ParseInfo parseInfo, Scope scope, DeltinScriptParser.Ow_ruleContext ruleContext)
@@ -69,9 +73,9 @@ namespace Deltin.Deltinteger.Parse
 
             foreach (var exprContext in ruleContext.expr())
             {
-                _missingBlockRange = DocRange.GetRange(exprContext);
+                missingBlockRange = DocRange.GetRange(exprContext);
 
-                var enumSetting = (DeltinScript.GetExpression(parseInfo, scope, exprContext) as ExpressionTree)?.Result as ScopedEnumMember;
+                var enumSetting = (parseInfo.GetExpression(scope, exprContext) as ExpressionTree)?.Result as ScopedEnumMember;
                 var enumData = (enumSetting?.Enum as WorkshopEnumType)?.EnumData;
 
                 if (enumData == null || !ValidRuleEnums.Contains(enumData))
@@ -140,7 +144,7 @@ namespace Deltin.Deltinteger.Parse
             
             // Get the expression.
             else
-                Expression = DeltinScript.GetExpression(parseInfo, scope, ifContext.expr());
+                Expression = parseInfo.GetExpression(scope, ifContext.expr());
         }
     }
 }

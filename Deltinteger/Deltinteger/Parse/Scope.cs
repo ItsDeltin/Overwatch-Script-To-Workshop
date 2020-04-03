@@ -18,6 +18,7 @@ namespace Deltin.Deltinteger.Parse
         public bool PrivateCatch { get; set; }
         public bool ProtectedCatch { get; set; }
         public bool CompletionCatch { get; set; }
+        public bool MethodContainer { get; set; }
 
         public Scope() {}
         private Scope(Scope parent)
@@ -363,6 +364,21 @@ namespace Deltin.Deltinteger.Parse
 
         public bool IsAlreadyInScope(IMethod method) => Methods.Contains(method);
         public bool IsAlreadyInScope(IScopeable scopeable) => Variables.Contains(scopeable);
+    
+        public void EndScope(ActionSet actionSet, bool includeParents)
+        {
+            if (MethodContainer) return;
+
+            foreach (IScopeable variable in Variables)
+                if (variable is IIndexReferencer referencer && // If the current scopeable is an IIndexReferencer,
+                    actionSet.IndexAssigner.TryGet(referencer, out IGettable gettable) && // and the current scopeable is assigned to an index,
+                    gettable is RecursiveIndexReference recursiveIndexReference) // and the assigned index is a RecursiveIndexReference,
+                    // Pop the variable stack.
+                    actionSet.AddAction(recursiveIndexReference.Pop());
+            
+            if (includeParents && Parent != null)
+                Parent.EndScope(actionSet, true);
+        }
     }
 
     class ScopeIterate

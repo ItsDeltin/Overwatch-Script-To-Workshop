@@ -56,7 +56,7 @@ namespace Deltin.Deltinteger.Parse
             Extends = extend;
         }
 
-        public bool Implements(CodeType type)
+        public virtual bool Implements(CodeType type)
         {
             if (type == null) return false;
 
@@ -77,7 +77,7 @@ namespace Deltin.Deltinteger.Parse
         public virtual Scope GetObjectScope() => null;
 
         public CodeType Type() => null;
-        public IWorkshopTree Parse(ActionSet actionSet, bool asElement = true) => null;
+        public IWorkshopTree Parse(ActionSet actionSet) => null;
 
         /// <summary>Determines if variables with this type can have their value changed.</summary>
         public virtual TypeSettable Constant() => TypeSettable.Normal;
@@ -125,7 +125,30 @@ namespace Deltin.Deltinteger.Parse
         public static CodeType GetCodeTypeFromContext(ParseInfo parseInfo, DeltinScriptParser.Code_typeContext typeContext)
         {
             if (typeContext == null) return null;
-            CodeType type = parseInfo.TranslateInfo.GetCodeType(typeContext.PART().GetText(), parseInfo.Script.Diagnostics, DocRange.GetRange(typeContext));
+            CodeType type = parseInfo.TranslateInfo.Types.GetCodeType(typeContext.PART().GetText(), parseInfo.Script.Diagnostics, DocRange.GetRange(typeContext));
+
+            // Get generics
+            if (typeContext.generics()?.generic_option() != null)
+            {
+                // Create a list to store the generics.
+                List<CodeType> generics = new List<CodeType>();
+
+                // Get the generics.
+                foreach (var genericContext in typeContext.generics().generic_option())
+                {
+                    if (genericContext.DEFINE() != null)
+                        generics.Add(null);
+                    else
+                        generics.Add(GetCodeTypeFromContext(parseInfo, genericContext.code_type()));
+                }
+                
+                if (type is Lambda.BlockLambda)
+                    type = new Lambda.BlockLambda(generics.ToArray());
+                else if (type is Lambda.ValueBlockLambda)
+                    type = new Lambda.ValueBlockLambda(generics[0], generics.Skip(1).ToArray());
+                else if (type is Lambda.MacroLambda)
+                    type = new Lambda.MacroLambda(generics[0], generics.Skip(1).ToArray());
+            }
 
             if (type != null)
             {
@@ -149,11 +172,17 @@ namespace Deltin.Deltinteger.Parse
         {
             _defaultTypes = new List<CodeType>();
             foreach (var enumData in EnumData.GetEnumData())
-                _defaultTypes.Add(new WorkshopEnumType(enumData));
+                if (enumData.ConvertableToElement())
+                    _defaultTypes.Add(new ValueGroupType(enumData));
+                else
+                    _defaultTypes.Add(new WorkshopEnumType(enumData));
             
             // Add custom classes here.
             _defaultTypes.Add(new Pathfinder.PathmapClass());
             _defaultTypes.Add(new Models.AssetClass());
+            _defaultTypes.Add(new Lambda.BlockLambda());
+            _defaultTypes.Add(new Lambda.ValueBlockLambda());
+            _defaultTypes.Add(new Lambda.MacroLambda());
             _defaultTypes.Add(VectorType.Instance);
             //_defaultTypes.Add(new JSON.JSONClass(????));
         }
@@ -162,18 +191,5 @@ namespace Deltin.Deltinteger.Parse
     public enum TypeSettable
     {
         Normal, Convertable, Constant
-    }
-
-    public class ArrayType : CodeType
-    {
-        public CodeType ArrayOfType { get; }
-
-        public ArrayType(CodeType arrayOfType) : base(arrayOfType.Name + "[]")
-        {
-            ArrayOfType = arrayOfType;
-        }
-
-        public override Scope ReturningScope() => null;
-        public override CompletionItem GetCompletion() => throw new NotImplementedException();
     }
 }

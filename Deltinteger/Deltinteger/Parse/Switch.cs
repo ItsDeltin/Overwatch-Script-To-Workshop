@@ -17,7 +17,7 @@ namespace Deltin.Deltinteger.Parse
         {
             // Get the expression.
             if (switchContext.expr() == null) parseInfo.Script.Diagnostics.Error("Expected expression.", DocRange.GetRange(switchContext.RIGHT_PAREN()));
-            else Expression = DeltinScript.GetExpression(parseInfo, scope, switchContext.expr());
+            else Expression = parseInfo.GetExpression(scope, switchContext.expr());
 
             paths = GetSections(ResolveElements(parseInfo.SetBreakHandler(this), scope, switchContext));
             pathInfo = new PathInfo[paths.Length];
@@ -54,9 +54,9 @@ namespace Deltin.Deltinteger.Parse
                 }
 
                 // Get the statement
-                if (switchElement.statement() != null) elements.Add(new SwitchElement(DeltinScript.GetStatement(parseInfo, scope, switchElement.statement())));
+                if (switchElement.statement() != null) elements.Add(new SwitchElement(parseInfo.GetStatement(scope, switchElement.statement())));
                 // Get the case
-                else if (switchElement.@case() != null) elements.Add(new SwitchElement(DocRange.GetRange(switchElement.@case().CASE()), DeltinScript.GetExpression(parseInfo, scope, switchElement.@case().expr())));
+                else if (switchElement.@case() != null) elements.Add(new SwitchElement(DocRange.GetRange(switchElement.@case().CASE()), parseInfo.GetExpression(scope, switchElement.@case().expr())));
                 // Get default
                 else if (switchElement.DEFAULT() != null) elements.Add(new SwitchElement(DocRange.GetRange(switchElement.DEFAULT())));
             }

@@ -24,6 +24,7 @@ namespace Deltin.Deltinteger.Elements
             WorkshopVariable bAsMeta = (WorkshopVariable)other;
             return Name == bAsMeta.Name && ID == bAsMeta.ID;
         }
+        public abstract int ElementCount(int depth);
 
         public static string WorkshopNameFromCodeName(string name, string[] takenNames)
         {

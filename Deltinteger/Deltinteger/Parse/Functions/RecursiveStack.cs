@@ -13,6 +13,9 @@ namespace Deltin.Deltinteger.Parse
         /// <summary>The next spot to continue at.</summary>
         private IndexReference nextContinue;
 
+        /// <summary>Stores the current object.</summary>
+        private IndexReference objectStore;
+
         /// <summary>The skip used to return the executing position after a recursive call.</summary>
         private SkipStartMarker continueAt;
         
@@ -20,67 +23,96 @@ namespace Deltin.Deltinteger.Parse
         private readonly SkipEndMarker endOfMethod = new SkipEndMarker();
 
         /// <summary>The recursive method data.</summary>
-        protected readonly DefinedMethod method;
+        public readonly MethodBuilder Builder;
 
-        /// <summary>The return handler.</summary>
-        protected ReturnHandler returnHandler;
-
-        public RecursiveStack(DefinedMethod method) : base((IApplyBlock)method)
+        private ActionSet ActionSet
         {
-            this.method = method;
+            get => Builder.BuilderSet;
+            set
+            {
+                Builder.BuilderSet = value;
+            }
+        }
+
+        public RecursiveStack(MethodBuilder builder) : base(builder.Method)
+        {
+            this.Builder = builder;
         }
 
         /// <summary>Calls the method.</summary>
-        private IWorkshopTree ParseCall(ActionSet actionSet, MethodCall methodCall)
+        public void ParseCall(MethodCall call)
         {
             // Create the array used for continuing after a recursive call.
-            continueArray = actionSet.VarCollection.Assign("_" + method.Name + "_recursiveContinue", actionSet.IsGlobal, false);
-            nextContinue = actionSet.VarCollection.Assign("_" + method.Name + "_nextContinue", actionSet.IsGlobal, true);
-            actionSet.InitialSet().AddAction(continueArray.SetVariable(new V_EmptyArray()));
+            continueArray = ActionSet.VarCollection.Assign("_" + Builder.Method.Name + "_recursiveContinue", ActionSet.IsGlobal, false);
+            nextContinue = ActionSet.VarCollection.Assign("_" + Builder.Method.Name + "_nextContinue", ActionSet.IsGlobal, true);
+            ActionSet.InitialSet().AddAction(continueArray.SetVariable(new V_EmptyArray()));
+            
+            if (Builder.Method.Attributes.Virtual)
+            {
+                objectStore = ActionSet.VarCollection.Assign("_" + Builder.Method.Name + "_objectStack", ActionSet.IsGlobal, false);
+                ActionSet.AddAction(objectStore.SetVariable(Element.CreateArray(ActionSet.CurrentObject)));
+                ActionSet = ActionSet.New(Element.Part<V_LastOf>(objectStore.GetVariable())).PackThis();
+            }
+            ActionSet = ActionSet.New(true);
 
-            ReturnHandler returnHandler = methodCall.ReturnHandler ?? new ReturnHandler(actionSet, method.Name, method.multiplePaths);
-            this.returnHandler = returnHandler;
+            // Assign the parameters.
+            Builder.Method.AssignParameters(ActionSet, call.ParameterValues, true);
 
-            DefinedMethod.AssignParameters(actionSet, method.ParameterVars, methodCall.ParameterValues, true);
+            Builder.SetupReturnHandler();
 
-            actionSet.AddAction(Element.Part<A_While>(new V_True()));
+            // Create the recursive loop.
+            ActionSet.AddAction(Element.Part<A_While>(new V_True()));
 
-            continueAt = new SkipStartMarker(actionSet);
+            // Create the continue skip action.
+            continueAt = new SkipStartMarker(ActionSet);
             continueAt.SetSkipCount((Element)nextContinue.GetVariable());
-            actionSet.AddAction(continueAt);
+            ActionSet.AddAction(continueAt);
 
-            method.block.Translate(actionSet.New(returnHandler));
+            // Translate the method's block.
+            Builder.ParseInner();
 
-            PopParameterStacks(actionSet);
+            ActionSet.ReturnHandler.ApplyReturnSkips();
 
-            // Pop the continueArray.
-            actionSet.AddAction(Element.Part<A_SkipIf>(new V_Compare(
+            // Pop the object store array.
+            if (Builder.Method.Attributes.Virtual)
+                ActionSet.AddAction(objectStore.ModifyVariable(Operation.RemoveFromArrayByIndex, Element.Part<V_CountOf>(objectStore.GetVariable()) - 1));
+            
+            // Pop the parameters.
+            PopParameterStacks();
+
+            // Restart the method from the specified position if there are any elements in the continue array.
+            ActionSet.AddAction(Element.Part<A_SkipIf>(new V_Compare(
                 Element.Part<V_CountOf>(continueArray.GetVariable()),
                 Operators.Equal,
                 new V_Number(0)
             ), new V_Number(3)));
 
-            actionSet.AddAction(nextContinue.SetVariable(Element.Part<V_LastOf>(continueArray.GetVariable())));
-            actionSet.AddAction(continueArray.ModifyVariable(Operation.RemoveFromArrayByIndex, Element.Part<V_CountOf>(continueArray.GetVariable()) - 1));
+            // Store the next continue and pop the continue array.
+            ActionSet.AddAction(nextContinue.SetVariable(Element.Part<V_LastOf>(continueArray.GetVariable())));
+            ActionSet.AddAction(continueArray.ModifyVariable(Operation.RemoveFromArrayByIndex, Element.Part<V_CountOf>(continueArray.GetVariable()) - 1));
 
-            actionSet.AddAction(endOfMethod);
-            actionSet.AddAction(new A_End());
+            // Mark the end of the method.
+            ActionSet.AddAction(endOfMethod);
+            ActionSet.AddAction(new A_End());
 
-            actionSet.AddAction(nextContinue.SetVariable(0));
-
-            return returnHandler.GetReturnedValue();
+            // Reset nextContinue.
+            ActionSet.AddAction(nextContinue.SetVariable(0));
         }
 
         /// <summary>The method was already called in the stack.</summary>
-        private IWorkshopTree RecursiveCall(ActionSet actionSet, MethodCall methodCall)
+        public void RecursiveCall(MethodCall methodCall, ActionSet callerSet)
         {
+            // Push object array.
+            if (Builder.Method.Attributes.Virtual)
+                ActionSet.AddAction(objectStore.ModifyVariable(Operation.AppendToArray, (Element)callerSet.CurrentObject));
+
             // Push new parameters.
-            for (int i = 0; i < method.ParameterVars.Length; i++)
+            for (int i = 0; i < Builder.Method.ParameterVars.Length; i++)
             {
-                var varReference = actionSet.IndexAssigner[method.ParameterVars[i]];
+                var varReference = ActionSet.IndexAssigner[Builder.Method.ParameterVars[i]];
                 if (varReference is RecursiveIndexReference)
                 {
-                    actionSet.AddAction(((RecursiveIndexReference)varReference).Push(
+                    ActionSet.AddAction(((RecursiveIndexReference)varReference).Push(
                         (Element)methodCall.ParameterValues[i]
                     ));
                 }
@@ -88,50 +120,36 @@ namespace Deltin.Deltinteger.Parse
 
             // Add to the continue skip array.
             V_Number skipLength = new V_Number();
-            actionSet.AddAction(continueArray.ModifyVariable(
+            ActionSet.AddAction(continueArray.ModifyVariable(
                 Operation.AppendToArray,
                 skipLength
             ));
 
             // Restart the method.
-            SkipStartMarker resetSkip = new SkipStartMarker(actionSet);
+            SkipStartMarker resetSkip = new SkipStartMarker(ActionSet);
             resetSkip.SetEndMarker(endOfMethod);
-            actionSet.AddAction(resetSkip);
+            ActionSet.AddAction(resetSkip);
 
             SkipEndMarker continueAtMarker = new SkipEndMarker();
-            actionSet.AddAction(continueAtMarker);
+            ActionSet.AddAction(continueAtMarker);
             skipLength.Value = continueAt.NumberOfActionsToMarker(continueAtMarker);
-
-            return returnHandler.GetReturnedValue();
         }
 
-        private void PopParameterStacks(ActionSet actionSet)
+        private void PopParameterStacks()
         {
-            for (int i = 0; i < method.ParameterVars.Length; i++)
+            PopParameterStacks(ActionSet, Builder.Method.ParameterVars);
+        }
+
+        public static void PopParameterStacks(ActionSet actionSet, Var[] parameters)
+        {
+            for (int i = 0; i < parameters.Length; i++)
             {
-                var pop = (actionSet.IndexAssigner[method.ParameterVars[i]] as RecursiveIndexReference)?.Pop();
+                var pop = (actionSet.IndexAssigner[parameters[i]] as RecursiveIndexReference)?.Pop();
                 if (pop != null) actionSet.AddAction(pop);
             }
         }
 
-        public static IWorkshopTree Call(DefinedMethod method, MethodCall call, ActionSet actionSet)
-        {
-            RecursiveStack lastCall = actionSet.Translate.MethodStack.FirstOrDefault(ms => ms.Function == method) as RecursiveStack;
-
-            if (lastCall == null)
-            {
-                RecursiveStack parser = new RecursiveStack(method);
-
-                actionSet.Translate.MethodStack.Add(parser);
-                var result = parser.ParseCall(actionSet, call);
-                actionSet.Translate.MethodStack.Remove(parser);
-
-                return result;
-            }
-            else
-            {
-                return lastCall.RecursiveCall(actionSet, call);
-            }
-        }
+        public static RecursiveStack GetRecursiveCall(List<MethodStack> stack, DefinedMethod method)
+            => stack.FirstOrDefault(ms => ms is RecursiveStack && ms.Function is DefinedMethod dm && (method == dm || dm.Attributes.AllOverrideOptions().Contains(method))) as RecursiveStack;
     }
 }
