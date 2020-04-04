@@ -5,6 +5,7 @@ using System.Linq;
 using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.Lobby;
 using Deltin.Deltinteger.Elements;
+using Deltin.Deltinteger.Json;
 using Newtonsoft.Json.Linq;
 using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
 using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItemKind;
@@ -163,9 +164,9 @@ namespace Deltin.Deltinteger.Parse
 
                             JObject jsonData = JObject.Parse(file.Content);
                             InternalVar jsonVar = new InternalVar(importFileContext.name.Text);
-                            jsonVar.CodeType = new JSONType(jsonData);
+                            jsonVar.CodeType = new JsonType(jsonData);
 
-                            if (((JSONType)jsonVar.CodeType).ContainsDeepArrays())
+                            if (((JsonType)jsonVar.CodeType).ContainsDeepArrays())
                                 script.Diagnostics.Error("JSON Arrays cannot include objects or arrays.", stringRange);
 
                             _deltinScript.RulesetScope.AddVariable(jsonVar, script.Diagnostics, DocRange.GetRange(importFileContext.name));

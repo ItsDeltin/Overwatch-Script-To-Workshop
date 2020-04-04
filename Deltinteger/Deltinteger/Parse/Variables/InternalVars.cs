@@ -48,7 +48,7 @@ namespace Deltin.Deltinteger.Parse
             Documentation = Extras.GetMarkupContent(Documentation)
         };
 
-        public string GetLabel(bool markdown)
+        public virtual string GetLabel(bool markdown)
         {
             string typeName = "define";
             if (CodeType != null) typeName = CodeType.Name;

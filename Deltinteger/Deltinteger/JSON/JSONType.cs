@@ -1,180 +1,280 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using Deltin.Deltinteger;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.Parse;
-using Deltin.JSON;
+using Deltin.Deltinteger.CustomMethods;
 using Newtonsoft.Json.Linq;
-using OmniSharp.Extensions.LanguageServer.Protocol.Models;
-using System;
-using System.Collections.Generic;
-using System.IO;
+using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
+using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItemKind;
 
-class JSONType: CodeType {
-    List<InternalVar> Children = new List<InternalVar>();
-    public List<InternalVar> Arrays = new List<InternalVar>();
-
-    List<(InternalVar var, JProperty prop)> Properties = new List<(InternalVar var, JProperty prop)>();
-
-    private Scope staticScope = new Scope("JSON");
-    private Scope objectScope = new Scope("JSON");
-
-
-    public JSONType(JObject jsonData) : base("JSON"){
-        foreach(JProperty prop in jsonData.Children<JProperty>()){
-            switch (prop.Value.Type)
-            {
-                case JTokenType.String:
-                case JTokenType.Boolean:
-                case JTokenType.Integer:
-                case JTokenType.Float:
-                case JTokenType.Null:
-                    Properties.Add((CreateInternalVar(prop.Name, "A JSON Property."), prop));
-                    break;
-                case JTokenType.Array:
-                    InternalVar array = CreateInternalVar(prop.Name, "A JSON Array.");
-                    array.CodeType = new ArrayType(new JSONArray(prop.Name + "Arr" + Arrays.Count, (JArray)prop.Value));
-                    //ArrayType array = new ArrayType(new JSONArray(prop.Name + "Arr" + Arrays.Count, (JArray)prop.Value));
-                    Arrays.Add(array);
-                    break;
-
-                default:
-                    InternalVar child = CreateInternalVar(prop.Name, "A JSON Object.");
-                    child.CodeType = new JSONType((JObject)prop.Value);
-                    Children.Add(child);
-                    break;
-            }
-        }
-    }
-
-    public bool ContainsDeepArrays()
-    {
-        foreach(InternalVar arr in Arrays)
-        {
-            if(((JSONArray)((ArrayType)arr.CodeType).ArrayOfType).Arrays.Count > 0)
-            {
-                return true;
-            }
-            if (((JSONArray)((ArrayType)arr.CodeType).ArrayOfType).Children.Count > 0)
-            {
-                return true;
-            }
-        }
-        foreach(InternalVar arr in Children)
-        {
-            bool containsDeepArrays = ((JSONType)arr.CodeType).ContainsDeepArrays();
-            if (containsDeepArrays)
-                return true;
-        }
-        return false;
-    }
-
-
-    private InternalVar CreateInternalVar(string name, string documentation, bool isStatic = false)
-    {
-        // Create the variable.
-        InternalVar newInternalVar = new InternalVar(name, CompletionItemKind.Property);
-
-        // Make the variable unsettable.
-        newInternalVar.IsSettable = false;
-
-        // Set the documentation.
-        newInternalVar.Documentation = documentation;
-
-        // Add the variable to the object scope.
-        if (!isStatic) objectScope.AddNativeVariable(newInternalVar);
-        // Add the variable to the static scope.
-        else staticScope.AddNativeVariable(newInternalVar);
-
-        return newInternalVar;
-    }
-
-
-
-    public override void AddObjectVariablesToAssigner(IWorkshopTree reference, VarIndexAssigner assigner) {
-        foreach (var p in Properties) {
-            switch (p.prop.Value.Type)
-            {
-                case JTokenType.String:
-                    assigner.Add(p.var, new V_CustomString(p.prop.Value.ToObject<string>()));
-                    break;
-                case JTokenType.Boolean:
-                    bool val = (bool)p.prop.Value;
-                    if (val) assigner.Add(p.var, new V_True());
-                    else assigner.Add(p.var, new V_False());
-
-                    break;
-
-                case JTokenType.Float:
-                    assigner.Add(p.var, new V_Number(p.prop.Value.ToObject<float>()));
-                    break;
-                case JTokenType.Integer:
-                    assigner.Add(p.var, new V_Number(p.prop.Value.ToObject<int>()));
-                    break;
-                case JTokenType.Null:
-                    assigner.Add(p.var, new V_Null());
-                    break;
-            }
-        }
-        foreach (var c in Children)
-        {
-            assigner.Add(c, new V_Null());
-        }
-
-        foreach (var a in Arrays)
-        {
-            assigner.Add(a, ((JSONArray)((ArrayType)a.CodeType).ArrayOfType).ConvertValuesToElementArray());
-        }
-    }
-    public override CompletionItem GetCompletion() => new CompletionItem()
-    {
-        Label = Name,
-        Kind = CompletionItemKind.Struct
-    };
-
-    public override Scope GetObjectScope() => objectScope;
-        
-    public override Scope ReturningScope() => staticScope;
-}
-
-
-//class JSONConstructor : Constructor
-//{
-//    public JSONConstructor(JSONType jsonType) : base(jsonType, null, AccessLevel.Public)
-//    {
-//        Parameters = new CodeParameter[] {
-//                new JSONFileParameter("jsonFile", "path of the JSON file you want to access. Must be a `.json` file.")
-//            };
-//        Documentation = Extras.GetMarkupContent("Creates a macro out of a '.json' file.");
-//    }
-
-//    public override void Parse(ActionSet actionSet, IWorkshopTree[] parameterValues, object[] additionalParameterData) => throw new NotImplementedException();
-//}
-
-class JSONFileParameter : FileParameter
+namespace Deltin.Deltinteger.Json
 {
-    public JSONFileParameter(string parameterName, string description) : base(parameterName, description, ".json") { }
-
-    public override object Validate(ScriptFile script, IExpression value, DocRange valueRange)
+    class JsonType : CodeType
     {
-        string filepath = base.Validate(script, value, valueRange) as string;
-        if (filepath == null) return null;
+        public List<JsonProperty> Properties { get; } = new List<JsonProperty>();
+        private Scope objectScope = new Scope("JSON");
 
-
-        JObject jsonData;
-
-        try
+        public JsonType(JObject jsonData) : base("JSON")
         {
-            string jsonText = File.ReadAllText(filepath);;
+            objectScope.AddNativeMethod(new GetJsonPropertyFunction(this));
 
-            jsonData = JObject.Parse(jsonText);
-        }
-        catch (InvalidOperationException)
-        {
-            script.Diagnostics.Error("Failed to deserialize the JSON file.", valueRange);
-            return null;
+            foreach(JProperty prop in jsonData.Children<JProperty>())
+            {
+                JsonProperty newProperty = new JsonProperty(prop);
+                Properties.Add(newProperty);
+                objectScope.AddNativeVariable(newProperty.Var);
+            }
         }
 
-        return jsonData;
+        public bool ContainsDeepArrays()
+        {
+            foreach (JsonProperty property in Properties)
+                if (property.Value.ContainsDeepArrays())
+                    return true;
+            return false;
+        }
+
+        public override void AddObjectVariablesToAssigner(IWorkshopTree reference, VarIndexAssigner assigner)
+        {
+            foreach (var p in Properties)
+                assigner.Add(p.Var, p.Value.Value);
+        }
+
+        public override CompletionItem GetCompletion() => throw new NotImplementedException();
+        public override Scope ReturningScope() => throw new NotImplementedException();
+        public override Scope GetObjectScope() => objectScope;
+
+        public static Element ElementFromProperty(JToken value)
+        {
+            switch (value.Type)
+            {
+                case JTokenType.String: return new V_CustomString(value.ToObject<string>());
+                case JTokenType.Boolean: return value.ToObject<bool>() ? (Element)new V_True() : new V_False();
+                case JTokenType.Float:
+                case JTokenType.Integer: return new V_Number(value.ToObject<double>());
+                default:
+                case JTokenType.Null: return new V_Null();
+            }
+        }
     }
 
+    class JsonProperty
+    {
+        public string Name { get; }
+        public InternalVar Var { get; }
+        public IJsonValue Value { get; }
+
+        public JsonProperty(JProperty property)
+        {
+            Name = property.Name;
+            Var = new JsonVar(property.Name);
+            Var.IsSettable = false;
+            Value = IJsonValue.GetValue(property.Value);
+            Var.Documentation = Value.Documentation;
+        }
+    }
+
+    interface IJsonValue
+    {
+        Element Value { get; }
+        string Documentation { get; }
+        CodeType Type { get; }
+        bool ContainsDeepArrays() => false;
+
+        public static IJsonValue GetValue(JToken value)
+        {
+            switch (value.Type)
+            {
+                case JTokenType.String:
+                case JTokenType.Boolean:
+                case JTokenType.Integer:
+                case JTokenType.Float:
+                case JTokenType.Null: return new JsonValue(value);
+                case JTokenType.Array: return new JsonArray(value);
+                default: return new JsonObject(value);
+            }
+        }
+    }
+
+    class JsonValue : IJsonValue
+    {
+        public Element Value { get; }
+        public string Documentation { get; }
+        public CodeType Type => null;
+
+        public JsonValue(JToken token)
+        {
+            Value = JsonType.ElementFromProperty(token);
+
+            string codeDescription;
+            string additionalDescription = "A json " + token.Type.ToString().ToLower() + ".";
+            switch (token.Type)
+            {
+                case JTokenType.String:
+                {
+                    // Get the string value.
+                    string str = token.ToObject<string>();
+                    codeDescription = "\"" + str + "\"";
+                    break;
+                }
+                case JTokenType.Boolean:
+                {
+                    bool val = token.ToObject<bool>();
+                    codeDescription = val.ToString().ToLower();
+                    break;
+                }
+                
+                case JTokenType.Float:
+                case JTokenType.Integer:
+                {
+                    double val = token.ToObject<double>();
+                    codeDescription = val.ToString();
+                    break;
+                }
+                
+                case JTokenType.Null:
+                    codeDescription = "null";
+                    break;
+                
+                default: throw new NotImplementedException();
+            }
+            
+            Documentation = new MarkupBuilder().StartCodeLine()
+                .Add(codeDescription)
+                .EndCodeLine()
+                .NewSection()
+                .Add(additionalDescription)
+                .ToString();
+        }
+    }
+
+    class JsonArray : IJsonValue
+    {
+        public Element Value { get; }
+        public IJsonValue[] Children { get; }
+        public string Documentation { get; }
+        public CodeType Type => null;
+
+        public JsonArray(JToken token)
+        {
+            Documentation = "A json array.";
+            JArray array = (JArray)token;
+
+            Children = new IJsonValue[array.Count];
+            for (int i = 0; i < Children.Length; i++)
+                Children[i] = IJsonValue.GetValue(array[i]);
+            
+            Value = Element.CreateArray(Children.Select(c => c.Value).ToArray());
+        }
+
+        public bool ContainsDeepArrays() => Children.Any(c => c is JsonArray);
+    }
+
+    class JsonObject : IJsonValue
+    {
+        public Element Value => null;
+        public string Documentation { get; }
+        public CodeType Type { get; }
+
+        public JsonObject(JToken token)
+        {
+            Documentation =  "A JSON object.";
+            Type = new JsonType((JObject)token);
+        }
+
+        public bool ContainsDeepArrays() => ((JsonType)Type).Properties.Any(p => p.Value.ContainsDeepArrays());
+    }
+
+    class JsonVar : InternalVar
+    {
+        public JsonVar(string name) : base(name, CompletionItemKind.Property) {}
+        public override string GetLabel(bool markdown)
+        {
+            if (!markdown) return base.GetLabel(false);
+            return Documentation;
+        }
+    }
+
+    class GetJsonPropertyFunction : IMethod
+    {
+        public MethodAttributes Attributes { get; }
+        public CodeParameter[] Parameters { get; }
+        public string Name => "Get";
+        public CodeType ReturnType => null;
+        public bool Static => false;
+        public bool WholeContext => true;
+        public string Documentation => "Gets a property value from a string. Used for getting properties whos name cannot be typed in code.";
+        public Deltin.Deltinteger.LanguageServer.Location DefinedAt => null;
+        public AccessLevel AccessLevel => AccessLevel.Public;
+        public bool DoesReturnValue() => true;
+        private JsonType ContainingType { get; }
+
+        public GetJsonPropertyFunction(JsonType containingType)
+        {
+            Attributes = new MethodAttributes() {
+                ContainingType = containingType
+            };
+            Parameters = new CodeParameter[] {
+                new GetPropertyParameter(containingType)
+            };
+            ContainingType = containingType;
+        }
+
+        public CompletionItem GetCompletion() => new CompletionItem() {
+            Label = Name,
+            Detail = GetLabel(false),
+            Kind = CompletionItemKind.Method,
+            Documentation = Documentation
+        };
+
+        public string GetLabel(bool markdown) => HoverHandler.GetLabel("define", Name, Parameters, markdown, Documentation);
+
+        public IWorkshopTree Parse(ActionSet actionSet, MethodCall methodCall) => (Element)methodCall.AdditionalParameterData[0];
+
+        class GetPropertyParameter : CodeParameter
+        {
+            private JsonType containingType { get; }
+
+            public GetPropertyParameter(JsonType type) : base("propertyName", type:null)
+            {
+                containingType = type;
+            }
+
+            public override IWorkshopTree Parse(ActionSet actionSet, IExpression expression, object additionalParameterData) => null;
+
+            public override object Validate(ScriptFile script, IExpression value, DocRange valueRange)
+            {
+                StringAction stringAction = value as StringAction;
+                if (stringAction == null)
+                {
+                    script.Diagnostics.Error("Expected string constant.", valueRange);
+                    return null;
+                }
+
+                List<CompletionItem> completion = new List<CompletionItem>();
+                foreach (var prop in containingType.Properties)
+                    completion.Add(new CompletionItem() {
+                        Label = prop.Name,
+                        Detail = prop.Name,
+                        Documentation = Extras.GetMarkupContent(prop.Var.Documentation),
+                        Kind = CompletionItemKind.Property
+                    });
+                script.AddCompletionRange(new CompletionRange(completion.ToArray(), valueRange, CompletionRangeKind.ClearRest));
+
+                string text = stringAction.Value;
+
+                // Check properties.
+                foreach (var prop in containingType.Properties)
+                    if (prop.Name == text)
+                        return prop.Value.Value;
+                
+                script.Diagnostics.Error($"Could not find the property '{text}'.", valueRange);
+                return null;
+            }
+        }
+    }
 }
