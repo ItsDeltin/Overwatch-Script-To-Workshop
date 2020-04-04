@@ -184,7 +184,6 @@ namespace Deltin.Deltinteger.Parse
             _defaultTypes.Add(new Lambda.ValueBlockLambda());
             _defaultTypes.Add(new Lambda.MacroLambda());
             _defaultTypes.Add(VectorType.Instance);
-            //_defaultTypes.Add(new JSON.JSONClass(????));
         }
     }
 

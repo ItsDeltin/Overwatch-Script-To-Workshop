@@ -105,7 +105,8 @@ namespace Deltin.Deltinteger
                         else if (ext == ".pathmap")
                         {
                             Editor.FromPathmapFile(script);
-                        }else
+                        }
+                        else
                             Script(script);
                     
                     #if DEBUG == false
