@@ -112,11 +112,12 @@ namespace Deltin.Deltinteger.Parse
         public virtual void Delete(ActionSet actionSet, Element reference) {}
 
         /// <summary>Calls a type from the specified document range.</summary>
-        /// <param name="script">The script that the type was called from.</param>
+        /// <param name="parseInfo">The script that the type was called from.</param>
         /// <param name="callRange">The range of the call.</param>
-        public virtual void Call(ScriptFile script, DocRange callRange)
+        public virtual void Call(ParseInfo parseInfo, DocRange callRange)
         {
-            script.AddHover(callRange, HoverHandler.Sectioned(Kind + " " + Name, Description));
+            parseInfo.TranslateInfo.Types.CalledTypes.Add(this);
+            parseInfo.Script.AddHover(callRange, HoverHandler.Sectioned(Kind + " " + Name, Description));
         }
 
         /// <summary>Gets the completion that will show up for the language server.</summary>
@@ -152,7 +153,7 @@ namespace Deltin.Deltinteger.Parse
 
             if (type != null)
             {
-                type.Call(parseInfo.Script, DocRange.GetRange(typeContext));
+                type.Call(parseInfo, DocRange.GetRange(typeContext));
 
                 if (typeContext.INDEX_START() != null)
                     for (int i = 0; i < typeContext.INDEX_START().Length; i++)

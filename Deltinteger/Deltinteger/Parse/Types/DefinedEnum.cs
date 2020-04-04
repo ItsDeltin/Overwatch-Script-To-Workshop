@@ -49,11 +49,11 @@ namespace Deltin.Deltinteger.Parse
         public override Scope ReturningScope() => Scope;
         public override TypeSettable Constant() => TypeSettable.Normal;
 
-        public override void Call(ScriptFile script, DocRange callRange)
+        public override void Call(ParseInfo parseInfo, DocRange callRange)
         {
-            base.Call(script, callRange);
-            script.AddDefinitionLink(callRange, DefinedAt);
-            _translateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, new Location(script.Uri, callRange));
+            base.Call(parseInfo, callRange);
+            parseInfo.Script.AddDefinitionLink(callRange, DefinedAt);
+            _translateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, new Location(parseInfo.Script.Uri, callRange));
         }
 
         public override CompletionItem GetCompletion() => new CompletionItem() {
@@ -100,10 +100,10 @@ namespace Deltin.Deltinteger.Parse
             Kind = CompletionItemKind.EnumMember
         };
 
-        public void Call(ScriptFile script, DocRange callRange)
+        public void Call(ParseInfo parseInfo, DocRange callRange)
         {
-            script.AddDefinitionLink(callRange, DefinedAt);
-            _translateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, new Location(script.Uri, callRange));
+            parseInfo.Script.AddDefinitionLink(callRange, DefinedAt);
+            _translateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, new Location(parseInfo.Script.Uri, callRange));
         }
     }
 }

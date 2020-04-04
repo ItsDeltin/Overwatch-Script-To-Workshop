@@ -44,7 +44,7 @@ namespace Deltin.Deltinteger
 
     public interface ICallable : INamed
     {
-        void Call(ScriptFile script, DocRange callRange);
+        void Call(ParseInfo parseInfo, DocRange callRange);
     }
 
     public interface IParameterCallable : ILabeled, IAccessable

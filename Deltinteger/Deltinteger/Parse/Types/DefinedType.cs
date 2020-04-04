@@ -46,7 +46,7 @@ namespace Deltin.Deltinteger.Parse
                     // GetCodeType will return null if the type is not found.
                     if (inheriting != null)
                     {
-                        inheriting.Call(parseInfo.Script, DocRange.GetRange(typeContext.extends));
+                        inheriting.Call(parseInfo, DocRange.GetRange(typeContext.extends));
 
                         Inherit(inheriting, parseInfo.Script.Diagnostics, DocRange.GetRange(typeContext.extends));
                         (Extends as ClassType)?.ResolveElements();
@@ -162,11 +162,11 @@ namespace Deltin.Deltinteger.Parse
             newClassInfo.Constructor.Parse(actionSet.New((Element)newClassInfo.ObjectReference.GetVariable()), newClassInfo.ConstructorValues, null);
         }
 
-        public override void Call(ScriptFile script, DocRange callRange)
+        public override void Call(ParseInfo parseInfo, DocRange callRange)
         {
-            base.Call(script, callRange);
-            script.AddDefinitionLink(callRange, DefinedAt);
-            AddLink(new LanguageServer.Location(script.Uri, callRange));
+            base.Call(parseInfo, callRange);
+            parseInfo.Script.AddDefinitionLink(callRange, DefinedAt);
+            AddLink(new LanguageServer.Location(parseInfo.Script.Uri, callRange));
         }
         public void AddLink(LanguageServer.Location location)
         {

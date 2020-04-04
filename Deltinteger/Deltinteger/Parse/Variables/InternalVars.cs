@@ -36,9 +36,9 @@ namespace Deltin.Deltinteger.Parse
 
         public bool Settable() => IsSettable;
 
-        public virtual void Call(ScriptFile script, DocRange callRange)
+        public virtual void Call(ParseInfo parseInfo, DocRange callRange)
         {
-            script.AddHover(callRange, GetLabel(true));
+            parseInfo.Script.AddHover(callRange, GetLabel(true));
         }
 
         public virtual CompletionItem GetCompletion() => new CompletionItem() {

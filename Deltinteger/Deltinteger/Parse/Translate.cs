@@ -153,7 +153,7 @@ namespace Deltin.Deltinteger.Parse
             WorkshopRules = new List<Rule>();
 
             // Assign static variables.
-            foreach (var type in Types.AllTypes) type.WorkshopInit(this);
+            foreach (var type in Types.CalledTypes) type.WorkshopInit(this);
 
              // Assign variables at the rule-set level.
             foreach (var variable in rulesetVariables)
@@ -252,6 +252,7 @@ namespace Deltin.Deltinteger.Parse
     {
         public List<CodeType> AllTypes { get; } = new List<CodeType>();
         public List<CodeType> DefinedTypes { get; } = new List<CodeType>();
+        public List<CodeType> CalledTypes { get; } = new List<CodeType>();
 
         public CodeType GetCodeType(string name, FileDiagnostics diagnostics, DocRange range)
         {
