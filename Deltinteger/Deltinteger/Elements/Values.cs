@@ -370,10 +370,10 @@ namespace Deltin.Deltinteger.Elements
 
     [ElementData("Control Mode Scoring Percentage", ValueType.Number)]
     [Parameter("Team", ValueType.Team, typeof(V_TeamVar))]
-    public class V_ControlPointScoringPercentage : Element {}
+    public class V_ControlModeScoringPercentage : Element {}
 
     [ElementData("Control Mode Scoring Team", ValueType.Team)]
-    public class V_ControlPointScoringTeam : Element {}
+    public class V_ControlModeScoringTeam : Element {}
 
     [ElementData("Count Of", ValueType.Number)]
     [Parameter("Array", ValueType.Any, null)]
@@ -634,6 +634,7 @@ namespace Deltin.Deltinteger.Elements
 
     [ElementData("Game Mode", ValueType.Gamemode)]
     [EnumParameter("Gamemode", typeof(GameMode))]
+    [HideElement]
     public class V_GameModeVar : Element {}
 
     [ElementData("Current Game Mode", ValueType.Gamemode)]
