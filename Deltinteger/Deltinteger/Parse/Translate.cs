@@ -24,7 +24,7 @@ namespace Deltin.Deltinteger.Parse
         public TranslateRule InitialGlobal { get; private set; }
         public TranslateRule InitialPlayer { get; private set; }
         private readonly OutputLanguage Language;
-        private readonly bool OptimizeOutput;
+        public readonly bool OptimizeOutput;
         private List<IComponent> Components { get; } = new List<IComponent>(); 
 
         public DeltinScript(TranslateSettings translateSettings)
@@ -219,7 +219,7 @@ namespace Deltin.Deltinteger.Parse
             for (int i = 0; i < WorkshopRules.Count; i++)
             {
                 WorkshopRules[i].ToWorkshop(result, OptimizeOutput);
-                ElementCount += WorkshopRules[i].ElementCount();
+                ElementCount += WorkshopRules[i].ElementCount(OptimizeOutput);
                 if (i != WorkshopRules.Count - 1) result.AppendLine();
             }
             

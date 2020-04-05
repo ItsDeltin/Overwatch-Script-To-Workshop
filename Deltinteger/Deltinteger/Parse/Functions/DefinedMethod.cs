@@ -263,7 +263,7 @@ namespace Deltin.Deltinteger.Parse
             Rule translatedRule = subroutineRule.GetRule();
             parseInfo.TranslateInfo.WorkshopRules.Add(translatedRule);
 
-            var codeLens = new ElementCountCodeLens(DefinedAt.range);
+            var codeLens = new ElementCountCodeLens(DefinedAt.range, parseInfo.TranslateInfo.OptimizeOutput);
             parseInfo.Script.AddCodeLensRange(codeLens);
             codeLens.RuleParsed(translatedRule);
         }

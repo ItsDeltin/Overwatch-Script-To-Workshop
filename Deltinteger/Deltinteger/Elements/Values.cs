@@ -1723,6 +1723,14 @@ namespace Deltin.Deltinteger.Elements
                 if (x == 0  && y == 0  && z == -1) return new V_Backward();
             }
 
+            Element oX = X;
+            Element oY = Y;
+            Element oZ = Z;
+            if (oX is V_Number oXNum && oXNum.Value == 0) oX = new V_EmptyArray();
+            if (oY is V_Number oYNum && oYNum.Value == 0) oY = new V_EmptyArray();
+            if (oZ is V_Number oZNum && oZNum.Value == 0) oZ = new V_EmptyArray();
+            if (oX != X || oY != Y || oZ != Z) return Element.Part<V_Vector>(oX, oY, oZ);
+
             return this;
         }
 
