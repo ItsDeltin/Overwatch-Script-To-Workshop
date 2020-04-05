@@ -186,7 +186,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
 
         public override Scope GetObjectScope() => _objectScope;
         public override Scope ReturningScope() => null;
-        public override TypeSettable Constant() => TypeSettable.Constant;
+        public override bool IsConstant() => true;
         public override CompletionItem GetCompletion() => new CompletionItem() {
             Label = Name,
             Kind = CompletionItemKind.Constant

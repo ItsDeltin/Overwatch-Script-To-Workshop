@@ -47,7 +47,6 @@ namespace Deltin.Deltinteger.Parse
         }
 
         public override Scope ReturningScope() => Scope;
-        public override TypeSettable Constant() => TypeSettable.Normal;
 
         public override void Call(ParseInfo parseInfo, DocRange callRange)
         {

@@ -26,31 +26,19 @@ namespace Deltin.Deltinteger.Parse
         }
 
         public override Scope ReturningScope() => EnumScope;
-        public override TypeSettable Constant() => EnumData.ConvertableToElement() ? TypeSettable.Convertable : TypeSettable.Constant;
+        public override bool IsConstant() => true;
         public override CompletionItem GetCompletion() => new CompletionItem() {
             Label = EnumData.CodeName,
             Kind = CompletionItemKind.Enum
         };
         public override void Call(ParseInfo parseInfo, DocRange callRange)
         {
-            MarkupBuilder hoverContents = new MarkupBuilder();
-
-            if (Constant() == TypeSettable.Convertable)
-            {
-                hoverContents
-                    .StartCodeLine()
-                    .Add("enum " + Name)
-                    .EndCodeLine();
-            }
-            else if (Constant() == TypeSettable.Constant)
-            {
-                hoverContents
-                    .StartCodeLine()
-                    .Add("constant " + Name)
-                    .EndCodeLine()
-                    .NewSection()
-                    .Add("Constant workshop types cannot be stored. Variables with this type cannot be changed from their initial value.");
-            }
+            MarkupBuilder hoverContents = new MarkupBuilder()
+                .StartCodeLine()
+                .Add("constant " + Name)
+                .EndCodeLine()
+                .NewSection()
+                .Add("Constant workshop types cannot be stored. Variables with this type cannot be changed from their initial value.");
 
             parseInfo.Script.AddHover(callRange, hoverContents.ToString());
         }

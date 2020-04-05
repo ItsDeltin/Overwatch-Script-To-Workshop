@@ -80,7 +80,7 @@ namespace Deltin.Deltinteger.Parse
         public IWorkshopTree Parse(ActionSet actionSet) => null;
 
         /// <summary>Determines if variables with this type can have their value changed.</summary>
-        public virtual TypeSettable Constant() => TypeSettable.Normal;
+        public virtual bool IsConstant() => false;
 
         /// <summary>The returning value when `new TypeName` is called.</summary>
         /// <param name="actionSet">The actionset to use.</param>
@@ -187,10 +187,5 @@ namespace Deltin.Deltinteger.Parse
             _defaultTypes.Add(new Lambda.MacroLambda());
             _defaultTypes.Add(VectorType.Instance);
         }
-    }
-
-    public enum TypeSettable
-    {
-        Normal, Convertable, Constant
     }
 }
