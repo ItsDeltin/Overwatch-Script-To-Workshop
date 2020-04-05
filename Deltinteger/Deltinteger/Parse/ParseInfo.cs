@@ -132,7 +132,7 @@ namespace Deltin.Deltinteger.Parse
                 if (variableContext.array() != null)
                     Script.Diagnostics.Error("Indexers cannot be used with types.", DocRange.GetRange(variableContext.array()));
 
-                type.Call(Script, variableRange);
+                type.Call(this, variableRange);
                 return type;
             }
 
@@ -141,7 +141,7 @@ namespace Deltin.Deltinteger.Parse
                 return null;
             
             if (element is ICallable)
-                ((ICallable)element).Call(Script, variableRange);
+                ((ICallable)element).Call(this, variableRange);
             
             if (element is IApplyBlock)
                 CurrentCallInfo?.Call((IApplyBlock)element, variableRange);

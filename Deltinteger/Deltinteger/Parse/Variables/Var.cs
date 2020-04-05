@@ -107,12 +107,12 @@ namespace Deltin.Deltinteger.Parse
         public CodeType Type() => CodeType;
 
         // ICallable
-        public void Call(ScriptFile script, DocRange callRange)
+        public void Call(ParseInfo parseInfo, DocRange callRange)
         {
             WasCalled = true;
-            script.AddDefinitionLink(callRange, DefinedAt);
-            script.AddHover(callRange, GetLabel(true));
-            parseInfo.TranslateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, new Location(script.Uri, callRange));
+            parseInfo.Script.AddDefinitionLink(callRange, DefinedAt);
+            parseInfo.Script.AddHover(callRange, GetLabel(true));
+            parseInfo.TranslateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, new Location(parseInfo.Script.Uri, callRange));
         }
     
         public IWorkshopTree Parse(ActionSet actionSet)

@@ -31,7 +31,7 @@ namespace Deltin.Deltinteger.Parse
             Label = EnumData.CodeName,
             Kind = CompletionItemKind.Enum
         };
-        public override void Call(ScriptFile script, DocRange callRange)
+        public override void Call(ParseInfo parseInfo, DocRange callRange)
         {
             MarkupBuilder hoverContents = new MarkupBuilder();
 
@@ -52,7 +52,7 @@ namespace Deltin.Deltinteger.Parse
                     .Add("Constant workshop types cannot be stored. Variables with this type cannot be changed from their initial value.");
             }
 
-            script.AddHover(callRange, hoverContents.ToString());
+            parseInfo.Script.AddHover(callRange, hoverContents.ToString());
         }
     
         public static CodeType GetEnumType(EnumData enumData)

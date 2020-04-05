@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -401,7 +401,7 @@ namespace Deltin.Deltinteger.Elements
 
     [ElementData("Reset Player Hero Availability")]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
-    public class A_ResetHeroRoster : Element {}
+    public class A_ResetHeroAvailability : Element {}
 
     [ElementData("Respawn")]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
@@ -498,7 +498,7 @@ namespace Deltin.Deltinteger.Elements
     [ElementData("Set Player Allowed Heroes")]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     [Parameter("Hero", ValueType.Hero, null)]
-    public class A_SetHeroRoster : Element {}
+    public class A_SetAllowedHeroes : Element {}
 
     [ElementData("Set Player Score")]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]

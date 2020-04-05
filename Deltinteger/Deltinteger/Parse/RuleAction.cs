@@ -61,7 +61,7 @@ namespace Deltin.Deltinteger.Parse
             if (ruleContext.number() != null)
                 Priority = double.Parse(ruleContext.number().GetText());
             
-            ElementCountLens = new ElementCountCodeLens(ruleInfoRange);
+            ElementCountLens = new ElementCountCodeLens(ruleInfoRange, parseInfo.TranslateInfo.OptimizeOutput);
             parseInfo.Script.AddCodeLensRange(ElementCountLens);
         }
 

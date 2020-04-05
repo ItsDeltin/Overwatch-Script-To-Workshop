@@ -25,13 +25,13 @@ namespace Deltin.Deltinteger.Parse
 
         public virtual void Parse(ActionSet actionSet, IWorkshopTree[] parameterValues, object[] additionalParameterData) {}
 
-        public void Call(ScriptFile script, DocRange callRange)
+        public void Call(ParseInfo parseInfo, DocRange callRange)
         {
             if (DefinedAt == null) return;
             
-            script.AddDefinitionLink(callRange, DefinedAt);
+            parseInfo.Script.AddDefinitionLink(callRange, DefinedAt);
             if (Type is DefinedType)
-                ((DefinedType)Type).AddLink(new LanguageServer.Location(script.Uri, callRange));
+                ((DefinedType)Type).AddLink(new LanguageServer.Location(parseInfo.Script.Uri, callRange));
         }
 
         public string GetLabel(bool markdown) => HoverHandler.GetLabel("new " + Type.Name, Parameters, markdown, Documentation);

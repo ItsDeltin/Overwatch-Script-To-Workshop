@@ -370,10 +370,10 @@ namespace Deltin.Deltinteger.Elements
 
     [ElementData("Control Mode Scoring Percentage", ValueType.Number)]
     [Parameter("Team", ValueType.Team, typeof(V_TeamVar))]
-    public class V_ControlPointScoringPercentage : Element {}
+    public class V_ControlModeScoringPercentage : Element {}
 
     [ElementData("Control Mode Scoring Team", ValueType.Team)]
-    public class V_ControlPointScoringTeam : Element {}
+    public class V_ControlModeScoringTeam : Element {}
 
     [ElementData("Count Of", ValueType.Number)]
     [Parameter("Array", ValueType.Any, null)]
@@ -634,6 +634,7 @@ namespace Deltin.Deltinteger.Elements
 
     [ElementData("Game Mode", ValueType.Gamemode)]
     [EnumParameter("Gamemode", typeof(GameMode))]
+    [HideElement]
     public class V_GameModeVar : Element {}
 
     [ElementData("Current Game Mode", ValueType.Gamemode)]
@@ -1721,6 +1722,14 @@ namespace Deltin.Deltinteger.Elements
                 if (x == 0  && y == 0  && z == 1 ) return new V_Forward();
                 if (x == 0  && y == 0  && z == -1) return new V_Backward();
             }
+
+            Element oX = X;
+            Element oY = Y;
+            Element oZ = Z;
+            if (oX is V_Number oXNum && oXNum.Value == 0) oX = new V_EmptyArray();
+            if (oY is V_Number oYNum && oYNum.Value == 0) oY = new V_EmptyArray();
+            if (oZ is V_Number oZNum && oZNum.Value == 0) oZ = new V_EmptyArray();
+            if (oX != X || oY != Y || oZ != Z) return Element.Part<V_Vector>(oX, oY, oZ);
 
             return this;
         }

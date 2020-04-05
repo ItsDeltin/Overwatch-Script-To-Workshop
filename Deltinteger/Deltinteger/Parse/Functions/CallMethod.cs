@@ -49,7 +49,7 @@ namespace Deltin.Deltinteger.Parse
                     if (CallingMethod is DefinedFunction definedFunction)
                     {
                         definedFunction.OnBlockApply(this);
-                        definedFunction.Call(parseInfo.Script, NameRange);
+                        definedFunction.Call(parseInfo, NameRange);
                         parseInfo.CurrentCallInfo?.Call(definedFunction, NameRange);
                     }
 

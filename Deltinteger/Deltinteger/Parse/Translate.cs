@@ -24,7 +24,7 @@ namespace Deltin.Deltinteger.Parse
         public TranslateRule InitialGlobal { get; private set; }
         public TranslateRule InitialPlayer { get; private set; }
         private readonly OutputLanguage Language;
-        private readonly bool OptimizeOutput;
+        public readonly bool OptimizeOutput;
         private List<IComponent> Components { get; } = new List<IComponent>(); 
 
         public DeltinScript(TranslateSettings translateSettings)
@@ -34,13 +34,13 @@ namespace Deltin.Deltinteger.Parse
             Language = translateSettings.OutputLanguage;
             OptimizeOutput = translateSettings.OptimizeOutput;
 
-            Types.AllTypes.AddRange(CodeType.DefaultTypes);
-            Importer = new Importer(Diagnostics, FileGetter, translateSettings.Root.Uri);
-            Importer.CollectScriptFiles(translateSettings.Root);
-            
             GlobalScope = Scope.GetGlobalScope();
             RulesetScope = GlobalScope.Child();
             RulesetScope.PrivateCatch = true;
+
+            Types.AllTypes.AddRange(CodeType.DefaultTypes);
+            Importer = new Importer(this, FileGetter, translateSettings.Root.Uri);
+            Importer.CollectScriptFiles(translateSettings.Root);            
             
             Translate();
             if (!Diagnostics.ContainsErrors())
@@ -153,7 +153,7 @@ namespace Deltin.Deltinteger.Parse
             WorkshopRules = new List<Rule>();
 
             // Assign static variables.
-            foreach (var type in Types.AllTypes) type.WorkshopInit(this);
+            foreach (var type in Types.CalledTypes.Distinct()) type.WorkshopInit(this);
 
              // Assign variables at the rule-set level.
             foreach (var variable in rulesetVariables)
@@ -219,7 +219,7 @@ namespace Deltin.Deltinteger.Parse
             for (int i = 0; i < WorkshopRules.Count; i++)
             {
                 WorkshopRules[i].ToWorkshop(result, OptimizeOutput);
-                ElementCount += WorkshopRules[i].ElementCount();
+                ElementCount += WorkshopRules[i].ElementCount(OptimizeOutput);
                 if (i != WorkshopRules.Count - 1) result.AppendLine();
             }
             
@@ -252,6 +252,7 @@ namespace Deltin.Deltinteger.Parse
     {
         public List<CodeType> AllTypes { get; } = new List<CodeType>();
         public List<CodeType> DefinedTypes { get; } = new List<CodeType>();
+        public List<CodeType> CalledTypes { get; } = new List<CodeType>();
 
         public CodeType GetCodeType(string name, FileDiagnostics diagnostics, DocRange range)
         {

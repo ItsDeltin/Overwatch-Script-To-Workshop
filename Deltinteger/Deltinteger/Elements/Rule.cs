@@ -115,15 +115,20 @@ namespace Deltin.Deltinteger.Elements
                 .AppendLine("}");
         }
     
-        public int ElementCount()
+        public int ElementCount(bool optimized)
         {
             int count = 1;
 
             foreach (Condition condition in Conditions)
-                count += condition.ElementCount();
+                count += condition.ElementCount(optimized);
 
             foreach (Element action in Actions)
-                count += action.ElementCount(0);
+            {
+                if (optimized)
+                    count += action.Optimize().ElementCount(0);
+                else
+                    count += action.ElementCount(0);
+            }
             
             return count;
         }
