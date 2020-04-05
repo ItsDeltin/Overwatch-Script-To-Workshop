@@ -51,14 +51,20 @@ namespace Deltin.Deltinteger.Pathfinder
             // Get the pathmap data.
             PathMap pathMap = (PathMap)newClassInfo.AdditionalParameterData[0];
 
-            actionSet.AddAction(Nodes.SetVariable(
-                value: pathMap.NodesAsWorkshopData(),
-                index: (Element)newClassInfo.ObjectReference.GetVariable()
-            ));
-            actionSet.AddAction(Segments.SetVariable(
-                value: pathMap.SegmentsAsWorkshopData(),
-                index: (Element)newClassInfo.ObjectReference.GetVariable()
-            ));
+            Element index = (Element)newClassInfo.ObjectReference.GetVariable();
+            IndexReference nodes = actionSet.VarCollection.Assign("_tempNodes", actionSet.IsGlobal, false);
+            IndexReference segments = actionSet.VarCollection.Assign("_tempSegments", actionSet.IsGlobal, false);
+
+            actionSet.AddAction(nodes.SetVariable(new V_EmptyArray()));
+            actionSet.AddAction(segments.SetVariable(new V_EmptyArray()));
+
+            foreach (var node in pathMap.Nodes)
+                actionSet.AddAction(nodes.ModifyVariable(operation: Operation.AppendToArray, value: node.ToVector()));
+            foreach (var segment in pathMap.Segments)
+                actionSet.AddAction(segments.ModifyVariable(operation: Operation.AppendToArray, value: segment.AsWorkshopData()));
+            
+            actionSet.AddAction(Nodes.SetVariable((Element)nodes.GetVariable(), index: index));
+            actionSet.AddAction(Segments.SetVariable((Element)segments.GetVariable(), index: index));
         }
     }
 
