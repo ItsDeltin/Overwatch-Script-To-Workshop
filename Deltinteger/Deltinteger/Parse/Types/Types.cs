@@ -116,7 +116,8 @@ namespace Deltin.Deltinteger.Parse
         /// <param name="callRange">The range of the call.</param>
         public virtual void Call(ParseInfo parseInfo, DocRange callRange)
         {
-            parseInfo.TranslateInfo.Types.CalledTypes.Add(this);
+            if (!parseInfo.TranslateInfo.Types.CalledTypes.Contains(this))
+                parseInfo.TranslateInfo.Types.CalledTypes.Add(this);
             parseInfo.Script.AddHover(callRange, HoverHandler.Sectioned(Kind + " " + Name, Description));
         }
 
