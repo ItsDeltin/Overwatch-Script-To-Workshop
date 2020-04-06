@@ -9,6 +9,7 @@
     <method name="conditions" alt="condition" />
     <method name="actions" alt="action" />
     <method name="disabled" alt="disabled" />
+    <method name="subroutines" alt="subroutines" />
     <method name="Abort" alt="Abort" />
     <method name="Abort If" alt="Abort If" />
     <method name="Abort If Condition Is False" alt="Abort If Condition Is False" />
@@ -16,6 +17,8 @@
     <method name="Allow Button" alt="Allow Button" />
     <method name="Apply Impulse" alt="Apply Impulse" />
     <method name="Big Message" alt="Big Message" />
+    <method name="Call Subroutine" alt="Call Subroutine" />
+    <method name="Start Rule" alt="Start Rule" />
     <method name="Chase Global Variable At Rate" alt="Chase Global Variable At Rate" />
     <method name="Chase Global Variable Over Time" alt="Chase Global Variable Over Time" />
     <method name="Chase Player Variable At Rate" alt="Chase Player Variable At Rate" />
@@ -41,6 +44,7 @@
     <method name="Destroy Dummy Bot" alt="Destroy Dummy Bot" />
     <method name="Destroy Effect" alt="Destroy Effect" />
     <method name="Destroy Hud Text" alt="Destroy HUD Text" />
+    <method name="Destroy Icon" alt="Destroy Icon" />
     <method name="Destroy In-World Text" alt="Destroy In-World Text" />
     <method name="Disable Built-In Game Mode Announcer" alt="Disable Built-In Game Mode Announcer" />
     <method name="Disable Built-In Game Mode Completion" alt="Disable Built-In Game Mode Completion" />
@@ -49,16 +53,24 @@
     <method name="Disable Built-In Game Mode Scoring" alt="Disable Built-In Game Mode Scoring" />
     <method name="Disable Death Spectate All Players" alt="Disable Death Spectate All Players" />
     <method name="Disable Death Spectate Target HUD" alt="Disable Death Spectate Target HUD" />
+    <method name="Disable Inspector Recording" alt="Disable Inspector Recording" />
     <method name="Disallow Button" alt="Disallow Button" />
     <method name="Enable Built-In Game Mode Announcer" alt="Enable Built-In Game Mode Announcer" />
     <method name="Enable Built-In Game Mode Completion" alt="Enable Built-In Game Mode Completion" />
+    <method name="Enable Inspector Recording" alt="Enable Inspector Recording" />
     <method name="Enable Built-In Game Mode Music" alt="Enable Built-In Game Mode Music" />
     <method name="Enable Built-In Game Mode Respawning" alt="Enable Built-In Game Mode Respawning" />
     <method name="Enable Built-In Game Mode Scoring" alt="Enable Built-In Game Mode Scoring" />
     <method name="Enable Death Spectate All Players" alt="Enable Death Spectate All Players" />
     <method name="Enable Death Spectate Target HUD" alt="Enable Death Spectate Target HUD" />
+    <method name="End" alt="End" />
+    <method name="For Global Variable" alt="For Global Variable" />
+    <method name="For Player Variable" alt="For Player Variable" />
     <method name="Go To Assemble Heroes" alt="Go To Assemble Heroes" />
     <method name="Heal" alt="Heal" />
+    <method name="If" alt="If" />
+    <method name="Else If" alt="Else If" />
+    <method name="Else" alt="Else" />
     <method name="Kill" alt="Kill" />
     <method name="Loop" alt="Loop" />
     <method name="Loop If" alt="Loop If" />
@@ -118,6 +130,8 @@
     <method name="Start Forcing Player To Be Hero" alt="Start Forcing Player To Be Hero" />
     <method name="Start Forcing Spawn Room" alt="Start Forcing Spawn Room" />
     <method name="Start Forcing Throttle" alt="Start Forcing Throttle" />
+    <method name="Start Healing Modification" alt="Start Healing Modification" />
+    <method name="Stop Healing Modification" alt="Stop Healing Modification" />
     <method name="Start Heal Over Time" alt="Start Heal Over Time" />
     <method name="Start Holding Button" alt="Start Holding Button" />
     <method name="Start Throttle In Direction" alt="Start Throttle In Direction" />
@@ -142,6 +156,7 @@
     <method name="Teleport" alt="Teleport" />
     <method name="Unpause Match Time" alt="Unpause Match Time" />
     <method name="Wait" alt="Wait" />
+    <method name="While" alt="While" />
     <method name="Absolute Value" alt="Absolute Value" />
     <method name="Add" alt="Add" />
     <method name="All Dead Players" alt="All Dead Players" />
@@ -188,6 +203,7 @@
     <method name="Event Healing" alt="Event Healing" />
     <method name="Event Player" alt="Event Player" />
     <method name="Event Was Critical Hit" alt="Event Was Critical Hit" />
+    <method name="Event Was Health Pack" alt="Event Was Health Pack" />
     <method name="Eye Position" alt="Eye Position" />
     <method name="Facing Direction Of" alt="Facing Direction Of" />
     <method name="False" alt="False" />
@@ -256,6 +272,7 @@
     <method name="Last Damage Modification ID" alt="Last Damage Modification ID" />
     <method name="Last Damage Over Time ID" alt="Last Damage Over Time ID" />
     <method name="Last Heal Over Time ID" alt="Last Heal Over Time ID" />
+    <method name="Last Healing Modification ID" alt="Last Healing Modification ID" />
     <method name="Last Of" alt="Last Of" />
     <method name="Last Text ID" alt="Last Text ID" />
     <method name="Left" alt="Left" />
@@ -357,6 +374,7 @@
     <method name="Player Received Healing" alt="Player Received Healing" />
     <method name="Player Joined Match" alt="Player Joined Match" />
     <method name="Player Left Match" alt="Player Left Match" />
+    <method name="Subroutine" alt="Subroutine" />
     <method name="All" alt="All" />
     <method name="Slot" alt="Slot" />
     <method name="Reaper" alt="리퍼" />
@@ -405,6 +423,8 @@
     <method name="Interact" alt="Interact" />
     <method name="Jump" alt="Jump" />
     <method name="Crouch" alt="Crouch" />
+    <method name="Melee" alt="Melee" />
+    <method name="Reload" alt="Reload" />
     <method name="To World" alt="To World" />
     <method name="To Player" alt="To Player" />
     <method name="Cancel Contrary Motion" alt="Cancel Contrary Motion" />
@@ -472,6 +492,8 @@
     <method name="Acknowledge" alt="Acknowledge" />
     <method name="Top" alt="Top" />
     <method name="Visible To And String" alt="Visible To and String" />
+    <method name="Visible To, Sort Order, and String" alt="Visible To, Sort Order, String" />
+    <method name="Sort Order And String" alt="Sort Order and String" />
     <method name="Arrow: Down" alt="Arrow: Down" />
     <method name="Arrow: Left" alt="Arrow: Left" />
     <method name="Arrow: Right" alt="Arrow: Right" />
@@ -524,6 +546,10 @@
     <method name="Direction, Rate, and Max Speed" alt="Direction, Rate, and Max Speed" />
     <method name="Receivers, Damagers, and Damage Percent" alt="Receivers, Damagers, and Damage Percent" />
     <method name="Receivers And Damagers" alt="Receivers and Damagers" />
+    <method name="Receivers, Healers, and Healing Percent" alt="Receivers, Healers, and Healing Percent" />
+    <method name="Receivers And Healers" alt="Receivers and Healers" />
+    <method name="Restart Rule" alt="Restart Rule" />
+    <method name="Do Nothing" alt="Do Nothing" />
     <method name="Direction And Turn Rate" alt="Direction and Turn Rate" />
     <method name="Barriers Do Not Block LOS" alt="Barriers Do Not Block LOS" />
     <method name="Enemy Barriers Block LOS" alt="Enemy Barriers Block LOS" />
@@ -617,5 +643,270 @@
     <method name="Skirmish" alt="연습 전투" />
     <method name="Team Deathmatch" alt="팀 데스매치" />
     <method name="Yeti Hunter" alt="예티 사냥꾼" />
+    <method name="settings" alt="settings" />
+    <method name="lobby" alt="lobby" />
+    <method name="modes" alt="modes" />
+    <method name="heroes" alt="heroes" />
+    <method name="General" alt="일반" />
+    <method name="Team 1" alt="1팀" />
+    <method name="Team 2" alt="2팀" />
+    <method name="enabled maps" alt="enabled maps" />
+    <method name="disabled maps" alt="disabled maps" />
+    <method name="enabled heroes" alt="enabled heroes" />
+    <method name="disabled heroes" alt="disabled heroes" />
+    <method name="%1$s Cooldown Time" alt="%1$s 재사용 대기시간" />
+    <method name="%1$s Recharge Rate" alt="%1$s 충전율" />
+    <method name="%1$s Maximum Time" alt="%1$s 최대 시간" />
+    <method name="Ultimate Ability (%1$s)" alt="궁극기 (%1$s)" />
+    <method name="Ultimate Generation (%1$s)" alt="궁극기 충전율 (%1$s)" />
+    <method name="Ultimate Generation - Combat (%1$s)" alt="궁극기 충전율 - 전투 참여 (%1$s)" />
+    <method name="Ultimate Generation - Passive (%1$s)" alt="궁극기 충전율 - 자동 충전 (%1$s)" />
+    <method name="Quick Melee" alt="빠른 근접 공격" />
+    <method name="Spawn With Ultimate Ready" alt="궁극기 보유 상태로 시작" />
+    <method name="Damage Dealt" alt="주는 피해" />
+    <method name="Damage Received" alt="받는 피해" />
+    <method name="Healing Received" alt="받는 치유" />
+    <method name="Jump Vertical Speed" alt="수직 점프 속도" />
+    <method name="Movement Gravity" alt="이동 중력" />
+    <method name="Movement Speed" alt="이동 속도" />
+    <method name="Receive Headshots Only" alt="헤드샷만 허용" />
+    <method name="Ammunition Clip Size Scalar" alt="탄창 크기 조정" />
+    <method name="No Ammunition Requirement" alt="탄창 제한 없음" />
+    <method name="Ultimate Ability" alt="궁극기" />
+    <method name="Ultimate Generation" alt="궁극기 충전율" />
+    <method name="Ultimate Generation - Passive" alt="궁극기 충전율 - 자동 충전" />
+    <method name="Ultimate Generation - Combat" alt="궁극기 충전율 - 전투 참여" />
+    <method name="Ultimate Duration" alt="궁극기 지속시간" />
+    <method name="Infinite Ultimate Duration" alt="궁극기 지속시간 무한" />
+    <method name="Projectile Speed" alt="투사체 속도" />
+    <method name="Projectile Gravity" alt="투사체 중력" />
+    <method name="Healing Dealt" alt="주는 치유" />
+    <method name="Nano Boost" alt="나노 강화제" />
+    <method name="No Automatic Fire" alt="자동 사격 불가" />
+    <method name="No Scope" alt="조준경 사용 불가" />
+    <method name="Biotic Grenade" alt="생체 수류탄" />
+    <method name="Sleep Dart" alt="수면총" />
+    <method name="B.O.B." alt="B.O.B." />
+    <method name="Coach Gun" alt="충격 샷건" />
+    <method name="Coach Gun Knockback Scalar (Enemy)" alt="충격 샷건으로 적 밀쳐내기 수준 조정" />
+    <method name="Coach Gun Knockback Scalar (Self)" alt="충격 샷건으로 자신 밀쳐내기 수준 조정" />
+    <method name="Dynamite" alt="다이너마이트" />
+    <method name="Dynamite Fuse Time Scalar" alt="다이너마이트 폭발 시간 조정" />
+    <method name="Amplification Matrix" alt="증폭 매트릭스" />
+    <method name="Immortality Field" alt="불사 장치" />
+    <method name="Regenerative Burst" alt="치유 파동" />
+    <method name="Configuration: Tank" alt="설정: 전차" />
+    <method name="Reconfigure" alt="재설정" />
+    <method name="Self-Repair" alt="자가 수리" />
+    <method name="Rally" alt="집결" />
+    <method name="Repair Pack" alt="수리 팩" />
+    <method name="Shield Bash" alt="방패 밀쳐내기" />
+    <method name="Shield Bash Knockback Scalar" alt="방패 밀쳐내기 밀쳐내기 수준 조정" />
+    <method name="Whip Shot" alt="도리깨 투척" />
+    <method name="Whip Shot Knockback Scalar" alt="도리깨 투척 밀쳐내기 수준 조정" />
+    <method name="Self-Destruct" alt="자폭" />
+    <method name="Micro Missiles" alt="마이크로 미사일" />
+    <method name="Boosters" alt="부스터" />
+    <method name="Boosters Knockback Scalar" alt="부스터로 밀쳐내기 수준 조정" />
+    <method name="Defense Matrix" alt="방어 매트릭스" />
+    <method name="Meteor Strike" alt="파멸의 일격" />
+    <method name="Meteor Strike Knockback Scalar" alt="파멸의 일격 밀쳐내기 수준 조정" />
+    <method name="Rising Uppercut" alt="라이징 어퍼컷" />
+    <method name="Rising Uppercut Knockback Scalar" alt="라이징 어퍼컷 밀쳐내기 수준 조정" />
+    <method name="Rocket Punch" alt="로켓 펀치" />
+    <method name="Rocket Punch Knockback Scalar" alt="로켓 펀치 밀쳐내기 수준 조정" />
+    <method name="Seismic Slam" alt="지진 강타" />
+    <method name="Ammunition Regeneration Time Scalar" alt="탄약 재생성 시간 조정" />
+    <method name="Dragonblade" alt="용검" />
+    <method name="Deflect" alt="튕겨내기" />
+    <method name="Swift Strike" alt="질풍참" />
+    <method name="Dragonstrike" alt="용의 일격" />
+    <method name="Lunge" alt="이단뛰기" />
+    <method name="Lunge Distance Scalar" alt="이단뛰기 거리 조정" />
+    <method name="Sonic Arrow" alt="음파 화살" />
+    <method name="Storm Arrow" alt="폭풍 화살" />
+    <method name="Storm Arrows Quantity" alt="폭풍 화살 갯수" />
+    <method name="Rip-Tire" alt="죽이는 타이어" />
+    <method name="Concussion Mine" alt="충격 지뢰" />
+    <method name="Concussion Mine Knockback Scalar" alt="충격 지뢰 밀쳐내기 수준 조정" />
+    <method name="Steel Trap" alt="강철 덫" />
+    <method name="Frag Launcher Knockback Scalar" alt="폭탄 발사기 밀쳐내기 수준 조정" />
+    <method name="Sound Barrier" alt="소리 방벽" />
+    <method name="Amp It Up" alt="볼륨을 높여라!" />
+    <method name="Crossfade" alt="분위기 전환!" />
+    <method name="Soundwave" alt="소리 파동" />
+    <method name="Soundwave Knockback Scalar" alt="소리 파동 밀쳐내기 수준 조정" />
+    <method name="Deadeye" alt="황야의 무법자" />
+    <method name="Combat Roll" alt="구르기" />
+    <method name="Flashbang" alt="섬광탄" />
+    <method name="Blizzard" alt="눈보라" />
+    <method name="Cryo-Freeze" alt="급속 빙결" />
+    <method name="Ice Wall" alt="빙벽" />
+    <method name="Blizzard Freeze Minimum" alt="눈보라 빙결 최소" />
+    <method name="Blizzard Freeze Rate Scalar" alt="눈보라 빙결 수준 조정" />
+    <method name="Freeze Stacking" alt="빙결 중첩" />
+    <method name="Weapon Freeze Duration Scalar" alt="무기 빙결 지속시간 조정" />
+    <method name="Weapon Freeze Minimum" alt="무기 빙결 최소" />
+    <method name="Weapon Freeze Rate Scalar" alt="무기 빙결 수준 조정" />
+    <method name="Valkyrie" alt="발키리" />
+    <method name="Guardian Angel" alt="수호천사" />
+    <method name="Regeneration" alt="재생" />
+    <method name="Weapons Enabled" alt="무기 사용" />
+    <method name="Caduceus Staff Only" alt="카두세우스 지팡이만 허용" />
+    <method name="Caduceus Blaster Only" alt="카두세우스 블라스터만 허용" />
+    <method name="Coalescence" alt="융화" />
+    <method name="Fade" alt="소멸" />
+    <method name="Biotic Orb" alt="생체 구슬" />
+    <method name="Biotic Orb Max Damage Scalar" alt="생체 구슬 최대 피해량 조정" />
+    <method name="Biotic Orb Max Healing Scalar" alt="생체 구슬 최대 치유량 조정" />
+    <method name="Biotic Energy Maximum" alt="생체 에너지 최대 수치" />
+    <method name="Biotic Energy Recharge Rate" alt="생체 에너지 충전률" />
+    <method name="Supercharger" alt="초강력 증폭기" />
+    <method name="Fortify" alt="방어 강화" />
+    <method name="Halt!" alt="꼼짝 마!" />
+    <method name="Protective Barrier" alt="보호 방벽" />
+    <method name="Barrage" alt="포화" />
+    <method name="Concussive Blast" alt="충격탄" />
+    <method name="Concussive Blast Knockback Scalar" alt="충격탄 밀쳐내기 수준 조정" />
+    <method name="Hover Jets" alt="호버 추진기" />
+    <method name="Hover Jets Vertical Speed Scalar" alt="호버 추진기 수직 속도 조정" />
+    <method name="Hover Jets Unlimited Fuel" alt="호버 추진기 무한 연료" />
+    <method name="Jump Jet" alt="점프 추진기" />
+    <method name="Jump Jet Acceleration Scalar" alt="점프 추진기 가속 조정" />
+    <method name="Rocket Launcher Knockback Scalar" alt="로켓 런처 밀쳐내기 수준 조정" />
+    <method name="Death Blossom" alt="죽음의 꽃" />
+    <method name="Shadow Step" alt="그림자 밟기" />
+    <method name="Wraith Form" alt="망령화" />
+    <method name="Earthshatter" alt="대지분쇄" />
+    <method name="Barrier Field" alt="방벽 방패" />
+    <method name="Charge" alt="돌진" />
+    <method name="Charge Knockback Scalar" alt="돌진 밀쳐내기 수준 조정" />
+    <method name="Fire Strike" alt="화염 강타" />
+    <method name="Rocket Hammer Knockback Scalar" alt="로켓 해머 밀쳐내기 수준 조정" />
+    <method name="Whole Hog" alt="돼재앙" />
+    <method name="Whole Hog Knockback Scalar" alt="돼재앙 밀쳐내기 수준 조정" />
+    <method name="Chain Hook" alt="사슬 갈고리" />
+    <method name="Take A Breather" alt="숨 돌리기" />
+    <method name="Gravitic Flux" alt="중력 붕괴" />
+    <method name="Accretion" alt="강착" />
+    <method name="Accretion Knockback Scalar" alt="강착 넘어뜨림 수준 조정" />
+    <method name="Experimental Barrier" alt="실험용 방벽" />
+    <method name="Kinetic Grasp" alt="키네틱 손아귀" />
+    <method name="Tactical Visor" alt="전술 조준경" />
+    <method name="Biotic Field" alt="생체장" />
+    <method name="Helix Rockets" alt="나선 로켓" />
+    <method name="Helix Rockets Knockback Scalar" alt="나선 로켓 밀쳐내기 수준 조정" />
+    <method name="Sprint" alt="질주" />
+    <method name="EMP" alt="EMP" />
+    <method name="Hack" alt="해킹" />
+    <method name="Stealth" alt="스텔스" />
+    <method name="Translocator" alt="위치변환기" />
+    <method name="Photon Barrier" alt="광자 방벽" />
+    <method name="Sentry Turret" alt="감시 포탑" />
+    <method name="Teleporter" alt="순간이동기" />
+    <method name="Molten Core" alt="초고열 용광로" />
+    <method name="Deploy Turret" alt="포탑 설치" />
+    <method name="Overload" alt="과부하" />
+    <method name="Overload Duration Scalar" alt="과부하 지속시간 조정" />
+    <method name="Rivet Gun Only" alt="대못 발사기만 허용" />
+    <method name="Forge Hammer Only" alt="대장간 망치만 허용" />
+    <method name="Pulse Bomb" alt="펄스 폭탄" />
+    <method name="Blink" alt="점멸" />
+    <method name="Recall" alt="시간 역행" />
+    <method name="Infra-sight" alt="적외선 투시" />
+    <method name="Grappling Hook" alt="갈고리 발사" />
+    <method name="Venom Mine" alt="맹독 지뢰" />
+    <method name="Primal Rage" alt="원시의 분노" />
+    <method name="Primal Rage Melee Knockback Scalar" alt="원시의 분노 밀쳐내기 수준 조정" />
+    <method name="Barrier Projector" alt="방벽 생성기" />
+    <method name="Jump Pack" alt="점프 팩" />
+    <method name="Jump Pack Knockback Scalar" alt="점프 팩 밀쳐내기 수준 조정" />
+    <method name="Jump Pack Acceleration Scalar" alt="점프 팩 가속 조정" />
+    <method name="Minefield" alt="지뢰밭" />
+    <method name="Minefield Knockback Scalar" alt="지뢰밭 밀쳐내기 수준 조정" />
+    <method name="Adaptive Shield" alt="적응형 보호막" />
+    <method name="Grappling Claw" alt="갈고리 고정" />
+    <method name="Grappling Claw Knockback Scalar" alt="갈고리 고정 밀쳐내기 수준 조정" />
+    <method name="Piledriver" alt="파일드라이버" />
+    <method name="Roll" alt="구르기" />
+    <method name="Roll Always Active" alt="구르기 항상 활성화" />
+    <method name="Graviton Surge" alt="중력자탄" />
+    <method name="Particle Barrier" alt="입자 방벽" />
+    <method name="Projected Barrier" alt="방벽 씌우기" />
+    <method name="Particle Cannon Secondary Knockback Scalar" alt="입자탄 밀쳐내기 수준 조정" />
+    <method name="Transcendence" alt="초월" />
+    <method name="Orb Of Harmony" alt="조화의 구슬" />
+    <method name="Orb Of Discord" alt="부조화의 구슬" />
+    <method name="Enemy Health Bars" alt="적 생명력 막대" />
+    <method name="Game Mode Start" alt="게임 모드 시작" />
+    <method name="All Slots Filled" alt="모든 자리가 찰 때" />
+    <method name="Immediately" alt="즉시" />
+    <method name="Manual" alt="수동" />
+    <method name="Health Pack Respawn Time Scalar" alt="생명력 팩 재생성 시간 조정" />
+    <method name="Kill Cam" alt="처치 영상" />
+    <method name="Kill Feed" alt="실시간 처치 정보" />
+    <method name="Skins" alt="스킨" />
+    <method name="Spawn Health Packs" alt="생명력 팩 생성" />
+    <method name="Determined By Mode" alt="모드에 따라 결정" />
+    <method name="Enabled" alt="활성화" />
+    <method name="Disabled" alt="disabled" />
+    <method name="Allow Hero Switching" alt="영웅 변경 허용" />
+    <method name="Hero Limit" alt="영웅 제한" />
+    <method name="1 Per Team" alt="팀당 1명" />
+    <method name="2 Per Team" alt="팀당 2명" />
+    <method name="1 Per Game" alt="게임당 1명" />
+    <method name="2 Per Game" alt="게임당 2명" />
+    <method name="Limit Roles" alt="역할 제한" />
+    <method name="2 Of Each Role Per Team" alt="팀당 역할별로 2명" />
+    <method name="Respawn As Random Hero" alt="임의의 영웅으로 부활" />
+    <method name="Respawn Time Scalar" alt="부활 시간 조정" />
+    <method name="Competitive Rules" alt="경쟁전 규칙" />
+    <method name="Capture Speed Modifier" alt="점령 속도 조정" />
+    <method name="Limit Valid Control Points" alt="점령 가능한 지점 제한" />
+    <method name="First" alt="처음" />
+    <method name="Second" alt="두 번째" />
+    <method name="Third" alt="세 번째" />
+    <method name="Score To Win" alt="승점" />
+    <method name="Scoring Speed Modifier" alt="점수 획득 속도 조정" />
+    <method name="Payload Speed Modifier" alt="화물 속도 조정" />
+    <method name="Blitz Flag Locations" alt="속공전 깃발 위치" />
+    <method name="Damage Interrupts Flag Interaction" alt="피해 받으면 깃발 집기 취소" />
+    <method name="Flag Carrier Abilities" alt="기수 기술" />
+    <method name="Restricted" alt="제한됨" />
+    <method name="Flag Dropped Lock Time" alt="깃발 다시 집기 제한 시간" />
+    <method name="Flag Pickup Time" alt="깃발 집기 시간" />
+    <method name="Flag Return Time" alt="깃발 원위치 시간" />
+    <method name="Flag Score Respawn Time" alt="깃발 득점 후 재생성 대기 시간" />
+    <method name="Game Length (Minutes)" alt="게임 시간(분)" />
+    <method name="Respawn Speed Buff Duration" alt="부활 속도 강화 지속 시간" />
+    <method name="Team Needs Flag At Base To Score" alt="득점에 우리팀 깃발 필요" />
+    <method name="Game Length In Minutes" alt="게임 진행 시간(분)" />
+    <method name="Self Initiated Respawn" alt="직접 부활" />
+    <method name="Hero Selection Time" alt="영웅 선택 시간" />
+    <method name="Restrict Previously Used Heroes" alt="기존 사용 영웅 제한" />
+    <method name="After Round Won" alt="라운드 승리 후" />
+    <method name="After Round Played" alt="라운드 플레이 후" />
+    <method name="Hero Selection" alt="영웅 선택" />
+    <method name="Any" alt="아무나" />
+    <method name="Limited" alt="선택 제한" />
+    <method name="Random" alt="무작위" />
+    <method name="Random (Mirrored)" alt="무작위 (동일 영웅)" />
+    <method name="Limited Choice Pool" alt="선택 폭 제한" />
+    <method name="Team Size +2" alt="팀 규모 +2" />
+    <method name="Team Size" alt="팀 규모" />
+    <method name="Team Size +1" alt="팀 규모 +1" />
+    <method name="Team Size +3" alt="팀 규모 +3" />
+    <method name="Capture Objective Tiebreaker" alt="점령 지점 승자 결정전" />
+    <method name="Tiebreaker After Match Time Elapsed" alt="경기 시간 지난 후에 승자 결정전" />
+    <method name="Time To Capture" alt="점령할 시간" />
+    <method name="Draw After Match Time Elapsed With No Tiebreaker" alt="승자 결정전이 없을 시 경기 시간 지난 후에 무승부" />
+    <method name="Reveal Heroes" alt="영웅 드러나기" />
+    <method name="Reveal Heroes After Match Time Elapsed" alt="경기 시간 지난 후에 영웅 드러나기" />
+    <method name="Mercy Resurrect Counteracts Kills" alt="메르시로 부활하면 처치 무효화" />
+    <method name="Imbalanced Team Score To Win" alt="팀별 승점" />
+    <method name="Team 1 Score To Win" alt="1팀 승점" />
+    <method name="Team 2 Score To Win" alt="2팀 승점" />
+    <method name="Spawn Training Bots" alt="훈련용 봇 생성" />
+    <method name="Training Bot Respawn Time Scalar" alt="훈련용 봇 재생성 시간 조정" />
   </Methods>
 </I18nLanguage>

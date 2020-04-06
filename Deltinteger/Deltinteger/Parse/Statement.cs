@@ -37,18 +37,20 @@ namespace Deltin.Deltinteger.Parse
     {
         public IExpression ReturningValue { get; }
         public DocRange ErrorRange { get; }
+        private readonly Scope ReturningFromScope;
 
         public ReturnAction(ParseInfo parseInfo, Scope scope, DeltinScriptParser.ReturnContext returnContext)
         {
             ErrorRange = DocRange.GetRange(returnContext.RETURN());
-            if (returnContext.expr() != null) ReturningValue = DeltinScript.GetExpression(parseInfo, scope, returnContext.expr());
+            if (returnContext.expr() != null) ReturningValue = parseInfo.GetExpression(scope, returnContext.expr());
+            ReturningFromScope = scope;
         }
 
         public void Translate(ActionSet actionSet)
         {
             if (ReturningValue != null)
                 actionSet.ReturnHandler.ReturnValue(ReturningValue.Parse(actionSet));
-            actionSet.ReturnHandler.Return();
+            actionSet.ReturnHandler.Return(ReturningFromScope, actionSet);
         }
     }
 
@@ -58,26 +60,33 @@ namespace Deltin.Deltinteger.Parse
 
         public DeleteAction(ParseInfo parseInfo, Scope scope, DeltinScriptParser.DeleteContext deleteContext)
         {
-            DeleteValue = DeltinScript.GetExpression(parseInfo, scope, deleteContext.expr());
+            DeleteValue = parseInfo.GetExpression(scope, deleteContext.expr());
+
+            if (DeleteValue != null)
+            {
+                if (DeleteValue.Type() == null)
+                    parseInfo.Script.Diagnostics.Error("Expression has no type.", DocRange.GetRange(deleteContext.expr()));
+                else if (!DeleteValue.Type().CanBeDeleted)
+                    parseInfo.Script.Diagnostics.Error($"Type '{DeleteValue.Type().Name}' cannot be deleted.", DocRange.GetRange(deleteContext.expr()));
+            }
         }
 
         public void Translate(ActionSet actionSet)
         {
+            // Object reference to delete.
             Element delete = (Element)DeleteValue.Parse(actionSet);
 
-            var classData = actionSet.Translate.DeltinScript.SetupClasses();
+            // Class data.
+            var classData = actionSet.Translate.DeltinScript.GetComponent<ClassData>();
 
-            actionSet.AddAction(
-                classData.ClassArray.SetVariable(new V_Null(), null, delete)
-            );
+            // Remove the variable from the list of classes.
+            actionSet.AddAction(classData.ClassIndexes.SetVariable(
+                value: new V_Number(0),
+                index: delete
+            ));
 
-            if (DefinedType.CLASS_INDEX_WORKAROUND)
-                actionSet.AddAction(classData.ClassIndexes.SetVariable(
-                    Element.Part<V_RemoveFromArray>(
-                        classData.ClassIndexes.GetVariable(),
-                        delete
-                    )
-                ));
+            // Delete the object.
+            DeleteValue.Type().Delete(actionSet, delete);
         }
     }
 }

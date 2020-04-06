@@ -127,6 +127,17 @@ namespace Deltin.Deltinteger.LanguageServer
             return GetRange(node.Symbol);
         }
 
+        public static DocRange GetRange(object node)
+        {
+            if (node is ParserRuleContext context) return GetRange(context);
+            if (node is ITerminalNode terminalNode) return GetRange(terminalNode);
+            if (node is IToken token) return GetRange(token);
+
+            throw new ArgumentException("Cannot get range of type '" + node.GetType().Name + "'.");
+        }
+
+        public static DocRange GetRange(object start, object stop) => new DocRange(DocRange.GetRange(start).start, DocRange.GetRange(stop).end);
+
         public bool IsInside(Pos pos)
         {
             return (start.line < pos.line || (start.line == pos.line && pos.character >= start.character))

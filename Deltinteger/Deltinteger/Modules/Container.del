@@ -19,7 +19,7 @@ Usage:
 
 */
 
-define globalvar scoper;
+globalvar define scoper;
 
 rule: "Create Scoper"
 {

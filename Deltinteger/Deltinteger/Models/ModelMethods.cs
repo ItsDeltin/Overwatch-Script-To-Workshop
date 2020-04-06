@@ -19,8 +19,6 @@ namespace Deltin.Deltinteger.Models
 {
     public class AssetClass : CodeType
     {
-        protected override string TypeKindString => "class";
-
         private Scope StaticScope { get; } = new Scope("class Asset");
 
         public AssetClass() : base("Asset")
@@ -295,7 +293,7 @@ namespace Deltin.Deltinteger.Models
 
     class ModelParameter : FileParameter
     {
-        public ModelParameter(string parameterName, string description) : base("obj", parameterName, description) {}
+        public ModelParameter(string parameterName, string description) : base(parameterName, description, ".obj") {}
     
         public override object Validate(ScriptFile script, IExpression value, DocRange valueRange)
         {
@@ -316,7 +314,7 @@ namespace Deltin.Deltinteger.Models
             return newModel;
         }
 
-        public override IWorkshopTree Parse(ActionSet actionSet, IExpression expression, bool asElement) => null;
+        public override IWorkshopTree Parse(ActionSet actionSet, IExpression expression, object additionalParameterData) => null;
     }
 
     [CustomMethod("CreateTextFont", "Creates in-world text using any custom text.", CustomMethodType.MultiAction_Value, false)]
@@ -329,7 +327,7 @@ namespace Deltin.Deltinteger.Models
             new CodeParameter("location", "The location to display the text."),
             new CodeParameter("rotation", "The rotation of the text."),
             new CodeParameter("scale", "The scale of the text."),
-            new CodeParameter("reevaluation", "Specifies which of this methods inputs will be continuously reevaluated, the text will keep asking for and using new values from reevaluated inputs."),
+            new CodeParameter("reevaluation", "Specifies which of this methods inputs will be continuously reevaluated, the text will keep asking for and using new values from reevaluated inputs.", WorkshopEnumType.GetEnumType<EffectRev>()),
             new ConstBoolParameter("getEffectIDs", "If true, the method will return the effect IDs used to create the text. Use `DestroyEffectArray()` to destroy the effect. This is a boolean constant.", false)
         };
 
@@ -369,7 +367,7 @@ namespace Deltin.Deltinteger.Models
             new CodeParameter("location", "The location to display the text."),
             new CodeParameter("rotation", "The rotation of the text."),
             new CodeParameter("scale", "The scale of the text."),
-            new CodeParameter("reevaluation", "Specifies which of this methods inputs will be continuously reevaluated, the text will keep asking for and using new values from reevaluated inputs."),
+            new CodeParameter("reevaluation", "Specifies which of this methods inputs will be continuously reevaluated, the text will keep asking for and using new values from reevaluated inputs.", WorkshopEnumType.GetEnumType<EffectRev>()),
             new ConstBoolParameter("getEffectIDs", "If true, the method will return the effect IDs used to create the text. Use `DestroyEffectArray()` to destroy the effect. This is a boolean constant.", false)
         };
 
@@ -396,7 +394,7 @@ namespace Deltin.Deltinteger.Models
             new CodeParameter("location", "The location to display the text."),
             new CodeParameter("rotation", "The rotation of the text."),
             new CodeParameter("scale", "The scale of the text."),
-            new CodeParameter("reevaluation", "Specifies which of this methods inputs will be continuously reevaluated, the text will keep asking for and using new values from reevaluated inputs."),
+            new CodeParameter("reevaluation", "Specifies which of this methods inputs will be continuously reevaluated, the text will keep asking for and using new values from reevaluated inputs.", WorkshopEnumType.GetEnumType<EffectRev>()),
             new ConstBoolParameter("getEffectIDs", "If true, the method will return the effect IDs used to create the text. Use `DestroyEffectArray()` to destroy the effect. This is a boolean constant.", false)
         };
 
@@ -476,6 +474,6 @@ namespace Deltin.Deltinteger.Models
             return false;
         }
 
-        public override IWorkshopTree Parse(ActionSet actionSet, IExpression expression, bool asElement) => null;
+        public override IWorkshopTree Parse(ActionSet actionSet, IExpression expression, object additionalParameterData) => null;
     }
 }

@@ -1,0 +1,84 @@
+{
+	"scopeName": "ow_source.del",
+	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+	"name": "Overwatch Script To Workshop",
+	"patterns": [
+		{ "include": "#comments" },
+		{ "include": "#rule" },
+		{ "include": "#if" },
+		{ "include": "#methods" },
+		{ "include": "#strings" },
+		{ "include": "#numbers" },
+		{ "include": "#keywords" },
+		{ "include": "#variables" }
+	],
+	"repository": {
+		"rule": {
+			"match": "\\b((disabled\\s+)?rule)\\s*:",
+			"captures": {
+				"1": {"name":"keyword.control"}
+			}
+		},
+		"if": {
+			"begin": "((else\\s+)?if)\\s*\\(",
+			"beginCaptures": {
+				"1": {"name": "keyword.control"}
+			},
+			"end": "\\)"
+		},
+		"methods": {
+            "begin": "(While|If|For|rule|([a-zA-Z0-9 ]+))\\s*\\(",
+            "beginCaptures": {
+                "1": {"name": "keyword.control"},
+                "2": {"name": "entity.name.function"}
+            },
+			"end": "\\)",
+			"patterns": [{"include": "#methods"}, {"include": "#strings"}, {"include": "#numbers"}, {"include": "#keywords"}, {"include": "#variables"}]
+		},
+		"strings": {
+			"name": "string.quoted.double",
+			"begin": "@?\"",
+			"end": "\"",
+			"patterns": [
+				{
+					"name": "constant.character.escape",
+					"match": "\\\\."
+				},
+				{
+					"name": "string.regexp",
+					"match": "<[0-9]+>"
+				}
+			]
+		},
+		"comments": {
+			"patterns": [
+				{"begin": "//"    , "end": "$"      , "name": "comment.line.double-slash"},
+				{"begin": "\\/\\*", "end": "\\*\\/" , "name": "comment.block"},
+				{"begin": "#", "end": "$", "name": "comment.block.documentation" }
+			]
+		},
+		"numbers": {
+			"name": "constant.numeric",
+			"match": "\\b-?[0-9]+(\\.[0-9]+)?\\b"
+		},
+
+		"keywords": {
+			"patterns": [
+				{"include": "#keywords_control"},
+				{"include": "#keywords_other"}
+			]
+		},
+		"keywords_control": {
+			"name": "keyword.control",
+			"match": "\\b(If|Else|While|For|Rule|variables|actions|conditions|event|global|player|End|settings|modes|heroes)\\b"
+		},
+		"keywords_other": {
+			"name": "keyword.other",
+			"match": "\\b(True|False|Null)\\b"
+		},
+		"variables": {
+			"name": "variable",
+			"match": "[a-zA-Z_0-9]+"
+		}
+	}
+}

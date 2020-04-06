@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -41,11 +41,23 @@ namespace Deltin.Deltinteger.Elements
     [Parameter("Header", ValueType.Any, typeof(V_String))]
     public class A_BigMessage : Element {}
 
+    [ElementData("Call Subroutine")]
+    [Parameter("Subroutine", ValueType.Any, null)]
+    [HideElement]
+    public class A_CallSubroutine : Element {}
+
+    [ElementData("Start Rule")]
+    [Parameter("Subroutine", ValueType.Any, null)]
+    [EnumParameter("If Already Executing", typeof(IfAlreadyExecuting))]
+    [HideElement]
+    public class A_StartRule : Element {}
+
     [ElementData("Chase Global Variable At Rate")]
     [VarRefParameter("Variable", true)]
     [Parameter("Destination", ValueType.Any, typeof(V_Number))]
     [Parameter("Rate", ValueType.Number, typeof(V_Number))]
     [EnumParameter("Reevaluation", typeof(RateChaseReevaluation))]
+    [HideElement]
     public class A_ChaseGlobalVariableAtRate : Element {}
 
     [ElementData("Chase Global Variable Over Time")]
@@ -53,6 +65,7 @@ namespace Deltin.Deltinteger.Elements
     [Parameter("Destination", ValueType.Any, typeof(V_Number))]
     [Parameter("Duration", ValueType.Number, typeof(V_Number))]
     [EnumParameter("Reevaluation", typeof(TimeChaseReevaluation))]
+    [HideElement]
     public class A_ChaseGlobalVariableOverTime : Element {}
 
     [ElementData("Chase Player Variable At Rate")]
@@ -61,6 +74,7 @@ namespace Deltin.Deltinteger.Elements
     [Parameter("Destination", ValueType.Any, typeof(V_Number))]
     [Parameter("Rate", ValueType.Number, typeof(V_Number))]
     [EnumParameter("Reevaluation", typeof(RateChaseReevaluation))]
+    [HideElement]
     public class A_ChasePlayerVariableAtRate : Element {}
 
     [ElementData("Chase Player Variable Over Time")]
@@ -69,6 +83,7 @@ namespace Deltin.Deltinteger.Elements
     [Parameter("Destination", ValueType.Any, typeof(V_Number))]
     [Parameter("Duration", ValueType.Number, typeof(V_Number))]
     [EnumParameter("Reevaluation", typeof(TimeChaseReevaluation))]
+    [HideElement]
     public class A_ChasePlayerVariableOverTime : Element {}
 
     [ElementData("Clear Status")]
@@ -118,7 +133,7 @@ namespace Deltin.Deltinteger.Elements
     [EnumParameter("Header Color", typeof(Color))]
     [EnumParameter("Subheader Color", typeof(Color))]
     [EnumParameter("Text Color", typeof(Color))]
-    [EnumParameter("Reevaluation", typeof(StringRev))]
+    [EnumParameter("Reevaluation", typeof(HudTextRev))]
     [EnumParameter("Spectators", typeof(Spectators))]
     public class A_CreateHudText : Element {}
 
@@ -191,8 +206,8 @@ namespace Deltin.Deltinteger.Elements
     [Parameter("Text ID", ValueType.Number, null)]
     public class A_DestroyHudText : Element {}
 
-    [ElementData("Destroy Effect")]
-    [Parameter("Effect ID", ValueType.Player, null)]
+    [ElementData("Destroy Icon")]
+    [Parameter("Icon ID", ValueType.Number, null)]
     public class A_DestroyIcon : Element {}
 
     [ElementData("Destroy In-World Text")]
@@ -223,18 +238,22 @@ namespace Deltin.Deltinteger.Elements
     [Parameter("Players", ValueType.Player, typeof(V_EventPlayer))]
     public class A_DisableSpectateHUD : Element {}
 
+    [ElementData("Disable Inspector Recording")]
+    public class A_DisableInspectorRecording : Element {}
+
     [ElementData("Disallow Button")]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     [EnumParameter("Button", typeof(Button))]
     public class A_DisallowButton : Element {}
-
-
 
     [ElementData("Enable Built-In Game Mode Announcer")]
     public class A_EnableAnnouncer : Element {}
 
     [ElementData("Enable Built-In Game Mode Completion")]
     public class A_EnableCompletion : Element {}
+
+    [ElementData("Enable Inspector Recording")]
+    public class A_EnableInspectorRecording : Element {}
 
     [ElementData("Enable Built-In Game Mode Music")]
     public class A_EnableMusic : Element {}
@@ -254,15 +273,46 @@ namespace Deltin.Deltinteger.Elements
     [Parameter("Players", ValueType.Player, typeof(V_EventPlayer))]
     public class A_EnableSpectateHUD : Element {}
 
+    [ElementData("End")]
+    [HideElement]
+    public class A_End : Element {}
+
+    [ElementData("For Global Variable")]
+    [VarRefParameter("Control Variable", true)]
+    [Parameter("Range Start", ValueType.Number, typeof(V_Number))]
+    [Parameter("Range Stop", ValueType.Number, typeof(V_Number))]
+    [Parameter("Step", ValueType.Number, typeof(V_Number))]
+    [HideElement]
+    public class A_ForGlobalVariable : Element {}
+
+    [ElementData("For Player Variable")]
+    [Parameter("Control Player", ValueType.Player, typeof(V_EventPlayer))]
+    [VarRefParameter("Control Variable", false)]
+    [Parameter("Range Start", ValueType.Number, typeof(V_Number))]
+    [Parameter("Range Stop", ValueType.Number, typeof(V_Number))]
+    [Parameter("Step", ValueType.Number, typeof(V_Number))]
+    [HideElement]
+    public class A_ForPlayerVariable : Element {}
 
     [ElementData("Go To Assemble Heroes")]
-    public class A_AssembleHeroes : Element {}
+    public class A_GoToAssembleHeroes : Element {}
 
     [ElementData("Heal")]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     [Parameter("Healer", ValueType.Player, typeof(V_Null))]
     [Parameter("Amount", ValueType.Number, typeof(V_Number))]
     public class A_Heal : Element {}
+
+    [ElementData("If")]
+    [Parameter("Condition", ValueType.Boolean, typeof(V_Compare))]
+    public class A_If : Element {}
+
+    [ElementData("Else If")]
+    [Parameter("Condition", ValueType.Boolean, typeof(V_Compare))]
+    public class A_ElseIf : Element {}
+
+    [ElementData("Else")]
+    public class A_Else : Element {}
 
     [ElementData("Kill")]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
@@ -290,6 +340,7 @@ namespace Deltin.Deltinteger.Elements
     [VarRefParameter("Variable", true)]
     [EnumParameter("Operation", typeof(Operation))]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
+    [HideElement]
     public class A_ModifyGlobalVariable : Element {}
 
     [ElementData("Modify Global Variable At Index")]
@@ -297,6 +348,7 @@ namespace Deltin.Deltinteger.Elements
     [Parameter("Index", ValueType.Number, typeof(V_Number))]
     [EnumParameter("Operation", typeof(Operation))]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
+    [HideElement]
     public class A_ModifyGlobalVariableAtIndex : Element {}
 
     [ElementData("Modify Player Score")]
@@ -309,6 +361,7 @@ namespace Deltin.Deltinteger.Elements
     [VarRefParameter("Variable", false)]
     [EnumParameter("Operation", typeof(Operation))]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
+    [HideElement]
     public class A_ModifyPlayerVariable : Element {}
 
     [ElementData("Modify Player Variable At Index")]
@@ -317,6 +370,7 @@ namespace Deltin.Deltinteger.Elements
     [Parameter("Index", ValueType.Number, typeof(V_Number))]
     [EnumParameter("Operation", typeof(Operation))]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
+    [HideElement]
     public class A_ModifyPlayerVariableAtIndex : Element {}
 
     [ElementData("Modify Team Score")]
@@ -347,7 +401,7 @@ namespace Deltin.Deltinteger.Elements
 
     [ElementData("Reset Player Hero Availability")]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
-    public class A_ResetHeroRoster : Element {}
+    public class A_ResetHeroAvailability : Element {}
 
     [ElementData("Respawn")]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
@@ -391,12 +445,14 @@ namespace Deltin.Deltinteger.Elements
     [ElementData("Set Global Variable")]
     [VarRefParameter("Variable", true)]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
+    [HideElement]
     public class A_SetGlobalVariable : Element {}
 
     [ElementData("Set Global Variable At Index")]
     [VarRefParameter("Variable", true)]
     [Parameter("Index", ValueType.Number, typeof(V_Number))]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
+    [HideElement]
     public class A_SetGlobalVariableAtIndex : Element {}
 
     [ElementData("Set Gravity")]
@@ -442,7 +498,7 @@ namespace Deltin.Deltinteger.Elements
     [ElementData("Set Player Allowed Heroes")]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     [Parameter("Hero", ValueType.Hero, null)]
-    public class A_SetHeroRoster : Element {}
+    public class A_SetAllowedHeroes : Element {}
 
     [ElementData("Set Player Score")]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
@@ -453,6 +509,7 @@ namespace Deltin.Deltinteger.Elements
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     [VarRefParameter("Variable", false)]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
+    [HideElement]
     public class A_SetPlayerVariable : Element {}
 
     [ElementData("Set Player Variable At Index")]
@@ -460,6 +517,7 @@ namespace Deltin.Deltinteger.Elements
     [VarRefParameter("Variable", false)]
     [Parameter("Index", ValueType.Number, typeof(V_Number))]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
+    [HideElement]
     public class A_SetPlayerVariableAtIndex : Element {}
 
     [ElementData("Set Primary Fire Enabled")]
@@ -561,7 +619,7 @@ namespace Deltin.Deltinteger.Elements
     [Parameter("Receivers", ValueType.Player, typeof(V_EventPlayer))]
     [Parameter("Damagers", ValueType.Player, typeof(V_AllPlayers))]
     [Parameter("Damage Percent", ValueType.Number, typeof(V_Number))]
-    [EnumParameter("Reevaluation", typeof(ModRev))]
+    [EnumParameter("Reevaluation", typeof(DamageModificationRev))]
     public class A_StartDamageModification : Element {}
 
     [ElementData("Start Damage Over Time")]
@@ -598,6 +656,17 @@ namespace Deltin.Deltinteger.Elements
     [Parameter("Min Sideways", ValueType.Number, typeof(V_Number))]
     [Parameter("Max Sideways", ValueType.Number, typeof(V_Number))]
     public class A_ForceThrottle : Element {}
+
+    [ElementData("Start Healing Modification")]
+    [Parameter("Recievers", ValueType.Player, typeof(V_EventPlayer))]
+    [Parameter("Healers", ValueType.Player, typeof(V_AllPlayers))]
+    [Parameter("Healing Percent", ValueType.Number, typeof(V_Number))]
+    [EnumParameter("Reevaluation", typeof(HealingModificationRev))]
+    public class A_StartHealingModification : Element {}
+
+    [ElementData("Stop Healing Modification")]
+    [Parameter("Healing Modification ID", ValueType.Number, typeof(V_LastHealingModificationID))]
+    public class A_StopHealingModification : Element {}
 
     [ElementData("Start Heal Over Time")]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
@@ -648,11 +717,13 @@ namespace Deltin.Deltinteger.Elements
 
     [ElementData("Stop Chasing Global Variable")]
     [VarRefParameter("Variable", true)]
+    [HideElement]
     public class A_StopChasingGlobalVariable : Element {}
 
     [ElementData("Stop Chasing Player Variable")]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     [VarRefParameter("Variable", false)]
+    [HideElement]
     public class A_StopChasingPlayerVariable : Element {}
 
     [ElementData("Stop Damage Modification")]
@@ -711,4 +782,9 @@ namespace Deltin.Deltinteger.Elements
     {
         public static A_Wait MinimumWait { get { return Element.Part<A_Wait>(new V_Number(Constants.MINIMUM_WAIT)); } }
     }
+
+    [ElementData("While")]
+    [Parameter("Condition", ValueType.Boolean, typeof(V_Compare))]
+    [HideElement]
+    public class A_While : Element {}
 }

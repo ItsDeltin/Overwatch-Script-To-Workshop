@@ -1,10 +1,8 @@
 using System;
 using System.Linq;
-using System.Collections.Generic;
 using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.Elements;
 using Antlr4.Runtime;
-using Antlr4.Runtime.Tree;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -12,248 +10,7 @@ namespace Deltin.Deltinteger.Parse
     {
         Scope ReturningScope();
         CodeType Type();
-        IWorkshopTree Parse(ActionSet actionSet, bool asElement = true);
-    }
-
-    public class ExpressionTree : IExpression, IStatement
-    {
-        public IExpression[] Tree { get; }
-        public IExpression Result { get; }
-        public bool Completed { get; } = true;
-        public TreeContextPart[] ExprContextTree { get; }
-
-        private ITerminalNode _trailingSeperator = null;
-
-        public ExpressionTree(ParseInfo parseInfo, Scope scope, DeltinScriptParser.E_expr_treeContext exprContext, bool usedAsValue)
-        {
-            ExprContextTree = Flatten(parseInfo.Script, exprContext);
-
-            Tree = new IExpression[ExprContextTree.Length];
-            IExpression current = ExprContextTree[0].Parse(parseInfo, scope, scope, true);
-            Tree[0] = current;
-            if (current != null)
-                for (int i = 1; i < ExprContextTree.Length; i++)
-                {
-                    current = ExprContextTree[i].Parse(parseInfo, current.ReturningScope() ?? new Scope(), scope, i < ExprContextTree.Length - 1 || usedAsValue);
-
-                    Tree[i] = current;
-
-                    if (current == null)
-                    {
-                        Completed = false;
-                        break;
-                    }
-                }
-            else Completed = false;
-        
-            if (Completed)
-                Result = Tree[Tree.Length - 1];
-            
-            // Get the completion items for each expression in the path.
-            GetCompletion(parseInfo.Script);
-        }
-
-        private TreeContextPart[] Flatten(ScriptFile script, DeltinScriptParser.E_expr_treeContext exprContext)
-        {
-            var exprList = new List<TreeContextPart>();
-            Flatten(script, exprContext, exprList);
-            return exprList.ToArray();
-
-            void Flatten(ScriptFile script, DeltinScriptParser.E_expr_treeContext exprContext, List<TreeContextPart> exprList)
-            {
-                if (exprContext.expr() is DeltinScriptParser.E_expr_treeContext)
-                    Flatten(script, (DeltinScriptParser.E_expr_treeContext)exprContext.expr(), exprList);
-                else
-                    exprList.Add(new TreeContextPart(exprContext.expr()));
-
-                if (exprContext.method() == null && exprContext.variable() == null)
-                {
-                    script.Diagnostics.Error("Expected expression.", DocRange.GetRange(exprContext.SEPERATOR()));
-                    _trailingSeperator = exprContext.SEPERATOR();
-                }
-                else
-                {
-                    if (exprContext.method() != null)
-                        exprList.Add(new TreeContextPart(exprContext.method()));
-                    if (exprContext.variable() != null)
-                        exprList.Add(new TreeContextPart(exprContext.variable()));
-                }
-            }
-        }
-
-        private void GetCompletion(ScriptFile script)
-        {
-            for (int i = 0; i < Tree.Length; i++)
-            if (Tree[i] != null)
-            {
-                // Get the treescope. Don't get the completion items if it is null.
-                var treeScope = Tree[i].ReturningScope();
-                if (treeScope != null)
-                {
-                    DocRange range;
-                    if (i < Tree.Length - 1)
-                    {
-                        range = ExprContextTree[i + 1].CompletionRange;
-                    }
-                    // Expression path has a trailing '.'
-                    else if (_trailingSeperator != null)
-                    {
-                        range = new DocRange(
-                            DocRange.GetRange(_trailingSeperator).end,
-                            DocRange.GetRange(script.NextToken(_trailingSeperator)).start
-                        );
-                    }
-                    else continue;
-
-                    script.AddCompletionRange(new CompletionRange(treeScope, range, CompletionRangeKind.ClearRest));
-                }
-            }
-        }
-
-        public Scope ReturningScope()
-        {
-            if (Completed)
-                return Result.ReturningScope();
-            else
-                return null;
-        }
-
-        public CodeType Type() => Result?.Type();
-
-        public IWorkshopTree Parse(ActionSet actionSet, bool asElement = true)
-        {
-            return ParseTree(actionSet, true, asElement).Result;
-        }
-
-        public void Translate(ActionSet actionSet)
-        {
-            ParseTree(actionSet, false, true);
-        }
-
-        public ExpressionTreeParseResult ParseTree(ActionSet actionSet, bool expectingValue, bool asElement)
-        {
-            IGettable resultingVariable = null;
-            IWorkshopTree target = null;
-            IWorkshopTree result = null;
-            VarIndexAssigner currentAssigner = actionSet.IndexAssigner;
-            IndexReference currentObject = null;
-            Element[] resultIndex = new Element[0];
-
-            for (int i = 0; i < Tree.Length; i++)
-            {
-                bool isLast = i == Tree.Length - 1;
-                IWorkshopTree current = null;
-                if (Tree[i] is CallVariableAction)
-                {
-                    var callVariableAction = (CallVariableAction)Tree[i];
-
-                    var reference = currentAssigner[callVariableAction.Calling];
-                    current = reference.GetVariable((Element)target);
-
-                    resultIndex = new Element[callVariableAction.Index.Length];
-                    for (int ai = 0; ai < callVariableAction.Index.Length; ai++)
-                    {
-                        var workshopIndex = callVariableAction.Index[ai].Parse(actionSet);
-                        resultIndex[ai] = (Element)workshopIndex;
-                        current = Element.Part<V_ValueInArray>(current, workshopIndex);
-                    }
-
-                    // If this is the last node in the tree, set the resulting variable.
-                    if (isLast) resultingVariable = reference;
-                }
-                else
-                {
-                    var newCurrent = Tree[i].Parse(actionSet.New(currentAssigner).New(currentObject), asElement);
-                    if (newCurrent != null)
-                    {
-                        current = newCurrent;
-                        resultIndex = new Element[0];
-                    }
-                }
-                
-                if (Tree[i].Type() == null)
-                {
-                    // If this isn't the last in the tree, set it as the target.
-                    if (!isLast)
-                        target = current;
-                    currentObject = null;
-                }
-                else
-                {
-                    currentObject = Tree[i].Type().GetObjectSource(actionSet.Translate.DeltinScript, current);
-
-                    if (Tree[i].Type() is DefinedType)
-                    {
-                        currentAssigner = actionSet.IndexAssigner.CreateContained();
-                        var definedType = ((DefinedType)Tree[i].Type());
-
-                        // Assign the object variables indexes.
-                        definedType.AddObjectVariablesToAssigner(currentObject, currentAssigner);
-                    }
-                }
-
-                result = current;
-            }
-
-            if (result == null && expectingValue) throw new Exception("Expression tree result is null");
-            return new ExpressionTreeParseResult(result, resultIndex, target, resultingVariable);
-        }
-    
-        public class TreeContextPart
-        {
-            public DocRange Range { get; }
-            public DocRange CompletionRange { get; }
-            private readonly DeltinScriptParser.VariableContext variable;
-            private readonly DeltinScriptParser.MethodContext method;
-            private readonly DeltinScriptParser.ExprContext expression;
-
-            public TreeContextPart(DeltinScriptParser.VariableContext variable)
-            {
-                this.variable = variable ?? throw new ArgumentNullException(nameof(variable));
-                Range = DocRange.GetRange(variable);
-                CompletionRange = Range;
-            }
-            public TreeContextPart(DeltinScriptParser.MethodContext method)
-            {
-                this.method = method ?? throw new ArgumentNullException(nameof(method));
-                Range = DocRange.GetRange(method);
-                CompletionRange = DocRange.GetRange(method.PART());
-            }
-            public TreeContextPart(DeltinScriptParser.ExprContext expression)
-            {
-                this.expression = expression ?? throw new ArgumentNullException(nameof(expression));
-                Range = DocRange.GetRange(expression);
-                CompletionRange = Range;
-            }
-
-            public IExpression Parse(ParseInfo parseInfo, Scope scope, Scope getter, bool usedAsValue)
-            {
-                if (variable != null)
-                    return DeltinScript.GetVariable(parseInfo, scope, variable, false);
-                if (method != null)
-                    return new CallMethodAction(parseInfo, scope, method, usedAsValue, getter);
-                if (expression != null)
-                    return DeltinScript.GetExpression(parseInfo, scope, expression, false, usedAsValue, getter);
-                
-                throw new Exception();
-            }
-        }
-    }
-
-    public class ExpressionTreeParseResult
-    {
-        public IWorkshopTree Result { get; }
-        public Element[] ResultingIndex { get; }
-        public IWorkshopTree Target { get; }
-        public IGettable ResultingVariable { get; }
-
-        public ExpressionTreeParseResult(IWorkshopTree result, Element[] index, IWorkshopTree target, IGettable resultingVariable)
-        {
-            Result = result;
-            ResultingIndex = index;
-            Target = target;
-            ResultingVariable = resultingVariable;
-        }
+        IWorkshopTree Parse(ActionSet actionSet);
     }
 
     public class NumberAction : IExpression
@@ -268,7 +25,7 @@ namespace Deltin.Deltinteger.Parse
         public Scope ReturningScope() => null;
         public CodeType Type() => null;
 
-        public IWorkshopTree Parse(ActionSet actionSet, bool asElement = true)
+        public IWorkshopTree Parse(ActionSet actionSet)
         {
             return new V_Number(Value);
         }
@@ -286,7 +43,7 @@ namespace Deltin.Deltinteger.Parse
         public Scope ReturningScope() => null;
         public CodeType Type() => null;
 
-        public IWorkshopTree Parse(ActionSet actionSet, bool asElement = true)
+        public IWorkshopTree Parse(ActionSet actionSet)
         {
             if (Value) return new V_True();
             else return new V_False();
@@ -299,7 +56,7 @@ namespace Deltin.Deltinteger.Parse
         public Scope ReturningScope() => null;
         public CodeType Type() => null;
 
-        public IWorkshopTree Parse(ActionSet actionSet, bool asElement = true)
+        public IWorkshopTree Parse(ActionSet actionSet)
         {
             return new V_Null();
         }
@@ -311,25 +68,27 @@ namespace Deltin.Deltinteger.Parse
         public IExpression Index { get; }
         private DocRange expressionRange { get; }
         private DocRange indexRange { get; }
+        private ParseInfo parseInfo { get; }
 
         public ValueInArrayAction(ParseInfo parseInfo, Scope scope, DeltinScriptParser.E_array_indexContext exprContext)
         {
-            Expression = DeltinScript.GetExpression(parseInfo, scope, exprContext.array);
+            Expression = parseInfo.GetExpression(scope, exprContext.array);
             expressionRange = DocRange.GetRange(exprContext.array);
+            this.parseInfo = parseInfo;
 
             if (exprContext.index == null)
                 parseInfo.Script.Diagnostics.Error("Expected an expression.", DocRange.GetRange(exprContext.INDEX_START()));
             else
             {
-                Index = DeltinScript.GetExpression(parseInfo, scope, exprContext.index);
+                Index = parseInfo.GetExpression(scope, exprContext.index);
                 indexRange = DocRange.GetRange(exprContext.index);
             }
         }
 
-        public Scope ReturningScope() => Type()?.GetObjectScope();
+        public Scope ReturningScope() => Type()?.GetObjectScope() ?? parseInfo.TranslateInfo.PlayerVariableScope;
         public CodeType Type() => (Expression.Type() as ArrayType)?.ArrayOfType;
 
-        public IWorkshopTree Parse(ActionSet actionSet, bool asElement = true)
+        public IWorkshopTree Parse(ActionSet actionSet)
         {
             return Element.Part<V_ValueInArray>(Expression.Parse(actionSet.New(expressionRange)), Index.Parse(actionSet.New(indexRange)));
         }
@@ -343,13 +102,13 @@ namespace Deltin.Deltinteger.Parse
         {
             Values = new IExpression[createArrayContext.expr().Length];
             for (int i = 0; i < Values.Length; i++)
-                Values[i] = DeltinScript.GetExpression(parseInfo, scope, createArrayContext.expr(i));
+                Values[i] = parseInfo.GetExpression(scope, createArrayContext.expr(i));
         }
 
         public Scope ReturningScope() => null;
         public CodeType Type() => null;
 
-        public IWorkshopTree Parse(ActionSet actionSet, bool asElement = true)
+        public IWorkshopTree Parse(ActionSet actionSet)
         {
             IWorkshopTree[] asWorkshop = new IWorkshopTree[Values.Length];
             for (int i = 0; i < asWorkshop.Length; i++)
@@ -366,18 +125,22 @@ namespace Deltin.Deltinteger.Parse
 
         public TypeConvertAction(ParseInfo parseInfo, Scope scope, DeltinScriptParser.TypeconvertContext typeConvert)
         {
-            Expression = DeltinScript.GetExpression(parseInfo, scope, typeConvert.expr());
+            // Get the expression. Syntax error if there is none.
+            if (typeConvert.expr() == null)
+                parseInfo.Script.Diagnostics.Error("Expected expression.", DocRange.GetRange(typeConvert.GREATER_THAN()));
+            else
+                Expression = parseInfo.GetExpression(scope, typeConvert.expr());
 
             // Get the type. Syntax error if there is none.
-            if (typeConvert.PART() == null)
+            if (typeConvert.code_type() == null)
                 parseInfo.Script.Diagnostics.Error("Expected type name.", DocRange.GetRange(typeConvert.LESS_THAN()));
             else
-                ConvertingTo = parseInfo.TranslateInfo.GetCodeType(typeConvert.PART().GetText(), parseInfo.Script.Diagnostics, DocRange.GetRange(typeConvert.PART()));
+                ConvertingTo = CodeType.GetCodeTypeFromContext(parseInfo, typeConvert.code_type());
         }
 
-        public Scope ReturningScope() => ConvertingTo.GetObjectScope();
+        public Scope ReturningScope() => ConvertingTo?.GetObjectScope();
         public CodeType Type() => ConvertingTo;
-        public IWorkshopTree Parse(ActionSet actionSet, bool asElement = true) => Expression.Parse(actionSet);
+        public IWorkshopTree Parse(ActionSet actionSet) => Expression.Parse(actionSet);
     }
 
     public class NotAction : IExpression
@@ -386,12 +149,12 @@ namespace Deltin.Deltinteger.Parse
 
         public NotAction(ParseInfo parseInfo, Scope scope, DeltinScriptParser.ExprContext exprContext)
         {
-            Expression = DeltinScript.GetExpression(parseInfo, scope, exprContext);
+            Expression = parseInfo.GetExpression(scope, exprContext);
         }
 
         public Scope ReturningScope() => null;
         public CodeType Type() => null;
-        public IWorkshopTree Parse(ActionSet actionSet, bool asElement = true) => Element.Part<V_Not>(Expression.Parse(actionSet));
+        public IWorkshopTree Parse(ActionSet actionSet) => Element.Part<V_Not>(Expression.Parse(actionSet));
     }
     
     public class InverseAction : IExpression
@@ -400,12 +163,12 @@ namespace Deltin.Deltinteger.Parse
 
         public InverseAction(ParseInfo parseInfo, Scope scope, DeltinScriptParser.ExprContext exprContext)
         {
-            Expression = DeltinScript.GetExpression(parseInfo, scope, exprContext);
+            Expression = parseInfo.GetExpression(scope, exprContext);
         }
 
         public Scope ReturningScope() => null;
         public CodeType Type() => null;
-        public IWorkshopTree Parse(ActionSet actionSet, bool asElement = true) => Element.Part<V_Subtract>(new V_Number(0), Expression.Parse(actionSet));
+        public IWorkshopTree Parse(ActionSet actionSet) => Element.Part<V_Multiply>(Expression.Parse(actionSet), new V_Number(-1));
     }
     
     public class OperatorAction : IExpression
@@ -435,18 +198,18 @@ namespace Deltin.Deltinteger.Parse
         {
             // Left operator.
             if (left == null) parseInfo.Script.Diagnostics.Error("Missing left operator.", opRange);
-            else Left = DeltinScript.GetExpression(parseInfo, scope, left);
+            else Left = parseInfo.GetExpression(scope, left);
 
             // Right operator.
             if (right == null) parseInfo.Script.Diagnostics.Error("Missing right operator.", opRange);
-            else Right = DeltinScript.GetExpression(parseInfo, scope, right);
+            else Right = parseInfo.GetExpression(scope, right);
 
             Operator = op;
         }
 
         public Scope ReturningScope() => null;
         public CodeType Type() => null;
-        public IWorkshopTree Parse(ActionSet actionSet, bool asElement = true)
+        public IWorkshopTree Parse(ActionSet actionSet)
         {
             var left = Left.Parse(actionSet);
             var right = Right.Parse(actionSet);
@@ -476,30 +239,32 @@ namespace Deltin.Deltinteger.Parse
         public IExpression Condition { get; }
         public IExpression Consequent { get; }
         public IExpression Alternative { get; }
+        private ParseInfo parseInfo { get; }
 
         public TernaryConditionalAction(ParseInfo parseInfo, Scope scope, DeltinScriptParser.E_ternary_conditionalContext ternaryContext)
         {
-            Condition = DeltinScript.GetExpression(parseInfo, scope, ternaryContext.condition);
+            this.parseInfo = parseInfo;
+            Condition = parseInfo.GetExpression(scope, ternaryContext.condition);
 
             if (ternaryContext.consequent == null)
                 parseInfo.Script.Diagnostics.Error("Expected expression.", DocRange.GetRange(ternaryContext.TERNARY()));
             else
-                Consequent = DeltinScript.GetExpression(parseInfo, scope, ternaryContext.consequent);
+                Consequent = parseInfo.GetExpression(scope, ternaryContext.consequent);
             
             if (ternaryContext.alternative == null)
                 parseInfo.Script.Diagnostics.Error("Expected expression.", DocRange.GetRange(ternaryContext.TERNARY_ELSE()));
             else
-                Alternative = DeltinScript.GetExpression(parseInfo, scope, ternaryContext.alternative);
+                Alternative = parseInfo.GetExpression(scope, ternaryContext.alternative);
         }
 
-        public Scope ReturningScope() => Type()?.GetObjectScope();
+        public Scope ReturningScope() => Type()?.GetObjectScope() ?? parseInfo.TranslateInfo.PlayerVariableScope;
         public CodeType Type()
         {
             // Consequent or Alternative can equal null on GetExpression failure.
             if (Consequent != null && Alternative != null && Consequent.Type() == Alternative.Type()) return Consequent.Type();
             return null;
         }
-        public IWorkshopTree Parse(ActionSet actionSet, bool asElement = true) => Element.TernaryConditional(Condition.Parse(actionSet), Consequent.Parse(actionSet), Alternative.Parse(actionSet));
+        public IWorkshopTree Parse(ActionSet actionSet) => Element.TernaryConditional(Condition.Parse(actionSet), Consequent.Parse(actionSet), Alternative.Parse(actionSet));
     }
 
     public class RootAction : IExpression
@@ -513,6 +278,89 @@ namespace Deltin.Deltinteger.Parse
 
         public Scope ReturningScope() => DeltinScript.RulesetScope;
         public CodeType Type() => null;
-        public IWorkshopTree Parse(ActionSet actionSet, bool asElement = true) => null;
+        public IWorkshopTree Parse(ActionSet actionSet) => null;
+    }
+
+    public class ThisAction : IExpression
+    {
+        private CodeType ThisType { get; }
+
+        public ThisAction(ParseInfo parseInfo, Scope scope, DeltinScriptParser.E_thisContext context)
+        {
+            ThisType = scope.GetThis();
+            if (ThisType == null)
+                parseInfo.Script.Diagnostics.Error("Keyword 'this' cannot be used here.", DocRange.GetRange(context));
+        }
+
+        public IWorkshopTree Parse(ActionSet actionSet) => actionSet.This;
+        public CodeType Type() => ThisType;
+        public Scope ReturningScope() => ThisType?.GetObjectScope();
+    }
+
+    public class BaseAction : IExpression
+    {
+        readonly CodeType baseType;
+
+        public BaseAction(ParseInfo parseInfo, Scope scope, DeltinScriptParser.E_baseContext context)
+        {
+            CodeType thisType = scope.GetThis();
+
+            // Syntax error if the 'base' keyword is used outside of classes.
+            if (thisType == null)
+                parseInfo.Script.Diagnostics.Error("Keyword 'base' cannot be used here.", DocRange.GetRange(context));
+            
+            // Syntax error if the current class does not extend anything.
+            else if (thisType.Extends == null)
+                parseInfo.Script.Diagnostics.Error("The current type does not extend a class.", DocRange.GetRange(context));
+            
+            else baseType = thisType.Extends;
+        }
+
+        public IWorkshopTree Parse(ActionSet actionSet) => null;
+        public Scope ReturningScope() => baseType?.GetObjectScope();
+        public CodeType Type() => baseType;
+    }
+
+    public class IsAction : IExpression
+    {
+        readonly IExpression expression;
+        readonly ClassType checkingIfType;
+
+        public IsAction(ParseInfo parseInfo, Scope scope, DeltinScriptParser.E_isContext isContext)
+        {
+            // Get the expression.
+            expression = parseInfo.GetExpression(scope, isContext.expr());
+
+            // Get the type.
+            if (isContext.type == null)
+                parseInfo.Script.Diagnostics.Error("Expected type name.", DocRange.GetRange(isContext.IS()));
+            else
+            {
+                CodeType type = parseInfo.TranslateInfo.Types.GetCodeType(isContext.type.Text, parseInfo.Script.Diagnostics, DocRange.GetRange(isContext.type));
+
+                // Make sure the received type is a class.
+                if (type != null && type is ClassType == false)
+                    parseInfo.Script.Diagnostics.Error("Expected a class type.", DocRange.GetRange(isContext.type));
+                else
+                    checkingIfType = (ClassType)type;
+            }
+        }
+
+        public IWorkshopTree Parse(ActionSet actionSet)
+        {
+            ClassData classData = actionSet.Translate.DeltinScript.GetComponent<ClassData>();
+
+            // Parse the expression.
+            IWorkshopTree expressionResult = expression.Parse(actionSet);
+
+            // Get the class identifier of the input expression.
+            IWorkshopTree classIdentifier = Element.Part<V_ValueInArray>(classData.ClassIndexes.GetVariable(), expressionResult);
+
+            // Check if the expression's class identifier and the type are equal.
+            return new V_Compare(classIdentifier, Operators.Equal, new V_Number(checkingIfType.Identifier));
+        }
+
+        public Scope ReturningScope() => null;
+        public CodeType Type() => null;
     }
 }

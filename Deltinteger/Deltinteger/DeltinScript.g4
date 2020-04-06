@@ -16,7 +16,7 @@ true   : TRUE          ;
 false  : FALSE         ;
 null   : NULL          ;
 
-define : accessor? STATIC? (GLOBAL|PLAYER)? (code_type | DEFINE) name=PART (id=number? | NOT?) (EQUALS expr?)? ;
+define : accessor? STATIC? (GLOBAL|PLAYER)? REF? (code_type | DEFINE) name=PART (id=number? | NOT?) (EQUALS expr?)? ;
 
 expr 
 	: 
@@ -35,9 +35,12 @@ expr
 	| typeconvert							                                           #e_type_convert
 	| THIS									                                           #e_this
 	| ROOT								                                               #e_root
+	| BASE                                                                             #e_base
 	| expr SEPERATOR (method | variable)?											   #e_expr_tree
 	| NOT expr                                                                         #e_not
 	| '-' expr                                                                         #e_inverse
+	| expr IS type=PART?                                                               #e_is
+	| lambda                                                                           #e_lambda
 	| <assoc=right> left=expr op=('^' | '*' | '/' | '%') right=expr                    #e_op_1
 	| left=expr op=('+' | '-') right=expr                                              #e_op_2
 	| left=expr op=(LESS_THAN | '<=' | '==' | '>=' | GREATER_THAN | '!=') right=expr   #e_op_compare
@@ -45,7 +48,7 @@ expr
 	| left=expr BOOL right=expr                                                        #e_op_bool
 	;
 
-typeconvert : LESS_THAN PART? GREATER_THAN expr ;
+typeconvert : LESS_THAN code_type? GREATER_THAN expr? ;
 
 exprgroup   : LEFT_PAREN expr RIGHT_PAREN ;
 createarray : INDEX_START (expr (COMMA expr)*)? INDEX_END;
@@ -58,22 +61,31 @@ statement_operation : EQUALS | EQUALS_ADD | EQUALS_DIVIDE | EQUALS_MODULO | EQUA
 call_parameters  : expr (COMMA expr?)*    		 	         ;
 picky_parameter  : PART? TERNARY_ELSE expr?                  ;
 picky_parameters : picky_parameter (COMMA picky_parameter?)* ;
-method           : PART LEFT_PAREN (picky_parameters | call_parameters)? RIGHT_PAREN ;
+method           : (ASYNC NOT?)? PART LEFT_PAREN (picky_parameters | call_parameters)? RIGHT_PAREN ;
 
 variable : PART array? ;
-code_type: PART (INDEX_START INDEX_END)*;
+code_type: PART (INDEX_START INDEX_END)* generics?;
+generics : LESS_THAN (generic_option (COMMA generic_option)*)? GREATER_THAN;
+generic_option: code_type | DEFINE;
+
+lambda: (define | LEFT_PAREN (define (COMMA define)*)? RIGHT_PAREN) INS (expr | block) ;
 
 statement :
-	  varset STATEMENT_END? #s_varset
-	| method STATEMENT_END? #s_method
-	| if 					#s_if
-	| for					#s_for
-	| foreach				#s_foreach
-	| while					#s_while
-	| define STATEMENT_END? #s_define
-	| return				#s_return
-	| expr STATEMENT_END?	#s_expr
-	| delete STATEMENT_END?	#s_delete
+	  define STATEMENT_END?   #s_define
+	| varset STATEMENT_END?   #s_varset
+	| method STATEMENT_END?   #s_method
+	| if 					  #s_if
+	| for					  #s_for
+	| for_auto                #s_for_auto
+	| foreach				  #s_foreach
+	| while					  #s_while
+	| return				  #s_return
+	| expr STATEMENT_END?	  #s_expr
+	| delete STATEMENT_END?	  #s_delete
+	| CONTINUE STATEMENT_END? #s_continue
+	| BREAK STATEMENT_END?    #s_break
+	| switch 				  #s_switch
+	| (BLOCK_START statement* BLOCK_END) #s_block
 	;
 
 block : (BLOCK_START statement* BLOCK_END) | statement | STATEMENT_END  ;
@@ -81,6 +93,10 @@ block : (BLOCK_START statement* BLOCK_END) | statement | STATEMENT_END  ;
 for     : FOR LEFT_PAREN 
 	((define | initialVarset=varset)? STATEMENT_END expr? STATEMENT_END endingVarset=varset?)
 	RIGHT_PAREN block;
+
+for_auto : FOR LEFT_PAREN
+	((forVariable=expr (EQUALS start=expr?)? | forDefine=define)? startSep=STATEMENT_END stop=expr? stopSep=STATEMENT_END step=expr?)
+	RIGHT_PAREN block?;
 
 foreach : FOREACH number? LEFT_PAREN (code_type | DEFINE) name=PART IN expr? RIGHT_PAREN block ;
 
@@ -93,31 +109,40 @@ else    : ELSE block?                                           ;
 return  : RETURN expr? STATEMENT_END                          ;
 delete  : DELETE LEFT_PAREN expr RIGHT_PAREN                  ;
 
+switch  : SWITCH LEFT_PAREN expr? RIGHT_PAREN
+	BLOCK_START switch_element* BLOCK_END;
+
+switch_element:  (DEFAULT TERNARY_ELSE?) | case | statement;
+
+case    : CASE expr? TERNARY_ELSE?;
+
 rule_if : IF LEFT_PAREN expr? RIGHT_PAREN;
 
 ow_rule : 
-	DISABLED? RULE_WORD ':' STRINGLITERAL
+	DISABLED? RULE_WORD ':' STRINGLITERAL number?
 	expr*
 	rule_if*
 	block?
 	;
 
-define_method : DOCUMENTATION* accessor? RECURSIVE? (METHOD | code_type) name=PART LEFT_PAREN setParameters RIGHT_PAREN
+define_method : DOCUMENTATION* method_attributes* (VOID | DEFINE | code_type) name=PART LEFT_PAREN setParameters RIGHT_PAREN ((GLOBAL | PLAYER)? subroutineRuleName=STRINGLITERAL)?
 	block?
 	;
 
-define_macro  : DOCUMENTATION* accessor? MACRO name=PART (LEFT_PAREN setParameters RIGHT_PAREN)? TERNARY_ELSE? expr? STATEMENT_END ;
+method_attributes : accessor | STATIC | OVERRIDE | VIRTUAL | RECURSIVE;
+
+define_macro  : DOCUMENTATION* accessor? STATIC? (DEFINE | code_type) name=PART (LEFT_PAREN setParameters RIGHT_PAREN)? TERNARY_ELSE? expr? STATEMENT_END? ;
 
 ruleset :
 	reserved_global?
 	reserved_player?
-	(import_file | import_object)*
+	import_file*
 	((define STATEMENT_END) | ow_rule | define_method | define_macro | type_define | enum_define)*
 	EOF;
 
 // Classes/structs
 
-type_define : (STRUCT | CLASS) name=PART
+type_define : (STRUCT | CLASS) name=PART (TERNARY_ELSE extends=PART?)?
 	BLOCK_START
 	((define STATEMENT_END) | constructor | define_method | define_macro)*
 	BLOCK_END ;
@@ -125,7 +150,7 @@ type_define : (STRUCT | CLASS) name=PART
 enum_define : ENUM name=PART BLOCK_START (firstMember=PART enum_element*)? BLOCK_END ;
 enum_element : COMMA PART ;
 
-accessor : PRIVATE | PUBLIC;
+accessor : PRIVATE | PUBLIC | PROTECTED;
 
 constructor : accessor? name=PART LEFT_PAREN setParameters RIGHT_PAREN block ;
 
@@ -133,8 +158,7 @@ setParameters: (define (COMMA define)*)?;
 
 create_object : NEW (type=PART (LEFT_PAREN call_parameters? RIGHT_PAREN)) ;
 
-import_file : IMPORT STRINGLITERAL STATEMENT_END ;
-import_object : IMPORT file=STRINGLITERAL AS name=PART STATEMENT_END ;
+import_file : IMPORT STRINGLITERAL (AS name=PART?)? STATEMENT_END ;
 
 /*
  * Lexer Rules
@@ -187,7 +211,6 @@ PLAYER    : 'playervar' ;
 TRUE      : 'true'      ;
 FALSE     : 'false'     ;
 NULL      : 'null'      ;
-METHOD    : 'method'    ;
 RECURSIVE : 'recursive' ;
 RETURN    : 'return'    ;
 WHILE     : 'while'     ;
@@ -195,6 +218,7 @@ STRUCT    : 'struct'    ;
 CLASS     : 'class'     ;
 PRIVATE   : 'private'   ;
 PUBLIC    : 'public'    ;
+PROTECTED : 'protected' ;
 THIS      : 'this'      ;
 ROOT      : 'root'      ;
 NEW       : 'new'       ;
@@ -202,10 +226,23 @@ STATIC    : 'static'    ;
 IMPORT    : 'import'    ;
 AS        : 'as'        ;
 DELETE    : 'delete'    ;
-MACRO     : 'macro'     ;
 DISABLED  : 'disabled'  ;
 ENUM      : 'enum'      ;
+REF       : 'ref'       ;
+VOID      : 'void'		;
+ASYNC     : 'async'		;
+OVERRIDE  : 'override'  ;
+VIRTUAL   : 'virtual'   ;
+BREAK     : 'break'     ;
+CONTINUE  : 'continue'  ;
+SWITCH    : 'switch'	;
+CASE      : 'case'		;
+DEFAULT   : 'default'   ;
+BASE      : 'base'      ;
+IS        : 'is'		;
+INTERFACE : 'interface' ;
 
+INS             : '=>'  ;
 EQUALS          : '='  ;
 EQUALS_POW      : '^=' ;
 EQUALS_MULTIPLY : '*=' ;

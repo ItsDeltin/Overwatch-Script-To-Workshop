@@ -13,12 +13,15 @@ namespace Deltin.Deltinteger
     public interface IWorkshopTree
     {
         string ToWorkshop(OutputLanguage language);
+        bool EqualTo(IWorkshopTree other);
+        int ElementCount(int depth);
     }
 
     public interface IMethod : IScopeable, IParameterCallable
     {
         CodeType ReturnType { get; }
-        IWorkshopTree Parse(ActionSet actionSet, IWorkshopTree[] values, object[] additionalParameterData);
+        MethodAttributes Attributes { get; }
+        IWorkshopTree Parse(ActionSet actionSet, MethodCall methodCall);
         bool DoesReturnValue();
     }
 
@@ -27,31 +30,44 @@ namespace Deltin.Deltinteger
         int SkipParameterIndex();
     }
 
-    public interface IScopeable
+    public interface INamed
     {
         string Name { get; }
-        AccessLevel AccessLevel { get; }
-        Location DefinedAt { get; }
+    }
+
+    public interface IScopeable : INamed, IAccessable
+    {
+        bool Static { get; }
         bool WholeContext { get; }
         CompletionItem GetCompletion();
     }
 
-    public interface ICallable
+    public interface ICallable : INamed
     {
-        void Call(ScriptFile script, DocRange callRange);
-        string Name { get; }
+        void Call(ParseInfo parseInfo, DocRange callRange);
     }
 
-    public interface IParameterCallable : ILabeled
+    public interface IParameterCallable : ILabeled, IAccessable
     {
         CodeParameter[] Parameters { get; }
+        string Documentation { get; }
+    }
+
+    public interface IAccessable
+    {
         Location DefinedAt { get; }
-        StringOrMarkupContent Documentation { get; }
+        AccessLevel AccessLevel { get; }
     }
 
     public interface IGettable
     {
         IWorkshopTree GetVariable(Element eventPlayer = null);
+    }
+
+    public interface IIndexReferencer : IScopeable, IExpression, ICallable, ILabeled
+    {
+        bool Settable();
+        VariableType VariableType { get; }
     }
 
     public interface ILabeled
@@ -61,7 +77,14 @@ namespace Deltin.Deltinteger
 
     public interface IApplyBlock : ILabeled
     {
+        void SetupParameters();
         void SetupBlock();
+        void OnBlockApply(IOnBlockApplied onBlockApplied);
         CallInfo CallInfo { get; }
+    }
+
+    public interface IOnBlockApplied
+    {
+        void Applied();
     }
 }

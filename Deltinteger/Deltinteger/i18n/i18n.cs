@@ -8,7 +8,7 @@ using Deltin.Deltinteger.Elements;
 
 namespace Deltin.Deltinteger.I18n
 {
-    public class I18n
+    public class LanguageInfo
     {
         public static OutputLanguage CurrentLanguage { get; private set; } = OutputLanguage.enUS;
         private static I18nLanguage Language;
@@ -23,8 +23,18 @@ namespace Deltin.Deltinteger.I18n
                 if (CurrentLanguage != language)
                     throw new Exception($"The '{language.ToString()}' language is not loaded.");
                 
-                return Language.Methods.FirstOrDefault(m => m.EnglishName == methodName)?.Translation
-                    ?? throw new Exception($"Could not find '{methodName}' in the language file.");
+                string translation = Language.Methods.FirstOrDefault(m => m.EnglishName == methodName)?.Translation;
+                if (translation != null) return translation;
+                throw new Exception($"Could not find '{methodName}' in the language file.");
+            }
+        }
+
+        public static bool IsKeyword(string keyword)
+        {
+            lock (LanguageLock)
+            {
+                if (CurrentLanguage == OutputLanguage.enUS) return true;
+                return Language.Methods.Any(m => m.EnglishName == keyword);
             }
         }
 
@@ -44,7 +54,7 @@ namespace Deltin.Deltinteger.I18n
             }
         }
 
-        public static void I18nWarningMessage(StringBuilder builder, OutputLanguage outputLanguage)
+        public static void I18nWarningMessage(WorkshopBuilder builder, OutputLanguage outputLanguage)
         {
             if (outputLanguage == OutputLanguage.enUS) return;
             builder.AppendLine($"// Outputting to the language {outputLanguage.ToString()}.");

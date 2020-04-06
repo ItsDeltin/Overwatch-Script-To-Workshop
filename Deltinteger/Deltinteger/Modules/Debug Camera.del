@@ -1,0 +1,63 @@
+define CameraSpeed: IsButtonHeld(EventPlayer(), Button.Ability1) ? 30 : 0.2;
+define ToggleKey: IsCommunicating(EventPlayer(), Communication.VoiceLineDown);
+
+playervar define cam = false;
+playervar define cameraPos;
+playervar define cameraHUD;
+
+rule: "Free cam"
+Event.OngoingPlayer
+if (ToggleKey)
+{
+    cam = !cam;
+}
+
+rule: "Start Camera"
+Event.OngoingPlayer
+if (cam)
+{
+    CreateHudText(EventPlayer(), null, "Camera Position:", cameraPos, Location.Left, 4, Color.White, Color.White, Color.Blue);
+    cameraHUD = LastTextID();
+
+    cameraPos = EyePosition(EventPlayer());
+
+    ChaseVariableAtRate(
+        cameraPos,
+        cameraPos +
+            ((FacingDirectionOf() * ZOf(ThrottleOf())) + // Forward
+            (CrossProduct(FacingDirectionOf(), Up()) * -XOf(ThrottleOf())) + // Left
+            Vector(0,
+                [0, 1, -1][IndexOfArrayValue([IsButtonHeld(EventPlayer(), Button.Jump), IsButtonHeld(EventPlayer(), Button.Crouch)], true) + 1],
+            0))
+            * CameraSpeed,
+        30,
+        RateChaseReevaluation.DestinationAndRate
+    );
+
+    StartCamera(EventPlayer(), cameraPos, cameraPos + FacingDirectionOf(EventPlayer()), 25);
+    SetMoveSpeed(EventPlayer(), 0);
+    DisallowButton(EventPlayer(), Button.Ability1);
+}
+
+rule: "Stop Camera"
+Event.OngoingPlayer
+if (!cam)
+{
+    StopChasingVariable(EventPlayer().cameraPos);
+    StopCamera(EventPlayer());
+    SetMoveSpeed(EventPlayer(), 100);
+    AllowButton(EventPlayer(), Button.Ability1);
+    
+    DestroyHudText(cameraHUD);
+}
+
+rule: "TP to camera"
+Event.OngoingPlayer
+if (cam)
+if (IsCommunicating(EventPlayer(), Communication.VoiceLineLeft))
+{
+    cam = false;
+    define storeFacing = FacingDirectionOf(EventPlayer());
+    Teleport(EventPlayer(), cameraPos);
+    SetFacing(EventPlayer(), storeFacing, Relative.ToWorld);
+}

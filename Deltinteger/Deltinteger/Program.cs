@@ -15,7 +15,7 @@ namespace Deltin.Deltinteger
 {
     public class Program
     {
-        public const string VERSION = "v1.0 prerelease 1";
+        public const string VERSION = "v1.3";
 
         public static readonly string ExeFolder = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
 
@@ -28,8 +28,11 @@ namespace Deltin.Deltinteger
         static void Main(string[] args)
         {
             Program.args = args;
-
             CultureInfo.DefaultThreadCurrentCulture = new CultureInfo("en-US");
+            ElementList.InitElements();
+            Lobby.HeroSettingCollection.Init();
+            Lobby.ModeSettingCollection.Init();
+
             if (!args.Contains("--langserver")) Log.Write(LogLevel.Normal, "Overwatch Script To Workshop " + VERSION);
 
             Log.LogLevel = LogLevel.Normal;
@@ -60,6 +63,19 @@ namespace Deltin.Deltinteger
             }
             else if (args.ElementAtOrDefault(0) == "--i18n") I18n.GenerateI18n.Generate(args);
             else if (args.ElementAtOrDefault(0) == "--i18nlink") I18n.GenerateI18n.GenerateKeyLink();
+            else if (args.ElementAtOrDefault(0) == "--wiki")
+            {
+                var wiki = WorkshopWiki.Wiki.GetWiki();
+                if (wiki != null)
+                {
+                    Console.Write("Output file: ");
+                    string outputPath = Console.ReadLine();
+                    wiki.ToXML(outputPath);
+                }
+            }
+            else if (args.ElementAtOrDefault(0) == "--schema") Deltin.Deltinteger.Lobby.Ruleset.GenerateSchema();
+            else if (args.ElementAtOrDefault(0) == "--maps") Deltin.Deltinteger.Lobby.LobbyMap.GetMaps(args[1], args[2], args[3]);
+            else if (args.ElementAtOrDefault(0) == "--function-table") NameTable.MakeNameTable();
             else
             {
                 string script = args.ElementAtOrDefault(0);
@@ -75,14 +91,17 @@ namespace Deltin.Deltinteger
                         if (ext == ".csv")
                         {
                             PathMap map = PathMap.ImportFromCSV(script);
-                            string result = map.ExportAsXML();
-                            string output = Path.ChangeExtension(script, "pathmap");
-                            using (FileStream fs = File.Create(output))
+                            if (map != null)
                             {
-                                Byte[] info = Encoding.Unicode.GetBytes(result);
-                                fs.Write(info, 0, info.Length);
+                                string result = map.ExportAsXML();
+                                string output = Path.ChangeExtension(script, "pathmap");
+                                using (FileStream fs = File.Create(output))
+                                {
+                                    Byte[] info = Encoding.Unicode.GetBytes(result);
+                                    fs.Write(info, 0, info.Length);
+                                }
+                                Log.Write(LogLevel.Normal, "Created pathmap file at '" + output + "'.");
                             }
-                            Log.Write(LogLevel.Normal, "Created pathmap file at '" + output + "'.");
                         }
                         else if (ext == ".pathmap")
                         {
@@ -116,7 +135,7 @@ namespace Deltin.Deltinteger
 
             Diagnostics diagnostics = new Diagnostics();
             ScriptFile root = new ScriptFile(diagnostics, new Uri(parseFile), text);
-            DeltinScript deltinScript = new DeltinScript(new FileGetter(null), diagnostics, root);
+            DeltinScript deltinScript = new DeltinScript(new TranslateSettings(diagnostics, root));
             diagnostics.PrintDiagnostics(Log);
             if (deltinScript.WorkshopCode != null)
                 WorkshopCodeResult(deltinScript.WorkshopCode);

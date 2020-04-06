@@ -6,25 +6,26 @@ using Deltin.Deltinteger.Parse;
 
 namespace Deltin.Deltinteger.Pathfinder
 {
-    public class PathfinderInfo
+    public class PathfinderInfo : IComponent
     {
         public const double MoveToNext = 0.3;
 
-        public IndexReference Path { get; }
-        public IndexReference PathAttributes { get; }
-        public IndexReference LastUpdate { get; }
-        public IndexReference DistanceToNext { get; }
+        public IndexReference Path { get; private set; }
+        public IndexReference PathAttributes { get; private set; }
+        public IndexReference LastUpdate { get; private set; }
+        public IndexReference DistanceToNext { get; private set; }
+        public DeltinScript DeltinScript { get; set; }
 
-        public PathfinderInfo(DeltinScript translateInfo)
+        public void Init()
         {
-            Path           = translateInfo.VarCollection.Assign("Pathfinder: Path", false, false);
-            PathAttributes = translateInfo.VarCollection.Assign("Pathfinder: Path Attributes", false, false);
-            LastUpdate     = translateInfo.VarCollection.Assign("Pathfinder: Last Update", false, true);
-            DistanceToNext = translateInfo.VarCollection.Assign("Pathfinder: Distance To Next Node", false, true);
+            Path           = DeltinScript.VarCollection.Assign("Pathfinder: Path", false, false);
+            LastUpdate     = DeltinScript.VarCollection.Assign("Pathfinder: Last Update", false, true);
+            LastUpdate     = DeltinScript.VarCollection.Assign("Pathfinder: Last Update", false, true);
+            DistanceToNext = DeltinScript.VarCollection.Assign("Pathfinder: Distance To Next Node", false, true);
 
-            translateInfo.WorkshopRules.Add(GetStartRule(translateInfo));
-            translateInfo.WorkshopRules.Add(GetUpdateRule());
-            translateInfo.WorkshopRules.Add(GetStopRule());
+            DeltinScript.WorkshopRules.Add(GetStartRule(DeltinScript));
+            DeltinScript.WorkshopRules.Add(GetUpdateRule());
+            DeltinScript.WorkshopRules.Add(GetStopRule());
         }
 
         private Rule GetStartRule(DeltinScript deltinScript)
@@ -40,15 +41,14 @@ namespace Deltin.Deltinteger.Pathfinder
 
             TranslateRule rule = new TranslateRule(deltinScript, Constants.INTERNAL_ELEMENT + "Pathfinder: Move", RuleEvent.OngoingPlayer);
 
-            IfBuilder isBetween = new IfBuilder(rule.ActionSet, 
+            rule.ActionSet.AddAction(Element.Part<A_If>( 
                 Element.Part<V_And>(
                     Element.Part<V_CountOf>(Path.GetVariable()) >= 2,
                     IsBetween(eventPlayerPos, NextPosition(eventPlayer), PositionAt(eventPlayer, 1))
                 )
-            );
-            isBetween.Setup();
+            ));
             rule.ActionSet.AddAction(Next());
-            isBetween.Finish();
+            rule.ActionSet.AddAction(new A_End());
 
             rule.ActionSet.AddAction(ArrayBuilder<Element>.Build
             (
@@ -136,7 +136,9 @@ namespace Deltin.Deltinteger.Pathfinder
 
             rule.Actions = ArrayBuilder<Element>.Build(
                 LastUpdate.SetVariable(new V_TotalTimeElapsed()),
+
                 Next(), // (5)
+                
                 DistanceToNext.SetVariable(Element.Part<V_DistanceBetween>(Element.Part<V_PositionOf>(new V_EventPlayer()), NextPosition(new V_EventPlayer()))),
                 A_Wait.MinimumWait,
                 new A_LoopIfConditionIsTrue()

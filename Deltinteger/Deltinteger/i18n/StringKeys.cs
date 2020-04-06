@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Deltin.Deltinteger.Dump;
 
 namespace Deltin.Deltinteger.I18n
 {
@@ -34,6 +35,33 @@ namespace Deltin.Deltinteger.I18n
             .ToArray();
         public int IndexOf(StringKey stringKey) => List.IndexOf(stringKey);
         public StringKey FromIndex(int index) => List[index];
+
+        public void DumpStrings(DataTool dataTool, string language, bool addNewKeys, Log log)
+        {
+            if (dataTool == null) throw new ArgumentNullException(nameof(dataTool));
+            if (language == null) throw new ArgumentNullException(nameof(language));
+
+            log?.Write(LogLevel.Normal, $"Getting {language} keys...");
+            string commandResult = dataTool.DumpStrings(language);
+
+            string[] lines = commandResult.Split(
+                new[] { "\r\n", "\r", "\n" },
+                StringSplitOptions.None
+            );
+
+            for (int i = 0; i < lines.Length; i++)
+            {
+                string[] lineSplit = lines[i].Split(':', 2);
+                if (lineSplit.Length == 2 && lineSplit[1].Length > 0)
+                {
+                    string key = lineSplit[0];
+                    string str = lineSplit[1].Substring(1);
+                    Add(key, language, str, addNewKeys);
+                }
+            }
+
+            log?.Write(LogLevel.Normal, $"Got {language} keys.");
+        }
     }
     
     public class StringKey

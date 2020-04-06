@@ -160,7 +160,7 @@ namespace Deltin.Deltinteger.Csv
         protected abstract bool IsEqual(CsvPart other);
     }
 
-    class CsvArray : CsvPart
+    public class CsvArray : CsvPart
     {
         public CsvPart[] Values { get; }
 
@@ -182,7 +182,7 @@ namespace Deltin.Deltinteger.Csv
         }
     }
 
-    class CsvNumber : CsvPart
+    public class CsvNumber : CsvPart
     {
         public double Value { get; }
 
@@ -197,7 +197,7 @@ namespace Deltin.Deltinteger.Csv
         }
     }
 
-    class CsvVector : CsvPart
+    public class CsvVector : CsvPart
     {
         public Vertex Value { get; }
 
@@ -212,7 +212,7 @@ namespace Deltin.Deltinteger.Csv
         }
     }
 
-    class CsvBoolean : CsvPart
+    public class CsvBoolean : CsvPart
     {
         public bool Value { get; }
 
@@ -227,7 +227,7 @@ namespace Deltin.Deltinteger.Csv
         }
     }
 
-    class CsvString : CsvPart
+    public class CsvString : CsvPart
     {
         public string Value { get; }
 
@@ -242,7 +242,7 @@ namespace Deltin.Deltinteger.Csv
         }
     }
 
-    class CsvParseFailedException : Exception
+    public class CsvParseFailedException : Exception
     {
         public CsvParseFailedException(string message) : base(message) {}
     }

@@ -2,19 +2,17 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Deltin.Deltinteger.Elements;
+using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.Parse;
 
 namespace Deltin.Deltinteger.CustomMethods
 {
-    [CustomMethod("CompareMap", "Compares the current map to a map value. Map variants are considured as well.", CustomMethodType.Value)]
+    [CustomMethod("CompareMap", "Compares the current map to a map value. Map variants are considered as well.", CustomMethodType.Value)]
     class CompareCurrentMap : CustomMethodBase
     {
-        public override CodeParameter[] Parameters()
-        {
-            return new CodeParameter[] {
-                new CodeParameter("map", WorkshopEnumType.GetEnumType(EnumData.GetEnum<Map>()))
-            };
-        }
+        public override CodeParameter[] Parameters() => new CodeParameter[] {
+            new MapParameter()
+        };
 
         public override IWorkshopTree Get(ActionSet actionSet, IWorkshopTree[] parameterValues)
         {
@@ -23,9 +21,32 @@ namespace Deltin.Deltinteger.CustomMethods
             MapLink mapLink = MapLink.GetMapLink(map);
 
             if (mapLink == null)
-                return new V_Compare(new V_CurrentMap(), Operators.Equal, enumData);
+                return new V_Compare(new V_CurrentMap(), Operators.Equal, Element.Part<V_MapVar>(enumData));
             else
                 return Element.Part<V_ArrayContains>(mapLink.GetArray(), new V_CurrentMap());
+        }
+    }
+
+    class MapParameter : CodeParameter
+    {
+        public MapParameter() : base("map", "The map to compare.") {}
+
+        public override IWorkshopTree Parse(ActionSet actionSet, IExpression expression, object additionalParameterData)
+        {
+            return base.Parse(actionSet, expression, additionalParameterData);
+        }
+
+        public override object Validate(ScriptFile script, IExpression value, DocRange valueRange)
+        {
+            var variableCallAction = ExpressionTree.ResultingExpression(value) as EnumValuePair;
+
+            if (variableCallAction == null || variableCallAction.Member.Value is Map == false)
+            {
+                script.Diagnostics.Error("Expected a map value.", valueRange);
+                return null;
+            }
+
+            return (Map)variableCallAction.Member.Value;
         }
     }
 
@@ -40,7 +61,11 @@ namespace Deltin.Deltinteger.CustomMethods
 
         public Element GetArray()
         {
-            return Element.CreateArray(Maps.Select(m => EnumData.GetEnumValue(m)).ToArray());
+            return Element.CreateArray(
+                // Convert the maps to EnumMembers encased in V_MapVar.
+                Maps.Select(m => Element.Part<V_MapVar>(EnumData.GetEnumValue(m)))
+                .ToArray()
+            );
         }
 
         public static MapLink GetMapLink(Map map)

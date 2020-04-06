@@ -16,7 +16,12 @@ namespace Deltin.Deltinteger.LanguageServer
 {
     public class ConfigurationHandler : IDidChangeConfigurationHandler
     {
+        public bool OptimizeOutput { get; private set; } = true;
         private DeltintegerLanguageServer _languageServer { get; }
+        public bool ReferencesCodeLens { get; private set; }
+        public bool ImplementsCodeLens { get; private set; }
+        public bool ElementCountCodeLens { get; private set; }
+        public OutputLanguage OutputLanguage { get; private set; }
 
         public ConfigurationHandler(DeltintegerLanguageServer languageServer)
         {
@@ -29,33 +34,21 @@ namespace Deltin.Deltinteger.LanguageServer
 
             if (json != null)
             {
-                var config = json.ToObject<RawConfiguration>();
-                I18n.I18n.LoadLanguage(config.GetOutputLanguage());
+                dynamic config = json;
+
+                ReferencesCodeLens = config.codelens.references;
+                ImplementsCodeLens = config.codelens.implements;
+                ElementCountCodeLens = config.codelens.elementCount;
+                OutputLanguage = GetOutputLanguage(config.outputLanguage);
+                LanguageInfo.LoadLanguage(OutputLanguage);
+                OptimizeOutput = config.optimizeOutput;
             }
 
             return Unit.Task;
-        }
 
-        public object GetRegistrationOptions()
-        {
-            return null;
-        }
-
-        // Client capability
-        private DidChangeConfigurationCapability _capability;
-        public void SetCapability(DidChangeConfigurationCapability capability)
-        {
-            _capability = capability;
-        }
-    
-        class RawConfiguration
-        {
-            public string outputLanguage;
-            public string deltintegerPath;
-
-            public OutputLanguage GetOutputLanguage()
+            OutputLanguage GetOutputLanguage(string languageString)
             {
-                switch (outputLanguage)
+                switch (languageString)
                 {
                     case "English": return OutputLanguage.enUS;
                     case "German": return OutputLanguage.deDE;
@@ -73,6 +66,18 @@ namespace Deltin.Deltinteger.LanguageServer
                     default: return OutputLanguage.enUS;
                 }
             }
+        }
+
+        public object GetRegistrationOptions()
+        {
+            return null;
+        }
+
+        // Client capability
+        private DidChangeConfigurationCapability _capability;
+        public void SetCapability(DidChangeConfigurationCapability capability)
+        {
+            _capability = capability;
         }
     }
 }

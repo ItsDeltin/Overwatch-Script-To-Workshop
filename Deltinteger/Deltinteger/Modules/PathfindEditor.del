@@ -1,20 +1,25 @@
 import "!Debug Tools.del";
 import "!Container.del";
 
-rule: "Commands"
+rule: "Commands" -1
 {
-    CreateHudText(VisibleTo:AllPlayers(), Text:"https://github.com/ItsDeltin/Overwatch-Script-To-Workshop/wiki/Pathfinding"     , TextColor     :Color.Blue   , Location:Location.Right, SortOrder:0 );
-    CreateHudText(VisibleTo:AllPlayers(), Subheader:"Ultimate: Create node."                                                    , SubheaderColor:Color.Aqua   , Location:Location.Right, SortOrder:1 );
-    CreateHudText(VisibleTo:AllPlayers(), Subheader:"Crouch + Ultimate: Destroy node."                                          , SubheaderColor:Color.Aqua   , Location:Location.Right, SortOrder:2 );
-    CreateHudText(VisibleTo:AllPlayers(), Subheader:"Interact: Select node."                                                    , SubheaderColor:Color.Green  , Location:Location.Right, SortOrder:3 );
-    CreateHudText(VisibleTo:AllPlayers(), Subheader:"Crouch + Interact: Deselect all nodes."                                    , SubheaderColor:Color.Green  , Location:Location.Right, SortOrder:4 );
-    CreateHudText(VisibleTo:AllPlayers(), Subheader:"Secondary Fire: Connect all selected nodes."                               , SubheaderColor:Color.Orange , Location:Location.Right, SortOrder:5 );
-    CreateHudText(VisibleTo:AllPlayers(), Subheader:"Crouch + Secondary Fire: Disconnect all selected nodes."                   , SubheaderColor:Color.Orange , Location:Location.Right, SortOrder:6 );
-    CreateHudText(VisibleTo:AllPlayers(), Subheader:"Voice Line Right: Create a path from the first to the last selected nodes.", SubheaderColor:Color.Orange , Location:Location.Right, SortOrder:7 );
-    CreateHudText(VisibleTo:AllPlayers(), Subheader:"Voice Line Left: Connect all selected nodes to the first selected node."   , SubheaderColor:Color.Orange , Location:Location.Right, SortOrder:8 );
-    CreateHudText(VisibleTo:AllPlayers(), Subheader:"Shift: Switch attribute."                                                  , SubheaderColor:Color.Purple , Location:Location.Right, SortOrder:9 );
-    CreateHudText(VisibleTo:AllPlayers(), Subheader:"Hello: Update shown nodes."                                                , SubheaderColor:Color.SkyBlue, Location:Location.Right, SortOrder:10);
-    CreateHudText(VisibleTo:AllPlayers(), Subheader:"Voice Line Up: Compile pathmap."                                           , SubheaderColor:Color.SkyBlue, Location:Location.Right, SortOrder:11);
+    DisableInspectorRecording();
+    CreateHudText(VisibleTo:AllPlayers(), Text:"https://github.com/ItsDeltin/Overwatch-Script-To-Workshop/wiki/Pathfinding", TextColor:Color.Blue, Location:Location.Right, SortOrder:0);
+    HelpText("Ultimate: Create node."                                                    , 1 );
+    HelpText("Crouch + Ultimate: Destroy node."                                          , 2 );
+    HelpText("Interact: Select node."                                                    , 3 );
+    HelpText("Crouch + Interact: Deselect all nodes."                                    , 4 );
+    HelpText("Secondary Fire: Connect all selected nodes."                               , 5 );
+    HelpText("Crouch + Secondary Fire: Disconnect all selected nodes."                   , 6 );
+    HelpText("Voice Line Right: Create a path from the first to the last selected nodes.", 7 );
+    HelpText("Voice Line Left: Connect all selected nodes to the first selected node."   , 8 );
+    HelpText("Shift: Switch attribute."                                                  , 9 );
+    HelpText("Voice Line Up: Compile pathmap."                                           , 11);
+}
+
+void HelpText(ref define text, ref define order)
+{
+    CreateHudText(VisibleTo:AllPlayers(), Subheader:text, SubheaderColor:Color.SkyBlue, Location:Location.Right, SortOrder:order);
 }
 
 rule: "Disable conflicting controls"
@@ -25,8 +30,8 @@ Event.OngoingPlayer
     SetSecondaryFireEnabled(EventPlayer(), false);
 }
 
-macro GetClosestNode(): FirstOf(SortedArray(Nodes, DistanceBetween(EyePosition(EventPlayer()), (<Node>ArrayElement()).ShownLocation)));
-macro IsNodeSelectable(Node node): DistanceBetween(node.Pos, EyePosition(EventPlayer())) < 5;
+define GetClosestNode(): FirstOf(SortedArray(Nodes, DistanceBetween(EyePosition(EventPlayer()), (<Node>ArrayElement()).ShownLocation)));
+define IsNodeSelectable(Node node): DistanceBetween(node.Pos, EyePosition(EventPlayer())) < 5;
 
 rule: "Create node"
 Event.OngoingPlayer
@@ -49,7 +54,7 @@ if (IsButtonHeld(EventPlayer(), Button.Crouch))
         if (ArrayContains((<Segment>Segments[i]).Nodes, selected))
         {
             (<Segment>Segments[i]).Hide();
-            delete(Segments[i]);
+            delete(<Segment>Segments[i]);
             Segments = RemoveFromArrayAtIndex(Segments, i);
         }
     PlayEffect(AllPlayers(), PlayEffect.BadExplosion, Color.Blue, selected.ShownLocation, 0.25);
@@ -106,7 +111,7 @@ class Node
         ShownLocation = Pos + Vector(0, 1.25, 0);
     }
 
-    public method Show()
+    public void Show()
     {
         if (!visible)
         {
@@ -115,7 +120,7 @@ class Node
         }
     }
 
-    public method Hide()
+    public void Hide()
     {
         if (visible)
         {
@@ -124,19 +129,19 @@ class Node
         }
     }
     
-    public method Select()
+    public void Select()
     {
         Selected = true;
         Update();
     }
 
-    public method Deselect()
+    public void Deselect()
     {
         Selected = false;
         Update();
     }
 
-    private method Update()
+    private void Update()
     {
         DestroyEffect(EffectID);
         if (!Selected)
@@ -146,16 +151,17 @@ class Node
         EffectID = LastCreatedEntity();
     }
 
-    private method Make(Color color)
+    private void Make(Color color)
     {
         CreateEffect(AllPlayers(), Effect.Sphere, color, ShownLocation, 0.25, EffectRev.VisibleTo);
     }
 
-    public method UpdateVisible()
+    public void UpdateVisible()
     {
-        Hide();
-        if (DistanceBetween(EventPlayer(), ShownLocation) < 35)
+        if (DistanceBetween(HostPlayer(), ShownLocation) < 35 && IsInViewAngle(HostPlayer(), ShownLocation, 50))
             Show();
+        else
+            Hide();
     }
 }
 
@@ -199,7 +205,7 @@ if (!IsButtonHeld(EventPlayer(), Button.Crouch))
         }
 }
 
-macro SegmentExists(define node1, define node2):
+define SegmentExists(define node1, define node2):
     IsTrueForAny(
         Segments,
         ArrayContains((<Segment>ArrayElement()).Nodes, node1)
@@ -216,7 +222,7 @@ if (IsButtonHeld(EventPlayer(), Button.Crouch))
         if (IsTrueForAll((<Segment>Segments[i]).Nodes, ArrayContains(Selected, ArrayElement())))
         {
             (<Segment>Segments[i]).Hide();
-            delete(Segments[i]);
+            delete(<Segment>Segments[i]);
             Segments = RemoveFromArrayAtIndex(Segments, i);
         }
 }
@@ -246,7 +252,7 @@ class Segment
         SecondAttribute = secondAttribute;
     }
 
-    public method Show()
+    public void Show()
     {
         if (!visible)
         {
@@ -260,7 +266,7 @@ class Segment
             }
         }
     }
-    public method Hide()
+    public void Hide()
     {
         if (visible)
         {
@@ -272,26 +278,39 @@ class Segment
     }
 }
 
+globalvar define updateVisibleLook;
+globalvar define updateVisiblePosition;
+
 rule: "Update visible"
-Event.OngoingPlayer
-if (HostPlayer() == EventPlayer())
-if (IsCommunicating(EventPlayer(), Communication.Hello))
+if (updateVisibleLook == null || DistanceBetween(updateVisiblePosition, HostPlayer()) > 3 || AngleBetweenVectors(updateVisibleLook, FacingDirectionOf(HostPlayer())) > 10)
 {
+    updateVisibleLook = FacingDirectionOf(HostPlayer());
+    updateVisiblePosition = PositionOf(HostPlayer());
+
     foreach (Segment segment in Segments)
     {
         segment.Node1.UpdateVisible();
         segment.Node2.UpdateVisible();
 
-        segment.Hide();
         if ((segment.Node1.visible) || segment.Node2.visible)
             segment.Show();
+        else
+            segment.Hide();
+        
+        MinWait();
     }
+    Wait(0.2);
+    LoopIfConditionIsTrue();
 }
+
+globalvar define compiling = false;
 
 rule: "CSV out"
 Event.OngoingPlayer
 if (IsCommunicating(EventPlayer(), Communication.VoiceLineUp))
 {
+    compiling = true;
+    EnableInspectorRecording();
     SmallMessage(AllPlayers(), "Compiling...");
 
     nodesOut = EmptyArray();
@@ -312,6 +331,8 @@ if (IsCommunicating(EventPlayer(), Communication.VoiceLineUp))
         ));
 
     SmallMessage(AllPlayers(), "Compile Finished!");
+    DisableInspectorRecording();
+    compiling = false;
 }
 
 globalvar define nodesOut    3;
@@ -391,7 +412,7 @@ rule: "Create Attribute HUD"
 }
 
 rule: "Create segment attribute text"
-Event.OnDamageTaken          // On Damage Takene event
+Event.OnDamageTaken          // On Damage Taken event
 if (scoper == EventPlayer()) // Check if is scoper
 if (GetID() == 1)            // GetID equals expected ID
 {

@@ -27,16 +27,20 @@ namespace Deltin.Deltinteger.Pathfinder
         public override IWorkshopTree Get(ActionSet actionSet, IWorkshopTree[] parameterValues)
         {
             Element player = (Element)parameterValues[0];
-            Element destination = (Element)parameterValues[1];
+
+            // Store the pathfind destination.
+            IndexReference destinationStore = actionSet.VarCollection.Assign("_pathfindDestinationStore", actionSet.IsGlobal, true);
+            actionSet.AddAction(destinationStore.SetVariable((Element)parameterValues[1]));
+
             Element attributes = (Element)parameterValues[2];
             if (attributes is V_Null || attributes is V_EmptyArray) attributes = null;
 
             DijkstraNormal algorithm = new DijkstraNormal(
-                actionSet, (Element)actionSet.CurrentObject.GetVariable(), Element.Part<V_PositionOf>(player), destination, attributes
+                actionSet, (Element)actionSet.CurrentObject, Element.Part<V_PositionOf>(parameterValues[0]), (Element)destinationStore.GetVariable(), attributes
             );
             algorithm.Get();
             DijkstraBase.Pathfind(
-                actionSet, actionSet.Translate.DeltinScript.SetupPathfinder(), (Element)algorithm.finalPath.GetVariable(), player, destination, (Element)algorithm.finalPathAttributes.GetVariable()
+                actionSet, actionSet.Translate.DeltinScript.GetComponent<PathfinderInfo>(), (Element)algorithm.finalPath.GetVariable(), (Element)parameterValues[0], (Element)destinationStore.GetVariable(), (Element)algorithm.finalPathAttributes.GetVariable()
             );
 
             return null;
@@ -57,13 +61,14 @@ namespace Deltin.Deltinteger.Pathfinder
 
         public override IWorkshopTree Get(ActionSet actionSet, IWorkshopTree[] parameterValues)
         {
-            Element players = (Element)parameterValues[0];
-            Element destination = (Element)parameterValues[1];
+            IndexReference destinationStore = actionSet.VarCollection.Assign("_pathfindDestinationStore", actionSet.IsGlobal, true);
+            actionSet.AddAction(destinationStore.SetVariable((Element)parameterValues[1]));
+
             Element attributes = (Element)parameterValues[2];
             if (attributes is V_Null || attributes is V_EmptyArray) attributes = null;
 
             DijkstraMultiSource algorithm = new DijkstraMultiSource(
-                actionSet, actionSet.Translate.DeltinScript.SetupPathfinder(), (Element)actionSet.CurrentObject.GetVariable(), players, destination, attributes
+                actionSet, actionSet.Translate.DeltinScript.GetComponent<PathfinderInfo>(), (Element)actionSet.CurrentObject, (Element)parameterValues[0], (Element)destinationStore.GetVariable(), attributes
             );
             algorithm.Get();
 
@@ -81,15 +86,15 @@ namespace Deltin.Deltinteger.Pathfinder
 
         public override IWorkshopTree Get(ActionSet actionSet, IWorkshopTree[] parameterValues)
         {
-            Element position = (Element)parameterValues[0];
-            Element destination = (Element)parameterValues[1];
+            IndexReference destinationStore = actionSet.VarCollection.Assign("_pathfindDestinationStore", actionSet.IsGlobal, true);
+            actionSet.AddAction(destinationStore.SetVariable((Element)parameterValues[1]));
 
             DijkstraNormal algorithm = new DijkstraNormal(
-                actionSet, (Element)actionSet.CurrentObject.GetVariable(), position, destination, null
+                actionSet, (Element)actionSet.CurrentObject, (Element)parameterValues[0], (Element)destinationStore.GetVariable(), null
             );
             algorithm.Get();
 
-            return Element.Part<V_Append>(algorithm.finalPath.GetVariable(), destination);
+            return Element.Part<V_Append>(algorithm.finalPath.GetVariable(), destinationStore.GetVariable());
         }
     }
 
@@ -108,7 +113,7 @@ namespace Deltin.Deltinteger.Pathfinder
         public override IWorkshopTree Get(ActionSet actionSet, IWorkshopTree[] parameterValues)
         {
             actionSet.AddAction(
-                actionSet.Translate.DeltinScript.SetupPathfinder().Path.SetVariable(
+                actionSet.Translate.DeltinScript.GetComponent<PathfinderInfo>().Path.SetVariable(
                     new V_EmptyArray(), (Element)parameterValues[0]
                 )
             );
@@ -126,7 +131,7 @@ namespace Deltin.Deltinteger.Pathfinder
 
         public override IWorkshopTree Get(ActionSet actionSet, IWorkshopTree[] parameterValues)
         {
-            return Get(actionSet.Translate.DeltinScript.SetupPathfinder(), (Element)parameterValues[0]);
+            return Get(actionSet.Translate.DeltinScript.GetComponent<PathfinderInfo>(), (Element)parameterValues[0]);
         }
 
         public static Element Get(PathfinderInfo info, Element player)
@@ -153,7 +158,7 @@ namespace Deltin.Deltinteger.Pathfinder
 
         public override IWorkshopTree Get(ActionSet actionSet, IWorkshopTree[] parameterValues)
         {
-            PathfinderInfo info = actionSet.Translate.DeltinScript.SetupPathfinder();
+            PathfinderInfo info = actionSet.Translate.DeltinScript.GetComponent<PathfinderInfo>();
 
             Element leniency = 2;
 
@@ -185,7 +190,7 @@ namespace Deltin.Deltinteger.Pathfinder
 
             actionSet.AddAction(Element.Part<A_Teleport>(
                 player,
-                actionSet.Translate.DeltinScript.SetupPathfinder().NextPosition(player)
+                actionSet.Translate.DeltinScript.GetComponent<PathfinderInfo>().NextPosition(player)
             ));
 
             return null;
@@ -201,7 +206,7 @@ namespace Deltin.Deltinteger.Pathfinder
 
         public override IWorkshopTree Get(ActionSet actionSet, IWorkshopTree[] parameterValues)
         {
-            return actionSet.Translate.DeltinScript.SetupPathfinder().NextPosition((Element)parameterValues[0]);
+            return actionSet.Translate.DeltinScript.GetComponent<PathfinderInfo>().NextPosition((Element)parameterValues[0]);
         }
     }
 
@@ -215,7 +220,7 @@ namespace Deltin.Deltinteger.Pathfinder
 
         public override IWorkshopTree Get(ActionSet actionSet, IWorkshopTree[] parameterValues)
         {
-            actionSet.AddAction(actionSet.Translate.DeltinScript.SetupPathfinder().Path.SetVariable(
+            actionSet.AddAction(actionSet.Translate.DeltinScript.GetComponent<PathfinderInfo>().Path.SetVariable(
                 (Element)parameterValues[1],
                 (Element)parameterValues[0]
             ));
@@ -232,9 +237,8 @@ namespace Deltin.Deltinteger.Pathfinder
 
         public override IWorkshopTree Get(ActionSet actionSet, IWorkshopTree[] parameterValues)
         {
-            PathfinderInfo pathfindInfo = actionSet.Translate.DeltinScript.SetupPathfinder();
+            PathfinderInfo pathfindInfo = actionSet.Translate.DeltinScript.GetComponent<PathfinderInfo>();
             Element player = (Element)parameterValues[0];
-
             return Element.TernaryConditional(pathfindInfo.NumberOfNodes(player) > 1, ((Element)pathfindInfo.PathAttributes.GetVariable(player))[0], new V_Number(-1));
         }
     }
@@ -251,7 +255,7 @@ namespace Deltin.Deltinteger.Pathfinder
 
         public override IWorkshopTree Get(ActionSet actionSet, IWorkshopTree[] parameterValues)
         {
-            PathfinderInfo pathfindInfo = actionSet.Translate.DeltinScript.SetupPathfinder();
+            PathfinderInfo pathfindInfo = actionSet.Translate.DeltinScript.GetComponent<PathfinderInfo>();
             Element player  = (Element)parameterValues[0];
             Element segment = (Element)parameterValues[1];
 

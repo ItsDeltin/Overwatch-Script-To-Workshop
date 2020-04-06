@@ -7,8 +7,6 @@ using System.Reflection;
 using Deltin.Deltinteger.Parse;
 using Deltin.Deltinteger.LanguageServer;
 using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
-using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItemKind;
-using StringOrMarkupContent = OmniSharp.Extensions.LanguageServer.Protocol.Models.StringOrMarkupContent;
 
 namespace Deltin.Deltinteger.CustomMethods
 {
@@ -43,15 +41,17 @@ namespace Deltin.Deltinteger.CustomMethods
         public CustomMethodType CustomMethodType { get; }
         public Type Type { get; }
         public bool Global { get; }
+        public MethodAttributes Attributes { get; } = new MethodAttributes();
 
         // IScopeable defaults
-        public Location DefinedAt { get; } = null;
-        public AccessLevel AccessLevel { get; } = AccessLevel.Public;
-        public bool WholeContext { get; } = true;
+        public Location DefinedAt => null;
+        public AccessLevel AccessLevel => AccessLevel.Public;
+        public bool WholeContext => true;
+        public bool Static => true;
         
-        public CodeType ReturnType { get; } = null;
+        public CodeType ReturnType => null;
 
-        public StringOrMarkupContent Documentation { get; }
+        public string Documentation { get; }
 
         public CustomMethodData(Type type)
         {
@@ -74,22 +74,13 @@ namespace Deltin.Deltinteger.CustomMethods
 
         public bool DoesReturnValue() => CustomMethodType == CustomMethodType.Value || CustomMethodType == CustomMethodType.MultiAction_Value;
 
-        public IWorkshopTree Parse(ActionSet actionSet, IWorkshopTree[] values, object[] additionalParameterData)
+        public IWorkshopTree Parse(ActionSet actionSet, MethodCall methodCall)
         {
-            return GetObject().Get(actionSet, values, additionalParameterData);
+            return GetObject().Get(actionSet, methodCall.ParameterValues, methodCall.AdditionalParameterData);
         }
 
-        public string GetLabel(bool markdown) => HoverHandler.GetLabel(ReturnType, Name, Parameters, markdown, Documentation.HasString ? Documentation.String : Documentation.MarkupContent.Value);
-        public CompletionItem GetCompletion()
-        {
-            return new CompletionItem()
-            {
-                Label = Name,
-                Kind = CompletionItemKind.Method,
-                Detail = GetLabel(false),
-                Documentation = Documentation
-            };
-        }
+        public string GetLabel(bool markdown) => HoverHandler.GetLabel(CustomMethodType == CustomMethodType.Action ? null : ReturnType?.Name ?? "define", Name, Parameters, markdown, Documentation);
+        public CompletionItem GetCompletion() => MethodAttributes.GetFunctionCompletion(this);
 
         static CustomMethodData[] _customMethodData = null;
         public static CustomMethodData[] GetCustomMethods()

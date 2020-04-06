@@ -6,6 +6,7 @@ using System.Xml.Serialization;
 using System.Diagnostics;
 using System.Text;
 using Deltin.Deltinteger.Elements;
+using Deltin.Deltinteger.Dump;
 
 namespace Deltin.Deltinteger.I18n
 {
@@ -30,7 +31,8 @@ namespace Deltin.Deltinteger.I18n
                 "event",
                 "conditions",
                 "actions",
-                "disabled"
+                "disabled",
+                "subroutines"
             });
 
             // Add methods
@@ -40,8 +42,11 @@ namespace Deltin.Deltinteger.I18n
             foreach(var enumData in EnumData.GetEnumData())
                 foreach (var member in enumData.Members)
                     keywords.Add(member.GetI18nKeyword());
+            
+            // Add settings
+            keywords.AddRange(Lobby.Ruleset.Keywords());
 
-            return keywords.Distinct().ToArray();
+            return keywords.Distinct().Where(k => k != null).ToArray();
         }
 
         public static void Generate(string[] args)
@@ -76,7 +81,7 @@ namespace Deltin.Deltinteger.I18n
                 return;
             }
 
-            var datatool = new DataTool(datatoolPath, overwatchPath);
+            var datatool = new Dump.DataTool(datatoolPath, overwatchPath);
 
             XmlSerializer linkSerializer = new XmlSerializer(typeof(KeyLinkList));
             KeyLink[] keyLinks;
@@ -88,7 +93,7 @@ namespace Deltin.Deltinteger.I18n
             {
                 // Dump the strings for the language.
                 StringKeyGroup strings = new StringKeyGroup();
-                datatool.DumpStrings(strings, lang, true, Log);
+                strings.DumpStrings(datatool, lang, true, Log);
 
                 I18nLanguage xml = new I18nLanguage();
 
@@ -96,7 +101,7 @@ namespace Deltin.Deltinteger.I18n
                 foreach (var keyword in Keywords())
                     xml.Methods.Add(new I18nMethod(
                         keyword,
-                        strings.ValueFromKeyAndLang(keyLinks.First(m => m.MethodName == keyword).Key, lang)
+                        strings.ValueFromKeyAndLang(keyLinks.First(m => m.MethodName.ToLower() == keyword.ToLower()).Key, lang)
                     ));
 
                 // Get the file
@@ -119,15 +124,16 @@ namespace Deltin.Deltinteger.I18n
             string datatoolPath = "C:/Users/Deltin/Downloads/toolchain-release/DataTool.exe";
             string overwatchPath = "C:/Program Files (x86)/Overwatch";
             string previous = "C:/Users/Deltin/Documents/GitHub/Overwatch-Script-To-Workshop/Deltinteger/Deltinteger/bin/Debug/netcoreapp3.0/Languages/key_links.xml";
+            string saveAt = previous;
 
             Console.OutputEncoding = System.Text.Encoding.Unicode;
 
-            DataTool datatool = new DataTool(datatoolPath, overwatchPath);
+            Dump.DataTool datatool = new Dump.DataTool(datatoolPath, overwatchPath);
             StringKeyGroup strings = new StringKeyGroup();
 
-            datatool.DumpStrings(strings, "enUS", true, Log);
-            datatool.DumpStrings(strings, "esES", false, Log);
-            datatool.DumpStrings(strings, "itIT", false, Log);
+            strings.DumpStrings(datatool, "enUS", true, Log);
+            strings.DumpStrings(datatool, "esES", false, Log);
+            strings.DumpStrings(datatool, "itIT", false, Log);
 
             List<KeyLink> links = new List<KeyLink>();
             var serializer = new XmlSerializer(typeof(KeyLinkList));
@@ -145,6 +151,7 @@ namespace Deltin.Deltinteger.I18n
             
             while (true)
             {
+                Console.WriteLine("Write name of link to redo.");
                 string input = Console.ReadLine();
                 if (input == "") break;
 
@@ -157,9 +164,6 @@ namespace Deltin.Deltinteger.I18n
                 }
             }
             
-            Console.Write("Save key links to file: ");
-            string saveAt = Console.ReadLine();
-
             using (var fileStream = File.Create(saveAt))
             using (StreamWriter writer = new StreamWriter(fileStream))
                 serializer.Serialize(writer, new KeyLinkList(links.ToArray()));
@@ -292,68 +296,6 @@ namespace Deltin.Deltinteger.I18n
         {
             MethodName = methodName;
             Key = key;
-        }
-    }
-
-    public class DataTool
-    {
-        static readonly string[] Languages = new string[] {
-            "deDE", "enUS", "esES", "esMX", "frFR", "itIT", "jaJP", "koKR", "plPL", "ptBR", "ruRU", "zhCN", "zhTW"
-        };
-
-        readonly string datatoolPath;
-        readonly string overwatchPath;
-
-        public DataTool(string datatoolPath, string overwatchPath)
-        {
-            this.datatoolPath = datatoolPath;
-            this.overwatchPath = overwatchPath;
-        }
-
-        string RunCommand(string arguments)
-        {
-            var startInfo = new ProcessStartInfo();
-            startInfo.FileName = "cmd.exe";
-            startInfo.Arguments = $"/C datatool \"{overwatchPath}\" {arguments} > out_result.txt";
-            startInfo.WorkingDirectory = Path.GetDirectoryName(datatoolPath);
-            startInfo.WindowStyle = ProcessWindowStyle.Hidden;
-
-            using (Process dataToolProcess = Process.Start(startInfo))
-            {
-                dataToolProcess.WaitForExit();
-            }
-
-            string file = Path.Join(Path.GetDirectoryName(datatoolPath), "out_result.txt");
-            return File.ReadAllText(file);
-        }
-
-        public void DumpStrings(StringKeyGroup group, string language, bool addNewKeys, Log log)
-        {
-            if (group == null) throw new ArgumentNullException(nameof(group));
-            if (language == null) throw new ArgumentNullException(nameof(language));
-            if (!Languages.Contains(language)) throw new ArgumentException(language + " is not a valid language.", nameof(language));
-
-            if (log != null) log.Write(LogLevel.Normal, $"Getting {language} keys...");
-
-            string commandResult = RunCommand("dump-strings --language=" + language);
-
-            string[] lines = commandResult.Split(
-                new[] { "\r\n", "\r", "\n" },
-                StringSplitOptions.None
-            );
-
-            for (int i = 0; i < lines.Length; i++)
-            {
-                string[] lineSplit = lines[i].Split(':', 2);
-                if (lineSplit.Length == 2 && lineSplit[1].Length > 0)
-                {
-                    string key = lineSplit[0];
-                    string str = lineSplit[1].Substring(1);
-                    group.Add(key, language, str, addNewKeys);
-                }
-            }
-
-            if (log != null) log.Write(LogLevel.Normal, $"Got {language} keys.");
         }
     }
 }
