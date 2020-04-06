@@ -26,7 +26,7 @@ namespace Deltin.Deltinteger.Lobby
             new RangeValue(true, "Max Spectators", 0, 12, 2),
             new SwitchValue("Allow Players Who Are In Queue", false, SwitchType.YesNo),
             new SwitchValue("Use Experimental Update If Available", false, SwitchType.YesNo),
-            new SwitchValue("Match Voice Chat", false),
+            new SwitchValue("Match Voice Chat", false, SwitchType.EnabledDisabled),
             new SwitchValue("Pause Game On Player Disconnect", false, SwitchType.YesNo)
         };
 
@@ -185,6 +185,12 @@ namespace Deltin.Deltinteger.Lobby
             keywords.Add("disabled maps");
             keywords.Add("enabled heroes");
             keywords.Add("disabled heroes");
+            keywords.Add("Enabled");
+            keywords.Add("Disabled");
+            keywords.Add("On");
+            keywords.Add("Off");
+            keywords.Add("Yes");
+            keywords.Add("No");
             keywords.Add(AbilityNameResolver.CooldownTime);
             keywords.Add(AbilityNameResolver.RechargeRate);
             keywords.Add(AbilityNameResolver.MaximumTime);
