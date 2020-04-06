@@ -19,15 +19,15 @@ namespace Deltin.Deltinteger.Lobby
             new SelectValue("Map Rotation", "After A Mirror Match", "After A Game", "Paused"),
             new SelectValue("Return To Lobby", "After A Mirror Match", "After A Game", "Never"),
             new SelectValue("Team Balancing", "Off", "After A Mirror Match", "After A Game"),
-            new SwitchValue("Swap Teams After Match", true),
+            new SwitchValue("Swap Teams After Match", true, SwitchType.YesNo),
             new RangeValue(true, "Max Team 1 Players", 0, 6, 6),
             new RangeValue(true, "Max Team 2 Players", 0, 6, 6),
             new RangeValue(true, "Max FFA Players", 0, 12, 0),
             new RangeValue(true, "Max Spectators", 0, 12, 2),
-            new SwitchValue("Allow Players Who Are In Queue", false),
-            new SwitchValue("Use Experimental Update If Available", false),
+            new SwitchValue("Allow Players Who Are In Queue", false, SwitchType.YesNo),
+            new SwitchValue("Use Experimental Update If Available", false, SwitchType.YesNo),
             new SwitchValue("Match Voice Chat", false),
-            new SwitchValue("Pause Game On Player Disconnect", false)
+            new SwitchValue("Pause Game On Player Disconnect", false, SwitchType.YesNo)
         };
 
         public WorkshopValuePair Lobby { get; set; }
