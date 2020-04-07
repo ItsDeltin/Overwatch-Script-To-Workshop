@@ -55,13 +55,14 @@ namespace Deltin.Deltinteger.Parse
         }
     }
 
-    public class ScopedEnumMember : IScopeable, IExpression
+    public class ScopedEnumMember : IVariable, IExpression
     {
         public string Name { get; }
         public AccessLevel AccessLevel { get; } = AccessLevel.Public;
         public LanguageServer.Location DefinedAt { get; } = null;
         public bool WholeContext { get; } = true;
         public bool Static => true;
+        public bool CanBeIndexed => false;
         
         public CodeType Enum { get; }
         public EnumMember EnumMember { get; }

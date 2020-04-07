@@ -61,7 +61,7 @@ namespace Deltin.Deltinteger.Parse
         };
     }
 
-    class DefinedEnumMember : IScopeable, IExpression, ICallable
+    class DefinedEnumMember : IVariable, IExpression, ICallable
     {
         public string Name { get; }
         public LanguageServer.Location DefinedAt { get; }
@@ -71,6 +71,7 @@ namespace Deltin.Deltinteger.Parse
         public AccessLevel AccessLevel => AccessLevel.Public;
         public bool Static => true;
         public bool WholeContext => true;
+        public bool CanBeIndexed => false;
 
         private DeltinScript _translateInfo { get; }
 

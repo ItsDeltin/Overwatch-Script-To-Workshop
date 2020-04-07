@@ -6,7 +6,7 @@ using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.C
 
 namespace Deltin.Deltinteger.Parse
 {
-    public class MacroVar : IScopeable, IExpression, ICallable, IApplyBlock
+    public class MacroVar : IVariable, IExpression, ICallable, IApplyBlock
     {
         public string Name { get; }
         public AccessLevel AccessLevel { get; }

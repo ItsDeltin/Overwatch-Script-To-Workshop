@@ -79,8 +79,8 @@ namespace Deltin.Deltinteger.Parse
                 }
                 else
                 {
-                    if (newMacro.Static) staticScope.CopyVariable(newMacro);
-                    else serveObjectScope.CopyVariable(newMacro);
+                    if (newMacro.Static) staticScope.CopyVariable((IVariable)newMacro);
+                    else serveObjectScope.CopyVariable((IVariable)newMacro);
                 }
             }
 
