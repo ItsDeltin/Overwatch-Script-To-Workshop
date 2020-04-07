@@ -35,22 +35,22 @@
     },
     "Max Team 1 Players": {
       "default": 6.0,
-      "type": "number",
+      "type": "integer",
       "maximum": 6.0
     },
     "Max Team 2 Players": {
       "default": 6.0,
-      "type": "number",
+      "type": "integer",
       "maximum": 6.0
     },
     "Max FFA Players": {
       "default": 0.0,
-      "type": "number",
+      "type": "integer",
       "maximum": 12.0
     },
     "Max Spectators": {
       "default": 2.0,
-      "type": "number",
+      "type": "integer",
       "maximum": 12.0
     },
     "Allow Players Who Are In Queue": {
@@ -1019,6 +1019,15 @@
       "type": "number",
       "minimum": 20.0,
       "maximum": 500.0
+    },
+    "Call Mech Knockback Scalar": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 400.0
+    },
+    "Spawn Without Mech": {
+      "default": false,
+      "type": "boolean"
     },
     "Ultimate Ability (Meteor Strike)": {
       "default": true,
@@ -2900,6 +2909,12 @@
             },
             "Defense Matrix Maximum Time": {
               "$ref": "#/definitions/Defense Matrix Maximum Time"
+            },
+            "Call Mech Knockback Scalar": {
+              "$ref": "#/definitions/Call Mech Knockback Scalar"
+            },
+            "Spawn Without Mech": {
+              "$ref": "#/definitions/Spawn Without Mech"
             }
           },
           "additionalProperties": false
