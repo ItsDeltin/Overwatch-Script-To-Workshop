@@ -165,6 +165,9 @@
     <method name="All Players" alt="すべてのプレイヤー" />
     <method name="All Players Not On Objective" alt="プレイヤー全員が目標を確保中ではない" />
     <method name="All Players On Objective" alt="プレイヤー全員が目標を確保中" />
+    <method name="All Tank Heroes" alt="全タンクヒーロー" />
+    <method name="All Damage Heroes" alt="全ダメージヒーロー" />
+    <method name="All Support Heroes" alt="全サポートヒーロー" />
     <method name="Allowed Heroes" alt="許可されたヒーロー" />
     <method name="Altitude Of" alt="高度: " />
     <method name="And" alt="AND" />
@@ -272,7 +275,7 @@
     <method name="Last Damage Modification ID" alt="最新のダメージ変更ID" />
     <method name="Last Damage Over Time ID" alt="最新の継続ダメージID" />
     <method name="Last Heal Over Time ID" alt="最新の継続回復ID" />
-    <method name="Last Healing Modification ID" alt="最新の回復変更ID" />
+    <method name="Last Healing Modification ID" alt="最新回復変更ID" />
     <method name="Last Of" alt="最後の値" />
     <method name="Last Text ID" alt="最新のテキストID" />
     <method name="Left" alt="左" />
@@ -654,6 +657,10 @@
     <method name="disabled maps" alt="無効なマップ" />
     <method name="enabled heroes" alt="有効なヒーロー" />
     <method name="disabled heroes" alt="無効なヒーロー" />
+    <method name="Enabled" alt="有効" />
+    <method name="Disabled" alt="無効" />
+    <method name="On" alt="ON" />
+    <method name="Yes" alt="はい" />
     <method name="%1$s Cooldown Time" alt="%1$s クールダウン時間" />
     <method name="%1$s Recharge Rate" alt="%1$s リチャージ・レート" />
     <method name="%1$s Maximum Time" alt="%1$s 最大時間" />
@@ -709,6 +716,8 @@
     <method name="Boosters" alt="ブースター" />
     <method name="Boosters Knockback Scalar" alt="ブースター ノックバック・スカラー" />
     <method name="Defense Matrix" alt="ディフェンス・&lt;br&gt;マトリックス" />
+    <method name="Call Mech Knockback Scalar" alt="メック召喚 ノックバック・スカラー" />
+    <method name="Spawn Without Mech" alt="メックなしでリスポーン" />
     <method name="Meteor Strike" alt="メテオ・ストライク" />
     <method name="Meteor Strike Knockback Scalar" alt="メテオ・ストライク ノックバック・スカラー" />
     <method name="Rising Uppercut" alt="ライジング・&lt;br&gt;アッパーカット" />
@@ -848,8 +857,6 @@
     <method name="Skins" alt="スキン" />
     <method name="Spawn Health Packs" alt="ライフ・パック リスポーン" />
     <method name="Determined By Mode" alt="モード準拠" />
-    <method name="Enabled" alt="有効" />
-    <method name="Disabled" alt="無効" />
     <method name="Allow Hero Switching" alt="ヒーロー変更許可" />
     <method name="Hero Limit" alt="ヒーロー制限" />
     <method name="1 Per Team" alt="1/チーム" />

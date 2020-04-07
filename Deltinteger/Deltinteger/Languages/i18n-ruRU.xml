@@ -165,6 +165,9 @@
     <method name="All Players" alt="All Players" />
     <method name="All Players Not On Objective" alt="All Players Not On Objective" />
     <method name="All Players On Objective" alt="All Players On Objective" />
+    <method name="All Tank Heroes" alt="All Tank Heroes" />
+    <method name="All Damage Heroes" alt="All Damage Heroes" />
+    <method name="All Support Heroes" alt="All Support Heroes" />
     <method name="Allowed Heroes" alt="Allowed Heroes" />
     <method name="Altitude Of" alt="Altitude Of" />
     <method name="And" alt="And" />
@@ -605,11 +608,11 @@
     <method name="King's Row" alt="Кингс Роу" />
     <method name="King's Row (Winter)" alt="Кингс Роу (зима)" />
     <method name="Lijiang Control Center" alt="Командный центр Лицзян" />
-    <method name="Lijiang Control Center (Lunar New Year)" alt="Командный центр Лицзян (Лунный Новый год)" />
+    <method name="Lijiang Control Center (Lunar New Year)" alt="Лицзян: командный центр (Лунный Новый год)" />
     <method name="Lijiang Garden" alt="Сад Лицзян" />
-    <method name="Lijiang Garden (Lunar New Year)" alt="Сад Лицзян (Лунный Новый год)" />
+    <method name="Lijiang Garden (Lunar New Year)" alt="Лицзян: сад (Лунный Новый год)" />
     <method name="Lijiang Night Market" alt="Ночной рынок Лицзян" />
-    <method name="Lijiang Night Market (Lunar New Year)" alt="Ночной рынок Лицзян (Лунный Новый год)" />
+    <method name="Lijiang Night Market (Lunar New Year)" alt="Лицзян: ночной рынок (Лунный Новый год)" />
     <method name="Lijiang Tower" alt="Башня Лицзян" />
     <method name="Lijiang Tower (Lunar New Year)" alt="Башня Лицзян (Лунный Новый год)" />
     <method name="Necropolis" alt="Некрополь" />
@@ -654,6 +657,10 @@
     <method name="disabled maps" alt="disabled maps" />
     <method name="enabled heroes" alt="enabled heroes" />
     <method name="disabled heroes" alt="disabled heroes" />
+    <method name="Enabled" alt="Вкл." />
+    <method name="Disabled" alt="disabled" />
+    <method name="On" alt="Вкл." />
+    <method name="Yes" alt="Да" />
     <method name="%1$s Cooldown Time" alt="Время восстановления: %1$s" />
     <method name="%1$s Recharge Rate" alt="Скорость зарядки: %1$s" />
     <method name="%1$s Maximum Time" alt="Макс. время: %1$s" />
@@ -709,6 +716,8 @@
     <method name="Boosters" alt="Ускорители" />
     <method name="Boosters Knockback Scalar" alt="Ускорители: сила отбрасывания" />
     <method name="Defense Matrix" alt="Защитная матрица" />
+    <method name="Call Mech Knockback Scalar" alt="Вызов мехи: сила отбрасывания" />
+    <method name="Spawn Without Mech" alt="Появление без мехи" />
     <method name="Meteor Strike" alt="Удар метеора" />
     <method name="Meteor Strike Knockback Scalar" alt="Удар метеора: сила отбрасывания" />
     <method name="Rising Uppercut" alt="Апперкот" />
@@ -848,8 +857,6 @@
     <method name="Skins" alt="Облики" />
     <method name="Spawn Health Packs" alt="Медкомплекты" />
     <method name="Determined By Mode" alt="В зависимости от режима" />
-    <method name="Enabled" alt="Вкл." />
-    <method name="Disabled" alt="disabled" />
     <method name="Allow Hero Switching" alt="Смена героев" />
     <method name="Hero Limit" alt="Лимит героев" />
     <method name="1 Per Team" alt="1 на команду" />
