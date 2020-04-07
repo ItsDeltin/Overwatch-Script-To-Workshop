@@ -92,6 +92,7 @@ namespace Deltin.Deltinteger.Parse
             _varInfo.WholeContext = true;
             _varInfo.OperationalScope = _varInfo.Static ? _staticScope : _objectScope;
             _varInfo.CodeLensType = CodeLensSourceType.ClassVariable;
+            _varInfo.InitialValueResolve = InitialValueResolve.ApplyBlock;
         }
     }
 
