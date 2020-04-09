@@ -18,8 +18,8 @@ namespace Deltin.Deltinteger.Parse
         {
             ArrayOfType = arrayOfType;
             _scope.AddNativeVariable(_length);
-            AddConditionalFunction<V_FilteredArray>("FilteredArray", "A copy of the specified array with any values that do not match the specified condition removed.", ArrayOfType, "The condition that is evaluated for each element of the copied array. If the condition is true, the element is kept in the copied array.");
-            AddConditionalFunction<V_SortedArray>("SortedArray", "A copy of the specified array with the values sorted according to the value rank that is evaluated for each element.", ArrayOfType, "The value that is evaluated for each element of the copied array. The array is sorted by this rank in ascending order.");
+            AddConditionalFunction<V_FilteredArray>("FilteredArray", "A copy of the specified array with any values that do not match the specified condition removed.", this, "The condition that is evaluated for each element of the copied array. If the condition is true, the element is kept in the copied array.");
+            AddConditionalFunction<V_SortedArray>("SortedArray", "A copy of the specified array with the values sorted according to the value rank that is evaluated for each element.", this, "The value that is evaluated for each element of the copied array. The array is sorted by this rank in ascending order.");
             AddConditionalFunction<V_IsTrueForAny>("IsTrueForAny", "Whether the specified condition evaluates to true for any value in the specified array.", null);
             AddConditionalFunction<V_IsTrueForAll>("IsTrueForAll", "Whether the specified condition evaluates to true for every value in the specified array.", null);
         }
@@ -47,7 +47,7 @@ namespace Deltin.Deltinteger.Parse
         private abstract class BaseArrayFunction : IMethod
         {
             public string Name { get; }
-            public CodeType ReturnType { get; }
+            public CodeType ReturnType { get; protected set; }
             public MethodAttributes Attributes { get; }
             public CodeParameter[] Parameters { get; protected set; }
             public string Documentation { get; }
@@ -76,8 +76,9 @@ namespace Deltin.Deltinteger.Parse
         {
             public ConditionalArrayFunction(string name, string description, ArrayType arrayType, string parameterDescription, CodeType returnType) : base(name, description, arrayType)
             {
+                ReturnType = returnType;
                 Parameters = new CodeParameter[] {
-                    new CodeParameter("conditionLambda", parameterDescription, new MacroLambda(returnType, arrayType.ArrayOfType))
+                    new CodeParameter("conditionLambda", parameterDescription, new MacroLambda(null, arrayType.ArrayOfType))
                 };
             }
 

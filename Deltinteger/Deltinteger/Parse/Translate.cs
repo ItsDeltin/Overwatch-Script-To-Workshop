@@ -90,6 +90,7 @@ namespace Deltin.Deltinteger.Parse
                 var newEnum = new DefinedEnum(new ParseInfo(script, this), enumContext);
                 Types.AllTypes.Add(newEnum); 
                 Types.DefinedTypes.Add(newEnum);
+                Types.CalledTypes.Add(newEnum);
             }
 
             // Get the types
@@ -99,6 +100,7 @@ namespace Deltin.Deltinteger.Parse
                 var newType = new DefinedType(new ParseInfo(script, this), GlobalScope, typeContext);
                 Types.AllTypes.Add(newType);
                 Types.DefinedTypes.Add(newType);
+                Types.CalledTypes.Add(newType);
             }
             
             // Get the methods and macros
