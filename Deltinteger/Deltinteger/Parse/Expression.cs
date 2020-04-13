@@ -23,12 +23,8 @@ namespace Deltin.Deltinteger.Parse
         }
 
         public Scope ReturningScope() => null;
-        public CodeType Type() => null;
-
-        public IWorkshopTree Parse(ActionSet actionSet)
-        {
-            return new V_Number(Value);
-        }
+        public CodeType Type() => NumberType.Instance;
+        public IWorkshopTree Parse(ActionSet actionSet) => new V_Number(Value);
     }
 
     public class BoolAction : IExpression
@@ -41,7 +37,7 @@ namespace Deltin.Deltinteger.Parse
         }
 
         public Scope ReturningScope() => null;
-        public CodeType Type() => null;
+        public CodeType Type() => BooleanType.Instance;
 
         public IWorkshopTree Parse(ActionSet actionSet)
         {
@@ -54,7 +50,7 @@ namespace Deltin.Deltinteger.Parse
     {
         public NullAction() {}
         public Scope ReturningScope() => null;
-        public CodeType Type() => null;
+        public CodeType Type() => NullType.Instance;
 
         public IWorkshopTree Parse(ActionSet actionSet)
         {
@@ -88,7 +84,6 @@ namespace Deltin.Deltinteger.Parse
 
         public Scope ReturningScope() => Type()?.GetObjectScope() ?? parseInfo.TranslateInfo.PlayerVariableScope;
         public CodeType Type() => (Expression.Type() as ArrayType)?.ArrayOfType;
-
         public IWorkshopTree Parse(ActionSet actionSet)
         {
             IWorkshopTree result = Expression.Parse(actionSet);

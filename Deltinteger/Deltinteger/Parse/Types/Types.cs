@@ -126,23 +126,20 @@ namespace Deltin.Deltinteger.Parse
 
         public static CodeType GetCodeTypeFromContext(ParseInfo parseInfo, DeltinScriptParser.Code_typeContext typeContext)
         {
-            if (typeContext == null) return null;
+            if (typeContext == null) throw new ArgumentNullException(nameof(typeContext));
+
             CodeType type = parseInfo.TranslateInfo.Types.GetCodeType(typeContext.PART().GetText(), parseInfo.Script.Diagnostics, DocRange.GetRange(typeContext));
+            if (type == null) return ObjectType.Instance;
 
             // Get generics
-            if (typeContext.generics()?.generic_option() != null)
+            if (typeContext.generics()?.code_type() != null)
             {
                 // Create a list to store the generics.
                 List<CodeType> generics = new List<CodeType>();
 
                 // Get the generics.
-                foreach (var genericContext in typeContext.generics().generic_option())
-                {
-                    if (genericContext.DEFINE() != null)
-                        generics.Add(null);
-                    else
-                        generics.Add(GetCodeTypeFromContext(parseInfo, genericContext.code_type()));
-                }
+                foreach (var genericContext in typeContext.generics().code_type())
+                    generics.Add(GetCodeTypeFromContext(parseInfo, genericContext));
                 
                 if (type is Lambda.BlockLambda)
                     type = new Lambda.BlockLambda(generics.ToArray());
@@ -152,14 +149,12 @@ namespace Deltin.Deltinteger.Parse
                     type = new Lambda.MacroLambda(generics[0], generics.Skip(1).ToArray());
             }
 
-            if (type != null)
-            {
-                type.Call(parseInfo, DocRange.GetRange(typeContext));
+            type.Call(parseInfo, DocRange.GetRange(typeContext));
 
-                if (typeContext.INDEX_START() != null)
-                    for (int i = 0; i < typeContext.INDEX_START().Length; i++)
-                        type = new ArrayType(type);
-            }
+            if (typeContext.INDEX_START() != null)
+                for (int i = 0; i < typeContext.INDEX_START().Length; i++)
+                    type = new ArrayType(type);
+            
             return type;
         }
 
@@ -185,6 +180,10 @@ namespace Deltin.Deltinteger.Parse
             _defaultTypes.Add(new Lambda.BlockLambda());
             _defaultTypes.Add(new Lambda.ValueBlockLambda());
             _defaultTypes.Add(new Lambda.MacroLambda());
+            _defaultTypes.Add(ObjectType.Instance);
+            _defaultTypes.Add(NumberType.Instance);
+            _defaultTypes.Add(PlayerType.Instance);
+            _defaultTypes.Add(TeamType.Instance);
             _defaultTypes.Add(VectorType.Instance);
         }
     }

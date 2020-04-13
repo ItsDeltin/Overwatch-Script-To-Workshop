@@ -377,7 +377,7 @@ namespace Deltin.Deltinteger.Parse
                 if (_foreachContext.name != null) return DocRange.GetRange(_foreachContext.name);
                 return DocRange.GetRange(_foreachContext);
             }
-            public DocRange GetTypeRange() => DocRange.GetRange((object)_foreachContext.code_type() ?? _foreachContext.DEFINE());
+            public DocRange GetTypeRange() => DocRange.GetRange(_foreachContext.code_type());
         }
     }
 }
