@@ -280,6 +280,7 @@ namespace Deltin.Deltinteger.Elements
         Moira,
         WreckingBall,
         Ashe,
+        Echo,
         Baptiste,
         Sigma
     }
@@ -295,6 +296,7 @@ namespace Deltin.Deltinteger.Elements
         [EnumOverride(null, "D.va")]
         Dva,
         Doomfist,
+        Echo,
         Genji,
         Hanzo,
         Junkrat,
