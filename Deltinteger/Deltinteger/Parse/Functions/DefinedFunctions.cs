@@ -62,7 +62,7 @@ namespace Deltin.Deltinteger.Parse
             parseInfo.TranslateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, new Location(parseInfo.Script.Uri, callRange));
         }
 
-        public virtual bool DoesReturnValue() => true;
+        public virtual bool DoesReturnValue() => doesReturnValue;
 
         public string GetLabel(bool markdown) => HoverHandler.GetLabel(!doesReturnValue ? null : ReturnType?.Name ?? "define", Name, Parameters, markdown, null);
 

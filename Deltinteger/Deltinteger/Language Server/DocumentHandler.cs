@@ -145,22 +145,21 @@ namespace Deltin.Deltinteger.LanguageServer
         Task<Unit> Parse(Uri uri) => Parse(TextDocumentFromUri(uri));
         Task<Unit> Parse(TextDocumentItem document)
         {
-            lock (_parseLock)
-            {
-                _typeWait.Restart();
-                _parseItem = document;
+            _typeWait.Restart();
 
-                if (!_updateTaskIsRunning)
-                {
-                    _updateTaskIsRunning = true;
-                    _updateTask = Task.Run(Update);
-                }
-                return Unit.Task;
+            lock (_parseItemLock) _parseItem = document;
+
+            if (!_updateTaskIsRunning)
+            {
+                _updateTaskIsRunning = true;
+                _updateTask = Task.Run(Update);
             }
+            return Unit.Task;
         }
 
         private const int TimeToUpdate = 250;
         private TextDocumentItem _parseItem;
+        private object _parseItemLock = new object();
         private Stopwatch _typeWait = new Stopwatch();
         private object _parseLock = new object();
         private bool _updateTaskIsRunning = false;
@@ -177,7 +176,8 @@ namespace Deltin.Deltinteger.LanguageServer
                 try
                 {
                     Diagnostics diagnostics = new Diagnostics();
-                    ScriptFile root = new ScriptFile(diagnostics, _parseItem.Uri, _parseItem.Text);
+                    ScriptFile root;
+                    lock (_parseItemLock) root = new ScriptFile(diagnostics, _parseItem.Uri, _parseItem.Text);
                     DeltinScript deltinScript = new DeltinScript(new TranslateSettings(diagnostics, root, _languageServer.FileGetter) {
                         OutputLanguage = _languageServer.ConfigurationHandler.OutputLanguage,
                         OptimizeOutput = _languageServer.ConfigurationHandler.OptimizeOutput

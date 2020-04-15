@@ -196,8 +196,7 @@ namespace Deltin.Deltinteger.Parse
         // Sets up single-instance methods for methods with the 'rule' attribute.
         public void SetupSubroutine()
         {
-            if (subroutineInfo != null) return;
-            if (!IsSubroutine) throw new Exception(Name + " does not have the subroutine attribute.");
+            if (subroutineInfo != null || !IsSubroutine) return;
 
             // Setup the subroutine element.
             Subroutine subroutine = parseInfo.TranslateInfo.SubroutineCollection.NewSubroutine(Name);
