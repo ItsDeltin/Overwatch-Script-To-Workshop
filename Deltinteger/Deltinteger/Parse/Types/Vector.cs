@@ -6,7 +6,7 @@ using Deltin.Deltinteger.Parse;
 
 namespace Deltin.Deltinteger.Parse
 {
-    public class VectorType : CodeType
+    public class VectorType : CodeType, IInitOperations
     {
         public static VectorType Instance { get; } = new VectorType();
 
@@ -46,6 +46,18 @@ namespace Deltin.Deltinteger.Parse
             objectScope.AddNativeMethod(CustomMethodData.GetCustomMethod<Towards>());
             objectScope.AddNativeMethod(CustomMethodData.GetCustomMethod<AsLocalVector>());
             objectScope.AddNativeMethod(CustomMethodData.GetCustomMethod<AsWorldVector>());
+        }
+
+        public void InitOperations()
+        {
+            Operations = new TypeOperation[] {
+                new TypeOperation(TypeOperator.Add, this, this, TypeOperation.Add), // Vector + vector
+                new TypeOperation(TypeOperator.Subtract, this, this, TypeOperation.Subtract), // Vector - vector
+                new TypeOperation(TypeOperator.Multiply, this, this, TypeOperation.Multiply), // Vector * vector
+                new TypeOperation(TypeOperator.Divide, this, this, TypeOperation.Divide), // Vector / vector
+                new TypeOperation(TypeOperator.Multiply, NumberType.Instance, this, TypeOperation.Multiply), // Vector * number
+                new TypeOperation(TypeOperator.Divide, NumberType.Instance, this, TypeOperation.Divide), // Vector / number
+            };
         }
 
         private InternalVar CreateInternalVar(string name, string documentation, bool isStatic = false)

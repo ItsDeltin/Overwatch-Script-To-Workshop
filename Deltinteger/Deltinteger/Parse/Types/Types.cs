@@ -23,6 +23,8 @@ namespace Deltin.Deltinteger.Parse
         /// <summary>Determines if other classes can inherit this class.</summary>
         public bool CanBeExtended { get; protected set; } = false;
 
+        public TypeOperation[] Operations { get; protected set; }
+
         public CodeType(string name)
         {
             Name = name;
@@ -111,6 +113,27 @@ namespace Deltin.Deltinteger.Parse
         /// <param name="reference">The object reference.</param>
         public virtual void Delete(ActionSet actionSet, Element reference) {}
 
+        /// <summary>
+        /// Gets an operation.
+        /// </summary>
+        /// <param name="op">The operation's operator type.</param>
+        /// <param name="right">The right object's type.</param>
+        /// <returns>A TypeOperation if the operation is found. Null if it is not found.</returns>
+        public TypeOperation GetOperation(TypeOperator op, CodeType right)
+        {
+            CodeType current = this;
+            while (current != null)
+            {
+                if (current.Operations != null)
+                    foreach (TypeOperation operation in current.Operations)
+                        if (operation.Operator == op && right.Implements(operation.Right))
+                            return operation;
+                
+                current = current.Extends;
+            }
+            return null;
+        }
+
         /// <summary>Calls a type from the specified document range.</summary>
         /// <param name="parseInfo">The script that the type was called from.</param>
         /// <param name="callRange">The range of the call.</param>
@@ -185,6 +208,9 @@ namespace Deltin.Deltinteger.Parse
             _defaultTypes.Add(PlayerType.Instance);
             _defaultTypes.Add(TeamType.Instance);
             _defaultTypes.Add(VectorType.Instance);
+            ObjectType.Instance.InitOperations();
+            NumberType.Instance.InitOperations();
+            VectorType.Instance.InitOperations();
         }
     }
 }

@@ -1,4 +1,3 @@
-using System;
 using System.Linq;
 using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.Elements;
@@ -170,69 +169,6 @@ namespace Deltin.Deltinteger.Parse
         public Scope ReturningScope() => null;
         public CodeType Type() => null;
         public IWorkshopTree Parse(ActionSet actionSet) => Element.Part<V_Multiply>(Expression.Parse(actionSet), new V_Number(-1));
-    }
-    
-    public class OperatorAction : IExpression
-    {
-        public IExpression Left { get; private set; }
-        public IExpression Right { get; private set; }
-        public string Operator { get; private set; }
-
-        public OperatorAction(ParseInfo parseInfo, Scope scope, DeltinScriptParser.E_op_1Context context)
-        {
-            GetParts(parseInfo, scope, context.left, context.op.Text, DocRange.GetRange(context.op), context.right);
-        }
-        public OperatorAction(ParseInfo parseInfo, Scope scope, DeltinScriptParser.E_op_2Context context)
-        {
-            GetParts(parseInfo, scope, context.left, context.op.Text, DocRange.GetRange(context.op), context.right);
-        }
-        public OperatorAction(ParseInfo parseInfo, Scope scope, DeltinScriptParser.E_op_boolContext context)
-        {
-            GetParts(parseInfo, scope, context.left, context.BOOL().GetText(), DocRange.GetRange(context.BOOL()), context.right);
-        }
-        public OperatorAction(ParseInfo parseInfo, Scope scope, DeltinScriptParser.E_op_compareContext context)
-        {
-            GetParts(parseInfo, scope, context.left, context.op.Text, DocRange.GetRange(context.op), context.right);
-        }
-
-        private void GetParts(ParseInfo parseInfo, Scope scope, DeltinScriptParser.ExprContext left, string op, DocRange opRange, DeltinScriptParser.ExprContext right)
-        {
-            // Left operator.
-            if (left == null) parseInfo.Script.Diagnostics.Error("Missing left operator.", opRange);
-            else Left = parseInfo.GetExpression(scope, left);
-
-            // Right operator.
-            if (right == null) parseInfo.Script.Diagnostics.Error("Missing right operator.", opRange);
-            else Right = parseInfo.GetExpression(scope, right);
-
-            Operator = op;
-        }
-
-        public Scope ReturningScope() => null;
-        public CodeType Type() => null;
-        public IWorkshopTree Parse(ActionSet actionSet)
-        {
-            var left = Left.Parse(actionSet);
-            var right = Right.Parse(actionSet);
-            switch (Operator)
-            {
-                case "^": return Element.Part<V_RaiseToPower>(left,right);
-                case "*": return Element.Part<V_Multiply>(left,right);
-                case "/": return Element.Part<V_Divide>(left,right);
-                case "%": return Element.Part<V_Modulo>(left,right);
-                case "+": return Element.Part<V_Add>(left,right);
-                case "-": return Element.Part<V_Subtract>(left,right);
-                case "<": return new V_Compare(left, Operators.LessThan, right);
-                case "<=": return new V_Compare(left, Operators.LessThanOrEqual, right);
-                case "==": return new V_Compare(left, Operators.Equal, right);
-                case ">=": return new V_Compare(left, Operators.GreaterThanOrEqual, right);
-                case ">": return new V_Compare(left, Operators.GreaterThan, right);
-                case "!=": return new V_Compare(left, Operators.NotEqual, right);
-                case "&&": return Element.Part<V_And>(left,right);
-                case "||": return Element.Part<V_Or>(left,right);
-                default: throw new Exception($"Unrecognized operator {Operator}.");
-            }
-        }
     }
 
     public class TernaryConditionalAction : IExpression
