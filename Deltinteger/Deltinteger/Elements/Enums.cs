@@ -231,7 +231,7 @@ namespace Deltin.Deltinteger.Elements
     }
 
     [WorkshopEnum]
-    [EnumOverride("Player", null)]
+    [EnumOverride("PlayerSelector", null)]
     public enum PlayerSelector
     {
         All,
