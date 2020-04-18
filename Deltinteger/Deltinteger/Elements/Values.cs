@@ -992,7 +992,7 @@ namespace Deltin.Deltinteger.Elements
                 if (a.Value == 1) return 1;
             }
 
-            if (b != null && (b.Value == 0 || b.Value == 1)) return 0;
+            if (b != null && b.Value == 0) return 0;
 
             if (((Element)ParameterValues[0]).EqualTo(ParameterValues[1])) return 0;
             
