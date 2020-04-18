@@ -119,16 +119,18 @@ namespace Deltin.Deltinteger.Elements
         {
             int count = 1;
 
-            foreach (Condition condition in Conditions)
-                count += condition.ElementCount(optimized);
+            if (Conditions != null)
+                foreach (Condition condition in Conditions)
+                    count += condition.ElementCount(optimized);
 
-            foreach (Element action in Actions)
-            {
-                if (optimized)
-                    count += action.Optimize().ElementCount(0);
-                else
-                    count += action.ElementCount(0);
-            }
+            if (Actions != null)
+                foreach (Element action in Actions)
+                {
+                    if (optimized)
+                        count += action.Optimize().ElementCount(0);
+                    else
+                        count += action.ElementCount(0);
+                }
             
             return count;
         }
