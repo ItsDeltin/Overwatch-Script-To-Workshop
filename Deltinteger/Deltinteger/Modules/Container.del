@@ -51,6 +51,7 @@ public void ActivateScoper(ref define id, define data)
     // data ID
     data += id / 100;
     Damage(scoper, scoper, data);
+    Heal(scoper, null, 6000);
 }
 
 // 123.0179
