@@ -158,7 +158,7 @@ class Node
 
     public void UpdateVisible()
     {
-        if (DistanceBetween(HostPlayer(), ShownLocation) < 35 && IsInViewAngle(HostPlayer(), ShownLocation, 50))
+        if (DistanceBetween(HostPlayer(), ShownLocation) < 35 && (IsInViewAngle(HostPlayer(), ShownLocation, 50) || DistanceBetween(HostPlayer(), ShownLocation) < 5))
             Show();
         else
             Hide();
