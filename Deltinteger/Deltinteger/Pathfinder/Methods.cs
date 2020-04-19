@@ -228,7 +228,7 @@ namespace Deltin.Deltinteger.Pathfinder
         }
     }
 
-    [CustomMethod("CurrentSegmentAttribute", "Gets the attribute of the current pathfind segment.", CustomMethodType.Value)]
+    [CustomMethod("CurrentSegmentAttribute", "Gets the attribute of the current pathfind segment.", CustomMethodType.Value, false)]
     class CurrentSegmentAttribute : CustomMethodBase
     {
         public override CodeParameter[] Parameters() => new CodeParameter[] {
@@ -243,7 +243,7 @@ namespace Deltin.Deltinteger.Pathfinder
         }
     }
 
-    [CustomMethod("SegmentAttribute", "Gets the attribute of a pathfind segment.", CustomMethodType.Value)]
+    [CustomMethod("SegmentAttribute", "Gets the attribute of a pathfind segment.", CustomMethodType.Value, false)]
     [Parameter("player", Elements.ValueType.Player, null)]
     [Parameter("segment", Elements.ValueType.Number, null)]
     class SegmentAttribute : CustomMethodBase
@@ -260,6 +260,21 @@ namespace Deltin.Deltinteger.Pathfinder
             Element segment = (Element)parameterValues[1];
 
             return ((Element)pathfindInfo.PathAttributes.GetVariable(player))[segment];
+        }
+    }
+
+    [CustomMethod("RestartThrottle", "Throttle towards the next node.", CustomMethodType.Action, false)]
+    class RestartThottle : CustomMethodBase
+    {
+        public override CodeParameter[] Parameters() => new CodeParameter[] {
+            new CodeParameter("player", "The player to restart throttle for.")
+        };
+
+        public override IWorkshopTree Get(ActionSet actionSet, IWorkshopTree[] parameterValues)
+        {
+            PathfinderInfo pathfindInfo = actionSet.Translate.DeltinScript.GetComponent<PathfinderInfo>();
+            actionSet.AddAction(pathfindInfo.Throttle((Element)parameterValues[0]));
+            return null;
         }
     }
 }

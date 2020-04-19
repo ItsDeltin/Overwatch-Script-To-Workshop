@@ -28,16 +28,19 @@ namespace Deltin.Deltinteger.Pathfinder
             if (elementsResolved) return;
             base.ResolveElements();
 
-            serveObjectScope.AddMethod(CustomMethodData.GetCustomMethod<Pathfind>(), null, null);
-            serveObjectScope.AddMethod(CustomMethodData.GetCustomMethod<PathfindAll>(), null, null);
-            serveObjectScope.AddMethod(CustomMethodData.GetCustomMethod<GetPath>(), null, null);
+            serveObjectScope.AddNativeMethod(CustomMethodData.GetCustomMethod<Pathfind>());
+            serveObjectScope.AddNativeMethod(CustomMethodData.GetCustomMethod<PathfindAll>());
+            serveObjectScope.AddNativeMethod(CustomMethodData.GetCustomMethod<GetPath>());
 
-            staticScope.AddMethod(CustomMethodData.GetCustomMethod<StopPathfind>(), null, null);
-            staticScope.AddMethod(CustomMethodData.GetCustomMethod<IsPathfinding>(), null, null);
-            staticScope.AddMethod(CustomMethodData.GetCustomMethod<IsPathfindStuck>(), null, null);
-            staticScope.AddMethod(CustomMethodData.GetCustomMethod<FixPathfind>(), null, null);
-            staticScope.AddMethod(CustomMethodData.GetCustomMethod<NextNode>(), null, null);
-            staticScope.AddMethod(CustomMethodData.GetCustomMethod<WalkPath>(), null, null);
+            staticScope.AddNativeMethod(CustomMethodData.GetCustomMethod<StopPathfind>());
+            staticScope.AddNativeMethod(CustomMethodData.GetCustomMethod<IsPathfinding>());
+            staticScope.AddNativeMethod(CustomMethodData.GetCustomMethod<IsPathfindStuck>());
+            staticScope.AddNativeMethod(CustomMethodData.GetCustomMethod<FixPathfind>());
+            staticScope.AddNativeMethod(CustomMethodData.GetCustomMethod<NextNode>());
+            staticScope.AddNativeMethod(CustomMethodData.GetCustomMethod<WalkPath>());
+            staticScope.AddNativeMethod(CustomMethodData.GetCustomMethod<CurrentSegmentAttribute>());
+            staticScope.AddNativeMethod(CustomMethodData.GetCustomMethod<SegmentAttribute>());
+            staticScope.AddNativeMethod(CustomMethodData.GetCustomMethod<RestartThottle>());
         }
 
         public override void WorkshopInit(DeltinScript translateInfo)
