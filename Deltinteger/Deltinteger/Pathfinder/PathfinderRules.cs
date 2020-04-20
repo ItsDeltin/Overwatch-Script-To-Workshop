@@ -8,7 +8,7 @@ namespace Deltin.Deltinteger.Pathfinder
 {
     public class PathfinderInfo : IComponent
     {
-        public const double MoveToNext = 0.3;
+        public const double MoveToNext = 0.2;
 
         public IndexReference Path { get; private set; }
         public IndexReference PathAttributes { get; private set; }
@@ -19,7 +19,7 @@ namespace Deltin.Deltinteger.Pathfinder
         public void Init()
         {
             Path           = DeltinScript.VarCollection.Assign("Pathfinder: Path", false, false);
-            LastUpdate     = DeltinScript.VarCollection.Assign("Pathfinder: Last Update", false, true);
+            PathAttributes = DeltinScript.VarCollection.Assign("Pathfinder: PathAttributes", false, false);
             LastUpdate     = DeltinScript.VarCollection.Assign("Pathfinder: Last Update", false, true);
             DistanceToNext = DeltinScript.VarCollection.Assign("Pathfinder: Distance To Next Node", false, true);
 
@@ -54,29 +54,8 @@ namespace Deltin.Deltinteger.Pathfinder
             (
                 LastUpdate.SetVariable(new V_TotalTimeElapsed()),
                 DistanceToNext.SetVariable(Element.Part<V_DistanceBetween>(Element.Part<V_PositionOf>(new V_EventPlayer()), NextPosition(new V_EventPlayer()))),
-                // Element.Part<A_StartFacing>(
-                //     new V_EventPlayer(),
-                //     Element.Part<V_DirectionTowards>(
-                //         new V_EyePosition(),
-                //         NextPosition()
-                //     ),
-                //     new V_Number(700),
-                //     EnumData.GetEnumValue(Relative.ToWorld),
-                //     EnumData.GetEnumValue(FacingRev.DirectionAndTurnRate)
-                // ),
-
                 // Move to the next node.
-                Element.Part<A_StartThrottleInDirection>(
-                    new V_EventPlayer(),
-                    Element.Part<V_DirectionTowards>(
-                        new V_EyePosition(),
-                        NextPosition(new V_EventPlayer()) // Because of ThrottleRev this will be reevaluated so 'Start Throttle In Direction' only needs to run once.
-                    ),
-                    new V_Number(1),
-                    EnumData.GetEnumValue(Relative.ToWorld),
-                    EnumData.GetEnumValue(ThrottleBehavior.ReplaceExistingThrottle),
-                    EnumData.GetEnumValue(ThrottleRev.DirectionAndMagnitude)
-                )
+                Throttle(new V_EventPlayer())
             ));
             
             var result = rule.GetRule();
@@ -195,6 +174,21 @@ namespace Deltin.Deltinteger.Pathfinder
         public Element NumberOfNodes(Element player)
         {
             return Element.Part<V_CountOf>(Path.GetVariable(player));
+        }
+
+        public Element Throttle(Element player)
+        {
+            return Element.Part<A_StartThrottleInDirection>(
+                player,
+                Element.Part<V_DirectionTowards>(
+                    new V_EyePosition(),
+                    NextPosition(player) // Because of ThrottleRev this will be reevaluated so 'Start Throttle In Direction' only needs to run once.
+                ),
+                new V_Number(1),
+                EnumData.GetEnumValue(Relative.ToWorld),
+                EnumData.GetEnumValue(ThrottleBehavior.ReplaceExistingThrottle),
+                EnumData.GetEnumValue(ThrottleRev.DirectionAndMagnitude)
+            );
         }
     }
 }

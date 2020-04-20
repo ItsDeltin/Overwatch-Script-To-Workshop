@@ -141,13 +141,13 @@ namespace Deltin.Deltinteger.Pathfinder
             GetResult();
 
             actionSet.AddAction(ArrayBuilder<Element>.Build(
-                current.SetVariable(-1),
-                distances.SetVariable(-1),
-                connectedSegments.SetVariable(-1),
-                neighborIndex.SetVariable(-1),
-                neighborDistance.SetVariable(-1),
-                parentArray.SetVariable(-1),
-                parentAttributeInfo.SetVariable(-1)
+                current.SetVariable(0),
+                distances.SetVariable(0),
+                connectedSegments.SetVariable(0),
+                neighborIndex.SetVariable(0),
+                neighborDistance.SetVariable(0),
+                parentArray.SetVariable(0),
+                parentAttributeInfo.SetVariable(0)
             ));
 
             Reset();
@@ -382,10 +382,13 @@ namespace Deltin.Deltinteger.Pathfinder
 
             finalNode = actionSet.VarCollection.Assign("Dijkstra: Last", actionSet.IsGlobal, assignExtended);
             finalPath = actionSet.VarCollection.Assign("Dijkstra: Final Path", actionSet.IsGlobal, false);
-            if (useAttributes)
-                finalPathAttributes = actionSet.VarCollection.Assign("Dijkstra: Final Path Attributes", actionSet.IsGlobal, false);
             actionSet.AddAction(finalNode.SetVariable(lastNode));
             actionSet.AddAction(finalPath.SetVariable(new V_EmptyArray()));
+            if (useAttributes)
+            {
+                finalPathAttributes = actionSet.VarCollection.Assign("Dijkstra: Final Path Attributes", actionSet.IsGlobal, false);
+                actionSet.AddAction(finalPathAttributes.SetVariable(new V_EmptyArray()));
+            }
         }
 
         override protected Element LoopCondition()
@@ -404,7 +407,7 @@ namespace Deltin.Deltinteger.Pathfinder
         override protected void Reset()
         {
             actionSet.AddAction(ArrayBuilder<Element>.Build(
-                finalNode.SetVariable(-1)
+                finalNode.SetVariable(0)
             ));
         }
     }
@@ -456,6 +459,8 @@ namespace Deltin.Deltinteger.Pathfinder
 
             IndexReference finalPath = actionSet.VarCollection.Assign("Dijkstra: Final Path", actionSet.IsGlobal, false);
             IndexReference finalPathAttributes = actionSet.VarCollection.Assign("Dijkstra: Final Path Attributes", actionSet.IsGlobal, false);
+
+            actionSet.AddAction(finalPathAttributes.SetVariable(new V_EmptyArray()));
 
             Backtrack(
                 Element.Part<V_ValueInArray>(

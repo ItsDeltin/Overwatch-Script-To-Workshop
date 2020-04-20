@@ -35,7 +35,8 @@ namespace Deltin.Deltinteger.Pathfinder
                     );
 
                     return new Rule[] { initialNodes };
-                }
+                },
+                OptimizeOutput = false
             });
 
             string code = deltinScript.WorkshopCode;
