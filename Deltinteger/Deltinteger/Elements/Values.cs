@@ -1872,4 +1872,12 @@ namespace Deltin.Deltinteger.Elements
             return this;
         }
     }
+
+    [ElementData("Array", ValueType.Any)]
+    [HideElement]
+    public class V_Array : Element {}
+
+    [ElementData("If Then Else", ValueType.Any)]
+    [HideElement]
+    public class V_IfThenElse : Element {}
 }

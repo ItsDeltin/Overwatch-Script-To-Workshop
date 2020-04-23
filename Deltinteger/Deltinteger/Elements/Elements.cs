@@ -119,26 +119,10 @@ namespace Deltin.Deltinteger.Elements
         }
 
         // Creates an array from a list of values.
-        public static Element CreateArray(params IWorkshopTree[] values)
-        {
-            Element array = new V_EmptyArray();
-            for (int i = 0; i < values.Length; i++)
-                array = Element.Part<V_Append>(array, values[i]);
-            return array;
-        }
+        public static Element CreateArray(params IWorkshopTree[] values) => Element.Part<V_Array>(values);
 
         // Creates an ternary conditional that works in the workshop
-        public static Element TernaryConditional(IWorkshopTree condition, IWorkshopTree consequent, IWorkshopTree alternative)
-        {
-            // This works by creating an array with the consequent (C) and the alternative (A): [C, A]
-            // It creates an array that contains false and true: [false, true]
-            // Then it gets the array value of the false/true array based on the condition result: IndexOfArrayValue(boolArray, condition)
-            // The result is either 0 or 1. Use that index to get the value from the [C, A] array.
-            return Element.Part<V_ValueInArray>(CreateArray(alternative, consequent), Element.Part<V_IndexOfArrayValue>(CreateArray(new V_False(), new V_True()), condition));
-
-            // Another way to do it would be to add 0 to the boolean, however this won't work with truthey/falsey values that aren't booleans.
-            // return Element.Part<V_ValueInArray>(CreateArray(alternative, consequent), Element.Part<V_Add>(condition, new V_Number(0)));
-        }
+        public static Element TernaryConditional(IWorkshopTree condition, IWorkshopTree consequent, IWorkshopTree alternative) => Element.Part<V_IfThenElse>(condition, consequent, alternative);
 
         public static Element operator +(Element a, Element b) => Element.Part<V_Add>(a, b);
         public static Element operator -(Element a, Element b) => Element.Part<V_Subtract>(a, b);
