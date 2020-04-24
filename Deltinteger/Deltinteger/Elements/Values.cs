@@ -1863,9 +1863,25 @@ namespace Deltin.Deltinteger.Elements
 
     [ElementData("Array", ValueType.Any)]
     [HideElement]
-    public class V_Array : Element {}
+    public class V_Array : Element
+    {
+        public V_Array()
+        {
+            AlwaysShowParentheses = true;
+        }
+    }
 
-    [ElementData("If Then Else", ValueType.Any)]
+    [ElementData("If-Then-Else", ValueType.Any)]
+    [Parameter("If", ValueType.Boolean, null)]
+    [Parameter("Then", ValueType.Boolean, null)]
+    [Parameter("Else", ValueType.Boolean, null)]
     [HideElement]
-    public class V_IfThenElse : Element {}
+    public class V_IfThenElse : Element
+    {
+        public override string ToWorkshop(OutputLanguage language)
+        {
+            AddMissingParameters();
+            return ParameterValues[0].ToWorkshop(language) + " ? " + ParameterValues[1].ToWorkshop(language) + " : " + ParameterValues[2].ToWorkshop(language);
+        }
+    }
 }

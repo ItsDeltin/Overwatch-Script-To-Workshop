@@ -58,6 +58,7 @@ namespace Deltin.Deltinteger.Elements
         public IWorkshopTree[] ParameterValues { get; set; }
         public bool Disabled { get; set; }
         public int Indent { get; set; }
+        protected bool AlwaysShowParentheses = false;
 
         public override string ToString()
         {
@@ -76,15 +77,16 @@ namespace Deltin.Deltinteger.Elements
             if (!ElementList.IsValue && Disabled) result += LanguageInfo.Translate(language, "disabled") + " ";
             result += LanguageInfo.Translate(language, Name);
             if (parameters.Count != 0) result += "(" + string.Join(", ", parameters) + ")";
+            else if (AlwaysShowParentheses) result += "()";
             if (!ElementList.IsValue) result += ";";
             return result;
         }
 
-        private void AddMissingParameters()
+        protected void AddMissingParameters()
         {
             List<IWorkshopTree> parameters = new List<IWorkshopTree>();
 
-            for (int i = 0; i < ParameterData.Length; i++)
+            for (int i = 0; i < ParameterData.Length || i < ParameterValues.Length; i++)
                 parameters.Add(ParameterValues?.ElementAtOrDefault(i) ?? ParameterData[i].GetDefault());
             
             ParameterValues = parameters.ToArray();
