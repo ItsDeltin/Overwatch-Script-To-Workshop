@@ -787,4 +787,12 @@ namespace Deltin.Deltinteger.Elements
     [Parameter("Condition", ValueType.Boolean, typeof(V_Compare))]
     [HideElement]
     public class A_While : Element {}
+
+    [ElementData("Continue")]
+    [HideElement]
+    public class A_Continue : Element {}
+
+    [ElementData("Break")]
+    [HideElement]
+    public class A_Break : Element {}
 }

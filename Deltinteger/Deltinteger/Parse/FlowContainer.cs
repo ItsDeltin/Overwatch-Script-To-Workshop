@@ -2,11 +2,11 @@ namespace Deltin.Deltinteger.Parse
 {
     public interface IContinueContainer
     {
-        void AddContinue(SkipStartMarker continueMarker);
+        void AddContinue(ActionSet actionSet);
     }
 
     public interface IBreakContainer
     {
-        void AddBreak(SkipStartMarker continueMarker);
+        void AddBreak(ActionSet actionSet);
     }
 }
