@@ -536,7 +536,11 @@ namespace Deltin.Deltinteger.Elements
         String,
         [EnumOverride(null, "Visible To, Sort Order, and String")]
         VisibleToSortOrderAndString,
-        SortOrderAndString
+        SortOrderAndString,
+        VisibleToAndSortOrder,
+        VisibleTo,
+        SortOrder,
+        None
     }
 
     [WorkshopEnum]
