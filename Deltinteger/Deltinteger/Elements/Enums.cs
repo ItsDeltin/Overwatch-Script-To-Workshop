@@ -187,12 +187,6 @@ namespace Deltin.Deltinteger.Elements
             EnumMember bAsEnum = (EnumMember)b;
             return WorkshopName == bAsEnum.WorkshopName && Enum == bAsEnum.Enum;
         }
-
-        public int ElementCount(int depth)
-        {
-            if (depth == 1) return 0;
-            else return 2;
-        }
     }
 
     [WorkshopEnum]

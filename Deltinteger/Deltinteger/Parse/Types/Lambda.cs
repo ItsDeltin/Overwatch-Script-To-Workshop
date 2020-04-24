@@ -66,7 +66,6 @@ namespace Deltin.Deltinteger.Parse.Lambda
 
         public string ToWorkshop(OutputLanguage outputLanguage) => throw new NotImplementedException();
         public bool EqualTo(IWorkshopTree other) => throw new NotImplementedException();
-        public int ElementCount(int depth) => throw new NotImplementedException();
 
         public IWorkshopTree Invoke(ActionSet actionSet, params IWorkshopTree[] parameterValues)
         {
