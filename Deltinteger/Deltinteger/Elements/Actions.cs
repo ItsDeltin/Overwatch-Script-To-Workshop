@@ -816,7 +816,7 @@ namespace Deltin.Deltinteger.Elements
 
     [ElementData("Set Ability Cooldown")]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
-    [Parameter("Button", ValueType.Button, typeof(V_ButtonVar))]
+    [Parameter("Button", ValueType.Button, typeof(V_ButtonValue))]
     [Parameter("Cooldown", ValueType.Number, typeof(V_Number))]
     public class A_SetAbilityCooldown : Element {}
 

@@ -27,22 +27,21 @@ namespace Deltin.Deltinteger.Parse
             }
         }
 
+        public override bool IsConstant() => Constant;
         public override void WorkshopInit(DeltinScript translateInfo)
         {
             foreach (EnumValuePair pair in ValuePairs)
             {
-                if (Constant) translateInfo.DefaultIndexAssigner.Add(pair, EnumData.ToElement(pair.Member));
-                else translateInfo.DefaultIndexAssigner.Add(pair, pair.Member);
+                if (Constant) translateInfo.DefaultIndexAssigner.Add(pair, pair.Member);
+                else translateInfo.DefaultIndexAssigner.Add(pair, EnumData.ToElement(pair.Member));
             }
         }
 
         public override Scope ReturningScope() => Scope;
-
         public override CompletionItem GetCompletion() => new CompletionItem() {
             Label = Name,
             Kind = CompletionItemKind.Enum
         };
-
         public override void Call(ParseInfo parseInfo, DocRange callRange)
         {
             MarkupBuilder hoverContents = new MarkupBuilder()
@@ -54,6 +53,7 @@ namespace Deltin.Deltinteger.Parse
                 hoverContents.NewSection().Add("Constant workshop types cannot be stored. Variables with this type cannot be changed from their initial value.");
 
             parseInfo.Script.AddHover(callRange, hoverContents.ToString());
+            parseInfo.TranslateInfo.Types.CallType(this);
         }
 
         public static ValueGroupType GetEnumType(EnumData enumData) => (ValueGroupType)CodeType.DefaultTypes.First(t => t is ValueGroupType valueGroupType && valueGroupType.EnumData == enumData);

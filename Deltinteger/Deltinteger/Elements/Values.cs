@@ -1898,19 +1898,18 @@ namespace Deltin.Deltinteger.Elements
 
     [ElementData("Button", ValueType.Button)]
     [EnumParameter("Button", typeof(Button))]
-    [HideElement]
-    public class V_ButtonVar : Element {}
+    public class V_ButtonValue : Element {}
 
     [ElementData("Event Ability", ValueType.Button)]
     public class V_EventAbility : Element {}
 
     [ElementData("Ability Cooldown", ValueType.Number)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
-    [Parameter("Button", ValueType.Button, typeof(V_ButtonVar))]
+    [Parameter("Button", ValueType.Button, typeof(V_ButtonValue))]
     public class V_AbilityCooldown : Element {}
 
     [ElementData("Ability Icon String", ValueType.String)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
-    [Parameter("Button", ValueType.Button, typeof(V_ButtonVar))]
+    [Parameter("Button", ValueType.Button, typeof(V_ButtonValue))]
     public class V_AbilityIconString : Element {}
 }

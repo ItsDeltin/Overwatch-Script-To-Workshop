@@ -41,18 +41,6 @@ namespace Deltin.Deltinteger.Elements
             return AllEnums;
         }
 
-        public static bool IsEnum(string codeName)
-        {
-            if (codeName == null)
-                return false;
-            return GetEnum(codeName) != null;
-        }
-
-        public static EnumData GetEnum(string codeName)
-        {
-            return GetEnumData().FirstOrDefault(e => e.CodeName == codeName);
-        }
-
         public static EnumData GetEnum(Type type)
         {
             return GetEnumData().FirstOrDefault(e => e.Type == type);
@@ -61,11 +49,6 @@ namespace Deltin.Deltinteger.Elements
         public static EnumData GetEnum<T>()
         {
             return GetEnum(typeof(T));
-        }
-
-        public static EnumMember GetEnumValue(string enumCodeName, string valueCodeName)
-        {
-            return GetEnum(enumCodeName)?.GetEnumMember(valueCodeName);
         }
 
         public static EnumMember GetEnumValue(object enumValue)
@@ -83,7 +66,6 @@ namespace Deltin.Deltinteger.Elements
                 case "Team": return Element.Part<V_TeamVar>(enumMember);
                 case "Map": return Element.Part<V_MapVar>(enumMember);
                 case "GameMode": return Element.Part<V_GameModeVar>(enumMember);
-                case "Button": return Element.Part<V_ButtonVar>(enumMember);
                 default: return null;
             }
         }
@@ -118,7 +100,7 @@ namespace Deltin.Deltinteger.Elements
 
         public bool ConvertableToElement()
         {
-            return new string[] { "Hero", "Team", "Map", "GameMode", "Button" }.Contains(CodeName);
+            return new string[] { "Hero", "Team", "Map", "GameMode" }.Contains(CodeName);
         }
 
         public bool IsEnumMember(string codeName)
