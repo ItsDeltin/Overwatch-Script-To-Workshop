@@ -510,10 +510,17 @@ namespace Deltin.Deltinteger.Elements
     }
 
     [WorkshopEnum]
-    public enum StringRev
+    public enum ObjectiveRev
     {
         VisibleToAndString,
-        String
+        String,
+        [EnumOverride(null, "Visible To, Sort Order, and String")]
+        VisibleToSortOrderAndString,
+        SortOrderAndString,
+        VisibleToAndSortOrder,
+        VisibleTo,
+        SortOrder,
+        None
     }
 
     [WorkshopEnum]
@@ -695,7 +702,10 @@ namespace Deltin.Deltinteger.Elements
         [EnumOverride(null, "Visible To, Position, and String")]
         VisibleToPositionAndString,
         VisibleToAndString,
-        String
+        String,
+        VisibleToAndPosition,
+        VisibleTo,
+        None
     }
 
     [WorkshopEnum]

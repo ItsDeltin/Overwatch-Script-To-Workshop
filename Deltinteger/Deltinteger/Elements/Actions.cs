@@ -492,7 +492,7 @@ namespace Deltin.Deltinteger.Elements
     [ElementData("Set Objective Description")]
     [Parameter("Visible To", ValueType.Player, typeof(V_AllPlayers))]
     [Parameter("Header", ValueType.Any, typeof(V_String))]
-    [EnumParameter("Reevaluation", typeof(StringRev))]
+    [EnumParameter("Reevaluation", typeof(ObjectiveRev))]
     public class A_SetObjectiveDescription : Element {}
 
     [ElementData("Set Player Allowed Heroes")]
