@@ -198,7 +198,10 @@ namespace Deltin.Deltinteger.Parse
             else if (InitialVarSet != null)
                 InitialVarSet.Translate(actionSet);
 
-            Element condition = (Element)Condition.Parse(actionSet) ?? new V_True();
+            // Get the condition.
+            Element condition;
+            if (Condition != null) condition = (Element)Condition.Parse(actionSet); // User-define condition
+            else condition = new V_True(); // No condition, just use true.
             actionSet.AddAction(Element.Part<A_While>(condition));
 
             Block.Translate(actionSet.Indent());
