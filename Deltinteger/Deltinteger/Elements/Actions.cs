@@ -795,4 +795,32 @@ namespace Deltin.Deltinteger.Elements
     [ElementData("Break")]
     [HideElement]
     public class A_Break : Element {}
+
+    [ElementData("Set Crouch Enabled")]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [Parameter("Enabled", ValueType.Boolean, typeof(V_True))]
+    public class A_SetCrouchEnabled : Element {}
+
+    [ElementData("Set Melee Enabled")]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [Parameter("Enabled", ValueType.Boolean, typeof(V_True))]
+    public class A_SetMeleeEnabled : Element {}
+
+    [ElementData("Set Jump Enabled")]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [Parameter("Enabled", ValueType.Boolean, typeof(V_True))]
+    public class A_SetJumpEnabled : Element {}
+
+    [ElementData("Declare Round Draw")]
+    public class A_DeclareRoundDraw : Element {}
+
+    [ElementData("Set Ability Cooldown")]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [EnumParameter("Button", typeof(Button))]
+    [Parameter("Cooldown", ValueType.Number, typeof(V_Number))]
+    public class A_SetAbilityCooldown : Element {}
+
+    [ElementData("Cancel Primary Action")]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    public class A_CancelPrimaryAction : Element {}
 }

@@ -16,19 +16,20 @@ using StringOrMarkupContent = OmniSharp.Extensions.LanguageServer.Protocol.Model
 
 namespace Deltin.Deltinteger.Elements
 {
-    [Flags]
     public enum ValueType
     {
-        Any = Number | Boolean | Hero | Vector | Player | Team ,
-        VectorAndPlayer = Vector | Player,
-        Number = 1,
-        Boolean = 2,
-        Hero = 4,
-        Vector = 8,
-        Player = 16,
-        Team = 32,
-        Map = 64,
-        Gamemode = 128
+        Any,
+        VectorAndPlayer,
+        Number,
+        Boolean,
+        Hero,
+        Vector,
+        Player,
+        Team,
+        Map,
+        Gamemode,
+        Button,
+        String
     }
 
     public abstract class Element : IWorkshopTree

@@ -79,18 +79,11 @@ namespace Deltin.Deltinteger.Elements
 
             switch(enumMember.Enum.CodeName)
             {
-                case "Hero":
-                    return Element.Part<V_HeroVar>(enumMember);
-                
-                case "Team":
-                    return Element.Part<V_TeamVar>(enumMember);
-                
-                case "Map":
-                    return Element.Part<V_MapVar>(enumMember);
-                
-                case "GameMode":
-                    return Element.Part<V_GameModeVar>(enumMember);
-
+                case "Hero": return Element.Part<V_HeroVar>(enumMember);
+                case "Team": return Element.Part<V_TeamVar>(enumMember);
+                case "Map": return Element.Part<V_MapVar>(enumMember);
+                case "GameMode": return Element.Part<V_GameModeVar>(enumMember);
+                case "Button": return Element.Part<V_ButtonVar>(enumMember);
                 default: return null;
             }
         }
@@ -125,7 +118,7 @@ namespace Deltin.Deltinteger.Elements
 
         public bool ConvertableToElement()
         {
-            return new string[] { "Hero", "Team", "Map", "GameMode" }.Contains(CodeName);
+            return new string[] { "Hero", "Team", "Map", "GameMode", "Button" }.Contains(CodeName);
         }
 
         public bool IsEnumMember(string codeName)

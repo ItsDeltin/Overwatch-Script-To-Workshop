@@ -1884,4 +1884,33 @@ namespace Deltin.Deltinteger.Elements
             return ParameterValues[0].ToWorkshop(language) + " ? " + ParameterValues[1].ToWorkshop(language) + " : " + ParameterValues[2].ToWorkshop(language);
         }
     }
+
+    [ElementData("Is Meleeing", ValueType.Boolean)]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    public class V_IsMeleeing : Element {}
+
+    [ElementData("Is Jumping", ValueType.Boolean)]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    public class V_IsJumping : Element {}
+
+    [ElementData("Event Direction", ValueType.Vector)]
+    public class V_EventDirection : Element {}
+
+    [ElementData("Button", ValueType.Button)]
+    [EnumParameter("Button", typeof(Button))]
+    [HideElement]
+    public class V_ButtonVar : Element {}
+
+    [ElementData("Event Ability", ValueType.Button)]
+    public class V_EventAbility : Element {}
+
+    [ElementData("Ability Cooldown", ValueType.Number)]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [Parameter("Button", ValueType.Button, typeof(V_ButtonVar))]
+    public class V_AbilityCooldown : Element {}
+
+    [ElementData("Ability Icon String", ValueType.String)]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [Parameter("Button", ValueType.Button, typeof(V_ButtonVar))]
+    public class V_AbilityIconString : Element {}
 }
