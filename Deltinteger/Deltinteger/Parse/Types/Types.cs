@@ -174,10 +174,7 @@ namespace Deltin.Deltinteger.Parse
         {
             _defaultTypes = new List<CodeType>();
             foreach (var enumData in EnumData.GetEnumData())
-                if (enumData.ConvertableToElement())
-                    _defaultTypes.Add(new ValueGroupType(enumData));
-                else
-                    _defaultTypes.Add(new WorkshopEnumType(enumData));
+                _defaultTypes.Add(new ValueGroupType(enumData, !enumData.ConvertableToElement()));
             
             // Add custom classes here.
             _defaultTypes.Add(new Pathfinder.PathmapClass());
