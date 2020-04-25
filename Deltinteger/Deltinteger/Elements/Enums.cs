@@ -497,7 +497,25 @@ namespace Deltin.Deltinteger.Elements
         NeedHealing,
         GroupUp,
         Thanks,
-        Acknowledge
+        Acknowledge,
+        PressTheAttack,
+        YouAreWelcome,
+        Yes,
+        No,
+        Goodbye,
+        Go,
+        Ready,
+        FallBack,
+        PushForward,
+        Incoming,
+        WithYou,
+        GoingIn,
+        OnMyWay,
+        Attacking,
+        Defending,
+        NeedHelp,
+        Sorry,
+        Countdown,
     }
 
     [WorkshopEnum]
