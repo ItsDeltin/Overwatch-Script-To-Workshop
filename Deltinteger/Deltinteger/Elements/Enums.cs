@@ -818,7 +818,14 @@ namespace Deltin.Deltinteger.Elements
         Temple_of_Anubis,
         Volskaya_Industries,
         [EnumOverride(null, "Watchpoint: Gibraltar")]
-        Watchpoint_Gibraltar
+        Watchpoint_Gibraltar,
+        Workshop_Chamber,
+        Workshop_Expanse,
+        [EnumOverride(null, "Workshop Expanse (Night)")]
+        Workshop_Expanse_Night,
+        Workshop_Island,
+        [EnumOverride(null, "Workshop Island (Night)")]
+        Workshop_Island_Night
     }
 
     [WorkshopEnum]
