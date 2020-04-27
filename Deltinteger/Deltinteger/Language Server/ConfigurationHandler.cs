@@ -20,6 +20,7 @@ namespace Deltin.Deltinteger.LanguageServer
         private DeltintegerLanguageServer _languageServer { get; }
         public bool ReferencesCodeLens { get; private set; }
         public bool ImplementsCodeLens { get; private set; }
+        public bool ElementCountCodeLens { get; private set; }
         public OutputLanguage OutputLanguage { get; private set; }
 
         public ConfigurationHandler(DeltintegerLanguageServer languageServer)
@@ -37,6 +38,7 @@ namespace Deltin.Deltinteger.LanguageServer
 
                 ReferencesCodeLens = config.codelens.references;
                 ImplementsCodeLens = config.codelens.implements;
+                ElementCountCodeLens = config.codelens.elementCount;
                 OutputLanguage = GetOutputLanguage(config.outputLanguage);
                 LanguageInfo.LoadLanguage(OutputLanguage);
                 OptimizeOutput = config.optimizeOutput;

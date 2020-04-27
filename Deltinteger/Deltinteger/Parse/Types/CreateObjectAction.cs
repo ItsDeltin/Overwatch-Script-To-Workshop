@@ -19,7 +19,7 @@ namespace Deltin.Deltinteger.Parse
             if (context.type == null)
                 parseInfo.Script.Diagnostics.Error("Expected a type name.", DocRange.GetRange(context.NEW()));
             else
-                CreatingObjectOf = parseInfo.TranslateInfo.GetCodeType(context.type.Text, parseInfo.Script.Diagnostics, DocRange.GetRange(context.type));
+                CreatingObjectOf = parseInfo.TranslateInfo.Types.GetCodeType(context.type.Text, parseInfo.Script.Diagnostics, DocRange.GetRange(context.type));
             
             if (CreatingObjectOf != null)
             {
@@ -40,8 +40,8 @@ namespace Deltin.Deltinteger.Parse
 
                 if (Constructor != null)
                 {
-                    parseInfo.TranslateInfo.AddSymbolLink(Constructor, new Location(parseInfo.Script.Uri, nameRange));
-                    Constructor.Call(parseInfo.Script, DocRange.GetRange(context.type));
+                    parseInfo.TranslateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(Constructor, new Location(parseInfo.Script.Uri, nameRange));
+                    Constructor.Call(parseInfo, DocRange.GetRange(context.type));
                     parseInfo.Script.AddHover(DocRange.GetRange(context), Constructor.GetLabel(true));
 
                     if (Constructor is DefinedConstructor)
@@ -53,7 +53,7 @@ namespace Deltin.Deltinteger.Parse
         public CodeType Type() => CreatingObjectOf;
         public Scope ReturningScope() => CreatingObjectOf?.GetObjectScope();
 
-        public IWorkshopTree Parse(ActionSet actionSet, bool asElement = true)
+        public IWorkshopTree Parse(ActionSet actionSet)
         {
             IWorkshopTree[] parameterValues = new IWorkshopTree[ConstructorValues.Length];
             for (int i = 0; i < parameterValues.Length; i++)

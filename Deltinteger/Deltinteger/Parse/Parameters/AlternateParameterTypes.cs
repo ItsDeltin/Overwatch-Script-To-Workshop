@@ -47,12 +47,7 @@ namespace Deltin.Deltinteger.Parse
             return null;
         }
 
-        public override IWorkshopTree Parse(ActionSet actionSet, IExpression expression, object additionalParameterData, bool asElement)
-        {
-            return null;
-            VariableResolve resolvedVariable = (VariableResolve)additionalParameterData;
-            return ((IndexReference)actionSet.IndexAssigner[resolvedVariable.SetVariable.Calling]).WorkshopVariable;
-        }
+        public override IWorkshopTree Parse(ActionSet actionSet, IExpression expression, object additionalParameterData) => null;
     }
 
     class ConstBoolParameter : CodeParameter
@@ -116,7 +111,7 @@ namespace Deltin.Deltinteger.Parse
             return str?.Value;
         }
 
-        public override IWorkshopTree Parse(ActionSet actionSet, IExpression expression, object additionalParameterData, bool asElement) => null;
+        public override IWorkshopTree Parse(ActionSet actionSet, IExpression expression, object additionalParameterData) => null;
     }
 
     class FileParameter : CodeParameter
@@ -159,7 +154,7 @@ namespace Deltin.Deltinteger.Parse
 
             string dir = Path.GetDirectoryName(resultingPath);
             if (Directory.Exists(dir))
-                DeltinScript.AddImportCompletion(script, dir, valueRange);
+                Importer.AddImportCompletion(script, dir, valueRange);
 
             if (!File.Exists(resultingPath))
             {

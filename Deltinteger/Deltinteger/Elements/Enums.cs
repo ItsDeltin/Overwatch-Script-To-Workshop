@@ -10,13 +10,7 @@ using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 namespace Deltin.Deltinteger.Elements
 {
     [AttributeUsage(AttributeTargets.Enum)]
-    public class WorkshopEnum : Attribute
-    {
-        public WorkshopEnum() 
-        { 
-
-        }
-    }
+    public class WorkshopEnum : Attribute {}
 
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Enum)]
     public class EnumOverride : Attribute
@@ -47,18 +41,6 @@ namespace Deltin.Deltinteger.Elements
             return AllEnums;
         }
 
-        public static bool IsEnum(string codeName)
-        {
-            if (codeName == null)
-                return false;
-            return GetEnum(codeName) != null;
-        }
-
-        public static EnumData GetEnum(string codeName)
-        {
-            return GetEnumData().FirstOrDefault(e => e.CodeName == codeName);
-        }
-
         public static EnumData GetEnum(Type type)
         {
             return GetEnumData().FirstOrDefault(e => e.Type == type);
@@ -67,11 +49,6 @@ namespace Deltin.Deltinteger.Elements
         public static EnumData GetEnum<T>()
         {
             return GetEnum(typeof(T));
-        }
-
-        public static EnumMember GetEnumValue(string enumCodeName, string valueCodeName)
-        {
-            return GetEnum(enumCodeName)?.GetEnumMember(valueCodeName);
         }
 
         public static EnumMember GetEnumValue(object enumValue)
@@ -85,18 +62,10 @@ namespace Deltin.Deltinteger.Elements
 
             switch(enumMember.Enum.CodeName)
             {
-                case "Hero":
-                    return Element.Part<V_HeroVar>(enumMember);
-                
-                case "Team":
-                    return Element.Part<V_TeamVar>(enumMember);
-                
-                case "Map":
-                    return Element.Part<V_MapVar>(enumMember);
-                
-                case "GameMode":
-                    return Element.Part<V_GameModeVar>(enumMember);
-
+                case "Hero": return Element.Part<V_HeroVar>(enumMember);
+                case "Team": return Element.Part<V_TeamVar>(enumMember);
+                case "Map": return Element.Part<V_MapVar>(enumMember);
+                case "GameMode": return Element.Part<V_GameModeVar>(enumMember);
                 default: return null;
             }
         }
@@ -280,6 +249,7 @@ namespace Deltin.Deltinteger.Elements
         Moira,
         WreckingBall,
         Ashe,
+        Echo,
         Baptiste,
         Sigma
     }
@@ -295,6 +265,7 @@ namespace Deltin.Deltinteger.Elements
         [EnumOverride(null, "D.va")]
         Dva,
         Doomfist,
+        Echo,
         Genji,
         Hanzo,
         Junkrat,
@@ -508,7 +479,25 @@ namespace Deltin.Deltinteger.Elements
         NeedHealing,
         GroupUp,
         Thanks,
-        Acknowledge
+        Acknowledge,
+        PressTheAttack,
+        YouAreWelcome,
+        Yes,
+        No,
+        Goodbye,
+        Go,
+        Ready,
+        FallBack,
+        PushForward,
+        Incoming,
+        WithYou,
+        GoingIn,
+        OnMyWay,
+        Attacking,
+        Defending,
+        NeedHelp,
+        Sorry,
+        Countdown,
     }
 
     [WorkshopEnum]
@@ -521,10 +510,17 @@ namespace Deltin.Deltinteger.Elements
     }
 
     [WorkshopEnum]
-    public enum StringRev
+    public enum ObjectiveRev
     {
         VisibleToAndString,
-        String
+        String,
+        [EnumOverride(null, "Visible To, Sort Order, and String")]
+        VisibleToSortOrderAndString,
+        SortOrderAndString,
+        VisibleToAndSortOrder,
+        VisibleTo,
+        SortOrder,
+        None
     }
 
     [WorkshopEnum]
@@ -534,7 +530,11 @@ namespace Deltin.Deltinteger.Elements
         String,
         [EnumOverride(null, "Visible To, Sort Order, and String")]
         VisibleToSortOrderAndString,
-        SortOrderAndString
+        SortOrderAndString,
+        VisibleToAndSortOrder,
+        VisibleTo,
+        SortOrder,
+        None
     }
 
     [WorkshopEnum]
@@ -702,7 +702,10 @@ namespace Deltin.Deltinteger.Elements
         [EnumOverride(null, "Visible To, Position, and String")]
         VisibleToPositionAndString,
         VisibleToAndString,
-        String
+        String,
+        VisibleToAndPosition,
+        VisibleTo,
+        None
     }
 
     [WorkshopEnum]
@@ -815,7 +818,14 @@ namespace Deltin.Deltinteger.Elements
         Temple_of_Anubis,
         Volskaya_Industries,
         [EnumOverride(null, "Watchpoint: Gibraltar")]
-        Watchpoint_Gibraltar
+        Watchpoint_Gibraltar,
+        Workshop_Chamber,
+        Workshop_Expanse,
+        [EnumOverride(null, "Workshop Expanse (Night)")]
+        Workshop_Expanse_Night,
+        Workshop_Island,
+        [EnumOverride(null, "Workshop Island (Night)")]
+        Workshop_Island_Night
     }
 
     [WorkshopEnum]

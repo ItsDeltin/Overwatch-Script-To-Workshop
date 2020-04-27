@@ -63,7 +63,7 @@ namespace Deltin.Deltinteger.Parse
             var parameterRanges = new List<DocRange>();
             for (int i = 0; i < values.Length; i++)
             {
-                values[i] = DeltinScript.GetExpression(parseInfo, getter, context.expr(i));
+                values[i] = parseInfo.GetExpression(getter, context.expr(i));
                 errorRanges[i] = DocRange.GetRange(context.expr(i));
                 parameterRanges.Add(errorRanges[i]);
             }
@@ -111,7 +111,7 @@ namespace Deltin.Deltinteger.Parse
                 // Get the expression. If it doesn't exist, add a syntax error.
                 if (context.picky_parameter(i).expr() != null)
                 {
-                    expression = DeltinScript.GetExpression(parseInfo, getter, context.picky_parameter(i).expr());
+                    expression = parseInfo.GetExpression(getter, context.picky_parameter(i).expr());
                     expressionRange = DocRange.GetRange(context.picky_parameter(i).expr());
                 }
                 else
@@ -257,13 +257,13 @@ namespace Deltin.Deltinteger.Parse
         {
             CodeType parameterType = option.Parameters[parameter].Type;
 
-            if (parameterType != null && (value.Type() != null && !value.Type().Implements(parameterType)))
+            if (parameterType != null && ((parameterType.IsConstant() && value.Type() == null) || (value.Type() != null && !value.Type().Implements(parameterType))))
             {
                 // The parameter type does not match.
                 string msg = string.Format("Expected a value of type {0}.", option.Parameters[parameter].Type.Name);
                 optionDiagnostics[option].Add(new Diagnostic(msg, errorRange, Diagnostic.Error));
             }
-            else if (value.Type() != null && parameterType == null && value.Type().Constant() == TypeSettable.Constant)
+            else if (value.Type() != null && parameterType == null && value.Type().IsConstant())
             {
                 string msg = string.Format($"The type '{value.Type().Name}' cannot be used here.");
                 optionDiagnostics[option].Add(new Diagnostic(msg, errorRange, Diagnostic.Error));

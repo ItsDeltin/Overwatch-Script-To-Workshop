@@ -14,7 +14,7 @@ namespace Deltin.Deltinteger.Parse
 
         public SetVariableAction(ParseInfo parseInfo, Scope scope, DeltinScriptParser.VarsetContext varsetContext)
         {
-            IExpression variableExpression = DeltinScript.GetExpression(parseInfo, scope, varsetContext.var);
+            IExpression variableExpression = parseInfo.GetExpression(scope, varsetContext.var);
 
             // Get the variable being set.
             VariableResolve = new VariableResolve(new VariableResolveOptions(), variableExpression, DocRange.GetRange(varsetContext), parseInfo.Script.Diagnostics);
@@ -30,7 +30,7 @@ namespace Deltin.Deltinteger.Parse
                 
                 // Parse the value.
                 else
-                    Value = DeltinScript.GetExpression(parseInfo, scope, varsetContext.val);
+                    Value = parseInfo.GetExpression(scope, varsetContext.val);
             }
             else if (varsetContext.INCREMENT() != null) Operation = "++";
             else if (varsetContext.DECREMENT() != null) Operation = "--";

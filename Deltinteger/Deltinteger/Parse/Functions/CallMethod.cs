@@ -49,7 +49,7 @@ namespace Deltin.Deltinteger.Parse
                     if (CallingMethod is DefinedFunction definedFunction)
                     {
                         definedFunction.OnBlockApply(this);
-                        definedFunction.Call(parseInfo.Script, NameRange);
+                        definedFunction.Call(parseInfo, NameRange);
                         parseInfo.CurrentCallInfo?.Call(definedFunction, NameRange);
                     }
 
@@ -86,7 +86,7 @@ namespace Deltin.Deltinteger.Parse
         }
 
         // IExpression
-        public IWorkshopTree Parse(ActionSet actionSet, bool asElement = true)
+        public IWorkshopTree Parse(ActionSet actionSet)
         {
             return CallingMethod.Parse(actionSet.New(NameRange), GetMethodCall(actionSet));
         }
@@ -108,7 +108,7 @@ namespace Deltin.Deltinteger.Parse
 
             IWorkshopTree[] parameterValues = new IWorkshopTree[ParameterValues.Length];
             for (int i = 0; i < ParameterValues.Length; i++)
-                parameterValues[i] = OverloadChooser.Overload.Parameters[i].Parse(actionSet, ParameterValues[i], OverloadChooser.AdditionalParameterData[i], OverloadChooser.Overload.Parameters[i].Type == null);
+                parameterValues[i] = OverloadChooser.Overload.Parameters[i].Parse(actionSet, ParameterValues[i], OverloadChooser.AdditionalParameterData[i]);
             return parameterValues;
         }
     }

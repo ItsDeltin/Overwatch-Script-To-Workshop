@@ -14,6 +14,7 @@ namespace Deltin.Deltinteger
     {
         string ToWorkshop(OutputLanguage language);
         bool EqualTo(IWorkshopTree other);
+        int ElementCount() => 1;
     }
 
     public interface IMethod : IScopeable, IParameterCallable
@@ -41,15 +42,20 @@ namespace Deltin.Deltinteger
         CompletionItem GetCompletion();
     }
 
+    public interface IVariable : IScopeable
+    {
+        bool CanBeIndexed => true;
+    }
+
     public interface ICallable : INamed
     {
-        void Call(ScriptFile script, DocRange callRange);
+        void Call(ParseInfo parseInfo, DocRange callRange);
     }
 
     public interface IParameterCallable : ILabeled, IAccessable
     {
         CodeParameter[] Parameters { get; }
-        StringOrMarkupContent Documentation { get; }
+        string Documentation { get; }
     }
 
     public interface IAccessable
@@ -63,7 +69,7 @@ namespace Deltin.Deltinteger
         IWorkshopTree GetVariable(Element eventPlayer = null);
     }
 
-    public interface IIndexReferencer : IScopeable, IExpression, ICallable, ILabeled
+    public interface IIndexReferencer : IVariable, IExpression, ICallable, ILabeled
     {
         bool Settable();
         VariableType VariableType { get; }

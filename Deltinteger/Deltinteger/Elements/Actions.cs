@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -401,7 +401,7 @@ namespace Deltin.Deltinteger.Elements
 
     [ElementData("Reset Player Hero Availability")]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
-    public class A_ResetHeroRoster : Element {}
+    public class A_ResetHeroAvailability : Element {}
 
     [ElementData("Respawn")]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
@@ -492,13 +492,13 @@ namespace Deltin.Deltinteger.Elements
     [ElementData("Set Objective Description")]
     [Parameter("Visible To", ValueType.Player, typeof(V_AllPlayers))]
     [Parameter("Header", ValueType.Any, typeof(V_String))]
-    [EnumParameter("Reevaluation", typeof(StringRev))]
+    [EnumParameter("Reevaluation", typeof(ObjectiveRev))]
     public class A_SetObjectiveDescription : Element {}
 
     [ElementData("Set Player Allowed Heroes")]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     [Parameter("Hero", ValueType.Hero, null)]
-    public class A_SetHeroRoster : Element {}
+    public class A_SetAllowedHeroes : Element {}
 
     [ElementData("Set Player Score")]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
@@ -787,4 +787,40 @@ namespace Deltin.Deltinteger.Elements
     [Parameter("Condition", ValueType.Boolean, typeof(V_Compare))]
     [HideElement]
     public class A_While : Element {}
+
+    [ElementData("Continue")]
+    [HideElement]
+    public class A_Continue : Element {}
+
+    [ElementData("Break")]
+    [HideElement]
+    public class A_Break : Element {}
+
+    [ElementData("Set Crouch Enabled")]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [Parameter("Enabled", ValueType.Boolean, typeof(V_True))]
+    public class A_SetCrouchEnabled : Element {}
+
+    [ElementData("Set Melee Enabled")]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [Parameter("Enabled", ValueType.Boolean, typeof(V_True))]
+    public class A_SetMeleeEnabled : Element {}
+
+    [ElementData("Set Jump Enabled")]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [Parameter("Enabled", ValueType.Boolean, typeof(V_True))]
+    public class A_SetJumpEnabled : Element {}
+
+    [ElementData("Declare Round Draw")]
+    public class A_DeclareRoundDraw : Element {}
+
+    [ElementData("Set Ability Cooldown")]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [Parameter("Button", ValueType.Button, typeof(V_ButtonValue))]
+    [Parameter("Cooldown", ValueType.Number, typeof(V_Number))]
+    public class A_SetAbilityCooldown : Element {}
+
+    [ElementData("Cancel Primary Action")]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    public class A_CancelPrimaryAction : Element {}
 }

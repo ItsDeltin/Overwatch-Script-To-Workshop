@@ -10,6 +10,11 @@ namespace Deltin.Deltinteger.Parse
         /// <summary>The path info of the loop block.</summary>
         protected PathInfo Path;
 
+        /// <summary>Determines if the continue action is used directly.</summary>
+        protected bool RawContinue = true;
+        /// <summary>Determines if the break action is used directly.</summary>
+        protected readonly bool RawBreak = true; // Remove the readonly if this needs to be changed.
+
         /// <summary>Stores skips that continue the loop.</summary>
         private readonly List<SkipStartMarker> Continue = new List<SkipStartMarker>();
 
@@ -20,14 +25,28 @@ namespace Deltin.Deltinteger.Parse
 
         public PathInfo[] GetPaths() => new PathInfo[] { Path };
 
-        public void AddContinue(SkipStartMarker continueMarker)
+        public void AddContinue(ActionSet actionSet)
         {
-            Continue.Add(continueMarker);
+            if (RawContinue)
+                actionSet.AddAction(new A_Continue());
+            else
+            {
+                SkipStartMarker continuer = new SkipStartMarker(actionSet);
+                actionSet.AddAction(continuer);
+                Continue.Add(continuer);
+            }
         }
 
-        public void AddBreak(SkipStartMarker breakMarker)
+        public void AddBreak(ActionSet actionSet)
         {
-            Break.Add(breakMarker);
+            if (RawBreak)
+                actionSet.AddAction(new A_Break());
+            else
+            {
+                SkipStartMarker breaker = new SkipStartMarker(actionSet);
+                actionSet.AddAction(breaker);
+                Break.Add(breaker);
+            }
         }
 
         protected void ResolveContinues(ActionSet actionSet)
@@ -59,10 +78,12 @@ namespace Deltin.Deltinteger.Parse
 
         public WhileAction(ParseInfo parseInfo, Scope scope, DeltinScriptParser.WhileContext whileContext)
         {
+            RawContinue = true;
+
             if (whileContext.expr() == null)
                 parseInfo.Script.Diagnostics.Error("Expected expression.", DocRange.GetRange(whileContext.LEFT_PAREN()));
             else
-                Condition = DeltinScript.GetExpression(parseInfo, scope, whileContext.expr());
+                Condition = parseInfo.GetExpression(scope, whileContext.expr());
             
             Block = new BlockAction(parseInfo.SetLoop(this), scope, whileContext.block());
             Path = new PathInfo(Block, DocRange.GetRange(whileContext.WHILE()), false);
@@ -141,10 +162,14 @@ namespace Deltin.Deltinteger.Parse
                 InitialVarSet = new SetVariableAction(parseInfo, varScope, forContext.initialVarset);
 
             if (forContext.expr() != null)
-                Condition = DeltinScript.GetExpression(parseInfo, varScope, forContext.expr());
+                Condition = parseInfo.GetExpression(varScope, forContext.expr());
             
             if (forContext.endingVarset != null)
+            {
                 SetVariableAction = new SetVariableAction(parseInfo, varScope, forContext.endingVarset);
+                RawContinue = false;
+            }
+            else RawContinue = true;
 
             // Get the block.
             if (forContext.block() != null)
@@ -173,7 +198,10 @@ namespace Deltin.Deltinteger.Parse
             else if (InitialVarSet != null)
                 InitialVarSet.Translate(actionSet);
 
-            Element condition = (Element)Condition.Parse(actionSet) ?? new V_True();
+            // Get the condition.
+            Element condition;
+            if (Condition != null) condition = (Element)Condition.Parse(actionSet); // User-define condition
+            else condition = new V_True(); // No condition, just use true.
             actionSet.AddAction(Element.Part<A_While>(condition));
 
             Block.Translate(actionSet.Indent());
@@ -203,10 +231,12 @@ namespace Deltin.Deltinteger.Parse
 
         public AutoForAction(ParseInfo parseInfo, Scope scope, DeltinScriptParser.For_autoContext autoForContext)
         {
+            RawContinue = true;
+
             // Get the auto-for variable. (Required)
             if (autoForContext.forVariable != null)
             {
-                IExpression variable = DeltinScript.GetExpression(parseInfo, scope, autoForContext.forVariable);
+                IExpression variable = parseInfo.GetExpression(scope, autoForContext.forVariable);
 
                 // Get the variable being set.
                 VariableResolve = new VariableResolve(new VariableResolveOptions() {
@@ -220,7 +250,7 @@ namespace Deltin.Deltinteger.Parse
                     if (autoForContext.start == null)
                         parseInfo.Script.Diagnostics.Error("Expected expression.", DocRange.GetRange(autoForContext.EQUALS()));
                     else
-                        InitialResolveValue = DeltinScript.GetExpression(parseInfo, scope, autoForContext.start);
+                        InitialResolveValue = parseInfo.GetExpression(scope, autoForContext.start);
                 }
             }
             // Get the defined variable.
@@ -235,13 +265,13 @@ namespace Deltin.Deltinteger.Parse
             if (autoForContext.stop == null)
                 parseInfo.Script.Diagnostics.Error("Expected end expression.", DocRange.GetRange(autoForContext.startSep));
             else
-                Stop = DeltinScript.GetExpression(parseInfo, scope, autoForContext.stop);
+                Stop = parseInfo.GetExpression(scope, autoForContext.stop);
             
             // Get the auto-for step. (Not Required)
             if (autoForContext.step == null)
                 Step = new ExpressionOrWorkshopValue(new V_Number(1));
             else
-                Step = new ExpressionOrWorkshopValue(DeltinScript.GetExpression(parseInfo, scope, autoForContext.step));
+                Step = new ExpressionOrWorkshopValue(parseInfo.GetExpression(scope, autoForContext.step));
             
             // Get the block.
             if (autoForContext.block() == null)
@@ -315,13 +345,15 @@ namespace Deltin.Deltinteger.Parse
 
         public ForeachAction(ParseInfo parseInfo, Scope scope, DeltinScriptParser.ForeachContext foreachContext)
         {
+            RawContinue = false;
+
             Scope varScope = scope.Child();
 
             ForeachVar = new ForeachVariable(varScope, new ForeachContextHandler(parseInfo, foreachContext));
 
             // Get the array that will be iterated on. Syntax error if it is missing.
             if (foreachContext.expr() != null)
-                Array = DeltinScript.GetExpression(parseInfo, scope, foreachContext.expr());
+                Array = parseInfo.GetExpression(scope, foreachContext.expr());
             else
                 parseInfo.Script.Diagnostics.Error("Expected expression.", DocRange.GetRange(foreachContext.IN()));
 
@@ -338,7 +370,7 @@ namespace Deltin.Deltinteger.Parse
 
         public override void Translate(ActionSet actionSet)
         {
-            ForeachBuilder foreachBuilder = new ForeachBuilder(actionSet, Array.Parse(actionSet));
+            ForeachBuilder foreachBuilder = new ForeachBuilder(actionSet, Array.Parse(actionSet), actionSet.IsRecursive);
 
             // Add the foreach value to the assigner.
             actionSet.IndexAssigner.Add(ForeachVar, foreachBuilder.IndexValue);

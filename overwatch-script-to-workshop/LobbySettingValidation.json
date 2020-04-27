@@ -35,22 +35,22 @@
     },
     "Max Team 1 Players": {
       "default": 6.0,
-      "type": "number",
+      "type": "integer",
       "maximum": 6.0
     },
     "Max Team 2 Players": {
       "default": 6.0,
-      "type": "number",
+      "type": "integer",
       "maximum": 6.0
     },
     "Max FFA Players": {
       "default": 0.0,
-      "type": "number",
+      "type": "integer",
       "maximum": 12.0
     },
     "Max Spectators": {
       "default": 2.0,
-      "type": "number",
+      "type": "integer",
       "maximum": 12.0
     },
     "Allow Players Who Are In Queue": {
@@ -371,7 +371,9 @@
           "Blizzard World (Winter)",
           "Workshop Island",
           "Workshop Expanse",
-          "Workshop Chamber"
+          "Workshop Chamber",
+          "Workshop Island (Night)",
+          "Workshop Expanse (Night)"
         ]
       }
     },
@@ -471,7 +473,9 @@
           "Black Forest (Winter)",
           "Workshop Island",
           "Workshop Expanse",
-          "Workshop Chamber"
+          "Workshop Chamber",
+          "Workshop Island (Night)",
+          "Workshop Expanse (Night)"
         ]
       }
     },
@@ -548,7 +552,9 @@
           "Blizzard World (Winter)",
           "Workshop Island",
           "Workshop Expanse",
-          "Workshop Chamber"
+          "Workshop Chamber",
+          "Workshop Island (Night)",
+          "Workshop Expanse (Night)"
         ]
       }
     },
@@ -586,7 +592,9 @@
           "Blizzard World (Winter)",
           "Workshop Island",
           "Workshop Expanse",
-          "Workshop Chamber"
+          "Workshop Chamber",
+          "Workshop Island (Night)",
+          "Workshop Expanse (Night)"
         ]
       }
     },
@@ -617,6 +625,12 @@
     "Spawn With Ultimate Ready": {
       "default": false,
       "type": "boolean"
+    },
+    "Health": {
+      "default": 100.0,
+      "type": "number",
+      "minimum": 10.0,
+      "maximum": 500.0
     },
     "Damage Dealt": {
       "default": 100.0,
@@ -1014,6 +1028,15 @@
       "minimum": 20.0,
       "maximum": 500.0
     },
+    "Call Mech Knockback Scalar": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 400.0
+    },
+    "Spawn Without Mech": {
+      "default": false,
+      "type": "boolean"
+    },
     "Ultimate Ability (Meteor Strike)": {
       "default": true,
       "type": "boolean"
@@ -1080,6 +1103,57 @@
       "default": 100.0,
       "type": "number",
       "minimum": 33.0,
+      "maximum": 500.0
+    },
+    "Ultimate Ability (Duplicate)": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Ultimate Generation (Duplicate)": {
+      "default": 100.0,
+      "type": "number",
+      "minimum": 10.0,
+      "maximum": 500.0
+    },
+    "Ultimate Generation - Passive (Duplicate)": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Ultimate Generation - Combat (Duplicate)": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Flight": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Flight Cooldown Time": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Focusing Beam": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Focusing Beam Cooldown Time": {
+      "default": 100.0,
+      "type": "number",
+      "maximum": 500.0
+    },
+    "Glide": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Sticky Bombs": {
+      "default": true,
+      "type": "boolean"
+    },
+    "Sticky Bombs Cooldown Time": {
+      "default": 100.0,
+      "type": "number",
       "maximum": 500.0
     },
     "Ultimate Ability (Dragonblade)": {
@@ -2290,6 +2364,7 @@
           "Brigitte",
           "D.va",
           "Doomfist",
+          "Echo",
           "Genji",
           "Hanzo",
           "Junkrat",
@@ -2327,6 +2402,9 @@
             },
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
+            },
+            "Health": {
+              "$ref": "#/definitions/Health"
             },
             "Damage Dealt": {
               "$ref": "#/definitions/Damage Dealt"
@@ -2396,6 +2474,9 @@
             },
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
+            },
+            "Health": {
+              "$ref": "#/definitions/Health"
             },
             "Damage Dealt": {
               "$ref": "#/definitions/Damage Dealt"
@@ -2474,6 +2555,9 @@
             },
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
+            },
+            "Health": {
+              "$ref": "#/definitions/Health"
             },
             "Damage Dealt": {
               "$ref": "#/definitions/Damage Dealt"
@@ -2568,6 +2652,9 @@
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
             },
+            "Health": {
+              "$ref": "#/definitions/Health"
+            },
             "Damage Dealt": {
               "$ref": "#/definitions/Damage Dealt"
             },
@@ -2649,6 +2736,9 @@
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
             },
+            "Health": {
+              "$ref": "#/definitions/Health"
+            },
             "Damage Dealt": {
               "$ref": "#/definitions/Damage Dealt"
             },
@@ -2726,6 +2816,9 @@
             },
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
+            },
+            "Health": {
+              "$ref": "#/definitions/Health"
             },
             "Damage Dealt": {
               "$ref": "#/definitions/Damage Dealt"
@@ -2808,6 +2901,9 @@
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
             },
+            "Health": {
+              "$ref": "#/definitions/Health"
+            },
             "Damage Dealt": {
               "$ref": "#/definitions/Damage Dealt"
             },
@@ -2873,6 +2969,12 @@
             },
             "Defense Matrix Maximum Time": {
               "$ref": "#/definitions/Defense Matrix Maximum Time"
+            },
+            "Call Mech Knockback Scalar": {
+              "$ref": "#/definitions/Call Mech Knockback Scalar"
+            },
+            "Spawn Without Mech": {
+              "$ref": "#/definitions/Spawn Without Mech"
             }
           },
           "additionalProperties": false
@@ -2885,6 +2987,9 @@
             },
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
+            },
+            "Health": {
+              "$ref": "#/definitions/Health"
             },
             "Damage Dealt": {
               "$ref": "#/definitions/Damage Dealt"
@@ -2970,6 +3075,87 @@
           },
           "additionalProperties": false
         },
+        "Echo": {
+          "description": "'Echo' hero settings.",
+          "properties": {
+            "Quick Melee": {
+              "$ref": "#/definitions/Quick Melee"
+            },
+            "Spawn With Ultimate Ready": {
+              "$ref": "#/definitions/Spawn With Ultimate Ready"
+            },
+            "Health": {
+              "$ref": "#/definitions/Health"
+            },
+            "Damage Dealt": {
+              "$ref": "#/definitions/Damage Dealt"
+            },
+            "Damage Received": {
+              "$ref": "#/definitions/Damage Received"
+            },
+            "Healing Received": {
+              "$ref": "#/definitions/Healing Received"
+            },
+            "Jump Vertical Speed": {
+              "$ref": "#/definitions/Jump Vertical Speed"
+            },
+            "Movement Gravity": {
+              "$ref": "#/definitions/Movement Gravity"
+            },
+            "Movement Speed": {
+              "$ref": "#/definitions/Movement Speed"
+            },
+            "Receive Headshots Only": {
+              "$ref": "#/definitions/Receive Headshots Only"
+            },
+            "Primary Fire": {
+              "$ref": "#/definitions/Primary Fire"
+            },
+            "Ammunition Clip Size Scalar": {
+              "$ref": "#/definitions/Ammunition Clip Size Scalar"
+            },
+            "No Ammunition Requirement": {
+              "$ref": "#/definitions/No Ammunition Requirement"
+            },
+            "Ultimate Ability (Duplicate)": {
+              "$ref": "#/definitions/Ultimate Ability (Duplicate)"
+            },
+            "Ultimate Generation (Duplicate)": {
+              "$ref": "#/definitions/Ultimate Generation (Duplicate)"
+            },
+            "Ultimate Generation - Passive (Duplicate)": {
+              "$ref": "#/definitions/Ultimate Generation - Passive (Duplicate)"
+            },
+            "Ultimate Generation - Combat (Duplicate)": {
+              "$ref": "#/definitions/Ultimate Generation - Combat (Duplicate)"
+            },
+            "Projectile Speed": {
+              "$ref": "#/definitions/Projectile Speed"
+            },
+            "Flight": {
+              "$ref": "#/definitions/Flight"
+            },
+            "Flight Cooldown Time": {
+              "$ref": "#/definitions/Flight Cooldown Time"
+            },
+            "Focusing Beam": {
+              "$ref": "#/definitions/Focusing Beam"
+            },
+            "Focusing Beam Cooldown Time": {
+              "$ref": "#/definitions/Focusing Beam Cooldown Time"
+            },
+            "Glide": {
+              "$ref": "#/definitions/Glide"
+            },
+            "Sticky Bombs": {
+              "$ref": "#/definitions/Sticky Bombs"
+            },
+            "Sticky Bombs Cooldown Time": {
+              "$ref": "#/definitions/Sticky Bombs Cooldown Time"
+            }
+          },
+          "additionalProperties": false
+        },
         "Genji": {
           "description": "'Genji' hero settings.",
           "properties": {
@@ -2978,6 +3164,9 @@
             },
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
+            },
+            "Health": {
+              "$ref": "#/definitions/Health"
             },
             "Damage Dealt": {
               "$ref": "#/definitions/Damage Dealt"
@@ -3057,6 +3246,9 @@
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
             },
+            "Health": {
+              "$ref": "#/definitions/Health"
+            },
             "Damage Dealt": {
               "$ref": "#/definitions/Damage Dealt"
             },
@@ -3134,6 +3326,9 @@
             },
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
+            },
+            "Health": {
+              "$ref": "#/definitions/Health"
             },
             "Damage Dealt": {
               "$ref": "#/definitions/Damage Dealt"
@@ -3219,6 +3414,9 @@
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
             },
+            "Health": {
+              "$ref": "#/definitions/Health"
+            },
             "Damage Dealt": {
               "$ref": "#/definitions/Damage Dealt"
             },
@@ -3297,6 +3495,9 @@
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
             },
+            "Health": {
+              "$ref": "#/definitions/Health"
+            },
             "Damage Dealt": {
               "$ref": "#/definitions/Damage Dealt"
             },
@@ -3368,6 +3569,9 @@
             },
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
+            },
+            "Health": {
+              "$ref": "#/definitions/Health"
             },
             "Damage Dealt": {
               "$ref": "#/definitions/Damage Dealt"
@@ -3465,6 +3669,9 @@
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
             },
+            "Health": {
+              "$ref": "#/definitions/Health"
+            },
             "Damage Dealt": {
               "$ref": "#/definitions/Damage Dealt"
             },
@@ -3545,6 +3752,9 @@
             },
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
+            },
+            "Health": {
+              "$ref": "#/definitions/Health"
             },
             "Damage Dealt": {
               "$ref": "#/definitions/Damage Dealt"
@@ -3633,6 +3843,9 @@
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
             },
+            "Health": {
+              "$ref": "#/definitions/Health"
+            },
             "Damage Dealt": {
               "$ref": "#/definitions/Damage Dealt"
             },
@@ -3710,6 +3923,9 @@
             },
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
+            },
+            "Health": {
+              "$ref": "#/definitions/Health"
             },
             "Damage Dealt": {
               "$ref": "#/definitions/Damage Dealt"
@@ -3804,6 +4020,9 @@
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
             },
+            "Health": {
+              "$ref": "#/definitions/Health"
+            },
             "Damage Dealt": {
               "$ref": "#/definitions/Damage Dealt"
             },
@@ -3872,6 +4091,9 @@
             },
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
+            },
+            "Health": {
+              "$ref": "#/definitions/Health"
             },
             "Damage Dealt": {
               "$ref": "#/definitions/Damage Dealt"
@@ -3951,6 +4173,9 @@
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
             },
+            "Health": {
+              "$ref": "#/definitions/Health"
+            },
             "Damage Dealt": {
               "$ref": "#/definitions/Damage Dealt"
             },
@@ -4028,6 +4253,9 @@
             },
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
+            },
+            "Health": {
+              "$ref": "#/definitions/Health"
             },
             "Damage Dealt": {
               "$ref": "#/definitions/Damage Dealt"
@@ -4109,6 +4337,9 @@
             },
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
+            },
+            "Health": {
+              "$ref": "#/definitions/Health"
             },
             "Damage Dealt": {
               "$ref": "#/definitions/Damage Dealt"
@@ -4194,6 +4425,9 @@
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
             },
+            "Health": {
+              "$ref": "#/definitions/Health"
+            },
             "Damage Dealt": {
               "$ref": "#/definitions/Damage Dealt"
             },
@@ -4272,6 +4506,9 @@
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
             },
+            "Health": {
+              "$ref": "#/definitions/Health"
+            },
             "Damage Dealt": {
               "$ref": "#/definitions/Damage Dealt"
             },
@@ -4343,6 +4580,9 @@
             },
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
+            },
+            "Health": {
+              "$ref": "#/definitions/Health"
             },
             "Damage Dealt": {
               "$ref": "#/definitions/Damage Dealt"
@@ -4431,6 +4671,9 @@
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
             },
+            "Health": {
+              "$ref": "#/definitions/Health"
+            },
             "Damage Dealt": {
               "$ref": "#/definitions/Damage Dealt"
             },
@@ -4502,6 +4745,9 @@
             },
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
+            },
+            "Health": {
+              "$ref": "#/definitions/Health"
             },
             "Damage Dealt": {
               "$ref": "#/definitions/Damage Dealt"
@@ -4587,6 +4833,9 @@
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
             },
+            "Health": {
+              "$ref": "#/definitions/Health"
+            },
             "Damage Dealt": {
               "$ref": "#/definitions/Damage Dealt"
             },
@@ -4667,6 +4916,9 @@
             },
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
+            },
+            "Health": {
+              "$ref": "#/definitions/Health"
             },
             "Damage Dealt": {
               "$ref": "#/definitions/Damage Dealt"
@@ -4764,6 +5016,9 @@
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
             },
+            "Health": {
+              "$ref": "#/definitions/Health"
+            },
             "Damage Dealt": {
               "$ref": "#/definitions/Damage Dealt"
             },
@@ -4841,6 +5096,9 @@
             },
             "Spawn With Ultimate Ready": {
               "$ref": "#/definitions/Spawn With Ultimate Ready"
+            },
+            "Health": {
+              "$ref": "#/definitions/Health"
             },
             "Damage Dealt": {
               "$ref": "#/definitions/Damage Dealt"
@@ -5678,6 +5936,10 @@
         }
       },
       "additionalProperties": false
+    },
+    "Description": {
+      "description": "The description of the custom game.",
+      "type": "string"
     }
   },
   "type": "object",

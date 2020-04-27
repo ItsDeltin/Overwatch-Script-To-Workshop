@@ -7,8 +7,6 @@ using System.Reflection;
 using Deltin.Deltinteger.Parse;
 using Deltin.Deltinteger.LanguageServer;
 using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
-using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItemKind;
-using StringOrMarkupContent = OmniSharp.Extensions.LanguageServer.Protocol.Models.StringOrMarkupContent;
 
 namespace Deltin.Deltinteger.CustomMethods
 {
@@ -53,7 +51,7 @@ namespace Deltin.Deltinteger.CustomMethods
         
         public CodeType ReturnType => null;
 
-        public StringOrMarkupContent Documentation { get; }
+        public string Documentation { get; }
 
         public CustomMethodData(Type type)
         {
@@ -81,17 +79,8 @@ namespace Deltin.Deltinteger.CustomMethods
             return GetObject().Get(actionSet, methodCall.ParameterValues, methodCall.AdditionalParameterData);
         }
 
-        public string GetLabel(bool markdown) => HoverHandler.GetLabel(CustomMethodType == CustomMethodType.Action ? null : ReturnType?.Name ?? "define", Name, Parameters, markdown, Documentation.HasString ? Documentation.String : Documentation.MarkupContent.Value);
-        public CompletionItem GetCompletion()
-        {
-            return new CompletionItem()
-            {
-                Label = Name,
-                Kind = CompletionItemKind.Method,
-                Detail = GetLabel(false),
-                Documentation = Documentation
-            };
-        }
+        public string GetLabel(bool markdown) => HoverHandler.GetLabel(CustomMethodType == CustomMethodType.Action ? null : ReturnType?.Name ?? "define", Name, Parameters, markdown, Documentation);
+        public CompletionItem GetCompletion() => MethodAttributes.GetFunctionCompletion(this);
 
         static CustomMethodData[] _customMethodData = null;
         public static CustomMethodData[] GetCustomMethods()

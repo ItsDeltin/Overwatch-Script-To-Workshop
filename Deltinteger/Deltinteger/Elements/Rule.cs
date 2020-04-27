@@ -1,4 +1,4 @@
-﻿using Deltin.Deltinteger.I18n;
+using Deltin.Deltinteger.I18n;
 
 namespace Deltin.Deltinteger.Elements
 {
@@ -46,74 +46,91 @@ namespace Deltin.Deltinteger.Elements
             return Name;
         }
 
-        public string ToWorkshop(OutputLanguage language, bool optimize)
+        public void ToWorkshop(WorkshopBuilder builder, bool optimize)
         {
-            var builder = new TabStringBuilder(true);
-
-            builder.Indent = 0;
             if (Disabled)
-                builder.Append(LanguageInfo.Translate(language, "disabled") + " ");
-            builder.AppendLine($"{LanguageInfo.Translate(language, "rule")}(\"{Name}\")");
-            builder.AppendLine("{");
-            builder.AppendLine();
-
-            builder.Indent = 1;
-            builder.AppendLine(LanguageInfo.Translate(language, "event"));
-            builder.AppendLine("{");
-            builder.Indent = 2;
-            builder.AppendLine(EnumData.GetEnumValue(RuleEvent)
-                .ToWorkshop(language) + ";");
+            {
+                builder.AppendKeyword("disabled")
+                    .Append(" ");
+            }
+            builder.AppendKeyword("rule")
+                .AppendLine("(\"" + Name + "\")")
+                .AppendLine("{")
+                .AppendLine()
+                .Indent()
+                .AppendKeywordLine("event")
+                .AppendLine("{")
+                .Indent()
+                .AppendLine(EnumData.GetEnumValue(RuleEvent).ToWorkshop(builder.OutputLanguage) + ";");
             
             // Add attributes.
             switch (RuleType)
             {
                 case RuleType.PlayerBased:
                     // Player based attributes
-                    builder.AppendLine(EnumData.GetEnumValue(Team).ToWorkshop(language) + ";"); // Team attribute
-                    builder.AppendLine(EnumData.GetEnumValue(Player).ToWorkshop(language) + ";"); // Player attribute
+                    builder.AppendLine(EnumData.GetEnumValue(Team).ToWorkshop(builder.OutputLanguage) + ";"); // Team attribute
+                    builder.AppendLine(EnumData.GetEnumValue(Player).ToWorkshop(builder.OutputLanguage) + ";"); // Player attribute
                     break;
                 
                 case RuleType.Subroutine:
-                    builder.AppendLine(Subroutine.ToWorkshop(language) + ";"); // Attribute name
+                    builder.AppendLine(Subroutine.ToWorkshop(builder.OutputLanguage) + ";"); // Attribute name
                     break;
             }
-            builder.Indent = 1;
-            builder.AppendLine("}");
+            builder.Unindent()
+                .AppendLine("}");
 
             if (Conditions?.Length > 0)
             {
-                builder.AppendLine();
-                builder.AppendLine(LanguageInfo.Translate(language, "conditions"));
-                builder.AppendLine("{");
-                builder.Indent = 2;
+                builder.AppendLine()
+                    .AppendKeywordLine("conditions")
+                    .AppendLine("{")
+                    .Indent();
+
                 foreach (var condition in Conditions)
-                    builder.AppendLine(condition.ToWorkshop(language, optimize) + ";");
-                builder.Indent = 1;
-                builder.AppendLine("}");
+                    builder.AppendLine(condition.ToWorkshop(builder.OutputLanguage, optimize) + ";");
+                
+                builder.Unindent()
+                    .AppendLine("}");
             }
 
             // Add actions.
             if (Actions?.Length > 0)
             {
-                builder.AppendLine();
-                builder.AppendLine("// Action count: " + Actions.Length); // Action count comment.
-                builder.AppendLine(LanguageInfo.Translate(language, "actions"));
-                builder.AppendLine("{");
-                builder.Indent = 2;
+                builder.AppendLine()
+                    .AppendLine("// Action count: " + Actions.Length) // Action count comment.
+                    .AppendKeywordLine("actions")
+                    .AppendLine("{")
+                    .Indent();
 
                 foreach (var action in Actions)
                     if (optimize)
-                        builder.AppendLine(action.Optimize().ToWorkshop(language));
+                        builder.AppendLine(action.Optimize().ToWorkshop(builder.OutputLanguage));
                     else
-                        builder.AppendLine(action.ToWorkshop(language));
+                        builder.AppendLine(action.ToWorkshop(builder.OutputLanguage));
                 
-                builder.Indent = 1;
-                builder.AppendLine("}");
+                builder.Unindent()
+                    .AppendLine("}");
             }
-            builder.Indent = 0;
-            builder.AppendLine("}");
+            builder.Unindent()
+                .AppendLine("}");
+        }
+    
+        public int ElementCount(bool optimized)
+        {
+            int count = 1;
 
-            return builder.ToString();
+            foreach (Condition condition in Conditions)
+                count += condition.ElementCount(optimized);
+
+            foreach (Element action in Actions)
+            {
+                if (optimized)
+                    count += action.Optimize().ElementCount();
+                else
+                    count += action.ElementCount();
+            }
+            
+            return count;
         }
     }
 

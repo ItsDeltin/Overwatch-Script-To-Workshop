@@ -75,6 +75,7 @@ namespace Deltin.Deltinteger.Parse
             }
 
             TypeCheck();
+            _varInfo.Recursive = IsRecursive();
 
             return new Var(_varInfo);
         }
@@ -92,7 +93,7 @@ namespace Deltin.Deltinteger.Parse
             // Get the type.
             CodeType type = CodeType.GetCodeTypeFromContext(_parseInfo, _contextHandler.GetCodeType());
             
-            if (type != null && type.Constant() != TypeSettable.Normal)
+            if (type != null && type.IsConstant())
                 _varInfo.IsWorkshopReference = true;
             
             _varInfo.Type = type;
@@ -105,8 +106,13 @@ namespace Deltin.Deltinteger.Parse
         protected virtual void TypeCheck()
         {
             // If the type of the variable is a constant workshop value and there is no initial value, throw a syntax error.
-            if (_varInfo.Type != null && _varInfo.Type.Constant() == TypeSettable.Constant && _varInfo.InitialValueContext == null)
+            if (_varInfo.Type != null && _varInfo.Type.IsConstant() && _varInfo.InitialValueContext == null)
                 _diagnostics.Error("Variables with constant workshop types must have an initial value.", _nameRange);
+        }
+
+        protected virtual bool IsRecursive()
+        {
+            return _parseInfo.CurrentCallInfo != null && _parseInfo.CurrentCallInfo.Function is IMethod iMethod && iMethod.Attributes.Recursive;
         }
 
         public static implicit operator Var(VarBuilder builder) => builder.GetVar();

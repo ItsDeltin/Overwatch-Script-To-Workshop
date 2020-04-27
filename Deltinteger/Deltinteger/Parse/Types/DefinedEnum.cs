@@ -19,14 +19,14 @@ namespace Deltin.Deltinteger.Parse
             CanBeDeleted = false;
             Kind = "enum";
 
-            if (parseInfo.TranslateInfo.IsCodeType(Name))
+            if (parseInfo.TranslateInfo.Types.IsCodeType(Name))
                 parseInfo.Script.Diagnostics.Error($"A type with the name '{Name}' already exists.", DocRange.GetRange(enumContext.name));
             
             _translateInfo = parseInfo.TranslateInfo;
             Scope = new Scope("enum " + Name);
             
             DefinedAt = new LanguageServer.Location(parseInfo.Script.Uri, DocRange.GetRange(enumContext.name));
-            _translateInfo.AddSymbolLink(this, DefinedAt, true);
+            _translateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, DefinedAt, true);
 
             // Get the enum members.
             List<DefinedEnumMember> members = new List<DefinedEnumMember>();
@@ -47,13 +47,12 @@ namespace Deltin.Deltinteger.Parse
         }
 
         public override Scope ReturningScope() => Scope;
-        public override TypeSettable Constant() => TypeSettable.Normal;
 
-        public override void Call(ScriptFile script, DocRange callRange)
+        public override void Call(ParseInfo parseInfo, DocRange callRange)
         {
-            base.Call(script, callRange);
-            script.AddDefinitionLink(callRange, DefinedAt);
-            _translateInfo.AddSymbolLink(this, new Location(script.Uri, callRange));
+            base.Call(parseInfo, callRange);
+            parseInfo.Script.AddDefinitionLink(callRange, DefinedAt);
+            _translateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, new Location(parseInfo.Script.Uri, callRange));
         }
 
         public override CompletionItem GetCompletion() => new CompletionItem() {
@@ -62,7 +61,7 @@ namespace Deltin.Deltinteger.Parse
         };
     }
 
-    class DefinedEnumMember : IScopeable, IExpression, ICallable
+    class DefinedEnumMember : IVariable, IExpression, ICallable
     {
         public string Name { get; }
         public LanguageServer.Location DefinedAt { get; }
@@ -72,6 +71,7 @@ namespace Deltin.Deltinteger.Parse
         public AccessLevel AccessLevel => AccessLevel.Public;
         public bool Static => true;
         public bool WholeContext => true;
+        public bool CanBeIndexed => false;
 
         private DeltinScript _translateInfo { get; }
 
@@ -83,14 +83,14 @@ namespace Deltin.Deltinteger.Parse
             ID = id;
             _translateInfo = parseInfo.TranslateInfo;
 
-            _translateInfo.AddSymbolLink(this, definedAt, true);
+            _translateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, definedAt, true);
             parseInfo.Script.AddCodeLensRange(new ReferenceCodeLensRange(this, parseInfo, CodeLensSourceType.EnumValue, DefinedAt.range));
         }
 
         public CodeType Type() => Enum;
         public Scope ReturningScope() => null;
 
-        public IWorkshopTree Parse(ActionSet actionSet, bool asElement = true)
+        public IWorkshopTree Parse(ActionSet actionSet)
         {
             return new V_Number(ID);
         }
@@ -100,10 +100,10 @@ namespace Deltin.Deltinteger.Parse
             Kind = CompletionItemKind.EnumMember
         };
 
-        public void Call(ScriptFile script, DocRange callRange)
+        public void Call(ParseInfo parseInfo, DocRange callRange)
         {
-            script.AddDefinitionLink(callRange, DefinedAt);
-            _translateInfo.AddSymbolLink(this, new Location(script.Uri, callRange));
+            parseInfo.Script.AddDefinitionLink(callRange, DefinedAt);
+            _translateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, new Location(parseInfo.Script.Uri, callRange));
         }
     }
 }

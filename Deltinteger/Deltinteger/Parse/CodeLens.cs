@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.LanguageServer;
 using Newtonsoft.Json.Linq;
 
@@ -8,6 +9,7 @@ namespace Deltin.Deltinteger.Parse
     [Flags]
     public enum CodeLensSourceType
     {
+        None = 0,
         Function = 1,
         Type = 2,
         EnumValue = 4,
@@ -50,7 +52,7 @@ namespace Deltin.Deltinteger.Parse
             _parseInfo = parseInfo;
         }
 
-        public override string GetTitle() => (_parseInfo.TranslateInfo.GetSymbolLinks(Callable).Count - 1).ToString() + " references";
+        public override string GetTitle() => (_parseInfo.TranslateInfo.GetComponent<SymbolLinkComponent>().GetSymbolLinks(Callable).Count - 1).ToString() + " references";
 
         public override JArray GetArguments() => new JArray {
             // Uri
@@ -58,7 +60,7 @@ namespace Deltin.Deltinteger.Parse
             // Range
             JToken.FromObject(Range.start),
             // Locations
-            JToken.FromObject(_parseInfo.TranslateInfo.GetSymbolLinks(Callable).GetSymbolLinks(false).Select(sl => sl.Location))
+            JToken.FromObject(_parseInfo.TranslateInfo.GetComponent<SymbolLinkComponent>().GetSymbolLinks(Callable).GetSymbolLinks(false).Select(sl => sl.Location))
         };
     }
 
@@ -89,5 +91,29 @@ namespace Deltin.Deltinteger.Parse
             // Locations
             JToken.FromObject(Method.Attributes.Overriders.Select(overrider => overrider.DefinedAt))
         };
+    }
+
+    public class ElementCountCodeLens : CodeLensRange
+    {
+        private readonly bool optimized;
+        private int elementCount = -1;
+        private int actionCount = -1;
+
+        public ElementCountCodeLens(DocRange range, bool optimized) : base(CodeLensSourceType.None, range, null)
+        {
+            this.optimized = optimized;
+        }
+
+        public void RuleParsed(Rule rule)
+        {
+            elementCount = rule.ElementCount(optimized);
+            actionCount = rule.Actions.Length;
+        }
+
+        public override string GetTitle()
+        {
+            if (elementCount == -1) return "- actions, - elements";
+            return actionCount + " actions, " + elementCount + " elements";
+        }
     }
 }

@@ -15,9 +15,7 @@ namespace Deltin.Deltinteger.Parse
 
         public void Translate(ActionSet actionSet)
         {
-            SkipStartMarker continuer = new SkipStartMarker(actionSet);
-            actionSet.AddAction(continuer);
-            Loop.AddContinue(continuer);
+            Loop.AddContinue(actionSet);
         }
     }
 
@@ -34,9 +32,7 @@ namespace Deltin.Deltinteger.Parse
 
         public void Translate(ActionSet actionSet)
         {
-            SkipStartMarker breaker = new SkipStartMarker(actionSet);
-            actionSet.AddAction(breaker);
-            BreakContainer.AddBreak(breaker);
+            BreakContainer.AddBreak(actionSet);
         }
     }
 }

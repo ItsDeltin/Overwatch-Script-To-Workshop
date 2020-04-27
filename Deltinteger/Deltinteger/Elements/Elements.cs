@@ -16,19 +16,20 @@ using StringOrMarkupContent = OmniSharp.Extensions.LanguageServer.Protocol.Model
 
 namespace Deltin.Deltinteger.Elements
 {
-    [Flags]
     public enum ValueType
     {
-        Any = Number | Boolean | Hero | Vector | Player | Team ,
-        VectorAndPlayer = Vector | Player,
-        Number = 1,
-        Boolean = 2,
-        Hero = 4,
-        Vector = 8,
-        Player = 16,
-        Team = 32,
-        Map = 64,
-        Gamemode = 128
+        Any,
+        VectorAndPlayer,
+        Number,
+        Boolean,
+        Hero,
+        Vector,
+        Player,
+        Team,
+        Map,
+        Gamemode,
+        Button,
+        String
     }
 
     public abstract class Element : IWorkshopTree
@@ -58,6 +59,7 @@ namespace Deltin.Deltinteger.Elements
         public IWorkshopTree[] ParameterValues { get; set; }
         public bool Disabled { get; set; }
         public int Indent { get; set; }
+        protected bool AlwaysShowParentheses = false;
 
         public override string ToString()
         {
@@ -76,15 +78,16 @@ namespace Deltin.Deltinteger.Elements
             if (!ElementList.IsValue && Disabled) result += LanguageInfo.Translate(language, "disabled") + " ";
             result += LanguageInfo.Translate(language, Name);
             if (parameters.Count != 0) result += "(" + string.Join(", ", parameters) + ")";
+            else if (AlwaysShowParentheses) result += "()";
             if (!ElementList.IsValue) result += ";";
             return result;
         }
 
-        private void AddMissingParameters()
+        protected void AddMissingParameters()
         {
             List<IWorkshopTree> parameters = new List<IWorkshopTree>();
 
-            for (int i = 0; i < ParameterData.Length; i++)
+            for (int i = 0; i < ParameterData.Length || i < ParameterValues.Length; i++)
                 parameters.Add(ParameterValues?.ElementAtOrDefault(i) ?? ParameterData[i].GetDefault());
             
             ParameterValues = parameters.ToArray();
@@ -119,26 +122,10 @@ namespace Deltin.Deltinteger.Elements
         }
 
         // Creates an array from a list of values.
-        public static Element CreateArray(params IWorkshopTree[] values)
-        {
-            Element array = new V_EmptyArray();
-            for (int i = 0; i < values.Length; i++)
-                array = Element.Part<V_Append>(array, values[i]);
-            return array;
-        }
+        public static Element CreateArray(params IWorkshopTree[] values) => Element.Part<V_Array>(values);
 
         // Creates an ternary conditional that works in the workshop
-        public static Element TernaryConditional(IWorkshopTree condition, IWorkshopTree consequent, IWorkshopTree alternative)
-        {
-            // This works by creating an array with the consequent (C) and the alternative (A): [C, A]
-            // It creates an array that contains false and true: [false, true]
-            // Then it gets the array value of the false/true array based on the condition result: IndexOfArrayValue(boolArray, condition)
-            // The result is either 0 or 1. Use that index to get the value from the [C, A] array.
-            return Element.Part<V_ValueInArray>(CreateArray(alternative, consequent), Element.Part<V_IndexOfArrayValue>(CreateArray(new V_False(), new V_True()), condition));
-
-            // Another way to do it would be to add 0 to the boolean, however this won't work with truthey/falsey values that aren't booleans.
-            // return Element.Part<V_ValueInArray>(CreateArray(alternative, consequent), Element.Part<V_Add>(condition, new V_Number(0)));
-        }
+        public static Element TernaryConditional(IWorkshopTree condition, IWorkshopTree consequent, IWorkshopTree alternative) => Element.Part<V_IfThenElse>(condition, consequent, alternative);
 
         public static Element operator +(Element a, Element b) => Element.Part<V_Add>(a, b);
         public static Element operator -(Element a, Element b) => Element.Part<V_Subtract>(a, b);
@@ -187,6 +174,17 @@ namespace Deltin.Deltinteger.Elements
         }
 
         protected virtual bool OverrideEquals(IWorkshopTree other) => true;
+
+        public virtual int ElementCount()
+        {
+            AddMissingParameters();
+            int count = 1;
+            
+            foreach (var parameter in ParameterValues)
+                count += parameter.ElementCount();
+            
+            return count;
+        }
 
         public Element OptimizeAddOperation(
             Func<double, double, double> op,
@@ -331,7 +329,7 @@ namespace Deltin.Deltinteger.Elements
         public MethodAttributes Attributes { get; } = new MethodAttributes();
         public UsageDiagnostic[] UsageDiagnostics { get; }
         public WikiMethod Wiki { get; }
-        public StringOrMarkupContent Documentation => Wiki?.Description;
+        public string Documentation => Wiki?.Description;
         private ValueType ElementValueType { get; }
 
         // IScopeable defaults
@@ -386,7 +384,7 @@ namespace Deltin.Deltinteger.Elements
 
                     // If the parameter is an enum, get the enum CodeType.
                     if (WorkshopParameters[i] is EnumParameter)
-                        codeType = WorkshopEnumType.GetEnumType(((EnumParameter)WorkshopParameters[i]).EnumData);
+                        codeType = ValueGroupType.GetEnumType(((EnumParameter)WorkshopParameters[i]).EnumData);
 
                     var defaultValue = WorkshopParameters[i].GetDefault();
 
@@ -422,16 +420,7 @@ namespace Deltin.Deltinteger.Elements
 
         public string GetLabel(bool markdown) => HoverHandler.GetLabel(!IsValue ? null : ReturnType?.Name ?? "define", Name, Parameters, markdown, Wiki?.Description);
 
-        public CompletionItem GetCompletion()
-        {
-            return new CompletionItem()
-            {
-                Label = Name,
-                Kind = CompletionItemKind.Method,
-                Detail = GetLabel(false),
-                Documentation = Wiki?.Description
-            };
-        }
+        public CompletionItem GetCompletion() => MethodAttributes.GetFunctionCompletion(this);
     }
 
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]

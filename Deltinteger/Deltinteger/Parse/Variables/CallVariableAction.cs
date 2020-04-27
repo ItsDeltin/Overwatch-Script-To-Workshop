@@ -11,10 +11,10 @@ namespace Deltin.Deltinteger.Parse
         public CallVariableAction(IIndexReferencer calling, IExpression[] index)
         {
             Calling = calling;
-            Index = index;
+            Index = index ?? new IExpression[0];
         }
 
-        public IWorkshopTree Parse(ActionSet actionSet, bool asElement = true)
+        public IWorkshopTree Parse(ActionSet actionSet)
         {
             IWorkshopTree result = Calling.Parse(actionSet);
 

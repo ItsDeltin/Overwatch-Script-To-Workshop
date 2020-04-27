@@ -6,7 +6,7 @@ using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.C
 
 namespace Deltin.Deltinteger.Parse
 {
-    public class MacroVar : IScopeable, IExpression, ICallable, IApplyBlock
+    public class MacroVar : IVariable, IExpression, ICallable, IApplyBlock
     {
         public string Name { get; }
         public AccessLevel AccessLevel { get; }
@@ -37,30 +37,31 @@ namespace Deltin.Deltinteger.Parse
             scope = Static ? staticScope : objectScope;
             this.parseInfo = parseInfo;
 
-            parseInfo.TranslateInfo.AddSymbolLink(this, DefinedAt, true);
             scope.AddVariable(this, parseInfo.Script.Diagnostics, DocRange.GetRange(macroContext.name));
+            parseInfo.TranslateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, DefinedAt, true);
             parseInfo.Script.AddHover(DocRange.GetRange(macroContext.name), GetLabel(true));
+            parseInfo.Script.AddCodeLensRange(new ReferenceCodeLensRange(this, parseInfo, CodeLensSourceType.Variable, DefinedAt.range));
         }
 
         public void SetupParameters() {}
 
         public void SetupBlock()
         {
-            if (ExpressionToParse != null) Expression = DeltinScript.GetExpression(parseInfo.SetCallInfo(CallInfo), scope, ExpressionToParse);
+            if (ExpressionToParse != null) Expression = parseInfo.SetCallInfo(CallInfo).GetExpression(scope, ExpressionToParse);
             foreach (var listener in listeners) listener.Applied();
         }
 
-        public IWorkshopTree Parse(ActionSet actionSet, bool asElement = true) => Expression.Parse(actionSet);
+        public IWorkshopTree Parse(ActionSet actionSet) => Expression.Parse(actionSet);
 
         public Scope ReturningScope() => ReturnType?.GetObjectScope() ?? parseInfo.TranslateInfo.PlayerVariableScope;
 
         public CodeType Type() => ReturnType;
 
-        public void Call(ScriptFile script, DocRange callRange)
+        public void Call(ParseInfo parseInfo, DocRange callRange)
         {
-            script.AddDefinitionLink(callRange, DefinedAt);
-            script.AddHover(callRange, GetLabel(true));
-            parseInfo.TranslateInfo.AddSymbolLink(this, new Location(script.Uri, callRange));
+            parseInfo.Script.AddDefinitionLink(callRange, DefinedAt);
+            parseInfo.Script.AddHover(callRange, GetLabel(true));
+            parseInfo.TranslateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, new Location(parseInfo.Script.Uri, callRange));
         }
 
         public CompletionItem GetCompletion()
@@ -71,7 +72,13 @@ namespace Deltin.Deltinteger.Parse
             };
         }
 
-        public string GetLabel(bool markdown) => HoverHandler.Sectioned((ReturnType?.Name ?? "define") + " " + Name, null);
+        public string GetLabel(bool markdown)
+        {
+            string name = ReturnType?.Name ?? "define" + " " + Name;
+
+            if (markdown) return HoverHandler.Sectioned(name, null);
+            else return name;
+        }
 
         private List<IOnBlockApplied> listeners = new List<IOnBlockApplied>();
         public void OnBlockApply(IOnBlockApplied onBlockApplied)

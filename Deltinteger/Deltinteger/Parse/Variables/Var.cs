@@ -23,12 +23,20 @@ namespace Deltin.Deltinteger.Parse
         public bool InExtendedCollection { get; }
         public int ID { get; }
         public bool Static { get; }
+        public bool Recursive { get; }
 
+        public bool WasCalled { get; private set; }
+
+        /// <summary>The scope the variable and initial value will use.</summary>
         private readonly Scope _operationalScope;
+        /// <summary>Determines when the initial value should be resolved.</summary>
         private readonly InitialValueResolve _initialValueResolve;
+        /// <summary>Stores the context of the initial value.</summary>
         private readonly DeltinScriptParser.ExprContext _initalValueContext;
-        private bool _finalized;
 
+        /// <summary>The resulting intial value. This will be null if there is no initial value.
+        /// If _initialValueResolve is Instant, this will be set when the Var object is created.
+        /// If it is ApplyBlock, this will be set when SetupBlock runs.</summary>
         public IExpression InitialValue { get; private set; }
 
         public CallInfo CallInfo => null;
@@ -47,6 +55,7 @@ namespace Deltin.Deltinteger.Parse
             InExtendedCollection = varInfo.InExtendedCollection;
             ID = varInfo.ID;
             Static = varInfo.Static;
+            Recursive = varInfo.Recursive;
             _initalValueContext = varInfo.InitialValueContext;
             _initialValueResolve = varInfo.InitialValueResolve;
             _operationalScope = varInfo.OperationalScope;
@@ -61,10 +70,9 @@ namespace Deltin.Deltinteger.Parse
 
             // Add the variable to the scope.
             _operationalScope.AddVariable(this, parseInfo.Script.Diagnostics, DefinedAt.range);
-            _finalized = true;
 
             parseInfo.Script.AddHover(DefinedAt.range, GetLabel(true));
-            parseInfo.TranslateInfo.AddSymbolLink(this, DefinedAt, true);
+            parseInfo.TranslateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, DefinedAt, true);
 
             if (_initialValueResolve == InitialValueResolve.Instant)
                 GetInitialValue();
@@ -79,45 +87,35 @@ namespace Deltin.Deltinteger.Parse
             // Get the initial value.
             if (_initalValueContext != null)
             {
-                InitialValue = DeltinScript.GetExpression(parseInfo, _operationalScope, _initalValueContext);
-                if (InitialValue?.Type() != null && InitialValue.Type().Constant() == TypeSettable.Constant && CodeType != InitialValue.Type())
+                InitialValue = parseInfo.GetExpression(_operationalScope, _initalValueContext);
+                if (InitialValue?.Type() != null && InitialValue.Type().IsConstant() && !InitialValue.Type().Implements(CodeType))
                     parseInfo.Script.Diagnostics.Error($"The type '{InitialValue.Type().Name}' cannot be stored.", DocRange.GetRange(_initalValueContext));
             }
         }
 
         public bool Settable()
         {
-            return (CodeType == null || CodeType.Constant() == TypeSettable.Normal) && (VariableType == VariableType.Global || VariableType == VariableType.Player || VariableType == VariableType.Dynamic);
+            return (CodeType == null || !CodeType.IsConstant()) && (VariableType == VariableType.Global || VariableType == VariableType.Player || VariableType == VariableType.Dynamic);
         }
 
         // IExpression
         public Scope ReturningScope()
         {
-            ThrowIfNotFinalized();
             if (CodeType == null) return parseInfo.TranslateInfo.PlayerVariableScope;
             else return CodeType.GetObjectScope();
         }
-        public CodeType Type()
-        {
-            ThrowIfNotFinalized();
-            return CodeType;
-        }
+        public CodeType Type() => CodeType;
 
         // ICallable
-        public void Call(ScriptFile script, DocRange callRange)
+        public void Call(ParseInfo parseInfo, DocRange callRange)
         {
-            ThrowIfNotFinalized();
-            script.AddDefinitionLink(callRange, DefinedAt);
-            script.AddHover(callRange, GetLabel(true));
-            parseInfo.TranslateInfo.AddSymbolLink(this, new Location(script.Uri, callRange));
-        }
-
-        private void ThrowIfNotFinalized()
-        {
-            if (!_finalized) throw new Exception("Var not finalized.");
+            WasCalled = true;
+            parseInfo.Script.AddDefinitionLink(callRange, DefinedAt);
+            parseInfo.Script.AddHover(callRange, GetLabel(true));
+            parseInfo.TranslateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, new Location(parseInfo.Script.Uri, callRange));
         }
     
-        public IWorkshopTree Parse(ActionSet actionSet, bool asElement = true)
+        public IWorkshopTree Parse(ActionSet actionSet)
         {
             return actionSet.IndexAssigner[this].GetVariable();
         }
@@ -175,6 +173,7 @@ namespace Deltin.Deltinteger.Parse
         public StoreType StoreType;
         public InitialValueResolve InitialValueResolve = InitialValueResolve.Instant;
         public Scope OperationalScope;
+        public bool Recursive;
 
         public CodeLensSourceType CodeLensType = CodeLensSourceType.Variable;
 

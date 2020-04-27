@@ -25,43 +25,50 @@ namespace Deltin.Deltinteger
             Builder = builder;
         }
 
-        public void Append(string text)
+        public WorkshopBuilder Append(string text)
         {
             if (!InLine) Builder.Append(Spacer());
             Builder.Append(text);
             InLine = true;
+            return this;
         }
 
-        public void AppendLine()
+        public WorkshopBuilder AppendLine()
         {
             Builder.AppendLine();
             InLine = false;
+            return this;
         }
 
-        public void AppendLine(string text)
+        public WorkshopBuilder AppendLine(string text)
         {
             Builder.AppendLine(Spacer() + text);
             InLine = false;
+            return this;
         }
 
-        public void AppendKeywordLine(string keyword)
+        public WorkshopBuilder AppendKeywordLine(string keyword)
         {
             AppendLine(LanguageInfo.Translate(OutputLanguage, keyword));
+            return this;
         }
 
-        public void AppendKeyword(string keyword)
+        public WorkshopBuilder AppendKeyword(string keyword)
         {
             Append(LanguageInfo.Translate(OutputLanguage, keyword));
+            return this;
         }
 
-        public void Indent()
+        public WorkshopBuilder Indent()
         {
             IndentCount++;
+            return this;
         }
 
-        public void Unindent()
+        public WorkshopBuilder Unindent()
         {
             IndentCount--;
+            return this;
         }
 
         public string Translate(string keyword) => LanguageInfo.Translate(OutputLanguage, keyword);

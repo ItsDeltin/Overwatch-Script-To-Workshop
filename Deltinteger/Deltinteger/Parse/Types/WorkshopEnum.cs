@@ -8,102 +8,66 @@ using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.C
 
 namespace Deltin.Deltinteger.Parse
 {    
-    public class WorkshopEnumType : CodeType
+    class ValueGroupType : CodeType
     {
-        private Scope EnumScope { get; } = new Scope();
         public EnumData EnumData { get; }
+        private Scope Scope { get; } = new Scope();
+        private List<EnumValuePair> ValuePairs { get; } = new List<EnumValuePair>();
+        private bool Constant { get; }
 
-        public WorkshopEnumType(EnumData enumData) : base(enumData.CodeName)
+        public ValueGroupType(EnumData enumData, bool constant) : base(enumData.CodeName)
         {
+            Constant = constant;
             EnumData = enumData;
-            foreach (var member in enumData.Members)
-            if (!member.IsHidden)
+            foreach (EnumMember member in enumData.Members)
             {
-                var scopedMember = new ScopedEnumMember(this, member);
-                EnumScope.AddVariable(scopedMember, null, null);
+                EnumValuePair newPair = new EnumValuePair(member, constant, this);
+                ValuePairs.Add(newPair);
+                Scope.AddNativeVariable(newPair);
             }
-            EnumScope.ErrorName = "enum " + Name;
         }
 
-        public override Scope ReturningScope() => EnumScope;
-        public override TypeSettable Constant() => EnumData.ConvertableToElement() ? TypeSettable.Convertable : TypeSettable.Constant;
+        public override bool IsConstant() => Constant;
+        public override void WorkshopInit(DeltinScript translateInfo)
+        {
+            foreach (EnumValuePair pair in ValuePairs)
+            {
+                if (Constant) translateInfo.DefaultIndexAssigner.Add(pair, pair.Member);
+                else translateInfo.DefaultIndexAssigner.Add(pair, EnumData.ToElement(pair.Member));
+            }
+        }
+
+        public override Scope ReturningScope() => Scope;
         public override CompletionItem GetCompletion() => new CompletionItem() {
-            Label = EnumData.CodeName,
+            Label = Name,
             Kind = CompletionItemKind.Enum
         };
-        public override void Call(ScriptFile script, DocRange callRange)
+        public override void Call(ParseInfo parseInfo, DocRange callRange)
         {
-            MarkupBuilder hoverContents = new MarkupBuilder();
+            MarkupBuilder hoverContents = new MarkupBuilder()
+                .StartCodeLine()
+                .Add((Constant ? "constant " : "enum ") + Name)
+                .EndCodeLine();
+            
+            if (Constant)
+                hoverContents.NewSection().Add("Constant workshop types cannot be stored. Variables with this type cannot be changed from their initial value.");
 
-            if (Constant() == TypeSettable.Convertable)
-            {
-                hoverContents
-                    .StartCodeLine()
-                    .Add("enum " + Name)
-                    .EndCodeLine();
-            }
-            else if (Constant() == TypeSettable.Constant)
-            {
-                hoverContents
-                    .StartCodeLine()
-                    .Add("constant " + Name)
-                    .EndCodeLine()
-                    .NewSection()
-                    .Add("Constant workshop types cannot be stored. Variables with this type cannot be changed from their initial value.");
-            }
+            parseInfo.Script.AddHover(callRange, hoverContents.ToString());
+            parseInfo.TranslateInfo.Types.CallType(this);
+        }
 
-            script.AddHover(callRange, hoverContents.ToString());
-        }
-    
-        public static WorkshopEnumType GetEnumType(EnumData enumData)
-        {
-            return (WorkshopEnumType)CodeType.DefaultTypes.First(t => t is WorkshopEnumType && ((WorkshopEnumType)t).EnumData == enumData);
-        }
-        public static WorkshopEnumType GetEnumType<T>()
-        {
-            var enumData = EnumData.GetEnum<T>();
-            return (WorkshopEnumType)CodeType.DefaultTypes.First(t => t is WorkshopEnumType && ((WorkshopEnumType)t).EnumData == enumData);
-        }
+        public static ValueGroupType GetEnumType(EnumData enumData) => (ValueGroupType)CodeType.DefaultTypes.First(t => t is ValueGroupType valueGroupType && valueGroupType.EnumData == enumData);
+        public static ValueGroupType GetEnumType<T>() => GetEnumType(EnumData.GetEnum<T>());
     }
 
-    public class ScopedEnumMember : IScopeable, IExpression
+    class EnumValuePair : InternalVar
     {
-        public string Name { get; }
-        public AccessLevel AccessLevel { get; } = AccessLevel.Public;
-        public LanguageServer.Location DefinedAt { get; } = null;
-        public bool WholeContext { get; } = true;
-        public bool Static => true;
-        
-        public CodeType Enum { get; }
-        public EnumMember EnumMember { get; }
+        public EnumMember Member { get; }
 
-        private Scope debugScope { get; } = new Scope();
-        
-        public ScopedEnumMember(CodeType parent, EnumMember enumMember)
+        public EnumValuePair(EnumMember member, bool constant, CodeType type) : base(member.CodeName, constant ? CompletionItemKind.Constant : CompletionItemKind.EnumMember)
         {
-            Enum = parent;
-            Name = enumMember.CodeName;
-            EnumMember = enumMember;
-            debugScope.ErrorName = "enum value " + Name;
+            Member = member;
+            CodeType = type;
         }
-
-        public Scope ReturningScope()
-        {
-            return debugScope;
-        }
-
-        public CodeType Type() => Enum;
-
-        public IWorkshopTree Parse(ActionSet actionSet, bool asElement = true)
-        {
-            if (asElement) return EnumData.ToElement(EnumMember) ?? (IWorkshopTree)EnumMember;
-            return (IWorkshopTree)EnumMember;
-        }
-
-        public CompletionItem GetCompletion() => new CompletionItem()
-        {
-            Label = Name,
-            Kind = CompletionItemKind.EnumMember
-        };
     }
 }

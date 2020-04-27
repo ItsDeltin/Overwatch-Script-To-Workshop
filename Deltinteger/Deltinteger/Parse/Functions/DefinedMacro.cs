@@ -17,6 +17,7 @@ namespace Deltin.Deltinteger.Parse
             AccessLevel = context.accessor().GetAccessLevel();
             ReturnType = returnType;
             ExpressionToParse = context.expr();
+            doesReturnValue = true;
         }
 
         public override void SetupParameters()
@@ -28,7 +29,7 @@ namespace Deltin.Deltinteger.Parse
 
         override public void SetupBlock()
         {
-            if (ExpressionToParse != null) Expression = DeltinScript.GetExpression(parseInfo.SetCallInfo(CallInfo), methodScope, ExpressionToParse);
+            if (ExpressionToParse != null) Expression = parseInfo.SetCallInfo(CallInfo).GetExpression(methodScope, ExpressionToParse);
             foreach (var listener in listeners) listener.Applied();
         }
 

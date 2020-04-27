@@ -30,15 +30,15 @@ namespace Deltin.Deltinteger.Parse
             CompletionItemKind = completionItemKind;
         }
 
-        public IWorkshopTree Parse(ActionSet actionSet, bool asElement = true) => throw new Exception("Cannot parse internal variables.");
+        public IWorkshopTree Parse(ActionSet actionSet) => throw new Exception("Cannot parse internal variables.");
         public virtual Scope ReturningScope() => CodeType?.ReturningScope();
         public virtual CodeType Type() => CodeType;
 
         public bool Settable() => IsSettable;
 
-        public virtual void Call(ScriptFile script, DocRange callRange)
+        public virtual void Call(ParseInfo parseInfo, DocRange callRange)
         {
-            script.AddHover(callRange, GetLabel(true));
+            parseInfo.Script.AddHover(callRange, GetLabel(true));
         }
 
         public virtual CompletionItem GetCompletion() => new CompletionItem() {
@@ -48,7 +48,7 @@ namespace Deltin.Deltinteger.Parse
             Documentation = Extras.GetMarkupContent(Documentation)
         };
 
-        public string GetLabel(bool markdown)
+        public virtual string GetLabel(bool markdown)
         {
             string typeName = "define";
             if (CodeType != null) typeName = CodeType.Name;

@@ -19,8 +19,7 @@ namespace Deltin.Deltinteger.Parse
         {
             if (varCollection == null) throw new ArgumentNullException(nameof(varCollection));
             if (var == null)           throw new ArgumentNullException(nameof(var          ));
-
-            if (references.ContainsKey(var)) throw new Exception(var.Name + " was already added into the variable index assigner.");
+            CheckIfAdded(var);
 
             IGettable assigned;
 
@@ -28,7 +27,7 @@ namespace Deltin.Deltinteger.Parse
             if (var.Settable())
             {
                 assigned = varCollection.Assign(var, isGlobal);
-                if (recursive) assigned = new RecursiveIndexReference((IndexReference)assigned);
+                if (recursive || var.Recursive) assigned = new RecursiveIndexReference((IndexReference)assigned);
                 references.Add(var, assigned);
             }
             
@@ -45,18 +44,44 @@ namespace Deltin.Deltinteger.Parse
             return assigned;
         }
 
+        public IndexReference AddIndexReference(VarCollection varCollection, Var var, bool isGlobal, bool recursive = false)
+        {
+            if (varCollection == null) throw new ArgumentNullException(nameof(varCollection));
+            if (var == null)           throw new ArgumentNullException(nameof(var          ));
+            CheckIfAdded(var);
+
+            IndexReference assigned = varCollection.Assign(var, isGlobal);
+            if (recursive) assigned = new RecursiveIndexReference((IndexReference)assigned);
+            references.Add(var, assigned);
+
+            return assigned;
+        }
+
         public void Add(IIndexReferencer var, IndexReference reference)
         {
             if (reference == null) throw new ArgumentNullException(nameof(reference));
-            if (references.ContainsKey(var)) throw new Exception(var.Name + " was already added into the variable index assigner.");
+            CheckIfAdded(var);
             references.Add(var, reference);
         }
 
         public void Add(IIndexReferencer var, IWorkshopTree reference)
         {
             if (reference == null) throw new ArgumentNullException(nameof(reference));
-            if (references.ContainsKey(var)) throw new Exception(var.Name + " was already added into the variable index assigner.");
+            CheckIfAdded(var);
             references.Add(var, new WorkshopElementReference(reference));
+        }
+
+        public void Add(IIndexReferencer var, IGettable gettable)
+        {
+            if (gettable == null) throw new ArgumentNullException(nameof(gettable));
+            CheckIfAdded(var);
+            references.Add(var, gettable);
+        }
+
+        private void CheckIfAdded(IIndexReferencer var)
+        {
+            if (references.ContainsKey(var))
+                throw new Exception(var.Name + " was already added into the variable index assigner.");
         }
 
         public VarIndexAssigner CreateContained()
@@ -69,18 +94,27 @@ namespace Deltin.Deltinteger.Parse
         public IGettable this[IIndexReferencer var]
         {
             get {
-                VarIndexAssigner current = this;
-                while (current != null)
-                {
-                    if (current.references.ContainsKey(var))
-                        return current.references[var];
-
-                    current = current.parent;
-                }
-
+                if (TryGet(var, out IGettable gettable)) return gettable;
                 throw new Exception(string.Format("The variable {0} is not assigned to an index.", var.Name));
             }
             private set {}
+        }
+
+        public bool TryGet(IIndexReferencer var, out IGettable gettable)
+        {
+            VarIndexAssigner current = this;
+            while (current != null)
+            {
+                if (current.references.ContainsKey(var))
+                {
+                    gettable = current.references[var];
+                    return true;
+                }
+
+                current = current.parent;
+            }
+            gettable = null;
+            return false;
         }
     }
 }

@@ -165,6 +165,9 @@
     <method name="All Players" alt="Todos os Jogadores" />
     <method name="All Players Not On Objective" alt="Todos os Jogadores Fora do Objetivo" />
     <method name="All Players On Objective" alt="Todos os Jogadores no Objetivo" />
+    <method name="All Tank Heroes" alt="Todos os Heróis de Tanque" />
+    <method name="All Damage Heroes" alt="Todos os Heróis de Dano" />
+    <method name="All Support Heroes" alt="Todos os Heróis de Suporte" />
     <method name="Allowed Heroes" alt="Heróis Permitidos" />
     <method name="Altitude Of" alt="Altitude de" />
     <method name="And" alt="E" />
@@ -654,6 +657,10 @@
     <method name="disabled maps" alt="mapas desativados" />
     <method name="enabled heroes" alt="heróis ativados" />
     <method name="disabled heroes" alt="heróis desativados" />
+    <method name="Enabled" alt="Ativado" />
+    <method name="Disabled" alt="desabilitado" />
+    <method name="On" alt="Ligado" />
+    <method name="Yes" alt="Sim" />
     <method name="%1$s Cooldown Time" alt="Tempo de recarga de %1$s" />
     <method name="%1$s Recharge Rate" alt="Taxa de recarga de %1$s " />
     <method name="%1$s Maximum Time" alt="Tempo máximo de %1$s" />
@@ -709,6 +716,8 @@
     <method name="Boosters" alt="Propulsores" />
     <method name="Boosters Knockback Scalar" alt="Repulsão escalar dos Propulsores" />
     <method name="Defense Matrix" alt="Matriz de Defesa" />
+    <method name="Call Mech Knockback Scalar" alt="Repulsão escalar do Chamar Mecha" />
+    <method name="Spawn Without Mech" alt="Surgimento sem o Mecha" />
     <method name="Meteor Strike" alt="Impacto Meteoro" />
     <method name="Meteor Strike Knockback Scalar" alt="Repulsão escalar do Impacto Meteoro" />
     <method name="Rising Uppercut" alt="Gancho Ascendente" />
@@ -848,8 +857,6 @@
     <method name="Skins" alt="Visuais" />
     <method name="Spawn Health Packs" alt="Surgimento de kits médicos" />
     <method name="Determined By Mode" alt="Determinado pelo modo" />
-    <method name="Enabled" alt="Ativado" />
-    <method name="Disabled" alt="desabilitado" />
     <method name="Allow Hero Switching" alt="Permitir troca de heróis" />
     <method name="Hero Limit" alt="Limite de heróis" />
     <method name="1 Per Team" alt="1 por equipe" />

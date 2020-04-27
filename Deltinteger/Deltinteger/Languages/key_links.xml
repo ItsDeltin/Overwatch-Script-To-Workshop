@@ -908,4 +908,11 @@
   <method name="disabled maps" key="000000010041.07C" />
   <method name="enabled heroes" key="000000010053.07C" />
   <method name="disabled heroes" key="000000010052.07C" />
+  <method name="All Tank Heroes" key="00000000D40C.07C" />
+  <method name="All Damage Heroes" key="00000000D40A.07C" />
+  <method name="All Support Heroes" key="00000000D40B.07C" />
+  <method name="On" key="0000000059BC.07C" />
+  <method name="Yes" key="00000000731F.07C" />
+  <method name="Call Mech Knockback Scalar" key="0000000065A5.07C" />
+  <method name="Spawn Without Mech" key="0000000072AF.07C" />
 </KeyLinkList>
