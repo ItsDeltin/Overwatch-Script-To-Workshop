@@ -41,7 +41,15 @@ namespace Deltin.Deltinteger.Json
         public override void AddObjectVariablesToAssigner(IWorkshopTree reference, VarIndexAssigner assigner)
         {
             foreach (var p in Properties)
-                assigner.Add(p.Var, p.Value.Value);
+            {
+                if(p.Value.Value != null)
+                {
+                    assigner.Add(p.Var, p.Value.Value);
+                } else
+                {
+                    assigner.Add(p.Var, new V_Null());
+                }
+            }
         }
 
         public override CompletionItem GetCompletion() => throw new NotImplementedException();
@@ -75,6 +83,7 @@ namespace Deltin.Deltinteger.Json
             Var.IsSettable = false;
             Value = IJsonValue.GetValue(property.Value);
             Var.Documentation = Value.Documentation;
+            Var.CodeType = Value.Type;
         }
     }
 
@@ -179,6 +188,8 @@ namespace Deltin.Deltinteger.Json
         public Element Value => null;
         public string Documentation { get; }
         public CodeType Type { get; }
+
+        public JsonVar Var { get; }
 
         public JsonObject(JToken token)
         {
