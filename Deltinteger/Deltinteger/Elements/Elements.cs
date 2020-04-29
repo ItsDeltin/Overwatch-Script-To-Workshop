@@ -116,13 +116,14 @@ namespace Deltin.Deltinteger.Elements
                     ParameterValues[i] = ((Element)ParameterValues[i]).Optimize();
         }
 
-        protected virtual string[] AdditionalParameters()
-        {
-            return new string[0];
-        }
+        protected virtual string[] AdditionalParameters() => new string[0];
 
         // Creates an array from a list of values.
-        public static Element CreateArray(params IWorkshopTree[] values) => Element.Part<V_Array>(values);
+        public static Element CreateArray(params IWorkshopTree[] values)
+        {
+            if (values == null || values.Length == 0) return new V_EmptyArray();
+            return Element.Part<V_Array>(values);
+        }
 
         // Creates an ternary conditional that works in the workshop
         public static Element TernaryConditional(IWorkshopTree condition, IWorkshopTree consequent, IWorkshopTree alternative) => Element.Part<V_IfThenElse>(condition, consequent, alternative);
