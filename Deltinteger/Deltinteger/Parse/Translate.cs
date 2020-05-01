@@ -110,7 +110,7 @@ namespace Deltin.Deltinteger.Parse
 
                 // Get the methods.
                 foreach (var methodContext in script.Context.define_method())
-                    new DefinedMethod(parseInfo, RulesetScope, RulesetScope, methodContext, null);
+                    new DefinedMethod(parseInfo, RulesetScope, RulesetScope, methodContext, null, true);
                 
                 // Get the macros.
                 foreach (var macroContext in script.Context.define_macro())

@@ -28,15 +28,18 @@ namespace Deltin.Deltinteger.Parse
 
         public CallInfo CallInfo { get; }
 
-        public DefinedFunction(ParseInfo parseInfo, string name, Location definedAt)
+        public DefinedFunction(ParseInfo parseInfo, string name, Location definedAt, bool addToScope)
         {
             Name = name;
             DefinedAt = definedAt;
             this.parseInfo = parseInfo;
             CallInfo = new CallInfo(this, parseInfo.Script);
 
-            parseInfo.TranslateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, definedAt, true);
-            parseInfo.Script.AddCodeLensRange(new ReferenceCodeLensRange(this, parseInfo, CodeLensSourceType.Function, DefinedAt.range));
+            if (addToScope)
+            {
+                parseInfo.TranslateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, definedAt, true);
+                parseInfo.Script.AddCodeLensRange(new ReferenceCodeLensRange(this, parseInfo, CodeLensSourceType.Function, DefinedAt.range));
+            }
         }
 
         protected void SetupScope(Scope chosenScope)

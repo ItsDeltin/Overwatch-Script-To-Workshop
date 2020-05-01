@@ -131,7 +131,8 @@ define_method : DOCUMENTATION* method_attributes* (VOID | DEFINE | code_type) na
 
 method_attributes : accessor | STATIC | OVERRIDE | VIRTUAL | RECURSIVE;
 
-define_macro  : DOCUMENTATION* accessor? STATIC? (DEFINE | code_type) name=PART (LEFT_PAREN setParameters RIGHT_PAREN)? TERNARY_ELSE? expr? STATEMENT_END? ;
+define_macro  : DOCUMENTATION* method_attributes* (DEFINE | code_type) name=PART (LEFT_PAREN setParameters RIGHT_PAREN)? TERNARY_ELSE? expr? STATEMENT_END? ;
+
 
 ruleset :
 	reserved_global?

@@ -124,6 +124,7 @@ namespace Deltin.Deltinteger.Parse
             DocRange variableRange = DocRange.GetRange(variableContext.PART());
 
             var type = TranslateInfo.Types.GetCodeType(variableName, null, null);
+            
             if (type != null)
             {
                 if (selfContained)
@@ -194,7 +195,7 @@ namespace Deltin.Deltinteger.Parse
             IScopeable newMacro;
 
             if (macroContext.LEFT_PAREN() != null || macroContext.RIGHT_PAREN() != null)
-                newMacro = new DefinedMacro(this, objectScope, staticScope, macroContext, returnType);
+                newMacro = new DefinedMacro(this, objectScope, staticScope, macroContext, returnType, true);
             else
                 newMacro = new MacroVar(this, objectScope, staticScope, macroContext, returnType);
 
