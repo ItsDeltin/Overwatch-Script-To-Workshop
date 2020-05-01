@@ -128,11 +128,15 @@ namespace Deltin.Deltinteger.Parse
         {
             IVariable element = null;
             Scope current = this;
+
+
+
             while (current != null && element == null)
             {
                 element = current.Variables.FirstOrDefault(element => element.Name == name);
                 current = current.Parent;
             }
+
 
             if (range != null && element == null)
                 diagnostics.Error(string.Format("The variable {0} does not exist in the {1}.", name, ErrorName), range);
@@ -175,6 +179,27 @@ namespace Deltin.Deltinteger.Parse
             Methods.Add(method);
         }
 
+        public void AddMacro(MacroVar macro, FileDiagnostics diagnostics, DocRange range, bool checkConflicts = true)
+        {
+            if (macro == null) throw new ArgumentNullException(nameof(macro));
+            if (Variables.Contains(macro)) throw new Exception("macro reference is already in scope.");
+
+            if (checkConflicts && HasConflict(macro))
+            {
+                string message = "A macro with the same name and parameter types was already defined in this scope.";
+
+                if (diagnostics != null && range != null)
+                {
+                    diagnostics.Error(message, range);
+                    return;
+                }
+                else
+                    throw new Exception(message);
+            }
+
+            Variables.Add(macro);
+        }
+
         public void AddNativeMethod(IMethod method)
         {
             AddMethod(method, null, null);
@@ -198,6 +223,11 @@ namespace Deltin.Deltinteger.Parse
         public bool HasConflict(IMethod method)
         {
             return GetMethodOverload(method) != null;
+        }
+
+        public bool HasConflict(MacroVar macro)
+        {
+            return GetMacroOverload(macro.Name, macro.DefinedAt) != null;
         }
 
         /// <summary>Gets a method in the scope that has the same name and parameter types. Can potentially resolve to itself if the method being tested is in the scope.</summary>
@@ -239,6 +269,29 @@ namespace Deltin.Deltinteger.Parse
             });
 
             return method;
+        }
+
+        public IVariable GetMacroOverload(string name, Location definedAt)
+        {
+            if (name == null) throw new ArgumentNullException(nameof(name));
+            IVariable variable = null;
+
+            IterateElements(null, true, false, itElement => {
+                // Convert the current element to an IMethod for checking.
+                IVariable checking = (IVariable)itElement.Element;
+
+                // If the name does not match or the number of parameters are not equal, continue.
+                if (checking.Name != name || checking.DefinedAt == definedAt) return ScopeIterateAction.Continue;
+
+                // Loop through all parameters.
+               
+                // Parameter overload matches.
+                variable = checking;
+                return ScopeIterateAction.Stop;
+            });
+
+            return variable;
+
         }
 
         /// <summary>Gets all methods in the scope with the provided name.</summary>
