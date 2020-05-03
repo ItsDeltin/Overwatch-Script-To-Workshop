@@ -50,7 +50,6 @@ namespace Deltin.Deltinteger.Parse
             ReturnType = returnType;
             ExpressionToParse = macroContext.expr();
 
-
             scope = Static ? staticScope : objectScope;
             this.parseInfo = parseInfo;
 

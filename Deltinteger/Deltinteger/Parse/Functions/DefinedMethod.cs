@@ -34,6 +34,7 @@ namespace Deltin.Deltinteger.Parse
             : base(parseInfo, context.name.Text, new Location(parseInfo.Script.Uri, DocRange.GetRange(context.name)), addToScope)
         {
             this.context = context;
+
             Attributes.ContainingType = containingType;
 
             DocRange nameRange = DocRange.GetRange(context.name);
