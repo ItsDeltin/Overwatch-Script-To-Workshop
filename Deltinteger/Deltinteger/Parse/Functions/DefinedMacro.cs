@@ -96,8 +96,8 @@ namespace Deltin.Deltinteger.Parse
             {
                 IGettable indexResult = actionSet.IndexAssigner.Add(actionSet.VarCollection, ParameterVars[i], actionSet.IsGlobal, parameterValues?[i], false);
 
-                if (indexResult is IndexReference indexReference && parameterValues?[i] != null)
-                    actionSet.AddAction(indexReference.SetVariable((Element)parameterValues[i]));
+                //if (indexResult is IndexReference indexReference && parameterValues?[i] != null)
+                    //actionSet.AddAction(indexReference.SetVariable((Element)parameterValues[i]));
 
                 foreach (Var virtualParameterOption in VirtualVarGroup(i))
                 {
@@ -111,8 +111,8 @@ namespace Deltin.Deltinteger.Parse
         {
             List<Var> parameters = new List<Var>();
 
-            foreach (var overrider in Attributes.AllOverrideOptions())
-                parameters.Add(((DefinedMacro)overrider).ParameterVars[i]);
+            foreach (var macroOverrider in Attributes.AllOverrideOptions())
+                parameters.Add(((DefinedMacro)macroOverrider).ParameterVars[i]);
 
             return parameters.ToArray();
         }

@@ -20,6 +20,9 @@ namespace Deltin.Parse.Functions
 
         public static IWorkshopTree Call(DefinedMacro macro, MethodCall call, ActionSet callerSet)
         {
+
+    
+
             MacroBuilder builder = new MacroBuilder(macro, callerSet);
             // Normal
             builder.BuilderSet = builder.BuilderSet.PackThis();
@@ -39,7 +42,7 @@ namespace Deltin.Parse.Functions
 
         public void AssignParameters(MethodCall methodCall)
         {
-            Macro.AssignParameters(BuilderSet, methodCall.ParameterValues);
+           Macro.AssignParameters(BuilderSet, methodCall.ParameterValues);
         }
 
         public IWorkshopTree ParseInner()
@@ -62,8 +65,8 @@ namespace Deltin.Parse.Functions
 
             options.AddRange(Array.ConvertAll(Macro.Attributes.AllOverrideOptions(), iMethod => (DefinedMacro)iMethod));
 
-            List<IExpression> expressions = options.Select(m => m.Expression).ToList();
-            //List<int> identifiers = options.Select(m =>((ClassType)m.Attributes.ContainingType).Identifier).ToList();
+            List<IExpression> expressions = new List<IExpression>();
+            List<int> identifiers = new List<int>();
 
             List<IWorkshopTree> expElements = new List<IWorkshopTree>();
 
@@ -73,14 +76,16 @@ namespace Deltin.Parse.Functions
                 option.Attributes.ContainingType.AddObjectVariablesToAssigner(optionSet.CurrentObject, optionSet.IndexAssigner);
 
                 expElements.Add(option.Expression.Parse(optionSet));
+                identifiers.Add(((ClassType)option.Attributes.ContainingType).Identifier);
+
             }
 
             var expArray = Element.CreateArray(expElements.ToArray());
-            //var identArray = Element.CreateArray(identifiers.Select(i => new V_Number(i)).ToArray());
+            var identArray = Element.CreateArray(identifiers.Select(i => new V_Number(i)).ToArray());
 
             ClassData classData = BuilderSet.Translate.DeltinScript.GetComponent<ClassData>();
 
-            return Element.Part<V_ValueInArray>(expArray, BuilderSet.CurrentObject);
+            return expArray[Element.Part<V_IndexOfArrayValue>(identArray, Element.Part<V_ValueInArray>(classData.ClassIndexes.GetVariable(), BuilderSet.CurrentObject))];
         }
 
         public IWorkshopTree ParseVirtualMacro(MacroVar macro)
@@ -90,10 +95,10 @@ namespace Deltin.Parse.Functions
 
             options.AddRange(macro.Attributes.AllMacroOverrideOptions());
 
-            List<IExpression> expressions = options.Select(m => m.Expression).ToList();
-            List<int> identifiers = options.Select(m => ((ClassType)m.Attributes.ContainingType).Identifier).ToList();
 
             List<IWorkshopTree> expElements = new List<IWorkshopTree>();
+            List<int> identifiers = new List<int>();
+
 
             foreach (var option in options)
             {
@@ -101,14 +106,16 @@ namespace Deltin.Parse.Functions
                 option.Attributes.ContainingType.AddObjectVariablesToAssigner(optionSet.CurrentObject, optionSet.IndexAssigner);
 
                 expElements.Add(option.Expression.Parse(optionSet));
+                identifiers.Add(((ClassType)option.Attributes.ContainingType).Identifier);
+
             }
 
             var expArray = Element.CreateArray(expElements.ToArray());
-            //var identArray = Element.CreateArray(identifiers.Select(i => new V_Number(i)).ToArray());
+            var identArray = Element.CreateArray(identifiers.Select(i => new V_Number(i)).ToArray());
 
             ClassData classData = BuilderSet.Translate.DeltinScript.GetComponent<ClassData>();
 
-            return Element.Part<V_ValueInArray>(expArray, BuilderSet.CurrentObject);
+            return expArray[Element.Part<V_IndexOfArrayValue>(identArray, Element.Part<V_ValueInArray>(classData.ClassIndexes.GetVariable(), BuilderSet.CurrentObject))];
         }
     }
 }
