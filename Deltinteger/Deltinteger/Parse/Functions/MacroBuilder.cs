@@ -99,6 +99,10 @@ namespace Deltin.Parse.Functions
             List<IWorkshopTree> expElements = new List<IWorkshopTree>();
             List<int> identifiers = new List<int>();
 
+            if(options.Count == 1)
+            {
+                return macro.Expression.Parse(BuilderSet);
+            }
 
             foreach (var option in options)
             {
