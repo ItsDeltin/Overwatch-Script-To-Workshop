@@ -65,24 +65,25 @@ namespace Deltin.Deltinteger.Parse
     public class ValueInArrayAction : IExpression
     {
         public IExpression Expression { get; }
-        public IExpression Index { get; }
-        private DocRange expressionRange { get; }
-        private DocRange indexRange { get; }
+        public IExpression[] Index { get; }
         private ParseInfo parseInfo { get; }
 
         public ValueInArrayAction(ParseInfo parseInfo, Scope scope, DeltinScriptParser.E_array_indexContext exprContext)
         {
             Expression = parseInfo.GetExpression(scope, exprContext.array);
-            expressionRange = DocRange.GetRange(exprContext.array);
             this.parseInfo = parseInfo;
 
             if (exprContext.index == null)
                 parseInfo.Script.Diagnostics.Error("Expected an expression.", DocRange.GetRange(exprContext.INDEX_START()));
             else
-            {
-                Index = parseInfo.GetExpression(scope, exprContext.index);
-                indexRange = DocRange.GetRange(exprContext.index);
-            }
+                Index = new IExpression[] { parseInfo.GetExpression(scope, exprContext.index) };
+        }
+
+        public ValueInArrayAction(ParseInfo parseInfo, IExpression expression, IExpression[] index)
+        {
+            Expression = expression;
+            Index = index;
+            this.parseInfo = parseInfo;
         }
 
         public Scope ReturningScope() => Type()?.GetObjectScope() ?? parseInfo.TranslateInfo.PlayerVariableScope;
@@ -90,7 +91,12 @@ namespace Deltin.Deltinteger.Parse
 
         public IWorkshopTree Parse(ActionSet actionSet)
         {
-            return Element.Part<V_ValueInArray>(Expression.Parse(actionSet.New(expressionRange)), Index.Parse(actionSet.New(indexRange)));
+            IWorkshopTree result = Expression.Parse(actionSet);
+
+            foreach(var index in Index)
+                result = Element.Part<V_ValueInArray>(result, index.Parse(actionSet));
+
+            return result;
         }
     }
 

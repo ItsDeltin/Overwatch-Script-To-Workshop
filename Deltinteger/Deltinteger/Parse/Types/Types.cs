@@ -45,7 +45,7 @@ namespace Deltin.Deltinteger.Parse
         public IWorkshopTree Parse(ActionSet actionSet) => null;
 
         /// <summary>Determines if variables with this type can have their value changed.</summary>
-        public virtual TypeSettable Constant() => TypeSettable.Normal;
+        public virtual bool IsConstant() => false;
 
         /// <summary>The returning value when `new TypeName` is called.</summary>
         /// <param name="actionSet">The actionset to use.</param>
@@ -80,11 +80,12 @@ namespace Deltin.Deltinteger.Parse
         public virtual void Delete(ActionSet actionSet, Element reference) {}
 
         /// <summary>Calls a type from the specified document range.</summary>
-        /// <param name="script">The script that the type was called from.</param>
+        /// <param name="parseInfo">The script that the type was called from.</param>
         /// <param name="callRange">The range of the call.</param>
-        public virtual void Call(ScriptFile script, DocRange callRange)
+        public virtual void Call(ParseInfo parseInfo, DocRange callRange)
         {
-            script.AddHover(callRange, HoverHandler.Sectioned(Kind + " " + Name, Description));
+            parseInfo.TranslateInfo.Types.CallType(this);
+            parseInfo.Script.AddHover(callRange, HoverHandler.Sectioned(Kind + " " + Name, Description));
         }
 
         /// <summary>Gets the completion that will show up for the language server.</summary>
@@ -120,7 +121,7 @@ namespace Deltin.Deltinteger.Parse
 
             if (type != null)
             {
-                type.Call(parseInfo.Script, DocRange.GetRange(typeContext));
+                type.Call(parseInfo, DocRange.GetRange(typeContext));
 
                 if (typeContext.INDEX_START() != null)
                     for (int i = 0; i < typeContext.INDEX_START().Length; i++)
@@ -140,10 +141,7 @@ namespace Deltin.Deltinteger.Parse
         {
             _defaultTypes = new List<CodeType>();
             foreach (var enumData in EnumData.GetEnumData())
-                if (enumData.ConvertableToElement())
-                    _defaultTypes.Add(new ValueGroupType(enumData));
-                else
-                    _defaultTypes.Add(new WorkshopEnumType(enumData));
+                _defaultTypes.Add(new ValueGroupType(enumData, !enumData.ConvertableToElement()));
             
             // Add custom classes here.
             _defaultTypes.Add(new Pathfinder.PathmapClass());
@@ -153,10 +151,5 @@ namespace Deltin.Deltinteger.Parse
             _defaultTypes.Add(new Lambda.MacroLambda());
             _defaultTypes.Add(VectorType.Instance);
         }
-    }
-
-    public enum TypeSettable
-    {
-        Normal, Convertable, Constant
     }
 }

@@ -10,7 +10,7 @@ namespace Deltin.Deltinteger.Parse
 {
     public class Scope
     {
-        private List<IScopeable> Variables { get; } = new List<IScopeable>();
+        private List<IVariable> Variables { get; } = new List<IVariable>();
         private List<IMethod> Methods { get; } = new List<IMethod>();
         private Scope Parent { get; }
         public string ErrorName { get; set; } = "current scope";
@@ -88,7 +88,7 @@ namespace Deltin.Deltinteger.Parse
         /// <param name="variable">The variable that will be added to the current scope. If the object reference is already in the direct scope, an exception will be thrown.</param>
         /// <param name="diagnostics">The file diagnostics to throw errors with. Should be null when adding variables internally.</param>
         /// <param name="range">The document range to throw errors at. Should be null when adding variables internally.</param>
-        public void AddVariable(IScopeable variable, FileDiagnostics diagnostics, DocRange range)
+        public void AddVariable(IVariable variable, FileDiagnostics diagnostics, DocRange range)
         {
             if (variable == null) throw new ArgumentNullException(nameof(variable));
             if (Variables.Contains(variable)) throw new Exception("variable reference is already in scope.");
@@ -106,13 +106,13 @@ namespace Deltin.Deltinteger.Parse
                 Variables.Add(variable);
         }
 
-        public void AddNativeVariable(IScopeable variable)
+        public void AddNativeVariable(IVariable variable)
         {
             AddVariable(variable, null, null);
         }
 
         /// <summary>Adds a variable to the scope that already belongs to another scope.</summary>
-        public void CopyVariable(IScopeable variable)
+        public void CopyVariable(IVariable variable)
         {
             if (variable == null) throw new ArgumentNullException(nameof(variable));
             if (!Variables.Contains(variable))
@@ -124,9 +124,9 @@ namespace Deltin.Deltinteger.Parse
             return GetVariable(name, null, null, null) != null;
         }
 
-        public IScopeable GetVariable(string name, Scope getter, FileDiagnostics diagnostics, DocRange range)
+        public IVariable GetVariable(string name, Scope getter, FileDiagnostics diagnostics, DocRange range)
         {
-            IScopeable element = null;
+            IVariable element = null;
             Scope current = this;
             while (current != null && element == null)
             {

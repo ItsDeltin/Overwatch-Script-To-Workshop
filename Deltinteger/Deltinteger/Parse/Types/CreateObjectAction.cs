@@ -41,7 +41,7 @@ namespace Deltin.Deltinteger.Parse
                 if (Constructor != null)
                 {
                     parseInfo.TranslateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(Constructor, new Location(parseInfo.Script.Uri, nameRange));
-                    Constructor.Call(parseInfo.Script, DocRange.GetRange(context.type));
+                    Constructor.Call(parseInfo, DocRange.GetRange(context.type));
                     parseInfo.Script.AddHover(DocRange.GetRange(context), Constructor.GetLabel(true));
 
                     if (Constructor is DefinedConstructor)

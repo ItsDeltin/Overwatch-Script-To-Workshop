@@ -82,10 +82,10 @@ namespace Deltin.Deltinteger.Parse
                         attributes.First(at => at.Type == MethodAttributeType.Override).Range,
                         overriding.DefinedAt
                     );
-                }
 
-                if (!Attributes.Recursive)
-                    Attributes.Recursive = overriding.Attributes.Recursive;
+                    if (!Attributes.Recursive)
+                        Attributes.Recursive = overriding.Attributes.Recursive;
+                }
             }
 
             if (Attributes.IsOverrideable && AccessLevel == AccessLevel.Private)
@@ -196,8 +196,7 @@ namespace Deltin.Deltinteger.Parse
         // Sets up single-instance methods for methods with the 'rule' attribute.
         public void SetupSubroutine()
         {
-            if (subroutineInfo != null) return;
-            if (!IsSubroutine) throw new Exception(Name + " does not have the subroutine attribute.");
+            if (subroutineInfo != null || !IsSubroutine) return;
 
             // Setup the subroutine element.
             Subroutine subroutine = parseInfo.TranslateInfo.SubroutineCollection.NewSubroutine(Name);
@@ -263,7 +262,7 @@ namespace Deltin.Deltinteger.Parse
             Rule translatedRule = subroutineRule.GetRule();
             parseInfo.TranslateInfo.WorkshopRules.Add(translatedRule);
 
-            var codeLens = new ElementCountCodeLens(DefinedAt.range);
+            var codeLens = new ElementCountCodeLens(DefinedAt.range, parseInfo.TranslateInfo.OptimizeOutput);
             parseInfo.Script.AddCodeLensRange(codeLens);
             codeLens.RuleParsed(translatedRule);
         }

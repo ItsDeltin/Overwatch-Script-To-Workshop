@@ -19,20 +19,21 @@ namespace Deltin.Deltinteger.Lobby
             new SelectValue("Map Rotation", "After A Mirror Match", "After A Game", "Paused"),
             new SelectValue("Return To Lobby", "After A Mirror Match", "After A Game", "Never"),
             new SelectValue("Team Balancing", "Off", "After A Mirror Match", "After A Game"),
-            new SwitchValue("Swap Teams After Match", true),
+            new SwitchValue("Swap Teams After Match", true, SwitchType.YesNo),
             new RangeValue(true, "Max Team 1 Players", 0, 6, 6),
             new RangeValue(true, "Max Team 2 Players", 0, 6, 6),
             new RangeValue(true, "Max FFA Players", 0, 12, 0),
             new RangeValue(true, "Max Spectators", 0, 12, 2),
-            new SwitchValue("Allow Players Who Are In Queue", false),
-            new SwitchValue("Use Experimental Update If Available", false),
-            new SwitchValue("Match Voice Chat", false),
-            new SwitchValue("Pause Game On Player Disconnect", false)
+            new SwitchValue("Allow Players Who Are In Queue", false, SwitchType.YesNo),
+            new SwitchValue("Use Experimental Update If Available", false, SwitchType.YesNo),
+            new SwitchValue("Match Voice Chat", false, SwitchType.EnabledDisabled),
+            new SwitchValue("Pause Game On Player Disconnect", false, SwitchType.YesNo)
         };
 
         public WorkshopValuePair Lobby { get; set; }
         public ModesRoot Modes { get; set; }
         public HeroesRoot Heroes { get; set; }
+        public string Description { get; set; }
 
         public void ToWorkshop(WorkshopBuilder builder)
         {
@@ -41,6 +42,17 @@ namespace Deltin.Deltinteger.Lobby
             builder.AppendKeywordLine("settings");
             builder.AppendLine("{");
             builder.Indent();
+
+            // Get the description
+            if (Description != null)
+            {
+                builder.AppendKeywordLine("main")
+                    .AppendLine("{")
+                    .Indent()
+                    .AppendKeyword("Description").Append(": \"" + Description + "\"").AppendLine()
+                    .Unindent()
+                    .AppendLine("}");
+            }
 
             // Get the lobby settings.
             if (Lobby != null)
@@ -104,6 +116,10 @@ namespace Deltin.Deltinteger.Lobby
             heroesRoot.Properties.Add("Team 1", GetHeroListReference("The list of hero settings that affects team 1."));
             heroesRoot.Properties.Add("Team 2", GetHeroListReference("The list of hero settings that affects team 2."));
             heroesRoot.AdditionalProperties = false;
+
+            root.Properties.Add("Description", new RootSchema("The description of the custom game.") {
+                Type = SchemaObjectType.String
+            });
             
             // Get the result.
             string result = JsonConvert.SerializeObject(root, new JsonSerializerSettings() {
@@ -185,6 +201,14 @@ namespace Deltin.Deltinteger.Lobby
             keywords.Add("disabled maps");
             keywords.Add("enabled heroes");
             keywords.Add("disabled heroes");
+            keywords.Add("Enabled");
+            keywords.Add("Disabled");
+            keywords.Add("On");
+            keywords.Add("Off");
+            keywords.Add("Yes");
+            keywords.Add("No");
+            keywords.Add("main");
+            keywords.Add("Description");
             keywords.Add(AbilityNameResolver.CooldownTime);
             keywords.Add(AbilityNameResolver.RechargeRate);
             keywords.Add(AbilityNameResolver.MaximumTime);
@@ -225,7 +249,7 @@ namespace Deltin.Deltinteger.Lobby
 
             // Check for invalid properties.
             foreach (JProperty setting in jobject.Properties())
-                if (!new string[] { "Lobby", "Modes", "Heroes" }.Contains(setting.Name))
+                if (!new string[] { "Lobby", "Modes", "Heroes", "Description" }.Contains(setting.Name))
                     validation.InvalidSetting(setting.Name);
             
             // Check lobby settings.
@@ -239,6 +263,10 @@ namespace Deltin.Deltinteger.Lobby
             // Check heroes.
             if (jobject.TryGetValue("Heroes", out JToken heroes))
                 HeroesRoot.Validate(validation, (JObject)heroes);
+            
+            // Check description.
+            if (jobject.TryGetValue("Description", out JToken description) && description.Type != JTokenType.String)
+                validation.IncorrectType("Description", "string");
 
             validation.Dump(diagnostics, range);
             return !validation.HasErrors();

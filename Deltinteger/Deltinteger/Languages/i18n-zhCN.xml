@@ -165,6 +165,9 @@
     <method name="All Players" alt="所有玩家" />
     <method name="All Players Not On Objective" alt="所有目标点外玩家" />
     <method name="All Players On Objective" alt="所有目标点内玩家" />
+    <method name="All Tank Heroes" alt="所有重装英雄" />
+    <method name="All Damage Heroes" alt="所有输出英雄" />
+    <method name="All Support Heroes" alt="所有支援英雄" />
     <method name="Allowed Heroes" alt="可用英雄" />
     <method name="Altitude Of" alt="高度" />
     <method name="And" alt="与" />
@@ -654,6 +657,10 @@
     <method name="disabled maps" alt="禁用地图" />
     <method name="enabled heroes" alt="启用英雄" />
     <method name="disabled heroes" alt="禁用英雄" />
+    <method name="Enabled" alt="开启" />
+    <method name="Disabled" alt="禁用" />
+    <method name="On" alt="直接加入比赛" />
+    <method name="Yes" alt="是" />
     <method name="%1$s Cooldown Time" alt="%1$s 冷却时间" />
     <method name="%1$s Recharge Rate" alt="%1$s充能速度" />
     <method name="%1$s Maximum Time" alt="%1$s最长时间" />
@@ -709,6 +716,8 @@
     <method name="Boosters" alt="推进器" />
     <method name="Boosters Knockback Scalar" alt="推进器击退倍率" />
     <method name="Defense Matrix" alt="防御矩阵" />
+    <method name="Call Mech Knockback Scalar" alt="呼叫机甲击退倍率" />
+    <method name="Spawn Without Mech" alt="无机甲重生" />
     <method name="Meteor Strike" alt="毁天灭地" />
     <method name="Meteor Strike Knockback Scalar" alt="毁天灭地击退倍率" />
     <method name="Rising Uppercut" alt="上勾重拳" />
@@ -848,8 +857,6 @@
     <method name="Skins" alt="皮肤" />
     <method name="Spawn Health Packs" alt="急救包刷新" />
     <method name="Determined By Mode" alt="依据比赛模式而定" />
-    <method name="Enabled" alt="开启" />
-    <method name="Disabled" alt="禁用" />
     <method name="Allow Hero Switching" alt="允许切换英雄" />
     <method name="Hero Limit" alt="英雄限制" />
     <method name="1 Per Team" alt="每队同一英雄最多1名" />

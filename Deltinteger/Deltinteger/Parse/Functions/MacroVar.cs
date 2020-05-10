@@ -6,7 +6,7 @@ using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.C
 
 namespace Deltin.Deltinteger.Parse
 {
-    public class MacroVar : IScopeable, IExpression, ICallable, IApplyBlock
+    public class MacroVar : IVariable, IExpression, ICallable, IApplyBlock
     {
         public string Name { get; }
         public AccessLevel AccessLevel { get; }
@@ -57,11 +57,11 @@ namespace Deltin.Deltinteger.Parse
 
         public CodeType Type() => ReturnType;
 
-        public void Call(ScriptFile script, DocRange callRange)
+        public void Call(ParseInfo parseInfo, DocRange callRange)
         {
-            script.AddDefinitionLink(callRange, DefinedAt);
-            script.AddHover(callRange, GetLabel(true));
-            parseInfo.TranslateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, new Location(script.Uri, callRange));
+            parseInfo.Script.AddDefinitionLink(callRange, DefinedAt);
+            parseInfo.Script.AddHover(callRange, GetLabel(true));
+            parseInfo.TranslateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, new Location(parseInfo.Script.Uri, callRange));
         }
 
         public CompletionItem GetCompletion()
@@ -72,7 +72,13 @@ namespace Deltin.Deltinteger.Parse
             };
         }
 
-        public string GetLabel(bool markdown) => HoverHandler.Sectioned((ReturnType?.Name ?? "define") + " " + Name, null);
+        public string GetLabel(bool markdown)
+        {
+            string name = ReturnType?.Name ?? "define" + " " + Name;
+
+            if (markdown) return HoverHandler.Sectioned(name, null);
+            else return name;
+        }
 
         private List<IOnBlockApplied> listeners = new List<IOnBlockApplied>();
         public void OnBlockApply(IOnBlockApplied onBlockApplied)

@@ -165,6 +165,9 @@
     <method name="All Players" alt="All Players" />
     <method name="All Players Not On Objective" alt="All Players Not On Objective" />
     <method name="All Players On Objective" alt="All Players On Objective" />
+    <method name="All Tank Heroes" alt="All Tank Heroes" />
+    <method name="All Damage Heroes" alt="All Damage Heroes" />
+    <method name="All Support Heroes" alt="All Support Heroes" />
     <method name="Allowed Heroes" alt="Allowed Heroes" />
     <method name="Altitude Of" alt="Altitude Of" />
     <method name="And" alt="And" />
@@ -654,6 +657,10 @@
     <method name="disabled maps" alt="停用的地圖" />
     <method name="enabled heroes" alt="啟用的英雄" />
     <method name="disabled heroes" alt="停用的英雄" />
+    <method name="Enabled" alt="啟用" />
+    <method name="Disabled" alt="停用" />
+    <method name="On" alt="開啟" />
+    <method name="Yes" alt="是" />
     <method name="%1$s Cooldown Time" alt="%1$s的冷卻時間" />
     <method name="%1$s Recharge Rate" alt="%1$s的能量補充速度" />
     <method name="%1$s Maximum Time" alt="%1$s的最大持續時間" />
@@ -709,6 +716,8 @@
     <method name="Boosters" alt="噴射推進" />
     <method name="Boosters Knockback Scalar" alt="噴射推進擊退距離" />
     <method name="Defense Matrix" alt="防護力場" />
+    <method name="Call Mech Knockback Scalar" alt="空投機甲擊退距離" />
+    <method name="Spawn Without Mech" alt="重生時不搭乘機甲" />
     <method name="Meteor Strike" alt="流星墜" />
     <method name="Meteor Strike Knockback Scalar" alt="流星墜擊退距離" />
     <method name="Rising Uppercut" alt="天鉤拳" />
@@ -848,8 +857,6 @@
     <method name="Skins" alt="造型" />
     <method name="Spawn Health Packs" alt="治療包重生" />
     <method name="Determined By Mode" alt="依模式決定" />
-    <method name="Enabled" alt="啟用" />
-    <method name="Disabled" alt="停用" />
     <method name="Allow Hero Switching" alt="允許更換英雄" />
     <method name="Hero Limit" alt="相同英雄限制" />
     <method name="1 Per Team" alt="每隊最多1名" />

@@ -66,7 +66,6 @@ namespace Deltin.Deltinteger.Parse.Lambda
 
         public string ToWorkshop(OutputLanguage outputLanguage) => throw new NotImplementedException();
         public bool EqualTo(IWorkshopTree other) => throw new NotImplementedException();
-        public int ElementCount(int depth) => throw new NotImplementedException();
 
         public IWorkshopTree Invoke(ActionSet actionSet, params IWorkshopTree[] parameterValues)
         {
@@ -186,7 +185,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
 
         public override Scope GetObjectScope() => _objectScope;
         public override Scope ReturningScope() => null;
-        public override TypeSettable Constant() => TypeSettable.Constant;
+        public override bool IsConstant() => true;
         public override CompletionItem GetCompletion() => new CompletionItem() {
             Label = Name,
             Kind = CompletionItemKind.Constant

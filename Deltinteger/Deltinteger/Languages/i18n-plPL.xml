@@ -165,6 +165,9 @@
     <method name="All Players" alt="All Players" />
     <method name="All Players Not On Objective" alt="All Players Not On Objective" />
     <method name="All Players On Objective" alt="All Players On Objective" />
+    <method name="All Tank Heroes" alt="Wszyscy bohaterowie tanki" />
+    <method name="All Damage Heroes" alt="Wszyscy bohaterowie natarcia" />
+    <method name="All Support Heroes" alt="Wszyscy bohaterowie wsparcia" />
     <method name="Allowed Heroes" alt="Allowed Heroes" />
     <method name="Altitude Of" alt="Altitude Of" />
     <method name="And" alt="And" />
@@ -654,6 +657,10 @@
     <method name="disabled maps" alt="niedostępne mapy" />
     <method name="enabled heroes" alt="dostępni bohaterowie" />
     <method name="disabled heroes" alt="niedostępni bohaterowie" />
+    <method name="Enabled" alt="Włączono" />
+    <method name="Disabled" alt="wył." />
+    <method name="On" alt="Wł." />
+    <method name="Yes" alt="Tak" />
     <method name="%1$s Cooldown Time" alt="Czas odnowienia: %1$s" />
     <method name="%1$s Recharge Rate" alt="Tempo doładowania (%1$s)" />
     <method name="%1$s Maximum Time" alt="Maksymalny czas (%1$s)" />
@@ -709,6 +716,8 @@
     <method name="Boosters" alt="Dopalacze" />
     <method name="Boosters Knockback Scalar" alt="Skalowanie odrzucenia (Dopalacze)" />
     <method name="Defense Matrix" alt="Matryca Obronna" />
+    <method name="Call Mech Knockback Scalar" alt="Skalowanie odrzucenia (Wezwanie Mecha)" />
+    <method name="Spawn Without Mech" alt="Odradzanie bez mecha" />
     <method name="Meteor Strike" alt="Meteor" />
     <method name="Meteor Strike Knockback Scalar" alt="Skalowanie odrzucenia (Meteor)" />
     <method name="Rising Uppercut" alt="Podbródkowy" />
@@ -848,8 +857,6 @@
     <method name="Skins" alt="Skórki" />
     <method name="Spawn Health Packs" alt="Odświeżanie apteczek" />
     <method name="Determined By Mode" alt="Określone przez tryb" />
-    <method name="Enabled" alt="Włączono" />
-    <method name="Disabled" alt="wył." />
     <method name="Allow Hero Switching" alt="Możliwość zmiany bohatera" />
     <method name="Hero Limit" alt="Limit bohaterów" />
     <method name="1 Per Team" alt="1 na drużynę" />

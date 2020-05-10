@@ -15,7 +15,7 @@ namespace Deltin.Deltinteger
 {
     public class Program
     {
-        public const string VERSION = "v1.2.2";
+        public const string VERSION = "v1.4.1";
 
         public static readonly string ExeFolder = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
 
@@ -75,6 +75,7 @@ namespace Deltin.Deltinteger
             }
             else if (args.ElementAtOrDefault(0) == "--schema") Deltin.Deltinteger.Lobby.Ruleset.GenerateSchema();
             else if (args.ElementAtOrDefault(0) == "--maps") Deltin.Deltinteger.Lobby.LobbyMap.GetMaps(args[1], args[2], args[3]);
+            else if (args.ElementAtOrDefault(0) == "--function-table") NameTable.MakeNameTable();
             else
             {
                 string script = args.ElementAtOrDefault(0);

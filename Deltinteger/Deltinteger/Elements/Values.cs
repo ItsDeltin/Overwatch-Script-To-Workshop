@@ -370,10 +370,10 @@ namespace Deltin.Deltinteger.Elements
 
     [ElementData("Control Mode Scoring Percentage", ValueType.Number)]
     [Parameter("Team", ValueType.Team, typeof(V_TeamVar))]
-    public class V_ControlPointScoringPercentage : Element {}
+    public class V_ControlModeScoringPercentage : Element {}
 
     [ElementData("Control Mode Scoring Team", ValueType.Team)]
-    public class V_ControlPointScoringTeam : Element {}
+    public class V_ControlModeScoringTeam : Element {}
 
     [ElementData("Count Of", ValueType.Number)]
     [Parameter("Array", ValueType.Any, null)]
@@ -634,6 +634,7 @@ namespace Deltin.Deltinteger.Elements
 
     [ElementData("Game Mode", ValueType.Gamemode)]
     [EnumParameter("Gamemode", typeof(GameMode))]
+    [HideElement]
     public class V_GameModeVar : Element {}
 
     [ElementData("Current Game Mode", ValueType.Gamemode)]
@@ -1120,14 +1121,6 @@ namespace Deltin.Deltinteger.Elements
         {
             return ((V_Number)other).Value == Value;
         }
-
-        public override int ElementCount(int depth) => NumberElementCount(depth);
-
-        public static int NumberElementCount(int depth)
-        {
-            if (depth <= 1) return 2;
-            else return 4;
-        }
     }
 
     [ElementData("Number Of Dead Players", ValueType.Number)]
@@ -1482,8 +1475,6 @@ namespace Deltin.Deltinteger.Elements
         {
             return ((V_String)other).Text == Text;
         }
-
-        public override int ElementCount(int depth) => base.ElementCount(depth) + 2;
     }
 
     [ElementData("Custom String", ValueType.Any)]
@@ -1537,8 +1528,6 @@ namespace Deltin.Deltinteger.Elements
         {
             return ((V_CustomString)other).Text == Text;
         }
-
-        public override int ElementCount(int depth) => base.ElementCount(depth) + 2;
     }
 
     [ElementData("Icon String", ValueType.Any)]
@@ -1722,6 +1711,14 @@ namespace Deltin.Deltinteger.Elements
                 if (x == 0  && y == 0  && z == -1) return new V_Backward();
             }
 
+            Element oX = X;
+            Element oY = Y;
+            Element oZ = Z;
+            if (oX is V_Number oXNum && oXNum.Value == 0) oX = new V_EmptyArray();
+            if (oY is V_Number oYNum && oYNum.Value == 0) oY = new V_EmptyArray();
+            if (oZ is V_Number oZNum && oZNum.Value == 0) oZ = new V_EmptyArray();
+            if (oX != X || oY != Y || oZ != Z) return Element.Part<V_Vector>(oX, oY, oZ);
+
             return this;
         }
 
@@ -1863,4 +1860,56 @@ namespace Deltin.Deltinteger.Elements
             return this;
         }
     }
+
+    [ElementData("Array", ValueType.Any)]
+    [HideElement]
+    public class V_Array : Element
+    {
+        public V_Array()
+        {
+            AlwaysShowParentheses = true;
+        }
+    }
+
+    [ElementData("If-Then-Else", ValueType.Any)]
+    [Parameter("If", ValueType.Boolean, null)]
+    [Parameter("Then", ValueType.Boolean, null)]
+    [Parameter("Else", ValueType.Boolean, null)]
+    [HideElement]
+    public class V_IfThenElse : Element
+    {
+        public override string ToWorkshop(OutputLanguage language)
+        {
+            AddMissingParameters();
+            return ParameterValues[0].ToWorkshop(language) + " ? " + ParameterValues[1].ToWorkshop(language) + " : " + ParameterValues[2].ToWorkshop(language);
+        }
+    }
+
+    [ElementData("Is Meleeing", ValueType.Boolean)]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    public class V_IsMeleeing : Element {}
+
+    [ElementData("Is Jumping", ValueType.Boolean)]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    public class V_IsJumping : Element {}
+
+    [ElementData("Event Direction", ValueType.Vector)]
+    public class V_EventDirection : Element {}
+
+    [ElementData("Button", ValueType.Button)]
+    [EnumParameter("Button", typeof(Button))]
+    public class V_ButtonValue : Element {}
+
+    [ElementData("Event Ability", ValueType.Button)]
+    public class V_EventAbility : Element {}
+
+    [ElementData("Ability Cooldown", ValueType.Number)]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [Parameter("Button", ValueType.Button, typeof(V_ButtonValue))]
+    public class V_AbilityCooldown : Element {}
+
+    [ElementData("Ability Icon String", ValueType.String)]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [Parameter("Button", ValueType.Button, typeof(V_ButtonValue))]
+    public class V_AbilityIconString : Element {}
 }

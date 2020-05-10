@@ -91,13 +91,21 @@ namespace Deltin.Deltinteger.Lobby
     class SwitchValue : LobbySetting
     {
         public bool Default { get; }
+        public SwitchType SwitchType { get; }
 
-        public SwitchValue(string name, bool defaultValue) : base(name)
+        public SwitchValue(string name, bool defaultValue, SwitchType switchType = SwitchType.OnOff) : base(name)
         {
             Default = defaultValue;
+            SwitchType = switchType;
         }
 
-        public override string GetValue(WorkshopBuilder builder, object value) => builder.Translate((bool)value ? "On" : "Off");
+        public override string GetValue(WorkshopBuilder builder, object value)
+        {
+            if (SwitchType == SwitchType.OnOff) return builder.Translate((bool)value ? "On" : "Off");
+            else if (SwitchType == SwitchType.YesNo) return builder.Translate((bool)value ? "Yes" : "No");
+            else if (SwitchType == SwitchType.EnabledDisabled) return builder.Translate((bool)value ? "Enabled" : "Disabled");
+            else throw new NotImplementedException();
+        }
 
         protected override RootSchema GetSchema()
         {
@@ -164,5 +172,12 @@ namespace Deltin.Deltinteger.Lobby
                 validation.IncorrectType(Name, "number");
             }
         }
+    }
+
+    enum SwitchType
+    {
+        OnOff,
+        YesNo,
+        EnabledDisabled
     }
 }

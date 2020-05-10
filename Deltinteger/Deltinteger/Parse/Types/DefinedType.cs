@@ -40,7 +40,7 @@ namespace Deltin.Deltinteger.Parse
                 var newMethod = new DefinedMethod(parseInfo, operationalScope, staticScope, definedMethod, this);
 
                 // Copy to serving scopes.
-                if (newMethod.Static) staticScope.CopyMethod(newMethod);
+                if (newMethod.Static) operationalScope.CopyMethod(newMethod);
                 else serveObjectScope.CopyMethod(newMethod);
             }
 
@@ -52,13 +52,13 @@ namespace Deltin.Deltinteger.Parse
                 // Copy to serving scopes.
                 if (newMacro is IMethod asMethod)
                 {
-                    if (newMacro.Static) staticScope.CopyMethod(asMethod);
+                    if (newMacro.Static) operationalScope.CopyMethod(asMethod);
                     else serveObjectScope.CopyMethod(asMethod);
                 }
                 else
                 {
-                    if (newMacro.Static) staticScope.CopyVariable(newMacro);
-                    else serveObjectScope.CopyVariable(newMacro);
+                    if (newMacro.Static) operationalScope.CopyVariable((IVariable)newMacro);
+                    else serveObjectScope.CopyVariable((IVariable)newMacro);
                 }
             }
 
@@ -127,11 +127,11 @@ namespace Deltin.Deltinteger.Parse
             newClassInfo.Constructor.Parse(actionSet.New((Element)newClassInfo.ObjectReference.GetVariable()), newClassInfo.ConstructorValues, null);
         }
 
-        public override void Call(ScriptFile script, DocRange callRange)
+        public override void Call(ParseInfo parseInfo, DocRange callRange)
         {
-            base.Call(script, callRange);
-            script.AddDefinitionLink(callRange, DefinedAt);
-            AddLink(new LanguageServer.Location(script.Uri, callRange));
+            base.Call(parseInfo, callRange);
+            parseInfo.Script.AddDefinitionLink(callRange, DefinedAt);
+            AddLink(new LanguageServer.Location(parseInfo.Script.Uri, callRange));
         }
         public void AddLink(LanguageServer.Location location)
         {

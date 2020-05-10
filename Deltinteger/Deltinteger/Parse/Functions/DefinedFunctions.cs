@@ -56,13 +56,13 @@ namespace Deltin.Deltinteger.Parse
             ParameterVars = parameterInfo.Variables;
         }
 
-        public void Call(ScriptFile script, DocRange callRange)
+        public void Call(ParseInfo parseInfo, DocRange callRange)
         {
-            script.AddDefinitionLink(callRange, DefinedAt);
-            parseInfo.TranslateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, new Location(script.Uri, callRange));
+            parseInfo.Script.AddDefinitionLink(callRange, DefinedAt);
+            parseInfo.TranslateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, new Location(parseInfo.Script.Uri, callRange));
         }
 
-        public virtual bool DoesReturnValue() => true;
+        public virtual bool DoesReturnValue() => doesReturnValue;
 
         public string GetLabel(bool markdown) => HoverHandler.GetLabel(!doesReturnValue ? null : ReturnType?.Name ?? "define", Name, Parameters, markdown, null);
 

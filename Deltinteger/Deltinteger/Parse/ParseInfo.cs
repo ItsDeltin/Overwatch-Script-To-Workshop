@@ -132,37 +132,39 @@ namespace Deltin.Deltinteger.Parse
                 if (variableContext.array() != null)
                     Script.Diagnostics.Error("Indexers cannot be used with types.", DocRange.GetRange(variableContext.array()));
 
-                type.Call(Script, variableRange);
+                type.Call(this, variableRange);
                 return type;
             }
 
-            IScopeable element = scope.GetVariable(variableName, getter, Script.Diagnostics, variableRange);
+            IVariable element = scope.GetVariable(variableName, getter, Script.Diagnostics, variableRange);
             if (element == null)
                 return null;
             
             if (element is ICallable)
-                ((ICallable)element).Call(Script, variableRange);
+                ((ICallable)element).Call(this, variableRange);
             
             if (element is IApplyBlock)
                 CurrentCallInfo?.Call((IApplyBlock)element, variableRange);
-
-            if (element is IIndexReferencer var)
+            
+            IExpression[] index = null;
+            if (variableContext.array() != null)
             {
-                IExpression[] index;
-                if (variableContext.array() == null) index = new IExpression[0];
-                else
-                {
-                    index = new IExpression[variableContext.array().expr().Length];
-                    for (int i = 0; i < index.Length; i++)
-                        index[i] = GetExpression(getter, variableContext.array().expr(i));
-                }
-
-                return new CallVariableAction(var, index);
+                index = new IExpression[variableContext.array().expr().Length];
+                for (int i = 0; i < index.Length; i++)
+                    index[i] = GetExpression(getter, variableContext.array().expr(i));
             }
-            else if (element is ScopedEnumMember) return (ScopedEnumMember)element;
-            else if (element is DefinedEnumMember) return (DefinedEnumMember)element;
-            else if (element is MacroVar) return (MacroVar)element;
-            else throw new NotImplementedException();
+
+            if (element is IIndexReferencer referencer) return new CallVariableAction(referencer, index);
+
+            if (index != null)
+            {
+                if (!element.CanBeIndexed)
+                    Script.Diagnostics.Error("This variable type cannot be indexed.", variableRange);
+                else
+                    return new ValueInArrayAction(this, (IExpression)element, index);
+            }
+
+            return (IExpression)element;
         }
 
         /// <summary>Creates a macro from a Define_macroContext.</summary>

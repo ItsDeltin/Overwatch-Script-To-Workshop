@@ -165,6 +165,9 @@
     <method name="All Players" alt="All Players" />
     <method name="All Players Not On Objective" alt="All Players Not On Objective" />
     <method name="All Players On Objective" alt="All Players On Objective" />
+    <method name="All Tank Heroes" alt="All Tank Heroes" />
+    <method name="All Damage Heroes" alt="All Damage Heroes" />
+    <method name="All Support Heroes" alt="All Support Heroes" />
     <method name="Allowed Heroes" alt="Allowed Heroes" />
     <method name="Altitude Of" alt="Altitude Of" />
     <method name="And" alt="And" />
@@ -654,6 +657,10 @@
     <method name="disabled maps" alt="disabled maps" />
     <method name="enabled heroes" alt="enabled heroes" />
     <method name="disabled heroes" alt="disabled heroes" />
+    <method name="Enabled" alt="활성화" />
+    <method name="Disabled" alt="disabled" />
+    <method name="On" alt="바로 참가만 보기" />
+    <method name="Yes" alt="네" />
     <method name="%1$s Cooldown Time" alt="%1$s 재사용 대기시간" />
     <method name="%1$s Recharge Rate" alt="%1$s 충전율" />
     <method name="%1$s Maximum Time" alt="%1$s 최대 시간" />
@@ -709,6 +716,8 @@
     <method name="Boosters" alt="부스터" />
     <method name="Boosters Knockback Scalar" alt="부스터로 밀쳐내기 수준 조정" />
     <method name="Defense Matrix" alt="방어 매트릭스" />
+    <method name="Call Mech Knockback Scalar" alt="메카 호출 밀쳐내기 수준 조정" />
+    <method name="Spawn Without Mech" alt="메카 없이 시작" />
     <method name="Meteor Strike" alt="파멸의 일격" />
     <method name="Meteor Strike Knockback Scalar" alt="파멸의 일격 밀쳐내기 수준 조정" />
     <method name="Rising Uppercut" alt="라이징 어퍼컷" />
@@ -848,8 +857,6 @@
     <method name="Skins" alt="스킨" />
     <method name="Spawn Health Packs" alt="생명력 팩 생성" />
     <method name="Determined By Mode" alt="모드에 따라 결정" />
-    <method name="Enabled" alt="활성화" />
-    <method name="Disabled" alt="disabled" />
     <method name="Allow Hero Switching" alt="영웅 변경 허용" />
     <method name="Hero Limit" alt="영웅 제한" />
     <method name="1 Per Team" alt="팀당 1명" />

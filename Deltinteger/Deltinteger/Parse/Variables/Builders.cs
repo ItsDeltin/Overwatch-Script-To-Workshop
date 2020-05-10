@@ -86,12 +86,13 @@ namespace Deltin.Deltinteger.Parse
 
         protected override void Apply()
         {
-            if (!_varInfo.Static && _varInfo.Type != null && _varInfo.Type.Constant() == TypeSettable.Constant)
+            if (!_varInfo.Static && _varInfo.Type != null && _varInfo.Type.IsConstant())
                 _diagnostics.Error("Non-static variables with workshop constant types are not allowed.", _typeRange);
 
             _varInfo.WholeContext = true;
             _varInfo.OperationalScope = _varInfo.Static ? _staticScope : _objectScope;
             _varInfo.CodeLensType = CodeLensSourceType.ClassVariable;
+            _varInfo.InitialValueResolve = InitialValueResolve.ApplyBlock;
         }
     }
 
@@ -127,7 +128,7 @@ namespace Deltin.Deltinteger.Parse
             VarBuilderAttribute refAttribute = _attributes.FirstOrDefault(attribute => attribute.Type == AttributeType.Ref);
 
             // If the type is constant and the variable has the ref parameter, show a warning.
-            if (refAttribute != null && _varInfo.Type != null && _varInfo.Type.Constant() == TypeSettable.Constant)
+            if (refAttribute != null && _varInfo.Type != null && _varInfo.Type.IsConstant())
                 _diagnostics.Warning("Constant workshop types have the 'ref' attribute by default.", refAttribute.Range);
         }
     }
@@ -141,7 +142,7 @@ namespace Deltin.Deltinteger.Parse
         protected override void CheckAttributes()
         {
             base.CheckAttributes();
-            RejectAttributes(AttributeType.Ext, AttributeType.Ref);
+            RejectAttributes(AttributeType.Ref);
         }
 
         protected override void GetCodeType()
@@ -149,7 +150,7 @@ namespace Deltin.Deltinteger.Parse
             var context = _contextHandler.GetCodeType();
             CodeType type = CodeType.GetCodeTypeFromContext(_parseInfo, context);
             
-            if (type != null && type.Constant() == TypeSettable.Constant)
+            if (type != null && type.IsConstant())
                 _diagnostics.Error($"Constant types cannot be used in subroutine parameters.", DocRange.GetRange(context));
             
             _varInfo.Type = type;

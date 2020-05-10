@@ -143,9 +143,11 @@ namespace Deltin.Deltinteger.Parse
             switchBuilder.Finish((Element)expression);
         }
 
-        public void AddBreak(SkipStartMarker continueMarker)
+        public void AddBreak(ActionSet actionSet)
         {
-            switchBuilder.SkipToEnd.Add(continueMarker);
+            SkipStartMarker breaker = new SkipStartMarker(actionSet);
+            actionSet.AddAction(breaker);
+            switchBuilder.SkipToEnd.Add(breaker);
         }
 
         public PathInfo[] GetPaths() => pathInfo;

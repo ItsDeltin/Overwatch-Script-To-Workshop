@@ -61,7 +61,7 @@ namespace Deltin.Deltinteger.Parse
             if (ruleContext.number() != null)
                 Priority = double.Parse(ruleContext.number().GetText());
             
-            ElementCountLens = new ElementCountCodeLens(ruleInfoRange);
+            ElementCountLens = new ElementCountCodeLens(ruleInfoRange, parseInfo.TranslateInfo.OptimizeOutput);
             parseInfo.Script.AddCodeLensRange(ElementCountLens);
         }
 
@@ -75,8 +75,8 @@ namespace Deltin.Deltinteger.Parse
             {
                 missingBlockRange = DocRange.GetRange(exprContext);
 
-                var enumSetting = (parseInfo.GetExpression(scope, exprContext) as ExpressionTree)?.Result as ScopedEnumMember;
-                var enumData = (enumSetting?.Enum as WorkshopEnumType)?.EnumData;
+                EnumValuePair enumSetting = (ExpressionTree.ResultingExpression(parseInfo.GetExpression(scope, exprContext)) as CallVariableAction)?.Calling as EnumValuePair;
+                EnumData enumData = enumSetting?.Member.Enum;
 
                 if (enumData == null || !ValidRuleEnums.Contains(enumData))
                     parseInfo.Script.Diagnostics.Error("Expected enum of type " + string.Join(", ", ValidRuleEnums.Select(vre => vre.CodeName)) + ".", DocRange.GetRange(exprContext));
@@ -89,7 +89,7 @@ namespace Deltin.Deltinteger.Parse
                     {
                         if (_setEventType)
                             parseInfo.Script.Diagnostics.AddDiagnostic(alreadySet);
-                        EventType = (RuleEvent)enumSetting.EnumMember.Value;
+                        EventType = (RuleEvent)enumSetting.Member.Value;
                         _setEventType = true;
                         eventContext = exprContext;
                     }
@@ -98,7 +98,7 @@ namespace Deltin.Deltinteger.Parse
                     {
                         if (_setTeam)
                             parseInfo.Script.Diagnostics.AddDiagnostic(alreadySet);
-                        Team = (Team)enumSetting.EnumMember.Value;
+                        Team = (Team)enumSetting.Member.Value;
                         _setTeam = true;
                         teamContext = exprContext;
                     }
@@ -107,7 +107,7 @@ namespace Deltin.Deltinteger.Parse
                     {
                         if (_setPlayer)
                             parseInfo.Script.Diagnostics.AddDiagnostic(alreadySet);
-                        Player = (PlayerSelector)enumSetting.EnumMember.Value;
+                        Player = (PlayerSelector)enumSetting.Member.Value;
                         _setPlayer = true;
                         playerContext = exprContext;
                     }

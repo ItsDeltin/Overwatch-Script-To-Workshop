@@ -24,7 +24,7 @@ namespace Deltin.Deltinteger.Parse
         public TranslateRule InitialGlobal { get; private set; }
         public TranslateRule InitialPlayer { get; private set; }
         private readonly OutputLanguage Language;
-        private readonly bool OptimizeOutput;
+        public readonly bool OptimizeOutput;
         private List<IComponent> Components { get; } = new List<IComponent>(); 
 
         public DeltinScript(TranslateSettings translateSettings)
@@ -34,13 +34,13 @@ namespace Deltin.Deltinteger.Parse
             Language = translateSettings.OutputLanguage;
             OptimizeOutput = translateSettings.OptimizeOutput;
 
-            Types.AllTypes.AddRange(CodeType.DefaultTypes);
-            Importer = new Importer(Diagnostics, FileGetter, translateSettings.Root.Uri);
-            Importer.CollectScriptFiles(translateSettings.Root);
-            
             GlobalScope = Scope.GetGlobalScope();
             RulesetScope = GlobalScope.Child();
             RulesetScope.PrivateCatch = true;
+
+            Types.AllTypes.AddRange(CodeType.DefaultTypes);
+            Importer = new Importer(this, FileGetter, translateSettings.Root.Uri);
+            Importer.CollectScriptFiles(translateSettings.Root);            
             
             Translate();
             if (!Diagnostics.ContainsErrors())
@@ -90,6 +90,7 @@ namespace Deltin.Deltinteger.Parse
                 var newEnum = new DefinedEnum(new ParseInfo(script, this), enumContext);
                 Types.AllTypes.Add(newEnum); 
                 Types.DefinedTypes.Add(newEnum);
+                Types.CalledTypes.Add(newEnum);
             }
 
             // Get the types
@@ -99,6 +100,7 @@ namespace Deltin.Deltinteger.Parse
                 var newType = new DefinedType(new ParseInfo(script, this), GlobalScope, typeContext);
                 Types.AllTypes.Add(newType);
                 Types.DefinedTypes.Add(newType);
+                Types.CalledTypes.Add(newType);
             }
 
             // Get the interfaces
@@ -163,8 +165,8 @@ namespace Deltin.Deltinteger.Parse
 
             foreach (var component in Components) if (component is IWorkshopInitComponent workshopInit) workshopInit.WorkshopInit();
 
-            // Assign static variables.
-            foreach (var type in Types.AllTypes) type.WorkshopInit(this);
+            // Init called types.
+            foreach (var type in Types.CalledTypes.Distinct()) type.WorkshopInit(this);
 
              // Assign variables at the rule-set level.
             foreach (var variable in rulesetVariables)
@@ -223,6 +225,9 @@ namespace Deltin.Deltinteger.Parse
             VarCollection.ToWorkshop(result);
             result.AppendLine();
 
+            // Print class identifiers.
+            Types.PrintClassIdentifiers(result);
+
             // Get the subroutines.
             SubroutineCollection.ToWorkshop(result);
 
@@ -230,7 +235,7 @@ namespace Deltin.Deltinteger.Parse
             for (int i = 0; i < WorkshopRules.Count; i++)
             {
                 WorkshopRules[i].ToWorkshop(result, OptimizeOutput);
-                ElementCount += WorkshopRules[i].ElementCount();
+                ElementCount += WorkshopRules[i].ElementCount(OptimizeOutput);
                 if (i != WorkshopRules.Count - 1) result.AppendLine();
             }
             
@@ -263,6 +268,7 @@ namespace Deltin.Deltinteger.Parse
     {
         public List<CodeType> AllTypes { get; } = new List<CodeType>();
         public List<CodeType> DefinedTypes { get; } = new List<CodeType>();
+        public List<CodeType> CalledTypes { get; } = new List<CodeType>();
 
         public CodeType GetCodeType(string name, FileDiagnostics diagnostics, DocRange range)
         {
@@ -278,6 +284,23 @@ namespace Deltin.Deltinteger.Parse
             return GetCodeType(name, null, null) != null;
         }
         public T GetCodeType<T>() where T: CodeType => (T)AllTypes.FirstOrDefault(type => type.GetType() == typeof(T));
+
+        public void CallType(CodeType type)
+        {
+            if (!CalledTypes.Contains(type))
+                CalledTypes.Add(type);
+        }
+
+        public void PrintClassIdentifiers(WorkshopBuilder builder)
+        {
+            builder.AppendLine("// Class identifiers:");
+
+            foreach (CodeType type in AllTypes)
+                if (type is ClassType classType && classType.Identifier > 0)
+                    builder.AppendLine("// " + classType.Name + ": " + classType.Identifier);
+            
+            builder.AppendLine();
+        }
     }
 
     public interface IComponent

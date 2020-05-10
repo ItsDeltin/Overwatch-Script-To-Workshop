@@ -165,6 +165,9 @@
     <method name="All Players" alt="All Players" />
     <method name="All Players Not On Objective" alt="All Players Not On Objective" />
     <method name="All Players On Objective" alt="All Players On Objective" />
+    <method name="All Tank Heroes" alt="All Tank Heroes" />
+    <method name="All Damage Heroes" alt="All Damage Heroes" />
+    <method name="All Support Heroes" alt="All Support Heroes" />
     <method name="Allowed Heroes" alt="Allowed Heroes" />
     <method name="Altitude Of" alt="Altitude Of" />
     <method name="And" alt="And" />
@@ -654,6 +657,10 @@
     <method name="disabled maps" alt="mapas no permitidos" />
     <method name="enabled heroes" alt="héroes permitidos" />
     <method name="disabled heroes" alt="héroes no permitidos" />
+    <method name="Enabled" alt="Permitir" />
+    <method name="Disabled" alt="disabled" />
+    <method name="On" alt="Activado" />
+    <method name="Yes" alt="Sí" />
     <method name="%1$s Cooldown Time" alt="Tiempo de reutilización: %1$s" />
     <method name="%1$s Recharge Rate" alt="Ritmo de recarga: %1$s" />
     <method name="%1$s Maximum Time" alt="Tiempo máximo: %1$s" />
@@ -709,6 +716,8 @@
     <method name="Boosters" alt="Impulsores" />
     <method name="Boosters Knockback Scalar" alt="Repulsión de Impulsores" />
     <method name="Defense Matrix" alt="Matriz de defensa" />
+    <method name="Call Mech Knockback Scalar" alt="Repulsión de meca" />
+    <method name="Spawn Without Mech" alt="Aparecer sin meca" />
     <method name="Meteor Strike" alt="Meteoro" />
     <method name="Meteor Strike Knockback Scalar" alt="Repulsión de Meteoro" />
     <method name="Rising Uppercut" alt="Uppercut" />
@@ -848,8 +857,6 @@
     <method name="Skins" alt="Aspectos" />
     <method name="Spawn Health Packs" alt="Crear packs de salud" />
     <method name="Determined By Mode" alt="Determinado por el modo" />
-    <method name="Enabled" alt="Permitir" />
-    <method name="Disabled" alt="disabled" />
     <method name="Allow Hero Switching" alt="Permitir cambio de héroes" />
     <method name="Hero Limit" alt="Límite de héroes" />
     <method name="1 Per Team" alt="1 por equipo" />
