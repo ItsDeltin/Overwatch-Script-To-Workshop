@@ -214,6 +214,9 @@ namespace Deltin.Deltinteger.Parse
             VarCollection.ToWorkshop(result);
             result.AppendLine();
 
+            // Print class identifiers.
+            Types.PrintClassIdentifiers(result);
+
             // Get the subroutines.
             SubroutineCollection.ToWorkshop(result);
 
@@ -275,6 +278,17 @@ namespace Deltin.Deltinteger.Parse
         {
             if (!CalledTypes.Contains(type))
                 CalledTypes.Add(type);
+        }
+
+        public void PrintClassIdentifiers(WorkshopBuilder builder)
+        {
+            builder.AppendLine("// Class identifiers:");
+
+            foreach (CodeType type in AllTypes)
+                if (type is ClassType classType && classType.Identifier > 0)
+                    builder.AppendLine("// " + classType.Name + ": " + classType.Identifier);
+            
+            builder.AppendLine();
         }
     }
 
