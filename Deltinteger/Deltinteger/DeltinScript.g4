@@ -125,9 +125,11 @@ ow_rule :
 	block?
 	;
 
-define_method : DOCUMENTATION* method_attributes* (VOID | DEFINE | code_type) name=PART LEFT_PAREN setParameters RIGHT_PAREN ((GLOBAL | PLAYER)? subroutineRuleName=STRINGLITERAL)?
+define_method : DOCUMENTATION* method_attributes* (VOID | DEFINE | code_type) name=PART LEFT_PAREN setParameters RIGHT_PAREN subroutine_info?
 	block?
 	;
+
+subroutine_info : (GLOBAL | PLAYER)? subroutineRuleName=STRINGLITERAL;
 
 method_attributes : accessor | STATIC | OVERRIDE | VIRTUAL | RECURSIVE;
 
@@ -148,7 +150,7 @@ type_define : (STRUCT | CLASS) name=PART inherit?
 	BLOCK_END ;
 
 interface          : INTERFACE name=PART inherit? BLOCK_START (interface_variable | interface_function)* BLOCK_END ;
-interface_function : (VOID | code_type) name=PART LEFT_PAREN setParameters RIGHT_PAREN (STATEMENT_END | block)? ;
+interface_function : (VOID | code_type) name=PART LEFT_PAREN setParameters RIGHT_PAREN subroutine_info? (STATEMENT_END | block)? ;
 interface_variable : (DEFINE | code_type) name=PART STATEMENT_END? ;
 
 inherit : TERNARY_ELSE first=PART? (COMMA PART)* ;

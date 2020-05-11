@@ -57,7 +57,7 @@ namespace Deltin.Deltinteger.Parse
                 SetupParameters(context.setParameters(), false);
             else
             {
-                subroutineDefaultGlobal = context.PLAYER() == null;
+                subroutineDefaultGlobal = context.subroutine_info()?.PLAYER() == null;
                 Attributes.Parallelable = true;
                 parseInfo.TranslateInfo.AddSubroutine(this);
 
@@ -110,9 +110,9 @@ namespace Deltin.Deltinteger.Parse
         {
             // If the STRINGLITERAL is not null, the method will be stored in a subroutine.
             // Get the name of the rule the method will be stored in.
-            if (context.STRINGLITERAL() != null)
+            if (context.subroutine_info() != null)
             {
-                SubroutineName = Extras.RemoveQuotes(context.STRINGLITERAL().GetText());
+                SubroutineName = Extras.RemoveQuotes(context.subroutine_info().subroutineRuleName.Text);
                 IsSubroutine = true;
             }
             

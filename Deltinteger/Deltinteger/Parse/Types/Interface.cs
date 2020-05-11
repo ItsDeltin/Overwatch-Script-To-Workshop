@@ -157,7 +157,7 @@ namespace Deltin.Deltinteger.Parse
                 CodeType variableType = CodeType.GetCodeTypeFromContext(ParseInfo, variable.code_type());
 
                 // Interface variables cannot be constants.
-                if (variableType != null && variableType.Constant() == TypeSettable.Constant)
+                if (variableType != null && variableType.IsConstant())
                 {
                     ParseInfo.Script.Diagnostics.Error("Interface variables cannot have a constant type.", DocRange.GetRange(variable.code_type()));
                     continue;
@@ -173,11 +173,11 @@ namespace Deltin.Deltinteger.Parse
             }
         }
 
-        public override void Call(ScriptFile script, DocRange callRange)
+        public override void Call(ParseInfo parseInfo, DocRange callRange)
         {
-            base.Call(script, callRange);
-            script.AddDefinitionLink(callRange, DefinedAt);
-            ParseInfo.TranslateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, new LanguageServer.Location(script.Uri, callRange));
+            base.Call(parseInfo, callRange);
+            parseInfo.Script.AddDefinitionLink(callRange, DefinedAt);
+            ParseInfo.TranslateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, new LanguageServer.Location(parseInfo.Script.Uri, callRange));
         }
     }
 
@@ -207,7 +207,7 @@ namespace Deltin.Deltinteger.Parse
         public CodeType Type() => CodeType;
         public IWorkshopTree Parse(ActionSet actionSet) => throw new NotImplementedException();
 
-        public void Call(ScriptFile script, DocRange callRange)
+        public void Call(ParseInfo parseInfo, DocRange callRange)
         {
             //todo
         }

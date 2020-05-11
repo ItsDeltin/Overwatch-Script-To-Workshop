@@ -26,7 +26,7 @@ namespace Deltin.Deltinteger.Parse
                     // GetCodeType will return null if the type is not found.
                     if (inheriting == null) continue;
 
-                    inheriting.Call(parseInfo.Script, range);
+                    inheriting.Call(parseInfo, range);
 
                     string errorMessage = null;
                     if (!inheriting.CanBeExtended) errorMessage = "Type '" + inheriting.Name + "' cannot be inherited.";
