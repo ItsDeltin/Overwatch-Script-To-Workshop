@@ -101,7 +101,7 @@ namespace Deltin.Deltinteger.Elements
 
                     // If the parameter is an enum, get the enum CodeType.
                     if (WorkshopParameters[i] is EnumParameter)
-                        codeType = WorkshopEnumType.GetEnumType(((EnumParameter)WorkshopParameters[i]).EnumData);
+                        codeType = ValueGroupType.GetEnumType(((EnumParameter)WorkshopParameters[i]).EnumData);
 
                     var defaultValue = WorkshopParameters[i].GetDefault();
 
