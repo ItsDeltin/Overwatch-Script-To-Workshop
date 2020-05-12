@@ -230,7 +230,7 @@ namespace Deltin.Deltinteger.Parse
                 // Loop through all parameters.
                 for (int p = 0; p < checking.Parameters.Length; p++)
                     // If the parameter types do not match, continue.
-                    if (checking.Parameters[p].Type != parameterTypes[p])
+                    if (!checking.Parameters[p].Type.ExactMatch(parameterTypes[p]))
                         return ScopeIterateAction.Continue;
                 
                 // Parameter overload matches.
@@ -240,6 +240,20 @@ namespace Deltin.Deltinteger.Parse
 
             return method;
         }
+
+        public static bool OverloadMatches(string name, CodeType[] parameterTypes, IMethod target)
+        {
+            // TODO: Make GetMethodOverload use this
+            if (target.Name != name || target.Parameters.Length != parameterTypes.Length) return false;
+
+            for (int p = 0; p < target.Parameters.Length; p++)
+                if (!target.Parameters[p].Type.ExactMatch(parameterTypes[p]))
+                    return false;
+            
+            return true;
+        }
+
+        public static bool OverloadMatches(IMethod first, IMethod other) => OverloadMatches(first.Name, first.Parameters.Select(p => p.Type).ToArray(), other);
 
         /// <summary>Gets all methods in the scope with the provided name.</summary>
         /// <param name="name">The name of the methods.</param>

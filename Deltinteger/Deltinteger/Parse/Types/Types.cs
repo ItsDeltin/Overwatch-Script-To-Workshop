@@ -36,6 +36,8 @@ namespace Deltin.Deltinteger.Parse
             return false;
         }
 
+        public virtual bool ExactMatch(CodeType other) => this == other;
+
         // Static
         public abstract Scope ReturningScope();
         // Object

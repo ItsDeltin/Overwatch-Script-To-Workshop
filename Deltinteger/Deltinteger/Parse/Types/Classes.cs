@@ -41,6 +41,7 @@ Object-serve scope. Only object members.
         public int Identifier { get; private set; } = -1;
 
         public readonly List<ObjectVariable> ObjectVariables = new List<ObjectVariable>();
+        public readonly List<IMethod> ObjectFunctions = new List<IMethod>();
 
         public ClassType(string name) : base(name)
         {
@@ -111,9 +112,11 @@ Object-serve scope. Only object members.
             if (workshopInitialized) return;
             workshopInitialized = true;
 
+            // Assign an identifier.
             ClassData classData = translateInfo.GetComponent<ClassData>();
             Identifier = classData.AssignID();
 
+            // Setup interfaces.
             foreach (Interface contract in Contracts)
                 contract.SetupImplementer(this);
 

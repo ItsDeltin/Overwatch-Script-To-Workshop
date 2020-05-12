@@ -38,6 +38,7 @@ namespace Deltin.Deltinteger.Parse
             foreach (var definedMethod in typeContext.define_method())
             {
                 var newMethod = new DefinedMethod(parseInfo, operationalScope, staticScope, definedMethod, this);
+                ObjectFunctions.Add(newMethod);
 
                 // Copy to serving scopes.
                 if (newMethod.Static) operationalScope.CopyMethod(newMethod);

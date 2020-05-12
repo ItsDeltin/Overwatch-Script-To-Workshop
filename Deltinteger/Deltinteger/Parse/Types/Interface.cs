@@ -26,6 +26,7 @@ namespace Deltin.Deltinteger.Parse
                 link.SetArrayStore(DeltinScript.VarCollection.Assign(link.VariableName, true, false));
         }
 
+        /// <summary>Gets an interface variable link. Will throw KeyNotFoundException if the link is not found.</summary>
         public IndexReference Get(string variableName)
         {
             foreach (var link in Links)
@@ -73,8 +74,9 @@ namespace Deltin.Deltinteger.Parse
     public abstract class Interface : CodeType, IImplementer
     {
         public List<Interface> Contracts { get; } = new List<Interface>();
-        protected Scope ObjectScope { get; } = new Scope();
+        protected Scope InterfaceScope { get; } = new Scope();
         protected List<InterfaceVariable> Variables { get; } = new List<InterfaceVariable>();
+        protected List<InterfaceFunction> Functions { get; } = new List<InterfaceFunction>();
         protected ParseInfo ParseInfo { get; }
 
         public Interface(ParseInfo parseInfo, string name) : base(name)
@@ -84,21 +86,88 @@ namespace Deltin.Deltinteger.Parse
             CanBeDeleted = true;
         }
 
-        public void SetupImplementer(ClassType classType)
+        public void SetupImplementer(ClassType implementer)
         {
-            foreach (var variable in classType.ObjectVariables)
-                if (variable.ArrayStore == null && ParseInfo.TranslateInfo.GetComponent<InterfaceLinkComponent>().TryGet(variable.Variable.Name, out IndexReference reference))
-                    variable.SetArrayStore(reference);
+            LinkVariables(implementer);
+            LinkFunctions(implementer);
             
-            if (classType.Extends != null)
-                SetupImplementer((ClassType)classType.Extends);
+            // ???
+            // if (implementer.Extends != null) SetupImplementer((ClassType)implementer.Extends);
         }
 
-        protected void AddVariable(InterfaceVariable variable, DocRange range)
+        private void LinkVariables(ClassType implementer)
+        {
+            // Check classType's inheritance tree for the variable.
+            foreach (InterfaceVariable variable in Variables)
+            {
+                // Get the matching ObjectVariable.
+                ObjectVariable match = VariableFromName(implementer, variable.Name);
+
+                // Get the workshop variable that the interface variable is stored in.
+                IndexReference linkIndex = ParseInfo.TranslateInfo.GetComponent<InterfaceLinkComponent>().Get(variable.Name);
+
+                if (match == null)
+                {
+                    // 'match' will by null if classType does not implement the variable.
+                    // Maybe throw a syntax error if the implementing class needs to explicitly define the variable.
+                }
+                else
+                {
+                    // Link the variable.
+                    match.SetArrayStore(linkIndex);
+                }
+            }
+        }
+
+        private void LinkFunctions(ClassType implementer)
+        {
+            foreach (InterfaceFunction interfaceFunction in Functions)
+                IterateParents(implementer, classType => {
+                    // Iterate through each function.
+                    foreach (IMethod classFunction in classType.ObjectFunctions)
+                        if (Scope.OverloadMatches(interfaceFunction, classFunction))
+                        {
+                            interfaceFunction.AddImplementation(classFunction);
+                            return true;
+                        }
+                    // Function was not found in the current class.
+                    return false;
+                });
+        }
+
+        /// <summary>Gets an ObjectVariable from a ClassType by name. If the class has no variables that matches the name, the type that the class extends is checked.</summary>
+        private static ObjectVariable VariableFromName(ClassType classType, string name)
+        {
+            ObjectVariable result = null;
+            IterateParents(classType, type => {
+                foreach (ObjectVariable variable in type.ObjectVariables)
+                    if (variable.Variable.Name == name)
+                    {
+                        result = variable;
+                        return true;
+                    }
+                return false;
+            });
+            return result;
+        }
+
+        private static void IterateParents(ClassType classType, Func<ClassType, bool> action)
+        {
+            ClassType current = classType;
+            while (current != null && !action.Invoke(current)) current = (ClassType)current.Extends;
+        }
+
+        protected void AddVariable(InterfaceVariable variable)
         {
             Variables.Add(variable);
-            ObjectScope.AddVariable(variable, ParseInfo.Script.Diagnostics, range);
+            InterfaceScope.AddVariable(variable, ParseInfo.Script.Diagnostics, variable.DefinedAt.range);
             ParseInfo.TranslateInfo.GetComponent<InterfaceLinkComponent>().Add(variable.Name);
+        }
+
+        public void AddFunction(InterfaceFunction function)
+        {
+            Functions.Add(function);
+            InterfaceScope.AddMethod(function, ParseInfo.Script.Diagnostics, function.DefinedAt.range);
         }
 
         public override void AddObjectVariablesToAssigner(IWorkshopTree reference, VarIndexAssigner assigner)
@@ -116,7 +185,7 @@ namespace Deltin.Deltinteger.Parse
             return false;
         }
 
-        public override Scope GetObjectScope() => ObjectScope;
+        public override Scope GetObjectScope() => InterfaceScope;
         public override Scope ReturningScope() => null;
         public override CompletionItem GetCompletion() => new CompletionItem() {
             Label = Name,
@@ -150,6 +219,12 @@ namespace Deltin.Deltinteger.Parse
             // Get implementing interfaces.
             InheritContext.InheritFromContext(this, ParseInfo, _context.inherit());
 
+            ResolveVariables();
+            ResolveFunctions();
+        }
+
+        private void ResolveVariables()
+        {
             // Get interface variables.
             foreach (var variable in _context.interface_variable())
             {
@@ -164,12 +239,18 @@ namespace Deltin.Deltinteger.Parse
                 }
 
                 InterfaceVariable newVariable = new InterfaceVariable(variableType, variable.name.Text, new LanguageServer.Location(ParseInfo.Script.Uri, DocRange.GetRange(variable.name)));
-                AddVariable(newVariable, DocRange.GetRange(variable.name));
+                //AddVariable(newVariable, DocRange.GetRange(variable.name));
+                AddVariable(newVariable);
             }
+        }
 
-            foreach (var method in _context.interface_function())
+        private void ResolveFunctions()
+        {
+            // Get the interface functions.
+            foreach (var function in _context.interface_function())
             {
-
+                InterfaceFunction newFunction = new InterfaceFunction(ParseInfo, InterfaceScope, function);
+                AddFunction(newFunction);
             }
         }
 
@@ -227,10 +308,27 @@ namespace Deltin.Deltinteger.Parse
         public string Documentation => ""; // TODO
         public AccessLevel AccessLevel => AccessLevel.Public;
         private bool ReturnsValue { get; }
+        private List<IMethod> Implementations { get; } = new List<IMethod>();
+        private Scope Scope { get; }
+        private SubroutineInfo Subroutine { get; }
 
-        public InterfaceFunction(ParseInfo parseInfo, DeltinScriptParser.Interface_functionContext context)
+        public InterfaceFunction(ParseInfo parseInfo, Scope interfaceScope, DeltinScriptParser.Interface_functionContext context)
         {
-            ReturnsValue = context.VOID() != null;
+            Name = context.name.Text;
+            Scope = interfaceScope.Child();
+
+            var parameterInfo = CodeParameter.GetParameters(parseInfo, Scope, context.setParameters(), false);
+            Parameters = parameterInfo.Parameters;
+
+            if (context.VOID() == null)
+                ReturnsValue = false;
+            else
+            {
+                ReturnsValue = true;
+                ReturnType = CodeType.GetCodeTypeFromContext(parseInfo, context.code_type());
+            }
+
+            DefinedAt = new Location(parseInfo.Script.Uri, DocRange.GetRange(context.name));
         }
 
         public bool DoesReturnValue() => ReturnsValue;
@@ -240,6 +338,11 @@ namespace Deltin.Deltinteger.Parse
         public IWorkshopTree Parse(ActionSet actionSet, MethodCall methodCall)
         {
             throw new NotImplementedException();
+        }
+
+        public void AddImplementation(IMethod implementation)
+        {
+            Implementations.Add(implementation);
         }
     }
 }
