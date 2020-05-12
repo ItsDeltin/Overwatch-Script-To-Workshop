@@ -183,7 +183,7 @@ namespace Deltin.Deltinteger.Parse
         {
             public override CodeParameter[] Parameters() => new CodeParameter[] {
                 new CodeParameter("other", "The vector to determine line of site."),
-                new CodeParameter("barriers", "Defines how barriers affect line of sight.", WorkshopEnumType.GetEnumType<BarrierLOS>(), new ExpressionOrWorkshopValue(EnumData.GetEnumValue(BarrierLOS.NoBarriersBlock))),
+                new CodeParameter("barriers", "Defines how barriers affect line of sight.", ValueGroupType.GetEnumType<BarrierLOS>(), new ExpressionOrWorkshopValue(EnumData.GetEnumValue(BarrierLOS.NoBarriersBlock))),
             };
 
             public override IWorkshopTree Get(ActionSet actionSet, IWorkshopTree[] parameterValues) => Element.Part<V_IsInLineOfSight>(actionSet.CurrentObject, parameterValues[0], parameterValues[1]);
@@ -204,7 +204,7 @@ namespace Deltin.Deltinteger.Parse
         {
             public override CodeParameter[] Parameters() => new CodeParameter[] {
                 new CodeParameter("relativePlayer", "The player to whom the resulting vector will be relative."),
-                new CodeParameter("transformation", "Specifies whether the vector should receive a rotation and a translation (usually applied to positions) or only a rotation (usually applied to directions and velocities).", WorkshopEnumType.GetEnumType<Transformation>())
+                new CodeParameter("transformation", "Specifies whether the vector should receive a rotation and a translation (usually applied to positions) or only a rotation (usually applied to directions and velocities).", ValueGroupType.GetEnumType<Transformation>())
             };
 
             public override IWorkshopTree Get(ActionSet actionSet, IWorkshopTree[] parameterValues) => Element.Part<V_LocalVectorOf>(actionSet.CurrentObject, parameterValues[0], parameterValues[1]);
@@ -215,7 +215,7 @@ namespace Deltin.Deltinteger.Parse
         {
             public override CodeParameter[] Parameters() => new CodeParameter[] {
                 new CodeParameter("relativePlayer", "The player to whom the resulting vector will be relative."),
-                new CodeParameter("transformation", "Specifies whether the vector should receive a rotation and a translation (usually applied to positions) or only a rotation (usually applied to directions and velocities).", WorkshopEnumType.GetEnumType<Transformation>())
+                new CodeParameter("transformation", "Specifies whether the vector should receive a rotation and a translation (usually applied to positions) or only a rotation (usually applied to directions and velocities).", ValueGroupType.GetEnumType<Transformation>())
             };
 
             public override IWorkshopTree Get(ActionSet actionSet, IWorkshopTree[] parameterValues) => Element.Part<V_WorldVectorOf>(actionSet.CurrentObject, parameterValues[0], parameterValues[1]);

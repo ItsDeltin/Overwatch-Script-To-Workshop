@@ -125,9 +125,9 @@ namespace Deltin.Deltinteger.Parse
 
         public void SetupReturnHandler()
         {
-            if (Method.DoesReturnValue() && ReturnHandler == null)
+            if (ReturnHandler == null)
             {
-                ReturnHandler = new ReturnHandler(BuilderSet, Method.Name, Method.Attributes.Virtual || Method.multiplePaths);
+                ReturnHandler = new ReturnHandler(BuilderSet, Method.Name, (Method.Attributes.Virtual && Method.DoesReturnValue()) || Method.multiplePaths);
                 BuilderSet = BuilderSet.New(ReturnHandler);
             }
         }
@@ -163,7 +163,15 @@ namespace Deltin.Deltinteger.Parse
 
                 // Go to next case then parse the block.
                 typeSwitch.NextCase(new V_Number(((ClassType)option.Attributes.ContainingType).Identifier));
-                TranslateSegment(optionSet, option);      
+
+                if (option.subroutineInfo == null)
+                    TranslateSegment(optionSet, option);
+                else
+                {
+                    option.SetupSubroutine();
+                    BuilderSet.AddAction(Element.Part<A_StartRule>(option.subroutineInfo.Subroutine, EnumData.GetEnumValue(IfAlreadyExecuting.DoNothing)));
+                    if (Method.DoesReturnValue()) ReturnHandler.ReturnValue(option.subroutineInfo.ReturnHandler.GetReturnedValue());
+                }
 
                 if (Method.IsSubroutine) option.virtualSubroutineAssigned = Method;
             }

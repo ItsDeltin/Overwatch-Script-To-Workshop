@@ -516,5 +516,23 @@
       "Team Deathmatch",
       "Skirmish"
     ]
+  },
+  {
+    "Name": "Workshop Island (Night)",
+    "GameModes": [
+      "Elimination",
+      "Deathmatch",
+      "Team Deathmatch",
+      "Skirmish"
+    ]
+  },
+  {
+    "Name": "Workshop Expanse (Night)",
+    "GameModes": [
+      "Elimination",
+      "Deathmatch",
+      "Team Deathmatch",
+      "Skirmish"
+    ]
   }
 ]

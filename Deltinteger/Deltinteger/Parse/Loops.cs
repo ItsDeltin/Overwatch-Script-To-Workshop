@@ -10,6 +10,11 @@ namespace Deltin.Deltinteger.Parse
         /// <summary>The path info of the loop block.</summary>
         protected PathInfo Path;
 
+        /// <summary>Determines if the continue action is used directly.</summary>
+        protected bool RawContinue = true;
+        /// <summary>Determines if the break action is used directly.</summary>
+        protected readonly bool RawBreak = true; // Remove the readonly if this needs to be changed.
+
         /// <summary>Stores skips that continue the loop.</summary>
         private readonly List<SkipStartMarker> Continue = new List<SkipStartMarker>();
 
@@ -20,14 +25,28 @@ namespace Deltin.Deltinteger.Parse
 
         public PathInfo[] GetPaths() => new PathInfo[] { Path };
 
-        public void AddContinue(SkipStartMarker continueMarker)
+        public void AddContinue(ActionSet actionSet)
         {
-            Continue.Add(continueMarker);
+            if (RawContinue)
+                actionSet.AddAction(new A_Continue());
+            else
+            {
+                SkipStartMarker continuer = new SkipStartMarker(actionSet);
+                actionSet.AddAction(continuer);
+                Continue.Add(continuer);
+            }
         }
 
-        public void AddBreak(SkipStartMarker breakMarker)
+        public void AddBreak(ActionSet actionSet)
         {
-            Break.Add(breakMarker);
+            if (RawBreak)
+                actionSet.AddAction(new A_Break());
+            else
+            {
+                SkipStartMarker breaker = new SkipStartMarker(actionSet);
+                actionSet.AddAction(breaker);
+                Break.Add(breaker);
+            }
         }
 
         protected void ResolveContinues(ActionSet actionSet)
@@ -59,6 +78,8 @@ namespace Deltin.Deltinteger.Parse
 
         public WhileAction(ParseInfo parseInfo, Scope scope, DeltinScriptParser.WhileContext whileContext)
         {
+            RawContinue = true;
+
             if (whileContext.expr() == null)
                 parseInfo.Script.Diagnostics.Error("Expected expression.", DocRange.GetRange(whileContext.LEFT_PAREN()));
             else
@@ -144,7 +165,11 @@ namespace Deltin.Deltinteger.Parse
                 Condition = parseInfo.GetExpression(varScope, forContext.expr());
             
             if (forContext.endingVarset != null)
+            {
                 SetVariableAction = new SetVariableAction(parseInfo, varScope, forContext.endingVarset);
+                RawContinue = false;
+            }
+            else RawContinue = true;
 
             // Get the block.
             if (forContext.block() != null)
@@ -173,7 +198,10 @@ namespace Deltin.Deltinteger.Parse
             else if (InitialVarSet != null)
                 InitialVarSet.Translate(actionSet);
 
-            Element condition = (Element)Condition.Parse(actionSet) ?? new V_True();
+            // Get the condition.
+            Element condition;
+            if (Condition != null) condition = (Element)Condition.Parse(actionSet); // User-define condition
+            else condition = new V_True(); // No condition, just use true.
             actionSet.AddAction(Element.Part<A_While>(condition));
 
             Block.Translate(actionSet.Indent());
@@ -203,6 +231,8 @@ namespace Deltin.Deltinteger.Parse
 
         public AutoForAction(ParseInfo parseInfo, Scope scope, DeltinScriptParser.For_autoContext autoForContext)
         {
+            RawContinue = true;
+
             // Get the auto-for variable. (Required)
             if (autoForContext.forVariable != null)
             {
@@ -315,6 +345,8 @@ namespace Deltin.Deltinteger.Parse
 
         public ForeachAction(ParseInfo parseInfo, Scope scope, DeltinScriptParser.ForeachContext foreachContext)
         {
+            RawContinue = false;
+
             Scope varScope = scope.Child();
 
             ForeachVar = new ForeachVariable(varScope, new ForeachContextHandler(parseInfo, foreachContext));

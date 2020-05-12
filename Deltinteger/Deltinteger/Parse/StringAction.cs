@@ -227,7 +227,7 @@ namespace Deltin.Deltinteger.Parse
                 {
                     int parameter = formatGroups[g].Parameter;
                     groupString = groupString.Replace("<" + parameter + ">", "{" + g + "}");
-                    groupParameters[g] = g;
+                    groupParameters[g] = parameter;
                 }
                 customStringGroup.Segments[i] = new CustomStringSegment(groupString, groupParameters);
             }

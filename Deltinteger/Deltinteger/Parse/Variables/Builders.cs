@@ -142,7 +142,7 @@ namespace Deltin.Deltinteger.Parse
         protected override void CheckAttributes()
         {
             base.CheckAttributes();
-            RejectAttributes(AttributeType.Ext, AttributeType.Ref);
+            RejectAttributes(AttributeType.Ref);
         }
 
         protected override void GetCodeType()
