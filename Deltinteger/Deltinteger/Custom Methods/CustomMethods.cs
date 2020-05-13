@@ -72,14 +72,12 @@ namespace Deltin.Deltinteger.CustomMethods
             return (CustomMethodBase)Activator.CreateInstance(Type);
         }
 
-        public bool DoesReturnValue() => CustomMethodType == CustomMethodType.Value || CustomMethodType == CustomMethodType.MultiAction_Value;
-
         public IWorkshopTree Parse(ActionSet actionSet, MethodCall methodCall)
         {
             return GetObject().Get(actionSet, methodCall.ParameterValues, methodCall.AdditionalParameterData);
         }
 
-        public string GetLabel(bool markdown) => HoverHandler.GetLabel(CustomMethodType == CustomMethodType.Action ? null : ReturnType?.Name ?? "define", Name, Parameters, markdown, Documentation);
+        public string GetLabel(bool markdown) => MethodAttributes.DefaultLabel(this).ToString(markdown);
         public CompletionItem GetCompletion() => MethodAttributes.GetFunctionCompletion(this);
 
         static CustomMethodData[] _customMethodData = null;

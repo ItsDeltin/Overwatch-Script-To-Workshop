@@ -210,7 +210,6 @@ namespace Deltin.Deltinteger.Json
         public string Documentation => "Gets a property value from a string. Used for getting properties whos name cannot be typed in code.";
         public Deltin.Deltinteger.LanguageServer.Location DefinedAt => null;
         public AccessLevel AccessLevel => AccessLevel.Public;
-        public bool DoesReturnValue() => true;
         private JsonType ContainingType { get; }
 
         public GetJsonPropertyFunction(JsonType containingType)
@@ -231,7 +230,7 @@ namespace Deltin.Deltinteger.Json
             Documentation = Documentation
         };
 
-        public string GetLabel(bool markdown) => HoverHandler.GetLabel("define", Name, Parameters, markdown, Documentation);
+        public string GetLabel(bool markdown) => MethodAttributes.DefaultLabel(this).ToString(markdown);
 
         public IWorkshopTree Parse(ActionSet actionSet, MethodCall methodCall) => (Element)methodCall.AdditionalParameterData[0];
 

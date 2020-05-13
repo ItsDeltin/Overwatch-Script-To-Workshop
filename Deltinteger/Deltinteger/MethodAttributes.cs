@@ -71,6 +71,23 @@ namespace Deltin.Deltinteger
             Detail = function.GetLabel(false),
             Documentation = function.Documentation
         };
+
+        public static MarkupBuilder DefaultLabel(IMethod function)
+        {
+            MarkupBuilder markup = new MarkupBuilder()
+                .StartCodeLine()
+                .Add(function.Name + CodeParameter.GetLabels(function.Parameters, false))
+                .EndCodeLine();
+            
+            if (function.Documentation != null)
+            {
+                markup
+                    .NewSection()
+                    .Add(function.Documentation);
+            }
+            
+            return markup;
+        }
     }
 
     public class MethodCall

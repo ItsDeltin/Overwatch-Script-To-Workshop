@@ -47,10 +47,7 @@ namespace Deltin.Deltinteger.Parse
 
             // Get the type.
             if (context.VOID() == null)
-            {
-                doesReturnValue = true;
                 ReturnType = CodeType.GetCodeTypeFromContext(parseInfo, context.code_type());
-            }
 
             // Setup the parameters and parse the block.
             if (!IsSubroutine)
@@ -179,7 +176,7 @@ namespace Deltin.Deltinteger.Parse
             {
                 block = new BlockAction(parseInfo.SetCallInfo(CallInfo), BlockScope, context.block());
 
-                BlockTreeScan validation = new BlockTreeScan(doesReturnValue, parseInfo, this);
+                BlockTreeScan validation = new BlockTreeScan(ReturnType != null, parseInfo, this);
                 validation.ValidateReturns();
                 multiplePaths = validation.MultiplePaths;
             }

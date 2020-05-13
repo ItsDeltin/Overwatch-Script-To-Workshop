@@ -30,9 +30,26 @@ namespace Deltin.Deltinteger.Parse
             Action = action;
         }
 
-        public bool DoesReturnValue() => ReturnType != null;
+        public FuncMethod(FuncMethodBuilder builder)
+        {
+            Name = builder.Name ?? throw new ArgumentNullException(nameof(Name));
+            Parameters = builder.Parameters ?? throw new ArgumentNullException(nameof(Parameters));
+            ReturnType = builder.ReturnType ?? throw new ArgumentNullException(nameof(ReturnType));
+            Documentation = builder.Documentation ?? throw new ArgumentNullException(nameof(Documentation));
+            Action = builder.Action ?? throw new ArgumentNullException(nameof(Action));
+        }
+
         public CompletionItem GetCompletion() => MethodAttributes.GetFunctionCompletion(this);
-        public string GetLabel(bool markdown) => "todo";
+        public string GetLabel(bool markdown) => MethodAttributes.DefaultLabel(this).ToString(markdown);
         public IWorkshopTree Parse(ActionSet actionSet, MethodCall methodCall) => Action.Invoke(actionSet, methodCall);
+    }
+
+    public class FuncMethodBuilder
+    {
+        public string Name;
+        public CodeParameter[] Parameters;
+        public CodeType ReturnType;
+        public string Documentation;
+        public Func<ActionSet, MethodCall, IWorkshopTree> Action;
     }
 }

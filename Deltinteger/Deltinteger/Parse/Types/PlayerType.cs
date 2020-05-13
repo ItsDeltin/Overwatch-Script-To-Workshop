@@ -39,13 +39,25 @@ namespace Deltin.Deltinteger.Parse
         private PlayerType() : base("Player")
         {
             CanBeExtended = false;
-            Inherit(ObjectType.Instance, null, null);
+            Inherit(Positionable.Instance, null, null);
 
             foreach (VariableShorthand shorthand in Variables)
                 ObjectScope.AddNativeVariable(shorthand.Variable);
             
-            AddFunc("IsButtonHeld", new CodeParameter[] { new CodeParameter("button", WorkshopEnumType.GetEnumType<Button>()) }, (set, call) => Element.Part<V_IsButtonHeld>(set.CurrentObject, call.ParameterValues[0]));
-            AddFunc("IsCommunicating", new CodeParameter[] { new CodeParameter("communication", WorkshopEnumType.GetEnumType<Communication>()) }, (set, call) => Element.Part<V_IsCommunicating>(set.CurrentObject, call.ParameterValues[0]));
+            AddFunc(new FuncMethodBuilder() {
+                Name = "IsButtonHeld",
+                Parameters = new CodeParameter[] { new CodeParameter("button", ValueGroupType.GetEnumType<Button>()) },
+                ReturnType = BooleanType.Instance,
+                Action = (set, call) => Element.Part<V_IsButtonHeld>(set.CurrentObject, call.ParameterValues[0]),
+                Documentation = "Determines if the target player is holding a button."
+            });
+            AddFunc(new FuncMethodBuilder() {
+                Name = "IsCommunicating",
+                Parameters = new CodeParameter[] { new CodeParameter("communication", ValueGroupType.GetEnumType<Communication>()) },
+                ReturnType = BooleanType.Instance,
+                Action = (set, call) => Element.Part<V_IsCommunicating>(set.CurrentObject, call.ParameterValues[0]),
+                Documentation = "Determines if the target player is communicating."
+            });
         }
 
         public override void AddObjectVariablesToAssigner(IWorkshopTree reference, VarIndexAssigner assigner)
@@ -61,9 +73,9 @@ namespace Deltin.Deltinteger.Parse
         public override Scope GetObjectScope() => ObjectScope;
         public override Scope ReturningScope() => null;
 
-        private void AddFunc(string name, CodeParameter[] parameters, Func<ActionSet, MethodCall, IWorkshopTree> action)
+        private void AddFunc(FuncMethodBuilder builder)
         {
-            ObjectScope.AddNativeMethod(new FuncMethod(name, parameters, action));
+            ObjectScope.AddNativeMethod(new FuncMethod(builder));
         }
 
         class VariableShorthand

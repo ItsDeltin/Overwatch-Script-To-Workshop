@@ -171,7 +171,7 @@ namespace Deltin.Deltinteger
         }
     }
 
-    class MarkupBuilder
+    public class MarkupBuilder
     {
         StringBuilder result = new StringBuilder();
 
@@ -204,5 +204,6 @@ namespace Deltin.Deltinteger
         }
 
         public override string ToString() => result.ToString();
+        public string ToString(bool markdown) => result.ToString();
     }
 }

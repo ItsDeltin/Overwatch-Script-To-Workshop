@@ -22,7 +22,6 @@ namespace Deltin.Deltinteger
         CodeType ReturnType { get; }
         MethodAttributes Attributes { get; }
         IWorkshopTree Parse(ActionSet actionSet, MethodCall methodCall);
-        bool DoesReturnValue();
     }
 
     public interface ISkip

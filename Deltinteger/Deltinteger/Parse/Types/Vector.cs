@@ -27,6 +27,7 @@ namespace Deltin.Deltinteger.Parse
             CanBeDeleted = false;
             CanBeExtended = false;
             Kind = "struct";
+            Inherit(Positionable.Instance, null, null);
 
             X = CreateInternalVar("X", "The X component of the vector.");
             Y = CreateInternalVar("Y", "The Y component of the vector.");

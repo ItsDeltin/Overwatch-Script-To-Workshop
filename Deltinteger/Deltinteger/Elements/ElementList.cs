@@ -120,8 +120,6 @@ namespace Deltin.Deltinteger.Elements
             return (Element)Activator.CreateInstance(Type);
         }
 
-        public bool DoesReturnValue() => IsValue;
-
         public IWorkshopTree Parse(ActionSet actionSet, MethodCall methodCall)
         {
             Element element = GetObject();
@@ -135,7 +133,7 @@ namespace Deltin.Deltinteger.Elements
             else return element;
         }
 
-        public string GetLabel(bool markdown) => HoverHandler.GetLabel(!IsValue ? null : ReturnType?.Name ?? "define", Name, Parameters, markdown, Wiki?.Description);
+        public string GetLabel(bool markdown) => MethodAttributes.DefaultLabel(this).ToString(markdown);
 
         public CompletionItem GetCompletion() => MethodAttributes.GetFunctionCompletion(this);
     }
