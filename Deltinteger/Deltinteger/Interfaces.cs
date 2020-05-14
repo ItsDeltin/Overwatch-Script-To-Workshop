@@ -14,7 +14,7 @@ namespace Deltin.Deltinteger
     {
         string ToWorkshop(OutputLanguage language);
         bool EqualTo(IWorkshopTree other);
-        int ElementCount(int depth);
+        int ElementCount() => 1;
     }
 
     public interface IMethod : IScopeable, IParameterCallable

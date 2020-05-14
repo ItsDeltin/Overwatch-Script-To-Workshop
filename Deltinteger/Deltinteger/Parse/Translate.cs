@@ -154,7 +154,7 @@ namespace Deltin.Deltinteger.Parse
             InitialPlayer = new TranslateRule(this, "Initial Player", RuleEvent.OngoingPlayer);
             WorkshopRules = new List<Rule>();
 
-            // Assign static variables.
+            // Init called types.
             foreach (var type in Types.CalledTypes.Distinct()) type.WorkshopInit(this);
 
              // Assign variables at the rule-set level.
@@ -214,6 +214,9 @@ namespace Deltin.Deltinteger.Parse
             VarCollection.ToWorkshop(result);
             result.AppendLine();
 
+            // Print class identifiers.
+            Types.PrintClassIdentifiers(result);
+
             // Get the subroutines.
             SubroutineCollection.ToWorkshop(result);
 
@@ -270,6 +273,23 @@ namespace Deltin.Deltinteger.Parse
             return GetCodeType(name, null, null) != null;
         }
         public T GetCodeType<T>() where T: CodeType => (T)AllTypes.FirstOrDefault(type => type.GetType() == typeof(T));
+
+        public void CallType(CodeType type)
+        {
+            if (!CalledTypes.Contains(type))
+                CalledTypes.Add(type);
+        }
+
+        public void PrintClassIdentifiers(WorkshopBuilder builder)
+        {
+            builder.AppendLine("// Class identifiers:");
+
+            foreach (CodeType type in AllTypes)
+                if (type is ClassType classType && classType.Identifier > 0)
+                    builder.AppendLine("// " + classType.Name + ": " + classType.Identifier);
+            
+            builder.AppendLine();
+        }
     }
 
     public interface IComponent
