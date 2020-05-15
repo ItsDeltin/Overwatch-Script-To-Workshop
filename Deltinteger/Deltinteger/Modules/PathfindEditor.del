@@ -5,21 +5,37 @@ rule: "Commands" -1
 {
     DisableInspectorRecording();
     CreateHudText(VisibleTo:AllPlayers(), Text:"https://github.com/ItsDeltin/Overwatch-Script-To-Workshop/wiki/Pathfinding", TextColor:Color.Blue, Location:Location.Right, SortOrder:0);
-    HelpText("Ultimate: Create node."                                                    , 1 );
-    HelpText("Crouch + Ultimate: Destroy node."                                          , 2 );
-    HelpText("Interact: Select node."                                                    , 3 );
-    HelpText("Crouch + Interact: Deselect all nodes."                                    , 4 );
-    HelpText("Secondary Fire: Connect all selected nodes."                               , 5 );
-    HelpText("Crouch + Secondary Fire: Disconnect all selected nodes."                   , 6 );
-    HelpText("Voice Line Right: Create a path from the first to the last selected nodes.", 7 );
-    HelpText("Voice Line Left: Connect all selected nodes to the first selected node."   , 8 );
-    HelpText("Shift: Switch attribute."                                                  , 9 );
-    HelpText("Voice Line Up: Compile pathmap."                                           , 11);
+    HelpText("Ultimate: Create node."                                                    , 1, Color.SkyBlue);
+    HelpText("Crouch + Ultimate: Destroy node."                                          , 2, Color.SkyBlue);
+    HelpText("Interact: Select node."                                                    , 3, Color.LimeGreen);
+    HelpText("Crouch + Interact: Deselect all nodes."                                    , 4, Color.LimeGreen);
+    HelpText("Secondary Fire: Connect all selected nodes."                               , 5, Color.Green);
+    HelpText("Crouch + Secondary Fire: Disconnect all selected nodes."                   , 6, Color.Green);
+    HelpText("Voice Line Right: Create a path from the first to the last selected nodes.", 7, Color.Green);
+    HelpText("Voice Line Left: Connect all selected nodes to the first selected node."   , 8, Color.Green);
+    HelpText("Shift: Switch attribute."                                                  , 9, Color.Orange);
+    HelpText("Voice Line Up: Compile pathmap."                                           , 11, Color.Yellow);
 }
 
-void HelpText(ref define text, ref define order)
+globalvar define scoper;
+
+rule: "Create Scoper"
 {
-    CreateHudText(VisibleTo:AllPlayers(), Subheader:text, SubheaderColor:Color.SkyBlue, Location:Location.Right, SortOrder:order);
+    if (CurrentGameMode() == GameMode.Deathmatch)
+        CreateDummyBot(Hero.Roadhog, Team.All, 1, Vector(0, 1000, 0));
+    else
+        CreateDummyBot(Hero.Roadhog, Team.Team1, 1, Vector(0, 1000, 0));
+    scoper = LastCreatedEntity();
+    SetGravity(scoper, 0);
+    SetStatus(scoper, null, Status.Unkillable, 9999);
+    SetMaxHealth(scoper, 1000);
+    StartDamageModification(scoper, FilteredArray(AllPlayers(), ArrayElement() != scoper), 0, DamageModificationRev.ReceiversDamagersAndDamagePercent);
+    SetInvisible(scoper, InvisibleTo.All);
+}
+
+void HelpText(ref define text, ref define order, Color color)
+{
+    CreateHudText(VisibleTo:AllPlayers(), Subheader:text, SubheaderColor:color, Location:Location.Right, SortOrder:order);
 }
 
 rule: "Disable conflicting controls"
@@ -104,6 +120,7 @@ class Node
     private define EffectID;
     public define Selected = false;
     public define visible = false;
+    public define SelectIDText;
 
     public Node(define pos)
     {
@@ -124,6 +141,7 @@ class Node
     {
         if (visible)
         {
+            DestroyInWorldText(SelectIDText);
             DestroyEffect(EffectID);
             visible = false;
         }
@@ -137,6 +155,7 @@ class Node
 
     public void Deselect()
     {
+        DestroyInWorldText(SelectIDText);
         Selected = false;
         Update();
     }
@@ -147,7 +166,10 @@ class Node
         if (!Selected)
             Make(Color.Blue);
         else
+        {
             Make(Color.Green);
+            root.ActivateScoper(root.scoper, 2, this);
+        }
         EffectID = LastCreatedEntity();
     }
 
@@ -262,7 +284,7 @@ class Segment
 
             if (FirstAttribute != 0 || SecondAttribute != 0)
             {
-                root.ActivateScoper(1, this);
+                root.ActivateScoper(root.scoper, 1, this);
             }
         }
     }
@@ -412,16 +434,16 @@ rule: "Create Attribute HUD"
 }
 
 rule: "Create segment attribute text"
-Event.OnDamageTaken          // On Damage Taken event
-if (scoper == EventPlayer()) // Check if is scoper
-if (GetID() == 1)            // GetID equals expected ID
+Event.OnDamageTaken
+if (scoper == EventPlayer())
+if (ScopeID == 1)
 {
     CreateInWorldText(
         AllPlayers(),
-        (<Segment>GetData()).FirstAttribute,
+        (<Segment>ScopeData).FirstAttribute,
         LinearInterpolate(
-            (<Node>((<Segment>GetData()).Node1)).ShownLocation,
-            (<Node>((<Segment>GetData()).Node2)).ShownLocation,
+            (<Node>((<Segment>ScopeData).Node1)).ShownLocation,
+            (<Node>((<Segment>ScopeData).Node2)).ShownLocation,
             0.2
         ),
         2.5,
@@ -430,13 +452,13 @@ if (GetID() == 1)            // GetID equals expected ID
         Color.Yellow,
         Spectators.VisibleAlways
     );
-    (<Segment>GetData()).AttributeText1 = LastTextID();
+    (<Segment>ScopeData).AttributeText1 = LastTextID();
     CreateInWorldText(
         AllPlayers(),
-        (<Segment>GetData()).SecondAttribute,
+        (<Segment>ScopeData).SecondAttribute,
         LinearInterpolate(
-            (<Node>((<Segment>GetData()).Node1)).ShownLocation,
-            (<Node>((<Segment>GetData()).Node2)).ShownLocation,
+            (<Node>((<Segment>ScopeData).Node1)).ShownLocation,
+            (<Node>((<Segment>ScopeData).Node2)).ShownLocation,
             0.8
         ),
         2.5,
@@ -445,5 +467,23 @@ if (GetID() == 1)            // GetID equals expected ID
         Color.Orange,
         Spectators.VisibleAlways
     );
-    (<Segment>GetData()).AttributeText2 = LastTextID();
+    (<Segment>ScopeData).AttributeText2 = LastTextID();
+}
+
+rule: "Create Selected ID Text"
+Event.OnDamageTaken
+if (scoper == EventPlayer())
+if (ScopeID == 2)
+{
+    CreateInWorldText(
+        AllPlayers(),
+        IndexOfArrayValue(Nodes, ScopeData),
+        (<Node>ScopeData).ShownLocation,
+        3,
+        Clipping.DoNotClip,
+        InworldTextRev.String,
+        Color.Green,
+        Spectators.VisibleAlways
+    );
+    (<Node>ScopeData).SelectIDText = LastTextID();
 }
