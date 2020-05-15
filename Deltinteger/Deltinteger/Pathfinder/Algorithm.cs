@@ -6,7 +6,6 @@ namespace Deltin.Deltinteger.Pathfinder
 {
     public abstract class DijkstraBase
     {
-        private static readonly V_Number Infinity = new V_Number(9999);
         private static readonly V_Number LeastNot0 = new V_Number(0.0001);
 
         protected ActionSet actionSet { get; }
@@ -62,13 +61,13 @@ namespace Deltin.Deltinteger.Pathfinder
 
             actionSet.AddAction(Element.Part<A_While>(LoopCondition()));
 
-            // !WAIT actionSet.AddAction(A_Wait.MinimumWait);
-
             // Get neighboring indexes
             actionSet.AddAction(connectedSegments.SetVariable(GetConnectedSegments(
                 Segments,
                 (Element)current.GetVariable()
             )));
+
+            actionSet.AddAction(A_Wait.MinimumWait);
 
             // Loop through neighboring indexes
             ForeachBuilder forBuilder = new ForeachBuilder(actionSet, connectedSegments.GetVariable());
@@ -78,15 +77,14 @@ namespace Deltin.Deltinteger.Pathfinder
             actionSet.AddAction(ArrayBuilder<Element>.Build(
                 // Get the index from the segment data
                 neighborIndex.SetVariable(
-                    Element.TernaryConditional(
+                    Element.Part<V_FirstOf>(Element.Part<V_FilteredArray>(
+                        BothNodes(forBuilder.IndexValue),
                         new V_Compare(
-                            current.GetVariable(),
+                            new V_ArrayElement(),
                             Operators.NotEqual,
-                            Node1(forBuilder.IndexValue)
-                        ),
-                        Node1(forBuilder.IndexValue),
-                        Node2(forBuilder.IndexValue)
-                    )
+                            current.GetVariable()
+                        )
+                    ))
                 ),
 
                 // Get the distance between the current and the neighbor index.
@@ -99,11 +97,14 @@ namespace Deltin.Deltinteger.Pathfinder
             ));
 
             // Set the current neighbor's distance if the new distance is less than what it is now.
-            actionSet.AddAction(Element.Part<A_If>(
-                (Element)neighborDistance.GetVariable()
-                <
-                WorkingDistance((Element)distances.GetVariable(), (Element)neighborIndex.GetVariable())
-            ));
+            actionSet.AddAction(Element.Part<A_If>(Element.Part<V_Or>(
+                new V_Compare(
+                    ((Element)distances.GetVariable())[(Element)neighborIndex.GetVariable()],
+                    Operators.Equal,
+                    new V_Number(0)
+                ),
+                (Element)neighborDistance.GetVariable() < ((Element)distances.GetVariable())[(Element)neighborIndex.GetVariable()]
+            )));
 
             actionSet.AddAction(distances.SetVariable((Element)neighborDistance.GetVariable(), null, (Element)neighborIndex.GetVariable()));
             actionSet.AddAction(parentArray.SetVariable((Element)current.GetVariable() + 1, null, (Element)neighborIndex.GetVariable()));
@@ -123,7 +124,9 @@ namespace Deltin.Deltinteger.Pathfinder
                     (Element)neighborIndex.GetVariable()
                 ));
 
+            // End the if.
             actionSet.AddAction(new A_End());
+            // End the for.
             forBuilder.Finish();
 
             actionSet.AddAction(ArrayBuilder<Element>.Build(
@@ -165,8 +168,6 @@ namespace Deltin.Deltinteger.Pathfinder
                 Operators.GreaterThanOrEqual,
                 new V_Number(0)
             )));
-
-            // !WAIT actionSet.AddAction(A_Wait.MinimumWait);
 
             Element next = Nodes[(Element)current.GetVariable()];
             Element array = (Element)finalPath.GetVariable();
@@ -297,19 +298,9 @@ namespace Deltin.Deltinteger.Pathfinder
         }
 
         private static Element LowestUnvisited(Element nodes, Element distances, Element unvisited) => Element.Part<V_FirstOf>(Element.Part<V_SortedArray>(
-            Element.Part<V_FilteredArray>(unvisited, new V_Compare(new V_ArrayElement(), Operators.NotEqual, new V_Number(0))),
+            Element.Part<V_FilteredArray>(unvisited, new V_Compare(distances[new V_ArrayElement()], Operators.NotEqual, new V_Number(0))),
             distances[new V_ArrayElement()]
         ));
-
-        private static Element WorkingDistance(Element distances, Element index)
-        {
-            // Return infinity if the distance is unassigned.
-            return Element.TernaryConditional(
-                new V_Compare(distances[index], Operators.NotEqual, new V_Number(0)),
-                distances[index],
-                Infinity
-            );
-        }
 
         private static Element BothNodes(Element segment) => Element.CreateArray(Node1(segment), Node2(segment));
         private static Element Node1(Element segment) => Element.Part<V_RoundToInteger>(Element.Part<V_XOf>(segment), EnumData.GetEnumValue(Rounding.Down));
@@ -443,7 +434,12 @@ namespace Deltin.Deltinteger.Pathfinder
     public class DijkstraEither : DijkstraBase
     {
         private IndexReference potentialDestinations;
-        private Element destinations;
+        private readonly Element destinations;
+
+        public DijkstraEither(ActionSet actionSet, Element pathfindObject, Element position, Element destinations, Element attributes) : base(actionSet, pathfindObject, position, attributes, false)
+        {
+            this.destinations = destinations;
+        }
 
         protected override void Assign()
         {
