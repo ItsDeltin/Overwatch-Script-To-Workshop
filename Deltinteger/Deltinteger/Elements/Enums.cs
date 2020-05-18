@@ -196,7 +196,11 @@ namespace Deltin.Deltinteger.Elements
         [EnumOverride(null, "Player Left Match")]
         OnPlayerLeave,
         [HideElement]
-        Subroutine
+        Subroutine,
+        [EnumOverride(null, "Player Dealt Knockback")]
+        PlayerDealtKnockback,
+        [EnumOverride(null, "Player Received Knockback")]
+        PlayerReceivedKnockback
     }
 
     [WorkshopEnum]

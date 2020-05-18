@@ -40,6 +40,7 @@ namespace Deltin.Deltinteger.Parse
             assigner.Add(_length, Element.Part<V_CountOf>(reference));
         }
 
+        public override bool Implements(CodeType type) => type is ArrayType arrayType && arrayType.ArrayOfType.Implements(ArrayOfType);
         public override Scope GetObjectScope() => _scope;
         public override Scope ReturningScope() => null;
         public override CompletionItem GetCompletion() => throw new NotImplementedException();
