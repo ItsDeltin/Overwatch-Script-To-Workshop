@@ -65,6 +65,12 @@ namespace Deltin.Parse.Functions
 
             options.AddRange(Array.ConvertAll(Macro.Attributes.AllOverrideOptions(), iMethod => (DefinedMacro)iMethod));
 
+            //If there are no overrides, don't bother creating the lookup table
+            if (options.Count == 1)
+            {
+                return Macro.Expression.Parse(BuilderSet);
+            }
+
             List<IExpression> expressions = new List<IExpression>();
             List<int> identifiers = new List<int>();
 
@@ -99,7 +105,8 @@ namespace Deltin.Parse.Functions
             List<IWorkshopTree> expElements = new List<IWorkshopTree>();
             List<int> identifiers = new List<int>();
 
-            if(options.Count == 1)
+            //If there are no overrides, don't bother creating the lookup table
+            if (options.Count == 1)
             {
                 return macro.Expression.Parse(BuilderSet);
             }
