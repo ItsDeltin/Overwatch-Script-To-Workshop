@@ -83,6 +83,7 @@ namespace Deltin.Deltinteger.Parse
         {
             // Assign the parameters.
             actionSet = actionSet.New(actionSet.IndexAssigner.CreateContained());
+
             return MacroBuilder.Call(this, methodCall, actionSet);
 
 
@@ -94,14 +95,14 @@ namespace Deltin.Deltinteger.Parse
         {
             for (int i = 0; i < ParameterVars.Length; i++)
             {
-                IGettable indexResult = actionSet.IndexAssigner.Add(actionSet.VarCollection, ParameterVars[i], actionSet.IsGlobal, parameterValues?[i], false);
+                actionSet.IndexAssigner.Add(ParameterVars[i], parameterValues[i]);
 
                 //if (indexResult is IndexReference indexReference && parameterValues?[i] != null)
                     //actionSet.AddAction(indexReference.SetVariable((Element)parameterValues[i]));
 
                 foreach (Var virtualParameterOption in VirtualVarGroup(i))
                 {
-                    actionSet.IndexAssigner.Add(virtualParameterOption, indexResult);
+                    actionSet.IndexAssigner.Add(virtualParameterOption, parameterValues[i]);
                 }
 
             }
