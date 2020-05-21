@@ -5846,6 +5846,9 @@
             "Respawn Time Scalar": {
               "$ref": "#/definitions/Respawn Time Scalar"
             },
+            "Limit Valid Control Points": {
+              "$ref": "#/definitions/Limit Valid Control Points"
+            },
             "Enabled Maps": {
               "$ref": "#/definitions/Skirmish Maps",
               "description": "An array of enabled maps for the 'Skirmish' mode."
