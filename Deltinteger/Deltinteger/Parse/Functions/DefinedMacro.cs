@@ -95,14 +95,14 @@ namespace Deltin.Deltinteger.Parse
         {
             for (int i = 0; i < ParameterVars.Length; i++)
             {
-                actionSet.IndexAssigner.Add(ParameterVars[i], parameterValues[i]);
+                IGettable result = actionSet.IndexAssigner.Add(ParameterVars[i], parameterValues[i]);
 
                 //if (indexResult is IndexReference indexReference && parameterValues?[i] != null)
                     //actionSet.AddAction(indexReference.SetVariable((Element)parameterValues[i]));
 
                 foreach (Var virtualParameterOption in VirtualVarGroup(i))
                 {
-                    actionSet.IndexAssigner.Add(virtualParameterOption, parameterValues[i]);
+                    actionSet.IndexAssigner.Add(virtualParameterOption, result);
                 }
 
             }
