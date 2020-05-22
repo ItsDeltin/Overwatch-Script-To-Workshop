@@ -16,6 +16,7 @@ namespace Deltin.Deltinteger.Parse
     {
         public List<Uri> ImportedFiles { get; } = new List<Uri>();
         public List<ScriptFile> ScriptFiles { get; } = new List<ScriptFile>();
+        public List<ImportedScript> OWFiles { get; } = new List<ImportedScript>();
         public JObject MergedLobbySettings { get; private set; }
         private readonly Diagnostics _diagnostics;
         private readonly FileGetter _fileGetter;
@@ -46,6 +47,7 @@ namespace Deltin.Deltinteger.Parse
                 }
             }
         }
+
 
         public static void AddImportCompletion(ScriptFile script, string directory, DocRange range)
         {
@@ -115,6 +117,10 @@ namespace Deltin.Deltinteger.Parse
                         case ".workshop":
                             ScriptFile importedScript = new ScriptFile(_diagnostics, importResult.Uri, _fileGetter.GetScript(importResult.Uri));
                             CollectScriptFiles(importedScript);
+                            break;
+                        case ".ow":
+                            ImportedScript owScript = _fileGetter.GetImportedFile(importResult.Uri);
+                            OWFiles.Add(owScript);
                             break;
                         
                         // Get lobby settings.

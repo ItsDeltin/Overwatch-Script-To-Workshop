@@ -8,15 +8,15 @@
     <Antlr4UseCSharpGenerator>True</Antlr4UseCSharpGenerator>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="HtmlAgilityPack" Version="1.11.16"/>
-    <PackageReference Include="Newtonsoft.Json" Version="12.0.2"/>
-    <PackageReference Include="Antlr4.Runtime" Version="4.6.6"/>
-    <PackageReference Include="TextCopy" Version="1.7.1"/>
-    <PackageReference Include="System.Drawing.Common" Version="4.6.0"/>
-    <PackageReference Include="OmniSharp.Extensions.LanguageServer" Version="0.14.1"/>
-    <PackageReference Include="Serilog" Version="2.9.0"/>
-    <PackageReference Include="Serilog.Sinks.File" Version="4.1.0"/>
-    <PackageReference Include="Serilog.Extensions.Logging" Version="3.0.1"/>
+    <PackageReference Include="HtmlAgilityPack" Version="1.11.16" />
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
+    <PackageReference Include="Antlr4.Runtime" Version="4.6.6" />
+    <PackageReference Include="TextCopy" Version="1.7.1" />
+    <PackageReference Include="System.Drawing.Common" Version="4.6.0" />
+    <PackageReference Include="OmniSharp.Extensions.LanguageServer" Version="0.14.1" />
+    <PackageReference Include="Serilog" Version="2.9.0" />
+    <PackageReference Include="Serilog.Sinks.File" Version="4.1.0" />
+    <PackageReference Include="Serilog.Extensions.Logging" Version="3.0.1" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Languages\*.*"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
@@ -26,7 +26,7 @@
     <Content Include="Maps.json"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Antlr4.Runtime" Version="4.6.4"/>
+    <PackageReference Include="Antlr4.Runtime" Version="4.6.4" />
     <PackageReference Include="Antlr4.CodeGenerator" Version="4.6.5-beta001">
       <PrivateAssets>All</PrivateAssets>
     </PackageReference>
@@ -40,7 +40,7 @@
     </Antlr4>
   </ItemGroup>
   <ItemGroup>
-    <Compile Remove="Custom Methods/Old/**"/>
-    <Compile Remove="Pathfinder/Old_Methods.cs"/>
+    <Compile Remove="Custom Methods/Old/**" />
+    <Compile Remove="Pathfinder/Old_Methods.cs" />
   </ItemGroup>
 </Project>

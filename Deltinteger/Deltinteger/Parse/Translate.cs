@@ -5,6 +5,8 @@ using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.Lobby;
 using Deltin.Deltinteger.I18n;
+using System.Text.RegularExpressions;
+using System.Diagnostics;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -25,7 +27,7 @@ namespace Deltin.Deltinteger.Parse
         public TranslateRule InitialPlayer { get; private set; }
         private readonly OutputLanguage Language;
         public readonly bool OptimizeOutput;
-        private List<IComponent> Components { get; } = new List<IComponent>(); 
+        private List<IComponent> Components { get; } = new List<IComponent>();
 
         public DeltinScript(TranslateSettings translateSettings)
         {
@@ -43,9 +45,12 @@ namespace Deltin.Deltinteger.Parse
             Importer.CollectScriptFiles(translateSettings.Root);            
             
             Translate();
+
             if (!Diagnostics.ContainsErrors())
                 ToWorkshop(translateSettings.AdditionalRules);
-            
+
+
+
             foreach (IComponent component in Components)
                 if (component is IDisposable disposable)
                     disposable.Dispose();
@@ -68,6 +73,8 @@ namespace Deltin.Deltinteger.Parse
 
         void Translate()
         {
+
+
             // Get the reserved variables and IDs
             foreach (ScriptFile script in Importer.ScriptFiles)
             {
@@ -138,6 +145,7 @@ namespace Deltin.Deltinteger.Parse
             foreach (ScriptFile script in Importer.ScriptFiles)
             foreach (var ruleContext in script.Context.ow_rule())
                 rules.Add(new RuleAction(new ParseInfo(script, this), RulesetScope, ruleContext));
+
         }
 
         public string WorkshopCode { get; private set; }
@@ -173,6 +181,8 @@ namespace Deltin.Deltinteger.Parse
                     ));
                 }
             }
+
+
 
             // Setup single-instance methods.
             foreach (var method in subroutines) method.SetupSubroutine();
@@ -210,6 +220,12 @@ namespace Deltin.Deltinteger.Parse
                 result.AppendLine();
             }
 
+            foreach (ImportedScript script in Importer.OWFiles)
+            {
+                ParseOWScript(script);
+            }
+
+
             // Get the variables.
             VarCollection.ToWorkshop(result);
             result.AppendLine();
@@ -227,7 +243,27 @@ namespace Deltin.Deltinteger.Parse
                 ElementCount += WorkshopRules[i].ElementCount(OptimizeOutput);
                 if (i != WorkshopRules.Count - 1) result.AppendLine();
             }
-            
+
+            Regex ruleRegex = new Regex(@"(?:rule[\s\S]*?)\r?\n(?=\{)(?:(?=(?(1).*?(?=\1)).*?\{(.*))(?=(?(2).*?(?=\2)).*?\}(.*)).)+?(?>.*?(?=\1))[^{]*?(?=\2$)
+", RegexOptions.Singleline | RegexOptions.Compiled);
+            //Regex ruleBodyRegex = new Regex(@"\{(?:[^{}]+|(?R))*+\}", RegexOptions.Compiled);
+            Regex ruleNameRegex = new Regex(@"(?<=rule\("")[^\r?\n]*(?=""\))", RegexOptions.Compiled);
+
+            for(int i = 0; i < Importer.OWFiles.Count; i++)
+            {
+                string[] rules = ruleRegex.Matches(Importer.OWFiles[i].Content).Select(r => r.Value).ToArray();
+
+                foreach(var rule in rules)
+                {
+                    if(!WorkshopRules.Select(r => r.Name).Contains(ruleNameRegex.Match(rule).Value))
+                    {
+                        result.Append(rule);
+                    }
+                }
+
+
+            }
+
             WorkshopCode = result.ToString();
         }
 
@@ -250,6 +286,53 @@ namespace Deltin.Deltinteger.Parse
         public void ApplyBlock(IApplyBlock apply)
         {
             applyBlocks.Add(apply);
+        }
+
+        private void ParseOWScript(ImportedScript script)
+        {
+            script.Update();
+            string content = script.Content;
+
+            string globalCollectionString = Regex.Match(content, @"(?<=variables\r?\n\{\r?\n\tglobal:\r?\n)[\s\S]*?\d+?: [\S]+?\r?\n[\s\S]*?(?=\tplayer)").Value;
+            string playerCollectionString = Regex.Match(content, @"(?<=player:\r?\n)[\s\S]*?(?=})").Value;
+            string subroutineCollectionString = Regex.Match(content, @"(?<=subroutines\r\n\{\r\n\t)[\s\S]*?(?=\})").Value;
+
+          
+
+            Regex varRegex = new Regex(@"\d*?: [\S]*[\S]");
+
+            string[] globalVariableStrings = varRegex.Matches(globalCollectionString).Select(m => m.Value).ToArray();
+            string[] playerVariableStrings = varRegex.Matches(playerCollectionString).Select(m => m.Value).ToArray();
+            string[] subroutineStrings = varRegex.Matches(subroutineCollectionString).Select(m => m.Value).ToArray();
+
+
+            Regex varNameRegex = new Regex(@"(?<= )[\S]*");
+            foreach (var varString in globalVariableStrings)
+            {
+                string name = varNameRegex.Match(varString).Value;
+                if (!VarCollection.NamesTaken(true).Contains(name))
+                {
+                    VarCollection.AssignWorkshopVariable(name, true);
+                }
+            }
+
+            foreach (var varString in playerVariableStrings)
+            {
+                string name = varNameRegex.Match(varString).Value;
+                if (!VarCollection.NamesTaken(false).Contains(name))
+                {
+                    VarCollection.AssignWorkshopVariable(name, false);
+                }
+            }
+            foreach (var varString in subroutineStrings)
+            {
+                string subrName = varNameRegex.Match(varString).Value;
+                if (!SubroutineCollection.Subroutines.Select(s => s.Name).Contains(subrName))
+                {
+                    SubroutineCollection.NewSubroutine(subrName);
+                }
+            }
+            //Debug.Assert(false);
         }
     }
 

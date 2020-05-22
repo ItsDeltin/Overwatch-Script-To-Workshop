@@ -70,7 +70,7 @@ namespace Deltin.Deltinteger.Parse
             if (!reservedNames(isGlobal).Contains(name)) reservedNames(isGlobal).Add(name);
         }
 
-        private string[] NamesTaken(bool isGlobal)
+        public string[] NamesTaken(bool isGlobal)
         {
             List<string> names = new List<string>();
             names.AddRange(variableList(isGlobal).Where(v => v != null).Select(v => v.Name));
@@ -78,7 +78,7 @@ namespace Deltin.Deltinteger.Parse
             return names.ToArray();
         }
     
-        private WorkshopVariable AssignWorkshopVariable(string name, bool isGlobal)
+        public WorkshopVariable AssignWorkshopVariable(string name, bool isGlobal)
         {
             int id = NextFreeID(isGlobal);
             WorkshopVariable workshopVariable = new WorkshopVariable(isGlobal, id, MetaElement.WorkshopNameFromCodeName(name, NamesTaken(isGlobal)));
