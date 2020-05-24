@@ -277,4 +277,20 @@ namespace Deltin.Deltinteger.Pathfinder
             return null;
         }
     }
+
+    [CustomMethod("Resolve", "", CustomMethodType.MultiAction_Value, false)]
+    class Resolve : CustomMethodBase
+    {
+        public override CodeParameter[] Parameters() => new CodeParameter[] {
+            new CodeParameter("position", "The position to resolve."),
+            new CodeParameter("attributes", "The attributes of the path.")
+        };
+
+        public override IWorkshopTree Get(ActionSet actionSet, IWorkshopTree[] parameterValues)
+        {
+            ResolveDijkstra resolve = new ResolveDijkstra(actionSet, (Element)parameterValues[0], (Element)parameterValues[1]);
+            resolve.Get();
+            return resolve.ClassReference.GetVariable();
+        }
+    }
 }

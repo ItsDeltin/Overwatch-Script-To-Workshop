@@ -19,8 +19,8 @@ namespace Deltin.Deltinteger.Pathfinder
 
         protected IndexReference unvisited { get; private set; }
         private IndexReference current { get; set; }
-        private IndexReference parentArray { get; set; }
-        private IndexReference parentAttributeInfo { get; set; }
+        protected IndexReference parentArray { get; set; }
+        protected IndexReference parentAttributeInfo { get; set; }
 
         protected static bool assignExtended = false;
         public DijkstraBase(ActionSet actionSet, Element pathmapObject, Element position, Element attributes, bool reversed)
@@ -50,9 +50,8 @@ namespace Deltin.Deltinteger.Pathfinder
             IndexReference connectedSegments = actionSet.VarCollection.Assign("Dijkstra: Connected Segments", actionSet.IsGlobal, assignExtended);
             IndexReference neighborIndex     = actionSet.VarCollection.Assign("Dijkstra: Neighbor Index", actionSet.IsGlobal, assignExtended);
             IndexReference neighborDistance  = actionSet.VarCollection.Assign("Dijkstra: Distance", actionSet.IsGlobal, assignExtended);
-            parentArray                      = actionSet.VarCollection.Assign("Dijkstra: Parent Array", actionSet.IsGlobal, false);
-            if (useAttributes)
-                parentAttributeInfo = actionSet.VarCollection.Assign("Dijkstra: Parent Attribute Info", actionSet.IsGlobal, false);
+            parentArray                      = GetParentArray();
+            if (useAttributes) parentAttributeInfo = GetParentAttributeArray();
 
             // Set the current variable as the first node.
             actionSet.AddAction(current.SetVariable(firstNode));
@@ -156,6 +155,9 @@ namespace Deltin.Deltinteger.Pathfinder
         protected abstract void Assign();
         protected abstract Element LoopCondition();
         protected abstract void GetResult();
+
+        protected virtual IndexReference GetParentArray() => actionSet.VarCollection.Assign("Dijkstra: Parent Array", actionSet.IsGlobal, false);
+        protected virtual IndexReference GetParentAttributeArray() => actionSet.VarCollection.Assign("Dijkstra: Parent Attribute Info", actionSet.IsGlobal, false);
 
         protected void Backtrack(Element destination, IndexReference finalPath, IndexReference finalPathAttributes)
         {
@@ -464,5 +466,51 @@ namespace Deltin.Deltinteger.Pathfinder
                 new V_ArrayElement()
             )
         );
+    }
+
+    public class ResolveDijkstra : DijkstraBase
+    {
+        // The destination to resolve the path to. Can be null.
+        private Element Destination;
+        // A reference to the PathResolveClass instance.
+        private PathResolveClass PathResolveClass;
+        // The created PathResolve's reference.
+        public IndexReference ClassReference { get; private set; }
+
+        public ResolveDijkstra(ActionSet actionSet, Element position, Element attributes) : base(actionSet, (Element)actionSet.CurrentObject, position, attributes, true)
+        {
+        }
+        public ResolveDijkstra(ActionSet actionSet, Element position, Element destination, Element attributes) : base(actionSet, (Element)actionSet.CurrentObject, position, attributes, true)
+        {
+            Destination = destination;
+        }
+        
+        protected override Element LoopCondition()
+        {
+            if (Destination == null)
+                return Element.Part<V_CountOf>(unvisited.GetVariable()) > 0;
+            else
+                // todo
+                throw new NotImplementedException();
+        }
+
+        protected override void Assign()
+        {
+            // Get the PathResolveClass instance.
+            PathResolveClass = actionSet.Translate.DeltinScript.Types.GetInstance<PathResolveClass>();
+
+            // Create a new PathResolve class instance.
+            ClassReference = PathResolveClass.Create(actionSet, actionSet.Translate.DeltinScript.GetComponent<ClassData>());
+        }
+
+        // Override GetParentArray and GetParentAttributeArray so the index reference to the PathResolveClass variable is used.
+        protected override IndexReference GetParentArray() => PathResolveClass.ParentArray.Spot((Element)ClassReference.GetVariable());
+        protected override IndexReference GetParentAttributeArray() => PathResolveClass.ParentArray.Spot((Element)ClassReference.GetVariable());
+
+        protected override void GetResult()
+        {
+            // todo
+            // this might be able to remain empty
+        }
     }
 }
