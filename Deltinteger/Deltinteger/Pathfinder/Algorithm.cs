@@ -225,7 +225,7 @@ namespace Deltin.Deltinteger.Pathfinder
             actionSet.AddAction(new A_End());
         }
 
-        protected static Element ClosestNodeToPosition(Element nodes, Element position)
+        public static Element ClosestNodeToPosition(Element nodes, Element position)
         {
             return Element.Part<V_IndexOfArrayValue>(
                 nodes,
@@ -501,6 +501,9 @@ namespace Deltin.Deltinteger.Pathfinder
 
             // Create a new PathResolve class instance.
             ClassReference = PathResolveClass.Create(actionSet, actionSet.Translate.DeltinScript.GetComponent<ClassData>());
+
+            // Save the pathmap.
+            PathResolveClass.Pathmap.ArrayStore.SetVariable(value: (Element)actionSet.CurrentObject, index: (Element)ClassReference.GetVariable());
         }
 
         // Override GetParentArray and GetParentAttributeArray so the index reference to the PathResolveClass variable is used.
