@@ -242,7 +242,7 @@ namespace Deltin.Deltinteger.Parse
             }
             
             // Set the subroutine info.
-            subroutineInfo = new SubroutineInfo(subroutine, returnHandler, subroutineRule, parameterStores, objectStore);
+            subroutineInfo = new SubroutineInfo(subroutine, returnHandler, parameterStores, objectStore);
 
             MethodBuilder builder = new MethodBuilder(this, actionSet, returnHandler);
             builder.BuilderSet = builder.BuilderSet.New(Attributes.Recursive);
