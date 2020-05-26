@@ -92,8 +92,7 @@ namespace Deltin.Deltinteger.Parse
                 // Copy to serving scopes.
                 if (!newVar.Static)
                 {
-                    ObjectVariables.Add(new ObjectVariable(newVar));
-                    serveObjectScope.CopyVariable(newVar);
+                    AddObjectVariable(newVar);
                 }
                 // Add to static scope.
                 else
