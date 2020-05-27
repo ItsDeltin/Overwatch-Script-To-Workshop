@@ -11,7 +11,6 @@ namespace Deltin.Deltinteger.Pathfinder
 
         public PathResolveClass() : base("PathResolve")
         {
-
         }
 
         public override void ResolveElements()
@@ -23,10 +22,12 @@ namespace Deltin.Deltinteger.Pathfinder
             ParentArray = AddObjectVariable(new InternalVar("ParentArray"));
 
             // Set ParentAttributeArray
-            ParentAttributeArray = AddObjectVariable(new InternalVar("ParentArray"));
+            ParentAttributeArray = AddObjectVariable(new InternalVar("ParentAttributeArray"));
             
             // Set Pathmap
             Pathmap = AddObjectVariable(new InternalVar("Pathmap"));
+
+            serveObjectScope.AddNativeMethod(PathfindFunction());
         }
 
         private FuncMethod PathfindFunction() => new FuncMethod(new FuncMethodBuilder() {

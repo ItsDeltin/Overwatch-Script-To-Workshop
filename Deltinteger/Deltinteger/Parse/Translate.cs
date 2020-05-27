@@ -38,7 +38,7 @@ namespace Deltin.Deltinteger.Parse
             RulesetScope = GlobalScope.Child();
             RulesetScope.PrivateCatch = true;
 
-            Types.AllTypes.AddRange(CodeType.DefaultTypes);
+            Types.GetDefaults(this);
             Importer = new Importer(this, FileGetter, translateSettings.Root.Uri);
             Importer.CollectScriptFiles(translateSettings.Root);            
             
@@ -259,6 +259,13 @@ namespace Deltin.Deltinteger.Parse
         public List<CodeType> DefinedTypes { get; } = new List<CodeType>();
         public List<CodeType> CalledTypes { get; } = new List<CodeType>();
 
+        public void GetDefaults(DeltinScript deltinScript)
+        {
+            AllTypes.AddRange(CodeType.DefaultTypes);
+            AllTypes.Add(new Pathfinder.PathmapClass(deltinScript));
+            AllTypes.Add(new Pathfinder.PathResolveClass());
+        }
+
         public CodeType GetCodeType(string name, FileDiagnostics diagnostics, DocRange range)
         {
             var type = AllTypes.FirstOrDefault(type => type.Name == name);
@@ -290,6 +297,8 @@ namespace Deltin.Deltinteger.Parse
             
             builder.AppendLine();
         }
+
+        public T GetInstance<T>() where T: CodeType => (T)AllTypes.First(type => type.GetType() == typeof(T));
     }
 
     public interface IComponent

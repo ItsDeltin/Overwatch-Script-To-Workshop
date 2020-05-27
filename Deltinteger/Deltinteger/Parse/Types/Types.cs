@@ -172,11 +172,9 @@ namespace Deltin.Deltinteger.Parse
         private static void GetDefaultTypes()
         {
             _defaultTypes = new List<CodeType>();
-            foreach (var enumData in EnumData.GetEnumData())
-                _defaultTypes.Add(new ValueGroupType(enumData, !enumData.ConvertableToElement()));
-            
+            _defaultTypes.AddRange(ValueGroupType.EnumTypes);
+
             // Add custom classes here.
-            _defaultTypes.Add(new Pathfinder.PathmapClass());
             _defaultTypes.Add(new Models.AssetClass());
             _defaultTypes.Add(new Lambda.BlockLambda());
             _defaultTypes.Add(new Lambda.ValueBlockLambda());

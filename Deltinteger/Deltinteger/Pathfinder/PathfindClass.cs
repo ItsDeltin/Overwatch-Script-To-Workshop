@@ -12,11 +12,13 @@ namespace Deltin.Deltinteger.Pathfinder
 {
     public class PathmapClass : ClassType
     {
+        private DeltinScript DeltinScript { get; }
         public IndexReference Nodes { get; private set; }
         public IndexReference Segments { get; private set; }
 
-        public PathmapClass() : base("Pathmap")
+        public PathmapClass(DeltinScript deltinScript) : base("Pathmap")
         {
+            DeltinScript = deltinScript;
             this.Constructors = new Constructor[] {
                 new PathmapClassConstructor(this)
             };
@@ -31,6 +33,7 @@ namespace Deltin.Deltinteger.Pathfinder
             serveObjectScope.AddNativeMethod(CustomMethodData.GetCustomMethod<Pathfind>());
             serveObjectScope.AddNativeMethod(CustomMethodData.GetCustomMethod<PathfindAll>());
             serveObjectScope.AddNativeMethod(CustomMethodData.GetCustomMethod<GetPath>());
+            serveObjectScope.AddNativeMethod(GetResolve(DeltinScript));
 
             staticScope.AddNativeMethod(CustomMethodData.GetCustomMethod<StopPathfind>());
             staticScope.AddNativeMethod(CustomMethodData.GetCustomMethod<IsPathfinding>());
@@ -69,6 +72,22 @@ namespace Deltin.Deltinteger.Pathfinder
             actionSet.AddAction(Nodes.SetVariable((Element)nodes.GetVariable(), index: index));
             actionSet.AddAction(Segments.SetVariable((Element)segments.GetVariable(), index: index));
         }
+
+        private static FuncMethod GetResolve(DeltinScript deltinScript) => new FuncMethodBuilder() {
+            Name = "Resolve",
+            Documentation = "Resolves all potential paths to the specified destination.",
+            DoesReturnValue = true,
+            ReturnType = deltinScript.Types.GetInstance<PathResolveClass>(),
+            Parameters = new CodeParameter[] {
+                new CodeParameter("position", "The position to resolve."),
+                new CodeParameter("attributes", "The attributes of the path.")
+            },
+            Action = (actionSet, call) => {
+                ResolveDijkstra resolve = new ResolveDijkstra(actionSet, (Element)call.ParameterValues[0], (Element)call.ParameterValues[1]);
+                resolve.Get();
+                return resolve.ClassReference.GetVariable();
+            }
+        };
     }
 
     class PathmapClassConstructor : Constructor
