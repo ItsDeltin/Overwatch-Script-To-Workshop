@@ -66,7 +66,7 @@ namespace Deltin.Deltinteger.Parse
                 Attributes = new MethodAttributes() { ContainingType = arrayType };
             }
 
-            public bool DoesReturnValue() => true;
+            public bool DoesReturnValue => true;
             public CompletionItem GetCompletion() => MethodAttributes.GetFunctionCompletion(this);
             public string GetLabel(bool markdown) => HoverHandler.GetLabel(ReturnType?.Name ?? "define", Name, Parameters, markdown, Documentation);
 

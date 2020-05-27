@@ -17,7 +17,7 @@ namespace Deltin.Deltinteger.Parse
             AccessLevel = context.accessor().GetAccessLevel();
             ReturnType = returnType;
             ExpressionToParse = context.expr();
-            doesReturnValue = true;
+            DoesReturnValue = true;
         }
 
         public override void SetupParameters()

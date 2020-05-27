@@ -101,7 +101,8 @@ namespace Deltin.Deltinteger.Parse.Lambda
         public string Documentation => "Invokes the lambda expression.";
         public Location DefinedAt => null;
         public AccessLevel AccessLevel => AccessLevel.Public;
-
+        public bool DoesReturnValue => LambdaType is MacroLambda || LambdaType is ValueBlockLambda;
+        
         public BaseLambda LambdaType { get; }
 
         public LambdaInvoke(BaseLambda lambdaType)
@@ -117,10 +118,8 @@ namespace Deltin.Deltinteger.Parse.Lambda
             return lambda.Invoke(actionSet, methodCall.ParameterValues);
         }
 
-        public bool DoesReturnValue() => LambdaType is MacroLambda || LambdaType is ValueBlockLambda;
-
         public CompletionItem GetCompletion() => MethodAttributes.GetFunctionCompletion(this);
-        public string GetLabel(bool markdown) => HoverHandler.GetLabel(DoesReturnValue() ? ReturnType?.Name ?? "define" : "void", Name, Parameters, markdown, Documentation);
+        public string GetLabel(bool markdown) => HoverHandler.GetLabel(DoesReturnValue ? ReturnType?.Name ?? "define" : "void", Name, Parameters, markdown, Documentation);
 
         /// <summary>Gets the 'Invoke' parameters from an array of CodeTypes.</summary>
         /// <param name="argumentTypes">The array of CodeTypes. The resulting CodeParameter[] will have an equal length to this.</param>

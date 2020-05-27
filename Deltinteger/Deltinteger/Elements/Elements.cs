@@ -404,7 +404,7 @@ namespace Deltin.Deltinteger.Elements
             return (Element)Activator.CreateInstance(Type);
         }
 
-        public bool DoesReturnValue() => IsValue;
+        public bool DoesReturnValue => IsValue;
 
         public IWorkshopTree Parse(ActionSet actionSet, MethodCall methodCall)
         {

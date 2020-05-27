@@ -63,7 +63,7 @@ namespace Deltin.Deltinteger.Parse
 
         public void Applied()
         {
-            if (UsedAsExpression && !CallingMethod.DoesReturnValue())
+            if (UsedAsExpression && !CallingMethod.DoesReturnValue)
                 parseInfo.Script.Diagnostics.Error("The chosen overload for " + CallingMethod.Name + " does not return a value.", NameRange);
         }
 

@@ -6,7 +6,6 @@ namespace Deltin.Deltinteger.Parse
     {
         public Subroutine Subroutine { get; }
         public ReturnHandler ReturnHandler { get; }
-        public TranslateRule Rule { get; }
         public IndexReference[] ParameterStores { get; }
         public IndexReference ObjectStore { get; }
 
