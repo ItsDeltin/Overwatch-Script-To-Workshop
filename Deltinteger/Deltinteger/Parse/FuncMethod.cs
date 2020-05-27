@@ -1,4 +1,5 @@
 using System;
+using Deltin.Deltinteger.LanguageServer;
 using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
 
 namespace Deltin.Deltinteger.Parse
@@ -34,15 +35,15 @@ namespace Deltin.Deltinteger.Parse
         public FuncMethod(FuncMethodBuilder builder)
         {
             Name = builder.Name ?? throw new ArgumentNullException(nameof(Name));
-            Parameters = builder.Parameters ?? throw new ArgumentNullException(nameof(Parameters));
-            ReturnType = builder.ReturnType ?? throw new ArgumentNullException(nameof(ReturnType));
+            Parameters = builder.Parameters ?? new CodeParameter[0];
+            ReturnType = builder.ReturnType;
             Documentation = builder.Documentation ?? throw new ArgumentNullException(nameof(Documentation));
             Action = builder.Action ?? throw new ArgumentNullException(nameof(Action));
             DoesReturnValue = builder.DoesReturnValue;
         }
 
         public CompletionItem GetCompletion() => MethodAttributes.GetFunctionCompletion(this);
-        public string GetLabel(bool markdown) => MethodAttributes.DefaultLabel(this).ToString(markdown);
+        public string GetLabel(bool markdown) => HoverHandler.GetLabel(!DoesReturnValue ? null : ReturnType?.Name ?? "define", Name, Parameters, markdown, null);
         public IWorkshopTree Parse(ActionSet actionSet, MethodCall methodCall) => Action.Invoke(actionSet, methodCall);
     }
 
