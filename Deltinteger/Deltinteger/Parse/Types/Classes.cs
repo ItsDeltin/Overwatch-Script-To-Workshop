@@ -238,6 +238,11 @@ Object-serve scope. Only object members.
         public IndexReference Spot(Element reference) => ArrayStore.CreateChild(reference);
 
         public Element Get(Element reference) => Element.Part<V_ValueInArray>(ArrayStore.GetVariable(), reference);
+
+        public void Set(ActionSet actionSet, Element reference, Element value)
+        {
+            actionSet.AddAction(ArrayStore.SetVariable(value: value, index: reference));
+        }
     }
 
     public class ClassData : IComponent
