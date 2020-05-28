@@ -92,18 +92,12 @@ namespace Deltin.Deltinteger.Pathfinder
             return result;
         }
 
-        public Element NodesAsWorkshopData()
-        {
-            return Element.CreateArray(
-                Nodes.Select(node => node.ToVector()).ToArray()
-            );
-        }
-        public Element SegmentsAsWorkshopData()
-        {
-            return Element.CreateArray(
-                Segments.Select(segment => segment.AsWorkshopData()).ToArray()
-            );
-        }
+        public Element NodesAsWorkshopData() => Element.CreateArray(
+            Nodes.Select(node => node.ToVector()).ToArray()
+        );
+        public Element SegmentsAsWorkshopData() => Element.CreateArray(
+            Segments.Select(segment => segment.AsWorkshopData()).ToArray()
+        );
     }
 
     public class Segment

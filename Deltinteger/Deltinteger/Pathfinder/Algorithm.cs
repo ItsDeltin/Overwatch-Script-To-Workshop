@@ -306,7 +306,7 @@ namespace Deltin.Deltinteger.Pathfinder
 
         protected Element NoAccessableUnvisited() => Element.Part<V_IsTrueForAll>(unvisited.GetVariable(), new V_Compare(Element.Part<V_ValueInArray>(distances.GetVariable(), new V_ArrayElement()), Operators.Equal, new V_Number(0)));
 
-        private static Element BothNodes(Element segment) => Element.CreateArray(Node1(segment), Node2(segment));
+        private static Element BothNodes(Element segment) => Element.CreateAppendArray(Node1(segment), Node2(segment));
         private static Element Node1(Element segment) => Element.Part<V_RoundToInteger>(Element.Part<V_XOf>(segment), EnumData.GetEnumValue(Rounding.Down));
         private static Element Node2(Element segment) => Element.Part<V_RoundToInteger>(Element.Part<V_YOf>(segment), EnumData.GetEnumValue(Rounding.Down));
         private static Element Node1Attribute(Element segment) => Element.Part<V_RoundToInteger>(

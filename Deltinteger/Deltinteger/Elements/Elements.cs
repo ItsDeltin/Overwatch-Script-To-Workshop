@@ -125,6 +125,14 @@ namespace Deltin.Deltinteger.Elements
             return Element.Part<V_Array>(values);
         }
 
+        public static Element CreateAppendArray(params IWorkshopTree[] values)
+        {
+            Element array = new V_EmptyArray();
+            for (int i = 0; i < values.Length; i++)
+                array = Element.Part<V_Append>(array, values[i]);
+            return array;
+        }
+
         // Creates an ternary conditional that works in the workshop
         public static Element TernaryConditional(IWorkshopTree condition, IWorkshopTree consequent, IWorkshopTree alternative) => Element.Part<V_IfThenElse>(condition, consequent, alternative);
 
