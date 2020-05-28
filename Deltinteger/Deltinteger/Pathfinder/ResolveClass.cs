@@ -8,6 +8,7 @@ namespace Deltin.Deltinteger.Pathfinder
         public ObjectVariable ParentArray { get; private set; }
         public ObjectVariable ParentAttributeArray { get; private set; }
         public ObjectVariable Pathmap { get; private set; }
+        public ObjectVariable Destination { get; private set; }
 
         public PathResolveClass() : base("PathResolve")
         {
@@ -26,6 +27,9 @@ namespace Deltin.Deltinteger.Pathfinder
             
             // Set Pathmap
             Pathmap = AddObjectVariable(new InternalVar("Pathmap"));
+
+            // Set Destination
+            Destination = AddObjectVariable(new InternalVar("Destination"));
 
             serveObjectScope.AddNativeMethod(PathfindFunction());
         }
@@ -82,6 +86,22 @@ namespace Deltin.Deltinteger.Pathfinder
             TranslateRule getResolveRule = new TranslateRule(DeltinScript, "Pathfinder: Resolve Current", RuleEvent.OngoingPlayer);
             getResolveRule.Conditions.Add(new Condition((Element)DoGetCurrent.GetVariable(), Operators.Equal, new V_True()));
             getResolveRule.ActionSet.AddAction(Current.SetVariable(ClosestNode(PlayerPosition())));
+            getResolveRule.ActionSet.AddAction(Element.Part<A_StartThrottleInDirection>(
+                Element.Part<V_EventPlayer>(),
+                Element.Part<V_DirectionTowards>(
+                    Element.Part<V_PositionOf>(Element.Part<V_EventPlayer>()),
+                    Element.TernaryConditional(
+                        new V_Compare(Current.GetVariable(), Operators.Equal, new V_Number(-1)),
+                        PathResolveInstance.Destination.Get((Element)Resolve.GetVariable()),
+                        CurrentPosition()
+                    )
+                ),
+                new V_Number(1),
+                EnumData.GetEnumValue(Relative.ToWorld),
+                EnumData.GetEnumValue(ThrottleBehavior.ReplaceExistingThrottle),
+                EnumData.GetEnumValue(ThrottleRev.DirectionAndMagnitude)
+            ));
+            getResolveRule.ActionSet.AddAction(Element.Part<A_CreateHudText>(new V_EventPlayer(), Current.GetVariable()));
             getResolveRule.ActionSet.AddAction(DoGetCurrent.SetVariable(new V_False()));
 
             DeltinScript.WorkshopRules.Add(getResolveRule.GetRule());
@@ -96,7 +116,7 @@ namespace Deltin.Deltinteger.Pathfinder
                 new V_Number(PathfinderInfo.MoveToNext)
             ));
             // Set current as the current's parent.
-            next.ActionSet.AddAction(Current.SetVariable(PathResolveInstance.ParentArray.Get((Element)Resolve.GetVariable())[(Element)Current.GetVariable()]));
+            next.ActionSet.AddAction(Current.SetVariable(PathResolveInstance.ParentArray.Get((Element)Resolve.GetVariable())[(Element)Current.GetVariable()] - 1));
             DeltinScript.WorkshopRules.Add(next.GetRule());
         }
 

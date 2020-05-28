@@ -19,6 +19,7 @@ namespace Deltin.Deltinteger.Pathfinder
 
         protected IndexReference unvisited { get; private set; }
         private IndexReference current { get; set; }
+        protected IndexReference distances { get; set; }
         protected IndexReference parentArray { get; set; }
         protected IndexReference parentAttributeInfo { get; set; }
 
@@ -45,7 +46,7 @@ namespace Deltin.Deltinteger.Pathfinder
             Assign();
             
             current                          = actionSet.VarCollection.Assign("Dijkstra: Current", actionSet.IsGlobal, assignExtended);
-            IndexReference distances         = actionSet.VarCollection.Assign("Dijkstra: Distances", actionSet.IsGlobal, false);
+            distances                        = actionSet.VarCollection.Assign("Dijkstra: Distances", actionSet.IsGlobal, false);
             unvisited                        = actionSet.VarCollection.Assign("Dijkstra: Unvisited", actionSet.IsGlobal, false);
             IndexReference connectedSegments = actionSet.VarCollection.Assign("Dijkstra: Connected Segments", actionSet.IsGlobal, assignExtended);
             IndexReference neighborIndex     = actionSet.VarCollection.Assign("Dijkstra: Neighbor Index", actionSet.IsGlobal, assignExtended);
@@ -128,14 +129,11 @@ namespace Deltin.Deltinteger.Pathfinder
             // End the for.
             forBuilder.Finish();
 
-            actionSet.AddAction(ArrayBuilder<Element>.Build(
-                // Remove the current node from the unvisited array.
-                // TODO: Add a way to stop here for DijkstraEither.
-                unvisited.ModifyVariable(Operation.RemoveFromArrayByValue, (Element)current.GetVariable()),
-
-                // Set the current node as the smallest unvisited.
-                current.SetVariable(LowestUnvisited(Nodes, (Element)distances.GetVariable(), (Element)unvisited.GetVariable()))
-            ));
+            // Remove the current node from the unvisited array.
+            actionSet.AddAction(unvisited.ModifyVariable(Operation.RemoveFromArrayByValue, (Element)current.GetVariable()));
+            actionSet.AddAction(current.SetVariable(LowestUnvisited(Nodes, (Element)distances.GetVariable(), (Element)unvisited.GetVariable())));
+            // TODO: Add a way to stop here for DijkstraEither.
+            EndLoop();
 
             actionSet.AddAction(new A_End());
 
@@ -146,15 +144,17 @@ namespace Deltin.Deltinteger.Pathfinder
                 distances.SetVariable(0),
                 connectedSegments.SetVariable(0),
                 neighborIndex.SetVariable(0),
-                neighborDistance.SetVariable(0),
-                parentArray.SetVariable(0),
-                parentAttributeInfo.SetVariable(0)
+                neighborDistance.SetVariable(0)
+                // parentArray.SetVariable(0),
+                // parentAttributeInfo.SetVariable(0)
             ));
         }
 
         protected abstract void Assign();
         protected abstract Element LoopCondition();
         protected abstract void GetResult();
+
+        protected virtual void EndLoop() {}
 
         protected virtual IndexReference GetParentArray() => actionSet.VarCollection.Assign("Dijkstra: Parent Array", actionSet.IsGlobal, false);
         protected virtual IndexReference GetParentAttributeArray() => actionSet.VarCollection.Assign("Dijkstra: Parent Attribute Info", actionSet.IsGlobal, false);
@@ -303,6 +303,8 @@ namespace Deltin.Deltinteger.Pathfinder
             Element.Part<V_FilteredArray>(unvisited, new V_Compare(distances[new V_ArrayElement()], Operators.NotEqual, new V_Number(0))),
             distances[new V_ArrayElement()]
         ));
+
+        protected Element NoAccessableUnvisited() => Element.Part<V_IsTrueForAll>(unvisited.GetVariable(), new V_Compare(Element.Part<V_ValueInArray>(distances.GetVariable(), new V_ArrayElement()), Operators.Equal, new V_Number(0)));
 
         private static Element BothNodes(Element segment) => Element.CreateArray(Node1(segment), Node2(segment));
         private static Element Node1(Element segment) => Element.Part<V_RoundToInteger>(Element.Part<V_XOf>(segment), EnumData.GetEnumValue(Rounding.Down));
@@ -503,12 +505,22 @@ namespace Deltin.Deltinteger.Pathfinder
             ClassReference = PathResolveClass.Create(actionSet, actionSet.Translate.DeltinScript.GetComponent<ClassData>());
 
             // Save the pathmap.
-            PathResolveClass.Pathmap.ArrayStore.SetVariable(value: (Element)actionSet.CurrentObject, index: (Element)ClassReference.GetVariable());
+            PathResolveClass.Pathmap.Set(actionSet, (Element)ClassReference.GetVariable(), (Element)actionSet.CurrentObject);
+
+            // Save the destination.
+            PathResolveClass.Destination.Set(actionSet, (Element)ClassReference.GetVariable(), position);
         }
 
         // Override GetParentArray and GetParentAttributeArray so the index reference to the PathResolveClass variable is used.
         protected override IndexReference GetParentArray() => PathResolveClass.ParentArray.Spot((Element)ClassReference.GetVariable());
-        protected override IndexReference GetParentAttributeArray() => PathResolveClass.ParentArray.Spot((Element)ClassReference.GetVariable());
+        protected override IndexReference GetParentAttributeArray() => PathResolveClass.ParentAttributeArray.Spot((Element)ClassReference.GetVariable());
+
+        protected override void EndLoop()
+        {
+            actionSet.AddAction(Element.Part<A_If>(NoAccessableUnvisited()));
+            actionSet.AddAction(Element.Part<A_Break>());
+            actionSet.AddAction(Element.Part<A_End>());
+        }
 
         protected override void GetResult()
         {
