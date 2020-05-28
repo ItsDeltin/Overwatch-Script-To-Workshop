@@ -305,13 +305,16 @@ namespace Deltin.Deltinteger.Elements
 
     [ElementData("If")]
     [Parameter("Condition", ValueType.Boolean, typeof(V_Compare))]
+    [HideElement]
     public class A_If : Element {}
 
     [ElementData("Else If")]
     [Parameter("Condition", ValueType.Boolean, typeof(V_Compare))]
+    [HideElement]
     public class A_ElseIf : Element {}
 
     [ElementData("Else")]
+    [HideElement]
     public class A_Else : Element {}
 
     [ElementData("Kill")]
