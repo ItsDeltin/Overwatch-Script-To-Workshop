@@ -823,4 +823,14 @@ namespace Deltin.Deltinteger.Elements
     [ElementData("Cancel Primary Action")]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     public class A_CancelPrimaryAction : Element {}
+
+    [ElementData("Start Forcing Player Position")]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [Parameter("Position", ValueType.Vector, typeof(V_Vector))]
+    [Parameter("Reevaluation", ValueType.Boolean, typeof(V_True))]
+    public class A_StartForcingPlayerPosition : Element {}
+    
+    [ElementData("Stop Forcing Player Position")]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    public class A_StopForcingPlayerPosition : Element {}
 }
