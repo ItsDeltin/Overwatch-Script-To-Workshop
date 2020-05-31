@@ -194,7 +194,7 @@ namespace Deltin.Deltinteger.Lobby
             schema.AdditionalProperties = false;
 
             // Get the mode's maps.
-            string[] modeMaps = LobbyMap.AllMaps.Where(map => map.GameModes.Contains(ModeName)).Select(map => map.Name).ToArray();
+            string[] modeMaps = LobbyMap.AllMaps.Where(map => map.GameModes.Any(mode => mode.ToLower() == ModeName.ToLower())).Select(map => map.Name).ToArray();
             if (modeMaps.Length == 0) return schema;
 
             // Create the map schema.
