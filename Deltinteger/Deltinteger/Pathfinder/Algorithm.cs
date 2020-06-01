@@ -18,7 +18,7 @@ namespace Deltin.Deltinteger.Pathfinder
         private bool reversed { get; }
 
         protected IndexReference unvisited { get; private set; }
-        private IndexReference current { get; set; }
+        protected IndexReference current { get; set; }
         protected IndexReference distances { get; set; }
         protected IndexReference parentArray { get; set; }
         protected IndexReference parentAttributeInfo { get; set; }
@@ -131,9 +131,8 @@ namespace Deltin.Deltinteger.Pathfinder
 
             // Remove the current node from the unvisited array.
             actionSet.AddAction(unvisited.ModifyVariable(Operation.RemoveFromArrayByValue, (Element)current.GetVariable()));
-            actionSet.AddAction(current.SetVariable(LowestUnvisited(Nodes, (Element)distances.GetVariable(), (Element)unvisited.GetVariable())));
-            // TODO: Add a way to stop here for DijkstraEither.
             EndLoop();
+            actionSet.AddAction(current.SetVariable(LowestUnvisited(Nodes, (Element)distances.GetVariable(), (Element)unvisited.GetVariable())));
 
             actionSet.AddAction(new A_End());
 
@@ -438,7 +437,11 @@ namespace Deltin.Deltinteger.Pathfinder
     public class DijkstraEither : DijkstraBase
     {
         private IndexReference potentialDestinations;
-        private readonly Element destinations;
+        public Element destinations { get; }
+        public IndexReference finalPath { get; private set; }
+        public IndexReference finalPathAttributes { get; private set; }
+        public IndexReference chosenDestination { get; private set; }
+        public Element PointDestination => destinations[(Element)chosenDestination.GetVariable()];
 
         public DijkstraEither(ActionSet actionSet, Element pathfindObject, Element position, Element destinations, Element attributes) : base(actionSet, pathfindObject, position, attributes, false)
         {
@@ -449,15 +452,31 @@ namespace Deltin.Deltinteger.Pathfinder
         {
             potentialDestinations = actionSet.VarCollection.Assign("Dijkstra: Potential Destinations", actionSet.IsGlobal, false);
             actionSet.AddAction(potentialDestinations.SetVariable(new V_EmptyArray()));
+            chosenDestination = actionSet.VarCollection.Assign("Dijkstra: Chosen Destination", actionSet.IsGlobal, assignExtended);
 
             ForeachBuilder getClosestNodes = new ForeachBuilder(actionSet, destinations);
             actionSet.AddAction(potentialDestinations.ModifyVariable(Operation.AppendToArray, ClosestNodeToPosition(Nodes, getClosestNodes.IndexValue)));
             getClosestNodes.Finish();
         }
 
+        protected override void EndLoop()
+        {
+            actionSet.AddAction(chosenDestination.SetVariable(Element.Part<V_IndexOfArrayValue>(potentialDestinations.GetVariable(), current.GetVariable())));
+            actionSet.AddAction(Element.Part<A_If>(new V_Compare(chosenDestination.GetVariable(), Operators.NotEqual, new V_Number(-1))));
+            actionSet.AddAction(Element.Part<A_Break>());
+            actionSet.AddAction(Element.Part<A_End>());
+        }
+
         protected override void GetResult()
         {
-            throw new NotImplementedException();
+            finalPath = actionSet.VarCollection.Assign("Dijkstra: Final Path", actionSet.IsGlobal, false);
+            actionSet.AddAction(finalPath.SetVariable(new V_EmptyArray()));
+            if (useAttributes)
+            {
+                finalPathAttributes = actionSet.VarCollection.Assign("Dijkstra: Final Path Attributes", actionSet.IsGlobal, false);
+                actionSet.AddAction(finalPathAttributes.SetVariable(new V_EmptyArray()));
+            }
+            Backtrack((Element)current.GetVariable(), finalPath, finalPathAttributes);
         }
 
         // Loop until any of the destinations have been visited.
