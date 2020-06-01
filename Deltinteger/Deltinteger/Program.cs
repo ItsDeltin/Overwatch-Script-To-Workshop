@@ -91,7 +91,7 @@ namespace Deltin.Deltinteger
                         string ext = Path.GetExtension(script).ToLower();
                         if (ext == ".csv")
                         {
-                            PathMap map = PathMap.ImportFromCSV(script);
+                            PathMap map = PathMap.ImportFromCSVFile(script, new ConsolePathmapErrorHandler(new Log("Pathmap")));
                             if (map != null)
                             {
                                 string result = map.ExportAsXML();

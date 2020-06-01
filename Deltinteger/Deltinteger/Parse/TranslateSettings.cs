@@ -34,5 +34,7 @@ namespace Deltin.Deltinteger.Parse
             string content = File.ReadAllText(file);
             Root = new ScriptFile(diagnostics, uri, content);
         }
+
+        public TranslateSettings(string file) : this(new Diagnostics(), file) {}
     }
 }

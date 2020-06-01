@@ -149,6 +149,16 @@
                 "command": "ostw.showReferences",
                 "title": "Show References",
                 "category": "Overwatch Script To Workshop"
+            },
+            {
+                "command": "ostw.createPathmap",
+                "title": "Create pathmap from CSV clipboard.",
+                "category": "Overwatch Script To Workshop"
+            },
+            {
+                "command": "ostw.pathmapEditorCode",
+                "title": "Copy pathmap editor code.",
+                "category": "Overwatch Script To Workshop"
             }
         ],
         "jsonValidation": [

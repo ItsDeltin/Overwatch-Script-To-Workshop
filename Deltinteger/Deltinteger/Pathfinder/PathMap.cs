@@ -12,21 +12,27 @@ namespace Deltin.Deltinteger.Pathfinder
 {
     public class PathMap
     {
-        private static readonly Log Log = new Log("PathMap");
-
         // nodesOut and segmentsOut must equal the ID override in Modules/PathfindEditor.del:
         // line 312: define globalvar nodesOut    [3];
         // line 313: define globalvar segmentsOut [4];
         private const int nodesOut = 3;
         private const int segmentsOut = 4;
 
-        public static PathMap ImportFromCSV(string file)
+        public static PathMap ImportFromCSVFile(string file, IPathmapErrorHandler errorHandler) => ImportFromCSV(File.ReadAllText(file).Trim(), errorHandler);
+        public static PathMap ImportFromCSV(string text, IPathmapErrorHandler errorHandler)
         {
-            CsvFrame frame = CsvFrame.ParseOne(File.ReadAllText(file).Trim());
+            CsvFrame frame; 
+            try {
+                frame = CsvFrame.ParseOne(text);
+            }
+            catch (Exception) {
+                errorHandler.Error("Incorrect CSV format.");
+                return null;
+            }
 
             if (frame.VariableSetOwner != "Global")
             {
-                Log.Write(LogLevel.Normal, new ColorMod("Error: need the global variable set, got " + frame.VariableSetOwner + " instead.", ConsoleColor.Red));
+                errorHandler.Error("Need the global variable set, got the '" + frame.VariableSetOwner + "' variable set instead.");
                 return null;
             }
 
@@ -57,9 +63,18 @@ namespace Deltin.Deltinteger.Pathfinder
             return new PathMap(vectors.ToArray(), segments.ToArray());
         }
 
-        public static PathMap ImportFromXML(string file)
+        public static PathMap ImportFromXMLFile(string file)
         {
             using (var reader = XmlReader.Create(file))
+            {
+                XmlSerializer serializer = new XmlSerializer(typeof(PathMap));
+                return (PathMap)serializer.Deserialize(reader);
+            }
+        }
+
+        public static PathMap ImportFromXML(string xml)
+        {
+            using (var reader = XmlReader.Create(new StringReader(xml)))
             {
                 XmlSerializer serializer = new XmlSerializer(typeof(PathMap));
                 return (PathMap)serializer.Deserialize(reader);
@@ -128,5 +143,22 @@ namespace Deltin.Deltinteger.Pathfinder
         {
             return new V_Vector((double)Node1 + (((double)Node1Attribute) / 100), (double)Node2 + (((double)Node2Attribute) / 100), 0);
         }
+    }
+
+    public interface IPathmapErrorHandler
+    {
+        void Error(string error);
+    }
+    
+    class ConsolePathmapErrorHandler : IPathmapErrorHandler
+    {
+        private readonly Log log;
+
+        public ConsolePathmapErrorHandler(Log log)
+        {
+            this.log = log;
+        }
+
+        public void Error(string error) => log.Write(LogLevel.Normal, new ColorMod("Error: " + error, ConsoleColor.Red));
     }
 }

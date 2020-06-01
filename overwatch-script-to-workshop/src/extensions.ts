@@ -173,12 +173,70 @@ function addCommands(context: ExtensionContext)
 		await vscode.window.showTextDocument(doc, { preview: false });
 	}, this));
 
+	// showReferences link
 	context.subscriptions.push(vscode.commands.registerCommand('ostw.showReferences', (uriStr: string, position: LSPosition, locations: LSLocation[]) => {
 		let uri : Uri = Uri.parse(uriStr);
 		let pos: Position = client.protocol2CodeConverter.asPosition(position);
 		let locs: Location[] = locations.map(client.protocol2CodeConverter.asLocation);
 
 		vscode.commands.executeCommand('editor.action.showReferences', uri, pos, locs);
+	}, this));
+
+	// Pathmap builder
+	context.subscriptions.push(vscode.commands.registerCommand('ostw.createPathmap', () => {
+		// Send the 'pathmapFromClipboard' request to the language server.
+		client.sendRequest('pathmapFromClipboard').then((result: string) => {
+			// The request will return 'success' if the pathmap was successfully created. Any other string is an error message.
+			if (result != 'success')
+			{
+				vscode.window.showErrorMessage('Pathmap generator error: ' + result);
+				return;
+			}
+			// If successful, show a save dialog to save the pathmap file.
+			vscode.window.showSaveDialog({
+				filters: {
+					'Pathmaps': ['pathmap']
+				}
+			}).then((uri: vscode.Uri) => {
+				// Send a second request 'pathmapApply' with the uri parameter to the language server.
+				client.sendRequest('pathmapApply', uri).then(() => {
+					// Success
+					vscode.window.showInformationMessage('Pathmap file saved!');
+				}, (reason: any) => {
+					vscode.window.showErrorMessage(reason);
+				});
+			});
+		});
+	}, this));
+
+	// Pathmap editor
+	context.subscriptions.push(vscode.commands.registerCommand('ostw.pathmapEditorCode', () => {
+
+		var editPathmap:string = null; // Stores the currently opened .pathmap file contents.
+		var editPathmapFile:string = null; // Stores the currently opened .pathmap file path.
+		// If the active text editor is a .pathmap file, set 'editPathmap' and 'editPathmapFile'.
+		if (window.activeTextEditor != undefined && window.activeTextEditor.document.fileName.toLowerCase().endsWith('.pathmap')) {
+			editPathmap = window.activeTextEditor.document.getText();
+			editPathmapFile = window.activeTextEditor.document.fileName;
+		}
+
+		// Send the 'pathmapEditor' request with the 'editPathmap' contents for the parameter to the language server.
+		client.sendRequest<boolean>('pathmapEditor', {Text: editPathmap}).then((result: boolean) => {
+			// The request will return true if successful.
+			// It can return false if PathfindEditor.del was tinkered with by the user (or there is a bug).
+			if (result)
+			{
+				// Send a success message depending on if the editor is the default editor or the editor is editing a .pathmap file.
+				if (editPathmapFile == null)
+					vscode.window.showInformationMessage('Default pathmap editor copied to clipboard. Paste the rules in Overwatch to edit.');
+				else
+					vscode.window.showInformationMessage("Pathmap editor for '" + editPathmapFile + "' copied to clipboard. Paste the rules in Overwatch to edit.");
+			}
+			else
+				vscode.window.showInformationMessage('Failed to generate pathmap editor code.');
+		}, (reason: any) => {
+			vscode.window.showErrorMessage(reason);
+		});
 	}, this));
 }
 
