@@ -30,12 +30,13 @@ namespace Deltin.Deltinteger.Pathfinder
             if (elementsResolved) return;
             base.ResolveElements();
 
-            serveObjectScope.AddNativeMethod(CustomMethodData.GetCustomMethod<Pathfind>());
-            serveObjectScope.AddNativeMethod(CustomMethodData.GetCustomMethod<PathfindAll>());
-            serveObjectScope.AddNativeMethod(CustomMethodData.GetCustomMethod<GetPath>());
+            serveObjectScope.AddNativeMethod(Pathfind);
+            serveObjectScope.AddNativeMethod(PathfindAll);
+            serveObjectScope.AddNativeMethod(GetPath);
+            serveObjectScope.AddNativeMethod(PathfindEither);
             serveObjectScope.AddNativeMethod(GetResolve(DeltinScript));
 
-            staticScope.AddNativeMethod(CustomMethodData.GetCustomMethod<StopPathfind>());
+            staticScope.AddNativeMethod(StopPathfind);
             staticScope.AddNativeMethod(CustomMethodData.GetCustomMethod<IsPathfinding>());
             staticScope.AddNativeMethod(CustomMethodData.GetCustomMethod<IsPathfindStuck>());
             staticScope.AddNativeMethod(CustomMethodData.GetCustomMethod<FixPathfind>());
@@ -73,6 +74,101 @@ namespace Deltin.Deltinteger.Pathfinder
             actionSet.AddAction(Segments.SetVariable((Element)segments.GetVariable(), index: index));
         }
 
+        // Pathfind(player, destination, [attributes])
+        private static readonly FuncMethod Pathfind = new FuncMethodBuilder() {
+            Name = "Pathfind",
+            Documentation = "Moves the specified player to the destination by pathfinding.",
+            Parameters = new CodeParameter[] {
+                new CodeParameter("player", "The player to move."),
+                new CodeParameter("destination", "The destination to move the player to."),
+                new CodeParameter("attributes", "An array of attributes to pathfind with.", new ExpressionOrWorkshopValue(new V_Null()))
+            },
+            Action = (actionSet, methodCall) => {
+                Element player = (Element)methodCall.ParameterValues[0];
+
+                // Store the pathfind destination.
+                IndexReference destinationStore = actionSet.VarCollection.Assign("_pathfindDestinationStore", actionSet.IsGlobal, true);
+                actionSet.AddAction(destinationStore.SetVariable((Element)methodCall.ParameterValues[1]));
+
+                Element attributes = (Element)methodCall.ParameterValues[2];
+                if (attributes is V_Null || attributes is V_EmptyArray) attributes = null;
+
+                DijkstraNormal algorithm = new DijkstraNormal(
+                    actionSet, (Element)actionSet.CurrentObject, Element.Part<V_PositionOf>(methodCall.ParameterValues[0]), (Element)destinationStore.GetVariable(), attributes
+                );
+                algorithm.Get();
+                DijkstraBase.Pathfind(
+                    actionSet, actionSet.Translate.DeltinScript.GetComponent<PathfinderInfo>(), (Element)algorithm.finalPath.GetVariable(), (Element)methodCall.ParameterValues[0], (Element)destinationStore.GetVariable(), (Element)algorithm.finalPathAttributes.GetVariable()
+                );
+
+                return null;
+            }
+        };
+
+        // PathfindAll(players, destination, [attributes])
+        private static readonly FuncMethod PathfindAll = new FuncMethodBuilder() {
+            Name = "PathfindAll",
+            Documentation = "Moves an array of players to the specified position by pathfinding.",
+            Parameters = new CodeParameter[] {
+                new CodeParameter("players", "The array of players to move."),
+                new CodeParameter("destination", "The destination to move the players to."),
+                new CodeParameter("attributes", "An array of attributes to pathfind with.", new ExpressionOrWorkshopValue(new V_Null()))
+            },
+            Action = (actionSet, methodCall) => {
+                IndexReference destinationStore = actionSet.VarCollection.Assign("_pathfindDestinationStore", actionSet.IsGlobal, true);
+                actionSet.AddAction(destinationStore.SetVariable((Element)methodCall.ParameterValues[1]));
+
+                Element attributes = (Element)methodCall.ParameterValues[2];
+                if (attributes is V_Null || attributes is V_EmptyArray) attributes = null;
+
+                DijkstraMultiSource algorithm = new DijkstraMultiSource(
+                    actionSet, actionSet.Translate.DeltinScript.GetComponent<PathfinderInfo>(), (Element)actionSet.CurrentObject, (Element)methodCall.ParameterValues[0], (Element)destinationStore.GetVariable(), attributes
+                );
+                algorithm.Get();
+
+                return null;
+            }
+        };
+
+        private static readonly FuncMethod PathfindEither = new FuncMethodBuilder() {
+            Name = "PathfindEither",
+            Documentation = "Moves a player to the closest position in the destination array by pathfinding.",
+            Parameters = new CodeParameter[] {
+                new CodeParameter("player", "The player to pathfind."),
+                new CodeParameter("destinations", "The array of destinations."),
+                new CodeParameter("attributes", "An array of attributes to pathfind with.", new ExpressionOrWorkshopValue(new V_Null()))
+            },
+            Action = (actionSet, methodCall) => {
+                DijkstraEither algorithm = new DijkstraEither(actionSet, (Element)actionSet.CurrentObject, Element.Part<V_PositionOf>(methodCall.ParameterValues[0]), (Element)methodCall.ParameterValues[1], (Element)methodCall.ParameterValues[2]);
+                algorithm.Get();
+                DijkstraBase.Pathfind(
+                    actionSet, actionSet.Translate.DeltinScript.GetComponent<PathfinderInfo>(), (Element)algorithm.finalPath.GetVariable(), (Element)methodCall.ParameterValues[0], algorithm.PointDestination, (Element)algorithm.finalPathAttributes.GetVariable()
+                );
+                return null;
+            }
+        };
+
+        // GetPath()
+        private static FuncMethod GetPath = new FuncMethodBuilder() {
+            Name = "GetPath",
+            Documentation = "Returns an array of vectors forming a path from the starting point to the destination.",
+            Parameters = new CodeParameter[] {
+                new CodeParameter("position", "The initial position."),
+                new CodeParameter("destination", "The final destination.")
+            },
+            Action = (actionSet, methodCall) => {
+                IndexReference destinationStore = actionSet.VarCollection.Assign("_pathfindDestinationStore", actionSet.IsGlobal, true);
+                actionSet.AddAction(destinationStore.SetVariable((Element)methodCall.ParameterValues[1]));
+
+                DijkstraNormal algorithm = new DijkstraNormal(
+                    actionSet, (Element)actionSet.CurrentObject, (Element)methodCall.ParameterValues[0], (Element)destinationStore.GetVariable(), null
+                );
+                algorithm.Get();
+
+                return Element.Part<V_Append>(algorithm.finalPath.GetVariable(), destinationStore.GetVariable());
+            }
+        };
+
         private static FuncMethod GetResolve(DeltinScript deltinScript) => new FuncMethodBuilder() {
             Name = "Resolve",
             Documentation = "Resolves all potential paths to the specified destination.",
@@ -86,6 +182,21 @@ namespace Deltin.Deltinteger.Pathfinder
                 ResolveDijkstra resolve = new ResolveDijkstra(actionSet, (Element)call.ParameterValues[0], (Element)call.ParameterValues[1]);
                 resolve.Get();
                 return resolve.ClassReference.GetVariable();
+            }
+        };
+
+        // Static functions
+        private static FuncMethod StopPathfind = new FuncMethodBuilder() {
+            Name = "GetPath",
+            Documentation = "Stops pathfinding for the specified players.",
+            Parameters = new CodeParameter[] {
+                new CodeParameter("players", "The players that will stop pathfinding. Can be a single player or an array of players.")
+            },
+            Action = (actionSet, methodCall) => {
+                actionSet.AddAction(
+                    actionSet.Translate.DeltinScript.GetComponent<PathfinderInfo>().Path.SetVariable(new V_EmptyArray(), (Element)methodCall.ParameterValues[0])
+                );
+                return null;
             }
         };
     }
@@ -115,7 +226,7 @@ namespace Deltin.Deltinteger.Pathfinder
             PathMap map;
             try
             {
-                map = PathMap.ImportFromXML(filepath);
+                map = PathMap.ImportFromXMLFile(filepath);
             }
             catch (InvalidOperationException)
             {
