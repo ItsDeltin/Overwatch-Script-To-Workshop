@@ -198,6 +198,7 @@ function addCommands(context: ExtensionContext)
 					'Pathmaps': ['pathmap']
 				}
 			}).then((uri: vscode.Uri) => {
+				if (uri == undefined) return; // Canceled
 				// Send a second request 'pathmapApply' with the uri parameter to the language server.
 				client.sendRequest('pathmapApply', uri).then(() => {
 					// Success
