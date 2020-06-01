@@ -202,6 +202,9 @@ function addCommands(context: ExtensionContext)
 				client.sendRequest('pathmapApply', uri).then(() => {
 					// Success
 					vscode.window.showInformationMessage('Pathmap file saved!');
+					vscode.workspace.openTextDocument(uri).then(document => {
+						vscode.window.showTextDocument(document);
+					});
 				}, (reason: any) => {
 					vscode.window.showErrorMessage(reason);
 				});
