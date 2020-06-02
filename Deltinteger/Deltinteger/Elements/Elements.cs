@@ -58,6 +58,7 @@ namespace Deltin.Deltinteger.Elements
 
         public IWorkshopTree[] ParameterValues { get; set; }
         public bool Disabled { get; set; }
+        public string Comment { get; set; }
         public int Indent { get; set; }
         protected bool AlwaysShowParentheses = false;
 
@@ -68,17 +69,27 @@ namespace Deltin.Deltinteger.Elements
         
         public virtual string ToWorkshop(OutputLanguage language)
         {
+            // Get the parameters
             AddMissingParameters();
-
             List<string> parameters = AdditionalParameters().ToList();
-
             parameters.AddRange(ParameterValues.Select(p => p.ToWorkshop(language)));
 
             string result = Extras.Indent(Indent, true); // TODO: option for spaces or tab output.
+
+            // Add a comment and newline
+            if (Comment != null) result += $"\"{Comment}\"\n" + Extras.Indent(Indent, true);
+
+            // Add the disabled tag if the element is disabled.
             if (!ElementList.IsValue && Disabled) result += LanguageInfo.Translate(language, "disabled") + " ";
+
+            // Add the name of the element.
             result += LanguageInfo.Translate(language, Name);
+
+            // Add the parameters.
             if (parameters.Count != 0) result += "(" + string.Join(", ", parameters) + ")";
             else if (AlwaysShowParentheses) result += "()";
+
+            // Add the ; if the element is an action.
             if (!ElementList.IsValue) result += ";";
             return result;
         }
@@ -418,6 +429,7 @@ namespace Deltin.Deltinteger.Elements
         {
             Element element = GetObject();
             element.ParameterValues = methodCall.ParameterValues;
+            element.Comment = methodCall.ActionComment;
 
             if (!IsValue)
             {

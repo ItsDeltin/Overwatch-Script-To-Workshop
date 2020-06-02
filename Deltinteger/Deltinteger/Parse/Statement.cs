@@ -9,6 +9,11 @@ namespace Deltin.Deltinteger.Parse
     public interface IStatement
     {
         void Translate(ActionSet actionSet);
+
+        void OutputComment(FileDiagnostics diagnostics, DocRange range, string comment)
+        {
+            diagnostics.Error("This statement cannot be documented.", range);
+        }
     }
 
     /// <summary>

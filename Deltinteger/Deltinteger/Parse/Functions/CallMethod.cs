@@ -15,6 +15,7 @@ namespace Deltin.Deltinteger.Parse
         private ParseInfo parseInfo { get; }
         private DocRange NameRange { get; }
         private bool UsedAsExpression { get; }
+        private string Comment;
 
         public CallMethodAction(ParseInfo parseInfo, Scope scope, DeltinScriptParser.MethodContext methodContext, bool usedAsExpression, Scope getter)
         {
@@ -98,8 +99,14 @@ namespace Deltin.Deltinteger.Parse
                 OverloadChooser.AdditionalParameterData
             )
             {
-                CallParallel = Parallel
+                CallParallel = Parallel,
+                ActionComment = Comment
             };
+        }
+
+        public void OutputComment(FileDiagnostics diagnostics, DocRange range, string comment)
+        {
+            Comment = comment;
         }
 
         private IWorkshopTree[] GetParameterValuesAsWorkshop(ActionSet actionSet)

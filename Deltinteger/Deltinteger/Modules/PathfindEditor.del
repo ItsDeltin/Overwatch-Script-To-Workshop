@@ -332,7 +332,6 @@ Event.OngoingPlayer
 if (IsCommunicating(EventPlayer(), Communication.VoiceLineUp))
 {
     compiling = true;
-    EnableInspectorRecording();
     SmallMessage(AllPlayers(), "Compiling...");
 
     nodesOut = EmptyArray();
@@ -353,6 +352,8 @@ if (IsCommunicating(EventPlayer(), Communication.VoiceLineUp))
         ));
 
     SmallMessage(AllPlayers(), "Compile Finished!");
+    EnableInspectorRecording();
+    # Pathmap is compiled. Copy the current global variable set to the clipboard. In vscode, press ctrl+shift+p to open the command pallete, then run the 'Create pathmap from CSV clipboard' command.
     DisableInspectorRecording();
     compiling = false;
 }

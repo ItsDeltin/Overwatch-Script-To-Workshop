@@ -33,9 +33,24 @@ namespace Deltin.Deltinteger.Parse
         /// <summary>Gets an IStatement from a StatementContext.</summary>
         /// <param name="scope">The scope the statement was created in.</param>
         /// <param name="statementContext">The context of the statement.</param>
-        public IStatement GetStatement(Scope scope, DeltinScriptParser.StatementContext statementContext)
+        public IStatement GetStatement(Scope scope, DeltinScriptParser.Documented_statementContext statementContext)
         {
-            switch (statementContext)
+            IStatement statement = StatementFromContext(scope, statementContext);
+
+            // Apply related output comment.
+            if (statementContext.DOCUMENTATION() != null)
+            {
+                string text = statementContext.DOCUMENTATION().GetText().Substring(1).Trim();
+                DocRange range = DocRange.GetRange(statementContext.DOCUMENTATION());
+                statement.OutputComment(Script.Diagnostics, range, text);
+            }
+
+            return statement;
+        }
+
+        private IStatement StatementFromContext(Scope scope, DeltinScriptParser.Documented_statementContext statementContext)
+        {
+            switch (statementContext.statement())
             {
                 case DeltinScriptParser.S_defineContext define    : {
                     var newVar = new ScopedVariable(scope, new DefineContextHandler(this, define.define()));

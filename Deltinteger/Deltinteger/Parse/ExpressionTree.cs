@@ -122,6 +122,9 @@ namespace Deltin.Deltinteger.Parse
             ParseTree(actionSet, false);
         }
 
+        /// <summary>Sets the related output comment. This assumes that the result is both an IExpression and an IStatement.</summary>
+        public void OutputComment(FileDiagnostics diagnostics, DocRange range, string comment) => ((IStatement)Result).OutputComment(diagnostics, range, comment);
+
         public ExpressionTreeParseResult ParseTree(ActionSet actionSet, bool expectingValue)
         {
             IGettable resultingVariable = null;

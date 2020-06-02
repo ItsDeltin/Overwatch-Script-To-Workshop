@@ -70,6 +70,7 @@ generic_option: code_type | DEFINE;
 
 lambda: (define | LEFT_PAREN (define (COMMA define)*)? RIGHT_PAREN) INS (expr | block) ;
 
+documented_statement: DOCUMENTATION? statement;
 statement :
 	  define STATEMENT_END?   #s_define
 	| varset STATEMENT_END?   #s_varset
@@ -85,10 +86,10 @@ statement :
 	| CONTINUE STATEMENT_END? #s_continue
 	| BREAK STATEMENT_END?    #s_break
 	| switch 				  #s_switch
-	| (BLOCK_START statement* BLOCK_END) #s_block
+	| (BLOCK_START documented_statement* BLOCK_END) #s_block
 	;
 
-block : (BLOCK_START statement* BLOCK_END) | statement | STATEMENT_END  ;
+block : (BLOCK_START documented_statement* BLOCK_END) | documented_statement | STATEMENT_END  ;
 
 for     : FOR LEFT_PAREN 
 	((define | initialVarset=varset)? STATEMENT_END expr? STATEMENT_END endingVarset=varset?)
@@ -112,7 +113,7 @@ delete  : DELETE LEFT_PAREN expr RIGHT_PAREN                  ;
 switch  : SWITCH LEFT_PAREN expr? RIGHT_PAREN
 	BLOCK_START switch_element* BLOCK_END;
 
-switch_element:  (DEFAULT TERNARY_ELSE?) | case | statement;
+switch_element:  (DEFAULT TERNARY_ELSE?) | case | documented_statement;
 
 case    : CASE expr? TERNARY_ELSE?;
 
