@@ -39,6 +39,12 @@ namespace Deltin.Deltinteger.Pathfinder
             List<Vertex> vectors = new List<Vertex>();
             CsvArray nodeArray = frame.VariableValues[nodesOut] as CsvArray;
 
+            if (nodeArray == null)
+            {
+                errorHandler.Error("Incorrect format, 'nodesOut' is not an array. Did you compile your pathmap?");
+                return null;
+            }
+
             for (int i = 0; i < nodeArray.Values.Length; i++)
             {
                 CsvVector nodeVector = (CsvVector)nodeArray.Values[i];
@@ -47,6 +53,12 @@ namespace Deltin.Deltinteger.Pathfinder
             
             List<Segment> segments = new List<Segment>();
             CsvArray segmentArray = frame.VariableValues[segmentsOut] as CsvArray;
+
+            if (segmentArray == null)
+            {
+                errorHandler.Error("Incorrect format, 'segmentsOut' is not an array.");
+                return null;
+            }
 
             for (int i = 0; i < segmentArray.Values.Length; i++)
             {
