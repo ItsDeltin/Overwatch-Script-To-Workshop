@@ -101,13 +101,20 @@ namespace Deltin.Deltinteger.LanguageServer
                 ServerPathmapHandler error = new ServerPathmapHandler();
 
                 // Get the pathmap. 'map' will be null if there is an error.
-                PathMap map = PathMap.ImportFromCSV(Clipboard.GetText(), error);
-
-                if (map == null) return error.Message;
-                else
+                try
                 {
-                    lastMap = map;
-                    return "success";
+                    PathMap map = PathMap.ImportFromCSV(Clipboard.GetText(), error);
+
+                    if (map == null) return error.Message;
+                    else
+                    {
+                        lastMap = map;
+                        return "success";
+                    }
+                }
+                catch (Exception ex)
+                {
+                    return ex.Message;
                 }
             }));
 
