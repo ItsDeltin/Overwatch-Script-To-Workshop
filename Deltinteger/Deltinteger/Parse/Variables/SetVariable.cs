@@ -11,6 +11,7 @@ namespace Deltin.Deltinteger.Parse
         private VariableResolve VariableResolve { get; }
         private string Operation { get; }
         private IExpression Value { get; }
+        private string Comment;
 
         public SetVariableAction(ParseInfo parseInfo, Scope scope, DeltinScriptParser.VarsetContext varsetContext)
         {
@@ -58,11 +59,35 @@ namespace Deltin.Deltinteger.Parse
                 default: throw new Exception($"Unknown operation {Operation}.");
             }
 
-            if (modifyOperation == null)
-                actionSet.AddAction(elements.IndexReference.SetVariable(value, elements.Target, elements.Index));
-            else
-                actionSet.AddAction(elements.IndexReference.ModifyVariable((Elements.Operation)modifyOperation, value, elements.Target, elements.Index));
+            // The actions used to set the variable.
+            Element[] actions;
 
+            // Set Variable actions
+            if (modifyOperation == null)
+                actions = elements.IndexReference.SetVariable(value, elements.Target, elements.Index);
+            // Modify Variable actions
+            else
+                actions = elements.IndexReference.ModifyVariable((Elements.Operation)modifyOperation, value, elements.Target, elements.Index);
+            
+            // Add the actions to the action set.
+            actionSet.AddAction(actions);
+
+            // Set action comments
+            if (Comment != null)
+            {
+                // If there is just one action used to set or modify the variable, set that action's comment.
+                if (actions.Length == 1)
+                    actions[0].Comment = Comment;
+                // If multiple actions are required, precede the comment with (#) where # is the order of the relevent action.
+                else
+                    for (int i = 0; i < actions.Length; i++)
+                        actions[i].Comment = "(" + i + ") " + Comment;
+            }
+        }
+
+        public void OutputComment(FileDiagnostics diagnostics, DocRange range, string comment)
+        {
+            Comment = comment;
         }
     }
 }
