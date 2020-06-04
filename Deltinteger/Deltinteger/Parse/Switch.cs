@@ -143,9 +143,9 @@ namespace Deltin.Deltinteger.Parse
             switchBuilder.Finish((Element)expression);
         }
 
-        public void AddBreak(ActionSet actionSet)
+        public void AddBreak(ActionSet actionSet, string comment)
         {
-            SkipStartMarker breaker = new SkipStartMarker(actionSet);
+            SkipStartMarker breaker = new SkipStartMarker(actionSet, comment);
             actionSet.AddAction(breaker);
             switchBuilder.SkipToEnd.Add(breaker);
         }

@@ -288,16 +288,19 @@ namespace Deltin.Deltinteger.Parse
         private ActionSet ActionSet { get; }
         public Element SkipCount { get; private set; }
         public SkipEndMarker EndMarker { get; private set; }
+        public string Comment { get; set; }
         public bool IsAction { get; } = true;
 
-        public SkipStartMarker(ActionSet actionSet, IWorkshopTree condition)
+        public SkipStartMarker(ActionSet actionSet, IWorkshopTree condition, string comment = null)
         {
             ActionSet = actionSet;
             Condition = condition;
+            Comment = comment;
         }
-        public SkipStartMarker(ActionSet actionSet)
+        public SkipStartMarker(ActionSet actionSet, string comment = null)
         {
             ActionSet = actionSet;
+            Comment = comment;
         }
 
         public DynamicSkip GetSkipCount(SkipEndMarker marker) => new DynamicSkip(this, marker);
@@ -345,10 +348,13 @@ namespace Deltin.Deltinteger.Parse
             if (SkipCount != null) skipCount = SkipCount;
             else skipCount = GetSkipCount(EndMarker);
 
-            if (Condition == null)
-                return Element.Part<A_Skip>(skipCount);
-            else
-                return Element.Part<A_SkipIf>(Element.Part<V_Not>(Condition), skipCount);
+            Element newAction;
+            if (Condition == null) newAction = Element.Part<A_Skip>(skipCount);
+            else newAction = Element.Part<A_SkipIf>(Element.Part<V_Not>(Condition), skipCount);
+
+            newAction.Comment = Comment;
+            
+            return newAction;
         }
 
         public bool ShouldRemove() => NumberOfActionsToMarker(EndMarker) == 0;

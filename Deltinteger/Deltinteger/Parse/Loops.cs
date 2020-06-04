@@ -25,25 +25,25 @@ namespace Deltin.Deltinteger.Parse
 
         public PathInfo[] GetPaths() => new PathInfo[] { Path };
 
-        public void AddContinue(ActionSet actionSet)
+        public void AddContinue(ActionSet actionSet, string comment)
         {
             if (RawContinue)
-                actionSet.AddAction(new A_Continue());
+                actionSet.AddAction(new A_Continue() { Comment = comment });
             else
             {
-                SkipStartMarker continuer = new SkipStartMarker(actionSet);
+                SkipStartMarker continuer = new SkipStartMarker(actionSet, comment);
                 actionSet.AddAction(continuer);
                 Continue.Add(continuer);
             }
         }
 
-        public void AddBreak(ActionSet actionSet)
+        public void AddBreak(ActionSet actionSet, string comment)
         {
             if (RawBreak)
-                actionSet.AddAction(new A_Break());
+                actionSet.AddAction(new A_Break() { Comment = comment });
             else
             {
-                SkipStartMarker breaker = new SkipStartMarker(actionSet);
+                SkipStartMarker breaker = new SkipStartMarker(actionSet, comment);
                 actionSet.AddAction(breaker);
                 Break.Add(breaker);
             }
