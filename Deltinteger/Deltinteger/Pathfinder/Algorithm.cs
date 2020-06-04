@@ -224,21 +224,20 @@ namespace Deltin.Deltinteger.Pathfinder
             actionSet.AddAction(new A_End());
         }
 
-        public static Element ClosestNodeToPosition(Element nodes, Element position)
-        {
-            return Element.Part<V_IndexOfArrayValue>(
-                nodes,
-                Element.Part<V_FirstOf>(
-                    Element.Part<V_SortedArray>(
-                        nodes,
-                        Element.Part<V_DistanceBetween>(
-                            position,
-                            new V_ArrayElement()
-                        )
+        /// <summary>Gets the closest node to a position.</summary>
+        /// <returns>The closest node as an index of the `Nodes` array.</returns>
+        public static Element ClosestNodeToPosition(Element nodes, Element position) => Element.Part<V_IndexOfArrayValue>(
+            nodes,
+            Element.Part<V_FirstOf>(
+                Element.Part<V_SortedArray>(
+                    nodes,
+                    Element.Part<V_DistanceBetween>(
+                        position,
+                        new V_ArrayElement()
                     )
                 )
-            );
-        }
+            )
+        );
 
         private static void SetInitialDistances(ActionSet actionSet, IndexReference distancesVar, Element currentIndex)
         {
@@ -304,6 +303,7 @@ namespace Deltin.Deltinteger.Pathfinder
         ));
 
         protected Element NoAccessableUnvisited() => Element.Part<V_IsTrueForAll>(unvisited.GetVariable(), new V_Compare(Element.Part<V_ValueInArray>(distances.GetVariable(), new V_ArrayElement()), Operators.Equal, new V_Number(0)));
+        protected Element AnyAccessableUnvisited() => Element.Part<V_IsTrueForAny>(unvisited.GetVariable(), new V_Compare(Element.Part<V_ValueInArray>(distances.GetVariable(), new V_ArrayElement()), Operators.NotEqual, new V_Number(0)));
 
         private static Element BothNodes(Element segment) => Element.CreateAppendArray(Node1(segment), Node2(segment));
         private static Element Node1(Element segment) => Element.Part<V_RoundToInteger>(Element.Part<V_XOf>(segment), EnumData.GetEnumValue(Rounding.Down));
@@ -369,6 +369,53 @@ namespace Deltin.Deltinteger.Pathfinder
         {
             Backtrack((Element)finalNode.GetVariable(), finalPath, finalPathAttributes);
         }
+    }
+
+    public class DijkstraPlayer : DijkstraBase
+    {
+        private readonly Element player;
+        public IndexReference finalPath { get; private set; }
+        public IndexReference finalPathAttributes { get; private set; }
+        private SkipStartMarker PlayerNodeReachedBreak;
+
+        public DijkstraPlayer(ActionSet actionSet, Element pathmapObject, Element player, Element destination, Element attributes) : base(actionSet, pathmapObject, destination, attributes)
+        {
+            this.player = player;
+        }
+
+        protected override void Assign()
+        {
+            finalPath = actionSet.VarCollection.Assign("Dijkstra: Final Path", actionSet.IsGlobal, false);
+            actionSet.AddAction(finalPath.SetVariable(new V_EmptyArray()));
+            if (useAttributes)
+            {
+                finalPathAttributes = actionSet.VarCollection.Assign("Dijkstra: Final Path Attributes", actionSet.IsGlobal, false);
+                actionSet.AddAction(finalPathAttributes.SetVariable(new V_EmptyArray()));
+            }
+        }
+
+        protected override void EndLoop()
+        {
+            // Break out of the while loop when the current node is the closest node to the player.
+            PlayerNodeReachedBreak = new SkipStartMarker(actionSet, new V_Compare(
+                ClosestNodeToPosition(Nodes, Element.Part<V_PositionOf>(player)),
+                Operators.Equal,
+                current.GetVariable()
+            ));
+            actionSet.AddAction(PlayerNodeReachedBreak);
+        }
+
+        protected override void GetResult()
+        {
+            SkipEndMarker endLoop = new SkipEndMarker();
+            actionSet.AddAction(endLoop);
+            PlayerNodeReachedBreak.SetEndMarker(endLoop);
+
+            // TODO: Backtrack sets current as the destination parameter, but current is being sent as the destination, resulting in a useless action.
+            Backtrack((Element)current.GetVariable(), finalPath, finalPathAttributes);
+        }
+
+        protected override Element LoopCondition() => AnyAccessableUnvisited();
     }
     
     public class DijkstraMultiSource : DijkstraBase

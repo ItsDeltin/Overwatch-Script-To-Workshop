@@ -61,14 +61,17 @@ namespace Deltin.Deltinteger.Pathfinder
     class ResolveInfoComponent : IComponent
     {
         public DeltinScript DeltinScript { get; set; }
-        public IndexReference Resolve { get; private set; }
-        public IndexReference DoGetCurrent { get; private set; }
-        public IndexReference Current { get; private set; }
+        // Class Instances
         private PathResolveClass PathResolveInstance;
         private PathmapClass PathmapInstance;
+        // Workshop Variables
+        public IndexReference Resolve { get; private set; } // Stores the resolve reference for a pathfinding player. 
+        public IndexReference DoGetCurrent { get; private set; } // When set to true, the current node is reset to the closest node.
+        public IndexReference Current { get; private set; } // The index of the current node that the player is walking to.
 
         public void Init()
         {
+            // Assign workshop variables.
             Resolve = DeltinScript.VarCollection.Assign("pathfinderResolveInstance", false, true);
             DoGetCurrent = DeltinScript.VarCollection.Assign("pathfinderDoGetCurrent", false, true);
             Current = DeltinScript.VarCollection.Assign("pathfinderCurrent", false, true);
@@ -83,29 +86,38 @@ namespace Deltin.Deltinteger.Pathfinder
 
         private void GetResolveRoutine()
         {
+            // Create the rule that will get the closest node.
             TranslateRule getResolveRule = new TranslateRule(DeltinScript, "Pathfinder: Resolve Current", RuleEvent.OngoingPlayer);
+            // The rule will activate when DoGetCurrent is set to true.
             getResolveRule.Conditions.Add(new Condition((Element)DoGetCurrent.GetVariable(), Operators.Equal, new V_True()));
+            // Set the Current variable to the closest node.
             getResolveRule.ActionSet.AddAction(Current.SetVariable(ClosestNode(PlayerPosition())));
+            // Start throttle to the current node.
             getResolveRule.ActionSet.AddAction(Element.Part<A_StartThrottleInDirection>(
                 Element.Part<V_EventPlayer>(),
                 Element.Part<V_DirectionTowards>(
                     Element.Part<V_PositionOf>(Element.Part<V_EventPlayer>()),
+                    // Go to the destination once the final node is reached.
                     Element.TernaryConditional(
+                        // Current will be -1 if the player reached the last node.
                         new V_Compare(Current.GetVariable(), Operators.Equal, new V_Number(-1)),
+                        // If so, go to the destination.
                         PathResolveInstance.Destination.Get((Element)Resolve.GetVariable()),
+                        // Otherwise, go to the current node.
                         CurrentPosition()
                     )
                 ),
-                new V_Number(1),
-                EnumData.GetEnumValue(Relative.ToWorld),
-                EnumData.GetEnumValue(ThrottleBehavior.ReplaceExistingThrottle),
-                EnumData.GetEnumValue(ThrottleRev.DirectionAndMagnitude)
+                new V_Number(1), // Magnitude
+                EnumData.GetEnumValue(Relative.ToWorld), // Relative
+                EnumData.GetEnumValue(ThrottleBehavior.ReplaceExistingThrottle), // Throttle Behavior
+                EnumData.GetEnumValue(ThrottleRev.DirectionAndMagnitude) // Throttle Reevaluation
             ));
-            getResolveRule.ActionSet.AddAction(Element.Part<A_CreateHudText>(new V_EventPlayer(), Current.GetVariable()));
+            // Reset DoGetCurrent to false.
             getResolveRule.ActionSet.AddAction(DoGetCurrent.SetVariable(new V_False()));
-
+            // Add the rule.
             DeltinScript.WorkshopRules.Add(getResolveRule.GetRule());
 
+            // The 'next' rule will set current to the next node index when the current node is reached. 
             TranslateRule next = new TranslateRule(DeltinScript, "Pathfinder: Resolve Next", RuleEvent.OngoingPlayer);
             next.Conditions.Add(new Condition(
                 Element.Part<V_DistanceBetween>(
