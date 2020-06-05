@@ -57,9 +57,9 @@ namespace Deltin.Deltinteger.Parse
 
         public string GetLabel(bool markdown)
         {
-            string typeName = "define";
-            if (Type != null) typeName = Type.Name;
-            return typeName + " " + Name;
+            string result = (Type == null ? "define" : Type.Name) + " " + Name;
+            if (DefaultValue != null) result = "[" + result + "]";
+            return result;
         }
 
         override public string ToString()
