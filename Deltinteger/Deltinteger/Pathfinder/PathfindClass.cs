@@ -93,14 +93,8 @@ namespace Deltin.Deltinteger.Pathfinder
                 Element attributes = (Element)methodCall.ParameterValues[2];
                 if (attributes is V_Null || attributes is V_EmptyArray) attributes = null;
 
-                DijkstraNormal algorithm = new DijkstraNormal(
-                    actionSet, (Element)actionSet.CurrentObject, Element.Part<V_PositionOf>(methodCall.ParameterValues[0]), (Element)destinationStore.GetVariable(), attributes
-                );
+                DijkstraPlayer algorithm = new DijkstraPlayer(actionSet, (Element)actionSet.CurrentObject, (Element)methodCall.ParameterValues[0], (Element)destinationStore.GetVariable(), attributes);
                 algorithm.Get();
-                DijkstraBase.Pathfind(
-                    actionSet, actionSet.Translate.DeltinScript.GetComponent<PathfinderInfo>(), (Element)algorithm.finalPath.GetVariable(), (Element)methodCall.ParameterValues[0], (Element)destinationStore.GetVariable(), (Element)algorithm.finalPathAttributes.GetVariable()
-                );
-
                 return null;
             }
         };
@@ -141,9 +135,7 @@ namespace Deltin.Deltinteger.Pathfinder
             Action = (actionSet, methodCall) => {
                 DijkstraEither algorithm = new DijkstraEither(actionSet, (Element)actionSet.CurrentObject, Element.Part<V_PositionOf>(methodCall.ParameterValues[0]), (Element)methodCall.ParameterValues[1], (Element)methodCall.ParameterValues[2]);
                 algorithm.Get();
-                DijkstraBase.Pathfind(
-                    actionSet, actionSet.Translate.DeltinScript.GetComponent<PathfinderInfo>(), (Element)algorithm.finalPath.GetVariable(), (Element)methodCall.ParameterValues[0], algorithm.PointDestination, (Element)algorithm.finalPathAttributes.GetVariable()
-                );
+                actionSet.Translate.DeltinScript.GetComponent<PathfinderInfo>().Pathfind(actionSet, (Element)methodCall.ParameterValues[0], (Element)algorithm.finalPath.GetVariable(), algorithm.PointDestination, (Element)algorithm.finalPathAttributes.GetVariable());
                 return null;
             }
         };

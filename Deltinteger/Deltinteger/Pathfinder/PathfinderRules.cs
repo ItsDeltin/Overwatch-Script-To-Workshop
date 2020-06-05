@@ -190,5 +190,17 @@ namespace Deltin.Deltinteger.Pathfinder
                 EnumData.GetEnumValue(ThrottleRev.DirectionAndMagnitude)
             );
         }
+
+        public void Pathfind(ActionSet actionSet, Element target, Element nodePath, Element destination, Element pathAttributes)
+        {
+            actionSet.AddAction(Path.SetVariable(
+                Element.Part<V_Append>(nodePath, destination),
+                target
+            ));
+            actionSet.AddAction(PathAttributes.SetVariable(
+                pathAttributes,
+                target
+            ));
+        }
     }
 }
