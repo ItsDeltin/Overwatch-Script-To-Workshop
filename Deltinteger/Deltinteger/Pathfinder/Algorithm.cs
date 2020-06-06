@@ -168,6 +168,8 @@ namespace Deltin.Deltinteger.Pathfinder
                 new V_Number(0)
             )));
 
+            Element next = Nodes[(Element)current.GetVariable()];
+
             // For debugging generated path.
             // actionSet.AddAction(Element.Part<A_CreateEffect>(
             //     Element.Part<V_AllPlayers>(),
@@ -179,7 +181,7 @@ namespace Deltin.Deltinteger.Pathfinder
             // ));
 
             // Add the current node to the final path.
-            actionSet.AddAction(finalPath.ModifyVariable(Operation.AppendToArray, Nodes[(Element)current.GetVariable()]));
+            actionSet.AddAction(finalPath.ModifyVariable(Operation.AppendToArray, next));
             // Add the current attribute to the final path attributes.
             if (useAttributes) actionSet.AddAction(finalPathAttributes.ModifyVariable(Operation.AppendToArray, ((Element)parentAttributeInfo.GetVariable())[(Element)current.GetVariable()]));
 

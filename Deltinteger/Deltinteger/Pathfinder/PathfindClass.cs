@@ -35,6 +35,7 @@ namespace Deltin.Deltinteger.Pathfinder
             serveObjectScope.AddNativeMethod(GetPath);
             serveObjectScope.AddNativeMethod(PathfindEither);
             serveObjectScope.AddNativeMethod(GetResolve(DeltinScript));
+            serveObjectScope.AddNativeMethod(GetResolveTo(DeltinScript));
 
             staticScope.AddNativeMethod(StopPathfind);
             staticScope.AddNativeMethod(CustomMethodData.GetCustomMethod<IsPathfinding>());
@@ -93,7 +94,7 @@ namespace Deltin.Deltinteger.Pathfinder
                 Element attributes = (Element)methodCall.ParameterValues[2];
                 if (attributes is V_Null || attributes is V_EmptyArray) attributes = null;
 
-                DijkstraPlayer algorithm = new DijkstraPlayer(actionSet, (Element)actionSet.CurrentObject, (Element)methodCall.ParameterValues[0], (Element)destinationStore.GetVariable(), attributes);
+                DijkstraPlayer algorithm = new DijkstraPlayer(actionSet, (Element)actionSet.CurrentObject, player, (Element)destinationStore.GetVariable(), attributes);
                 algorithm.Get();
                 return null;
             }
@@ -124,6 +125,7 @@ namespace Deltin.Deltinteger.Pathfinder
             }
         };
 
+        // PathfindEither(player, destination, [attributes])
         private static readonly FuncMethod PathfindEither = new FuncMethodBuilder() {
             Name = "PathfindEither",
             Documentation = "Moves a player to the closest position in the destination array by pathfinding.",
@@ -161,6 +163,7 @@ namespace Deltin.Deltinteger.Pathfinder
             }
         };
 
+        // Resolve(position, [attributes])
         private static FuncMethod GetResolve(DeltinScript deltinScript) => new FuncMethodBuilder() {
             Name = "Resolve",
             Documentation = "Resolves all potential paths to the specified destination.",
@@ -168,10 +171,28 @@ namespace Deltin.Deltinteger.Pathfinder
             ReturnType = deltinScript.Types.GetInstance<PathResolveClass>(),
             Parameters = new CodeParameter[] {
                 new CodeParameter("position", "The position to resolve."),
-                new CodeParameter("attributes", "The attributes of the path.")
+                new CodeParameter("attributes", "The attributes of the path.", new ExpressionOrWorkshopValue(new V_Null()))
             },
             Action = (actionSet, call) => {
                 ResolveDijkstra resolve = new ResolveDijkstra(actionSet, (Element)call.ParameterValues[0], (Element)call.ParameterValues[1]);
+                resolve.Get();
+                return resolve.ClassReference.GetVariable();
+            }
+        };
+
+        // ResolveTo(position, resolveTo, [attributes])
+        public static FuncMethod GetResolveTo(DeltinScript deltinScript) => new FuncMethodBuilder() {
+            Name = "ResolveTo",
+            Documentation = "Resolves the path to the specified destination.",
+            DoesReturnValue = true,
+            ReturnType = deltinScript.Types.GetInstance<PathResolveClass>(),
+            Parameters = new CodeParameter[] {
+                new CodeParameter("position", "The position to resolve."),
+                new CodeParameter("resolveTo", "Resolving will stop once this position is reached."),
+                new CodeParameter("attributes", "The attributes of the path.", new ExpressionOrWorkshopValue(new V_Null()))
+            },
+            Action = (actionSet, call) => {
+                ResolveDijkstra resolve = new ResolveDijkstra(actionSet, (Element)call.ParameterValues[0],  (Element)call.ParameterValues[1], (Element)call.ParameterValues[2]);
                 resolve.Get();
                 return resolve.ClassReference.GetVariable();
             }
