@@ -147,8 +147,8 @@ type_define : (STRUCT | CLASS) name=PART (TERNARY_ELSE extends=PART?)?
 	((define STATEMENT_END) | constructor | define_method | define_macro)*
 	BLOCK_END ;
 
-enum_define : ENUM name=PART BLOCK_START (firstMember=PART enum_element*)? BLOCK_END ;
-enum_element : COMMA PART ;
+enum_define : ENUM name=PART BLOCK_START (firstMember=PART (EQUALS expr)? enum_element*)? BLOCK_END ;
+enum_element : COMMA PART (EQUALS expr)?;
 
 accessor : PRIVATE | PUBLIC | PROTECTED;
 

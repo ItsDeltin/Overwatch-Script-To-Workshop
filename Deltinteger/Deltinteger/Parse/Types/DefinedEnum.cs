@@ -13,6 +13,9 @@ namespace Deltin.Deltinteger.Parse
         private Scope Scope { get; }
         private DeltinScript _translateInfo { get; }
 
+        private List<DefinedEnumMember> members = new List<DefinedEnumMember>();
+
+
         public DefinedEnum(ParseInfo parseInfo, DeltinScriptParser.Enum_defineContext enumContext) : base(enumContext.name.Text)
         {
             CanBeExtended = false;
@@ -29,21 +32,24 @@ namespace Deltin.Deltinteger.Parse
             _translateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, DefinedAt, true);
 
             // Get the enum members.
-            List<DefinedEnumMember> members = new List<DefinedEnumMember>();
             if (enumContext.firstMember != null)
             {
-                members.Add(new DefinedEnumMember(parseInfo, this, enumContext.firstMember.Text, 0, new Location(parseInfo.Script.Uri, DocRange.GetRange(enumContext.firstMember))));
+                var expression = (enumContext.expr() != null) ? new ExpressionOrWorkshopValue(parseInfo.GetExpression(Scope, enumContext.expr())):null;
+                members.Add(new DefinedEnumMember(parseInfo, this, enumContext.firstMember.Text, 0, new LanguageServer.Location(parseInfo.Script.Uri, DocRange.GetRange(enumContext.firstMember)), expression));
 
                 if (enumContext.enum_element() != null)
                     for (int i = 0; i < enumContext.enum_element().Length; i++)
+                    {
+                        expression = (enumContext.enum_element(i).expr() != null) ? new ExpressionOrWorkshopValue(parseInfo.GetExpression(Scope, enumContext.enum_element(i).expr())) : null;
                         members.Add(
                             new DefinedEnumMember(
-                                parseInfo, this, enumContext.enum_element(i).PART().GetText(), i + 1, new Location(parseInfo.Script.Uri, DocRange.GetRange(enumContext.enum_element(i).PART()))
+                                parseInfo, this, enumContext.enum_element(i).PART().GetText(), i + 1, new LanguageServer.Location(parseInfo.Script.Uri, DocRange.GetRange(enumContext.enum_element(i).PART())), expression
                             )
                         );
+                    }
             }
 
-            foreach (var member in members) Scope.AddVariable(member, null, null);
+            foreach (var member in members) Scope.AddVariable(member, parseInfo.Script.Diagnostics, member.DefinedAt.range);
         }
 
         public override Scope ReturningScope() => Scope;
@@ -52,7 +58,7 @@ namespace Deltin.Deltinteger.Parse
         {
             base.Call(parseInfo, callRange);
             parseInfo.Script.AddDefinitionLink(callRange, DefinedAt);
-            _translateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, new Location(parseInfo.Script.Uri, callRange));
+            _translateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, new LanguageServer.Location(parseInfo.Script.Uri, callRange));
         }
 
         public override CompletionItem GetCompletion() => new CompletionItem() {
@@ -61,9 +67,9 @@ namespace Deltin.Deltinteger.Parse
         };
     }
 
-    class DefinedEnumMember : IVariable, IExpression, ICallable
+    class DefinedEnumMember : IVariable, ICallable, IExpression
     {
-        public string Name { get; }
+        public new string Name { get; }
         public LanguageServer.Location DefinedAt { get; }
         public DefinedEnum Enum { get; }
         public int ID { get; }
@@ -73,26 +79,49 @@ namespace Deltin.Deltinteger.Parse
         public bool WholeContext => true;
         public bool CanBeIndexed => false;
 
+        public ExpressionOrWorkshopValue ValueExpression { get; private set; }
+        public IWorkshopTree Value { get; private set; }
+
         private DeltinScript _translateInfo { get; }
 
-        public DefinedEnumMember(ParseInfo parseInfo, DefinedEnum type, string name, int id, Location definedAt)
+        public InternalVar ValueVar { get; }
+        //public InternalVar Var { get; }
+
+        private Scope scope;
+
+        public DefinedEnumMember(ParseInfo parseInfo, DefinedEnum type, string name, int id, LanguageServer.Location definedAt, ExpressionOrWorkshopValue value)
         {
             Enum = type;
             Name = name;
             DefinedAt = definedAt;
             ID = id;
             _translateInfo = parseInfo.TranslateInfo;
+            ValueExpression = (value == null) ? new ExpressionOrWorkshopValue(new V_Number(ID)): value;
 
             _translateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, definedAt, true);
             parseInfo.Script.AddCodeLensRange(new ReferenceCodeLensRange(this, parseInfo, CodeLensSourceType.EnumValue, DefinedAt.range));
+
+            //Var = new InternalVar(name, AccessLevel.Public, CompletionItemKind.EnumMember);
+            //Var.CodeType = this;
+            ValueVar = new InternalVar("value", AccessLevel.Public, CompletionItemKind.Property);
+
+            //type.ReturningScope().AddNativeVariable(Var);
+            scope = type.ReturningScope().Child(name);
+
+            scope.AddNativeVariable(ValueVar);
         }
 
         public CodeType Type() => Enum;
-        public Scope ReturningScope() => null;
+        //public Scope ReturningScope() => scope;
+
+
 
         public IWorkshopTree Parse(ActionSet actionSet)
         {
-            return new V_Number(ID);
+            Value = ValueExpression.Parse(actionSet);
+            //actionSet = actionSet.New(actionSet.IndexAssigner.CreateContained());
+            //actionSet.IndexAssigner.Add(ValueVar, Value);
+            return Value;
         }
 
         public CompletionItem GetCompletion() => new CompletionItem() {
@@ -103,7 +132,20 @@ namespace Deltin.Deltinteger.Parse
         public void Call(ParseInfo parseInfo, DocRange callRange)
         {
             parseInfo.Script.AddDefinitionLink(callRange, DefinedAt);
-            _translateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, new Location(parseInfo.Script.Uri, callRange));
+            _translateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, new LanguageServer.Location(parseInfo.Script.Uri, callRange));
         }
+
+        public Scope ReturningScope() => scope;
     }
 }
+
+
+//class EnumVar : InternalVar
+//{
+//    public JsonVar(string name) : base(name, CompletionItemKind.Property) { }
+//    public override string GetLabel(bool markdown)
+//    {
+//        if (!markdown) return base.GetLabel(false);
+//        return Documentation;
+//    }
+//}
