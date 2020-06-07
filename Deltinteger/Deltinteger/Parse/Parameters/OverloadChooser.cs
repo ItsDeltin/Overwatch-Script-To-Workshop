@@ -27,14 +27,9 @@ namespace Deltin.Deltinteger.Parse
         public IParameterCallable Overload { get; private set; }
         public IExpression[] Values { get; private set; }
 
-        private bool _setContext;
-        private DeltinScriptParser.Call_parametersContext CallContext;
-        private DeltinScriptParser.Picky_parametersContext PickyContext;
         public DocRange[] ParameterRanges { get; private set; }
 
         public object[] AdditionalParameterData { get; private set; }
-
-        private Dictionary<IParameterCallable, List<Diagnostic>> optionDiagnostics;
 
         public OverloadChooser(IParameterCallable[] overloads, ParseInfo parseInfo, Scope elementScope, Scope getter, DocRange genericErrorRange, DocRange callRange, OverloadError errorMessages)
         {
@@ -52,234 +47,124 @@ namespace Deltin.Deltinteger.Parse
             parseInfo.Script.AddOverloadData(this);
         }
 
-        public void SetContext(DeltinScriptParser.Call_parametersContext context)
+        public void Apply(DeltinScriptParser.Call_parametersContext context)
         {
-            if (_setContext) throw new Exception("Already set the context for the overload chooser.");
-            CallContext = context;
-            _setContext = true;
+            PickyParameter[] inputParameters = ParametersFromContext(context);
 
-            IExpression[] values = new IExpression[context.expr().Length];
-            DocRange[] errorRanges = new DocRange[values.Length];
-            var parameterRanges = new List<DocRange>();
-            for (int i = 0; i < values.Length; i++)
-            {
-                values[i] = parseInfo.GetExpression(getter, context.expr(i));
-                errorRanges[i] = DocRange.GetRange(context.expr(i));
-                parameterRanges.Add(errorRanges[i]);
-            }
-            
-            if (!SetParameterCount(values.Length)) return;
-            if (values.Any(v => v == null)) return;
+            // Compare parameter counts.
+            if (!SetParameterCount(inputParameters.Length)) return;
 
-            // Match by value types and parameter types.
-            for (int i = 0; i < values.Length; i++)
-            foreach (var option in CurrentOptions)
-                CompareParameterTypes(values[i], option, i, errorRanges[i]);
-            GetBestOption();
+            // Match overloads.
+            OverloadMatch[] matches = new OverloadMatch[CurrentOptions.Count];
+            for (int i = 0; i < matches.Length; i++) matches[i] = MatchOverload(CurrentOptions[i], inputParameters);
 
-            Values = new IExpression[Overload.Parameters.Length];
-            for (int i = 0; i < values.Length; i++)
-                Values[i] = values[i];
-            
-            if (values.Length < Overload.Parameters.Length)
-                parameterRanges.Add(new DocRange(
-                    DocRange.GetRange(context).end,
-                    CallRange.end
-                ));
-            
-            ParameterRanges = parameterRanges.ToArray();
+            // Choose the best option.
+            OverloadMatch bestOption = BestOption(matches);
+            Values = bestOption.OrderedParameters.Select(op => op?.Value).ToArray();
+            ParameterRanges = bestOption.OrderedParameters.Select(op => op?.ExpressionRange).ToArray();
 
-            // Get the missing parameters.
-            for (int i = values.Length; i < Values.Length; i++)
-                Values[i] = MissingParameter(Overload.Parameters[i]);
             GetAdditionalData();
         }
-        public void SetContext(DeltinScriptParser.Picky_parametersContext context)
-        {
-            if (_setContext) throw new Exception("Already set the context for the overload chooser.");
-            PickyContext = context;
-            _setContext = true;
 
-            PickyParameter[] parameters = new PickyParameter[context.picky_parameter().Length];
+        private PickyParameter[] ParametersFromContext(DeltinScriptParser.Call_parametersContext context)
+        {
+            // Return empty if context is null.
+            if (context == null) return new PickyParameter[0];
+
+            // Create the parameters array with the same length as the number of input parameters.
+            PickyParameter[] parameters = new PickyParameter[context.call_parameter().Length];
             for (int i = 0; i < parameters.Length; i++)
             {
-                string name = context.picky_parameter(i).PART().GetText();
-                IExpression expression = null;
+                PickyParameter parameter = new PickyParameter(DocRange.GetRange(context.call_parameter(i)));
+                parameters[i] = parameter;
 
-                DocRange expressionRange = null;
+                // Get the picky name.
+                // A is not picky, B is picky.
+                // 'name' will be null depending on how the parameter is written. A is null, B is not null.
+                // A: '5'
+                // B: 'parameter: 5'
+                parameter.Name = context.call_parameter(i).PART()?.GetText();
+                parameter.Picky = parameter.Name != null;
 
-                // Get the expression. If it doesn't exist, add a syntax error.
-                if (context.picky_parameter(i).expr() != null)
+                if (parameter.Picky) parameter.NameRange = DocRange.GetRange(context.call_parameter(i).PART()); // Get the name range if picky.
+
+                // If the expression context exists, set expression and expressionRange.
+                if (context.call_parameter(i).expr() != null)
                 {
-                    expression = parseInfo.GetExpression(getter, context.picky_parameter(i).expr());
-                    expressionRange = DocRange.GetRange(context.picky_parameter(i).expr());
+                    parameter.Value = parseInfo.GetExpression(getter, context.call_parameter(i).expr());
+                    parameter.ExpressionRange = DocRange.GetRange(context.call_parameter(i).expr());
+                }
+                else if (parameter.Picky) // TODO: remove condition so only 'else' remains if parameter-quick-skip is not implemented.
+                    // Throw a syntax error if picky.
+                    parseInfo.Script.Diagnostics.Error("Expected expression.", DocRange.GetRange(context.call_parameter(i).TERNARY_ELSE()));
+
+                // Check if there are any duplicate names.
+                if (parameter.Picky && parameters.Any(p => p != null && p.Picky && p != parameter && p.Name == parameter.Name))
+                    // If there are, syntax error
+                    parseInfo.Script.Diagnostics.Error($"The parameter {parameter.Name} was already set.", parameter.NameRange);
+            }
+
+            return parameters;
+        }
+
+        private OverloadMatch MatchOverload(IParameterCallable option, PickyParameter[] inputParameters)
+        {
+            PickyParameter lastPicky = null;
+
+            OverloadMatch match = new OverloadMatch(option);
+            match.OrderedParameters = new PickyParameter[option.Parameters.Length];
+
+            // Iterate through the option's parameters.
+            for (int i = 0; i < inputParameters.Length; i++)
+            {
+                if (inputParameters[i].ParameterOrdered(option.Parameters[i]))
+                {
+                    // If the picky parameters end but there is an additional picky parameter, throw a syntax error.
+                    if (lastPicky != null && inputParameters[i].Name == null)
+                        match.Error($"Named argument '{lastPicky.Name}' is used out-of-position but is followed by an unnamed argument", lastPicky.NameRange);
+                    else
+                        match.OrderedParameters[i] = inputParameters[i];
                 }
                 else
-                    parseInfo.Script.Diagnostics.Error("Expected expression.", DocRange.GetRange(context.picky_parameter(i).TERNARY_ELSE()));
-                
-                var nameRange = DocRange.GetRange(context.picky_parameter(i).PART());
+                {
+                    // Picky parameter ends.
+                    lastPicky = inputParameters[i];
 
-                // Syntax error if the parameter was already set.
-                if (parameters.Any(p => p != null && p.Name == name))
-                {
-                    parseInfo.Script.Diagnostics.Error($"The parameter {name} was already set.", nameRange);
-                }
-                else
-                {
-                    // Add the parameter.
-                    parameters[i] = new PickyParameter(
-                        name,
-                        expression,
-                        DocRange.GetRange(context.picky_parameter(i)),
-                        nameRange,
-                        expressionRange
-                    );
+                    // Set relevant picky parameter.
+                    for (int p = 0; p < option.Parameters.Length; p++)
+                        if (inputParameters[i].Name == option.Parameters[p].Name)
+                        {
+                            match.OrderedParameters[p] = inputParameters[i];
+                            break;
+                        }
                 }
             }
 
-            if (!SetParameterCount(parameters.Length)) return;
+            // Compare parameter types.
+            for (int i = 0; i < match.OrderedParameters.Length; i++) match.CompareParameterTypes(i);
 
-            // Match by value types and parameter types.
-            foreach (var parameter in parameters)
-            foreach (var option in CurrentOptions)
-            {
-                int index = -1;
-                for (int i = 0; i < option.Parameters.Length; i++)
-                if (option.Parameters[i].Name == parameter.Name)
-                {
-                    index = i;
-                    break;
-                }
+            // Get the missing parameters.
+            match.GetMissingParameters(genericErrorRange, ErrorMessages);
 
-                if (index == -1)
-                {
-                    // Syntax error if the parameter does not exist.
-                    optionDiagnostics[option].Add(new Diagnostic(
-                        string.Format(ErrorMessages.ParameterDoesntExist, parameter.Name),
-                        parameter.NameRange,
-                        Diagnostic.Error
-                    ));
-                }
-                // parameter.Value is null if there is no expression.
-                // A syntax error for this was already thrown earlier.
-                else if (parameter.Value != null)
-                {
-                    // Check the types.
-                    CompareParameterTypes(parameter.Value, option, index, parameter.ExpressionRange);
-                }
-            }
-            GetBestOption();
-
-            List<string> pickyParameterCompletion = Overload.Parameters.Select(p => p.Name).ToList();
-
-            ParameterRanges = new DocRange[Overload.Parameters.Length];
-            IExpression[] values = new IExpression[Overload.Parameters.Length];
-            for (int i = 0; i < values.Length; i++)
-            {
-                int parameterIndex = -1;
-                for (int p = 0; p < parameters.Length && parameterIndex == -1; p++)
-                    if (parameters[p].Name == Overload.Parameters[i].Name)
-                    {
-                        parameterIndex = p;
-                        pickyParameterCompletion.Remove(parameters[p].Name);
-                    }
-
-                if (parameterIndex != -1)
-                {
-                    values[i] = parameters[parameterIndex].Value;
-                    ParameterRanges[i] = parameters[parameterIndex].FullRange;
-                }
-                else
-                    values[i] = MissingParameter(Overload.Parameters[i]);
-            }
-            Values = values;
-
-            // Add the picky parameter completion.
-            parseInfo.Script.AddCompletionRange(new CompletionRange(pickyParameterCompletion.Select(p => new CompletionItem() {
-                Label = p + ":",
-                Kind = CompletionItemKind.Field
-            }).ToArray(), CallRange, CompletionRangeKind.Additive));
-
-            GetAdditionalData();
-        }
-        public void SetContext()
-        {
-            if (_setContext) throw new Exception("Already set the context for the overload chooser.");
-            _setContext = true;
-
-            if (!SetParameterCount(0)) return;
-            GetBestOption();
-
-            Values = new IExpression[Overload.Parameters.Length];
-            for (int i = 0; i < Overload.Parameters.Length; i++)
-                Values[i] = MissingParameter(Overload.Parameters[i]);
-            
-            ParameterRanges = new DocRange[] {
-                new DocRange(
-                    genericErrorRange.end,
-                    CallRange.end
-                )
-            };
-            GetAdditionalData();
+            return match;
         }
 
-        private bool SetParameterCount(int numberOfParameters)
-        {
-            Overload = AllOverloads
-                .OrderBy(o => Math.Abs(numberOfParameters - o.Parameters.Length))
-                .FirstOrDefault();
-            
-            CurrentOptions = CurrentOptions
-                .Where(o => numberOfParameters <= o.Parameters.Length)
-                .ToList();
-            
-            SetOptionDiagnostics();
-            
-            if (CurrentOptions.Count == 0)
-            {
-                parseInfo.Script.Diagnostics.Error(
-                    string.Format(ErrorMessages.BadParameterCount, numberOfParameters),
-                    genericErrorRange
-                );
-                return false;
-            }
-            return true;
-        }
-
-        private void SetOptionDiagnostics()
-        {
-            optionDiagnostics = new Dictionary<IParameterCallable, List<Diagnostic>>();
-            // Fill methodDiagnostics.
-            foreach (var option in CurrentOptions) optionDiagnostics.Add(option, new List<Diagnostic>());
-        }
-
-        private void CompareParameterTypes(IExpression value, IParameterCallable option, int parameter, DocRange errorRange)
-        {
-            CodeType parameterType = option.Parameters[parameter].Type;
-
-            if (parameterType != null && ((parameterType.IsConstant() && value.Type() == null) || (value.Type() != null && !value.Type().Implements(parameterType))))
-            {
-                // The parameter type does not match.
-                string msg = string.Format("Expected a value of type {0}.", option.Parameters[parameter].Type.Name);
-                optionDiagnostics[option].Add(new Diagnostic(msg, errorRange, Diagnostic.Error));
-            }
-            else if (value.Type() != null && parameterType == null && value.Type().IsConstant())
-            {
-                string msg = string.Format($"The type '{value.Type().Name}' cannot be used here.");
-                optionDiagnostics[option].Add(new Diagnostic(msg, errorRange, Diagnostic.Error));
-            }
-        }
-    
-        private void GetBestOption()
+        private OverloadMatch BestOption(OverloadMatch[] matches)
         {
             // If there are any methods with no errors, set that as the best option.
-            var optionWithNoErrors = optionDiagnostics.FirstOrDefault(o => o.Value.Count == 0).Key;
-            if (optionWithNoErrors != null) Overload = optionWithNoErrors;
+            OverloadMatch bestOption = matches.FirstOrDefault(match => !match.HasError) ?? matches.FirstOrDefault(match => !match.HasDeterminingError);
+            if (bestOption != null) Overload = bestOption.Option;
+            else bestOption = matches.First(match => match.Option == Overload);
 
             // Add the diagnostics of the best option.
-            parseInfo.Script.Diagnostics.AddDiagnostics(optionDiagnostics[Overload].ToArray());
+            bestOption.AddDiagnostics(parseInfo.Script.Diagnostics);
+            CheckAccessLevel();
 
-            // Check the access level.
+            return bestOption;
+        }
+
+        private void CheckAccessLevel()
+        {
             bool accessable = true;
 
             if (Overload is IMethod asMethod)
@@ -291,17 +176,26 @@ namespace Deltin.Deltinteger.Parse
             if (!accessable)
                 parseInfo.Script.Diagnostics.Error(string.Format("'{0}' is inaccessable due to its access level.", Overload.GetLabel(false)), genericErrorRange);
         }
-    
-        private IExpression MissingParameter(CodeParameter parameter)
-        {
-            if (parameter.DefaultValue != null) return parameter.DefaultValue;
 
-            // Parameter is missing.
-            parseInfo.Script.Diagnostics.Error(
-                string.Format(ErrorMessages.MissingParameter, parameter.Name),
-                genericErrorRange
-            );
-            return null;
+        private bool SetParameterCount(int numberOfParameters)
+        {
+            Overload = AllOverloads
+                .OrderBy(o => Math.Abs(numberOfParameters - o.Parameters.Length))
+                .FirstOrDefault();
+            
+            CurrentOptions = CurrentOptions
+                .Where(o => numberOfParameters <= o.Parameters.Length)
+                .ToList();
+                        
+            if (CurrentOptions.Count == 0)
+            {
+                parseInfo.Script.Diagnostics.Error(
+                    string.Format(ErrorMessages.BadParameterCount, numberOfParameters),
+                    genericErrorRange
+                );
+                return false;
+            }
+            return true;
         }
     
         private void GetAdditionalData()
@@ -357,19 +251,105 @@ namespace Deltin.Deltinteger.Parse
 
     class PickyParameter
     {
-        public string Name { get; }
-        public IExpression Value { get; }
+        /// <summary>The name of the picky parameter. This will be null if `Picky` is false.</summary>
+        public string Name { get; set; }
+        /// <summary>The parameter's expression. This will only be null if there is a syntax error.</summary>
+        public IExpression Value { get; set; }
+        /// <summary>The full range of the parameter, including the picky name and the value. This will equal `ExpressionRange` if `Picky` is false.</summary>
         public DocRange FullRange { get; }
-        public DocRange NameRange { get; }
-        public DocRange ExpressionRange { get; }
+        /// <summary>The range of the picky parameter's name. This will be null if `Picky` is false.</summary>
+        public DocRange NameRange { get; set; }
+        /// <summary>The range of the expression. This will equal `FullRange` if `Picky` is false.</summary>
+        public DocRange ExpressionRange { get; set; }
+        /// <summary>Determines if the parameter's name is specified.</summary>
+        public bool Picky { get; set; }
+        /// <summary>If `Prefilled` is true, this parameter was filled by a default value.</summary>
+        public bool Prefilled { get; set; }
 
-        public PickyParameter(string name, IExpression value, DocRange fullRange, DocRange nameRange, DocRange expressionRange)
+        public PickyParameter(DocRange fullRange)
         {
-            Name = name;
-            Value = value;
             FullRange = fullRange;
-            NameRange = nameRange;
-            ExpressionRange = expressionRange;
+        }
+
+        public PickyParameter()
+        {
+            Prefilled = true;
+        }
+
+        public bool ParameterOrdered(CodeParameter parameter) => !Picky || parameter.Name == Name;
+    }
+
+    class OverloadMatch
+    {
+        public IParameterCallable Option { get; }
+        public PickyParameter[] OrderedParameters { get; set; }
+        public List<OverloadMatchError> Errors { get; } = new List<OverloadMatchError>();
+        public bool HasDeterminingError => Errors.Any(error => error.Vital);
+        public bool HasError => Errors.Count > 0;
+
+        public OverloadMatch(IParameterCallable option)
+        {
+            Option = option;
+        }
+
+        public void Error(string message, DocRange range, bool vital = true) => Errors.Add(new OverloadMatchError(message, range, vital));
+
+        /// <summary>Confirms that a parameter type matches.</summary>
+        public void CompareParameterTypes(int parameter)
+        {
+            CodeType parameterType = Option.Parameters[parameter].Type;
+            IExpression value = OrderedParameters[parameter]?.Value;
+            if (value == null) return;
+            DocRange errorRange = OrderedParameters[parameter].ExpressionRange;
+
+            if (parameterType != null && ((parameterType.IsConstant() && value.Type() == null) || (value.Type() != null && !value.Type().Implements(parameterType))))
+            {
+                // The parameter type does not match.
+                string msg = string.Format("Expected a value of type {0}.", Option.Parameters[parameter].Type.Name);
+                Error(msg, errorRange);
+            }
+            else if (value.Type() != null && parameterType == null && value.Type().IsConstant())
+            {
+                string msg = string.Format($"The type '{value.Type().Name}' cannot be used here.");
+                Error(msg, errorRange);
+            }
+        }
+
+        /// <summary>Determines if there are any missing parameters.</summary>
+        public void GetMissingParameters(DocRange genericErrorRange, OverloadError messageHandler)
+        {
+            for (int i = 0; i < OrderedParameters.Length; i++)
+                if (OrderedParameters[i]?.Value == null)
+                {
+                    // Default value
+                    if (Option.Parameters[i].DefaultValue != null)
+                    {
+                        if (OrderedParameters[i] == null) OrderedParameters[i] = new PickyParameter();
+                        OrderedParameters[i].Value = Option.Parameters[i].DefaultValue;
+                    }
+                    else
+                        // Parameter is missing.
+                        Error(string.Format(messageHandler.MissingParameter, Option.Parameters[i].Name), genericErrorRange);
+                }
+        }
+
+        public void AddDiagnostics(FileDiagnostics diagnostics)
+        {
+            foreach (OverloadMatchError error in Errors) diagnostics.Error(error.Message, error.Range);
+        }
+    }
+
+    class OverloadMatchError
+    {
+        public string Message { get; }
+        public DocRange Range { get; }
+        public bool Vital { get; }
+
+        public OverloadMatchError(string message, DocRange range, bool vital = true)
+        {
+            Message = message;
+            Range = range;
+            Vital = vital;
         }
     }
 

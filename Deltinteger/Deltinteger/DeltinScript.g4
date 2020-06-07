@@ -58,10 +58,9 @@ array : (INDEX_START expr INDEX_END)+ ;
 varset   : var=expr array? ((statement_operation val=expr?) | INCREMENT | DECREMENT) ;
 statement_operation : EQUALS | EQUALS_ADD | EQUALS_DIVIDE | EQUALS_MODULO | EQUALS_MULTIPLY | EQUALS_POW | EQUALS_SUBTRACT ;
 
-call_parameters  : expr (COMMA expr?)*    		 	         ;
-picky_parameter  : PART? TERNARY_ELSE expr?                  ;
-picky_parameters : picky_parameter (COMMA picky_parameter?)* ;
-method           : (ASYNC NOT?)? PART LEFT_PAREN (picky_parameters | call_parameters)? RIGHT_PAREN ;
+method         : (ASYNC NOT?)? PART LEFT_PAREN call_parameters? RIGHT_PAREN ;
+call_parameters: call_parameter (COMMA call_parameter?)*   ;
+call_parameter : (PART? TERNARY_ELSE)? expr					 ;
 
 variable : PART array? ;
 code_type: PART (INDEX_START INDEX_END)* generics?;
