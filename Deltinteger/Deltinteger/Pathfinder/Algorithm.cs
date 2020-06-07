@@ -12,7 +12,7 @@ namespace Deltin.Deltinteger.Pathfinder
         protected Element pathmapObject { get; }
         protected Element Nodes { get; }
         protected Element Segments { get; }
-        protected Element position { get; }
+        protected Element Source { get; }
         private Element attributes { get; }
         protected bool useAttributes { get; }
 
@@ -27,7 +27,7 @@ namespace Deltin.Deltinteger.Pathfinder
         {
             this.actionSet = actionSet;
             this.pathmapObject = pathmapObject;
-            this.position = position;
+            this.Source = position;
             this.attributes = attributes;
             this.useAttributes = attributes != null && attributes is V_EmptyArray == false;
 
@@ -39,7 +39,7 @@ namespace Deltin.Deltinteger.Pathfinder
 
         public void Get()
         {
-            var firstNode = ClosestNodeToPosition(Nodes, position);
+            var firstNode = ClosestNodeToPosition(Nodes, Source);
 
             Assign();
             
@@ -156,9 +156,9 @@ namespace Deltin.Deltinteger.Pathfinder
         protected virtual IndexReference GetParentArray() => actionSet.VarCollection.Assign("Dijkstra: Parent Array", actionSet.IsGlobal, false);
         protected virtual IndexReference GetParentAttributeArray() => actionSet.VarCollection.Assign("Dijkstra: Parent Attribute Info", actionSet.IsGlobal, false);
 
-        protected void Backtrack(Element destination, IndexReference finalPath, IndexReference finalPathAttributes)
+        protected void Backtrack(Element startNode, IndexReference finalPath, IndexReference finalPathAttributes, bool reversePath = false)
         {
-            actionSet.AddAction(current.SetVariable(destination));
+            actionSet.AddAction(current.SetVariable(startNode));
             actionSet.AddAction(finalPath.SetVariable(new V_EmptyArray()));
 
             // Get the path.
@@ -168,7 +168,8 @@ namespace Deltin.Deltinteger.Pathfinder
                 new V_Number(0)
             )));
 
-            Element next = Nodes[(Element)current.GetVariable()];
+            Element nextNode = Nodes[(Element)current.GetVariable()];
+            Element nextAttribute = ((Element)parentAttributeInfo.GetVariable())[(Element)current.GetVariable()];
 
             // For debugging generated path.
             // actionSet.AddAction(Element.Part<A_CreateEffect>(
@@ -180,10 +181,20 @@ namespace Deltin.Deltinteger.Pathfinder
             //     EnumData.GetEnumValue(EffectRev.VisibleTo)
             // ));
 
-            // Add the current node to the final path.
-            actionSet.AddAction(finalPath.ModifyVariable(Operation.AppendToArray, next));
-            // Add the current attribute to the final path attributes.
-            if (useAttributes) actionSet.AddAction(finalPathAttributes.ModifyVariable(Operation.AppendToArray, ((Element)parentAttributeInfo.GetVariable())[(Element)current.GetVariable()]));
+            if (!reversePath)
+            {
+                // Add the current node to the final path.
+                actionSet.AddAction(finalPath.ModifyVariable(Operation.AppendToArray, nextNode));
+                // Add the current attribute to the final path attributes.
+                if (useAttributes) actionSet.AddAction(finalPathAttributes.ModifyVariable(Operation.AppendToArray, nextAttribute));
+            }
+            else
+            {
+                // Insert the current node to the final path.
+                actionSet.AddAction(finalPath.SetVariable(Element.Part<V_Append>(nextNode, finalPath.GetVariable())));
+                // Insert the current attribute to the final path attributes.
+                actionSet.AddAction(finalPathAttributes.SetVariable(Element.Part<V_Append>(nextAttribute, finalPathAttributes.GetVariable())));
+            }
 
             actionSet.AddAction(current.SetVariable(Element.Part<V_ValueInArray>(parentArray.GetVariable(), current.GetVariable()) - 1));
             actionSet.AddAction(new A_End());
@@ -364,7 +375,7 @@ namespace Deltin.Deltinteger.Pathfinder
             // TODO: Backtrack sets current as the destination parameter, but current is being sent as the destination, resulting in a useless action.
             Backtrack((Element)current.GetVariable(), finalPath, finalPathAttributes);
 
-            actionSet.Translate.DeltinScript.GetComponent<PathfinderInfo>().Pathfind(actionSet, player, (Element)finalPath.GetVariable(), position, finalPathAttributes?.GetVariable() as Element);
+            actionSet.Translate.DeltinScript.GetComponent<PathfinderInfo>().Pathfind(actionSet, player, (Element)finalPath.GetVariable(), Source, finalPathAttributes?.GetVariable() as Element);
         }
 
         protected override Element LoopCondition() => AnyAccessableUnvisited();
@@ -428,7 +439,7 @@ namespace Deltin.Deltinteger.Pathfinder
                 finalPath,
                 finalPathAttributes
             );
-            actionSet.Translate.DeltinScript.GetComponent<PathfinderInfo>().Pathfind(actionSet, assignPlayerPaths.IndexValue, (Element)finalPath.GetVariable(), position, (Element)finalPathAttributes.GetVariable());
+            actionSet.Translate.DeltinScript.GetComponent<PathfinderInfo>().Pathfind(actionSet, assignPlayerPaths.IndexValue, (Element)finalPath.GetVariable(), Source, (Element)finalPathAttributes.GetVariable());
             assignPlayerPaths.Finish();
         }
     }
@@ -475,7 +486,7 @@ namespace Deltin.Deltinteger.Pathfinder
                 finalPathAttributes = actionSet.VarCollection.Assign("Dijkstra: Final Path Attributes", actionSet.IsGlobal, false);
                 actionSet.AddAction(finalPathAttributes.SetVariable(new V_EmptyArray()));
             }
-            Backtrack((Element)current.GetVariable(), finalPath, finalPathAttributes);
+            Backtrack((Element)current.GetVariable(), finalPath, finalPathAttributes, true);
         }
 
         // Loop until any of the destinations have been visited.
@@ -529,7 +540,7 @@ namespace Deltin.Deltinteger.Pathfinder
             PathResolveClass.Pathmap.Set(actionSet, (Element)ClassReference.GetVariable(), (Element)actionSet.CurrentObject);
 
             // Save the destination.
-            PathResolveClass.Destination.Set(actionSet, (Element)ClassReference.GetVariable(), position);
+            PathResolveClass.Destination.Set(actionSet, (Element)ClassReference.GetVariable(), Source);
 
             // Assign FinalNode
             if (Destination != null)
