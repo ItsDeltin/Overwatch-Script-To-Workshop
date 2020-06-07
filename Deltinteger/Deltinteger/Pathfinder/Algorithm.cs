@@ -349,7 +349,7 @@ namespace Deltin.Deltinteger.Pathfinder
             // Break out of the while loop when the current node is the closest node to the player.
             PlayerNodeReachedBreak = new SkipStartMarker(actionSet, new V_Compare(
                 ClosestNodeToPosition(Nodes, Element.Part<V_PositionOf>(player)),
-                Operators.Equal,
+                Operators.NotEqual,
                 current.GetVariable()
             ));
             actionSet.AddAction(PlayerNodeReachedBreak);
