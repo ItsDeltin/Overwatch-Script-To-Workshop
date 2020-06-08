@@ -131,12 +131,17 @@ namespace Deltin.Deltinteger.Parse
                     lastPicky = inputParameters[i];
 
                     // Set relevant picky parameter.
-                    for (int p = 0; p < option.Parameters.Length; p++)
+                    bool nameFound = false;
+                    for (int p = 0; p < option.Parameters.Length && !nameFound; p++)
                         if (inputParameters[i].Name == option.Parameters[p].Name)
                         {
                             match.OrderedParameters[p] = inputParameters[i];
-                            break;
+                            nameFound = true;
                         }
+                    
+                    // If the named argument's name is not found, throw an error.
+                    if (!nameFound)
+                        match.Error($"Name argument '{lastPicky.Name}' does not exist in the function '{option.GetLabel(false)}'.", inputParameters[i].NameRange);
                 }
             }
 
