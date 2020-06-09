@@ -116,21 +116,6 @@ namespace Deltin.Deltinteger.Pathfinder
         }
     }
 
-    [CustomMethod("CurrentSegmentAttribute", "Gets the attribute of the current pathfind segment.", CustomMethodType.Value, false)]
-    class CurrentSegmentAttribute : CustomMethodBase
-    {
-        public override CodeParameter[] Parameters() => new CodeParameter[] {
-            new CodeParameter("player", "The player to get the next segment attribute of."),
-        };
-
-        public override IWorkshopTree Get(ActionSet actionSet, IWorkshopTree[] parameterValues)
-        {
-            PathfinderInfo pathfindInfo = actionSet.Translate.DeltinScript.GetComponent<PathfinderInfo>();
-            Element player = (Element)parameterValues[0];
-            return Element.TernaryConditional(pathfindInfo.NumberOfNodes(player) > 1, ((Element)pathfindInfo.PathAttributes.GetVariable(player))[0], new V_Number(-1));
-        }
-    }
-
     [CustomMethod("SegmentAttribute", "Gets the attribute of a pathfind segment.", CustomMethodType.Value, false)]
     [Parameter("player", Elements.ValueType.Player, null)]
     [Parameter("segment", Elements.ValueType.Number, null)]

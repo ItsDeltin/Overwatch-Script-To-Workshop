@@ -39,12 +39,12 @@ namespace Deltin.Deltinteger.Pathfinder
             serveObjectScope.AddNativeMethod(GetResolveTo(DeltinScript));
 
             staticScope.AddNativeMethod(StopPathfind);
+            staticScope.AddNativeMethod(CurrentSegmentAttribute);
             staticScope.AddNativeMethod(CustomMethodData.GetCustomMethod<IsPathfinding>());
             staticScope.AddNativeMethod(CustomMethodData.GetCustomMethod<IsPathfindStuck>());
             staticScope.AddNativeMethod(CustomMethodData.GetCustomMethod<FixPathfind>());
             staticScope.AddNativeMethod(CustomMethodData.GetCustomMethod<NextNode>());
             staticScope.AddNativeMethod(CustomMethodData.GetCustomMethod<WalkPath>());
-            staticScope.AddNativeMethod(CustomMethodData.GetCustomMethod<CurrentSegmentAttribute>());
             staticScope.AddNativeMethod(CustomMethodData.GetCustomMethod<SegmentAttribute>());
             staticScope.AddNativeMethod(CustomMethodData.GetCustomMethod<RestartThottle>());
         }
@@ -97,6 +97,7 @@ namespace Deltin.Deltinteger.Pathfinder
         private readonly static CodeParameter OnLoopStartParameter = new CodeParameter("onLoopStart", $"A list of actions to run at the beginning of the pathfinding code's main loop. This is an optional parameter. By default, it will wait for {Constants.MINIMUM_WAIT} seconds. Manipulate this depending on if speed or server load is more important.", new BlockLambda(), new ExpressionOrWorkshopValue());
         private readonly static CodeParameter OnNeighborLoopParameter = new CodeParameter("onNeighborLoopStart", $"A list of actions to run at the beginning of the pathfinding code's neighbor loop, which is nested inside the main loop. This is an optional parameter. By default, it will wait for {Constants.MINIMUM_WAIT} seconds. Manipulate this depending on if speed or server load is more important.", new BlockLambda(), new ExpressionOrWorkshopValue());
 
+        // Object Functions
         // Pathfind(player, destination, [attributes])
         private static FuncMethod Pathfind => new FuncMethodBuilder() {
             Name = "Pathfind",
@@ -249,6 +250,7 @@ namespace Deltin.Deltinteger.Pathfinder
         };
 
         // Static functions
+        // StopPathfind(players)
         private static FuncMethod StopPathfind = new FuncMethodBuilder() {
             Name = "GetPath",
             Documentation = "Stops pathfinding for the specified players.",
@@ -260,6 +262,22 @@ namespace Deltin.Deltinteger.Pathfinder
                     actionSet.Translate.DeltinScript.GetComponent<PathfinderInfo>().Path.SetVariable(new V_EmptyArray(), (Element)methodCall.ParameterValues[0])
                 );
                 return null;
+            }
+        };
+    
+        // CurrentSegmentAttribute(player)
+        private static FuncMethod CurrentSegmentAttribute = new FuncMethodBuilder() {
+            Name = "CurrentSegmentAttribute",
+            Documentation = "Gets the attribute of the current pathfind segment. If the player is not pathfinding, -1 is returned.",
+            Parameters = new CodeParameter[] {
+                new CodeParameter("player", "The player to get the current segment attribute of.")
+            },
+            DoesReturnValue = true,
+            Action = (actionSet, methodCall) => {
+                PathfinderInfo pathfindInfo = actionSet.Translate.DeltinScript.GetComponent<PathfinderInfo>();
+                Element player = (Element)methodCall.ParameterValues[0];
+                // If the player is not pathfinding, return -1.
+                return Element.TernaryConditional(pathfindInfo.NumberOfNodes(player) > 1, ((Element)pathfindInfo.PathAttributes.GetVariable(player))[0], new V_Number(-1));
             }
         };
     }
