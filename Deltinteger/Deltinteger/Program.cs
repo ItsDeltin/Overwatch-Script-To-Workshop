@@ -27,6 +27,8 @@ namespace Deltin.Deltinteger
 
         static void Main(string[] args)
         {
+            if (args.Contains("--debug")) WaitForDebugger();
+
             Program.args = args;
             CultureInfo.DefaultThreadCurrentCulture = new CultureInfo("en-US");
             ElementList.InitElements();
@@ -128,6 +130,11 @@ namespace Deltin.Deltinteger
             }
             
             Finished();
+        }
+
+        static void WaitForDebugger()
+        {
+            while (!System.Diagnostics.Debugger.IsAttached) Thread.Sleep(100);
         }
 
         static void Script(string parseFile)
