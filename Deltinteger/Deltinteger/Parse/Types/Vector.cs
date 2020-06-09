@@ -8,7 +8,7 @@ namespace Deltin.Deltinteger.Parse
 {
     public class VectorType : CodeType
     {
-        public static VectorType Instance;
+        public static VectorType Instance { get; } = new VectorType();
 
         private Scope objectScope = new Scope("Vector");
         private Scope staticScope = new Scope("Vector");
@@ -27,7 +27,10 @@ namespace Deltin.Deltinteger.Parse
             CanBeDeleted = false;
             CanBeExtended = false;
             Kind = "struct";
+        }
 
+        public void ResolveElements()
+        {
             X = CreateInternalVar("X", "The X component of the vector.");
             Y = CreateInternalVar("Y", "The Y component of the vector.");
             Z = CreateInternalVar("Z", "The Z component of the vector.");
