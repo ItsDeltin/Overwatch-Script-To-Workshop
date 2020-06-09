@@ -23,6 +23,13 @@ namespace Deltin.Deltinteger.Pathfinder
         protected IndexReference parentAttributeInfo { get; set; }
         protected static bool assignExtended = false;
 
+        public Action<ActionSet> OnLoop { get; set; } = actionSet => {
+            actionSet.AddAction(A_Wait.MinimumWait);
+        };
+        public Action<ActionSet> OnConnectLoop { get; set; } = actionSet => {
+            actionSet.AddAction(A_Wait.MinimumWait);
+        };
+
         public DijkstraBase(ActionSet actionSet, Element pathmapObject, Element position, Element attributes)
         {
             this.actionSet = actionSet;
@@ -59,18 +66,20 @@ namespace Deltin.Deltinteger.Pathfinder
 
             actionSet.AddAction(Element.Part<A_While>(LoopCondition()));
 
+            // Invoke LoopStart
+            OnLoop.Invoke(actionSet);
+
             // Get neighboring indexes
             actionSet.AddAction(connectedSegments.SetVariable(GetConnectedSegments(
                 Segments,
                 (Element)current.GetVariable()
             )));
 
-            actionSet.AddAction(A_Wait.MinimumWait);
-
             // Loop through neighboring indexes
             ForeachBuilder forBuilder = new ForeachBuilder(actionSet, connectedSegments.GetVariable());
 
-            actionSet.AddAction(A_Wait.MinimumWait);
+            // Invoke OnConnectLoop
+            OnConnectLoop.Invoke(actionSet);
 
             actionSet.AddAction(ArrayBuilder<Element>.Build(
                 // Get the index from the segment data

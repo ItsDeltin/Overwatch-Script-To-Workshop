@@ -130,6 +130,7 @@ namespace Deltin.Deltinteger.Parse
         {
             WorkshopValue = workshopValue;
         }
+        public ExpressionOrWorkshopValue() {}
 
         public IWorkshopTree Parse(ActionSet actionSet)
         {

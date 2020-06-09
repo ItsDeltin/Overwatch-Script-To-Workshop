@@ -4,6 +4,7 @@ using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.Parse;
 using Deltin.Deltinteger.CustomMethods;
+using Deltin.Deltinteger.Parse.Lambda;
 using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
 using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItemKind;
 using StringOrMarkupContent = OmniSharp.Extensions.LanguageServer.Protocol.Models.StringOrMarkupContent;
@@ -75,26 +76,54 @@ namespace Deltin.Deltinteger.Pathfinder
             actionSet.AddAction(Segments.SetVariable((Element)segments.GetVariable(), index: index));
         }
 
+        private static void SetHooks(DijkstraBase algorithm, IWorkshopTree onLoop, IWorkshopTree onConnectLoop)
+        {
+            // OnLoop
+            if (onLoop is LambdaAction onLoopLambda)
+                algorithm.OnLoop = actionSet => onLoopLambda.Invoke(actionSet);
+            
+            // OnConnectLoop
+            if (onConnectLoop is LambdaAction onConnectLoopLambda)
+                algorithm.OnConnectLoop = actionSet => onConnectLoopLambda.Invoke(actionSet);
+        }
+
+        private static Element ContainParameter(ActionSet actionSet, string name, IWorkshopTree value)
+        {
+            IndexReference containParameter = actionSet.VarCollection.Assign(name, actionSet.IsGlobal, true);
+            actionSet.AddAction(containParameter.SetVariable((Element)value));
+            return (Element)containParameter.GetVariable();
+        }
+
+        private readonly static CodeParameter OnLoopStartParameter = new CodeParameter("onLoopStart", $"A list of actions to run at the beginning of the pathfinding code's main loop. This is an optional parameter. By default, it will wait for {Constants.MINIMUM_WAIT} seconds. Manipulate this depending on if speed or server load is more important.", new BlockLambda(), new ExpressionOrWorkshopValue());
+        private readonly static CodeParameter OnNeighborLoopParameter = new CodeParameter("onNeighborLoopStart", $"A list of actions to run at the beginning of the pathfinding code's neighbor loop, which is nested inside the main loop. This is an optional parameter. By default, it will wait for {Constants.MINIMUM_WAIT} seconds. Manipulate this depending on if speed or server load is more important.", new BlockLambda(), new ExpressionOrWorkshopValue());
+
         // Pathfind(player, destination, [attributes])
-        private static readonly FuncMethod Pathfind = new FuncMethodBuilder() {
+        private static FuncMethod Pathfind => new FuncMethodBuilder() {
             Name = "Pathfind",
             Documentation = "Moves the specified player to the destination by pathfinding.",
             Parameters = new CodeParameter[] {
                 new CodeParameter("player", "The player to move."),
                 new CodeParameter("destination", "The destination to move the player to."),
-                new CodeParameter("attributes", "An array of attributes to pathfind with.", new ExpressionOrWorkshopValue(new V_Null()))
+                new CodeParameter("attributes", "An array of attributes to pathfind with.", new ExpressionOrWorkshopValue(new V_Null())),
+                OnLoopStartParameter,
+                OnNeighborLoopParameter
             },
             Action = (actionSet, methodCall) => {
                 Element player = (Element)methodCall.ParameterValues[0];
 
                 // Store the pathfind destination.
-                IndexReference destinationStore = actionSet.VarCollection.Assign("_pathfindDestinationStore", actionSet.IsGlobal, true);
-                actionSet.AddAction(destinationStore.SetVariable((Element)methodCall.ParameterValues[1]));
+                Element destination = ContainParameter(actionSet, "_pathfindDestinationStore", methodCall.ParameterValues[1]);
 
+                // Get the attributes.
                 Element attributes = (Element)methodCall.ParameterValues[2];
                 if (attributes is V_Null || attributes is V_EmptyArray) attributes = null;
 
-                DijkstraPlayer algorithm = new DijkstraPlayer(actionSet, (Element)actionSet.CurrentObject, player, (Element)destinationStore.GetVariable(), attributes);
+                DijkstraPlayer algorithm = new DijkstraPlayer(actionSet, (Element)actionSet.CurrentObject, player, destination, attributes);
+
+                // Set lambda hooks
+                SetHooks(algorithm, methodCall.ParameterValues[3], methodCall.ParameterValues[4]);
+
+                // Apply
                 algorithm.Get();
                 return null;
             }
@@ -107,20 +136,25 @@ namespace Deltin.Deltinteger.Pathfinder
             Parameters = new CodeParameter[] {
                 new CodeParameter("players", "The array of players to move."),
                 new CodeParameter("destination", "The destination to move the players to."),
-                new CodeParameter("attributes", "An array of attributes to pathfind with.", new ExpressionOrWorkshopValue(new V_Null()))
+                new CodeParameter("attributes", "An array of attributes to pathfind with.", new ExpressionOrWorkshopValue(new V_Null())),
+                OnLoopStartParameter,
+                OnNeighborLoopParameter
             },
             Action = (actionSet, methodCall) => {
-                IndexReference destinationStore = actionSet.VarCollection.Assign("_pathfindDestinationStore", actionSet.IsGlobal, true);
-                actionSet.AddAction(destinationStore.SetVariable((Element)methodCall.ParameterValues[1]));
+                Element destination = ContainParameter(actionSet, "_pathfindDestinationStore", methodCall.ParameterValues[1]);
 
                 Element attributes = (Element)methodCall.ParameterValues[2];
                 if (attributes is V_Null || attributes is V_EmptyArray) attributes = null;
 
                 DijkstraMultiSource algorithm = new DijkstraMultiSource(
-                    actionSet, actionSet.Translate.DeltinScript.GetComponent<PathfinderInfo>(), (Element)actionSet.CurrentObject, (Element)methodCall.ParameterValues[0], (Element)destinationStore.GetVariable(), attributes
+                    actionSet, actionSet.Translate.DeltinScript.GetComponent<PathfinderInfo>(), (Element)actionSet.CurrentObject, (Element)methodCall.ParameterValues[0], destination, attributes
                 );
-                algorithm.Get();
 
+                // Set lambda hooks
+                SetHooks(algorithm, methodCall.ParameterValues[3], methodCall.ParameterValues[4]);
+
+                // Apply
+                algorithm.Get();
                 return null;
             }
         };
@@ -132,10 +166,19 @@ namespace Deltin.Deltinteger.Pathfinder
             Parameters = new CodeParameter[] {
                 new CodeParameter("player", "The player to pathfind."),
                 new CodeParameter("destinations", "The array of destinations."),
-                new CodeParameter("attributes", "An array of attributes to pathfind with.", new ExpressionOrWorkshopValue(new V_Null()))
+                new CodeParameter("attributes", "An array of attributes to pathfind with.", new ExpressionOrWorkshopValue(new V_Null())),
+                OnLoopStartParameter,
+                OnNeighborLoopParameter
             },
             Action = (actionSet, methodCall) => {
-                DijkstraEither algorithm = new DijkstraEither(actionSet, (Element)actionSet.CurrentObject, Element.Part<V_PositionOf>(methodCall.ParameterValues[0]), (Element)methodCall.ParameterValues[1], (Element)methodCall.ParameterValues[2]);
+                Element destinations = ContainParameter(actionSet, "_pathfindDestinationStore", methodCall.ParameterValues[1]);
+
+                DijkstraEither algorithm = new DijkstraEither(actionSet, (Element)actionSet.CurrentObject, Element.Part<V_PositionOf>(methodCall.ParameterValues[0]), destinations, (Element)methodCall.ParameterValues[2]);
+
+                // Set lambda hooks
+                SetHooks(algorithm, methodCall.ParameterValues[3], methodCall.ParameterValues[4]);
+
+                // Apply
                 algorithm.Get();
                 actionSet.Translate.DeltinScript.GetComponent<PathfinderInfo>().Pathfind(actionSet, (Element)methodCall.ParameterValues[0], (Element)algorithm.finalPath.GetVariable(), algorithm.PointDestination, (Element)algorithm.finalPathAttributes.GetVariable());
                 return null;
@@ -171,10 +214,17 @@ namespace Deltin.Deltinteger.Pathfinder
             ReturnType = deltinScript.Types.GetInstance<PathResolveClass>(),
             Parameters = new CodeParameter[] {
                 new CodeParameter("position", "The position to resolve."),
-                new CodeParameter("attributes", "The attributes of the path.", new ExpressionOrWorkshopValue(new V_Null()))
+                new CodeParameter("attributes", "The attributes of the path.", new ExpressionOrWorkshopValue(new V_Null())),
+                OnLoopStartParameter,
+                OnNeighborLoopParameter
             },
             Action = (actionSet, call) => {
                 ResolveDijkstra resolve = new ResolveDijkstra(actionSet, (Element)call.ParameterValues[0], (Element)call.ParameterValues[1]);
+
+                // Set lambda hooks
+                SetHooks(resolve, call.ParameterValues[2], call.ParameterValues[3]);
+
+                // Apply
                 resolve.Get();
                 return resolve.ClassReference.GetVariable();
             }
