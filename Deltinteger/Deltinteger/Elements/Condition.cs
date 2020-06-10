@@ -8,7 +8,7 @@ using Deltin.Deltinteger;
 
 namespace Deltin.Deltinteger.Elements
 {
-    public class Condition : IWorkshopTree
+    public class Condition
     {
         public Element Value1 { get; private set; }
         public EnumMember CompareOperator { get; private set; }
@@ -28,22 +28,30 @@ namespace Deltin.Deltinteger.Elements
         }
 
         public Condition(Element value1, Elements.Operators compareOperator, Element value2) : this(value1, EnumData.GetEnumValue(compareOperator), value2) {}
-        
-        public void DebugPrint(Log log, int depth = 0)
+        public Condition(V_Compare condition) : this((Element)condition.ParameterValues[0], (EnumMember)condition.ParameterValues[1], (Element)condition.ParameterValues[2]) {}
+        public Condition(Element condition) : this(condition, Operators.Equal, new V_True()) {}
+
+        public string ToWorkshop(OutputLanguage language, bool optimize)
         {
-            Value1.DebugPrint(log, depth);
-            log.Write(LogLevel.Verbose, new ColorMod(new string(' ', depth * 4) + CompareOperator.ToWorkshop(), ConsoleColor.DarkYellow));
-            Value2.DebugPrint(log, depth);
+            Element a = Value1;
+            Element b = Value2;
+            if (optimize)
+            {
+                a = a.Optimize();
+                b = b.Optimize();
+            }
+            
+            return a.ToWorkshop(language) + " " + CompareOperator.ToWorkshop(language) + " " + b.ToWorkshop(language);
         }
 
-        public string ToWorkshop()
+        public int ElementCount(bool optimized)
         {
-            return Value1.ToWorkshop() + " " + CompareOperator.ToWorkshop() + " " + Value2.ToWorkshop();
+            if (optimized)
+                return 1 + Value1.Optimize().ElementCount() + Value2.Optimize().ElementCount();
+            else
+                return 1 + Value1.ElementCount() + Value2.ElementCount();
         }
 
-        public double ServerLoadWeight()
-        {
-            return Value1.ServerLoadWeight() + Value2.ServerLoadWeight();
-        }
+        public static implicit operator Condition(Element element) => new Condition(element);
     }
 }

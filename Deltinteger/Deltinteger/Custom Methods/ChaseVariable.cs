@@ -1,150 +1,104 @@
-using System;
-using System.Linq;
 using Deltin.Deltinteger.Parse;
-using Deltin.Deltinteger.WorkshopWiki;
+using Deltin.Deltinteger.Elements;
 
-namespace Deltin.Deltinteger.Elements
+namespace Deltin.Deltinteger.CustomMethods
 {
-    abstract class ChaseMethod : CustomMethodBase
+    [CustomMethod("ChaseVariableAtRate", "Gradually modifies the value of a variable at a specific rate.", CustomMethodType.Action)]
+    public class ChaseVariableAtRate : CustomMethodBase
     {
-        public VariableChaseData GetChaseData(IndexedVar var, TranslateRule context)
+        public override CodeParameter[] Parameters() => new CodeParameter[] {
+            new VariableParameter("variable", "The variable to manipulate. Player variables will chase the event player's variable. Must be a variable defined on the rule level.", VariableType.Dynamic, new VariableResolveOptions() { CanBeIndexed = false, FullVariable = true }),
+            new CodeParameter("destination", "The value that the variable will eventually reach. The type of this value may be either a number or a vector, through the variable’s existing value must be of the same type before the chase begins. Can use number or vector based values."),
+            new CodeParameter("rate", "The amount of change that will happen to the variable’s value each second."),
+            new CodeParameter("reevaluation", "Specifies which of this action's inputs will be continuously reevaluated. This action will keep asking for and using new values from reevaluated inputs.", ValueGroupType.GetEnumType<RateChaseReevaluation>())
+        };
+
+        public override IWorkshopTree Get(ActionSet actionSet, IWorkshopTree[] parameterValues, object[] additionalParameterData)
         {
-            var existingChaseData = context.ParserData.Chasing.FirstOrDefault(cd => cd.Var == var);
-            if (existingChaseData != null)
-                return existingChaseData;
+            VariableElements elements = ((VariableResolve)additionalParameterData[0]).ParseElements(actionSet);
+            WorkshopVariable variable = elements.IndexReference.WorkshopVariable;
+
+            Element destination = (Element)parameterValues[1];
+            Element rate = (Element)parameterValues[2];
+            IWorkshopTree reevaluation = parameterValues[3];
             
-            IndexedVar destination = context.VarCollection.AssignVar(null, $"'{var.Name}' chase destination", var.IsGlobal, null);
-            IndexedVar rate        = context.VarCollection.AssignVar(null, $"'{var.Name}' chase duration"   , var.IsGlobal, null);
+            if (variable.IsGlobal)
+                actionSet.AddAction(Element.Part<A_ChaseGlobalVariableAtRate>(
+                    variable,
+                    destination,
+                    rate,
+                    reevaluation
+                ));
+            else
+                actionSet.AddAction(Element.Part<A_ChasePlayerVariableAtRate>(
+                    elements.Target,
+                    variable,
+                    destination,
+                    rate,
+                    reevaluation
+                ));
 
-            VariableChaseData newChaseData = new VariableChaseData(var, destination, rate);
-            context.ParserData.Chasing.Add(newChaseData);
-
-            Rule chaseRule = new Rule(
-                Constants.INTERNAL_ELEMENT + "Chase Variable: " + var.Name, 
-                var.IsGlobal ? RuleEvent.OngoingGlobal : RuleEvent.OngoingPlayer
-            );
-            chaseRule.Conditions = new Condition[]
-            {
-                new Condition(
-                    rate.GetVariable(),
-                    Operators.NotEqual,
-                    new V_Number(0)
-                )
-            };
-            chaseRule.Actions = ArrayBuilder<Element>.Build(
-                UpdateVariable(var, destination, rate),
-                A_Wait.MinimumWait,
-                new A_LoopIfConditionIsTrue()
-            );
-            context.ParserData.AdditionalRules.Add(chaseRule);
-
-            return newChaseData;
-        }
-
-        private static Element[] UpdateVariable(IndexedVar var, IndexedVar destination, IndexedVar rate)
-        {
-            Element rateAdjusted = Element.Part<V_Multiply>(rate.GetVariable(), new V_Number(Constants.MINIMUM_WAIT));
-
-            Element distance = Element.Part<V_DistanceBetween>(var.GetVariable(), destination.GetVariable());
-
-            Element ratio = Element.Part<V_Divide>(rateAdjusted, distance);
-
-            Element delta = Element.Part<V_Subtract>(destination.GetVariable(), var.GetVariable());
-
-            Element result = Element.TernaryConditional(
-                new V_Compare(distance, Operators.GreaterThan, rateAdjusted),
-                Element.Part<V_Add>(var.GetVariable(), Element.Part<V_Multiply>(ratio, delta)),
-                destination.GetVariable()
-            );
-
-            return var.SetVariable(result);
+            return null;
         }
     }
 
-    public class VariableChaseData
+    [CustomMethod("ChaseVariableOverTime", "Gradually modifies the value of a variable over time.", CustomMethodType.Action)]
+    public class ChaseVariableOverTime : CustomMethodBase
     {
-        public readonly IndexedVar Var;
-        public readonly IndexedVar Destination;
-        public readonly IndexedVar Rate;
+        public override CodeParameter[] Parameters() => new CodeParameter[] {
+            new VariableParameter("variable", "The variable to manipulate. Player variables will chase the event player's variable. Must be a variable defined on the rule level.", VariableType.Dynamic, new VariableResolveOptions() { CanBeIndexed = false, FullVariable = true }),
+            new CodeParameter("destination", "The value that the variable will eventually reach. The type of this value may be either a number or a vector, through the variable’s existing value must be of the same type before the chase begins. Can use number or vector based values."),
+            new CodeParameter("duration", "The amount of time, in seconds, over which the variable's value will approach the destination."),
+            new CodeParameter("reevaluation", "Specifies which of this action's inputs will be continuously reevaluated. This action will keep asking for and using new values from reevaluated inputs.", ValueGroupType.GetEnumType<TimeChaseReevaluation>())
+        };
 
-        public VariableChaseData(IndexedVar var, IndexedVar destination, IndexedVar rate)
+        public override IWorkshopTree Get(ActionSet actionSet, IWorkshopTree[] parameterValues, object[] additionalParameterData)
         {
-            Var = var;
-            Destination = destination;
-            Rate = rate;
+            VariableElements elements = ((VariableResolve)additionalParameterData[0]).ParseElements(actionSet);
+            WorkshopVariable variable = elements.IndexReference.WorkshopVariable;
+
+            Element destination = (Element)parameterValues[1];
+            Element duration = (Element)parameterValues[2];
+            IWorkshopTree reevaluation = parameterValues[3];
+            
+            if (variable.IsGlobal)
+                actionSet.AddAction(Element.Part<A_ChaseGlobalVariableOverTime>(
+                    variable,
+                    destination,
+                    duration,
+                    reevaluation
+                ));
+            else
+                actionSet.AddAction(Element.Part<A_ChasePlayerVariableOverTime>(
+                    elements.Target,
+                    variable,
+                    destination,
+                    duration,
+                    reevaluation
+                ));
+
+            return null;
         }
     }
 
-    [CustomMethod("ChaseVariable", CustomMethodType.Action)]
-    [VarRefParameter("Variable")]
-    [Parameter("Destination", ValueType.Number | ValueType.Vector, null)]
-    [Parameter("Rate", ValueType.Number, null)]
-    class ChaseVariable : ChaseMethod
+    [CustomMethod("StopChasingVariable", "Stops an in-progress chase of a variable, leaving it at its current value.", CustomMethodType.Action)]
+    public class StopChasingVariable : CustomMethodBase
     {
-        protected override MethodResult Get()
+        public override CodeParameter[] Parameters() => new CodeParameter[] {
+            new VariableParameter("variable", "The variable to stop. Must be a variable defined on the rule level.", VariableType.Dynamic, new VariableResolveOptions() { CanBeIndexed = false, FullVariable = true })
+        };
+
+        public override IWorkshopTree Get(ActionSet actionSet, IWorkshopTree[] parameterValues, object[] additionalParameterData)
         {
-            VarRef targetVariable = (VarRef)Parameters[0];
-            
-            if (targetVariable.Var is IndexedVar == false)
-                throw SyntaxErrorException.InvalidVarRefType(targetVariable.Var.Name, VarType.Indexed, ParameterLocations[0]);
+            VariableElements elements = ((VariableResolve)additionalParameterData[0]).ParseElements(actionSet);
+            WorkshopVariable variable = elements.IndexReference.WorkshopVariable;
 
-            IndexedVar var = (IndexedVar)targetVariable.Var;
-            Element destination = (Element)Parameters[1];
-            Element rate = (Element)Parameters[2];
-            
-            VariableChaseData chaseData = GetChaseData(var, TranslateContext);
-            
-            Element[] actions = ArrayBuilder<Element>.Build
-            (
-                chaseData.Destination.SetVariable(destination, targetVariable.Target),
-                chaseData.Rate.SetVariable(rate, targetVariable.Target)
-            );
+            if (variable.IsGlobal)
+                actionSet.AddAction(Element.Part<A_StopChasingGlobalVariable>(variable));
+            else
+                actionSet.AddAction(Element.Part<A_StopChasingPlayerVariable>(elements.Target, variable));
 
-            return new MethodResult(actions, null);
-        }
-    
-        public override CustomMethodWiki Wiki()
-        {
-            return new CustomMethodWiki(
-                "Chases a variable to a value. Works with numbers and vectors.",
-                // Parameters
-                /* Variable    */ "Variable that will chase the destination.", 
-                /* Destination */ "The final variable destination. Can be a number or vector.",
-                /* Rate        */ "The chase speed per second."
-            );
-        }
-    }
-
-    [CustomMethod("StopChasingVariable", CustomMethodType.Action)]
-    [VarRefParameter("Variable")]
-    class StopChasingVariable : ChaseMethod
-    {
-        protected override MethodResult Get()
-        {
-            VarRef targetVariable = (VarRef)Parameters[0];
-
-            if (targetVariable.Var is IndexedVar == false)
-                throw SyntaxErrorException.InvalidVarRefType(targetVariable.Var.Name, VarType.Indexed, ParameterLocations[0]);
-
-            IndexedVar var = (IndexedVar)targetVariable.Var;
-            
-            VariableChaseData chaseData = GetChaseData(var, TranslateContext);
-            
-            Element[] actions = ArrayBuilder<Element>.Build
-            (
-                chaseData.Rate.SetVariable(new V_Number(0), targetVariable.Target)
-            );
-
-            return new MethodResult(actions, null);
-        }
-    
-        public override CustomMethodWiki Wiki()
-        {
-            return new CustomMethodWiki(
-                "Stops chasing a variable.", 
-                // Parameters
-                "Variable that will no longer be chasing."
-            );
+            return null;
         }
     }
 }

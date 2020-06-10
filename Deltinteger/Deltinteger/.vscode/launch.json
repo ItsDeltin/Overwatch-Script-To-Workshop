@@ -1,63 +1,153 @@
 {
-    // Use IntelliSense to learn about possible attributes.
-    // Hover to view descriptions of existing attributes.
-    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
-    "version": "0.2.0",
-    "configurations": [
+   // Use IntelliSense to find out which attributes exist for C# debugging
+   // Use hover for the description of the existing attributes
+   // For further information visit https://github.com/OmniSharp/omnisharp-vscode/blob/master/debugger-launchjson.md
+   "version": "0.2.0",
+   "configurations": [
+        {
+            "name": ".NET Core Launch (console)",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            // If you have changed target frameworks, make sure to update the program path.
+            "program": "${workspaceFolder}/bin/Debug/netcoreapp3.0/Deltinteger.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
+            "console": "integratedTerminal",
+            "stopAtEntry": false
+        },
+        {
+            "name": ".NET Core Attach",
+            "type": "coreclr",
+            "request": "attach",
+            "processId": "${command:pickProcess}"
+        },
+        {
+            "name": "Attach to Deltinteger",
+            "type": "coreclr",
+            "request": "attach",
+            "processName": "Deltinteger"
+        },
         {
             "name": "Debug Script",
-            "type":"clr",
+            "type":"coreclr",
             "request": "launch",
-            "preLaunchTask": "Debug build",
-            "program": "${workspaceFolder}/bin/Debug/Deltinteger.exe",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/bin/Debug/netcoreapp3.0/Deltinteger.dll",
             "args":["${file}"],
             "console": "externalTerminal",
             "stopAtEntry": false,
             "internalConsoleOptions": "openOnSessionStart"
         },
         {
-            "name": "Debug Script Verbose",
-            "type":"clr",
-            "request": "launch",
-            "preLaunchTask": "Debug build",
-            "program": "${workspaceFolder}/bin/Debug/Deltinteger.exe",
-            "args":["${file}", "-verbose"],
-            "console": "externalTerminal",
-            "stopAtEntry": false,
-            "internalConsoleOptions": "openOnSessionStart"
-        },
-        {
             "name": "Language Server Debug",
-            "type":"clr",
+            "type":"coreclr",
             "request": "launch",
-            "preLaunchTask": "Debug build",
-            "program": "${workspaceFolder}/bin/Debug/Deltinteger.exe",
-            "args":["-langserver", "-port 9145 9146"],
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/bin/Debug/netcoreapp3.0/Deltinteger.dll",
+            "args":["--langserver"],
             "console": "externalTerminal",
             "stopAtEntry": false,
             "internalConsoleOptions": "openOnSessionStart"
         },
         {
             "name": "Generate Economic Alphabet",
-            "type":"clr",
+            "type":"coreclr",
             "request": "launch",
-            "preLaunchTask": "Debug build",
-            "program": "${workspaceFolder}/bin/Debug/Deltinteger.exe",
-            "args":["-generatealphabet"],
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/bin/Debug/netcoreapp3.0/Deltinteger.dll",
+            "args":["--generatealphabet"],
             "console": "externalTerminal",
             "stopAtEntry": false,
             "internalConsoleOptions": "openOnSessionStart"
         },
         {
-            "name": "Release",
-            "type":"clr",
+            "name": "Build Pathfind Editor",
+            "type":"coreclr",
             "request": "launch",
-            "preLaunchTask": "Release build",
-            "program": "${workspaceFolder}/bin/Release/Deltinteger.exe",
-            "args":[],
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/bin/Debug/netcoreapp3.0/Deltinteger.dll",
+            "args":["--editor"],
             "console": "externalTerminal",
             "stopAtEntry": false,
             "internalConsoleOptions": "openOnSessionStart"
+        },
+        {
+            "name": "i18n link",
+            "type":"coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/bin/Debug/netcoreapp3.0/Deltinteger.dll",
+            "args":["--i18nlink"],
+            "console": "externalTerminal",
+            "stopAtEntry": false,
+            "internalConsoleOptions": "openOnSessionStart"
+        },
+        {
+            "name": "i18n generator",
+            "type":"coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/bin/Debug/netcoreapp3.0/Deltinteger.dll",
+            "args":["--i18n", "C:/Users/Deltin/Downloads/toolchain-release/DataTool.exe", "C:/Users/Deltin/Documents/GitHub/Overwatch-Script-To-Workshop/Deltinteger/Deltinteger/Languages/key_links.xml", "C:/Users/Deltin/Documents/GitHub/Overwatch-Script-To-Workshop/Deltinteger/Deltinteger/Languages/"],
+            "console": "externalTerminal",
+            "stopAtEntry": false,
+            "internalConsoleOptions": "openOnSessionStart"
+        },
+        {
+            "name": "Wiki",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/bin/Debug/netcoreapp3.0/Deltinteger.dll",
+            "args":["--wiki"],
+            "console": "externalTerminal",
+            "stopAtEntry": false,
+            "internalConsoleOptions": "openOnSessionStart"
+        },
+        {
+            "name": "Setting schema",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/bin/Debug/netcoreapp3.0/Deltinteger.dll",
+            "args":["--schema"],
+            "console": "integratedTerminal",
+            "stopAtEntry": false,
+            "internalConsoleOptions": "openOnSessionStart"
+        },
+        {
+            "name": "Lobby maps",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/bin/Debug/netcoreapp3.0/Deltinteger.dll",
+            "args":["--maps", "C:/Users/Deltin/Downloads/toolchain-release/DataTool.exe", "C:/Program Files (x86)/Overwatch", "C:/Users/Deltin/Documents/OverwatchMapInfo.json"],
+            "console": "integratedTerminal",
+            "stopAtEntry": false,
+            "internalConsoleOptions": "openOnSessionStart"
+        },
+        {
+            "name": "Function name table",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/bin/Debug/netcoreapp3.0/Deltinteger.dll",
+            "args":["--function-table"],
+            "console": "integratedTerminal",
+            "stopAtEntry": false,
+            "internalConsoleOptions": "openOnSessionStart"
+        },
+        {
+            "name": "Debug ANTLR4 grammar",
+            "type": "antlr-debug",
+            "request": "launch",
+            "input": "C:/Users/Deltin/Documents/GitHub/Overwatch-Script-To-Workshop/Deltinteger/Deltinteger/Modules/PathfindEditor.del",
+            "grammar": "DeltinScript.g4",
+            "startRule": "ruleset",
+            "printParseTree": true,
+            "visualParseTree": true
         }
     ]
 }

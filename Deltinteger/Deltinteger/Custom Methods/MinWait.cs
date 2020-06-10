@@ -1,19 +1,17 @@
 using Deltin.Deltinteger.Parse;
-using Deltin.Deltinteger.WorkshopWiki;
+using Deltin.Deltinteger.Elements;
 
-namespace Deltin.Deltinteger.Elements
+namespace Deltin.Deltinteger.CustomMethods
 {
-    [CustomMethod("MinWait", CustomMethodType.Action)]
+    [CustomMethod("MinWait", "Waits for 0.016 seconds.", CustomMethodType.Action)]
     class MinWait : CustomMethodBase
     {
-        protected override MethodResult Get()
-        {
-            return new MethodResult(new Element[] { A_Wait.MinimumWait }, null);
-        }
+        public override CodeParameter[] Parameters() => null;
 
-        public override CustomMethodWiki Wiki()
+        public override IWorkshopTree Get(ActionSet actionSet, IWorkshopTree[] parameters)
         {
-            return new CustomMethodWiki("Waits for " + Constants.MINIMUM_WAIT + " seconds.");
+            actionSet.AddAction(A_Wait.MinimumWait);
+            return null;
         }
     }
 }

@@ -2,6 +2,11 @@ using System;
 using System.Text;
 using System.Collections.Generic;
 using System.IO;
+using System.Xml.Serialization;
+using Deltin.Deltinteger.Parse;
+using StringOrMarkupContent = OmniSharp.Extensions.LanguageServer.Protocol.Models.StringOrMarkupContent;
+using MarkupContent = OmniSharp.Extensions.LanguageServer.Protocol.Models.MarkupContent;
+using MarkupKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.MarkupKind;
 
 namespace Deltin.Deltinteger
 {
@@ -40,6 +45,12 @@ namespace Deltin.Deltinteger
 
         public static string CombinePathWithDotNotation(string referenceDirectory, string file)
         {
+            if (file.Length > 0 && file[0] == '!')
+            {
+                referenceDirectory = Path.Combine(Program.ExeFolder, "Modules" + Path.DirectorySeparatorChar);
+                file = file.Substring(1);
+            }
+
             try
             {
                 string directory = Path.GetDirectoryName(referenceDirectory);
@@ -57,43 +68,76 @@ namespace Deltin.Deltinteger
         {
             return string.Join("\n", lines);
         }
-    }
 
-    public class TabStringBuilder
-    {
-        public int Indent { get; set; }
-        public bool Tab { get; private set; }
-        public int WhitespaceCount { get; set; } = 4;
-
-        private readonly StringBuilder StringBuilder = new StringBuilder();
-
-        public TabStringBuilder(bool tab)
+        public static string RemoveQuotes(string str)
         {
-            Tab = tab;
+            return str.Substring(1, str.Length - 2);
         }
 
-        public TabStringBuilder AppendLine()
+        public static AccessLevel GetAccessLevel(this DeltinScriptParser.AccessorContext accessorContext)
         {
-            StringBuilder.AppendLine(Extras.Indent(Indent, Tab));
-            return this;
+            if (accessorContext == null) return AccessLevel.Private;
+            else if (accessorContext.PUBLIC() != null) return AccessLevel.Public;
+            else if (accessorContext.PRIVATE() != null) return AccessLevel.Private;
+            else if (accessorContext.PROTECTED() != null) return AccessLevel.Protected;
+            else throw new NotImplementedException();
         }
 
-        public TabStringBuilder AppendLine(string text)
+        public static string SerializeToXML<T>(object o)
         {
-            StringBuilder.AppendLine(Extras.Indent(Indent, Tab) + text);
-            return this;
+            XmlSerializer serializer = new XmlSerializer(typeof(T));
+            XmlSerializerNamespaces ns = new XmlSerializerNamespaces();
+            ns.Add("","");
+
+            string result;
+            using (StringWriter stringWriter = new StringWriter())
+            {
+                serializer.Serialize(stringWriter, o, ns);
+                result = stringWriter.ToString();
+            }
+            return result;
         }
 
-        public TabStringBuilder Append(string text)
+        public static string FilePath(this Uri uri)
         {
-            StringBuilder.Append(text);
-            return this;
+            return uri.LocalPath.TrimStart('/');
         }
 
-        public override string ToString()
+        public static Uri Clean(this Uri uri)
         {
-            return StringBuilder.ToString();
+            return new Uri(uri.FilePath());
         }
+
+        public static bool Compare(this Uri uri, Uri other) => uri.Clean().FilePath() == other.Clean().FilePath();
+
+        public static Uri Definition(string path)
+        {
+            string enc = "file:///" + path.Replace('\\', '/').Replace(" ","%20").Replace(":", "%3A");
+            return new Uri(enc);
+        }
+
+        public static StringOrMarkupContent GetMarkupContent(string text) => new StringOrMarkupContent(new MarkupContent() {
+            Kind = MarkupKind.Markdown,
+            Value = text
+        });
+
+        public static string ListJoin(string collectionName, params string[] elements)
+        {
+            if (elements.Length == 0) return collectionName;
+            if (elements.Length == 1) return elements[0] + " " + collectionName;
+
+            string result = "";
+            for (int i = 0; i < elements.Length; i++)
+            {
+                if (i < elements.Length - 2) result += elements[i] + ", ";
+                else if (i < elements.Length - 1) result += elements[i] + " and ";
+                else result += elements[i];
+            }
+            result += " " + collectionName + "s";
+            return result;
+        }
+
+        public static string RemoveStructuralChars(this string str) => str.Replace(",", "").Replace("(", "").Replace(")", "");
     }
 
     class ArrayBuilder<T>
@@ -125,5 +169,40 @@ namespace Deltin.Deltinteger
             
             return valueList.ToArray();
         }
+    }
+
+    class MarkupBuilder
+    {
+        StringBuilder result = new StringBuilder();
+
+        public MarkupBuilder() {}
+
+        public MarkupBuilder Add(string line)
+        {
+            result.Append(line);
+            return this;
+        }
+        public MarkupBuilder NewLine()
+        {
+            result.Append("\n\r");
+            return this;
+        }
+        public MarkupBuilder StartCodeLine()
+        {
+            result.Append("```ostw\n");
+            return this;
+        }
+        public MarkupBuilder EndCodeLine()
+        {
+            result.Append("\n\r```");
+            return this;
+        }
+        public MarkupBuilder NewSection()
+        {
+            result.Append("\n\r ----- \n\r");
+            return this;
+        }
+
+        public override string ToString() => result.ToString();
     }
 }

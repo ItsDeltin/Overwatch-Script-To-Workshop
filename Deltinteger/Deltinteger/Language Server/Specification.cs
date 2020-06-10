@@ -2,6 +2,9 @@ using System;
 using Deltin.Deltinteger.Parse;
 using Antlr4.Runtime;
 using Antlr4.Runtime.Tree;
+using LSPos      = OmniSharp.Extensions.LanguageServer.Protocol.Models.Position;
+using LSRange    = OmniSharp.Extensions.LanguageServer.Protocol.Models.Range;
+using LSLocation = OmniSharp.Extensions.LanguageServer.Protocol.Models.Location;
 
 namespace Deltin.Deltinteger.LanguageServer
 {
@@ -25,9 +28,9 @@ namespace Deltin.Deltinteger.LanguageServer
             return line + ", " + character;
         }
 
-        public Range ToRange()
+        public DocRange ToRange()
         {
-            return new Range(this, this);
+            return new DocRange(this, this);
         }
 
         public int CompareTo(Pos other)
@@ -55,33 +58,40 @@ namespace Deltin.Deltinteger.LanguageServer
         {
             return new Pos(this.line + other.line, this.character + other.character);
         }
+
+        public LSPos ToLsPos()
+        {
+            return new LSPos(line, character);
+        }
+
+        public static implicit operator Pos(LSPos pos) => new Pos((int)pos.Line, (int)pos.Character);
     }
 
-    public class Range : IComparable<Range>
+    public class DocRange : IComparable<DocRange>
     {
-        public static Range Zero { get { return new Range(Pos.Zero, Pos.Zero); } }
+        public static DocRange Zero { get { return new DocRange(Pos.Zero, Pos.Zero); } }
 
         public Pos start { get; private set; }
         public Pos end { get; private set; }
 
-        public Range(Pos start, Pos end)
+        public DocRange(Pos start, Pos end)
         {
             this.start = start;
             this.end = end;
         }
 
-        public static Range GetRange(ParserRuleContext context)
+        public static DocRange GetRange(ParserRuleContext context)
         {
             if (context.stop == null)
             {
                 Pos pos = new Pos(context.start.Line, context.start.Column);
-                return new Range(pos, pos);
+                return new DocRange(pos, pos);
             }
 
             if (context.start.Line == context.stop.Line &&
                 context.start.Column == context.stop.Column)
             {
-                return new Range
+                return new DocRange
                 (
                     new Pos(context.start.Line - 1, context.start.Column),
                     new Pos(context.stop.Line - 1, context.stop.Column + context.GetText().Length)
@@ -89,7 +99,7 @@ namespace Deltin.Deltinteger.LanguageServer
             }
             else
             {
-                return new Range
+                return new DocRange
                 (
                     new Pos(context.start.Line - 1, context.start.Column),
                     new Pos(context.stop.Line - 1, context.stop.Column + 1)
@@ -97,20 +107,36 @@ namespace Deltin.Deltinteger.LanguageServer
             }
         }
 
-        public static Range GetRange(IToken token)
+        public static DocRange GetRange(IToken token)
         {
-            return new Range(new Pos(token.Line - 1, token.Column), new Pos(token.Line - 1, token.Column + token.Text.Length));
+            return new DocRange(new Pos(token.Line - 1, token.Column), new Pos(token.Line - 1, token.Column + token.Text.Length));
         }
 
-        public static Range GetRange(IToken start, IToken stop)
+        public static DocRange GetRange(IToken start, IToken stop)
         {
-            return new Range(new Pos(start.Line - 1, start.Column), new Pos(stop.Line - 1, stop.Column + stop.Text.Length));
+            return new DocRange(new Pos(start.Line - 1, start.Column), new Pos(stop.Line - 1, stop.Column + stop.Text.Length));
         }
 
-        public static Range GetRange(ITerminalNode node)
+        public static DocRange GetRange(ITerminalNode start, ITerminalNode stop)
+        {
+            return GetRange(start.Symbol, stop.Symbol);
+        }
+
+        public static DocRange GetRange(ITerminalNode node)
         {
             return GetRange(node.Symbol);
         }
+
+        public static DocRange GetRange(object node)
+        {
+            if (node is ParserRuleContext context) return GetRange(context);
+            if (node is ITerminalNode terminalNode) return GetRange(terminalNode);
+            if (node is IToken token) return GetRange(token);
+
+            throw new ArgumentException("Cannot get range of type '" + node.GetType().Name + "'.");
+        }
+
+        public static DocRange GetRange(object start, object stop) => new DocRange(DocRange.GetRange(start).start, DocRange.GetRange(stop).end);
 
         public bool IsInside(Pos pos)
         {
@@ -118,7 +144,7 @@ namespace Deltin.Deltinteger.LanguageServer
                 && (end.line > pos.line || (end.line == pos.line && pos.character <= end.character));
         }
 
-        public int CompareTo(Range other)
+        public int CompareTo(DocRange other)
         {
             // Return -1 if 'this' is less than 'other'.
             // Return 0 if 'this' is equal to 'other'.
@@ -144,7 +170,7 @@ namespace Deltin.Deltinteger.LanguageServer
             if (thisLineDif == otherLineDif)
             {
                 int thisCharDif = this.end.character - this.start.character;
-                int otherCharDif = other.end.character - other.end.character;
+                int otherCharDif = other.end.character - other.start.character;
 
                 // Return less-than.
                 if (thisCharDif < otherCharDif)
@@ -164,118 +190,26 @@ namespace Deltin.Deltinteger.LanguageServer
         }
 
         #region Operators
-        public static bool operator <(Range r1, Range r2)  => r1.CompareTo(r2) <  0;
-        public static bool operator >(Range r1, Range r2)  => r1.CompareTo(r2) >  0;
-        public static bool operator <=(Range r1, Range r2) => r1.CompareTo(r2) <= 0;
-        public static bool operator >=(Range r1, Range r2) => r1.CompareTo(r2) >= 0;
+        public static bool operator <(DocRange r1, DocRange r2)  => r1.CompareTo(r2) <  0;
+        public static bool operator >(DocRange r1, DocRange r2)  => r1.CompareTo(r2) >  0;
+        public static bool operator <=(DocRange r1, DocRange r2) => r1.CompareTo(r2) <= 0;
+        public static bool operator >=(DocRange r1, DocRange r2) => r1.CompareTo(r2) >= 0;
+        public static implicit operator DocRange(LSRange range) => new DocRange(range.Start, range.End);
         #endregion
 
-        public Range Offset(Range other)
+        public DocRange Offset(DocRange other)
         {
-            return new Range(start.Offset(other.start), end.Offset(other.end));
-        }
-    }
-    
-    public class CompletionItem
-    {
-        #region Kinds
-        public const int Text = 1;
-        public const int Method = 2;
-        public const int Function = 3;
-        public const int Constructor = 4;
-        public const int Field = 5;
-        public const int Variable = 6;
-        public const int Class = 7;
-        public const int Interface = 8;
-        public const int Module = 9;
-        public const int Property = 10;
-        public const int Unit = 11;
-        public const int Value = 12;
-        public const int Enum = 13;
-        public const int Keyword = 14;
-        public const int Snippet = 15;
-        public const int Color = 16;
-        public const int File = 17;
-        public const int Reference = 18;
-        public const int Folder = 19;
-        public const int EnumMember = 20;
-        public const int Constant = 21;
-        public const int Struct = 22;
-        public const int Event = 23;
-        public const int Operator = 24;
-        public const int TypeParameter = 25;
-        #endregion
-
-        public CompletionItem(string label)
-        {
-            this.label = label;
+            return new DocRange(start.Offset(other.start), end.Offset(other.end));
         }
 
-        public string label;
-        public int kind;
-        public string detail;
-        public object documentation;
-        public bool deprecated;
-        public string sortText;
-        public string filterText;
-        public int insertTextFormat;
-        public TextEdit textEdit;
-        public TextEdit[] additionalTextEdits;
-        public string[] commitCharacters;
-        public Command command;
-        public object data;
-    }
-
-    class SignatureHelp
-    {
-        public SignatureInformation[] signatures;
-        public int activeSignature;
-        public int activeParameter;
-
-        public SignatureHelp(SignatureInformation[] signatures, int activeSignature, int activeParameter)
+        public override string ToString()
         {
-            this.signatures = signatures;
-            this.activeSignature = activeSignature;
-            this.activeParameter = activeParameter;
+            return start.ToString() + " - " + end.ToString();
         }
-    }
 
-    class SignatureInformation
-    {
-        public string label;
-        public object documentation; // string or markup
-        public ParameterInformation[] parameters;
-
-        public SignatureInformation(string label, object documentation, ParameterInformation[] parameters)
+        public LSRange ToLsRange()
         {
-            this.label = label;
-            this.documentation = documentation;
-            this.parameters = parameters;
-        }
-    }
-
-    public class ParameterInformation
-    {
-        public object label; // string or int[]
-
-        public object documentation; // string or markup
-
-        public ParameterInformation(object label, object documentation)
-        {
-            this.label = label;
-            this.documentation = documentation;
-        }
-    }
-
-    public class PublishDiagnosticsParams
-    {
-        public string uri;
-        public Diagnostic[] diagnostics;
-
-        public PublishDiagnosticsParams(string uri, Diagnostic[] diagnostics)
-        {
-            this.uri = uri;
-            this.diagnostics = diagnostics;
+            return new LSRange(start.ToLsPos(), end.ToLsPos());
         }
     }
 
@@ -287,16 +221,17 @@ namespace Deltin.Deltinteger.LanguageServer
         public const int Hint = 4;
         
         public string message;
-        public Range range;
+        public DocRange range;
         public int severity;
         public object code; // string or number
         public string source;
         public DiagnosticRelatedInformation[] relatedInformation;
 
-        public Diagnostic(string message, Range range)
+        public Diagnostic(string message, DocRange range, int severity)
         {
             this.message = message;
             this.range = range;
+            this.severity = severity;
         }
 
         override public string ToString()
@@ -334,138 +269,23 @@ namespace Deltin.Deltinteger.LanguageServer
         }
     }
 
-    // https://microsoft.github.io/language-server-protocol/specification#textDocument_hover
-    class Hover
-    {
-        public object contents; // TODO MarkedString support 
-        public Range range;
-
-        public Hover(MarkupContent contents)
-        {
-            this.contents = contents;
-        }
-        #pragma warning disable 0618
-        public Hover(MarkedString contents)
-        {
-            this.contents = contents;
-        }
-        public Hover(MarkedString[] contents)
-        {
-            this.contents = contents;
-        }
-        #pragma warning restore 0618
-    }
-
-    public class MarkupContent
-    {
-        public string kind;
-        public string value;
-
-        public const string PlainText = "plaintext";
-        public const string Markdown = "markdown";
-
-        public MarkupContent(string kind, string value)
-        {
-            this.kind = kind;
-            this.value = value;
-        }
-    }
-
-    [Obsolete("MarkedString is obsolete, use MarkupContent instead.")]
-    public class MarkedString
-    {
-        public string language;
-        public string value;
-
-        public MarkedString(string language, string value)
-        {
-            this.language = language;
-            this.value = value;
-        }
-    }
-
     public class Location 
     {
-        public string uri;
-        public Range range;
+        public Uri uri;
+        public DocRange range;
 
-        public Location(string uri, Range range)
+        public Location(Uri uri, DocRange range)
         {
             this.uri = uri;
             this.range = range;
         }
-    }
 
-    class LocationLink
-    {
-        /// Span of the origin of this link.
-        ///
-        /// Used as the underlined span for mouse interaction. Defaults to the word range at
-        /// the mouse position.
-        public Range originSelectionRange;
-
-        /// The target resource identifier of this link.
-        public string targetUri;
-
-        /// The full target range of this link. If the target for example is a symbol then target range is the
-	    /// range enclosing this symbol not including leading/trailing whitespace but everything else
-	    /// like comments. This information is typically used to highlight the range in the editor.
-        public Range targetRange;
-
-        /// The range that should be selected and revealed when this link is being followed, e.g the name of a function.
-	    /// Must be contained by the the <see cref="targetRange"/>.
-        public Range targetSelectionRange;
-
-        public LocationLink(Range originSelectionRange, string targetUri, Range targetRange, Range targetSelectionRange)
+        public LSLocation ToLsLocation()
         {
-            this.originSelectionRange = originSelectionRange;
-            this.targetUri = targetUri;
-            this.targetRange = targetRange;
-            this.targetSelectionRange = targetSelectionRange;
-        }
-    }
-
-    public class TextEdit
-    {
-        public static TextEdit Replace(Range range, string newText)
-        {
-            return new TextEdit()
-            {
-                range = range,
-                newText = newText
+            return new LSLocation() {
+                Uri = uri,
+                Range = range.ToLsRange()
             };
-        }
-        public static TextEdit Insert(Pos pos, string newText)
-        {
-            return new TextEdit()
-            {
-                range = new Range(pos, pos),
-                newText = newText
-            };
-        }
-        public static TextEdit Delete(Range range)
-        {
-            return new TextEdit()
-            {
-                range = range,
-                newText = string.Empty
-            };
-        }
-
-        public Range range;
-        public string newText;
-    }
-
-    public class Command
-    {
-        public string title;
-        public string command;
-        public object[] arguments;
-
-        public Command(string title, string command)
-        {
-            this.title = title;
-            this.command = command;
         }
     }
 }

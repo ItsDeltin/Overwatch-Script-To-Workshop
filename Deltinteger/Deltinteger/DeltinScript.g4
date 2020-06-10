@@ -4,133 +4,161 @@ grammar DeltinScript;
  * Parser Rules
  */
 
+reserved_global : GLOBAL BLOCK_START reserved_list? BLOCK_END ;
+reserved_player : PLAYER BLOCK_START reserved_list? BLOCK_END ;
+reserved_list : (PART | NUMBER) (COMMA (PART | NUMBER))* ;
+
 number : NUMBER | neg  ;
 neg    : '-'NUMBER     ;
-string : STRINGLITERAL ;
-formatted_string: '<' string (COMMA expr)* '>' ;
+string : LOCALIZED? STRINGLITERAL ;
+formatted_string: LESS_THAN string (COMMA expr)* GREATER_THAN ;
 true   : TRUE          ;
 false  : FALSE         ;
 null   : NULL          ;
 
-statement_operation : EQUALS | EQUALS_ADD | EQUALS_DIVIDE | EQUALS_MODULO | EQUALS_MULTIPLY | EQUALS_POW | EQUALS_SUBTRACT ;
-
-define           :                   (type=PART | DEFINE)                 name=PART useVar? (EQUALS expr?)? ;
-rule_define      :                   (type=PART | DEFINE) (GLOBAL|PLAYER) name=PART useVar? (EQUALS expr?)? STATEMENT_END;
-inclass_define   : accessor? STATIC? (type=PART | DEFINE)                 name=PART         (EQUALS expr?)? ;
-parameter_define :                   (type=PART | DEFINE)                 name=PART                         ;
-
-useVar   : PART (INDEX_START number INDEX_END)? ;
-useGlobalVar : USEVAR GLOBAL PART STATEMENT_END ;
-usePlayerVar : USEVAR PLAYER PART STATEMENT_END ;
-useDimVar    : USEVAR DIM    PART STATEMENT_END ;
+define : accessor? STATIC? (GLOBAL|PLAYER)? REF? (code_type | DEFINE) name=PART (id=number? | NOT?) (EQUALS expr?)? ;
 
 expr 
 	: 
-      number                                      // Numbers
-	| method                                      // Methods
-	| string                                      // Strings
-	| { Deltin.Deltinteger.Elements.EnumData.IsEnum(_input.Lt(1).Text) }? enum // Enums
-	| expr INDEX_START expr INDEX_END             // Array index
-	| createarray                                 // Array creation
-	| formatted_string                            // Formatted strings
-	| true                                        // True
-	| false                                       // False
-	| null                                        // Null
-	| variable                                    // Variables
-	| exprgroup
-	| create_object
-	| THIS
-	| <assoc=right> expr SEPERATOR expr           // Variable seperation
-	| NOT expr                                     // !x
-	| expr TERNARY expr TERNARY_ELSE expr
-	| <assoc=right> expr ('^' | '*' | '/' | '%') expr // x^y
-	| expr ('+' | '-') expr                           // x+y
-	| expr ('<' | '<=' | '==' | '>=' | '>' | '!=') expr // x == y
-	| expr BOOL expr                              // x & y
+      number                                                                           #e_number
+	| method                                                                           #e_method
+	| string                                                                           #e_string
+	| array=expr INDEX_START index=expr? INDEX_END                                     #e_array_index
+	| createarray                                                                      #e_create_array
+	| formatted_string                                                                 #e_formatted_string
+	| true                                                                             #e_true
+	| false                                                                            #e_false
+	| null                                                                             #e_null
+	| variable                                                                         #e_variable
+	| exprgroup								                                           #e_expr_group
+	| create_object							                                           #e_new_object
+	| typeconvert							                                           #e_type_convert
+	| THIS									                                           #e_this
+	| ROOT								                                               #e_root
+	| BASE                                                                             #e_base
+	| expr SEPERATOR (method | variable)?											   #e_expr_tree
+	| NOT expr                                                                         #e_not
+	| '-' expr                                                                         #e_inverse
+	| expr IS type=PART?                                                               #e_is
+	| lambda                                                                           #e_lambda
+	| <assoc=right> left=expr op=('^' | '*' | '/' | '%') right=expr                    #e_op_1
+	| left=expr op=('+' | '-') right=expr                                              #e_op_2
+	| left=expr op=(LESS_THAN | '<=' | '==' | '>=' | GREATER_THAN | '!=') right=expr   #e_op_compare
+	| condition=expr TERNARY consequent=expr? TERNARY_ELSE alternative=expr 		   #e_ternary_conditional
+	| left=expr BOOL right=expr                                                        #e_op_bool
 	;
+
+typeconvert : LESS_THAN code_type? GREATER_THAN expr? ;
 
 exprgroup   : LEFT_PAREN expr RIGHT_PAREN ;
 createarray : INDEX_START (expr (COMMA expr)*)? INDEX_END;
 
 array : (INDEX_START expr INDEX_END)+ ;
 
-enum : PART SEPERATOR PART? ;
+varset   : var=expr array? ((statement_operation val=expr?) | INCREMENT | DECREMENT) ;
+statement_operation : EQUALS | EQUALS_ADD | EQUALS_DIVIDE | EQUALS_MODULO | EQUALS_MULTIPLY | EQUALS_POW | EQUALS_SUBTRACT ;
+
+call_parameters  : expr (COMMA expr?)*    		 	         ;
+picky_parameter  : PART? TERNARY_ELSE expr?                  ;
+picky_parameters : picky_parameter (COMMA picky_parameter?)* ;
+method           : (ASYNC NOT?)? PART LEFT_PAREN (picky_parameters | call_parameters)? RIGHT_PAREN ;
 
 variable : PART array? ;
-varset   : var=expr array? ((statement_operation val=expr?) | INCREMENT | DECREMENT) ;
+code_type: PART (INDEX_START INDEX_END)* generics?;
+generics : LESS_THAN (generic_option (COMMA generic_option)*)? GREATER_THAN;
+generic_option: code_type | DEFINE;
 
-call_parameters : expr (COMMA expr?)*    		 	     ;
-method          : PART LEFT_PAREN call_parameters? RIGHT_PAREN ;
+lambda: (define | LEFT_PAREN (define (COMMA define)*)? RIGHT_PAREN) INS (expr | block) ;
 
 statement :
-	( varset STATEMENT_END?
-	| method STATEMENT_END?
-	| if
-	| for
-	| foreach
-	| while
-	| define STATEMENT_END?
-	| return
-	| expr STATEMENT_END?
-	| delete STATEMENT_END?
-	);
+	  define STATEMENT_END?   #s_define
+	| varset STATEMENT_END?   #s_varset
+	| method STATEMENT_END?   #s_method
+	| if 					  #s_if
+	| for					  #s_for
+	| for_auto                #s_for_auto
+	| foreach				  #s_foreach
+	| while					  #s_while
+	| return				  #s_return
+	| expr STATEMENT_END?	  #s_expr
+	| delete STATEMENT_END?	  #s_delete
+	| CONTINUE STATEMENT_END? #s_continue
+	| BREAK STATEMENT_END?    #s_break
+	| switch 				  #s_switch
+	| (BLOCK_START statement* BLOCK_END) #s_block
+	;
 
 block : (BLOCK_START statement* BLOCK_END) | statement | STATEMENT_END  ;
 
 for     : FOR LEFT_PAREN 
-	((define | varset)? STATEMENT_END expr? STATEMENT_END forEndStatement?)
+	((define | initialVarset=varset)? STATEMENT_END expr? STATEMENT_END endingVarset=varset?)
 	RIGHT_PAREN block;
-forEndStatement : varset ;
 
-foreach : FOREACH number? LEFT_PAREN parameter_define IN expr RIGHT_PAREN block ;
+for_auto : FOR LEFT_PAREN
+	((forVariable=expr (EQUALS start=expr?)? | forDefine=define)? startSep=STATEMENT_END stop=expr? stopSep=STATEMENT_END step=expr?)
+	RIGHT_PAREN block?;
+
+foreach : FOREACH number? LEFT_PAREN (code_type | DEFINE) name=PART IN expr? RIGHT_PAREN block ;
 
 while   : WHILE LEFT_PAREN expr RIGHT_PAREN block             ;
 
-if      : IF LEFT_PAREN expr RIGHT_PAREN block else_if* else? ;
-else_if : ELSE IF LEFT_PAREN expr RIGHT_PAREN block           ;
-else    : ELSE block                                          ;
+if      : IF LEFT_PAREN expr? RIGHT_PAREN block? else_if* else? ;
+else_if : ELSE IF LEFT_PAREN expr? RIGHT_PAREN block?           ;
+else    : ELSE block?                                           ;
 
 return  : RETURN expr? STATEMENT_END                          ;
 delete  : DELETE LEFT_PAREN expr RIGHT_PAREN                  ;
 
+switch  : SWITCH LEFT_PAREN expr? RIGHT_PAREN
+	BLOCK_START switch_element* BLOCK_END;
+
+switch_element:  (DEFAULT TERNARY_ELSE?) | case | statement;
+
+case    : CASE expr? TERNARY_ELSE?;
+
 rule_if : IF LEFT_PAREN expr? RIGHT_PAREN;
 
 ow_rule : 
-	RULE_WORD ':' STRINGLITERAL
-	(enum)*
-	(rule_if)*
-	block
+	DISABLED? RULE_WORD ':' STRINGLITERAL number?
+	expr*
+	rule_if*
+	block?
 	;
 
-user_method : DOCUMENTATION* accessor? RECURSIVE? (METHOD | type=PART) name=PART LEFT_PAREN setParameters RIGHT_PAREN
-	block
+define_method : DOCUMENTATION* method_attributes* (VOID | DEFINE | code_type) name=PART LEFT_PAREN setParameters RIGHT_PAREN ((GLOBAL | PLAYER)? subroutineRuleName=STRINGLITERAL)?
+	block?
 	;
+
+method_attributes : accessor | STATIC | OVERRIDE | VIRTUAL | RECURSIVE;
+
+define_macro  : DOCUMENTATION* accessor? STATIC? (DEFINE | code_type) name=PART (LEFT_PAREN setParameters RIGHT_PAREN)? TERNARY_ELSE? expr? STATEMENT_END? ;
 
 ruleset :
-	(import_file | import_object)*
-	useGlobalVar?
-	usePlayerVar?
-	useDimVar?
-	(rule_define | ow_rule | user_method | type_define)*
-	;
+	reserved_global?
+	reserved_player?
+	import_file*
+	((define STATEMENT_END) | ow_rule | define_method | define_macro | type_define | enum_define)*
+	EOF;
 
 // Classes/structs
 
-type_define : (STRUCT | CLASS) name=PART
+type_define : (STRUCT | CLASS) name=PART (TERNARY_ELSE extends=PART?)?
 	BLOCK_START
-	((inclass_define STATEMENT_END) | constructor | user_method)*
+	((define STATEMENT_END) | constructor | define_method | define_macro)*
 	BLOCK_END ;
 
-accessor : PRIVATE | PUBLIC;
+enum_define : ENUM name=PART BLOCK_START (firstMember=PART enum_element*)? BLOCK_END ;
+enum_element : COMMA PART ;
+
+accessor : PRIVATE | PUBLIC | PROTECTED;
 
 constructor : accessor? name=PART LEFT_PAREN setParameters RIGHT_PAREN block ;
 
-setParameters: (parameter_define (COMMA parameter_define)*)?;
+setParameters: (define (COMMA define)*)?;
 
-create_object : NEW type=PART LEFT_PAREN call_parameters? RIGHT_PAREN ;
+create_object : NEW (type=PART (LEFT_PAREN call_parameters? RIGHT_PAREN)) ;
 
-import_file : IMPORT STRINGLITERAL STATEMENT_END ;
-import_object : IMPORT file=STRINGLITERAL AS name=PART STATEMENT_END ;
+import_file : IMPORT STRINGLITERAL (AS name=PART?)? STATEMENT_END ;
 
 /*
  * Lexer Rules
@@ -167,6 +195,7 @@ SEPERATOR     : '.' ;
 COMMA         : ',' ;
 TERNARY       : '?' ;
 TERNARY_ELSE  : ':' ;
+LOCALIZED     : '@' ;
 
 // Keywords
 RULE_WORD : 'rule'      ;
@@ -179,11 +208,9 @@ DEFINE    : 'define'    ;
 USEVAR    : 'usevar'    ;
 GLOBAL    : 'globalvar' ;
 PLAYER    : 'playervar' ;
-DIM       : 'buildervar';
 TRUE      : 'true'      ;
 FALSE     : 'false'     ;
 NULL      : 'null'      ;
-METHOD    : 'method'    ;
 RECURSIVE : 'recursive' ;
 RETURN    : 'return'    ;
 WHILE     : 'while'     ;
@@ -191,13 +218,31 @@ STRUCT    : 'struct'    ;
 CLASS     : 'class'     ;
 PRIVATE   : 'private'   ;
 PUBLIC    : 'public'    ;
+PROTECTED : 'protected' ;
 THIS      : 'this'      ;
+ROOT      : 'root'      ;
 NEW       : 'new'       ;
 STATIC    : 'static'    ;
 IMPORT    : 'import'    ;
 AS        : 'as'        ;
 DELETE    : 'delete'    ;
+DISABLED  : 'disabled'  ;
+ENUM      : 'enum'      ;
+REF       : 'ref'       ;
+VOID      : 'void'		;
+ASYNC     : 'async'		;
+OVERRIDE  : 'override'  ;
+VIRTUAL   : 'virtual'   ;
+BREAK     : 'break'     ;
+CONTINUE  : 'continue'  ;
+SWITCH    : 'switch'	;
+CASE      : 'case'		;
+DEFAULT   : 'default'   ;
+BASE      : 'base'      ;
+IS        : 'is'		;
+INTERFACE : 'interface' ;
 
+INS             : '=>'  ;
 EQUALS          : '='  ;
 EQUALS_POW      : '^=' ;
 EQUALS_MULTIPLY : '*=' ;
@@ -212,6 +257,9 @@ DIV   : '/';
 MOD   : '%';
 ADD   : '+';
 MINUS : '-';
+
+LESS_THAN    : '<' ;
+GREATER_THAN : '>';
 
 BOOL : '&&' | '||';
 NOT : '!';

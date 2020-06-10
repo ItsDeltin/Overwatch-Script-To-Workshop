@@ -2,7 +2,7 @@
     "name": "overwatch-script-to-workshop",
     "displayName": "Overwatch Script To Workshop",
     "description": "Autocomplete and syntax highlighting for Overwatch Script To Workshop",
-    "version": "0.1.1",
+    "version": "1.5.0",
     "publisher": "Deltin",
     "engines": {
         "vscode": "^1.34.0"
@@ -11,10 +11,16 @@
         "Programming Languages"
     ],
     "activationEvents": [
-        "onLanguage:plaintext",
-        "onLanguage:ostw"
+        "onLanguage:ostw",
+        "onLanguage:ow_ostw",
+        "workspaceContains:**/customGameSettings.json"
     ],
-    "main": "./client/out/extensions.js",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/ItsDeltin/Overwatch-Script-To-Workshop.git"
+    },
+    "main": "./dist/extension",
+    "icon": "icon.png",
     "contributes": {
         "languages": [
             {
@@ -29,6 +35,18 @@
                     ".workshop"
                 ],
                 "configuration": "./language-configuration.json"
+            },
+            {
+                "id": "ow_ostw",
+                "aliases": [
+                    "Overwatch Output",
+                    "ow"
+                ],
+                "extensions": [
+                    ".ow",
+                    ".overwatch"
+                ],
+                "configuration": "./language-configuration.json"
             }
         ],
         "grammars": [
@@ -36,23 +54,77 @@
                 "language": "ostw",
                 "scopeName": "source.del",
                 "path": "./syntaxes/ostw.tmLanguage.json"
+            },
+            {
+                "language": "ow_ostw",
+                "scopeName": "ow_source.del",
+                "path": "./syntaxes/ow.tmLanguage.json"
             }
         ],
         "configuration": {
             "type": "object",
             "title": "ostw",
             "properties": {
-                "ostw.maxNumberOfProblems": {
-                    "scope": "resource",
-                    "type": "number",
-                    "default": 100,
-                    "description": "Controls the maximum number of problems produced by the server."
+                "ostw.outputLanguage": {
+                    "scope": "window",
+                    "type": "string",
+                    "enum": [
+                        "English",
+                        "German",
+                        "Spanish (Castilian)",
+                        "Spanish (Mexico)",
+                        "French",
+                        "Italian",
+                        "Japanese",
+                        "Korean",
+                        "Polish",
+                        "Portuguese",
+                        "Russian",
+                        "Chinese (S)",
+                        "Chinese (T)"
+                    ],
+                    "default": "English",
+                    "description": "The output language of the OSTW output."
                 },
-                "ostw.port1": {
-                    "scope": "resource",
-                    "type": "number",
-                    "default": 9145,
-                    "description": "The first port the language server application is using."
+                "ostw.optimizeOutput": {
+                    "scope": "window",
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Determines if the workshop output will be optimized."
+                },
+                "ostw.deltintegerPath": {
+                    "scope": "machine",
+                    "type": "string",
+                    "description": "The path to Deltinteger.exe."
+                },
+                "ostw.newRelease": {
+                    "scope": "machine",
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Determines if the new release notification is shown."
+                },
+                "ostw.ignoreRelease": {
+                    "scope": "machine",
+                    "type": "string",
+                    "description": "Ignores a release tag."
+                },
+                "ostw.codelens.references": {
+                    "scope": "window",
+                    "type": "boolean",
+                    "description": "Determines if the references code lens is shown.",
+                    "default": true
+                },
+                "ostw.codelens.implements": {
+                    "scope": "window",
+                    "type": "boolean",
+                    "description": "Determines if the implements code lens is shown.",
+                    "default": true
+                },
+                "ostw.codelens.elementCount": {
+                    "scope": "window",
+                    "type": "boolean",
+                    "description": "Determines if the element count code lens is shown.",
+                    "default": true
                 },
                 "ostw.trace.server": {
                     "scope": "window",
@@ -69,27 +141,47 @@
         },
         "commands": [
             {
-                "command": "ostw.webviewOutput",
-                "title": "Create webview panel for workshop code output.",
+                "command": "ostw.virtualDocumentOutput",
+                "title": "Create a panel for workshop code output.",
                 "category": "Overwatch Script To Workshop"
+            },
+            {
+                "command": "ostw.showReferences",
+                "title": "Show References",
+                "category": "Overwatch Script To Workshop"
+            }
+        ],
+        "jsonValidation": [
+            {
+                "fileMatch": "customGameSettings.json",
+                "url": "./LobbySettingValidation.json"
             }
         ]
     },
     "scripts": {
-        "vscode:prepublish": "cd client && npm run update-vscode && cd .. && npm run compile",
-        "compile": "tsc -b",
+        "vscode:prepublish": "npm run compile && webpack --mode production",
+        "compile": "tsc -b && webpack --mode development",
         "watch": "tsc -b -w",
-        "postinstall": "cd client && npm install && cd ../server && npm install && cd ..",
-        "test": "sh ./scripts/e2e.sh"
+        "postinstall": "npm install",
+        "test": "sh ./scripts/e2e.sh",
+        "webpack": "webpack --mode development",
+        "webpack-dev": "webpack --mode development --watch",
+        "test-compile": "tsc -p ./"
     },
     "devDependencies": {
         "@types/mocha": "^5.2.0",
-        "@types/node": "^8.10.52",
-        "tslint": "^5.19.0",
-        "typescript": "^3.5.3"
+        "@types/node": "^8.10.59",
+        "node-fetch": "^2.6.0",
+        "ts-loader": "^6.2.2",
+        "tslint": "^5.20.1",
+        "typescript": "^3.8.3",
+        "vscode": "^1.1.36",
+        "webpack": "^4.42.1",
+        "webpack-cli": "^3.3.11"
     },
     "dependencies": {
-        "async": "^3.1.0",
-        "request": "^2.88.0"
+        "async": "^3.2.0",
+        "node-fetch": "^2.6.0",
+        "vscode-languageclient": "^5.2.1"
     }
 }

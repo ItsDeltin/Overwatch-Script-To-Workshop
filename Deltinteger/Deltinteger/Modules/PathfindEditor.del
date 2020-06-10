@@ -1,0 +1,365 @@
+import "!Debug Tools.del";
+
+rule: "Commands" -1
+{
+    DisableInspectorRecording();
+    CreateHudText(VisibleTo:AllPlayers(), Text:"https://github.com/ItsDeltin/Overwatch-Script-To-Workshop/wiki/Pathfinding", TextColor:Color.Blue, Location:Location.Right, SortOrder:0);
+    HelpText("Ultimate: Create node."                                                    , 1 );
+    HelpText("Crouch + Ultimate: Destroy node."                                          , 2 );
+    HelpText("Interact: Select node."                                                    , 3 );
+    HelpText("Crouch + Interact: Deselect all nodes."                                    , 4 );
+    HelpText("Secondary Fire: Connect all selected nodes."                               , 5 );
+    HelpText("Crouch + Secondary Fire: Disconnect all selected nodes."                   , 6 );
+    HelpText("Voice Line Right: Create a path from the first to the last selected nodes.", 7 );
+    HelpText("Voice Line Left: Connect all selected nodes to the first selected node."   , 8 );
+    HelpText("Shift: Switch attribute."                                                  , 9 );
+    HelpText("Voice Line Up: Compile pathmap."                                           , 11);
+}
+
+void HelpText(ref define text, ref define order)
+{
+    CreateHudText(VisibleTo:AllPlayers(), Subheader:text, SubheaderColor:Color.SkyBlue, Location:Location.Right, SortOrder:order);
+}
+
+define GetClosestNode(): FirstOf(SortedArray(Nodes, DistanceBetween(EyePosition(EventPlayer()), (<Node>ArrayElement()).ShownLocation)));
+define IsNodeSelectable(Node node): DistanceBetween(node.Pos, EyePosition(EventPlayer())) < 5;
+
+rule: "Create node"
+Event.OngoingPlayer
+if (IsButtonHeld(EventPlayer(), Button.Ultimate))
+if (!IsButtonHeld(EventPlayer(), Button.Crouch))
+{
+    Nodes = Append(Nodes, new Node(PositionOf(EventPlayer())));
+    (<Node>LastOf(Nodes)).Show();
+}
+
+rule: "Delete node"
+Event.OngoingPlayer
+if (IsButtonHeld(EventPlayer(), Button.Ultimate))
+if (IsButtonHeld(EventPlayer(), Button.Crouch))
+{
+    Node selected = GetClosestNode();
+    if (!IsNodeSelectable(selected)) return;
+
+    for (define i = CountOf(Segments) - 1; i >= 0; i--)
+        if (ArrayContains((<Segment>Segments[i]).Nodes, selected))
+        {
+            (<Segment>Segments[i]).Hide();
+            delete(<Segment>Segments[i]);
+            Segments = RemoveFromArrayAtIndex(Segments, i);
+        }
+    PlayEffect(AllPlayers(), PlayEffect.BadExplosion, Color.Blue, selected.ShownLocation, 0.25);
+    selected.Hide();
+    Selected = RemoveFromArray(Selected, selected);
+    Nodes = RemoveFromArray(Nodes, selected); 
+    delete(selected);
+}
+
+rule: "Select"
+Event.OngoingPlayer
+if (IsButtonHeld(EventPlayer(), Button.Interact))
+if (!IsButtonHeld(EventPlayer(), Button.Crouch))
+{
+    Node selected = GetClosestNode();
+    if (!IsNodeSelectable(selected)) return;
+
+    if (!selected.Selected)
+    {        
+        selected.Select();
+        Selected = Append(Selected, selected);
+    }
+    else
+    {
+        selected.Deselect();
+        Selected = RemoveFromArray(Selected, selected);
+    }
+}
+
+rule: "Deselect all"
+Event.OngoingPlayer
+if (IsButtonHeld(EventPlayer(), Button.Interact))
+if (IsButtonHeld(EventPlayer(), Button.Crouch))
+{
+    foreach (Node selected in Selected)
+        selected.Deselect();
+    Selected = EmptyArray();
+}
+
+globalvar define Nodes = EmptyArray();
+globalvar define Selected = EmptyArray();
+
+class Node
+{
+    public define Pos;
+    public define ShownLocation;
+    private define EffectID;
+    public define Selected = false;
+    public define visible = false;
+
+    public Node(define pos)
+    {
+        Pos = pos;
+        ShownLocation = Pos + Vector(0, 1.25, 0);
+    }
+
+    public void Show()
+    {
+        if (!visible)
+        {
+            Update();
+            visible = true;
+        }
+    }
+
+    public void Hide()
+    {
+        if (visible)
+        {
+            DestroyEffect(EffectID);
+            visible = false;
+        }
+    }
+    
+    public void Select()
+    {
+        Selected = true;
+        Update();
+    }
+
+    public void Deselect()
+    {
+        Selected = false;
+        Update();
+    }
+
+    private void Update()
+    {
+        DestroyEffect(EffectID);
+        if (!Selected)
+            Make(Color.Blue);
+        else
+            Make(Color.Green);
+        EffectID = LastCreatedEntity();
+    }
+
+    private void Make(Color color)
+    {
+        CreateEffect(AllPlayers(), Effect.Sphere, color, ShownLocation, 0.25, EffectRev.VisibleTo);
+    }
+
+    public void UpdateVisible()
+    {
+        if (DistanceBetween(HostPlayer(), ShownLocation) < 35 && IsInViewAngle(HostPlayer(), ShownLocation, 50))
+            Show();
+        else
+            Hide();
+    }
+}
+
+rule: "Connect All Segments"
+Event.OngoingPlayer
+if (IsButtonHeld(EventPlayer(), Button.SecondaryFire))
+if (!IsButtonHeld(EventPlayer(), Button.Crouch))
+{
+    for (define f = 0; f < CountOf(Selected); f++)
+        for (define l = 0; l < CountOf(Selected); l++)
+            if ((l != f) && !SegmentExists(Selected[f], Selected[l]))
+            {
+                Segments = Append(Segments, new Segment(<Node>Selected[f], <Node>Selected[l], Attribute));
+                (<Segment>LastOf(Segments)).Show();
+            }
+}
+
+rule: "Connect Segment Path"
+Event.OngoingPlayer
+if (IsCommunicating(EventPlayer(), Communication.VoiceLineRight))
+if (!IsButtonHeld(EventPlayer(), Button.Crouch))
+{
+    for (define i = 1; i < CountOf(Selected); i++)
+        if (!SegmentExists(Selected[i - 1], Selected[i]))
+        {
+            Segments = Append(Segments, new Segment(<Node>Selected[i - 1], <Node>Selected[i], Attribute));
+            (<Segment>LastOf(Segments)).Show();
+        }
+}
+
+rule: "Connect Segments From First"
+Event.OngoingPlayer
+if (IsCommunicating(EventPlayer(), Communication.VoiceLineLeft))
+if (!IsButtonHeld(EventPlayer(), Button.Crouch))
+{
+    for (define i = 1; i < CountOf(Selected); i++)
+        if (!SegmentExists(Selected[0], Selected[i]))
+        {
+            Segments = Append(Segments, new Segment(<Node>Selected[0], <Node>Selected[i], Attribute));
+            (<Segment>LastOf(Segments)).Show();
+        }
+}
+
+define SegmentExists(define node1, define node2):
+    IsTrueForAny(
+        Segments,
+        ArrayContains((<Segment>ArrayElement()).Nodes, node1)
+        &&
+        ArrayContains((<Segment>ArrayElement()).Nodes, node2)
+    );
+
+rule: "Delete Segments"
+Event.OngoingPlayer
+if (IsButtonHeld(EventPlayer(), Button.SecondaryFire))
+if (IsButtonHeld(EventPlayer(), Button.Crouch))
+{
+    for (define i = CountOf(Segments) - 1; i >= 0; i--)
+        if (IsTrueForAll((<Segment>Segments[i]).Nodes, ArrayContains(Selected, ArrayElement())))
+        {
+            (<Segment>Segments[i]).Hide();
+            delete(<Segment>Segments[i]);
+            Segments = RemoveFromArrayAtIndex(Segments, i);
+        }
+}
+
+globalvar define Segments = EmptyArray();
+
+class Segment
+{
+    public Node Node1;
+    public Node Node2;    
+    public define Nodes;
+    public define Attribute;
+
+    define EffectID;
+    public define visible = false;
+
+    define DirectionMarker1;
+
+    public Segment(Node node1, Node node2, define attribute)
+    {
+        Node1 = node1;
+        Node2 = node2;
+        Nodes = [Node1, Node2];
+        Attribute = attribute;
+    }
+
+    public void Show()
+    {
+        if (!visible)
+        {
+            CreateBeamEffect(AllPlayers(), BeamType.GrappleBeam, Node1.ShownLocation, Node2.ShownLocation, Color.Red, EffectRev.VisibleTo);
+            EffectID = LastCreatedEntity();
+            visible = true;
+
+            if (Attribute == 1)
+            {
+                CreateEffect(AllPlayers(), Effect.Sphere, Color.Purple, LinearInterpolate(Node1.ShownLocation, Node2.ShownLocation, 0.8), 0.25, EffectRev.VisibleTo);
+                DirectionMarker1 = LastCreatedEntity();
+            }
+        }
+    }
+    public void Hide()
+    {
+        if (visible)
+        {
+            DestroyEffect(EffectID);
+            DestroyEffect(DirectionMarker1);
+            visible = false;
+        }
+    }
+}
+
+globalvar define updateVisibleLook;
+globalvar define updateVisiblePosition;
+
+rule: "Update visible"
+if (updateVisibleLook == null || DistanceBetween(updateVisiblePosition, HostPlayer()) > 3 || AngleBetweenVectors(updateVisibleLook, FacingDirectionOf(HostPlayer())) > 10)
+{
+    updateVisibleLook = FacingDirectionOf(HostPlayer());
+    updateVisiblePosition = PositionOf(HostPlayer());
+
+    foreach (Segment segment in Segments)
+    {
+        segment.Node1.UpdateVisible();
+        segment.Node2.UpdateVisible();
+
+        if ((segment.Node1.visible) || segment.Node2.visible)
+            segment.Show();
+        else
+            segment.Hide();
+        
+        MinWait();
+    }
+    Wait(0.2);
+    LoopIfConditionIsTrue();
+}
+
+globalvar define compiling = false;
+
+rule: "CSV out"
+Event.OngoingPlayer
+if (IsCommunicating(EventPlayer(), Communication.VoiceLineUp))
+{
+    compiling = true;
+    EnableInspectorRecording();
+    SmallMessage(AllPlayers(), "Compiling...");
+
+    nodesOut = EmptyArray();
+    segmentsOut = EmptyArray();
+
+    for (define i = 0; i < CountOf(Nodes); i++)
+        nodesOut = Append(nodesOut, (<Node>Nodes[i]).Pos);
+    
+    for (define i = 0; i < CountOf(Segments); i++)
+        segmentsOut = Append(segmentsOut, Vector(
+            IndexOfArrayValue(Nodes, (<Segment>Segments[i]).Node1),
+            IndexOfArrayValue(Nodes, (<Segment>Segments[i]).Node2),
+            (<Segment>Segments[i]).Attribute
+        ));
+
+    SmallMessage(AllPlayers(), "Compile Finished!");
+    DisableInspectorRecording();
+    compiling = false;
+}
+
+globalvar define nodesOut    3;
+globalvar define segmentsOut 4;
+
+rule: "Preload"
+if (CountOf(preloadNodes) != 0)
+{
+    for (define i = 0; i < CountOf(preloadNodes); i++)
+        Nodes = Append(Nodes, new Node(preloadNodes[i]));    
+    for (define i = 0; i < CountOf(preloadSegments); i++)
+        Segments = Append(Segments, new Segment(
+                <Node>Nodes[XOf(preloadSegments[i])],
+                <Node>Nodes[YOf(preloadSegments[i])],
+                ZOf(preloadSegments[i])
+            ));
+}
+
+globalvar define preloadNodes 5;
+globalvar define preloadSegments 6;
+
+globalvar define Attribute = 0;
+globalvar define AttributeHud = 0;
+
+rule: "Change attribute"
+Event.OngoingPlayer
+if (IsButtonHeld(EventPlayer(), Button.Ability1))
+{
+    Attribute++;
+    DestroyHudText(AttributeHud);
+
+    if (Attribute == 2) Attribute = 0;
+
+    if (Attribute == 0)
+        CreateHudText(AllPlayers(), "Attribute:", "Normal", null, Location.Top);
+    else if (Attribute == 1)
+        CreateHudText(AllPlayers(), "Attribute:", "One-way", null, Location.Top);
+
+    AttributeHud = LastTextID();
+}
+
+rule: "Initial attribute HUD"
+{
+    CreateHudText(AllPlayers(), "Attribute:", "normal", null, Location.Top);
+    AttributeHud = LastTextID();
+}

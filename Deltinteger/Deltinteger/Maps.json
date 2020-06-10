@@ -1,0 +1,538 @@
+[
+  {
+    "Name": "Temple of Anubis",
+    "GameModes": [
+      "Assault",
+      "Skirmish",
+      "Deathmatch",
+      "Team Deathmatch"
+    ]
+  },
+  {
+    "Name": "King's Row",
+    "GameModes": [
+      "Hybrid",
+      "Skirmish",
+      "Deathmatch",
+      "Team Deathmatch"
+    ]
+  },
+  {
+    "Name": "Hanamura",
+    "GameModes": [
+      "Assault",
+      "Skirmish",
+      "Deathmatch",
+      "Team Deathmatch"
+    ]
+  },
+  {
+    "Name": "Watchpoint: Gibraltar",
+    "GameModes": [
+      "Escort",
+      "Skirmish"
+    ]
+  },
+  {
+    "Name": "Numbani",
+    "GameModes": [
+      "Hybrid",
+      "Skirmish"
+    ]
+  },
+  {
+    "Name": "Volskaya Industries",
+    "GameModes": [
+      "Assault",
+      "Skirmish",
+      "Deathmatch",
+      "Team Deathmatch"
+    ]
+  },
+  {
+    "Name": "Hollywood",
+    "GameModes": [
+      "Hybrid",
+      "Skirmish",
+      "Deathmatch",
+      "Team Deathmatch"
+    ]
+  },
+  {
+    "Name": "Dorado",
+    "GameModes": [
+      "Escort",
+      "Skirmish",
+      "Deathmatch",
+      "Team Deathmatch"
+    ]
+  },
+  {
+    "Name": "Nepal",
+    "GameModes": [
+      "Control",
+      "Skirmish"
+    ]
+  },
+  {
+    "Name": "Route 66",
+    "GameModes": [
+      "Escort",
+      "Skirmish"
+    ]
+  },
+  {
+    "Name": "Tutorial",
+    "GameModes": [
+      "Tutorial"
+    ]
+  },
+  {
+    "Name": "Lijiang Tower",
+    "GameModes": [
+      "Control",
+      "Skirmish"
+    ]
+  },
+  {
+    "Name": "Ilios",
+    "GameModes": [
+      "Control",
+      "Skirmish"
+    ]
+  },
+  {
+    "Name": "Practice Range",
+    "GameModes": [
+      "Practice Range",
+      "Practice Range"
+    ]
+  },
+  {
+    "Name": "Eichenwalde",
+    "GameModes": [
+      "Hybrid",
+      "Skirmish",
+      "Deathmatch",
+      "Team Deathmatch"
+    ]
+  },
+  {
+    "Name": "Oasis",
+    "GameModes": [
+      "Control",
+      "Skirmish"
+    ]
+  },
+  {
+    "Name": "Hollywood (Halloween)",
+    "GameModes": [
+      "Hybrid",
+      "Skirmish",
+      "Deathmatch",
+      "Team Deathmatch"
+    ]
+  },
+  {
+    "Name": "King's Row (Winter)",
+    "GameModes": [
+      "Hybrid",
+      "Skirmish",
+      "Deathmatch",
+      "Team Deathmatch"
+    ]
+  },
+  {
+    "Name": "Estádio das Rãs",
+    "GameModes": [
+      "Lúcioball"
+    ]
+  },
+  {
+    "Name": "Hanamura (Winter)",
+    "GameModes": [
+      "Assault",
+      "Skirmish",
+      "Deathmatch",
+      "Team Deathmatch"
+    ]
+  },
+  {
+    "Name": "Lijiang Tower (Lunar New Year)",
+    "GameModes": [
+      "Control",
+      "Skirmish"
+    ]
+  },
+  {
+    "Name": "Junkenstein's Revenge",
+    "GameModes": [
+      "Junkenstein's Revenge",
+      "Junkenstein's Revenge"
+    ]
+  },
+  {
+    "Name": "Ecopoint: Antarctica",
+    "GameModes": [
+      "Elimination",
+      "Team Deathmatch",
+      "Deathmatch"
+    ]
+  },
+  {
+    "Name": "Horizon Lunar Colony",
+    "GameModes": [
+      "Assault",
+      "Skirmish",
+      "Deathmatch",
+      "Team Deathmatch"
+    ]
+  },
+  {
+    "Name": "Necropolis",
+    "GameModes": [
+      "Elimination",
+      "Deathmatch",
+      "Team Deathmatch"
+    ]
+  },
+  {
+    "Name": "Black Forest",
+    "GameModes": [
+      "Elimination",
+      "Deathmatch",
+      "Team Deathmatch"
+    ]
+  },
+  {
+    "Name": "Ecopoint: Antarctica (Winter)",
+    "GameModes": [
+      "Elimination",
+      "Team Deathmatch",
+      "Deathmatch",
+      "Mei's Snowball Offensive",
+      "Snowball Deathmatch"
+    ]
+  },
+  {
+    "Name": "Lijiang Garden (Lunar New Year)",
+    "GameModes": [
+      "Capture the Flag",
+      "Elimination",
+      "Deathmatch",
+      "Team Deathmatch"
+    ]
+  },
+  {
+    "Name": "Lijiang Night Market (Lunar New Year)",
+    "GameModes": [
+      "Capture the Flag",
+      "Elimination",
+      "Deathmatch",
+      "Team Deathmatch"
+    ]
+  },
+  {
+    "Name": "Nepal Sanctum",
+    "GameModes": [
+      "Capture the Flag",
+      "Elimination",
+      "Deathmatch",
+      "Team Deathmatch"
+    ]
+  },
+  {
+    "Name": "Lijiang Control Center (Lunar New Year)",
+    "GameModes": [
+      "Capture the Flag",
+      "Elimination",
+      "Deathmatch",
+      "Team Deathmatch"
+    ]
+  },
+  {
+    "Name": "Castillo",
+    "GameModes": [
+      "Elimination",
+      "Deathmatch",
+      "Team Deathmatch"
+    ]
+  },
+  {
+    "Name": "Nepal Village",
+    "GameModes": [
+      "Capture the Flag",
+      "Elimination",
+      "Deathmatch",
+      "Team Deathmatch"
+    ]
+  },
+  {
+    "Name": "Nepal Shrine",
+    "GameModes": [
+      "Capture the Flag",
+      "Elimination",
+      "Deathmatch",
+      "Team Deathmatch"
+    ]
+  },
+  {
+    "Name": "Ilios Well",
+    "GameModes": [
+      "Capture the Flag",
+      "Elimination",
+      "Deathmatch",
+      "Team Deathmatch"
+    ]
+  },
+  {
+    "Name": "Ilios Lighthouse",
+    "GameModes": [
+      "Capture the Flag",
+      "Elimination",
+      "Deathmatch",
+      "Team Deathmatch"
+    ]
+  },
+  {
+    "Name": "Ilios Ruins",
+    "GameModes": [
+      "Capture the Flag",
+      "Elimination",
+      "Deathmatch",
+      "Team Deathmatch"
+    ]
+  },
+  {
+    "Name": "Lijiang Control Center",
+    "GameModes": [
+      "Capture the Flag",
+      "Elimination",
+      "Deathmatch",
+      "Team Deathmatch"
+    ]
+  },
+  {
+    "Name": "Lijiang Garden",
+    "GameModes": [
+      "Capture the Flag",
+      "Elimination",
+      "Deathmatch",
+      "Team Deathmatch"
+    ]
+  },
+  {
+    "Name": "Lijiang Night Market",
+    "GameModes": [
+      "Capture the Flag",
+      "Elimination",
+      "Deathmatch",
+      "Team Deathmatch"
+    ]
+  },
+  {
+    "Name": "Oasis City Center",
+    "GameModes": [
+      "Capture the Flag",
+      "Elimination",
+      "Deathmatch",
+      "Team Deathmatch"
+    ]
+  },
+  {
+    "Name": "Oasis Gardens",
+    "GameModes": [
+      "Capture the Flag",
+      "Elimination",
+      "Deathmatch",
+      "Team Deathmatch"
+    ]
+  },
+  {
+    "Name": "Oasis University",
+    "GameModes": [
+      "Capture the Flag",
+      "Elimination",
+      "Deathmatch",
+      "Team Deathmatch"
+    ]
+  },
+  {
+    "Name": "Junkertown",
+    "GameModes": [
+      "Escort",
+      "Skirmish"
+    ]
+  },
+  {
+    "Name": "Blizzard World",
+    "GameModes": [
+      "Hybrid",
+      "Skirmish",
+      "Deathmatch",
+      "Team Deathmatch"
+    ]
+  },
+  {
+    "Name": "Sydney Harbour Arena",
+    "GameModes": [
+      "Lúcioball"
+    ]
+  },
+  {
+    "Name": "Rialto",
+    "GameModes": [
+      "Retribution"
+    ]
+  },
+  {
+    "Name": "Ayutthaya",
+    "GameModes": [
+      "Capture the Flag",
+      "Elimination"
+    ]
+  },
+  {
+    "Name": "Château Guillard",
+    "GameModes": [
+      "Deathmatch",
+      "Team Deathmatch"
+    ]
+  },
+  {
+    "Name": "Busan",
+    "GameModes": [
+      "Control",
+      "Skirmish"
+    ]
+  },
+  {
+    "Name": "Eichenwalde (Halloween)",
+    "GameModes": [
+      "Hybrid",
+      "Skirmish",
+      "Deathmatch",
+      "Team Deathmatch"
+    ]
+  },
+  {
+    "Name": "Black Forest (Winter)",
+    "GameModes": [
+      "Elimination",
+      "Deathmatch",
+      "Team Deathmatch",
+      "Mei's Snowball Offensive",
+      "Snowball Deathmatch"
+    ]
+  },
+  {
+    "Name": "Nepal Village (Winter)",
+    "GameModes": [
+      "Yeti Hunter"
+    ]
+  },
+  {
+    "Name": "Château Guillard (Halloween)",
+    "GameModes": [
+      "Deathmatch",
+      "Team Deathmatch"
+    ]
+  },
+  {
+    "Name": "Petra",
+    "GameModes": [
+      "Deathmatch",
+      "Team Deathmatch"
+    ]
+  },
+  {
+    "Name": "Paris",
+    "GameModes": [
+      "Assault",
+      "Skirmish",
+      "Deathmatch",
+      "Team Deathmatch"
+    ]
+  },
+  {
+    "Name": "Busan Stadium",
+    "GameModes": [
+      "Lúcioball"
+    ]
+  },
+  {
+    "Name": "Havana",
+    "GameModes": [
+      "Escort",
+      "Skirmish",
+      "Storm Rising",
+      "Deathmatch"
+    ]
+  },
+  {
+    "Name": "Blizzard World (Winter)",
+    "GameModes": [
+      "Hybrid",
+      "Skirmish",
+      "Deathmatch",
+      "Team Deathmatch"
+    ]
+  },
+  {
+    "Name": "Busan Sanctuary (Lunar New Year)",
+    "GameModes": [
+      "Capture the Flag"
+    ]
+  },
+  {
+    "Name": "Busan Downtown (Lunar New Year)",
+    "GameModes": [
+      "Capture the Flag"
+    ]
+  },
+  {
+    "Name": "Workshop Island",
+    "GameModes": [
+      "Elimination",
+      "Deathmatch",
+      "Team Deathmatch",
+      "Skirmish"
+    ]
+  },
+  {
+    "Name": "Workshop Expanse",
+    "GameModes": [
+      "Elimination",
+      "Deathmatch",
+      "Team Deathmatch",
+      "Skirmish"
+    ]
+  },
+  {
+    "Name": "Workshop Chamber",
+    "GameModes": [
+      "Elimination",
+      "Deathmatch",
+      "Team Deathmatch",
+      "Skirmish"
+    ]
+  },
+  {
+    "Name": "Workshop Island (Night)",
+    "GameModes": [
+      "Elimination",
+      "Deathmatch",
+      "Team Deathmatch",
+      "Skirmish"
+    ]
+  },
+  {
+    "Name": "Workshop Expanse (Night)",
+    "GameModes": [
+      "Elimination",
+      "Deathmatch",
+      "Team Deathmatch",
+      "Skirmish"
+    ]
+  }
+]

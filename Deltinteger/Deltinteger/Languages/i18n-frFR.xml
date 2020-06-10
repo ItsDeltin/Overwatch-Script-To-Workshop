@@ -1,0 +1,919 @@
+<?xml version="1.0" encoding="utf-8"?>
+<I18nLanguage xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <Methods>
+    <method name="variables" alt="variables" />
+    <method name="global" alt="globale" />
+    <method name="player" alt="de joueur" />
+    <method name="rule" alt="règle" />
+    <method name="event" alt="évènement" />
+    <method name="conditions" alt="conditions" />
+    <method name="actions" alt="actions" />
+    <method name="disabled" alt="désactivé" />
+    <method name="subroutines" alt="sous-programmes" />
+    <method name="Abort" alt="Interrompre" />
+    <method name="Abort If" alt="Interrompre si" />
+    <method name="Abort If Condition Is False" alt="Interrompre si la condition est fausse" />
+    <method name="Abort If Condition Is True" alt="Interrompre si la condition est vraie" />
+    <method name="Allow Button" alt="Autoriser un bouton" />
+    <method name="Apply Impulse" alt="Appliquer une impulsion" />
+    <method name="Big Message" alt="Message en grand" />
+    <method name="Call Subroutine" alt="Sous-programme à appeler" />
+    <method name="Start Rule" alt="Lancer la règle" />
+    <method name="Chase Global Variable At Rate" alt="Modifier une variable globale selon une cadence" />
+    <method name="Chase Global Variable Over Time" alt="Modifier une variable globale sur la durée" />
+    <method name="Chase Player Variable At Rate" alt="Modifier une variable de joueur selon une cadence" />
+    <method name="Chase Player Variable Over Time" alt="Modifier une variable de joueur sur la durée" />
+    <method name="Clear Status" alt="Effacer le statut" />
+    <method name="Communicate" alt="Communiquer" />
+    <method name="Create Beam Effect" alt="Créer un effet de rayon" />
+    <method name="Create Dummy Bot" alt="Créer une I.A." />
+    <method name="Create Effect" alt="Créer un effet" />
+    <method name="Create Hud Text" alt="Créer du texte d’interface" />
+    <method name="Create Icon" alt="Créer une icône" />
+    <method name="Create In-World Text" alt="Créer du texte en jeu" />
+    <method name="Damage" alt="Infliger des dégâts" />
+    <method name="Declare Match Draw" alt="Déclarer le match nul" />
+    <method name="Declare Player Victory" alt="Déclarer la victoire d’un joueur" />
+    <method name="Declare Round Victory" alt="Déclarer la victoire de la manche" />
+    <method name="Declare team Victory" alt="Déclarer la victoire d’une équipe" />
+    <method name="Destroy All Dummy Bots" alt="Détruire toutes les I.A." />
+    <method name="Destroy All Effects" alt="Détruire tous les effets" />
+    <method name="Destroy All HUD Text" alt="Détruire tous les textes d’interface" />
+    <method name="Destroy All Icons" alt="Détruire toutes les icônes" />
+    <method name="Destroy All In-World Text" alt="Détruire tous les textes en jeu" />
+    <method name="Destroy Dummy Bot" alt="Détruire une I.A." />
+    <method name="Destroy Effect" alt="Détruire un effet" />
+    <method name="Destroy Hud Text" alt="Détruire du texte d’interface" />
+    <method name="Destroy Icon" alt="Détruire une icône" />
+    <method name="Destroy In-World Text" alt="Détruire du texte en jeu" />
+    <method name="Disable Built-In Game Mode Announcer" alt="Désactiver l’annonceur prédéfini par le mode de jeu" />
+    <method name="Disable Built-In Game Mode Completion" alt="Désactiver l’accomplissement prédéfini par le mode de jeu" />
+    <method name="Disable Built-In Game Mode Music" alt="Désactiver la musique prédéfinie par le mode de jeu" />
+    <method name="Disable Built-In Game Mode Respawning" alt="Désactiver la réapparition prédéfinie par le mode de jeu" />
+    <method name="Disable Built-In Game Mode Scoring" alt="Désactiver le calcul des points prédéfini par le mode de jeu" />
+    <method name="Disable Death Spectate All Players" alt="Empêcher d’observer n’importe qui après la mort" />
+    <method name="Disable Death Spectate Target HUD" alt="Empêcher de voir l’interface de la cible après la mort" />
+    <method name="Disable Inspector Recording" alt="Désactiver l’enregistrement du contrôleur" />
+    <method name="Disallow Button" alt="Interdire le bouton" />
+    <method name="Enable Built-In Game Mode Announcer" alt="Activer l’annonceur prédéfini par le mode de jeu" />
+    <method name="Enable Built-In Game Mode Completion" alt="Activer l’accomplissement prédéfini par le mode de jeu" />
+    <method name="Enable Inspector Recording" alt="Activer l’enregistrement du contrôleur" />
+    <method name="Enable Built-In Game Mode Music" alt="Activer la musique prédéfinie par le mode de jeu" />
+    <method name="Enable Built-In Game Mode Respawning" alt="Activer la réapparition prédéfinie par le mode de jeu" />
+    <method name="Enable Built-In Game Mode Scoring" alt="Activer le calcul des points prédéfini par le mode de jeu" />
+    <method name="Enable Death Spectate All Players" alt="Permettre d’observer n’importe qui après la mort" />
+    <method name="Enable Death Spectate Target HUD" alt="Permettre de voir l’interface de la cible après la mort" />
+    <method name="End" alt="Fin" />
+    <method name="For Global Variable" alt="Pour variable globale" />
+    <method name="For Player Variable" alt="Pour variable de joueur" />
+    <method name="Go To Assemble Heroes" alt="Aller à Choisissez vos héros" />
+    <method name="Heal" alt="Soigner" />
+    <method name="If" alt="Si" />
+    <method name="Else If" alt="Sinon Si" />
+    <method name="Else" alt="Sinon" />
+    <method name="Kill" alt="Tuer" />
+    <method name="Loop" alt="Boucle" />
+    <method name="Loop If" alt="Boucle si" />
+    <method name="Loop If Condition Is False" alt="Boucle si la condition est fausse" />
+    <method name="Loop If Condition Is True" alt="Boucle si la condition est vraie" />
+    <method name="Modify Global Variable" alt="Modifier une variable globale" />
+    <method name="Modify Global Variable At Index" alt="Modifier une variable globale à l’index" />
+    <method name="Modify Player Score" alt="Modifier le score d’un joueur" />
+    <method name="Modify Player Variable" alt="Modifier une variable de joueur" />
+    <method name="Modify Player Variable At Index" alt="Modifier une variable de joueur à l’index" />
+    <method name="Modify Team Score" alt="Modifier le score de l’équipe" />
+    <method name="Pause Match Time" alt="Mettre en pause le temps de jeu" />
+    <method name="Play Effect" alt="Jouer un effet" />
+    <method name="Preload Hero" alt="Précharger un héros" />
+    <method name="Press Button" alt="Appuyer sur un bouton" />
+    <method name="Reset Player Hero Availability" alt="Réinitialiser la disponibilité du héros pour un joueur" />
+    <method name="Respawn" alt="Réapparaître" />
+    <method name="Resurrect" alt="Ressusciter" />
+    <method name="Set Ability 1 Enabled" alt="Définir l’activation de la capacité 1" />
+    <method name="Set Ability 2 Enabled" alt="Définir l’activation de la capacité 2" />
+    <method name="Set Aim Speed" alt="Définir la vitesse de visée" />
+    <method name="Set Damage Dealt" alt="Définir les dégâts infligés" />
+    <method name="Set Damage Received" alt="Définir les dégâts subis" />
+    <method name="Set Facing" alt="Définir la direction du regard" />
+    <method name="Set Global Variable" alt="Définir une variable globale" />
+    <method name="Set Global Variable At Index" alt="Définir une variable globale à l’index" />
+    <method name="Set Gravity" alt="Définir la gravité" />
+    <method name="Set Healing Dealt" alt="Définir les soins prodigués" />
+    <method name="Set Healing Received" alt="Définir les soins reçus" />
+    <method name="Set Invisible" alt="Définir l’invisibilité" />
+    <method name="Set Match Time" alt="Définir le temps de jeu" />
+    <method name="Set Max Health" alt="Définir les points de vie maximum" />
+    <method name="Set Move Speed" alt="Définir la vitesse de déplacement" />
+    <method name="Set Objective Description" alt="Définir la description d’objectif" />
+    <method name="Set Player Allowed Heroes" alt="Définir les héros autorisés pour un joueur" />
+    <method name="Set Player Score" alt="Définir le score d’un joueur" />
+    <method name="Set Player Variable" alt="Définir une variable de joueur" />
+    <method name="Set Player Variable At Index" alt="Définir une variable de joueur à l’index" />
+    <method name="Set Primary Fire Enabled" alt="Définir l’activation du tir principal" />
+    <method name="Set Projectile Gravity" alt="Définir la gravité des projectiles" />
+    <method name="Set Projectile Speed" alt="Définir la vitesse des projectiles" />
+    <method name="Set Respawn Max Time" alt="Définir la durée maximum avant réapparition" />
+    <method name="Set Secondary Fire Enabled" alt="Définir l’activation du tir secondaire" />
+    <method name="Set Slow Motion" alt="Définir un ralenti" />
+    <method name="Set Status" alt="Définir un statut" />
+    <method name="Set Team Score" alt="Définir le score d’une équipe" />
+    <method name="Set Ultimate Ability Enabled" alt="Définir l’activation de la capacité ultime" />
+    <method name="Set Ultimate Charge" alt="Définir la charge de la capacité ultime" />
+    <method name="Skip" alt="Passer" />
+    <method name="Skip If" alt="Passer si" />
+    <method name="Small Message" alt="Message en petit" />
+    <method name="Start Accelerating" alt="Accélérer" />
+    <method name="Start Camera" alt="Lancer la caméra" />
+    <method name="Start Damage Modification" alt="Lancer la modification des dégâts" />
+    <method name="Start Damage Over Time" alt="Infliger des dégâts sur la durée" />
+    <method name="Start Facing" alt="Regarder vers" />
+    <method name="Start Forcing Player To Be Hero" alt="Forcer un héros" />
+    <method name="Start Forcing Spawn Room" alt="Forcer une salle d’apparition" />
+    <method name="Start Forcing Throttle" alt="Forcer l’accélération" />
+    <method name="Start Healing Modification" alt="Lancer la modification des soins" />
+    <method name="Stop Healing Modification" alt="Terminer la modification de soins" />
+    <method name="Start Heal Over Time" alt="Prodiguer des soins sur la durée" />
+    <method name="Start Holding Button" alt="Maintenir un bouton enfoncé" />
+    <method name="Start Throttle In Direction" alt="Commencer l’accélération directionnelle" />
+    <method name="Start Transforming Throttle" alt="Début de modification de l’accélération" />
+    <method name="Stop Accelerating" alt="Arrêter l’accélération" />
+    <method name="Stop All Damage Modifications" alt="Arrêter toutes les modifications de dégâts" />
+    <method name="Stop All Damage Over Time" alt="Arrêter tous les dégâts sur la durée" />
+    <method name="Stop All Heal Over Time" alt="Arrêter tous les soins sur la durée" />
+    <method name="Stop Camera" alt="Arrêter la caméra" />
+    <method name="Stop Chasing Global Variable" alt="Arrêter de modifier une variable globale" />
+    <method name="Stop Chasing Player Variable" alt="Arrêter de modifier une variable de joueur" />
+    <method name="Stop Damage Modification" alt="Arrêter la modification des dégâts" />
+    <method name="Stop Damage Over Time" alt="Arrêter des dégâts sur la durée" />
+    <method name="Stop Facing" alt="Arrêter de regarder vers" />
+    <method name="Stop Forcing Player To Be Hero" alt="Arrêter de forcer un héros" />
+    <method name="Stop Forcing Spawn Room" alt="Arrêter de forcer une salle d’apparition" />
+    <method name="Stop Forcing Throttle" alt="Arrêter de forcer l’accélération" />
+    <method name="Stop Heal Over Time" alt="Arrêter des soins sur la durée" />
+    <method name="Stop Holding Button" alt="Arrêter de maintenir un bouton enfoncé" />
+    <method name="Stop Throttle In Direction" alt="Arrêter l’accélération directionnelle" />
+    <method name="Stop Transforming Throttle" alt="Arrêt de modification de l’accélération" />
+    <method name="Teleport" alt="Téléportation" />
+    <method name="Unpause Match Time" alt="Reprendre le temps de jeu" />
+    <method name="Wait" alt="Attente" />
+    <method name="While" alt="Tant que" />
+    <method name="Absolute Value" alt="Valeur absolue" />
+    <method name="Add" alt="Addition" />
+    <method name="All Dead Players" alt="Tous les joueurs morts" />
+    <method name="All Heroes" alt="Tous les héros" />
+    <method name="All Living Players" alt="Tous les joueurs en vie" />
+    <method name="All Players" alt="Tous les joueurs" />
+    <method name="All Players Not On Objective" alt="Tous les joueurs éloignés de l’objectif" />
+    <method name="All Players On Objective" alt="Tous les joueurs sur l’objectif" />
+    <method name="All Tank Heroes" alt="Tous les héros tanks" />
+    <method name="All Damage Heroes" alt="Tous les héros de dégâts" />
+    <method name="All Support Heroes" alt="Tous les héros de soutien" />
+    <method name="Allowed Heroes" alt="Héros autorisés" />
+    <method name="Altitude Of" alt="Altitude de" />
+    <method name="And" alt="Et" />
+    <method name="Angle Between Vectors" alt="Angle entre deux vecteurs" />
+    <method name="Angle Difference" alt="Différence entre angles" />
+    <method name="Append To Array" alt="Ajouter au tableau" />
+    <method name="Arccosine In Degrees" alt="Arc cosinus en degrés" />
+    <method name="Arccosine In Radians" alt="Arc cosinus en radians" />
+    <method name="Arcsine In Degrees" alt="Arc sinus en degrés" />
+    <method name="Arcsine In Radians" alt="Arc sinus en radians" />
+    <method name="Arctangent In Degrees" alt="Arc tangente en degrés" />
+    <method name="Arctangent In Radians" alt="Arc tangente en radians" />
+    <method name="Array Contains" alt="Contenu du tableau" />
+    <method name="Array Slice" alt="Section de tableau" />
+    <method name="Attacker" alt="Attaquant" />
+    <method name="Backward" alt="Arrière" />
+    <method name="Closest Player To" alt="Joueur le plus proche de" />
+    <method name="Compare" alt="Comparer" />
+    <method name="Control Mode Scoring Percentage" alt="Pourcentage du score en mode Contrôle" />
+    <method name="Control Mode Scoring Team" alt="Équipe contrôlant le point en mode Contrôle" />
+    <method name="Count Of" alt="Décompte de" />
+    <method name="Cosine From Degrees" alt="Cosinus en degrés" />
+    <method name="Cosine From Radians" alt="Cosinus en radians" />
+    <method name="Cross Product" alt="Produit croisé" />
+    <method name="Current Map" alt="Carte actuelle" />
+    <method name="Current Array Element" alt="Élément de tableau actuel" />
+    <method name="Direction From Angles" alt="Direction depuis des angles" />
+    <method name="Direction Towards" alt="Direction" />
+    <method name="Distance Between" alt="Distance entre" />
+    <method name="Divide" alt="Division" />
+    <method name="Dot Product" alt="Produit scalaire" />
+    <method name="Down" alt="Bas" />
+    <method name="Empty Array" alt="Tableau vide" />
+    <method name="Entity Exists" alt="Existence de l’entité" />
+    <method name="Event Damage" alt="Dégâts d’évènement" />
+    <method name="Event Healing" alt="Évènement soin" />
+    <method name="Event Player" alt="Joueur exécutant" />
+    <method name="Event Was Critical Hit" alt="L’évènement était un coup critique" />
+    <method name="Event Was Health Pack" alt="L’évènement était un kit de soins" />
+    <method name="Eye Position" alt="Position des yeux" />
+    <method name="Facing Direction Of" alt="Regard en direction de" />
+    <method name="False" alt="Faux" />
+    <method name="Farthest Player From" alt="Joueur le plus éloigné de" />
+    <method name="Filtered Array" alt="Tableau filtré" />
+    <method name="First Of" alt="Premier de" />
+    <method name="Flag Position" alt="Position du drapeau" />
+    <method name="Forward" alt="Avant" />
+    <method name="Game Mode" alt="Mode de jeu" />
+    <method name="Current Game Mode" alt="Mode de jeu actuel" />
+    <method name="Global Variable" alt="Variable globale" />
+    <method name="Has Spawned" alt="Apparition" />
+    <method name="Has Status" alt="Statut" />
+    <method name="Healee" alt="Soigné" />
+    <method name="Healer" alt="Soigneur" />
+    <method name="Health" alt="Points de vie" />
+    <method name="Hero" alt="Héros" />
+    <method name="Hero Icon String" alt="Chaîne d’icône du héros" />
+    <method name="Hero Of" alt="Héros de" />
+    <method name="Horizontal Angle From Direction" alt="Angle horizontal depuis une direction" />
+    <method name="Horizontal Angle Towards" alt="Angle horizontal vers" />
+    <method name="Horizontal Facing Angle Of" alt="Angle horizontal du regard de" />
+    <method name="Horizontal Speed Of" alt="Vitesse horizontale de" />
+    <method name="Host Player" alt="Joueur hôte" />
+    <method name="Index Of Array Value" alt="Index de la valeur de tableau" />
+    <method name="Is Alive" alt="En vie" />
+    <method name="Is Assembling Heroes" alt="Phase de choix de héros" />
+    <method name="Is Between Rounds" alt="Entre deux manches" />
+    <method name="Is Button Held" alt="Bouton maintenu enfoncé" />
+    <method name="Is Communicating" alt="Communication" />
+    <method name="Is Communicating Any" alt="N’importe quelle communication" />
+    <method name="Is Communicating Any Emote" alt="Communication par emote" />
+    <method name="Is Communicating Any Voice Line" alt="Communication par réplique" />
+    <method name="Is Control Mode Point Locked" alt="Point de contrôle verrouillé" />
+    <method name="Is Crouching" alt="Accroupi" />
+    <method name="Is CTF Mode In Sudden Death" alt="Capture du drapeau en mort subite" />
+    <method name="Is Dead" alt="Mort" />
+    <method name="Is Dummy Bot" alt="Est une I.A." />
+    <method name="Is Firing Primary" alt="Tir principal" />
+    <method name="Is Firing Secondary" alt="Tir secondaire" />
+    <method name="Is Flag At Base" alt="Drapeau à la base" />
+    <method name="Is Game In Progress" alt="Partie en cours" />
+    <method name="Is Hero Being Played" alt="Héros joué" />
+    <method name="Is In Air" alt="Dans les airs" />
+    <method name="Is In Line Of Sight" alt="Dans la ligne de vue" />
+    <method name="Is In Setup" alt="Dans les paramètres" />
+    <method name="Is In Spawn Room" alt="Dans la salle d’apparition" />
+    <method name="Is In View Angle" alt="Dans le champ de vision" />
+    <method name="Is Match Complete" alt="Partie terminée" />
+    <method name="Is Moving" alt="Se déplace" />
+    <method name="Is Objective Complete" alt="Objectif accompli" />
+    <method name="Is On Ground" alt="Au sol" />
+    <method name="Is On Objective" alt="Sur l’objectif" />
+    <method name="Is On Wall" alt="Sur le mur" />
+    <method name="Is Portrait On Fire" alt="Portrait « en feu »" />
+    <method name="Is Standing" alt="Debout" />
+    <method name="Is Team On Defense" alt="Équipe en défense" />
+    <method name="Is Team On Offense" alt="Équipe en attaque" />
+    <method name="Is True For All" alt="Vrai pour tous" />
+    <method name="Is True For Any" alt="Vrai pour n’importe qui" />
+    <method name="Is Using Ability 1" alt="Capacité 1 utilisée" />
+    <method name="Is Using Ability 2" alt="Capacité 2 utilisée" />
+    <method name="Is Using Ultimate" alt="Capacité ultime utilisée" />
+    <method name="Is Waiting For Players" alt="En attente de joueurs" />
+    <method name="Last Created Entity" alt="Dernière entité créée" />
+    <method name="Last Damage Modification ID" alt="Dernier identifiant de modification de dégâts" />
+    <method name="Last Damage Over Time ID" alt="Dernier identifiant de dégâts sur la durée" />
+    <method name="Last Heal Over Time ID" alt="Dernier identifiant de soins sur la durée" />
+    <method name="Last Healing Modification ID" alt="Dernier identifiant de modification de soins" />
+    <method name="Last Of" alt="Dernier" />
+    <method name="Last Text ID" alt="Dernier identifiant de texte" />
+    <method name="Left" alt="Gauche" />
+    <method name="Local Vector Of" alt="Vecteur local de" />
+    <method name="Map" alt="Carte" />
+    <method name="Match Round" alt="Manche de la partie" />
+    <method name="Match Time" alt="Temps de jeu" />
+    <method name="Max" alt="Maximum" />
+    <method name="Max Health" alt="Points de vie maximum" />
+    <method name="Min" alt="Minimum" />
+    <method name="Modulo" alt="Modulo" />
+    <method name="Multiply" alt="Multiplication" />
+    <method name="Nearest Walkable Position" alt="Position la plus proche en marchant" />
+    <method name="Normalize" alt="Normalisation" />
+    <method name="Normalized Health" alt="Points de vie normalisés" />
+    <method name="Not" alt="Pas" />
+    <method name="Null" alt="Non applicable" />
+    <method name="Number" alt="Nombre" />
+    <method name="Number Of Dead Players" alt="Nombre de joueurs morts" />
+    <method name="Number Of Deaths" alt="Nombre de morts" />
+    <method name="Number Of Eliminations" alt="Nombre d’éliminations" />
+    <method name="Number Of Final Blows" alt="Nombre de coups de grâce" />
+    <method name="Number Of Heroes" alt="Nombre de héros" />
+    <method name="Number Of Living Players" alt="Nombre de joueurs en vie" />
+    <method name="Number Of Players" alt="Nombre de joueurs" />
+    <method name="Number Of Players On Objective" alt="Nombre de joueurs sur l’objectif" />
+    <method name="Objective Index" alt="Index de l’objectif" />
+    <method name="Objective Position" alt="Position de l’objectif" />
+    <method name="Opposite Team Of" alt="Équipe opposée à" />
+    <method name="Or" alt="Ou" />
+    <method name="Payload Position" alt="Position du convoi" />
+    <method name="Payload Progress Percentage" alt="Pourcentage de progression du convoi" />
+    <method name="Player Carrying Flag" alt="Joueur portant le drapeau" />
+    <method name="Player Closest To Reticle" alt="Joueur le plus proche du réticule" />
+    <method name="Player Variable" alt="Variable de joueur" />
+    <method name="Players In Slot" alt="Joueurs dans l’emplacement" />
+    <method name="Players In View Angle" alt="Joueurs dans le champ de vision" />
+    <method name="Players On Hero" alt="Joueurs sur le héros" />
+    <method name="Players Within Radius" alt="Joueurs dans un rayon" />
+    <method name="Point Capture Percentage" alt="Pourcentage de capture du point" />
+    <method name="Position of" alt="Position de" />
+    <method name="Raise To Power" alt="Élévation à une puissance " />
+    <method name="Random Integer" alt="Nombre entier aléatoire" />
+    <method name="Random Real" alt="Nombre réel aléatoire" />
+    <method name="Random Value In Array" alt="Valeur aléatoire dans le tableau" />
+    <method name="Randomized Array" alt="Tableau aléatoire" />
+    <method name="Ray Cast Hit Normal" alt="Surface intersectée par le rayon émis" />
+    <method name="Ray Cast Hit Player" alt="Joueur intersecté par le rayon émis" />
+    <method name="Ray Cast Hit Position" alt="Position d’impact du rayon émis" />
+    <method name="Remove From Array" alt="Supprimer du tableau" />
+    <method name="Right" alt="Droite" />
+    <method name="Round To Integer" alt="Arrondir à l’entier" />
+    <method name="Score Of" alt="Score de" />
+    <method name="Server Load" alt="Charge du serveur" />
+    <method name="Server Load Average" alt="Charge moyenne du serveur" />
+    <method name="Server Load Peak" alt="Pic de charge du serveur" />
+    <method name="Sine From Degrees" alt="Sinus en degrés" />
+    <method name="Sine From Radians" alt="Sinus en radians" />
+    <method name="Slot Of" alt="Emplacement de" />
+    <method name="Sorted Array" alt="Tableau trié" />
+    <method name="Speed Of" alt="Vitesse de" />
+    <method name="Speed Of In Direction" alt="Vitesse dans la direction donnée de" />
+    <method name="Square Root" alt="Racine carrée" />
+    <method name="String" alt="Chaîne de texte" />
+    <method name="Custom String" alt="Chaîne personnalisée" />
+    <method name="Icon String" alt="Chaîne d’icône" />
+    <method name="Subtract" alt="Soustraction" />
+    <method name="Tangent From Degrees" alt="Tangente en degrés" />
+    <method name="Tangent From Radians" alt="Tangente en radians" />
+    <method name="Team" alt="Équipe" />
+    <method name="Team Of" alt="Équipe de" />
+    <method name="Team Score" alt="Score de l’équipe" />
+    <method name="Throttle Of" alt="Accélération de" />
+    <method name="Total Time Elapsed" alt="Temps total écoulé" />
+    <method name="True" alt="Vrai" />
+    <method name="Ultimate Charge Percent" alt="Pourcentage de charge de la capacité ultime" />
+    <method name="Up" alt="Haut" />
+    <method name="Value In Array" alt="Valeur dans le tableau" />
+    <method name="Vector" alt="Vecteur" />
+    <method name="Vector Towards" alt="Vecteur vers" />
+    <method name="Velocity Of" alt="Vélocité de" />
+    <method name="Vertical Angle From Direction" alt="Angle vertical depuis une direction" />
+    <method name="Vertical Angle Towards" alt="Angle vertical vers" />
+    <method name="Vertical Facing Angle Of" alt="Angle vertical du regard de" />
+    <method name="Vertical Speed Of" alt="Vitesse verticale de" />
+    <method name="Victim" alt="Victime" />
+    <method name="World Vector Of" alt="Vecteur mondial de" />
+    <method name="X Component Of" alt="Composante X de" />
+    <method name="Y Component Of" alt="Composante Y de" />
+    <method name="Z Component Of" alt="Composante Z de" />
+    <method name="Ongoing - Global" alt="Toute la partie - Tout le monde" />
+    <method name="Ongoing - Each Player" alt="Toute la partie - Chaque joueur" />
+    <method name="Player earned elimination" alt="Un joueur obtient une élimination" />
+    <method name="Player dealt final blow" alt="Un joueur inflige un coup de grâce" />
+    <method name="Player dealt damage" alt="Un joueur inflige des dégâts" />
+    <method name="Player took damage" alt="Un joueur subit des dégâts" />
+    <method name="Player died" alt="Un joueur meurt" />
+    <method name="Player Dealt Healing" alt="Un joueur a prodigué des soins" />
+    <method name="Player Received Healing" alt="Un joueur a reçu des soins" />
+    <method name="Player Joined Match" alt="Un joueur a rejoint la partie" />
+    <method name="Player Left Match" alt="Un joueur a quitté la partie" />
+    <method name="Subroutine" alt="Sous-programme" />
+    <method name="All" alt="Les deux" />
+    <method name="Slot" alt="Emplacement" />
+    <method name="Reaper" alt="Faucheur" />
+    <method name="Tracer" alt="Tracer" />
+    <method name="Mercy" alt="Ange" />
+    <method name="Hanzo" alt="Hanzo" />
+    <method name="Torbjörn" alt="Torbjörn" />
+    <method name="Reinhardt" alt="Reinhardt" />
+    <method name="Pharah" alt="Pharah" />
+    <method name="Winston" alt="Winston" />
+    <method name="Widowmaker" alt="Fatale" />
+    <method name="Bastion" alt="Bastion" />
+    <method name="Symmetra" alt="Symmetra" />
+    <method name="Zenyatta" alt="Zenyatta" />
+    <method name="Genji" alt="Genji" />
+    <method name="Roadhog" alt="Chopper" />
+    <method name="Mccree" alt="McCree" />
+    <method name="Junkrat" alt="Chacal" />
+    <method name="Zarya" alt="Zarya" />
+    <method name="Soldier: 76" alt="Soldat : 76" />
+    <method name="Lúcio" alt="Lúcio" />
+    <method name="D.va" alt="D.Va" />
+    <method name="Mei" alt="Mei" />
+    <method name="Sombra" alt="Sombra" />
+    <method name="Doomfist" alt="Doomfist" />
+    <method name="Ana" alt="Ana" />
+    <method name="Orisa" alt="Orisa" />
+    <method name="Brigitte" alt="Brigitte" />
+    <method name="Moira" alt="Moira" />
+    <method name="Wrecking Ball" alt="Bouldozer" />
+    <method name="Ashe" alt="Ashe" />
+    <method name="Baptiste" alt="Baptiste" />
+    <method name="Sigma" alt="Sigma" />
+    <method name="==" alt="== (égal à)" />
+    <method name="!=" alt="!= (différent de)" />
+    <method name="&lt;" alt="&lt; (inférieur à)" />
+    <method name="&lt;=" alt="&lt;= (inférieur ou égal à)" />
+    <method name="&gt;" alt="&gt; (supérieur à)" />
+    <method name="&gt;=" alt="&gt;= (supérieur ou égal à)" />
+    <method name="Remove From Array By Value" alt="Supprimer du tableau par valeur" />
+    <method name="Remove From Array By Index" alt="Supprimer du tableau par index" />
+    <method name="Primary Fire" alt="Tir principal" />
+    <method name="Secondary Fire" alt="Tir secondaire" />
+    <method name="Ability" alt="Capacité" />
+    <method name="Ultimate" alt="Capacité ultime" />
+    <method name="Interact" alt="Interaction" />
+    <method name="Jump" alt="Sauter" />
+    <method name="Crouch" alt="S’accroupir" />
+    <method name="Melee" alt="Mêlée" />
+    <method name="Reload" alt="Rechargement" />
+    <method name="To World" alt="Au monde" />
+    <method name="To Player" alt="Au joueur" />
+    <method name="Cancel Contrary Motion" alt="Annuler le mouvement contraire" />
+    <method name="Incorporate Contrary Motion" alt="Incorporer un mouvement contraire" />
+    <method name="Destination And Rate" alt="Destination et Taux" />
+    <method name="None" alt="Aucune" />
+    <method name="Destination And Duration" alt="Destination et Durée" />
+    <method name="Hacked" alt="Piraté" />
+    <method name="Burning" alt="Enflammé" />
+    <method name="Knocked Down" alt="Renversé" />
+    <method name="Asleep" alt="Endormi" />
+    <method name="Frozen" alt="Gelé" />
+    <method name="Unkillable" alt="Intuable" />
+    <method name="Invincible" alt="Invincible" />
+    <method name="Phased Out" alt="Déphasé" />
+    <method name="Rooted" alt="Immobilisé" />
+    <method name="Stunned" alt="Étourdi" />
+    <method name="Ignore Condition" alt="Ignorer la condition" />
+    <method name="Abort When False" alt="Interrompre quand faux" />
+    <method name="Restart When True" alt="Redémarrer quand vrai" />
+    <method name="Sphere" alt="Sphère" />
+    <method name="Light Shaft" alt="Puits de lumière" />
+    <method name="Orb" alt="Orbe" />
+    <method name="Ring" alt="Anneau" />
+    <method name="Cloud" alt="Nuage" />
+    <method name="Sparkles" alt="Etincelles" />
+    <method name="Good Aura" alt="Bonne aura" />
+    <method name="Bad Aura" alt="Mauvaise aura" />
+    <method name="Energy Sound" alt="Son de l’énergie" />
+    <method name="Pick-up Sound" alt="Son de ramassage" />
+    <method name="Good Aura Sound" alt="Son de bonne aura" />
+    <method name="Bad Aura Sound" alt="Son de mauvaise aura" />
+    <method name="Sparkles Sound" alt="Son des étincelles" />
+    <method name="Smoke Sound" alt="Son de la fumée" />
+    <method name="Decal Sound" alt="Son de décal" />
+    <method name="Beacon Sound" alt="Son de balise" />
+    <method name="White" alt="Blanc" />
+    <method name="Yellow" alt="Jaune" />
+    <method name="Green" alt="Vert" />
+    <method name="Purple" alt="Violet" />
+    <method name="Red" alt="Rouge" />
+    <method name="Blue" alt="Bleu" />
+    <method name="Aqua" alt="Cyan" />
+    <method name="Orange" alt="Orange" />
+    <method name="Sky Blue" alt="Bleu ciel" />
+    <method name="Turquoise" alt="Turquoise" />
+    <method name="Lime Green" alt="Citron vert" />
+    <method name="Visible To, Position, and Radius" alt="Visible pour, Position et Rayon" />
+    <method name="Position And Radius" alt="Position et Rayon" />
+    <method name="Visible To" alt="Visible pour" />
+    <method name="To Nearest" alt="Au plus près" />
+    <method name="Voice Line Up" alt="Réplique haut" />
+    <method name="Voice Line Left" alt="Réplique gauche" />
+    <method name="Voice Line Right" alt="Réplique droite" />
+    <method name="Voice Line Down" alt="Réplique bas" />
+    <method name="Emote Up" alt="Emote haut" />
+    <method name="Emote Left" alt="Emote gauche" />
+    <method name="Emote Right" alt="Emote droite" />
+    <method name="Emote Down" alt="Emote bas" />
+    <method name="Ultimate Status" alt="Statut de l’ulti" />
+    <method name="Hello" alt="Bonjour" />
+    <method name="Need Healing" alt="Besoin de soins" />
+    <method name="Group Up" alt="Regroupement" />
+    <method name="Thanks" alt="Merci" />
+    <method name="Acknowledge" alt="Bien reçu" />
+    <method name="Top" alt="Haut" />
+    <method name="Visible To And String" alt="Visible pour et Chaîne de texte" />
+    <method name="Visible To, Sort Order, and String" alt="Visible pour, Tri et Chaîne de texte" />
+    <method name="Sort Order And String" alt="Tri et Chaîne de texte" />
+    <method name="Arrow: Down" alt="Flèche bas" />
+    <method name="Arrow: Left" alt="Flèche gauche" />
+    <method name="Arrow: Right" alt="Flèche droite" />
+    <method name="Arrow: Up" alt="Flèche haut" />
+    <method name="Asterisk" alt="Astérisque" />
+    <method name="Bolt" alt="Boulon" />
+    <method name="Checkmark" alt="Point d’exclamation" />
+    <method name="Circle" alt="Cercle" />
+    <method name="Club" alt="Trèfle" />
+    <method name="Diamond" alt="Carreau" />
+    <method name="Dizzy" alt="Étourdi" />
+    <method name="Exclamation Mark" alt="Point d’exclamation" />
+    <method name="Eye" alt="Œil" />
+    <method name="Fire" alt="Flamme" />
+    <method name="Flag" alt="Drapeau" />
+    <method name="Halo" alt="Halo" />
+    <method name="Happy" alt="Smiley content" />
+    <method name="Heart" alt="Cœur" />
+    <method name="Moon" alt="Lune" />
+    <method name="No" alt="Interdit" />
+    <method name="Plus" alt="Plus" />
+    <method name="Poison" alt="Poison" />
+    <method name="Poison 2" alt="Poison 2" />
+    <method name="Question Mark" alt="Point d’interrogation" />
+    <method name="Radioactive" alt="Radioactif" />
+    <method name="Recycle" alt="Recyclage" />
+    <method name="Ring Thick" alt="Anneau épais" />
+    <method name="Ring Thin" alt="Anneau fin" />
+    <method name="Sad" alt="Smiley triste" />
+    <method name="Skull" alt="Crâne" />
+    <method name="Spade" alt="Pique" />
+    <method name="Spiral" alt="Spirale" />
+    <method name="Stop" alt="Stop" />
+    <method name="Trashcan" alt="Poubelle" />
+    <method name="Warning" alt="Avertissement" />
+    <method name="X" alt="X" />
+    <method name="Visible To And Position" alt="Visible pour et Position" />
+    <method name="Position" alt="Position" />
+    <method name="Good Explosion" alt="Bonne explosion" />
+    <method name="Bad Explosion" alt="Mauvaise explosion" />
+    <method name="Ring Explosion" alt="Explosion concentrique" />
+    <method name="Good Pickup Effect" alt="Bon effet de ramassage" />
+    <method name="Bad Pickup Effect" alt="Mauvais effet de ramassage" />
+    <method name="Debuff Impact Sound" alt="Son d’impact d’affaiblissement" />
+    <method name="Buff Impact Sound" alt="Son d’impact d’amélioration" />
+    <method name="Ring Explosion Sound" alt="Son d’explosion concentrique" />
+    <method name="Buff Explosion Sound" alt="Son d’explosion d’amélioration" />
+    <method name="Explosion Sound" alt="Son de l’explosion" />
+    <method name="Enemies" alt="Ennemis" />
+    <method name="Direction, Rate, and Max Speed" alt="Direction, Taux et Vitesse maximum" />
+    <method name="Receivers, Damagers, and Damage Percent" alt="Récepteurs de dégâts, émetteurs de dégâts et pourcentage de dégâts" />
+    <method name="Receivers And Damagers" alt="Récepteurs et émetteurs de dégâts" />
+    <method name="Receivers, Healers, and Healing Percent" alt="Récepteurs de soins, soigneurs et pourcentage de soins" />
+    <method name="Receivers And Healers" alt="Récepteurs de soins et soigneurs" />
+    <method name="Restart Rule" alt="Relancer la règle" />
+    <method name="Do Nothing" alt="Ne rien faire" />
+    <method name="Direction And Turn Rate" alt="Direction et Taux de rotation" />
+    <method name="Barriers Do Not Block LOS" alt="Les barrières ne bloquent pas la ligne de vue" />
+    <method name="Enemy Barriers Block LOS" alt="Les barrières ennemies bloquent la ligne de vue" />
+    <method name="All Barriers Block LOS" alt="Toutes les barrières bloquent la ligne de vue" />
+    <method name="Rotation" alt="Rotation" />
+    <method name="Rotation And Translation" alt="Rotation et Translation" />
+    <method name="Off" alt="Désactivé" />
+    <method name="Surfaces" alt="Surfaces" />
+    <method name="Surfaces And Enemy Barriers" alt="Surfaces et barrières ennemies" />
+    <method name="Surfaces And All Barriers" alt="Surfaces et toutes les barrières" />
+    <method name="Clip Against Surfaces" alt="Masquer derrière les surfaces" />
+    <method name="Do Not Clip" alt="Ne pas masquer" />
+    <method name="Visible To, Position, and String" alt="Visible pour, Position et Chaîne de texte" />
+    <method name="Good Beam" alt="Bon rayon" />
+    <method name="Bad Beam" alt="Mauvais rayon" />
+    <method name="Grapple Beam" alt="Rayon du grappin" />
+    <method name="Default Visibility" alt="Visibilité par défaut" />
+    <method name="Visible Always" alt="Toujours visible" />
+    <method name="Visible Never" alt="Jamais visible" />
+    <method name="Replace Existing Throttle" alt="Remplacer l’accélération existante" />
+    <method name="Add To Existing Throttle" alt="Ajouter à l’accélération existante" />
+    <method name="Direction And Magnitude" alt="Direction et ampleur" />
+    <method name="Ayutthaya" alt="Ayutthaya" />
+    <method name="Black Forest" alt="Forêt-Noire" />
+    <method name="Black Forest (Winter)" alt="Forêt-Noire (hiver)" />
+    <method name="Blizzard World" alt="Blizzard World" />
+    <method name="Blizzard World (Winter)" alt="Blizzard World (hiver)" />
+    <method name="Busan" alt="Busan" />
+    <method name="Busan Downtown (Lunar New Year)" alt="Busan - Centre-ville (nouvel an lunaire)" />
+    <method name="Busan Sanctuary (Lunar New Year)" alt="Busan - Sanctuaire (nouvel an lunaire)" />
+    <method name="Busan Stadium" alt="Stade de Busan" />
+    <method name="Castillo" alt="Castillo" />
+    <method name="Château Guillard" alt="Château Guillard" />
+    <method name="Château Guillard (Halloween)" alt="Château Guillard (Halloween)" />
+    <method name="Dorado" alt="Dorado" />
+    <method name="Ecopoint: Antarctica" alt="Écolab : Antarctique" />
+    <method name="Ecopoint: Antarctica (Winter)" alt="Écolab : Antarctique (hiver)" />
+    <method name="Eichenwalde" alt="Eichenwalde" />
+    <method name="Eichenwalde (Halloween)" alt="Eichenwalde (Halloween)" />
+    <method name="Estádio das Rãs" alt="Estádio das Rãs" />
+    <method name="Hanamura" alt="Hanamura" />
+    <method name="Hanamura (Winter)" alt="Hanamura (hiver)" />
+    <method name="Havana" alt="La Havane" />
+    <method name="Hollywood" alt="Hollywood" />
+    <method name="Hollywood (Halloween)" alt="Hollywood (Halloween)" />
+    <method name="Horizon Lunar Colony" alt="Colonie lunaire Horizon" />
+    <method name="Ilios" alt="Ilios" />
+    <method name="Ilios Lighthouse" alt="Ilios - Phare" />
+    <method name="Ilios Ruins" alt="Ilios - Ruines" />
+    <method name="Ilios Well" alt="Ilios - Puits" />
+    <method name="Junkenstein's Revenge" alt="La vengeance du Dr Schakalstein" />
+    <method name="Junkertown" alt="Junkertown" />
+    <method name="King's Row" alt="King’s Row" />
+    <method name="King's Row (Winter)" alt="King's Row (hiver)" />
+    <method name="Lijiang Control Center" alt="Centre de contrôle de Lijiang" />
+    <method name="Lijiang Control Center (Lunar New Year)" alt="Lijiang - Centre de contrôle (nouvel an lunaire)" />
+    <method name="Lijiang Garden" alt="Jardin de Lijiang" />
+    <method name="Lijiang Garden (Lunar New Year)" alt="Lijiang - Jardin (nouvel an lunaire)" />
+    <method name="Lijiang Night Market" alt="Marché de nuit de Lijiang" />
+    <method name="Lijiang Night Market (Lunar New Year)" alt="Lijiang - Marché de nuit (nouvel an lunaire)" />
+    <method name="Lijiang Tower" alt="Tour de Lijiang" />
+    <method name="Lijiang Tower (Lunar New Year)" alt="Tour de Lijiang (nouvel an lunaire)" />
+    <method name="Necropolis" alt="Nécropole" />
+    <method name="Nepal" alt="Népal" />
+    <method name="Nepal Sanctum" alt="Népal - Sanctuaire" />
+    <method name="Nepal Shrine" alt="Népal - Autel" />
+    <method name="Nepal Village" alt="Népal - Village" />
+    <method name="Numbani" alt="Numbani" />
+    <method name="Oasis" alt="Oasis" />
+    <method name="Oasis City Center" alt="Oasis - Centre-ville" />
+    <method name="Oasis Gardens" alt="Oasis - Jardins" />
+    <method name="Oasis University" alt="Oasis - Université" />
+    <method name="Paris" alt="Paris" />
+    <method name="Petra" alt="Petra" />
+    <method name="Rialto" alt="Rialto" />
+    <method name="Route 66" alt="Route 66" />
+    <method name="Sydney Harbour Arena" alt="Harbour Arena de Sydney" />
+    <method name="Temple of Anubis" alt="Temple d’Anubis" />
+    <method name="Volskaya Industries" alt="Usine Volskaya" />
+    <method name="Watchpoint: Gibraltar" alt="Observatoire : Gibraltar" />
+    <method name="Assault" alt="Attaque" />
+    <method name="Capture The Flag" alt="Capture du drapeau" />
+    <method name="Control" alt="Point de contrôle" />
+    <method name="Deathmatch" alt="Combat à mort" />
+    <method name="Elimination" alt="Élimination" />
+    <method name="Escort" alt="Escorte" />
+    <method name="Hybrid" alt="Hybride" />
+    <method name="Lúcioball" alt="Lúcioball" />
+    <method name="Mei's Snowball Offensive" alt="Opération Boule de neige" />
+    <method name="Practice Range" alt="Champ de tir" />
+    <method name="Skirmish" alt="Échauffement" />
+    <method name="Team Deathmatch" alt="Combat à mort par équipe" />
+    <method name="Yeti Hunter" alt="Chasseuse de yéti" />
+    <method name="settings" alt="paramètres" />
+    <method name="lobby" alt="salon" />
+    <method name="modes" alt="modes" />
+    <method name="heroes" alt="héros" />
+    <method name="General" alt="Général" />
+    <method name="Team 1" alt="Équipe 1" />
+    <method name="Team 2" alt="Équipe 2" />
+    <method name="enabled maps" alt="cartes activées" />
+    <method name="disabled maps" alt="cartes désactivées" />
+    <method name="enabled heroes" alt="héros activés" />
+    <method name="disabled heroes" alt="héros désactivés" />
+    <method name="Enabled" alt="Activé" />
+    <method name="Disabled" alt="désactivé" />
+    <method name="On" alt="Activé" />
+    <method name="Yes" alt="Oui" />
+    <method name="%1$s Cooldown Time" alt="Temps de recharge de %1$s" />
+    <method name="%1$s Recharge Rate" alt="Vitesse de rechargement de %1$s" />
+    <method name="%1$s Maximum Time" alt="Durée maximale de %1$s" />
+    <method name="Ultimate Ability (%1$s)" alt="Capacité ultime (%1$s)" />
+    <method name="Ultimate Generation (%1$s)" alt="Génération de capacité ultime (%1$s)" />
+    <method name="Ultimate Generation - Combat (%1$s)" alt="Génération de capacité ultime - Combat (%1$s)" />
+    <method name="Ultimate Generation - Passive (%1$s)" alt="Génération de capacité ultime - Passif (%1$s)" />
+    <method name="Quick Melee" alt="Coup en mêlée" />
+    <method name="Spawn With Ultimate Ready" alt="Apparition avec la capacité ultime prête" />
+    <method name="Damage Dealt" alt="Dégâts infligés" />
+    <method name="Damage Received" alt="Dégâts subis" />
+    <method name="Healing Received" alt="Soins reçus" />
+    <method name="Jump Vertical Speed" alt="Vitesse de saut verticale" />
+    <method name="Movement Gravity" alt="Gravité des mouvements" />
+    <method name="Movement Speed" alt="Vitesse de déplacement" />
+    <method name="Receive Headshots Only" alt="Tirs à la tête uniquement" />
+    <method name="Ammunition Clip Size Scalar" alt="Taille des chargeurs" />
+    <method name="No Ammunition Requirement" alt="Munitions illimitées" />
+    <method name="Ultimate Ability" alt="Capacité ultime" />
+    <method name="Ultimate Generation" alt="Génération de capacité ultime" />
+    <method name="Ultimate Generation - Passive" alt="Génération de capacité ultime - Passif" />
+    <method name="Ultimate Generation - Combat" alt="Génération de capacité ultime - Combat" />
+    <method name="Ultimate Duration" alt="Durée de la capacité ultime" />
+    <method name="Infinite Ultimate Duration" alt="Durée infinie de la capacité ultime" />
+    <method name="Projectile Speed" alt="Vitesse des projectiles" />
+    <method name="Projectile Gravity" alt="Gravité des projectiles" />
+    <method name="Healing Dealt" alt="Soins prodigués" />
+    <method name="Nano Boost" alt="Nanoboost" />
+    <method name="No Automatic Fire" alt="Pas de tir automatique" />
+    <method name="No Scope" alt="Pas de lunette" />
+    <method name="Biotic Grenade" alt="Grenade biotique" />
+    <method name="Sleep Dart" alt="Fléchette hypodermique" />
+    <method name="B.O.B." alt="B.O.B." />
+    <method name="Coach Gun" alt="Canon scié" />
+    <method name="Coach Gun Knockback Scalar (Enemy)" alt="Recul du canon scié (ennemi)" />
+    <method name="Coach Gun Knockback Scalar (Self)" alt="Recul du canon scié (Ashe)" />
+    <method name="Dynamite" alt="Dynamite" />
+    <method name="Dynamite Fuse Time Scalar" alt="Durée avant explosion de la dynamite" />
+    <method name="Amplification Matrix" alt="Matrice amplificatrice" />
+    <method name="Immortality Field" alt="Champ d’immortalité" />
+    <method name="Regenerative Burst" alt="Salve régénérante" />
+    <method name="Configuration: Tank" alt="Configuration : tank" />
+    <method name="Reconfigure" alt="Reconfiguration" />
+    <method name="Self-Repair" alt="Autoréparation" />
+    <method name="Rally" alt="Ralliement" />
+    <method name="Repair Pack" alt="Module de réparation" />
+    <method name="Shield Bash" alt="Charge de bouclier" />
+    <method name="Shield Bash Knockback Scalar" alt="Recul de Charge de bouclier" />
+    <method name="Whip Shot" alt="Fléau cinglant" />
+    <method name="Whip Shot Knockback Scalar" alt="Recul de Fléau cinglant" />
+    <method name="Self-Destruct" alt="Autodestruction" />
+    <method name="Micro Missiles" alt="Micro-missiles" />
+    <method name="Boosters" alt="Turboréacteurs" />
+    <method name="Boosters Knockback Scalar" alt="Recul des turboréacteurs" />
+    <method name="Defense Matrix" alt="Matrice défensive" />
+    <method name="Call Mech Knockback Scalar" alt="Recul d’Appel du méca" />
+    <method name="Spawn Without Mech" alt="Apparaître hors du méca" />
+    <method name="Meteor Strike" alt="Frappe météore" />
+    <method name="Meteor Strike Knockback Scalar" alt="Recul de Frappe météore" />
+    <method name="Rising Uppercut" alt="Uppercut" />
+    <method name="Rising Uppercut Knockback Scalar" alt="Recul d’Uppercut" />
+    <method name="Rocket Punch" alt="Direct d’enfer" />
+    <method name="Rocket Punch Knockback Scalar" alt="Recul de Direct d’enfer" />
+    <method name="Seismic Slam" alt="Onde de choc" />
+    <method name="Ammunition Regeneration Time Scalar" alt="Temps de recharge des munitions" />
+    <method name="Dragonblade" alt="Lame du dragon" />
+    <method name="Deflect" alt="Riposte" />
+    <method name="Swift Strike" alt="Frappe du vent" />
+    <method name="Dragonstrike" alt="Frappe du dragon" />
+    <method name="Lunge" alt="Impulsion" />
+    <method name="Lunge Distance Scalar" alt="Distance d’Impulsion" />
+    <method name="Sonic Arrow" alt="Flèche sonique" />
+    <method name="Storm Arrow" alt="Rafale" />
+    <method name="Storm Arrows Quantity" alt="Rafales utilisées" />
+    <method name="Rip-Tire" alt="Pneumastic" />
+    <method name="Concussion Mine" alt="Mine incapacitante" />
+    <method name="Concussion Mine Knockback Scalar" alt="Recul de Mine incapacitante" />
+    <method name="Steel Trap" alt="Piège d’acier" />
+    <method name="Frag Launcher Knockback Scalar" alt="Recul de Lance-grenades" />
+    <method name="Sound Barrier" alt="Mur de son" />
+    <method name="Amp It Up" alt="Volume max." />
+    <method name="Crossfade" alt="Crossfade" />
+    <method name="Soundwave" alt="Onde sonore" />
+    <method name="Soundwave Knockback Scalar" alt="Recul d’Onde sonore" />
+    <method name="Deadeye" alt="Implacable" />
+    <method name="Combat Roll" alt="Roulade" />
+    <method name="Flashbang" alt="Grenade flash" />
+    <method name="Blizzard" alt="Blizzard" />
+    <method name="Cryo-Freeze" alt="Cryostase" />
+    <method name="Ice Wall" alt="Mur de glace" />
+    <method name="Blizzard Freeze Minimum" alt="Gel minimal de Blizzard" />
+    <method name="Blizzard Freeze Rate Scalar" alt="Vitesse de gel de Blizzard" />
+    <method name="Freeze Stacking" alt="Charges de gel" />
+    <method name="Weapon Freeze Duration Scalar" alt="Durée de gel de l’arme" />
+    <method name="Weapon Freeze Minimum" alt="Gel minimal par l’arme" />
+    <method name="Weapon Freeze Rate Scalar" alt="Vitesse de gel par l’arme" />
+    <method name="Valkyrie" alt="Valkyrie" />
+    <method name="Guardian Angel" alt="Ange gardien" />
+    <method name="Regeneration" alt="Régénération" />
+    <method name="Weapons Enabled" alt="Armes activées" />
+    <method name="Caduceus Staff Only" alt="Caducée uniquement" />
+    <method name="Caduceus Blaster Only" alt="Miséricorde uniquement" />
+    <method name="Coalescence" alt="Coalescence" />
+    <method name="Fade" alt="Volatilité" />
+    <method name="Biotic Orb" alt="Orbe biotique" />
+    <method name="Biotic Orb Max Damage Scalar" alt="Maximum de dégâts d’Orbe biotique" />
+    <method name="Biotic Orb Max Healing Scalar" alt="Maximum de soins d’Orbe biotique" />
+    <method name="Biotic Energy Maximum" alt="Énergie biotique maximale" />
+    <method name="Biotic Energy Recharge Rate" alt="Vitesse de rechargement de l’énergie biotique" />
+    <method name="Supercharger" alt="Surchargeur" />
+    <method name="Fortify" alt="Blindage" />
+    <method name="Halt!" alt="Halte-là !" />
+    <method name="Protective Barrier" alt="Dispositif de protection" />
+    <method name="Barrage" alt="Barrage" />
+    <method name="Concussive Blast" alt="Conflagration" />
+    <method name="Concussive Blast Knockback Scalar" alt="Recul de Conflagration" />
+    <method name="Hover Jets" alt="Stabilisateurs" />
+    <method name="Hover Jets Vertical Speed Scalar" alt="Vitesse verticale des stabilisateurs" />
+    <method name="Hover Jets Unlimited Fuel" alt="Carburant des stabilisateurs illimité" />
+    <method name="Jump Jet" alt="Réacteurs" />
+    <method name="Jump Jet Acceleration Scalar" alt="Accélération des réacteurs" />
+    <method name="Rocket Launcher Knockback Scalar" alt="Recul de Lance-roquettes" />
+    <method name="Death Blossom" alt="Éclosion mortelle" />
+    <method name="Shadow Step" alt="Voie des ombres" />
+    <method name="Wraith Form" alt="Forme spectrale" />
+    <method name="Earthshatter" alt="Choc sismique" />
+    <method name="Barrier Field" alt="Écran" />
+    <method name="Charge" alt="Charge" />
+    <method name="Charge Knockback Scalar" alt="Recul de Charge" />
+    <method name="Fire Strike" alt="Frappe de feu" />
+    <method name="Rocket Hammer Knockback Scalar" alt="Recul de Marteau à réaction" />
+    <method name="Whole Hog" alt="Équarisseur" />
+    <method name="Whole Hog Knockback Scalar" alt="Recul d’Équarrisseur" />
+    <method name="Chain Hook" alt="Traquelard" />
+    <method name="Take A Breather" alt="Inhalateur" />
+    <method name="Gravitic Flux" alt="Flux gravitationnel" />
+    <method name="Accretion" alt="Concrétion" />
+    <method name="Accretion Knockback Scalar" alt="Recul de Concrétion" />
+    <method name="Experimental Barrier" alt="Écran expérimental" />
+    <method name="Kinetic Grasp" alt="Captation cinétique" />
+    <method name="Tactical Visor" alt="Visière tactique" />
+    <method name="Biotic Field" alt="Champ biotique" />
+    <method name="Helix Rockets" alt="Roquettes LX" />
+    <method name="Helix Rockets Knockback Scalar" alt="Recul de Roquettes LX" />
+    <method name="Sprint" alt="Sprint" />
+    <method name="EMP" alt="IEM" />
+    <method name="Hack" alt="Piratage" />
+    <method name="Stealth" alt="Furtif" />
+    <method name="Translocator" alt="Transducteur" />
+    <method name="Photon Barrier" alt="Écran photonique" />
+    <method name="Sentry Turret" alt="Tourelle sentinelle" />
+    <method name="Teleporter" alt="Téléporteur" />
+    <method name="Molten Core" alt="Cœur de magma" />
+    <method name="Deploy Turret" alt="Déploiement de tourelle" />
+    <method name="Overload" alt="Surcharge" />
+    <method name="Overload Duration Scalar" alt="Durée de Surcharge" />
+    <method name="Rivet Gun Only" alt="Pistolet à rivets uniquement" />
+    <method name="Forge Hammer Only" alt="Marteau de forge uniquement" />
+    <method name="Pulse Bomb" alt="Bombe à impulsion" />
+    <method name="Blink" alt="Transfert" />
+    <method name="Recall" alt="Rappel" />
+    <method name="Infra-sight" alt="Infravision" />
+    <method name="Grappling Hook" alt="Grappin" />
+    <method name="Venom Mine" alt="Mine venimeuse" />
+    <method name="Primal Rage" alt="Rage primordiale" />
+    <method name="Primal Rage Melee Knockback Scalar" alt="Recul en mêlée de Rage primordiale" />
+    <method name="Barrier Projector" alt="Générateur d’écran" />
+    <method name="Jump Pack" alt="Propulseurs" />
+    <method name="Jump Pack Knockback Scalar" alt="Recul des propulseurs" />
+    <method name="Jump Pack Acceleration Scalar" alt="Accélération des propulseurs" />
+    <method name="Minefield" alt="Champ de mines" />
+    <method name="Minefield Knockback Scalar" alt="Recul de Champ de mines" />
+    <method name="Adaptive Shield" alt="Bouclier dynamique" />
+    <method name="Grappling Claw" alt="Griffe-crampon" />
+    <method name="Grappling Claw Knockback Scalar" alt="Recul de Griffe-crampon" />
+    <method name="Piledriver" alt="Pilonnage" />
+    <method name="Roll" alt="Roulé-boulé" />
+    <method name="Roll Always Active" alt="Roulé-boulé toujours actif" />
+    <method name="Graviton Surge" alt="Orbe à gravitons" />
+    <method name="Particle Barrier" alt="Écran de particules" />
+    <method name="Projected Barrier" alt="Écran généré" />
+    <method name="Particle Cannon Secondary Knockback Scalar" alt="Recul secondaire de Canon à particules" />
+    <method name="Transcendence" alt="Transcendance" />
+    <method name="Orb Of Harmony" alt="Orbe d’harmonie" />
+    <method name="Orb Of Discord" alt="Orbe de discorde" />
+    <method name="Enemy Health Bars" alt="Barres de vie adverses" />
+    <method name="Game Mode Start" alt="Début de la partie" />
+    <method name="All Slots Filled" alt="Emplacements complets" />
+    <method name="Immediately" alt="Immédiatement" />
+    <method name="Manual" alt="Manuel" />
+    <method name="Health Pack Respawn Time Scalar" alt="Temps de réapparition des kits de soins" />
+    <method name="Kill Cam" alt="Derniers instants" />
+    <method name="Kill Feed" alt="Journal d’action" />
+    <method name="Skins" alt="Modèles" />
+    <method name="Spawn Health Packs" alt="Apparition des kits de soins" />
+    <method name="Determined By Mode" alt="Selon le mode" />
+    <method name="Allow Hero Switching" alt="Changement de héros" />
+    <method name="Hero Limit" alt="Limite de héros" />
+    <method name="1 Per Team" alt="1 par équipe" />
+    <method name="2 Per Team" alt="2 par équipe" />
+    <method name="1 Per Game" alt="1 par partie" />
+    <method name="2 Per Game" alt="2 par partie" />
+    <method name="Limit Roles" alt="Limite de rôles" />
+    <method name="2 Of Each Role Per Team" alt="2 de chaque par équipe" />
+    <method name="Respawn As Random Hero" alt="Réapparition en héros aléatoire" />
+    <method name="Respawn Time Scalar" alt="Temps de réapparition" />
+    <method name="Competitive Rules" alt="Règles des parties compétitives" />
+    <method name="Capture Speed Modifier" alt="Modificateur de vitesse de capture" />
+    <method name="Limit Valid Control Points" alt="Limite de points de contrôle valides" />
+    <method name="First" alt="Premier" />
+    <method name="Second" alt="Deuxième" />
+    <method name="Third" alt="Troisième" />
+    <method name="Score To Win" alt="Score à atteindre pour gagner" />
+    <method name="Scoring Speed Modifier" alt="Vitesse de progression du pourcentage" />
+    <method name="Payload Speed Modifier" alt="Modificateur de vitesse du convoi" />
+    <method name="Blitz Flag Locations" alt="Emplacement des drapeaux Éclair" />
+    <method name="Damage Interrupts Flag Interaction" alt="Interruption par les dégâts" />
+    <method name="Flag Carrier Abilities" alt="Capacités du porteur de drapeau" />
+    <method name="Restricted" alt="Limitées" />
+    <method name="Flag Dropped Lock Time" alt="Durée d’immobilisation du drapeau après lâcher" />
+    <method name="Flag Pickup Time" alt="Durée de ramassage du drapeau" />
+    <method name="Flag Return Time" alt="Durée de récupération du drapeau" />
+    <method name="Flag Score Respawn Time" alt="Temps de réapparition du drapeau après capture" />
+    <method name="Game Length (Minutes)" alt="Durée de la partie (minutes)" />
+    <method name="Respawn Speed Buff Duration" alt="Durée du bonus de vitesse à la réapparition" />
+    <method name="Team Needs Flag At Base To Score" alt="Présence du drapeau allié nécessaire à la capture" />
+    <method name="Game Length In Minutes" alt="Durée de la partie en minutes" />
+    <method name="Self Initiated Respawn" alt="Réapparition active" />
+    <method name="Hero Selection Time" alt="Durée de la sélection de héros" />
+    <method name="Restrict Previously Used Heroes" alt="Exclusion des héros déjà utilisés" />
+    <method name="After Round Won" alt="Après une manche gagnée" />
+    <method name="After Round Played" alt="Après une manche jouée" />
+    <method name="Hero Selection" alt="Sélection de héros" />
+    <method name="Any" alt="Tous" />
+    <method name="Limited" alt="Limitée" />
+    <method name="Random" alt="Aléatoire" />
+    <method name="Random (Mirrored)" alt="Aléatoire (miroir)" />
+    <method name="Limited Choice Pool" alt="Catalogue limité de héros" />
+    <method name="Team Size +2" alt="Taille de l’équipe +2" />
+    <method name="Team Size" alt="Taille de l’équipe" />
+    <method name="Team Size +1" alt="Taille de l’équipe +1" />
+    <method name="Team Size +3" alt="Taille de l’équipe +3" />
+    <method name="Capture Objective Tiebreaker" alt="Objectif décisif à capturer" />
+    <method name="Tiebreaker After Match Time Elapsed" alt="Durée avant activation de l’objectif décisif" />
+    <method name="Time To Capture" alt="Durée de capture" />
+    <method name="Draw After Match Time Elapsed With No Tiebreaker" alt="Durée avant match nul sans capture de l’objectif décisif" />
+    <method name="Reveal Heroes" alt="Détection des héros" />
+    <method name="Reveal Heroes After Match Time Elapsed" alt="Durée avant la détection des héros" />
+    <method name="Mercy Resurrect Counteracts Kills" alt="Les résurrections annulent les points de victime" />
+    <method name="Imbalanced Team Score To Win" alt="Scores distincts" />
+    <method name="Team 1 Score To Win" alt="Score à atteindre par l’équipe 1 pour gagner" />
+    <method name="Team 2 Score To Win" alt="Score à atteindre par l’équipe 2 pour gagner" />
+    <method name="Spawn Training Bots" alt="Générer des robots d’entraînement" />
+    <method name="Training Bot Respawn Time Scalar" alt="Temps de réapparition des robots d’entraînement" />
+  </Methods>
+</I18nLanguage>

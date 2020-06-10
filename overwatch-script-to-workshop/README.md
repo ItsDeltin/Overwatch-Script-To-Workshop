@@ -1,18 +1,22 @@
-# overwatch-script-to-workshop
+# Overwatch Script To Workshop
+
+OSTW is a high-level programming language for Overwatch's workshop.
+
+[Repository](https://github.com/ItsDeltin/Overwatch-Script-To-Workshop)
+
+[Wiki](https://github.com/ItsDeltin/Overwatch-Script-To-Workshop/wiki)
 
 ## Features
 
-Syntax highlighting and language server for OSTW.
+- Syntax highlighting and autocompletion
+- If...else
+- Switch
+- Loops (while, for, foreach)
+- Easy string creation
+- Easy operation trees
+- Functions
+- Classes
 
-## Extension Settings
-* `ostw.port1`
-* `ostw.port2`
+## Installing
 
-Set these to mirror the ports the language server uses. Is 3000 and 3001 by default.
-
-## Release Notes
-
-
-### 1.0.0
-
-Initial release of the OSTW extension.
+Download the latest release from the [releases](https://github.com/ItsDeltin/Overwatch-Script-To-Workshop/releases) section. Set the `ostw.deltintegerPath` setting to the `deltinteger.exe` file.

@@ -6,32 +6,25 @@ using System.Threading.Tasks;
 using System.Reflection;
 using Deltin.Deltinteger.Parse;
 using Deltin.Deltinteger.LanguageServer;
-using Deltin.Deltinteger.WorkshopWiki;
+using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
 
-namespace Deltin.Deltinteger.Elements
+namespace Deltin.Deltinteger.CustomMethods
 {
     [AttributeUsage(AttributeTargets.Class)]
     public class CustomMethod : Attribute
     {
-        public CustomMethod(string elementName, CustomMethodType methodType)
+        public CustomMethod(string methodName, string description, CustomMethodType methodType, bool global = true)
         {
-            MethodName = elementName;
+            MethodName = methodName;
+            Description = description;
             MethodType = methodType;
+            Global = global;
         }
 
-        public string MethodName { get; private set; }
-        public CustomMethodType MethodType { get; private set; }
-    }
-
-    public class MethodResult
-    {
-        public MethodResult(Element[] elements, Element result)
-        {
-            Elements = elements;
-            Result = result;
-        }
-        public Element[] Elements { get; private set; }
-        public Element Result { get; private set; }
+        public string MethodName { get; }
+        public string Description { get; }
+        public CustomMethodType MethodType { get; }
+        public bool Global { get; }
     }
 
     public enum CustomMethodType
@@ -44,15 +37,21 @@ namespace Deltin.Deltinteger.Elements
     public class CustomMethodData : IMethod
     {
         public string Name { get; }
-        public ParameterBase[] Parameters { get; }
+        public CodeParameter[] Parameters { get; }
         public CustomMethodType CustomMethodType { get; }
         public Type Type { get; }
-        public WikiMethod Wiki { get; }
-        public string GetLabel(bool markdown)
-        {
-            return Name + "(" + Parameter.ParameterGroupToString(Parameters, markdown) + ")"
-            + (markdown && Wiki?.Description != null ? "\n\r" + Wiki.Description : "");
-        }
+        public bool Global { get; }
+        public MethodAttributes Attributes { get; } = new MethodAttributes();
+
+        // IScopeable defaults
+        public Location DefinedAt => null;
+        public AccessLevel AccessLevel => AccessLevel.Public;
+        public bool WholeContext => true;
+        public bool Static => true;
+        
+        public CodeType ReturnType => null;
+
+        public string Documentation { get; }
 
         public CustomMethodData(Type type)
         {
@@ -61,52 +60,30 @@ namespace Deltin.Deltinteger.Elements
             CustomMethod data = type.GetCustomAttribute<CustomMethod>();
             Name = data.MethodName;
             CustomMethodType = data.MethodType;
+            Documentation = data.Description;
+            Global = data.Global;
 
-            Parameters = type.GetCustomAttributes<ParameterBase>()
-                .ToArray();
-            
-            CustomMethodWiki cmWiki = GetObject().Wiki();
-            if (cmWiki != null)
-            {
-                WikiParameter[] parameters = null;
-
-                if (cmWiki.ParameterDescriptions != null)
-                {
-                    parameters = new WikiParameter[cmWiki.ParameterDescriptions.Length];
-                    for (int i = 0; i < parameters.Length; i++)
-                        parameters[i] = new WikiParameter(Parameters[i].Name, cmWiki.ParameterDescriptions[i]);
-                }
-
-                string description = cmWiki.Description;
-                if (CustomMethodType == CustomMethodType.MultiAction_Value)
-                {
-                    if (description != null)
-                        description += "\nThis method cannot be used in conditions.";
-                    else
-                        description = "This method cannot be used in conditions.";
-                }
-
-                Wiki = new WikiMethod(Name, description, parameters);
-            }
+            var obj = GetObject();
+            Parameters = obj.Parameters() ?? new CodeParameter[0];
         }
 
-        public CustomMethodBase GetObject(TranslateRule context, ScopeGroup scope, IWorkshopTree[] parameters, Location methodLocation, Location[] parameterLocations)
-        {
-            CustomMethodBase customMethod = GetObject();
-            customMethod.TranslateContext = context;
-            customMethod.Scope = scope;
-            customMethod.Parameters = parameters;
-            customMethod.ParameterLocations = parameterLocations;
-            customMethod.MethodLocation = methodLocation;
-            return customMethod;
-        }
         private CustomMethodBase GetObject()
         {
             return (CustomMethodBase)Activator.CreateInstance(Type);
         }
 
+        public bool DoesReturnValue() => CustomMethodType == CustomMethodType.Value || CustomMethodType == CustomMethodType.MultiAction_Value;
+
+        public IWorkshopTree Parse(ActionSet actionSet, MethodCall methodCall)
+        {
+            return GetObject().Get(actionSet, methodCall.ParameterValues, methodCall.AdditionalParameterData);
+        }
+
+        public string GetLabel(bool markdown) => HoverHandler.GetLabel(CustomMethodType == CustomMethodType.Action ? null : ReturnType?.Name ?? "define", Name, Parameters, markdown, Documentation);
+        public CompletionItem GetCompletion() => MethodAttributes.GetFunctionCompletion(this);
+
         static CustomMethodData[] _customMethodData = null;
-        private static CustomMethodData[] GetCustomMethods()
+        public static CustomMethodData[] GetCustomMethods()
         {
             if (_customMethodData == null)
             {
@@ -120,64 +97,22 @@ namespace Deltin.Deltinteger.Elements
             }
             return _customMethodData;
         }
-
-        public static CustomMethodData GetCustomMethod(string name)
+        public static CustomMethodData GetCustomMethod<T>() where T: CustomMethodBase
         {
-            return GetCustomMethods().FirstOrDefault(method => method.Name == name);
-        }
-
-        public static CompletionItem[] GetCompletion()
-        {
-            return GetCustomMethods().Select(cm => new CompletionItem(cm.Name) 
-            { 
-                detail = cm.GetLabel(false),
-                kind = CompletionItem.Method,
-                documentation = cm.Wiki?.Description
-            }).ToArray();
+            foreach (CustomMethodData customMethod in GetCustomMethods())
+                if (customMethod.Type == typeof(T))
+                    return customMethod;
+            return null;
         }
     }
 
     public abstract class CustomMethodBase
     {
-        public TranslateRule TranslateContext { get; set; }
-        public IWorkshopTree[] Parameters { get; set; }
-        public ScopeGroup Scope { get; set; }
-        public Location[] ParameterLocations { get; set; }
-        public Location MethodLocation { get; set; }
-
-        public MethodResult Result()
+        public abstract CodeParameter[] Parameters();
+        public virtual IWorkshopTree Get(ActionSet actionSet, IWorkshopTree[] parameterValues) => throw new NotImplementedException();
+        public virtual IWorkshopTree Get(ActionSet actionSet, IWorkshopTree[] parameterValues, object[] additionalParameterData)
         {
-            if (TranslateContext == null)
-                throw new ArgumentNullException(nameof(TranslateContext));
-            
-            if (Parameters == null)
-                throw new ArgumentNullException(nameof(Parameters));
-            
-            if (Scope == null)
-                throw new ArgumentNullException(nameof(Scope));
-            
-            if (ParameterLocations == null)
-                throw new ArgumentNullException(nameof(ParameterLocations));
-            
-            if (MethodLocation == null)
-                throw new ArgumentNullException(nameof(MethodLocation));
-            
-            return Get();
-        }
-
-        protected abstract MethodResult Get();
-
-        public abstract CustomMethodWiki Wiki();
-    }
-
-    public class CustomMethodWiki
-    {
-        public string Description { get; }
-        public string[] ParameterDescriptions { get; }
-        public CustomMethodWiki(string description, params string[] parameterDescriptions)
-        {
-            Description = description;
-            ParameterDescriptions = parameterDescriptions;
+            return Get(actionSet, parameterValues);
         }
     }
 }

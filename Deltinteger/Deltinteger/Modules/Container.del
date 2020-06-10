@@ -1,0 +1,61 @@
+public void ActivateScoper(ref define executor, ref define id, define data)
+{
+    data += id / 100;
+    Damage(executor, executor, data);
+    Heal(executor, executor, data);
+}
+public define ScopeData: RoundToInteger(EventDamage(), Rounding.Down);
+public define ScopeID: RoundToInteger((EventDamage() * 100) % 100, Rounding.Nearest);
+
+/*
+ * Container.del is used to manually select what components will be reevaluated.
+ * This allows you to do something like creating an effect for each index of an array where the position is reevaluated but the index is not.
+ * This is done using the 'Event Damage' or 'Event Healing' values, which does not get reevaluated.
+ * Since class references are numbers, entire classes of data can be passed through Event Damage.
+ *
+ * 'ScopeID' prevents conflicts when using multiple systems that need to break evaluation.
+ *
+ * This strategy has a few restrictions. The player or dummy used to create the effect cannot have any damage resistance. Damaging the scoper for 5 health should
+ * result in exactly 5 damage being taken. This also requires the scoper to have enough health to transmit the data. The scoper cannot be in the spawn room or have
+ * the 'Phased' or 'Invulnerable' status, as these prevents the player from taking damage. Note that armor (the orange part of some heroe's health bar) has small
+ * damage resistance. If you have free slots in your custom game, you can make a dedicated dummy bot used for activating containers. 
+ *
+ * The example below will create an effect for each value in the Positions array. The effect's position will update when the respective value in 'Positions' is changed.
+
+class EffectMaker
+{
+    public Vector Position;
+    public define Radius;
+    public define Entity;
+    
+    public EffectMaker(ref Vector position, ref define radius)
+    {
+        Position = position;
+        Radius = radius;
+    }
+}
+
+globalvar Vector[] Positions = [...];
+globalvar define Radiuses = [...];
+
+rule: "Make Effects"
+{
+    foreach (Vector position in Positions)
+        ActivateScoper(HostPlayer(), 1, new EffectMaker(position));
+}
+
+rule: "Make Effect (Reevaluation Container)"
+Event.OnDamageDealt
+if (ScopeID == 1) // Match ScopeID.
+{
+    // Make the effect
+    CreateEffect(
+        AllPlayers(),
+        Effect.Sphere,
+        Color.Red,
+        (<EffectMaker>ScopeData).Position,
+        (<EffectMaker>ScopeData).Radius
+    );
+    (<EffectMaker>ScopeData).Entity = LastCreatedEntity();
+}
+*/

@@ -4,36 +4,31 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Reflection;
-using Deltin.Deltinteger.LanguageServer;
+using Deltin.Deltinteger.I18n;
+using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 
 namespace Deltin.Deltinteger.Elements
 {
     [AttributeUsage(AttributeTargets.Enum)]
-    public class WorkshopEnum : Attribute
-    {
-        public WorkshopEnum() 
-        { 
-
-        }
-    }
+    public class WorkshopEnum : Attribute {}
 
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Enum)]
     public class EnumOverride : Attribute
     {
-        public EnumOverride(string codeName, string workshopName)
+        public EnumOverride(string codeName = null, string workshopName = null)
         {
             CodeName = codeName;
             WorkshopName = workshopName;
         }
-        public string CodeName { get; private set; }
-        public string WorkshopName { get; private set; }
+        public string CodeName { get; }
+        public string WorkshopName { get; }
     }
 
     public class EnumData
     {
         private static EnumData[] AllEnums = null;
 
-        private static EnumData[] GetEnumData()
+        public static EnumData[] GetEnumData()
         {
             if (AllEnums == null)
             {
@@ -46,18 +41,6 @@ namespace Deltin.Deltinteger.Elements
             return AllEnums;
         }
 
-        public static bool IsEnum(string codeName)
-        {
-            if (codeName == null)
-                return false;
-            return GetEnum(codeName) != null;
-        }
-
-        public static EnumData GetEnum(string codeName)
-        {
-            return GetEnumData().FirstOrDefault(e => e.CodeName == codeName);
-        }
-
         public static EnumData GetEnum(Type type)
         {
             return GetEnumData().FirstOrDefault(e => e.Type == type);
@@ -68,19 +51,9 @@ namespace Deltin.Deltinteger.Elements
             return GetEnum(typeof(T));
         }
 
-        public static EnumMember GetEnumValue(string enumCodeName, string valueCodeName)
-        {
-            return GetEnum(enumCodeName)?.GetEnumMember(valueCodeName);
-        }
-
         public static EnumMember GetEnumValue(object enumValue)
         {
             return GetEnum(enumValue.GetType()).GetEnumMember(enumValue.ToString());
-        }
-
-        public static CompletionItem[] GetAllEnumCompletion()
-        {
-            return GetEnumData().Select(e => new CompletionItem(e.CodeName) { kind = CompletionItem.Enum }).ToArray();
         }
 
         public static Element ToElement(EnumMember enumMember)
@@ -89,15 +62,10 @@ namespace Deltin.Deltinteger.Elements
 
             switch(enumMember.Enum.CodeName)
             {
-                case "Hero":
-                    return Element.Part<V_HeroVar>(enumMember);
-                
-                case "Team":
-                    return Element.Part<V_TeamVar>(enumMember);
-                
-                case "Map":
-                    return new V_Number((int)enumMember.UnderlyingValue);
-
+                case "Hero": return Element.Part<V_HeroVar>(enumMember);
+                case "Team": return Element.Part<V_TeamVar>(enumMember);
+                case "Map": return Element.Part<V_MapVar>(enumMember);
+                case "GameMode": return Element.Part<V_GameModeVar>(enumMember);
                 default: return null;
             }
         }
@@ -123,10 +91,16 @@ namespace Deltin.Deltinteger.Elements
             {
                 EnumOverride fieldData = fields[v].GetCustomAttribute<EnumOverride>();
                 string fieldCodeName     = fieldData?.CodeName     ?? fields[v].Name;
-                string fieldWorkshopName = fieldData?.WorkshopName ?? Extras.AddSpacesToSentence(fields[v].Name, false);
+                string fieldWorkshopName = fieldData?.WorkshopName ?? Extras.AddSpacesToSentence(fields[v].Name.Replace('_', ' '), false);
+                bool isHidden = fields[v].GetCustomAttribute<HideElement>() != null;
 
-                Members[v] = new EnumMember(this, fieldCodeName, fieldWorkshopName, values.GetValue(v));
+                Members[v] = new EnumMember(this, fieldCodeName, fieldWorkshopName, values.GetValue(v), isHidden);
             }
+        }
+
+        public bool ConvertableToElement()
+        {
+            return new string[] { "Hero", "Team", "Map", "GameMode" }.Contains(CodeName);
         }
 
         public bool IsEnumMember(string codeName)
@@ -138,45 +112,55 @@ namespace Deltin.Deltinteger.Elements
         {
             return Members.FirstOrDefault(m => m.CodeName == codeName);
         }
-
-        public CompletionItem[] GetCompletion()
-        {
-            return Members.Select(value =>
-                new CompletionItem(value.CodeName) { kind = CompletionItem.EnumMember }
-            ).ToArray();
-        }
     }
 
     public class EnumMember : IWorkshopTree
     {
-        public EnumData @Enum { get; private set; }
-        public string CodeName { get; private set; }
-        public string WorkshopName { get; private set; }
-        public object UnderlyingValue { get; private set; }
-        public object Value { get; private set; }
+        public EnumData @Enum { get; }
+        public string CodeName { get; }
+        public string WorkshopName { get; }
+        public object UnderlyingValue { get; }
+        public object Value { get; }
+        public bool IsHidden { get; }
 
-        public EnumMember(EnumData @enum, string codeName, string workshopName, object value)
+        public EnumMember(EnumData @enum, string codeName, string workshopName, object value, bool isHidden)
         {
             @Enum = @enum;
             CodeName = codeName;
             WorkshopName = workshopName;
             UnderlyingValue = System.Convert.ChangeType(value, @Enum.UnderlyingType);
             Value = value;
+            IsHidden = isHidden;
         }
 
-        public string ToWorkshop()
+        public string ToWorkshop(OutputLanguage language)
         {
+            string numTranslate(string name)
+            {
+                return LanguageInfo.Translate(language, name) + WorkshopName.Substring(name.Length);
+            }
+
+            if (@Enum.Type == typeof(PlayerSelector) && WorkshopName.StartsWith("Slot")) return numTranslate("Slot");
+            if (@Enum.Type == typeof(Button) && WorkshopName.StartsWith("Ability")) return numTranslate("Ability");
+            if ((@Enum.Type == typeof(Team) || @Enum.Type == typeof(Color)) && WorkshopName.StartsWith("Team")) return numTranslate("Team");
+            
+            return LanguageInfo.Translate(language, WorkshopName).RemoveStructuralChars();
+        }
+
+        public string GetI18nKeyword()
+        {
+            if (@Enum.Type == typeof(PlayerSelector) && WorkshopName.StartsWith("Slot")) return "Slot";
+            if (@Enum.Type == typeof(Button) && WorkshopName.StartsWith("Ability")) return "Ability";
+            if ((@Enum.Type == typeof(Team) || @Enum.Type == typeof(Color)) && WorkshopName.StartsWith("Team")) return "Team";
             return WorkshopName;
         }
 
-        public double ServerLoadWeight()
+        public bool EqualTo(IWorkshopTree b)
         {
-            return 0;
-        }
+            if (this.GetType() != b.GetType()) return false;
 
-        public void DebugPrint(Log log, int depth)
-        {
-            log.Write(LogLevel.Verbose, Extras.Indent(depth, false) + WorkshopName);
+            EnumMember bAsEnum = (EnumMember)b;
+            return WorkshopName == bAsEnum.WorkshopName && Enum == bAsEnum.Enum;
         }
     }
 
@@ -211,6 +195,12 @@ namespace Deltin.Deltinteger.Elements
         OnPlayerJoin,
         [EnumOverride(null, "Player Left Match")]
         OnPlayerLeave,
+        [HideElement]
+        Subroutine,
+        [EnumOverride(null, "Player Dealt Knockback")]
+        PlayerDealtKnockback,
+        [EnumOverride(null, "Player Received Knockback")]
+        PlayerReceivedKnockback
     }
 
     [WorkshopEnum]
@@ -230,7 +220,6 @@ namespace Deltin.Deltinteger.Elements
         Slot9,
         Slot10,
         Slot11,
-        // Why isn't it alphabetical? we will never know.
         Reaper,
         Tracer,
         Mercy,
@@ -264,6 +253,7 @@ namespace Deltin.Deltinteger.Elements
         Moira,
         WreckingBall,
         Ashe,
+        Echo,
         Baptiste,
         Sigma
     }
@@ -279,6 +269,7 @@ namespace Deltin.Deltinteger.Elements
         [EnumOverride(null, "D.va")]
         Dva,
         Doomfist,
+        Echo,
         Genji,
         Hanzo,
         Junkrat,
@@ -326,37 +317,6 @@ namespace Deltin.Deltinteger.Elements
     }
 
     [WorkshopEnum]
-    public enum Variable
-    {
-        A,
-        B,
-        C,
-        D,
-        E,
-        F,
-        G,
-        H,
-        I,
-        J,
-        K,
-        L,
-        M,
-        N,
-        O,
-        P,
-        Q,
-        R,
-        S,
-        T,
-        U,
-        V,
-        W,
-        X,
-        Y,
-        Z
-    }
-
-    [WorkshopEnum]
     public enum Operation
     {
         Add,
@@ -382,7 +342,9 @@ namespace Deltin.Deltinteger.Elements
         Ultimate,
         Interact,
         Jump,
-        Crouch
+        Crouch,
+        Melee,
+        Reload
     }
 
     [WorkshopEnum]
@@ -458,6 +420,7 @@ namespace Deltin.Deltinteger.Elements
         GoodAura,
         BadAura,
         EnergySound,
+        [EnumOverride(null, "Pick-up Sound")]
         PickupSound,
         GoodAuraSound,
         BadAuraSound,
@@ -481,13 +444,14 @@ namespace Deltin.Deltinteger.Elements
         Aqua,
         Orange,
         SkyBlue,
-        Turqoise,
+        Turquoise,
         LimeGreen
     }
 
     [WorkshopEnum]
     public enum EffectRev
     {
+        [EnumOverride(null, "Visible To, Position, and Radius")]
         VisibleToPositionAndRadius,
         PositionAndRadius,
         VisibleTo,
@@ -519,7 +483,25 @@ namespace Deltin.Deltinteger.Elements
         NeedHealing,
         GroupUp,
         Thanks,
-        Acknowledge
+        Acknowledge,
+        PressTheAttack,
+        YouAreWelcome,
+        Yes,
+        No,
+        Goodbye,
+        Go,
+        Ready,
+        FallBack,
+        PushForward,
+        Incoming,
+        WithYou,
+        GoingIn,
+        OnMyWay,
+        Attacking,
+        Defending,
+        NeedHelp,
+        Sorry,
+        Countdown,
     }
 
     [WorkshopEnum]
@@ -532,10 +514,31 @@ namespace Deltin.Deltinteger.Elements
     }
 
     [WorkshopEnum]
-    public enum StringRev
+    public enum ObjectiveRev
     {
         VisibleToAndString,
-        String
+        String,
+        [EnumOverride(null, "Visible To, Sort Order, and String")]
+        VisibleToSortOrderAndString,
+        SortOrderAndString,
+        VisibleToAndSortOrder,
+        VisibleTo,
+        SortOrder,
+        None
+    }
+
+    [WorkshopEnum]
+    public enum HudTextRev
+    {
+        VisibleToAndString,
+        String,
+        [EnumOverride(null, "Visible To, Sort Order, and String")]
+        VisibleToSortOrderAndString,
+        SortOrderAndString,
+        VisibleToAndSortOrder,
+        VisibleTo,
+        SortOrder,
+        None
     }
 
     [WorkshopEnum]
@@ -566,7 +569,8 @@ namespace Deltin.Deltinteger.Elements
         Moon,
         No,
         Plus,
-        Poison1,
+        Poison,
+        [EnumOverride(null, "Poison 2")]
         Poison2,
         QuestionMark,
         Radioactive,
@@ -618,16 +622,34 @@ namespace Deltin.Deltinteger.Elements
     [WorkshopEnum]
     public enum AccelerateRev
     {
+        [EnumOverride(null, "Direction, Rate, and Max Speed")]
         DirectionRateAndMaxSpeed,
         None
     }
 
     [WorkshopEnum]
-    public enum ModRev
+    public enum DamageModificationRev
     {
+        [EnumOverride(null, "Receivers, Damagers, and Damage Percent")]
         ReceiversDamagersAndDamagePercent,
         ReceiversAndDamagers,
         None
+    }
+
+    [WorkshopEnum]
+    public enum HealingModificationRev
+    {
+        [EnumOverride(null, "Receivers, Healers, and Healing Percent")]
+        ReceiversDamagersAndDamagePercent,
+        ReceiversAndHealers,
+        None
+    }
+
+    [WorkshopEnum]
+    public enum IfAlreadyExecuting
+    {
+        RestartRule,
+        DoNothing
     }
 
     [WorkshopEnum]
@@ -681,9 +703,13 @@ namespace Deltin.Deltinteger.Elements
     [WorkshopEnum]
     public enum InworldTextRev
     {
+        [EnumOverride(null, "Visible To, Position, and String")]
         VisibleToPositionAndString,
         VisibleToAndString,
-        String
+        String,
+        VisibleToAndPosition,
+        VisibleTo,
+        None
     }
 
     [WorkshopEnum]
@@ -719,47 +745,112 @@ namespace Deltin.Deltinteger.Elements
     [WorkshopEnum]
     public enum Map
     {
-        Black_Forest = 0,
-        Blizzard_World = 1,
-        Busan = 2,
-        Castillo = 3,
-        Chateau_Guillard = 4,
-        Dorado = 5,
-        Ecopoint_Antarctica = 6,
-        Eichenwalde = 7,
-        Hanamura = 8,
-        Havana = 9,
-        Hollywood = 10,
-        Horizon_Lunar_Colony = 11,
-        Ilios = 12,
-        Junkertown = 13,
-        Kings_Row = 14,
-        Lijiang_Tower = 15,
-        Necropolis = 16,
-        Nepal = 17,
-        Numbani = 18,
-        Oasis = 19,
-        Paris = 20,
-        Petra = 21,
-        Rialto = 22,
-        Route_66 = 23,
-        Temple_of_Anubis = 24,
-        Volskaya_Industries = 25,
-        Watchpoint_Gibraltar = 26,
-        Ayutthaya = 27,
-        Busan_Downtown = 28,
-        Busan_Sanctuary = 29,
-        Ilios_Lighthouse = 30,
-        Ilios_Ruins = 31,
-        Ilios_Well = 32,
-        Lijiang_Control_Center = 33,
-        Lijiang_Garden = 34,
-        Lijiang_Night_Market = 35,
-        Nepal_Sanctum = 36,
-        Nepal_Shrine = 37,
-        Nepal_Village = 38,
-        Oasis_City_Center = 39,
-        Oasis_Gardens = 40,
-        Oasis_University = 41
+        Ayutthaya,
+        Black_Forest,
+        [EnumOverride(null, "Black Forest (Winter)")]
+        Black_Forest_Winter,
+        Blizzard_World,
+        [EnumOverride(null, "Blizzard World (Winter)")]
+        Blizzard_World_Winter,
+        Busan,
+        [EnumOverride(null, "Busan Downtown (Lunar New Year)")]
+        Busan_Downtown_Lunar,
+        [EnumOverride(null, "Busan Sanctuary (Lunar New Year)")]
+        Busan_Sanctuary_Lunar,
+        Busan_Stadium,
+        Castillo,
+        [EnumOverride(null, "Château Guillard")]
+        Chateau_Guillard,
+        [EnumOverride(null, "Château Guillard (Halloween)")]
+        Chateau_Guillard_Halloween,
+        Dorado,
+        [EnumOverride(null, "Ecopoint: Antarctica")]
+        Ecopoint_Antarctica,
+        [EnumOverride(null, "Ecopoint: Antarctica (Winter)")]
+        Ecopoint_Antarctica_Winter,
+        Eichenwalde,
+        [EnumOverride(null, "Eichenwalde (Halloween)")]
+        Eichenwalde_Halloween,
+        [EnumOverride(null, "Estádio das Rãs")]
+        Estadio_Das_Ras,
+        Hanamura,
+        [EnumOverride(null, "Hanamura (Winter)")]
+        Hanamura_Winter,
+        Havana,
+        Hollywood,
+        [EnumOverride(null, "Hollywood (Halloween)")]
+        Hollywood_Halloween,
+        Horizon_Lunar_Colony,
+        Ilios,
+        Ilios_Lighthouse,
+        Ilios_Ruins,
+        Ilios_Well,
+        [EnumOverride(null, "Junkenstein's Revenge")]
+        Junkensteins_Revenge,
+        Junkertown,
+        [EnumOverride(null, "King's Row")]
+        Kings_Row,
+        [EnumOverride(null, "King's Row (Winter)")]
+        Kings_Row_Winter,
+        Lijiang_Control_Center,
+        [EnumOverride(null, "Lijiang Control Center (Lunar New Year)")]
+        Lijiang_Control_Center_Lunar,
+        Lijiang_Garden,
+        [EnumOverride(null, "Lijiang Garden (Lunar New Year)")]
+        Lijiang_Garden_Lunar,
+        Lijiang_Night_Market,
+        [EnumOverride(null, "Lijiang Night Market (Lunar New Year)")]
+        Lijiang_Night_Market_Lunar,
+        Lijiang_Tower,
+        [EnumOverride(null, "Lijiang Tower (Lunar New Year)")]
+        Lijiang_Tower_Lunar,
+        Necropolis,
+        Nepal,
+        Nepal_Sanctum,
+        Nepal_Shrine,
+        Nepal_Village,
+        Numbani,
+        Oasis,
+        Oasis_City_Center,
+        Oasis_Gardens,
+        Oasis_University,
+        Paris,
+        Petra,
+        Rialto,
+        Route_66,
+        Sydney_Harbour_Arena,
+        Temple_of_Anubis,
+        Volskaya_Industries,
+        [EnumOverride(null, "Watchpoint: Gibraltar")]
+        Watchpoint_Gibraltar,
+        Workshop_Chamber,
+        Workshop_Expanse,
+        [EnumOverride(null, "Workshop Expanse (Night)")]
+        Workshop_Expanse_Night,
+        Workshop_Island,
+        [EnumOverride(null, "Workshop Island (Night)")]
+        Workshop_Island_Night
+    }
+
+    [WorkshopEnum]
+    public enum GameMode
+    {
+        Assault,
+        CaptureTheFlag,
+        Control,
+        Deathmatch,
+        Elimination,
+        Escort,
+        Hybrid,
+        [EnumOverride(null, "Junkenstein's Revenge")]
+        JunkensteinsRevenge,
+        [EnumOverride(null, "Lúcioball")]
+        Lucioball,
+        [EnumOverride(null, "Mei's Snowball Offensive")]
+        MeisSnowballOffensive,
+        PracticeRange,
+        Skirmish,
+        TeamDeathmatch,
+        YetiHunter
     }
 }

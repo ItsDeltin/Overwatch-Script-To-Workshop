@@ -1,30 +1,44 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
+using Deltin.Deltinteger.I18n;
 
 namespace Deltin.Deltinteger.Elements
 {
-    public class Rule: IWorkshopTree
+    public class Rule
     {
-        public string Name { get; private set; }
-        public RuleEvent RuleEvent { get; private set; }
-        public Team Team { get; private set; }
-        public PlayerSelector Player { get; private set; }
-        public bool IsGlobal { get; private set; }
+        public string Name { get; }
+        public RuleEvent RuleEvent { get; }
+        public Team Team { get; }
+        public PlayerSelector Player { get; }
+        public Subroutine Subroutine { get; }
+        public RuleType RuleType { get; }
 
         public Condition[] Conditions { get; set; }
         public Element[] Actions { get; set; }
 
+        public bool Disabled { get; set; }
+
+        public double Priority { get; set; }
+
         public Rule(string name, RuleEvent ruleEvent = RuleEvent.OngoingGlobal, Team team = Team.All, PlayerSelector player = PlayerSelector.All) // Creates a rule.
         {
+            if (ruleEvent == RuleEvent.OngoingGlobal && (team != Team.All || player != PlayerSelector.All))
+                ruleEvent = RuleEvent.OngoingPlayer;
+
             Name = name;
             RuleEvent = ruleEvent;
             Team = team;
             Player = player;
-            IsGlobal = ruleEvent == RuleEvent.OngoingGlobal;
+
+            if (RuleEvent == RuleEvent.OngoingGlobal) RuleType = RuleType.Global;
+            else if (RuleEvent == RuleEvent.Subroutine) RuleType = RuleType.Subroutine;
+            else RuleType = RuleType.PlayerBased;
+        }
+
+        public Rule(string name, Subroutine subroutine)
+        {
+            Name = name;
+            RuleEvent = RuleEvent.Subroutine;
+            RuleType = RuleType.Subroutine;
+            Subroutine = subroutine;
         }
 
         public override string ToString()
@@ -32,80 +46,98 @@ namespace Deltin.Deltinteger.Elements
             return Name;
         }
 
-        public void DebugPrint(Log log, int depth = 0)
+        public void ToWorkshop(WorkshopBuilder builder, bool optimize)
         {
-            log.Write(LogLevel.Verbose, new ColorMod("Conditions:", ConsoleColor.DarkYellow));
-            if (Conditions != null)
+            if (Disabled)
+            {
+                builder.AppendKeyword("disabled")
+                    .Append(" ");
+            }
+            builder.AppendKeyword("rule")
+                .AppendLine("(\"" + Name + "\")")
+                .AppendLine("{")
+                .AppendLine()
+                .Indent()
+                .AppendKeywordLine("event")
+                .AppendLine("{")
+                .Indent()
+                .AppendLine(EnumData.GetEnumValue(RuleEvent).ToWorkshop(builder.OutputLanguage) + ";");
+            
+            // Add attributes.
+            switch (RuleType)
+            {
+                case RuleType.PlayerBased:
+                    // Player based attributes
+                    builder.AppendLine(EnumData.GetEnumValue(Team).ToWorkshop(builder.OutputLanguage) + ";"); // Team attribute
+                    builder.AppendLine(EnumData.GetEnumValue(Player).ToWorkshop(builder.OutputLanguage) + ";"); // Player attribute
+                    break;
+                
+                case RuleType.Subroutine:
+                    builder.AppendLine(Subroutine.ToWorkshop(builder.OutputLanguage) + ";"); // Attribute name
+                    break;
+            }
+            builder.Unindent()
+                .AppendLine("}");
+
+            if (Conditions?.Length > 0)
+            {
+                builder.AppendLine()
+                    .AppendKeywordLine("conditions")
+                    .AppendLine("{")
+                    .Indent();
+
                 foreach (var condition in Conditions)
-                    condition.DebugPrint(log, 1);
-            
-            log.Write(LogLevel.Verbose, new ColorMod("Actions:", ConsoleColor.DarkCyan));
-            if (Actions != null)
+                    builder.AppendLine(condition.ToWorkshop(builder.OutputLanguage, optimize) + ";");
+                
+                builder.Unindent()
+                    .AppendLine("}");
+            }
+
+            // Add actions.
+            if (Actions?.Length > 0)
+            {
+                builder.AppendLine()
+                    .AppendLine("// Action count: " + Actions.Length) // Action count comment.
+                    .AppendKeywordLine("actions")
+                    .AppendLine("{")
+                    .Indent();
+
                 foreach (var action in Actions)
-                    action.DebugPrint(log, 1);
+                    if (optimize)
+                        builder.AppendLine(action.Optimize().ToWorkshop(builder.OutputLanguage));
+                    else
+                        builder.AppendLine(action.ToWorkshop(builder.OutputLanguage));
+                
+                builder.Unindent()
+                    .AppendLine("}");
+            }
+            builder.Unindent()
+                .AppendLine("}");
         }
-
-        public string ToWorkshop()
-        {            
-            var builder = new TabStringBuilder(true);
-
-            builder.Indent = 0;                                                       //
-            builder.AppendLine($"rule(\"{Name}\")");                                  // rule("this is the name of the rule!")
-            builder.AppendLine("{");                                                  // {
-            builder.AppendLine();                                                     //
-                                                                                      //
-            builder.Indent = 1;                                                       // (indent)
-            builder.AppendLine("event");                                              //     event
-            builder.AppendLine("{");                                                  //     {
-            builder.Indent = 2;                                                       //     (indent)
-            builder.AppendLine(EnumData.GetEnumValue(RuleEvent).ToWorkshop() + ";");  //         Ongoing - Each Player
-            if (!IsGlobal)                                                            //       --(only if the event is a player event)
-            {                                                                         //       |  
-                builder.AppendLine(EnumData.GetEnumValue(Team).ToWorkshop() + ";");   //       | Team 1
-                builder.AppendLine(EnumData.GetEnumValue(Player).ToWorkshop() + ";"); //       | Bastion
-            }                                                                         //
-            builder.Indent = 1;                                                       //     (outdent)
-            builder.AppendLine("}");                                                  //     }
-                                                                                      //
-            if (Conditions?.Length > 0)                                               // (only if there are 1 or more conditions)
-            {                                                                         // |
-                builder.AppendLine();                                                 // |
-                builder.AppendLine("conditions");                                     // |   conditions
-                builder.AppendLine("{");                                              // |   {
-                builder.Indent = 2;                                                   // |   (indent)
-                foreach (var condition in Conditions)                                 // |       
-                    builder.AppendLine(condition.ToWorkshop() + ";");                 // |       Number Of Players >= 3;
-                builder.Indent = 1;                                                   // |   (outdent)
-                builder.AppendLine("}");                                              // |   }
-            }                                                                         //
-                                                                                      //
-            if (Actions?.Length > 0)                                                  // (only if there are 1 or more actions)
-            {                                                                         // |
-                builder.AppendLine();                                                 // |
-                builder.AppendLine("// Action count: " + Actions.Length);             // |   // Action count: #
-                builder.AppendLine("actions");                                        // |   actions
-                builder.AppendLine("{");                                              // |   {
-                builder.Indent = 2;                                                   // |   (indent)
-                foreach (var action in Actions)                                       // |       
-                    builder.AppendLine(action.ToWorkshop());                          // |       Set Global Variable(A, true);
-                builder.Indent = 1;                                                   // |   (outdent)
-                builder.AppendLine("}");                                              // |   }
-            }                                                                         //
-            builder.Indent = 0;                                                       // (outdent)
-            builder.AppendLine("}");                                                  // }
-
-            return builder.ToString();
-        }
-
-        public double ServerLoadWeight()
+    
+        public int ElementCount(bool optimized)
         {
-            double weight = 0;
-            foreach (var action in Actions)
-                weight += action.ServerLoadWeight();
-            foreach (var condition in Conditions)
-                weight += condition.ServerLoadWeight();
+            int count = 1;
+
+            foreach (Condition condition in Conditions)
+                count += condition.ElementCount(optimized);
+
+            foreach (Element action in Actions)
+            {
+                if (optimized)
+                    count += action.Optimize().ElementCount();
+                else
+                    count += action.ElementCount();
+            }
             
-            return weight;
+            return count;
         }
+    }
+
+    public enum RuleType
+    {
+        Global,
+        PlayerBased,
+        Subroutine
     }
 }

@@ -1,0 +1,43 @@
+rule: "Debug"
+Event.OngoingPlayer
+if (!IsDummyBot())
+{
+    CreateHudText(EventPlayer(), null, "Eye Position:", EyePosition(), Location.Left, 0, Color.White, Color.White, Color.Blue);
+    CreateHudText(EventPlayer(), null, "Position:", PositionOf(), Location.Left, 1, Color.White, Color.White, Color.Blue);
+    CreateHudText(EventPlayer(), null, "Throttle:", ThrottleOf(), Location.Left, 2, Color.White, Color.White, Color.Blue);
+    CreateHudText(EventPlayer(), null, "Facing:", <"<0> <<1>, <2>>", FacingDirectionOf(), HorizontalFacingAngleOf(), VerticalFacingAngleOf()>, Location.Left, 3, Color.White, Color.White, Color.Blue);
+    CreateHudText(EventPlayer(), null, "Ray Cast Hit Position:",
+        RayCastHitPosition(
+            EyePosition(),
+            Destination(EyePosition(), FacingDirectionOf(), 100),
+            AllPlayers(),
+            EventPlayer(),
+            true
+        ), Location.Left, 5, Color.White, Color.White, Color.Blue
+    );
+    CreateHudText(EventPlayer(), null, "Ray Cast Hit Normal:",
+        RayCastHitNormal(
+            EyePosition(),
+            Destination(EyePosition(), FacingDirectionOf(), 100),
+            AllPlayers(),
+            EventPlayer(),
+            true
+        ), Location.Left, 6, Color.White, Color.White, Color.Blue
+    );
+    CreateHudText(EventPlayer(), null, "Ray Cast Hit Player:",
+        RayCastHitPlayer(
+            EyePosition(),
+            Destination(EyePosition(), FacingDirectionOf(), 100),
+            AllPlayers(),
+            EventPlayer(),
+            true
+        ), Location.Left, 7, Color.White, Color.White, Color.Blue
+    );
+    CreateHudText(EventPlayer(), null, "Server Load:", ServerLoad(), Location.Left, 8, Color.White, Color.White, Color.Blue);
+    CreateHudText(EventPlayer(), null, "Server Load Average:", ServerLoadAverage(), Location.Left, 9, Color.White, Color.White, Color.Blue);
+    CreateHudText(EventPlayer(), null, "Server Load Peak:", ServerLoadPeak(), Location.Left, 10, Color.White, Color.White, Color.Blue);
+
+    CreateHudText(EventPlayer(), null, "Class Memory:", ClassMemory(), Location.Left, 11, Color.White, Color.White, Color.Blue);
+    CreateHudText(EventPlayer(), null, "Class Memory Used:", ClassMemoryUsed(), Location.Left, 12, Color.White, Color.White, Color.Blue);
+    CreateHudText(EventPlayer(), null, "Class Memory Created:", ClassMemoryRemaining(), Location.Left, 13, Color.White, Color.White, Color.Blue);
+}
