@@ -41,8 +41,8 @@ namespace Deltin.Deltinteger.Pathfinder
             staticScope.AddNativeMethod(StopPathfind);
             staticScope.AddNativeMethod(CurrentSegmentAttribute);
             staticScope.AddNativeMethod(CustomMethodData.GetCustomMethod<IsPathfinding>());
-            staticScope.AddNativeMethod(CustomMethodData.GetCustomMethod<IsPathfindStuck>());
-            staticScope.AddNativeMethod(CustomMethodData.GetCustomMethod<FixPathfind>());
+            staticScope.AddNativeMethod(IsPathfindStuck);
+            staticScope.AddNativeMethod(FixPathfind);
             staticScope.AddNativeMethod(CustomMethodData.GetCustomMethod<NextNode>());
             staticScope.AddNativeMethod(CustomMethodData.GetCustomMethod<WalkPath>());
             staticScope.AddNativeMethod(CustomMethodData.GetCustomMethod<SegmentAttribute>());
@@ -278,6 +278,38 @@ namespace Deltin.Deltinteger.Pathfinder
                 Element player = (Element)methodCall.ParameterValues[0];
                 // If the player is not pathfinding, return -1.
                 return Element.TernaryConditional(pathfindInfo.NumberOfNodes(player) > 1, ((Element)pathfindInfo.PathAttributes.GetVariable(player))[0], new V_Number(-1));
+            }
+        };
+
+        private static FuncMethod IsPathfindStuck = new FuncMethodBuilder() {
+            Name = "IsPathfindStuck",
+            Documentation = "Returns true if the specified player takes longer than expected to reach the next pathfind node.",
+            Parameters = new CodeParameter[] {
+                new CodeParameter("player", "The player to check."),
+                new CodeParameter(
+                    "speedScalar",
+                    "The speed scalar of the player. `1` is the default speed of all heroes except Gengi and Tracer, which is `1.1`. Default value is `1`.",
+                    new ExpressionOrWorkshopValue(new V_Number(1))
+                )
+            },
+            DoesReturnValue = true,
+            OnCall = (parseInfo, docRange) => { parseInfo.TranslateInfo.ExecOnComponent<ResolveInfoComponent>(resolveInfo => resolveInfo.TrackTimeSinceLastNode = true); },
+            Action = (actionSet, methodCall) => actionSet.Translate.DeltinScript.GetComponent<ResolveInfoComponent>().IsPathfindingStuck((Element)methodCall.ParameterValues[0], (Element)methodCall.ParameterValues[1])
+        };
+
+        private static FuncMethod FixPathfind = new FuncMethodBuilder() {
+            Name = "FixPathfind",
+            Documentation = "Fixes pathfinding for a player by teleporting them to the next node. Use in conjunction with `IsPathfindStuck()`.",
+            Parameters = new CodeParameter[] {
+                new CodeParameter("player", "The player to fix pathfinding for.")
+            },
+            Action = (actionSet, methodCall) => {
+                Element player = (Element)methodCall.ParameterValues[0];
+                actionSet.AddAction(Element.Part<A_Teleport>(
+                    player,
+                    actionSet.Translate.DeltinScript.GetComponent<ResolveInfoComponent>().CurrentPositionWithDestination(player)
+                ));
+                return null;
             }
         };
     }

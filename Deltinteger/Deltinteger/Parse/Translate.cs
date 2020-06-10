@@ -25,7 +25,8 @@ namespace Deltin.Deltinteger.Parse
         public TranslateRule InitialPlayer { get; private set; }
         private readonly OutputLanguage Language;
         public readonly bool OptimizeOutput;
-        private List<IComponent> Components { get; } = new List<IComponent>(); 
+        private List<IComponent> Components { get; } = new List<IComponent>();
+        private List<InitComponent> InitComponent { get; } = new List<InitComponent>();
 
         public DeltinScript(TranslateSettings translateSettings)
         {
@@ -59,9 +60,39 @@ namespace Deltin.Deltinteger.Parse
             
             T newT = new T();
             newT.DeltinScript = this;
+
+            for (int i = InitComponent.Count - 1; i >= 0; i--)
+                if (typeof(T) == InitComponent[i].ComponentType)
+                {
+                    InitComponent[i].Apply(newT);
+                    InitComponent.RemoveAt(i);
+                }
+            
             Components.Add(newT);
             newT.Init();
+
             return newT;
+        }
+
+        public bool IsComponent<T>() where T: IComponent => Components.Any(component => component is T);
+        public bool IsComponent<T>(out T component) where T: IComponent
+        {
+            foreach (IComponent iterateComponent in Components)
+                if (iterateComponent is T t)
+                {
+                    component = t;
+                    return true;
+                }
+            component = default(T);
+            return false;
+        }
+
+        public void ExecOnComponent<T>(Action<T> apply) where T: IComponent
+        {
+            if (IsComponent<T>(out T existing))
+                apply.Invoke(existing);
+            else
+                InitComponent.Add(new InitComponent(typeof(T), component => apply.Invoke((T)component)));
         }
 
         private List<RuleAction> rules { get; } = new List<RuleAction>();
@@ -305,5 +336,17 @@ namespace Deltin.Deltinteger.Parse
     {
         DeltinScript DeltinScript { get; set; }
         void Init();
+    }
+
+    class InitComponent
+    {
+        public Type ComponentType { get; }
+        public Action<IComponent> Apply { get; }
+
+        public InitComponent(Type componentType, Action<IComponent> apply)
+        {
+            ComponentType = componentType;
+            Apply = apply;
+        }
     }
 }

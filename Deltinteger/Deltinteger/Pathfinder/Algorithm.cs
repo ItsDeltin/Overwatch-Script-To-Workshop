@@ -381,10 +381,7 @@ namespace Deltin.Deltinteger.Pathfinder
             actionSet.AddAction(endLoop);
             PlayerNodeReachedBreak.SetEndMarker(endLoop);
 
-            // TODO: Backtrack sets current as the destination parameter, but current is being sent as the destination, resulting in a useless action.
-            Backtrack((Element)current.GetVariable(), finalPath, finalPathAttributes);
-
-            actionSet.Translate.DeltinScript.GetComponent<PathfinderInfo>().Pathfind(actionSet, player, (Element)finalPath.GetVariable(), Source, finalPathAttributes?.GetVariable() as Element);
+            actionSet.Translate.DeltinScript.GetComponent<ResolveInfoComponent>().Pathfind(actionSet, player, pathmapObject, parentArray.Get(), parentAttributeInfo.Get(), Source);
         }
 
         protected override Element LoopCondition() => AnyAccessableUnvisited();

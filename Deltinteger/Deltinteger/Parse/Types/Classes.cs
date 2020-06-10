@@ -237,7 +237,11 @@ Object-serve scope. Only object members.
         /// <summary>Creates a direct reference to the ArrayStore.</summary>
         public IndexReference Spot(Element reference) => ArrayStore.CreateChild(reference);
 
+        /// <summary>Gets the value from a reference.</summary>
         public Element Get(Element reference) => Element.Part<V_ValueInArray>(ArrayStore.GetVariable(), reference);
+
+        /// <summary>Gets the value from the current context's object reference.</summary>
+        public Element Get(ActionSet actionSet) => Get((Element)actionSet.CurrentObject);
 
         public void Set(ActionSet actionSet, Element reference, Element value)
         {
