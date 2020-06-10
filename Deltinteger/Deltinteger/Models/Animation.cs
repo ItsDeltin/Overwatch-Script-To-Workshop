@@ -50,6 +50,9 @@ namespace Deltin.Deltinteger.Models
                     vertexElements[i] = indexedVar.GetVariable();
                     vertexVariables[i] = indexedVar;
                 }
+            
+            IndexedVar effects = context.VarCollection.AssignVar(scope, "hi_andy", context.IsGlobal, null);
+            actions.AddRange(effects.SetVariable(new V_EmptyArray()));
 
             foreach (AnimatedLine line in AnimatedLines)
             {
@@ -68,11 +71,14 @@ namespace Deltin.Deltinteger.Models
                         reevaluation
                     )
                 );
+                actions.AddRange(effects.SetVariable(
+                    Element.Part<V_Append>(effects.GetVariable(), new V_LastCreatedEntity())
+                ));
             }
 
             WasBuilt = true;
 
-            return new AnimationBuild(actions.ToArray(), vertexVariables);
+            return new AnimationBuild(actions.ToArray(), vertexVariables, effects.GetVariable());
         }
 
         public Element[] Animate(AnimationBuild builtAnimation)
@@ -170,11 +176,13 @@ namespace Deltin.Deltinteger.Models
         public Element[] Actions { get; }
         /// Any element can potentially be null.
         public IndexedVar[] VertexVariables { get; }
+        public Element EffectArray { get; }
 
-        public AnimationBuild(Element[] actions, IndexedVar[] vertexVariables)
+        public AnimationBuild(Element[] actions, IndexedVar[] vertexVariables, Element effectArray)
         {
             Actions = actions;
             VertexVariables = vertexVariables;
+            EffectArray = effectArray;
         }
     }
 
@@ -218,7 +226,7 @@ namespace Deltin.Deltinteger.Models
         }
     }
 
-    [CustomMethod("CreateAnimation", CustomMethodType.Action)]
+    [CustomMethod("CreateAnimation", CustomMethodType.MultiAction_Value)]
     [VarRefParameter("Animation")]
     [Parameter("Visible To", Elements.ValueType.Player, null)]
     [Parameter("Location", Elements.ValueType.Vector, null)]
@@ -240,7 +248,7 @@ namespace Deltin.Deltinteger.Models
             actions.AddRange(build.Actions);
             actions.AddRange(animation.Animation.Animate(build));
 
-            return new MethodResult(actions.ToArray(), null);
+            return new MethodResult(actions.ToArray(), build.EffectArray);
         }
 
         override public CustomMethodWiki Wiki()
