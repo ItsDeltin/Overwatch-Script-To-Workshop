@@ -49,12 +49,20 @@ namespace Deltin.Deltinteger.Parse
 
     public class FuncMethodBuilder
     {
+        /// <summary>Required: the name of the function.</summary>
         public string Name;
+        /// <summary>Not required: the parameters of the function. Will default to CodeParameter[0]</summary>
         public CodeParameter[] Parameters;
+        /// <summary>Not required: the return type of the function.</summary>
         public CodeType ReturnType;
+        /// <summary>Required: the documentation of the function.</summary>
         public string Documentation;
+        /// <summary>Not required: Determines if the function returns a value.</summary>
         public bool DoesReturnValue;
+        /// <summary>Required: The action of the function.</summary>
         public Func<ActionSet, MethodCall, IWorkshopTree> Action;
+        /// <summary>Not required: The code to run when the function is called.</summary>
+        public Action<ParseInfo, DocRange> OnCall;
 
         public static implicit operator FuncMethod(FuncMethodBuilder builder) => new FuncMethod(builder);
     }
