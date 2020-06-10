@@ -23,6 +23,7 @@ namespace Deltin.Deltinteger
         MethodAttributes Attributes { get; }
         bool DoesReturnValue { get; }
         IWorkshopTree Parse(ActionSet actionSet, MethodCall methodCall);
+        void Call(ParseInfo parseInfo, DocRange callRange) {}
     }
 
     public interface ISkip

@@ -44,10 +44,12 @@ namespace Deltin.Deltinteger.Parse
 
                 if (CallingMethod != null)
                 {
+                    CallingMethod.Call(parseInfo, NameRange);
+
+                    // Todo: move this to DefinedFunction.Call.
                     if (CallingMethod is DefinedFunction definedFunction)
                     {
                         definedFunction.OnBlockApply(this);
-                        definedFunction.Call(parseInfo, NameRange);
                         parseInfo.CurrentCallInfo?.Call(definedFunction, NameRange);
                     }
 

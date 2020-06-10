@@ -18,6 +18,7 @@ namespace Deltin.Deltinteger.Parse
         public bool DoesReturnValue { get; }
 
         private Func<ActionSet, MethodCall, IWorkshopTree> Action { get; }
+        private Action<ParseInfo, DocRange> OnCall { get; }
 
         public FuncMethod(string name, Func<ActionSet, MethodCall, IWorkshopTree> action)
         {
@@ -40,11 +41,14 @@ namespace Deltin.Deltinteger.Parse
             Documentation = builder.Documentation ?? throw new ArgumentNullException(nameof(Documentation));
             Action = builder.Action ?? throw new ArgumentNullException(nameof(Action));
             DoesReturnValue = builder.DoesReturnValue;
+            OnCall = builder.OnCall;
         }
 
         public CompletionItem GetCompletion() => MethodAttributes.GetFunctionCompletion(this);
         public string GetLabel(bool markdown) => HoverHandler.GetLabel(!DoesReturnValue ? null : ReturnType?.Name ?? "define", Name, Parameters, markdown, null);
         public IWorkshopTree Parse(ActionSet actionSet, MethodCall methodCall) => Action.Invoke(actionSet, methodCall);
+
+        public void Call(ParseInfo parseInfo, DocRange callRange) => OnCall?.Invoke(parseInfo, callRange);
     }
 
     public class FuncMethodBuilder
