@@ -5,6 +5,7 @@ using System.Linq;
 using Deltin.Deltinteger.Models.Import;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.Parse;
+using Deltin.Deltinteger.CustomMethods;
 
 namespace Deltin.Deltinteger.Models
 {
@@ -13,8 +14,8 @@ namespace Deltin.Deltinteger.Models
         private AnimatedLine[] AnimatedLines { get; }
         private AnimatedVertex[] Vertices { get; }
         public int Frames { get; }
-        public int FPS { get; }
-        private A_Wait Wait { get; }
+        public int FPS { get; private set; }
+        private A_Wait Wait { get; set; }
         public bool WasBuilt { get; private set; }
 
         public Animation(AnimatedLine[] animatedLines, AnimatedVertex[] vertices)
@@ -22,16 +23,23 @@ namespace Deltin.Deltinteger.Models
             AnimatedLines = animatedLines;
             Vertices = vertices;
             Frames = Vertices[0].FramePoints.Length;
-            FPS = 3;
+        }
+
+        public void SetFPS(int fps)
+        {
+            FPS = fps;
             Wait = Element.Part<A_Wait>(new V_Number(1.0/(double)FPS));
         }
 
-        public AnimationBuild Create(TranslateRule context, ScopeGroup scope, Element visibleTo, Element location, IWorkshopTree reevaluation)
+        public AnimationBuild Create(ActionSet actionSet, Element visibleTo, Element location, IWorkshopTree reevaluation, EnumMember type, EnumMember color)
         {
-            List<Element> actions = new List<Element>();
+            IndexReference currentFrame = actionSet.VarCollection.Assign("currentFrame", actionSet.IsGlobal, false);
 
             Element[] vertexElements = new Element[Vertices.Length];
-            IndexedVar[] vertexVariables = new IndexedVar[Vertices.Length];
+            IndexReference[] vertexVariables = new IndexReference[Vertices.Length];
+
+            TranslateRule current = null;
+
             for (int i = 0; i < vertexElements.Length; i++)
                 if (!Vertices[i].Changes)
                 {
@@ -41,18 +49,28 @@ namespace Deltin.Deltinteger.Models
                 }
                 else
                 {
+                    if (i%5==0 || current == null)
+                    {
+                        if (current != null)
+                            actionSet.Translate.DeltinScript.WorkshopRules.Add(current.GetRule());
+                        
+                        current = new TranslateRule(actionSet.Translate.DeltinScript, "init_animation_" + i + "-" + (i + 5), RuleEvent.OngoingGlobal);
+                    }
+
                     // The vertex changes location in the animation, so set its location to a variable.
-                    IndexedVar indexedVar = context.VarCollection.AssignVar(scope, "Vertex", context.IsGlobal, null);
+                    IndexReference indexReference = actionSet.VarCollection.Assign("Vertex", true, false);
                     
                     // Set the variable to the initial position
-                    actions.AddRange(indexedVar.SetVariable(Vertices[i].Initial().ToVector()));
+                    current.ActionSet.AddAction(indexReference.SetVariable(VertexArrayForVertex(i)));
 
-                    vertexElements[i] = indexedVar.GetVariable();
-                    vertexVariables[i] = indexedVar;
+                    vertexElements[i] = ((Element)indexReference.GetVariable())[(Element)currentFrame.GetVariable()];
+                    vertexVariables[i] = indexReference;
                 }
             
-            IndexedVar effects = context.VarCollection.AssignVar(scope, "hi_andy", context.IsGlobal, null);
-            actions.AddRange(effects.SetVariable(new V_EmptyArray()));
+            actionSet.Translate.DeltinScript.WorkshopRules.Add(current.GetRule());
+            
+            IndexReference effects = actionSet.VarCollection.Assign("hi_andy", actionSet.IsGlobal, false);
+            actionSet.AddAction(effects.SetVariable(new V_EmptyArray()));
 
             foreach (AnimatedLine line in AnimatedLines)
             {
@@ -61,43 +79,55 @@ namespace Deltin.Deltinteger.Models
 
                 if (vertex1 == -1 || vertex2 == -1) throw new Exception();
 
-                actions.Add(
-                    Element.Part<A_CreateBeamEffect>(
-                        visibleTo,
-                        EnumData.GetEnumValue(BeamType.GrappleBeam),
-                        Element.Part<V_Add>(location, vertexElements[vertex1]),
-                        Element.Part<V_Add>(location, vertexElements[vertex2]),
-                        EnumData.GetEnumValue(Elements.Color.Red),
-                        reevaluation
-                    )
-                );
-                actions.AddRange(effects.SetVariable(
-                    Element.Part<V_Append>(effects.GetVariable(), new V_LastCreatedEntity())
+                actionSet.AddAction(Element.Part<A_CreateBeamEffect>(
+                    visibleTo,
+                    type,
+                    Element.Part<V_Add>(location, vertexElements[vertex1]),
+                    Element.Part<V_Add>(location, vertexElements[vertex2]),
+                    color,
+                    reevaluation
                 ));
+                actionSet.AddAction(effects.ModifyVariable(Operation.AppendToArray, new V_LastCreatedEntity()));
+                actionSet.AddAction(A_Wait.MinimumWait);
             }
 
             WasBuilt = true;
 
-            return new AnimationBuild(actions.ToArray(), vertexVariables, effects.GetVariable());
+            return new AnimationBuild(vertexVariables, (Element)effects.GetVariable(), currentFrame);
         }
 
-        public Element[] Animate(AnimationBuild builtAnimation)
+        private Element VertexArrayForVertex(int vertex)
         {
-            List<Element> actions = new List<Element>();
-
+            Element[] positions = new Element[Frames];
+            Element lastNotNull = null;
             for (int f = 0; f < Frames; f++)
             {
-                for (int v = 0; v < Vertices.Length; v++)
-                    if (Vertices[v].FramePoints[f] != null
-                        && builtAnimation.VertexVariables[v] != null)
-                    {
-                        actions.AddRange(builtAnimation.VertexVariables[v].SetVariable(Vertices[v].FramePoints[f].ToVector()));
-                    }
-
-                actions.Add(Wait);
+                positions[f] = Vertices[vertex].FramePoints[f].ToVector();
+                if (positions[f] == null) positions[f] = lastNotNull;
+                else lastNotNull = positions[f];
             }
+            return Element.CreateArray(positions);
+        }
 
-            return actions.ToArray();
+        public void Animate(ActionSet actionSet, AnimationBuild builtAnimation)
+        {
+            actionSet.AddAction(builtAnimation.Current.SetVariable(new V_Number(0)));
+
+            if (builtAnimation.Current.WorkshopVariable.IsGlobal)
+                actionSet.AddAction(Element.Part<A_ForGlobalVariable>(
+                    builtAnimation.Current.WorkshopVariable,
+                    new V_Number(0), new V_Number(Frames - 1), new V_Number(1)
+                ));
+            // Player
+            else
+                actionSet.AddAction(Element.Part<A_ForPlayerVariable>(
+                    new V_EventPlayer(),
+                    builtAnimation.Current.WorkshopVariable,
+                    new V_Number(0), new V_Number(Frames - 1), new V_Number(1)
+                ));
+            
+            actionSet.AddAction(Wait);
+            actionSet.AddAction(new A_End());
         }
 
         public static Animation ImportObjSequence(string folder)
@@ -173,16 +203,16 @@ namespace Deltin.Deltinteger.Models
 
     public class AnimationBuild
     {
-        public Element[] Actions { get; }
         /// Any element can potentially be null.
-        public IndexedVar[] VertexVariables { get; }
+        public IndexReference[] VertexVariables { get; }
         public Element EffectArray { get; }
+        public IndexReference Current { get; }
 
-        public AnimationBuild(Element[] actions, IndexedVar[] vertexVariables, Element effectArray)
+        public AnimationBuild(IndexReference[] vertexVariables, Element effectArray, IndexReference current)
         {
-            Actions = actions;
             VertexVariables = vertexVariables;
             EffectArray = effectArray;
+            Current = current;
         }
     }
 
@@ -226,36 +256,34 @@ namespace Deltin.Deltinteger.Models
         }
     }
 
-    [CustomMethod("CreateAnimation", CustomMethodType.MultiAction_Value)]
-    [VarRefParameter("Animation")]
-    [Parameter("Visible To", Elements.ValueType.Player, null)]
-    [Parameter("Location", Elements.ValueType.Vector, null)]
-    [EnumParameter("Reevaluation", typeof(EffectRev))]
+    [CustomMethod("CreateAnimation", "Makes an animation, I guess", CustomMethodType.MultiAction_Value)]
     class CreateAnimation : ModelCreator
     {
-        override protected MethodResult Get()
-        {
-            if (((VarRef)Parameters[0]).Var is AnimationVar == false)
-                throw SyntaxErrorException.InvalidVarRefType(((VarRef)Parameters[0]).Var.Name, VarType.Model, ParameterLocations[0]);
-            
-            AnimationVar animation = (AnimationVar)((VarRef)Parameters[0]).Var;
-            Element visibleTo           = (Element)Parameters[1];
-            Element location            = (Element)Parameters[2];
-            EnumMember effectRev     = (EnumMember)Parameters[3];
+        public override CodeParameter[] Parameters() => new CodeParameter[] {
+            new FileParameter("animationFile", "The folder of the animation."),
+            new CodeParameter("visibleTo", "The players the animation is visible to."),
+            new CodeParameter("position", "The position to display the animation."),
+            new CodeParameter("reevaluation", "The reevaluation of the created animation. Position needs to be reevaluated for the position to play.", ValueGroupType.GetEnumType<EffectRev>()),
+            new CodeParameter("beamType", "The type of beam.", ValueGroupType.GetEnumType<BeamType>()),
+            new CodeParameter("beamColor", "The color of the beam.", ValueGroupType.GetEnumType<Color>()),
+            new ConstNumberParameter("fps", "The frames per second of the animation. Must be a constant number value.")
+        };
+
+        public override IWorkshopTree Get(ActionSet actionSet, IWorkshopTree[] parameterValues, object[] additional)
+        {            
+            Animation animation = Animation.ImportObjSequence(Path.GetDirectoryName((string)additional[0]));
+            animation.SetFPS((int)(double)additional[6]);
+            Element visibleTo           = (Element)parameterValues[1];
+            Element location            = (Element)parameterValues[2];
+            EnumMember effectRev     = (EnumMember)parameterValues[3];
+            EnumMember effectType     = (EnumMember)parameterValues[4];
+            EnumMember effectColor = (EnumMember)parameterValues[5];
 
             List<Element> actions = new List<Element>();
-            AnimationBuild build = animation.Animation.Create(TranslateContext, Scope, visibleTo, location, effectRev);
-            actions.AddRange(build.Actions);
-            actions.AddRange(animation.Animation.Animate(build));
+            AnimationBuild build = animation.Create(actionSet, visibleTo, location, effectRev, effectType, effectColor);
+            animation.Animate(actionSet, build);
 
-            return new MethodResult(actions.ToArray(), build.EffectArray);
-        }
-
-        override public CustomMethodWiki Wiki()
-        {
-            return new CustomMethodWiki(
-                "zoo wee mama this is bad."
-            );
+            return build.EffectArray;
         }
     }
 }

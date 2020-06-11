@@ -117,6 +117,7 @@ namespace Deltin.Deltinteger.Parse
     class FileParameter : CodeParameter
     {
         public string[] FileTypes { get; }
+        public bool NeedsDirectory { get; }
 
         /// <summary>
         /// A parameter that resolves to a file. AdditionalParameterData will return the file path.
@@ -126,6 +127,7 @@ namespace Deltin.Deltinteger.Parse
         /// <param name="fileTypes">The expected file types. Can be null.</param>
         public FileParameter(string parameterName, string description, params string[] fileTypes) : base(parameterName, description)
         {
+            NeedsDirectory = false;
             if (fileTypes != null)
             {
                 if (fileTypes.Length == 0)
@@ -133,6 +135,11 @@ namespace Deltin.Deltinteger.Parse
                 else
                     FileTypes = fileTypes.Select(f => f.ToLower()).ToArray();
             }
+        }
+
+        public FileParameter(string parameterName, string description ) : base(parameterName, description)
+        {
+            NeedsDirectory = true;
         }
 
         public override object Validate(ScriptFile script, IExpression value, DocRange valueRange)
@@ -156,16 +163,19 @@ namespace Deltin.Deltinteger.Parse
             if (Directory.Exists(dir))
                 Importer.AddImportCompletion(script, dir, valueRange);
 
-            if (!File.Exists(resultingPath))
+            if (NeedsDirectory)
             {
-                script.Diagnostics.Error($"No file was found at '{resultingPath}'.", valueRange);
-                return null;
-            }
+                if (!File.Exists(resultingPath))
+                {
+                    script.Diagnostics.Error($"No file was found at '{resultingPath}'.", valueRange);
+                    return null;
+                }
 
-            if (FileTypes != null && !FileTypes.Contains(Path.GetExtension(resultingPath).ToLower()))
-            {
-                script.Diagnostics.Error($"Expected a file with the file type '{string.Join(", ", FileTypes)}'.", valueRange);
-                return null;
+                if (FileTypes != null && !FileTypes.Contains(Path.GetExtension(resultingPath).ToLower()))
+                {
+                    script.Diagnostics.Error($"Expected a file with the file type '{string.Join(", ", FileTypes)}'.", valueRange);
+                    return null;
+                }
             }
 
             script.AddDefinitionLink(valueRange, new Location(Extras.Definition(resultingPath), DocRange.Zero));
