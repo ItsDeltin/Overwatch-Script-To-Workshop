@@ -102,7 +102,7 @@ namespace Deltin.Deltinteger.Models
             Element lastNotNull = null;
             for (int f = 0; f < Frames; f++)
             {
-                positions[f] = Vertices[vertex].FramePoints[f].ToVector();
+                positions[f] = Vertices[vertex].FramePoints[f]?.ToVector();
                 if (positions[f] == null) positions[f] = lastNotNull;
                 else lastNotNull = positions[f];
             }
