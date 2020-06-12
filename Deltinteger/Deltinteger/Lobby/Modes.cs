@@ -147,6 +147,7 @@ namespace Deltin.Deltinteger.Lobby
         private static LobbySetting GameLengthInMinutes = new RangeValue(false, "Game Length In Minutes", 5, 15, 10);
         private static LobbySetting SelfInitiatedRespawn = new SwitchValue("Self Initiated Respawn", true);
         private static LobbySetting ScoreToWin_1to9 = new RangeValue(false, "Score To Win", 1, 9, 3) { ReferenceName = "Score To Win 1-9" };
+        private static LobbySetting LimitValidControlPoints = new SelectValue("Limit Valid Control Points", "All", "First", "Second", "Third");
 
         public static ModeSettingCollection[] AllModeSettings { get; private set; }
 
@@ -226,7 +227,7 @@ namespace Deltin.Deltinteger.Lobby
             AllModeSettings = new ModeSettingCollection[] {
                 new ModeSettingCollection("All"),
                 new ModeSettingCollection("Assault", true).Competitive().AddCaptureSpeed(),
-                new ModeSettingCollection("Control", true).Competitive().AddCaptureSpeed().AddSelect("Limit Valid Control Points", "All", "First", "Second", "Third").AddIntRange("Score To Win", 1, 3, 2, "Score To Win 1-3").AddRange("Scoring Speed Modifier", 10, 500),
+                new ModeSettingCollection("Control", true).Competitive().AddCaptureSpeed().Add(LimitValidControlPoints).AddIntRange("Score To Win", 1, 3, 2, "Score To Win 1-3").AddRange("Scoring Speed Modifier", 10, 500),
                 new ModeSettingCollection("Escort", true).Competitive().AddPayloadSpeed(),
                 new ModeSettingCollection("Hybrid", true).Competitive().AddCaptureSpeed().AddPayloadSpeed(),
                 new ModeSettingCollection("Capture The Flag", false).AddSwitch("Blitz Flag Locations", false).AddSwitch("Damage Interrupts Flag Interaction", false)
@@ -240,7 +241,7 @@ namespace Deltin.Deltinteger.Lobby
                     .AddSwitch("Reveal Heroes", false).AddIntRange("Reveal Heroes After Match Time Elapsed", 0, 180, 75),
                 new ModeSettingCollection("Team Deathmatch", false).Add(GameLengthInMinutes).AddSwitch("Mercy Resurrect Counteracts Kills", true).AddIntRange("Score To Win", 1, 200, 30, "Score To Win 1-200").Add(SelfInitiatedRespawn).AddSwitch("Imbalanced Team Score To Win", false)
                     .AddIntRange("Team 1 Score To Win", 1, 200, 30).AddIntRange("Team 2 Score To Win", 1, 200, 30),
-                new ModeSettingCollection("Skirmish", false),
+                new ModeSettingCollection("Skirmish", false).Add(LimitValidControlPoints),
                 new ModeSettingCollection("Practice Range", false).AddSwitch("Spawn Training Bots", true).AddRange("Training Bot Respawn Time Scalar", 10, 500)
             };
         }

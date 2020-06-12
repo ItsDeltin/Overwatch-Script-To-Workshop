@@ -95,7 +95,7 @@ namespace Deltin.Deltinteger.Parse
             if (context.block() == null) parseInfo.Script.Diagnostics.Error("Expected block.", nameRange);
 
             // Add to the scope. Check for conflicts if the method is not overriding.
-            objectScope.AddMethod(this, parseInfo.Script.Diagnostics, nameRange, !Attributes.Override);
+            containingScope.AddMethod(this, parseInfo.Script.Diagnostics, nameRange, !Attributes.Override);
 
             // Add the hover info.
             parseInfo.Script.AddHover(DocRange.GetRange(context.name), GetLabel(true));
