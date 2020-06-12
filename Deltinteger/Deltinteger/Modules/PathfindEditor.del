@@ -168,7 +168,7 @@ class Node
         else
         {
             Make(Color.Green);
-            root.ActivateScoper(root.scoper, 2, this);
+            root.ActivateScoper(root.scoper, 1, this);
         }
         EffectID = LastCreatedEntity();
     }
@@ -284,7 +284,36 @@ class Segment
 
             if (FirstAttribute != 0 || SecondAttribute != 0)
             {
-                root.ActivateScoper(root.scoper, 1, this);
+                CreateInWorldText(
+                    AllPlayers(),
+                    FirstAttribute,
+                    LinearInterpolate(
+                        Node1.ShownLocation,
+                        Node2.ShownLocation,
+                        0.2
+                    ),
+                    2.5,
+                    Clipping.ClipAgainstSurfaces,
+                    InworldTextRev.VisibleTo,
+                    Color.Yellow,
+                    Spectators.VisibleAlways
+                );
+                AttributeText1 = LastTextID();
+                CreateInWorldText(
+                    AllPlayers(),
+                    SecondAttribute,
+                    LinearInterpolate(
+                        Node1.ShownLocation,
+                        Node2.ShownLocation,
+                        0.8
+                    ),
+                    2.5,
+                    Clipping.ClipAgainstSurfaces,
+                    InworldTextRev.VisibleTo,
+                    Color.Orange,
+                    Spectators.VisibleAlways
+                );
+                AttributeText2 = LastTextID();
             }
         }
     }
@@ -434,47 +463,10 @@ rule: "Create Attribute HUD"
     );
 }
 
-rule: "Create segment attribute text"
-Event.OnDamageTaken
-if (scoper == EventPlayer())
-if (ScopeID == 1)
-{
-    CreateInWorldText(
-        AllPlayers(),
-        (<Segment>ScopeData).FirstAttribute,
-        LinearInterpolate(
-            (<Node>((<Segment>ScopeData).Node1)).ShownLocation,
-            (<Node>((<Segment>ScopeData).Node2)).ShownLocation,
-            0.2
-        ),
-        2.5,
-        Clipping.ClipAgainstSurfaces,
-        InworldTextRev.String,
-        Color.Yellow,
-        Spectators.VisibleAlways
-    );
-    (<Segment>ScopeData).AttributeText1 = LastTextID();
-    CreateInWorldText(
-        AllPlayers(),
-        (<Segment>ScopeData).SecondAttribute,
-        LinearInterpolate(
-            (<Node>((<Segment>ScopeData).Node1)).ShownLocation,
-            (<Node>((<Segment>ScopeData).Node2)).ShownLocation,
-            0.8
-        ),
-        2.5,
-        Clipping.ClipAgainstSurfaces,
-        InworldTextRev.String,
-        Color.Orange,
-        Spectators.VisibleAlways
-    );
-    (<Segment>ScopeData).AttributeText2 = LastTextID();
-}
-
 rule: "Create Selected ID Text"
 Event.OnDamageTaken
 if (scoper == EventPlayer())
-if (ScopeID == 2)
+if (ScopeID == 1)
 {
     CreateInWorldText(
         AllPlayers(),

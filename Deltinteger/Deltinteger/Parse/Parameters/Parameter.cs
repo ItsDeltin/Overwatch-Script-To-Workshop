@@ -140,5 +140,7 @@ namespace Deltin.Deltinteger.Parse
 
         public Scope ReturningScope() => null;
         public CodeType Type() => null;
+
+        public static bool UseNonnullParameter(IWorkshopTree input) => input != null && input is V_Null == false;
     }
 }

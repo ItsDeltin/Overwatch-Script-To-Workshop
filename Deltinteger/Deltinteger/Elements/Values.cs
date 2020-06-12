@@ -1655,6 +1655,10 @@ namespace Deltin.Deltinteger.Elements
         {
             ParameterValues = new IWorkshopTree[] { x, y, z };
         }
+        public V_Vector(IWorkshopTree x, IWorkshopTree y, IWorkshopTree z)
+        {
+            ParameterValues = new IWorkshopTree[] { x, y, z };
+        }
         public V_Vector(double x, double y, double z) : this(new V_Number(x), new V_Number(y), new V_Number(z))
         {
         }

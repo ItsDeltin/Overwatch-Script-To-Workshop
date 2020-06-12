@@ -37,6 +37,8 @@ namespace Deltin.Deltinteger.Pathfinder
             serveObjectScope.AddNativeMethod(PathfindEither);
             serveObjectScope.AddNativeMethod(GetResolve(DeltinScript));
             serveObjectScope.AddNativeMethod(GetResolveTo(DeltinScript));
+            serveObjectScope.AddNativeMethod(AddNode);
+            serveObjectScope.AddNativeMethod(AddSegment);
 
             staticScope.AddNativeMethod(StopPathfind);
             staticScope.AddNativeMethod(CurrentSegmentAttribute);
@@ -232,7 +234,7 @@ namespace Deltin.Deltinteger.Pathfinder
         };
 
         // ResolveTo(position, resolveTo, [attributes])
-        public static FuncMethod GetResolveTo(DeltinScript deltinScript) => new FuncMethodBuilder() {
+        private static FuncMethod GetResolveTo(DeltinScript deltinScript) => new FuncMethodBuilder() {
             Name = "ResolveTo",
             Documentation = "Resolves the path to the specified destination.",
             DoesReturnValue = true,
@@ -249,10 +251,60 @@ namespace Deltin.Deltinteger.Pathfinder
             }
         };
 
+        // AddNode(position)
+        private FuncMethod AddNode => new FuncMethodBuilder() {
+            Name = "AddNode",
+            Documentation = "Dynamically adds a node to the pathmap.",
+            Parameters = new CodeParameter[] {
+                new CodeParameter("position", "The position to place the new node.")
+            },
+            DoesReturnValue = true,
+            Action = (actionSet, methodCall) => {
+                // Append the position.
+                actionSet.AddAction(Nodes.ModifyVariable(operation: Operation.AppendToArray, value: (Element)methodCall.ParameterValues[0], index: (Element)actionSet.CurrentObject));
+                
+                // Return the index of the added node.
+                return Element.Part<V_CountOf>(Nodes.Get()[(Element)actionSet.CurrentObject]);
+            }
+        };
+
+        private FuncMethod AddSegment => new FuncMethodBuilder() {
+            Name = "AddSegment",
+            Documentation = "Dynamically connects 2 nodes. Existing path resolves will not reflect the new available path.",
+            Parameters = new CodeParameter[] {
+                new CodeParameter("node_a", "The first node of the segment."),
+                new CodeParameter("node_b", "The second node of the segment."),
+                new CodeParameter("attribute_ab", "The attribute when travelling from a to b.", new ExpressionOrWorkshopValue()),
+                new CodeParameter("attribute_ba", "The attribute when travelling from b to a.", new ExpressionOrWorkshopValue())
+            },
+            DoesReturnValue = true,
+            Action = (actionSet, methodCall) => {
+                Element x, y, z = new V_Number(0);
+
+                // Encode the x, y, and z values.
+                if (ExpressionOrWorkshopValue.UseNonnullParameter(methodCall.ParameterValues[2])) // A value was set for the 'attribute_ab' parameter.
+                    x = ((Element)methodCall.ParameterValues[0]) + (((Element)methodCall.ParameterValues[2]) / 100);
+                else // A value was not set for the 'attribute_ab' parameter.
+                    x = (Element)methodCall.ParameterValues[0];
+                
+                // Do the same with y
+                if (ExpressionOrWorkshopValue.UseNonnullParameter(methodCall.ParameterValues[3])) // A value was set for the 'attribute_ba' parameter.
+                    y = ((Element)methodCall.ParameterValues[1]) + (((Element)methodCall.ParameterValues[3]) / 100);
+                else // A value was not set for the 'attribute_ba' parameter.
+                    y = (Element)methodCall.ParameterValues[1];
+                
+                // Append the vector.
+                actionSet.AddAction(Segments.ModifyVariable(operation: Operation.AppendToArray, value: new V_Vector(x, y, z), index: (Element)actionSet.CurrentObject));
+
+                // Return the index of the last added node.
+                return Element.Part<V_CountOf>(Segments.GetVariable()) - 1;
+            }
+        };
+
         // Static functions
         // StopPathfind(players)
         private static FuncMethod StopPathfind = new FuncMethodBuilder() {
-            Name = "GetPath",
+            Name = "StopPathfind",
             Documentation = "Stops pathfinding for the specified players.",
             Parameters = new CodeParameter[] {
                 new CodeParameter("players", "The players that will stop pathfinding. Can be a single player or an array of players.")
