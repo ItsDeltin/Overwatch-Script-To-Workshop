@@ -1105,7 +1105,7 @@ namespace Deltin.Deltinteger.Elements
         }
         public V_Number() : this(0) {}
 
-        public override string ToWorkshop(OutputLanguage language)
+        public override string ToWorkshop(OutputLanguage language, ToWorkshopContext context)
         {
             if (double.IsNaN(Value))
                 Value = 0;
@@ -1882,10 +1882,12 @@ namespace Deltin.Deltinteger.Elements
     [HideElement]
     public class V_IfThenElse : Element
     {
-        public override string ToWorkshop(OutputLanguage language)
+        public override string ToWorkshop(OutputLanguage language, ToWorkshopContext context)
         {
             AddMissingParameters();
-            return ParameterValues[0].ToWorkshop(language) + " ? " + ParameterValues[1].ToWorkshop(language) + " : " + ParameterValues[2].ToWorkshop(language);
+            string result = ParameterValues[0].ToWorkshop(language, ToWorkshopContext.NestedValue) + " ? " + ParameterValues[1].ToWorkshop(language, ToWorkshopContext.NestedValue) + " : " + ParameterValues[2].ToWorkshop(language, ToWorkshopContext.NestedValue);
+            if (context == ToWorkshopContext.ConditionValue) result = "(" + result + ")";
+            return result;
         }
     }
 

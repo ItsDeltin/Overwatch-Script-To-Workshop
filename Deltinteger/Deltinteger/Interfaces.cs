@@ -10,13 +10,6 @@ using StringOrMarkupContent = OmniSharp.Extensions.LanguageServer.Protocol.Model
 
 namespace Deltin.Deltinteger
 {
-    public interface IWorkshopTree
-    {
-        string ToWorkshop(OutputLanguage language);
-        bool EqualTo(IWorkshopTree other);
-        int ElementCount() => 1;
-    }
-
     public interface IMethod : IScopeable, IParameterCallable
     {
         CodeType ReturnType { get; }

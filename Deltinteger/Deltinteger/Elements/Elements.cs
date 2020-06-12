@@ -67,12 +67,12 @@ namespace Deltin.Deltinteger.Elements
             return ElementList.GetLabel(false);
         }
         
-        public virtual string ToWorkshop(OutputLanguage language)
+        public virtual string ToWorkshop(OutputLanguage language, ToWorkshopContext context)
         {
             // Get the parameters
             AddMissingParameters();
             List<string> parameters = AdditionalParameters().ToList();
-            parameters.AddRange(ParameterValues.Select(p => p.ToWorkshop(language)));
+            parameters.AddRange(ParameterValues.Select(p => p.ToWorkshop(language, ToWorkshopContext.NestedValue)));
 
             string result = Extras.Indent(Indent, true); // TODO: option for spaces or tab output.
 

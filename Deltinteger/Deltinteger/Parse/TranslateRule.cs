@@ -371,7 +371,7 @@ namespace Deltin.Deltinteger.Parse
             EndMarker = endMarker;
         }
 
-        public string ToWorkshop(OutputLanguage language) => StartMarker.NumberOfActionsToMarker(EndMarker).ToString();
+        public string ToWorkshop(OutputLanguage language, ToWorkshopContext context) => StartMarker.NumberOfActionsToMarker(EndMarker).ToString();
 
         public bool EqualTo(IWorkshopTree other) => false;
     }
