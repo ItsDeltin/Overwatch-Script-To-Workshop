@@ -14,7 +14,7 @@ namespace Deltin.Deltinteger.Models
         private AnimatedLine[] AnimatedLines { get; }
         private AnimatedVertex[] Vertices { get; }
         public int Frames { get; }
-        public int FPS { get; private set; }
+        public double FPS { get; private set; }
         private A_Wait Wait { get; set; }
         public bool WasBuilt { get; private set; }
 
@@ -25,10 +25,15 @@ namespace Deltin.Deltinteger.Models
             Frames = Vertices[0].FramePoints.Length;
         }
 
-        public void SetFPS(int fps)
+        public void SetFPS(double fps, double skip)
         {
             FPS = fps;
-            Wait = Element.Part<A_Wait>(new V_Number(1.0/(double)FPS));
+
+            double time = 1.0 / FPS;
+            if (skip > 0) time *= 1.0 + 1.0 / skip;
+            else if (skip < 0) time *= -skip + 1;
+            
+            Wait = Element.Part<A_Wait>(new V_Number(time));
         }
 
         public AnimationBuild Create(ActionSet actionSet, Element visibleTo, Element location, IWorkshopTree reevaluation, EnumMember type, EnumMember color)
@@ -130,11 +135,11 @@ namespace Deltin.Deltinteger.Models
             actionSet.AddAction(new A_End());
         }
 
-        public static Animation ImportObjSequence(string folder)
+        public static Animation ImportObjSequence(string folder, int skip)
         {
-            string[] files = GetFiles(folder);
+            string[] files = GetFiles(folder, skip);
 
-            if (files.Length == 0) throw new Exception();
+            if (files.Length == 0) throw new Exception("No obj files found at " + folder);
 
             ObjModel[] keys = new ObjModel[files.Length];
             for (int i = 0; i < keys.Length; i++)
@@ -185,17 +190,20 @@ namespace Deltin.Deltinteger.Models
             return new Animation(animatedLines, animatedVertices);
         }
 
-        private static string[] GetFiles(string folder)
+        private static string[] GetFiles(string folder, int skip)
         {
             List<string> frames = new List<string>();
             string[] files = Directory.GetFiles(folder);
+            int num = 0;
             foreach (string file in files)
             {
                 if (Path.GetExtension(file) != ".obj") continue;
                 string[] split = Path.GetFileNameWithoutExtension(file).Split('_');
                 if (split.Length < 2) continue;
                 if (!int.TryParse(split.Last(), out int f)) continue;
-                frames.Add(file);
+
+                if (skip == 0 || skip > 0 ? (num + 1) % (skip + 1) != 0 : (num + 1) % (-skip + 1) == 0) frames.Add(file);
+                num++;
             }
             return frames.OrderBy(file => int.Parse(Path.GetFileNameWithoutExtension(file).Split('_').Last())).ToArray();
         }
@@ -266,13 +274,19 @@ namespace Deltin.Deltinteger.Models
             new CodeParameter("reevaluation", "The reevaluation of the created animation. Position needs to be reevaluated for the position to play.", ValueGroupType.GetEnumType<EffectRev>()),
             new CodeParameter("beamType", "The type of beam.", ValueGroupType.GetEnumType<BeamType>()),
             new CodeParameter("beamColor", "The color of the beam.", ValueGroupType.GetEnumType<Color>()),
-            new ConstNumberParameter("fps", "The frames per second of the animation. Must be a constant number value.")
+            new ConstNumberParameter("fps", "The frames per second of the animation. Must be a constant number value."),
+            new ConstNumberParameter("frameSkip", "0 will skip no frames, 1 will skip ever other frame, 2 will skip every 3rd frame, 3 will skip every 4th frame, etc. Defaults to 0.", 0)
         };
 
         public override IWorkshopTree Get(ActionSet actionSet, IWorkshopTree[] parameterValues, object[] additional)
-        {            
-            Animation animation = Animation.ImportObjSequence(Path.GetDirectoryName((string)additional[0]));
-            animation.SetFPS((int)(double)additional[6]);
+        {
+            double fps = (double)additional[6];
+            double frameSkip = (double)additional[7];
+
+            Animation animation = Animation.ImportObjSequence(Path.GetDirectoryName((string)additional[0]), (int)frameSkip);
+
+            animation.SetFPS(fps, frameSkip);
+
             Element visibleTo           = (Element)parameterValues[1];
             Element location            = (Element)parameterValues[2];
             EnumMember effectRev     = (EnumMember)parameterValues[3];

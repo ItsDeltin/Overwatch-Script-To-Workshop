@@ -90,6 +90,9 @@ namespace Deltin.Deltinteger.Parse
         {
             if (value == null) return DefaultConstValue;
 
+            if (value is ExpressionOrWorkshopValue expressionOrWorkshopValue)
+                return ((V_Number)expressionOrWorkshopValue.WorkshopValue).Value;
+
             if (value is NumberAction == false)
             {
                 script.Diagnostics.Error("Expected a number constant.", valueRange);
@@ -163,7 +166,7 @@ namespace Deltin.Deltinteger.Parse
             if (Directory.Exists(dir))
                 Importer.AddImportCompletion(script, dir, valueRange);
 
-            if (NeedsDirectory)
+            if (!NeedsDirectory)
             {
                 if (!File.Exists(resultingPath))
                 {
