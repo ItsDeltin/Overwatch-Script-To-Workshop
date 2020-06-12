@@ -118,17 +118,16 @@ namespace Deltin.Deltinteger.Pathfinder
 
             if (useAttributes)
                 actionSet.AddAction(parentAttributeInfo.SetVariable(
-                    Element.TernaryConditional(
+                    value: Element.TernaryConditional(
                         new V_Compare(
                             current.GetVariable(),
                             Operators.Equal,
                             Node1(forBuilder.IndexValue)
                         ),
-                        Node1Attribute(forBuilder.IndexValue),
-                        Node2Attribute(forBuilder.IndexValue)
+                        Node2Attribute(forBuilder.IndexValue),
+                        Node1Attribute(forBuilder.IndexValue)
                     ),
-                    null,
-                    (Element)neighborIndex.GetVariable()
+                    index: neighborIndex.Get()
                 ));
 
             // End the if.
