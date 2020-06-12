@@ -268,6 +268,7 @@ namespace Deltin.Deltinteger.Pathfinder
             }
         };
 
+        // AddSegment(node_a, node_b, [attribute_ab], [attribute_ba])
         private FuncMethod AddSegment => new FuncMethodBuilder() {
             Name = "AddSegment",
             Documentation = "Dynamically connects 2 nodes. Existing path resolves will not reflect the new available path.",
@@ -325,14 +326,10 @@ namespace Deltin.Deltinteger.Pathfinder
                 new CodeParameter("player", "The player to get the current segment attribute of.")
             },
             DoesReturnValue = true,
-            Action = (actionSet, methodCall) => {
-                PathfinderInfo pathfindInfo = actionSet.Translate.DeltinScript.GetComponent<PathfinderInfo>();
-                Element player = (Element)methodCall.ParameterValues[0];
-                // If the player is not pathfinding, return -1.
-                return Element.TernaryConditional(pathfindInfo.NumberOfNodes(player) > 1, ((Element)pathfindInfo.PathAttributes.GetVariable(player))[0], new V_Number(-1));
-            }
+            Action = (actionSet, methodCall) => actionSet.Translate.DeltinScript.GetComponent<ResolveInfoComponent>().CurrentAttribute.Get((Element)methodCall.ParameterValues[0])
         };
 
+        // IsPathfindStuck(player, [speedScalar])
         private static FuncMethod IsPathfindStuck = new FuncMethodBuilder() {
             Name = "IsPathfindStuck",
             Documentation = "Returns true if the specified player takes longer than expected to reach the next pathfind node.",
@@ -349,6 +346,7 @@ namespace Deltin.Deltinteger.Pathfinder
             Action = (actionSet, methodCall) => actionSet.Translate.DeltinScript.GetComponent<ResolveInfoComponent>().IsPathfindingStuck((Element)methodCall.ParameterValues[0], (Element)methodCall.ParameterValues[1])
         };
 
+        // FixPathfind(player)
         private static FuncMethod FixPathfind = new FuncMethodBuilder() {
             Name = "FixPathfind",
             Documentation = "Fixes pathfinding for a player by teleporting them to the next node. Use in conjunction with `IsPathfindStuck()`.",
