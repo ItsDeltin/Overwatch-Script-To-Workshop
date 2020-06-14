@@ -42,10 +42,10 @@ namespace Deltin.Deltinteger.Pathfinder
 
             staticScope.AddNativeMethod(StopPathfind);
             staticScope.AddNativeMethod(CurrentSegmentAttribute);
-            staticScope.AddNativeMethod(CustomMethodData.GetCustomMethod<IsPathfinding>());
+            staticScope.AddNativeMethod(IsPathfinding);
             staticScope.AddNativeMethod(IsPathfindStuck);
             staticScope.AddNativeMethod(FixPathfind);
-            staticScope.AddNativeMethod(CustomMethodData.GetCustomMethod<NextNode>());
+            staticScope.AddNativeMethod(NextNode);
             staticScope.AddNativeMethod(CustomMethodData.GetCustomMethod<WalkPath>());
             staticScope.AddNativeMethod(CustomMethodData.GetCustomMethod<SegmentAttribute>());
             staticScope.AddNativeMethod(CustomMethodData.GetCustomMethod<RestartThottle>());
@@ -311,9 +311,7 @@ namespace Deltin.Deltinteger.Pathfinder
                 new CodeParameter("players", "The players that will stop pathfinding. Can be a single player or an array of players.")
             },
             Action = (actionSet, methodCall) => {
-                actionSet.AddAction(
-                    actionSet.Translate.DeltinScript.GetComponent<PathfinderInfo>().Path.SetVariable(new V_EmptyArray(), (Element)methodCall.ParameterValues[0])
-                );
+                actionSet.Translate.DeltinScript.GetComponent<ResolveInfoComponent>().StopPathfinding(actionSet, (Element)methodCall.ParameterValues[0]);
                 return null;
             }
         };
@@ -361,6 +359,24 @@ namespace Deltin.Deltinteger.Pathfinder
                 ));
                 return null;
             }
+        };
+
+        private static FuncMethod NextNode = new FuncMethodBuilder() {
+            Name = "NextNode",
+            Documentation = "Gets the position the player is currently walking towards.",
+            Parameters = new CodeParameter[] {
+                new CodeParameter("player", "The player to get the next node of.")
+            },
+            Action = (actionSet, methodCall) => actionSet.Translate.DeltinScript.GetComponent<ResolveInfoComponent>().CurrentPositionWithDestination((Element)methodCall.ParameterValues[0])
+        };
+
+        private static FuncMethod IsPathfinding = new FuncMethodBuilder() {
+            Name = "IsPathfinding",
+            Documentation = "Determines if the player is currently pathfinding.",
+            Parameters = new CodeParameter[] {
+                new CodeParameter("player", "todo")
+            },
+            Action = (actionSet, methodCall) => actionSet.Translate.DeltinScript.GetComponent<ResolveInfoComponent>().IsPathfinding((Element)methodCall.ParameterValues[0])
         };
     }
 

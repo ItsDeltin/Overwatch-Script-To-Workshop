@@ -30,7 +30,7 @@ namespace Deltin.Deltinteger.Pathfinder
             ParentAttributeArray = AddObjectVariable(new InternalVar("ParentAttributeArray"));
             
             // Set Pathmap
-            Pathmap = AddObjectVariable(new InternalVar("Pathmap"));
+            Pathmap = AddObjectVariable(new InternalVar("OriginMap"));
 
             // Set Destination
             Destination = AddObjectVariable(new InternalVar("Destination"));

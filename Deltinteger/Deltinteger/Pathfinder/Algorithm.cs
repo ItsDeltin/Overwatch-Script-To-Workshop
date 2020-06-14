@@ -428,24 +428,8 @@ namespace Deltin.Deltinteger.Pathfinder
 
         override protected void GetResult()
         {
-            ForeachBuilder assignPlayerPaths = new ForeachBuilder(actionSet, players);
-            actionSet.AddAction(A_Wait.MinimumWait);
-
-            IndexReference finalPath = actionSet.VarCollection.Assign("Dijkstra: Final Path", actionSet.IsGlobal, false);
-            IndexReference finalPathAttributes = actionSet.VarCollection.Assign("Dijkstra: Final Path Attributes", actionSet.IsGlobal, false);
-
-            actionSet.AddAction(finalPathAttributes.SetVariable(new V_EmptyArray()));
-
-            Backtrack(
-                Element.Part<V_ValueInArray>(
-                    closestNodesToPlayers.GetVariable(),
-                    assignPlayerPaths.Index
-                ),
-                finalPath,
-                finalPathAttributes
-            );
-            actionSet.Translate.DeltinScript.GetComponent<PathfinderInfo>().Pathfind(actionSet, assignPlayerPaths.IndexValue, (Element)finalPath.GetVariable(), Source, (Element)finalPathAttributes.GetVariable());
-            assignPlayerPaths.Finish();
+            ResolveInfoComponent resolveInfo = actionSet.Translate.DeltinScript.GetComponent<ResolveInfoComponent>();
+            resolveInfo.Pathfind(actionSet, players, pathmapObject, parentArray.Get(), parentAttributeInfo.Get(), Source);
         }
     }
 
@@ -542,10 +526,10 @@ namespace Deltin.Deltinteger.Pathfinder
             ClassReference = PathResolveClass.Create(actionSet, actionSet.Translate.DeltinScript.GetComponent<ClassData>());
 
             // Save the pathmap.
-            PathResolveClass.Pathmap.Set(actionSet, (Element)ClassReference.GetVariable(), (Element)actionSet.CurrentObject);
+            PathResolveClass.Pathmap.Set(actionSet, ClassReference.Get(), (Element)actionSet.CurrentObject);
 
             // Save the destination.
-            PathResolveClass.Destination.Set(actionSet, (Element)ClassReference.GetVariable(), Source);
+            PathResolveClass.Destination.Set(actionSet, ClassReference.Get(), Source);
 
             // Assign FinalNode
             if (Destination != null)
