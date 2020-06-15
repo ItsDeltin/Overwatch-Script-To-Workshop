@@ -114,8 +114,10 @@ namespace Deltin.Deltinteger.Models
             return Element.CreateArray(positions);
         }
 
-        public void Animate(ActionSet actionSet, AnimationBuild builtAnimation)
+        public void Animate(ActionSet actionSet, AnimationBuild builtAnimation, IWorkshopTree doLoop)
         {
+            if (doLoop != null) actionSet.AddAction(Element.Part<A_While>(doLoop));
+
             actionSet.AddAction(builtAnimation.Current.SetVariable(new V_Number(0)));
 
             if (builtAnimation.Current.WorkshopVariable.IsGlobal)
@@ -133,6 +135,12 @@ namespace Deltin.Deltinteger.Models
             
             actionSet.AddAction(Wait);
             actionSet.AddAction(new A_End());
+
+            if (doLoop != null)
+            {
+                actionSet.AddAction(Wait);
+                actionSet.AddAction(new A_End());
+            }
         }
 
         public static Animation ImportObjSequence(string folder, int skip)
@@ -202,7 +210,7 @@ namespace Deltin.Deltinteger.Models
                 if (split.Length < 2) continue;
                 if (!int.TryParse(split.Last(), out int f)) continue;
 
-                if (skip == 0 || skip > 0 ? (num + 1) % (skip + 1) != 0 : (num + 1) % (-skip + 1) == 0) frames.Add(file);
+                if (skip == 0 || (skip > 0 ? (num + 1) % (skip + 1) != 0 : (num + 1) % (-skip + 1) == 0)) frames.Add(file);
                 num++;
             }
             return frames.OrderBy(file => int.Parse(Path.GetFileNameWithoutExtension(file).Split('_').Last())).ToArray();
@@ -274,14 +282,15 @@ namespace Deltin.Deltinteger.Models
             new CodeParameter("reevaluation", "The reevaluation of the created animation. Position needs to be reevaluated for the position to play.", ValueGroupType.GetEnumType<EffectRev>()),
             new CodeParameter("beamType", "The type of beam.", ValueGroupType.GetEnumType<BeamType>()),
             new CodeParameter("beamColor", "The color of the beam.", ValueGroupType.GetEnumType<Color>()),
+            new CodeParameter("loopWhile", "Loops the animation while the specified condition is true.", defaultValue:null),
             new ConstNumberParameter("fps", "The frames per second of the animation. Must be a constant number value."),
             new ConstNumberParameter("frameSkip", "0 will skip no frames, 1 will skip ever other frame, 2 will skip every 3rd frame, 3 will skip every 4th frame, etc. Defaults to 0.", 0)
         };
 
         public override IWorkshopTree Get(ActionSet actionSet, IWorkshopTree[] parameterValues, object[] additional)
         {
-            double fps = (double)additional[6];
-            double frameSkip = (double)additional[7];
+            double fps = (double)additional[7];
+            double frameSkip = (double)additional[8];
 
             Animation animation = Animation.ImportObjSequence(Path.GetDirectoryName((string)additional[0]), (int)frameSkip);
 
@@ -295,7 +304,7 @@ namespace Deltin.Deltinteger.Models
 
             List<Element> actions = new List<Element>();
             AnimationBuild build = animation.Create(actionSet, visibleTo, location, effectRev, effectType, effectColor);
-            animation.Animate(actionSet, build);
+            animation.Animate(actionSet, build, parameterValues[6]);
 
             return build.EffectArray;
         }
