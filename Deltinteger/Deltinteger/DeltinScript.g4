@@ -58,6 +58,8 @@ array : (INDEX_START expr INDEX_END)+ ;
 varset   : var=expr array? ((statement_operation val=expr?) | INCREMENT | DECREMENT) ;
 statement_operation : EQUALS | EQUALS_ADD | EQUALS_DIVIDE | EQUALS_MODULO | EQUALS_MULTIPLY | EQUALS_POW | EQUALS_SUBTRACT ;
 
+hook : var=expr EQUALS value=expr STATEMENT_END;
+
 method         : (ASYNC NOT?)? PART LEFT_PAREN call_parameters? RIGHT_PAREN ;
 call_parameters: call_parameter (COMMA call_parameter?)*   ;
 call_parameter : (PART? TERNARY_ELSE)? expr					 ;
@@ -137,7 +139,7 @@ ruleset :
 	reserved_global?
 	reserved_player?
 	import_file*
-	((define STATEMENT_END) | ow_rule | define_method | define_macro | type_define | enum_define)*
+	((define STATEMENT_END) | ow_rule | define_method | define_macro | type_define | enum_define | hook)*
 	EOF;
 
 // Classes/structs

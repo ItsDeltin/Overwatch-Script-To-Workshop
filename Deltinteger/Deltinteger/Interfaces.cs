@@ -63,12 +63,6 @@ namespace Deltin.Deltinteger
         IWorkshopTree GetVariable(Element eventPlayer = null);
     }
 
-    public interface IIndexReferencer : IVariable, IExpression, ICallable, ILabeled
-    {
-        bool Settable();
-        VariableType VariableType { get; }
-    }
-
     public interface ILabeled
     {
         string GetLabel(bool markdown);

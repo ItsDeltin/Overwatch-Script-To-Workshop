@@ -165,6 +165,11 @@ namespace Deltin.Deltinteger.Parse
             foreach (var apply in applyBlocks) apply.SetupBlock();
             foreach (var apply in applyBlocks) apply.CallInfo?.CheckRecursion();
 
+            // Get hooks
+            foreach (ScriptFile script in Importer.ScriptFiles)
+            foreach (var hookContext in script.Context.hook())
+                HookVar.GetHook(new ParseInfo(script, this), RulesetScope, hookContext);
+
             // Get the rules
             foreach (ScriptFile script in Importer.ScriptFiles)
             foreach (var ruleContext in script.Context.ow_rule())

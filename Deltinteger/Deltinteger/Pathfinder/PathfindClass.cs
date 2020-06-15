@@ -17,6 +17,10 @@ namespace Deltin.Deltinteger.Pathfinder
         public IndexReference Nodes { get; private set; }
         public IndexReference Segments { get; private set; }
 
+        private HookVar OnPathStartHook;
+        private HookVar OnNodeReachedHook;
+        private HookVar OnPathCompleted;
+
         public PathmapClass(DeltinScript deltinScript) : base("Pathmap")
         {
             DeltinScript = deltinScript;
@@ -49,12 +53,37 @@ namespace Deltin.Deltinteger.Pathfinder
             staticScope.AddNativeMethod(CustomMethodData.GetCustomMethod<WalkPath>());
             staticScope.AddNativeMethod(CustomMethodData.GetCustomMethod<SegmentAttribute>());
             staticScope.AddNativeMethod(CustomMethodData.GetCustomMethod<RestartThottle>());
+
+            // Hooks
+            // Code to run when pathfinding starts.
+            OnPathStartHook = new HookVar("OnPathStart", new BlockLambda(), userLambda => {
+            });
+            // Code to run when node is reached.
+            OnNodeReachedHook = new HookVar("OnNodeReached", new BlockLambda(), userLambda => {
+            });
+            // Code to run when pathfind completes.
+            OnPathCompleted = new HookVar("OnPathCompleted", new BlockLambda(), userLambda => {
+            });
+
+            staticScope.AddNativeVariable(OnPathStartHook);
+            staticScope.AddNativeVariable(OnNodeReachedHook);
+            staticScope.AddNativeVariable(OnPathCompleted);
         }
 
         public override void WorkshopInit(DeltinScript translateInfo)
         {
             Nodes = translateInfo.VarCollection.Assign("Nodes", true, false);
             Segments = translateInfo.VarCollection.Assign("Segments", true, false);
+        }
+
+        public override void AddObjectVariablesToAssigner(IWorkshopTree reference, VarIndexAssigner assigner)
+        {
+            base.AddObjectVariablesToAssigner(reference, assigner);
+
+            // Add hooks to assigner.
+            if (OnPathStartHook.WasSet) assigner.Add(OnPathStartHook, (IWorkshopTree)OnPathStartHook.HookValue);
+            if (OnNodeReachedHook.WasSet) assigner.Add(OnNodeReachedHook, (IWorkshopTree)OnNodeReachedHook.HookValue);
+            if (OnPathCompleted.WasSet) assigner.Add(OnPathCompleted, (IWorkshopTree)OnPathCompleted.HookValue);
         }
 
         protected override void New(ActionSet actionSet, NewClassInfo newClassInfo)
