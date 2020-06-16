@@ -52,9 +52,7 @@ namespace Deltin.Deltinteger.Pathfinder
             staticScope.AddNativeMethod(IsPathfindStuck);
             staticScope.AddNativeMethod(FixPathfind);
             staticScope.AddNativeMethod(NextNode);
-            staticScope.AddNativeMethod(CustomMethodData.GetCustomMethod<WalkPath>());
-            staticScope.AddNativeMethod(CustomMethodData.GetCustomMethod<SegmentAttribute>());
-            staticScope.AddNativeMethod(CustomMethodData.GetCustomMethod<RestartThottle>());
+            staticScope.AddNativeMethod(ThrottleToNextNode);
 
             // Hooks
 
@@ -67,7 +65,7 @@ namespace Deltin.Deltinteger.Pathfinder
             // Code to run when pathfind completes.
             OnPathCompleted = new HookVar("OnPathCompleted", new BlockLambda(), userLambda => DeltinScript.ExecOnComponent<ResolveInfoComponent>(resolveInfo => resolveInfo.OnPathCompleted = (LambdaAction)userLambda));
             // The condition to use to determine if a node was reached.
-            IsNodeReachedDeterminer = new HookVar("IsNodeReachedDeterminer", new MacroLambda(null, null), userLambda => DeltinScript.ExecOnComponent<ResolveInfoComponent>(resolveInfo => resolveInfo.IsNodeReachedDeterminer = (LambdaAction)userLambda));
+            IsNodeReachedDeterminer = new HookVar("IsNodeReachedDeterminer", new MacroLambda(null, new CodeType[] {null}), userLambda => DeltinScript.ExecOnComponent<ResolveInfoComponent>(resolveInfo => resolveInfo.IsNodeReachedDeterminer = (LambdaAction)userLambda));
             // The condition to use to determine the closest node to a player.
             IndexOfClosestNodeToPlayerDeterminer = new HookVar("IndexOfClosestNodeToPositionDeterminer", new MacroLambda(null, null), userLambda => {
             });
@@ -427,7 +425,7 @@ namespace Deltin.Deltinteger.Pathfinder
         // ThrottleEventPlayerToNextNode
         private static FuncMethod ThrottleToNextNode = new FuncMethodBuilder() {
             Name = "ThrottleEventPlayerToNextNode",
-            Documentation = new MarkupBuilder().Add("Throttles the selected player to the next node in the path. This is called by default when the player starts a pathfind, but if the ").Code("Pathmap.OnPathStart").Add(" hook is overridden, then this will need to be called in the hook unless you want to change how the player navigates to the next position").ToString(),
+            Documentation = new MarkupBuilder().Add("Throttles the event player to the next node in their path. This is called by default when the player starts a pathfind, but if the ").Code("Pathmap.OnPathStart").Add(" hook is overridden, then this will need to be called in the hook unless you want to change how the player navigates to the next position").ToString(),
             Action = (actionSet, methodCall) => {
                 actionSet.Translate.DeltinScript.GetComponent<ResolveInfoComponent>().ThrottleEventPlayerToNextNode(actionSet);
                 return null;

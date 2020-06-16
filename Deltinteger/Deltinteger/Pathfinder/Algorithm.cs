@@ -405,12 +405,7 @@ namespace Deltin.Deltinteger.Pathfinder
 
             ForeachBuilder getClosestNodes = new ForeachBuilder(actionSet, players);
 
-            actionSet.AddAction(closestNodesToPlayers.SetVariable(
-                Element.Part<V_Append>(
-                    closestNodesToPlayers.GetVariable(),
-                    ClosestNodeToPosition(Nodes, getClosestNodes.IndexValue)
-                )
-            ));
+            actionSet.AddAction(closestNodesToPlayers.ModifyVariable(Operation.AppendToArray, ClosestNodeToPosition(Nodes, getClosestNodes.IndexValue)));
 
             getClosestNodes.Finish();
         }

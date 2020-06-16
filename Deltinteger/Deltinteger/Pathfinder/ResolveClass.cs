@@ -153,6 +153,9 @@ namespace Deltin.Deltinteger.Pathfinder
             // Update stuck
             UpdateStuckDetector(next.ActionSet);
 
+            // Invoke OnNodeReached
+            OnNodeReached?.Invoke(next.ActionSet);
+
             // Add rule
             DeltinScript.WorkshopRules.Add(next.GetRule());
         }
@@ -317,7 +320,7 @@ namespace Deltin.Deltinteger.Pathfinder
             // Otherwise, use hook.
             else
                 return new Condition(
-                    (Element)IsNodeReachedDeterminer.Invoke(actionSet),
+                    (Element)IsNodeReachedDeterminer.Invoke(actionSet, CurrentPosition()),
                     Operators.Equal,
                     new V_True()
                 );
