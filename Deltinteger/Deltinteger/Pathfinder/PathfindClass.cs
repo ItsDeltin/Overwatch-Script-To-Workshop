@@ -20,6 +20,8 @@ namespace Deltin.Deltinteger.Pathfinder
         private HookVar OnPathStartHook;
         private HookVar OnNodeReachedHook;
         private HookVar OnPathCompleted;
+        private HookVar IsNodeReachedDeterminer;
+        private HookVar IndexOfClosestNodeToPlayerDeterminer;
 
         public PathmapClass(DeltinScript deltinScript) : base("Pathmap")
         {
@@ -55,19 +57,25 @@ namespace Deltin.Deltinteger.Pathfinder
             staticScope.AddNativeMethod(CustomMethodData.GetCustomMethod<RestartThottle>());
 
             // Hooks
+
+            // All 'userLambda' variables below should be LambdaAction.
+
             // Code to run when pathfinding starts.
-            OnPathStartHook = new HookVar("OnPathStart", new BlockLambda(), userLambda => {
-            });
+            OnPathStartHook = new HookVar("OnPathStart", new BlockLambda(), userLambda => DeltinScript.ExecOnComponent<ResolveInfoComponent>(resolveInfo => resolveInfo.OnPathStart = (LambdaAction)userLambda));
             // Code to run when node is reached.
-            OnNodeReachedHook = new HookVar("OnNodeReached", new BlockLambda(), userLambda => {
-            });
+            OnNodeReachedHook = new HookVar("OnNodeReached", new BlockLambda(), userLambda => DeltinScript.ExecOnComponent<ResolveInfoComponent>(resolveInfo => resolveInfo.OnNodeReached = (LambdaAction)userLambda));
             // Code to run when pathfind completes.
-            OnPathCompleted = new HookVar("OnPathCompleted", new BlockLambda(), userLambda => {
+            OnPathCompleted = new HookVar("OnPathCompleted", new BlockLambda(), userLambda => DeltinScript.ExecOnComponent<ResolveInfoComponent>(resolveInfo => resolveInfo.OnPathCompleted = (LambdaAction)userLambda));
+            // The condition to use to determine if a node was reached.
+            IsNodeReachedDeterminer = new HookVar("IsNodeReachedDeterminer", new MacroLambda(null, null), userLambda => DeltinScript.ExecOnComponent<ResolveInfoComponent>(resolveInfo => resolveInfo.IsNodeReachedDeterminer = (LambdaAction)userLambda));
+            // The condition to use to determine the closest node to a player.
+            IndexOfClosestNodeToPlayerDeterminer = new HookVar("IndexOfClosestNodeToPositionDeterminer", new MacroLambda(null, null), userLambda => {
             });
 
             staticScope.AddNativeVariable(OnPathStartHook);
             staticScope.AddNativeVariable(OnNodeReachedHook);
             staticScope.AddNativeVariable(OnPathCompleted);
+            staticScope.AddNativeVariable(IsNodeReachedDeterminer);
         }
 
         public override void WorkshopInit(DeltinScript translateInfo)
@@ -81,9 +89,15 @@ namespace Deltin.Deltinteger.Pathfinder
             base.AddObjectVariablesToAssigner(reference, assigner);
 
             // Add hooks to assigner.
-            if (OnPathStartHook.WasSet) assigner.Add(OnPathStartHook, (IWorkshopTree)OnPathStartHook.HookValue);
-            if (OnNodeReachedHook.WasSet) assigner.Add(OnNodeReachedHook, (IWorkshopTree)OnNodeReachedHook.HookValue);
-            if (OnPathCompleted.WasSet) assigner.Add(OnPathCompleted, (IWorkshopTree)OnPathCompleted.HookValue);
+            AddHook(assigner, OnPathStartHook);
+            AddHook(assigner, OnNodeReachedHook);
+            AddHook(assigner, OnPathCompleted);
+            AddHook(assigner, IsNodeReachedDeterminer);
+        }
+
+        private void AddHook(VarIndexAssigner assigner, HookVar hook)
+        {
+            if (hook.WasSet) assigner.Add(hook, (IWorkshopTree)hook.HookValue);
         }
 
         protected override void New(ActionSet actionSet, NewClassInfo newClassInfo)
@@ -390,6 +404,7 @@ namespace Deltin.Deltinteger.Pathfinder
             }
         };
 
+        // NextNode(player)
         private static FuncMethod NextNode = new FuncMethodBuilder() {
             Name = "NextNode",
             Documentation = "Gets the position the player is currently walking towards.",
@@ -399,13 +414,24 @@ namespace Deltin.Deltinteger.Pathfinder
             Action = (actionSet, methodCall) => actionSet.Translate.DeltinScript.GetComponent<ResolveInfoComponent>().CurrentPositionWithDestination((Element)methodCall.ParameterValues[0])
         };
 
+        // IsPathfinding(player)
         private static FuncMethod IsPathfinding = new FuncMethodBuilder() {
             Name = "IsPathfinding",
             Documentation = "Determines if the player is currently pathfinding.",
             Parameters = new CodeParameter[] {
-                new CodeParameter("player", "todo")
+                new CodeParameter("player", "The target player to determine if pathfinding.")
             },
             Action = (actionSet, methodCall) => actionSet.Translate.DeltinScript.GetComponent<ResolveInfoComponent>().IsPathfinding((Element)methodCall.ParameterValues[0])
+        };
+    
+        // ThrottleEventPlayerToNextNode
+        private static FuncMethod ThrottleToNextNode = new FuncMethodBuilder() {
+            Name = "ThrottleEventPlayerToNextNode",
+            Documentation = new MarkupBuilder().Add("Throttles the selected player to the next node in the path. This is called by default when the player starts a pathfind, but if the ").Code("Pathmap.OnPathStart").Add(" hook is overridden, then this will need to be called in the hook unless you want to change how the player navigates to the next position").ToString(),
+            Action = (actionSet, methodCall) => {
+                actionSet.Translate.DeltinScript.GetComponent<ResolveInfoComponent>().ThrottleEventPlayerToNextNode(actionSet);
+                return null;
+            }
         };
     }
 

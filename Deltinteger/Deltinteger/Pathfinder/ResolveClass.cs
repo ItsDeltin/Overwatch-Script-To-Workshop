@@ -1,4 +1,5 @@
 using Deltin.Deltinteger.Parse;
+using Deltin.Deltinteger.Parse.Lambda;
 using Deltin.Deltinteger.Elements;
 
 namespace Deltin.Deltinteger.Pathfinder
@@ -59,7 +60,7 @@ namespace Deltin.Deltinteger.Pathfinder
     class ResolveInfoComponent : IComponent
     {
         public DeltinScript DeltinScript { get; set; }
-        public bool TrackTimeSinceLastNode { get; set; }
+        public bool TrackTimeSinceLastNode { get; set; } // This will be true if the Pathmap.IsPathfindingStuck function is called anywhere in the code.
         
         // Class Instances
         private PathResolveClass PathResolveInstance;
@@ -77,6 +78,12 @@ namespace Deltin.Deltinteger.Pathfinder
         // Stuck dection workshop variables. These are only assigned if 'TrackTimeSinceLastNode' is true.
         private IndexReference DistanceToNextNode { get; set; } // The distance from the player to the next node.
         private IndexReference TimeSinceLastNode { get; set; } // The time since the last node was reached.
+
+        // Hooks to override ostw generated code.
+        public LambdaAction OnPathStart { get; set; } // The code to run when a path starts.
+        public LambdaAction OnNodeReached { get; set; } // The code to run when a node is reached.
+        public LambdaAction OnPathCompleted { get; set; } // The code to run when a path is completed.
+        public LambdaAction IsNodeReachedDeterminer { get; set; } // The condition that determines wether or not the current node was reached.
 
         public void Init()
         {
@@ -113,28 +120,29 @@ namespace Deltin.Deltinteger.Pathfinder
             getResolveRule.Conditions.Add(new Condition((Element)DoGetCurrent.GetVariable(), Operators.Equal, new V_True()));
             // Set the Current variable to the closest node.
             getResolveRule.ActionSet.AddAction(Current.SetVariable(ClosestNode(PlayerPosition())));
-            // Start throttle to the current node.
-            getResolveRule.ActionSet.AddAction(Element.Part<A_StartThrottleInDirection>(
-                Element.Part<V_EventPlayer>(),
-                Element.Part<V_DirectionTowards>(
-                    Element.Part<V_PositionOf>(Element.Part<V_EventPlayer>()),
-                    // Go to the destination once the final node is reached.
-                    CurrentPositionWithDestination()
-                ),
-                new V_Number(1), // Magnitude
-                EnumData.GetEnumValue(Relative.ToWorld), // Relative
-                EnumData.GetEnumValue(ThrottleBehavior.ReplaceExistingThrottle), // Throttle Behavior
-                EnumData.GetEnumValue(ThrottleRev.DirectionAndMagnitude) // Throttle Reevaluation
-            ));
+
+            // If the OnPathStart hook is null, do the default which is throttling the player to the next node.
+            if (OnPathStart == null)
+                // Start throttle to the current node.
+                ThrottleEventPlayerToNextNode(getResolveRule.ActionSet);
+            // Otherwise, use the hook.
+            else
+                OnPathStart.Invoke(getResolveRule.ActionSet);
+            
+            // Update IsPathfindStuck data.
             UpdateStuckDetector(getResolveRule.ActionSet);
+
             // Reset DoGetCurrent to false.
             getResolveRule.ActionSet.AddAction(DoGetCurrent.SetVariable(new V_False()));
+
             // Add the rule.
             DeltinScript.WorkshopRules.Add(getResolveRule.GetRule());
 
+            // Resolve the rule that increments the current node.
+
             // The 'next' rule will set current to the next node index when the current node is reached. 
             TranslateRule next = new TranslateRule(DeltinScript, "Pathfinder: Resolve Next", RuleEvent.OngoingPlayer);
-            next.Conditions.Add(NodeReachedCondition);
+            next.Conditions.Add(NodeReachedCondition(next.ActionSet));
 
             // Get last attribute.
             next.ActionSet.AddAction(CurrentAttribute.SetVariable(NextSegmentAttribute(new V_EventPlayer())));
@@ -179,16 +187,6 @@ namespace Deltin.Deltinteger.Pathfinder
 
         /// <summary>The position of the current player: `Position Of(Event Player)`</summary>
         private Element PlayerPosition() => Element.Part<V_PositionOf>(Element.Part<V_EventPlayer>());
-
-        /// <summary>The condition to use to determine when a player reaches a node.</summary>
-        private Condition NodeReachedCondition => new Condition(
-            Element.Part<V_DistanceBetween>(
-                PlayerPosition(),
-                CurrentPosition()
-            ),
-            Operators.LessThanOrEqual,
-            new V_Number(PathfinderInfo.MoveToNext)
-        );
 
         /// <summary>Starts pathfinding for the specified players/</summary>
         /// <param name="actionSet">The actionset of the current rule.</param>
@@ -284,5 +282,45 @@ namespace Deltin.Deltinteger.Pathfinder
             AttributeArray.Get(player)[Current.Get(player)],
             new V_Number(-1)
         );
+    
+        /// <summary>Throttles the event player to the next node.</summary>
+        public void ThrottleEventPlayerToNextNode(ActionSet actionSet)
+        {
+            // Start throttle to the current node.
+            actionSet.AddAction(Element.Part<A_StartThrottleInDirection>(
+                Element.Part<V_EventPlayer>(),
+                Element.Part<V_DirectionTowards>(
+                    Element.Part<V_PositionOf>(Element.Part<V_EventPlayer>()),
+                    // Go to the destination once the final node is reached.
+                    CurrentPositionWithDestination()
+                ),
+                new V_Number(1), // Magnitude
+                EnumData.GetEnumValue(Relative.ToWorld), // Relative
+                EnumData.GetEnumValue(ThrottleBehavior.ReplaceExistingThrottle), // Throttle Behavior
+                EnumData.GetEnumValue(ThrottleRev.DirectionAndMagnitude) // Throttle Reevaluation
+            ));
+        }
+
+        /// <summary>The condition to use to determine when the current node is reached.</summary>
+        private Condition NodeReachedCondition(ActionSet actionSet)
+        {
+            // No node reached hook, use default.
+            if (IsNodeReachedDeterminer == null)
+                return new Condition(
+                    Element.Part<V_DistanceBetween>(
+                        PlayerPosition(),
+                        CurrentPosition()
+                    ),
+                    Operators.LessThanOrEqual,
+                    new V_Number(PathfinderInfo.MoveToNext)
+                );
+            // Otherwise, use hook.
+            else
+                return new Condition(
+                    (Element)IsNodeReachedDeterminer.Invoke(actionSet),
+                    Operators.Equal,
+                    new V_True()
+                );
+        }
     }
 }

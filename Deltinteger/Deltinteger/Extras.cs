@@ -182,6 +182,11 @@ namespace Deltin.Deltinteger
             result.Append(line);
             return this;
         }
+        public MarkupBuilder Code(string line)
+        {
+            result.Append("`" + line + "`");
+            return this;
+        }
         public MarkupBuilder NewLine()
         {
             result.Append("\n\r");
