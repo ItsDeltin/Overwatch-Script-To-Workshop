@@ -21,6 +21,7 @@ namespace Deltin.Deltinteger
         public LanguageServer.Location DefinedAt { get; protected set; }
         public AccessLevel AccessLevel { get; protected set; } = AccessLevel.Public;
         public CodeType CodeType { get; protected set; }
+        public string Documentation { get; set; }
 
         public IndexReferencer(string name)
         {
@@ -45,7 +46,8 @@ namespace Deltin.Deltinteger
         {
             string typeName = "define";
             if (CodeType != null) typeName = CodeType.GetName();
-            return HoverHandler.Sectioned(typeName + " " + Name, null);
+            if (markdown) return HoverHandler.Sectioned(typeName + " " + Name, Documentation);
+            else return typeName + " " + Name;
         }
 
         public IWorkshopTree Parse(ActionSet actionSet) => throw new NotImplementedException();

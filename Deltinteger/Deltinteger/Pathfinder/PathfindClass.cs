@@ -68,6 +68,19 @@ namespace Deltin.Deltinteger.Pathfinder
             IsNodeReachedDeterminer = new HookVar("IsNodeReachedDeterminer", new MacroLambda(null, new CodeType[] {null}), userLambda => DeltinScript.ExecOnComponent<ResolveInfoComponent>(resolveInfo => resolveInfo.IsNodeReachedDeterminer = (LambdaAction)userLambda));
             // The condition to use to determine the closest node to a player.
             ApplicableNodeDeterminer = new HookVar("ApplicableNodeDeterminer", new ValueBlockLambda(null, new CodeType[] { new ArrayType(VectorType.Instance), VectorType.Instance }), userLambda => DeltinScript.ExecOnComponent<ResolveInfoComponent>(resolveInfo => resolveInfo.ApplicableNodeDeterminer = (LambdaAction)userLambda));
+            ApplicableNodeDeterminer.Documentation = new MarkupBuilder()
+                .Add("Gets a node that is relevent to the specified position. Hooking this can change how OSTW generated rules will get the node. By default, it will return the node that is closest to the specified position.")
+                .NewLine()
+                .Add("The returned value must be the index of the node in the ").Code("nodes").Add(" array.")
+                .NewLine()
+                .Add("The default implementation may cause problems if the closest node to a player is behind a wall or under the floor. Hooking this so line-of-sight is accounted for may be a good idea if accuracy is more important than server load, for example:")
+                .NewLine()
+                .StartCodeLine()
+                .Add(@"Pathmap.ApplicableNodeDeterminer = (Vector[] nodes, Vector position) => {
+    return IndexOfArrayValue(nodes, nodes.FilteredArray(Vector node => node.IsInLineOfSight(position)).SortedArray(Vector node => node.DistanceTo(position))[0]);
+}")
+                .EndCodeLine()
+                .ToString();
 
             staticScope.AddNativeVariable(OnPathStartHook);
             staticScope.AddNativeVariable(OnNodeReachedHook);
