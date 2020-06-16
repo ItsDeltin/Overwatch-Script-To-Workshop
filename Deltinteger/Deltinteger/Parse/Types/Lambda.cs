@@ -72,6 +72,8 @@ namespace Deltin.Deltinteger.Parse.Lambda
 
         public IWorkshopTree Invoke(ActionSet actionSet, params IWorkshopTree[] parameterValues)
         {
+            actionSet = actionSet.New(actionSet.IndexAssigner.CreateContained());
+
             for (int i = 0; i < parameterValues.Length; i++)
                 actionSet.IndexAssigner.Add(Parameters[i], parameterValues[i]);
             
