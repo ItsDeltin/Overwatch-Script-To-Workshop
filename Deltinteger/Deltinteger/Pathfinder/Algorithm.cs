@@ -534,8 +534,8 @@ namespace Deltin.Deltinteger.Pathfinder
         }
 
         // Override GetParentArray and GetParentAttributeArray so the index reference to the PathResolveClass variable is used.
-        protected override IndexReference GetParentArray() => PathResolveClass.ParentArray.Spot((Element)ClassReference.GetVariable());
-        protected override IndexReference GetParentAttributeArray() => PathResolveClass.ParentAttributeArray.Spot((Element)ClassReference.GetVariable());
+        // protected override IndexReference GetParentArray() => PathResolveClass.ParentArray.Spot((Element)ClassReference.GetVariable());
+        // protected override IndexReference GetParentAttributeArray() => PathResolveClass.ParentAttributeArray.Spot((Element)ClassReference.GetVariable());
 
         protected override void EndLoop()
         {
@@ -544,6 +544,11 @@ namespace Deltin.Deltinteger.Pathfinder
             actionSet.AddAction(Element.Part<A_End>());
         }
 
-        protected override void GetResult() {}
+        protected override void GetResult()
+        {
+             // Save parent arrays.
+            PathResolveClass.ParentArray.Set(actionSet, ClassReference.Get(), parentArray.Get());
+            PathResolveClass.ParentAttributeArray.Set(actionSet, ClassReference.Get(), parentAttributeInfo.Get());
+        }
     }
 }
