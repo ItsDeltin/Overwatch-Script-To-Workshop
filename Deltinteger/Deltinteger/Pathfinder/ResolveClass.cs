@@ -84,6 +84,7 @@ namespace Deltin.Deltinteger.Pathfinder
         public LambdaAction OnNodeReached { get; set; } // The code to run when a node is reached.
         public LambdaAction OnPathCompleted { get; set; } // The code to run when a path is completed.
         public LambdaAction IsNodeReachedDeterminer { get; set; } // The condition that determines wether or not the current node was reached.
+        public LambdaAction ApplicableNodeDeterminer { get; set; } // The function used to get the closest node to the player.
 
         public void Init()
         {
@@ -119,7 +120,7 @@ namespace Deltin.Deltinteger.Pathfinder
             // The rule will activate when DoGetCurrent is set to true.
             getResolveRule.Conditions.Add(new Condition((Element)DoGetCurrent.GetVariable(), Operators.Equal, new V_True()));
             // Set the Current variable to the closest node.
-            getResolveRule.ActionSet.AddAction(Current.SetVariable(ClosestNode(PlayerPosition())));
+            getResolveRule.ActionSet.AddAction(Current.SetVariable(ClosestNode(getResolveRule.ActionSet, PlayerPosition())));
 
             // If the OnPathStart hook is null, do the default which is throttling the player to the next node.
             if (OnPathStart == null)
@@ -167,13 +168,16 @@ namespace Deltin.Deltinteger.Pathfinder
         }
 
         /// <summary>Gets the closest node from a position.</summary>
-        public Element ClosestNode(Element position)
+        public Element ClosestNode(ActionSet actionSet, Element position)
         {
             // Get the nodes in the pathmap
             Element nodes = Element.Part<V_ValueInArray>(PathmapInstance.Nodes.GetVariable(), PathmapReference.GetVariable());
 
             // Get the closest node index.
-            return DijkstraBase.ClosestNodeToPosition(nodes, position);
+            if (ApplicableNodeDeterminer == null)
+                return DijkstraBase.ClosestNodeToPosition(nodes, position);
+            else
+                return (Element)ApplicableNodeDeterminer.Invoke(actionSet, nodes, position);
         }
 
         /// <summary>The position of the current node the player is walking towards.</summary>

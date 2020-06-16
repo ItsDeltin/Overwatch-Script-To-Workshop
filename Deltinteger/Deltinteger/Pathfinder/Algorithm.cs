@@ -29,6 +29,7 @@ namespace Deltin.Deltinteger.Pathfinder
         public Action<ActionSet> OnConnectLoop { get; set; } = actionSet => {
             actionSet.AddAction(A_Wait.MinimumWait);
         };
+        public Func<ActionSet, Element, Element, Element> GetClosestNode { get; set; } = (actionSet, nodes, position) => ClosestNodeToPosition(nodes, position);
 
         public DijkstraBase(ActionSet actionSet, Element pathmapObject, Element position, Element attributes)
         {
@@ -46,7 +47,7 @@ namespace Deltin.Deltinteger.Pathfinder
 
         public void Get()
         {
-            var firstNode = ClosestNodeToPosition(Nodes, Source);
+            var firstNode = GetClosestNode(actionSet, Nodes, Source);
 
             Assign();
             
@@ -316,7 +317,7 @@ namespace Deltin.Deltinteger.Pathfinder
 
         override protected void Assign()
         {
-            var lastNode = ClosestNodeToPosition(Nodes, destination);
+            var lastNode = GetClosestNode(actionSet, Nodes, destination);
 
             finalNode = actionSet.VarCollection.Assign("Dijkstra: Last", actionSet.IsGlobal, assignExtended);
             finalPath = actionSet.VarCollection.Assign("Dijkstra: Final Path", actionSet.IsGlobal, false);
@@ -367,7 +368,7 @@ namespace Deltin.Deltinteger.Pathfinder
         {
             // Break out of the while loop when the current node is the closest node to the player.
             PlayerNodeReachedBreak = new SkipStartMarker(actionSet, new V_Compare(
-                ClosestNodeToPosition(Nodes, Element.Part<V_PositionOf>(player)),
+                GetClosestNode(actionSet, Nodes, Element.Part<V_PositionOf>(player)),
                 Operators.NotEqual,
                 current.GetVariable()
             ));
@@ -393,7 +394,6 @@ namespace Deltin.Deltinteger.Pathfinder
 
         public DijkstraMultiSource(ActionSet actionSet, Element pathmapObject, Element players, Element destination, Element attributes) : base(actionSet, pathmapObject, destination, attributes)
         {
-            this.pathfinderInfo = pathfinderInfo;
             this.players = players;
         }
 
@@ -404,7 +404,7 @@ namespace Deltin.Deltinteger.Pathfinder
 
             ForeachBuilder getClosestNodes = new ForeachBuilder(actionSet, players);
 
-            actionSet.AddAction(closestNodesToPlayers.ModifyVariable(Operation.AppendToArray, ClosestNodeToPosition(Nodes, getClosestNodes.IndexValue)));
+            actionSet.AddAction(closestNodesToPlayers.ModifyVariable(Operation.AppendToArray, GetClosestNode(actionSet, Nodes, getClosestNodes.IndexValue)));
 
             getClosestNodes.Finish();
         }
@@ -448,7 +448,7 @@ namespace Deltin.Deltinteger.Pathfinder
             chosenDestination = actionSet.VarCollection.Assign("Dijkstra: Chosen Destination", actionSet.IsGlobal, assignExtended);
 
             ForeachBuilder getClosestNodes = new ForeachBuilder(actionSet, destinations);
-            actionSet.AddAction(potentialDestinations.ModifyVariable(Operation.AppendToArray, ClosestNodeToPosition(Nodes, getClosestNodes.IndexValue)));
+            actionSet.AddAction(potentialDestinations.ModifyVariable(Operation.AppendToArray, GetClosestNode(actionSet, Nodes, getClosestNodes.IndexValue)));
             getClosestNodes.Finish();
         }
 
@@ -529,7 +529,7 @@ namespace Deltin.Deltinteger.Pathfinder
             if (Destination != null)
             {
                 finalNode = actionSet.VarCollection.Assign("Final Node", actionSet.IsGlobal, assignExtended);
-                finalNode.SetVariable(ClosestNodeToPosition(Nodes, Destination));
+                finalNode.SetVariable(GetClosestNode(actionSet, Nodes, Destination));
             }
         }
 

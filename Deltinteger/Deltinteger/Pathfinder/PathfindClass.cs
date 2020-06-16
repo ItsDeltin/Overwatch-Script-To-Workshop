@@ -21,7 +21,7 @@ namespace Deltin.Deltinteger.Pathfinder
         private HookVar OnNodeReachedHook;
         private HookVar OnPathCompleted;
         private HookVar IsNodeReachedDeterminer;
-        private HookVar IndexOfClosestNodeToPlayerDeterminer;
+        private HookVar ApplicableNodeDeterminer;
 
         public PathmapClass(DeltinScript deltinScript) : base("Pathmap")
         {
@@ -67,13 +67,13 @@ namespace Deltin.Deltinteger.Pathfinder
             // The condition to use to determine if a node was reached.
             IsNodeReachedDeterminer = new HookVar("IsNodeReachedDeterminer", new MacroLambda(null, new CodeType[] {null}), userLambda => DeltinScript.ExecOnComponent<ResolveInfoComponent>(resolveInfo => resolveInfo.IsNodeReachedDeterminer = (LambdaAction)userLambda));
             // The condition to use to determine the closest node to a player.
-            IndexOfClosestNodeToPlayerDeterminer = new HookVar("IndexOfClosestNodeToPositionDeterminer", new MacroLambda(null, null), userLambda => {
-            });
+            ApplicableNodeDeterminer = new HookVar("ApplicableNodeDeterminer", new ValueBlockLambda(null, new CodeType[] { new ArrayType(VectorType.Instance), VectorType.Instance }), userLambda => DeltinScript.ExecOnComponent<ResolveInfoComponent>(resolveInfo => resolveInfo.ApplicableNodeDeterminer = (LambdaAction)userLambda));
 
             staticScope.AddNativeVariable(OnPathStartHook);
             staticScope.AddNativeVariable(OnNodeReachedHook);
             staticScope.AddNativeVariable(OnPathCompleted);
             staticScope.AddNativeVariable(IsNodeReachedDeterminer);
+            staticScope.AddNativeVariable(ApplicableNodeDeterminer);
         }
 
         public override void WorkshopInit(DeltinScript translateInfo)
@@ -119,7 +119,7 @@ namespace Deltin.Deltinteger.Pathfinder
             actionSet.AddAction(Segments.SetVariable((Element)segments.GetVariable(), index: index));
         }
 
-        private static void SetHooks(DijkstraBase algorithm, IWorkshopTree onLoop, IWorkshopTree onConnectLoop)
+        private void SetHooks(DijkstraBase algorithm, IWorkshopTree onLoop, IWorkshopTree onConnectLoop)
         {
             // OnLoop
             if (onLoop is LambdaAction onLoopLambda)
@@ -128,6 +128,9 @@ namespace Deltin.Deltinteger.Pathfinder
             // OnConnectLoop
             if (onConnectLoop is LambdaAction onConnectLoopLambda)
                 algorithm.OnConnectLoop = actionSet => onConnectLoopLambda.Invoke(actionSet);
+            
+            if (ApplicableNodeDeterminer.HookValue != null)
+                algorithm.GetClosestNode = (actionSet, nodes, position) => (Element)((LambdaAction)ApplicableNodeDeterminer.HookValue).Invoke(actionSet, nodes, position);
         }
 
         private static Element ContainParameter(ActionSet actionSet, string name, IWorkshopTree value)
@@ -142,7 +145,7 @@ namespace Deltin.Deltinteger.Pathfinder
 
         // Object Functions
         // Pathfind(player, destination, [attributes])
-        private static FuncMethod Pathfind => new FuncMethodBuilder() {
+        private FuncMethod Pathfind => new FuncMethodBuilder() {
             Name = "Pathfind",
             Documentation = "Moves the specified player to the destination by pathfinding.",
             Parameters = new CodeParameter[] {
@@ -174,7 +177,7 @@ namespace Deltin.Deltinteger.Pathfinder
         };
 
         // PathfindAll(players, destination, [attributes])
-        private static readonly FuncMethod PathfindAll = new FuncMethodBuilder() {
+        private FuncMethod PathfindAll => new FuncMethodBuilder() {
             Name = "PathfindAll",
             Documentation = "Moves an array of players to the specified position by pathfinding.",
             Parameters = new CodeParameter[] {
@@ -204,7 +207,7 @@ namespace Deltin.Deltinteger.Pathfinder
         };
 
         // PathfindEither(player, destination, [attributes])
-        private static readonly FuncMethod PathfindEither = new FuncMethodBuilder() {
+        private FuncMethod PathfindEither => new FuncMethodBuilder() {
             Name = "PathfindEither",
             Documentation = "Moves a player to the closest position in the destination array by pathfinding.",
             Parameters = new CodeParameter[] {
@@ -251,7 +254,7 @@ namespace Deltin.Deltinteger.Pathfinder
         };
 
         // Resolve(position, [attributes])
-        private static FuncMethod GetResolve(DeltinScript deltinScript) => new FuncMethodBuilder() {
+        private FuncMethod GetResolve(DeltinScript deltinScript) => new FuncMethodBuilder() {
             Name = "Resolve",
             Documentation = "Resolves all potential paths to the specified destination.",
             DoesReturnValue = true,
