@@ -191,7 +191,7 @@ namespace Deltin.Deltinteger.Pathfinder
                 if (attributes is V_Null || attributes is V_EmptyArray) attributes = null;
 
                 DijkstraMultiSource algorithm = new DijkstraMultiSource(
-                    actionSet, actionSet.Translate.DeltinScript.GetComponent<PathfinderInfo>(), (Element)actionSet.CurrentObject, (Element)methodCall.ParameterValues[0], destination, attributes
+                    actionSet, (Element)actionSet.CurrentObject, (Element)methodCall.ParameterValues[0], destination, attributes
                 );
 
                 // Set lambda hooks

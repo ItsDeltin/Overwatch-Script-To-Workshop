@@ -388,11 +388,10 @@ namespace Deltin.Deltinteger.Pathfinder
     
     public class DijkstraMultiSource : DijkstraBase
     {
-        private PathfinderInfo pathfinderInfo { get; }
         private Element players { get; }
         private IndexReference closestNodesToPlayers;
 
-        public DijkstraMultiSource(ActionSet actionSet, PathfinderInfo pathfinderInfo, Element pathmapObject, Element players, Element destination, Element attributes) : base(actionSet, pathmapObject, destination, attributes)
+        public DijkstraMultiSource(ActionSet actionSet, Element pathmapObject, Element players, Element destination, Element attributes) : base(actionSet, pathmapObject, destination, attributes)
         {
             this.pathfinderInfo = pathfinderInfo;
             this.players = players;
