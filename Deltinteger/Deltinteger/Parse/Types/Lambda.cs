@@ -58,6 +58,9 @@ namespace Deltin.Deltinteger.Parse.Lambda
                 Expression = parseInfo.GetExpression(lambdaScope, context.expr());
                 LambdaType = new MacroLambda(Expression.Type(), argumentTypes);
             }
+
+            // Add hover info
+            parseInfo.Script.AddHover(DocRange.GetRange(context.INS()), new MarkupBuilder().StartCodeLine().Add(LambdaType.GetName()).EndCodeLine().ToString());
         }
 
         public IWorkshopTree Parse(ActionSet actionSet) => this;
@@ -155,7 +158,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
             CanBeDeleted = false;
             CanBeExtended = false;
             Kind = "constant";
-            ArgumentTypes = argumentTypes;
+            ArgumentTypes = argumentTypes ?? new CodeType[0];
             _objectScope = new Scope("lambda");
             _objectScope.AddNativeMethod(new LambdaInvoke(this));
         }
@@ -189,6 +192,11 @@ namespace Deltin.Deltinteger.Parse.Lambda
             Label = Name,
             Kind = CompletionItemKind.Constant
         };
+        public override string GetName()
+        {
+            if (ArgumentTypes.Length == 0) return Name;
+            else return Name + "<" + string.Join(", ", ArgumentTypes.Select(at => at?.GetName() ?? "define")) + ">";
+        }
     }
 
     public class BlockLambda : BaseLambda

@@ -23,7 +23,7 @@ namespace Deltin.Deltinteger.Parse
                 parseInfo.Script.Diagnostics.Error("Hooks cannot be set twice.", expressionRange);
             // Check if the given value implements the expected value.
             else if (!value.Type().Implements(CodeType))
-                parseInfo.Script.Diagnostics.Error($"Expected a value of type {CodeType.Name}.", expressionRange);
+                parseInfo.Script.Diagnostics.Error($"Expected a value of type {CodeType.GetName()}.", expressionRange);
             // Set the hook.
             else
             {
@@ -51,6 +51,8 @@ namespace Deltin.Deltinteger.Parse
                 // Hook variables are not settable.
                 ShouldBeSettable = false
             }, variableExpression, DocRange.GetRange(context.var), parseInfo.Script.Diagnostics);
+
+            if (valueExpression == null) return;
 
             // Check if the resolved variable is a HookVar.
             if (resolvedVariable.SetVariable?.Calling is HookVar hookVar)

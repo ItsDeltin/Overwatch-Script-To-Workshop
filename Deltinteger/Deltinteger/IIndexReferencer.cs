@@ -44,7 +44,7 @@ namespace Deltin.Deltinteger
         public string GetLabel(bool markdown)
         {
             string typeName = "define";
-            if (CodeType != null) typeName = CodeType.Name;
+            if (CodeType != null) typeName = CodeType.GetName();
             return HoverHandler.Sectioned(typeName + " " + Name, null);
         }
 

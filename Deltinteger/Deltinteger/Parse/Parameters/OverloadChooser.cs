@@ -310,7 +310,7 @@ namespace Deltin.Deltinteger.Parse
             if (parameterType != null && ((parameterType.IsConstant() && value.Type() == null) || (value.Type() != null && !value.Type().Implements(parameterType))))
             {
                 // The parameter type does not match.
-                string msg = string.Format("Expected a value of type {0}.", Option.Parameters[parameter].Type.Name);
+                string msg = string.Format("Expected a value of type {0}.", Option.Parameters[parameter].Type.GetName());
                 Error(msg, errorRange);
             }
             else if (value.Type() != null && parameterType == null && value.Type().IsConstant())

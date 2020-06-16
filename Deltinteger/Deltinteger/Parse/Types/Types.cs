@@ -123,6 +123,9 @@ namespace Deltin.Deltinteger.Parse
         /// <summary>Gets the completion that will show up for the language server.</summary>
         public abstract CompletionItem GetCompletion();
 
+        /// <summary>Gets the full name of the type.</summary>
+        public virtual string GetName() => Name;
+
         public static CodeType GetCodeTypeFromContext(ParseInfo parseInfo, DeltinScriptParser.Code_typeContext typeContext)
         {
             if (typeContext == null) return null;
