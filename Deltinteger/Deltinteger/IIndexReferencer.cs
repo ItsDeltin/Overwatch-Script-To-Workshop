@@ -21,7 +21,7 @@ namespace Deltin.Deltinteger
         public LanguageServer.Location DefinedAt { get; protected set; }
         public AccessLevel AccessLevel { get; protected set; } = AccessLevel.Public;
         public CodeType CodeType { get; protected set; }
-        public string Documentation { get; set; }
+        public MarkupBuilder Documentation { get; set; }
 
         public IndexReferencer(string name)
         {
@@ -39,14 +39,15 @@ namespace Deltin.Deltinteger
         {
             Label = Name,
             Kind = CompletionItemKind.Variable,
-            Detail = (CodeType?.Name ?? "define") + " " + Name
+            Detail = (CodeType?.GetName() ?? "define") + " " + Name,
+            Documentation = Documentation == null ? null : Extras.GetMarkupContent(Documentation.ToString())
         };
 
         public string GetLabel(bool markdown)
         {
             string typeName = "define";
             if (CodeType != null) typeName = CodeType.GetName();
-            if (markdown) return HoverHandler.Sectioned(typeName + " " + Name, Documentation);
+            if (markdown) return HoverHandler.Sectioned(typeName + " " + Name, Documentation?.ToString(true));
             else return typeName + " " + Name;
         }
 

@@ -62,30 +62,36 @@ namespace Deltin.Deltinteger.Pathfinder
 
             // Code to run when pathfinding starts.
             OnPathStartHook = new HookVar("OnPathStart", new BlockLambda(), userLambda => DeltinScript.ExecOnComponent<ResolveInfoComponent>(resolveInfo => resolveInfo.OnPathStart = (LambdaAction)userLambda));
-            OnPathStartHook.Documentation = new MarkupBuilder()
-                .Add("The code that runs when a pathfind starts for a player. By default, it will start throttling to the player's current node. Hooking will override the thottle, so if you want to throttle you will need to call ").Code("Pathmap.ThrottleEventPlayerToNextNode").Add(".")
-                .ToString();
+            OnPathStartHook.Documentation = AddHookInfo(new MarkupBuilder()
+                .Add("The code that runs when a pathfind starts for a player. By default, it will start throttling to the player's current node. Hooking will override the thottle, so if you want to throttle you will need to call ").Code("Pathmap.ThrottleEventPlayerToNextNode").Add("."));
             // Code to run when node is reached.
             OnNodeReachedHook = new HookVar("OnNodeReached", new BlockLambda(), userLambda => DeltinScript.ExecOnComponent<ResolveInfoComponent>(resolveInfo => resolveInfo.OnNodeReached = (LambdaAction)userLambda));
+            OnNodeReachedHook.Documentation = AddHookInfo(new MarkupBuilder().Add("The code that runs when a player reaches a node. Does nothing by default."));
             // Code to run when pathfind completes.
             OnPathCompleted = new HookVar("OnPathCompleted", new BlockLambda(), userLambda => DeltinScript.ExecOnComponent<ResolveInfoComponent>(resolveInfo => resolveInfo.OnPathCompleted = (LambdaAction)userLambda));
+            OnPathCompleted.Documentation = AddHookInfo(new MarkupBuilder().Add("The code that runs when a player completes a pathfind. By default, it will stop throttling the player. Hooking will override the stop throttle."));
             // The condition to use to determine if a node was reached.
-            IsNodeReachedDeterminer = new HookVar("IsNodeReachedDeterminer", new MacroLambda(null, new CodeType[] {null}), userLambda => DeltinScript.ExecOnComponent<ResolveInfoComponent>(resolveInfo => resolveInfo.IsNodeReachedDeterminer = (LambdaAction)userLambda));
+            IsNodeReachedDeterminer = new HookVar("IsNodeReachedDeterminer", new MacroLambda(null, new CodeType[] {VectorType.Instance}), userLambda => DeltinScript.ExecOnComponent<ResolveInfoComponent>(resolveInfo => resolveInfo.IsNodeReachedDeterminer = (LambdaAction)userLambda));
+            IsNodeReachedDeterminer.Documentation = AddHookInfo(new MarkupBuilder()
+                .Add("The condition that is used to determine if a player reached the current node. The given value is the position of the next node. The returned value should be a boolean determining if the player reached the node they are walking towards.")
+                .NewLine()
+                .Add("Modify the ").Code("Pathmap.OnNodeReached").Add(" hook to run code when the player reaches the node.")
+                .NewSection()
+                .Add("By default, it will return true when the player is less than or equal to " + PathfinderInfo.MoveToNext + " meters away from the next node."));
             // The condition to use to determine the closest node to a player.
             ApplicableNodeDeterminer = new HookVar("ApplicableNodeDeterminer", new ValueBlockLambda(null, new CodeType[] { new ArrayType(VectorType.Instance), VectorType.Instance }), userLambda => DeltinScript.ExecOnComponent<ResolveInfoComponent>(resolveInfo => resolveInfo.ApplicableNodeDeterminer = (LambdaAction)userLambda));
-            ApplicableNodeDeterminer.Documentation = new MarkupBuilder()
+            ApplicableNodeDeterminer.Documentation = AddHookInfo(new MarkupBuilder()
                 .Add("Gets a node that is relevent to the specified position. Hooking this will change how OSTW generated rules will get the node. By default, it will return the node that is closest to the specified position.")
                 .NewLine()
                 .Add("The returned value must be the index of the node in the ").Code("nodes").Add(" array.")
                 .NewLine()
                 .Add("The default implementation may cause problems if the closest node to a player is behind a wall or under the floor. Hooking this so line-of-sight is accounted for may be a good idea if accuracy is more important than server load, for example:")
-                .NewLine()
+                .NewSection()
                 .StartCodeLine()
                 .Add(@"Pathmap.ApplicableNodeDeterminer = (Vector[] nodes, Vector position) => {
     return IndexOfArrayValue(nodes, nodes.FilteredArray(Vector node => node.IsInLineOfSight(position)).SortedArray(Vector node => node.DistanceTo(position))[0]);
 }")
-                .EndCodeLine()
-                .ToString();
+                .EndCodeLine());
 
             staticScope.AddNativeVariable(OnPathStartHook);
             staticScope.AddNativeVariable(OnNodeReachedHook);
@@ -93,6 +99,8 @@ namespace Deltin.Deltinteger.Pathfinder
             staticScope.AddNativeVariable(IsNodeReachedDeterminer);
             staticScope.AddNativeVariable(ApplicableNodeDeterminer);
         }
+
+        private static MarkupBuilder AddHookInfo(MarkupBuilder markupBuilder) => markupBuilder.NewLine().Add("This is a hook variable, meaning it can only be set at the rule-level.");
 
         public override void WorkshopInit(DeltinScript translateInfo)
         {
