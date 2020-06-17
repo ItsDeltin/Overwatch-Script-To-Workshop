@@ -136,12 +136,6 @@ namespace Deltin.Deltinteger.Parse
             listeners.Add(onBlockApplied);
         }
 
-        public DefinedMacro ToDefinedMacro()
-        {
-            return new DefinedMacro(parseInfo, scope, scope, context, ReturnType, false);
-        }
-
-
         private void GetAttributes(DeltinScriptParser.Define_macroContext context)
         {
             // method_attributes will ne null if there are no attributes.

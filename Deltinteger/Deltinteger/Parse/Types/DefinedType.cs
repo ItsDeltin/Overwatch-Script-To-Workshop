@@ -59,7 +59,7 @@ namespace Deltin.Deltinteger.Parse
             // Give DefinedMethod and GetMacro a scope to use in case of the static attribute.
             foreach (var definedMethod in typeContext.define_method())
             {
-                var newMethod = new DefinedMethod(parseInfo, operationalScope, staticScope, definedMethod, this, true);
+                var newMethod = new DefinedMethod(parseInfo, operationalScope, staticScope, definedMethod, this);
 
                 // Copy to serving scopes.
                 if (newMethod.Static) operationalScope.CopyMethod(newMethod);

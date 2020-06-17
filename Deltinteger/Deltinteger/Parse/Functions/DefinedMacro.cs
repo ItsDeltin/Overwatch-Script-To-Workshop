@@ -15,8 +15,8 @@ namespace Deltin.Deltinteger.Parse
 
         private readonly FunctionAttributesGetter attributeInfo;
 
-        public DefinedMacro(ParseInfo parseInfo, Scope objectScope, Scope staticScope, DeltinScriptParser.Define_macroContext context, CodeType returnType, bool addToScope)
-            : base(parseInfo, context.name.Text, new LanguageServer.Location(parseInfo.Script.Uri, DocRange.GetRange(context.name)), addToScope)
+        public DefinedMacro(ParseInfo parseInfo, Scope objectScope, Scope staticScope, DeltinScriptParser.Define_macroContext context, CodeType returnType)
+            : base(parseInfo, context.name.Text, new LanguageServer.Location(parseInfo.Script.Uri, DocRange.GetRange(context.name)))
         {
             this.context = context;
             DocRange nameRange = DocRange.GetRange(context.name);
@@ -30,10 +30,6 @@ namespace Deltin.Deltinteger.Parse
             ReturnType = returnType;
             ExpressionToParse = context.expr();
             DoesReturnValue = true;
-            if(!addToScope)
-            {
-                Expression = parseInfo.SetCallInfo(CallInfo).GetExpression(methodScope, ExpressionToParse);
-            }
 
             SetupParameters(context.setParameters(), false);
 
@@ -46,7 +42,7 @@ namespace Deltin.Deltinteger.Parse
                 else if (!overriding.Attributes.IsOverrideable) parseInfo.Script.Diagnostics.Error("The specified method is not marked as virtual.", nameRange);
                 else overriding.Attributes.AddOverride(this);
 
-                if (overriding != null && overriding.DefinedAt != null && addToScope)
+                if (overriding != null && overriding.DefinedAt != null)
                 {
                     // Make the override keyword go to the base method.
                     parseInfo.Script.AddDefinitionLink(
@@ -56,8 +52,7 @@ namespace Deltin.Deltinteger.Parse
                 }
             }
 
-            if(addToScope)
-                containingScope.AddMethod(this, parseInfo.Script.Diagnostics, DefinedAt.range, !Attributes.Override);
+            containingScope.AddMethod(this, parseInfo.Script.Diagnostics, DefinedAt.range, !Attributes.Override);
 
             if (Attributes.IsOverrideable && AccessLevel == AccessLevel.Private)
                 parseInfo.Script.Diagnostics.Error("A method marked as virtual or abstract must have the protection level 'public' or 'protected'.", nameRange);
