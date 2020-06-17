@@ -210,7 +210,7 @@ namespace Deltin.Deltinteger.Parse
             IScopeable newMacro;
 
             if (macroContext.LEFT_PAREN() != null || macroContext.RIGHT_PAREN() != null)
-                newMacro = new DefinedMacro(this, objectScope, staticScope, macroContext, returnType, true);
+                newMacro = new DefinedMacro(this, objectScope, staticScope, macroContext, returnType);
             else
                 newMacro = new MacroVar(this, objectScope, staticScope, macroContext, returnType);
 
