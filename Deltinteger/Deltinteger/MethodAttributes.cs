@@ -28,15 +28,19 @@ namespace Deltin.Deltinteger
         public bool IsOverrideable => Virtual || Abstract || Override;
 
         /// <summary>Determines if the method was overriden.</summary>
-        public bool WasOverriden => AllOverrideOptions().Length > 0;
+        public bool WasOverriden => AllOverrideOptions().Length > 0 || AllMacroOverrideOptions().Length > 0;
 
         /// <summary>An array of methods that directly overrides the function. Call `AllOverrideOptions` instead for all child overriders.</summary>
         public IMethod[] Overriders => _overriders.ToArray();
-        
+
+        public MacroVar[] MacroOverriders => _macroOverriders.ToArray();
+
         /// <summary>Determines if the method can be called recursively.</summary>
         public bool Recursive { get; set; }
 
         private readonly List<IMethod> _overriders = new List<IMethod>();
+        private readonly List<MacroVar> _macroOverriders = new List<MacroVar>();
+
 
         public MethodAttributes() {}
 
@@ -52,6 +56,12 @@ namespace Deltin.Deltinteger
             _overriders.Add(overridingMethod);
         }
 
+        public void AddMacroOverride(MacroVar overridingMacro)
+        {
+
+            _macroOverriders.Add(overridingMacro);
+        }
+
         public IMethod[] AllOverrideOptions()
         {
             List<IMethod> options = new List<IMethod>();
@@ -63,6 +73,19 @@ namespace Deltin.Deltinteger
             
             return options.ToArray();
         }
+
+        public MacroVar[] AllMacroOverrideOptions()
+        {
+            List<MacroVar> options = new List<MacroVar>();
+
+            options.AddRange(_macroOverriders);
+
+            foreach (var overrider in _macroOverriders)
+                options.AddRange(overrider.Attributes.AllMacroOverrideOptions());
+
+            return options.ToArray();
+        }
+
 
         public static CompletionItem GetFunctionCompletion(IMethod function) => new CompletionItem()
         {

@@ -30,10 +30,11 @@ namespace Deltin.Deltinteger.Parse
 
         private readonly bool subroutineDefaultGlobal;
 
-        public DefinedMethod(ParseInfo parseInfo, Scope objectScope, Scope staticScope, DeltinScriptParser.Define_methodContext context, CodeType containingType)
-            : base(parseInfo, context.name.Text, new Location(parseInfo.Script.Uri, DocRange.GetRange(context.name)))
+        public DefinedMethod(ParseInfo parseInfo, Scope objectScope, Scope staticScope, DeltinScriptParser.Define_methodContext context, CodeType containingType, bool addToScope)
+            : base(parseInfo, context.name.Text, new Location(parseInfo.Script.Uri, DocRange.GetRange(context.name)), addToScope)
         {
             this.context = context;
+
             Attributes.ContainingType = containingType;
 
             DocRange nameRange = DocRange.GetRange(context.name);
