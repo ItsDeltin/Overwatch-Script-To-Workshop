@@ -56,7 +56,7 @@ namespace Deltin.Deltinteger.Parse
 
             // Match overloads.
             OverloadMatch[] matches = new OverloadMatch[CurrentOptions.Count];
-            for (int i = 0; i < matches.Length; i++) matches[i] = MatchOverload(CurrentOptions[i], inputParameters);
+            for (int i = 0; i < matches.Length; i++) matches[i] = MatchOverload(CurrentOptions[i], inputParameters, context);
 
             // Choose the best option.
             OverloadMatch bestOption = BestOption(matches);
@@ -107,7 +107,7 @@ namespace Deltin.Deltinteger.Parse
             return parameters;
         }
 
-        private OverloadMatch MatchOverload(IParameterCallable option, PickyParameter[] inputParameters)
+        private OverloadMatch MatchOverload(IParameterCallable option, PickyParameter[] inputParameters, DeltinScriptParser.Call_parametersContext context)
         {
             PickyParameter lastPicky = null;
 
@@ -123,7 +123,12 @@ namespace Deltin.Deltinteger.Parse
                     if (lastPicky != null && inputParameters[i].Name == null)
                         match.Error($"Named argument '{lastPicky.Name}' is used out-of-position but is followed by an unnamed argument", lastPicky.NameRange);
                     else
+                    {
                         match.OrderedParameters[i] = inputParameters[i];
+                        // Next contextual parameter
+                        if (i == inputParameters.Length - 1 && i < option.Parameters.Length - 1)
+                            match.LastContextualParameterIndex = i + 1;
+                    }
                 }
                 else
                 {
@@ -141,7 +146,7 @@ namespace Deltin.Deltinteger.Parse
                     
                     // If the named argument's name is not found, throw an error.
                     if (!nameFound)
-                        match.Error($"Name argument '{lastPicky.Name}' does not exist in the function '{option.GetLabel(false)}'.", inputParameters[i].NameRange);
+                        match.Error($"Named argument '{lastPicky.Name}' does not exist in the function '{option.GetLabel(false)}'.", inputParameters[i].NameRange);
                 }
             }
 
@@ -149,7 +154,7 @@ namespace Deltin.Deltinteger.Parse
             for (int i = 0; i < match.OrderedParameters.Length; i++) match.CompareParameterTypes(i);
 
             // Get the missing parameters.
-            match.GetMissingParameters(genericErrorRange, ErrorMessages);
+            match.GetMissingParameters(genericErrorRange, ErrorMessages, context, CallRange);
 
             return match;
         }
@@ -291,6 +296,7 @@ namespace Deltin.Deltinteger.Parse
         public List<OverloadMatchError> Errors { get; } = new List<OverloadMatchError>();
         public bool HasDeterminingError => Errors.Any(error => error.Vital);
         public bool HasError => Errors.Count > 0;
+        public int LastContextualParameterIndex { get; set; } = -1;
 
         public OverloadMatch(IParameterCallable option)
         {
@@ -321,21 +327,45 @@ namespace Deltin.Deltinteger.Parse
         }
 
         /// <summary>Determines if there are any missing parameters.</summary>
-        public void GetMissingParameters(DocRange genericErrorRange, OverloadError messageHandler)
+        public void GetMissingParameters(DocRange genericErrorRange, OverloadError messageHandler, DeltinScriptParser.Call_parametersContext context, DocRange functionCallRange)
         {
             for (int i = 0; i < OrderedParameters.Length; i++)
                 if (OrderedParameters[i]?.Value == null)
                 {
+                    if (OrderedParameters[i] == null) OrderedParameters[i] = new PickyParameter();
+                    AddContextualParameter(context, functionCallRange, i);
+
                     // Default value
                     if (Option.Parameters[i].DefaultValue != null)
-                    {
-                        if (OrderedParameters[i] == null) OrderedParameters[i] = new PickyParameter();
+                        // Set the default value.
                         OrderedParameters[i].Value = Option.Parameters[i].DefaultValue;
-                    }
                     else
                         // Parameter is missing.
                         Error(string.Format(messageHandler.MissingParameter, Option.Parameters[i].Name), genericErrorRange);
                 }
+        }
+
+        private void AddContextualParameter(DeltinScriptParser.Call_parametersContext context, DocRange functionCallRange, int parameter)
+        {
+            // No parameters set, set range for first parameter to callRange.
+            if (parameter == 0 && OrderedParameters.All(p => p.Value == null))
+            {
+                OrderedParameters[0].ExpressionRange = functionCallRange;
+            }
+            // If this is the last contextual parameter and the context contains comma, set the expression range so signature help works with the last comma when there is no set expression.
+            else if (LastContextualParameterIndex == parameter && context.COMMA().Length > 0)
+            {
+                // Get the last comma in the context.
+                var lastComma = context.COMMA().Last();
+
+                // Set the expression range if the last child in the context is a comma.
+                if (lastComma == context.children.Last())
+                    // Set the range to be the end of the comma to the start of the call range.
+                    OrderedParameters[parameter].ExpressionRange = new DocRange(
+                        DocRange.GetRange(lastComma).end,
+                        functionCallRange.end
+                    );
+            }
         }
 
         public void AddDiagnostics(FileDiagnostics diagnostics)
