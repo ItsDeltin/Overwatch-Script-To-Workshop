@@ -9,7 +9,7 @@ namespace Deltin.Deltinteger.Parse
     public class DefinedMethod : DefinedFunction
     {
         public readonly DeltinScriptParser.Define_methodContext context;
-        private MethodAttributeHandler[] attributes;
+        private MethodAttributeContext[] attributes;
 
         // Attributes
         public bool IsSubroutine { get; private set; }
@@ -23,11 +23,8 @@ namespace Deltin.Deltinteger.Parse
         public bool multiplePaths;
 
         public DefinedMethod virtualSubroutineAssigned { get; set; }
-
         public SubroutineInfo subroutineInfo { get; private set; }
-
         public Scope BlockScope { get; }
-
         private readonly bool subroutineDefaultGlobal;
 
         public DefinedMethod(ParseInfo parseInfo, Scope objectScope, Scope staticScope, DeltinScriptParser.Define_methodContext context, CodeType containingType, bool addToScope)
@@ -40,7 +37,8 @@ namespace Deltin.Deltinteger.Parse
             DocRange nameRange = DocRange.GetRange(context.name);
 
             // Get the attributes.
-            GetAttributes();
+            FunctionAttributesGetter attributeInfo = new MethodAttributesGetter(context, Attributes);
+            attributeInfo.GetAttributes(parseInfo.Script.Diagnostics);
 
             SetupScope(Static ? staticScope : objectScope);
             methodScope.MethodContainer = true;
@@ -105,72 +103,6 @@ namespace Deltin.Deltinteger.Parse
                 parseInfo.Script.AddCodeLensRange(new ImplementsCodeLensRange(this, parseInfo.Script, CodeLensSourceType.Function, nameRange));
 
             parseInfo.TranslateInfo.ApplyBlock(this);
-        }
-
-        private void GetAttributes()
-        {
-            // If the STRINGLITERAL is not null, the method will be stored in a subroutine.
-            // Get the name of the rule the method will be stored in.
-            if (context.STRINGLITERAL() != null)
-            {
-                SubroutineName = Extras.RemoveQuotes(context.STRINGLITERAL().GetText());
-                IsSubroutine = true;
-            }
-            
-            // method_attributes will ne null if there are no attributes.
-            if (context.method_attributes() == null) return;
-
-            int numberOfAttributes = context.method_attributes().Length;
-            attributes = new MethodAttributeHandler[numberOfAttributes];
-
-            // Loop through all attributes.
-            for (int i = 0; i < numberOfAttributes; i++)
-            {
-                var newAttribute = new MethodAttributeHandler(context.method_attributes(i));
-                attributes[i] = newAttribute;
-
-                bool wasCopy = false;
-
-                // If the attribute already exists, syntax error.
-                for (int c = i - 1; c >= 0; c--)
-                    if (attributes[c].Type == newAttribute.Type)
-                    {
-                        newAttribute.Copy(parseInfo.Script.Diagnostics);
-                        wasCopy = true;
-                        break;
-                    }
-                
-                // Additonal syntax errors. Only throw if the attribute is not a copy.
-                if (!wasCopy)
-                {
-                    // Virtual attribute on a static method (static attribute was first.)
-                    if (Static && newAttribute.Type == MethodAttributeType.Virtual)
-                        parseInfo.Script.Diagnostics.Error("Static methods cannot be virtual.", newAttribute.Range);
-                    
-                    // Static attribute on a virtual method (virtual attribute was first.)
-                    if (Attributes.Virtual && newAttribute.Type == MethodAttributeType.Static)
-                        parseInfo.Script.Diagnostics.Error("Virtual methods cannot be static.", newAttribute.Range);
-                }
-                
-                // Apply the attribute.
-                switch (newAttribute.Type)
-                {
-                    // Apply accessor
-                    case MethodAttributeType.Accessor: AccessLevel = newAttribute.AttributeContext.accessor().GetAccessLevel(); break;
-                    
-                    // Apply static
-                    case MethodAttributeType.Static: Static = true; break;
-                    
-                    // Apply virtual
-                    case MethodAttributeType.Virtual: Attributes.Virtual = true; break;
-                    
-                    // Apply override
-                    case MethodAttributeType.Override: Attributes.Override = true; break;
-                    
-                    // Apply Recursive
-                    case MethodAttributeType.Recursive: Attributes.Recursive = true; break;
-                }
-            }
         }
 
         // Sets up the method's block.
@@ -305,39 +237,5 @@ namespace Deltin.Deltinteger.Parse
                     );
             }
         }
-    }
-
-    class MethodAttributeHandler
-    {
-        public MethodAttributeType Type { get; }
-        public DocRange Range { get; }
-        public DeltinScriptParser.Method_attributesContext AttributeContext { get; }
-
-        public MethodAttributeHandler(DeltinScriptParser.Method_attributesContext attributeContext)
-        {
-            AttributeContext = attributeContext; 
-            Range = DocRange.GetRange(attributeContext);
-
-            if (attributeContext.accessor() != null) Type = MethodAttributeType.Accessor;
-            else if (attributeContext.STATIC() != null) Type = MethodAttributeType.Static;
-            else if (attributeContext.VIRTUAL() != null) Type = MethodAttributeType.Virtual;
-            else if (attributeContext.OVERRIDE() != null) Type = MethodAttributeType.Override;
-            else if (attributeContext.RECURSIVE() != null) Type = MethodAttributeType.Recursive;
-            else throw new NotImplementedException();
-        }
-
-        public void Copy(FileDiagnostics diagnostics)
-        {
-            diagnostics.Error($"Multiple '{Type.ToString().ToLower()}' attributes.", Range);
-        }
-    }
-
-    enum MethodAttributeType
-    {
-        Accessor,
-        Static,
-        Override,
-        Virtual,
-        Recursive
     }
 }

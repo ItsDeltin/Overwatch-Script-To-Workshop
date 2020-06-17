@@ -14,7 +14,7 @@ namespace Deltin.Deltinteger.Parse
         public AccessLevel AccessLevel { get; private set; }
 
         public MethodAttributes Attributes { get; } = new MethodAttributes();
-        private MethodAttributeHandler[] attributes;
+        private MethodAttributeContext[] attributes;
 
 
         public LanguageServer.Location DefinedAt { get; }
@@ -148,12 +148,12 @@ namespace Deltin.Deltinteger.Parse
             if (context.method_attributes() == null) return;
 
             int numberOfAttributes = context.method_attributes().Length;
-            attributes = new MethodAttributeHandler[numberOfAttributes];
+            attributes = new MethodAttributeContext[numberOfAttributes];
 
             // Loop through all attributes.
             for (int i = 0; i < numberOfAttributes; i++)
             {
-                var newAttribute = new MethodAttributeHandler(context.method_attributes(i));
+                var newAttribute = new MethodAttributeContext(context.method_attributes(i));
                 attributes[i] = newAttribute;
 
                 bool wasCopy = false;
