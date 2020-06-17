@@ -29,7 +29,11 @@ namespace Deltin.Deltinteger.Pathfinder
             this.Constructors = new Constructor[] {
                 new PathmapClassConstructor(this)
             };
-            Description = "A pathmap can be used for pathfinding.";
+            Description = new MarkupBuilder()
+                .Add("A pathmap can be used for pathfinding.").NewLine()
+                .Add("Pathmaps are imported from ").Code(".pathmap").Add(" files. These files are generated from an ingame editor. Run the ").Code("Copy Pathmap Editor Code").Add(" command by opening the command palette with ").Code("ctrl+shift+p")
+                .Add(". Paste the rules into Overwatch and select the map the pathmap will be created for.")
+                .ToString();
         }
 
         public override void ResolveElements()

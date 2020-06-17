@@ -57,7 +57,7 @@ namespace Deltin.Deltinteger.Parse
 
         public string GetLabel(bool markdown)
         {
-            string result = (Type == null ? "define" : Type.Name) + " " + Name;
+            string result = (Type == null ? "define" : Type.GetName()) + " " + Name;
             if (DefaultValue != null) result = "[" + result + "]";
             return result;
         }
@@ -65,7 +65,7 @@ namespace Deltin.Deltinteger.Parse
         override public string ToString()
         {
             if (Type == null) return Name;
-            else return Type.Name + " " + Name;
+            else return Type.GetName() + " " + Name;
         }
 
         public static ParameterParseResult GetParameters(ParseInfo parseInfo, Scope methodScope, DeltinScriptParser.SetParametersContext context, bool subroutineParameter)
