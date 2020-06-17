@@ -45,6 +45,8 @@ namespace Deltin.Deltinteger.Pathfinder
             serveObjectScope.AddNativeMethod(GetResolveTo(DeltinScript));
             serveObjectScope.AddNativeMethod(AddNode);
             serveObjectScope.AddNativeMethod(AddSegment);
+            serveObjectScope.AddNativeMethod(SetSegmentAttributeAB);
+            serveObjectScope.AddNativeMethod(SetSegmentAttributeBA);
 
             staticScope.AddNativeMethod(StopPathfind);
             staticScope.AddNativeMethod(CurrentSegmentAttribute);
@@ -60,6 +62,9 @@ namespace Deltin.Deltinteger.Pathfinder
 
             // Code to run when pathfinding starts.
             OnPathStartHook = new HookVar("OnPathStart", new BlockLambda(), userLambda => DeltinScript.ExecOnComponent<ResolveInfoComponent>(resolveInfo => resolveInfo.OnPathStart = (LambdaAction)userLambda));
+            OnPathStartHook.Documentation = new MarkupBuilder()
+                .Add("The code that runs when a pathfind starts for a player. By default, it will start throttling to the player's current node. Hooking will override the thottle, so if you want to throttle you will need to call ").Code("Pathmap.ThrottleEventPlayerToNextNode").Add(".")
+                .ToString();
             // Code to run when node is reached.
             OnNodeReachedHook = new HookVar("OnNodeReached", new BlockLambda(), userLambda => DeltinScript.ExecOnComponent<ResolveInfoComponent>(resolveInfo => resolveInfo.OnNodeReached = (LambdaAction)userLambda));
             // Code to run when pathfind completes.
@@ -69,7 +74,7 @@ namespace Deltin.Deltinteger.Pathfinder
             // The condition to use to determine the closest node to a player.
             ApplicableNodeDeterminer = new HookVar("ApplicableNodeDeterminer", new ValueBlockLambda(null, new CodeType[] { new ArrayType(VectorType.Instance), VectorType.Instance }), userLambda => DeltinScript.ExecOnComponent<ResolveInfoComponent>(resolveInfo => resolveInfo.ApplicableNodeDeterminer = (LambdaAction)userLambda));
             ApplicableNodeDeterminer.Documentation = new MarkupBuilder()
-                .Add("Gets a node that is relevent to the specified position. Hooking this can change how OSTW generated rules will get the node. By default, it will return the node that is closest to the specified position.")
+                .Add("Gets a node that is relevent to the specified position. Hooking this will change how OSTW generated rules will get the node. By default, it will return the node that is closest to the specified position.")
                 .NewLine()
                 .Add("The returned value must be the index of the node in the ").Code("nodes").Add(" array.")
                 .NewLine()
@@ -356,6 +361,46 @@ namespace Deltin.Deltinteger.Pathfinder
 
                 // Return the index of the last added node.
                 return Element.Part<V_CountOf>(Segments.GetVariable()) - 1;
+            }
+        };
+
+        // SetSegmentAttributeAB(segment, attribute)
+        private FuncMethod SetSegmentAttributeAB => new FuncMethodBuilder() {
+            Name = "SetSegmentAttributeAB",
+            Documentation = "Sets the primary segment attribute when travelling from node A to B.",
+            Parameters = new CodeParameter[] {
+                new CodeParameter("segment", "The segment that is being modified."),
+                new CodeParameter("attribute", "The new A to B attribute of the segment.")
+            },
+            Action = (actionSet, methodCall) => {
+                actionSet.AddAction(Segments.SetVariable(
+                    index: new Element[] {
+                        (Element)actionSet.CurrentObject,
+                        (Element)methodCall.ParameterValues[0]
+                    },
+                    value: ((Element)methodCall.ParameterValues[1]) + (Segments.Get()[(Element)actionSet.CurrentObject][(Element)methodCall.ParameterValues[0]] % 1)
+                ));
+                return null;
+            }
+        };
+
+        // SetSegmentAttributeBA(segment, attribute)
+        private FuncMethod SetSegmentAttributeBA => new FuncMethodBuilder() {
+            Name = "SetSegmentAttributeBA",
+            Documentation = "Sets the primary segment attribute when travelling from node B to A.",
+            Parameters = new CodeParameter[] {
+                new CodeParameter("segment", "The segment that is being modified."),
+                new CodeParameter("attribute", "The new B to A attribute of the segment.")
+            },
+            Action = (actionSet, methodCall) => {
+                actionSet.AddAction(Segments.SetVariable(
+                    index: new Element[] {
+                        (Element)actionSet.CurrentObject,
+                        (Element)methodCall.ParameterValues[0]
+                    },
+                    value: Element.Part<V_RoundToInteger>(Segments.Get()[(Element)actionSet.CurrentObject][(Element)methodCall.ParameterValues[0]], EnumData.GetEnumValue(Rounding.Down)) + (Element)methodCall.ParameterValues[1]
+                ));
+                return null;
             }
         };
 
