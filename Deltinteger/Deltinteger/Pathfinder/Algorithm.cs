@@ -431,14 +431,14 @@ namespace Deltin.Deltinteger.Pathfinder
     {
         private IndexReference potentialDestinations;
         public Element destinations { get; }
-        public IndexReference finalPath { get; private set; }
-        public IndexReference finalPathAttributes { get; private set; }
         public IndexReference chosenDestination { get; private set; }
         public Element PointDestination => destinations[(Element)chosenDestination.GetVariable()];
+        private readonly Element player;
 
-        public DijkstraEither(ActionSet actionSet, Element pathfindObject, Element position, Element destinations, Element attributes) : base(actionSet, pathfindObject, position, attributes)
+        public DijkstraEither(ActionSet actionSet, Element pathfindObject, Element player, Element destinations, Element attributes) : base(actionSet, pathfindObject, Element.Part<V_PositionOf>(player), attributes)
         {
             this.destinations = destinations;
+            this.player = player;
         }
 
         protected override void Assign()
@@ -462,14 +462,36 @@ namespace Deltin.Deltinteger.Pathfinder
 
         protected override void GetResult()
         {
-            finalPath = actionSet.VarCollection.Assign("Dijkstra: Final Path", actionSet.IsGlobal, false);
-            actionSet.AddAction(finalPath.SetVariable(new V_EmptyArray()));
-            if (useAttributes)
-            {
-                finalPathAttributes = actionSet.VarCollection.Assign("Dijkstra: Final Path Attributes", actionSet.IsGlobal, false);
-                actionSet.AddAction(finalPathAttributes.SetVariable(new V_EmptyArray()));
-            }
-            Backtrack((Element)current.GetVariable(), finalPath, finalPathAttributes, true);
+            /*
+                  |  |
+            +--+--+--+
+
+            */
+
+            IndexReference newParentArray = actionSet.VarCollection.Assign("Pathfinder: New parent array", actionSet.IsGlobal, false);
+
+            // Flip the parent array.
+            IndexReference backTracker = actionSet.VarCollection.Assign("Pathfinder: Backtracker", actionSet.IsGlobal, assignExtended);
+            actionSet.AddAction(backTracker.SetVariable(current.Get()));
+
+            // Get the path.
+            actionSet.AddAction(Element.Part<A_While>(new V_Compare(
+                backTracker.GetVariable(),
+                Operators.GreaterThanOrEqual,
+                new V_Number(0)
+            )));
+
+            Element next = parentArray.Get()[backTracker.Get()] - 1;
+
+            actionSet.AddAction(newParentArray.SetVariable(index:next, value: backTracker.Get() + 1));
+
+            actionSet.AddAction(backTracker.SetVariable(next));
+            actionSet.AddAction(A_Wait.MinimumWait); // TODO: Should there be a minwait here?
+            actionSet.AddAction(new A_End());
+
+            actionSet.AddAction(parentArray.SetVariable(newParentArray.Get()));
+
+            actionSet.Translate.DeltinScript.GetComponent<ResolveInfoComponent>().Pathfind(actionSet, player, pathmapObject, parentArray.Get(), parentAttributeInfo.Get(), Nodes[current.Get()]);
         }
 
         // Loop until any of the destinations have been visited.

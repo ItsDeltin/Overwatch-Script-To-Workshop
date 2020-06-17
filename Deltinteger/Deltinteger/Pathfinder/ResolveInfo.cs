@@ -6,6 +6,8 @@ namespace Deltin.Deltinteger.Pathfinder
 {
     class ResolveInfoComponent : IComponent
     {
+        public const double DefaultMoveToNext = 0.4;
+
         public DeltinScript DeltinScript { get; set; }
         public bool TrackTimeSinceLastNode { get; set; } // This will be true if the Pathmap.IsPathfindingStuck function is called anywhere in the code.
         
@@ -266,7 +268,7 @@ namespace Deltin.Deltinteger.Pathfinder
                         CurrentPosition()
                     ),
                     Operators.LessThanOrEqual,
-                    new V_Number(PathfinderInfo.MoveToNext)
+                    new V_Number(DefaultMoveToNext)
                 );
             // Otherwise, use hook.
             else

@@ -77,7 +77,7 @@ namespace Deltin.Deltinteger.Pathfinder
                 .NewLine()
                 .Add("Modify the ").Code("Pathmap.OnNodeReached").Add(" hook to run code when the player reaches the node.")
                 .NewSection()
-                .Add("By default, it will return true when the player is less than or equal to " + PathfinderInfo.MoveToNext + " meters away from the next node."));
+                .Add("By default, it will return true when the player is less than or equal to " + ResolveInfoComponent.DefaultMoveToNext + " meters away from the next node."));
             // The condition to use to determine the closest node to a player.
             ApplicableNodeDeterminer = new HookVar("ApplicableNodeDeterminer", new ValueBlockLambda(null, new CodeType[] { new ArrayType(VectorType.Instance), VectorType.Instance }), userLambda => DeltinScript.ExecOnComponent<ResolveInfoComponent>(resolveInfo => resolveInfo.ApplicableNodeDeterminer = (LambdaAction)userLambda));
             ApplicableNodeDeterminer.Documentation = AddHookInfo(new MarkupBuilder()
@@ -246,14 +246,13 @@ namespace Deltin.Deltinteger.Pathfinder
             Action = (actionSet, methodCall) => {
                 Element destinations = ContainParameter(actionSet, "_pathfindDestinationStore", methodCall.ParameterValues[1]);
 
-                DijkstraEither algorithm = new DijkstraEither(actionSet, (Element)actionSet.CurrentObject, Element.Part<V_PositionOf>(methodCall.ParameterValues[0]), destinations, (Element)methodCall.ParameterValues[2]);
+                DijkstraEither algorithm = new DijkstraEither(actionSet, (Element)actionSet.CurrentObject, (Element)methodCall.ParameterValues[0], destinations, (Element)methodCall.ParameterValues[2]);
 
                 // Set lambda hooks
                 SetHooks(algorithm, methodCall.ParameterValues[3], methodCall.ParameterValues[4]);
 
                 // Apply
                 algorithm.Get();
-                actionSet.Translate.DeltinScript.GetComponent<PathfinderInfo>().Pathfind(actionSet, (Element)methodCall.ParameterValues[0], (Element)algorithm.finalPath.GetVariable(), algorithm.PointDestination, (Element)algorithm.finalPathAttributes.GetVariable());
                 return null;
             }
         };
