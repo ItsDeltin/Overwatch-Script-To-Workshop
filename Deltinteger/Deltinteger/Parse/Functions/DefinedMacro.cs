@@ -100,15 +100,5 @@ namespace Deltin.Deltinteger.Parse
                     actionSet.IndexAssigner.Add(virtualParameterOption, result);
             }
         }
-
-        public Var[] VirtualVarGroup(int i)
-        {
-            List<Var> parameters = new List<Var>();
-
-            foreach (var macroOverrider in Attributes.AllOverrideOptions())
-                parameters.Add(((DefinedMacro)macroOverrider).ParameterVars[i]);
-
-            return parameters.ToArray();
-        }
     }
 }

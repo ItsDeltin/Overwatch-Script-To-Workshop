@@ -200,16 +200,6 @@ namespace Deltin.Deltinteger.Parse
             codeLens.RuleParsed(translatedRule);
         }
 
-        public Var[] VirtualVarGroup(int i)
-        {
-            List<Var> parameters = new List<Var>();
-
-            foreach (var overrider in Attributes.AllOverrideOptions())
-                parameters.Add(((DefinedMethod)overrider).ParameterVars[i]);
-            
-            return parameters.ToArray();
-        }
-
         public void AssignParameters(ActionSet actionSet, IWorkshopTree[] parameterValues, bool recursive)
         {
             for (int i = 0; i < ParameterVars.Length; i++)
