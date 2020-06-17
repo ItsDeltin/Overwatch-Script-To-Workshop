@@ -348,7 +348,7 @@ namespace Deltin.Deltinteger.Parse
         private void AddContextualParameter(DeltinScriptParser.Call_parametersContext context, DocRange functionCallRange, int parameter)
         {
             // No parameters set, set range for first parameter to callRange.
-            if (parameter == 0 && OrderedParameters.All(p => p.Value == null))
+            if (parameter == 0 && OrderedParameters.All(p => p?.Value == null))
             {
                 OrderedParameters[0].ExpressionRange = functionCallRange;
             }
