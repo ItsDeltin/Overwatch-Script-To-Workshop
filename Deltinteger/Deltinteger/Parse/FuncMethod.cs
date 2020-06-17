@@ -45,7 +45,7 @@ namespace Deltin.Deltinteger.Parse
         }
 
         public CompletionItem GetCompletion() => MethodAttributes.GetFunctionCompletion(this);
-        public string GetLabel(bool markdown) => HoverHandler.GetLabel(!DoesReturnValue ? null : ReturnType?.Name ?? "define", Name, Parameters, markdown, null);
+        public string GetLabel(bool markdown) => HoverHandler.GetLabel(!DoesReturnValue ? null : ReturnType?.Name ?? "define", Name, Parameters, markdown, Documentation);
         public IWorkshopTree Parse(ActionSet actionSet, MethodCall methodCall) => Action.Invoke(actionSet, methodCall);
 
         public void Call(ParseInfo parseInfo, DocRange callRange) => OnCall?.Invoke(parseInfo, callRange);

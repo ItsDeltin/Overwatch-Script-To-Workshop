@@ -69,7 +69,7 @@ namespace Deltin.Deltinteger
             Label = function.Name,
             Kind = CompletionItemKind.Method,
             Detail = function.GetLabel(false),
-            Documentation = function.Documentation
+            Documentation = Extras.GetMarkupContent(function.Documentation)
         };
     }
 

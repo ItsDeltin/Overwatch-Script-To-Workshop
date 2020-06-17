@@ -483,7 +483,12 @@ namespace Deltin.Deltinteger.Pathfinder
         // IsPathfinding(player)
         private static FuncMethod IsPathfinding = new FuncMethodBuilder() {
             Name = "IsPathfinding",
-            Documentation = "Determines if the player is currently pathfinding.",
+            Documentation = new MarkupBuilder()
+                .Add("Determines if the player is currently pathfinding.").NewLine().Add("This will become ").Code("true").Add(" when any of the pathfinding functions in the pathmap class is used on a player." + 
+                    " This will remain ").Code("true").Add(" even if the player is dead. If the player reaches their destination or ").Code("Pathmap.StopPathfind").Add(" is called, this will become ").Code("false").Add(".")
+                .NewLine()
+                .Add("If the player reaches their destination, ").Code("Pathmap.OnPathCompleted").Add(" will run immediately after this becomes ").Code("false").Add(".")
+                .ToString(),
             Parameters = new CodeParameter[] {
                 new CodeParameter("player", "The target player to determine if pathfinding.")
             },
