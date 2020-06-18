@@ -286,7 +286,6 @@ namespace Deltin.Deltinteger.Pathfinder
         private FuncMethod GetResolve(DeltinScript deltinScript) => new FuncMethodBuilder() {
             Name = "Resolve",
             Documentation = "Resolves all potential paths to the specified destination.",
-            DoesReturnValue = true,
             ReturnType = deltinScript.Types.GetInstance<PathResolveClass>(),
             Parameters = new CodeParameter[] {
                 new CodeParameter("position", "The position to resolve."),
@@ -310,7 +309,6 @@ namespace Deltin.Deltinteger.Pathfinder
         private static FuncMethod GetResolveTo(DeltinScript deltinScript) => new FuncMethodBuilder() {
             Name = "ResolveTo",
             Documentation = "Resolves the path to the specified destination.",
-            DoesReturnValue = true,
             ReturnType = deltinScript.Types.GetInstance<PathResolveClass>(),
             Parameters = new CodeParameter[] {
                 new CodeParameter("position", "The position to resolve."),
@@ -331,7 +329,7 @@ namespace Deltin.Deltinteger.Pathfinder
             Parameters = new CodeParameter[] {
                 new CodeParameter("position", "The position to place the new node.")
             },
-            DoesReturnValue = true,
+            ReturnType = NumberType.Instance,
             Action = (actionSet, methodCall) => {
                 // Append the position.
                 actionSet.AddAction(Nodes.ModifyVariable(operation: Operation.AppendToArray, value: (Element)methodCall.ParameterValues[0], index: (Element)actionSet.CurrentObject));
@@ -351,7 +349,7 @@ namespace Deltin.Deltinteger.Pathfinder
                 new CodeParameter("attribute_ab", "The attribute when travelling from a to b.", new ExpressionOrWorkshopValue()),
                 new CodeParameter("attribute_ba", "The attribute when travelling from b to a.", new ExpressionOrWorkshopValue())
             },
-            DoesReturnValue = true,
+            ReturnType = NumberType.Instance,
             Action = (actionSet, methodCall) => {
                 Element x, y, z = new V_Number(0);
 
@@ -383,6 +381,7 @@ namespace Deltin.Deltinteger.Pathfinder
                 new CodeParameter("segment", "The segment that is being modified."),
                 new CodeParameter("attribute", "The new A to B attribute of the segment.")
             },
+            ReturnType = NumberType.Instance,
             Action = (actionSet, methodCall) => {
                 actionSet.AddAction(Segments.SetVariable(
                     index: new Element[] {
@@ -436,7 +435,7 @@ namespace Deltin.Deltinteger.Pathfinder
             Parameters = new CodeParameter[] {
                 new CodeParameter("player", "The player to get the current segment attribute of.")
             },
-            DoesReturnValue = true,
+            ReturnType = NumberType.Instance,
             Action = (actionSet, methodCall) => actionSet.Translate.DeltinScript.GetComponent<ResolveInfoComponent>().CurrentAttribute.Get((Element)methodCall.ParameterValues[0])
         };
 
@@ -452,7 +451,7 @@ namespace Deltin.Deltinteger.Pathfinder
                     new ExpressionOrWorkshopValue(new V_Number(1))
                 )
             },
-            DoesReturnValue = true,
+            ReturnType = BooleanType.Instance,
             OnCall = (parseInfo, docRange) => { parseInfo.TranslateInfo.ExecOnComponent<ResolveInfoComponent>(resolveInfo => resolveInfo.TrackTimeSinceLastNode = true); },
             Action = (actionSet, methodCall) => actionSet.Translate.DeltinScript.GetComponent<ResolveInfoComponent>().IsPathfindingStuck((Element)methodCall.ParameterValues[0], (Element)methodCall.ParameterValues[1])
         };
@@ -481,6 +480,7 @@ namespace Deltin.Deltinteger.Pathfinder
             Parameters = new CodeParameter[] {
                 new CodeParameter("player", "The player to get the next node of.")
             },
+            ReturnType = VectorType.Instance,
             Action = (actionSet, methodCall) => actionSet.Translate.DeltinScript.GetComponent<ResolveInfoComponent>().CurrentPositionWithDestination((Element)methodCall.ParameterValues[0])
         };
 
@@ -496,6 +496,7 @@ namespace Deltin.Deltinteger.Pathfinder
             Parameters = new CodeParameter[] {
                 new CodeParameter("player", "The target player to determine if pathfinding.")
             },
+            ReturnType = BooleanType.Instance,
             Action = (actionSet, methodCall) => actionSet.Translate.DeltinScript.GetComponent<ResolveInfoComponent>().IsPathfinding((Element)methodCall.ParameterValues[0])
         };
     

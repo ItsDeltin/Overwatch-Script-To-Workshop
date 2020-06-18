@@ -124,6 +124,7 @@ namespace Deltin.Deltinteger.Elements
         {
             Element element = GetObject();
             element.ParameterValues = methodCall.ParameterValues;
+            element.Comment = methodCall.ActionComment;
 
             if (!IsValue)
             {
