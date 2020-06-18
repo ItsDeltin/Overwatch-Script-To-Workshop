@@ -50,22 +50,77 @@ namespace Deltin.Parse.Functions
                 return options[0].Parse(ActionSet);
 
             List<IWorkshopTree> expElements = new List<IWorkshopTree>();
+            List<int> resolves = new List<int>();
             List<int> identifiers = new List<int>();
+            bool needsResolve = false;
 
             foreach (var option in options)
             {
                 var optionSet = ActionSet.New(ActionSet.IndexAssigner.CreateContained());
                 option.Type().AddObjectVariablesToAssigner(optionSet.CurrentObject, optionSet.IndexAssigner);
 
+                int currentIndex = expElements.Count;
                 expElements.Add(option.Parse(optionSet));
+                resolves.Add(currentIndex);
                 identifiers.Add(((ClassType)option.Type()).Identifier);
+
+                // Iterate through every type.
+                foreach (CodeType type in ActionSet.Translate.DeltinScript.Types.AllTypes)
+                    // If 'type' does not equal the current virtual option's containing class...
+                    if (option.Type() != type
+                        // ...and 'type' implements the containing class...
+                        && type.Implements(option.Type())
+                        // ...and 'type' does not have their own function implementation...
+                        && MethodBuilder.AutoImplemented(option.Type(), options.Select(option => option.Type()).ToArray(), type))
+                        // ...then add an additional case for 'type's class identifier.
+                    {
+                        needsResolve = true;
+                        resolves.Add(currentIndex);
+                        identifiers.Add(((ClassType)type).Identifier);
+                    }
             }
 
-            var expArray = Element.CreateArray(expElements.ToArray());
-            var identArray = Element.CreateArray(identifiers.Select(i => new V_Number(i)).ToArray());
+            Element expArray = Element.CreateArray(expElements.ToArray());
+            Element resolveArray = Element.CreateArray(resolves.Select(i => new V_Number(i)).ToArray());
+            Element identArray = Element.CreateArray(identifiers.Select(i => new V_Number(i)).ToArray());
 
             ClassData classData = ActionSet.Translate.DeltinScript.GetComponent<ClassData>();
-            return expArray[Element.Part<V_IndexOfArrayValue>(identArray, Element.Part<V_ValueInArray>(classData.ClassIndexes.GetVariable(), ActionSet.CurrentObject))];
+            Element classIdentifier = Element.Part<V_ValueInArray>(classData.ClassIndexes.GetVariable(), ActionSet.CurrentObject);
+
+            /*
+            class A // Class identifier: 5
+            {
+                virtual define Macro: 2;
+            }
+            class B : A // Class identifier: 6
+            {
+                override define Macro: 3;
+            }
+            * In this case, the macro can be resolved like so:
+            [2, 3][Index Of([5, 6], class id)]
+            * This output will not work in this case:
+            class A // Class identifier: 5
+            {
+                virtual define Macro: 2;
+            }
+            class B : A // Class identifier: 6
+            {
+                override define Macro: 3;
+            }
+            class C : B // Class identifier: 7
+            {
+            }
+            * C does not implement 'Macro'. This will cause the output to be the same as above.
+            * This is not correct. Since C implements B, it should return 3. Since Index Of returns -1, the macro will return 0 if 'new C().Macro' is called.
+            * If this case happens, 'needsResolve' will be true. When it is true, do this instead:
+            [2, 3][0, 1, 1][IndexOf([5, 6, 7], class id)]
+            * '[0, 1, 1]' will map the index to the correct macro value.
+            */
+
+            if (needsResolve)
+                return expArray[resolveArray[Element.Part<V_IndexOfArrayValue>(identArray, classIdentifier)]];
+            else
+                return expArray[Element.Part<V_IndexOfArrayValue>(identArray, classIdentifier)];
         }
 
         protected abstract IWorkshopTree ParseDefault();

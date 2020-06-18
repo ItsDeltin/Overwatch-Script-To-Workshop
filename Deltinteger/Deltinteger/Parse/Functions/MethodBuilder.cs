@@ -172,7 +172,7 @@ namespace Deltin.Deltinteger.Parse
                         // ...and 'type' implements the containing class...
                         && type.Implements(option.Attributes.ContainingType)
                         // ...and 'type' does not have their own function implementation...
-                        && AutoImplemented(option, options, type))
+                        && AutoImplemented(option.Attributes.ContainingType, options.Select(o => o.Attributes.ContainingType).ToArray(), type))
                         // ...then add an additional case for 'type's class identifier.
                         typeSwitch.NextCase(new V_Number(((ClassType)type).Identifier));
 
@@ -198,14 +198,14 @@ namespace Deltin.Deltinteger.Parse
         /// <param name="virtualFunction">The virtual function to check overrides of.</param>
         /// <param name="options">All potential virtual functions.</param>
         /// <param name="type">The type to check.</param>
-        private bool AutoImplemented(DefinedMethod virtualFunction, DefinedMethod[] options, CodeType type)
+        public static bool AutoImplemented(CodeType virtualType, CodeType[] allOptionTypes, CodeType type)
         {
             // Go through each class in the inheritance tree and check if it implements the function.
             CodeType current = type;
-            while (current != null && current != virtualFunction.Attributes.ContainingType)
+            while (current != null && current != virtualType)
             {
                 // If it does, return false.
-                if (options.Any(option => option.Attributes.ContainingType == current)) return false;
+                if (allOptionTypes.Contains(current)) return false;
                 current = current.Extends;
             }
             return true;

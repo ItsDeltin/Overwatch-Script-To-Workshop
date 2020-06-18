@@ -13,8 +13,6 @@ namespace Deltin.Deltinteger.Parse
         private DeltinScriptParser.ExprContext ExpressionToParse { get; }
         private DeltinScriptParser.Define_macroContext context { get; }
 
-        private readonly FunctionAttributesGetter attributeInfo;
-
         public DefinedMacro(ParseInfo parseInfo, Scope objectScope, Scope staticScope, DeltinScriptParser.Define_macroContext context, CodeType returnType)
             : base(parseInfo, context.name.Text, new LanguageServer.Location(parseInfo.Script.Uri, DocRange.GetRange(context.name)))
         {
@@ -24,7 +22,7 @@ namespace Deltin.Deltinteger.Parse
             
             // Get the attributes.
             MethodAttributeAppender attributeResult = new MethodAttributeAppender(Attributes);
-            attributeInfo = new MacroAttributesGetter(context, attributeResult);
+            FunctionAttributesGetter attributeInfo = new MacroAttributesGetter(context, attributeResult);
             attributeInfo.GetAttributes(parseInfo.Script.Diagnostics);
 
             // Copy attribute results

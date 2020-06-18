@@ -9,7 +9,6 @@ namespace Deltin.Deltinteger.Parse
     public class DefinedMethod : DefinedFunction
     {
         public readonly DeltinScriptParser.Define_methodContext context;
-        private MethodAttributeContext[] attributes;
 
         // Attributes
         public bool IsSubroutine { get; private set; }
@@ -38,7 +37,8 @@ namespace Deltin.Deltinteger.Parse
 
             // Get the attributes.
             MethodAttributeAppender attributeResult = new MethodAttributeAppender(Attributes);
-            new MethodAttributesGetter(context, attributeResult).GetAttributes(parseInfo.Script.Diagnostics);
+            MethodAttributesGetter attributeGetter = new MethodAttributesGetter(context, attributeResult);
+            attributeGetter.GetAttributes(parseInfo.Script.Diagnostics);
 
             // Copy attribute results
             Static = attributeResult.Static;
@@ -85,7 +85,7 @@ namespace Deltin.Deltinteger.Parse
                 {
                     // Make the override keyword go to the base method.
                     parseInfo.Script.AddDefinitionLink(
-                        attributes.First(at => at.Type == MethodAttributeType.Override).Range,
+                        attributeGetter.ObtainedAttributes.First(at => at.Type == MethodAttributeType.Override).Range,
                         overriding.DefinedAt
                     );
 
