@@ -203,6 +203,8 @@ namespace Deltin.Deltinteger.Parse
             _defaultTypes.Add(ObjectType.Instance);
             _defaultTypes.Add(NumberType.Instance);
             _defaultTypes.Add(PlayerType.Instance);
+            _defaultTypes.Add(PlayersType.Instance);
+            _defaultTypes.Add(BooleanType.Instance);
             _defaultTypes.Add(TeamType.Instance);
             _defaultTypes.Add(VectorType.Instance);
             ObjectType.Instance.InitOperations();

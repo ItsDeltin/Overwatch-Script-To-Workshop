@@ -124,9 +124,9 @@ namespace Deltin.Deltinteger.Parse
     {
         public static readonly Positionable Instance = new Positionable();
 
-        private Positionable() : base("Boolean")
+        private Positionable() : base("Positionable")
         {
-            CanBeExtended = false;
+            CanBeExtended = true;
             Inherit(ObjectType.Instance, null, null);
         }
 

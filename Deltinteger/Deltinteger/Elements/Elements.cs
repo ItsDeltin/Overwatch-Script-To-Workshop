@@ -22,6 +22,7 @@ namespace Deltin.Deltinteger.Elements
         Hero,
         Vector,
         Player,
+        Players,
         Team,
         Map,
         Gamemode,

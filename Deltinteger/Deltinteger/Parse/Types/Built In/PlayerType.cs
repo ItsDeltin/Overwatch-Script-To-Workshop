@@ -5,7 +5,7 @@ using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.C
 
 namespace Deltin.Deltinteger.Parse
 {
-    public class PlayerType : CodeType
+    public class PlayerType : CodeType, IAdditionalArray
     {
         public static readonly PlayerType Instance = new PlayerType();
         private readonly Scope ObjectScope = new Scope();
@@ -78,6 +78,12 @@ namespace Deltin.Deltinteger.Parse
             ObjectScope.AddNativeMethod(new FuncMethod(builder));
         }
 
+        public void OverrideArray(ArrayType array)
+        {
+            foreach (var function in PlayersType.SharedFunctions)
+                array.Scope.AddNativeMethod(function);
+        }
+
         class VariableShorthand
         {
             public InternalVar Variable { get; }
@@ -97,5 +103,43 @@ namespace Deltin.Deltinteger.Parse
                 assigner.Add(Variable, Reference.Invoke(reference));
             }
         }
+    }
+
+    /// <summary>The players type is either a Player or Player[].</summary>
+    public class PlayersType : CodeType
+    {
+        public static readonly PlayersType Instance = new PlayersType();
+        private readonly Scope ObjectScope = new Scope();
+
+        private PlayersType() : base("Players") {}
+
+        public void ResolveElements()
+        {
+            ObjectScope.AddNativeMethod(Teleport);
+            SharedFunctions = new FuncMethod[] {
+                Teleport
+            };
+        }
+
+        public override bool Implements(CodeType type) => type.Implements(PlayerType.Instance) || new ArrayType(type).Implements(new ArrayType(PlayerType.Instance));
+
+        public override Scope ReturningScope() => null;
+
+        public override CompletionItem GetCompletion() => new CompletionItem() {
+            Label = Name,
+            Kind = CompletionItemKind.Struct
+        };
+
+        public static FuncMethod[] SharedFunctions;
+
+        // These functions are shared with both all Player, Player[], and Players type.
+        public static FuncMethod Teleport { get; } = new FuncMethodBuilder() {
+            Name = "Teleport",
+            Parameters = new CodeParameter[] {
+                new CodeParameter("position", "The position to teleport the player or players to. Can be a player or a vector.", Positionable.Instance)
+            },
+            Documentation = "Teleports one or more players to the specified location.",
+            Action = (actionSet, methodCall) => Element.Part<A_Teleport>(actionSet.CurrentObject, methodCall.ParameterValues[0])
+        };
     }
 }
