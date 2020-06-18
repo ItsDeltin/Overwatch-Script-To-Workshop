@@ -129,14 +129,11 @@ namespace Deltin.Deltinteger.Parse
             IVariable element = null;
             Scope current = this;
 
-
-
             while (current != null && element == null)
             {
                 element = current.Variables.FirstOrDefault(element => element.Name == name);
                 current = current.Parent;
             }
-
 
             if (range != null && element == null)
                 diagnostics.Error(string.Format("The variable {0} does not exist in the {1}.", name, ErrorName), range);

@@ -37,9 +37,16 @@ namespace Deltin.Deltinteger.Parse
             DocRange nameRange = DocRange.GetRange(context.name);
 
             // Get the attributes.
-            FunctionAttributesGetter attributeInfo = new MethodAttributesGetter(context, Attributes);
-            attributeInfo.GetAttributes(parseInfo.Script.Diagnostics);
+            MethodAttributeAppender attributeResult = new MethodAttributeAppender(Attributes);
+            new MethodAttributesGetter(context, attributeResult).GetAttributes(parseInfo.Script.Diagnostics);
 
+            // Copy attribute results
+            Static = attributeResult.Static;
+            IsSubroutine = attributeResult.IsSubroutine;
+            SubroutineName = attributeResult.SubroutineName;
+            AccessLevel = attributeResult.AccessLevel;
+
+            // Setup scope.
             SetupScope(Static ? staticScope : objectScope);
             methodScope.MethodContainer = true;
             BlockScope = methodScope.Child();

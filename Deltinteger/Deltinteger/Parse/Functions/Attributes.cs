@@ -6,23 +6,19 @@ namespace Deltin.Deltinteger.Parse
 {
     abstract class FunctionAttributesGetter
     {
-        public bool IsSubroutine { get; private set; } // Determines if the function is a subroutine.
-        public string SubroutineName { get; private set; } // The name of the subroutine if applicable.
         public MethodAttributeContext[] ObtainedAttributes { get; private set; } // Attribute context.
-        public AccessLevel AccessLevel { get; private set; } // The access level of the function.
-        public bool IsStatic { get; private set; } // Is the function static?
-        private MethodAttributes Attributes { get; } // The actual attributes.
+        public IFunctionAppendResult ResultAppender { get; protected set; }
 
-        protected FunctionAttributesGetter(MethodAttributes attributes)
+        protected FunctionAttributesGetter(IFunctionAppendResult resultAppender)
         {
-            Attributes = attributes;
+            ResultAppender = resultAppender;
         }
         
         public void GetAttributes(FileDiagnostics diagnostics)
         {
             // Get the name of the rule the method will be stored in.
-            SubroutineName = GetSubroutineName();
-            IsSubroutine = SubroutineName != null;
+            string subroutineName = GetSubroutineName();
+            if (subroutineName != null) ResultAppender.SetSubroutine(subroutineName);
             
             // context will be null if there are no attributes.
             var context = GetAttributeContext();
@@ -65,11 +61,11 @@ namespace Deltin.Deltinteger.Parse
             else
             {
                 // Virtual attribute on a static method (static attribute was first.)
-                if (IsStatic && newAttribute.Type == MethodAttributeType.Virtual)
+                if (ResultAppender.IsStatic() && newAttribute.Type == MethodAttributeType.Virtual)
                     diagnostics.Error("Static methods cannot be virtual.", newAttribute.Range);
                 
                 // Static attribute on a virtual method (virtual attribute was first.)
-                if (Attributes.Virtual && newAttribute.Type == MethodAttributeType.Static)
+                if (ResultAppender.IsVirtual() && newAttribute.Type == MethodAttributeType.Static)
                     diagnostics.Error("Virtual methods cannot be static.", newAttribute.Range);
             }
         }
@@ -80,19 +76,19 @@ namespace Deltin.Deltinteger.Parse
             switch (newAttribute.Type)
             {
                 // Apply accessor
-                case MethodAttributeType.Accessor: AccessLevel = newAttribute.AttributeContext.accessor().GetAccessLevel(); break;
+                case MethodAttributeType.Accessor: ResultAppender.SetAccessLevel(newAttribute.AttributeContext.accessor().GetAccessLevel()); break;
                 
                 // Apply static
-                case MethodAttributeType.Static: IsStatic = true; break;
+                case MethodAttributeType.Static: ResultAppender.SetStatic(); break;
                 
                 // Apply virtual
-                case MethodAttributeType.Virtual: Attributes.Virtual = true; break;
+                case MethodAttributeType.Virtual: ResultAppender.SetVirtual(); break;
                 
                 // Apply override
-                case MethodAttributeType.Override: Attributes.Override = true; break;
+                case MethodAttributeType.Override: ResultAppender.SetOverride(); break;
                 
                 // Apply Recursive
-                case MethodAttributeType.Recursive: Attributes.Recursive = true; break;
+                case MethodAttributeType.Recursive: ResultAppender.SetRecursive(); break;
             }
         }
 
@@ -136,12 +132,48 @@ namespace Deltin.Deltinteger.Parse
         Recursive
     }
 
+    // Result Appenders
+    interface IFunctionAppendResult
+    {
+        void SetAccessLevel(AccessLevel accessLevel);
+        void SetStatic();
+        void SetVirtual();
+        void SetOverride();
+        void SetRecursive();
+        void SetSubroutine(string name);
+        bool IsVirtual();
+        bool IsStatic();
+    }
+
+    class MethodAttributeAppender : IFunctionAppendResult
+    {
+        private readonly MethodAttributes _attributes;
+        public AccessLevel AccessLevel { get; private set; } // The access level of the function.
+        public bool Static { get; private set; } // Determines if the function is static.
+        public string SubroutineName { get; private set; } // The name of the subroutine if applicable.
+        public bool IsSubroutine => SubroutineName != null; // Determines if the function is a subroutine.
+
+        public MethodAttributeAppender(MethodAttributes attributes)
+        {
+            _attributes = attributes;
+        }
+
+        public bool IsVirtual() => _attributes.Virtual;
+        public bool IsStatic() => Static;
+        public void SetAccessLevel(AccessLevel accessLevel) => AccessLevel = accessLevel;
+        public void SetOverride() => _attributes.Override = true;
+        public void SetRecursive() => _attributes.Recursive = true;
+        public void SetStatic() => Static = true;
+        public void SetVirtual() => _attributes.Virtual = true;
+        public void SetSubroutine(string name) => SubroutineName = name;
+    }
+    
     // Attribute handler for defined methods
     class MethodAttributesGetter : FunctionAttributesGetter
     {
         private DeltinScriptParser.Define_methodContext Context { get; }
 
-        public MethodAttributesGetter(DeltinScriptParser.Define_methodContext context, MethodAttributes attributes) : base(attributes)
+        public MethodAttributesGetter(DeltinScriptParser.Define_methodContext context, IFunctionAppendResult result) : base(result)
         {
             Context = context;
         }
@@ -155,7 +187,7 @@ namespace Deltin.Deltinteger.Parse
     {
         private DeltinScriptParser.Define_macroContext Context { get; }
 
-        public MacroAttributesGetter(DeltinScriptParser.Define_macroContext context, MethodAttributes attributes) : base(attributes)
+        public MacroAttributesGetter(DeltinScriptParser.Define_macroContext context, IFunctionAppendResult result) : base(result)
         {
             Context = context;
         }

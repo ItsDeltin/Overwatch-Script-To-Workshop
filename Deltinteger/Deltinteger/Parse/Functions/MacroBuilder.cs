@@ -8,125 +8,150 @@ using Deltin.Deltinteger.Elements;
 
 namespace Deltin.Parse.Functions
 {
-    class MacroBuilder
+    abstract class AbstractMacroBuilder
     {
-        public static IWorkshopTree Call(MacroVar macro, ActionSet callerSet)
+        public static IWorkshopTree Call(ActionSet actionSet, MacroVar macro)
         {
-            MacroBuilder builder = new MacroBuilder(null, callerSet);
-            // Normal  
-            builder.BuilderSet = builder.BuilderSet.PackThis();
-            return builder.ParseInnerMacroVar(macro);
-        }
-
-        public static IWorkshopTree Call(DefinedMacro macro, MethodCall call, ActionSet callerSet)
-        {
-
-    
-
-            MacroBuilder builder = new MacroBuilder(macro, callerSet);
-            // Normal
-            builder.BuilderSet = builder.BuilderSet.PackThis();
-            builder.AssignParameters(call);
+            MacroVarBuilder builder = new MacroVarBuilder(actionSet, macro);
+            builder.AssignParameters();
             return builder.ParseInner();
         }
 
-        public DefinedMacro Macro { get; }
-        public ActionSet BuilderSet { get; set; }
-
-
-        public MacroBuilder(DefinedMacro macro, ActionSet builderSet)
+        public static IWorkshopTree Call(ActionSet actionSet, DefinedMacro macro, MethodCall call)
         {
-            Macro = macro;
-            this.BuilderSet = builderSet;
+            MacroBuilder builder = new MacroBuilder(actionSet, macro, call);
+            builder.AssignParameters();
+            return builder.ParseInner();
         }
 
-        public void AssignParameters(MethodCall methodCall)
+        public ActionSet ActionSet { get; set; }
+        public AbstractMacroBuilder(ActionSet actionSet)
         {
-           Macro.AssignParameters(BuilderSet, methodCall.ParameterValues);
+            this.ActionSet = actionSet;
+        }
+
+        public virtual void AssignParameters()
+        {
+            ActionSet = ActionSet.PackThis();
         }
 
         public IWorkshopTree ParseInner()
         {
-            if (Macro.Attributes.WasOverriden) return ParseVirtual();
-            else return Macro.Expression.Parse(BuilderSet);
+            if (WasOverriden) return ParseVirtual();
+            else return ParseDefault();
         }
-
-        public IWorkshopTree ParseInnerMacroVar(MacroVar macro)
-        {
-            if (macro.Attributes.WasOverriden) return ParseVirtualMacro(macro);
-            else return macro.Expression.Parse(BuilderSet);
-        }
-
 
         public IWorkshopTree ParseVirtual()
         {
-            List<DefinedMacro> options = new List<DefinedMacro>();
-            options.Add(Macro);
-
-            options.AddRange(Array.ConvertAll(Macro.Attributes.AllOverrideOptions(), iMethod => (DefinedMacro)iMethod));
+            IMacroOption[] options = AllOptions();
 
             //If there are no overrides, don't bother creating the lookup table
-            if (options.Count == 1)
-            {
-                return Macro.Expression.Parse(BuilderSet);
-            }
-
-            List<IExpression> expressions = new List<IExpression>();
-            List<int> identifiers = new List<int>();
+            if (options.Length == 1)
+                return options[0].Parse(ActionSet);
 
             List<IWorkshopTree> expElements = new List<IWorkshopTree>();
+            List<int> identifiers = new List<int>();
 
             foreach (var option in options)
             {
-                var optionSet = BuilderSet.New(BuilderSet.IndexAssigner.CreateContained());
-                option.Attributes.ContainingType.AddObjectVariablesToAssigner(optionSet.CurrentObject, optionSet.IndexAssigner);
+                var optionSet = ActionSet.New(ActionSet.IndexAssigner.CreateContained());
+                option.Type().AddObjectVariablesToAssigner(optionSet.CurrentObject, optionSet.IndexAssigner);
 
-                expElements.Add(option.Expression.Parse(optionSet));
-                identifiers.Add(((ClassType)option.Attributes.ContainingType).Identifier);
-
+                expElements.Add(option.Parse(optionSet));
+                identifiers.Add(((ClassType)option.Type()).Identifier);
             }
 
             var expArray = Element.CreateArray(expElements.ToArray());
             var identArray = Element.CreateArray(identifiers.Select(i => new V_Number(i)).ToArray());
 
-            ClassData classData = BuilderSet.Translate.DeltinScript.GetComponent<ClassData>();
-
-            return expArray[Element.Part<V_IndexOfArrayValue>(identArray, Element.Part<V_ValueInArray>(classData.ClassIndexes.GetVariable(), BuilderSet.CurrentObject))];
+            ClassData classData = ActionSet.Translate.DeltinScript.GetComponent<ClassData>();
+            return expArray[Element.Part<V_IndexOfArrayValue>(identArray, Element.Part<V_ValueInArray>(classData.ClassIndexes.GetVariable(), ActionSet.CurrentObject))];
         }
 
-        public IWorkshopTree ParseVirtualMacro(MacroVar macro)
+        protected abstract IWorkshopTree ParseDefault();
+        protected abstract IMacroOption[] AllOptions();
+        protected abstract bool WasOverriden { get; }
+    }
+
+    class MacroBuilder : AbstractMacroBuilder
+    {
+        private readonly DefinedMacro _macro;
+        private readonly MethodCall _call;
+
+        public MacroBuilder(ActionSet actionSet, DefinedMacro macro, MethodCall call) : base(actionSet)
         {
-            List<MacroVar> options = new List<MacroVar>();
-            options.Add(macro);
-
-            options.AddRange(macro.Attributes.AllMacroOverrideOptions());
-
-
-            List<IWorkshopTree> expElements = new List<IWorkshopTree>();
-            List<int> identifiers = new List<int>();
-
-            //If there are no overrides, don't bother creating the lookup table
-            if (options.Count == 1)
-            {
-                return macro.Expression.Parse(BuilderSet);
-            }
-
-            foreach (var option in options)
-            {
-                var optionSet = BuilderSet.New(BuilderSet.IndexAssigner.CreateContained());
-                option.Attributes.ContainingType.AddObjectVariablesToAssigner(optionSet.CurrentObject, optionSet.IndexAssigner);
-
-                expElements.Add(option.Expression.Parse(optionSet));
-                identifiers.Add(((ClassType)option.Attributes.ContainingType).Identifier);
-
-            }
-
-            var expArray = Element.CreateArray(expElements.ToArray());
-            var identArray = Element.CreateArray(identifiers.Select(i => new V_Number(i)).ToArray());
-
-            ClassData classData = BuilderSet.Translate.DeltinScript.GetComponent<ClassData>();
-
-            return expArray[Element.Part<V_IndexOfArrayValue>(identArray, Element.Part<V_ValueInArray>(classData.ClassIndexes.GetVariable(), BuilderSet.CurrentObject))];
+            _macro = macro;
+            _call = call;
         }
+
+        public override void AssignParameters()
+        {
+            _macro.AssignParameters(ActionSet, _call.ParameterValues);
+            base.AssignParameters();
+        }
+
+        protected override IWorkshopTree ParseDefault() => _macro.Expression.Parse(ActionSet);
+        protected override bool WasOverriden => _macro.Attributes.WasOverriden;
+        protected override IMacroOption[] AllOptions()
+        {
+            List<IMacroOption> options = new List<IMacroOption>();
+            options.Add(new ParameterMacroOption(_macro, _call));
+            options.AddRange(_macro.Attributes.AllOverrideOptions().Select(option => new ParameterMacroOption((DefinedMacro)option, _call)));
+            return options.ToArray();
+        }
+    }
+
+    class MacroVarBuilder : AbstractMacroBuilder
+    {
+        private readonly MacroVar _macro;
+
+        public MacroVarBuilder(ActionSet builderSet, MacroVar macro) : base(builderSet)
+        {
+            _macro = macro;
+        }
+        protected override IWorkshopTree ParseDefault() => _macro.Expression.Parse(ActionSet);
+        protected override bool WasOverriden => _macro.Overriders.Count > 0;
+        protected override IMacroOption[] AllOptions()
+        {
+            List<IMacroOption> options = new List<IMacroOption>();
+            options.Add(new MacroVarOption(_macro));
+            options.AddRange(_macro.AllMacroOverrideOptions().Select(option => new MacroVarOption(option)));
+            return options.ToArray();
+        }
+    }
+
+    // Macro Option resolver
+    interface IMacroOption
+    {
+        IWorkshopTree Parse(ActionSet actionSet);
+        CodeType Type(); 
+    }
+
+    class ParameterMacroOption : IMacroOption
+    {
+        private readonly DefinedMacro _macro;
+        private readonly MethodCall _methodCall;
+
+        public ParameterMacroOption(DefinedMacro macro, MethodCall methodCall)
+        {
+            _macro = macro;
+            _methodCall = methodCall;
+        }
+
+        public IWorkshopTree Parse(ActionSet actionSet) => _macro.Expression.Parse(actionSet);
+        public CodeType Type() => _macro.Attributes.ContainingType;
+    }
+
+    class MacroVarOption : IMacroOption
+    {
+        private readonly MacroVar _macroVar;
+        
+        public MacroVarOption(MacroVar macroVar)
+        {
+            _macroVar = macroVar;
+        }
+
+        public IWorkshopTree Parse(ActionSet actionSet) => _macroVar.Expression.Parse(actionSet);
+        public CodeType Type() => _macroVar.ContainingType;
     }
 }

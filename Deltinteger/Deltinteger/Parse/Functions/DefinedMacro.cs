@@ -23,8 +23,13 @@ namespace Deltin.Deltinteger.Parse
             Attributes.ContainingType = (Static ? staticScope: objectScope).This;
             
             // Get the attributes.
-            attributeInfo = new MacroAttributesGetter(context, Attributes);
+            MethodAttributeAppender attributeResult = new MethodAttributeAppender(Attributes);
+            attributeInfo = new MacroAttributesGetter(context, attributeResult);
             attributeInfo.GetAttributes(parseInfo.Script.Diagnostics);
+
+            // Copy attribute results
+            Static = attributeResult.Static;
+            AccessLevel = attributeResult.AccessLevel;
             
             SetupScope(Static ? staticScope : objectScope);
             ReturnType = returnType;
@@ -64,7 +69,6 @@ namespace Deltin.Deltinteger.Parse
 
         public override void SetupParameters()
         {
-            //SetupParameters(context.setParameters(), false);
             parseInfo.Script.AddHover(DocRange.GetRange(context.name), GetLabel(true));
         }
 
@@ -79,7 +83,7 @@ namespace Deltin.Deltinteger.Parse
             // Assign the parameters.
             actionSet = actionSet.New(actionSet.IndexAssigner.CreateContained());
 
-            return MacroBuilder.Call(this, methodCall, actionSet);
+            return AbstractMacroBuilder.Call(actionSet, this, methodCall);
         }
 
         public void AssignParameters(ActionSet actionSet, IWorkshopTree[] parameterValues)

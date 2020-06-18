@@ -11,60 +11,54 @@ namespace Deltin.Deltinteger.Parse
     public class MacroVar : IVariable, IExpression, ICallable, IApplyBlock
     {
         public string Name { get; }
-        public AccessLevel AccessLevel { get; private set; }
+        public AccessLevel AccessLevel { get; set; }
 
-        public MethodAttributes Attributes { get; } = new MethodAttributes();
-        private MethodAttributeContext[] attributes;
-
+        public bool Virtual { get; set; }
+        public bool Override { get; set; }
+        public bool IsOverridable => Virtual || Override;
+        public CodeType ContainingType { get; }
+        public List<MacroVar> Overriders { get; } = new List<MacroVar>();
 
         public LanguageServer.Location DefinedAt { get; }
-        public bool Static { get; private set; }
+        public bool Static { get; set; }
         public bool WholeContext => true;
 
         public IExpression Expression { get; private set; }
         public CodeType ReturnType { get; private set; }
 
-        private DeltinScriptParser.ExprContext ExpressionToParse { get; }
-        private Scope scope { get; }
-        private ParseInfo parseInfo { get; }
+        private readonly DeltinScriptParser.ExprContext _expressionToParse;
+        private readonly Scope _scope;
+        private readonly ParseInfo _parseInfo;
+        private readonly DeltinScriptParser.Define_macroContext _context;
 
         public CallInfo CallInfo { get; }
 
-        private DeltinScriptParser.Define_macroContext context;
-
-
         public MacroVar(ParseInfo parseInfo, Scope objectScope, Scope staticScope, DeltinScriptParser.Define_macroContext macroContext, CodeType returnType)
         {
-            context = macroContext;
-
-            GetAttributes(macroContext);
-
-            Attributes.ContainingType = (Static ? staticScope : objectScope).This;
+            _context = macroContext;
 
             Name = macroContext.name.Text;
-            //AccessLevel = macroContext.accessor().GetAccessLevel();
+
+            // Get the attributes.
+            FunctionAttributesGetter attributeResult = new MacroAttributesGetter(macroContext, new MacroVarAttribute(this));
+            attributeResult.GetAttributes(parseInfo.Script.Diagnostics);
+
+            ContainingType = (Static ? staticScope : objectScope).This;
             DefinedAt = new Location(parseInfo.Script.Uri, DocRange.GetRange(macroContext.name));
             CallInfo = new CallInfo(this, parseInfo.Script);
-            //Static = macroContext.STATIC() != null;
-
             ReturnType = returnType;
-            ExpressionToParse = macroContext.expr();
-
-            scope = Static ? staticScope : objectScope;
-            this.parseInfo = parseInfo;
-
-            //SetupBlock();
-
+            _expressionToParse = macroContext.expr();
+            _scope = Static ? staticScope : objectScope;
+            this._parseInfo = parseInfo;
             
-            //scope.AddMethod(this.ToDefinedMacro(), parseInfo.Script.Diagnostics, DocRange.GetRange(macroContext.name));
-            scope.AddMacro(this, parseInfo.Script.Diagnostics, DocRange.GetRange(macroContext.name), !Attributes.Override);
+            _scope.AddMacro(this, parseInfo.Script.Diagnostics, DocRange.GetRange(macroContext.name), !Override);
             parseInfo.TranslateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, DefinedAt, true);
             parseInfo.Script.AddHover(DocRange.GetRange(macroContext.name), GetLabel(true));
             parseInfo.Script.AddCodeLensRange(new ReferenceCodeLensRange(this, parseInfo, CodeLensSourceType.Variable, DefinedAt.range));
 
-            DocRange nameRange = DocRange.GetRange(context.name);
+            DocRange nameRange = DocRange.GetRange(_context.name);
 
-            if (Attributes.Override)
+            if (Override)
             {
                 MacroVar overriding = (MacroVar)objectScope.GetMacroOverload(Name, DefinedAt);
 
@@ -74,14 +68,14 @@ namespace Deltin.Deltinteger.Parse
 
                 // No method with the name and parameters found.
                 if (overriding == null) parseInfo.Script.Diagnostics.Error("Could not find a macro to override.", nameRange);
-                else if (!overriding.Attributes.IsOverrideable) parseInfo.Script.Diagnostics.Error("The specified method is not marked as virtual.", nameRange);
-                else overriding.Attributes.AddMacroOverride(this);
+                else if (!overriding.IsOverridable) parseInfo.Script.Diagnostics.Error("The specified macro is not marked as virtual.", nameRange);
+                else overriding.Overriders.Add(this);
 
                 if (overriding != null && overriding.DefinedAt != null)
                 {
                     // Make the override keyword go to the base method.
                     parseInfo.Script.AddDefinitionLink(
-                        attributes.First(at => at.Type == MethodAttributeType.Override).Range,
+                        attributeResult.ObtainedAttributes.First(at => at.Type == MethodAttributeType.Override).Range,
                         overriding.DefinedAt
                     );
                 }
@@ -92,7 +86,7 @@ namespace Deltin.Deltinteger.Parse
 
         public void SetupBlock()
         {
-            if (ExpressionToParse != null) Expression = parseInfo.SetCallInfo(CallInfo).GetExpression(scope.Child(), ExpressionToParse);
+            if (_expressionToParse != null) Expression = _parseInfo.SetCallInfo(CallInfo).GetExpression(_scope.Child(), _expressionToParse);
             foreach (var listener in listeners) listener.Applied();
         }
 
@@ -100,10 +94,10 @@ namespace Deltin.Deltinteger.Parse
         {
             actionSet = actionSet.New(actionSet.IndexAssigner.CreateContained());
 
-            return MacroBuilder.Call(this, actionSet);
+            return AbstractMacroBuilder.Call(actionSet, this);
         }
 
-        public Scope ReturningScope() => ReturnType?.GetObjectScope() ?? parseInfo.TranslateInfo.PlayerVariableScope;
+        public Scope ReturningScope() => ReturnType?.GetObjectScope() ?? _parseInfo.TranslateInfo.PlayerVariableScope;
 
         public CodeType Type() => ReturnType;
 
@@ -114,20 +108,24 @@ namespace Deltin.Deltinteger.Parse
             parseInfo.TranslateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, new Location(parseInfo.Script.Uri, callRange));
         }
 
-        public CompletionItem GetCompletion()
-        {
-            return new CompletionItem() {
-                Label = Name,
-                Kind = CompletionItemKind.Property
-            };
-        }
+        public CompletionItem GetCompletion() => new CompletionItem() {
+            Label = Name,
+            Kind = CompletionItemKind.Property
+        };
 
         public string GetLabel(bool markdown)
         {
-            string name = ReturnType?.Name ?? "define" + " " + Name;
-
+            string name = ReturnType?.GetName() ?? "define" + " " + Name;
             if (markdown) return HoverHandler.Sectioned(name, null);
             else return name;
+        }
+
+        public MacroVar[] AllMacroOverrideOptions()
+        {
+            List<MacroVar> options = new List<MacroVar>();
+            options.AddRange(Overriders);
+            foreach (var overrider in Overriders) options.AddRange(overrider.AllMacroOverrideOptions());
+            return options.ToArray();
         }
 
         private List<IOnBlockApplied> listeners = new List<IOnBlockApplied>();
@@ -135,64 +133,24 @@ namespace Deltin.Deltinteger.Parse
         {
             listeners.Add(onBlockApplied);
         }
+    }
 
-        private void GetAttributes(DeltinScriptParser.Define_macroContext context)
+    class MacroVarAttribute : IFunctionAppendResult
+    {
+        private readonly MacroVar _macro;
+
+        public MacroVarAttribute(MacroVar macro)
         {
-            // method_attributes will ne null if there are no attributes.
-            if (context.method_attributes() == null) return;
-
-            int numberOfAttributes = context.method_attributes().Length;
-            attributes = new MethodAttributeContext[numberOfAttributes];
-
-            // Loop through all attributes.
-            for (int i = 0; i < numberOfAttributes; i++)
-            {
-                var newAttribute = new MethodAttributeContext(context.method_attributes(i));
-                attributes[i] = newAttribute;
-
-                bool wasCopy = false;
-
-                // If the attribute already exists, syntax error.
-                for (int c = i - 1; c >= 0; c--)
-                    if (attributes[c].Type == newAttribute.Type)
-                    {
-                        newAttribute.Copy(parseInfo.Script.Diagnostics);
-                        wasCopy = true;
-                        break;
-                    }
-
-                // Additonal syntax errors. Only throw if the attribute is not a copy.
-                if (!wasCopy)
-                {
-                    // Virtual attribute on a static method (static attribute was first.)
-                    if (Static && newAttribute.Type == MethodAttributeType.Virtual)
-                        parseInfo.Script.Diagnostics.Error("Static macros cannot be virtual.", newAttribute.Range);
-
-                    // Static attribute on a virtual method (virtual attribute was first.)
-                    if (Attributes.Virtual && newAttribute.Type == MethodAttributeType.Static)
-                        parseInfo.Script.Diagnostics.Error("Virtual macros cannot be static.", newAttribute.Range);
-                }
-
-                // Apply the attribute.
-                switch (newAttribute.Type)
-                {
-                    // Apply accessor
-                    case MethodAttributeType.Accessor: AccessLevel = newAttribute.AttributeContext.accessor().GetAccessLevel(); break;
-
-                    // Apply static
-                    case MethodAttributeType.Static: Static = true; break;
-
-                    // Apply virtual
-                    case MethodAttributeType.Virtual: Attributes.Virtual = true; break;
-
-                    // Apply override
-                    case MethodAttributeType.Override: Attributes.Override = true; break;
-
-                    // Apply Recursive
-                    case MethodAttributeType.Recursive: parseInfo.Script.Diagnostics.Error("Macros cannot be recursive.", newAttribute.Range); break;
-                }
-            }
+            _macro = macro;
         }
 
+        public bool IsStatic() => _macro.Static;
+        public bool IsVirtual() => _macro.Virtual;
+        public void SetAccessLevel(AccessLevel accessLevel) => _macro.AccessLevel = accessLevel;
+        public void SetOverride() => _macro.Override = true;
+        public void SetStatic() => _macro.Static = true;
+        public void SetVirtual() => _macro.Virtual = true;
+        public void SetRecursive() => throw new NotImplementedException();
+        public void SetSubroutine(string name) => throw new NotImplementedException();
     }
 }
