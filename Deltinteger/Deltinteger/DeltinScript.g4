@@ -177,7 +177,7 @@ UNTERMINATEDSTRINGLITERAL : '"' (~["\\\r\n] | '\\' (. | EOF))* ;
 
 DOCUMENTATION: '#' .*? NEWLINE ;
 // Comments
-COMMENT : (('/*' .*? '*/') | ('//' .*? NEWLINE)) -> skip ;
+COMMENT : (('/*' .*? '*/') | ('//' .*? (NEWLINE | EOF))) -> skip ;
 
 // Misc
 WHITESPACE : (' '|'\t')+ -> skip ;
