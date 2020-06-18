@@ -27,8 +27,6 @@ namespace Deltin.Deltinteger
 
         static void Main(string[] args)
         {
-            if (args.Contains("--debug")) WaitForDebugger();
-
             Program.args = args;
             CultureInfo.DefaultThreadCurrentCulture = new CultureInfo("en-US");
             ElementList.InitElements();
