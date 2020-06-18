@@ -25,19 +25,14 @@ namespace Deltin.Deltinteger.LanguageServer
 
         public async Task<CompletionList> Handle(CompletionParams completionParams, CancellationToken token)
         {
-            List<CompletionItem> items = new List<CompletionItem>();
-
             _languageServer.DocumentHandler.WaitForNextUpdate();
 
-            // Get default type completion.
-            foreach (var defaultType in CodeType.DefaultTypes)
-                items.Add(defaultType.GetCompletion());
-
             // If the script has not been parsed yet, return the default completion.
-            if (_languageServer.LastParse == null) return items;
+            if (_languageServer.LastParse == null) return new CompletionList();
+            List<CompletionItem> items = new List<CompletionItem>();
 
             // Add the user defined types.
-            foreach (var definedType in _languageServer.LastParse.Types.DefinedTypes)
+            foreach (var definedType in _languageServer.LastParse.Types.AllTypes)
                 items.Add(definedType.GetCompletion());
 
             // Get the script from the uri. If it isn't parsed, return the default completion. 

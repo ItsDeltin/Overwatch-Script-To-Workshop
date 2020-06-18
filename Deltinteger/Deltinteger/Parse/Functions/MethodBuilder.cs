@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Deltin.Deltinteger.Elements;
 
 namespace Deltin.Deltinteger.Parse
@@ -164,6 +165,17 @@ namespace Deltin.Deltinteger.Parse
                 // Go to next case then parse the block.
                 typeSwitch.NextCase(new V_Number(((ClassType)option.Attributes.ContainingType).Identifier));
 
+                // Iterate through every type.
+                foreach (CodeType type in BuilderSet.Translate.DeltinScript.Types.AllTypes)
+                    // If 'type' does not equal the current virtual option's containing class...
+                    if (option.Attributes.ContainingType != type
+                        // ...and 'type' implements the containing class...
+                        && type.Implements(option.Attributes.ContainingType)
+                        // ...and 'type' does not have their own function implementation...
+                        && AutoImplemented(option.Attributes.ContainingType, options.Select(o => o.Attributes.ContainingType).ToArray(), type))
+                        // ...then add an additional case for 'type's class identifier.
+                        typeSwitch.NextCase(new V_Number(((ClassType)type).Identifier));
+
                 if (option.subroutineInfo == null)
                     TranslateSegment(optionSet, option);
                 else
@@ -180,6 +192,23 @@ namespace Deltin.Deltinteger.Parse
 
             // Finish the switch.
             typeSwitch.Finish(Element.Part<V_ValueInArray>(classData.ClassIndexes.GetVariable(), BuilderSet.CurrentObject));
+        }
+
+        /// <summary>Determines if the specified type does not have their own implementation for the specified virtual function.</summary>
+        /// <param name="virtualFunction">The virtual function to check overrides of.</param>
+        /// <param name="options">All potential virtual functions.</param>
+        /// <param name="type">The type to check.</param>
+        public static bool AutoImplemented(CodeType virtualType, CodeType[] allOptionTypes, CodeType type)
+        {
+            // Go through each class in the inheritance tree and check if it implements the function.
+            CodeType current = type;
+            while (current != null && current != virtualType)
+            {
+                // If it does, return false.
+                if (allOptionTypes.Contains(current)) return false;
+                current = current.Extends;
+            }
+            return true;
         }
 
         private static void TranslateSegment(ActionSet actionSet, DefinedMethod method)

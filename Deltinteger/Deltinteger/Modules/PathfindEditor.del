@@ -1,24 +1,49 @@
 import "!Debug Tools.del";
+import "!Container.del";
 
 rule: "Commands" -1
 {
     DisableInspectorRecording();
     CreateHudText(VisibleTo:AllPlayers(), Text:"https://github.com/ItsDeltin/Overwatch-Script-To-Workshop/wiki/Pathfinding", TextColor:Color.Blue, Location:Location.Right, SortOrder:0);
-    HelpText("Ultimate: Create node."                                                    , 1 );
-    HelpText("Crouch + Ultimate: Destroy node."                                          , 2 );
-    HelpText("Interact: Select node."                                                    , 3 );
-    HelpText("Crouch + Interact: Deselect all nodes."                                    , 4 );
-    HelpText("Secondary Fire: Connect all selected nodes."                               , 5 );
-    HelpText("Crouch + Secondary Fire: Disconnect all selected nodes."                   , 6 );
-    HelpText("Voice Line Right: Create a path from the first to the last selected nodes.", 7 );
-    HelpText("Voice Line Left: Connect all selected nodes to the first selected node."   , 8 );
-    HelpText("Shift: Switch attribute."                                                  , 9 );
-    HelpText("Voice Line Up: Compile pathmap."                                           , 11);
+    HelpText("Ultimate: Create node."                                                    , 1, Color.SkyBlue);
+    HelpText("Crouch + Ultimate: Destroy node."                                          , 2, Color.SkyBlue);
+    HelpText("Interact: Select node."                                                    , 3, Color.LimeGreen);
+    HelpText("Crouch + Interact: Deselect all nodes."                                    , 4, Color.LimeGreen);
+    HelpText("Secondary Fire: Connect all selected nodes."                               , 5, Color.Green);
+    HelpText("Crouch + Secondary Fire: Disconnect all selected nodes."                   , 6, Color.Green);
+    HelpText("Voice Line Right: Create a path from the first to the last selected nodes.", 7, Color.Green);
+    HelpText("Voice Line Left: Connect all selected nodes to the first selected node."   , 8, Color.Green);
+    HelpText("Shift: Switch attribute."                                                  , 9, Color.Orange);
+    HelpText("Voice Line Up: Compile pathmap."                                           , 11, Color.Yellow);
 }
 
-void HelpText(ref define text, ref define order)
+globalvar define scoper;
+
+rule: "Create Scoper"
 {
-    CreateHudText(VisibleTo:AllPlayers(), Subheader:text, SubheaderColor:Color.SkyBlue, Location:Location.Right, SortOrder:order);
+    if (CurrentGameMode() == GameMode.Deathmatch)
+        CreateDummyBot(Hero.Roadhog, Team.All, 1, Vector(0, 1000, 0));
+    else
+        CreateDummyBot(Hero.Roadhog, Team.Team1, 1, Vector(0, 1000, 0));
+    scoper = LastCreatedEntity();
+    SetGravity(scoper, 0);
+    SetStatus(scoper, null, Status.Unkillable, 9999);
+    SetMaxHealth(scoper, 1000);
+    StartDamageModification(scoper, FilteredArray(AllPlayers(), ArrayElement() != scoper), 0, DamageModificationRev.ReceiversDamagersAndDamagePercent);
+    SetInvisible(scoper, InvisibleTo.All);
+}
+
+void HelpText(ref define text, ref define order, Color color)
+{
+    CreateHudText(VisibleTo:AllPlayers(), Subheader:text, SubheaderColor:color, Location:Location.Right, SortOrder:order);
+}
+
+rule: "Disable conflicting controls"
+Event.OngoingPlayer
+{
+    SetAbility1Enabled(EventPlayer(), false);
+    SetAbility2Enabled(EventPlayer(), false);
+    SetSecondaryFireEnabled(EventPlayer(), false);
 }
 
 define GetClosestNode(): FirstOf(SortedArray(Nodes, DistanceBetween(EyePosition(EventPlayer()), (<Node>ArrayElement()).ShownLocation)));
@@ -95,6 +120,7 @@ class Node
     private define EffectID;
     public define Selected = false;
     public define visible = false;
+    public define SelectIDText;
 
     public Node(define pos)
     {
@@ -115,6 +141,7 @@ class Node
     {
         if (visible)
         {
+            DestroyInWorldText(SelectIDText);
             DestroyEffect(EffectID);
             visible = false;
         }
@@ -128,6 +155,7 @@ class Node
 
     public void Deselect()
     {
+        DestroyInWorldText(SelectIDText);
         Selected = false;
         Update();
     }
@@ -138,7 +166,10 @@ class Node
         if (!Selected)
             Make(Color.Blue);
         else
+        {
             Make(Color.Green);
+            root.ActivateScoper(root.scoper, 1, this);
+        }
         EffectID = LastCreatedEntity();
     }
 
@@ -149,7 +180,7 @@ class Node
 
     public void UpdateVisible()
     {
-        if (DistanceBetween(HostPlayer(), ShownLocation) < 35 && IsInViewAngle(HostPlayer(), ShownLocation, 50))
+        if (DistanceBetween(HostPlayer(), ShownLocation) < 35 && (IsInViewAngle(HostPlayer(), ShownLocation, 50) || DistanceBetween(HostPlayer(), ShownLocation) < 5))
             Show();
         else
             Hide();
@@ -165,7 +196,7 @@ if (!IsButtonHeld(EventPlayer(), Button.Crouch))
         for (define l = 0; l < CountOf(Selected); l++)
             if ((l != f) && !SegmentExists(Selected[f], Selected[l]))
             {
-                Segments = Append(Segments, new Segment(<Node>Selected[f], <Node>Selected[l], Attribute));
+                Segments = Append(Segments, new Segment(<Node>Selected[f], <Node>Selected[l], FirstAttribute, SecondAttribute));
                 (<Segment>LastOf(Segments)).Show();
             }
 }
@@ -178,7 +209,7 @@ if (!IsButtonHeld(EventPlayer(), Button.Crouch))
     for (define i = 1; i < CountOf(Selected); i++)
         if (!SegmentExists(Selected[i - 1], Selected[i]))
         {
-            Segments = Append(Segments, new Segment(<Node>Selected[i - 1], <Node>Selected[i], Attribute));
+            Segments = Append(Segments, new Segment(<Node>Selected[i - 1], <Node>Selected[i], FirstAttribute, SecondAttribute));
             (<Segment>LastOf(Segments)).Show();
         }
 }
@@ -191,7 +222,7 @@ if (!IsButtonHeld(EventPlayer(), Button.Crouch))
     for (define i = 1; i < CountOf(Selected); i++)
         if (!SegmentExists(Selected[0], Selected[i]))
         {
-            Segments = Append(Segments, new Segment(<Node>Selected[0], <Node>Selected[i], Attribute));
+            Segments = Append(Segments, new Segment(<Node>Selected[0], <Node>Selected[i], FirstAttribute, SecondAttribute));
             (<Segment>LastOf(Segments)).Show();
         }
 }
@@ -225,19 +256,22 @@ class Segment
     public Node Node1;
     public Node Node2;    
     public define Nodes;
-    public define Attribute;
+    public define FirstAttribute;
+    public define SecondAttribute;
 
     define EffectID;
     public define visible = false;
 
-    define DirectionMarker1;
+    public define AttributeText1;
+    public define AttributeText2;
 
-    public Segment(Node node1, Node node2, define attribute)
+    public Segment(Node node1, Node node2, define firstAttribute, define secondAttribute)
     {
         Node1 = node1;
         Node2 = node2;
         Nodes = [Node1, Node2];
-        Attribute = attribute;
+        FirstAttribute = firstAttribute;
+        SecondAttribute = secondAttribute;
     }
 
     public void Show()
@@ -248,10 +282,38 @@ class Segment
             EffectID = LastCreatedEntity();
             visible = true;
 
-            if (Attribute == 1)
+            if (FirstAttribute != 0 || SecondAttribute != 0)
             {
-                CreateEffect(AllPlayers(), Effect.Sphere, Color.Purple, LinearInterpolate(Node1.ShownLocation, Node2.ShownLocation, 0.8), 0.25, EffectRev.VisibleTo);
-                DirectionMarker1 = LastCreatedEntity();
+                CreateInWorldText(
+                    AllPlayers(),
+                    FirstAttribute,
+                    LinearInterpolate(
+                        Node1.ShownLocation,
+                        Node2.ShownLocation,
+                        0.2
+                    ),
+                    2.5,
+                    Clipping.ClipAgainstSurfaces,
+                    InworldTextRev.VisibleTo,
+                    Color.Yellow,
+                    Spectators.VisibleAlways
+                );
+                AttributeText1 = LastTextID();
+                CreateInWorldText(
+                    AllPlayers(),
+                    SecondAttribute,
+                    LinearInterpolate(
+                        Node1.ShownLocation,
+                        Node2.ShownLocation,
+                        0.8
+                    ),
+                    2.5,
+                    Clipping.ClipAgainstSurfaces,
+                    InworldTextRev.VisibleTo,
+                    Color.Orange,
+                    Spectators.VisibleAlways
+                );
+                AttributeText2 = LastTextID();
             }
         }
     }
@@ -260,7 +322,8 @@ class Segment
         if (visible)
         {
             DestroyEffect(EffectID);
-            DestroyEffect(DirectionMarker1);
+            DestroyInWorldText(AttributeText1);
+            DestroyInWorldText(AttributeText2);
             visible = false;
         }
     }
@@ -298,7 +361,6 @@ Event.OngoingPlayer
 if (IsCommunicating(EventPlayer(), Communication.VoiceLineUp))
 {
     compiling = true;
-    EnableInspectorRecording();
     SmallMessage(AllPlayers(), "Compiling...");
 
     nodesOut = EmptyArray();
@@ -309,12 +371,18 @@ if (IsCommunicating(EventPlayer(), Communication.VoiceLineUp))
     
     for (define i = 0; i < CountOf(Segments); i++)
         segmentsOut = Append(segmentsOut, Vector(
-            IndexOfArrayValue(Nodes, (<Segment>Segments[i]).Node1),
-            IndexOfArrayValue(Nodes, (<Segment>Segments[i]).Node2),
-            (<Segment>Segments[i]).Attribute
+            // X is first node
+            IndexOfArrayValue(Nodes, (<Segment>Segments[i]).Node1) + ((<Segment>Segments[i]).FirstAttribute / 100),
+            // Y is second node
+            IndexOfArrayValue(Nodes, (<Segment>Segments[i]).Node2) + ((<Segment>Segments[i]).SecondAttribute / 100),
+            // Z is unused
+            0
+            // (<Segment>Segments[i]).Attribute
         ));
 
     SmallMessage(AllPlayers(), "Compile Finished!");
+    EnableInspectorRecording();
+    # Pathmap is compiled. Copy the current global variable set to the clipboard. In vscode, press ctrl+shift+p to open the command pallete, then run the 'Create pathmap from CSV clipboard' command.
     DisableInspectorRecording();
     compiling = false;
 }
@@ -329,37 +397,86 @@ if (CountOf(preloadNodes) != 0)
         Nodes = Append(Nodes, new Node(preloadNodes[i]));    
     for (define i = 0; i < CountOf(preloadSegments); i++)
         Segments = Append(Segments, new Segment(
-                <Node>Nodes[XOf(preloadSegments[i])],
-                <Node>Nodes[YOf(preloadSegments[i])],
-                ZOf(preloadSegments[i])
+                <Node>Nodes[RoundToInteger(XOf(preloadSegments[i]), Rounding.Down)],
+                <Node>Nodes[RoundToInteger(YOf(preloadSegments[i]), Rounding.Down)],
+                (XOf(preloadSegments[i]) % 1) * 100,
+                (YOf(preloadSegments[i]) % 1) * 100
             ));
 }
 
 globalvar define preloadNodes 5;
 globalvar define preloadSegments 6;
 
+globalvar define FirstAttribute = 0;
+globalvar define SecondAttribute = 0;
 globalvar define Attribute = 0;
 globalvar define AttributeHud = 0;
 
-rule: "Change attribute"
+rule: "Change Primary Attribute"
 Event.OngoingPlayer
 if (IsButtonHeld(EventPlayer(), Button.Ability1))
+if (!IsButtonHeld(EventPlayer(), Button.Crouch))
 {
-    Attribute++;
-    DestroyHudText(AttributeHud);
-
-    if (Attribute == 2) Attribute = 0;
-
-    if (Attribute == 0)
-        CreateHudText(AllPlayers(), "Attribute:", "Normal", null, Location.Top);
-    else if (Attribute == 1)
-        CreateHudText(AllPlayers(), "Attribute:", "One-way", null, Location.Top);
-
-    AttributeHud = LastTextID();
+    FirstAttribute++;
+}
+rule: "Change Secondary Attribute"
+Event.OngoingPlayer
+if (IsButtonHeld(EventPlayer(), Button.Ability2))
+if (!IsButtonHeld(EventPlayer(), Button.Crouch))
+{
+    SecondAttribute++;
+}
+rule: "Reset Primary Attribute"
+Event.OngoingPlayer
+if (IsButtonHeld(EventPlayer(), Button.Ability1))
+if (IsButtonHeld(EventPlayer(), Button.Crouch))
+{
+    FirstAttribute = 0;
+}
+rule: "Reset Secondary Attribute"
+Event.OngoingPlayer
+if (IsButtonHeld(EventPlayer(), Button.Ability2))
+if (IsButtonHeld(EventPlayer(), Button.Crouch))
+{
+    SecondAttribute = 0;
 }
 
-rule: "Initial attribute HUD"
+rule: "Create Attribute HUD"
 {
-    CreateHudText(AllPlayers(), "Attribute:", "normal", null, Location.Top);
-    AttributeHud = LastTextID();
+    CreateHudText(
+        VisibleTo: AllPlayers(),
+        Header   : "Primary Attribute:",
+        Subheader: ["Normal", "Custom"][Min(FirstAttribute, 1)],
+        Text     : FirstAttribute,
+        TextColor: Color.Yellow,
+        Location : Location.Top,
+        SortOrder: 1
+    );
+    CreateHudText(
+        VisibleTo: AllPlayers(),
+        Header   : "Secondary Attribute:",
+        Subheader: ["Normal", "Custom"][Min(SecondAttribute, 1)],
+        Text     : SecondAttribute,
+        TextColor: Color.Orange,
+        Location : Location.Top,
+        SortOrder: 2
+    );
+}
+
+rule: "Create Selected ID Text"
+Event.OnDamageTaken
+if (scoper == EventPlayer())
+if (ScopeID == 1)
+{
+    CreateInWorldText(
+        AllPlayers(),
+        IndexOfArrayValue(Nodes, ScopeData),
+        (<Node>ScopeData).ShownLocation,
+        3,
+        Clipping.DoNotClip,
+        InworldTextRev.String,
+        Color.Green,
+        Spectators.VisibleAlways
+    );
+    (<Node>ScopeData).SelectIDText = LastTextID();
 }

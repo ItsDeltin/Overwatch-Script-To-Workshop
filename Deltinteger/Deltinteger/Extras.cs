@@ -174,17 +174,26 @@ namespace Deltin.Deltinteger
     public class MarkupBuilder
     {
         StringBuilder result = new StringBuilder();
+        StringBuilder noMarkup = new StringBuilder();
 
         public MarkupBuilder() {}
 
         public MarkupBuilder Add(string line)
         {
             result.Append(line);
+            noMarkup.Append(line);
+            return this;
+        }
+        public MarkupBuilder Code(string line)
+        {
+            result.Append("`" + line + "`");
+            noMarkup.Append(line);
             return this;
         }
         public MarkupBuilder NewLine()
         {
             result.Append("\n\r");
+            noMarkup.Append("\n\r");
             return this;
         }
         public MarkupBuilder StartCodeLine()
@@ -200,10 +209,11 @@ namespace Deltin.Deltinteger
         public MarkupBuilder NewSection()
         {
             result.Append("\n\r ----- \n\r");
+            noMarkup.Append("\n\r");
             return this;
         }
 
         public override string ToString() => result.ToString();
-        public string ToString(bool markdown) => result.ToString();
+        public string ToString(bool markup) => markup ? result.ToString() : noMarkup.ToString();
     }
 }

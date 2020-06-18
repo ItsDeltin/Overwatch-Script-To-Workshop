@@ -15,7 +15,8 @@
 			"preLaunchTask": {
 				"type": "npm",
 				"script": "compile"
-            }
+			},
+			"sourceMaps": true
 		}
     ]
 }

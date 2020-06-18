@@ -64,11 +64,13 @@ namespace Deltin.Deltinteger.Parse
             references.Add(var, reference);
         }
 
-        public void Add(IIndexReferencer var, IWorkshopTree reference)
+        public IGettable Add(IIndexReferencer var, IWorkshopTree reference)
         {
             if (reference == null) throw new ArgumentNullException(nameof(reference));
             CheckIfAdded(var);
-            references.Add(var, new WorkshopElementReference(reference));
+            var weRef = new WorkshopElementReference(reference);
+            references.Add(var, weRef);
+            return weRef;
         }
 
         public void Add(IIndexReferencer var, IGettable gettable)

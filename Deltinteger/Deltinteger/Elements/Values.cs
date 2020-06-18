@@ -992,7 +992,7 @@ namespace Deltin.Deltinteger.Elements
                 if (a.Value == 1) return 1;
             }
 
-            if (b != null && (b.Value == 0 || b.Value == 1)) return 0;
+            if (b != null && b.Value == 0) return 0;
 
             if (((Element)ParameterValues[0]).EqualTo(ParameterValues[1])) return 0;
             
@@ -1105,7 +1105,7 @@ namespace Deltin.Deltinteger.Elements
         }
         public V_Number() : this(0) {}
 
-        public override string ToWorkshop(OutputLanguage language)
+        public override string ToWorkshop(OutputLanguage language, ToWorkshopContext context)
         {
             if (double.IsNaN(Value))
                 Value = 0;
@@ -1655,6 +1655,10 @@ namespace Deltin.Deltinteger.Elements
         {
             ParameterValues = new IWorkshopTree[] { x, y, z };
         }
+        public V_Vector(IWorkshopTree x, IWorkshopTree y, IWorkshopTree z)
+        {
+            ParameterValues = new IWorkshopTree[] { x, y, z };
+        }
         public V_Vector(double x, double y, double z) : this(new V_Number(x), new V_Number(y), new V_Number(z))
         {
         }
@@ -1878,10 +1882,12 @@ namespace Deltin.Deltinteger.Elements
     [HideElement]
     public class V_IfThenElse : Element
     {
-        public override string ToWorkshop(OutputLanguage language)
+        public override string ToWorkshop(OutputLanguage language, ToWorkshopContext context)
         {
             AddMissingParameters();
-            return ParameterValues[0].ToWorkshop(language) + " ? " + ParameterValues[1].ToWorkshop(language) + " : " + ParameterValues[2].ToWorkshop(language);
+            string result = ParameterValues[0].ToWorkshop(language, ToWorkshopContext.NestedValue) + " ? " + ParameterValues[1].ToWorkshop(language, ToWorkshopContext.NestedValue) + " : " + ParameterValues[2].ToWorkshop(language, ToWorkshopContext.NestedValue);
+            if (context == ToWorkshopContext.ConditionValue) result = "(" + result + ")";
+            return result;
         }
     }
 

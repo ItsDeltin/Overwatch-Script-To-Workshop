@@ -1,4 +1,4 @@
-define CameraSpeed: IsButtonHeld(EventPlayer(), Button.Ability1) ? 30 : 0.2;
+define CameraSpeed: IsButtonHeld(EventPlayer(), Button.Ability1) ? 30 : 10;
 define ToggleKey: IsCommunicating(EventPlayer(), Communication.VoiceLineDown);
 
 playervar define cam = false;
@@ -24,13 +24,13 @@ if (cam)
     ChaseVariableAtRate(
         cameraPos,
         cameraPos +
-            ((FacingDirectionOf() * ZOf(ThrottleOf())) + // Forward
-            (CrossProduct(FacingDirectionOf(), Up()) * -XOf(ThrottleOf())) + // Left
+            ((FacingDirectionOf() * ThrottleOf().Z) + // Forward
+            (FacingDirectionOf().CrossProduct(Up()) * -ThrottleOf().X) + // Left
             Vector(0,
                 [0, 1, -1][IndexOfArrayValue([IsButtonHeld(EventPlayer(), Button.Jump), IsButtonHeld(EventPlayer(), Button.Crouch)], true) + 1],
             0))
-            * CameraSpeed,
-        30,
+            * 100,
+        (ThrottleOf() != Vector.Zero || IsButtonHeld(EventPlayer(), Button.Jump) || IsButtonHeld(EventPlayer(), Button.Crouch)) ? CameraSpeed : 0,
         RateChaseReevaluation.DestinationAndRate
     );
 

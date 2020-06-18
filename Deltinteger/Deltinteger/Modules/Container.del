@@ -1,70 +1,61 @@
+public void ActivateScoper(ref define executor, ref define id, define data)
+{
+    data += id / 100;
+    Damage(executor, executor, data);
+    Heal(executor, executor, data);
+}
+public define ScopeData: RoundToInteger(EventDamage(), Rounding.Down);
+public define ScopeID: RoundToInteger((EventDamage() * 100) % 100, Rounding.Nearest);
+
 /*
-Usage:
+ * Container.del is used to manually select what components will be reevaluated.
+ * This allows you to do something like creating an effect for each index of an array where the position is reevaluated but the index is not.
+ * This is done using the 'Event Damage' or 'Event Healing' values, which does not get reevaluated.
+ * Since class references are numbers, entire classes of data can be passed through Event Damage.
+ *
+ * 'ScopeID' prevents conflicts when using multiple systems that need to break evaluation.
+ *
+ * This strategy has a few restrictions. The player or dummy used to create the effect cannot have any damage resistance. Damaging the scoper for 5 health should
+ * result in exactly 5 damage being taken. This also requires the scoper to have enough health to transmit the data. The scoper cannot be in the spawn room or have
+ * the 'Phased' or 'Invulnerable' status, as these prevents the player from taking damage. Note that armor (the orange part of some heroe's health bar) has small
+ * damage resistance. If you have free slots in your custom game, you can make a dedicated dummy bot used for activating containers. 
+ *
+ * The example below will create an effect for each value in the Positions array. The effect's position will update when the respective value in 'Positions' is changed.
 
-    To create contained rule:
-        import "Container.del";
+class EffectMaker
+{
+    public Vector Position;
+    public define Radius;
+    public define Entity;
+    
+    public EffectMaker(ref Vector position, ref define radius)
+    {
+        Position = position;
+        Radius = radius;
+    }
+}
 
-        rule: "Scoped Index"
-        Event.OnDamageTaken          // On Damage Taken event
-        if (scoper == EventPlayer()) // Check if is scoper
-        if (GetID() == 79)           // GetID equals expected ID
-        {
-            // GetPlayer() for executor
-            // GetData() for sent data
-            CreateEffect(AllPlayers(), Effect.Sphere, Color.Red, Destination(EyePosition(GetPlayer()), FacingDirectionOf(GetPlayer()), GetData()), 0.1);
-        }
+globalvar Vector[] Positions = [...];
+globalvar define Radiuses = [...];
 
-    To trigger rule:
-        ActivateScoper(79, someData);
+rule: "Make Effects"
+{
+    foreach (Vector position in Positions)
+        ActivateScoper(HostPlayer(), 1, new EffectMaker(position));
+}
 
+rule: "Make Effect (Reevaluation Container)"
+Event.OnDamageDealt
+if (ScopeID == 1) // Match ScopeID.
+{
+    // Make the effect
+    CreateEffect(
+        AllPlayers(),
+        Effect.Sphere,
+        Color.Red,
+        (<EffectMaker>ScopeData).Position,
+        (<EffectMaker>ScopeData).Radius
+    );
+    (<EffectMaker>ScopeData).Entity = LastCreatedEntity();
+}
 */
-
-globalvar define scoper;
-
-rule: "Create Scoper"
-{
-    CreateDummyBot(Hero.Roadhog, Team.Team1, 5, Vector(0, 2000, 0));
-    scoper = LastCreatedEntity();
-    SetGravity(scoper, 0);
-    SetStatus(scoper, null, Status.Unkillable, 9999);
-    SetMaxHealth(scoper, 1000);
-    StartDamageModification(scoper, FilteredArray(AllPlayers(), ArrayElement() != scoper), 0, ModRev.ReceiversDamagersAndDamagePercent);
-    SetInvisible(scoper, InvisibleTo.All);
-}
-
-rule: "Scoper: Heal Set"
-Event.OngoingPlayer
-if (scoper == EventPlayer())
-if (HasSpawned())
-{
-    Heal(scoper, null, 6000);
-}
-
-public method ActivateScoper(define id, define data)
-{
-    // Encode the executor, id and data into one number.
-    //      vv executor
-    // 1234.5678
-    // ^^^^   ^^
-    // data   ID
-    data += (SlotOf(EventPlayer()) + (TeamOf(EventPlayer()) == Team.Team1) ? 0 : 6) / 100;
-    data += id / 10000;
-    Damage(scoper, scoper, data);
-}
-
-// 123.0179
-// ^^^ Gets the whole number (123)
-public macro GetData(): RoundToInteger(EventDamage(), Rounding.Down);
-
-macro GetPlayer(): PlayersInSlot(rawPlayerID() - ((rawPlayerID() < 6) ? 0 : 6), decodeTeam());
-
-// 123.0179
-//       ^^ Gets the last 2 digits (79)
-// Use Nearest because of optimizations at this decimal level
-macro GetID(): RoundToInteger((EventDamage() * 10000) % 100, Rounding.Nearest);
-
-// 123.0179
-//     ^^ Gets the first 2 digits (01)
-macro rawPlayerID(): RoundToInteger((EventDamage() * 100) % 100, Rounding.Down);
-
-macro decodeTeam(): (rawPlayerID() < 6) ? Team.Team1 : Team.Team2;

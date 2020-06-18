@@ -20,9 +20,9 @@ namespace Deltin.Deltinteger.LanguageServer
             _languageServer = languageServer;
         }
 
-        public TextDocumentRegistrationOptions GetRegistrationOptions()
+        public HoverRegistrationOptions GetRegistrationOptions()
         {
-            return new TextDocumentRegistrationOptions() {
+            return new HoverRegistrationOptions() {
                 DocumentSelector = DeltintegerLanguageServer.DocumentSelector
             };
         }

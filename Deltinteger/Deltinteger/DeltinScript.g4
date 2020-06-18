@@ -58,10 +58,11 @@ array : (INDEX_START expr INDEX_END)+ ;
 varset   : var=expr array? ((statement_operation val=expr?) | INCREMENT | DECREMENT) ;
 statement_operation : EQUALS | EQUALS_ADD | EQUALS_DIVIDE | EQUALS_MODULO | EQUALS_MULTIPLY | EQUALS_POW | EQUALS_SUBTRACT ;
 
-call_parameters  : expr (COMMA expr?)*    		 	         ;
-picky_parameter  : PART? TERNARY_ELSE expr?                  ;
-picky_parameters : picky_parameter (COMMA picky_parameter?)* ;
-method           : (ASYNC NOT?)? PART LEFT_PAREN (picky_parameters | call_parameters)? RIGHT_PAREN ;
+hook : var=expr EQUALS value=expr STATEMENT_END;
+
+method         : (ASYNC NOT?)? PART LEFT_PAREN call_parameters? RIGHT_PAREN ;
+call_parameters: call_parameter (COMMA call_parameter?)*   ;
+call_parameter : (PART? TERNARY_ELSE)? expr					 ;
 
 variable : PART array? ;
 code_type: PART (INDEX_START INDEX_END)* generics?;
@@ -69,6 +70,7 @@ generics : LESS_THAN (code_type (COMMA code_type)*)? GREATER_THAN;
 
 lambda: (define | LEFT_PAREN (define (COMMA define)*)? RIGHT_PAREN) INS (expr | block) ;
 
+documented_statement: DOCUMENTATION? statement;
 statement :
 	  define STATEMENT_END?   #s_define
 	| varset STATEMENT_END?   #s_varset
@@ -84,10 +86,10 @@ statement :
 	| CONTINUE STATEMENT_END? #s_continue
 	| BREAK STATEMENT_END?    #s_break
 	| switch 				  #s_switch
-	| (BLOCK_START statement* BLOCK_END) #s_block
+	| (BLOCK_START documented_statement* BLOCK_END) #s_block
 	;
 
-block : (BLOCK_START statement* BLOCK_END) | statement | STATEMENT_END  ;
+block : (BLOCK_START documented_statement* BLOCK_END) | documented_statement | STATEMENT_END  ;
 
 for     : FOR LEFT_PAREN 
 	((define | initialVarset=varset)? STATEMENT_END expr? STATEMENT_END endingVarset=varset?)
@@ -111,7 +113,7 @@ delete  : DELETE LEFT_PAREN expr RIGHT_PAREN                  ;
 switch  : SWITCH LEFT_PAREN expr? RIGHT_PAREN
 	BLOCK_START switch_element* BLOCK_END;
 
-switch_element:  (DEFAULT TERNARY_ELSE?) | case | statement;
+switch_element:  (DEFAULT TERNARY_ELSE?) | case | documented_statement;
 
 case    : CASE expr? TERNARY_ELSE?;
 
@@ -130,13 +132,13 @@ define_method : DOCUMENTATION* method_attributes* (VOID | code_type) name=PART L
 
 method_attributes : accessor | STATIC | OVERRIDE | VIRTUAL | RECURSIVE;
 
-define_macro  : DOCUMENTATION* accessor? STATIC? code_type name=PART (LEFT_PAREN setParameters RIGHT_PAREN)? TERNARY_ELSE? expr? STATEMENT_END? ;
+define_macro  : DOCUMENTATION* method_attributes* code_type name=PART (LEFT_PAREN setParameters RIGHT_PAREN)? TERNARY_ELSE? expr? STATEMENT_END? ;
 
 ruleset :
 	reserved_global?
 	reserved_player?
 	import_file*
-	((define STATEMENT_END) | ow_rule | define_method | define_macro | type_define | enum_define)*
+	((define STATEMENT_END) | ow_rule | define_method | define_macro | type_define | enum_define | hook)*
 	EOF;
 
 // Classes/structs
@@ -173,7 +175,7 @@ UNTERMINATEDSTRINGLITERAL : '"' (~["\\\r\n] | '\\' (. | EOF))* ;
 
 DOCUMENTATION: '#' .*? NEWLINE ;
 // Comments
-COMMENT : (('/*' .*? '*/') | ('//' .*? NEWLINE)) -> skip ;
+COMMENT : (('/*' .*? '*/') | ('//' .*? (NEWLINE | EOF))) -> skip ;
 
 // Misc
 WHITESPACE : (' '|'\t')+ -> skip ;

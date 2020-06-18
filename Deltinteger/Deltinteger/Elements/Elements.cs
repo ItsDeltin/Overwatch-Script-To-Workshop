@@ -55,6 +55,7 @@ namespace Deltin.Deltinteger.Elements
 
         public IWorkshopTree[] ParameterValues { get; set; }
         public bool Disabled { get; set; }
+        public string Comment { get; set; }
         public int Indent { get; set; }
         protected bool AlwaysShowParentheses = false;
 
@@ -63,19 +64,29 @@ namespace Deltin.Deltinteger.Elements
             return ElementList.GetLabel(false);
         }
         
-        public virtual string ToWorkshop(OutputLanguage language)
+        public virtual string ToWorkshop(OutputLanguage language, ToWorkshopContext context)
         {
+            // Get the parameters
             AddMissingParameters();
-
             List<string> parameters = AdditionalParameters().ToList();
-
-            parameters.AddRange(ParameterValues.Select(p => p.ToWorkshop(language)));
+            parameters.AddRange(ParameterValues.Select(p => p.ToWorkshop(language, ToWorkshopContext.NestedValue)));
 
             string result = Extras.Indent(Indent, true); // TODO: option for spaces or tab output.
+
+            // Add a comment and newline
+            if (Comment != null) result += $"\"{Comment}\"\n" + Extras.Indent(Indent, true);
+
+            // Add the disabled tag if the element is disabled.
             if (!ElementList.IsValue && Disabled) result += LanguageInfo.Translate(language, "disabled") + " ";
+
+            // Add the name of the element.
             result += LanguageInfo.Translate(language, Name);
+
+            // Add the parameters.
             if (parameters.Count != 0) result += "(" + string.Join(", ", parameters) + ")";
             else if (AlwaysShowParentheses) result += "()";
+
+            // Add the ; if the element is an action.
             if (!ElementList.IsValue) result += ";";
             return result;
         }
@@ -120,6 +131,14 @@ namespace Deltin.Deltinteger.Elements
         {
             if (values == null || values.Length == 0) return new V_EmptyArray();
             return Element.Part<V_Array>(values);
+        }
+
+        public static Element CreateAppendArray(params IWorkshopTree[] values)
+        {
+            Element array = new V_EmptyArray();
+            for (int i = 0; i < values.Length; i++)
+                array = Element.Part<V_Append>(array, values[i]);
+            return array;
         }
 
         // Creates an ternary conditional that works in the workshop

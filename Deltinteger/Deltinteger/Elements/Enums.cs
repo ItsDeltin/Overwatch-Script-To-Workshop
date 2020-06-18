@@ -133,7 +133,7 @@ namespace Deltin.Deltinteger.Elements
             IsHidden = isHidden;
         }
 
-        public string ToWorkshop(OutputLanguage language)
+        public string ToWorkshop(OutputLanguage language, ToWorkshopContext context)
         {
             string numTranslate(string name)
             {
@@ -196,7 +196,11 @@ namespace Deltin.Deltinteger.Elements
         [EnumOverride(null, "Player Left Match")]
         OnPlayerLeave,
         [HideElement]
-        Subroutine
+        Subroutine,
+        [EnumOverride(null, "Player Dealt Knockback")]
+        PlayerDealtKnockback,
+        [EnumOverride(null, "Player Received Knockback")]
+        PlayerReceivedKnockback
     }
 
     [WorkshopEnum]

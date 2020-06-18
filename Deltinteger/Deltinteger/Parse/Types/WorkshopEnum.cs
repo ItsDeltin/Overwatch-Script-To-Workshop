@@ -56,7 +56,16 @@ namespace Deltin.Deltinteger.Parse
             parseInfo.TranslateInfo.Types.CallType(this);
         }
 
-        public static ValueGroupType GetEnumType(EnumData enumData) => (ValueGroupType)CodeType.DefaultTypes.First(t => t is ValueGroupType valueGroupType && valueGroupType.EnumData == enumData);
+        public static readonly ValueGroupType[] EnumTypes = GetEnumTypes();
+        private static ValueGroupType[] GetEnumTypes()
+        {
+            var enums = EnumData.GetEnumData();
+            ValueGroupType[] types = new ValueGroupType[enums.Length];
+            for (int i = 0; i < types.Length; i++) types[i] = new ValueGroupType(enums[i], !enums[i].ConvertableToElement());
+            return types;
+        }
+
+        public static ValueGroupType GetEnumType(EnumData enumData) => EnumTypes.First(t => t.EnumData == enumData);
         public static ValueGroupType GetEnumType<T>() => GetEnumType(EnumData.GetEnum<T>());
     }
 

@@ -32,7 +32,7 @@ namespace Deltin.Deltinteger
 
         /// <summary>An array of methods that directly overrides the function. Call `AllOverrideOptions` instead for all child overriders.</summary>
         public IMethod[] Overriders => _overriders.ToArray();
-        
+
         /// <summary>Determines if the method can be called recursively.</summary>
         public bool Recursive { get; set; }
 
@@ -69,7 +69,7 @@ namespace Deltin.Deltinteger
             Label = function.Name,
             Kind = CompletionItemKind.Method,
             Detail = function.GetLabel(false),
-            Documentation = function.Documentation
+            Documentation = Extras.GetMarkupContent(function.Documentation)
         };
 
         public static MarkupBuilder DefaultLabel(IMethod function)
@@ -95,6 +95,7 @@ namespace Deltin.Deltinteger
         public IWorkshopTree[] ParameterValues { get; }
         public object[] AdditionalParameterData { get; }
         public CallParallel CallParallel { get; set; } = CallParallel.NoParallel;
+        public string ActionComment { get; set; }
 
         public MethodCall(IWorkshopTree[] parameterValues, object[] additionalParameterData)
         {

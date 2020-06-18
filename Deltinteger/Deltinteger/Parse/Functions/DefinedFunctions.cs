@@ -79,5 +79,12 @@ namespace Deltin.Deltinteger.Parse
             if (Attributes.ContainingType != null) name = Attributes.ContainingType.Name + "." + name;
             return name;
         }
+
+        public Var[] VirtualVarGroup(int i)
+        {
+            List<Var> parameters = new List<Var>();
+            foreach (var overrider in Attributes.AllOverrideOptions()) parameters.Add(((DefinedFunction)overrider).ParameterVars[i]);
+            return parameters.ToArray();
+        }
     }
 }

@@ -146,6 +146,9 @@ namespace Deltin.Deltinteger.Parse
         /// <summary>Gets the completion that will show up for the language server.</summary>
         public abstract CompletionItem GetCompletion();
 
+        /// <summary>Gets the full name of the type.</summary>
+        public virtual string GetName() => Name;
+
         public static CodeType GetCodeTypeFromContext(ParseInfo parseInfo, DeltinScriptParser.Code_typeContext typeContext)
         {
             if (typeContext == null) throw new ArgumentNullException(nameof(typeContext));
@@ -190,11 +193,9 @@ namespace Deltin.Deltinteger.Parse
         private static void GetDefaultTypes()
         {
             _defaultTypes = new List<CodeType>();
-            foreach (var enumData in EnumData.GetEnumData())
-                _defaultTypes.Add(new ValueGroupType(enumData, !enumData.ConvertableToElement()));
-            
+            _defaultTypes.AddRange(ValueGroupType.EnumTypes);
+
             // Add custom classes here.
-            _defaultTypes.Add(new Pathfinder.PathmapClass());
             _defaultTypes.Add(new Models.AssetClass());
             _defaultTypes.Add(new Lambda.BlockLambda());
             _defaultTypes.Add(new Lambda.ValueBlockLambda());
