@@ -60,5 +60,11 @@ namespace Deltin.Deltinteger.Elements
         {
             return baseName.Substring(0, Math.Min(baseName.Length, Constants.MAX_VARIABLE_NAME_LENGTH - (indent.ToString().Length + 1))) + "_" + indent;
         }
+
+        public int ElementCount(int depth)
+        {
+            if (depth <= 0) return 0;
+            return 1;
+        }
     }
 }

@@ -195,13 +195,14 @@ namespace Deltin.Deltinteger.Elements
 
         protected virtual bool OverrideEquals(IWorkshopTree other) => true;
 
-        public virtual int ElementCount()
+        public virtual int ElementCount(int depth)
         {
             AddMissingParameters();
-            int count = 1;
+            int count = 0;
+            if (depth > 0) count = 1;
             
             foreach (var parameter in ParameterValues)
-                count += parameter.ElementCount();
+                count += parameter.ElementCount(depth + 1);
             
             return count;
         }

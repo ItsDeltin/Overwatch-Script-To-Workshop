@@ -47,9 +47,9 @@ namespace Deltin.Deltinteger.Elements
         public int ElementCount(bool optimized)
         {
             if (optimized)
-                return 1 + Value1.Optimize().ElementCount() + Value2.Optimize().ElementCount();
+                return 1 + Value1.Optimize().ElementCount(0) + Value2.Optimize().ElementCount(0);
             else
-                return 1 + Value1.ElementCount() + Value2.ElementCount();
+                return 1 + Value1.ElementCount(0) + Value2.ElementCount(0);
         }
 
         public static implicit operator Condition(Element element) => new Condition(element);

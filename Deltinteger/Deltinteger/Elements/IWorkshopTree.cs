@@ -6,7 +6,7 @@ namespace Deltin.Deltinteger
     {
         string ToWorkshop(OutputLanguage language, ToWorkshopContext context);
         bool EqualTo(IWorkshopTree other);
-        int ElementCount() => 1;
+        int ElementCount(int depth);
     }
 
     public enum ToWorkshopContext

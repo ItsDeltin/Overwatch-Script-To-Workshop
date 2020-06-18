@@ -374,6 +374,12 @@ namespace Deltin.Deltinteger.Parse
         public string ToWorkshop(OutputLanguage language, ToWorkshopContext context) => StartMarker.NumberOfActionsToMarker(EndMarker).ToString();
 
         public bool EqualTo(IWorkshopTree other) => false;
+
+        public int ElementCount(int depth)
+        {
+            if (depth <= 0) return 1;
+            return 2;
+        }
     }
 
     public class SkipEndMarker : IActionList

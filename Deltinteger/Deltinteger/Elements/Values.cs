@@ -1121,6 +1121,12 @@ namespace Deltin.Deltinteger.Elements
         {
             return ((V_Number)other).Value == Value;
         }
+
+        public override int ElementCount(int depth)
+        {
+            if (depth <= 0) return 1;
+            return 2;
+        }
     }
 
     [ElementData("Number Of Dead Players", ValueType.Number)]
@@ -1475,6 +1481,8 @@ namespace Deltin.Deltinteger.Elements
         {
             return ((V_String)other).Text == Text;
         }
+
+        public override int ElementCount(int depth) => base.ElementCount(depth) + 2;
     }
 
     [ElementData("Custom String", ValueType.Any)]
@@ -1528,6 +1536,8 @@ namespace Deltin.Deltinteger.Elements
         {
             return ((V_CustomString)other).Text == Text;
         }
+
+        public override int ElementCount(int depth) => base.ElementCount(depth) + 1;
     }
 
     [ElementData("Icon String", ValueType.Any)]
@@ -1873,6 +1883,8 @@ namespace Deltin.Deltinteger.Elements
         {
             AlwaysShowParentheses = true;
         }
+
+        public override int ElementCount(int depth) => base.ElementCount(depth) + 1;
     }
 
     [ElementData("If-Then-Else", ValueType.Any)]

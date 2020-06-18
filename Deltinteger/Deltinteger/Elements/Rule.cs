@@ -127,9 +127,9 @@ namespace Deltin.Deltinteger.Elements
                 foreach (Element action in Actions)
                 {
                     if (optimized)
-                        count += action.Optimize().ElementCount();
+                        count += action.Optimize().ElementCount(-1) + 1;
                     else
-                        count += action.ElementCount();
+                        count += action.ElementCount(-1) + 1;
                 }
             
             return count;
