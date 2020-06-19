@@ -27,7 +27,11 @@ namespace Deltin.Deltinteger.Elements
         Map,
         Gamemode,
         Button,
-        String
+        String,
+        Effect,
+        Text,
+        Icon,
+        WorldText
     }
 
     public abstract class Element : IWorkshopTree
