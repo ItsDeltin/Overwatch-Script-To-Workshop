@@ -291,13 +291,13 @@ namespace Deltin.Deltinteger.Pathfinder
         protected Element AnyAccessableUnvisited() => Element.Part<V_IsTrueForAny>(unvisited.GetVariable(), new V_Compare(Element.Part<V_ValueInArray>(distances.GetVariable(), new V_ArrayElement()), Operators.NotEqual, new V_Number(0)));
 
         private static Element BothNodes(Element segment) => Element.CreateAppendArray(Node1(segment), Node2(segment));
-        private static Element Node1(Element segment) => Element.Part<V_RoundToInteger>(Element.Part<V_XOf>(segment), EnumData.GetEnumValue(Rounding.Down));
-        private static Element Node2(Element segment) => Element.Part<V_RoundToInteger>(Element.Part<V_YOf>(segment), EnumData.GetEnumValue(Rounding.Down));
-        private static Element Node1Attribute(Element segment) => Element.Part<V_RoundToInteger>(
+        public static Element Node1(Element segment) => Element.Part<V_RoundToInteger>(Element.Part<V_XOf>(segment), EnumData.GetEnumValue(Rounding.Down));
+        public static Element Node2(Element segment) => Element.Part<V_RoundToInteger>(Element.Part<V_YOf>(segment), EnumData.GetEnumValue(Rounding.Down));
+        public static Element Node1Attribute(Element segment) => Element.Part<V_RoundToInteger>(
             (Element.Part<V_XOf>(segment) % 1) * 100,
             EnumData.GetEnumValue(Rounding.Nearest)
         );
-        private static Element Node2Attribute(Element segment) => Element.Part<V_RoundToInteger>(
+        public static Element Node2Attribute(Element segment) => Element.Part<V_RoundToInteger>(
             (Element.Part<V_YOf>(segment) % 1) * 100,
             EnumData.GetEnumValue(Rounding.Nearest)
         );

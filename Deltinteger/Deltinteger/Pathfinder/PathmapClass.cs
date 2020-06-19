@@ -17,6 +17,8 @@ namespace Deltin.Deltinteger.Pathfinder
         public IndexReference Nodes { get; private set; }
         public IndexReference Segments { get; private set; }
 
+        private InternalVar NodesVar;
+        private InternalVar SegmentsVar;
         private HookVar OnPathStartHook;
         private HookVar OnNodeReachedHook;
         private HookVar OnPathCompleted;
@@ -102,6 +104,19 @@ namespace Deltin.Deltinteger.Pathfinder
             staticScope.AddNativeVariable(OnPathCompleted);
             staticScope.AddNativeVariable(IsNodeReachedDeterminer);
             staticScope.AddNativeVariable(ApplicableNodeDeterminer);
+
+            NodesVar = new InternalVar("Nodes", CompletionItemKind.Property) {
+                Documentation = "The nodes of the pathmap.",
+                CodeType = new ArrayType(VectorType.Instance),
+                IsSettable = false
+            };
+            SegmentsVar = new InternalVar("Segments", CompletionItemKind.Property) {
+                Documentation = "The segments of the pathmap. These segments connect the nodes together.",
+                CodeType = new ArrayType(SegmentsStruct.Instance),
+                IsSettable = false
+            };
+            serveObjectScope.AddNativeVariable(NodesVar);
+            serveObjectScope.AddNativeVariable(SegmentsVar);
         }
 
         private static MarkupBuilder AddHookInfo(MarkupBuilder markupBuilder) => markupBuilder.NewLine().Add("This is a hook variable, meaning it can only be set at the rule-level.");
@@ -121,6 +136,9 @@ namespace Deltin.Deltinteger.Pathfinder
             AddHook(assigner, OnNodeReachedHook);
             AddHook(assigner, OnPathCompleted);
             AddHook(assigner, IsNodeReachedDeterminer);
+
+            assigner.Add(NodesVar, Nodes.GetVariable());
+            assigner.Add(SegmentsVar, Segments.GetVariable());
         }
 
         private void AddHook(VarIndexAssigner assigner, HookVar hook)
@@ -545,5 +563,45 @@ namespace Deltin.Deltinteger.Pathfinder
 
             return map;
         }
+    }
+
+    class SegmentsStruct : CodeType
+    {
+        public static readonly SegmentsStruct Instance = new SegmentsStruct();
+        private readonly InternalVar Node_A;
+        private readonly InternalVar Node_B;
+        private readonly InternalVar Attribute_AB;
+        private readonly InternalVar Attribute_BA;
+        private readonly Scope _scope = new Scope();
+
+        private SegmentsStruct() : base("Segment")
+        {
+            this.Kind = "struct";
+
+            Node_A = new InternalVar("Node_A", CompletionItemKind.Property) { Documentation = "The primary node of this segment. This returns a number which is the index of the node in the pathmap." };
+            Node_B = new InternalVar("Node_B", CompletionItemKind.Property) { Documentation = "The secondary node of this segment. This returns a number which is the index of the node in the pathmap." };
+            Attribute_AB = new InternalVar("Attribute_AB", CompletionItemKind.Property) { Documentation = "The attribute of this segment when travelling from node A to B." };
+            Attribute_BA = new InternalVar("Attribute_BA", CompletionItemKind.Property) { Documentation = "The attribute of this segment when travelling from node B to A." };
+
+            _scope.AddNativeVariable(Node_A);
+            _scope.AddNativeVariable(Node_B);
+            _scope.AddNativeVariable(Attribute_AB);
+            _scope.AddNativeVariable(Attribute_BA);
+        }
+
+        public override void AddObjectVariablesToAssigner(IWorkshopTree reference, VarIndexAssigner assigner)
+        {
+            assigner.Add(Node_A, DijkstraBase.Node1((Element)reference));
+            assigner.Add(Node_B, DijkstraBase.Node2((Element)reference));
+            assigner.Add(Attribute_AB, DijkstraBase.Node1Attribute((Element)reference));
+            assigner.Add(Attribute_BA, DijkstraBase.Node2Attribute((Element)reference));
+        }
+
+        public override Scope GetObjectScope() => _scope;
+        public override Scope ReturningScope() => null;
+        public override CompletionItem GetCompletion() => new CompletionItem() {
+            Label = "Segments",
+            Kind = CompletionItemKind.Struct
+        };
     }
 }
