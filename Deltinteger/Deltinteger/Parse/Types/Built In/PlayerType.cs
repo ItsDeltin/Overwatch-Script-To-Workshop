@@ -40,10 +40,16 @@ namespace Deltin.Deltinteger.Parse
         {
             CanBeExtended = false;
             Inherit(Positionable.Instance, null, null);
+            Kind = "struct";
+        }
 
+        public void ResolveElements()
+        {
             foreach (VariableShorthand shorthand in Variables)
                 ObjectScope.AddNativeVariable(shorthand.Variable);
             
+            PlayersType.AddSharedFunctionsToScope(ObjectScope);
+
             AddFunc(new FuncMethodBuilder() {
                 Name = "IsButtonHeld",
                 Parameters = new CodeParameter[] { new CodeParameter("button", ValueGroupType.GetEnumType<Button>()) },
@@ -59,6 +65,9 @@ namespace Deltin.Deltinteger.Parse
                 Documentation = "Determines if the target player is communicating."
             });
         }
+
+        public override bool Implements(CodeType type) => base.Implements(type) || type == PlayersType.Instance;
+        public bool AlternateImplements(CodeType type) => type == PlayersType.Instance;
 
         public override void AddObjectVariablesToAssigner(IWorkshopTree reference, VarIndexAssigner assigner)
         {
@@ -80,8 +89,7 @@ namespace Deltin.Deltinteger.Parse
 
         public void OverrideArray(ArrayType array)
         {
-            foreach (var function in PlayersType.SharedFunctions)
-                array.Scope.AddNativeMethod(function);
+            PlayersType.AddSharedFunctionsToScope(array.Scope);
         }
 
         class VariableShorthand
@@ -115,14 +123,13 @@ namespace Deltin.Deltinteger.Parse
 
         public void ResolveElements()
         {
-            ObjectScope.AddNativeMethod(Teleport);
-            SharedFunctions = new FuncMethod[] {
-                Teleport
-            };
+            AddSharedFunctionsToScope(ObjectScope);
+            Kind = "struct";
         }
 
         public override bool Implements(CodeType type) => type.Implements(PlayerType.Instance) || new ArrayType(type).Implements(new ArrayType(PlayerType.Instance));
 
+        public override Scope GetObjectScope() => ObjectScope;
         public override Scope ReturningScope() => null;
 
         public override CompletionItem GetCompletion() => new CompletionItem() {
@@ -130,7 +137,10 @@ namespace Deltin.Deltinteger.Parse
             Kind = CompletionItemKind.Struct
         };
 
-        public static FuncMethod[] SharedFunctions;
+        public static void AddSharedFunctionsToScope(Scope scope)
+        {
+            scope.AddNativeMethod(Teleport);
+        }
 
         // These functions are shared with both all Player, Player[], and Players type.
         public static FuncMethod Teleport { get; } = new FuncMethodBuilder() {

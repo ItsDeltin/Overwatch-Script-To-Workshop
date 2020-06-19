@@ -76,6 +76,8 @@ namespace Deltin.Deltinteger
         {
             MarkupBuilder markup = new MarkupBuilder()
                 .StartCodeLine()
+                .Add(function.ReturnType == null ? "void" : function.ReturnType.GetName())
+                .Add(" ")
                 .Add(function.Name + CodeParameter.GetLabels(function.Parameters, false))
                 .EndCodeLine();
             

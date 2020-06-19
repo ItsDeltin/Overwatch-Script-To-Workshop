@@ -75,7 +75,7 @@ namespace Deltin.Deltinteger.Elements
         public void ApplyParameters()
         {
             // Set the return type to the Vector class if the value returns a vector.
-            if (ElementValueType == ValueType.Vector) ReturnType = VectorType.Instance;
+            if (IsValue) ReturnType = CodeTypeFromValueType(ElementValueType);
 
             // Get the parameters.
             Parameters = new Parse.CodeParameter[WorkshopParameters.Length];
@@ -100,8 +100,10 @@ namespace Deltin.Deltinteger.Elements
                     CodeType codeType = null;
 
                     // If the parameter is an enum, get the enum CodeType.
-                    if (WorkshopParameters[i] is EnumParameter)
-                        codeType = ValueGroupType.GetEnumType(((EnumParameter)WorkshopParameters[i]).EnumData);
+                    if (WorkshopParameters[i] is EnumParameter enumParameter)
+                        codeType = ValueGroupType.GetEnumType(enumParameter.EnumData);
+                    else if (WorkshopParameters[i] is Parameter parameter)
+                        codeType = CodeTypeFromValueType(parameter.ReturnType);
 
                     var defaultValue = WorkshopParameters[i].GetDefault();
 
@@ -112,6 +114,22 @@ namespace Deltin.Deltinteger.Elements
                         defaultValue == null ? null : new ExpressionOrWorkshopValue(defaultValue)
                     );
                 }
+            }
+        }
+
+        private static CodeType CodeTypeFromValueType(ValueType valueType)
+        {
+            switch (valueType)
+            {
+                case ValueType.Boolean: return BooleanType.Instance;
+                case ValueType.Number: return NumberType.Instance;
+                case ValueType.Player: return PlayerType.Instance;
+                case ValueType.Players: return PlayersType.Instance;
+                case ValueType.Vector: return VectorType.Instance;
+                case ValueType.VectorAndPlayer: return Positionable.Instance;
+                case ValueType.String: return StringType.Instance;
+                case ValueType.Any:
+                default: return ObjectType.Instance;
             }
         }
 

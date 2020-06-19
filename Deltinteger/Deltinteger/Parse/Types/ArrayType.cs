@@ -43,7 +43,8 @@ namespace Deltin.Deltinteger.Parse
             assigner.Add(_length, Element.Part<V_CountOf>(reference));
         }
 
-        public override bool Implements(CodeType type) => type is ArrayType arrayType && arrayType.ArrayOfType.Implements(ArrayOfType);
+        public override string GetName() => ArrayOfType.GetName() + "[]";
+        public override bool Implements(CodeType type) => (type is ArrayType arrayType && arrayType.ArrayOfType.Implements(ArrayOfType)) || (ArrayOfType is IAdditionalArray additon && additon.AlternateImplements(type));
         public override Scope GetObjectScope() => Scope;
         public override Scope ReturningScope() => null;
         public override CompletionItem GetCompletion() => throw new NotImplementedException();
@@ -96,5 +97,6 @@ namespace Deltin.Deltinteger.Parse
     interface IAdditionalArray
     {
         void OverrideArray(ArrayType array);
+        bool AlternateImplements(CodeType type);
     }
 }

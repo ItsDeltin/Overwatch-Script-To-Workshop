@@ -207,6 +207,7 @@ namespace Deltin.Deltinteger.Parse
             _defaultTypes.Add(BooleanType.Instance);
             _defaultTypes.Add(TeamType.Instance);
             _defaultTypes.Add(VectorType.Instance);
+            _defaultTypes.Add(StringType.Instance);
             ObjectType.Instance.InitOperations();
             NumberType.Instance.InitOperations();
             VectorType.Instance.InitOperations();

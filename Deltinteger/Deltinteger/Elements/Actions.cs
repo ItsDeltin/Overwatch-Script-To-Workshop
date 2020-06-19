@@ -38,7 +38,7 @@ namespace Deltin.Deltinteger.Elements
 
     [ElementData("Big Message")]
     [Parameter("Visible To", ValueType.Players, typeof(V_AllPlayers))]
-    [Parameter("Header", ValueType.Any, typeof(V_String))]
+    [Parameter("Header", ValueType.String, typeof(V_String))]
     public class A_BigMessage : Element {}
 
     [ElementData("Call Subroutine")]
@@ -125,9 +125,9 @@ namespace Deltin.Deltinteger.Elements
 
     [ElementData("Create Hud Text")]
     [Parameter("Visible To", ValueType.Players, typeof(V_AllPlayers))]
-    [Parameter("Header", ValueType.Any, typeof(V_Null))]
-    [Parameter("Subheader", ValueType.Any, typeof(V_Null))]
-    [Parameter("Text", ValueType.Any, typeof(V_Null))]
+    [Parameter("Header", ValueType.String, typeof(V_Null))]
+    [Parameter("Subheader", ValueType.String, typeof(V_Null))]
+    [Parameter("Text", ValueType.String, typeof(V_Null))]
     [EnumParameter("Location", typeof(HudLocation))]
     [Parameter("Sort Order", ValueType.Number, typeof(V_Number))]
     [EnumParameter("Header Color", typeof(Color))]
@@ -148,7 +148,7 @@ namespace Deltin.Deltinteger.Elements
 
     [ElementData("Create In-World Text")]
     [Parameter("Visible To", ValueType.Players, typeof(V_AllPlayers))]
-    [Parameter("Header", ValueType.Any, typeof(V_String))]
+    [Parameter("Header", ValueType.String, typeof(V_String))]
     [Parameter("Position", ValueType.VectorAndPlayer, typeof(V_EventPlayer))]
     [Parameter("Scale", ValueType.Number, typeof(V_Number))]
     [EnumParameter("Clipping", typeof(Clipping))]
@@ -494,7 +494,7 @@ namespace Deltin.Deltinteger.Elements
 
     [ElementData("Set Objective Description")]
     [Parameter("Visible To", ValueType.Players, typeof(V_AllPlayers))]
-    [Parameter("Header", ValueType.Any, typeof(V_String))]
+    [Parameter("Header", ValueType.String, typeof(V_String))]
     [EnumParameter("Reevaluation", typeof(ObjectiveRev))]
     public class A_SetObjectiveDescription : Element {}
 
@@ -599,7 +599,7 @@ namespace Deltin.Deltinteger.Elements
 
     [ElementData("Small Message")]
     [Parameter("Visible To", ValueType.Players, typeof(V_AllPlayers))]
-    [Parameter("Header", ValueType.Any, typeof(V_String))]
+    [Parameter("Header", ValueType.String, typeof(V_String))]
     public class A_SmallMessage : Element {}
 
     [ElementData("Start Accelerating")]

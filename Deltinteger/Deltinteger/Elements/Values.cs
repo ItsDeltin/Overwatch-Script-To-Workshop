@@ -669,7 +669,7 @@ namespace Deltin.Deltinteger.Elements
     public class V_HeroVar : Element {}
 
     [ElementData("Hero Icon String", ValueType.Any)]
-    [Parameter("Value", ValueType.Hero, typeof(V_HeroVar))]
+    [Parameter("Value", ValueType.String, typeof(V_HeroVar))]
     public class V_HeroIconString : Element {}
 
     [ElementData("Hero Of", ValueType.Hero)]
@@ -1443,7 +1443,7 @@ namespace Deltin.Deltinteger.Elements
         }
     }
 
-    [ElementData("String", ValueType.Any)]
+    [ElementData("String", ValueType.String)]
     [Parameter("{0}", ValueType.Any, typeof(V_Null))]
     [Parameter("{1}", ValueType.Any, typeof(V_Null))]
     [Parameter("{2}", ValueType.Any, typeof(V_Null))]
@@ -1477,7 +1477,7 @@ namespace Deltin.Deltinteger.Elements
         }
     }
 
-    [ElementData("Custom String", ValueType.Any)]
+    [ElementData("Custom String", ValueType.String)]
     [Parameter("{0}", ValueType.Any, typeof(V_Null))]
     [Parameter("{1}", ValueType.Any, typeof(V_Null))]
     [Parameter("{2}", ValueType.Any, typeof(V_Null))]
@@ -1530,7 +1530,7 @@ namespace Deltin.Deltinteger.Elements
         }
     }
 
-    [ElementData("Icon String", ValueType.Any)]
+    [ElementData("Icon String", ValueType.String)]
     [EnumParameter("Icon", typeof(Icon))]
     public class V_IconString : Element {}
 
