@@ -87,7 +87,7 @@ namespace Deltin.Deltinteger.Parse
         }
 
         public Scope ReturningScope() => null;
-        public CodeType Type() => null;
+        public CodeType Type() => StringType.Instance;
         public IWorkshopTree Parse(ActionSet actionSet) => String.Parse(actionSet, FormatParameters.Select(fp => fp.Parse(actionSet)).ToArray());
 
         private static readonly object _cacheLock = new object();

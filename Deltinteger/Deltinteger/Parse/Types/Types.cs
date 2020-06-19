@@ -211,6 +211,7 @@ namespace Deltin.Deltinteger.Parse
             ObjectType.Instance.InitOperations();
             NumberType.Instance.InitOperations();
             VectorType.Instance.InitOperations();
+            StringType.Instance.InitOperations();
         }
     }
 }
