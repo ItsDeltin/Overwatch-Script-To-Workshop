@@ -574,7 +574,7 @@ namespace Deltin.Deltinteger.Pathfinder
         private readonly InternalVar Attribute_BA;
         private readonly Scope _scope = new Scope();
 
-        private SegmentsStruct() : base("Segment")
+        private SegmentsStruct() : base("PathmapSegment")
         {
             this.Kind = "struct";
 
