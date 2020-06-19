@@ -62,7 +62,7 @@ namespace Deltin.Deltinteger.LanguageServer
 
             string result = "";
             if (markdown) result += "```ostw\n";
-            result += name + CodeParameter.GetLabels(parameters, false);
+            result += name + CodeParameter.GetLabels(parameters);
             if (markdown) result += "\n\r```";
             if (markdown && description != null) result += "\n\r ----- \n\r" + description;
             return result;
@@ -79,7 +79,7 @@ namespace Deltin.Deltinteger.LanguageServer
                 result += type ?? "void";
                 result += " ";
             }
-            result += name + CodeParameter.GetLabels(parameters, false);
+            result += name + CodeParameter.GetLabels(parameters);
             if (markdown) result += "\n\r```";
             if (markdown && description != null) result += "\n\r ----- \n\r" + description;
             return result;

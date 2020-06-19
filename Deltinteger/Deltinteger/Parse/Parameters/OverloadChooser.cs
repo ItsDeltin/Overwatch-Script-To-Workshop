@@ -237,7 +237,7 @@ namespace Deltin.Deltinteger.Parse
                 for (int p = 0; p < parameters.Length; p++)
                     parameters[p] = new ParameterInformation() {
                         // Get the label to show in the signature.
-                        Label = AllOverloads[i].Parameters[p].GetLabel(false),
+                        Label = AllOverloads[i].Parameters[p].GetLabel(),
                         // Get the documentation.
                         Documentation = Extras.GetMarkupContent(AllOverloads[i].Parameters[p].Documentation)
                     };

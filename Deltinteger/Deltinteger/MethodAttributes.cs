@@ -68,7 +68,7 @@ namespace Deltin.Deltinteger
         {
             Label = function.Name,
             Kind = CompletionItemKind.Method,
-            Detail = function.GetLabel(false),
+            Detail = (function.ReturnType == null ? "void" : function.ReturnType.GetName()) + " " + function.Name + CodeParameter.GetLabels(function.Parameters),
             Documentation = Extras.GetMarkupContent(function.Documentation)
         };
 
@@ -78,7 +78,7 @@ namespace Deltin.Deltinteger
                 .StartCodeLine()
                 .Add(function.ReturnType == null ? "void" : function.ReturnType.GetName())
                 .Add(" ")
-                .Add(function.Name + CodeParameter.GetLabels(function.Parameters, false))
+                .Add(function.Name + CodeParameter.GetLabels(function.Parameters))
                 .EndCodeLine();
             
             if (function.Documentation != null)
