@@ -29,6 +29,12 @@ namespace Deltin.Deltinteger.Parse
             AccessLevel = accessLevel;
             CompletionItemKind = completionItemKind;
         }
+        public InternalVar(string name, CodeType type, CompletionItemKind completionItemKind = CompletionItemKind.Variable)
+        {
+            Name = name;
+            CodeType = type;
+            CompletionItemKind = completionItemKind;
+        }
 
         public IWorkshopTree Parse(ActionSet actionSet) => throw new Exception("Cannot parse internal variables.");
         public virtual Scope ReturningScope() => CodeType?.ReturningScope();
