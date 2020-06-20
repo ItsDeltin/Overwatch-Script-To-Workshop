@@ -20,17 +20,26 @@ rule: "Commands" -1
         AllPlayers(),
         Header: <"Current Mode: <0>", ["Free Walk", "Place Nodes And Connect Segments", "Attributes"][CurrentMode]>,
         Location: Location.Top,
-        SortOrder: -10,
+        SortOrder: 1,
         Reevaluation: HudTextRev.VisibleToAndString
     );
     CreateHudText(
-        VisibleTo: AllPlayers(),
+        CurrentMode == Mode.Attribute ? AllPlayers() : null,
         Header   : "Attribute:",
         Subheader: ["Normal", "Custom"][Min(FirstAttribute, 1)],
         Text     : FirstAttribute,
         TextColor: Color.Yellow,
         Location : Location.Top,
-        SortOrder: 1
+        SortOrder: 2
+    );
+    CreateHudText(
+        CurrentMode == Mode.Place ? AllPlayers() : null,
+        Header   : "Place mode:",
+        Subheader: ["Connect All", "Connect as path leading from first", "Connect first selected to all"][PlaceMode],
+        Text     : FirstAttribute,
+        TextColor: Color.Yellow,
+        Location : Location.Top,
+        SortOrder: 2
     );
 }
 
@@ -51,6 +60,7 @@ globalvar Vector preloadNodes 3; // Preloading nodes.
 globalvar Vector preloadSegments 4; // Preloading segments.
 globalvar Vector preloadAttributes 5; // Preloading segments.
 
+globalvar define PlaceMode = 0;
 globalvar define FirstAttribute = 0; // The selected attribute.
 
 // Used for updating visible effects.
@@ -318,8 +328,9 @@ class VisibleAttributeInfo
 rule: "Connect All Segments"
 Event.OngoingPlayer
 if (CurrentMode == Mode.Place)
-if (IsButtonHeld(EventPlayer(), Button.Jump))
+if (IsButtonHeld(EventPlayer(), Button.Melee))
 if (!IsButtonHeld(EventPlayer(), Button.Crouch))
+if (PlaceMode == 0)
 {
     for (define f = 0; f < CountOf(Selected); f++)
         for (define l = 0; l < CountOf(Selected); l++)
@@ -333,8 +344,9 @@ if (!IsButtonHeld(EventPlayer(), Button.Crouch))
 rule: "Connect Segment Path"
 Event.OngoingPlayer
 if (CurrentMode == Mode.Place)
-if (IsCommunicating(EventPlayer(), Communication.VoiceLineRight))
+if (IsButtonHeld(EventPlayer(), Button.Melee))
 if (!IsButtonHeld(EventPlayer(), Button.Crouch))
+if (PlaceMode == 1)
 {
     for (define i = 1; i < CountOf(Selected); i++)
         if (!SegmentExists(Selected[i - 1], Selected[i]))
@@ -347,8 +359,9 @@ if (!IsButtonHeld(EventPlayer(), Button.Crouch))
 rule: "Connect Segments From First"
 Event.OngoingPlayer
 if (CurrentMode == Mode.Place)
-if (IsCommunicating(EventPlayer(), Communication.VoiceLineLeft))
+if (IsButtonHeld(EventPlayer(), Button.Melee))
 if (!IsButtonHeld(EventPlayer(), Button.Crouch))
+if (PlaceMode == 2)
 {
     for (define i = 1; i < CountOf(Selected); i++)
         if (!SegmentExists(Selected[0], Selected[i]))
@@ -369,7 +382,7 @@ define SegmentExists(define node1, define node2):
 rule: "Delete Segments"
 Event.OngoingPlayer
 if (CurrentMode == Mode.Place)
-if (IsButtonHeld(EventPlayer(), Button.Jump))
+if (IsButtonHeld(EventPlayer(), Button.Melee))
 if (IsButtonHeld(EventPlayer(), Button.Crouch))
 {
     for (define i = CountOf(Segments) - 1; i >= 0; i--)
@@ -447,8 +460,9 @@ if (IsCommunicating(EventPlayer(), Communication.VoiceLineUp))
     compiling = true;
     SmallMessage(AllPlayers(), "Compiling...");
 
-    nodesOut = EmptyArray();
-    segmentsOut = EmptyArray();
+    nodesOut = [];
+    segmentsOut = [];
+    attributesOut = [];
 
     foreach (Node node in Nodes)
         ModifyVariable(nodesOut, Operation.AppendToArray, node.Pos);
@@ -505,13 +519,19 @@ rule: "Change Primary Attribute"
 Event.OngoingPlayer
 if (IsButtonHeld(EventPlayer(), Button.Reload))
 {
-    FirstAttribute++;
+    if (CurrentMode == Mode.Attribute)
+        FirstAttribute++;
+    else
+        PlaceMode = Min(2, PlaceMode + 1);
 }
 rule: "Reset Primary Attribute"
 Event.OngoingPlayer
 if (IsButtonHeld(EventPlayer(), Button.Ability2))
 {
-    FirstAttribute--;
+    if (CurrentMode == Mode.Attribute)
+        FirstAttribute--;
+    else
+        PlaceMode = Max(0, PlaceMode - 1);
 }
 
 rule: "Create Selected ID Text"
@@ -519,6 +539,7 @@ Event.OnDamageTaken
 if (scoper == EventPlayer())
 if (ScopeID == 1)
 {
+    DestroyInWorldText((<Node>ScopeData).SelectIDText);
     CreateInWorldText(
         AllPlayers(),
         IndexOfArrayValue(Nodes, ScopeData),

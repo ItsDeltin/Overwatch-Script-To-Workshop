@@ -185,6 +185,7 @@ namespace Deltin.Deltinteger.Pathfinder
             Node2 = node2;
             Attribute = attribute;
         }
+        public MapAttribute() {}
 
         public Element AsWorkshopData() => new V_Vector(Node1, Node2, Attribute);
     }

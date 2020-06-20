@@ -107,31 +107,37 @@ namespace Deltin.Deltinteger.Pathfinder
             ));
 
             // Set the current neighbor's distance if the new distance is less than what it is now.
-            actionSet.AddAction(Element.Part<A_If>(Element.Part<V_Or>(
-                new V_Compare(
-                    ((Element)distances.GetVariable())[(Element)neighborIndex.GetVariable()],
-                    Operators.Equal,
-                    new V_Number(0)
+            actionSet.AddAction(Element.Part<A_If>(Element.Part<V_And>(
+                Element.Part<V_Or>(
+                    new V_Compare(
+                        ((Element)distances.GetVariable())[(Element)neighborIndex.GetVariable()],
+                        Operators.Equal,
+                        new V_Number(0)
+                    ),
+                    (Element)neighborDistance.GetVariable() < ((Element)distances.GetVariable())[(Element)neighborIndex.GetVariable()]
                 ),
-                (Element)neighborDistance.GetVariable() < ((Element)distances.GetVariable())[(Element)neighborIndex.GetVariable()]
+                Element.Part<V_IsTrueForAny>(
+                    Element.Part<V_FilteredArray>(
+                        Attributes,
+                        Element.Part<V_And>(
+                            new V_Compare(
+                                Element.Part<V_XOf>(new V_ArrayElement()),
+                                Operators.Equal,
+                                current.Get()
+                            ),
+                            new V_Compare(
+                                Element.Part<V_YOf>(new V_ArrayElement()),
+                                Operators.Equal,
+                                neighborIndex.Get()
+                            )
+                        )
+                    ),
+                    Element.Part<V_ArrayContains>(attributes, Element.Part<V_ZOf>(new V_ArrayElement()))
+                )
             )));
 
             actionSet.AddAction(distances.SetVariable((Element)neighborDistance.GetVariable(), null, (Element)neighborIndex.GetVariable()));
             actionSet.AddAction(parentArray.SetVariable((Element)current.GetVariable() + 1, null, (Element)neighborIndex.GetVariable()));
-
-            if (useAttributes)
-                actionSet.AddAction(parentAttributeInfo.SetVariable(
-                    value: Element.TernaryConditional(
-                        new V_Compare(
-                            current.GetVariable(),
-                            Operators.Equal,
-                            Node1(forBuilder.IndexValue)
-                        ),
-                        Node2Attribute(forBuilder.IndexValue),
-                        Node1Attribute(forBuilder.IndexValue)
-                    ),
-                    index: neighborIndex.Get()
-                ));
 
             // End the if.
             actionSet.AddAction(new A_End());
@@ -252,37 +258,14 @@ namespace Deltin.Deltinteger.Pathfinder
             actionSet.AddAction(new A_End());
         }
 
-        private Element GetConnectedSegments(Element segments, Element currentIndex)
-        {
-            Element currentSegmentCheck = new V_ArrayElement();
-
-            Element useAttribute = Element.TernaryConditional(
-                new V_Compare(Node1(currentSegmentCheck), Operators.Equal, currentIndex),
-                Node1Attribute(currentSegmentCheck),
-                Node2Attribute(currentSegmentCheck)
-            );
-
-            Element isValid;
-            if (useAttributes)
-                isValid = Element.Part<V_ArrayContains>(
-                    Element.Part<V_Append>(attributes, new V_Number(0)),
-                    useAttribute
-                );
-            else
-                isValid = new V_Compare(useAttribute, Operators.Equal, new V_Number(0));
-
-            return Element.Part<V_FilteredArray>(
-                segments,
-                Element.Part<V_And>(
-                    // Make sure one of the segments nodes is the current node.
-                    Element.Part<V_ArrayContains>(
-                        BothNodes(currentSegmentCheck),
-                        currentIndex
-                    ),
-                    isValid
-                )
-            );
-        }
+        private Element GetConnectedSegments(Element segments, Element currentIndex) => Element.Part<V_FilteredArray>(
+            segments,
+            // Make sure one of the segments nodes is the current node.
+            Element.Part<V_ArrayContains>(
+                BothNodes(new V_ArrayElement()),
+                currentIndex
+            )
+        );
 
         private static Element LowestUnvisited(Element nodes, Element distances, Element unvisited) => Element.Part<V_FirstOf>(Element.Part<V_SortedArray>(
             Element.Part<V_FilteredArray>(unvisited, new V_Compare(distances[new V_ArrayElement()], Operators.NotEqual, new V_Number(0))),

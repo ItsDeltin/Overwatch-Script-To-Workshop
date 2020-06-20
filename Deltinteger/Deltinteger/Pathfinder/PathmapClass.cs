@@ -584,21 +584,21 @@ namespace Deltin.Deltinteger.Pathfinder
 
             Node_A = new InternalVar("Node_A", CompletionItemKind.Property) { Documentation = "The primary node of this segment. This returns a number which is the index of the node in the pathmap." };
             Node_B = new InternalVar("Node_B", CompletionItemKind.Property) { Documentation = "The secondary node of this segment. This returns a number which is the index of the node in the pathmap." };
-            Attribute_AB = new InternalVar("Attribute_AB", CompletionItemKind.Property) { Documentation = "The attribute of this segment when travelling from node A to B." };
-            Attribute_BA = new InternalVar("Attribute_BA", CompletionItemKind.Property) { Documentation = "The attribute of this segment when travelling from node B to A." };
+            // Attribute_AB = new InternalVar("Attribute_AB", CompletionItemKind.Property) { Documentation = "The attribute of this segment when travelling from node A to B." };
+            // Attribute_BA = new InternalVar("Attribute_BA", CompletionItemKind.Property) { Documentation = "The attribute of this segment when travelling from node B to A." };
 
             _scope.AddNativeVariable(Node_A);
             _scope.AddNativeVariable(Node_B);
-            _scope.AddNativeVariable(Attribute_AB);
-            _scope.AddNativeVariable(Attribute_BA);
+            // _scope.AddNativeVariable(Attribute_AB);
+            // _scope.AddNativeVariable(Attribute_BA);
         }
 
         public override void AddObjectVariablesToAssigner(IWorkshopTree reference, VarIndexAssigner assigner)
         {
             assigner.Add(Node_A, DijkstraBase.Node1((Element)reference));
             assigner.Add(Node_B, DijkstraBase.Node2((Element)reference));
-            assigner.Add(Attribute_AB, DijkstraBase.Node1Attribute((Element)reference));
-            assigner.Add(Attribute_BA, DijkstraBase.Node2Attribute((Element)reference));
+            // assigner.Add(Attribute_AB, DijkstraBase.Node1Attribute((Element)reference));
+            // assigner.Add(Attribute_BA, DijkstraBase.Node2Attribute((Element)reference));
         }
 
         public override Scope GetObjectScope() => _scope;
