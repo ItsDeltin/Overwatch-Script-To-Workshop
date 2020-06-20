@@ -12,6 +12,7 @@ namespace Deltin.Deltinteger.Pathfinder
         protected Element pathmapObject { get; }
         protected Element Nodes { get; }
         protected Element Segments { get; }
+        protected Element Attributes { get; }
         protected Element Source { get; }
         private Element attributes { get; }
         protected bool useAttributes { get; }
@@ -41,8 +42,9 @@ namespace Deltin.Deltinteger.Pathfinder
 
             PathmapClass pathmapClass = actionSet.Translate.DeltinScript.Types.GetCodeType<PathmapClass>();
 
-            Nodes = ((Element)pathmapClass.Nodes.GetVariable())[pathmapObject];
-            Segments = ((Element)pathmapClass.Segments.GetVariable())[pathmapObject];
+            Nodes = pathmapClass.Nodes.Get()[pathmapObject];
+            Segments = pathmapClass.Segments.Get()[pathmapObject];
+            Attributes = pathmapClass.Attributes.Get()[pathmapObject];
         }
 
         public void Get()
@@ -291,16 +293,8 @@ namespace Deltin.Deltinteger.Pathfinder
         protected Element AnyAccessableUnvisited() => Element.Part<V_IsTrueForAny>(unvisited.GetVariable(), new V_Compare(Element.Part<V_ValueInArray>(distances.GetVariable(), new V_ArrayElement()), Operators.NotEqual, new V_Number(0)));
 
         private static Element BothNodes(Element segment) => Element.CreateAppendArray(Node1(segment), Node2(segment));
-        public static Element Node1(Element segment) => Element.Part<V_RoundToInteger>(Element.Part<V_XOf>(segment), EnumData.GetEnumValue(Rounding.Down));
-        public static Element Node2(Element segment) => Element.Part<V_RoundToInteger>(Element.Part<V_YOf>(segment), EnumData.GetEnumValue(Rounding.Down));
-        public static Element Node1Attribute(Element segment) => Element.Part<V_RoundToInteger>(
-            (Element.Part<V_XOf>(segment) % 1) * 100,
-            EnumData.GetEnumValue(Rounding.Nearest)
-        );
-        public static Element Node2Attribute(Element segment) => Element.Part<V_RoundToInteger>(
-            (Element.Part<V_YOf>(segment) % 1) * 100,
-            EnumData.GetEnumValue(Rounding.Nearest)
-        );
+        public static Element Node1(Element segment) => Element.Part<V_XOf>(segment);
+        public static Element Node2(Element segment) => Element.Part<V_YOf>(segment);
     }
 
     public class DijkstraNormal : DijkstraBase

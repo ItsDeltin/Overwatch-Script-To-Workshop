@@ -16,6 +16,7 @@ namespace Deltin.Deltinteger.Pathfinder
         private DeltinScript DeltinScript { get; }
         public IndexReference Nodes { get; private set; }
         public IndexReference Segments { get; private set; }
+        public IndexReference Attributes { get; private set; }
 
         private InternalVar NodesVar;
         private InternalVar SegmentsVar;
@@ -125,6 +126,7 @@ namespace Deltin.Deltinteger.Pathfinder
         {
             Nodes = translateInfo.VarCollection.Assign("Nodes", true, false);
             Segments = translateInfo.VarCollection.Assign("Segments", true, false);
+            Attributes = translateInfo.VarCollection.Assign("Attributes", true, false);
         }
 
         public override void AddObjectVariablesToAssigner(IWorkshopTree reference, VarIndexAssigner assigner)
@@ -154,17 +156,19 @@ namespace Deltin.Deltinteger.Pathfinder
             Element index = (Element)newClassInfo.ObjectReference.GetVariable();
             IndexReference nodes = actionSet.VarCollection.Assign("_tempNodes", actionSet.IsGlobal, false);
             IndexReference segments = actionSet.VarCollection.Assign("_tempSegments", actionSet.IsGlobal, false);
+            IndexReference attributes = actionSet.VarCollection.Assign("_tempAttributes", actionSet.IsGlobal, false);
 
             actionSet.AddAction(nodes.SetVariable(new V_EmptyArray()));
             actionSet.AddAction(segments.SetVariable(new V_EmptyArray()));
+            actionSet.AddAction(attributes.SetVariable(new V_EmptyArray()));
 
-            foreach (var node in pathMap.Nodes)
-                actionSet.AddAction(nodes.ModifyVariable(operation: Operation.AppendToArray, value: node.ToVector()));
-            foreach (var segment in pathMap.Segments)
-                actionSet.AddAction(segments.ModifyVariable(operation: Operation.AppendToArray, value: segment.AsWorkshopData()));
+            foreach (var node in pathMap.Nodes) actionSet.AddAction(nodes.ModifyVariable(operation: Operation.AppendToArray, value: node.ToVector()));
+            foreach (var segment in pathMap.Segments) actionSet.AddAction(segments.ModifyVariable(operation: Operation.AppendToArray, value: segment.AsWorkshopData()));
+            foreach (var attribute in pathMap.Attributes) actionSet.AddAction(attributes.ModifyVariable(operation: Operation.AppendToArray, value: attribute.AsWorkshopData()));
             
             actionSet.AddAction(Nodes.SetVariable((Element)nodes.GetVariable(), index: index));
             actionSet.AddAction(Segments.SetVariable((Element)segments.GetVariable(), index: index));
+            actionSet.AddAction(Attributes.SetVariable((Element)attributes.GetVariable(), index: index));
         }
 
         private void SetHooks(DijkstraBase algorithm, IWorkshopTree onLoop, IWorkshopTree onConnectLoop)

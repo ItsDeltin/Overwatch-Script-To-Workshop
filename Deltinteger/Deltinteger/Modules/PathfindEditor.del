@@ -15,9 +15,47 @@ rule: "Commands" -1
     HelpText("Voice Line Left: Connect all selected nodes to the first selected node."   , 8, Color.Green);
     HelpText("Shift: Switch attribute."                                                  , 9, Color.Orange);
     HelpText("Voice Line Up: Compile pathmap."                                           , 11, Color.Yellow);
+
+    CreateHudText(
+        AllPlayers(),
+        Header: <"Current Mode: <0>", ["Free Walk", "Place Nodes And Connect Segments", "Attributes"][CurrentMode]>,
+        Location: Location.Top,
+        SortOrder: -10,
+        Reevaluation: HudTextRev.VisibleToAndString
+    );
+    CreateHudText(
+        VisibleTo: AllPlayers(),
+        Header   : "Attribute:",
+        Subheader: ["Normal", "Custom"][Min(FirstAttribute, 1)],
+        Text     : FirstAttribute,
+        TextColor: Color.Yellow,
+        Location : Location.Top,
+        SortOrder: 1
+    );
 }
 
-globalvar define scoper;
+globalvar Mode CurrentMode;
+enum Mode
+{
+    Navigate,
+    Place,
+    Attribute
+}
+
+globalvar define scoper; // The dummy used for reevaluation containers.
+globalvar define compiling = false; // Determines if the pathmap is currently compiling.
+globalvar Vector nodesOut 0; // The nodes for the CSV output.
+globalvar Vector segmentsOut 1; // The segments for the CSV output.
+globalvar Vector attributesOut 2; // The attributes for the CSV output.
+globalvar Vector preloadNodes 3; // Preloading nodes.
+globalvar Vector preloadSegments 4; // Preloading segments.
+globalvar Vector preloadAttributes 5; // Preloading segments.
+
+globalvar define FirstAttribute = 0; // The selected attribute.
+
+// Used for updating visible effects.
+globalvar define updateVisibleLook;
+globalvar define updateVisiblePosition;
 
 rule: "Create Scoper"
 {
@@ -40,17 +78,29 @@ void HelpText(ref define text, ref define order, Color color)
 
 rule: "Disable conflicting controls"
 Event.OngoingPlayer
+if (CurrentMode == Mode.Place)
 {
-    SetAbility1Enabled(EventPlayer(), false);
-    SetAbility2Enabled(EventPlayer(), false);
     SetSecondaryFireEnabled(EventPlayer(), false);
 }
+rule: "Enable conflicting controls"
+Event.OngoingPlayer
+if (CurrentMode != Mode.Place)
+{
+    SetSecondaryFireEnabled(EventPlayer(), true);
+}
+rule: "Set mode"
+if (IsButtonHeld(HostPlayer(), Button.Interact))
+{
+    CurrentMode++;
+    if (CurrentMode > 2) CurrentMode = 0;
+}
 
-define GetClosestNode(): FirstOf(SortedArray(Nodes, DistanceBetween(EyePosition(EventPlayer()), (<Node>ArrayElement()).ShownLocation)));
+Node GetClosestNode(): Nodes.SortedArray(Node node => EyePosition().DistanceTo(node.ShownLocation))[0];
 define IsNodeSelectable(Node node): DistanceBetween(node.Pos, EyePosition(EventPlayer())) < 5;
 
 rule: "Create node"
 Event.OngoingPlayer
+if (CurrentMode == Mode.Place)
 if (IsButtonHeld(EventPlayer(), Button.Ultimate))
 if (!IsButtonHeld(EventPlayer(), Button.Crouch))
 {
@@ -60,6 +110,7 @@ if (!IsButtonHeld(EventPlayer(), Button.Crouch))
 
 rule: "Delete node"
 Event.OngoingPlayer
+if (CurrentMode == Mode.Place)
 if (IsButtonHeld(EventPlayer(), Button.Ultimate))
 if (IsButtonHeld(EventPlayer(), Button.Crouch))
 {
@@ -82,14 +133,15 @@ if (IsButtonHeld(EventPlayer(), Button.Crouch))
 
 rule: "Select"
 Event.OngoingPlayer
-if (IsButtonHeld(EventPlayer(), Button.Interact))
+if (CurrentMode == Mode.Place || CurrentMode == Mode.Attribute)
+if (IsButtonHeld(EventPlayer(), Button.SecondaryFire))
 if (!IsButtonHeld(EventPlayer(), Button.Crouch))
 {
     Node selected = GetClosestNode();
     if (!IsNodeSelectable(selected)) return;
 
     if (!selected.Selected)
-    {        
+    {
         selected.Select();
         Selected = Append(Selected, selected);
     }
@@ -102,7 +154,8 @@ if (!IsButtonHeld(EventPlayer(), Button.Crouch))
 
 rule: "Deselect all"
 Event.OngoingPlayer
-if (IsButtonHeld(EventPlayer(), Button.Interact))
+if (CurrentMode == Mode.Place)
+if (IsButtonHeld(EventPlayer(), Button.SecondaryFire))
 if (IsButtonHeld(EventPlayer(), Button.Crouch))
 {
     foreach (Node selected in Selected)
@@ -110,8 +163,9 @@ if (IsButtonHeld(EventPlayer(), Button.Crouch))
     Selected = EmptyArray();
 }
 
-globalvar define Nodes = EmptyArray();
-globalvar define Selected = EmptyArray();
+globalvar Node[] Nodes = [];
+globalvar Node[] Selected = [];
+globalvar LinkedAttribute[] Attributes = [];
 
 class Node
 {
@@ -121,6 +175,9 @@ class Node
     public define Selected = false;
     public define visible = false;
     public define SelectIDText;
+    public define ID: root.Nodes.IndexOf(this);
+
+    public VisibleAttributeInfo[] VisibleAttribute = [];
 
     public Node(define pos)
     {
@@ -144,6 +201,7 @@ class Node
             DestroyInWorldText(SelectIDText);
             DestroyEffect(EffectID);
             visible = false;
+            DestroyAttributes();
         }
     }
     
@@ -160,7 +218,7 @@ class Node
         Update();
     }
 
-    private void Update()
+    private void Update() "Update"
     {
         DestroyEffect(EffectID);
         if (!Selected)
@@ -171,6 +229,42 @@ class Node
             root.ActivateScoper(root.scoper, 1, this);
         }
         EffectID = LastCreatedEntity();
+        UpdateAttributeTexts();
+    }
+
+    private void DestroyAttributes() "Destroy Attributes"
+    {
+        foreach (VisibleAttributeInfo visibleAttribute in VisibleAttribute)
+        {
+            DestroyInWorldText(visibleAttribute.InworldText);
+            delete(visibleAttribute);
+        }
+        VisibleAttribute = [];
+    }
+
+    public void UpdateAttributeTexts() "Update Attribute Texts"
+    {
+        DestroyAttributes();
+
+        LinkedAttribute[] show = root.Attributes.FilteredArray(LinkedAttribute attribute => attribute.Node1 == this);
+        foreach (LinkedAttribute attribute in show)
+        {
+            define index = VisibleAttribute.IndexOf(VisibleAttribute.FilteredArray(VisibleAttributeInfo info => info.Link == attribute.Node2)[0]);
+            if (index == -1)
+            {
+                index = VisibleAttribute.Length;
+                ModifyVariable(VisibleAttribute, Operation.AppendToArray, new VisibleAttributeInfo(this, attribute.Node2));
+                VisibleAttribute[index].String = attribute.ID;
+            }
+            else
+                VisibleAttribute[index].String = <"<0>\n<1>", VisibleAttribute[index].String, attribute.ID>;
+        }
+
+        foreach (VisibleAttributeInfo visibleAttribute in VisibleAttribute)
+        {
+            root.ActivateScoper(root.scoper, 2, visibleAttribute);
+            MinWait();
+        }
     }
 
     private void Make(Color color)
@@ -187,43 +281,80 @@ class Node
     }
 }
 
+class VisibleAttributeInfo
+{
+    public Node Source;
+    public Node Link;
+    public define String = "";
+    public define InworldText;
+
+    public VisibleAttributeInfo(ref Node source, ref Node link)
+    {
+        Source = source;
+        Link = link;
+    }
+
+    public void Make()
+    {
+        DestroyHudText(InworldText);
+        CreateInWorldText(
+            AllPlayers(),
+            String,
+            LinearInterpolate(
+                Source.ShownLocation,
+                Link.ShownLocation,
+                0.2
+            ),
+            1.5,
+            Clipping.ClipAgainstSurfaces,
+            InworldTextRev.VisibleTo,
+            Color.Yellow,
+            Spectators.VisibleAlways
+        );
+        InworldText = LastTextID();
+    }
+}
+
 rule: "Connect All Segments"
 Event.OngoingPlayer
-if (IsButtonHeld(EventPlayer(), Button.SecondaryFire))
+if (CurrentMode == Mode.Place)
+if (IsButtonHeld(EventPlayer(), Button.Jump))
 if (!IsButtonHeld(EventPlayer(), Button.Crouch))
 {
     for (define f = 0; f < CountOf(Selected); f++)
         for (define l = 0; l < CountOf(Selected); l++)
             if ((l != f) && !SegmentExists(Selected[f], Selected[l]))
             {
-                Segments = Append(Segments, new Segment(<Node>Selected[f], <Node>Selected[l], FirstAttribute, SecondAttribute));
+                Segments = Append(Segments, new Segment(<Node>Selected[f], <Node>Selected[l]));
                 (<Segment>LastOf(Segments)).Show();
             }
 }
 
 rule: "Connect Segment Path"
 Event.OngoingPlayer
+if (CurrentMode == Mode.Place)
 if (IsCommunicating(EventPlayer(), Communication.VoiceLineRight))
 if (!IsButtonHeld(EventPlayer(), Button.Crouch))
 {
     for (define i = 1; i < CountOf(Selected); i++)
         if (!SegmentExists(Selected[i - 1], Selected[i]))
         {
-            Segments = Append(Segments, new Segment(<Node>Selected[i - 1], <Node>Selected[i], FirstAttribute, SecondAttribute));
-            (<Segment>LastOf(Segments)).Show();
+            Segments = Append(Segments, new Segment(<Node>Selected[i - 1], <Node>Selected[i]));
+            Segments.Last.Show();
         }
 }
 
 rule: "Connect Segments From First"
 Event.OngoingPlayer
+if (CurrentMode == Mode.Place)
 if (IsCommunicating(EventPlayer(), Communication.VoiceLineLeft))
 if (!IsButtonHeld(EventPlayer(), Button.Crouch))
 {
     for (define i = 1; i < CountOf(Selected); i++)
         if (!SegmentExists(Selected[0], Selected[i]))
         {
-            Segments = Append(Segments, new Segment(<Node>Selected[0], <Node>Selected[i], FirstAttribute, SecondAttribute));
-            (<Segment>LastOf(Segments)).Show();
+            Segments = Append(Segments, new Segment(<Node>Selected[0], <Node>Selected[i]));
+            Segments.Last.Show();
         }
 }
 
@@ -237,7 +368,8 @@ define SegmentExists(define node1, define node2):
 
 rule: "Delete Segments"
 Event.OngoingPlayer
-if (IsButtonHeld(EventPlayer(), Button.SecondaryFire))
+if (CurrentMode == Mode.Place)
+if (IsButtonHeld(EventPlayer(), Button.Jump))
 if (IsButtonHeld(EventPlayer(), Button.Crouch))
 {
     for (define i = CountOf(Segments) - 1; i >= 0; i--)
@@ -249,29 +381,22 @@ if (IsButtonHeld(EventPlayer(), Button.Crouch))
         }
 }
 
-globalvar define Segments = EmptyArray();
+globalvar Segment[] Segments = EmptyArray();
 
 class Segment
 {
     public Node Node1;
     public Node Node2;    
     public define Nodes;
-    public define FirstAttribute;
-    public define SecondAttribute;
 
     define EffectID;
     public define visible = false;
 
-    public define AttributeText1;
-    public define AttributeText2;
-
-    public Segment(Node node1, Node node2, define firstAttribute, define secondAttribute)
+    public Segment(Node node1, Node node2)
     {
         Node1 = node1;
         Node2 = node2;
         Nodes = [Node1, Node2];
-        FirstAttribute = firstAttribute;
-        SecondAttribute = secondAttribute;
     }
 
     public void Show()
@@ -281,40 +406,6 @@ class Segment
             CreateBeamEffect(AllPlayers(), BeamType.GrappleBeam, Node1.ShownLocation, Node2.ShownLocation, Color.Red, EffectRev.VisibleTo);
             EffectID = LastCreatedEntity();
             visible = true;
-
-            if (FirstAttribute != 0 || SecondAttribute != 0)
-            {
-                CreateInWorldText(
-                    AllPlayers(),
-                    FirstAttribute,
-                    LinearInterpolate(
-                        Node1.ShownLocation,
-                        Node2.ShownLocation,
-                        0.2
-                    ),
-                    2.5,
-                    Clipping.ClipAgainstSurfaces,
-                    InworldTextRev.VisibleTo,
-                    Color.Yellow,
-                    Spectators.VisibleAlways
-                );
-                AttributeText1 = LastTextID();
-                CreateInWorldText(
-                    AllPlayers(),
-                    SecondAttribute,
-                    LinearInterpolate(
-                        Node1.ShownLocation,
-                        Node2.ShownLocation,
-                        0.8
-                    ),
-                    2.5,
-                    Clipping.ClipAgainstSurfaces,
-                    InworldTextRev.VisibleTo,
-                    Color.Orange,
-                    Spectators.VisibleAlways
-                );
-                AttributeText2 = LastTextID();
-            }
         }
     }
     public void Hide()
@@ -322,15 +413,10 @@ class Segment
         if (visible)
         {
             DestroyEffect(EffectID);
-            DestroyInWorldText(AttributeText1);
-            DestroyInWorldText(AttributeText2);
             visible = false;
         }
     }
 }
-
-globalvar define updateVisibleLook;
-globalvar define updateVisiblePosition;
 
 rule: "Update visible"
 if (updateVisibleLook == null || DistanceBetween(updateVisiblePosition, HostPlayer()) > 3 || AngleBetweenVectors(updateVisibleLook, FacingDirectionOf(HostPlayer())) > 10)
@@ -354,8 +440,6 @@ if (updateVisibleLook == null || DistanceBetween(updateVisiblePosition, HostPlay
     LoopIfConditionIsTrue();
 }
 
-globalvar define compiling = false;
-
 rule: "CSV out"
 Event.OngoingPlayer
 if (IsCommunicating(EventPlayer(), Communication.VoiceLineUp))
@@ -366,18 +450,25 @@ if (IsCommunicating(EventPlayer(), Communication.VoiceLineUp))
     nodesOut = EmptyArray();
     segmentsOut = EmptyArray();
 
-    for (define i = 0; i < CountOf(Nodes); i++)
-        nodesOut = Append(nodesOut, (<Node>Nodes[i]).Pos);
+    foreach (Node node in Nodes)
+        ModifyVariable(nodesOut, Operation.AppendToArray, node.Pos);
     
-    for (define i = 0; i < CountOf(Segments); i++)
-        segmentsOut = Append(segmentsOut, Vector(
+    foreach (Segment segment in Segments)
+        ModifyVariable(segmentsOut, Operation.AppendToArray, Vector(
             // X is first node
-            IndexOfArrayValue(Nodes, (<Segment>Segments[i]).Node1) + ((<Segment>Segments[i]).FirstAttribute / 100),
+            segment.Node1.ID,
             // Y is second node
-            IndexOfArrayValue(Nodes, (<Segment>Segments[i]).Node2) + ((<Segment>Segments[i]).SecondAttribute / 100),
+            segment.Node2.ID,
             // Z is unused
             0
             // (<Segment>Segments[i]).Attribute
+        ));
+    
+    foreach (LinkedAttribute attribute in Attributes)
+        ModifyVariable(attributesOut, Operation.AppendToArray, Vector(
+            attribute.Node1,
+            attribute.Node2,
+            attribute.ID,
         ));
 
     SmallMessage(AllPlayers(), "Compile Finished!");
@@ -387,80 +478,40 @@ if (IsCommunicating(EventPlayer(), Communication.VoiceLineUp))
     compiling = false;
 }
 
-globalvar define nodesOut    3;
-globalvar define segmentsOut 4;
-
 rule: "Preload"
 if (CountOf(preloadNodes) != 0)
 {
-    for (define i = 0; i < CountOf(preloadNodes); i++)
-        Nodes = Append(Nodes, new Node(preloadNodes[i]));    
-    for (define i = 0; i < CountOf(preloadSegments); i++)
-        Segments = Append(Segments, new Segment(
-                <Node>Nodes[RoundToInteger(XOf(preloadSegments[i]), Rounding.Down)],
-                <Node>Nodes[RoundToInteger(YOf(preloadSegments[i]), Rounding.Down)],
-                (XOf(preloadSegments[i]) % 1) * 100,
-                (YOf(preloadSegments[i]) % 1) * 100
+    // Load nodes
+    foreach (Vector preload in preloadNodes)
+        ModifyVariable(Nodes, Operation.AppendToArray, new Node(preload));
+    
+    // Load segments
+    foreach (Vector preload in preloadSegments)
+        ModifyVariable(Segments, Operation.AppendToArray, new Segment(
+                Nodes[preload.X],
+                Nodes[preload.Y]
             ));
+    
+    // Load attributes
+    foreach (Vector preload in preloadAttributes)
+        ModifyVariable(Attributes, Operation.AppendToArray, new LinkedAttribute(
+            preload.X,
+            preload.Y,
+            preload.Z
+        ));
 }
-
-globalvar define preloadNodes 5;
-globalvar define preloadSegments 6;
-
-globalvar define FirstAttribute = 0;
-globalvar define SecondAttribute = 0;
-globalvar define Attribute = 0;
-globalvar define AttributeHud = 0;
 
 rule: "Change Primary Attribute"
 Event.OngoingPlayer
-if (IsButtonHeld(EventPlayer(), Button.Ability1))
-if (!IsButtonHeld(EventPlayer(), Button.Crouch))
+if (IsButtonHeld(EventPlayer(), Button.Reload))
 {
     FirstAttribute++;
 }
-rule: "Change Secondary Attribute"
-Event.OngoingPlayer
-if (IsButtonHeld(EventPlayer(), Button.Ability2))
-if (!IsButtonHeld(EventPlayer(), Button.Crouch))
-{
-    SecondAttribute++;
-}
 rule: "Reset Primary Attribute"
 Event.OngoingPlayer
-if (IsButtonHeld(EventPlayer(), Button.Ability1))
-if (IsButtonHeld(EventPlayer(), Button.Crouch))
-{
-    FirstAttribute = 0;
-}
-rule: "Reset Secondary Attribute"
-Event.OngoingPlayer
 if (IsButtonHeld(EventPlayer(), Button.Ability2))
-if (IsButtonHeld(EventPlayer(), Button.Crouch))
 {
-    SecondAttribute = 0;
-}
-
-rule: "Create Attribute HUD"
-{
-    CreateHudText(
-        VisibleTo: AllPlayers(),
-        Header   : "Primary Attribute:",
-        Subheader: ["Normal", "Custom"][Min(FirstAttribute, 1)],
-        Text     : FirstAttribute,
-        TextColor: Color.Yellow,
-        Location : Location.Top,
-        SortOrder: 1
-    );
-    CreateHudText(
-        VisibleTo: AllPlayers(),
-        Header   : "Secondary Attribute:",
-        Subheader: ["Normal", "Custom"][Min(SecondAttribute, 1)],
-        Text     : SecondAttribute,
-        TextColor: Color.Orange,
-        Location : Location.Top,
-        SortOrder: 2
-    );
+    FirstAttribute--;
 }
 
 rule: "Create Selected ID Text"
@@ -479,4 +530,47 @@ if (ScopeID == 1)
         Spectators.VisibleAlways
     );
     (<Node>ScopeData).SelectIDText = LastTextID();
+}
+
+rule: "Create Selected ID Text"
+Event.OnDamageTaken
+if (scoper == EventPlayer())
+if (ScopeID == 2)
+{
+    (<VisibleAttributeInfo>ScopeData).Make();
+}
+
+class LinkedAttribute
+{
+    public Node Node1;
+    public Node Node2;
+    public define ID;
+
+    public LinkedAttribute(ref Node node1, ref Node node2, ref define id)
+    {
+        Node1 = node1;
+        Node2 = node2;
+        ID = id;
+    }
+}
+
+rule: "Add attribute"
+Event.OngoingPlayer
+if (CurrentMode == Mode.Attribute)
+if (IsButtonHeld(EventPlayer(), Button.Melee))
+if (Selected.Length >= 2)
+{
+    Node node1 = Selected[Selected.Length - 2];
+    Node node2 = Selected.Last;
+
+    LinkedAttribute matching = Attributes.FilteredArray(LinkedAttribute attribute => attribute.Node1 == node1 && attribute.Node2 == node2 && attribute.ID == FirstAttribute)[0];
+    if (matching != null)
+    {
+        ModifyVariable(Attributes, Operation.RemoveFromArrayByValue, matching);
+        delete(matching);
+    }
+    else
+        ModifyVariable(Attributes, Operation.AppendToArray, new LinkedAttribute(node1, node2, FirstAttribute));
+    
+    node1.UpdateAttributeTexts();
 }
