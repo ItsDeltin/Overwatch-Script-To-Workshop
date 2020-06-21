@@ -30,7 +30,7 @@ namespace Deltin.Deltinteger.Pathfinder
         public Action<ActionSet> OnConnectLoop { get; set; } = actionSet => {
             actionSet.AddAction(A_Wait.MinimumWait);
         };
-        public Func<ActionSet, Element, Element, Element> GetClosestNode { get; set; } = (actionSet, nodes, position) => ClosestNodeToPosition(nodes, position);
+        public Func<ActionSet, Element, Element, Element> GetClosestNode { get; set; }
 
         public DijkstraBase(ActionSet actionSet, Element pathmapObject, Element position, Element attributes)
         {
@@ -40,6 +40,8 @@ namespace Deltin.Deltinteger.Pathfinder
             this.attributes = attributes;
             this.useAttributes = attributes != null && attributes is V_EmptyArray == false;
 
+            // Set closest node determiner.
+            GetClosestNode = (actionSet, nodes, position) => ClosestNodeToPosition(nodes, position, resolveInfo.PotentiallyNullNodes);
             PathmapClass pathmapClass = actionSet.Translate.DeltinScript.Types.GetCodeType<PathmapClass>();
 
             Nodes = ((Element)pathmapClass.Nodes.GetVariable())[pathmapObject];
@@ -213,18 +215,24 @@ namespace Deltin.Deltinteger.Pathfinder
 
         /// <summary>Gets the closest node to a position.</summary>
         /// <returns>The closest node as an index of the `Nodes` array.</returns>
-        public static Element ClosestNodeToPosition(Element nodes, Element position) => Element.Part<V_IndexOfArrayValue>(
-            nodes,
-            Element.Part<V_FirstOf>(
-                Element.Part<V_SortedArray>(
-                    nodes,
-                    Element.Part<V_DistanceBetween>(
-                        position,
-                        new V_ArrayElement()
+        public static Element ClosestNodeToPosition(Element nodes, Element position, bool potentiallyNullNodes)
+        {
+            Element sortArray = nodes;
+            if (potentiallyNullNodes) sortArray = Element.Part<V_FilteredArray>(nodes, new V_Compare(new V_ArrayElement(), Operators.NotEqual, new V_Null()));
+
+            return Element.Part<V_IndexOfArrayValue>(
+                nodes,
+                Element.Part<V_FirstOf>(
+                    Element.Part<V_SortedArray>(
+                        sortArray,
+                        Element.Part<V_DistanceBetween>(
+                            position,
+                            new V_ArrayElement()
+                        )
                     )
                 )
-            )
-        );
+            );
+        }
 
         private static void SetInitialDistances(ActionSet actionSet, IndexReference distancesVar, Element currentIndex)
         {

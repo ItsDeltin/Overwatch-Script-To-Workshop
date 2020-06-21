@@ -126,7 +126,7 @@ namespace Deltin.Deltinteger.Pathfinder
 
             // Get the closest node index.
             if (ApplicableNodeDeterminer == null)
-                return DijkstraBase.ClosestNodeToPosition(nodes, position);
+                return DijkstraBase.ClosestNodeToPosition(nodes, position, PotentiallyNullNodes);
             else
                 return (Element)ApplicableNodeDeterminer.Invoke(actionSet, nodes, position);
         }
