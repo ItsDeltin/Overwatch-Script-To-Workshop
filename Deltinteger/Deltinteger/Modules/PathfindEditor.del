@@ -17,16 +17,15 @@ rule: "Commands" -1
     HelpText("Crouch + Ultimate: Destroy node."                                          , 2, Color.SkyBlue);
     HelpText("Interact: Select node."                                                    , 3, Color.LimeGreen);
     HelpText("Crouch + Interact: Deselect all nodes."                                    , 4, Color.LimeGreen);
-    HelpText("Secondary Fire: Connect all selected nodes."                               , 5, Color.Green);
+    HelpText("Secondary Fire: Connect nodes."                                            , 5, Color.Green);
     HelpText("Crouch + Secondary Fire: Disconnect all selected nodes."                   , 6, Color.Green);
-    HelpText("Voice Line Right: Create a path from the first to the last selected nodes.", 7, Color.Green);
-    HelpText("Voice Line Left: Connect all selected nodes to the first selected node."   , 8, Color.Green);
-    HelpText("Ability 1: Switch primary attribute."                                      , 9, Color.Yellow);
-    HelpText("Crouch + Ability 1: Switch primary attribute."                             , 10, Color.Yellow);
-    HelpText("Ability 2: Switch secondary attribute."                                    , 11, Color.Orange);
-    HelpText("Crouch + Ability 2: Switch secondary attribute."                           , 12, Color.Orange);
-    HelpText("Reload: Toggle free walk."                                                 , 13, Color.Turquoise);
-    HelpText("Melee: Compile pathmap."                                                   , 14, Color.Turquoise);
+    HelpText("Primary Fire: Cycle connect type"                                          , 7, Color.Green);
+    HelpText("Ability 1: Switch primary attribute."                                      , 8, Color.Yellow);
+    HelpText("Crouch + Ability 1: Switch primary attribute."                             , 9, Color.Yellow);
+    HelpText("Ability 2: Switch secondary attribute."                                    , 10, Color.Orange);
+    HelpText("Crouch + Ability 2: Switch secondary attribute."                           , 11, Color.Orange);
+    HelpText("Reload: Toggle free walk."                                                 , 12, Color.Turquoise);
+    HelpText("Melee: Compile pathmap."                                                   , 13, Color.Turquoise);
 
     CreateHudText(AllPlayers(), Text: "OSTW pathmap editor", Location:Location.Left, SortOrder: 0);
     CreateHudText(AllPlayers(), Text: "Remember to periodically compile your pathmap so you don't lose progress.", TextColor: Color.Orange, Location:Location.Left, SortOrder: 1);
@@ -49,7 +48,8 @@ rule: "Commands" -1
         Location : Location.Top,
         SortOrder: 2
     );
-    CreateHudText(FreeWalk ? AllPlayers() : null, Header: "Free Walk Enabled", Location: Location.Top, SortOrder: 3);
+    CreateHudText(AllPlayers(), Header: "Connect mode:", Text: ["Connect All", "Connect As Path", "Connect As Star"][PlaceMode], Location: Location.Top, SortOrder: 3);
+    CreateHudText(FreeWalk ? AllPlayers() : null, Header: "Free Walk Enabled", Location: Location.Top, SortOrder: 4);
 }
 
 globalvar define scoper;
@@ -66,6 +66,7 @@ globalvar Vector[] preloadSegments 6;
 globalvar define FirstAttribute = 0;
 globalvar define SecondAttribute = 0;
 globalvar define FreeWalk = false;
+globalvar define PlaceMode = 0;
 
 rule: "Create Scoper"
 {
@@ -92,8 +93,9 @@ if (!FreeWalk)
 {
     SetAbility1Enabled(EventPlayer(), false);
     SetAbility2Enabled(EventPlayer(), false);
-    SetSecondaryFireEnabled(EventPlayer(), false);
     SetUltimateAbilityEnabled(EventPlayer(), false);
+    SetSecondaryFireEnabled(EventPlayer(), false);
+    SetPrimaryFireEnabled(EventPlayer(), false);
 }
 rule: "Enable conflicting controls"
 Event.OngoingPlayer
@@ -101,8 +103,9 @@ if (FreeWalk)
 {
     SetAbility1Enabled(EventPlayer(), true);
     SetAbility2Enabled(EventPlayer(), true);
-    SetSecondaryFireEnabled(EventPlayer(), true);
     SetUltimateAbilityEnabled(EventPlayer(), true);
+    SetSecondaryFireEnabled(EventPlayer(), true);
+    SetPrimaryFireEnabled(EventPlayer(), true);
 }
 rule: "Toggle freewalk"
 Event.OngoingPlayer
@@ -122,8 +125,8 @@ if (!FreeWalk)
 if (IsButtonHeld(EventPlayer(), Button.Ultimate))
 if (!IsButtonHeld(EventPlayer(), Button.Crouch))
 {
-    Nodes = Append(Nodes, new Node(PositionOf(EventPlayer())));
-    (<Node>LastOf(Nodes)).Show();
+    ModifyVariable(Nodes, Operation.AppendToArray, new Node(PositionOf(EventPlayer())));
+    Nodes.Last.Show();
 }
 
 rule: "Delete node"
@@ -255,9 +258,19 @@ class Node
     }
 }
 
+rule: "Cycle place mode"
+Event.OngoingPlayer
+if (!FreeWalk)
+if (IsButtonHeld(EventPlayer(), Button.PrimaryFire))
+{
+    PlaceMode++;
+    if (PlaceMode > 2) PlaceMode = 0;
+}
+
 rule: "Connect All Segments"
 Event.OngoingPlayer
 if (!FreeWalk)
+if (PlaceMode == 0)
 if (IsButtonHeld(EventPlayer(), Button.SecondaryFire))
 if (!IsButtonHeld(EventPlayer(), Button.Crouch))
 {
@@ -273,7 +286,8 @@ if (!IsButtonHeld(EventPlayer(), Button.Crouch))
 rule: "Connect Segment Path"
 Event.OngoingPlayer
 if (!FreeWalk)
-if (IsCommunicating(EventPlayer(), Communication.VoiceLineRight))
+if (PlaceMode == 1)
+if (IsButtonHeld(EventPlayer(), Button.SecondaryFire))
 if (!IsButtonHeld(EventPlayer(), Button.Crouch))
 {
     for (define i = 1; i < Selected.Length; i++)
@@ -287,7 +301,8 @@ if (!IsButtonHeld(EventPlayer(), Button.Crouch))
 rule: "Connect Segments From First"
 Event.OngoingPlayer
 if (!FreeWalk)
-if (IsCommunicating(EventPlayer(), Communication.VoiceLineLeft))
+if (PlaceMode == 2)
+if (IsButtonHeld(EventPlayer(), Button.SecondaryFire))
 if (!IsButtonHeld(EventPlayer(), Button.Crouch))
 {
     for (define i = 1; i < Selected.Length; i++)
