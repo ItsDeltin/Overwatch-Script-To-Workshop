@@ -15,6 +15,7 @@ namespace Deltin.Deltinteger.Pathfinder
         protected Element Source { get; }
         private Element attributes { get; }
         protected bool useAttributes { get; }
+        protected bool potentiallyNullNodes { get; }
 
         protected IndexReference unvisited { get; private set; }
         protected IndexReference current { get; set; }
@@ -43,6 +44,8 @@ namespace Deltin.Deltinteger.Pathfinder
 
             Nodes = ((Element)pathmapClass.Nodes.GetVariable())[pathmapObject];
             Segments = ((Element)pathmapClass.Segments.GetVariable())[pathmapObject];
+
+            potentiallyNullNodes = actionSet.Translate.DeltinScript.GetComponent<ResolveInfoComponent>().PotentiallyNullNodes;
         }
 
         public void Get()
@@ -63,7 +66,7 @@ namespace Deltin.Deltinteger.Pathfinder
             // Set the current variable as the first node.
             actionSet.AddAction(current.SetVariable(firstNode));
             SetInitialDistances(actionSet, distances, (Element)current.GetVariable());
-            SetInitialUnvisited(actionSet, Nodes, unvisited);
+            SetInitialUnvisited();
 
             actionSet.AddAction(Element.Part<A_While>(LoopCondition()));
 
@@ -72,7 +75,6 @@ namespace Deltin.Deltinteger.Pathfinder
 
             // Get neighboring indexes
             actionSet.AddAction(connectedSegments.SetVariable(GetConnectedSegments(
-                Segments,
                 (Element)current.GetVariable()
             )));
 
@@ -229,28 +231,35 @@ namespace Deltin.Deltinteger.Pathfinder
             actionSet.AddAction(distancesVar.SetVariable(LeastNot0, null, currentIndex));
         }
 
-        private static void SetInitialUnvisited(ActionSet actionSet, Element nodeArray, IndexReference unvisitedVar)
+        private void SetInitialUnvisited()
         {
             // Create an array counting up to the number of values in the nodeArray array.
             // For example, if nodeArray has 6 variables unvisitedVar will be set to [0, 1, 2, 3, 4, 5].
 
             // Empty the unvisited array.
-            actionSet.AddAction(unvisitedVar.SetVariable(new V_EmptyArray()));
+            actionSet.AddAction(unvisited.SetVariable(new V_EmptyArray()));
             
             IndexReference current = actionSet.VarCollection.Assign("unvisitedBuilder", actionSet.IsGlobal, assignExtended);
             actionSet.AddAction(current.SetVariable(0));
 
             // While current < the count of the node array.
-            actionSet.AddAction(Element.Part<A_While>((Element)current.GetVariable() < Element.Part<V_CountOf>(nodeArray)));
+            actionSet.AddAction(Element.Part<A_While>((Element)current.GetVariable() < Element.Part<V_CountOf>(Nodes)));
 
-            actionSet.AddAction(unvisitedVar.ModifyVariable(Operation.AppendToArray, (Element)current.GetVariable()));
+            // If there can be null nodes, make sure the node is not null.
+            if (potentiallyNullNodes) actionSet.AddAction(Element.Part<A_If>(new V_Compare(Nodes[current.Get()], Operators.NotEqual, new V_Null())));
+
+            actionSet.AddAction(unvisited.ModifyVariable(Operation.AppendToArray, (Element)current.GetVariable()));
+
+            // End the if.
+            if (potentiallyNullNodes) actionSet.AddAction(new A_End());
+
             actionSet.AddAction(current.ModifyVariable(Operation.Add, 1));
 
             // End the while.
             actionSet.AddAction(new A_End());
         }
 
-        private Element GetConnectedSegments(Element segments, Element currentIndex)
+        private Element GetConnectedSegments(Element currentIndex)
         {
             Element currentSegmentCheck = new V_ArrayElement();
 
@@ -268,9 +277,12 @@ namespace Deltin.Deltinteger.Pathfinder
                 );
             else
                 isValid = new V_Compare(useAttribute, Operators.Equal, new V_Number(0));
+            
+            // If potentiallyNullNodes is true, make sure the segment is not null.
+            if (potentiallyNullNodes) isValid = Element.Part<V_And>(isValid, new V_Compare(currentSegmentCheck, Operators.NotEqual, new V_Null()));
 
             return Element.Part<V_FilteredArray>(
-                segments,
+                Segments,
                 Element.Part<V_And>(
                     // Make sure one of the segments nodes is the current node.
                     Element.Part<V_ArrayContains>(
@@ -290,7 +302,7 @@ namespace Deltin.Deltinteger.Pathfinder
         protected Element NoAccessableUnvisited() => Element.Part<V_IsTrueForAll>(unvisited.GetVariable(), new V_Compare(Element.Part<V_ValueInArray>(distances.GetVariable(), new V_ArrayElement()), Operators.Equal, new V_Number(0)));
         protected Element AnyAccessableUnvisited() => Element.Part<V_IsTrueForAny>(unvisited.GetVariable(), new V_Compare(Element.Part<V_ValueInArray>(distances.GetVariable(), new V_ArrayElement()), Operators.NotEqual, new V_Number(0)));
 
-        private static Element BothNodes(Element segment) => Element.CreateAppendArray(Node1(segment), Node2(segment));
+        public static Element BothNodes(Element segment) => Element.CreateAppendArray(Node1(segment), Node2(segment));
         public static Element Node1(Element segment) => Element.Part<V_RoundToInteger>(Element.Part<V_XOf>(segment), EnumData.GetEnumValue(Rounding.Down));
         public static Element Node2(Element segment) => Element.Part<V_RoundToInteger>(Element.Part<V_YOf>(segment), EnumData.GetEnumValue(Rounding.Down));
         public static Element Node1Attribute(Element segment) => Element.Part<V_RoundToInteger>(

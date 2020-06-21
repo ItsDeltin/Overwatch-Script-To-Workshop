@@ -10,6 +10,7 @@ namespace Deltin.Deltinteger.Pathfinder
 
         public DeltinScript DeltinScript { get; set; }
         public bool TrackTimeSinceLastNode { get; set; } // This will be true if the Pathmap.IsPathfindingStuck function is called anywhere in the code.
+        public bool SaveLastCurrent { get; set; } // This will be true if the Pathmap.IsPathfindingToSegment function is called anywhere in the code.
         
         // Class Instances
         private PathResolveClass PathResolveInstance;
@@ -277,6 +278,45 @@ namespace Deltin.Deltinteger.Pathfinder
                     Operators.Equal,
                     new V_True()
                 );
+        }
+
+        /// <summary>Looks at a player's future nodes.</summary>
+        public void Lookahead(ActionSet actionSet, Element targetPlayer, Element condition, Action<PathLookahead> action)
+        {
+            IndexReference look = actionSet.VarCollection.Assign("Pathfind: Lookahead", actionSet.IsGlobal, true);
+            actionSet.AddAction(look.SetVariable(Current.Get(targetPlayer)));
+
+            Element setCondition = new V_Compare(
+                look.GetVariable(),
+                Operators.GreaterThanOrEqual,
+                new V_Number(0)
+            );
+            if (condition != null) setCondition = condition;
+
+            // Get the path.
+            actionSet.AddAction(Element.Part<A_While>(setCondition));
+
+            Element nextNode = PathmapInstance.Nodes.Get()[PathmapReference.Get()][look.Get()];
+            Element nextAttribute = AttributeArray.Get()[look.Get()];
+
+            action.Invoke(new PathLookahead(actionSet, nextNode, nextAttribute));
+
+            actionSet.AddAction(look.SetVariable(ParentArray.Get()[look.Get()] - 1));
+            actionSet.AddAction(new A_End());
+        }
+    }
+
+    class PathLookahead
+    {
+        private readonly ActionSet _actionSet;
+        public Element Node { get; }
+        public Element Attribute { get; }
+
+        public PathLookahead(ActionSet actionSet, Element node, Element attribute)
+        {
+            _actionSet = actionSet;
+            Node = node;
+            Attribute = attribute;
         }
     }
 }

@@ -50,6 +50,7 @@ namespace Deltin.Deltinteger.Pathfinder
             serveObjectScope.AddNativeMethod(GetResolve(DeltinScript));
             serveObjectScope.AddNativeMethod(GetResolveTo(DeltinScript));
             serveObjectScope.AddNativeMethod(AddNode);
+            serveObjectScope.AddNativeMethod(DeleteNode);
             serveObjectScope.AddNativeMethod(AddSegment);
             serveObjectScope.AddNativeMethod(SetSegmentAttributeAB);
             serveObjectScope.AddNativeMethod(SetSegmentAttributeBA);
@@ -342,6 +343,21 @@ namespace Deltin.Deltinteger.Pathfinder
             }
         };
 
+        private Element FirstNullOrLength(ActionSet actionSet, Element array, string tempVariableName)
+        {
+            // Get the index of the first null node.
+            IndexReference index = actionSet.VarCollection.Assign(tempVariableName, actionSet.IsGlobal, true);
+            
+            // Get the first null value.
+            index.SetVariable(Element.Part<V_IndexOfArrayValue>(array, new V_Null()));
+
+            // If the index is -1, use the count of the element.
+            index.SetVariable(Element.TernaryConditional(new V_Compare(index.Get(), Operators.Equal, new V_Number(-1)), Element.Part<V_CountOf>(array), index.Get()));
+
+            // Done
+            return index.Get();
+        }
+
         // AddNode(position)
         private FuncMethod AddNode => new FuncMethodBuilder() {
             Name = "AddNode",
@@ -351,11 +367,53 @@ namespace Deltin.Deltinteger.Pathfinder
             },
             DoesReturnValue = true,
             Action = (actionSet, methodCall) => {
-                // Append the position.
-                actionSet.AddAction(Nodes.ModifyVariable(operation: Operation.AppendToArray, value: (Element)methodCall.ParameterValues[0], index: (Element)actionSet.CurrentObject));
-                
-                // Return the index of the added node.
-                return Element.Part<V_CountOf>(Nodes.Get()[(Element)actionSet.CurrentObject]);
+                // Some nodes may be null
+                if (actionSet.Translate.DeltinScript.GetComponent<ResolveInfoComponent>().PotentiallyNullNodes)
+                {
+                    Element index = FirstNullOrLength(actionSet, Nodes.Get()[(Element)actionSet.CurrentObject], "Add Node: Index");
+
+                    // Set the position.
+                    actionSet.AddAction(Nodes.SetVariable((Element)methodCall.ParameterValues[0], null, (Element)actionSet.CurrentObject, index));
+                    
+                    // Return the index of the added node.
+                    return index;
+                }
+                else // No nodes will be null.
+                {
+                    // Append the position.
+                    actionSet.AddAction(Nodes.ModifyVariable(operation: Operation.AppendToArray, value: (Element)methodCall.ParameterValues[0], index: (Element)actionSet.CurrentObject));
+                    
+                    // Return the index of the added node.
+                    return Element.Part<V_CountOf>(Nodes.Get()[(Element)actionSet.CurrentObject]);
+                }
+            }
+        };
+
+        // DeleteNode(node)
+        private FuncMethod DeleteNode => new FuncMethodBuilder() {
+            Name = "DeleteNode",
+            Documentation = new MarkupBuilder().Add("Deletes a node from the pathmap using the index of the node. Connected segments are also deleted. This may cause issue for pathfinding players who's path contains the node, so it may be a good idea to use the ").Code("Pathmap.IsPathfindingToNode").Add(" function to check if the node is in their path.").ToString(),
+            Parameters = new CodeParameter[] {
+                new CodeParameter("node", "The index of the node to remove.")
+            },
+            OnCall = (parseInfo, range) => parseInfo.TranslateInfo.ExecOnComponent<ResolveInfoComponent>(resolveInfo => resolveInfo.PotentiallyNullNodes = true),
+            Action = (actionSet, methodCall) => {
+                actionSet.AddAction(Nodes.SetVariable(value: new V_Null(), index: new Element[] { (Element)actionSet.CurrentObject, (Element)methodCall.ParameterValues[0] }));
+
+                // Delete segments.
+                Element connectedSegments = ContainParameter(actionSet, "Delete Node: Segments", Element.Part<V_FilteredArray>(
+                    Segments.Get()[(Element)actionSet.CurrentObject],
+                    Element.Part<V_ArrayContains>(
+                        DijkstraBase.BothNodes(new V_ArrayElement()),
+                        methodCall.ParameterValues[0]
+                    )
+                ));
+
+                ForeachBuilder loop = new ForeachBuilder(actionSet, connectedSegments);
+                actionSet.AddAction(Segments.SetVariable(new V_Null(), null, (Element)actionSet.CurrentObject, Element.Part<V_IndexOfArrayValue>(Segments.Get()[(Element)actionSet.CurrentObject], loop.IndexValue)));
+                loop.Finish();
+
+                return null;
             }
         };
 
@@ -385,11 +443,27 @@ namespace Deltin.Deltinteger.Pathfinder
                 else // A value was not set for the 'attribute_ba' parameter.
                     y = (Element)methodCall.ParameterValues[1];
                 
-                // Append the vector.
-                actionSet.AddAction(Segments.ModifyVariable(operation: Operation.AppendToArray, value: new V_Vector(x, y, z), index: (Element)actionSet.CurrentObject));
+                V_Vector segmentData = new V_Vector(x, y, z);
+                
+                // Some segments may be null
+                if (actionSet.Translate.DeltinScript.GetComponent<ResolveInfoComponent>().PotentiallyNullNodes)
+                {
+                    Element index = FirstNullOrLength(actionSet, Segments.Get()[(Element)actionSet.CurrentObject], "Add Segment: Index");
 
-                // Return the index of the last added node.
-                return Element.Part<V_CountOf>(Segments.GetVariable()) - 1;
+                    // Set the position.
+                    actionSet.AddAction(Segments.SetVariable(segmentData, null, (Element)actionSet.CurrentObject, index));
+                    
+                    // Return the index of the added node.
+                    return index;
+                }
+                else // No segments are null.
+                {
+                    // Append the vector.
+                    actionSet.AddAction(Segments.ModifyVariable(operation: Operation.AppendToArray, value: segmentData, index: (Element)actionSet.CurrentObject));
+
+                    // Return the index of the last added node.
+                    return Element.Part<V_CountOf>(Segments.GetVariable()) - 1;
+                }
             }
         };
 
@@ -524,6 +598,26 @@ namespace Deltin.Deltinteger.Pathfinder
             Action = (actionSet, methodCall) => {
                 actionSet.Translate.DeltinScript.GetComponent<ResolveInfoComponent>().ThrottleEventPlayerToNextNode(actionSet);
                 return null;
+            }
+        };
+    
+        private static FuncMethod IsPathfindingToNode = new FuncMethodBuilder() {
+            Name = "IsPathfindingToNode",
+            Documentation = "Determines if a player is pathfinding towards a node. This will return true if the node is anywhere in their path, not just the one they are currently walking towards.",
+            DoesReturnValue = true,
+            Parameters = new CodeParameter[] {
+                new CodeParameter("player", "The player to check."),
+                new CodeParameter("node", "The node to check.")
+            },
+            Action = (actionSet, methodCall) => {
+                IndexReference result = actionSet.VarCollection.Assign("Lookahead: Result", actionSet.IsGlobal, true);
+                actionSet.AddAction(result.SetVariable(new V_False()));
+
+                actionSet.Translate.DeltinScript.GetComponent<ResolveInfoComponent>().Lookahead(actionSet, (Element)methodCall.ParameterValues[0], Element.Part<V_Not>(result.Get()), lookahead => {
+                    actionSet.AddAction(result.SetVariable(new V_Compare(lookahead.Node, Operators.Equal, methodCall.ParameterValues[1])));
+                });
+
+                return result.Get();
             }
         };
     }
