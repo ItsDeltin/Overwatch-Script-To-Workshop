@@ -492,19 +492,20 @@ namespace Deltin.Deltinteger.Pathfinder
         // SetSegmentAttributeAB(segment, attribute)
         private FuncMethod SetSegmentAttributeAB => new FuncMethodBuilder() {
             Name = "SetSegmentAttributeAB",
-            Documentation = "Sets the primary segment attribute when traveling from node A to B.",
+            Documentation = "Sets the primary segment attribute when traveling from node A to B. The index of the segment in the pathmap's Segment array will change to be the last value.",
             Parameters = new CodeParameter[] {
                 new CodeParameter("segment_index", "The index of the segment that is being modified."),
                 new CodeParameter("attribute", "The new A to B attribute of the segment.")
             },
             Action = (actionSet, methodCall) => {
-                actionSet.AddAction(Segments.SetVariable(
-                    index: new Element[] {
-                        (Element)actionSet.CurrentObject,
-                        (Element)methodCall.ParameterValues[0]
-                    },
-                    value: ((Element)methodCall.ParameterValues[1]) + (Segments.Get()[(Element)actionSet.CurrentObject][(Element)methodCall.ParameterValues[0]] % 1)
-                ));
+                actionSet.AddAction(Segments.ModifyVariable(Operation.AppendToArray, new V_Vector(
+                    DijkstraBase.Node1((Element)methodCall.ParameterValues[0]) + (Element)methodCall.ParameterValues[1] / 100,
+                    Element.Part<V_YOf>((Element)methodCall.ParameterValues[0]),
+                    // If the Z component is ever used, update this.
+                    new V_Number(0)
+                ), null, (Element)actionSet.CurrentObject));
+                actionSet.AddAction(Segments.ModifyVariable(Operation.RemoveFromArrayByValue, (Element)methodCall.ParameterValues[0], null, (Element)actionSet.CurrentObject));
+
                 return null;
             }
         };
@@ -512,19 +513,20 @@ namespace Deltin.Deltinteger.Pathfinder
         // SetSegmentAttributeBA(segment, attribute)
         private FuncMethod SetSegmentAttributeBA => new FuncMethodBuilder() {
             Name = "SetSegmentAttributeBA",
-            Documentation = "Sets the primary segment attribute when traveling from node B to A.",
+            Documentation = "Sets the primary segment attribute when traveling from node B to A. The index of the segment in the pathmap's Segment array will change to be the last value.",
             Parameters = new CodeParameter[] {
                 new CodeParameter("segment_index", "The index of the segment that is being modified."),
                 new CodeParameter("attribute", "The new B to A attribute of the segment.")
             },
             Action = (actionSet, methodCall) => {
-                actionSet.AddAction(Segments.SetVariable(
-                    index: new Element[] {
-                        (Element)actionSet.CurrentObject,
-                        (Element)methodCall.ParameterValues[0]
-                    },
-                    value: Element.Part<V_RoundToInteger>(Segments.Get()[(Element)actionSet.CurrentObject][(Element)methodCall.ParameterValues[0]], EnumData.GetEnumValue(Rounding.Down)) + (Element)methodCall.ParameterValues[1]
-                ));
+                actionSet.AddAction(Segments.ModifyVariable(Operation.AppendToArray, new V_Vector(
+                    Element.Part<V_XOf>((Element)methodCall.ParameterValues[0]),
+                    DijkstraBase.Node2((Element)methodCall.ParameterValues[0]) + (Element)methodCall.ParameterValues[1] / 100,
+                    // If the Z component is ever used, update this.
+                    new V_Number(0)
+                ), null, (Element)actionSet.CurrentObject));
+                actionSet.AddAction(Segments.ModifyVariable(Operation.RemoveFromArrayByValue, (Element)methodCall.ParameterValues[0], null, (Element)actionSet.CurrentObject));
+
                 return null;
             }
         };
