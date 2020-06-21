@@ -58,6 +58,7 @@ namespace Deltin.Deltinteger.Pathfinder
             serveObjectScope.AddNativeMethod(DeleteSegment);
             serveObjectScope.AddNativeMethod(SetSegmentAttributeAB);
             serveObjectScope.AddNativeMethod(SetSegmentAttributeBA);
+            serveObjectScope.AddNativeMethod(SegmentFromNodes);
 
             staticScope.AddNativeMethod(StopPathfind);
             staticScope.AddNativeMethod(CurrentSegmentAttribute);
@@ -183,6 +184,20 @@ namespace Deltin.Deltinteger.Pathfinder
                 actionSet.AddAction(Segments.SetVariable(new V_EmptyArray(), index: index));
             }
         }
+
+        public Element SegmentsFromNodes(IWorkshopTree pathmapObject, Element node1, Element node2) => Element.Part<V_FilteredArray>(
+            Segments.Get()[(Element)pathmapObject],
+            Element.Part<V_And>(
+                Element.Part<V_ArrayContains>(
+                    DijkstraBase.BothNodes(new V_ArrayElement()),
+                    node1
+                ),
+                Element.Part<V_ArrayContains>(
+                    DijkstraBase.BothNodes(new V_ArrayElement()),
+                    node2
+                )
+            )
+        );
 
         private void SetHooks(DijkstraBase algorithm, IWorkshopTree onLoop, IWorkshopTree onConnectLoop)
         {
@@ -509,6 +524,18 @@ namespace Deltin.Deltinteger.Pathfinder
                 ));
                 return null;
             }
+        };
+
+        private FuncMethod SegmentFromNodes => new FuncMethodBuilder() {
+            Name = "SegmentFromNodes",
+            Documentation = "Gets a segment from 2 nodes.",
+            Parameters = new CodeParameter[] {
+                new CodeParameter("firstNodeIndex", "The first node index."),
+                new CodeParameter("secondNodeIndex", "The second node index.")
+            },
+            DoesReturnValue = true,
+            ReturnType = SegmentsStruct.Instance,
+            Action = (actionSet, methodCall) => SegmentsFromNodes(actionSet.CurrentObject, (Element)methodCall.ParameterValues[0], (Element)methodCall.ParameterValues[1])
         };
 
         // Static functions

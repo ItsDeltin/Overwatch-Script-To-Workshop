@@ -326,26 +326,13 @@ namespace Deltin.Deltinteger.Pathfinder
             Element currentNode = PathmapInstance.Nodes.Get()[PathmapReference.Get(targetPlayer)][look.Get()];
             Element nextNode = PathmapInstance.Nodes.Get()[PathmapReference.Get(targetPlayer)][ParentArray.Get(targetPlayer)[look.Get()] - 1];
 
-            // DijkstraBase.BothNodes PathmapInstance.Segments.Get()
             actionSet.AddAction(result.SetVariable(new V_Compare(
                 segment,
                 Operators.Equal,
-                Element.Part<V_FirstOf>(Element.Part<V_FilteredArray>(
-                    PathmapInstance.Segments.Get()[PathmapReference.Get(targetPlayer)],
-                    Element.Part<V_And>(
-                        Element.Part<V_ArrayContains>(
-                            DijkstraBase.BothNodes(new V_ArrayElement()),
-                            currentNode
-                        ),
-                        Element.Part<V_ArrayContains>(
-                            DijkstraBase.BothNodes(new V_ArrayElement()),
-                            nextNode
-                        )
-                    )
-                ))
+                Element.Part<V_FirstOf>(PathmapInstance.SegmentsFromNodes(PathmapReference.Get(targetPlayer), look.Get(), ParentArray.Get(targetPlayer)[look.Get()] - 1))
             )));
 
-            actionSet.AddAction(look.SetVariable(ParentArray.Get()[look.Get()] - 1));
+            actionSet.AddAction(look.SetVariable(ParentArray.Get(targetPlayer)[look.Get()] - 1));
             actionSet.AddAction(new A_End());
 
             return result.Get();
