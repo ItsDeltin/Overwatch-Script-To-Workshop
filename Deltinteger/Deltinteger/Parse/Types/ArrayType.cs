@@ -16,7 +16,7 @@ namespace Deltin.Deltinteger.Parse
         private readonly InternalVar _last;
         private readonly InternalVar _first;
 
-        public ArrayType(CodeType arrayOfType) : base(arrayOfType.Name + "[]")
+        public ArrayType(CodeType arrayOfType) : base((arrayOfType?.Name ?? "define") + "[]")
         {
             ArrayOfType = arrayOfType;
 
@@ -156,7 +156,7 @@ namespace Deltin.Deltinteger.Parse
             assigner.Add(_first, Element.Part<V_FirstOf>(reference));
         }
 
-        public override bool Implements(CodeType type) => type is ArrayType arrayType && arrayType.ArrayOfType.Implements(ArrayOfType);
+        public override bool Implements(CodeType type) => type is ArrayType arrayType && (ArrayOfType == null || arrayType.ArrayOfType == null || arrayType.ArrayOfType.Implements(ArrayOfType));
         public override Scope GetObjectScope() => _scope;
         public override Scope ReturningScope() => null;
         public override CompletionItem GetCompletion() => throw new NotImplementedException();

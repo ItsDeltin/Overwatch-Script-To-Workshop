@@ -129,22 +129,19 @@ namespace Deltin.Deltinteger.Parse
         public static CodeType GetCodeTypeFromContext(ParseInfo parseInfo, DeltinScriptParser.Code_typeContext typeContext)
         {
             if (typeContext == null) return null;
-            CodeType type = parseInfo.TranslateInfo.Types.GetCodeType(typeContext.PART().GetText(), parseInfo.Script.Diagnostics, DocRange.GetRange(typeContext));
+            
+            CodeType type = null;
+            if (typeContext.PART() != null) type = parseInfo.TranslateInfo.Types.GetCodeType(typeContext.PART().GetText(), parseInfo.Script.Diagnostics, DocRange.GetRange(typeContext));
 
             // Get generics
-            if (typeContext.generics()?.generic_option() != null)
+            if (typeContext.generics() != null)
             {
                 // Create a list to store the generics.
                 List<CodeType> generics = new List<CodeType>();
 
                 // Get the generics.
-                foreach (var genericContext in typeContext.generics().generic_option())
-                {
-                    if (genericContext.DEFINE() != null)
-                        generics.Add(null);
-                    else
-                        generics.Add(GetCodeTypeFromContext(parseInfo, genericContext.code_type()));
-                }
+                foreach (var genericContext in typeContext.generics().code_type())
+                    generics.Add(GetCodeTypeFromContext(parseInfo, genericContext));
                 
                 if (type is Lambda.BlockLambda)
                     type = new Lambda.BlockLambda(generics.ToArray());
@@ -155,13 +152,12 @@ namespace Deltin.Deltinteger.Parse
             }
 
             if (type != null)
-            {
                 type.Call(parseInfo, DocRange.GetRange(typeContext));
 
-                if (typeContext.INDEX_START() != null)
+            if (typeContext.INDEX_START() != null)
                     for (int i = 0; i < typeContext.INDEX_START().Length; i++)
                         type = new ArrayType(type);
-            }
+
             return type;
         }
 
