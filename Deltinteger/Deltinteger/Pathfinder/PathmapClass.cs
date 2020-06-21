@@ -305,7 +305,7 @@ namespace Deltin.Deltinteger.Pathfinder
         // Resolve(position, [attributes])
         private FuncMethod GetResolve(DeltinScript deltinScript) => new FuncMethodBuilder() {
             Name = "Resolve",
-            Documentation = "Resolves all potential paths to the specified destination.",
+            Documentation = "Resolves all potential paths to the specified destination. This can be used to precalculate the path to a position, or to reuse the calculated path to a position.",
             DoesReturnValue = true,
             ReturnType = deltinScript.Types.GetInstance<PathResolveClass>(),
             Parameters = new CodeParameter[] {
@@ -329,7 +329,7 @@ namespace Deltin.Deltinteger.Pathfinder
         // ResolveTo(position, resolveTo, [attributes])
         private static FuncMethod GetResolveTo(DeltinScript deltinScript) => new FuncMethodBuilder() {
             Name = "ResolveTo",
-            Documentation = "Resolves the path to the specified destination.",
+            Documentation = "Resolves the path to the specified destination. This can be used to precalculate the path to a position, or to reuse the calculated path to a position.",
             DoesReturnValue = true,
             ReturnType = deltinScript.Types.GetInstance<PathResolveClass>(),
             Parameters = new CodeParameter[] {
@@ -393,7 +393,8 @@ namespace Deltin.Deltinteger.Pathfinder
         // DeleteNode(node)
         private FuncMethod DeleteNode => new FuncMethodBuilder() {
             Name = "DeleteNode",
-            Documentation = new MarkupBuilder().Add("Deletes a node from the pathmap using the index of the node. Connected segments are also deleted. This may cause issue for pathfinding players who's path contains the node, so it may be a good idea to use the ").Code("Pathmap.IsPathfindingToNode").Add(" function to check if the node is in their path.").ToString(),
+            Documentation = new MarkupBuilder().Add("Deletes a node from the pathmap using the index of the node. Connected segments are also deleted. This may cause issue for pathfinding players who's path contains the node, so it may be a good idea to use the ").Code("Pathmap.IsPathfindingToNode").Add(" function to check if the node is in their path.")
+                .Add("This may also cause issues if this is executed while a pathfinder function is running, like ").Code("Pathmap.Pathfind").Add(" or ").Code("Pathmap.Resolve").Add(".").ToString(),
             Parameters = new CodeParameter[] {
                 new CodeParameter("node_index", "The index of the node to remove.")
             },
