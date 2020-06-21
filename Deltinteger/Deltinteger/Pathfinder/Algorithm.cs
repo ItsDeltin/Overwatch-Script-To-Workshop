@@ -15,6 +15,7 @@ namespace Deltin.Deltinteger.Pathfinder
         protected Element Source { get; }
         private Element attributes { get; }
         protected bool useAttributes { get; }
+        protected bool reverseAttributes { get; set; } = false;
         protected ResolveInfoComponent resolveInfo { get; }
 
         protected IndexReference unvisited { get; private set; }
@@ -122,18 +123,34 @@ namespace Deltin.Deltinteger.Pathfinder
             actionSet.AddAction(parentArray.SetVariable((Element)current.GetVariable() + 1, null, (Element)neighborIndex.GetVariable()));
 
             if (useAttributes)
-                actionSet.AddAction(parentAttributeInfo.SetVariable(
-                    value: Element.TernaryConditional(
-                        new V_Compare(
-                            current.GetVariable(),
-                            Operators.Equal,
-                            Node1(forBuilder.IndexValue)
+            {
+                if (!reverseAttributes)
+                    actionSet.AddAction(parentAttributeInfo.SetVariable(
+                        value: Element.TernaryConditional(
+                            new V_Compare(
+                                current.GetVariable(),
+                                Operators.Equal,
+                                Node1(forBuilder.IndexValue)
+                            ),
+                            Node2Attribute(forBuilder.IndexValue),
+                            Node1Attribute(forBuilder.IndexValue)
                         ),
-                        Node2Attribute(forBuilder.IndexValue),
-                        Node1Attribute(forBuilder.IndexValue)
-                    ),
-                    index: neighborIndex.Get()
-                ));
+                        index: neighborIndex.Get()
+                    ));
+                else
+                    actionSet.AddAction(parentAttributeInfo.SetVariable(
+                        value: Element.TernaryConditional(
+                            new V_Compare(
+                                current.GetVariable(),
+                                Operators.Equal,
+                                Node1(forBuilder.IndexValue)
+                            ),
+                            Node1Attribute(forBuilder.IndexValue),
+                            Node2Attribute(forBuilder.IndexValue)
+                        ),
+                        index: neighborIndex.Get()
+                    ));
+            }
 
             // End the if.
             actionSet.AddAction(new A_End());
@@ -455,6 +472,7 @@ namespace Deltin.Deltinteger.Pathfinder
         {
             this.destinations = destinations;
             this.player = player;
+            reverseAttributes = true;
         }
 
         protected override void Assign()
