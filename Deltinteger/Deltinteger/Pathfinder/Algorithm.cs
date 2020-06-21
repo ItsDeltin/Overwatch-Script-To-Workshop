@@ -15,7 +15,7 @@ namespace Deltin.Deltinteger.Pathfinder
         protected Element Source { get; }
         private Element attributes { get; }
         protected bool useAttributes { get; }
-        protected bool potentiallyNullNodes { get; }
+        protected ResolveInfoComponent resolveInfo { get; }
 
         protected IndexReference unvisited { get; private set; }
         protected IndexReference current { get; set; }
@@ -45,7 +45,7 @@ namespace Deltin.Deltinteger.Pathfinder
             Nodes = ((Element)pathmapClass.Nodes.GetVariable())[pathmapObject];
             Segments = ((Element)pathmapClass.Segments.GetVariable())[pathmapObject];
 
-            potentiallyNullNodes = actionSet.Translate.DeltinScript.GetComponent<ResolveInfoComponent>().PotentiallyNullNodes;
+            resolveInfo = actionSet.Translate.DeltinScript.GetComponent<ResolveInfoComponent>();
         }
 
         public void Get()
@@ -246,12 +246,12 @@ namespace Deltin.Deltinteger.Pathfinder
             actionSet.AddAction(Element.Part<A_While>((Element)current.GetVariable() < Element.Part<V_CountOf>(Nodes)));
 
             // If there can be null nodes, make sure the node is not null.
-            if (potentiallyNullNodes) actionSet.AddAction(Element.Part<A_If>(new V_Compare(Nodes[current.Get()], Operators.NotEqual, new V_Null())));
+            if (resolveInfo.PotentiallyNullNodes) actionSet.AddAction(Element.Part<A_If>(new V_Compare(Nodes[current.Get()], Operators.NotEqual, new V_Null())));
 
             actionSet.AddAction(unvisited.ModifyVariable(Operation.AppendToArray, (Element)current.GetVariable()));
 
             // End the if.
-            if (potentiallyNullNodes) actionSet.AddAction(new A_End());
+            if (resolveInfo.PotentiallyNullNodes) actionSet.AddAction(new A_End());
 
             actionSet.AddAction(current.ModifyVariable(Operation.Add, 1));
 
@@ -278,8 +278,8 @@ namespace Deltin.Deltinteger.Pathfinder
             else
                 isValid = new V_Compare(useAttribute, Operators.Equal, new V_Number(0));
             
-            // If potentiallyNullNodes is true, make sure the segment is not null.
-            if (potentiallyNullNodes) isValid = Element.Part<V_And>(isValid, new V_Compare(currentSegmentCheck, Operators.NotEqual, new V_Null()));
+            // If potentiallyNullSegments is true, make sure the segment is not null.
+            if (resolveInfo.PotentiallyNullSegments) isValid = Element.Part<V_And>(isValid, new V_Compare(currentSegmentCheck, Operators.NotEqual, new V_Null()));
 
             return Element.Part<V_FilteredArray>(
                 Segments,
@@ -393,7 +393,7 @@ namespace Deltin.Deltinteger.Pathfinder
             actionSet.AddAction(endLoop);
             PlayerNodeReachedBreak.SetEndMarker(endLoop);
 
-            actionSet.Translate.DeltinScript.GetComponent<ResolveInfoComponent>().Pathfind(actionSet, player, pathmapObject, parentArray.Get(), parentAttributeInfo.Get(), Source);
+            resolveInfo.Pathfind(actionSet, player, pathmapObject, parentArray.Get(), parentAttributeInfo.Get(), Source);
         }
 
         protected override Element LoopCondition() => AnyAccessableUnvisited();
@@ -434,7 +434,6 @@ namespace Deltin.Deltinteger.Pathfinder
 
         override protected void GetResult()
         {
-            ResolveInfoComponent resolveInfo = actionSet.Translate.DeltinScript.GetComponent<ResolveInfoComponent>();
             resolveInfo.Pathfind(actionSet, players, pathmapObject, parentArray.Get(), parentAttributeInfo.Get(), Source);
         }
     }
@@ -503,7 +502,7 @@ namespace Deltin.Deltinteger.Pathfinder
 
             actionSet.AddAction(parentArray.SetVariable(newParentArray.Get()));
 
-            actionSet.Translate.DeltinScript.GetComponent<ResolveInfoComponent>().Pathfind(actionSet, player, pathmapObject, parentArray.Get(), parentAttributeInfo.Get(), Nodes[current.Get()]);
+            resolveInfo.Pathfind(actionSet, player, pathmapObject, parentArray.Get(), parentAttributeInfo.Get(), Nodes[current.Get()]);
         }
 
         // Loop until any of the destinations have been visited.

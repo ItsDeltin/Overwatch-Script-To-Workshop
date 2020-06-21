@@ -446,7 +446,7 @@ namespace Deltin.Deltinteger.Pathfinder
                 V_Vector segmentData = new V_Vector(x, y, z);
                 
                 // Some segments may be null
-                if (actionSet.Translate.DeltinScript.GetComponent<ResolveInfoComponent>().PotentiallyNullNodes)
+                if (actionSet.Translate.DeltinScript.GetComponent<ResolveInfoComponent>().PotentiallyNullSegments)
                 {
                     Element index = FirstNullOrLength(actionSet, Segments.Get()[(Element)actionSet.CurrentObject], "Add Segment: Index");
 

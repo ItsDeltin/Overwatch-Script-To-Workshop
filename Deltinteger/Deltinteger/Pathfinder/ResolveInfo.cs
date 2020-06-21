@@ -4,13 +4,19 @@ using Deltin.Deltinteger.Elements;
 
 namespace Deltin.Deltinteger.Pathfinder
 {
-    class ResolveInfoComponent : IComponent
+    public class ResolveInfoComponent : IComponent
     {
         public const double DefaultMoveToNext = 0.4;
 
         public DeltinScript DeltinScript { get; set; }
         public bool TrackTimeSinceLastNode { get; set; } // This will be true if the Pathmap.IsPathfindingStuck function is called anywhere in the code.
         public bool SaveLastCurrent { get; set; } // This will be true if the Pathmap.IsPathfindingToSegment function is called anywhere in the code.
+        public bool PotentiallyNullNodes { get; set; } // Determines if nodes can potentially be null.
+        public bool PotentiallyNullSegments { // Determines if the segments can potentially be null.
+            get => _potentiallyNullSegments || PotentiallyNullNodes;
+            set => _potentiallyNullSegments = value;
+        }
+        private bool _potentiallyNullSegments;
         
         // Class Instances
         private PathResolveClass PathResolveInstance;
