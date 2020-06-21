@@ -67,6 +67,8 @@ namespace Deltin.Deltinteger.Pathfinder
             staticScope.AddNativeMethod(NextNode);
             staticScope.AddNativeMethod(ThrottleToNextNode);
             staticScope.AddNativeMethod(Recalibrate);
+            staticScope.AddNativeMethod(IsPathfindingToNode);
+            staticScope.AddNativeMethod(IsPathfindingToSegment);
 
             // Hooks
 
@@ -623,16 +625,19 @@ namespace Deltin.Deltinteger.Pathfinder
                 new CodeParameter("player", "The player to check."),
                 new CodeParameter("node", "The node to check.")
             },
-            Action = (actionSet, methodCall) => {
-                IndexReference result = actionSet.VarCollection.Assign("Lookahead: Result", actionSet.IsGlobal, true);
-                actionSet.AddAction(result.SetVariable(new V_False()));
+            Action = (actionSet, methodCall) => actionSet.Translate.DeltinScript.GetComponent<ResolveInfoComponent>().IsTravelingToNode(actionSet, (Element)methodCall.ParameterValues[0], (Element)methodCall.ParameterValues[1])
+        };
 
-                actionSet.Translate.DeltinScript.GetComponent<ResolveInfoComponent>().Lookahead(actionSet, (Element)methodCall.ParameterValues[0], Element.Part<V_Not>(result.Get()), lookahead => {
-                    actionSet.AddAction(result.SetVariable(new V_Compare(lookahead.Node, Operators.Equal, methodCall.ParameterValues[1])));
-                });
-
-                return result.Get();
-            }
+        private static FuncMethod IsPathfindingToSegment = new FuncMethodBuilder() {
+            Name = "IsPathfindingToSegment",
+            Documentation = "Determines if a player is pathfinding towards a node. This will return true if the node is anywhere in their path, not just the one they are currently walking towards.",
+            DoesReturnValue = true,
+            Parameters = new CodeParameter[] {
+                new CodeParameter("player", "The player to check."),
+                new CodeParameter("node", "The node to check.")
+            },
+            OnCall = (parseInfo, range) => parseInfo.TranslateInfo.ExecOnComponent<ResolveInfoComponent>(resolveInfo => resolveInfo.SaveLastCurrent = true),
+            Action = (actionSet, methodCall) => actionSet.Translate.DeltinScript.GetComponent<ResolveInfoComponent>().IsTravelingToSegment(actionSet, (Element)methodCall.ParameterValues[0], (Element)methodCall.ParameterValues[1])
         };
     }
 

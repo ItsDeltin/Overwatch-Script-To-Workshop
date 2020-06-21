@@ -282,42 +282,73 @@ namespace Deltin.Deltinteger.Pathfinder
         }
 
         /// <summary>Looks at a player's future nodes.</summary>
-        public void Lookahead(ActionSet actionSet, Element targetPlayer, Element condition, Action<PathLookahead> action)
+        public Element IsTravelingToNode(ActionSet actionSet, Element targetPlayer, Element node)
         {
+            IndexReference result = actionSet.VarCollection.Assign("Lookahead: Result", actionSet.IsGlobal, true);
+            actionSet.AddAction(result.SetVariable(new V_False()));
+
             IndexReference look = actionSet.VarCollection.Assign("Pathfind: Lookahead", actionSet.IsGlobal, true);
             actionSet.AddAction(look.SetVariable(Current.Get(targetPlayer)));
 
-            Element setCondition = new V_Compare(
+            // Get the path.
+            actionSet.AddAction(Element.Part<A_While>(Element.Part<V_And>(new V_Compare(
                 look.GetVariable(),
                 Operators.GreaterThanOrEqual,
                 new V_Number(0)
-            );
-            if (condition != null) setCondition = condition;
+            ), !result.Get())));
+
+            //Element currentNode = PathmapInstance.Nodes.Get()[PathmapReference.Get(targetPlayer)][look.Get()];
+
+            actionSet.AddAction(result.SetVariable(new V_Compare(look.Get(), Operators.Equal, node)));
+
+            actionSet.AddAction(look.SetVariable(ParentArray.Get(targetPlayer)[look.Get()] - 1));
+            actionSet.AddAction(new A_End());
+
+            return result.Get();
+        }
+
+        /// <summary>Looks at a player's future segments.</summary>
+        public Element IsTravelingToSegment(ActionSet actionSet, Element targetPlayer, Element segment)
+        {
+            IndexReference result = actionSet.VarCollection.Assign("Lookahead: Result", actionSet.IsGlobal, true);
+            actionSet.AddAction(result.SetVariable(new V_False()));
+
+            IndexReference look = actionSet.VarCollection.Assign("Pathfind: Lookahead", actionSet.IsGlobal, true);
+            actionSet.AddAction(look.SetVariable(Current.Get(targetPlayer)));
 
             // Get the path.
-            actionSet.AddAction(Element.Part<A_While>(setCondition));
+            actionSet.AddAction(Element.Part<A_While>(Element.Part<V_And>(new V_Compare(
+                ParentArray.Get(targetPlayer)[look.Get()] - 1,
+                Operators.GreaterThanOrEqual,
+                new V_Number(0)
+            ), !result.Get())));
 
-            Element nextNode = PathmapInstance.Nodes.Get()[PathmapReference.Get()][look.Get()];
-            Element nextAttribute = AttributeArray.Get()[look.Get()];
+            Element currentNode = PathmapInstance.Nodes.Get()[PathmapReference.Get(targetPlayer)][look.Get()];
+            Element nextNode = PathmapInstance.Nodes.Get()[PathmapReference.Get(targetPlayer)][ParentArray.Get(targetPlayer)[look.Get()] - 1];
 
-            action.Invoke(new PathLookahead(actionSet, nextNode, nextAttribute));
+            // DijkstraBase.BothNodes PathmapInstance.Segments.Get()
+            actionSet.AddAction(result.SetVariable(new V_Compare(
+                segment,
+                Operators.Equal,
+                Element.Part<V_FirstOf>(Element.Part<V_FilteredArray>(
+                    PathmapInstance.Segments.Get()[PathmapReference.Get(targetPlayer)],
+                    Element.Part<V_And>(
+                        Element.Part<V_ArrayContains>(
+                            DijkstraBase.BothNodes(new V_ArrayElement()),
+                            currentNode
+                        ),
+                        Element.Part<V_ArrayContains>(
+                            DijkstraBase.BothNodes(new V_ArrayElement()),
+                            nextNode
+                        )
+                    )
+                ))
+            )));
 
             actionSet.AddAction(look.SetVariable(ParentArray.Get()[look.Get()] - 1));
             actionSet.AddAction(new A_End());
-        }
-    }
 
-    class PathLookahead
-    {
-        private readonly ActionSet _actionSet;
-        public Element Node { get; }
-        public Element Attribute { get; }
-
-        public PathLookahead(ActionSet actionSet, Element node, Element attribute)
-        {
-            _actionSet = actionSet;
-            Node = node;
-            Attribute = attribute;
+            return result.Get();
         }
     }
 }
