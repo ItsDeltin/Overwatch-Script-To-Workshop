@@ -91,6 +91,8 @@ namespace Deltin.Deltinteger.Parse.Lambda
             }
             else throw new NotImplementedException();
         }
+    
+        public bool EmptyBlock => Block == null || Block.Statements.Length == 0;
     }
 
     /// <summary>Lambda invoke function.</summary>

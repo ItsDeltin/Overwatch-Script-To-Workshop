@@ -23,7 +23,7 @@ namespace Deltin.Deltinteger.Pathfinder
         protected IndexReference distances { get; set; }
         protected IndexReference parentArray { get; set; }
         protected IndexReference parentAttributeInfo { get; set; }
-        protected static bool assignExtended = false;
+        protected static bool assignExtended = true;
 
         public Action<ActionSet> OnLoop { get; set; } = actionSet => {
             actionSet.AddAction(A_Wait.MinimumWait);

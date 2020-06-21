@@ -78,13 +78,16 @@ namespace Deltin.Deltinteger.Pathfinder
             // Code to run when pathfinding starts.
             OnPathStartHook = new HookVar("OnPathStart", new BlockLambda(), userLambda => DeltinScript.ExecOnComponent<ResolveInfoComponent>(resolveInfo => resolveInfo.OnPathStart = (LambdaAction)userLambda));
             OnPathStartHook.Documentation = AddHookInfo(new MarkupBuilder()
-                .Add("The code that runs when a pathfind starts for a player. By default, it will start throttling to the player's current node. Hooking will override the thottle, so if you want to throttle you will need to call ").Code("Pathmap.ThrottleEventPlayerToNextNode").Add("."));
+                .Add("The code that runs when a pathfind starts for a player. By default, it will start throttling to the player's current node. Hooking will override the thottle, so if you want to throttle you will need to call ").Code("Pathmap.ThrottleEventPlayerToNextNode").Add(".")
+                .NewLine().Add("Call ").Code("EventPlayer()").Add(" to get the player that is pathfinding."));
             // Code to run when node is reached.
             OnNodeReachedHook = new HookVar("OnNodeReached", new BlockLambda(), userLambda => DeltinScript.ExecOnComponent<ResolveInfoComponent>(resolveInfo => resolveInfo.OnNodeReached = (LambdaAction)userLambda));
-            OnNodeReachedHook.Documentation = AddHookInfo(new MarkupBuilder().Add("The code that runs when a player reaches a node. Does nothing by default."));
+            OnNodeReachedHook.Documentation = AddHookInfo(new MarkupBuilder().Add("The code that runs when a player reaches a node. Does nothing by default.")
+                .NewLine().Add("Call ").Code("EventPlayer()").Add(" to get the player that reached the node."));
             // Code to run when pathfind completes.
             OnPathCompleted = new HookVar("OnPathCompleted", new BlockLambda(), userLambda => DeltinScript.ExecOnComponent<ResolveInfoComponent>(resolveInfo => resolveInfo.OnPathCompleted = (LambdaAction)userLambda));
-            OnPathCompleted.Documentation = AddHookInfo(new MarkupBuilder().Add("The code that runs when a player completes a pathfind. By default, it will stop throttling the player. Hooking will override the stop throttle."));
+            OnPathCompleted.Documentation = AddHookInfo(new MarkupBuilder().Add("The code that runs when a player completes a pathfind. By default, it will stop throttling the player and call ").Code("StopPathfind(EventPlayer())").Add(", hooking will override this.")
+                .NewLine().Add("Call ").Code("EventPlayer()").Add(" to get the player that completed the path."));
             // The condition to use to determine if a node was reached.
             IsNodeReachedDeterminer = new HookVar("IsNodeReachedDeterminer", new MacroLambda(null, new CodeType[] {VectorType.Instance}), userLambda => DeltinScript.ExecOnComponent<ResolveInfoComponent>(resolveInfo => resolveInfo.IsNodeReachedDeterminer = (LambdaAction)userLambda));
             IsNodeReachedDeterminer.Documentation = AddHookInfo(new MarkupBuilder()
@@ -650,7 +653,7 @@ namespace Deltin.Deltinteger.Pathfinder
             DoesReturnValue = true,
             Parameters = new CodeParameter[] {
                 new CodeParameter("player", "The player to check."),
-                new CodeParameter("node", "The node to check.")
+                new CodeParameter("node_index", "The node to check. This is the index of the node in the pathmap's Node array.")
             },
             Action = (actionSet, methodCall) => actionSet.Translate.DeltinScript.GetComponent<ResolveInfoComponent>().IsTravelingToNode(actionSet, (Element)methodCall.ParameterValues[0], (Element)methodCall.ParameterValues[1])
         };
@@ -661,7 +664,7 @@ namespace Deltin.Deltinteger.Pathfinder
             DoesReturnValue = true,
             Parameters = new CodeParameter[] {
                 new CodeParameter("player", "The player to check."),
-                new CodeParameter("node", "The node to check.")
+                new CodeParameter("segment", "The segment to check. This is not an index of the pathmap's segment array, instead it is the segment itself.")
             },
             OnCall = (parseInfo, range) => parseInfo.TranslateInfo.ExecOnComponent<ResolveInfoComponent>(resolveInfo => resolveInfo.SaveLastCurrent = true),
             Action = (actionSet, methodCall) => actionSet.Translate.DeltinScript.GetComponent<ResolveInfoComponent>().IsTravelingToSegment(actionSet, (Element)methodCall.ParameterValues[0], (Element)methodCall.ParameterValues[1])
