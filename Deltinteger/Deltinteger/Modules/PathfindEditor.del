@@ -1,4 +1,12 @@
-import "!Debug Tools.del";
+/*
+
+This is the pathmap editor used for customizing pathmaps.
+
+You can quickly copy the compiled code by pressing ctrl+shift+p and running the 'Overwatch Script To Workshop: Copy pathmap editor code' command
+in vscode with the Overwatch Script To Workshop extension.
+
+*/
+
 import "!Container.del";
 
 rule: "Commands" -1
@@ -13,11 +21,49 @@ rule: "Commands" -1
     HelpText("Crouch + Secondary Fire: Disconnect all selected nodes."                   , 6, Color.Green);
     HelpText("Voice Line Right: Create a path from the first to the last selected nodes.", 7, Color.Green);
     HelpText("Voice Line Left: Connect all selected nodes to the first selected node."   , 8, Color.Green);
-    HelpText("Shift: Switch attribute."                                                  , 9, Color.Orange);
-    HelpText("Voice Line Up: Compile pathmap."                                           , 11, Color.Yellow);
+    HelpText("Ability 1: Switch primary attribute."                                      , 9, Color.Yellow);
+    HelpText("Crouch + Ability 1: Switch primary attribute."                             , 10, Color.Yellow);
+    HelpText("Ability 2: Switch secondary attribute."                                    , 11, Color.Orange);
+    HelpText("Crouch + Ability 2: Switch secondary attribute."                           , 12, Color.Orange);
+    HelpText("Melee: Compile pathmap."                                                   , 13, Color.Turquoise);
+
+    CreateHudText(AllPlayers(), Text: "OSTW pathmap editor", Location:Location.Left, SortOrder: 0);
+    CreateHudText(AllPlayers(), Text: "Remember to periodically compile your pathmap so you don't lose progress.", TextColor: Color.Red, Location:Location.Left, SortOrder: 1);
+
+    CreateHudText(
+        VisibleTo: AllPlayers(),
+        Header   : "Primary Attribute:",
+        Subheader: ["Normal", "Custom"][Min(FirstAttribute, 1)],
+        Text     : FirstAttribute,
+        TextColor: Color.Yellow,
+        Location : Location.Top,
+        SortOrder: 1
+    );
+    CreateHudText(
+        VisibleTo: AllPlayers(),
+        Header   : "Secondary Attribute:",
+        Subheader: ["Normal", "Custom"][Min(SecondAttribute, 1)],
+        Text     : SecondAttribute,
+        TextColor: Color.Orange,
+        Location : Location.Top,
+        SortOrder: 2
+    );
 }
 
 globalvar define scoper;
+globalvar Node[] Nodes = [];
+globalvar Node[] Selected = [];
+globalvar Segment[] Segments = [];
+globalvar define updateVisibleLook;
+globalvar define updateVisiblePosition;
+globalvar define compiling = false;
+globalvar Vector[] nodesOut    3;
+globalvar Vector[] segmentsOut 4;
+globalvar Vector[] preloadNodes 5;
+globalvar Vector[] preloadSegments 6;
+globalvar define FirstAttribute = 0;
+globalvar define SecondAttribute = 0;
+globalvar define FreeWalk = false;
 
 rule: "Create Scoper"
 {
@@ -35,18 +81,37 @@ rule: "Create Scoper"
 
 void HelpText(ref define text, ref define order, Color color)
 {
-    CreateHudText(VisibleTo:AllPlayers(), Subheader:text, SubheaderColor:color, Location:Location.Right, SortOrder:order);
+    CreateHudText(AllPlayers(), Text:text, TextColor:color, Location:Location.Right, SortOrder:order);
 }
 
 rule: "Disable conflicting controls"
 Event.OngoingPlayer
+if (!FreeWalk)
 {
     SetAbility1Enabled(EventPlayer(), false);
     SetAbility2Enabled(EventPlayer(), false);
     SetSecondaryFireEnabled(EventPlayer(), false);
+    SetUltimateAbilityEnabled(EventPlayer(), false);
+}
+rule: "Enable conflicting controls"
+Event.OngoingPlayer
+if (FreeWalk)
+{
+    SetAbility1Enabled(EventPlayer(), true);
+    SetAbility2Enabled(EventPlayer(), true);
+    SetSecondaryFireEnabled(EventPlayer(), true);
+    SetUltimateAbilityEnabled(EventPlayer(), true);
+}
+rule: "Toggle freewalk"
+Event.OngoingPlayer
+if (IsButtonHeld(EventPlayer(), Button.Reload))
+{
+    FreeWalk = !FreeWalk;
+    if (FreeWalk) SmallMessage(AllPlayers(), "Free walk enabled.");
+    else SmallMessage(AllPlayers(), "Free walk disabled.");
 }
 
-define GetClosestNode(): FirstOf(SortedArray(Nodes, DistanceBetween(EyePosition(EventPlayer()), (<Node>ArrayElement()).ShownLocation)));
+Node GetClosestNode(): Nodes.SortedArray(Node node => EyePosition(EventPlayer()).DistanceTo(node.ShownLocation))[0];
 define IsNodeSelectable(Node node): DistanceBetween(node.Pos, EyePosition(EventPlayer())) < 5;
 
 rule: "Create node"
@@ -60,14 +125,15 @@ if (!IsButtonHeld(EventPlayer(), Button.Crouch))
 
 rule: "Delete node"
 Event.OngoingPlayer
+if (!FreeWalk)
 if (IsButtonHeld(EventPlayer(), Button.Ultimate))
 if (IsButtonHeld(EventPlayer(), Button.Crouch))
 {
     Node selected = GetClosestNode();
     if (!IsNodeSelectable(selected)) return;
 
-    for (define i = CountOf(Segments) - 1; i >= 0; i--)
-        if (ArrayContains((<Segment>Segments[i]).Nodes, selected))
+    for (define i = Segments.Length - 1; i >= 0; i--)
+        if (Segments[i].Nodes.Contains(selected))
         {
             (<Segment>Segments[i]).Hide();
             delete(<Segment>Segments[i]);
@@ -82,6 +148,7 @@ if (IsButtonHeld(EventPlayer(), Button.Crouch))
 
 rule: "Select"
 Event.OngoingPlayer
+if (!FreeWalk)
 if (IsButtonHeld(EventPlayer(), Button.Interact))
 if (!IsButtonHeld(EventPlayer(), Button.Crouch))
 {
@@ -102,6 +169,7 @@ if (!IsButtonHeld(EventPlayer(), Button.Crouch))
 
 rule: "Deselect all"
 Event.OngoingPlayer
+if (!FreeWalk)
 if (IsButtonHeld(EventPlayer(), Button.Interact))
 if (IsButtonHeld(EventPlayer(), Button.Crouch))
 {
@@ -109,9 +177,6 @@ if (IsButtonHeld(EventPlayer(), Button.Crouch))
         selected.Deselect();
     Selected = EmptyArray();
 }
-
-globalvar define Nodes = EmptyArray();
-globalvar define Selected = EmptyArray();
 
 class Node
 {
@@ -189,73 +254,69 @@ class Node
 
 rule: "Connect All Segments"
 Event.OngoingPlayer
+if (!FreeWalk)
 if (IsButtonHeld(EventPlayer(), Button.SecondaryFire))
 if (!IsButtonHeld(EventPlayer(), Button.Crouch))
 {
-    for (define f = 0; f < CountOf(Selected); f++)
-        for (define l = 0; l < CountOf(Selected); l++)
+    for (define f = 0; f < Selected.Length; f++)
+        for (define l = 0; l < Selected.Length; l++)
             if ((l != f) && !SegmentExists(Selected[f], Selected[l]))
             {
-                Segments = Append(Segments, new Segment(<Node>Selected[f], <Node>Selected[l], FirstAttribute, SecondAttribute));
-                (<Segment>LastOf(Segments)).Show();
+                ModifyVariable(Segments, Operation.AppendToArray, new Segment(Selected[f], Selected[l], FirstAttribute, SecondAttribute));
+                Segments.Last.Show();
             }
 }
 
 rule: "Connect Segment Path"
 Event.OngoingPlayer
+if (!FreeWalk)
 if (IsCommunicating(EventPlayer(), Communication.VoiceLineRight))
 if (!IsButtonHeld(EventPlayer(), Button.Crouch))
 {
-    for (define i = 1; i < CountOf(Selected); i++)
+    for (define i = 1; i < Selected.Length; i++)
         if (!SegmentExists(Selected[i - 1], Selected[i]))
         {
-            Segments = Append(Segments, new Segment(<Node>Selected[i - 1], <Node>Selected[i], FirstAttribute, SecondAttribute));
-            (<Segment>LastOf(Segments)).Show();
+            ModifyVariable(Segments, Operation.AppendToArray, new Segment(Selected[i - 1], Selected[i], FirstAttribute, SecondAttribute))
+            Segments.Last.Show();
         }
 }
 
 rule: "Connect Segments From First"
 Event.OngoingPlayer
+if (!FreeWalk)
 if (IsCommunicating(EventPlayer(), Communication.VoiceLineLeft))
 if (!IsButtonHeld(EventPlayer(), Button.Crouch))
 {
-    for (define i = 1; i < CountOf(Selected); i++)
+    for (define i = 1; i < Selected.Length; i++)
         if (!SegmentExists(Selected[0], Selected[i]))
         {
-            Segments = Append(Segments, new Segment(<Node>Selected[0], <Node>Selected[i], FirstAttribute, SecondAttribute));
-            (<Segment>LastOf(Segments)).Show();
+            ModifyVariable(Segments, Operation.AppendToArray, new Segment(Selected[0], Selected[i], FirstAttribute, SecondAttribute))
+            Segments.Last.Show();
         }
 }
 
-define SegmentExists(define node1, define node2):
-    IsTrueForAny(
-        Segments,
-        ArrayContains((<Segment>ArrayElement()).Nodes, node1)
-        &&
-        ArrayContains((<Segment>ArrayElement()).Nodes, node2)
-    );
+define SegmentExists(define node1, define node2): Segments.IsTrueForAny(Segment segment => segment.Nodes.Contains(node1) && segment.Nodes.Contains(node2));
 
 rule: "Delete Segments"
 Event.OngoingPlayer
+if (!FreeWalk)
 if (IsButtonHeld(EventPlayer(), Button.SecondaryFire))
 if (IsButtonHeld(EventPlayer(), Button.Crouch))
 {
-    for (define i = CountOf(Segments) - 1; i >= 0; i--)
-        if (IsTrueForAll((<Segment>Segments[i]).Nodes, ArrayContains(Selected, ArrayElement())))
+    for (define i = Segments.Length - 1; i >= 0; i--)
+        if (Segments[i].Nodes.IsTrueForAll(Node node => Selected.Contains(node)))
         {
-            (<Segment>Segments[i]).Hide();
-            delete(<Segment>Segments[i]);
-            Segments = RemoveFromArrayAtIndex(Segments, i);
+            Segments[i].Hide();
+            delete(Segments[i]);
+            ModifyVariable(Segments, Operation.RemoveFromArrayByIndex, i);
         }
 }
-
-globalvar define Segments = EmptyArray();
 
 class Segment
 {
     public Node Node1;
     public Node Node2;    
-    public define Nodes;
+    public Node[] Nodes;
     public define FirstAttribute;
     public define SecondAttribute;
 
@@ -329,8 +390,7 @@ class Segment
     }
 }
 
-globalvar define updateVisibleLook;
-globalvar define updateVisiblePosition;
+
 
 rule: "Update visible"
 if (updateVisibleLook == null || DistanceBetween(updateVisiblePosition, HostPlayer()) > 3 || AngleBetweenVectors(updateVisibleLook, FacingDirectionOf(HostPlayer())) > 10)
@@ -354,11 +414,9 @@ if (updateVisibleLook == null || DistanceBetween(updateVisiblePosition, HostPlay
     LoopIfConditionIsTrue();
 }
 
-globalvar define compiling = false;
-
 rule: "CSV out"
 Event.OngoingPlayer
-if (IsCommunicating(EventPlayer(), Communication.VoiceLineUp))
+if (IsButtonHeld(EventPlayer(), Button.Melee))
 {
     compiling = true;
     SmallMessage(AllPlayers(), "Compiling...");
@@ -366,18 +424,17 @@ if (IsCommunicating(EventPlayer(), Communication.VoiceLineUp))
     nodesOut = EmptyArray();
     segmentsOut = EmptyArray();
 
-    for (define i = 0; i < CountOf(Nodes); i++)
-        nodesOut = Append(nodesOut, (<Node>Nodes[i]).Pos);
+    foreach (Node node in Nodes)
+        ModifyVariable(nodesOut, Operation.AppendToArray, node.Pos);
     
-    for (define i = 0; i < CountOf(Segments); i++)
-        segmentsOut = Append(segmentsOut, Vector(
+    foreach (Segment segment in Segments)
+        ModifyVariable(segmentsOut, Operation.AppendToArray, Vector(
             // X is first node
-            IndexOfArrayValue(Nodes, (<Segment>Segments[i]).Node1) + ((<Segment>Segments[i]).FirstAttribute / 100),
+            IndexOfArrayValue(Nodes, segment.Node1) + (segment.FirstAttribute / 100),
             // Y is second node
-            IndexOfArrayValue(Nodes, (<Segment>Segments[i]).Node2) + ((<Segment>Segments[i]).SecondAttribute / 100),
+            IndexOfArrayValue(Nodes, segment.Node2) + (segment.SecondAttribute / 100),
             // Z is unused
             0
-            // (<Segment>Segments[i]).Attribute
         ));
 
     SmallMessage(AllPlayers(), "Compile Finished!");
@@ -387,33 +444,26 @@ if (IsCommunicating(EventPlayer(), Communication.VoiceLineUp))
     compiling = false;
 }
 
-globalvar define nodesOut    3;
-globalvar define segmentsOut 4;
-
 rule: "Preload"
 if (CountOf(preloadNodes) != 0)
 {
-    for (define i = 0; i < CountOf(preloadNodes); i++)
-        Nodes = Append(Nodes, new Node(preloadNodes[i]));    
-    for (define i = 0; i < CountOf(preloadSegments); i++)
-        Segments = Append(Segments, new Segment(
-                <Node>Nodes[RoundToInteger(XOf(preloadSegments[i]), Rounding.Down)],
-                <Node>Nodes[RoundToInteger(YOf(preloadSegments[i]), Rounding.Down)],
-                (XOf(preloadSegments[i]) % 1) * 100,
-                (YOf(preloadSegments[i]) % 1) * 100
-            ));
+    // Preload nodes
+    foreach (Vector node in preloadNodes)
+        ModifyVariable(Nodes, Operation.AppendToArray, new Node(node));
+    
+    // Preload segments
+    foreach (Vector segment in preloadSegments)
+        ModifyVariable(Segments, Operation.AppendToArray, new Segment(
+            Nodes[RoundToInteger(segment.X, Rounding.Down)],
+            Nodes[RoundToInteger(segment.Y, Rounding.Down)],
+            (segment.X % 1) * 100,
+            (segment.Y % 1) * 100
+        ));
 }
-
-globalvar define preloadNodes 5;
-globalvar define preloadSegments 6;
-
-globalvar define FirstAttribute = 0;
-globalvar define SecondAttribute = 0;
-globalvar define Attribute = 0;
-globalvar define AttributeHud = 0;
 
 rule: "Change Primary Attribute"
 Event.OngoingPlayer
+if (!FreeWalk)
 if (IsButtonHeld(EventPlayer(), Button.Ability1))
 if (!IsButtonHeld(EventPlayer(), Button.Crouch))
 {
@@ -421,6 +471,7 @@ if (!IsButtonHeld(EventPlayer(), Button.Crouch))
 }
 rule: "Change Secondary Attribute"
 Event.OngoingPlayer
+if (!FreeWalk)
 if (IsButtonHeld(EventPlayer(), Button.Ability2))
 if (!IsButtonHeld(EventPlayer(), Button.Crouch))
 {
@@ -428,6 +479,7 @@ if (!IsButtonHeld(EventPlayer(), Button.Crouch))
 }
 rule: "Reset Primary Attribute"
 Event.OngoingPlayer
+if (!FreeWalk)
 if (IsButtonHeld(EventPlayer(), Button.Ability1))
 if (IsButtonHeld(EventPlayer(), Button.Crouch))
 {
@@ -435,32 +487,11 @@ if (IsButtonHeld(EventPlayer(), Button.Crouch))
 }
 rule: "Reset Secondary Attribute"
 Event.OngoingPlayer
+if (!FreeWalk)
 if (IsButtonHeld(EventPlayer(), Button.Ability2))
 if (IsButtonHeld(EventPlayer(), Button.Crouch))
 {
     SecondAttribute = 0;
-}
-
-rule: "Create Attribute HUD"
-{
-    CreateHudText(
-        VisibleTo: AllPlayers(),
-        Header   : "Primary Attribute:",
-        Subheader: ["Normal", "Custom"][Min(FirstAttribute, 1)],
-        Text     : FirstAttribute,
-        TextColor: Color.Yellow,
-        Location : Location.Top,
-        SortOrder: 1
-    );
-    CreateHudText(
-        VisibleTo: AllPlayers(),
-        Header   : "Secondary Attribute:",
-        Subheader: ["Normal", "Custom"][Min(SecondAttribute, 1)],
-        Text     : SecondAttribute,
-        TextColor: Color.Orange,
-        Location : Location.Top,
-        SortOrder: 2
-    );
 }
 
 rule: "Create Selected ID Text"
