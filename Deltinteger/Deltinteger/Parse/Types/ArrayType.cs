@@ -52,7 +52,7 @@ namespace Deltin.Deltinteger.Parse
             });
             // Is True For Any
             Func(new FuncMethodBuilder() {
-                Name = "Any",
+                Name = "IsTrueForAny",
                 Documentation = "Whether the specified condition evaluates to true for any value in the specified array.",
                 DoesReturnValue = true,
                 Parameters = new CodeParameter[] {
@@ -62,7 +62,7 @@ namespace Deltin.Deltinteger.Parse
             });
             // Is True For All
             Func(new FuncMethodBuilder() {
-                Name = "All",
+                Name = "IsTrueForAll",
                 Documentation = "Whether the specified condition evaluates to true for every value in the specified array.",
                 DoesReturnValue = true,
                 Parameters = new CodeParameter[] {
