@@ -211,11 +211,7 @@ namespace Deltin.Deltinteger.Pathfinder
                 // Store the pathfind destination.
                 Element destination = ContainParameter(actionSet, "_pathfindDestinationStore", methodCall.ParameterValues[1]);
 
-                // Get the attributes.
-                Element attributes = (Element)methodCall.ParameterValues[2];
-                if (attributes is V_Null || attributes is V_EmptyArray) attributes = null;
-
-                DijkstraPlayer algorithm = new DijkstraPlayer(actionSet, (Element)actionSet.CurrentObject, player, destination, attributes);
+                DijkstraPlayer algorithm = new DijkstraPlayer(actionSet, (Element)actionSet.CurrentObject, player, destination, (Element)methodCall.ParameterValues[2]);
 
                 // Set lambda hooks
                 SetHooks(algorithm, methodCall.ParameterValues[3], methodCall.ParameterValues[4]);
@@ -233,19 +229,14 @@ namespace Deltin.Deltinteger.Pathfinder
             Parameters = new CodeParameter[] {
                 new CodeParameter("players", "The array of players to move."),
                 new CodeParameter("destination", "The destination to move the players to."),
-                new CodeParameter("attributes", "An array of attributes to pathfind with.", new ExpressionOrWorkshopValue(new V_Null())),
+                new CodeParameter("attributes", "An array of attributes to pathfind with.", new ExpressionOrWorkshopValue(workshopValue:null)),
                 OnLoopStartParameter,
                 OnNeighborLoopParameter
             },
             Action = (actionSet, methodCall) => {
                 Element destination = ContainParameter(actionSet, "_pathfindDestinationStore", methodCall.ParameterValues[1]);
 
-                Element attributes = (Element)methodCall.ParameterValues[2];
-                if (attributes is V_Null || attributes is V_EmptyArray) attributes = null;
-
-                DijkstraMultiSource algorithm = new DijkstraMultiSource(
-                    actionSet, (Element)actionSet.CurrentObject, (Element)methodCall.ParameterValues[0], destination, attributes
-                );
+                DijkstraMultiSource algorithm = new DijkstraMultiSource(actionSet, (Element)actionSet.CurrentObject, (Element)methodCall.ParameterValues[0], destination, (Element)methodCall.ParameterValues[2]);
 
                 // Set lambda hooks
                 SetHooks(algorithm, methodCall.ParameterValues[3], methodCall.ParameterValues[4]);
@@ -290,15 +281,12 @@ namespace Deltin.Deltinteger.Pathfinder
                 new CodeParameter("destination", "The final destination.")
             },
             Action = (actionSet, methodCall) => {
-                IndexReference destinationStore = actionSet.VarCollection.Assign("_pathfindDestinationStore", actionSet.IsGlobal, true);
-                actionSet.AddAction(destinationStore.SetVariable((Element)methodCall.ParameterValues[1]));
+                Element destination = ContainParameter(actionSet, "_pathfindDestinationStore", methodCall.ParameterValues[1]);
 
-                DijkstraNormal algorithm = new DijkstraNormal(
-                    actionSet, (Element)actionSet.CurrentObject, (Element)methodCall.ParameterValues[0], (Element)destinationStore.GetVariable(), null
-                );
+                DijkstraNormal algorithm = new DijkstraNormal(actionSet, (Element)actionSet.CurrentObject, (Element)methodCall.ParameterValues[0], destination, null);
                 algorithm.Get();
 
-                return Element.Part<V_Append>(algorithm.finalPath.GetVariable(), destinationStore.GetVariable());
+                return Element.Part<V_Append>(algorithm.finalPath.GetVariable(), destination);
             }
         };
 
@@ -338,7 +326,7 @@ namespace Deltin.Deltinteger.Pathfinder
                 new CodeParameter("attributes", "The attributes of the path.", new ExpressionOrWorkshopValue(new V_Null()))
             },
             Action = (actionSet, call) => {
-                ResolveDijkstra resolve = new ResolveDijkstra(actionSet, (Element)call.ParameterValues[0],  (Element)call.ParameterValues[1], (Element)call.ParameterValues[2]);
+                ResolveDijkstra resolve = new ResolveDijkstra(actionSet, (Element)call.ParameterValues[0], ContainParameter(actionSet, "_pathfindDestinationStore", call.ParameterValues[1]), (Element)call.ParameterValues[2]);
                 resolve.Get();
                 return resolve.ClassReference.GetVariable();
             }

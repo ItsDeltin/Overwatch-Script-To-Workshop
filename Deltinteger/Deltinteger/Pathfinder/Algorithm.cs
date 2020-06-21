@@ -39,15 +39,19 @@ namespace Deltin.Deltinteger.Pathfinder
             this.pathmapObject = pathmapObject;
             this.Source = position;
             this.attributes = attributes;
-            this.useAttributes = attributes != null && attributes is V_EmptyArray == false;
+            this.useAttributes = attributes != null;
 
             // Set closest node determiner.
             GetClosestNode = (actionSet, nodes, position) => ClosestNodeToPosition(nodes, position, resolveInfo.PotentiallyNullNodes);
+
+            // Get the pathmap class instance.
             PathmapClass pathmapClass = actionSet.Translate.DeltinScript.Types.GetCodeType<PathmapClass>();
 
-            Nodes = ((Element)pathmapClass.Nodes.GetVariable())[pathmapObject];
-            Segments = ((Element)pathmapClass.Segments.GetVariable())[pathmapObject];
+            // Set nodes and segments.
+            Nodes = pathmapClass.Nodes.Get()[pathmapObject];
+            Segments = pathmapClass.Segments.Get()[pathmapObject];
 
+            // Get the resolve info component.
             resolveInfo = actionSet.Translate.DeltinScript.GetComponent<ResolveInfoComponent>();
         }
 
