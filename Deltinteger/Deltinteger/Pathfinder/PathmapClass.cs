@@ -66,6 +66,7 @@ namespace Deltin.Deltinteger.Pathfinder
             staticScope.AddNativeMethod(FixPathfind);
             staticScope.AddNativeMethod(NextNode);
             staticScope.AddNativeMethod(ThrottleToNextNode);
+            staticScope.AddNativeMethod(Recalibrate);
 
             // Hooks
 
@@ -598,6 +599,18 @@ namespace Deltin.Deltinteger.Pathfinder
             Documentation = new MarkupBuilder().Add("Throttles the event player to the next node in their path. This is called by default when the player starts a pathfind, but if the ").Code("Pathmap.OnPathStart").Add(" hook is overridden, then this will need to be called in the hook unless you want to change how the player navigates to the next position").ToString(),
             Action = (actionSet, methodCall) => {
                 actionSet.Translate.DeltinScript.GetComponent<ResolveInfoComponent>().ThrottleEventPlayerToNextNode(actionSet);
+                return null;
+            }
+        };
+
+        private static FuncMethod Recalibrate = new FuncMethodBuilder() {
+            Name = "Recalibrate",
+            Documentation = new MarkupBuilder().Add("Specified players will get the closest node and restart the path from there. This is useful when used in conjuction with ").Code("Pathmap.Resolve").Add(" and the players have a chance of being knocked off the path into another possible path.").ToString(),
+            Parameters = new CodeParameter[] {
+                new CodeParameter("players", "The players that will recalibrate their pathfinding.")
+            },
+            Action = (actionSet, methodCall) => {
+                actionSet.Translate.DeltinScript.GetComponent<ResolveInfoComponent>().SetCurrent(actionSet, (Element)methodCall.ParameterValues[0]);
                 return null;
             }
         };
