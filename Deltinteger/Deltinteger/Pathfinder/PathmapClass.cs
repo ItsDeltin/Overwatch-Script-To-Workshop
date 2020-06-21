@@ -143,8 +143,8 @@ namespace Deltin.Deltinteger.Pathfinder
             AddHook(assigner, OnPathCompleted);
             AddHook(assigner, IsNodeReachedDeterminer);
 
-            assigner.Add(NodesVar, Nodes.GetVariable());
-            assigner.Add(SegmentsVar, Segments.GetVariable());
+            assigner.Add(NodesVar, Nodes.Get()[reference]);
+            assigner.Add(SegmentsVar, Segments.Get()[reference]);
         }
 
         private void AddHook(VarIndexAssigner assigner, HookVar hook)
@@ -427,8 +427,8 @@ namespace Deltin.Deltinteger.Pathfinder
             Parameters = new CodeParameter[] {
                 new CodeParameter("node_a", "The first node of the segment."),
                 new CodeParameter("node_b", "The second node of the segment."),
-                new CodeParameter("attribute_ab", "The attribute when travelling from a to b.", new ExpressionOrWorkshopValue()),
-                new CodeParameter("attribute_ba", "The attribute when travelling from b to a.", new ExpressionOrWorkshopValue())
+                new CodeParameter("attribute_ab", "The attribute when traveling from a to b.", new ExpressionOrWorkshopValue()),
+                new CodeParameter("attribute_ba", "The attribute when traveling from b to a.", new ExpressionOrWorkshopValue())
             },
             DoesReturnValue = true,
             Action = (actionSet, methodCall) => {
@@ -472,7 +472,7 @@ namespace Deltin.Deltinteger.Pathfinder
         // SetSegmentAttributeAB(segment, attribute)
         private FuncMethod SetSegmentAttributeAB => new FuncMethodBuilder() {
             Name = "SetSegmentAttributeAB",
-            Documentation = "Sets the primary segment attribute when travelling from node A to B.",
+            Documentation = "Sets the primary segment attribute when traveling from node A to B.",
             Parameters = new CodeParameter[] {
                 new CodeParameter("segment_index", "The index of the segment that is being modified."),
                 new CodeParameter("attribute", "The new A to B attribute of the segment.")
@@ -492,7 +492,7 @@ namespace Deltin.Deltinteger.Pathfinder
         // SetSegmentAttributeBA(segment, attribute)
         private FuncMethod SetSegmentAttributeBA => new FuncMethodBuilder() {
             Name = "SetSegmentAttributeBA",
-            Documentation = "Sets the primary segment attribute when travelling from node B to A.",
+            Documentation = "Sets the primary segment attribute when traveling from node B to A.",
             Parameters = new CodeParameter[] {
                 new CodeParameter("segment_index", "The index of the segment that is being modified."),
                 new CodeParameter("attribute", "The new B to A attribute of the segment.")
@@ -688,8 +688,8 @@ namespace Deltin.Deltinteger.Pathfinder
 
             Node_A = new InternalVar("Node_A", CompletionItemKind.Property) { Documentation = "The primary node of this segment. This returns a number which is the index of the node in the pathmap." };
             Node_B = new InternalVar("Node_B", CompletionItemKind.Property) { Documentation = "The secondary node of this segment. This returns a number which is the index of the node in the pathmap." };
-            Attribute_AB = new InternalVar("Attribute_AB", CompletionItemKind.Property) { Documentation = "The attribute of this segment when travelling from node A to B." };
-            Attribute_BA = new InternalVar("Attribute_BA", CompletionItemKind.Property) { Documentation = "The attribute of this segment when travelling from node B to A." };
+            Attribute_AB = new InternalVar("Attribute_AB", CompletionItemKind.Property) { Documentation = "The attribute of this segment when traveling from node A to B." };
+            Attribute_BA = new InternalVar("Attribute_BA", CompletionItemKind.Property) { Documentation = "The attribute of this segment when traveling from node B to A." };
 
             _scope.AddNativeVariable(Node_A);
             _scope.AddNativeVariable(Node_B);
