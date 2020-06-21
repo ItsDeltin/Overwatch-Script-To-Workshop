@@ -1918,4 +1918,16 @@ namespace Deltin.Deltinteger.Elements
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     [Parameter("Button", ValueType.Button, typeof(V_ButtonValue))]
     public class V_AbilityIconString : Element {}
+
+    [ElementData("Is In Alternative Form", ValueType.Boolean)]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    public class V_IsInAlternativeForm : Element {}
+
+    [ElementData("Is Duplicating", ValueType.Boolean)]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    public class V_IsDuplicating : Element {}
+
+    [ElementData("Hero Being Duplicated", ValueType.Hero)]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    public class V_HeroBeingDuplicated : Element {}
 }
