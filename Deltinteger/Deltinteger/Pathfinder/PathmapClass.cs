@@ -143,8 +143,8 @@ namespace Deltin.Deltinteger.Pathfinder
             AddHook(assigner, OnPathCompleted);
             AddHook(assigner, IsNodeReachedDeterminer);
 
-            assigner.Add(NodesVar, Nodes.Get()[reference]);
-            assigner.Add(SegmentsVar, Segments.Get()[reference]);
+            assigner.Add(NodesVar, Nodes.Get()[(Element)reference]);
+            assigner.Add(SegmentsVar, Segments.Get()[(Element)reference]);
         }
 
         private void AddHook(VarIndexAssigner assigner, HookVar hook)
