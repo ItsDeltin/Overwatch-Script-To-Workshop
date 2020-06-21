@@ -29,7 +29,10 @@ namespace Deltin.Deltinteger.Pathfinder
         {
             DeltinScript = deltinScript;
             this.Constructors = new Constructor[] {
-                new PathmapClassConstructor(this)
+                new PathmapClassConstructor(this),
+                new Constructor(this, null, AccessLevel.Public) {
+                    Documentation = "Creates an empty pathmap."
+                }
             };
             Description = new MarkupBuilder()
                 .Add("A pathmap can be used for pathfinding.").NewLine()
@@ -150,23 +153,32 @@ namespace Deltin.Deltinteger.Pathfinder
 
         protected override void New(ActionSet actionSet, NewClassInfo newClassInfo)
         {
-            // Get the pathmap data.
-            PathMap pathMap = (PathMap)newClassInfo.AdditionalParameterData[0];
-
             Element index = (Element)newClassInfo.ObjectReference.GetVariable();
-            IndexReference nodes = actionSet.VarCollection.Assign("_tempNodes", actionSet.IsGlobal, false);
-            IndexReference segments = actionSet.VarCollection.Assign("_tempSegments", actionSet.IsGlobal, false);
 
-            actionSet.AddAction(nodes.SetVariable(new V_EmptyArray()));
-            actionSet.AddAction(segments.SetVariable(new V_EmptyArray()));
+            if (newClassInfo.AdditionalParameterData.Length > 0)
+            {
+                // Get the pathmap data.
+                PathMap pathMap = (PathMap)newClassInfo.AdditionalParameterData[0];
 
-            foreach (var node in pathMap.Nodes)
-                actionSet.AddAction(nodes.ModifyVariable(operation: Operation.AppendToArray, value: node.ToVector()));
-            foreach (var segment in pathMap.Segments)
-                actionSet.AddAction(segments.ModifyVariable(operation: Operation.AppendToArray, value: segment.AsWorkshopData()));
-            
-            actionSet.AddAction(Nodes.SetVariable((Element)nodes.GetVariable(), index: index));
-            actionSet.AddAction(Segments.SetVariable((Element)segments.GetVariable(), index: index));
+                IndexReference nodes = actionSet.VarCollection.Assign("_tempNodes", actionSet.IsGlobal, false);
+                IndexReference segments = actionSet.VarCollection.Assign("_tempSegments", actionSet.IsGlobal, false);
+
+                actionSet.AddAction(nodes.SetVariable(new V_EmptyArray()));
+                actionSet.AddAction(segments.SetVariable(new V_EmptyArray()));
+
+                foreach (var node in pathMap.Nodes)
+                    actionSet.AddAction(nodes.ModifyVariable(operation: Operation.AppendToArray, value: node.ToVector()));
+                foreach (var segment in pathMap.Segments)
+                    actionSet.AddAction(segments.ModifyVariable(operation: Operation.AppendToArray, value: segment.AsWorkshopData()));
+                
+                actionSet.AddAction(Nodes.SetVariable((Element)nodes.GetVariable(), index: index));
+                actionSet.AddAction(Segments.SetVariable((Element)segments.GetVariable(), index: index));
+            }
+            else
+            {
+                actionSet.AddAction(Nodes.SetVariable(new V_EmptyArray(), index: index));
+                actionSet.AddAction(Segments.SetVariable(new V_EmptyArray(), index: index));
+            }
         }
 
         private void SetHooks(DijkstraBase algorithm, IWorkshopTree onLoop, IWorkshopTree onConnectLoop)
