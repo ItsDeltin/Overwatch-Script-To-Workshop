@@ -571,6 +571,7 @@ namespace Deltin.Deltinteger.Pathfinder
         {
             // Get the PathResolveClass instance.
             PathResolveClass = actionSet.Translate.DeltinScript.Types.GetInstance<PathResolveClass>();
+            PathResolveClass.WorkshopInit(actionSet.Translate.DeltinScript);
 
             // Create a new PathResolve class instance.
             ClassReference = PathResolveClass.Create(actionSet, actionSet.Translate.DeltinScript.GetComponent<ClassData>());
