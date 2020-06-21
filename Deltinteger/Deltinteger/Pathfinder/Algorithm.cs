@@ -278,9 +278,6 @@ namespace Deltin.Deltinteger.Pathfinder
             else
                 isValid = new V_Compare(useAttribute, Operators.Equal, new V_Number(0));
             
-            // If potentiallyNullSegments is true, make sure the segment is not null.
-            if (resolveInfo.PotentiallyNullSegments) isValid = Element.Part<V_And>(isValid, new V_Compare(currentSegmentCheck, Operators.NotEqual, new V_Null()));
-
             return Element.Part<V_FilteredArray>(
                 Segments,
                 Element.Part<V_And>(

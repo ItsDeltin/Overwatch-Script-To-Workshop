@@ -52,6 +52,7 @@ namespace Deltin.Deltinteger.Pathfinder
             serveObjectScope.AddNativeMethod(AddNode);
             serveObjectScope.AddNativeMethod(DeleteNode);
             serveObjectScope.AddNativeMethod(AddSegment);
+            serveObjectScope.AddNativeMethod(DeleteSegment);
             serveObjectScope.AddNativeMethod(SetSegmentAttributeAB);
             serveObjectScope.AddNativeMethod(SetSegmentAttributeBA);
 
@@ -410,7 +411,7 @@ namespace Deltin.Deltinteger.Pathfinder
                 ));
 
                 ForeachBuilder loop = new ForeachBuilder(actionSet, connectedSegments);
-                actionSet.AddAction(Segments.SetVariable(new V_Null(), null, (Element)actionSet.CurrentObject, Element.Part<V_IndexOfArrayValue>(Segments.Get()[(Element)actionSet.CurrentObject], loop.IndexValue)));
+                actionSet.AddAction(Segments.ModifyVariable(Operation.RemoveFromArrayByValue, value:loop.IndexValue, index:(Element)actionSet.CurrentObject));
                 loop.Finish();
 
                 return null;
@@ -445,25 +446,24 @@ namespace Deltin.Deltinteger.Pathfinder
                 
                 V_Vector segmentData = new V_Vector(x, y, z);
                 
-                // Some segments may be null
-                if (actionSet.Translate.DeltinScript.GetComponent<ResolveInfoComponent>().PotentiallyNullSegments)
-                {
-                    Element index = FirstNullOrLength(actionSet, Segments.Get()[(Element)actionSet.CurrentObject], "Add Segment: Index");
+                // Append the vector.
+                actionSet.AddAction(Segments.ModifyVariable(operation: Operation.AppendToArray, value: segmentData, index: (Element)actionSet.CurrentObject));
 
-                    // Set the position.
-                    actionSet.AddAction(Segments.SetVariable(segmentData, null, (Element)actionSet.CurrentObject, index));
-                    
-                    // Return the index of the added node.
-                    return index;
-                }
-                else // No segments are null.
-                {
-                    // Append the vector.
-                    actionSet.AddAction(Segments.ModifyVariable(operation: Operation.AppendToArray, value: segmentData, index: (Element)actionSet.CurrentObject));
+                // Return the index of the last added node.
+                return Element.Part<V_CountOf>(Segments.GetVariable()) - 1;
+            }
+        };
 
-                    // Return the index of the last added node.
-                    return Element.Part<V_CountOf>(Segments.GetVariable()) - 1;
-                }
+        // DeleteSegment(segment)
+        private FuncMethod DeleteSegment => new FuncMethodBuilder() {
+            Name = "DeleteSegment",
+            Documentation = new MarkupBuilder().Add("Deletes a connection between 2 nodes. This is not destructive, unlike the ").Code("Pathmap.DeleteNode").Add(" counterpart. This can be run while any of the pathfinder functions are running. The change will not reflect for players currently pathfinding.").ToString(),
+            Parameters = new CodeParameter[] {
+                new CodeParameter("segment", "The segment that will be deleted.")
+            },
+            Action = (actionSet, methodCall) => {
+                actionSet.AddAction(Segments.ModifyVariable(Operation.RemoveFromArrayByValue, value: (Element)methodCall.ParameterValues[0], index: (Element)actionSet.CurrentObject));
+                return null;
             }
         };
 
@@ -472,7 +472,7 @@ namespace Deltin.Deltinteger.Pathfinder
             Name = "SetSegmentAttributeAB",
             Documentation = "Sets the primary segment attribute when travelling from node A to B.",
             Parameters = new CodeParameter[] {
-                new CodeParameter("segment", "The segment that is being modified."),
+                new CodeParameter("segment", "The index of the segment that is being modified."),
                 new CodeParameter("attribute", "The new A to B attribute of the segment.")
             },
             Action = (actionSet, methodCall) => {
@@ -492,7 +492,7 @@ namespace Deltin.Deltinteger.Pathfinder
             Name = "SetSegmentAttributeBA",
             Documentation = "Sets the primary segment attribute when travelling from node B to A.",
             Parameters = new CodeParameter[] {
-                new CodeParameter("segment", "The segment that is being modified."),
+                new CodeParameter("segment", "The index of the segment that is being modified."),
                 new CodeParameter("attribute", "The new B to A attribute of the segment.")
             },
             Action = (actionSet, methodCall) => {
