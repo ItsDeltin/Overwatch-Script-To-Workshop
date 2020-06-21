@@ -25,10 +25,11 @@ rule: "Commands" -1
     HelpText("Crouch + Ability 1: Switch primary attribute."                             , 10, Color.Yellow);
     HelpText("Ability 2: Switch secondary attribute."                                    , 11, Color.Orange);
     HelpText("Crouch + Ability 2: Switch secondary attribute."                           , 12, Color.Orange);
-    HelpText("Melee: Compile pathmap."                                                   , 13, Color.Turquoise);
+    HelpText("Reload: Toggle free walk."                                                 , 13, Color.Turquoise);
+    HelpText("Melee: Compile pathmap."                                                   , 14, Color.Turquoise);
 
     CreateHudText(AllPlayers(), Text: "OSTW pathmap editor", Location:Location.Left, SortOrder: 0);
-    CreateHudText(AllPlayers(), Text: "Remember to periodically compile your pathmap so you don't lose progress.", TextColor: Color.Red, Location:Location.Left, SortOrder: 1);
+    CreateHudText(AllPlayers(), Text: "Remember to periodically compile your pathmap so you don't lose progress.", TextColor: Color.Orange, Location:Location.Left, SortOrder: 1);
 
     CreateHudText(
         VisibleTo: AllPlayers(),
@@ -48,6 +49,7 @@ rule: "Commands" -1
         Location : Location.Top,
         SortOrder: 2
     );
+    CreateHudText(FreeWalk ? AllPlayers() : null, Header: "Free Walk Enabled", Location: Location.Top, SortOrder: 3);
 }
 
 globalvar define scoper;
@@ -116,6 +118,7 @@ define IsNodeSelectable(Node node): DistanceBetween(node.Pos, EyePosition(EventP
 
 rule: "Create node"
 Event.OngoingPlayer
+if (!FreeWalk)
 if (IsButtonHeld(EventPlayer(), Button.Ultimate))
 if (!IsButtonHeld(EventPlayer(), Button.Crouch))
 {
