@@ -41,7 +41,7 @@ namespace Deltin.Deltinteger.Pathfinder
 
         private FuncMethod PathfindFunction => new FuncMethodBuilder() {
             Name = "Pathfind",
-            Documentation = "Pathfinds the specified players.",
+            Documentation = "Pathfinds the specified players to the destination.",
             Parameters = new CodeParameter[] {
                 new CodeParameter("players", "The players to pathfind.")
             },

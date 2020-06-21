@@ -395,7 +395,7 @@ namespace Deltin.Deltinteger.Pathfinder
             Name = "DeleteNode",
             Documentation = new MarkupBuilder().Add("Deletes a node from the pathmap using the index of the node. Connected segments are also deleted. This may cause issue for pathfinding players who's path contains the node, so it may be a good idea to use the ").Code("Pathmap.IsPathfindingToNode").Add(" function to check if the node is in their path.").ToString(),
             Parameters = new CodeParameter[] {
-                new CodeParameter("node", "The index of the node to remove.")
+                new CodeParameter("node_index", "The index of the node to remove.")
             },
             OnCall = (parseInfo, range) => parseInfo.TranslateInfo.ExecOnComponent<ResolveInfoComponent>(resolveInfo => resolveInfo.PotentiallyNullNodes = true),
             Action = (actionSet, methodCall) => {
@@ -459,7 +459,7 @@ namespace Deltin.Deltinteger.Pathfinder
             Name = "DeleteSegment",
             Documentation = new MarkupBuilder().Add("Deletes a connection between 2 nodes. This is not destructive, unlike the ").Code("Pathmap.DeleteNode").Add(" counterpart. This can be run while any of the pathfinder functions are running. The change will not reflect for players currently pathfinding.").ToString(),
             Parameters = new CodeParameter[] {
-                new CodeParameter("segment", "The segment that will be deleted.")
+                new CodeParameter("segment", "The segment that will be deleted.", SegmentsStruct.Instance)
             },
             Action = (actionSet, methodCall) => {
                 actionSet.AddAction(Segments.ModifyVariable(Operation.RemoveFromArrayByValue, value: (Element)methodCall.ParameterValues[0], index: (Element)actionSet.CurrentObject));
@@ -472,7 +472,7 @@ namespace Deltin.Deltinteger.Pathfinder
             Name = "SetSegmentAttributeAB",
             Documentation = "Sets the primary segment attribute when travelling from node A to B.",
             Parameters = new CodeParameter[] {
-                new CodeParameter("segment", "The index of the segment that is being modified."),
+                new CodeParameter("segment_index", "The index of the segment that is being modified."),
                 new CodeParameter("attribute", "The new A to B attribute of the segment.")
             },
             Action = (actionSet, methodCall) => {
@@ -492,7 +492,7 @@ namespace Deltin.Deltinteger.Pathfinder
             Name = "SetSegmentAttributeBA",
             Documentation = "Sets the primary segment attribute when travelling from node B to A.",
             Parameters = new CodeParameter[] {
-                new CodeParameter("segment", "The index of the segment that is being modified."),
+                new CodeParameter("segment_index", "The index of the segment that is being modified."),
                 new CodeParameter("attribute", "The new B to A attribute of the segment.")
             },
             Action = (actionSet, methodCall) => {
