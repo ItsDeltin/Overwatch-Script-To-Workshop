@@ -25,25 +25,25 @@ namespace Deltin.Deltinteger.Parse
 
         public PathInfo[] GetPaths() => new PathInfo[] { Path };
 
-        public void AddContinue(ActionSet actionSet)
+        public void AddContinue(ActionSet actionSet, string comment)
         {
             if (RawContinue)
-                actionSet.AddAction(new A_Continue());
+                actionSet.AddAction(new A_Continue() { Comment = comment });
             else
             {
-                SkipStartMarker continuer = new SkipStartMarker(actionSet);
+                SkipStartMarker continuer = new SkipStartMarker(actionSet, comment);
                 actionSet.AddAction(continuer);
                 Continue.Add(continuer);
             }
         }
 
-        public void AddBreak(ActionSet actionSet)
+        public void AddBreak(ActionSet actionSet, string comment)
         {
             if (RawBreak)
-                actionSet.AddAction(new A_Break());
+                actionSet.AddAction(new A_Break() { Comment = comment });
             else
             {
-                SkipStartMarker breaker = new SkipStartMarker(actionSet);
+                SkipStartMarker breaker = new SkipStartMarker(actionSet, comment);
                 actionSet.AddAction(breaker);
                 Break.Add(breaker);
             }
@@ -409,7 +409,7 @@ namespace Deltin.Deltinteger.Parse
                 if (_foreachContext.name != null) return DocRange.GetRange(_foreachContext.name);
                 return DocRange.GetRange(_foreachContext);
             }
-            public DocRange GetTypeRange() => DocRange.GetRange((object)_foreachContext.code_type() ?? _foreachContext.DEFINE());
+            public DocRange GetTypeRange() => DocRange.GetRange(_foreachContext.code_type());
         }
     }
 }

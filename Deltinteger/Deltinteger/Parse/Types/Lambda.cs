@@ -58,17 +58,22 @@ namespace Deltin.Deltinteger.Parse.Lambda
                 Expression = parseInfo.GetExpression(lambdaScope, context.expr());
                 LambdaType = new MacroLambda(Expression.Type(), argumentTypes);
             }
+
+            // Add hover info
+            parseInfo.Script.AddHover(DocRange.GetRange(context.INS()), new MarkupBuilder().StartCodeLine().Add(LambdaType.GetName()).EndCodeLine().ToString());
         }
 
         public IWorkshopTree Parse(ActionSet actionSet) => this;
         public Scope ReturningScope() => LambdaType.GetObjectScope();
         public CodeType Type() => LambdaType;
 
-        public string ToWorkshop(OutputLanguage outputLanguage) => throw new NotImplementedException();
+        public string ToWorkshop(OutputLanguage outputLanguage, ToWorkshopContext context) => throw new NotImplementedException();
         public bool EqualTo(IWorkshopTree other) => throw new NotImplementedException();
 
         public IWorkshopTree Invoke(ActionSet actionSet, params IWorkshopTree[] parameterValues)
         {
+            actionSet = actionSet.New(actionSet.IndexAssigner.CreateContained());
+
             for (int i = 0; i < parameterValues.Length; i++)
                 actionSet.IndexAssigner.Add(Parameters[i], parameterValues[i]);
             
@@ -86,6 +91,8 @@ namespace Deltin.Deltinteger.Parse.Lambda
             }
             else throw new NotImplementedException();
         }
+    
+        public bool EmptyBlock => Block == null || Block.Statements.Length == 0;
     }
 
     /// <summary>Lambda invoke function.</summary>
@@ -101,7 +108,8 @@ namespace Deltin.Deltinteger.Parse.Lambda
         public string Documentation => "Invokes the lambda expression.";
         public Location DefinedAt => null;
         public AccessLevel AccessLevel => AccessLevel.Public;
-
+        public bool DoesReturnValue => LambdaType is MacroLambda || LambdaType is ValueBlockLambda;
+        
         public BaseLambda LambdaType { get; }
 
         public LambdaInvoke(BaseLambda lambdaType)
@@ -117,10 +125,8 @@ namespace Deltin.Deltinteger.Parse.Lambda
             return lambda.Invoke(actionSet, methodCall.ParameterValues);
         }
 
-        public bool DoesReturnValue() => LambdaType is MacroLambda || LambdaType is ValueBlockLambda;
-
         public CompletionItem GetCompletion() => MethodAttributes.GetFunctionCompletion(this);
-        public string GetLabel(bool markdown) => HoverHandler.GetLabel(DoesReturnValue() ? ReturnType?.Name ?? "define" : "void", Name, Parameters, markdown, Documentation);
+        public string GetLabel(bool markdown) => HoverHandler.GetLabel(DoesReturnValue ? ReturnType?.Name ?? "define" : "void", Name, Parameters, markdown, Documentation);
 
         /// <summary>Gets the 'Invoke' parameters from an array of CodeTypes.</summary>
         /// <param name="argumentTypes">The array of CodeTypes. The resulting CodeParameter[] will have an equal length to this.</param>
@@ -156,7 +162,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
             CanBeDeleted = false;
             CanBeExtended = false;
             Kind = "constant";
-            ArgumentTypes = argumentTypes;
+            ArgumentTypes = argumentTypes ?? new CodeType[0];
             _objectScope = new Scope("lambda");
             _objectScope.AddNativeMethod(new LambdaInvoke(this));
         }
@@ -190,6 +196,11 @@ namespace Deltin.Deltinteger.Parse.Lambda
             Label = Name,
             Kind = CompletionItemKind.Constant
         };
+        public override string GetName()
+        {
+            if (ArgumentTypes.Length == 0) return Name;
+            else return Name + "<" + string.Join(", ", ArgumentTypes.Select(at => at?.GetName() ?? "define")) + ">";
+        }
     }
 
     public class BlockLambda : BaseLambda

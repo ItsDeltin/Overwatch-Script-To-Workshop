@@ -13,12 +13,12 @@ namespace Deltin.Deltinteger.Parse
         {
             BlockScope = scope.Child();
 
-            if (blockContext.statement() == null) Statements = new IStatement[0];
+            if (blockContext.documented_statement() == null) Statements = new IStatement[0];
             else
             {
-                Statements = new IStatement[blockContext.statement().Length];
+                Statements = new IStatement[blockContext.documented_statement().Length];
                 for (int i = 0; i < Statements.Length; i++)
-                    Statements[i] = parseInfo.GetStatement(BlockScope, blockContext.statement(i));
+                    Statements[i] = parseInfo.GetStatement(BlockScope, blockContext.documented_statement(i));
             }
 
             if (blockContext.BLOCK_START() != null && blockContext.BLOCK_END() != null)
@@ -29,12 +29,12 @@ namespace Deltin.Deltinteger.Parse
         {
             BlockScope = scope.Child();
 
-            if (blockContext.statement() == null) Statements = new IStatement[0];
+            if (blockContext.documented_statement() == null) Statements = new IStatement[0];
             else
             {
-                Statements = new IStatement[blockContext.statement().Length];
+                Statements = new IStatement[blockContext.documented_statement().Length];
                 for (int i = 0; i < Statements.Length; i++)
-                    Statements[i] = parseInfo.GetStatement(BlockScope, blockContext.statement(i));
+                    Statements[i] = parseInfo.GetStatement(BlockScope, blockContext.documented_statement(i));
             }
 
             parseInfo.Script.AddCompletionRange(new CompletionRange(BlockScope, DocRange.GetRange(blockContext.BLOCK_START(), blockContext.BLOCK_END()), CompletionRangeKind.Catch));

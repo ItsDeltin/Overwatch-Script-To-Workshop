@@ -57,15 +57,15 @@ namespace Deltin.Deltinteger.Parse
 
         public string GetLabel(bool markdown)
         {
-            string typeName = "define";
-            if (Type != null) typeName = Type.Name;
-            return typeName + " " + Name;
+            string result = (Type == null ? "define" : Type.GetName()) + " " + Name;
+            if (DefaultValue != null) result = "[" + result + "]";
+            return result;
         }
 
         override public string ToString()
         {
             if (Type == null) return Name;
-            else return Type.Name + " " + Name;
+            else return Type.GetName() + " " + Name;
         }
 
         public static ParameterParseResult GetParameters(ParseInfo parseInfo, Scope methodScope, DeltinScriptParser.SetParametersContext context, bool subroutineParameter)
@@ -130,6 +130,7 @@ namespace Deltin.Deltinteger.Parse
         {
             WorkshopValue = workshopValue;
         }
+        public ExpressionOrWorkshopValue() {}
 
         public IWorkshopTree Parse(ActionSet actionSet)
         {
@@ -139,5 +140,7 @@ namespace Deltin.Deltinteger.Parse
 
         public Scope ReturningScope() => null;
         public CodeType Type() => null;
+
+        public static bool UseNonnullParameter(IWorkshopTree input) => input != null && input is V_Null == false;
     }
 }

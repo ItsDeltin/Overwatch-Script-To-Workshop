@@ -25,7 +25,8 @@ namespace Deltin.Deltinteger.Parse
         public TranslateRule InitialPlayer { get; private set; }
         private readonly OutputLanguage Language;
         public readonly bool OptimizeOutput;
-        private List<IComponent> Components { get; } = new List<IComponent>(); 
+        private List<IComponent> Components { get; } = new List<IComponent>();
+        private List<InitComponent> InitComponent { get; } = new List<InitComponent>();
 
         public DeltinScript(TranslateSettings translateSettings)
         {
@@ -38,7 +39,7 @@ namespace Deltin.Deltinteger.Parse
             RulesetScope = GlobalScope.Child();
             RulesetScope.PrivateCatch = true;
 
-            Types.AllTypes.AddRange(CodeType.DefaultTypes);
+            Types.GetDefaults(this);
             Importer = new Importer(this, FileGetter, translateSettings.Root.Uri);
             Importer.CollectScriptFiles(translateSettings.Root);            
             
@@ -59,9 +60,39 @@ namespace Deltin.Deltinteger.Parse
             
             T newT = new T();
             newT.DeltinScript = this;
+
+            for (int i = InitComponent.Count - 1; i >= 0; i--)
+                if (typeof(T) == InitComponent[i].ComponentType)
+                {
+                    InitComponent[i].Apply(newT);
+                    InitComponent.RemoveAt(i);
+                }
+            
             Components.Add(newT);
             newT.Init();
+
             return newT;
+        }
+
+        public bool IsComponent<T>() where T: IComponent => Components.Any(component => component is T);
+        public bool IsComponent<T>(out T component) where T: IComponent
+        {
+            foreach (IComponent iterateComponent in Components)
+                if (iterateComponent is T t)
+                {
+                    component = t;
+                    return true;
+                }
+            component = default(T);
+            return false;
+        }
+
+        public void ExecOnComponent<T>(Action<T> apply) where T: IComponent
+        {
+            if (IsComponent<T>(out T existing))
+                apply.Invoke(existing);
+            else
+                InitComponent.Add(new InitComponent(typeof(T), component => apply.Invoke((T)component)));
         }
 
         private List<RuleAction> rules { get; } = new List<RuleAction>();
@@ -133,6 +164,11 @@ namespace Deltin.Deltinteger.Parse
             foreach (var apply in applyBlocks) apply.SetupParameters();
             foreach (var apply in applyBlocks) apply.SetupBlock();
             foreach (var apply in applyBlocks) apply.CallInfo?.CheckRecursion();
+
+            // Get hooks
+            foreach (ScriptFile script in Importer.ScriptFiles)
+            foreach (var hookContext in script.Context.hook())
+                HookVar.GetHook(new ParseInfo(script, this), RulesetScope, hookContext);
 
             // Get the rules
             foreach (ScriptFile script in Importer.ScriptFiles)
@@ -259,6 +295,13 @@ namespace Deltin.Deltinteger.Parse
         public List<CodeType> DefinedTypes { get; } = new List<CodeType>();
         public List<CodeType> CalledTypes { get; } = new List<CodeType>();
 
+        public void GetDefaults(DeltinScript deltinScript)
+        {
+            AllTypes.AddRange(CodeType.DefaultTypes);
+            AllTypes.Add(new Pathfinder.PathmapClass(deltinScript));
+            AllTypes.Add(new Pathfinder.PathResolveClass());
+        }
+
         public CodeType GetCodeType(string name, FileDiagnostics diagnostics, DocRange range)
         {
             var type = AllTypes.FirstOrDefault(type => type.Name == name);
@@ -290,11 +333,25 @@ namespace Deltin.Deltinteger.Parse
             
             builder.AppendLine();
         }
+
+        public T GetInstance<T>() where T: CodeType => (T)AllTypes.First(type => type.GetType() == typeof(T));
     }
 
     public interface IComponent
     {
         DeltinScript DeltinScript { get; set; }
         void Init();
+    }
+
+    class InitComponent
+    {
+        public Type ComponentType { get; }
+        public Action<IComponent> Apply { get; }
+
+        public InitComponent(Type componentType, Action<IComponent> apply)
+        {
+            ComponentType = componentType;
+            Apply = apply;
+        }
     }
 }

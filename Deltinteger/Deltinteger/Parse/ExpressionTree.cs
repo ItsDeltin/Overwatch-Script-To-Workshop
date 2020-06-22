@@ -122,6 +122,9 @@ namespace Deltin.Deltinteger.Parse
             ParseTree(actionSet, false);
         }
 
+        /// <summary>Sets the related output comment. This assumes that the result is both an IExpression and an IStatement.</summary>
+        public void OutputComment(FileDiagnostics diagnostics, DocRange range, string comment) => ((IStatement)Result).OutputComment(diagnostics, range, comment);
+
         public ExpressionTreeParseResult ParseTree(ActionSet actionSet, bool expectingValue)
         {
             IGettable resultingVariable = null;
@@ -296,9 +299,11 @@ namespace Deltin.Deltinteger.Parse
             // Make sure the variable can be set to.
             if (SetVariable != null)
             {
-                if (!SetVariable.Calling.Settable())
+                // Check if the variable is settable.
+                if (options.ShouldBeSettable && !SetVariable.Calling.Settable())
                     diagnostics.Error($"The variable '{SetVariable.Calling.Name}' cannot be set to.", VariableRange);
                 
+                // Check if the variable is a whole workshop variable.
                 if (options.FullVariable)
                 {
                     Var asVar = SetVariable.Calling as Var;
@@ -306,6 +311,7 @@ namespace Deltin.Deltinteger.Parse
                         diagnostics.Error($"The variable '{SetVariable.Calling.Name}' cannot be indexed.", VariableRange);
                 }
 
+                // Check for indexers.
                 if (!options.CanBeIndexed && SetVariable.Index.Length != 0)
                     diagnostics.Error($"The variable '{SetVariable.Calling.Name}' cannot be indexed.", VariableRange);
             }
@@ -358,7 +364,11 @@ namespace Deltin.Deltinteger.Parse
 
     public class VariableResolveOptions
     {
+        /// <summary>Determines if a variables needs to be an entire workshop variable.</summary>
         public bool FullVariable = false;
+        /// <summary>Determines if the variable can be set to a value in an array.</summary>
         public bool CanBeIndexed = true;
+        /// <summary>Determines if the variable should be settable.</summary>
+        public bool ShouldBeSettable = true;
     }
 }

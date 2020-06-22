@@ -1,33 +1,18 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.Linq;
 using System.IO;
-using System.IO.Pipes;
-using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
-using System.Diagnostics;
-
+using System.Text;
 using Deltin.Deltinteger.Parse;
-
-using Microsoft.Extensions.DependencyInjection;
+using Deltin.Deltinteger.Pathfinder;
+using Serilog;
+using TextCopy;
 using Microsoft.Extensions.Logging;
-
 using OmniSharp.Extensions.LanguageServer.Server;
 using OmniSharp.Extensions.JsonRpc;
-using OmniSharp.Extensions.LanguageServer;
-using OmniSharp.Extensions.LanguageServer.Protocol;
-using OmniSharp.Extensions.LanguageServer.Protocol.Server;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
-using OmniSharp.Extensions.LanguageServer.Protocol.Client.Capabilities;
-using OmniSharp.Extensions.LanguageServer.Protocol.Server.Capabilities;
-
-using ProtocolRange = OmniSharp.Extensions.LanguageServer.Protocol.Models.Range;
 using ILanguageServer = OmniSharp.Extensions.LanguageServer.Server.ILanguageServer;
-
-using MediatR;
-using Serilog;
 
 namespace Deltin.Deltinteger.LanguageServer
 {
@@ -60,6 +45,7 @@ namespace Deltin.Deltinteger.LanguageServer
         public DocumentHandler DocumentHandler { get; private set; }
         public FileGetter FileGetter { get; private set; }
         public ConfigurationHandler ConfigurationHandler { get; private set; }
+        private PathMap lastMap;
 
         async Task RunServer()
         {
@@ -82,7 +68,7 @@ namespace Deltin.Deltinteger.LanguageServer
             DoRenameHandler renameHandler = new DoRenameHandler(this);
             PrepareRenameHandler prepareRenameHandler = new PrepareRenameHandler(this);
 
-            Server = await OmniSharp.Extensions.LanguageServer.Server.LanguageServer.From(options => options
+            Server = await OmniSharp.Extensions.LanguageServer.Server.LanguageServer.From(options => AddRequests(options
                 .WithInput(Console.OpenStandardInput())
                 .WithOutput(Console.OpenStandardOutput())
                 .ConfigureLogging(x => x
@@ -98,11 +84,89 @@ namespace Deltin.Deltinteger.LanguageServer
                 .WithHandler<ReferenceHandler>(referenceHandler)
                 .WithHandler<CodeLensHandler>(codeLensHandler)
                 .WithHandler<DoRenameHandler>(renameHandler)
-                .WithHandler<PrepareRenameHandler>(prepareRenameHandler));
+                .WithHandler<PrepareRenameHandler>(prepareRenameHandler)                
+            ));
             
             Server.SendNotification(Version, Program.VERSION);
             
             await Server.WaitForExit;
+        }
+
+        private LanguageServerOptions AddRequests(LanguageServerOptions options)
+        {
+            // Pathmap creation is seperated into 2 requests, 'pathmapFromClipboard' and 'pathmapApply'.
+            // Pathmap generation request.
+            options.OnRequest<object, string>("pathmapFromClipboard", _=> Task<string>.Run(() => {
+                // Create the error handler for pathmap parser.
+                ServerPathmapHandler error = new ServerPathmapHandler();
+
+                // Get the pathmap. 'map' will be null if there is an error.
+                try
+                {
+                    PathMap map = PathMap.ImportFromCSV(Clipboard.GetText(), error);
+
+                    if (map == null) return error.Message;
+                    else
+                    {
+                        lastMap = map;
+                        return "success";
+                    }
+                }
+                catch (Exception ex)
+                {
+                    return ex.Message;
+                }
+            }));
+
+            // Pathmap save request.
+            options.OnRequest<Newtonsoft.Json.Linq.JToken>("pathmapApply", uriToken => Task.Run(() => {
+                
+                // Save 'lastMap' to a file.
+                string result = lastMap.ExportAsXML();
+                string output = uriToken["path"].ToObject<string>().Trim('/');
+                using (FileStream fs = File.Create(output))
+                {
+                    Byte[] info = Encoding.Unicode.GetBytes(result);
+                    fs.Write(info, 0, info.Length);
+                }
+            }));
+
+            // Pathmap editor request.
+            options.OnRequest<PathmapDocument, bool>("pathmapEditor", (editFileToken) => Task<bool>.Run(() => {
+
+                DeltinScript compile;
+                if (editFileToken.Text == null)
+                {
+                    string editor = Extras.CombinePathWithDotNotation(null, "!PathfindEditor.del");
+                    compile = new DeltinScript(new TranslateSettings(editor) {
+                        OutputLanguage = ConfigurationHandler.OutputLanguage
+                    });
+                }
+                else
+                {
+                    compile = Editor.Generate(PathMap.ImportFromXML(editFileToken.Text), ConfigurationHandler.OutputLanguage);
+                }
+
+                Clipboard.SetText(compile.WorkshopCode);
+
+                return true;
+            }));
+
+            return options;
+        }
+
+        class PathmapDocument
+        {
+            public string Text;
+
+            public PathmapDocument() {}
+            public PathmapDocument(string text)
+            {
+                Text = text;
+            }
+
+            public static implicit operator PathmapDocument(string doc) => new PathmapDocument(doc);
+            public static implicit operator string(PathmapDocument doc) => doc.Text;
         }
 
         public static readonly DocumentSelector DocumentSelector = new DocumentSelector(
@@ -119,5 +183,15 @@ namespace Deltin.Deltinteger.LanguageServer
                 Pattern = "**/*.workshop"
             }
         );
+    }
+
+    class ServerPathmapHandler : IPathmapErrorHandler
+    {
+        public string Message { get; private set; }
+
+        public void Error(string error)
+        {
+            Message = error;
+        }
     }
 }

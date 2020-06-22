@@ -15,6 +15,7 @@ namespace Deltin.Deltinteger.Parse
         private ParseInfo parseInfo { get; }
         private DocRange NameRange { get; }
         private bool UsedAsExpression { get; }
+        private string Comment;
 
         public CallMethodAction(ParseInfo parseInfo, Scope scope, DeltinScriptParser.MethodContext methodContext, bool usedAsExpression, Scope getter)
         {
@@ -36,20 +37,19 @@ namespace Deltin.Deltinteger.Parse
             else
             {
                 OverloadChooser = new OverloadChooser(options, parseInfo, scope, getter, NameRange, DocRange.GetRange(methodContext), new OverloadError("method '" + methodName + "'"));
-
-                if (methodContext.call_parameters() != null) OverloadChooser.SetContext(methodContext.call_parameters());
-                else if (methodContext.picky_parameters() != null) OverloadChooser.SetContext(methodContext.picky_parameters());
-                else OverloadChooser.SetContext();
+                OverloadChooser.Apply(methodContext.call_parameters());
             
                 CallingMethod = (IMethod)OverloadChooser.Overload;
                 ParameterValues = OverloadChooser.Values;
 
                 if (CallingMethod != null)
                 {
+                    CallingMethod.Call(parseInfo, NameRange);
+
+                    // Todo: move this to DefinedFunction.Call.
                     if (CallingMethod is DefinedFunction definedFunction)
                     {
                         definedFunction.OnBlockApply(this);
-                        definedFunction.Call(parseInfo, NameRange);
                         parseInfo.CurrentCallInfo?.Call(definedFunction, NameRange);
                     }
 
@@ -63,7 +63,7 @@ namespace Deltin.Deltinteger.Parse
 
         public void Applied()
         {
-            if (UsedAsExpression && !CallingMethod.DoesReturnValue())
+            if (UsedAsExpression && !CallingMethod.DoesReturnValue)
                 parseInfo.Script.Diagnostics.Error("The chosen overload for " + CallingMethod.Name + " does not return a value.", NameRange);
         }
 
@@ -98,8 +98,14 @@ namespace Deltin.Deltinteger.Parse
                 OverloadChooser.AdditionalParameterData
             )
             {
-                CallParallel = Parallel
+                CallParallel = Parallel,
+                ActionComment = Comment
             };
+        }
+
+        public void OutputComment(FileDiagnostics diagnostics, DocRange range, string comment)
+        {
+            Comment = comment;
         }
 
         private IWorkshopTree[] GetParameterValuesAsWorkshop(ActionSet actionSet)

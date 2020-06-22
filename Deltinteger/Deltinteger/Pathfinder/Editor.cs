@@ -20,23 +20,7 @@ namespace Deltin.Deltinteger.Pathfinder
 
         public static void FromPathmapFile(string file)
         {
-            PathMap map = PathMap.ImportFromXML(file);
-
-            string baseEditorFile = Extras.CombinePathWithDotNotation(null, "!PathfindEditor.del");
-            Diagnostics diagnostics = new Diagnostics();
-
-            DeltinScript deltinScript = new DeltinScript(new TranslateSettings(diagnostics, baseEditorFile) {
-                AdditionalRules = (varCollection) => {
-                    // Set the initial nodes.
-                    Rule initialNodes = new Rule("Initial Nodes");
-                    initialNodes.Actions = ArrayBuilder<Element>.Build(
-                        WorkshopArrayBuilder.SetVariable(null, map.NodesAsWorkshopData(), null, LoadNodes, false),
-                        WorkshopArrayBuilder.SetVariable(null, map.SegmentsAsWorkshopData(), null, LoadSegments, false)
-                    );
-
-                    return new Rule[] { initialNodes };
-                }
-            });
+            DeltinScript deltinScript = Generate(PathMap.ImportFromXMLFile(file), OutputLanguage.enUS);
 
             string code = deltinScript.WorkshopCode;
 
@@ -47,8 +31,27 @@ namespace Deltin.Deltinteger.Pathfinder
             else
             {
                 Log.Write(LogLevel.Normal, new ColorMod("Build Failed.", ConsoleColor.Red));
-                diagnostics.PrintDiagnostics(Log);
+                deltinScript.Diagnostics.PrintDiagnostics(Log);
             }
+        }
+        public static DeltinScript Generate(PathMap map, OutputLanguage language)
+        {
+            string baseEditorFile = Extras.CombinePathWithDotNotation(null, "!PathfindEditor.del");
+
+            return new DeltinScript(new TranslateSettings(baseEditorFile) {
+                AdditionalRules = (varCollection) => {
+                    // Set the initial nodes.
+                    Rule initialNodes = new Rule("Initial Nodes");
+                    initialNodes.Actions = ArrayBuilder<Element>.Build(
+                        WorkshopArrayBuilder.SetVariable(null, map.NodesAsWorkshopData(), null, LoadNodes, false),
+                        WorkshopArrayBuilder.SetVariable(null, map.SegmentsAsWorkshopData(), null, LoadSegments, false)
+                    );
+
+                    return new Rule[] { initialNodes };
+                },
+                OptimizeOutput = false,
+                OutputLanguage = language
+            });
         }
     }
 }

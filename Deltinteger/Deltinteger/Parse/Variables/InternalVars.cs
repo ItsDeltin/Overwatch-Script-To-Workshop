@@ -29,6 +29,12 @@ namespace Deltin.Deltinteger.Parse
             AccessLevel = accessLevel;
             CompletionItemKind = completionItemKind;
         }
+        public InternalVar(string name, CodeType type, CompletionItemKind completionItemKind = CompletionItemKind.Variable)
+        {
+            Name = name;
+            CodeType = type;
+            CompletionItemKind = completionItemKind;
+        }
 
         public IWorkshopTree Parse(ActionSet actionSet) => throw new Exception("Cannot parse internal variables.");
         public virtual Scope ReturningScope() => CodeType?.ReturningScope();
@@ -51,7 +57,7 @@ namespace Deltin.Deltinteger.Parse
         public virtual string GetLabel(bool markdown)
         {
             string typeName = "define";
-            if (CodeType != null) typeName = CodeType.Name;
+            if (CodeType != null) typeName = CodeType.GetName();
             if (markdown) return HoverHandler.Sectioned(typeName + " " + Name, Documentation);
             else return typeName + " " + Name;
         }

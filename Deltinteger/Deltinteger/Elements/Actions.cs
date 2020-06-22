@@ -305,13 +305,16 @@ namespace Deltin.Deltinteger.Elements
 
     [ElementData("If")]
     [Parameter("Condition", ValueType.Boolean, typeof(V_Compare))]
+    [HideElement]
     public class A_If : Element {}
 
     [ElementData("Else If")]
     [Parameter("Condition", ValueType.Boolean, typeof(V_Compare))]
+    [HideElement]
     public class A_ElseIf : Element {}
 
     [ElementData("Else")]
+    [HideElement]
     public class A_Else : Element {}
 
     [ElementData("Kill")]
@@ -833,4 +836,14 @@ namespace Deltin.Deltinteger.Elements
     [ElementData("Stop Forcing Player Position")]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     public class A_StopForcingPlayerPosition : Element {}
+
+    [ElementData("Attach Players")]
+    [Parameter("Child", ValueType.Player, typeof(V_EventPlayer))]
+    [Parameter("Parent", ValueType.Player, typeof(V_LastCreatedEntity))]
+    [Parameter("Offset", ValueType.Player, typeof(V_Vector))]
+    public class A_AttachPlayers : Element {}
+
+    [ElementData("Detach Players")]
+    [Parameter("Children", ValueType.Player, typeof(V_EventPlayer))]
+    public class A_DetachPlayers : Element {}
 }

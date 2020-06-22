@@ -133,7 +133,7 @@ namespace Deltin.Deltinteger.Elements
             IsHidden = isHidden;
         }
 
-        public string ToWorkshop(OutputLanguage language)
+        public string ToWorkshop(OutputLanguage language, ToWorkshopContext context)
         {
             string numTranslate(string name)
             {
