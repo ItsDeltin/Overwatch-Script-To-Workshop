@@ -13,8 +13,6 @@ namespace Deltin.Deltinteger.Parse
         private Scope Scope { get; }
         private DeltinScript _translateInfo { get; }
 
-        private List<DefinedEnumMember> members = new List<DefinedEnumMember>();
-
 
         public DefinedEnum(ParseInfo parseInfo, DeltinScriptParser.Enum_defineContext enumContext) : base(enumContext.name.Text)
         {
@@ -30,6 +28,8 @@ namespace Deltin.Deltinteger.Parse
             
             DefinedAt = new Location(parseInfo.Script.Uri, DocRange.GetRange(enumContext.name));
             _translateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, DefinedAt, true);
+
+            List<DefinedEnumMember> members = new List<DefinedEnumMember>();
 
             // Get the enum members.
             if (enumContext.firstMember != null)
@@ -81,8 +81,6 @@ namespace Deltin.Deltinteger.Parse
 
         private DeltinScript _translateInfo { get; }
 
-        private Scope scope;
-
         public DefinedEnumMember(ParseInfo parseInfo, DefinedEnum type, string name, LanguageServer.Location definedAt, ExpressionOrWorkshopValue value)
         {
             Enum = type;
@@ -93,10 +91,6 @@ namespace Deltin.Deltinteger.Parse
 
             _translateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, definedAt, true);
             parseInfo.Script.AddCodeLensRange(new ReferenceCodeLensRange(this, parseInfo, CodeLensSourceType.EnumValue, DefinedAt.range));
-
-            InternalVar valueVar = new InternalVar("value", AccessLevel.Public, CompletionItemKind.Property);
-            scope = type.ReturningScope().Child(name);
-            scope.AddNativeVariable(valueVar);
         }
 
         public CodeType Type() => Enum;
@@ -114,6 +108,6 @@ namespace Deltin.Deltinteger.Parse
             _translateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, new Location(parseInfo.Script.Uri, callRange));
         }
 
-        public Scope ReturningScope() => scope;
+        public Scope ReturningScope() => null;
     }
 }
