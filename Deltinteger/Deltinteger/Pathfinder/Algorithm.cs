@@ -292,11 +292,19 @@ namespace Deltin.Deltinteger.Pathfinder
         {
             Element currentSegmentCheck = new V_ArrayElement();
 
-            Element useAttribute = Element.TernaryConditional(
-                new V_Compare(Node1(currentSegmentCheck), Operators.Equal, currentIndex),
-                Node1Attribute(currentSegmentCheck),
-                Node2Attribute(currentSegmentCheck)
-            );
+            Element useAttribute;
+            if (!reverseAttributes)
+                useAttribute = Element.TernaryConditional(
+                    new V_Compare(Node1(currentSegmentCheck), Operators.Equal, currentIndex),
+                    Node2Attribute(currentSegmentCheck),
+                    Node1Attribute(currentSegmentCheck)
+                );
+            else
+                useAttribute = Element.TernaryConditional(
+                    new V_Compare(Node1(currentSegmentCheck), Operators.Equal, currentIndex),
+                    Node1Attribute(currentSegmentCheck),
+                    Node2Attribute(currentSegmentCheck)
+                );
 
             Element isValid;
             if (useAttributes)
