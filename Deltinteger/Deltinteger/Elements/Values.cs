@@ -1915,13 +1915,13 @@ namespace Deltin.Deltinteger.Elements
     public class V_AbilityCooldown : Element {}
 
     [ElementData("Ability Icon String", ValueType.String)]
-    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [Parameter("Hero", ValueType.Player, typeof(V_HeroVar))]
     [Parameter("Button", ValueType.Button, typeof(V_ButtonValue))]
     public class V_AbilityIconString : Element {}
 
-    [ElementData("Is In Alternative Form", ValueType.Boolean)]
+    [ElementData("Is In Alternate Form", ValueType.Boolean)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
-    public class V_IsInAlternativeForm : Element {}
+    public class V_IsInAlternateForm : Element {}
 
     [ElementData("Is Duplicating", ValueType.Boolean)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
