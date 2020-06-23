@@ -33,9 +33,24 @@ namespace Deltin.Deltinteger.Parse
         /// <summary>Gets an IStatement from a StatementContext.</summary>
         /// <param name="scope">The scope the statement was created in.</param>
         /// <param name="statementContext">The context of the statement.</param>
-        public IStatement GetStatement(Scope scope, DeltinScriptParser.StatementContext statementContext)
+        public IStatement GetStatement(Scope scope, DeltinScriptParser.Documented_statementContext statementContext)
         {
-            switch (statementContext)
+            IStatement statement = StatementFromContext(scope, statementContext);
+
+            // Apply related output comment.
+            if (statementContext.DOCUMENTATION() != null)
+            {
+                string text = statementContext.DOCUMENTATION().GetText().Substring(1).Trim();
+                DocRange range = DocRange.GetRange(statementContext.DOCUMENTATION());
+                statement.OutputComment(Script.Diagnostics, range, text);
+            }
+
+            return statement;
+        }
+
+        private IStatement StatementFromContext(Scope scope, DeltinScriptParser.Documented_statementContext statementContext)
+        {
+            switch (statementContext.statement())
             {
                 case DeltinScriptParser.S_defineContext define    : {
                     var newVar = new ScopedVariable(scope, new DefineContextHandler(this, define.define()));
@@ -124,6 +139,7 @@ namespace Deltin.Deltinteger.Parse
             DocRange variableRange = DocRange.GetRange(variableContext.PART());
 
             var type = TranslateInfo.Types.GetCodeType(variableName, null, null);
+            
             if (type != null)
             {
                 if (selfContained)
@@ -136,7 +152,7 @@ namespace Deltin.Deltinteger.Parse
                 return type;
             }
 
-            IScopeable element = scope.GetVariable(variableName, getter, Script.Diagnostics, variableRange);
+            IVariable element = scope.GetVariable(variableName, getter, Script.Diagnostics, variableRange);
             if (element == null)
                 return null;
             
@@ -145,24 +161,26 @@ namespace Deltin.Deltinteger.Parse
             
             if (element is IApplyBlock)
                 CurrentCallInfo?.Call((IApplyBlock)element, variableRange);
-
-            if (element is IIndexReferencer var)
+            
+            IExpression[] index = null;
+            if (variableContext.array() != null)
             {
-                IExpression[] index;
-                if (variableContext.array() == null) index = new IExpression[0];
-                else
-                {
-                    index = new IExpression[variableContext.array().expr().Length];
-                    for (int i = 0; i < index.Length; i++)
-                        index[i] = GetExpression(getter, variableContext.array().expr(i));
-                }
-
-                return new CallVariableAction(var, index);
+                index = new IExpression[variableContext.array().expr().Length];
+                for (int i = 0; i < index.Length; i++)
+                    index[i] = GetExpression(getter, variableContext.array().expr(i));
             }
-            else if (element is ScopedEnumMember) return (ScopedEnumMember)element;
-            else if (element is DefinedEnumMember) return (DefinedEnumMember)element;
-            else if (element is MacroVar) return (MacroVar)element;
-            else throw new NotImplementedException();
+
+            if (element is IIndexReferencer referencer) return new CallVariableAction(referencer, index);
+
+            if (index != null)
+            {
+                if (!element.CanBeIndexed)
+                    Script.Diagnostics.Error("This variable type cannot be indexed.", variableRange);
+                else
+                    return new ValueInArrayAction(this, (IExpression)element, index);
+            }
+
+            return (IExpression)element;
         }
 
         /// <summary>Creates a macro from a Define_macroContext.</summary>

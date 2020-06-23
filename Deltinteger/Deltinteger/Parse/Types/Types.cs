@@ -80,7 +80,7 @@ namespace Deltin.Deltinteger.Parse
         public IWorkshopTree Parse(ActionSet actionSet) => null;
 
         /// <summary>Determines if variables with this type can have their value changed.</summary>
-        public virtual TypeSettable Constant() => TypeSettable.Normal;
+        public virtual bool IsConstant() => false;
 
         /// <summary>The returning value when `new TypeName` is called.</summary>
         /// <param name="actionSet">The actionset to use.</param>
@@ -116,33 +116,32 @@ namespace Deltin.Deltinteger.Parse
         /// <param name="callRange">The range of the call.</param>
         public virtual void Call(ParseInfo parseInfo, DocRange callRange)
         {
-            if (!parseInfo.TranslateInfo.Types.CalledTypes.Contains(this))
-                parseInfo.TranslateInfo.Types.CalledTypes.Add(this);
+            parseInfo.TranslateInfo.Types.CallType(this);
             parseInfo.Script.AddHover(callRange, HoverHandler.Sectioned(Kind + " " + Name, Description));
         }
 
         /// <summary>Gets the completion that will show up for the language server.</summary>
         public abstract CompletionItem GetCompletion();
 
+        /// <summary>Gets the full name of the type.</summary>
+        public virtual string GetName() => Name;
+
         public static CodeType GetCodeTypeFromContext(ParseInfo parseInfo, DeltinScriptParser.Code_typeContext typeContext)
         {
             if (typeContext == null) return null;
-            CodeType type = parseInfo.TranslateInfo.Types.GetCodeType(typeContext.PART().GetText(), parseInfo.Script.Diagnostics, DocRange.GetRange(typeContext));
+            
+            CodeType type = null;
+            if (typeContext.PART() != null) type = parseInfo.TranslateInfo.Types.GetCodeType(typeContext.PART().GetText(), parseInfo.Script.Diagnostics, DocRange.GetRange(typeContext));
 
             // Get generics
-            if (typeContext.generics()?.generic_option() != null)
+            if (typeContext.generics() != null)
             {
                 // Create a list to store the generics.
                 List<CodeType> generics = new List<CodeType>();
 
                 // Get the generics.
-                foreach (var genericContext in typeContext.generics().generic_option())
-                {
-                    if (genericContext.DEFINE() != null)
-                        generics.Add(null);
-                    else
-                        generics.Add(GetCodeTypeFromContext(parseInfo, genericContext.code_type()));
-                }
+                foreach (var genericContext in typeContext.generics().code_type())
+                    generics.Add(GetCodeTypeFromContext(parseInfo, genericContext));
                 
                 if (type is Lambda.BlockLambda)
                     type = new Lambda.BlockLambda(generics.ToArray());
@@ -153,13 +152,12 @@ namespace Deltin.Deltinteger.Parse
             }
 
             if (type != null)
-            {
                 type.Call(parseInfo, DocRange.GetRange(typeContext));
 
-                if (typeContext.INDEX_START() != null)
+            if (typeContext.INDEX_START() != null)
                     for (int i = 0; i < typeContext.INDEX_START().Length; i++)
                         type = new ArrayType(type);
-            }
+
             return type;
         }
 
@@ -173,24 +171,15 @@ namespace Deltin.Deltinteger.Parse
         private static void GetDefaultTypes()
         {
             _defaultTypes = new List<CodeType>();
-            foreach (var enumData in EnumData.GetEnumData())
-                if (enumData.ConvertableToElement())
-                    _defaultTypes.Add(new ValueGroupType(enumData));
-                else
-                    _defaultTypes.Add(new WorkshopEnumType(enumData));
-            
+            _defaultTypes.AddRange(ValueGroupType.EnumTypes);
+
             // Add custom classes here.
-            _defaultTypes.Add(new Pathfinder.PathmapClass());
             _defaultTypes.Add(new Models.AssetClass());
             _defaultTypes.Add(new Lambda.BlockLambda());
             _defaultTypes.Add(new Lambda.ValueBlockLambda());
             _defaultTypes.Add(new Lambda.MacroLambda());
             _defaultTypes.Add(VectorType.Instance);
+            _defaultTypes.Add(Pathfinder.SegmentsStruct.Instance);
         }
-    }
-
-    public enum TypeSettable
-    {
-        Normal, Convertable, Constant
     }
 }

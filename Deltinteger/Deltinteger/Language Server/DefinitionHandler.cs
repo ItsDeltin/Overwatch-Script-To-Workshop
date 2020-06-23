@@ -34,9 +34,9 @@ namespace Deltin.Deltinteger.LanguageServer
             return new LocationOrLocationLinks(items);
         }
 
-        public TextDocumentRegistrationOptions GetRegistrationOptions()
+        public DefinitionRegistrationOptions GetRegistrationOptions()
         {
-            return new TextDocumentRegistrationOptions() {
+            return new DefinitionRegistrationOptions() {
                 DocumentSelector = DeltintegerLanguageServer.DocumentSelector
             };
         }

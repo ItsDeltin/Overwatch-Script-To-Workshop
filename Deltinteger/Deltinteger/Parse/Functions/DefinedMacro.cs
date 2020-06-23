@@ -1,4 +1,9 @@
+using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.LanguageServer;
+using Deltin.Parse.Functions;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -12,18 +17,57 @@ namespace Deltin.Deltinteger.Parse
             : base(parseInfo, context.name.Text, new LanguageServer.Location(parseInfo.Script.Uri, DocRange.GetRange(context.name)))
         {
             this.context = context;
-            Static = context.STATIC() != null;
+            DocRange nameRange = DocRange.GetRange(context.name);
+            Attributes.ContainingType = (Static ? staticScope: objectScope).This;
+            
+            // Get the attributes.
+            MethodAttributeAppender attributeResult = new MethodAttributeAppender(Attributes);
+            FunctionAttributesGetter attributeInfo = new MacroAttributesGetter(context, attributeResult);
+            attributeInfo.GetAttributes(parseInfo.Script.Diagnostics);
+
+            // Copy attribute results
+            Static = attributeResult.Static;
+            AccessLevel = attributeResult.AccessLevel;
+            
             SetupScope(Static ? staticScope : objectScope);
-            AccessLevel = context.accessor().GetAccessLevel();
             ReturnType = returnType;
             ExpressionToParse = context.expr();
+            DoesReturnValue = true;
+
+            SetupParameters(context.setParameters(), false);
+
+            if (Attributes.Override)
+            {
+                IMethod overriding = objectScope.GetMethodOverload(this);
+
+                // No method with the name and parameters found.
+                if (overriding == null) parseInfo.Script.Diagnostics.Error("Could not find a macro to override.", nameRange);
+                else if (!overriding.Attributes.IsOverrideable) parseInfo.Script.Diagnostics.Error("The specified method is not marked as virtual.", nameRange);
+                else overriding.Attributes.AddOverride(this);
+
+                if (overriding != null && overriding.DefinedAt != null)
+                {
+                    // Make the override keyword go to the base method.
+                    parseInfo.Script.AddDefinitionLink(
+                        attributeInfo.ObtainedAttributes.First(at => at.Type == MethodAttributeType.Override).Range,
+                        overriding.DefinedAt
+                    );
+                }
+            }
+
+            containingScope.AddMethod(this, parseInfo.Script.Diagnostics, DefinedAt.range, !Attributes.Override);
+
+            if (Attributes.IsOverrideable && AccessLevel == AccessLevel.Private)
+                parseInfo.Script.Diagnostics.Error("A method marked as virtual or abstract must have the protection level 'public' or 'protected'.", nameRange);
+
+            if (Attributes.IsOverrideable)
+                parseInfo.Script.AddCodeLensRange(new ImplementsCodeLensRange(this, parseInfo.Script, CodeLensSourceType.Function, nameRange));
+
         }
 
         public override void SetupParameters()
         {
-            SetupParameters(context.setParameters(), false);
             parseInfo.Script.AddHover(DocRange.GetRange(context.name), GetLabel(true));
-            if (!containingScope.IsAlreadyInScope(this)) containingScope.AddMethod(this, parseInfo.Script.Diagnostics, DefinedAt.range);
         }
 
         override public void SetupBlock()
@@ -36,11 +80,22 @@ namespace Deltin.Deltinteger.Parse
         {
             // Assign the parameters.
             actionSet = actionSet.New(actionSet.IndexAssigner.CreateContained());
-            for (int i = 0; i < ParameterVars.Length; i++)
-                actionSet.IndexAssigner.Add(ParameterVars[i], methodCall.ParameterValues[i]);
 
-            // Parse the expression.
-            return Expression.Parse(actionSet);
+            return AbstractMacroBuilder.Call(actionSet, this, methodCall);
+        }
+
+        public void AssignParameters(ActionSet actionSet, IWorkshopTree[] parameterValues)
+        {
+            for (int i = 0; i < ParameterVars.Length; i++)
+            {
+                IGettable result = actionSet.IndexAssigner.Add(ParameterVars[i], parameterValues[i]);
+
+                //if (indexResult is IndexReference indexReference && parameterValues?[i] != null)
+                    //actionSet.AddAction(indexReference.SetVariable((Element)parameterValues[i]));
+
+                foreach (Var virtualParameterOption in VirtualVarGroup(i))
+                    actionSet.IndexAssigner.Add(virtualParameterOption, result);
+            }
         }
     }
 }

@@ -16,7 +16,7 @@ namespace Deltin.Deltinteger.Elements
             Name = name;
         }
 
-        public virtual string ToWorkshop(OutputLanguage language) => Name;
+        public virtual string ToWorkshop(OutputLanguage language, ToWorkshopContext context) => Name;
         public virtual bool EqualTo(IWorkshopTree other)
         {
             if (this.GetType() != other.GetType()) return false;
@@ -24,7 +24,6 @@ namespace Deltin.Deltinteger.Elements
             WorkshopVariable bAsMeta = (WorkshopVariable)other;
             return Name == bAsMeta.Name && ID == bAsMeta.ID;
         }
-        public abstract int ElementCount(int depth);
 
         public static string WorkshopNameFromCodeName(string name, string[] takenNames)
         {

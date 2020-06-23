@@ -72,7 +72,7 @@ namespace Deltin.Deltinteger.CustomMethods
             return (CustomMethodBase)Activator.CreateInstance(Type);
         }
 
-        public bool DoesReturnValue() => CustomMethodType == CustomMethodType.Value || CustomMethodType == CustomMethodType.MultiAction_Value;
+        public bool DoesReturnValue => CustomMethodType == CustomMethodType.Value || CustomMethodType == CustomMethodType.MultiAction_Value;
 
         public IWorkshopTree Parse(ActionSet actionSet, MethodCall methodCall)
         {

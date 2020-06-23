@@ -7,7 +7,7 @@ using Deltin.Deltinteger.Parse;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using LSLocation = OmniSharp.Extensions.LanguageServer.Protocol.Models.Location;
 using IReferencesHandler = OmniSharp.Extensions.LanguageServer.Protocol.Server.IReferencesHandler;
-using ReferencesCapability = OmniSharp.Extensions.LanguageServer.Protocol.Client.Capabilities.ReferencesCapability;
+using ReferenceCapability = OmniSharp.Extensions.LanguageServer.Protocol.Client.Capabilities.ReferenceCapability;
 
 namespace Deltin.Deltinteger.LanguageServer
 {
@@ -47,15 +47,15 @@ namespace Deltin.Deltinteger.LanguageServer
                 .ToArray();
         }
 
-        public TextDocumentRegistrationOptions GetRegistrationOptions()
+        public ReferenceRegistrationOptions GetRegistrationOptions()
         {
-            return new TextDocumentRegistrationOptions() {
+            return new ReferenceRegistrationOptions() {
                 DocumentSelector = DeltintegerLanguageServer.DocumentSelector
             };
         }
 
-        private ReferencesCapability _capability;
-        public void SetCapability(ReferencesCapability capability)
+        private ReferenceCapability _capability;
+        public void SetCapability(ReferenceCapability capability)
         {
             _capability = capability;
         }

@@ -170,7 +170,7 @@ namespace Deltin.Deltinteger.LanguageServer
             if (thisLineDif == otherLineDif)
             {
                 int thisCharDif = this.end.character - this.start.character;
-                int otherCharDif = other.end.character - other.end.character;
+                int otherCharDif = other.end.character - other.start.character;
 
                 // Return less-than.
                 if (thisCharDif < otherCharDif)

@@ -24,7 +24,7 @@ namespace Deltin.Deltinteger.Parse
         protected Scope methodScope { get; private set; }
         protected Scope containingScope { get; private set; }
         public Var[] ParameterVars { get; private set; }
-        protected bool doesReturnValue;
+        public bool DoesReturnValue { get; protected set; }
 
         public CallInfo CallInfo { get; }
 
@@ -62,9 +62,7 @@ namespace Deltin.Deltinteger.Parse
             parseInfo.TranslateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, new Location(parseInfo.Script.Uri, callRange));
         }
 
-        public virtual bool DoesReturnValue() => true;
-
-        public string GetLabel(bool markdown) => HoverHandler.GetLabel(!doesReturnValue ? null : ReturnType?.Name ?? "define", Name, Parameters, markdown, null);
+        public string GetLabel(bool markdown) => HoverHandler.GetLabel(!DoesReturnValue ? null : ReturnType?.Name ?? "define", Name, Parameters, markdown, null);
 
         public abstract IWorkshopTree Parse(ActionSet actionSet, MethodCall methodCall);
 
@@ -81,6 +79,13 @@ namespace Deltin.Deltinteger.Parse
             string name = GetLabel(false);
             if (Attributes.ContainingType != null) name = Attributes.ContainingType.Name + "." + name;
             return name;
+        }
+
+        public Var[] VirtualVarGroup(int i)
+        {
+            List<Var> parameters = new List<Var>();
+            foreach (var overrider in Attributes.AllOverrideOptions()) parameters.Add(((DefinedFunction)overrider).ParameterVars[i]);
+            return parameters.ToArray();
         }
     }
 }

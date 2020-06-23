@@ -88,14 +88,14 @@ namespace Deltin.Deltinteger.Parse
             if (_initalValueContext != null)
             {
                 InitialValue = parseInfo.GetExpression(_operationalScope, _initalValueContext);
-                if (InitialValue?.Type() != null && InitialValue.Type().Constant() == TypeSettable.Constant && !InitialValue.Type().Implements(CodeType))
+                if (InitialValue?.Type() != null && InitialValue.Type().IsConstant() && !InitialValue.Type().Implements(CodeType))
                     parseInfo.Script.Diagnostics.Error($"The type '{InitialValue.Type().Name}' cannot be stored.", DocRange.GetRange(_initalValueContext));
             }
         }
 
         public bool Settable()
         {
-            return (CodeType == null || CodeType.Constant() == TypeSettable.Normal) && (VariableType == VariableType.Global || VariableType == VariableType.Player || VariableType == VariableType.Dynamic);
+            return (CodeType == null || !CodeType.IsConstant()) && (VariableType == VariableType.Global || VariableType == VariableType.Player || VariableType == VariableType.Dynamic);
         }
 
         // IExpression
@@ -130,7 +130,7 @@ namespace Deltin.Deltinteger.Parse
         public string GetLabel(bool markdown)
         {
             string typeName = "define";
-            if (CodeType != null) typeName = CodeType.Name;
+            if (CodeType != null) typeName = CodeType.GetName();
             return HoverHandler.Sectioned(typeName + " " + Name, null);
         }
 

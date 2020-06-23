@@ -10,19 +10,13 @@ using StringOrMarkupContent = OmniSharp.Extensions.LanguageServer.Protocol.Model
 
 namespace Deltin.Deltinteger
 {
-    public interface IWorkshopTree
-    {
-        string ToWorkshop(OutputLanguage language);
-        bool EqualTo(IWorkshopTree other);
-        int ElementCount(int depth);
-    }
-
     public interface IMethod : IScopeable, IParameterCallable
     {
         CodeType ReturnType { get; }
         MethodAttributes Attributes { get; }
+        bool DoesReturnValue { get; }
         IWorkshopTree Parse(ActionSet actionSet, MethodCall methodCall);
-        bool DoesReturnValue();
+        void Call(ParseInfo parseInfo, DocRange callRange) {}
     }
 
     public interface ISkip
@@ -40,6 +34,11 @@ namespace Deltin.Deltinteger
         bool Static { get; }
         bool WholeContext { get; }
         CompletionItem GetCompletion();
+    }
+
+    public interface IVariable : IScopeable
+    {
+        bool CanBeIndexed => true;
     }
 
     public interface ICallable : INamed
@@ -62,12 +61,6 @@ namespace Deltin.Deltinteger
     public interface IGettable
     {
         IWorkshopTree GetVariable(Element eventPlayer = null);
-    }
-
-    public interface IIndexReferencer : IScopeable, IExpression, ICallable, ILabeled
-    {
-        bool Settable();
-        VariableType VariableType { get; }
     }
 
     public interface ILabeled

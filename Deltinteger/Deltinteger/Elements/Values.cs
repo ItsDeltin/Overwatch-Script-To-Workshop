@@ -992,7 +992,7 @@ namespace Deltin.Deltinteger.Elements
                 if (a.Value == 1) return 1;
             }
 
-            if (b != null && (b.Value == 0 || b.Value == 1)) return 0;
+            if (b != null && b.Value == 0) return 0;
 
             if (((Element)ParameterValues[0]).EqualTo(ParameterValues[1])) return 0;
             
@@ -1105,7 +1105,7 @@ namespace Deltin.Deltinteger.Elements
         }
         public V_Number() : this(0) {}
 
-        public override string ToWorkshop(OutputLanguage language)
+        public override string ToWorkshop(OutputLanguage language, ToWorkshopContext context)
         {
             if (double.IsNaN(Value))
                 Value = 0;
@@ -1120,14 +1120,6 @@ namespace Deltin.Deltinteger.Elements
         protected override bool OverrideEquals(IWorkshopTree other)
         {
             return ((V_Number)other).Value == Value;
-        }
-
-        public override int ElementCount(int depth) => NumberElementCount(depth);
-
-        public static int NumberElementCount(int depth)
-        {
-            if (depth <= 1) return 2;
-            else return 4;
         }
     }
 
@@ -1483,8 +1475,6 @@ namespace Deltin.Deltinteger.Elements
         {
             return ((V_String)other).Text == Text;
         }
-
-        public override int ElementCount(int depth) => base.ElementCount(depth) + 2;
     }
 
     [ElementData("Custom String", ValueType.Any)]
@@ -1538,8 +1528,6 @@ namespace Deltin.Deltinteger.Elements
         {
             return ((V_CustomString)other).Text == Text;
         }
-
-        public override int ElementCount(int depth) => base.ElementCount(depth) + 2;
     }
 
     [ElementData("Icon String", ValueType.Any)]
@@ -1664,6 +1652,10 @@ namespace Deltin.Deltinteger.Elements
     public class V_Vector : Element
     {
         public V_Vector(V_Number x, V_Number y, V_Number z)
+        {
+            ParameterValues = new IWorkshopTree[] { x, y, z };
+        }
+        public V_Vector(IWorkshopTree x, IWorkshopTree y, IWorkshopTree z)
         {
             ParameterValues = new IWorkshopTree[] { x, y, z };
         }
@@ -1872,4 +1864,70 @@ namespace Deltin.Deltinteger.Elements
             return this;
         }
     }
+
+    [ElementData("Array", ValueType.Any)]
+    [HideElement]
+    public class V_Array : Element
+    {
+        public V_Array()
+        {
+            AlwaysShowParentheses = true;
+        }
+    }
+
+    [ElementData("If-Then-Else", ValueType.Any)]
+    [Parameter("If", ValueType.Boolean, null)]
+    [Parameter("Then", ValueType.Boolean, null)]
+    [Parameter("Else", ValueType.Boolean, null)]
+    [HideElement]
+    public class V_IfThenElse : Element
+    {
+        public override string ToWorkshop(OutputLanguage language, ToWorkshopContext context)
+        {
+            AddMissingParameters();
+            string result = ParameterValues[0].ToWorkshop(language, ToWorkshopContext.NestedValue) + " ? " + ParameterValues[1].ToWorkshop(language, ToWorkshopContext.NestedValue) + " : " + ParameterValues[2].ToWorkshop(language, ToWorkshopContext.NestedValue);
+            if (context == ToWorkshopContext.ConditionValue) result = "(" + result + ")";
+            return result;
+        }
+    }
+
+    [ElementData("Is Meleeing", ValueType.Boolean)]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    public class V_IsMeleeing : Element {}
+
+    [ElementData("Is Jumping", ValueType.Boolean)]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    public class V_IsJumping : Element {}
+
+    [ElementData("Event Direction", ValueType.Vector)]
+    public class V_EventDirection : Element {}
+
+    [ElementData("Button", ValueType.Button)]
+    [EnumParameter("Button", typeof(Button))]
+    public class V_ButtonValue : Element {}
+
+    [ElementData("Event Ability", ValueType.Button)]
+    public class V_EventAbility : Element {}
+
+    [ElementData("Ability Cooldown", ValueType.Number)]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [Parameter("Button", ValueType.Button, typeof(V_ButtonValue))]
+    public class V_AbilityCooldown : Element {}
+
+    [ElementData("Ability Icon String", ValueType.String)]
+    [Parameter("Hero", ValueType.Hero, typeof(V_HeroVar))]
+    [Parameter("Button", ValueType.Button, typeof(V_ButtonValue))]
+    public class V_AbilityIconString : Element {}
+
+    [ElementData("Is In Alternate Form", ValueType.Boolean)]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    public class V_IsInAlternateForm : Element {}
+
+    [ElementData("Is Duplicating", ValueType.Boolean)]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    public class V_IsDuplicating : Element {}
+
+    [ElementData("Hero Being Duplicated", ValueType.Hero)]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    public class V_HeroBeingDuplicated : Element {}
 }

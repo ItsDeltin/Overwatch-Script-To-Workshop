@@ -41,15 +41,15 @@ namespace Deltin.Deltinteger.Elements
                 b = b.Optimize();
             }
             
-            return a.ToWorkshop(language) + " " + CompareOperator.ToWorkshop(language) + " " + b.ToWorkshop(language);
+            return a.ToWorkshop(language, ToWorkshopContext.ConditionValue) + " " + CompareOperator.ToWorkshop(language, ToWorkshopContext.Other) + " " + b.ToWorkshop(language, ToWorkshopContext.ConditionValue);
         }
 
         public int ElementCount(bool optimized)
         {
             if (optimized)
-                return 1 + Value1.Optimize().ElementCount(1) + Value2.Optimize().ElementCount(1);
+                return 1 + Value1.Optimize().ElementCount() + Value2.Optimize().ElementCount();
             else
-                return 1 + Value1.ElementCount(1) + Value2.ElementCount(1);
+                return 1 + Value1.ElementCount() + Value2.ElementCount();
         }
 
         public static implicit operator Condition(Element element) => new Condition(element);

@@ -15,7 +15,7 @@ namespace Deltin.Deltinteger
 {
     public class Program
     {
-        public const string VERSION = "v1.3";
+        public const string VERSION = "v1.5";
 
         public static readonly string ExeFolder = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
 
@@ -30,6 +30,7 @@ namespace Deltin.Deltinteger
             Program.args = args;
             CultureInfo.DefaultThreadCurrentCulture = new CultureInfo("en-US");
             ElementList.InitElements();
+            VectorType.Instance.ResolveElements();
             Lobby.HeroSettingCollection.Init();
             Lobby.ModeSettingCollection.Init();
 
@@ -90,7 +91,7 @@ namespace Deltin.Deltinteger
                         string ext = Path.GetExtension(script).ToLower();
                         if (ext == ".csv")
                         {
-                            PathMap map = PathMap.ImportFromCSV(script);
+                            PathMap map = PathMap.ImportFromCSVFile(script, new ConsolePathmapErrorHandler(new Log("Pathmap")));
                             if (map != null)
                             {
                                 string result = map.ExportAsXML();
@@ -127,6 +128,11 @@ namespace Deltin.Deltinteger
             }
             
             Finished();
+        }
+
+        static void WaitForDebugger()
+        {
+            while (!System.Diagnostics.Debugger.IsAttached) Thread.Sleep(100);
         }
 
         static void Script(string parseFile)

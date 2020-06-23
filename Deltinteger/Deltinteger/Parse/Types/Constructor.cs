@@ -13,7 +13,7 @@ namespace Deltin.Deltinteger.Parse
         public CodeParameter[] Parameters { get; protected set; }
         public LanguageServer.Location DefinedAt { get; }
         public CodeType Type { get; }
-        public string Documentation { get; protected set; }
+        public string Documentation { get; set; }
 
         public Constructor(CodeType type, LanguageServer.Location definedAt, AccessLevel accessLevel)
         {

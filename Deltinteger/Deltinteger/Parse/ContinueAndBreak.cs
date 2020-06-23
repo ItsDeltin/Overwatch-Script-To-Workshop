@@ -5,6 +5,7 @@ namespace Deltin.Deltinteger.Parse
     public class ContinueAction : IStatement
     {
         private IContinueContainer Loop { get; }
+        private string Comment;
 
         public ContinueAction(ParseInfo parseInfo, DocRange range)
         {
@@ -13,17 +14,21 @@ namespace Deltin.Deltinteger.Parse
             Loop = parseInfo.ContinueHandler;
         }
 
+        public void OutputComment(FileDiagnostics diagnostics, DocRange range, string comment)
+        {
+            Comment = comment;
+        }
+
         public void Translate(ActionSet actionSet)
         {
-            SkipStartMarker continuer = new SkipStartMarker(actionSet);
-            actionSet.AddAction(continuer);
-            Loop.AddContinue(continuer);
+            Loop.AddContinue(actionSet, Comment);
         }
     }
 
     public class BreakAction : IStatement
     {
         private IBreakContainer BreakContainer { get; }
+        private string Comment;
 
         public BreakAction(ParseInfo parseInfo, DocRange range)
         {
@@ -32,11 +37,14 @@ namespace Deltin.Deltinteger.Parse
             BreakContainer = parseInfo.BreakHandler;
         }
 
+        public void OutputComment(FileDiagnostics diagnostics, DocRange range, string comment)
+        {
+            Comment = comment;
+        }
+
         public void Translate(ActionSet actionSet)
         {
-            SkipStartMarker breaker = new SkipStartMarker(actionSet);
-            actionSet.AddAction(breaker);
-            BreakContainer.AddBreak(breaker);
+            BreakContainer.AddBreak(actionSet, Comment);
         }
     }
 }

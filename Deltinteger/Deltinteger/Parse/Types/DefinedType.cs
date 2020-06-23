@@ -62,7 +62,7 @@ namespace Deltin.Deltinteger.Parse
                 var newMethod = new DefinedMethod(parseInfo, operationalScope, staticScope, definedMethod, this);
 
                 // Copy to serving scopes.
-                if (newMethod.Static) staticScope.CopyMethod(newMethod);
+                if (newMethod.Static) operationalScope.CopyMethod(newMethod);
                 else serveObjectScope.CopyMethod(newMethod);
             }
 
@@ -74,13 +74,13 @@ namespace Deltin.Deltinteger.Parse
                 // Copy to serving scopes.
                 if (newMacro is IMethod asMethod)
                 {
-                    if (newMacro.Static) staticScope.CopyMethod(asMethod);
+                    if (newMacro.Static) operationalScope.CopyMethod(asMethod);
                     else serveObjectScope.CopyMethod(asMethod);
                 }
                 else
                 {
-                    if (newMacro.Static) staticScope.CopyVariable(newMacro);
-                    else serveObjectScope.CopyVariable(newMacro);
+                    if (newMacro.Static) operationalScope.CopyVariable((IVariable)newMacro);
+                    else serveObjectScope.CopyVariable((IVariable)newMacro);
                 }
             }
 
@@ -92,8 +92,7 @@ namespace Deltin.Deltinteger.Parse
                 // Copy to serving scopes.
                 if (!newVar.Static)
                 {
-                    ObjectVariables.Add(new ObjectVariable(newVar));
-                    serveObjectScope.CopyVariable(newVar);
+                    AddObjectVariable(newVar);
                 }
                 // Add to static scope.
                 else

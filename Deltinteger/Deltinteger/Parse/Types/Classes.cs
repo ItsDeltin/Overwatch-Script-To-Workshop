@@ -111,15 +111,25 @@ Object-serve scope. Only object members.
 
             // Classes are stored in the class array (`classData.ClassArray`),
             // this stores the index where the new class is created at.
+            var classReference = Create(actionSet, classData);
+
+            New(actionSet, new NewClassInfo(classReference, constructor, constructorValues, additionalParameterData));
+
+            // Return the reference.
+            return classReference.GetVariable();
+        }
+
+        public IndexReference Create(ActionSet actionSet, ClassData classData)
+        {
+            // Classes are stored in the class array (`classData.ClassArray`),
+            // this stores the index where the new class is created at.
             var classReference = actionSet.VarCollection.Assign("_new_" + Name + "_class_index", actionSet.IsGlobal, true);
             classData.GetClassIndex(Identifier, classReference, actionSet);
 
             // Get object variables.
             BaseSetup(actionSet, (Element)classReference.GetVariable());
-            New(actionSet, new NewClassInfo(classReference, constructor, constructorValues, additionalParameterData));
 
-            // Return the reference.
-            return classReference.GetVariable();
+            return classReference;
         }
 
         public override void BaseSetup(ActionSet actionSet, Element reference)
@@ -128,13 +138,7 @@ Object-serve scope. Only object members.
                 Extends.BaseSetup(actionSet, reference);
 
             foreach (ObjectVariable variable in ObjectVariables)
-            if (variable.Variable.InitialValue != null)
-            {
-                actionSet.AddAction(variable.ArrayStore.SetVariable(
-                    value: (Element)variable.Variable.InitialValue.Parse(actionSet),
-                    index: reference
-                ));
-            }
+                variable.Init(actionSet, reference);
         }
 
         protected virtual void New(ActionSet actionSet, NewClassInfo newClassInfo)
@@ -160,6 +164,18 @@ Object-serve scope. Only object members.
             Extends?.AddObjectVariablesToAssigner(reference, assigner);
             for (int i = 0; i < ObjectVariables.Count; i++)
                 ObjectVariables[i].AddToAssigner((Element)reference, assigner);
+        }
+
+        protected ObjectVariable AddObjectVariable(IIndexReferencer variable)
+        {
+            // Create an ObjectVariable
+            ObjectVariable createdObjectVariable = new ObjectVariable(variable);
+            // Add the ObjectVariable to the ObjectVariables list. This will assign the variable a stack when WorkshopInit executes.
+            ObjectVariables.Add(createdObjectVariable);
+            // Copy the variable to the serve object scope. This allows the variable to be accessed when doing className.variableName. 
+            serveObjectScope.CopyVariable(variable);
+            // Return the created ObjectVariable.
+            return createdObjectVariable;
         }
 
         public override Scope GetObjectScope() => serveObjectScope;
@@ -189,10 +205,10 @@ Object-serve scope. Only object members.
 
     public class ObjectVariable
     {
-        public Var Variable { get; }
+        public IIndexReferencer Variable { get; }
         public IndexReference ArrayStore { get; private set; }
 
-        public ObjectVariable(Var variable)
+        public ObjectVariable(IIndexReferencer variable)
         {
             Variable = variable;
         }
@@ -205,6 +221,31 @@ Object-serve scope. Only object members.
         public void AddToAssigner(Element reference, VarIndexAssigner assigner)
         {
             assigner.Add(Variable, ArrayStore.CreateChild(reference));
+        }
+
+        public void Init(ActionSet actionSet, Element reference)
+        {
+            if (Variable is Var var && var.InitialValue != null)
+            {
+                actionSet.AddAction(ArrayStore.SetVariable(
+                    value: (Element)var.InitialValue.Parse(actionSet),
+                    index: reference
+                ));
+            }
+        }
+
+        /// <summary>Creates a direct reference to the ArrayStore.</summary>
+        public IndexReference Spot(Element reference) => ArrayStore.CreateChild(reference);
+
+        /// <summary>Gets the value from a reference.</summary>
+        public Element Get(Element reference) => Element.Part<V_ValueInArray>(ArrayStore.GetVariable(), reference);
+
+        /// <summary>Gets the value from the current context's object reference.</summary>
+        public Element Get(ActionSet actionSet) => Get((Element)actionSet.CurrentObject);
+
+        public void Set(ActionSet actionSet, Element reference, Element value)
+        {
+            actionSet.AddAction(ArrayStore.SetVariable(value: value, index: reference));
         }
     }
 

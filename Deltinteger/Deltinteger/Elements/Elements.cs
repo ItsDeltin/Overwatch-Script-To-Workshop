@@ -16,19 +16,20 @@ using StringOrMarkupContent = OmniSharp.Extensions.LanguageServer.Protocol.Model
 
 namespace Deltin.Deltinteger.Elements
 {
-    [Flags]
     public enum ValueType
     {
-        Any = Number | Boolean | Hero | Vector | Player | Team ,
-        VectorAndPlayer = Vector | Player,
-        Number = 1,
-        Boolean = 2,
-        Hero = 4,
-        Vector = 8,
-        Player = 16,
-        Team = 32,
-        Map = 64,
-        Gamemode = 128
+        Any,
+        VectorAndPlayer,
+        Number,
+        Boolean,
+        Hero,
+        Vector,
+        Player,
+        Team,
+        Map,
+        Gamemode,
+        Button,
+        String
     }
 
     public abstract class Element : IWorkshopTree
@@ -57,34 +58,47 @@ namespace Deltin.Deltinteger.Elements
 
         public IWorkshopTree[] ParameterValues { get; set; }
         public bool Disabled { get; set; }
+        public string Comment { get; set; }
         public int Indent { get; set; }
+        protected bool AlwaysShowParentheses = false;
 
         public override string ToString()
         {
             return ElementList.GetLabel(false);
         }
         
-        public virtual string ToWorkshop(OutputLanguage language)
+        public virtual string ToWorkshop(OutputLanguage language, ToWorkshopContext context)
         {
+            // Get the parameters
             AddMissingParameters();
-
             List<string> parameters = AdditionalParameters().ToList();
-
-            parameters.AddRange(ParameterValues.Select(p => p.ToWorkshop(language)));
+            parameters.AddRange(ParameterValues.Select(p => p.ToWorkshop(language, ToWorkshopContext.NestedValue)));
 
             string result = Extras.Indent(Indent, true); // TODO: option for spaces or tab output.
+
+            // Add a comment and newline
+            if (Comment != null) result += $"\"{Comment}\"\n" + Extras.Indent(Indent, true);
+
+            // Add the disabled tag if the element is disabled.
             if (!ElementList.IsValue && Disabled) result += LanguageInfo.Translate(language, "disabled") + " ";
+
+            // Add the name of the element.
             result += LanguageInfo.Translate(language, Name);
+
+            // Add the parameters.
             if (parameters.Count != 0) result += "(" + string.Join(", ", parameters) + ")";
+            else if (AlwaysShowParentheses) result += "()";
+
+            // Add the ; if the element is an action.
             if (!ElementList.IsValue) result += ";";
             return result;
         }
 
-        private void AddMissingParameters()
+        protected void AddMissingParameters()
         {
             List<IWorkshopTree> parameters = new List<IWorkshopTree>();
 
-            for (int i = 0; i < ParameterData.Length; i++)
+            for (int i = 0; i < ParameterData.Length || i < ParameterValues.Length; i++)
                 parameters.Add(ParameterValues?.ElementAtOrDefault(i) ?? ParameterData[i].GetDefault());
             
             ParameterValues = parameters.ToArray();
@@ -113,13 +127,16 @@ namespace Deltin.Deltinteger.Elements
                     ParameterValues[i] = ((Element)ParameterValues[i]).Optimize();
         }
 
-        protected virtual string[] AdditionalParameters()
-        {
-            return new string[0];
-        }
+        protected virtual string[] AdditionalParameters() => new string[0];
 
         // Creates an array from a list of values.
         public static Element CreateArray(params IWorkshopTree[] values)
+        {
+            if (values == null || values.Length == 0) return new V_EmptyArray();
+            return Element.Part<V_Array>(values);
+        }
+
+        public static Element CreateAppendArray(params IWorkshopTree[] values)
         {
             Element array = new V_EmptyArray();
             for (int i = 0; i < values.Length; i++)
@@ -128,17 +145,7 @@ namespace Deltin.Deltinteger.Elements
         }
 
         // Creates an ternary conditional that works in the workshop
-        public static Element TernaryConditional(IWorkshopTree condition, IWorkshopTree consequent, IWorkshopTree alternative)
-        {
-            // This works by creating an array with the consequent (C) and the alternative (A): [C, A]
-            // It creates an array that contains false and true: [false, true]
-            // Then it gets the array value of the false/true array based on the condition result: IndexOfArrayValue(boolArray, condition)
-            // The result is either 0 or 1. Use that index to get the value from the [C, A] array.
-            return Element.Part<V_ValueInArray>(CreateArray(alternative, consequent), Element.Part<V_IndexOfArrayValue>(CreateArray(new V_False(), new V_True()), condition));
-
-            // Another way to do it would be to add 0 to the boolean, however this won't work with truthey/falsey values that aren't booleans.
-            // return Element.Part<V_ValueInArray>(CreateArray(alternative, consequent), Element.Part<V_Add>(condition, new V_Number(0)));
-        }
+        public static Element TernaryConditional(IWorkshopTree condition, IWorkshopTree consequent, IWorkshopTree alternative) => Element.Part<V_IfThenElse>(condition, consequent, alternative);
 
         public static V_Add operator +(Element a, Element b) => Element.Part<V_Add>(a, b);
         public static V_Subtract operator -(Element a, Element b) => Element.Part<V_Subtract>(a, b);
@@ -188,15 +195,13 @@ namespace Deltin.Deltinteger.Elements
 
         protected virtual bool OverrideEquals(IWorkshopTree other) => true;
 
-        public virtual int ElementCount(int depth)
+        public virtual int ElementCount()
         {
             AddMissingParameters();
-            int count = 0;
-            if (depth == 0) count = 1;
-            if (depth >= 2) count = 2;
+            int count = 1;
             
             foreach (var parameter in ParameterValues)
-                count += parameter.ElementCount(depth + 1);
+                count += parameter.ElementCount();
             
             return count;
         }
@@ -399,7 +404,7 @@ namespace Deltin.Deltinteger.Elements
 
                     // If the parameter is an enum, get the enum CodeType.
                     if (WorkshopParameters[i] is EnumParameter)
-                        codeType = WorkshopEnumType.GetEnumType(((EnumParameter)WorkshopParameters[i]).EnumData);
+                        codeType = ValueGroupType.GetEnumType(((EnumParameter)WorkshopParameters[i]).EnumData);
 
                     var defaultValue = WorkshopParameters[i].GetDefault();
 
@@ -418,12 +423,13 @@ namespace Deltin.Deltinteger.Elements
             return (Element)Activator.CreateInstance(Type);
         }
 
-        public bool DoesReturnValue() => IsValue;
+        public bool DoesReturnValue => IsValue;
 
         public IWorkshopTree Parse(ActionSet actionSet, MethodCall methodCall)
         {
             Element element = GetObject();
             element.ParameterValues = methodCall.ParameterValues;
+            element.Comment = methodCall.ActionComment;
 
             if (!IsValue)
             {

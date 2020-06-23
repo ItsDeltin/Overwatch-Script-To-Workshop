@@ -22,6 +22,8 @@ namespace Deltin.Deltinteger.Parse
             return WorkshopArrayBuilder.GetVariable(targetPlayer, WorkshopVariable, Index);
         }
 
+        public Element Get(Element targetPlayer = null) => (Element)GetVariable(targetPlayer);
+
         public virtual Element[] SetVariable(Element value, Element targetPlayer = null, params Element[] index)
         {
             return WorkshopArrayBuilder.SetVariable(ArrayBuilder, value, targetPlayer, WorkshopVariable, false, ArrayBuilder<Element>.Build(Index, index));

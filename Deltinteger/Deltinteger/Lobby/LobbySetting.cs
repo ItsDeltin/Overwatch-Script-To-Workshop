@@ -101,10 +101,9 @@ namespace Deltin.Deltinteger.Lobby
 
         public override string GetValue(WorkshopBuilder builder, object value)
         {
-            if (SwitchType == SwitchType.OnOff)
-                return builder.Translate((bool)value ? "On" : "Off");
-            else if (SwitchType == SwitchType.YesNo)
-                return builder.Translate((bool)value ? "Yes" : "No");
+            if (SwitchType == SwitchType.OnOff) return builder.Translate((bool)value ? "On" : "Off");
+            else if (SwitchType == SwitchType.YesNo) return builder.Translate((bool)value ? "Yes" : "No");
+            else if (SwitchType == SwitchType.EnabledDisabled) return builder.Translate((bool)value ? "Enabled" : "Disabled");
             else throw new NotImplementedException();
         }
 
@@ -178,6 +177,7 @@ namespace Deltin.Deltinteger.Lobby
     enum SwitchType
     {
         OnOff,
-        YesNo
+        YesNo,
+        EnabledDisabled
     }
 }
