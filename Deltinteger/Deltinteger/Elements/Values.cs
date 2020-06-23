@@ -1915,7 +1915,7 @@ namespace Deltin.Deltinteger.Elements
     public class V_AbilityCooldown : Element {}
 
     [ElementData("Ability Icon String", ValueType.String)]
-    [Parameter("Hero", ValueType.Player, typeof(V_HeroVar))]
+    [Parameter("Hero", ValueType.Hero, typeof(V_HeroVar))]
     [Parameter("Button", ValueType.Button, typeof(V_ButtonValue))]
     public class V_AbilityIconString : Element {}
 
