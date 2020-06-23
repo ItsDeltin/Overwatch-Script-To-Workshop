@@ -616,7 +616,23 @@ namespace Deltin.Deltinteger.Elements
 
     [ElementData("First Of", ValueType.Any)]
     [Parameter("Array", ValueType.Any, null)]
-    public class V_FirstOf : Element {}
+    public class V_FirstOf : Element
+    {
+        public override Element Optimize()
+        {
+            OptimizeChildren();
+
+            if (ParameterValues[0] is V_Array array)
+            {
+                if (array.ParameterValues.Length > 0)
+                    return (Element)array.ParameterValues[0];
+                else
+                    return new V_Null();
+            }
+
+            return this;
+        }
+    }
 
     [ElementData("Flag Position", ValueType.Vector)]
     [Parameter("Team", ValueType.Team, typeof(V_TeamVar))]
@@ -897,7 +913,23 @@ namespace Deltin.Deltinteger.Elements
 
     [ElementData("Last Of", ValueType.Any)]
     [Parameter("Array", ValueType.Any, null)]
-    public class V_LastOf : Element {}
+    public class V_LastOf : Element
+    {
+        public override Element Optimize()
+        {
+            OptimizeChildren();
+
+            if (ParameterValues[0] is V_Array array)
+            {
+                if (array.ParameterValues.Length > 0)
+                    return (Element)array.ParameterValues.Last();
+                else
+                    return new V_Null();
+            }
+
+            return this;
+        }
+    }
 
     [ElementData("Last Text ID", ValueType.Number)]
     public class V_LastTextID : Element {}
@@ -1635,11 +1667,23 @@ namespace Deltin.Deltinteger.Elements
             Element array = (Element)ParameterValues[0];
             Element index = (Element)ParameterValues[1];
 
-            if (index is V_Number num)
-            if (num.Value == 0) // Needs to be in a seperate if or else the compiler will complain.
+            if (array is V_Array)
             {
-                return Element.Part<V_FirstOf>(array);
+                if (index is V_Number num)
+                {
+                    int i = (int)Math.Floor(num.Value);
+                    if (i < 0 || i >= array.ParameterValues.Length || array.ParameterValues.Length == 0)
+                        return new V_Null();
+                    else
+                        return (Element)array.ParameterValues[i];
+                }
             }
+            else if (array is V_EmptyArray)
+                return new V_Null();
+
+            if (index is V_Number num2)
+            if (num2.Value == 0) // Needs to be in a seperate if or else the compiler will complain.
+                return Element.Part<V_FirstOf>(array);
 
             return this;
         }
