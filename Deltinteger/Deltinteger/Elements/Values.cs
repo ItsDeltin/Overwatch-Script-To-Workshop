@@ -574,6 +574,9 @@ namespace Deltin.Deltinteger.Elements
 
     [ElementData("Event Damage", ValueType.Number)]
     public class V_EventDamage : Element {}
+    
+    [ElementData("Event Direction", ValueType.Vector)]
+    public class V_EventDirection : Element {}
 
     [ElementData("Event Healing", ValueType.Number)]
     public class V_EventHealing : Element {}
