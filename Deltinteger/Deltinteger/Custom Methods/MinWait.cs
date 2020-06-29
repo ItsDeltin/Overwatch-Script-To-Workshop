@@ -8,7 +8,7 @@ namespace Deltin.Deltinteger.CustomMethods
     {
         public override CodeParameter[] Parameters() => new CodeParameter[] {
             new CodeParameter("waitBehavior", ValueGroupType.GetEnumType<WaitBehavior>(), new ExpressionOrWorkshopValue(EnumData.GetEnumValue(WaitBehavior.IgnoreCondition)))
-        }
+        };
 
         public override IWorkshopTree Get(ActionSet actionSet, IWorkshopTree[] parameters)
         {
