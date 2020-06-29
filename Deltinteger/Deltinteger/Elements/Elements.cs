@@ -442,6 +442,12 @@ namespace Deltin.Deltinteger.Elements
         public string GetLabel(bool markdown) => HoverHandler.GetLabel(!IsValue ? null : ReturnType?.Name ?? "define", Name, Parameters, markdown, Wiki?.Description);
 
         public CompletionItem GetCompletion() => MethodAttributes.GetFunctionCompletion(this);
+
+        public void Call(ParseInfo parseInfo, DocRange callRange)
+        {
+            if (WorkshopName == "Event Player")
+                parseInfo.CurrentCallInfo.RestrictedCall(new RestrictedCall(RestrictedCallType.EventPlayer, parseInfo.GetLocation(callRange), new CallStrategy("Event player cannot be called in a global rule.")));
+        }
     }
 
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]

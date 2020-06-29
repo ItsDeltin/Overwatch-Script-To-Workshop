@@ -26,7 +26,7 @@ namespace Deltin.Deltinteger.Parse
             if (current != null)
                 for (int i = 1; i < ExprContextTree.Length; i++)
                 {
-                    current = ExprContextTree[i].Parse(parseInfo, current.ReturningScope() ?? new Scope(), scope, i < ExprContextTree.Length - 1 || usedAsValue);
+                    current = ExprContextTree[i].Parse(parseInfo.SetSourceExpression(Tree[i - 1]), current.ReturningScope() ?? new Scope(), scope, i < ExprContextTree.Length - 1 || usedAsValue);
 
                     Tree[i] = current;
 

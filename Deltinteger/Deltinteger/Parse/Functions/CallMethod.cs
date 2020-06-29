@@ -53,6 +53,7 @@ namespace Deltin.Deltinteger.Parse
                         parseInfo.CurrentCallInfo?.Call(definedFunction, NameRange);
                     }
 
+                    // Check if the function can be called in parallel.
                     if (Parallel != CallParallel.NoParallel && !CallingMethod.Attributes.Parallelable)
                         parseInfo.Script.Diagnostics.Error($"The method '{CallingMethod.Name}' cannot be called in parallel.", NameRange);
                     
@@ -65,6 +66,10 @@ namespace Deltin.Deltinteger.Parse
         {
             if (UsedAsExpression && !CallingMethod.DoesReturnValue)
                 parseInfo.Script.Diagnostics.Error("The chosen overload for " + CallingMethod.Name + " does not return a value.", NameRange);
+            
+            // Check callinfo :)
+            foreach (RestrictedCallType type in ((IApplyBlock)CallingMethod).CallInfo.GetRestrictedCallTypes())
+                parseInfo.CurrentCallInfo.RestrictedCall(new RestrictedCall(type, parseInfo.GetLocation(NameRange), new FunctionCallsRestricted(CallingMethod.Name, type)));
         }
 
         public Scope ReturningScope()
@@ -124,5 +129,19 @@ namespace Deltin.Deltinteger.Parse
         NoParallel,
         AlreadyRunning_RestartRule,
         AlreadyRunning_DoNothing
+    }
+
+    class FunctionCallsRestricted : ICallStrategy
+    {
+        private readonly string _functionName;
+        private readonly RestrictedCallType _callType;
+
+        public FunctionCallsRestricted(string functionName, RestrictedCallType callType)
+        {
+            _functionName = functionName;
+            _callType = callType;
+        }
+
+        public string Message() => $"The function '{_functionName}' calls a restricted function of type '{_callType.ToString()}'.";
     }
 }

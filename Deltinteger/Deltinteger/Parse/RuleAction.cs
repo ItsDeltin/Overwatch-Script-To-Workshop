@@ -53,7 +53,11 @@ namespace Deltin.Deltinteger.Parse
 
             // Get the block.
             if (ruleContext.block() != null)
-                Block = new BlockAction(parseInfo, scope, ruleContext.block());
+            {
+                CallInfo callInfo = new CallInfo(parseInfo.Script);
+                Block = new BlockAction(parseInfo.SetCallInfo(callInfo), scope, ruleContext.block());
+                callInfo.CheckRestrictedCalls(EventType);
+            }
             else
                 parseInfo.Script.Diagnostics.Error("Missing block.", missingBlockRange);
             

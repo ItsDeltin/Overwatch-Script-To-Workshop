@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 using Deltin.Deltinteger.Parse;
+using Deltin.Deltinteger.LanguageServer;
 using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
 using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItemKind;
 
@@ -85,5 +86,41 @@ namespace Deltin.Deltinteger
             ParameterValues = parameterValues;
             AdditionalParameterData = additionalParameterData;
         }
+    }
+
+    public class RestrictedCall
+    {
+        public RestrictedCallType CallType { get; }
+        public Location CallRange { get; }
+        public ICallStrategy CallStrategy { get; }
+
+        public RestrictedCall(RestrictedCallType callType, Location callRange, ICallStrategy callStrategy)
+        {
+            CallType = callType;
+            CallRange = callRange;
+            CallStrategy = callStrategy;
+        }
+    }
+
+    public interface ICallStrategy
+    {
+        string Message();
+    }
+
+    class CallStrategy : ICallStrategy
+    {
+        private readonly string _message;
+        public CallStrategy(string message)
+        {
+            _message = message;
+        }
+        public string Message() => _message;
+    }
+
+    public enum RestrictedCallType
+    {
+        EventPlayer,
+        Attacker,
+        Healer
     }
 }

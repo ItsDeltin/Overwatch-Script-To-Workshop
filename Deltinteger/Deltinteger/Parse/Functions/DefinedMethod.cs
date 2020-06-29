@@ -123,6 +123,7 @@ namespace Deltin.Deltinteger.Parse
                 validation.ValidateReturns();
                 multiplePaths = validation.MultiplePaths;
             }
+            WasApplied = true;
             foreach (var listener in listeners) listener.Applied();
         }
 

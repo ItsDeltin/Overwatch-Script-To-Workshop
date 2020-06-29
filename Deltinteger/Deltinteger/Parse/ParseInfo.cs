@@ -11,6 +11,7 @@ namespace Deltin.Deltinteger.Parse
         public CallInfo CurrentCallInfo { get; private set; }
         public IBreakContainer BreakHandler { get; private set; }
         public IContinueContainer ContinueHandler { get; private set; }
+        public IExpression SourceExpression { get; private set; }
 
         public ParseInfo(ScriptFile script, DeltinScript translateInfo)
         {
@@ -29,6 +30,7 @@ namespace Deltin.Deltinteger.Parse
         public ParseInfo SetLoop(LoopAction loop) => new ParseInfo(this) { BreakHandler = loop, ContinueHandler = loop };
         public ParseInfo SetBreakHandler(IBreakContainer handler) => new ParseInfo(this) { BreakHandler = handler };
         public ParseInfo SetContinueHandler(IContinueContainer handler) => new ParseInfo(this) { ContinueHandler = handler };
+        public ParseInfo SetSourceExpression(IExpression expression) => new ParseInfo(this) { SourceExpression = expression };
 
         /// <summary>Gets an IStatement from a StatementContext.</summary>
         /// <param name="scope">The scope the statement was created in.</param>
@@ -152,16 +154,17 @@ namespace Deltin.Deltinteger.Parse
                 return type;
             }
 
+            // If no variable is found, return null.
             IVariable element = scope.GetVariable(variableName, getter, Script.Diagnostics, variableRange);
-            if (element == null)
-                return null;
+            if (element == null) return null;
             
-            if (element is ICallable)
-                ((ICallable)element).Call(this, variableRange);
+            // If the element is a callable, call it.
+            if (element is ICallable callable) callable.Call(this, variableRange);
             
-            if (element is IApplyBlock)
-                CurrentCallInfo?.Call((IApplyBlock)element, variableRange);
+            // If the element can execute code when called, add the callinfo.
+            if (element is IApplyBlock applyBlock) CurrentCallInfo?.Call(applyBlock, variableRange);
             
+            // Get the index the variable is being called with.
             IExpression[] index = null;
             if (variableContext.array() != null)
             {
@@ -170,7 +173,16 @@ namespace Deltin.Deltinteger.Parse
                     index[i] = GetExpression(getter, variableContext.array().expr(i));
             }
 
-            if (element is IIndexReferencer referencer) return new CallVariableAction(referencer, index);
+            if (element is IIndexReferencer referencer)
+            {
+                // If the type of the variable being called is Player, check if the variable is calling Event Player.
+                // If the source expression is null, Event Player is used by default.
+                // Otherwise, confirm that the source expression is returning the player variable scope.
+                if (referencer.VariableType == VariableType.Player && (SourceExpression == null || SourceExpression.ReturningScope() != TranslateInfo.PlayerVariableScope))
+                    CurrentCallInfo.RestrictedCall(new RestrictedCall(RestrictedCallType.EventPlayer, GetLocation(variableRange), new EventPlayerRestrictedCall(referencer)));
+
+                return new CallVariableAction(referencer, index);
+            }
 
             if (index != null)
             {
@@ -217,5 +229,19 @@ namespace Deltin.Deltinteger.Parse
             TranslateInfo.ApplyBlock((IApplyBlock)newMacro);
             return newMacro;
         }
+    
+        public Location GetLocation(DocRange range) => new Location(Script.Uri, range);
+    }
+
+    class EventPlayerRestrictedCall : ICallStrategy
+    {
+        private readonly IIndexReferencer _variable;
+
+        public EventPlayerRestrictedCall(IIndexReferencer variable)
+        {
+            _variable = variable;
+        }
+
+        public string Message() => $"The variable '{_variable.Name}' is a player variable and no player was provided in a global rule.";
     }
 }

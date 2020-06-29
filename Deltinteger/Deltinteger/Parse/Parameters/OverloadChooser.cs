@@ -24,11 +24,11 @@ namespace Deltin.Deltinteger.Parse
 
         private IParameterCallable[] AllOverloads { get; }
         private List<IParameterCallable> CurrentOptions { get; set; }
+
+        private OverloadMatch Match { get; set; }
         public IParameterCallable Overload { get; private set; }
         public IExpression[] Values { get; private set; }
-
         public DocRange[] ParameterRanges { get; private set; }
-
         public object[] AdditionalParameterData { get; private set; }
 
         public OverloadChooser(IParameterCallable[] overloads, ParseInfo parseInfo, Scope elementScope, Scope getter, DocRange genericErrorRange, DocRange callRange, OverloadError errorMessages)
@@ -59,9 +59,9 @@ namespace Deltin.Deltinteger.Parse
             for (int i = 0; i < matches.Length; i++) matches[i] = MatchOverload(CurrentOptions[i], inputParameters, context);
 
             // Choose the best option.
-            OverloadMatch bestOption = BestOption(matches);
-            Values = bestOption.OrderedParameters.Select(op => op?.Value).ToArray();
-            ParameterRanges = bestOption.OrderedParameters.Select(op => op?.ExpressionRange).ToArray();
+            Match = BestOption(matches);
+            Values = Match.OrderedParameters.Select(op => op?.Value).ToArray();
+            ParameterRanges = Match.OrderedParameters.Select(op => op?.ExpressionRange).ToArray();
 
             GetAdditionalData();
         }
@@ -75,7 +75,7 @@ namespace Deltin.Deltinteger.Parse
             PickyParameter[] parameters = new PickyParameter[context.call_parameter().Length];
             for (int i = 0; i < parameters.Length; i++)
             {
-                PickyParameter parameter = new PickyParameter(DocRange.GetRange(context.call_parameter(i)));
+                PickyParameter parameter = new PickyParameter(false);
                 parameters[i] = parameter;
 
                 // Get the picky name.
@@ -265,8 +265,6 @@ namespace Deltin.Deltinteger.Parse
         public string Name { get; set; }
         /// <summary>The parameter's expression. This will only be null if there is a syntax error.</summary>
         public IExpression Value { get; set; }
-        /// <summary>The full range of the parameter, including the picky name and the value. This will equal `ExpressionRange` if `Picky` is false.</summary>
-        public DocRange FullRange { get; }
         /// <summary>The range of the picky parameter's name. This will be null if `Picky` is false.</summary>
         public DocRange NameRange { get; set; }
         /// <summary>The range of the expression. This will equal `FullRange` if `Picky` is false.</summary>
@@ -276,14 +274,9 @@ namespace Deltin.Deltinteger.Parse
         /// <summary>If `Prefilled` is true, this parameter was filled by a default value.</summary>
         public bool Prefilled { get; set; }
 
-        public PickyParameter(DocRange fullRange)
+        public PickyParameter(bool prefilled)
         {
-            FullRange = fullRange;
-        }
-
-        public PickyParameter()
-        {
-            Prefilled = true;
+            Prefilled = prefilled;
         }
 
         public bool ParameterOrdered(CodeParameter parameter) => !Picky || parameter.Name == Name;
@@ -332,7 +325,7 @@ namespace Deltin.Deltinteger.Parse
             for (int i = 0; i < OrderedParameters.Length; i++)
                 if (OrderedParameters[i]?.Value == null)
                 {
-                    if (OrderedParameters[i] == null) OrderedParameters[i] = new PickyParameter();
+                    if (OrderedParameters[i] == null) OrderedParameters[i] = new PickyParameter(true);
                     AddContextualParameter(context, functionCallRange, i);
 
                     // Default value
@@ -371,6 +364,15 @@ namespace Deltin.Deltinteger.Parse
         public void AddDiagnostics(FileDiagnostics diagnostics)
         {
             foreach (OverloadMatchError error in Errors) diagnostics.Error(error.Message, error.Range);
+        }
+    
+        public void CheckOptionalsRestrictedCalls(ParseInfo parseInfo)
+        {
+            foreach (PickyParameter parameter in OrderedParameters)
+                if (parameter.Prefilled)
+                {
+                    // todo
+                }
         }
     }
 

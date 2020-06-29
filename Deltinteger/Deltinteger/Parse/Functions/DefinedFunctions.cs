@@ -28,6 +28,8 @@ namespace Deltin.Deltinteger.Parse
 
         public CallInfo CallInfo { get; }
 
+        protected bool WasApplied = false;
+
         public DefinedFunction(ParseInfo parseInfo, string name, Location definedAt)
         {
             Name = name;
@@ -71,7 +73,8 @@ namespace Deltin.Deltinteger.Parse
         protected List<IOnBlockApplied> listeners = new List<IOnBlockApplied>();
         public void OnBlockApply(IOnBlockApplied onBlockApplied)
         {
-            listeners.Add(onBlockApplied);
+            if (WasApplied) onBlockApplied.Applied();
+            else listeners.Add(onBlockApplied);
         }
 
         public override string ToString()
