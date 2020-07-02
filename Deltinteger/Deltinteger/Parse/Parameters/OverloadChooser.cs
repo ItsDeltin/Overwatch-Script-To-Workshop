@@ -25,7 +25,7 @@ namespace Deltin.Deltinteger.Parse
         private IParameterCallable[] AllOverloads { get; }
         private List<IParameterCallable> CurrentOptions { get; set; }
 
-        private OverloadMatch Match { get; set; }
+        public OverloadMatch Match { get; private set; }
         public IParameterCallable Overload { get; private set; }
         public IExpression[] Values { get; private set; }
         public DocRange[] ParameterRanges { get; private set; }
@@ -259,7 +259,7 @@ namespace Deltin.Deltinteger.Parse
         }
     }
 
-    class PickyParameter
+    public class PickyParameter
     {
         /// <summary>The name of the picky parameter. This will be null if `Picky` is false.</summary>
         public string Name { get; set; }
@@ -282,7 +282,7 @@ namespace Deltin.Deltinteger.Parse
         public bool ParameterOrdered(CodeParameter parameter) => !Picky || parameter.Name == Name;
     }
 
-    class OverloadMatch
+    public class OverloadMatch
     {
         public IParameterCallable Option { get; }
         public PickyParameter[] OrderedParameters { get; set; }
@@ -366,17 +366,24 @@ namespace Deltin.Deltinteger.Parse
             foreach (OverloadMatchError error in Errors) diagnostics.Error(error.Message, error.Range);
         }
     
-        public void CheckOptionalsRestrictedCalls(ParseInfo parseInfo)
+        ///<summary>Gets the restricted calls from the unfilled optional parameters.</summary>
+        public void CheckOptionalsRestrictedCalls(ParseInfo parseInfo, DocRange callRange)
         {
-            foreach (PickyParameter parameter in OrderedParameters)
-                if (parameter.Prefilled)
-                {
-                    // todo
-                }
+            // Iterate through each parameter.
+            for (int i = 0; i < OrderedParameters.Length; i++)
+                // Check if the parameter is prefilled, which means the parameter is optional and not set.
+                if (OrderedParameters[i].Prefilled)
+                    // Add the restricted call.
+                    foreach (RestrictedCallType callType in Option.Parameters[i].RestrictedCalls)
+                        parseInfo.RestrictedCallHandler.RestrictedCall(new RestrictedCall(
+                            callType,
+                            parseInfo.GetLocation(callRange),
+                            new CallStrategy($"An unset optional parameter '{Option.Parameters[i].Name}' in the function '{Option.GetLabel(false)}' calls a restricted value of type '{RestrictedCall.StringFromCallType(callType)}'."))
+                        );
         }
     }
 
-    class OverloadMatchError
+    public class OverloadMatchError
     {
         public string Message { get; }
         public DocRange Range { get; }

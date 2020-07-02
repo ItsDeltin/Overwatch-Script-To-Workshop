@@ -1,15 +1,22 @@
+using System.Collections.Generic;
 using System.Linq;
 using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.Elements;
 
 namespace Deltin.Deltinteger.Parse
 {
-    public class CodeParameter
+    public class CodeParameter : IRestrictedCallHandler
     {
-        public string Name { get; }
-        public CodeType Type { get; }
-        public string Documentation { get; }
-        public ExpressionOrWorkshopValue DefaultValue { get; }
+        public string Name { get; set; }
+        public CodeType Type { get; set; }
+        public string Documentation { get; set; }
+        public ExpressionOrWorkshopValue DefaultValue { get; set; }
+        public List<RestrictedCallType> RestrictedCalls { get; } = new List<RestrictedCallType>();
+
+        public CodeParameter(string name)
+        {
+            Name = name;
+        }
 
         public CodeParameter(string name, CodeType type)
         {
@@ -68,6 +75,12 @@ namespace Deltin.Deltinteger.Parse
             else return Type.GetName() + " " + Name;
         }
 
+        public void RestrictedCall(RestrictedCall restrictedCall)
+        {
+            if (!RestrictedCalls.Contains(restrictedCall.CallType))
+                RestrictedCalls.Add(restrictedCall.CallType);
+        }
+
         public static ParameterParseResult GetParameters(ParseInfo parseInfo, Scope methodScope, DeltinScriptParser.SetParametersContext context, bool subroutineParameter)
         {
             if (context == null) return new ParameterParseResult(new CodeParameter[0], new Var[0]);
@@ -78,8 +91,10 @@ namespace Deltin.Deltinteger.Parse
             {
                 Var newVar;
 
+                CodeParameter parameter = new CodeParameter(context.define(i).name.Text);
+
                 // Set up the context handler.
-                IVarContextHandler contextHandler = new DefineContextHandler(parseInfo, context.define(i));
+                IVarContextHandler contextHandler = new DefineContextHandler(parseInfo.SetRestrictedCallHandler(parameter), context.define(i));
 
                 // Normal parameter
                 if (!subroutineParameter)
@@ -89,11 +104,11 @@ namespace Deltin.Deltinteger.Parse
                     newVar = new SubroutineParameterVariable(methodScope, contextHandler);
 
                 vars[i] = newVar;
+                parameter.Type = newVar.CodeType;
 
-                ExpressionOrWorkshopValue initialValue = null;
-                if (newVar.InitialValue != null) initialValue = new ExpressionOrWorkshopValue(newVar.InitialValue);
+                if (newVar.InitialValue != null) parameter.DefaultValue = new ExpressionOrWorkshopValue(newVar.InitialValue);
 
-                parameters[i] = new CodeParameter(context.define(i).name.Text, newVar.CodeType, initialValue);
+                parameters[i] = parameter;
             }
 
             return new ParameterParseResult(parameters, vars);

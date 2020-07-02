@@ -285,6 +285,7 @@ namespace Deltin.Deltinteger.Elements
     public class V_ArraySlice : Element {}
 
     [ElementData("Attacker", ValueType.Player)]
+    [Restricted(RestrictedCallType.Attacker)]
     public class V_Attacker : Element {}
 
     [ElementData("Backward", ValueType.Vector)]
@@ -579,6 +580,7 @@ namespace Deltin.Deltinteger.Elements
     public class V_EventHealing : Element {}
 
     [ElementData("Event Player", ValueType.Player)]
+    [Restricted(RestrictedCallType.EventPlayer)]
     public class V_EventPlayer : Element {}
 
     [ElementData("Event Was Critical Hit", ValueType.Boolean)]
@@ -654,9 +656,11 @@ namespace Deltin.Deltinteger.Elements
     public class V_HasStatus : Element {}
 
     [ElementData("Healee", ValueType.Player)]
+    [Restricted(RestrictedCallType.Healer)]
     public class V_Healee : Element {}
 
     [ElementData("Healer", ValueType.Player)]
+    [Restricted(RestrictedCallType.Healer)]
     public class V_Healer : Element {}
 
     [ElementData("Health", ValueType.Number)]
@@ -1797,6 +1801,7 @@ namespace Deltin.Deltinteger.Elements
     public class V_VerticalSpeedOf : Element {}
 
     [ElementData("Victim", ValueType.Player)]
+    [Restricted(RestrictedCallType.Attacker)]
     public class V_Victim : Element {}
 
     [ElementData("World Vector Of", ValueType.Vector)]

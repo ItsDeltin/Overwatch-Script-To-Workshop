@@ -351,6 +351,7 @@ namespace Deltin.Deltinteger.Elements
         public WikiMethod Wiki { get; }
         public string Documentation => Wiki?.Description;
         private ValueType ElementValueType { get; }
+        private RestrictedCallType? Restricted { get; }
 
         // IScopeable defaults
         public LanguageServer.Location DefinedAt { get; } = null;
@@ -371,6 +372,7 @@ namespace Deltin.Deltinteger.Elements
             WorkshopParameters = type.GetCustomAttributes<ParameterBase>().ToArray();
             UsageDiagnostics = type.GetCustomAttributes<UsageDiagnostic>().ToArray();
             Hidden = type.GetCustomAttribute<HideElement>() != null;
+            Restricted = type.GetCustomAttribute<RestrictedAttribute>()?.Type;
 
             Wiki = WorkshopWiki.Wiki.GetWiki()?.GetMethod(WorkshopName);
         }
@@ -414,6 +416,11 @@ namespace Deltin.Deltinteger.Elements
                         codeType,
                         defaultValue == null ? null : new ExpressionOrWorkshopValue(defaultValue)
                     );
+
+                    // If the default parameter value is an Element and the Element is restricted,
+                    if (defaultValue is Element parameterElement && parameterElement.ElementList.Restricted != null)
+                        // ...then add the restricted call type to the parameter's list of restricted call types.
+                        Parameters[i].RestrictedCalls.Add((RestrictedCallType)parameterElement.ElementList.Restricted);
                 }
             }
         }
@@ -445,8 +452,13 @@ namespace Deltin.Deltinteger.Elements
 
         public void Call(ParseInfo parseInfo, DocRange callRange)
         {
-            if (WorkshopName == "Event Player")
-                parseInfo.CurrentCallInfo.RestrictedCall(new RestrictedCall(RestrictedCallType.EventPlayer, parseInfo.GetLocation(callRange), new CallStrategy("Event player cannot be called in a global rule.")));
+            if (Restricted != null)
+                // If there is a restricted call type, add it.
+                parseInfo.RestrictedCallHandler.RestrictedCall(new RestrictedCall(
+                    (RestrictedCallType)Restricted,
+                    parseInfo.GetLocation(callRange),
+                    new CallStrategy($"A restricted value of type '{RestrictedCall.StringFromCallType((RestrictedCallType)Restricted)}' cannot be called in this rule.")
+                ));
         }
     }
 

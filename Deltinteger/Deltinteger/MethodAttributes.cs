@@ -3,6 +3,7 @@ using System.Linq;
 using System.Collections.Generic;
 using Deltin.Deltinteger.Parse;
 using Deltin.Deltinteger.LanguageServer;
+using Deltin.Deltinteger.Elements;
 using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
 using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItemKind;
 
@@ -99,6 +100,51 @@ namespace Deltin.Deltinteger
             CallType = callType;
             CallRange = callRange;
             CallStrategy = callStrategy;
+        }
+
+        public static string StringFromCallType(RestrictedCallType type)
+        {
+            switch (type)
+            {
+                case RestrictedCallType.EventPlayer: return "Event Player";
+                default: return type.ToString();
+            }
+        }
+
+        public static RuleEvent[] GetSupportedRules(RestrictedCallType type)
+        {
+            switch (type)
+            {
+                case RestrictedCallType.EventPlayer: return new RuleEvent[] {
+                    RuleEvent.OnDamageDealt,
+                    RuleEvent.OnDamageTaken,
+                    RuleEvent.OnDeath,
+                    RuleEvent.OnElimination,
+                    RuleEvent.OnFinalBlow,
+                    RuleEvent.OngoingPlayer,
+                    RuleEvent.OnHealingDealt,
+                    RuleEvent.OnHealingTaken,
+                    RuleEvent.OnPlayerJoin,
+                    RuleEvent.OnPlayerLeave,
+                    RuleEvent.PlayerDealtKnockback,
+                    RuleEvent.PlayerReceivedKnockback,
+                    RuleEvent.Subroutine
+                };
+                case RestrictedCallType.Attacker: return new RuleEvent[] {
+                    RuleEvent.OnDamageDealt,
+                    RuleEvent.OnDamageTaken,
+                    RuleEvent.OnDeath,
+                    RuleEvent.OnElimination,
+                    RuleEvent.OnFinalBlow,
+                    RuleEvent.PlayerDealtKnockback,
+                    RuleEvent.PlayerReceivedKnockback
+                };
+                case RestrictedCallType.Healer: return new RuleEvent[] {
+                    RuleEvent.OnHealingDealt,
+                    RuleEvent.OnHealingTaken
+                };
+                default: throw new NotImplementedException();
+            }
         }
     }
 

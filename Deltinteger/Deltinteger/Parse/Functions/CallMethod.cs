@@ -52,6 +52,11 @@ namespace Deltin.Deltinteger.Parse
                         definedFunction.OnBlockApply(this);
                         parseInfo.CurrentCallInfo?.Call(definedFunction, NameRange);
                     }
+                    else
+                    {
+                        // Get optional parameter's restricted calls.
+                        OverloadChooser.Match.CheckOptionalsRestrictedCalls(parseInfo, NameRange);
+                    }
 
                     // Check if the function can be called in parallel.
                     if (Parallel != CallParallel.NoParallel && !CallingMethod.Attributes.Parallelable)
@@ -67,9 +72,12 @@ namespace Deltin.Deltinteger.Parse
             if (UsedAsExpression && !CallingMethod.DoesReturnValue)
                 parseInfo.Script.Diagnostics.Error("The chosen overload for " + CallingMethod.Name + " does not return a value.", NameRange);
             
+            // Get optional parameter's restricted calls.
+            OverloadChooser.Match.CheckOptionalsRestrictedCalls(parseInfo, NameRange);
+            
             // Check callinfo :)
             foreach (RestrictedCallType type in ((IApplyBlock)CallingMethod).CallInfo.GetRestrictedCallTypes())
-                parseInfo.CurrentCallInfo.RestrictedCall(new RestrictedCall(type, parseInfo.GetLocation(NameRange), new FunctionCallsRestricted(CallingMethod.Name, type)));
+                parseInfo.RestrictedCallHandler.RestrictedCall(new RestrictedCall(type, parseInfo.GetLocation(NameRange), new FunctionCallsRestricted(CallingMethod.Name, type)));
         }
 
         public Scope ReturningScope()

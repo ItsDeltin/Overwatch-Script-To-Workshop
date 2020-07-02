@@ -12,6 +12,7 @@ namespace Deltin.Deltinteger.Parse
         public IBreakContainer BreakHandler { get; private set; }
         public IContinueContainer ContinueHandler { get; private set; }
         public IExpression SourceExpression { get; private set; }
+        public IRestrictedCallHandler RestrictedCallHandler { get; private set; }
 
         public ParseInfo(ScriptFile script, DeltinScript translateInfo)
         {
@@ -26,11 +27,12 @@ namespace Deltin.Deltinteger.Parse
             BreakHandler = other.BreakHandler;
             ContinueHandler = other.ContinueHandler;
         }
-        public ParseInfo SetCallInfo(CallInfo currentCallInfo) => new ParseInfo(this) { CurrentCallInfo = currentCallInfo };
+        public ParseInfo SetCallInfo(CallInfo currentCallInfo) => new ParseInfo(this) { CurrentCallInfo = currentCallInfo, RestrictedCallHandler = currentCallInfo };
         public ParseInfo SetLoop(LoopAction loop) => new ParseInfo(this) { BreakHandler = loop, ContinueHandler = loop };
         public ParseInfo SetBreakHandler(IBreakContainer handler) => new ParseInfo(this) { BreakHandler = handler };
         public ParseInfo SetContinueHandler(IContinueContainer handler) => new ParseInfo(this) { ContinueHandler = handler };
         public ParseInfo SetSourceExpression(IExpression expression) => new ParseInfo(this) { SourceExpression = expression };
+        public ParseInfo SetRestrictedCallHandler(IRestrictedCallHandler callHandler) => new ParseInfo(this) { RestrictedCallHandler = callHandler };
 
         /// <summary>Gets an IStatement from a StatementContext.</summary>
         /// <param name="scope">The scope the statement was created in.</param>
@@ -179,7 +181,7 @@ namespace Deltin.Deltinteger.Parse
                 // If the source expression is null, Event Player is used by default.
                 // Otherwise, confirm that the source expression is returning the player variable scope.
                 if (referencer.VariableType == VariableType.Player && (SourceExpression == null || SourceExpression.ReturningScope() != TranslateInfo.PlayerVariableScope))
-                    CurrentCallInfo.RestrictedCall(new RestrictedCall(RestrictedCallType.EventPlayer, GetLocation(variableRange), new EventPlayerRestrictedCall(referencer)));
+                    RestrictedCallHandler.RestrictedCall(new RestrictedCall(RestrictedCallType.EventPlayer, GetLocation(variableRange), new EventPlayerRestrictedCall(referencer)));
 
                 return new CallVariableAction(referencer, index);
             }

@@ -6,7 +6,7 @@ using RuleEvent = Deltin.Deltinteger.Elements.RuleEvent;
 
 namespace Deltin.Deltinteger.Parse
 {
-    public class CallInfo
+    public class CallInfo : IRestrictedCallHandler
     {
         public IApplyBlock Function { get; }
         private ScriptFile Script { get; }
@@ -55,30 +55,30 @@ namespace Deltin.Deltinteger.Parse
             return false;
         }
 
-        public void RestrictedCall(RestrictedCall restrictedCall)
-        {
-            RestrictedCalls.Add(restrictedCall);
-        }
+        public void RestrictedCall(RestrictedCall restrictedCall) => RestrictedCalls.Add(restrictedCall);
 
         public void CheckRestrictedCalls(RuleEvent eventType)
         {
+            // Iterate through each restricted call.
             foreach (RestrictedCall call in RestrictedCalls)
-            {
-                // If the restricted call calls Event Player and the rule is ongoing global.
-                if (call.CallType == RestrictedCallType.EventPlayer && eventType == RuleEvent.OngoingGlobal)
+                // If the restricted call type's list of supported event types does not contain eventType...
+                if (!Deltin.Deltinteger.RestrictedCall.GetSupportedRules(call.CallType).Contains(eventType))
+                    // ...then add the syntax error.
                     Script.Diagnostics.Error(call.CallStrategy.Message(), call.CallRange.range);
-            }
         }
 
-        public RestrictedCallType[] GetRestrictedCallTypes()
+        public RestrictedCallType[] GetRestrictedCallTypes() => GetRestrictedCallTypes(RestrictedCalls);
+
+        public static RestrictedCallType[] GetRestrictedCallTypes(List<RestrictedCall> restrictedCalls)
         {
             List<RestrictedCallType> callTypes = new List<RestrictedCallType>();
-            foreach (RestrictedCall call in RestrictedCalls)
-                if (!callTypes.Contains(call.CallType)) callTypes.Add(call.CallType);
+            foreach (RestrictedCall call in restrictedCalls) if (!callTypes.Contains(call.CallType)) callTypes.Add(call.CallType);
             return callTypes.ToArray();
         }
-        public bool DoesCallEventPlayer() => RestrictedCalls.Any(call => call.CallType == RestrictedCallType.EventPlayer);
-        public bool DoesCallAttacker() => RestrictedCalls.Any(call => call.CallType == RestrictedCallType.Attacker);
-        public bool DoesCallHealer() => RestrictedCalls.Any(call => call.CallType == RestrictedCallType.Healer);
+    }
+
+    public interface IRestrictedCallHandler
+    {
+        void RestrictedCall(RestrictedCall restrictedCall);
     }
 }
