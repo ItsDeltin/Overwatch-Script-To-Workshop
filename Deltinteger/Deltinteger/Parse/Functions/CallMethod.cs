@@ -150,6 +150,6 @@ namespace Deltin.Deltinteger.Parse
             _callType = callType;
         }
 
-        public string Message() => $"The function '{_functionName}' calls a restricted function of type '{_callType.ToString()}'.";
+        public string Message() => $"The function '{_functionName}' calls a restricted value of type '{RestrictedCall.StringFromCallType(_callType)}'.";
     }
 }
