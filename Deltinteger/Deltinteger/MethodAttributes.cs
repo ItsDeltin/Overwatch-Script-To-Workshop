@@ -91,6 +91,51 @@ namespace Deltin.Deltinteger
 
     public class RestrictedCall
     {
+        public static readonly Dictionary<RestrictedCallType, RuleEvent[]> SupportedGroups = new Dictionary<RestrictedCallType, RuleEvent[]> {
+            {RestrictedCallType.Ability, new RuleEvent[] {
+                RuleEvent.OnDamageDealt,
+                RuleEvent.OnDamageTaken,
+                RuleEvent.OnDeath,
+                RuleEvent.OnElimination,
+                RuleEvent.OnFinalBlow,
+                RuleEvent.OnHealingDealt,
+                RuleEvent.OnHealingTaken,
+                RuleEvent.PlayerDealtKnockback,
+                RuleEvent.PlayerReceivedKnockback
+            }},
+            {RestrictedCallType.Attacker, new RuleEvent[] {
+                RuleEvent.OnDamageDealt,
+                RuleEvent.OnDamageTaken,
+                RuleEvent.OnDeath,
+                RuleEvent.OnElimination,
+                RuleEvent.OnFinalBlow,
+                RuleEvent.PlayerDealtKnockback,
+                RuleEvent.PlayerReceivedKnockback
+            }},
+            {RestrictedCallType.EventPlayer, new RuleEvent[] {
+                RuleEvent.OnDamageDealt,
+                RuleEvent.OnDamageTaken,
+                RuleEvent.OnDeath,
+                RuleEvent.OnElimination,
+                RuleEvent.OnFinalBlow,
+                RuleEvent.OngoingPlayer,
+                RuleEvent.OnHealingDealt,
+                RuleEvent.OnHealingTaken,
+                RuleEvent.OnPlayerJoin,
+                RuleEvent.OnPlayerLeave,
+                RuleEvent.PlayerDealtKnockback,
+                RuleEvent.PlayerReceivedKnockback,
+                RuleEvent.Subroutine
+            }},
+            {RestrictedCallType.Healer, new RuleEvent[] {
+                RuleEvent.OnHealingDealt,
+                RuleEvent.OnHealingTaken
+            }},
+            {RestrictedCallType.Knockback, new RuleEvent[] {
+                RuleEvent.PlayerDealtKnockback,
+                RuleEvent.PlayerReceivedKnockback
+            }}
+        };
         public RestrictedCallType CallType { get; }
         public Location CallRange { get; }
         public ICallStrategy CallStrategy { get; }
@@ -108,42 +153,6 @@ namespace Deltin.Deltinteger
             {
                 case RestrictedCallType.EventPlayer: return "Event Player";
                 default: return type.ToString();
-            }
-        }
-
-        public static RuleEvent[] GetSupportedRules(RestrictedCallType type)
-        {
-            switch (type)
-            {
-                case RestrictedCallType.EventPlayer: return new RuleEvent[] {
-                    RuleEvent.OnDamageDealt,
-                    RuleEvent.OnDamageTaken,
-                    RuleEvent.OnDeath,
-                    RuleEvent.OnElimination,
-                    RuleEvent.OnFinalBlow,
-                    RuleEvent.OngoingPlayer,
-                    RuleEvent.OnHealingDealt,
-                    RuleEvent.OnHealingTaken,
-                    RuleEvent.OnPlayerJoin,
-                    RuleEvent.OnPlayerLeave,
-                    RuleEvent.PlayerDealtKnockback,
-                    RuleEvent.PlayerReceivedKnockback,
-                    RuleEvent.Subroutine
-                };
-                case RestrictedCallType.Attacker: return new RuleEvent[] {
-                    RuleEvent.OnDamageDealt,
-                    RuleEvent.OnDamageTaken,
-                    RuleEvent.OnDeath,
-                    RuleEvent.OnElimination,
-                    RuleEvent.OnFinalBlow,
-                    RuleEvent.PlayerDealtKnockback,
-                    RuleEvent.PlayerReceivedKnockback
-                };
-                case RestrictedCallType.Healer: return new RuleEvent[] {
-                    RuleEvent.OnHealingDealt,
-                    RuleEvent.OnHealingTaken
-                };
-                default: throw new NotImplementedException();
             }
         }
     }
@@ -167,6 +176,8 @@ namespace Deltin.Deltinteger
     {
         EventPlayer,
         Attacker,
-        Healer
+        Healer,
+        Knockback,
+        Ability
     }
 }

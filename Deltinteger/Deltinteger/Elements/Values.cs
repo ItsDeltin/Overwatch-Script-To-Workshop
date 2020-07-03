@@ -574,9 +574,11 @@ namespace Deltin.Deltinteger.Elements
     public class V_EntityExists : Element {}
 
     [ElementData("Event Damage", ValueType.Number)]
+    [Restricted(RestrictedCallType.Attacker)]
     public class V_EventDamage : Element {}
 
     [ElementData("Event Healing", ValueType.Number)]
+    [Restricted(RestrictedCallType.Healer)]
     public class V_EventHealing : Element {}
 
     [ElementData("Event Player", ValueType.Player)]
@@ -584,9 +586,11 @@ namespace Deltin.Deltinteger.Elements
     public class V_EventPlayer : Element {}
 
     [ElementData("Event Was Critical Hit", ValueType.Boolean)]
+    [Restricted(RestrictedCallType.Attacker)]
     public class V_EventWasCriticalHit : Element {}
 
     [ElementData("Event Was Health Pack", ValueType.Boolean)]
+    [Restricted(RestrictedCallType.Healer)]
     public class V_EventWasHealthPack : Element {}
 
     [ElementData("Eye Position", ValueType.Vector)]
@@ -1905,6 +1909,7 @@ namespace Deltin.Deltinteger.Elements
     public class V_IsJumping : Element {}
 
     [ElementData("Event Direction", ValueType.Vector)]
+    [Restricted(RestrictedCallType.Knockback)]
     public class V_EventDirection : Element {}
 
     [ElementData("Button", ValueType.Button)]
@@ -1912,6 +1917,7 @@ namespace Deltin.Deltinteger.Elements
     public class V_ButtonValue : Element {}
 
     [ElementData("Event Ability", ValueType.Button)]
+    [Restricted(RestrictedCallType.Ability)]
     public class V_EventAbility : Element {}
 
     [ElementData("Ability Cooldown", ValueType.Number)]
