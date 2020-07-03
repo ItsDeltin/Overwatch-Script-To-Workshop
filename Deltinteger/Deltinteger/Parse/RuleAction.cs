@@ -120,6 +120,10 @@ namespace Deltin.Deltinteger.Parse
                 }
             }
 
+            // Set the event type to player if the event type was not set and player or team was changed.
+            if (!_setEventType && ((_setPlayer && Player != PlayerSelector.All) || (_setTeam && Team != Team.All)))
+                EventType = RuleEvent.OngoingPlayer;
+
             // Syntax error if changing the Team type when the Event type is set to Global.
             if (_setEventType && EventType == RuleEvent.OngoingGlobal)
             {

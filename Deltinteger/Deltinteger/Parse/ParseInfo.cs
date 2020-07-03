@@ -26,6 +26,8 @@ namespace Deltin.Deltinteger.Parse
             CurrentCallInfo = other.CurrentCallInfo;
             BreakHandler = other.BreakHandler;
             ContinueHandler = other.ContinueHandler;
+            // SourceExpression = other.SourceExpression; TODO: Should this be here?
+            RestrictedCallHandler = other.RestrictedCallHandler;
         }
         public ParseInfo SetCallInfo(CallInfo currentCallInfo) => new ParseInfo(this) { CurrentCallInfo = currentCallInfo, RestrictedCallHandler = currentCallInfo };
         public ParseInfo SetLoop(LoopAction loop) => new ParseInfo(this) { BreakHandler = loop, ContinueHandler = loop };
