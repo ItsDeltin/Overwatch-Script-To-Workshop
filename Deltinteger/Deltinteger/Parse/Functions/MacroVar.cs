@@ -30,6 +30,7 @@ namespace Deltin.Deltinteger.Parse
         private readonly Scope _scope;
         private readonly ParseInfo _parseInfo;
         private readonly DeltinScriptParser.Define_macroContext _context;
+        private bool _wasApplied = false;
 
         public CallInfo CallInfo { get; }
 
@@ -87,6 +88,7 @@ namespace Deltin.Deltinteger.Parse
         public void SetupBlock()
         {
             if (_expressionToParse != null) Expression = _parseInfo.SetCallInfo(CallInfo).GetExpression(_scope.Child(), _expressionToParse);
+            _wasApplied = true;
             foreach (var listener in listeners) listener.Applied();
         }
 
@@ -106,6 +108,7 @@ namespace Deltin.Deltinteger.Parse
             parseInfo.Script.AddDefinitionLink(callRange, DefinedAt);
             parseInfo.Script.AddHover(callRange, GetLabel(true));
             parseInfo.TranslateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, new Location(parseInfo.Script.Uri, callRange));
+            OnBlockApply(new MacroVarRestrictedCallHandler(this, parseInfo.RestrictedCallHandler, parseInfo.GetLocation(callRange)));
         }
 
         public CompletionItem GetCompletion() => new CompletionItem() {
@@ -131,7 +134,8 @@ namespace Deltin.Deltinteger.Parse
         private List<IOnBlockApplied> listeners = new List<IOnBlockApplied>();
         public void OnBlockApply(IOnBlockApplied onBlockApplied)
         {
-            listeners.Add(onBlockApplied);
+            if (_wasApplied) onBlockApplied.Applied();
+            else listeners.Add(onBlockApplied);
         }
     }
 
@@ -152,5 +156,31 @@ namespace Deltin.Deltinteger.Parse
         public void SetVirtual() => _macro.Virtual = true;
         public void SetRecursive() => throw new NotImplementedException();
         public void SetSubroutine(string name) => throw new NotImplementedException();
+    }
+
+    /// <summary>When a macro is called, sometimes the macro's expression is not parsed yet so callers do not know if the macro has a restricted value.
+    /// Once the expression is parsed, this will copy the restricted values to the caller's restricted value handler.</summary>
+    class MacroVarRestrictedCallHandler : IOnBlockApplied
+    {
+        private readonly MacroVar _macroVar;
+        private readonly IRestrictedCallHandler _callHandler;
+        private readonly Location _callLocation;
+
+        public MacroVarRestrictedCallHandler(MacroVar macroVar, IRestrictedCallHandler callHandler, Location callLocation)
+        {
+            _macroVar = macroVar;
+            _callHandler = callHandler;
+            _callLocation = callLocation;
+        }
+
+        public void Applied()
+        {
+            foreach (RestrictedCall restrictedCall in _macroVar.CallInfo.RestrictedCalls)
+                _callHandler.RestrictedCall(new RestrictedCall(
+                    restrictedCall.CallType,
+                    _callLocation,
+                    new CallStrategy($"The macro '{_macroVar.Name}' calls a restricted value of type '{RestrictedCall.StringFromCallType(restrictedCall.CallType)}'")
+                ));
+        }
     }
 }
