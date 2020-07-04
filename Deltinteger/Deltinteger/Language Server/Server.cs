@@ -152,6 +152,9 @@ namespace Deltin.Deltinteger.LanguageServer
                 return true;
             }));
 
+            // semantic tokens
+            options.OnRequest<Newtonsoft.Json.Linq.JToken, SemanticToken[]>("semanticTokens", (uriToken) => Task<SemanticToken[]>.Run(() => LastParse?.ScriptFromUri(new Uri(uriToken["fsPath"].ToObject<string>()))?.GetSemanticTokens()));
+
             return options;
         }
 

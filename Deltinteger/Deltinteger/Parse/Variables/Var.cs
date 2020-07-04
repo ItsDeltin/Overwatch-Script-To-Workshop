@@ -24,6 +24,7 @@ namespace Deltin.Deltinteger.Parse
         public int ID { get; }
         public bool Static { get; }
         public bool Recursive { get; }
+        private readonly TokenType _tokenType;
 
         public bool WasCalled { get; private set; }
 
@@ -56,6 +57,7 @@ namespace Deltin.Deltinteger.Parse
             ID = varInfo.ID;
             Static = varInfo.Static;
             Recursive = varInfo.Recursive;
+            _tokenType = varInfo.TokenType;
             _initalValueContext = varInfo.InitialValueContext;
             _initialValueResolve = varInfo.InitialValueResolve;
             _operationalScope = varInfo.OperationalScope;
@@ -110,6 +112,7 @@ namespace Deltin.Deltinteger.Parse
         public void Call(ParseInfo parseInfo, DocRange callRange)
         {
             WasCalled = true;
+            parseInfo.Script.AddToken(callRange, _tokenType);
             parseInfo.Script.AddDefinitionLink(callRange, DefinedAt);
             parseInfo.Script.AddHover(callRange, GetLabel(true));
             parseInfo.TranslateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, new Location(parseInfo.Script.Uri, callRange));
@@ -174,7 +177,7 @@ namespace Deltin.Deltinteger.Parse
         public InitialValueResolve InitialValueResolve = InitialValueResolve.Instant;
         public Scope OperationalScope;
         public bool Recursive;
-
+        public TokenType TokenType = TokenType.Variable;
         public CodeLensSourceType CodeLensType = CodeLensSourceType.Variable;
 
         public VarInfo(string name, Location definedAt, ParseInfo parseInfo)

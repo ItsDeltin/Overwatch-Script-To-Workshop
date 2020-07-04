@@ -6,7 +6,7 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { workspace, ExtensionContext, OutputChannel, window, Uri, Position, Location, StatusBarItem } from 'vscode';
-import { LanguageClient, LanguageClientOptions, ServerOptions, ExecutableOptions, Executable, TransportKind, InitializationFailedHandler, ErrorHandler, TextDocument, RequestType, Position as LSPosition, Location as LSLocation } from 'vscode-languageclient';
+import { LanguageClient, LanguageClientOptions, ServerOptions, ExecutableOptions, Executable, TransportKind, InitializationFailedHandler, ErrorHandler, TextDocument, RequestType, Position as LSPosition, Location as LSLocation, Range as LSRange } from 'vscode-languageclient';
 const fetch = require('node-fetch').default;
 
 let client: LanguageClient;
@@ -27,6 +27,8 @@ export function activate(context: ExtensionContext) {
 	setElementCount(0);
 	
 	addCommands(context);
+	// context.subscriptions.push(vscode.languages.registerDocument);
+	// new vscode.languages.
 
 	workspace.onDidChangeConfiguration((e: vscode.ConfigurationChangeEvent) => {
 		if (e.affectsConfiguration("ostw.deltintegerPath"))
@@ -74,7 +76,7 @@ function startLanguageServer(context: ExtensionContext)
 	// Options to control the language client
 	let clientOptions: LanguageClientOptions = {
 		// Register the server for plain text documents
-		documentSelector: [{ scheme: 'file', language: 'ostw' }],
+		documentSelector: [selector],
 		synchronize: {
 			// Notify the server about file changes to '.clientrc files contained in the workspace
 			// fileEvents: workspace.createFileSystemWatcher('**/.clientrc')
@@ -254,3 +256,30 @@ const workshopPanelProvider = new class implements vscode.TextDocumentContentPro
 		return lastWorkshopOutput;
 	}
 };
+
+const tokenTypes = ['comment', 'string', 'keyword', 'number', 'regexp', 'operator', 'namespace',
+	'type', 'struct', 'class', 'interface', 'enum', 'enummember', 'typeParameter', 'function',
+	'member', 'macro', 'variable', 'parameter', 'property', 'label'];
+const tokenModifiers = ['declaration', 'readonly', 'static', 'deprecated', 'abstract', 'async', 'modification', 'documentation', 'defaultLibrary'];
+const legend = new vscode.SemanticTokensLegend(tokenTypes, tokenModifiers);
+const selector = { language: 'ostw', scheme: 'file' }; // register for all Java documents from the local file system
+
+const provider: vscode.DocumentSemanticTokensProvider = {
+	async provideDocumentSemanticTokens(document: vscode.TextDocument) {
+			// Get the semantic tokens in the provided document from the language server.
+			let tokens: {range: LSRange, tokenType:string, modifiers:string[]}[] = await client.sendRequest('semanticTokens', document.uri);
+
+			// Create the builder.
+			let builder:vscode.SemanticTokensBuilder = new vscode.SemanticTokensBuilder(legend);
+
+			// Push tokens to the builder.
+			for (const token of tokens) {
+				builder.push(client.protocol2CodeConverter.asRange(token.range), token.tokenType, token.modifiers);
+			}
+
+			// Return the result.
+			return builder.build();
+		}
+};
+
+vscode.languages.registerDocumentSemanticTokensProvider(selector, provider, legend);

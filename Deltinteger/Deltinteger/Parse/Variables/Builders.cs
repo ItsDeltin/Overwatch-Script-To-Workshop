@@ -120,6 +120,7 @@ namespace Deltin.Deltinteger.Parse
             _varInfo.WholeContext = true; // Shouldn't matter.
             _varInfo.OperationalScope = _operationalScope;
             _varInfo.CodeLensType = CodeLensSourceType.ParameterVariable;
+            _varInfo.TokenType = TokenType.Parameter;
         }
 
         protected override void TypeCheck()

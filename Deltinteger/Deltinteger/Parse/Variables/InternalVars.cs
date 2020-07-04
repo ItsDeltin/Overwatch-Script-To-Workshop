@@ -17,6 +17,7 @@ namespace Deltin.Deltinteger.Parse
         public bool IsSettable { get; set; } = true;
         public VariableType VariableType => VariableType.Global;
         public bool Static => true;
+        public TokenType? TokenType { get; set; } = null;
 
         public InternalVar(string name, CompletionItemKind completionItemKind = CompletionItemKind.Variable)
         {
@@ -45,6 +46,7 @@ namespace Deltin.Deltinteger.Parse
         public virtual void Call(ParseInfo parseInfo, DocRange callRange)
         {
             parseInfo.Script.AddHover(callRange, GetLabel(true));
+            if (TokenType != null) parseInfo.Script.AddToken(callRange, (TokenType)TokenType);
         }
 
         public virtual CompletionItem GetCompletion() => new CompletionItem() {
