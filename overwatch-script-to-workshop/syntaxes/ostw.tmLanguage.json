@@ -1,211 +1,190 @@
 {
-	"scopeName": "source.del",
-	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
-	"name": "Overwatch Script To Workshop",
-	"patterns": [
-		{ "include": "#ruleset" },
-		{ "include": "#comments" }
-	],
-	"repository": {
-		"ruleset": {
-			"patterns": [
-				{"include": "#rule"},
-				{"include": "#strings"},
-				{"include": "#new"},
-				{"include": "#if"},
-				{"include": "#modifiers"},
-				{"include": "#rule_option"},
-				{"include": "#keywords_control"},
-				{"include": "#block"},
-				{"include": "#define_type"},
-				{"include": "#define_macro"},
-				{"include": "#define_macro_var"},
-				{"include": "#define_method"},
-				{"include": "#define_variable"},
-				{"include": "#expressions"},
-				{"include": "#keywords_other"}
-			]
-		},
-		"rule": {
-			"match": "\\b((disabled\\s+)?rule)\\s*:",
-			"captures": {
-				"1": {"name":"keyword.control"}
-			}
-		},
-		"if": {
-			"begin": "((else\\s+)?if)\\s*\\(",
-			"beginCaptures": {
-				"1": {"name": "keyword.control"}
-			},
-			"end": "\\)",
-			"patterns": [{"include": "#expressions"}]
-		},
-		"rule_option": {
-			"match": "(Player|Event|Team)\\s*\\.\\s*([a-zA-Z0-9]+)\\s*;",
-			"captures": {
-				"1": {"name": "entity.name.type"},
-				"2": {"name": "variable.other"}
-			}
-		},
-		"define_variable": {
-			"begin": "((define)|([_[:alnum:]]+)(\\s*\\[\\s*\\])*)(\\s+[_[:alnum:]]+)(\\s*(\\!|([0-9]+)))?(\\s*=)?",
-			"beginCaptures": {
-				"2": {"name":"keyword.other"},
-				"3": {"name":"entity.name.type"},
-				"5": {"name":"variable.name"},
-				"8": {"name":"constant.numeric"}
-			},
-			"end": ";",
-			"patterns": [{"include": "#expressions"}]
-		},
-		"define_method": {
-			"begin": "((void|define)|([_[:alnum:]]+)(\\s*\\[\\s*\\])*)\\s+([_[:alnum:]]+\\s*\\()",
-			"beginCaptures": {
-				"2": {"name":"keyword.other"},
-				"3": {"name":"entity.name.class"},
-				"5": {"name":"entity.name.function"}
-			},
-			"end": "\\)",
-			"endCaptures": {
-				"0": {"name":"entity.name.function"}
-			},
-			"patterns": [{"include": "#parameter"}]
-		},
-		"define_macro": {
-			"begin": "(macro)\\s+(([_[:alnum:]]+)\\s*\\()",
-			"beginCaptures": {
-				"1": {"name":"keyword.other"},
-				"2": {"name":"entity.name.function"}
-			},
-			"end": "\\)",
-			"endCaptures": {
-				"0": {"name":"entity.name.function"}
-			},
-			"patterns": [{"include": "#parameter"}]
-		},
-		"define_macro_var": {
-			"match": "(macro)\\s+([_[:alnum:]]+)",
-			"captures": {
-				"0": {"name":"keyword.other"},
-				"1": {"name":"variable.other"}
-			}
-		},
-		"modifiers": {
-			"match": "\\b(public|private|protected|static|globalvar|playervar|ref|override|virtual|recursive)\\b",
-			"name": "keyword.other"
-		},
-		"parameter": {
-			"match": "(ref\\s+)?((define)|([_[:alnum:]]+)(\\s*\\[\\s*\\])*)\\s+([_[:alnum:]]+)",
-			"captures": {
-				"1": { "name": "keyword.other" },
-				"3": { "name": "keyword.other" },
-				"4": { "name": "entity.name.type" },
-				"6": { "name": "variable.parameter" }
-			}
-		},
-		"define_type": {
-			"match": "(class|struct|enum)\\s+([_[:alnum:]]+)(\\s*:\\s*([_[:alnum:]]+)(\\s*,\\s*([_[:alnum:]]+))*)?",
-			"captures": {
-				"1": {"name": "keyword.other"},
-				"2": {"name": "entity.name.class"},
-				"4": {"name": "entity.name.class"},
-				"6": {"name": "entity.name.class"}
-			}
-		},
-		"block": {
-			"begin": "{",
-			"end": "}",
-			"patterns": [
-				{"include": "#comments"},
-				{"include": "#if"},
-				{"include": "#new"},
-				{"include": "#modifiers"},
-				{"include": "#keywords_control"},
-				{"include": "#define_macro"},
-				{"include": "#define_macro_var"},
-				{"include": "#define_method"},
-				{"include": "#methods"},
-				{"include": "#define_variable"},
-				{"include": "#expressions"}
-			]
-		},
-		"expressions": {
-			"patterns": [
-				{"include": "#new"},
-				{"include": "#cast"},
-				{"include": "#methods"},
-				{"include": "#keywords"}, 
-				{"include": "#strings"},
-				{"include": "#comments"}, 
-				{"include": "#numbers"},
-				{"include": "#variables"}
-			]
-		},
-		"methods": {
-			"name": "entity.name.function",
-			"begin": "[_[:alnum:]]+\\(",
-			"end": "\\)",
-			"patterns": [{"include": "#parameter"}, {"include": "#expressions"}]
-		},
-		"new": {
-			"begin": "(new)\\s+([_[:alnum:]]+)\\s*\\(",
-			"end": "\\)",
-			"beginCaptures": {
-				"1": {"name":"keyword.other"},
-				"2": {"name":"entity.name.class"}
-			},
-			"patterns": [{"include": "#expressions"}]
-		},
-		"cast": {
-			"match": "<\\s*([_[:alnum:]]+)\\s*>",
-			"captures": {
-				"1": {"name": "entity.name.class"}
-			}
-		},
-		"strings": {
-			"name": "string.quoted.double",
-			"begin": "@?\"",
-			"end": "\"",
-			"patterns": [
-				{
-					"name": "constant.character.escape",
-					"match": "\\\\."
-				},
-				{
-					"name": "string.regexp",
-					"match": "<[0-9]+>"
-				}
-			]
-		},
-		"comments": {
-			"patterns": [
-				{"begin": "//"    , "end": "$"      , "name": "comment.line.double-slash"},
-				{"begin": "\\/\\*", "end": "\\*\\/" , "name": "comment.block"},
-				{"begin": "#", "end": "$", "name": "comment.block.documentation" }
-			]
-		},
-		"numbers": {
-			"name": "constant.numeric",
-			"match": "\\b-?[0-9]+(\\.[0-9]+)?\\b"
-		},
-
-		"keywords": {
-			"patterns": [
-				{"include": "#keywords_control"},
-				{"include": "#keywords_other"}
-			]
-		},
-		"keywords_control": {
-			"name": "keyword.control",
-			"match": "\\b(if|else|while|for|foreach|return|rule|import|continue|break|switch|case|default|async)\\b"
-		},
-		"keywords_other": {
-			"name": "keyword.other",
-			"match": "\\b(in|define|true|false|recursive|playervar|globalvar|buildervar|null|struct|class|public|private|static|protected|new|this|as|delete|root|base|macro)\\b"
-		},
-		"variables": {
-			"name": "variable",
-			"match": "[a-zA-Z_0-9]+"
-		}
-	}
+  "name": "Overwatch Script To Workshop",
+  "scopeName": "source.del",
+  "fileTypes": [
+    "del",
+    "ostw",
+    "workshop"
+  ],
+  "$schema": "https://raw.githubusercontent.com/Septh/tmlanguage/master/tmLanguage.schema.json",
+  "patterns": [
+    {
+      "include": "#rule-set"
+    }
+  ],
+  "repository": {
+    "rule-set": {
+      "patterns": [
+        {
+          "include": "#rule"
+        },
+        {
+          "include": "#declare-variable"
+        },
+        {
+          "include": "#declare-function"
+        }
+      ]
+    },
+    "declare-variable": {
+      "begin": "((define)|([_[:alnum:]]+))\\b\\s*([_[:alnum:]]+)\\s*(=)?(?!\\s*\\()",
+      "end": ";",
+      "patterns": [
+        {
+          "include": "#expression"
+        }
+      ],
+      "beginCaptures": {
+        "2": {
+          "name": "keyword.other"
+        },
+        "3": {
+          "name": "entity.name.type"
+        },
+        "4": {
+          "name": "variable"
+        },
+        "5": {
+          "name": "keyword.operator.assignment.ostw"
+        }
+      },
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.terminator.statement.ostw"
+        }
+      }
+    },
+    "declare-function": {
+      "begin": "((public|private|protected|virtual|override|abstract|static)\\s+)*((define)|([_[:alnum:]]+))\\b\\s*([_[:alnum:]]+)",
+      "end": "(?<=})|(?<=;)",
+      "beginCaptures": {
+        "2": {
+          "name": "storage.modifier"
+        },
+        "4": {
+          "name": "keyword.other"
+        },
+        "5": {
+          "name": "entity.name.type"
+        },
+        "6": {
+          "name": "entity.name.function"
+        },
+        "7": {
+          "name": "punctuation.parenthesis.open"
+        }
+      },
+      "patterns": [
+        {
+          "include": "#parameter-list-declaration"
+        }
+      ]
+    },
+    "parameter-list-declaration": {
+      "begin": "\\(",
+      "end": "\\)",
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.parenthesis.close"
+        }
+      },
+      "patterns": [
+        {
+          "include": "#parameter-declaration"
+        }
+      ]
+    },
+    "parameter-declaration": {
+      "match": "(ref\\s+)?((define)|([_[:alnum:]]+))\\b\\s*([_[:alnum:]]+)",
+      "captures": {
+        "1": {
+          "name": "storage.modifier"
+        },
+        "3": {
+          "name": "keyword.other"
+        },
+        "4": {
+          "name": "entity.name.type"
+        },
+        "5": {
+          "name": "variable.parameter"
+        }
+      }
+    },
+    "rule": {
+      "begin": "(rule)\\s*(:)\\s*(\".*?\")",
+      "end": "(?<=})|(?<=;)",
+      "beginCaptures": {
+        "1": {
+          "name": "keyword.control"
+        },
+        "2": {
+          "name": "punctuation.separator.colon"
+        },
+        "3": {
+          "name": "string.quoted.double"
+        }
+      },
+      "patterns": [
+        {
+          "match": "(Event|Team|Player)\\s*(\\.)\\s*([_[:alnum:]]+)",
+          "captures": {
+            "1": {
+              "name": "support.type"
+            },
+            "2": {
+              "name": "punctuation.accessor"
+            },
+            "3": {
+              "name": "support.variable"
+            }
+          }
+        },
+        {
+          "begin": "(if)\\s*(\\()",
+          "end": "\\)",
+          "beginCaptures": {
+            "1": {
+              "name": "keyword.control.conditional.if"
+            },
+            "2": {
+              "name": "punctuation.parenthesis.open"
+            }
+          },
+          "endCaptures": {
+            "0": {
+              "name": "punctuation.parenthesis.close"
+            }
+          },
+          "patterns": [
+            {
+              "include": "#expression"
+            }
+          ]
+        },
+        {
+          "include": "#block"
+        }
+      ]
+    },
+    "block": {
+      "begin": "{",
+      "end": "}"
+    },
+    "expression": {
+      "patterns": [
+        {
+          "include": "#number"
+        }
+      ]
+    },
+    "number": {
+      "patterns": [
+        {
+          "match": "\\b-?[0-9]+(\\.[0-9]+)?\\b",
+          "name": "constant.numeric"
+        }
+      ]
+    }
+  }
 }

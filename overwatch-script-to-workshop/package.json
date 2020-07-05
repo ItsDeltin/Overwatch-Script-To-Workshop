@@ -175,13 +175,13 @@
         "test": "sh ./scripts/e2e.sh",
         "webpack": "webpack --mode development",
         "webpack-dev": "webpack --mode development --watch",
-        "test-compile": "tsc -p ./"
+        "compile-grammar-builder": "tsc -b ./build-grammar"
     },
     "devDependencies": {
         "@types/mocha": "^5.2.0",
         "@types/node": "^8.10.61",
         "@types/vscode": "^1.46.0",
-        "node-fetch": "^2.6.0",
+        "js-yaml": "^3.14.0",
         "ts-loader": "^6.2.2",
         "tslint": "^5.20.1",
         "typescript": "^3.9.6",

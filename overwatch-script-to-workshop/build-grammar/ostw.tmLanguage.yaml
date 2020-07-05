@@ -1,0 +1,145 @@
+# Run build-grammar.ts to convert this yaml file.
+# See https://macromates.com/manual/en/language_grammars section 12.4 naming conventions.
+
+name: Overwatch Script To Workshop
+scopeName: source.del
+fileTypes: [del, ostw, workshop]
+$schema: https://raw.githubusercontent.com/Septh/tmlanguage/master/tmLanguage.schema.json
+
+variables:
+  part: '([_[:alnum:]]+)'
+  type: '((define)|{{part}})\b'
+  # define a =
+  declare-variable-start: '{{type}}\s*{{part}}\s*(=)?'
+  string-literal: '".*?"'
+  encapsulated-block-end: '(?<=})|(?<=;)'
+  attribute-list: ((public|private|protected|virtual|override|abstract|static)\s+)*
+
+  # Scopes
+  statement-end: punctuation.terminator.statement.ostw
+  assignment: keyword.operator.assignment.ostw
+  define: keyword.other
+  
+patterns:
+- include: '#rule-set'
+
+repository:
+  # The root of a default OSTW script.
+  rule-set:
+    patterns:
+    - include: '#rule'
+    - include: '#declare-variable'
+    - include: '#declare-function'
+  
+  # Variable definition syntax
+  declare-variable:
+    begin: '{{declare-variable-start}}(?!\s*\()'
+    end: ;
+    patterns:
+      - include: '#expression'
+    beginCaptures:
+      2: # The define keyword
+        name: '{{define}}'
+      3: # The type of the variable declaration.
+        name: entity.name.type
+      4: # The variable name
+        name: variable
+      5: # The equals for an initial value.
+        name: '{{assignment}}'
+    endCaptures:
+      0:
+        name: '{{statement-end}}'
+  
+  # Function delcaration
+  declare-function:
+    begin: '{{attribute-list}}{{type}}\s*{{part}}'
+    end: '{{encapsulated-block-end}}'
+    beginCaptures:
+      2:
+        name: storage.modifier
+      4:
+        name: '{{define}}'
+      5:
+        name: entity.name.type
+      6:
+        name: entity.name.function
+      7:
+        name: punctuation.parenthesis.open
+    patterns:
+      - include: '#parameter-list-declaration'
+  
+  # Parameter declaration
+  parameter-list-declaration:
+    begin: '\('
+    end: '\)'
+    endCaptures:
+      0:
+        name: punctuation.parenthesis.close
+    patterns:
+      - include: '#parameter-declaration'
+    
+  parameter-declaration:
+    match: '(ref\s+)?{{type}}\s*{{part}}'
+    captures:
+      1:
+        name: storage.modifier
+      3:
+        name: '{{define}}'
+      4:
+        name: entity.name.type
+      5:
+        name: variable.parameter
+
+  # Rules
+  rule:
+    begin: '(rule)\s*(:)\s*({{string-literal}})' # rule: "string"
+    end: '{{encapsulated-block-end}}'
+    beginCaptures:
+      1:
+        name: keyword.control
+      2:
+        name: punctuation.separator.colon
+      3:
+        name: string.quoted.double
+
+    patterns:
+    # Event attribute
+    - match: (Event|Team|Player)\s*(\.)\s*{{part}}
+      captures:
+        1:
+          name: support.type
+        2:
+          name: punctuation.accessor
+        3:
+          name: support.variable
+    
+    # Rule condition
+    - begin: '(if)\s*(\()'
+      end: '\)'
+      beginCaptures:
+        1:
+          name: keyword.control.conditional.if
+        2:
+          name: punctuation.parenthesis.open
+      endCaptures:
+        0:
+          name: punctuation.parenthesis.close
+      patterns:
+        - include: '#expression'
+    - include: '#block'
+
+  # Block that contains statements.
+  block:
+    begin: '{'
+    end: '}'
+  
+  # Expressions
+  expression:
+    patterns:
+      - include: '#number'
+  
+  # Numbers
+  number:
+    patterns:
+      - match: \b-?[0-9]+(\.[0-9]+)?\b
+        name: constant.numeric
