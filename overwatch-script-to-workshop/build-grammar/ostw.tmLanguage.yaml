@@ -176,14 +176,84 @@ repository:
   block:
     begin: '{'
     end: '}'
+    beginCaptures:
+      0:
+        name: punctuation.curlybrace.open
+    endCaptures:
+      0:
+        name: punctuation.curlybrace.close
+    patterns:
+      - include: '#statement'
+  
+  # Statement
+  statement:
+    patterns:
+      # Return statement
+      - begin: return
+        end: ;
+        beginCaptures:
+          0:
+            name: keyword.control.flow.return
+        endCaptures:
+          0:
+            name: '{{statement-end}}'
+        patterns:
+          - include: '#expression'
+      - include: '#function-call'
   
   # Expressions
   expression:
     patterns:
       - include: '#number'
+      - include: '#boolean'
+      - include: '#function-call'
   
   # Numbers
   number:
     patterns:
       - match: \b-?[0-9]+(\.[0-9]+)?\b
         name: constant.numeric
+  
+  # Booleans
+  boolean:
+    match: (true)|(false)
+    captures:
+      1:
+        name: constant.language.boolean.true
+      2:
+        name: constant.language.boolean.false
+  
+  # Function call
+  function-call:
+    begin: (.?)\s*{{part}}\s*(\()
+    end: \)
+    beginCaptures:
+      1:
+        name: punctuation.accessor
+      2:
+        name: entity.name.function
+      3:
+        name: punctuation.parenthesis.open
+    endCaptures:
+      0:
+        name: punctuation.parenthesis.close
+    patterns:
+      - include: '#argument-list'
+
+  # Argument list
+  argument-list:
+    patterns:
+      - include: '#expression'
+      # Named argument
+      - begin: '{{part}}\s*(:)'
+        end: '\s*(?=,|\))'
+        beginCaptures:
+          1:
+            name: variable.parameter
+          2:
+            name: punctuation.separator.colon
+        patterns:
+          - include: '#expression'
+      # Parameter comma seperator
+      - match: ','
+        name: punctuation.separator.comma
