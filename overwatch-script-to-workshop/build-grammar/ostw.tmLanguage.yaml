@@ -8,7 +8,7 @@ $schema: https://raw.githubusercontent.com/Septh/tmlanguage/master/tmLanguage.sc
 
 variables:
   part: '([_[:alnum:]]+)'
-  type: '((define)|{{part}})\b'
+  type: '(?<set-type>(define|{{part}})\b\s*(<\s*\g<set-type>?\s*>)?\s*(\[\s*\])*)' # 5 groups
   # define a =
   declare-variable-start: '{{type}}\s*{{part}}\s*(=)?'
   string-literal: '".*?"'
@@ -28,8 +28,28 @@ repository:
   rule-set:
     patterns:
     - include: '#rule'
-    - include: '#declare-variable'
     - include: '#declare-function'
+    - include: '#declare-variable'
+  
+  # Applies syntax highlighting to an already matched type.
+  type-matcher:
+    patterns:
+      # 'define' default type.
+      - match: 'define'
+        name: '{{define}}'
+      # other types
+      - match: '{{part}}'
+        name: entity.name.type
+      # Array
+      - match: '\['
+        name: punctuation.squarebracket.open
+      - match: '\]'
+        name: punctuation.squarebracket.close
+      # Generics
+      - match: '<'
+        name: punctuation.definition.typeparameters.begin
+      - match: '>'
+        name: punctuation.definition.typeparameters.end
   
   # Variable definition syntax
   declare-variable:
@@ -38,13 +58,13 @@ repository:
     patterns:
       - include: '#expression'
     beginCaptures:
-      2: # The define keyword
-        name: '{{define}}'
-      3: # The type of the variable declaration.
-        name: entity.name.type
-      4: # The variable name
+      # Apply highlighting to the type match
+      1:
+        patterns:
+          - include: '#type-matcher'
+      6: # The variable name
         name: variable
-      5: # The equals for an initial value.
+      7: # The equals for an initial value.
         name: '{{assignment}}'
     endCaptures:
       0:
@@ -52,19 +72,16 @@ repository:
   
   # Function delcaration
   declare-function:
-    begin: '{{attribute-list}}{{type}}\s*{{part}}'
+    begin: '{{attribute-list}}{{type}}\s*{{part}}\s*(?=\()'
     end: '{{encapsulated-block-end}}'
     beginCaptures:
       2:
         name: storage.modifier
-      4:
-        name: '{{define}}'
-      5:
-        name: entity.name.type
-      6:
+      3:
+        patterns:
+          - include: '#type-matcher'
+      8:
         name: entity.name.function
-      7:
-        name: punctuation.parenthesis.open
     patterns:
       - include: '#parameter-list-declaration'
   
@@ -83,11 +100,10 @@ repository:
     captures:
       1:
         name: storage.modifier
-      3:
-        name: '{{define}}'
-      4:
-        name: entity.name.type
-      5:
+      2:
+        patterns:
+          - include: '#type-matcher'
+      7:
         name: variable.parameter
 
   # Rules

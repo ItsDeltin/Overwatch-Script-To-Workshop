@@ -19,15 +19,43 @@
           "include": "#rule"
         },
         {
-          "include": "#declare-variable"
+          "include": "#declare-function"
         },
         {
-          "include": "#declare-function"
+          "include": "#declare-variable"
+        }
+      ]
+    },
+    "type-matcher": {
+      "patterns": [
+        {
+          "match": "define",
+          "name": "keyword.other"
+        },
+        {
+          "match": "([_[:alnum:]]+)",
+          "name": "entity.name.type"
+        },
+        {
+          "match": "\\[",
+          "name": "punctuation.squarebracket.open"
+        },
+        {
+          "match": "\\]",
+          "name": "punctuation.squarebracket.close"
+        },
+        {
+          "match": "<",
+          "name": "punctuation.definition.typeparameters.begin"
+        },
+        {
+          "match": ">",
+          "name": "punctuation.definition.typeparameters.end"
         }
       ]
     },
     "declare-variable": {
-      "begin": "((define)|([_[:alnum:]]+))\\b\\s*([_[:alnum:]]+)\\s*(=)?(?!\\s*\\()",
+      "begin": "(?<set-type>(define|([_[:alnum:]]+))\\b\\s*(<\\s*\\g<set-type>?\\s*>)?\\s*(\\[\\s*\\])*)\\s*([_[:alnum:]]+)\\s*(=)?(?!\\s*\\()",
       "end": ";",
       "patterns": [
         {
@@ -35,16 +63,17 @@
         }
       ],
       "beginCaptures": {
-        "2": {
-          "name": "keyword.other"
+        "1": {
+          "patterns": [
+            {
+              "include": "#type-matcher"
+            }
+          ]
         },
-        "3": {
-          "name": "entity.name.type"
-        },
-        "4": {
+        "6": {
           "name": "variable"
         },
-        "5": {
+        "7": {
           "name": "keyword.operator.assignment.ostw"
         }
       },
@@ -55,23 +84,21 @@
       }
     },
     "declare-function": {
-      "begin": "((public|private|protected|virtual|override|abstract|static)\\s+)*((define)|([_[:alnum:]]+))\\b\\s*([_[:alnum:]]+)",
+      "begin": "((public|private|protected|virtual|override|abstract|static)\\s+)*(?<set-type>(define|([_[:alnum:]]+))\\b\\s*(<\\s*\\g<set-type>?\\s*>)?\\s*(\\[\\s*\\])*)\\s*([_[:alnum:]]+)\\s*(?=\\()",
       "end": "(?<=})|(?<=;)",
       "beginCaptures": {
         "2": {
           "name": "storage.modifier"
         },
-        "4": {
-          "name": "keyword.other"
+        "3": {
+          "patterns": [
+            {
+              "include": "#type-matcher"
+            }
+          ]
         },
-        "5": {
-          "name": "entity.name.type"
-        },
-        "6": {
+        "8": {
           "name": "entity.name.function"
-        },
-        "7": {
-          "name": "punctuation.parenthesis.open"
         }
       },
       "patterns": [
@@ -95,18 +122,19 @@
       ]
     },
     "parameter-declaration": {
-      "match": "(ref\\s+)?((define)|([_[:alnum:]]+))\\b\\s*([_[:alnum:]]+)",
+      "match": "(ref\\s+)?(?<set-type>(define|([_[:alnum:]]+))\\b\\s*(<\\s*\\g<set-type>?\\s*>)?\\s*(\\[\\s*\\])*)\\s*([_[:alnum:]]+)",
       "captures": {
         "1": {
           "name": "storage.modifier"
         },
-        "3": {
-          "name": "keyword.other"
+        "2": {
+          "patterns": [
+            {
+              "include": "#type-matcher"
+            }
+          ]
         },
-        "4": {
-          "name": "entity.name.type"
-        },
-        "5": {
+        "7": {
           "name": "variable.parameter"
         }
       }
