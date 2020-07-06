@@ -169,7 +169,7 @@
       ]
     },
     "rule": {
-      "begin": "(rule)\\s*(:)\\s*(\".*?\")",
+      "begin": "(rule)\\s*(:)\\s*(\\\"(?:[^\"\\\\]|\\\\.)*\\\")",
       "end": "(?<=})|(?<=;)",
       "beginCaptures": {
         "1": {
@@ -278,6 +278,9 @@
           "include": "#boolean"
         },
         {
+          "include": "#string"
+        },
+        {
           "include": "#function-call"
         }
       ]
@@ -300,6 +303,18 @@
           "name": "constant.language.boolean.false"
         }
       }
+    },
+    "string": {
+      "patterns": [
+        {
+          "match": "\\'(?:[^'\\\\]|\\\\.)*\\'",
+          "name": "string.quoted.single"
+        },
+        {
+          "match": "\\\"(?:[^\"\\\\]|\\\\.)*\\\"",
+          "name": "string.quoted.double"
+        }
+      ]
     },
     "function-call": {
       "begin": "(.?)\\s*([_[:alnum:]]+)\\s*(\\()",

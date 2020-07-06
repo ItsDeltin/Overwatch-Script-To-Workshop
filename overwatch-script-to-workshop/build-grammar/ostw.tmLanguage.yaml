@@ -22,7 +22,8 @@ variables:
   type: '(?<set-type>{{part}}\b\s*(<\s*(\s*,?\s*\g<set-type>\s*)*>)?\s*(\[\s*\])*)' # 5 groups
   # define a =
   declare-variable-start: '{{type}}\s*{{part}}\s*(=)?'
-  string-literal: '".*?"'
+  string-double: \"(?:[^"\\]|\\.)*\"
+  string-single: \'(?:[^'\\]|\\.)*\'
   encapsulated-block-end: '(?<=})|(?<=;)'
   attribute-list: ((public|private|protected|virtual|override|abstract|static)\s+)*
 
@@ -136,7 +137,7 @@ repository:
 
   # Rules
   rule:
-    begin: '(rule)\s*(:)\s*({{string-literal}})' # rule: "string"
+    begin: '(rule)\s*(:)\s*({{string-double}})' # rule: "string"
     end: '{{encapsulated-block-end}}'
     beginCaptures:
       1:
@@ -206,6 +207,7 @@ repository:
     patterns:
       - include: '#number'
       - include: '#boolean'
+      - include: '#string'
       - include: '#function-call'
   
   # Numbers
@@ -222,6 +224,14 @@ repository:
         name: constant.language.boolean.true
       2:
         name: constant.language.boolean.false
+  
+  # Strings
+  string:
+    patterns:
+    - match: '{{string-single}}'
+      name: string.quoted.single
+    - match: '{{string-double}}'
+      name: string.quoted.double
   
   # Function call
   function-call:
