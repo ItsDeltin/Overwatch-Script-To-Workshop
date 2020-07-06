@@ -55,7 +55,7 @@
       ]
     },
     "declare-variable": {
-      "begin": "(?<set-type>(define|([_[:alnum:]]+))\\b\\s*(<\\s*\\g<set-type>?\\s*>)?\\s*(\\[\\s*\\])*)\\s*([_[:alnum:]]+)\\s*(=)?(?!\\s*\\()",
+      "begin": "(?<set-type>([_[:alnum:]]+)\\b\\s*(<\\s*(\\s*,?\\s*\\g<set-type>\\s*)*>)?\\s*(\\[\\s*\\])*)\\s*([_[:alnum:]]+)\\s*(=)?(?!\\s*\\()",
       "end": ";",
       "patterns": [
         {
@@ -84,7 +84,7 @@
       }
     },
     "declare-function": {
-      "begin": "((public|private|protected|virtual|override|abstract|static)\\s+)*(?<set-type>(define|([_[:alnum:]]+))\\b\\s*(<\\s*\\g<set-type>?\\s*>)?\\s*(\\[\\s*\\])*)\\s*([_[:alnum:]]+)\\s*(?=\\()",
+      "begin": "((public|private|protected|virtual|override|abstract|static)\\s+)*(?<set-type>([_[:alnum:]]+)\\b\\s*(<\\s*(\\s*,?\\s*\\g<set-type>\\s*)*>)?\\s*(\\[\\s*\\])*)\\s*([_[:alnum:]]+)\\s*(?=\\(|:)",
       "end": "(?<=})|(?<=;)",
       "beginCaptures": {
         "2": {
@@ -104,6 +104,12 @@
       "patterns": [
         {
           "include": "#parameter-list-declaration"
+        },
+        {
+          "include": "#block"
+        },
+        {
+          "include": "#macro-value"
         }
       ]
     },
@@ -122,7 +128,7 @@
       ]
     },
     "parameter-declaration": {
-      "match": "(ref\\s+)?(?<set-type>(define|([_[:alnum:]]+))\\b\\s*(<\\s*\\g<set-type>?\\s*>)?\\s*(\\[\\s*\\])*)\\s*([_[:alnum:]]+)",
+      "match": "(ref\\s+)?(?<set-type>([_[:alnum:]]+)\\b\\s*(<\\s*(\\s*,?\\s*\\g<set-type>\\s*)*>)?\\s*(\\[\\s*\\])*)\\s*([_[:alnum:]]+)",
       "captures": {
         "1": {
           "name": "storage.modifier"
@@ -138,6 +144,25 @@
           "name": "variable.parameter"
         }
       }
+    },
+    "macro-value": {
+      "begin": ":",
+      "end": ";",
+      "beginCaptures": {
+        "0": {
+          "name": "punctuation.separator"
+        }
+      },
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.terminator.statement.ostw"
+        }
+      },
+      "patterns": [
+        {
+          "include": "#expression"
+        }
+      ]
     },
     "rule": {
       "begin": "(rule)\\s*(:)\\s*(\".*?\")",

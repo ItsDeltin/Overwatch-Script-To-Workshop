@@ -8,7 +8,18 @@ $schema: https://raw.githubusercontent.com/Septh/tmlanguage/master/tmLanguage.sc
 
 variables:
   part: '([_[:alnum:]]+)'
-  type: '(?<set-type>(define|{{part}})\b\s*(<\s*\g<set-type>?\s*>)?\s*(\[\s*\])*)' # 5 groups
+  # (?<set-type> - Names the entire type group, which is used for recursion later.
+  #   {{part}}\b\s* - The name of the type. \b is used for the end of the word, \s* is for any number of spaces that may proceed the type name.
+  #   - type arguments
+  #   (\s* - Start of type arguments group. Start with any amount of whitespace.
+  #     ,?\s* - This group can be repeated, check for a comma.
+  #     \g<set-type>
+  #     \s*
+  #   )?\s*
+  #   - end type arguments
+  #   (\[\s*\])* - Array markers '[]'
+  # )
+  type: '(?<set-type>{{part}}\b\s*(<\s*(\s*,?\s*\g<set-type>\s*)*>)?\s*(\[\s*\])*)' # 5 groups
   # define a =
   declare-variable-start: '{{type}}\s*{{part}}\s*(=)?'
   string-literal: '".*?"'
@@ -50,6 +61,9 @@ repository:
         name: punctuation.definition.typeparameters.begin
       - match: '>'
         name: punctuation.definition.typeparameters.end
+      # Generics seperator
+      - match: ','
+        name: punctuation.separator.comma
   
   # Variable definition syntax
   declare-variable:
@@ -70,9 +84,9 @@ repository:
       0:
         name: '{{statement-end}}'
   
-  # Function delcaration
+  # Function and macro declaration
   declare-function:
-    begin: '{{attribute-list}}{{type}}\s*{{part}}\s*(?=\()'
+    begin: '{{attribute-list}}{{type}}\s*{{part}}\s*(?=\(|:)'
     end: '{{encapsulated-block-end}}'
     beginCaptures:
       2:
@@ -84,6 +98,8 @@ repository:
         name: entity.name.function
     patterns:
       - include: '#parameter-list-declaration'
+      - include: '#block'
+      - include: '#macro-value'
   
   # Parameter declaration
   parameter-list-declaration:
@@ -105,6 +121,18 @@ repository:
           - include: '#type-matcher'
       7:
         name: variable.parameter
+  
+  macro-value:
+    begin: ':'
+    end: ';'
+    beginCaptures:
+      0:
+        name: punctuation.separator
+    endCaptures:
+      0:
+        name: '{{statement-end}}'
+    patterns:
+      - include: '#expression'
 
   # Rules
   rule:
