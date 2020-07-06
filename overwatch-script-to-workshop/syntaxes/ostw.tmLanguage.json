@@ -284,17 +284,26 @@
           "include": "#function-call"
         },
         {
+          "include": "#new-object"
+        },
+        {
           "include": "#create-array"
         },
         {
           "include": "#ternary-conditional"
+        },
+        {
+          "include": "#expression-operators"
+        },
+        {
+          "include": "#variable"
         }
       ]
     },
     "number": {
       "patterns": [
         {
-          "match": "\\b-?[0-9]+(\\.[0-9]+)?\\b",
+          "match": "-?[0-9]+(\\.[0-9]+)?\\b",
           "name": "constant.numeric"
         }
       ]
@@ -323,7 +332,7 @@
       ]
     },
     "function-call": {
-      "begin": "(\\.?)\\s*([_[:alnum:]]+)\\s*(\\()",
+      "begin": "(\\.?\\s*)([_[:alnum:]]+)\\s*(\\()",
       "end": "\\)",
       "beginCaptures": {
         "1": {
@@ -331,6 +340,31 @@
         },
         "2": {
           "name": "entity.name.function"
+        },
+        "3": {
+          "name": "punctuation.parenthesis.open"
+        }
+      },
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.parenthesis.close"
+        }
+      },
+      "patterns": [
+        {
+          "include": "#argument-list"
+        }
+      ]
+    },
+    "new-object": {
+      "begin": "(new)\\b\\s*([_[:alnum:]]+)\\s*(\\()",
+      "end": "\\)",
+      "beginCaptures": {
+        "1": {
+          "name": "keyword.other.new"
+        },
+        "2": {
+          "name": "entity.name.type"
         },
         "3": {
           "name": "punctuation.parenthesis.open"
@@ -389,11 +423,39 @@
         }
       ]
     },
-    "argument-list": {
+    "variable": {
+      "match": "(\\.\\s*)?([_[:alnum:]]+)\\b",
+      "captures": {
+        "1": {
+          "name": "punctuation.accessor"
+        },
+        "2": {
+          "name": "variable"
+        }
+      }
+    },
+    "expression-operators": {
       "patterns": [
         {
-          "include": "#expression"
+          "name": "keyword.operator.comparison",
+          "match": "==|\\!="
         },
+        {
+          "name": "keyword.operator.relational",
+          "match": "<=|>=|<|>"
+        },
+        {
+          "name": "keyword.operator.logical",
+          "match": "\\!|&&|\\|\\|"
+        },
+        {
+          "name": "keyword.operator.arithmetic",
+          "match": "%|\\*|/|-|\\+"
+        }
+      ]
+    },
+    "argument-list": {
+      "patterns": [
         {
           "begin": "([_[:alnum:]]+)\\s*(:)",
           "end": "\\s*(?=,|\\))",
@@ -410,6 +472,9 @@
               "include": "#expression"
             }
           ]
+        },
+        {
+          "include": "#expression"
         },
         {
           "match": ",",
