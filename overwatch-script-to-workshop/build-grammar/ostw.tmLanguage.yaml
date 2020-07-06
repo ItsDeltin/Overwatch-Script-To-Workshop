@@ -209,6 +209,8 @@ repository:
       - include: '#boolean'
       - include: '#string'
       - include: '#function-call'
+      - include: '#create-array'
+      - include: '#ternary-conditional'
   
   # Numbers
   number:
@@ -235,7 +237,7 @@ repository:
   
   # Function call
   function-call:
-    begin: (.?)\s*{{part}}\s*(\()
+    begin: (\.?)\s*{{part}}\s*(\()
     end: \)
     beginCaptures:
       1:
@@ -249,6 +251,34 @@ repository:
         name: punctuation.parenthesis.close
     patterns:
       - include: '#argument-list'
+  
+  # Create array
+  create-array:
+    begin: '\['
+    end: '\]'
+    beginCaptures:
+      0:
+        name: punctuation.squarebracket.open
+    endCaptures:
+      0:
+        name: punctuation.squarebracket.close
+    patterns:
+      - include: '#expression'
+      - match: ','
+        name: punctuation.separator.comma
+  
+  # Ternary conditional
+  ternary-conditional:
+    begin: '\?'
+    end: ':'
+    beginCaptures:
+      0:
+        name: keyword.operator.conditional.question-mark
+    endCaptures:
+      0:
+        name: keyword.operator.conditional.colon
+    patterns:
+      - include: '#expression'
 
   # Argument list
   argument-list:
