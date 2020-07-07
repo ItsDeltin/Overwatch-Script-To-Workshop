@@ -16,6 +16,9 @@
     "rule-set": {
       "patterns": [
         {
+          "include": "#comment"
+        },
+        {
           "include": "#import"
         },
         {
@@ -32,6 +35,45 @@
         },
         {
           "include": "#declare-variable"
+        }
+      ]
+    },
+    "comment": {
+      "patterns": [
+        {
+          "begin": "//",
+          "end": "(?=$)",
+          "name": "comment.line.double-slash",
+          "beginCaptures": {
+            "0": {
+              "name": "punctuation.definition.comment.cs"
+            }
+          }
+        },
+        {
+          "begin": "/\\*",
+          "end": "\\*/",
+          "name": "comment.block",
+          "beginCaptures": {
+            "0": {
+              "name": "punctuation.definition.comment"
+            }
+          },
+          "endCaptures": {
+            "0": {
+              "name": "punctuation.definition.comment"
+            }
+          }
+        },
+        {
+          "begin": "#",
+          "end": "(?=$)",
+          "name": "comment.block.documentation",
+          "beginCaptures": {
+            "0": {
+              "name": "punctuation.definition.comment"
+            }
+          }
         }
       ]
     },
@@ -91,6 +133,9 @@
       "end": ";",
       "patterns": [
         {
+          "include": "#comment"
+        },
+        {
           "include": "#expression"
         }
       ],
@@ -125,6 +170,9 @@
       "begin": "(?<set-type>([_[:alnum:]]+)\\b\\s*(<\\s*(\\s*,?\\s*\\g<set-type>\\s*)*>)?\\s*(\\[\\s*\\])*)\\s*([_[:alnum:]]+)(\\s*\\!)?(\\s*=)?",
       "end": ";",
       "patterns": [
+        {
+          "include": "#comment"
+        },
         {
           "include": "#expression"
         }
@@ -173,6 +221,9 @@
       },
       "patterns": [
         {
+          "include": "#comment"
+        },
+        {
           "include": "#parameter-list-declaration"
         },
         {
@@ -180,6 +231,13 @@
         },
         {
           "include": "#macro-value"
+        },
+        {
+          "include": "#string"
+        },
+        {
+          "match": "\\b(globalvar|playervar)\\b",
+          "name": "storage.modifier"
         }
       ]
     },
@@ -211,6 +269,9 @@
       },
       "patterns": [
         {
+          "include": "#comment"
+        },
+        {
           "begin": "{",
           "end": "}",
           "beginCaptures": {
@@ -224,6 +285,9 @@
             }
           },
           "patterns": [
+            {
+              "include": "#comment"
+            },
             {
               "include": "#declare-function"
             },
@@ -247,6 +311,9 @@
       },
       "patterns": [
         {
+          "include": "#comment"
+        },
+        {
           "begin": "{",
           "end": "}",
           "beginCaptures": {
@@ -261,6 +328,9 @@
           },
           "patterns": [
             {
+              "include": "#comment"
+            },
+            {
               "begin": "([_[:alnum:]]+)",
               "end": "(,)|(?=\\s*})",
               "beginCaptures": {
@@ -274,6 +344,9 @@
                 }
               },
               "patterns": [
+                {
+                  "include": "#comment"
+                },
                 {
                   "include": "#expression"
                 },
@@ -296,6 +369,9 @@
         }
       },
       "patterns": [
+        {
+          "include": "#comment"
+        },
         {
           "include": "#parameter-declaration"
         }
@@ -339,23 +415,29 @@
       ]
     },
     "rule": {
-      "begin": "(rule)\\s*(:)\\s*((\\\"(?:[^\"\\\\]|\\\\.)*\\\")|(\\'(?:[^'\\\\]|\\\\.)*\\'))",
+      "begin": "\\b(disabled\\b\\s*)?(rule)\\b\\s*(:)\\s*((\\\"(?:[^\"\\\\]|\\\\.)*\\\")|(\\'(?:[^'\\\\]|\\\\.)*\\'))",
       "end": "(?<=})|(?<=;)",
       "beginCaptures": {
         "1": {
-          "name": "keyword.control"
+          "name": "storage.modifier"
         },
         "2": {
+          "name": "keyword.control"
+        },
+        "3": {
           "name": "punctuation.separator.colon"
         },
-        "4": {
+        "5": {
           "name": "string.quoted.double"
         },
-        "5": {
+        "6": {
           "name": "string.quoted.single"
         }
       },
       "patterns": [
+        {
+          "include": "#comment"
+        },
         {
           "match": "(Event|Team|Player)\\s*(\\.)\\s*([_[:alnum:]]+)",
           "captures": {
@@ -399,6 +481,9 @@
     },
     "statement": {
       "patterns": [
+        {
+          "include": "#comment"
+        },
         {
           "begin": "return",
           "end": ";",
@@ -467,6 +552,9 @@
           },
           "patterns": [
             {
+              "include": "#comment"
+            },
+            {
               "begin": "\\bin\\b",
               "end": "\\s*(?=\\))",
               "beginCaptures": {
@@ -496,23 +584,6 @@
               }
             }
           ]
-        },
-        {
-          "begin": "\\b(while)\\b\\s*(\\()",
-          "end": "\\)",
-          "beginCaptures": {
-            "1": {
-              "name": "keyword.control.loop.while"
-            },
-            "2": {
-              "name": "punctuation.parenthesis.open"
-            }
-          },
-          "endCaptures": {
-            "0": {
-              "name": "punctuation.parenthesis.close"
-            }
-          }
         },
         {
           "include": "#if-statement"
@@ -573,7 +644,7 @@
       "name": "punctuation.terminator.statement.ostw"
     },
     "if-statement": {
-      "begin": "\\b((\\belse\\b\\s*)?(if)|(switch))\\b\\s*(\\()",
+      "begin": "\\b((\\belse\\b\\s*)?(if)|(switch)|(while))\\b\\s*(\\()",
       "end": "\\)",
       "beginCaptures": {
         "2": {
@@ -586,6 +657,9 @@
           "name": "keyword.control.switch"
         },
         "5": {
+          "name": "keyword.control.loop.while"
+        },
+        "6": {
           "name": "punctuation.parenthesis.open"
         }
       },
@@ -611,6 +685,9 @@
     "expression": {
       "patterns": [
         {
+          "include": "#comment"
+        },
+        {
           "include": "#number"
         },
         {
@@ -633,9 +710,6 @@
         },
         {
           "include": "#lambda"
-        },
-        {
-          "include": "#grouped"
         },
         {
           "include": "#expression-operators"
@@ -816,7 +890,7 @@
         },
         {
           "begin": "\\(",
-          "end": "(\\))\\s*(=>)",
+          "end": "(\\))(\\s*=>)?",
           "beginCaptures": {
             "0": {
               "name": "punctuation.definition.parameters.begin"
@@ -831,6 +905,9 @@
             }
           },
           "patterns": [
+            {
+              "include": "#comment"
+            },
             {
               "match": "(?<set-type>([_[:alnum:]]+)\\b\\s*(<\\s*(\\s*,?\\s*\\g<set-type>\\s*)*>)?\\s*(\\[\\s*\\])*)\\b\\s*([_[:alnum:]]+)\\b",
               "captures": {
@@ -849,6 +926,9 @@
             {
               "match": ",",
               "name": "punctuation.separator.comma"
+            },
+            {
+              "include": "#expression"
             }
           ]
         }
@@ -887,6 +967,9 @@
     },
     "argument-list": {
       "patterns": [
+        {
+          "include": "#comment"
+        },
         {
           "begin": "([_[:alnum:]]+)\\s*(:)",
           "end": "\\s*(?=,|\\))",

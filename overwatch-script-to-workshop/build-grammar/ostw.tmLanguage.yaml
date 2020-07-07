@@ -41,12 +41,41 @@ repository:
   # The root of a default OSTW script.
   rule-set:
     patterns:
+    - include: '#comment'
     - include: '#import'
     - include: '#rule'
     - include: '#declare-class'
     - include: '#declare-enum'
     - include: '#declare-function'
     - include: '#declare-variable'
+  
+  # Comments
+  comment:
+    patterns:
+      # Line comments
+      - begin: //
+        end: (?=$)
+        name: comment.line.double-slash
+        beginCaptures:
+          0:
+            name: punctuation.definition.comment.cs
+      # Block comments
+      - begin: /\*
+        end: \*/
+        name: comment.block
+        beginCaptures:
+          0:
+            name: punctuation.definition.comment
+        endCaptures:
+          0:
+            name: punctuation.definition.comment
+      # Documentation comments
+      - begin: '#'
+        end: (?=$)
+        name: comment.block.documentation
+        beginCaptures:
+          0:
+            name: punctuation.definition.comment
   
   # Import
   import:
@@ -89,6 +118,7 @@ repository:
     begin: '{{variable-attribute-list}}{{declare-variable-start}}(?!\s*\()'
     end: ;
     patterns:
+      - include: '#comment'
       - include: '#expression'
     beginCaptures:
       1: # Highlight attributes
@@ -111,6 +141,7 @@ repository:
     begin: '{{declare-variable-start}}'
     end: ;
     patterns:
+      - include: '#comment'
       - include: '#expression'
     beginCaptures:
       1: # Apply highlighting to type match
@@ -139,6 +170,7 @@ repository:
       9:
         name: entity.name.function
     patterns:
+      - include: '#comment'
       - include: '#parameter-list-declaration'
       - include: '#block'
       - include: '#macro-value'
@@ -165,6 +197,7 @@ repository:
           - match: ','
             name: punctuation.separator.comma
     patterns:
+      - include: '#comment'
       - begin: '{'
         end: '}'
         beginCaptures:
@@ -174,6 +207,7 @@ repository:
           0:
             name: punctuation.curlybrace.close
         patterns:
+          - include: '#comment'
           - include: '#declare-function'
           - include: '#declare-variable'
   
@@ -187,6 +221,7 @@ repository:
       2:
         name: entity.name.type.enum
     patterns:
+      - include: '#comment'
       - begin: '{'
         end: '}'
         beginCaptures:
@@ -196,6 +231,7 @@ repository:
           0:
             name: punctuation.curlybrace.close
         patterns:
+          - include: '#comment'
           # Match enum value
           - begin: '{{part}}'
             end: '(,)|(?=\s*})' # Enum declaration ends when either ',' is reached or lookahead finds '}'
@@ -207,6 +243,7 @@ repository:
                 name: punctuation.separator.comma
             patterns:
               # Match enum value's actual value
+              - include: '#comment'
               - include: '#expression'
               - match: '='
                 name: '{{assignment}}'
@@ -219,6 +256,7 @@ repository:
       0:
         name: punctuation.parenthesis.close
     patterns:
+      - include: '#comment'
       - include: '#parameter-declaration'
     
   parameter-declaration:
@@ -260,6 +298,7 @@ repository:
       6: # Rule name (single quotes)
         name: string.quoted.single
     patterns:
+    - include: '#comment'
     # Event attribute
     - match: (Event|Team|Player)\s*(\.)\s*{{part}}
       captures:
@@ -288,6 +327,7 @@ repository:
   # Statement
   statement:
     patterns:
+      - include: '#comment'
       # Return statement
       - begin: return
         end: ;
@@ -327,6 +367,7 @@ repository:
           0:
             name: punctuation.parenthesis.close
         patterns:
+          - include: '#comment'
           # Match 'in' and the following expression.
           - begin: \bin\b
             end: '\s*(?=\))'
@@ -442,6 +483,7 @@ repository:
   # Expressions
   expression:
     patterns:
+      - include: '#comment'
       - include: '#number'
       - include: '#boolean'
       - include: '#string'
@@ -569,6 +611,7 @@ repository:
           2:
             name: storage.type.function.arrow
         patterns:
+          - include: '#comment'
           # Match lambda parameter
           - match: '{{type}}\b\s*{{part}}\b'
             captures:
@@ -606,6 +649,7 @@ repository:
   # Argument list
   argument-list:
     patterns:
+      - include: '#comment'
       # Named argument
       - begin: '{{part}}\s*(:)'
         end: '\s*(?=,|\))'
