@@ -142,6 +142,10 @@ repository:
       - include: '#parameter-list-declaration'
       - include: '#block'
       - include: '#macro-value'
+      - include: '#string' # Subroutine name
+      # Subroutine default variable assignment
+      - match: \b(globalvar|playervar)\b
+        name: storage.modifier
   
   # Class declaration
   declare-class:
