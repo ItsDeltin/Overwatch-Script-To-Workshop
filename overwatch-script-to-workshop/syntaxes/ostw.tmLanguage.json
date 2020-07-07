@@ -19,6 +19,9 @@
           "include": "#rule"
         },
         {
+          "include": "#declare-class"
+        },
+        {
           "include": "#declare-function"
         },
         {
@@ -91,20 +94,20 @@
       }
     },
     "declare-function": {
-      "begin": "((public|private|protected|virtual|override|abstract|static)\\s+)*(?<set-type>([_[:alnum:]]+)\\b\\s*(<\\s*(\\s*,?\\s*\\g<set-type>\\s*)*>)?\\s*(\\[\\s*\\])*)\\s*([_[:alnum:]]+)\\s*(?=\\(|:)",
+      "begin": "(((public|private|protected|virtual|override|abstract|static)\\b\\s*)*)(?<set-type>([_[:alnum:]]+)\\b\\s*(<\\s*(\\s*,?\\s*\\g<set-type>\\s*)*>)?\\s*(\\[\\s*\\])*)\\s*([_[:alnum:]]+)\\s*(?=\\(|:)",
       "end": "(?<=})|(?<=;)",
       "beginCaptures": {
-        "2": {
+        "1": {
           "name": "storage.modifier"
         },
-        "3": {
+        "4": {
           "patterns": [
             {
               "include": "#type-matcher"
             }
           ]
         },
-        "8": {
+        "9": {
           "name": "entity.name.function"
         }
       },
@@ -117,6 +120,57 @@
         },
         {
           "include": "#macro-value"
+        }
+      ]
+    },
+    "declare-class": {
+      "begin": "(class)\\b\\s*([_[:alnum:]]+)(\\s*(:)\\s*((\\s*,?\\s*[_[:alnum:]]+)*))?",
+      "end": "(?<=})|(?<=;)",
+      "beginCaptures": {
+        "1": {
+          "name": "keyword.other.class"
+        },
+        "2": {
+          "name": "entity.name.type.class"
+        },
+        "4": {
+          "name": "punctuation.separator.colon"
+        },
+        "5": {
+          "patterns": [
+            {
+              "match": "[_[:alnum:]]+",
+              "name": "entity.name.type"
+            },
+            {
+              "match": ",",
+              "name": "punctuation.separator.comma"
+            }
+          ]
+        }
+      },
+      "patterns": [
+        {
+          "begin": "{",
+          "end": "}",
+          "beginCaptures": {
+            "0": {
+              "name": "punctuation.curlybrace.open"
+            }
+          },
+          "endCaptures": {
+            "0": {
+              "name": "punctuation.curlybrace.close"
+            }
+          },
+          "patterns": [
+            {
+              "include": "#declare-function"
+            },
+            {
+              "include": "#declare-variable"
+            }
+          ]
         }
       ]
     },

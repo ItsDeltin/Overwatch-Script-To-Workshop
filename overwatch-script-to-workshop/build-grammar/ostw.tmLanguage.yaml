@@ -8,6 +8,7 @@ $schema: https://raw.githubusercontent.com/Septh/tmlanguage/master/tmLanguage.sc
 
 variables:
   part: '([_[:alnum:]]+)'
+  groupless-part: '[_[:alnum:]]+'
   # (?<set-type> - Names the entire type group, which is used for recursion later.
   #   {{part}}\b\s* - The name of the type. \b is used for the end of the word, \s* is for any number of spaces that may proceed the type name.
   #   - type arguments
@@ -25,7 +26,7 @@ variables:
   string-double: \"(?:[^"\\]|\\.)*\"
   string-single: \'(?:[^'\\]|\\.)*\'
   encapsulated-block-end: '(?<=})|(?<=;)'
-  attribute-list: ((public|private|protected|virtual|override|abstract|static)\s+)*
+  attribute-list: (((public|private|protected|virtual|override|abstract|static)\b\s*)*)
 
   # Scopes
   statement-end: punctuation.terminator.statement.ostw
@@ -40,6 +41,7 @@ repository:
   rule-set:
     patterns:
     - include: '#rule'
+    - include: '#declare-class'
     - include: '#declare-function'
     - include: '#declare-variable'
   
@@ -92,17 +94,47 @@ repository:
     begin: '{{attribute-list}}{{type}}\s*{{part}}\s*(?=\(|:)'
     end: '{{encapsulated-block-end}}'
     beginCaptures:
-      2:
+      1:
         name: storage.modifier
-      3:
+      4:
         patterns:
           - include: '#type-matcher'
-      8:
+      9:
         name: entity.name.function
     patterns:
       - include: '#parameter-list-declaration'
       - include: '#block'
       - include: '#macro-value'
+  
+  # Class declaration
+  declare-class:
+    begin: '(class)\b\s*{{part}}(\s*(:)\s*((\s*,?\s*{{groupless-part}})*))?'
+    end: '{{encapsulated-block-end}}'
+    beginCaptures:
+      1:
+        name: keyword.other.class
+      2:
+        name: entity.name.type.class
+      4:
+        name: punctuation.separator.colon
+      5:
+        patterns:
+          - match: '{{groupless-part}}'
+            name: entity.name.type
+          - match: ','
+            name: punctuation.separator.comma
+    patterns:
+      - begin: '{'
+        end: '}'
+        beginCaptures:
+          0:
+            name: punctuation.curlybrace.open
+        endCaptures:
+          0:
+            name: punctuation.curlybrace.close
+        patterns:
+          - include: '#declare-function'
+          - include: '#declare-variable'
   
   # Parameter declaration
   parameter-list-declaration:
