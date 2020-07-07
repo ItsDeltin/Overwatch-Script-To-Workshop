@@ -270,10 +270,31 @@ repository:
             name: '{{statement-end}}'
         patterns:
           - include: '#expression'
+      # for
+      - begin: \b(for)\b\s*(\()
+        end: \)
+        beginCaptures:
+          1:
+            name: keyword.control.loop.for
+          2:
+            name: punctuation.parenthesis.open
+        endCaptures:
+          0:
+            name: punctuation.parenthesis.close
+        patterns:
+          - include: '#declare-local-variable'
+          - include: '#assignment'
+          - include: '#expression'
+          - include: '#statement-end'
       - include: '#function-call'
       - include: '#declare-local-variable'
       - include: '#assignment'
       - include: '#expression'
+      - include: '#block' # Nested block
+  
+  statement-end:
+    match: ;
+    name: '{{statement-end}}'
   
   # Assignment
   # assignment:
@@ -334,6 +355,8 @@ repository:
         name: constant.language.null
       # 'variable' can match a bunch of things easily, so match it last.
       - include: '#variable'
+      # Lambda block
+      - include: '#block'
   
   # Numbers
   number:
@@ -360,7 +383,7 @@ repository:
   
   # Function call
   function-call:
-    begin: (\.?\s*){{part}}\s*(\()
+    begin: (\.\s*)?{{part}}\s*(\()
     end: \)
     beginCaptures:
       1:

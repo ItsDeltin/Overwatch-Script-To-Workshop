@@ -379,6 +379,37 @@
           ]
         },
         {
+          "begin": "\\b(for)\\b\\s*(\\()",
+          "end": "\\)",
+          "beginCaptures": {
+            "1": {
+              "name": "keyword.control.loop.for"
+            },
+            "2": {
+              "name": "punctuation.parenthesis.open"
+            }
+          },
+          "endCaptures": {
+            "0": {
+              "name": "punctuation.parenthesis.close"
+            }
+          },
+          "patterns": [
+            {
+              "include": "#declare-local-variable"
+            },
+            {
+              "include": "#assignment"
+            },
+            {
+              "include": "#expression"
+            },
+            {
+              "include": "#statement-end"
+            }
+          ]
+        },
+        {
           "include": "#function-call"
         },
         {
@@ -389,8 +420,15 @@
         },
         {
           "include": "#expression"
+        },
+        {
+          "include": "#block"
         }
       ]
+    },
+    "statement-end": {
+      "match": ";",
+      "name": "punctuation.terminator.statement.ostw"
     },
     "assignment": {
       "match": "=|\\+=|-=|\\*=|\\/=|%=|^=|\\+\\+|--",
@@ -438,6 +476,9 @@
         },
         {
           "include": "#variable"
+        },
+        {
+          "include": "#block"
         }
       ]
     },
@@ -473,7 +514,7 @@
       ]
     },
     "function-call": {
-      "begin": "(\\.?\\s*)([_[:alnum:]]+)\\s*(\\()",
+      "begin": "(\\.\\s*)?([_[:alnum:]]+)\\s*(\\()",
       "end": "\\)",
       "beginCaptures": {
         "1": {
