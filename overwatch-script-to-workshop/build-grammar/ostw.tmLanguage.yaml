@@ -343,17 +343,6 @@ repository:
                   - include: '#type-matcher'
               6:
                 name: entity.name.variable.local
-      # while
-      - begin: \b(while)\b\s*(\()
-        end: \)
-        beginCaptures:
-          1:
-            name: keyword.control.loop.while
-          2:
-            name: punctuation.parenthesis.open
-        endCaptures:
-          0:
-            name: punctuation.parenthesis.close
       # If, else if, and switch.
       - include: '#if-statement'
       # Else
@@ -387,9 +376,9 @@ repository:
     match: ;
     name: '{{statement-end}}'
   
-  # If, else if, and switch
+  # If, else if, switch, and while
   if-statement:
-    begin: \b((\belse\b\s*)?(if)|(switch))\b\s*(\()
+    begin: \b((\belse\b\s*)?(if)|(switch)|(while))\b\s*(\()
     end: '\)'
     beginCaptures:
       2:
@@ -399,6 +388,8 @@ repository:
       4:
         name: keyword.control.switch
       5:
+        name: keyword.control.loop.while
+      6:
         name: punctuation.parenthesis.open
     endCaptures:
       0:
