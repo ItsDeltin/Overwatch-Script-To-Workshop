@@ -46,6 +46,7 @@ repository:
     - include: '#rule'
     - include: '#declare-class'
     - include: '#declare-enum'
+    - include: '#declare-macro-var'
     - include: '#declare-function'
     - include: '#declare-variable'
   
@@ -58,7 +59,7 @@ repository:
         name: comment.line.double-slash
         beginCaptures:
           0:
-            name: punctuation.definition.comment.cs
+            name: punctuation.definition.comment
       # Block comments
       - begin: /\*
         end: \*/
@@ -118,7 +119,6 @@ repository:
     begin: '{{variable-attribute-list}}{{declare-variable-start}}(?!\s*\()'
     end: ;
     patterns:
-      - include: '#comment'
       - include: '#expression'
     beginCaptures:
       1: # Highlight attributes
@@ -136,12 +136,28 @@ repository:
       0:
         name: '{{statement-end}}'
   
+  # Macro var
+  declare-macro-var:
+    begin: '{{attribute-list}}{{type}}\b\s*{{part}}\b\s*(:)'
+    end: ;
+    patterns:
+      - include: '#expression'
+    beginCaptures:
+      1: # Highlight attributes
+        name: storage.modifier
+      4: # Apply highlighting to the type match
+        patterns:
+          - include: '#type-matcher'
+      9: # The variable name
+        name: entity.name.variable.property
+      10: # Macro colon
+        name: '{{assignment}}'
+  
   # Variables defined in rules and functions
   declare-local-variable:
     begin: '{{declare-variable-start}}'
     end: ;
     patterns:
-      - include: '#comment'
       - include: '#expression'
     beginCaptures:
       1: # Apply highlighting to type match
@@ -208,6 +224,7 @@ repository:
             name: punctuation.curlybrace.close
         patterns:
           - include: '#comment'
+          - include: '#declare-macro-var'
           - include: '#declare-function'
           - include: '#declare-variable'
   
@@ -275,7 +292,7 @@ repository:
     end: ';'
     beginCaptures:
       0:
-        name: punctuation.separator
+        name: '{{assignment}}'
     endCaptures:
       0:
         name: '{{statement-end}}'

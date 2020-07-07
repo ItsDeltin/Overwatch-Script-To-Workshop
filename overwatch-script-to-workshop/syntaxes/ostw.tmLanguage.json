@@ -31,6 +31,9 @@
           "include": "#declare-enum"
         },
         {
+          "include": "#declare-macro-var"
+        },
+        {
           "include": "#declare-function"
         },
         {
@@ -46,7 +49,7 @@
           "name": "comment.line.double-slash",
           "beginCaptures": {
             "0": {
-              "name": "punctuation.definition.comment.cs"
+              "name": "punctuation.definition.comment"
             }
           }
         },
@@ -133,9 +136,6 @@
       "end": ";",
       "patterns": [
         {
-          "include": "#comment"
-        },
-        {
           "include": "#expression"
         }
       ],
@@ -166,13 +166,37 @@
         }
       }
     },
+    "declare-macro-var": {
+      "begin": "(((public|private|protected|virtual|override|abstract|static)\\b\\s*)*)(?<set-type>([_[:alnum:]]+)\\b\\s*(<\\s*(\\s*,?\\s*\\g<set-type>\\s*)*>)?\\s*(\\[\\s*\\])*)\\b\\s*([_[:alnum:]]+)\\b\\s*(:)",
+      "end": ";",
+      "patterns": [
+        {
+          "include": "#expression"
+        }
+      ],
+      "beginCaptures": {
+        "1": {
+          "name": "storage.modifier"
+        },
+        "4": {
+          "patterns": [
+            {
+              "include": "#type-matcher"
+            }
+          ]
+        },
+        "9": {
+          "name": "entity.name.variable.property"
+        },
+        "10": {
+          "name": "keyword.operator.assignment.ostw"
+        }
+      }
+    },
     "declare-local-variable": {
       "begin": "(?<set-type>([_[:alnum:]]+)\\b\\s*(<\\s*(\\s*,?\\s*\\g<set-type>\\s*)*>)?\\s*(\\[\\s*\\])*)\\s*([_[:alnum:]]+)(\\s*\\!)?(\\s*=)?",
       "end": ";",
       "patterns": [
-        {
-          "include": "#comment"
-        },
         {
           "include": "#expression"
         }
@@ -289,6 +313,9 @@
               "include": "#comment"
             },
             {
+              "include": "#declare-macro-var"
+            },
+            {
               "include": "#declare-function"
             },
             {
@@ -400,7 +427,7 @@
       "end": ";",
       "beginCaptures": {
         "0": {
-          "name": "punctuation.separator"
+          "name": "keyword.operator.assignment.ostw"
         }
       },
       "endCaptures": {
@@ -841,25 +868,6 @@
       "endCaptures": {
         "0": {
           "name": "keyword.operator.conditional.colon"
-        }
-      },
-      "patterns": [
-        {
-          "include": "#expression"
-        }
-      ]
-    },
-    "grouped": {
-      "begin": "\\(",
-      "end": "\\)",
-      "beginCaptures": {
-        "0": {
-          "name": "punctuation.parenthesis.open"
-        }
-      },
-      "endCaptures": {
-        "0": {
-          "name": "punctuation.parenthesis.close"
         }
       },
       "patterns": [
