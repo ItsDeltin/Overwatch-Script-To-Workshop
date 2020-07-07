@@ -402,6 +402,12 @@
           "include": "#ternary-conditional"
         },
         {
+          "include": "#lambda"
+        },
+        {
+          "include": "#grouped"
+        },
+        {
           "include": "#expression-operators"
         },
         {
@@ -529,6 +535,85 @@
       "patterns": [
         {
           "include": "#expression"
+        }
+      ]
+    },
+    "grouped": {
+      "begin": "\\(",
+      "end": "\\)",
+      "beginCaptures": {
+        "0": {
+          "name": "punctuation.parenthesis.open"
+        }
+      },
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.parenthesis.close"
+        }
+      },
+      "patterns": [
+        {
+          "include": "#expression"
+        }
+      ]
+    },
+    "lambda": {
+      "patterns": [
+        {
+          "match": "(?<set-type>([_[:alnum:]]+)\\b\\s*(<\\s*(\\s*,?\\s*\\g<set-type>\\s*)*>)?\\s*(\\[\\s*\\])*)\\b\\s*([_[:alnum:]]+)\\b\\s*(=>)",
+          "captures": {
+            "1": {
+              "patterns": [
+                {
+                  "include": "#type-matcher"
+                }
+              ]
+            },
+            "6": {
+              "name": "variable.parameter"
+            },
+            "7": {
+              "name": "storage.type.function.arrow"
+            }
+          }
+        },
+        {
+          "begin": "\\(",
+          "end": "(\\))\\s*(=>)",
+          "beginCaptures": {
+            "0": {
+              "name": "punctuation.definition.parameters.begin"
+            }
+          },
+          "endCaptures": {
+            "1": {
+              "name": "punctuation.definition.parameters.end"
+            },
+            "2": {
+              "name": "storage.type.function.arrow"
+            }
+          },
+          "patterns": [
+            {
+              "match": "(?<set-type>([_[:alnum:]]+)\\b\\s*(<\\s*(\\s*,?\\s*\\g<set-type>\\s*)*>)?\\s*(\\[\\s*\\])*)\\b\\s*([_[:alnum:]]+)\\b",
+              "captures": {
+                "1": {
+                  "patterns": [
+                    {
+                      "include": "#type-matcher"
+                    }
+                  ]
+                },
+                "6": {
+                  "name": "variable.parameter"
+                }
+              }
+            },
+            {
+              "match": ",",
+              "name": "punctuation.separator.comma"
+            }
+          ]
         }
       ]
     },

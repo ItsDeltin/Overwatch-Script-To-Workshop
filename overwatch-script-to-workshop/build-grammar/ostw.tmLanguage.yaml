@@ -313,7 +313,9 @@ repository:
       - include: '#new-object'
       - include: '#create-array'
       - include: '#ternary-conditional'
-      - include: '#expression-operators'
+      - include: '#lambda'
+      - include: '#grouped' # Must be below lambda
+      - include: '#expression-operators' # Must be below lambda
       # 'variable' can match a bunch of things easily, so match it last.
       - include: '#variable'
   
@@ -401,6 +403,56 @@ repository:
         name: keyword.operator.conditional.colon
     patterns:
       - include: '#expression'
+  
+  # Grouped
+  grouped:
+    begin: \(
+    end: \)
+    beginCaptures:
+      0:
+        name: punctuation.parenthesis.open
+    endCaptures:
+      0:
+        name: punctuation.parenthesis.close
+    patterns:
+      - include: '#expression'
+  
+  # Lambda
+  lambda:
+    patterns:
+      # One parameter: define param =>
+      - match: '{{type}}\b\s*{{part}}\b\s*(=>)'
+        captures:
+          1:
+            patterns:
+              - include: '#type-matcher'
+          6:
+            name: variable.parameter
+          7:
+            name: storage.type.function.arrow
+      # With parenthesis: () =>
+      - begin: \(
+        end: (\))\s*(=>)
+        beginCaptures:
+          0:
+            name: punctuation.definition.parameters.begin
+        endCaptures:
+          1:
+            name: punctuation.definition.parameters.end
+          2:
+            name: storage.type.function.arrow
+        patterns:
+          # Match lambda parameter
+          - match: '{{type}}\b\s*{{part}}\b'
+            captures:
+              1:
+                patterns:
+                  - include: '#type-matcher'
+              6:
+                name: variable.parameter
+          # Match parameter seperator
+          - match: ','
+            name: punctuation.separator.comma
   
   # Variable
   variable:
