@@ -450,7 +450,6 @@ repository:
       - include: '#create-array'
       - include: '#ternary-conditional'
       - include: '#lambda'
-      - include: '#grouped' # Must be below lambda
       - include: '#expression-operators' # Must be below lambda
       # null
       - match: \bnull\b
@@ -544,20 +543,7 @@ repository:
         name: keyword.operator.conditional.colon
     patterns:
       - include: '#expression'
-  
-  # Grouped
-  grouped:
-    begin: \(
-    end: \)
-    beginCaptures:
-      0:
-        name: punctuation.parenthesis.open
-    endCaptures:
-      0:
-        name: punctuation.parenthesis.close
-    patterns:
-      - include: '#expression'
-  
+    
   # Lambda
   lambda:
     patterns:
@@ -573,7 +559,7 @@ repository:
             name: storage.type.function.arrow
       # With parenthesis: () =>
       - begin: \(
-        end: (\))\s*(=>)
+        end: (\))(\s*=>)?
         beginCaptures:
           0:
             name: punctuation.definition.parameters.begin
@@ -594,6 +580,7 @@ repository:
           # Match parameter seperator
           - match: ','
             name: punctuation.separator.comma
+          - include: '#expression'
   
   # Variable
   variable:
