@@ -207,16 +207,17 @@ repository:
 
   # Rules
   rule:
-    begin: '(rule)\s*(:)\s*({{string-double}})' # rule: "string"
+    begin: '(rule)\s*(:)\s*(({{string-double}})|({{string-single}}))' # rule: "string"
     end: '{{encapsulated-block-end}}'
     beginCaptures:
       1:
         name: keyword.control
       2:
         name: punctuation.separator.colon
-      3:
+      4:
         name: string.quoted.double
-
+      5:
+        name: string.quoted.single
     patterns:
     # Event attribute
     - match: (Event|Team|Player)\s*(\.)\s*{{part}}
@@ -227,21 +228,8 @@ repository:
           name: punctuation.accessor
         3:
           name: support.variable
-    
-    # Rule condition
-    - begin: '(if)\s*(\()'
-      end: '\)'
-      beginCaptures:
-        1:
-          name: keyword.control.conditional.if
-        2:
-          name: punctuation.parenthesis.open
-      endCaptures:
-        0:
-          name: punctuation.parenthesis.close
-      patterns:
-        - include: '#expression'
-    - include: '#block'
+    - include: '#if-statement' # Rule condition
+    - include: '#block' # Rule block
 
   # Block that contains statements.
   block:
@@ -286,15 +274,96 @@ repository:
           - include: '#assignment'
           - include: '#expression'
           - include: '#statement-end'
+      # foreach
+      - begin: \b(foreach)\b\s*(\()
+        end: \)
+        beginCaptures:
+          1:
+            name: keyword.control.loop.foreach
+          2:
+            name: punctuation.parenthesis.open
+        endCaptures:
+          0:
+            name: punctuation.parenthesis.close
+        patterns:
+          # Match 'in' and the following expression.
+          - begin: \bin\b
+            end: '\s*(?=\))'
+            beginCaptures:
+              0:
+                name: keyword.control.loop.in
+            patterns:
+              - include: '#expression'
+          # Match the variable created for the loop.
+          - match: '{{type}}\b\s*{{part}}\b'
+            captures:
+              1:
+                patterns:
+                  - include: '#type-matcher'
+              6:
+                name: entity.name.variable.local
+      # while
+      - begin: \b(while)\b\s*(\()
+        end: \)
+        beginCaptures:
+          1:
+            name: keyword.control.loop.while
+          2:
+            name: punctuation.parenthesis.open
+        endCaptures:
+          0:
+            name: punctuation.parenthesis.close
+      # If, else if, and switch.
+      - include: '#if-statement'
+      # Else
+      - match: \belse\b
+        name: keyword.control.conditional.else
+      # break;
+      - match: \bbreak\b
+        name: keyword.control.flow.break
+      # continue;
+      - match: \bcontinue\b
+        name: keyword.control.flow.continue
+      # case
+      - begin: \bcase\b
+        end: ':'
+        beginCaptures:
+          0:
+            name: keyword.control.case
+        endCaptures:
+          0:
+            name: punctuation.separator.colon
+        patterns:
+          - include: '#expression'
       - include: '#function-call'
       - include: '#declare-local-variable'
       - include: '#assignment'
       - include: '#expression'
       - include: '#block' # Nested block
+      - include: '#statement-end'
   
   statement-end:
     match: ;
     name: '{{statement-end}}'
+  
+  # If, else if, and switch
+  if-statement:
+    begin: \b((\belse\b\s*)?(if)|(switch))\b\s*(\()
+    end: '\)'
+    beginCaptures:
+      2:
+        name: keyword.control.conditional.else
+      3:
+        name: keyword.control.conditional.if
+      4:
+        name: keyword.control.switch
+      5:
+        name: punctuation.parenthesis.open
+    endCaptures:
+      0:
+        name: punctuation.parenthesis.close
+    patterns:
+      - include: '#expression'
   
   # Assignment
   # assignment:
@@ -351,6 +420,7 @@ repository:
       - include: '#lambda'
       - include: '#grouped' # Must be below lambda
       - include: '#expression-operators' # Must be below lambda
+      # null
       - match: \bnull\b
         name: constant.language.null
       # 'variable' can match a bunch of things easily, so match it last.

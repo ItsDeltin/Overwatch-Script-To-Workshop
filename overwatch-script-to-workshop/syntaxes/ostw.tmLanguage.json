@@ -283,7 +283,7 @@
       ]
     },
     "rule": {
-      "begin": "(rule)\\s*(:)\\s*(\\\"(?:[^\"\\\\]|\\\\.)*\\\")",
+      "begin": "(rule)\\s*(:)\\s*((\\\"(?:[^\"\\\\]|\\\\.)*\\\")|(\\'(?:[^'\\\\]|\\\\.)*\\'))",
       "end": "(?<=})|(?<=;)",
       "beginCaptures": {
         "1": {
@@ -292,8 +292,11 @@
         "2": {
           "name": "punctuation.separator.colon"
         },
-        "3": {
+        "4": {
           "name": "string.quoted.double"
+        },
+        "5": {
+          "name": "string.quoted.single"
         }
       },
       "patterns": [
@@ -312,26 +315,7 @@
           }
         },
         {
-          "begin": "(if)\\s*(\\()",
-          "end": "\\)",
-          "beginCaptures": {
-            "1": {
-              "name": "keyword.control.conditional.if"
-            },
-            "2": {
-              "name": "punctuation.parenthesis.open"
-            }
-          },
-          "endCaptures": {
-            "0": {
-              "name": "punctuation.parenthesis.close"
-            }
-          },
-          "patterns": [
-            {
-              "include": "#expression"
-            }
-          ]
+          "include": "#if-statement"
         },
         {
           "include": "#block"
@@ -410,6 +394,105 @@
           ]
         },
         {
+          "begin": "\\b(foreach)\\b\\s*(\\()",
+          "end": "\\)",
+          "beginCaptures": {
+            "1": {
+              "name": "keyword.control.loop.foreach"
+            },
+            "2": {
+              "name": "punctuation.parenthesis.open"
+            }
+          },
+          "endCaptures": {
+            "0": {
+              "name": "punctuation.parenthesis.close"
+            }
+          },
+          "patterns": [
+            {
+              "begin": "\\bin\\b",
+              "end": "\\s*(?=\\))",
+              "beginCaptures": {
+                "0": {
+                  "name": "keyword.control.loop.in"
+                }
+              },
+              "patterns": [
+                {
+                  "include": "#expression"
+                }
+              ]
+            },
+            {
+              "match": "(?<set-type>([_[:alnum:]]+)\\b\\s*(<\\s*(\\s*,?\\s*\\g<set-type>\\s*)*>)?\\s*(\\[\\s*\\])*)\\b\\s*([_[:alnum:]]+)\\b",
+              "captures": {
+                "1": {
+                  "patterns": [
+                    {
+                      "include": "#type-matcher"
+                    }
+                  ]
+                },
+                "6": {
+                  "name": "entity.name.variable.local"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "begin": "\\b(while)\\b\\s*(\\()",
+          "end": "\\)",
+          "beginCaptures": {
+            "1": {
+              "name": "keyword.control.loop.while"
+            },
+            "2": {
+              "name": "punctuation.parenthesis.open"
+            }
+          },
+          "endCaptures": {
+            "0": {
+              "name": "punctuation.parenthesis.close"
+            }
+          }
+        },
+        {
+          "include": "#if-statement"
+        },
+        {
+          "match": "\\belse\\b",
+          "name": "keyword.control.conditional.else"
+        },
+        {
+          "match": "\\bbreak\\b",
+          "name": "keyword.control.flow.break"
+        },
+        {
+          "match": "\\bcontinue\\b",
+          "name": "keyword.control.flow.continue"
+        },
+        {
+          "begin": "\\bcase\\b",
+          "end": ":",
+          "beginCaptures": {
+            "0": {
+              "name": "keyword.control.case"
+            }
+          },
+          "endCaptures": {
+            "0": {
+              "name": "punctuation.separator.colon"
+            }
+          },
+          "patterns": [
+            {
+              "include": "#expression"
+            }
+          ]
+        },
+        {
           "include": "#function-call"
         },
         {
@@ -423,12 +506,43 @@
         },
         {
           "include": "#block"
+        },
+        {
+          "include": "#statement-end"
         }
       ]
     },
     "statement-end": {
       "match": ";",
       "name": "punctuation.terminator.statement.ostw"
+    },
+    "if-statement": {
+      "begin": "\\b((\\belse\\b\\s*)?(if)|(switch))\\b\\s*(\\()",
+      "end": "\\)",
+      "beginCaptures": {
+        "2": {
+          "name": "keyword.control.conditional.else"
+        },
+        "3": {
+          "name": "keyword.control.conditional.if"
+        },
+        "4": {
+          "name": "keyword.control.switch"
+        },
+        "5": {
+          "name": "punctuation.parenthesis.open"
+        }
+      },
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.parenthesis.close"
+        }
+      },
+      "patterns": [
+        {
+          "include": "#expression"
+        }
+      ]
     },
     "assignment": {
       "match": "=|\\+=|-=|\\*=|\\/=|%=|^=|\\+\\+|--",
