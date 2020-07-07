@@ -21,7 +21,7 @@ variables:
   # )
   type: '(?<set-type>{{part}}\b\s*(<\s*(\s*,?\s*\g<set-type>\s*)*>)?\s*(\[\s*\])*)' # 5 groups
   # define a =
-  declare-variable-start: '{{type}}\s*{{part}}\s*(=)?'
+  declare-variable-start: '{{type}}\s*{{part}}(\s*\!)?(\s*=)?'
   string-double: \"(?:[^"\\]|\\.)*\"
   string-single: \'(?:[^'\\]|\\.)*\'
   encapsulated-block-end: '(?<=})|(?<=;)'
@@ -79,7 +79,9 @@ repository:
           - include: '#type-matcher'
       6: # The variable name
         name: variable
-      7: # The equals for an initial value.
+      7:
+        name: '{{assignment}}'
+      8: # The equals for an initial value.
         name: '{{assignment}}'
     endCaptures:
       0:
@@ -201,6 +203,51 @@ repository:
         patterns:
           - include: '#expression'
       - include: '#function-call'
+      - include: '#declare-variable'
+      - include: '#assignment'
+      - include: '#expression'
+  
+  # Assignment
+  # assignment:
+  #   begin: '(\.\s*)?{{part}}\b\s*(?=\[|=|\+=|-=|\*=|\/=|%=|^=|\+\+|--)'
+  #   end: =|\+=|-=|\*=|\/=|%=|^=|\+\+|--
+  #   beginCaptures:
+  #     1:
+  #       name: punctuation.accessor
+  #     2:
+  #       name: variable
+  #   endCaptures:
+  #     0:
+  #       name: keyword.operator.assignment.compound
+  #   patterns:
+  #     - begin: \[
+  #       end: \]
+  #       beginCaptures:
+  #         0:
+  #           name: punctuation.squarebracket.open
+  #       endCaptures:
+  #         0:
+  #           name: punctuation.squarebracket.close
+  #       patterns:
+  #         - include: '#expression'
+  
+  # assignment:
+  #   begin: =|\+=|-=|\*=|\/=|%=|^=|\+\+|--
+  #   end: ;
+  #   beginCaptures:
+  #     0:
+  #       name: keyword.operator.assignment.compound
+  #   endCaptures:
+  #     0:
+  #       name: '{{statement-end}}'
+  #   patterns:
+  #     - include: '#expression'
+
+  assignment:
+    match: =|\+=|-=|\*=|\/=|%=|^=|\+\+|--
+    captures:
+      0:
+        name: keyword.operator.assignment.compound
   
   # Expressions
   expression:
@@ -320,7 +367,7 @@ repository:
       - name: keyword.operator.logical
         match: \!|&&|\|\|
       - name: keyword.operator.arithmetic
-        match: '%|\*|/|-|\+'
+        match: '%|\*|\/|-|\+'
 
   # Argument list
   argument-list:

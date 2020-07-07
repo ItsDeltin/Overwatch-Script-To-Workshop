@@ -170,7 +170,7 @@
     },
     "scripts": {
         "vscode:prepublish": "npm run compile && webpack --mode production",
-        "compile": "tsc -b && webpack --mode development",
+        "compile": "node ./build-grammar/out/build-grammar.js tsc -b && webpack --mode development",
         "watch": "tsc -b -w",
         "test": "sh ./scripts/e2e.sh",
         "webpack": "webpack --mode development",

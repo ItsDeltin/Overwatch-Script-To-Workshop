@@ -59,7 +59,7 @@
       ]
     },
     "declare-variable": {
-      "begin": "(?<set-type>([_[:alnum:]]+)\\b\\s*(<\\s*(\\s*,?\\s*\\g<set-type>\\s*)*>)?\\s*(\\[\\s*\\])*)\\s*([_[:alnum:]]+)\\s*(=)?(?!\\s*\\()",
+      "begin": "(?<set-type>([_[:alnum:]]+)\\b\\s*(<\\s*(\\s*,?\\s*\\g<set-type>\\s*)*>)?\\s*(\\[\\s*\\])*)\\s*([_[:alnum:]]+)(\\s*\\!)?(\\s*=)?(?!\\s*\\()",
       "end": ";",
       "patterns": [
         {
@@ -78,6 +78,9 @@
           "name": "variable"
         },
         "7": {
+          "name": "keyword.operator.assignment.ostw"
+        },
+        "8": {
           "name": "keyword.operator.assignment.ostw"
         }
       },
@@ -266,8 +269,25 @@
         },
         {
           "include": "#function-call"
+        },
+        {
+          "include": "#declare-variable"
+        },
+        {
+          "include": "#assignment"
+        },
+        {
+          "include": "#expression"
         }
       ]
+    },
+    "assignment": {
+      "match": "=|\\+=|-=|\\*=|\\/=|%=|^=|\\+\\+|--",
+      "captures": {
+        "0": {
+          "name": "keyword.operator.assignment.compound"
+        }
+      }
     },
     "expression": {
       "patterns": [
@@ -450,7 +470,7 @@
         },
         {
           "name": "keyword.operator.arithmetic",
-          "match": "%|\\*|/|-|\\+"
+          "match": "%|\\*|\\/|-|\\+"
         }
       ]
     },
