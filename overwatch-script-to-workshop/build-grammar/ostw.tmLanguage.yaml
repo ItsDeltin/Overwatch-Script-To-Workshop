@@ -41,10 +41,24 @@ repository:
   # The root of a default OSTW script.
   rule-set:
     patterns:
+    - include: '#import'
     - include: '#rule'
     - include: '#declare-class'
     - include: '#declare-function'
     - include: '#declare-variable'
+  
+  # Import
+  import:
+    begin: '\bimport\b'
+    end: ;
+    beginCaptures:
+      0:
+        name: keyword.other
+    endCaptures:
+      0:
+        name: '{{statement-end}}'
+    patterns:
+      - include: '#string'
   
   # Applies syntax highlighting to an already matched type.
   type-matcher:
@@ -316,6 +330,8 @@ repository:
       - include: '#lambda'
       - include: '#grouped' # Must be below lambda
       - include: '#expression-operators' # Must be below lambda
+      - match: \bnull\b
+        name: constant.language.null
       # 'variable' can match a bunch of things easily, so match it last.
       - include: '#variable'
   
