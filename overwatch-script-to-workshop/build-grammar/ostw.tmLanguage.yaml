@@ -246,16 +246,18 @@ repository:
 
   # Rules
   rule:
-    begin: '(rule)\s*(:)\s*(({{string-double}})|({{string-single}}))' # rule: "string"
+    begin: '\b(disabled\b\s*)?(rule)\b\s*(:)\s*(({{string-double}})|({{string-single}}))' # rule: "string"
     end: '{{encapsulated-block-end}}'
     beginCaptures:
-      1:
+      1: # Disabled keyword
+        name: storage.modifier
+      2: # Rule keyword
         name: keyword.control
-      2:
+      3: # Colon
         name: punctuation.separator.colon
-      4:
+      5: # Rule name (double quotes)
         name: string.quoted.double
-      5:
+      6: # Rule name (single quotes)
         name: string.quoted.single
     patterns:
     # Event attribute
