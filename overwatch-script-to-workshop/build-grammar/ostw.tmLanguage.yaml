@@ -44,6 +44,7 @@ repository:
     - include: '#import'
     - include: '#rule'
     - include: '#declare-class'
+    - include: '#declare-enum'
     - include: '#declare-function'
     - include: '#declare-variable'
   
@@ -171,6 +172,40 @@ repository:
         patterns:
           - include: '#declare-function'
           - include: '#declare-variable'
+  
+  # Enum declaration
+  declare-enum:
+    begin: '\b(enum)\b\s*{{part}}'
+    end: '{{encapsulated-block-end}}'
+    beginCaptures:
+      1:
+        name: keyword.other.enum
+      2:
+        name: entity.name.type.enum
+    patterns:
+      - begin: '{'
+        end: '}'
+        beginCaptures:
+          0:
+            name: punctuation.curlybrace.open
+        endCaptures:
+          0:
+            name: punctuation.curlybrace.close
+        patterns:
+          # Match enum value
+          - begin: '{{part}}'
+            end: '(,)|(?=\s*})' # Enum declaration ends when either ',' is reached or lookahead finds '}'
+            beginCaptures:
+              0:
+                name: entity.name.variable.enum-member
+            endCaptures:
+              1:
+                name: punctuation.separator.comma
+            patterns:
+              # Match enum value's actual value
+              - include: '#expression'
+              - match: '='
+                name: '{{assignment}}'
   
   # Parameter declaration
   parameter-list-declaration:

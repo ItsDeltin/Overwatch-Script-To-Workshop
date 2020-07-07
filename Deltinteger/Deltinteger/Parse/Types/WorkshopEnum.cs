@@ -11,12 +11,13 @@ namespace Deltin.Deltinteger.Parse
     class ValueGroupType : CodeType
     {
         public EnumData EnumData { get; }
-        private Scope Scope { get; } = new Scope();
+        private Scope Scope { get; }
         private List<EnumValuePair> ValuePairs { get; } = new List<EnumValuePair>();
         private bool Constant { get; }
 
         public ValueGroupType(EnumData enumData, bool constant) : base(enumData.CodeName)
         {
+            Scope = new Scope("enum " + Name);
             Constant = constant;
             EnumData = enumData;
             TokenType = TokenType.Enum;

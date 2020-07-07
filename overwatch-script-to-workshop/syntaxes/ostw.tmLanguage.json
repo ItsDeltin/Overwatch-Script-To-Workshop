@@ -25,6 +25,9 @@
           "include": "#declare-class"
         },
         {
+          "include": "#declare-enum"
+        },
+        {
           "include": "#declare-function"
         },
         {
@@ -226,6 +229,59 @@
             },
             {
               "include": "#declare-variable"
+            }
+          ]
+        }
+      ]
+    },
+    "declare-enum": {
+      "begin": "\\b(enum)\\b\\s*([_[:alnum:]]+)",
+      "end": "(?<=})|(?<=;)",
+      "beginCaptures": {
+        "1": {
+          "name": "keyword.other.enum"
+        },
+        "2": {
+          "name": "entity.name.type.enum"
+        }
+      },
+      "patterns": [
+        {
+          "begin": "{",
+          "end": "}",
+          "beginCaptures": {
+            "0": {
+              "name": "punctuation.curlybrace.open"
+            }
+          },
+          "endCaptures": {
+            "0": {
+              "name": "punctuation.curlybrace.close"
+            }
+          },
+          "patterns": [
+            {
+              "begin": "([_[:alnum:]]+)",
+              "end": "(,)|(?=\\s*})",
+              "beginCaptures": {
+                "0": {
+                  "name": "entity.name.variable.enum-member"
+                }
+              },
+              "endCaptures": {
+                "1": {
+                  "name": "punctuation.separator.comma"
+                }
+              },
+              "patterns": [
+                {
+                  "include": "#expression"
+                },
+                {
+                  "match": "=",
+                  "name": "keyword.operator.assignment.ostw"
+                }
+              ]
             }
           ]
         }
