@@ -62,7 +62,42 @@
       ]
     },
     "declare-variable": {
-      "begin": "(?<set-type>([_[:alnum:]]+)\\b\\s*(<\\s*(\\s*,?\\s*\\g<set-type>\\s*)*>)?\\s*(\\[\\s*\\])*)\\s*([_[:alnum:]]+)(\\s*\\!)?(\\s*=)?(?!\\s*\\()",
+      "begin": "(((public|private|protected|virtual|override|abstract|static|globalvar|playervar)\\b\\s*)*)(?<set-type>([_[:alnum:]]+)\\b\\s*(<\\s*(\\s*,?\\s*\\g<set-type>\\s*)*>)?\\s*(\\[\\s*\\])*)\\s*([_[:alnum:]]+)(\\s*\\!)?(\\s*=)?(?!\\s*\\()",
+      "end": ";",
+      "patterns": [
+        {
+          "include": "#expression"
+        }
+      ],
+      "beginCaptures": {
+        "1": {
+          "name": "storage.modifier"
+        },
+        "4": {
+          "patterns": [
+            {
+              "include": "#type-matcher"
+            }
+          ]
+        },
+        "9": {
+          "name": "entity.name.variable.field"
+        },
+        "10": {
+          "name": "keyword.operator.assignment.ostw"
+        },
+        "11": {
+          "name": "keyword.operator.assignment.ostw"
+        }
+      },
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.terminator.statement.ostw"
+        }
+      }
+    },
+    "declare-local-variable": {
+      "begin": "(?<set-type>([_[:alnum:]]+)\\b\\s*(<\\s*(\\s*,?\\s*\\g<set-type>\\s*)*>)?\\s*(\\[\\s*\\])*)\\s*([_[:alnum:]]+)(\\s*\\!)?(\\s*=)?",
       "end": ";",
       "patterns": [
         {
@@ -78,7 +113,7 @@
           ]
         },
         "6": {
-          "name": "variable"
+          "name": "entity.name.variable.local"
         },
         "7": {
           "name": "keyword.operator.assignment.ostw"
@@ -325,7 +360,7 @@
           "include": "#function-call"
         },
         {
-          "include": "#declare-variable"
+          "include": "#declare-local-variable"
         },
         {
           "include": "#assignment"

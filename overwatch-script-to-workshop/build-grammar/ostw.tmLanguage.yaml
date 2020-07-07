@@ -27,6 +27,7 @@ variables:
   string-single: \'(?:[^'\\]|\\.)*\'
   encapsulated-block-end: '(?<=})|(?<=;)'
   attribute-list: (((public|private|protected|virtual|override|abstract|static)\b\s*)*)
+  variable-attribute-list: (((public|private|protected|virtual|override|abstract|static|globalvar|playervar)\b\s*)*)
 
   # Scopes
   statement-end: punctuation.terminator.statement.ostw
@@ -70,18 +71,39 @@ repository:
   
   # Variable definition syntax
   declare-variable:
-    begin: '{{declare-variable-start}}(?!\s*\()'
+    begin: '{{variable-attribute-list}}{{declare-variable-start}}(?!\s*\()'
     end: ;
     patterns:
       - include: '#expression'
     beginCaptures:
-      # Apply highlighting to the type match
-      1:
+      1: # Highlight attributes
+        name: storage.modifier
+      4: # Apply highlighting to the type match
+        patterns:
+          - include: '#type-matcher'
+      9: # The variable name
+        name: entity.name.variable.field
+      10: # Extended collection '!' marker
+        name: '{{assignment}}'
+      11: # The equals for an initial value.
+        name: '{{assignment}}'
+    endCaptures:
+      0:
+        name: '{{statement-end}}'
+  
+  # Variables defined in rules and functions
+  declare-local-variable:
+    begin: '{{declare-variable-start}}'
+    end: ;
+    patterns:
+      - include: '#expression'
+    beginCaptures:
+      1: # Apply highlighting to type match
         patterns:
           - include: '#type-matcher'
       6: # The variable name
-        name: variable
-      7:
+        name: entity.name.variable.local
+      7: # Extended collection '!' marker
         name: '{{assignment}}'
       8: # The equals for an initial value.
         name: '{{assignment}}'
@@ -117,7 +139,7 @@ repository:
         name: entity.name.type.class
       4:
         name: punctuation.separator.colon
-      5:
+      5: # Match extending and implementing.
         patterns:
           - match: '{{groupless-part}}'
             name: entity.name.type
@@ -235,7 +257,7 @@ repository:
         patterns:
           - include: '#expression'
       - include: '#function-call'
-      - include: '#declare-variable'
+      - include: '#declare-local-variable'
       - include: '#assignment'
       - include: '#expression'
   
