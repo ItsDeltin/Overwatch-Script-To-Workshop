@@ -155,7 +155,7 @@ namespace Deltin.Deltinteger.Parse
             }
 
             if (type != null)
-                type.Call(parseInfo, DocRange.GetRange(typeContext));
+                type.Call(parseInfo, DocRange.GetRange(typeContext.PART()));
 
             if (typeContext.INDEX_START() != null)
                     for (int i = 0; i < typeContext.INDEX_START().Length; i++)
