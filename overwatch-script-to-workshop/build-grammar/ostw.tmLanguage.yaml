@@ -139,7 +139,7 @@ repository:
   
   # Macro var
   declare-macro-var:
-    begin: '{{attribute-list}}{{type}}\b\s*{{part}}\b\s*(:)'
+    begin: '{{attribute-list}}{{type}}\s*{{part}}\b\s*(:)'
     end: ;
     patterns:
       - include: '#expression'
@@ -302,7 +302,7 @@ repository:
   
   # Hooks
   set-hook:
-    begin: '{{type}}\b\s*(.)\s*{{part}}\b\s*(=)'
+    begin: '{{type}}\s*(.)\s*{{part}}\b\s*(=)'
     end: ';'
     beginCaptures:
       1: # {{type}}
@@ -415,7 +415,7 @@ repository:
             patterns:
               - include: '#expression'
           # Match the variable created for the loop.
-          - match: '{{type}}\b\s*{{part}}\b'
+          - match: '{{type}}\s*{{part}}\b'
             captures:
               1:
                 patterns:
@@ -628,7 +628,7 @@ repository:
   lambda:
     patterns:
       # One parameter: define param =>
-      - match: '{{type}}\b\s*{{part}}\b\s*(=>)'
+      - match: '{{type}}\s*{{part}}\b\s*(=>)'
         captures:
           1:
             patterns:
@@ -651,7 +651,7 @@ repository:
         patterns:
           - include: '#comment'
           # Match lambda parameter
-          - match: '{{type}}\b\s*{{part}}\b'
+          - match: '{{type}}\s*{{part}}\b'
             captures:
               1:
                 patterns:

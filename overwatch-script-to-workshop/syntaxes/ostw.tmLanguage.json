@@ -170,7 +170,7 @@
       }
     },
     "declare-macro-var": {
-      "begin": "(((public|private|protected|virtual|override|abstract|static)\\b\\s*)*)(?<set-type>([_[:alnum:]]+)\\b\\s*(<\\s*(\\s*,?\\s*\\g<set-type>\\s*)*>)?\\s*(\\[\\s*\\])*)\\b\\s*([_[:alnum:]]+)\\b\\s*(:)",
+      "begin": "(((public|private|protected|virtual|override|abstract|static)\\b\\s*)*)(?<set-type>([_[:alnum:]]+)\\b\\s*(<\\s*(\\s*,?\\s*\\g<set-type>\\s*)*>)?\\s*(\\[\\s*\\])*)\\s*([_[:alnum:]]+)\\b\\s*(:)",
       "end": ";",
       "patterns": [
         {
@@ -445,7 +445,7 @@
       ]
     },
     "set-hook": {
-      "begin": "(?<set-type>([_[:alnum:]]+)\\b\\s*(<\\s*(\\s*,?\\s*\\g<set-type>\\s*)*>)?\\s*(\\[\\s*\\])*)\\b\\s*(.)\\s*([_[:alnum:]]+)\\b\\s*(=)",
+      "begin": "(?<set-type>([_[:alnum:]]+)\\b\\s*(<\\s*(\\s*,?\\s*\\g<set-type>\\s*)*>)?\\s*(\\[\\s*\\])*)\\s*(.)\\s*([_[:alnum:]]+)\\b\\s*(=)",
       "end": ";",
       "beginCaptures": {
         "1": {
@@ -631,7 +631,7 @@
               ]
             },
             {
-              "match": "(?<set-type>([_[:alnum:]]+)\\b\\s*(<\\s*(\\s*,?\\s*\\g<set-type>\\s*)*>)?\\s*(\\[\\s*\\])*)\\b\\s*([_[:alnum:]]+)\\b",
+              "match": "(?<set-type>([_[:alnum:]]+)\\b\\s*(<\\s*(\\s*,?\\s*\\g<set-type>\\s*)*>)?\\s*(\\[\\s*\\])*)\\s*([_[:alnum:]]+)\\b",
               "captures": {
                 "1": {
                   "patterns": [
@@ -914,7 +914,7 @@
     "lambda": {
       "patterns": [
         {
-          "match": "(?<set-type>([_[:alnum:]]+)\\b\\s*(<\\s*(\\s*,?\\s*\\g<set-type>\\s*)*>)?\\s*(\\[\\s*\\])*)\\b\\s*([_[:alnum:]]+)\\b\\s*(=>)",
+          "match": "(?<set-type>([_[:alnum:]]+)\\b\\s*(<\\s*(\\s*,?\\s*\\g<set-type>\\s*)*>)?\\s*(\\[\\s*\\])*)\\s*([_[:alnum:]]+)\\b\\s*(=>)",
           "captures": {
             "1": {
               "patterns": [
@@ -952,7 +952,7 @@
               "include": "#comment"
             },
             {
-              "match": "(?<set-type>([_[:alnum:]]+)\\b\\s*(<\\s*(\\s*,?\\s*\\g<set-type>\\s*)*>)?\\s*(\\[\\s*\\])*)\\b\\s*([_[:alnum:]]+)\\b",
+              "match": "(?<set-type>([_[:alnum:]]+)\\b\\s*(<\\s*(\\s*,?\\s*\\g<set-type>\\s*)*>)?\\s*(\\[\\s*\\])*)\\s*([_[:alnum:]]+)\\b",
               "captures": {
                 "1": {
                   "patterns": [
