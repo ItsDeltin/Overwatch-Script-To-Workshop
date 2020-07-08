@@ -38,6 +38,9 @@
         },
         {
           "include": "#declare-variable"
+        },
+        {
+          "include": "#set-hook"
         }
       ]
     },
@@ -427,6 +430,38 @@
       "end": ";",
       "beginCaptures": {
         "0": {
+          "name": "keyword.operator.assignment.ostw"
+        }
+      },
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.terminator.statement.ostw"
+        }
+      },
+      "patterns": [
+        {
+          "include": "#expression"
+        }
+      ]
+    },
+    "set-hook": {
+      "begin": "(?<set-type>([_[:alnum:]]+)\\b\\s*(<\\s*(\\s*,?\\s*\\g<set-type>\\s*)*>)?\\s*(\\[\\s*\\])*)\\b\\s*(.)\\s*([_[:alnum:]]+)\\b\\s*(=)",
+      "end": ";",
+      "beginCaptures": {
+        "1": {
+          "patterns": [
+            {
+              "include": "#type-matcher"
+            }
+          ]
+        },
+        "6": {
+          "name": "punctuation.accessor"
+        },
+        "7": {
+          "name": "support.variable"
+        },
+        "8": {
           "name": "keyword.operator.assignment.ostw"
         }
       },

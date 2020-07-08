@@ -49,6 +49,7 @@ repository:
     - include: '#declare-macro-var'
     - include: '#declare-function'
     - include: '#declare-variable'
+    - include: '#set-hook'
   
   # Comments
   comment:
@@ -292,6 +293,26 @@ repository:
     end: ';'
     beginCaptures:
       0:
+        name: '{{assignment}}'
+    endCaptures:
+      0:
+        name: '{{statement-end}}'
+    patterns:
+      - include: '#expression'
+  
+  # Hooks
+  set-hook:
+    begin: '{{type}}\b\s*(.)\s*{{part}}\b\s*(=)'
+    end: ';'
+    beginCaptures:
+      1: # {{type}}
+        patterns:
+          - include: '#type-matcher'
+      6: # (.)
+        name: punctuation.accessor
+      7: # Hook name
+        name: support.variable
+      8: # =
         name: '{{assignment}}'
     endCaptures:
       0:
