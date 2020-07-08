@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Deltin.Deltinteger.LanguageServer;
 using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
 using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItemKind;
@@ -25,6 +26,7 @@ namespace Deltin.Deltinteger.Parse
         public bool Static { get; }
         public bool Recursive { get; }
         private readonly TokenType _tokenType;
+        private readonly TokenModifier[] _tokenModifiers;
 
         public bool WasCalled { get; private set; }
 
@@ -58,6 +60,7 @@ namespace Deltin.Deltinteger.Parse
             Static = varInfo.Static;
             Recursive = varInfo.Recursive;
             _tokenType = varInfo.TokenType;
+            _tokenModifiers = varInfo.TokenModifiers.ToArray();
             _initalValueContext = varInfo.InitialValueContext;
             _initialValueResolve = varInfo.InitialValueResolve;
             _operationalScope = varInfo.OperationalScope;
@@ -73,6 +76,7 @@ namespace Deltin.Deltinteger.Parse
             // Add the variable to the scope.
             _operationalScope.AddVariable(this, parseInfo.Script.Diagnostics, DefinedAt.range);
 
+            parseInfo.Script.AddToken(DefinedAt.range, _tokenType, _tokenModifiers);
             parseInfo.Script.AddHover(DefinedAt.range, GetLabel(true));
             parseInfo.TranslateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, DefinedAt, true);
 
@@ -112,7 +116,7 @@ namespace Deltin.Deltinteger.Parse
         public void Call(ParseInfo parseInfo, DocRange callRange)
         {
             WasCalled = true;
-            parseInfo.Script.AddToken(callRange, _tokenType);
+            parseInfo.Script.AddToken(callRange, _tokenType, _tokenModifiers);
             parseInfo.Script.AddDefinitionLink(callRange, DefinedAt);
             parseInfo.Script.AddHover(callRange, GetLabel(true));
             parseInfo.TranslateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, new Location(parseInfo.Script.Uri, callRange));
@@ -178,6 +182,7 @@ namespace Deltin.Deltinteger.Parse
         public Scope OperationalScope;
         public bool Recursive;
         public TokenType TokenType = TokenType.Variable;
+        public List<TokenModifier> TokenModifiers = new List<TokenModifier>();
         public CodeLensSourceType CodeLensType = CodeLensSourceType.Variable;
 
         public VarInfo(string name, Location definedAt, ParseInfo parseInfo)

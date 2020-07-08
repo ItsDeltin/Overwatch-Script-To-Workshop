@@ -186,6 +186,10 @@ namespace Deltin.Deltinteger.Parse
             _varInfo.IsWorkshopReference = true;
             _varInfo.OperationalScope = _operationalScope;
             _varInfo.CodeLensType = CodeLensSourceType.ScopedVariable;
+
+            _varInfo.TokenType = TokenType.Variable;
+            _varInfo.TokenModifiers.Add(TokenModifier.Declaration);
+            _varInfo.TokenModifiers.Add(TokenModifier.Readonly);
         }
     }
 
