@@ -131,7 +131,7 @@ namespace Deltin.Deltinteger.Parse
         {
             string typeName = "define";
             if (CodeType != null) typeName = CodeType.GetName();
-            return HoverHandler.Sectioned(typeName + " " + Name, null);
+            return new MarkupBuilder().StartCodeLine().Add(typeName + " " + Name).EndCodeLine().ToString(markdown);
         }
 
         public void SetupParameters() {}

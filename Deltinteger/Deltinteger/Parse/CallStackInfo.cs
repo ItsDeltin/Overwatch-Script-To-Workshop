@@ -8,12 +8,12 @@ namespace Deltin.Deltinteger.Parse
 {
     public class CallInfo : IRestrictedCallHandler
     {
-        public IApplyBlock Function { get; }
+        public IRecursiveCallHandler Function { get; }
         private ScriptFile Script { get; }
-        private Dictionary<IApplyBlock, List<DocRange>> Calls { get; } = new Dictionary<IApplyBlock, List<DocRange>>();
+        private Dictionary<IRecursiveCallHandler, List<DocRange>> Calls { get; } = new Dictionary<IRecursiveCallHandler, List<DocRange>>();
         public List<RestrictedCall> RestrictedCalls { get; } = new List<RestrictedCall>();
 
-        public CallInfo(IApplyBlock function, ScriptFile script)
+        public CallInfo(IRecursiveCallHandler function, ScriptFile script)
         {
             Function = function;
             Script = script;
@@ -24,7 +24,7 @@ namespace Deltin.Deltinteger.Parse
             Script = script;
         }
 
-        public void Call(IApplyBlock callBlock, DocRange range)
+        public void Call(IRecursiveCallHandler callBlock, DocRange range)
         {
             if (!Calls.ContainsKey(callBlock)) Calls.Add(callBlock, new List<DocRange>());
             Calls[callBlock].Add(range);
@@ -35,16 +35,18 @@ namespace Deltin.Deltinteger.Parse
             foreach (var call in Calls)
                 if (DoesTreeCall(Function, call.Key))
                     foreach (DocRange range in call.Value)
-                        Script.Diagnostics.Error($"Recursion is not allowed here, the function '{call.Key.GetLabel(false)}' calls '{Function.GetLabel(false)}'.", range);
+                        Script.Diagnostics.Error($"Recursion is not allowed here, the {call.Key.TypeName} '{call.Key.GetLabel()}' calls '{Function.GetLabel()}'.", range);
         }
 
-        private bool DoesTreeCall(IApplyBlock function, IApplyBlock currentCheck, List<IApplyBlock> check = null)
+        private bool DoesTreeCall(IRecursiveCallHandler function, IRecursiveCallHandler currentCheck, List<IRecursiveCallHandler> check = null)
         {
-            if (check == null) check = new List<IApplyBlock>();
+            if (check == null) check = new List<IRecursiveCallHandler>();
             if (currentCheck.CallInfo == null) return false;
 
-            if (function is DefinedMethod dm && currentCheck is IMethod asMethod && (dm == asMethod || asMethod.Attributes.AllOverrideOptions().Contains(dm)))
-                return !asMethod.Attributes.Recursive;
+            // if (function is DefinedMethod dm && currentCheck is IMethod asMethod && (dm == asMethod || asMethod.Attributes.AllOverrideOptions().Contains(dm)))
+            //     return !asMethod.Attributes.Recursive;
+            if (function.DoesRecursivelyCall(currentCheck))
+                return !currentCheck.CanBeRecursivelyCalled();
 
             if (check.Contains(currentCheck)) return false;
             check.Add(currentCheck);
@@ -75,6 +77,31 @@ namespace Deltin.Deltinteger.Parse
             foreach (RestrictedCall call in restrictedCalls) if (!callTypes.Contains(call.CallType)) callTypes.Add(call.CallType);
             return callTypes.ToArray();
         }
+    }
+
+    public interface IRecursiveCallHandler
+    {
+        CallInfo CallInfo { get; }
+        string TypeName { get; }
+        bool DoesRecursivelyCall(IRecursiveCallHandler calling);
+        bool CanBeRecursivelyCalled();
+        string GetLabel();
+    }
+
+    public class RecursiveCallHandler : IRecursiveCallHandler
+    {
+        private readonly IApplyBlock _applyBlock;
+
+        public RecursiveCallHandler(IApplyBlock applyBlock)
+        {
+            _applyBlock = applyBlock;
+        }
+
+        public CallInfo CallInfo => _applyBlock.CallInfo;
+        public string TypeName => "function";
+        public bool DoesRecursivelyCall(IRecursiveCallHandler calling) => this == calling;
+        public bool CanBeRecursivelyCalled() => _applyBlock is IMethod function && function.Attributes.Recursive;
+        public string GetLabel() => _applyBlock.GetLabel(false);
     }
 
     public interface IRestrictedCallHandler

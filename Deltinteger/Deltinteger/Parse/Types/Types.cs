@@ -143,10 +143,10 @@ namespace Deltin.Deltinteger.Parse
                 foreach (var genericContext in typeContext.generics().code_type())
                     generics.Add(GetCodeTypeFromContext(parseInfo, genericContext));
                 
-                if (type is Lambda.BlockLambda)
-                    type = new Lambda.BlockLambda(generics.ToArray());
-                else if (type is Lambda.ValueBlockLambda)
+                if (type is Lambda.ValueBlockLambda)
                     type = new Lambda.ValueBlockLambda(generics[0], generics.Skip(1).ToArray());
+                else if (type is Lambda.BlockLambda)
+                    type = new Lambda.BlockLambda(generics.ToArray());
                 else if (type is Lambda.MacroLambda)
                     type = new Lambda.MacroLambda(generics[0], generics.Skip(1).ToArray());
             }

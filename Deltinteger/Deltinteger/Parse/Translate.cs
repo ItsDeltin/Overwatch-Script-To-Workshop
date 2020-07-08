@@ -161,9 +161,9 @@ namespace Deltin.Deltinteger.Parse
             }
 
             foreach (var applyType in Types.AllTypes) if (applyType is ClassType classType) classType.ResolveElements();
-            foreach (var apply in applyBlocks) apply.SetupParameters();
-            foreach (var apply in applyBlocks) apply.SetupBlock();
-            foreach (var apply in applyBlocks) apply.CallInfo?.CheckRecursion();
+            foreach (var apply in _applyBlocks) apply.SetupParameters();
+            foreach (var apply in _applyBlocks) apply.SetupBlock();
+            foreach (var callInfo in _recursionCheck) callInfo.CheckRecursion();
 
             // Get hooks
             foreach (ScriptFile script in Importer.ScriptFiles)
@@ -282,10 +282,16 @@ namespace Deltin.Deltinteger.Parse
         }
 
         // Applyable blocks
-        private List<IApplyBlock> applyBlocks = new List<IApplyBlock>();
+        private readonly List<IApplyBlock> _applyBlocks = new List<IApplyBlock>();
+        private readonly List<CallInfo> _recursionCheck = new List<CallInfo>();
         public void ApplyBlock(IApplyBlock apply)
         {
-            applyBlocks.Add(apply);
+            _applyBlocks.Add(apply);
+            if (apply.CallInfo != null) _recursionCheck.Add(apply.CallInfo);
+        }
+        public void RecursionCheck(CallInfo callInfo)
+        {
+            _recursionCheck.Add(callInfo ?? throw new ArgumentNullException(nameof(callInfo)));
         }
     }
 

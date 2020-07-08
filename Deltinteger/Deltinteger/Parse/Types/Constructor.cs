@@ -25,14 +25,7 @@ namespace Deltin.Deltinteger.Parse
 
         public virtual void Parse(ActionSet actionSet, IWorkshopTree[] parameterValues, object[] additionalParameterData) {}
 
-        public void Call(ParseInfo parseInfo, DocRange callRange)
-        {
-            if (DefinedAt == null) return;
-            
-            parseInfo.Script.AddDefinitionLink(callRange, DefinedAt);
-            if (Type is DefinedType)
-                ((DefinedType)Type).AddLink(new LanguageServer.Location(parseInfo.Script.Uri, callRange));
-        }
+        public virtual void Call(ParseInfo parseInfo, DocRange callRange) {}
 
         public string GetLabel(bool markdown) => HoverHandler.GetLabel("new " + Type.Name, Parameters, markdown, Documentation);
     }
@@ -47,6 +40,7 @@ namespace Deltin.Deltinteger.Parse
         private DeltinScriptParser.ConstructorContext context { get; }
 
         public CallInfo CallInfo { get; }
+        private readonly RecursiveCallHandler _recursiveCallHandler;
 
         public DefinedConstructor(ParseInfo parseInfo, Scope scope, CodeType type, DeltinScriptParser.ConstructorContext context) : base(
             type,
@@ -55,7 +49,8 @@ namespace Deltin.Deltinteger.Parse
         {
             this.parseInfo = parseInfo;
             this.context = context;
-            CallInfo = new CallInfo(this, parseInfo.Script);
+            _recursiveCallHandler = new RecursiveCallHandler(this);
+            CallInfo = new CallInfo(_recursiveCallHandler, parseInfo.Script);
 
             ConstructorScope = scope.Child();
 
@@ -87,6 +82,13 @@ namespace Deltin.Deltinteger.Parse
             actionSet = actionSet.New(actionSet.IndexAssigner.CreateContained()).PackThis();
             DefinedMethod.AssignParameters(actionSet, ParameterVars, parameterValues);
             Block.Translate(actionSet);
+        }
+
+        public override void Call(ParseInfo parseInfo, DocRange callRange)
+        {
+            parseInfo.Script.AddDefinitionLink(callRange, DefinedAt);
+            parseInfo.CurrentCallInfo?.Call(_recursiveCallHandler, callRange);
+            ((DefinedType)Type).AddLink(parseInfo.GetLocation(callRange));
         }
 
         private List<IOnBlockApplied> listeners = new List<IOnBlockApplied>();

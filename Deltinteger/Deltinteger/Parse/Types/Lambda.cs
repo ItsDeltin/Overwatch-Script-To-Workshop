@@ -8,7 +8,7 @@ using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.C
 
 namespace Deltin.Deltinteger.Parse.Lambda
 {
-    public class LambdaAction : IExpression, IWorkshopTree
+    public class LambdaAction : IExpression, IWorkshopTree, IApplyBlock
     {
         private readonly BaseLambda LambdaType;
         public Var[] Parameters { get; }
@@ -19,9 +19,14 @@ namespace Deltin.Deltinteger.Parse.Lambda
         // For macro lambda
         public IExpression Expression { get; }
 
+        public CallInfo CallInfo { get; }
+        public IRecursiveCallHandler RecursiveCallHandler { get; }
+
         public LambdaAction(ParseInfo parseInfo, Scope scope, DeltinScriptParser.LambdaContext context)
         {
             Scope lambdaScope = scope.Child();
+            RecursiveCallHandler = new LambdaRecursionHandler(this);
+            CallInfo = new CallInfo(RecursiveCallHandler, parseInfo.Script);
 
             // Get the lambda parameters.
             Parameters = new Var[context.define().Length];
@@ -36,7 +41,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
             if (context.block() != null)
             {
                 // Parse the block.
-                Block = new BlockAction(parseInfo, lambdaScope, context.block());
+                Block = new BlockAction(parseInfo.SetCallInfo(CallInfo), lambdaScope, context.block());
 
                 // Validate the block.
                 BlockTreeScan validation = new BlockTreeScan(parseInfo, Block, "lambda", DocRange.GetRange(context.INS()));
@@ -55,9 +60,12 @@ namespace Deltin.Deltinteger.Parse.Lambda
             else if (context.expr() != null)
             {
                 // Get the lambda expression.
-                Expression = parseInfo.GetExpression(lambdaScope, context.expr());
+                Expression = parseInfo.SetCallInfo(CallInfo).GetExpression(lambdaScope, context.expr());
                 LambdaType = new MacroLambda(Expression.Type(), argumentTypes);
             }
+
+            // Add so the lambda can be recursive-checked.
+            parseInfo.TranslateInfo.RecursionCheck(CallInfo);
 
             // Add hover info
             parseInfo.Script.AddHover(DocRange.GetRange(context.INS()), new MarkupBuilder().StartCodeLine().Add(LambdaType.GetName()).EndCodeLine().ToString());
@@ -91,8 +99,52 @@ namespace Deltin.Deltinteger.Parse.Lambda
             }
             else throw new NotImplementedException();
         }
-    
+
+        public string GetLabel(bool markdown)
+        {
+            string label = "";
+
+            if (Parameters.Length == 1) label += Parameters[0].GetLabel(false);
+            else
+            {
+                label += "(";
+                for (int i = 0; i < Parameters.Length; i++)
+                {
+                    if (i != 0) label += ", ";
+                    label += Parameters[i].GetLabel(false);
+                }
+                label += ")";
+            }
+            label += " => ";
+
+            if (LambdaType is MacroLambda macroLambda) label += macroLambda.ReturnType?.GetName() ?? "define";
+            else if (LambdaType is ValueBlockLambda vbl) label += "{" + (vbl.ReturnType?.GetName() ?? "define") + "}";
+            else if (LambdaType is BlockLambda) label += "{}";
+
+            return label;
+        }
+
+        public void SetupParameters() {}
+        public void SetupBlock() {}
+        public void OnBlockApply(IOnBlockApplied onBlockApplied) => onBlockApplied.Applied();
+
         public bool EmptyBlock => Block == null || Block.Statements.Length == 0;
+
+        class LambdaRecursionHandler : IRecursiveCallHandler
+        {
+            public LambdaAction Lambda { get; }
+
+            public LambdaRecursionHandler(LambdaAction lambda)
+            {
+                Lambda = lambda;
+            }
+
+            public CallInfo CallInfo => Lambda.CallInfo;
+            public string TypeName => "lambda";
+            public bool CanBeRecursivelyCalled() => false;
+            public bool DoesRecursivelyCall(IRecursiveCallHandler calling) => calling is LambdaRecursionHandler lambdaRecursion && Lambda == lambdaRecursion.Lambda;
+            public string GetLabel() => Lambda.GetLabel(false);
+        }
     }
 
     /// <summary>Lambda invoke function.</summary>
@@ -125,6 +177,14 @@ namespace Deltin.Deltinteger.Parse.Lambda
             return lambda.Invoke(actionSet, methodCall.ParameterValues);
         }
 
+        public void Call(ParseInfo parseInfo, DocRange callRange)
+        {
+            InvokeListener listener = new InvokeListener(parseInfo, callRange);
+
+            if (parseInfo.SourceExpression is IBlockListener blockListener) blockListener.OnBlockApply(listener);
+            else listener.Applied();
+        }
+
         public CompletionItem GetCompletion() => MethodAttributes.GetFunctionCompletion(this);
         public string GetLabel(bool markdown) => HoverHandler.GetLabel(DoesReturnValue ? ReturnType?.Name ?? "define" : "void", Name, Parameters, markdown, Documentation);
 
@@ -137,6 +197,35 @@ namespace Deltin.Deltinteger.Parse.Lambda
             CodeParameter[] parameters = new CodeParameter[argumentTypes.Length];
             for (int i = 0; i < parameters.Length; i++) parameters[i] = new CodeParameter($"arg{i}", argumentTypes[i]);
             return parameters;
+        }
+
+        class InvokeListener : IOnBlockApplied
+        {
+            private readonly ParseInfo _parseInfo;
+            private readonly DocRange _callRange;
+
+            public InvokeListener(ParseInfo parseInfo, DocRange callRange)
+            {
+                _parseInfo = parseInfo;
+                _callRange = callRange;
+            }
+
+            public void Applied()
+            {
+                if (ConstantExpressionResolver.Resolve(_parseInfo.SourceExpression) is LambdaAction source)
+                {
+                    _parseInfo.CurrentCallInfo.Call(source.RecursiveCallHandler, _callRange);
+
+                    // Add restricted calls.
+                    foreach (RestrictedCall call in source.CallInfo.RestrictedCalls)
+                        _parseInfo.RestrictedCallHandler.RestrictedCall(new RestrictedCall(
+                            call.CallType,
+                            _parseInfo.GetLocation(_callRange),
+                            new CallStrategy("The lambda '" + source.GetLabel(false) + "' calls a restricted value of type " + RestrictedCall.StringFromCallType(call.CallType) + ".")
+                        ));
+                }
+                else _parseInfo.Script.Diagnostics.Warning("Could not resolve lambda's source expression.", _callRange);
+            }
         }
     }
 

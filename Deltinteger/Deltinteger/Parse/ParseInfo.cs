@@ -165,9 +165,6 @@ namespace Deltin.Deltinteger.Parse
             // If the element is a callable, call it.
             if (element is ICallable callable) callable.Call(this, variableRange);
             
-            // If the element can execute code when called, add the callinfo.
-            if (element is IApplyBlock applyBlock) CurrentCallInfo?.Call(applyBlock, variableRange);
-            
             // Get the index the variable is being called with.
             IExpression[] index = null;
             if (variableContext.array() != null)

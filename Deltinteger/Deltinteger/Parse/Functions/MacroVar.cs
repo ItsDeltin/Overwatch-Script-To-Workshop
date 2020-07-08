@@ -33,6 +33,7 @@ namespace Deltin.Deltinteger.Parse
         private bool _wasApplied = false;
 
         public CallInfo CallInfo { get; }
+        private readonly RecursiveCallHandler _recursiveCallHandler;
 
         public MacroVar(ParseInfo parseInfo, Scope objectScope, Scope staticScope, DeltinScriptParser.Define_macroContext macroContext, CodeType returnType)
         {
@@ -46,7 +47,8 @@ namespace Deltin.Deltinteger.Parse
 
             ContainingType = (Static ? staticScope : objectScope).This;
             DefinedAt = new Location(parseInfo.Script.Uri, DocRange.GetRange(macroContext.name));
-            CallInfo = new CallInfo(this, parseInfo.Script);
+            _recursiveCallHandler = new RecursiveCallHandler(this);
+            CallInfo = new CallInfo(_recursiveCallHandler, parseInfo.Script);
             ReturnType = returnType;
             _expressionToParse = macroContext.expr();
             _scope = Static ? staticScope : objectScope;
@@ -108,6 +110,7 @@ namespace Deltin.Deltinteger.Parse
             parseInfo.Script.AddDefinitionLink(callRange, DefinedAt);
             parseInfo.Script.AddHover(callRange, GetLabel(true));
             parseInfo.TranslateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, new Location(parseInfo.Script.Uri, callRange));
+            parseInfo.CurrentCallInfo.Call(_recursiveCallHandler, callRange);
             OnBlockApply(new MacroVarRestrictedCallHandler(this, parseInfo.RestrictedCallHandler, parseInfo.GetLocation(callRange)));
         }
 
