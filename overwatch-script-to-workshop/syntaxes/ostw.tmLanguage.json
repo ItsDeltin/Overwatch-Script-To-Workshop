@@ -774,6 +774,24 @@
           "include": "#lambda"
         },
         {
+          "match": "(<)\\s*(?<set-type>([_[:alnum:]]+)\\b\\s*(<\\s*(\\s*,?\\s*\\g<set-type>\\s*)*>)?\\s*(\\[\\s*\\])*)\\s*(>)",
+          "captures": {
+            "1": {
+              "name": "punctuation.definition.typeparameters.begin"
+            },
+            "2": {
+              "patterns": [
+                {
+                  "include": "#type-matcher"
+                }
+              ]
+            },
+            "7": {
+              "name": "punctuation.definition.typeparameters.end"
+            }
+          }
+        },
+        {
           "include": "#expression-operators"
         },
         {

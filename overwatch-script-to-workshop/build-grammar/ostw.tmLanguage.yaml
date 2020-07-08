@@ -530,6 +530,16 @@ repository:
       - include: '#create-array'
       - include: '#ternary-conditional'
       - include: '#lambda'
+      # type cast
+      - match: (<)\s*{{type}}\s*(>)
+        captures:
+          1:
+            name: punctuation.definition.typeparameters.begin
+          2:
+            patterns:
+            - include: '#type-matcher'
+          7:
+            name: punctuation.definition.typeparameters.end
       - include: '#expression-operators' # Must be below lambda
       # null
       - match: \bnull\b
