@@ -221,7 +221,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
                         _parseInfo.RestrictedCallHandler.RestrictedCall(new RestrictedCall(
                             call.CallType,
                             _parseInfo.GetLocation(_callRange),
-                            new CallStrategy("The lambda '" + source.GetLabel(false) + "' calls a restricted value of type " + RestrictedCall.StringFromCallType(call.CallType) + ".")
+                            new CallStrategy("The lambda '" + source.GetLabel(false) + "' calls a restricted value of type '" + RestrictedCall.StringFromCallType(call.CallType) + "'.")
                         ));
                 }
                 else _parseInfo.Script.Diagnostics.Warning("Could not resolve lambda's source expression.", _callRange);

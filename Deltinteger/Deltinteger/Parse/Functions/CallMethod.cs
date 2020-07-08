@@ -83,8 +83,6 @@ namespace Deltin.Deltinteger.Parse
             // Check callinfo :)
             foreach (RestrictedCallType type in ((IApplyBlock)CallingMethod).CallInfo.GetRestrictedCallTypes())
                 parseInfo.RestrictedCallHandler.RestrictedCall(new RestrictedCall(type, parseInfo.GetLocation(NameRange), new FunctionCallsRestricted(CallingMethod.Name, type)));
-            
-            foreach (IOnBlockApplied apply in _onBlockApplied) apply.Applied();
         }
 
         public Scope ReturningScope()
@@ -138,8 +136,15 @@ namespace Deltin.Deltinteger.Parse
             return parameterValues;
         }
 
-        private readonly List<IOnBlockApplied> _onBlockApplied = new List<IOnBlockApplied>();
-        public void OnBlockApply(IOnBlockApplied onBlockApplied) => _onBlockApplied.Add(onBlockApplied);
+        public void OnBlockApply(IOnBlockApplied onBlockApplied)
+        {
+            // If the function being called is an IApplyBlock, bridge onBlockApply to it.
+            if (CallingMethod is IApplyBlock applyBlock)
+                applyBlock.OnBlockApply(onBlockApplied);
+            // Otherwise, instantly apply.
+            else
+                onBlockApplied.Applied();
+        }
     }
 
     public enum CallParallel
