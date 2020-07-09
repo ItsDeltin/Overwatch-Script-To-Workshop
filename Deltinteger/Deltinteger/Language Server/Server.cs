@@ -153,9 +153,25 @@ namespace Deltin.Deltinteger.LanguageServer
             }));
 
             // semantic tokens
-            options.OnRequest<Newtonsoft.Json.Linq.JToken, SemanticToken[]>("semanticTokens", (uriToken) => Task<SemanticToken[]>.Run(() => LastParse?.ScriptFromUri(new Uri(uriToken["fsPath"].ToObject<string>()))?.GetSemanticTokens()));
+            options.OnRequest<Newtonsoft.Json.Linq.JToken, SemanticTokensResult>("semanticTokens", (uriToken) => Task<SemanticTokensResult>.Run(() => 
+            {
+                SemanticToken[] tokens = LastParse?.ScriptFromUri(new Uri(uriToken["fsPath"].ToObject<string>()))?.GetSemanticTokens();
+                return new SemanticTokensResult(tokens == null ? "wait" : "success", tokens ?? new SemanticToken[0]);
+            }));
 
             return options;
+        }
+
+        class SemanticTokensResult
+        {
+            public string result;
+            public SemanticToken[] tokens;
+
+            public SemanticTokensResult(string result, SemanticToken[] tokens)
+            {
+                this.result = result;
+                this.tokens = tokens;
+            }
         }
 
         class PathmapDocument

@@ -7,6 +7,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { workspace, ExtensionContext, OutputChannel, window, Uri, Position, Location, StatusBarItem } from 'vscode';
 import { LanguageClient, LanguageClientOptions, ServerOptions, ExecutableOptions, Executable, TransportKind, InitializationFailedHandler, ErrorHandler, TextDocument, RequestType, Position as LSPosition, Location as LSLocation, Range as LSRange } from 'vscode-languageclient';
+import { setTimeout } from 'timers';
 const fetch = require('node-fetch').default;
 
 let client: LanguageClient;
@@ -98,6 +99,13 @@ function startLanguageServer(context: ExtensionContext)
 
 		// When the client is ready, setup the workshopCode notification.
 		client.onNotification("workshopCode", (code: string)=> {
+
+			if (!registeredProvider)
+			{
+				vscode.languages.registerDocumentSemanticTokensProvider(selector, provider, legend);
+				registeredProvider = true;
+			}
+
 			if (code != lastWorkshopOutput)
 			{
 				lastWorkshopOutput = code;
@@ -257,6 +265,7 @@ const workshopPanelProvider = new class implements vscode.TextDocumentContentPro
 	}
 };
 
+let registeredProvider: boolean = false;
 const tokenTypes = ['comment', 'string', 'keyword', 'number', 'regexp', 'operator', 'namespace',
 	'type', 'struct', 'class', 'interface', 'enum', 'enummember', 'typeParameter', 'function',
 	'member', 'macro', 'variable', 'parameter', 'property', 'label'];
@@ -266,20 +275,34 @@ const selector = { language: 'ostw', scheme: 'file' }; // register for all Java 
 
 const provider: vscode.DocumentSemanticTokensProvider = {
 	async provideDocumentSemanticTokens(document: vscode.TextDocument) {
-			// Get the semantic tokens in the provided document from the language server.
-			let tokens: {range: LSRange, tokenType:string, modifiers:string[]}[] = await client.sendRequest('semanticTokens', document.uri);
 
-			// Create the builder.
-			let builder:vscode.SemanticTokensBuilder = new vscode.SemanticTokensBuilder(legend);
+		// Get the semantic tokens in the provided document from the language server.
+		let tokens: {result:string, tokens: {range: LSRange, tokenType:string, modifiers:string[]}[]}
+		let count: number = 0;
 
-			// Push tokens to the builder.
-			for (const token of tokens) {
-				builder.push(client.protocol2CodeConverter.asRange(token.range), token.tokenType, token.modifiers);
+		do
+		{
+			tokens = await client.sendRequest('semanticTokens', document.uri);
+			if (tokens.result != 'success')
+			{
+				count++;
+				await new Promise(resolve => setTimeout(resolve, 100));
 			}
-
-			// Return the result.
-			return builder.build();
 		}
-};
+		// Repeat the request until success is returned.
+		// This is needed due to the fact that vscode will call provideDocumentSemanticTokens before the script is parsed.
+		// Cancel after 10 seconds.
+		while (tokens.result != 'success' && count < 100)
 
-vscode.languages.registerDocumentSemanticTokensProvider(selector, provider, legend);
+		// Create the builder.
+		let builder:vscode.SemanticTokensBuilder = new vscode.SemanticTokensBuilder(legend);
+
+		// Push tokens to the builder.
+		for (const token of tokens.tokens) {
+			builder.push(client.protocol2CodeConverter.asRange(token.range), token.tokenType, token.modifiers);
+		}
+
+		// Return the result.
+		return builder.build();
+	}
+};
