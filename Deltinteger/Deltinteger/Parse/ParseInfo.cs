@@ -135,38 +135,57 @@ namespace Deltin.Deltinteger.Parse
         /// <returns>An IExpression created from the context.</returns>
         public IExpression GetVariable(Scope scope, Scope getter, DeltinScriptParser.VariableContext variableContext, bool selfContained)
         {
+            // Get the variable name and range.
             string variableName = variableContext.PART().GetText();
             DocRange variableRange = DocRange.GetRange(variableContext.PART());
 
+            // Get the variable.
             IVariable element = scope.GetVariable(variableName, getter, Script.Diagnostics, variableRange);
-            if (element == null)
-                return null;
+            if (element == null) return null;
             
-            if (element is ICallable callable)
-                callable.Call(this, variableRange);
-            
-            if (element is IApplyBlock applyBlock)
-                CurrentCallInfo?.Call(applyBlock, variableRange);
-            
-            IExpression[] index = null;
-            if (variableContext.array() != null)
-            {
-                index = new IExpression[variableContext.array().expr().Length];
-                for (int i = 0; i < index.Length; i++)
-                    index[i] = GetExpression(getter, variableContext.array().expr(i));
-            }
+            // Additional syntax checking.
+            return ApplyVariable(new VariableApply(this), element, ExpressionIndexArray(getter, variableContext.array()), variableRange);
+        }
 
-            if (element is IIndexReferencer referencer) return new CallVariableAction(referencer, index);
+        public IExpression ApplyVariable(VariableApply variableApplier, IVariable variable, IExpression[] index, DocRange variableRange)
+        {
+            // Callable
+            if (variable is ICallable callable) variableApplier.Call(callable, variableRange);
+            
+            // Apply block
+            if (variable is IApplyBlock applyBlock) variableApplier.ApplyBlock(applyBlock, variableRange);
 
+            // IIndexReferencers are wrapped by CallVariableActions.
+            if (variable is IIndexReferencer referencer) return new CallVariableAction(referencer, index);
+
+            // Check value in array.
             if (index != null)
             {
-                if (!element.CanBeIndexed)
-                    Script.Diagnostics.Error("This variable type cannot be indexed.", variableRange);
+                if (!variable.CanBeIndexed)
+                    variableApplier.Error("This variable type cannot be indexed.", variableRange);
                 else
-                    return new ValueInArrayAction(this, (IExpression)element, index);
+                    return new ValueInArrayAction(this, (IExpression)variable, index);
             }
 
-            return (IExpression)element;
+            return (IExpression)variable;
+        }
+
+        /// <summary>Gets an IExpression[] from a DeltinScriptParser.ArrayContext.</summary>
+        /// <param name="scope">The scope used to parse the index values.</param>
+        /// <param name="arrayContext">The context of the array.</param>
+        /// <returns>An IExpression[] of each indexer in the chain. Will return null if arrayContext is null.</returns>
+        public IExpression[] ExpressionIndexArray(Scope scope, DeltinScriptParser.ArrayContext arrayContext)
+        {
+            if (arrayContext == null) return null;
+
+            IExpression[] index = null;
+            if (arrayContext != null)
+            {
+                index = new IExpression[arrayContext.expr().Length];
+                for (int i = 0; i < index.Length; i++)
+                    index[i] = GetExpression(scope, arrayContext.expr(i));
+            }
+            return index;
         }
 
         /// <summary>Creates a macro from a Define_macroContext.</summary>
@@ -203,5 +222,20 @@ namespace Deltin.Deltinteger.Parse
             TranslateInfo.ApplyBlock((IApplyBlock)newMacro);
             return newMacro;
         }
+    }
+
+    public class VariableApply
+    {
+        private readonly ParseInfo _parseInfo;
+
+        public VariableApply(ParseInfo parseInfo)
+        {
+            _parseInfo = parseInfo;
+        }
+        protected VariableApply() {}
+
+        public virtual void Call(ICallable callable, DocRange range) => callable.Call(_parseInfo, range);
+        public virtual void ApplyBlock(IApplyBlock applyBlock, DocRange range) => _parseInfo.CurrentCallInfo?.Call(applyBlock, range);
+        public virtual void Error(string message, DocRange range) => _parseInfo.Script.Diagnostics.Error(message, range);
     }
 }

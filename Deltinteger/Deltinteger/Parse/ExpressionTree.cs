@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.Elements;
 using Antlr4.Runtime.Tree;
@@ -26,7 +27,8 @@ namespace Deltin.Deltinteger.Parse
                     Getter = scope,
                     Scope = i == 0 ? scope : ExprContextTree[i - 1].GetScope() ?? new Scope(),
                     Parent = i == 0 ? null : ExprContextTree[i - 1],
-                    UsedAsExpression = usedAsValue || i < ExprContextTree.Length - 1
+                    UsedAsExpression = usedAsValue || i < ExprContextTree.Length - 1,
+                    IsLast = i == ExprContextTree.Length - 1
                 });
 
             // Get expressions
@@ -229,6 +231,7 @@ namespace Deltin.Deltinteger.Parse
         public Scope Getter;
         public bool UsedAsExpression;
         public ITreeContextPart Parent;
+        public bool IsLast;
     }
 
     /// <summary>The base interface for any element in an expression tree.</summary>
@@ -286,6 +289,7 @@ namespace Deltin.Deltinteger.Parse
     class VariableOrTypePart : ITreeContextPart
     {
         private readonly DeltinScriptParser.VariableContext _variable;
+        private readonly DocRange _range;
         private readonly string _name;
         private readonly bool _canBeType;
         private TreeContextParseInfo _tcParseInfo;
@@ -294,6 +298,7 @@ namespace Deltin.Deltinteger.Parse
 
         public VariableOrTypePart(DeltinScriptParser.VariableContext variable) {
             _variable = variable;
+            _range = DocRange.GetRange(_variable.PART());
             _name = variable.PART().GetText();
             _canBeType = variable.array() == null;
         }
@@ -301,28 +306,55 @@ namespace Deltin.Deltinteger.Parse
         public void Setup(TreeContextParseInfo tcParseInfo)
         {
             _tcParseInfo = tcParseInfo;
-            _potentialPaths = GetPotentialPaths(tcParseInfo.ParseInfo, tcParseInfo.Scope, tcParseInfo.Getter);
-            // default
-            if (_potentialPaths.Length > 0) _chosenPath = _potentialPaths[0];
+            _potentialPaths = GetPotentialPaths(tcParseInfo);
+
+            // If there are any paths.
+            if (_potentialPaths.Length > 0)
+            {
+                _chosenPath = _potentialPaths[0];
+                // This is the last expression in the tree, which means RetrievedScopeable will not be called. At this point, nothing can be done about ambiguities.
+                // If ParseInfo implements something like ExpectingCodeType, that can be used to further narrow down the chosen path.
+                // But if IsLast is true then there should only be one option anyway.
+                if (tcParseInfo.IsLast) _chosenPath.Accept();
+            }
+            else // There are no paths.
+            {
+                // May resolve to type or variable.
+                if (_canBeType && tcParseInfo.Parent == null)
+                    tcParseInfo.ParseInfo.Script.Diagnostics.Error($"No variable or type by the name of '{_name}' exists in the current scope.", _range);
+                // May resolve to only variable.
+                else
+                    tcParseInfo.ParseInfo.Script.Diagnostics.Error($"No variable by the name of '{_name}' exists in the {tcParseInfo.Parent.GetScope().ErrorName}.", _range);
+            }
         }
 
-        private IPotentialPathOption[] GetPotentialPaths(ParseInfo parseInfo, Scope scope, Scope getter)
+        private IPotentialPathOption[] GetPotentialPaths(TreeContextParseInfo tcParseInfo)
         {
             List<IPotentialPathOption> potentialPaths = new List<IPotentialPathOption>();
 
             // Get the potential variable.
-            IExpression variable = parseInfo.GetVariable(scope, getter, _variable, false);
-            // If the variable exists, add it to potentialPaths.
-            if (variable != null)
-                potentialPaths.Add(new VariableOption(variable));
+            if (tcParseInfo.Scope.IsVariable(_variable.PART().GetText()))
+            {
+                IVariable variable = tcParseInfo.Scope.GetVariable(_variable.PART().GetText(), null, null, null);
+
+                // Variable handler.
+                var apply = new PotentialVariableApply();
+
+                // Get the wrapped expression.
+                IExpression expression = tcParseInfo.ParseInfo.ApplyVariable(apply, variable, tcParseInfo.ParseInfo.ExpressionIndexArray(tcParseInfo.Getter, _variable.array()), _range);
+
+                // Add the potential path.
+                potentialPaths.Add(new VariableOption(tcParseInfo.Parent, apply, expression, variable, tcParseInfo.ParseInfo, _range));
+            }
             
             // Get the potential type.
-            if (_canBeType)
+            // Currently, OSTW does not support nested types, so make sure there is no parent.
+            if (_canBeType && tcParseInfo.Parent == null)
             {
-                CodeType type = parseInfo.TranslateInfo.Types.GetCodeType(_name);
+                CodeType type = tcParseInfo.ParseInfo.TranslateInfo.Types.GetCodeType(_name);
                 // If the type exists, add it to potentialPaths.
                 if (type != null)
-                    potentialPaths.Add(new TypeOption(type));
+                    potentialPaths.Add(new TypeOption(type, tcParseInfo.ParseInfo, _range));
             }
             
             return potentialPaths.ToArray();
@@ -334,17 +366,29 @@ namespace Deltin.Deltinteger.Parse
                 if (option.GetScope().ScopeContains(scopeable, _tcParseInfo.Getter))
                 {
                     _chosenPath = option;
+                    _chosenPath.Accept();
                     return;
                 }
         }
 
         public Scope GetScope()
         {
-            Scope scopeBatch = new Scope();
-            foreach (var path in _potentialPaths) {
-                Scope addScope = path.GetScope();
-                if (addScope != null) scopeBatch.CopyAll(addScope, _tcParseInfo.Getter);
-            }
+            // Get the name of the scope batch.
+            var batchNameGroup = _potentialPaths.Select(pp => pp.GetScope().ErrorName).Distinct(); // Gets all scope names in an enumerable with no duplicates.
+            string name = "current scope"; // The default scope name.
+
+            // Set the scope name.
+            if (batchNameGroup.Count() == 1) name = batchNameGroup.First();
+            else name = "'" + string.Join(", ", batchNameGroup) + "'";
+
+            // Create the scope.
+            Scope scopeBatch = new Scope(name);
+
+            // Add all potential path's scopes to the scope batch.
+            foreach (var path in _potentialPaths)
+                scopeBatch.CopyAll(path.GetScope(), _tcParseInfo.Getter);
+
+            // Finished.
             return scopeBatch;
         }
         public IExpression GetExpression() => _chosenPath?.GetExpression();
@@ -353,28 +397,65 @@ namespace Deltin.Deltinteger.Parse
         interface IPotentialPathOption {
             Scope GetScope();
             IExpression GetExpression();
+            void Accept();
         }
         class TypeOption : IPotentialPathOption
         {
             private readonly CodeType _type;
+            private readonly ParseInfo _parseInfo;
+            private readonly DocRange _callRange;
             
-            public TypeOption(CodeType type) {
+            public TypeOption(CodeType type, ParseInfo parseInfo, DocRange callRange) {
                 _type = type;
+                _parseInfo = parseInfo;
+                _callRange = callRange;
             }
 
             public Scope GetScope() => _type.ReturningScope();
             public IExpression GetExpression() => _type;
+            public void Accept()
+            {
+                _type.Call(_parseInfo, _callRange);
+            }
         }
         class VariableOption : IPotentialPathOption
         {
-            private readonly IExpression _variable;
+            private readonly ITreeContextPart _parent;
+            private readonly PotentialVariableApply _apply;
+            private readonly IExpression _expression;
+            private readonly IVariable _variable;
+            private readonly ParseInfo _parseInfo;
+            private readonly DocRange _callRange;
 
-            public VariableOption(IExpression variable) {
+            public VariableOption(ITreeContextPart parent, PotentialVariableApply apply, IExpression expression, IVariable variable, ParseInfo parseInfo, DocRange callRange) {
+                _parent = parent;
+                _apply = apply;
+                _expression = expression;
                 _variable = variable;
+                _parseInfo = parseInfo;
+                _callRange = callRange;
             }
 
-            public Scope GetScope() => _variable.Type()?.GetObjectScope();
-            public IExpression GetExpression() => _variable;
+            public Scope GetScope() => _expression.Type()?.GetObjectScope() ?? _parseInfo.TranslateInfo.PlayerVariableScope;
+            public IExpression GetExpression() => _expression;
+            public void Accept()
+            {
+                if (_variable is ICallable callable) callable.Call(_parseInfo, _callRange);
+                if (_variable is IApplyBlock applyBlock) _parseInfo.CurrentCallInfo?.Call(applyBlock, _callRange);
+                _parseInfo.Script.Diagnostics.AddDiagnostics(_apply.Errors.ToArray());
+                _parent?.RetrievedScopeable(_variable);
+            }
+        }
+    
+        class PotentialVariableApply : VariableApply
+        {
+            public List<Diagnostic> Errors { get; } = new List<Diagnostic>();
+
+            public PotentialVariableApply() {}
+
+            public override void Call(ICallable callable, DocRange range) {}
+            public override void ApplyBlock(IApplyBlock applyBlock, DocRange range) {}
+            public override void Error(string message, DocRange range) => Errors.Add(new Diagnostic(message, range, Diagnostic.Error));
         }
     }
 

@@ -14,7 +14,7 @@ namespace Deltin.Deltinteger.Parse
         private Importer Importer { get; }
         public Diagnostics Diagnostics { get; }
         public ScriptTypes Types { get; } = new ScriptTypes();
-        public Scope PlayerVariableScope { get; private set; } = new Scope();
+        public Scope PlayerVariableScope { get; private set; } = new Scope("player variables");
         public Scope GlobalScope { get; }
         public Scope RulesetScope { get; }
         public VarCollection VarCollection { get; } = new VarCollection();
