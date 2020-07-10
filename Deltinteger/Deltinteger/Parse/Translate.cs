@@ -302,6 +302,7 @@ namespace Deltin.Deltinteger.Parse
             AllTypes.Add(new Pathfinder.PathResolveClass());
         }
 
+        public CodeType GetCodeType(string name) => AllTypes.FirstOrDefault(type => type.Name == name);
         public CodeType GetCodeType(string name, FileDiagnostics diagnostics, DocRange range)
         {
             var type = AllTypes.FirstOrDefault(type => type.Name == name);

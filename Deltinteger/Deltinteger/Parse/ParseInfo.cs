@@ -138,29 +138,15 @@ namespace Deltin.Deltinteger.Parse
             string variableName = variableContext.PART().GetText();
             DocRange variableRange = DocRange.GetRange(variableContext.PART());
 
-            var type = TranslateInfo.Types.GetCodeType(variableName, null, null);
-            
-            if (type != null)
-            {
-                if (selfContained)
-                    Script.Diagnostics.Error("Types can't be used as expressions.", variableRange);
-                
-                if (variableContext.array() != null)
-                    Script.Diagnostics.Error("Indexers cannot be used with types.", DocRange.GetRange(variableContext.array()));
-
-                type.Call(this, variableRange);
-                return type;
-            }
-
             IVariable element = scope.GetVariable(variableName, getter, Script.Diagnostics, variableRange);
             if (element == null)
                 return null;
             
-            if (element is ICallable)
-                ((ICallable)element).Call(this, variableRange);
+            if (element is ICallable callable)
+                callable.Call(this, variableRange);
             
-            if (element is IApplyBlock)
-                CurrentCallInfo?.Call((IApplyBlock)element, variableRange);
+            if (element is IApplyBlock applyBlock)
+                CurrentCallInfo?.Call(applyBlock, variableRange);
             
             IExpression[] index = null;
             if (variableContext.array() != null)

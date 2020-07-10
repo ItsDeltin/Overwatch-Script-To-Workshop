@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.Elements;
 using Antlr4.Runtime.Tree;
@@ -12,7 +11,7 @@ namespace Deltin.Deltinteger.Parse
         public IExpression[] Tree { get; }
         public IExpression Result { get; }
         public bool Completed { get; } = true;
-        public TreeContextPart[] ExprContextTree { get; }
+        public ITreeContextPart[] ExprContextTree { get; }
 
         private ITerminalNode _trailingSeperator = null;
 
@@ -20,13 +19,24 @@ namespace Deltin.Deltinteger.Parse
         {
             ExprContextTree = Flatten(parseInfo.Script, exprContext);
 
+            // Setup
+            for (int i = 0; i < ExprContextTree.Length; i++)
+                ExprContextTree[i].Setup(new TreeContextParseInfo() {
+                    ParseInfo = parseInfo,
+                    Getter = scope,
+                    Scope = i == 0 ? scope : ExprContextTree[i - 1].GetScope() ?? new Scope(),
+                    Parent = i == 0 ? null : ExprContextTree[i - 1],
+                    UsedAsExpression = usedAsValue || i < ExprContextTree.Length - 1
+                });
+
+            // Get expressions
             Tree = new IExpression[ExprContextTree.Length];
-            IExpression current = ExprContextTree[0].Parse(parseInfo, scope, scope, true);
+            IExpression current = ExprContextTree[0].GetExpression();
             Tree[0] = current;
             if (current != null)
                 for (int i = 1; i < ExprContextTree.Length; i++)
                 {
-                    current = ExprContextTree[i].Parse(parseInfo, current.ReturningScope() ?? new Scope(), scope, i < ExprContextTree.Length - 1 || usedAsValue);
+                    current = ExprContextTree[i].GetExpression();
 
                     Tree[i] = current;
 
@@ -45,19 +55,32 @@ namespace Deltin.Deltinteger.Parse
             GetCompletion(parseInfo.Script, scope);
         }
 
-        private TreeContextPart[] Flatten(ScriptFile script, DeltinScriptParser.E_expr_treeContext exprContext)
+        private ITreeContextPart[] Flatten(ScriptFile script, DeltinScriptParser.E_expr_treeContext exprContext)
         {
-            var exprList = new List<TreeContextPart>();
+            var exprList = new List<ITreeContextPart>();
             Flatten(script, exprContext, exprList);
             return exprList.ToArray();
 
-            void Flatten(ScriptFile script, DeltinScriptParser.E_expr_treeContext exprContext, List<TreeContextPart> exprList)
+            // Recursive flatten function.
+            void Flatten(ScriptFile script, DeltinScriptParser.E_expr_treeContext exprContext, List<ITreeContextPart> exprList)
             {
+                // If the expression is a Tree, recursively flatten.
                 if (exprContext.expr() is DeltinScriptParser.E_expr_treeContext)
                     Flatten(script, (DeltinScriptParser.E_expr_treeContext)exprContext.expr(), exprList);
+                // Otherwise, add the expression to the list.
                 else
-                    exprList.Add(new TreeContextPart(exprContext.expr()));
+                {
+                    // Get the function.
+                    if (exprContext.expr() is DeltinScriptParser.E_methodContext method)
+                        exprList.Add(new FunctionPart(method.method()));
+                    // Get the variable.
+                    else if (exprContext.expr() is DeltinScriptParser.E_variableContext variable)
+                        exprList.Add(new VariableOrTypePart(variable.variable()));
+                    // Get the expression.
+                    else exprList.Add(new ExpressionPart(exprContext.expr()));
+                }
 
+                // Syntax error if there is no method or variable.
                 if (exprContext.method() == null && exprContext.variable() == null)
                 {
                     script.Diagnostics.Error("Expected expression.", DocRange.GetRange(exprContext.SEPERATOR()));
@@ -65,10 +88,12 @@ namespace Deltin.Deltinteger.Parse
                 }
                 else
                 {
+                    // Get the method.
                     if (exprContext.method() != null)
-                        exprList.Add(new TreeContextPart(exprContext.method()));
+                        exprList.Add(new FunctionPart(exprContext.method()));
+                    // Get the variable.
                     if (exprContext.variable() != null)
-                        exprList.Add(new TreeContextPart(exprContext.variable()));
+                        exprList.Add(new VariableOrTypePart(exprContext.variable()));
                 }
             }
         }
@@ -79,13 +104,13 @@ namespace Deltin.Deltinteger.Parse
             if (Tree[i] != null)
             {
                 // Get the treescope. Don't get the completion items if it is null.
-                var treeScope = Tree[i].ReturningScope();
+                var treeScope = ExprContextTree[i].GetScope();
                 if (treeScope != null)
                 {
                     DocRange range;
                     if (i < Tree.Length - 1)
                     {
-                        range = ExprContextTree[i + 1].CompletionRange;
+                        range = ExprContextTree[i + 1].GetRange();
                     }
                     // Expression path has a trailing '.'
                     else if (_trailingSeperator != null)
@@ -127,9 +152,9 @@ namespace Deltin.Deltinteger.Parse
 
         public ExpressionTreeParseResult ParseTree(ActionSet actionSet, bool expectingValue)
         {
-            IGettable resultingVariable = null;
-            IWorkshopTree target = null;
-            IWorkshopTree result = null;
+            IGettable resultingVariable = null; // The resulting variable.
+            IWorkshopTree target = null; // The resulting player.
+            IWorkshopTree result = null; // The resulting value.
             VarIndexAssigner currentAssigner = actionSet.IndexAssigner;
             IWorkshopTree currentObject = null;
             Element[] resultIndex = new Element[0];
@@ -196,43 +221,160 @@ namespace Deltin.Deltinteger.Parse
         }
     }
 
-    public class TreeContextPart
+    /// <summary>Data that gets sent to ITreeContextPart.</summary>
+    public class TreeContextParseInfo
     {
-        public DocRange Range { get; }
-        public DocRange CompletionRange { get; }
-        private readonly DeltinScriptParser.VariableContext variable;
-        private readonly DeltinScriptParser.MethodContext method;
-        private readonly DeltinScriptParser.ExprContext expression;
+        public ParseInfo ParseInfo;
+        public Scope Scope;
+        public Scope Getter;
+        public bool UsedAsExpression;
+        public ITreeContextPart Parent;
+    }
 
-        public TreeContextPart(DeltinScriptParser.VariableContext variable)
-        {
-            this.variable = variable ?? throw new ArgumentNullException(nameof(variable));
-            Range = DocRange.GetRange(variable);
-            CompletionRange = Range;
-        }
-        public TreeContextPart(DeltinScriptParser.MethodContext method)
-        {
-            this.method = method ?? throw new ArgumentNullException(nameof(method));
-            Range = DocRange.GetRange(method);
-            CompletionRange = DocRange.GetRange(method.PART());
-        }
-        public TreeContextPart(DeltinScriptParser.ExprContext expression)
-        {
-            this.expression = expression ?? throw new ArgumentNullException(nameof(expression));
-            Range = DocRange.GetRange(expression);
-            CompletionRange = Range;
+    /// <summary>The base interface for any element in an expression tree.</summary>
+    public interface ITreeContextPart
+    {
+        void Setup(TreeContextParseInfo tcParseInfo);
+        Scope GetScope();
+        void RetrievedScopeable(IScopeable scopeable) {}
+        IExpression GetExpression();
+        DocRange GetRange();
+    }
+
+    /// <summary>Expressions in the tree.</summary>
+    class ExpressionPart : ITreeContextPart
+    {
+        private readonly DeltinScriptParser.ExprContext _expressionContext;
+        private IExpression _expression;
+
+        public ExpressionPart(DeltinScriptParser.ExprContext expression) {
+            _expressionContext = expression;
         }
 
-        public IExpression Parse(ParseInfo parseInfo, Scope scope, Scope getter, bool usedAsValue)
+        public void Setup(TreeContextParseInfo tcParseInfo)
         {
+            _expression = tcParseInfo.ParseInfo.GetExpression(tcParseInfo.Scope, _expressionContext);
+        }
+
+        public Scope GetScope() => _expression.ReturningScope();
+        public IExpression GetExpression() => _expression;
+        public DocRange GetRange() => DocRange.GetRange(_expressionContext);
+    }
+
+    /// <summary>Functions in the expression tree.</summary>
+    class FunctionPart : ITreeContextPart
+    {
+        private readonly DeltinScriptParser.MethodContext _methodContext;
+        private CallMethodAction _methodCall;
+
+        public FunctionPart(DeltinScriptParser.MethodContext method) {
+            _methodContext = method;
+        }
+
+        public void Setup(TreeContextParseInfo tcParseInfo)
+        {
+            _methodCall = new CallMethodAction(tcParseInfo.ParseInfo, tcParseInfo.Scope, _methodContext, tcParseInfo.UsedAsExpression, tcParseInfo.Getter);
+            tcParseInfo.Parent?.RetrievedScopeable(_methodCall.CallingMethod);
+        }
+
+        public Scope GetScope() => _methodCall.ReturningScope();
+        public IExpression GetExpression() => _methodCall;
+        public DocRange GetRange() => DocRange.GetRange(_methodContext.PART());
+    }
+
+    /// <summary>Variables or tyes in the expression tree.</summary>
+    class VariableOrTypePart : ITreeContextPart
+    {
+        private readonly DeltinScriptParser.VariableContext _variable;
+        private readonly string _name;
+        private readonly bool _canBeType;
+        private TreeContextParseInfo _tcParseInfo;
+        private IPotentialPathOption[] _potentialPaths;
+        private IPotentialPathOption _chosenPath;
+
+        public VariableOrTypePart(DeltinScriptParser.VariableContext variable) {
+            _variable = variable;
+            _name = variable.PART().GetText();
+            _canBeType = variable.array() == null;
+        }
+
+        public void Setup(TreeContextParseInfo tcParseInfo)
+        {
+            _tcParseInfo = tcParseInfo;
+            _potentialPaths = GetPotentialPaths(tcParseInfo.ParseInfo, tcParseInfo.Scope, tcParseInfo.Getter);
+            // default
+            if (_potentialPaths.Length > 0) _chosenPath = _potentialPaths[0];
+        }
+
+        private IPotentialPathOption[] GetPotentialPaths(ParseInfo parseInfo, Scope scope, Scope getter)
+        {
+            List<IPotentialPathOption> potentialPaths = new List<IPotentialPathOption>();
+
+            // Get the potential variable.
+            IExpression variable = parseInfo.GetVariable(scope, getter, _variable, false);
+            // If the variable exists, add it to potentialPaths.
             if (variable != null)
-                return parseInfo.GetVariable(scope, getter, variable, false);
-            if (method != null)
-                return new CallMethodAction(parseInfo, scope, method, usedAsValue, getter);
-            if (expression != null)
-                return parseInfo.GetExpression(scope, expression, false, usedAsValue, getter);
+                potentialPaths.Add(new VariableOption(variable));
             
-            throw new Exception();
+            // Get the potential type.
+            if (_canBeType)
+            {
+                CodeType type = parseInfo.TranslateInfo.Types.GetCodeType(_name);
+                // If the type exists, add it to potentialPaths.
+                if (type != null)
+                    potentialPaths.Add(new TypeOption(type));
+            }
+            
+            return potentialPaths.ToArray();
+        }
+
+        public void RetrievedScopeable(IScopeable scopeable)
+        {
+            foreach (var option in _potentialPaths)
+                if (option.GetScope().ScopeContains(scopeable, _tcParseInfo.Getter))
+                {
+                    _chosenPath = option;
+                    return;
+                }
+        }
+
+        public Scope GetScope()
+        {
+            Scope scopeBatch = new Scope();
+            foreach (var path in _potentialPaths) {
+                Scope addScope = path.GetScope();
+                if (addScope != null) scopeBatch.CopyAll(addScope, _tcParseInfo.Getter);
+            }
+            return scopeBatch;
+        }
+        public IExpression GetExpression() => _chosenPath?.GetExpression();
+        public DocRange GetRange() => DocRange.GetRange(_variable);
+
+        interface IPotentialPathOption {
+            Scope GetScope();
+            IExpression GetExpression();
+        }
+        class TypeOption : IPotentialPathOption
+        {
+            private readonly CodeType _type;
+            
+            public TypeOption(CodeType type) {
+                _type = type;
+            }
+
+            public Scope GetScope() => _type.ReturningScope();
+            public IExpression GetExpression() => _type;
+        }
+        class VariableOption : IPotentialPathOption
+        {
+            private readonly IExpression _variable;
+
+            public VariableOption(IExpression variable) {
+                _variable = variable;
+            }
+
+            public Scope GetScope() => _variable.Type()?.GetObjectScope();
+            public IExpression GetExpression() => _variable;
         }
     }
 
@@ -250,125 +392,5 @@ namespace Deltin.Deltinteger.Parse
             Target = target;
             ResultingVariable = resultingVariable;
         }
-    }
-
-    public class VariableResolve
-    {
-        public bool DoesResolveToVariable { get; }
-
-        private DocRange NotAVariableRange { get; }
-        private DocRange VariableRange { get; }
-
-        public CallVariableAction SetVariable { get; }
-        private ExpressionTree Tree { get; }
-
-        public VariableResolve(VariableResolveOptions options, IExpression expression, DocRange expressionRange, FileDiagnostics diagnostics)
-        {
-            // The expression is a variable.
-            if (expression is CallVariableAction)
-            {
-                // Get the variable being set and the range.
-                SetVariable = (CallVariableAction)expression;
-                VariableRange = expressionRange;
-            }
-            // The expression is an expression tree.
-            else if (expression is ExpressionTree tree)
-            {
-                Tree = tree;
-                if (tree.Completed)
-                {
-                    // If the resulting expression in the tree is not a variable.
-                    if (tree.Result is CallVariableAction == false)
-                        NotAVariableRange = tree.ExprContextTree.Last().Range;
-                    else
-                    {
-                        // Get the variable and the range.
-                        SetVariable = (CallVariableAction)tree.Result;
-                        VariableRange = tree.ExprContextTree.Last().Range;
-                    }
-                }
-            }
-            // The expression is not a variable.
-            else if (expression != null)
-                NotAVariableRange = expressionRange;
-
-            // NotAVariableRange will not be null if the resulting expression is a variable.
-            if (NotAVariableRange != null)
-                diagnostics.Error("Expected a variable.", NotAVariableRange);
-            
-            // Make sure the variable can be set to.
-            if (SetVariable != null)
-            {
-                // Check if the variable is settable.
-                if (options.ShouldBeSettable && !SetVariable.Calling.Settable())
-                    diagnostics.Error($"The variable '{SetVariable.Calling.Name}' cannot be set to.", VariableRange);
-                
-                // Check if the variable is a whole workshop variable.
-                if (options.FullVariable)
-                {
-                    Var asVar = SetVariable.Calling as Var;
-                    if (asVar == null || asVar.StoreType != StoreType.FullVariable)
-                        diagnostics.Error($"The variable '{SetVariable.Calling.Name}' cannot be indexed.", VariableRange);
-                }
-
-                // Check for indexers.
-                if (!options.CanBeIndexed && SetVariable.Index.Length != 0)
-                    diagnostics.Error($"The variable '{SetVariable.Calling.Name}' cannot be indexed.", VariableRange);
-            }
-            
-            DoesResolveToVariable = SetVariable != null;
-        }
-
-        public VariableElements ParseElements(ActionSet actionSet)
-        {
-            IndexReference var;
-            Element target = null;
-            Element[] index;
-
-            if (Tree != null)
-            {
-                // Parse the tree.
-                ExpressionTreeParseResult treeParseResult = Tree.ParseTree(actionSet, true);
-                // Get the variable.
-                var = (IndexReference)treeParseResult.ResultingVariable;
-                // Get the target.
-                target = (Element)treeParseResult.Target;
-                // Get the index.
-                index = treeParseResult.ResultingIndex;
-            }
-            else
-            {
-                // Get the variable.
-                var = (IndexReference)actionSet.IndexAssigner[SetVariable.Calling];
-                // Get the index.
-                index = Array.ConvertAll(SetVariable.Index, index => (Element)index.Parse(actionSet));
-            }
-
-            return new VariableElements(var, target, index);
-        }
-    }
-
-    public class VariableElements
-    {
-        public IndexReference IndexReference { get; }
-        public Element Target { get; }
-        public Element[] Index { get; }
-
-        public VariableElements(IndexReference indexReference, Element target, Element[] index)
-        {
-            IndexReference = indexReference;
-            Target = target;
-            Index = index;
-        }
-    }
-
-    public class VariableResolveOptions
-    {
-        /// <summary>Determines if a variables needs to be an entire workshop variable.</summary>
-        public bool FullVariable = false;
-        /// <summary>Determines if the variable can be set to a value in an array.</summary>
-        public bool CanBeIndexed = true;
-        /// <summary>Determines if the variable should be settable.</summary>
-        public bool ShouldBeSettable = true;
     }
 }
