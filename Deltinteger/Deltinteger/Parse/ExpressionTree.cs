@@ -23,7 +23,7 @@ namespace Deltin.Deltinteger.Parse
             // Setup
             for (int i = 0; i < ExprContextTree.Length; i++)
                 ExprContextTree[i].Setup(new TreeContextParseInfo() {
-                    ParseInfo = parseInfo,
+                    ParseInfo = i == 0 ? parseInfo : parseInfo.SetSourceExpression(ExprContextTree[i - 1]),
                     Getter = scope,
                     Scope = i == 0 ? scope : ExprContextTree[i - 1].GetScope() ?? new Scope(),
                     Parent = i == 0 ? null : ExprContextTree[i - 1],
@@ -238,6 +238,7 @@ namespace Deltin.Deltinteger.Parse
     public interface ITreeContextPart
     {
         void Setup(TreeContextParseInfo tcParseInfo);
+        void OnResolve(Action<IExpression> resolved) => resolved.Invoke(GetExpression());
         Scope GetScope();
         void RetrievedScopeable(IScopeable scopeable) {}
         IExpression GetExpression();
@@ -314,7 +315,10 @@ namespace Deltin.Deltinteger.Parse
                 _chosenPath = _potentialPaths[0];
                 // This is the last expression in the tree, which means RetrievedScopeable will not be called. At this point, nothing can be done about ambiguities.
                 // If ParseInfo implements something like ExpectingCodeType, that can be used to further narrow down the chosen path.
-                if (tcParseInfo.IsLast) _chosenPath.Accept();
+                if (tcParseInfo.IsLast) {
+                    _chosenPath.Accept();
+                    CallResolvers();
+                }
             }
             else // There are no paths.
             {
@@ -370,6 +374,7 @@ namespace Deltin.Deltinteger.Parse
                 {
                     _chosenPath = option;
                     _chosenPath.Accept();
+                    CallResolvers();
                     return;
                 }
         }
@@ -396,6 +401,14 @@ namespace Deltin.Deltinteger.Parse
         }
         public IExpression GetExpression() => _chosenPath?.GetExpression();
         public DocRange GetRange() => DocRange.GetRange(_variable);
+
+        private readonly List<Action<IExpression>> _onResolve = new List<Action<IExpression>>();
+        public void OnResolve(Action<IExpression> resolved) => _onResolve.Add(resolved);
+        void CallResolvers()
+        {
+            IExpression result = GetExpression();
+            foreach (var onResolve in _onResolve) onResolve.Invoke(result);
+        }
 
         interface IPotentialPathOption {
             Scope GetScope();

@@ -91,14 +91,16 @@ namespace Deltin.Deltinteger.Parse
     public class RecursiveCallHandler : IRecursiveCallHandler
     {
         private readonly IApplyBlock _applyBlock;
+        private readonly string _typeName;
 
-        public RecursiveCallHandler(IApplyBlock applyBlock)
+        public RecursiveCallHandler(IApplyBlock applyBlock, string typeName = "function")
         {
             _applyBlock = applyBlock;
+            _typeName = typeName;
         }
 
         public CallInfo CallInfo => _applyBlock.CallInfo;
-        public string TypeName => "function";
+        public string TypeName => _typeName;
         public bool DoesRecursivelyCall(IRecursiveCallHandler calling) => this == calling;
         public bool CanBeRecursivelyCalled() => _applyBlock is IMethod function && function.Attributes.Recursive;
         public string GetLabel() => _applyBlock.GetLabel(false);

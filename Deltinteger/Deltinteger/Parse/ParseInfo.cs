@@ -11,7 +11,7 @@ namespace Deltin.Deltinteger.Parse
         public CallInfo CurrentCallInfo { get; private set; }
         public IBreakContainer BreakHandler { get; private set; }
         public IContinueContainer ContinueHandler { get; private set; }
-        public IExpression SourceExpression { get; private set; }
+        public ITreeContextPart SourceExpression { get; private set; }
         public IRestrictedCallHandler RestrictedCallHandler { get; private set; }
 
         public ParseInfo(ScriptFile script, DeltinScript translateInfo)
@@ -33,7 +33,7 @@ namespace Deltin.Deltinteger.Parse
         public ParseInfo SetLoop(LoopAction loop) => new ParseInfo(this) { BreakHandler = loop, ContinueHandler = loop };
         public ParseInfo SetBreakHandler(IBreakContainer handler) => new ParseInfo(this) { BreakHandler = handler };
         public ParseInfo SetContinueHandler(IContinueContainer handler) => new ParseInfo(this) { ContinueHandler = handler };
-        public ParseInfo SetSourceExpression(IExpression expression) => new ParseInfo(this) { SourceExpression = expression };
+        public ParseInfo SetSourceExpression(ITreeContextPart treePart) => new ParseInfo(this) { SourceExpression = treePart };
         public ParseInfo SetRestrictedCallHandler(IRestrictedCallHandler callHandler) => new ParseInfo(this) { RestrictedCallHandler = callHandler };
 
         /// <summary>Gets an IStatement from a StatementContext.</summary>
@@ -241,7 +241,7 @@ namespace Deltin.Deltinteger.Parse
                 // If the type of the variable being called is Player, check if the variable is calling Event Player.
                 // If the source expression is null, Event Player is used by default.
                 // Otherwise, confirm that the source expression is returning the player variable scope.
-                if (RestrictedCall.EventPlayerDefaultCall(referencer, _parseInfo))
+                if (referencer.VariableType == VariableType.Player)
                     EventPlayerRestrictedCall(new RestrictedCall(RestrictedCallType.EventPlayer, _parseInfo.GetLocation(variableRange), new EventPlayerRestrictedCall(referencer)));
 
                 return new CallVariableAction(referencer, index);

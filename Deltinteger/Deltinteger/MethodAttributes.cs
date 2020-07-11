@@ -156,8 +156,6 @@ namespace Deltin.Deltinteger
             }
         }
         
-        public static bool EventPlayerDefaultCall(IIndexReferencer referencer, ParseInfo parseInfo)
-            => EventPlayerDefaultCall(referencer, parseInfo.SourceExpression, parseInfo);
         public static bool EventPlayerDefaultCall(IIndexReferencer referencer, IExpression parent, ParseInfo parseInfo)
             => referencer.VariableType == VariableType.Player && (parent == null || parent.ReturningScope() != parseInfo.TranslateInfo.PlayerVariableScope);
     }

@@ -179,10 +179,20 @@ namespace Deltin.Deltinteger.Parse.Lambda
 
         public void Call(ParseInfo parseInfo, DocRange callRange)
         {
-            InvokeListener listener = new InvokeListener(parseInfo, callRange);
+            if (parseInfo.SourceExpression != null) parseInfo.SourceExpression.OnResolve(expr => {
 
-            if (parseInfo.SourceExpression is IBlockListener blockListener) blockListener.OnBlockApply(listener);
-            else listener.Applied();
+                InvokeListener listener = new InvokeListener(parseInfo, callRange, expr);
+
+                // If the expression is an IBlockListener, wait for the block to be applied.
+                if (expr is IBlockListener blockListener)
+                    blockListener.OnBlockApply(listener);
+                // Otherwise, apply immediately.
+                else
+                    listener.Applied();
+                
+            });
+            else
+                parseInfo.Script.Diagnostics.Warning("Could not resolve lambda's source expression.", callRange);
         }
 
         public CompletionItem GetCompletion() => MethodAttributes.GetFunctionCompletion(this);
@@ -203,18 +213,20 @@ namespace Deltin.Deltinteger.Parse.Lambda
         {
             private readonly ParseInfo _parseInfo;
             private readonly DocRange _callRange;
+            private readonly IExpression _expression;
 
-            public InvokeListener(ParseInfo parseInfo, DocRange callRange)
+            public InvokeListener(ParseInfo parseInfo, DocRange callRange, IExpression expression)
             {
                 _parseInfo = parseInfo;
                 _callRange = callRange;
+                _expression = expression;
             }
 
             public void Applied()
             {
-                if (ConstantExpressionResolver.Resolve(_parseInfo.SourceExpression) is LambdaAction source)
+                if (ConstantExpressionResolver.Resolve(_expression) is LambdaAction source)
                 {
-                    _parseInfo.CurrentCallInfo.Call(source.RecursiveCallHandler, _callRange);
+                    _parseInfo.CurrentCallInfo?.Call(source.RecursiveCallHandler, _callRange);
 
                     // Add restricted calls.
                     foreach (RestrictedCall call in source.CallInfo.RestrictedCalls)
@@ -224,7 +236,6 @@ namespace Deltin.Deltinteger.Parse.Lambda
                             new CallStrategy("The lambda '" + source.GetLabel(false) + "' calls a restricted value of type '" + RestrictedCall.StringFromCallType(call.CallType) + "'.")
                         ));
                 }
-                else _parseInfo.Script.Diagnostics.Warning("Could not resolve lambda's source expression.", _callRange);
             }
         }
     }

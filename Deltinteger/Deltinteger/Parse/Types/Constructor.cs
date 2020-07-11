@@ -49,7 +49,7 @@ namespace Deltin.Deltinteger.Parse
         {
             this.parseInfo = parseInfo;
             this.context = context;
-            _recursiveCallHandler = new RecursiveCallHandler(this);
+            _recursiveCallHandler = new RecursiveCallHandler(this, "constructor");
             CallInfo = new CallInfo(_recursiveCallHandler, parseInfo.Script);
 
             ConstructorScope = scope.Child();
