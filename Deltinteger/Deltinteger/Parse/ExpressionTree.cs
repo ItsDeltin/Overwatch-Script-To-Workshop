@@ -314,8 +314,7 @@ namespace Deltin.Deltinteger.Parse
                 _chosenPath = _potentialPaths[0];
                 // This is the last expression in the tree, which means RetrievedScopeable will not be called. At this point, nothing can be done about ambiguities.
                 // If ParseInfo implements something like ExpectingCodeType, that can be used to further narrow down the chosen path.
-                // But if IsLast is true then there should only be one option anyway.
-                if (tcParseInfo.IsLast) _chosenPath.Accept();
+\                if (tcParseInfo.IsLast) _chosenPath.Accept();
             }
             else // There are no paths.
             {
@@ -448,7 +447,7 @@ namespace Deltin.Deltinteger.Parse
                 if (_variable is ICallable callable) callable.Call(_parseInfo, _callRange);
 
                 // Restricted value type check.
-                if (_variable is IIndexReferencer referencer && RestrictedCall.EventPlayerDefaultCall(referencer, _parent.GetExpression(), _parseInfo))
+                if (_parent != null && _variable is IIndexReferencer referencer && RestrictedCall.EventPlayerDefaultCall(referencer, _parent.GetExpression(), _parseInfo))
                     _parseInfo.RestrictedCallHandler.RestrictedCall(new RestrictedCall(RestrictedCallType.EventPlayer, _parseInfo.GetLocation(_callRange), new EventPlayerRestrictedCall(referencer)));
 
                 // Add diagnostics.
