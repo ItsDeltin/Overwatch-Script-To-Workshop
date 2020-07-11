@@ -61,7 +61,7 @@ namespace Deltin.Deltinteger.Parse
                 case DeltinScriptParser.S_exprContext s_expr      : {
 
                     var expr = GetExpression(scope, s_expr.expr(), true, false);
-                    if (expr is ExpressionTree == false || ((ExpressionTree)expr)?.Result is IStatement == false)
+                    if (expr is ExpressionTree == false || (((ExpressionTree)expr)?.Result is IStatement == false && (((ExpressionTree)expr)?.Completed ?? false)))
                     {
                         if (expr != null)
                             Script.Diagnostics.Error("Expressions can't be used as statements.", DocRange.GetRange(statementContext));
@@ -144,30 +144,7 @@ namespace Deltin.Deltinteger.Parse
             if (element == null) return null;
             
             // Additional syntax checking.
-            return ApplyVariable(new VariableApply(this), element, ExpressionIndexArray(getter, variableContext.array()), variableRange);
-        }
-
-        public IExpression ApplyVariable(VariableApply variableApplier, IVariable variable, IExpression[] index, DocRange variableRange)
-        {
-            // Callable
-            if (variable is ICallable callable) variableApplier.Call(callable, variableRange);
-            
-            // Apply block
-            if (variable is IApplyBlock applyBlock) variableApplier.ApplyBlock(applyBlock, variableRange);
-
-            // IIndexReferencers are wrapped by CallVariableActions.
-            if (variable is IIndexReferencer referencer) return new CallVariableAction(referencer, index);
-
-            // Check value in array.
-            if (index != null)
-            {
-                if (!variable.CanBeIndexed)
-                    variableApplier.Error("This variable type cannot be indexed.", variableRange);
-                else
-                    return new ValueInArrayAction(this, (IExpression)variable, index);
-            }
-
-            return (IExpression)variable;
+            return new VariableApply(this).Apply(element, ExpressionIndexArray(getter, variableContext.array()), variableRange);
         }
 
         /// <summary>Gets an IExpression[] from a DeltinScriptParser.ArrayContext.</summary>
@@ -232,10 +209,32 @@ namespace Deltin.Deltinteger.Parse
         {
             _parseInfo = parseInfo;
         }
-        protected VariableApply() {}
 
-        public virtual void Call(ICallable callable, DocRange range) => callable.Call(_parseInfo, range);
-        public virtual void ApplyBlock(IApplyBlock applyBlock, DocRange range) => _parseInfo.CurrentCallInfo?.Call(applyBlock, range);
+        public IExpression Apply(IVariable variable, IExpression[] index, DocRange variableRange)
+        {
+            // Callable
+            if (variable is ICallable callable) Call(callable, variableRange);
+            
+            // Apply block
+            if (variable is IApplyBlock applyBlock) ApplyBlock(applyBlock, variableRange);
+
+            // IIndexReferencers are wrapped by CallVariableActions.
+            if (variable is IIndexReferencer referencer) return new CallVariableAction(referencer, index);
+
+            // Check value in array.
+            if (index != null)
+            {
+                if (!variable.CanBeIndexed)
+                    Error("This variable type cannot be indexed.", variableRange);
+                else
+                    return new ValueInArrayAction(_parseInfo, (IExpression)variable, index);
+            }
+
+            return (IExpression)variable;
+        }
+
+        protected virtual void Call(ICallable callable, DocRange range) => callable.Call(_parseInfo, range);
+        protected virtual void ApplyBlock(IApplyBlock applyBlock, DocRange range) => _parseInfo.CurrentCallInfo?.Call(applyBlock, range);
         public virtual void Error(string message, DocRange range) => _parseInfo.Script.Diagnostics.Error(message, range);
     }
 }

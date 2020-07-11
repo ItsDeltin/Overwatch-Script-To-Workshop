@@ -285,7 +285,7 @@ namespace Deltin.Deltinteger.Parse
         public DocRange GetRange() => DocRange.GetRange(_methodContext.PART());
     }
 
-    /// <summary>Variables or tyes in the expression tree.</summary>
+    /// <summary>Variables or types in the expression tree.</summary>
     class VariableOrTypePart : ITreeContextPart
     {
         private readonly DeltinScriptParser.VariableContext _variable;
@@ -338,10 +338,14 @@ namespace Deltin.Deltinteger.Parse
                 IVariable variable = tcParseInfo.Scope.GetVariable(_variable.PART().GetText(), null, null, null);
 
                 // Variable handler.
-                var apply = new PotentialVariableApply();
+                var apply = new PotentialVariableApply(tcParseInfo.ParseInfo);
+
+                // Check accessor.
+                if (!tcParseInfo.Getter.AccessorMatches(tcParseInfo.Scope, variable.AccessLevel))
+                    apply.Error(string.Format("'{0}' is inaccessable due to its access level.", _name), _range);
 
                 // Get the wrapped expression.
-                IExpression expression = tcParseInfo.ParseInfo.ApplyVariable(apply, variable, tcParseInfo.ParseInfo.ExpressionIndexArray(tcParseInfo.Getter, _variable.array()), _range);
+                IExpression expression = apply.Apply(variable, tcParseInfo.ParseInfo.ExpressionIndexArray(tcParseInfo.Getter, _variable.array()), _range);
 
                 // Add the potential path.
                 potentialPaths.Add(new VariableOption(tcParseInfo.Parent, apply, expression, variable, tcParseInfo.ParseInfo, _range));
@@ -451,14 +455,15 @@ namespace Deltin.Deltinteger.Parse
         {
             public List<Diagnostic> Errors { get; } = new List<Diagnostic>();
 
-            public PotentialVariableApply() {}
+            public PotentialVariableApply(ParseInfo parseInfo) : base(parseInfo) {}
 
-            public override void Call(ICallable callable, DocRange range) {}
-            public override void ApplyBlock(IApplyBlock applyBlock, DocRange range) {}
+            protected override void Call(ICallable callable, DocRange range) {}
+            protected override void ApplyBlock(IApplyBlock applyBlock, DocRange range) {}
             public override void Error(string message, DocRange range) => Errors.Add(new Diagnostic(message, range, Diagnostic.Error));
         }
     }
 
+    /// <summary>The result from converting an expression tree to the workshop.</summary>
     public class ExpressionTreeParseResult
     {
         public IWorkshopTree Result { get; }
