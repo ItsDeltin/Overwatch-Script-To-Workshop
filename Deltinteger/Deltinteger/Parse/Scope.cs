@@ -362,7 +362,7 @@ namespace Deltin.Deltinteger.Parse
             // Just return true if the access level is public.
             if (accessLevel == AccessLevel.Public) return true;
 
-            Scope current = Parent;
+            Scope current = this;
             while (current != null)
             {
                 // If the current scope is the scope being looked for, return true.
