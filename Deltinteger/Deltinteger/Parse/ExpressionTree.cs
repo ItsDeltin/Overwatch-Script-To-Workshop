@@ -314,7 +314,7 @@ namespace Deltin.Deltinteger.Parse
                 _chosenPath = _potentialPaths[0];
                 // This is the last expression in the tree, which means RetrievedScopeable will not be called. At this point, nothing can be done about ambiguities.
                 // If ParseInfo implements something like ExpectingCodeType, that can be used to further narrow down the chosen path.
-\                if (tcParseInfo.IsLast) _chosenPath.Accept();
+                if (tcParseInfo.IsLast) _chosenPath.Accept();
             }
             else // There are no paths.
             {
