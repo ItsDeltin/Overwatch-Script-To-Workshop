@@ -27,6 +27,7 @@ namespace Deltin.Deltinteger.Parse
             CanBeDeleted = false;
             CanBeExtended = false;
             Kind = "struct";
+            TokenType = TokenType.Struct;
         }
 
         public void ResolveElements()

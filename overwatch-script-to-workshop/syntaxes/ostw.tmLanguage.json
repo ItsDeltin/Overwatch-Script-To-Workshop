@@ -1,211 +1,1061 @@
 {
-	"scopeName": "source.del",
-	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
-	"name": "Overwatch Script To Workshop",
-	"patterns": [
-		{ "include": "#ruleset" },
-		{ "include": "#comments" }
-	],
-	"repository": {
-		"ruleset": {
-			"patterns": [
-				{"include": "#rule"},
-				{"include": "#strings"},
-				{"include": "#new"},
-				{"include": "#if"},
-				{"include": "#modifiers"},
-				{"include": "#rule_option"},
-				{"include": "#keywords_control"},
-				{"include": "#block"},
-				{"include": "#define_type"},
-				{"include": "#define_macro"},
-				{"include": "#define_macro_var"},
-				{"include": "#define_method"},
-				{"include": "#define_variable"},
-				{"include": "#expressions"},
-				{"include": "#keywords_other"}
-			]
-		},
-		"rule": {
-			"match": "\\b((disabled\\s+)?rule)\\s*:",
-			"captures": {
-				"1": {"name":"keyword.control"}
-			}
-		},
-		"if": {
-			"begin": "((else\\s+)?if)\\s*\\(",
-			"beginCaptures": {
-				"1": {"name": "keyword.control"}
-			},
-			"end": "\\)",
-			"patterns": [{"include": "#expressions"}]
-		},
-		"rule_option": {
-			"match": "(Player|Event|Team)\\s*\\.\\s*([a-zA-Z0-9]+)\\s*;",
-			"captures": {
-				"1": {"name": "entity.name.type"},
-				"2": {"name": "variable.other"}
-			}
-		},
-		"define_variable": {
-			"begin": "((define)|([_[:alnum:]]+)(\\s*\\[\\s*\\])*)(\\s+[_[:alnum:]]+)(\\s*(\\!|([0-9]+)))?(\\s*=)?",
-			"beginCaptures": {
-				"2": {"name":"keyword.other"},
-				"3": {"name":"entity.name.type"},
-				"5": {"name":"variable.name"},
-				"8": {"name":"constant.numeric"}
-			},
-			"end": ";",
-			"patterns": [{"include": "#expressions"}]
-		},
-		"define_method": {
-			"begin": "((void|define)|([_[:alnum:]]+)(\\s*\\[\\s*\\])*)\\s+([_[:alnum:]]+\\s*\\()",
-			"beginCaptures": {
-				"2": {"name":"keyword.other"},
-				"3": {"name":"entity.name.class"},
-				"5": {"name":"entity.name.function"}
-			},
-			"end": "\\)",
-			"endCaptures": {
-				"0": {"name":"entity.name.function"}
-			},
-			"patterns": [{"include": "#parameter"}]
-		},
-		"define_macro": {
-			"begin": "(macro)\\s+(([_[:alnum:]]+)\\s*\\()",
-			"beginCaptures": {
-				"1": {"name":"keyword.other"},
-				"2": {"name":"entity.name.function"}
-			},
-			"end": "\\)",
-			"endCaptures": {
-				"0": {"name":"entity.name.function"}
-			},
-			"patterns": [{"include": "#parameter"}]
-		},
-		"define_macro_var": {
-			"match": "(macro)\\s+([_[:alnum:]]+)",
-			"captures": {
-				"0": {"name":"keyword.other"},
-				"1": {"name":"variable.other"}
-			}
-		},
-		"modifiers": {
-			"match": "\\b(public|private|protected|static|globalvar|playervar|ref|override|virtual|recursive)\\b",
-			"name": "keyword.other"
-		},
-		"parameter": {
-			"match": "(ref\\s+)?((define)|([_[:alnum:]]+)(\\s*\\[\\s*\\])*)\\s+([_[:alnum:]]+)",
-			"captures": {
-				"1": { "name": "keyword.other" },
-				"3": { "name": "keyword.other" },
-				"4": { "name": "entity.name.type" },
-				"6": { "name": "variable.parameter" }
-			}
-		},
-		"define_type": {
-			"match": "(class|struct|enum)\\s+([_[:alnum:]]+)(\\s*:\\s*([_[:alnum:]]+)(\\s*,\\s*([_[:alnum:]]+))*)?",
-			"captures": {
-				"1": {"name": "keyword.other"},
-				"2": {"name": "entity.name.class"},
-				"4": {"name": "entity.name.class"},
-				"6": {"name": "entity.name.class"}
-			}
-		},
-		"block": {
-			"begin": "{",
-			"end": "}",
-			"patterns": [
-				{"include": "#comments"},
-				{"include": "#if"},
-				{"include": "#new"},
-				{"include": "#modifiers"},
-				{"include": "#keywords_control"},
-				{"include": "#define_macro"},
-				{"include": "#define_macro_var"},
-				{"include": "#define_method"},
-				{"include": "#methods"},
-				{"include": "#define_variable"},
-				{"include": "#expressions"}
-			]
-		},
-		"expressions": {
-			"patterns": [
-				{"include": "#new"},
-				{"include": "#cast"},
-				{"include": "#methods"},
-				{"include": "#keywords"}, 
-				{"include": "#strings"},
-				{"include": "#comments"}, 
-				{"include": "#numbers"},
-				{"include": "#variables"}
-			]
-		},
-		"methods": {
-			"name": "entity.name.function",
-			"begin": "[_[:alnum:]]+\\(",
-			"end": "\\)",
-			"patterns": [{"include": "#parameter"}, {"include": "#expressions"}]
-		},
-		"new": {
-			"begin": "(new)\\s+([_[:alnum:]]+)\\s*\\(",
-			"end": "\\)",
-			"beginCaptures": {
-				"1": {"name":"keyword.other"},
-				"2": {"name":"entity.name.class"}
-			},
-			"patterns": [{"include": "#expressions"}]
-		},
-		"cast": {
-			"match": "<\\s*([_[:alnum:]]+)\\s*>",
-			"captures": {
-				"1": {"name": "entity.name.class"}
-			}
-		},
-		"strings": {
-			"name": "string.quoted.double",
-			"begin": "@?\"",
-			"end": "\"",
-			"patterns": [
-				{
-					"name": "constant.character.escape",
-					"match": "\\\\."
-				},
-				{
-					"name": "string.regexp",
-					"match": "<[0-9]+>"
-				}
-			]
-		},
-		"comments": {
-			"patterns": [
-				{"begin": "//"    , "end": "$"      , "name": "comment.line.double-slash"},
-				{"begin": "\\/\\*", "end": "\\*\\/" , "name": "comment.block"},
-				{"begin": "#", "end": "$", "name": "comment.block.documentation" }
-			]
-		},
-		"numbers": {
-			"name": "constant.numeric",
-			"match": "\\b-?[0-9]+(\\.[0-9]+)?\\b"
-		},
-
-		"keywords": {
-			"patterns": [
-				{"include": "#keywords_control"},
-				{"include": "#keywords_other"}
-			]
-		},
-		"keywords_control": {
-			"name": "keyword.control",
-			"match": "\\b(if|else|while|for|foreach|return|rule|import|continue|break|switch|case|default|async)\\b"
-		},
-		"keywords_other": {
-			"name": "keyword.other",
-			"match": "\\b(in|define|true|false|recursive|playervar|globalvar|buildervar|null|struct|class|public|private|static|protected|new|this|as|delete|root|base|macro)\\b"
-		},
-		"variables": {
-			"name": "variable",
-			"match": "[a-zA-Z_0-9]+"
-		}
-	}
+  "name": "Overwatch Script To Workshop",
+  "scopeName": "source.del",
+  "fileTypes": [
+    "del",
+    "ostw",
+    "workshop"
+  ],
+  "$schema": "https://raw.githubusercontent.com/Septh/tmlanguage/master/tmLanguage.schema.json",
+  "patterns": [
+    {
+      "include": "#rule-set"
+    }
+  ],
+  "repository": {
+    "rule-set": {
+      "patterns": [
+        {
+          "include": "#comment"
+        },
+        {
+          "include": "#import"
+        },
+        {
+          "include": "#rule"
+        },
+        {
+          "include": "#declare-class"
+        },
+        {
+          "include": "#declare-enum"
+        },
+        {
+          "include": "#declare-macro-var"
+        },
+        {
+          "include": "#declare-function"
+        },
+        {
+          "include": "#declare-variable"
+        },
+        {
+          "include": "#set-hook"
+        }
+      ]
+    },
+    "comment": {
+      "patterns": [
+        {
+          "begin": "//",
+          "end": "(?=$)",
+          "name": "comment.line.double-slash",
+          "beginCaptures": {
+            "0": {
+              "name": "punctuation.definition.comment"
+            }
+          }
+        },
+        {
+          "begin": "/\\*",
+          "end": "\\*/",
+          "name": "comment.block",
+          "beginCaptures": {
+            "0": {
+              "name": "punctuation.definition.comment"
+            }
+          },
+          "endCaptures": {
+            "0": {
+              "name": "punctuation.definition.comment"
+            }
+          }
+        },
+        {
+          "begin": "#",
+          "end": "(?=$)",
+          "name": "comment.block.documentation",
+          "beginCaptures": {
+            "0": {
+              "name": "punctuation.definition.comment"
+            }
+          }
+        }
+      ]
+    },
+    "import": {
+      "begin": "\\bimport\\b",
+      "end": ";",
+      "beginCaptures": {
+        "0": {
+          "name": "keyword.other"
+        }
+      },
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.terminator.statement.ostw"
+        }
+      },
+      "patterns": [
+        {
+          "include": "#string"
+        }
+      ]
+    },
+    "type-matcher": {
+      "patterns": [
+        {
+          "match": "define",
+          "name": "keyword.other"
+        },
+        {
+          "match": "([_[:alnum:]]+)",
+          "name": "entity.name.type"
+        },
+        {
+          "match": "\\[",
+          "name": "punctuation.squarebracket.open"
+        },
+        {
+          "match": "\\]",
+          "name": "punctuation.squarebracket.close"
+        },
+        {
+          "match": "<",
+          "name": "punctuation.definition.typeparameters.begin"
+        },
+        {
+          "match": ">",
+          "name": "punctuation.definition.typeparameters.end"
+        },
+        {
+          "match": ",",
+          "name": "punctuation.separator.comma"
+        }
+      ]
+    },
+    "declare-variable": {
+      "begin": "(((public|private|protected|virtual|override|abstract|static|globalvar|playervar)\\b\\s*)*)(?<set-type>([_[:alnum:]]+)\\b\\s*(<\\s*(\\s*,?\\s*\\g<set-type>\\s*)*>)?\\s*(\\[\\s*\\])*)\\s*([_[:alnum:]]+)(\\s*\\!)?(\\s*=)?(?!\\s*\\()",
+      "end": ";",
+      "patterns": [
+        {
+          "include": "#expression"
+        }
+      ],
+      "beginCaptures": {
+        "1": {
+          "name": "storage.modifier"
+        },
+        "4": {
+          "patterns": [
+            {
+              "include": "#type-matcher"
+            }
+          ]
+        },
+        "9": {
+          "name": "entity.name.variable.field"
+        },
+        "10": {
+          "name": "keyword.operator.assignment.ostw"
+        },
+        "11": {
+          "name": "keyword.operator.assignment.ostw"
+        }
+      },
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.terminator.statement.ostw"
+        }
+      }
+    },
+    "declare-macro-var": {
+      "begin": "(((public|private|protected|virtual|override|abstract|static)\\b\\s*)*)(?<set-type>([_[:alnum:]]+)\\b\\s*(<\\s*(\\s*,?\\s*\\g<set-type>\\s*)*>)?\\s*(\\[\\s*\\])*)\\s*([_[:alnum:]]+)\\b\\s*(:)",
+      "end": ";",
+      "patterns": [
+        {
+          "include": "#expression"
+        }
+      ],
+      "beginCaptures": {
+        "1": {
+          "name": "storage.modifier"
+        },
+        "4": {
+          "patterns": [
+            {
+              "include": "#type-matcher"
+            }
+          ]
+        },
+        "9": {
+          "name": "entity.name.variable.property"
+        },
+        "10": {
+          "name": "keyword.operator.assignment.ostw"
+        }
+      }
+    },
+    "declare-local-variable": {
+      "begin": "(?<set-type>([_[:alnum:]]+)\\b\\s*(<\\s*(\\s*,?\\s*\\g<set-type>\\s*)*>)?\\s*(\\[\\s*\\])*)\\s*([_[:alnum:]]+)(\\s*\\!)?(\\s*=)?",
+      "end": ";",
+      "patterns": [
+        {
+          "include": "#expression"
+        }
+      ],
+      "beginCaptures": {
+        "1": {
+          "patterns": [
+            {
+              "include": "#type-matcher"
+            }
+          ]
+        },
+        "6": {
+          "name": "entity.name.variable.local"
+        },
+        "7": {
+          "name": "keyword.operator.assignment.ostw"
+        },
+        "8": {
+          "name": "keyword.operator.assignment.ostw"
+        }
+      },
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.terminator.statement.ostw"
+        }
+      }
+    },
+    "declare-function": {
+      "begin": "(((public|private|protected|virtual|override|abstract|static)\\b\\s*)*)(?<set-type>([_[:alnum:]]+)\\b\\s*(<\\s*(\\s*,?\\s*\\g<set-type>\\s*)*>)?\\s*(\\[\\s*\\])*)\\s*([_[:alnum:]]+)\\s*(?=\\(|:)",
+      "end": "(?<=})|(?<=;)",
+      "beginCaptures": {
+        "1": {
+          "name": "storage.modifier"
+        },
+        "4": {
+          "patterns": [
+            {
+              "include": "#type-matcher"
+            }
+          ]
+        },
+        "9": {
+          "name": "entity.name.function"
+        }
+      },
+      "patterns": [
+        {
+          "include": "#comment"
+        },
+        {
+          "include": "#parameter-list-declaration"
+        },
+        {
+          "include": "#block"
+        },
+        {
+          "include": "#macro-value"
+        },
+        {
+          "include": "#string"
+        },
+        {
+          "match": "\\b(globalvar|playervar)\\b",
+          "name": "storage.modifier"
+        }
+      ]
+    },
+    "declare-class": {
+      "begin": "(class)\\b\\s*([_[:alnum:]]+)(\\s*(:)\\s*((\\s*,?\\s*[_[:alnum:]]+)*))?",
+      "end": "(?<=})|(?<=;)",
+      "beginCaptures": {
+        "1": {
+          "name": "keyword.other.class"
+        },
+        "2": {
+          "name": "entity.name.type.class"
+        },
+        "4": {
+          "name": "punctuation.separator.colon"
+        },
+        "5": {
+          "patterns": [
+            {
+              "match": "[_[:alnum:]]+",
+              "name": "entity.name.type"
+            },
+            {
+              "match": ",",
+              "name": "punctuation.separator.comma"
+            }
+          ]
+        }
+      },
+      "patterns": [
+        {
+          "include": "#comment"
+        },
+        {
+          "begin": "{",
+          "end": "}",
+          "beginCaptures": {
+            "0": {
+              "name": "punctuation.curlybrace.open"
+            }
+          },
+          "endCaptures": {
+            "0": {
+              "name": "punctuation.curlybrace.close"
+            }
+          },
+          "patterns": [
+            {
+              "include": "#comment"
+            },
+            {
+              "include": "#declare-macro-var"
+            },
+            {
+              "include": "#declare-function"
+            },
+            {
+              "include": "#declare-variable"
+            }
+          ]
+        }
+      ]
+    },
+    "declare-enum": {
+      "begin": "\\b(enum)\\b\\s*([_[:alnum:]]+)",
+      "end": "(?<=})|(?<=;)",
+      "beginCaptures": {
+        "1": {
+          "name": "keyword.other.enum"
+        },
+        "2": {
+          "name": "entity.name.type.enum"
+        }
+      },
+      "patterns": [
+        {
+          "include": "#comment"
+        },
+        {
+          "begin": "{",
+          "end": "}",
+          "beginCaptures": {
+            "0": {
+              "name": "punctuation.curlybrace.open"
+            }
+          },
+          "endCaptures": {
+            "0": {
+              "name": "punctuation.curlybrace.close"
+            }
+          },
+          "patterns": [
+            {
+              "include": "#comment"
+            },
+            {
+              "begin": "([_[:alnum:]]+)",
+              "end": "(,)|(?=\\s*})",
+              "beginCaptures": {
+                "0": {
+                  "name": "entity.name.variable.enum-member"
+                }
+              },
+              "endCaptures": {
+                "1": {
+                  "name": "punctuation.separator.comma"
+                }
+              },
+              "patterns": [
+                {
+                  "include": "#comment"
+                },
+                {
+                  "include": "#expression"
+                },
+                {
+                  "match": "=",
+                  "name": "keyword.operator.assignment.ostw"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "parameter-list-declaration": {
+      "begin": "\\(",
+      "end": "\\)",
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.parenthesis.close"
+        }
+      },
+      "patterns": [
+        {
+          "include": "#comment"
+        },
+        {
+          "include": "#parameter-declaration"
+        }
+      ]
+    },
+    "parameter-declaration": {
+      "match": "(ref\\s+)?(?<set-type>([_[:alnum:]]+)\\b\\s*(<\\s*(\\s*,?\\s*\\g<set-type>\\s*)*>)?\\s*(\\[\\s*\\])*)\\s*([_[:alnum:]]+)",
+      "captures": {
+        "1": {
+          "name": "storage.modifier"
+        },
+        "2": {
+          "patterns": [
+            {
+              "include": "#type-matcher"
+            }
+          ]
+        },
+        "7": {
+          "name": "variable.parameter"
+        }
+      }
+    },
+    "macro-value": {
+      "begin": ":",
+      "end": ";",
+      "beginCaptures": {
+        "0": {
+          "name": "keyword.operator.assignment.ostw"
+        }
+      },
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.terminator.statement.ostw"
+        }
+      },
+      "patterns": [
+        {
+          "include": "#expression"
+        }
+      ]
+    },
+    "set-hook": {
+      "begin": "(?<set-type>([_[:alnum:]]+)\\b\\s*(<\\s*(\\s*,?\\s*\\g<set-type>\\s*)*>)?\\s*(\\[\\s*\\])*)\\s*(.)\\s*([_[:alnum:]]+)\\b\\s*(=)",
+      "end": ";",
+      "beginCaptures": {
+        "1": {
+          "patterns": [
+            {
+              "include": "#type-matcher"
+            }
+          ]
+        },
+        "6": {
+          "name": "punctuation.accessor"
+        },
+        "7": {
+          "name": "support.variable"
+        },
+        "8": {
+          "name": "keyword.operator.assignment.ostw"
+        }
+      },
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.terminator.statement.ostw"
+        }
+      },
+      "patterns": [
+        {
+          "include": "#expression"
+        }
+      ]
+    },
+    "rule": {
+      "begin": "\\b(disabled\\b\\s*)?(rule)\\b\\s*(:)\\s*((\\\"(?:[^\"\\\\]|\\\\.)*\\\")|(\\'(?:[^'\\\\]|\\\\.)*\\'))",
+      "end": "(?<=})|(?<=;)",
+      "beginCaptures": {
+        "1": {
+          "name": "storage.modifier"
+        },
+        "2": {
+          "name": "keyword.control"
+        },
+        "3": {
+          "name": "punctuation.separator.colon"
+        },
+        "5": {
+          "name": "string.quoted.double"
+        },
+        "6": {
+          "name": "string.quoted.single"
+        }
+      },
+      "patterns": [
+        {
+          "include": "#comment"
+        },
+        {
+          "match": "(Event|Team|Player)\\s*(\\.)\\s*([_[:alnum:]]+)",
+          "captures": {
+            "1": {
+              "name": "support.type"
+            },
+            "2": {
+              "name": "punctuation.accessor"
+            },
+            "3": {
+              "name": "support.variable"
+            }
+          }
+        },
+        {
+          "include": "#if-statement"
+        },
+        {
+          "include": "#block"
+        }
+      ]
+    },
+    "block": {
+      "begin": "{",
+      "end": "}",
+      "beginCaptures": {
+        "0": {
+          "name": "punctuation.curlybrace.open"
+        }
+      },
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.curlybrace.close"
+        }
+      },
+      "patterns": [
+        {
+          "include": "#statement"
+        }
+      ]
+    },
+    "statement": {
+      "patterns": [
+        {
+          "include": "#comment"
+        },
+        {
+          "begin": "return",
+          "end": ";",
+          "beginCaptures": {
+            "0": {
+              "name": "keyword.control.flow.return"
+            }
+          },
+          "endCaptures": {
+            "0": {
+              "name": "punctuation.terminator.statement.ostw"
+            }
+          },
+          "patterns": [
+            {
+              "include": "#expression"
+            }
+          ]
+        },
+        {
+          "begin": "\\b(for)\\b\\s*(\\()",
+          "end": "\\)",
+          "beginCaptures": {
+            "1": {
+              "name": "keyword.control.loop.for"
+            },
+            "2": {
+              "name": "punctuation.parenthesis.open"
+            }
+          },
+          "endCaptures": {
+            "0": {
+              "name": "punctuation.parenthesis.close"
+            }
+          },
+          "patterns": [
+            {
+              "include": "#declare-local-variable"
+            },
+            {
+              "include": "#assignment"
+            },
+            {
+              "include": "#expression"
+            },
+            {
+              "include": "#statement-end"
+            }
+          ]
+        },
+        {
+          "begin": "\\b(foreach)\\b\\s*(\\()",
+          "end": "\\)",
+          "beginCaptures": {
+            "1": {
+              "name": "keyword.control.loop.foreach"
+            },
+            "2": {
+              "name": "punctuation.parenthesis.open"
+            }
+          },
+          "endCaptures": {
+            "0": {
+              "name": "punctuation.parenthesis.close"
+            }
+          },
+          "patterns": [
+            {
+              "include": "#comment"
+            },
+            {
+              "begin": "\\bin\\b",
+              "end": "\\s*(?=\\))",
+              "beginCaptures": {
+                "0": {
+                  "name": "keyword.control.loop.in"
+                }
+              },
+              "patterns": [
+                {
+                  "include": "#expression"
+                }
+              ]
+            },
+            {
+              "match": "(?<set-type>([_[:alnum:]]+)\\b\\s*(<\\s*(\\s*,?\\s*\\g<set-type>\\s*)*>)?\\s*(\\[\\s*\\])*)\\s*([_[:alnum:]]+)\\b",
+              "captures": {
+                "1": {
+                  "patterns": [
+                    {
+                      "include": "#type-matcher"
+                    }
+                  ]
+                },
+                "6": {
+                  "name": "entity.name.variable.local"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "include": "#if-statement"
+        },
+        {
+          "match": "\\belse\\b",
+          "name": "keyword.control.conditional.else"
+        },
+        {
+          "match": "\\bbreak\\b",
+          "name": "keyword.control.flow.break"
+        },
+        {
+          "match": "\\bcontinue\\b",
+          "name": "keyword.control.flow.continue"
+        },
+        {
+          "begin": "\\bcase\\b",
+          "end": ":",
+          "beginCaptures": {
+            "0": {
+              "name": "keyword.control.case"
+            }
+          },
+          "endCaptures": {
+            "0": {
+              "name": "punctuation.separator.colon"
+            }
+          },
+          "patterns": [
+            {
+              "include": "#expression"
+            }
+          ]
+        },
+        {
+          "include": "#function-call"
+        },
+        {
+          "include": "#declare-local-variable"
+        },
+        {
+          "include": "#assignment"
+        },
+        {
+          "include": "#expression"
+        },
+        {
+          "include": "#block"
+        },
+        {
+          "include": "#statement-end"
+        }
+      ]
+    },
+    "statement-end": {
+      "match": ";",
+      "name": "punctuation.terminator.statement.ostw"
+    },
+    "if-statement": {
+      "begin": "\\b((\\belse\\b\\s*)?(if)|(switch)|(while))\\b\\s*(\\()",
+      "end": "\\)",
+      "beginCaptures": {
+        "2": {
+          "name": "keyword.control.conditional.else"
+        },
+        "3": {
+          "name": "keyword.control.conditional.if"
+        },
+        "4": {
+          "name": "keyword.control.switch"
+        },
+        "5": {
+          "name": "keyword.control.loop.while"
+        },
+        "6": {
+          "name": "punctuation.parenthesis.open"
+        }
+      },
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.parenthesis.close"
+        }
+      },
+      "patterns": [
+        {
+          "include": "#expression"
+        }
+      ]
+    },
+    "assignment": {
+      "match": "=|\\+=|-=|\\*=|\\/=|%=|^=|\\+\\+|--",
+      "captures": {
+        "0": {
+          "name": "keyword.operator.assignment.compound"
+        }
+      }
+    },
+    "expression": {
+      "patterns": [
+        {
+          "include": "#comment"
+        },
+        {
+          "include": "#number"
+        },
+        {
+          "include": "#boolean"
+        },
+        {
+          "include": "#string"
+        },
+        {
+          "include": "#function-call"
+        },
+        {
+          "include": "#new-object"
+        },
+        {
+          "include": "#create-array"
+        },
+        {
+          "include": "#ternary-conditional"
+        },
+        {
+          "include": "#lambda"
+        },
+        {
+          "match": "(<)\\s*(?<set-type>([_[:alnum:]]+)\\b\\s*(<\\s*(\\s*,?\\s*\\g<set-type>\\s*)*>)?\\s*(\\[\\s*\\])*)\\s*(>)",
+          "captures": {
+            "1": {
+              "name": "punctuation.definition.typeparameters.begin"
+            },
+            "2": {
+              "patterns": [
+                {
+                  "include": "#type-matcher"
+                }
+              ]
+            },
+            "7": {
+              "name": "punctuation.definition.typeparameters.end"
+            }
+          }
+        },
+        {
+          "include": "#expression-operators"
+        },
+        {
+          "match": "\\bnull\\b",
+          "name": "constant.language.null"
+        },
+        {
+          "include": "#variable"
+        },
+        {
+          "include": "#block"
+        }
+      ]
+    },
+    "number": {
+      "patterns": [
+        {
+          "match": "-?[0-9]+(\\.[0-9]+)?\\b",
+          "name": "constant.numeric"
+        }
+      ]
+    },
+    "boolean": {
+      "match": "(true)|(false)",
+      "captures": {
+        "1": {
+          "name": "constant.language.boolean.true"
+        },
+        "2": {
+          "name": "constant.language.boolean.false"
+        }
+      }
+    },
+    "string": {
+      "patterns": [
+        {
+          "match": "\\'(?:[^'\\\\]|\\\\.)*\\'",
+          "name": "string.quoted.single"
+        },
+        {
+          "match": "\\\"(?:[^\"\\\\]|\\\\.)*\\\"",
+          "name": "string.quoted.double"
+        }
+      ]
+    },
+    "function-call": {
+      "begin": "(\\.\\s*)?([_[:alnum:]]+)\\s*(\\()",
+      "end": "\\)",
+      "beginCaptures": {
+        "1": {
+          "name": "punctuation.accessor"
+        },
+        "2": {
+          "name": "entity.name.function"
+        },
+        "3": {
+          "name": "punctuation.parenthesis.open"
+        }
+      },
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.parenthesis.close"
+        }
+      },
+      "patterns": [
+        {
+          "include": "#argument-list"
+        }
+      ]
+    },
+    "new-object": {
+      "begin": "(new)\\b\\s*([_[:alnum:]]+)\\s*(\\()",
+      "end": "\\)",
+      "beginCaptures": {
+        "1": {
+          "name": "keyword.other.new"
+        },
+        "2": {
+          "name": "entity.name.type"
+        },
+        "3": {
+          "name": "punctuation.parenthesis.open"
+        }
+      },
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.parenthesis.close"
+        }
+      },
+      "patterns": [
+        {
+          "include": "#argument-list"
+        }
+      ]
+    },
+    "create-array": {
+      "begin": "\\[",
+      "end": "\\]",
+      "beginCaptures": {
+        "0": {
+          "name": "punctuation.squarebracket.open"
+        }
+      },
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.squarebracket.close"
+        }
+      },
+      "patterns": [
+        {
+          "include": "#expression"
+        },
+        {
+          "match": ",",
+          "name": "punctuation.separator.comma"
+        }
+      ]
+    },
+    "ternary-conditional": {
+      "begin": "\\?",
+      "end": ":",
+      "beginCaptures": {
+        "0": {
+          "name": "keyword.operator.conditional.question-mark"
+        }
+      },
+      "endCaptures": {
+        "0": {
+          "name": "keyword.operator.conditional.colon"
+        }
+      },
+      "patterns": [
+        {
+          "include": "#expression"
+        }
+      ]
+    },
+    "lambda": {
+      "patterns": [
+        {
+          "match": "(?<set-type>([_[:alnum:]]+)\\b\\s*(<\\s*(\\s*,?\\s*\\g<set-type>\\s*)*>)?\\s*(\\[\\s*\\])*)\\s*([_[:alnum:]]+)\\b\\s*(=>)",
+          "captures": {
+            "1": {
+              "patterns": [
+                {
+                  "include": "#type-matcher"
+                }
+              ]
+            },
+            "6": {
+              "name": "variable.parameter"
+            },
+            "7": {
+              "name": "storage.type.function.arrow"
+            }
+          }
+        },
+        {
+          "begin": "\\(",
+          "end": "(\\))(\\s*=>)?",
+          "beginCaptures": {
+            "0": {
+              "name": "punctuation.definition.parameters.begin"
+            }
+          },
+          "endCaptures": {
+            "1": {
+              "name": "punctuation.definition.parameters.end"
+            },
+            "2": {
+              "name": "storage.type.function.arrow"
+            }
+          },
+          "patterns": [
+            {
+              "include": "#comment"
+            },
+            {
+              "match": "(?<set-type>([_[:alnum:]]+)\\b\\s*(<\\s*(\\s*,?\\s*\\g<set-type>\\s*)*>)?\\s*(\\[\\s*\\])*)\\s*([_[:alnum:]]+)\\b",
+              "captures": {
+                "1": {
+                  "patterns": [
+                    {
+                      "include": "#type-matcher"
+                    }
+                  ]
+                },
+                "6": {
+                  "name": "variable.parameter"
+                }
+              }
+            },
+            {
+              "match": ",",
+              "name": "punctuation.separator.comma"
+            },
+            {
+              "include": "#expression"
+            }
+          ]
+        }
+      ]
+    },
+    "variable": {
+      "match": "(\\.\\s*)?([_[:alnum:]]+)\\b",
+      "captures": {
+        "1": {
+          "name": "punctuation.accessor"
+        },
+        "2": {
+          "name": "variable"
+        }
+      }
+    },
+    "expression-operators": {
+      "patterns": [
+        {
+          "name": "keyword.operator.comparison",
+          "match": "==|\\!="
+        },
+        {
+          "name": "keyword.operator.relational",
+          "match": "<=|>=|<|>"
+        },
+        {
+          "name": "keyword.operator.logical",
+          "match": "\\!|&&|\\|\\|"
+        },
+        {
+          "name": "keyword.operator.arithmetic",
+          "match": "%|\\*|\\/|-|\\+"
+        }
+      ]
+    },
+    "argument-list": {
+      "patterns": [
+        {
+          "include": "#comment"
+        },
+        {
+          "begin": "([_[:alnum:]]+)\\s*(:)",
+          "end": "\\s*(?=,|\\))",
+          "beginCaptures": {
+            "1": {
+              "name": "variable.parameter"
+            },
+            "2": {
+              "name": "punctuation.separator.colon"
+            }
+          },
+          "patterns": [
+            {
+              "include": "#expression"
+            }
+          ]
+        },
+        {
+          "include": "#expression"
+        },
+        {
+          "match": ",",
+          "name": "punctuation.separator.comma"
+        }
+      ]
+    }
+  }
 }

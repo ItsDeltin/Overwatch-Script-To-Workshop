@@ -67,7 +67,7 @@ namespace Deltin.Deltinteger.Parse
                 case DeltinScriptParser.S_exprContext s_expr      : {
 
                     var expr = GetExpression(scope, s_expr.expr(), true, false);
-                    if (expr is ExpressionTree == false || ((ExpressionTree)expr)?.Result is IStatement == false)
+                    if (expr is ExpressionTree == false || (((ExpressionTree)expr)?.Result is IStatement == false && (((ExpressionTree)expr)?.Completed ?? false)))
                     {
                         if (expr != null)
                             Script.Diagnostics.Error("Expressions can't be used as statements.", DocRange.GetRange(statementContext));
@@ -141,59 +141,34 @@ namespace Deltin.Deltinteger.Parse
         /// <returns>An IExpression created from the context.</returns>
         public IExpression GetVariable(Scope scope, Scope getter, DeltinScriptParser.VariableContext variableContext, bool selfContained)
         {
+            // Get the variable name and range.
             string variableName = variableContext.PART().GetText();
             DocRange variableRange = DocRange.GetRange(variableContext.PART());
 
-            var type = TranslateInfo.Types.GetCodeType(variableName, null, null);
-            
-            if (type != null)
-            {
-                if (selfContained)
-                    Script.Diagnostics.Error("Types can't be used as expressions.", variableRange);
-                
-                if (variableContext.array() != null)
-                    Script.Diagnostics.Error("Indexers cannot be used with types.", DocRange.GetRange(variableContext.array()));
-
-                type.Call(this, variableRange);
-                return type;
-            }
-
-            // If no variable is found, return null.
+            // Get the variable.
             IVariable element = scope.GetVariable(variableName, getter, Script.Diagnostics, variableRange);
             if (element == null) return null;
             
-            // If the element is a callable, call it.
-            if (element is ICallable callable) callable.Call(this, variableRange);
-            
-            // Get the index the variable is being called with.
+            // Additional syntax checking.
+            return new VariableApply(this).Apply(element, ExpressionIndexArray(getter, variableContext.array()), variableRange);
+        }
+
+        /// <summary>Gets an IExpression[] from a DeltinScriptParser.ArrayContext.</summary>
+        /// <param name="scope">The scope used to parse the index values.</param>
+        /// <param name="arrayContext">The context of the array.</param>
+        /// <returns>An IExpression[] of each indexer in the chain. Will return null if arrayContext is null.</returns>
+        public IExpression[] ExpressionIndexArray(Scope scope, DeltinScriptParser.ArrayContext arrayContext)
+        {
+            if (arrayContext == null) return null;
+
             IExpression[] index = null;
-            if (variableContext.array() != null)
+            if (arrayContext != null)
             {
-                index = new IExpression[variableContext.array().expr().Length];
+                index = new IExpression[arrayContext.expr().Length];
                 for (int i = 0; i < index.Length; i++)
-                    index[i] = GetExpression(getter, variableContext.array().expr(i));
+                    index[i] = GetExpression(scope, arrayContext.expr(i));
             }
-
-            if (element is IIndexReferencer referencer)
-            {
-                // If the type of the variable being called is Player, check if the variable is calling Event Player.
-                // If the source expression is null, Event Player is used by default.
-                // Otherwise, confirm that the source expression is returning the player variable scope.
-                if (referencer.VariableType == VariableType.Player && (SourceExpression == null || SourceExpression.ReturningScope() != TranslateInfo.PlayerVariableScope))
-                    RestrictedCallHandler.RestrictedCall(new RestrictedCall(RestrictedCallType.EventPlayer, GetLocation(variableRange), new EventPlayerRestrictedCall(referencer)));
-
-                return new CallVariableAction(referencer, index);
-            }
-
-            if (index != null)
-            {
-                if (!element.CanBeIndexed)
-                    Script.Diagnostics.Error("This variable type cannot be indexed.", variableRange);
-                else
-                    return new ValueInArrayAction(this, (IExpression)element, index);
-            }
-
-            return (IExpression)element;
+            return index;
         }
 
         /// <summary>Creates a macro from a Define_macroContext.</summary>
@@ -244,5 +219,48 @@ namespace Deltin.Deltinteger.Parse
         }
 
         public string Message() => $"The variable '{_variable.Name}' is a player variable and no player was provided in a global rule.";
+    }
+
+    public class VariableApply
+    {
+        private readonly ParseInfo _parseInfo;
+
+        public VariableApply(ParseInfo parseInfo)
+        {
+            _parseInfo = parseInfo;
+        }
+
+        public IExpression Apply(IVariable variable, IExpression[] index, DocRange variableRange)
+        {
+            // Callable
+            if (variable is ICallable callable) Call(callable, variableRange);
+            
+            // IIndexReferencers are wrapped by CallVariableActions.
+            if (variable is IIndexReferencer referencer)
+            {
+                // If the type of the variable being called is Player, check if the variable is calling Event Player.
+                // If the source expression is null, Event Player is used by default.
+                // Otherwise, confirm that the source expression is returning the player variable scope.
+                if (RestrictedCall.EventPlayerDefaultCall(referencer, _parseInfo))
+                    EventPlayerRestrictedCall(new RestrictedCall(RestrictedCallType.EventPlayer, _parseInfo.GetLocation(variableRange), new EventPlayerRestrictedCall(referencer)));
+
+                return new CallVariableAction(referencer, index);
+            }
+
+            // Check value in array.
+            if (index != null)
+            {
+                if (!variable.CanBeIndexed)
+                    Error("This variable type cannot be indexed.", variableRange);
+                else
+                    return new ValueInArrayAction(_parseInfo, (IExpression)variable, index);
+            }
+
+            return (IExpression)variable;
+        }
+
+        protected virtual void Call(ICallable callable, DocRange range) => callable.Call(_parseInfo, range);
+        protected virtual void EventPlayerRestrictedCall(RestrictedCall restrictedCall) => _parseInfo.RestrictedCallHandler.RestrictedCall(restrictedCall);
+        public virtual void Error(string message, DocRange range) => _parseInfo.Script.Diagnostics.Error(message, range);
     }
 }

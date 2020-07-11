@@ -121,7 +121,7 @@ namespace Deltin.Deltinteger.Parse
 
         public string GetLabel(bool markdown)
         {
-            string name = ReturnType?.GetName() ?? "define" + " " + Name;
+            string name = (ReturnType?.GetName() ?? "define") + " " + Name;
             if (markdown) return HoverHandler.Sectioned(name, null);
             else return name;
         }

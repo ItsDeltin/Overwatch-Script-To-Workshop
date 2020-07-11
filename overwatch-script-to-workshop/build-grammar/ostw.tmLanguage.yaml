@@ -1,0 +1,714 @@
+# Run build-grammar.ts to convert this yaml file.
+# See https://macromates.com/manual/en/language_grammars section 12.4 naming conventions.
+
+name: Overwatch Script To Workshop
+scopeName: source.del
+fileTypes: [del, ostw, workshop]
+$schema: https://raw.githubusercontent.com/Septh/tmlanguage/master/tmLanguage.schema.json
+
+variables:
+  part: '([_[:alnum:]]+)'
+  groupless-part: '[_[:alnum:]]+'
+  # (?<set-type> - Names the entire type group, which is used for recursion later.
+  #   {{part}}\b\s* - The name of the type. \b is used for the end of the word, \s* is for any number of spaces that may proceed the type name.
+  #   - type arguments
+  #   (\s* - Start of type arguments group. Start with any amount of whitespace.
+  #     ,?\s* - This group can be repeated, check for a comma.
+  #     \g<set-type>
+  #     \s*
+  #   )?\s*
+  #   - end type arguments
+  #   (\[\s*\])* - Array markers '[]'
+  # )
+  type: '(?<set-type>{{part}}\b\s*(<\s*(\s*,?\s*\g<set-type>\s*)*>)?\s*(\[\s*\])*)' # 5 groups
+  # define a =
+  declare-variable-start: '{{type}}\s*{{part}}(\s*\!)?(\s*=)?'
+  string-double: \"(?:[^"\\]|\\.)*\"
+  string-single: \'(?:[^'\\]|\\.)*\'
+  encapsulated-block-end: '(?<=})|(?<=;)'
+  attribute-list: (((public|private|protected|virtual|override|abstract|static)\b\s*)*)
+  variable-attribute-list: (((public|private|protected|virtual|override|abstract|static|globalvar|playervar)\b\s*)*)
+
+  # Scopes
+  statement-end: punctuation.terminator.statement.ostw
+  assignment: keyword.operator.assignment.ostw
+  define: keyword.other
+  
+patterns:
+- include: '#rule-set'
+
+repository:
+  # The root of a default OSTW script.
+  rule-set:
+    patterns:
+    - include: '#comment'
+    - include: '#import'
+    - include: '#rule'
+    - include: '#declare-class'
+    - include: '#declare-enum'
+    - include: '#declare-macro-var'
+    - include: '#declare-function'
+    - include: '#declare-variable'
+    - include: '#set-hook'
+  
+  # Comments
+  comment:
+    patterns:
+      # Line comments
+      - begin: //
+        end: (?=$)
+        name: comment.line.double-slash
+        beginCaptures:
+          0:
+            name: punctuation.definition.comment
+      # Block comments
+      - begin: /\*
+        end: \*/
+        name: comment.block
+        beginCaptures:
+          0:
+            name: punctuation.definition.comment
+        endCaptures:
+          0:
+            name: punctuation.definition.comment
+      # Documentation comments
+      - begin: '#'
+        end: (?=$)
+        name: comment.block.documentation
+        beginCaptures:
+          0:
+            name: punctuation.definition.comment
+  
+  # Import
+  import:
+    begin: '\bimport\b'
+    end: ;
+    beginCaptures:
+      0:
+        name: keyword.other
+    endCaptures:
+      0:
+        name: '{{statement-end}}'
+    patterns:
+      - include: '#string'
+  
+  # Applies syntax highlighting to an already matched type.
+  type-matcher:
+    patterns:
+      # 'define' default type.
+      - match: 'define'
+        name: '{{define}}'
+      # other types
+      - match: '{{part}}'
+        name: entity.name.type
+      # Array
+      - match: '\['
+        name: punctuation.squarebracket.open
+      - match: '\]'
+        name: punctuation.squarebracket.close
+      # Generics
+      - match: '<'
+        name: punctuation.definition.typeparameters.begin
+      - match: '>'
+        name: punctuation.definition.typeparameters.end
+      # Generics seperator
+      - match: ','
+        name: punctuation.separator.comma
+  
+  # Variable definition syntax
+  declare-variable:
+    begin: '{{variable-attribute-list}}{{declare-variable-start}}(?!\s*\()'
+    end: ;
+    patterns:
+      - include: '#expression'
+    beginCaptures:
+      1: # Highlight attributes
+        name: storage.modifier
+      4: # Apply highlighting to the type match
+        patterns:
+          - include: '#type-matcher'
+      9: # The variable name
+        name: entity.name.variable.field
+      10: # Extended collection '!' marker
+        name: '{{assignment}}'
+      11: # The equals for an initial value.
+        name: '{{assignment}}'
+    endCaptures:
+      0:
+        name: '{{statement-end}}'
+  
+  # Macro var
+  declare-macro-var:
+    begin: '{{attribute-list}}{{type}}\s*{{part}}\b\s*(:)'
+    end: ;
+    patterns:
+      - include: '#expression'
+    beginCaptures:
+      1: # Highlight attributes
+        name: storage.modifier
+      4: # Apply highlighting to the type match
+        patterns:
+          - include: '#type-matcher'
+      9: # The variable name
+        name: entity.name.variable.property
+      10: # Macro colon
+        name: '{{assignment}}'
+  
+  # Variables defined in rules and functions
+  declare-local-variable:
+    begin: '{{declare-variable-start}}'
+    end: ;
+    patterns:
+      - include: '#expression'
+    beginCaptures:
+      1: # Apply highlighting to type match
+        patterns:
+          - include: '#type-matcher'
+      6: # The variable name
+        name: entity.name.variable.local
+      7: # Extended collection '!' marker
+        name: '{{assignment}}'
+      8: # The equals for an initial value.
+        name: '{{assignment}}'
+    endCaptures:
+      0:
+        name: '{{statement-end}}'
+  
+  # Function and macro declaration
+  declare-function:
+    begin: '{{attribute-list}}{{type}}\s*{{part}}\s*(?=\(|:)'
+    end: '{{encapsulated-block-end}}'
+    beginCaptures:
+      1:
+        name: storage.modifier
+      4:
+        patterns:
+          - include: '#type-matcher'
+      9:
+        name: entity.name.function
+    patterns:
+      - include: '#comment'
+      - include: '#parameter-list-declaration'
+      - include: '#block'
+      - include: '#macro-value'
+      - include: '#string' # Subroutine name
+      # Subroutine default variable assignment
+      - match: \b(globalvar|playervar)\b
+        name: storage.modifier
+  
+  # Class declaration
+  declare-class:
+    begin: '(class)\b\s*{{part}}(\s*(:)\s*((\s*,?\s*{{groupless-part}})*))?'
+    end: '{{encapsulated-block-end}}'
+    beginCaptures:
+      1:
+        name: keyword.other.class
+      2:
+        name: entity.name.type.class
+      4:
+        name: punctuation.separator.colon
+      5: # Match extending and implementing.
+        patterns:
+          - match: '{{groupless-part}}'
+            name: entity.name.type
+          - match: ','
+            name: punctuation.separator.comma
+    patterns:
+      - include: '#comment'
+      - begin: '{'
+        end: '}'
+        beginCaptures:
+          0:
+            name: punctuation.curlybrace.open
+        endCaptures:
+          0:
+            name: punctuation.curlybrace.close
+        patterns:
+          - include: '#comment'
+          - include: '#declare-macro-var'
+          - include: '#declare-function'
+          - include: '#declare-variable'
+  
+  # Enum declaration
+  declare-enum:
+    begin: '\b(enum)\b\s*{{part}}'
+    end: '{{encapsulated-block-end}}'
+    beginCaptures:
+      1:
+        name: keyword.other.enum
+      2:
+        name: entity.name.type.enum
+    patterns:
+      - include: '#comment'
+      - begin: '{'
+        end: '}'
+        beginCaptures:
+          0:
+            name: punctuation.curlybrace.open
+        endCaptures:
+          0:
+            name: punctuation.curlybrace.close
+        patterns:
+          - include: '#comment'
+          # Match enum value
+          - begin: '{{part}}'
+            end: '(,)|(?=\s*})' # Enum declaration ends when either ',' is reached or lookahead finds '}'
+            beginCaptures:
+              0:
+                name: entity.name.variable.enum-member
+            endCaptures:
+              1:
+                name: punctuation.separator.comma
+            patterns:
+              # Match enum value's actual value
+              - include: '#comment'
+              - include: '#expression'
+              - match: '='
+                name: '{{assignment}}'
+  
+  # Parameter declaration
+  parameter-list-declaration:
+    begin: '\('
+    end: '\)'
+    endCaptures:
+      0:
+        name: punctuation.parenthesis.close
+    patterns:
+      - include: '#comment'
+      - include: '#parameter-declaration'
+    
+  parameter-declaration:
+    match: '(ref\s+)?{{type}}\s*{{part}}'
+    captures:
+      1:
+        name: storage.modifier
+      2:
+        patterns:
+          - include: '#type-matcher'
+      7:
+        name: variable.parameter
+  
+  macro-value:
+    begin: ':'
+    end: ';'
+    beginCaptures:
+      0:
+        name: '{{assignment}}'
+    endCaptures:
+      0:
+        name: '{{statement-end}}'
+    patterns:
+      - include: '#expression'
+  
+  # Hooks
+  set-hook:
+    begin: '{{type}}\s*(.)\s*{{part}}\b\s*(=)'
+    end: ';'
+    beginCaptures:
+      1: # {{type}}
+        patterns:
+          - include: '#type-matcher'
+      6: # (.)
+        name: punctuation.accessor
+      7: # Hook name
+        name: support.variable
+      8: # =
+        name: '{{assignment}}'
+    endCaptures:
+      0:
+        name: '{{statement-end}}'
+    patterns:
+      - include: '#expression'
+
+  # Rules
+  rule:
+    begin: '\b(disabled\b\s*)?(rule)\b\s*(:)\s*(({{string-double}})|({{string-single}}))' # rule: "string"
+    end: '{{encapsulated-block-end}}'
+    beginCaptures:
+      1: # Disabled keyword
+        name: storage.modifier
+      2: # Rule keyword
+        name: keyword.control
+      3: # Colon
+        name: punctuation.separator.colon
+      5: # Rule name (double quotes)
+        name: string.quoted.double
+      6: # Rule name (single quotes)
+        name: string.quoted.single
+    patterns:
+    - include: '#comment'
+    # Event attribute
+    - match: (Event|Team|Player)\s*(\.)\s*{{part}}
+      captures:
+        1:
+          name: support.type
+        2:
+          name: punctuation.accessor
+        3:
+          name: support.variable
+    - include: '#if-statement' # Rule condition
+    - include: '#block' # Rule block
+
+  # Block that contains statements.
+  block:
+    begin: '{'
+    end: '}'
+    beginCaptures:
+      0:
+        name: punctuation.curlybrace.open
+    endCaptures:
+      0:
+        name: punctuation.curlybrace.close
+    patterns:
+      - include: '#statement'
+  
+  # Statement
+  statement:
+    patterns:
+      - include: '#comment'
+      # Return statement
+      - begin: return
+        end: ;
+        beginCaptures:
+          0:
+            name: keyword.control.flow.return
+        endCaptures:
+          0:
+            name: '{{statement-end}}'
+        patterns:
+          - include: '#expression'
+      # for
+      - begin: \b(for)\b\s*(\()
+        end: \)
+        beginCaptures:
+          1:
+            name: keyword.control.loop.for
+          2:
+            name: punctuation.parenthesis.open
+        endCaptures:
+          0:
+            name: punctuation.parenthesis.close
+        patterns:
+          - include: '#declare-local-variable'
+          - include: '#assignment'
+          - include: '#expression'
+          - include: '#statement-end'
+      # foreach
+      - begin: \b(foreach)\b\s*(\()
+        end: \)
+        beginCaptures:
+          1:
+            name: keyword.control.loop.foreach
+          2:
+            name: punctuation.parenthesis.open
+        endCaptures:
+          0:
+            name: punctuation.parenthesis.close
+        patterns:
+          - include: '#comment'
+          # Match 'in' and the following expression.
+          - begin: \bin\b
+            end: '\s*(?=\))'
+            beginCaptures:
+              0:
+                name: keyword.control.loop.in
+            patterns:
+              - include: '#expression'
+          # Match the variable created for the loop.
+          - match: '{{type}}\s*{{part}}\b'
+            captures:
+              1:
+                patterns:
+                  - include: '#type-matcher'
+              6:
+                name: entity.name.variable.local
+      # If, else if, and switch.
+      - include: '#if-statement'
+      # Else
+      - match: \belse\b
+        name: keyword.control.conditional.else
+      # break;
+      - match: \bbreak\b
+        name: keyword.control.flow.break
+      # continue;
+      - match: \bcontinue\b
+        name: keyword.control.flow.continue
+      # case
+      - begin: \bcase\b
+        end: ':'
+        beginCaptures:
+          0:
+            name: keyword.control.case
+        endCaptures:
+          0:
+            name: punctuation.separator.colon
+        patterns:
+          - include: '#expression'
+      - include: '#function-call'
+      - include: '#declare-local-variable'
+      - include: '#assignment'
+      - include: '#expression'
+      - include: '#block' # Nested block
+      - include: '#statement-end'
+  
+  statement-end:
+    match: ;
+    name: '{{statement-end}}'
+  
+  # If, else if, switch, and while
+  if-statement:
+    begin: \b((\belse\b\s*)?(if)|(switch)|(while))\b\s*(\()
+    end: '\)'
+    beginCaptures:
+      2:
+        name: keyword.control.conditional.else
+      3:
+        name: keyword.control.conditional.if
+      4:
+        name: keyword.control.switch
+      5:
+        name: keyword.control.loop.while
+      6:
+        name: punctuation.parenthesis.open
+    endCaptures:
+      0:
+        name: punctuation.parenthesis.close
+    patterns:
+      - include: '#expression'
+  
+  # Assignment
+  # assignment:
+  #   begin: '(\.\s*)?{{part}}\b\s*(?=\[|=|\+=|-=|\*=|\/=|%=|^=|\+\+|--)'
+  #   end: =|\+=|-=|\*=|\/=|%=|^=|\+\+|--
+  #   beginCaptures:
+  #     1:
+  #       name: punctuation.accessor
+  #     2:
+  #       name: variable
+  #   endCaptures:
+  #     0:
+  #       name: keyword.operator.assignment.compound
+  #   patterns:
+  #     - begin: \[
+  #       end: \]
+  #       beginCaptures:
+  #         0:
+  #           name: punctuation.squarebracket.open
+  #       endCaptures:
+  #         0:
+  #           name: punctuation.squarebracket.close
+  #       patterns:
+  #         - include: '#expression'
+  
+  # assignment:
+  #   begin: =|\+=|-=|\*=|\/=|%=|^=|\+\+|--
+  #   end: ;
+  #   beginCaptures:
+  #     0:
+  #       name: keyword.operator.assignment.compound
+  #   endCaptures:
+  #     0:
+  #       name: '{{statement-end}}'
+  #   patterns:
+  #     - include: '#expression'
+
+  assignment:
+    match: =|\+=|-=|\*=|\/=|%=|^=|\+\+|--
+    captures:
+      0:
+        name: keyword.operator.assignment.compound
+  
+  # Expressions
+  expression:
+    patterns:
+      - include: '#comment'
+      - include: '#number'
+      - include: '#boolean'
+      - include: '#string'
+      - include: '#function-call'
+      - include: '#new-object'
+      - include: '#create-array'
+      - include: '#ternary-conditional'
+      - include: '#lambda'
+      # type cast
+      - match: (<)\s*{{type}}\s*(>)
+        captures:
+          1:
+            name: punctuation.definition.typeparameters.begin
+          2:
+            patterns:
+            - include: '#type-matcher'
+          7:
+            name: punctuation.definition.typeparameters.end
+      - include: '#expression-operators' # Must be below lambda
+      # null
+      - match: \bnull\b
+        name: constant.language.null
+      # 'variable' can match a bunch of things easily, so match it last.
+      - include: '#variable'
+      # Lambda block
+      - include: '#block'
+  
+  # Numbers
+  number:
+    patterns:
+      - match: -?[0-9]+(\.[0-9]+)?\b
+        name: constant.numeric
+  
+  # Booleans
+  boolean:
+    match: (true)|(false)
+    captures:
+      1:
+        name: constant.language.boolean.true
+      2:
+        name: constant.language.boolean.false
+  
+  # Strings
+  string:
+    patterns:
+    - match: '{{string-single}}'
+      name: string.quoted.single
+    - match: '{{string-double}}'
+      name: string.quoted.double
+  
+  # Function call
+  function-call:
+    begin: (\.\s*)?{{part}}\s*(\()
+    end: \)
+    beginCaptures:
+      1:
+        name: punctuation.accessor
+      2:
+        name: entity.name.function
+      3:
+        name: punctuation.parenthesis.open
+    endCaptures:
+      0:
+        name: punctuation.parenthesis.close
+    patterns:
+      - include: '#argument-list'
+  
+  # New object
+  new-object:
+    begin: (new)\b\s*{{part}}\s*(\()
+    end: \)
+    beginCaptures:
+      1:
+        name: keyword.other.new
+      2:
+        name: entity.name.type
+      3:
+        name: punctuation.parenthesis.open
+    endCaptures:
+      0:
+        name: punctuation.parenthesis.close
+    patterns:
+      - include: '#argument-list'
+  
+  # Create array
+  create-array:
+    begin: '\['
+    end: '\]'
+    beginCaptures:
+      0:
+        name: punctuation.squarebracket.open
+    endCaptures:
+      0:
+        name: punctuation.squarebracket.close
+    patterns:
+      - include: '#expression'
+      - match: ','
+        name: punctuation.separator.comma
+  
+  # Ternary conditional
+  ternary-conditional:
+    begin: '\?'
+    end: ':'
+    beginCaptures:
+      0:
+        name: keyword.operator.conditional.question-mark
+    endCaptures:
+      0:
+        name: keyword.operator.conditional.colon
+    patterns:
+      - include: '#expression'
+    
+  # Lambda
+  lambda:
+    patterns:
+      # One parameter: define param =>
+      - match: '{{type}}\s*{{part}}\b\s*(=>)'
+        captures:
+          1:
+            patterns:
+              - include: '#type-matcher'
+          6:
+            name: variable.parameter
+          7:
+            name: storage.type.function.arrow
+      # With parenthesis: () =>
+      - begin: \(
+        end: (\))(\s*=>)?
+        beginCaptures:
+          0:
+            name: punctuation.definition.parameters.begin
+        endCaptures:
+          1:
+            name: punctuation.definition.parameters.end
+          2:
+            name: storage.type.function.arrow
+        patterns:
+          - include: '#comment'
+          # Match lambda parameter
+          - match: '{{type}}\s*{{part}}\b'
+            captures:
+              1:
+                patterns:
+                  - include: '#type-matcher'
+              6:
+                name: variable.parameter
+          # Match parameter seperator
+          - match: ','
+            name: punctuation.separator.comma
+          - include: '#expression'
+  
+  # Variable
+  variable:
+    match: (\.\s*)?{{part}}\b
+    captures:
+      1:
+        name: punctuation.accessor
+      2:
+        name: variable
+  
+  # Expression operators
+  expression-operators:
+    patterns:
+      - name: keyword.operator.comparison
+        match: ==|\!=
+      - name: keyword.operator.relational
+        match: <=|>=|<|>
+      - name: keyword.operator.logical
+        match: \!|&&|\|\|
+      - name: keyword.operator.arithmetic
+        match: '%|\*|\/|-|\+'
+
+  # Argument list
+  argument-list:
+    patterns:
+      - include: '#comment'
+      # Named argument
+      - begin: '{{part}}\s*(:)'
+        end: '\s*(?=,|\))'
+        beginCaptures:
+          1:
+            name: variable.parameter
+          2:
+            name: punctuation.separator.colon
+        patterns:
+          - include: '#expression'
+      - include: '#expression'
+      # Parameter comma seperator
+      - match: ','
+        name: punctuation.separator.comma

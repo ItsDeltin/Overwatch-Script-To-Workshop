@@ -24,6 +24,7 @@ namespace Deltin.Deltinteger.Parse
         private List<LocationLink> callLinks { get; } = new List<LocationLink>();
         private List<HoverRange> hoverRanges { get; } = new List<HoverRange>();
         private List<CodeLensRange> codeLensRanges { get; } = new List<CodeLensRange>();
+        private List<SemanticToken> semanticTokens { get; } = new List<SemanticToken>();
 
         public ScriptFile(Diagnostics diagnostics, Uri uri, ScriptParseInfo scriptParseInfo)
         {
@@ -55,6 +56,7 @@ namespace Deltin.Deltinteger.Parse
         }
         public OverloadChooser[] GetSignatures() => overloads.ToArray();
 
+        /// <summary>Adds a link that can be clicked on in the script.</summary>
         public void AddDefinitionLink(DocRange callRange, Location definedAt)
         {
             if (callRange == null) throw new ArgumentNullException(nameof(callRange));
@@ -69,6 +71,7 @@ namespace Deltin.Deltinteger.Parse
         }
         public LocationLink[] GetDefinitionLinks() => callLinks.ToArray();
 
+        ///<summary>Adds a hover to the file.</summary>
         public void AddHover(DocRange range, string content)
         {
             if (range == null) throw new ArgumentNullException(nameof(range));
@@ -78,11 +81,18 @@ namespace Deltin.Deltinteger.Parse
         }
         public HoverRange[] GetHoverRanges() => hoverRanges.ToArray();
 
+        ///<summary>Adds a codelens to the file.</summary>
         public void AddCodeLensRange(CodeLensRange codeLensRange)
         {
             codeLensRanges.Add(codeLensRange ?? throw new ArgumentNullException(nameof(codeLensRange)));
         }
         public CodeLensRange[] GetCodeLensRanges() => codeLensRanges.ToArray();
+
+        /// <summary>Adds a semantic token to the file.</summary>
+        public void AddToken(DocRange range, TokenType type, params TokenModifier[] modifiers) => AddToken(new SemanticToken(range, type, modifiers));
+        /// <summary>Adds a semantic token to the file.</summary>
+        public void AddToken(SemanticToken token) => semanticTokens.Add(token);
+        public SemanticToken[] GetSemanticTokens() => semanticTokens.ToArray();
     }
 
     public class CompletionRange
@@ -139,5 +149,54 @@ namespace Deltin.Deltinteger.Parse
             Range = range;
             Content = content;
         }
+    }
+
+    public class SemanticToken
+    {
+        public DocRange Range { get; }
+        public string TokenType { get; }
+        public string[] Modifiers { get; }
+
+        public SemanticToken(DocRange range, TokenType tokenType, params TokenModifier[] modifiers)
+        {
+            Range = range;
+            TokenType = GetTokenName(tokenType);
+            Modifiers = modifiers == null ? new string[0] : Array.ConvertAll(modifiers, modifier => GetModifierName(modifier));
+        }
+
+        private static string GetTokenName(TokenType tokenType)
+        {
+            switch (tokenType)
+            {
+                case Deltin.Deltinteger.Parse.TokenType.TypeParameter: return "typeParameter";
+                default: return tokenType.ToString().ToLower();
+            }
+        }
+
+        private static string GetModifierName(TokenModifier modifier)
+        {
+            switch (modifier)
+            {
+                case TokenModifier.DefaultLibrary: return "defaultLibrary";
+                default: return modifier.ToString().ToLower();
+            }
+        }
+    }
+
+    public enum TokenType
+    {
+        Namespace,
+        Type, Class, Enum, Interface, Struct, TypeParameter,
+        Parameter, Variable, Property, EnumMember, Event,
+        Function, Member, Macro,
+        Label,
+        Comment, String, Keyword, Number, Regexp, Operator
+    }
+
+    public enum TokenModifier
+    {
+        Declaration,
+        Readonly, Static, Deprecated, Abstract,
+        Async, Modification, Documentation, DefaultLibrary
     }
 }

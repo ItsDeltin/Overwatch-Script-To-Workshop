@@ -16,6 +16,8 @@ namespace Deltin.Deltinteger.Parse
         public CodeType Extends { get; private set; }
         public string Description { get; protected set; }
         protected string Kind = "class";
+        protected TokenType TokenType { get; set; } = TokenType.Type;
+        protected List<TokenModifier> TokenModifiers { get; set; } = new List<TokenModifier>();
 
         /// <summary>Determines if the class can be deleted with the delete keyword.</summary>
         public bool CanBeDeleted { get; protected set; } = false;
@@ -118,6 +120,7 @@ namespace Deltin.Deltinteger.Parse
         {
             parseInfo.TranslateInfo.Types.CallType(this);
             parseInfo.Script.AddHover(callRange, HoverHandler.Sectioned(Kind + " " + Name, Description));
+            parseInfo.Script.AddToken(callRange, TokenType, TokenModifiers.ToArray());
         }
 
         /// <summary>Gets the completion that will show up for the language server.</summary>
@@ -152,7 +155,7 @@ namespace Deltin.Deltinteger.Parse
             }
 
             if (type != null)
-                type.Call(parseInfo, DocRange.GetRange(typeContext));
+                type.Call(parseInfo, DocRange.GetRange(typeContext.PART()));
 
             if (typeContext.INDEX_START() != null)
                     for (int i = 0; i < typeContext.INDEX_START().Length; i++)

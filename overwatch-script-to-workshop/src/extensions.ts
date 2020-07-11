@@ -6,7 +6,8 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { workspace, ExtensionContext, OutputChannel, window, Uri, Position, Location, StatusBarItem } from 'vscode';
-import { LanguageClient, LanguageClientOptions, ServerOptions, ExecutableOptions, Executable, TransportKind, InitializationFailedHandler, ErrorHandler, TextDocument, RequestType, Position as LSPosition, Location as LSLocation } from 'vscode-languageclient';
+import { LanguageClient, LanguageClientOptions, ServerOptions, ExecutableOptions, Executable, TransportKind, InitializationFailedHandler, ErrorHandler, TextDocument, RequestType, Position as LSPosition, Location as LSLocation, Range as LSRange } from 'vscode-languageclient';
+import { setTimeout } from 'timers';
 const fetch = require('node-fetch').default;
 
 let client: LanguageClient;
@@ -27,6 +28,8 @@ export function activate(context: ExtensionContext) {
 	setElementCount(0);
 	
 	addCommands(context);
+	// context.subscriptions.push(vscode.languages.registerDocument);
+	// new vscode.languages.
 
 	workspace.onDidChangeConfiguration((e: vscode.ConfigurationChangeEvent) => {
 		if (e.affectsConfiguration("ostw.deltintegerPath"))
@@ -74,7 +77,7 @@ function startLanguageServer(context: ExtensionContext)
 	// Options to control the language client
 	let clientOptions: LanguageClientOptions = {
 		// Register the server for plain text documents
-		documentSelector: [{ scheme: 'file', language: 'ostw' }],
+		documentSelector: [selector],
 		synchronize: {
 			// Notify the server about file changes to '.clientrc files contained in the workspace
 			// fileEvents: workspace.createFileSystemWatcher('**/.clientrc')
@@ -96,6 +99,13 @@ function startLanguageServer(context: ExtensionContext)
 
 		// When the client is ready, setup the workshopCode notification.
 		client.onNotification("workshopCode", (code: string)=> {
+
+			if (!registeredProvider)
+			{
+				vscode.languages.registerDocumentSemanticTokensProvider(selector, provider, legend);
+				registeredProvider = true;
+			}
+
 			if (code != lastWorkshopOutput)
 			{
 				lastWorkshopOutput = code;
@@ -252,5 +262,47 @@ const workshopPanelProvider = new class implements vscode.TextDocumentContentPro
 	provideTextDocumentContent(uri: vscode.Uri): string {
 		if (lastWorkshopOutput == null) return "";
 		return lastWorkshopOutput;
+	}
+};
+
+let registeredProvider: boolean = false;
+const tokenTypes = ['comment', 'string', 'keyword', 'number', 'regexp', 'operator', 'namespace',
+	'type', 'struct', 'class', 'interface', 'enum', 'enummember', 'typeParameter', 'function',
+	'member', 'macro', 'variable', 'parameter', 'property', 'label'];
+const tokenModifiers = ['declaration', 'readonly', 'static', 'deprecated', 'abstract', 'async', 'modification', 'documentation', 'defaultLibrary'];
+const legend = new vscode.SemanticTokensLegend(tokenTypes, tokenModifiers);
+const selector = { language: 'ostw', scheme: 'file' }; // register for all Java documents from the local file system
+
+const provider: vscode.DocumentSemanticTokensProvider = {
+	async provideDocumentSemanticTokens(document: vscode.TextDocument) {
+
+		// Get the semantic tokens in the provided document from the language server.
+		let tokens: {result:string, tokens: {range: LSRange, tokenType:string, modifiers:string[]}[]}
+		let count: number = 0;
+
+		do
+		{
+			tokens = await client.sendRequest('semanticTokens', document.uri);
+			if (tokens.result != 'success')
+			{
+				count++;
+				await new Promise(resolve => setTimeout(resolve, 100));
+			}
+		}
+		// Repeat the request until success is returned.
+		// This is needed due to the fact that vscode will call provideDocumentSemanticTokens before the script is parsed.
+		// Cancel after 10 seconds.
+		while (tokens.result != 'success' && count < 100)
+
+		// Create the builder.
+		let builder:vscode.SemanticTokensBuilder = new vscode.SemanticTokensBuilder(legend);
+
+		// Push tokens to the builder.
+		for (const token of tokens.tokens) {
+			builder.push(client.protocol2CodeConverter.asRange(token.range), token.tokenType, token.modifiers);
+		}
+
+		// Return the result.
+		return builder.build();
 	}
 };
