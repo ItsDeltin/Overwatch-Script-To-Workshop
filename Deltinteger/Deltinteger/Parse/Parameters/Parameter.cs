@@ -62,8 +62,10 @@ namespace Deltin.Deltinteger.Parse
 
         public virtual object Validate(ParseInfo parseInfo, IExpression value, DocRange valueRange)
         {
-            if (Type is Lambda.BaseLambda && ConstantExpressionResolver.Resolve(value) is Lambda.LambdaAction lambda)
-                Invoked.OnInvoke(new LambdaParameterInvoke(parseInfo, lambda, valueRange));
+            if (Type is Lambda.BaseLambda) ConstantExpressionResolver.Resolve(value, expr => {
+                if (expr is Lambda.LambdaAction lambda)
+                    Invoked.OnInvoke(new LambdaParameterInvoke(parseInfo, lambda, valueRange));
+            });
             return null;
         }
         public virtual IWorkshopTree Parse(ActionSet actionSet, IExpression expression, object additionalParameterData) => expression.Parse(actionSet);
@@ -140,7 +142,7 @@ namespace Deltin.Deltinteger.Parse
 
     public class ParameterInvokedInfo
     {
-        public bool Invoked { get; private set; } = true;
+        public bool Invoked { get; private set; }
         private List<LambdaParameterInvoke> _onInvoke = new List<LambdaParameterInvoke>();
 
         public void WasInvoked()

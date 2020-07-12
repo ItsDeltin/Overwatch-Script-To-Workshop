@@ -222,22 +222,25 @@ namespace Deltin.Deltinteger.Parse.Lambda
 
             public void Applied()
             {
-                if (ConstantExpressionResolver.Resolve(_expression) is LambdaAction source)
-                {
-                    _parseInfo.CurrentCallInfo?.Call(source.RecursiveCallHandler, _callRange);
+                ConstantExpressionResolver.Resolve(_expression, expr => {
+                    if (expr is LambdaAction source)
+                    {
+                        _parseInfo.CurrentCallInfo?.Call(source.RecursiveCallHandler, _callRange);
 
-                    // Add restricted calls.
-                    foreach (RestrictedCall call in source.CallInfo.RestrictedCalls)
-                        _parseInfo.RestrictedCallHandler.RestrictedCall(new RestrictedCall(
-                            call.CallType,
-                            _parseInfo.GetLocation(_callRange),
-                            new CallStrategy("The lambda '" + source.GetLabel(false) + "' calls a restricted value of type '" + RestrictedCall.StringFromCallType(call.CallType) + "'.")
-                        ));
-                }
-                else if (_expression is CallVariableAction callVariable && callVariable.Calling is Var var && var.RelatedParameter != null)
-                {
-                    var.RelatedParameter.Invoked.WasInvoked();
-                }
+                        // Add restricted calls.
+                        foreach (RestrictedCall call in source.CallInfo.RestrictedCalls)
+                            _parseInfo.RestrictedCallHandler.RestrictedCall(new RestrictedCall(
+                                call.CallType,
+                                _parseInfo.GetLocation(_callRange),
+                                new CallStrategy("The lambda '" + source.GetLabel(false) + "' calls a restricted value of type '" + RestrictedCall.StringFromCallType(call.CallType) + "'.")
+                            ));
+                    }
+                    else if (_expression is CallVariableAction callVariable && callVariable.Calling is Var var && var.RelatedParameter != null)
+                    {
+                        var.RelatedParameter.Invoked.WasInvoked();
+                    }
+                    else _parseInfo.Script.Diagnostics.Warning("Source lambda not found.", _callRange);
+                });
             }
         }
     }
