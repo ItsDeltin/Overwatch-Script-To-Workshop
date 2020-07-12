@@ -106,7 +106,7 @@ namespace Deltin.Deltinteger.Parse
 
                 // Normal parameter
                 if (!subroutineParameter)
-                    newVar = new ParameterVariable(methodScope, contextHandler, parameter);
+                    newVar = new ParameterVariable(methodScope, contextHandler, parameter.Invoked);
                 // Subroutine parameter.
                 else
                     newVar = new SubroutineParameterVariable(methodScope, contextHandler);
@@ -140,7 +140,7 @@ namespace Deltin.Deltinteger.Parse
         }
     }
 
-    public class ParameterInvokedInfo
+    public class ParameterInvokedInfo : Lambda.IBridgeInvocable
     {
         public bool Invoked { get; private set; }
         private List<LambdaParameterInvoke> _onInvoke = new List<LambdaParameterInvoke>();

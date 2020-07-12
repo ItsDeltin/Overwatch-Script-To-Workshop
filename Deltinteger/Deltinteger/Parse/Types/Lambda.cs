@@ -12,6 +12,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
     {
         private readonly BaseLambda LambdaType;
         public Var[] Parameters { get; }
+        public SubLambdaInvoke[] InvokedState { get; }
         public bool MultiplePaths { get; }
 
         // For block lambda
@@ -30,9 +31,13 @@ namespace Deltin.Deltinteger.Parse.Lambda
 
             // Get the lambda parameters.
             Parameters = new Var[context.define().Length];
+            InvokedState = new SubLambdaInvoke[Parameters.Length];
             for (int i = 0; i < Parameters.Length; i++)
+            {
+                InvokedState[i] = new SubLambdaInvoke();
                 // TODO: Make custom builder.
-                Parameters[i] = new ParameterVariable(lambdaScope, new DefineContextHandler(parseInfo, context.define(i)), null);
+                Parameters[i] = new ParameterVariable(lambdaScope, new DefineContextHandler(parseInfo, context.define(i)), InvokedState[i]);
+            }
             
             CodeType[] argumentTypes = Parameters.Select(arg => arg.CodeType).ToArray();
 
@@ -147,6 +152,12 @@ namespace Deltin.Deltinteger.Parse.Lambda
         }
     }
 
+    public class SubLambdaInvoke : IBridgeInvocable
+    {
+        public bool Invoked { get; private set; }
+        public void WasInvoked() => Invoked = true;
+    }
+
     /// <summary>Lambda invoke function.</summary>
     public class LambdaInvoke : IMethod
     {
@@ -179,18 +190,29 @@ namespace Deltin.Deltinteger.Parse.Lambda
 
         public void Call(ParseInfo parseInfo, DocRange callRange)
         {
-            if (parseInfo.SourceExpression != null) parseInfo.SourceExpression.OnResolve(expr => {
+            if (parseInfo.SourceExpression != null) parseInfo.SourceExpression.OnResolve(expr => ConstantExpressionResolver.Resolve(expr, expr => {
+                if (expr is LambdaAction source)
+                {
+                    parseInfo.CurrentCallInfo?.Call(source.RecursiveCallHandler, callRange);
 
-                InvokeListener listener = new InvokeListener(parseInfo, callRange, expr);
-
-                // If the expression is an IBlockListener, wait for the block to be applied.
-                if (expr is IBlockListener blockListener)
-                    blockListener.OnBlockApply(listener);
-                // Otherwise, apply immediately.
-                else
-                    listener.Applied();
-                
-            });
+                    // Add restricted calls.
+                    foreach (RestrictedCall call in source.CallInfo.RestrictedCalls)
+                        parseInfo.RestrictedCallHandler.RestrictedCall(new RestrictedCall(
+                            call.CallType,
+                            parseInfo.GetLocation(callRange),
+                            new CallStrategy("The lambda '" + source.GetLabel(false) + "' calls a restricted value of type '" + RestrictedCall.StringFromCallType(call.CallType) + "'.")
+                        ));
+                    
+                    for (int i = 0; i < source.InvokedState.Length; i++)
+                        if (source.InvokedState[i].Invoked)
+                            Parameters[i].Invoked.WasInvoked();
+                }
+                else if (expr is CallVariableAction callVariable && callVariable.Calling is Var var && var.BridgeInvocable != null)
+                {
+                    var.BridgeInvocable.WasInvoked();
+                }
+                else parseInfo.Script.Diagnostics.Warning("Source lambda not found.", callRange);
+            }));
         }
 
         public CompletionItem GetCompletion() => MethodAttributes.GetFunctionCompletion(this);
@@ -205,43 +227,6 @@ namespace Deltin.Deltinteger.Parse.Lambda
             CodeParameter[] parameters = new CodeParameter[argumentTypes.Length];
             for (int i = 0; i < parameters.Length; i++) parameters[i] = new CodeParameter($"arg{i}", argumentTypes[i]);
             return parameters;
-        }
-
-        class InvokeListener : IOnBlockApplied
-        {
-            private readonly ParseInfo _parseInfo;
-            private readonly DocRange _callRange;
-            private readonly IExpression _expression;
-
-            public InvokeListener(ParseInfo parseInfo, DocRange callRange, IExpression expression)
-            {
-                _parseInfo = parseInfo;
-                _callRange = callRange;
-                _expression = expression;
-            }
-
-            public void Applied()
-            {
-                ConstantExpressionResolver.Resolve(_expression, expr => {
-                    if (expr is LambdaAction source)
-                    {
-                        _parseInfo.CurrentCallInfo?.Call(source.RecursiveCallHandler, _callRange);
-
-                        // Add restricted calls.
-                        foreach (RestrictedCall call in source.CallInfo.RestrictedCalls)
-                            _parseInfo.RestrictedCallHandler.RestrictedCall(new RestrictedCall(
-                                call.CallType,
-                                _parseInfo.GetLocation(_callRange),
-                                new CallStrategy("The lambda '" + source.GetLabel(false) + "' calls a restricted value of type '" + RestrictedCall.StringFromCallType(call.CallType) + "'.")
-                            ));
-                    }
-                    else if (_expression is CallVariableAction callVariable && callVariable.Calling is Var var && var.RelatedParameter != null)
-                    {
-                        var.RelatedParameter.Invoked.WasInvoked();
-                    }
-                    else _parseInfo.Script.Diagnostics.Warning("Source lambda not found.", _callRange);
-                });
-            }
         }
     }
 
@@ -340,4 +325,9 @@ namespace Deltin.Deltinteger.Parse.Lambda
             ReturnType = returnType;
         }
     }
-}   
+
+    public interface IBridgeInvocable
+    {
+        void WasInvoked();
+    }
+}

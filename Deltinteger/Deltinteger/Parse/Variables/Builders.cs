@@ -99,12 +99,12 @@ namespace Deltin.Deltinteger.Parse
     class ParameterVariable : VarBuilder
     {
         private readonly Scope _operationalScope;
-        private readonly CodeParameter _relatedParameter;
+        private readonly Lambda.IBridgeInvocable _bridgeInvocable;
 
-        public ParameterVariable(Scope operationalScope, IVarContextHandler contextHandler, CodeParameter relatedParameter) : base(contextHandler)
+        public ParameterVariable(Scope operationalScope, IVarContextHandler contextHandler, Lambda.IBridgeInvocable bridgeInvocable) : base(contextHandler)
         {
             _operationalScope = operationalScope;
-            _relatedParameter = relatedParameter;
+            _bridgeInvocable = bridgeInvocable;
         }
 
         protected override void CheckAttributes()
@@ -123,7 +123,7 @@ namespace Deltin.Deltinteger.Parse
             _varInfo.OperationalScope = _operationalScope;
             _varInfo.CodeLensType = CodeLensSourceType.ParameterVariable;
             _varInfo.TokenType = TokenType.Parameter;
-            _varInfo.RelatedParameter = _relatedParameter;
+            _varInfo.BridgeInvocable = _bridgeInvocable;
         }
 
         protected override void TypeCheck()
