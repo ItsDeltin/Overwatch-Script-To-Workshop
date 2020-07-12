@@ -212,7 +212,7 @@ namespace Deltin.Deltinteger.Parse
         {
             AdditionalParameterData = new object[Overload.Parameters.Length];
             for (int i = 0; i < Overload.Parameters.Length; i++)
-                AdditionalParameterData[i] = Overload.Parameters[i].Validate(parseInfo.Script, Values[i], ParameterRanges.ElementAtOrDefault(i));
+                AdditionalParameterData[i] = Overload.Parameters[i].Validate(parseInfo, Values[i], ParameterRanges.ElementAtOrDefault(i));
         }
 
         public SignatureHelp GetSignatureHelp(Pos caretPos)

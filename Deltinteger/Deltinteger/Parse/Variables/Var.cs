@@ -25,6 +25,7 @@ namespace Deltin.Deltinteger.Parse
         public int ID { get; }
         public bool Static { get; }
         public bool Recursive { get; }
+        public CodeParameter RelatedParameter { get; }
         private readonly TokenType _tokenType;
         private readonly TokenModifier[] _tokenModifiers;
 
@@ -59,6 +60,7 @@ namespace Deltin.Deltinteger.Parse
             ID = varInfo.ID;
             Static = varInfo.Static;
             Recursive = varInfo.Recursive;
+            RelatedParameter = varInfo.RelatedParameter;
             _tokenType = varInfo.TokenType;
             _tokenModifiers = varInfo.TokenModifiers.ToArray();
             _initalValueContext = varInfo.InitialValueContext;
@@ -184,6 +186,7 @@ namespace Deltin.Deltinteger.Parse
         public TokenType TokenType = TokenType.Variable;
         public List<TokenModifier> TokenModifiers = new List<TokenModifier>();
         public CodeLensSourceType CodeLensType = CodeLensSourceType.Variable;
+        public CodeParameter RelatedParameter;
 
         public VarInfo(string name, Location definedAt, ParseInfo parseInfo)
         {

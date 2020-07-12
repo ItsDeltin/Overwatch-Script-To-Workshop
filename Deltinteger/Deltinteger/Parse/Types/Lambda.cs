@@ -32,7 +32,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
             Parameters = new Var[context.define().Length];
             for (int i = 0; i < Parameters.Length; i++)
                 // TODO: Make custom builder.
-                Parameters[i] = new ParameterVariable(lambdaScope, new DefineContextHandler(parseInfo, context.define(i)));
+                Parameters[i] = new ParameterVariable(lambdaScope, new DefineContextHandler(parseInfo, context.define(i)), null);
             
             CodeType[] argumentTypes = Parameters.Select(arg => arg.CodeType).ToArray();
 
@@ -191,8 +191,6 @@ namespace Deltin.Deltinteger.Parse.Lambda
                     listener.Applied();
                 
             });
-            else
-                parseInfo.Script.Diagnostics.Warning("Could not resolve lambda's source expression.", callRange);
         }
 
         public CompletionItem GetCompletion() => MethodAttributes.GetFunctionCompletion(this);
@@ -235,6 +233,10 @@ namespace Deltin.Deltinteger.Parse.Lambda
                             _parseInfo.GetLocation(_callRange),
                             new CallStrategy("The lambda '" + source.GetLabel(false) + "' calls a restricted value of type '" + RestrictedCall.StringFromCallType(call.CallType) + "'.")
                         ));
+                }
+                else if (_expression is CallVariableAction callVariable && callVariable.Calling is Var var && var.RelatedParameter != null)
+                {
+                    var.RelatedParameter.Invoked.WasInvoked();
                 }
             }
         }

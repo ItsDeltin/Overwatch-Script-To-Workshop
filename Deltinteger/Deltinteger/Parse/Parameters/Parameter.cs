@@ -12,6 +12,7 @@ namespace Deltin.Deltinteger.Parse
         public string Documentation { get; set; }
         public ExpressionOrWorkshopValue DefaultValue { get; set; }
         public List<RestrictedCallType> RestrictedCalls { get; } = new List<RestrictedCallType>();
+        public ParameterInvokedInfo Invoked { get; set; } = new ParameterInvokedInfo();
 
         public CodeParameter(string name)
         {
@@ -59,7 +60,12 @@ namespace Deltin.Deltinteger.Parse
             Documentation = documentation;
         }
 
-        public virtual object Validate(ScriptFile script, IExpression value, DocRange valueRange) => null;
+        public virtual object Validate(ParseInfo parseInfo, IExpression value, DocRange valueRange)
+        {
+            if (Type is Lambda.BaseLambda && ConstantExpressionResolver.Resolve(value) is Lambda.LambdaAction lambda)
+                Invoked.OnInvoke(new LambdaParameterInvoke(parseInfo, lambda, valueRange));
+            return null;
+        }
         public virtual IWorkshopTree Parse(ActionSet actionSet, IExpression expression, object additionalParameterData) => expression.Parse(actionSet);
 
         public string GetLabel(bool markdown)
@@ -98,7 +104,7 @@ namespace Deltin.Deltinteger.Parse
 
                 // Normal parameter
                 if (!subroutineParameter)
-                    newVar = new ParameterVariable(methodScope, contextHandler);
+                    newVar = new ParameterVariable(methodScope, contextHandler, parameter);
                 // Subroutine parameter.
                 else
                     newVar = new SubroutineParameterVariable(methodScope, contextHandler);
@@ -129,6 +135,54 @@ namespace Deltin.Deltinteger.Parse
         {
             Parameters = parameters;
             Variables = parameterVariables;
+        }
+    }
+
+    public class ParameterInvokedInfo
+    {
+        public bool Invoked { get; private set; } = true;
+        private List<LambdaParameterInvoke> _onInvoke = new List<LambdaParameterInvoke>();
+
+        public void WasInvoked()
+        {
+            if (Invoked) return;
+            Invoked = true;
+
+            foreach (LambdaParameterInvoke onInvoke in _onInvoke)
+                onInvoke.Invoked();
+        }
+
+        public void OnInvoke(LambdaParameterInvoke lambdaInvoke)
+        {
+            if (Invoked) lambdaInvoke.Invoked();
+            else _onInvoke.Add(lambdaInvoke);
+        }
+    }
+
+    public class LambdaParameterInvoke
+    {
+        public ParseInfo ParseInfo { get; }
+        public Lambda.LambdaAction Lambda { get; }
+        public DocRange CallRange { get; }
+
+        public LambdaParameterInvoke(ParseInfo parseInfo, Lambda.LambdaAction lambda, DocRange callRange)
+        {
+            ParseInfo = parseInfo;
+            Lambda = lambda;
+            CallRange = callRange;
+        }
+
+        public void Invoked()
+        {
+            ParseInfo.CurrentCallInfo?.Call(Lambda.RecursiveCallHandler, CallRange);
+
+            // Add restricted calls.
+            foreach (RestrictedCall call in Lambda.CallInfo.RestrictedCalls)
+                ParseInfo.RestrictedCallHandler.RestrictedCall(new RestrictedCall(
+                    call.CallType,
+                    ParseInfo.GetLocation(CallRange),
+                    new CallStrategy("The lambda '" + Lambda.GetLabel(false) + "' calls a restricted value of type '" + RestrictedCall.StringFromCallType(call.CallType) + "'.")
+                ));
         }
     }
 

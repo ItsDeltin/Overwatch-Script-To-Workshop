@@ -690,9 +690,9 @@ namespace Deltin.Deltinteger.Pathfinder
     {
         public PathmapFileParameter(string parameterName, string description) : base(parameterName, description, ".pathmap") {}
 
-        public override object Validate(ScriptFile script, IExpression value, DocRange valueRange)
+        public override object Validate(ParseInfo parseInfo, IExpression value, DocRange valueRange)
         {
-            string filepath = base.Validate(script, value, valueRange) as string;
+            string filepath = base.Validate(parseInfo, value, valueRange) as string;
             if (filepath == null) return null;
 
             PathMap map;
@@ -702,7 +702,7 @@ namespace Deltin.Deltinteger.Pathfinder
             }
             catch (InvalidOperationException)
             {
-                script.Diagnostics.Error("Failed to deserialize the PathMap.", valueRange);
+                parseInfo.Script.Diagnostics.Error("Failed to deserialize the PathMap.", valueRange);
                 return null;
             }
 

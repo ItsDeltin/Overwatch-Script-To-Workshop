@@ -99,10 +99,12 @@ namespace Deltin.Deltinteger.Parse
     class ParameterVariable : VarBuilder
     {
         private readonly Scope _operationalScope;
+        private readonly CodeParameter _relatedParameter;
 
-        public ParameterVariable(Scope operationalScope, IVarContextHandler contextHandler) : base(contextHandler)
+        public ParameterVariable(Scope operationalScope, IVarContextHandler contextHandler, CodeParameter relatedParameter) : base(contextHandler)
         {
             _operationalScope = operationalScope;
+            _relatedParameter = relatedParameter;
         }
 
         protected override void CheckAttributes()
@@ -121,6 +123,7 @@ namespace Deltin.Deltinteger.Parse
             _varInfo.OperationalScope = _operationalScope;
             _varInfo.CodeLensType = CodeLensSourceType.ParameterVariable;
             _varInfo.TokenType = TokenType.Parameter;
+            _varInfo.RelatedParameter = _relatedParameter;
         }
 
         protected override void TypeCheck()
@@ -136,7 +139,7 @@ namespace Deltin.Deltinteger.Parse
 
     class SubroutineParameterVariable : ParameterVariable
     {
-        public SubroutineParameterVariable(Scope operationalScope, IVarContextHandler contextHandler) : base(operationalScope, contextHandler)
+        public SubroutineParameterVariable(Scope operationalScope, IVarContextHandler contextHandler) : base(operationalScope, contextHandler, null)
         {
         }
 
