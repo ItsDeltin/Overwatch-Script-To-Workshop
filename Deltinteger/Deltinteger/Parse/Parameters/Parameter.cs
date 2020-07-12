@@ -172,33 +172,6 @@ namespace Deltin.Deltinteger.Parse
         }
     }
 
-    public class LambdaParameterInvoke
-    {
-        public ParseInfo ParseInfo { get; }
-        public Lambda.LambdaAction Lambda { get; }
-        public DocRange CallRange { get; }
-
-        public LambdaParameterInvoke(ParseInfo parseInfo, Lambda.LambdaAction lambda, DocRange callRange)
-        {
-            ParseInfo = parseInfo;
-            Lambda = lambda;
-            CallRange = callRange;
-        }
-
-        public void Invoked()
-        {
-            ParseInfo.CurrentCallInfo?.Call(Lambda.RecursiveCallHandler, CallRange);
-
-            // Add restricted calls.
-            foreach (RestrictedCall call in Lambda.CallInfo.RestrictedCalls)
-                ParseInfo.RestrictedCallHandler.RestrictedCall(new RestrictedCall(
-                    call.CallType,
-                    ParseInfo.GetLocation(CallRange),
-                    new CallStrategy("The lambda '" + Lambda.GetLabel(false) + "' calls a restricted value of type '" + RestrictedCall.StringFromCallType(call.CallType) + "'.")
-                ));
-        }
-    }
-
     public class ExpressionOrWorkshopValue : IExpression
     {
         public IExpression Expression { get; }

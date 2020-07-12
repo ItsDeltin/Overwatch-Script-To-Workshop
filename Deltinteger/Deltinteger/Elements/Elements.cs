@@ -457,7 +457,7 @@ namespace Deltin.Deltinteger.Elements
                 parseInfo.RestrictedCallHandler.RestrictedCall(new RestrictedCall(
                     (RestrictedCallType)Restricted,
                     parseInfo.GetLocation(callRange),
-                    new CallStrategy($"A restricted value of type '{RestrictedCall.StringFromCallType((RestrictedCallType)Restricted)}' cannot be called in this rule.")
+                    RestrictedCall.Message_Element((RestrictedCallType)Restricted)
                 ));
         }
     }

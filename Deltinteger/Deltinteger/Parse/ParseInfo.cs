@@ -209,18 +209,6 @@ namespace Deltin.Deltinteger.Parse
         public Location GetLocation(DocRange range) => new Location(Script.Uri, range);
     }
 
-    class EventPlayerRestrictedCall : ICallStrategy
-    {
-        private readonly IIndexReferencer _variable;
-
-        public EventPlayerRestrictedCall(IIndexReferencer variable)
-        {
-            _variable = variable;
-        }
-
-        public string Message() => $"The variable '{_variable.Name}' is a player variable and no player was provided in a global rule.";
-    }
-
     public class VariableApply
     {
         private readonly ParseInfo _parseInfo;
@@ -242,7 +230,7 @@ namespace Deltin.Deltinteger.Parse
                 // If the source expression is null, Event Player is used by default.
                 // Otherwise, confirm that the source expression is returning the player variable scope.
                 if (referencer.VariableType == VariableType.Player)
-                    EventPlayerRestrictedCall(new RestrictedCall(RestrictedCallType.EventPlayer, _parseInfo.GetLocation(variableRange), new EventPlayerRestrictedCall(referencer)));
+                    EventPlayerRestrictedCall(new RestrictedCall(RestrictedCallType.EventPlayer, _parseInfo.GetLocation(variableRange), RestrictedCall.Message_EventPlayerDefault(referencer.Name)));
 
                 return new CallVariableAction(referencer, index);
             }

@@ -69,7 +69,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
                 parseInfo.RestrictedCallHandler.RestrictedCall(new RestrictedCall(
                     call.CallType,
                     parseInfo.GetLocation(callRange),
-                    new CallStrategy("The lambda '" + source.GetLabel(false) + "' calls a restricted value of type '" + RestrictedCall.StringFromCallType(call.CallType) + "'.")
+                    RestrictedCall.Message_LambdaInvoke(source.GetLabel(false), call.CallType)
                 ));
         }
 

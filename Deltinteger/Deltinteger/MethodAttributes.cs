@@ -136,15 +136,28 @@ namespace Deltin.Deltinteger
                 RuleEvent.PlayerReceivedKnockback
             }}
         };
+
+        public static string Message_Element(RestrictedCallType type) => $"A restricted value of type '{StringFromCallType(type)}' cannot be called in this rule.";
+        public static string Message_EventPlayerDefault(string name)
+            => $"The variable '{name}' is a player variable and no player was provided in a global rule.";
+        public static string Message_FunctionCallsRestricted(string functionName, RestrictedCallType type)
+            => $"The function '{functionName}' calls a restricted value of type '{RestrictedCall.StringFromCallType(type)}'.";
+        public static string Message_Macro(string macroName, RestrictedCallType type)
+            => $"The macro '{macroName}' calls a restricted value of type '{RestrictedCall.StringFromCallType(type)}'.";
+        public static string Message_LambdaInvoke(string lambdaName, RestrictedCallType type)
+            => $"The lambda '{lambdaName}' calls a restricted value of type '{RestrictedCall.StringFromCallType(type)}'.";
+        public static string Message_UnsetOptionalParameter(string parameterName, string functionName, RestrictedCallType type)
+            => $"An unset optional parameter '{parameterName}' in the function '{functionName}' calls a restricted value of type '{RestrictedCall.StringFromCallType(type)}'.";
+
         public RestrictedCallType CallType { get; }
         public Location CallRange { get; }
-        public ICallStrategy CallStrategy { get; }
+        public string Message { get; }
 
-        public RestrictedCall(RestrictedCallType callType, Location callRange, ICallStrategy callStrategy)
+        public RestrictedCall(RestrictedCallType callType, Location callRange, string message)
         {
             CallType = callType;
             CallRange = callRange;
-            CallStrategy = callStrategy;
+            Message = message;
         }
 
         public static string StringFromCallType(RestrictedCallType type)
@@ -158,21 +171,6 @@ namespace Deltin.Deltinteger
         
         public static bool EventPlayerDefaultCall(IIndexReferencer referencer, IExpression parent, ParseInfo parseInfo)
             => referencer.VariableType == VariableType.Player && (parent == null || parent.ReturningScope() != parseInfo.TranslateInfo.PlayerVariableScope);
-    }
-
-    public interface ICallStrategy
-    {
-        string Message();
-    }
-
-    class CallStrategy : ICallStrategy
-    {
-        private readonly string _message;
-        public CallStrategy(string message)
-        {
-            _message = message;
-        }
-        public string Message() => _message;
     }
 
     public enum RestrictedCallType

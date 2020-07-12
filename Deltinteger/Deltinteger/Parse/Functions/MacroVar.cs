@@ -182,7 +182,7 @@ namespace Deltin.Deltinteger.Parse
                 _callHandler.RestrictedCall(new RestrictedCall(
                     restrictedCall.CallType,
                     _callLocation,
-                    new CallStrategy($"The macro '{_macroVar.Name}' calls a restricted value of type '{RestrictedCall.StringFromCallType(restrictedCall.CallType)}'.")
+                    RestrictedCall.Message_Macro(_macroVar.Name, restrictedCall.CallType)
                 ));
         }
     }

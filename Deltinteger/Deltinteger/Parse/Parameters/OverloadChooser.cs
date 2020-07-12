@@ -378,8 +378,8 @@ namespace Deltin.Deltinteger.Parse
                         parseInfo.RestrictedCallHandler.RestrictedCall(new RestrictedCall(
                             callType,
                             parseInfo.GetLocation(callRange),
-                            new CallStrategy($"An unset optional parameter '{Option.Parameters[i].Name}' in the function '{Option.GetLabel(false)}' calls a restricted value of type '{RestrictedCall.StringFromCallType(callType)}'."))
-                        );
+                            RestrictedCall.Message_UnsetOptionalParameter(Option.Parameters[i].Name, Option.GetLabel(false), callType)
+                        ));
         }
     }
 

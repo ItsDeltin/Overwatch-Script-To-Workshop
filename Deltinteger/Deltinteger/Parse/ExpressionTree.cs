@@ -461,7 +461,7 @@ namespace Deltin.Deltinteger.Parse
 
                 // Restricted value type check.
                 if (_parent != null && _variable is IIndexReferencer referencer && RestrictedCall.EventPlayerDefaultCall(referencer, _parent.GetExpression(), _parseInfo))
-                    _parseInfo.RestrictedCallHandler.RestrictedCall(new RestrictedCall(RestrictedCallType.EventPlayer, _parseInfo.GetLocation(_callRange), new EventPlayerRestrictedCall(referencer)));
+                    _parseInfo.RestrictedCallHandler.RestrictedCall(new RestrictedCall(RestrictedCallType.EventPlayer, _parseInfo.GetLocation(_callRange), RestrictedCall.Message_EventPlayerDefault(referencer.Name)));
 
                 // Add diagnostics.
                 _parseInfo.Script.Diagnostics.AddDiagnostics(_apply.Errors.ToArray());

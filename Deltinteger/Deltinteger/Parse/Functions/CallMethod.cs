@@ -82,7 +82,7 @@ namespace Deltin.Deltinteger.Parse
             
             // Check callinfo :)
             foreach (RestrictedCallType type in ((IApplyBlock)CallingMethod).CallInfo.GetRestrictedCallTypes())
-                parseInfo.RestrictedCallHandler.RestrictedCall(new RestrictedCall(type, parseInfo.GetLocation(NameRange), new FunctionCallsRestricted(CallingMethod.Name, type)));
+                parseInfo.RestrictedCallHandler.RestrictedCall(new RestrictedCall(type, parseInfo.GetLocation(NameRange), RestrictedCall.Message_FunctionCallsRestricted(CallingMethod.Name, type)));
         }
 
         public Scope ReturningScope()
@@ -152,19 +152,5 @@ namespace Deltin.Deltinteger.Parse
         NoParallel,
         AlreadyRunning_RestartRule,
         AlreadyRunning_DoNothing
-    }
-
-    class FunctionCallsRestricted : ICallStrategy
-    {
-        private readonly string _functionName;
-        private readonly RestrictedCallType _callType;
-
-        public FunctionCallsRestricted(string functionName, RestrictedCallType callType)
-        {
-            _functionName = functionName;
-            _callType = callType;
-        }
-
-        public string Message() => $"The function '{_functionName}' calls a restricted value of type '{RestrictedCall.StringFromCallType(_callType)}'.";
     }
 }
