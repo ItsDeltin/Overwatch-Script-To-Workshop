@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Collections.Generic;
 using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.Elements;
 using StringOrMarkupContent = OmniSharp.Extensions.LanguageServer.Protocol.Models.StringOrMarkupContent;
@@ -152,12 +153,6 @@ namespace Deltin.Deltinteger.Parse.Lambda
         }
     }
 
-    public class SubLambdaInvoke : IBridgeInvocable
-    {
-        public bool Invoked { get; private set; }
-        public void WasInvoked() => Invoked = true;
-    }
-
     /// <summary>Lambda invoke function.</summary>
     public class LambdaInvoke : IMethod
     {
@@ -191,28 +186,56 @@ namespace Deltin.Deltinteger.Parse.Lambda
         public void Call(ParseInfo parseInfo, DocRange callRange)
         {
             if (parseInfo.SourceExpression != null) parseInfo.SourceExpression.OnResolve(expr => ConstantExpressionResolver.Resolve(expr, expr => {
+                // Get the lambda that is being invoked.
                 if (expr is LambdaAction source)
                 {
-                    parseInfo.CurrentCallInfo?.Call(source.RecursiveCallHandler, callRange);
-
-                    // Add restricted calls.
-                    foreach (RestrictedCall call in source.CallInfo.RestrictedCalls)
-                        parseInfo.RestrictedCallHandler.RestrictedCall(new RestrictedCall(
-                            call.CallType,
-                            parseInfo.GetLocation(callRange),
-                            new CallStrategy("The lambda '" + source.GetLabel(false) + "' calls a restricted value of type '" + RestrictedCall.StringFromCallType(call.CallType) + "'.")
-                        ));
+                    // Recursion and error check.
+                    LambdaInvokeApply(parseInfo, source, callRange);
                     
+                    // Parameter invocation states.
                     for (int i = 0; i < source.InvokedState.Length; i++)
                         if (source.InvokedState[i].Invoked)
                             Parameters[i].Invoked.WasInvoked();
                 }
-                else if (expr is CallVariableAction callVariable && callVariable.Calling is Var var && var.BridgeInvocable != null)
+                // The lambda is being invoked from a parameter.
+                else if (ParameterInvocableBridge(expr, out IBridgeInvocable invocable))
                 {
-                    var.BridgeInvocable.WasInvoked();
+                    invocable.WasInvoked();
                 }
-                else parseInfo.Script.Diagnostics.Warning("Source lambda not found.", callRange);
+                // This will only run if a way to resolve lambdas was not accounted for.
+                // Unresolved lambdas will not throw any errors if a restricted value is inside and the lambda is invoked.
+                // Unresolved lambdas also cannot check for recursion.
+                else parseInfo.Script.Diagnostics.Warning("Source lambda not found, contact zez- I mean, deltin.", callRange);
             }));
+        }
+
+        /// <summary>Gets the restricted calls and recursion from a lambda invocation.</summary>
+        public static void LambdaInvokeApply(ParseInfo parseInfo, LambdaAction source, DocRange callRange)
+        {
+            parseInfo.CurrentCallInfo?.Call(source.RecursiveCallHandler, callRange);
+
+            // Add restricted calls.
+            foreach (RestrictedCall call in source.CallInfo.RestrictedCalls)
+                parseInfo.RestrictedCallHandler.RestrictedCall(new RestrictedCall(
+                    call.CallType,
+                    parseInfo.GetLocation(callRange),
+                    new CallStrategy("The lambda '" + source.GetLabel(false) + "' calls a restricted value of type '" + RestrictedCall.StringFromCallType(call.CallType) + "'.")
+                ));
+        }
+
+        /// <summary>Determines if an expression resolves to an IBridgeInvocable.</summary>
+        /// <param name="expression">The expression to extract the IBridgeInvocable from.</param>
+        /// <param name="invocable">The resulting invocable. Will be null if not found.</param>
+        /// <returns>True if the invocable is found, false otherwise.</returns>
+        public static bool ParameterInvocableBridge(IExpression expression, out IBridgeInvocable invocable)
+        {
+            if (expression is CallVariableAction callVariable && callVariable.Calling is Var var && var.BridgeInvocable != null)
+            {
+                invocable = var.BridgeInvocable;
+                return true;
+            }
+            invocable = null;
+            return false;
         }
 
         public CompletionItem GetCompletion() => MethodAttributes.GetFunctionCompletion(this);
@@ -329,5 +352,15 @@ namespace Deltin.Deltinteger.Parse.Lambda
     public interface IBridgeInvocable
     {
         void WasInvoked();
+        void OnInvoke(Action onInvoke);
+    }
+
+    public class SubLambdaInvoke : IBridgeInvocable
+    {
+        public bool Invoked { get; private set; }
+        public List<Action> Actions { get; } = new List<Action>();
+        
+        public void WasInvoked() => Invoked = true;
+        public void OnInvoke(Action onInvoke) => Actions.Add(onInvoke);
     }
 }

@@ -1,7 +1,9 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.Elements;
+using Deltin.Deltinteger.Parse.Lambda;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -62,9 +64,18 @@ namespace Deltin.Deltinteger.Parse
 
         public virtual object Validate(ParseInfo parseInfo, IExpression value, DocRange valueRange)
         {
+            // If the type of the parameter is a lambda, then resolve the expression.
             if (Type is Lambda.BaseLambda) ConstantExpressionResolver.Resolve(value, expr => {
+                // If the expression is a lambda...
                 if (expr is Lambda.LambdaAction lambda)
-                    Invoked.OnInvoke(new LambdaParameterInvoke(parseInfo, lambda, valueRange));
+                    // ...then if this parameter is invoked, apply the restricted calls and recursion info.
+                    Invoked.OnInvoke(() => {
+                        LambdaInvoke.LambdaInvokeApply(parseInfo, lambda, valueRange);
+                    });
+                // Otherwise, if the expression resolves to an IBridgeInvocable...
+                else if (LambdaInvoke.ParameterInvocableBridge(value, out IBridgeInvocable invocable))
+                    // ...then this lambda parameter is invoked, invoke the resolved invocable. 
+                    Invoked.OnInvoke(() => invocable.WasInvoked());
             });
             return null;
         }
@@ -140,24 +151,24 @@ namespace Deltin.Deltinteger.Parse
         }
     }
 
-    public class ParameterInvokedInfo : Lambda.IBridgeInvocable
+    public class ParameterInvokedInfo : IBridgeInvocable
     {
         public bool Invoked { get; private set; }
-        private List<LambdaParameterInvoke> _onInvoke = new List<LambdaParameterInvoke>();
+        private List<Action> _onInvoke = new List<Action>();
 
         public void WasInvoked()
         {
             if (Invoked) return;
             Invoked = true;
 
-            foreach (LambdaParameterInvoke onInvoke in _onInvoke)
-                onInvoke.Invoked();
+            foreach (Action onInvoke in _onInvoke)
+                onInvoke.Invoke();
         }
 
-        public void OnInvoke(LambdaParameterInvoke lambdaInvoke)
+        public void OnInvoke(Action onInvoke)
         {
-            if (Invoked) lambdaInvoke.Invoked();
-            else _onInvoke.Add(lambdaInvoke);
+            if (Invoked) onInvoke.Invoke();
+            else _onInvoke.Add(onInvoke);
         }
     }
 
