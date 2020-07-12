@@ -32,12 +32,16 @@ namespace Deltin.Deltinteger.Parse
                 else if (start is MacroVar macroVar)
                     resolve = macroVar.Expression;
                 
+                // If the expression is an ExpressionTree, resolve the last value.
+                else if (start is ExpressionTree expressionTree)
+                    resolve = expressionTree.Result;
+                
                 if (resolve == null) callback.Invoke(start);
                 else Resolve(resolve, callback);
             };
 
-            if (start is IApplyBlock applyBlock)
-                applyBlock.OnBlockApply(new OnBlockApplied(() => resolver.Invoke()));
+            if (start is IBlockListener blockListener)
+                blockListener.OnBlockApply(new OnBlockApplied(() => resolver.Invoke()));
             else
                 resolver.Invoke();
         }
