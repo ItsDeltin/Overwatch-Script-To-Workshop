@@ -97,6 +97,12 @@
                     "type": "string",
                     "description": "The path to Deltinteger.exe."
                 },
+                "ostw.deltintegerShell": {
+                    "scope": "machine",
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Whether to use the operating system shell to start the deltinteger process."
+                },
                 "ostw.newRelease": {
                     "scope": "machine",
                     "type": "boolean",
@@ -141,6 +147,11 @@
         },
         "commands": [
             {
+                "command": "ostw.downloadLatestRelease",
+                "title": "Download the latest OSTW release.",
+                "category": "Overwatch Script To Workshop"
+            },
+            {
                 "command": "ostw.virtualDocumentOutput",
                 "title": "Create a panel for workshop code output.",
                 "category": "Overwatch Script To Workshop"
@@ -170,7 +181,7 @@
     },
     "scripts": {
         "vscode:prepublish": "npm run compile && webpack --mode production",
-        "compile": "node ./build-grammar/out/build-grammar.js tsc -b && webpack --mode development",
+        "compile": "node ./build-grammar/out/build-grammar.js && tsc -b && webpack --mode development",
         "watch": "tsc -b -w",
         "test": "sh ./scripts/e2e.sh",
         "webpack": "webpack --mode development",
@@ -190,7 +201,9 @@
     },
     "dependencies": {
         "async": "^3.2.0",
-        "node-fetch": "^2.6.0",
-        "vscode-languageclient": "^5.2.1"
+        "axios": "^0.19.2",
+        "glob": "^7.1.6",
+        "vscode-languageclient": "^5.2.1",
+        "yauzl": "^2.10.0"
     }
 }

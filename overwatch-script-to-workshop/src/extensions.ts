@@ -3,12 +3,19 @@
  * Licensed under the MIT License. See License.txt in the project root for license information.
  * ------------------------------------------------------------------------------------------ */
 
-import * as path from 'path';
 import * as vscode from 'vscode';
 import { workspace, ExtensionContext, OutputChannel, window, Uri, Position, Location, StatusBarItem } from 'vscode';
 import { LanguageClient, LanguageClientOptions, ServerOptions, ExecutableOptions, Executable, TransportKind, InitializationFailedHandler, ErrorHandler, TextDocument, RequestType, Position as LSPosition, Location as LSLocation, Range as LSRange } from 'vscode-languageclient';
 import { setTimeout } from 'timers';
-const fetch = require('node-fetch').default;
+import axios from 'axios';
+import fs = require('fs');
+import path = require('path');
+import glob = require('glob');
+import util = require('util');
+import yauzl = require("yauzl");
+const exec = util.promisify(require('child_process').exec);
+
+let globalStoragePath:string;
 
 let client: LanguageClient;
 let workshopOut: OutputChannel;
@@ -16,7 +23,8 @@ let elementCountStatus: vscode.StatusBarItem;
 let config = workspace.getConfiguration("ostw", null);
 let isServerRunning = false;
 
-export function activate(context: ExtensionContext) {
+export async function activate(context: ExtensionContext) {
+	globalStoragePath = context.globalStoragePath;	
 
 	// Shows the compiled result in an output window.
 	workshopOut = window.createOutputChannel("Workshop Code");
@@ -28,8 +36,6 @@ export function activate(context: ExtensionContext) {
 	setElementCount(0);
 	
 	addCommands(context);
-	// context.subscriptions.push(vscode.languages.registerDocument);
-	// new vscode.languages.
 
 	workspace.onDidChangeConfiguration((e: vscode.ConfigurationChangeEvent) => {
 		if (e.affectsConfiguration("ostw.deltintegerPath"))
@@ -58,24 +64,17 @@ function startLanguageServer(context: ExtensionContext)
 {
 	// Gets the path to the server executable.
 	const serverModule = <string>config.get('deltintegerPath');
-	var serverPath: path.ParsedPath = path.parse(serverModule);
-
-	if (serverPath.name.toLowerCase() != "deltinteger")
-	{
-		workshopOut.clear();
-		workshopOut.appendLine("The ostw.deltintegerPath does not resolve to deltinteger.exe.");
-		return;
-	}
+	const useShell = <boolean>config.get('deltintegerShell');
 
 	// It was me, stdio!
-	const options: ExecutableOptions = { stdio: "pipe", detached: false };
+	const options: ExecutableOptions = { stdio: "pipe", detached: false, shell: useShell };
 	const serverOptions: ServerOptions = {
 		run:   { command: serverModule, args: ['--langserver']           , options: options },
 		debug: { command: serverModule, args: ['--langserver', '--debug'], options: options }
 	};
 
 	// Options to control the language client
-	let clientOptions: LanguageClientOptions = {
+	const clientOptions: LanguageClientOptions = {
 		// Register the server for plain text documents
 		documentSelector: [selector],
 		synchronize: {
@@ -128,37 +127,36 @@ function startLanguageServer(context: ExtensionContext)
 			// Do not show the message if the newRelease config is false.
 			if (!config.get('newRelease')) return;
 
-			fetch('https://api.github.com/repos/ItsDeltin/Overwatch-Script-To-Workshop/releases/latest')
-				.then(res => res.json())
-				.then(json => {
-					let latest: string = json.tag_name;
-					let url: string = json.html_url;
+			// todo: update
+			// fetch('https://api.github.com/repos/ItsDeltin/Overwatch-Script-To-Workshop/releases/latest')
+			// 	.then(res => res.json())
+			// 	.then(json => {
+			// 		let latest: string = json.tag_name;
+			// 		let url: string = json.html_url;
 
-					if (version != latest && config.get('ignoreRelease') != latest)
-					{
-						window.showInformationMessage(
-							// Message
-							"A new version of Overwatch Script To Workshop (" + latest + ") is now available. (Current: " + version + ")",
-							// Options
-							"Ignore release", "View release"
-						).then(chosenOption => {
-							// Open the release.
-							if (chosenOption == "View release")
-								vscode.env.openExternal(Uri.parse(url));
-							// Don't show again for this version.
-							else if (chosenOption == "Ignore release")
-								config.update('ignoreRelease', latest, vscode.ConfigurationTarget.Global);
-						});
-					}
-				})
-				.catch(error => {});
+			// 		if (version != latest && config.get('ignoreRelease') != latest)
+			// 		{
+			// 			window.showInformationMessage(
+			// 				// Message
+			// 				"A new version of Overwatch Script To Workshop (" + latest + ") is now available. (Current: " + version + ")",
+			// 				// Options
+			// 				"Ignore release", "View release"
+			// 			).then(chosenOption => {
+			// 				// Open the release.
+			// 				if (chosenOption == "View release")
+			// 					vscode.env.openExternal(Uri.parse(url));
+			// 				// Don't show again for this version.
+			// 				else if (chosenOption == "Ignore release")
+			// 					config.update('ignoreRelease', latest, vscode.ConfigurationTarget.Global);
+			// 			});
+			// 		}
+			// 	})
+			// 	.catch(error => {});
 		});
-	}).catch((reason) => {
+	}, (uhh) => {}).catch((reason) => {
 		workshopOut.clear();
 		workshopOut.appendLine(reason);
 	});
-
-	client.start();
 }
 
 export function deactivate(): Thenable<void> | undefined {
@@ -175,6 +173,12 @@ function addCommands(context: ExtensionContext)
 	// Push provider.
 	context.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider('ow_ostw', workshopPanelProvider));
 
+	// Download latest release
+	context.subscriptions.push(vscode.commands.registerCommand('ostw.downloadLatestRelease', () => {
+		downloadOSTW();
+	}));
+
+	// Virtual document
 	context.subscriptions.push(vscode.commands.registerCommand('ostw.virtualDocumentOutput', async () => {
 		// Encode uri.
 		let uri = vscode.Uri.parse('ow_ostw:Workshop Output.ow');
@@ -306,3 +310,120 @@ const provider: vscode.DocumentSemanticTokensProvider = {
 		return builder.build();
 	}
 };
+
+async function IsDotnetInstalled(): Promise<boolean>
+{
+	try
+	{
+		const { stdout, stderr } = await exec('dotnet --list-runtimes');
+		return /Microsoft\.NETCore\.App 3\.[0-9]+/.test(stdout);
+	}
+	catch (ex)
+	{
+		// An error may be thrown if the command does not exist.
+		return false;
+	}
+}
+
+async function downloadOSTW(): Promise<void>
+{
+	try
+	{
+		const url: string = await getAssetUrl();
+
+		let response = await axios.get(url, {
+			responseType: 'arraybuffer'
+		});
+
+		yauzl.fromBuffer(response.data, {lazyEntries: true}, (err, zipfile) => {
+			if (err) throw err;
+			zipfile.readEntry();
+			zipfile.on("entry", function(entry) {
+				if (/\/$/.test(entry.fileName)) {
+					// Directory file names end with '/'.
+					// Note that entires for directories themselves are optional.
+					// An entry's fileName implicitly requires its parent directories to exist.
+					zipfile.readEntry();
+				} else {
+					// file entry
+					zipfile.openReadStream(entry, function(err, readStream) {
+						if (err) throw err;
+						readStream.on("end", function() {
+							zipfile.readEntry();
+						});
+						
+						// The path to the file.
+						let p = path.join(globalStoragePath, entry.fileName);
+
+						// Create the directory if it does not exist.
+						ensureDirectoryExistence(p);
+
+						// Create the write stream.
+						let ws = fs.createWriteStream(p);
+						ws.on('error', (e) => { console.error(e); });
+
+						// Pipe the readStream into the write stream.
+						readStream.pipe(ws);
+					});
+				}
+			});
+			zipfile.once("end", () => {
+				// Extraction done.
+				// Locate the DLL file.
+				locateDLL(globalStoragePath, (executable: string) => {
+					if (executable != null)
+					{
+						let newCommand = 'dotnet exec ' + executable;
+						// Update config.
+						config.update('deltintegerPath', newCommand, vscode.ConfigurationTarget.Global);
+					}
+					else
+					{
+						// Todo: error
+					}
+				});
+			});
+		});
+	}
+	catch (ex)
+	{
+		// Todo: remove try-catch and get errors otherwise.
+	}
+}
+
+// Gets the latest release's download URL.
+async function getAssetUrl(): Promise<string>
+{
+	let assets: any[] = (await getLatestRelease()).assets;
+
+	for (const asset of assets) {
+		if (path.extname(asset.name) != '.zip') continue;
+		// TODO: more matches
+		return asset.browser_download_url;
+	}
+
+	return null;
+}
+
+// Gets the latest release.
+async function getLatestRelease()
+{
+	return (await axios.get('https://api.github.com/repos/ItsDeltin/Overwatch-Script-To-Workshop/releases/latest')).data;
+}
+
+function ensureDirectoryExistence(filePath) {
+	var dirname = path.dirname(filePath);
+	if (fs.existsSync(dirname)) {
+		return true;
+	}
+	ensureDirectoryExistence(dirname);
+	fs.mkdirSync(dirname);
+}
+
+function locateDLL(root: string, callback: (filename: string) => void)
+{
+	glob('**/deltinteger.dll', {cwd: root}, (error, matches: string[]) => {
+		if (error || matches.length == 0) callback(null);
+		return callback(path.join(root, matches[0]));
+	});
+}
