@@ -349,23 +349,28 @@ async function IsDotnetInstalled(): Promise<boolean>
 async function downloadOSTW(): Promise<void>
 {
 	window.withProgress(
-		{ location: vscode.ProgressLocation.Notification, title:'Downloading the Overwatch Script To Workshop server.' },
+		{ location: vscode.ProgressLocation.Notification, title: 'Downloading the Overwatch Script To Workshop server.', cancellable: true },
 		async(progress, token) => {
-
-			await new Promise((resolve, reject) => {
-				doDownload(successResponse => {
-					resolve(successResponse);
-				}, errorResponse => {
-					reject(errorResponse)
+			try {
+				await new Promise((resolve, reject) => {
+					doDownload(token, successResponse => {
+						resolve(successResponse);
+					}, errorResponse => {
+						reject(errorResponse)
+					});
 				});
-			});
+			}
+			// On error
+			catch (ex) {
+				vscode.window.showErrorMessage('Failed to download the OSTW server: ' + ex);
+			}
 
 			return null;
 		}
 	)
 }
 
-async function doDownload(success, error)
+async function doDownload(token: vscode.CancellationToken, success, error)
 {
 	if (isServerRunning)
 	{
@@ -376,9 +381,37 @@ async function doDownload(success, error)
 	// Get the downloadable url for the ostw server.
 	const url: string = await getAssetUrl();
 
-	let response = await axios.get(url, {
-		responseType: 'arraybuffer'
-	});
+	if (url == null)
+	{
+		// Could not retrieve asset url.
+		error('Could not get release assets, do you have a connection?');
+		return;
+	}
+
+	// Set up the cancel token.
+	const CancelToken = axios.CancelToken;
+	let source = CancelToken.source();
+
+	// When the progress bar is canceled, cancel the axios request.
+	token.onCancellationRequested(e => {
+		source.cancel(e);
+	}, this);
+
+	// Download the file.
+	let response: any;
+
+	try
+	{
+		response = await axios.get(url, {
+			responseType: 'arraybuffer',
+			cancelToken: source.token
+		});
+	}
+	catch (cancel)
+	{
+		// Canceled.
+		success(null);
+	}
 
 	const folder = path.join(globalStoragePath, 'server');
 
@@ -447,7 +480,8 @@ async function doDownload(success, error)
 // Gets the latest release's download URL.
 async function getAssetUrl(): Promise<string>
 {
-	let assets: any[] = (await getLatestRelease()).assets;
+	let assets: any[] = (await getLatestRelease())?.assets;
+	if (assets == null) return null;
 
 	for (const asset of assets) {
 		if (path.extname(asset.name) != '.zip') continue;
@@ -461,7 +495,14 @@ async function getAssetUrl(): Promise<string>
 // Gets the latest release.
 async function getLatestRelease()
 {
-	return (await axios.get('https://api.github.com/repos/ItsDeltin/Overwatch-Script-To-Workshop/releases/latest')).data;
+	try
+	{
+		return (await axios.get('https://api.github.com/repos/ItsDeltin/Overwatch-Script-To-Workshop/releases/latest')).data;
+	}
+	catch (ex)
+	{
+		return null;
+	}
 }
 
 function ensureDirectoryExistence(filePath) {
