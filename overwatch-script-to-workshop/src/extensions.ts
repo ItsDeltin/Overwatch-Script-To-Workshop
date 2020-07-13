@@ -5,7 +5,7 @@
 
 import * as vscode from 'vscode';
 import { workspace, ExtensionContext, OutputChannel, window, Uri, Position, Location, StatusBarItem } from 'vscode';
-import { LanguageClient, LanguageClientOptions, ServerOptions, ExecutableOptions, Executable, TransportKind, InitializationFailedHandler, ErrorHandler, TextDocument, RequestType, Position as LSPosition, Location as LSLocation, Range as LSRange } from 'vscode-languageclient';
+import { LanguageClient, LanguageClientOptions, ServerOptions, ExecutableOptions, Executable, TransportKind, InitializationFailedHandler, ErrorHandler, TextDocument, RequestType, Position as LSPosition, Location as LSLocation, Range as LSRange, ErrorAction, Message, CloseAction } from 'vscode-languageclient';
 import { setTimeout } from 'timers';
 import axios from 'axios';
 import fs = require('fs');
@@ -37,23 +37,23 @@ export async function activate(context: ExtensionContext) {
 	
 	addCommands(context);
 
-	workspace.onDidChangeConfiguration((e: vscode.ConfigurationChangeEvent) => {
+	workspace.onDidChangeConfiguration(async (e: vscode.ConfigurationChangeEvent) => {
 		if (e.affectsConfiguration("ostw.deltintegerPath"))
 		{
 			config = workspace.getConfiguration("ostw", null);
 
-			client.outputChannel.hide();
-			client.outputChannel.dispose();
 			lastWorkshopOutput = "";
 			if (isServerRunning) {
-				client.stop();
+				await client.stop();
 				isServerRunning = false;
 			}
 			client.start();
+			isServerRunning = true;
 		}
 	});
 	makeLanguageServer(context);
 	client.start();
+	isServerRunning = true;
 }
 
 function setElementCount(count)
@@ -61,27 +61,36 @@ function setElementCount(count)
 	elementCountStatus.text = "Element count: " + count + " / 20000";
 }
 
+let serverOptions: ServerOptions;
+let serverExecutableOptions: ExecutableOptions;
+
 function makeLanguageServer(context: ExtensionContext)
 {
 	// Gets the path to the server executable.
 	const serverModule = <string>config.get('deltintegerPath');
-	const useShell = <boolean>config.get('deltintegerShell');
 
-	// It was me, stdio!
-	const options: ExecutableOptions = { stdio: "pipe", detached: false, shell: useShell };
-	const serverOptions: ServerOptions = {
-		run:   { command: serverModule, args: ['--langserver']           , options: options },
-		debug: { command: serverModule, args: ['--langserver', '--debug'], options: options }
-	};
+	setServerOptions(serverModule);
 
 	// Options to control the language client
 	const clientOptions: LanguageClientOptions = {
 		// Register the server for plain text documents
 		documentSelector: [selector],
 		synchronize: {
-			// Notify the server about file changes to '.clientrc files contained in the workspace
-			// fileEvents: workspace.createFileSystemWatcher('**/.clientrc')
 			configurationSection: 'ostw'
+		},
+		initializationFailedHandler: error => {
+			console.log(error);
+			return true; // hmm
+		},
+		errorHandler: new class handler implements ErrorHandler {
+			error(error: Error, message: Message, count: number): ErrorAction {
+				console.log('error: ' + message);
+				return ErrorAction.Shutdown;
+			}
+			closed(): CloseAction {
+				console.log('closed');
+				return CloseAction.DoNotRestart;
+			}
 		}
 	};
 
@@ -160,10 +169,21 @@ function makeLanguageServer(context: ExtensionContext)
 	});
 }
 
+function setServerOptions(serverModule: string)
+{
+	// It was me, stdio!
+	serverExecutableOptions = { stdio: "pipe", detached: false, shell: <boolean>config.get('deltintegerShell') };
+	serverOptions = {
+		run:   { command: serverModule, args: ['--langserver']           , options: serverExecutableOptions },
+		debug: { command: serverModule, args: ['--langserver', '--debug'], options: serverExecutableOptions }
+	};
+}
+
 export function deactivate(): Thenable<void> | undefined {
 	if (!client) {
 		return undefined;
 	}
+	isServerRunning = false;
 	return client.stop();
 }
 
@@ -332,7 +352,7 @@ async function downloadOSTW(): Promise<void>
 		{ location: vscode.ProgressLocation.Notification, title:'Downloading the Overwatch Script To Workshop server.' },
 		async(progress, token) => {
 
-			let newCommand = await new Promise((resolve, reject) => {
+			await new Promise((resolve, reject) => {
 				doDownload(successResponse => {
 					resolve(successResponse);
 				}, errorResponse => {
@@ -347,7 +367,11 @@ async function downloadOSTW(): Promise<void>
 
 async function doDownload(success, error)
 {
-	await client?.stop();
+	if (isServerRunning)
+	{
+		await client.stop();
+		isServerRunning = false;
+	}
 
 	// Get the downloadable url for the ostw server.
 	const url: string = await getAssetUrl();
@@ -355,6 +379,8 @@ async function doDownload(success, error)
 	let response = await axios.get(url, {
 		responseType: 'arraybuffer'
 	});
+
+	const folder = path.join(globalStoragePath, 'server');
 
 	await yauzl.fromBuffer(response.data, {lazyEntries: true}, async (err, zipfile) => {
 		if (err) throw err;
@@ -374,7 +400,7 @@ async function doDownload(success, error)
 					});
 					
 					// The path to the file.
-					let p = path.join(globalStoragePath, entry.fileName);
+					let p = path.join(folder, entry.fileName);
 
 					// Create the directory if it does not exist.
 					ensureDirectoryExistence(p);
@@ -391,18 +417,27 @@ async function doDownload(success, error)
 		await zipfile.once("end", () => {
 			// Extraction done.
 			// Locate the DLL file.
-			locateDLL(globalStoragePath, async (executable: string) => {
+			locateDLL(folder, async (executable: string) => {
 				if (executable != null)
 				{
 					let newCommand = 'dotnet exec ' + executable;
+					setServerOptions(newCommand);
+
 					// Update config.
 					await config.update('deltintegerPath', newCommand, vscode.ConfigurationTarget.Global);
-					client.start();
+
+					// If updating the config does not start the client, start it now.
+					if (!isServerRunning) {
+						client.start();
+						isServerRunning = true;
+					}
+
+					// Done.
 					success(newCommand);
 				}
 				else
 				{
-					// Todo: error
+					error('deltinteger.dll not found within retrieved artifacts.');
 				}
 			});
 		});
