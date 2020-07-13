@@ -49,10 +49,11 @@ export async function activate(context: ExtensionContext) {
 				client.stop();
 				isServerRunning = false;
 			}
-			startLanguageServer(context);
+			client.start();
 		}
 	});
-	startLanguageServer(context);
+	makeLanguageServer(context);
+	client.start();
 }
 
 function setElementCount(count)
@@ -60,7 +61,7 @@ function setElementCount(count)
 	elementCountStatus.text = "Element count: " + count + " / 20000";
 }
 
-function startLanguageServer(context: ExtensionContext)
+function makeLanguageServer(context: ExtensionContext)
 {
 	// Gets the path to the server executable.
 	const serverModule = <string>config.get('deltintegerPath');
@@ -153,7 +154,7 @@ function startLanguageServer(context: ExtensionContext)
 			// 	})
 			// 	.catch(error => {});
 		});
-	}, (uhh) => {}).catch((reason) => {
+	}).catch((reason) => {
 		workshopOut.clear();
 		workshopOut.appendLine(reason);
 	});
@@ -327,68 +328,85 @@ async function IsDotnetInstalled(): Promise<boolean>
 
 async function downloadOSTW(): Promise<void>
 {
-	try
-	{
-		const url: string = await getAssetUrl();
+	window.withProgress(
+		{ location: vscode.ProgressLocation.Notification, title:'Downloading the Overwatch Script To Workshop server.' },
+		async(progress, token) => {
 
-		let response = await axios.get(url, {
-			responseType: 'arraybuffer'
-		});
-
-		yauzl.fromBuffer(response.data, {lazyEntries: true}, (err, zipfile) => {
-			if (err) throw err;
-			zipfile.readEntry();
-			zipfile.on("entry", function(entry) {
-				if (/\/$/.test(entry.fileName)) {
-					// Directory file names end with '/'.
-					// Note that entires for directories themselves are optional.
-					// An entry's fileName implicitly requires its parent directories to exist.
-					zipfile.readEntry();
-				} else {
-					// file entry
-					zipfile.openReadStream(entry, function(err, readStream) {
-						if (err) throw err;
-						readStream.on("end", function() {
-							zipfile.readEntry();
-						});
-						
-						// The path to the file.
-						let p = path.join(globalStoragePath, entry.fileName);
-
-						// Create the directory if it does not exist.
-						ensureDirectoryExistence(p);
-
-						// Create the write stream.
-						let ws = fs.createWriteStream(p);
-						ws.on('error', (e) => { console.error(e); });
-
-						// Pipe the readStream into the write stream.
-						readStream.pipe(ws);
-					});
-				}
-			});
-			zipfile.once("end", () => {
-				// Extraction done.
-				// Locate the DLL file.
-				locateDLL(globalStoragePath, (executable: string) => {
-					if (executable != null)
-					{
-						let newCommand = 'dotnet exec ' + executable;
-						// Update config.
-						config.update('deltintegerPath', newCommand, vscode.ConfigurationTarget.Global);
-					}
-					else
-					{
-						// Todo: error
-					}
+			let newCommand = await new Promise((resolve, reject) => {
+				doDownload(successResponse => {
+					resolve(successResponse);
+				}, errorResponse => {
+					reject(errorResponse)
 				});
 			});
+
+			return null;
+		}
+	)
+}
+
+async function doDownload(success, error)
+{
+	await client?.stop();
+
+	// Get the downloadable url for the ostw server.
+	const url: string = await getAssetUrl();
+
+	let response = await axios.get(url, {
+		responseType: 'arraybuffer'
+	});
+
+	await yauzl.fromBuffer(response.data, {lazyEntries: true}, async (err, zipfile) => {
+		if (err) throw err;
+		zipfile.readEntry();
+		zipfile.on("entry", function(entry) {
+			if (/\/$/.test(entry.fileName)) {
+				// Directory file names end with '/'.
+				// Note that entires for directories themselves are optional.
+				// An entry's fileName implicitly requires its parent directories to exist.
+				zipfile.readEntry();
+			} else {
+				// file entry
+				zipfile.openReadStream(entry, function(err, readStream) {
+					if (err) throw err;
+					readStream.on("end", function() {
+						zipfile.readEntry();
+					});
+					
+					// The path to the file.
+					let p = path.join(globalStoragePath, entry.fileName);
+
+					// Create the directory if it does not exist.
+					ensureDirectoryExistence(p);
+
+					// Create the write stream.
+					let ws = fs.createWriteStream(p);
+					ws.on('error', (e) => { console.error(e); });
+
+					// Pipe the readStream into the write stream.
+					readStream.pipe(ws);
+				});
+			}
 		});
-	}
-	catch (ex)
-	{
-		// Todo: remove try-catch and get errors otherwise.
-	}
+		await zipfile.once("end", () => {
+			// Extraction done.
+			// Locate the DLL file.
+			locateDLL(globalStoragePath, async (executable: string) => {
+				if (executable != null)
+				{
+					let newCommand = 'dotnet exec ' + executable;
+					// Update config.
+					await config.update('deltintegerPath', newCommand, vscode.ConfigurationTarget.Global);
+					client.start();
+					success(newCommand);
+				}
+				else
+				{
+					// Todo: error
+				}
+			});
+		});
+	});
 }
 
 // Gets the latest release's download URL.
