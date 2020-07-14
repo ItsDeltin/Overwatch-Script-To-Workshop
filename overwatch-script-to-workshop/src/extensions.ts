@@ -367,6 +367,11 @@ function addCommands(context: ExtensionContext)
 		// Determines if the file name is 'deltinteger'.
 		// if (opened.fsPath.split('\\').pop().split('/').pop().split('.')[0].toLowerCase() != 'deltinteger')
 	}));
+
+	// Copy workshop code
+	context.subscriptions.push(vscode.commands.registerCommand('ostw.copyWorkshopCode', () => {
+		vscode.env.clipboard.writeText(lastWorkshopOutput);
+	}))
 }
 
 const workshopPanelProvider = new class implements vscode.TextDocumentContentProvider {

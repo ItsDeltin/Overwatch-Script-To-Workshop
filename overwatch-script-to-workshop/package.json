@@ -178,7 +178,7 @@
             },
             {
                 "command": "ostw.copyWorkshopCode",
-                "title": "Copies the workshop output to the clipboard.",
+                "title": "Copy the workshop output to the clipboard.",
                 "category": "Overwatch Script To Workshop"
             }
         ],
