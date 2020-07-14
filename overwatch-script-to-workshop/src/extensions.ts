@@ -8,7 +8,7 @@ import path = require('path');
 import glob = require('glob');
 import util = require('util');
 import yauzl = require("yauzl");
-const exec = util.promisify(require('child_process').exec);
+import exec = require('child_process');
 
 let globalStoragePath:string;
 let defaultServerFolder:string;
@@ -54,6 +54,7 @@ function setElementCount(count)
 	elementCountStatus.text = "Element count: " + count + " / 20000";
 }
 
+let execServerModule;
 let serverOptions: {
     run: Executable;
     debug: Executable;
@@ -95,7 +96,7 @@ async function makeLanguageServer()
 	if (!await IsDotnetInstalled())
 	{
 		doStart = false;
-		vscode.window.showWarningMessage('Overwatch Script To Workshop requires dotnet core 3.1 to be installed.', 'View Download Page')
+		vscode.window.showWarningMessage('Overwatch Script To Workshop requires .Net Core 3.1 to be installed.', 'View Download Page')
 			.then(option => {
 				// View dotnet
 				if (option == 'View Download Page') vscode.env.openExternal(Uri.parse('https://dotnet.microsoft.com/download/dotnet-core/current/runtime'));
@@ -217,6 +218,7 @@ async function stopLanguageServer() {
 
 function setServerOptions(serverModule: string)
 {
+	execServerModule = serverModule;
 	// It was me, stdio!
 	let serverExecutableOptions = { stdio: "pipe", detached: false, shell: <boolean>config.get('deltintegerShell') };
 	serverOptions.run = {
@@ -229,6 +231,15 @@ function setServerOptions(serverModule: string)
 		args: ['--langserver', '--debug'],
 		options: serverExecutableOptions
 	};
+}
+
+async function pingModule(module: string): Promise<boolean> {
+	return new Promise<boolean>(resolve => {
+		exec.exec(module + ' --ping', {timeout: 10000}, (error, stdout, stderr) => {
+			if (error) resolve(false);
+			resolve(stdout == 'Hello!');
+		});
+	});
 }
 
 export function deactivate(): Thenable<void> | undefined {
@@ -329,6 +340,34 @@ function addCommands(context: ExtensionContext)
 			vscode.window.showErrorMessage(reason);
 		});
 	}, this));
+
+	context.subscriptions.push(vscode.commands.registerCommand('ostw.locateServerInstallation', async () => {
+		// Open a file picker to locate the server.
+		let openedFiles = await vscode.window.showOpenDialog({canSelectMany: false, filters: { 'Application': ['exe', 'dll'] }});
+
+		// 'opened' will be undefined if canceled.
+		if (openedFiles == undefined) return;
+
+		let opened = openedFiles[0];
+		let ext = path.extname(opened.fsPath).toLowerCase();
+		let module:string = null;
+
+		if (ext == '.dll')
+			module = getModuleCommand(opened.fsPath);
+		else if (ext == '.exe')
+			module = opened.fsPath;
+		
+		if (!await pingModule(module))
+			vscode.window.showWarningMessage('Failed to ping the Overwatch Script To Workshop server.');
+
+		await stopLanguageServer();
+		setServerOptions(module);
+		config.update('deltintegerPath', module, vscode.ConfigurationTarget.Global);
+		startLanguageServer();
+
+		// Determines if the file name is 'deltinteger'.
+		// if (opened.fsPath.split('\\').pop().split('/').pop().split('.')[0].toLowerCase() != 'deltinteger')
+	}));
 }
 
 const workshopPanelProvider = new class implements vscode.TextDocumentContentProvider {
@@ -388,8 +427,12 @@ async function IsDotnetInstalled(): Promise<boolean>
 {
 	try
 	{
-		const { stdout, stderr } = await exec('dotnet --list-runtimes');
-		return /Microsoft\.NETCore\.App 3\.[0-9]+/.test(stdout);
+		return new Promise<boolean>(resolve => {
+			exec.exec('dotnet --list-runtimes', (error, stdout, stderr) => {
+				if (error) resolve(false);
+				resolve(/Microsoft\.NETCore\.App 3\.[0-9]+/.test(stdout));
+			});
+		});
 	}
 	catch (ex)
 	{

@@ -27,6 +27,11 @@ namespace Deltin.Deltinteger
 
         static void Main(string[] args)
         {
+            if (args.ElementAtOrDefault(0) == "--ping") {
+                Console.Write("Hello!");
+                return;
+            }
+
             Program.args = args;
             CultureInfo.DefaultThreadCurrentCulture = new CultureInfo("en-US");
             ElementList.InitElements();

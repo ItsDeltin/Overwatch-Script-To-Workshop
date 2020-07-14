@@ -152,6 +152,11 @@
                 "category": "Overwatch Script To Workshop"
             },
             {
+                "command": "ostw.locateServerInstallation",
+                "title": "Locate the server installation.",
+                "category": "Overwatch Script To Workshop"
+            },
+            {
                 "command": "ostw.virtualDocumentOutput",
                 "title": "Create a panel for workshop code output.",
                 "category": "Overwatch Script To Workshop"
@@ -170,6 +175,17 @@
                 "command": "ostw.pathmapEditorCode",
                 "title": "Copy pathmap editor code.",
                 "category": "Overwatch Script To Workshop"
+            },
+            {
+                "command": "ostw.copyWorkshopCode",
+                "title": "Copies the workshop output to the clipboard.",
+                "category": "Overwatch Script To Workshop"
+            }
+        ],
+        "keybindings":[
+            {
+                "command": "ostw.copyWorkshopCode",
+                "key": "Ctrl+Alt+C"
             }
         ],
         "jsonValidation": [
