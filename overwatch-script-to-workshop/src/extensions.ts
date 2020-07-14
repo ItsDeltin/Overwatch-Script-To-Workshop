@@ -9,7 +9,6 @@ import glob = require('glob');
 import util = require('util');
 import yauzl = require("yauzl");
 const exec = util.promisify(require('child_process').exec);
-import * as dotnet from './dotnet';
 
 let globalStoragePath:string;
 let defaultServerFolder:string;
@@ -96,10 +95,8 @@ async function makeLanguageServer()
 	if (!await IsDotnetInstalled())
 	{
 		doStart = false;
-		vscode.window.showWarningMessage('Overwatch Script To Workshop requires dotnet core 3.1 to be installed.', 'Automatically Install', 'View Download Page')
+		vscode.window.showWarningMessage('Overwatch Script To Workshop requires dotnet core 3.1 to be installed.', 'View Download Page')
 			.then(option => {
-				// Install dotnet
-				if (option == 'Automatically Install') dotnet.downloadDotnet(globalStoragePath);
 				// View dotnet
 				if (option == 'View Download Page') vscode.env.openExternal(Uri.parse('https://dotnet.microsoft.com/download/dotnet-core/current/runtime'));
 			});
@@ -446,6 +443,11 @@ async function doDownload(token: vscode.CancellationToken, success, error)
 		success(null);
 		return;
 	}
+	else if (typeof data == 'string')
+    {
+        error(data);
+        return;
+    }
 
 	await yauzl.fromBuffer(data, {lazyEntries: true}, async (err, zipfile) => {
 		if (err) throw err;
@@ -530,7 +532,7 @@ export async function cancelableGet(url: string, token: vscode.CancellationToken
 	catch (cancel)
 	{
 		// Canceled.
-		return null;
+		return cancel.message;
 	}
 }
 
