@@ -95,7 +95,7 @@
                 "ostw.deltintegerPath": {
                     "scope": "machine",
                     "type": "string",
-                    "description": "The path to Deltinteger.exe."
+                    "description": "The command to run to start the OSTW server."
                 },
                 "ostw.deltintegerShell": {
                     "scope": "machine",

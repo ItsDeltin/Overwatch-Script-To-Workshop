@@ -16,15 +16,18 @@ import yauzl = require("yauzl");
 const exec = util.promisify(require('child_process').exec);
 
 let globalStoragePath:string;
+let defaultServerFolder:string;
 
 let client: LanguageClient;
 let workshopOut: OutputChannel;
 let elementCountStatus: vscode.StatusBarItem;
 let config = workspace.getConfiguration("ostw", null);
 let isServerRunning = false;
+let canBeStarted = false;
 
 export async function activate(context: ExtensionContext) {
-	globalStoragePath = context.globalStoragePath;	
+	globalStoragePath = context.globalStoragePath;
+	defaultServerFolder = path.join(globalStoragePath, 'Server');
 
 	// Shows the compiled result in an output window.
 	workshopOut = window.createOutputChannel("Workshop Code");
@@ -41,19 +44,14 @@ export async function activate(context: ExtensionContext) {
 		if (e.affectsConfiguration("ostw.deltintegerPath"))
 		{
 			config = workspace.getConfiguration("ostw", null);
-
 			lastWorkshopOutput = "";
-			if (isServerRunning) {
-				await client.stop();
-				isServerRunning = false;
-			}
-			client.start();
-			isServerRunning = true;
+			await stopLanguageServer();
+			setServerOptions(config.get('deltintegerPath'));
+			startLanguageServer();
 		}
 	});
-	makeLanguageServer(context);
-	client.start();
-	isServerRunning = true;
+
+	makeLanguageServer();
 }
 
 function setElementCount(count)
@@ -61,13 +59,52 @@ function setElementCount(count)
 	elementCountStatus.text = "Element count: " + count + " / 20000";
 }
 
-let serverOptions: ServerOptions;
-let serverExecutableOptions: ExecutableOptions;
+let serverOptions: {
+    run: Executable;
+    debug: Executable;
+} = {run: null, debug: null};
 
-function makeLanguageServer(context: ExtensionContext)
+async function makeLanguageServer()
 {
 	// Gets the path to the server executable.
-	const serverModule = <string>config.get('deltintegerPath');
+	let serverModule = <string>config.get('deltintegerPath');
+
+	// Determines if the server should be started after this call.
+	let doStart: boolean = true;
+
+	// Confirm the serverModule.
+	if (serverModule == null || serverModule == '')
+	{
+		// If serverModule is not set, locate the dll at its default location.
+		let findInstallLocation = await locateDLL(defaultServerFolder);
+		if (findInstallLocation == null) {
+			// Not found at the default location.
+			doStart = false;
+			// Ask the user if they want to install the OSTW server.
+			vscode.window.showWarningMessage('The Overwatch Script To Workshop server was not found.', 'Automatically Install Latest', 'View Releases')
+				.then(option => {
+					// Download OSTW
+					if (option == 'Automatically Install Latest') downloadOSTW();
+					// View releases
+					if (option == 'View Releases') vscode.env.openExternal(Uri.parse('https://github.com/ItsDeltin/Overwatch-Script-To-Workshop/releases'));
+				})
+		}
+		else {
+			serverModule = getModuleCommand(findInstallLocation);
+			// Was found at the default location, update config.
+			config.update('deltintegerPath', serverModule, vscode.ConfigurationTarget.Global);
+		}
+	}
+
+	// Confirm that dotnet is installed.
+	if (!await IsDotnetInstalled())
+	{
+		doStart = false;
+		vscode.window.showWarningMessage('Overwatch Script To Workshop requires dotnet core 3.1 to be installed.', 'View Download Page')
+			.then(option => {
+				if (option == 'View Download Page') vscode.env.openExternal(Uri.parse('https://dotnet.microsoft.com/download/dotnet-core/current/runtime'));
+			});
+	}
 
 	setServerOptions(serverModule);
 
@@ -82,13 +119,11 @@ function makeLanguageServer(context: ExtensionContext)
 			console.log(error);
 			return true; // hmm
 		},
-		errorHandler: new class handler implements ErrorHandler {
+		errorHandler: new class implements ErrorHandler {
 			error(error: Error, message: Message, count: number): ErrorAction {
-				console.log('error: ' + message);
-				return ErrorAction.Shutdown;
+				return ErrorAction.Continue;
 			}
 			closed(): CloseAction {
-				console.log('closed');
 				return CloseAction.DoNotRestart;
 			}
 		}
@@ -104,8 +139,6 @@ function makeLanguageServer(context: ExtensionContext)
 
 	// Start the client. This will also launch the server
 	client.onReady().then(() => {
-		isServerRunning = true;
-
 		// When the client is ready, setup the workshopCode notification.
 		client.onNotification("workshopCode", (code: string)=> {
 
@@ -133,49 +166,72 @@ function makeLanguageServer(context: ExtensionContext)
 		});
 
 		// Check version.
-		client.onNotification("version", (version: string) => {
+		client.onNotification("version", async (version: string) => {
 			// Do not show the message if the newRelease config is false.
 			if (!config.get('newRelease')) return;
 
-			// todo: update
-			// fetch('https://api.github.com/repos/ItsDeltin/Overwatch-Script-To-Workshop/releases/latest')
-			// 	.then(res => res.json())
-			// 	.then(json => {
-			// 		let latest: string = json.tag_name;
-			// 		let url: string = json.html_url;
+			// Get the latest release.
+			let latestRelease = await getLatestRelease();
+			if (latestRelease == null) return;
 
-			// 		if (version != latest && config.get('ignoreRelease') != latest)
-			// 		{
-			// 			window.showInformationMessage(
-			// 				// Message
-			// 				"A new version of Overwatch Script To Workshop (" + latest + ") is now available. (Current: " + version + ")",
-			// 				// Options
-			// 				"Ignore release", "View release"
-			// 			).then(chosenOption => {
-			// 				// Open the release.
-			// 				if (chosenOption == "View release")
-			// 					vscode.env.openExternal(Uri.parse(url));
-			// 				// Don't show again for this version.
-			// 				else if (chosenOption == "Ignore release")
-			// 					config.update('ignoreRelease', latest, vscode.ConfigurationTarget.Global);
-			// 			});
-			// 		}
-			// 	})
-			// 	.catch(error => {});
+			// Get the name and url.
+			let latest: string = latestRelease.tag_name;
+			let url: string = latestRelease.html_url;
+
+			if (version != latest && config.get('ignoreRelease') != latest)
+			{
+				window.showInformationMessage(
+					// Message
+					"A new version of Overwatch Script To Workshop (" + latest + ") is now available. (Current: " + version + ")",
+					// Options
+					"Download release", "Ignore release", "View release"
+				).then(chosenOption => {
+					// Download the release.
+					if (chosenOption == "Download release")
+						downloadOSTW();
+					// Open the release.
+					else if (chosenOption == "View release")
+						vscode.env.openExternal(Uri.parse(url));
+					// Don't show again for this version.
+					else if (chosenOption == "Ignore release")
+						config.update('ignoreRelease', latest, vscode.ConfigurationTarget.Global);
+				});
+			}
 		});
 	}).catch((reason) => {
 		workshopOut.clear();
 		workshopOut.appendLine(reason);
 	});
+
+	canBeStarted = true;
+	if (doStart) startLanguageServer();
+}
+
+function startLanguageServer() {
+	if (isServerRunning || !canBeStarted || serverOptions.run.command == null || serverOptions.run.command == '') return;
+	client.start();
+	isServerRunning = true;
+}
+
+async function stopLanguageServer() {
+	if (!isServerRunning) return;
+	await client.stop();
+	isServerRunning = false;
 }
 
 function setServerOptions(serverModule: string)
 {
 	// It was me, stdio!
-	serverExecutableOptions = { stdio: "pipe", detached: false, shell: <boolean>config.get('deltintegerShell') };
-	serverOptions = {
-		run:   { command: serverModule, args: ['--langserver']           , options: serverExecutableOptions },
-		debug: { command: serverModule, args: ['--langserver', '--debug'], options: serverExecutableOptions }
+	let serverExecutableOptions = { stdio: "pipe", detached: false, shell: <boolean>config.get('deltintegerShell') };
+	serverOptions.run = {
+		command: serverModule,
+		args: ['--langserver'],
+		options: serverExecutableOptions
+	};
+	serverOptions.debug = {
+		command: serverModule,
+		args: ['--langserver', '--debug'],
+		options: serverExecutableOptions
 	};
 }
 
@@ -372,11 +428,8 @@ async function downloadOSTW(): Promise<void>
 
 async function doDownload(token: vscode.CancellationToken, success, error)
 {
-	if (isServerRunning)
-	{
-		await client.stop();
-		isServerRunning = false;
-	}
+	// Stop the server.
+	await stopLanguageServer();
 
 	// Get the downloadable url for the ostw server.
 	const url: string = await getAssetUrl();
@@ -413,8 +466,6 @@ async function doDownload(token: vscode.CancellationToken, success, error)
 		success(null);
 	}
 
-	const folder = path.join(globalStoragePath, 'server');
-
 	await yauzl.fromBuffer(response.data, {lazyEntries: true}, async (err, zipfile) => {
 		if (err) throw err;
 		zipfile.readEntry();
@@ -433,7 +484,7 @@ async function doDownload(token: vscode.CancellationToken, success, error)
 					});
 					
 					// The path to the file.
-					let p = path.join(folder, entry.fileName);
+					let p = path.join(defaultServerFolder, entry.fileName);
 
 					// Create the directory if it does not exist.
 					ensureDirectoryExistence(p);
@@ -447,39 +498,38 @@ async function doDownload(token: vscode.CancellationToken, success, error)
 				});
 			}
 		});
-		await zipfile.once("end", () => {
+		await zipfile.once("end", async () => {
 			// Extraction done.
 			// Locate the DLL file.
-			locateDLL(folder, async (executable: string) => {
-				if (executable != null)
-				{
-					let newCommand = 'dotnet exec ' + executable;
-					setServerOptions(newCommand);
+			let executable = await locateDLL(defaultServerFolder);
+			if (executable != null)
+			{
+				let newCommand = getModuleCommand(executable);
+				setServerOptions(newCommand);
 
-					// Update config.
-					await config.update('deltintegerPath', newCommand, vscode.ConfigurationTarget.Global);
+				// Update config.
+				await config.update('deltintegerPath', newCommand, vscode.ConfigurationTarget.Global);
 
-					// If updating the config does not start the client, start it now.
-					if (!isServerRunning) {
-						client.start();
-						isServerRunning = true;
-					}
+				// If updating the config does not start the client, start it now.
+				startLanguageServer();
 
-					// Done.
-					success(newCommand);
-				}
-				else
-				{
-					error('deltinteger.dll not found within retrieved artifacts.');
-				}
-			});
+				// Done.
+				success(newCommand);
+			}
+			else
+			{
+				error('deltinteger.dll not found within retrieved artifacts.');
+			}
 		});
 	});
 }
 
+function getModuleCommand(module: string): string {
+	return 'dotnet exec ' + module;
+}
+
 // Gets the latest release's download URL.
-async function getAssetUrl(): Promise<string>
-{
+async function getAssetUrl(): Promise<string> {
 	let assets: any[] = (await getLatestRelease())?.assets;
 	if (assets == null) return null;
 
@@ -493,14 +543,11 @@ async function getAssetUrl(): Promise<string>
 }
 
 // Gets the latest release.
-async function getLatestRelease()
-{
-	try
-	{
+async function getLatestRelease() {
+	try {
 		return (await axios.get('https://api.github.com/repos/ItsDeltin/Overwatch-Script-To-Workshop/releases/latest')).data;
 	}
-	catch (ex)
-	{
+	catch (ex) {
 		return null;
 	}
 }
@@ -514,10 +561,12 @@ function ensureDirectoryExistence(filePath) {
 	fs.mkdirSync(dirname);
 }
 
-function locateDLL(root: string, callback: (filename: string) => void)
+async function locateDLL(root: string): Promise<string>
 {
-	glob('**/deltinteger.dll', {cwd: root}, (error, matches: string[]) => {
-		if (error || matches.length == 0) callback(null);
-		return callback(path.join(root, matches[0]));
-	});
+	return new Promise<string>((resolve, reject) =>
+		glob('**/deltinteger.dll', {cwd: root}, (error, matches: string[]) => {
+			if (error || matches.length == 0) resolve(null);
+			return resolve(path.join(root, matches[0]));
+		})
+	);
 }
