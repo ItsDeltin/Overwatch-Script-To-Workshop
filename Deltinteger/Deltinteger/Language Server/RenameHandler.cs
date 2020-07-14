@@ -48,6 +48,8 @@ namespace Deltin.Deltinteger.LanguageServer
 
         public override async Task<WorkspaceEdit> Handle(RenameParams request, CancellationToken cancellationToken)
         {
+            await _languageServer.DocumentHandler.WaitForCompletedTyping();
+            
             var link = RenameInfo.GetLink(_languageServer, request.TextDocument.Uri, request.Position);
             if (link == null) return new WorkspaceEdit();
 
@@ -117,6 +119,8 @@ namespace Deltin.Deltinteger.LanguageServer
         // IPrepareRename
         public async Task<RangeOrPlaceholderRange> Handle(PrepareRenameParams request, CancellationToken cancellationToken)
         {
+            await _languageServer.DocumentHandler.WaitForCompletedTyping();
+
             var link = RenameInfo.GetLink(_languageServer, request.TextDocument.Uri, request.Position);
             if (link == null) return new RangeOrPlaceholderRange(new PlaceholderRange());
 

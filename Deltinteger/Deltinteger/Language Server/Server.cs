@@ -153,9 +153,9 @@ namespace Deltin.Deltinteger.LanguageServer
             }));
 
             // semantic tokens
-            options.OnRequest<Newtonsoft.Json.Linq.JToken, SemanticTokensResult>("semanticTokens", (uriToken) => Task<SemanticTokensResult>.Run(() => 
+            options.OnRequest<Newtonsoft.Json.Linq.JToken, SemanticTokensResult>("semanticTokens", (uriToken) => Task<SemanticTokensResult>.Run(async () => 
             {
-                DocumentHandler.WaitForNextUpdate();
+                await DocumentHandler.WaitForCompletedTyping();
                 SemanticToken[] tokens = LastParse?.ScriptFromUri(new Uri(uriToken["fsPath"].ToObject<string>()))?.GetSemanticTokens();
                 return new SemanticTokensResult(tokens == null ? "wait" : "success", tokens ?? new SemanticToken[0]);
             }));

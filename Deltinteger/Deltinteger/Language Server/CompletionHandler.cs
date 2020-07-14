@@ -25,7 +25,7 @@ namespace Deltin.Deltinteger.LanguageServer
 
         public async Task<CompletionList> Handle(CompletionParams completionParams, CancellationToken token)
         {
-            _languageServer.DocumentHandler.WaitForNextUpdate();
+            await _languageServer.DocumentHandler.WaitForCompletedTyping();
 
             // If the script has not been parsed yet, return the default completion.
             if (_languageServer.LastParse == null) return new CompletionList();

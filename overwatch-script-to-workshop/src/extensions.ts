@@ -54,7 +54,6 @@ function setElementCount(count)
 	elementCountStatus.text = "Element count: " + count + " / 20000";
 }
 
-let execServerModule;
 let serverOptions: {
     run: Executable;
     debug: Executable;
@@ -218,7 +217,6 @@ async function stopLanguageServer() {
 
 function setServerOptions(serverModule: string)
 {
-	execServerModule = serverModule;
 	// It was me, stdio!
 	let serverExecutableOptions = { stdio: "pipe", detached: false, shell: <boolean>config.get('deltintegerShell') };
 	serverOptions.run = {
@@ -341,6 +339,7 @@ function addCommands(context: ExtensionContext)
 		});
 	}, this));
 
+	// Locate server installation
 	context.subscriptions.push(vscode.commands.registerCommand('ostw.locateServerInstallation', async () => {
 		// Open a file picker to locate the server.
 		let openedFiles = await vscode.window.showOpenDialog({canSelectMany: false, filters: { 'Application': ['exe', 'dll'] }});

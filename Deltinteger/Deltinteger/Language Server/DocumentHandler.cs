@@ -31,6 +31,7 @@ namespace Deltin.Deltinteger.LanguageServer
         public DocumentHandler(DeltintegerLanguageServer languageServer)
         {
             _languageServer = languageServer;
+            _typeWaitTimer = new Timer(state => Update());
         }
 
         public TextDocumentAttributes GetTextDocumentAttributes(Uri uri)
@@ -145,79 +146,102 @@ namespace Deltin.Deltinteger.LanguageServer
         Task<Unit> Parse(Uri uri) => Parse(TextDocumentFromUri(uri));
         Task<Unit> Parse(TextDocumentItem document)
         {
-            _typeWait.Restart();
-
-            lock (_parseItemLock) _parseItem = document;
-
-            if (!_updateTaskIsRunning)
+            lock (_taskCompletionLock)
             {
-                _updateTaskIsRunning = true;
-                _updateTask = Task.Run(Update);
+                lock (_nextLock) _next = new TypeUpdateQueue(document);
+                _typeWaitTimer.Change(_updateTaskIsRunning ? TimeToUpdate : 0, Timeout.Infinite);
             }
+
             return Unit.Task;
         }
 
         private const int TimeToUpdate = 250;
-        private TextDocumentItem _parseItem;
-        private object _parseItemLock = new object();
-        private Stopwatch _typeWait = new Stopwatch();
-        private object _parseLock = new object();
+        private Timer _typeWaitTimer;
         private bool _updateTaskIsRunning = false;
-        private Task<Unit> _updateTask = null;
+        private TypeUpdateQueue _next;
+        private object _taskCompletionLock = new object();
+        private object _nextLock = new object();
+        private List<TaskCompletionSource<int>> _onTypeCompleted = new List<TaskCompletionSource<int>>();
 
-        Unit Update()
+        void Update()
         {
-            SpinWait.SpinUntil(() => {
-                lock (_parseLock) return _typeWait.ElapsedMilliseconds >= TimeToUpdate;
-            });
+            lock (_taskCompletionLock) _updateTaskIsRunning = true;
 
-            lock (_parseLock)
-            {   
-                try
+            try
+            {
+                Diagnostics diagnostics = new Diagnostics();
+                ScriptFile root;
+                lock (_nextLock)
                 {
-                    Diagnostics diagnostics = new Diagnostics();
-                    ScriptFile root;
-                    lock (_parseItemLock) root = new ScriptFile(diagnostics, _parseItem.Uri, _parseItem.Text);
-                    DeltinScript deltinScript = new DeltinScript(new TranslateSettings(diagnostics, root, _languageServer.FileGetter) {
-                        OutputLanguage = _languageServer.ConfigurationHandler.OutputLanguage,
-                        OptimizeOutput = _languageServer.ConfigurationHandler.OptimizeOutput
-                    });
-                    _languageServer.LastParse = deltinScript;
-
-                    // Publish the diagnostics.
-                    var publishDiagnostics = diagnostics.GetDiagnostics();
-                    foreach (var publish in publishDiagnostics)
-                        _languageServer.Server.Document.PublishDiagnostics(publish);
-                    
-                    if (deltinScript.WorkshopCode != null)
-                    {
-                        _languageServer.Server.SendNotification(DeltintegerLanguageServer.SendWorkshopCode, deltinScript.WorkshopCode);
-                        _languageServer.Server.SendNotification(DeltintegerLanguageServer.SendElementCount, deltinScript.ElementCount.ToString());
-                    }
-                    else
-                    {
-                        _languageServer.Server.SendNotification(DeltintegerLanguageServer.SendWorkshopCode, diagnostics.OutputDiagnostics());
-                        _languageServer.Server.SendNotification(DeltintegerLanguageServer.SendElementCount, "-");
-                    }
+                    root = new ScriptFile(diagnostics, _next.ParseItem.Uri, _next.ParseItem.Text);
+                    _next = null;
                 }
-                catch (Exception ex)
+                DeltinScript deltinScript = new DeltinScript(new TranslateSettings(diagnostics, root, _languageServer.FileGetter) {
+                    OutputLanguage = _languageServer.ConfigurationHandler.OutputLanguage,
+                    OptimizeOutput = _languageServer.ConfigurationHandler.OptimizeOutput
+                });
+                _languageServer.LastParse = deltinScript;
+
+                // Publish the diagnostics.
+                var publishDiagnostics = diagnostics.GetDiagnostics();
+                foreach (var publish in publishDiagnostics)
+                    _languageServer.Server.Document.PublishDiagnostics(publish);
+                
+                if (deltinScript.WorkshopCode != null)
                 {
-                    Serilog.Log.Error(ex, "An exception was thrown while parsing.");
-                    _languageServer.Server.SendNotification(DeltintegerLanguageServer.SendWorkshopCode, "An exception was thrown while parsing.\r\n" + ex.ToString());
+                    _languageServer.Server.SendNotification(DeltintegerLanguageServer.SendWorkshopCode, deltinScript.WorkshopCode);
+                    _languageServer.Server.SendNotification(DeltintegerLanguageServer.SendElementCount, deltinScript.ElementCount.ToString());
+                }
+                else
+                {
+                    _languageServer.Server.SendNotification(DeltintegerLanguageServer.SendWorkshopCode, diagnostics.OutputDiagnostics());
                     _languageServer.Server.SendNotification(DeltintegerLanguageServer.SendElementCount, "-");
                 }
-                finally
+            }
+            catch (Exception ex)
+            {
+                Serilog.Log.Error(ex, "An exception was thrown while parsing.");
+                _languageServer.Server.SendNotification(DeltintegerLanguageServer.SendWorkshopCode, "An exception was thrown while parsing.\r\n" + ex.ToString());
+                _languageServer.Server.SendNotification(DeltintegerLanguageServer.SendElementCount, "-");
+            }
+            finally
+            {
+                // Activate those waiting for the typing to complete
+                lock (_taskCompletionLock)
                 {
+                    if (_next == null)
+                        while (_onTypeCompleted.Count > 0)
+                        {
+                            _onTypeCompleted[0].SetResult(0);
+                            _onTypeCompleted.RemoveAt(0);
+                        }
                     _updateTaskIsRunning = false;
-                    _typeWait.Stop();
                 }
-                return Unit.Value;
             }
         }
 
-        public void WaitForNextUpdate()
+        public async Task WaitForCompletedTyping()
         {
-            SpinWait.SpinUntil(() => { lock(_parseLock) return !_updateTaskIsRunning; });
+            var promise = new TaskCompletionSource<int>();
+
+            lock (_taskCompletionLock)
+            {
+                lock (_nextLock)
+                    if (_next == null) promise.SetResult(0);
+                    else _onTypeCompleted.Add(promise);
+            }
+
+            Task completedTask = await Task.WhenAny(promise.Task, Task.Delay(10000));
+            await completedTask;
+        }
+    }
+
+    class TypeUpdateQueue
+    {
+        public TextDocumentItem ParseItem { get; }
+        public TypeUpdateQueue(TextDocumentItem parseItem)
+        {
+            ParseItem = parseItem;
         }
     }
 }

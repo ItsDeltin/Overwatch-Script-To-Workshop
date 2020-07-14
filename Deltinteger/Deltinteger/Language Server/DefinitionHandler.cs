@@ -24,6 +24,8 @@ namespace Deltin.Deltinteger.LanguageServer
 
         public async Task<LocationOrLocationLinks> Handle(DefinitionParams definitionParams, CancellationToken token)
         {
+            await _languageServer.DocumentHandler.WaitForCompletedTyping();
+
             var links = _languageServer.LastParse?.ScriptFromUri(definitionParams.TextDocument.Uri)?.GetDefinitionLinks();
             if (links == null) return new LocationOrLocationLinks();
 

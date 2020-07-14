@@ -21,7 +21,7 @@ namespace Deltin.Deltinteger.LanguageServer
 
         public async Task<SignatureHelp> Handle(SignatureHelpParams signatureHelpParams, CancellationToken token)
         {
-            _languageServer.DocumentHandler.WaitForNextUpdate();
+            await _languageServer.DocumentHandler.WaitForCompletedTyping();
 
             var def = new SignatureHelp();
             if (_languageServer.LastParse == null) return def;

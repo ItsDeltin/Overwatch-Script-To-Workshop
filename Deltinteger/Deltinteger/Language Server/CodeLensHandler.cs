@@ -20,7 +20,7 @@ namespace Deltin.Deltinteger.LanguageServer
 
         public async Task<CodeLensContainer> Handle(CodeLensParams request, CancellationToken cancellationToken)
         {
-            _languageServer.DocumentHandler.WaitForNextUpdate();
+            await _languageServer.DocumentHandler.WaitForCompletedTyping();
 
             var codeLenses = _languageServer.LastParse?.ScriptFromUri(request.TextDocument.Uri)?.GetCodeLensRanges();
             if (codeLenses == null) return new CodeLensContainer();
