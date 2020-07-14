@@ -1,8 +1,3 @@
-/* --------------------------------------------------------------------------------------------
- * Copyright (c) Microsoft Corporation. All rights reserved.
- * Licensed under the MIT License. See License.txt in the project root for license information.
- * ------------------------------------------------------------------------------------------ */
-
 import * as vscode from 'vscode';
 import { workspace, ExtensionContext, OutputChannel, window, Uri, Position, Location, StatusBarItem } from 'vscode';
 import { LanguageClient, LanguageClientOptions, ServerOptions, ExecutableOptions, Executable, TransportKind, InitializationFailedHandler, ErrorHandler, TextDocument, RequestType, Position as LSPosition, Location as LSLocation, Range as LSRange, ErrorAction, Message, CloseAction } from 'vscode-languageclient';
@@ -14,6 +9,7 @@ import glob = require('glob');
 import util = require('util');
 import yauzl = require("yauzl");
 const exec = util.promisify(require('child_process').exec);
+import * as dotnet from './dotnet';
 
 let globalStoragePath:string;
 let defaultServerFolder:string;
@@ -100,8 +96,11 @@ async function makeLanguageServer()
 	if (!await IsDotnetInstalled())
 	{
 		doStart = false;
-		vscode.window.showWarningMessage('Overwatch Script To Workshop requires dotnet core 3.1 to be installed.', 'View Download Page')
+		vscode.window.showWarningMessage('Overwatch Script To Workshop requires dotnet core 3.1 to be installed.', 'Automatically Install', 'View Download Page')
 			.then(option => {
+				// Install dotnet
+				if (option == 'Automatically Install') dotnet.downloadDotnet(globalStoragePath);
+				// View dotnet
 				if (option == 'View Download Page') vscode.env.openExternal(Uri.parse('https://dotnet.microsoft.com/download/dotnet-core/current/runtime'));
 			});
 	}
@@ -441,33 +440,14 @@ async function doDownload(token: vscode.CancellationToken, success, error)
 		return;
 	}
 
-	// Set up the cancel token.
-	const CancelToken = axios.CancelToken;
-	let source = CancelToken.source();
-
-	// When the progress bar is canceled, cancel the axios request.
-	token.onCancellationRequested(e => {
-		source.cancel(e);
-	}, this);
-
-	// Download the file.
-	let response: any;
-
-	try
+	let data = await cancelableGet(url, token);
+	if (data == null)
 	{
-		response = await axios.get(url, {
-			responseType: 'arraybuffer',
-			cancelToken: source.token
-		});
-	}
-	catch (cancel)
-	{
-		// Canceled.
 		success(null);
 		return;
 	}
 
-	await yauzl.fromBuffer(response.data, {lazyEntries: true}, async (err, zipfile) => {
+	await yauzl.fromBuffer(data, {lazyEntries: true}, async (err, zipfile) => {
 		if (err) throw err;
 		zipfile.readEntry();
 		zipfile.on("entry", function(entry) {
@@ -523,6 +503,35 @@ async function doDownload(token: vscode.CancellationToken, success, error)
 			}
 		});
 	});
+}
+
+export async function cancelableGet(url: string, token: vscode.CancellationToken)
+{
+	// Set up the cancel token.
+	const CancelToken = axios.CancelToken;
+	let source = CancelToken.source();
+
+	// When the progress bar is canceled, cancel the axios request.
+	token.onCancellationRequested(e => {
+		source.cancel(e);
+	}, this);
+
+	// Download the file.
+	let response: any;
+
+	try
+	{
+		response = await axios.get(url, {
+			responseType: 'arraybuffer',
+			cancelToken: source.token
+		});
+		return response.data;
+	}
+	catch (cancel)
+	{
+		// Canceled.
+		return null;
+	}
 }
 
 function getModuleCommand(module: string): string {
