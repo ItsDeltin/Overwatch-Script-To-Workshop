@@ -464,6 +464,7 @@ async function doDownload(token: vscode.CancellationToken, success, error)
 	{
 		// Canceled.
 		success(null);
+		return;
 	}
 
 	await yauzl.fromBuffer(response.data, {lazyEntries: true}, async (err, zipfile) => {
