@@ -395,12 +395,11 @@ const selector = { language: 'ostw', scheme: 'file' }; // register for all Java 
 
 const provider: vscode.DocumentSemanticTokensProvider = {
 	async provideDocumentSemanticTokens(document: vscode.TextDocument) {
+		// Wait for the server to be ready.
+		if (!await waitForServer()) return null;
 
 		// Get the semantic tokens in the provided document from the language server.
-		let tokens: {range: LSRange, tokenType:string, modifiers:string[]}[];
-		let count: number = 0;
-
-		tokens = await client.sendRequest('semanticTokens', document.uri);
+		let tokens: {range: LSRange, tokenType:string, modifiers:string[]}[] = await client.sendRequest('semanticTokens', document.uri);
 
 		// Create the builder.
 		let builder:vscode.SemanticTokensBuilder = new vscode.SemanticTokensBuilder(legend);
@@ -414,6 +413,21 @@ const provider: vscode.DocumentSemanticTokensProvider = {
 		return builder.build();
 	}
 };
+
+async function waitForServer(): Promise<boolean>
+{
+	if (isServerRunning) return true;
+	return new Promise(resolve =>
+		{
+			onServerReady.event(() => {
+				resolve(true);
+			}, this);
+			setTimeout(() => {
+				resolve(false);
+			}, 10000);
+		}
+	);
+}
 
 async function IsDotnetInstalled(): Promise<boolean>
 {
