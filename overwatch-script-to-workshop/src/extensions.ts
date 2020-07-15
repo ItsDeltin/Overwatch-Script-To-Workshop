@@ -477,7 +477,7 @@ async function doDownload(token: vscode.CancellationToken, success, error)
 	await stopLanguageServer();
 
 	// Get the downloadable url for the ostw server.
-	const url: string = await getAssetUrl();
+	const url: string = await getAssetUrl(token);
 
 	if (url == null)
 	{
@@ -600,17 +600,27 @@ function getModuleCommand(module: string): string {
 }
 
 // Gets the latest release's download URL.
-async function getAssetUrl(): Promise<string> {
+async function getAssetUrl(token: vscode.CancellationToken): Promise<string> {
 	let assets: any[] = (await getLatestRelease())?.assets;
 	if (assets == null) return null;
+
+	let names:string[] = [];
+	let urls:string[] = [];
 
 	for (const asset of assets) {
 		if (path.extname(asset.name) != '.zip') continue;
 		// TODO: more matches
-		return asset.browser_download_url;
+
+		names.push(asset.name);
+		urls.push(asset.browser_download_url);
 	}
 
-	return null;
+	if (urls.length == 0) return null;
+	if (urls.length == 1) return urls[0];
+
+	let selected:string = await vscode.window.showQuickPick(names, {canPickMany: false, placeHolder: 'Download release', ignoreFocusOut: true}, token);
+	if (selected == undefined) return null;
+	return urls[names.indexOf(selected)];
 }
 
 // Gets the latest release.
