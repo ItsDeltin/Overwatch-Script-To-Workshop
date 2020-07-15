@@ -176,7 +176,7 @@ repository:
   
   # Function and macro declaration
   declare-function:
-    begin: '{{attribute-list}}{{type}}\s*{{part}}\s*(?=\(|:)'
+    begin: '{{attribute-list}}{{type}}?\s*{{part}}\s*(?=\(|:)'
     end: '{{encapsulated-block-end}}'
     beginCaptures:
       1:
@@ -276,6 +276,9 @@ repository:
     patterns:
       - include: '#comment'
       - include: '#parameter-declaration'
+      - include: '#expression'
+      - match: '='
+        name: '{{assignment}}'
     
   parameter-declaration:
     match: '(ref\s+)?{{type}}\s*{{part}}'

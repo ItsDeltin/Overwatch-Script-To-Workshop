@@ -229,7 +229,7 @@
       }
     },
     "declare-function": {
-      "begin": "(((public|private|protected|virtual|override|abstract|static)\\b\\s*)*)(?<set-type>([_[:alnum:]]+)\\b\\s*(<\\s*(\\s*,?\\s*\\g<set-type>\\s*)*>)?\\s*(\\[\\s*\\])*)\\s*([_[:alnum:]]+)\\s*(?=\\(|:)",
+      "begin": "(((public|private|protected|virtual|override|abstract|static)\\b\\s*)*)(?<set-type>([_[:alnum:]]+)\\b\\s*(<\\s*(\\s*,?\\s*\\g<set-type>\\s*)*>)?\\s*(\\[\\s*\\])*)?\\s*([_[:alnum:]]+)\\s*(?=\\(|:)",
       "end": "(?<=})|(?<=;)",
       "beginCaptures": {
         "1": {
@@ -404,6 +404,13 @@
         },
         {
           "include": "#parameter-declaration"
+        },
+        {
+          "include": "#expression"
+        },
+        {
+          "match": "=",
+          "name": "keyword.operator.assignment.ostw"
         }
       ]
     },
