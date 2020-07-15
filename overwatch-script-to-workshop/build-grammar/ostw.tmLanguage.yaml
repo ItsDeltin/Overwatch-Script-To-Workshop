@@ -547,6 +547,12 @@ repository:
       # null
       - match: \bnull\b
         name: constant.language.null
+      # root
+      - match: \broot\b
+        name: constant.language.root
+      # this
+      - match: \bthis\b
+        name: keyword.other.this
       # 'variable' can match a bunch of things easily, so match it last.
       - include: '#variable'
       # Lambda block

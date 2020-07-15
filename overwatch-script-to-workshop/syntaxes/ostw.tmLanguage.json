@@ -806,6 +806,14 @@
           "name": "constant.language.null"
         },
         {
+          "match": "\\broot\\b",
+          "name": "constant.language.root"
+        },
+        {
+          "match": "\\bthis\\b",
+          "name": "keyword.other.this"
+        },
+        {
           "include": "#variable"
         },
         {

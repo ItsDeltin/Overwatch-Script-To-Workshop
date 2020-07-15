@@ -64,20 +64,6 @@ function setVariables(value:string):string
         }
         return setVariables(replace);
     });
-    // Match variables {{variable-name}}  
-    // var regex = /{{.*?}}/g
-    // let matches:RegExpExecArray = regex.exec(value);
-
-    // matches.forEach(match => {
-    // });
-
-    // return '';
 }
 
 makeTmLanuage();
-
-class tmVariable
-{
-    name:string;
-    value:string;
-}
