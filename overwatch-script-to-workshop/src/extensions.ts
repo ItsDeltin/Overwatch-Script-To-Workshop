@@ -1,12 +1,11 @@
 import * as vscode from 'vscode';
 import { workspace, ExtensionContext, OutputChannel, window, Uri, Position, Location, StatusBarItem } from 'vscode';
-import { LanguageClient, LanguageClientOptions, ServerOptions, ExecutableOptions, Executable, TransportKind, InitializationFailedHandler, ErrorHandler, TextDocument, RequestType, Position as LSPosition, Location as LSLocation, Range as LSRange, ErrorAction, Message, CloseAction } from 'vscode-languageclient';
+import { LanguageClient, LanguageClientOptions, ServerOptions, ExecutableOptions, Executable, TransportKind, InitializationFailedHandler, ErrorHandler, TextDocument, RequestType, Position as LSPosition, Location as LSLocation, Range as LSRange, ErrorAction, Message, CloseAction, Disposable } from 'vscode-languageclient';
 import { setTimeout } from 'timers';
 import axios from 'axios';
 import fs = require('fs');
 import path = require('path');
 import glob = require('glob');
-import util = require('util');
 import yauzl = require("yauzl");
 import exec = require('child_process');
 
@@ -14,10 +13,12 @@ let globalStoragePath:string;
 let defaultServerFolder:string;
 
 let client: LanguageClient;
+let idk: Disposable;
 let workshopOut: OutputChannel;
 let elementCountStatus: vscode.StatusBarItem;
 let config = workspace.getConfiguration("ostw", null);
 let isServerRunning = false;
+let isServerReady = false;
 let canBeStarted = false;
 
 export async function activate(context: ExtensionContext) {
@@ -91,18 +92,32 @@ async function makeLanguageServer()
 		}
 	}
 
+	// Update the server options.
+	setServerOptions(serverModule);
+
 	// Confirm that dotnet is installed.
 	if (!await IsDotnetInstalled())
 	{
 		doStart = false;
+		canBeStarted = false;
 		vscode.window.showWarningMessage('Overwatch Script To Workshop requires .Net Core 3.1 to be installed.', 'View Download Page')
 			.then(option => {
 				// View dotnet
 				if (option == 'View Download Page') vscode.env.openExternal(Uri.parse('https://dotnet.microsoft.com/download/dotnet-core/current/runtime'));
 			});
 	}
+	else
+	{
+		canBeStarted = true;
+		if (doStart) startLanguageServer();
+	}
+}
 
-	setServerOptions(serverModule);
+let onServerReady = new vscode.EventEmitter();
+
+function startLanguageServer() {
+	// If the server is running, or the server cannot be started, or the command server option is invalid, return.
+	if (isServerRunning || !canBeStarted || serverOptions.run.command == null || serverOptions.run.command == '') return;
 
 	// Options to control the language client
 	const clientOptions: LanguageClientOptions = {
@@ -133,85 +148,84 @@ async function makeLanguageServer()
 		clientOptions
 	);
 
-	// Start the client. This will also launch the server
 	client.onReady().then(() => {
-		// When the client is ready, setup the workshopCode notification.
-		client.onNotification("workshopCode", (code: string)=> {
-
-			if (!registeredProvider && config.get<boolean>('semanticHighlighting'))
-			{
-				vscode.languages.registerDocumentSemanticTokensProvider(selector, provider, legend);
-				registeredProvider = true;
-			}
-
-			if (code != lastWorkshopOutput)
-			{
-				lastWorkshopOutput = code;
-				workshopPanelProvider.onDidChangeEmitter.fire(vscode.Uri.parse('ow_ostw:Workshop Output.ow'));
-
-				// Clear the output
-				workshopOut.clear();
-				// Append the compiled result.
-				workshopOut.appendLine(code);
-			}
-		});
-
-		// Update element count in window.
-		client.onNotification("elementCount", (count: string) => {
-			setElementCount(count);
-		});
-
-		// Check version.
-		client.onNotification("version", async (version: string) => {
-			// Do not show the message if the newRelease config is false.
-			if (!config.get('newRelease')) return;
-
-			// Get the latest release.
-			let latestRelease = await getLatestRelease();
-			if (latestRelease == null) return;
-
-			// Get the name and url.
-			let latest: string = latestRelease.tag_name;
-			let url: string = latestRelease.html_url;
-
-			if (version != latest && config.get('ignoreRelease') != latest)
-			{
-				window.showInformationMessage(
-					// Message
-					"A new version of Overwatch Script To Workshop (" + latest + ") is now available. (Current: " + version + ")",
-					// Options
-					"Download release", "Ignore release", "View release"
-				).then(chosenOption => {
-					// Download the release.
-					if (chosenOption == "Download release")
-						downloadOSTW();
-					// Open the release.
-					else if (chosenOption == "View release")
-						vscode.env.openExternal(Uri.parse(url));
-					// Don't show again for this version.
-					else if (chosenOption == "Ignore release")
-						config.update('ignoreRelease', latest, vscode.ConfigurationTarget.Global);
-				});
-			}
-		});
-	}).catch((reason) => {
-		workshopOut.clear();
-		workshopOut.appendLine(reason);
+		weAreReady();
 	});
-
-	canBeStarted = true;
-	if (doStart) startLanguageServer();
+	idk = client.start();
+	isServerRunning = true;
 }
 
-function startLanguageServer() {
-	if (isServerRunning || !canBeStarted || serverOptions.run.command == null || serverOptions.run.command == '') return;
-	client.start();
-	isServerRunning = true;
+function weAreReady()
+{
+	isServerReady = true;
+	onServerReady.fire(null);
+
+	// When the client is ready, setup the workshopCode notification.
+	client.onNotification("workshopCode", (code: string)=> {
+
+		if (!registeredProvider && config.get<boolean>('semanticHighlighting'))
+		{
+			vscode.languages.registerDocumentSemanticTokensProvider(selector, provider, legend);
+			registeredProvider = true;
+		}
+
+		if (code != lastWorkshopOutput)
+		{
+			lastWorkshopOutput = code;
+			workshopPanelProvider.onDidChangeEmitter.fire(vscode.Uri.parse('ow_ostw:Workshop Output.ow'));
+
+			// Clear the output
+			workshopOut.clear();
+			// Append the compiled result.
+			workshopOut.appendLine(code);
+		}
+	});
+
+	// Update element count in window.
+	client.onNotification("elementCount", (count: string) => {
+		setElementCount(count);
+	});
+
+	// Check version.
+	client.onNotification("version", async (version: string) => {
+		// Do not show the message if the newRelease config is false.
+		if (!config.get('newRelease')) return;
+
+		// Get the latest release.
+		let latestRelease = await getLatestRelease();
+		if (latestRelease == null) return;
+
+		// Get the name and url.
+		let latest: string = latestRelease.tag_name;
+		let url: string = latestRelease.html_url;
+
+		if (version != latest && config.get('ignoreRelease') != latest)
+		{
+			window.showInformationMessage(
+				// Message
+				"A new version of Overwatch Script To Workshop (" + latest + ") is now available. (Current: " + version + ")",
+				// Options
+				"Download release", "Ignore release", "View release"
+			).then(chosenOption => {
+				// Download the release.
+				if (chosenOption == "Download release")
+					downloadOSTW();
+				// Open the release.
+				else if (chosenOption == "View release")
+					vscode.env.openExternal(Uri.parse(url));
+				// Don't show again for this version.
+				else if (chosenOption == "Ignore release")
+					config.update('ignoreRelease', latest, vscode.ConfigurationTarget.Global);
+			});
+		}
+	});
 }
 
 async function stopLanguageServer() {
 	if (!isServerRunning) return;
+	isServerReady = false;
 	await client.stop();
+	idk.dispose();
 	isServerRunning = false;
 }
 
@@ -416,7 +430,7 @@ const provider: vscode.DocumentSemanticTokensProvider = {
 
 async function waitForServer(): Promise<boolean>
 {
-	if (isServerRunning) return true;
+	if (isServerReady) return true;
 	return new Promise(resolve =>
 		{
 			onServerReady.event(() => {
@@ -609,7 +623,6 @@ async function getAssetUrl(token: vscode.CancellationToken): Promise<string> {
 
 	for (const asset of assets) {
 		if (path.extname(asset.name) != '.zip') continue;
-		// TODO: more matches
 
 		names.push(asset.name);
 		urls.push(asset.browser_download_url);
