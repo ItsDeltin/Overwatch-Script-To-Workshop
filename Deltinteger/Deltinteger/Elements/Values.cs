@@ -1941,4 +1941,83 @@ namespace Deltin.Deltinteger.Elements
     [ElementData("Hero Being Duplicated", ValueType.Hero)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     public class V_HeroBeingDuplicated : Element {}
+
+    [ElementData("Ammo", ValueType.Number)]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [Parameter("Clip", ValueType.Number, typeof(V_Number))]
+    public class V_Ammo : Element {}
+
+    [ElementData("Max Ammo", ValueType.Number)]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [Parameter("Clip", ValueType.Number, typeof(V_Number))]
+    public class V_MaxAmmo : Element {}
+
+    [ElementData("Weapon", ValueType.Number)]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    public class V_Weapon : Element {}
+
+    [ElementData("Is Reloading", ValueType.Boolean)]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    public class V_IsReloading : Element {}
+
+    [ElementData("Event Was Environment", ValueType.Boolean)]
+    [Restricted(RestrictedCallType.Attacker)]
+    public class V_EventWasEnvironment : Element {}
+
+    [ElementData("Current Array Index", ValueType.Number)]
+    public class V_CurrentArrayIndex : Element {}
+
+    [ElementData("Input Binding String", ValueType.String)]
+    [Parameter("Button", ValueType.Button, typeof(V_ButtonValue))]
+    public class V_InputBindingString : Element {}
+
+    [ElementData("Ability Charge", ValueType.Number)]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [Parameter("Button", ValueType.Button, typeof(V_ButtonValue))]
+    public class V_AbilityCharge : Element {}
+
+    [ElementData("Ability Resource", ValueType.Number)]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [Parameter("Button", ValueType.Button, typeof(V_ButtonValue))]
+    public class V_AbilityResource : Element {}
+
+    [ElementData("Mapped Array", ValueType.Number)]
+    [Parameter("Array", ValueType.Any, typeof(V_AllPlayers))]
+    [Parameter("Mapping Expression", ValueType.Any, typeof(V_ArrayElement))]
+    public class V_MappedArray : Element {}
+
+    [ElementData("Workshop Setting Integer", ValueType.Number)]
+    [Parameter("Category", ValueType.String, null)]
+    [Parameter("Name", ValueType.String, null)]
+    [Parameter("Default", ValueType.Number, null)]
+    [Parameter("Min", ValueType.Number, null)]
+    [Parameter("Max", ValueType.Number, null)]
+    public class V_WorkshopSettingInteger : Element {}
+
+    [ElementData("Workshop Setting Real", ValueType.Number)]
+    [Parameter("Category", ValueType.String, null)]
+    [Parameter("Name", ValueType.String, null)]
+    [Parameter("Default", ValueType.Number, null)]
+    [Parameter("Min", ValueType.Number, null)]
+    [Parameter("Max", ValueType.Number, null)]
+    public class V_WorkshopSettingReal : Element {}
+
+    [ElementData("Workshop Setting Toggle", ValueType.Boolean)]
+    [Parameter("Category", ValueType.String, null)]
+    [Parameter("Name", ValueType.String, null)]
+    [Parameter("Default", ValueType.Boolean, null)]
+    public class V_WorkshopSettingToggle : Element {}
+
+    [ElementData("Last Created Health Pool", ValueType.Any)]
+    public class V_LastCreatedHealthPool : Element {}
+
+    [ElementData("Health Of Type", ValueType.Number)]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [EnumParameter("Health Type", typeof(HealthType))]
+    public class V_HealthOfType : Element {}
+
+    [ElementData("Max Health Of Type", ValueType.Number)]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [EnumParameter("Health Type", typeof(HealthType))]
+    public class V_MaxHealthOfType : Element {}
 }
