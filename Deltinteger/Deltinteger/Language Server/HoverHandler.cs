@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using Deltin.Deltinteger.Parse;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 
-using IHoverHandler = OmniSharp.Extensions.LanguageServer.Protocol.Server.IHoverHandler;
+using IHoverHandler = OmniSharp.Extensions.LanguageServer.Protocol.Document.IHoverHandler;
 using HoverCapability = OmniSharp.Extensions.LanguageServer.Protocol.Client.Capabilities.HoverCapability;
 
 namespace Deltin.Deltinteger.LanguageServer
@@ -31,7 +31,7 @@ namespace Deltin.Deltinteger.LanguageServer
         {
             await _languageServer.DocumentHandler.WaitForCompletedTyping();
             
-            var hoverRanges = _languageServer.LastParse?.ScriptFromUri(request.TextDocument.Uri)?.GetHoverRanges();
+            var hoverRanges = _languageServer.LastParse?.ScriptFromUri(request.TextDocument.Uri.ToUri())?.GetHoverRanges();
             if (hoverRanges == null || hoverRanges.Length == 0) return new Hover();
 
             HoverRange chosen = hoverRanges

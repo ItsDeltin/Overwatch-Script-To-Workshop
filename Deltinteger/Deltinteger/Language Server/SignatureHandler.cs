@@ -5,7 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Deltin.Deltinteger.Parse;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
-using ISignatureHelpHandler = OmniSharp.Extensions.LanguageServer.Protocol.Server.ISignatureHelpHandler;
+using ISignatureHelpHandler = OmniSharp.Extensions.LanguageServer.Protocol.Document.ISignatureHelpHandler;
 using SignatureHelpCapability = OmniSharp.Extensions.LanguageServer.Protocol.Client.Capabilities.SignatureHelpCapability;
 
 namespace Deltin.Deltinteger.LanguageServer
@@ -26,7 +26,7 @@ namespace Deltin.Deltinteger.LanguageServer
             var def = new SignatureHelp();
             if (_languageServer.LastParse == null) return def;
 
-            var script = _languageServer.LastParse.ScriptFromUri(signatureHelpParams.TextDocument.Uri);
+            var script = _languageServer.LastParse.ScriptFromUri(signatureHelpParams.TextDocument.Uri.ToUri());
             if (script == null) return def;
 
             // Get all signatures in the file.

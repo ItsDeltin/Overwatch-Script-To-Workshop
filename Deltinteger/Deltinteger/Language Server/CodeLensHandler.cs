@@ -4,7 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Deltin.Deltinteger.Parse;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
-using ICodeLensHandler = OmniSharp.Extensions.LanguageServer.Protocol.Server.ICodeLensHandler;
+using ICodeLensHandler = OmniSharp.Extensions.LanguageServer.Protocol.Document.ICodeLensHandler;
 using CodeLensCapability = OmniSharp.Extensions.LanguageServer.Protocol.Client.Capabilities.CodeLensCapability;
 
 namespace Deltin.Deltinteger.LanguageServer
@@ -22,7 +22,7 @@ namespace Deltin.Deltinteger.LanguageServer
         {
             await _languageServer.DocumentHandler.WaitForCompletedTyping(true);
 
-            var codeLenses = _languageServer.LastParse?.ScriptFromUri(request.TextDocument.Uri)?.GetCodeLensRanges();
+            var codeLenses = _languageServer.LastParse?.ScriptFromUri(request.TextDocument.Uri.ToUri())?.GetCodeLensRanges();
             if (codeLenses == null) return new CodeLensContainer();
 
             List<CodeLens> finalLenses = new List<CodeLens>();
