@@ -491,10 +491,20 @@ async function doDownload(token: vscode.CancellationToken, success, error)
 		return;
 	}
 	else if (typeof data == 'string')
-    {
-        error(data);
-        return;
-    }
+	{
+		error(data);
+		return;
+	}
+
+	// Send previous installation to the trash.
+	if (fs.existsSync(defaultServerFolder)) {
+		try {
+			await vscode.workspace.fs.delete(Uri.parse('file:///' + defaultServerFolder, true), {recursive: true, useTrash: true});
+		}
+		catch (ex) {
+			window.showWarningMessage('Failed to delete previous server installation: ' + ex);
+		}
+	}
 
 	await yauzl.fromBuffer(data, {lazyEntries: true}, async (err, zipfile) => {
 		if (err) throw err;
