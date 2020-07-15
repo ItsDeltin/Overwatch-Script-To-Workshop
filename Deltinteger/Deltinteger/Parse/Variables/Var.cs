@@ -28,6 +28,7 @@ namespace Deltin.Deltinteger.Parse
         public Lambda.IBridgeInvocable BridgeInvocable { get; }
         private readonly TokenType _tokenType;
         private readonly TokenModifier[] _tokenModifiers;
+        private readonly bool _handleRestrictedCalls;
 
         public bool WasCalled { get; private set; }
 
@@ -63,6 +64,7 @@ namespace Deltin.Deltinteger.Parse
             BridgeInvocable = varInfo.BridgeInvocable;
             _tokenType = varInfo.TokenType;
             _tokenModifiers = varInfo.TokenModifiers.ToArray();
+            _handleRestrictedCalls = varInfo.HandleRestrictedCalls;
             _initalValueContext = varInfo.InitialValueContext;
             _initialValueResolve = varInfo.InitialValueResolve;
             _operationalScope = varInfo.OperationalScope;
@@ -95,9 +97,29 @@ namespace Deltin.Deltinteger.Parse
             // Get the initial value.
             if (_initalValueContext != null)
             {
+                ParseInfo parseInfo = this.parseInfo;
+
+                // Store the initial value's restricted calls.
+                RestrictedCallList restrictedCalls = null;
+                if (_handleRestrictedCalls)
+                {
+                    restrictedCalls = new RestrictedCallList();
+                    parseInfo = parseInfo.SetRestrictedCallHandler(restrictedCalls);
+                }
+
+                // Parse the initial value.
                 InitialValue = parseInfo.GetExpression(_operationalScope, _initalValueContext);
                 if (InitialValue?.Type() != null && InitialValue.Type().IsConstant() && !InitialValue.Type().Implements(CodeType))
                     parseInfo.Script.Diagnostics.Error($"The type '{InitialValue.Type().Name}' cannot be stored.", DocRange.GetRange(_initalValueContext));
+                
+                // Check restricted calls.
+                if (_handleRestrictedCalls)
+                    foreach (RestrictedCall call in restrictedCalls)
+                        // If the variable type is global, or the variable type is player and the restricted call type is not player...
+                        if (VariableType == VariableType.Global ||
+                            (VariableType == VariableType.Player && call.CallType != RestrictedCallType.EventPlayer))
+                            // ... then add the error.
+                            parseInfo.Script.Diagnostics.Error(call.Message, call.CallRange.range);
             }
         }
 
@@ -185,6 +207,7 @@ namespace Deltin.Deltinteger.Parse
         public bool Recursive;
         public TokenType TokenType = TokenType.Variable;
         public List<TokenModifier> TokenModifiers = new List<TokenModifier>();
+        public bool HandleRestrictedCalls;
         public CodeLensSourceType CodeLensType = CodeLensSourceType.Variable;
         public Lambda.IBridgeInvocable BridgeInvocable;
 

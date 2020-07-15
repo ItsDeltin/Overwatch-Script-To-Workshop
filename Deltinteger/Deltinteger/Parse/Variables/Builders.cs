@@ -33,6 +33,7 @@ namespace Deltin.Deltinteger.Parse
             _varInfo.AccessLevel = AccessLevel.Public; // Set the access level.
             _varInfo.InitialValueResolve = InitialValueResolve.ApplyBlock; // Get the inital value after elements have been resolved.
             _varInfo.CodeLensType = CodeLensSourceType.RuleVariable; // Set the code lens type.
+            _varInfo.HandleRestrictedCalls = true; // Handle restricted calls.
         }
     }
 

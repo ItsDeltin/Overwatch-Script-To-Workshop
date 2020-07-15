@@ -43,8 +43,6 @@ namespace Deltin.Deltinteger.Parse
             if (check == null) check = new List<IRecursiveCallHandler>();
             if (currentCheck.CallInfo == null) return false;
 
-            // if (function is DefinedMethod dm && currentCheck is IMethod asMethod && (dm == asMethod || asMethod.Attributes.AllOverrideOptions().Contains(dm)))
-            //     return !asMethod.Attributes.Recursive;
             if (function.DoesRecursivelyCall(currentCheck))
                 return !currentCheck.CanBeRecursivelyCalled();
 
@@ -109,5 +107,10 @@ namespace Deltin.Deltinteger.Parse
     public interface IRestrictedCallHandler
     {
         void RestrictedCall(RestrictedCall restrictedCall);
+    }
+
+    public class RestrictedCallList : List<RestrictedCall>, IRestrictedCallHandler
+    {
+        public void RestrictedCall(RestrictedCall restrictedCall) => Add(restrictedCall);
     }
 }
