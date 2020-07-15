@@ -138,7 +138,7 @@ async function makeLanguageServer()
 		// When the client is ready, setup the workshopCode notification.
 		client.onNotification("workshopCode", (code: string)=> {
 
-			if (!registeredProvider)
+			if (!registeredProvider && config.get<boolean>('semanticHighlighting'))
 			{
 				vscode.languages.registerDocumentSemanticTokensProvider(selector, provider, legend);
 				registeredProvider = true;
@@ -397,28 +397,16 @@ const provider: vscode.DocumentSemanticTokensProvider = {
 	async provideDocumentSemanticTokens(document: vscode.TextDocument) {
 
 		// Get the semantic tokens in the provided document from the language server.
-		let tokens: {result:string, tokens: {range: LSRange, tokenType:string, modifiers:string[]}[]}
+		let tokens: {range: LSRange, tokenType:string, modifiers:string[]}[];
 		let count: number = 0;
 
-		do
-		{
-			tokens = await client.sendRequest('semanticTokens', document.uri);
-			if (tokens.result != 'success')
-			{
-				count++;
-				await new Promise(resolve => setTimeout(resolve, 100));
-			}
-		}
-		// Repeat the request until success is returned.
-		// This is needed due to the fact that vscode will call provideDocumentSemanticTokens before the script is parsed.
-		// Cancel after 10 seconds.
-		while (tokens.result != 'success' && count < 100)
+		tokens = await client.sendRequest('semanticTokens', document.uri);
 
 		// Create the builder.
 		let builder:vscode.SemanticTokensBuilder = new vscode.SemanticTokensBuilder(legend);
 
 		// Push tokens to the builder.
-		for (const token of tokens.tokens) {
+		for (const token of tokens) {
 			builder.push(client.protocol2CodeConverter.asRange(token.range), token.tokenType, token.modifiers);
 		}
 

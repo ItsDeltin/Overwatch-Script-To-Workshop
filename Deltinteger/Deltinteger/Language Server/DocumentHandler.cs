@@ -220,14 +220,14 @@ namespace Deltin.Deltinteger.LanguageServer
             }
         }
 
-        public async Task WaitForCompletedTyping()
+        public async Task WaitForCompletedTyping(bool waitForScript = false)
         {
             var promise = new TaskCompletionSource<int>();
 
             lock (_taskCompletionLock)
             {
                 lock (_nextLock)
-                    if (_next == null) promise.SetResult(0);
+                    if (_next == null && (!waitForScript || _languageServer.LastParse != null)) promise.SetResult(0);
                     else _onTypeCompleted.Add(promise);
             }
 

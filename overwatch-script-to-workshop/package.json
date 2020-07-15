@@ -114,6 +114,12 @@
                     "type": "string",
                     "description": "Ignores a release tag."
                 },
+                "ostw.semanticHighlighting": {
+                    "scope": "resource",
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Determines if OSTW will use semantic highlighting."
+                },
                 "ostw.codelens.references": {
                     "scope": "window",
                     "type": "boolean",
