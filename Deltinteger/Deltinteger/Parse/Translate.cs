@@ -45,7 +45,14 @@ namespace Deltin.Deltinteger.Parse
             
             Translate();
             if (!Diagnostics.ContainsErrors())
-                ToWorkshop(translateSettings.AdditionalRules);
+                try
+                {
+                    ToWorkshop(translateSettings.AdditionalRules);
+                }
+                catch (Exception ex)
+                {
+                    WorkshopCode = "An exception was thrown while translating to workshop.\r\n" + ex.ToString();
+                }
             
             foreach (IComponent component in Components)
                 if (component is IDisposable disposable)
