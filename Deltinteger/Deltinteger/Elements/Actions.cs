@@ -954,8 +954,6 @@ namespace Deltin.Deltinteger.Elements
     [ElementData("Stop Forcing Player Outlines")]
     [Parameter("Viewed Players", ValueType.Player, typeof(V_EventPlayer))]
     [Parameter("Viewing Players", ValueType.Player, typeof(V_AllPlayers))]
-    [Parameter("Visible", ValueType.Boolean, typeof(V_True))]
-    [EnumParameter("Color", typeof(Color))]
     public class A_StopForcingPlayerOutlines : Element {}
 
     [ElementData("Start Scaling Player")]
@@ -1008,12 +1006,13 @@ namespace Deltin.Deltinteger.Elements
     [ElementData("Add Health Pool To Player")]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     [EnumParameter("Health Type", typeof(HealthType))]
+    [Parameter("Max Health", ValueType.Number, typeof(V_Number))]
     [Parameter("Recoverable", ValueType.Boolean, typeof(V_True))]
     [Parameter("Reevaluation", ValueType.Boolean, typeof(V_True))]
     public class A_AddHealthPoolToPlayer : Element {}
 
     [ElementData("Remove Health Pool From Player")]
-    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [Parameter("Health Pool ID", ValueType.Any, typeof(V_LastCreatedHealthPool))]
     public class A_RemoveHealthPoolFromPlayer : Element {}
 
     [ElementData("Remove All Health Pools From Player")]
