@@ -10,7 +10,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
         public bool ReturnsValue { get; protected set; }
         public CodeType ReturnType { get; protected set; }
         public CodeType[] ArgumentTypes { get; }
-        private readonly Scope _objectScope;
+        protected readonly Scope _objectScope;
 
         protected BaseLambda(string name) : base(name)
         {
@@ -69,8 +69,12 @@ namespace Deltin.Deltinteger.Parse.Lambda
 
     public class BlockLambda : BaseLambda
     {
-        public BlockLambda() : base("BlockLambda") {}
-        public BlockLambda(params CodeType[] argumentTypes) : base("BlockLambda", argumentTypes) {}
+        public BlockLambda() : base("BlockLambda") {
+            _objectScope.AddNativeMethod(new LambdaToRule(ArgumentTypes));
+        }
+        public BlockLambda(params CodeType[] argumentTypes) : base("BlockLambda", argumentTypes) {
+            _objectScope.AddNativeMethod(new LambdaToRule(ArgumentTypes));
+        }
         protected BlockLambda(string name) : base(name) {}
         protected BlockLambda(string name, CodeType[] argumentTypes) : base(name, argumentTypes) {}
     }
@@ -80,10 +84,12 @@ namespace Deltin.Deltinteger.Parse.Lambda
         public ValueBlockLambda() : base("ValueLambda")
         {
             ReturnsValue = true;
+            _objectScope.AddNativeMethod(new LambdaToRule(ArgumentTypes));
         }
         public ValueBlockLambda(CodeType returnType, params CodeType[] argumentTypes) : base("ValueLambda", argumentTypes)
         {
             ReturnType = returnType;
+            _objectScope.AddNativeMethod(new LambdaToRule(ArgumentTypes));
         }
     }
 

@@ -93,7 +93,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
 
         /// <summary>Gets the 'Invoke' parameters from an array of CodeTypes.</summary>
         /// <param name="argumentTypes">The array of CodeTypes. The resulting CodeParameter[] will have an equal length to this.</param>
-        private static CodeParameter[] ParametersFromTypes(CodeType[] argumentTypes)
+        public static CodeParameter[] ParametersFromTypes(CodeType[] argumentTypes)
         {
             if (argumentTypes == null) return new CodeParameter[0];
 

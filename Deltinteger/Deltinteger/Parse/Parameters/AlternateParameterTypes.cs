@@ -92,7 +92,7 @@ namespace Deltin.Deltinteger.Parse
 
             if (value is NumberAction == false)
             {
-                parseInfo.Script.Diagnostics.Error("Expected a number constant.", valueRange);
+                if (valueRange != null) parseInfo.Script.Diagnostics.Error("Expected a number constant.", valueRange);
                 return null;
             }
 
@@ -107,7 +107,7 @@ namespace Deltin.Deltinteger.Parse
         public override object Validate(ParseInfo parseInfo, IExpression value, DocRange valueRange)
         {
             StringAction str = value as StringAction;
-            if (str == null) parseInfo.Script.Diagnostics.Error("Expected string constant.", valueRange);
+            if (str == null && valueRange != null) parseInfo.Script.Diagnostics.Error("Expected string constant.", valueRange);
             return str?.Value;
         }
 

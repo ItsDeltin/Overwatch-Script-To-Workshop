@@ -21,7 +21,7 @@ namespace Deltin.Deltinteger.Parse
         private Team Team { get; }
         private PlayerSelector Player { get; }
         private bool Disabled { get; }
-        private double Priority { get; }
+        public double Priority { get; set; }
         private Subroutine Subroutine { get; }
 
         public TranslateRule(DeltinScript deltinScript, RuleAction ruleAction)
