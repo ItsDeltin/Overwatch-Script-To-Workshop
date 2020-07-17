@@ -28,6 +28,7 @@ variables:
   encapsulated-block-end: '(?<=})|(?<=;)'
   attribute-list: (((public|private|protected|virtual|override|abstract|static)\b\s*)*)
   variable-attribute-list: (((public|private|protected|virtual|override|abstract|static|globalvar|playervar)\b\s*)*)
+  number: -?[0-9]+(\.[0-9]+)?\b
 
   # Scopes
   statement-end: punctuation.terminator.statement.ostw
@@ -325,7 +326,7 @@ repository:
 
   # Rules
   rule:
-    begin: '\b(disabled\b\s*)?(rule)\b\s*(:)\s*(({{string-double}})|({{string-single}}))' # rule: "string"
+    begin: '\b(disabled\b\s*)?(rule)\b\s*(:)\s*(({{string-double}})|({{string-single}}))\s*({{number}})' # rule: "string"
     end: '{{encapsulated-block-end}}'
     beginCaptures:
       1: # Disabled keyword
@@ -338,6 +339,8 @@ repository:
         name: string.quoted.double
       6: # Rule name (single quotes)
         name: string.quoted.single
+      7: # Rule order
+        name: constant.numeric
     patterns:
     - include: '#comment'
     # Event attribute
@@ -561,7 +564,7 @@ repository:
   # Numbers
   number:
     patterns:
-      - match: -?[0-9]+(\.[0-9]+)?\b
+      - match: '{{number}}'
         name: constant.numeric
   
   # Booleans
