@@ -326,7 +326,7 @@ repository:
 
   # Rules
   rule:
-    begin: '\b(disabled\b\s*)?(rule)\b\s*(:)\s*(({{string-double}})|({{string-single}}))\s*({{number}})' # rule: "string"
+    begin: '\b(disabled\b\s*)?(rule)\b\s*(:)\s*(({{string-double}})|({{string-single}}))\s*({{number}})?' # rule: "string"
     end: '{{encapsulated-block-end}}'
     beginCaptures:
       1: # Disabled keyword
