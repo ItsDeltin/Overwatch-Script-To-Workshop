@@ -1,0 +1,144 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "JSON schema for workshop elements.",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+        "values": {
+            "type": "array",
+            "items": {
+                "allOf": [
+                    {
+                        "$ref": "#/definitions/action-value"
+                    },
+                    {
+                        "properties": {
+                            "type": {
+                                "$ref": "#/definitions/type",
+                                "description": "The type of the value that will be returned."
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        "actions": {
+            "type": "array",
+            "items": {
+                "allOf": [
+                    {
+                        "$ref": "#/definitions/action-value"
+                    },
+                    {
+                        "properties": {
+                            "return-value": {
+                                "description": "The value that is returned from this action. For an action like 'Create Effect', you may want to set this to 'Last Created Entity'.",
+                                "type": "string"
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        "enumerators": {
+            "additionalProperties": {
+                "type": "array",
+                "items": {
+                    "oneOf": [{
+                        "type": "string"
+                    }, {
+                        "type": "object",
+                        "properties": {
+                            "name": {
+                                "type": "string",
+                                "description": "The name of the enum value."
+                            },
+                            "alias": {
+                                "type": "string",
+                                "description": "The name of the value in Overwatch Script To Workshop."
+                            }
+                        },
+                        "required": ["name", "alias"]
+                    }]
+                }
+            }
+        }
+    },
+    "definitions": {
+        "action-value": {
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "description": "The name of the element."
+                },
+                "documentation": {
+                    "type": "string"
+                },
+                "parameters": {
+                    "type": "object",
+                    "description": "The parameters of the element.",
+                    "additionalProperties": {
+                        "properties": {
+                            "documentation": {
+                                "type": "string",
+                                "description": "The documentation of the parameter."
+                            },
+                            "type": {
+                                "$ref": "#/definitions/type",
+                                "description": "The expected type of the parameter."
+                            },
+                            "defaultValue": {
+                                "oneOf": [{
+                                    "type": "number"
+                                }, {
+                                    "type": "boolean"
+                                }, {
+                                    "type": "string"
+                                }, {
+                                    "type": "null"
+                                }],
+                                "description": "The default value of the parameter."
+                            }
+                        },
+                        "required": ["documentation"]
+                    }
+                },
+                "restricted": {
+                    "type": "string",
+                    "enum": ["Ability", "Attacker", "Event Player", "Healer", "Knockback"],
+                    "description": "The type of rule this element is allowed in."
+                },
+                "alias": {
+                    "type": "string",
+                    "description": "The name of the function in Overwatch Script To Workshop.",
+                    "pattern": "^[a-zA-Z0-9_]+$"
+                },
+                "hidden": {
+                    "type": "boolean",
+                    "description": "Determines if the element is hidden.",
+                    "default": false
+                },
+                "format": {
+                    "type": "string",
+                    "description": "The output format of the element. Use '{#}' to reference parameters."
+                }
+            },
+            "required": ["name", "documentation"]
+        },
+        "type": {
+            "type": "string",
+            "enum": [
+                "any",
+                "vector",
+                "player",
+                "player[]",
+                "player | player[]",
+                "player | vector",
+                "number",
+                "string",
+                "map",
+                "gamemode"
+            ]
+        }
+    }
+}
