@@ -292,7 +292,6 @@ namespace Deltin.Deltinteger.Parse
         private readonly DeltinScriptParser.VariableContext _variable;
         private readonly DocRange _range;
         private readonly string _name;
-        private readonly bool _canBeType;
         private TreeContextParseInfo _tcParseInfo;
         private IPotentialPathOption[] _potentialPaths;
         private IPotentialPathOption _chosenPath;
@@ -301,13 +300,13 @@ namespace Deltin.Deltinteger.Parse
             _variable = variable;
             _range = DocRange.GetRange(_variable.PART());
             _name = variable.PART().GetText();
-            _canBeType = variable.array() == null;
         }
 
         public void Setup(TreeContextParseInfo tcParseInfo)
         {
+            bool canBeType = _variable.array() == null && tcParseInfo.Parent == null;
             _tcParseInfo = tcParseInfo;
-            _potentialPaths = GetPotentialPaths(tcParseInfo);
+            _potentialPaths = GetPotentialPaths(tcParseInfo, canBeType);
 
             // If there are any paths.
             if (_potentialPaths.Length > 0)
@@ -323,15 +322,15 @@ namespace Deltin.Deltinteger.Parse
             else // There are no paths.
             {
                 // May resolve to type or variable.
-                if (_canBeType && tcParseInfo.Parent == null)
+                if (canBeType)
                     tcParseInfo.ParseInfo.Script.Diagnostics.Error($"No variable or type by the name of '{_name}' exists in the current scope.", _range);
                 // May resolve to only variable.
                 else
-                    tcParseInfo.ParseInfo.Script.Diagnostics.Error($"No variable by the name of '{_name}' exists in the {tcParseInfo.Parent.GetScope().ErrorName}.", _range);
+                    tcParseInfo.ParseInfo.Script.Diagnostics.Error($"No variable by the name of '{_name}' exists in the {tcParseInfo.Scope.ErrorName}.", _range);
             }
         }
 
-        private IPotentialPathOption[] GetPotentialPaths(TreeContextParseInfo tcParseInfo)
+        private IPotentialPathOption[] GetPotentialPaths(TreeContextParseInfo tcParseInfo, bool canBeType)
         {
             List<IPotentialPathOption> potentialPaths = new List<IPotentialPathOption>();
 
@@ -356,7 +355,7 @@ namespace Deltin.Deltinteger.Parse
             
             // Get the potential type.
             // Currently, OSTW does not support nested types, so make sure there is no parent.
-            if (_canBeType && tcParseInfo.Parent == null)
+            if (canBeType)
             {
                 CodeType type = tcParseInfo.ParseInfo.TranslateInfo.Types.GetCodeType(_name);
                 // If the type exists, add it to potentialPaths.
