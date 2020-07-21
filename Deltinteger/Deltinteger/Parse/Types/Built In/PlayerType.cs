@@ -8,13 +8,41 @@ namespace Deltin.Deltinteger.Parse
     public class PlayerType : CodeType, IAdditionalArray
     {
         // These functions are shared with both Player and Player[] types.
+        // * Teleport *
         public static readonly FuncMethod Teleport = new FuncMethodBuilder() {
             Name = "Teleport",
             Parameters = new CodeParameter[] {
                 new CodeParameter("position", "The position to teleport the player or players to. Can be a player or a vector.", Positionable.Instance)
             },
             Documentation = "Teleports one or more players to the specified location.",
-            Action = (actionSet, methodCall) => Element.Part<A_Teleport>(actionSet.CurrentObject, methodCall.ParameterValues[0])
+            Action = (actionSet, methodCall) => {
+                actionSet.AddAction(Element.Part<A_Teleport>(actionSet.CurrentObject, methodCall.ParameterValues[0]));
+                return null;
+            }
+        };
+        // * SetMoveSpeed *
+        public static readonly FuncMethod SetMoveSpeed = new FuncMethodBuilder() {
+            Name = "SetMoveSpeed",
+            Parameters = new CodeParameter[] {
+                new CodeParameter("moveSpeedPercent", "The percentage of raw move speed to which the player or players will set their move speed.", NumberType.Instance)
+            },
+            Documentation = "Sets the move speed of one or more players.",
+            Action = (actionSet, methodCall) => {
+                actionSet.AddAction(Element.Part<A_SetMoveSpeed>(actionSet.CurrentObject, methodCall.ParameterValues[0]));
+                return null;
+            }
+        };
+        // * SetMaxHealth *
+        public static readonly FuncMethod SetMaxHealth = new FuncMethodBuilder() {
+            Name = "SetMaxHealth",
+            Parameters = new CodeParameter[] {
+                new CodeParameter("healthPercent", "The percentage of raw max health to which the player or players will set their max health.", NumberType.Instance)
+            },
+            Documentation = "Sets the move speed of one or more players.",
+            Action = (actionSet, methodCall) => {
+                actionSet.AddAction(Element.Part<A_SetMaxHealth>(actionSet.CurrentObject, methodCall.ParameterValues[0]));
+                return null;
+            }
         };
 
         public static readonly PlayerType Instance = new PlayerType();
@@ -92,7 +120,12 @@ namespace Deltin.Deltinteger.Parse
         public override Scope ReturningScope() => null;
         private void AddFunc(FuncMethodBuilder builder) => ObjectScope.AddNativeMethod(new FuncMethod(builder));
         public void OverrideArray(ArrayType array) => AddSharedFunctionsToScope(array.Scope);
-        public static void AddSharedFunctionsToScope(Scope scope) => scope.AddNativeMethod(Teleport);
+        public static void AddSharedFunctionsToScope(Scope scope)
+        {
+            scope.AddNativeMethod(Teleport);
+            scope.AddNativeMethod(SetMoveSpeed);
+            scope.AddNativeMethod(SetMaxHealth);
+        }
     }
 
     class VariableShorthand
