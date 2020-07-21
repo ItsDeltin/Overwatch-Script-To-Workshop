@@ -48,6 +48,7 @@ namespace Deltin.Deltinteger.Elements
         public WikiMethod Wiki { get; }
         public string Documentation => Wiki?.Description;
         private ValueType ElementValueType { get; }
+        private RestrictedCallType? Restricted { get; }
 
         // IScopeable defaults
         public LanguageServer.Location DefinedAt { get; } = null;
@@ -68,6 +69,7 @@ namespace Deltin.Deltinteger.Elements
             WorkshopParameters = type.GetCustomAttributes<ParameterBase>().ToArray();
             UsageDiagnostics = type.GetCustomAttributes<UsageDiagnostic>().ToArray();
             Hidden = type.GetCustomAttribute<HideElement>() != null;
+            Restricted = type.GetCustomAttribute<RestrictedAttribute>()?.Type;
 
             Wiki = WorkshopWiki.Wiki.GetWiki()?.GetMethod(WorkshopName);
         }
@@ -155,5 +157,16 @@ namespace Deltin.Deltinteger.Elements
         public string GetLabel(bool markdown) => MethodAttributes.DefaultLabel(this).ToString(markdown);
 
         public CompletionItem GetCompletion() => MethodAttributes.GetFunctionCompletion(this);
+
+        public void Call(ParseInfo parseInfo, DocRange callRange)
+        {
+            if (Restricted != null)
+                // If there is a restricted call type, add it.
+                parseInfo.RestrictedCallHandler.RestrictedCall(new RestrictedCall(
+                    (RestrictedCallType)Restricted,
+                    parseInfo.GetLocation(callRange),
+                    RestrictedCall.Message_Element((RestrictedCallType)Restricted)
+                ));
+        }
     }
 }
