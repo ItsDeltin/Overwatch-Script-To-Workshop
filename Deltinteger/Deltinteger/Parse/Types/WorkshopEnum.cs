@@ -11,14 +11,20 @@ namespace Deltin.Deltinteger.Parse
     class ValueGroupType : CodeType
     {
         public EnumData EnumData { get; }
-        private Scope Scope { get; } = new Scope();
+        private Scope Scope { get; }
         private List<EnumValuePair> ValuePairs { get; } = new List<EnumValuePair>();
         private bool Constant { get; }
 
         public ValueGroupType(EnumData enumData, bool constant) : base(enumData.CodeName)
         {
+            Scope = new Scope("enum " + Name);
             Constant = constant;
             EnumData = enumData;
+            TokenType = TokenType.Enum;
+
+            if (constant)
+                TokenModifiers.Add(TokenModifier.Readonly);
+
             foreach (EnumMember member in enumData.Members)
             {
                 EnumValuePair newPair = new EnumValuePair(member, constant, this);
@@ -53,6 +59,7 @@ namespace Deltin.Deltinteger.Parse
                 hoverContents.NewSection().Add("Constant workshop types cannot be stored. Variables with this type cannot be changed from their initial value.");
 
             parseInfo.Script.AddHover(callRange, hoverContents.ToString());
+            parseInfo.Script.AddToken(callRange, TokenType, TokenModifiers.ToArray());
             parseInfo.TranslateInfo.Types.CallType(this);
         }
 
@@ -77,6 +84,7 @@ namespace Deltin.Deltinteger.Parse
         {
             Member = member;
             CodeType = type;
+            TokenType = Deltin.Deltinteger.Parse.TokenType.EnumMember;
         }
     }
 }

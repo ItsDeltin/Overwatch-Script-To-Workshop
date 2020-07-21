@@ -41,6 +41,7 @@ Object-serve scope. Only object members.
         {
             CanBeDeleted = true;
             CanBeExtended = true;
+            TokenType = TokenType.Class;
         }
 
         public virtual void ResolveElements()

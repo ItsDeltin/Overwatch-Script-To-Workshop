@@ -67,12 +67,16 @@ namespace Deltin.Deltinteger
         string GetLabel(bool markdown);
     }
 
-    public interface IApplyBlock : ILabeled
+    public interface IApplyBlock : IBlockListener, ILabeled
     {
         void SetupParameters();
-        void SetupBlock();
-        void OnBlockApply(IOnBlockApplied onBlockApplied);
+        void SetupBlock();        
         CallInfo CallInfo { get; }
+    }
+
+    public interface IBlockListener
+    {
+        void OnBlockApply(IOnBlockApplied onBlockApplied);
     }
 
     public interface IOnBlockApplied

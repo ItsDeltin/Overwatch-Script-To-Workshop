@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using Deltin.Deltinteger.Parse;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using LSLocation = OmniSharp.Extensions.LanguageServer.Protocol.Models.Location;
-using IReferencesHandler = OmniSharp.Extensions.LanguageServer.Protocol.Server.IReferencesHandler;
+using IReferencesHandler = OmniSharp.Extensions.LanguageServer.Protocol.Document.IReferencesHandler;
 using ReferenceCapability = OmniSharp.Extensions.LanguageServer.Protocol.Client.Capabilities.ReferenceCapability;
 
 namespace Deltin.Deltinteger.LanguageServer
@@ -22,6 +22,8 @@ namespace Deltin.Deltinteger.LanguageServer
 
         public async Task<LocationContainer> Handle(ReferenceParams request, CancellationToken cancellationToken)
         {
+            await _languageServer.DocumentHandler.WaitForCompletedTyping();
+            
             bool includeDeclaration = request.Context.IncludeDeclaration;
 
             var allSymbolLinks = _languageServer.LastParse?.GetComponent<SymbolLinkComponent>().GetSymbolLinks();
@@ -32,7 +34,7 @@ namespace Deltin.Deltinteger.LanguageServer
 
             foreach (var pair in allSymbolLinks)
                 foreach (var link in pair.Value)
-                    if (link.Location.uri.Compare(request.TextDocument.Uri) && link.Location.range.IsInside(request.Position))
+                    if (link.Location.uri.Compare(request.TextDocument.Uri.ToUri()) && link.Location.range.IsInside(request.Position))
                     {
                         use = pair.Key;
                         declaredAt = link.Location;

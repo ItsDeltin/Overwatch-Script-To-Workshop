@@ -853,4 +853,12 @@ namespace Deltin.Deltinteger.Elements
         TeamDeathmatch,
         YetiHunter
     }
+
+    [WorkshopEnum]
+    enum HealthType
+    {
+        Health,
+        Armor,
+        Shields
+    }
 }

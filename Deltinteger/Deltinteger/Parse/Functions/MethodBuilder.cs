@@ -128,7 +128,7 @@ namespace Deltin.Deltinteger.Parse
         {
             if (ReturnHandler == null)
             {
-                ReturnHandler = new ReturnHandler(BuilderSet, Method.Name, (Method.Attributes.Virtual && Method.ReturnType != null) || Method.multiplePaths);
+                ReturnHandler = new ReturnHandler(BuilderSet, Method.Name, (Method.Attributes.Virtual && Method.ReturnType != null) || Method.MultiplePaths);
                 BuilderSet = BuilderSet.New(ReturnHandler);
             }
         }
@@ -213,7 +213,7 @@ namespace Deltin.Deltinteger.Parse
 
         private static void TranslateSegment(ActionSet actionSet, DefinedMethod method)
         {
-            method.block.Translate(actionSet);
+            method.Block.Translate(actionSet);
         }
     }
 }

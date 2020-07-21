@@ -12,7 +12,6 @@ using Microsoft.Extensions.Logging;
 using OmniSharp.Extensions.LanguageServer.Server;
 using OmniSharp.Extensions.JsonRpc;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
-using ILanguageServer = OmniSharp.Extensions.LanguageServer.Server.ILanguageServer;
 
 namespace Deltin.Deltinteger.LanguageServer
 {
@@ -29,7 +28,7 @@ namespace Deltin.Deltinteger.LanguageServer
 
         private static string LogFile() => Path.Combine(Program.ExeFolder, "Log", "log.txt");
 
-        public ILanguageServer Server { get; private set; }
+        public OmniSharp.Extensions.LanguageServer.Server.LanguageServer Server { get; private set; }
 
         private DeltinScript _lastParse = null;
         private object _lastParseLock = new object();
@@ -73,7 +72,7 @@ namespace Deltin.Deltinteger.LanguageServer
                 .WithOutput(Console.OpenStandardOutput())
                 .ConfigureLogging(x => x
                     .AddSerilog()
-                    .AddLanguageServer()
+                    .AddLanguageProtocolLogging()
                     .SetMinimumLevel(Microsoft.Extensions.Logging.LogLevel.Debug))
                 .WithHandler<DocumentHandler>(DocumentHandler)
                 .WithHandler<CompletionHandler>(completionHandler)
@@ -150,6 +149,14 @@ namespace Deltin.Deltinteger.LanguageServer
                 Clipboard.SetText(compile.WorkshopCode);
 
                 return true;
+            }));
+
+            // semantic tokens
+            options.OnRequest<Newtonsoft.Json.Linq.JToken, SemanticToken[]>("semanticTokens", (uriToken) => Task<SemanticToken[]>.Run(async () => 
+            {
+                await DocumentHandler.WaitForCompletedTyping(true);
+                SemanticToken[] tokens = LastParse?.ScriptFromUri(new Uri(uriToken["fsPath"].ToObject<string>()))?.GetSemanticTokens();
+                return tokens ?? new SemanticToken[0];
             }));
 
             return options;

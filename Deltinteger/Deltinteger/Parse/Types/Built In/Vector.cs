@@ -28,6 +28,7 @@ namespace Deltin.Deltinteger.Parse
             CanBeExtended = false;
             Kind = "struct";
             Inherit(Positionable.Instance, null, null);
+            TokenType = TokenType.Struct;
         }
 
         public void ResolveElements()

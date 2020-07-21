@@ -65,7 +65,7 @@ call_parameters: call_parameter (COMMA call_parameter?)*   ;
 call_parameter : (PART? TERNARY_ELSE)? expr					 ;
 
 variable : PART array? ;
-code_type: PART (INDEX_START INDEX_END)* generics?;
+code_type: (PART|DEFINE) (INDEX_START INDEX_END)* generics?;
 generics : LESS_THAN (code_type (COMMA code_type)*)? GREATER_THAN;
 
 lambda: (define | LEFT_PAREN (define (COMMA define)*)? RIGHT_PAREN) INS (expr | block) ;
@@ -148,8 +148,8 @@ type_define : (STRUCT | CLASS) name=PART (TERNARY_ELSE extends=PART?)?
 	((define STATEMENT_END) | constructor | define_method | define_macro)*
 	BLOCK_END ;
 
-enum_define : ENUM name=PART BLOCK_START (firstMember=PART enum_element*)? BLOCK_END ;
-enum_element : COMMA PART ;
+enum_define : ENUM name=PART BLOCK_START (firstMember=PART (EQUALS expr)? enum_element*)? BLOCK_END ;
+enum_element : COMMA PART (EQUALS expr)?;
 
 accessor : PRIVATE | PUBLIC | PROTECTED;
 
@@ -241,6 +241,7 @@ DEFAULT   : 'default'   ;
 BASE      : 'base'      ;
 IS        : 'is'		;
 INTERFACE : 'interface' ;
+DEFINE    : 'define';
 
 INS             : '=>'  ;
 EQUALS          : '='  ;
