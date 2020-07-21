@@ -65,7 +65,7 @@ call_parameters: call_parameter (COMMA call_parameter?)*   ;
 call_parameter : (PART? TERNARY_ELSE)? expr					 ;
 
 variable : PART array? ;
-code_type: (PART|DEFINE) (INDEX_START INDEX_END)* generics?;
+code_type: (PART|DEFINE) (INDEX_START INDEX_END)* generics? (PIPE code_type)?;
 generics : LESS_THAN (code_type (COMMA code_type)*)? GREATER_THAN;
 
 lambda: (define | LEFT_PAREN (define (COMMA define)*)? RIGHT_PAREN) INS (expr | block) ;
@@ -263,6 +263,7 @@ LESS_THAN    : '<' ;
 GREATER_THAN : '>';
 
 BOOL : '&&' | '||';
+PIPE: '|';
 NOT : '!';
 INCREMENT : '++' ;
 DECREMENT : '--' ;

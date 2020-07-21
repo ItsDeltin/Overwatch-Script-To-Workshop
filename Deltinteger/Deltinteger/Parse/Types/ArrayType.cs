@@ -200,6 +200,5 @@ namespace Deltin.Deltinteger.Parse
     interface IAdditionalArray
     {
         void OverrideArray(ArrayType array);
-        bool AlternateImplements(CodeType type);
     }
 }

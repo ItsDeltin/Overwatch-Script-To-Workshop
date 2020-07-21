@@ -126,7 +126,7 @@ namespace Deltin.Deltinteger.Elements
                 case ValueType.Boolean: return BooleanType.Instance;
                 case ValueType.Number: return NumberType.Instance;
                 case ValueType.Player: return PlayerType.Instance;
-                case ValueType.Players: return PlayersType.Instance;
+                case ValueType.Players: return PlayerType.PlayerOrPlayers;
                 case ValueType.Vector: return VectorType.Instance;
                 case ValueType.VectorAndPlayer: return Positionable.Instance;
                 case ValueType.String: return StringType.Instance;

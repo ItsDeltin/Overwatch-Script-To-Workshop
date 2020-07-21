@@ -179,9 +179,14 @@ namespace Deltin.Deltinteger.Parse
 
             type.Call(parseInfo, DocRange.GetRange(typeContext));
 
+            // Array type
             if (typeContext.INDEX_START() != null)
                 for (int i = 0; i < typeContext.INDEX_START().Length; i++)
                     type = new ArrayType(type);
+            
+            // Pipe type
+            if (typeContext.code_type() != null)
+                type = new PipeType(type, GetCodeTypeFromContext(parseInfo, typeContext.code_type()));
             
             return type;
         }
@@ -206,7 +211,6 @@ namespace Deltin.Deltinteger.Parse
             _defaultTypes.Add(ObjectType.Instance);
             _defaultTypes.Add(NumberType.Instance);
             _defaultTypes.Add(PlayerType.Instance);
-            _defaultTypes.Add(PlayersType.Instance);
             _defaultTypes.Add(BooleanType.Instance);
             _defaultTypes.Add(TeamType.Instance);
             _defaultTypes.Add(VectorType.Instance);

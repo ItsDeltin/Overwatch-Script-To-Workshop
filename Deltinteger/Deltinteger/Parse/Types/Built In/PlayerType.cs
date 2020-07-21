@@ -7,7 +7,19 @@ namespace Deltin.Deltinteger.Parse
 {
     public class PlayerType : CodeType, IAdditionalArray
     {
+        // These functions are shared with both Player and Player[] types.
+        public static readonly FuncMethod Teleport = new FuncMethodBuilder() {
+            Name = "Teleport",
+            Parameters = new CodeParameter[] {
+                new CodeParameter("position", "The position to teleport the player or players to. Can be a player or a vector.", Positionable.Instance)
+            },
+            Documentation = "Teleports one or more players to the specified location.",
+            Action = (actionSet, methodCall) => Element.Part<A_Teleport>(actionSet.CurrentObject, methodCall.ParameterValues[0])
+        };
+
         public static readonly PlayerType Instance = new PlayerType();
+        public static readonly CodeType PlayerOrPlayers = new PipeType(Instance, new ArrayType(Instance));
+
         private readonly Scope ObjectScope = new Scope();
         private VariableShorthand[] Variables { get; } = new VariableShorthand[] {
             new VariableShorthand("Team", TeamType.Instance, r => Element.Part<V_TeamOf>(r)),
@@ -48,7 +60,7 @@ namespace Deltin.Deltinteger.Parse
             foreach (VariableShorthand shorthand in Variables)
                 ObjectScope.AddNativeVariable(shorthand.Variable);
             
-            PlayersType.AddSharedFunctionsToScope(ObjectScope);
+            PlayerType.AddSharedFunctionsToScope(ObjectScope);
 
             AddFunc(new FuncMethodBuilder() {
                 Name = "IsButtonHeld",
@@ -66,9 +78,6 @@ namespace Deltin.Deltinteger.Parse
             });
         }
 
-        public override bool Implements(CodeType type) => base.Implements(type) || type == PlayersType.Instance;
-        public bool AlternateImplements(CodeType type) => type == PlayersType.Instance;
-
         public override void AddObjectVariablesToAssigner(IWorkshopTree reference, VarIndexAssigner assigner)
         {
             foreach (VariableShorthand shorthand in Variables)
@@ -81,75 +90,28 @@ namespace Deltin.Deltinteger.Parse
         };
         public override Scope GetObjectScope() => ObjectScope;
         public override Scope ReturningScope() => null;
-
-        private void AddFunc(FuncMethodBuilder builder)
-        {
-            ObjectScope.AddNativeMethod(new FuncMethod(builder));
-        }
-
-        public void OverrideArray(ArrayType array)
-        {
-            PlayersType.AddSharedFunctionsToScope(array.Scope);
-        }
-
-        class VariableShorthand
-        {
-            public InternalVar Variable { get; }
-            private Func<IWorkshopTree, IWorkshopTree> Reference { get; }
-
-            public VariableShorthand(string name, CodeType type, Func<IWorkshopTree, IWorkshopTree> reference)
-            {
-                Variable = new InternalVar(name, CompletionItemKind.Property) {
-                    CodeType = type,
-                    VariableType = VariableType.ElementReference
-                };
-                Reference = reference;
-            }
-
-            public void Assign(IWorkshopTree reference, VarIndexAssigner assigner)
-            {
-                assigner.Add(Variable, Reference.Invoke(reference));
-            }
-        }
+        private void AddFunc(FuncMethodBuilder builder) => ObjectScope.AddNativeMethod(new FuncMethod(builder));
+        public void OverrideArray(ArrayType array) => AddSharedFunctionsToScope(array.Scope);
+        public static void AddSharedFunctionsToScope(Scope scope) => scope.AddNativeMethod(Teleport);
     }
 
-    /// <summary>The players type is either a Player or Player[].</summary>
-    public class PlayersType : CodeType
+    class VariableShorthand
     {
-        public static readonly PlayersType Instance = new PlayersType();
-        private readonly Scope ObjectScope = new Scope();
+        public InternalVar Variable { get; }
+        private Func<IWorkshopTree, IWorkshopTree> Reference { get; }
 
-        private PlayersType() : base("Players") {}
-
-        public void ResolveElements()
+        public VariableShorthand(string name, CodeType type, Func<IWorkshopTree, IWorkshopTree> reference)
         {
-            AddSharedFunctionsToScope(ObjectScope);
-            Kind = "struct";
+            Variable = new InternalVar(name, CompletionItemKind.Property) {
+                CodeType = type,
+                VariableType = VariableType.ElementReference
+            };
+            Reference = reference;
         }
 
-        public override bool Implements(CodeType type) => type.Implements(PlayerType.Instance) || new ArrayType(type).Implements(new ArrayType(PlayerType.Instance));
-
-        public override Scope GetObjectScope() => ObjectScope;
-        public override Scope ReturningScope() => null;
-
-        public override CompletionItem GetCompletion() => new CompletionItem() {
-            Label = Name,
-            Kind = CompletionItemKind.Struct
-        };
-
-        public static void AddSharedFunctionsToScope(Scope scope)
+        public void Assign(IWorkshopTree reference, VarIndexAssigner assigner)
         {
-            scope.AddNativeMethod(Teleport);
+            assigner.Add(Variable, Reference.Invoke(reference));
         }
-
-        // These functions are shared with both all Player, Player[], and Players type.
-        public static FuncMethod Teleport { get; } = new FuncMethodBuilder() {
-            Name = "Teleport",
-            Parameters = new CodeParameter[] {
-                new CodeParameter("position", "The position to teleport the player or players to. Can be a player or a vector.", Positionable.Instance)
-            },
-            Documentation = "Teleports one or more players to the specified location.",
-            Action = (actionSet, methodCall) => Element.Part<A_Teleport>(actionSet.CurrentObject, methodCall.ParameterValues[0])
-        };
     }
 }

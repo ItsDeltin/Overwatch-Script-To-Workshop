@@ -37,7 +37,6 @@ namespace Deltin.Deltinteger
             ElementList.InitElements();
             VectorType.Instance.ResolveElements();
             PlayerType.Instance.ResolveElements();
-            PlayersType.Instance.ResolveElements();
             Lobby.HeroSettingCollection.Init();
             Lobby.ModeSettingCollection.Init();
 

@@ -84,7 +84,7 @@ namespace Deltin.Deltinteger.Parse
         {
             other.IterateElements(getter, true, true, iterate => {
                 if (iterate.Element is IVariable variable) Variables.Add(variable);
-                if (iterate.Element is IMethod method) Methods.Add(method);
+                if (iterate.Element is IMethod method && !HasConflict(method)) Methods.Add(method);
 
                 if (iterate.Container.PrivateCatch) return ScopeIterateAction.StopAfterScope;
                 return ScopeIterateAction.Continue;
