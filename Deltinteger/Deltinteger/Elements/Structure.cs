@@ -128,14 +128,37 @@ namespace Deltin.Deltinteger.Elements
                     // Initialize the variables that will be used to create the ElementParameter.
                     string returnType = null; // Initialize the return type's literal name.
                     bool? variableReferenceGlobal = null; // Initialize the variable reference type.
-                    string defaultValue = null; // Initialize the default value.
+                    object defaultValue = null; // Initialize the default value.
 
                     // Get the type name from a parameter.
                     if (el.WorkshopParameters[i] is Parameter parameter)
                     {
                         returnType = GetTypeName(parameter.ReturnType);
                         // Get the default value.
-                        if (parameter.GetDefault() is Element defaultElement) defaultValue = defaultElement.Name;
+                        if (parameter.GetDefault() is Element defaultElement)
+                        {
+                            // Numbers
+                            if (defaultElement is V_Number numberElement)
+                                defaultValue = numberElement.Value;
+                            // Strings
+                            else if (defaultElement is V_CustomString customString)
+                                defaultValue = "!" + customString.Text;
+                            // Localized
+                            else if (defaultElement is V_String str)
+                                defaultValue = "@" + str.Text;
+                            // True
+                            else if (defaultElement is V_True)
+                                defaultValue = true;
+                            // False
+                            else if (defaultElement is V_False)
+                                defaultValue = false;
+                            // TODO will not convert / Null
+                            else if (defaultElement is V_Null)
+                                defaultValue = null;
+                            // Other
+                            else
+                                defaultValue = defaultElement.Name;
+                        }
                     }
                     // Get the type name from an enum.
                     else if (el.WorkshopParameters[i] is EnumParameter enumParameter)
@@ -167,6 +190,7 @@ namespace Deltin.Deltinteger.Elements
                         Name = el.WorkshopName,
                         Documentation = el.Documentation,
                         Parameters = parameters,
+                        IsHidden = el.Hidden,
                         ReturnType = GetTypeName(el.ElementValueType)
                     });
                 }
@@ -176,11 +200,13 @@ namespace Deltin.Deltinteger.Elements
                     actions.Add(new ElementJsonAction() {
                         Name = el.WorkshopName,
                         Documentation = el.Documentation,
+                        IsHidden = el.Hidden,
                         Parameters = parameters
                     });
                 }
             }
             
+            // Get the enumerators.
             ElementEnum[] enumerators = EnumData.GetEnumData().Select(e => new ElementEnum() {
                 Name = e.CodeName,
                 Members = e.Members.Select(mem => new ElementEnumMember() {
@@ -188,6 +214,7 @@ namespace Deltin.Deltinteger.Elements
                 }).ToArray()
             }).ToArray();
             
+            // Create the object then get the json.
             return new ElementJsonRoot() {
                 Actions = actions.ToArray(),
                 Values = values.ToArray(),
@@ -237,6 +264,11 @@ namespace Deltin.Deltinteger.Elements
 
         [JsonProperty("parameters")]
         public ElementParameter[] Parameters;
+
+        [JsonProperty("hidden")]
+        public bool IsHidden;
+
+        public bool ShouldSerializeIsHidden() => IsHidden;
     }
 
     public class ElementJsonValue : ElementBaseJson
