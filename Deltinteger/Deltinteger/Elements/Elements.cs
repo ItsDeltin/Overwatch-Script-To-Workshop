@@ -350,7 +350,7 @@ namespace Deltin.Deltinteger.Elements
         public UsageDiagnostic[] UsageDiagnostics { get; }
         public WikiMethod Wiki { get; }
         public string Documentation => Wiki?.Description;
-        private ValueType ElementValueType { get; }
+        public ValueType ElementValueType { get; }
         private RestrictedCallType? Restricted { get; }
 
         // IScopeable defaults

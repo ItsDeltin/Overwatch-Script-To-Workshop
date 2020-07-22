@@ -82,25 +82,43 @@
                             "documentation": {
                                 "type": "string",
                                 "description": "The documentation of the parameter."
-                            },
-                            "type": {
-                                "$ref": "#/definitions/type",
-                                "description": "The expected type of the parameter."
-                            },
-                            "defaultValue": {
-                                "oneOf": [{
-                                    "type": "number"
-                                }, {
-                                    "type": "boolean"
-                                }, {
-                                    "type": "string"
-                                }, {
-                                    "type": "null"
-                                }],
-                                "description": "The default value of the parameter."
                             }
                         },
-                        "required": ["documentation"]
+                        "required": ["documentation"],
+                        "oneOf": [
+                            {
+                                "properties": {
+                                    "type": {
+                                        "$ref": "#/definitions/type",
+                                        "description": "The expected type of the parameter."
+                                    },
+                                    "defaultValue": {
+                                        "oneOf": [{
+                                            "type": "number"
+                                        }, {
+                                            "type": "boolean"
+                                        }, {
+                                            "type": "string"
+                                        }, {
+                                            "type": "null"
+                                        }, {
+                                            "$ref": "#/definitions/set-value"
+                                        }],
+                                        "description": "The default value of the parameter."
+                                    }
+                                },
+                                "required": ["type"]
+                            },
+                            {
+                                "properties": {
+                                    "var-ref-global": {
+                                        "type": "boolean",
+                                        "description": "Wether the variable reference parameter requires a global variable."
+                                    }
+                                },
+                                "required": ["var-ref-global"]
+                            }
+                        ]
                     }
                 },
                 "restricted": {
@@ -125,6 +143,21 @@
             },
             "required": ["name", "documentation"]
         },
+        "set-value": {
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "parameters": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/set-value"
+                    }
+                }
+            },
+            "required": ["name"],
+            "type": "object"
+        },
         "type": {
             "type": "string",
             "enum": [
@@ -136,8 +169,12 @@
                 "player | vector",
                 "number",
                 "string",
+                "boolean",
                 "map",
-                "gamemode"
+                "gamemode",
+                "button",
+                "hero",
+                "team"
             ]
         }
     }
