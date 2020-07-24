@@ -165,20 +165,25 @@ namespace Deltin.Deltinteger.Compiler
             switch (tokenType)
             {
                 case TokenType.Colon: return ":";
+                case TokenType.Semicolon: return ";";
                 case TokenType.CurlyBracket_Close: return "}";
                 case TokenType.CurlyBracket_Open: return "{";
                 case TokenType.Parentheses_Close: return ")";
                 case TokenType.Parentheses_Open: return "(";
                 case TokenType.Dot: return ".";
+                case TokenType.SquareBracket_Open: return "[";
+                case TokenType.SquareBracket_Close: return "]";
                 case TokenType.For: return "for";
                 case TokenType.If: return "if";
+                case TokenType.Break: return "break";
+                case TokenType.Continue: return "continue";
                 case TokenType.Identifier: return "identifier";
                 case TokenType.String: return "string";
                 case TokenType.Number: return "number";
                 case TokenType.True: return "true";
                 case TokenType.False: return "false";
                 case TokenType.Unknown: return "unknown";
-                default: return "*" + tokenType.ToString();
+                default: return tokenType.ToString().ToLower();
             }
         }
     }
@@ -192,16 +197,26 @@ namespace Deltin.Deltinteger.Compiler
         CurlyBracket_Close,
         Parentheses_Open,
         Parentheses_Close,
+        SquareBracket_Open,
+        SquareBracket_Close,
         // Symbols
         Colon,
         Semicolon,
         Dot,
+        Exclamation,
+        Equals,
+        LessThan,
+        GreaterThan,
+        Comma,
         // Generic expressions
         String,
         Number,
         True,
         False,
         // Keywords
+        Define,
+        Break,
+        Continue,
         Rule,
         For,
         If

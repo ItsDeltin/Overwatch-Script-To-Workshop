@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Deltin.Deltinteger.Compiler.Parser
 {
@@ -11,10 +12,26 @@ namespace Deltin.Deltinteger.Compiler.Parser
         public ParserRule DeclareRule = new ParserRule();
         public ParserRule Statement = new ParserRule();
         public ParserRule Expression = new ParserRule();
+        public ParserRule Define = new ParserRule();
+        public ParserRule CodeType = new ParserRule();
         
         public Parser(Lexer lexer)
         {
             Lexer = lexer;
+
+            // Types
+            CodeType.Init(seq(
+                req(alt("Expected define or identifier", TokenType.Define, TokenType.Identifier)),
+                // Generics
+                opt(seq(
+                    req(TokenType.LessThan),
+                    CodeType,
+                    rep(seq(TokenType.Comma, CodeType)),
+                    TokenType.GreaterThan
+                )),
+                // Array
+                rep(seq(req(TokenType.SquareBracket_Open), TokenType.SquareBracket_Close))
+            ));
 
             // Root of the file.
             Root.Init(rep(DeclareRule));
@@ -23,7 +40,8 @@ namespace Deltin.Deltinteger.Compiler.Parser
             DeclareRule.Init(seq(
                 TokenType.Rule, TokenType.Colon, TokenType.String, // rule: ""
                 rep(seq(TokenType.Identifier, TokenType.Dot, TokenType.Identifier)), // Rule options
-                rep(seq(TokenType.If, TokenType.Parentheses_Open, Expression, TokenType.Parentheses_Close)) // Conditions
+                rep(seq(TokenType.If, TokenType.Parentheses_Open, Expression, TokenType.Parentheses_Close)), // Conditions
+                Statement
             ));
 
             // Expressions.
@@ -32,6 +50,38 @@ namespace Deltin.Deltinteger.Compiler.Parser
                 TokenType.Number,
                 TokenType.True,
                 TokenType.False
+            ));
+
+            // Statements
+            Statement.Init(alt("Invalid statement term '{0}'",
+                // Block
+                seq(
+                    req(TokenType.CurlyBracket_Open),
+                    rep(Statement),
+                    TokenType.CurlyBracket_Close
+                ),
+                // Break
+                seq(req(TokenType.Break), TokenType.Semicolon),
+                // Continue
+                seq(req(TokenType.Continue), TokenType.Semicolon),
+                // Define
+                seq(req(Define), TokenType.Semicolon),
+                // Single semicolon
+                TokenType.Semicolon
+            ));
+            
+            // Define
+            Define.Init(seq(
+                CodeType,
+                TokenType.Identifier,
+                opt(alt("Expected number or !",
+                    TokenType.Number,
+                    TokenType.Exclamation
+                )),
+                opt(seq(
+                    TokenType.Equals,
+                    Expression
+                ))
             ));
         }
 
@@ -42,10 +92,31 @@ namespace Deltin.Deltinteger.Compiler.Parser
             root.Debug();
         }
 
+        /// <summary>A sequence of rules or tokens.</summary>
+        /// <param name="parts">The rules in order.</param>
+        /// <returns>The created sequence.</returns>
         private static Sequence seq(params TreeWalker[] parts) => new Sequence(parts);
+        /// <summary>Repeats the tree walker.</summary>
+        /// <param name="part">The rule that will be repeated.</param>
+        /// <returns>The created repeater.</returns>
         private static Repeat0 rep(TreeWalker part) => new Repeat0(part);
-        // private static Alt alt(params TreeWalker[] options) => new Alt(options);
+        /// <summary>An optional rule.</summary>
+        /// <param name="walker">The optional rule.</param>
+        /// <returns>The created tree walker.</returns>
+        private static Optional opt(TreeWalker walker) => new Optional(walker);
+        /// <summary>One of any of the specified options.</summary>
+        /// <param name="alias">The message that is displayed when none is found.</param>
+        /// <param name="options">The valid rules.</param>
+        /// <returns>The created tree walker.</returns>
         private static Alt alt(string alias, params TreeWalker[] options) => new Alt(alias, options);
+        /// <summary>Marks the rule as required. If this rule is not found in a sequence, the sequence is canceled.</summary>
+        /// <param name="walker">The rule that will be marked as required.</param>
+        /// <returns>Returns 'walker'.</returns>
+        private static TreeWalker req(TreeWalker walker)
+        {
+            walker.Required = true;
+            return walker;
+        }
     }
 
     public class ParseTree
@@ -156,6 +227,8 @@ namespace Deltin.Deltinteger.Compiler.Parser
 
     public abstract class TreeWalker
     {
+        public bool Required { get; set; }
+        
         public static implicit operator TreeWalker(TokenType tokenType) => new TokenWalker(tokenType);
         public abstract void Walk(ParseTree parseTree);
         public virtual void EOF(ParseTree parseTree) {}
@@ -182,6 +255,8 @@ namespace Deltin.Deltinteger.Compiler.Parser
 
         public override void EOF(ParseTree parseTree)
             => parseTree.Diagnostic("Syntax error, '" + _tokenType.Name() + "' expected", parseTree.LastToken().Range);
+        
+        public override string ToString() => _tokenType.ToString();
     }
 
     class Sequence : TreeWalker
@@ -214,6 +289,7 @@ namespace Deltin.Deltinteger.Compiler.Parser
                         else broke = true;
                         break;
                     }
+                    else if (_children[i].Required) break;
                 }
                 if (sequenceRoot.ReachedEnd)
                 {
@@ -228,6 +304,8 @@ namespace Deltin.Deltinteger.Compiler.Parser
             if (sequenceRoot.WasAdvanced)
                 parseTree.Moosh(sequenceRoot);
         }
+
+        public override string ToString() => "[" + string.Join(", ", _children.Select(c => c.ToString())) + "]";
     }
     class Alt : TreeWalker
     {
@@ -248,11 +326,12 @@ namespace Deltin.Deltinteger.Compiler.Parser
         {
             bool anyFound = false;
 
-            foreach (TreeWalker option in _options)
+            ParseTree[] optionTrees = new ParseTree[_options.Length];
+            for (int i = 0; i < _options.Length; i++)
             {
-                ParseTree optionTree = parseTree.Child();
-                option.Walk(optionTree);
-                if (optionTree.Accepted)
+                optionTrees[i] = parseTree.Child();
+                _options[i].Walk(optionTrees[i]);
+                if (optionTrees[i].Accepted)
                 {
                     parseTree.Accept();
                     anyFound = true;
@@ -267,9 +346,19 @@ namespace Deltin.Deltinteger.Compiler.Parser
                 else
                     // TODO
                     throw new NotImplementedException();
-                // parseTree.Accept();
+            }
+            else
+            {
+                foreach (ParseTree optionTree in optionTrees)
+                    if (optionTree.Accepted)
+                    {
+                        parseTree.Moosh(optionTree);
+                        break;
+                    }
             }
         }
+
+        public override string ToString() => string.Join(" | ", _options.Select(op => op.ToString()));
     }
     class Repeat0 : TreeWalker
     {
@@ -293,6 +382,26 @@ namespace Deltin.Deltinteger.Compiler.Parser
             }
             while (last.Accepted && last.WasAdvanced && !last.ReachedEnd);
         }
+
+        public override string ToString() => "rep(" + _rule.ToString() + ")";
+    }
+    class Optional : TreeWalker
+    {
+        private readonly TreeWalker _walker;
+
+        public Optional(TreeWalker walker)
+        {
+            _walker = walker;
+        }
+        
+        public override void Walk(ParseTree parseTree)
+        {
+            var walkTree = parseTree.Child();
+            _walker.Walk(walkTree);
+            if (walkTree.Accepted && walkTree.WasAdvanced) parseTree.Moosh(walkTree);
+        }
+
+        public override string ToString() => "?(" + _walker.ToString() + ")?";
     }
 
     public class ParserDiagnostic

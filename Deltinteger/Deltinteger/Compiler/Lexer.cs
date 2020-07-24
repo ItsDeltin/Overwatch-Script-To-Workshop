@@ -116,13 +116,24 @@ namespace Deltin.Deltinteger.Compiler
                     MatchSymbol('}', TokenType.CurlyBracket_Close) ||
                     MatchSymbol('(', TokenType.Parentheses_Open) ||
                     MatchSymbol(')', TokenType.Parentheses_Close) ||
+                    MatchSymbol('[', TokenType.SquareBracket_Open) ||
+                    MatchSymbol(']', TokenType.SquareBracket_Close) ||
                     MatchSymbol(':', TokenType.Colon) ||
+                    MatchSymbol(';', TokenType.Semicolon) ||
                     MatchSymbol('.', TokenType.Dot) ||
+                    MatchSymbol('!', TokenType.Exclamation) ||
+                    MatchSymbol('=', TokenType.Equals) ||
+                    MatchSymbol('<', TokenType.LessThan) ||
+                    MatchSymbol('>', TokenType.GreaterThan) ||
+                    MatchSymbol(',', TokenType.Comma) ||
                     MatchKeyword("for", TokenType.For) ||
                     MatchKeyword("rule", TokenType.Rule) ||
                     MatchKeyword("true", TokenType.True) ||
                     MatchKeyword("false", TokenType.False) ||
                     MatchKeyword("if", TokenType.If) ||
+                    MatchKeyword("break", TokenType.Break) ||
+                    MatchKeyword("continue", TokenType.Continue) ||
+                    MatchKeyword("define", TokenType.Define) ||
                     MatchNumber() ||
                     MatchIdentifier() ||
                     MatchString();
@@ -194,7 +205,7 @@ namespace Deltin.Deltinteger.Compiler
             LexScanner scanner = MakeScanner();
             
             // Advance while the current character is an identifier.
-            while (scanner.AtIdentifierChar()) scanner.Advance();
+            while (!scanner.ReachedEnd && scanner.AtIdentifierChar()) scanner.Advance();
 
             // Push the token if it is accepted.
             if (scanner.WasAdvanced)
