@@ -94,6 +94,9 @@ namespace Deltin.Deltinteger.Compiler.Parser
         /// <summary>Gets the current token.</summary>
         public Token CurrentToken() => Lexer.Tokens[Position];
 
+        /// <summary>Gets the last token in the file.</summary>
+        public Token LastToken() => Lexer.Tokens[Lexer.Tokens.Count - 1];
+
         /// <summary>The diagnostics that will be displayed if this tree is chosen.</summary>
         /// <param name="message">The message that will be displayed.</param>
         /// <param name="range">The range of the diagnostic.</param>
@@ -103,11 +106,18 @@ namespace Deltin.Deltinteger.Compiler.Parser
         public void Accept()
         {
             Accepted = true;
-            if (_parent != null)
-            {
-                _parent.Position = Position;
-                _parent.WasAdvanced = true;
-            }
+            // if (_parent != null)
+            // {
+            //     _parent.Position = Position;
+            //     _parent.WasAdvanced = true;
+            // }
+        }
+
+        public void Skip(ParseTree parseTree)
+        {
+            if (Position >= parseTree.Position) throw new Exception("Skipping to same or lower.");
+            Position = parseTree.Position;
+            WasAdvanced = true;
         }
 
         public void Debug(int ind = 0)
@@ -148,6 +158,7 @@ namespace Deltin.Deltinteger.Compiler.Parser
     {
         public static implicit operator TreeWalker(TokenType tokenType) => new TokenWalker(tokenType);
         public abstract void Walk(ParseTree parseTree);
+        public virtual void EOF(ParseTree parseTree) {}
     }
     class TokenWalker : TreeWalker
     {
@@ -166,8 +177,11 @@ namespace Deltin.Deltinteger.Compiler.Parser
                 parseTree.Accept();
             }
             else
-                parseTree.Diagnostic("Syntax error, '" + _tokenType + "' expected", parseTree.CurrentToken().Range);
+                parseTree.Diagnostic("Syntax error, '" + _tokenType.Name() + "' expected", parseTree.CurrentToken().Range);
         }
+
+        public override void EOF(ParseTree parseTree)
+            => parseTree.Diagnostic("Syntax error, '" + _tokenType.Name() + "' expected", parseTree.LastToken().Range);
     }
 
     class Sequence : TreeWalker
@@ -195,11 +209,17 @@ namespace Deltin.Deltinteger.Compiler.Parser
 
                     if (childTree.WasAdvanced || childTree.ContinueEvenWithNoAdvance)
                     {
-                        broke = true;
                         i = l + 1;
-                        if (sequenceRoot.ReachedEnd) return;
+                        if (sequenceRoot.ReachedEnd) break;
+                        else broke = true;
                         break;
                     }
+                }
+                if (sequenceRoot.ReachedEnd)
+                {
+                    for (; i < _children.Length; i++)
+                        _children[i].EOF(sequenceRoot);
+                    break;
                 }
                 if (!broke)
                     break;

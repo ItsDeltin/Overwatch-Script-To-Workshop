@@ -178,7 +178,7 @@ namespace Deltin.Deltinteger.Compiler
                 case TokenType.True: return "true";
                 case TokenType.False: return "false";
                 case TokenType.Unknown: return "unknown";
-                default: throw new NotImplementedException("No identifier for the token '" + tokenType + "'");
+                default: return "*" + tokenType.ToString();
             }
         }
     }
