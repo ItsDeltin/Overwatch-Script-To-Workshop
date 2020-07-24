@@ -55,6 +55,7 @@ namespace Deltin.Deltinteger.Compiler.Parser
         public List<ParserDiagnostic> Diagnostics { get; } = new List<ParserDiagnostic>();
         public bool Accepted { get; private set; }
         public bool ReachedEnd => Position == Lexer.Tokens.Count;
+        public bool WasAdvanced { get; private set; }
         private readonly List<ParseTree> _children = new List<ParseTree>();
         private readonly ParseTree _parent;
 
@@ -72,8 +73,19 @@ namespace Deltin.Deltinteger.Compiler.Parser
 
         public void Advance()
         {
+            WasAdvanced = true;
             if (Position == Lexer.Tokens.Count) throw new Exception("No more tokens to advance.");
             Position++;
+        }
+
+        public void Moosh(ParseTree parseTree)
+        {
+            if (!_children.Remove(parseTree)) throw new Exception("Mooshing parse tree that is not a child.");
+            Position = parseTree.Position;
+            WasAdvanced = true;
+            Diagnostics.AddRange(parseTree.Diagnostics);
+            _children.AddRange(parseTree._children);
+            Accept();
         }
 
         public ParseTree Child() => new ParseTree(this);
@@ -104,6 +116,10 @@ namespace Deltin.Deltinteger.Compiler.Parser
                     return;
                 }
         }
+
+        public override string ToString() => "[" + nameof(Accepted) + ": " + Accepted +
+            ", " + nameof(_children) + ": " + _children.Count +
+            ", " + nameof(Diagnostics) + ": " + Diagnostics.Count + "]";
     }
 
     public class ParserRule : TreeWalker
@@ -161,7 +177,10 @@ namespace Deltin.Deltinteger.Compiler.Parser
         public override void Walk(ParseTree parseTree)
         {
             foreach (TreeWalker child in _children)
+            {
                 child.Walk(parseTree);
+                if (parseTree.ReachedEnd) return;
+            }
         }
     }
     class Alt : TreeWalker
@@ -181,23 +200,28 @@ namespace Deltin.Deltinteger.Compiler.Parser
 
         public override void Walk(ParseTree parseTree)
         {
+            bool anyFound = false;
+
             foreach (TreeWalker option in _options)
             {
                 ParseTree optionTree = parseTree.Child();
                 option.Walk(optionTree);
-                if (optionTree.Accepted) parseTree.Accept();
+                if (optionTree.Accepted)
+                {
+                    parseTree.Accept();
+                    anyFound = true;
+                }
             }
 
             // Syntax error if none was found.
-            if (!parseTree.Accepted)
+            if (!anyFound)
             {
                 if (_alias != null)
                     parseTree.Diagnostic(string.Format(_alias, parseTree.CurrentToken().TokenType.Name()), parseTree.CurrentToken().Range);
                 else
                     // TODO
                     throw new NotImplementedException();
-                parseTree.Advance();
-                parseTree.Accept();
+                // parseTree.Accept();
             }
         }
     }
@@ -217,9 +241,9 @@ namespace Deltin.Deltinteger.Compiler.Parser
             {
                 last = parseTree.Child();
                 _rule.Walk(last);
-                if (last.Accepted) parseTree.Accept();
+                if (last.Accepted && last.WasAdvanced) parseTree.Moosh(last);
             }
-            while (last.Accepted);
+            while (last.Accepted && last.WasAdvanced && !last.ReachedEnd);
         }
     }
 
@@ -233,5 +257,7 @@ namespace Deltin.Deltinteger.Compiler.Parser
             Message = message;
             Range = range;
         }
+
+        public override string ToString() => Message;
     }
 }

@@ -167,8 +167,11 @@ namespace Deltin.Deltinteger.Compiler
                 case TokenType.Colon: return ":";
                 case TokenType.CurlyBracket_Close: return "}";
                 case TokenType.CurlyBracket_Open: return "{";
+                case TokenType.Parentheses_Close: return ")";
+                case TokenType.Parentheses_Open: return "(";
                 case TokenType.Dot: return ".";
                 case TokenType.For: return "for";
+                case TokenType.If: return "if";
                 case TokenType.Identifier: return "identifier";
                 case TokenType.String: return "string";
                 case TokenType.Number: return "number";
