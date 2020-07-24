@@ -56,6 +56,7 @@ namespace Deltin.Deltinteger.Compiler.Parser
         public bool Accepted { get; private set; }
         public bool ReachedEnd => Position == Lexer.Tokens.Count;
         public bool WasAdvanced { get; private set; }
+        public bool ContinueEvenWithNoAdvance { get; set; }
         private readonly List<ParseTree> _children = new List<ParseTree>();
         private readonly ParseTree _parent;
 
@@ -81,8 +82,8 @@ namespace Deltin.Deltinteger.Compiler.Parser
         public void Moosh(ParseTree parseTree)
         {
             if (!_children.Remove(parseTree)) throw new Exception("Mooshing parse tree that is not a child.");
+            if (parseTree.Position > Position) WasAdvanced = true;
             Position = parseTree.Position;
-            WasAdvanced = true;
             Diagnostics.AddRange(parseTree.Diagnostics);
             _children.AddRange(parseTree._children);
             Accept();
@@ -102,7 +103,11 @@ namespace Deltin.Deltinteger.Compiler.Parser
         public void Accept()
         {
             Accepted = true;
-            if (_parent != null) _parent.Position = Position;
+            if (_parent != null)
+            {
+                _parent.Position = Position;
+                _parent.WasAdvanced = true;
+            }
         }
 
         public void Debug(int ind = 0)
@@ -176,11 +181,32 @@ namespace Deltin.Deltinteger.Compiler.Parser
 
         public override void Walk(ParseTree parseTree)
         {
-            foreach (TreeWalker child in _children)
+            ParseTree sequenceRoot = parseTree.Child();
+
+            for (int i = 0; i < _children.Length;)
             {
-                child.Walk(parseTree);
-                if (parseTree.ReachedEnd) return;
+                bool broke = false;
+                for (int l = i; l < _children.Length; l++)
+                {                    
+                    ParseTree childTree = sequenceRoot.Child();
+                    _children[l].Walk(childTree);
+                    
+                    sequenceRoot.Moosh(childTree);
+
+                    if (childTree.WasAdvanced || childTree.ContinueEvenWithNoAdvance)
+                    {
+                        broke = true;
+                        i = l + 1;
+                        if (sequenceRoot.ReachedEnd) return;
+                        break;
+                    }
+                }
+                if (!broke)
+                    break;
             }
+
+            if (sequenceRoot.WasAdvanced)
+                parseTree.Moosh(sequenceRoot);
         }
     }
     class Alt : TreeWalker
@@ -236,6 +262,8 @@ namespace Deltin.Deltinteger.Compiler.Parser
 
         public override void Walk(ParseTree parseTree)
         {
+            parseTree.ContinueEvenWithNoAdvance = true;
+
             ParseTree last;
             do
             {
