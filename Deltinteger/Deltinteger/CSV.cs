@@ -242,6 +242,11 @@ namespace Deltin.Deltinteger.Csv
         }
     }
 
+    public class CsvNull : CsvPart
+    {
+        override protected bool IsEqual(CsvPart other) => true;
+    }
+
     public class CsvParseFailedException : Exception
     {
         public CsvParseFailedException(string message) : base(message) {}
