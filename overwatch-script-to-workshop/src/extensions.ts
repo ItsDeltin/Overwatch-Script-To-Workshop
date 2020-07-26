@@ -8,6 +8,7 @@ import path = require('path');
 import glob = require('glob');
 import yauzl = require("yauzl");
 import exec = require('child_process');
+import { register } from './debugger';
 
 let globalStoragePath:string;
 let defaultServerFolder:string;
@@ -34,7 +35,7 @@ export async function activate(context: ExtensionContext) {
 	elementCountStatus.show();
 	setElementCount(0);
 	
-	addCommands(context);
+	subscribe(context);
 
 	workspace.onDidChangeConfiguration(async (e: vscode.ConfigurationChangeEvent) => {
 		if (e.affectsConfiguration("ostw.deltintegerPath"))
@@ -229,8 +230,16 @@ async function stopLanguageServer() {
 	isServerRunning = false;
 }
 
+let deltintegerModule: string;
+
+export function getServerModule(): string
+{
+	return deltintegerModule;
+}
+
 function setServerOptions(serverModule: string)
 {
+	deltintegerModule = serverModule;
 	// It was me, stdio!
 	let serverExecutableOptions = { stdio: "pipe", detached: false, shell: <boolean>config.get('deltintegerShell') };
 	serverOptions.run = {
@@ -264,8 +273,10 @@ export function deactivate(): Thenable<void> | undefined {
 
 var lastWorkshopOutput : string = null;
 
-function addCommands(context: ExtensionContext)
+function subscribe(context: ExtensionContext)
 {
+	register(context);
+	
 	// Push provider.
 	context.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider('ow_ostw', workshopPanelProvider));
 
