@@ -181,7 +181,7 @@ namespace Deltin.Deltinteger.Csv
             return true;
         }
 
-        public override string ToString() => "TODO: this is an array";
+        public override string ToString() => "Count = " + Values.Length;
     }
 
     public class CsvNumber : CsvPart
