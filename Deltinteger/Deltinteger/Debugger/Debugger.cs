@@ -41,6 +41,7 @@ namespace Deltin.Deltinteger.Debugger
                 {
                     // Action list successfully parsed.
                     // Get the DeltinScript.
+                    // TODO: Null check _languageServer.LastParse
                     VariableCollection = _languageServer.LastParse.DebugVariables;
 
                     // Apply debugger variables.
@@ -316,8 +317,11 @@ namespace Deltin.Deltinteger.Debugger
                 return new CsvVector(new Models.Vertex(x, y, z));
             }
             // Strings
-            else if (VisitString(out string str))
+            else if (Visit(_keywords.CustomString))
             {
+                Visit("(");
+                VisitString(out string str);
+                Visit(")");
                 return new CsvString(str);
             }
             // todo: all the types
@@ -336,6 +340,7 @@ namespace Deltin.Deltinteger.Debugger
         public string Array = "Array";
         public string Null = "Null";
         public string Vector = "Vector";
+        public string CustomString = "Custom String";
     }
 
     public class StreamVariable

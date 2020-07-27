@@ -160,7 +160,7 @@ namespace Deltin.Deltinteger.Debugger
             ActionVariable = null;
         }
 
-        public CsvPart GetValue() => ActionVariable.Value;
+        public CsvPart GetValue() => ActionVariable?.Value;
 
         public IDebugVariable[] GetChildren(DebugVariableLinkCollection collection)
         {

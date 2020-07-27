@@ -225,15 +225,16 @@
                         "description": "A new configuration for debugging an OSTW script.",
                         "body": {
                             "type": "ostw",
-                            "program": "^\"\\${workspaceFolder}/\\${file}\""
+                            "program": "${workspaceFolder}/${file}"
                         }
                     }
                 ],
                 "initialConfigurations": [
                     {
                         "type": "ostw",
-                        "name": "Overwatch Script To Workshop Configuration",
-                        "program": "^\"\\${workspaceFolder}/\\${file}\""
+                        "name": "OSTW",
+                        "program": "${workspaceFolder}/${file}",
+                        "request": "launch"
                     }
                 ],
                 "configurationAttributes": {
