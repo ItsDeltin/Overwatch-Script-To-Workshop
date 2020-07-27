@@ -4,6 +4,7 @@ using System.Linq;
 using Deltin.Deltinteger.Parse;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.Csv;
+using Deltin.Deltinteger.Debugger.Protocol;
 
 namespace Deltin.Deltinteger.Debugger
 {
@@ -71,6 +72,24 @@ namespace Deltin.Deltinteger.Debugger
             }
             return new DBPVariable[0];
         }
+
+        public EvaluateResponse Evaluate(EvaluateArgs args)
+        {
+            string[] path = args.expression.Split('.');
+
+            // Get the first variable.
+            var current = Variables.FirstOrDefault(v => v.IsRoot && v.Name == path[0]);
+            if (current == null) return null;
+
+            // Get the rest of the path.
+            for (int i = 1; i < path.Length; i++)
+            {
+                current = current.GetChildren(this).FirstOrDefault(v => v.Name == path[i]);
+                if (current == null) return null;
+            }
+
+            return current.GetEvaluation();
+        }
     }
 
     public interface IDebugVariable
@@ -79,15 +98,40 @@ namespace Deltin.Deltinteger.Debugger
         string Type { get; }
         int Reference { get; }
         bool IsRoot { get; }
+        IDebugVariableResolver Resolver { get; }
         IDebugVariable[] GetChildren(DebugVariableLinkCollection collection);
         CsvPart GetValue();
-        DBPVariable GetProtocolVariable();
+
+        public DBPVariable GetProtocolVariable()
+        {
+            if (GetValue() == null) return null;
+            DBPVariable variable = new DBPVariable() {
+                name = Name,
+                type = Type,
+                value = GetValue().ToString(),
+                variablesReference = Reference
+            };
+            Resolver.Apply(this, variable);
+            return variable;
+        }
+
+        public EvaluateResponse GetEvaluation()
+        {
+            if (GetValue() == null) return null;
+            EvaluateResponse response = new EvaluateResponse() {
+                type = Type,
+                result = GetValue().ToString(),
+                variablesReference = Reference
+            };
+            Resolver.Apply(this, response);
+            return response;
+        }
     }
 
     public class LinkableDebugVariable : IDebugVariable
     {
-        private readonly IDebugVariableResolver _resolver;
         public bool IsRoot => true;
+        public IDebugVariableResolver Resolver { get; }
         public string Name { get; }
         public string Type { get; }
         public WorkshopVariable Variable { get; }
@@ -98,12 +142,12 @@ namespace Deltin.Deltinteger.Debugger
 
         public LinkableDebugVariable(DebugVariableLinkCollection collection, IIndexReferencer referencer, WorkshopVariable variable, int[] index)
         {
-            _resolver = referencer.Type().DebugVariableResolver ?? new DefaultResolver();
+            Resolver = referencer.Type().DebugVariableResolver ?? new DefaultResolver();
             Name = referencer.Name;
             Type = referencer.Type()?.GetName() ?? "define";
             Variable = variable;
             Index = index;
-            Reference = _resolver.IsStructured() ? collection.GetReference() : 0;
+            Reference = Resolver.IsStructured() ? collection.GetReference() : 0;
         }
 
         public void SetStreamVariable(StreamVariable variable)
@@ -116,33 +160,20 @@ namespace Deltin.Deltinteger.Debugger
             ActionVariable = null;
         }
 
-        public DBPVariable GetProtocolVariable()
-        {
-            if (ActionVariable == null) return null;
-            DBPVariable variable = new DBPVariable() {
-                name = Name,
-                type = Type,
-                value = ActionVariable.Value.ToString(),
-                variablesReference = Reference
-            };
-            _resolver.Apply(this, variable);
-            return variable;
-        }
-
         public CsvPart GetValue() => ActionVariable.Value;
 
         public IDebugVariable[] GetChildren(DebugVariableLinkCollection collection)
         {
             if (_children == null)
-                _children = _resolver.GetChildren(collection, this);
+                _children = Resolver.GetChildren(collection, this);
             return _children;
         }
     }
 
     public class ChildDebugVariable : IDebugVariable
     {
-        private readonly IDebugVariableResolver _resolver;
         public bool IsRoot => false;
+        public IDebugVariableResolver Resolver { get; }
         public string Name { get; }
         public string Type { get; }
         public int Reference { get; }
@@ -151,24 +182,11 @@ namespace Deltin.Deltinteger.Debugger
 
         public ChildDebugVariable(IDebugVariableResolver resolver, CsvPart value, string name, string type, int reference)
         {
-            _resolver = resolver;
+            Resolver = resolver;
             Name = name;
             Type = type;
             Reference = reference;
             Value = value;
-        }
-
-        public DBPVariable GetProtocolVariable()
-        {
-            if (Value == null) return null;
-            DBPVariable variable = new DBPVariable() {
-                name = Name,
-                type = Type,
-                value = Value.ToString(),
-                variablesReference = Reference
-            };
-            _resolver.Apply(this, variable);
-            return variable;
         }
 
         public CsvPart GetValue() => Value;
@@ -176,25 +194,16 @@ namespace Deltin.Deltinteger.Debugger
         public IDebugVariable[] GetChildren(DebugVariableLinkCollection collection)
         {
             if (_children == null)
-                _children = _resolver.GetChildren(collection, this);
+                _children = Resolver.GetChildren(collection, this);
             return _children;
         }
-    }
-
-    public class DBPVariable
-    {
-        public string name;
-        public string value;
-        public string type;
-        public int variablesReference;
-        public int namedVariables;
-        public int indexedVariables; 
     }
 
     public interface IDebugVariableResolver
     {
         bool IsStructured();
         void Apply(IDebugVariable debugVariable, DBPVariable outVariable);
+        void Apply(IDebugVariable debugVariable, EvaluateResponse outEvaluation);
         IDebugVariable[] GetChildren(DebugVariableLinkCollection collection, IDebugVariable parent);
         int GetReference(DebugVariableLinkCollection collection)
         {
@@ -206,11 +215,13 @@ namespace Deltin.Deltinteger.Debugger
     class DefaultResolver : IDebugVariableResolver
     {
         public void Apply(IDebugVariable debugVariable, DBPVariable outVariable) {}
+        public void Apply(IDebugVariable debugVariable, EvaluateResponse outEvaluation) {}
 
         public bool IsStructured() => false;
 
         public IDebugVariable[] GetChildren(DebugVariableLinkCollection collection, IDebugVariable parent)
             => throw new NotImplementedException();
+
     }
 
     class ArrayResolver : IDebugVariableResolver
@@ -228,6 +239,12 @@ namespace Deltin.Deltinteger.Debugger
         {
             if (debugVariable.GetValue() is CsvArray array)
                 outVariable.indexedVariables = array.Values.Length;
+        }
+
+        public void Apply(IDebugVariable debugVariable, EvaluateResponse outEvaluation)
+        {
+            if (debugVariable.GetValue() is CsvArray array)
+                outEvaluation.indexedVariables = array.Values.Length;
         }
 
         public IDebugVariable[] GetChildren(DebugVariableLinkCollection collection, IDebugVariable parent)

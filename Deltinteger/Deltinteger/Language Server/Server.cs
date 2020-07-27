@@ -7,6 +7,7 @@ using System.Text;
 using Deltin.Deltinteger.Parse;
 using Deltin.Deltinteger.Pathfinder;
 using Deltin.Deltinteger.Debugger;
+using Deltin.Deltinteger.Debugger.Protocol;
 using Serilog;
 using TextCopy;
 using Microsoft.Extensions.Logging;
@@ -173,6 +174,11 @@ namespace Deltin.Deltinteger.LanguageServer
                 if (_debugger.VariableCollection != null)
                     return _debugger.VariableCollection.GetVariables(args);
                 return null;
+            }));
+
+            // debugger evaluate
+            options.OnRequest<EvaluateArgs, EvaluateResponse>("debugger.evaluate", args => Task<EvaluateResponse>.Run(() => {
+                return _debugger.VariableCollection?.Evaluate(args);
             }));
 
             return options;

@@ -4,8 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Deltin.Deltinteger.Elements;
-using Deltin.Deltinteger.Parse;
+using Deltin.Deltinteger.Debugger.Protocol;
 using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.Csv;
 using TextCopy;
@@ -62,13 +61,6 @@ namespace Deltin.Deltinteger.Debugger
                     catch (Exception) {}
                 }
             }
-        }
-
-        public EvaluateResult Evaluate(EvaluateArgs args)
-        {
-            string[] path = args.expression.Split('.');
-            
-            return null;
         }
     }
 
@@ -364,31 +356,5 @@ namespace Deltin.Deltinteger.Debugger
         Unknown,
         Global,
         Player
-    }
-
-    public class EvaluateArgs
-    {
-        public string expression;
-        public string context;
-    }
-
-    public class VariablesArgs
-    {
-        /// <summary>The Variable reference.</summary>
-        public int variablesReference;
-        /// <summary>Optional filter to limit the child variables to either named or indexed. If omitted, both types are fetched.</summary>
-        public string filter;
-        /// <summary>The index of the first variable to return; if omitted children start at 0.</summary>
-        public int start;
-        /// <summary>The number of variables to return. If count is missing or 0, all variables are returned.</summary>
-        public int count;
-    }
-
-    public class EvaluateResult
-    {
-        public string type;
-        public int variablesReference;
-        public int namedVariables;
-        public int indexedVariables;
     }
 }

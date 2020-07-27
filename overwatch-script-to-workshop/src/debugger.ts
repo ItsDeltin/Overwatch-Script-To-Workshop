@@ -107,15 +107,8 @@ class DeltinDebugger extends LoggingDebugSession
 		this.sendResponse(response);
 	}
 
-	protected evaluateRequest(response: DebugProtocol.EvaluateResponse, args: DebugProtocol.EvaluateArguments): void {
-
-		// if (args.context == 'hover')
-		// {
-		response.body = {
-			result: "hmm",
-			variablesReference: 0
-		};
-		// }
+	protected async evaluateRequest(response: DebugProtocol.EvaluateResponse, args: DebugProtocol.EvaluateArguments) {
+		response.body = await client.sendRequest('debugger.evaluate', args);
 		this.sendResponse(response);
 	}
 
