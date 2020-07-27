@@ -6,19 +6,20 @@ using System.Threading;
 using System.Threading.Tasks;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.Parse;
+using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.Csv;
 using TextCopy;
 
 namespace Deltin.Deltinteger.Debugger
 {
-    class DebuggerServer
+    class ClipboardListener
     {
-        public bool IsListening { get; private set; }
-        private readonly Func<DeltinScript> _deltinScriptResolver;
+        public bool IsListening { get; private set; } = true;
+        private readonly DeltintegerLanguageServer _languageServer;
 
-        public DebuggerServer(Func<DeltinScript> deltinScriptResolver)
+        public ClipboardListener(DeltintegerLanguageServer languageServer)
         {
-            _deltinScriptResolver = deltinScriptResolver;
+            _languageServer = languageServer;
         }
 
         public async Task Listen()
@@ -40,7 +41,8 @@ namespace Deltin.Deltinteger.Debugger
                 {
                     // Action list successfully parsed.
                     // Get the DeltinScript.
-                    DeltinScript deltinScript = _deltinScriptResolver.Invoke();
+                    _languageServer.Server.SendNotification("debugger.activated");
+                    // DeltinScript deltinScript = _languageServer.LastParse;
                 }
                 else
                 {
@@ -55,6 +57,13 @@ namespace Deltin.Deltinteger.Debugger
                 }
             }
         }
+
+        public EvaluateResult Evaluate(EvaluateArgs args)
+        {
+            string[] path = args.expression.Split('.');
+            
+            return null;
+        }
     }
 
     class DebuggerActionStream
@@ -64,7 +73,7 @@ namespace Deltin.Deltinteger.Debugger
         private readonly string _text;
         private readonly DebuggerActionStreamKeywords _keywords;
         private int _position;
-        private bool ReachedEnd => _position < _text.Length;
+        private bool ReachedEnd => _position >= _text.Length;
 
         public DebuggerActionStream(string text, DebuggerActionStreamKeywords keywords = null)
         {
@@ -89,7 +98,7 @@ namespace Deltin.Deltinteger.Debugger
         private bool IsAlphaNumeric() => IsNumeric() || IsAlpha();
         private bool Is(int pos, char character) => _position + pos < _text.Length && _text[_position + pos] == character;
         private bool IsWhitespace() => IsAny(' ', '\t', '\r', '\n');
-        private void Accept(int length = 0) => _position = Math.Min(_text.Length, _position + length);
+        private void Accept(int length = 1) => _position = Math.Min(_text.Length, _position + length);
         private void SkipWhitespace()
         {
             while (IsWhitespace()) Accept();
@@ -122,6 +131,7 @@ namespace Deltin.Deltinteger.Debugger
                 return false;
             }
             number = int.Parse(str);
+            SkipWhitespace();
             return true;
         }
 
@@ -153,6 +163,7 @@ namespace Deltin.Deltinteger.Debugger
                 return false;
             }
             number = double.Parse(str);
+            SkipWhitespace();
             return true;
         }
 
@@ -175,6 +186,7 @@ namespace Deltin.Deltinteger.Debugger
             }
             while (escaped || !Is(0, '"'));
             Accept();
+            SkipWhitespace();
 
             return true;
         }
@@ -193,6 +205,7 @@ namespace Deltin.Deltinteger.Debugger
                 identifier += Current();
                 Accept();
             }
+            SkipWhitespace();
             return true;
         }
 
@@ -240,6 +253,9 @@ namespace Deltin.Deltinteger.Debugger
 
                 // Get the name
                 VisitIdentifier(out string name);
+
+                // =
+                Visit("=");
 
                 // Get the value
                 SetVariable(name ?? "?", VisitExpression());
@@ -353,5 +369,19 @@ namespace Deltin.Deltinteger.Debugger
         Unknown,
         Global,
         Player
+    }
+
+    class EvaluateArgs
+    {
+        public string expression;
+        public string context;
+    }
+
+    class EvaluateResult
+    {
+        public string type;
+        public int variablesReference;
+        public int namedVariables;
+        public int indexedVariables;
     }
 }
