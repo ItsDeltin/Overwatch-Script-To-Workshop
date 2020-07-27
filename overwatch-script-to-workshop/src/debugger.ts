@@ -1,11 +1,12 @@
 import * as vscode from 'vscode';
 import { ProviderResult, ExtensionContext } from 'vscode';
 import * as debugAdapter from 'vscode-debugadapter';
-import { LoggingDebugSession, Scope, Handles, InitializedEvent, StoppedEvent } from 'vscode-debugadapter';
+import { LoggingDebugSession, Scope, Handles, InitializedEvent, StoppedEvent, Thread, StackFrame } from 'vscode-debugadapter';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { EventEmitter } from 'events';
-import { getServerModule } from './extensions';
+import { getServerModule, client } from './extensions';
 import { setTimeout } from 'timers';
+import { debugPort } from 'process';
 
 export function register(context: ExtensionContext)
 {
@@ -24,7 +25,6 @@ class DeltinDebugger extends LoggingDebugSession
     private _variableHandles = new Handles<string>();
     private _cancelationTokens = new Map<number, boolean>();
 	private _isLongrunning = new Map<number, boolean>();
-	private _listenToClipboard: boolean = true;
 
     constructor()
     {
@@ -32,7 +32,11 @@ class DeltinDebugger extends LoggingDebugSession
 
         // Debugger settings
         this.setDebuggerColumnsStartAt1(false);
-        this.setDebuggerLinesStartAt1(false);
+		this.setDebuggerLinesStartAt1(false);
+		
+		client.onNotification('debugger.activated', () => {
+			this.sendEvent(new StoppedEvent('activated actions', 1));
+		});
 
         // _runtime = new DebuggerRuntime();
     }
@@ -42,8 +46,9 @@ class DeltinDebugger extends LoggingDebugSession
         response.body = response.body || {};
 
         // response.body.supportsCancelRequest = true;
-		// response.body.supportsEvaluateForHovers = true;
+		response.body.supportsEvaluateForHovers = true;
 		response.body.supportsRestartRequest = true;
+		response.body.supportsValueFormattingOptions = true;
 
         this.sendResponse(response);
 		this.sendEvent(new InitializedEvent());
@@ -51,7 +56,35 @@ class DeltinDebugger extends LoggingDebugSession
 
     protected async launchRequest(response: DebugProtocol.LaunchResponse, args: DebugProtocol.LaunchRequestArguments) {
         this.sendResponse(response);
-    }
+	}
+	
+	protected threadsRequest(response: DebugProtocol.ThreadsResponse): void {
+		// runtime supports no threads so just return a default thread.
+		response.body = {
+			threads: [
+				new Thread(1, "main")
+			]
+		};
+		this.sendResponse(response);
+	}
+
+	protected stackTraceRequest(response: DebugProtocol.StackTraceResponse, args: DebugProtocol.StackTraceArguments): void {
+
+		const startFrame = typeof args.startFrame === 'number' ? args.startFrame : 0;
+		const maxLevels = typeof args.levels === 'number' ? args.levels : 1000;
+
+		response.body = {
+			stackFrames: [{
+				id: 1,
+				name: 'todo: Stack Frame Name',
+				column: 0,
+				line: 0,
+				source: {name:'saucy', path:this.convertDebuggerPathToClient(vscode.window.activeTextEditor.document.uri.fsPath), adapterData:'this is a test'}
+			}],
+			totalFrames: 1
+		};
+		this.sendResponse(response);
+	}
 
     protected scopesRequest(response: DebugProtocol.ScopesResponse, args: DebugProtocol.ScopesArguments): void {
 		response.body = {
@@ -138,8 +171,20 @@ class DeltinDebugger extends LoggingDebugSession
 		this.sendResponse(response);
 	}
 
+	protected evaluateRequest(response: DebugProtocol.EvaluateResponse, args: DebugProtocol.EvaluateArguments): void {
+
+		// if (args.context == 'hover')
+		// {
+		response.body = {
+			result: "hmm",
+			variablesReference: 0
+		};
+		// }
+		this.sendResponse(response);
+	}
+
 	protected pauseRequest(response: DebugProtocol.PauseResponse, args: DebugProtocol.PauseArguments, request?: DebugProtocol.Request) {
-		this.sendEvent(new StoppedEvent('entry', 0));
+		this.sendEvent(new StoppedEvent('pause', 1));
 		response.body = {};
 		this.sendResponse(response);
 	}
@@ -147,23 +192,6 @@ class DeltinDebugger extends LoggingDebugSession
 	protected restartRequest(response: DebugProtocol.RestartResponse, args: DebugProtocol.RestartArguments, request?: DebugProtocol.Request) {
 		response.body = {};
 		this.sendResponse(response);
-	}
-
-	private async clipboardListener()
-	{
-		let lastClipboard:string = null;
-
-		while (this._listenToClipboard)
-		{
-			// Read clipboard every 500 ms
-			await new Promise(resolve => setTimeout(resolve, 500));
-
-			// Read from the clipboard.
-			let clipboard: string = await vscode.env.clipboard.readText();
-			
-			// Do nothing if the clipboard is the same.
-			if (clipboard == lastClipboard) continue;
-		}
 	}
 }
 

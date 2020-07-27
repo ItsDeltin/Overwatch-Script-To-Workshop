@@ -13,7 +13,7 @@ import { register } from './debugger';
 let globalStoragePath:string;
 let defaultServerFolder:string;
 
-let client: LanguageClient;
+export let client: LanguageClient;
 let idk: Disposable;
 let workshopOut: OutputChannel;
 let elementCountStatus: vscode.StatusBarItem;
