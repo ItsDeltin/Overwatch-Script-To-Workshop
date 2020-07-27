@@ -7,6 +7,7 @@ import { EventEmitter } from 'events';
 import { getServerModule, client } from './extensions';
 import { setTimeout } from 'timers';
 import { debugPort } from 'process';
+import { debug } from 'console';
 
 export function register(context: ExtensionContext)
 {
@@ -97,74 +98,9 @@ class DeltinDebugger extends LoggingDebugSession
     }
     
     protected async variablesRequest(response: DebugProtocol.VariablesResponse, args: DebugProtocol.VariablesArguments, request?: DebugProtocol.Request) {
-		const variables: DebugProtocol.Variable[] = [];
 
-		if (this._isLongrunning.get(args.variablesReference)) {
-			// long running
-
-			if (request) {
-				this._cancelationTokens.set(request.seq, false);
-			}
-
-			for (let i = 0; i < 100; i++) {
-				variables.push({
-					name: `i_${i}`,
-					type: "integer",
-					value: `${i}`,
-					variablesReference: 0
-				});
-				if (request && this._cancelationTokens.get(request.seq)) {
-					break;
-				}
-			}
-
-			if (request) {
-				this._cancelationTokens.delete(request.seq);
-			}
-
-		} else {
-
-			const id = this._variableHandles.get(args.variablesReference);
-
-			if (id) {
-				variables.push({
-					name: id + "_i",
-					type: "integer",
-					value: "123",
-					variablesReference: 0
-				});
-				variables.push({
-					name: id + "_f",
-					type: "float",
-					value: "3.14",
-					variablesReference: 0
-				});
-				variables.push({
-					name: id + "_s",
-					type: "string",
-					value: "hello world",
-					variablesReference: 0
-				});
-				variables.push({
-					name: id + "_o",
-					type: "object",
-					value: "Object",
-					variablesReference: this._variableHandles.create(id + "_o")
-				});
-
-				// cancelation support for long running requests
-				const nm = id + "_long_running";
-				const ref = this._variableHandles.create(id + "_lr");
-				variables.push({
-					name: nm,
-					type: "object",
-					value: "Object",
-					variablesReference: ref
-				});
-				this._isLongrunning.set(ref, true);
-			}
-		}
-
+		let variables: debugAdapter.Variable[] = await client.sendRequest("debugger.getVariables", args);
+		
 		response.body = {
 			variables: variables
 		};

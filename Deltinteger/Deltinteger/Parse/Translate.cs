@@ -5,6 +5,7 @@ using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.Lobby;
 using Deltin.Deltinteger.I18n;
+using Deltin.Deltinteger.Debugger;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -27,6 +28,7 @@ namespace Deltin.Deltinteger.Parse
         public readonly bool OptimizeOutput;
         private List<IComponent> Components { get; } = new List<IComponent>();
         private List<InitComponent> InitComponent { get; } = new List<InitComponent>();
+        public DebugVariableLinkCollection DebugVariables { get; } = new DebugVariableLinkCollection();
 
         public DeltinScript(TranslateSettings translateSettings)
         {
@@ -204,16 +206,21 @@ namespace Deltin.Deltinteger.Parse
             foreach (var variable in rulesetVariables)
             {
                 // Assign the variable an index.
-                DefaultIndexAssigner.Add(VarCollection, variable, true, null);
+                var assigner = DefaultIndexAssigner.Add(VarCollection, variable, true, null) as IndexReference;
 
-                var assigner = DefaultIndexAssigner[variable] as IndexReference;
-                if (assigner != null && variable.InitialValue != null)
+                // Assigner will be non-null if it is an IndexReference.
+                if (assigner != null)
                 {
-                    var addToInitialRule = GetInitialRule(variable.VariableType == VariableType.Global);
+                    DebugVariables.Add(variable, assigner);
+                    // Initial value.
+                    if (variable.InitialValue != null)
+                    {
+                        var addToInitialRule = GetInitialRule(variable.VariableType == VariableType.Global);
 
-                    addToInitialRule.ActionSet.AddAction(assigner.SetVariable(
-                        (Element)variable.InitialValue.Parse(addToInitialRule.ActionSet)
-                    ));
+                        addToInitialRule.ActionSet.AddAction(assigner.SetVariable(
+                            (Element)variable.InitialValue.Parse(addToInitialRule.ActionSet)
+                        ));
+                    }
                 }
             }
 

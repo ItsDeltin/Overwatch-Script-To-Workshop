@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Text;
 using Deltin.Deltinteger.Parse;
 using Deltin.Deltinteger.Pathfinder;
+using Deltin.Deltinteger.Debugger;
 using Serilog;
 using TextCopy;
 using Microsoft.Extensions.Logging;
@@ -44,7 +45,13 @@ namespace Deltin.Deltinteger.LanguageServer
         public DocumentHandler DocumentHandler { get; private set; }
         public FileGetter FileGetter { get; private set; }
         public ConfigurationHandler ConfigurationHandler { get; private set; }
+        private readonly ClipboardListener _debugger;
         private PathMap lastMap;
+
+        public DeltintegerLanguageServer()
+        {
+            _debugger = new ClipboardListener(this);
+        }
 
         async Task RunServer()
         {
@@ -87,6 +94,8 @@ namespace Deltin.Deltinteger.LanguageServer
             ));
             
             Server.SendNotification(Version, Program.VERSION);
+            
+            Task wait = _debugger.Listen();
             
             await Server.WaitForExit;
         }
@@ -157,6 +166,13 @@ namespace Deltin.Deltinteger.LanguageServer
                 await DocumentHandler.WaitForCompletedTyping(true);
                 SemanticToken[] tokens = LastParse?.ScriptFromUri(new Uri(uriToken["fsPath"].ToObject<string>()))?.GetSemanticTokens();
                 return tokens ?? new SemanticToken[0];
+            }));
+
+            // debugger variables
+            options.OnRequest<VariablesArgs, DBPVariable[]>("debugger.getVariables", args => Task<DBPVariable[]>.Run(() => {
+                if (_debugger.VariableCollection != null)
+                    return _debugger.VariableCollection.GetVariables(args);
+                return null;
             }));
 
             return options;

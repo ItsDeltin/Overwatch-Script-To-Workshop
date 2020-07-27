@@ -16,6 +16,7 @@ namespace Deltin.Deltinteger.Debugger
     {
         public bool IsListening { get; private set; } = true;
         private readonly DeltintegerLanguageServer _languageServer;
+        public DebugVariableLinkCollection VariableCollection;
 
         public ClipboardListener(DeltintegerLanguageServer languageServer)
         {
@@ -41,8 +42,13 @@ namespace Deltin.Deltinteger.Debugger
                 {
                     // Action list successfully parsed.
                     // Get the DeltinScript.
+                    VariableCollection = _languageServer.LastParse.DebugVariables;
+
+                    // Apply debugger variables.
+                    VariableCollection.Apply(actionStream);
+
+                    // Notify the adapter of the new state.
                     _languageServer.Server.SendNotification("debugger.activated");
-                    // DeltinScript deltinScript = _languageServer.LastParse;
                 }
                 else
                 {
@@ -66,10 +72,10 @@ namespace Deltin.Deltinteger.Debugger
         }
     }
 
-    class DebuggerActionStream
+    public class DebuggerActionStream
     {
         public DebuggerActionStreamSet Set { get; private set; }
-        public List<DebuggerVariable> Variables { get; } = new List<DebuggerVariable>();
+        public List<StreamVariable> Variables { get; } = new List<StreamVariable>();
         private readonly string _text;
         private readonly DebuggerActionStreamKeywords _keywords;
         private int _position;
@@ -85,10 +91,8 @@ namespace Deltin.Deltinteger.Debugger
         {
             bool visitVariables = VisitVariables();
             bool visitActions = VisitActions();
-            return visitVariables || visitActions;
+            return visitActions;
         }
-
-        public DebuggerActionResult GetResult() => new DebuggerActionResult(Variables.ToArray());
 
         private char Current() => _text[_position];
         private bool IsAny(params char[] characters) => !ReachedEnd && characters.Contains(Current());
@@ -233,11 +237,12 @@ namespace Deltin.Deltinteger.Debugger
 
         private void VisitVariableList()
         {
+            Visit(":");
             while (VisitNumber(out int index))
             {
                 Visit(":");
                 VisitIdentifier(out string name);
-                Variables.Add(new DebuggerVariable(index, name ?? "?"));
+                Variables.Add(new StreamVariable(index, name ?? "?"));
             }
         }
 
@@ -270,10 +275,10 @@ namespace Deltin.Deltinteger.Debugger
 
         private void SetVariable(string name, CsvPart value)
         {
-            DebuggerVariable set = Variables.FirstOrDefault(v => v.Name == name);
+            StreamVariable set = Variables.FirstOrDefault(v => v.Name == name);
             if (set == null)
             {
-                set = new DebuggerVariable(-1, name);
+                set = new StreamVariable(-1, name);
                 Variables.Add(set);
             }
             set.Value = value;
@@ -328,7 +333,7 @@ namespace Deltin.Deltinteger.Debugger
         }
     }
 
-    class DebuggerActionStreamKeywords
+    public class DebuggerActionStreamKeywords
     {
         public string Variables = "variables";
         public string Global = "global";
@@ -341,43 +346,45 @@ namespace Deltin.Deltinteger.Debugger
         public string Vector = "Vector";
     }
 
-    class DebuggerActionResult
-    {
-        public DebuggerVariable[] Variables { get; }
-
-        public DebuggerActionResult(DebuggerVariable[] variables)
-        {
-            Variables = variables;
-        }
-    }
-
-    class DebuggerVariable
+    public class StreamVariable
     {
         public int Index { get; }
         public string Name { get; }
         public CsvPart Value { get; set; }
 
-        public DebuggerVariable(int index, string name)
+        public StreamVariable(int index, string name)
         {
             Index = index;
             Name = name;
         }
     }
 
-    enum DebuggerActionStreamSet
+    public enum DebuggerActionStreamSet
     {
         Unknown,
         Global,
         Player
     }
 
-    class EvaluateArgs
+    public class EvaluateArgs
     {
         public string expression;
         public string context;
     }
 
-    class EvaluateResult
+    public class VariablesArgs
+    {
+        /// <summary>The Variable reference.</summary>
+        public int variablesReference;
+        /// <summary>Optional filter to limit the child variables to either named or indexed. If omitted, both types are fetched.</summary>
+        public string filter;
+        /// <summary>The index of the first variable to return; if omitted children start at 0.</summary>
+        public int start;
+        /// <summary>The number of variables to return. If count is missing or 0, all variables are returned.</summary>
+        public int count;
+    }
+
+    public class EvaluateResult
     {
         public string type;
         public int variablesReference;

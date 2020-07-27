@@ -180,6 +180,8 @@ namespace Deltin.Deltinteger.Csv
             
             return true;
         }
+
+        public override string ToString() => "TODO: this is an array";
     }
 
     public class CsvNumber : CsvPart
@@ -195,6 +197,8 @@ namespace Deltin.Deltinteger.Csv
         {
             return ((CsvNumber)other).Value == Value;
         }
+
+        public override string ToString() => Value.ToString();
     }
 
     public class CsvVector : CsvPart
@@ -210,6 +214,8 @@ namespace Deltin.Deltinteger.Csv
         {
             return ((CsvVector)other).Value.EqualTo(Value);
         }
+
+        public override string ToString() => $"Vector({Value.X}, {Value.Y}, {Value.Z})";
     }
 
     public class CsvBoolean : CsvPart
@@ -225,6 +231,8 @@ namespace Deltin.Deltinteger.Csv
         {
             return ((CsvBoolean)other).Value == Value;
         }
+
+        public override string ToString() => Value.ToString();
     }
 
     public class CsvString : CsvPart
@@ -240,11 +248,14 @@ namespace Deltin.Deltinteger.Csv
         {
             return ((CsvString)other).Value == Value;
         }
+
+        public override string ToString() => $"'{Value}'";
     }
 
     public class CsvNull : CsvPart
     {
         override protected bool IsEqual(CsvPart other) => true;
+        public override string ToString() => "Null";
     }
 
     public class CsvParseFailedException : Exception
