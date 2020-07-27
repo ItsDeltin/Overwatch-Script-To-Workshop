@@ -19,6 +19,7 @@ namespace Deltin.Deltinteger.Parse
         public ArrayType(CodeType arrayOfType) : base((arrayOfType?.Name ?? "define") + "[]")
         {
             ArrayOfType = arrayOfType;
+            DebugVariableResolver = new Debugger.ArrayResolver(ArrayOfType?.DebugVariableResolver, ArrayOfType?.GetName());
 
             _length = new InternalVar("Length", CompletionItemKind.Property);
             _last = new InternalVar("Last", ArrayOfType, CompletionItemKind.Property);
