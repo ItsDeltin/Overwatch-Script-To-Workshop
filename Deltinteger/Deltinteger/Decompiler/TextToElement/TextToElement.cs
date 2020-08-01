@@ -19,12 +19,12 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
         public bool ReachedEnd => Position >= Content.Length;
 
         private readonly Stack<TTEOperator> _operators = new Stack<TTEOperator>();
-        private readonly Stack<ITTEExpression> _operands = new Stack<ITTEExpression>(); 
+        private readonly Stack<ITTEExpression> _operands = new Stack<ITTEExpression>();
 
         private readonly string[] _actions;
         private readonly string[] _values;
 
-        public List<ITTEAction> Actions { get; } = new List<ITTEAction>();
+        public List<TTERule> Rules { get; } = new List<TTERule>();
 
         public WorkshopWalker(string content)
         {
@@ -37,7 +37,7 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
         public void Get()
         {
             // Match rules
-            while (Rule());
+            while (Rule(out TTERule rule)) Rules.Add(rule);
         }
 
         void Advance()
@@ -183,9 +183,13 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
         }
 
         // Rules
-        bool Rule()
+        bool Rule(out TTERule rule)
         {
-            if (!Match("rule")) return false;
+            if (!Match("rule"))
+            {
+                rule = null;
+                return false;
+            }
 
             Match("(");
             MatchString(out string ruleName);
@@ -195,17 +199,69 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
             // Event
             Match("event");
             Match("{");
-            Match("Ongoing - Global;");
+            EventInfo eventInfo = MatchEvent();
             Match("}");
 
             // Actions
-            Match("actions");
-            Match("{");
-            while (Action(out ITTEAction action)) Actions.Add(action);
-            Match("}");
+            List<ITTEAction> actions = new List<ITTEAction>(); 
+            if (Match("actions"))
+            {
+                Match("{");
+                while (Action(out ITTEAction action)) actions.Add(action);
+                Match("}");
+            }
 
             Match("}");
+
+            rule = new TTERule(ruleName, eventInfo, actions.ToArray());
             return true;
+        }
+
+        EventInfo MatchEvent()
+        {
+            // Global
+            if (Match("Ongoing - Global;"))
+            {
+                return new EventInfo();
+            }
+            // Subroutine
+            else if (Match("Subroutine;"))
+            {
+                Identifier(out string subroutineName);
+                Match(";");
+                return new EventInfo(subroutineName);
+            }
+            // Player event
+            else
+            {
+                // Get the event type.
+                var ruleEvent = RuleEvent.OngoingGlobal;
+                foreach (var eventNameInfo in EventInfo.PlayerEventNames)
+                    if (Match(eventNameInfo.Item1 + ";"))
+                    {
+                        ruleEvent = eventNameInfo.Item2;
+                        break;
+                    }
+
+                // Get the player type.
+                var player = PlayerSelector.All;
+                foreach (var playerNameInfo in EventInfo.PlayerTypeNames)
+                    if (Match(playerNameInfo.Item1 + ";"))
+                    {
+                        player = playerNameInfo.Item2;
+                        break;
+                    }
+
+                // Get the team.
+                var team = Team.All;
+                if (Match("All;")) {}
+                else if (Match("Team 1;"))
+                    team = Team.Team1;
+                else if (Match("Team 2;"))
+                    team = Team.Team2;
+
+                return new EventInfo(ruleEvent, player, team);
+            }
         }
 
         // Actions
@@ -218,16 +274,26 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
                 action = func;
             }
             // Set variable.
-            else if (Expression(out ITTEExpression expr))
+            else if (Expression(out ITTEExpression expr, getIndexer: false))
             {
                 // Make sure the expression is a global or player variable.
                 if (expr is ITTEVariable == false)
                     throw new Exception("Expression is not a variable.");
                 
-                // TODO: +=, -=, etc. Also arrays
-                Match("=");
+                // Get the index being set.
+                VariableIndex(out var index);
+                
+                string op = null;
+                string[] operators = new string[] { "=", "+=", "-=", "/=", "*=" };
+                foreach (string it in operators)
+                    if (Match(it))
+                    {
+                        op = it;
+                        break;
+                    }
+                
                 Expression(out ITTEExpression value);
-                action = new SetVariableAction((ITTEVariable)expr, "=", value);
+                action = new SetVariableAction((ITTEVariable)expr, op, value, index);
             }
             // Unknown.
             else
@@ -288,12 +354,18 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
         }
 
         // Expressions
-        bool Expression(out ITTEExpression expr, bool root = true)
+        bool Expression(out ITTEExpression expr, bool root = true, bool getIndexer = true)
         {
             expr = null;
 
+            // Group
+            if (Match("("))
+            {
+                Expression(out expr);
+                Match(")");
+            }
             // Number
-            if (Number(out expr))
+            else if (Number(out expr))
             {
             }
             // Variable
@@ -305,17 +377,31 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
             {
                 expr = value;
             }
-            
+            // Anonymous variable.
+            else if (root && Identifier(out string identifier))
+            {
+                expr = new AnonymousVariableExpression(identifier);
+                return true; // Anonymous variable should be a self contained expression.
+            }
             // No matches
-            if (expr == null)
-                return false;
-            
-            // Push the expression
-            _operands.Push(expr);
+            else
+            {
+                return false;    
+            }
             
             // Player variable
             if (MatchPlayerVariable(expr, out ITTEExpression playerVariable))
                 expr = playerVariable;
+            
+            // Array index
+            if (getIndexer)
+            {
+                while (VariableIndex(out ITTEExpression index))
+                    expr = new IndexerExpression(expr, index);
+            }
+
+            // Push the expression
+            _operands.Push(expr);
             
             // Binary operator
             while (MatchOperator(out TTEOperator op))
@@ -328,6 +414,16 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
             
             // If this is the root, return the top operand.
             if (root) expr = _operands.Pop();
+
+            // Ternary conditional
+            if (Match("?"))
+            {
+                Expression(out ITTEExpression consequent);
+                Match(":");
+                Expression(out ITTEExpression alternative);
+                expr = new TernaryExpression(expr, consequent, alternative);
+            }
+
             return true;
         }
 
@@ -371,22 +467,37 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
             playerVariable = new PlayerVariableExpression(name, parent);
             return true;
         }
+
+        bool VariableIndex(out ITTEExpression index)
+        {
+            if (!Match("["))
+            {
+                index = null;
+                return false;
+            }
+
+            Expression(out index);
+            Match("]");
+            return true;
+        }
     
         // Operators
         bool MatchOperator(out TTEOperator op)
         {
-            if (Match("-"))
-                op = TTEOperator.Subtract;
-            else if (Match("+"))
-                op = TTEOperator.Add;
-            else if (Match("%"))
-                op = TTEOperator.Modulo;
-            else if (Match("/"))
-                op = TTEOperator.Divide;
-            else if (Match("*"))
-                op = TTEOperator.Multiply;
-            else if (Match("^"))
-                op = TTEOperator.Power;
+            if (Match("&&")) op = TTEOperator.And;
+            else if (Match("||")) op = TTEOperator.Or;
+            else if (Match("-")) op = TTEOperator.Subtract;
+            else if (Match("+")) op = TTEOperator.Add;
+            else if (Match("%")) op = TTEOperator.Modulo;
+            else if (Match("/")) op = TTEOperator.Divide;
+            else if (Match("*")) op = TTEOperator.Multiply;
+            else if (Match("^")) op = TTEOperator.Power;
+            else if (Match("==")) op = TTEOperator.Equal;
+            else if (Match("!=")) op = TTEOperator.NotEqual;
+            else if (Match(">=")) op = TTEOperator.GreaterThanOrEqual;
+            else if (Match("<=")) op = TTEOperator.LessThanOrEqual;
+            else if (Match(">")) op = TTEOperator.GreaterThan;
+            else if (Match("<")) op = TTEOperator.LessThan;
             else
             {
                 op = null;
@@ -411,15 +522,110 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
         }
     }
 
+    public class EventInfo
+    {
+        public static readonly (string, RuleEvent)[] PlayerEventNames = new (string, RuleEvent)[] {
+            ("Ongoing - Each Player", RuleEvent.OngoingPlayer),
+            ("Player Earned Elimination", RuleEvent.OnElimination),
+            ("Player Dealt Final Blow", RuleEvent.OnFinalBlow),
+            ("Player Dealt Damage", RuleEvent.OnDamageDealt),
+            ("Player Took Damage", RuleEvent.OnDamageTaken),
+            ("Player Died", RuleEvent.OnDeath),
+            ("Player Dealt Healing", RuleEvent.OnHealingDealt),
+            ("Player Received Healing", RuleEvent.OnHealingTaken),
+            ("Player Joined Match", RuleEvent.OnPlayerJoin),
+            ("Player Left Match", RuleEvent.OnPlayerLeave),
+            ("Player Dealt Knockback", RuleEvent.PlayerDealtKnockback),
+            ("Player Received Knockback", RuleEvent.PlayerReceivedKnockback)
+        };
+        public static readonly (string, PlayerSelector)[] PlayerTypeNames = new (string, PlayerSelector)[] {
+            ("All", PlayerSelector.All),
+            ("Ana", PlayerSelector.Ana),
+            ("Ashe", PlayerSelector.Ashe),
+            ("Baptiste", PlayerSelector.Baptiste),
+            ("Bastion", PlayerSelector.Bastion),
+            ("Brigitte", PlayerSelector.Brigitte),
+            ("Doomfist", PlayerSelector.Doomfist),
+            ("D.va", PlayerSelector.Dva),
+            ("Echo", PlayerSelector.Echo),
+            ("Genji", PlayerSelector.Genji),
+            ("Hanzo", PlayerSelector.Hanzo),
+            ("Junkrat", PlayerSelector.Junkrat),
+            ("Lúcio", PlayerSelector.Lucio),
+            ("Mccree", PlayerSelector.Mccree),
+            ("Mei", PlayerSelector.Mei),
+            ("Mercy", PlayerSelector.Mercy),
+            ("Moira", PlayerSelector.Moira),
+            ("Orisa", PlayerSelector.Orisa),
+            ("Pharah", PlayerSelector.Pharah),
+            ("Reaper", PlayerSelector.Reaper),
+            ("Reinhardt", PlayerSelector.Reinhardt),
+            ("Roadhog", PlayerSelector.Roadhog),
+            ("Sigma", PlayerSelector.Sigma),
+            ("Slot 0", PlayerSelector.Slot0),
+            ("Slot 1", PlayerSelector.Slot1),
+            ("Slot 2", PlayerSelector.Slot2),
+            ("Slot 3", PlayerSelector.Slot3),
+            ("Slot 4", PlayerSelector.Slot4),
+            ("Slot 5", PlayerSelector.Slot5),
+            ("Slot 6", PlayerSelector.Slot6),
+            ("Slot 7", PlayerSelector.Slot7),
+            ("Slot 8", PlayerSelector.Slot8),
+            ("Slot 9", PlayerSelector.Slot9),
+            ("Slot 10", PlayerSelector.Slot10),
+            ("Slot 11", PlayerSelector.Slot11),
+            ("Soldier: 76", PlayerSelector.Soldier76),
+            ("Sombra", PlayerSelector.Sombra),
+            ("Symmetra", PlayerSelector.Symmetra),
+            ("Torbjörn", PlayerSelector.Torbjorn),
+            ("Tracer", PlayerSelector.Tracer),
+            ("Widowmaker", PlayerSelector.Widowmaker),
+            ("Winston", PlayerSelector.Winston),
+            ("Wrecking Ball", PlayerSelector.WreckingBall),
+            ("Zarya", PlayerSelector.Zarya),
+            ("Zenyatta", PlayerSelector.Zenyatta)
+        };
+        public RuleEvent Event { get; }
+        public PlayerSelector Player { get; }
+        public Team Team { get; }
+        public string SubroutineName { get; }
+
+        public EventInfo()
+        {
+        }
+        public EventInfo(string subroutineName)
+        {
+            Event = RuleEvent.Subroutine;
+            SubroutineName = subroutineName;
+        }
+        public EventInfo(RuleEvent ruleEvent, PlayerSelector player, Team team)
+        {
+            Event = ruleEvent;
+            Player = player;
+            Team = team;
+        }
+    }
+
     public class TTEOperator
     {
         public static TTEOperator Sentinel { get; } = new TTEOperator(0, null);
-        public static TTEOperator Subtract { get; } = new TTEOperator(1, "-");
-        public static TTEOperator Add { get; } = new TTEOperator(2, "+");
-        public static TTEOperator Modulo { get; } = new TTEOperator(3, "%");
-        public static TTEOperator Divide { get; } = new TTEOperator(4, "/");
-        public static TTEOperator Multiply { get; } = new TTEOperator(5, "*");
-        public static TTEOperator Power { get; } = new TTEOperator(6, "^");
+        // Boolean
+        public static TTEOperator And { get; } = new TTEOperator(1, "&&");
+        public static TTEOperator Or { get; } = new TTEOperator(2, "||");
+        // Math
+        public static TTEOperator Subtract { get; } = new TTEOperator(9, "-");
+        public static TTEOperator Add { get; } = new TTEOperator(10, "+");
+        public static TTEOperator Modulo { get; } = new TTEOperator(11, "%");
+        public static TTEOperator Divide { get; } = new TTEOperator(12, "/");
+        public static TTEOperator Multiply { get; } = new TTEOperator(13, "*");
+        public static TTEOperator Power { get; } = new TTEOperator(14, "^");
+        // Compare
+        public static TTEOperator Equal { get; } = new TTEOperator(3, "==");
+        public static TTEOperator NotEqual { get; } = new TTEOperator(4, "!=");
+        public static TTEOperator GreaterThan { get; } = new TTEOperator(5, ">");
+        public static TTEOperator LessThan { get; } = new TTEOperator(6, "<");
+        public static TTEOperator GreaterThanOrEqual { get; } = new TTEOperator(7, ">=");
+        public static TTEOperator LessThanOrEqual { get; } = new TTEOperator(8, "<=");
 
         public int Precedence { get; }
         public string Operator { get; }
@@ -429,6 +635,24 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
             Precedence = precedence;
             Operator = op;
         }
+    }
+
+    public class TTERule
+    {
+        public string Name { get; }
+        public EventInfo EventInfo { get; }
+        public ITTEAction[] Actions { get; }
+
+        public TTERule(string name, EventInfo eventInfo, ITTEAction[] actions)
+        {
+            Name = name;
+            Actions = actions;
+        }
+    }
+
+    public class TTECondition
+    {
+        public 
     }
 
     // Interfaces
@@ -489,6 +713,17 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
 
         public override string ToString() => "Global." + Name;
     }
+    public class AnonymousVariableExpression : ITTEExpression, ITTEVariable
+    {
+        public string Name { get; }
+
+        public AnonymousVariableExpression(string name)
+        {
+            Name = name;
+        }
+
+        public override string ToString() => Name;
+    }
     public class PlayerVariableExpression : ITTEExpression, ITTEVariable
     {
         public string Name { get; }
@@ -502,20 +737,48 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
 
         public override string ToString() => Player.ToString() + "." + Name;
     }
+    public class IndexerExpression : ITTEExpression
+    {
+        public ITTEExpression Expression { get; }
+        public ITTEExpression Index { get; }
+
+        public IndexerExpression(ITTEExpression expression, ITTEExpression index)
+        {
+            Expression = expression;
+            Index = index;
+        }
+
+        public override string ToString() => Expression.ToString() + "[" + Index.ToString() + "]";
+    }
+    public class TernaryExpression : ITTEExpression
+    {
+        public ITTEExpression Condition { get; }
+        public ITTEExpression Consequent { get; }
+        public ITTEExpression Alternative { get; }
+
+        public TernaryExpression(ITTEExpression condition, ITTEExpression consequent, ITTEExpression alternative)
+        {
+            Condition = condition;
+            Consequent = consequent;
+            Alternative = alternative;
+        }
+    }
     // Actions
     public class SetVariableAction : ITTEAction
     {
         public ITTEVariable Variable { get; }
         public string Operator { get; }
         public ITTEExpression Value { get; }
+        public ITTEExpression Index { get; }
 
-        public SetVariableAction(ITTEVariable variable, string op, ITTEExpression value)
+        public SetVariableAction(ITTEVariable variable, string op, ITTEExpression value, ITTEExpression index)
         {
             Variable = variable;
             Operator = op;
             Value = value;
+            Index = index;
         }
 
-        public override string ToString() => Variable.ToString() + " " + Operator + " " + Value.ToString();
+        public override string ToString() => Variable.ToString() + (Index == null ? " " : " [" + Index.ToString() + "]") + Operator + " " + Value.ToString();
     }
 }
