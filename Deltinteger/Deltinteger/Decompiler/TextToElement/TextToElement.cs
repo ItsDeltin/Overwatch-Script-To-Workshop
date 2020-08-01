@@ -5,11 +5,7 @@ using Deltin.Deltinteger.Elements;
 
 namespace Deltin.Deltinteger.Decompiler.TextToElement
 {
-    public class ConvertTextToElement
-    {
-    }
-
-    class WorkshopWalker
+    class ConvertTextToElement
     {
         private readonly static char[] WHITESPACE = new char[] { '\r', '\n', '\t', ' ' };
 
@@ -28,7 +24,7 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
         public List<Subroutine> Subroutines { get; } = new List<Subroutine>();
         public List<TTERule> Rules { get; } = new List<TTERule>();
 
-        public WorkshopWalker(string content)
+        public ConvertTextToElement(string content)
         {
             Content = content;
             _actions = ElementList.Elements.Where(e => !e.IsValue).Select(e => e.WorkshopName).OrderByDescending(e => e.Length).ToArray();
@@ -338,7 +334,11 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
         bool Action(out ITTEAction action)
         {
             action = null;
-            // Action.
+
+            // Comment
+            MatchString(out string comment);
+
+            // Function.
             if (Function(true, out FunctionExpression func))
             {
                 action = func;
@@ -371,6 +371,7 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
                 return false;
             }
 
+            action.Comment = comment;
             Match(";");
             return true;
         }
@@ -758,7 +759,9 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
 
     // Interfaces
     public interface ITTEExpression {}
-    public interface ITTEAction {}
+    public interface ITTEAction {
+        string Comment { get; set; }
+    }
     public interface ITTEVariable
     {
         string Name { get; }
@@ -807,6 +810,7 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
     {
         public string Name { get; }
         public ITTEExpression[] Values { get; }
+        public string Comment { get; set; }
 
         public FunctionExpression(string name, ITTEExpression[] values)
         {
@@ -884,6 +888,7 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
         public string Operator { get; }
         public ITTEExpression Value { get; }
         public ITTEExpression Index { get; }
+        public string Comment { get; set; }
 
         public SetVariableAction(ITTEVariable variable, string op, ITTEExpression value, ITTEExpression index)
         {
