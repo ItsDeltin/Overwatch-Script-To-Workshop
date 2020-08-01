@@ -410,6 +410,7 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
             List<ITTEExpression> values = new List<ITTEExpression>();
             if (Match("("))
             {
+                _operators.Push(TTEOperator.Sentinel);
                 do
                 {
                     if (Expression(out ITTEExpression value))
@@ -417,6 +418,7 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
                 }
                 while (Match(","));
                 Match(")");
+                _operators.Pop();
             }
 
             expr = new FunctionExpression(name, values.ToArray());
@@ -431,8 +433,10 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
             // Group
             if (Match("("))
             {
+                _operators.Push(TTEOperator.Sentinel);
                 Expression(out expr);
                 Match(")");
+                _operators.Pop();
             }
             // Number
             else if (Number(out expr))
