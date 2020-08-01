@@ -447,6 +447,12 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
             {
                 expr = value;
             }
+            // Unary operator
+            else if (MatchUnary(out TTEOperator unaryOperator))
+            {
+                PushOperator(unaryOperator);
+                Expression(out expr);
+            }
             // Anonymous variable.
             else if (root && Identifier(out string identifier))
             {
@@ -576,6 +582,17 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
             return true;
         }
 
+        bool MatchUnary(out TTEOperator op)
+        {
+            if (Match("!")) op = TTEOperator.Not;
+            else
+            {
+                op = null;
+                return false;
+            }
+            return true;
+        }
+
         void PushOperator(TTEOperator op)
         {
             while (_operators.Peek().Precedence > op.Precedence)
@@ -585,10 +602,18 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
 
         void PopOperator()
         {
-            var right = _operands.Pop();
-            var left = _operands.Pop();
             var op = _operators.Pop();
-            _operands.Push(new BinaryOperatorExpression(left, right, op));
+            if (op.Binary)
+            {
+                var right = _operands.Pop();
+                var left = _operands.Pop();
+                _operands.Push(new BinaryOperatorExpression(left, right, op));
+            }
+            else
+            {
+                var value = _operands.Pop();
+                _operands.Push(new UnaryOperatorExpression(value, op));
+            }
         }
     }
 
@@ -679,31 +704,35 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
     public class TTEOperator
     {
         public static TTEOperator Sentinel { get; } = new TTEOperator(0, null);
-        // Boolean
-        public static TTEOperator And { get; } = new TTEOperator(1, "&&");
-        public static TTEOperator Or { get; } = new TTEOperator(2, "||");
-        // Math
-        public static TTEOperator Subtract { get; } = new TTEOperator(9, "-");
-        public static TTEOperator Add { get; } = new TTEOperator(10, "+");
-        public static TTEOperator Modulo { get; } = new TTEOperator(11, "%");
-        public static TTEOperator Divide { get; } = new TTEOperator(12, "/");
-        public static TTEOperator Multiply { get; } = new TTEOperator(13, "*");
-        public static TTEOperator Power { get; } = new TTEOperator(14, "^");
+        // Unary
+        public static TTEOperator Not { get; } = new TTEOperator(16, "!", false);
         // Compare
-        public static TTEOperator Equal { get; } = new TTEOperator(3, "==");
-        public static TTEOperator NotEqual { get; } = new TTEOperator(4, "!=");
-        public static TTEOperator GreaterThan { get; } = new TTEOperator(5, ">");
-        public static TTEOperator LessThan { get; } = new TTEOperator(6, "<");
-        public static TTEOperator GreaterThanOrEqual { get; } = new TTEOperator(7, ">=");
-        public static TTEOperator LessThanOrEqual { get; } = new TTEOperator(8, "<=");
+        public static TTEOperator Equal { get; } = new TTEOperator(2, "==");
+        public static TTEOperator NotEqual { get; } = new TTEOperator(3, "!=");
+        public static TTEOperator GreaterThan { get; } = new TTEOperator(4, ">");
+        public static TTEOperator LessThan { get; } = new TTEOperator(5, "<");
+        public static TTEOperator GreaterThanOrEqual { get; } = new TTEOperator(6, ">=");
+        public static TTEOperator LessThanOrEqual { get; } = new TTEOperator(7, "<=");
+        // Boolean
+        public static TTEOperator And { get; } = new TTEOperator(8, "&&");
+        public static TTEOperator Or { get; } = new TTEOperator(9, "||");
+        // Math
+        public static TTEOperator Subtract { get; } = new TTEOperator(10, "-");
+        public static TTEOperator Add { get; } = new TTEOperator(11, "+");
+        public static TTEOperator Modulo { get; } = new TTEOperator(12, "%");
+        public static TTEOperator Divide { get; } = new TTEOperator(13, "/");
+        public static TTEOperator Multiply { get; } = new TTEOperator(14, "*");
+        public static TTEOperator Power { get; } = new TTEOperator(15, "^");
 
         public int Precedence { get; }
         public string Operator { get; }
+        public bool Binary { get; }
 
-        public TTEOperator(int precedence, string op)
+        public TTEOperator(int precedence, string op, bool binary = true)
         {
             Precedence = precedence;
             Operator = op;
+            Binary = binary;
         }
     }
 
@@ -717,6 +746,8 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
         public TTERule(string name, EventInfo eventInfo, ITTEExpression[] conditions, ITTEAction[] actions)
         {
             Name = name;
+            EventInfo = eventInfo;
+            Conditions = conditions;
             Actions = actions;
         }
     }
@@ -754,6 +785,19 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
         }
 
         public override string ToString() => Left.ToString() + " " + Operator.Operator + " " + Right.ToString(); 
+    }
+    public class UnaryOperatorExpression : ITTEExpression
+    {
+        public ITTEExpression Value { get; }
+        public TTEOperator Operator { get; }
+
+        public UnaryOperatorExpression(ITTEExpression value, TTEOperator op)
+        {
+            Value = value;
+            Operator = op;
+        }
+
+        public override string ToString() => Operator.Operator + Value.ToString();
     }
     public class FunctionExpression : ITTEExpression, ITTEAction
     {
