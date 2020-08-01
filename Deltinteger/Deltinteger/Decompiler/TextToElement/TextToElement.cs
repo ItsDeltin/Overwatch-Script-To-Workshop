@@ -24,6 +24,8 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
         private readonly string[] _actions;
         private readonly string[] _values;
 
+        public List<WorkshopVariable> Variables { get; } = new List<WorkshopVariable>();
+        public List<Subroutine> Subroutines { get; } = new List<Subroutine>();
         public List<TTERule> Rules { get; } = new List<TTERule>();
 
         public WorkshopWalker(string content)
@@ -36,6 +38,9 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
 
         public void Get()
         {
+            // Match variables and subroutines.
+            MatchVariables();
+            MatchSubroutines();
             // Match rules
             while (Rule(out TTERule rule)) Rules.Add(rule);
         }
@@ -124,6 +129,29 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
             return true;
         }
 
+        // Integer
+        bool Integer(out int value)
+        {
+            string str = "";
+
+            if (Match("-")) str += "-";
+
+            while (IsNumeric())
+            {
+                str += Current;
+                Advance();
+            }
+
+            if (str == "")
+            {
+                value = 0;
+                return false;
+            }
+            value = int.Parse(str);
+            SkipWhitespace();
+            return true;
+        }
+
         // Double
         bool Double(out double number)
         {
@@ -171,13 +199,42 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
 
         // Workshop Copy Structure
         // Variable list
-        bool Variables()
+        bool MatchVariables()
         {
             if (!Match("variables")) return false;
             Match("{");
 
-            // TODO: match variables
+            if (Match("global:")) MatchVariableList(true);
+            if (Match("player:")) MatchVariableList(false);
             
+            Match("}");
+            return true;
+        }
+
+        void MatchVariableList(bool isGlobal)
+        {
+            while (Integer(out int index))
+            {
+                Match(":");
+                Identifier(out string name);
+                Variables.Add(new WorkshopVariable(isGlobal, index, name));
+            }
+        }
+
+        // Subroutines
+        bool MatchSubroutines()
+        {
+            if (!Match("subroutines")) return false;
+            Match("{");
+
+            // Subroutine list
+            while (Integer(out int index))
+            {
+                Match(":");
+                Identifier(out string name);
+                Subroutines.Add(new Subroutine(index, name));
+            } 
+
             Match("}");
             return true;
         }
@@ -202,6 +259,19 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
             EventInfo eventInfo = MatchEvent();
             Match("}");
 
+            // Conditions
+            List<ITTEExpression> conditions = new List<ITTEExpression>();
+            if (Match("conditions"))
+            {
+                Match("{");
+                while (Expression(out ITTEExpression condition))
+                {
+                    Match(";");
+                    conditions.Add(condition);
+                }
+                Match("}");
+            }
+
             // Actions
             List<ITTEAction> actions = new List<ITTEAction>(); 
             if (Match("actions"))
@@ -213,7 +283,7 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
 
             Match("}");
 
-            rule = new TTERule(ruleName, eventInfo, actions.ToArray());
+            rule = new TTERule(ruleName, eventInfo, conditions.ToArray(), actions.ToArray());
             return true;
         }
 
@@ -641,18 +711,14 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
     {
         public string Name { get; }
         public EventInfo EventInfo { get; }
+        public ITTEExpression[] Conditions { get; }
         public ITTEAction[] Actions { get; }
 
-        public TTERule(string name, EventInfo eventInfo, ITTEAction[] actions)
+        public TTERule(string name, EventInfo eventInfo, ITTEExpression[] conditions, ITTEAction[] actions)
         {
             Name = name;
             Actions = actions;
         }
-    }
-
-    public class TTECondition
-    {
-        public 
     }
 
     // Interfaces
