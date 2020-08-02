@@ -35,17 +35,17 @@ namespace Deltin.Deltinteger.Parse
                 actionSet.AddAction(IndexStore.SetVariable(0));
 
             Array = array;
-            Condition = new V_Compare(IndexStore.GetVariable(), Operator.LessThan, Element.Part<V_CountOf>(Array));
+            Condition = Element.Compare(IndexStore.GetVariable(), Operator.LessThan, Element.CountOf(Array));
             Index = (Element)IndexStore.GetVariable();
-            IndexValue = Element.Part<V_ValueInArray>(Array, IndexStore.GetVariable());
+            IndexValue = Element.ValueInArray(Array, IndexStore.GetVariable());
             
-            actionSet.AddAction(Element.Part<A_While>(Condition));
+            actionSet.AddAction(Element.While(Condition));
         }
 
         public void Finish()
         {
             ActionSet.AddAction(IndexStore.ModifyVariable(Operation.Add, 1));
-            ActionSet.AddAction(new A_End());
+            ActionSet.AddAction(Element.End());
 
             if (Recursive)
             {
@@ -144,7 +144,7 @@ namespace Deltin.Deltinteger.Parse
                     // Get the case with the value that matches.
                     // IndexOfArrayValue will return -1 if the case is not found,
                     // Add 1 and skip to the default case.
-                    Element.Part<V_IndexOfArrayValue>(
+                    Element.IndexOfArrayValue(
                         Element.CreateArray(skipValues.ToArray()),
                         switchValue
                     ) + 1

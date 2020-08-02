@@ -177,7 +177,7 @@ namespace Deltin.Deltinteger.Parse
                     {
                         var workshopIndex = callVariableAction.Index[ai].Parse(actionSet);
                         resultIndex[ai] = (Element)workshopIndex;
-                        current = Element.Part<V_ValueInArray>(current, workshopIndex);
+                        current = Element.ValueInArray(current, workshopIndex);
                     }
 
                     // If this is the last node in the tree, set the resulting variable.

@@ -82,16 +82,16 @@ namespace Deltin.Deltinteger.Parse
                 missingBlockRange = DocRange.GetRange(exprContext);
 
                 EnumValuePair enumSetting = (ExpressionTree.ResultingExpression(parseInfo.GetExpression(scope, exprContext)) as CallVariableAction)?.Calling as EnumValuePair;
-                EnumData enumData = enumSetting?.Member.Enum;
+                ElementEnum enumData = enumSetting?.Member.Enum;
 
                 if (enumData == null || !ValidRuleEnums.Contains(enumData))
-                    parseInfo.Script.Diagnostics.Error("Expected enum of type " + string.Join(", ", ValidRuleEnums.Select(vre => vre.CodeName)) + ".", DocRange.GetRange(exprContext));
+                    parseInfo.Script.Diagnostics.Error("Expected enum of type " + string.Join(", ", ValidRuleEnums.Select(vre => vre.Name)) + ".", DocRange.GetRange(exprContext));
                 else
                 {
-                    var alreadySet = new Diagnostic("The " + enumData.CodeName + " rule setting was already set.", DocRange.GetRange(exprContext), Diagnostic.Error);
+                    var alreadySet = new Diagnostic("The " + enumData.Name + " rule setting was already set.", DocRange.GetRange(exprContext), Diagnostic.Error);
 
                     // Get the Event option.
-                    if (enumData == EnumData.GetEnum<RuleEvent>())
+                    if (enumData == ElementRoot.Instance.GetEnum("Event"))
                     {
                         if (_setEventType)
                             parseInfo.Script.Diagnostics.AddDiagnostic(alreadySet);
@@ -100,7 +100,7 @@ namespace Deltin.Deltinteger.Parse
                         eventContext = exprContext;
                     }
                     // Get the Team option.
-                    if (enumData == EnumData.GetEnum<Team>())
+                    if (enumData == ElementRoot.Instance.GetEnum("Team"))
                     {
                         if (_setTeam)
                             parseInfo.Script.Diagnostics.AddDiagnostic(alreadySet);
@@ -109,7 +109,7 @@ namespace Deltin.Deltinteger.Parse
                         teamContext = exprContext;
                     }
                     // Get the Player option.
-                    if (enumData == EnumData.GetEnum<PlayerSelector>())
+                    if (enumData == ElementRoot.Instance.GetEnum("Player"))
                     {
                         if (_setPlayer)
                             parseInfo.Script.Diagnostics.AddDiagnostic(alreadySet);
@@ -134,11 +134,11 @@ namespace Deltin.Deltinteger.Parse
             }
         }
 
-        private static readonly EnumData[] ValidRuleEnums = new EnumData[]
+        private static readonly ElementEnum[] ValidRuleEnums = new ElementEnum[]
         {
-            EnumData.GetEnum<RuleEvent>(),
-            EnumData.GetEnum<Team>(),
-            EnumData.GetEnum<PlayerSelector>()
+            ElementRoot.Instance.GetEnum("Event"),
+            ElementRoot.Instance.GetEnum("Team"),
+            ElementRoot.Instance.GetEnum("Player")
         };
     }
 

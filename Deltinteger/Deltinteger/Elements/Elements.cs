@@ -169,14 +169,33 @@ namespace Deltin.Deltinteger.Elements
             return count;
         }
 
-        public static Element Compare(IWorkshopTree a, Operator op, IWorkshopTree b) => Part("Compare", a, new OperatorElement(op), b);
-        public static Element Vector(Element x, Element y, Element z) => Part("Vector", x, y, z);
-        public static Element Pow(Element a, Element b) => Part("Raise To Power", a, b);
         public static Element True() => Part("True");
         public static Element False() => Part("False");
+        public static Element EmptyArray() => Part("Empty Array");
+        public static Element Null() => Part("Null");
+        public static Element EventPlayer() => Part("Event Player");
+        public static Element Compare(IWorkshopTree a, Operator op, IWorkshopTree b) => Part("Compare", a, new OperatorElement(op), b);
+        public static Element Vector(Element x, Element y, Element z) => Part("Vector", x, y, z);
         public static Element Not(IWorkshopTree a) => Part("Not", a);
         public static Element IndexOfArrayValue(Element array, Element value) => Part("Index Of Array Value", array, value);
         public static Element Append(Element array, Element value) => Part("Append To Array", array, value);
+        public static Element LastOf(IWorkshopTree array) => Part("Last Of", array);
+        public static Element CountOf(IWorkshopTree array) => Part("Count Of", array);
+        public static Element ValueInArray(IWorkshopTree array, IWorkshopTree index) => Part("Value In Array", array, index);
+        public static Element Pow(Element a, Element b) => Part("Raise To Power", a, b);
+        public static Element Pow(IWorkshopTree a, IWorkshopTree b) => Part("Raise To Power", a, b);
+        public static Element Multiply(IWorkshopTree a, IWorkshopTree b) => Part("Multiply", a, b);
+        public static Element Divide(IWorkshopTree a, IWorkshopTree b) => Part("Divide", a, b);
+        public static Element Modulo(IWorkshopTree a, IWorkshopTree b) => Part("Modulo", a, b);
+        public static Element Add(IWorkshopTree a, IWorkshopTree b) => Part("Add", a, b);
+        public static Element Subtract(IWorkshopTree a, IWorkshopTree b) => Part("Subtract", a, b);
+        public static Element And(IWorkshopTree a, IWorkshopTree b) => Part("And", a, b);
+        public static Element Or(IWorkshopTree a, IWorkshopTree b) => Part("Or", a, b);
+        public static Element If(IWorkshopTree expression) => Part("If", expression);
+        public static Element ElseIf(IWorkshopTree expression) => Part("Else If", expression);
+        public static Element Else() => Part("Else");
+        public static Element End() => Part("End");
+        public static Element While(IWorkshopTree expression) => Part("While", expression);
 
         public static Element operator +(Element a, Element b) => Part("Add", a, b);
         public static Element operator -(Element a, Element b) => Part("Subtract", a, b);

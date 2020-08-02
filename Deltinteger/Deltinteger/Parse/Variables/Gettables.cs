@@ -55,7 +55,7 @@ namespace Deltin.Deltinteger.Parse
 
         public override IWorkshopTree GetVariable(Element targetPlayer = null)
         {
-            return Element.Part<V_LastOf>(base.GetVariable(targetPlayer));
+            return Element.LastOf(base.GetVariable(targetPlayer));
         }
 
         public override Element[] SetVariable(Element value, Element targetPlayer = null, params Element[] index)
@@ -70,7 +70,7 @@ namespace Deltin.Deltinteger.Parse
 
         public Element[] Reset()
         {
-            return base.SetVariable(new V_EmptyArray());
+            return base.SetVariable(Element.EmptyArray());
         }
 
         public Element[] Push(Element value)
@@ -93,7 +93,7 @@ namespace Deltin.Deltinteger.Parse
 
         private Element StackLength()
         {
-            return Element.Part<V_CountOf>(base.GetVariable());
+            return Element.CountOf(base.GetVariable());
         }
     }
 

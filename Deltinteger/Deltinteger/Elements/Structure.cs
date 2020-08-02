@@ -26,24 +26,27 @@ namespace Deltin.Deltinteger.Elements
                 // Direct
                 if (reader.TokenType == JsonToken.StartArray)
                 {
-                    enumerators.Add(new ElementEnum() {
-                        Name = name,
-                        Members = JToken.Load(reader).ToArray().Select(v => {
+                    ElementEnum newEnum = new ElementEnum();
+                    newEnum.Name = name;
+                    newEnum.Members = JToken.Load(reader).ToArray().Select(v => {
                             // String
                             if (v.Type == JTokenType.String)
                                 return new ElementEnumMember() {
-                                    Name = v.ToObject<string>()
+                                    Name = v.ToObject<string>(),
+                                    Enum = newEnum
                                 };
                             // Object
                             else if (v.Type == JTokenType.Object)
                                 return new ElementEnumMember() {
                                     Name = v["name"].ToObject<string>(),
-                                    Alias = v["alias"].ToObject<string>()
+                                    Alias = v["alias"].ToObject<string>(),
+                                    Enum = newEnum
                                 };
                             // Unknown
                             throw new NotImplementedException(v.Type.ToString());
-                        }).ToArray()
-                    });
+                        }).ToArray();
+
+                    enumerators.Add(newEnum);
                 }
                 // With additional properties
                 else if (reader.TokenType == JsonToken.StartObject)
@@ -272,6 +275,7 @@ namespace Deltin.Deltinteger.Elements
     {
         public string Name;
         public string Alias;
+        public ElementEnum Enum;
 
         public override string ToString() => Name;
 
