@@ -309,6 +309,14 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
                         break;
                     }
 
+                // Get the team.
+                var team = Team.All;
+                if (Match("All;")) {}
+                else if (Match("Team 1;"))
+                    team = Team.Team1;
+                else if (Match("Team 2;"))
+                    team = Team.Team2;
+                
                 // Get the player type.
                 var player = PlayerSelector.All;
                 foreach (var playerNameInfo in EventInfo.PlayerTypeNames)
@@ -317,14 +325,6 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
                         player = playerNameInfo.Item2;
                         break;
                     }
-
-                // Get the team.
-                var team = Team.All;
-                if (Match("All;")) {}
-                else if (Match("Team 1;"))
-                    team = Team.Team1;
-                else if (Match("Team 2;"))
-                    team = Team.Team2;
 
                 return new EventInfo(ruleEvent, player, team);
             }
