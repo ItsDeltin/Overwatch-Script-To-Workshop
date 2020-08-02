@@ -149,6 +149,8 @@ namespace Deltin.Deltinteger.Elements
 
     public class ElementJsonRoot
     {
+        public static ElementJsonRoot Instance { get; }
+
         [JsonProperty("values")]
         public ElementJsonValue[] Values;
 
@@ -157,6 +159,15 @@ namespace Deltin.Deltinteger.Elements
 
         [JsonProperty("enumerators")]
         public ElementEnum[] Enumerators;
+
+        public ElementBaseJson GetFunction(string name)
+        {
+            foreach (var value in Values) if (value.Name == name) return value;
+            foreach (var action in Actions) if (action.Name == name) return action;
+            throw new KeyNotFoundException("The function '" + name + "' was not found.");
+        }
+
+        public ElementEnum GetEnum(string name) => Enumerators.FirstOrDefault(e => e.Name == name) ?? throw new KeyNotFoundException("The enum '" + name + "' was not found.");
 
         public static ElementJsonRoot Get(string json)
             => JsonConvert.DeserializeObject<ElementJsonRoot>(json, new EnumeratorConverter(), new ParameterConverter());
@@ -229,12 +240,16 @@ namespace Deltin.Deltinteger.Elements
                 }
                 if (parameters.Length == 0) parameters = null;
 
+                string alias = null;
+                if (!el.Hidden && el.WorkshopName.Replace(" ", "") != el.Name) alias = el.Name;
+
                 // Add the element.
                 if (el.IsValue)
                 {
                     // Add value
                     values.Add(new ElementJsonValue() {
                         Name = el.WorkshopName,
+                        Alias = alias,
                         Documentation = el.Documentation,
                         Parameters = parameters,
                         IsHidden = el.Hidden,
@@ -246,6 +261,7 @@ namespace Deltin.Deltinteger.Elements
                     // Add action
                     actions.Add(new ElementJsonAction() {
                         Name = el.WorkshopName,
+                        Alias = alias,
                         Documentation = el.Documentation,
                         IsHidden = el.Hidden,
                         Parameters = parameters
@@ -257,7 +273,8 @@ namespace Deltin.Deltinteger.Elements
             ElementEnum[] enumerators = EnumData.GetEnumData().Select(e => new ElementEnum() {
                 Name = e.CodeName,
                 Members = e.Members.Select(mem => new ElementEnumMember() {
-                    Name = mem.WorkshopName
+                    Name = mem.WorkshopName,
+                    Alias = mem.WorkshopName.Replace(" ", "") == mem.CodeName ? null : mem.CodeName
                 }).ToArray()
             }).ToArray();
             
@@ -301,7 +318,7 @@ namespace Deltin.Deltinteger.Elements
         }
     }
 
-    public class ElementBaseJson
+    public abstract class ElementBaseJson
     {
         [JsonProperty("name")]
         public string Name;
@@ -314,6 +331,9 @@ namespace Deltin.Deltinteger.Elements
 
         [JsonProperty("hidden")]
         public bool IsHidden;
+
+        [JsonProperty("alias")]
+        public string Alias;
 
         public bool ShouldSerializeIsHidden() => IsHidden;
 
@@ -358,12 +378,22 @@ namespace Deltin.Deltinteger.Elements
         public ElementEnumMember[] Members;
 
         public override string ToString() => Name + " [" + Members.Length + " members]";
+
+        public ElementEnumMember GetMemberFromAlias(string name) => Members.FirstOrDefault(m => (m.Alias ?? m.Name) == name) ?? throw new KeyNotFoundException("The enum member '" + name + "' was not found.");
     }
 
-    public class ElementEnumMember
+    public class ElementEnumMember : IWorkshopTree
     {
         public string Name;
         public string Alias;
+
         public override string ToString() => Name;
+
+        public string ToWorkshop(OutputLanguage language, ToWorkshopContext context) => Name;
+
+        public bool EqualTo(IWorkshopTree other)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

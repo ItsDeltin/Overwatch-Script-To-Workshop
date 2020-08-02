@@ -32,6 +32,144 @@ namespace Deltin.Deltinteger.Elements
         String
     }
 
+    public class NewElement : IWorkshopTree
+    {
+        public static NewElement Part(string name, params IWorkshopTree[] parameterValues)
+            => new NewElement(ElementJsonRoot.Instance.GetFunction(name), parameterValues);
+        public static NewElement Part(ElementBaseJson function, params IWorkshopTree[] parameterValues)
+            => new NewElement(function, parameterValues);
+
+        public ElementBaseJson Function { get; }
+        public IWorkshopTree[] ParameterValues { get; set; }
+        public bool Disabled { get; set; }
+        public string Comment { get; set; }
+
+        public NewElement(ElementBaseJson function, IWorkshopTree[] parameterValues)
+        {
+            Function = function;
+            ParameterValues = parameterValues;
+        }
+
+        public virtual string ToWorkshop(OutputLanguage language, ToWorkshopContext context)
+        {            
+            string result = "";
+
+            // Add a comment and newline
+            if (Comment != null) result += $"\"{Comment}\"\n";
+
+            // Add the disabled tag if the element is disabled.
+            if (Function is ElementJsonAction && Disabled) result += LanguageInfo.Translate(language, "disabled") + " ";
+
+            // Add the name of the element.
+            result += LanguageInfo.Translate(language, Function.Name);
+
+            // Add the parameters.
+            AddMissingParameters();
+            var parameters = ParameterValues.Select(p => p.ToWorkshop(language, ToWorkshopContext.NestedValue));
+            if (parameters.Count() != 0) result += "(" + string.Join(", ", parameters) + ")";
+
+            return result;
+        }
+
+        /// <summary>Makes sure no parameter values are null.</summary>
+        private void AddMissingParameters()
+        {
+            List<IWorkshopTree> parameters = new List<IWorkshopTree>();
+
+            for (int i = 0; i < Function.Parameters.Length || i < ParameterValues.Length; i++)
+                parameters.Add(ParameterValues?.ElementAtOrDefault(i) ?? GetDefaultParameter(Function.Parameters[i]));
+            
+            ParameterValues = parameters.ToArray();
+        }
+
+        public bool EqualTo(IWorkshopTree other)
+        {
+            throw new NotImplementedException();
+        }
+
+        public static NewElement Compare(IWorkshopTree a, Operators op, IWorkshopTree b)
+            => Part("Compare", a, new OperatorElement(op), b);
+
+        public static NewElement operator +(NewElement a, NewElement b) => Part("Add", a, b);
+        public static NewElement operator -(NewElement a, NewElement b) => Part("Subtract", a, b);
+        public static NewElement operator *(NewElement a, NewElement b) => Part("Multiply", a, b);
+        public static NewElement operator /(NewElement a, NewElement b) => Part("Divide", a, b);
+        public static NewElement operator %(NewElement a, NewElement b) => Part("Modulo", a, b);
+        public static NewElement operator <(NewElement a, NewElement b) => Compare(a, Operators.LessThan, b);
+        public static NewElement operator >(NewElement a, NewElement b) => Compare(a, Operators.GreaterThan, b);
+        public static NewElement operator <=(NewElement a, NewElement b) => Compare(a, Operators.LessThanOrEqual, b);
+        public static NewElement operator >=(NewElement a, NewElement b) => Compare(a, Operators.GreaterThanOrEqual, b);
+        public static NewElement operator !(NewElement a) => Part("Not", a);
+        public static NewElement operator -(NewElement a) => a * -1;
+        public NewElement this[IWorkshopTree i]
+        {
+            get => Part("Value In Array", this, i);
+            private set {}
+        }
+        public NewElement this[NewElement i]
+        {
+            get => Part("Value In Array", this, i);
+            private set {}
+        }
+        public static implicit operator NewElement(double number) => new NumberElement(number);
+        public static implicit operator NewElement(int number) => new NumberElement(number);
+        public static implicit operator NewElement(bool boolean) => Part(boolean.ToString());
+
+        public static IWorkshopTree GetDefaultParameter(ElementParameter parameter)
+        {
+            // todo
+            return null;
+        }
+    }
+
+    public class OperatorElement : IWorkshopTree
+    {
+        public Operators Operator { get; }
+
+        public OperatorElement(Operators op)
+        {
+            Operator = op;
+        }
+
+        public bool EqualTo(IWorkshopTree other) => other is OperatorElement oe && oe.Operator == Operator;
+
+        public string ToWorkshop(OutputLanguage language, ToWorkshopContext context)
+        {
+            switch (Operator)
+            {
+                case Operators.Equal: return "==";
+                case Operators.GreaterThan: return ">";
+                case Operators.GreaterThanOrEqual: return ">=";
+                case Operators.LessThan: return "<";
+                case Operators.LessThanOrEqual: return "<=";
+                case Operators.NotEqual: return "!=";
+                default: throw new NotImplementedException();
+            }
+        }
+    }
+
+    public class NumberElement : NewElement
+    {
+        public double Value { get; }
+
+        public NumberElement(double value) : base(ElementJsonRoot.Instance.GetFunction("Number"), null)
+        {
+            Value = value;
+        }
+
+        public override string ToWorkshop(OutputLanguage language, ToWorkshopContext context)
+        {
+            return base.ToWorkshop(language, context);
+        }
+    }
+
+    public enum ElementIndent
+    {
+        Neutral,
+        Increment,
+        Decrement
+    }
+
     public abstract class Element : IWorkshopTree
     {
         public static T Part<T>(params IWorkshopTree[] parameterValues) where T : Element, new()
