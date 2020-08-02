@@ -83,7 +83,7 @@ namespace Deltin.Deltinteger.Parse
             // Restart the method from the specified position if there are any elements in the continue array.
             ActionSet.AddAction(Element.Part<A_SkipIf>(new V_Compare(
                 Element.Part<V_CountOf>(continueArray.GetVariable()),
-                Operators.Equal,
+                Operator.Equal,
                 new V_Number(0)
             ), new V_Number(3)));
 

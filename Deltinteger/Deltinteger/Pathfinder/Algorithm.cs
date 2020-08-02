@@ -98,7 +98,7 @@ namespace Deltin.Deltinteger.Pathfinder
                         BothNodes(forBuilder.IndexValue),
                         new V_Compare(
                             new V_ArrayElement(),
-                            Operators.NotEqual,
+                            Operator.NotEqual,
                             current.GetVariable()
                         )
                     ))
@@ -117,7 +117,7 @@ namespace Deltin.Deltinteger.Pathfinder
             actionSet.AddAction(Element.Part<A_If>(Element.Part<V_Or>(
                 new V_Compare(
                     ((Element)distances.GetVariable())[(Element)neighborIndex.GetVariable()],
-                    Operators.Equal,
+                    Operator.Equal,
                     new V_Number(0)
                 ),
                 (Element)neighborDistance.GetVariable() < ((Element)distances.GetVariable())[(Element)neighborIndex.GetVariable()]
@@ -133,7 +133,7 @@ namespace Deltin.Deltinteger.Pathfinder
                         value: Element.TernaryConditional(
                             new V_Compare(
                                 current.GetVariable(),
-                                Operators.Equal,
+                                Operator.Equal,
                                 Node1(forBuilder.IndexValue)
                             ),
                             Node2Attribute(forBuilder.IndexValue),
@@ -146,7 +146,7 @@ namespace Deltin.Deltinteger.Pathfinder
                         value: Element.TernaryConditional(
                             new V_Compare(
                                 current.GetVariable(),
-                                Operators.Equal,
+                                Operator.Equal,
                                 Node1(forBuilder.IndexValue)
                             ),
                             Node1Attribute(forBuilder.IndexValue),
@@ -198,7 +198,7 @@ namespace Deltin.Deltinteger.Pathfinder
             // Get the path.
             actionSet.AddAction(Element.Part<A_While>(new V_Compare(
                 current.GetVariable(),
-                Operators.GreaterThanOrEqual,
+                Operator.GreaterThanOrEqual,
                 new V_Number(0)
             )));
 
@@ -239,7 +239,7 @@ namespace Deltin.Deltinteger.Pathfinder
         public static Element ClosestNodeToPosition(Element nodes, Element position, bool potentiallyNullNodes)
         {
             Element sortArray = nodes;
-            if (potentiallyNullNodes) sortArray = Element.Part<V_FilteredArray>(nodes, new V_Compare(new V_ArrayElement(), Operators.NotEqual, new V_Null()));
+            if (potentiallyNullNodes) sortArray = Element.Part<V_FilteredArray>(nodes, new V_Compare(new V_ArrayElement(), Operator.NotEqual, new V_Null()));
 
             return Element.Part<V_IndexOfArrayValue>(
                 nodes,
@@ -275,7 +275,7 @@ namespace Deltin.Deltinteger.Pathfinder
             actionSet.AddAction(Element.Part<A_While>((Element)current.GetVariable() < Element.Part<V_CountOf>(Nodes)));
 
             // If there can be null nodes, make sure the node is not null.
-            if (resolveInfo.PotentiallyNullNodes) actionSet.AddAction(Element.Part<A_If>(new V_Compare(Nodes[current.Get()], Operators.NotEqual, new V_Null())));
+            if (resolveInfo.PotentiallyNullNodes) actionSet.AddAction(Element.Part<A_If>(new V_Compare(Nodes[current.Get()], Operator.NotEqual, new V_Null())));
 
             actionSet.AddAction(unvisited.ModifyVariable(Operation.AppendToArray, (Element)current.GetVariable()));
 
@@ -295,13 +295,13 @@ namespace Deltin.Deltinteger.Pathfinder
             Element useAttribute;
             if (!reverseAttributes)
                 useAttribute = Element.TernaryConditional(
-                    new V_Compare(Node1(currentSegmentCheck), Operators.Equal, currentIndex),
+                    new V_Compare(Node1(currentSegmentCheck), Operator.Equal, currentIndex),
                     Node2Attribute(currentSegmentCheck),
                     Node1Attribute(currentSegmentCheck)
                 );
             else
                 useAttribute = Element.TernaryConditional(
-                    new V_Compare(Node1(currentSegmentCheck), Operators.Equal, currentIndex),
+                    new V_Compare(Node1(currentSegmentCheck), Operator.Equal, currentIndex),
                     Node1Attribute(currentSegmentCheck),
                     Node2Attribute(currentSegmentCheck)
                 );
@@ -313,7 +313,7 @@ namespace Deltin.Deltinteger.Pathfinder
                     useAttribute
                 );
             else
-                isValid = new V_Compare(useAttribute, Operators.Equal, new V_Number(0));
+                isValid = new V_Compare(useAttribute, Operator.Equal, new V_Number(0));
             
             return Element.Part<V_FilteredArray>(
                 Segments,
@@ -329,12 +329,12 @@ namespace Deltin.Deltinteger.Pathfinder
         }
 
         private static Element LowestUnvisited(Element nodes, Element distances, Element unvisited) => Element.Part<V_FirstOf>(Element.Part<V_SortedArray>(
-            Element.Part<V_FilteredArray>(unvisited, new V_Compare(distances[new V_ArrayElement()], Operators.NotEqual, new V_Number(0))),
+            Element.Part<V_FilteredArray>(unvisited, new V_Compare(distances[new V_ArrayElement()], Operator.NotEqual, new V_Number(0))),
             distances[new V_ArrayElement()]
         ));
 
-        protected Element NoAccessableUnvisited() => Element.Part<V_IsTrueForAll>(unvisited.GetVariable(), new V_Compare(Element.Part<V_ValueInArray>(distances.GetVariable(), new V_ArrayElement()), Operators.Equal, new V_Number(0)));
-        protected Element AnyAccessableUnvisited() => Element.Part<V_IsTrueForAny>(unvisited.GetVariable(), new V_Compare(Element.Part<V_ValueInArray>(distances.GetVariable(), new V_ArrayElement()), Operators.NotEqual, new V_Number(0)));
+        protected Element NoAccessableUnvisited() => Element.Part<V_IsTrueForAll>(unvisited.GetVariable(), new V_Compare(Element.Part<V_ValueInArray>(distances.GetVariable(), new V_ArrayElement()), Operator.Equal, new V_Number(0)));
+        protected Element AnyAccessableUnvisited() => Element.Part<V_IsTrueForAny>(unvisited.GetVariable(), new V_Compare(Element.Part<V_ValueInArray>(distances.GetVariable(), new V_ArrayElement()), Operator.NotEqual, new V_Number(0)));
 
         public static Element BothNodes(Element segment) => Element.CreateAppendArray(Node1(segment), Node2(segment));
         public static Element Node1(Element segment) => Element.Part<V_RoundToInteger>(Element.Part<V_XOf>(segment), EnumData.GetEnumValue(Rounding.Down));
@@ -415,7 +415,7 @@ namespace Deltin.Deltinteger.Pathfinder
             // Break out of the while loop when the current node is the closest node to the player.
             PlayerNodeReachedBreak = new SkipStartMarker(actionSet, new V_Compare(
                 GetClosestNode(actionSet, Nodes, Element.Part<V_PositionOf>(player)),
-                Operators.NotEqual,
+                Operator.NotEqual,
                 current.GetVariable()
             ));
             actionSet.AddAction(PlayerNodeReachedBreak);
@@ -501,7 +501,7 @@ namespace Deltin.Deltinteger.Pathfinder
         protected override void EndLoop()
         {
             actionSet.AddAction(chosenDestination.SetVariable(Element.Part<V_IndexOfArrayValue>(potentialDestinations.GetVariable(), current.GetVariable())));
-            actionSet.AddAction(Element.Part<A_If>(new V_Compare(chosenDestination.GetVariable(), Operators.NotEqual, new V_Number(-1))));
+            actionSet.AddAction(Element.Part<A_If>(new V_Compare(chosenDestination.GetVariable(), Operator.NotEqual, new V_Number(-1))));
             actionSet.AddAction(Element.Part<A_Break>());
             actionSet.AddAction(Element.Part<A_End>());
         }
@@ -523,7 +523,7 @@ namespace Deltin.Deltinteger.Pathfinder
             // Get the path.
             actionSet.AddAction(Element.Part<A_While>(new V_Compare(
                 backTracker.GetVariable(),
-                Operators.GreaterThanOrEqual,
+                Operator.GreaterThanOrEqual,
                 new V_Number(0)
             )));
 

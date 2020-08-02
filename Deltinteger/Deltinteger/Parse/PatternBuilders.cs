@@ -35,7 +35,7 @@ namespace Deltin.Deltinteger.Parse
                 actionSet.AddAction(IndexStore.SetVariable(0));
 
             Array = array;
-            Condition = new V_Compare(IndexStore.GetVariable(), Operators.LessThan, Element.Part<V_CountOf>(Array));
+            Condition = new V_Compare(IndexStore.GetVariable(), Operator.LessThan, Element.Part<V_CountOf>(Array));
             Index = (Element)IndexStore.GetVariable();
             IndexValue = Element.Part<V_ValueInArray>(Array, IndexStore.GetVariable());
             

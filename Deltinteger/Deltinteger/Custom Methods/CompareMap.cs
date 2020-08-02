@@ -21,7 +21,7 @@ namespace Deltin.Deltinteger.CustomMethods
             MapLink mapLink = MapLink.GetMapLink(map);
 
             if (mapLink == null)
-                return new V_Compare(new V_CurrentMap(), Operators.Equal, Element.Part<V_MapVar>(enumData));
+                return new V_Compare(new V_CurrentMap(), Operator.Equal, Element.Part<V_MapVar>(enumData));
             else
                 return Element.Part<V_ArrayContains>(mapLink.GetArray(), new V_CurrentMap());
         }

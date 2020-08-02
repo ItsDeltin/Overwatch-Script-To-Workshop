@@ -26,9 +26,9 @@ namespace Deltin.Deltinteger.Models
         public Vertex(double x, double y) : this(x,y,0,0) {}
         public Vertex() : this(0,0,0,0) {}
 
-        public NewElement ToVector()
+        public Element ToVector()
         {
-            return NewElement.Vector(X, Y, Z);
+            return Element.Vector(X, Y, Z);
         }
 
         public Vertex Rotate(double pitch, double roll, double yaw)

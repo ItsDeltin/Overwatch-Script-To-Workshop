@@ -227,12 +227,12 @@ namespace Deltin.Deltinteger.Parse
                 case "%": return Element.Part<V_Modulo>(left,right);
                 case "+": return Element.Part<V_Add>(left,right);
                 case "-": return Element.Part<V_Subtract>(left,right);
-                case "<": return new V_Compare(left, Operators.LessThan, right);
-                case "<=": return new V_Compare(left, Operators.LessThanOrEqual, right);
-                case "==": return new V_Compare(left, Operators.Equal, right);
-                case ">=": return new V_Compare(left, Operators.GreaterThanOrEqual, right);
-                case ">": return new V_Compare(left, Operators.GreaterThan, right);
-                case "!=": return new V_Compare(left, Operators.NotEqual, right);
+                case "<": return new V_Compare(left, Elements.Operator.LessThan, right);
+                case "<=": return new V_Compare(left, Elements.Operator.LessThanOrEqual, right);
+                case "==": return new V_Compare(left, Elements.Operator.Equal, right);
+                case ">=": return new V_Compare(left, Elements.Operator.GreaterThanOrEqual, right);
+                case ">": return new V_Compare(left, Elements.Operator.GreaterThan, right);
+                case "!=": return new V_Compare(left, Elements.Operator.NotEqual, right);
                 case "&&": return Element.Part<V_And>(left,right);
                 case "||": return Element.Part<V_Or>(left,right);
                 default: throw new Exception($"Unrecognized operator {Operator}.");
@@ -363,7 +363,7 @@ namespace Deltin.Deltinteger.Parse
             IWorkshopTree classIdentifier = Element.Part<V_ValueInArray>(classData.ClassIndexes.GetVariable(), expressionResult);
 
             // Check if the expression's class identifier and the type are equal.
-            return new V_Compare(classIdentifier, Operators.Equal, new V_Number(checkingIfType.Identifier));
+            return new V_Compare(classIdentifier, Operator.Equal, new V_Number(checkingIfType.Identifier));
         }
 
         public Scope ReturningScope() => null;

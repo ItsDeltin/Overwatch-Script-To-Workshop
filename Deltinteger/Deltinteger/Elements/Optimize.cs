@@ -6,9 +6,9 @@ namespace Deltin.Deltinteger.Elements
 {
     public static class OptimizeElements
     {
-        public static readonly Dictionary<string, Func<NewElement, NewElement>> Optimizations = new Dictionary<string, Func<NewElement, NewElement>>() {
+        public static readonly Dictionary<string, Func<Element, Element>> Optimizations = new Dictionary<string, Func<Element, Element>>() {
             {"Absolute Value", element => {
-                if (element.ParameterValues[0] is V_Number a)
+                if (element.ParameterValues[0] is NumberElement a)
                     return Math.Abs(a.Value);
                 return element;
             }},
@@ -19,8 +19,8 @@ namespace Deltin.Deltinteger.Elements
                 true
             )},
             {"And", element => {
-                NewElement a = (NewElement)element.ParameterValues[0];
-                NewElement b = (NewElement)element.ParameterValues[1];
+                Element a = (Element)element.ParameterValues[0];
+                Element b = (Element)element.ParameterValues[1];
 
                 if (a.TryGetConstant(out bool ac) && b.TryGetConstant(out bool bc))
                     return ac && bc;
@@ -42,8 +42,8 @@ namespace Deltin.Deltinteger.Elements
                 return element;
             }},
             {"Angle Between Vectors", element => {
-                NewElement a = (NewElement)element.ParameterValues[0];
-                NewElement b = (NewElement)element.ParameterValues[1];
+                Element a = (Element)element.ParameterValues[0];
+                Element b = (Element)element.ParameterValues[1];
 
                 if (a.TryGetConstant(out Vertex vertexA) && b.TryGetConstant(out Vertex vertexB))
                     return Math.Acos(vertexA.DotProduct(vertexB) / (vertexA.Length * vertexB.Length)) * (180 / Math.PI);
@@ -90,46 +90,46 @@ namespace Deltin.Deltinteger.Elements
                 return element;
             }},
             {"Compare", element => {
-                NewElement left = (NewElement)element.ParameterValues[0];
+                Element left = (Element)element.ParameterValues[0];
                 OperatorElement op = (OperatorElement)element.ParameterValues[1];
-                NewElement right = (NewElement)element.ParameterValues[2];
+                Element right = (Element)element.ParameterValues[2];
 
-                if (op.Operator == Operators.Equal)
+                if (op.Operator == Operator.Equal)
                 {
                     if (left.EqualTo(right))
                         return true;
                     if (left is NumberElement a && right is NumberElement b)
                         return a.Value == b.Value;
                 }
-                else if (op.Operator == Operators.GreaterThan)
+                else if (op.Operator == Operator.GreaterThan)
                 {
                     if (left.EqualTo(right))
                         return false;
                     if (left is NumberElement a && right is NumberElement b)
                         return a.Value > b.Value;
                 }
-                else if (op.Operator == Operators.GreaterThanOrEqual)
+                else if (op.Operator == Operator.GreaterThanOrEqual)
                 {
                     if (left.EqualTo(right))
                         return true;
                     if (left is NumberElement a && right is NumberElement b)
                         return a.Value >= b.Value;
                 }
-                else if (op.Operator == Operators.LessThan)
+                else if (op.Operator == Operator.LessThan)
                 {
                     if (left.EqualTo(right))
                         return false;
                     if (left is NumberElement a && right is NumberElement b)
                         return a.Value < b.Value;
                 }
-                else if (op.Operator == Operators.LessThanOrEqual)
+                else if (op.Operator == Operator.LessThanOrEqual)
                 {
                     if (left.EqualTo(right))
                         return true;
                     if (left is NumberElement a && right is NumberElement b)
                         return a.Value <= b.Value;
                 }
-                else if (op.Operator == Operators.NotEqual)
+                else if (op.Operator == Operator.NotEqual)
                 {
                     if (left is NumberElement a && right is NumberElement b)
                         return a.Value != b.Value;
@@ -150,8 +150,8 @@ namespace Deltin.Deltinteger.Elements
                 return element;
             }},
             {"Cross Product", element => {
-                NewElement a = (NewElement)element.ParameterValues[0];
-                NewElement b = (NewElement)element.ParameterValues[1];
+                Element a = (Element)element.ParameterValues[0];
+                Element b = (Element)element.ParameterValues[1];
 
                 if (a.TryGetConstant(out Vertex vertexA) && b.TryGetConstant(out Vertex vertexB))
                     return vertexA.CrossProduct(vertexB).RemoveNaNs().ToVector();
@@ -171,22 +171,22 @@ namespace Deltin.Deltinteger.Elements
                     if (y == -0)
                         y = 0;
 
-                    return NewElement.Vector(x, y, z);
+                    return Element.Vector(x, y, z);
                 }
 
                 return element;
             }},
             {"Direction Towards", element => {
-                NewElement a = (NewElement)element.ParameterValues[0];
-                NewElement b = (NewElement)element.ParameterValues[1];
+                Element a = (Element)element.ParameterValues[0];
+                Element b = (Element)element.ParameterValues[1];
 
                 if (a.TryGetConstant(out Vertex vertexA) && b.TryGetConstant(out Vertex vertexB))
                     return vertexA.DirectionTowards(vertexB).RemoveNaNs().ToVector();
                 return element;
             }},
             {"Distance Between", element => {
-                NewElement a = (NewElement)element.ParameterValues[0];
-                NewElement b = (NewElement)element.ParameterValues[1];
+                Element a = (Element)element.ParameterValues[0];
+                Element b = (Element)element.ParameterValues[1];
 
                 if (a.TryGetConstant(out Vertex vertexA) && b.TryGetConstant(out Vertex vertexB))
                     return vertexA.DistanceTo(vertexB);
@@ -199,15 +199,15 @@ namespace Deltin.Deltinteger.Elements
                 false
             )},
             {"Dot Product", element => {
-                NewElement a = (NewElement)element.ParameterValues[0];
-                NewElement b = (NewElement)element.ParameterValues[1];
+                Element a = (Element)element.ParameterValues[0];
+                Element b = (Element)element.ParameterValues[1];
 
                 if (a.TryGetConstant(out Vertex vertexA) && b.TryGetConstant(out Vertex vertexB))
                     return vertexA.DotProduct(vertexB);
                 return element;
             }},
             {"Horizontal Angle From Direction", element => {
-                NewElement a = (NewElement)element.ParameterValues[0];
+                Element a = (Element)element.ParameterValues[0];
 
                 if (a.TryGetConstant(out Vertex vert))
                 {
@@ -222,16 +222,16 @@ namespace Deltin.Deltinteger.Elements
                 return element;
             }},
             {"Max", element => {
-                NewElement a = (NewElement)element.ParameterValues[0];
-                NewElement b = (NewElement)element.ParameterValues[1];
+                Element a = (Element)element.ParameterValues[0];
+                Element b = (Element)element.ParameterValues[1];
 
                 if (a is NumberElement aNum && b is NumberElement bNum)
                     return Math.Max(aNum.Value, bNum.Value);
                 return element;
             }},
             {"Min", element => {
-                NewElement a = (NewElement)element.ParameterValues[0];
-                NewElement b = (NewElement)element.ParameterValues[1];
+                Element a = (Element)element.ParameterValues[0];
+                Element b = (Element)element.ParameterValues[1];
 
                 if (a is NumberElement aNum && b is NumberElement bNum)
                     return Math.Min(aNum.Value, bNum.Value);
@@ -252,18 +252,18 @@ namespace Deltin.Deltinteger.Elements
 
                 if (b != null && b.Value == 0) return 0;
 
-                if (((NewElement)element.ParameterValues[0]).EqualTo(element.ParameterValues[1])) return 0;
+                if (((Element)element.ParameterValues[0]).EqualTo(element.ParameterValues[1])) return 0;
                 
                 return element;
             }},
             {"Multiply", element => OptimizeMultiplyOperation(
                 element,
                 op      : (a, b) => a * b,
-                areEqual: (a, b) => NewElement.Pow(a, 2),
+                areEqual: (a, b) => Element.Pow(a, 2),
                 true
             )},
             {"Normalize", element => {
-                NewElement a = (NewElement)element.ParameterValues[0];
+                Element a = (Element)element.ParameterValues[0];
 
                 if (a.TryGetConstant(out Vertex vertexA))
                     return vertexA.Normalize().ToVector();
@@ -271,7 +271,7 @@ namespace Deltin.Deltinteger.Elements
                 return element;
             }},
             {"Not", element => {
-                NewElement a = (NewElement)element.ParameterValues[0];
+                Element a = (Element)element.ParameterValues[0];
 
                 if (a.Function.Name == "True")
                     return false;
@@ -280,32 +280,32 @@ namespace Deltin.Deltinteger.Elements
                     return true;
 
                 if (a.Function.Name == "Not")
-                    return (NewElement)a.ParameterValues[0];
+                    return (Element)a.ParameterValues[0];
 
                 if (a.Function.Name == "Compare")
                 {
-                    Operators op = ((OperatorElement)a.ParameterValues[1]).Operator;
+                    Operator op = ((OperatorElement)a.ParameterValues[1]).Operator;
                     IWorkshopTree left = a.ParameterValues[0];
                     IWorkshopTree right = a.ParameterValues[2];
-                    if (op == Operators.Equal)
-                        return NewElement.Compare(left, Operators.NotEqual, right);
-                    else if (op == Operators.GreaterThan)
-                        return NewElement.Compare(left, Operators.LessThanOrEqual, right);
-                    else if (op == Operators.GreaterThanOrEqual)
-                        return NewElement.Compare(left, Operators.LessThan, right);
-                    else if (op == Operators.LessThan)
-                        return NewElement.Compare(left, Operators.GreaterThanOrEqual, right);
-                    else if (op == Operators.LessThanOrEqual)
-                        return NewElement.Compare(left, Operators.GreaterThan, right);
-                    else if (op == Operators.NotEqual)
-                        return NewElement.Compare(left, Operators.Equal, right);
+                    if (op == Operator.Equal)
+                        return Element.Compare(left, Operator.NotEqual, right);
+                    else if (op == Operator.GreaterThan)
+                        return Element.Compare(left, Operator.LessThanOrEqual, right);
+                    else if (op == Operator.GreaterThanOrEqual)
+                        return Element.Compare(left, Operator.LessThan, right);
+                    else if (op == Operator.LessThan)
+                        return Element.Compare(left, Operator.GreaterThanOrEqual, right);
+                    else if (op == Operator.LessThanOrEqual)
+                        return Element.Compare(left, Operator.GreaterThan, right);
+                    else if (op == Operator.NotEqual)
+                        return Element.Compare(left, Operator.Equal, right);
                 }
 
                 return element;
             }},
             {"Or", element => {
-                NewElement a = (NewElement)element.ParameterValues[0];
-                NewElement b = (NewElement)element.ParameterValues[1];
+                Element a = (Element)element.ParameterValues[0];
+                Element b = (Element)element.ParameterValues[1];
 
                 if (a.TryGetConstant(out bool ac) && b.TryGetConstant(out bool ab))
                     return ac || ab;
@@ -366,26 +366,24 @@ namespace Deltin.Deltinteger.Elements
             {"Sine From Degrees", element => {
                 if (element.ParameterValues[0] is NumberElement a)
                     return Math.Sin(a.Value * (Math.PI / 180));
-
-                return this;
+                return element;
             }},
             {"Sine From Radians", element => {
                 if (element.ParameterValues[0] is NumberElement a)
                     return Math.Sin(a.Value);
-
-                return this;
+                return element;
             }},
         };
 
-        static NewElement OptimizeAddOperation(
-            NewElement element,
+        static Element OptimizeAddOperation(
+            Element element,
             Func<double, double, double> op,
-            Func<NewElement, NewElement, NewElement> areEqual,
+            Func<Element, Element, Element> areEqual,
             bool returnBIf0
         )
         {
-            NewElement a = (NewElement)element.ParameterValues[0];
-            NewElement b = (NewElement)element.ParameterValues[1];
+            Element a = (Element)element.ParameterValues[0];
+            Element b = (Element)element.ParameterValues[1];
 
             NumberElement aAsNumber = a as NumberElement;
             NumberElement bAsNumber = b as NumberElement;
@@ -406,7 +404,7 @@ namespace Deltin.Deltinteger.Elements
                 return areEqual(a, b);
             
             if (a.TryGetConstant(out Vertex aVertex) && b.TryGetConstant(out Vertex bVertex))
-                return NewElement.Vector(
+                return Element.Vector(
                     op(aVertex.X, bVertex.X),
                     op(aVertex.Y, bVertex.Y),
                     op(aVertex.Z, bVertex.Z)
@@ -415,15 +413,15 @@ namespace Deltin.Deltinteger.Elements
             return element;
         }
 
-        static NewElement OptimizeMultiplyOperation(
-            NewElement element,
+        static Element OptimizeMultiplyOperation(
+            Element element,
             Func<double, double, double> op,
-            Func<NewElement, NewElement, NewElement> areEqual,
+            Func<Element, Element, Element> areEqual,
             bool returnBIf1
         )
         {
-            NewElement a = (NewElement)element.ParameterValues[0];
-            NewElement b = (NewElement)element.ParameterValues[1];
+            Element a = (Element)element.ParameterValues[0];
+            Element b = (Element)element.ParameterValues[1];
 
             NumberElement aAsNumber = a as NumberElement;
             NumberElement bAsNumber = b as NumberElement;
@@ -434,7 +432,7 @@ namespace Deltin.Deltinteger.Elements
 
             // Multiply vector and a vector
             if (a.TryGetConstant(out Vertex vertexA) && b.TryGetConstant(out Vertex vertexB))
-                return NewElement.Vector(
+                return Element.Vector(
                     op(vertexA.X, vertexB.X),
                     op(vertexA.Y, vertexB.Y),
                     op(vertexA.Z, vertexB.Z)
@@ -446,7 +444,7 @@ namespace Deltin.Deltinteger.Elements
             {
                 Vertex vector = bAsNumber != null ? mVertexA : mVertexB;
                 NumberElement number = aAsNumber ?? bAsNumber;
-                return NewElement.Vector(
+                return Element.Vector(
                     op(vector.X, number.Value),
                     op(vector.Y, number.Value),
                     op(vector.Z, number.Value)

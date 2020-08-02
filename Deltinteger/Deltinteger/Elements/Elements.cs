@@ -32,19 +32,19 @@ namespace Deltin.Deltinteger.Elements
         String
     }
 
-    public class NewElement : IWorkshopTree
+    public class Element : IWorkshopTree
     {
-        public static NewElement Part(string name, params IWorkshopTree[] parameterValues)
-            => new NewElement(ElementJsonRoot.Instance.GetFunction(name), parameterValues);
-        public static NewElement Part(ElementBaseJson function, params IWorkshopTree[] parameterValues)
-            => new NewElement(function, parameterValues);
+        public static Element Part(string name, params IWorkshopTree[] parameterValues)
+            => new Element(ElementRoot.Instance.GetFunction(name), parameterValues);
+        public static Element Part(ElementBaseJson function, params IWorkshopTree[] parameterValues)
+            => new Element(function, parameterValues);
 
         public ElementBaseJson Function { get; }
         public IWorkshopTree[] ParameterValues { get; set; }
         public bool Disabled { get; set; }
         public string Comment { get; set; }
 
-        public NewElement(ElementBaseJson function, IWorkshopTree[] parameterValues)
+        public Element(ElementBaseJson function, IWorkshopTree[] parameterValues)
         {
             Function = function;
             ParameterValues = parameterValues;
@@ -86,14 +86,14 @@ namespace Deltin.Deltinteger.Elements
         {
             if (this.GetType() != other.GetType()) return false;
 
-            NewElement bElement = (NewElement)other;
+            Element bElement = (Element)other;
             if (Function != bElement.Function || ParameterValues.Length != bElement.ParameterValues.Length) return false;
 
-            Type[] createsRandom = new Type[] {
-                typeof(V_RandomInteger),
-                typeof(V_RandomizedArray),
-                typeof(V_RandomReal),
-                typeof(V_RandomValueInArray)
+            string[] createsRandom = new string[] {
+                "Random Integer",
+                "Randomized Array",
+                "Random Real",
+                "Random Value In Array"
             };
 
             for (int i = 0; i < ParameterValues.Length; i++)
@@ -101,32 +101,33 @@ namespace Deltin.Deltinteger.Elements
                 if ((ParameterValues[i] == null) != (bElement.ParameterValues[i] == null))
                     return false;
 
-                if (ParameterValues[i] != null && (!ParameterValues[i].EqualTo(bElement.ParameterValues[i]) || createsRandom.Contains(ParameterValues[i].GetType())))
+                if (ParameterValues[i] != null && (!ParameterValues[i].EqualTo(bElement.ParameterValues[i]) || (ParameterValues[i] is Element element && createsRandom.Contains(element.Function.Name))))
                     return false;
             }
             
             return true;
         }
 
-        public NewElement Optimize()
+        public Element Optimize()
         {
             OptimizeChildren();
+            return this;
         }
 
         protected void OptimizeChildren()
         {
             AddMissingParameters();
             for (int i = 0; i < ParameterValues.Length; i++)
-                if (ParameterValues[i] is NewElement element)
+                if (ParameterValues[i] is Element element)
                     ParameterValues[i] = element.Optimize();
         }
 
         public bool TryGetConstant(out Vertex vertex)
         {
             if (Function.Name == "Vector"
-                && ParameterValues[0] is NewElement xe && xe.TryGetConstant(out double x)
-                && ParameterValues[1] is NewElement ye && ye.TryGetConstant(out double y)
-                && ParameterValues[2] is NewElement ze && ze.TryGetConstant(out double z))
+                && ParameterValues[0] is Element xe && xe.TryGetConstant(out double x)
+                && ParameterValues[1] is Element ye && ye.TryGetConstant(out double y)
+                && ParameterValues[2] is Element ze && ze.TryGetConstant(out double z))
             {
                 vertex = new Vertex(x, y, z);
                 return true;
@@ -157,39 +158,50 @@ namespace Deltin.Deltinteger.Elements
             return false;
         }
 
-        public static NewElement Compare(IWorkshopTree a, Operators op, IWorkshopTree b)
-            => Part("Compare", a, new OperatorElement(op), b);
-        
-        public static NewElement Vector(NewElement x, NewElement y, NewElement z)
-            => Part("Vector", x, y, z);
-        
-        public static NewElement Pow(NewElement a, NewElement b)
-            => Part("Raise To Power", a, b);
+        public virtual int ElementCount()
+        {
+            AddMissingParameters();
+            int count = 1;
+            
+            foreach (var parameter in ParameterValues)
+                count += parameter.ElementCount();
+            
+            return count;
+        }
 
-        public static NewElement operator +(NewElement a, NewElement b) => Part("Add", a, b);
-        public static NewElement operator -(NewElement a, NewElement b) => Part("Subtract", a, b);
-        public static NewElement operator *(NewElement a, NewElement b) => Part("Multiply", a, b);
-        public static NewElement operator /(NewElement a, NewElement b) => Part("Divide", a, b);
-        public static NewElement operator %(NewElement a, NewElement b) => Part("Modulo", a, b);
-        public static NewElement operator <(NewElement a, NewElement b) => Compare(a, Operators.LessThan, b);
-        public static NewElement operator >(NewElement a, NewElement b) => Compare(a, Operators.GreaterThan, b);
-        public static NewElement operator <=(NewElement a, NewElement b) => Compare(a, Operators.LessThanOrEqual, b);
-        public static NewElement operator >=(NewElement a, NewElement b) => Compare(a, Operators.GreaterThanOrEqual, b);
-        public static NewElement operator !(NewElement a) => Part("Not", a);
-        public static NewElement operator -(NewElement a) => a * -1;
-        public NewElement this[IWorkshopTree i]
+        public static Element Compare(IWorkshopTree a, Operator op, IWorkshopTree b) => Part("Compare", a, new OperatorElement(op), b);
+        public static Element Vector(Element x, Element y, Element z) => Part("Vector", x, y, z);
+        public static Element Pow(Element a, Element b) => Part("Raise To Power", a, b);
+        public static Element True() => Part("True");
+        public static Element False() => Part("False");
+        public static Element Not(IWorkshopTree a) => Part("Not", a);
+        public static Element IndexOfArrayValue(Element array, Element value) => Part("Index Of Array Value", array, value);
+        public static Element Append(Element array, Element value) => Part("Append To Array", array, value);
+
+        public static Element operator +(Element a, Element b) => Part("Add", a, b);
+        public static Element operator -(Element a, Element b) => Part("Subtract", a, b);
+        public static Element operator *(Element a, Element b) => Part("Multiply", a, b);
+        public static Element operator /(Element a, Element b) => Part("Divide", a, b);
+        public static Element operator %(Element a, Element b) => Part("Modulo", a, b);
+        public static Element operator <(Element a, Element b) => Compare(a, Operator.LessThan, b);
+        public static Element operator >(Element a, Element b) => Compare(a, Operator.GreaterThan, b);
+        public static Element operator <=(Element a, Element b) => Compare(a, Operator.LessThanOrEqual, b);
+        public static Element operator >=(Element a, Element b) => Compare(a, Operator.GreaterThanOrEqual, b);
+        public static Element operator !(Element a) => Part("Not", a);
+        public static Element operator -(Element a) => a * -1;
+        public Element this[IWorkshopTree i]
         {
             get => Part("Value In Array", this, i);
             private set {}
         }
-        public NewElement this[NewElement i]
+        public Element this[Element i]
         {
             get => Part("Value In Array", this, i);
             private set {}
         }
-        public static implicit operator NewElement(double number) => new NumberElement(number);
-        public static implicit operator NewElement(int number) => new NumberElement(number);
-        public static implicit operator NewElement(bool boolean) => Part(boolean.ToString());
+        public static implicit operator Element(double number) => new NumberElement(number);
+        public static implicit operator Element(int number) => new NumberElement(number);
+        public static implicit operator Element(bool boolean) => Part(boolean.ToString());
 
         public static IWorkshopTree GetDefaultParameter(ElementParameter parameter)
         {
@@ -198,29 +210,29 @@ namespace Deltin.Deltinteger.Elements
         }
 
         // Creates an array from a list of values.
-        public static NewElement CreateArray(params IWorkshopTree[] values)
+        public static Element CreateArray(params IWorkshopTree[] values)
         {
             if (values == null || values.Length == 0) return Part("Empty Array");
             return Part("Array", values);
         }
 
-        public static NewElement CreateAppendArray(params IWorkshopTree[] values)
+        public static Element CreateAppendArray(params IWorkshopTree[] values)
         {
-            NewElement array = Part("Empty Array");
+            Element array = Part("Empty Array");
             for (int i = 0; i < values.Length; i++)
                 array = Part("Append To Array", array, values[i]);
             return array;
         }
 
         // Creates an ternary conditional that works in the workshop
-        public static NewElement TernaryConditional(IWorkshopTree condition, IWorkshopTree consequent, IWorkshopTree alternative) => Part("If-Then-Else", condition, consequent, alternative);
+        public static Element TernaryConditional(IWorkshopTree condition, IWorkshopTree consequent, IWorkshopTree alternative) => Part("If-Then-Else", condition, consequent, alternative);
     }
 
     public class OperatorElement : IWorkshopTree
     {
-        public Operators Operator { get; }
+        public Operator Operator { get; }
 
-        public OperatorElement(Operators op)
+        public OperatorElement(Operator op)
         {
             Operator = op;
         }
@@ -231,22 +243,40 @@ namespace Deltin.Deltinteger.Elements
         {
             switch (Operator)
             {
-                case Operators.Equal: return "==";
-                case Operators.GreaterThan: return ">";
-                case Operators.GreaterThanOrEqual: return ">=";
-                case Operators.LessThan: return "<";
-                case Operators.LessThanOrEqual: return "<=";
-                case Operators.NotEqual: return "!=";
+                case Operator.Equal: return "==";
+                case Operator.GreaterThan: return ">";
+                case Operator.GreaterThanOrEqual: return ">=";
+                case Operator.LessThan: return "<";
+                case Operator.LessThanOrEqual: return "<=";
+                case Operator.NotEqual: return "!=";
                 default: throw new NotImplementedException();
             }
         }
     }
 
-    public class NumberElement : NewElement
+    public class OperationElement : IWorkshopTree
+    {
+        public Operation Operation { get; }
+
+        public OperationElement(Operation op)
+        {
+            Operation = op;
+        }
+
+        public bool EqualTo(IWorkshopTree other) => other is OperationElement oe && oe.Operation == Operation;
+
+        public string ToWorkshop(OutputLanguage language, ToWorkshopContext context)
+        {
+            // todo
+            throw new NotImplementedException();
+        }
+    }
+
+    public class NumberElement : Element
     {
         public double Value { get; }
 
-        public NumberElement(double value) : base(ElementJsonRoot.Instance.GetFunction("Number"), null)
+        public NumberElement(double value) : base(ElementRoot.Instance.GetFunction("Number"), null)
         {
             Value = value;
         }
@@ -270,285 +300,6 @@ namespace Deltin.Deltinteger.Elements
         Neutral,
         Increment,
         Decrement
-    }
-
-    public abstract class Element : IWorkshopTree
-    {
-        public static T Part<T>(params IWorkshopTree[] parameterValues) where T : Element, new()
-        {
-            T element = new T()
-            {
-                ParameterValues = parameterValues
-            };
-            return element;
-        }
-
-        public Element(params IWorkshopTree[] parameterValues)
-        {
-            ElementList = ElementList.FromType(GetType());
-            ElementData = GetType().GetCustomAttribute<ElementData>();
-            ParameterData = ElementList.WorkshopParameters;
-            ParameterValues = parameterValues;
-        }
-
-        public ElementList ElementList { get; private set; }
-        public ElementData ElementData { get; private set; }
-        public ParameterBase[] ParameterData { get; private set; }
-        public string Name => ElementList.WorkshopName;
-
-        public IWorkshopTree[] ParameterValues { get; set; }
-        public bool Disabled { get; set; }
-        public string Comment { get; set; }
-        public int Indent { get; set; }
-        protected bool AlwaysShowParentheses = false;
-
-        public override string ToString()
-        {
-            return ElementList.GetLabel(false);
-        }
-        
-        public virtual string ToWorkshop(OutputLanguage language, ToWorkshopContext context)
-        {
-            // Get the parameters
-            AddMissingParameters();
-            List<string> parameters = AdditionalParameters().ToList();
-            parameters.AddRange(ParameterValues.Select(p => p.ToWorkshop(language, ToWorkshopContext.NestedValue)));
-
-            string result = Extras.Indent(Indent, true); // TODO: option for spaces or tab output.
-
-            // Add a comment and newline
-            if (Comment != null) result += $"\"{Comment}\"\n" + Extras.Indent(Indent, true);
-
-            // Add the disabled tag if the element is disabled.
-            if (!ElementList.IsValue && Disabled) result += LanguageInfo.Translate(language, "disabled") + " ";
-
-            // Add the name of the element.
-            result += LanguageInfo.Translate(language, Name);
-
-            // Add the parameters.
-            if (parameters.Count != 0) result += "(" + string.Join(", ", parameters) + ")";
-            else if (AlwaysShowParentheses) result += "()";
-
-            // Add the ; if the element is an action.
-            if (!ElementList.IsValue) result += ";";
-            return result;
-        }
-
-        protected void AddMissingParameters()
-        {
-            List<IWorkshopTree> parameters = new List<IWorkshopTree>();
-
-            for (int i = 0; i < ParameterData.Length || i < ParameterValues.Length; i++)
-                parameters.Add(ParameterValues?.ElementAtOrDefault(i) ?? ParameterData[i].GetDefault());
-            
-            ParameterValues = parameters.ToArray();
-        }
-
-        public virtual bool ConstantSupported<T>()
-        {
-            return false;
-        }
-        public virtual object GetConstant()
-        {
-            return null;
-        }
-
-        public virtual Element Optimize()
-        {
-            OptimizeChildren();
-            return this;
-        }
-
-        protected void OptimizeChildren()
-        {
-            AddMissingParameters();
-            for (int i = 0; i < ParameterValues.Length; i++)
-                if (ParameterValues[i] is Element)
-                    ParameterValues[i] = ((Element)ParameterValues[i]).Optimize();
-        }
-
-        protected virtual string[] AdditionalParameters() => new string[0];
-
-        // Creates an array from a list of values.
-        public static Element CreateArray(params IWorkshopTree[] values)
-        {
-            if (values == null || values.Length == 0) return new V_EmptyArray();
-            return Element.Part<V_Array>(values);
-        }
-
-        public static Element CreateAppendArray(params IWorkshopTree[] values)
-        {
-            Element array = new V_EmptyArray();
-            for (int i = 0; i < values.Length; i++)
-                array = Element.Part<V_Append>(array, values[i]);
-            return array;
-        }
-
-        // Creates an ternary conditional that works in the workshop
-        public static Element TernaryConditional(IWorkshopTree condition, IWorkshopTree consequent, IWorkshopTree alternative) => Element.Part<V_IfThenElse>(condition, consequent, alternative);
-
-        public static Element operator +(Element a, Element b) => Element.Part<V_Add>(a, b);
-        public static Element operator -(Element a, Element b) => Element.Part<V_Subtract>(a, b);
-        public static Element operator *(Element a, Element b) => Element.Part<V_Multiply>(a, b);
-        public static Element operator /(Element a, Element b) => Element.Part<V_Divide>(a, b);
-        public static Element operator %(Element a, Element b) => Element.Part<V_Modulo>(a, b);
-        public static Element operator <(Element a, Element b) => new V_Compare(a, Operators.LessThan, b);
-        public static Element operator >(Element a, Element b) => new V_Compare(a, Operators.GreaterThan, b);
-        public static Element operator <=(Element a, Element b) => new V_Compare(a, Operators.LessThanOrEqual, b);
-        public static Element operator >=(Element a, Element b) => new V_Compare(a, Operators.GreaterThanOrEqual, b);
-        public static Element operator !(Element a) => Element.Part<V_Not>(a);
-        public static Element operator -(Element a) => a * -1;
-        public Element this[Element i]
-        {
-            get { return Element.Part<V_ValueInArray>(this, i); }
-            private set {}
-        }
-        public static implicit operator Element(double number) => new V_Number(number);
-        public static implicit operator Element(int number) => new V_Number(number);
-        public static implicit operator Element(bool boolean) => boolean ? (Element)new V_True() : new V_False();
-
-        public bool EqualTo(IWorkshopTree b)
-        {
-            if (this.GetType() != b.GetType()) return false;
-
-            Element bElement = (Element)b;
-            if (ParameterValues.Length != bElement.ParameterValues.Length) return false;
-
-            Type[] createsRandom = new Type[] {
-                typeof(V_RandomInteger),
-                typeof(V_RandomizedArray),
-                typeof(V_RandomReal),
-                typeof(V_RandomValueInArray)
-            };
-
-            for (int i = 0; i < ParameterValues.Length; i++)
-            {
-                if ((ParameterValues[i] == null) != (bElement.ParameterValues[i] == null))
-                    return false;
-
-                if (ParameterValues[i] != null && (!ParameterValues[i].EqualTo(bElement.ParameterValues[i]) || createsRandom.Contains(ParameterValues[i].GetType())))
-                    return false;
-            }
-            
-            return OverrideEquals(b);
-        }
-
-        protected virtual bool OverrideEquals(IWorkshopTree other) => true;
-
-        public virtual int ElementCount()
-        {
-            AddMissingParameters();
-            int count = 1;
-            
-            foreach (var parameter in ParameterValues)
-                count += parameter.ElementCount();
-            
-            return count;
-        }
-
-        public Element OptimizeAddOperation(
-            Func<double, double, double> op,
-            Func<Element, Element, Element> areEqual,
-            bool returnBIf0
-        )
-        {
-            OptimizeChildren();
-
-            Element a = (Element)ParameterValues[0];
-            Element b = (Element)ParameterValues[1];
-
-            V_Number aAsNumber = a as V_Number;
-            V_Number bAsNumber = b as V_Number;
-
-            // If a and b are numbers, operate them.
-            if (aAsNumber != null && bAsNumber != null)
-                return op(aAsNumber.Value, bAsNumber.Value);
-            
-            // If a is 0, return b.
-            if (aAsNumber != null && aAsNumber.Value == 0 && returnBIf0)
-                return b;
-            
-            // If b is 0, return a.
-            if (bAsNumber != null && bAsNumber.Value == 0)
-                return a;
-
-            if (a.EqualTo(b))
-                return areEqual(a, b);
-            
-            if (a.ConstantSupported<Vertex>() && b.ConstantSupported<Vertex>())
-            {
-                var aVertex = (Vertex)a.GetConstant();
-                var bVertex = (Vertex)b.GetConstant();
-
-                return new V_Vector(
-                    op(aVertex.X, bVertex.X),
-                    op(aVertex.Y, bVertex.Y),
-                    op(aVertex.Z, bVertex.Z)
-                );
-            }
-            
-            return this;
-        }
-
-        public Element OptimizeMultiplyOperation(
-            Func<double, double, double> op,
-            Func<Element, Element, Element> areEqual,
-            bool returnBIf1
-        )
-        {
-            OptimizeChildren();
-
-            Element a = (Element)ParameterValues[0];
-            Element b = (Element)ParameterValues[1];
-
-            V_Number aAsNumber = a as V_Number;
-            V_Number bAsNumber = b as V_Number;
-
-            // Multiply number and number
-            if (aAsNumber != null && bAsNumber != null)
-                return op(aAsNumber.Value, bAsNumber.Value);
-
-            // Multiply vector and a vector
-            if (a.ConstantSupported<Vertex>() && b.ConstantSupported<Vertex>())
-            {
-                Vertex vertexA = (Vertex)a.GetConstant();
-                Vertex vertexB = (Vertex)b.GetConstant();
-                return new V_Vector(
-                    op(vertexA.X, vertexB.X),
-                    op(vertexA.Y, vertexB.Y),
-                    op(vertexA.Z, vertexB.Z)
-                );
-            }
-
-            // Multiply vector and number
-            if ((a.ConstantSupported<Vertex>() && b is V_Number) || (a is V_Number && b.ConstantSupported<Vertex>()))
-            {
-                Vertex vector = a.ConstantSupported<Vertex>() ? (Vertex)a.GetConstant() : (Vertex)b.GetConstant();
-                V_Number number = a is V_Number ? (V_Number)a : (V_Number)b;
-                return new V_Vector(
-                    op(vector.X, number.Value),
-                    op(vector.Y, number.Value),
-                    op(vector.Z, number.Value)
-                );
-            }
-
-            if (aAsNumber != null)
-            {
-                if (aAsNumber.Value == 1 && returnBIf1) return b;
-                if (aAsNumber.Value == 0) return 0;
-            }
-
-            if (bAsNumber != null)
-            {
-                if (bAsNumber.Value == 1) return a;
-                if (bAsNumber.Value == 0) return 0;
-            }
-
-            if (a.EqualTo(b))
-                return areEqual(a, b);
-            
-            return this;
-        }
     }
 
     public class ElementList : IMethod
@@ -658,9 +409,9 @@ namespace Deltin.Deltinteger.Elements
                     );
 
                     // If the default parameter value is an Element and the Element is restricted,
-                    if (defaultValue is Element parameterElement && parameterElement.ElementList.Restricted != null)
+                    if (defaultValue is Element parameterElement && parameterElement.Function.Restricted != null)
                         // ...then add the restricted call type to the parameter's list of restricted call types.
-                        Parameters[i].RestrictedCalls.Add((RestrictedCallType)parameterElement.ElementList.Restricted);
+                        Parameters[i].RestrictedCalls.Add((RestrictedCallType)parameterElement.Function.Restricted);
                 }
             }
         }

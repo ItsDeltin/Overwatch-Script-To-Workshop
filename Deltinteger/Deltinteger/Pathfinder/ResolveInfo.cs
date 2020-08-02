@@ -69,7 +69,7 @@ namespace Deltin.Deltinteger.Pathfinder
             // Create the rule that will get the closest node.
             TranslateRule getResolveRule = new TranslateRule(DeltinScript, "Pathfinder: Resolve Current", RuleEvent.OngoingPlayer);
             // The rule will activate when DoGetCurrent is set to true.
-            getResolveRule.Conditions.Add(new Condition((Element)DoGetCurrent.GetVariable(), Operators.Equal, new V_True()));
+            getResolveRule.Conditions.Add(new Condition((Element)DoGetCurrent.GetVariable(), Operator.Equal, new V_True()));
             // Set the Current variable to the closest node.
             getResolveRule.ActionSet.AddAction(Current.SetVariable(ClosestNode(getResolveRule.ActionSet, PlayerPosition())));
 
@@ -95,10 +95,10 @@ namespace Deltin.Deltinteger.Pathfinder
             // The 'next' rule will set current to the next node index when the current node is reached. 
             TranslateRule next = new TranslateRule(DeltinScript, "Pathfinder: Resolve Next", RuleEvent.OngoingPlayer);
             next.Conditions.Add(NodeReachedCondition(next.ActionSet));
-            next.Conditions.Add(new Condition(ParentArray.Get(), Operators.NotEqual, new V_Null()));
+            next.Conditions.Add(new Condition(ParentArray.Get(), Operator.NotEqual, new V_Null()));
 
             if (OnPathCompleted == null || !OnPathCompleted.EmptyBlock)
-                next.ActionSet.AddAction(Element.Part<A_If>(new V_Compare(Current.Get(), Operators.NotEqual, new V_Number(-1))));
+                next.ActionSet.AddAction(Element.Part<A_If>(new V_Compare(Current.Get(), Operator.NotEqual, new V_Number(-1))));
 
             // Get last attribute.
             next.ActionSet.AddAction(CurrentAttribute.SetVariable(NextSegmentAttribute(new V_EventPlayer())));
@@ -151,7 +151,7 @@ namespace Deltin.Deltinteger.Pathfinder
 
         public Element CurrentPositionWithDestination(Element player = null) => Element.TernaryConditional(
             // Current will be -1 if the player reached the last node.
-            new V_Compare(Current.GetVariable(player), Operators.Equal, new V_Number(-1)),
+            new V_Compare(Current.GetVariable(player), Operator.Equal, new V_Number(-1)),
             // If so, go to the destination.
             Destination.GetVariable(player),
             // Otherwise, go to the current node.
@@ -215,14 +215,14 @@ namespace Deltin.Deltinteger.Pathfinder
                     players,
                     new V_Compare(
                         PathmapReference.GetVariable(new V_ArrayElement()),
-                        Operators.Equal,
+                        Operator.Equal,
                         pathmapReference
                     )
                 )
             );
     
         /// <summary>Determines if the target player is pathfinding.</summary>
-        public Element IsPathfinding(Element player) => new V_Compare(ParentArray.GetVariable(player), Operators.NotEqual, new V_Null());
+        public Element IsPathfinding(Element player) => new V_Compare(ParentArray.GetVariable(player), Operator.NotEqual, new V_Null());
 
         /// <summary>Returns true if the player takes longer than expected to reach the next node.</summary>
         public Element IsPathfindingStuck(Element player, Element scalar)
@@ -235,7 +235,7 @@ namespace Deltin.Deltinteger.Pathfinder
             
             Element isStuck = new V_Compare(
                 nodeDistance - ((defaultSpeed * scalar * timeSinceLastNode) / leniency),
-                Operators.LessThanOrEqual,
+                Operator.LessThanOrEqual,
                 new V_Number(0)
             );
             return Element.Part<V_And>(IsPathfinding(player), isStuck);
@@ -251,7 +251,7 @@ namespace Deltin.Deltinteger.Pathfinder
     
         /// <summary>Gets the next pathfinding attribute.</summary>
         public Element NextSegmentAttribute(Element player) => Element.TernaryConditional(
-            Element.Part<V_And>(IsPathfinding(player), new V_Compare(Current.GetVariable(player), Operators.NotEqual, new V_Number(-1))),
+            Element.Part<V_And>(IsPathfinding(player), new V_Compare(Current.GetVariable(player), Operator.NotEqual, new V_Number(-1))),
             AttributeArray.Get(player)[Current.Get(player)],
             new V_Number(-1)
         );
@@ -284,14 +284,14 @@ namespace Deltin.Deltinteger.Pathfinder
                         PlayerPosition(),
                         CurrentPositionWithDestination()
                     ),
-                    Operators.LessThanOrEqual,
+                    Operator.LessThanOrEqual,
                     new V_Number(DefaultMoveToNext)
                 );
             // Otherwise, use hook.
             else
                 return new Condition(
                     (Element)IsNodeReachedDeterminer.Invoke(actionSet, CurrentPositionWithDestination()),
-                    Operators.Equal,
+                    Operator.Equal,
                     new V_True()
                 );
         }
@@ -308,13 +308,13 @@ namespace Deltin.Deltinteger.Pathfinder
             // Get the path.
             actionSet.AddAction(Element.Part<A_While>(Element.Part<V_And>(new V_Compare(
                 look.GetVariable(),
-                Operators.GreaterThanOrEqual,
+                Operator.GreaterThanOrEqual,
                 new V_Number(0)
             ), !result.Get())));
 
             //Element currentNode = PathmapInstance.Nodes.Get()[PathmapReference.Get(targetPlayer)][look.Get()];
 
-            actionSet.AddAction(result.SetVariable(new V_Compare(look.Get(), Operators.Equal, node)));
+            actionSet.AddAction(result.SetVariable(new V_Compare(look.Get(), Operator.Equal, node)));
 
             actionSet.AddAction(look.SetVariable(ParentArray.Get(targetPlayer)[look.Get()] - 1));
             actionSet.AddAction(new A_End());
@@ -334,7 +334,7 @@ namespace Deltin.Deltinteger.Pathfinder
             // Get the path.
             actionSet.AddAction(Element.Part<A_While>(Element.Part<V_And>(new V_Compare(
                 ParentArray.Get(targetPlayer)[look.Get()] - 1,
-                Operators.GreaterThanOrEqual,
+                Operator.GreaterThanOrEqual,
                 new V_Number(0)
             ), !result.Get())));
 
@@ -343,7 +343,7 @@ namespace Deltin.Deltinteger.Pathfinder
 
             actionSet.AddAction(result.SetVariable(new V_Compare(
                 segment,
-                Operators.Equal,
+                Operator.Equal,
                 Element.Part<V_FirstOf>(PathmapInstance.SegmentsFromNodes(PathmapReference.Get(targetPlayer), look.Get(), ParentArray.Get(targetPlayer)[look.Get()] - 1))
             )));
 
@@ -365,11 +365,11 @@ namespace Deltin.Deltinteger.Pathfinder
             // Get the path.
             actionSet.AddAction(Element.Part<A_While>(Element.Part<V_And>(new V_Compare(
                 look.GetVariable(),
-                Operators.GreaterThanOrEqual,
+                Operator.GreaterThanOrEqual,
                 new V_Number(0)
             ), !result.Get())));
 
-            actionSet.AddAction(result.SetVariable(new V_Compare(attribute, Operators.Equal, AttributeArray.Get(targetPlayer)[look.Get()])));
+            actionSet.AddAction(result.SetVariable(new V_Compare(attribute, Operator.Equal, AttributeArray.Get(targetPlayer)[look.Get()])));
 
             actionSet.AddAction(look.SetVariable(ParentArray.Get(targetPlayer)[look.Get()] - 1));
             actionSet.AddAction(new A_End());

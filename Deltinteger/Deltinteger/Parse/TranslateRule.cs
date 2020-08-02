@@ -71,20 +71,20 @@ namespace Deltin.Deltinteger.Parse
                 var conditionParse = condition.Expression.Parse(ActionSet);
 
                 Element value1;
-                EnumMember compareOperator;
+                Operator compareOperator;
                 Element value2;
 
-                if (conditionParse is V_Compare)
+                if (conditionParse is Element asElement && asElement.Function.Name == "Compare")
                 {
-                    value1 = (Element)((Element)conditionParse).ParameterValues[0];
-                    compareOperator = (EnumMember)((Element)conditionParse).ParameterValues[1];
-                    value2 = (Element)((Element)conditionParse).ParameterValues[2];
+                    value1 = (Element)asElement.ParameterValues[0];
+                    compareOperator = ((OperatorElement)asElement.ParameterValues[1]).Operator;
+                    value2 = (Element)asElement.ParameterValues[2];
                 }
                 else
                 {
                     value1 = (Element)conditionParse;
-                    compareOperator = EnumData.GetEnumValue(Operators.Equal);
-                    value2 = new V_True();
+                    compareOperator = Operator.Equal;
+                    value2 = Element.True();
                 }
 
                 Conditions.Add(new Condition(value1, compareOperator, value2));
@@ -349,11 +349,10 @@ namespace Deltin.Deltinteger.Parse
             else skipCount = GetSkipCount(EndMarker);
 
             Element newAction;
-            if (Condition == null) newAction = Element.Part<A_Skip>(skipCount);
-            else newAction = Element.Part<A_SkipIf>(Element.Part<V_Not>(Condition), skipCount);
+            if (Condition == null) newAction = Element.Part("Skip", skipCount);
+            else newAction = Element.Part("Skip If", Element.Not(Condition), skipCount);
 
             newAction.Comment = Comment;
-            
             return newAction;
         }
 

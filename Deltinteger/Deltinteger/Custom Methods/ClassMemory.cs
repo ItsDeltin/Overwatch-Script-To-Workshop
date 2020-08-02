@@ -29,7 +29,7 @@ namespace Deltin.Deltinteger.CustomMethods
             return Element.Part<V_CountOf>(Element.Part<V_FilteredArray>(
                 // The number of assigned variables. Assigned variables do not equal 0.
                 actionSet.Translate.DeltinScript.GetComponent<ClassData>().ClassIndexes.GetVariable(),
-                new V_Compare(new V_ArrayElement(), Operators.NotEqual, new V_Number(0))
+                new V_Compare(new V_ArrayElement(), Operator.NotEqual, new V_Number(0))
             ));
         } 
     }

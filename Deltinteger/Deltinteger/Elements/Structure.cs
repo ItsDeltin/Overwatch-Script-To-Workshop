@@ -147,9 +147,9 @@ namespace Deltin.Deltinteger.Elements
         }
     }
 
-    public class ElementJsonRoot
+    public class ElementRoot
     {
-        public static ElementJsonRoot Instance { get; }
+        public static ElementRoot Instance { get; }
 
         [JsonProperty("values")]
         public ElementJsonValue[] Values;
@@ -169,123 +169,9 @@ namespace Deltin.Deltinteger.Elements
 
         public ElementEnum GetEnum(string name) => Enumerators.FirstOrDefault(e => e.Name == name) ?? throw new KeyNotFoundException("The enum '" + name + "' was not found.");
 
-        public static ElementJsonRoot Get(string json)
-            => JsonConvert.DeserializeObject<ElementJsonRoot>(json, new EnumeratorConverter(), new ParameterConverter());
+        public static ElementRoot Get(string json)
+            => JsonConvert.DeserializeObject<ElementRoot>(json, new EnumeratorConverter(), new ParameterConverter());
         
-        public static string Make()
-        {
-            var values = new List<ElementJsonValue>();
-            var actions = new List<ElementJsonAction>();
-            
-            foreach (var el in ElementList.Elements)
-            {
-                // Get the parameters.                
-                ElementParameter[] parameters = new ElementParameter[el.WorkshopParameters.Length];
-                for (int i = 0; i < el.WorkshopParameters.Length; i++)
-                {
-                    // Initialize the variables that will be used to create the ElementParameter.
-                    string returnType = null; // Initialize the return type's literal name.
-                    bool? variableReferenceGlobal = null; // Initialize the variable reference type.
-                    object defaultValue = null; // Initialize the default value.
-
-                    // Get the type name from a parameter.
-                    if (el.WorkshopParameters[i] is Parameter parameter)
-                    {
-                        returnType = GetTypeName(parameter.ReturnType);
-                        // Get the default value.
-                        if (parameter.GetDefault() is Element defaultElement)
-                        {
-                            // Numbers
-                            if (defaultElement is V_Number numberElement)
-                                defaultValue = numberElement.Value;
-                            // Strings
-                            else if (defaultElement is V_CustomString customString)
-                                defaultValue = "!" + customString.Text;
-                            // Localized
-                            else if (defaultElement is V_String str)
-                                defaultValue = "@" + str.Text;
-                            // True
-                            else if (defaultElement is V_True)
-                                defaultValue = true;
-                            // False
-                            else if (defaultElement is V_False)
-                                defaultValue = false;
-                            // TODO will not convert / Null
-                            else if (defaultElement is V_Null)
-                                defaultValue = null;
-                            // Other
-                            else
-                                defaultValue = defaultElement.Name;
-                        }
-                    }
-                    // Get the type name from an enum.
-                    else if (el.WorkshopParameters[i] is EnumParameter enumParameter)
-                    {
-                        returnType = enumParameter.EnumData.CodeName;
-                        // Get the default value.
-                        defaultValue = enumParameter.EnumData.Members[0].WorkshopName;
-                    }
-                    // Get the expected variable type.
-                    else if (el.WorkshopParameters[i] is VarRefParameter varRef)
-                        variableReferenceGlobal = varRef.IsGlobal;
-
-                    // Set the parameter with the retrieved data.
-                    parameters[i] = new ElementParameter() {
-                        Name = el.WorkshopParameters[i].Name,
-                        Documentation = el.Parameters[i].Documentation,
-                        Type = returnType,
-                        VariableReferenceIsGlobal = variableReferenceGlobal,
-                        DefaultValue = defaultValue
-                    };
-                }
-                if (parameters.Length == 0) parameters = null;
-
-                string alias = null;
-                if (!el.Hidden && el.WorkshopName.Replace(" ", "") != el.Name) alias = el.Name;
-
-                // Add the element.
-                if (el.IsValue)
-                {
-                    // Add value
-                    values.Add(new ElementJsonValue() {
-                        Name = el.WorkshopName,
-                        Alias = alias,
-                        Documentation = el.Documentation,
-                        Parameters = parameters,
-                        IsHidden = el.Hidden,
-                        ReturnType = GetTypeName(el.ElementValueType)
-                    });
-                }
-                else
-                {
-                    // Add action
-                    actions.Add(new ElementJsonAction() {
-                        Name = el.WorkshopName,
-                        Alias = alias,
-                        Documentation = el.Documentation,
-                        IsHidden = el.Hidden,
-                        Parameters = parameters
-                    });
-                }
-            }
-            
-            // Get the enumerators.
-            ElementEnum[] enumerators = EnumData.GetEnumData().Select(e => new ElementEnum() {
-                Name = e.CodeName,
-                Members = e.Members.Select(mem => new ElementEnumMember() {
-                    Name = mem.WorkshopName,
-                    Alias = mem.WorkshopName.Replace(" ", "") == mem.CodeName ? null : mem.CodeName
-                }).ToArray()
-            }).ToArray();
-            
-            // Create the object then get the json.
-            return new ElementJsonRoot() {
-                Actions = actions.ToArray(),
-                Values = values.ToArray(),
-                Enumerators = enumerators
-            }.ToJson();
-        }
-
         public string ToJson()
             => JsonConvert.SerializeObject(this, Formatting.Indented, new JsonSerializerSettings() {
                 // Set converters

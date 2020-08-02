@@ -374,7 +374,7 @@ namespace Deltin.Deltinteger.Pathfinder
             index.SetVariable(Element.Part<V_IndexOfArrayValue>(array, new V_Null()));
 
             // If the index is -1, use the count of the element.
-            index.SetVariable(Element.TernaryConditional(new V_Compare(index.Get(), Operators.Equal, new V_Number(-1)), Element.Part<V_CountOf>(array), index.Get()));
+            index.SetVariable(Element.TernaryConditional(new V_Compare(index.Get(), Operator.Equal, new V_Number(-1)), Element.Part<V_CountOf>(array), index.Get()));
 
             // Done
             return index.Get();

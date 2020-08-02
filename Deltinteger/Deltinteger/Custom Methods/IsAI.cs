@@ -19,11 +19,11 @@ namespace Deltin.Deltinteger.CustomMethods
             actionSet.AddAction(ArrayBuilder<Element>.Build
             (
                 originalHero.SetVariable(Element.Part<V_HeroOf>(player)),
-                Element.Part<A_SkipIf>(Element.Part<V_Compare>(originalHero.GetVariable(), EnumData.GetEnumValue(Operators.NotEqual), new V_Null()), new V_Number(2)),
+                Element.Part<A_SkipIf>(Element.Part<V_Compare>(originalHero.GetVariable(), EnumData.GetEnumValue(Operator.NotEqual), new V_Null()), new V_Number(2)),
                 isAI.SetVariable(new V_False()),
                 Element.Part<A_Skip>(new V_Number(4)),
                 Element.Part<A_ForcePlayerHero>(player, EnumData.GetEnumValue(Hero.Ashe)),
-                isAI.SetVariable(Element.Part<V_Compare>(Element.Part<V_HeroOf>(player), EnumData.GetEnumValue(Operators.NotEqual), EnumData.GetEnumValue(Hero.Ashe))),
+                isAI.SetVariable(Element.Part<V_Compare>(Element.Part<V_HeroOf>(player), EnumData.GetEnumValue(Operator.NotEqual), EnumData.GetEnumValue(Hero.Ashe))),
                 Element.Part<A_ForcePlayerHero>(player, originalHero.GetVariable()),
                 Element.Part<A_StopForcingHero>(player)
             ));
