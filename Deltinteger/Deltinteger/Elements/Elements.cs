@@ -174,14 +174,21 @@ namespace Deltin.Deltinteger.Elements
         public static Element EmptyArray() => Part("Empty Array");
         public static Element Null() => Part("Null");
         public static Element EventPlayer() => Part("Event Player");
+        public static Element ArrayElement() => Part("Current Array Element");
+        public static Element ArrayIndex() => Part("Current Array Index");
         public static Element Compare(IWorkshopTree a, Operator op, IWorkshopTree b) => Part("Compare", a, new OperatorElement(op), b);
         public static Element Vector(Element x, Element y, Element z) => Part("Vector", x, y, z);
         public static Element Not(IWorkshopTree a) => Part("Not", a);
         public static Element IndexOfArrayValue(Element array, Element value) => Part("Index Of Array Value", array, value);
+        public static Element IndexOfArrayValue(IWorkshopTree array, IWorkshopTree value) => Part("Index Of Array Value", array, value);
         public static Element Append(Element array, Element value) => Part("Append To Array", array, value);
+        public static Element Append(IWorkshopTree array, IWorkshopTree value) => Part("Append To Array", array, value);
+        public static Element FirstOf(IWorkshopTree array) => Part("First Of", array);
         public static Element LastOf(IWorkshopTree array) => Part("Last Of", array);
         public static Element CountOf(IWorkshopTree array) => Part("Count Of", array);
+        public static Element Contains(IWorkshopTree array, IWorkshopTree value) => Part("Array Contains", array);
         public static Element ValueInArray(IWorkshopTree array, IWorkshopTree index) => Part("Value In Array", array, index);
+        public static Element Filter(IWorkshopTree array, IWorkshopTree condition) => Part("Filtered Array", array, condition);
         public static Element Pow(Element a, Element b) => Part("Raise To Power", a, b);
         public static Element Pow(IWorkshopTree a, IWorkshopTree b) => Part("Raise To Power", a, b);
         public static Element Multiply(IWorkshopTree a, IWorkshopTree b) => Part("Multiply", a, b);
@@ -196,6 +203,15 @@ namespace Deltin.Deltinteger.Elements
         public static Element Else() => Part("Else");
         public static Element End() => Part("End");
         public static Element While(IWorkshopTree expression) => Part("While", expression);
+        public static Element XOf(IWorkshopTree expression) => Part("X Component Of", expression);
+        public static Element YOf(IWorkshopTree expression) => Part("Y Component Of", expression);
+        public static Element ZOf(IWorkshopTree expression) => Part("Z Component Of", expression);
+        public static Element DistanceBetween(IWorkshopTree a, IWorkshopTree b) => Part("Distance Between", a, b);
+        public static Element CrossProduct(IWorkshopTree a, IWorkshopTree b) => Part("Cross Product", a, b);
+        public static Element DotProduct(IWorkshopTree a, IWorkshopTree b) => Part("Dot Product", a, b);
+        public static Element Normalize(IWorkshopTree a) => Part("Normalize", a);
+        public static Element DirectionTowards(IWorkshopTree a, IWorkshopTree b) => Part("Direction Towards", a, b);
+        public static Element PositionOf(IWorkshopTree player) => Part("Position Of", player);
 
         public static Element operator +(Element a, Element b) => Part("Add", a, b);
         public static Element operator -(Element a, Element b) => Part("Subtract", a, b);
@@ -293,12 +309,13 @@ namespace Deltin.Deltinteger.Elements
 
     public class NumberElement : Element
     {
-        public double Value { get; }
+        public double Value { get; set; }
 
         public NumberElement(double value) : base(ElementRoot.Instance.GetFunction("Number"), null)
         {
             Value = value;
         }
+        public NumberElement() : this(0) {}
 
         public override bool TryGetConstant(out double number)
         {

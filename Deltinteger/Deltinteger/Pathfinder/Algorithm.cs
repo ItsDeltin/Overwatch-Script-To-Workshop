@@ -6,7 +6,7 @@ namespace Deltin.Deltinteger.Pathfinder
 {
     public abstract class DijkstraBase
     {
-        private static readonly V_Number LeastNot0 = new V_Number(0.0001);
+        private static readonly NumberElement LeastNot0 = new NumberElement(0.0001);
 
         protected ActionSet actionSet { get; }
         protected Element pathmapObject { get; }

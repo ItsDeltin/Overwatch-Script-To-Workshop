@@ -110,7 +110,7 @@ namespace Deltin.Deltinteger.Parse
                 actionSet.AddAction(Element.While(condition));
                 
                 // Translate the block.
-                Block.Translate(actionSet.Indent());
+                Block.Translate(actionSet);
 
                 // Resolve continues.
                 ResolveContinues(actionSet);
@@ -127,10 +127,10 @@ namespace Deltin.Deltinteger.Parse
                 actionSet.ActionList.Insert(actionCountPreCondition, new ALAction(Element.While(Element.True())));
 
                 SkipStartMarker whileEndSkip = new SkipStartMarker(actionSet, condition);
-                actionSet.Indent().AddAction(whileEndSkip);
+                actionSet.AddAction(whileEndSkip);
 
                 // Translate the block.
-                Block.Translate(actionSet.Indent());
+                Block.Translate(actionSet);
 
                 // Resolve continues.
                 ResolveContinues(actionSet);
@@ -212,13 +212,13 @@ namespace Deltin.Deltinteger.Parse
             else condition = Element.True(); // No condition, just use true.
             actionSet.AddAction(Element.While(condition));
 
-            Block.Translate(actionSet.Indent());
+            Block.Translate(actionSet);
 
             // Resolve continues.
             ResolveContinues(actionSet);
 
             if (SetVariableAction != null)
-                SetVariableAction.Translate(actionSet.Indent());
+                SetVariableAction.Translate(actionSet);
                         
             actionSet.AddAction(Element.End());
 
@@ -332,7 +332,7 @@ namespace Deltin.Deltinteger.Parse
                 ));
             
             // Translate the block.
-            Block.Translate(actionSet.Indent());
+            Block.Translate(actionSet);
 
             // Resolve continues.
             ResolveContinues(actionSet);
@@ -384,7 +384,7 @@ namespace Deltin.Deltinteger.Parse
             actionSet.IndexAssigner.Add(ForeachVar, foreachBuilder.IndexValue);
 
             // Translate the block.
-            Block.Translate(actionSet.Indent());
+            Block.Translate(actionSet);
 
             // Resolve continues.
             ResolveContinues(actionSet);

@@ -171,6 +171,7 @@ namespace Deltin.Deltinteger.Elements
         }
 
         public ElementEnum GetEnum(string name) => Enumerators.FirstOrDefault(e => e.Name == name) ?? throw new KeyNotFoundException("The enum '" + name + "' was not found.");
+        public ElementEnumMember GetEnumValue(string enumName, string value) => GetEnum(enumName).GetMemberFromAlias(value);
 
         public static ElementRoot Get(string json)
             => JsonConvert.DeserializeObject<ElementRoot>(json, new EnumeratorConverter(), new ParameterConverter());
@@ -285,5 +286,7 @@ namespace Deltin.Deltinteger.Elements
         {
             throw new NotImplementedException();
         }
+
+        public static ElementEnumMember Team(Team team) => ElementRoot.Instance.GetEnumValue("Team", team.ToString());
     }
 }

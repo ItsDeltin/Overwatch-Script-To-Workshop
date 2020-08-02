@@ -45,13 +45,13 @@ namespace Deltin.Deltinteger.Parse
             // Create the array used for continuing after a recursive call.
             continueArray = ActionSet.VarCollection.Assign("_" + Builder.Method.Name + "_recursiveContinue", ActionSet.IsGlobal, false);
             nextContinue = ActionSet.VarCollection.Assign("_" + Builder.Method.Name + "_nextContinue", ActionSet.IsGlobal, true);
-            ActionSet.InitialSet().AddAction(continueArray.SetVariable(new V_EmptyArray()));
+            ActionSet.InitialSet().AddAction(continueArray.SetVariable(Element.EmptyArray()));
             
             if (Builder.Method.Attributes.Virtual)
             {
                 objectStore = ActionSet.VarCollection.Assign("_" + Builder.Method.Name + "_objectStack", ActionSet.IsGlobal, false);
                 ActionSet.AddAction(objectStore.SetVariable(Element.CreateArray(ActionSet.CurrentObject)));
-                ActionSet = ActionSet.New(Element.Part<V_LastOf>(objectStore.GetVariable())).PackThis();
+                ActionSet = ActionSet.New(Element.LastOf(objectStore.GetVariable())).PackThis();
             }
             ActionSet = ActionSet.New(true);
 
@@ -61,7 +61,7 @@ namespace Deltin.Deltinteger.Parse
             Builder.SetupReturnHandler();
 
             // Create the recursive loop.
-            ActionSet.AddAction(Element.Part<A_While>(new V_True()));
+            ActionSet.AddAction(Element.While(Element.True()));
 
             // Create the continue skip action.
             continueAt = new SkipStartMarker(ActionSet);
@@ -75,25 +75,25 @@ namespace Deltin.Deltinteger.Parse
 
             // Pop the object store array.
             if (Builder.Method.Attributes.Virtual)
-                ActionSet.AddAction(objectStore.ModifyVariable(Operation.RemoveFromArrayByIndex, Element.Part<V_CountOf>(objectStore.GetVariable()) - 1));
+                ActionSet.AddAction(objectStore.ModifyVariable(Operation.RemoveFromArrayByIndex, Element.CountOf(objectStore.GetVariable()) - 1));
             
             // Pop the parameters.
             PopParameterStacks();
 
             // Restart the method from the specified position if there are any elements in the continue array.
-            ActionSet.AddAction(Element.Part<A_SkipIf>(new V_Compare(
-                Element.Part<V_CountOf>(continueArray.GetVariable()),
+            ActionSet.AddAction(Element.Part("Skip If", Element.Compare(
+                Element.CountOf(continueArray.GetVariable()),
                 Operator.Equal,
-                new V_Number(0)
-            ), new V_Number(3)));
+                new NumberElement(0)
+            ), new NumberElement(3)));
 
             // Store the next continue and pop the continue array.
-            ActionSet.AddAction(nextContinue.SetVariable(Element.Part<V_LastOf>(continueArray.GetVariable())));
-            ActionSet.AddAction(continueArray.ModifyVariable(Operation.RemoveFromArrayByIndex, Element.Part<V_CountOf>(continueArray.GetVariable()) - 1));
+            ActionSet.AddAction(nextContinue.SetVariable(Element.LastOf(continueArray.GetVariable())));
+            ActionSet.AddAction(continueArray.ModifyVariable(Operation.RemoveFromArrayByIndex, Element.CountOf(continueArray.GetVariable()) - 1));
 
             // Mark the end of the method.
             ActionSet.AddAction(endOfMethod);
-            ActionSet.AddAction(new A_End());
+            ActionSet.AddAction(Element.End());
 
             // Reset nextContinue.
             ActionSet.AddAction(nextContinue.SetVariable(0));
@@ -119,7 +119,7 @@ namespace Deltin.Deltinteger.Parse
             }
 
             // Add to the continue skip array.
-            V_Number skipLength = new V_Number();
+            NumberElement skipLength = new NumberElement();
             ActionSet.AddAction(continueArray.ModifyVariable(
                 Operation.AppendToArray,
                 skipLength

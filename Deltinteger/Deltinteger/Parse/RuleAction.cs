@@ -95,7 +95,7 @@ namespace Deltin.Deltinteger.Parse
                     {
                         if (_setEventType)
                             parseInfo.Script.Diagnostics.AddDiagnostic(alreadySet);
-                        EventType = (RuleEvent)enumSetting.Member.Value;
+                        EventType = (RuleEvent)Enum.Parse(typeof(RuleEvent), enumSetting.Member.Alias);
                         _setEventType = true;
                         eventContext = exprContext;
                     }
@@ -104,7 +104,7 @@ namespace Deltin.Deltinteger.Parse
                     {
                         if (_setTeam)
                             parseInfo.Script.Diagnostics.AddDiagnostic(alreadySet);
-                        Team = (Team)enumSetting.Member.Value;
+                        Team = (Team)Enum.Parse(typeof(Team), enumSetting.Member.Alias);
                         _setTeam = true;
                         teamContext = exprContext;
                     }
@@ -113,7 +113,7 @@ namespace Deltin.Deltinteger.Parse
                     {
                         if (_setPlayer)
                             parseInfo.Script.Diagnostics.AddDiagnostic(alreadySet);
-                        Player = (PlayerSelector)enumSetting.Member.Value;
+                        Player = (PlayerSelector)Enum.Parse(typeof(PlayerSelector), enumSetting.Member.Alias);
                         _setPlayer = true;
                         playerContext = exprContext;
                     }

@@ -151,10 +151,7 @@ namespace Deltin.Deltinteger.Pathfinder
         public bool ShouldSerializeNode1Attribute() => Node1Attribute != 0;
         public bool ShouldSerializeNode2Attribute() => Node2Attribute != 0;
 
-        public V_Vector AsWorkshopData()
-        {
-            return new V_Vector((double)Node1 + (((double)Node1Attribute) / 100), (double)Node2 + (((double)Node2Attribute) / 100), 0);
-        }
+        public Element AsWorkshopData() => Element.Vector((double)Node1 + (((double)Node1Attribute) / 100), (double)Node2 + (((double)Node2Attribute) / 100), 0);
     }
 
     public interface IPathmapErrorHandler

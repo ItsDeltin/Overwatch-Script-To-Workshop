@@ -56,15 +56,15 @@ namespace Deltin.Deltinteger.Parse
 
         public ConstBoolParameter(string name, string documentation) : base(name, documentation) {}
         public ConstBoolParameter(string name, string documentation, bool defaultValue)
-            : base(name, documentation, new ExpressionOrWorkshopValue(defaultValue ? (Element)new V_True() : new V_False()))
+            : base(name, documentation, new ExpressionOrWorkshopValue(defaultValue ? Element.True() : Element.False()))
         {
             DefaultConstValue = defaultValue;
         }
 
         public override object Validate(ParseInfo parseInfo, IExpression value, DocRange valueRange)
         {
-            if (value is ExpressionOrWorkshopValue)
-                return ((ExpressionOrWorkshopValue)value).WorkshopValue is V_True;
+            if (value is ExpressionOrWorkshopValue expressionOrWorkshop && expressionOrWorkshop.WorkshopValue is Element asElement)
+                return asElement.Function.Name == "True";
 
             if (value is BoolAction == false)
             {
@@ -81,7 +81,7 @@ namespace Deltin.Deltinteger.Parse
         private double DefaultConstValue { get; }
 
         public ConstNumberParameter(string name, string documentation) : base(name, documentation) {}
-        public ConstNumberParameter(string name, string documentation, double defaultValue) : base(name, documentation, new ExpressionOrWorkshopValue(new V_Number(defaultValue)))
+        public ConstNumberParameter(string name, string documentation, double defaultValue) : base(name, documentation, new ExpressionOrWorkshopValue(new NumberElement(defaultValue)))
         {
             DefaultConstValue = defaultValue;
         }

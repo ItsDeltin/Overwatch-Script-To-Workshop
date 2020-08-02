@@ -143,7 +143,7 @@ namespace Deltin.Deltinteger.Parse
             actionSet.AddAction(newIf);
 
             // Translate the if block.
-            Block.Translate(actionSet.Indent());
+            Block.Translate(actionSet);
 
             // Add the else-ifs.
             for (int i = 0; i < ElseIfs.Length; i++)
@@ -152,14 +152,14 @@ namespace Deltin.Deltinteger.Parse
                 actionSet.AddAction(Element.ElseIf(ElseIfs[i].Expression.Parse(actionSet)));
 
                 // Translate the else-if block.
-                ElseIfs[i].Block.Translate(actionSet.Indent());
+                ElseIfs[i].Block.Translate(actionSet);
             }
 
             // If there is an else block, translate it.
             if (ElseBlock != null)
             {
                 actionSet.AddAction(Element.Else());
-                ElseBlock.Translate(actionSet.Indent());
+                ElseBlock.Translate(actionSet);
             }
 
             // Add the end of the if.

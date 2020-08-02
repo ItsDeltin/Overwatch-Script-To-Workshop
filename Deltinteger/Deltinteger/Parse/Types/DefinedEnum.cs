@@ -34,7 +34,7 @@ namespace Deltin.Deltinteger.Parse
             // Get the enum members.
             if (enumContext.firstMember != null)
             {
-                var firstExpression = (enumContext.expr() != null) ? new ExpressionOrWorkshopValue(parseInfo.GetExpression(Scope, enumContext.expr())) : new ExpressionOrWorkshopValue(new V_Number(0));
+                var firstExpression = (enumContext.expr() != null) ? new ExpressionOrWorkshopValue(parseInfo.GetExpression(Scope, enumContext.expr())) : new ExpressionOrWorkshopValue(new NumberElement(0));
                 members.Add(new DefinedEnumMember(parseInfo, this, enumContext.firstMember.Text, new Location(parseInfo.Script.Uri, DocRange.GetRange(enumContext.firstMember)), firstExpression));
 
                 if (enumContext.enum_element() != null)
