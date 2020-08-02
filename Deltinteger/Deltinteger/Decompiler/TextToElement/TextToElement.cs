@@ -65,6 +65,7 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
 
         bool Is(char character) => !ReachedEnd && Current == character;
         bool Is(int position, char character) => Position + position < Content.Length && Content[Position + position] == character;
+        bool IsInsensitive(int position, char character) => Position + position < Content.Length && Char.ToLower(Content[Position + position]) == Char.ToLower(character);
         bool IsSymbol(int position) => Position + position < Content.Length && char.IsSymbol(Content[Position + position]);
         bool IsAny(params char[] characters) => !ReachedEnd && characters.Contains(Current);
         bool IsAny(string characters) => IsAny(characters.ToCharArray());
@@ -72,10 +73,10 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
         bool IsAlpha() => IsAny("_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ");
         bool IsAlphaNumeric() => IsNumeric() || IsAlpha();
 
-        bool Match(string str)
+        bool Match(string str, bool caseSensitive = true)
         {
             for (int i = 0; i < str.Length; i++)
-                if (!Is(i, str[i]))
+                if ((caseSensitive && !Is(i, str[i])) || !IsInsensitive(i, str[i]))
                     return false;
             
             if (IsSymbol(str.Length)) return false;
@@ -166,6 +167,12 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
                 Advance();
             }
 
+            if (str == "")
+            {
+                number = 0;
+                return false;
+            }
+
             if (Match("."))
             {
                 str += ".";
@@ -176,11 +183,6 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
                 }
             }
 
-            if (str == "")
-            {
-                number = 0;
-                return false;
-            }
             number = double.Parse(str);
             SkipWhitespace();
             return true;
@@ -243,7 +245,17 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
         // Rules
         bool Rule(out TTERule rule)
         {
-            if (!Match("rule"))
+            bool disabled;
+            if (Match("disabled"))
+            {
+                disabled = true;
+                Match("rule");
+            }
+            else if (Match("rule"))
+            {
+                disabled = false;
+            }
+            else
             {
                 rule = null;
                 return false;
@@ -284,7 +296,7 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
 
             Match("}");
 
-            rule = new TTERule(ruleName, eventInfo, conditions.ToArray(), actions.ToArray());
+            rule = new TTERule(ruleName, eventInfo, conditions.ToArray(), actions.ToArray(), disabled);
             return true;
         }
 
@@ -406,7 +418,7 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
 
         bool Function(ElementList func, out FunctionExpression expr)
         {
-            if (!Match(Kw(func.WorkshopName)))
+            if (!Match(Kw(func.WorkshopName), false))
             {
                 expr = null;
                 return false;
@@ -431,7 +443,7 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
                     {
                         // Match enum member
                         foreach (var member in enumParam.EnumData.Members.OrderByDescending(m => m.WorkshopName.Length))
-                            if (Match(Kw(member.WorkshopName)))
+                            if (Match(Kw(member.WorkshopName), false))
                             {
                                 values.Add(new ConstantEnumeratorExpression(member));
                                 break;
@@ -619,22 +631,17 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
 
         bool MatchPlayerVariable(ITTEExpression parent, out ITTEExpression playerVariable)
         {
-            int c = Position; // Revert
+            playerVariable = parent;
+            bool matched = false;
 
-            string name = null;
-            bool result = parent != null
-                && Match(".")
-                && Identifier(out name);
-            
-            if (!result)
+            while (Match("."))
             {
-                playerVariable = null;
-                Position = c;
-                return false;
+                matched = true;
+                Identifier(out string name);
+                playerVariable = new PlayerVariableExpression(name, playerVariable);
             }
             
-            playerVariable = new PlayerVariableExpression(name, parent);
-            return true;
+            return matched;
         }
 
         bool VariableIndex(out ITTEExpression index)
@@ -849,13 +856,15 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
         public EventInfo EventInfo { get; }
         public ITTEExpression[] Conditions { get; }
         public ITTEAction[] Actions { get; }
+        public bool Disabled { get; }
 
-        public TTERule(string name, EventInfo eventInfo, ITTEExpression[] conditions, ITTEAction[] actions)
+        public TTERule(string name, EventInfo eventInfo, ITTEExpression[] conditions, ITTEAction[] actions, bool disabled)
         {
             Name = name;
             EventInfo = eventInfo;
             Conditions = conditions;
             Actions = actions;
+            Disabled = disabled;
         }
     }
 
