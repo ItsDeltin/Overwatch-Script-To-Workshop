@@ -17,8 +17,8 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
         private readonly Stack<TTEOperator> _operators = new Stack<TTEOperator>();
         private readonly Stack<ITTEExpression> _operands = new Stack<ITTEExpression>();
 
-        private readonly string[] _actions;
-        private readonly string[] _values;
+        private readonly ElementList[] _actions;
+        private readonly ElementList[] _values;
 
         public List<WorkshopVariable> Variables { get; } = new List<WorkshopVariable>();
         public List<Subroutine> Subroutines { get; } = new List<Subroutine>();
@@ -27,18 +27,20 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
         public ConvertTextToElement(string content)
         {
             Content = content;
-            _actions = ElementList.Elements.Where(e => !e.IsValue).Select(e => e.WorkshopName).OrderByDescending(e => e.Length).ToArray();
-            _values = ElementList.Elements.Where(e => e.IsValue).Select(e => e.WorkshopName).OrderByDescending(e => e.Length).ToArray();
+            _actions = ElementList.Elements.Where(e => !e.IsValue).OrderByDescending(e => e.WorkshopName.Length).ToArray();
+            _values = ElementList.Elements.Where(e => e.IsValue).OrderByDescending(e => e.WorkshopName.Length).ToArray();
             _operators.Push(TTEOperator.Sentinel);
         }
 
-        public void Get()
+        public Workshop Get()
         {
             // Match variables and subroutines.
             MatchVariables();
             MatchSubroutines();
             // Match rules
             while (Rule(out TTERule rule)) Rules.Add(rule);
+
+            return new Workshop(Variables.ToArray(), Subroutines.ToArray(), Rules.ToArray());
         }
 
         // TODO: Translate the english keyword to the specified language's keyword.
@@ -402,9 +404,9 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
             return false;
         }
 
-        bool Function(string name, out FunctionExpression expr)
+        bool Function(ElementList func, out FunctionExpression expr)
         {
-            if (!Match(name))
+            if (!Match(Kw(func.WorkshopName)))
             {
                 expr = null;
                 return false;
@@ -414,18 +416,45 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
             List<ITTEExpression> values = new List<ITTEExpression>();
             if (Match("("))
             {
-                _operators.Push(TTEOperator.Sentinel);
+                int currentParameter = 0;
                 do
                 {
-                    if (Expression(out ITTEExpression value))
-                        values.Add(value);
+                    // Normal parameter
+                    if (currentParameter >= func.WorkshopParameters.Length || func.WorkshopParameters[currentParameter] is Parameter)
+                    {
+                        _operators.Push(TTEOperator.Sentinel);
+                        if (Expression(out ITTEExpression value)) values.Add(value);
+                        _operators.Pop();
+                    }
+                    // Enumerator
+                    else if (func.WorkshopParameters[currentParameter] is EnumParameter enumParam)
+                    {
+                        // Match enum member
+                        foreach (var member in enumParam.EnumData.Members.OrderByDescending(m => m.WorkshopName.Length))
+                            if (Match(Kw(member.WorkshopName)))
+                            {
+                                values.Add(new ConstantEnumeratorExpression(member));
+                                break;
+                            }
+                    }
+                    // Variable reference
+                    else if (func.WorkshopParameters[currentParameter] is VarRefParameter varRefParameter)
+                    {
+                        // Match the variable parameter.
+                        if (!Identifier(out string identifier))
+                            throw new Exception("Failed to retrieve identifier of variable parameter.");
+                        
+                        values.Add(new AnonymousVariableExpression(identifier, varRefParameter.IsGlobal));
+                    }
+
+                    // Increment the current parameter.
+                    currentParameter++;
                 }
                 while (Match(","));
                 Match(")");
-                _operators.Pop();
             }
 
-            expr = new FunctionExpression(name, values.ToArray());
+            expr = new FunctionExpression(func, values.ToArray());
             return true;
         }
 
@@ -446,6 +475,8 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
             else if (Number(out expr)) {}
             // String
             else if (WorkshopString(out expr)) {}
+            // Enum value
+            else if (EnumeratorValue(out expr)) {}
             // Variable
             else if (GlobalVariable(out expr)) {}
             // Function
@@ -458,12 +489,6 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
             {
                 PushOperator(unaryOperator);
                 Expression(out expr);
-            }
-            // Anonymous variable.
-            else if (root && Identifier(out string identifier))
-            {
-                expr = new AnonymousVariableExpression(identifier);
-                return true; // Anonymous variable should be a self contained expression.
             }
             // No matches
             else
@@ -685,6 +710,20 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
         }
     }
 
+    public class Workshop
+    {
+        public WorkshopVariable[] Variables { get; }
+        public Subroutine[] Subroutines { get; }
+        public TTERule[] Rules { get; }
+
+        public Workshop(WorkshopVariable[] variables, Subroutine[] subroutines, TTERule[] rules)
+        {
+            Variables = variables;
+            Subroutines = subroutines;
+            Rules = rules;
+        }
+    }
+
     public class EventInfo
     {
         public static readonly (string, RuleEvent)[] PlayerEventNames = new (string, RuleEvent)[] {
@@ -886,17 +925,17 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
     }
     public class FunctionExpression : ITTEExpression, ITTEAction
     {
-        public string Name { get; }
+        public ElementList Function { get; }
         public ITTEExpression[] Values { get; }
         public string Comment { get; set; }
 
-        public FunctionExpression(string name, ITTEExpression[] values)
+        public FunctionExpression(ElementList function, ITTEExpression[] values)
         {
-            Name = name;
+            Function = function;
             Values = values;
         }
 
-        public override string ToString() => Name + (Values.Length == 0 ? "" : "(" + string.Join(", ", Values.Select(v => v.ToString())) + ")");
+        public override string ToString() => Function.Name + (Values.Length == 0 ? "" : "(" + string.Join(", ", Values.Select(v => v.ToString())) + ")");
     }
     public class GlobalVariableExpression : ITTEExpression, ITTEVariable
     {
@@ -912,13 +951,15 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
     public class AnonymousVariableExpression : ITTEExpression, ITTEVariable
     {
         public string Name { get; }
+        public bool IsGlobal { get; }
 
-        public AnonymousVariableExpression(string name)
+        public AnonymousVariableExpression(string name, bool isGlobal)
         {
             Name = name;
+            IsGlobal = isGlobal;
         }
 
-        public override string ToString() => Name;
+        public override string ToString() => (IsGlobal ? "Global." : "Player.") + Name;
     }
     public class PlayerVariableExpression : ITTEExpression, ITTEVariable
     {
@@ -958,6 +999,19 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
             Consequent = consequent;
             Alternative = alternative;
         }
+
+        public override string ToString() => "(" + Condition.ToString() + " ? " + Consequent.ToString() + " : " + Alternative.ToString() + ")"; 
+    }
+    public class ConstantEnumeratorExpression : ITTEExpression
+    {
+        public EnumMember Member { get; }
+
+        public ConstantEnumeratorExpression(EnumMember member)
+        {
+            Member = member;
+        }
+
+        public override string ToString() => Member.WorkshopName; 
     }
     // Actions
     public class SetVariableAction : ITTEAction
