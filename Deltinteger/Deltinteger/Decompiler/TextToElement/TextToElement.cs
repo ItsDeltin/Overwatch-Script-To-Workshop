@@ -41,6 +41,9 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
             while (Rule(out TTERule rule)) Rules.Add(rule);
         }
 
+        // TODO: Translate the english keyword to the specified language's keyword.
+        public string Kw(string value) => value;
+
         void Advance()
         {
             if (!ReachedEnd)
@@ -64,7 +67,7 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
         bool IsAny(params char[] characters) => !ReachedEnd && characters.Contains(Current);
         bool IsAny(string characters) => IsAny(characters.ToCharArray());
         bool IsNumeric() => IsAny("0123456789");
-        bool IsAlpha() => IsAny("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ");
+        bool IsAlpha() => IsAny("_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ");
         bool IsAlphaNumeric() => IsNumeric() || IsAlpha();
 
         bool Match(string str)
@@ -440,13 +443,11 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
                 _operators.Pop();
             }
             // Number
-            else if (Number(out expr))
-            {
-            }
+            else if (Number(out expr)) {}
+            // String
+            else if (WorkshopString(out expr)) {}
             // Variable
-            else if (GlobalVariable(out expr))
-            {
-            }
+            else if (GlobalVariable(out expr)) {}
             // Function
             else if (Function(false, out FunctionExpression value))
             {
@@ -506,6 +507,68 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
             }
 
             return true;
+        }
+
+        // Workshop string function
+        bool WorkshopString(out ITTEExpression expr)
+        {
+            bool localized; // Determines if the string is localized.
+
+            // Custom string
+            if (Match(Kw("Custom String")))
+                localized = false;
+            // Localized string
+            else if (Match(Kw("String")))
+                localized = true;
+            else
+            {
+                // Not a string
+                expr = null;
+                return false;
+            }
+
+            Match("(");
+
+            // Get the actual string.
+            MatchString(out string str);
+
+            // Get the format parameters.
+            List<ITTEExpression> formats = new List<ITTEExpression>();
+            while (Match(","))
+            {
+                _operators.Push(TTEOperator.Sentinel);
+                if (Expression(out ITTEExpression value)) formats.Add(value);
+                _operators.Pop();
+            }
+
+            Match(")");
+
+            expr = new StringExpression(str, formats.ToArray(), localized);
+            return true;
+        }
+
+        // Enumerator Values
+        bool EnumeratorValue(out ITTEExpression expr)
+        {
+            if (Match(Kw("All Teams")))
+            {
+                expr = new ConstantEnumeratorExpression(EnumData.GetEnumValue(Team.All));
+                return true;
+            }
+            if (Match(Kw("Team 1")))
+            {
+                expr = new ConstantEnumeratorExpression(EnumData.GetEnumValue(Team.Team1));
+                return true;
+            }
+            if (Match(Kw("Team 2")))
+            {
+                expr = new ConstantEnumeratorExpression(EnumData.GetEnumValue(Team.Team2));
+                return true;
+            }
+            // TODO: Gamemode, map, button, etc
+
+            expr = null;
+            return false;
         }
 
         // Variables
@@ -777,6 +840,21 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
         }
 
         public override string ToString() => Value.ToString();
+    }
+    public class StringExpression : ITTEExpression
+    {
+        public string Value { get; }
+        public ITTEExpression[] Formats { get; }
+        public bool IsLocalized { get; }
+
+        public StringExpression(string str, ITTEExpression[] formats, bool isLocalized)
+        {
+            Value = str;
+            Formats = formats;
+            IsLocalized = isLocalized;
+        }
+
+        public override string ToString() => (IsLocalized ? "@" : "") + "\"" + Value + "\"";
     }
     public class BinaryOperatorExpression : ITTEExpression
     {
