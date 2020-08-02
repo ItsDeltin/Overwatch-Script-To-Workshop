@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Serialization;
 
 namespace Deltin.Deltinteger.Elements
 {
@@ -11,17 +13,46 @@ namespace Deltin.Deltinteger.Elements
 
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
-            var enumerator = existingValue as ElementEnum[] ?? new ElementEnum[0];
+            var enumerators = new List<ElementEnum>();
 
-            while (reader.Read())
+            // When ReadJson is called, reader's token type is StartObject.
+            reader.Read(); // Advance to property name.
+            
+            while (reader.TokenType != JsonToken.EndObject)
             {
-                if (reader.TokenType == JsonToken.EndObject) continue;
+                string name = (string)reader.Value;
+                reader.Read(); // Advance to the next object.
 
-                var value = reader.Value.ToString();
-
+                // Direct
+                if (reader.TokenType == JsonToken.StartArray)
+                {
+                    enumerators.Add(new ElementEnum() {
+                        Name = name,
+                        Members = JToken.Load(reader).ToArray().Select(v => {
+                            // String
+                            if (v.Type == JTokenType.String)
+                                return new ElementEnumMember() {
+                                    Name = v.ToObject<string>()
+                                };
+                            // Object
+                            else if (v.Type == JTokenType.Object)
+                                return new ElementEnumMember() {
+                                    Name = v["name"].ToObject<string>(),
+                                    Alias = v["alias"].ToObject<string>()
+                                };
+                            // Unknown
+                            throw new NotImplementedException(v.Type.ToString());
+                        }).ToArray()
+                    });
+                }
+                // With additional properties
+                else if (reader.TokenType == JsonToken.StartObject)
+                {
+                    // todo
+                }
             }
 
-            return enumerator;
+            return enumerators.ToArray();
         }
 
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
@@ -72,15 +103,31 @@ namespace Deltin.Deltinteger.Elements
 
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
-            var parameter = existingValue as ElementParameter[] ?? new ElementParameter[0];
+            // var parameter = existingValue as ElementParameter[] ?? new ElementParameter[0];
+            List<ElementParameter> parameters = new List<ElementParameter>();
 
-            while (reader.Read())
+            // When ReadJson is called, reader's token type is StartObject.
+            reader.Read(); // Advance to property name.
+
+            while (reader.TokenType != JsonToken.EndObject)
             {
-                if (reader.TokenType == JsonToken.EndObject) continue;
-                var value = reader.Value.ToString();
+                string name = (string)reader.Value;
+                reader.Read(); // Advance to the next object.
+
+                // Convert the parameter to an object.
+                var parameter = JObject.Load(reader).ToObject<ElementParameter>();
+
+                // Get the name.
+                parameter.Name = name;
+
+                // Add it to the parameter list.
+                parameters.Add(parameter);
+
+                // Advance
+                reader.Read();
             }
 
-            return parameter;
+            return parameters.ToArray();
         }
 
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
@@ -112,7 +159,7 @@ namespace Deltin.Deltinteger.Elements
         public ElementEnum[] Enumerators;
 
         public static ElementJsonRoot Get(string json)
-            => JsonConvert.DeserializeObject<ElementJsonRoot>(json, new EnumeratorConverter());
+            => JsonConvert.DeserializeObject<ElementJsonRoot>(json, new EnumeratorConverter(), new ParameterConverter());
         
         public static string Make()
         {
@@ -269,6 +316,8 @@ namespace Deltin.Deltinteger.Elements
         public bool IsHidden;
 
         public bool ShouldSerializeIsHidden() => IsHidden;
+
+        public override string ToString() => Name + (Parameters == null ? "" : "(" + string.Join(", ", Parameters.Select(v => v.ToString())) + ")");
     }
 
     public class ElementJsonValue : ElementBaseJson
@@ -299,17 +348,22 @@ namespace Deltin.Deltinteger.Elements
 
         [JsonProperty("var-ref-global")]
         public bool? VariableReferenceIsGlobal;
+
+        public override string ToString() => Type + " " + Name;
     }
 
     public class ElementEnum
     {
         public string Name;
         public ElementEnumMember[] Members;
+
+        public override string ToString() => Name + " [" + Members.Length + " members]";
     }
 
     public class ElementEnumMember
     {
         public string Name;
         public string Alias;
+        public override string ToString() => Name;
     }
 }
