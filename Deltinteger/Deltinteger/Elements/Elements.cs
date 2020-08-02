@@ -82,13 +82,89 @@ namespace Deltin.Deltinteger.Elements
             ParameterValues = parameters.ToArray();
         }
 
-        public bool EqualTo(IWorkshopTree other)
+        public virtual bool EqualTo(IWorkshopTree other)
         {
-            throw new NotImplementedException();
+            if (this.GetType() != other.GetType()) return false;
+
+            NewElement bElement = (NewElement)other;
+            if (Function != bElement.Function || ParameterValues.Length != bElement.ParameterValues.Length) return false;
+
+            Type[] createsRandom = new Type[] {
+                typeof(V_RandomInteger),
+                typeof(V_RandomizedArray),
+                typeof(V_RandomReal),
+                typeof(V_RandomValueInArray)
+            };
+
+            for (int i = 0; i < ParameterValues.Length; i++)
+            {
+                if ((ParameterValues[i] == null) != (bElement.ParameterValues[i] == null))
+                    return false;
+
+                if (ParameterValues[i] != null && (!ParameterValues[i].EqualTo(bElement.ParameterValues[i]) || createsRandom.Contains(ParameterValues[i].GetType())))
+                    return false;
+            }
+            
+            return true;
+        }
+
+        public NewElement Optimize()
+        {
+            OptimizeChildren();
+        }
+
+        protected void OptimizeChildren()
+        {
+            AddMissingParameters();
+            for (int i = 0; i < ParameterValues.Length; i++)
+                if (ParameterValues[i] is NewElement element)
+                    ParameterValues[i] = element.Optimize();
+        }
+
+        public bool TryGetConstant(out Vertex vertex)
+        {
+            if (Function.Name == "Vector"
+                && ParameterValues[0] is NewElement xe && xe.TryGetConstant(out double x)
+                && ParameterValues[1] is NewElement ye && ye.TryGetConstant(out double y)
+                && ParameterValues[2] is NewElement ze && ze.TryGetConstant(out double z))
+            {
+                vertex = new Vertex(x, y, z);
+                return true;
+            }
+            vertex = null;
+            return false;
+        }
+
+        public virtual bool TryGetConstant(out double number)
+        {
+            number = 0;
+            return false;
+        }
+
+        public virtual bool TryGetConstant(out bool boolean)
+        {
+            if (Function.Name == "True")
+            {
+                boolean = true;
+                return true;
+            }
+            else if (Function.Name == "False")
+            {
+                boolean = false;
+                return true;
+            }
+            boolean = false;
+            return false;
         }
 
         public static NewElement Compare(IWorkshopTree a, Operators op, IWorkshopTree b)
             => Part("Compare", a, new OperatorElement(op), b);
+        
+        public static NewElement Vector(NewElement x, NewElement y, NewElement z)
+            => Part("Vector", x, y, z);
+        
+        public static NewElement Pow(NewElement a, NewElement b)
+            => Part("Raise To Power", a, b);
 
         public static NewElement operator +(NewElement a, NewElement b) => Part("Add", a, b);
         public static NewElement operator -(NewElement a, NewElement b) => Part("Subtract", a, b);
@@ -120,6 +196,24 @@ namespace Deltin.Deltinteger.Elements
             // todo
             return null;
         }
+
+        // Creates an array from a list of values.
+        public static NewElement CreateArray(params IWorkshopTree[] values)
+        {
+            if (values == null || values.Length == 0) return Part("Empty Array");
+            return Part("Array", values);
+        }
+
+        public static NewElement CreateAppendArray(params IWorkshopTree[] values)
+        {
+            NewElement array = Part("Empty Array");
+            for (int i = 0; i < values.Length; i++)
+                array = Part("Append To Array", array, values[i]);
+            return array;
+        }
+
+        // Creates an ternary conditional that works in the workshop
+        public static NewElement TernaryConditional(IWorkshopTree condition, IWorkshopTree consequent, IWorkshopTree alternative) => Part("If-Then-Else", condition, consequent, alternative);
     }
 
     public class OperatorElement : IWorkshopTree
@@ -157,10 +251,18 @@ namespace Deltin.Deltinteger.Elements
             Value = value;
         }
 
+        public override bool TryGetConstant(out double number)
+        {
+            number = Value;
+            return true;
+        }
+
         public override string ToWorkshop(OutputLanguage language, ToWorkshopContext context)
         {
             return base.ToWorkshop(language, context);
         }
+
+        public override bool EqualTo(IWorkshopTree other) => base.EqualTo(other) && ((NumberElement)other).Value == Value;
     }
 
     public enum ElementIndent
