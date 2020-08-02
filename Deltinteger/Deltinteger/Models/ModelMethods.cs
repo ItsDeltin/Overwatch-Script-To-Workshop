@@ -48,7 +48,7 @@ namespace Deltin.Deltinteger.Models
             if (getEffectIDs)
             {
                 effects = actionSet.VarCollection.Assign("_modelEffects", actionSet.IsGlobal, true);
-                actionSet.AddAction(effects.SetVariable(new V_EmptyArray()));
+                actionSet.AddAction(effects.SetVariable(Element.EmptyArray()));
             }
 
             for (int i = 0; i < model.Lines.Length; i++)

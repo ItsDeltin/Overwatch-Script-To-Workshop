@@ -44,7 +44,7 @@ namespace Deltin.Deltinteger.Elements
         public bool Disabled { get; set; }
         public string Comment { get; set; }
 
-        public Element(ElementBaseJson function, IWorkshopTree[] parameterValues)
+        public Element(ElementBaseJson function, params IWorkshopTree[] parameterValues)
         {
             Function = function;
             ParameterValues = parameterValues;
@@ -189,6 +189,7 @@ namespace Deltin.Deltinteger.Elements
         public static Element Contains(IWorkshopTree array, IWorkshopTree value) => Part("Array Contains", array);
         public static Element ValueInArray(IWorkshopTree array, IWorkshopTree index) => Part("Value In Array", array, index);
         public static Element Filter(IWorkshopTree array, IWorkshopTree condition) => Part("Filtered Array", array, condition);
+        public static Element Sort(IWorkshopTree array, IWorkshopTree rank) => Part("Sorted Array", array, rank);
         public static Element Pow(Element a, Element b) => Part("Raise To Power", a, b);
         public static Element Pow(IWorkshopTree a, IWorkshopTree b) => Part("Raise To Power", a, b);
         public static Element Multiply(IWorkshopTree a, IWorkshopTree b) => Part("Multiply", a, b);
@@ -203,6 +204,7 @@ namespace Deltin.Deltinteger.Elements
         public static Element Else() => Part("Else");
         public static Element End() => Part("End");
         public static Element While(IWorkshopTree expression) => Part("While", expression);
+        public static Element Wait() => Part("Wait", new NumberElement(Constants.MINIMUM_WAIT), ElementRoot.Instance.GetEnumValue("WaitBehavior", "Ignore Condition"));
         public static Element XOf(IWorkshopTree expression) => Part("X Component Of", expression);
         public static Element YOf(IWorkshopTree expression) => Part("Y Component Of", expression);
         public static Element ZOf(IWorkshopTree expression) => Part("Z Component Of", expression);
@@ -212,6 +214,7 @@ namespace Deltin.Deltinteger.Elements
         public static Element Normalize(IWorkshopTree a) => Part("Normalize", a);
         public static Element DirectionTowards(IWorkshopTree a, IWorkshopTree b) => Part("Direction Towards", a, b);
         public static Element PositionOf(IWorkshopTree player) => Part("Position Of", player);
+        public static Element RoundToInt(IWorkshopTree value, Rounding rounding) => Part("Round To Integer", value, ElementRoot.Instance.GetEnumValue("Rounding", rounding == Rounding.Down ? "Down" : rounding == Rounding.Up ? "Up" : "To Nearest");
 
         public static Element operator +(Element a, Element b) => Part("Add", a, b);
         public static Element operator -(Element a, Element b) => Part("Subtract", a, b);

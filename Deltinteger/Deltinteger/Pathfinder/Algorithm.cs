@@ -26,10 +26,10 @@ namespace Deltin.Deltinteger.Pathfinder
         protected static bool assignExtended = true;
 
         public Action<ActionSet> OnLoop { get; set; } = actionSet => {
-            actionSet.AddAction(A_Wait.MinimumWait);
+            actionSet.AddAction(Element.Wait());
         };
         public Action<ActionSet> OnConnectLoop { get; set; } = actionSet => {
-            actionSet.AddAction(A_Wait.MinimumWait);
+            actionSet.AddAction(Element.Wait());
         };
         public Func<ActionSet, Element, Element, Element> GetClosestNode { get; set; }
 
@@ -75,7 +75,7 @@ namespace Deltin.Deltinteger.Pathfinder
             SetInitialDistances(actionSet, distances, (Element)current.GetVariable());
             SetInitialUnvisited();
 
-            actionSet.AddAction(Element.Part<A_While>(LoopCondition()));
+            actionSet.AddAction(Element.While(LoopCondition()));
 
             // Invoke LoopStart
             OnLoop.Invoke(actionSet);
@@ -94,10 +94,10 @@ namespace Deltin.Deltinteger.Pathfinder
             actionSet.AddAction(ArrayBuilder<Element>.Build(
                 // Get the index from the segment data
                 neighborIndex.SetVariable(
-                    Element.Part<V_FirstOf>(Element.Part<V_FilteredArray>(
+                    Element.FirstOf(Element.Filter(
                         BothNodes(forBuilder.IndexValue),
-                        new V_Compare(
-                            new V_ArrayElement(),
+                        Element.Compare(
+                            Element.ArrayElement(),
                             Operator.NotEqual,
                             current.GetVariable()
                         )
@@ -106,7 +106,7 @@ namespace Deltin.Deltinteger.Pathfinder
 
                 // Get the distance between the current and the neighbor index.
                 neighborDistance.SetVariable(
-                    Element.Part<V_DistanceBetween>(
+                    Element.DistanceBetween(
                         Nodes[(Element)neighborIndex.GetVariable()],
                         Nodes[(Element)current.GetVariable()]
                     ) + ((Element)distances.GetVariable())[(Element)current.GetVariable()]
@@ -114,11 +114,11 @@ namespace Deltin.Deltinteger.Pathfinder
             ));
 
             // Set the current neighbor's distance if the new distance is less than what it is now.
-            actionSet.AddAction(Element.Part<A_If>(Element.Part<V_Or>(
-                new V_Compare(
+            actionSet.AddAction(Element.If(Element.Or(
+                Element.Compare(
                     ((Element)distances.GetVariable())[(Element)neighborIndex.GetVariable()],
                     Operator.Equal,
-                    new V_Number(0)
+                    new NumberElement(0)
                 ),
                 (Element)neighborDistance.GetVariable() < ((Element)distances.GetVariable())[(Element)neighborIndex.GetVariable()]
             )));
@@ -131,7 +131,7 @@ namespace Deltin.Deltinteger.Pathfinder
                 if (!reverseAttributes)
                     actionSet.AddAction(parentAttributeInfo.SetVariable(
                         value: Element.TernaryConditional(
-                            new V_Compare(
+                            Element.Compare(
                                 current.GetVariable(),
                                 Operator.Equal,
                                 Node1(forBuilder.IndexValue)
@@ -144,7 +144,7 @@ namespace Deltin.Deltinteger.Pathfinder
                 else
                     actionSet.AddAction(parentAttributeInfo.SetVariable(
                         value: Element.TernaryConditional(
-                            new V_Compare(
+                            Element.Compare(
                                 current.GetVariable(),
                                 Operator.Equal,
                                 Node1(forBuilder.IndexValue)
@@ -157,7 +157,7 @@ namespace Deltin.Deltinteger.Pathfinder
             }
 
             // End the if.
-            actionSet.AddAction(new A_End());
+            actionSet.AddAction(Element.End());
             // End the for.
             forBuilder.Finish();
 
@@ -166,7 +166,7 @@ namespace Deltin.Deltinteger.Pathfinder
             EndLoop();
             actionSet.AddAction(current.SetVariable(LowestUnvisited(Nodes, (Element)distances.GetVariable(), (Element)unvisited.GetVariable())));
 
-            actionSet.AddAction(new A_End());
+            actionSet.AddAction(Element.End());
 
             GetResult();
 
@@ -193,13 +193,13 @@ namespace Deltin.Deltinteger.Pathfinder
         protected void Backtrack(Element startNode, IndexReference finalPath, IndexReference finalPathAttributes, bool reversePath = false)
         {
             actionSet.AddAction(current.SetVariable(startNode));
-            actionSet.AddAction(finalPath.SetVariable(new V_EmptyArray()));
+            actionSet.AddAction(finalPath.SetVariable(Element.EmptyArray()));
 
             // Get the path.
-            actionSet.AddAction(Element.Part<A_While>(new V_Compare(
+            actionSet.AddAction(Element.While(Element.Compare(
                 current.GetVariable(),
                 Operator.GreaterThanOrEqual,
-                new V_Number(0)
+                new NumberElement(0)
             )));
 
             Element nextNode = Nodes[(Element)current.GetVariable()];
@@ -211,7 +211,7 @@ namespace Deltin.Deltinteger.Pathfinder
             //     EnumData.GetEnumValue(Effect.Orb),
             //     EnumData.GetEnumValue(Color.SkyBlue),
             //     next,
-            //     new V_Number(0.5),
+            //     new NumberElement(0.5),
             //     EnumData.GetEnumValue(EffectRev.VisibleTo)
             // ));
 
@@ -225,13 +225,13 @@ namespace Deltin.Deltinteger.Pathfinder
             else
             {
                 // Insert the current node to the final path.
-                actionSet.AddAction(finalPath.SetVariable(Element.Part<V_Append>(nextNode, finalPath.GetVariable())));
+                actionSet.AddAction(finalPath.SetVariable(Element.Append(nextNode, finalPath.GetVariable())));
                 // Insert the current attribute to the final path attributes.
-                actionSet.AddAction(finalPathAttributes.SetVariable(Element.Part<V_Append>(nextAttribute, finalPathAttributes.GetVariable())));
+                actionSet.AddAction(finalPathAttributes.SetVariable(Element.Append(nextAttribute, finalPathAttributes.GetVariable())));
             }
 
-            actionSet.AddAction(current.SetVariable(Element.Part<V_ValueInArray>(parentArray.GetVariable(), current.GetVariable()) - 1));
-            actionSet.AddAction(new A_End());
+            actionSet.AddAction(current.SetVariable(parentArray.Get()[current.GetVariable()] - 1));
+            actionSet.AddAction(Element.End());
         }
 
         /// <summary>Gets the closest node to a position.</summary>
@@ -239,16 +239,16 @@ namespace Deltin.Deltinteger.Pathfinder
         public static Element ClosestNodeToPosition(Element nodes, Element position, bool potentiallyNullNodes)
         {
             Element sortArray = nodes;
-            if (potentiallyNullNodes) sortArray = Element.Part<V_FilteredArray>(nodes, new V_Compare(new V_ArrayElement(), Operator.NotEqual, new V_Null()));
+            if (potentiallyNullNodes) sortArray = Element.Filter(nodes, Element.Compare(Element.ArrayElement(), Operator.NotEqual, Element.Null()));
 
-            return Element.Part<V_IndexOfArrayValue>(
+            return Element.IndexOfArrayValue(
                 nodes,
-                Element.Part<V_FirstOf>(
-                    Element.Part<V_SortedArray>(
+                Element.FirstOf(
+                    Element.Part("Sorted Array",
                         sortArray,
-                        Element.Part<V_DistanceBetween>(
+                        Element.DistanceBetween(
                             position,
-                            new V_ArrayElement()
+                            Element.ArrayElement()
                         )
                     )
                 )
@@ -266,60 +266,60 @@ namespace Deltin.Deltinteger.Pathfinder
             // For example, if nodeArray has 6 variables unvisitedVar will be set to [0, 1, 2, 3, 4, 5].
 
             // Empty the unvisited array.
-            actionSet.AddAction(unvisited.SetVariable(new V_EmptyArray()));
+            actionSet.AddAction(unvisited.SetVariable(Element.EmptyArray()));
             
             IndexReference current = actionSet.VarCollection.Assign("unvisitedBuilder", actionSet.IsGlobal, assignExtended);
             actionSet.AddAction(current.SetVariable(0));
 
             // While current < the count of the node array.
-            actionSet.AddAction(Element.Part<A_While>((Element)current.GetVariable() < Element.Part<V_CountOf>(Nodes)));
+            actionSet.AddAction(Element.While((Element)current.GetVariable() < Element.CountOf(Nodes)));
 
             // If there can be null nodes, make sure the node is not null.
-            if (resolveInfo.PotentiallyNullNodes) actionSet.AddAction(Element.Part<A_If>(new V_Compare(Nodes[current.Get()], Operator.NotEqual, new V_Null())));
+            if (resolveInfo.PotentiallyNullNodes) actionSet.AddAction(Element.If(Element.Compare(Nodes[current.Get()], Operator.NotEqual, Element.Null())));
 
             actionSet.AddAction(unvisited.ModifyVariable(Operation.AppendToArray, (Element)current.GetVariable()));
 
             // End the if.
-            if (resolveInfo.PotentiallyNullNodes) actionSet.AddAction(new A_End());
+            if (resolveInfo.PotentiallyNullNodes) actionSet.AddAction(Element.End());
 
             actionSet.AddAction(current.ModifyVariable(Operation.Add, 1));
 
             // End the while.
-            actionSet.AddAction(new A_End());
+            actionSet.AddAction(Element.End());
         }
 
         private Element GetConnectedSegments(Element currentIndex)
         {
-            Element currentSegmentCheck = new V_ArrayElement();
+            Element currentSegmentCheck = Element.ArrayElement();
 
             Element useAttribute;
             if (!reverseAttributes)
                 useAttribute = Element.TernaryConditional(
-                    new V_Compare(Node1(currentSegmentCheck), Operator.Equal, currentIndex),
+                    Element.Compare(Node1(currentSegmentCheck), Operator.Equal, currentIndex),
                     Node2Attribute(currentSegmentCheck),
                     Node1Attribute(currentSegmentCheck)
                 );
             else
                 useAttribute = Element.TernaryConditional(
-                    new V_Compare(Node1(currentSegmentCheck), Operator.Equal, currentIndex),
+                    Element.Compare(Node1(currentSegmentCheck), Operator.Equal, currentIndex),
                     Node1Attribute(currentSegmentCheck),
                     Node2Attribute(currentSegmentCheck)
                 );
 
             Element isValid;
             if (useAttributes)
-                isValid = Element.Part<V_ArrayContains>(
-                    Element.Part<V_Append>(attributes, new V_Number(0)),
+                isValid = Element.Contains(
+                    Element.Append(attributes, new NumberElement(0)),
                     useAttribute
                 );
             else
-                isValid = new V_Compare(useAttribute, Operator.Equal, new V_Number(0));
+                isValid = Element.Compare(useAttribute, Operator.Equal, new NumberElement(0));
             
-            return Element.Part<V_FilteredArray>(
+            return Element.Filter(
                 Segments,
-                Element.Part<V_And>(
+                Element.And(
                     // Make sure one of the segments nodes is the current node.
-                    Element.Part<V_ArrayContains>(
+                    Element.Contains(
                         BothNodes(currentSegmentCheck),
                         currentIndex
                     ),
@@ -328,24 +328,24 @@ namespace Deltin.Deltinteger.Pathfinder
             );
         }
 
-        private static Element LowestUnvisited(Element nodes, Element distances, Element unvisited) => Element.Part<V_FirstOf>(Element.Part<V_SortedArray>(
-            Element.Part<V_FilteredArray>(unvisited, new V_Compare(distances[new V_ArrayElement()], Operator.NotEqual, new V_Number(0))),
-            distances[new V_ArrayElement()]
+        private static Element LowestUnvisited(Element nodes, Element distances, Element unvisited) => Element.FirstOf(Element.Sort(
+            Element.Filter(unvisited, Element.Compare(distances[Element.ArrayElement()], Operator.NotEqual, new NumberElement(0))),
+            distances[Element.ArrayElement()]
         ));
 
-        protected Element NoAccessableUnvisited() => Element.Part<V_IsTrueForAll>(unvisited.GetVariable(), new V_Compare(Element.Part<V_ValueInArray>(distances.GetVariable(), new V_ArrayElement()), Operator.Equal, new V_Number(0)));
-        protected Element AnyAccessableUnvisited() => Element.Part<V_IsTrueForAny>(unvisited.GetVariable(), new V_Compare(Element.Part<V_ValueInArray>(distances.GetVariable(), new V_ArrayElement()), Operator.NotEqual, new V_Number(0)));
+        protected Element NoAccessableUnvisited() => Element.Part("Is True For All", unvisited.GetVariable(), Element.Compare(distances.Get()[Element.ArrayElement()], Operator.Equal, new NumberElement(0)));
+        protected Element AnyAccessableUnvisited() => Element.Part("Is True For Any", unvisited.GetVariable(), Element.Compare(distances.Get()[Element.ArrayElement()], Operator.NotEqual, new NumberElement(0)));
 
         public static Element BothNodes(Element segment) => Element.CreateAppendArray(Node1(segment), Node2(segment));
-        public static Element Node1(Element segment) => Element.Part<V_RoundToInteger>(Element.Part<V_XOf>(segment), EnumData.GetEnumValue(Rounding.Down));
-        public static Element Node2(Element segment) => Element.Part<V_RoundToInteger>(Element.Part<V_YOf>(segment), EnumData.GetEnumValue(Rounding.Down));
-        public static Element Node1Attribute(Element segment) => Element.Part<V_RoundToInteger>(
-            (Element.Part<V_XOf>(segment) % 1) * 100,
-            EnumData.GetEnumValue(Rounding.Nearest)
+        public static Element Node1(Element segment) => Element.RoundToInt(Element.XOf(segment), Rounding.Down);
+        public static Element Node2(Element segment) => Element.RoundToInt(Element.YOf(segment), Rounding.Down);
+        public static Element Node1Attribute(Element segment) => Element.RoundToInt(
+            (Element.XOf(segment) % 1) * 100,
+            Rounding.Nearest
         );
-        public static Element Node2Attribute(Element segment) => Element.Part<V_RoundToInteger>(
-            (Element.Part<V_YOf>(segment) % 1) * 100,
-            EnumData.GetEnumValue(Rounding.Nearest)
+        public static Element Node2Attribute(Element segment) => Element.RoundToInt(
+            (Element.YOf(segment) % 1) * 100,
+            Rounding.Nearest
         );
     }
 
@@ -368,15 +368,15 @@ namespace Deltin.Deltinteger.Pathfinder
             finalNode = actionSet.VarCollection.Assign("Dijkstra: Last", actionSet.IsGlobal, assignExtended);
             finalPath = actionSet.VarCollection.Assign("Dijkstra: Final Path", actionSet.IsGlobal, false);
             actionSet.AddAction(finalNode.SetVariable(lastNode));
-            actionSet.AddAction(finalPath.SetVariable(new V_EmptyArray()));
+            actionSet.AddAction(finalPath.SetVariable(Element.EmptyArray()));
             if (useAttributes)
             {
                 finalPathAttributes = actionSet.VarCollection.Assign("Dijkstra: Final Path Attributes", actionSet.IsGlobal, false);
-                actionSet.AddAction(finalPathAttributes.SetVariable(new V_EmptyArray()));
+                actionSet.AddAction(finalPathAttributes.SetVariable(Element.EmptyArray()));
             }
         }
 
-        override protected Element LoopCondition() => Element.Part<V_ArrayContains>(
+        override protected Element LoopCondition() => Element.Contains(
             unvisited.GetVariable(),
             finalNode.GetVariable()
         );
@@ -402,19 +402,19 @@ namespace Deltin.Deltinteger.Pathfinder
         protected override void Assign()
         {
             finalPath = actionSet.VarCollection.Assign("Dijkstra: Final Path", actionSet.IsGlobal, false);
-            actionSet.AddAction(finalPath.SetVariable(new V_EmptyArray()));
+            actionSet.AddAction(finalPath.SetVariable(Element.EmptyArray()));
             if (useAttributes)
             {
                 finalPathAttributes = actionSet.VarCollection.Assign("Dijkstra: Final Path Attributes", actionSet.IsGlobal, false);
-                actionSet.AddAction(finalPathAttributes.SetVariable(new V_EmptyArray()));
+                actionSet.AddAction(finalPathAttributes.SetVariable(Element.EmptyArray()));
             }
         }
 
         protected override void EndLoop()
         {
             // Break out of the while loop when the current node is the closest node to the player.
-            PlayerNodeReachedBreak = new SkipStartMarker(actionSet, new V_Compare(
-                GetClosestNode(actionSet, Nodes, Element.Part<V_PositionOf>(player)),
+            PlayerNodeReachedBreak = new SkipStartMarker(actionSet, Element.Compare(
+                GetClosestNode(actionSet, Nodes, Element.PositionOf(player)),
                 Operator.NotEqual,
                 current.GetVariable()
             ));
@@ -446,7 +446,7 @@ namespace Deltin.Deltinteger.Pathfinder
         override protected void Assign()
         {
             closestNodesToPlayers = actionSet.VarCollection.Assign("Dijkstra: Closest nodes", actionSet.IsGlobal, false);
-            actionSet.AddAction(closestNodesToPlayers.SetVariable(Element.Part<V_EmptyArray>()));
+            actionSet.AddAction(closestNodesToPlayers.SetVariable(Element.EmptyArray()));
 
             ForeachBuilder getClosestNodes = new ForeachBuilder(actionSet, players);
 
@@ -457,11 +457,11 @@ namespace Deltin.Deltinteger.Pathfinder
 
         override protected Element LoopCondition()
         {
-            return Element.Part<V_IsTrueForAny>(
+            return Element.Part("Is True For Any",
                 closestNodesToPlayers.GetVariable(),
-                Element.Part<V_ArrayContains>(
+                Element.Contains(
                     unvisited.GetVariable(),
-                    new V_ArrayElement()
+                    Element.ArrayElement()
                 )
             );
         }
@@ -480,7 +480,7 @@ namespace Deltin.Deltinteger.Pathfinder
         public Element PointDestination => destinations[(Element)chosenDestination.GetVariable()];
         private readonly Element player;
 
-        public DijkstraEither(ActionSet actionSet, Element pathfindObject, Element player, Element destinations, Element attributes) : base(actionSet, pathfindObject, Element.Part<V_PositionOf>(player), attributes)
+        public DijkstraEither(ActionSet actionSet, Element pathfindObject, Element player, Element destinations, Element attributes) : base(actionSet, pathfindObject, Element.PositionOf(player), attributes)
         {
             this.destinations = destinations;
             this.player = player;
@@ -490,7 +490,7 @@ namespace Deltin.Deltinteger.Pathfinder
         protected override void Assign()
         {
             potentialDestinations = actionSet.VarCollection.Assign("Dijkstra: Potential Destinations", actionSet.IsGlobal, false);
-            actionSet.AddAction(potentialDestinations.SetVariable(new V_EmptyArray()));
+            actionSet.AddAction(potentialDestinations.SetVariable(Element.EmptyArray()));
             chosenDestination = actionSet.VarCollection.Assign("Dijkstra: Chosen Destination", actionSet.IsGlobal, assignExtended);
 
             ForeachBuilder getClosestNodes = new ForeachBuilder(actionSet, destinations);
@@ -500,10 +500,10 @@ namespace Deltin.Deltinteger.Pathfinder
 
         protected override void EndLoop()
         {
-            actionSet.AddAction(chosenDestination.SetVariable(Element.Part<V_IndexOfArrayValue>(potentialDestinations.GetVariable(), current.GetVariable())));
-            actionSet.AddAction(Element.Part<A_If>(new V_Compare(chosenDestination.GetVariable(), Operator.NotEqual, new V_Number(-1))));
-            actionSet.AddAction(Element.Part<A_Break>());
-            actionSet.AddAction(Element.Part<A_End>());
+            actionSet.AddAction(chosenDestination.SetVariable(Element.IndexOfArrayValue(potentialDestinations.GetVariable(), current.GetVariable())));
+            actionSet.AddAction(Element.If(Element.Compare(chosenDestination.GetVariable(), Operator.NotEqual, new NumberElement(-1))));
+            actionSet.AddAction(Element.Part("Break"));
+            actionSet.AddAction(Element.End());
         }
 
         protected override void GetResult()
@@ -521,10 +521,10 @@ namespace Deltin.Deltinteger.Pathfinder
             actionSet.AddAction(backTracker.SetVariable(current.Get()));
 
             // Get the path.
-            actionSet.AddAction(Element.Part<A_While>(new V_Compare(
+            actionSet.AddAction(Element.While(Element.Compare(
                 backTracker.GetVariable(),
                 Operator.GreaterThanOrEqual,
-                new V_Number(0)
+                new NumberElement(0)
             )));
 
             Element next = parentArray.Get()[backTracker.Get()] - 1;
@@ -532,8 +532,8 @@ namespace Deltin.Deltinteger.Pathfinder
             actionSet.AddAction(newParentArray.SetVariable(index:next, value: backTracker.Get() + 1));
 
             actionSet.AddAction(backTracker.SetVariable(next));
-            actionSet.AddAction(A_Wait.MinimumWait); // TODO: Should there be a minwait here?
-            actionSet.AddAction(new A_End());
+            actionSet.AddAction(Element.Wait()); // TODO: Should there be a minwait here?
+            actionSet.AddAction(Element.End());
 
             actionSet.AddAction(parentArray.SetVariable(newParentArray.Get()));
 
@@ -541,11 +541,11 @@ namespace Deltin.Deltinteger.Pathfinder
         }
 
         // Loop until any of the destinations have been visited.
-        protected override Element LoopCondition() => Element.Part<V_IsTrueForAll>(
+        protected override Element LoopCondition() => Element.Part("Is True For All",
             potentialDestinations.GetVariable(),
-            Element.Part<V_ArrayContains>(
+            Element.Contains(
                 unvisited.GetVariable(),
-                new V_ArrayElement()
+                Element.ArrayElement()
             )
         );
     }
@@ -571,9 +571,9 @@ namespace Deltin.Deltinteger.Pathfinder
         protected override Element LoopCondition()
         {
             if (Destination == null)
-                return Element.Part<V_CountOf>(unvisited.GetVariable()) > 0;
+                return Element.CountOf(unvisited.GetVariable()) > 0;
             else
-                return Element.Part<V_ArrayContains>(
+                return Element.Contains(
                     unvisited.GetVariable(),
                     finalNode.GetVariable()
                 );
@@ -608,9 +608,9 @@ namespace Deltin.Deltinteger.Pathfinder
 
         protected override void EndLoop()
         {
-            actionSet.AddAction(Element.Part<A_If>(NoAccessableUnvisited()));
-            actionSet.AddAction(Element.Part<A_Break>());
-            actionSet.AddAction(Element.Part<A_End>());
+            actionSet.AddAction(Element.If(NoAccessableUnvisited()));
+            actionSet.AddAction(Element.Part("Break"));
+            actionSet.AddAction(Element.End());
         }
 
         protected override void GetResult()

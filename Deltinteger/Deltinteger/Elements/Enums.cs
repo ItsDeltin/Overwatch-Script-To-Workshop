@@ -107,4 +107,11 @@ namespace Deltin.Deltinteger.Elements
         RemoveFromArrayByValue,
         RemoveFromArrayByIndex
     }
+
+    public enum Rounding
+    {
+        Down,
+        Up,
+        Nearest
+    }
 }
