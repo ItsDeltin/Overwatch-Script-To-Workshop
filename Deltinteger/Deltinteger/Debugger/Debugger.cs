@@ -42,6 +42,7 @@ namespace Deltin.Deltinteger.Debugger
                     // Action list successfully parsed.
                     // Get the DeltinScript.
                     // TODO: Null check _languageServer.LastParse
+                    await _languageServer.DocumentHandler.WaitForCompletedTyping(true);
                     VariableCollection = _languageServer.LastParse.DebugVariables;
 
                     // Apply debugger variables.
@@ -91,7 +92,7 @@ namespace Deltin.Deltinteger.Debugger
         private bool IsAny(params char[] characters) => !ReachedEnd && characters.Contains(Current());
         private bool IsAny(string characters) => IsAny(characters.ToCharArray());
         private bool IsNumeric() => IsAny("0123456789");
-        private bool IsAlpha() => IsAny("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ");
+        private bool IsAlpha() => IsAny("_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ");
         private bool IsAlphaNumeric() => IsNumeric() || IsAlpha();
         private bool Is(int pos, char character) => _position + pos < _text.Length && _text[_position + pos] == character;
         private bool IsWhitespace() => IsAny(' ', '\t', '\r', '\n');

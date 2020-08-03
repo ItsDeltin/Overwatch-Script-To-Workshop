@@ -2,7 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Deltin.Deltinteger.Elements;
+using Deltin.Deltinteger.Debugger;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
+using Deltin.Deltinteger.Debugger.Protocol;
+using Deltin.Deltinteger.Csv;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -35,13 +38,14 @@ Object-serve scope. Only object members.
 
         public int Identifier { get; private set; } = -1;
 
-        protected readonly List<ObjectVariable> ObjectVariables = new List<ObjectVariable>();
+        public readonly List<ObjectVariable> ObjectVariables = new List<ObjectVariable>();
 
         public ClassType(string name) : base(name)
         {
             CanBeDeleted = true;
             CanBeExtended = true;
             TokenType = TokenType.Class;
+            DebugVariableResolver = new ClassDebugVariableResolver(this);
         }
 
         public virtual void ResolveElements()
@@ -252,6 +256,7 @@ Object-serve scope. Only object members.
 
     public class ClassData : IComponent
     {
+        public const string ObjectVariableTag = "_objectVariable_";
         public DeltinScript DeltinScript { get; set; }
         public IndexReference ClassIndexes { get; private set; }
         private List<IndexReference> VariableStacks { get; } = new List<IndexReference>();
@@ -289,7 +294,7 @@ Object-serve scope. Only object members.
         {
             if (index > VariableStacks.Count) throw new Exception("Variable stack skipped");
             if (index == VariableStacks.Count)
-                VariableStacks.Add(collection.Assign("_objectVariable_" + index, true, false));
+                VariableStacks.Add(collection.Assign(ObjectVariableTag + index, true, false));
             
             return VariableStacks[index];
         }
@@ -298,6 +303,70 @@ Object-serve scope. Only object members.
         {
             AssignClassID++;
             return AssignClassID;
+        }
+    }
+
+    /// <summary>Links variables with the type of a class with debugger variables discovered from the action stream.</summary>
+    public class ClassDebugVariableResolver : IDebugVariableResolver
+    {
+        public ClassType Class { get; }
+
+        public ClassDebugVariableResolver(ClassType @class)
+        {
+            Class = @class;
+        }
+
+        public DBPVariable GetVariable(DebugVariableLinkCollection collection, IDebugVariable debugVariable)
+        {
+            // Return null if there is no value.
+            if (debugVariable.Value == null) return null;
+
+            // Create the variable.
+            IDebugVariable.ApplyReference(collection, debugVariable);
+            DBPVariable variable = new DBPVariable(debugVariable);
+            variable.namedVariables = Class.ObjectVariables.Count;
+
+            return variable;
+        }
+
+        public EvaluateResponse GetEvaluation(DebugVariableLinkCollection collection, IDebugVariable debugVariable)
+        {
+            // Return null if there is no value.
+            if (debugVariable.Value == null) return null;
+
+            // Create the evaluation response.
+            IDebugVariable.ApplyReference(collection, debugVariable);
+            EvaluateResponse response = new EvaluateResponse(debugVariable);
+            response.namedVariables = Class.ObjectVariables.Count;
+            
+            return response;
+        }
+
+        public IDebugVariable[] GetChildren(DebugVariableLinkCollection collection, IDebugVariable parent)
+        {
+            IDebugVariable[] variables = new IDebugVariable[Class.ObjectVariables.Count];
+            for (int i = 0; i < variables.Length; i++)
+            {
+                CsvPart value = new CsvNull();
+
+                // Get the related object variable array.
+                var objectVariableArray = collection.ActionStream.Variables.FirstOrDefault(v => v.Name == ClassData.ObjectVariableTag + i);
+                if (objectVariableArray != null && objectVariableArray.Value is Csv.CsvArray csvArray)
+                    value = csvArray.Values[i];
+
+                variables[i] = new ChildDebugVariable(
+                    // Child variable resolver
+                    Class.ObjectVariables[i].Variable.Type()?.DebugVariableResolver ?? new DefaultResolver(),
+                    // Value
+                    value,
+                    // Name
+                    Class.ObjectVariables[i].Variable.Name,
+                    // Type
+                    Class.ObjectVariables[i].Variable.Type()?.GetName() ?? "define"
+                );
+            }
+
+            return variables;
         }
     }
 }

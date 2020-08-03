@@ -38,6 +38,14 @@ namespace Deltin.Deltinteger.Debugger.Protocol
         /// The value should be less than or equal to 2147483647 (2^31 - 1).
         /// </summary>
         public int indexedVariables;
+
+        public EvaluateResponse() {}
+        public EvaluateResponse(IDebugVariable variable)
+        {
+            type = variable.Type;
+            result = variable.Value.ToString();
+            variablesReference = variable.Reference;
+        }
     }
 
     public class VariablesArgs
@@ -60,5 +68,13 @@ namespace Deltin.Deltinteger.Debugger.Protocol
         public int variablesReference;
         public int namedVariables;
         public int indexedVariables;
+
+        public DBPVariable() {}
+        public DBPVariable(IDebugVariable variable)
+        {
+            name = variable.Name;
+            type = variable.Type;
+            value = variable.Value.ToString();
+        }
     }
 }
