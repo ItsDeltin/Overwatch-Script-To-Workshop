@@ -354,9 +354,18 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
 
             // Comment
             MatchString(out string comment);
+            bool isDisabled = Match(Kw("disabled"));
 
+            // Subroutine
+            if (Match(Kw("Call Subroutine")))
+            {
+                Match("(");
+                Identifier(out string name);
+                Match(")");
+                action = new CallSubroutine(name, Parse.CallParallel.NoParallel);
+            }
             // Function.
-            if (Function(true, out FunctionExpression func))
+            else if (Function(true, out FunctionExpression func))
             {
                 action = func;
             }
@@ -872,6 +881,7 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
     public interface ITTEExpression {}
     public interface ITTEAction {
         string Comment { get; set; }
+        bool Disabled { get; set; }
     }
     public interface ITTEVariable
     {
@@ -937,6 +947,7 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
         public ElementList Function { get; }
         public ITTEExpression[] Values { get; }
         public string Comment { get; set; }
+        public bool Disabled { get; set; }
 
         public FunctionExpression(ElementList function, ITTEExpression[] values)
         {
@@ -1009,7 +1020,7 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
             Alternative = alternative;
         }
 
-        public override string ToString() => "(" + Condition.ToString() + " ? " + Consequent.ToString() + " : " + Alternative.ToString() + ")"; 
+        public override string ToString() => "(" + Condition.ToString() + " ? " + Consequent.ToString() + " : " + Alternative.ToString() + ")";
     }
     public class ConstantEnumeratorExpression : ITTEExpression
     {
@@ -1021,6 +1032,18 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
         }
 
         public override string ToString() => Member.WorkshopName; 
+    public class CallSubroutine : ITTEAction
+    {
+        public string SubroutineName { get; }
+        public Parse.CallParallel Parallel { get; }
+        public string Comment { get; set; }
+        public bool Disabled { get; set; }
+
+        public CallSubroutine(string name, Parse.CallParallel parallel)
+        {
+            SubroutineName = name;
+            Parallel = parallel;
+        }
     }
     // Actions
     public class SetVariableAction : ITTEAction
@@ -1030,6 +1053,7 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
         public ITTEExpression Value { get; }
         public ITTEExpression Index { get; }
         public string Comment { get; set; }
+        public bool Disabled { get; set; }
 
         public SetVariableAction(ITTEVariable variable, string op, ITTEExpression value, ITTEExpression index)
         {
@@ -1039,6 +1063,6 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
             Index = index;
         }
 
-        public override string ToString() => Variable.ToString() + (Index == null ? " " : " [" + Index.ToString() + "]") + Operator + " " + Value.ToString();
+        public override string ToString() => Variable.ToString() + (Index == null ? " " : "[" + Index.ToString() + "] ") + Operator + " " + Value.ToString();
     }
 }
