@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Deltin.Deltinteger.Elements;
+using Deltin.Deltinteger.Decompiler.ElementToCode;
 
 namespace Deltin.Deltinteger.Decompiler.TextToElement
 {
@@ -878,14 +879,18 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
     }
 
     // Interfaces
-    public interface ITTEExpression {}
+    public interface ITTEExpression {
+        void Decompile(DecompileRule decompiler);
+    }
     public interface ITTEAction {
         string Comment { get; set; }
         bool Disabled { get; set; }
+        void Decompile(DecompileRule decompiler);
     }
     public interface ITTEVariable
     {
         string Name { get; }
+        void Decompile(DecompileRule decompiler);
     }
     // Expressions
     public class NumberExpression : ITTEExpression
@@ -898,6 +903,7 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
         }
 
         public override string ToString() => Value.ToString();
+        public void Decompile(DecompileRule decompiler) => decompiler.Append(Value.ToString());
     }
     public class StringExpression : ITTEExpression
     {
@@ -913,6 +919,24 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
         }
 
         public override string ToString() => (IsLocalized ? "@" : "") + "\"" + Value + "\"";
+
+        public void Decompile(DecompileRule decompiler)
+        {
+            string str = (IsLocalized ? "@\"" : "\"") + Value + "\"";
+            if (Formats == null || Formats.Length == 0)
+                decompiler.Append(str);
+            else
+            {
+                decompiler.Append("<" + str + ", ");
+                for (int i = 0; i < Formats.Length; i++)
+                {
+                    Formats[i].Decompile(decompiler);
+                    if (i < Formats.Length - 1)
+                        decompiler.Append(", ");
+                }
+                decompiler.Append(">");
+            }
+        }
     }
     public class BinaryOperatorExpression : ITTEExpression
     {
@@ -927,7 +951,14 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
             Operator = op;
         }
 
-        public override string ToString() => Left.ToString() + " " + Operator.Operator + " " + Right.ToString(); 
+        public override string ToString() => Left.ToString() + " " + Operator.Operator + " " + Right.ToString();
+
+        public void Decompile(DecompileRule decompiler)
+        {
+            Left.Decompile(decompiler);
+            decompiler.Append(" " + Operator.Operator + " ");
+            Right.Decompile(decompiler);
+        }
     }
     public class UnaryOperatorExpression : ITTEExpression
     {
@@ -941,6 +972,20 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
         }
 
         public override string ToString() => Operator.Operator + Value.ToString();
+
+        public void Decompile(DecompileRule decompiler)
+        {
+            decompiler.Append(Operator.Operator);
+
+            if (Value is BinaryOperatorExpression expr)
+            {
+                decompiler.Append("(");
+                Value.Decompile(decompiler);
+                decompiler.Append(")");
+            }
+            else
+                Value.Decompile(decompiler);
+        }
     }
     public class FunctionExpression : ITTEExpression, ITTEAction
     {
@@ -956,6 +1001,35 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
         }
 
         public override string ToString() => Function.Name + (Values.Length == 0 ? "" : "(" + string.Join(", ", Values.Select(v => v.ToString())) + ")");
+
+        void ITTEExpression.Decompile(DecompileRule decompiler) => Decompile(decompiler, false);
+        void ITTEAction.Decompile(DecompileRule decompiler) => Decompile(decompiler, true);
+
+        public void Decompile(DecompileRule decompiler, bool end)
+        {
+            if (Disabled)
+                decompiler.Append("// ");
+
+            if (WorkshopFunctionDecompileHook.Convert.TryGetValue(Function.WorkshopName, out var action))
+                action.Invoke(decompiler, this);
+            else
+            {
+                decompiler.Append(Function.Name + "(");
+
+                for (int i = 0; i < Values.Length; i++)
+                {
+                    Values[i].Decompile(decompiler);
+                    if (i < Values.Length - 1)
+                        decompiler.Append(", ");
+                }
+
+                decompiler.Append(")");
+
+                // Finished
+                if (end)
+                    WorkshopFunctionDecompileHook.End(decompiler);
+            }
+        }
     }
     public class GlobalVariableExpression : ITTEExpression, ITTEVariable
     {
@@ -967,6 +1041,7 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
         }
 
         public override string ToString() => "Global." + Name;
+        public void Decompile(DecompileRule decompiler) => decompiler.Append(Name);
     }
     public class AnonymousVariableExpression : ITTEExpression, ITTEVariable
     {
@@ -980,6 +1055,10 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
         }
 
         public override string ToString() => (IsGlobal ? "Global." : "Player.") + Name;
+        public void Decompile(DecompileRule decompiler)
+        {
+            decompiler.Append(Name);
+        }
     }
     public class PlayerVariableExpression : ITTEExpression, ITTEVariable
     {
@@ -993,6 +1072,17 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
         }
 
         public override string ToString() => Player.ToString() + "." + Name;
+
+        public void Decompile(DecompileRule decompiler)
+        {
+            if (Player is FunctionExpression func && func.Function.WorkshopName == "Event Player")
+                decompiler.Append(Name);
+            else
+            {
+                Player.Decompile(decompiler);
+                decompiler.Append("." + Name);
+            }
+        }
     }
     public class IndexerExpression : ITTEExpression
     {
@@ -1006,6 +1096,14 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
         }
 
         public override string ToString() => Expression.ToString() + "[" + Index.ToString() + "]";
+
+        public void Decompile(DecompileRule decompiler)
+        {
+            Expression.Decompile(decompiler);
+            decompiler.Append("[");
+            Index.Decompile(decompiler);
+            decompiler.Append("]");
+        }
     }
     public class TernaryExpression : ITTEExpression
     {
@@ -1021,6 +1119,15 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
         }
 
         public override string ToString() => "(" + Condition.ToString() + " ? " + Consequent.ToString() + " : " + Alternative.ToString() + ")";
+
+        public void Decompile(DecompileRule decompiler)
+        {
+            Condition.Decompile(decompiler);
+            decompiler.Append(" ? ");
+            Consequent.Decompile(decompiler);
+            decompiler.Append(" : ");
+            Alternative.Decompile(decompiler);
+        }
     }
     public class ConstantEnumeratorExpression : ITTEExpression
     {
@@ -1031,18 +1138,11 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
             Member = member;
         }
 
-        public override string ToString() => Member.WorkshopName; 
-    public class CallSubroutine : ITTEAction
-    {
-        public string SubroutineName { get; }
-        public Parse.CallParallel Parallel { get; }
-        public string Comment { get; set; }
-        public bool Disabled { get; set; }
+        public override string ToString() => Member.WorkshopName;
 
-        public CallSubroutine(string name, Parse.CallParallel parallel)
+        public void Decompile(DecompileRule decompiler)
         {
-            SubroutineName = name;
-            Parallel = parallel;
+            decompiler.Append(Member.Enum.CodeName + "." + Member.CodeName);
         }
     }
     // Actions
@@ -1064,5 +1164,55 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
         }
 
         public override string ToString() => Variable.ToString() + (Index == null ? " " : "[" + Index.ToString() + "] ") + Operator + " " + Value.ToString();
+
+        public void Decompile(DecompileRule decompiler)
+        {
+            if (Comment != null)
+            {
+                if (Disabled) decompiler.Append("// ");
+                decompiler.Append(Comment);
+                decompiler.NewLine();
+            }
+
+            if (Disabled) decompiler.Append("// ");
+            Variable.Decompile(decompiler);
+
+            if (Index != null)
+            {
+                decompiler.Append("[");
+                Index.Decompile(decompiler);
+                decompiler.Append("]");
+            }
+
+            decompiler.Append(" " + Operator + " ");
+            Value.Decompile(decompiler);
+            WorkshopFunctionDecompileHook.End(decompiler);
+        }
+    }
+    public class CallSubroutine : ITTEAction
+    {
+        public string SubroutineName { get; }
+        public Parse.CallParallel Parallel { get; }
+        public string Comment { get; set; }
+        public bool Disabled { get; set; }
+
+        public CallSubroutine(string name, Parse.CallParallel parallel)
+        {
+            SubroutineName = name;
+            Parallel = parallel;
+        }
+
+        public void Decompile(DecompileRule decompiler)
+        {
+            switch (Parallel)
+            {
+                case Parse.CallParallel.NoParallel:
+                    decompiler.Append(SubroutineName + "()");
+                    break;
+                
+                default: throw new NotImplementedException(Parallel.ToString());
+            }
+            WorkshopFunctionDecompileHook.End(decompiler);
+        }
     }
 }

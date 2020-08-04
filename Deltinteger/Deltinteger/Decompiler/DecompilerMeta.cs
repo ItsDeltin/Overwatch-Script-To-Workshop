@@ -7,7 +7,7 @@ using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.Parse;
 using Newtonsoft.Json;
 
-namespace Deltin.Deltinteger.Decompiler
+namespace Deltin.Deltinteger.Decompiler.Json
 {
     public class DecompilerMeta
     {
@@ -17,15 +17,20 @@ namespace Deltin.Deltinteger.Decompiler
         public string[] ExtendedGlobalVariables;
         [JsonProperty("extPlayer")]
         public string[] ExtendedPlayerVariables;
+        [JsonProperty("funcs")]
+        public JsonFunction[] Functions;
 
         public static Rule Generate(DeltinScript deltinScript)
         {
             DecompilerMeta obj = new DecompilerMeta() {
                 ExtendedGlobalVariables = deltinScript.VarCollection.ExtendedVariableList(true).Select(v => v.DebugName).ToArray(),
-                ExtendedPlayerVariables = deltinScript.VarCollection.ExtendedVariableList(false).Select(v => v.DebugName).ToArray()
+                ExtendedPlayerVariables = deltinScript.VarCollection.ExtendedVariableList(false).Select(v => v.DebugName).ToArray(),
+                Functions = deltinScript.RuleLevelFunctions.Select(f => f.GetJsonFunction()).ToArray()
             };
 
-            string json = JsonConvert.SerializeObject(obj);
+            string json = JsonConvert.SerializeObject(obj, new JsonSerializerSettings() {
+                NullValueHandling = NullValueHandling.Ignore
+            });
             int start = 0;
 
             // Split the json into strings that are 256 or less bytes.
