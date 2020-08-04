@@ -71,6 +71,76 @@ namespace Deltin.Deltinteger.Decompiler.ElementToCode
                 // Finished
                 decompiler.EndAction();
             }},
+            {"Chase Global Variable Over Time", (decompiler, function) => {
+                decompiler.Append("ChaseVariableOverTime(");
+                // Variable
+                function.Values[0].Decompile(decompiler);
+                decompiler.Append(", ");
+                // Destination
+                function.Values[1].Decompile(decompiler);
+                decompiler.Append(", ");
+                // Duration
+                function.Values[2].Decompile(decompiler);
+                decompiler.Append(", ");
+                // Reevaluation
+                function.Values[3].Decompile(decompiler);
+                // Finished
+                decompiler.EndAction();
+            }},
+            {"Chase Player Variable Over Time", (decompiler, function) => {
+                decompiler.Append("ChaseVariableOverTime(");
+                // Player
+                function.Values[0].Decompile(decompiler);
+                decompiler.Append(".");
+                // Variable
+                function.Values[1].Decompile(decompiler);
+                decompiler.Append(", ");
+                // Destination
+                function.Values[2].Decompile(decompiler);
+                decompiler.Append(", ");
+                // Duration
+                function.Values[3].Decompile(decompiler);
+                decompiler.Append(", ");
+                // Reevaluation
+                function.Values[4].Decompile(decompiler);
+                // Finished
+                decompiler.EndAction();
+            }},
+            {"Chase Global Variable At Rate", (decompiler, function) => {
+                decompiler.Append("ChaseVariableAtRate(");
+                // Variable
+                function.Values[0].Decompile(decompiler);
+                decompiler.Append(", ");
+                // Destination
+                function.Values[1].Decompile(decompiler);
+                decompiler.Append(", ");
+                // Duration
+                function.Values[2].Decompile(decompiler);
+                decompiler.Append(", ");
+                // Reevaluation
+                function.Values[3].Decompile(decompiler);
+                // Finished
+                decompiler.EndAction();
+            }},
+            {"Chase Player Variable At Rate", (decompiler, function) => {
+                decompiler.Append("ChaseVariableAtRate(");
+                // Player
+                function.Values[0].Decompile(decompiler);
+                decompiler.Append(".");
+                // Variable
+                function.Values[1].Decompile(decompiler);
+                decompiler.Append(", ");
+                // Destination
+                function.Values[2].Decompile(decompiler);
+                decompiler.Append(", ");
+                // Duration
+                function.Values[3].Decompile(decompiler);
+                decompiler.Append(", ");
+                // Reevaluation
+                function.Values[4].Decompile(decompiler);
+                // Finished
+                decompiler.EndAction();
+            }},
             {"If", (decompiler, function) => {
                 decompiler.Append("if (");
                 function.Values[0].Decompile(decompiler);
