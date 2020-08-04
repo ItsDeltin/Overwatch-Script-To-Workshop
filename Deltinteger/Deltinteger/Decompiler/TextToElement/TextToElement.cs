@@ -899,6 +899,8 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
             Actions = actions;
             Disabled = disabled;
         }
+
+        public override string ToString() => Name + " [" + Actions.Length + " actions]"; 
     }
 
     // Interfaces
@@ -978,9 +980,21 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
 
         public void Decompile(DecompileRule decompiler)
         {
-            Left.Decompile(decompiler);
+            WriteSide(decompiler, Left);
             decompiler.Append(" " + Operator.Operator + " ");
-            Right.Decompile(decompiler);
+            WriteSide(decompiler, Right);
+        }
+
+        private void WriteSide(DecompileRule decompiler, ITTEExpression expression)
+        {
+            if (expression is TernaryExpression || (expression is BinaryOperatorExpression bop && bop.Operator.Precedence < Operator.Precedence))
+            {
+                decompiler.Append("(");
+                expression.Decompile(decompiler);
+                decompiler.Append(")");
+            }
+            else
+                expression.Decompile(decompiler);
         }
     }
     public class UnaryOperatorExpression : ITTEExpression
@@ -1000,7 +1014,7 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
         {
             decompiler.Append(Operator.Operator);
 
-            if (Value is BinaryOperatorExpression expr)
+            if (Value is BinaryOperatorExpression || Value is TernaryExpression)
             {
                 decompiler.Append("(");
                 Value.Decompile(decompiler);
