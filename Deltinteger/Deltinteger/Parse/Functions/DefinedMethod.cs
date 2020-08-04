@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.LanguageServer;
+using Deltin.Deltinteger.Decompiler.Json;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -240,6 +241,22 @@ namespace Deltin.Deltinteger.Parse
             }
         }
     
+        public JsonFunction GetJsonFunction()
+        {
+            var parameters = new JsonParameter[Parameters.Length];
+            for (int i = 0; i < parameters.Length; i++)
+                parameters[i] = new JsonParameter() {
+                    Name = Parameters[i].Name,
+                    Ref = ParameterVars[i].VariableType == VariableType.ElementReference
+                };
+            
+            return new JsonFunction() {
+                Name = Name,
+                Parameters = parameters,
+                Block = Block.GetJsonBlock()
+            };
+        }
+
         // Assigns parameters to the index assigner. TODO: Move to OverloadChooser.
         public static void AssignParameters(ActionSet actionSet, Var[] parameterVars, IWorkshopTree[] parameterValues, bool recursive = false)
         {

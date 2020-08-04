@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.Elements;
+using Deltin.Deltinteger.Decompiler.Json;
 using Antlr4.Runtime;
 
 namespace Deltin.Deltinteger.Parse
@@ -11,6 +12,7 @@ namespace Deltin.Deltinteger.Parse
         Scope ReturningScope();
         CodeType Type();
         IWorkshopTree Parse(ActionSet actionSet);
+        JsonExpression ToJson() => throw new NotImplementedException();
     }
 
     public class NumberAction : IExpression
@@ -29,6 +31,8 @@ namespace Deltin.Deltinteger.Parse
         {
             return new V_Number(Value);
         }
+
+        public JsonExpression ToJson() => new JsonExpression() { Number = Value };
     }
 
     public class BoolAction : IExpression
@@ -48,6 +52,8 @@ namespace Deltin.Deltinteger.Parse
             if (Value) return new V_True();
             else return new V_False();
         }
+
+        public JsonExpression ToJson() => new JsonExpression() { Boolean = Value };
     }
 
     public class NullAction : IExpression
