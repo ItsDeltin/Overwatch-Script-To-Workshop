@@ -544,15 +544,6 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
             // If this is the root, return the top operand.
             if (root) expr = _operands.Pop();
 
-            // Ternary conditional
-            if (Match("?"))
-            {
-                Expression(out ITTEExpression consequent);
-                Match(":");
-                Expression(out ITTEExpression alternative);
-                expr = new TernaryExpression(expr, consequent, alternative);
-            }
-
             return true;
         }
 
@@ -684,6 +675,8 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
             else if (Match("<=")) op = TTEOperator.LessThanOrEqual;
             else if (Match(">")) op = TTEOperator.GreaterThan;
             else if (Match("<")) op = TTEOperator.LessThan;
+            else if (Match("?")) op = TTEOperator.Ternary;
+            else if (Match(":")) op = TTEOperator.RhsTernary;
             else
             {
                 op = null;
@@ -705,7 +698,8 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
 
         void PushOperator(TTEOperator op)
         {
-            while (_operators.Peek().Precedence > op.Precedence)
+            // while (_operators.Peek().Precedence > op.Precedence)
+            while (TTEOperator.Compare(_operators.Peek(), op))
                 PopOperator();
             _operators.Push(op);
         }
@@ -713,16 +707,27 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
         void PopOperator()
         {
             var op = _operators.Pop();
-            if (op.Binary)
+            if (op.Type == OperatorType.Binary)
             {
+                // Binary
                 var right = _operands.Pop();
                 var left = _operands.Pop();
                 _operands.Push(new BinaryOperatorExpression(left, right, op));
             }
-            else
+            else if (op.Type == OperatorType.Unary)
             {
+                // Unary
                 var value = _operands.Pop();
                 _operands.Push(new UnaryOperatorExpression(value, op));
+            }
+            else
+            {
+                // Ternary
+                var op2 = _operators.Pop();
+                var rhs = _operands.Pop();
+                var middle = _operands.Pop();
+                var lhs = _operands.Pop();
+                _operands.Push(new TernaryExpression(lhs, middle, rhs));
             }
         }
     }
@@ -829,35 +834,53 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
     {
         public static TTEOperator Sentinel { get; } = new TTEOperator(0, null);
         // Unary
-        public static TTEOperator Not { get; } = new TTEOperator(16, "!", false);
+        public static TTEOperator Not { get; } = new TTEOperator(16, "!", OperatorType.Unary);
         // Compare
-        public static TTEOperator Equal { get; } = new TTEOperator(2, "==");
-        public static TTEOperator NotEqual { get; } = new TTEOperator(3, "!=");
-        public static TTEOperator GreaterThan { get; } = new TTEOperator(4, ">");
-        public static TTEOperator LessThan { get; } = new TTEOperator(5, "<");
-        public static TTEOperator GreaterThanOrEqual { get; } = new TTEOperator(6, ">=");
-        public static TTEOperator LessThanOrEqual { get; } = new TTEOperator(7, "<=");
+        public static TTEOperator Ternary { get; } = new TTEOperator(1, "?", OperatorType.Ternary);
+        public static TTEOperator RhsTernary { get; } = new TTEOperator(2, ":", OperatorType.Ternary);
+        public static TTEOperator Equal { get; } = new TTEOperator(3, "==");
+        public static TTEOperator NotEqual { get; } = new TTEOperator(4, "!=");
+        public static TTEOperator GreaterThan { get; } = new TTEOperator(5, ">");
+        public static TTEOperator LessThan { get; } = new TTEOperator(6, "<");
+        public static TTEOperator GreaterThanOrEqual { get; } = new TTEOperator(7, ">=");
+        public static TTEOperator LessThanOrEqual { get; } = new TTEOperator(8, "<=");
         // Boolean
-        public static TTEOperator And { get; } = new TTEOperator(8, "&&");
-        public static TTEOperator Or { get; } = new TTEOperator(9, "||");
+        public static TTEOperator And { get; } = new TTEOperator(9, "&&");
+        public static TTEOperator Or { get; } = new TTEOperator(10, "||");
         // Math
-        public static TTEOperator Subtract { get; } = new TTEOperator(10, "-");
-        public static TTEOperator Add { get; } = new TTEOperator(11, "+");
-        public static TTEOperator Modulo { get; } = new TTEOperator(12, "%");
-        public static TTEOperator Divide { get; } = new TTEOperator(13, "/");
-        public static TTEOperator Multiply { get; } = new TTEOperator(14, "*");
-        public static TTEOperator Power { get; } = new TTEOperator(15, "^");
+        public static TTEOperator Subtract { get; } = new TTEOperator(11, "-");
+        public static TTEOperator Add { get; } = new TTEOperator(12, "+");
+        public static TTEOperator Modulo { get; } = new TTEOperator(13, "%");
+        public static TTEOperator Divide { get; } = new TTEOperator(14, "/");
+        public static TTEOperator Multiply { get; } = new TTEOperator(15, "*");
+        public static TTEOperator Power { get; } = new TTEOperator(16, "^");
 
         public int Precedence { get; }
         public string Operator { get; }
-        public bool Binary { get; }
+        public OperatorType Type { get; }
 
-        public TTEOperator(int precedence, string op, bool binary = true)
+        public TTEOperator(int precedence, string op, OperatorType type = OperatorType.Binary)
         {
             Precedence = precedence;
             Operator = op;
-            Binary = binary;
+            Type = type;
         }
+
+        public static bool Compare(TTEOperator op1, TTEOperator op2)
+        {
+            if ((op1 == Ternary || op1 == RhsTernary) && (op2 == Ternary || op2 == RhsTernary))
+                return op1 == RhsTernary && op2 == RhsTernary;
+            
+            if (op1 == Sentinel || op2 == Sentinel) return false;
+            return op1.Precedence > op2.Precedence;
+        }
+    }
+
+    public enum OperatorType
+    {
+        Unary,
+        Binary,
+        Ternary
     }
 
     public class TTERule
