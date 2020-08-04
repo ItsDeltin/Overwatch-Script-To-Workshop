@@ -24,13 +24,21 @@ namespace Deltin.Deltinteger.Decompiler.ElementToCode
             Options = options;
         }
 
-        public void AddBlock()
+        public void AddBlock(bool startBlock = true)
         {
-            if (Options.SameLineOpeningBrace) Append(" {");
+            if (Options.SameLineOpeningBrace)
+            {
+                if (startBlock) Append(" {");
+                NewLine();
+                Indent();
+            }
             else
             {
-                NewLine();
-                Append("{");
+                if (startBlock)
+                {
+                    NewLine();
+                    Append("{");
+                }
                 NewLine();
                 Indent();
             }
@@ -126,15 +134,20 @@ namespace Deltin.Deltinteger.Decompiler.ElementToCode
         public void DecompileCurrentAction()
         {
             Rule.Actions[CurrentAction].Decompile(this);
-            CurrentAction++;
         }
 
         public void Append(string text) => Decompiler.Append(text);
         public void NewLine() => Decompiler.NewLine();
-        public void AddBlock() => Decompiler.AddBlock();
+        public void AddBlock(bool startBlock = true) => Decompiler.AddBlock(startBlock);
         public void Outdent() => Decompiler.Outdent();
         public void Advance() {
             CurrentAction++;
+        }
+        public void EndAction()
+        {
+            Append(";");
+            NewLine();
+            Advance();
         }
     }
 }

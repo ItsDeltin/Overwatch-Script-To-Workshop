@@ -1064,7 +1064,7 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
 
                 // Finished
                 if (end)
-                    WorkshopFunctionDecompileHook.End(decompiler);
+                    decompiler.EndAction();
             }
         }
     }
@@ -1223,7 +1223,7 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
 
             decompiler.Append(" " + Operator + " ");
             Value.Decompile(decompiler);
-            WorkshopFunctionDecompileHook.End(decompiler);
+            decompiler.EndAction();
         }
     }
     public class CallSubroutine : ITTEAction
@@ -1249,7 +1249,7 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
                 
                 default: throw new NotImplementedException(Parallel.ToString());
             }
-            WorkshopFunctionDecompileHook.End(decompiler);
+            decompiler.EndAction();
         }
     }
 }
