@@ -103,7 +103,7 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
             {
                 value += Current;
                 if (escaped) escaped = false;
-                else if (Is(0, '"')) escaped = true;
+                else if (Is(0, '\\')) escaped = true;
                 Advance();
             }
             while (escaped || !Is(0, '"'));
