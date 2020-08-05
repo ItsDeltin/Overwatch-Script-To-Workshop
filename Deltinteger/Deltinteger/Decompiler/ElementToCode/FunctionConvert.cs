@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Deltin.Deltinteger.Decompiler.TextToElement;
+using Deltin.Deltinteger.Elements;
 
 namespace Deltin.Deltinteger.Decompiler.ElementToCode
 {
@@ -212,8 +213,76 @@ namespace Deltin.Deltinteger.Decompiler.ElementToCode
 
                 if (!finished)
                     Cap(decompiler, withBlock);
+            }},
+            {"For Global Variable", (decompiler, function) => {
+                decompiler.Append("for (");
+                function.Values[0].Decompile(decompiler);
+                decompiler.Append(" = ");
+                function.Values[1].Decompile(decompiler);
+                decompiler.Append("; ");
+                function.Values[2].Decompile(decompiler);
+                decompiler.Append("; ");
+                function.Values[3].Decompile(decompiler);
+                decompiler.Append(")");
+                bool withBlock = StartBlock(decompiler);
+
+                new ActionGroupIterator(decompiler).On("End", endFunc => {
+                    Cap(decompiler);
+                    decompiler.Advance();
+                    return true;
+                }).OnInterupt(() => Cap(decompiler, withBlock)).Get();
+            }},
+            {"For Player Variable", (decompiler, function) => {
+                decompiler.Append("for (");
+                function.Values[0].Decompile(decompiler);
+                decompiler.Append(".");
+                function.Values[1].Decompile(decompiler);
+                decompiler.Append(" = ");
+                function.Values[2].Decompile(decompiler);
+                decompiler.Append("; ");
+                function.Values[3].Decompile(decompiler);
+                decompiler.Append("; ");
+                function.Values[4].Decompile(decompiler);
+                decompiler.Append(")");
+                bool withBlock = StartBlock(decompiler);
+                
+                new ActionGroupIterator(decompiler).On("End", endFunc => {
+                    Cap(decompiler);
+                    decompiler.Advance();
+                    return true;
+                }).OnInterupt(() => Cap(decompiler, withBlock)).Get();
+            }},
+            {"Wait", (decompiler, function) => {
+                // Convert the Wait to a MinWait if the wait duration is less than or equal to the minimum.
+                if (function.Values[0] is NumberExpression number && number.Value <= Constants.MINIMUM_WAIT)
+                {
+                    decompiler.Append("MinWait(");
+
+                    // Add wait behavior if it is not the default.
+                    if (function.Values[1] is ConstantEnumeratorExpression enumerator && enumerator.Member != EnumData.GetEnumValue(WaitBehavior.IgnoreCondition))
+                        enumerator.Decompile(decompiler);
+                    
+                    // End function
+                    decompiler.Append(")");
+
+                    // Finished
+                    decompiler.EndAction();
+                }
+                else
+                {
+                    // Default
+                    function.Default(decompiler, true);
+                }
             }}
         };
+
+        private static bool StartBlock(DecompileRule decompiler)
+        {
+            bool withBlock = !IsSingleStatementBlock(decompiler);
+            decompiler.AddBlock(withBlock);
+            decompiler.Advance();
+            return withBlock;
+        }
 
         private static void Cap(DecompileRule decompiler, bool endBlock = true)
         {
@@ -229,5 +298,45 @@ namespace Deltin.Deltinteger.Decompiler.ElementToCode
             => decompiler.CurrentAction + 2 < decompiler.Rule.Actions.Length
             && decompiler.Rule.Actions[decompiler.CurrentAction] is FunctionExpression func
             && Array.Exists(TerminatorFunctions, element => element == func.Function.Name);
+    }
+
+    class ActionGroupIterator
+    {
+        private readonly DecompileRule _decompiler;
+        private readonly Dictionary<string, Func<FunctionExpression, bool>> _onFunction = new Dictionary<string, Func<FunctionExpression, bool>>();
+        private Action _onInterupt;
+
+        public ActionGroupIterator(DecompileRule decompiler)
+        {
+            _decompiler = decompiler;
+        }
+
+        public ActionGroupIterator On(string func, Func<FunctionExpression, bool> action)
+        {
+            _onFunction.Add(func, action);
+            return this;
+        }
+
+        public ActionGroupIterator OnInterupt(Action action)
+        {
+            _onInterupt = action;
+            return this;
+        }
+
+        public void Get()
+        {
+            bool finished = false;
+            while (!_decompiler.IsFinished)
+            {
+                if (_decompiler.Current is FunctionExpression func && _onFunction.TryGetValue(func.Function.Name, out var action))
+                {
+                    if (action.Invoke(func))
+                        finished = true;
+                }
+                else
+                    _decompiler.DecompileCurrentAction();
+            }
+            if (!finished && _onInterupt != null) _onInterupt.Invoke();
+        }
     }
 }

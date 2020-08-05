@@ -149,5 +149,13 @@ namespace Deltin.Deltinteger.Decompiler.ElementToCode
             NewLine();
             Advance();
         }
+        public void AddComment(ITTEAction action)
+        {
+            if (action.Comment == null) return;
+            if (action.Disabled) Append("// ");
+            else Append("# ");
+            Append(action.Comment);
+            NewLine();
+        }
     }
 }

@@ -398,6 +398,7 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
                 return false;
             }
 
+            action.Disabled = isDisabled;
             action.Comment = comment;
             Match(";");
             return true;
@@ -1040,7 +1041,11 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
         public override string ToString() => Function.Name + (Values.Length == 0 ? "" : "(" + string.Join(", ", Values.Select(v => v.ToString())) + ")");
 
         void ITTEExpression.Decompile(DecompileRule decompiler) => Decompile(decompiler, false);
-        void ITTEAction.Decompile(DecompileRule decompiler) => Decompile(decompiler, true);
+        void ITTEAction.Decompile(DecompileRule decompiler)
+        {
+            decompiler.AddComment(this);
+            Decompile(decompiler, true);
+        }
 
         public void Decompile(DecompileRule decompiler, bool end)
         {
@@ -1050,22 +1055,25 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
             if (WorkshopFunctionDecompileHook.Convert.TryGetValue(Function.WorkshopName, out var action))
                 action.Invoke(decompiler, this);
             else
+                Default(decompiler, end);
+        }
+
+        public void Default(DecompileRule decompiler, bool end)
+        {
+            decompiler.Append(Function.Name + "(");
+
+            for (int i = 0; i < Values.Length; i++)
             {
-                decompiler.Append(Function.Name + "(");
-
-                for (int i = 0; i < Values.Length; i++)
-                {
-                    Values[i].Decompile(decompiler);
-                    if (i < Values.Length - 1)
-                        decompiler.Append(", ");
-                }
-
-                decompiler.Append(")");
-
-                // Finished
-                if (end)
-                    decompiler.EndAction();
+                Values[i].Decompile(decompiler);
+                if (i < Values.Length - 1)
+                    decompiler.Append(", ");
             }
+
+            decompiler.Append(")");
+
+            // Finished
+            if (end)
+                decompiler.EndAction();
         }
     }
     public class GlobalVariableExpression : ITTEExpression, ITTEVariable
@@ -1204,12 +1212,7 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
 
         public void Decompile(DecompileRule decompiler)
         {
-            if (Comment != null)
-            {
-                if (Disabled) decompiler.Append("// ");
-                decompiler.Append(Comment);
-                decompiler.NewLine();
-            }
+            decompiler.AddComment(this);
 
             if (Disabled) decompiler.Append("// ");
             Variable.Decompile(decompiler);
@@ -1241,6 +1244,8 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
 
         public void Decompile(DecompileRule decompiler)
         {
+            decompiler.AddComment(this);
+
             switch (Parallel)
             {
                 case Parse.CallParallel.NoParallel:
