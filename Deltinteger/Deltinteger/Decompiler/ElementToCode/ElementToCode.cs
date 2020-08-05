@@ -1,4 +1,5 @@
 using System.Text;
+using System.Linq;
 using Deltin.Deltinteger.Decompiler.TextToElement;
 using Deltin.Deltinteger.Elements;
 
@@ -8,6 +9,7 @@ namespace Deltin.Deltinteger.Decompiler.ElementToCode
     {
         public bool SameLineOpeningBrace = false;
         public bool IndentWithTabs = false;
+        public int SpaceIndentCount = 4;
     }
 
     public class WorkshopDecompiler
@@ -16,7 +18,7 @@ namespace Deltin.Deltinteger.Decompiler.ElementToCode
         public CodeFormattingOptions Options { get; }
         public int IndentLevel { get; private set; }
         private readonly StringBuilder _builder = new StringBuilder();
-        private bool space = false;
+        private bool _space = false;
 
         public WorkshopDecompiler(Workshop workshop, CodeFormattingOptions options)
         {
@@ -49,10 +51,10 @@ namespace Deltin.Deltinteger.Decompiler.ElementToCode
 
         public void Append(string text)
         {
-            if (space)
+            if (_space)
             {
-                space = false;
-                _builder.Append(new string(Options.IndentWithTabs ? '\t' : ' ', IndentLevel * (Options.IndentWithTabs ? 1 : 4)));
+                _space = false;
+                _builder.Append(new string(Options.IndentWithTabs ? '\t' : ' ', IndentLevel * (Options.IndentWithTabs ? 1 : Options.SpaceIndentCount)));
             }
             _builder.Append(text);
         }
@@ -60,7 +62,7 @@ namespace Deltin.Deltinteger.Decompiler.ElementToCode
         public void NewLine()
         {
             _builder.AppendLine();
-            space = true;
+            _space = true;
         }
 
         public string Decompile()
@@ -68,7 +70,7 @@ namespace Deltin.Deltinteger.Decompiler.ElementToCode
             // Variables
             foreach (var variable in Workshop.Variables)
             {
-                Append((variable.IsGlobal ? "globalvar" : "playervar") + " define " + variable.Name + ";");
+                Append((variable.IsGlobal ? "globalvar" : "playervar") + " define " + GetVariableName(variable.Name, variable.IsGlobal) + ";");
                 NewLine();
             }
             NewLine();
@@ -81,6 +83,14 @@ namespace Deltin.Deltinteger.Decompiler.ElementToCode
         }
 
         public override string ToString() => _builder.ToString();
+
+        public string GetVariableName(string baseName, bool isGlobal)
+        {
+            if (!isGlobal && Workshop.Variables.Any(v => v.IsGlobal && v.Name == baseName))
+                baseName = "p_" + baseName;
+            
+            return baseName;
+        }
     }
 
     public class DecompileRule

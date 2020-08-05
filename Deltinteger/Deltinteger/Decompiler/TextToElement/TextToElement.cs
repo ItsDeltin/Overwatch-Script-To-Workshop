@@ -9,6 +9,7 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
     class ConvertTextToElement
     {
         private readonly static char[] WHITESPACE = new char[] { '\r', '\n', '\t', ' ' };
+        private readonly static string[] DEFAULT_VARIABLES = new string[] { "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z" };
 
         public string Content { get; }
         public int Position { get; private set; }
@@ -223,6 +224,15 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
                 Identifier(out string name);
                 Variables.Add(new WorkshopVariable(isGlobal, index, name));
             }
+        }
+
+        void AddIfOmitted(string variableName, bool isGlobal)
+        {
+            // Get the default index of the variable.
+            int index = Array.IndexOf(DEFAULT_VARIABLES, variableName);
+            // If the index was found and the variable was not added, add it.
+            if (index != -1 && !Variables.Any(v => v.IsGlobal == isGlobal && v.Name == variableName))
+                Variables.Add(new WorkshopVariable(isGlobal, index, variableName));
         }
 
         // Subroutines
@@ -467,6 +477,7 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
                         if (!Identifier(out string identifier))
                             throw new Exception("Failed to retrieve identifier of variable parameter.");
                         
+                        AddIfOmitted(identifier, varRefParameter.IsGlobal);
                         values.Add(new AnonymousVariableExpression(identifier, varRefParameter.IsGlobal));
                     }
 
@@ -627,6 +638,7 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
                 return false;
             }
             
+            AddIfOmitted(name, true);
             expr = new GlobalVariableExpression(name);
             return true;
         }
@@ -640,6 +652,7 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
             {
                 matched = true;
                 Identifier(out string name);
+                AddIfOmitted(name, false);
                 playerVariable = new PlayerVariableExpression(name, playerVariable);
             }
             
@@ -913,11 +926,6 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
         bool Disabled { get; set; }
         void Decompile(DecompileRule decompiler);
     }
-    public interface ITTEVariable
-    {
-        string Name { get; }
-        void Decompile(DecompileRule decompiler);
-    }
     // Expressions
     public class NumberExpression : ITTEExpression
     {
@@ -1076,59 +1084,6 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
                 decompiler.EndAction();
         }
     }
-    public class GlobalVariableExpression : ITTEExpression, ITTEVariable
-    {
-        public string Name { get; }
-
-        public GlobalVariableExpression(string name)
-        {
-            Name = name;
-        }
-
-        public override string ToString() => "Global." + Name;
-        public void Decompile(DecompileRule decompiler) => decompiler.Append(Name);
-    }
-    public class AnonymousVariableExpression : ITTEExpression, ITTEVariable
-    {
-        public string Name { get; }
-        public bool IsGlobal { get; }
-
-        public AnonymousVariableExpression(string name, bool isGlobal)
-        {
-            Name = name;
-            IsGlobal = isGlobal;
-        }
-
-        public override string ToString() => (IsGlobal ? "Global." : "Player.") + Name;
-        public void Decompile(DecompileRule decompiler)
-        {
-            decompiler.Append(Name);
-        }
-    }
-    public class PlayerVariableExpression : ITTEExpression, ITTEVariable
-    {
-        public string Name { get; }
-        public ITTEExpression Player { get; }
-
-        public PlayerVariableExpression(string name, ITTEExpression player)
-        {
-            Name = name;
-            Player = player;
-        }
-
-        public override string ToString() => Player.ToString() + "." + Name;
-
-        public void Decompile(DecompileRule decompiler)
-        {
-            if (Player is FunctionExpression func && func.Function.WorkshopName == "Event Player")
-                decompiler.Append(Name);
-            else
-            {
-                Player.Decompile(decompiler);
-                decompiler.Append("." + Name);
-            }
-        }
-    }
     public class IndexerExpression : ITTEExpression
     {
         public ITTEExpression Expression { get; }
@@ -1255,6 +1210,62 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
                 default: throw new NotImplementedException(Parallel.ToString());
             }
             decompiler.EndAction();
+        }
+    }
+    // Variables
+    public interface ITTEVariable
+    {
+        string Name { get; }
+        void Decompile(DecompileRule decompiler);
+    }
+    public class GlobalVariableExpression : ITTEExpression, ITTEVariable
+    {
+        public string Name { get; }
+
+        public GlobalVariableExpression(string name)
+        {
+            Name = name;
+        }
+
+        public override string ToString() => "Global." + Name;
+        public void Decompile(DecompileRule decompiler) => decompiler.Append(decompiler.Decompiler.GetVariableName(Name, true));
+    }
+    public class AnonymousVariableExpression : ITTEExpression, ITTEVariable
+    {
+        public string Name { get; }
+        public bool IsGlobal { get; }
+
+        public AnonymousVariableExpression(string name, bool isGlobal)
+        {
+            Name = name;
+            IsGlobal = isGlobal;
+        }
+
+        public override string ToString() => (IsGlobal ? "Global." : "Player.") + Name;
+        public void Decompile(DecompileRule decompiler) => decompiler.Append(decompiler.Decompiler.GetVariableName(Name, IsGlobal));
+    }
+    public class PlayerVariableExpression : ITTEExpression, ITTEVariable
+    {
+        public string Name { get; }
+        public ITTEExpression Player { get; }
+
+        public PlayerVariableExpression(string name, ITTEExpression player)
+        {
+            Name = name;
+            Player = player;
+        }
+
+        public override string ToString() => Player.ToString() + "." + Name;
+
+        public void Decompile(DecompileRule decompiler)
+        {
+            if (Player is FunctionExpression func && func.Function.WorkshopName == "Event Player")
+                decompiler.Append(decompiler.Decompiler.GetVariableName(Name, false));
+            else
+            {
+                Player.Decompile(decompiler);
+                decompiler.Append("." + decompiler.Decompiler.GetVariableName(Name, false));
+            }
         }
     }
 }
