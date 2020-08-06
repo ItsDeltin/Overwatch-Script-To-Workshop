@@ -328,14 +328,21 @@ namespace Deltin.Deltinteger.Decompiler.ElementToCode
             bool finished = false;
             while (!_decompiler.IsFinished)
             {
+                // If the current action is a function and there is an action registered for it, invoke it.
                 if (_decompiler.Current is FunctionExpression func && _onFunction.TryGetValue(func.Function.Name, out var action))
                 {
                     if (action.Invoke(func))
+                    {
+                        // If the invocation returns true, end the action group.
                         finished = true;
+                        break;
+                    }
                 }
+                // Otherwise, decompile the current action.
                 else
                     _decompiler.DecompileCurrentAction();
             }
+            // If the end of the action set was reached and the group was not completed, invoke _onInterupt.
             if (!finished && _onInterupt != null) _onInterupt.Invoke();
         }
     }
