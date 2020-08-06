@@ -63,6 +63,14 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
         {
             while (!ReachedEnd && WHITESPACE.Contains(Current))
                 Advance();
+            
+            if (Match("//"))
+            {
+                while (!ReachedEnd && !Is('\n'))
+                    Advance();
+                
+                SkipWhitespace();
+            }
         }
 
         bool Is(char character) => !ReachedEnd && Current == character;
