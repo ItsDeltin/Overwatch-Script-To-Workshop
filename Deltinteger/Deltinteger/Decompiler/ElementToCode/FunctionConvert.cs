@@ -14,6 +14,9 @@ namespace Deltin.Deltinteger.Decompiler.ElementToCode
             {"Null", (decompiler, function) => decompiler.Append("null")},
             {"True", (decompiler, function) => decompiler.Append("true")},
             {"False", (decompiler, function) => decompiler.Append("false")},
+            {"Map", (decompiler, function) => function.Values[0].Decompile(decompiler)},
+            {"Game Mode", (decompiler, function) => function.Values[0].Decompile(decompiler)},
+            {"Button", (decompiler, function) => function.Values[0].Decompile(decompiler)},
             {"Modify Global Variable", (decompiler, function) => {
                 decompiler.Append("ModifyVariable(");
                 // Variable

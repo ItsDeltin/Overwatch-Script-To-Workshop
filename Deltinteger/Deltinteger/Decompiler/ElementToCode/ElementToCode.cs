@@ -109,25 +109,32 @@ namespace Deltin.Deltinteger.Decompiler.ElementToCode
         
         public void Decompile()
         {
-            if (Rule.Disabled) Decompiler.Append("disabled ");
-            Decompiler.Append("rule: \"" + Rule.Name + "\"");
-
-            if (Rule.EventInfo.Event != RuleEvent.OngoingGlobal)
+            if (Rule.EventInfo.Event != RuleEvent.Subroutine)
             {
-                Decompiler.NewLine();
-                Decompiler.Append("Event." + EnumData.GetEnumValue(Rule.EventInfo.Event).CodeName);
-                // Write the event.
-                if (Rule.EventInfo.Team != Team.All)
+                if (Rule.Disabled) Decompiler.Append("disabled ");
+                Decompiler.Append("rule: \"" + Rule.Name + "\"");
+
+                if (Rule.EventInfo.Event != RuleEvent.OngoingGlobal)
                 {
                     Decompiler.NewLine();
-                    Decompiler.Append("Team." + EnumData.GetEnumValue(Rule.EventInfo.Team).CodeName);
+                    Decompiler.Append("Event." + EnumData.GetEnumValue(Rule.EventInfo.Event).CodeName);
+                    // Write the event.
+                    if (Rule.EventInfo.Team != Team.All)
+                    {
+                        Decompiler.NewLine();
+                        Decompiler.Append("Team." + EnumData.GetEnumValue(Rule.EventInfo.Team).CodeName);
+                    }
+                    // Write the player.
+                    if (Rule.EventInfo.Player != PlayerSelector.All)
+                    {
+                        Decompiler.NewLine();
+                        Decompiler.Append("Player." + EnumData.GetEnumValue(Rule.EventInfo.Player).CodeName);
+                    }
                 }
-                // Write the player.
-                if (Rule.EventInfo.Player != PlayerSelector.All)
-                {
-                    Decompiler.NewLine();
-                    Decompiler.Append("Player." + EnumData.GetEnumValue(Rule.EventInfo.Player).CodeName);
-                }
+            }
+            else
+            {
+                Decompiler.Append("void " + Rule.EventInfo.SubroutineName + "() \"" + Rule.Name + "\"");
             }
 
             Decompiler.AddBlock();
