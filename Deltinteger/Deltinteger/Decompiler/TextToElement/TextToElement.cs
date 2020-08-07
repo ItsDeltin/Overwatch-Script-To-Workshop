@@ -383,6 +383,25 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
                 Match(")");
                 action = new CallSubroutine(name, Parse.CallParallel.NoParallel);
             }
+            // Start Rule Subroutine
+            else if (Match(Kw("Start Rule")))
+            {
+                Match("(");
+                Identifier(out string name);
+                Match(",");
+
+                if (Match(Kw("Restart Rule")))
+                {
+                    Match(")");
+                    action = new CallSubroutine(name, Parse.CallParallel.AlreadyRunning_RestartRule);
+                }
+                else if (Match(Kw("Do Nothing")))
+                {
+                    Match(")");
+                    action = new CallSubroutine(name, Parse.CallParallel.AlreadyRunning_DoNothing);
+                }
+                else throw new Exception("Expected 'Restart Rule' or 'Do Nothing'.");
+            }
             // Function.
             else if (Function(true, out FunctionExpression func))
             {
@@ -1215,7 +1234,13 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
                     decompiler.Append(SubroutineName + "()");
                     break;
                 
-                default: throw new NotImplementedException(Parallel.ToString());
+                case Parse.CallParallel.AlreadyRunning_DoNothing:
+                    decompiler.Append("async! " + SubroutineName + "()");
+                    break;
+                
+                case Parse.CallParallel.AlreadyRunning_RestartRule:
+                    decompiler.Append("async " + SubroutineName + "()");
+                    break;
             }
             decompiler.EndAction();
         }
