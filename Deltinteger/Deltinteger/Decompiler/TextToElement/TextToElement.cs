@@ -218,11 +218,11 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
         // Variable list
         bool MatchVariables()
         {
-            if (!Match("variables")) return false;
+            if (!Match(Kw("variables"))) return false;
             Match("{");
 
-            if (Match("global:")) MatchVariableList(true);
-            if (Match("player:")) MatchVariableList(false);
+            if (Match(Kw("global") + ":")) MatchVariableList(true);
+            if (Match(Kw("player") + ":")) MatchVariableList(false);
             
             Match("}");
             return true;
@@ -250,7 +250,7 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
         // Subroutines
         bool MatchSubroutines()
         {
-            if (!Match("subroutines")) return false;
+            if (!Match(Kw("subroutines"))) return false;
             Match("{");
 
             // Subroutine list
@@ -269,12 +269,12 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
         bool Rule(out TTERule rule)
         {
             bool disabled;
-            if (Match("disabled"))
+            if (Match(Kw("disabled")))
             {
                 disabled = true;
-                Match("rule");
+                Match(Kw("rule"));
             }
-            else if (Match("rule"))
+            else if (Match(Kw("rule")))
             {
                 disabled = false;
             }
@@ -290,14 +290,14 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
             Match("{");
 
             // Event
-            Match("event");
+            Match(Kw("event"));
             Match("{");
             EventInfo eventInfo = MatchEvent();
             Match("}");
 
             // Conditions
             List<ITTEExpression> conditions = new List<ITTEExpression>();
-            if (Match("conditions"))
+            if (Match(Kw("conditions")))
             {
                 Match("{");
                 while (Expression(out ITTEExpression condition))
@@ -310,7 +310,7 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
 
             // Actions
             List<ITTEAction> actions = new List<ITTEAction>(); 
-            if (Match("actions"))
+            if (Match(Kw("actions")))
             {
                 Match("{");
                 while (Action(out ITTEAction action)) actions.Add(action);
@@ -326,12 +326,12 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
         EventInfo MatchEvent()
         {
             // Global
-            if (Match("Ongoing - Global;"))
+            if (Match(Kw("Ongoing - Global") + ";"))
             {
                 return new EventInfo();
             }
             // Subroutine
-            else if (Match("Subroutine;"))
+            else if (Match(Kw("Subroutine") + ";"))
             {
                 Identifier(out string subroutineName);
                 Match(";");
@@ -343,7 +343,7 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
                 // Get the event type.
                 var ruleEvent = RuleEvent.OngoingGlobal;
                 foreach (var eventNameInfo in EventInfo.PlayerEventNames)
-                    if (Match(eventNameInfo.Item1 + ";"))
+                    if (Match(Kw(eventNameInfo.Item1) + ";"))
                     {
                         ruleEvent = eventNameInfo.Item2;
                         break;
@@ -351,16 +351,16 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
 
                 // Get the team.
                 var team = Team.All;
-                if (Match("All;")) {}
-                else if (Match("Team 1;"))
+                if (Match(Kw("All") + ";")) {}
+                else if (Match(Kw("Team 1") + ";"))
                     team = Team.Team1;
-                else if (Match("Team 2;"))
+                else if (Match(Kw("Team 2") + ";"))
                     team = Team.Team2;
                 
                 // Get the player type.
                 var player = PlayerSelector.All;
                 foreach (var playerNameInfo in EventInfo.PlayerTypeNames)
-                    if (Match(playerNameInfo.Item1 + ";"))
+                    if (Match(Kw(playerNameInfo.Item1) + ";"))
                     {
                         player = playerNameInfo.Item2;
                         break;
