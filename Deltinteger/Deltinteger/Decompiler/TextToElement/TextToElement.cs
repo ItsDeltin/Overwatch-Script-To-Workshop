@@ -1,12 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.Decompiler.ElementToCode;
+using Deltin.Deltinteger.Elements;
+using Deltin.Deltinteger.Lobby;
 
 namespace Deltin.Deltinteger.Decompiler.TextToElement
 {
-    class ConvertTextToElement
+    public class ConvertTextToElement
     {
         private readonly static char[] WHITESPACE = new char[] { '\r', '\n', '\t', ' ' };
         private readonly static string[] DEFAULT_VARIABLES = new string[] { "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z" };
@@ -15,6 +16,7 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
         public int Position { get; private set; }
         public char Current => Content[Position];
         public bool ReachedEnd => Position >= Content.Length;
+        public string LocalStream => Content.Substring(Position); // ! For debugging
 
         private readonly Stack<TTEOperator> _operators = new Stack<TTEOperator>();
         private readonly Stack<ITTEExpression> _operands = new Stack<ITTEExpression>();
@@ -36,7 +38,8 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
 
         public Workshop Get()
         {
-            // Match variables and subroutines.
+            // Match lobby settings, variables, and subroutines.
+            MatchSettings();
             MatchVariables();
             MatchSubroutines();
             // Match rules
@@ -83,13 +86,13 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
         bool IsAlpha() => IsAny("_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ");
         bool IsAlphaNumeric() => IsNumeric() || IsAlpha();
 
-        bool Match(string str, bool caseSensitive = true)
+        public bool Match(string str, bool caseSensitive = true, bool noSymbols = false)
         {
             for (int i = 0; i < str.Length; i++)
                 if ((caseSensitive && !Is(i, str[i])) || !IsInsensitive(i, str[i]))
                     return false;
             
-            if (IsSymbol(str.Length)) return false;
+            if (!noSymbols && IsSymbol(str.Length)) return false;
 
             Advance(str.Length);
             SkipWhitespace();
@@ -100,7 +103,7 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
         // String
         bool MatchString(out string value)
         {
-            if (!Match("\""))
+            if (!Match("\"", noSymbols: true))
             {
                 value = null;
                 return false;
@@ -146,7 +149,7 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
         }
 
         // Integer
-        bool Integer(out int value)
+        public bool Integer(out int value)
         {
             string str = "";
 
@@ -169,7 +172,7 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
         }
 
         // Double
-        bool Double(out double number)
+        public bool Double(out double number)
         {
             string str = "";
 
@@ -783,6 +786,249 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
                 var lhs = _operands.Pop();
                 _operands.Push(new TernaryExpression(lhs, middle, rhs));
             }
+        }
+    
+        // Settings
+        bool MatchSettings()
+        {
+            if (!Match(Kw("settings"))) return false;
+
+            Ruleset ruleset = new Ruleset();
+
+            Match("{"); // Start settings section.
+
+            // Main settings
+            if (Match(Kw("main")))
+            {
+                Match("{"); // Start main section.
+
+                // Description
+                if (Match(Kw("Description") + ":"))
+                {
+                    MatchString(out string description);
+                    ruleset.Description = description;
+                }
+
+                Match("}"); // End main section.
+            }
+
+            // General lobby settings
+            if (Match(Kw("lobby")))
+            {
+                ruleset.Lobby = new WorkshopValuePair();
+                Match("{"); // Start lobby section.
+                MatchSettings(ruleset.Lobby, Ruleset.LobbySettings); // Match the settings and value pairs.
+                Match("}"); // End lobby section.
+            }
+
+            // Modes
+            if (Match(Kw("modes")))
+            {
+                ruleset.Modes = new ModesRoot();
+                Match("{"); // Start modes section.
+
+                // Match the mode settings.
+                while (LobbyModes(ruleset));
+
+                Match("}"); // End modes section.
+            }
+
+            // Heroes
+            if (Match(Kw("heroes")))
+            {
+                ruleset.Heroes = new HeroesRoot();
+                Match("{"); // Start heroes section.
+
+                // Match the hero settings.
+                while (HeroSettingsGroup(ruleset));
+
+                Match("}"); // End heroes section.
+            }
+
+            Match("}"); // End settings section.
+            return true;
+        }
+
+        bool LobbyModes(Ruleset ruleset)
+        {
+            // Match general
+            if (Match(Kw("General")))
+            {
+                ruleset.Modes.All = new WorkshopValuePair(); // Init settings dictionary.
+                Match("{"); // Start general settings section.
+                MatchSettings(ruleset.Modes.All, ModeSettingCollection.AllModeSettings.First(modeSettings => modeSettings.ModeName == "All").ToArray()); // Match settings.
+                Match("}"); // End general settings section.
+                return true;
+            }
+
+            foreach (var mode in ModeSettingCollection.AllModeSettings)
+            // Match the mode name.
+            if (Match(Kw(mode.ModeName)))
+            {
+                ModeSettings relatedModeSettings = ruleset.Modes.SettingsFromModeCollection(mode); // Get the related mode settings from the matched mode.
+                Match("{"); // Start specific mode settings section.
+                // Match the value pairs.
+                MatchSettings(relatedModeSettings.Settings, mode.ToArray(), () => {
+                    bool matchingEnabledMaps; // Determines if the map group is matching enabled or disabled maps.
+                    // Match enabled maps
+                    if (Match(Kw("enabled maps"))) matchingEnabledMaps = true;
+                    // Match disabled maps
+                    else if (Match(Kw("disabled maps"))) matchingEnabledMaps = false;
+                    // End
+                    else return false;
+
+                    Match("{"); // Start map section.
+
+                    List<string> maps = new List<string>(); // Matched maps.
+
+                    // Match map names.
+                    bool matched = true;
+                    while (matched)
+                    {
+                        matched = false;
+                        // Only match maps related to the current mode.
+                        foreach (var map in LobbyMap.AllMaps.Where(m => m.GameModes.Any(mapMode => mapMode.ToLower() == mode.ModeName.ToLower())).OrderByDescending(map => map.GetWorkshopName().Length))
+                            // Match the map.
+                            if (Match(Kw(map.GetWorkshopName()), false))
+                            {
+                                // Add the map.
+                                maps.Add(map.Name);
+
+                                // Indicate that a map was matched in this iteration.
+                                matched = true;
+                                break;
+                            }
+                    }
+
+                    Match("}"); // End map section.
+
+                    // Add the maps to the mode's settings.
+                    if (matchingEnabledMaps) relatedModeSettings.EnabledMaps = maps.ToArray();
+                    else relatedModeSettings.DisabledMaps = maps.ToArray();
+
+                    return true;
+                });
+                Match("}"); // End specific mode settings section.
+                return true;
+            }
+            return false;
+        }
+
+        bool HeroSettingsGroup(Ruleset ruleset)
+        {
+            // Matched settings will be added to this list.
+            HeroList list = new HeroList();
+            list.Settings = new Dictionary<string, object>();
+
+            // Match hero settings group name.
+            if (Match(Kw("General"))) ruleset.Heroes.General = list;   // General
+            else if (Match(Kw("Team 1"))) ruleset.Heroes.Team1 = list; // Team 1
+            else if (Match(Kw("Team 2"))) ruleset.Heroes.Team2 = list; // Team 2
+            else return false;
+
+            Match("{"); // Start hero settings section.
+
+            // Match general settings.
+            MatchSettings(list.Settings, HeroSettingCollection.AllHeroSettings.First(hero => hero.HeroName == "General").ToArray(), () => {
+                // Match hero names.
+                foreach (var hero in HeroSettingCollection.AllHeroSettings.Where(heroSettings => heroSettings.HeroName != "General"))
+                    if (Match(Kw(hero.HeroName), false))
+                    {
+                        WorkshopValuePair heroSettings = new WorkshopValuePair();
+                        list.Settings.Add(hero.HeroName, heroSettings);
+
+                        Match("{"); // Start specific hero settings section.
+
+                        // Match settings.
+                        MatchSettings(heroSettings, hero.ToArray());
+                        
+                        Match("}"); // End specific hero settings section.
+                        return true;
+                    }
+                
+                bool enabledHeroes; // Determines if the hero group is matching enabled or disabled heroes.
+                // Enabled heroes
+                if (Match(Kw("enabled heroes"))) enabledHeroes = true;
+                // Disabled heroes
+                else if (Match(Kw("disabled heroes"))) enabledHeroes = false;
+                // No heroes
+                else return false;
+
+                var heroes = new List<string>(); // The list of heroes in the collection.
+
+                Match("{"); // Start the enabled heroes section.
+                while (MatchHero(out string heroName)) heroes.Add(heroName); // Match heroes.
+                Match("}"); // End the enabled heroes section.
+
+                // Apply the hero list.
+                if (enabledHeroes) list.EnabledHeroes = heroes.ToArray();
+                else list.DisabledHeroes = heroes.ToArray();
+
+                // Done
+                return true;
+            });
+
+            Match("}"); // End hero settings section.
+            return true;
+        }
+
+        bool MatchHero(out string heroName)
+        {
+            // Iterate through all hero names.
+            foreach (var hero in HeroSettingCollection.AllHeroSettings)
+                // If a hero name is matched, return true.
+                if (Match(Kw(hero.HeroName), false))
+                {
+                    heroName = hero.HeroName;
+                    return true;
+                }
+            // Otherwise, return false.
+            heroName = null;
+            return false;
+        }
+
+        void MatchSettings(Dictionary<string, object> collection, LobbySetting[] settings, Func<Boolean> onInterupt = null)
+        {
+            var orderedSettings = settings.OrderByDescending(s => s.Name); // Order the settings so longer names are matched first.
+
+            bool matched = true;
+            while (matched)
+            {
+                matched = false;
+                foreach (var lobbySetting in orderedSettings)
+                {
+                    // Test hook.
+                    if (onInterupt != null && onInterupt.Invoke())
+                    {
+                        // If the hook handled the match, break.
+                        matched = true;
+                        break;
+                    }
+
+                    // Match the setting name.
+                    else if (MatchLobbySetting(collection, lobbySetting))
+                    {
+                        // Indicate that a setting was matched.
+                        matched = true;
+                        break;
+                    }
+                }
+            }
+        }
+
+        bool MatchLobbySetting(Dictionary<string, object> collection, LobbySetting setting)
+        {
+            // Match the setting name.
+            if (Match(Kw(setting.Workshop), false))
+            {
+                Match(":"); // Match the value seperator.
+                setting.Match(this, out object value); // Match the setting value.
+
+                // Add the setting.
+                collection.Add(setting.Name, value);
+                return true;
+            }
+            return false;
         }
     }
 
