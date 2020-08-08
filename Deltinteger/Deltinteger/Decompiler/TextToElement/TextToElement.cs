@@ -412,15 +412,20 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
                 action = func;
             }
             // Set variable.
-            else if (Expression(out ITTEExpression expr, getIndexer: false))
+            else if (Expression(out ITTEExpression expr))
             {
-                // Make sure the expression is a global or player variable.
+                // Unfold the index if required.
+                ITTEExpression index = null;
+                if (expr is IndexerExpression indexer)
+                {
+                    index = indexer.Index;
+                    expr = indexer.Expression;
+                }
+
+                // Make sure the expression is a variable.
                 if (expr is ITTEVariable == false)
                     throw new Exception("Expression is not a variable.");
-                
-                // Get the index being set.
-                VariableIndex(out var index);
-                
+                                
                 string op = null;
                 string[] operators = new string[] { "=", "+=", "-=", "/=", "*=" };
                 foreach (string it in operators)
@@ -524,7 +529,7 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
         }
 
         // Expressions
-        bool Expression(out ITTEExpression expr, bool root = true, bool getIndexer = true)
+        bool Expression(out ITTEExpression expr, bool root = true)
         {
             expr = null;
 
@@ -560,17 +565,14 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
             {
                 return false;    
             }
+
+            // Array index
+            while (VariableIndex(out ITTEExpression index))
+                expr = new IndexerExpression(expr, index);
             
             // Player variable
             if (MatchPlayerVariable(expr, out ITTEExpression playerVariable))
                 expr = playerVariable;
-            
-            // Array index
-            if (getIndexer)
-            {
-                while (VariableIndex(out ITTEExpression index))
-                    expr = new IndexerExpression(expr, index);
-            }
 
             // Push the expression
             _operands.Push(expr);
@@ -685,6 +687,10 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
                 Identifier(out string name);
                 AddIfOmitted(name, false);
                 playerVariable = new PlayerVariableExpression(name, playerVariable);
+
+                // Array index
+                while (VariableIndex(out ITTEExpression index))
+                    playerVariable = new IndexerExpression(playerVariable, index);
             }
             
             return matched;
@@ -698,7 +704,10 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
                 return false;
             }
 
+            _operators.Push(TTEOperator.Sentinel);
             Expression(out index);
+            _operators.Pop();
+
             Match("]");
             return true;
         }
