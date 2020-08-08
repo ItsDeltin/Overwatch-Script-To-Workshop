@@ -107,6 +107,10 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
             }
 
             value = "";
+
+            // Empty string
+            if (Match("\"", noSymbols: true)) return true;
+
             bool escaped = false;
             do
             {
