@@ -28,6 +28,7 @@ namespace Deltin.Deltinteger.Decompiler.ElementToCode
         {
             Workshop = workshop;
             Options = options;
+            _settingsResolver = settingsResolver;
         }
 
         public void AddBlock(bool startBlock = true)
