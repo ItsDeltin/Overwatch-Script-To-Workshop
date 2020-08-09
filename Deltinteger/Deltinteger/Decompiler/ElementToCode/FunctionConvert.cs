@@ -89,6 +89,7 @@ namespace Deltin.Deltinteger.Decompiler.ElementToCode
                 // Reevaluation
                 function.Values[3].Decompile(decompiler);
                 // Finished
+                decompiler.Append(")");
                 decompiler.EndAction();
             }},
             {"Chase Player Variable Over Time", (decompiler, function) => {
@@ -108,6 +109,7 @@ namespace Deltin.Deltinteger.Decompiler.ElementToCode
                 // Reevaluation
                 function.Values[4].Decompile(decompiler);
                 // Finished
+                decompiler.Append(")");
                 decompiler.EndAction();
             }},
             {"Chase Global Variable At Rate", (decompiler, function) => {
@@ -124,6 +126,7 @@ namespace Deltin.Deltinteger.Decompiler.ElementToCode
                 // Reevaluation
                 function.Values[3].Decompile(decompiler);
                 // Finished
+                decompiler.Append(")");
                 decompiler.EndAction();
             }},
             {"Chase Player Variable At Rate", (decompiler, function) => {
@@ -143,6 +146,7 @@ namespace Deltin.Deltinteger.Decompiler.ElementToCode
                 // Reevaluation
                 function.Values[4].Decompile(decompiler);
                 // Finished
+                decompiler.Append(")");
                 decompiler.EndAction();
             }},
             {"If", (decompiler, function) => {
