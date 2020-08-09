@@ -302,8 +302,8 @@ namespace Deltin.Deltinteger.Decompiler.ElementToCode
         }
 
         private static bool IsSingleStatementBlock(DecompileRule decompiler)
-            => decompiler.CurrentAction + 2 < decompiler.Rule.Actions.Length
-            && decompiler.Rule.Actions[decompiler.CurrentAction] is FunctionExpression func
+            => decompiler.CurrentAction + 2 < decompiler.ActionList.Length
+            && decompiler.ActionList[decompiler.CurrentAction] is FunctionExpression func
             && Array.Exists(TerminatorFunctions, element => element == func.Function.Name);
     }
 

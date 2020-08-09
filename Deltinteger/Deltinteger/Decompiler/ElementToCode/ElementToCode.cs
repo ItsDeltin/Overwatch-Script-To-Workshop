@@ -72,32 +72,42 @@ namespace Deltin.Deltinteger.Decompiler.ElementToCode
 
         public string Decompile()
         {
-            // Add settings import.
-            if (_settingsResolver != null && Workshop.LobbySettings != null)
+            if (Workshop.Actions != null)
             {
-                string settingsFile = _settingsResolver.GetFile();
-                // If the resolved file is not null, add the import statement.
-                if (settingsFile != null)
+                DecompileActions();
+                return _builder.ToString();
+            }
+            else
+            {
+                // Add settings import.
+                if (_settingsResolver != null && Workshop.LobbySettings != null)
                 {
-                    Append("import \"" + settingsFile + "\";");
+                    string settingsFile = _settingsResolver.GetFile();
+                    // If the resolved file is not null, add the import statement.
+                    if (settingsFile != null)
+                    {
+                        Append("import \"" + settingsFile + "\";");
+                        NewLine();
+                    }
+                }
+
+                // Variables
+                foreach (var variable in Workshop.Variables)
+                {
+                    Append((variable.IsGlobal ? "globalvar" : "playervar") + " define " + GetVariableName(variable.Name, variable.IsGlobal) + ";");
                     NewLine();
                 }
-            }
-
-            // Variables
-            foreach (var variable in Workshop.Variables)
-            {
-                Append((variable.IsGlobal ? "globalvar" : "playervar") + " define " + GetVariableName(variable.Name, variable.IsGlobal) + ";");
                 NewLine();
+                
+                // Rules
+                foreach (var rule in Workshop.Rules)
+                    new RuleTraveler(this, rule).Decompile();
             }
-            NewLine();
             
-            // Rules
-            foreach (var rule in Workshop.Rules)
-                new DecompileRule(this, rule).Decompile();
-            
-            return _builder.ToString();
+            return _builder.ToString().TrimEnd();
         }
+
+        private void DecompileActions() => new ActionTraveler(this, Workshop.Actions).Decompile();
 
         public override string ToString() => _builder.ToString();
 
@@ -110,21 +120,65 @@ namespace Deltin.Deltinteger.Decompiler.ElementToCode
         }
     }
 
-    public class DecompileRule
+    public abstract class DecompileRule
     {
         public WorkshopDecompiler Decompiler { get; }
-        public TTERule Rule { get; }
         public int CurrentAction { get; private set; }
-        public bool IsFinished => CurrentAction >= Rule.Actions.Length;
-        public ITTEAction Current => Rule.Actions[CurrentAction];
+        public bool IsFinished => CurrentAction >= ActionList.Length;
+        public ITTEAction Current => ActionList[CurrentAction];
+        public abstract ITTEAction[] ActionList { get; }
+        public abstract void Decompile();
 
-        public DecompileRule(WorkshopDecompiler decompiler, TTERule rule)
+        protected DecompileRule(WorkshopDecompiler decompiler)
         {
             Decompiler = decompiler;
+        }
+
+        protected void DecompileActions()
+        {
+            while (CurrentAction < ActionList.Length)
+                DecompileCurrentAction();
+        }
+
+        public void DecompileCurrentAction()
+        {
+            ActionList[CurrentAction].Decompile(this);
+        }
+
+        public void Append(string text) => Decompiler.Append(text);
+        public void NewLine() => Decompiler.NewLine();
+        public void AddBlock(bool startBlock = true) => Decompiler.AddBlock(startBlock);
+        public void Outdent() => Decompiler.Outdent();
+        public void Advance() {
+            CurrentAction++;
+        }
+        public void EndAction()
+        {
+            Append(";");
+            NewLine();
+            Advance();
+        }
+        public void AddComment(ITTEAction action)
+        {
+            if (action.Comment == null) return;
+            if (action.Disabled) Append("// ");
+            else Append("# ");
+            Append(action.Comment);
+            NewLine();
+        }
+    }
+
+    public class RuleTraveler : DecompileRule
+    {
+        public TTERule Rule { get; }
+        public override ITTEAction[] ActionList => Rule.Actions;
+
+        public RuleTraveler(WorkshopDecompiler decompiler, TTERule rule) : base(decompiler)
+        {
             Rule = rule;
         }
         
-        public void Decompile()
+        public override void Decompile()
         {
             if (Rule.EventInfo.Event != RuleEvent.Subroutine)
             {
@@ -156,41 +210,25 @@ namespace Deltin.Deltinteger.Decompiler.ElementToCode
 
             Decompiler.AddBlock();
 
-            while (CurrentAction < Rule.Actions.Length)
-                DecompileCurrentAction();
+            DecompileActions();
 
             Decompiler.Outdent();
             Decompiler.Append("}");
             Decompiler.NewLine();
             Decompiler.NewLine();
         }
+    }
 
-        public void DecompileCurrentAction()
+    public class ActionTraveler : DecompileRule
+    {
+        public override ITTEAction[] ActionList { get; }
+
+        public ActionTraveler(WorkshopDecompiler decompiler, ITTEAction[] actions) : base(decompiler)
         {
-            Rule.Actions[CurrentAction].Decompile(this);
+            ActionList = actions;
         }
 
-        public void Append(string text) => Decompiler.Append(text);
-        public void NewLine() => Decompiler.NewLine();
-        public void AddBlock(bool startBlock = true) => Decompiler.AddBlock(startBlock);
-        public void Outdent() => Decompiler.Outdent();
-        public void Advance() {
-            CurrentAction++;
-        }
-        public void EndAction()
-        {
-            Append(";");
-            NewLine();
-            Advance();
-        }
-        public void AddComment(ITTEAction action)
-        {
-            if (action.Comment == null) return;
-            if (action.Disabled) Append("// ");
-            else Append("# ");
-            Append(action.Comment);
-            NewLine();
-        }
+        public override void Decompile() => DecompileActions();
     }
 
     public interface IDecompilerLobbySettingsResolver

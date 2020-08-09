@@ -43,10 +43,28 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
             MatchSettings();
             MatchVariables();
             MatchSubroutines();
-            // Match rules
-            while (Rule(out TTERule rule)) Rules.Add(rule);
 
-            return new Workshop(Variables.ToArray(), Subroutines.ToArray(), Rules.ToArray(), LobbySettings);
+            // Match action copy
+            if (ActionGroup(out var actions))
+                return new Workshop(Variables.ToArray(), Subroutines.ToArray(), actions.ToArray());
+            // Match condition copy
+            else if (ConditionGroup(out var conditions))
+                return new Workshop(Variables.ToArray(), Subroutines.ToArray(), conditions.ToArray());
+            else
+            {
+                // Match rules
+                while (Rule(out TTERule rule)) Rules.Add(rule);
+                return new Workshop(Variables.ToArray(), Subroutines.ToArray(), Rules.ToArray(), LobbySettings);
+            }
+        }
+
+        public void GetActionGroup()
+        {
+            // Match variables and subroutines.
+            MatchVariables();
+            MatchSubroutines();
+            // Match actions.
+            ActionGroup(out var actions);
         }
 
         // TODO: Translate the english keyword to the specified language's keyword.
@@ -300,26 +318,10 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
             Match("}");
 
             // Conditions
-            List<ITTEExpression> conditions = new List<ITTEExpression>();
-            if (Match(Kw("conditions")))
-            {
-                Match("{");
-                while (Expression(out ITTEExpression condition))
-                {
-                    Match(";");
-                    conditions.Add(condition);
-                }
-                Match("}");
-            }
+            ConditionGroup(out var conditions);
 
             // Actions
-            List<ITTEAction> actions = new List<ITTEAction>(); 
-            if (Match(Kw("actions")))
-            {
-                Match("{");
-                while (Action(out ITTEAction action)) actions.Add(action);
-                Match("}");
-            }
+            ActionGroup(out var actions);
 
             Match("}");
 
@@ -374,7 +376,33 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
             }
         }
 
+        bool ConditionGroup(out List<ITTEExpression> conditions)
+        {
+            conditions = new List<ITTEExpression>();
+            if (!Match(Kw("conditions"))) return false;
+
+            Match("{");
+            while (Expression(out ITTEExpression condition))
+            {
+                Match(";");
+                conditions.Add(condition);
+            }
+            Match("}");
+            return true;
+        }
+
         // Actions
+        bool ActionGroup(out List<ITTEAction> actionList)
+        {
+            actionList = new List<ITTEAction>();
+            if (!Match(Kw("actions"))) return false;
+
+            Match("{");
+            while (Action(out ITTEAction action)) actionList.Add(action);
+            Match("}");
+            return true;
+        }
+
         bool Action(out ITTEAction action)
         {
             action = null;
@@ -1040,6 +1068,8 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
         public Subroutine[] Subroutines { get; }
         public TTERule[] Rules { get; }
         public Ruleset LobbySettings { get; }
+        public ITTEAction[] Actions { get; }
+        public ITTEExpression[] Conditions { get; }
 
         public Workshop(WorkshopVariable[] variables, Subroutine[] subroutines, TTERule[] rules, Ruleset settings)
         {
@@ -1047,6 +1077,18 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
             Subroutines = subroutines;
             Rules = rules;
             LobbySettings = settings;
+        }
+        public Workshop(WorkshopVariable[] variables, Subroutine[] subroutines, ITTEAction[] actions)
+        {
+            Variables = variables;
+            Subroutines = subroutines;
+            Actions = actions;
+        }
+        public Workshop(WorkshopVariable[] variables, Subroutine[] subroutines, ITTEExpression[] conditions)
+        {
+            Variables = variables;
+            Subroutines = subroutines;
+            Conditions = conditions;
         }
     }
 

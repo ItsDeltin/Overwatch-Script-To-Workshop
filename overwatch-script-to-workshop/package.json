@@ -192,6 +192,10 @@
             {
                 "command": "ostw.copyWorkshopCode",
                 "key": "Ctrl+Alt+C"
+            },
+            {
+                "command": "ostw.decompile.insert",
+                "key": "Ctrl+K Ctrl+V"
             }
         ],
         "jsonValidation": [

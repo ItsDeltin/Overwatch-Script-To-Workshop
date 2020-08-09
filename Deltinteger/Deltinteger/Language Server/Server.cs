@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 using System.Text;
 using Deltin.Deltinteger.Parse;
 using Deltin.Deltinteger.Pathfinder;
+using Deltin.Deltinteger.Decompiler.TextToElement;
+using Deltin.Deltinteger.Decompiler.ElementToCode;
 using Serilog;
 using TextCopy;
 using Microsoft.Extensions.Logging;
@@ -157,6 +159,14 @@ namespace Deltin.Deltinteger.LanguageServer
                 await DocumentHandler.WaitForCompletedTyping(true);
                 SemanticToken[] tokens = LastParse?.ScriptFromUri(new Uri(uriToken["fsPath"].ToObject<string>()))?.GetSemanticTokens();
                 return tokens ?? new SemanticToken[0];
+            }));
+
+            // Decompile insert
+            options.OnRequest<string>("decompile.insert", () => Task.Run(() =>
+            {
+                var workshop = new ConvertTextToElement(Clipboard.GetText()).Get();
+                string result = new WorkshopDecompiler(workshop, new OmitLobbySettingsResolver(), new CodeFormattingOptions()).Decompile();
+                return result;
             }));
 
             return options;

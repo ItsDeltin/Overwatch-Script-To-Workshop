@@ -8,11 +8,12 @@ import path = require('path');
 import glob = require('glob');
 import yauzl = require("yauzl");
 import exec = require('child_process');
+import { decompileClipboard, insertActions } from './decompile';
 
 let globalStoragePath:string;
 let defaultServerFolder:string;
 
-let client: LanguageClient;
+export let client: LanguageClient;
 let idk: Disposable;
 let workshopOut: OutputChannel;
 let elementCountStatus: vscode.StatusBarItem;
@@ -229,8 +230,10 @@ async function stopLanguageServer() {
 	isServerRunning = false;
 }
 
+export let serverModuleCommand: string;
 function setServerOptions(serverModule: string)
 {
+	serverModuleCommand = serverModule;
 	// It was me, stdio!
 	let serverExecutableOptions = { stdio: "pipe", detached: false, shell: <boolean>config.get('deltintegerShell') };
 	serverOptions.run = {
@@ -385,7 +388,17 @@ function addCommands(context: ExtensionContext)
 	// Copy workshop code
 	context.subscriptions.push(vscode.commands.registerCommand('ostw.copyWorkshopCode', () => {
 		vscode.env.clipboard.writeText(lastWorkshopOutput);
-	}))
+	}));
+	
+	// Decompile clipboard
+	context.subscriptions.push(vscode.commands.registerCommand('ostw.decompile.clipboard', () => {
+		decompileClipboard();
+	}));
+
+	// Decompile clipboard and insert.
+	context.subscriptions.push(vscode.commands.registerTextEditorCommand('ostw.decompile.insert', (textEditor, edit) => {
+		insertActions(textEditor);
+	}));
 }
 
 const workshopPanelProvider = new class implements vscode.TextDocumentContentProvider {
