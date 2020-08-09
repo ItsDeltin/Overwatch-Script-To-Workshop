@@ -1,7 +1,10 @@
 using System.Text;
 using System.Linq;
+using System.IO;
+using Newtonsoft.Json;
 using Deltin.Deltinteger.Decompiler.TextToElement;
 using Deltin.Deltinteger.Elements;
+using Deltin.Deltinteger.Lobby;
 
 namespace Deltin.Deltinteger.Decompiler.ElementToCode
 {
@@ -17,10 +20,11 @@ namespace Deltin.Deltinteger.Decompiler.ElementToCode
         public Workshop Workshop { get; }
         public CodeFormattingOptions Options { get; }
         public int IndentLevel { get; private set; }
+        private readonly IDecompilerLobbySettingsResolver _settingsResolver;
         private readonly StringBuilder _builder = new StringBuilder();
         private bool _space = false;
 
-        public WorkshopDecompiler(Workshop workshop, CodeFormattingOptions options)
+        public WorkshopDecompiler(Workshop workshop, IDecompilerLobbySettingsResolver settingsResolver, CodeFormattingOptions options)
         {
             Workshop = workshop;
             Options = options;
@@ -67,6 +71,18 @@ namespace Deltin.Deltinteger.Decompiler.ElementToCode
 
         public string Decompile()
         {
+            // Add settings import.
+            if (_settingsResolver != null && Workshop.LobbySettings != null)
+            {
+                string settingsFile = _settingsResolver.GetFile();
+                // If the resolved file is not null, add the import statement.
+                if (settingsFile != null)
+                {
+                    Append("import \"" + settingsFile + "\";");
+                    NewLine();
+                }
+            }
+
             // Variables
             foreach (var variable in Workshop.Variables)
             {
@@ -174,5 +190,50 @@ namespace Deltin.Deltinteger.Decompiler.ElementToCode
             Append(action.Comment);
             NewLine();
         }
+    }
+
+    public interface IDecompilerLobbySettingsResolver
+    {
+        string GetFile();
+    }
+
+    public class FileLobbySettingsResolver : IDecompilerLobbySettingsResolver
+    {
+        private readonly string _sourceFile;
+        private readonly Ruleset _settings;
+
+        public FileLobbySettingsResolver(string sourceFile, Ruleset settings)
+        {
+            _sourceFile = sourceFile;
+            _settings = settings;
+        }
+
+        public string GetFile()
+        {
+            // Get the file name.
+            string directory = Path.GetDirectoryName(_sourceFile);
+            string file = Path.Join(directory, "customGameSettings.json");
+
+            // Change file if the name already exists.
+            int i = 0;
+            while (File.Exists(file))
+            {
+                file = Path.Join(directory, "customGameSettings_" + i + ".json");
+                i++;
+            }
+
+            // Create the file.
+            var writer = File.CreateText(file);
+
+            // Write to the settings file.
+            writer.Write(JsonConvert.SerializeObject(_settings));
+
+            return Path.GetFileName(file);
+        }
+    }
+
+    public class OmitLobbySettingsResolver : IDecompilerLobbySettingsResolver
+    {
+        public string GetFile() => null;
     }
 }

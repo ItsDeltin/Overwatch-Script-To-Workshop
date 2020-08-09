@@ -27,6 +27,7 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
         public List<WorkshopVariable> Variables { get; } = new List<WorkshopVariable>();
         public List<Subroutine> Subroutines { get; } = new List<Subroutine>();
         public List<TTERule> Rules { get; } = new List<TTERule>();
+        public Ruleset LobbySettings { get; private set; } = null;
 
         public ConvertTextToElement(string content)
         {
@@ -45,7 +46,7 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
             // Match rules
             while (Rule(out TTERule rule)) Rules.Add(rule);
 
-            return new Workshop(Variables.ToArray(), Subroutines.ToArray(), Rules.ToArray());
+            return new Workshop(Variables.ToArray(), Subroutines.ToArray(), Rules.ToArray(), LobbySettings);
         }
 
         // TODO: Translate the english keyword to the specified language's keyword.
@@ -817,7 +818,7 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
             {
                 ruleset.Lobby = new WorkshopValuePair();
                 Match("{"); // Start lobby section.
-                MatchSettings(ruleset.Lobby, Ruleset.LobbySettings); // Match the settings and value pairs.
+                GroupSettings(ruleset.Lobby, Ruleset.LobbySettings); // Match the settings and value pairs.
                 Match("}"); // End lobby section.
             }
 
@@ -846,6 +847,7 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
             }
 
             Match("}"); // End settings section.
+            LobbySettings = ruleset;
             return true;
         }
 
@@ -856,7 +858,7 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
             {
                 ruleset.Modes.All = new WorkshopValuePair(); // Init settings dictionary.
                 Match("{"); // Start general settings section.
-                MatchSettings(ruleset.Modes.All, ModeSettingCollection.AllModeSettings.First(modeSettings => modeSettings.ModeName == "All").ToArray()); // Match settings.
+                GroupSettings(ruleset.Modes.All, ModeSettingCollection.AllModeSettings.First(modeSettings => modeSettings.ModeName == "All").ToArray()); // Match settings.
                 Match("}"); // End general settings section.
                 return true;
             }
@@ -868,7 +870,7 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
                 ModeSettings relatedModeSettings = ruleset.Modes.SettingsFromModeCollection(mode); // Get the related mode settings from the matched mode.
                 Match("{"); // Start specific mode settings section.
                 // Match the value pairs.
-                MatchSettings(relatedModeSettings.Settings, mode.ToArray(), () => {
+                GroupSettings(relatedModeSettings.Settings, mode.ToArray(), () => {
                     bool matchingEnabledMaps; // Determines if the map group is matching enabled or disabled maps.
                     // Match enabled maps
                     if (Match(Kw("enabled maps"))) matchingEnabledMaps = true;
@@ -929,7 +931,7 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
             Match("{"); // Start hero settings section.
 
             // Match general settings.
-            MatchSettings(list.Settings, HeroSettingCollection.AllHeroSettings.First(hero => hero.HeroName == "General").ToArray(), () => {
+            GroupSettings(list.Settings, HeroSettingCollection.AllHeroSettings.First(hero => hero.HeroName == "General").ToArray(), () => {
                 // Match hero names.
                 foreach (var hero in HeroSettingCollection.AllHeroSettings.Where(heroSettings => heroSettings.HeroName != "General"))
                     if (Match(Kw(hero.HeroName), false))
@@ -940,7 +942,7 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
                         Match("{"); // Start specific hero settings section.
 
                         // Match settings.
-                        MatchSettings(heroSettings, hero.ToArray());
+                        GroupSettings(heroSettings, hero.ToArray());
                         
                         Match("}"); // End specific hero settings section.
                         return true;
@@ -987,7 +989,7 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
             return false;
         }
 
-        void MatchSettings(Dictionary<string, object> collection, LobbySetting[] settings, Func<Boolean> onInterupt = null)
+        void GroupSettings(Dictionary<string, object> collection, LobbySetting[] settings, Func<Boolean> onInterupt = null)
         {
             var orderedSettings = settings.OrderByDescending(s => s.Name); // Order the settings so longer names are matched first.
 
@@ -1037,12 +1039,14 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
         public WorkshopVariable[] Variables { get; }
         public Subroutine[] Subroutines { get; }
         public TTERule[] Rules { get; }
+        public Ruleset LobbySettings { get; }
 
-        public Workshop(WorkshopVariable[] variables, Subroutine[] subroutines, TTERule[] rules)
+        public Workshop(WorkshopVariable[] variables, Subroutine[] subroutines, TTERule[] rules, Ruleset settings)
         {
             Variables = variables;
             Subroutines = subroutines;
             Rules = rules;
+            LobbySettings = settings;
         }
     }
 
