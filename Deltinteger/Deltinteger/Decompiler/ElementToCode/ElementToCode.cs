@@ -73,10 +73,9 @@ namespace Deltin.Deltinteger.Decompiler.ElementToCode
         public string Decompile()
         {
             if (Workshop.Actions != null)
-            {
-                DecompileActions();
-                return _builder.ToString();
-            }
+                new ActionTraveler(this, Workshop.Actions).Decompile();
+            else if (Workshop.Conditions != null)
+                new ConditionTraveler(this, Workshop.Conditions).Decompile();
             else
             {
                 // Add settings import.
@@ -104,7 +103,7 @@ namespace Deltin.Deltinteger.Decompiler.ElementToCode
                     new RuleTraveler(this, rule).Decompile();
             }
             
-            return _builder.ToString().TrimEnd();
+            return _builder.ToString().Trim();
         }
 
         private void DecompileActions() => new ActionTraveler(this, Workshop.Actions).Decompile();
@@ -202,6 +201,15 @@ namespace Deltin.Deltinteger.Decompiler.ElementToCode
                         Decompiler.Append("Player." + EnumData.GetEnumValue(Rule.EventInfo.Player).CodeName);
                     }
                 }
+
+                // Decompile conditions
+                foreach (var condition in Rule.Conditions)
+                {
+                    Decompiler.NewLine();
+                    Decompiler.Append("if (");
+                    condition.Decompile(this);
+                    Decompiler.Append(")");
+                }
             }
             else
             {
@@ -229,6 +237,29 @@ namespace Deltin.Deltinteger.Decompiler.ElementToCode
         }
 
         public override void Decompile() => DecompileActions();
+    }
+
+    public class ConditionTraveler : DecompileRule
+    {
+        public override ITTEAction[] ActionList => throw new System.NotImplementedException();
+        private readonly ITTEExpression[] _conditions;
+
+        public ConditionTraveler(WorkshopDecompiler decompiler, ITTEExpression[] conditions) : base(decompiler)
+        {
+            _conditions = conditions;
+        }
+
+        public override void Decompile()
+        {
+            // Decompile conditions
+            foreach (var condition in _conditions)
+            {
+                NewLine();
+                Append("if (");
+                condition.Decompile(this);
+                Append(")");
+            }
+        }
     }
 
     public interface IDecompilerLobbySettingsResolver
