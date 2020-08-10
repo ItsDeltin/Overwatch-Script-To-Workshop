@@ -17,15 +17,12 @@ namespace Deltin.Deltinteger.Decompiler.Json
         public string[] ExtendedGlobalVariables;
         [JsonProperty("extPlayer")]
         public string[] ExtendedPlayerVariables;
-        [JsonProperty("funcs")]
-        public JsonFunction[] Functions;
 
         public static Rule Generate(DeltinScript deltinScript)
         {
             DecompilerMeta obj = new DecompilerMeta() {
                 ExtendedGlobalVariables = deltinScript.VarCollection.ExtendedVariableList(true).Select(v => v.DebugName).ToArray(),
-                ExtendedPlayerVariables = deltinScript.VarCollection.ExtendedVariableList(false).Select(v => v.DebugName).ToArray(),
-                Functions = deltinScript.RuleLevelFunctions.Select(f => f.GetJsonFunction()).ToArray()
+                ExtendedPlayerVariables = deltinScript.VarCollection.ExtendedVariableList(false).Select(v => v.DebugName).ToArray()
             };
 
             string json = JsonConvert.SerializeObject(obj, new JsonSerializerSettings() {

@@ -146,15 +146,6 @@ namespace Deltin.Deltinteger.Parse
             else
                 onBlockApplied.Applied();
         }
-
-        public JsonAction ToJsonAction() => new JsonAction() { Function = new JsonCallFunction() {
-            Name = CallingMethod.Name,
-            Expressions = ParameterValues.Select(pv => pv.ToJson()).ToArray()
-        }};
-        public JsonExpression ToJson() => new JsonExpression() { Function = new JsonCallFunction() {
-            Name = CallingMethod.Name,
-            Expressions = ParameterValues.Select(pv => pv.ToJson()).ToArray()
-        }};
     }
 
     public enum CallParallel

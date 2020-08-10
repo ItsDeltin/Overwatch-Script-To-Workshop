@@ -1,7 +1,6 @@
 using System;
 using System.Linq;
 using Deltin.Deltinteger.LanguageServer;
-using Deltin.Deltinteger.Decompiler.Json;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -56,9 +55,5 @@ namespace Deltin.Deltinteger.Parse
         }
 
         public PathInfo[] GetPaths() => new PathInfo[] { new PathInfo(this, null, true) };
-
-        public JsonBlock GetJsonBlock() => new JsonBlock() {
-            Actions = Statements.Select(s => s.ToJsonAction()).ToArray()
-        };
     }
 }

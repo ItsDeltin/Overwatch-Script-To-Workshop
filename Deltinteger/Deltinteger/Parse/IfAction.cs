@@ -167,16 +167,6 @@ namespace Deltin.Deltinteger.Parse
             // Add the end of the if.
             actionSet.AddAction(new A_End());
         }
-    
-        public JsonAction ToJsonAction() => new JsonAction() { If = new JsonIfAction() {
-            Expression = Expression.ToJson(),
-            Block = Block.GetJsonBlock(),
-            ElseIfs = ElseIfs.Select(e => new JsonIfAction() {
-                Expression = e.Expression.ToJson(),
-                Block = e.Block.GetJsonBlock()
-            }).ToArray(),
-            Else = ElseBlock?.GetJsonBlock()
-        }};
     }
 
     public class ElseIf

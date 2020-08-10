@@ -15,8 +15,6 @@ namespace Deltin.Deltinteger.Parse
         {
             diagnostics.Error("This statement cannot be documented.", range);
         }
-
-        JsonAction ToJsonAction() => throw new NotImplementedException();
     }
 
     /// <summary>

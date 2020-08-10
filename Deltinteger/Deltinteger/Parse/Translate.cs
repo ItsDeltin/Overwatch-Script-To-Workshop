@@ -27,7 +27,6 @@ namespace Deltin.Deltinteger.Parse
         public readonly bool OptimizeOutput;
         private List<IComponent> Components { get; } = new List<IComponent>();
         private List<InitComponent> InitComponent { get; } = new List<InitComponent>();
-        public List<DefinedMethod> RuleLevelFunctions { get; } = new List<DefinedMethod>();
 
         public DeltinScript(TranslateSettings translateSettings)
         {
@@ -149,7 +148,7 @@ namespace Deltin.Deltinteger.Parse
 
                 // Get the methods.
                 foreach (var methodContext in script.Context.define_method())
-                    RuleLevelFunctions.Add(new DefinedMethod(parseInfo, RulesetScope, RulesetScope, methodContext, null));
+                    new DefinedMethod(parseInfo, RulesetScope, RulesetScope, methodContext, null);
                 
                 // Get the macros.
                 foreach (var macroContext in script.Context.define_macro())
@@ -242,10 +241,7 @@ namespace Deltin.Deltinteger.Parse
             // Additional
             if (addRules != null)
                 WorkshopRules.AddRange(addRules.Invoke(VarCollection).Where(rule => rule != null));
-            
-            // Meta
-            WorkshopRules.Add(Decompiler.Json.DecompilerMeta.Generate(this));
-            
+                        
             // Order the workshop rules by priority.
             WorkshopRules = WorkshopRules.OrderBy(wr => wr.Priority).ToList();
 
