@@ -568,6 +568,8 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
             else if (EnumeratorValue(out expr)) {}
             // Variable
             else if (GlobalVariable(out expr)) {}
+            // Legacy
+            else if (LegacyExpression(out expr)) {}
             // Function
             else if (Function(false, out FunctionExpression value))
             {
@@ -617,6 +619,73 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
             bool result = Expression(out expr);
             _operators.Pop();
             return result;
+        }
+
+        bool LegacyExpression(out ITTEExpression expr)
+        {
+            if (LegacyOperator(out expr))
+                return true;
+            else if (Match("Value In Array"))
+            {
+                Match("(");
+                ContainExpression(out var array);
+                Match(",");
+                ContainExpression(out var index);
+                Match(")");
+
+                expr = new IndexerExpression(array, index);
+                return true;
+            }
+            return false;
+        }
+
+        bool LegacyOperator(out ITTEExpression expr)
+        {
+            TTEOperator op = null;
+
+            if (Match(Kw("Add"))) op = TTEOperator.Add;
+            else if (Match(Kw("Subtract"))) op = TTEOperator.Subtract;
+            else if (Match(Kw("Multiply"))) op = TTEOperator.Multiply;
+            else if (Match(Kw("Divide"))) op = TTEOperator.Divide;
+            else if (Match(Kw("Modulo"))) op = TTEOperator.Modulo;
+            else if (Match(Kw("Raise To Power"))) op = TTEOperator.Power;
+            else if (Match(Kw("And"))) op = TTEOperator.And;
+            else if (Match(Kw("Or"))) op = TTEOperator.Or;
+            else if (Match(Kw("Compare")))
+            {
+                Match("(");
+                ContainExpression(out ITTEExpression compareLeft);
+                Match(",");
+
+                if (Match("==")) op = TTEOperator.Equal;
+                else if (Match("!=")) op = TTEOperator.NotEqual;
+                else if (Match(">=")) op = TTEOperator.GreaterThanOrEqual;
+                else if (Match("<=")) op = TTEOperator.LessThanOrEqual;
+                else if (Match(">")) op = TTEOperator.GreaterThan;
+                else if (Match("<")) op = TTEOperator.LessThan;
+
+                Match(",");
+                ContainExpression(out ITTEExpression compareRight);
+                Match(")");
+
+                expr = new BinaryOperatorExpression(compareLeft, compareRight, op);
+                return true;
+            }
+
+            if (op == null)
+            {
+                expr = null;
+                return false;
+            }
+
+            Match("(");
+            ContainExpression(out ITTEExpression left);
+            Match(",");
+            ContainExpression(out ITTEExpression right);
+            Match(")");
+
+            expr = new BinaryOperatorExpression(left, right, op);
+            return true;
         }
 
         // Workshop string function
@@ -1243,6 +1312,18 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
     // Interfaces
     public interface ITTEExpression {
         void Decompile(DecompileRule decompiler);
+        bool IsEventPlayer() => this is FunctionExpression func && func.Function.WorkshopName == "Event Player";
+        bool RequiresContainment() => this is UnaryOperatorExpression || this is BinaryOperatorExpression || this is TernaryExpression;
+        void WritePlayerSeperator(DecompileRule decompiler)
+        {
+            if (IsEventPlayer()) return;
+
+            if (RequiresContainment()) decompiler.Append("(");
+            Decompile(decompiler);
+            if (RequiresContainment()) decompiler.Append(")");
+            
+            decompiler.Append(".");
+        }
     }
     public interface ITTEAction {
         string Comment { get; set; }
@@ -1422,7 +1503,10 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
 
         public void Decompile(DecompileRule decompiler)
         {
+            if (Expression.RequiresContainment()) decompiler.Append("(");
             Expression.Decompile(decompiler);
+            if (Expression.RequiresContainment()) decompiler.Append(")");
+
             decompiler.Append("[");
             Index.Decompile(decompiler);
             decompiler.Append("]");
@@ -1588,13 +1672,8 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
 
         public void Decompile(DecompileRule decompiler)
         {
-            if (Player is FunctionExpression func && func.Function.WorkshopName == "Event Player")
-                decompiler.Append(decompiler.Decompiler.GetVariableName(Name, false));
-            else
-            {
-                Player.Decompile(decompiler);
-                decompiler.Append("." + decompiler.Decompiler.GetVariableName(Name, false));
-            }
+            Player.WritePlayerSeperator(decompiler);
+            decompiler.Append(decompiler.Decompiler.GetVariableName(Name, false));
         }
     }
 }

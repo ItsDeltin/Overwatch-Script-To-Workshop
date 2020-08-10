@@ -187,7 +187,7 @@ namespace Deltin.Deltinteger
             }
             catch (Exception ex)
             {
-                Console.Write(ex.Message);
+                Console.Write(ex.ToString());
             }
 
             // Done.

@@ -41,8 +41,7 @@ namespace Deltin.Deltinteger.Decompiler.ElementToCode
             {"Modify Player Variable", (decompiler, function) => {
                 decompiler.Append("ModifyVariable(");
                 // Variable
-                function.Values[0].Decompile(decompiler);
-                decompiler.Append(".");
+                function.Values[0].WritePlayerSeperator(decompiler);
                 function.Values[1].Decompile(decompiler);
                 decompiler.Append(", ");
                 function.Values[2].Decompile(decompiler);
@@ -70,8 +69,7 @@ namespace Deltin.Deltinteger.Decompiler.ElementToCode
             {"Modify Player Variable At Index", (decompiler, function) => {
                 decompiler.Append("ModifyVariable(");
                 // Variable
-                function.Values[0].Decompile(decompiler);
-                decompiler.Append(".");
+                function.Values[0].WritePlayerSeperator(decompiler);
                 function.Values[1].Decompile(decompiler);
                 decompiler.Append("[");
                 function.Values[2].Decompile(decompiler);
@@ -104,8 +102,7 @@ namespace Deltin.Deltinteger.Decompiler.ElementToCode
             {"Chase Player Variable Over Time", (decompiler, function) => {
                 decompiler.Append("ChaseVariableOverTime(");
                 // Player
-                function.Values[0].Decompile(decompiler);
-                decompiler.Append(".");
+                function.Values[0].WritePlayerSeperator(decompiler);
                 // Variable
                 function.Values[1].Decompile(decompiler);
                 decompiler.Append(", ");
@@ -141,8 +138,7 @@ namespace Deltin.Deltinteger.Decompiler.ElementToCode
             {"Chase Player Variable At Rate", (decompiler, function) => {
                 decompiler.Append("ChaseVariableAtRate(");
                 // Player
-                function.Values[0].Decompile(decompiler);
-                decompiler.Append(".");
+                function.Values[0].WritePlayerSeperator(decompiler);
                 // Variable
                 function.Values[1].Decompile(decompiler);
                 decompiler.Append(", ");
@@ -166,8 +162,7 @@ namespace Deltin.Deltinteger.Decompiler.ElementToCode
             }},
             {"Stop Chasing Player Variable", (decompiler, function) => {
                 decompiler.Append("StopChasingVariable(");
-                function.Values[0].Decompile(decompiler); // Decompile the player.
-                decompiler.Append(".");
+                function.Values[0].WritePlayerSeperator(decompiler); // Decompile the player.
                 function.Values[1].Decompile(decompiler); // Decompile the variable name.
                 decompiler.Append(")");
                 decompiler.EndAction();
@@ -264,8 +259,7 @@ namespace Deltin.Deltinteger.Decompiler.ElementToCode
             }},
             {"For Player Variable", (decompiler, function) => {
                 decompiler.Append("for (");
-                function.Values[0].Decompile(decompiler);
-                decompiler.Append(".");
+                function.Values[0].WritePlayerSeperator(decompiler);
                 function.Values[1].Decompile(decompiler);
                 decompiler.Append(" = ");
                 function.Values[2].Decompile(decompiler);
@@ -303,6 +297,54 @@ namespace Deltin.Deltinteger.Decompiler.ElementToCode
                     // Default
                     function.Default(decompiler, true);
                 }
+            }},
+            // * Legacy *
+            {"Set Global Variable", (decompiler, function) => {
+                function.Values[0].Decompile(decompiler);
+                decompiler.Append(" = ");
+                function.Values[1].Decompile(decompiler);
+
+                // Finished
+                decompiler.EndAction();
+            }},
+            {"Set Player Variable", (decompiler, function) => {
+                function.Values[0].WritePlayerSeperator(decompiler);
+                function.Values[1].Decompile(decompiler);
+                decompiler.Append(" = ");
+                function.Values[2].Decompile(decompiler);
+
+                // Finished
+                decompiler.EndAction();
+            }},
+            {"Set Global Variable At Index", (decompiler, function) => {
+                function.Values[0].Decompile(decompiler);
+                decompiler.Append("[");
+                function.Values[1].Decompile(decompiler);
+                decompiler.Append("]");
+                decompiler.Append(" = ");
+                function.Values[2].Decompile(decompiler);
+
+                // Finished
+                decompiler.EndAction();
+            }},
+            {"Set Player Variable At Index", (decompiler, function) => {
+                function.Values[0].WritePlayerSeperator(decompiler);
+                function.Values[1].Decompile(decompiler);
+                decompiler.Append("[");
+                function.Values[2].Decompile(decompiler);
+                decompiler.Append("]");
+                decompiler.Append(" = ");
+                function.Values[3].Decompile(decompiler);
+
+                // Finished
+                decompiler.EndAction();
+            }},
+            {"Global Variable", (decompiler, function) => {
+                function.Values[0].Decompile(decompiler);
+            }},
+            {"Player Variable", (decompiler, function) => {
+                function.Values[0].WritePlayerSeperator(decompiler);
+                function.Values[1].Decompile(decompiler);
             }}
         };
 
