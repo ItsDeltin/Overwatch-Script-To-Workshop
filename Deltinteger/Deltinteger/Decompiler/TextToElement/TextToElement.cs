@@ -514,9 +514,7 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
                     // Normal parameter
                     if (currentParameter >= func.WorkshopParameters.Length || func.WorkshopParameters[currentParameter] is Parameter)
                     {
-                        _operators.Push(TTEOperator.Sentinel);
-                        if (Expression(out ITTEExpression value)) values.Add(value);
-                        _operators.Pop();
+                        if (ContainExpression(out ITTEExpression value)) values.Add(value);
                     }
                     // Enumerator
                     else if (func.WorkshopParameters[currentParameter] is EnumParameter enumParam)
@@ -559,10 +557,8 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
             // Group
             if (Match("("))
             {
-                _operators.Push(TTEOperator.Sentinel);
-                Expression(out expr);
+                ContainExpression(out expr);
                 Match(")");
-                _operators.Pop();
             }
             // Number
             else if (Number(out expr)) {}
@@ -615,6 +611,14 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
             return true;
         }
 
+        bool ContainExpression(out ITTEExpression expr)
+        {
+            _operators.Push(TTEOperator.Sentinel);
+            bool result = Expression(out expr);
+            _operators.Pop();
+            return result;
+        }
+
         // Workshop string function
         bool WorkshopString(out ITTEExpression expr)
         {
@@ -642,9 +646,7 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
             List<ITTEExpression> formats = new List<ITTEExpression>();
             while (Match(","))
             {
-                _operators.Push(TTEOperator.Sentinel);
-                if (Expression(out ITTEExpression value)) formats.Add(value);
-                _operators.Pop();
+                if (ContainExpression(out ITTEExpression value)) formats.Add(value);
             }
 
             Match(")");
@@ -727,9 +729,7 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
                 return false;
             }
 
-            _operators.Push(TTEOperator.Sentinel);
-            Expression(out index);
-            _operators.Pop();
+            ContainExpression(out index);
 
             Match("]");
             return true;
