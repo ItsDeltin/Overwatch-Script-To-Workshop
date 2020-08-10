@@ -58,15 +58,6 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
             }
         }
 
-        public void GetActionGroup()
-        {
-            // Match variables and subroutines.
-            MatchVariables();
-            MatchSubroutines();
-            // Match actions.
-            ActionGroup(out var actions);
-        }
-
         // TODO: Translate the english keyword to the specified language's keyword.
         public string Kw(string value) => value;
 

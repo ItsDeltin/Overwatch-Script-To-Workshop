@@ -13,6 +13,9 @@
     "activationEvents": [
         "onLanguage:ostw",
         "onLanguage:ow_ostw",
+        "onCommand:ostw.downloadLatestRelease",
+        "onCommand:ostw.locateServerInstallation",
+        "onCommand:ostw.decompile.clipboard",
         "workspaceContains:**/customGameSettings.json"
     ],
     "repository": {
@@ -185,6 +188,11 @@
             {
                 "command": "ostw.copyWorkshopCode",
                 "title": "Copy the workshop output to the clipboard.",
+                "category": "Overwatch Script To Workshop"
+            },
+            {
+                "command": "ostw.decompile.clipboard",
+                "title": "Decompile workshop code from clipboard to file.",
                 "category": "Overwatch Script To Workshop"
             }
         ],

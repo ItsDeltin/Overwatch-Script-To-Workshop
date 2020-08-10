@@ -284,7 +284,7 @@ namespace Deltin.Deltinteger.Decompiler.ElementToCode
             }},
             {"Wait", (decompiler, function) => {
                 // Convert the Wait to a MinWait if the wait duration is less than or equal to the minimum.
-                if (function.Values[0] is NumberExpression number && number.Value <= Constants.MINIMUM_WAIT)
+                if ((function.Values[0] is NumberExpression number && number.Value <= Constants.MINIMUM_WAIT) || (function.Values[0] is FunctionExpression durationFunc && durationFunc.Function.WorkshopName == "False"))
                 {
                     decompiler.Append("MinWait(");
 

@@ -31,6 +31,43 @@ namespace Deltin.Deltinteger.Decompiler.ElementToCode
             _settingsResolver = settingsResolver;
         }
 
+        public string Decompile()
+        {
+            if (Workshop.Actions != null)
+                new ActionTraveler(this, Workshop.Actions).Decompile();
+            else if (Workshop.Conditions != null)
+                new ConditionTraveler(this, Workshop.Conditions).Decompile();
+            else
+            {
+                // Add settings import.
+                if (_settingsResolver != null && Workshop.LobbySettings != null)
+                {
+                    string settingsFile = _settingsResolver.GetFile();
+                    // If the resolved file is not null, add the import statement.
+                    if (settingsFile != null)
+                    {
+                        Append("import \"" + settingsFile + "\";");
+                        NewLine();
+                        NewLine();
+                    }
+                }
+
+                // Variables
+                foreach (var variable in Workshop.Variables)
+                {
+                    Append((variable.IsGlobal ? "globalvar" : "playervar") + " define " + GetVariableName(variable.Name, variable.IsGlobal) + ";");
+                    NewLine();
+                }
+                NewLine();
+                
+                // Rules
+                foreach (var rule in Workshop.Rules)
+                    new RuleTraveler(this, rule).Decompile();
+            }
+            
+            return _builder.ToString().Trim();
+        }
+
         public void AddBlock(bool startBlock = true)
         {
             if (Options.SameLineOpeningBrace)
@@ -70,46 +107,6 @@ namespace Deltin.Deltinteger.Decompiler.ElementToCode
             _space = true;
         }
 
-        public string Decompile()
-        {
-            if (Workshop.Actions != null)
-                new ActionTraveler(this, Workshop.Actions).Decompile();
-            else if (Workshop.Conditions != null)
-                new ConditionTraveler(this, Workshop.Conditions).Decompile();
-            else
-            {
-                // Add settings import.
-                if (_settingsResolver != null && Workshop.LobbySettings != null)
-                {
-                    string settingsFile = _settingsResolver.GetFile();
-                    // If the resolved file is not null, add the import statement.
-                    if (settingsFile != null)
-                    {
-                        Append("import \"" + settingsFile + "\";");
-                        NewLine();
-                    }
-                }
-
-                // Variables
-                foreach (var variable in Workshop.Variables)
-                {
-                    Append((variable.IsGlobal ? "globalvar" : "playervar") + " define " + GetVariableName(variable.Name, variable.IsGlobal) + ";");
-                    NewLine();
-                }
-                NewLine();
-                
-                // Rules
-                foreach (var rule in Workshop.Rules)
-                    new RuleTraveler(this, rule).Decompile();
-            }
-            
-            return _builder.ToString().Trim();
-        }
-
-        private void DecompileActions() => new ActionTraveler(this, Workshop.Actions).Decompile();
-
-        public override string ToString() => _builder.ToString();
-
         public string GetVariableName(string baseName, bool isGlobal)
         {
             if (!isGlobal && Workshop.Variables.Any(v => v.IsGlobal && v.Name == baseName))
@@ -117,6 +114,8 @@ namespace Deltin.Deltinteger.Decompiler.ElementToCode
             
             return baseName;
         }
+
+        public override string ToString() => _builder.ToString();
     }
 
     public abstract class DecompileRule
