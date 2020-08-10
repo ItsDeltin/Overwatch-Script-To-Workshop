@@ -24,8 +24,15 @@ export function decompileClipboard()
 
 export function insertActions(textEditor: vscode.TextEditor)
 {
-    client.sendRequest('decompile.insert').then((value: string) => {
-        let snippet: vscode.SnippetString = new vscode.SnippetString(value);
-        textEditor.insertSnippet(snippet);
+    client.sendRequest('decompile.insert').then((value: {success: boolean, code: string}) => {
+        if (value.success)
+        {   
+            let snippet: vscode.SnippetString = new vscode.SnippetString(value.code);
+            textEditor.insertSnippet(snippet);
+        }
+        else
+        {
+            vscode.window.showErrorMessage(value.code);
+        }
     });
 }

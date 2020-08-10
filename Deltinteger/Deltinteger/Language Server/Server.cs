@@ -162,11 +162,20 @@ namespace Deltin.Deltinteger.LanguageServer
             }));
 
             // Decompile insert
-            options.OnRequest<string>("decompile.insert", () => Task.Run(() =>
+            options.OnRequest<object>("decompile.insert", () => Task.Run(() =>
             {
-                var workshop = new ConvertTextToElement(Clipboard.GetText()).Get();
-                string result = new WorkshopDecompiler(workshop, new OmitLobbySettingsResolver(), new CodeFormattingOptions()).Decompile();
-                return result;
+                try
+                {
+                    var workshop = new ConvertTextToElement(Clipboard.GetText()).Get();
+                    var code = new WorkshopDecompiler(workshop, new OmitLobbySettingsResolver(), new CodeFormattingOptions()).Decompile();
+                    object result = new {success = true, code = code};
+                    return result;
+                }
+                catch (Exception ex)
+                {
+                    object result = new {success = false, code = ex.ToString()};
+                    return result;
+                }
             }));
 
             return options;
