@@ -17,6 +17,15 @@ namespace Deltin.Deltinteger.Decompiler.ElementToCode
             {"Map", (decompiler, function) => function.Values[0].Decompile(decompiler)},
             {"Game Mode", (decompiler, function) => function.Values[0].Decompile(decompiler)},
             {"Button", (decompiler, function) => function.Values[0].Decompile(decompiler)},
+            {"Array", (decompiler, function) => {
+                decompiler.Append("[");
+                for (int i = 0; i < function.Values.Length; i++)
+                {
+                    function.Values[i].Decompile(decompiler);
+                    if (i < function.Values.Length - 1) decompiler.Append(", ");
+                }
+                decompiler.Append("]");
+            }},
             {"Modify Global Variable", (decompiler, function) => {
                 decompiler.Append("ModifyVariable(");
                 // Variable
@@ -146,6 +155,20 @@ namespace Deltin.Deltinteger.Decompiler.ElementToCode
                 // Reevaluation
                 function.Values[4].Decompile(decompiler);
                 // Finished
+                decompiler.Append(")");
+                decompiler.EndAction();
+            }},
+            {"Stop Chasing Global Variable", (decompiler, function) => {
+                decompiler.Append("StopChasingVariable(");
+                function.Values[0].Decompile(decompiler); // Decompile the variable name.
+                decompiler.Append(")");
+                decompiler.EndAction();
+            }},
+            {"Stop Chasing Player Variable", (decompiler, function) => {
+                decompiler.Append("StopChasingVariable(");
+                function.Values[0].Decompile(decompiler); // Decompile the player.
+                decompiler.Append(".");
+                function.Values[1].Decompile(decompiler); // Decompile the variable name.
                 decompiler.Append(")");
                 decompiler.EndAction();
             }},
