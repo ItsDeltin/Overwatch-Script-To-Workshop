@@ -450,7 +450,7 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
                     throw new Exception("Expression is not a variable.");
                                 
                 string op = null;
-                string[] operators = new string[] { "=", "+=", "-=", "/=", "*=" };
+                string[] operators = new string[] { "=", "+=", "-=", "/=", "*=", "%=", "^=" };
                 foreach (string it in operators)
                     if (Match(it))
                     {
