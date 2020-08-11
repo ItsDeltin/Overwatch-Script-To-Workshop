@@ -23,8 +23,7 @@ namespace Deltin.Deltinteger.Pathfinder
         protected IndexReference current { get; set; }
         protected IndexReference distances { get; set; }
         protected IndexReference parentArray { get; set; }
-        protected IndexReference parentAttributeInfo { get; set; }
-        protected static bool assignExtended = true;
+        protected static bool assignExtended = false;
 
         public Action<ActionSet> OnLoop { get; set; } = actionSet => {
             actionSet.AddAction(A_Wait.MinimumWait);
@@ -68,8 +67,8 @@ namespace Deltin.Deltinteger.Pathfinder
             IndexReference connectedSegments = actionSet.VarCollection.Assign("Dijkstra: Connected Segments", actionSet.IsGlobal, assignExtended);
             IndexReference neighborIndex     = actionSet.VarCollection.Assign("Dijkstra: Neighbor Index", actionSet.IsGlobal, assignExtended);
             IndexReference neighborDistance  = actionSet.VarCollection.Assign("Dijkstra: Distance", actionSet.IsGlobal, assignExtended);
+            IndexReference neighborSegmentAttributes = actionSet.VarCollection.Assign("Dijkstra: Neighbor Attributes", actionSet.IsGlobal, assignExtended);
             parentArray                      = GetParentArray();
-            if (useAttributes) parentAttributeInfo = GetParentAttributeArray();
 
             // Set the current variable as the first node.
             actionSet.AddAction(current.SetVariable(firstNode));
@@ -115,6 +114,22 @@ namespace Deltin.Deltinteger.Pathfinder
                 )
             ));
 
+            // Get the attributes from the current node to the neighbor node.
+            actionSet.AddAction(neighborSegmentAttributes.SetVariable(Element.Part<V_FilteredArray>(Attributes,
+                Element.Part<V_And>(
+                    new V_Compare(
+                        Element.Part<V_YOf>(new V_ArrayElement()),
+                        Operators.Equal,
+                        current.Get()
+                    ),
+                    new V_Compare(
+                        Element.Part<V_XOf>(new V_ArrayElement()),
+                        Operators.Equal,
+                        neighborIndex.Get()
+                    )
+                )
+            )));
+
             // Set the current neighbor's distance if the new distance is less than what it is now.
             actionSet.AddAction(Element.Part<A_If>(Element.Part<V_And>(
                 Element.Part<V_Or>(
@@ -125,23 +140,14 @@ namespace Deltin.Deltinteger.Pathfinder
                     ),
                     (Element)neighborDistance.GetVariable() < ((Element)distances.GetVariable())[(Element)neighborIndex.GetVariable()]
                 ),
-                Element.Part<V_IsTrueForAny>(
-                    Element.Part<V_FilteredArray>(
-                        Attributes,
-                        Element.Part<V_And>(
-                            new V_Compare(
-                                Element.Part<V_XOf>(new V_ArrayElement()),
-                                Operators.Equal,
-                                current.Get()
-                            ),
-                            new V_Compare(
-                                Element.Part<V_YOf>(new V_ArrayElement()),
-                                Operators.Equal,
-                                neighborIndex.Get()
-                            )
-                        )
-                    ),
-                    Element.Part<V_ArrayContains>(attributes, Element.Part<V_ZOf>(new V_ArrayElement()))
+                Element.Part<V_Or>(
+                    // There are no attributes.
+                    Element.Part<V_Not>(Element.Part<V_CountOf>(neighborSegmentAttributes.Get())),
+                    // There are attributes and the attribute array contains one of the attributes.
+                    Element.Part<V_IsTrueForAny>(
+                        neighborSegmentAttributes.Get(),
+                        Element.Part<V_ArrayContains>(attributes, Element.Part<V_ZOf>(new V_ArrayElement()))
+                    ) 
                 )
             )));
 
@@ -168,8 +174,7 @@ namespace Deltin.Deltinteger.Pathfinder
                 connectedSegments.SetVariable(0),
                 neighborIndex.SetVariable(0),
                 neighborDistance.SetVariable(0),
-                parentArray.SetVariable(0),
-                parentAttributeInfo.SetVariable(0)
+                parentArray.SetVariable(0)
             ));
         }
 
@@ -182,7 +187,7 @@ namespace Deltin.Deltinteger.Pathfinder
         protected virtual IndexReference GetParentArray() => actionSet.VarCollection.Assign("Dijkstra: Parent Array", actionSet.IsGlobal, false);
         protected virtual IndexReference GetParentAttributeArray() => actionSet.VarCollection.Assign("Dijkstra: Parent Attribute Info", actionSet.IsGlobal, false);
 
-        protected void Backtrack(Element startNode, IndexReference finalPath, IndexReference finalPathAttributes, bool reversePath = false)
+        protected void Backtrack(Element startNode, IndexReference finalPath, bool reversePath = false)
         {
             actionSet.AddAction(current.SetVariable(startNode));
             actionSet.AddAction(finalPath.SetVariable(new V_EmptyArray()));
@@ -195,7 +200,6 @@ namespace Deltin.Deltinteger.Pathfinder
             )));
 
             Element nextNode = Nodes[(Element)current.GetVariable()];
-            Element nextAttribute = ((Element)parentAttributeInfo.GetVariable())[(Element)current.GetVariable()];
 
             // For debugging generated path.
             // actionSet.AddAction(Element.Part<A_CreateEffect>(
@@ -211,15 +215,11 @@ namespace Deltin.Deltinteger.Pathfinder
             {
                 // Add the current node to the final path.
                 actionSet.AddAction(finalPath.ModifyVariable(Operation.AppendToArray, nextNode));
-                // Add the current attribute to the final path attributes.
-                if (useAttributes) actionSet.AddAction(finalPathAttributes.ModifyVariable(Operation.AppendToArray, nextAttribute));
             }
             else
             {
                 // Insert the current node to the final path.
                 actionSet.AddAction(finalPath.SetVariable(Element.Part<V_Append>(nextNode, finalPath.GetVariable())));
-                // Insert the current attribute to the final path attributes.
-                actionSet.AddAction(finalPathAttributes.SetVariable(Element.Part<V_Append>(nextAttribute, finalPathAttributes.GetVariable())));
             }
 
             actionSet.AddAction(current.SetVariable(Element.Part<V_ValueInArray>(parentArray.GetVariable(), current.GetVariable()) - 1));
@@ -307,7 +307,6 @@ namespace Deltin.Deltinteger.Pathfinder
         private Element destination { get; }
         private IndexReference finalNode;
         public IndexReference finalPath { get; private set; }
-        public IndexReference finalPathAttributes { get; private set; }
 
         public DijkstraNormal(ActionSet actionSet, Element pathmapObject, Element position, Element destination, Element attributes) : base(actionSet, pathmapObject, position, attributes)
         {
@@ -322,11 +321,6 @@ namespace Deltin.Deltinteger.Pathfinder
             finalPath = actionSet.VarCollection.Assign("Dijkstra: Final Path", actionSet.IsGlobal, false);
             actionSet.AddAction(finalNode.SetVariable(lastNode));
             actionSet.AddAction(finalPath.SetVariable(new V_EmptyArray()));
-            if (useAttributes)
-            {
-                finalPathAttributes = actionSet.VarCollection.Assign("Dijkstra: Final Path Attributes", actionSet.IsGlobal, false);
-                actionSet.AddAction(finalPathAttributes.SetVariable(new V_EmptyArray()));
-            }
         }
 
         override protected Element LoopCondition() => Element.Part<V_ArrayContains>(
@@ -336,7 +330,7 @@ namespace Deltin.Deltinteger.Pathfinder
 
         override protected void GetResult()
         {
-            Backtrack((Element)finalNode.GetVariable(), finalPath, finalPathAttributes);
+            Backtrack((Element)finalNode.GetVariable(), finalPath);
         }
     }
 
@@ -380,7 +374,7 @@ namespace Deltin.Deltinteger.Pathfinder
             actionSet.AddAction(endLoop);
             PlayerNodeReachedBreak.SetEndMarker(endLoop);
 
-            resolveInfo.Pathfind(actionSet, player, pathmapObject, parentArray.Get(), parentAttributeInfo.Get(), Source);
+            resolveInfo.Pathfind(actionSet, player, pathmapObject, parentArray.Get(), Source);
         }
 
         protected override Element LoopCondition() => AnyAccessableUnvisited();
@@ -421,7 +415,7 @@ namespace Deltin.Deltinteger.Pathfinder
 
         override protected void GetResult()
         {
-            resolveInfo.Pathfind(actionSet, players, pathmapObject, parentArray.Get(), parentAttributeInfo.Get(), Source);
+            resolveInfo.Pathfind(actionSet, players, pathmapObject, parentArray.Get(), Source);
         }
     }
 
@@ -490,7 +484,7 @@ namespace Deltin.Deltinteger.Pathfinder
 
             actionSet.AddAction(parentArray.SetVariable(newParentArray.Get()));
 
-            resolveInfo.Pathfind(actionSet, player, pathmapObject, parentArray.Get(), parentAttributeInfo.Get(), Nodes[current.Get()]);
+            resolveInfo.Pathfind(actionSet, player, pathmapObject, parentArray.Get(), Nodes[current.Get()]);
         }
 
         // Loop until any of the destinations have been visited.
@@ -570,7 +564,6 @@ namespace Deltin.Deltinteger.Pathfinder
         {
              // Save parent arrays.
             PathResolveClass.ParentArray.Set(actionSet, ClassReference.Get(), parentArray.Get());
-            PathResolveClass.ParentAttributeArray.Set(actionSet, ClassReference.Get(), parentAttributeInfo.Get());
         }
     }
 }

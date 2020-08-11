@@ -27,15 +27,20 @@ rule: "Commands" -1
     HelpText("Reload: Toggle free walk."                                                 , 12, Color.Turquoise);
     HelpText("Melee: Compile pathmap."                                                   , 13, Color.Turquoise);
 
-    CreateHudText(
-        AllPlayers(),
-        Header: <"Current Mode: <0>", ["Free Walk", "Place Nodes And Connect Segments", "Attributes"][CurrentMode]>,
-        Location: Location.Top,
-        SortOrder: 1,
-        Reevaluation: HudTextRev.VisibleToAndString
-    );
     CreateHudText(AllPlayers(), Text: "OSTW pathmap editor", Location:Location.Left, SortOrder: 0);
     CreateHudText(AllPlayers(), Text: "Remember to periodically compile your pathmap so you don't lose progress.", TextColor: Color.Orange, Location:Location.Left, SortOrder: 1);
+    CreateHudText(
+        AllPlayers(),
+        Header: <"Current Mode - Press <0> to change\n<1>Free Walk\n<2>Place Nodes\n<3>Add Attributes",
+            InputBindingString(ButtonValue(Button.Interact)),
+            menuArrow(CurrentMode, 0),
+            menuArrow(CurrentMode, 1),
+            menuArrow(CurrentMode, 2)
+        >,
+        Location: Location.Left,
+        SortOrder: 2,
+        Reevaluation: HudTextRev.VisibleToAndString
+    );
 
     CreateHudText(
         CurrentMode == Mode.Attribute ? AllPlayers() : null,
@@ -59,6 +64,8 @@ rule: "Commands" -1
 
     CreateHudText(AllPlayers(), Header: "Connect mode:", Text: ["Connect All", "Connect As Path", "Connect As Star"][PlaceMode], Location: Location.Top, SortOrder: 3);
 }
+
+define menuArrow(define value, define expecting): value == expecting ? "▶" : "▷";
 
 globalvar Mode CurrentMode;
 enum Mode
@@ -88,6 +95,12 @@ globalvar Node[] Nodes = [];
 globalvar Node[] Selected = [];
 globalvar LinkedAttribute[] Attributes = [];
 globalvar Segment[] Segments = [];
+
+Button b_placeNode: Button.PrimaryFire;
+Button b_selectNode: Button.SecondaryFire;
+Button b_connectNodes: Button.Ability2;
+Button b_placeModeAndAttribute: Button.Reload;
+Communication b_compile: Communication.Acknowledge;
 
 rule: "Create Scoper"
 {
@@ -155,7 +168,7 @@ define IsNodeSelectable(Node node): DistanceBetween(node.Pos, EyePosition(EventP
 rule: "Create node"
 Event.OngoingPlayer
 if (CurrentMode == Mode.Place)
-if (IsButtonHeld(EventPlayer(), Button.Ultimate))
+if (IsButtonHeld(EventPlayer(), b_placeNode))
 if (!IsButtonHeld(EventPlayer(), Button.Crouch))
 {
     ModifyVariable(Nodes, Operation.AppendToArray, new Node(PositionOf(EventPlayer())));
@@ -165,7 +178,7 @@ if (!IsButtonHeld(EventPlayer(), Button.Crouch))
 rule: "Delete node"
 Event.OngoingPlayer
 if (CurrentMode == Mode.Place)
-if (IsButtonHeld(EventPlayer(), Button.Ultimate))
+if (IsButtonHeld(EventPlayer(), b_placeNode))
 if (IsButtonHeld(EventPlayer(), Button.Crouch))
 {
     Node selected = GetClosestNode();
@@ -188,7 +201,7 @@ if (IsButtonHeld(EventPlayer(), Button.Crouch))
 rule: "Select"
 Event.OngoingPlayer
 if (CurrentMode == Mode.Place || CurrentMode == Mode.Attribute)
-if (IsButtonHeld(EventPlayer(), Button.SecondaryFire))
+if (IsButtonHeld(EventPlayer(), b_selectNode))
 if (!IsButtonHeld(EventPlayer(), Button.Crouch))
 {
     Node selected = GetClosestNode();
@@ -209,7 +222,7 @@ if (!IsButtonHeld(EventPlayer(), Button.Crouch))
 rule: "Deselect all"
 Event.OngoingPlayer
 if (CurrentMode == Mode.Place)
-if (IsButtonHeld(EventPlayer(), Button.SecondaryFire))
+if (IsButtonHeld(EventPlayer(), b_selectNode))
 if (IsButtonHeld(EventPlayer(), Button.Crouch))
 {
     foreach (Node selected in Selected)
@@ -368,7 +381,7 @@ class VisibleAttributeInfo
 rule: "Connect All Segments"
 Event.OngoingPlayer
 if (CurrentMode == Mode.Place)
-if (IsButtonHeld(EventPlayer(), Button.Melee))
+if (IsButtonHeld(EventPlayer(), b_connectNodes))
 if (!IsButtonHeld(EventPlayer(), Button.Crouch))
 if (PlaceMode == 0)
 {
@@ -384,7 +397,7 @@ if (PlaceMode == 0)
 rule: "Connect Segment Path"
 Event.OngoingPlayer
 if (CurrentMode == Mode.Place)
-if (IsButtonHeld(EventPlayer(), Button.Melee))
+if (IsButtonHeld(EventPlayer(), b_connectNodes))
 if (!IsButtonHeld(EventPlayer(), Button.Crouch))
 if (PlaceMode == 1)
 {
@@ -399,7 +412,7 @@ if (PlaceMode == 1)
 rule: "Connect Segments From First"
 Event.OngoingPlayer
 if (CurrentMode == Mode.Place)
-if (IsButtonHeld(EventPlayer(), Button.Melee))
+if (IsButtonHeld(EventPlayer(), b_connectNodes))
 if (!IsButtonHeld(EventPlayer(), Button.Crouch))
 if (PlaceMode == 2)
 {
@@ -416,7 +429,7 @@ define SegmentExists(define node1, define node2): Segments.IsTrueForAny(Segment 
 rule: "Delete Segments"
 Event.OngoingPlayer
 if (CurrentMode == Mode.Place)
-if (IsButtonHeld(EventPlayer(), Button.Melee))
+if (IsButtonHeld(EventPlayer(), b_connectNodes))
 if (IsButtonHeld(EventPlayer(), Button.Crouch))
 {
     for (define i = Segments.Length - 1; i >= 0; i--)
@@ -487,7 +500,7 @@ if (updateVisibleLook == null || DistanceBetween(updateVisiblePosition, HostPlay
 
 rule: "CSV out"
 Event.OngoingPlayer
-if (IsButtonHeld(EventPlayer(), Button.Melee))
+if (IsCommunicating(EventPlayer(), b_compile))
 {
     compiling = true;
     SmallMessage(AllPlayers(), "Compiling...");
@@ -548,21 +561,31 @@ if (CountOf(preloadNodes) != 0)
 
 rule: "Change Primary Attribute"
 Event.OngoingPlayer
-if (IsButtonHeld(EventPlayer(), Button.Reload))
+if (IsButtonHeld(EventPlayer(), b_placeModeAndAttribute))
+if (!IsButtonHeld(EventPlayer(), Button.Crouch))
 {
     if (CurrentMode == Mode.Attribute)
         FirstAttribute++;
     else
-        PlaceMode = Min(2, PlaceMode + 1);
+    {
+        PlaceMode++;
+        if (PlaceMode > 2)
+            PlaceMode = 0;
+    }
 }
 rule: "Reset Primary Attribute"
 Event.OngoingPlayer
-if (IsButtonHeld(EventPlayer(), Button.Ability2))
+if (IsButtonHeld(EventPlayer(), b_placeModeAndAttribute))
+if (IsButtonHeld(EventPlayer(), Button.Crouch))
 {
     if (CurrentMode == Mode.Attribute)
         FirstAttribute--;
     else
-        PlaceMode = Max(0, PlaceMode - 1);
+    {
+        PlaceMode--;
+        if (PlaceMode < 0)
+            PlaceMode = 2;
+    }
 }
 
 rule: "Create Selected ID Text"
@@ -609,7 +632,7 @@ class LinkedAttribute
 rule: "Add attribute"
 Event.OngoingPlayer
 if (CurrentMode == Mode.Attribute)
-if (IsButtonHeld(EventPlayer(), Button.Melee))
+if (IsButtonHeld(EventPlayer(), b_placeNode))
 if (Selected.Length >= 2)
 {
     Node node1 = Selected[Selected.Length - 2];

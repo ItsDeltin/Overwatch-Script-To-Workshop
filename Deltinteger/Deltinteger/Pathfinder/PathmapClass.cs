@@ -665,7 +665,7 @@ namespace Deltin.Deltinteger.Pathfinder
 
         private static FuncMethod IsPathfindingToSegment = new FuncMethodBuilder() {
             Name = "IsPathfindingToSegment",
-            Documentation = "Determines if a player is pathfinding towards a node. This will return true if the node is anywhere in their path, not just the one they are currently walking towards.",
+            Documentation = "Determines if a player is pathfinding towards a node. This will return true if the segment is anywhere in their path, not just the one they are currently walking towards.",
             DoesReturnValue = true,
             Parameters = new CodeParameter[] {
                 new CodeParameter("player", "The player to check."),
