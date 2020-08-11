@@ -71,6 +71,7 @@ namespace Deltin.Deltinteger.Pathfinder
             staticScope.AddNativeMethod(Recalibrate);
             staticScope.AddNativeMethod(IsPathfindingToNode);
             staticScope.AddNativeMethod(IsPathfindingToSegment);
+            staticScope.AddNativeMethod(IsPathfindingToAttribute);
 
             // Hooks
 
@@ -660,7 +661,7 @@ namespace Deltin.Deltinteger.Pathfinder
                 new CodeParameter("player", "The player to check."),
                 new CodeParameter("node_index", "The node to check. This is the index of the node in the pathmap's Node array.")
             },
-            Action = (actionSet, methodCall) => actionSet.Translate.DeltinScript.GetComponent<ResolveInfoComponent>().IsTravelingToNode(actionSet, (Element)methodCall.ParameterValues[0], (Element)methodCall.ParameterValues[1])
+            Action = (actionSet, methodCall) => new IsTravelingToNode((Element)methodCall.ParameterValues[1]).Get(actionSet.Translate.DeltinScript.GetComponent<ResolveInfoComponent>(), actionSet, (Element)methodCall.ParameterValues[0])
         };
 
         private static FuncMethod IsPathfindingToSegment = new FuncMethodBuilder() {
@@ -671,8 +672,18 @@ namespace Deltin.Deltinteger.Pathfinder
                 new CodeParameter("player", "The player to check."),
                 new CodeParameter("segment", "The segment to check. This is not an index of the pathmap's segment array, instead it is the segment itself.")
             },
-            OnCall = (parseInfo, range) => parseInfo.TranslateInfo.ExecOnComponent<ResolveInfoComponent>(resolveInfo => resolveInfo.SaveLastCurrent = true),
-            Action = (actionSet, methodCall) => actionSet.Translate.DeltinScript.GetComponent<ResolveInfoComponent>().IsTravelingToSegment(actionSet, (Element)methodCall.ParameterValues[0], (Element)methodCall.ParameterValues[1])
+            Action = (actionSet, methodCall) => new IsTravelingToSegment((Element)methodCall.ParameterValues[1]).Get(actionSet.Translate.DeltinScript.GetComponent<ResolveInfoComponent>(), actionSet, (Element)methodCall.ParameterValues[0])
+        };
+
+        private static FuncMethod IsPathfindingToAttribute = new FuncMethodBuilder() {
+            Name = "IsPathfindingToAttribute",
+            Documentation = "Determines if a player is pathfinding towards an attribute. This will return true if the attribute is anywhere in their path, not just the one they are currently walking towards.",
+            DoesReturnValue = true,
+            Parameters = new CodeParameter[] {
+                new CodeParameter("player", "The player to check."),
+                new CodeParameter("attribute", "The segment to check.")
+            },
+            Action = (actionSet, methodCall) => new IsTravelingToAttribute((Element)methodCall.ParameterValues[1]).Get(actionSet.Translate.DeltinScript.GetComponent<ResolveInfoComponent>(), actionSet, (Element)methodCall.ParameterValues[0])
         };
     }
 
