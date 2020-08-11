@@ -57,8 +57,9 @@ namespace Deltin.Deltinteger.Pathfinder
             serveObjectScope.AddNativeMethod(DeleteNode);
             serveObjectScope.AddNativeMethod(AddSegment);
             serveObjectScope.AddNativeMethod(DeleteSegment);
-            serveObjectScope.AddNativeMethod(SetSegmentAttributeAB);
-            serveObjectScope.AddNativeMethod(SetSegmentAttributeBA);
+            serveObjectScope.AddNativeMethod(AddAttribute);
+            serveObjectScope.AddNativeMethod(DeleteAttribute);
+            serveObjectScope.AddNativeMethod(DeleteAllAttributes);
             serveObjectScope.AddNativeMethod(SegmentFromNodes);
 
             staticScope.AddNativeMethod(StopPathfind);
@@ -444,33 +445,17 @@ namespace Deltin.Deltinteger.Pathfinder
             }
         };
 
-        // AddSegment(node_a, node_b, [attribute_ab], [attribute_ba])
+        // AddSegment(node_a, node_b)
         private FuncMethod AddSegment => new FuncMethodBuilder() {
             Name = "AddSegment",
             Documentation = "Dynamically connects 2 nodes. Existing path resolves will not reflect the new available path.",
             Parameters = new CodeParameter[] {
                 new CodeParameter("node_a", "The first node of the segment."),
-                new CodeParameter("node_b", "The second node of the segment."),
-                new CodeParameter("attribute_ab", "The attribute when traveling from a to b.", new ExpressionOrWorkshopValue()),
-                new CodeParameter("attribute_ba", "The attribute when traveling from b to a.", new ExpressionOrWorkshopValue())
+                new CodeParameter("node_b", "The second node of the segment.")
             },
             DoesReturnValue = true,
-            Action = (actionSet, methodCall) => {
-                Element x, y, z = new V_Number(0);
-
-                // Encode the x, y, and z values.
-                if (ExpressionOrWorkshopValue.UseNonnullParameter(methodCall.ParameterValues[2])) // A value was set for the 'attribute_ab' parameter.
-                    x = ((Element)methodCall.ParameterValues[0]) + (((Element)methodCall.ParameterValues[2]) / 100);
-                else // A value was not set for the 'attribute_ab' parameter.
-                    x = (Element)methodCall.ParameterValues[0];
-                
-                // Do the same with y
-                if (ExpressionOrWorkshopValue.UseNonnullParameter(methodCall.ParameterValues[3])) // A value was set for the 'attribute_ba' parameter.
-                    y = ((Element)methodCall.ParameterValues[1]) + (((Element)methodCall.ParameterValues[3]) / 100);
-                else // A value was not set for the 'attribute_ba' parameter.
-                    y = (Element)methodCall.ParameterValues[1];
-                
-                V_Vector segmentData = new V_Vector(x, y, z);
+            Action = (actionSet, methodCall) => {                
+                V_Vector segmentData = new V_Vector((Element)methodCall.ParameterValues[0], (Element)methodCall.ParameterValues[1], new V_Number(0));
                 
                 // Append the vector.
                 actionSet.AddAction(Segments.ModifyVariable(operation: Operation.AppendToArray, value: segmentData, index: (Element)actionSet.CurrentObject));
@@ -493,54 +478,75 @@ namespace Deltin.Deltinteger.Pathfinder
             }
         };
 
-        // SetSegmentAttributeAB(segment, attribute)
-        private FuncMethod SetSegmentAttributeAB => new FuncMethodBuilder() {
-            Name = "SetSegmentAttributeAB",
-            Documentation = "Sets the primary segment attribute when traveling from node A to B. The index of the segment in the pathmap's Segment array will change to be the last value.",
+        // AddAttribute(node_a, node_b, attribute)
+        private FuncMethod AddAttribute => new FuncMethodBuilder() {
+            Name = "AddAttribute",
+            Documentation = "Adds an attribute between 2 nodes. This will work even if there is not a segment between the two nodes.",
             Parameters = new CodeParameter[] {
-                new CodeParameter("segment_index", "The index of the segment that is being modified."),
-                new CodeParameter("attribute", "The new A to B attribute of the segment.")
+                new CodeParameter("node_a", "The primary node."),
+                new CodeParameter("node_b", "The secondary node."),
+                new CodeParameter("attribute", "The attribute value. Should be any number.")
             },
             Action = (actionSet, methodCall) => {
-                actionSet.AddAction(Segments.ModifyVariable(Operation.AppendToArray, new V_Vector(
-                    DijkstraBase.Node1((Element)methodCall.ParameterValues[0]) + (Element)methodCall.ParameterValues[1] / 100,
-                    Element.Part<V_YOf>((Element)methodCall.ParameterValues[0]),
-                    // If the Z component is ever used, update this.
-                    new V_Number(0)
+                actionSet.AddAction(Attributes.ModifyVariable(Operation.AppendToArray, new V_Vector(
+                    methodCall.ParameterValues[0],
+                    methodCall.ParameterValues[1],
+                    methodCall.ParameterValues[2]
                 ), null, (Element)actionSet.CurrentObject));
-                actionSet.AddAction(Segments.ModifyVariable(Operation.RemoveFromArrayByValue, (Element)methodCall.ParameterValues[0], null, (Element)actionSet.CurrentObject));
-
                 return null;
             }
         };
 
-        // SetSegmentAttributeBA(segment, attribute)
-        private FuncMethod SetSegmentAttributeBA => new FuncMethodBuilder() {
-            Name = "SetSegmentAttributeBA",
-            Documentation = "Sets the primary segment attribute when traveling from node B to A. The index of the segment in the pathmap's Segment array will change to be the last value.",
+        // DeleteAttribute(node_a, node_b, attribute)
+        private FuncMethod DeleteAttribute => new FuncMethodBuilder() {
+            Name = "DeleteAttribute",
+            Documentation = "Removes an attribute between 2 nodes. This will work even if there is not a segment between the two nodes.",
             Parameters = new CodeParameter[] {
-                new CodeParameter("segment_index", "The index of the segment that is being modified."),
-                new CodeParameter("attribute", "The new B to A attribute of the segment.")
+                new CodeParameter("node_a", "The primary node."),
+                new CodeParameter("node_b", "The secondary node."),
+                new CodeParameter("attribute", "The attribute value that will be removed. Should be any number.")
             },
             Action = (actionSet, methodCall) => {
-                actionSet.AddAction(Segments.ModifyVariable(Operation.AppendToArray, new V_Vector(
-                    Element.Part<V_XOf>((Element)methodCall.ParameterValues[0]),
-                    DijkstraBase.Node2((Element)methodCall.ParameterValues[0]) + (Element)methodCall.ParameterValues[1] / 100,
-                    // If the Z component is ever used, update this.
-                    new V_Number(0)
+                actionSet.AddAction(Attributes.ModifyVariable(Operation.RemoveFromArrayByValue, new V_Vector(
+                    methodCall.ParameterValues[0],
+                    methodCall.ParameterValues[1],
+                    methodCall.ParameterValues[2]
                 ), null, (Element)actionSet.CurrentObject));
-                actionSet.AddAction(Segments.ModifyVariable(Operation.RemoveFromArrayByValue, (Element)methodCall.ParameterValues[0], null, (Element)actionSet.CurrentObject));
-
                 return null;
             }
         };
 
+        // DeleteAllAttributes(node_a, node_b)
+        private FuncMethod DeleteAllAttributes => new FuncMethodBuilder() {
+            Name = "DeleteAllAttributes",
+            Documentation = "Removes all attributes between 2 nodes.",
+            Parameters = new CodeParameter[] {
+                new CodeParameter("node_a", "The primary node."),
+                new CodeParameter("node_b", "The secondary node.")
+            },
+            Action = (actionSet, methodCall) => {
+                actionSet.AddAction(Attributes.ModifyVariable(
+                    Operation.RemoveFromArrayByValue,
+                    Element.Part<V_FilteredArray>(
+                        Attributes.Get()[(Element)actionSet.CurrentObject],
+                        Element.Part<V_And>(
+                            new V_Compare(methodCall.ParameterValues[0], Operators.Equal, Element.Part<V_XOf>(Element.Part<V_ArrayElement>())),
+                            new V_Compare(methodCall.ParameterValues[1], Operators.Equal, Element.Part<V_YOf>(Element.Part<V_ArrayElement>()))
+                        )
+                    ),
+                    index: (Element)actionSet.CurrentObject)
+                );
+                return null;
+            }
+        };
+
+        // SegmentFromNodes(node_a, node_b)
         private FuncMethod SegmentFromNodes => new FuncMethodBuilder() {
             Name = "SegmentFromNodes",
             Documentation = "Gets a segment from 2 nodes.",
             Parameters = new CodeParameter[] {
-                new CodeParameter("firstNodeIndex", "The first node index."),
-                new CodeParameter("secondNodeIndex", "The second node index.")
+                new CodeParameter("node_a", "The first node index."),
+                new CodeParameter("node_b", "The second node index.")
             },
             DoesReturnValue = true,
             ReturnType = SegmentsStruct.Instance,
@@ -677,7 +683,10 @@ namespace Deltin.Deltinteger.Pathfinder
 
         private static FuncMethod IsPathfindingToAttribute = new FuncMethodBuilder() {
             Name = "IsPathfindingToAttribute",
-            Documentation = "Determines if a player is pathfinding towards an attribute. This will return true if the attribute is anywhere in their path, not just the one they are currently walking towards.",
+            Documentation = new MarkupBuilder().Add("Determines if a player is pathfinding towards an attribute.")
+                .Add(" This will return true if the attribute is anywhere in their path, not just the one they are currently walking towards.")
+                .Add(" This will not return true if the attribute is on the segment the player is currently walking on, instead for this case use ").Code("CurrentSegmentAttribute").Add(".")
+                .ToString(),
             DoesReturnValue = true,
             Parameters = new CodeParameter[] {
                 new CodeParameter("player", "The player to check."),
