@@ -5,10 +5,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using Deltin.Deltinteger.Parse;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
-
-using IDefinitionHandler = OmniSharp.Extensions.LanguageServer.Protocol.Server.IDefinitionHandler;
+using IDefinitionHandler = OmniSharp.Extensions.LanguageServer.Protocol.Document.IDefinitionHandler;
 using DefinitionCapability = OmniSharp.Extensions.LanguageServer.Protocol.Client.Capabilities.DefinitionCapability;
-using ITypeDefinitionHandler = OmniSharp.Extensions.LanguageServer.Protocol.Server.ITypeDefinitionHandler;
+using ITypeDefinitionHandler = OmniSharp.Extensions.LanguageServer.Protocol.Document.ITypeDefinitionHandler;
 using TypeDefinitionCapability = OmniSharp.Extensions.LanguageServer.Protocol.Client.Capabilities.TypeDefinitionCapability;
 
 namespace Deltin.Deltinteger.LanguageServer
@@ -24,7 +23,9 @@ namespace Deltin.Deltinteger.LanguageServer
 
         public async Task<LocationOrLocationLinks> Handle(DefinitionParams definitionParams, CancellationToken token)
         {
-            var links = _languageServer.LastParse?.ScriptFromUri(definitionParams.TextDocument.Uri)?.GetDefinitionLinks();
+            await _languageServer.DocumentHandler.WaitForCompletedTyping();
+
+            var links = _languageServer.LastParse?.ScriptFromUri(definitionParams.TextDocument.Uri.ToUri())?.GetDefinitionLinks();
             if (links == null) return new LocationOrLocationLinks();
 
             links = links.Where(link => ((DocRange)link.OriginSelectionRange).IsInside(definitionParams.Position)).ToArray();

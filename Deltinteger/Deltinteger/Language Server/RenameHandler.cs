@@ -6,13 +6,11 @@ using System.Threading.Tasks;
 using Deltin.Deltinteger.Parse;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 
-using BaseRenameHandler = OmniSharp.Extensions.LanguageServer.Protocol.Server.RenameHandler;
-using RenameHandlerExtensions = OmniSharp.Extensions.LanguageServer.Protocol.Server.RenameHandlerExtensions;
+using BaseRenameHandler = OmniSharp.Extensions.LanguageServer.Protocol.Document.RenameHandler;
 using RenameCapability = OmniSharp.Extensions.LanguageServer.Protocol.Client.Capabilities.RenameCapability;
 
-using IPrepareRenameHandler = OmniSharp.Extensions.LanguageServer.Protocol.Server.IPrepareRenameHandler;
-using PrepareRenameHandler = OmniSharp.Extensions.LanguageServer.Protocol.Server.PrepareRenameHandler;
-using PrepareRenameHandlerExtensions = OmniSharp.Extensions.LanguageServer.Protocol.Server.PrepareRenameHandlerExtensions;
+using IPrepareRenameHandler = OmniSharp.Extensions.LanguageServer.Protocol.Document.IPrepareRenameHandler;
+using PrepareRenameHandler = OmniSharp.Extensions.LanguageServer.Protocol.Document.PrepareRenameHandler;
 using OmniSharp.Extensions.LanguageServer.Protocol;
 
 namespace Deltin.Deltinteger.LanguageServer
@@ -48,7 +46,9 @@ namespace Deltin.Deltinteger.LanguageServer
 
         public override async Task<WorkspaceEdit> Handle(RenameParams request, CancellationToken cancellationToken)
         {
-            var link = RenameInfo.GetLink(_languageServer, request.TextDocument.Uri, request.Position);
+            await _languageServer.DocumentHandler.WaitForCompletedTyping();
+            
+            var link = RenameInfo.GetLink(_languageServer, request.TextDocument.Uri.ToUri(), request.Position);
             if (link == null) return new WorkspaceEdit();
 
             var grouped = link.Group();
@@ -117,7 +117,9 @@ namespace Deltin.Deltinteger.LanguageServer
         // IPrepareRename
         public async Task<RangeOrPlaceholderRange> Handle(PrepareRenameParams request, CancellationToken cancellationToken)
         {
-            var link = RenameInfo.GetLink(_languageServer, request.TextDocument.Uri, request.Position);
+            await _languageServer.DocumentHandler.WaitForCompletedTyping();
+
+            var link = RenameInfo.GetLink(_languageServer, request.TextDocument.Uri.ToUri(), request.Position);
             if (link == null) return new RangeOrPlaceholderRange(new PlaceholderRange());
 
             return new RangeOrPlaceholderRange(new PlaceholderRange() {

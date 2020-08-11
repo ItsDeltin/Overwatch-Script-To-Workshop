@@ -295,9 +295,9 @@ namespace Deltin.Deltinteger.Models
     {
         public ModelParameter(string parameterName, string description) : base(parameterName, description, ".obj") {}
     
-        public override object Validate(ScriptFile script, IExpression value, DocRange valueRange)
+        public override object Validate(ParseInfo parseInfo, IExpression value, DocRange valueRange)
         {
-            string filepath = base.Validate(script, value, valueRange) as string;
+            string filepath = base.Validate(parseInfo, value, valueRange) as string;
             if (filepath == null) return null;
 
             Model newModel;
@@ -307,7 +307,7 @@ namespace Deltin.Deltinteger.Models
             }
             catch (Exception)
             {
-                script.Diagnostics.Error("Failed to load the model.", valueRange);
+                parseInfo.Script.Diagnostics.Error("Failed to load the model.", valueRange);
                 return null;
             }
 
@@ -350,11 +350,11 @@ namespace Deltin.Deltinteger.Models
     {
         public FontParameter(string name, string documentation) : base(name, documentation) {}
 
-        public override object Validate(ScriptFile script, IExpression value, DocRange valueRange)
+        public override object Validate(ParseInfo parseInfo, IExpression value, DocRange valueRange)
         {
-            string font = base.Validate(script, value, valueRange) as string;
+            string font = base.Validate(parseInfo, value, valueRange) as string;
             if (font == null) return null;
-            return ModelCreator.GetFontFamily(script, valueRange, font);
+            return ModelCreator.GetFontFamily(parseInfo.Script, valueRange, font);
         }
     }
 
@@ -416,12 +416,12 @@ namespace Deltin.Deltinteger.Models
     {
         public EconomicTextParameter(string name, string documentation) : base(name, documentation) {}
 
-        public override object Validate(ScriptFile script, IExpression value, DocRange valueRange)
+        public override object Validate(ParseInfo parseInfo, IExpression value, DocRange valueRange)
         {
-            string text = base.Validate(script, value, valueRange) as string;
+            string text = base.Validate(parseInfo, value, valueRange) as string;
             if (text == null) return null;
 
-            var lines = Letter.Create(text, false, script, valueRange);
+            var lines = Letter.Create(text, false, parseInfo.Script, valueRange);
             if (lines == null) return null;
             return new Model(lines);
         }
@@ -431,13 +431,13 @@ namespace Deltin.Deltinteger.Models
     {
         public VertexParameter(string name, string documentation) : base(name, documentation) {}
 
-        public override object Validate(ScriptFile script, IExpression value, DocRange valueRange)
+        public override object Validate(ParseInfo parseInfo, IExpression value, DocRange valueRange)
         {
             if (value is NullAction) return new Vertex();
             else if (value is NumberAction) return new Vertex(((NumberAction)value).Value, 0);
             else if (value is CallMethodAction && GetVertex((CallMethodAction)value, out Vertex vertex)) return vertex;
 
-            script.Diagnostics.Error("Expected a vector constant, number constant, or null.", valueRange);
+            parseInfo.Script.Diagnostics.Error("Expected a vector constant, number constant, or null.", valueRange);
             return null;
         }
 

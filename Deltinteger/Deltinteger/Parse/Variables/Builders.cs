@@ -33,6 +33,7 @@ namespace Deltin.Deltinteger.Parse
             _varInfo.AccessLevel = AccessLevel.Public; // Set the access level.
             _varInfo.InitialValueResolve = InitialValueResolve.ApplyBlock; // Get the inital value after elements have been resolved.
             _varInfo.CodeLensType = CodeLensSourceType.RuleVariable; // Set the code lens type.
+            _varInfo.HandleRestrictedCalls = true; // Handle restricted calls.
         }
     }
 
@@ -99,10 +100,12 @@ namespace Deltin.Deltinteger.Parse
     class ParameterVariable : VarBuilder
     {
         private readonly Scope _operationalScope;
+        private readonly Lambda.IBridgeInvocable _bridgeInvocable;
 
-        public ParameterVariable(Scope operationalScope, IVarContextHandler contextHandler) : base(contextHandler)
+        public ParameterVariable(Scope operationalScope, IVarContextHandler contextHandler, Lambda.IBridgeInvocable bridgeInvocable) : base(contextHandler)
         {
             _operationalScope = operationalScope;
+            _bridgeInvocable = bridgeInvocable;
         }
 
         protected override void CheckAttributes()
@@ -120,6 +123,8 @@ namespace Deltin.Deltinteger.Parse
             _varInfo.WholeContext = true; // Shouldn't matter.
             _varInfo.OperationalScope = _operationalScope;
             _varInfo.CodeLensType = CodeLensSourceType.ParameterVariable;
+            _varInfo.TokenType = TokenType.Parameter;
+            _varInfo.BridgeInvocable = _bridgeInvocable;
         }
 
         protected override void TypeCheck()
@@ -135,7 +140,7 @@ namespace Deltin.Deltinteger.Parse
 
     class SubroutineParameterVariable : ParameterVariable
     {
-        public SubroutineParameterVariable(Scope operationalScope, IVarContextHandler contextHandler) : base(operationalScope, contextHandler)
+        public SubroutineParameterVariable(Scope operationalScope, IVarContextHandler contextHandler) : base(operationalScope, contextHandler, null)
         {
         }
 
@@ -185,6 +190,10 @@ namespace Deltin.Deltinteger.Parse
             _varInfo.IsWorkshopReference = true;
             _varInfo.OperationalScope = _operationalScope;
             _varInfo.CodeLensType = CodeLensSourceType.ScopedVariable;
+
+            _varInfo.TokenType = TokenType.Variable;
+            _varInfo.TokenModifiers.Add(TokenModifier.Declaration);
+            _varInfo.TokenModifiers.Add(TokenModifier.Readonly);
         }
     }
 

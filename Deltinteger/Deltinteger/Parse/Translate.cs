@@ -14,7 +14,7 @@ namespace Deltin.Deltinteger.Parse
         private Importer Importer { get; }
         public Diagnostics Diagnostics { get; }
         public ScriptTypes Types { get; } = new ScriptTypes();
-        public Scope PlayerVariableScope { get; private set; } = new Scope();
+        public Scope PlayerVariableScope { get; private set; } = new Scope("player variables");
         public Scope GlobalScope { get; }
         public Scope RulesetScope { get; }
         public VarCollection VarCollection { get; } = new VarCollection();
@@ -45,7 +45,14 @@ namespace Deltin.Deltinteger.Parse
             
             Translate();
             if (!Diagnostics.ContainsErrors())
-                ToWorkshop(translateSettings.AdditionalRules);
+                try
+                {
+                    ToWorkshop(translateSettings.AdditionalRules);
+                }
+                catch (Exception ex)
+                {
+                    WorkshopCode = "An exception was thrown while translating to workshop.\r\n" + ex.ToString();
+                }
             
             foreach (IComponent component in Components)
                 if (component is IDisposable disposable)
@@ -161,9 +168,9 @@ namespace Deltin.Deltinteger.Parse
             }
 
             foreach (var applyType in Types.AllTypes) if (applyType is ClassType classType) classType.ResolveElements();
-            foreach (var apply in applyBlocks) apply.SetupParameters();
-            foreach (var apply in applyBlocks) apply.SetupBlock();
-            foreach (var apply in applyBlocks) apply.CallInfo?.CheckRecursion();
+            foreach (var apply in _applyBlocks) apply.SetupParameters();
+            foreach (var apply in _applyBlocks) apply.SetupBlock();
+            foreach (var callInfo in _recursionCheck) callInfo.CheckRecursion();
 
             // Get hooks
             foreach (ScriptFile script in Importer.ScriptFiles)
@@ -282,10 +289,16 @@ namespace Deltin.Deltinteger.Parse
         }
 
         // Applyable blocks
-        private List<IApplyBlock> applyBlocks = new List<IApplyBlock>();
+        private readonly List<IApplyBlock> _applyBlocks = new List<IApplyBlock>();
+        private readonly List<CallInfo> _recursionCheck = new List<CallInfo>();
         public void ApplyBlock(IApplyBlock apply)
         {
-            applyBlocks.Add(apply);
+            _applyBlocks.Add(apply);
+            if (apply.CallInfo != null) _recursionCheck.Add(apply.CallInfo);
+        }
+        public void RecursionCheck(CallInfo callInfo)
+        {
+            _recursionCheck.Add(callInfo ?? throw new ArgumentNullException(nameof(callInfo)));
         }
     }
 
@@ -302,6 +315,7 @@ namespace Deltin.Deltinteger.Parse
             AllTypes.Add(new Pathfinder.PathResolveClass());
         }
 
+        public CodeType GetCodeType(string name) => AllTypes.FirstOrDefault(type => type.Name == name);
         public CodeType GetCodeType(string name, FileDiagnostics diagnostics, DocRange range)
         {
             var type = AllTypes.FirstOrDefault(type => type.Name == name);

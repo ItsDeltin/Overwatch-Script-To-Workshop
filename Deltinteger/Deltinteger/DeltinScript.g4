@@ -16,7 +16,7 @@ true   : TRUE          ;
 false  : FALSE         ;
 null   : NULL          ;
 
-define : accessor? STATIC? (GLOBAL|PLAYER)? REF? (code_type | DEFINE) name=PART (id=number? | NOT?) (EQUALS expr?)? ;
+define : accessor? STATIC? (GLOBAL|PLAYER)? REF? code_type name=PART (id=number? | NOT?) (EQUALS expr?)? ;
 
 expr 
 	: 
@@ -65,9 +65,8 @@ call_parameters: call_parameter (COMMA call_parameter?)*   ;
 call_parameter : (PART? TERNARY_ELSE)? expr					 ;
 
 variable : PART array? ;
-code_type: PART (INDEX_START INDEX_END)* generics?;
-generics : LESS_THAN (generic_option (COMMA generic_option)*)? GREATER_THAN;
-generic_option: code_type | DEFINE;
+code_type: (PART|DEFINE) (INDEX_START INDEX_END)* generics?;
+generics : LESS_THAN (code_type (COMMA code_type)*)? GREATER_THAN;
 
 lambda: (define | LEFT_PAREN (define (COMMA define)*)? RIGHT_PAREN) INS (expr | block) ;
 
@@ -100,7 +99,7 @@ for_auto : FOR LEFT_PAREN
 	((forVariable=expr (EQUALS start=expr?)? | forDefine=define)? startSep=STATEMENT_END stop=expr? stopSep=STATEMENT_END step=expr?)
 	RIGHT_PAREN block?;
 
-foreach : FOREACH number? LEFT_PAREN (code_type | DEFINE) name=PART IN expr? RIGHT_PAREN block ;
+foreach : FOREACH number? LEFT_PAREN code_type name=PART IN expr? RIGHT_PAREN block ;
 
 while   : WHILE LEFT_PAREN expr RIGHT_PAREN block             ;
 
@@ -127,13 +126,13 @@ ow_rule :
 	block?
 	;
 
-define_method : DOCUMENTATION* method_attributes* (VOID | DEFINE | code_type) name=PART LEFT_PAREN setParameters RIGHT_PAREN ((GLOBAL | PLAYER)? subroutineRuleName=STRINGLITERAL)?
+define_method : DOCUMENTATION* method_attributes* (VOID | code_type) name=PART LEFT_PAREN setParameters RIGHT_PAREN ((GLOBAL | PLAYER)? subroutineRuleName=STRINGLITERAL)?
 	block?
 	;
 
 method_attributes : accessor | STATIC | OVERRIDE | VIRTUAL | RECURSIVE;
 
-define_macro  : DOCUMENTATION* method_attributes* (DEFINE | code_type) name=PART (LEFT_PAREN setParameters RIGHT_PAREN)? TERNARY_ELSE? expr? STATEMENT_END? ;
+define_macro  : DOCUMENTATION* method_attributes* code_type name=PART (LEFT_PAREN setParameters RIGHT_PAREN)? TERNARY_ELSE? expr? STATEMENT_END? ;
 
 
 ruleset :
@@ -150,8 +149,8 @@ type_define : (STRUCT | CLASS) name=PART (TERNARY_ELSE extends=PART?)?
 	((define STATEMENT_END) | constructor | define_method | define_macro)*
 	BLOCK_END ;
 
-enum_define : ENUM name=PART BLOCK_START (firstMember=PART enum_element*)? BLOCK_END ;
-enum_element : COMMA PART ;
+enum_define : ENUM name=PART BLOCK_START (firstMember=PART (EQUALS expr)? enum_element*)? BLOCK_END ;
+enum_element : COMMA PART (EQUALS expr)?;
 
 accessor : PRIVATE | PUBLIC | PROTECTED;
 

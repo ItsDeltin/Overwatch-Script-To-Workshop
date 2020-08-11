@@ -4,12 +4,14 @@ using Deltin.Deltinteger.Elements;
 
 namespace Deltin.Deltinteger.Pathfinder
 {
-    class ResolveInfoComponent : IComponent
+    public class ResolveInfoComponent : IComponent
     {
         public const double DefaultMoveToNext = 0.4;
 
         public DeltinScript DeltinScript { get; set; }
         public bool TrackTimeSinceLastNode { get; set; } // This will be true if the Pathmap.IsPathfindingStuck function is called anywhere in the code.
+        public bool SaveLastCurrent { get; set; } // This will be true if the Pathmap.IsPathfindingToSegment function is called anywhere in the code.
+        public bool PotentiallyNullNodes { get; set; } // Determines if nodes can potentially be null.
         
         // Class Instances
         private PathResolveClass PathResolveInstance;
@@ -93,6 +95,10 @@ namespace Deltin.Deltinteger.Pathfinder
             // The 'next' rule will set current to the next node index when the current node is reached. 
             TranslateRule next = new TranslateRule(DeltinScript, "Pathfinder: Resolve Next", RuleEvent.OngoingPlayer);
             next.Conditions.Add(NodeReachedCondition(next.ActionSet));
+            next.Conditions.Add(new Condition(ParentArray.Get(), Operators.NotEqual, new V_Null()));
+
+            if (OnPathCompleted == null || !OnPathCompleted.EmptyBlock)
+                next.ActionSet.AddAction(Element.Part<A_If>(new V_Compare(Current.Get(), Operators.NotEqual, new V_Number(-1))));
 
             // Get last attribute.
             next.ActionSet.AddAction(CurrentAttribute.SetVariable(NextSegmentAttribute(new V_EventPlayer())));
@@ -105,6 +111,17 @@ namespace Deltin.Deltinteger.Pathfinder
 
             // Invoke OnNodeReached
             OnNodeReached?.Invoke(next.ActionSet);
+
+            if (OnPathCompleted == null || !OnPathCompleted.EmptyBlock) next.ActionSet.AddAction(Element.Part<A_Else>());
+
+            if (OnPathCompleted == null)
+            {
+                next.ActionSet.AddAction(Element.Part<A_StopThrottleInDirection>(new V_EventPlayer()));
+                StopPathfinding(next.ActionSet, new V_EventPlayer());
+            }
+            else if (!OnPathCompleted.EmptyBlock) OnPathCompleted.Invoke(next.ActionSet);
+
+            if (OnPathCompleted == null || !OnPathCompleted.EmptyBlock) next.ActionSet.AddAction(Element.Part<A_End>());
 
             // Add rule
             DeltinScript.WorkshopRules.Add(next.GetRule());
@@ -124,7 +141,7 @@ namespace Deltin.Deltinteger.Pathfinder
 
             // Get the closest node index.
             if (ApplicableNodeDeterminer == null)
-                return DijkstraBase.ClosestNodeToPosition(nodes, position);
+                return DijkstraBase.ClosestNodeToPosition(nodes, position, PotentiallyNullNodes);
             else
                 return (Element)ApplicableNodeDeterminer.Invoke(actionSet, nodes, position);
         }
@@ -265,7 +282,7 @@ namespace Deltin.Deltinteger.Pathfinder
                 return new Condition(
                     Element.Part<V_DistanceBetween>(
                         PlayerPosition(),
-                        CurrentPosition()
+                        CurrentPositionWithDestination()
                     ),
                     Operators.LessThanOrEqual,
                     new V_Number(DefaultMoveToNext)
@@ -273,10 +290,91 @@ namespace Deltin.Deltinteger.Pathfinder
             // Otherwise, use hook.
             else
                 return new Condition(
-                    (Element)IsNodeReachedDeterminer.Invoke(actionSet, CurrentPosition()),
+                    (Element)IsNodeReachedDeterminer.Invoke(actionSet, CurrentPositionWithDestination()),
                     Operators.Equal,
                     new V_True()
                 );
+        }
+
+        /// <summary>Looks at a player's future nodes.</summary>
+        public Element IsTravelingToNode(ActionSet actionSet, Element targetPlayer, Element node)
+        {
+            IndexReference result = actionSet.VarCollection.Assign("Lookahead: Result", actionSet.IsGlobal, true);
+            actionSet.AddAction(result.SetVariable(new V_False()));
+
+            IndexReference look = actionSet.VarCollection.Assign("Pathfind: Lookahead", actionSet.IsGlobal, true);
+            actionSet.AddAction(look.SetVariable(Current.Get(targetPlayer)));
+
+            // Get the path.
+            actionSet.AddAction(Element.Part<A_While>(Element.Part<V_And>(new V_Compare(
+                look.GetVariable(),
+                Operators.GreaterThanOrEqual,
+                new V_Number(0)
+            ), !result.Get())));
+
+            //Element currentNode = PathmapInstance.Nodes.Get()[PathmapReference.Get(targetPlayer)][look.Get()];
+
+            actionSet.AddAction(result.SetVariable(new V_Compare(look.Get(), Operators.Equal, node)));
+
+            actionSet.AddAction(look.SetVariable(ParentArray.Get(targetPlayer)[look.Get()] - 1));
+            actionSet.AddAction(new A_End());
+
+            return result.Get();
+        }
+
+        /// <summary>Looks at a player's future segments.</summary>
+        public Element IsTravelingToSegment(ActionSet actionSet, Element targetPlayer, Element segment)
+        {
+            IndexReference result = actionSet.VarCollection.Assign("Lookahead: Result", actionSet.IsGlobal, true);
+            actionSet.AddAction(result.SetVariable(new V_False()));
+
+            IndexReference look = actionSet.VarCollection.Assign("Pathfind: Lookahead", actionSet.IsGlobal, true);
+            actionSet.AddAction(look.SetVariable(Current.Get(targetPlayer)));
+
+            // Get the path.
+            actionSet.AddAction(Element.Part<A_While>(Element.Part<V_And>(new V_Compare(
+                ParentArray.Get(targetPlayer)[look.Get()] - 1,
+                Operators.GreaterThanOrEqual,
+                new V_Number(0)
+            ), !result.Get())));
+
+            Element currentNode = PathmapInstance.Nodes.Get()[PathmapReference.Get(targetPlayer)][look.Get()];
+            Element nextNode = PathmapInstance.Nodes.Get()[PathmapReference.Get(targetPlayer)][ParentArray.Get(targetPlayer)[look.Get()] - 1];
+
+            actionSet.AddAction(result.SetVariable(new V_Compare(
+                segment,
+                Operators.Equal,
+                Element.Part<V_FirstOf>(PathmapInstance.SegmentsFromNodes(PathmapReference.Get(targetPlayer), look.Get(), ParentArray.Get(targetPlayer)[look.Get()] - 1))
+            )));
+
+            actionSet.AddAction(look.SetVariable(ParentArray.Get(targetPlayer)[look.Get()] - 1));
+            actionSet.AddAction(new A_End());
+
+            return result.Get();
+        }
+
+        /// <summary>Looks at a player's future nodes.</summary>
+        public Element IsTravelingToAttribute(ActionSet actionSet, Element targetPlayer, Element attribute)
+        {
+            IndexReference result = actionSet.VarCollection.Assign("Lookahead: Result", actionSet.IsGlobal, true);
+            actionSet.AddAction(result.SetVariable(new V_False()));
+
+            IndexReference look = actionSet.VarCollection.Assign("Pathfind: Lookahead", actionSet.IsGlobal, true);
+            actionSet.AddAction(look.SetVariable(Current.Get(targetPlayer)));
+
+            // Get the path.
+            actionSet.AddAction(Element.Part<A_While>(Element.Part<V_And>(new V_Compare(
+                look.GetVariable(),
+                Operators.GreaterThanOrEqual,
+                new V_Number(0)
+            ), !result.Get())));
+
+            actionSet.AddAction(result.SetVariable(new V_Compare(attribute, Operators.Equal, AttributeArray.Get(targetPlayer)[look.Get()])));
+
+            actionSet.AddAction(look.SetVariable(ParentArray.Get(targetPlayer)[look.Get()] - 1));
+            actionSet.AddAction(new A_End());
+
+            return result.Get();
         }
     }
 }

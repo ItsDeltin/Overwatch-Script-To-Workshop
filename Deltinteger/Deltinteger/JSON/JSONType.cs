@@ -257,12 +257,12 @@ namespace Deltin.Deltinteger.Json
 
             public override IWorkshopTree Parse(ActionSet actionSet, IExpression expression, object additionalParameterData) => null;
 
-            public override object Validate(ScriptFile script, IExpression value, DocRange valueRange)
+            public override object Validate(ParseInfo parseInfo, IExpression value, DocRange valueRange)
             {
                 StringAction stringAction = value as StringAction;
                 if (stringAction == null)
                 {
-                    script.Diagnostics.Error("Expected string constant.", valueRange);
+                    parseInfo.Script.Diagnostics.Error("Expected string constant.", valueRange);
                     return null;
                 }
 
@@ -274,7 +274,7 @@ namespace Deltin.Deltinteger.Json
                         Documentation = Extras.GetMarkupContent(prop.Var.Documentation),
                         Kind = CompletionItemKind.Property
                     });
-                script.AddCompletionRange(new CompletionRange(completion.ToArray(), valueRange, CompletionRangeKind.ClearRest));
+                parseInfo.Script.AddCompletionRange(new CompletionRange(completion.ToArray(), valueRange, CompletionRangeKind.ClearRest));
 
                 string text = stringAction.Value;
 
@@ -283,7 +283,7 @@ namespace Deltin.Deltinteger.Json
                     if (prop.Name == text)
                         return prop.Value.Value;
                 
-                script.Diagnostics.Error($"Could not find the property '{text}'.", valueRange);
+                parseInfo.Script.Diagnostics.Error($"Could not find the property '{text}'.", valueRange);
                 return null;
             }
         }

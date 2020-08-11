@@ -28,12 +28,17 @@ namespace Deltin.Deltinteger.Parse
 
         public CallInfo CallInfo { get; }
 
+        protected bool WasApplied = false;
+
+        private readonly RecursiveCallHandler _recursiveCallHandler;
+
         public DefinedFunction(ParseInfo parseInfo, string name, Location definedAt)
         {
             Name = name;
             DefinedAt = definedAt;
             this.parseInfo = parseInfo;
-            CallInfo = new CallInfo(this, parseInfo.Script);
+            _recursiveCallHandler = new RecursiveCallHandler(this);
+            CallInfo = new CallInfo(_recursiveCallHandler, parseInfo.Script);
 
             parseInfo.TranslateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, definedAt, true);
             parseInfo.Script.AddCodeLensRange(new ReferenceCodeLensRange(this, parseInfo, CodeLensSourceType.Function, DefinedAt.range));
@@ -60,7 +65,10 @@ namespace Deltin.Deltinteger.Parse
         {
             parseInfo.Script.AddDefinitionLink(callRange, DefinedAt);
             parseInfo.TranslateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, new Location(parseInfo.Script.Uri, callRange));
+            parseInfo.CurrentCallInfo.Call(_recursiveCallHandler, callRange);
         }
+
+        protected virtual IRecursiveCallHandler GetRecursiveCallHandler() => null;
 
         public string GetLabel(bool markdown) => HoverHandler.GetLabel(!DoesReturnValue ? null : ReturnType?.Name ?? "define", Name, Parameters, markdown, null);
 
@@ -71,7 +79,8 @@ namespace Deltin.Deltinteger.Parse
         protected List<IOnBlockApplied> listeners = new List<IOnBlockApplied>();
         public void OnBlockApply(IOnBlockApplied onBlockApplied)
         {
-            listeners.Add(onBlockApplied);
+            if (WasApplied) onBlockApplied.Applied();
+            else listeners.Add(onBlockApplied);
         }
 
         public override string ToString()

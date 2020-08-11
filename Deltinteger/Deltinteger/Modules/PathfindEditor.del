@@ -1,4 +1,12 @@
-import "!Debug Tools.del";
+/*
+
+This is the pathmap editor used for customizing pathmaps.
+
+You can quickly copy the compiled code by pressing ctrl+shift+p and running the 'Overwatch Script To Workshop: Copy pathmap editor code' command
+in vscode with the Overwatch Script To Workshop extension.
+
+*/
+
 import "!Container.del";
 
 rule: "Commands" -1
@@ -9,12 +17,15 @@ rule: "Commands" -1
     HelpText("Crouch + Ultimate: Destroy node."                                          , 2, Color.SkyBlue);
     HelpText("Interact: Select node."                                                    , 3, Color.LimeGreen);
     HelpText("Crouch + Interact: Deselect all nodes."                                    , 4, Color.LimeGreen);
-    HelpText("Secondary Fire: Connect all selected nodes."                               , 5, Color.Green);
+    HelpText("Secondary Fire: Connect nodes."                                            , 5, Color.Green);
     HelpText("Crouch + Secondary Fire: Disconnect all selected nodes."                   , 6, Color.Green);
-    HelpText("Voice Line Right: Create a path from the first to the last selected nodes.", 7, Color.Green);
-    HelpText("Voice Line Left: Connect all selected nodes to the first selected node."   , 8, Color.Green);
-    HelpText("Shift: Switch attribute."                                                  , 9, Color.Orange);
-    HelpText("Voice Line Up: Compile pathmap."                                           , 11, Color.Yellow);
+    HelpText("Primary Fire: Cycle connect type"                                          , 7, Color.Green);
+    HelpText("Ability 1: Switch primary attribute."                                      , 8, Color.Yellow);
+    HelpText("Crouch + Ability 1: Switch primary attribute."                             , 9, Color.Yellow);
+    HelpText("Ability 2: Switch secondary attribute."                                    , 10, Color.Orange);
+    HelpText("Crouch + Ability 2: Switch secondary attribute."                           , 11, Color.Orange);
+    HelpText("Reload: Toggle free walk."                                                 , 12, Color.Turquoise);
+    HelpText("Melee: Compile pathmap."                                                   , 13, Color.Turquoise);
 
     CreateHudText(
         AllPlayers(),
@@ -23,6 +34,9 @@ rule: "Commands" -1
         SortOrder: 1,
         Reevaluation: HudTextRev.VisibleToAndString
     );
+    CreateHudText(AllPlayers(), Text: "OSTW pathmap editor", Location:Location.Left, SortOrder: 0);
+    CreateHudText(AllPlayers(), Text: "Remember to periodically compile your pathmap so you don't lose progress.", TextColor: Color.Orange, Location:Location.Left, SortOrder: 1);
+
     CreateHudText(
         CurrentMode == Mode.Attribute ? AllPlayers() : null,
         Header   : "Attribute:",
@@ -32,15 +46,18 @@ rule: "Commands" -1
         Location : Location.Top,
         SortOrder: 2
     );
-    CreateHudText(
-        CurrentMode == Mode.Place ? AllPlayers() : null,
-        Header   : "Place mode:",
-        Subheader: ["Connect All", "Connect as path leading from first", "Connect first selected to all"][PlaceMode],
-        Text     : FirstAttribute,
-        TextColor: Color.Yellow,
-        Location : Location.Top,
-        SortOrder: 2
-    );
+
+    // CreateHudText(
+    //     CurrentMode == Mode.Place ? AllPlayers() : null,
+    //     Header   : "Place mode:",
+    //     Subheader: ["Connect All", "Connect as path leading from first", "Connect first selected to all"][PlaceMode],
+    //     Text     : FirstAttribute,
+    //     TextColor: Color.Yellow,
+    //     Location : Location.Top,
+    //     SortOrder: 2
+    // );
+
+    CreateHudText(AllPlayers(), Header: "Connect mode:", Text: ["Connect All", "Connect As Path", "Connect As Star"][PlaceMode], Location: Location.Top, SortOrder: 3);
 }
 
 globalvar Mode CurrentMode;
@@ -67,6 +84,11 @@ globalvar define FirstAttribute = 0; // The selected attribute.
 globalvar define updateVisibleLook;
 globalvar define updateVisiblePosition;
 
+globalvar Node[] Nodes = [];
+globalvar Node[] Selected = [];
+globalvar LinkedAttribute[] Attributes = [];
+globalvar Segment[] Segments = [];
+
 rule: "Create Scoper"
 {
     if (CurrentGameMode() == GameMode.Deathmatch)
@@ -83,15 +105,37 @@ rule: "Create Scoper"
 
 void HelpText(ref define text, ref define order, Color color)
 {
-    CreateHudText(VisibleTo:AllPlayers(), Subheader:text, SubheaderColor:color, Location:Location.Right, SortOrder:order);
+    CreateHudText(AllPlayers(), Text:text, TextColor:color, Location:Location.Right, SortOrder:order);
 }
 
-rule: "Disable conflicting controls"
-Event.OngoingPlayer
-if (CurrentMode == Mode.Place)
-{
-    SetSecondaryFireEnabled(EventPlayer(), false);
-}
+// rule: "Disable conflicting controls"
+// Event.OngoingPlayer
+// if (CurrentMode == Mode.Place)
+// {
+//     SetAbility1Enabled(EventPlayer(), false);
+//     SetAbility2Enabled(EventPlayer(), false);
+//     SetUltimateAbilityEnabled(EventPlayer(), false);
+//     SetSecondaryFireEnabled(EventPlayer(), false);
+//     SetPrimaryFireEnabled(EventPlayer(), false);
+// }
+// rule: "Enable conflicting controls"
+// Event.OngoingPlayer
+// if (FreeWalk)
+// {
+//     SetAbility1Enabled(EventPlayer(), true);
+//     SetAbility2Enabled(EventPlayer(), true);
+//     SetUltimateAbilityEnabled(EventPlayer(), true);
+//     SetSecondaryFireEnabled(EventPlayer(), true);
+//     SetPrimaryFireEnabled(EventPlayer(), true);
+// }
+// rule: "Toggle freewalk"
+// Event.OngoingPlayer
+// if (IsButtonHeld(EventPlayer(), Button.Reload))
+// {
+//     FreeWalk = !FreeWalk;
+//     if (FreeWalk) SmallMessage(AllPlayers(), "Free walk enabled.");
+//     else SmallMessage(AllPlayers(), "Free walk disabled.");
+// }
 rule: "Enable conflicting controls"
 Event.OngoingPlayer
 if (CurrentMode != Mode.Place)
@@ -114,8 +158,8 @@ if (CurrentMode == Mode.Place)
 if (IsButtonHeld(EventPlayer(), Button.Ultimate))
 if (!IsButtonHeld(EventPlayer(), Button.Crouch))
 {
-    Nodes = Append(Nodes, new Node(PositionOf(EventPlayer())));
-    (<Node>LastOf(Nodes)).Show();
+    ModifyVariable(Nodes, Operation.AppendToArray, new Node(PositionOf(EventPlayer())));
+    Nodes.Last.Show();
 }
 
 rule: "Delete node"
@@ -127,8 +171,8 @@ if (IsButtonHeld(EventPlayer(), Button.Crouch))
     Node selected = GetClosestNode();
     if (!IsNodeSelectable(selected)) return;
 
-    for (define i = CountOf(Segments) - 1; i >= 0; i--)
-        if (ArrayContains((<Segment>Segments[i]).Nodes, selected))
+    for (define i = Segments.Length - 1; i >= 0; i--)
+        if (Segments[i].Nodes.Contains(selected))
         {
             (<Segment>Segments[i]).Hide();
             delete(<Segment>Segments[i]);
@@ -172,10 +216,6 @@ if (IsButtonHeld(EventPlayer(), Button.Crouch))
         selected.Deselect();
     Selected = EmptyArray();
 }
-
-globalvar Node[] Nodes = [];
-globalvar Node[] Selected = [];
-globalvar LinkedAttribute[] Attributes = [];
 
 class Node
 {
@@ -332,12 +372,12 @@ if (IsButtonHeld(EventPlayer(), Button.Melee))
 if (!IsButtonHeld(EventPlayer(), Button.Crouch))
 if (PlaceMode == 0)
 {
-    for (define f = 0; f < CountOf(Selected); f++)
-        for (define l = 0; l < CountOf(Selected); l++)
+    for (define f = 0; f < Selected.Length; f++)
+        for (define l = 0; l < Selected.Length; l++)
             if ((l != f) && !SegmentExists(Selected[f], Selected[l]))
             {
-                Segments = Append(Segments, new Segment(<Node>Selected[f], <Node>Selected[l]));
-                (<Segment>LastOf(Segments)).Show();
+                ModifyVariable(Segments, Operation.AppendToArray, new Segment(Selected[f], Selected[l]));
+                Segments.Last.Show();
             }
 }
 
@@ -348,10 +388,10 @@ if (IsButtonHeld(EventPlayer(), Button.Melee))
 if (!IsButtonHeld(EventPlayer(), Button.Crouch))
 if (PlaceMode == 1)
 {
-    for (define i = 1; i < CountOf(Selected); i++)
+    for (define i = 1; i < Selected.Length; i++)
         if (!SegmentExists(Selected[i - 1], Selected[i]))
         {
-            Segments = Append(Segments, new Segment(<Node>Selected[i - 1], <Node>Selected[i]));
+            ModifyVariable(Segments, Operation.AppendToArray, new Segment(Selected[i - 1], Selected[i]))
             Segments.Last.Show();
         }
 }
@@ -363,21 +403,15 @@ if (IsButtonHeld(EventPlayer(), Button.Melee))
 if (!IsButtonHeld(EventPlayer(), Button.Crouch))
 if (PlaceMode == 2)
 {
-    for (define i = 1; i < CountOf(Selected); i++)
+    for (define i = 1; i < Selected.Length; i++)
         if (!SegmentExists(Selected[0], Selected[i]))
         {
-            Segments = Append(Segments, new Segment(<Node>Selected[0], <Node>Selected[i]));
+            ModifyVariable(Segments, Operation.AppendToArray, new Segment(Selected[0], Selected[i]))
             Segments.Last.Show();
         }
 }
 
-define SegmentExists(define node1, define node2):
-    IsTrueForAny(
-        Segments,
-        ArrayContains((<Segment>ArrayElement()).Nodes, node1)
-        &&
-        ArrayContains((<Segment>ArrayElement()).Nodes, node2)
-    );
+define SegmentExists(define node1, define node2): Segments.IsTrueForAny(Segment segment => segment.Nodes.Contains(node1) && segment.Nodes.Contains(node2));
 
 rule: "Delete Segments"
 Event.OngoingPlayer
@@ -385,22 +419,20 @@ if (CurrentMode == Mode.Place)
 if (IsButtonHeld(EventPlayer(), Button.Melee))
 if (IsButtonHeld(EventPlayer(), Button.Crouch))
 {
-    for (define i = CountOf(Segments) - 1; i >= 0; i--)
-        if (IsTrueForAll((<Segment>Segments[i]).Nodes, ArrayContains(Selected, ArrayElement())))
+    for (define i = Segments.Length - 1; i >= 0; i--)
+        if (Segments[i].Nodes.IsTrueForAll(Node node => Selected.Contains(node)))
         {
-            (<Segment>Segments[i]).Hide();
-            delete(<Segment>Segments[i]);
-            Segments = RemoveFromArrayAtIndex(Segments, i);
+            Segments[i].Hide();
+            delete(Segments[i]);
+            ModifyVariable(Segments, Operation.RemoveFromArrayByIndex, i);
         }
 }
-
-globalvar Segment[] Segments = EmptyArray();
 
 class Segment
 {
     public Node Node1;
     public Node Node2;    
-    public define Nodes;
+    public Node[] Nodes;
 
     define EffectID;
     public define visible = false;
@@ -455,7 +487,7 @@ if (updateVisibleLook == null || DistanceBetween(updateVisiblePosition, HostPlay
 
 rule: "CSV out"
 Event.OngoingPlayer
-if (IsCommunicating(EventPlayer(), Communication.VoiceLineUp))
+if (IsButtonHeld(EventPlayer(), Button.Melee))
 {
     compiling = true;
     SmallMessage(AllPlayers(), "Compiling...");
@@ -475,7 +507,6 @@ if (IsCommunicating(EventPlayer(), Communication.VoiceLineUp))
             segment.Node2.ID,
             // Z is unused
             0
-            // (<Segment>Segments[i]).Attribute
         ));
     
     foreach (LinkedAttribute attribute in Attributes)

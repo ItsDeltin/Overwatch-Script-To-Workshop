@@ -16,13 +16,15 @@ namespace Deltin.Deltinteger.Pathfinder
         protected Element Source { get; }
         private Element attributes { get; }
         protected bool useAttributes { get; }
+        protected bool reverseAttributes { get; set; } = false;
+        protected ResolveInfoComponent resolveInfo { get; }
 
         protected IndexReference unvisited { get; private set; }
         protected IndexReference current { get; set; }
         protected IndexReference distances { get; set; }
         protected IndexReference parentArray { get; set; }
         protected IndexReference parentAttributeInfo { get; set; }
-        protected static bool assignExtended = false;
+        protected static bool assignExtended = true;
 
         public Action<ActionSet> OnLoop { get; set; } = actionSet => {
             actionSet.AddAction(A_Wait.MinimumWait);
@@ -30,7 +32,7 @@ namespace Deltin.Deltinteger.Pathfinder
         public Action<ActionSet> OnConnectLoop { get; set; } = actionSet => {
             actionSet.AddAction(A_Wait.MinimumWait);
         };
-        public Func<ActionSet, Element, Element, Element> GetClosestNode { get; set; } = (actionSet, nodes, position) => ClosestNodeToPosition(nodes, position);
+        public Func<ActionSet, Element, Element, Element> GetClosestNode { get; set; }
 
         public DijkstraBase(ActionSet actionSet, Element pathmapObject, Element position, Element attributes)
         {
@@ -38,13 +40,20 @@ namespace Deltin.Deltinteger.Pathfinder
             this.pathmapObject = pathmapObject;
             this.Source = position;
             this.attributes = attributes;
-            this.useAttributes = attributes != null && attributes is V_EmptyArray == false;
+            this.useAttributes = attributes != null;
 
+            // Set closest node determiner.
+            GetClosestNode = (actionSet, nodes, position) => ClosestNodeToPosition(nodes, position, resolveInfo.PotentiallyNullNodes);
+
+            // Get the pathmap class instance.
             PathmapClass pathmapClass = actionSet.Translate.DeltinScript.Types.GetCodeType<PathmapClass>();
 
             Nodes = pathmapClass.Nodes.Get()[pathmapObject];
             Segments = pathmapClass.Segments.Get()[pathmapObject];
             Attributes = pathmapClass.Attributes.Get()[pathmapObject];
+
+            // Get the resolve info component.
+            resolveInfo = actionSet.Translate.DeltinScript.GetComponent<ResolveInfoComponent>();
         }
 
         public void Get()
@@ -65,7 +74,7 @@ namespace Deltin.Deltinteger.Pathfinder
             // Set the current variable as the first node.
             actionSet.AddAction(current.SetVariable(firstNode));
             SetInitialDistances(actionSet, distances, (Element)current.GetVariable());
-            SetInitialUnvisited(actionSet, Nodes, unvisited);
+            SetInitialUnvisited();
 
             actionSet.AddAction(Element.Part<A_While>(LoopCondition()));
 
@@ -219,39 +228,52 @@ namespace Deltin.Deltinteger.Pathfinder
 
         /// <summary>Gets the closest node to a position.</summary>
         /// <returns>The closest node as an index of the `Nodes` array.</returns>
-        public static Element ClosestNodeToPosition(Element nodes, Element position) => Element.Part<V_IndexOfArrayValue>(
-            nodes,
-            Element.Part<V_FirstOf>(
-                Element.Part<V_SortedArray>(
-                    nodes,
-                    Element.Part<V_DistanceBetween>(
-                        position,
-                        new V_ArrayElement()
+        public static Element ClosestNodeToPosition(Element nodes, Element position, bool potentiallyNullNodes)
+        {
+            Element sortArray = nodes;
+            if (potentiallyNullNodes) sortArray = Element.Part<V_FilteredArray>(nodes, new V_Compare(new V_ArrayElement(), Operators.NotEqual, new V_Null()));
+
+            return Element.Part<V_IndexOfArrayValue>(
+                nodes,
+                Element.Part<V_FirstOf>(
+                    Element.Part<V_SortedArray>(
+                        sortArray,
+                        Element.Part<V_DistanceBetween>(
+                            position,
+                            new V_ArrayElement()
+                        )
                     )
                 )
-            )
-        );
+            );
+        }
 
         private static void SetInitialDistances(ActionSet actionSet, IndexReference distancesVar, Element currentIndex)
         {
             actionSet.AddAction(distancesVar.SetVariable(LeastNot0, null, currentIndex));
         }
 
-        private static void SetInitialUnvisited(ActionSet actionSet, Element nodeArray, IndexReference unvisitedVar)
+        private void SetInitialUnvisited()
         {
             // Create an array counting up to the number of values in the nodeArray array.
             // For example, if nodeArray has 6 variables unvisitedVar will be set to [0, 1, 2, 3, 4, 5].
 
             // Empty the unvisited array.
-            actionSet.AddAction(unvisitedVar.SetVariable(new V_EmptyArray()));
+            actionSet.AddAction(unvisited.SetVariable(new V_EmptyArray()));
             
             IndexReference current = actionSet.VarCollection.Assign("unvisitedBuilder", actionSet.IsGlobal, assignExtended);
             actionSet.AddAction(current.SetVariable(0));
 
             // While current < the count of the node array.
-            actionSet.AddAction(Element.Part<A_While>((Element)current.GetVariable() < Element.Part<V_CountOf>(nodeArray)));
+            actionSet.AddAction(Element.Part<A_While>((Element)current.GetVariable() < Element.Part<V_CountOf>(Nodes)));
 
-            actionSet.AddAction(unvisitedVar.ModifyVariable(Operation.AppendToArray, (Element)current.GetVariable()));
+            // If there can be null nodes, make sure the node is not null.
+            if (resolveInfo.PotentiallyNullNodes) actionSet.AddAction(Element.Part<A_If>(new V_Compare(Nodes[current.Get()], Operators.NotEqual, new V_Null())));
+
+            actionSet.AddAction(unvisited.ModifyVariable(Operation.AppendToArray, (Element)current.GetVariable()));
+
+            // End the if.
+            if (resolveInfo.PotentiallyNullNodes) actionSet.AddAction(new A_End());
+
             actionSet.AddAction(current.ModifyVariable(Operation.Add, 1));
 
             // End the while.
@@ -275,7 +297,7 @@ namespace Deltin.Deltinteger.Pathfinder
         protected Element NoAccessableUnvisited() => Element.Part<V_IsTrueForAll>(unvisited.GetVariable(), new V_Compare(Element.Part<V_ValueInArray>(distances.GetVariable(), new V_ArrayElement()), Operators.Equal, new V_Number(0)));
         protected Element AnyAccessableUnvisited() => Element.Part<V_IsTrueForAny>(unvisited.GetVariable(), new V_Compare(Element.Part<V_ValueInArray>(distances.GetVariable(), new V_ArrayElement()), Operators.NotEqual, new V_Number(0)));
 
-        private static Element BothNodes(Element segment) => Element.CreateAppendArray(Node1(segment), Node2(segment));
+        public static Element BothNodes(Element segment) => Element.CreateAppendArray(Node1(segment), Node2(segment));
         public static Element Node1(Element segment) => Element.Part<V_XOf>(segment);
         public static Element Node2(Element segment) => Element.Part<V_YOf>(segment);
     }
@@ -358,7 +380,7 @@ namespace Deltin.Deltinteger.Pathfinder
             actionSet.AddAction(endLoop);
             PlayerNodeReachedBreak.SetEndMarker(endLoop);
 
-            actionSet.Translate.DeltinScript.GetComponent<ResolveInfoComponent>().Pathfind(actionSet, player, pathmapObject, parentArray.Get(), parentAttributeInfo.Get(), Source);
+            resolveInfo.Pathfind(actionSet, player, pathmapObject, parentArray.Get(), parentAttributeInfo.Get(), Source);
         }
 
         protected override Element LoopCondition() => AnyAccessableUnvisited();
@@ -399,7 +421,6 @@ namespace Deltin.Deltinteger.Pathfinder
 
         override protected void GetResult()
         {
-            ResolveInfoComponent resolveInfo = actionSet.Translate.DeltinScript.GetComponent<ResolveInfoComponent>();
             resolveInfo.Pathfind(actionSet, players, pathmapObject, parentArray.Get(), parentAttributeInfo.Get(), Source);
         }
     }
@@ -416,6 +437,7 @@ namespace Deltin.Deltinteger.Pathfinder
         {
             this.destinations = destinations;
             this.player = player;
+            reverseAttributes = true;
         }
 
         protected override void Assign()
@@ -468,7 +490,7 @@ namespace Deltin.Deltinteger.Pathfinder
 
             actionSet.AddAction(parentArray.SetVariable(newParentArray.Get()));
 
-            actionSet.Translate.DeltinScript.GetComponent<ResolveInfoComponent>().Pathfind(actionSet, player, pathmapObject, parentArray.Get(), parentAttributeInfo.Get(), Nodes[current.Get()]);
+            resolveInfo.Pathfind(actionSet, player, pathmapObject, parentArray.Get(), parentAttributeInfo.Get(), Nodes[current.Get()]);
         }
 
         // Loop until any of the destinations have been visited.
@@ -514,6 +536,7 @@ namespace Deltin.Deltinteger.Pathfinder
         {
             // Get the PathResolveClass instance.
             PathResolveClass = actionSet.Translate.DeltinScript.Types.GetInstance<PathResolveClass>();
+            PathResolveClass.WorkshopInit(actionSet.Translate.DeltinScript);
 
             // Create a new PathResolve class instance.
             ClassReference = PathResolveClass.Create(actionSet, actionSet.Translate.DeltinScript.GetComponent<ClassData>());

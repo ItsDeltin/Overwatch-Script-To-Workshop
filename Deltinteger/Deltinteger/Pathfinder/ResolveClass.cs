@@ -35,12 +35,13 @@ namespace Deltin.Deltinteger.Pathfinder
             // Set Destination
             Destination = AddObjectVariable(new InternalVar("Destination"));
 
-            serveObjectScope.AddNativeMethod(PathfindFunction());
+            serveObjectScope.AddNativeMethod(PathfindFunction);
+            serveObjectScope.AddNativeMethod(Next);
         }
 
-        private FuncMethod PathfindFunction() => new FuncMethod(new FuncMethodBuilder() {
+        private FuncMethod PathfindFunction => new FuncMethodBuilder() {
             Name = "Pathfind",
-            Documentation = "Pathfinds the specified players.",
+            Documentation = "Pathfinds the specified players to the destination.",
             Parameters = new CodeParameter[] {
                 new CodeParameter("players", "The players to pathfind.")
             },
@@ -53,6 +54,17 @@ namespace Deltin.Deltinteger.Pathfinder
 
                 return null;
             }
-        });
+        };
+
+        private FuncMethod Next => new FuncMethodBuilder() {
+            Name = "Next",
+            Documentation = new MarkupBuilder().Add("Gets a node's parent index from a node index. Continuously feeding the result back into this function will eventually lead to the source of the resolved path. The node's actual position can be obtained by calling ").Code("PathResolve.OriginMap.Nodes[node_index]").Add(".")
+                .NewLine().Add("Identical to doing ").Code("parent_node_index = PathResolve.ParentArray[node_index] - 1").ToString(),
+            Parameters = new CodeParameter[] {
+                new CodeParameter("node", new MarkupBuilder().Add("The index of the node from the ").Code("PathResolve.OriginMap.Nodes").Add(" array.").ToString())
+            },
+            DoesReturnValue = true,
+            Action = (actionSet, methodCall) => ParentArray.Get(actionSet)[(Element)methodCall.ParameterValues[0]] - 1
+        };
     }
 }
