@@ -256,28 +256,13 @@ namespace Deltin.Deltinteger.Pathfinder
         {
             // Create an array counting up to the number of values in the nodeArray array.
             // For example, if nodeArray has 6 variables unvisitedVar will be set to [0, 1, 2, 3, 4, 5].
+            Element array = Element.Part<V_MappedArray>(Nodes, new V_CurrentArrayIndex());
 
-            // Empty the unvisited array.
-            actionSet.AddAction(unvisited.SetVariable(new V_EmptyArray()));
+            // If any of the nodes are null, destroy them.
+            if (resolveInfo.PotentiallyNullNodes)
+                array = Element.Part<V_FilteredArray>(array, new V_Compare(Nodes[new V_ArrayElement()], Operators.NotEqual, new V_Null()));
             
-            IndexReference current = actionSet.VarCollection.Assign("unvisitedBuilder", actionSet.IsGlobal, assignExtended);
-            actionSet.AddAction(current.SetVariable(0));
-
-            // While current < the count of the node array.
-            actionSet.AddAction(Element.Part<A_While>((Element)current.GetVariable() < Element.Part<V_CountOf>(Nodes)));
-
-            // If there can be null nodes, make sure the node is not null.
-            if (resolveInfo.PotentiallyNullNodes) actionSet.AddAction(Element.Part<A_If>(new V_Compare(Nodes[current.Get()], Operators.NotEqual, new V_Null())));
-
-            actionSet.AddAction(unvisited.ModifyVariable(Operation.AppendToArray, (Element)current.GetVariable()));
-
-            // End the if.
-            if (resolveInfo.PotentiallyNullNodes) actionSet.AddAction(new A_End());
-
-            actionSet.AddAction(current.ModifyVariable(Operation.Add, 1));
-
-            // End the while.
-            actionSet.AddAction(new A_End());
+            actionSet.AddAction(unvisited.SetVariable(array));
         }
 
         private Element GetConnectedSegments(Element segments, Element currentIndex) => Element.Part<V_FilteredArray>(

@@ -67,7 +67,8 @@ namespace Deltin.Deltinteger.Pathfinder
             staticScope.AddNativeMethod(IsPathfinding);
             staticScope.AddNativeMethod(IsPathfindStuck);
             staticScope.AddNativeMethod(FixPathfind);
-            staticScope.AddNativeMethod(NextNode);
+            staticScope.AddNativeMethod(NextPosition);
+            staticScope.AddNativeMethod(CurrentNode);
             staticScope.AddNativeMethod(ThrottleToNextNode);
             staticScope.AddNativeMethod(Recalibrate);
             staticScope.AddNativeMethod(IsPathfindingToNode);
@@ -135,6 +136,8 @@ namespace Deltin.Deltinteger.Pathfinder
         }
 
         private static MarkupBuilder AddHookInfo(MarkupBuilder markupBuilder) => markupBuilder.NewLine().Add("This is a hook variable, meaning it can only be set at the rule-level.");
+
+        private static ResolveInfoComponent Comp(ActionSet actionSet) => actionSet.Translate.DeltinScript.GetComponent<ResolveInfoComponent>();
 
         public override void WorkshopInit(DeltinScript translateInfo)
         {
@@ -411,7 +414,7 @@ namespace Deltin.Deltinteger.Pathfinder
                     actionSet.AddAction(Nodes.ModifyVariable(operation: Operation.AppendToArray, value: (Element)methodCall.ParameterValues[0], index: (Element)actionSet.CurrentObject));
                     
                     // Return the index of the added node.
-                    return Element.Part<V_CountOf>(Nodes.Get()[(Element)actionSet.CurrentObject]);
+                    return Element.Part<V_CountOf>(Nodes.Get()[(Element)actionSet.CurrentObject]) - 1;
                 }
             }
         };
@@ -575,6 +578,7 @@ namespace Deltin.Deltinteger.Pathfinder
                 new CodeParameter("player", "The player to get the current segment attribute of.")
             },
             DoesReturnValue = true,
+            ReturnType = new ArrayType(null),
             Action = (actionSet, methodCall) => actionSet.Translate.DeltinScript.GetComponent<ResolveInfoComponent>().CurrentAttribute.Get((Element)methodCall.ParameterValues[0])
         };
 
@@ -612,14 +616,27 @@ namespace Deltin.Deltinteger.Pathfinder
             }
         };
 
-        // NextNode(player)
-        private static FuncMethod NextNode = new FuncMethodBuilder() {
-            Name = "NextNode",
+        // NextPosition(player)
+        private static FuncMethod NextPosition = new FuncMethodBuilder() {
+            Name = "NextPosition",
             Documentation = "Gets the position the player is currently walking towards.",
+            Parameters = new CodeParameter[] {
+                new CodeParameter("player", "The player to get the next position of.")
+            },
+            DoesReturnValue = true,
+            ReturnType = VectorType.Instance,
+            Action = (actionSet, methodCall) => actionSet.Translate.DeltinScript.GetComponent<ResolveInfoComponent>().CurrentPositionWithDestination((Element)methodCall.ParameterValues[0])
+        };
+
+        // CurrentNode
+        private static FuncMethod CurrentNode = new FuncMethodBuilder() {
+            Name = "CurrentNode",
+            Documentation = "The node index the player is currently walking towards.",
             Parameters = new CodeParameter[] {
                 new CodeParameter("player", "The player to get the next node of.")
             },
-            Action = (actionSet, methodCall) => actionSet.Translate.DeltinScript.GetComponent<ResolveInfoComponent>().CurrentPositionWithDestination((Element)methodCall.ParameterValues[0])
+            DoesReturnValue = true,
+            Action = (actionSet, methodCall) => Comp(actionSet).Current.Get(methodCall.Get(0))
         };
 
         // IsPathfinding(player)
