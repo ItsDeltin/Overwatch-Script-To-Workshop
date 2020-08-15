@@ -12,58 +12,59 @@ import "!Container.del";
 rule: "Commands" -1
 {
     DisableInspectorRecording();
-    CreateHudText(VisibleTo:AllPlayers(), Text:"https://github.com/ItsDeltin/Overwatch-Script-To-Workshop/wiki/Pathfinding", TextColor:Color.Blue, Location:Location.Right, SortOrder:0);
-    HelpText("Ultimate: Create node."                                                    , 1, Color.SkyBlue);
-    HelpText("Crouch + Ultimate: Destroy node."                                          , 2, Color.SkyBlue);
-    HelpText("Interact: Select node."                                                    , 3, Color.LimeGreen);
-    HelpText("Crouch + Interact: Deselect all nodes."                                    , 4, Color.LimeGreen);
-    HelpText("Secondary Fire: Connect nodes."                                            , 5, Color.Green);
-    HelpText("Crouch + Secondary Fire: Disconnect all selected nodes."                   , 6, Color.Green);
-    HelpText("Primary Fire: Cycle connect type"                                          , 7, Color.Green);
-    HelpText("Ability 1: Switch primary attribute."                                      , 8, Color.Yellow);
-    HelpText("Crouch + Ability 1: Switch primary attribute."                             , 9, Color.Yellow);
-    HelpText("Ability 2: Switch secondary attribute."                                    , 10, Color.Orange);
-    HelpText("Crouch + Ability 2: Switch secondary attribute."                           , 11, Color.Orange);
-    HelpText("Reload: Toggle free walk."                                                 , 12, Color.Turquoise);
-    HelpText("Melee: Compile pathmap."                                                   , 13, Color.Turquoise);
+    CreateHudText(AllPlayers(), Text:"https://github.com/ItsDeltin/Overwatch-Script-To-Workshop/wiki/Pathfinding", TextColor:Color.Blue, Location:Location.Right, SortOrder:0);
 
+    // Left huds
     CreateHudText(AllPlayers(), Text: "OSTW pathmap editor", Location:Location.Left, SortOrder: 0);
     CreateHudText(AllPlayers(), Text: "Remember to periodically compile your pathmap so you don't lose progress.", TextColor: Color.Orange, Location:Location.Left, SortOrder: 1);
+    CreateHudText(AllPlayers(), Text: "――――――――――", Location: Location.Left, SortOrder: 2);
+    CreateHudText(AllPlayers(), Text: <"Mode - Press <0> to change", InputBindingString(ButtonValue(Button.Interact))>, Location: Location.Left, SortOrder: 3);
     CreateHudText(
         AllPlayers(),
-        Header: <"Current Mode - Press <0> to change\n<1>Free Walk\n<2>Place Nodes\n<3>Add Attributes",
-            InputBindingString(ButtonValue(Button.Interact)),
+        Text: <"<0>Free Walk\n<1>Place Nodes+Segments\n<2>Add Attributes",
             menuArrow(CurrentMode, 0),
             menuArrow(CurrentMode, 1),
             menuArrow(CurrentMode, 2)
         >,
         Location: Location.Left,
-        SortOrder: 2,
-        Reevaluation: HudTextRev.VisibleToAndString
+        SortOrder: 4
     );
+    CreateHudText(AllPlayers(), Text: "――――――――――", Location: Location.Left, SortOrder: 5);
+    CreateHudText(AllPlayers(), Text: <"Change Mode → <0>", InputBindingString(ButtonValue(Button.Interact))>, Location: Location.Left, SortOrder: 6);
+    CreateHudText(CurrentMode == Mode.Place ? AllPlayers() : null, Text: <"Create Node → <0>\nDelete Node → <1>+<0>", inpStr(Button.PrimaryFire), inpStr(Button.Crouch)>, TextColor: Color.SkyBlue, Location: Location.Left, SortOrder: 7);
+    CreateHudText(CurrentMode == Mode.Attribute ? AllPlayers() : null, Text: <"Toggle Current Attribute → <0>", inpStr(Button.PrimaryFire)>, TextColor: Color.SkyBlue, Location: Location.Left, SortOrder: 7);
+    CreateHudText(ArrayContains([Mode.Place, Mode.Attribute], CurrentMode) ? AllPlayers() : null, Text: <"Select node → <0>\nDeselect All Nodes → <1>+<0>", inpStr(Button.SecondaryFire), inpStr(Button.Crouch)>, TextColor: Color.LimeGreen, Location: Location.Left, SortOrder: 8);
+    CreateHudText(CurrentMode == Mode.Place ? AllPlayers() : null, Text: <"Connect selected nodes → <0>\nDisconnect all selected nodes → <1>+<0>", inpStr(Button.Ability2), inpStr(Button.Crouch)>, TextColor: Color.Green, Location: Location.Left, SortOrder: 9);
+    CreateHudText(CurrentMode == Mode.Place ? AllPlayers() : null, Text: <"Cycle Connect Type → <0>", inpStr(Button.Reload)>, TextColor: Color.Orange, Location: Location.Left, SortOrder: 10);
+    CreateHudText(CurrentMode == Mode.Attribute ? AllPlayers() : null, Text: <"Increase Attribute Value → <0>\nDecrease Attribute Value → <1>+<0>", inpStr(Button.Reload), inpStr(Button.Crouch)>, TextColor: Color.Orange, Location: Location.Left, SortOrder: 10);
+    CreateHudText(AllPlayers(), Text: "Compile Pathmap → Acknowledge", TextColor: Color.Turquoise, Location: Location.Left, SortOrder: 11);
 
+    // Top huds
     CreateHudText(
         CurrentMode == Mode.Attribute ? AllPlayers() : null,
         Header   : "Attribute:",
-        Subheader: ["Normal", "Custom"][Min(FirstAttribute, 1)],
         Text     : FirstAttribute,
-        TextColor: Color.Yellow,
         Location : Location.Top,
-        SortOrder: 2
+        SortOrder: -4
     );
 
-    // CreateHudText(
-    //     CurrentMode == Mode.Place ? AllPlayers() : null,
-    //     Header   : "Place mode:",
-    //     Subheader: ["Connect All", "Connect as path leading from first", "Connect first selected to all"][PlaceMode],
-    //     Text     : FirstAttribute,
-    //     TextColor: Color.Yellow,
-    //     Location : Location.Top,
-    //     SortOrder: 2
-    // );
+    CreateHudText(
+        CurrentMode == Mode.Place ? AllPlayers() : null,
+        Header: "Connect mode:",
+        Text: ["Connect All", "Connect As Path", "Connect As Star"][PlaceMode],
+        Location: Location.Top,
+        SortOrder: -4
+    );
 
-    CreateHudText(AllPlayers(), Header: "Connect mode:", Text: ["Connect All", "Connect As Path", "Connect As Star"][PlaceMode], Location: Location.Top, SortOrder: 3);
+    CreateHudText(
+        AllPlayers(),
+        Text: " \n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
+        Location: Location.Top,
+        SortOrder: -0.1
+    );
 }
+
+define inpStr(Button button): InputBindingString(ButtonValue(button));
 
 define menuArrow(define value, define expecting): value == expecting ? "▶" : "▷";
 
@@ -73,6 +74,28 @@ enum Mode
     Navigate,
     Place,
     Attribute
+}
+
+rule: "Enable Conflicting Controls: Free-Walk"
+Event.OngoingPlayer
+if (CurrentMode == Mode.Navigate)
+{
+    AllowButton(EventPlayer(), Button.PrimaryFire);
+    AllowButton(EventPlayer(), Button.SecondaryFire);
+    AllowButton(EventPlayer(), Button.Reload);
+    AllowButton(EventPlayer(), Button.Ability2);
+    AllowButton(EventPlayer(), Button.Ability1);
+}
+
+rule: "Disable Conflicting Controls: Free-Walk"
+Event.OngoingPlayer
+if (CurrentMode != Mode.Navigate)
+{
+    DisallowButton(EventPlayer(), Button.PrimaryFire);
+    DisallowButton(EventPlayer(), Button.SecondaryFire);
+    DisallowButton(EventPlayer(), Button.Reload);
+    DisallowButton(EventPlayer(), Button.Ability2);
+    DisallowButton(EventPlayer(), Button.Ability1);
 }
 
 globalvar define scoper; // The dummy used for reevaluation containers.
@@ -121,34 +144,6 @@ void HelpText(ref define text, ref define order, Color color)
     CreateHudText(AllPlayers(), Text:text, TextColor:color, Location:Location.Right, SortOrder:order);
 }
 
-// rule: "Disable conflicting controls"
-// Event.OngoingPlayer
-// if (CurrentMode == Mode.Place)
-// {
-//     SetAbility1Enabled(EventPlayer(), false);
-//     SetAbility2Enabled(EventPlayer(), false);
-//     SetUltimateAbilityEnabled(EventPlayer(), false);
-//     SetSecondaryFireEnabled(EventPlayer(), false);
-//     SetPrimaryFireEnabled(EventPlayer(), false);
-// }
-// rule: "Enable conflicting controls"
-// Event.OngoingPlayer
-// if (FreeWalk)
-// {
-//     SetAbility1Enabled(EventPlayer(), true);
-//     SetAbility2Enabled(EventPlayer(), true);
-//     SetUltimateAbilityEnabled(EventPlayer(), true);
-//     SetSecondaryFireEnabled(EventPlayer(), true);
-//     SetPrimaryFireEnabled(EventPlayer(), true);
-// }
-// rule: "Toggle freewalk"
-// Event.OngoingPlayer
-// if (IsButtonHeld(EventPlayer(), Button.Reload))
-// {
-//     FreeWalk = !FreeWalk;
-//     if (FreeWalk) SmallMessage(AllPlayers(), "Free walk enabled.");
-//     else SmallMessage(AllPlayers(), "Free walk disabled.");
-// }
 rule: "Enable conflicting controls"
 Event.OngoingPlayer
 if (CurrentMode != Mode.Place)
@@ -559,32 +554,56 @@ if (CountOf(preloadNodes) != 0)
         ));
 }
 
-rule: "Change Primary Attribute"
+rule: "Increment Place Mode"
 Event.OngoingPlayer
 if (IsButtonHeld(EventPlayer(), b_placeModeAndAttribute))
 if (!IsButtonHeld(EventPlayer(), Button.Crouch))
+if (CurrentMode == Mode.Place)
 {
-    if (CurrentMode == Mode.Attribute)
-        FirstAttribute++;
-    else
-    {
-        PlaceMode++;
-        if (PlaceMode > 2)
-            PlaceMode = 0;
-    }
+    PlaceMode++;
+    if (PlaceMode > 2)
+        PlaceMode = 0;
 }
-rule: "Reset Primary Attribute"
+rule: "Decrement Place Mode"
 Event.OngoingPlayer
 if (IsButtonHeld(EventPlayer(), b_placeModeAndAttribute))
 if (IsButtonHeld(EventPlayer(), Button.Crouch))
+if (CurrentMode == Mode.Place)
 {
-    if (CurrentMode == Mode.Attribute)
+    PlaceMode--;
+    if (PlaceMode < 0)
+        PlaceMode = 2;
+}
+rule: "Increment Attribute"
+Event.OngoingPlayer
+if (IsButtonHeld(EventPlayer(), b_placeModeAndAttribute))
+if (!IsButtonHeld(EventPlayer(), Button.Crouch))
+if (CurrentMode == Mode.Attribute)
+{
+    pressLoop(() => {
+        FirstAttribute++;
+    });
+}
+rule: "Decrement Attribute"
+Event.OngoingPlayer
+if (IsButtonHeld(EventPlayer(), b_placeModeAndAttribute))
+if (IsButtonHeld(EventPlayer(), Button.Crouch))
+if (CurrentMode == Mode.Attribute)
+{
+    pressLoop(() => {
         FirstAttribute--;
-    else
+    });
+}
+
+void pressLoop(BlockLambda action)
+{
+    action.Invoke();
+    Wait(0.5, WaitBehavior.AbortWhenFalse);
+    while (true)
     {
-        PlaceMode--;
-        if (PlaceMode < 0)
-            PlaceMode = 2;
+        action.Invoke();
+        Wait(0.1, WaitBehavior.AbortWhenFalse);
+        AbortIfConditionIsFalse();
     }
 }
 

@@ -18,7 +18,7 @@ namespace Deltin.Deltinteger.Pathfinder
 
         public static void FromPathmapFile(string file)
         {
-            DeltinScript deltinScript = Generate(PathMap.ImportFromXMLFile(file), OutputLanguage.enUS);
+            DeltinScript deltinScript = Generate(file, PathMap.ImportFromXMLFile(file), OutputLanguage.enUS);
 
             string code = deltinScript.WorkshopCode;
 
@@ -32,7 +32,7 @@ namespace Deltin.Deltinteger.Pathfinder
                 deltinScript.Diagnostics.PrintDiagnostics(Log);
             }
         }
-        public static DeltinScript Generate(PathMap map, OutputLanguage language)
+        public static DeltinScript Generate(string fileName, PathMap map, OutputLanguage language)
         {
             string baseEditorFile = Extras.CombinePathWithDotNotation(null, "!PathfindEditor.del");
 
@@ -41,6 +41,10 @@ namespace Deltin.Deltinteger.Pathfinder
                     // Set the initial nodes.
                     Rule initialNodes = new Rule("Initial Nodes");
                     initialNodes.Actions = ArrayBuilder<Element>.Build(
+                        // File name HUD.
+                        Element.Hud(text: new V_CustomString(fileName), sortOrder: 1, textColor: Color.Orange, location: HudLocation.Right),
+
+                        // Set nodes, segments, and attributes.
                         WorkshopArrayBuilder.SetVariable(null, map.NodesAsWorkshopData(), null, LoadNodes, false),
                         WorkshopArrayBuilder.SetVariable(null, map.SegmentsAsWorkshopData(), null, LoadSegments, false),
                         WorkshopArrayBuilder.SetVariable(null, map.AttributesAsWorkshopData(), null, LoadAttributes, false)

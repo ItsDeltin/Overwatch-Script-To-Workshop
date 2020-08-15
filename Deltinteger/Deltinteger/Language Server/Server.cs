@@ -143,7 +143,7 @@ namespace Deltin.Deltinteger.LanguageServer
                 }
                 else
                 {
-                    compile = Editor.Generate(PathMap.ImportFromXML(editFileToken.Text), ConfigurationHandler.OutputLanguage);
+                    compile = Editor.Generate(editFileToken.File, PathMap.ImportFromXML(editFileToken.Text), ConfigurationHandler.OutputLanguage);
                 }
 
                 Clipboard.SetText(compile.WorkshopCode);
@@ -165,15 +165,9 @@ namespace Deltin.Deltinteger.LanguageServer
         class PathmapDocument
         {
             public string Text;
+            public string File;
 
             public PathmapDocument() {}
-            public PathmapDocument(string text)
-            {
-                Text = text;
-            }
-
-            public static implicit operator PathmapDocument(string doc) => new PathmapDocument(doc);
-            public static implicit operator string(PathmapDocument doc) => doc.Text;
         }
 
         public static readonly DocumentSelector DocumentSelector = new DocumentSelector(

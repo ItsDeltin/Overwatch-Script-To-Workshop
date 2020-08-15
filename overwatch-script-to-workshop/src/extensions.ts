@@ -335,7 +335,7 @@ function addCommands(context: ExtensionContext)
 		}
 
 		// Send the 'pathmapEditor' request with the 'editPathmap' contents for the parameter to the language server.
-		client.sendRequest<boolean>('pathmapEditor', {Text: editPathmap}).then((result: boolean) => {
+		client.sendRequest<boolean>('pathmapEditor', {Text: editPathmap, File: editPathmapFile}).then((result: boolean) => {
 			// The request will return true if successful.
 			// It can return false if PathfindEditor.del was tinkered with by the user (or there is a bug).
 			if (result)
