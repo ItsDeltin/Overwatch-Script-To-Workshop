@@ -20,6 +20,7 @@ namespace Deltin.Deltinteger.Pathfinder
 
         private InternalVar NodesVar;
         private InternalVar SegmentsVar;
+        private InternalVar AttributesVar;
         private HookVar OnPathStartHook;
         private HookVar OnNodeReachedHook;
         private HookVar OnPathCompleted;
@@ -60,6 +61,7 @@ namespace Deltin.Deltinteger.Pathfinder
             serveObjectScope.AddNativeMethod(AddAttribute);
             serveObjectScope.AddNativeMethod(DeleteAttribute);
             serveObjectScope.AddNativeMethod(DeleteAllAttributes);
+            serveObjectScope.AddNativeMethod(DeleteAllAttributesConnectedToNode);
             serveObjectScope.AddNativeMethod(SegmentFromNodes);
 
             staticScope.AddNativeMethod(StopPathfind);
@@ -121,18 +123,21 @@ namespace Deltin.Deltinteger.Pathfinder
             staticScope.AddNativeVariable(IsNodeReachedDeterminer);
             staticScope.AddNativeVariable(ApplicableNodeDeterminer);
 
-            NodesVar = new InternalVar("Nodes", CompletionItemKind.Property) {
+            NodesVar = new InternalVar("Nodes") {
                 Documentation = "The nodes of the pathmap.",
-                CodeType = new ArrayType(VectorType.Instance),
-                IsSettable = false
+                CodeType = new ArrayType(VectorType.Instance)
             };
-            SegmentsVar = new InternalVar("Segments", CompletionItemKind.Property) {
+            SegmentsVar = new InternalVar("Segments") {
                 Documentation = "The segments of the pathmap. These segments connect the nodes together.",
-                CodeType = new ArrayType(SegmentsStruct.Instance),
-                IsSettable = false
+                CodeType = new ArrayType(SegmentsStruct.Instance)
+            };
+            AttributesVar = new InternalVar("Attributes") {
+                Documentation = "The attributes of the pathmap. The X of a value in the array is the first node that the attribute is related to. The Y is the second node the attribute is related to. The Z is the attribute's actual value.",
+                CodeType = new ArrayType(VectorType.Instance)
             };
             serveObjectScope.AddNativeVariable(NodesVar);
             serveObjectScope.AddNativeVariable(SegmentsVar);
+            serveObjectScope.AddNativeVariable(AttributesVar);
         }
 
         private static MarkupBuilder AddHookInfo(MarkupBuilder markupBuilder) => markupBuilder.NewLine().Add("This is a hook variable, meaning it can only be set at the rule-level.");
@@ -156,8 +161,9 @@ namespace Deltin.Deltinteger.Pathfinder
             AddHook(assigner, OnPathCompleted);
             AddHook(assigner, IsNodeReachedDeterminer);
 
-            assigner.Add(NodesVar, Nodes.Get()[(Element)reference]);
-            assigner.Add(SegmentsVar, Segments.Get()[(Element)reference]);
+            assigner.Add(NodesVar, Nodes.CreateChild((Element)reference));
+            assigner.Add(SegmentsVar, Segments.CreateChild((Element)reference));
+            assigner.Add(AttributesVar, Attributes.CreateChild((Element)reference));
         }
 
         private void AddHook(VarIndexAssigner assigner, HookVar hook)
@@ -379,10 +385,10 @@ namespace Deltin.Deltinteger.Pathfinder
             IndexReference index = actionSet.VarCollection.Assign(tempVariableName, actionSet.IsGlobal, true);
             
             // Get the first null value.
-            index.SetVariable(Element.Part<V_IndexOfArrayValue>(array, new V_Null()));
+            actionSet.AddAction(index.SetVariable(Element.Part<V_IndexOfArrayValue>(array, new V_Null())));
 
             // If the index is -1, use the count of the element.
-            index.SetVariable(Element.TernaryConditional(new V_Compare(index.Get(), Operators.Equal, new V_Number(-1)), Element.Part<V_CountOf>(array), index.Get()));
+            actionSet.AddAction(index.SetVariable(Element.TernaryConditional(new V_Compare(index.Get(), Operators.Equal, new V_Number(-1)), Element.Part<V_CountOf>(array), index.Get())));
 
             // Done
             return index.Get();
@@ -535,6 +541,31 @@ namespace Deltin.Deltinteger.Pathfinder
                         Element.Part<V_And>(
                             new V_Compare(methodCall.ParameterValues[0], Operators.Equal, Element.Part<V_XOf>(Element.Part<V_ArrayElement>())),
                             new V_Compare(methodCall.ParameterValues[1], Operators.Equal, Element.Part<V_YOf>(Element.Part<V_ArrayElement>()))
+                        )
+                    ),
+                    index: (Element)actionSet.CurrentObject)
+                );
+                return null;
+            }
+        };
+
+        // DeleteAllAttributesConnectedToNode(node);
+        private FuncMethod DeleteAllAttributesConnectedToNode => new FuncMethodBuilder() {
+            Name = "DeleteAllAttributesConnectedToNode",
+            Documentation = new MarkupBuilder().Add("Removes all attributes connected to a node.").NewLine().Add("This is identical to doing ")
+                .Code("ModifyVariable(pathmap.Attributes, Operation.RemoveFromArrayByValue, pathmap.Attributes.FilteredArray(Vector attribute => attribute.X == _node_ || attribute.Y == _node_))")
+                .Add(".").ToString(),
+            Parameters = new CodeParameter[] {
+                new CodeParameter("node", "Attributes whose node_a or node_b are equal to this will be removed.")
+            },
+            Action = (actionSet, methodCall) => {
+                actionSet.AddAction(Attributes.ModifyVariable(
+                    Operation.RemoveFromArrayByValue,
+                    Element.Part<V_FilteredArray>(
+                        Attributes.Get()[(Element)actionSet.CurrentObject],
+                        Element.Part<V_Or>(
+                            new V_Compare(methodCall.ParameterValues[0], Operators.Equal, Element.Part<V_XOf>(Element.Part<V_ArrayElement>())),
+                            new V_Compare(methodCall.ParameterValues[0], Operators.Equal, Element.Part<V_YOf>(Element.Part<V_ArrayElement>()))
                         )
                     ),
                     index: (Element)actionSet.CurrentObject)
