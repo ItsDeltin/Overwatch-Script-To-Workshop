@@ -216,7 +216,7 @@ if (!IsButtonHeld(EventPlayer(), Button.Crouch))
 
 rule: "Deselect all"
 Event.OngoingPlayer
-if (CurrentMode == Mode.Place)
+if (CurrentMode == Mode.Place || CurrentMode == Mode.Attribute)
 if (IsButtonHeld(EventPlayer(), b_selectNode))
 if (IsButtonHeld(EventPlayer(), Button.Crouch))
 {
