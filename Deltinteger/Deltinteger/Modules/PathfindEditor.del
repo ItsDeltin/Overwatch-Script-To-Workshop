@@ -519,8 +519,8 @@ if (IsCommunicating(EventPlayer(), b_compile))
     
     foreach (LinkedAttribute attribute in Attributes)
         ModifyVariable(attributesOut, Operation.AppendToArray, Vector(
-            attribute.Node1,
-            attribute.Node2,
+            attribute.Node1.ID,
+            attribute.Node2.ID,
             attribute.ID,
         ));
 
