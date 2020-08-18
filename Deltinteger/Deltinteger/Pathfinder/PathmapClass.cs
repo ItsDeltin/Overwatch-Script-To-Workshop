@@ -183,7 +183,7 @@ namespace Deltin.Deltinteger.Pathfinder
             }
 
              // Get the pathmap data.
-            PathMap pathMap = (PathMap)newClassInfo.AdditionalParameterData[0];
+            Pathmap pathMap = (Pathmap)newClassInfo.AdditionalParameterData[0];
             
             IndexReference nodes = actionSet.VarCollection.Assign("_tempNodes", actionSet.IsGlobal, false);
             IndexReference segments = actionSet.VarCollection.Assign("_tempSegments", actionSet.IsGlobal, false);
@@ -766,10 +766,10 @@ namespace Deltin.Deltinteger.Pathfinder
             string filepath = base.Validate(parseInfo, value, valueRange) as string;
             if (filepath == null) return null;
 
-            PathMap map;
+            Pathmap map;
             try
             {
-                map = PathMap.ImportFromXMLFile(filepath);
+                map = Pathmap.ImportFromFile(filepath);
             }
             catch (InvalidOperationException)
             {

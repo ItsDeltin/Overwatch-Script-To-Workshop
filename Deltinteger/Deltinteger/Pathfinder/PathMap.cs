@@ -2,15 +2,15 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.IO;
-using System.Xml;
 using System.Xml.Serialization;
 using Deltin.Deltinteger.Csv;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.Models;
+using Newtonsoft.Json;
 
 namespace Deltin.Deltinteger.Pathfinder
 {
-    public class PathMap
+    public class Pathmap
     {
         // nodesOut and segmentsOut must equal the ID override in Modules/PathfindEditor.del:
         // line 312: define globalvar nodesOut    [3];
@@ -19,8 +19,8 @@ namespace Deltin.Deltinteger.Pathfinder
         private const int segmentsOut = 1;
         private const int attributesOut = 2;
 
-        public static PathMap ImportFromCSVFile(string file, IPathmapErrorHandler errorHandler) => ImportFromCSV(File.ReadAllText(file).Trim(), errorHandler);
-        public static PathMap ImportFromCSV(string text, IPathmapErrorHandler errorHandler)
+        public static Pathmap ImportFromCSVFile(string file, IPathmapErrorHandler errorHandler) => ImportFromCSV(File.ReadAllText(file).Trim(), errorHandler);
+        public static Pathmap ImportFromCSV(string text, IPathmapErrorHandler errorHandler)
         {
             CsvFrame frame; 
             try {
@@ -92,54 +92,37 @@ namespace Deltin.Deltinteger.Pathfinder
                 );
             }
             
-            return new PathMap(vectors.ToArray(), segments.ToArray(), attributes);
+            return new Pathmap(vectors.ToArray(), segments.ToArray(), attributes);
         }
 
-        public static PathMap ImportFromXMLFile(string file)
+        public static Pathmap ImportFromText(string text)
         {
-            using (var reader = XmlReader.Create(file))
-            {
-                XmlSerializer serializer = new XmlSerializer(typeof(PathMap));
-                return (PathMap)serializer.Deserialize(reader);
-            }
+            if (LegacyPathmap.TryLoad(text, out Pathmap legacyMap)) return legacyMap;
+            return Deserialize(text);
         }
-
-        public static PathMap ImportFromXML(string xml)
+        public static Pathmap ImportFromFile(string file)
         {
-            using (var reader = XmlReader.Create(new StringReader(xml)))
-            {
-                XmlSerializer serializer = new XmlSerializer(typeof(PathMap));
-                return (PathMap)serializer.Deserialize(reader);
-            }
+            if (LegacyPathmap.TryLoadFile(file, out Pathmap legacyMap)) return legacyMap;
+            return Deserialize(System.IO.File.ReadAllText(file));
         }
+        private static Pathmap Deserialize(string text) => JsonConvert.DeserializeObject<Pathmap>(text, new JsonSerializerSettings() {
+            Formatting = Formatting.Indented
+        });
 
         public Vertex[] Nodes { get; set; }
         public Segment[] Segments { get; set; }
         public MapAttribute[] Attributes { get; set; }
 
-        public PathMap(Vertex[] nodes, Segment[] segments, MapAttribute[] attributes)
+        public Pathmap(Vertex[] nodes, Segment[] segments, MapAttribute[] attributes)
         {
             Nodes = nodes;
             Segments = segments;
             Attributes = attributes;
         }
 
-        private PathMap() {}
+        private Pathmap() {}
 
-        public string ExportAsXML()
-        {
-            XmlSerializer serializer = new XmlSerializer(typeof(PathMap));
-            XmlSerializerNamespaces ns = new XmlSerializerNamespaces();
-            ns.Add("","");
-
-            string result;
-            using (StringWriter stringWriter = new StringWriter())
-            {
-                serializer.Serialize(stringWriter, this, ns);
-                result = stringWriter.ToString();
-            }
-            return result;
-        }
+        public string ExportAsJSON() => JsonConvert.SerializeObject(this);
 
         public Element NodesAsWorkshopData() => Element.CreateArray(
             Nodes.Select(node => node.ToVector()).ToArray()
@@ -154,9 +137,7 @@ namespace Deltin.Deltinteger.Pathfinder
 
     public class Segment
     {
-        [XmlAttribute]
         public int Node1 { get; set; }
-        [XmlAttribute]
         public int Node2 { get; set; }
 
         public Segment(int node1, int node2)

@@ -44,7 +44,7 @@ namespace Deltin.Deltinteger.LanguageServer
         public DocumentHandler DocumentHandler { get; private set; }
         public FileGetter FileGetter { get; private set; }
         public ConfigurationHandler ConfigurationHandler { get; private set; }
-        private PathMap lastMap;
+        private Pathmap lastMap;
 
         async Task RunServer()
         {
@@ -102,7 +102,7 @@ namespace Deltin.Deltinteger.LanguageServer
                 // Get the pathmap. 'map' will be null if there is an error.
                 try
                 {
-                    PathMap map = PathMap.ImportFromCSV(Clipboard.GetText(), error);
+                    Pathmap map = Pathmap.ImportFromCSV(Clipboard.GetText(), error);
 
                     if (map == null) return error.Message;
                     else
@@ -121,7 +121,7 @@ namespace Deltin.Deltinteger.LanguageServer
             options.OnRequest<Newtonsoft.Json.Linq.JToken>("pathmapApply", uriToken => Task.Run(() => {
                 
                 // Save 'lastMap' to a file.
-                string result = lastMap.ExportAsXML();
+                string result = lastMap.ExportAsJSON();
                 string output = uriToken["path"].ToObject<string>().Trim('/');
                 using (FileStream fs = File.Create(output))
                 {
@@ -143,7 +143,7 @@ namespace Deltin.Deltinteger.LanguageServer
                 }
                 else
                 {
-                    compile = Editor.Generate(editFileToken.File, PathMap.ImportFromXML(editFileToken.Text), ConfigurationHandler.OutputLanguage);
+                    compile = Editor.Generate(editFileToken.File, Pathmap.ImportFromText(editFileToken.Text), ConfigurationHandler.OutputLanguage);
                 }
 
                 Clipboard.SetText(compile.WorkshopCode);

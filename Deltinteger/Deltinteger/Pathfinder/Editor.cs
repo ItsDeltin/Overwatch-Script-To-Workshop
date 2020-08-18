@@ -18,7 +18,7 @@ namespace Deltin.Deltinteger.Pathfinder
 
         public static void FromPathmapFile(string file)
         {
-            DeltinScript deltinScript = Generate(file, PathMap.ImportFromXMLFile(file), OutputLanguage.enUS);
+            DeltinScript deltinScript = Generate(file, Pathmap.ImportFromFile(file), OutputLanguage.enUS);
 
             string code = deltinScript.WorkshopCode;
 
@@ -32,7 +32,7 @@ namespace Deltin.Deltinteger.Pathfinder
                 deltinScript.Diagnostics.PrintDiagnostics(Log);
             }
         }
-        public static DeltinScript Generate(string fileName, PathMap map, OutputLanguage language)
+        public static DeltinScript Generate(string fileName, Pathmap map, OutputLanguage language)
         {
             string baseEditorFile = Extras.CombinePathWithDotNotation(null, "!PathfindEditor.del");
 
