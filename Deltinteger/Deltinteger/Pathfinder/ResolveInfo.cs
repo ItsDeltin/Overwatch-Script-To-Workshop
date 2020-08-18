@@ -10,7 +10,6 @@ namespace Deltin.Deltinteger.Pathfinder
 
         public DeltinScript DeltinScript { get; set; }
         public bool TrackTimeSinceLastNode { get; set; } // This will be true if the Pathmap.IsPathfindingStuck function is called anywhere in the code.
-        public bool SaveLastCurrent { get; set; } // This will be true if the Pathmap.IsPathfindingToSegment function is called anywhere in the code.
         public bool PotentiallyNullNodes { get; set; } // Determines if nodes can potentially be null.
         
         // Class Instances
@@ -19,10 +18,9 @@ namespace Deltin.Deltinteger.Pathfinder
 
         // Workshop Variables
         private IndexReference DoGetCurrent { get; set; } // When set to true, the current node is reset to the closest node.
-        private IndexReference Current { get; set; } // The index of the current node that the player is walking to.
-        private IndexReference PathmapReference { get; set; } // A reference to the pathmap being used to pathfind.
-        private IndexReference ParentArray { get; set; } // Stores the parent path array.
-        private IndexReference AttributeArray { get; set; } // Stores the parent path attribute array.
+        public IndexReference Current { get; set; } // The index of the current node that the player is walking to.
+        public IndexReference PathmapReference { get; set; } // A reference to the pathmap being used to pathfind.
+        public IndexReference ParentArray { get; set; } // Stores the parent path array.
         private IndexReference Destination { get; set; } // The destination to walk to after all nodes have been transversed.
         public IndexReference CurrentAttribute { get; set; } // The current pathfinding attribute.
         
@@ -46,7 +44,6 @@ namespace Deltin.Deltinteger.Pathfinder
             Current = DeltinScript.VarCollection.Assign("pathfinderCurrent", false, assignExtended);
             PathmapReference = DeltinScript.VarCollection.Assign("pathmapReference", false, assignExtended);
             ParentArray = DeltinScript.VarCollection.Assign("parentArray", false, assignExtended);
-            AttributeArray = DeltinScript.VarCollection.Assign("attributeArray", false, assignExtended);
             Destination = DeltinScript.VarCollection.Assign("destination", false, assignExtended);
             CurrentAttribute = DeltinScript.VarCollection.Assign("lastAttribute", false, assignExtended);
 
@@ -168,7 +165,7 @@ namespace Deltin.Deltinteger.Pathfinder
         /// <param name="parentArray">The parent array path.</param>
         /// <param name="attributeArray">The path attributes.</param>
         /// <param name="destination">The destination the players are navigating to.</param>
-        public void Pathfind(ActionSet actionSet, Element players, Element pathmapReference, Element parentArray, Element attributeArray, Element destination)
+        public void Pathfind(ActionSet actionSet, Element players, Element pathmapReference, Element parentArray, Element destination)
         {
             // Set target's pathmap reference.
             actionSet.AddAction(PathmapReference.SetVariable(
@@ -179,12 +176,6 @@ namespace Deltin.Deltinteger.Pathfinder
             // Set target's parent array.
             actionSet.AddAction(ParentArray.SetVariable(
                 value: parentArray,
-                targetPlayer: players
-            ));
-
-            // Set target's attribute array.
-            actionSet.AddAction(AttributeArray.SetVariable(
-                value: attributeArray,
                 targetPlayer: players
             ));
 
@@ -250,11 +241,18 @@ namespace Deltin.Deltinteger.Pathfinder
         }
     
         /// <summary>Gets the next pathfinding attribute.</summary>
-        public Element NextSegmentAttribute(Element player) => Element.TernaryConditional(
-            Element.Part<V_And>(IsPathfinding(player), new V_Compare(Current.GetVariable(player), Operators.NotEqual, new V_Number(-1))),
-            AttributeArray.Get(player)[Current.Get(player)],
-            new V_Number(-1)
-        );
+        // public Element NextSegmentAttribute(Element player) => Element.TernaryConditional(
+        //     Element.Part<V_And>(IsPathfinding(player), new V_Compare(Current.GetVariable(player), Operators.NotEqual, new V_Number(-1))),
+        //     AttributeArray.Get(player)[Current.Get(player)],
+        //     new V_Number(-1)
+        // );
+        public Element NextSegmentAttribute(Element player) => Element.Part<V_MappedArray>(Element.Part<V_FilteredArray>(
+            PathmapInstance.Attributes.Get()[PathmapReference.Get(player)],
+            Element.Part<V_And>(
+                new V_Compare(Element.Part<V_XOf>(Element.Part<V_ArrayElement>()), Operators.Equal, Current.Get(player)),
+                new V_Compare(Element.Part<V_YOf>(Element.Part<V_ArrayElement>()), Operators.Equal, ParentArray.Get()[Current.Get()] - 1)
+            )
+        ), Element.Part<V_ZOf>(Element.Part<V_ArrayElement>()));
     
         /// <summary>Throttles the event player to the next node.</summary>
         public void ThrottleEventPlayerToNextNode(ActionSet actionSet)
@@ -294,87 +292,6 @@ namespace Deltin.Deltinteger.Pathfinder
                     Operators.Equal,
                     new V_True()
                 );
-        }
-
-        /// <summary>Looks at a player's future nodes.</summary>
-        public Element IsTravelingToNode(ActionSet actionSet, Element targetPlayer, Element node)
-        {
-            IndexReference result = actionSet.VarCollection.Assign("Lookahead: Result", actionSet.IsGlobal, true);
-            actionSet.AddAction(result.SetVariable(new V_False()));
-
-            IndexReference look = actionSet.VarCollection.Assign("Pathfind: Lookahead", actionSet.IsGlobal, true);
-            actionSet.AddAction(look.SetVariable(Current.Get(targetPlayer)));
-
-            // Get the path.
-            actionSet.AddAction(Element.Part<A_While>(Element.Part<V_And>(new V_Compare(
-                look.GetVariable(),
-                Operators.GreaterThanOrEqual,
-                new V_Number(0)
-            ), !result.Get())));
-
-            //Element currentNode = PathmapInstance.Nodes.Get()[PathmapReference.Get(targetPlayer)][look.Get()];
-
-            actionSet.AddAction(result.SetVariable(new V_Compare(look.Get(), Operators.Equal, node)));
-
-            actionSet.AddAction(look.SetVariable(ParentArray.Get(targetPlayer)[look.Get()] - 1));
-            actionSet.AddAction(new A_End());
-
-            return result.Get();
-        }
-
-        /// <summary>Looks at a player's future segments.</summary>
-        public Element IsTravelingToSegment(ActionSet actionSet, Element targetPlayer, Element segment)
-        {
-            IndexReference result = actionSet.VarCollection.Assign("Lookahead: Result", actionSet.IsGlobal, true);
-            actionSet.AddAction(result.SetVariable(new V_False()));
-
-            IndexReference look = actionSet.VarCollection.Assign("Pathfind: Lookahead", actionSet.IsGlobal, true);
-            actionSet.AddAction(look.SetVariable(Current.Get(targetPlayer)));
-
-            // Get the path.
-            actionSet.AddAction(Element.Part<A_While>(Element.Part<V_And>(new V_Compare(
-                ParentArray.Get(targetPlayer)[look.Get()] - 1,
-                Operators.GreaterThanOrEqual,
-                new V_Number(0)
-            ), !result.Get())));
-
-            Element currentNode = PathmapInstance.Nodes.Get()[PathmapReference.Get(targetPlayer)][look.Get()];
-            Element nextNode = PathmapInstance.Nodes.Get()[PathmapReference.Get(targetPlayer)][ParentArray.Get(targetPlayer)[look.Get()] - 1];
-
-            actionSet.AddAction(result.SetVariable(new V_Compare(
-                segment,
-                Operators.Equal,
-                Element.Part<V_FirstOf>(PathmapInstance.SegmentsFromNodes(PathmapReference.Get(targetPlayer), look.Get(), ParentArray.Get(targetPlayer)[look.Get()] - 1))
-            )));
-
-            actionSet.AddAction(look.SetVariable(ParentArray.Get(targetPlayer)[look.Get()] - 1));
-            actionSet.AddAction(new A_End());
-
-            return result.Get();
-        }
-
-        /// <summary>Looks at a player's future nodes.</summary>
-        public Element IsTravelingToAttribute(ActionSet actionSet, Element targetPlayer, Element attribute)
-        {
-            IndexReference result = actionSet.VarCollection.Assign("Lookahead: Result", actionSet.IsGlobal, true);
-            actionSet.AddAction(result.SetVariable(new V_False()));
-
-            IndexReference look = actionSet.VarCollection.Assign("Pathfind: Lookahead", actionSet.IsGlobal, true);
-            actionSet.AddAction(look.SetVariable(Current.Get(targetPlayer)));
-
-            // Get the path.
-            actionSet.AddAction(Element.Part<A_While>(Element.Part<V_And>(new V_Compare(
-                look.GetVariable(),
-                Operators.GreaterThanOrEqual,
-                new V_Number(0)
-            ), !result.Get())));
-
-            actionSet.AddAction(result.SetVariable(new V_Compare(attribute, Operators.Equal, AttributeArray.Get(targetPlayer)[look.Get()])));
-
-            actionSet.AddAction(look.SetVariable(ParentArray.Get(targetPlayer)[look.Get()] - 1));
-            actionSet.AddAction(new A_End());
-
-            return result.Get();
         }
     }
 }

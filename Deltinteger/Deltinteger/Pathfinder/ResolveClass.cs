@@ -7,8 +7,6 @@ namespace Deltin.Deltinteger.Pathfinder
     {
         /// <summary>An array of numbers where each value is that index's parent index. Following the path will lead to the source. Subtract value by -1 since 0 is used for unset.</summary>
         public ObjectVariable ParentArray { get; private set; }
-        /// <summary>The attributes of the parents.</summary>
-        public ObjectVariable ParentAttributeArray { get; private set; }
         /// <summary>A reference to the source pathmap.</summary>
         public ObjectVariable Pathmap { get; private set; }
         /// <summary>A vector determining the destination.</summary>
@@ -25,9 +23,6 @@ namespace Deltin.Deltinteger.Pathfinder
 
             // Set ParentArray
             ParentArray = AddObjectVariable(new InternalVar("ParentArray"));
-
-            // Set ParentAttributeArray
-            ParentAttributeArray = AddObjectVariable(new InternalVar("ParentAttributeArray"));
             
             // Set Pathmap
             Pathmap = AddObjectVariable(new InternalVar("OriginMap"));
@@ -50,7 +45,7 @@ namespace Deltin.Deltinteger.Pathfinder
                 ResolveInfoComponent resolveInfo = actionSet.Translate.DeltinScript.GetComponent<ResolveInfoComponent>();
 
                 // For each of the players, get the current.
-                resolveInfo.Pathfind(actionSet, (Element)call.ParameterValues[0], Pathmap.Get(actionSet), ParentArray.Get(actionSet), ParentAttributeArray.Get(actionSet), Destination.Get(actionSet));
+                resolveInfo.Pathfind(actionSet, (Element)call.ParameterValues[0], Pathmap.Get(actionSet), ParentArray.Get(actionSet), Destination.Get(actionSet));
 
                 return null;
             }

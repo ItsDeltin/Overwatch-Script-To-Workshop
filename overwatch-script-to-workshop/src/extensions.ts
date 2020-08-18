@@ -9,6 +9,7 @@ import glob = require('glob');
 import yauzl = require("yauzl");
 import exec = require('child_process');
 import { register } from './debugger';
+import { decompileClipboard, insertActions } from './decompile';
 
 let globalStoragePath:string;
 let defaultServerFolder:string;
@@ -230,16 +231,10 @@ async function stopLanguageServer() {
 	isServerRunning = false;
 }
 
-let deltintegerModule: string;
-
-export function getServerModule(): string
-{
-	return deltintegerModule;
-}
-
+export let serverModuleCommand: string;
 function setServerOptions(serverModule: string)
 {
-	deltintegerModule = serverModule;
+	serverModuleCommand = serverModule;
 	// It was me, stdio!
 	let serverExecutableOptions = { stdio: "pipe", detached: false, shell: <boolean>config.get('deltintegerShell') };
 	serverOptions.run = {
@@ -346,7 +341,7 @@ function subscribe(context: ExtensionContext)
 		}
 
 		// Send the 'pathmapEditor' request with the 'editPathmap' contents for the parameter to the language server.
-		client.sendRequest<boolean>('pathmapEditor', {Text: editPathmap}).then((result: boolean) => {
+		client.sendRequest<boolean>('pathmapEditor', {Text: editPathmap, File: editPathmapFile}).then((result: boolean) => {
 			// The request will return true if successful.
 			// It can return false if PathfindEditor.del was tinkered with by the user (or there is a bug).
 			if (result)
@@ -396,7 +391,17 @@ function subscribe(context: ExtensionContext)
 	// Copy workshop code
 	context.subscriptions.push(vscode.commands.registerCommand('ostw.copyWorkshopCode', () => {
 		vscode.env.clipboard.writeText(lastWorkshopOutput);
-	}))
+	}));
+	
+	// Decompile clipboard
+	context.subscriptions.push(vscode.commands.registerCommand('ostw.decompile.clipboard', () => {
+		decompileClipboard();
+	}));
+
+	// Decompile clipboard and insert.
+	context.subscriptions.push(vscode.commands.registerTextEditorCommand('ostw.decompile.insert', (textEditor, edit) => {
+		insertActions(textEditor);
+	}));
 }
 
 const workshopPanelProvider = new class implements vscode.TextDocumentContentProvider {

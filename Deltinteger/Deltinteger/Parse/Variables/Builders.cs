@@ -50,7 +50,6 @@ namespace Deltin.Deltinteger.Parse
         {
             RejectAttributes(
                 AttributeType.Public, AttributeType.Protected, AttributeType.Private,
-                AttributeType.Ref,
                 AttributeType.Static,
                 AttributeType.Globalvar, AttributeType.Playervar,
                 AttributeType.ID
@@ -62,6 +61,9 @@ namespace Deltin.Deltinteger.Parse
             _varInfo.WholeContext = false;
             _varInfo.OperationalScope = _operationalScope;
             _varInfo.CodeLensType = CodeLensSourceType.ScopedVariable;
+
+            if (_varInfo.IsWorkshopReference && _varInfo.InitialValueContext == null)
+                _diagnostics.Error("Variables with the 'ref' attribute must have an initial value.", _nameRange);
         }
     }
 

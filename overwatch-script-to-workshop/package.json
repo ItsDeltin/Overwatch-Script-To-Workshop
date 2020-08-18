@@ -14,13 +14,11 @@
     "activationEvents": [
         "onLanguage:ostw",
         "onLanguage:ow_ostw",
-        "onCommand:commandId",
         "workspaceContains:**/customGameSettings.json",
-        "onDebugAdapterProtocolTracker:ostw",
-        "onCommand:extension.ostw.createPathmap",
-        "onCommand:extension.ostw.downloadLatestRelease",
-        "onCommand:extension.ostw.locateServerInstallation",
-        "onCommand:extension.ostw.pathmapEditorCode"
+        "workspaceContains:**/*.pathmap",
+        "onCommand:ostw.downloadLatestRelease",
+        "onCommand:ostw.locateServerInstallation",
+        "onCommand:ostw.decompile.clipboard"
     ],
     "repository": {
         "type": "git",
@@ -197,12 +195,21 @@
                 "command": "ostw.copyWorkshopCode",
                 "title": "Copy the workshop output to the clipboard.",
                 "category": "Overwatch Script To Workshop"
+            },
+            {
+                "command": "ostw.decompile.clipboard",
+                "title": "Decompile workshop code from clipboard to file.",
+                "category": "Overwatch Script To Workshop"
             }
         ],
         "keybindings": [
             {
                 "command": "ostw.copyWorkshopCode",
                 "key": "Ctrl+Alt+C"
+            },
+            {
+                "command": "ostw.decompile.insert",
+                "key": "Ctrl+K Ctrl+V"
             }
         ],
         "jsonValidation": [

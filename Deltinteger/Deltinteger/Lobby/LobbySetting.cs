@@ -1,9 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
 using Newtonsoft.Json.Linq;
+using Deltin.Deltinteger.Decompiler.TextToElement;
 
 namespace Deltin.Deltinteger.Lobby
 {
@@ -12,6 +11,7 @@ namespace Deltin.Deltinteger.Lobby
         public string Name { get; }
         public string ReferenceName { get; set; }
         public SettingNameResolver TitleResolver { get; set; }
+        public string Workshop => Name.Replace("(", "").Replace(")", "");
         private RootSchema Reference;
 
         public LobbySetting(string name)
@@ -34,19 +34,27 @@ namespace Deltin.Deltinteger.Lobby
             return Reference;
         }
 
+        /// <summary>The schema of the lobby setting.</summary>
         protected abstract RootSchema GetSchema();
 
+        /// <summary>Adds the value to the workshop output.</summary>
         public abstract string GetValue(WorkshopBuilder builder, object value);
 
+        /// <summary>Resolves the actual name of the setting that will be used in the workshop output.</summary>
         public string ResolveName(WorkshopBuilder builder)
         {
             if (TitleResolver == null) return builder.Translate(Name);
             else return TitleResolver.ResolveName(builder);
         }
 
+        /// <summary>The keywords that the setting's value could be.</summary>
         public virtual string[] AdditionalKeywords() => new string[0];
 
+        /// <summary>Validates the json value.</summary>
         public abstract void CheckValue(SettingValidation validation, JToken value);
+
+        /// <summary>Decompiles the workshop value.</summary>
+        public abstract bool Match(ConvertTextToElement parser, out object value);
     }
 
     /// <summary>Enum lobby setting.</summary>
@@ -85,6 +93,22 @@ namespace Deltin.Deltinteger.Lobby
                 validation.IncorrectType(Name, "string");
             }
         }
+
+        public override bool Match(ConvertTextToElement parser, out object value)
+        {
+            // Match the enumerator.
+            foreach (string enumerator in Values)
+                if (parser.Match(parser.Kw(enumerator), false, true))
+                {
+                    // Return true if it is found.
+                    value = enumerator;
+                    return true;
+                }
+            
+            // The value was not found.
+            value = null;
+            return false;
+        }
     }
 
     /// <summary>Boolean lobby setting.</summary>
@@ -99,13 +123,7 @@ namespace Deltin.Deltinteger.Lobby
             SwitchType = switchType;
         }
 
-        public override string GetValue(WorkshopBuilder builder, object value)
-        {
-            if (SwitchType == SwitchType.OnOff) return builder.Translate((bool)value ? "On" : "Off");
-            else if (SwitchType == SwitchType.YesNo) return builder.Translate((bool)value ? "Yes" : "No");
-            else if (SwitchType == SwitchType.EnabledDisabled) return builder.Translate((bool)value ? "Enabled" : "Disabled");
-            else throw new NotImplementedException();
-        }
+        public override string GetValue(WorkshopBuilder builder, object value) => builder.Translate((bool)value ? EnabledKey() : DisabledKey());
 
         protected override RootSchema GetSchema()
         {
@@ -119,6 +137,40 @@ namespace Deltin.Deltinteger.Lobby
         {
             if (value.ToObject<object>() is bool == false)
                 validation.IncorrectType(Name, "boolean");
+        }
+
+        public override bool Match(ConvertTextToElement parser, out object value)
+        {
+            // Match enabled
+            if (parser.Match(parser.Kw(EnabledKey()), false, true))
+            {
+                value = true;
+                return true;
+            }
+            // Match disabled
+            else if (parser.Match(parser.Kw(DisabledKey()), false, true))
+            {
+                value = false;
+                return true;
+            }
+
+            // Unknown
+            value = null;
+            return false;
+        }
+
+        private string EnabledKey()
+        {
+            if (SwitchType == SwitchType.OnOff) return "On";
+            else if (SwitchType == SwitchType.YesNo) return "Yes";
+            else return "Enabled";
+        }
+
+        private string DisabledKey()
+        {
+            if (SwitchType == SwitchType.OnOff) return "Off";
+            else if (SwitchType == SwitchType.YesNo) return "No";
+            else return "Disabled";
         }
     }
 
@@ -170,6 +222,43 @@ namespace Deltin.Deltinteger.Lobby
             catch
             {
                 validation.IncorrectType(Name, "number");
+            }
+        }
+
+        public override bool Match(ConvertTextToElement parser, out object value)
+        {
+            // If the setting is an integer, match an integer.
+            if (Integer)
+            {
+                if (parser.Integer(out int i))
+                {
+                    // Integer matched.
+                    value = i;
+                    return true;
+                }
+                else
+                {
+                    // Integer not matched.
+                    value = null;
+                    return false;
+                }
+            }
+            else
+            {
+                // Match a double.
+                if (parser.Double(out double d))
+                {
+                    parser.Match("%", noSymbols: true);
+                    // Double matched.
+                    value = d;
+                    return true;
+                }
+                else
+                {
+                    // Double not matched.
+                    value = null;
+                    return false;
+                }
             }
         }
     }

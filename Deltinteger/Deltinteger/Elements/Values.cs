@@ -1254,7 +1254,7 @@ namespace Deltin.Deltinteger.Elements
     [ElementData("Point Capture Percentage", ValueType.Number)]
     public class V_PointCapturePercentage : Element {}
 
-    [ElementData("Position of", ValueType.Vector)]
+    [ElementData("Position Of", ValueType.Vector)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     public class V_PositionOf : Element {}  
 
