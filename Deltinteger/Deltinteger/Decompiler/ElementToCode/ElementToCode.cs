@@ -282,10 +282,12 @@ namespace Deltin.Deltinteger.Decompiler.ElementToCode
             }
 
             // Create the file.
-            var writer = File.CreateText(file);
-
-            // Write to the settings file.
-            writer.Write(JsonConvert.SerializeObject(_settings));
+            using (var writer = File.CreateText(file))
+                // Write to the settings file.
+                writer.Write(JsonConvert.SerializeObject(_settings, new JsonSerializerSettings() {
+                    Formatting = Formatting.Indented,
+                    NullValueHandling = NullValueHandling.Ignore
+                }));
 
             return Path.GetFileName(file);
         }
