@@ -231,10 +231,10 @@ namespace Deltin.Deltinteger
             // Run .csv file
             if (ext == ".csv")
             {
-                PathMap map = PathMap.ImportFromCSVFile(script, new ConsolePathmapErrorHandler(new Log("Pathmap")));
+                Pathmap map = Pathmap.ImportFromCSVFile(script, new ConsolePathmapErrorHandler(new Log("Pathmap")));
                 if (map != null)
                 {
-                    string result = map.ExportAsXML();
+                    string result = map.ExportAsJSON();
                     string output = Path.ChangeExtension(script, "pathmap");
                     using (FileStream fs = File.Create(output))
                     {
@@ -250,7 +250,7 @@ namespace Deltin.Deltinteger
                 Editor.FromPathmapFile(script);
             }
             // Decompile .ow file
-            else if (true) //(ext == ".ow")
+            else if (ext == ".ow")
             {
                 string text = File.ReadAllText(script);
 
