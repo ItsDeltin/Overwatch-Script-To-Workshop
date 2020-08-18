@@ -229,15 +229,19 @@ namespace Deltin.Deltinteger.Parse
                 rule.ElementCountLens.RuleParsed(newRule);
             }
 
+            // Add built-in rules.
+            // Initial player
             if (InitialPlayer.Actions.Count > 0)
                 WorkshopRules.Insert(0, InitialPlayer.GetRule());
 
+            // Initial global
             if (InitialGlobal.Actions.Count > 0)
                 WorkshopRules.Insert(0, InitialGlobal.GetRule());
             
+            // Additional
             if (addRules != null)
                 WorkshopRules.AddRange(addRules.Invoke(VarCollection).Where(rule => rule != null));
-            
+                        
             // Order the workshop rules by priority.
             WorkshopRules = WorkshopRules.OrderBy(wr => wr.Priority).ToList();
 
