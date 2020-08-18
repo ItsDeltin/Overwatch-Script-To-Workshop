@@ -179,6 +179,7 @@ if (IsButtonHeld(EventPlayer(), Button.Crouch))
     Node selected = GetClosestNode();
     if (!IsNodeSelectable(selected)) return;
 
+    // Delete segments
     for (define i = Segments.Length - 1; i >= 0; i--)
         if (Segments[i].Nodes.Contains(selected))
         {
@@ -186,6 +187,27 @@ if (IsButtonHeld(EventPlayer(), Button.Crouch))
             delete(<Segment>Segments[i]);
             Segments = RemoveFromArrayAtIndex(Segments, i);
         }
+
+    // Delete attributes
+    for (define i = Attributes.Length - 1; i >= 0; i--)
+    {
+        Node update = null;
+        if (Attributes[i].Node1 == selected)
+        {
+            update = Attributes[i].Node2;
+            delete(Attributes[i]);
+            ModifyVariable(Attributes, Operation.RemoveFromArrayByIndex, i);
+        }
+        if (Attributes[i].Node2 == selected)
+        {
+            update = Attributes[i].Node1;
+            delete(Attributes[i]);
+            ModifyVariable(Attributes, Operation.RemoveFromArrayByIndex, i);
+        }
+        if (update != null)
+            update.UpdateAttributeTexts();
+    }
+
     PlayEffect(AllPlayers(), PlayEffect.BadExplosion, Color.Blue, selected.ShownLocation, 0.25);
     selected.Hide();
     Selected = RemoveFromArray(Selected, selected);
@@ -541,15 +563,15 @@ if (CountOf(preloadNodes) != 0)
     // Load segments
     foreach (Vector preload in preloadSegments)
         ModifyVariable(Segments, Operation.AppendToArray, new Segment(
-                Nodes[preload.X],
-                Nodes[preload.Y]
-            ));
+            Nodes[preload.X],
+            Nodes[preload.Y]
+        ));
     
     // Load attributes
     foreach (Vector preload in preloadAttributes)
         ModifyVariable(Attributes, Operation.AppendToArray, new LinkedAttribute(
-            preload.X,
-            preload.Y,
+            Nodes[preload.X],
+            Nodes[preload.Y],
             preload.Z
         ));
 }
