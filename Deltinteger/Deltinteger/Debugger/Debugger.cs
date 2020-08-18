@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Deltin.Deltinteger.Debugger.Protocol;
 using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.Csv;
+using Deltin.Deltinteger.Decompiler.TextToElement;
 using TextCopy;
 
 namespace Deltin.Deltinteger.Debugger
@@ -35,313 +36,148 @@ namespace Deltin.Deltinteger.Debugger
 
                 // Clipboard changed.
 
-                // As workshop actions
-                DebuggerActionStream actionStream = new DebuggerActionStream(clipboard);
-                if (actionStream.Run()) // Determines if the clipboard is an action list.
+                try
                 {
-                    // Action list successfully parsed.
-                    // Get the DeltinScript.
-                    // TODO: Null check _languageServer.LastParse
-                    await _languageServer.DocumentHandler.WaitForCompletedTyping(true);
-                    VariableCollection = _languageServer.LastParse.DebugVariables;
+                    // As workshop actions
+                    ConvertTextToElement tte = new ConvertTextToElement(clipboard);
+                    Workshop workshop = tte.GetActionList();
+                    
+                    if (workshop != null) // Determines if the clipboard is an action list.
+                    {
+                        DebuggerActionSetResult actionStream = new DebuggerActionSetResult(workshop);
 
-                    // Apply debugger variables.
-                    VariableCollection.Apply(actionStream);
+                        // Action list successfully parsed.
+                        // Get the DeltinScript.
+                        // TODO: Null check _languageServer.LastParse
+                        await _languageServer.DocumentHandler.WaitForCompletedTyping(true);
+                        VariableCollection = _languageServer.LastParse.DebugVariables;
 
-                    // Notify the adapter of the new state.
-                    _languageServer.Server.SendNotification("debugger.activated");
+                        // Apply debugger variables.
+                        VariableCollection.Apply(actionStream);
+
+                        // Notify the adapter of the new state.
+                        _languageServer.Server.SendNotification("debugger.activated");
+                    }
+                    else
+                    {
+                        // As CSV
+                        try
+                        {
+                            CsvFrame csv = CsvFrame.ParseOne(clipboard);
+                            // TODO
+                        }
+                        catch (CsvParseFailedException) {}
+                        catch (Exception) {}
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // TODO: Error handling
+                }
+            }
+        }
+    }
+
+    public class DebuggerActionSetResult
+    {
+        public DebuggerActionStreamSet Set { get; }
+        public StreamVariable[] Variables { get; }
+
+        public DebuggerActionSetResult(Workshop workshop)
+        {
+            // Get the variables.
+            Variables = new StreamVariable[workshop.Variables.Length];
+            for (int i = 0; i < Variables.Length; i++)
+                Variables[i] = new StreamVariable(workshop.Variables[i].ID, workshop.Variables[i].Name);
+
+            // Get the variable values.
+            foreach (var action in workshop.Actions)
+                if (action is SetVariableAction setVariable)
+                {
+                    // Set the variable kind.
+                    if (Set == DebuggerActionStreamSet.Unknown)
+                    {
+                        // The variable is a global variable.
+                        if (setVariable.Variable is GlobalVariableExpression)
+                            Set = DebuggerActionStreamSet.Global;
+                        // The varaible is a player variable.
+                        else
+                            Set = DebuggerActionStreamSet.Player;
+                    }
+
+                    // Error if the operator is incorrect.
+                    if (setVariable.Operator != "=") Error($"Variable is not being set with '{setVariable.Operator}' rather than '='.");
+                    // Error if set variable's index is not null.
+                    if (setVariable.Index != null) Error("Variable is incorrectly being set at an index.");
+                    
+                    // Get the variable.
+                    string variableName = setVariable.Variable.Name;
+                    StreamVariable relatedVariable = Array.Find(Variables, value => value.Name == variableName);
+                    
+                    // Get the value.
+                    var value = PartFromExpression(setVariable.Value);
+                    relatedVariable.Value = value;
                 }
                 else
+                    Error("Action is not setting a variable.");
+        }
+
+        private void Error(string msg)
+        {
+            throw new Exception(msg);
+        }
+
+        private CsvPart PartFromExpression(ITTEExpression expression)
+        {
+            if (expression is NumberExpression num) return new CsvNumber(num.Value);
+            else if (expression is StringExpression str) return new CsvString(str.Value);
+            // Others
+            else if (expression is FunctionExpression func)
+            {
+                switch (func.Function.WorkshopName)
                 {
-                    // As CSV
-                    try
-                    {
-                        CsvFrame csv = CsvFrame.ParseOne(clipboard);
-                        // TODO
-                    }
-                    catch (CsvParseFailedException) {}
-                    catch (Exception) {}
+                    // Array
+                    case "Array": return new CsvArray(func.Values.Select(v => PartFromExpression(v)).ToArray());
+                    // True
+                    case "True": return new CsvBoolean(true);
+                    // False
+                    case "False": return new CsvBoolean(false);
+                    // Null
+                    case "Null": return new CsvNull();
+                    // Vector
+                    case "Vector": return new CsvVector(new Models.Vertex(
+                        ExtractComponent(func, 0, "X"),
+                        ExtractComponent(func, 1, "Y"),
+                        ExtractComponent(func, 2, "Z")
+                    ));
+                    // Default
+                    default:
+                        Error("Unsure of how to handle function '" + func.Function.WorkshopName);
+                        return null;
                 }
             }
+            
+            Error("Unsure of how to handle expression of type '" + expression.GetType().Name + "'.");
+            return null;
         }
-    }
 
-    public class DebuggerActionStream
-    {
-        public DebuggerActionStreamSet Set { get; private set; }
-        public List<StreamVariable> Variables { get; } = new List<StreamVariable>();
-        private readonly string _text;
-        private readonly DebuggerActionStreamKeywords _keywords;
-        private int _position;
-        private bool ReachedEnd => _position >= _text.Length;
-
-        public DebuggerActionStream(string text, DebuggerActionStreamKeywords keywords = null)
+        private double ExtractComponent(FunctionExpression function, int index, string name)
         {
-            _text = text;
-            _keywords = keywords ?? new DebuggerActionStreamKeywords();
+            // Not enough values.
+            if (function.Values.Length <= index)
+                Error("Could not get the '" + name + "' component, there are only " + function.Values.Length + " values.");
+            else
+            {
+                // If the value is a number, return the number.
+                if (function.Values[index] is NumberExpression num)
+                    return num.Value;
+                // Error if the value is not a number.
+                else
+                    Error("Could not get the '" + name + "' component, the value is a '" + function.Values[index].GetType().Name + "' rather than a number.");
+            }
+            // Default
+            return 0;
         }
-
-        public bool Run()
-        {
-            bool visitVariables = VisitVariables();
-            bool visitActions = VisitActions();
-            return visitActions;
-        }
-
-        private char Current() => _text[_position];
-        private bool IsAny(params char[] characters) => !ReachedEnd && characters.Contains(Current());
-        private bool IsAny(string characters) => IsAny(characters.ToCharArray());
-        private bool IsNumeric() => IsAny("0123456789");
-        private bool IsAlpha() => IsAny("_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ");
-        private bool IsAlphaNumeric() => IsNumeric() || IsAlpha();
-        private bool Is(int pos, char character) => _position + pos < _text.Length && _text[_position + pos] == character;
-        private bool IsWhitespace() => IsAny(' ', '\t', '\r', '\n');
-        private void Accept(int length = 1) => _position = Math.Min(_text.Length, _position + length);
-        private void SkipWhitespace()
-        {
-            while (IsWhitespace()) Accept();
-        }
-
-        private bool Visit(string text)
-        {
-            for (int i = 0; i < text.Length; i++)
-                if (!Is(i, text[i]))
-                    return false;
-                
-            Accept(text.Length);
-            SkipWhitespace();
-            return true;
-        }
-
-        private bool VisitNumber(out int number)
-        {
-            string str = "";
-
-            while (IsNumeric())
-            {
-                str += Current();
-                Accept();
-            }
-
-            if (str == "")
-            {
-                number = 0;
-                return false;
-            }
-            number = int.Parse(str);
-            SkipWhitespace();
-            return true;
-        }
-
-        private bool VisitDouble(out double number)
-        {
-            string str = "";
-
-            if (Visit("-")) str += "-";
-
-            while (IsNumeric())
-            {
-                str += Current();
-                Accept();
-            }
-
-            if (Visit("."))
-            {
-                str += ".";
-                while (IsNumeric())
-                {
-                    str += Current();
-                    Accept();
-                }
-            }
-
-            if (str == "")
-            {
-                number = 0;
-                return false;
-            }
-            number = double.Parse(str);
-            SkipWhitespace();
-            return true;
-        }
-
-        private bool VisitString(out string value)
-        {
-            if (!Visit("\""))
-            {
-                value = null;
-                return false;
-            }
-
-            value = "";
-            bool escaped = false;
-            do
-            {
-                value += Current();
-                if (escaped) escaped = false;
-                else if (Is(0, '"')) escaped = true;
-                Accept();
-            }
-            while (escaped || !Is(0, '"'));
-            Accept();
-            SkipWhitespace();
-
-            return true;
-        }
-
-        private bool VisitIdentifier(out string identifier)
-        {
-            if (!IsAlpha())
-            {
-                identifier = null;
-                return false;
-            }
-
-            identifier = "";
-            while (IsAlphaNumeric())
-            {
-                identifier += Current();
-                Accept();
-            }
-            SkipWhitespace();
-            return true;
-        }
-
-        private bool VisitVariables()
-        {
-            if (!Visit(_keywords.Variables)) return false;
-            Visit("{");
-
-            // Global variable list
-            if (Visit(_keywords.Global))
-            {
-                Set = DebuggerActionStreamSet.Global;
-                VisitVariableList();
-            }
-            // Player variable list
-            else if (Visit(_keywords.Player))
-            {
-                Set = DebuggerActionStreamSet.Player;
-                VisitVariableList();
-            }
-
-            Visit("}");
-            return true;
-        }
-
-        private void VisitVariableList()
-        {
-            Visit(":");
-            while (VisitNumber(out int index))
-            {
-                Visit(":");
-                VisitIdentifier(out string name);
-                Variables.Add(new StreamVariable(index, name ?? "?"));
-            }
-        }
-
-        private bool VisitActions()
-        {
-            if (!Visit(_keywords.Actions)) return false;
-            Visit("{");
-
-            while (Visit(_keywords.GlobalIdentifier) || Visit(_keywords.PlayerIdentifier))
-            {
-                // Global.Name
-                Visit(".");
-
-                // Get the name
-                VisitIdentifier(out string name);
-
-                // =
-                Visit("=");
-
-                // Get the value
-                SetVariable(name ?? "?", VisitExpression());
-
-                // Statement end
-                Visit(";");
-            }
-
-            Visit("}");
-            return true;
-        }
-
-        private void SetVariable(string name, CsvPart value)
-        {
-            StreamVariable set = Variables.FirstOrDefault(v => v.Name == name);
-            if (set == null)
-            {
-                set = new StreamVariable(-1, name);
-                Variables.Add(set);
-            }
-            set.Value = value;
-        }
-
-        CsvPart VisitExpression()
-        {
-            if (Is(0, ',') || Visit(_keywords.Null))
-            {
-                return new CsvNull();
-            }
-            // Arrays
-            else if (Visit(_keywords.Array))
-            {
-                List<CsvPart> elements = new List<CsvPart>();
-
-                Visit("(");
-                do
-                {
-                    elements.Add(VisitExpression());
-                }
-                while (Visit(","));
-                Visit(")");
-
-                return new CsvArray(elements.ToArray());
-            }
-            // Number
-            else if (VisitDouble(out double value))
-            {
-                return new CsvNumber(value);
-            }
-            // Vector
-            else if (Visit(_keywords.Vector))
-            {
-                Visit("(");
-                VisitDouble(out double x);
-                Visit(",");
-                VisitDouble(out double y);
-                Visit(",");
-                VisitDouble(out double z);
-                Visit(")");
-
-                return new CsvVector(new Models.Vertex(x, y, z));
-            }
-            // Strings
-            else if (Visit(_keywords.CustomString))
-            {
-                Visit("(");
-                VisitString(out string str);
-                Visit(")");
-                return new CsvString(str);
-            }
-            // todo: all the types
-            else throw new NotImplementedException();
-        }
-    }
-
-    public class DebuggerActionStreamKeywords
-    {
-        public string Variables = "variables";
-        public string Global = "global";
-        public string Player = "player";
-        public string Actions = "actions";
-        public string GlobalIdentifier = "Global";
-        public string PlayerIdentifier = "Event Player";
-        public string Array = "Array";
-        public string Null = "Null";
-        public string Vector = "Vector";
-        public string CustomString = "Custom String";
     }
 
     public class StreamVariable

@@ -4,7 +4,7 @@ import * as debugAdapter from 'vscode-debugadapter';
 import { LoggingDebugSession, Scope, Handles, InitializedEvent, StoppedEvent, Thread, StackFrame } from 'vscode-debugadapter';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { EventEmitter } from 'events';
-import { getServerModule, client } from './extensions';
+import { serverModuleCommand, client } from './extensions';
 import { setTimeout } from 'timers';
 import { debugPort } from 'process';
 import { debug } from 'console';
@@ -22,7 +22,6 @@ const adapterFactory = new class implements vscode.DebugAdapterDescriptorFactory
 
 class DeltinDebugger extends LoggingDebugSession
 {
-    // private _runtime: DebuggerRuntime;
     private _variableHandles = new Handles<string>();
     private _cancelationTokens = new Map<number, boolean>();
 	private _isLongrunning = new Map<number, boolean>();

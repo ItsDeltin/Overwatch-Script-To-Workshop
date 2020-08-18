@@ -58,6 +58,18 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
             }
         }
 
+        public Workshop GetActionList()
+        {
+            // Match variables and subroutines.
+            MatchVariables();
+            MatchSubroutines();
+
+            // Match actions.
+            if (ActionGroup(out var actions))
+                return new Workshop(Variables.ToArray(), Subroutines.ToArray(), actions.ToArray());
+            return null;
+        }
+
         // TODO: Translate the english keyword to the specified language's keyword.
         public string Kw(string value) => value;
 

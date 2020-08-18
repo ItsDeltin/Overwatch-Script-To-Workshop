@@ -10,8 +10,9 @@ namespace Deltin.Deltinteger.Debugger
 {
     public class DebugVariableLinkCollection
     {
-        public List<IDebugVariable> Variables { get; } = new List<IDebugVariable>();
-        public DebuggerActionStream ActionStream { get; private set; }
+        public List<LinkableDebugVariable> LinkableVariables { get; } = new List<LinkableDebugVariable>();
+        public List<IDebugVariable> Variables { get; private set; } = new List<IDebugVariable>();
+        public DebuggerActionSetResult ActionStream { get; private set; }
         private int _currentReference = 0;
 
         public void Add(IIndexReferencer referencer, IndexReference value)
@@ -23,7 +24,9 @@ namespace Deltin.Deltinteger.Debugger
                 else
                     return;
                 
-            Variables.Add(new LinkableDebugVariable(this, referencer, value.WorkshopVariable, index));
+            var newVariable = new LinkableDebugVariable(this, referencer, value.WorkshopVariable, index);
+            Variables.Add(newVariable);
+            LinkableVariables.Add(newVariable);
         }
 
         public void Add(IDebugVariable variable)
@@ -31,11 +34,14 @@ namespace Deltin.Deltinteger.Debugger
             Variables.Add(variable);
         }
 
-        public void Apply(DebuggerActionStream actionStream)
+        public void Apply(DebuggerActionSetResult actionStream)
         {
             ActionStream = actionStream;
+
+            // Reset the variables list.
+            Variables = new List<IDebugVariable>(LinkableVariables);
             
-            foreach (LinkableDebugVariable variable in Variables)
+            foreach (LinkableDebugVariable variable in LinkableVariables)
             {
                 // Reset the obtained variable.
                 variable.ResetStreamVariable();
@@ -81,7 +87,7 @@ namespace Deltin.Deltinteger.Debugger
             string[] path = args.expression.Split('.');
 
             // Get the first variable.
-            var current = Variables.FirstOrDefault(v => v.IsRoot && v.Name == path[0]);
+            IDebugVariable current = Variables.FirstOrDefault(v => v.IsRoot && v.Name == path[0]);
             if (current == null) return null;
 
             // Get the rest of the path.
@@ -121,11 +127,10 @@ namespace Deltin.Deltinteger.Debugger
         public int[] Index { get; }
         public int Reference { get; set; }
         public CsvPart Value { get; private set; }
-        private IDebugVariable[] _children = null;
 
         public LinkableDebugVariable(DebugVariableLinkCollection collection, IIndexReferencer referencer, WorkshopVariable variable, int[] index)
         {
-            Resolver = referencer.Type().DebugVariableResolver ?? new DefaultResolver();
+            Resolver = referencer.Type()?.DebugVariableResolver ?? new DefaultResolver();
             Name = referencer.Name;
             Type = referencer.Type()?.GetName() ?? "define";
             Variable = variable;
@@ -153,7 +158,6 @@ namespace Deltin.Deltinteger.Debugger
         public string Type { get; }
         public int Reference { get; set; }
         public CsvPart Value { get; }
-        private IDebugVariable[] _children = null;
 
         public ChildDebugVariable(IDebugVariableResolver resolver, CsvPart value, string name, string type)
         {
