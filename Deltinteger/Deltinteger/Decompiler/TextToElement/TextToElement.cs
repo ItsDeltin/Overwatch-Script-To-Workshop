@@ -367,19 +367,37 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
             }
         }
 
-        bool ConditionGroup(out List<ITTEExpression> conditions)
+        // Conditions
+        bool ConditionGroup(out List<TTECondition> conditions)
         {
-            conditions = new List<ITTEExpression>();
+            conditions = new List<TTECondition>();
             if (!Match(Kw("conditions"))) return false;
 
             Match("{");
-            while (Expression(out ITTEExpression condition))
+            while (Condition(out TTECondition condition))
             {
                 Match(";");
                 conditions.Add(condition);
             }
             Match("}");
             return true;
+        }
+
+        bool Condition(out TTECondition condition)
+        {
+            // Is the condition disabled?
+            bool isDisabled = Match(Kw("disabled"));
+
+            // Match the condition's expression.
+            if (Expression(out ITTEExpression expression))
+            {
+                condition = new TTECondition(isDisabled, expression);
+                return true;
+            }
+
+            // No expression matched; return false.
+            condition = null;
+            return false;
         }
 
         // Actions
@@ -1129,7 +1147,7 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
         public TTERule[] Rules { get; }
         public Ruleset LobbySettings { get; }
         public ITTEAction[] Actions { get; }
-        public ITTEExpression[] Conditions { get; }
+        public TTECondition[] Conditions { get; }
 
         public Workshop(WorkshopVariable[] variables, Subroutine[] subroutines, TTERule[] rules, Ruleset settings)
         {
@@ -1144,7 +1162,7 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
             Subroutines = subroutines;
             Actions = actions;
         }
-        public Workshop(WorkshopVariable[] variables, Subroutine[] subroutines, ITTEExpression[] conditions)
+        public Workshop(WorkshopVariable[] variables, Subroutine[] subroutines, TTECondition[] conditions)
         {
             Variables = variables;
             Subroutines = subroutines;
@@ -1293,11 +1311,11 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
     {
         public string Name { get; }
         public EventInfo EventInfo { get; }
-        public ITTEExpression[] Conditions { get; }
+        public TTECondition[] Conditions { get; }
         public ITTEAction[] Actions { get; }
         public bool Disabled { get; }
 
-        public TTERule(string name, EventInfo eventInfo, ITTEExpression[] conditions, ITTEAction[] actions, bool disabled)
+        public TTERule(string name, EventInfo eventInfo, TTECondition[] conditions, ITTEAction[] actions, bool disabled)
         {
             Name = name;
             EventInfo = eventInfo;
@@ -1307,6 +1325,31 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
         }
 
         public override string ToString() => Name + " [" + Actions.Length + " actions]"; 
+    }
+
+    public class TTECondition
+    {
+        public bool Disabled { get; }
+        public ITTEExpression Expression { get; }
+
+        public TTECondition(bool disabled, ITTEExpression expression)
+        {
+            Disabled = disabled;
+            Expression = expression;
+        }
+
+        public void Decompile(DecompileRule decompiler)
+        {
+            decompiler.NewLine();
+
+            // Make the condition a comment if it is disabled.
+            if (Disabled) decompiler.Append("// ");
+
+            // Add the condition.
+            decompiler.Append("if (");
+            Expression.Decompile(decompiler);
+            decompiler.Append(")");
+        }
     }
 
     // Interfaces

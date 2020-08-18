@@ -14,9 +14,6 @@ namespace Deltin.Deltinteger.Decompiler.ElementToCode
             {"Null", (decompiler, function) => decompiler.Append("null")},
             {"True", (decompiler, function) => decompiler.Append("true")},
             {"False", (decompiler, function) => decompiler.Append("false")},
-            {"Map", (decompiler, function) => function.Values[0].Decompile(decompiler)},
-            {"Game Mode", (decompiler, function) => function.Values[0].Decompile(decompiler)},
-            {"Button", (decompiler, function) => function.Values[0].Decompile(decompiler)},
             {"Array", (decompiler, function) => {
                 decompiler.Append("[");
                 for (int i = 0; i < function.Values.Length; i++)
@@ -26,6 +23,12 @@ namespace Deltin.Deltinteger.Decompiler.ElementToCode
                 }
                 decompiler.Append("]");
             }},
+
+            {"Map", (decompiler, function) => function.Values[0].Decompile(decompiler)},
+            {"Game Mode", (decompiler, function) => function.Values[0].Decompile(decompiler)},
+            // {"Button", (decompiler, function) => function.Values[0].Decompile(decompiler)},
+            {"Hero", (decompiler, function) => function.Values[0].Decompile(decompiler)},
+
             {"Modify Global Variable", (decompiler, function) => {
                 decompiler.Append("ModifyVariable(");
                 // Variable
@@ -82,6 +85,7 @@ namespace Deltin.Deltinteger.Decompiler.ElementToCode
                 // Finished
                 decompiler.EndAction();
             }},
+
             {"Chase Global Variable Over Time", (decompiler, function) => {
                 decompiler.Append("ChaseVariableOverTime(");
                 // Variable
@@ -167,6 +171,7 @@ namespace Deltin.Deltinteger.Decompiler.ElementToCode
                 decompiler.Append(")");
                 decompiler.EndAction();
             }},
+
             {"If", (decompiler, function) => {
                 decompiler.Append("if (");
                 function.Values[0].Decompile(decompiler);
@@ -298,6 +303,16 @@ namespace Deltin.Deltinteger.Decompiler.ElementToCode
                     function.Default(decompiler, true);
                 }
             }},
+            
+            {"Break", (decompiler, function) => {
+                decompiler.Append("break");
+                decompiler.EndAction();
+            }},
+            {"Continue", (decompiler, function) => {
+                decompiler.Append("continue");
+                decompiler.EndAction();
+            }},
+            
             // * Legacy *
             {"Set Global Variable", (decompiler, function) => {
                 function.Values[0].Decompile(decompiler);

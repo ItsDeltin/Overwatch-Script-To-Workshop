@@ -203,12 +203,7 @@ namespace Deltin.Deltinteger.Decompiler.ElementToCode
 
                 // Decompile conditions
                 foreach (var condition in Rule.Conditions)
-                {
-                    Decompiler.NewLine();
-                    Decompiler.Append("if (");
                     condition.Decompile(this);
-                    Decompiler.Append(")");
-                }
             }
             else
             {
@@ -241,9 +236,9 @@ namespace Deltin.Deltinteger.Decompiler.ElementToCode
     public class ConditionTraveler : DecompileRule
     {
         public override ITTEAction[] ActionList => throw new System.NotImplementedException();
-        private readonly ITTEExpression[] _conditions;
+        private readonly TTECondition[] _conditions;
 
-        public ConditionTraveler(WorkshopDecompiler decompiler, ITTEExpression[] conditions) : base(decompiler)
+        public ConditionTraveler(WorkshopDecompiler decompiler, TTECondition[] conditions) : base(decompiler)
         {
             _conditions = conditions;
         }
@@ -252,12 +247,7 @@ namespace Deltin.Deltinteger.Decompiler.ElementToCode
         {
             // Decompile conditions
             foreach (var condition in _conditions)
-            {
-                NewLine();
-                Append("if (");
                 condition.Decompile(this);
-                Append(")");
-            }
         }
     }
 
