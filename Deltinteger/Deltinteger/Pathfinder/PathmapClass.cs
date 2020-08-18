@@ -771,9 +771,9 @@ namespace Deltin.Deltinteger.Pathfinder
             {
                 map = Pathmap.ImportFromFile(filepath);
             }
-            catch (InvalidOperationException)
+            catch (Exception ex)
             {
-                parseInfo.Script.Diagnostics.Error("Failed to deserialize the PathMap.", valueRange);
+                parseInfo.Script.Diagnostics.Error("Failed to deserialize the Pathmap: " + ex.Message, valueRange);
                 return null;
             }
 

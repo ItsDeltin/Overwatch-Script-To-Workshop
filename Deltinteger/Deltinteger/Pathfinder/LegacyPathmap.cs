@@ -20,7 +20,6 @@ namespace Deltin.Deltinteger.Pathfinder
 
         public static bool TryLoad(string text, out Pathmap pathmap)
         {
-            test();
             try
             {
                 using (var reader = XmlReader.Create(new StringReader(text)))
@@ -46,7 +45,6 @@ namespace Deltin.Deltinteger.Pathfinder
 
         public static bool TryLoadFile(string file, out Pathmap pathmap)
         {
-            test();
             try
             {
                 using (var reader = XmlReader.Create(file))
@@ -70,28 +68,18 @@ namespace Deltin.Deltinteger.Pathfinder
             }
         }
 
-        private static void test()
-        {
-            var ihate = new LegacyPathmap();
-            ihate.Segments = new LegacySegment[] { new LegacySegment() { Node1 = 1, Node2 = 2, Node1Attribute = 3, Node2Attribute = 4 } };
-            ihate.Nodes = new Vertex[] { new Vertex(1,2,3) };
-
-            var stream = File.Create(@"C:\Users\Deltin\Desktop\delete later\testing_stuff.txt");
-
-            XmlSerializer ser = new XmlSerializer(typeof(LegacyPathmap));
-            ser.Serialize(stream, ihate);
-        }
-
         Pathmap AsPathmap()
         {
-            List<MapAttribute> attributes = new List<MapAttribute>(Attributes);
-            foreach (var segment in Segments)
-            {
-                if (segment.Node1Attribute != 0) attributes.Add(new MapAttribute(segment.Node1, segment.Node2, segment.Node1Attribute));
-                if (segment.Node2Attribute != 0) attributes.Add(new MapAttribute(segment.Node2, segment.Node1, segment.Node2Attribute));
-            }
+            List<MapAttribute> attributes = new List<MapAttribute>(Attributes ?? new MapAttribute[0]);
 
-            return new Pathmap(Nodes, Segments.Select(s => new Segment(s.Node1, s.Node2)).ToArray(), attributes.ToArray());
+            if (Segments != null)
+                foreach (var segment in Segments)
+                {
+                    if (segment.Node1Attribute != 0) attributes.Add(new MapAttribute(segment.Node1, segment.Node2, segment.Node1Attribute));
+                    if (segment.Node2Attribute != 0) attributes.Add(new MapAttribute(segment.Node2, segment.Node1, segment.Node2Attribute));
+                }
+
+            return new Pathmap((Nodes ?? new Vertex[0]), (Segments ?? new LegacySegment[0]).Select(s => new Segment(s.Node1, s.Node2)).ToArray(), (attributes ?? new List<MapAttribute>()).ToArray());
         }
     }
 

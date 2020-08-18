@@ -105,9 +105,7 @@ namespace Deltin.Deltinteger.Pathfinder
             if (LegacyPathmap.TryLoadFile(file, out Pathmap legacyMap)) return legacyMap;
             return Deserialize(System.IO.File.ReadAllText(file));
         }
-        private static Pathmap Deserialize(string text) => JsonConvert.DeserializeObject<Pathmap>(text, new JsonSerializerSettings() {
-            Formatting = Formatting.Indented
-        });
+        private static Pathmap Deserialize(string text) => JsonConvert.DeserializeObject<Pathmap>(text);
 
         public Vertex[] Nodes { get; set; }
         public Segment[] Segments { get; set; }
@@ -122,7 +120,7 @@ namespace Deltin.Deltinteger.Pathfinder
 
         private Pathmap() {}
 
-        public string ExportAsJSON() => JsonConvert.SerializeObject(this);
+        public string ExportAsJSON() => JsonConvert.SerializeObject(this, Formatting.Indented);
 
         public Element NodesAsWorkshopData() => Element.CreateArray(
             Nodes.Select(node => node.ToVector()).ToArray()

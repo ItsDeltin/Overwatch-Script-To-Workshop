@@ -13,7 +13,8 @@
     "activationEvents": [
         "onLanguage:ostw",
         "onLanguage:ow_ostw",
-        "workspaceContains:**/customGameSettings.json"
+        "workspaceContains:**/customGameSettings.json",
+        "workspaceContains:**/*.pathmap"
     ],
     "repository": {
         "type": "git",

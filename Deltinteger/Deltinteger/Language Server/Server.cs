@@ -123,11 +123,8 @@ namespace Deltin.Deltinteger.LanguageServer
                 // Save 'lastMap' to a file.
                 string result = lastMap.ExportAsJSON();
                 string output = uriToken["path"].ToObject<string>().Trim('/');
-                using (FileStream fs = File.Create(output))
-                {
-                    Byte[] info = Encoding.Unicode.GetBytes(result);
-                    fs.Write(info, 0, info.Length);
-                }
+                using (var stream = new StreamWriter(output))
+                    stream.Write(result);
             }));
 
             // Pathmap editor request.
