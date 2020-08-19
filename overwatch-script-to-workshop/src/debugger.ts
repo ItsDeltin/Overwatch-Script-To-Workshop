@@ -86,19 +86,18 @@ class DeltinDebugger extends LoggingDebugSession
 		this.sendResponse(response);
 	}
 
-    protected scopesRequest(response: DebugProtocol.ScopesResponse, args: DebugProtocol.ScopesArguments): void {
+    protected async scopesRequest(response: DebugProtocol.ScopesResponse, args: DebugProtocol.ScopesArguments) {
+		let scopes: DebugProtocol.Scope[] = await client.sendRequest("debugger.scopes", args);
+		
 		response.body = {
-			scopes: [
-				new Scope("Variables", this._variableHandles.create("variables"), false)
-				// new Scope("Global", this._variableHandles.create("global"), false)
-            ]
+			scopes: scopes
 		};
 		this.sendResponse(response);
     }
     
     protected async variablesRequest(response: DebugProtocol.VariablesResponse, args: DebugProtocol.VariablesArguments, request?: DebugProtocol.Request) {
 
-		let variables: debugAdapter.Variable[] = await client.sendRequest("debugger.getVariables", args);
+		let variables: debugAdapter.Variable[] = await client.sendRequest("debugger.variables", args);
 		
 		response.body = {
 			variables: variables

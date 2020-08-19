@@ -12,8 +12,19 @@ namespace Deltin.Deltinteger.Debugger
     {
         public List<LinkableDebugVariable> LinkableVariables { get; } = new List<LinkableDebugVariable>();
         public List<IDebugVariable> Variables { get; private set; } = new List<IDebugVariable>();
+        public List<DebuggerScope> Scopes { get; } = new List<DebuggerScope>();
         public DebuggerActionSetResult ActionStream { get; private set; }
         private int _currentReference = 0;
+        private readonly DebuggerScope _variablesScope;
+        private readonly DebuggerScope _rawScope;
+
+        public DebugVariableLinkCollection()
+        {
+            _variablesScope = new DebuggerScope("Variables", GetReference());
+            _rawScope = new DebuggerScope("Raw", GetReference());
+            Scopes.Add(_variablesScope);
+            Scopes.Add(_rawScope);
+        }
 
         public void Add(IIndexReferencer referencer, IndexReference value)
         {
@@ -27,6 +38,7 @@ namespace Deltin.Deltinteger.Debugger
             var newVariable = new LinkableDebugVariable(this, referencer, value.WorkshopVariable, index);
             Variables.Add(newVariable);
             LinkableVariables.Add(newVariable);
+            _variablesScope.Variables.Add(newVariable);
         }
 
         public void Add(IDebugVariable variable)
@@ -58,6 +70,14 @@ namespace Deltin.Deltinteger.Debugger
                         }
                 }
             }
+
+            // Raw variables
+            foreach (var value in actionStream.Variables)
+            {
+                var variable = new ChildDebugVariable(new DefaultResolver(), value.Value, value.Name, null);
+                Add(variable);
+                _rawScope.Variables.Add(variable);
+            }
         }
 
         public int GetReference()
@@ -68,19 +88,18 @@ namespace Deltin.Deltinteger.Debugger
 
         public DBPVariable[] GetVariables(VariablesArgs args)
         {
-            if (args.variablesReference == 0 || args.variablesReference >= 1000)
-            {
-                return Variables.Where(v => v.IsRoot).Select(v => v.Resolver.GetVariable(this, v)).Where(v => v != null).ToArray();
-            }
-            else
-            {
-                // Child variables
-                var linkVariable = Variables.FirstOrDefault(v => v.Reference == args.variablesReference);
-                if (linkVariable != null)
-                    return linkVariable.Resolver.GetChildren(this, linkVariable).Select(v => v.Resolver.GetVariable(this, v)).Where(v => v != null).ToArray();
-            }
+            foreach (var scope in Scopes)
+                if (scope.Reference == args.variablesReference)
+                    return scope.Variables.Select(v => v.Resolver.GetVariable(this, v)).Where(v => v != null).ToArray();
+            
+            foreach (var variable in Variables)
+                if (variable.Reference == args.variablesReference)
+                    return variable.Resolver.GetChildren(this, variable).Select(v => v.Resolver.GetVariable(this, v)).Where(v => v != null).ToArray();
+
             return new DBPVariable[0];
         }
+
+        public DBPScope[] GetScopes(ScopesArgs args) => Scopes.Select(scope => scope.GetScope()).ToArray();
 
         public EvaluateResponse Evaluate(EvaluateArgs args)
         {
@@ -99,149 +118,5 @@ namespace Deltin.Deltinteger.Debugger
 
             return current.Resolver.GetEvaluation(this, current);
         }
-    }
-
-    public interface IDebugVariable
-    {
-        string Name { get; }
-        string Type { get; }
-        int Reference { get; set; }
-        bool IsRoot { get; }
-        CsvPart Value { get; }
-        IDebugVariableResolver Resolver { get; }
-        public static int ApplyReference(DebugVariableLinkCollection collection, IDebugVariable debugVariable)
-        {
-            if (debugVariable.Reference == 0)
-                debugVariable.Reference = collection.GetReference();
-            return debugVariable.Reference;
-        }
-    }
-
-    public class LinkableDebugVariable : IDebugVariable
-    {
-        public bool IsRoot => true;
-        public IDebugVariableResolver Resolver { get; }
-        public string Name { get; }
-        public string Type { get; }
-        public WorkshopVariable Variable { get; }
-        public int[] Index { get; }
-        public int Reference { get; set; }
-        public CsvPart Value { get; private set; }
-
-        public LinkableDebugVariable(DebugVariableLinkCollection collection, IIndexReferencer referencer, WorkshopVariable variable, int[] index)
-        {
-            Resolver = referencer.Type()?.DebugVariableResolver ?? new DefaultResolver();
-            Name = referencer.Name;
-            Type = referencer.Type()?.GetName() ?? "define";
-            Variable = variable;
-            Index = index;
-        }
-
-        public void SetStreamVariable(StreamVariable variable)
-        {
-            Value = variable.Value;
-            for (int i = 0; i < Index.Length; i++)
-                Value = ((CsvArray)Value).Values[Index[i]];
-        }
-
-        public void ResetStreamVariable()
-        {
-            Value = null;
-        }
-    }
-
-    public class ChildDebugVariable : IDebugVariable
-    {
-        public bool IsRoot => false;
-        public IDebugVariableResolver Resolver { get; }
-        public string Name { get; }
-        public string Type { get; }
-        public int Reference { get; set; }
-        public CsvPart Value { get; }
-
-        public ChildDebugVariable(IDebugVariableResolver resolver, CsvPart value, string name, string type)
-        {
-            Resolver = resolver;
-            Name = name;
-            Type = type;
-            Value = value;
-        }
-    }
-
-    public interface IDebugVariableResolver
-    {
-        DBPVariable GetVariable(DebugVariableLinkCollection collection, IDebugVariable debugVariable);
-        EvaluateResponse GetEvaluation(DebugVariableLinkCollection collection, IDebugVariable debugVariable);
-        IDebugVariable[] GetChildren(DebugVariableLinkCollection collection, IDebugVariable parent);
-    }
-
-    class DefaultResolver : IDebugVariableResolver
-    {
-        public DBPVariable GetVariable(DebugVariableLinkCollection collection, IDebugVariable debugVariable) {
-            // Return null if there is no value.
-            if (debugVariable.Value == null) return null;
-
-            // Create the variable.
-            DBPVariable variable = new DBPVariable(debugVariable);
-
-            if (debugVariable.Value is CsvArray array)
-            {
-                variable.indexedVariables = array.Values.Length;
-                variable.variablesReference = IDebugVariable.ApplyReference(collection, debugVariable);
-            }
-
-            return variable;
-        }
-        public EvaluateResponse GetEvaluation(DebugVariableLinkCollection collection, IDebugVariable debugVariable) {
-            // Return null if there is no value.
-            if (debugVariable.Value == null) return null;
-
-            // Create the evaluation response.
-            EvaluateResponse response = new EvaluateResponse(debugVariable);
-
-            if (debugVariable.Value is CsvArray array)
-            {
-                response.indexedVariables = array.Values.Length;
-                response.variablesReference = IDebugVariable.ApplyReference(collection, debugVariable);
-            }
-            
-            return response;
-        }
-
-        public virtual IDebugVariable[] GetChildren(DebugVariableLinkCollection collection, IDebugVariable parent)
-        {
-            // Get the array.
-            CsvArray array = parent.Value as CsvArray;
-
-            // No children if the value is not an array.
-            if (array == null) return new LinkableDebugVariable[0];
-
-            // Get the values.
-            IDebugVariable[] children = new IDebugVariable[array.Values.Length];
-            for (int i = 0; i < children.Length; i++)
-            {
-                children[i] = GetChildDebugVariable(array.Values[i], "[" + i + "]");
-                collection.Add(children[i]);
-            }
-            
-            // Done
-            return children;
-        }
-
-        protected virtual ChildDebugVariable GetChildDebugVariable(CsvPart arrayValue, string indexName) => new ChildDebugVariable(this, arrayValue, indexName, "define");
-    }
-
-    class ArrayResolver : DefaultResolver
-    {
-        private readonly IDebugVariableResolver _typeResolver;
-        private readonly string _arrayOfTypeName;
-
-        public ArrayResolver(IDebugVariableResolver typeResolver, string arrayOfTypeName)
-        {
-            _typeResolver = typeResolver ?? new DefaultResolver();
-            _arrayOfTypeName = arrayOfTypeName ?? "define";
-        }
-
-        protected override ChildDebugVariable GetChildDebugVariable(CsvPart arrayValue, string indexName) => new ChildDebugVariable(_typeResolver, arrayValue, indexName, _arrayOfTypeName);
     }
 }

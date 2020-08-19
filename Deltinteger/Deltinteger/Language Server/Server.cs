@@ -168,8 +168,15 @@ namespace Deltin.Deltinteger.LanguageServer
                 return tokens ?? new SemanticToken[0];
             }));
 
+            // debugger scopes
+            options.OnRequest<ScopesArgs, DBPScope[]>("debugger.scopes", args => Task<DBPScope[]>.Run(() => {
+                if (_debugger.VariableCollection != null)
+                    return _debugger.VariableCollection.GetScopes(args);
+                return null;
+            }));
+
             // debugger variables
-            options.OnRequest<VariablesArgs, DBPVariable[]>("debugger.getVariables", args => Task<DBPVariable[]>.Run(() => {
+            options.OnRequest<VariablesArgs, DBPVariable[]>("debugger.variables", args => Task<DBPVariable[]>.Run(() => {
                 if (_debugger.VariableCollection != null)
                     return _debugger.VariableCollection.GetVariables(args);
                 return null;

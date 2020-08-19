@@ -257,6 +257,7 @@ Object-serve scope. Only object members.
     public class ClassData : IComponent
     {
         public const string ObjectVariableTag = "_objectVariable_";
+        public const string ClassIndexesTag = "_classIndexes";
         public DeltinScript DeltinScript { get; set; }
         public IndexReference ClassIndexes { get; private set; }
         private List<IndexReference> VariableStacks { get; } = new List<IndexReference>();
@@ -264,7 +265,7 @@ Object-serve scope. Only object members.
 
         public void Init()
         {
-            ClassIndexes = DeltinScript.VarCollection.Assign("_classIndexes", true, false);
+            ClassIndexes = DeltinScript.VarCollection.Assign(ClassIndexesTag, true, false);
             DeltinScript.InitialGlobal.ActionSet.AddAction(ClassIndexes.SetVariable(0, null, Constants.MAX_ARRAY_LENGTH));
         }
 
@@ -322,9 +323,9 @@ Object-serve scope. Only object members.
             if (debugVariable.Value == null) return null;
 
             // Create the variable.
-            IDebugVariable.ApplyReference(collection, debugVariable);
             DBPVariable variable = new DBPVariable(debugVariable);
             variable.namedVariables = Class.ObjectVariables.Count;
+            variable.variablesReference = IDebugVariable.ApplyReference(collection, debugVariable);
 
             return variable;
         }
@@ -344,6 +345,9 @@ Object-serve scope. Only object members.
 
         public IDebugVariable[] GetChildren(DebugVariableLinkCollection collection, IDebugVariable parent)
         {
+            // The class reference of the parent variable.
+            int reference = (int)((parent.Value as CsvNumber)?.Value ?? 0);
+
             IDebugVariable[] variables = new IDebugVariable[Class.ObjectVariables.Count];
             for (int i = 0; i < variables.Length; i++)
             {
@@ -352,7 +356,7 @@ Object-serve scope. Only object members.
                 // Get the related object variable array.
                 var objectVariableArray = collection.ActionStream.Variables.FirstOrDefault(v => v.Name == ClassData.ObjectVariableTag + i);
                 if (objectVariableArray != null && objectVariableArray.Value is Csv.CsvArray csvArray)
-                    value = csvArray.Values[i];
+                    value = csvArray.Values[reference];
 
                 variables[i] = new ChildDebugVariable(
                     // Child variable resolver
