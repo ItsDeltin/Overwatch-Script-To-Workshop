@@ -337,7 +337,7 @@ Object-serve scope. Only object members.
 
             // Create the evaluation response.
             IDebugVariable.ApplyReference(collection, debugVariable);
-            EvaluateResponse response = new EvaluateResponse(debugVariable);
+            EvaluateResponse response = new EvaluateResponse(collection, debugVariable);
             response.namedVariables = Class.ObjectVariables.Count;
             
             return response;

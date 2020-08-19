@@ -40,11 +40,11 @@ namespace Deltin.Deltinteger.Debugger.Protocol
         public int indexedVariables;
 
         public EvaluateResponse() {}
-        public EvaluateResponse(IDebugVariable variable)
+        public EvaluateResponse(DebugVariableLinkCollection collection, IDebugVariable variable)
         {
             type = variable.Type;
             result = variable.Value.ToString();
-            variablesReference = variable.Reference;
+            variablesReference = collection.References[variable];
         }
     }
 

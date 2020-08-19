@@ -12,16 +12,15 @@ namespace Deltin.Deltinteger.Debugger
     {
         public List<LinkableDebugVariable> LinkableVariables { get; } = new List<LinkableDebugVariable>();
         public List<IDebugVariable> Variables { get; private set; } = new List<IDebugVariable>();
+        public Dictionary<object, int> References { get; } = new Dictionary<object, int>();
         public List<DebuggerScope> Scopes { get; } = new List<DebuggerScope>();
         public DebuggerActionSetResult ActionStream { get; private set; }
         private int _currentReference = 0;
-        private readonly DebuggerScope _variablesScope;
-        private readonly DebuggerScope _rawScope;
+        private readonly DebuggerScope _variablesScope = new DebuggerScope("Variables");
+        private readonly DebuggerScope _rawScope = new DebuggerScope("Raw");
 
         public DebugVariableLinkCollection()
         {
-            _variablesScope = new DebuggerScope("Variables", GetReference());
-            _rawScope = new DebuggerScope("Raw", GetReference());
             Scopes.Add(_variablesScope);
             Scopes.Add(_rawScope);
         }
@@ -52,6 +51,15 @@ namespace Deltin.Deltinteger.Debugger
 
             // Reset the variables list.
             Variables = new List<IDebugVariable>(LinkableVariables);
+
+            // Reset the references.
+            References.Clear();
+            _currentReference = 0;
+
+            // Add scope references.
+            References.Add(_variablesScope, GetReference());
+            References.Add(_rawScope, GetReference());
+            _rawScope.Variables.Clear();
             
             foreach (LinkableDebugVariable variable in LinkableVariables)
             {
@@ -86,20 +94,22 @@ namespace Deltin.Deltinteger.Debugger
             return _currentReference;
         }
 
+        /// <summary>Gets the variables.</summary>
         public DBPVariable[] GetVariables(VariablesArgs args)
         {
             foreach (var scope in Scopes)
-                if (scope.Reference == args.variablesReference)
+                if (References[scope] == args.variablesReference)
                     return scope.Variables.Select(v => v.Resolver.GetVariable(this, v)).Where(v => v != null).ToArray();
             
             foreach (var variable in Variables)
-                if (variable.Reference == args.variablesReference)
+                if (References.TryGetValue(variable, out int reference) && reference == args.variablesReference)
                     return variable.Resolver.GetChildren(this, variable).Select(v => v.Resolver.GetVariable(this, v)).Where(v => v != null).ToArray();
 
             return new DBPVariable[0];
         }
 
-        public DBPScope[] GetScopes(ScopesArgs args) => Scopes.Select(scope => scope.GetScope()).ToArray();
+        /// <summary>Gets the variable scopes.</summary>
+        public DBPScope[] GetScopes(ScopesArgs args) => Scopes.Select(scope => scope.GetScope(this)).ToArray();
 
         public EvaluateResponse Evaluate(EvaluateArgs args)
         {

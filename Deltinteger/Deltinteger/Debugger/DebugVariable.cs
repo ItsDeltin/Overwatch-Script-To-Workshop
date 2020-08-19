@@ -7,15 +7,15 @@ namespace Deltin.Deltinteger.Debugger
     {
         string Name { get; }
         string Type { get; }
-        int Reference { get; set; }
         bool IsRoot { get; }
         CsvPart Value { get; }
         IDebugVariableResolver Resolver { get; }
         public static int ApplyReference(DebugVariableLinkCollection collection, IDebugVariable debugVariable)
         {
-            if (debugVariable.Reference == 0)
-                debugVariable.Reference = collection.GetReference();
-            return debugVariable.Reference;
+            if (!collection.References.ContainsKey(debugVariable))
+                collection.References.Add(debugVariable, collection.GetReference());
+            
+            return collection.References[debugVariable];
         }
     }
 
@@ -27,7 +27,6 @@ namespace Deltin.Deltinteger.Debugger
         public string Type { get; }
         public WorkshopVariable Variable { get; }
         public int[] Index { get; }
-        public int Reference { get; set; }
         public CsvPart Value { get; private set; }
 
         public LinkableDebugVariable(DebugVariableLinkCollection collection, IIndexReferencer referencer, WorkshopVariable variable, int[] index)
@@ -50,6 +49,8 @@ namespace Deltin.Deltinteger.Debugger
         {
             Value = null;
         }
+
+        public override string ToString() => Name + (Value == null ? "" : " = " + Value.ToString());
     }
 
     public class ChildDebugVariable : IDebugVariable
@@ -58,7 +59,6 @@ namespace Deltin.Deltinteger.Debugger
         public IDebugVariableResolver Resolver { get; }
         public string Name { get; }
         public string Type { get; }
-        public int Reference { get; set; }
         public CsvPart Value { get; }
 
         public ChildDebugVariable(IDebugVariableResolver resolver, CsvPart value, string name, string type)
@@ -68,5 +68,7 @@ namespace Deltin.Deltinteger.Debugger
             Type = type;
             Value = value;
         }
+
+        public override string ToString() => Name + (Value == null ? "" : " = " + Value.ToString());
     }
 }

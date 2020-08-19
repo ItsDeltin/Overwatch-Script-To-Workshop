@@ -6,18 +6,16 @@ namespace Deltin.Deltinteger.Debugger
     public class DebuggerScope
     {
         public string Name { get; }
-        public int Reference { get; }
         public List<IDebugVariable> Variables { get; } = new List<IDebugVariable>();
 
-        public DebuggerScope(string name, int reference)
+        public DebuggerScope(string name)
         {
             Name = name;
-            Reference = reference;
         }
 
-        public DBPScope GetScope() => new DBPScope() {
+        public DBPScope GetScope(DebugVariableLinkCollection collection) => new DBPScope() {
             name = Name,
-            variablesReference = Reference
+            variablesReference = collection.References[this]
         };
     }
 }

@@ -32,7 +32,7 @@ namespace Deltin.Deltinteger.Debugger
             if (debugVariable.Value == null) return null;
 
             // Create the evaluation response.
-            EvaluateResponse response = new EvaluateResponse(debugVariable);
+            EvaluateResponse response = new EvaluateResponse(collection, debugVariable);
 
             if (debugVariable.Value is CsvArray array)
             {
