@@ -114,12 +114,28 @@ namespace Deltin.Deltinteger.Debugger.Protocol
 
     public class DBPVariable
     {
+        /// <summary>The variable's name.</summary>
         public string name;
+        /// <summary>The variable's value. This can be a multi-line text, e.g. for a function the body of a function.</summary>
         public string value;
+        /// <summary>The type of the variable's value. Typically shown in the UI when hovering over the value.
+        /// This attribute should only be returned by a debug adapter if the client has passed the value true for the 'supportsVariableType' capability of the 'initialize' request.</summary>
         public string type;
+        /// <summary>Properties of a variable that can be used to determine how to render the variable in the UI.</summary>
+        public VariablePresentationHint presentationHint;
+        /// <summary>Optional evaluatable name of this variable which can be passed to the 'EvaluateRequest' to fetch the variable's value.</summary>
+        public string evaluateName;
+        /// <summary>If variablesReference is > 0, the variable is structured and its children can be retrieved by passing variablesReference to the VariablesRequest.</summary>
         public int variablesReference;
+        /// <summary>The number of named child variables.
+        /// The client can use this optional information to present the children in a paged UI and fetch them in chunks.</summary>
         public int namedVariables;
+        /// <summary>The number of indexed child variables.
+        /// The client can use this optional information to present the children in a paged UI and fetch them in chunks.</summary>
         public int indexedVariables;
+        /// <summary>Optional memory reference for the variable if the variable represents executable code, such as a function pointer.
+        /// This attribute is only required if the client has passed the value true for the 'supportsMemoryReferences' capability of the 'initialize' request.</summary>
+        public string memoryReference;
 
         public DBPVariable() {}
         public DBPVariable(IDebugVariable variable)
@@ -128,5 +144,43 @@ namespace Deltin.Deltinteger.Debugger.Protocol
             type = variable.Type;
             value = variable.Value.ToString();
         }
+    }
+
+    public class VariablePresentationHint
+    {
+        /// <summary>
+        /// The kind of variable. Before introducing additional values, try to use the listed values.
+        /// Values: 
+        /// 'property': Indicates that the object is a property.
+        /// 'method': Indicates that the object is a method.
+        /// 'class': Indicates that the object is a class.
+        /// 'data': Indicates that the object is data.
+        /// 'event': Indicates that the object is an event.
+        /// 'baseClass': Indicates that the object is a base class.
+        /// 'innerClass': Indicates that the object is an inner class.
+        /// 'interface': Indicates that the object is an interface.
+        /// 'mostDerivedClass': Indicates that the object is the most derived class.
+        /// 'virtual': Indicates that the object is virtual, that means it is a synthetic object introducedby the
+        /// adapter for rendering purposes, e.g. an index range for large arrays.
+        /// 'dataBreakpoint': Indicates that a data breakpoint is registered for the object.
+        /// etc.
+        /// </summary>
+        public string kind;
+        /// <summary>
+        /// Set of attributes represented as an array of strings. Before introducing additional values, try to use the listed values.
+        /// Values: 
+        /// 'static': Indicates that the object is static.
+        /// 'constant': Indicates that the object is a constant.
+        /// 'readOnly': Indicates that the object is read only.
+        /// 'rawString': Indicates that the object is a raw string.
+        /// 'hasObjectId': Indicates that the object can have an Object ID created for it.
+        /// 'canHaveObjectId': Indicates that the object has an Object ID associated with it.
+        /// 'hasSideEffects': Indicates that the evaluation had side effects.
+        /// etc.
+        /// </summary>
+        public string attributes;
+        /// <summary>Visibility of variable. Before introducing additional values, try to use the listed values.
+        /// Values: 'public', 'private', 'protected', 'internal', 'final', etc.</summary>
+        public string visibility;
     }
 }

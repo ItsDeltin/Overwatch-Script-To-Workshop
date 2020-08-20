@@ -346,7 +346,7 @@ Object-serve scope. Only object members.
         public IDebugVariable[] GetChildren(DebugVariableLinkCollection collection, IDebugVariable parent)
         {
             // The class reference of the parent variable.
-            int reference = (int)((parent.Value as CsvNumber)?.Value ?? 0);
+            int reference = (int)((CsvNumber)parent.Value).Value;
 
             IDebugVariable[] variables = new IDebugVariable[Class.ObjectVariables.Count];
             for (int i = 0; i < variables.Length; i++)
@@ -368,6 +368,7 @@ Object-serve scope. Only object members.
                     // Type
                     Class.ObjectVariables[i].Variable.Type()?.GetName() ?? "define"
                 );
+                collection.Add(variables[i]);
             }
 
             return variables;

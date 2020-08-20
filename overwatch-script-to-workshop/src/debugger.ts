@@ -22,9 +22,7 @@ const adapterFactory = new class implements vscode.DebugAdapterDescriptorFactory
 
 class DeltinDebugger extends LoggingDebugSession
 {
-    private _variableHandles = new Handles<string>();
     private _cancelationTokens = new Map<number, boolean>();
-	private _isLongrunning = new Map<number, boolean>();
 
     constructor()
     {
@@ -49,6 +47,7 @@ class DeltinDebugger extends LoggingDebugSession
 		response.body.supportsEvaluateForHovers = true;
 		response.body.supportsRestartRequest = true;
 		response.body.supportsValueFormattingOptions = true;
+		response.body.supportsClipboardContext = true;
 
         this.sendResponse(response);
 		this.sendEvent(new InitializedEvent());

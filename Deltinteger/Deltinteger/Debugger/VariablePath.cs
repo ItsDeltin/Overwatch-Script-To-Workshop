@@ -10,13 +10,23 @@ namespace Deltin.Deltinteger.Debugger
 {
     public class DebugVariableLinkCollection
     {
+        /// <summary>Vraiables created in the script.</summary>
         public List<LinkableDebugVariable> LinkableVariables { get; } = new List<LinkableDebugVariable>();
+        /// <summary>All variables including children.</summary>
         public List<IDebugVariable> Variables { get; private set; } = new List<IDebugVariable>();
-        public Dictionary<object, int> References { get; } = new Dictionary<object, int>();
+        /// <summary>The scopes in the project.</summary>
         public List<DebuggerScope> Scopes { get; } = new List<DebuggerScope>();
+        /// <summary>All assigned references, includes scopes and variables.</summary>
+        public Dictionary<object, int> References { get; } = new Dictionary<object, int>();
+        /// <summary>A copied variable's value.</summary>
+        public Dictionary<string, string> ClipboardEvaluation { get; } = new Dictionary<string, string>();
+        /// <summary>The copied inspector values.</summary>
         public DebuggerActionSetResult ActionStream { get; private set; }
+        /// <summary>The current reference.</summary>
         private int _currentReference = 0;
+        /// <summary>The variables scope, containing variables from the script.</summary>
         private readonly DebuggerScope _variablesScope = new DebuggerScope("Variables");
+        /// <summary>The 'raw scope', containing variables directly from ActionStream.</summary>
         private readonly DebuggerScope _rawScope = new DebuggerScope("Raw");
 
         public DebugVariableLinkCollection()
@@ -111,8 +121,14 @@ namespace Deltin.Deltinteger.Debugger
         /// <summary>Gets the variable scopes.</summary>
         public DBPScope[] GetScopes(ScopesArgs args) => Scopes.Select(scope => scope.GetScope(this)).ToArray();
 
+        /// <summary>Evaluates an expression.</summary>
         public EvaluateResponse Evaluate(EvaluateArgs args)
         {
+            if (args.context == "clipboard")
+                return new EvaluateResponse() {
+                    result = ClipboardEvaluation[args.expression]
+                };
+
             string[] path = args.expression.Split('.');
 
             // Get the first variable.
@@ -127,6 +143,18 @@ namespace Deltin.Deltinteger.Debugger
             }
 
             return current.Resolver.GetEvaluation(this, current);
+        }
+
+        public string AddClipboardKey(string original, string value)
+        {
+            original = "!clipboard." + original;
+            string current = original;
+
+            for (int i = 0; ClipboardEvaluation.ContainsKey(current); i++)
+                current = original + "_" + i;
+            
+            ClipboardEvaluation.Add(current, value);
+            return current;
         }
     }
 }

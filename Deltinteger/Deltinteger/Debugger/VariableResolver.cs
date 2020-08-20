@@ -19,9 +19,19 @@ namespace Deltin.Deltinteger.Debugger
             // Create the variable.
             DBPVariable variable = new DBPVariable(debugVariable);
 
+            // Add the clipboard value copy.
+            variable.evaluateName = collection.AddClipboardKey(debugVariable.Name, debugVariable.Value.AsOSTWExpression());
+
+            // If the value is an array, assign a reference.
             if (debugVariable.Value is CsvArray array)
             {
                 variable.indexedVariables = array.Values.Length;
+                variable.variablesReference = IDebugVariable.ApplyReference(collection, debugVariable);
+            }
+            // If the value is a vector, assign a reference.
+            else if (debugVariable.Value is CsvVector vector)
+            {
+                variable.namedVariables = 3; // X, Y, and Z.
                 variable.variablesReference = IDebugVariable.ApplyReference(collection, debugVariable);
             }
 
@@ -34,9 +44,16 @@ namespace Deltin.Deltinteger.Debugger
             // Create the evaluation response.
             EvaluateResponse response = new EvaluateResponse(collection, debugVariable);
 
+            // Array
             if (debugVariable.Value is CsvArray array)
             {
                 response.indexedVariables = array.Values.Length;
+                response.variablesReference = IDebugVariable.ApplyReference(collection, debugVariable);
+            }
+            // Vector
+            else if (debugVariable.Value is CsvVector)
+            {
+                response.namedVariables = 3;
                 response.variablesReference = IDebugVariable.ApplyReference(collection, debugVariable);
             }
             
@@ -46,21 +63,31 @@ namespace Deltin.Deltinteger.Debugger
         public virtual IDebugVariable[] GetChildren(DebugVariableLinkCollection collection, IDebugVariable parent)
         {
             // Get the array.
-            CsvArray array = parent.Value as CsvArray;
-
-            // No children if the value is not an array.
-            if (array == null) return new LinkableDebugVariable[0];
-
-            // Get the values.
-            IDebugVariable[] children = new IDebugVariable[array.Values.Length];
-            for (int i = 0; i < children.Length; i++)
+            if (parent.Value is CsvArray array)
             {
-                children[i] = GetChildDebugVariable(collection, array.Values[i], "[" + i + "]");
-                collection.Add(children[i]);
+                // Get the values.
+                IDebugVariable[] children = new IDebugVariable[array.Values.Length];
+                for (int i = 0; i < children.Length; i++)
+                {
+                    children[i] = GetChildDebugVariable(collection, array.Values[i], "[" + i + "]");
+                    collection.Add(children[i]);
+                }
+                
+                // Done
+                return children;
             }
-            
-            // Done
-            return children;
+            // Get the vector.
+            else if (parent.Value is CsvVector vector)
+            {
+                var x = GetChildDebugVariable(collection, new CsvNumber(vector.Value.X), "X");
+                var y = GetChildDebugVariable(collection, new CsvNumber(vector.Value.Y), "Y");
+                var z = GetChildDebugVariable(collection, new CsvNumber(vector.Value.Z), "Z");
+                collection.Add(x);
+                collection.Add(y);
+                collection.Add(z);
+                return new IDebugVariable[] {x,y,z};
+            }
+            return new LinkableDebugVariable[0];
         }
 
         protected virtual ChildDebugVariable GetChildDebugVariable(DebugVariableLinkCollection collection, CsvPart arrayValue, string indexName) => new ChildDebugVariable(this, arrayValue, indexName, "define");
