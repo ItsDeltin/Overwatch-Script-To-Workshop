@@ -67,6 +67,51 @@ namespace Deltin.Deltinteger.Lobby
             builder.Unindent();
             builder.AppendLine("}");
         }
+
+        public ModeSettings SettingsFromModeCollection(ModeSettingCollection collection)
+        {
+            if (collection.ModeName == "Assault") {
+                if (Assault == null) Assault = new ModeSettings();
+                return Assault;
+            }
+            if (collection.ModeName == "Capture The Flag") {
+                if (CaptureTheFlag == null) CaptureTheFlag = new ModeSettings();
+                return CaptureTheFlag;
+            }
+            if (collection.ModeName == "Control") {
+                if (Control == null) Control = new ModeSettings();
+                return Control;
+            }
+            if (collection.ModeName == "Deathmatch") {
+                if (Deathmatch == null) Deathmatch = new ModeSettings();
+                return Deathmatch;
+            }
+            if (collection.ModeName == "Elimination") {
+                if (Elimination == null) Elimination = new ModeSettings();
+                return Elimination;
+            }
+            if (collection.ModeName == "Escort") {
+                if (Escort == null) Escort = new ModeSettings();
+                return Escort;
+            }
+            if (collection.ModeName == "Hybrid") {
+                if (Hybrid == null) Hybrid = new ModeSettings();
+                return Hybrid;
+            }
+            if (collection.ModeName == "Practice Range") {
+                if (PracticeRange == null) PracticeRange = new ModeSettings();
+                return PracticeRange;
+            }
+            if (collection.ModeName == "Skirmish") {
+                if (Skirmish == null) Skirmish = new ModeSettings();
+                return Skirmish;
+            }
+            if (collection.ModeName == "Team Deathmatch") {
+                if (TeamDeathmatch == null) TeamDeathmatch = new ModeSettings();
+                return TeamDeathmatch;
+            }
+            throw new NotImplementedException(collection.ModeName);
+        }
     }
 
     public class ModeSettings
@@ -78,7 +123,7 @@ namespace Deltin.Deltinteger.Lobby
         public string[] DisabledMaps { get; set; }
 
         [JsonExtensionData]
-        public Dictionary<string, object> Settings { get; set; }
+        public Dictionary<string, object> Settings { get; set; } = new Dictionary<string, object>();
 
         public void ToWorkshop(WorkshopBuilder builder, List<LobbySetting> allSettings, string modeName)
         {

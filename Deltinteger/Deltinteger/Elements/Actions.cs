@@ -123,7 +123,7 @@ namespace Deltin.Deltinteger.Elements
     [EnumParameter("Reevaluation", typeof(EffectRev))]
     public class A_CreateEffect : Element {}
 
-    [ElementData("Create Hud Text")]
+    [ElementData("Create HUD Text")]
     [Parameter("Visible To", ValueType.Players, typeof(V_AllPlayers))]
     [Parameter("Header", ValueType.String, typeof(V_Null))]
     [Parameter("Subheader", ValueType.String, typeof(V_Null))]
@@ -202,7 +202,7 @@ namespace Deltin.Deltinteger.Elements
     [Parameter("Effect ID", ValueType.Effect, null)]
     public class A_DestroyEffect : Element {}
 
-    [ElementData("Destroy Hud Text")]
+    [ElementData("Destroy HUD Text")]
     [Parameter("Text ID", ValueType.Text, null)]
     public class A_DestroyHudText : Element {}
 
@@ -885,11 +885,11 @@ namespace Deltin.Deltinteger.Elements
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     public class A_EnableGameModeInworldUI : Element {}
 
-    [ElementData("Disable Hero Hud")]
+    [ElementData("Disable Hero HUD")]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     public class A_DisableHeroHud : Element {}
 
-    [ElementData("Enable Hero Hud")]
+    [ElementData("Enable Hero HUD")]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     public class A_EnableHeroHud : Element {}
 

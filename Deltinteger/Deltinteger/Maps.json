@@ -126,6 +126,7 @@
   },
   {
     "Name": "Hollywood (Halloween)",
+    "Workshop": "Hollywood Halloween",
     "GameModes": [
       "Hybrid",
       "Skirmish",
@@ -135,6 +136,7 @@
   },
   {
     "Name": "King's Row (Winter)",
+    "Workshop": "King's Row Winter",
     "GameModes": [
       "Hybrid",
       "Skirmish",
@@ -150,6 +152,7 @@
   },
   {
     "Name": "Hanamura (Winter)",
+    "Workshop": "Hanamura Winter",
     "GameModes": [
       "Assault",
       "Skirmish",
@@ -159,6 +162,7 @@
   },
   {
     "Name": "Lijiang Tower (Lunar New Year)",
+    "Workshop": "Lijiang Tower Lunar New Year",
     "GameModes": [
       "Control",
       "Skirmish"
@@ -206,6 +210,7 @@
   },
   {
     "Name": "Ecopoint: Antarctica (Winter)",
+    "Workshop": "Ecopoint: Antarctica Winter",
     "GameModes": [
       "Elimination",
       "Team Deathmatch",
@@ -216,6 +221,7 @@
   },
   {
     "Name": "Lijiang Garden (Lunar New Year)",
+    "Workshop": "Lijiang Garden Lunar New Year",
     "GameModes": [
       "Capture the Flag",
       "Elimination",
@@ -225,6 +231,7 @@
   },
   {
     "Name": "Lijiang Night Market (Lunar New Year)",
+    "Workshop": "Lijiang Night Market Lunar New Year",
     "GameModes": [
       "Capture the Flag",
       "Elimination",
@@ -243,6 +250,7 @@
   },
   {
     "Name": "Lijiang Control Center (Lunar New Year)",
+    "Workshop": "Lijiang Control Center Lunar New Year",
     "GameModes": [
       "Capture the Flag",
       "Elimination",
@@ -408,6 +416,7 @@
   },
   {
     "Name": "Eichenwalde (Halloween)",
+    "Workshop": "Eichenwalde Halloween",
     "GameModes": [
       "Hybrid",
       "Skirmish",
@@ -417,6 +426,7 @@
   },
   {
     "Name": "Black Forest (Winter)",
+    "Workshop": "Black Forest Winter",
     "GameModes": [
       "Elimination",
       "Deathmatch",
@@ -427,12 +437,14 @@
   },
   {
     "Name": "Nepal Village (Winter)",
+    "Workshop": "Nepal Village Winter",
     "GameModes": [
       "Yeti Hunter"
     ]
   },
   {
     "Name": "Château Guillard (Halloween)",
+    "Workshop": "Château Guillard Halloween",
     "GameModes": [
       "Deathmatch",
       "Team Deathmatch"
@@ -471,6 +483,7 @@
   },
   {
     "Name": "Blizzard World (Winter)",
+    "Workshop": "Blizzard World Winter",
     "GameModes": [
       "Hybrid",
       "Skirmish",
@@ -480,12 +493,14 @@
   },
   {
     "Name": "Busan Sanctuary (Lunar New Year)",
+    "Workshop": "Busan Sanctuary Lunar New Year",
     "GameModes": [
       "Capture the Flag"
     ]
   },
   {
     "Name": "Busan Downtown (Lunar New Year)",
+    "Workshop": "Busan Downtown Lunar New Year",
     "GameModes": [
       "Capture the Flag"
     ]
@@ -519,6 +534,7 @@
   },
   {
     "Name": "Workshop Island (Night)",
+    "Workshop": "Workshop Island Night",
     "GameModes": [
       "Elimination",
       "Deathmatch",
@@ -528,6 +544,7 @@
   },
   {
     "Name": "Workshop Expanse (Night)",
+    "Workshop": "Workshop Expanse Night",
     "GameModes": [
       "Elimination",
       "Deathmatch",

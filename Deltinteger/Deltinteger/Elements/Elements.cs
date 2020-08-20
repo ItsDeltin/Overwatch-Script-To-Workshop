@@ -149,6 +149,27 @@ namespace Deltin.Deltinteger.Elements
         // Creates an ternary conditional that works in the workshop
         public static Element TernaryConditional(IWorkshopTree condition, IWorkshopTree consequent, IWorkshopTree alternative) => Element.Part<V_IfThenElse>(condition, consequent, alternative);
 
+        public static Element Hud(
+            IWorkshopTree players = null,
+            IWorkshopTree header = null, IWorkshopTree subheader = null, IWorkshopTree text = null,
+            HudLocation location = HudLocation.Top, double? sortOrder = null,
+            Color headerColor = Color.White, Color subheaderColor = Color.White, Color textColor = Color.White,
+            HudTextRev reevaluation = HudTextRev.VisibleToSortOrderAndString, Spectators spectators = Spectators.DefaultVisibility)
+        =>
+            Element.Part<A_CreateHudText>(
+                players ?? Element.Part<V_AllPlayers>(),
+                header ?? Element.Part<V_Null>(),
+                subheader ?? Element.Part<V_Null>(),
+                text ?? Element.Part<V_Null>(),
+                EnumData.GetEnumValue(location),
+                new V_Number(sortOrder == null ? 0 : sortOrder.Value),
+                EnumData.GetEnumValue(headerColor),
+                EnumData.GetEnumValue(subheaderColor),
+                EnumData.GetEnumValue(textColor),
+                EnumData.GetEnumValue(reevaluation),
+                EnumData.GetEnumValue(spectators)
+            );
+
         public static Element operator +(Element a, Element b) => Element.Part<V_Add>(a, b);
         public static Element operator -(Element a, Element b) => Element.Part<V_Subtract>(a, b);
         public static Element operator *(Element a, Element b) => Element.Part<V_Multiply>(a, b);

@@ -1,7 +1,6 @@
 using System.Linq;
 using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.Elements;
-using Antlr4.Runtime;
 
 namespace Deltin.Deltinteger.Parse
 {

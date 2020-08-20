@@ -236,7 +236,7 @@ namespace Deltin.Deltinteger.Parse
                     actionSet.IndexAssigner.Add(virtualParameterOption, indexResult);
             }
         }
-    
+
         // Assigns parameters to the index assigner. TODO: Move to OverloadChooser.
         public static void AssignParameters(ActionSet actionSet, Var[] parameterVars, IWorkshopTree[] parameterValues, bool recursive = false)
         {

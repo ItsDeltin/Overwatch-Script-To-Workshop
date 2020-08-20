@@ -106,6 +106,9 @@ namespace Deltin.Deltinteger
             ParameterValues = parameterValues;
             AdditionalParameterData = additionalParameterData;
         }
+
+        /// <summary>Gets a parameter as an element.</summary>
+        public Element Get(int i) => (Element)ParameterValues[i];
     }
 
     public class RestrictedCall
