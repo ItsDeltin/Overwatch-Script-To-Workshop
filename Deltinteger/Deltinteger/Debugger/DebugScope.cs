@@ -3,7 +3,7 @@ using Deltin.Deltinteger.Debugger.Protocol;
 
 namespace Deltin.Deltinteger.Debugger
 {
-    public class DebuggerScope
+    public class DebuggerScope : IDebuggerReference
     {
         public string Name { get; }
         public List<IDebugVariable> Variables { get; } = new List<IDebugVariable>();
@@ -17,5 +17,7 @@ namespace Deltin.Deltinteger.Debugger
             name = Name,
             variablesReference = collection.References[this]
         };
+
+        public IDebugVariable[] GetChildren(DebugVariableLinkCollection collection) => Variables.ToArray();
     }
 }

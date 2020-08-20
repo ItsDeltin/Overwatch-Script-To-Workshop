@@ -1,9 +1,11 @@
+using System.Collections.Generic;
+using Deltin.Deltinteger.Debugger.Protocol;
 using Deltin.Deltinteger.Csv;
 using Deltin.Deltinteger.Elements;
 
 namespace Deltin.Deltinteger.Debugger
 {
-    public interface IDebugVariable
+    public interface IDebugVariable : IDebuggerReference
     {
         string Name { get; }
         string Type { get; }
@@ -38,6 +40,8 @@ namespace Deltin.Deltinteger.Debugger
             Index = index;
         }
 
+        public IDebugVariable[] GetChildren(DebugVariableLinkCollection collection) => Resolver.GetChildren(collection, this);
+
         public void SetStreamVariable(StreamVariable variable)
         {
             Value = variable.Value;
@@ -68,6 +72,8 @@ namespace Deltin.Deltinteger.Debugger
             Type = type;
             Value = value;
         }
+
+        public IDebugVariable[] GetChildren(DebugVariableLinkCollection collection) => Resolver.GetChildren(collection, this);
 
         public override string ToString() => Name + (Value == null ? "" : " = " + Value.ToString());
     }

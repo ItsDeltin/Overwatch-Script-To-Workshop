@@ -17,7 +17,7 @@ namespace Deltin.Deltinteger.Debugger
         /// <summary>The scopes in the project.</summary>
         public List<DebuggerScope> Scopes { get; } = new List<DebuggerScope>();
         /// <summary>All assigned references, includes scopes and variables.</summary>
-        public Dictionary<object, int> References { get; } = new Dictionary<object, int>();
+        public Dictionary<IDebuggerReference, int> References { get; } = new Dictionary<IDebuggerReference, int>();
         /// <summary>A copied variable's value.</summary>
         public Dictionary<string, string> ClipboardEvaluation { get; } = new Dictionary<string, string>();
         /// <summary>The copied inspector values.</summary>
@@ -107,14 +107,10 @@ namespace Deltin.Deltinteger.Debugger
         /// <summary>Gets the variables.</summary>
         public DBPVariable[] GetVariables(VariablesArgs args)
         {
-            foreach (var scope in Scopes)
-                if (References[scope] == args.variablesReference)
-                    return scope.Variables.Select(v => v.Resolver.GetVariable(this, v)).Where(v => v != null).ToArray();
+            foreach (var reference in References)
+                if (reference.Value == args.variablesReference)
+                    return reference.Key.GetChildren(this).Select(v => v.Resolver.GetVariable(this, v)).Where(v => v != null).Skip(args.start).Take(args.count == 0 ? int.MaxValue : args.count).ToArray();
             
-            foreach (var variable in Variables)
-                if (References.TryGetValue(variable, out int reference) && reference == args.variablesReference)
-                    return variable.Resolver.GetChildren(this, variable).Select(v => v.Resolver.GetVariable(this, v)).Where(v => v != null).ToArray();
-
             return new DBPVariable[0];
         }
 
@@ -156,5 +152,10 @@ namespace Deltin.Deltinteger.Debugger
             ClipboardEvaluation.Add(current, value);
             return current;
         }
+    }
+
+    public interface IDebuggerReference
+    {
+        IDebugVariable[] GetChildren(DebugVariableLinkCollection collection);
     }
 }
