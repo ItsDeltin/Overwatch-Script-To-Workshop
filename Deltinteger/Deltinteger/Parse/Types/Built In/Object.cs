@@ -22,8 +22,8 @@ namespace Deltin.Deltinteger.Parse
         public void InitOperations()
         {
             Operations = new TypeOperation[] {
-                new TypeOperation(TypeOperator.Equal, this, BooleanType.Instance, (l, r) => new V_Compare(l, Operators.Equal, r)),
-                new TypeOperation(TypeOperator.NotEqual, this, BooleanType.Instance, (l, r) => new V_Compare(l, Operators.NotEqual, r))
+                new TypeOperation(TypeOperator.Equal, this, BooleanType.Instance, (l, r) => Element.Compare(l, Operator.Equal, r)),
+                new TypeOperation(TypeOperator.NotEqual, this, BooleanType.Instance, (l, r) => Element.Compare(l, Operator.NotEqual, r))
             };
         }
 
@@ -61,16 +61,16 @@ namespace Deltin.Deltinteger.Parse
         public void InitOperations()
         {
             Operations = new TypeOperation[] {
-                new TypeOperation(TypeOperator.Add, this, this, TypeOperation.Add), // Number + number
-                new TypeOperation(TypeOperator.Subtract, this, this, TypeOperation.Subtract), // Number - number
-                new TypeOperation(TypeOperator.Multiply, this, this, TypeOperation.Multiply), // Number * number
-                new TypeOperation(TypeOperator.Divide, this, this, TypeOperation.Divide), // Number / number
-                new TypeOperation(TypeOperator.Modulo, this, this, TypeOperation.Modulo), // Number % number
-                new TypeOperation(TypeOperator.Multiply, VectorType.Instance, VectorType.Instance, TypeOperation.Multiply), // Number * vector
-                new TypeOperation(TypeOperator.LessThan, this, BooleanType.Instance, (l, r) => new V_Compare(l, Operators.LessThan, r)), // Number < number
-                new TypeOperation(TypeOperator.LessThanOrEqual, this, BooleanType.Instance, (l, r) => new V_Compare(l, Operators.LessThanOrEqual, r)), // Number <= number
-                new TypeOperation(TypeOperator.GreaterThanOrEqual, this, BooleanType.Instance, (l, r) => new V_Compare(l, Operators.GreaterThanOrEqual, r)), // Number >= number
-                new TypeOperation(TypeOperator.GreaterThan, this, BooleanType.Instance, (l, r) => new V_Compare(l, Operators.GreaterThan, r)), // Number > number
+                new TypeOperation(TypeOperator.Add, this, this), // Number + number
+                new TypeOperation(TypeOperator.Subtract, this, this), // Number - number
+                new TypeOperation(TypeOperator.Multiply, this, this), // Number * number
+                new TypeOperation(TypeOperator.Divide, this, this), // Number / number
+                new TypeOperation(TypeOperator.Modulo, this, this), // Number % number
+                new TypeOperation(TypeOperator.Multiply, VectorType.Instance, VectorType.Instance), // Number * vector
+                new TypeOperation(TypeOperator.LessThan, this, BooleanType.Instance), // Number < number
+                new TypeOperation(TypeOperator.LessThanOrEqual, this, BooleanType.Instance), // Number <= number
+                new TypeOperation(TypeOperator.GreaterThanOrEqual, this, BooleanType.Instance), // Number >= number
+                new TypeOperation(TypeOperator.GreaterThan, this, BooleanType.Instance), // Number > number
             };
         }
 
@@ -108,8 +108,8 @@ namespace Deltin.Deltinteger.Parse
             Inherit(ObjectType.Instance, null, null);
 
             Operations = new TypeOperation[] {
-                new TypeOperation(TypeOperator.And, this, this, (l, r) => Element.Part<V_And>(l, r)),
-                new TypeOperation(TypeOperator.Or, this, this, (l, r) => Element.Part<V_Or>(l, r)),
+                new TypeOperation(TypeOperator.And, this, this),
+                new TypeOperation(TypeOperator.Or, this, this),
             };
         }
 

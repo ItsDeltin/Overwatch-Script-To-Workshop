@@ -16,7 +16,7 @@ namespace Deltin.Deltinteger.Parse
             },
             Documentation = "Teleports one or more players to the specified location.",
             Action = (actionSet, methodCall) => {
-                actionSet.AddAction(Element.Part<A_Teleport>(actionSet.CurrentObject, methodCall.ParameterValues[0]));
+                actionSet.AddAction(Element.Part("Teleport", actionSet.CurrentObject, methodCall.ParameterValues[0]));
                 return null;
             }
         };
@@ -28,7 +28,7 @@ namespace Deltin.Deltinteger.Parse
             },
             Documentation = "Sets the move speed of one or more players.",
             Action = (actionSet, methodCall) => {
-                actionSet.AddAction(Element.Part<A_SetMoveSpeed>(actionSet.CurrentObject, methodCall.ParameterValues[0]));
+                actionSet.AddAction(Element.Part("Set Move Speed", actionSet.CurrentObject, methodCall.ParameterValues[0]));
                 return null;
             }
         };
@@ -40,7 +40,7 @@ namespace Deltin.Deltinteger.Parse
             },
             Documentation = "Sets the move speed of one or more players.",
             Action = (actionSet, methodCall) => {
-                actionSet.AddAction(Element.Part<A_SetMaxHealth>(actionSet.CurrentObject, methodCall.ParameterValues[0]));
+                actionSet.AddAction(Element.Part("Set Max Health", actionSet.CurrentObject, methodCall.ParameterValues[0]));
                 return null;
             }
         };
@@ -50,30 +50,30 @@ namespace Deltin.Deltinteger.Parse
 
         private readonly Scope ObjectScope = new Scope();
         private VariableShorthand[] Variables { get; } = new VariableShorthand[] {
-            new VariableShorthand("Team", TeamType.Instance, r => Element.Part<V_TeamOf>(r)),
-            new VariableShorthand("Position", VectorType.Instance, r => Element.Part<V_PositionOf>(r)),
-            new VariableShorthand("Health", NumberType.Instance, r => Element.Part<V_Health>(r)),
-            new VariableShorthand("MaxHealth", NumberType.Instance, r => Element.Part<V_MaxHealth>(r)),
-            new VariableShorthand("FacingDirection", VectorType.Instance, r => Element.Part<V_FacingDirectionOf>(r)),
-            new VariableShorthand("Hero", ObjectType.Instance, r => Element.Part<V_HeroOf>(r)), // TODO: Hero type
-            new VariableShorthand("IsHost", BooleanType.Instance, r => new V_Compare(r, Operators.Equal, new V_HostPlayer())),
-            new VariableShorthand("IsAlive", BooleanType.Instance, r => Element.Part<V_IsAlive>(r)),
-            new VariableShorthand("IsDead", BooleanType.Instance, r => Element.Part<V_IsDead>(r)),
-            new VariableShorthand("IsCrouching", BooleanType.Instance, r => Element.Part<V_IsCrouching>(r)),
-            new VariableShorthand("IsDummy", BooleanType.Instance, r => Element.Part<V_IsDummyBot>(r)),
-            new VariableShorthand("IsFiringPrimary", BooleanType.Instance, r => Element.Part<V_IsFiringPrimary>(r)),
-            new VariableShorthand("IsFiringSecondary", BooleanType.Instance, r => Element.Part<V_IsFiringSecondary>(r)),
-            new VariableShorthand("IsInAir", BooleanType.Instance, r => Element.Part<V_IsInAir>(r)),
-            new VariableShorthand("IsOnGround", BooleanType.Instance, r => Element.Part<V_IsOnGround>(r)),
-            new VariableShorthand("IsInSpawnRoom", BooleanType.Instance, r => Element.Part<V_IsInSpawnRoom>(r)),
-            new VariableShorthand("IsMoving", BooleanType.Instance, r => Element.Part<V_IsMoving>(r)),
-            new VariableShorthand("IsOnObjective", BooleanType.Instance, r => Element.Part<V_IsOnObjective>(r)),
-            new VariableShorthand("IsOnWall", BooleanType.Instance, r => Element.Part<V_IsOnWall>(r)),
-            new VariableShorthand("IsPortraitOnFire", BooleanType.Instance, r => Element.Part<V_IsPortraitOnFire>(r)),
-            new VariableShorthand("IsStanding", BooleanType.Instance, r => Element.Part<V_IsStanding>(r)),
-            new VariableShorthand("IsUsingAbility1", BooleanType.Instance, r => Element.Part<V_IsUsingAbility1>(r)),
-            new VariableShorthand("IsUsingAbility2", BooleanType.Instance, r => Element.Part<V_IsUsingAbility2>(r)),
-            new VariableShorthand("IsUsingUltimate", BooleanType.Instance, r => Element.Part<V_IsUsingUltimate>(r)),
+            new VariableShorthand("Team", TeamType.Instance, r => Element.Part("Team Of", r)),
+            new VariableShorthand("Position", VectorType.Instance, r => Element.PositionOf(r)),
+            new VariableShorthand("Health", NumberType.Instance, r => Element.Part("Health", r)),
+            new VariableShorthand("MaxHealth", NumberType.Instance, r => Element.Part("Max Health", r)),
+            new VariableShorthand("FacingDirection", VectorType.Instance, r => Element.Part("Facing Direction Of", r)),
+            new VariableShorthand("Hero", ObjectType.Instance, r => Element.Part("Hero Of", r)), // TODO: Hero type
+            new VariableShorthand("IsHost", BooleanType.Instance, r => Element.Compare(r, Operator.Equal, Element.Part("Host Player"))),
+            new VariableShorthand("IsAlive", BooleanType.Instance, r => Element.Part("IsAlive", r)),
+            new VariableShorthand("IsDead", BooleanType.Instance, r => Element.Part("IsDead", r)),
+            new VariableShorthand("IsCrouching", BooleanType.Instance, r => Element.Part("IsCrouching", r)),
+            new VariableShorthand("IsDummy", BooleanType.Instance, r => Element.Part("IsDummyBot", r)),
+            new VariableShorthand("IsFiringPrimary", BooleanType.Instance, r => Element.Part("IsFiringPrimary", r)),
+            new VariableShorthand("IsFiringSecondary", BooleanType.Instance, r => Element.Part("IsFiringSecondary", r)),
+            new VariableShorthand("IsInAir", BooleanType.Instance, r => Element.Part("IsInAir", r)),
+            new VariableShorthand("IsOnGround", BooleanType.Instance, r => Element.Part("IsOnGround", r)),
+            new VariableShorthand("IsInSpawnRoom", BooleanType.Instance, r => Element.Part("IsInSpawnRoom", r)),
+            new VariableShorthand("IsMoving", BooleanType.Instance, r => Element.Part("IsMoving", r)),
+            new VariableShorthand("IsOnObjective", BooleanType.Instance, r => Element.Part("IsOnObjective", r)),
+            new VariableShorthand("IsOnWall", BooleanType.Instance, r => Element.Part("IsOnWall", r)),
+            new VariableShorthand("IsPortraitOnFire", BooleanType.Instance, r => Element.Part("IsPortraitOnFire", r)),
+            new VariableShorthand("IsStanding", BooleanType.Instance, r => Element.Part("IsStanding", r)),
+            new VariableShorthand("IsUsingAbility1", BooleanType.Instance, r => Element.Part("IsUsingAbility1", r)),
+            new VariableShorthand("IsUsingAbility2", BooleanType.Instance, r => Element.Part("IsUsingAbility2", r)),
+            new VariableShorthand("IsUsingUltimate", BooleanType.Instance, r => Element.Part("IsUsingUltimate", r)),
         };
 
         private PlayerType() : base("Player")
@@ -92,16 +92,16 @@ namespace Deltin.Deltinteger.Parse
 
             AddFunc(new FuncMethodBuilder() {
                 Name = "IsButtonHeld",
-                Parameters = new CodeParameter[] { new CodeParameter("button", ValueGroupType.GetEnumType<Button>()) },
+                Parameters = new CodeParameter[] { new CodeParameter("button", ValueGroupType.GetEnumType("Button")) },
                 ReturnType = BooleanType.Instance,
-                Action = (set, call) => Element.Part<V_IsButtonHeld>(set.CurrentObject, call.ParameterValues[0]),
+                Action = (set, call) => Element.Part("IsButtonHeld", set.CurrentObject, call.ParameterValues[0]),
                 Documentation = "Determines if the target player is holding a button."
             });
             AddFunc(new FuncMethodBuilder() {
                 Name = "IsCommunicating",
-                Parameters = new CodeParameter[] { new CodeParameter("communication", ValueGroupType.GetEnumType<Communication>()) },
+                Parameters = new CodeParameter[] { new CodeParameter("communication", ValueGroupType.GetEnumType("Communication")) },
                 ReturnType = BooleanType.Instance,
-                Action = (set, call) => Element.Part<V_IsCommunicating>(set.CurrentObject, call.ParameterValues[0]),
+                Action = (set, call) => Element.Part("IsCommunicating", set.CurrentObject, call.ParameterValues[0]),
                 Documentation = "Determines if the target player is communicating."
             });
         }

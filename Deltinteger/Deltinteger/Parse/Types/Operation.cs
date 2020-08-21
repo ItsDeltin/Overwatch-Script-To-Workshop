@@ -5,17 +5,6 @@ namespace Deltin.Deltinteger.Parse
 {
     public class TypeOperation
     {
-        public static readonly Func<IWorkshopTree, IWorkshopTree, IWorkshopTree> Add = (l, r) => Element.Part<V_Add>(l, r);
-        public static readonly Func<IWorkshopTree, IWorkshopTree, IWorkshopTree> Subtract = (l, r) => Element.Part<V_Subtract>(l, r);
-        public static readonly Func<IWorkshopTree, IWorkshopTree, IWorkshopTree> Multiply = (l, r) => Element.Part<V_Multiply>(l, r);
-        public static readonly Func<IWorkshopTree, IWorkshopTree, IWorkshopTree> Divide = (l, r) => Element.Part<V_Divide>(l, r);
-        public static readonly Func<IWorkshopTree, IWorkshopTree, IWorkshopTree> Modulo = (l, r) => Element.Part<V_Modulo>(l, r);
-        public static readonly Func<IWorkshopTree, IWorkshopTree, IWorkshopTree> And = (l, r) => Element.Part<V_And>(l, r);
-        public static readonly Func<IWorkshopTree, IWorkshopTree, IWorkshopTree> GreaterThan = (l, r) => new V_Compare(l, Operators.GreaterThan, r);
-        public static readonly Func<IWorkshopTree, IWorkshopTree, IWorkshopTree> GreaterThanOrEqual = (l, r) => new V_Compare(l, Operators.GreaterThanOrEqual, r);
-        public static readonly Func<IWorkshopTree, IWorkshopTree, IWorkshopTree> LessThan = (l, r) => new V_Compare(l, Operators.LessThan, r);
-        public static readonly Func<IWorkshopTree, IWorkshopTree, IWorkshopTree> LessThanOrEqual = (l, r) => new V_Compare(l, Operators.LessThanOrEqual, r);
-
         public TypeOperator Operator { get; }
         /// <summary>The righthand of the operator. May be null if there is no right operator.</summary>
         public CodeType Right { get; }
@@ -59,22 +48,22 @@ namespace Deltin.Deltinteger.Parse
         {
             switch (op)
             {
-                case TypeOperator.And               :
-                case TypeOperator.Or                :
-                case TypeOperator.NotEqual          :
-                case TypeOperator.Equal             :
-                case TypeOperator.GreaterThan       :
+                case TypeOperator.And:
+                case TypeOperator.Or:
+                case TypeOperator.NotEqual:
+                case TypeOperator.Equal:
+                case TypeOperator.GreaterThan:
                 case TypeOperator.GreaterThanOrEqual:
-                case TypeOperator.LessThan          :
-                case TypeOperator.LessThanOrEqual   :
+                case TypeOperator.LessThan:
+                case TypeOperator.LessThanOrEqual:
                     return BooleanType.Instance;
 
-                case TypeOperator.Add               :
-                case TypeOperator.Divide            :
-                case TypeOperator.Modulo            :
-                case TypeOperator.Multiply          :
-                case TypeOperator.Pow               :
-                case TypeOperator.Subtract          :
+                case TypeOperator.Add:
+                case TypeOperator.Divide:
+                case TypeOperator.Modulo:
+                case TypeOperator.Multiply:
+                case TypeOperator.Pow:
+                case TypeOperator.Subtract:
                     return NumberType.Instance;
 
                 default: throw new NotImplementedException(op.ToString());
@@ -85,20 +74,20 @@ namespace Deltin.Deltinteger.Parse
         {
             switch (op)
             {
-                case TypeOperator.Add               : return (l, r) => Element.Part<V_Add>         (l, r);
-                case TypeOperator.And               : return (l, r) => Element.Part<V_And>         (l, r);
-                case TypeOperator.Divide            : return (l, r) => Element.Part<V_Divide>      (l, r);
-                case TypeOperator.Modulo            : return (l, r) => Element.Part<V_Modulo>      (l, r);
-                case TypeOperator.Multiply          : return (l, r) => Element.Part<V_Multiply>    (l, r);
-                case TypeOperator.Or                : return (l, r) => Element.Part<V_Or>          (l, r);
-                case TypeOperator.Pow               : return (l, r) => Element.Part<V_RaiseToPower>(l, r);
-                case TypeOperator.Equal             : return (l, r) => new V_Compare(l, Operators.Equal             , r);
-                case TypeOperator.GreaterThan       : return (l, r) => new V_Compare(l, Operators.GreaterThan       , r);
-                case TypeOperator.GreaterThanOrEqual: return (l, r) => new V_Compare(l, Operators.GreaterThanOrEqual, r);
-                case TypeOperator.LessThan          : return (l, r) => new V_Compare(l, Operators.LessThan          , r);
-                case TypeOperator.LessThanOrEqual   : return (l, r) => new V_Compare(l, Operators.LessThanOrEqual   , r);
-                case TypeOperator.NotEqual          : return (l, r) => new V_Compare(l, Operators.NotEqual          , r);
-                case TypeOperator.Subtract          : return Subtract;
+                case TypeOperator.Add               : return (l, r) => Element.Add     (l, r);
+                case TypeOperator.And               : return (l, r) => Element.And     (l, r);
+                case TypeOperator.Divide            : return (l, r) => Element.Divide  (l, r);
+                case TypeOperator.Modulo            : return (l, r) => Element.Modulo  (l, r);
+                case TypeOperator.Multiply          : return (l, r) => Element.Multiply(l, r);
+                case TypeOperator.Or                : return (l, r) => Element.Or      (l, r);
+                case TypeOperator.Pow               : return (l, r) => Element.Pow     (l, r);
+                case TypeOperator.Subtract          : return (l, r) => Element.Subtract(l, r);
+                case TypeOperator.Equal             : return (l, r) => Element.Compare(l, Elements.Operator.Equal             , r);
+                case TypeOperator.GreaterThan       : return (l, r) => Element.Compare(l, Elements.Operator.GreaterThan       , r);
+                case TypeOperator.GreaterThanOrEqual: return (l, r) => Element.Compare(l, Elements.Operator.GreaterThanOrEqual, r);
+                case TypeOperator.LessThan          : return (l, r) => Element.Compare(l, Elements.Operator.LessThan          , r);
+                case TypeOperator.LessThanOrEqual   : return (l, r) => Element.Compare(l, Elements.Operator.LessThanOrEqual   , r);
+                case TypeOperator.NotEqual          : return (l, r) => Element.Compare(l, Elements.Operator.NotEqual          , r);
                 default: throw new NotImplementedException(op.ToString());
             }
         }
