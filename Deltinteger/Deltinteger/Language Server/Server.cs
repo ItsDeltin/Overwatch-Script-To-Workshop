@@ -163,8 +163,7 @@ namespace Deltin.Deltinteger.LanguageServer
             // semantic tokens
             options.OnRequest<Newtonsoft.Json.Linq.JToken, SemanticToken[]>("semanticTokens", (uriToken) => Task<SemanticToken[]>.Run(async () => 
             {
-                await DocumentHandler.WaitForCompletedTyping(true);
-                SemanticToken[] tokens = LastParse?.ScriptFromUri(new Uri(uriToken["fsPath"].ToObject<string>()))?.GetSemanticTokens();
+                SemanticToken[] tokens = (await DocumentHandler.OnScriptAvailability())?.ScriptFromUri(new Uri(uriToken["fsPath"].ToObject<string>()))?.GetSemanticTokens();
                 return tokens ?? new SemanticToken[0];
             }));
 

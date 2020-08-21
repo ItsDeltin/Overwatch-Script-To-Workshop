@@ -48,26 +48,16 @@ namespace Deltin.Deltinteger.Debugger
 
                         // Action list successfully parsed.
                         // Get the DeltinScript.
-                        // TODO: Null check _languageServer.LastParse
-                        await _languageServer.DocumentHandler.WaitForCompletedTyping(true);
-                        VariableCollection = _languageServer.LastParse.DebugVariables;
+                        VariableCollection = (await _languageServer.DocumentHandler.OnScriptAvailability())?.DebugVariables;
+
+                        // Error obtaining debug variables.
+                        if (VariableCollection == null) return;
 
                         // Apply debugger variables.
                         VariableCollection.Apply(actionStream);
 
                         // Notify the adapter of the new state.
                         _languageServer.Server.SendNotification("debugger.activated");
-                    }
-                    else
-                    {
-                        // As CSV
-                        try
-                        {
-                            CsvFrame csv = CsvFrame.ParseOne(clipboard);
-                            // TODO
-                        }
-                        catch (CsvParseFailedException) {}
-                        catch (Exception) {}
                     }
                 }
                 catch (Exception ex)
