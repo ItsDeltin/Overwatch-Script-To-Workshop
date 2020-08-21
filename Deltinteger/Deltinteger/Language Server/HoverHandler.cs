@@ -28,9 +28,7 @@ namespace Deltin.Deltinteger.LanguageServer
         }
 
         public async Task<Hover> Handle(HoverParams request, CancellationToken cancellationToken)
-        {
-            await _languageServer.DocumentHandler.WaitForCompletedTyping();
-            
+        {   
             var hoverRanges = _languageServer.LastParse?.ScriptFromUri(request.TextDocument.Uri.ToUri())?.GetHoverRanges();
             if (hoverRanges == null || hoverRanges.Length == 0) return new Hover();
 

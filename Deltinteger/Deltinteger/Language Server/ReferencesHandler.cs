@@ -22,8 +22,6 @@ namespace Deltin.Deltinteger.LanguageServer
 
         public async Task<LocationContainer> Handle(ReferenceParams request, CancellationToken cancellationToken)
         {
-            await _languageServer.DocumentHandler.WaitForCompletedTyping();
-            
             bool includeDeclaration = request.Context.IncludeDeclaration;
 
             var allSymbolLinks = _languageServer.LastParse?.GetComponent<SymbolLinkComponent>().GetSymbolLinks();

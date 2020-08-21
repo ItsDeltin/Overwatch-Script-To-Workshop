@@ -12,6 +12,7 @@ namespace Deltin.Deltinteger.Pathfinder
         protected Element pathmapObject { get; }
         protected Element Nodes { get; }
         protected Element Segments { get; }
+        protected Element Attributes { get; }
         protected Element Source { get; }
         private Element attributes { get; }
         protected bool useAttributes { get; }
@@ -22,8 +23,7 @@ namespace Deltin.Deltinteger.Pathfinder
         protected IndexReference current { get; set; }
         protected IndexReference distances { get; set; }
         protected IndexReference parentArray { get; set; }
-        protected IndexReference parentAttributeInfo { get; set; }
-        protected static bool assignExtended = true;
+        protected static bool assignExtended = false;
 
         public Action<ActionSet> OnLoop { get; set; } = actionSet => {
             actionSet.AddAction(Element.Wait());
@@ -47,9 +47,9 @@ namespace Deltin.Deltinteger.Pathfinder
             // Get the pathmap class instance.
             PathmapClass pathmapClass = actionSet.Translate.DeltinScript.Types.GetCodeType<PathmapClass>();
 
-            // Set nodes and segments.
             Nodes = pathmapClass.Nodes.Get()[pathmapObject];
             Segments = pathmapClass.Segments.Get()[pathmapObject];
+            Attributes = pathmapClass.Attributes.Get()[pathmapObject];
 
             // Get the resolve info component.
             resolveInfo = actionSet.Translate.DeltinScript.GetComponent<ResolveInfoComponent>();
@@ -67,8 +67,8 @@ namespace Deltin.Deltinteger.Pathfinder
             IndexReference connectedSegments = actionSet.VarCollection.Assign("Dijkstra: Connected Segments", actionSet.IsGlobal, assignExtended);
             IndexReference neighborIndex     = actionSet.VarCollection.Assign("Dijkstra: Neighbor Index", actionSet.IsGlobal, assignExtended);
             IndexReference neighborDistance  = actionSet.VarCollection.Assign("Dijkstra: Distance", actionSet.IsGlobal, assignExtended);
+            IndexReference neighborSegmentAttributes = actionSet.VarCollection.Assign("Dijkstra: Neighbor Attributes", actionSet.IsGlobal, assignExtended);
             parentArray                      = GetParentArray();
-            if (useAttributes) parentAttributeInfo = GetParentAttributeArray();
 
             // Set the current variable as the first node.
             actionSet.AddAction(current.SetVariable(firstNode));
@@ -82,6 +82,7 @@ namespace Deltin.Deltinteger.Pathfinder
 
             // Get neighboring indexes
             actionSet.AddAction(connectedSegments.SetVariable(GetConnectedSegments(
+                Segments,
                 (Element)current.GetVariable()
             )));
 
@@ -107,54 +108,51 @@ namespace Deltin.Deltinteger.Pathfinder
                 // Get the distance between the current and the neighbor index.
                 neighborDistance.SetVariable(
                     Element.DistanceBetween(
-                        Nodes[(Element)neighborIndex.GetVariable()],
-                        Nodes[(Element)current.GetVariable()]
-                    ) + ((Element)distances.GetVariable())[(Element)current.GetVariable()]
+                        Nodes[neighborIndex.Get()],
+                        Nodes[current.Get()]
+                    ) + distances.Get()[current.Get()]
                 )
             ));
 
+            // Get the attributes from the current node to the neighbor node.
+            actionSet.AddAction(neighborSegmentAttributes.SetVariable(Element.Filter(Attributes,
+                Element.And(
+                    Element.Compare(
+                        Element.YOf(Element.ArrayElement()),
+                        Operator.Equal,
+                        current.Get()
+                    ),
+                    Element.Compare(
+                        Element.XOf(Element.ArrayElement()),
+                        Operator.Equal,
+                        neighborIndex.Get()
+                    )
+                )
+            )));
+
             // Set the current neighbor's distance if the new distance is less than what it is now.
-            actionSet.AddAction(Element.If(Element.Or(
-                Element.Compare(
-                    ((Element)distances.GetVariable())[(Element)neighborIndex.GetVariable()],
-                    Operator.Equal,
-                    new NumberElement(0)
+            actionSet.AddAction(Element.If(Element.And(
+                Element.Or(
+                    Element.Compare(
+                        ((Element)distances.GetVariable())[(Element)neighborIndex.GetVariable()],
+                        Operator.Equal,
+                        Element.Num(0)
+                    ),
+                    neighborDistance.Get() < distances.Get()[neighborIndex.Get()]
                 ),
-                (Element)neighborDistance.GetVariable() < ((Element)distances.GetVariable())[(Element)neighborIndex.GetVariable()]
+                Element.Or(
+                    // There are no attributes.
+                    Element.Not(Element.CountOf(neighborSegmentAttributes.Get())),
+                    // There are attributes and the attribute array contains one of the attributes.
+                    Element.Any(
+                        neighborSegmentAttributes.Get(),
+                        Element.Contains(attributes, Element.ZOf(Element.ArrayElement()))
+                    ) 
+                )
             )));
 
             actionSet.AddAction(distances.SetVariable((Element)neighborDistance.GetVariable(), null, (Element)neighborIndex.GetVariable()));
             actionSet.AddAction(parentArray.SetVariable((Element)current.GetVariable() + 1, null, (Element)neighborIndex.GetVariable()));
-
-            if (useAttributes)
-            {
-                if (!reverseAttributes)
-                    actionSet.AddAction(parentAttributeInfo.SetVariable(
-                        value: Element.TernaryConditional(
-                            Element.Compare(
-                                current.GetVariable(),
-                                Operator.Equal,
-                                Node1(forBuilder.IndexValue)
-                            ),
-                            Node2Attribute(forBuilder.IndexValue),
-                            Node1Attribute(forBuilder.IndexValue)
-                        ),
-                        index: neighborIndex.Get()
-                    ));
-                else
-                    actionSet.AddAction(parentAttributeInfo.SetVariable(
-                        value: Element.TernaryConditional(
-                            Element.Compare(
-                                current.GetVariable(),
-                                Operator.Equal,
-                                Node1(forBuilder.IndexValue)
-                            ),
-                            Node1Attribute(forBuilder.IndexValue),
-                            Node2Attribute(forBuilder.IndexValue)
-                        ),
-                        index: neighborIndex.Get()
-                    ));
-            }
 
             // End the if.
             actionSet.AddAction(Element.End());
@@ -176,8 +174,7 @@ namespace Deltin.Deltinteger.Pathfinder
                 connectedSegments.SetVariable(0),
                 neighborIndex.SetVariable(0),
                 neighborDistance.SetVariable(0),
-                parentArray.SetVariable(0),
-                parentAttributeInfo.SetVariable(0)
+                parentArray.SetVariable(0)
             ));
         }
 
@@ -190,7 +187,7 @@ namespace Deltin.Deltinteger.Pathfinder
         protected virtual IndexReference GetParentArray() => actionSet.VarCollection.Assign("Dijkstra: Parent Array", actionSet.IsGlobal, false);
         protected virtual IndexReference GetParentAttributeArray() => actionSet.VarCollection.Assign("Dijkstra: Parent Attribute Info", actionSet.IsGlobal, false);
 
-        protected void Backtrack(Element startNode, IndexReference finalPath, IndexReference finalPathAttributes, bool reversePath = false)
+        protected void Backtrack(Element startNode, IndexReference finalPath, bool reversePath = false)
         {
             actionSet.AddAction(current.SetVariable(startNode));
             actionSet.AddAction(finalPath.SetVariable(Element.EmptyArray()));
@@ -203,7 +200,6 @@ namespace Deltin.Deltinteger.Pathfinder
             )));
 
             Element nextNode = Nodes[(Element)current.GetVariable()];
-            Element nextAttribute = ((Element)parentAttributeInfo.GetVariable())[(Element)current.GetVariable()];
 
             // For debugging generated path.
             // actionSet.AddAction(Element.Part<A_CreateEffect>(
@@ -219,15 +215,11 @@ namespace Deltin.Deltinteger.Pathfinder
             {
                 // Add the current node to the final path.
                 actionSet.AddAction(finalPath.ModifyVariable(Operation.AppendToArray, nextNode));
-                // Add the current attribute to the final path attributes.
-                if (useAttributes) actionSet.AddAction(finalPathAttributes.ModifyVariable(Operation.AppendToArray, nextAttribute));
             }
             else
             {
                 // Insert the current node to the final path.
-                actionSet.AddAction(finalPath.SetVariable(Element.Append(nextNode, finalPath.GetVariable())));
-                // Insert the current attribute to the final path attributes.
-                actionSet.AddAction(finalPathAttributes.SetVariable(Element.Append(nextAttribute, finalPathAttributes.GetVariable())));
+                actionSet.AddAction(finalPath.SetVariable(Element.Append(nextNode, finalPath.Get())));
             }
 
             actionSet.AddAction(current.SetVariable(parentArray.Get()[current.GetVariable()] - 1));
@@ -264,69 +256,23 @@ namespace Deltin.Deltinteger.Pathfinder
         {
             // Create an array counting up to the number of values in the nodeArray array.
             // For example, if nodeArray has 6 variables unvisitedVar will be set to [0, 1, 2, 3, 4, 5].
+            Element array = Element.Map(Nodes, Element.ArrayIndex());
 
-            // Empty the unvisited array.
-            actionSet.AddAction(unvisited.SetVariable(Element.EmptyArray()));
+            // If any of the nodes are null, destroy them.
+            if (resolveInfo.PotentiallyNullNodes)
+                array = Element.Filter(array, Element.Compare(Nodes[Element.ArrayElement()], Operator.NotEqual, Element.Null()));
             
-            IndexReference current = actionSet.VarCollection.Assign("unvisitedBuilder", actionSet.IsGlobal, assignExtended);
-            actionSet.AddAction(current.SetVariable(0));
-
-            // While current < the count of the node array.
-            actionSet.AddAction(Element.While((Element)current.GetVariable() < Element.CountOf(Nodes)));
-
-            // If there can be null nodes, make sure the node is not null.
-            if (resolveInfo.PotentiallyNullNodes) actionSet.AddAction(Element.If(Element.Compare(Nodes[current.Get()], Operator.NotEqual, Element.Null())));
-
-            actionSet.AddAction(unvisited.ModifyVariable(Operation.AppendToArray, (Element)current.GetVariable()));
-
-            // End the if.
-            if (resolveInfo.PotentiallyNullNodes) actionSet.AddAction(Element.End());
-
-            actionSet.AddAction(current.ModifyVariable(Operation.Add, 1));
-
-            // End the while.
-            actionSet.AddAction(Element.End());
+            actionSet.AddAction(unvisited.SetVariable(array));
         }
 
-        private Element GetConnectedSegments(Element currentIndex)
-        {
-            Element currentSegmentCheck = Element.ArrayElement();
-
-            Element useAttribute;
-            if (!reverseAttributes)
-                useAttribute = Element.TernaryConditional(
-                    Element.Compare(Node1(currentSegmentCheck), Operator.Equal, currentIndex),
-                    Node2Attribute(currentSegmentCheck),
-                    Node1Attribute(currentSegmentCheck)
-                );
-            else
-                useAttribute = Element.TernaryConditional(
-                    Element.Compare(Node1(currentSegmentCheck), Operator.Equal, currentIndex),
-                    Node1Attribute(currentSegmentCheck),
-                    Node2Attribute(currentSegmentCheck)
-                );
-
-            Element isValid;
-            if (useAttributes)
-                isValid = Element.Contains(
-                    Element.Append(attributes, new NumberElement(0)),
-                    useAttribute
-                );
-            else
-                isValid = Element.Compare(useAttribute, Operator.Equal, new NumberElement(0));
-            
-            return Element.Filter(
-                Segments,
-                Element.And(
-                    // Make sure one of the segments nodes is the current node.
-                    Element.Contains(
-                        BothNodes(currentSegmentCheck),
-                        currentIndex
-                    ),
-                    isValid
-                )
-            );
-        }
+        private Element GetConnectedSegments(Element segments, Element currentIndex) => Element.Filter(
+            segments,
+            // Make sure one of the segments nodes is the current node.
+            Element.Contains(
+                BothNodes(Element.ArrayElement()),
+                currentIndex
+            )
+        );
 
         private static Element LowestUnvisited(Element nodes, Element distances, Element unvisited) => Element.FirstOf(Element.Sort(
             Element.Filter(unvisited, Element.Compare(distances[Element.ArrayElement()], Operator.NotEqual, new NumberElement(0))),
@@ -337,16 +283,8 @@ namespace Deltin.Deltinteger.Pathfinder
         protected Element AnyAccessableUnvisited() => Element.Part("Is True For Any", unvisited.GetVariable(), Element.Compare(distances.Get()[Element.ArrayElement()], Operator.NotEqual, new NumberElement(0)));
 
         public static Element BothNodes(Element segment) => Element.CreateAppendArray(Node1(segment), Node2(segment));
-        public static Element Node1(Element segment) => Element.RoundToInt(Element.XOf(segment), Rounding.Down);
-        public static Element Node2(Element segment) => Element.RoundToInt(Element.YOf(segment), Rounding.Down);
-        public static Element Node1Attribute(Element segment) => Element.RoundToInt(
-            (Element.XOf(segment) % 1) * 100,
-            Rounding.Nearest
-        );
-        public static Element Node2Attribute(Element segment) => Element.RoundToInt(
-            (Element.YOf(segment) % 1) * 100,
-            Rounding.Nearest
-        );
+        public static Element Node1(Element segment) => Element.XOf(segment);
+        public static Element Node2(Element segment) => Element.YOf(segment);
     }
 
     public class DijkstraNormal : DijkstraBase
@@ -354,7 +292,6 @@ namespace Deltin.Deltinteger.Pathfinder
         private Element destination { get; }
         private IndexReference finalNode;
         public IndexReference finalPath { get; private set; }
-        public IndexReference finalPathAttributes { get; private set; }
 
         public DijkstraNormal(ActionSet actionSet, Element pathmapObject, Element position, Element destination, Element attributes) : base(actionSet, pathmapObject, position, attributes)
         {
@@ -369,11 +306,6 @@ namespace Deltin.Deltinteger.Pathfinder
             finalPath = actionSet.VarCollection.Assign("Dijkstra: Final Path", actionSet.IsGlobal, false);
             actionSet.AddAction(finalNode.SetVariable(lastNode));
             actionSet.AddAction(finalPath.SetVariable(Element.EmptyArray()));
-            if (useAttributes)
-            {
-                finalPathAttributes = actionSet.VarCollection.Assign("Dijkstra: Final Path Attributes", actionSet.IsGlobal, false);
-                actionSet.AddAction(finalPathAttributes.SetVariable(Element.EmptyArray()));
-            }
         }
 
         override protected Element LoopCondition() => Element.Contains(
@@ -383,7 +315,7 @@ namespace Deltin.Deltinteger.Pathfinder
 
         override protected void GetResult()
         {
-            Backtrack((Element)finalNode.GetVariable(), finalPath, finalPathAttributes);
+            Backtrack((Element)finalNode.GetVariable(), finalPath);
         }
     }
 
@@ -427,7 +359,7 @@ namespace Deltin.Deltinteger.Pathfinder
             actionSet.AddAction(endLoop);
             PlayerNodeReachedBreak.SetEndMarker(endLoop);
 
-            resolveInfo.Pathfind(actionSet, player, pathmapObject, parentArray.Get(), parentAttributeInfo.Get(), Source);
+            resolveInfo.Pathfind(actionSet, player, pathmapObject, parentArray.Get(), Source);
         }
 
         protected override Element LoopCondition() => AnyAccessableUnvisited();
@@ -468,7 +400,7 @@ namespace Deltin.Deltinteger.Pathfinder
 
         override protected void GetResult()
         {
-            resolveInfo.Pathfind(actionSet, players, pathmapObject, parentArray.Get(), parentAttributeInfo.Get(), Source);
+            resolveInfo.Pathfind(actionSet, players, pathmapObject, parentArray.Get(), Source);
         }
     }
 
@@ -537,7 +469,7 @@ namespace Deltin.Deltinteger.Pathfinder
 
             actionSet.AddAction(parentArray.SetVariable(newParentArray.Get()));
 
-            resolveInfo.Pathfind(actionSet, player, pathmapObject, parentArray.Get(), parentAttributeInfo.Get(), Nodes[current.Get()]);
+            resolveInfo.Pathfind(actionSet, player, pathmapObject, parentArray.Get(), Nodes[current.Get()]);
         }
 
         // Loop until any of the destinations have been visited.
@@ -617,7 +549,6 @@ namespace Deltin.Deltinteger.Pathfinder
         {
              // Save parent arrays.
             PathResolveClass.ParentArray.Set(actionSet, ClassReference.Get(), parentArray.Get());
-            PathResolveClass.ParentAttributeArray.Set(actionSet, ClassReference.Get(), parentAttributeInfo.Get());
         }
     }
 }

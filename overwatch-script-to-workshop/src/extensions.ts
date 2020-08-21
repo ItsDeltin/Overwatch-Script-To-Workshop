@@ -8,11 +8,13 @@ import path = require('path');
 import glob = require('glob');
 import yauzl = require("yauzl");
 import exec = require('child_process');
+import { register } from './debugger';
+import { decompileClipboard, insertActions } from './decompile';
 
 let globalStoragePath:string;
 let defaultServerFolder:string;
 
-let client: LanguageClient;
+export let client: LanguageClient;
 let idk: Disposable;
 let workshopOut: OutputChannel;
 let elementCountStatus: vscode.StatusBarItem;
@@ -34,7 +36,7 @@ export async function activate(context: ExtensionContext) {
 	elementCountStatus.show();
 	setElementCount(0);
 	
-	addCommands(context);
+	subscribe(context);
 
 	workspace.onDidChangeConfiguration(async (e: vscode.ConfigurationChangeEvent) => {
 		if (e.affectsConfiguration("ostw.deltintegerPath"))
@@ -229,8 +231,10 @@ async function stopLanguageServer() {
 	isServerRunning = false;
 }
 
+export let serverModuleCommand: string;
 function setServerOptions(serverModule: string)
 {
+	serverModuleCommand = serverModule;
 	// It was me, stdio!
 	let serverExecutableOptions = { stdio: "pipe", detached: false, shell: <boolean>config.get('deltintegerShell') };
 	serverOptions.run = {
@@ -264,8 +268,10 @@ export function deactivate(): Thenable<void> | undefined {
 
 var lastWorkshopOutput : string = null;
 
-function addCommands(context: ExtensionContext)
+function subscribe(context: ExtensionContext)
 {
+	register(context);
+	
 	// Push provider.
 	context.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider('ow_ostw', workshopPanelProvider));
 
@@ -335,7 +341,7 @@ function addCommands(context: ExtensionContext)
 		}
 
 		// Send the 'pathmapEditor' request with the 'editPathmap' contents for the parameter to the language server.
-		client.sendRequest<boolean>('pathmapEditor', {Text: editPathmap}).then((result: boolean) => {
+		client.sendRequest<boolean>('pathmapEditor', {Text: editPathmap, File: editPathmapFile}).then((result: boolean) => {
 			// The request will return true if successful.
 			// It can return false if PathfindEditor.del was tinkered with by the user (or there is a bug).
 			if (result)
@@ -385,7 +391,17 @@ function addCommands(context: ExtensionContext)
 	// Copy workshop code
 	context.subscriptions.push(vscode.commands.registerCommand('ostw.copyWorkshopCode', () => {
 		vscode.env.clipboard.writeText(lastWorkshopOutput);
-	}))
+	}));
+	
+	// Decompile clipboard
+	context.subscriptions.push(vscode.commands.registerCommand('ostw.decompile.clipboard', () => {
+		decompileClipboard();
+	}));
+
+	// Decompile clipboard and insert.
+	context.subscriptions.push(vscode.commands.registerTextEditorCommand('ostw.decompile.insert', (textEditor, edit) => {
+		insertActions(textEditor);
+	}));
 }
 
 const workshopPanelProvider = new class implements vscode.TextDocumentContentProvider {

@@ -176,6 +176,7 @@ namespace Deltin.Deltinteger.Elements
         public static Element EventPlayer() => Part("Event Player");
         public static Element ArrayElement() => Part("Current Array Element");
         public static Element ArrayIndex() => Part("Current Array Index");
+        public static Element Num(double value) => new NumberElement(value);
         public static Element Compare(IWorkshopTree a, Operator op, IWorkshopTree b) => Part("Compare", a, new OperatorElement(op), b);
         public static Element Vector(Element x, Element y, Element z) => Part("Vector", x, y, z);
         public static Element Not(IWorkshopTree a) => Part("Not", a);
@@ -190,6 +191,9 @@ namespace Deltin.Deltinteger.Elements
         public static Element ValueInArray(IWorkshopTree array, IWorkshopTree index) => Part("Value In Array", array, index);
         public static Element Filter(IWorkshopTree array, IWorkshopTree condition) => Part("Filtered Array", array, condition);
         public static Element Sort(IWorkshopTree array, IWorkshopTree rank) => Part("Sorted Array", array, rank);
+        public static Element All(IWorkshopTree array, IWorkshopTree condition) => Part("Is True For All", array, condition);
+        public static Element Any(IWorkshopTree array, IWorkshopTree condition) => Part("Is True For Any", array, condition);
+        public static Element Map(IWorkshopTree array, IWorkshopTree select) => Part("Mapped Array", array, select);
         public static Element Pow(Element a, Element b) => Part("Raise To Power", a, b);
         public static Element Pow(IWorkshopTree a, IWorkshopTree b) => Part("Raise To Power", a, b);
         public static Element Multiply(IWorkshopTree a, IWorkshopTree b) => Part("Multiply", a, b);
@@ -214,7 +218,29 @@ namespace Deltin.Deltinteger.Elements
         public static Element Normalize(IWorkshopTree a) => Part("Normalize", a);
         public static Element DirectionTowards(IWorkshopTree a, IWorkshopTree b) => Part("Direction Towards", a, b);
         public static Element PositionOf(IWorkshopTree player) => Part("Position Of", player);
-        public static Element RoundToInt(IWorkshopTree value, Rounding rounding) => Part("Round To Integer", value, ElementRoot.Instance.GetEnumValue("Rounding", rounding == Rounding.Down ? "Down" : rounding == Rounding.Up ? "Up" : "To Nearest");
+        public static Element RoundToInt(IWorkshopTree value, Rounding rounding) => Part("Round To Integer", value, ElementRoot.Instance.GetEnumValue("Rounding", rounding == Rounding.Down ? "Down" : rounding == Rounding.Up ? "Up" : "To Nearest"));
+        public static Element CustomString(string value, params Element[] format) => Part("");
+
+        public static Element Hud(
+            IWorkshopTree players = null,
+            IWorkshopTree header = null, IWorkshopTree subheader = null, IWorkshopTree text = null,
+            int location = 0, double? sortOrder = null,
+            Color headerColor = Color.White, Color subheaderColor = Color.White, Color textColor = Color.White,
+            HudTextRev reevaluation = HudTextRev.VisibleToSortOrderAndString, Spectators spectators = Spectators.DefaultVisibility)
+        =>
+            Element.Part<A_CreateHudText>(
+                players ?? Element.Part<V_AllPlayers>(),
+                header ?? Element.Part<V_Null>(),
+                subheader ?? Element.Part<V_Null>(),
+                text ?? Element.Part<V_Null>(),
+                EnumData.GetEnumValue(location),
+                new V_Number(sortOrder == null ? 0 : sortOrder.Value),
+                EnumData.GetEnumValue(headerColor),
+                EnumData.GetEnumValue(subheaderColor),
+                EnumData.GetEnumValue(textColor),
+                EnumData.GetEnumValue(reevaluation),
+                EnumData.GetEnumValue(spectators)
+            );
 
         public static Element operator +(Element a, Element b) => Part("Add", a, b);
         public static Element operator -(Element a, Element b) => Part("Subtract", a, b);
@@ -332,6 +358,22 @@ namespace Deltin.Deltinteger.Elements
         }
 
         public override bool EqualTo(IWorkshopTree other) => base.EqualTo(other) && ((NumberElement)other).Value == Value;
+    }
+
+    public class StringElement : Element
+    {
+        public string Value { get; set; }
+
+        public StringElement(string value, params Element[] formats) : base(ElementRoot.Instance.GetFunction("Custom String"), formats) {}
+        public StringElement() : this(null) {}
+
+        public override string ToWorkshop(OutputLanguage language, ToWorkshopContext context)
+        {
+            // TODO
+            throw new NotImplementedException();
+        }
+
+        public override bool EqualTo(IWorkshopTree other) => base.EqualTo(other) && ((StringElement)other).Value == Value;
     }
 
     public enum ElementIndent
