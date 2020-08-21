@@ -195,6 +195,7 @@ namespace Deltin.Deltinteger.Elements
         public static Element All(IWorkshopTree array, IWorkshopTree condition) => Part("Is True For All", array, condition);
         public static Element Any(IWorkshopTree array, IWorkshopTree condition) => Part("Is True For Any", array, condition);
         public static Element Map(IWorkshopTree array, IWorkshopTree select) => Part("Mapped Array", array, select);
+        public static Element Slice(IWorkshopTree array, IWorkshopTree start, IWorkshopTree count) => Part("Array Slice", array, start, count);
         public static Element Pow(Element a, Element b) => Part("Raise To Power", a, b);
         public static Element Pow(IWorkshopTree a, IWorkshopTree b) => Part("Raise To Power", a, b);
         public static Element Multiply(IWorkshopTree a, IWorkshopTree b) => Part("Multiply", a, b);
@@ -219,8 +220,13 @@ namespace Deltin.Deltinteger.Elements
         public static Element Normalize(IWorkshopTree a) => Part("Normalize", a);
         public static Element DirectionTowards(IWorkshopTree a, IWorkshopTree b) => Part("Direction Towards", a, b);
         public static Element PositionOf(IWorkshopTree player) => Part("Position Of", player);
+        public static Element EyePosition(IWorkshopTree player) => Part("Eye Position", player);
+        public static Element FacingDirectionOf(IWorkshopTree player) => Part("Facing Direction Of", player);
         public static Element RoundToInt(IWorkshopTree value, Rounding rounding) => Part("Round To Integer", value, ElementRoot.Instance.GetEnumValue("Rounding", rounding == Rounding.Down ? "Down" : rounding == Rounding.Up ? "Up" : "To Nearest"));
-        public static Element CustomString(string value, params Element[] format) => Part("");
+        public static Element CustomString(string value, params Element[] formats) => new StringElement(value, formats);
+        public static Element LastEntity() => Part("Last Entity");
+        public static Element RaycastPosition(IWorkshopTree start, IWorkshopTree end, IWorkshopTree playersToInclude = null, IWorkshopTree playersToExclude = null, IWorkshopTree includePlayerOwnedObjects = null)
+            => Part("Ray Cast Hit Position", start ?? throw new ArgumentNullException(nameof(start)), end ?? throw new ArgumentNullException(nameof(end)), playersToInclude ?? Null(), playersToExclude ?? Null(), includePlayerOwnedObjects ?? False());
 
         public static Element Hud(
             IWorkshopTree players = null,

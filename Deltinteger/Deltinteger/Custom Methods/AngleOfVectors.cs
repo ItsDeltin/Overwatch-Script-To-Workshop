@@ -25,7 +25,7 @@ namespace Deltin.Deltinteger.CustomMethods
             var abNorm = actionSet.VarCollection.Assign("_angleOfVectors_abNorm", actionSet.IsGlobal, true);
             var bcNorm = actionSet.VarCollection.Assign("_angleOfVectors_bcNorm", actionSet.IsGlobal, true);
 
-            Element zeroVec = Element.Part<V_Vector>(new V_Number(0), new V_Number(0), new V_Number(0));
+            Element zeroVec = Element.Vector(Element.Num(0), Element.Num(0), Element.Num(0));
 
             actionSet.AddAction(ArrayBuilder<Element>.Build(
                 // Save A
@@ -37,58 +37,58 @@ namespace Deltin.Deltinteger.CustomMethods
 
                 // get ab
                 // ab[3] = { b[0] - a[0], b[1] - a[1], b[2] - a[2] };
-                ab.SetVariable(Element.Part<V_Vector>(
-                    Element.Part<V_XOf>(b.GetVariable()) - Element.Part<V_XOf>(a.GetVariable()),
-                    Element.Part<V_YOf>(b.GetVariable()) - Element.Part<V_YOf>(a.GetVariable()),
-                    Element.Part<V_ZOf>(b.GetVariable()) - Element.Part<V_ZOf>(a.GetVariable())
+                ab.SetVariable(Element.Vector(
+                    Element.XOf(b.GetVariable()) - Element.XOf(a.GetVariable()),
+                    Element.YOf(b.GetVariable()) - Element.YOf(a.GetVariable()),
+                    Element.ZOf(b.GetVariable()) - Element.ZOf(a.GetVariable())
                 )),
 
                 // get bc
                 // bc[3] = { c[0] - b[0], c[1] - b[1], c[2] - b[2] };
-                bc.SetVariable(Element.Part<V_Vector>(
-                    Element.Part<V_XOf>(c.GetVariable()) - Element.Part<V_XOf>(b.GetVariable()),
-                    Element.Part<V_YOf>(c.GetVariable()) - Element.Part<V_YOf>(b.GetVariable()),
-                    Element.Part<V_ZOf>(c.GetVariable()) - Element.Part<V_ZOf>(b.GetVariable())
+                bc.SetVariable(Element.Vector(
+                    Element.XOf(c.GetVariable()) - Element.XOf(b.GetVariable()),
+                    Element.YOf(c.GetVariable()) - Element.YOf(b.GetVariable()),
+                    Element.ZOf(c.GetVariable()) - Element.ZOf(b.GetVariable())
                 )),
 
                 // get abVec
                 // abVec = sqrt(ab[0] * ab[0] + ab[1] * ab[1] + ab[2] * ab[2]);
-                abVec.SetVariable(Element.Part<V_DistanceBetween>(
+                abVec.SetVariable(Element.DistanceBetween(
                     ab.GetVariable(),
                     zeroVec
                 )),
 
                 // get bcVec
                 // bcVec = sqrt(bc[0] * bc[0] + bc[1] * bc[1] + bc[2] * bc[2]);
-                bcVec.SetVariable(Element.Part<V_DistanceBetween>(
+                bcVec.SetVariable(Element.DistanceBetween(
                     bc.GetVariable(),
                     zeroVec
                 )),
 
                 // get abNorm
                 // abNorm[3] = {ab[0] / abVec, ab[1] / abVec, ab[2] / abVec};
-                abNorm.SetVariable(Element.Part<V_Vector>(
-                    Element.Part<V_XOf>(ab.GetVariable()) / (Element)abVec.GetVariable(),
-                    Element.Part<V_YOf>(ab.GetVariable()) / (Element)abVec.GetVariable(),
-                    Element.Part<V_ZOf>(ab.GetVariable()) / (Element)abVec.GetVariable()
+                abNorm.SetVariable(Element.Vector(
+                    Element.XOf(ab.GetVariable()) / (Element)abVec.GetVariable(),
+                    Element.YOf(ab.GetVariable()) / (Element)abVec.GetVariable(),
+                    Element.ZOf(ab.GetVariable()) / (Element)abVec.GetVariable()
                 )),
 
                 // get bcNorm
                 // bcNorm[3] = {bc[0] / bcVec, bc[1] / bcVec, bc[2] / bcVec};
-                bcNorm.SetVariable(Element.Part<V_Vector>(
-                    Element.Part<V_XOf>(bc.GetVariable()) / (Element)bcVec.GetVariable(),
-                    Element.Part<V_YOf>(bc.GetVariable()) / (Element)bcVec.GetVariable(),
-                    Element.Part<V_ZOf>(bc.GetVariable()) / (Element)bcVec.GetVariable()
+                bcNorm.SetVariable(Element.Vector(
+                    Element.XOf(bc.GetVariable()) / (Element)bcVec.GetVariable(),
+                    Element.YOf(bc.GetVariable()) / (Element)bcVec.GetVariable(),
+                    Element.ZOf(bc.GetVariable()) / (Element)bcVec.GetVariable()
                 ))
             ));
 
-            Element result = (Element.Part<V_ArccosineInRadians>(
+            Element result = (Element.Part("Arccosine In Radians",
                 // get res
                 // res = abNorm[0] * bcNorm[0] + abNorm[1] * bcNorm[1] + abNorm[2] * bcNorm[2];
                 //target.SetVariable(
-                Element.Part<V_XOf>(abNorm.GetVariable()) * Element.Part<V_XOf>(bcNorm.GetVariable()) +
-                Element.Part<V_YOf>(abNorm.GetVariable()) * Element.Part<V_YOf>(bcNorm.GetVariable()) +
-                Element.Part<V_ZOf>(abNorm.GetVariable()) * Element.Part<V_ZOf>(bcNorm.GetVariable())
+                Element.XOf(abNorm.GetVariable()) * Element.XOf(bcNorm.GetVariable()) +
+                Element.YOf(abNorm.GetVariable()) * Element.YOf(bcNorm.GetVariable()) +
+                Element.ZOf(abNorm.GetVariable()) * Element.ZOf(bcNorm.GetVariable())
             ) * 180) / Math.PI;
 
             return result;

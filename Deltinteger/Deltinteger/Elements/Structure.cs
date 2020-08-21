@@ -313,6 +313,12 @@ namespace Deltin.Deltinteger.Elements
             }
         }
 
+        public Operation GetOperation()
+        {
+            if (Enum.Name != "Operation") throw new Exception("Enum is not 'Operation'.");
+            return System.Enum.Parse<Operation>(CodeName());
+        }
+
         public static ElementEnumMember Event(RuleEvent eventType) => ElementRoot.Instance.GetEnumValue("Event", eventType.ToString());
         public static ElementEnumMember Team(Team team) => ElementRoot.Instance.GetEnumValue("Team", team.ToString());
         public static ElementEnumMember Player(PlayerSelector player) => ElementRoot.Instance.GetEnumValue("Player", player.ToString());

@@ -242,9 +242,9 @@ namespace Deltin.Deltinteger.Pathfinder
     
         /// <summary>Gets the next pathfinding attribute.</summary>
         // public Element NextSegmentAttribute(Element player) => Element.TernaryConditional(
-        //     Element.Part<V_And>(IsPathfinding(player), new V_Compare(Current.GetVariable(player), Operators.NotEqual, new V_Number(-1))),
+        //     Element.Part<V_And>(IsPathfinding(player), new V_Compare(Current.GetVariable(player), Operators.NotEqual, Element.Num(-1))),
         //     AttributeArray.Get(player)[Current.Get(player)],
-        //     new V_Number(-1)
+        //     Element.Num(-1)
         // );
         public Element NextSegmentAttribute(Element player) => Element.Map(Element.Filter(
             PathmapInstance.Attributes.Get()[PathmapReference.Get(player)],

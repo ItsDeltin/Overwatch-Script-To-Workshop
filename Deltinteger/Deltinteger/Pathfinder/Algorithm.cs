@@ -236,7 +236,7 @@ namespace Deltin.Deltinteger.Pathfinder
             return Element.IndexOfArrayValue(
                 nodes,
                 Element.FirstOf(
-                    Element.Part("Sorted Array",
+                    Element.Sort(
                         sortArray,
                         Element.DistanceBetween(
                             position,
@@ -279,8 +279,8 @@ namespace Deltin.Deltinteger.Pathfinder
             distances[Element.ArrayElement()]
         ));
 
-        protected Element NoAccessableUnvisited() => Element.Part("Is True For All", unvisited.GetVariable(), Element.Compare(distances.Get()[Element.ArrayElement()], Operator.Equal, new NumberElement(0)));
-        protected Element AnyAccessableUnvisited() => Element.Part("Is True For Any", unvisited.GetVariable(), Element.Compare(distances.Get()[Element.ArrayElement()], Operator.NotEqual, new NumberElement(0)));
+        protected Element NoAccessableUnvisited() => Element.All(unvisited.GetVariable(), Element.Compare(distances.Get()[Element.ArrayElement()], Operator.Equal, new NumberElement(0)));
+        protected Element AnyAccessableUnvisited() => Element.Any(unvisited.GetVariable(), Element.Compare(distances.Get()[Element.ArrayElement()], Operator.NotEqual, new NumberElement(0)));
 
         public static Element BothNodes(Element segment) => Element.CreateAppendArray(Node1(segment), Node2(segment));
         public static Element Node1(Element segment) => Element.XOf(segment);
@@ -389,7 +389,7 @@ namespace Deltin.Deltinteger.Pathfinder
 
         override protected Element LoopCondition()
         {
-            return Element.Part("Is True For Any",
+            return Element.Any(
                 closestNodesToPlayers.GetVariable(),
                 Element.Contains(
                     unvisited.GetVariable(),
@@ -473,7 +473,7 @@ namespace Deltin.Deltinteger.Pathfinder
         }
 
         // Loop until any of the destinations have been visited.
-        protected override Element LoopCondition() => Element.Part("Is True For All",
+        protected override Element LoopCondition() => Element.All(
             potentialDestinations.GetVariable(),
             Element.Contains(
                 unvisited.GetVariable(),

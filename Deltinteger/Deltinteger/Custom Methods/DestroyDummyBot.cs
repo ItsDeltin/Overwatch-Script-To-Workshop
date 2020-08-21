@@ -12,7 +12,7 @@ namespace Deltin.Deltinteger.CustomMethods
 
         public override IWorkshopTree Get(ActionSet actionSet, IWorkshopTree[] parameterValues)
         {
-            actionSet.AddAction(Element.Part<A_DestroyDummyBot>(Element.Part<V_TeamOf>(parameterValues[0]), Element.Part<V_SlotOf>(parameterValues[0])));
+            actionSet.AddAction(Element.Part("Destroy Dummy Bot", Element.Part("Team Of", parameterValues[0]), Element.Part("Slot Of", parameterValues[0])));
             return null;
         }
     }

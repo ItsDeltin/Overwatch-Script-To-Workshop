@@ -1018,7 +1018,7 @@ namespace Deltin.Deltinteger.Elements
         {
             return OptimizeMultiplyOperation(
                 op      : (a, b) => a * b,
-                areEqual: (a, b) => Element.Part<V_RaiseToPower>(a, new V_Number(2)),
+                areEqual: (a, b) => Element.Part<V_RaiseToPower>(a, Element.Num(2)),
                 true
             );
         }
@@ -1101,7 +1101,7 @@ namespace Deltin.Deltinteger.Elements
     [ElementData("Number", ValueType.Number)]
     public class V_Number : Element
     {
-        public static readonly V_Number LargeArbitraryNumber = new V_Number(9999);
+        public static readonly V_Number LargeArbitraryNumber = Element.Num(9999);
 
         private const int MAX_LENGTH = 10;
 
@@ -1667,7 +1667,7 @@ namespace Deltin.Deltinteger.Elements
         {
             ParameterValues = new IWorkshopTree[] { x, y, z };
         }
-        public V_Vector(double x, double y, double z) : this(new V_Number(x), new V_Number(y), new V_Number(z))
+        public V_Vector(double x, double y, double z) : this(Element.Num(x), Element.Num(y), Element.Num(z))
         {
         }
         public V_Vector()
@@ -1729,7 +1729,7 @@ namespace Deltin.Deltinteger.Elements
             if (oX is V_Number oXNum && oXNum.Value == 0) oX = new V_EmptyArray();
             if (oY is V_Number oYNum && oYNum.Value == 0) oY = new V_EmptyArray();
             if (oZ is V_Number oZNum && oZNum.Value == 0) oZ = new V_EmptyArray();
-            if (oX != X || oY != Y || oZ != Z) return Element.Part<V_Vector>(oX, oY, oZ);
+            if (oX != X || oY != Y || oZ != Z) return Element.Vector(oX, oY, oZ);
 
             return this;
         }

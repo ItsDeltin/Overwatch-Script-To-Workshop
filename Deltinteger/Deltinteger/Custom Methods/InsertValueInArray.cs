@@ -22,12 +22,12 @@ namespace Deltin.Deltinteger.CustomMethods
             Element index = (Element)parameters[1];
             Element value = (Element)parameters[2];
 
-            return Element.Part<V_Append>(
-                Element.Part<V_Append>(
-                    Element.Part<V_ArraySlice>(array, new V_Number(0), index),
+            return Element.Append(
+                Element.Append(
+                    Element.Slice(array, Element.Num(0), index),
                     value
                 ),
-                Element.Part<V_ArraySlice>(array, index, V_Number.LargeArbitraryNumber)
+                Element.Slice(array, index, Element.Num(Constants.MAX_ARRAY_LENGTH))
             );
         }
     }

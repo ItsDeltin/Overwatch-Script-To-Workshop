@@ -26,10 +26,10 @@ namespace Deltin.Deltinteger.CustomMethods
 
         public static Element NumberOfClasses(ActionSet actionSet)
         {
-            return Element.Part<V_CountOf>(Element.Part<V_FilteredArray>(
+            return Element.CountOf(Element.Filter(
                 // The number of assigned variables. Assigned variables do not equal 0.
                 actionSet.Translate.DeltinScript.GetComponent<ClassData>().ClassIndexes.GetVariable(),
-                new V_Compare(new V_ArrayElement(), Operator.NotEqual, new V_Number(0))
+                Element.Compare(Element.ArrayElement(), Operator.NotEqual, Element.Num(0))
             ));
         } 
     }

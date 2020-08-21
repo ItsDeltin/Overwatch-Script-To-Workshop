@@ -12,8 +12,8 @@ namespace Deltin.Deltinteger.Elements
         {
             Element side1 = (Element)Parameters[0];
             Element side2 = (Element)Parameters[1];
-            Element s1 = Element.Part<V_RaiseToPower>(side1, new V_Number(2));
-            Element s2 = Element.Part<V_RaiseToPower>(side2, new V_Number(2));
+            Element s1 = Element.Part<V_RaiseToPower>(side1, Element.Num(2));
+            Element s2 = Element.Part<V_RaiseToPower>(side2, Element.Num(2));
             Element sum = s1 + s2;
             return new MethodResult(null, Element.Part<V_SquareRoot>(sum));
         }
@@ -38,8 +38,8 @@ namespace Deltin.Deltinteger.Elements
         {
             Element side1 = (Element)Parameters[0];
             Element side2 = (Element)Parameters[1];
-            Element s1 = Element.Part<V_RaiseToPower>(side1, new V_Number(2));
-            Element s2 = Element.Part<V_RaiseToPower>(side2, new V_Number(2));
+            Element s1 = Element.Part<V_RaiseToPower>(side1, Element.Num(2));
+            Element s2 = Element.Part<V_RaiseToPower>(side2, Element.Num(2));
             Element sum = s2 - s1;
             return new MethodResult(null, Element.Part<V_SquareRoot>(sum));
         }

@@ -167,7 +167,7 @@ namespace Deltin.Deltinteger.Elements
         {
             Element array = (Element)Parameters[0];
             Element length = Element.Part<V_CountOf>(array);
-            Element condition = Element.Part<V_Compare>(length % 2, EnumData.GetEnumValue(Operators.Equal), new V_Number(0));
+            Element condition = Element.Part<V_Compare>(length % 2, EnumData.GetEnumValue(Operators.Equal), Element.Num(0));
             Element medianIndex = (length + 1) / 2;
             Element consequent = (Element.Part<V_ValueInArray>(array, medianIndex - 0.5) + Element.Part<V_ValueInArray>(array, medianIndex + 0.5)) / 2;
             Element alternative = Element.Part<V_ValueInArray>(array, medianIndex);
@@ -194,7 +194,7 @@ namespace Deltin.Deltinteger.Elements
             IndexedVar medianIndex = IndexedVar.AssignInternalVar(TranslateContext.VarCollection, Scope, "OptimisedSortedMedian: medianIndex", TranslateContext.IsGlobal);
 
             Element length = Element.Part<V_CountOf>(array.GetVariable());
-            Element condition = Element.Part<V_Compare>(length % 2, EnumData.GetEnumValue(Operators.Equal), new V_Number(0));
+            Element condition = Element.Part<V_Compare>(length % 2, EnumData.GetEnumValue(Operators.Equal), Element.Num(0));
             Element consequent = (Element.Part<V_ValueInArray>(array.GetVariable(), medianIndex.GetVariable() - 0.5) + Element.Part<V_ValueInArray>(array.GetVariable(), medianIndex.GetVariable() + 0.5)) / 2;
             Element alternative = Element.Part<V_ValueInArray>(array.GetVariable(), medianIndex.GetVariable());
 
@@ -225,7 +225,7 @@ namespace Deltin.Deltinteger.Elements
         {
             Element array = Element.Part<V_SortedArray>((Element)Parameters[0], new V_ArrayElement());
             Element length = Element.Part<V_CountOf>(array);
-            Element condition = Element.Part<V_Compare>(length % 2, EnumData.GetEnumValue(Operators.Equal), new V_Number(0));
+            Element condition = Element.Part<V_Compare>(length % 2, EnumData.GetEnumValue(Operators.Equal), Element.Num(0));
             Element medianIndex = (length + 1) / 2;
             Element consequent = (Element.Part<V_ValueInArray>(array, medianIndex - 0.5) + Element.Part<V_ValueInArray>(array, medianIndex + 0.5)) / 2;
             Element alternative = Element.Part<V_ValueInArray>(array, medianIndex);
@@ -252,7 +252,7 @@ namespace Deltin.Deltinteger.Elements
             IndexedVar medianIndex = IndexedVar.AssignInternalVar(TranslateContext.VarCollection, Scope, "OptimisedSortedMedian: medianIndex", TranslateContext.IsGlobal);
 
             Element length = Element.Part<V_CountOf>(array.GetVariable());
-            Element condition = Element.Part<V_Compare>(length % 2, EnumData.GetEnumValue(Operators.Equal), new V_Number(0));
+            Element condition = Element.Part<V_Compare>(length % 2, EnumData.GetEnumValue(Operators.Equal), Element.Num(0));
             Element consequent = (Element.Part<V_ValueInArray>(array.GetVariable(), medianIndex.GetVariable() - 0.5) + Element.Part<V_ValueInArray>(array.GetVariable(), medianIndex.GetVariable() + 0.5)) / 2;
             Element alternative = Element.Part<V_ValueInArray>(array.GetVariable(), medianIndex.GetVariable());
 
