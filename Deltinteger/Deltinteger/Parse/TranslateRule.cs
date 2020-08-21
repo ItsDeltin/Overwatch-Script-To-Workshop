@@ -71,20 +71,20 @@ namespace Deltin.Deltinteger.Parse
                 var conditionParse = condition.Expression.Parse(ActionSet);
 
                 Element value1;
-                EnumMember compareOperator;
+                Operator compareOperator;
                 Element value2;
 
-                if (conditionParse is V_Compare)
+                if (conditionParse is Element asElement && asElement.Function.Name == "Compare")
                 {
-                    value1 = (Element)((Element)conditionParse).ParameterValues[0];
-                    compareOperator = (EnumMember)((Element)conditionParse).ParameterValues[1];
-                    value2 = (Element)((Element)conditionParse).ParameterValues[2];
+                    value1 = (Element)asElement.ParameterValues[0];
+                    compareOperator = ((OperatorElement)asElement.ParameterValues[1]).Operator;
+                    value2 = (Element)asElement.ParameterValues[2];
                 }
                 else
                 {
                     value1 = (Element)conditionParse;
-                    compareOperator = EnumData.GetEnumValue(Operators.Equal);
-                    value2 = new V_True();
+                    compareOperator = Operator.Equal;
+                    value2 = Element.True();
                 }
 
                 Conditions.Add(new Condition(value1, compareOperator, value2));
@@ -141,7 +141,6 @@ namespace Deltin.Deltinteger.Parse
         public ReturnHandler ReturnHandler { get; private set; }
         public IWorkshopTree CurrentObject { get; private set; }
         public IWorkshopTree This { get; private set; }
-        public int IndentCount { get; private set; }
         public bool IsRecursive { get; private set; }
         public bool IsGlobal { get; }
         public List<IActionList> ActionList { get; }
@@ -177,7 +176,6 @@ namespace Deltin.Deltinteger.Parse
             ReturnHandler = other.ReturnHandler;
             CurrentObject = other.CurrentObject;
             This = other.This;
-            IndentCount = other.IndentCount;
             IsRecursive = other.IsRecursive;
         }
         private ActionSet Clone()
@@ -215,12 +213,6 @@ namespace Deltin.Deltinteger.Parse
             newActionSet.IsRecursive = isRecursive;
             return newActionSet;
         }
-        public ActionSet Indent()
-        {
-            var newActionSet = Clone();
-            newActionSet.IndentCount++;
-            return newActionSet;
-        }
         public ActionSet PackThis()
         {            
             var newActionSet = Clone();
@@ -230,16 +222,12 @@ namespace Deltin.Deltinteger.Parse
 
         public void AddAction(IWorkshopTree action)
         {
-            if (action is Element element) element.Indent = IndentCount;
             ActionList.Add(new ALAction(action));
         }
         public void AddAction(IWorkshopTree[] actions)
         {
             foreach (var action in actions)
-            {
-                if (action is Element element) element.Indent = IndentCount;
                 ActionList.Add(new ALAction(action));
-            }
         }
         public void AddAction(IActionList action)
         {
@@ -349,11 +337,10 @@ namespace Deltin.Deltinteger.Parse
             else skipCount = GetSkipCount(EndMarker);
 
             Element newAction;
-            if (Condition == null) newAction = Element.Part<A_Skip>(skipCount);
-            else newAction = Element.Part<A_SkipIf>(Element.Part<V_Not>(Condition), skipCount);
+            if (Condition == null) newAction = Element.Part("Skip", skipCount);
+            else newAction = Element.Part("Skip If", Element.Not(Condition), skipCount);
 
             newAction.Comment = Comment;
-            
             return newAction;
         }
 
@@ -371,7 +358,7 @@ namespace Deltin.Deltinteger.Parse
             EndMarker = endMarker;
         }
 
-        public string ToWorkshop(OutputLanguage language, ToWorkshopContext context) => StartMarker.NumberOfActionsToMarker(EndMarker).ToString();
+        public void ToWorkshop(WorkshopBuilder b, ToWorkshopContext context) => b.Append(StartMarker.NumberOfActionsToMarker(EndMarker).ToString());
 
         public bool EqualTo(IWorkshopTree other) => false;
     }

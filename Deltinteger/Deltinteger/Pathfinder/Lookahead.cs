@@ -21,14 +21,14 @@ namespace Deltin.Deltinteger.Pathfinder
 
             // Lookahead status
             IndexReference result = actionSet.VarCollection.Assign("Lookahead: Result", actionSet.IsGlobal, true);
-            actionSet.AddAction(result.SetVariable(new V_False()));
+            actionSet.AddAction(result.SetVariable(Element.False()));
 
             // The lookhead controller
             Look = actionSet.VarCollection.Assign("Pathfind: Lookahead", actionSet.IsGlobal, true);
             actionSet.AddAction(Look.SetVariable(resolveInfo.Current.Get(target)));
 
             // The loop
-            actionSet.AddAction(Element.Part<A_While>(Element.Part<V_And>(
+            actionSet.AddAction(Element.While(Element.And(
                 !result.Get(),
                 LoopCondition()
             )));
@@ -38,7 +38,7 @@ namespace Deltin.Deltinteger.Pathfinder
 
             // End
             actionSet.AddAction(Look.SetVariable(Next));
-            actionSet.AddAction(new A_End());
+            actionSet.AddAction(Element.End());
             return result.Get();
         }
 
@@ -48,12 +48,12 @@ namespace Deltin.Deltinteger.Pathfinder
         /// <summary>The next node.</summary>
         protected Element Next => ResolveInfo.ParentArray.Get(Target)[Look.Get()] - 1;
         /// <summary>The current segment resolved from the current node and the next node.</summary>
-        protected Element CurrentSegment => Element.Part<V_FirstOf>(PathmapInstance.SegmentsFromNodes(ResolveInfo.PathmapReference.Get(Target), Look.Get(), Next));
+        protected Element CurrentSegment => Element.FirstOf(PathmapInstance.SegmentsFromNodes(ResolveInfo.PathmapReference.Get(Target), Look.Get(), Next));
         /// <summary>Determines if the node after the current node is not the last one.</summary>
-        protected Element NextIsNotEnd => new V_Compare(
+        protected Element NextIsNotEnd => Element.Compare(
             Next,
-            Operators.GreaterThanOrEqual,
-            new V_Number(0)
+            Operator.GreaterThanOrEqual,
+            Element.Num(0)
         );
     }
 
@@ -66,12 +66,12 @@ namespace Deltin.Deltinteger.Pathfinder
             _node = node;
         }
 
-        protected override Element LoopCondition() => new V_Compare(
+        protected override Element LoopCondition() => Element.Compare(
             Look.GetVariable(),
-            Operators.GreaterThanOrEqual,
-            new V_Number(0)
+            Operator.GreaterThanOrEqual,
+            Element.Num(0)
         );
-        protected override Element SetResult() => new V_Compare(Look.Get(), Operators.Equal, _node);
+        protected override Element SetResult() => Element.Compare(Look.Get(), Operator.Equal, _node);
     }
 
     class IsTravelingToSegment : PathLookahead
@@ -84,9 +84,9 @@ namespace Deltin.Deltinteger.Pathfinder
         }
 
         protected override Element LoopCondition() => NextIsNotEnd;
-        protected override Element SetResult() => new V_Compare(
+        protected override Element SetResult() => Element.Compare(
             _segment,
-            Operators.Equal,
+            Operator.Equal,
             CurrentSegment
         );
     }
@@ -101,21 +101,21 @@ namespace Deltin.Deltinteger.Pathfinder
         }
 
         protected override Element LoopCondition() => NextIsNotEnd;
-        protected override Element SetResult() => Element.Part<V_IsTrueForAny>(
+        protected override Element SetResult() => Element.Any(
             // Get the attributes where the first node is the current and the second node is the next.
-            Element.Part<V_FilteredArray>(
+            Element.Filter(
                 // Get the attribute array.
                 PathmapInstance.Attributes.Get()[ResolveInfo.PathmapReference.Get(Target)],
                 // Filter.
-                Element.Part<V_And>(
+                Element.And(
                     // Compare the first node to current.
-                    new V_Compare(Element.Part<V_XOf>(Element.Part<V_ArrayElement>()), Operators.Equal, Look.Get()),
+                    Element.Compare(Element.XOf(Element.ArrayElement()), Operator.Equal, Look.Get()),
                     // Compare the second node to next.
-                    new V_Compare(Element.Part<V_YOf>(Element.Part<V_ArrayElement>()), Operators.Equal, Next)
+                    Element.Compare(Element.YOf(Element.ArrayElement()), Operator.Equal, Next)
                 )
             ),
             // Check if the current attribute is equal to the attribute being looked for.
-            new V_Compare(Element.Part<V_ZOf>(Element.Part<V_ArrayElement>()), Operators.Equal, _attribute)
+            Element.Compare(Element.ZOf(Element.ArrayElement()), Operator.Equal, _attribute)
         );
     }
 }

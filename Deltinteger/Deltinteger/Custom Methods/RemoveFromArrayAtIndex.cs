@@ -20,9 +20,9 @@ namespace Deltin.Deltinteger.CustomMethods
             Element array = (Element)parameters[0];
             Element index = (Element)parameters[1];
 
-            return Element.Part<V_Append>(
-                Element.Part<V_ArraySlice>(array, new V_Number(0), index),
-                Element.Part<V_ArraySlice>(array, index + 1, V_Number.LargeArbitraryNumber)
+            return Element.Append(
+                Element.Slice(array, Element.Num(0), index),
+                Element.Slice(array, index + 1, Element.Num(Constants.MAX_ARRAY_LENGTH))
             );
         }
     }

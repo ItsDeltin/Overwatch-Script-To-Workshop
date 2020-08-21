@@ -406,19 +406,18 @@ namespace Deltin.Deltinteger.Parse
             return (pos == null || element.DefinedAt == null || element.WholeContext || element.DefinedAt.range.start <= pos) && (getter == null || getter.AccessorMatches(element));
         }
 
-        public static Scope GetGlobalScope()
+        public static Scope GetGlobalScope(ITypeSupplier typeSupplier)
         {
             Scope globalScope = new Scope();
 
             // Add workshop methods
-            foreach (var workshopMethod in ElementList.Elements)
-                if (!workshopMethod.Hidden)
-                    globalScope.AddMethod(workshopMethod, null, null);
+            var workshopFunctions = ElementList.GetWorkshopFunctions(typeSupplier);
+            foreach (var func in workshopFunctions) globalScope.AddNativeMethod(func);
             
             // Add custom methods
             foreach (var builtInMethod in CustomMethods.CustomMethodData.GetCustomMethods())
                 if (builtInMethod.Global)
-                    globalScope.AddMethod(builtInMethod, null, null);
+                    globalScope.AddNativeMethod(builtInMethod);
 
             return globalScope;
         }

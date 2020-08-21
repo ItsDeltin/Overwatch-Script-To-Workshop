@@ -16,14 +16,14 @@ namespace Deltin.Deltinteger.CustomMethods
 
         public override IWorkshopTree Get(ActionSet actionSet, IWorkshopTree[] parameterValues)
         {
-            var enumData = (EnumMember)parameterValues[0];
-            Map map = (Map)enumData.Value;
+            var enumData = (ElementEnumMember)parameterValues[0];
+            string map = enumData.Name;
             MapLink mapLink = MapLink.GetMapLink(map);
 
             if (mapLink == null)
-                return new V_Compare(new V_CurrentMap(), Operators.Equal, Element.Part<V_MapVar>(enumData));
+                return Element.Compare(Element.Part("Current Map"), Operator.Equal, enumData.ToElement());
             else
-                return Element.Part<V_ArrayContains>(mapLink.GetArray(), new V_CurrentMap());
+                return Element.Contains(mapLink.GetArray(), Element.Part("Current Map"));
         }
     }
 
@@ -40,52 +40,46 @@ namespace Deltin.Deltinteger.CustomMethods
         {
             var variableCallAction = ExpressionTree.ResultingExpression(value) as EnumValuePair;
 
-            if (variableCallAction == null || variableCallAction.Member.Value is Map == false)
+            if (variableCallAction == null || variableCallAction.Member.Enum.Name != "Map")
             {
                 parseInfo.Script.Diagnostics.Error("Expected a map value.", valueRange);
                 return null;
             }
 
-            return (Map)variableCallAction.Member.Value;
+            return variableCallAction.Member.Enum.Name;
         }
     }
 
     class MapLink
     {
-        public Map[] Maps { get; }
+        public string[] Maps { get; }
 
-        public MapLink(params Map[] maps)
+        public MapLink(params string[] maps)
         {
             Maps = maps;
         }
 
-        public Element GetArray()
-        {
-            return Element.CreateArray(
-                // Convert the maps to EnumMembers encased in V_MapVar.
-                Maps.Select(m => Element.Part<V_MapVar>(EnumData.GetEnumValue(m)))
-                .ToArray()
-            );
-        }
+        public Element GetArray() => Element.CreateArray(
+            // Convert the maps to EnumMembers encased in V_MapVar.
+            Maps.Select(m => ElementRoot.Instance.GetEnumValueFromWorkshop("Map", m))
+            .ToArray()
+        );
 
-        public static MapLink GetMapLink(Map map)
-        {
-            return MapLinks.FirstOrDefault(m => m.Maps.Contains(map));
-        }
+        public static MapLink GetMapLink(string map) => MapLinks.FirstOrDefault(m => m.Maps.Contains(map));
 
         public static readonly MapLink[] MapLinks = new MapLink[] {
-            new MapLink(Map.Black_Forest, Map.Black_Forest_Winter),
-            new MapLink(Map.Blizzard_World, Map.Blizzard_World_Winter),
-            new MapLink(Map.Busan, Map.Busan_Downtown_Lunar, Map.Busan_Sanctuary_Lunar, Map.Busan_Stadium),
-            new MapLink(Map.Chateau_Guillard, Map.Chateau_Guillard_Halloween),
-            new MapLink(Map.Ecopoint_Antarctica, Map.Ecopoint_Antarctica_Winter),
-            new MapLink(Map.Eichenwalde, Map.Eichenwalde_Halloween),
-            new MapLink(Map.Hanamura, Map.Hanamura_Winter),
-            new MapLink(Map.Hollywood, Map.Hollywood_Halloween),
-            new MapLink(Map.Ilios, Map.Ilios_Lighthouse, Map.Ilios_Ruins, Map.Ilios_Well),
-            new MapLink(Map.Lijiang_Control_Center, Map.Lijiang_Control_Center_Lunar, Map.Lijiang_Garden, Map.Lijiang_Garden_Lunar, Map.Lijiang_Night_Market, Map.Lijiang_Night_Market_Lunar, Map.Lijiang_Tower, Map.Lijiang_Tower_Lunar),
-            new MapLink(Map.Nepal, Map.Nepal_Sanctum, Map.Nepal_Shrine, Map.Nepal_Village),
-            new MapLink(Map.Oasis, Map.Oasis_City_Center, Map.Oasis_Gardens, Map.Oasis_University)
+            new MapLink("Black Forest", "Black Forest (Winter)"),
+            new MapLink("Blizzard World", "Blizzard World (Winter)"),
+            new MapLink("Busan", "Busan Downtown (Lunar New Year)", "Busan Sanctuary (Lunar New Year)", "Busan Stadium"),
+            new MapLink("Château Guillard", "Château Guillard (Halloween)"),
+            new MapLink("Ecopoint: Antarctica", "Ecopoint: Antarctica (Winter)"),
+            new MapLink("Eichenwalde", "Eichenwalde (Halloween)"),
+            new MapLink("Hanamura", "Hanamura (Winter)"),
+            new MapLink("Hollywood", "Hollywood (Halloween)"),
+            new MapLink("Ilios", "Ilios Lighthouse", "Ilios Ruins", "Ilions Well"),
+            new MapLink("Lijiang Control Center", "Lijiang Control Center (Lunar New Year)", "Lijiang Garden", "Lijiang Garden (Lunar New Year)", "Lijiang Night Market", "Lijiang Night Market (Lunar New Year)", "Lijiang Tower", "Lijiang Tower (Lunar New Year)"),
+            new MapLink("Nepal", "Nepal Sanctum", "Nepal Shrine", "Nepal Village"),
+            new MapLink("Oasis", "Oasis City Center", "Oasis Gardens", "Oasis University")
         };
     }
 }

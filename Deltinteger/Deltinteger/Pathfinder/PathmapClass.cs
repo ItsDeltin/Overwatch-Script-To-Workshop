@@ -177,8 +177,8 @@ namespace Deltin.Deltinteger.Pathfinder
 
             if (newClassInfo.AdditionalParameterData.Length == 0)
             {
-                actionSet.AddAction(Nodes.SetVariable(new V_EmptyArray(), index: index));
-                actionSet.AddAction(Segments.SetVariable(new V_EmptyArray(), index: index));
+                actionSet.AddAction(Nodes.SetVariable(Element.EmptyArray(), index: index));
+                actionSet.AddAction(Segments.SetVariable(Element.EmptyArray(), index: index));
                 return;
             }
 
@@ -189,9 +189,9 @@ namespace Deltin.Deltinteger.Pathfinder
             IndexReference segments = actionSet.VarCollection.Assign("_tempSegments", actionSet.IsGlobal, false);
             IndexReference attributes = actionSet.VarCollection.Assign("_tempAttributes", actionSet.IsGlobal, false);
 
-            actionSet.AddAction(nodes.SetVariable(new V_EmptyArray()));
-            actionSet.AddAction(segments.SetVariable(new V_EmptyArray()));
-            actionSet.AddAction(attributes.SetVariable(new V_EmptyArray()));
+            actionSet.AddAction(nodes.SetVariable(Element.EmptyArray()));
+            actionSet.AddAction(segments.SetVariable(Element.EmptyArray()));
+            actionSet.AddAction(attributes.SetVariable(Element.EmptyArray()));
 
             foreach (var node in pathMap.Nodes) actionSet.AddAction(nodes.ModifyVariable(operation: Operation.AppendToArray, value: node.ToVector()));
             foreach (var segment in pathMap.Segments) actionSet.AddAction(segments.ModifyVariable(operation: Operation.AppendToArray, value: segment.AsWorkshopData()));
@@ -202,15 +202,15 @@ namespace Deltin.Deltinteger.Pathfinder
             actionSet.AddAction(Attributes.SetVariable((Element)attributes.GetVariable(), index: index));
         }
 
-        public Element SegmentsFromNodes(IWorkshopTree pathmapObject, Element node1, Element node2) => Element.Part<V_FilteredArray>(
+        public Element SegmentsFromNodes(IWorkshopTree pathmapObject, Element node1, Element node2) => Element.Filter(
             Segments.Get()[(Element)pathmapObject],
-            Element.Part<V_And>(
-                Element.Part<V_ArrayContains>(
-                    DijkstraBase.BothNodes(new V_ArrayElement()),
+            Element.And(
+                Element.Contains(
+                    DijkstraBase.BothNodes(Element.ArrayElement()),
                     node1
                 ),
-                Element.Part<V_ArrayContains>(
-                    DijkstraBase.BothNodes(new V_ArrayElement()),
+                Element.Contains(
+                    DijkstraBase.BothNodes(Element.ArrayElement()),
                     node2
                 )
             )
@@ -248,7 +248,7 @@ namespace Deltin.Deltinteger.Pathfinder
             Parameters = new CodeParameter[] {
                 new CodeParameter("player", "The player to move."),
                 new CodeParameter("destination", "The destination to move the player to."),
-                new CodeParameter("attributes", "An array of attributes to pathfind with.", new ExpressionOrWorkshopValue(new V_Null())),
+                new CodeParameter("attributes", "An array of attributes to pathfind with.", new ExpressionOrWorkshopValue(Element.Null())),
                 OnLoopStartParameter,
                 OnNeighborLoopParameter
             },
@@ -301,7 +301,7 @@ namespace Deltin.Deltinteger.Pathfinder
             Parameters = new CodeParameter[] {
                 new CodeParameter("player", "The player to pathfind."),
                 new CodeParameter("destinations", "The array of destinations."),
-                new CodeParameter("attributes", "An array of attributes to pathfind with.", new ExpressionOrWorkshopValue(new V_Null())),
+                new CodeParameter("attributes", "An array of attributes to pathfind with.", new ExpressionOrWorkshopValue(Element.Null())),
                 OnLoopStartParameter,
                 OnNeighborLoopParameter
             },
@@ -333,7 +333,7 @@ namespace Deltin.Deltinteger.Pathfinder
                 DijkstraNormal algorithm = new DijkstraNormal(actionSet, (Element)actionSet.CurrentObject, (Element)methodCall.ParameterValues[0], destination, null);
                 algorithm.Get();
 
-                return Element.Part<V_Append>(algorithm.finalPath.GetVariable(), destination);
+                return Element.Append(algorithm.finalPath.GetVariable(), destination);
             }
         };
 
@@ -344,7 +344,7 @@ namespace Deltin.Deltinteger.Pathfinder
             ReturnType = deltinScript.Types.GetInstance<PathResolveClass>(),
             Parameters = new CodeParameter[] {
                 new CodeParameter("position", "The position to resolve."),
-                new CodeParameter("attributes", "The attributes of the path.", new ExpressionOrWorkshopValue(new V_Null())),
+                new CodeParameter("attributes", "The attributes of the path.", new ExpressionOrWorkshopValue(Element.Null())),
                 OnLoopStartParameter,
                 OnNeighborLoopParameter
             },
@@ -368,7 +368,7 @@ namespace Deltin.Deltinteger.Pathfinder
             Parameters = new CodeParameter[] {
                 new CodeParameter("position", "The position to resolve."),
                 new CodeParameter("resolveTo", "Resolving will stop once this position is reached."),
-                new CodeParameter("attributes", "The attributes of the path.", new ExpressionOrWorkshopValue(new V_Null()))
+                new CodeParameter("attributes", "The attributes of the path.", new ExpressionOrWorkshopValue(Element.Null()))
             },
             Action = (actionSet, call) => {
                 ResolveDijkstra resolve = new ResolveDijkstra(actionSet, (Element)call.ParameterValues[0], ContainParameter(actionSet, "_pathfindDestinationStore", call.ParameterValues[1]), (Element)call.ParameterValues[2]);
@@ -383,10 +383,10 @@ namespace Deltin.Deltinteger.Pathfinder
             IndexReference index = actionSet.VarCollection.Assign(tempVariableName, actionSet.IsGlobal, true);
             
             // Get the first null value.
-            actionSet.AddAction(index.SetVariable(Element.Part<V_IndexOfArrayValue>(array, new V_Null())));
+            actionSet.AddAction(index.SetVariable(Element.IndexOfArrayValue(array, Element.Null())));
 
             // If the index is -1, use the count of the element.
-            actionSet.AddAction(index.SetVariable(Element.TernaryConditional(new V_Compare(index.Get(), Operators.Equal, new V_Number(-1)), Element.Part<V_CountOf>(array), index.Get())));
+            actionSet.AddAction(index.SetVariable(Element.TernaryConditional(Element.Compare(index.Get(), Operator.Equal, Element.Num(-1)), Element.CountOf(array), index.Get())));
 
             // Done
             return index.Get();
@@ -418,7 +418,7 @@ namespace Deltin.Deltinteger.Pathfinder
                     actionSet.AddAction(Nodes.ModifyVariable(operation: Operation.AppendToArray, value: (Element)methodCall.ParameterValues[0], index: (Element)actionSet.CurrentObject));
                     
                     // Return the index of the added node.
-                    return Element.Part<V_CountOf>(Nodes.Get()[(Element)actionSet.CurrentObject]) - 1;
+                    return Element.CountOf(Nodes.Get()[(Element)actionSet.CurrentObject]) - 1;
                 }
             }
         };
@@ -433,13 +433,13 @@ namespace Deltin.Deltinteger.Pathfinder
             },
             OnCall = (parseInfo, range) => parseInfo.TranslateInfo.ExecOnComponent<ResolveInfoComponent>(resolveInfo => resolveInfo.PotentiallyNullNodes = true),
             Action = (actionSet, methodCall) => {
-                actionSet.AddAction(Nodes.SetVariable(value: new V_Null(), index: new Element[] { (Element)actionSet.CurrentObject, (Element)methodCall.ParameterValues[0] }));
+                actionSet.AddAction(Nodes.SetVariable(value: Element.Null(), index: new Element[] { (Element)actionSet.CurrentObject, (Element)methodCall.ParameterValues[0] }));
 
                 // Delete segments.
-                Element connectedSegments = ContainParameter(actionSet, "Delete Node: Segments", Element.Part<V_FilteredArray>(
+                Element connectedSegments = ContainParameter(actionSet, "Delete Node: Segments", Element.Filter(
                     Segments.Get()[(Element)actionSet.CurrentObject],
-                    Element.Part<V_ArrayContains>(
-                        DijkstraBase.BothNodes(new V_ArrayElement()),
+                    Element.Contains(
+                        DijkstraBase.BothNodes(Element.ArrayElement()),
                         methodCall.ParameterValues[0]
                     )
                 ));
@@ -462,13 +462,13 @@ namespace Deltin.Deltinteger.Pathfinder
             },
             ReturnType = NumberType.Instance,
             Action = (actionSet, methodCall) => {                
-                V_Vector segmentData = new V_Vector((Element)methodCall.ParameterValues[0], (Element)methodCall.ParameterValues[1], new V_Number(0));
+                Element segmentData = Element.Vector((Element)methodCall.ParameterValues[0], (Element)methodCall.ParameterValues[1], Element.Num(0));
                 
                 // Append the vector.
                 actionSet.AddAction(Segments.ModifyVariable(operation: Operation.AppendToArray, value: segmentData, index: (Element)actionSet.CurrentObject));
 
                 // Return the index of the last added node.
-                return Element.Part<V_CountOf>(Segments.GetVariable()) - 1;
+                return Element.CountOf(Segments.GetVariable()) - 1;
             }
         };
 
@@ -496,7 +496,7 @@ namespace Deltin.Deltinteger.Pathfinder
             },
             ReturnType = NumberType.Instance,
             Action = (actionSet, methodCall) => {
-                actionSet.AddAction(Attributes.ModifyVariable(Operation.AppendToArray, new V_Vector(
+                actionSet.AddAction(Attributes.ModifyVariable(Operation.AppendToArray, Element.Vector(
                     methodCall.ParameterValues[0],
                     methodCall.ParameterValues[1],
                     methodCall.ParameterValues[2]
@@ -515,7 +515,7 @@ namespace Deltin.Deltinteger.Pathfinder
                 new CodeParameter("attribute", "The attribute value that will be removed. Should be any number.")
             },
             Action = (actionSet, methodCall) => {
-                actionSet.AddAction(Attributes.ModifyVariable(Operation.RemoveFromArrayByValue, new V_Vector(
+                actionSet.AddAction(Attributes.ModifyVariable(Operation.RemoveFromArrayByValue, Element.Vector(
                     methodCall.ParameterValues[0],
                     methodCall.ParameterValues[1],
                     methodCall.ParameterValues[2]
@@ -535,11 +535,11 @@ namespace Deltin.Deltinteger.Pathfinder
             Action = (actionSet, methodCall) => {
                 actionSet.AddAction(Attributes.ModifyVariable(
                     Operation.RemoveFromArrayByValue,
-                    Element.Part<V_FilteredArray>(
+                    Element.Filter(
                         Attributes.Get()[(Element)actionSet.CurrentObject],
-                        Element.Part<V_And>(
-                            new V_Compare(methodCall.ParameterValues[0], Operators.Equal, Element.Part<V_XOf>(Element.Part<V_ArrayElement>())),
-                            new V_Compare(methodCall.ParameterValues[1], Operators.Equal, Element.Part<V_YOf>(Element.Part<V_ArrayElement>()))
+                        Element.And(
+                            Element.Compare(methodCall.ParameterValues[0], Operator.Equal, Element.XOf(Element.ArrayElement())),
+                            Element.Compare(methodCall.ParameterValues[1], Operator.Equal, Element.YOf(Element.ArrayElement()))
                         )
                     ),
                     index: (Element)actionSet.CurrentObject)
@@ -560,11 +560,11 @@ namespace Deltin.Deltinteger.Pathfinder
             Action = (actionSet, methodCall) => {
                 actionSet.AddAction(Attributes.ModifyVariable(
                     Operation.RemoveFromArrayByValue,
-                    Element.Part<V_FilteredArray>(
+                    Element.Filter(
                         Attributes.Get()[(Element)actionSet.CurrentObject],
-                        Element.Part<V_Or>(
-                            new V_Compare(methodCall.ParameterValues[0], Operators.Equal, Element.Part<V_XOf>(Element.Part<V_ArrayElement>())),
-                            new V_Compare(methodCall.ParameterValues[0], Operators.Equal, Element.Part<V_YOf>(Element.Part<V_ArrayElement>()))
+                        Element.Or(
+                            Element.Compare(methodCall.ParameterValues[0], Operator.Equal, Element.XOf(Element.ArrayElement())),
+                            Element.Compare(methodCall.ParameterValues[0], Operator.Equal, Element.YOf(Element.ArrayElement()))
                         )
                     ),
                     index: (Element)actionSet.CurrentObject)
@@ -619,7 +619,7 @@ namespace Deltin.Deltinteger.Pathfinder
                 new CodeParameter(
                     "speedScalar",
                     "The speed scalar of the player. `1` is the default speed of all heroes except Gengi and Tracer, which is `1.1`. Default value is `1`.",
-                    new ExpressionOrWorkshopValue(new V_Number(1))
+                    new ExpressionOrWorkshopValue(new NumberElement(1))
                 )
             },
             ReturnType = BooleanType.Instance,
@@ -636,7 +636,7 @@ namespace Deltin.Deltinteger.Pathfinder
             },
             Action = (actionSet, methodCall) => {
                 Element player = (Element)methodCall.ParameterValues[0];
-                actionSet.AddAction(Element.Part<A_Teleport>(
+                actionSet.AddAction(Element.Part("Teleport",
                     player,
                     actionSet.Translate.DeltinScript.GetComponent<ResolveInfoComponent>().CurrentPositionWithDestination(player)
                 ));

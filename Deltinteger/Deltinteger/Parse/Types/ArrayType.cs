@@ -36,7 +36,7 @@ namespace Deltin.Deltinteger.Parse
                 ReturnType = this,
                 ArrayOfType = ArrayOfType,
                 ParameterDocumentation = "The condition that is evaluated for each element of the copied array. If the condition is true, the element is kept in the copied array."
-            }.Add<V_FilteredArray>(Scope);
+            }.Add("Filtered Array", Scope);
             // Sorted Array
             new GenericSortFunction() {
                 Name = "SortedArray",
@@ -44,7 +44,7 @@ namespace Deltin.Deltinteger.Parse
                 ReturnType = this,
                 ArrayOfType = ArrayOfType,
                 ParameterDocumentation = "The value that is evaluated for each element of the copied array. The array is sorted by this rank in ascending order."
-            }.Add<V_SortedArray>(Scope);
+            }.Add("Sorted Array", Scope);
             // Is True For Any
             new GenericSortFunction() {
                 Name = "IsTrueForAny",
@@ -52,7 +52,7 @@ namespace Deltin.Deltinteger.Parse
                 ReturnType = BooleanType.Instance,
                 ArrayOfType = ArrayOfType,
                 ParameterDocumentation = "The condition that is evaluated for each element of the specified array."
-            }.Add<V_IsTrueForAny>(Scope);
+            }.Add("Is True For Any", Scope);
             // Is True For All
             new GenericSortFunction() {
                 Name = "IsTrueForAll",
@@ -60,7 +60,7 @@ namespace Deltin.Deltinteger.Parse
                 ReturnType = BooleanType.Instance,
                 ArrayOfType = ArrayOfType,
                 ParameterDocumentation = "The condition that is evaluated for each element of the specified array."
-            }.Add<V_IsTrueForAll>(Scope);
+            }.Add("Is True For All", Scope);
             // Mapped
             new GenericSortFunction() {
                 Name = "Map",
@@ -68,7 +68,7 @@ namespace Deltin.Deltinteger.Parse
                 ReturnType = ObjectType.Instance,
                 ArrayOfType = ArrayOfType,
                 ParameterDocumentation = "The condition that is evaluated for each element of the specified array."
-            }.Add<V_MappedArray>(Scope);
+            }.Add("Mapped Array", Scope);
             // Contains
             Func(new FuncMethodBuilder() {
                 Name = "Contains",
@@ -77,21 +77,21 @@ namespace Deltin.Deltinteger.Parse
                 Parameters = new CodeParameter[] {
                     new CodeParameter("value", "The value that is being looked for in the array.", ArrayOfType)
                 },
-                Action = (actionSet, methodCall) => Element.Part<V_ArrayContains>(actionSet.CurrentObject, methodCall.ParameterValues[0])
+                Action = (actionSet, methodCall) => Element.Contains(actionSet.CurrentObject, methodCall.ParameterValues[0])
             });
             // Random
             Func(new FuncMethodBuilder() {
                 Name = "Random",
                 Documentation = "Gets a random value from the array.",
                 ReturnType = ArrayOfType,
-                Action = (actionSet, methodCall) => Element.Part<V_RandomValueInArray>(actionSet.CurrentObject)
+                Action = (actionSet, methodCall) => Element.Part("Random Value In Array", actionSet.CurrentObject)
             });
             // Randomize
             Func(new FuncMethodBuilder() {
                 Name = "Randomize",
                 Documentation = "Returns a copy of the array that is randomized.",
                 ReturnType = this,
-                Action = (actionSet, methodCall) => Element.Part<V_RandomizedArray>(actionSet.CurrentObject)
+                Action = (actionSet, methodCall) => Element.Part("Randomized Array", actionSet.CurrentObject)
             });
             // Append
             Func(new FuncMethodBuilder() {
@@ -101,7 +101,7 @@ namespace Deltin.Deltinteger.Parse
                 Parameters = new CodeParameter[] {
                     new CodeParameter("value", "The value that is appended to the array. If the value is an array, it will be flattened.")
                 },
-                Action = (actionSet, methodCall) => Element.Part<V_Append>(actionSet.CurrentObject, methodCall.ParameterValues[0])
+                Action = (actionSet, methodCall) => Element.Append(actionSet.CurrentObject, methodCall.ParameterValues[0])
             });
             // Remove
             Func(new FuncMethodBuilder() {
@@ -111,7 +111,7 @@ namespace Deltin.Deltinteger.Parse
                 Parameters = new CodeParameter[] {
                     new CodeParameter("value", "The value that is removed from the array.")
                 },
-                Action = (actionSet, methodCall) => Element.Part<V_RemoveFromArray>(actionSet.CurrentObject, methodCall.ParameterValues[0])
+                Action = (actionSet, methodCall) => Element.Part("Remove From Array", actionSet.CurrentObject, methodCall.ParameterValues[0])
             });
             // Slice
             Func(new FuncMethodBuilder() {
@@ -122,7 +122,7 @@ namespace Deltin.Deltinteger.Parse
                     new CodeParameter("startIndex", "The first index of the range."),
                     new CodeParameter("count", "The number of elements in the resulting array. The resulting array will contain fewer elements if the specified range exceeds the bounds of the array.")
                 },
-                Action = (actionSet, methodCall) => Element.Part<V_ArraySlice>(actionSet.CurrentObject, methodCall.ParameterValues[0], methodCall.ParameterValues[1])
+                Action = (actionSet, methodCall) => Element.Part("Array Slice", actionSet.CurrentObject, methodCall.ParameterValues[0], methodCall.ParameterValues[1])
             });
             // Index Of
             Func(new FuncMethodBuilder() {
@@ -132,14 +132,12 @@ namespace Deltin.Deltinteger.Parse
                 Parameters = new CodeParameter[] {
                     new CodeParameter("value", "The value for which to search.")
                 },
-                Action = (actionSet, methodCall) => Element.Part<V_IndexOfArrayValue>(actionSet.CurrentObject, methodCall.ParameterValues[0])
+                Action = (actionSet, methodCall) => Element.IndexOfArrayValue(actionSet.CurrentObject, methodCall.ParameterValues[0])
             });
 
             if (arrayOfType is IAdditionalArray addition)
                 addition.OverrideArray(this);
         }
-
-        private static IWorkshopTree GenericSort<T>(ActionSet actionSet, MethodCall methodCall) where T: Element, new() => Element.Part<T>(actionSet.CurrentObject, ((LambdaAction)methodCall.ParameterValues[0]).Invoke(actionSet, new V_ArrayElement()));
 
         private void Func(FuncMethodBuilder builder)
         {
@@ -148,9 +146,9 @@ namespace Deltin.Deltinteger.Parse
 
         public override void AddObjectVariablesToAssigner(IWorkshopTree reference, VarIndexAssigner assigner)
         {
-            assigner.Add(_length, Element.Part<V_CountOf>(reference));
-            assigner.Add(_last, Element.Part<V_LastOf>(reference));
-            assigner.Add(_first, Element.Part<V_FirstOf>(reference));
+            assigner.Add(_length, Element.CountOf(reference));
+            assigner.Add(_last, Element.LastOf(reference));
+            assigner.Add(_first, Element.FirstOf(reference));
         }
 
         public override string GetName() => ArrayOfType.GetName() + "[]";
@@ -169,7 +167,7 @@ namespace Deltin.Deltinteger.Parse
         public CodeType ReturnType;
         public CodeType ArrayOfType;
 
-        public void Add<T>(Scope addToScope) where T: Element, new()
+        public void Add(string function, Scope addToScope)
         {
             // value => ...
             var noIndex = GetFuncMethod();
@@ -177,7 +175,7 @@ namespace Deltin.Deltinteger.Parse
                 new CodeParameter("conditionLambda", ParameterDocumentation, new MacroLambda(null, ArrayOfType))
             };
             noIndex.Action = (actionSet, methodCall) =>
-                Element.Part<T>(actionSet.CurrentObject, ((LambdaAction)methodCall.ParameterValues[0]).Invoke(actionSet, new V_ArrayElement()));
+                Element.Part(function, actionSet.CurrentObject, ((LambdaAction)methodCall.ParameterValues[0]).Invoke(actionSet, Element.ArrayElement()));
 
             // (value, index) => ...
             var withIndex = GetFuncMethod();
@@ -185,7 +183,7 @@ namespace Deltin.Deltinteger.Parse
                 new CodeParameter("conditionLambda", ParameterDocumentation, new MacroLambda(null, ArrayOfType, null))
             };
             withIndex.Action = (actionSet, methodCall) =>
-                Element.Part<T>(actionSet.CurrentObject, ((LambdaAction)methodCall.ParameterValues[0]).Invoke(actionSet, new V_ArrayElement(), new V_CurrentArrayIndex()));
+                Element.Part(function, actionSet.CurrentObject, ((LambdaAction)methodCall.ParameterValues[0]).Invoke(actionSet, Element.ArrayElement(), Element.ArrayIndex()));
             
             addToScope.AddNativeMethod(new FuncMethod(noIndex));
             addToScope.AddNativeMethod(new FuncMethod(withIndex));

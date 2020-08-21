@@ -27,11 +27,11 @@ namespace Deltin.Deltinteger.LanguageServer
         public List<TextDocumentItem> Documents { get; } = new List<TextDocumentItem>();
         private DeltintegerLanguageServer _languageServer { get; } 
         private SynchronizationCapability _compatibility;
+        private TaskCompletionSource<Unit> _scriptReady = new TaskCompletionSource<Unit>();
 
         public DocumentHandler(DeltintegerLanguageServer languageServer)
         {
             _languageServer = languageServer;
-            _typeWaitTimer = new Timer(state => Update());
         }
 
         public TextDocumentAttributes GetTextDocumentAttributes(DocumentUri uri)
@@ -146,41 +146,26 @@ namespace Deltin.Deltinteger.LanguageServer
         Task<Unit> Parse(Uri uri) => Parse(TextDocumentFromUri(uri));
         Task<Unit> Parse(TextDocumentItem document)
         {
-            lock (_taskCompletionLock)
-            {
-                lock (_nextLock) _next = new TypeUpdateQueue(document);
-                _typeWaitTimer.Change(_updateTaskIsRunning ? TimeToUpdate : 0, Timeout.Infinite);
-            }
-
-            return Unit.Task;
+            return Task.Run(() => {
+                Update(document);
+                return Unit.Value;
+            });
         }
 
-        private const int TimeToUpdate = 250;
-        private Timer _typeWaitTimer;
-        private bool _updateTaskIsRunning = false;
-        private TypeUpdateQueue _next;
-        private object _taskCompletionLock = new object();
-        private object _nextLock = new object();
-        private List<TaskCompletionSource<int>> _onTypeCompleted = new List<TaskCompletionSource<int>>();
-
-        void Update()
+        void Update(TextDocumentItem item)
         {
-            lock (_taskCompletionLock) _updateTaskIsRunning = true;
-
             try
             {
                 Diagnostics diagnostics = new Diagnostics();
-                ScriptFile root;
-                lock (_nextLock)
-                {
-                    root = new ScriptFile(diagnostics, _next.ParseItem.Uri.ToUri(), _next.ParseItem.Text);
-                    _next = null;
-                }
+                ScriptFile root = new ScriptFile(diagnostics, item.Uri.ToUri(), item.Text);
                 DeltinScript deltinScript = new DeltinScript(new TranslateSettings(diagnostics, root, _languageServer.FileGetter) {
                     OutputLanguage = _languageServer.ConfigurationHandler.OutputLanguage,
                     OptimizeOutput = _languageServer.ConfigurationHandler.OptimizeOutput
                 });
                 _languageServer.LastParse = deltinScript;
+
+                if (!_scriptReady.Task.IsCompleted)
+                    _scriptReady.SetResult(Unit.Value);
 
                 // Publish the diagnostics.
                 var publishDiagnostics = diagnostics.GetDiagnostics();
@@ -204,35 +189,12 @@ namespace Deltin.Deltinteger.LanguageServer
                 _languageServer.Server.SendNotification(DeltintegerLanguageServer.SendWorkshopCode, "An exception was thrown while parsing.\r\n" + ex.ToString());
                 _languageServer.Server.SendNotification(DeltintegerLanguageServer.SendElementCount, "-");
             }
-            finally
-            {
-                // Activate those waiting for the typing to complete
-                lock (_taskCompletionLock)
-                {
-                    if (_next == null)
-                        while (_onTypeCompleted.Count > 0)
-                        {
-                            _onTypeCompleted[0].SetResult(0);
-                            _onTypeCompleted.RemoveAt(0);
-                        }
-                    _updateTaskIsRunning = false;
-                }
-            }
         }
 
-        public async Task WaitForCompletedTyping(bool waitForScript = false)
+        public async Task<DeltinScript> OnScriptAvailability()
         {
-            var promise = new TaskCompletionSource<int>();
-
-            lock (_taskCompletionLock)
-            {
-                lock (_nextLock)
-                    if (_next == null && (!waitForScript || _languageServer.LastParse != null)) promise.SetResult(0);
-                    else _onTypeCompleted.Add(promise);
-            }
-
-            Task completedTask = await Task.WhenAny(promise.Task, Task.Delay(10000));
-            await completedTask;
+            await Task.WhenAny(_scriptReady.Task, Task.Delay(10000));
+            return _languageServer.LastParse;
         }
     }
 

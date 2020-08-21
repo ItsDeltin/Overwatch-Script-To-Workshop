@@ -11,14 +11,14 @@ namespace Deltin.Deltinteger.CustomMethods
     {
         public override CodeParameter[] Parameters() => new CodeParameter[] {
             new VariableParameter("variable", "The variable to modify. Player variables will modify the event player's variable."),
-            new CodeParameter("operation", "The way in which the variable’s value will be changed. Options include standard arithmetic operations as well as array operations for appending and removing values.", ValueGroupType.GetEnumType<Operation>()),
+            new CodeParameter("operation", "The way in which the variable’s value will be changed. Options include standard arithmetic operations as well as array operations for appending and removing values.", ValueGroupType.GetEnumType("Operation")),
             new CodeParameter("value", "The value used for the modification. For arithmetic operations, this is the second of two operands, with the other being the variable’s existing value. For array operations, this is the value to append or remove.")
         };
 
         public override IWorkshopTree Get(ActionSet actionSet, IWorkshopTree[] parameterValues, object[] additionalParameterData)
         {
             VariableResolve variableResolve = (VariableResolve)additionalParameterData[0];
-            Operation operation = (Operation)((EnumMember)parameterValues[1]).Value;
+            Operation operation = ((ElementEnumMember)parameterValues[1]).GetOperation();
             Element value = (Element)parameterValues[2];
 
             VariableElements variableElements = variableResolve.ParseElements(actionSet);

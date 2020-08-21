@@ -170,7 +170,7 @@ namespace Deltin.Deltinteger.Parse
                                 script.Diagnostics.Error("JSON Arrays cannot include objects or arrays.", stringRange);
 
                             _deltinScript.RulesetScope.AddVariable(jsonVar, script.Diagnostics, DocRange.GetRange(importFileContext.name));
-                            _deltinScript.DefaultIndexAssigner.Add(jsonVar, new V_Null());                            
+                            _deltinScript.DefaultIndexAssigner.Add(jsonVar, Element.Null());                            
                             break;
                     }
 

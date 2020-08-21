@@ -91,17 +91,17 @@ namespace Deltin.Deltinteger.Parse
             {
                 // No parallel, call subroutine normally.
                 case CallParallel.NoParallel:
-                    callerSet.AddAction(Element.Part<A_CallSubroutine>(method.subroutineInfo.Subroutine));
+                    callerSet.AddAction(Element.Part("Call Subroutine", method.subroutineInfo.Subroutine));
                     return method.subroutineInfo.ReturnHandler.GetReturnedValue();
                 
                 // Restart the subroutine if it is already running.
                 case CallParallel.AlreadyRunning_RestartRule:
-                    callerSet.AddAction(Element.Part<A_StartRule>(method.subroutineInfo.Subroutine, EnumData.GetEnumValue(IfAlreadyExecuting.RestartRule)));
+                    callerSet.AddAction(Element.Part("Start Rule", method.subroutineInfo.Subroutine, ElementRoot.Instance.GetEnumValue("IfAlreadyExecuting", "RestartRule")));
                     return null;
                 
                 // Do nothing if the subroutine is already running.
                 case CallParallel.AlreadyRunning_DoNothing:
-                    callerSet.AddAction(Element.Part<A_StartRule>(method.subroutineInfo.Subroutine, EnumData.GetEnumValue(IfAlreadyExecuting.DoNothing)));
+                    callerSet.AddAction(Element.Part("Start Rule", method.subroutineInfo.Subroutine, ElementRoot.Instance.GetEnumValue("IfAlreadyExecuting", "DoNothing")));
                     return null;
                 
                 default: throw new NotImplementedException();
@@ -151,7 +151,7 @@ namespace Deltin.Deltinteger.Parse
             if (Method.Attributes.Virtual)
                 typeSwitch.AddDefault();
             else
-                typeSwitch.NextCase(new V_Number(((ClassType)Method.Attributes.ContainingType).Identifier));
+                typeSwitch.NextCase(new NumberElement(((ClassType)Method.Attributes.ContainingType).Identifier));
             TranslateSegment(BuilderSet, Method);
 
             foreach (DefinedMethod option in options)
@@ -163,7 +163,7 @@ namespace Deltin.Deltinteger.Parse
                 option.Attributes.ContainingType.AddObjectVariablesToAssigner(optionSet.CurrentObject, optionSet.IndexAssigner);
 
                 // Go to next case then parse the block.
-                typeSwitch.NextCase(new V_Number(((ClassType)option.Attributes.ContainingType).Identifier));
+                typeSwitch.NextCase(new NumberElement(((ClassType)option.Attributes.ContainingType).Identifier));
 
                 // Iterate through every type.
                 foreach (CodeType type in BuilderSet.Translate.DeltinScript.Types.AllTypes)
@@ -174,14 +174,14 @@ namespace Deltin.Deltinteger.Parse
                         // ...and 'type' does not have their own function implementation...
                         && AutoImplemented(option.Attributes.ContainingType, options.Select(o => o.Attributes.ContainingType).ToArray(), type))
                         // ...then add an additional case for 'type's class identifier.
-                        typeSwitch.NextCase(new V_Number(((ClassType)type).Identifier));
+                        typeSwitch.NextCase(new NumberElement(((ClassType)type).Identifier));
 
                 if (option.subroutineInfo == null)
                     TranslateSegment(optionSet, option);
                 else
                 {
                     option.SetupSubroutine();
-                    BuilderSet.AddAction(Element.Part<A_StartRule>(option.subroutineInfo.Subroutine, EnumData.GetEnumValue(IfAlreadyExecuting.DoNothing)));
+                    BuilderSet.AddAction(Element.Part("Start Rule", option.subroutineInfo.Subroutine, ElementRoot.Instance.GetEnumValue("IfAlreadyExecuting", "DoNothing")));
                     if (Method.ReturnType != null) ReturnHandler.ReturnValue(option.subroutineInfo.ReturnHandler.GetReturnedValue());
                 }
 
@@ -191,7 +191,7 @@ namespace Deltin.Deltinteger.Parse
             ClassData classData = BuilderSet.Translate.DeltinScript.GetComponent<ClassData>();
 
             // Finish the switch.
-            typeSwitch.Finish(Element.Part<V_ValueInArray>(classData.ClassIndexes.GetVariable(), BuilderSet.CurrentObject));
+            typeSwitch.Finish(classData.ClassIndexes.Get()[BuilderSet.CurrentObject]);
         }
 
         /// <summary>Determines if the specified type does not have their own implementation for the specified virtual function.</summary>

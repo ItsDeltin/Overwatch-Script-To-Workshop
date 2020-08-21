@@ -81,7 +81,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
         public Scope ReturningScope() => LambdaType.GetObjectScope();
         public CodeType Type() => LambdaType;
 
-        public string ToWorkshop(OutputLanguage outputLanguage, ToWorkshopContext context) => throw new NotImplementedException();
+        public void ToWorkshop(WorkshopBuilder builder, ToWorkshopContext context) => throw new NotImplementedException();
         public bool EqualTo(IWorkshopTree other) => throw new NotImplementedException();
 
         public IWorkshopTree Invoke(ActionSet actionSet, params IWorkshopTree[] parameterValues)

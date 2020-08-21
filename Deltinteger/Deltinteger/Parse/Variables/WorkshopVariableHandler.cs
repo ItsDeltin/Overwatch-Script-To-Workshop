@@ -22,17 +22,17 @@ namespace Deltin.Deltinteger.Parse
             if (index == null || index.Length == 0)
             {
                 if (variable.IsGlobal)
-                    return new Element[] { Element.Part<A_SetGlobalVariable>(              variable, value) };
+                    return new Element[] { Element.Part("Set Global Variable",               variable, value) };
                 else
-                    return new Element[] { Element.Part<A_SetPlayerVariable>(targetPlayer, variable, value) };
+                    return new Element[] { Element.Part("Set Player Variable", targetPlayer, variable, value) };
             }
 
             if (index.Length == 1)
             {
                 if (variable.IsGlobal)
-                    return new Element[] { Element.Part<A_SetGlobalVariableAtIndex>(              variable, index[0], value) };
+                    return new Element[] { Element.Part("Set Global Variable At Index", variable, index[0], value) };
                 else
-                    return new Element[] { Element.Part<A_SetPlayerVariableAtIndex>(targetPlayer, variable, index[0], value) };
+                    return new Element[] { Element.Part("Set Player Variable At Index", targetPlayer, variable, index[0], value) };
             }
 
             if (flat2ndDim && index.Length > 2) throw new ArgumentOutOfRangeException("index", "Can't set more than 2 dimensions if flat2ndDim is true.");
@@ -40,19 +40,19 @@ namespace Deltin.Deltinteger.Parse
             if (index.Length == 2 && flat2ndDim)
             {
                 Element baseArray = GetVariable(targetPlayer, variable, index[0]);
-                Element baseArrayValue = Element.Part<V_Append>(
-                    Element.Part<V_Append>(
-                        Element.Part<V_ArraySlice>(
+                Element baseArrayValue = Element.Append(
+                    Element.Append(
+                        Element.Part("Array Slice",
                             baseArray,
-                            new V_Number(0),
+                            new NumberElement(0),
                             index[1]
                         ),
                         value
                     ),
-                    Element.Part<V_ArraySlice>(
+                    Element.Part("Array Slice",
                         baseArray,
                         index[1] + 1,
-                        new V_Number(Constants.MAX_ARRAY_LENGTH)
+                        new NumberElement(Constants.MAX_ARRAY_LENGTH)
                     )
                 );
 
@@ -110,7 +110,7 @@ namespace Deltin.Deltinteger.Parse
             Element element = GetRoot(targetPlayer, variable);
             if (index != null)
                 for (int i = 0; i < index.Length; i++)
-                    element = Element.Part<V_ValueInArray>(element, index[i]);
+                    element = element[index[i]];
             return element;
         }
 
@@ -120,17 +120,17 @@ namespace Deltin.Deltinteger.Parse
                 return array;
             
             if (index.Length == 1)
-                return Element.Part<V_ValueInArray>(array, index[0]);
+                return array[index[0]];
             
-            return Element.Part<V_ValueInArray>(ValueInArrayPath(array, index.Take(index.Length - 1).ToArray()), index.Last());
+            return ValueInArrayPath(array, index.Take(index.Length - 1).ToArray())[index.Last()];
         }
         
         private static Element GetRoot(Element targetPlayer, WorkshopVariable variable)
         {
             if (variable.IsGlobal)
-                return Element.Part<V_GlobalVariable>(variable);
+                return Element.Part("Global Variable", variable);
             else
-                return Element.Part<V_PlayerVariable>(targetPlayer, variable);
+                return Element.Part("Player Variable", targetPlayer, variable);
         }
     
         public static Element[] ModifyVariable(WorkshopArrayBuilder builder, Operation operation, Element value, Element targetPlayer, WorkshopVariable variable, params Element[] index)
@@ -138,17 +138,17 @@ namespace Deltin.Deltinteger.Parse
             if (index == null || index.Length == 0)
             {
                 if (variable.IsGlobal)
-                    return new Element[] { Element.Part<A_ModifyGlobalVariable>(              variable, EnumData.GetEnumValue(operation), value) };
+                    return new Element[] { Element.Part("Modify Global Variable", variable, new OperationElement(operation), value) };
                 else
-                    return new Element[] { Element.Part<A_ModifyPlayerVariable>(targetPlayer, variable, EnumData.GetEnumValue(operation), value) };
+                    return new Element[] { Element.Part("Modify Player Variable", targetPlayer, variable, new OperationElement(operation), value) };
             }
 
             if (index.Length == 1)
             {
                 if (variable.IsGlobal)
-                    return new Element[] { Element.Part<A_ModifyGlobalVariableAtIndex>(              variable, index[0], EnumData.GetEnumValue(operation), value) };
+                    return new Element[] { Element.Part("Modify Global Variable At Index", variable, index[0], new OperationElement(operation), value) };
                 else
-                    return new Element[] { Element.Part<A_ModifyPlayerVariableAtIndex>(targetPlayer, variable, index[0], EnumData.GetEnumValue(operation), value) };
+                    return new Element[] { Element.Part("Modify Player Variable At Index", targetPlayer, variable, index[0], new OperationElement(operation), value) };
             }
 
             if (builder == null) throw new ArgumentNullException("builder", "Can't modify multidimensional array if builder is null.");

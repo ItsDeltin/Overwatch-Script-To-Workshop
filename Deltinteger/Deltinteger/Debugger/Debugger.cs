@@ -48,26 +48,16 @@ namespace Deltin.Deltinteger.Debugger
 
                         // Action list successfully parsed.
                         // Get the DeltinScript.
-                        // TODO: Null check _languageServer.LastParse
-                        await _languageServer.DocumentHandler.WaitForCompletedTyping(true);
-                        VariableCollection = _languageServer.LastParse.DebugVariables;
+                        VariableCollection = (await _languageServer.DocumentHandler.OnScriptAvailability())?.DebugVariables;
+
+                        // Error obtaining debug variables.
+                        if (VariableCollection == null) return;
 
                         // Apply debugger variables.
                         VariableCollection.Apply(actionStream);
 
                         // Notify the adapter of the new state.
                         _languageServer.Server.SendNotification("debugger.activated");
-                    }
-                    else
-                    {
-                        // As CSV
-                        try
-                        {
-                            CsvFrame csv = CsvFrame.ParseOne(clipboard);
-                            // TODO
-                        }
-                        catch (CsvParseFailedException) {}
-                        catch (Exception) {}
                     }
                 }
                 catch (Exception ex)
@@ -134,7 +124,7 @@ namespace Deltin.Deltinteger.Debugger
             // Others
             else if (expression is FunctionExpression func)
             {
-                switch (func.Function.WorkshopName)
+                switch (func.Function.Name)
                 {
                     // Array
                     case "Array": return new CsvArray(func.Values.Select(v => PartFromExpression(v)).ToArray());
@@ -152,7 +142,7 @@ namespace Deltin.Deltinteger.Debugger
                     ));
                     // Default
                     default:
-                        Error("Unsure of how to handle function '" + func.Function.WorkshopName);
+                        Error("Unsure of how to handle function '" + func.Function.Name);
                         return null;
                 }
             }

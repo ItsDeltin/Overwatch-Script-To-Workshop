@@ -19,7 +19,7 @@ namespace Deltin.Deltinteger.Parse
             IWorkshopTree result = Calling.Parse(actionSet);
 
             for (int i = 0; i < Index.Length; i++)
-                result = Element.Part<V_ValueInArray>(result, Index[i].Parse(actionSet));
+                result = Element.ValueInArray(result, Index[i].Parse(actionSet));
 
             return result;
         }

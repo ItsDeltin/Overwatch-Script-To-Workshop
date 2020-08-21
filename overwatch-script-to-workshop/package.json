@@ -215,7 +215,11 @@
         "jsonValidation": [
             {
                 "fileMatch": "customGameSettings.json",
-                "url": "./LobbySettingValidation.json"
+                "url": "./json-schemas/LobbySettingValidation.json"
+            },
+            {
+                "fileMatch": "elements.json",
+                "url": "./json-schemas/ElementValidation.json"
             }
         ],
         "debuggers": [

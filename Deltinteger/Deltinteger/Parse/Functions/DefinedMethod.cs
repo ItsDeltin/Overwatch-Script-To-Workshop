@@ -186,9 +186,9 @@ namespace Deltin.Deltinteger.Parse
                 // Set the objectStore as an empty array if the subroutine is recursive.
                 if (Attributes.Recursive)
                 {
-                    actionSet.InitialSet().AddAction(objectStore.SetVariable(new V_EmptyArray()));
-                    Attributes.ContainingType.AddObjectVariablesToAssigner(Element.Part<V_LastOf>(objectStore.GetVariable()), actionSet.IndexAssigner);
-                    actionSet = actionSet.New(Element.Part<V_LastOf>(objectStore.GetVariable())).PackThis();
+                    actionSet.InitialSet().AddAction(objectStore.SetVariable(Element.EmptyArray()));
+                    Attributes.ContainingType.AddObjectVariablesToAssigner(Element.LastOf(objectStore.GetVariable()), actionSet.IndexAssigner);
+                    actionSet = actionSet.New(Element.LastOf(objectStore.GetVariable())).PackThis();
                 }
                 else
                 {
@@ -210,7 +210,7 @@ namespace Deltin.Deltinteger.Parse
             // Pop object array and parameters if recursive.
             if (Attributes.Recursive)
             {
-                if (objectStore != null) actionSet.AddAction(objectStore.ModifyVariable(Operation.RemoveFromArrayByIndex, Element.Part<V_CountOf>(objectStore.GetVariable()) - 1));
+                if (objectStore != null) actionSet.AddAction(objectStore.ModifyVariable(Operation.RemoveFromArrayByIndex, Element.CountOf(objectStore.GetVariable()) - 1));
                 RecursiveStack.PopParameterStacks(actionSet, ParameterVars);
             }
 
