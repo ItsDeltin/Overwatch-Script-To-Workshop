@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.IO;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
@@ -152,7 +153,7 @@ namespace Deltin.Deltinteger.Elements
 
     public class ElementRoot
     {
-        public static ElementRoot Instance { get; }
+        public static ElementRoot Instance { get; } = Get(File.ReadAllText(Path.Combine(Program.ExeFolder, "Elements.json")));
 
         [JsonProperty("values")]
         public ElementJsonValue[] Values;
@@ -293,7 +294,7 @@ namespace Deltin.Deltinteger.Elements
 
         public string ToWorkshop(OutputLanguage language, ToWorkshopContext context) => Name;
 
-        public string CodeName() => Alias ?? Name;
+        public string CodeName() => Alias ?? Name.Replace(" ", "");
 
         public bool EqualTo(IWorkshopTree other)
         {

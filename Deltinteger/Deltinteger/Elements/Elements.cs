@@ -415,7 +415,9 @@ namespace Deltin.Deltinteger.Elements
             Documentation = function.Documentation;
 
             // Get the parameters.
-            Parameters = new CodeParameter[function.Parameters.Length];
+            if (function.Parameters == null) Parameters = new CodeParameter[0];
+            else Parameters = new CodeParameter[function.Parameters.Length];
+            
             for (int i = 0; i < Parameters.Length; i++) 
             {
                 // Get the name and documentation.

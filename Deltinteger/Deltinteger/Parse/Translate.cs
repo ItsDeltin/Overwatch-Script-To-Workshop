@@ -367,14 +367,13 @@ namespace Deltin.Deltinteger.Parse
         public CodeType AnyArray() => new ArrayType(null);
         public CodeType Boolean() => null;
         public CodeType Number() => null;
+        public CodeType String() => null;
         public CodeType Player() => null;
         public CodeType Players() => null;
         public CodeType PlayerArray() => null;
         public CodeType Vector() => VectorType.Instance;
         public CodeType PlayerOrVector() => null;
-        public CodeType Button() => throw new NotImplementedException();
-        public CodeType ConstButton() => throw new NotImplementedException();
-        public CodeType EnumType(string typeName) => throw new NotImplementedException();
+        public CodeType Button() => null;
     }
 
     public interface IComponent

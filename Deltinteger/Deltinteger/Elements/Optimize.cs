@@ -373,6 +373,108 @@ namespace Deltin.Deltinteger.Elements
                     return Math.Sin(a.Value);
                 return element;
             }},
+            {"Square Root", element => {
+                if (element.ParameterValues[0] is NumberElement a)
+                    return Math.Sqrt(a.Value);
+
+                return element;
+            }},
+            {"Subtract", element => OptimizeAddOperation(
+                element,
+                op       : (a, b) => a - b,
+                areEqual : (a, b) => 0,
+                false
+            )},
+            {"Tangent From Degrees", element => {
+                if (element.ParameterValues[0] is NumberElement a)
+                    return Math.Tan(a.Value * (Math.PI / 180));
+
+                return element;
+            }},
+            {"Tangent From Radians", element => {
+                if (element.ParameterValues[0] is NumberElement a)
+                    return Math.Tan(a.Value);
+
+                return element;
+            }},
+            {"Value In Array", element => {
+                if (element.ParameterValues[1] is NumberElement num && num.Value == 0)
+                    return Element.FirstOf(element.ParameterValues[0]);
+                
+                return element;
+            }},
+            {"Vector", element => {
+                if (element.ParameterValues[0] is NumberElement xNum &&
+                    element.ParameterValues[1] is NumberElement yNum &&
+                    element.ParameterValues[2] is NumberElement zNum)
+                {
+                    double x = xNum.Value, y = yNum.Value, z = zNum.Value;
+
+                    if (x == 0  && y == 1  && z == 0 ) return Element.Part("Up");
+                    if (x == 0  && y == -1 && z == 0 ) return Element.Part("Down");
+                    if (x == -1 && y == 0  && z == 0 ) return Element.Part("Right");
+                    if (x == 1  && y == 0  && z == 0 ) return Element.Part("Left");
+                    if (x == 0  && y == 0  && z == 1 ) return Element.Part("Forward");
+                    if (x == 0  && y == 0  && z == -1) return Element.Part("Backward");
+                }
+
+                // Convert zeros to Empty Array.
+                IWorkshopTree oX = element.ParameterValues[0];
+                IWorkshopTree oY = element.ParameterValues[1];
+                IWorkshopTree oZ = element.ParameterValues[2];
+                if (oX is NumberElement oXNum && oXNum.Value == 0) oX = Element.EmptyArray();
+                if (oY is NumberElement oYNum && oYNum.Value == 0) oY = Element.EmptyArray();
+                if (oZ is NumberElement oZNum && oZNum.Value == 0) oZ = Element.EmptyArray();
+                if (oX != element.ParameterValues[0] ||
+                    oY != element.ParameterValues[1] ||
+                    oZ != element.ParameterValues[2]) return Element.Vector(oX, oY, oZ);
+
+                return element;
+            }},
+            {"Vector Towards", element => {
+                Element a = (Element)element.ParameterValues[0];
+                Element b = (Element)element.ParameterValues[1];
+
+                if (a.TryGetConstant(out Vertex vertA) && b.TryGetConstant(out Vertex vertB))
+                    return vertA.VectorTowards(vertB).ToVector();
+
+                return element;
+            }},
+            {"Vertical Angle From Direction", element => {
+                if (((Element)element.ParameterValues[0]).TryGetConstant(out Vertex vertex))
+                {
+                    double result = -Math.Asin(vertex.Y) * (180 / Math.PI);
+                    if (result == -0)
+                        result = 0;
+                    return result;
+                }
+
+                return element;
+            }},
+            {"X Component Of", element => {
+                Element a = (Element)element.ParameterValues[0];
+
+                if (a.Function.Name == "Vector")
+                    return (Element)a.ParameterValues[0];
+                
+                return element;
+            }},
+            {"Y Component Of", element => {
+                Element a = (Element)element.ParameterValues[0];
+
+                if (a.Function.Name == "Vector")
+                    return (Element)a.ParameterValues[1];
+                
+                return element;
+            }},
+            {"Z Component Of", element => {
+                Element a = (Element)element.ParameterValues[0];
+
+                if (a.Function.Name == "Vector")
+                    return (Element)a.ParameterValues[2];
+                
+                return element;
+            }}
         };
 
         static Element OptimizeAddOperation(
