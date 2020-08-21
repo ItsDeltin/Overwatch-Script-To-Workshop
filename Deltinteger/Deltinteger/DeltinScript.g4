@@ -200,6 +200,7 @@ LOCALIZED     : '@' ;
 
 // Keywords
 RULE_WORD : 'rule'      ;
+DEFINE    : 'define'    ;
 IF        : 'if'        ;
 ELSE      : 'else'      ;
 FOR       : 'for'       ;
@@ -241,7 +242,6 @@ DEFAULT   : 'default'   ;
 BASE      : 'base'      ;
 IS        : 'is'		;
 INTERFACE : 'interface' ;
-DEFINE    : 'define';
 
 INS             : '=>'  ;
 EQUALS          : '='  ;

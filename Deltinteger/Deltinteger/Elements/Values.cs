@@ -57,26 +57,26 @@ namespace Deltin.Deltinteger.Elements
         }
     }
 
-    [ElementData("All Dead Players", ValueType.Player)]
+    [ElementData("All Dead Players", ValueType.Players)]
     [Parameter("Team", ValueType.Team, typeof(V_TeamVar))]
     public class V_AllDeadPlayers : Element {}
 
     [ElementData("All Heroes", ValueType.Hero)]
     public class V_AllHeroes : Element {}
 
-    [ElementData("All Living Players", ValueType.Player)]
+    [ElementData("All Living Players", ValueType.Players)]
     [Parameter("Team", ValueType.Team, typeof(V_TeamVar))]
     public class V_AllLivingPlayers : Element {}
 
-    [ElementData("All Players", ValueType.Player)]
+    [ElementData("All Players", ValueType.Players)]
     [Parameter("Team", ValueType.Team, typeof(V_TeamVar))]
     public class V_AllPlayers : Element {}
 
-    [ElementData("All Players Not On Objective", ValueType.Player)]
+    [ElementData("All Players Not On Objective", ValueType.Players)]
     [Parameter("Team", ValueType.Team, typeof(V_TeamVar))]
     public class V_AllPlayersNotOnObjective : Element {}
 
-    [ElementData("All Players On Objective", ValueType.Player)]
+    [ElementData("All Players On Objective", ValueType.Players)]
     [Parameter("Team", ValueType.Team, typeof(V_TeamVar))]
     public class V_AllPlayersOnObjective : Element {}
 
@@ -726,7 +726,7 @@ namespace Deltin.Deltinteger.Elements
     [ElementData("Host Player", ValueType.Player)]
     public class V_HostPlayer : Element {}
 
-    [ElementData("Index Of Array Value", ValueType.Any)]
+    [ElementData("Index Of Array Value", ValueType.Number)]
     [Parameter("Array", ValueType.Any, null)]
     [Parameter("Value", ValueType.Any, typeof(V_Number))]
     public class V_IndexOfArrayValue : Element {}
@@ -1228,23 +1228,23 @@ namespace Deltin.Deltinteger.Elements
     [VarRefParameter("Variable", false)]
     public class V_PlayerVariable : Element {}
 
-    [ElementData("Players In Slot", ValueType.Player)]
+    [ElementData("Players In Slot", ValueType.Players)]
     [Parameter("Slot", ValueType.Number, typeof(V_Number))]
     [Parameter("Team", ValueType.Team, typeof(V_TeamVar))]
     public class V_PlayersInSlot : Element {}
 
-    [ElementData("Players In View Angle", ValueType.Player)]
+    [ElementData("Players In View Angle", ValueType.Players)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     [Parameter("Team", ValueType.Team, typeof(V_TeamVar))]
     [Parameter("View Angle", ValueType.Number, typeof(V_Number))]
     public class V_PlayersInViewAngle : Element {}
 
-    [ElementData("Players On Hero", ValueType.Player)]
+    [ElementData("Players On Hero", ValueType.Players)]
     [Parameter("Hero", ValueType.Hero, typeof(V_HeroVar))]
     [Parameter("Team", ValueType.Team, typeof(V_TeamVar))]
     public class V_PlayersOnHero : Element {}
 
-    [ElementData("Players Within Radius", ValueType.Player)]
+    [ElementData("Players Within Radius", ValueType.Players)]
     [Parameter("Center", ValueType.Vector, typeof(V_Vector))]
     [Parameter("Radius", ValueType.Number, typeof(V_Number))]
     [Parameter("Team", ValueType.Team, typeof(V_TeamVar))]
@@ -1769,7 +1769,7 @@ namespace Deltin.Deltinteger.Elements
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     public class V_VelocityOf : Element {}
 
-    [ElementData("Vertical Angle From Direction", ValueType.Vector)]
+    [ElementData("Vertical Angle From Direction", ValueType.Number)]
     [Parameter("Direction", ValueType.VectorAndPlayer, typeof(V_Vector))]
     public class V_VerticalAngleFromDirection : Element
     {

@@ -40,6 +40,13 @@ namespace Deltin.Deltinteger.Parse
                     return true;
             return false;
         }
+        public override bool Is(CodeType type)
+        {
+            foreach (CodeType included in IncludedTypes)
+                if (included.Is(type))
+                    return true;
+            return false;
+        }
         public override void AddObjectVariablesToAssigner(IWorkshopTree reference, VarIndexAssigner assigner)
         {
             foreach (CodeType included in IncludedTypes)

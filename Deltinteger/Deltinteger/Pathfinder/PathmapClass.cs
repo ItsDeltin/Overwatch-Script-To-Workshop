@@ -662,7 +662,7 @@ namespace Deltin.Deltinteger.Pathfinder
             Parameters = new CodeParameter[] {
                 new CodeParameter("player", "The player to get the next node of.")
             },
-            DoesReturnValue = true,
+            ReturnType = NumberType.Instance,
             Action = (actionSet, methodCall) => Comp(actionSet).Current.Get(methodCall.Get(0))
         };
 
@@ -732,7 +732,7 @@ namespace Deltin.Deltinteger.Pathfinder
                 .Add(" This will return true if the attribute is anywhere in their path, not just the one they are currently walking towards.")
                 .Add(" This will not return true if the attribute is on the segment the player is currently walking on, instead for this case use ").Code("CurrentSegmentAttribute").Add(".")
                 .ToString(),
-            DoesReturnValue = true,
+            ReturnType = BooleanType.Instance,
             Parameters = new CodeParameter[] {
                 new CodeParameter("player", "The player to check."),
                 new CodeParameter("attribute", "The segment to check.")

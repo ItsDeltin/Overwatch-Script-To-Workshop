@@ -69,12 +69,14 @@ namespace Deltin.Deltinteger.Parse
             CodeType checkType = this;
             while (checkType != null)
             {
-                if (checkType == type) return true;
+                if (type.Is(checkType)) return true;
                 checkType = checkType.Extends;
             }
 
             return false;
         }
+
+        public virtual bool Is(CodeType type) => this == type;
 
         // Static
         public abstract Scope ReturningScope();
@@ -156,6 +158,8 @@ namespace Deltin.Deltinteger.Parse
         public static CodeType GetCodeTypeFromContext(ParseInfo parseInfo, DeltinScriptParser.Code_typeContext typeContext)
         {
             if (typeContext == null) throw new ArgumentNullException(nameof(typeContext));
+
+            if (typeContext.DEFINE() != null) return parseInfo.TranslateInfo.Types.GetInstance<DynamicType>();
 
             CodeType type = parseInfo.TranslateInfo.Types.GetCodeType(typeContext.PART().GetText(), parseInfo.Script.Diagnostics, DocRange.GetRange(typeContext));
             if (type == null) return ObjectType.Instance;
