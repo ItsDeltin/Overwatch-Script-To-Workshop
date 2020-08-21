@@ -22,7 +22,7 @@ namespace Deltin.Deltinteger.Elements
         }
         public Condition(Element condition) : this(condition, Operator.Equal, Element.True()) {}
 
-        public string ToWorkshop(OutputLanguage language, bool optimize)
+        public void ToWorkshop(WorkshopBuilder builder, bool optimize)
         {
             Element a = Value1;
             Element b = Value2;
@@ -32,7 +32,13 @@ namespace Deltin.Deltinteger.Elements
                 b = b.Optimize();
             }
             
-            return a.ToWorkshop(language, ToWorkshopContext.ConditionValue) + " " + CompareOperator.ToWorkshop(language, ToWorkshopContext.Other) + " " + b.ToWorkshop(language, ToWorkshopContext.ConditionValue);
+            a.ToWorkshop(builder, ToWorkshopContext.ConditionValue);
+            builder.Append(" ");
+            CompareOperator.ToWorkshop(builder, ToWorkshopContext.Other);
+            builder.Append(" ");
+            b.ToWorkshop(builder, ToWorkshopContext.ConditionValue);
+            builder.Append(";");
+            builder.AppendLine();
         }
 
         public int ElementCount(bool optimized)

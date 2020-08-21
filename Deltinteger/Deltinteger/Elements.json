@@ -3557,7 +3557,8 @@
     },
     {
       "name": "End",
-      "hidden": true
+      "hidden": true,
+      "indent": "outdent"
     },
     {
       "name": "For Global Variable",
@@ -3578,7 +3579,8 @@
           "defaultValue": 0.0
         }
       },
-      "hidden": true
+      "hidden": true,
+      "indent": "indent"
     },
     {
       "name": "For Player Variable",
@@ -3603,7 +3605,8 @@
           "defaultValue": 0.0
         }
       },
-      "hidden": true
+      "hidden": true,
+      "indent": "indent"
     },
     {
       "name": "Go To Assemble Heroes",
@@ -3637,7 +3640,8 @@
           "defaultValue": "Compare"
         }
       },
-      "hidden": true
+      "hidden": true,
+      "indent": "indent"
     },
     {
       "name": "Else If",
@@ -5049,7 +5053,8 @@
           "defaultValue": "Compare"
         }
       },
-      "hidden": true
+      "hidden": true,
+      "indent": "indent"
     },
     {
       "name": "Continue",

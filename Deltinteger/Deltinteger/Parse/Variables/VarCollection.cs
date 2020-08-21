@@ -181,13 +181,13 @@ namespace Deltin.Deltinteger.Parse
             builder.AppendKeyword("global"); builder.Append(":"); builder.AppendLine();
             builder.Indent();
             WriteCollection(builder, variableList(true));
-            builder.Unindent();
+            builder.Outdent();
 
             builder.AppendKeyword("player"); builder.Append(":"); builder.AppendLine();
             builder.Indent();
             WriteCollection(builder, variableList(false));
-            builder.Unindent();
-            builder.Unindent();
+            builder.Outdent();
+            builder.Outdent();
             builder.AppendLine("}");
 
             bool anyExtendedGlobal = ExtendedVariableList(true).Any(v => v != null);

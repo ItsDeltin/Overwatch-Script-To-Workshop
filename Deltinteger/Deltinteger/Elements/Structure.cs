@@ -269,6 +269,9 @@ namespace Deltin.Deltinteger.Elements
     {
         [JsonProperty("return-value")]
         public string ReturnValue;
+
+        [JsonProperty("indent")]
+        public string Indentation;
     }
 
     public class ElementParameter
@@ -331,7 +334,7 @@ namespace Deltin.Deltinteger.Elements
         public ElementEnumMember GetMemberFromAlias(string name) => Members.FirstOrDefault(m => m.CodeName() == name) ?? throw new KeyNotFoundException("The enum member '" + name + "' was not found.");
         public ElementEnumMember GetMemberFromWorkshop(string name) => Members.FirstOrDefault(m => m.Name == name) ?? throw new KeyNotFoundException("The enum member '" + name + "' was not found.");
 
-        public bool ConvertableToElement() => new string[] { "Map", "GameMode", "Team", "Hero", "Button" }.Contains(Name);
+        public bool ConvertableToElement() => new string[] { "Map", "GameMode", "Team", "Hero"/*, "Button"*/ }.Contains(Name);
     }
 
     public class ElementEnumMember : IWorkshopTree
@@ -342,7 +345,7 @@ namespace Deltin.Deltinteger.Elements
 
         public override string ToString() => Name;
 
-        public string ToWorkshop(OutputLanguage language, ToWorkshopContext context) => Name;
+        public void ToWorkshop(WorkshopBuilder builder, ToWorkshopContext context) => builder.AppendKeyword(Name);
 
         public string CodeName() => Alias ?? Name.Replace(" ", "");
 
@@ -359,7 +362,7 @@ namespace Deltin.Deltinteger.Elements
                 case "GameMode": return Element.Part("Game Mode", this);
                 case "Team": return Element.Part("Team", this);
                 case "Hero": return Element.Part("Hero", this);
-                case "Button": return Element.Part("Button", this);
+                // case "Button": return Element.Part("Button", this);
                 default: throw new NotImplementedException(Enum.Name + " cannot be converted to element.");
             }
         }

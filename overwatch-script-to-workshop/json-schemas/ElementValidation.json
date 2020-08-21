@@ -34,6 +34,12 @@
                             "return-value": {
                                 "description": "The value that is returned from this action. For an action like 'Create Effect', you may want to set this to 'Last Created Entity'.",
                                 "type": "string"
+                            },
+                            "indent": {
+                                "description": "The indentation of the action. Is neutral by default.",
+                                "type": "string",
+                                "enum": ["indent", "outdent", "neutral"],
+                                "default": "indent"
                             }
                         }
                     }

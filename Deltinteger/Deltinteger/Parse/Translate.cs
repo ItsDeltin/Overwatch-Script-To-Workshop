@@ -283,7 +283,7 @@ namespace Deltin.Deltinteger.Parse
                 if (i != WorkshopRules.Count - 1) result.AppendLine();
             }
             
-            WorkshopCode = result.ToString();
+            WorkshopCode = result.GetResult();
         }
 
         public ScriptFile ScriptFromUri(Uri uri) => Importer.ScriptFiles.FirstOrDefault(script => script.Uri.Compare(uri));

@@ -34,7 +34,7 @@ namespace Deltin.Deltinteger.Parse
             foreach (Subroutine routine in Subroutines)
                 builder.AppendLine(routine.ID.ToString() + ": " + routine.Name);
 
-            builder.Unindent();
+            builder.Outdent();
             builder.AppendLine("}");
             builder.AppendLine();
         }

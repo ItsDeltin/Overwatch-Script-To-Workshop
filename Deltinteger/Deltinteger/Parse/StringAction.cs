@@ -146,7 +146,7 @@ namespace Deltin.Deltinteger.Parse
             for (int i = 0; i < parsed.Length; i++)
                 parsed[i] = Segments[i].Parse(actionSet, parameters);
             
-            return WorkshopCustomString.Join(parsed);
+            return StringElement.Join(parsed);
         }
 
         public static CustomStringGroup ParseCustomString(string value, int parameterCount)
@@ -250,13 +250,13 @@ namespace Deltin.Deltinteger.Parse
             ParameterIndexes = parameterIndexes;
         }
 
-        public WorkshopCustomString Parse(ActionSet actionSet, IWorkshopTree[] parameters)
+        public StringElement Parse(ActionSet actionSet, IWorkshopTree[] parameters)
         {
             IWorkshopTree[] resultingParameters = new IWorkshopTree[ParameterIndexes.Length];
             for (int i = 0; i < resultingParameters.Length; i++)
                 resultingParameters[i] = parameters[ParameterIndexes[i]];
             
-            return new WorkshopCustomString(Text, resultingParameters);
+            return new StringElement(Text, resultingParameters);
         }
     }
 
@@ -393,7 +393,7 @@ namespace Deltin.Deltinteger.Parse
                 ;
         }
 
-        public IWorkshopTree Parse(ActionSet actionSet, IWorkshopTree[] parameters) => new WorkshopString(String, ParameterValues.Select(pv => (Element)pv.Parse(actionSet, parameters)).ToArray());
+        public IWorkshopTree Parse(ActionSet actionSet, IWorkshopTree[] parameters) => new StringElement(String, true, ParameterValues.Select(pv => (Element)pv.Parse(actionSet, parameters)).ToArray());
     }
 
     class LocalizedStringOrExpression

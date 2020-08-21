@@ -50,25 +50,49 @@ namespace Deltin.Deltinteger.Elements
             ParameterValues = parameterValues;
         }
 
-        public virtual string ToWorkshop(OutputLanguage language, ToWorkshopContext context)
-        {            
-            string result = "";
+        public virtual void ToWorkshop(WorkshopBuilder b, ToWorkshopContext context)
+        {
+            if (CustomConverters.Converters.TryGetValue(Function.Name, out var converter))
+            {
+                converter(b, this);
+                return;
+            }
+
+            var action = Function as ElementJsonAction;
+            if (action != null && action.Indentation == "outdent") b.Outdent();
 
             // Add a comment and newline
-            if (Comment != null) result += $"\"{Comment}\"\n";
+            if (Comment != null) b.Append($"\"{Comment}\"");
 
             // Add the disabled tag if the element is disabled.
-            if (Function is ElementJsonAction && Disabled) result += LanguageInfo.Translate(language, "disabled") + " ";
+            if (Function is ElementJsonAction && Disabled) b.AppendKeyword("disabled").Append(" ");
 
             // Add the name of the element.
-            result += LanguageInfo.Translate(language, Function.Name);
+            b.AppendKeyword(Function.Name);
 
             // Add the parameters.
             AddMissingParameters();
-            var parameters = ParameterValues.Select(p => p.ToWorkshop(language, ToWorkshopContext.NestedValue));
-            if (parameters.Count() != 0) result += "(" + string.Join(", ", parameters) + ")";
+            if (ParameterValues.Length > 0)
+            {
+                b.Append("(");
+                ParametersToWorkshop(b);
+                b.Append(")");
+            }
 
-            return result;
+            if (action != null)
+            {
+                b.AppendLine(";");
+                if (action.Indentation == "indent") b.Indent();
+            }
+        }
+
+        protected void ParametersToWorkshop(WorkshopBuilder b)
+        {
+            for (int i = 0; i < ParameterValues.Length; i++)
+            {
+                ParameterValues[i].ToWorkshop(b, ToWorkshopContext.NestedValue);
+                if (i != ParameterValues.Length - 1) b.Append(", ");
+            }
         }
 
         /// <summary>Makes sure no parameter values are null.</summary>
@@ -112,6 +136,10 @@ namespace Deltin.Deltinteger.Elements
         public Element Optimize()
         {
             OptimizeChildren();
+
+            if (OptimizeElements.Optimizations.TryGetValue(Function.Name, out var optimizer))
+                return optimizer(this);
+            
             return this;
         }
 
@@ -189,7 +217,7 @@ namespace Deltin.Deltinteger.Elements
         public static Element FirstOf(IWorkshopTree array) => Part("First Of", array);
         public static Element LastOf(IWorkshopTree array) => Part("Last Of", array);
         public static Element CountOf(IWorkshopTree array) => Part("Count Of", array);
-        public static Element Contains(IWorkshopTree array, IWorkshopTree value) => Part("Array Contains", array);
+        public static Element Contains(IWorkshopTree array, IWorkshopTree value) => Part("Array Contains", array, value);
         public static Element ValueInArray(IWorkshopTree array, IWorkshopTree index) => Part("Value In Array", array, index);
         public static Element Filter(IWorkshopTree array, IWorkshopTree condition) => Part("Filtered Array", array, condition);
         public static Element Sort(IWorkshopTree array, IWorkshopTree rank) => Part("Sorted Array", array, rank);
@@ -305,7 +333,9 @@ namespace Deltin.Deltinteger.Elements
 
         public bool EqualTo(IWorkshopTree other) => other is OperatorElement oe && oe.Operator == Operator;
 
-        public string ToWorkshop(OutputLanguage language, ToWorkshopContext context)
+        public void ToWorkshop(WorkshopBuilder b, ToWorkshopContext context) => b.Append(ToString());
+
+        public override string ToString()
         {
             switch (Operator)
             {
@@ -331,7 +361,7 @@ namespace Deltin.Deltinteger.Elements
 
         public bool EqualTo(IWorkshopTree other) => other is OperationElement oe && oe.Operation == Operation;
 
-        public string ToWorkshop(OutputLanguage language, ToWorkshopContext context) => ElementRoot.Instance.GetEnumValue("Operation", Operation.ToString()).ToWorkshop(language, context);
+        public void ToWorkshop(WorkshopBuilder b, ToWorkshopContext context) => ElementRoot.Instance.GetEnumValue("Operation", Operation.ToString()).ToWorkshop(b, context);
     }
 
     public class NumberElement : Element
@@ -350,36 +380,8 @@ namespace Deltin.Deltinteger.Elements
             return true;
         }
 
-        public override string ToWorkshop(OutputLanguage language, ToWorkshopContext context) => Value.ToString();
+        public override void ToWorkshop(WorkshopBuilder b, ToWorkshopContext context) => b.Append(Value.ToString());
         public override bool EqualTo(IWorkshopTree other) => base.EqualTo(other) && ((NumberElement)other).Value == Value;
-    }
-
-    public class StringElement : Element
-    {
-        public string Value { get; set; }
-        public bool Localized { get; set; }
-
-        public StringElement(string value, bool localized, params Element[] formats) : base(ElementRoot.Instance.GetFunction("Custom String"), formats)
-        {
-            Value = value;
-            Localized = localized;
-        }
-        public StringElement(string value, params Element[] formats) : this(value, false, formats) {}
-        public StringElement() : this(null, false) {}
-
-        public override string ToWorkshop(OutputLanguage language, ToWorkshopContext context)
-        {
-            string result = Localized ? LanguageInfo.Translate(language, "String") : LanguageInfo.Translate(language, "Custom String");
-            result += "(\"" + Value + "\"";
-
-            if (ParameterValues.Length > 0)
-                result += ", " + string.Join(", ", ParameterValues.Select(v => v.ToWorkshop(language, ToWorkshopContext.NestedValue)));
-            
-            result += ")";
-            return result;
-        }
-
-        public override bool EqualTo(IWorkshopTree other) => base.EqualTo(other) && ((StringElement)other).Value == Value;
     }
 
     public enum ElementIndent
@@ -473,6 +475,9 @@ namespace Deltin.Deltinteger.Elements
             if (!DoesReturnValue)
             {
                 actionSet.AddAction(element);
+
+                if (((ElementJsonAction)_function).ReturnValue != null)
+                    return Element.Part(((ElementJsonAction)_function).ReturnValue);
                 return null;
             }
             else return element;

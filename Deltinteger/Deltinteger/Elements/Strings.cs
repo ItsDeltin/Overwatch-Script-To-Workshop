@@ -4,15 +4,34 @@ using System.Linq;
 
 namespace Deltin.Deltinteger.Elements
 {
-    public class WorkshopCustomString : Element
+    public class StringElement : Element
     {
-        public string Text { get; }
+        public string Value { get; set; }
+        public bool Localized { get; set; }
 
-        public WorkshopCustomString(string text, params IWorkshopTree[] format) : base(ElementRoot.Instance.GetFunction("Custom String"), format)
+        public StringElement(string value, bool localized, params IWorkshopTree[] formats) : base(ElementRoot.Instance.GetFunction("Custom String"), formats)
         {
-            Text = text;
+            Value = value;
+            Localized = localized;
         }
-        public WorkshopCustomString() : this("") {}
+        public StringElement(string value, params IWorkshopTree[] formats) : this(value, false, formats) {}
+        public StringElement() : this(null, false) {}
+
+        public override void ToWorkshop(WorkshopBuilder b, ToWorkshopContext context)
+        {
+            b.AppendKeyword(Localized ? "String" : "Custom String");
+            b.Append("(\"" + (Localized ? b.Kw(Value) : Value) + "\"");
+
+            if (ParameterValues.Length > 0)
+            {
+                b.Append(", ");
+                ParametersToWorkshop(b);
+            }
+            
+            b.Append(")");
+        }
+
+        public override bool EqualTo(IWorkshopTree other) => base.EqualTo(other) && ((StringElement)other).Value == Value && ((StringElement)other).Localized == Localized;
 
         public static IWorkshopTree Join(params IWorkshopTree[] elements)
         {
@@ -26,54 +45,17 @@ namespace Deltin.Deltinteger.Elements
             {
                 if (list.Count >= 3)
                 {
-                    list[0] = new WorkshopCustomString(join3, list[0], list[1], list[2]);
+                    list[0] = new StringElement(join3, list[0], list[1], list[2]);
                     list.RemoveRange(1, 2);
                 }
                 else if (list.Count >= 2)
                 {
-                    list[0] = new WorkshopCustomString(join2, list[0], list[1], Element.Null());
+                    list[0] = new StringElement(join2, list[0], list[1], Element.Null());
                     list.RemoveAt(1);
                 }
                 else throw new Exception();
             }
             return list[0];
-        }
-
-        public override bool EqualTo(IWorkshopTree other) => base.EqualTo(other) && ((WorkshopCustomString)other).Text == Text;
-
-        public override string ToWorkshop(OutputLanguage language, ToWorkshopContext context)
-        {
-            string toWorkshop = Function.Name + "(\"" + Text + "\"";
-
-            if (ParameterValues != null && ParameterValues.Length > 0)
-                toWorkshop += ", " + string.Join(", ", ParameterValues.Select(p => p.ToWorkshop(language, ToWorkshopContext.NestedValue)));
-            
-            toWorkshop += ")";
-            return toWorkshop;
-        }
-    }
-
-    public class WorkshopString : Element
-    {
-        public string Text { get; }
-
-        public WorkshopString(string text, params Element[] stringValues) : base(ElementRoot.Instance.GetFunction("String"), stringValues)
-        {
-            Text = text;
-        }
-        public WorkshopString() : this("") {}
-
-        public override bool EqualTo(IWorkshopTree other) => base.EqualTo(other) && ((WorkshopString)other).Text == Text;
-
-        public override string ToWorkshop(OutputLanguage language, ToWorkshopContext context)
-        {
-            string toWorkshop = Function.Name + "(\"" + Text + "\"";
-
-            if (ParameterValues != null && ParameterValues.Length > 0)
-                toWorkshop += ", " + string.Join(", ", ParameterValues.Select(p => p.ToWorkshop(language, ToWorkshopContext.NestedValue)));
-            
-            toWorkshop += ")";
-            return toWorkshop;
         }
     }
 }
