@@ -542,7 +542,7 @@ namespace Deltin.Deltinteger.Decompiler.TextToElement
                 do
                 {
                     ElementParameter parameter = null;
-                    if (currentParameter < func.Parameters.Length)
+                    if (func.Parameters != null && currentParameter < func.Parameters.Length)
                         parameter = func.Parameters[currentParameter];
 
                     // Variable reference

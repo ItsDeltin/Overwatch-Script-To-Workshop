@@ -191,7 +191,7 @@ namespace Deltin.Deltinteger.Models
 
             actionSet.AddAction(Element.Part("Create Beam Effect",
                 visibleTo,
-                ElementRoot.Instance.GetEnumValue("BeamType", "Grapple Beam"),
+                ElementRoot.Instance.GetEnumValue("BeamType", "GrappleBeam"),
                 location + pos1,
                 location + pos2,
                 ElementRoot.Instance.GetEnumValue("Color", "Red"),

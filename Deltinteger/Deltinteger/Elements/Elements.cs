@@ -76,8 +76,9 @@ namespace Deltin.Deltinteger.Elements
         {
             List<IWorkshopTree> parameters = new List<IWorkshopTree>();
 
-            for (int i = 0; i < Function.Parameters.Length || i < ParameterValues.Length; i++)
-                parameters.Add(ParameterValues?.ElementAtOrDefault(i) ?? GetDefaultParameter(Function.Parameters[i]));
+            if (Function.Parameters != null)
+                for (int i = 0; i < Function.Parameters.Length || i < ParameterValues.Length; i++)
+                    parameters.Add(ParameterValues?.ElementAtOrDefault(i) ?? Function.Parameters[i].GetDefaultValue() ?? throw new Exception("Null argument"));
             
             ParameterValues = parameters.ToArray();
         }
@@ -210,7 +211,7 @@ namespace Deltin.Deltinteger.Elements
         public static Element Else() => Part("Else");
         public static Element End() => Part("End");
         public static Element While(IWorkshopTree expression) => Part("While", expression);
-        public static Element Wait() => Part("Wait", new NumberElement(Constants.MINIMUM_WAIT), ElementRoot.Instance.GetEnumValue("WaitBehavior", "Ignore Condition"));
+        public static Element Wait() => Part("Wait", new NumberElement(Constants.MINIMUM_WAIT), ElementRoot.Instance.GetEnumValueFromWorkshop("WaitBehavior", "Ignore Condition"));
         public static Element XOf(IWorkshopTree expression) => Part("X Component Of", expression);
         public static Element YOf(IWorkshopTree expression) => Part("Y Component Of", expression);
         public static Element ZOf(IWorkshopTree expression) => Part("Z Component Of", expression);
@@ -222,7 +223,7 @@ namespace Deltin.Deltinteger.Elements
         public static Element PositionOf(IWorkshopTree player) => Part("Position Of", player);
         public static Element EyePosition(IWorkshopTree player) => Part("Eye Position", player);
         public static Element FacingDirectionOf(IWorkshopTree player) => Part("Facing Direction Of", player);
-        public static Element RoundToInt(IWorkshopTree value, Rounding rounding) => Part("Round To Integer", value, ElementRoot.Instance.GetEnumValue("Rounding", rounding == Rounding.Down ? "Down" : rounding == Rounding.Up ? "Up" : "To Nearest"));
+        public static Element RoundToInt(IWorkshopTree value, Rounding rounding) => Part("Round To Integer", value, ElementRoot.Instance.GetEnumValueFromWorkshop("Rounding", rounding == Rounding.Down ? "Down" : rounding == Rounding.Up ? "Up" : "To Nearest"));
         public static Element CustomString(string value, params Element[] formats) => new StringElement(value, formats);
         public static Element LastEntity() => Part("Last Entity");
         public static Element RaycastPosition(IWorkshopTree start, IWorkshopTree end, IWorkshopTree playersToInclude = null, IWorkshopTree playersToExclude = null, IWorkshopTree includePlayerOwnedObjects = null)
@@ -240,13 +241,13 @@ namespace Deltin.Deltinteger.Elements
                 header ?? Null(),
                 subheader ?? Null(),
                 text ?? Null(),
-                ElementRoot.Instance.GetEnumValue("Location", location ?? "Top"),
+                ElementRoot.Instance.GetEnumValueFromWorkshop("Location", location ?? "Top"),
                 Element.Num(sortOrder == null ? 0 : sortOrder.Value),
-                ElementRoot.Instance.GetEnumValue("Color", headerColor ?? "White"),
-                ElementRoot.Instance.GetEnumValue("Color", subheaderColor ?? "White"),
-                ElementRoot.Instance.GetEnumValue("Color", textColor ?? "White"),
-                ElementRoot.Instance.GetEnumValue("HudTextRev", reevaluation ?? "Visible To And String"),
-                ElementRoot.Instance.GetEnumValue("Spectators", spectators ?? "Default Visibility")
+                ElementRoot.Instance.GetEnumValueFromWorkshop("Color", headerColor ?? "White"),
+                ElementRoot.Instance.GetEnumValueFromWorkshop("Color", subheaderColor ?? "White"),
+                ElementRoot.Instance.GetEnumValueFromWorkshop("Color", textColor ?? "White"),
+                ElementRoot.Instance.GetEnumValueFromWorkshop("HudTextRev", reevaluation ?? "Visible To And String"),
+                ElementRoot.Instance.GetEnumValueFromWorkshop("Spectators", spectators ?? "Default Visibility")
             );
 
         public static Element operator +(Element a, Element b) => Part("Add", a, b);
@@ -273,12 +274,6 @@ namespace Deltin.Deltinteger.Elements
         public static implicit operator Element(double number) => new NumberElement(number);
         public static implicit operator Element(int number) => new NumberElement(number);
         public static implicit operator Element(bool boolean) => Part(boolean.ToString());
-
-        public static IWorkshopTree GetDefaultParameter(ElementParameter parameter)
-        {
-            // todo
-            return null;
-        }
 
         // Creates an array from a list of values.
         public static Element CreateArray(params IWorkshopTree[] values)
@@ -336,11 +331,7 @@ namespace Deltin.Deltinteger.Elements
 
         public bool EqualTo(IWorkshopTree other) => other is OperationElement oe && oe.Operation == Operation;
 
-        public string ToWorkshop(OutputLanguage language, ToWorkshopContext context)
-        {
-            // todo
-            throw new NotImplementedException();
-        }
+        public string ToWorkshop(OutputLanguage language, ToWorkshopContext context) => ElementRoot.Instance.GetEnumValue("Operation", Operation.ToString()).ToWorkshop(language, context);
     }
 
     public class NumberElement : Element
@@ -359,25 +350,33 @@ namespace Deltin.Deltinteger.Elements
             return true;
         }
 
-        public override string ToWorkshop(OutputLanguage language, ToWorkshopContext context)
-        {
-            return base.ToWorkshop(language, context);
-        }
-
+        public override string ToWorkshop(OutputLanguage language, ToWorkshopContext context) => Value.ToString();
         public override bool EqualTo(IWorkshopTree other) => base.EqualTo(other) && ((NumberElement)other).Value == Value;
     }
 
     public class StringElement : Element
     {
         public string Value { get; set; }
+        public bool Localized { get; set; }
 
-        public StringElement(string value, params Element[] formats) : base(ElementRoot.Instance.GetFunction("Custom String"), formats) {}
-        public StringElement() : this(null) {}
+        public StringElement(string value, bool localized, params Element[] formats) : base(ElementRoot.Instance.GetFunction("Custom String"), formats)
+        {
+            Value = value;
+            Localized = localized;
+        }
+        public StringElement(string value, params Element[] formats) : this(value, false, formats) {}
+        public StringElement() : this(null, false) {}
 
         public override string ToWorkshop(OutputLanguage language, ToWorkshopContext context)
         {
-            // TODO
-            throw new NotImplementedException();
+            string result = Localized ? LanguageInfo.Translate(language, "String") : LanguageInfo.Translate(language, "Custom String");
+            result += "(\"" + Value + "\"";
+
+            if (ParameterValues.Length > 0)
+                result += ", " + string.Join(", ", ParameterValues.Select(v => v.ToWorkshop(language, ToWorkshopContext.NestedValue)));
+            
+            result += ")";
+            return result;
         }
 
         public override bool EqualTo(IWorkshopTree other) => base.EqualTo(other) && ((StringElement)other).Value == Value;
@@ -405,7 +404,7 @@ namespace Deltin.Deltinteger.Elements
         public AccessLevel AccessLevel { get; } = AccessLevel.Public;
         public bool WholeContext { get; } = true;
         public bool Static => true;
-        public bool DoesReturnValue => ReturnType != null;
+        public bool DoesReturnValue => _function is ElementJsonValue;
 
         ElementList(ElementBaseJson function, ITypeSupplier typeSupplier)
         {
@@ -443,15 +442,20 @@ namespace Deltin.Deltinteger.Elements
                     // Get the type from the type value.
                     if (function.Parameters[i].Type != null)    
                         type = typeSupplier.FromString(function.Parameters[i].Type);
+
+                    // Get the default value.
+                    ExpressionOrWorkshopValue defaultValue = null;
+                    if (function.Parameters[i].HasDefaultValue)
+                        defaultValue = new ExpressionOrWorkshopValue(function.Parameters[i].GetDefaultValue());
                     
-                    // TODO: Default type and restricted value.
+                    // TODO: Restricted value.
                     // If the default parameter value is an Element and the Element is restricted,
                     // if (defaultValue is Element parameterElement && parameterElement.Function.Restricted != null)
                         // ...then add the restricted call type to the parameter's list of restricted call types.
                         // Parameters[i].RestrictedCalls.Add((RestrictedCallType)parameterElement.Function.Restricted);
                     
                     // Set the parameter.
-                    Parameters[i] = new CodeParameter(name, documentation, type);
+                    Parameters[i] = new CodeParameter(name, documentation, type, defaultValue);
                 }
             }
         }

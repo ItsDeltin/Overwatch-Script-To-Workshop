@@ -119,10 +119,14 @@ namespace Deltin.Deltinteger.Elements
                 reader.Read(); // Advance to the next object.
 
                 // Convert the parameter to an object.
-                var parameter = JObject.Load(reader).ToObject<ElementParameter>();
+                var parameterObject = JObject.Load(reader);
+                var parameter = parameterObject.ToObject<ElementParameter>();
 
                 // Get the name.
                 parameter.Name = name;
+
+                // Get the default value state.
+                parameter.HasDefaultValue = parameterObject.ContainsKey("defaultValue");
 
                 // Add it to the parameter list.
                 parameters.Add(parameter);
@@ -171,6 +175,22 @@ namespace Deltin.Deltinteger.Elements
             throw new KeyNotFoundException("The function '" + name + "' was not found.");
         }
 
+        public bool TryGetFunction(string name, out ElementBaseJson function)
+        {
+            foreach (var value in Values) if (value.Name == name)
+            {
+                function = value;
+                return true;
+            }
+            foreach (var action in Actions) if (action.Name == name)
+            {
+                function = action;
+                return true;
+            }
+            function = null;
+            return false;
+        }
+
         public ElementEnum GetEnum(string name) => Enumerators.FirstOrDefault(e => e.Name == name) ?? throw new KeyNotFoundException("The enum '" + name + "' was not found.");
         public bool TryGetEnum(string name, out ElementEnum enumerator)
         {
@@ -178,6 +198,7 @@ namespace Deltin.Deltinteger.Elements
             return enumerator != null;
         }
         public ElementEnumMember GetEnumValue(string enumName, string alias) => GetEnum(enumName).GetMemberFromAlias(alias);
+        public ElementEnumMember GetEnumValueFromWorkshop(string enumName, string workshopName) => GetEnum(enumName).GetMemberFromWorkshop(workshopName);
 
         public static ElementRoot Get(string json)
             => JsonConvert.DeserializeObject<ElementRoot>(json, new EnumeratorConverter(), new ParameterConverter());
@@ -267,9 +288,37 @@ namespace Deltin.Deltinteger.Elements
         [JsonProperty("var-ref-global")]
         public bool? VariableReferenceIsGlobal;
 
+        [JsonIgnore]
+        public bool HasDefaultValue;
+
         public override string ToString() => Type + " " + Name;
 
         public bool IsVariableReference => VariableReferenceIsGlobal != null;
+
+        public IWorkshopTree GetDefaultValue()
+        {
+            // No default value.
+            if (!HasDefaultValue) throw new Exception("Parameter has no default value.");
+
+            // Enumerator default value
+            if (ElementRoot.Instance.TryGetEnum(Type, out ElementEnum enumerator)) return enumerator.GetMemberFromWorkshop((string)DefaultValue);
+            // Null
+            else if (DefaultValue == null) return Element.Null();
+            // Boolean
+            else if (DefaultValue is bool boolean) return boolean ? Element.True() : Element.False();
+            // Number
+            else if (DefaultValue is double number) return Element.Num(number);
+            // String
+            else if (DefaultValue is string str)
+            {
+                // Localized string default
+                if (str == "@") return new StringElement(Constants.Strings[0], true);
+                // Function
+                else if (ElementRoot.Instance.TryGetFunction(str, out var function)) return Element.Part(function);
+            }
+
+            throw new Exception("Could not get default value for parameter '" + Name + "'. Value: '" + DefaultValue.ToString() + "'");
+        }
     }
 
     public class ElementEnum
@@ -279,7 +328,8 @@ namespace Deltin.Deltinteger.Elements
 
         public override string ToString() => Name + " [" + Members.Length + " members]";
 
-        public ElementEnumMember GetMemberFromAlias(string name) => Members.FirstOrDefault(m => (m.Alias ?? m.Name) == name) ?? throw new KeyNotFoundException("The enum member '" + name + "' was not found.");
+        public ElementEnumMember GetMemberFromAlias(string name) => Members.FirstOrDefault(m => m.CodeName() == name) ?? throw new KeyNotFoundException("The enum member '" + name + "' was not found.");
+        public ElementEnumMember GetMemberFromWorkshop(string name) => Members.FirstOrDefault(m => m.Name == name) ?? throw new KeyNotFoundException("The enum member '" + name + "' was not found.");
 
         public bool ConvertableToElement() => new string[] { "Map", "GameMode", "Team", "Hero", "Button" }.Contains(Name);
     }

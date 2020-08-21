@@ -1807,7 +1807,7 @@
     },
     {
       "type": "vector",
-      "name": "Position of",
+      "name": "Position Of",
       "documentation": "The current position of a player as a vector.",
       "parameters": {
         "Player": {
@@ -2147,15 +2147,18 @@
       "parameters": {
         "{0}": {
           "documentation": "The first value in the string.",
-          "type": "any"
+          "type": "any",
+          "defaultValue": null
         },
         "{1}": {
           "documentation": "The second value in the string.",
-          "type": "any"
+          "type": "any",
+          "defaultValue": null
         },
         "{2}": {
           "documentation": "The third value in the string.",
-          "type": "any"
+          "type": "any",
+          "defaultValue": null
         }
       }
     },
@@ -2164,13 +2167,16 @@
       "name": "Custom String",
       "parameters": {
         "{0}": {
-          "type": "any"
+          "type": "any",
+          "defaultValue": null
         },
         "{1}": {
-          "type": "any"
+          "type": "any",
+          "defaultValue": null
         },
         "{2}": {
-          "type": "any"
+          "type": "any",
+          "defaultValue": null
         }
       }
     },
@@ -3162,15 +3168,18 @@
         },
         "Header": {
           "documentation": "The header text to be displayed (can be blank). Can use most String based Value Syntax to populate.",
-          "type": "any"
+          "type": "any",
+          "defaultValue": null
         },
         "Subheader": {
           "documentation": "The subheader text to be displayed (can be blank). Can use most String based Value Syntax to populate.",
-          "type": "any"
+          "type": "any",
+          "defaultValue": null
         },
         "Text": {
           "documentation": "The body text to be displayed (can be blank). Can use most String based Value Syntax to populate.",
-          "type": "any"
+          "type": "any",
+          "defaultValue": null
         },
         "Location": {
           "documentation": "The location on the screen where text will appear. You can choose left, top, or right.",

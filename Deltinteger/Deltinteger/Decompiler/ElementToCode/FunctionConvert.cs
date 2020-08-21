@@ -288,7 +288,7 @@ namespace Deltin.Deltinteger.Decompiler.ElementToCode
                     decompiler.Append("MinWait(");
 
                     // Add wait behavior if it is not the default.
-                    if (function.Values[1] is ConstantEnumeratorExpression enumerator && enumerator.Member != ElementRoot.Instance.GetEnumValue("WaitBehavior", "IgnoreCondition"))
+                    if (function.Values[1] is ConstantEnumeratorExpression enumerator && enumerator.Member != ElementRoot.Instance.GetEnumValueFromWorkshop("WaitBehavior", "Ignore Condition"))
                         enumerator.Decompile(decompiler);
                     
                     // End function

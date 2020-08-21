@@ -266,9 +266,9 @@ namespace Deltin.Deltinteger.Pathfinder
                     CurrentPositionWithDestination()
                 ),
                 new NumberElement(1), // Magnitude
-                ElementRoot.Instance.GetEnumValue("Relative", "To World"),
-                ElementRoot.Instance.GetEnumValue("ThrottleBehavior", "Replace Existing Throttle"),
-                ElementRoot.Instance.GetEnumValue("ThrottleRev", "Direction And Magnitude")
+                ElementRoot.Instance.GetEnumValueFromWorkshop("Relative", "To World"),
+                ElementRoot.Instance.GetEnumValueFromWorkshop("ThrottleBehavior", "Replace Existing Throttle"),
+                ElementRoot.Instance.GetEnumValueFromWorkshop("ThrottleRev", "Direction And Magnitude")
             ));
         }
 

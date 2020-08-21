@@ -7,7 +7,7 @@ namespace Deltin.Deltinteger.CustomMethods
     class MinWait : CustomMethodBase
     {
         public override CodeParameter[] Parameters() => new CodeParameter[] {
-            new CodeParameter("waitBehavior", ValueGroupType.GetEnumType("WaitBehavior"), new ExpressionOrWorkshopValue(ElementRoot.Instance.GetEnumValue("WaitBehavior", "Ignore Condition")))
+            new CodeParameter("waitBehavior", ValueGroupType.GetEnumType("WaitBehavior"), new ExpressionOrWorkshopValue(ElementRoot.Instance.GetEnumValueFromWorkshop("WaitBehavior", "Ignore Condition")))
         };
 
         public override IWorkshopTree Get(ActionSet actionSet, IWorkshopTree[] parameters)

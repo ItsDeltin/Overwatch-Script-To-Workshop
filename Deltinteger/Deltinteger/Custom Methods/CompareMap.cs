@@ -61,7 +61,7 @@ namespace Deltin.Deltinteger.CustomMethods
 
         public Element GetArray() => Element.CreateArray(
             // Convert the maps to EnumMembers encased in V_MapVar.
-            Maps.Select(m => ElementRoot.Instance.GetEnumValue("Map", m))
+            Maps.Select(m => ElementRoot.Instance.GetEnumValueFromWorkshop("Map", m))
             .ToArray()
         );
 
