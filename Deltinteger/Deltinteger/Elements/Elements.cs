@@ -100,9 +100,8 @@ namespace Deltin.Deltinteger.Elements
         {
             List<IWorkshopTree> parameters = new List<IWorkshopTree>();
 
-            if (Function.Parameters != null)
-                for (int i = 0; i < Function.Parameters.Length || i < ParameterValues.Length; i++)
-                    parameters.Add(ParameterValues?.ElementAtOrDefault(i) ?? Function.Parameters[i].GetDefaultValue() ?? throw new Exception("Null argument"));
+            for (int i = 0; (Function.Parameters != null && i < Function.Parameters.Length) || (ParameterValues != null && i < ParameterValues.Length); i++)
+                parameters.Add(ParameterValues?.ElementAtOrDefault(i) ?? Function.Parameters[i].GetDefaultValue() ?? throw new Exception("Null argument"));
             
             ParameterValues = parameters.ToArray();
         }

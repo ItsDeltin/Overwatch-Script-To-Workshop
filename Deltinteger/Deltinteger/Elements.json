@@ -3086,7 +3086,7 @@
         "Reevaluation": {
           "documentation": "Specifies which of this action’s inputs will be continuously reevaluated, the effect will keep asking for and using new values from reevaluated inputs.\n\nVisible to, position, and radius\nPosition and radius\nVisible to\nNone",
           "type": "EffectRev",
-          "defaultValue": "Visible To, Position, and Radius"
+          "defaultValue": "Visible To Position and Radius"
         }
       }
     },
@@ -3153,12 +3153,13 @@
         "Reevaluation": {
           "documentation": "Specifies which of this action’s inputs will be continuously reevaluated, the effect will keep asking for and using new values from reevaluated inputs.\n\nVisible to, position, and scale\nPosition and scale\nVisible to\nNone",
           "type": "EffectRev",
-          "defaultValue": "Visible To, Position, and Radius"
+          "defaultValue": "Visible To Position and Radius"
         }
       }
     },
     {
-      "name": "Create Hud Text",
+      "name": "Create HUD Text",
+      "alias": "CreateHudText",
       "documentation": "Creates HUD text visible to specific players at specific location on the screen. This text will persist until destroyed. To obtain a reference to this text, use the last text ID value. This action will fail if too many text elements have been created.",
       "parameters": {
         "Visible To": {
@@ -3285,7 +3286,7 @@
         "Reevaluation": {
           "documentation": "Specifies which of this action’s inputs will be continuously reevaluated, the text will keep asking for and using new values from reevaluated inputs.\n\nVisible to, Position, and String\nVisible to and String\nNone",
           "type": "InworldTextRev",
-          "defaultValue": "Visible To, Position, and String"
+          "defaultValue": "Visible To Position and String"
         },
         "Text Color": {
           "type": "Color",
@@ -3402,7 +3403,8 @@
       }
     },
     {
-      "name": "Destroy Hud Text",
+      "name": "Destroy HUD Text",
+      "alias": "DestroyHudText",
       "documentation": "Destroys hud text that was created by create hud text.",
       "parameters": {
         "Text ID": {
@@ -4506,7 +4508,7 @@
         "Reevaluation": {
           "documentation": "Specifies which of this actions inputs will be continously reevaluated. This action will keep asking for and using new values from reevaluated inputs. You can choose from “Direction, Rate, and Max Speed” or “None”.",
           "type": "AccelerateRev",
-          "defaultValue": "Direction, Rate, and Max Speed"
+          "defaultValue": "Direction Rate and Max Speed"
         }
       }
     },
@@ -5286,7 +5288,8 @@
       "alias": "EnableGameModeInworldUI"
     },
     {
-      "name": "Disable Hero Hud",
+      "name": "Disable Hero HUD",
+      "alias": "DisableHeroHud",
       "parameters": {
         "Player": {
           "type": "player",
@@ -5295,7 +5298,8 @@
       }
     },
     {
-      "name": "Enable Hero Hud",
+      "name": "Enable Hero HUD",
+      "alias": "EnableHeroHud",
       "parameters": {
         "Player": {
           "type": "player",
@@ -5836,8 +5840,14 @@
     "Button": [
       "Primary Fire",
       "Secondary Fire",
-      "Ability1",
-      "Ability2",
+      {
+        "name": "Ability 1",
+        "alias": "Ability1"
+      },
+      {
+        "name": "Ability 2",
+        "alias": "Ability2"
+      },
       "Ultimate",
       "Interact",
       "Jump",
@@ -5917,8 +5927,14 @@
       "Purple",
       "Red",
       "Blue",
-      "Team1",
-      "Team2",
+      {
+        "name": "Team 1",
+        "alias": "Team1"
+      },
+      {
+        "name": "Team 2",
+        "alias": "Team2"
+      },
       "Aqua",
       "Orange",
       "Sky Blue",
@@ -5927,7 +5943,7 @@
     ],
     "EffectRev": [
       {
-        "name": "Visible To, Position, and Radius",
+        "name": "Visible To Position and Radius",
         "alias": "VisibleToPositionAndRadius"
       },
       "Position And Radius",
@@ -5985,7 +6001,7 @@
       "Visible To And String",
       "String",
       {
-        "name": "Visible To, Sort Order, and String",
+        "name": "Visible To Sort Order and String",
         "alias": "VisibleToSortOrderAndString"
       },
       "Sort Order And String",
@@ -5998,7 +6014,7 @@
       "Visible To And String",
       "String",
       {
-        "name": "Visible To, Sort Order, and String",
+        "name": "Visible To Sort Order and String",
         "alias": "VisibleToSortOrderAndString"
       },
       "Sort Order And String",
@@ -6082,7 +6098,7 @@
     ],
     "AccelerateRev": [
       {
-        "name": "Direction, Rate, and Max Speed",
+        "name": "Direction Rate and Max Speed",
         "alias": "DirectionRateAndMaxSpeed"
       },
       "None"
@@ -6145,7 +6161,7 @@
     ],
     "InworldTextRev": [
       {
-        "name": "Visible To, Position, and String",
+        "name": "Visible To Position and String",
         "alias": "VisibleToPositionAndString"
       },
       "Visible To And String",
