@@ -61,15 +61,15 @@ namespace Deltin.Deltinteger.Elements
                 .AppendKeywordLine("event")
                 .AppendLine("{")
                 .Indent()
-                .AppendLine(EnumData.GetEnumValue(RuleEvent).ToWorkshop(builder.OutputLanguage, ToWorkshopContext.Other) + ";");
+                .AppendLine(ElementRoot.Instance.GetEnumValue("Event", RuleEvent.ToString()).ToWorkshop(builder.OutputLanguage, ToWorkshopContext.Other) + ";");
             
             // Add attributes.
             switch (RuleType)
             {
                 case RuleType.PlayerBased:
                     // Player based attributes
-                    builder.AppendLine(EnumData.GetEnumValue(Team).ToWorkshop(builder.OutputLanguage, ToWorkshopContext.Other) + ";"); // Team attribute
-                    builder.AppendLine(EnumData.GetEnumValue(Player).ToWorkshop(builder.OutputLanguage, ToWorkshopContext.Other) + ";"); // Player attribute
+                    builder.AppendLine(ElementEnumMember.Team(Team).ToWorkshop(builder.OutputLanguage, ToWorkshopContext.Other) + ";"); // Team attribute
+                    builder.AppendLine(ElementRoot.Instance.GetEnumValue("Player", Player.ToString()).ToWorkshop(builder.OutputLanguage, ToWorkshopContext.Other) + ";"); // Player attribute
                     break;
                 
                 case RuleType.Subroutine:

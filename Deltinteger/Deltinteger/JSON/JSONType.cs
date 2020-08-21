@@ -60,7 +60,7 @@ namespace Deltin.Deltinteger.Json
         {
             switch (value.Type)
             {
-                case JTokenType.String: return new V_CustomString(value.ToObject<string>());
+                case JTokenType.String: return new StringElement(value.ToObject<string>());
                 case JTokenType.Boolean: return value.ToObject<bool>() ? Element.True() : Element.False();
                 case JTokenType.Float:
                 case JTokenType.Integer: return new NumberElement(value.ToObject<double>());

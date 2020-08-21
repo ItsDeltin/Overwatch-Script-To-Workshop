@@ -37,11 +37,12 @@ namespace Deltin.Deltinteger.Parse
             Language = translateSettings.OutputLanguage;
             OptimizeOutput = translateSettings.OptimizeOutput;
 
-            GlobalScope = Scope.GetGlobalScope();
+            Types.GetDefaults(this);
+
+            GlobalScope = Scope.GetGlobalScope(Types);
             RulesetScope = GlobalScope.Child();
             RulesetScope.PrivateCatch = true;
 
-            Types.GetDefaults(this);
             Importer = new Importer(this, FileGetter, translateSettings.Root.Uri);
             Importer.CollectScriptFiles(translateSettings.Root);            
             
@@ -313,7 +314,7 @@ namespace Deltin.Deltinteger.Parse
         }
     }
 
-    public class ScriptTypes
+    public class ScriptTypes : ITypeSupplier
     {
         public List<CodeType> AllTypes { get; } = new List<CodeType>();
         public List<CodeType> DefinedTypes { get; } = new List<CodeType>();
@@ -360,6 +361,20 @@ namespace Deltin.Deltinteger.Parse
         }
 
         public T GetInstance<T>() where T: CodeType => (T)AllTypes.First(type => type.GetType() == typeof(T));
+
+        public CodeType Default() => null;
+        public CodeType Any() => null;
+        public CodeType AnyArray() => new ArrayType(null);
+        public CodeType Boolean() => null;
+        public CodeType Number() => null;
+        public CodeType Player() => null;
+        public CodeType Players() => null;
+        public CodeType PlayerArray() => null;
+        public CodeType Vector() => VectorType.Instance;
+        public CodeType PlayerOrVector() => null;
+        public CodeType Button() => throw new NotImplementedException();
+        public CodeType ConstButton() => throw new NotImplementedException();
+        public CodeType EnumType(string typeName) => throw new NotImplementedException();
     }
 
     public interface IComponent

@@ -185,7 +185,7 @@ namespace Deltin.Deltinteger.Decompiler.ElementToCode
                 {
                     if (decompiler.Current is FunctionExpression childFunc)
                     {
-                        if (acceptingElseIfs && childFunc.Function.WorkshopName == "Else If")
+                        if (acceptingElseIfs && childFunc.Function.Name == "Else If")
                         {
                             Cap(decompiler);
                             decompiler.Append("else if (");
@@ -194,7 +194,7 @@ namespace Deltin.Deltinteger.Decompiler.ElementToCode
                             decompiler.AddBlock();
                             decompiler.Advance();
                         }
-                        else if (childFunc.Function.WorkshopName == "Else")
+                        else if (childFunc.Function.Name == "Else")
                         {
                             Cap(decompiler);
                             acceptingElseIfs = false;
@@ -202,7 +202,7 @@ namespace Deltin.Deltinteger.Decompiler.ElementToCode
                             decompiler.AddBlock();
                             decompiler.Advance();
                         }
-                        else if (childFunc.Function.WorkshopName == "End")
+                        else if (childFunc.Function.Name == "End")
                         {
                             finished = true;
                             Cap(decompiler);
@@ -230,7 +230,7 @@ namespace Deltin.Deltinteger.Decompiler.ElementToCode
                 bool finished = false;
                 while (!decompiler.IsFinished)
                 {
-                    if (decompiler.Current is FunctionExpression childFunc && childFunc.Function.WorkshopName == "End")
+                    if (decompiler.Current is FunctionExpression childFunc && childFunc.Function.Name == "End")
                     {
                         finished = true;
                         Cap(decompiler);
@@ -283,12 +283,12 @@ namespace Deltin.Deltinteger.Decompiler.ElementToCode
             }},
             {"Wait", (decompiler, function) => {
                 // Convert the Wait to a MinWait if the wait duration is less than or equal to the minimum.
-                if ((function.Values[0] is NumberExpression number && number.Value <= Constants.MINIMUM_WAIT) || (function.Values[0] is FunctionExpression durationFunc && durationFunc.Function.WorkshopName == "False"))
+                if ((function.Values[0] is NumberExpression number && number.Value <= Constants.MINIMUM_WAIT) || (function.Values[0] is FunctionExpression durationFunc && durationFunc.Function.Name == "False"))
                 {
                     decompiler.Append("MinWait(");
 
                     // Add wait behavior if it is not the default.
-                    if (function.Values[1] is ConstantEnumeratorExpression enumerator && enumerator.Member != EnumData.GetEnumValue(WaitBehavior.IgnoreCondition))
+                    if (function.Values[1] is ConstantEnumeratorExpression enumerator && enumerator.Member != ElementRoot.Instance.GetEnumValue("WaitBehavior", "IgnoreCondition"))
                         enumerator.Decompile(decompiler);
                     
                     // End function

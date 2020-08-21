@@ -171,7 +171,12 @@ namespace Deltin.Deltinteger.Elements
         }
 
         public ElementEnum GetEnum(string name) => Enumerators.FirstOrDefault(e => e.Name == name) ?? throw new KeyNotFoundException("The enum '" + name + "' was not found.");
-        public ElementEnumMember GetEnumValue(string enumName, string value) => GetEnum(enumName).GetMemberFromAlias(value);
+        public bool TryGetEnum(string name, out ElementEnum enumerator)
+        {
+            enumerator = Enumerators.FirstOrDefault(e => e.Name == name);
+            return enumerator != null;
+        }
+        public ElementEnumMember GetEnumValue(string enumName, string alias) => GetEnum(enumName).GetMemberFromAlias(alias);
 
         public static ElementRoot Get(string json)
             => JsonConvert.DeserializeObject<ElementRoot>(json, new EnumeratorConverter(), new ParameterConverter());
@@ -228,6 +233,8 @@ namespace Deltin.Deltinteger.Elements
         public bool ShouldSerializeIsHidden() => IsHidden;
 
         public override string ToString() => Name + (Parameters == null ? "" : "(" + string.Join(", ", Parameters.Select(v => v.ToString())) + ")");
+
+        public string CodeName() => Alias ?? Name.Replace(" ", "");
     }
 
     public class ElementJsonValue : ElementBaseJson
@@ -260,6 +267,8 @@ namespace Deltin.Deltinteger.Elements
         public bool? VariableReferenceIsGlobal;
 
         public override string ToString() => Type + " " + Name;
+
+        public bool IsVariableReference => VariableReferenceIsGlobal != null;
     }
 
     public class ElementEnum
@@ -270,6 +279,8 @@ namespace Deltin.Deltinteger.Elements
         public override string ToString() => Name + " [" + Members.Length + " members]";
 
         public ElementEnumMember GetMemberFromAlias(string name) => Members.FirstOrDefault(m => (m.Alias ?? m.Name) == name) ?? throw new KeyNotFoundException("The enum member '" + name + "' was not found.");
+
+        public bool ConvertableToElement() => new string[] { "Map", "GameMode", "Team", "Hero", "Button" }.Contains(Name);
     }
 
     public class ElementEnumMember : IWorkshopTree
@@ -282,11 +293,28 @@ namespace Deltin.Deltinteger.Elements
 
         public string ToWorkshop(OutputLanguage language, ToWorkshopContext context) => Name;
 
+        public string CodeName() => Alias ?? Name;
+
         public bool EqualTo(IWorkshopTree other)
         {
             throw new NotImplementedException();
         }
 
+        public Element ToElement()
+        {
+            switch (Enum.Name)
+            {
+                case "Map": return Element.Part("Map", this);
+                case "GameMode": return Element.Part("Game Mode", this);
+                case "Team": return Element.Part("Team", this);
+                case "Hero": return Element.Part("Hero", this);
+                case "Button": return Element.Part("Button", this);
+                default: throw new NotImplementedException(Enum.Name + " cannot be converted to element.");
+            }
+        }
+
+        public static ElementEnumMember Event(RuleEvent eventType) => ElementRoot.Instance.GetEnumValue("Event", eventType.ToString());
         public static ElementEnumMember Team(Team team) => ElementRoot.Instance.GetEnumValue("Team", team.ToString());
+        public static ElementEnumMember Player(PlayerSelector player) => ElementRoot.Instance.GetEnumValue("Player", player.ToString());
     }
 }

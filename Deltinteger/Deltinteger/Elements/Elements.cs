@@ -179,6 +179,7 @@ namespace Deltin.Deltinteger.Elements
         public static Element Num(double value) => new NumberElement(value);
         public static Element Compare(IWorkshopTree a, Operator op, IWorkshopTree b) => Part("Compare", a, new OperatorElement(op), b);
         public static Element Vector(Element x, Element y, Element z) => Part("Vector", x, y, z);
+        public static Element Vector(IWorkshopTree x, IWorkshopTree y, IWorkshopTree z) => Part("Vector", x, y, z);
         public static Element Not(IWorkshopTree a) => Part("Not", a);
         public static Element IndexOfArrayValue(Element array, Element value) => Part("Index Of Array Value", array, value);
         public static Element IndexOfArrayValue(IWorkshopTree array, IWorkshopTree value) => Part("Index Of Array Value", array, value);
@@ -404,7 +405,7 @@ namespace Deltin.Deltinteger.Elements
         {
             _function = function;
 
-            Name = function.Alias ?? function.Name;
+            Name = function.CodeName();
             Documentation = function.Documentation;
 
             // Get the parameters.
@@ -447,7 +448,7 @@ namespace Deltin.Deltinteger.Elements
             }
         }
 
-        public ElementList(ElementJsonValue value, ITypeSupplier typeSupplier) : this((ElementBaseJson)value, typeSupplier)
+        ElementList(ElementJsonValue value, ITypeSupplier typeSupplier) : this((ElementBaseJson)value, typeSupplier)
         {
             ReturnType = typeSupplier.FromString(value.ReturnType);
         }
@@ -478,6 +479,24 @@ namespace Deltin.Deltinteger.Elements
                     parseInfo.GetLocation(callRange),
                     RestrictedCall.Message_Element((RestrictedCallType)_restricted)
                 ));
+        }
+
+        public static IMethod[] GetWorkshopFunctions(ITypeSupplier typeSupplier)
+        {
+            // Initialize the list.
+            List<IMethod> functions = new List<IMethod>();
+
+            // Get the actions.
+            foreach (var action in ElementRoot.Instance.Actions)
+                if (!action.IsHidden)
+                    functions.Add(new ElementList(action, typeSupplier));
+
+            // Get the values.
+            foreach (var value in ElementRoot.Instance.Values)
+                if (!value.IsHidden)
+                    functions.Add(new ElementList(value, typeSupplier));
+            
+            return functions.ToArray();
         }
     }
 

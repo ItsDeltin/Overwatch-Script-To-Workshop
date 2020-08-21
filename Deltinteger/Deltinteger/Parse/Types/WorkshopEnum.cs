@@ -39,7 +39,7 @@ namespace Deltin.Deltinteger.Parse
             foreach (EnumValuePair pair in ValuePairs)
             {
                 if (Constant) translateInfo.DefaultIndexAssigner.Add(pair, pair.Member);
-                else translateInfo.DefaultIndexAssigner.Add(pair, EnumData.ToElement(pair.Member));
+                else translateInfo.DefaultIndexAssigner.Add(pair, pair.Member.ToElement());
             }
         }
 
