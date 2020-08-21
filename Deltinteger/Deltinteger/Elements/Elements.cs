@@ -158,10 +158,19 @@ namespace Deltin.Deltinteger.Elements
                 && ParameterValues[2] is Element ze && ze.TryGetConstant(out double z))
             {
                 vertex = new Vertex(x, y, z);
-                return true;
             }
-            vertex = null;
-            return false;
+            else if (Function.Name == "Left") vertex = new Vertex(1, 0, 0);
+            else if (Function.Name == "Right") vertex = new Vertex(-1, 0, 0);
+            else if (Function.Name == "Up") vertex = new Vertex(0, 1, 0);
+            else if (Function.Name == "Down") vertex = new Vertex(0, -1, 0);
+            else if (Function.Name == "Forward") vertex = new Vertex(0, 0, 1);
+            else if (Function.Name == "Backward") vertex = new Vertex(0, 0, -1);
+            else
+            {   
+                vertex = null;
+                return false;
+            }
+            return true;
         }
 
         public virtual bool TryGetConstant(out double number)
