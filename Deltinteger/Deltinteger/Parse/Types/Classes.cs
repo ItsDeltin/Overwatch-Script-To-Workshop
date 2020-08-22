@@ -333,7 +333,7 @@ Object-serve scope. Only object members.
         public EvaluateResponse GetEvaluation(DebugVariableLinkCollection collection, IDebugVariable debugVariable)
         {
             // Return null if there is no value.
-            if (debugVariable.Value == null) return null;
+            if (debugVariable.Value == null) return EvaluateResponse.Empty;
 
             // Create the evaluation response.
             IDebugVariable.ApplyReference(collection, debugVariable);

@@ -129,13 +129,13 @@ namespace Deltin.Deltinteger.Debugger
 
             // Get the first variable.
             IDebugVariable current = Variables.FirstOrDefault(v => v.IsRoot && v.Name == path[0]);
-            if (current == null) return null;
+            if (current == null) return EvaluateResponse.Empty;
 
             // Get the rest of the path.
             for (int i = 1; i < path.Length; i++)
             {
                 current = current.Resolver.GetChildren(this, current).FirstOrDefault(v => v.Name == path[i]);
-                if (current == null) return null;
+                if (current == null) return EvaluateResponse.Empty;
             }
 
             return current.Resolver.GetEvaluation(this, current);

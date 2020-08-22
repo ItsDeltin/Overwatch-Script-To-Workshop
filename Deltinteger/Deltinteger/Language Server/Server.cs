@@ -96,10 +96,7 @@ namespace Deltin.Deltinteger.LanguageServer
                 .WithHandler<PrepareRenameHandler>(prepareRenameHandler)                
             ));
             
-            Server.SendNotification(Version, Program.VERSION);
-            
-            Task wait = _debugger.Listen();
-            
+            Server.SendNotification(Version, Program.VERSION);            
             await Server.WaitForExit;
         }
 
@@ -165,6 +162,18 @@ namespace Deltin.Deltinteger.LanguageServer
             {
                 SemanticToken[] tokens = (await DocumentHandler.OnScriptAvailability())?.ScriptFromUri(new Uri(uriToken["fsPath"].ToObject<string>()))?.GetSemanticTokens();
                 return tokens ?? new SemanticToken[0];
+            }));
+
+            // debugger start
+            options.OnRequest<object>("debugger.start", args => Task.Run(() => {
+                _debugger.Start();
+                return new object();
+            }));
+
+            // debugger stop
+            options.OnRequest<object>("debugger.stop", args => Task.Run(() => {
+                _debugger.Stop();
+                return new object();
             }));
 
             // debugger scopes
