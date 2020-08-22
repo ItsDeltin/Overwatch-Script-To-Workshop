@@ -17,7 +17,7 @@ namespace Deltin.Deltinteger.Debugger
             if (debugVariable.Value == null) return null;
 
             // Create the variable.
-            DBPVariable variable = new DBPVariable(debugVariable);
+            DBPVariable variable = GetProtocolVariable(debugVariable);
 
             // Add the clipboard value copy.
             variable.evaluateName = collection.AddClipboardKey(debugVariable.Name, debugVariable.Value.AsOSTWExpression());
@@ -90,6 +90,7 @@ namespace Deltin.Deltinteger.Debugger
             return new LinkableDebugVariable[0];
         }
 
+        protected virtual DBPVariable GetProtocolVariable(IDebugVariable variable) => new DBPVariable(variable);
         protected virtual ChildDebugVariable GetChildDebugVariable(DebugVariableLinkCollection collection, CsvPart arrayValue, string indexName) => new ChildDebugVariable(this, arrayValue, indexName, "define");
     }
 
@@ -106,6 +107,7 @@ namespace Deltin.Deltinteger.Debugger
             _typeContainsChildren = typeContainsChildren;
         }
 
+        protected override DBPVariable GetProtocolVariable(IDebugVariable variable) => new DBPVariable(variable, _arrayOfTypeName + "[]");
         protected override ChildDebugVariable GetChildDebugVariable(DebugVariableLinkCollection collection, CsvPart arrayValue, string indexName) => new ChildDebugVariable(_typeResolver, arrayValue, indexName, _arrayOfTypeName);
     }
 }

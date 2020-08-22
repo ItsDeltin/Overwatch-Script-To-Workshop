@@ -140,11 +140,12 @@ namespace Deltin.Deltinteger.Debugger.Protocol
         public string memoryReference;
 
         public DBPVariable() {}
-        public DBPVariable(IDebugVariable variable)
+        public DBPVariable(IDebugVariable variable, string typeString = null)
         {
             name = variable.Name;
             type = variable.Type;
             value = variable.Value.ToString();
+            if (typeString != null) value += " {" + typeString + "}";
         }
     }
 

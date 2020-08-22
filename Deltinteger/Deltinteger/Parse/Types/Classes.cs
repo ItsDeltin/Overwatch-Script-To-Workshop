@@ -323,7 +323,7 @@ Object-serve scope. Only object members.
             if (debugVariable.Value == null) return null;
 
             // Create the variable.
-            DBPVariable variable = new DBPVariable(debugVariable);
+            DBPVariable variable = new DBPVariable(debugVariable, Class.Name);
             variable.namedVariables = Class.ObjectVariables.Count;
             variable.variablesReference = IDebugVariable.ApplyReference(collection, debugVariable);
 
