@@ -73,7 +73,7 @@ namespace Deltin.Deltinteger.Debugger
                 }
                 catch (Exception ex)
                 {
-                    _languageServer.Server.SendNotification("debugger.error", ex.ToString());
+                    _languageServer.DebuggerException(ex);
                 }
             }
         }

@@ -45,7 +45,7 @@ namespace Deltin.Deltinteger.Parse
             return new Scope(this, name);
         }
 
-        private void IterateElements(Scope getter, bool iterateVariables, bool iterateMethods, Func<ScopeIterate, ScopeIterateAction> element)
+        private void IterateElements(bool iterateVariables, bool iterateMethods, Func<ScopeIterate, ScopeIterateAction> element, Func<Scope, ScopeIterateAction> onEmpty = null)
         {
             Scope current = this;
 
@@ -71,6 +71,12 @@ namespace Deltin.Deltinteger.Parse
                     if (action == ScopeIterateAction.Stop) return;
                     if (action == ScopeIterateAction.StopAfterScope) stopAfterScope = true;
                 }
+                // If there are no scopeables and onEmpty is not null, invoke onEmpty. 
+                if (checkScopeables.Count == 0 && onEmpty != null)
+                {
+                    ScopeIterateAction action = onEmpty.Invoke(current);
+                    if (action != ScopeIterateAction.Continue) return;
+                }
 
                 if (current.PrivateCatch) getPrivate = false;
                 if (current.ProtectedCatch) getProtected = false;
@@ -82,11 +88,16 @@ namespace Deltin.Deltinteger.Parse
 
         public void CopyAll(Scope other, Scope getter)
         {
-            other.IterateElements(getter, true, true, iterate => {
+            other.IterateElements(true, true, iterate => {
+                // Add the element.
                 if (iterate.Element is IVariable variable) Variables.Add(variable);
                 if (iterate.Element is IMethod method) Methods.Add(method);
 
-                if (iterate.Container.PrivateCatch) return ScopeIterateAction.StopAfterScope;
+                if (iterate.Container.PrivateCatch || iterate.Container.CompletionCatch) return ScopeIterateAction.StopAfterScope;
+                return ScopeIterateAction.Continue;
+            }, scope => {
+                // On empty scope.
+                if (scope.PrivateCatch || scope.CompletionCatch) return ScopeIterateAction.StopAfterScope;
                 return ScopeIterateAction.Continue;
             });
         }
@@ -258,7 +269,7 @@ namespace Deltin.Deltinteger.Parse
 
             IMethod method = null;
 
-            IterateElements(null, false, true, itElement => {
+            IterateElements(false, true, itElement => {
                 // Convert the current element to an IMethod for checking.
                 IMethod checking = (IMethod)itElement.Element;
 
@@ -284,7 +295,7 @@ namespace Deltin.Deltinteger.Parse
             if (name == null) throw new ArgumentNullException(nameof(name));
             IVariable variable = null;
 
-            IterateElements(null, true, false, itElement => {
+            IterateElements(true, false, itElement => {
                 // Convert the current element to an IMethod for checking.
                 IVariable checking = (IVariable)itElement.Element;
 
@@ -341,7 +352,7 @@ namespace Deltin.Deltinteger.Parse
 
             bool matches = false;
 
-            IterateElements(null, true, true, itElement => {
+            IterateElements(true, true, itElement => {
                 if (element == itElement.Element)
                 {
                     matches = true;
@@ -386,7 +397,7 @@ namespace Deltin.Deltinteger.Parse
         {
             List<CompletionItem> completions = new List<CompletionItem>();
 
-            IterateElements(getter, true, true, (itElement) => {
+            IterateElements(true, true, (itElement) => {
                 // Add the completion of the current element.
                 if (WasScopedAtPosition(itElement.Element, pos, getter))
                     completions.Add(itElement.Element.GetCompletion());
@@ -426,7 +437,7 @@ namespace Deltin.Deltinteger.Parse
         public bool ScopeContains(IScopeable scopeable, Scope getter)
         {
             bool found = false;
-            IterateElements(getter, true, true, iterate => {
+            IterateElements(true, true, iterate => {
                 if (iterate.Element == scopeable)
                 {
                     found = true;

@@ -178,21 +178,43 @@ namespace Deltin.Deltinteger.LanguageServer
 
             // debugger scopes
             options.OnRequest<ScopesArgs, DBPScope[]>("debugger.scopes", args => Task<DBPScope[]>.Run(() => {
-                if (_debugger.VariableCollection != null)
-                    return _debugger.VariableCollection.GetScopes(args);
-                return null;
+                try
+                {
+                    if (_debugger.VariableCollection != null)
+                        return _debugger.VariableCollection.GetScopes(args);
+                }
+                catch (Exception ex)
+                {
+                    DebuggerException(ex);
+                }
+                return new DBPScope[0];
             }));
 
             // debugger variables
             options.OnRequest<VariablesArgs, DBPVariable[]>("debugger.variables", args => Task<DBPVariable[]>.Run(() => {
-                if (_debugger.VariableCollection != null)
-                    return _debugger.VariableCollection.GetVariables(args);
-                return null;
+                try
+                {
+                    if (_debugger.VariableCollection != null)
+                        return _debugger.VariableCollection.GetVariables(args);
+                }
+                catch (Exception ex)
+                {
+                    DebuggerException(ex);
+                }
+                return new DBPVariable[0];
             }));
 
             // debugger evaluate
             options.OnRequest<EvaluateArgs, EvaluateResponse>("debugger.evaluate", args => Task<EvaluateResponse>.Run(() => {
-                return _debugger.VariableCollection?.Evaluate(args);
+                try
+                {
+                    return _debugger.VariableCollection?.Evaluate(args);
+                }
+                catch (Exception ex)
+                {
+                    DebuggerException(ex);
+                    return EvaluateResponse.Empty;
+                }
             }));
             
             // Decompile insert
@@ -213,6 +235,11 @@ namespace Deltin.Deltinteger.LanguageServer
             }));
 
             return options;
+        }
+
+        public void DebuggerException(Exception ex)
+        {
+            Server.SendNotification("debugger.error", ex.ToString());
         }
 
         class PathmapDocument
