@@ -45,38 +45,9 @@ namespace Deltin.Deltinteger.Parse
             }
         };
 
-        public static readonly PlayerType Instance = new PlayerType();
-        public static readonly CodeType PlayerOrPlayers = new PipeType(Instance, new ArrayType(Instance));
+        public readonly Scope ObjectScope = new Scope("player variables");
 
-        private readonly Scope ObjectScope = new Scope();
-        private VariableShorthand[] Variables { get; } = new VariableShorthand[] {
-            new VariableShorthand("Team", TeamType.Instance, r => Element.Part("Team Of", r)),
-            new VariableShorthand("Position", VectorType.Instance, r => Element.PositionOf(r)),
-            new VariableShorthand("Health", NumberType.Instance, r => Element.Part("Health", r)),
-            new VariableShorthand("MaxHealth", NumberType.Instance, r => Element.Part("Max Health", r)),
-            new VariableShorthand("FacingDirection", VectorType.Instance, r => Element.Part("Facing Direction Of", r)),
-            new VariableShorthand("Hero", ObjectType.Instance, r => Element.Part("Hero Of", r)), // TODO: Hero type
-            new VariableShorthand("IsHost", BooleanType.Instance, r => Element.Compare(r, Operator.Equal, Element.Part("Host Player"))),
-            new VariableShorthand("IsAlive", BooleanType.Instance, r => Element.Part("IsAlive", r)),
-            new VariableShorthand("IsDead", BooleanType.Instance, r => Element.Part("IsDead", r)),
-            new VariableShorthand("IsCrouching", BooleanType.Instance, r => Element.Part("IsCrouching", r)),
-            new VariableShorthand("IsDummy", BooleanType.Instance, r => Element.Part("IsDummyBot", r)),
-            new VariableShorthand("IsFiringPrimary", BooleanType.Instance, r => Element.Part("IsFiringPrimary", r)),
-            new VariableShorthand("IsFiringSecondary", BooleanType.Instance, r => Element.Part("IsFiringSecondary", r)),
-            new VariableShorthand("IsInAir", BooleanType.Instance, r => Element.Part("IsInAir", r)),
-            new VariableShorthand("IsOnGround", BooleanType.Instance, r => Element.Part("IsOnGround", r)),
-            new VariableShorthand("IsInSpawnRoom", BooleanType.Instance, r => Element.Part("IsInSpawnRoom", r)),
-            new VariableShorthand("IsMoving", BooleanType.Instance, r => Element.Part("IsMoving", r)),
-            new VariableShorthand("IsOnObjective", BooleanType.Instance, r => Element.Part("IsOnObjective", r)),
-            new VariableShorthand("IsOnWall", BooleanType.Instance, r => Element.Part("IsOnWall", r)),
-            new VariableShorthand("IsPortraitOnFire", BooleanType.Instance, r => Element.Part("IsPortraitOnFire", r)),
-            new VariableShorthand("IsStanding", BooleanType.Instance, r => Element.Part("IsStanding", r)),
-            new VariableShorthand("IsUsingAbility1", BooleanType.Instance, r => Element.Part("IsUsingAbility1", r)),
-            new VariableShorthand("IsUsingAbility2", BooleanType.Instance, r => Element.Part("IsUsingAbility2", r)),
-            new VariableShorthand("IsUsingUltimate", BooleanType.Instance, r => Element.Part("IsUsingUltimate", r)),
-        };
-
-        private PlayerType() : base("Player")
+        public PlayerType() : base("Player")
         {
             CanBeExtended = false;
             Inherit(Positionable.Instance, null, null);
@@ -84,32 +55,46 @@ namespace Deltin.Deltinteger.Parse
         }
 
         public void ResolveElements()
-        {
-            foreach (VariableShorthand shorthand in Variables)
-                ObjectScope.AddNativeVariable(shorthand.Variable);
-            
+        {            
             PlayerType.AddSharedFunctionsToScope(ObjectScope);
 
             AddFunc(new FuncMethodBuilder() {
                 Name = "IsButtonHeld",
                 Parameters = new CodeParameter[] { new CodeParameter("button", ValueGroupType.GetEnumType("Button")) },
                 ReturnType = BooleanType.Instance,
-                Action = (set, call) => Element.Part("IsButtonHeld", set.CurrentObject, call.ParameterValues[0]),
+                Action = (set, call) => Element.Part("Is Button Held", set.CurrentObject, call.ParameterValues[0]),
                 Documentation = "Determines if the target player is holding a button."
             });
             AddFunc(new FuncMethodBuilder() {
                 Name = "IsCommunicating",
                 Parameters = new CodeParameter[] { new CodeParameter("communication", ValueGroupType.GetEnumType("Communication")) },
                 ReturnType = BooleanType.Instance,
-                Action = (set, call) => Element.Part("IsCommunicating", set.CurrentObject, call.ParameterValues[0]),
+                Action = (set, call) => Element.Part("Is Communicating", set.CurrentObject, call.ParameterValues[0]),
                 Documentation = "Determines if the target player is communicating."
             });
-        }
-
-        public override void AddObjectVariablesToAssigner(IWorkshopTree reference, VarIndexAssigner assigner)
-        {
-            foreach (VariableShorthand shorthand in Variables)
-                shorthand.Assign(reference, assigner);
+            AddFunc("Position", VectorType.Instance, (set, call) => Element.PositionOf(set.CurrentObject), "The position of the player.");
+            AddFunc("Team", ObjectType.Instance, (set, call) => Element.Part("Team Of", set.CurrentObject), "The team of the player.");
+            AddFunc("Health", NumberType.Instance, (set, call) => Element.Part("Health", set.CurrentObject), "The health of the player.");
+            AddFunc("MaxHealth", NumberType.Instance, (set, call) => Element.Part("Max Health", set.CurrentObject), "The maximum health of the player.");
+            AddFunc("FacingDirection", VectorType.Instance, (set, call) => Element.FacingDirectionOf(set.CurrentObject), "The facing direction of the player.");
+            AddFunc("Hero", ObjectType.Instance, (set, call) => Element.Part("Hero Of", set.CurrentObject), "The hero of the player.");
+            AddFunc("IsHost", BooleanType.Instance, (set, call) => Element.Compare(set.CurrentObject, Operator.Equal, Element.Part("Host Player")), "Determines if the player is the host.");
+            AddFunc("IsAlive", BooleanType.Instance, (set, call) => Element.Part("Is Alive", set.CurrentObject), "Determines if the player is alive.");
+            AddFunc("IsDead", BooleanType.Instance, (set, call) => Element.Part("Is Dead", set.CurrentObject), "Determines if the player is dead.");
+            AddFunc("IsCrouching", BooleanType.Instance, (set, call) => Element.Part("Is Crouching", set.CurrentObject), "Determines if the player is crouching.");
+            AddFunc("IsDummy", BooleanType.Instance, (set, call) => Element.Part("Is Dummy Bot", set.CurrentObject), "Determines if the player is a dummy bot.");
+            AddFunc("IsFiringPrimary", BooleanType.Instance, (set, call) => Element.Part("Is Firing Primary", set.CurrentObject), "Determines if the player is firing their primary weapon.");
+            AddFunc("IsFiringSecondary", BooleanType.Instance, (set, call) => Element.Part("Is Firing Secondary", set.CurrentObject), "Determines if the player is using their secondary attack.");
+            AddFunc("IsInAir", BooleanType.Instance, (set, call) => Element.Part("Is In Air", set.CurrentObject), "Determines if the player is in the air.");
+            AddFunc("IsOnGround", BooleanType.Instance, (set, call) => Element.Part("Is On Ground", set.CurrentObject), "Determines if the player is on the ground.");
+            AddFunc("IsInSpawnRoom", BooleanType.Instance, (set, call) => Element.Part("Is In Spawn Room", set.CurrentObject), "Determines if the player is in the spawn room.");
+            AddFunc("IsMoving", BooleanType.Instance, (set, call) => Element.Part("Is Moving", set.CurrentObject), "Determines if the player is moving.");
+            AddFunc("IsOnObjective", BooleanType.Instance, (set, call) => Element.Part("Is On Objective", set.CurrentObject), "Determines if the player is on the objective.");
+            AddFunc("IsOnWall", BooleanType.Instance, (set, call) => Element.Part("Is On Wall", set.CurrentObject), "Determines if the player is on a wall.");
+            AddFunc("IsPortraitOnFire", BooleanType.Instance, (set, call) => Element.Part("Is Portrait On Fire", set.CurrentObject), "Determines if the player's portrait is on fire.");
+            AddFunc("IsStanding", BooleanType.Instance, (set, call) => Element.Part("Is Standing", set.CurrentObject), "Determines if the player is standing.");
+            AddFunc("IsUsingAbility1", BooleanType.Instance, (set, call) => Element.Part("Is Using Ability 1", set.CurrentObject), "Determines if the player is using their ability 1.");
+            AddFunc("IsUsingAbility2", BooleanType.Instance, (set, call) => Element.Part("Is Using Ability 2", set.CurrentObject), "Determines if the player is using their ability 2.");
         }
 
         public override CompletionItem GetCompletion() => new CompletionItem() {
@@ -119,32 +104,13 @@ namespace Deltin.Deltinteger.Parse
         public override Scope GetObjectScope() => ObjectScope;
         public override Scope ReturningScope() => null;
         private void AddFunc(FuncMethodBuilder builder) => ObjectScope.AddNativeMethod(new FuncMethod(builder));
+        private void AddFunc(string name, CodeType returnType, Func<ActionSet, MethodCall, IWorkshopTree> action, string documentation) => AddFunc(new FuncMethodBuilder() { Name = name, ReturnType = returnType, Action = action, Documentation = documentation });
         public void OverrideArray(ArrayType array) => AddSharedFunctionsToScope(array.Scope);
         public static void AddSharedFunctionsToScope(Scope scope)
         {
             scope.AddNativeMethod(Teleport);
             scope.AddNativeMethod(SetMoveSpeed);
             scope.AddNativeMethod(SetMaxHealth);
-        }
-    }
-
-    class VariableShorthand
-    {
-        public InternalVar Variable { get; }
-        private Func<IWorkshopTree, IWorkshopTree> Reference { get; }
-
-        public VariableShorthand(string name, CodeType type, Func<IWorkshopTree, IWorkshopTree> reference)
-        {
-            Variable = new InternalVar(name, CompletionItemKind.Property) {
-                CodeType = type,
-                VariableType = VariableType.ElementReference
-            };
-            Reference = reference;
-        }
-
-        public void Assign(IWorkshopTree reference, VarIndexAssigner assigner)
-        {
-            assigner.Add(Variable, Reference.Invoke(reference));
         }
     }
 }

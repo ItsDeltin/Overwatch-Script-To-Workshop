@@ -15,7 +15,7 @@ namespace Deltin.Deltinteger.Parse
         private Importer Importer { get; }
         public Diagnostics Diagnostics { get; }
         public ScriptTypes Types { get; } = new ScriptTypes();
-        public Scope PlayerVariableScope { get; private set; } = new Scope("player variables");
+        public Scope PlayerVariableScope { get; set; }
         public Scope GlobalScope { get; }
         public Scope RulesetScope { get; }
         public VarCollection VarCollection { get; } = new VarCollection();
@@ -319,13 +319,23 @@ namespace Deltin.Deltinteger.Parse
         public List<CodeType> AllTypes { get; } = new List<CodeType>();
         public List<CodeType> DefinedTypes { get; } = new List<CodeType>();
         public List<CodeType> CalledTypes { get; } = new List<CodeType>();
+        private readonly PlayerType _playerType;
+
+        public ScriptTypes()
+        {
+            _playerType = new PlayerType();
+        }
 
         public void GetDefaults(DeltinScript deltinScript)
         {
+            AllTypes.Add(_playerType);
             AllTypes.AddRange(CodeType.DefaultTypes);
             AllTypes.Add(new Pathfinder.PathmapClass(deltinScript));
             AllTypes.Add(new Pathfinder.PathResolveClass());
             AllTypes.Add(new DynamicType(deltinScript));
+
+            _playerType.ResolveElements();
+            deltinScript.PlayerVariableScope = _playerType.ObjectScope;
         }
 
         public CodeType GetCodeType(string name) => AllTypes.FirstOrDefault(type => type.Name == name);
@@ -369,11 +379,11 @@ namespace Deltin.Deltinteger.Parse
         public CodeType Boolean() => null;
         public CodeType Number() => null;
         public CodeType String() => null;
-        public CodeType Player() => null;
-        public CodeType Players() => null;
-        public CodeType PlayerArray() => null;
+        public CodeType Player() => _playerType;
+        public CodeType Players() => new PipeType(_playerType, PlayerArray());
+        public CodeType PlayerArray() => new ArrayType(_playerType);
         public CodeType Vector() => VectorType.Instance;
-        public CodeType PlayerOrVector() => null;
+        public CodeType PlayerOrVector() => new PipeType(Player(), Vector());
         public CodeType Button() => null;
     }
 

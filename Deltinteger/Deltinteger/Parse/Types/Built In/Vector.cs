@@ -149,7 +149,7 @@ namespace Deltin.Deltinteger.Parse
         private static FuncMethod FarthestPlayer = new FuncMethodBuilder() {
             Name = "FarthestPlayer",
             Documentation = "The farthest player from the vector, optionally restricted by team.",
-            ReturnType = PlayerType.Instance,
+            ReturnType = ObjectType.Instance, // TODO: Switch to player
             Parameters = new CodeParameter[] { new CodeParameter("team", "The team to get the farthest player with.", new ExpressionOrWorkshopValue(ElementEnumMember.Team(Team.All))) },
             Action = (ActionSet actionSet, MethodCall call) => Element.Part("Farthest Player From", actionSet.CurrentObject, call.ParameterValues[0])
         };
@@ -157,7 +157,7 @@ namespace Deltin.Deltinteger.Parse
         private static FuncMethod ClosestPlayer = new FuncMethodBuilder() {
             Name = "ClosestPlayer",
             Documentation = "The closest player to the vector, optionally restricted by team.",
-            ReturnType = PlayerType.Instance,
+            ReturnType = ObjectType.Instance, // TODO: Switch to player
             Parameters = new CodeParameter[] { new CodeParameter("team", "The team to get the closest player with.", new ExpressionOrWorkshopValue(ElementEnumMember.Team(Team.All))) },
             Action = (ActionSet actionSet, MethodCall call) => Element.Part("Closest Player To", actionSet.CurrentObject, call.ParameterValues[0])
         };
