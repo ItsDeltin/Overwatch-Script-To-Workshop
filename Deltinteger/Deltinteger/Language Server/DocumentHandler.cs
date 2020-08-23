@@ -153,7 +153,7 @@ namespace Deltin.Deltinteger.LanguageServer
         }
 
         private TextDocumentItem _currentDocument;
-        private AutoResetEvent _wait = new AutoResetEvent(false);
+        private ManualResetEventSlim _wait = new ManualResetEventSlim(false);
         private ManualResetEventSlim _parseDone = new ManualResetEventSlim(false);
         private readonly CancellationTokenSource _stopUpdateListener = new CancellationTokenSource();
 
@@ -165,24 +165,17 @@ namespace Deltin.Deltinteger.LanguageServer
             Task.Run(() => {
                 while (!stopToken.IsCancellationRequested)
                 {
-                    _wait.WaitOne();
-                    _parseDone.Reset();
-                    Debug.WriteLine("* BEGIN parse");
-                    while (true)
-                    {
-                        Update(_currentDocument);
-                        Debug.WriteLine("   - waiting for additional");
+                    // If _wait is not signaled, signal _parseDone.
+                    if (!_wait.IsSet) _parseDone.Set();
+                    _wait.Wait();
 
-                        bool any = false;
-                        while (_wait.WaitOne(100))
-                        {
-                            Debug.WriteLine("+ wait repeat...");
-                            any = true;
-                        }
-                        if (!any) break;
-                    }
-                    Debug.WriteLine("* FINISHED parse");
-                    _parseDone.Set();
+                    // Reset _wait so when _wait.Wait() is called, the task will pause.
+                    // If Parse() is called before the while loops, _wait.Wait() will be skipped and the document will be parsed again.
+                    _wait.Reset();
+
+                    // Make _parseDone wait.
+                    _parseDone.Reset();
+                    Update(_currentDocument);
                 }
             }, stopToken);
         }
