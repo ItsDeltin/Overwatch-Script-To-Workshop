@@ -32,6 +32,7 @@ namespace Deltin.Deltinteger.LanguageServer
         public DocumentHandler(DeltintegerLanguageServer languageServer)
         {
             _languageServer = languageServer;
+            SetupUpdateListener();
         }
 
         public TextDocumentAttributes GetTextDocumentAttributes(DocumentUri uri)
@@ -146,10 +147,44 @@ namespace Deltin.Deltinteger.LanguageServer
         Task<Unit> Parse(Uri uri) => Parse(TextDocumentFromUri(uri));
         Task<Unit> Parse(TextDocumentItem document)
         {
-            return Task.Run(() => {
-                Update(document);
-                return Unit.Value;
-            });
+            _currentDocument = document;
+            _wait.Set();
+            return null;
+        }
+
+        private TextDocumentItem _currentDocument;
+        private AutoResetEvent _wait = new AutoResetEvent(false);
+        private ManualResetEventSlim _parseDone = new ManualResetEventSlim(false);
+        private readonly CancellationTokenSource _stopUpdateListener = new CancellationTokenSource();
+
+        public async Task WaitForParse() => await Task.Run(() => _parseDone.Wait());
+
+        void SetupUpdateListener()
+        {
+            var stopToken = _stopUpdateListener.Token;
+            Task.Run(() => {
+                while (!stopToken.IsCancellationRequested)
+                {
+                    _wait.WaitOne();
+                    _parseDone.Reset();
+                    Debug.WriteLine("* BEGIN parse");
+                    while (true)
+                    {
+                        Update(_currentDocument);
+                        Debug.WriteLine("   - waiting for additional");
+
+                        bool any = false;
+                        while (_wait.WaitOne(100))
+                        {
+                            Debug.WriteLine("+ wait repeat...");
+                            any = true;
+                        }
+                        if (!any) break;
+                    }
+                    Debug.WriteLine("* FINISHED parse");
+                    _parseDone.Set();
+                }
+            }, stopToken);
         }
 
         void Update(TextDocumentItem item)
@@ -195,15 +230,6 @@ namespace Deltin.Deltinteger.LanguageServer
         {
             await Task.WhenAny(_scriptReady.Task, Task.Delay(10000));
             return _languageServer.LastParse;
-        }
-    }
-
-    class TypeUpdateQueue
-    {
-        public TextDocumentItem ParseItem { get; }
-        public TypeUpdateQueue(TextDocumentItem parseItem)
-        {
-            ParseItem = parseItem;
         }
     }
 }
