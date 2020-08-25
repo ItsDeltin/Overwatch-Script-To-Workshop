@@ -2,110 +2,154 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.IO;
-using System.Xml;
 using System.Xml.Serialization;
 using Deltin.Deltinteger.Csv;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.Models;
+using Newtonsoft.Json;
 
 namespace Deltin.Deltinteger.Pathfinder
 {
-    public class PathMap
+    public class Pathmap
     {
-        private static readonly Log Log = new Log("PathMap");
-
         // nodesOut and segmentsOut must equal the ID override in Modules/PathfindEditor.del:
         // line 312: define globalvar nodesOut    [3];
         // line 313: define globalvar segmentsOut [4];
-        private const int nodesOut = 3;
-        private const int segmentsOut = 4;
+        private const int nodesOut = 0;
+        private const int segmentsOut = 1;
+        private const int attributesOut = 2;
 
-        public static PathMap ImportFromCSV(string file)
+        public static Pathmap ImportFromCSVFile(string file, IPathmapErrorHandler errorHandler) => ImportFromCSV(File.ReadAllText(file).Trim(), errorHandler);
+        public static Pathmap ImportFromCSV(string text, IPathmapErrorHandler errorHandler)
         {
-            CsvFrame frame = CsvFrame.ParseOne(File.ReadAllText(file).Trim());
-
-            if (frame.VariableSetOwner != "Global")
-            {
-                Log.Write(LogLevel.Normal, new ColorMod("Error: need the global variable set, got " + frame.VariableSetOwner + " instead.", ConsoleColor.Red));
+            CsvFrame frame; 
+            try {
+                frame = CsvFrame.ParseOne(text);
+            }
+            catch (Exception) {
+                errorHandler.Error("Incorrect CSV format.");
                 return null;
             }
 
-            List<Vertex> vectors = new List<Vertex>();
+            if (frame.VariableSetOwner != "Global")
+            {
+                errorHandler.Error("Need the global variable set, got the '" + frame.VariableSetOwner + "' variable set instead.");
+                return null;
+            }
+
+            // Get nodes
             CsvArray nodeArray = frame.VariableValues[nodesOut] as CsvArray;
 
+            if (nodeArray == null)
+            {
+                errorHandler.Error("Incorrect format, 'nodesOut' is not an array. Did you compile your pathmap?");
+                return null;
+            }
+
+            Vertex[] vectors = new Vertex[nodeArray.Values.Length];
             for (int i = 0; i < nodeArray.Values.Length; i++)
             {
                 CsvVector nodeVector = (CsvVector)nodeArray.Values[i];
-                vectors.Add(nodeVector.Value);
+                vectors[i] = nodeVector.Value;
             }
             
-            List<Segment> segments = new List<Segment>();
+            // Get segments
             CsvArray segmentArray = frame.VariableValues[segmentsOut] as CsvArray;
 
+            if (segmentArray == null)
+            {
+                errorHandler.Error("Incorrect format, 'segmentsOut' is not an array.");
+                return null;
+            }
+
+            Segment[] segments = new Segment[segmentArray.Values.Length];
             for (int i = 0; i < segmentArray.Values.Length; i++)
             {
                 CsvVector segmentVector = (CsvVector)segmentArray.Values[i];
-
-                segments.Add(new Segment(
+                segments[i] = new Segment(
                     (int)segmentVector.Value.X,
-                    (int)segmentVector.Value.Y,
-                    (int)segmentVector.Value.Z
-                ));
+                    (int)segmentVector.Value.Y
+                );
             }
             
-            return new PathMap(vectors.ToArray(), segments.ToArray());
+            // Get attributes
+            CsvArray attributeArray = frame.VariableValues[attributesOut] as CsvArray;
+
+            if (attributeArray == null)
+            {
+                errorHandler.Error("Incorrect format, 'attributesOut' is not an array.");
+                return null;
+            }
+
+            MapAttribute[] attributes = new MapAttribute[attributeArray.Values.Length];
+            for (int i = 0; i < attributeArray.Values.Length; i++)
+            {
+                CsvVector attributeVector = (CsvVector)attributeArray.Values[i];
+                attributes[i] = new MapAttribute(
+                    (int)attributeVector.Value.X,
+                    (int)attributeVector.Value.Y,
+                    (int)attributeVector.Value.Z
+                );
+            }
+            
+            return new Pathmap(vectors.ToArray(), segments.ToArray(), attributes);
         }
 
-        public static PathMap ImportFromXML(string file)
+        public static Pathmap ImportFromText(string text)
         {
-            using (var reader = XmlReader.Create(file))
-            {
-                XmlSerializer serializer = new XmlSerializer(typeof(PathMap));
-                return (PathMap)serializer.Deserialize(reader);
-            }
+            if (LegacyPathmap.TryLoad(text, out Pathmap legacyMap)) return legacyMap;
+            return Deserialize(text);
         }
+        public static Pathmap ImportFromFile(string file)
+        {
+            if (LegacyPathmap.TryLoadFile(file, out Pathmap legacyMap)) return legacyMap;
+            return Deserialize(System.IO.File.ReadAllText(file));
+        }
+        private static Pathmap Deserialize(string text) => JsonConvert.DeserializeObject<Pathmap>(text);
 
         public Vertex[] Nodes { get; set; }
         public Segment[] Segments { get; set; }
+        public MapAttribute[] Attributes { get; set; }
 
-        public PathMap(Vertex[] nodes, Segment[] segments)
+        public Pathmap(Vertex[] nodes, Segment[] segments, MapAttribute[] attributes)
         {
             Nodes = nodes;
             Segments = segments;
+            Attributes = attributes;
         }
 
-        private PathMap() {}
+        private Pathmap() {}
 
-        public string ExportAsXML()
-        {
-            XmlSerializer serializer = new XmlSerializer(typeof(PathMap));
-            XmlSerializerNamespaces ns = new XmlSerializerNamespaces();
-            ns.Add("","");
+        public string ExportAsJSON() => JsonConvert.SerializeObject(this, Formatting.Indented);
 
-            string result;
-            using (StringWriter stringWriter = new StringWriter())
-            {
-                serializer.Serialize(stringWriter, this, ns);
-                result = stringWriter.ToString();
-            }
-            return result;
-        }
-
-        public Element NodesAsWorkshopData()
-        {
-            return Element.CreateArray(
-                Nodes.Select(node => node.ToVector()).ToArray()
-            );
-        }
-        public Element SegmentsAsWorkshopData()
-        {
-            return Element.CreateArray(
-                Segments.Select(segment => segment.AsWorkshopData()).ToArray()
-            );
-        }
+        public Element NodesAsWorkshopData() => Element.CreateArray(
+            Nodes.Select(node => node.ToVector()).ToArray()
+        );
+        public Element SegmentsAsWorkshopData() => Element.CreateArray(
+            Segments.Select(segment => segment.AsWorkshopData()).ToArray()
+        );
+        public Element AttributesAsWorkshopData() => Element.CreateArray(
+            Attributes.Select(attribute => attribute.AsWorkshopData()).ToArray()
+        );
     }
 
     public class Segment
+    {
+        public int Node1 { get; set; }
+        public int Node2 { get; set; }
+
+        public Segment(int node1, int node2)
+        {
+            Node1 = node1;
+            Node2 = node2;
+        }
+
+        private Segment() {}
+
+        public V_Vector AsWorkshopData() => new V_Vector((double)Node1, (double)Node2, 0);
+    }
+
+    public class MapAttribute
     {
         [XmlAttribute]
         public int Node1 { get; set; }
@@ -114,23 +158,31 @@ namespace Deltin.Deltinteger.Pathfinder
         [XmlAttribute]
         public int Attribute { get; set; }
 
-        public Segment(int node1, int node2, int attribute)
+        public MapAttribute(int node1, int node2, int attribute)
         {
             Node1 = node1;
             Node2 = node2;
             Attribute = attribute;
         }
+        public MapAttribute() {}
 
-        private Segment() {}
+        public Element AsWorkshopData() => new V_Vector(Node1, Node2, Attribute);
+    }
 
-        public bool ShouldSerializeAttribute()
+    public interface IPathmapErrorHandler
+    {
+        void Error(string error);
+    }
+    
+    class ConsolePathmapErrorHandler : IPathmapErrorHandler
+    {
+        private readonly Log log;
+
+        public ConsolePathmapErrorHandler(Log log)
         {
-            return Attribute != 0;
+            this.log = log;
         }
 
-        public V_Vector AsWorkshopData()
-        {
-            return new V_Vector((double)Node1, (double)Node2, (double)Attribute);
-        }
+        public void Error(string error) => log.Write(LogLevel.Normal, new ColorMod("Error: " + error, ConsoleColor.Red));
     }
 }

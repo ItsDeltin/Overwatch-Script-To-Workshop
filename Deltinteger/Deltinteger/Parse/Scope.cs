@@ -45,7 +45,7 @@ namespace Deltin.Deltinteger.Parse
             return new Scope(this, name);
         }
 
-        private void IterateElements(Scope getter, bool iterateVariables, bool iterateMethods, Func<ScopeIterate, ScopeIterateAction> element)
+        private void IterateElements(bool iterateVariables, bool iterateMethods, Func<ScopeIterate, ScopeIterateAction> element, Func<Scope, ScopeIterateAction> onEmpty = null)
         {
             Scope current = this;
 
@@ -71,6 +71,12 @@ namespace Deltin.Deltinteger.Parse
                     if (action == ScopeIterateAction.Stop) return;
                     if (action == ScopeIterateAction.StopAfterScope) stopAfterScope = true;
                 }
+                // If there are no scopeables and onEmpty is not null, invoke onEmpty. 
+                if (checkScopeables.Count == 0 && onEmpty != null)
+                {
+                    ScopeIterateAction action = onEmpty.Invoke(current);
+                    if (action != ScopeIterateAction.Continue) return;
+                }
 
                 if (current.PrivateCatch) getPrivate = false;
                 if (current.ProtectedCatch) getProtected = false;
@@ -78,6 +84,22 @@ namespace Deltin.Deltinteger.Parse
 
                 current = current.Parent;
             }
+        }
+
+        public void CopyAll(Scope other, Scope getter)
+        {
+            other.IterateElements(true, true, iterate => {
+                // Add the element.
+                if (iterate.Element is IVariable variable) Variables.Add(variable);
+                if (iterate.Element is IMethod method) Methods.Add(method);
+
+                if (iterate.Container.PrivateCatch || iterate.Container.CompletionCatch) return ScopeIterateAction.StopAfterScope;
+                return ScopeIterateAction.Continue;
+            }, scope => {
+                // On empty scope.
+                if (scope.PrivateCatch || scope.CompletionCatch) return ScopeIterateAction.StopAfterScope;
+                return ScopeIterateAction.Continue;
+            });
         }
 
         /// <summary>
@@ -128,6 +150,7 @@ namespace Deltin.Deltinteger.Parse
         {
             IVariable element = null;
             Scope current = this;
+
             while (current != null && element == null)
             {
                 element = current.Variables.FirstOrDefault(element => element.Name == name);
@@ -175,6 +198,27 @@ namespace Deltin.Deltinteger.Parse
             Methods.Add(method);
         }
 
+        public void AddMacro(MacroVar macro, FileDiagnostics diagnostics, DocRange range, bool checkConflicts = true)
+        {
+            if (macro == null) throw new ArgumentNullException(nameof(macro));
+            if (Variables.Contains(macro)) throw new Exception("macro reference is already in scope.");
+
+            if (checkConflicts && HasConflict(macro))
+            {
+                string message = "A macro with the same name and parameter types was already defined in this scope.";
+
+                if (diagnostics != null && range != null)
+                {
+                    diagnostics.Error(message, range);
+                    return;
+                }
+                else
+                    throw new Exception(message);
+            }
+
+            Variables.Add(macro);
+        }
+
         public void AddNativeMethod(IMethod method)
         {
             AddMethod(method, null, null);
@@ -200,6 +244,11 @@ namespace Deltin.Deltinteger.Parse
             return GetMethodOverload(method) != null;
         }
 
+        public bool HasConflict(MacroVar macro)
+        {
+            return GetMacroOverload(macro.Name, macro.DefinedAt) != null;
+        }
+
         /// <summary>Gets a method in the scope that has the same name and parameter types. Can potentially resolve to itself if the method being tested is in the scope.</summary>
         /// <param name="method">The method to get a matching overload.</param>
         /// <returns>A method with the matching overload, or null if none is found.</returns>
@@ -220,7 +269,7 @@ namespace Deltin.Deltinteger.Parse
 
             IMethod method = null;
 
-            IterateElements(null, false, true, itElement => {
+            IterateElements(false, true, itElement => {
                 // Convert the current element to an IMethod for checking.
                 IMethod checking = (IMethod)itElement.Element;
 
@@ -239,6 +288,29 @@ namespace Deltin.Deltinteger.Parse
             });
 
             return method;
+        }
+
+        public IVariable GetMacroOverload(string name, Location definedAt)
+        {
+            if (name == null) throw new ArgumentNullException(nameof(name));
+            IVariable variable = null;
+
+            IterateElements(true, false, itElement => {
+                // Convert the current element to an IMethod for checking.
+                IVariable checking = (IVariable)itElement.Element;
+
+                // If the name does not match or the number of parameters are not equal, continue.
+                if (checking.Name != name || checking.DefinedAt == definedAt) return ScopeIterateAction.Continue;
+
+                // Loop through all parameters.
+               
+                // Parameter overload matches.
+                variable = checking;
+                return ScopeIterateAction.Stop;
+            });
+
+            return variable;
+
         }
 
         /// <summary>Gets all methods in the scope with the provided name.</summary>
@@ -280,7 +352,7 @@ namespace Deltin.Deltinteger.Parse
 
             bool matches = false;
 
-            IterateElements(null, true, true, itElement => {
+            IterateElements(true, true, itElement => {
                 if (element == itElement.Element)
                 {
                     matches = true;
@@ -301,7 +373,7 @@ namespace Deltin.Deltinteger.Parse
             // Just return true if the access level is public.
             if (accessLevel == AccessLevel.Public) return true;
 
-            Scope current = Parent;
+            Scope current = this;
             while (current != null)
             {
                 // If the current scope is the scope being looked for, return true.
@@ -325,7 +397,7 @@ namespace Deltin.Deltinteger.Parse
         {
             List<CompletionItem> completions = new List<CompletionItem>();
 
-            IterateElements(getter, true, true, (itElement) => {
+            IterateElements(true, true, (itElement) => {
                 // Add the completion of the current element.
                 if (WasScopedAtPosition(itElement.Element, pos, getter))
                     completions.Add(itElement.Element.GetCompletion());
@@ -362,8 +434,19 @@ namespace Deltin.Deltinteger.Parse
             return globalScope;
         }
 
-        public bool IsAlreadyInScope(IMethod method) => Methods.Contains(method);
-        public bool IsAlreadyInScope(IScopeable scopeable) => Variables.Contains(scopeable);
+        public bool ScopeContains(IScopeable scopeable, Scope getter)
+        {
+            bool found = false;
+            IterateElements(true, true, iterate => {
+                if (iterate.Element == scopeable)
+                {
+                    found = true;
+                    return ScopeIterateAction.Stop;
+                }
+                return ScopeIterateAction.Continue;
+            });
+            return found;
+        }
     
         public void EndScope(ActionSet actionSet, bool includeParents)
         {

@@ -25,7 +25,7 @@ namespace Deltin.Deltinteger.Parse
             Returns = GetReturns();
             ReturnsValue = Returns.Any(r => r.ReturningValue != null);
         }
-        public BlockTreeScan(bool doesReturnValue, ParseInfo parseInfo, DefinedMethod method) : this(parseInfo, method.block, method.Name, DocRange.GetRange(method.context.name))
+        public BlockTreeScan(bool doesReturnValue, ParseInfo parseInfo, DefinedMethod method) : this(parseInfo, method.Block, method.Name, DocRange.GetRange(method.Context.name))
         {
             ReturnsValue = doesReturnValue;
         }
@@ -46,6 +46,10 @@ namespace Deltin.Deltinteger.Parse
                 foreach (var ret in Returns)
                     if (ret.ReturningValue == null)
                         _parseInfo.Script.Diagnostics.Error("Must return a value.", ret.ErrorRange);
+
+                // Syntax error if the return type is constant and there are more than one returns.
+                if (ReturnType != null && ReturnType.IsConstant() && MultiplePaths)
+                    _parseInfo.Script.Diagnostics.Error("Cannot have more than one return statement if the function's return type is constant.", _genericErrorRange);
             }
             else
             {

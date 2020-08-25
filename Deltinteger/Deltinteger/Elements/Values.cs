@@ -285,6 +285,7 @@ namespace Deltin.Deltinteger.Elements
     public class V_ArraySlice : Element {}
 
     [ElementData("Attacker", ValueType.Player)]
+    [Restricted(RestrictedCallType.Attacker)]
     public class V_Attacker : Element {}
 
     [ElementData("Backward", ValueType.Vector)]
@@ -573,18 +574,23 @@ namespace Deltin.Deltinteger.Elements
     public class V_EntityExists : Element {}
 
     [ElementData("Event Damage", ValueType.Number)]
+    [Restricted(RestrictedCallType.Attacker)]
     public class V_EventDamage : Element {}
 
     [ElementData("Event Healing", ValueType.Number)]
+    [Restricted(RestrictedCallType.Healer)]
     public class V_EventHealing : Element {}
 
     [ElementData("Event Player", ValueType.Player)]
+    [Restricted(RestrictedCallType.EventPlayer)]
     public class V_EventPlayer : Element {}
 
     [ElementData("Event Was Critical Hit", ValueType.Boolean)]
+    [Restricted(RestrictedCallType.Attacker)]
     public class V_EventWasCriticalHit : Element {}
 
     [ElementData("Event Was Health Pack", ValueType.Boolean)]
+    [Restricted(RestrictedCallType.Healer)]
     public class V_EventWasHealthPack : Element {}
 
     [ElementData("Eye Position", ValueType.Vector)]
@@ -654,9 +660,11 @@ namespace Deltin.Deltinteger.Elements
     public class V_HasStatus : Element {}
 
     [ElementData("Healee", ValueType.Player)]
+    [Restricted(RestrictedCallType.Healer)]
     public class V_Healee : Element {}
 
     [ElementData("Healer", ValueType.Player)]
+    [Restricted(RestrictedCallType.Healer)]
     public class V_Healer : Element {}
 
     [ElementData("Health", ValueType.Number)]
@@ -992,7 +1000,7 @@ namespace Deltin.Deltinteger.Elements
                 if (a.Value == 1) return 1;
             }
 
-            if (b != null && (b.Value == 0 || b.Value == 1)) return 0;
+            if (b != null && b.Value == 0) return 0;
 
             if (((Element)ParameterValues[0]).EqualTo(ParameterValues[1])) return 0;
             
@@ -1105,7 +1113,7 @@ namespace Deltin.Deltinteger.Elements
         }
         public V_Number() : this(0) {}
 
-        public override string ToWorkshop(OutputLanguage language)
+        public override string ToWorkshop(OutputLanguage language, ToWorkshopContext context)
         {
             if (double.IsNaN(Value))
                 Value = 0;
@@ -1246,7 +1254,7 @@ namespace Deltin.Deltinteger.Elements
     [ElementData("Point Capture Percentage", ValueType.Number)]
     public class V_PointCapturePercentage : Element {}
 
-    [ElementData("Position of", ValueType.Vector)]
+    [ElementData("Position Of", ValueType.Vector)]
     [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
     public class V_PositionOf : Element {}  
 
@@ -1655,6 +1663,10 @@ namespace Deltin.Deltinteger.Elements
         {
             ParameterValues = new IWorkshopTree[] { x, y, z };
         }
+        public V_Vector(IWorkshopTree x, IWorkshopTree y, IWorkshopTree z)
+        {
+            ParameterValues = new IWorkshopTree[] { x, y, z };
+        }
         public V_Vector(double x, double y, double z) : this(new V_Number(x), new V_Number(y), new V_Number(z))
         {
         }
@@ -1793,6 +1805,7 @@ namespace Deltin.Deltinteger.Elements
     public class V_VerticalSpeedOf : Element {}
 
     [ElementData("Victim", ValueType.Player)]
+    [Restricted(RestrictedCallType.Attacker)]
     public class V_Victim : Element {}
 
     [ElementData("World Vector Of", ValueType.Vector)]
@@ -1878,10 +1891,12 @@ namespace Deltin.Deltinteger.Elements
     [HideElement]
     public class V_IfThenElse : Element
     {
-        public override string ToWorkshop(OutputLanguage language)
+        public override string ToWorkshop(OutputLanguage language, ToWorkshopContext context)
         {
             AddMissingParameters();
-            return ParameterValues[0].ToWorkshop(language) + " ? " + ParameterValues[1].ToWorkshop(language) + " : " + ParameterValues[2].ToWorkshop(language);
+            string result = ParameterValues[0].ToWorkshop(language, ToWorkshopContext.NestedValue) + " ? " + ParameterValues[1].ToWorkshop(language, ToWorkshopContext.NestedValue) + " : " + ParameterValues[2].ToWorkshop(language, ToWorkshopContext.NestedValue);
+            if (context == ToWorkshopContext.ConditionValue) result = "(" + result + ")";
+            return result;
         }
     }
 
@@ -1894,6 +1909,7 @@ namespace Deltin.Deltinteger.Elements
     public class V_IsJumping : Element {}
 
     [ElementData("Event Direction", ValueType.Vector)]
+    [Restricted(RestrictedCallType.Knockback)]
     public class V_EventDirection : Element {}
 
     [ElementData("Button", ValueType.Button)]
@@ -1901,6 +1917,7 @@ namespace Deltin.Deltinteger.Elements
     public class V_ButtonValue : Element {}
 
     [ElementData("Event Ability", ValueType.Button)]
+    [Restricted(RestrictedCallType.Ability)]
     public class V_EventAbility : Element {}
 
     [ElementData("Ability Cooldown", ValueType.Number)]
@@ -1909,7 +1926,98 @@ namespace Deltin.Deltinteger.Elements
     public class V_AbilityCooldown : Element {}
 
     [ElementData("Ability Icon String", ValueType.String)]
-    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [Parameter("Hero", ValueType.Hero, typeof(V_HeroVar))]
     [Parameter("Button", ValueType.Button, typeof(V_ButtonValue))]
     public class V_AbilityIconString : Element {}
+
+    [ElementData("Is In Alternate Form", ValueType.Boolean)]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    public class V_IsInAlternateForm : Element {}
+
+    [ElementData("Is Duplicating", ValueType.Boolean)]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    public class V_IsDuplicating : Element {}
+
+    [ElementData("Hero Being Duplicated", ValueType.Hero)]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    public class V_HeroBeingDuplicated : Element {}
+
+    [ElementData("Ammo", ValueType.Number)]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [Parameter("Clip", ValueType.Number, typeof(V_Number))]
+    public class V_Ammo : Element {}
+
+    [ElementData("Max Ammo", ValueType.Number)]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [Parameter("Clip", ValueType.Number, typeof(V_Number))]
+    public class V_MaxAmmo : Element {}
+
+    [ElementData("Weapon", ValueType.Number)]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    public class V_Weapon : Element {}
+
+    [ElementData("Is Reloading", ValueType.Boolean)]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    public class V_IsReloading : Element {}
+
+    [ElementData("Event Was Environment", ValueType.Boolean)]
+    [Restricted(RestrictedCallType.Attacker)]
+    public class V_EventWasEnvironment : Element {}
+
+    [ElementData("Current Array Index", ValueType.Number)]
+    public class V_CurrentArrayIndex : Element {}
+
+    [ElementData("Input Binding String", ValueType.String)]
+    [Parameter("Button", ValueType.Button, typeof(V_ButtonValue))]
+    public class V_InputBindingString : Element {}
+
+    [ElementData("Ability Charge", ValueType.Number)]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [Parameter("Button", ValueType.Button, typeof(V_ButtonValue))]
+    public class V_AbilityCharge : Element {}
+
+    [ElementData("Ability Resource", ValueType.Number)]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [Parameter("Button", ValueType.Button, typeof(V_ButtonValue))]
+    public class V_AbilityResource : Element {}
+
+    [ElementData("Mapped Array", ValueType.Number)]
+    [Parameter("Array", ValueType.Any, typeof(V_AllPlayers))]
+    [Parameter("Mapping Expression", ValueType.Any, typeof(V_ArrayElement))]
+    public class V_MappedArray : Element {}
+
+    [ElementData("Workshop Setting Integer", ValueType.Number)]
+    [Parameter("Category", ValueType.String, null)]
+    [Parameter("Name", ValueType.String, null)]
+    [Parameter("Default", ValueType.Number, null)]
+    [Parameter("Min", ValueType.Number, null)]
+    [Parameter("Max", ValueType.Number, null)]
+    public class V_WorkshopSettingInteger : Element {}
+
+    [ElementData("Workshop Setting Real", ValueType.Number)]
+    [Parameter("Category", ValueType.String, null)]
+    [Parameter("Name", ValueType.String, null)]
+    [Parameter("Default", ValueType.Number, null)]
+    [Parameter("Min", ValueType.Number, null)]
+    [Parameter("Max", ValueType.Number, null)]
+    public class V_WorkshopSettingReal : Element {}
+
+    [ElementData("Workshop Setting Toggle", ValueType.Boolean)]
+    [Parameter("Category", ValueType.String, null)]
+    [Parameter("Name", ValueType.String, null)]
+    [Parameter("Default", ValueType.Boolean, null)]
+    public class V_WorkshopSettingToggle : Element {}
+
+    [ElementData("Last Created Health Pool", ValueType.Any)]
+    public class V_LastCreatedHealthPool : Element {}
+
+    [ElementData("Health Of Type", ValueType.Number)]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [EnumParameter("Health Type", typeof(HealthType))]
+    public class V_HealthOfType : Element {}
+
+    [ElementData("Max Health Of Type", ValueType.Number)]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [EnumParameter("Health Type", typeof(HealthType))]
+    public class V_MaxHealthOfType : Element {}
 }

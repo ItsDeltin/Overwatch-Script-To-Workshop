@@ -17,6 +17,7 @@ namespace Deltin.Deltinteger.Parse
         public bool IsSettable { get; set; } = true;
         public VariableType VariableType => VariableType.Global;
         public bool Static => true;
+        public TokenType? TokenType { get; set; } = null;
 
         public InternalVar(string name, CompletionItemKind completionItemKind = CompletionItemKind.Variable)
         {
@@ -29,6 +30,12 @@ namespace Deltin.Deltinteger.Parse
             AccessLevel = accessLevel;
             CompletionItemKind = completionItemKind;
         }
+        public InternalVar(string name, CodeType type, CompletionItemKind completionItemKind = CompletionItemKind.Variable)
+        {
+            Name = name;
+            CodeType = type;
+            CompletionItemKind = completionItemKind;
+        }
 
         public IWorkshopTree Parse(ActionSet actionSet) => throw new Exception("Cannot parse internal variables.");
         public virtual Scope ReturningScope() => CodeType?.ReturningScope();
@@ -39,6 +46,7 @@ namespace Deltin.Deltinteger.Parse
         public virtual void Call(ParseInfo parseInfo, DocRange callRange)
         {
             parseInfo.Script.AddHover(callRange, GetLabel(true));
+            if (TokenType != null) parseInfo.Script.AddToken(callRange, (TokenType)TokenType);
         }
 
         public virtual CompletionItem GetCompletion() => new CompletionItem() {
@@ -51,7 +59,7 @@ namespace Deltin.Deltinteger.Parse
         public virtual string GetLabel(bool markdown)
         {
             string typeName = "define";
-            if (CodeType != null) typeName = CodeType.Name;
+            if (CodeType != null) typeName = CodeType.GetName();
             if (markdown) return HoverHandler.Sectioned(typeName + " " + Name, Documentation);
             else return typeName + " " + Name;
         }

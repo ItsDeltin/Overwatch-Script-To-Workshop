@@ -15,7 +15,15 @@
 			"preLaunchTask": {
 				"type": "npm",
 				"script": "compile"
-            }
+			},
+			"sourceMaps": true
+		},
+		{
+			"type": "node",
+			"request": "launch",
+			"name": "Build Grammar",
+			"program": "${workspaceRoot}/build-grammar/build-grammar.ts",
+			"outFiles": ["${workspaceRoot}/build-grammar/out/build-grammar.js"]
 		}
     ]
 }

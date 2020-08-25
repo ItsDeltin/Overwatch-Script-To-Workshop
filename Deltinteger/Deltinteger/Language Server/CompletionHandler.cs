@@ -5,10 +5,13 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Deltin.Deltinteger.Parse;
-using OmniSharp.Extensions.LanguageServer.Protocol.Server;
-using OmniSharp.Extensions.LanguageServer.Protocol.Models;
-using OmniSharp.Extensions.LanguageServer.Protocol.Client.Capabilities;
-using OmniSharp.Extensions.LanguageServer.Protocol.Server.Capabilities;
+using ICompletionHandler = OmniSharp.Extensions.LanguageServer.Protocol.Document.ICompletionHandler;
+using CompletionList = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionList;
+using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
+using CompletionParams = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionParams;
+using CompletionRegistrationOptions = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionRegistrationOptions;
+using Container = OmniSharp.Extensions.LanguageServer.Protocol.Models.Container<string>;
+using CompletionCapability = OmniSharp.Extensions.LanguageServer.Protocol.Client.Capabilities.CompletionCapability;
 
 namespace Deltin.Deltinteger.LanguageServer
 {
@@ -25,23 +28,18 @@ namespace Deltin.Deltinteger.LanguageServer
 
         public async Task<CompletionList> Handle(CompletionParams completionParams, CancellationToken token)
         {
-            List<CompletionItem> items = new List<CompletionItem>();
-
-            _languageServer.DocumentHandler.WaitForNextUpdate();
-
-            // Get default type completion.
-            foreach (var defaultType in CodeType.DefaultTypes)
-                items.Add(defaultType.GetCompletion());
+            await _languageServer.DocumentHandler.WaitForParse();
 
             // If the script has not been parsed yet, return the default completion.
-            if (_languageServer.LastParse == null) return items;
+            if (_languageServer.LastParse == null) return new CompletionList();
+            List<CompletionItem> items = new List<CompletionItem>();
 
             // Add the user defined types.
-            foreach (var definedType in _languageServer.LastParse.Types.DefinedTypes)
+            foreach (var definedType in _languageServer.LastParse.Types.AllTypes)
                 items.Add(definedType.GetCompletion());
 
             // Get the script from the uri. If it isn't parsed, return the default completion. 
-            var script = _languageServer.LastParse.ScriptFromUri(completionParams.TextDocument.Uri);
+            var script = _languageServer.LastParse.ScriptFromUri(completionParams.TextDocument.Uri.ToUri());
             if (script == null) return items;
 
             var completions = script.GetCompletionRanges();
@@ -94,7 +92,7 @@ namespace Deltin.Deltinteger.LanguageServer
                 //
                 // If code complete should automatically be trigger on characters not being valid inside
                 // an identifier (for example `.` in JavaScript) list them in `triggerCharacters`.
-                TriggerCharacters = new Container<string>("."),
+                TriggerCharacters = new Container("."),
                 // The server provides support to resolve additional
                 // information for a completion item.
                 ResolveProvider = false

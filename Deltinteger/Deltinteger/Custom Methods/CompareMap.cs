@@ -36,13 +36,13 @@ namespace Deltin.Deltinteger.CustomMethods
             return base.Parse(actionSet, expression, additionalParameterData);
         }
 
-        public override object Validate(ScriptFile script, IExpression value, DocRange valueRange)
+        public override object Validate(ParseInfo parseInfo, IExpression value, DocRange valueRange)
         {
             var variableCallAction = ExpressionTree.ResultingExpression(value) as EnumValuePair;
 
             if (variableCallAction == null || variableCallAction.Member.Value is Map == false)
             {
-                script.Diagnostics.Error("Expected a map value.", valueRange);
+                parseInfo.Script.Diagnostics.Error("Expected a map value.", valueRange);
                 return null;
             }
 

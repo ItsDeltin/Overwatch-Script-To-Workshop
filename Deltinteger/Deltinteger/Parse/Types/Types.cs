@@ -15,7 +15,10 @@ namespace Deltin.Deltinteger.Parse
         public Constructor[] Constructors { get; protected set; } = new Constructor[0];
         public CodeType Extends { get; private set; }
         public string Description { get; protected set; }
+        public Debugger.IDebugVariableResolver DebugVariableResolver { get; protected set; } = new Debugger.DefaultResolver();
         protected string Kind = "class";
+        protected TokenType TokenType { get; set; } = TokenType.Type;
+        protected List<TokenModifier> TokenModifiers { get; set; } = new List<TokenModifier>();
 
         /// <summary>Determines if the class can be deleted with the delete keyword.</summary>
         public bool CanBeDeleted { get; protected set; } = false;
@@ -118,47 +121,47 @@ namespace Deltin.Deltinteger.Parse
         {
             parseInfo.TranslateInfo.Types.CallType(this);
             parseInfo.Script.AddHover(callRange, HoverHandler.Sectioned(Kind + " " + Name, Description));
+            parseInfo.Script.AddToken(callRange, TokenType, TokenModifiers.ToArray());
         }
 
         /// <summary>Gets the completion that will show up for the language server.</summary>
         public abstract CompletionItem GetCompletion();
 
+        /// <summary>Gets the full name of the type.</summary>
+        public virtual string GetName() => Name;
+
         public static CodeType GetCodeTypeFromContext(ParseInfo parseInfo, DeltinScriptParser.Code_typeContext typeContext)
         {
             if (typeContext == null) return null;
-            CodeType type = parseInfo.TranslateInfo.Types.GetCodeType(typeContext.PART().GetText(), parseInfo.Script.Diagnostics, DocRange.GetRange(typeContext));
+            
+            CodeType type = null;
+            if (typeContext.PART() != null) type = parseInfo.TranslateInfo.Types.GetCodeType(typeContext.PART().GetText(), parseInfo.Script.Diagnostics, DocRange.GetRange(typeContext));
 
             // Get generics
-            if (typeContext.generics()?.generic_option() != null)
+            if (typeContext.generics() != null)
             {
                 // Create a list to store the generics.
                 List<CodeType> generics = new List<CodeType>();
 
                 // Get the generics.
-                foreach (var genericContext in typeContext.generics().generic_option())
-                {
-                    if (genericContext.DEFINE() != null)
-                        generics.Add(null);
-                    else
-                        generics.Add(GetCodeTypeFromContext(parseInfo, genericContext.code_type()));
-                }
+                foreach (var genericContext in typeContext.generics().code_type())
+                    generics.Add(GetCodeTypeFromContext(parseInfo, genericContext));
                 
-                if (type is Lambda.BlockLambda)
-                    type = new Lambda.BlockLambda(generics.ToArray());
-                else if (type is Lambda.ValueBlockLambda)
+                if (type is Lambda.ValueBlockLambda)
                     type = new Lambda.ValueBlockLambda(generics[0], generics.Skip(1).ToArray());
+                else if (type is Lambda.BlockLambda)
+                    type = new Lambda.BlockLambda(generics.ToArray());
                 else if (type is Lambda.MacroLambda)
                     type = new Lambda.MacroLambda(generics[0], generics.Skip(1).ToArray());
             }
 
             if (type != null)
-            {
-                type.Call(parseInfo, DocRange.GetRange(typeContext));
+                type.Call(parseInfo, DocRange.GetRange(typeContext.PART()));
 
-                if (typeContext.INDEX_START() != null)
+            if (typeContext.INDEX_START() != null)
                     for (int i = 0; i < typeContext.INDEX_START().Length; i++)
                         type = new ArrayType(type);
-            }
+
             return type;
         }
 
@@ -172,16 +175,15 @@ namespace Deltin.Deltinteger.Parse
         private static void GetDefaultTypes()
         {
             _defaultTypes = new List<CodeType>();
-            foreach (var enumData in EnumData.GetEnumData())
-                _defaultTypes.Add(new ValueGroupType(enumData, !enumData.ConvertableToElement()));
-            
+            _defaultTypes.AddRange(ValueGroupType.EnumTypes);
+
             // Add custom classes here.
-            _defaultTypes.Add(new Pathfinder.PathmapClass());
             _defaultTypes.Add(new Models.AssetClass());
             _defaultTypes.Add(new Lambda.BlockLambda());
             _defaultTypes.Add(new Lambda.ValueBlockLambda());
             _defaultTypes.Add(new Lambda.MacroLambda());
             _defaultTypes.Add(VectorType.Instance);
+            _defaultTypes.Add(Pathfinder.SegmentsStruct.Instance);
         }
     }
 }

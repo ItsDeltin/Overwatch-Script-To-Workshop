@@ -61,19 +61,19 @@ namespace Deltin.Deltinteger.Elements
                 .AppendKeywordLine("event")
                 .AppendLine("{")
                 .Indent()
-                .AppendLine(EnumData.GetEnumValue(RuleEvent).ToWorkshop(builder.OutputLanguage) + ";");
+                .AppendLine(EnumData.GetEnumValue(RuleEvent).ToWorkshop(builder.OutputLanguage, ToWorkshopContext.Other) + ";");
             
             // Add attributes.
             switch (RuleType)
             {
                 case RuleType.PlayerBased:
                     // Player based attributes
-                    builder.AppendLine(EnumData.GetEnumValue(Team).ToWorkshop(builder.OutputLanguage) + ";"); // Team attribute
-                    builder.AppendLine(EnumData.GetEnumValue(Player).ToWorkshop(builder.OutputLanguage) + ";"); // Player attribute
+                    builder.AppendLine(EnumData.GetEnumValue(Team).ToWorkshop(builder.OutputLanguage, ToWorkshopContext.Other) + ";"); // Team attribute
+                    builder.AppendLine(EnumData.GetEnumValue(Player).ToWorkshop(builder.OutputLanguage, ToWorkshopContext.Other) + ";"); // Player attribute
                     break;
                 
                 case RuleType.Subroutine:
-                    builder.AppendLine(Subroutine.ToWorkshop(builder.OutputLanguage) + ";"); // Attribute name
+                    builder.AppendLine(Subroutine.ToWorkshop(builder.OutputLanguage, ToWorkshopContext.Other) + ";"); // Attribute name
                     break;
             }
             builder.Unindent()
@@ -104,9 +104,9 @@ namespace Deltin.Deltinteger.Elements
 
                 foreach (var action in Actions)
                     if (optimize)
-                        builder.AppendLine(action.Optimize().ToWorkshop(builder.OutputLanguage));
+                        builder.AppendLine(action.Optimize().ToWorkshop(builder.OutputLanguage, ToWorkshopContext.Action));
                     else
-                        builder.AppendLine(action.ToWorkshop(builder.OutputLanguage));
+                        builder.AppendLine(action.ToWorkshop(builder.OutputLanguage, ToWorkshopContext.Action));
                 
                 builder.Unindent()
                     .AppendLine("}");
@@ -119,16 +119,18 @@ namespace Deltin.Deltinteger.Elements
         {
             int count = 1;
 
-            foreach (Condition condition in Conditions)
-                count += condition.ElementCount(optimized);
+            if (Conditions != null)
+                foreach (Condition condition in Conditions)
+                    count += condition.ElementCount(optimized);
 
-            foreach (Element action in Actions)
-            {
-                if (optimized)
-                    count += action.Optimize().ElementCount();
-                else
-                    count += action.ElementCount();
-            }
+            if (Actions != null)
+                foreach (Element action in Actions)
+                {
+                    if (optimized)
+                        count += action.Optimize().ElementCount();
+                    else
+                        count += action.ElementCount();
+                }
             
             return count;
         }

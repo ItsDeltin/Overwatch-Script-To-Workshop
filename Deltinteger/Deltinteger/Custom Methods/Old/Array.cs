@@ -19,7 +19,7 @@ namespace Deltin.Deltinteger.Elements
             Element alt2 = Element.Part<V_ValueInArray>(array, Element.Part<V_RoundToInteger>(index, EnumData.GetEnumValue(Rounding.Up))) * (Element.Part<V_RoundToInteger>(index, EnumData.GetEnumValue(Rounding.Up)) - index);
             Element alternative = alt1 + alt2;
 
-            return new MethodResult(null, Element.TernaryConditional(condition, consequent, alternative));
+            return new MethodResult(null, Element.TernaryConditional(condition, consequent, alternative, false));
         }
 
         public override CustomMethodWiki Wiki()
@@ -54,7 +54,7 @@ namespace Deltin.Deltinteger.Elements
             Element alt2 = Element.Part<V_ValueInArray>(array.GetVariable(), Element.Part<V_RoundToInteger>(index.GetVariable(), EnumData.GetEnumValue(Rounding.Up))) * (Element.Part<V_RoundToInteger>(index.GetVariable(), EnumData.GetEnumValue(Rounding.Up)) - index.GetVariable());
             Element alternative = alt1 + alt2;
 
-            return new MethodResult(actions, Element.TernaryConditional(condition, consequent, alternative));
+            return new MethodResult(actions, Element.TernaryConditional(condition, consequent, alternative, false));
         }
 
         public override CustomMethodWiki Wiki()
@@ -171,7 +171,7 @@ namespace Deltin.Deltinteger.Elements
             Element medianIndex = (length + 1) / 2;
             Element consequent = (Element.Part<V_ValueInArray>(array, medianIndex - 0.5) + Element.Part<V_ValueInArray>(array, medianIndex + 0.5)) / 2;
             Element alternative = Element.Part<V_ValueInArray>(array, medianIndex);
-            return new MethodResult(null, Element.TernaryConditional(condition, consequent, alternative));
+            return new MethodResult(null, Element.TernaryConditional(condition, consequent, alternative, false));
         }
 
         public override CustomMethodWiki Wiki()
@@ -204,7 +204,7 @@ namespace Deltin.Deltinteger.Elements
                 medianIndex.SetVariable((length + 1) / 2)
             );
             
-            return new MethodResult(actions, Element.TernaryConditional(condition, consequent, alternative));
+            return new MethodResult(actions, Element.TernaryConditional(condition, consequent, alternative, false));
         }
 
         public override CustomMethodWiki Wiki()
@@ -229,7 +229,7 @@ namespace Deltin.Deltinteger.Elements
             Element medianIndex = (length + 1) / 2;
             Element consequent = (Element.Part<V_ValueInArray>(array, medianIndex - 0.5) + Element.Part<V_ValueInArray>(array, medianIndex + 0.5)) / 2;
             Element alternative = Element.Part<V_ValueInArray>(array, medianIndex);
-            return new MethodResult(null, Element.TernaryConditional(condition, consequent, alternative));
+            return new MethodResult(null, Element.TernaryConditional(condition, consequent, alternative, false));
         }
 
         public override CustomMethodWiki Wiki()
@@ -262,7 +262,7 @@ namespace Deltin.Deltinteger.Elements
                 medianIndex.SetVariable((length + 1) / 2)
             );
 
-            return new MethodResult(actions, Element.TernaryConditional(condition, consequent, alternative));
+            return new MethodResult(actions, Element.TernaryConditional(condition, consequent, alternative, false));
         }
 
         public override CustomMethodWiki Wiki()

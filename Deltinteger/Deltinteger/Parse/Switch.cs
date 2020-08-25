@@ -37,7 +37,7 @@ namespace Deltin.Deltinteger.Parse
             foreach (var switchElement in switchContext.switch_element())
             {
                 // Syntax error if there is a statement before a case.
-                if (switchElement.statement() != null && !inSection && !caseError)
+                if (switchElement.documented_statement() != null && !inSection && !caseError)
                 {
                     parseInfo.Script.Diagnostics.Error("Expected case or default.", DocRange.GetRange(switchElement));
                     caseError = true;
@@ -54,7 +54,7 @@ namespace Deltin.Deltinteger.Parse
                 }
 
                 // Get the statement
-                if (switchElement.statement() != null) elements.Add(new SwitchElement(parseInfo.GetStatement(scope, switchElement.statement())));
+                if (switchElement.documented_statement() != null) elements.Add(new SwitchElement(parseInfo.GetStatement(scope, switchElement.documented_statement())));
                 // Get the case
                 else if (switchElement.@case() != null) elements.Add(new SwitchElement(DocRange.GetRange(switchElement.@case().CASE()), parseInfo.GetExpression(scope, switchElement.@case().expr())));
                 // Get default
@@ -143,9 +143,9 @@ namespace Deltin.Deltinteger.Parse
             switchBuilder.Finish((Element)expression);
         }
 
-        public void AddBreak(ActionSet actionSet)
+        public void AddBreak(ActionSet actionSet, string comment)
         {
-            SkipStartMarker breaker = new SkipStartMarker(actionSet);
+            SkipStartMarker breaker = new SkipStartMarker(actionSet, comment);
             actionSet.AddAction(breaker);
             switchBuilder.SkipToEnd.Add(breaker);
         }

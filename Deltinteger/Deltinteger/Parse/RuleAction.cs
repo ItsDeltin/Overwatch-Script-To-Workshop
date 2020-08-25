@@ -33,6 +33,9 @@ namespace Deltin.Deltinteger.Parse
 
             GetRuleSettings(parseInfo, scope, ruleContext);
 
+            // Store restricted calls
+            CallInfo callInfo = new CallInfo(parseInfo.Script);
+
             // Get the conditions.
             if (ruleContext.rule_if() == null) Conditions = new RuleIfAction[0];
             else
@@ -46,16 +49,19 @@ namespace Deltin.Deltinteger.Parse
                         CompletionRangeKind.Catch
                     ));
 
-                    Conditions[i] = new RuleIfAction(parseInfo, scope, ruleContext.rule_if(i));
+                    Conditions[i] = new RuleIfAction(parseInfo.SetCallInfo(callInfo), scope, ruleContext.rule_if(i));
                     missingBlockRange = DocRange.GetRange(ruleContext.rule_if(i));
                 }
             }
 
             // Get the block.
             if (ruleContext.block() != null)
-                Block = new BlockAction(parseInfo, scope, ruleContext.block());
+                Block = new BlockAction(parseInfo.SetCallInfo(callInfo), scope, ruleContext.block());
             else
                 parseInfo.Script.Diagnostics.Error("Missing block.", missingBlockRange);
+            
+            // Check restricted calls.
+            callInfo.CheckRestrictedCalls(EventType);
             
             // Get the rule order priority.
             if (ruleContext.number() != null)
@@ -113,6 +119,10 @@ namespace Deltin.Deltinteger.Parse
                     }
                 }
             }
+
+            // Set the event type to player if the event type was not set and player or team was changed.
+            if (!_setEventType && ((_setPlayer && Player != PlayerSelector.All) || (_setTeam && Team != Team.All)))
+                EventType = RuleEvent.OngoingPlayer;
 
             // Syntax error if changing the Team type when the Event type is set to Global.
             if (_setEventType && EventType == RuleEvent.OngoingGlobal)

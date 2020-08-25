@@ -27,20 +27,20 @@ namespace Deltin.Deltinteger.Parse
             Options = options ?? new VariableResolveOptions();
         }
 
-        public override object Validate(ScriptFile script, IExpression value, DocRange valueRange)
+        public override object Validate(ParseInfo parseInfo, IExpression value, DocRange valueRange)
         {
-            VariableResolve resolvedVariable = new VariableResolve(Options, value, valueRange, script.Diagnostics);
+            VariableResolve resolvedVariable = new VariableResolve(Options, value, valueRange, parseInfo.Script.Diagnostics);
 
             // Syntax error if the expression is not a variable.
             if (!resolvedVariable.DoesResolveToVariable)
-                script.Diagnostics.Error("Expected a variable.", valueRange);
+                parseInfo.Script.Diagnostics.Error("Expected a variable.", valueRange);
                         
             else if (VariableType != VariableType.Dynamic && resolvedVariable.SetVariable.Calling.VariableType != VariableType)
             {
                 if (VariableType == VariableType.Global)
-                    script.Diagnostics.Error($"Expected a global variable.", valueRange);
+                    parseInfo.Script.Diagnostics.Error($"Expected a global variable.", valueRange);
                 else
-                    script.Diagnostics.Error($"Expected a player variable.", valueRange);
+                    parseInfo.Script.Diagnostics.Error($"Expected a player variable.", valueRange);
             }
             
             else return resolvedVariable;
@@ -61,14 +61,14 @@ namespace Deltin.Deltinteger.Parse
             DefaultConstValue = defaultValue;
         }
 
-        public override object Validate(ScriptFile script, IExpression value, DocRange valueRange)
+        public override object Validate(ParseInfo parseInfo, IExpression value, DocRange valueRange)
         {
             if (value is ExpressionOrWorkshopValue)
                 return ((ExpressionOrWorkshopValue)value).WorkshopValue is V_True;
 
             if (value is BoolAction == false)
             {
-                script.Diagnostics.Error("Expected a boolean constant.", valueRange);
+                parseInfo.Script.Diagnostics.Error("Expected a boolean constant.", valueRange);
                 return null;
             }
 
@@ -86,7 +86,7 @@ namespace Deltin.Deltinteger.Parse
             DefaultConstValue = defaultValue;
         }
 
-        public override object Validate(ScriptFile script, IExpression value, DocRange valueRange)
+        public override object Validate(ParseInfo parseInfo, IExpression value, DocRange valueRange)
         {
             if (value == null) return DefaultConstValue;
 
@@ -95,7 +95,7 @@ namespace Deltin.Deltinteger.Parse
 
             if (value is NumberAction == false)
             {
-                script.Diagnostics.Error("Expected a number constant.", valueRange);
+                parseInfo.Script.Diagnostics.Error("Expected a number constant.", valueRange);
                 return null;
             }
 
@@ -107,10 +107,10 @@ namespace Deltin.Deltinteger.Parse
     {
         public ConstStringParameter(string name, string documentation) : base(name, documentation) {}
 
-        public override object Validate(ScriptFile script, IExpression value, DocRange valueRange)
+        public override object Validate(ParseInfo parseInfo, IExpression value, DocRange valueRange)
         {
             StringAction str = value as StringAction;
-            if (str == null) script.Diagnostics.Error("Expected string constant.", valueRange);
+            if (str == null) parseInfo.Script.Diagnostics.Error("Expected string constant.", valueRange);
             return str?.Value;
         }
 
@@ -145,44 +145,44 @@ namespace Deltin.Deltinteger.Parse
             NeedsDirectory = true;
         }
 
-        public override object Validate(ScriptFile script, IExpression value, DocRange valueRange)
+        public override object Validate(ParseInfo parseInfo, IExpression value, DocRange valueRange)
         {
             StringAction str = value as StringAction;
             if (str == null)
             {
-                script.Diagnostics.Error("Expected string constant.", valueRange);
+                parseInfo.Script.Diagnostics.Error("Expected string constant.", valueRange);
                 return null;
             }
 
-            string resultingPath = Extras.CombinePathWithDotNotation(script.Uri.FilePath(), str.Value);
+            string resultingPath = Extras.CombinePathWithDotNotation(parseInfo.Script.Uri.FilePath(), str.Value);
             
             if (resultingPath == null)
             {
-                script.Diagnostics.Error("File path contains invalid characters.", valueRange);
+                parseInfo.Script.Diagnostics.Error("File path contains invalid characters.", valueRange);
                 return null;
             }
 
             string dir = Path.GetDirectoryName(resultingPath);
             if (Directory.Exists(dir))
-                Importer.AddImportCompletion(script, dir, valueRange);
+                Importer.AddImportCompletion(parseInfo.Script, dir, valueRange);
 
             if (!NeedsDirectory)
             {
                 if (!File.Exists(resultingPath))
                 {
-                    script.Diagnostics.Error($"No file was found at '{resultingPath}'.", valueRange);
+                    parseInfo.Script.Diagnostics.Error($"No file was found at '{resultingPath}'.", valueRange);
                     return null;
                 }
 
                 if (FileTypes != null && !FileTypes.Contains(Path.GetExtension(resultingPath).ToLower()))
                 {
-                    script.Diagnostics.Error($"Expected a file with the file type '{string.Join(", ", FileTypes)}'.", valueRange);
+                    parseInfo.Script.Diagnostics.Error($"Expected a file with the file type '{string.Join(", ", FileTypes)}'.", valueRange);
                     return null;
                 }
             }
 
-            script.AddDefinitionLink(valueRange, new Location(Extras.Definition(resultingPath), DocRange.Zero));
-            script.AddHover(valueRange, resultingPath);
+            parseInfo.Script.AddDefinitionLink(valueRange, new Location(Extras.Definition(resultingPath), DocRange.Zero));
+            parseInfo.Script.AddHover(valueRange, resultingPath);
 
             return resultingPath;
         }

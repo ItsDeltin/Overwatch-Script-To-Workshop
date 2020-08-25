@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.Elements;
+using Deltin.Deltinteger.Decompiler.Json;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -12,6 +14,7 @@ namespace Deltin.Deltinteger.Parse
         public ElseIf[] ElseIfs { get; }
         public BlockAction ElseBlock { get; }
         private PathInfo[] Paths { get; }
+        private string Comment;
 
         public IfAction(ParseInfo parseInfo, Scope scope, DeltinScriptParser.IfContext ifContext)
         {
@@ -61,6 +64,11 @@ namespace Deltin.Deltinteger.Parse
         }
 
         public PathInfo[] GetPaths() => Paths;
+
+        public void OutputComment(FileDiagnostics diagnostics, DocRange range, string comment)
+        {
+            Comment = comment;
+        }
 
         public void TranslateSkip(ActionSet actionSet)
         {
@@ -132,7 +140,9 @@ namespace Deltin.Deltinteger.Parse
         public void Translate(ActionSet actionSet)
         {
             // Add the if action.
-            actionSet.AddAction(Element.Part<A_If>(Expression.Parse(actionSet)));
+            A_If newIf = Element.Part<A_If>(Expression.Parse(actionSet));
+            newIf.Comment = Comment;
+            actionSet.AddAction(newIf);
 
             // Translate the if block.
             Block.Translate(actionSet.Indent());

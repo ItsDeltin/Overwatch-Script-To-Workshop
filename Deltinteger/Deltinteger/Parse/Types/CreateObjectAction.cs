@@ -29,11 +29,7 @@ namespace Deltin.Deltinteger.Parse
                 OverloadChooser = new OverloadChooser(
                     CreatingObjectOf.Constructors, parseInfo, CreatingObjectOf.ReturningScope(), scope, nameRange, DocRange.GetRange(context), new OverloadError("type " + CreatingObjectOf.Name)
                 );
-
-                if (context.call_parameters() != null)
-                    OverloadChooser.SetContext(context.call_parameters());
-                else
-                    OverloadChooser.SetContext();
+                OverloadChooser.Apply(context.call_parameters());
 
                 Constructor = (Constructor)OverloadChooser.Overload;
                 ConstructorValues = OverloadChooser.Values ?? new IExpression[0];
@@ -43,9 +39,6 @@ namespace Deltin.Deltinteger.Parse
                     parseInfo.TranslateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(Constructor, new Location(parseInfo.Script.Uri, nameRange));
                     Constructor.Call(parseInfo, DocRange.GetRange(context.type));
                     parseInfo.Script.AddHover(DocRange.GetRange(context), Constructor.GetLabel(true));
-
-                    if (Constructor is DefinedConstructor)
-                        parseInfo.CurrentCallInfo?.Call((DefinedConstructor)Constructor, nameRange);
                 }
             }
         }

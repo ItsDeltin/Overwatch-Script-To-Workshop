@@ -41,7 +41,7 @@ namespace Deltin.Deltinteger.Elements
                 b = b.Optimize();
             }
             
-            return a.ToWorkshop(language) + " " + CompareOperator.ToWorkshop(language) + " " + b.ToWorkshop(language);
+            return a.ToWorkshop(language, ToWorkshopContext.ConditionValue) + " " + CompareOperator.ToWorkshop(language, ToWorkshopContext.Other) + " " + b.ToWorkshop(language, ToWorkshopContext.ConditionValue);
         }
 
         public int ElementCount(bool optimized)

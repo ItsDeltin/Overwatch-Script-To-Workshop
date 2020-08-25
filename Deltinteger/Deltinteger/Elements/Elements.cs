@@ -58,6 +58,7 @@ namespace Deltin.Deltinteger.Elements
 
         public IWorkshopTree[] ParameterValues { get; set; }
         public bool Disabled { get; set; }
+        public string Comment { get; set; }
         public int Indent { get; set; }
         protected bool AlwaysShowParentheses = false;
 
@@ -66,19 +67,29 @@ namespace Deltin.Deltinteger.Elements
             return ElementList.GetLabel(false);
         }
         
-        public virtual string ToWorkshop(OutputLanguage language)
+        public virtual string ToWorkshop(OutputLanguage language, ToWorkshopContext context)
         {
+            // Get the parameters
             AddMissingParameters();
-
             List<string> parameters = AdditionalParameters().ToList();
-
-            parameters.AddRange(ParameterValues.Select(p => p.ToWorkshop(language)));
+            parameters.AddRange(ParameterValues.Select(p => p.ToWorkshop(language, ToWorkshopContext.NestedValue)));
 
             string result = Extras.Indent(Indent, true); // TODO: option for spaces or tab output.
+
+            // Add a comment and newline
+            if (Comment != null) result += $"\"{Comment}\"\n" + Extras.Indent(Indent, true);
+
+            // Add the disabled tag if the element is disabled.
             if (!ElementList.IsValue && Disabled) result += LanguageInfo.Translate(language, "disabled") + " ";
+
+            // Add the name of the element.
             result += LanguageInfo.Translate(language, Name);
+
+            // Add the parameters.
             if (parameters.Count != 0) result += "(" + string.Join(", ", parameters) + ")";
             else if (AlwaysShowParentheses) result += "()";
+
+            // Add the ; if the element is an action.
             if (!ElementList.IsValue) result += ";";
             return result;
         }
@@ -125,8 +136,37 @@ namespace Deltin.Deltinteger.Elements
             return Element.Part<V_Array>(values);
         }
 
+        public static Element CreateAppendArray(params IWorkshopTree[] values)
+        {
+            Element array = new V_EmptyArray();
+            for (int i = 0; i < values.Length; i++)
+                array = Element.Part<V_Append>(array, values[i]);
+            return array;
+        }
+
         // Creates an ternary conditional that works in the workshop
         public static Element TernaryConditional(IWorkshopTree condition, IWorkshopTree consequent, IWorkshopTree alternative) => Element.Part<V_IfThenElse>(condition, consequent, alternative);
+
+        public static Element Hud(
+            IWorkshopTree players = null,
+            IWorkshopTree header = null, IWorkshopTree subheader = null, IWorkshopTree text = null,
+            HudLocation location = HudLocation.Top, double? sortOrder = null,
+            Color headerColor = Color.White, Color subheaderColor = Color.White, Color textColor = Color.White,
+            HudTextRev reevaluation = HudTextRev.VisibleToSortOrderAndString, Spectators spectators = Spectators.DefaultVisibility)
+        =>
+            Element.Part<A_CreateHudText>(
+                players ?? Element.Part<V_AllPlayers>(),
+                header ?? Element.Part<V_Null>(),
+                subheader ?? Element.Part<V_Null>(),
+                text ?? Element.Part<V_Null>(),
+                EnumData.GetEnumValue(location),
+                new V_Number(sortOrder == null ? 0 : sortOrder.Value),
+                EnumData.GetEnumValue(headerColor),
+                EnumData.GetEnumValue(subheaderColor),
+                EnumData.GetEnumValue(textColor),
+                EnumData.GetEnumValue(reevaluation),
+                EnumData.GetEnumValue(spectators)
+            );
 
         public static Element operator +(Element a, Element b) => Element.Part<V_Add>(a, b);
         public static Element operator -(Element a, Element b) => Element.Part<V_Subtract>(a, b);
@@ -332,6 +372,7 @@ namespace Deltin.Deltinteger.Elements
         public WikiMethod Wiki { get; }
         public string Documentation => Wiki?.Description;
         private ValueType ElementValueType { get; }
+        private RestrictedCallType? Restricted { get; }
 
         // IScopeable defaults
         public LanguageServer.Location DefinedAt { get; } = null;
@@ -352,6 +393,7 @@ namespace Deltin.Deltinteger.Elements
             WorkshopParameters = type.GetCustomAttributes<ParameterBase>().ToArray();
             UsageDiagnostics = type.GetCustomAttributes<UsageDiagnostic>().ToArray();
             Hidden = type.GetCustomAttribute<HideElement>() != null;
+            Restricted = type.GetCustomAttribute<RestrictedAttribute>()?.Type;
 
             Wiki = WorkshopWiki.Wiki.GetWiki()?.GetMethod(WorkshopName);
         }
@@ -395,6 +437,11 @@ namespace Deltin.Deltinteger.Elements
                         codeType,
                         defaultValue == null ? null : new ExpressionOrWorkshopValue(defaultValue)
                     );
+
+                    // If the default parameter value is an Element and the Element is restricted,
+                    if (defaultValue is Element parameterElement && parameterElement.ElementList.Restricted != null)
+                        // ...then add the restricted call type to the parameter's list of restricted call types.
+                        Parameters[i].RestrictedCalls.Add((RestrictedCallType)parameterElement.ElementList.Restricted);
                 }
             }
         }
@@ -404,12 +451,13 @@ namespace Deltin.Deltinteger.Elements
             return (Element)Activator.CreateInstance(Type);
         }
 
-        public bool DoesReturnValue() => IsValue;
+        public bool DoesReturnValue => IsValue;
 
         public IWorkshopTree Parse(ActionSet actionSet, MethodCall methodCall)
         {
             Element element = GetObject();
             element.ParameterValues = methodCall.ParameterValues;
+            element.Comment = methodCall.ActionComment;
 
             if (!IsValue)
             {
@@ -422,6 +470,17 @@ namespace Deltin.Deltinteger.Elements
         public string GetLabel(bool markdown) => HoverHandler.GetLabel(!IsValue ? null : ReturnType?.Name ?? "define", Name, Parameters, markdown, Wiki?.Description);
 
         public CompletionItem GetCompletion() => MethodAttributes.GetFunctionCompletion(this);
+
+        public void Call(ParseInfo parseInfo, DocRange callRange)
+        {
+            if (Restricted != null)
+                // If there is a restricted call type, add it.
+                parseInfo.RestrictedCallHandler.RestrictedCall(new RestrictedCall(
+                    (RestrictedCallType)Restricted,
+                    parseInfo.GetLocation(callRange),
+                    RestrictedCall.Message_Element((RestrictedCallType)Restricted)
+                ));
+        }
     }
 
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]

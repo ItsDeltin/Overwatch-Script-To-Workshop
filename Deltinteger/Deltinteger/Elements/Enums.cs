@@ -133,7 +133,7 @@ namespace Deltin.Deltinteger.Elements
             IsHidden = isHidden;
         }
 
-        public string ToWorkshop(OutputLanguage language)
+        public string ToWorkshop(OutputLanguage language, ToWorkshopContext context)
         {
             string numTranslate(string name)
             {
@@ -337,7 +337,9 @@ namespace Deltin.Deltinteger.Elements
     {
         PrimaryFire,
         SecondaryFire,
+        [EnumOverride(null, "Ability 1")]
         Ability1,
+        [EnumOverride(null, "Ability 2")]
         Ability2,
         Ultimate,
         Interact,
@@ -366,6 +368,7 @@ namespace Deltin.Deltinteger.Elements
     [WorkshopEnum]
     public enum RateChaseReevaluation
     {
+        [EnumOverride(null, "Destination and Rate")]
         DestinationAndRate,
         None
     }
@@ -439,7 +442,9 @@ namespace Deltin.Deltinteger.Elements
         Purple,
         Red,
         Blue,
+        [EnumOverride(null, "Team 1")]
         Team1,
+        [EnumOverride(null, "Team 2")]
         Team2,
         Aqua,
         Orange,
@@ -451,7 +456,7 @@ namespace Deltin.Deltinteger.Elements
     [WorkshopEnum]
     public enum EffectRev
     {
-        [EnumOverride(null, "Visible To, Position, and Radius")]
+        [EnumOverride(null, "Visible To Position and Radius")]
         VisibleToPositionAndRadius,
         PositionAndRadius,
         VisibleTo,
@@ -516,9 +521,10 @@ namespace Deltin.Deltinteger.Elements
     [WorkshopEnum]
     public enum ObjectiveRev
     {
+        [EnumOverride(null, "Visible To and String")]
         VisibleToAndString,
         String,
-        [EnumOverride(null, "Visible To, Sort Order, and String")]
+        [EnumOverride(null, "Visible To Sort Order and String")]
         VisibleToSortOrderAndString,
         SortOrderAndString,
         VisibleToAndSortOrder,
@@ -530,9 +536,10 @@ namespace Deltin.Deltinteger.Elements
     [WorkshopEnum]
     public enum HudTextRev
     {
+        [EnumOverride(null, "Visible To and String")]
         VisibleToAndString,
         String,
-        [EnumOverride(null, "Visible To, Sort Order, and String")]
+        [EnumOverride(null, "Visible To Sort Order and String")]
         VisibleToSortOrderAndString,
         SortOrderAndString,
         VisibleToAndSortOrder,
@@ -622,7 +629,7 @@ namespace Deltin.Deltinteger.Elements
     [WorkshopEnum]
     public enum AccelerateRev
     {
-        [EnumOverride(null, "Direction, Rate, and Max Speed")]
+        [EnumOverride(null, "Direction Rate and Max Speed")]
         DirectionRateAndMaxSpeed,
         None
     }
@@ -655,6 +662,7 @@ namespace Deltin.Deltinteger.Elements
     [WorkshopEnum]
     public enum FacingRev
     {
+        [EnumOverride(null, "Direction and Turn Rate")]
         DirectionAndTurnRate,
         None
     }
@@ -703,8 +711,9 @@ namespace Deltin.Deltinteger.Elements
     [WorkshopEnum]
     public enum InworldTextRev
     {
-        [EnumOverride(null, "Visible To, Position, and String")]
+        [EnumOverride(null, "Visible To Position and String")]
         VisibleToPositionAndString,
+        [EnumOverride(null, "Visible To and String")]
         VisibleToAndString,
         String,
         VisibleToAndPosition,
@@ -731,6 +740,7 @@ namespace Deltin.Deltinteger.Elements
     [WorkshopEnum]
     public enum ThrottleBehavior
     {
+        [EnumOverride(null, "Replace existing throttle")]
         ReplaceExistingThrottle,
         AddToExistingThrottle
     }
@@ -738,6 +748,7 @@ namespace Deltin.Deltinteger.Elements
     [WorkshopEnum]
     public enum ThrottleRev
     {
+        [EnumOverride(null, "Direction and Magnitude")]
         DirectionAndMagnitude,
         None
     }
@@ -852,5 +863,13 @@ namespace Deltin.Deltinteger.Elements
         Skirmish,
         TeamDeathmatch,
         YetiHunter
+    }
+
+    [WorkshopEnum]
+    enum HealthType
+    {
+        Health,
+        Armor,
+        Shields
     }
 }

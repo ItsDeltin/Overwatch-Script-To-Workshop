@@ -5,6 +5,7 @@ using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.Lobby;
 using Deltin.Deltinteger.I18n;
+using Deltin.Deltinteger.Debugger;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -14,7 +15,7 @@ namespace Deltin.Deltinteger.Parse
         private Importer Importer { get; }
         public Diagnostics Diagnostics { get; }
         public ScriptTypes Types { get; } = new ScriptTypes();
-        public Scope PlayerVariableScope { get; private set; } = new Scope();
+        public Scope PlayerVariableScope { get; private set; } = new Scope("player variables");
         public Scope GlobalScope { get; }
         public Scope RulesetScope { get; }
         public VarCollection VarCollection { get; } = new VarCollection();
@@ -25,7 +26,9 @@ namespace Deltin.Deltinteger.Parse
         public TranslateRule InitialPlayer { get; private set; }
         private readonly OutputLanguage Language;
         public readonly bool OptimizeOutput;
-        private List<IComponent> Components { get; } = new List<IComponent>(); 
+        private List<IComponent> Components { get; } = new List<IComponent>();
+        private List<InitComponent> InitComponent { get; } = new List<InitComponent>();
+        public DebugVariableLinkCollection DebugVariables { get; } = new DebugVariableLinkCollection();
 
         public DeltinScript(TranslateSettings translateSettings)
         {
@@ -38,13 +41,20 @@ namespace Deltin.Deltinteger.Parse
             RulesetScope = GlobalScope.Child();
             RulesetScope.PrivateCatch = true;
 
-            Types.AllTypes.AddRange(CodeType.DefaultTypes);
+            Types.GetDefaults(this);
             Importer = new Importer(this, FileGetter, translateSettings.Root.Uri);
             Importer.CollectScriptFiles(translateSettings.Root);            
             
             Translate();
             if (!Diagnostics.ContainsErrors())
-                ToWorkshop(translateSettings.AdditionalRules);
+                try
+                {
+                    ToWorkshop(translateSettings.AdditionalRules);
+                }
+                catch (Exception ex)
+                {
+                    WorkshopCode = "An exception was thrown while translating to workshop.\r\n" + ex.ToString();
+                }
             
             foreach (IComponent component in Components)
                 if (component is IDisposable disposable)
@@ -59,9 +69,39 @@ namespace Deltin.Deltinteger.Parse
             
             T newT = new T();
             newT.DeltinScript = this;
+
+            for (int i = InitComponent.Count - 1; i >= 0; i--)
+                if (typeof(T) == InitComponent[i].ComponentType)
+                {
+                    InitComponent[i].Apply(newT);
+                    InitComponent.RemoveAt(i);
+                }
+            
             Components.Add(newT);
             newT.Init();
+
             return newT;
+        }
+
+        public bool IsComponent<T>() where T: IComponent => Components.Any(component => component is T);
+        public bool IsComponent<T>(out T component) where T: IComponent
+        {
+            foreach (IComponent iterateComponent in Components)
+                if (iterateComponent is T t)
+                {
+                    component = t;
+                    return true;
+                }
+            component = default(T);
+            return false;
+        }
+
+        public void ExecOnComponent<T>(Action<T> apply) where T: IComponent
+        {
+            if (IsComponent<T>(out T existing))
+                apply.Invoke(existing);
+            else
+                InitComponent.Add(new InitComponent(typeof(T), component => apply.Invoke((T)component)));
         }
 
         private List<RuleAction> rules { get; } = new List<RuleAction>();
@@ -130,9 +170,14 @@ namespace Deltin.Deltinteger.Parse
             }
 
             foreach (var applyType in Types.AllTypes) if (applyType is ClassType classType) classType.ResolveElements();
-            foreach (var apply in applyBlocks) apply.SetupParameters();
-            foreach (var apply in applyBlocks) apply.SetupBlock();
-            foreach (var apply in applyBlocks) apply.CallInfo?.CheckRecursion();
+            foreach (var apply in _applyBlocks) apply.SetupParameters();
+            foreach (var apply in _applyBlocks) apply.SetupBlock();
+            foreach (var callInfo in _recursionCheck) callInfo.CheckRecursion();
+
+            // Get hooks
+            foreach (ScriptFile script in Importer.ScriptFiles)
+            foreach (var hookContext in script.Context.hook())
+                HookVar.GetHook(new ParseInfo(script, this), RulesetScope, hookContext);
 
             // Get the rules
             foreach (ScriptFile script in Importer.ScriptFiles)
@@ -161,16 +206,21 @@ namespace Deltin.Deltinteger.Parse
             foreach (var variable in rulesetVariables)
             {
                 // Assign the variable an index.
-                DefaultIndexAssigner.Add(VarCollection, variable, true, null);
+                var assigner = DefaultIndexAssigner.Add(VarCollection, variable, true, null) as IndexReference;
 
-                var assigner = DefaultIndexAssigner[variable] as IndexReference;
-                if (assigner != null && variable.InitialValue != null)
+                // Assigner will be non-null if it is an IndexReference.
+                if (assigner != null)
                 {
-                    var addToInitialRule = GetInitialRule(variable.VariableType == VariableType.Global);
+                    DebugVariables.Add(variable, assigner);
+                    // Initial value.
+                    if (variable.InitialValue != null)
+                    {
+                        var addToInitialRule = GetInitialRule(variable.VariableType == VariableType.Global);
 
-                    addToInitialRule.ActionSet.AddAction(assigner.SetVariable(
-                        (Element)variable.InitialValue.Parse(addToInitialRule.ActionSet)
-                    ));
+                        addToInitialRule.ActionSet.AddAction(assigner.SetVariable(
+                            (Element)variable.InitialValue.Parse(addToInitialRule.ActionSet)
+                        ));
+                    }
                 }
             }
 
@@ -186,15 +236,19 @@ namespace Deltin.Deltinteger.Parse
                 rule.ElementCountLens.RuleParsed(newRule);
             }
 
+            // Add built-in rules.
+            // Initial player
             if (InitialPlayer.Actions.Count > 0)
                 WorkshopRules.Insert(0, InitialPlayer.GetRule());
 
+            // Initial global
             if (InitialGlobal.Actions.Count > 0)
                 WorkshopRules.Insert(0, InitialGlobal.GetRule());
             
+            // Additional
             if (addRules != null)
                 WorkshopRules.AddRange(addRules.Invoke(VarCollection).Where(rule => rule != null));
-            
+                        
             // Order the workshop rules by priority.
             WorkshopRules = WorkshopRules.OrderBy(wr => wr.Priority).ToList();
 
@@ -246,10 +300,16 @@ namespace Deltin.Deltinteger.Parse
         }
 
         // Applyable blocks
-        private List<IApplyBlock> applyBlocks = new List<IApplyBlock>();
+        private readonly List<IApplyBlock> _applyBlocks = new List<IApplyBlock>();
+        private readonly List<CallInfo> _recursionCheck = new List<CallInfo>();
         public void ApplyBlock(IApplyBlock apply)
         {
-            applyBlocks.Add(apply);
+            _applyBlocks.Add(apply);
+            if (apply.CallInfo != null) _recursionCheck.Add(apply.CallInfo);
+        }
+        public void RecursionCheck(CallInfo callInfo)
+        {
+            _recursionCheck.Add(callInfo ?? throw new ArgumentNullException(nameof(callInfo)));
         }
     }
 
@@ -259,6 +319,14 @@ namespace Deltin.Deltinteger.Parse
         public List<CodeType> DefinedTypes { get; } = new List<CodeType>();
         public List<CodeType> CalledTypes { get; } = new List<CodeType>();
 
+        public void GetDefaults(DeltinScript deltinScript)
+        {
+            AllTypes.AddRange(CodeType.DefaultTypes);
+            AllTypes.Add(new Pathfinder.PathmapClass(deltinScript));
+            AllTypes.Add(new Pathfinder.PathResolveClass());
+        }
+
+        public CodeType GetCodeType(string name) => AllTypes.FirstOrDefault(type => type.Name == name);
         public CodeType GetCodeType(string name, FileDiagnostics diagnostics, DocRange range)
         {
             var type = AllTypes.FirstOrDefault(type => type.Name == name);
@@ -290,11 +358,25 @@ namespace Deltin.Deltinteger.Parse
             
             builder.AppendLine();
         }
+
+        public T GetInstance<T>() where T: CodeType => (T)AllTypes.First(type => type.GetType() == typeof(T));
     }
 
     public interface IComponent
     {
         DeltinScript DeltinScript { get; set; }
         void Init();
+    }
+
+    class InitComponent
+    {
+        public Type ComponentType { get; }
+        public Action<IComponent> Apply { get; }
+
+        public InitComponent(Type componentType, Action<IComponent> apply)
+        {
+            ComponentType = componentType;
+            Apply = apply;
+        }
     }
 }
