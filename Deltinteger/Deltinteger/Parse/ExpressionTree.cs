@@ -343,7 +343,7 @@ namespace Deltin.Deltinteger.Parse
                 var apply = new PotentialVariableApply(tcParseInfo.ParseInfo);
 
                 // Check accessor.
-                if (!tcParseInfo.Getter.AccessorMatches(tcParseInfo.Scope, variable.AccessLevel))
+                if (!tcParseInfo.Getter.AccessorMatches(variable))
                     apply.Error(string.Format("'{0}' is inaccessable due to its access level.", _name), _range);
 
                 // Get the wrapped expression.
