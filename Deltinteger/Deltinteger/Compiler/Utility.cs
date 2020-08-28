@@ -163,6 +163,7 @@ namespace Deltin.Deltinteger.Compiler
         public static bool operator true(Token x) => x != null;
         public static bool operator false(Token x) => x == null;
         public static bool operator !(Token x) => x == null;
+        public static implicit operator bool(Token x) => x != null;
     }
 
     public static class TokenExtensions
@@ -235,6 +236,9 @@ namespace Deltin.Deltinteger.Compiler
         Modulo,
         Add,
         Subtract,
+        // Increment/Decrement
+        PlusPlus,
+        MinusMinus,
         // Boolean
         And,
         Or,
@@ -247,9 +251,11 @@ namespace Deltin.Deltinteger.Compiler
         Define,
         Break,
         Continue,
+        Return,
         Rule,
         For,
         If,
+        Else,
         // Comparison
         NotEqual,
         EqualEqual,

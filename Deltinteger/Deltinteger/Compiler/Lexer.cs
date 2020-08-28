@@ -136,7 +136,9 @@ namespace Deltin.Deltinteger.Compiler
                     MatchSymbol('*', TokenType.Multiply) ||
                     MatchSymbol('/', TokenType.Divide) ||
                     MatchSymbol('%', TokenType.Modulo) ||
+                    MatchSymbol("++", TokenType.PlusPlus) ||
                     MatchSymbol('+', TokenType.Add) ||
+                    MatchSymbol("++", TokenType.MinusMinus) ||
                     MatchSymbol('-', TokenType.Subtract) ||
                     MatchSymbol("&&", TokenType.And) ||
                     MatchSymbol("||", TokenType.Or) ||
