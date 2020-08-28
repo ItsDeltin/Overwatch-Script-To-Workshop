@@ -119,13 +119,27 @@ namespace Deltin.Deltinteger.Compiler
                     MatchSymbol('[', TokenType.SquareBracket_Open) ||
                     MatchSymbol(']', TokenType.SquareBracket_Close) ||
                     MatchSymbol(':', TokenType.Colon) ||
+                    MatchSymbol('?', TokenType.QuestionMark) ||
                     MatchSymbol(';', TokenType.Semicolon) ||
                     MatchSymbol('.', TokenType.Dot) ||
+                    MatchSymbol('~', TokenType.Squiggle) ||
+                    MatchSymbol("!=", TokenType.NotEqual) ||
+                    MatchSymbol("==", TokenType.EqualEqual) ||
+                    MatchSymbol("<=", TokenType.LessThanOrEqual) ||
+                    MatchSymbol(">=", TokenType.GreaterThanOrEqual) ||
                     MatchSymbol('!', TokenType.Exclamation) ||
-                    MatchSymbol('=', TokenType.Equals) ||
+                    MatchSymbol('=', TokenType.Equal) ||
                     MatchSymbol('<', TokenType.LessThan) ||
                     MatchSymbol('>', TokenType.GreaterThan) ||
                     MatchSymbol(',', TokenType.Comma) ||
+                    MatchSymbol('^', TokenType.Hat) ||
+                    MatchSymbol('*', TokenType.Multiply) ||
+                    MatchSymbol('/', TokenType.Divide) ||
+                    MatchSymbol('%', TokenType.Modulo) ||
+                    MatchSymbol('+', TokenType.Add) ||
+                    MatchSymbol('-', TokenType.Subtract) ||
+                    MatchSymbol("&&", TokenType.And) ||
+                    MatchSymbol("||", TokenType.Or) ||
                     MatchKeyword("for", TokenType.For) ||
                     MatchKeyword("rule", TokenType.Rule) ||
                     MatchKeyword("true", TokenType.True) ||
@@ -298,11 +312,17 @@ namespace Deltin.Deltinteger.Compiler
         }
 
         /// <summary>Skips whitespace.</summary>
-        public void Skip()
+        public bool Skip()
         {
+            bool preceedingWhitespace = false;
             LexScanner scanner = MakeScanner();
-            while (scanner.AtWhitespace() && !scanner.ReachedEnd) scanner.Advance();
+            while (scanner.AtWhitespace() && !scanner.ReachedEnd)
+            {
+                if (scanner.At('\n')) preceedingWhitespace = true;
+                scanner.Advance();
+            }
             Accept(scanner);
+            return preceedingWhitespace;
         }
 
         /// <summary>Pushes a token to the token list.</summary>

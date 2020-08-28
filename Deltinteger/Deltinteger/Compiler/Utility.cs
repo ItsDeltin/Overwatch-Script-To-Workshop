@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 
 namespace Deltin.Deltinteger.Compiler
 {
@@ -156,10 +157,20 @@ namespace Deltin.Deltinteger.Compiler
             Range = range;
             TokenType = tokenType;
         }
+
+        public override string ToString() => "[" + Text + "]";
+
+        public static bool operator true(Token x) => x != null;
+        public static bool operator false(Token x) => x == null;
+        public static bool operator !(Token x) => x == null;
     }
 
     public static class TokenExtensions
     {
+        public static readonly TokenType[] Assignment_Tokens = new TokenType[] {
+            TokenType.Equal, TokenType.AddEqual, TokenType.DivideEqual, TokenType.HatEqual, TokenType.ModuloEqual, TokenType.MultiplyEqual, TokenType.SubtractEqual 
+        };
+
         public static string Name(this TokenType tokenType)
         {
             switch (tokenType)
@@ -171,6 +182,7 @@ namespace Deltin.Deltinteger.Compiler
                 case TokenType.Parentheses_Close: return ")";
                 case TokenType.Parentheses_Open: return "(";
                 case TokenType.Dot: return ".";
+                case TokenType.Squiggle: return "~";
                 case TokenType.SquareBracket_Open: return "[";
                 case TokenType.SquareBracket_Close: return "]";
                 case TokenType.For: return "for";
@@ -186,6 +198,8 @@ namespace Deltin.Deltinteger.Compiler
                 default: return tokenType.ToString().ToLower();
             }
         }
+
+        public static bool IsAssignmentOperator(this TokenType tokenType) => Assignment_Tokens.Contains(tokenType);
     }
 
     public enum TokenType
@@ -203,11 +217,27 @@ namespace Deltin.Deltinteger.Compiler
         Colon,
         Semicolon,
         Dot,
+        Squiggle,
         Exclamation,
-        Equals,
-        LessThan,
-        GreaterThan,
         Comma,
+        // Assignment
+        Equal,
+        HatEqual,
+        MultiplyEqual,
+        DivideEqual,
+        ModuloEqual,
+        AddEqual,
+        SubtractEqual,
+        // Math
+        Hat,
+        Multiply,
+        Divide,
+        Modulo,
+        Add,
+        Subtract,
+        // Boolean
+        And,
+        Or,
         // Generic expressions
         String,
         Number,
@@ -219,7 +249,16 @@ namespace Deltin.Deltinteger.Compiler
         Continue,
         Rule,
         For,
-        If
+        If,
+        // Comparison
+        NotEqual,
+        EqualEqual,
+        LessThan,
+        GreaterThan,
+        LessThanOrEqual,
+        GreaterThanOrEqual,
+        // Ternary
+        QuestionMark
     }
 
     public class UpdateRange
