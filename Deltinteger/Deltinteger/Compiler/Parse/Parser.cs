@@ -16,7 +16,6 @@ namespace Deltin.Deltinteger.Compiler.Parse
         public TokenType Kind => Current.TokenType;
         public int TokenCount => Lexer.Tokens.Count;
         public bool IsFinished => Token >= Lexer.Tokens.Count;
-        public List<RuleContext> Rules { get; } = new List<RuleContext>();
 
         public Stack<OperatorInfo> Operators { get; } = new Stack<OperatorInfo>();
         public Stack<IParseExpression> Operands { get; } = new Stack<IParseExpression>();
@@ -256,7 +255,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
             else
             {
                 // Parse parameters.
-                var values = Is(TokenType.Parentheses_Close) ? new List<FunctionParameter>() : ParseParameterValues();
+                var values = Is(TokenType.Parentheses_Close) ? new List<ParameterValue>() : ParseParameterValues();
                 ParseExpected(TokenType.Parentheses_Close);
 
                 // Return function
@@ -266,16 +265,16 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
         /// <summary>Parses the inner parameter values of a function.</summary>
         /// <returns></returns>
-        public List<FunctionParameter> ParseParameterValues()
+        public List<ParameterValue> ParseParameterValues()
         {
             // Get the parameters.
-            List<FunctionParameter> values = new List<FunctionParameter>();
+            List<ParameterValue> values = new List<ParameterValue>();
             bool getValues = true;
             while (getValues)
             {
                 var expression = GetContainExpression();
                 getValues = ParseOptional(TokenType.Comma, out Token comma);
-                values.Add(new FunctionParameter(expression, comma));
+                values.Add(new ParameterValue(expression, comma));
             }
 
             return values;
@@ -520,9 +519,23 @@ namespace Deltin.Deltinteger.Compiler.Parse
             return new ParseType(identifier, typeArgs, arrayCount);
         }
 
-        bool IsDeclaration() => Is(TokenType.Define) || Lookahead(
-            () => ParseType().Identifier != null && ParseExpected(TokenType.Identifier) && new TokenType[] { TokenType.Semicolon, TokenType.Equal, TokenType.Exclamation }.Contains(Kind)
-        );
+        bool IsDeclaration() => Lookahead(() => {
+            ParseAttributes();
+            return ParseType().LookaheadValid && ParseExpected(TokenType.Identifier) && (
+                // This is a declaration if the following token is:
+                Is(TokenType.Semicolon) ||   // End declaration statement.
+                Is(TokenType.Equal) ||       // Initial value.
+                Is(TokenType.Exclamation) || // Extended collection marker.
+                Is(TokenType.Number) ||      // Assigned workshop ID.
+                Is(TokenType.Colon) ||       // Macro variable value.
+                IsFinished                   // EOF was reached.
+            );
+        });
+
+        bool IsFunctionDeclaration() => Lookahead(() => {
+            ParseAttributes();
+            return ParseType().LookaheadValid && ParseExpected(TokenType.Identifier) && ParseExpected(TokenType.Parentheses_Open);
+        });
 
         Declaration ParseDeclaration()
         {
@@ -544,22 +557,52 @@ namespace Deltin.Deltinteger.Compiler.Parse
         }
 
         /// <summary>Parses the root of a file.</summary>
-        public void Parse()
+        public RootContext Parse()
         {
-            while (TryParseRule(out RuleContext rule)) Rules.Add(rule);
+            var context = new RootContext();
+            while (!IsFinished) ParseScriptRootElement(context);
+            return context;
+        }
+
+        /// <summary>Parses a single import, rule, variable, class, etc.</summary>
+        /// <returns>Determines wether an element was parsed.</returns>
+        void ParseScriptRootElement(RootContext context)
+        {
+            // Return false if the EOF was reached.
+            switch (Kind)
+            {
+                // Rule
+                case TokenType.Rule:
+                    context.Rules.Add(ParseRule());
+                    break;
+                
+                // Class
+                case TokenType.Class:
+                    context.Classes.Add(ParseClass());
+                    break;
+                
+                // Others
+                default:
+                    // Variable declaration
+                    if (IsDeclaration()) context.RuleLevelVariables.Add(ParseDeclaration());
+                    // Function declaration
+                    else if (IsFunctionDeclaration()) context.Functions.Add(ParseFunctionDeclaration());
+                    // Unknown
+                    else
+                    {
+                        // TODO: error
+                        Consume();
+                    }
+                    break;
+            }
         }
 
         /// <summary>Parses a rule.</summary>
         /// <param name="context">If Kind is not TokenType.Rule, this out parameter will be null.</param>
         /// <returns>If Kind is not TokenType.Rule, false will be returned. Otherwise, true is returned.</returns>
-        public bool TryParseRule(out RuleContext context)
+        public RuleContext ParseRule()
         {
-            Token ruleToken = ParseOptional(TokenType.Rule);
-            if (!ruleToken)
-            {
-                context = null;
-                return false;
-            }
+            Token ruleToken = ParseExpected(TokenType.Rule);
 
             // Colon
             ParseExpected(TokenType.Colon);
@@ -574,8 +617,100 @@ namespace Deltin.Deltinteger.Compiler.Parse
             // Get the block.
             TryParseStatementOrBlock(out var statement);
 
-            context = new RuleContext(name, conditions, statement);
-            return true;
+            return new RuleContext(name, conditions, statement);
+        }
+
+        /// <summary>Parses a class.</summary>
+        public ClassContext ParseClass()
+        {
+            ParseExpected(TokenType.Class);
+            var identifier = ParseExpected(TokenType.Identifier);
+            ParseExpected(TokenType.CurlyBracket_Open);
+
+            ClassContext context = new ClassContext(identifier);
+
+            // Get the class elements.
+            while(!Is(TokenType.CurlyBracket_Close) && !IsFinished)
+            {
+                if (IsFunctionDeclaration()) context.Functions.Add(ParseFunctionDeclaration());
+                else if (IsDeclaration()) context.Variables.Add(ParseDeclaration());
+                else break;
+            }
+            ParseExpected(TokenType.CurlyBracket_Close);
+
+            return context;
+        }
+
+        /// <summary>Parses a function or parametered macro.</summary>
+        FunctionContext ParseFunctionDeclaration()
+        {
+            // Parse the accessor and other attributes.
+            var attributes = ParseAttributes();
+
+            // If the return type is void, don't parse the type.
+            ParseType type = null;
+            if (!ParseOptional(TokenType.Void))
+                type = ParseType();
+            
+            // Get the identifier.
+            var identifier = ParseExpected(TokenType.Identifier);
+            
+            // Start the parameter list.
+            ParseExpected(TokenType.Parentheses_Open);
+
+            // Get the parameters.
+            var parameters = new List<Declaration>();
+            if (!Is(TokenType.Parentheses_Close))
+            {
+                do {
+                    parameters.Add(ParseDeclaration());
+                }
+                while (ParseOptional(TokenType.Comma));
+            }
+
+            // End the parameter list.
+            ParseExpected(TokenType.Parentheses_Close);
+
+            // Macro
+            if (ParseOptional(TokenType.Colon))
+            {
+                // Get the macro's value.
+                var value = GetContainExpression();
+                ParseSemicolon();
+                return new FunctionContext(attributes, type, identifier, parameters, value);
+            }
+            // Normal function
+            else
+            {
+                // Get the function's block.
+                Block block = ParseBlock();
+                return new FunctionContext(attributes, type, identifier, parameters, block);
+            }
+        }
+
+        /// <summary>Parses a list of attributes.</summary>
+        /// <returns>The resulting attribute tokens.</returns>
+        AttributeTokens ParseAttributes()
+        {
+            AttributeTokens tokens = new AttributeTokens();
+
+            while (true)
+            {
+                Token token;
+                if (ParseOptional(TokenType.Public, out token)) tokens.Public = token;
+                else if (ParseOptional(TokenType.Private, out token)) tokens.Private = token;
+                else if (ParseOptional(TokenType.Protected, out token)) tokens.Protected = token;
+                else if (ParseOptional(TokenType.Static, out token)) tokens.Static = token;
+                else if (ParseOptional(TokenType.Override, out token)) tokens.Override = token;
+                else if (ParseOptional(TokenType.Virtual, out token)) tokens.Virtual = token;
+                else if (ParseOptional(TokenType.Recursive, out token)) tokens.Recursive = token;
+                else if (ParseOptional(TokenType.GlobalVar, out token)) tokens.GlobalVar = token;
+                else if (ParseOptional(TokenType.PlayerVar, out token)) tokens.PlayerVar = token;
+                else break;
+                tokens.AllAttributes.Add(token);
+            }
+
+            return tokens;
         }
 
         /// <summary>Parses an if condition. The block is not included.</summary>

@@ -128,6 +128,12 @@ namespace Deltin.Deltinteger.Compiler
                     MatchSymbol("<=", TokenType.LessThanOrEqual) ||
                     MatchSymbol(">=", TokenType.GreaterThanOrEqual) ||
                     MatchSymbol('!', TokenType.Exclamation) ||
+                    MatchSymbol("^=", TokenType.HatEqual) ||
+                    MatchSymbol("*=", TokenType.MultiplyEqual) ||
+                    MatchSymbol("/=", TokenType.DivideEqual) ||
+                    MatchSymbol("%=", TokenType.ModuloEqual) ||
+                    MatchSymbol("+=", TokenType.AddEqual) ||
+                    MatchSymbol("-=", TokenType.SubtractEqual) ||
                     MatchSymbol('=', TokenType.Equal) ||
                     MatchSymbol('<', TokenType.LessThan) ||
                     MatchSymbol('>', TokenType.GreaterThan) ||
@@ -138,7 +144,7 @@ namespace Deltin.Deltinteger.Compiler
                     MatchSymbol('%', TokenType.Modulo) ||
                     MatchSymbol("++", TokenType.PlusPlus) ||
                     MatchSymbol('+', TokenType.Add) ||
-                    MatchSymbol("++", TokenType.MinusMinus) ||
+                    MatchSymbol("--", TokenType.MinusMinus) ||
                     MatchSymbol('-', TokenType.Subtract) ||
                     MatchSymbol("&&", TokenType.And) ||
                     MatchSymbol("||", TokenType.Or) ||
@@ -147,9 +153,20 @@ namespace Deltin.Deltinteger.Compiler
                     MatchKeyword("true", TokenType.True) ||
                     MatchKeyword("false", TokenType.False) ||
                     MatchKeyword("if", TokenType.If) ||
+                    MatchKeyword("else", TokenType.Else) ||
                     MatchKeyword("break", TokenType.Break) ||
                     MatchKeyword("continue", TokenType.Continue) ||
                     MatchKeyword("define", TokenType.Define) ||
+                    MatchKeyword("void", TokenType.Void) ||
+                    MatchKeyword("public", TokenType.Public) ||
+                    MatchKeyword("private", TokenType.Private) ||
+                    MatchKeyword("protected", TokenType.Protected) ||
+                    MatchKeyword("static", TokenType.Static) ||
+                    MatchKeyword("override", TokenType.Override) ||
+                    MatchKeyword("virtual", TokenType.Virtual) ||
+                    MatchKeyword("recursive", TokenType.Recursive) ||
+                    MatchKeyword("globalvar", TokenType.GlobalVar) ||
+                    MatchKeyword("playervar", TokenType.PlayerVar) ||
                     MatchNumber() ||
                     MatchIdentifier() ||
                     MatchString();

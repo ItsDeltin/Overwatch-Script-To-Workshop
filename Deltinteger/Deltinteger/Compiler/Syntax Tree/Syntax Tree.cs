@@ -3,6 +3,14 @@ using System.Linq;
 
 namespace Deltin.Deltinteger.Compiler.SyntaxTree
 {
+    public class RootContext
+    {
+        public List<RuleContext> Rules { get; } = new List<RuleContext>();
+        public List<ClassContext> Classes { get; } = new List<ClassContext>();
+        public List<Declaration> RuleLevelVariables { get; } = new List<Declaration>();
+        public List<FunctionContext> Functions { get; } = new List<FunctionContext>();
+    }
+
     // Interfaces
     public interface IParseExpression {}
     public interface IParseStatement {}
@@ -22,6 +30,8 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
 
         public bool HasTypeArgs => TypeArgs != null && TypeArgs.Count > 0;
         public bool IsArray => ArrayCount > 0;
+        public bool LookaheadValid => Identifier != null;
+        public bool IsDefault => Identifier.TokenType == TokenType.Define;
     }
 
     public class RuleContext
@@ -39,6 +49,63 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         }
     }
 
+    public class ClassContext
+    {
+        public Token Identifier { get; }
+        public List<FunctionContext> Functions { get; } = new List<FunctionContext>();
+        public List<Declaration> Variables { get; } = new List<Declaration>();
+
+        public ClassContext(Token identifier)
+        {
+            Identifier = identifier;
+        }
+    }
+
+    public class FunctionContext
+    {
+        public AttributeTokens Attributes { get; }
+        public ParseType Type { get; }
+        public Token Identifier { get; }
+        public List<Declaration> Parameters { get; }
+        public Block Block { get; }
+        public IParseExpression Expression { get; }
+        public bool IsMacro { get; }
+
+        public FunctionContext(AttributeTokens attributes, ParseType type, Token identifier, List<Declaration> parameters, Block block)
+        {
+            Attributes = attributes;
+            Type = type;
+            Identifier = identifier;
+            Parameters = parameters;
+            Block = block;
+            IsMacro = false;
+        }
+
+        public FunctionContext(AttributeTokens attributes, ParseType type, Token identifier, List<Declaration> parameters, IParseExpression value)
+        {
+            Attributes = attributes;
+            Type = type;
+            Identifier = identifier;
+            Parameters = parameters;
+            Expression = value;
+            IsMacro = true;
+        }
+    }
+
+    public class AttributeTokens
+    {
+        public Token Public { get; set; }
+        public Token Private { get; set; }
+        public Token Protected { get; set; }
+        public Token Static { get; set; }
+        public Token Override { get; set; }
+        public Token Virtual { get; set; }
+        public Token Recursive { get; set; }
+        public Token GlobalVar { get; set; }
+        public Token PlayerVar { get; set; }
+        public List<Token> AllAttributes { get; } = new List<Token>();
+    }
+
     public class IfCondition
     {
         public Token If;
@@ -53,9 +120,9 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
     public class FunctionExpression : IParseExpression, IParseStatement
     {
         public Token Identifier { get; }
-        public List<FunctionParameter> Parameters { get; }
+        public List<ParameterValue> Parameters { get; }
 
-        public FunctionExpression(Token identifier, List<FunctionParameter> parameters)
+        public FunctionExpression(Token identifier, List<ParameterValue> parameters)
         {
             Identifier = identifier;
             Parameters = parameters;
@@ -64,12 +131,12 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public override string ToString() => Identifier.Text + "(" + string.Join(", ", Parameters.Select(p => p.ToString())) + ")";
     }
 
-    public class FunctionParameter
+    public class ParameterValue
     {
         public IParseExpression Expression { get; }
         public Token NextComma { get; }
 
-        public FunctionParameter(IParseExpression value, Token comma)
+        public ParameterValue(IParseExpression value, Token comma)
         {
             Expression = value;
             NextComma = comma;

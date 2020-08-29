@@ -256,6 +256,18 @@ namespace Deltin.Deltinteger.Compiler
         For,
         If,
         Else,
+        Class,
+        Void,
+        // Attributes
+        Public,
+        Private,
+        Protected,
+        Static,
+        Override,
+        Virtual,
+        Recursive,
+        GlobalVar,
+        PlayerVar,
         // Comparison
         NotEqual,
         EqualEqual,
