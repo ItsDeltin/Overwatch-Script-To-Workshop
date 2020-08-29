@@ -9,7 +9,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using MediatR;
-using IDidChangeConfigurationHandler = OmniSharp.Extensions.LanguageServer.Protocol.Server.IDidChangeConfigurationHandler;
+using IDidChangeConfigurationHandler = OmniSharp.Extensions.LanguageServer.Protocol.Workspace.IDidChangeConfigurationHandler;
 using DidChangeConfigurationCapability = OmniSharp.Extensions.LanguageServer.Protocol.Client.Capabilities.DidChangeConfigurationCapability;
 
 namespace Deltin.Deltinteger.LanguageServer

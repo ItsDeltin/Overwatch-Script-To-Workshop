@@ -28,4 +28,15 @@ namespace Deltin.Deltinteger.Elements
 
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Field)]
     public class HideElement : Attribute {}
+
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
+    public class RestrictedAttribute : Attribute
+    {
+        public RestrictedCallType Type { get; }
+
+        public RestrictedAttribute(RestrictedCallType type)
+        {
+            Type = type;
+        }
+    }
 }

@@ -1,6 +1,7 @@
 using System;
 using System.Xml.Serialization;
 using Deltin.Deltinteger.Elements;
+using Newtonsoft.Json;
 
 namespace Deltin.Deltinteger.Models
 {
@@ -13,6 +14,7 @@ namespace Deltin.Deltinteger.Models
         [XmlAttribute]
         public double Z { get; set; }
         [XmlIgnore]
+        [JsonIgnore]
         public double W { get; set; }
 
         public Vertex(double x, double y, double z, double w)
@@ -142,6 +144,7 @@ namespace Deltin.Deltinteger.Models
             double.IsNaN(Y) ? 0 : Y,
             double.IsNaN(Z) ? 0 : Z);
 
+        [JsonIgnore]
         public double Length =>
             DistanceTo(new Vertex());
 

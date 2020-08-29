@@ -14,6 +14,7 @@ namespace Deltin.Deltinteger.Lobby
     {
         public static LobbyMap[] AllMaps { get; } = GetMaps();
         public string Name { get; set; }
+        public string Workshop { get; set; }
         public List<string> GameModes { get; set; }
 
         public LobbyMap() {}
@@ -23,6 +24,8 @@ namespace Deltin.Deltinteger.Lobby
             GameModes = new List<string>();
         }
         
+        public string GetWorkshopName() => Workshop ?? Name;
+
         private static LobbyMap[] GetMaps()
         {
             // Get the Maps.json file.

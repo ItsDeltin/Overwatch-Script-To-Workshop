@@ -1,0 +1,8 @@
+{
+    "Modes": {
+        "Skirmish": {
+            "Enabled": true,
+            "Enabled Maps": ["Eichenwalde"]
+        }
+    }
+}

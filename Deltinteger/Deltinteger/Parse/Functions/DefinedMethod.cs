@@ -8,28 +8,34 @@ namespace Deltin.Deltinteger.Parse
 {
     public class DefinedMethod : DefinedFunction
     {
-        public readonly DeltinScriptParser.Define_methodContext context;
+        /// <summary>The context of the function.</summary>
+        public DeltinScriptParser.Define_methodContext Context { get; }
 
         // Attributes
+        /// <summary>Determines if the function is a subroutine.</summary>
         public bool IsSubroutine { get; private set; }
+        /// <summary>The name of the subroutine. Will be null if IsSubroutine is false.</summary>
         public string SubroutineName { get; private set; }
 
         // Block data
-        public BlockAction block { get; private set; }
+        /// <summary>The block of the function.</summary>
+        public BlockAction Block { get; private set; }
 
         /// <summary>If there is only one return statement, return the reference to
         /// the return expression instead of assigning it to a variable to reduce the number of actions.</summary>
-        public bool multiplePaths;
+        public bool MultiplePaths { get; private set; }
+
+        /// <summary>If there is only one return statement, this will be the statement being returned.</summary>
+        public IExpression SingleReturnValue { get; private set; }
 
         public DefinedMethod virtualSubroutineAssigned { get; set; }
         public SubroutineInfo subroutineInfo { get; private set; }
-        public Scope BlockScope { get; }
-        private readonly bool subroutineDefaultGlobal;
+        private readonly bool _subroutineDefaultGlobal;
 
         public DefinedMethod(ParseInfo parseInfo, Scope objectScope, Scope staticScope, DeltinScriptParser.Define_methodContext context, CodeType containingType)
             : base(parseInfo, context.name.Text, new Location(parseInfo.Script.Uri, DocRange.GetRange(context.name)))
         {
-            this.context = context;
+            this.Context = context;
 
             Attributes.ContainingType = containingType;
 
@@ -49,7 +55,6 @@ namespace Deltin.Deltinteger.Parse
             // Setup scope.
             SetupScope(Static ? staticScope : objectScope);
             methodScope.MethodContainer = true;
-            BlockScope = methodScope.Child();
 
             // Get the type.
             if (context.VOID() == null)
@@ -63,7 +68,7 @@ namespace Deltin.Deltinteger.Parse
                 SetupParameters(context.setParameters(), false);
             else
             {
-                subroutineDefaultGlobal = context.PLAYER() == null;
+                _subroutineDefaultGlobal = context.PLAYER() == null;
                 Attributes.Parallelable = true;
                 parseInfo.TranslateInfo.AddSubroutine(this);
 
@@ -115,14 +120,28 @@ namespace Deltin.Deltinteger.Parse
         // Sets up the method's block.
         public override void SetupBlock()
         {
-            if (context.block() != null)
+            if (Context.block() != null)
             {
-                block = new BlockAction(parseInfo.SetCallInfo(CallInfo), BlockScope, context.block());
+                Block = new BlockAction(parseInfo.SetCallInfo(CallInfo), methodScope.Child(), Context.block());
 
+                // Validate returns.
                 BlockTreeScan validation = new BlockTreeScan(DoesReturnValue, parseInfo, this);
                 validation.ValidateReturns();
-                multiplePaths = validation.MultiplePaths;
+                MultiplePaths = validation.MultiplePaths;
+
+                // If there is only one return statement, set SingleReturnValue.
+                if (validation.Returns.Length == 1) SingleReturnValue = validation.Returns[0].ReturningValue;
+
+                // If the return type is a constant type...
+                if (ReturnType != null && ReturnType.IsConstant())
+                    // ... iterate through each return statement ...
+                    foreach (ReturnAction returnAction in validation.Returns)
+                        // ... If the current return statement returns a value and that value does not implement the return type ...
+                        if (returnAction.ReturningValue != null && (returnAction.ReturningValue.Type() == null || !returnAction.ReturningValue.Type().Implements(ReturnType)))
+                            // ... then add a syntax error.
+                            parseInfo.Script.Diagnostics.Error("Must return a value of type '" + ReturnType.GetName() + "'.", returnAction.ErrorRange);
             }
+            WasApplied = true;
             foreach (var listener in listeners) listener.Applied();
         }
 
@@ -142,10 +161,10 @@ namespace Deltin.Deltinteger.Parse
             Subroutine subroutine = parseInfo.TranslateInfo.SubroutineCollection.NewSubroutine(Name);
 
             // Create the rule.
-            TranslateRule subroutineRule = new TranslateRule(parseInfo.TranslateInfo, subroutine, SubroutineName, subroutineDefaultGlobal);
+            TranslateRule subroutineRule = new TranslateRule(parseInfo.TranslateInfo, subroutine, SubroutineName, _subroutineDefaultGlobal);
 
             // Setup the return handler.
-            ReturnHandler returnHandler = new ReturnHandler(subroutineRule.ActionSet, Name, multiplePaths || Attributes.Virtual);
+            ReturnHandler returnHandler = new ReturnHandler(subroutineRule.ActionSet, Name, MultiplePaths || Attributes.Virtual);
             ActionSet actionSet = subroutineRule.ActionSet.New(returnHandler).New(subroutineRule.ActionSet.IndexAssigner.CreateContained());
 
             // Get the variables that will be used to store the parameters.
@@ -153,7 +172,7 @@ namespace Deltin.Deltinteger.Parse
             for (int i = 0; i < ParameterVars.Length; i++)
             {
                 // Create the workshop variable the parameter will be stored as.
-                IndexReference indexResult = actionSet.IndexAssigner.AddIndexReference(actionSet.VarCollection, ParameterVars[i], subroutineDefaultGlobal, Attributes.Recursive);
+                IndexReference indexResult = actionSet.IndexAssigner.AddIndexReference(actionSet.VarCollection, ParameterVars[i], _subroutineDefaultGlobal, Attributes.Recursive);
                 parameterStores[i] = indexResult;
 
                 // Assign virtual variables to the index reference.
@@ -220,7 +239,7 @@ namespace Deltin.Deltinteger.Parse
                     actionSet.IndexAssigner.Add(virtualParameterOption, indexResult);
             }
         }
-    
+
         // Assigns parameters to the index assigner. TODO: Move to OverloadChooser.
         public static void AssignParameters(ActionSet actionSet, Var[] parameterVars, IWorkshopTree[] parameterValues, bool recursive = false)
         {

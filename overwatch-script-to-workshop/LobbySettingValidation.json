@@ -36,12 +36,12 @@
     "Max Team 1 Players": {
       "default": 6.0,
       "type": "integer",
-      "maximum": 6.0
+      "maximum": 12.0
     },
     "Max Team 2 Players": {
       "default": 6.0,
       "type": "integer",
-      "maximum": 6.0
+      "maximum": 12.0
     },
     "Max FFA Players": {
       "default": 0.0,

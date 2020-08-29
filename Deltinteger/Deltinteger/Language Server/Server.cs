@@ -6,13 +6,16 @@ using System.Threading.Tasks;
 using System.Text;
 using Deltin.Deltinteger.Parse;
 using Deltin.Deltinteger.Pathfinder;
+using Deltin.Deltinteger.Debugger;
+using Deltin.Deltinteger.Debugger.Protocol;
+using Deltin.Deltinteger.Decompiler.TextToElement;
+using Deltin.Deltinteger.Decompiler.ElementToCode;
 using Serilog;
 using TextCopy;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Extensions.LanguageServer.Server;
 using OmniSharp.Extensions.JsonRpc;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
-using ILanguageServer = OmniSharp.Extensions.LanguageServer.Server.ILanguageServer;
 
 namespace Deltin.Deltinteger.LanguageServer
 {
@@ -29,7 +32,7 @@ namespace Deltin.Deltinteger.LanguageServer
 
         private static string LogFile() => Path.Combine(Program.ExeFolder, "Log", "log.txt");
 
-        public ILanguageServer Server { get; private set; }
+        public OmniSharp.Extensions.LanguageServer.Server.LanguageServer Server { get; private set; }
 
         private DeltinScript _lastParse = null;
         private object _lastParseLock = new object();
@@ -45,7 +48,13 @@ namespace Deltin.Deltinteger.LanguageServer
         public DocumentHandler DocumentHandler { get; private set; }
         public FileGetter FileGetter { get; private set; }
         public ConfigurationHandler ConfigurationHandler { get; private set; }
-        private PathMap lastMap;
+        private readonly ClipboardListener _debugger;
+        private Pathmap lastMap;
+
+        public DeltintegerLanguageServer()
+        {
+            _debugger = new ClipboardListener(this);
+        }
 
         async Task RunServer()
         {
@@ -73,7 +82,7 @@ namespace Deltin.Deltinteger.LanguageServer
                 .WithOutput(Console.OpenStandardOutput())
                 .ConfigureLogging(x => x
                     .AddSerilog()
-                    .AddLanguageServer()
+                    .AddLanguageProtocolLogging()
                     .SetMinimumLevel(Microsoft.Extensions.Logging.LogLevel.Debug))
                 .WithHandler<DocumentHandler>(DocumentHandler)
                 .WithHandler<CompletionHandler>(completionHandler)
@@ -87,8 +96,7 @@ namespace Deltin.Deltinteger.LanguageServer
                 .WithHandler<PrepareRenameHandler>(prepareRenameHandler)                
             ));
             
-            Server.SendNotification(Version, Program.VERSION);
-            
+            Server.SendNotification(Version, Program.VERSION);            
             await Server.WaitForExit;
         }
 
@@ -103,7 +111,7 @@ namespace Deltin.Deltinteger.LanguageServer
                 // Get the pathmap. 'map' will be null if there is an error.
                 try
                 {
-                    PathMap map = PathMap.ImportFromCSV(Clipboard.GetText(), error);
+                    Pathmap map = Pathmap.ImportFromCSV(Clipboard.GetText(), error);
 
                     if (map == null) return error.Message;
                     else
@@ -122,13 +130,10 @@ namespace Deltin.Deltinteger.LanguageServer
             options.OnRequest<Newtonsoft.Json.Linq.JToken>("pathmapApply", uriToken => Task.Run(() => {
                 
                 // Save 'lastMap' to a file.
-                string result = lastMap.ExportAsXML();
+                string result = lastMap.ExportAsJSON();
                 string output = uriToken["path"].ToObject<string>().Trim('/');
-                using (FileStream fs = File.Create(output))
-                {
-                    Byte[] info = Encoding.Unicode.GetBytes(result);
-                    fs.Write(info, 0, info.Length);
-                }
+                using (var stream = new StreamWriter(output))
+                    stream.Write(result);
             }));
 
             // Pathmap editor request.
@@ -144,7 +149,7 @@ namespace Deltin.Deltinteger.LanguageServer
                 }
                 else
                 {
-                    compile = Editor.Generate(PathMap.ImportFromXML(editFileToken.Text), ConfigurationHandler.OutputLanguage);
+                    compile = Editor.Generate(editFileToken.File, Pathmap.ImportFromText(editFileToken.Text), ConfigurationHandler.OutputLanguage);
                 }
 
                 Clipboard.SetText(compile.WorkshopCode);
@@ -152,21 +157,98 @@ namespace Deltin.Deltinteger.LanguageServer
                 return true;
             }));
 
+            // semantic tokens
+            options.OnRequest<Newtonsoft.Json.Linq.JToken, SemanticToken[]>("semanticTokens", (uriToken) => Task<SemanticToken[]>.Run(async () => 
+            {
+                await DocumentHandler.WaitForParse();
+                SemanticToken[] tokens = LastParse.ScriptFromUri(new Uri(uriToken["fsPath"].ToObject<string>()))?.GetSemanticTokens();
+                return tokens ?? new SemanticToken[0];
+            }));
+
+            // debugger start
+            options.OnRequest<object>("debugger.start", args => Task.Run(() => {
+                _debugger.Start();
+                return new object();
+            }));
+
+            // debugger stop
+            options.OnRequest<object>("debugger.stop", args => Task.Run(() => {
+                _debugger.Stop();
+                return new object();
+            }));
+
+            // debugger scopes
+            options.OnRequest<ScopesArgs, DBPScope[]>("debugger.scopes", args => Task<DBPScope[]>.Run(() => {
+                try
+                {
+                    if (_debugger.VariableCollection != null)
+                        return _debugger.VariableCollection.GetScopes(args);
+                }
+                catch (Exception ex)
+                {
+                    DebuggerException(ex);
+                }
+                return new DBPScope[0];
+            }));
+
+            // debugger variables
+            options.OnRequest<VariablesArgs, DBPVariable[]>("debugger.variables", args => Task<DBPVariable[]>.Run(() => {
+                try
+                {
+                    if (_debugger.VariableCollection != null)
+                        return _debugger.VariableCollection.GetVariables(args);
+                }
+                catch (Exception ex)
+                {
+                    DebuggerException(ex);
+                }
+                return new DBPVariable[0];
+            }));
+
+            // debugger evaluate
+            options.OnRequest<EvaluateArgs, EvaluateResponse>("debugger.evaluate", args => Task<EvaluateResponse>.Run(() => {
+                try
+                {
+                    return _debugger.VariableCollection?.Evaluate(args);
+                }
+                catch (Exception ex)
+                {
+                    DebuggerException(ex);
+                    return EvaluateResponse.Empty;
+                }
+            }));
+            
+            // Decompile insert
+            options.OnRequest<object>("decompile.insert", () => Task.Run(() =>
+            {
+                try
+                {
+                    var workshop = new ConvertTextToElement(Clipboard.GetText()).Get();
+                    var code = new WorkshopDecompiler(workshop, new OmitLobbySettingsResolver(), new CodeFormattingOptions()).Decompile();
+                    object result = new {success = true, code = code};
+                    return result;
+                }
+                catch (Exception ex)
+                {
+                    object result = new {success = false, code = ex.ToString()};
+                    return result;
+                }
+            }));
+
             return options;
+        }
+
+        public void DebuggerException(Exception ex)
+        {
+            Server.SendNotification("debugger.error", ex.ToString());
         }
 
         class PathmapDocument
         {
             public string Text;
+            public string File;
 
             public PathmapDocument() {}
-            public PathmapDocument(string text)
-            {
-                Text = text;
-            }
-
-            public static implicit operator PathmapDocument(string doc) => new PathmapDocument(doc);
-            public static implicit operator string(PathmapDocument doc) => doc.Text;
         }
 
         public static readonly DocumentSelector DocumentSelector = new DocumentSelector(

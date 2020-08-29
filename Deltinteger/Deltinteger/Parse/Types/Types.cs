@@ -15,7 +15,10 @@ namespace Deltin.Deltinteger.Parse
         public Constructor[] Constructors { get; protected set; } = new Constructor[0];
         public CodeType Extends { get; private set; }
         public string Description { get; protected set; }
+        public Debugger.IDebugVariableResolver DebugVariableResolver { get; protected set; } = new Debugger.DefaultResolver();
         protected string Kind = "class";
+        protected TokenType TokenType { get; set; } = TokenType.Type;
+        protected List<TokenModifier> TokenModifiers { get; set; } = new List<TokenModifier>();
 
         /// <summary>Determines if the class can be deleted with the delete keyword.</summary>
         public bool CanBeDeleted { get; protected set; } = false;
@@ -118,6 +121,7 @@ namespace Deltin.Deltinteger.Parse
         {
             parseInfo.TranslateInfo.Types.CallType(this);
             parseInfo.Script.AddHover(callRange, HoverHandler.Sectioned(Kind + " " + Name, Description));
+            parseInfo.Script.AddToken(callRange, TokenType, TokenModifiers.ToArray());
         }
 
         /// <summary>Gets the completion that will show up for the language server.</summary>
@@ -143,16 +147,16 @@ namespace Deltin.Deltinteger.Parse
                 foreach (var genericContext in typeContext.generics().code_type())
                     generics.Add(GetCodeTypeFromContext(parseInfo, genericContext));
                 
-                if (type is Lambda.BlockLambda)
-                    type = new Lambda.BlockLambda(generics.ToArray());
-                else if (type is Lambda.ValueBlockLambda)
+                if (type is Lambda.ValueBlockLambda)
                     type = new Lambda.ValueBlockLambda(generics[0], generics.Skip(1).ToArray());
+                else if (type is Lambda.BlockLambda)
+                    type = new Lambda.BlockLambda(generics.ToArray());
                 else if (type is Lambda.MacroLambda)
                     type = new Lambda.MacroLambda(generics[0], generics.Skip(1).ToArray());
             }
 
             if (type != null)
-                type.Call(parseInfo, DocRange.GetRange(typeContext));
+                type.Call(parseInfo, DocRange.GetRange(typeContext.PART()));
 
             if (typeContext.INDEX_START() != null)
                     for (int i = 0; i < typeContext.INDEX_START().Length; i++)

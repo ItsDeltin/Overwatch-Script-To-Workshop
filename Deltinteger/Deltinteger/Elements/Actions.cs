@@ -123,7 +123,7 @@ namespace Deltin.Deltinteger.Elements
     [EnumParameter("Reevaluation", typeof(EffectRev))]
     public class A_CreateEffect : Element {}
 
-    [ElementData("Create Hud Text")]
+    [ElementData("Create HUD Text")]
     [Parameter("Visible To", ValueType.Player, typeof(V_AllPlayers))]
     [Parameter("Header", ValueType.Any, typeof(V_Null))]
     [Parameter("Subheader", ValueType.Any, typeof(V_Null))]
@@ -202,7 +202,7 @@ namespace Deltin.Deltinteger.Elements
     [Parameter("Effect ID", ValueType.Player, null)]
     public class A_DestroyEffect : Element {}
 
-    [ElementData("Destroy Hud Text")]
+    [ElementData("Destroy HUD Text")]
     [Parameter("Text ID", ValueType.Number, null)]
     public class A_DestroyHudText : Element {}
 
@@ -846,4 +846,181 @@ namespace Deltin.Deltinteger.Elements
     [ElementData("Detach Players")]
     [Parameter("Children", ValueType.Player, typeof(V_EventPlayer))]
     public class A_DetachPlayers : Element {}
+
+    [ElementData("Set Ammo")]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [Parameter("Clip", ValueType.Number, typeof(V_Number))]
+    [Parameter("Ammo", ValueType.Number, typeof(V_Number))]
+    public class A_SetAmmo : Element {}
+
+    [ElementData("Set Max Ammo")]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [Parameter("Clip", ValueType.Number, typeof(V_Number))]
+    [Parameter("Max Ammo", ValueType.Number, typeof(V_Number))]
+    public class A_SetMaxAmmo : Element {}
+
+    [ElementData("Set Weapon")]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [Parameter("Weapon", ValueType.Number, typeof(V_Number))]
+    public class A_SetWeapon : Element {}
+
+    [ElementData("Set Reload enabled")]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [Parameter("Enabled", ValueType.Number, typeof(V_True))]
+    public class A_SetReloadEnabled : Element {}
+
+    [ElementData("Disable Game Mode HUD")]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    public class A_DisableGameModeHud : Element {}
+
+    [ElementData("Enable Game Mode HUD")]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    public class A_EnableGameModeHud : Element {}
+
+    [ElementData("Disable Game Mode In-World UI")]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    public class A_DisableGameModeInworldUI : Element {}
+
+    [ElementData("Enable Game Mode In-World UI")]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    public class A_EnableGameModeInworldUI : Element {}
+
+    [ElementData("Disable Hero HUD")]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    public class A_DisableHeroHud : Element {}
+
+    [ElementData("Enable Hero HUD")]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    public class A_EnableHeroHud : Element {}
+
+    [ElementData("Disable Kill Feed")]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    public class A_DisableKillFeed : Element {}
+
+    [ElementData("Enable Kill Feed")]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    public class A_EnableKillFeed : Element {}
+
+    [ElementData("Disable Messages")]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    public class A_DisableMessages : Element {}
+
+    [ElementData("Enable Messages")]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    public class A_EnableMessages : Element {}
+
+    [ElementData("Disable Scoreboard")]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    public class A_DisableScoreboard : Element {}
+
+    [ElementData("Enable Scoreboard")]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    public class A_EnableScoreboard : Element {}
+
+    [ElementData("Set Ability Charge")]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [Parameter("Button", ValueType.Button, typeof(V_ButtonValue))]
+    [Parameter("Charge Count", ValueType.Number, typeof(V_Number))]
+    public class A_SetAbilityCharge : Element {}
+
+    [ElementData("Set Ability Resource")]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [Parameter("Button", ValueType.Button, typeof(V_ButtonValue))]
+    [Parameter("Resource Percent", ValueType.Number, typeof(V_Number))]
+    public class A_SetAbilityResource : Element {}
+
+    [ElementData("Set Jump Vertical Speed")]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [Parameter("Jump Vertical Speed Percent", ValueType.Number, typeof(V_Number))]
+    public class A_SetJumpVerticalSpeed : Element {}
+
+    [ElementData("Disable Nameplates")]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [Parameter("Viewing Players", ValueType.Player, typeof(V_AllPlayers))]
+    public class A_DisableNameplates : Element {}
+
+    [ElementData("Enable Nameplates")]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [Parameter("Viewing Players", ValueType.Player, typeof(V_AllPlayers))]
+    public class A_EnableNameplates : Element {}
+    
+    [ElementData("Start Forcing Player Outlines")]
+    [Parameter("Viewed Players", ValueType.Player, typeof(V_EventPlayer))]
+    [Parameter("Viewing Players", ValueType.Player, typeof(V_AllPlayers))]
+    [Parameter("Visible", ValueType.Boolean, typeof(V_True))]
+    [EnumParameter("Color", typeof(Color))]
+    public class A_StartForcingPlayerOutlines : Element {}
+
+    [ElementData("Stop Forcing Player Outlines")]
+    [Parameter("Viewed Players", ValueType.Player, typeof(V_EventPlayer))]
+    [Parameter("Viewing Players", ValueType.Player, typeof(V_AllPlayers))]
+    public class A_StopForcingPlayerOutlines : Element {}
+
+    [ElementData("Start Scaling Player")]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [Parameter("Scale", ValueType.Number, typeof(V_Number))]
+    [Parameter("Reevaluation", ValueType.Boolean, typeof(V_True))]
+    public class A_StartScalingPlayer : Element {}
+
+    [ElementData("Stop Scaling Player")]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    public class A_StopScalingPlayer : Element {}
+
+    [ElementData("Start Scaling Barriers")]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [Parameter("Scale", ValueType.Number, typeof(V_Number))]
+    [Parameter("Reevaluation", ValueType.Boolean, typeof(V_True))]
+    public class A_StartScalingBarriers : Element {}
+
+    [ElementData("Stop Scaling Barriers")]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    public class A_StopScalingBarriers : Element {}
+
+    [ElementData("Enable Movement Collision With Environment")]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    public class A_EnableMovementCollisionWithEnvironment : Element {}
+
+    [ElementData("Disable Movement Collision With Environment")]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [Parameter("Include Floors", ValueType.Boolean, typeof(V_False))]
+    public class A_DisableMovementCollisionWithEnvironment : Element {}
+
+    [ElementData("Enable Movement Collision With Players")]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    public class A_EnableMovementCollisionWithPlayers : Element {}
+
+    [ElementData("Disable Movement Collision With Players")]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    public class A_DisableMovementCollisionWithPlayers : Element {}
+
+    [ElementData("Start Modifying Hero Voice Lines")]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [Parameter("Pitch Scalar", ValueType.Number, typeof(V_Number))]
+    [Parameter("Reevaluation", ValueType.Boolean, typeof(V_True))]
+    public class A_StartModifyingHeroVoiceLines : Element {}
+
+    [ElementData("Stop Modifying Hero Voice Lines")]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    public class A_StopModifyingHeroVoiceLines : Element {}
+
+    [ElementData("Add Health Pool To Player")]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [EnumParameter("Health Type", typeof(HealthType))]
+    [Parameter("Max Health", ValueType.Number, typeof(V_Number))]
+    [Parameter("Recoverable", ValueType.Boolean, typeof(V_True))]
+    [Parameter("Reevaluation", ValueType.Boolean, typeof(V_True))]
+    public class A_AddHealthPoolToPlayer : Element {}
+
+    [ElementData("Remove Health Pool From Player")]
+    [Parameter("Health Pool ID", ValueType.Any, typeof(V_LastCreatedHealthPool))]
+    public class A_RemoveHealthPoolFromPlayer : Element {}
+
+    [ElementData("Remove All Health Pools From Player")]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    public class A_RemoveAllHealthPoolsFromPlayer : Element {}
+
+    [ElementData("Set Player Health")]
+    [Parameter("Player", ValueType.Player, typeof(V_EventPlayer))]
+    [Parameter("Amount", ValueType.Number, typeof(V_Number))]
+    public class A_SetPlayerHealth : Element {}
 }
