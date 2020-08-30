@@ -20,6 +20,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
         }
 
         public string Message() => string.Join(", ", Expecting.Select(e => e.Name())) + " expected";
+        public override string ToString() => "[" + Message() + ", range: " + Range.ToString() + "]";
     }
 
     class InvalidExpressionTerm : IParserError
@@ -34,5 +35,6 @@ namespace Deltin.Deltinteger.Compiler.Parse
         }
 
         public string Message() => "Invalid expression term '" + ObtainedToken.Name() + "'";
+        public override string ToString() => "[" + Message() + ", range: " + Range.ToString() + "]";
     }
 }

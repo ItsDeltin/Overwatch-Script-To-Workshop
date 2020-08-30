@@ -7,13 +7,11 @@ namespace Deltin.Deltinteger.Compiler.Parse
 {
     public class Parser
     {
-        private readonly static TokenType[] ExpressionTokens = new TokenType[] { TokenType.Number, TokenType.Identifier, TokenType.True, TokenType.False };
-
         public Lexer Lexer { get; }
         public int Token { get; private set; }
         public Token Current => Lexer.Tokens[Token];
-        public Token CurrentOrLast => Lexer.Tokens[Math.Min(Token, Lexer.Tokens.Count)];
-        public TokenType Kind => Current.TokenType;
+        public Token CurrentOrLast => Lexer.Tokens[Math.Min(Token, Lexer.Tokens.Count - 1)];
+        public TokenType Kind => IsFinished ? TokenType.EOF : Current.TokenType;
         public int TokenCount => Lexer.Tokens.Count;
         public bool IsFinished => Token >= Lexer.Tokens.Count;
 
@@ -77,7 +75,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
         /// <param name="type">The expected token type.</param>
         Token ParseExpected(TokenType type)
         {
-            if (Kind == type)
+            if (Is(type))
                 return Consume();
             AddError(ErrorExpected(type));
             return null;
@@ -203,7 +201,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 case TokenType.Identifier: return IdentifierOrFunction();
                 // Unknown node
                 default:
-                    AddError(new InvalidExpressionTerm(Current));
+                    AddError(new InvalidExpressionTerm(CurrentOrLast));
                     return MissingElement();
             }
         }

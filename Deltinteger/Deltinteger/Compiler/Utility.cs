@@ -62,12 +62,11 @@ namespace Deltin.Deltinteger.Compiler
 
         public bool EqualTo(DocPos other) => CompareTo(other) == 0;
 
-        #region Operators
         public static bool operator <(DocPos p1, DocPos p2)  => p1.CompareTo(p2) <  0;
         public static bool operator >(DocPos p1, DocPos p2)  => p1.CompareTo(p2) >  0;
         public static bool operator <=(DocPos p1, DocPos p2) => p1.CompareTo(p2) <= 0;
         public static bool operator >=(DocPos p1, DocPos p2) => p1.CompareTo(p2) >= 0;
-        #endregion
+        public static implicit operator DocPos(OmniSharp.Extensions.LanguageServer.Protocol.Models.Position pos) => new DocPos(pos.Line, pos.Character);
     }
 
     public class DocRange : IComparable<DocRange>
@@ -84,7 +83,7 @@ namespace Deltin.Deltinteger.Compiler
         public bool IsInside(DocPos pos) => (Start.Line < pos.Line || (Start.Line == pos.Line && pos.Character >= Start.Character))
             && (End.Line > pos.Line || (End.Line == pos.Line && pos.Character <= End.Character));
 
-        public bool DoOverlap(DocRange other) => IsInside(other.Start) || IsInside(other.End);
+        public bool DoOverlap(DocRange other) => IsInside(other.Start) || IsInside(other.End) || other.IsInside(Start) || other.IsInside(End);
 
         public int CompareTo(DocRange other)
         {
@@ -131,7 +130,14 @@ namespace Deltin.Deltinteger.Compiler
             throw new Exception();
         }
 
-        public int LineSpan => End.Line - Start.Line;
+        public int LineSpan() => End.Line - Start.Line;
+        public int ColumnSpan()
+        {
+            int span = End.Character;
+            if (Start.Line == End.Line)
+                span -= Start.Character;
+            return span;
+        }
 
         public override string ToString() => "[" + Start.ToString() + "] - [" + End.ToString() + "]";
 
@@ -139,21 +145,19 @@ namespace Deltin.Deltinteger.Compiler
         public static bool operator >(DocRange r1, DocRange r2)  => r1.CompareTo(r2) >  0;
         public static bool operator <=(DocRange r1, DocRange r2) => r1.CompareTo(r2) <= 0;
         public static bool operator >=(DocRange r1, DocRange r2) => r1.CompareTo(r2) >= 0;
+
+        public static implicit operator DocRange(OmniSharp.Extensions.LanguageServer.Protocol.Models.Range range) => new DocRange(range.Start, range.End);
     }
 
-    public class Token
+    public class Token : SyntaxTree.IParseTree
     {
         public string Text { get; }
-        public int Index { get; set; }
-        public int Length { get; }
         public DocRange Range { get; set; }
         public TokenType TokenType { get; }
 
-        public Token(string text, int index, int length, DocRange range, TokenType tokenType)
+        public Token(string text, DocRange range, TokenType tokenType)
         {
             Text = text;
-            Index = index;
-            Length = length;
             Range = range;
             TokenType = tokenType;
         }
@@ -276,12 +280,20 @@ namespace Deltin.Deltinteger.Compiler
         LessThanOrEqual,
         GreaterThanOrEqual,
         // Ternary
-        QuestionMark
+        QuestionMark,
+        // Other
+        EOF
     }
 
     public class UpdateRange
     {
         public DocRange Range { get; }
         public string Text { get; }
+
+        public UpdateRange(DocRange range, string text)
+        {
+            Range = range;
+            Text = text;
+        }
     }
 }

@@ -63,7 +63,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
         {
             Advance(content.Length);
             int length = Position - pos;
-            return new Token(content, pos, length, new DocRange(PositionOf(pos), PositionOf(Position)), type);
+            return new Token(content, new DocRange(PositionOf(pos), PositionOf(Position)), type);
         }
     }
 }

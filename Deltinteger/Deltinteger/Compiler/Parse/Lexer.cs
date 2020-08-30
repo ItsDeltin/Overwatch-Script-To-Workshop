@@ -10,14 +10,16 @@ namespace Deltin.Deltinteger.Compiler
     {
         public List<Token> Tokens { get; } = new List<Token>();
         public string Content { get; private set; }
+        public List<int> Newlines { get; } = new List<int>();
 
         public Lexer() {}
 
         public void Init(string content)
         {
             Content = content;
+            GetNewlines(Content); // This can be removed after debugging.
 
-            LexController controller = new LexController(Content, Tokens);
+            LexController controller = new LexController(Content, new InitTokenPush(Tokens));
             controller.Match();
         }
 
@@ -31,54 +33,112 @@ namespace Deltin.Deltinteger.Compiler
         }
 
         // TODO
-        public void Update(string newContent, UpdateRange updateRange)
+        public IncrementInfo Update(string newContent, UpdateRange updateRange)
         {
-            // Get the range of the tokens overlapped.
-            int start = -1;
-            int end = Tokens.Count - 1;
-            for (int i = 0; i < Tokens.Count; i++)
-                if (Tokens[i].Range.DoOverlap(updateRange.Range))
-                {
-                    start = i;
-                }
-                else if (start != -1)
-                {
-                    // End range.
-                    end = i;
-                    break;
-                }
+            int lastTokenCount = Tokens.Count;
+            AffectedAreaInfo affectedArea = GetAffectedArea(updateRange);
             
-            // start shouldn't be -1 anymore.
-            if (start == -1) throw new Exception("Could not find the start of the tokens in range of the updated content.");
-
-            // Adjust start if the previous token is touching the update range.
-            if (start != 0 && Tokens[start - 1].Range.End.EqualTo(updateRange.Range.Start))
-                start--;
-            
-            // Adjust end if the next token is touching the update range.
-            if (end < Tokens.Count - 1 && Tokens[end + 1].Range.Start.EqualTo(updateRange.Range.End))
-                end++;
-
-            // Get the content scan range.
-            int startScan = Tokens[start].Index;
-            int endScan = Tokens[end].Index + Tokens[end].Length;
-
             // The number of lines
-            int lineDifference = updateRange.Range.LineSpan - NumberOfNewLines(updateRange.Text);
-            int indexDifference = newContent.Length - (updateRange.Range.End.PosIndex(Content) - updateRange.Range.Start.PosIndex(Content));
+            int lineDelta = NumberOfNewLines(updateRange.Text) - updateRange.Range.LineSpan();
+            int columnDelta = NumberOfCharactersInLastLine(updateRange.Text) - updateRange.Range.ColumnSpan();
+
+            var tokenInsert = new IncrementalTokenInsert(Tokens, affectedArea.StartingTokenIndex, affectedArea.EndingTokenIndex);
+            LexController controller = new LexController(newContent, tokenInsert);
+
+            // Set start range
+            controller.Index = affectedArea.StartIndex;
+            controller.Line = GetLine(controller.Index);
+            controller.Column = GetColumn(controller.Index);
 
             // Adjust token ranges.
-            foreach (Token token in Tokens)
-                if (updateRange.Range.End < token.Range.Start)
+            for (int i = affectedArea.EndingTokenIndex; i < Tokens.Count; i++)
+            {
+                if (updateRange.Range.End <= Tokens[i].Range.Start)
                 {
-                    token.Index += indexDifference;
-                    token.Range.Start.Line += lineDifference;
-                    token.Range.End.Line += lineDifference;
-                }
+                    Tokens[i].Range.Start.Line += lineDelta;
+                    Tokens[i].Range.End.Line += lineDelta;
 
-            // Remove tokens.
-            for (int i = start; i < start + end; i++) Tokens.RemoveAt(i);
+                    if (updateRange.Range.End.Line == Tokens[i].Range.Start.Line)
+                    {
+                        Tokens[i].Range.Start.Character += columnDelta;
+                        Tokens[i].Range.End.Character += columnDelta;
+                    }
+                }
+            }
+
+            controller.Match();
+
+            Content = newContent;
+            GetNewlines(newContent);
+            return new IncrementInfo(affectedArea.StartIndex, affectedArea.EndIndex, Tokens.Count - lastTokenCount);
         }
+
+        AffectedAreaInfo GetAffectedArea(UpdateRange updateRange)
+        {
+            // Get the range of the tokens overlapped.
+            bool startSet = false;
+
+            int updateStartIndex = IndexOf(updateRange.Range.Start);
+            int updateEndIndex = IndexOf(updateRange.Range.End);
+
+            int startIndex = updateStartIndex;
+            int startingTokenIndex = Tokens.Count;
+            int endIndex = updateEndIndex;
+            int endingTokenIndex = int.MaxValue;
+
+            for (int i = 0; i < Tokens.Count; i++)
+            {
+                if (Tokens[i].Range.DoOverlap(updateRange.Range))
+                {
+                    if (!startSet)
+                    {
+                        startIndex = Math.Min(updateStartIndex, IndexOf(Tokens[i].Range.Start));
+                        startingTokenIndex = i;
+                        startSet = true;
+                    }
+                }
+                else if (!startSet && Tokens[i].Range.End < updateRange.Range.Start)
+                {
+                    startIndex = Math.Min(updateStartIndex, IndexOf(Tokens[i].Range.Start));
+                    startingTokenIndex = i;
+                }
+                else if (startSet)
+                {
+                    // End range.
+                    endIndex = Math.Max(updateEndIndex, IndexOf(Tokens[i - 1].Range.End));
+                    endingTokenIndex = i - 1;
+                    break;
+                }
+                else if (!startSet && updateRange.Range.End < Tokens[i].Range.Start)
+                {
+                    // End range.
+                    endIndex = Math.Max(updateEndIndex, IndexOf(Tokens[i].Range.End));
+                    endingTokenIndex = i;
+                    break;
+                }
+            }
+            
+            return new AffectedAreaInfo(startIndex, endIndex, startingTokenIndex, endingTokenIndex);
+        }
+
+        private void GetNewlines(string content)
+        {
+            Newlines.Clear();
+            for (int i = 0; i < content.Length; i++)
+                if (content[i] == '\n')
+                    Newlines.Add(i);
+        }
+
+        private int GetLine(int index)
+        {
+            int r;
+            for (r = 0; r < Newlines.Count && Newlines[r] < index; r++);
+            return r;
+        }
+        // private int GetColumn(int index) => Newlines.Count == 0 ? index : index - GetLineIndex(GetLine(index));
+        private int GetColumn(int index) => index - GetLineIndex(GetLine(index));
+        private int IndexOf(DocPos pos) => GetLineIndex(pos.Line) + pos.Character;
+        private int GetLineIndex(int line) => line == 0 ? 0 : (Newlines[line - 1] + 1);
 
         private static int NumberOfNewLines(string text)
         {
@@ -89,6 +149,8 @@ namespace Deltin.Deltinteger.Compiler
             return count;
         }
 
+        private static int NumberOfCharactersInLastLine(string text) => text.Split('\n').Last().Length;
+
         public Token NextToken(Token token) => Tokens[Tokens.IndexOf(token) + 1];
     }
 
@@ -98,9 +160,9 @@ namespace Deltin.Deltinteger.Compiler
         public int Line;
         public int Column;
         public string Content { get; }
-        private readonly List<Token> _push;
+        private readonly ITokenPush _push;
 
-        public LexController(string content, List<Token> push)
+        public LexController(string content, ITokenPush push)
         {
             Content = content;
             _push = push;
@@ -108,9 +170,11 @@ namespace Deltin.Deltinteger.Compiler
 
         public void Match()
         {
-            while (Index != Content.Length)
+            while (Index < Content.Length && !_push.IncrementalStop())
             {
                 Skip();
+                if (Index >= Content.Length) break;
+
                 bool matched =
                     MatchSymbol('{', TokenType.CurlyBracket_Open) ||
                     MatchSymbol('}', TokenType.CurlyBracket_Close) ||
@@ -174,6 +238,7 @@ namespace Deltin.Deltinteger.Compiler
                 if (!matched)
                     Unknown();
             }
+            if (Index >= Content.Length) _push.EndReached();
         }
 
         private LexScanner MakeScanner() => new LexScanner(this);
@@ -325,7 +390,7 @@ namespace Deltin.Deltinteger.Compiler
         public void Unknown()
         {
             LexScanner scanner = MakeScanner();
-            PushToken(new Token(Content[Index].ToString(), Index, 1, new DocRange(new DocPos(Line, Column), new DocPos(Line, Column + 1)), TokenType.Unknown));
+            PushToken(new Token(Content[Index].ToString(), new DocRange(new DocPos(Line, Column), new DocPos(Line, Column + 1)), TokenType.Unknown));
             scanner.Advance();
             Accept(scanner);
         }
@@ -335,7 +400,7 @@ namespace Deltin.Deltinteger.Compiler
         {
             bool preceedingWhitespace = false;
             LexScanner scanner = MakeScanner();
-            while (scanner.AtWhitespace() && !scanner.ReachedEnd)
+            while (!scanner.ReachedEnd && scanner.AtWhitespace())
             {
                 if (scanner.At('\n')) preceedingWhitespace = true;
                 scanner.Advance();
@@ -348,12 +413,12 @@ namespace Deltin.Deltinteger.Compiler
         /// <param name="token">The token that is pushed.</param>
         private void PushToken(Token token)
         {
-            _push.Add(token);
+            _push.PushToken(token);
         }
 
         private void PushToken(LexScanner scanner, TokenType tokenType)
         {
-            _push.Add(scanner.AsToken(tokenType));
+            _push.PushToken(scanner.AsToken(tokenType));
             Accept(scanner);
         }
     }
@@ -367,7 +432,7 @@ namespace Deltin.Deltinteger.Compiler
         public int Line { get; private set; }
         public int Column { get; private set; }
         public bool WasAdvanced { get; private set; }
-        public bool ReachedEnd => Index == _content.Length;
+        public bool ReachedEnd => Index >= _content.Length;
         private readonly string _content;
         private readonly StringBuilder _captured = new StringBuilder();
         private readonly DocPos _startPos;
@@ -406,15 +471,101 @@ namespace Deltin.Deltinteger.Compiler
 
         public bool Match(char character)
         {
-            bool res = _content[Index] == character;
+            bool res = !ReachedEnd && _content[Index] == character;
             Advance();
             return res;
         }
 
-        public bool At(char chr) => _content[Index] == chr;
-        public bool AtIdentifierChar() => identifierCharacters.Contains(_content[Index]);
-        public bool AtWhitespace() => whitespaceCharacters.Contains(_content[Index]);
-        public bool AtNumeric() => numericalCharacters.Contains(_content[Index]);
-        public Token AsToken(TokenType tokenType) => new Token(_captured.ToString(), Index, Index + _captured.Length, new DocRange(_startPos, new DocPos(Line, Column)), tokenType);
+        public bool At(char chr) => !ReachedEnd && _content[Index] == chr;
+        public bool AtIdentifierChar() => !ReachedEnd && identifierCharacters.Contains(_content[Index]);
+        public bool AtWhitespace() => !ReachedEnd && whitespaceCharacters.Contains(_content[Index]);
+        public bool AtNumeric() => !ReachedEnd && numericalCharacters.Contains(_content[Index]);
+        public Token AsToken(TokenType tokenType) => new Token(_captured.ToString(), new DocRange(_startPos, new DocPos(Line, Column)), tokenType);
+    }
+
+    public interface ITokenPush
+    {
+        void PushToken(Token token);
+        bool IncrementalStop();
+        void EndReached();
+    }
+
+    class InitTokenPush : ITokenPush
+    {
+        private readonly List<Token> _tokens;
+
+        public InitTokenPush(List<Token> list)
+        {
+            _tokens = list;
+        }
+
+        public void PushToken(Token token) => _tokens.Add(token);
+        public bool IncrementalStop() => false;
+        public void EndReached() {}
+    }
+
+    class IncrementalTokenInsert : ITokenPush
+    {
+        public int Current { get; private set; }
+        private readonly List<Token> _tokens;
+        private bool _lastInsertWasEqual;
+        private int _stopMinimum;
+
+        public IncrementalTokenInsert(List<Token> list, int startingTokenIndex, int stopMinimum)
+        {
+            Current = startingTokenIndex;
+            _tokens = list;
+            _stopMinimum = stopMinimum;
+        }
+        public void PushToken(Token token)
+        {
+            _lastInsertWasEqual = Current < _tokens.Count && _tokens[Current].TokenType == token.TokenType && _tokens[Current].Text == token.Text;
+            if (Current == _tokens.Count)
+                _tokens.Add(token);
+            else
+            {
+                _tokens.RemoveAt(Current);
+                _tokens.Insert(Current, token);
+            }
+            Current++;
+        }
+
+        public bool IncrementalStop() => Current > _stopMinimum && _lastInsertWasEqual;
+
+        public void EndReached()
+        {
+            while (_tokens.Count > Current)
+                _tokens.RemoveAt(Current);
+        }
+    }
+
+    class AffectedAreaInfo
+    {
+        public int StartIndex { get; }
+        public int EndIndex { get; }
+        public int StartingTokenIndex { get; }
+        public int EndingTokenIndex { get; }
+
+        public AffectedAreaInfo(int startIndex, int endIndex, int startingTokenIndex, int endingTokenIndex)
+        {
+            StartIndex = startIndex;
+            EndIndex = endIndex;
+            StartingTokenIndex = startingTokenIndex;
+            EndingTokenIndex = endingTokenIndex;
+        }
+    }
+
+    public class IncrementInfo
+    {
+        public int ChangeStart { get; }
+        public int ChangeEnd { get; }
+        public int Delta { get; }
+
+        public IncrementInfo(int startIgnoring, int stopIgnoring, int delta)
+        {
+            ChangeStart = startIgnoring;
+            ChangeEnd = stopIgnoring;
+            Delta = delta;
+        }
     }
 }
