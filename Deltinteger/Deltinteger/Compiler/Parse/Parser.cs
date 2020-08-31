@@ -17,16 +17,22 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
         public Stack<OperatorInfo> Operators { get; } = new Stack<OperatorInfo>();
         public Stack<IParseExpression> Operands { get; } = new Stack<IParseExpression>();
+        public Stack<TokenCapture> TokenCaptureStack { get; } = new Stack<TokenCapture>();
+        public List<TokenCapture> NodeCaptures { get; } = new List<TokenCapture>();
         public List<IParserError> Errors { get; } = new List<IParserError>();
+        private readonly RootContext _last;
+        private readonly IncrementInfo _incrementInfo;
 
         private int LookaheadDepth = 0;
 
-        public Parser(Lexer lexer)
+        public Parser(Lexer lexer, RootContext last = null, IncrementInfo incrementInfo = null)
         {
             Lexer = lexer;
+            _last = last;
+            _incrementInfo = incrementInfo;
         }
 
-        public Token Consume()
+        Token Consume()
         {
             if (Token < Lexer.Tokens.Count)
             {
@@ -34,6 +40,53 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 return Lexer.Tokens[Token - 1];
             }
             return null;
+        }
+
+        void StartTokenCapture()
+        {
+            if (LookaheadDepth == 0)
+                TokenCaptureStack.Push(new TokenCapture(Token));
+        }
+
+        T EndTokenCapture<T>(T node)
+        {
+            if (LookaheadDepth == 0)
+            {
+                var capture = TokenCaptureStack.Pop();
+                capture.Finish(Token, node);
+                if (capture.IsValid) NodeCaptures.Add(capture);
+            }
+            return node;
+        }
+
+        /// <summary>Gets an existing parsing tree at the current position.</summary>
+        /// <param name="node">The resulting node.</param>
+        /// <typeparam name="T">The expected node type.</typeparam>
+        /// <returns>A boolean determining whether a compatible node was found.</returns>
+        bool GetIncrementalNode<T>(out T node)
+        {
+            // If the last syntax tree was not provided or the current token is inside the change range, return null.
+            if (_last == null || _incrementInfo == null || (Token >= _incrementInfo.ChangeStart && Token <= _incrementInfo.ChangeEnd))
+            {
+                node = default(T);
+                return false;
+            }
+
+            // Iterate through each cached node.
+            foreach (var capture in _last.NodeCaptures) 
+                // If the node's type is equal to the expected node type
+                // and the cached node's start token index is equal to the current token's index (adjusted for token difference if the current token is past the change position) 
+                if (capture.Node.GetType() == typeof(T) && capture.StartToken + (Token > _incrementInfo.ChangeStart ? _incrementInfo.Delta : 0) == Token)
+                {
+                    // Then return the node then advance by the number of tokens in the cached node.
+                    node = (T)capture.Node;
+                    Token += capture.Length;
+                    return true;
+                }
+            
+            // No matching node was found.
+            node = default(T);
+            return false;
         }
 
         void AddError(IParserError error)
@@ -304,6 +357,9 @@ namespace Deltin.Deltinteger.Compiler.Parse
         /// <returns>The resulting block.</returns>
         Block ParseBlock()
         {
+            StartTokenCapture();
+            if (GetIncrementalNode(out Block block)) return EndTokenCapture(block);
+
             // Open block
             ParseExpected(TokenType.CurlyBracket_Open);
 
@@ -311,11 +367,13 @@ namespace Deltin.Deltinteger.Compiler.Parse
             var statements = new List<IParseStatement>();
             while (TryParseStatementOrBlock(out var statement)) statements.Add(statement);
 
+            // Close block
+            ParseExpected(TokenType.CurlyBracket_Close);
+
             // Create the block.
             var result = new Block(statements);
 
-            // Close block
-            ParseExpected(TokenType.CurlyBracket_Close);
+            EndTokenCapture(result);
 
             // Done
             return result;
@@ -394,14 +452,20 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
         Return ParseReturn()
         {
+            StartTokenCapture();
+            if (GetIncrementalNode(out Return ret)) return EndTokenCapture(ret);
+
             var returnToken = ParseExpected(TokenType.Return);
             var expression = GetContainExpression();
             ParseSemicolon();
-            return new Return(returnToken, expression);
+            return EndTokenCapture(new Return(returnToken, expression));
         }
 
         If ParseIf()
         {
+            StartTokenCapture();
+            if (GetIncrementalNode(out If @if)) return EndTokenCapture(@if);
+
             ParseExpected(TokenType.If);
 
             // Parse the expression.
@@ -446,11 +510,14 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 }
             }
 
-            return new If(expression, statement, elifs, els);
+            return EndTokenCapture(new If(expression, statement, elifs, els));
         }
 
         For ParseFor()
         {
+            StartTokenCapture();
+            if (GetIncrementalNode(out For @for)) return EndTokenCapture(@for);
+
             ParseExpected(TokenType.For);
             ParseExpected(TokenType.Parentheses_Open);
 
@@ -485,7 +552,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
             var statement = ParseStatement();
 
             // Done
-            return new For(initializer, condition, iterator, statement);
+            return EndTokenCapture(new For(initializer, condition, iterator, statement));
         }
 
         ParseType ParseType()
@@ -559,6 +626,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
         {
             var context = new RootContext();
             while (!IsFinished) ParseScriptRootElement(context);
+            context.NodeCaptures = NodeCaptures;
             return context;
         }
 
@@ -598,8 +666,11 @@ namespace Deltin.Deltinteger.Compiler.Parse
         /// <summary>Parses a rule.</summary>
         /// <param name="context">If Kind is not TokenType.Rule, this out parameter will be null.</param>
         /// <returns>If Kind is not TokenType.Rule, false will be returned. Otherwise, true is returned.</returns>
-        public RuleContext ParseRule()
+        RuleContext ParseRule()
         {
+            StartTokenCapture();
+            if (GetIncrementalNode(out RuleContext rule)) return EndTokenCapture(rule);
+
             Token ruleToken = ParseExpected(TokenType.Rule);
 
             // Colon
@@ -615,12 +686,15 @@ namespace Deltin.Deltinteger.Compiler.Parse
             // Get the block.
             TryParseStatementOrBlock(out var statement);
 
-            return new RuleContext(name, conditions, statement);
+            return EndTokenCapture(new RuleContext(name, conditions, statement));
         }
 
         /// <summary>Parses a class.</summary>
-        public ClassContext ParseClass()
+        ClassContext ParseClass()
         {
+            StartTokenCapture();
+            if (GetIncrementalNode(out ClassContext @class)) return EndTokenCapture(@class);
+
             ParseExpected(TokenType.Class);
             var identifier = ParseExpected(TokenType.Identifier);
             ParseExpected(TokenType.CurlyBracket_Open);
@@ -636,7 +710,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
             }
             ParseExpected(TokenType.CurlyBracket_Close);
 
-            return context;
+            return EndTokenCapture(context);
         }
 
         /// <summary>Parses a function or parametered macro.</summary>

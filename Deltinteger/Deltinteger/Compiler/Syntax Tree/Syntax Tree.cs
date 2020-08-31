@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using Deltin.Deltinteger.Compiler.Parse;
 
 namespace Deltin.Deltinteger.Compiler.SyntaxTree
 {
@@ -9,6 +10,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public List<ClassContext> Classes { get; } = new List<ClassContext>();
         public List<Declaration> RuleLevelVariables { get; } = new List<Declaration>();
         public List<FunctionContext> Functions { get; } = new List<FunctionContext>();
+        public List<TokenCapture> NodeCaptures { get; set; }
     }
 
     // Interfaces

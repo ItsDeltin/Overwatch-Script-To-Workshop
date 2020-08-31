@@ -70,7 +70,7 @@ namespace Deltin.Deltinteger.Compiler
 
             Content = newContent;
             GetNewlines(newContent);
-            return new IncrementInfo(affectedArea.StartIndex, affectedArea.EndIndex, Tokens.Count - lastTokenCount);
+            return new IncrementInfo(affectedArea.StartingTokenIndex, affectedArea.EndingTokenIndex, Tokens.Count - lastTokenCount);
         }
 
         AffectedAreaInfo GetAffectedArea(UpdateRange updateRange)
@@ -78,47 +78,82 @@ namespace Deltin.Deltinteger.Compiler
             // Get the range of the tokens overlapped.
             bool startSet = false;
 
+            // The default starting range of the update range's start and end positions in the document.
             int updateStartIndex = IndexOf(updateRange.Range.Start);
             int updateEndIndex = IndexOf(updateRange.Range.End);
 
-            int startIndex = updateStartIndex;
-            int startingTokenIndex = Tokens.Count;
-            int endIndex = updateEndIndex;
-            int endingTokenIndex = int.MaxValue;
+            int startIndex = updateStartIndex; // The position where lexing will start.
+            int startingTokenIndex = Tokens.Count; // The position in the token list where new tokens will be inserted into.
+            int endingTokenIndex = int.MaxValue; // The token where lexing will end.
 
+            // Find the first token to the left of the update range and the first token to the right of the update range.
+            // Set 'startIndex', 'startingTokenIndex' with the left token and 'endingTokenIndex' with the right token.
+            // 
+            // In the event of a left-side or right-side token in relation to the update range is not found,
+            // the default values of 'startIndex', 'startingTokenIndex', and 'endingTokenIndex' should handle it fine.
             for (int i = 0; i < Tokens.Count; i++)
             {
+                // If the current token overlaps the update range, set startTokenIndex.
                 if (Tokens[i].Range.DoOverlap(updateRange.Range))
                 {
+                    // Don't set the starting position and index again if it was already set via overlap.
+                    // We use a seperate if rather than an && because the proceeding else-ifs cannot run if the token overlaps the update range.
                     if (!startSet)
                     {
+                        // 'startIndex' cannot be higher than 'updateStartIndex'.
+                        // Simply setting 'startIndex' to 'IndexOf...' may cause an issue in the common scenario:
+
+                        // Character            : |1|2|3|4|5|6|7|
+                        // Update start position:    x     x
+                        // Token start position :        +     +
+
+                        // startIndex will be 3, causing the characters between the first x and + to be skipped.
+                        // So pick the lower of the 2 values.
                         startIndex = Math.Min(updateStartIndex, IndexOf(Tokens[i].Range.Start));
+                        // Set the starting token to the current token's index.
                         startingTokenIndex = i;
+                        // Once an overlapping token is found, do not set 'startIndex' or 'startingTokenIndex' again.
                         startSet = true;
                     }
                 }
+                // Sometimes, there is no overlapping token. In that case, we use the closest token to the left of the update range.
+                // We determine if a token is to the left by checking if the token's ending position is less than the update range's start position.
+                //
+                // If the overlapping token is not found,
+                //   and the token is to the left of the update range,
+                //   then set the 'startIndex' and 'startingTokenIndex'.
+                //
+                // This block will run every iteration until the if statement above executes.
                 else if (!startSet && Tokens[i].Range.End < updateRange.Range.Start)
                 {
+                    // TODO: Since the end position of the token was already checked, doing Math.Min is probably redundant
+                    // simply doing 'startIndex = IndexOf(Tokens[i].Range.Start)' will probably suffice.
                     startIndex = Math.Min(updateStartIndex, IndexOf(Tokens[i].Range.Start));
+                    // Set the starting token to the current token's index.
                     startingTokenIndex = i;
                 }
+                // If the token was overlapping, it would have been caught earlier.
+                // This block will run once no more overlapping tokens are found.
                 else if (startSet)
                 {
-                    // End range.
-                    endIndex = Math.Max(updateEndIndex, IndexOf(Tokens[i - 1].Range.End));
+                    // Subtract by 1 because i - 1 is the last token that overlaps with the update range.
                     endingTokenIndex = i - 1;
+
+                    // No more iterations are need once the end is found.
                     break;
                 }
+                // If there is no overlapping token, set the ending using the first token that is completely to the right of the update range.
                 else if (!startSet && updateRange.Range.End < Tokens[i].Range.Start)
                 {
-                    // End range.
-                    endIndex = Math.Max(updateEndIndex, IndexOf(Tokens[i].Range.End));
+                    // Set the token index where lexing will stop.
                     endingTokenIndex = i;
+
+                    // No more iterations are need once the end is found.
                     break;
                 }
             }
-            
-            return new AffectedAreaInfo(startIndex, endIndex, startingTokenIndex, endingTokenIndex);
+
+            return new AffectedAreaInfo(startIndex, startingTokenIndex, endingTokenIndex);
         }
 
         private void GetNewlines(string content)
@@ -542,14 +577,12 @@ namespace Deltin.Deltinteger.Compiler
     class AffectedAreaInfo
     {
         public int StartIndex { get; }
-        public int EndIndex { get; }
         public int StartingTokenIndex { get; }
         public int EndingTokenIndex { get; }
 
-        public AffectedAreaInfo(int startIndex, int endIndex, int startingTokenIndex, int endingTokenIndex)
+        public AffectedAreaInfo(int startIndex, int startingTokenIndex, int endingTokenIndex)
         {
             StartIndex = startIndex;
-            EndIndex = endIndex;
             StartingTokenIndex = startingTokenIndex;
             EndingTokenIndex = endingTokenIndex;
         }

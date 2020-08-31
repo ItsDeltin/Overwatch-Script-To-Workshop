@@ -149,7 +149,7 @@ namespace Deltin.Deltinteger.Compiler
         public static implicit operator DocRange(OmniSharp.Extensions.LanguageServer.Protocol.Models.Range range) => new DocRange(range.Start, range.End);
     }
 
-    public class Token : SyntaxTree.IParseTree
+    public class Token
     {
         public string Text { get; }
         public DocRange Range { get; set; }
