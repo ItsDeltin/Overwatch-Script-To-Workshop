@@ -13,6 +13,11 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public List<TokenCapture> NodeCaptures { get; set; }
     }
 
+    public class Node
+    {
+        public DocRange Range { get; set; }
+    }
+
     // Interfaces
     public interface IParseExpression {}
     public interface IParseStatement {}
@@ -147,6 +152,20 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public override string ToString() => Expression.ToString();
     }
 
+    public class NewExpression : IParseExpression, IParseStatement
+    {
+        public Token ClassIdentifier { get; }
+        public List<ParameterValue> Parameters { get; }
+
+        public NewExpression(Token classIdentifier, List<ParameterValue> parameters)
+        {
+            ClassIdentifier = classIdentifier;
+            Parameters = parameters;
+        }
+
+        public override string ToString() => "new " + ClassIdentifier.Text + "(" + string.Join(", ", Parameters.Select(p => p.ToString())) + ")"; 
+    }
+
     // Expressions
     public class BooleanExpression : IParseExpression
     {
@@ -218,6 +237,86 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         }
 
         public override string ToString() => "[" + Expression.ToString() + "]";
+    }
+
+    public class ValueInArray : IParseExpression
+    {
+        public IParseExpression Array { get; }
+        public IParseExpression Index { get; }
+
+        public ValueInArray(IParseExpression array, IParseExpression index)
+        {
+            Array = array;
+            Index = index;
+        }
+
+        public override string ToString() => Array.ToString() + "[" + Index.ToString() + "]";
+    }
+
+    public class CreateArray : IParseExpression
+    {
+        public List<ParameterValue> Values { get; }
+        public Token LeftBracket { get; }
+        public Token RightBracket { get; }
+
+        public CreateArray(List<ParameterValue> values, Token leftBracket, Token rightBracket)
+        {
+            Values = values;
+            LeftBracket = leftBracket;
+            RightBracket = rightBracket;
+        }
+    }
+
+    public class NullExpression : IParseExpression
+    {
+        public Token Token { get; }
+
+        public NullExpression(Token token)
+        {
+            Token = token;
+        }
+
+        public override string ToString() => "null";
+    }
+
+    public class ThisExpression : IParseExpression
+    {
+        public Token Token { get; }
+
+        public ThisExpression(Token token)
+        {
+            Token = token;
+        }
+
+        public override string ToString() => "this";
+    }
+
+    public class ExpressionGroup : IParseExpression
+    {
+        public IParseExpression Expression { get; }
+        public Token Left { get; }
+        public Token Right { get; }
+
+        public ExpressionGroup(IParseExpression expression, Token left, Token right)
+        {
+            Expression = expression;
+            Left = left;
+            Right = right;
+        }
+    }
+
+    public class TypeCast : IParseExpression
+    {
+        public ParseType Type { get; }
+        public IParseExpression Expression { get; }
+
+        public TypeCast(ParseType type, IParseExpression expression)
+        {
+            Type = type;
+            Expression = expression;
+        }
+
+        public override string ToString() => "<" + Type.ToString() + ">" + Expression.ToString();
     }
 
     // Statements
@@ -338,6 +437,18 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
             Condition = condition;
             Iterator = iterator;
             Block = block;
+        }
+    }
+
+    public class While : IParseStatement
+    {
+        public IParseExpression Condition { get; }
+        public IParseStatement Statement { get; }
+
+        public While(IParseExpression condition, IParseStatement statement)
+        {
+            Condition = condition;
+            Statement = statement;
         }
     }
 

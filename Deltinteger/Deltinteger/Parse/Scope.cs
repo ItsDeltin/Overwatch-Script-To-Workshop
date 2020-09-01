@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.Elements;
+using Deltin.Deltinteger.Compiler;
 using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
-using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItemKind;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -393,7 +393,7 @@ namespace Deltin.Deltinteger.Parse
             return false;
         }
 
-        public CompletionItem[] GetCompletion(Pos pos, bool immediate, Scope getter = null)
+        public CompletionItem[] GetCompletion(DocPos pos, bool immediate, Scope getter = null)
         {
             List<CompletionItem> completions = new List<CompletionItem>();
 
@@ -412,9 +412,9 @@ namespace Deltin.Deltinteger.Parse
             return completions.ToArray();
         }
 
-        private bool WasScopedAtPosition(IScopeable element, Pos pos, Scope getter)
+        private bool WasScopedAtPosition(IScopeable element, DocPos pos, Scope getter)
         {
-            return (pos == null || element.DefinedAt == null || element.WholeContext || element.DefinedAt.range.start <= pos) && (getter == null || getter.AccessorMatches(element));
+            return (pos == null || element.DefinedAt == null || element.WholeContext || element.DefinedAt.range.Start <= pos) && (getter == null || getter.AccessorMatches(element));
         }
 
         public static Scope GetGlobalScope()

@@ -1,5 +1,7 @@
 using System;
 using Deltin.Deltinteger.LanguageServer;
+using Deltin.Deltinteger.Compiler;
+using Deltin.Deltinteger.Compiler.SyntaxTree;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -54,9 +56,9 @@ namespace Deltin.Deltinteger.Parse
             return statement;
         }
 
-        private IStatement StatementFromContext(Scope scope, DeltinScriptParser.Documented_statementContext statementContext)
+        private IStatement StatementFromContext(Scope scope, IParseStatement statementContext)
         {
-            switch (statementContext.statement())
+            switch (statementContext)
             {
                 case DeltinScriptParser.S_defineContext define    : {
                     var newVar = new ScopedVariable(scope, new DefineContextHandler(this, define.define()));
@@ -75,17 +77,17 @@ namespace Deltin.Deltinteger.Parse
                     }
                     else return (ExpressionTree)expr;
                 }
-                case DeltinScriptParser.S_ifContext s_if            : return new IfAction(this, scope, s_if.@if());
-                case DeltinScriptParser.S_whileContext s_while      : return new WhileAction(this, scope, s_while.@while());
-                case DeltinScriptParser.S_forContext s_for          : return new ForAction(this, scope, s_for.@for());
+                case If @if            : return new IfAction(this, scope, @if);
+                case While @while      : return new WhileAction(this, scope, @while);
+                case For @for          : return new ForAction(this, scope, @for);
                 case DeltinScriptParser.S_for_autoContext s_forAuto : return new AutoForAction(this, scope, s_forAuto.for_auto());
                 case DeltinScriptParser.S_foreachContext s_foreach  : return new ForeachAction(this, scope, s_foreach.@foreach());
-                case DeltinScriptParser.S_returnContext s_return    : return new ReturnAction(this, scope, s_return.@return());
+                case Return @return    : return new ReturnAction(this, scope, @return);
                 case DeltinScriptParser.S_deleteContext s_delete    : return new DeleteAction(this, scope, s_delete.delete());
-                case DeltinScriptParser.S_continueContext s_continue: return new ContinueAction(this, DocRange.GetRange(s_continue));
-                case DeltinScriptParser.S_breakContext s_break      : return new BreakAction(this, DocRange.GetRange(s_break));
+                case Continue @continue: return new ContinueAction(this, DocRange.GetRange(@continue));
+                case Break @break      : return new BreakAction(this, DocRange.GetRange(@break));
                 case DeltinScriptParser.S_switchContext s_switch    : return new SwitchAction(this, scope, s_switch.@switch());
-                case DeltinScriptParser.S_blockContext s_block: return new BlockAction(this, scope, s_block);
+                case Block @block      : return new BlockAction(this, scope, @block);
                 default: return null;
             }
         }
@@ -97,38 +99,38 @@ namespace Deltin.Deltinteger.Parse
         /// <param name="usedAsValue">Determines if the expression is being used as a value.</param>
         /// <param name="getter">The getter scope. Used for preserving scope through parameters.</param>
         /// <returns>An IExpression created from the ExprContext.</returns>
-        public IExpression GetExpression(Scope scope, DeltinScriptParser.ExprContext exprContext, bool selfContained = true, bool usedAsValue = true, Scope getter = null)
+        public IExpression GetExpression(Scope scope, IParseExpression exprContext, bool selfContained = true, bool usedAsValue = true, Scope getter = null)
         {
             if (getter == null) getter = scope;
 
             switch (exprContext)
             {
-                case DeltinScriptParser.E_numberContext number: return new NumberAction(Script, number.number());
-                case DeltinScriptParser.E_trueContext @true: return new BoolAction(Script, true);
-                case DeltinScriptParser.E_falseContext @false: return new BoolAction(Script, false);
-                case DeltinScriptParser.E_nullContext @null: return new NullAction();
-                case DeltinScriptParser.E_stringContext @string: return new StringAction(this, @string.@string());
+                case NumberExpression number: return new NumberAction(Script, number);
+                case BooleanExpression boolean: return new BoolAction(Script, boolean.Value);
+                case NullExpression @null: return new NullAction();
+                case StringExpression @string: return new StringAction(this, @string.@string());
                 case DeltinScriptParser.E_formatted_stringContext formattedString: return new StringAction(this, scope, formattedString.formatted_string());
-                case DeltinScriptParser.E_variableContext variable: return GetVariable(scope, getter, variable.variable(), selfContained);
-                case DeltinScriptParser.E_methodContext method: return new CallMethodAction(this, scope, method.method(), usedAsValue, getter);
-                case DeltinScriptParser.E_new_objectContext newObject: return new CreateObjectAction(this, scope, newObject.create_object());
-                case DeltinScriptParser.E_expr_treeContext exprTree: return new ExpressionTree(this, scope, exprTree, usedAsValue);
-                case DeltinScriptParser.E_array_indexContext arrayIndex: return new ValueInArrayAction(this, scope, arrayIndex);
-                case DeltinScriptParser.E_create_arrayContext createArray: return new CreateArrayAction(this, scope, createArray.createarray());
-                case DeltinScriptParser.E_expr_groupContext group: return GetExpression(scope, group.exprgroup().expr());
-                case DeltinScriptParser.E_type_convertContext typeConvert: return new TypeConvertAction(this, scope, typeConvert.typeconvert());
-                case DeltinScriptParser.E_notContext not: return new NotAction(this, scope, not.expr());
-                case DeltinScriptParser.E_inverseContext inverse: return new InverseAction(this, scope, inverse.expr());
-                case DeltinScriptParser.E_op_1Context             op1: return new OperatorAction(this, scope, op1);
-                case DeltinScriptParser.E_op_2Context             op2: return new OperatorAction(this, scope, op2);
-                case DeltinScriptParser.E_op_boolContext       opBool: return new OperatorAction(this, scope, opBool);
-                case DeltinScriptParser.E_op_compareContext opCompare: return new OperatorAction(this, scope, opCompare);
-                case DeltinScriptParser.E_ternary_conditionalContext ternary: return new TernaryConditionalAction(this, scope, ternary);
+                case Identifier identifier: return GetVariable(scope, getter, identifier, selfContained);
+                case FunctionExpression method: return new CallMethodAction(this, scope, method, usedAsValue, getter);
+                case NewExpression newObject: return new CreateObjectAction(this, scope, newObject);
+                case BinaryOperatorExpression op:
+                    if (op.IsDotExpression())
+                        return new ExpressionTree(this, scope, op, usedAsValue);
+                    else
+                        return new OperatorAction(this, scope, op);
+                case UnaryOperatorExpression op: return new UnaryOperatorAction(this, scope, op);
+                case TernaryExpression op: return new TernaryConditionalAction(this, scope, op);
+                case ValueInArray arrayIndex: return new ValueInArrayAction(this, scope, arrayIndex);
+                case CreateArray createArray: return new CreateArrayAction(this, scope, createArray);
+                case ExpressionGroup group: return GetExpression(scope, group.Expression);
+                case TypeCast typeCast: return new TypeConvertAction(this, scope, typeCast);
+                case ThisExpression @this: return new ThisAction(this, scope, @this);
                 case DeltinScriptParser.E_rootContext root: return new RootAction(this.TranslateInfo);
-                case DeltinScriptParser.E_thisContext @this: return new ThisAction(this, scope, @this);
                 case DeltinScriptParser.E_baseContext @base: return new BaseAction(this, scope, @base);
                 case DeltinScriptParser.E_isContext @is: return new IsAction(this, scope, @is);
                 case DeltinScriptParser.E_lambdaContext lambda: return new Lambda.LambdaAction(this, scope, lambda.lambda());
+                // todo
+                case MissingElement missing: throw new NotImplementedException("Todo: missing IExpression");
                 default: throw new Exception($"Could not determine the expression type '{exprContext.GetType().Name}'.");
             }
         }
@@ -139,11 +141,11 @@ namespace Deltin.Deltinteger.Parse
         /// <param name="variableContext">The context of the variable.</param>
         /// <param name="selfContained">Wether the variable was not called in an expression tree.</param>
         /// <returns>An IExpression created from the context.</returns>
-        public IExpression GetVariable(Scope scope, Scope getter, DeltinScriptParser.VariableContext variableContext, bool selfContained)
+        public IExpression GetVariable(Scope scope, Scope getter, Identifier variableContext, bool selfContained)
         {
             // Get the variable name and range.
-            string variableName = variableContext.PART().GetText();
-            DocRange variableRange = DocRange.GetRange(variableContext.PART());
+            string variableName = variableContext.Token.Text;
+            DocRange variableRange = DocRange.GetRange(variableContext.Token);
 
             // Get the variable.
             IVariable element = scope.GetVariable(variableName, getter, Script.Diagnostics, variableRange);

@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.Elements;
-using Antlr4.Runtime.Tree;
+using Deltin.Deltinteger.Compiler;
+using Deltin.Deltinteger.Compiler.SyntaxTree;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -14,9 +15,9 @@ namespace Deltin.Deltinteger.Parse
         public bool Completed { get; } = true;
         public ITreeContextPart[] ExprContextTree { get; }
 
-        private ITerminalNode _trailingSeperator = null;
+        private Token _trailingSeperator = null;
 
-        public ExpressionTree(ParseInfo parseInfo, Scope scope, DeltinScriptParser.E_expr_treeContext exprContext, bool usedAsValue)
+        public ExpressionTree(ParseInfo parseInfo, Scope scope, BinaryOperatorExpression exprContext, bool usedAsValue)
         {
             ExprContextTree = Flatten(parseInfo.Script, exprContext);
 
@@ -57,46 +58,42 @@ namespace Deltin.Deltinteger.Parse
             GetCompletion(parseInfo.Script, scope);
         }
 
-        private ITreeContextPart[] Flatten(ScriptFile script, DeltinScriptParser.E_expr_treeContext exprContext)
+        private ITreeContextPart[] Flatten(ScriptFile script, BinaryOperatorExpression exprContext)
         {
             var exprList = new List<ITreeContextPart>();
             Flatten(script, exprContext, exprList);
             return exprList.ToArray();
 
             // Recursive flatten function.
-            void Flatten(ScriptFile script, DeltinScriptParser.E_expr_treeContext exprContext, List<ITreeContextPart> exprList)
+            void Flatten(ScriptFile script, BinaryOperatorExpression exprContext, List<ITreeContextPart> exprList)
             {
                 // If the expression is a Tree, recursively flatten.
-                if (exprContext.expr() is DeltinScriptParser.E_expr_treeContext)
-                    Flatten(script, (DeltinScriptParser.E_expr_treeContext)exprContext.expr(), exprList);
+                if (exprContext.Left is BinaryOperatorExpression op && op.IsDotExpression())
+                    Flatten(script, op, exprList);
                 // Otherwise, add the expression to the list.
                 else
                 {
                     // Get the function.
-                    if (exprContext.expr() is DeltinScriptParser.E_methodContext method)
-                        exprList.Add(new FunctionPart(method.method()));
+                    if (exprContext.Left is FunctionExpression method)
+                        exprList.Add(new FunctionPart(method));
                     // Get the variable.
-                    else if (exprContext.expr() is DeltinScriptParser.E_variableContext variable)
-                        exprList.Add(new VariableOrTypePart(variable.variable()));
+                    else if (exprContext.Left is Identifier variable)
+                        exprList.Add(new VariableOrTypePart(variable));
                     // Get the expression.
-                    else exprList.Add(new ExpressionPart(exprContext.expr()));
+                    else exprList.Add(new ExpressionPart(exprContext.Left));
                 }
 
-                // Syntax error if there is no method or variable.
-                if (exprContext.method() == null && exprContext.variable() == null)
-                {
-                    script.Diagnostics.Error("Expected expression.", DocRange.GetRange(exprContext.SEPERATOR()));
-                    _trailingSeperator = exprContext.SEPERATOR();
-                }
-                else
-                {
-                    // Get the method.
-                    if (exprContext.method() != null)
-                        exprList.Add(new FunctionPart(exprContext.method()));
-                    // Get the variable.
-                    if (exprContext.variable() != null)
-                        exprList.Add(new VariableOrTypePart(exprContext.variable()));
-                }
+                // Get the expression to the right of the dot.
+
+                // Missing function or variable, set the _trailingSeperator.
+                if (exprContext.Right is MissingElement)
+                    _trailingSeperator = exprContext.Operator.Token;
+                // Get the method.
+                else if (exprContext.Right is FunctionExpression rightMethod)
+                    exprList.Add(new FunctionPart(rightMethod));
+                // Get the variable.
+                else if (exprContext.Right is Identifier rightVariable)
+                    exprList.Add(new VariableOrTypePart(rightVariable));
             }
         }
 
@@ -248,10 +245,10 @@ namespace Deltin.Deltinteger.Parse
     /// <summary>Expressions in the tree.</summary>
     class ExpressionPart : ITreeContextPart
     {
-        private readonly DeltinScriptParser.ExprContext _expressionContext;
+        private readonly IParseExpression _expressionContext;
         private IExpression _expression;
 
-        public ExpressionPart(DeltinScriptParser.ExprContext expression) {
+        public ExpressionPart(IParseExpression expression) {
             _expressionContext = expression;
         }
 
@@ -268,10 +265,10 @@ namespace Deltin.Deltinteger.Parse
     /// <summary>Functions in the expression tree.</summary>
     class FunctionPart : ITreeContextPart
     {
-        private readonly DeltinScriptParser.MethodContext _methodContext;
+        private readonly FunctionExpression _methodContext;
         private CallMethodAction _methodCall;
 
-        public FunctionPart(DeltinScriptParser.MethodContext method) {
+        public FunctionPart(FunctionExpression method) {
             _methodContext = method;
         }
 
@@ -283,28 +280,28 @@ namespace Deltin.Deltinteger.Parse
 
         public Scope GetScope() => _methodCall.ReturningScope();
         public IExpression GetExpression() => _methodCall;
-        public DocRange GetRange() => DocRange.GetRange(_methodContext.PART());
+        public DocRange GetRange() => DocRange.GetRange(_methodContext.Identifier);
     }
 
     /// <summary>Variables or types in the expression tree.</summary>
     class VariableOrTypePart : ITreeContextPart
     {
-        private readonly DeltinScriptParser.VariableContext _variable;
+        private readonly Identifier _variable;
         private readonly DocRange _range;
         private readonly string _name;
         private TreeContextParseInfo _tcParseInfo;
         private IPotentialPathOption[] _potentialPaths;
         private IPotentialPathOption _chosenPath;
 
-        public VariableOrTypePart(DeltinScriptParser.VariableContext variable) {
+        public VariableOrTypePart(Identifier variable) {
             _variable = variable;
-            _range = DocRange.GetRange(_variable.PART());
-            _name = variable.PART().GetText();
+            _range = DocRange.GetRange(_variable.Token);
+            _name = variable.Token.Text;
         }
 
         public void Setup(TreeContextParseInfo tcParseInfo)
         {
-            bool canBeType = _variable.array() == null && tcParseInfo.Parent == null;
+            bool canBeType = (_variable.Index == null || _variable.Index.Count == 0) && tcParseInfo.Parent == null;
             _tcParseInfo = tcParseInfo;
             _potentialPaths = GetPotentialPaths(tcParseInfo, canBeType);
 
@@ -335,9 +332,9 @@ namespace Deltin.Deltinteger.Parse
             List<IPotentialPathOption> potentialPaths = new List<IPotentialPathOption>();
 
             // Get the potential variable.
-            if (tcParseInfo.Scope.IsVariable(_variable.PART().GetText()))
+            if (tcParseInfo.Scope.IsVariable(_name))
             {
-                IVariable variable = tcParseInfo.Scope.GetVariable(_variable.PART().GetText(), null, null, null);
+                IVariable variable = tcParseInfo.Scope.GetVariable(_name, null, null, null);
 
                 // Variable handler.
                 var apply = new PotentialVariableApply(tcParseInfo.ParseInfo);
@@ -347,7 +344,7 @@ namespace Deltin.Deltinteger.Parse
                     apply.Error(string.Format("'{0}' is inaccessable due to its access level.", _name), _range);
 
                 // Get the wrapped expression.
-                IExpression expression = apply.Apply(variable, tcParseInfo.ParseInfo.ExpressionIndexArray(tcParseInfo.Getter, _variable.array()), _range);
+                IExpression expression = apply.Apply(variable, tcParseInfo.ParseInfo.ExpressionIndexArray(tcParseInfo.Getter, _variable.Index), _range);
 
                 // Add the potential path.
                 potentialPaths.Add(new VariableOption(tcParseInfo.Parent, apply, expression, variable, tcParseInfo.ParseInfo, _range));

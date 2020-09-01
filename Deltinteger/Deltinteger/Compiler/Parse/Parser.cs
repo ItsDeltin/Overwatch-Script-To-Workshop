@@ -239,7 +239,23 @@ namespace Deltin.Deltinteger.Compiler.Parse
         // Expressions
         /// <summary>Parses the current expression. In most cases, 'GetContainExpression' should be called instead.</summary>
         /// <returns>The resulting expression.</returns>
-        public IParseExpression GetNextExpression()
+        public IParseExpression GetExpressionWithArray()
+        {
+            IParseExpression expression = GetSubExpression();
+
+            // Get the array index.
+            while (ParseOptional(TokenType.SquareBracket_Open))
+            {
+                IParseExpression index = GetContainExpression();
+                // End the closing square bracket.
+                ParseExpected(TokenType.SquareBracket_Close);
+                // Update the expression.
+                expression = new ValueInArray(expression, index);
+            }
+            return expression;
+        }
+
+        IParseExpression GetSubExpression()
         {
             switch (Kind)
             {
@@ -250,8 +266,23 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 case TokenType.Number: return new NumberExpression(Consume());
                 // Strings
                 case TokenType.String: return new StringExpression(Consume());
+                // Null
+                case TokenType.Null: return new NullExpression(Consume());
+                // This
+                case TokenType.This: return new ThisExpression(Consume());
                 // Functions and identifiers
                 case TokenType.Identifier: return IdentifierOrFunction();
+                // New
+                case TokenType.New: return ParseNew();
+                // Array
+                case TokenType.SquareBracket_Open: return ParseCreateArray();
+                // Expression group
+                case TokenType.Parentheses_Open: return ParseGroup();
+                // Type cast
+                case TokenType.LessThan:
+                    // Make sure this is actually a type cast and not an operator.
+                    if (IsTypeCast()) return ParseTypeCast();
+                    goto default;
                 // Unknown node
                 default:
                     AddError(new InvalidExpressionTerm(CurrentOrLast));
@@ -260,10 +291,10 @@ namespace Deltin.Deltinteger.Compiler.Parse
         }
 
         /// <summary>Parses an expression and handles operators. The caller must call 'Operands.Pop()', which is also used to get the resulting expression.</summary>
-        public void GetExpressionOperatorInfo()
+        void GetExpressionWithOperators()
         {
             // Push the expression
-            Operands.Push(GetNextExpression());
+            Operands.Push(GetExpressionWithArray());
 
             // Binary operator
             while (TryParseBinaryOperator(out OperatorInfo op))
@@ -280,7 +311,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
         public IParseExpression GetContainExpression()
         {
             Operators.Push(OperatorInfo.Sentinel);
-            GetExpressionOperatorInfo();
+            GetExpressionWithOperators();
             Operators.Pop();
             return Operands.Pop();
         }
@@ -306,13 +337,15 @@ namespace Deltin.Deltinteger.Compiler.Parse
             else
             {
                 // Parse parameters.
-                var values = Is(TokenType.Parentheses_Close) ? new List<ParameterValue>() : ParseParameterValues();
+                var values = ParseParameterValuesIfNotClosing();
                 ParseExpected(TokenType.Parentheses_Close);
 
                 // Return function
                 return new FunctionExpression(identifier, values);
             }
         }
+
+        public List<ParameterValue> ParseParameterValuesIfNotClosing() => Is(TokenType.Parentheses_Close) ? new List<ParameterValue>() : ParseParameterValues();
 
         /// <summary>Parses the inner parameter values of a function.</summary>
         /// <returns></returns>
@@ -395,6 +428,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 case TokenType.Else: // Error handling in the case of an else with no if.
                     return ParseIf();
                 case TokenType.For: return ParseFor();
+                case TokenType.While: return ParseWhile();
             }
 
             if (IsDeclaration()) return ParseDeclaration();
@@ -555,6 +589,27 @@ namespace Deltin.Deltinteger.Compiler.Parse
             return EndTokenCapture(new For(initializer, condition, iterator, statement));
         }
 
+        While ParseWhile()
+        {
+            StartTokenCapture();
+            if (GetIncrementalNode(out While node)) return EndTokenCapture(node);
+
+            ParseExpected(TokenType.While);
+            ParseExpected(TokenType.Parentheses_Open);
+
+            // Get the condition.
+            var condition = GetContainExpression();
+
+            // End the while's condition closing parentheses.
+            ParseExpected(TokenType.Parentheses_Close);
+
+            // Get the while's statement.
+            var statement = ParseStatement();
+
+            // Done
+            return EndTokenCapture(new While(condition, statement));
+        }
+
         ParseType ParseType()
         {
             // Get the type name.
@@ -602,6 +657,21 @@ namespace Deltin.Deltinteger.Compiler.Parse
             return ParseType().LookaheadValid && ParseExpected(TokenType.Identifier) && ParseExpected(TokenType.Parentheses_Open);
         });
 
+        /// <summary>Determines if the current context is a type cast.</summary>
+        bool IsTypeCast()
+        {
+            if (!Is(TokenType.LessThan))
+                return false;
+            
+            return Lookahead(() => {
+                // Consume the less-than token.
+                Consume();
+
+                // Parse the type.
+                return Is(TokenType.GreaterThan) || (ParseType().LookaheadValid && Is(TokenType.GreaterThan));
+            });
+        }
+
         Declaration ParseDeclaration()
         {
             var type = ParseType();
@@ -619,6 +689,74 @@ namespace Deltin.Deltinteger.Compiler.Parse
             }
 
             return new Declaration(type, identifier, assignmentToken, initialValue);
+        NewExpression ParseNew()
+        {
+            ParseExpected(TokenType.New);
+
+            // Parse the class identifier.
+            var identifier = ParseExpected(TokenType.Identifier);
+            
+            // Start the parentheses.
+            ParseExpected(TokenType.Parentheses_Open);
+
+            // Parse the parameters.
+            List<ParameterValue> parameterValues = ParseParameterValuesIfNotClosing();
+
+            // End the parentheses.
+            ParseExpected(TokenType.Parentheses_Close);
+
+            return new NewExpression(identifier, parameterValues);
+        }
+
+        CreateArray ParseCreateArray()
+        {
+            // Start the array creation.
+            Token left = ParseExpected(TokenType.Parentheses_Open);
+
+            // Create the list that stores the parsed values.
+            List<ParameterValue> values = null;
+
+            if (!Is(TokenType.SquareBracket_Close))
+                values = ParseParameterValues();
+            else
+                values = new List<ParameterValue>();
+
+            // End the array creation.
+            Token right = ParseExpected(TokenType.Parentheses_Close);
+
+            return new CreateArray(values, left, right);
+        }
+
+        ExpressionGroup ParseGroup()
+        {
+            // Start the parentheses.
+            var left = ParseExpected(TokenType.Parentheses_Open);
+            
+            // Get the expression.
+            var expression = GetContainExpression();
+
+            // End the parentheses.
+            var right = ParseExpected(TokenType.Parentheses_Close);
+
+            return new ExpressionGroup(expression, left, right);
+        }
+
+        TypeCast ParseTypeCast()
+        {
+            // Parse the opening angled bracket.
+            ParseExpected(TokenType.LessThan);
+            
+            // Parse the type.
+            var type = ParseType();
+
+            // Parse the closing angled bracket.
+            ParseExpected(TokenType.GreaterThan);
+
+            // Parse the expression.
+            var expression = GetContainExpression();
+
+            // Done.
+            return new TypeCast(type, expression);
         }
 
         /// <summary>Parses the root of a file.</summary>

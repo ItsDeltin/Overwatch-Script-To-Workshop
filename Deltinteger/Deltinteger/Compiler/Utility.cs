@@ -1,9 +1,11 @@
 using System;
 using System.Linq;
+using LSPos   = OmniSharp.Extensions.LanguageServer.Protocol.Models.Position;
+using LSRange = OmniSharp.Extensions.LanguageServer.Protocol.Models.Range;
 
 namespace Deltin.Deltinteger.Compiler
 {
-    public class DocPos
+    public class DocPos : IComparable<DocPos>
     {
         public int Line;
         public int Character;
@@ -67,6 +69,7 @@ namespace Deltin.Deltinteger.Compiler
         public static bool operator <=(DocPos p1, DocPos p2) => p1.CompareTo(p2) <= 0;
         public static bool operator >=(DocPos p1, DocPos p2) => p1.CompareTo(p2) >= 0;
         public static implicit operator DocPos(OmniSharp.Extensions.LanguageServer.Protocol.Models.Position pos) => new DocPos(pos.Line, pos.Character);
+        public static implicit operator LSPos(DocPos pos) => new LSPos(pos.Line, pos.Character);
     }
 
     public class DocRange : IComparable<DocRange>
@@ -145,8 +148,8 @@ namespace Deltin.Deltinteger.Compiler
         public static bool operator >(DocRange r1, DocRange r2)  => r1.CompareTo(r2) >  0;
         public static bool operator <=(DocRange r1, DocRange r2) => r1.CompareTo(r2) <= 0;
         public static bool operator >=(DocRange r1, DocRange r2) => r1.CompareTo(r2) >= 0;
-
         public static implicit operator DocRange(OmniSharp.Extensions.LanguageServer.Protocol.Models.Range range) => new DocRange(range.Start, range.End);
+        public static implicit operator LSRange(DocRange range) => new LSRange(range.Start, range.End);
     }
 
     public class Token
@@ -251,6 +254,7 @@ namespace Deltin.Deltinteger.Compiler
         Number,
         True,
         False,
+        Null,
         // Keywords
         Define,
         Break,
@@ -258,10 +262,13 @@ namespace Deltin.Deltinteger.Compiler
         Return,
         Rule,
         For,
+        While,
         If,
         Else,
         Class,
         Void,
+        New,
+        This,
         // Attributes
         Public,
         Private,
@@ -295,5 +302,7 @@ namespace Deltin.Deltinteger.Compiler
             Range = range;
             Text = text;
         }
+
+        public static implicit operator UpdateRange(OmniSharp.Extensions.LanguageServer.Protocol.Models.TextDocumentContentChangeEvent e) => new UpdateRange(e.Range, e.Text);
     }
 }

@@ -1,4 +1,5 @@
 using System.Linq;
+using Deltin.Deltinteger.LanguageServer;
 
 namespace Deltin.Deltinteger.Compiler.Parse
 {
@@ -6,6 +7,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
     {
         DocRange Range { get; }
         string Message();
+        Diagnostic GetDiagnostic() => new Diagnostic(Message(), Range, Diagnostic.Error);
     }
 
     class ExpectedTokenError : IParserError

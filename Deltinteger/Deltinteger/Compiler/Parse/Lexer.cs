@@ -1,10 +1,9 @@
 using System;
 using System.Linq;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Collections.Generic;
 
-namespace Deltin.Deltinteger.Compiler
+namespace Deltin.Deltinteger.Compiler.Parse
 {
     public class Lexer
     {
@@ -23,6 +22,13 @@ namespace Deltin.Deltinteger.Compiler
             controller.Match();
         }
 
+        public void Reset()
+        {
+            Tokens.Clear();
+            Content = null;
+            Newlines.Clear();
+        }
+
         public string DebugTokens()
         {
             StringBuilder debugString = new StringBuilder();
@@ -32,7 +38,6 @@ namespace Deltin.Deltinteger.Compiler
             return debugString.ToString();
         }
 
-        // TODO
         public IncrementInfo Update(string newContent, UpdateRange updateRange)
         {
             int lastTokenCount = Tokens.Count;
@@ -248,13 +253,17 @@ namespace Deltin.Deltinteger.Compiler
                     MatchSymbol("&&", TokenType.And) ||
                     MatchSymbol("||", TokenType.Or) ||
                     MatchKeyword("for", TokenType.For) ||
+                    MatchKeyword("while", TokenType.While) ||
                     MatchKeyword("rule", TokenType.Rule) ||
                     MatchKeyword("true", TokenType.True) ||
                     MatchKeyword("false", TokenType.False) ||
+                    MatchKeyword("null", TokenType.Null) ||
                     MatchKeyword("if", TokenType.If) ||
                     MatchKeyword("else", TokenType.Else) ||
                     MatchKeyword("break", TokenType.Break) ||
                     MatchKeyword("continue", TokenType.Continue) ||
+                    MatchKeyword("class", TokenType.Class) ||
+                    MatchKeyword("new", TokenType.New) ||
                     MatchKeyword("define", TokenType.Define) ||
                     MatchKeyword("void", TokenType.Void) ||
                     MatchKeyword("public", TokenType.Public) ||
@@ -266,6 +275,7 @@ namespace Deltin.Deltinteger.Compiler
                     MatchKeyword("recursive", TokenType.Recursive) ||
                     MatchKeyword("globalvar", TokenType.GlobalVar) ||
                     MatchKeyword("playervar", TokenType.PlayerVar) ||
+                    MatchKeyword("this", TokenType.This) ||
                     MatchNumber() ||
                     MatchIdentifier() ||
                     MatchString();

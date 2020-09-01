@@ -10,6 +10,7 @@ using Deltin.Deltinteger.WorkshopWiki;
 using Deltin.Deltinteger.Parse;
 using Deltin.Deltinteger.Models;
 using Deltin.Deltinteger.I18n;
+using Deltin.Deltinteger.Compiler;
 using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
 using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItemKind;
 using StringOrMarkupContent = OmniSharp.Extensions.LanguageServer.Protocol.Models.StringOrMarkupContent;

@@ -1,4 +1,4 @@
-using Deltin.Deltinteger.Compiler.SyntaxTree;
+using Deltin.Deltinteger.Compiler.Parse;
 
 namespace Deltin.Deltinteger.Compiler.Parse
 {
@@ -71,24 +71,6 @@ namespace Deltin.Deltinteger.Compiler.Parse
         }
     }
 
-    public class OperatorInfo
-    {
-        public static OperatorInfo Sentinel { get; } = new OperatorInfo(CompilerOperator.Sentinel, null);
-
-        public CompilerOperator Operator { get; }
-        public Token Token { get; }
-        public OperatorType Type => Operator.Type;
-        public int Precedence => Operator.Precedence;
-
-        public OperatorInfo(CompilerOperator compilerOperator, Token token)
-        {
-            Operator = compilerOperator;
-            Token = token;
-        }
-
-        public override string ToString() => Operator.ToString();
-    }
-
     public enum OperatorType
     {
         Unary,
@@ -105,7 +87,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
     {
         public void Get(Parser parser)
         {
-            parser.Operands.Push(parser.GetNextExpression());
+            parser.Operands.Push(parser.GetExpressionWithArray());
         }
     }
 
@@ -116,6 +98,27 @@ namespace Deltin.Deltinteger.Compiler.Parse
             var identifier = parser.IdentifierOrFunction();
             parser.Operands.Push(identifier);
         }
+    }
+}
+
+namespace Deltin.Deltinteger.Compiler.SyntaxTree
+{
+    public class OperatorInfo
+    {
+        public static OperatorInfo Sentinel { get; } = new OperatorInfo(CompilerOperator.Sentinel, null);
+
+        public CompilerOperator Operator { get; }
+        public Token Token { get; }
+        public OperatorType Type => Operator.Type;
+        public int Precedence => Operator.Precedence;
+
+        public OperatorInfo(CompilerOperator compilerOperator, Token token)
+        {
+            Operator = compilerOperator;
+            Token = token;
+        }
+
+        public override string ToString() => Operator.ToString();
     }
 
     public class BinaryOperatorExpression : IParseExpression
