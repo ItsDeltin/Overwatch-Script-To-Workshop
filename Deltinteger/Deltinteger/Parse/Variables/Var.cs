@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using Deltin.Deltinteger.LanguageServer;
+using Deltin.Deltinteger.Compiler;
+using Deltin.Deltinteger.Compiler.SyntaxTree;
 using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
 using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItemKind;
 
@@ -37,7 +39,7 @@ namespace Deltin.Deltinteger.Parse
         /// <summary>Determines when the initial value should be resolved.</summary>
         private readonly InitialValueResolve _initialValueResolve;
         /// <summary>Stores the context of the initial value.</summary>
-        private readonly DeltinScriptParser.ExprContext _initalValueContext;
+        private readonly IParseExpression _initalValueContext;
 
         /// <summary>The resulting intial value. This will be null if there is no initial value.
         /// If _initialValueResolve is Instant, this will be set when the Var object is created.

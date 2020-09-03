@@ -11,6 +11,7 @@ namespace Deltin.Deltinteger.Parse
         Scope ReturningScope();
         CodeType Type();
         IWorkshopTree Parse(ActionSet actionSet);
+        bool IsStatement() => false;
     }
 
     public class NumberAction : IExpression
@@ -104,7 +105,7 @@ namespace Deltin.Deltinteger.Parse
         {
             Values = new IExpression[createArrayContext.Values.Count];
             for (int i = 0; i < Values.Length; i++)
-                Values[i] = parseInfo.GetExpression(scope, createArrayContext.Values[i].Expression);
+                Values[i] = parseInfo.GetExpression(scope, createArrayContext.Values[i]);
         }
 
         public Scope ReturningScope() => null;
@@ -262,7 +263,7 @@ namespace Deltin.Deltinteger.Parse
         {
             ThisType = scope.GetThis();
             if (ThisType == null)
-                parseInfo.Script.Diagnostics.Error("Keyword 'this' cannot be used here.", DocRange.GetRange(context));
+                parseInfo.Script.Diagnostics.Error("Keyword 'this' cannot be used here.", context.Range);
         }
 
         public IWorkshopTree Parse(ActionSet actionSet) => actionSet.This;

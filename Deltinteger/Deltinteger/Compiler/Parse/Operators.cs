@@ -121,7 +121,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public override string ToString() => Operator.ToString();
     }
 
-    public class BinaryOperatorExpression : IParseExpression
+    public class BinaryOperatorExpression : Node, IParseExpression
     {
         public IParseExpression Left { get; }
         public IParseExpression Right { get; }
@@ -132,6 +132,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
             Left = left;
             Right = right;
             Operator = op;
+            Range = left.Range.Start + right.Range.End;
         }
 
         public override string ToString() => Left.ToString() + " " + Operator.ToString() + " " + Right.ToString();
@@ -139,7 +140,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public bool IsDotExpression() => Operator.Operator == CompilerOperator.Dot || Operator.Operator == CompilerOperator.Squiggle;
     }
 
-    public class UnaryOperatorExpression : IParseExpression
+    public class UnaryOperatorExpression : Node, IParseExpression
     {
         public IParseExpression Value { get; }
         public OperatorInfo Operator { get; }
@@ -148,12 +149,13 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         {
             Value = value;
             Operator = op;
+            Range = op.Token.Range.Start + value.Range.End;
         }
 
         public override string ToString() => Operator.ToString() + Value.ToString(); 
     }
 
-    public class TernaryExpression : IParseExpression
+    public class TernaryExpression : Node, IParseExpression
     {
         public IParseExpression Condition { get; }
         public IParseExpression Consequent { get; }
@@ -164,6 +166,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
             Condition = condition;
             Consequent = consequent;
             Alternative = alternative;
+            Range = condition.Range.Start + alternative.Range.End;
         }
 
         public override string ToString() => Condition.ToString() + " ? " + Consequent.ToString() + " : " + Alternative.ToString();

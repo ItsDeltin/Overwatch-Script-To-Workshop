@@ -2,7 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Deltin.Deltinteger.LanguageServer;
-using Deltin.Deltinteger.Decompiler.Json;
+using Deltin.Deltinteger.Compiler;
+using Deltin.Deltinteger.Compiler.SyntaxTree;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -19,11 +20,11 @@ namespace Deltin.Deltinteger.Parse
 
         private string Comment;
 
-        public CallMethodAction(ParseInfo parseInfo, Scope scope, DeltinScriptParser.MethodContext methodContext, bool usedAsExpression, Scope getter)
+        public CallMethodAction(ParseInfo parseInfo, Scope scope, FunctionExpression methodContext, bool usedAsExpression, Scope getter)
         {
             this.parseInfo = parseInfo;
-            string methodName = methodContext.PART().GetText();
-            NameRange = DocRange.GetRange(methodContext.PART());
+            string methodName = methodContext.Identifier.Text;
+            NameRange = methodContext.Identifier.Range;
 
             UsedAsExpression = usedAsExpression;
 
@@ -42,9 +43,9 @@ namespace Deltin.Deltinteger.Parse
             else
             {
                 // Make an OverloadChooser to choose an Overload.
-                OverloadChooser = new OverloadChooser(options, parseInfo, scope, getter, NameRange, DocRange.GetRange(methodContext), new OverloadError("method '" + methodName + "'"));
+                OverloadChooser = new OverloadChooser(options, parseInfo, scope, getter, NameRange, methodContext.Range, new OverloadError("method '" + methodName + "'"));
                 // Apply the parameters.
-                OverloadChooser.Apply(methodContext.call_parameters());
+                OverloadChooser.Apply(methodContext.Parameters);
             
                 // Get the best function.
                 CallingMethod = (IMethod)OverloadChooser.Overload;
@@ -68,7 +69,7 @@ namespace Deltin.Deltinteger.Parse
                     if (Parallel != CallParallel.NoParallel && !CallingMethod.Attributes.Parallelable)
                         parseInfo.Script.Diagnostics.Error($"The method '{CallingMethod.Name}' cannot be called in parallel.", NameRange);
                     
-                    parseInfo.Script.AddHover(DocRange.GetRange(methodContext), CallingMethod.GetLabel(true));
+                    parseInfo.Script.AddHover(methodContext.Range, CallingMethod.GetLabel(true));
                 }
             }
         }
@@ -146,6 +147,8 @@ namespace Deltin.Deltinteger.Parse
             else
                 onBlockApplied.Applied();
         }
+
+        public bool IsStatement() => true;
     }
 
     public enum CallParallel

@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using Newtonsoft.Json;
 using LSPos   = OmniSharp.Extensions.LanguageServer.Protocol.Models.Position;
 using LSRange = OmniSharp.Extensions.LanguageServer.Protocol.Models.Range;
 
@@ -7,7 +8,11 @@ namespace Deltin.Deltinteger.Compiler
 {
     public class DocPos : IComparable<DocPos>
     {
+        public static DocPos Zero = new DocPos(0, 0);
+
+        [JsonProperty("line")] 
         public int Line;
+        [JsonProperty("character")] 
         public int Character;
 
         public DocPos(int line, int character)
@@ -68,13 +73,18 @@ namespace Deltin.Deltinteger.Compiler
         public static bool operator >(DocPos p1, DocPos p2)  => p1.CompareTo(p2) >  0;
         public static bool operator <=(DocPos p1, DocPos p2) => p1.CompareTo(p2) <= 0;
         public static bool operator >=(DocPos p1, DocPos p2) => p1.CompareTo(p2) >= 0;
+        public static DocRange operator +(DocPos p1, DocPos p2) => new DocRange(p1, p2);
         public static implicit operator DocPos(OmniSharp.Extensions.LanguageServer.Protocol.Models.Position pos) => new DocPos(pos.Line, pos.Character);
         public static implicit operator LSPos(DocPos pos) => new LSPos(pos.Line, pos.Character);
     }
 
     public class DocRange : IComparable<DocRange>
     {
+        public static readonly DocRange Zero = new DocRange(DocPos.Zero, DocPos.Zero);
+
+        [JsonProperty("start")] 
         public DocPos Start;
+        [JsonProperty("end")] 
         public DocPos End;
 
         public DocRange(DocPos start, DocPos end)
@@ -148,6 +158,7 @@ namespace Deltin.Deltinteger.Compiler
         public static bool operator >(DocRange r1, DocRange r2)  => r1.CompareTo(r2) >  0;
         public static bool operator <=(DocRange r1, DocRange r2) => r1.CompareTo(r2) <= 0;
         public static bool operator >=(DocRange r1, DocRange r2) => r1.CompareTo(r2) >= 0;
+        public static DocRange operator +(DocRange start, DocRange end) => new DocRange(start.Start, end.End);
         public static implicit operator DocRange(OmniSharp.Extensions.LanguageServer.Protocol.Models.Range range) => new DocRange(range.Start, range.End);
         public static implicit operator LSRange(DocRange range) => new LSRange(range.Start, range.End);
     }
@@ -256,11 +267,13 @@ namespace Deltin.Deltinteger.Compiler
         False,
         Null,
         // Keywords
+        Import,
         Define,
         Break,
         Continue,
         Return,
         Rule,
+        Disabled,
         For,
         While,
         If,
@@ -268,7 +281,9 @@ namespace Deltin.Deltinteger.Compiler
         Class,
         Void,
         New,
+        Delete,
         This,
+        As,
         // Attributes
         Public,
         Private,
@@ -289,6 +304,7 @@ namespace Deltin.Deltinteger.Compiler
         // Ternary
         QuestionMark,
         // Other
+        ActionComment,
         EOF
     }
 

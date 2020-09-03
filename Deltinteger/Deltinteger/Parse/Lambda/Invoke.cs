@@ -1,3 +1,4 @@
+using Deltin.Deltinteger.Compiler;
 using Deltin.Deltinteger.LanguageServer;
 using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
 

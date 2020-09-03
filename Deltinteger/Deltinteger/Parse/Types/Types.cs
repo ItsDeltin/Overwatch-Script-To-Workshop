@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.LanguageServer;
+using Deltin.Deltinteger.Compiler;
+using Deltin.Deltinteger.Compiler.SyntaxTree;
 using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
 using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItemKind;
 using StringOrMarkupContent = OmniSharp.Extensions.LanguageServer.Protocol.Models.StringOrMarkupContent;
@@ -130,21 +132,21 @@ namespace Deltin.Deltinteger.Parse
         /// <summary>Gets the full name of the type.</summary>
         public virtual string GetName() => Name;
 
-        public static CodeType GetCodeTypeFromContext(ParseInfo parseInfo, DeltinScriptParser.Code_typeContext typeContext)
+        public static CodeType GetCodeTypeFromContext(ParseInfo parseInfo, ParseType typeContext)
         {
             if (typeContext == null) return null;
             
             CodeType type = null;
-            if (typeContext.PART() != null) type = parseInfo.TranslateInfo.Types.GetCodeType(typeContext.PART().GetText(), parseInfo.Script.Diagnostics, DocRange.GetRange(typeContext));
+            if (!typeContext.IsDefault) type = parseInfo.TranslateInfo.Types.GetCodeType(typeContext.Identifier.Text, parseInfo.Script.Diagnostics, typeContext.Identifier.Range);
 
             // Get generics
-            if (typeContext.generics() != null)
+            if (typeContext.HasTypeArgs)
             {
                 // Create a list to store the generics.
                 List<CodeType> generics = new List<CodeType>();
 
                 // Get the generics.
-                foreach (var genericContext in typeContext.generics().code_type())
+                foreach (var genericContext in typeContext.TypeArgs)
                     generics.Add(GetCodeTypeFromContext(parseInfo, genericContext));
                 
                 if (type is Lambda.ValueBlockLambda)
@@ -156,11 +158,10 @@ namespace Deltin.Deltinteger.Parse
             }
 
             if (type != null)
-                type.Call(parseInfo, DocRange.GetRange(typeContext.PART()));
+                type.Call(parseInfo, typeContext.Identifier.Range);
 
-            if (typeContext.INDEX_START() != null)
-                    for (int i = 0; i < typeContext.INDEX_START().Length; i++)
-                        type = new ArrayType(type);
+            for (int i = 0; i < typeContext.ArrayCount; i++)
+                type = new ArrayType(type);
 
             return type;
         }

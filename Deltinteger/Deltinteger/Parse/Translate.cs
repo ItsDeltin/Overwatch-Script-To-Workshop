@@ -6,6 +6,8 @@ using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.Lobby;
 using Deltin.Deltinteger.I18n;
 using Deltin.Deltinteger.Debugger;
+using Deltin.Deltinteger.Compiler;
+using Deltin.Deltinteger.Compiler.SyntaxTree;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -135,7 +137,7 @@ namespace Deltin.Deltinteger.Parse
 
             // Get the types
             foreach (ScriptFile script in Importer.ScriptFiles)
-            foreach (var typeContext in script.Context.type_define())
+            foreach (var typeContext in script.Context.Classes)
             {
                 var newType = new DefinedType(new ParseInfo(script, this), GlobalScope, typeContext);
                 Types.AllTypes.Add(newType);
@@ -143,30 +145,31 @@ namespace Deltin.Deltinteger.Parse
                 Types.CalledTypes.Add(newType);
             }
             
-            // Get the methods and macros
+            // Get the declarations
             foreach (ScriptFile script in Importer.ScriptFiles)
             {
                 ParseInfo parseInfo = new ParseInfo(script, this);
 
-                // Get the methods.
-                foreach (var methodContext in script.Context.define_method())
-                    new DefinedMethod(parseInfo, RulesetScope, RulesetScope, methodContext, null);
-                
-                // Get the macros.
-                foreach (var macroContext in script.Context.define_macro())
-                    parseInfo.GetMacro(RulesetScope, RulesetScope, macroContext);
-            }
+                // Get the functions.
+                foreach (var declaration in script.Context.Declarations)
+                {
+                    // Function
+                    if (declaration is FunctionContext function)
+                        new DefinedMethod(parseInfo, RulesetScope, RulesetScope, function, null);
+                    // Macro function
+                    else if (declaration is MacroFunctionContext macroFunction)
+                        parseInfo.GetMacro(RulesetScope, RulesetScope, macroFunction);
+                    // Variables
+                    else if (declaration is Declaration variable)
+                    {
+                        Var newVar = new RuleLevelVariable(RulesetScope, new DefineContextHandler(new ParseInfo(script, this), variable));
+                        rulesetVariables.Add(newVar);
 
-            // Get the defined variables.
-            foreach (ScriptFile script in Importer.ScriptFiles)
-            foreach (var varContext in script.Context.define())
-            {
-                Var newVar = new RuleLevelVariable(RulesetScope, new DefineContextHandler(new ParseInfo(script, this), varContext));
-                rulesetVariables.Add(newVar);
-
-                // Add the variable to the player variables scope if it is a player variable.
-                if (newVar.VariableType == VariableType.Player)
-                    PlayerVariableScope.CopyVariable(newVar);
+                        // Add the variable to the player variables scope if it is a player variable.
+                        if (newVar.VariableType == VariableType.Player)
+                            PlayerVariableScope.CopyVariable(newVar);
+                    }
+                }
             }
 
             foreach (var applyType in Types.AllTypes) if (applyType is ClassType classType) classType.ResolveElements();
@@ -181,7 +184,7 @@ namespace Deltin.Deltinteger.Parse
 
             // Get the rules
             foreach (ScriptFile script in Importer.ScriptFiles)
-            foreach (var ruleContext in script.Context.ow_rule())
+            foreach (var ruleContext in script.Context.Rules)
                 rules.Add(new RuleAction(new ParseInfo(script, this), RulesetScope, ruleContext));
         }
 

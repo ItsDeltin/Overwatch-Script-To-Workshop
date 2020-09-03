@@ -1,8 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Deltin.Deltinteger.Elements;
-using Deltin.Deltinteger.LanguageServer;
+using Deltin.Deltinteger.Compiler;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -68,7 +67,7 @@ namespace Deltin.Deltinteger.Parse
         {
             foreach (var condition in ruleAction.Conditions)
             {
-                var conditionParse = condition.Expression.Parse(ActionSet);
+                var conditionParse = condition.Parse(ActionSet);
 
                 Element value1;
                 EnumMember compareOperator;

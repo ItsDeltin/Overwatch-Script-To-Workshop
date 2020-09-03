@@ -216,6 +216,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 if (Index >= Content.Length) break;
 
                 bool matched =
+                    MatchComment() ||
                     MatchSymbol('{', TokenType.CurlyBracket_Open) ||
                     MatchSymbol('}', TokenType.CurlyBracket_Close) ||
                     MatchSymbol('(', TokenType.Parentheses_Open) ||
@@ -252,9 +253,11 @@ namespace Deltin.Deltinteger.Compiler.Parse
                     MatchSymbol('-', TokenType.Subtract) ||
                     MatchSymbol("&&", TokenType.And) ||
                     MatchSymbol("||", TokenType.Or) ||
+                    MatchKeyword("import", TokenType.Import) ||
                     MatchKeyword("for", TokenType.For) ||
                     MatchKeyword("while", TokenType.While) ||
                     MatchKeyword("rule", TokenType.Rule) ||
+                    MatchKeyword("disabled", TokenType.Disabled) ||
                     MatchKeyword("true", TokenType.True) ||
                     MatchKeyword("false", TokenType.False) ||
                     MatchKeyword("null", TokenType.Null) ||
@@ -264,6 +267,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
                     MatchKeyword("continue", TokenType.Continue) ||
                     MatchKeyword("class", TokenType.Class) ||
                     MatchKeyword("new", TokenType.New) ||
+                    MatchKeyword("delete", TokenType.Delete) ||
                     MatchKeyword("define", TokenType.Define) ||
                     MatchKeyword("void", TokenType.Void) ||
                     MatchKeyword("public", TokenType.Public) ||
@@ -276,6 +280,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
                     MatchKeyword("globalvar", TokenType.GlobalVar) ||
                     MatchKeyword("playervar", TokenType.PlayerVar) ||
                     MatchKeyword("this", TokenType.This) ||
+                    MatchKeyword("as", TokenType.As) ||
                     MatchNumber() ||
                     MatchIdentifier() ||
                     MatchString();
@@ -431,6 +436,21 @@ namespace Deltin.Deltinteger.Compiler.Parse
             return true;
         }
 
+        bool MatchComment()
+        {
+            LexScanner scanner = MakeScanner();
+            // Action comment.
+            if (!scanner.At('#')) return false;
+
+            // Match every character to the end of the line.
+            scanner.Advance();
+            while(!scanner.At('\n')) scanner.Advance();
+            
+            // Done.
+            PushToken(scanner, TokenType.ActionComment);
+            return true;
+        }
+
         /// <summary>Unknown token.</summary>
         public void Unknown()
         {
@@ -472,7 +492,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
     {
         private static readonly char[] identifierCharacters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_".ToCharArray();
         private static readonly char[] numericalCharacters = "0123456789".ToCharArray();
-        private static readonly char[] whitespaceCharacters = " \r\n".ToCharArray();
+        private static readonly char[] whitespaceCharacters = " \t\r\n".ToCharArray();
         public int Index { get; private set; }
         public int Line { get; private set; }
         public int Column { get; private set; }

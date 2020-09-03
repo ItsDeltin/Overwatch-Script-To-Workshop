@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
+using Deltin.Deltinteger.Compiler;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -63,13 +64,15 @@ namespace Deltin.Deltinteger.Parse
 
     public class ImportedScript : ImportedFile
     {
-        public ScriptParseInfo ScriptParseInfo { get; } = new ScriptParseInfo();
+        public Document Document { get; }
 
-        public ImportedScript(Uri uri) : base(uri) {}
+        public ImportedScript(Uri uri) : base(uri) {
+            Document = new Document(uri, Content);
+        }
 
         protected override void OnUpdate()
         {
-            ScriptParseInfo.Update(Content);
+            Document.Update(Content);
         }
     }
 }

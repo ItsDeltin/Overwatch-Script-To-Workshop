@@ -6,7 +6,7 @@ using System.Text;
 using System.Linq;
 using Deltin.Deltinteger.Elements;
 
-namespace Deltin.Parse.Functions
+namespace Deltin.Deltinteger.Parse
 {
     abstract class AbstractMacroBuilder
     {

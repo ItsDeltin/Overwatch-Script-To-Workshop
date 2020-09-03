@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Deltin.Deltinteger.LanguageServer;
+using Deltin.Deltinteger.Compiler;
+using Deltin.Deltinteger.Compiler.SyntaxTree;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -125,7 +127,7 @@ namespace Deltin.Deltinteger.Parse
         string GetName();
         DocRange GetNameRange();
         VarBuilderAttribute[] GetAttributes();
-        DeltinScriptParser.Code_typeContext GetCodeType();
+        ParseType GetCodeType();
         DocRange GetTypeRange();
     }
 
@@ -225,9 +227,9 @@ namespace Deltin.Deltinteger.Parse
     {
         public int ID { get; }
 
-        public IDAttribute(DeltinScriptParser.NumberContext context) : base(AttributeType.ID, DocRange.GetRange(context))
+        public IDAttribute(NumberExpression context) : base(AttributeType.ID, context.Range)
         {
-            ID = int.Parse(context.GetText());
+            ID = (int)context.Value;
         }
 
         public override void Apply(VarInfo varInfo)
@@ -238,9 +240,9 @@ namespace Deltin.Deltinteger.Parse
 
     public class InitialValueAttribute : VarBuilderAttribute
     {
-        public DeltinScriptParser.ExprContext ExprContext { get; }
+        public IParseExpression ExprContext { get; }
 
-        public InitialValueAttribute(DeltinScriptParser.ExprContext exprContext) : base(AttributeType.Initial, DocRange.GetRange(exprContext))
+        public InitialValueAttribute(IParseExpression exprContext) : base(AttributeType.Initial, exprContext.Range)
         {
             ExprContext = exprContext;
         }

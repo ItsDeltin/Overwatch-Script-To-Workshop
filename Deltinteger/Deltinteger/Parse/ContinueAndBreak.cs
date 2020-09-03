@@ -1,4 +1,4 @@
-using Deltin.Deltinteger.LanguageServer;
+using Deltin.Deltinteger.Compiler;
 
 namespace Deltin.Deltinteger.Parse
 {

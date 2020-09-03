@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.Elements;
+using Deltin.Deltinteger.Compiler;
+using Deltin.Deltinteger.Compiler.SyntaxTree;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -74,18 +76,14 @@ namespace Deltin.Deltinteger.Parse
     class WhileAction : LoopAction
     {
         private IExpression Condition { get; }
-        private BlockAction Block { get; }
+        private IStatement Block { get; }
 
-        public WhileAction(ParseInfo parseInfo, Scope scope, DeltinScriptParser.WhileContext whileContext)
+        public WhileAction(ParseInfo parseInfo, Scope scope, While whileContext)
         {
             RawContinue = true;
-
-            if (whileContext.expr() == null)
-                parseInfo.Script.Diagnostics.Error("Expected expression.", DocRange.GetRange(whileContext.LEFT_PAREN()));
-            else
-                Condition = parseInfo.GetExpression(scope, whileContext.expr());
+            Condition = parseInfo.GetExpression(scope, whileContext.Condition);
             
-            Block = new BlockAction(parseInfo.SetLoop(this), scope, whileContext.block());
+            Block = parseInfo.SetLoop(this).GetStatement(scope, whileContext.Statement);
             Path = new PathInfo(Block, DocRange.GetRange(whileContext.WHILE()), false);
         }
 
@@ -143,46 +141,121 @@ namespace Deltin.Deltinteger.Parse
 
     class ForAction : LoopAction
     {
-        private Var DefinedVariable { get; }
-        private SetVariableAction InitialVarSet { get; }
+        readonly bool IsAutoFor;
+        readonly IStatement Block;
+        readonly IExpression Condition;
+        readonly Var DefinedVariable;
 
-        private IExpression Condition { get; }
-        private SetVariableAction SetVariableAction { get; }
-        private BlockAction Block { get; }
+        // For
+        readonly SetVariableAction InitialVarSet;
+        readonly SetVariableAction SetVariableAction;
 
-        public ForAction(ParseInfo parseInfo, Scope scope, DeltinScriptParser.ForContext forContext)
+        // Auto-for
+        readonly VariableResolve VariableResolve;
+        readonly IExpression InitialResolveValue;
+        readonly IExpression Step;
+
+        public ForAction(ParseInfo parseInfo, Scope scope, For forContext)
         {
             Scope varScope = scope.Child();
 
-            if (forContext.define() != null)
+            // Get the iterator first in case this is an auto-for.
+            if (forContext.Iterator != null)
             {
-                DefinedVariable = new ScopedVariable(varScope, new DefineContextHandler(parseInfo, forContext.define()));
-            }
-            else if (forContext.initialVarset != null)
-                InitialVarSet = new SetVariableAction(parseInfo, varScope, forContext.initialVarset);
-
-            if (forContext.expr() != null)
-                Condition = parseInfo.GetExpression(varScope, forContext.expr());
-            
-            if (forContext.endingVarset != null)
-            {
-                SetVariableAction = new SetVariableAction(parseInfo, varScope, forContext.endingVarset);
-                RawContinue = false;
+                // Get the assignment.
+                if (forContext.Iterator is Assignment assignment)
+                {
+                    Step = new SetVariableAction(parseInfo, varScope, assignment);
+                    RawContinue = false;
+                }
+                // Get the auto-for
+                else if (forContext.Iterator is ExpressionStatement exprStatement)
+                {
+                    Step = parseInfo.GetExpression(scope, exprStatement.Expression);
+                    RawContinue = true;
+                    IsAutoFor = true;
+                }
             }
             else RawContinue = true;
 
-            // Get the block.
-            if (forContext.block() != null)
+            // Get the initializer.
+            if (!IsAutoFor)
             {
-                Block = new BlockAction(parseInfo.SetLoop(this), varScope, forContext.block());
-                // Get the path info.
-                Path = new PathInfo(Block, DocRange.GetRange(forContext.FOR()), false);
+                // Normal for loop initializer.
+                if (forContext.Initializer != null)
+                {
+                    // Declaration for initializer.
+                    if (forContext.Initializer is Declaration declaration)
+                        DefinedVariable = new ScopedVariable(varScope, new DefineContextHandler(parseInfo, declaration));
+                    // Variable assignment for initializer
+                    else if (forContext.Initializer is Assignment assignment)
+                        InitialVarSet = new SetVariableAction(parseInfo, varScope, assignment);
+                    
+                    // TODO: Throw error on incorrect initializer type.
+                }
             }
             else
-                parseInfo.Script.Diagnostics.Error("Expected a block.", DocRange.GetRange(forContext.RIGHT_PAREN()));
+            {
+                // Auto-for initializer.
+                // Missing initializer.
+                if (forContext.Initializer == null)
+                {
+                    // TODO: throw error if there is no variable or assignment.
+                }
+                // Declaration
+                else if (forContext.Initializer is Declaration declaration)
+                {
+                    DefinedVariable = new ScopedVariable(varScope, new DefineContextHandler(parseInfo, declaration));
+                }
+                // Assignment
+                else if (forContext.Initializer is Assignment assignment)
+                {
+                    // Get the variable being set.
+                    VariableResolve = new VariableResolve(new VariableResolveOptions() {
+                        // The for cannot be indexed and should be on the rule-level.
+                        CanBeIndexed = false,
+                        FullVariable = true
+                    }, parseInfo.GetExpression(scope, assignment.VariableExpression), assignment.VariableExpression.Range, parseInfo.Script.Diagnostics);
+
+                    InitialResolveValue = parseInfo.GetExpression(scope, assignment.Value);
+                }
+                // Variable
+                else if (forContext.Initializer is ExpressionStatement exprStatement && exprStatement.Expression is Identifier identifier)
+                {
+                    // The variable is defined but no start value was given. In this case, just start at 0.
+                    // Get the variable.
+                    VariableResolve = new VariableResolve(new VariableResolveOptions() {
+                        // The for cannot be indexed and should be on the rule-level.
+                        CanBeIndexed = false,
+                        FullVariable = true
+                    }, parseInfo.GetExpression(scope, identifier), identifier.Range, parseInfo.Script.Diagnostics);
+                }
+                // Incorrect initializer.
+                else
+                {
+                    // TODO: throw error on incorrect expression type.
+                }
             }
 
+            // Get the condition.
+            if (forContext.Condition != null)
+                Condition = parseInfo.GetExpression(varScope, forContext.Condition);
+
+            // Get the block.
+            Block = parseInfo.GetStatement(scope, forContext.Block);
+            // Get the path info.
+            Path = new PathInfo(Block, DocRange.GetRange(forContext.FOR()), false);
+        }
+
         public override void Translate(ActionSet actionSet)
+        {
+            if (IsAutoFor)
+                TranslateAutoFor(actionSet);
+            else
+                TranslateFor(actionSet);
+        }
+
+        void TranslateFor(ActionSet actionSet)
         {
             if (DefinedVariable != null)
             {
@@ -217,73 +290,8 @@ namespace Deltin.Deltinteger.Parse
             // Resolve breaks.
             ResolveBreaks(actionSet);
         }
-    }
 
-    class AutoForAction : LoopAction
-    {
-        private VariableResolve VariableResolve { get; }
-        private IExpression InitialResolveValue { get; }
-        private Var DefinedVariable { get; }
-
-        private IExpression Stop { get; }
-        private ExpressionOrWorkshopValue Step { get; }
-        private BlockAction Block { get; }
-
-        public AutoForAction(ParseInfo parseInfo, Scope scope, DeltinScriptParser.For_autoContext autoForContext)
-        {
-            RawContinue = true;
-
-            // Get the auto-for variable. (Required)
-            if (autoForContext.forVariable != null)
-            {
-                IExpression variable = parseInfo.GetExpression(scope, autoForContext.forVariable);
-
-                // Get the variable being set.
-                VariableResolve = new VariableResolve(new VariableResolveOptions() {
-                    // The for cannot be indexed and should be on the rule-level.
-                    CanBeIndexed = false,
-                    FullVariable = true
-                }, variable, DocRange.GetRange(autoForContext.forVariable), parseInfo.Script.Diagnostics);
-
-                if (autoForContext.EQUALS() != null)
-                {
-                    if (autoForContext.start == null)
-                        parseInfo.Script.Diagnostics.Error("Expected expression.", DocRange.GetRange(autoForContext.EQUALS()));
-                    else
-                        InitialResolveValue = parseInfo.GetExpression(scope, autoForContext.start);
-                }
-            }
-            // Get the defined variable.
-            else if (autoForContext.forDefine != null)
-            {
-                DefinedVariable = new AutoForVariable(scope, new DefineContextHandler(parseInfo, autoForContext.forDefine));
-            }
-            else
-                parseInfo.Script.Diagnostics.Error("Expected define or variable.", DocRange.GetRange(autoForContext.FOR()));
-            
-            // Get the auto-for end. (Required)
-            if (autoForContext.stop == null)
-                parseInfo.Script.Diagnostics.Error("Expected end expression.", DocRange.GetRange(autoForContext.startSep));
-            else
-                Stop = parseInfo.GetExpression(scope, autoForContext.stop);
-            
-            // Get the auto-for step. (Not Required)
-            if (autoForContext.step == null)
-                Step = new ExpressionOrWorkshopValue(new V_Number(1));
-            else
-                Step = new ExpressionOrWorkshopValue(parseInfo.GetExpression(scope, autoForContext.step));
-            
-            // Get the block.
-            if (autoForContext.block() == null)
-                parseInfo.Script.Diagnostics.Error("Missing block.", DocRange.GetRange(autoForContext.RIGHT_PAREN()));
-            else
-            {
-                Block = new BlockAction(parseInfo.SetLoop(this), scope, autoForContext.block());
-                Path = new PathInfo(Block, DocRange.GetRange(autoForContext.block()), false);
-            }
-        }
-
-        public override void Translate(ActionSet actionSet)
+        void TranslateAutoFor(ActionSet actionSet)
         {
             WorkshopVariable variable;
             Element target;
@@ -306,7 +314,7 @@ namespace Deltin.Deltinteger.Parse
                 start = (Element)DefinedVariable.InitialValue?.Parse(actionSet) ?? new V_Number(0);
             }
 
-            Element stop = (Element)Stop.Parse(actionSet);
+            Element stop = (Element)Condition.Parse(actionSet);
             Element step = (Element)Step.Parse(actionSet);
 
             // Global

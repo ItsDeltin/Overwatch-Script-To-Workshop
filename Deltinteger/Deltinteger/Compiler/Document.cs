@@ -49,7 +49,11 @@ namespace Deltin.Deltinteger.Compiler
         public void UpdateIfChanged(string newContent)
         {
             if (newContent == Content) return;
+            Update(newContent);
+        }
 
+        public void Update(string newContent)
+        {
             Syntax = null;
             Lexer.Reset();
             Lexer.Init(Content);
@@ -57,5 +61,11 @@ namespace Deltin.Deltinteger.Compiler
         }
 
         public Diagnostic[] GetDiagnostics() => Errors.Select(e => e.GetDiagnostic()).ToArray();
+
+        public TextDocumentItem AsItem() => new TextDocumentItem() {
+            Uri = Uri,
+            Text = Content,
+            LanguageId = "ostw"
+        };
     }
 }

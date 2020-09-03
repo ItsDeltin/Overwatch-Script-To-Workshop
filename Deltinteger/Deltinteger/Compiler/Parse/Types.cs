@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Deltin.Deltinteger.Compiler.SyntaxTree;
 
 namespace Deltin.Deltinteger.Compiler.Parse
 {

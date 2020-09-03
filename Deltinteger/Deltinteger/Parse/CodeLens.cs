@@ -1,7 +1,7 @@
 using System;
 using System.Linq;
 using Deltin.Deltinteger.Elements;
-using Deltin.Deltinteger.LanguageServer;
+using Deltin.Deltinteger.Compiler;
 using Newtonsoft.Json.Linq;
 
 namespace Deltin.Deltinteger.Parse
@@ -58,7 +58,7 @@ namespace Deltin.Deltinteger.Parse
             // Uri
             JToken.FromObject(_parseInfo.Script.Uri.ToString()),
             // Range
-            JToken.FromObject(Range.start),
+            JToken.FromObject(Range.Start),
             // Locations
             JToken.FromObject(_parseInfo.TranslateInfo.GetComponent<SymbolLinkComponent>().GetSymbolLinks(Callable).GetSymbolLinks(false).Select(sl => sl.Location))
         };
@@ -87,7 +87,7 @@ namespace Deltin.Deltinteger.Parse
             // Uri
             JToken.FromObject(_script.Uri.ToString()),
             // Range
-            JToken.FromObject(Range.start),
+            JToken.FromObject(Range.Start),
             // Locations
             JToken.FromObject(Method.Attributes.Overriders.Select(overrider => overrider.DefinedAt))
         };

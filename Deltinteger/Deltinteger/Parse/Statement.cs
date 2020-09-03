@@ -2,8 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Deltin.Deltinteger.Elements;
-using Deltin.Deltinteger.LanguageServer;
-using Deltin.Deltinteger.Decompiler.Json;
+using Deltin.Deltinteger.Compiler;
+using Deltin.Deltinteger.Compiler.SyntaxTree;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -45,10 +45,10 @@ namespace Deltin.Deltinteger.Parse
         public DocRange ErrorRange { get; }
         private readonly Scope ReturningFromScope;
 
-        public ReturnAction(ParseInfo parseInfo, Scope scope, DeltinScriptParser.ReturnContext returnContext)
+        public ReturnAction(ParseInfo parseInfo, Scope scope, Return returnContext)
         {
-            ErrorRange = DocRange.GetRange(returnContext.RETURN());
-            if (returnContext.expr() != null) ReturningValue = parseInfo.GetExpression(scope, returnContext.expr());
+            ErrorRange = returnContext.Range;
+            if (returnContext.Expression != null) ReturningValue = parseInfo.GetExpression(scope, returnContext.Expression);
             ReturningFromScope = scope;
         }
 
@@ -64,17 +64,15 @@ namespace Deltin.Deltinteger.Parse
     {
         private IExpression DeleteValue { get; }
 
-        public DeleteAction(ParseInfo parseInfo, Scope scope, DeltinScriptParser.DeleteContext deleteContext)
+        public DeleteAction(ParseInfo parseInfo, Scope scope, Delete deleteContext)
         {
-            DeleteValue = parseInfo.GetExpression(scope, deleteContext.expr());
+            DeleteValue = parseInfo.GetExpression(scope, deleteContext.Deleting);
 
-            if (DeleteValue != null)
-            {
-                if (DeleteValue.Type() == null)
-                    parseInfo.Script.Diagnostics.Error("Expression has no type.", DocRange.GetRange(deleteContext.expr()));
-                else if (!DeleteValue.Type().CanBeDeleted)
-                    parseInfo.Script.Diagnostics.Error($"Type '{DeleteValue.Type().Name}' cannot be deleted.", DocRange.GetRange(deleteContext.expr()));
-            }
+            if (DeleteValue.Type() == null)
+                parseInfo.Script.Diagnostics.Error("Expression has no type.", deleteContext.Deleting.Range);
+            
+            else if (!DeleteValue.Type().CanBeDeleted)
+                parseInfo.Script.Diagnostics.Error($"Type '{DeleteValue.Type().Name}' cannot be deleted.", deleteContext.Deleting.Range);
         }
 
         public void Translate(ActionSet actionSet)

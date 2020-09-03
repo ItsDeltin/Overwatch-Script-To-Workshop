@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.Compiler;
 using Deltin.Deltinteger.Compiler.SyntaxTree;
@@ -41,15 +42,15 @@ namespace Deltin.Deltinteger.Parse
         /// <summary>Gets an IStatement from a StatementContext.</summary>
         /// <param name="scope">The scope the statement was created in.</param>
         /// <param name="statementContext">The context of the statement.</param>
-        public IStatement GetStatement(Scope scope, DeltinScriptParser.Documented_statementContext statementContext)
+        public IStatement GetStatement(Scope scope, IParseStatement statementContext)
         {
             IStatement statement = StatementFromContext(scope, statementContext);
 
             // Apply related output comment.
-            if (statementContext.DOCUMENTATION() != null)
+            if (statementContext is ICommentableStatement comment)
             {
-                string text = statementContext.DOCUMENTATION().GetText().Substring(1).Trim();
-                DocRange range = DocRange.GetRange(statementContext.DOCUMENTATION());
+                string text = comment.ActionComment.Text.Substring(1).Trim();
+                DocRange range = comment.ActionComment.Range;
                 statement.OutputComment(Script.Diagnostics, range, text);
             }
 
@@ -60,34 +61,37 @@ namespace Deltin.Deltinteger.Parse
         {
             switch (statementContext)
             {
-                case DeltinScriptParser.S_defineContext define    : {
-                    var newVar = new ScopedVariable(scope, new DefineContextHandler(this, define.define()));
+                case Declaration declare: {
+                    var newVar = new ScopedVariable(scope, new DefineContextHandler(this, declare));
                     return new DefineAction(newVar);
                 }
-                case DeltinScriptParser.S_methodContext method    : return new CallMethodAction(this, scope, method.method(), false, scope);
-                case DeltinScriptParser.S_varsetContext varset    : return new SetVariableAction(this, scope, varset.varset());
-                case DeltinScriptParser.S_exprContext s_expr      : {
-
-                    var expr = GetExpression(scope, s_expr.expr(), true, false);
-                    if (expr is ExpressionTree == false || (((ExpressionTree)expr)?.Result is IStatement == false && (((ExpressionTree)expr)?.Completed ?? false)))
-                    {
-                        if (expr != null)
-                            Script.Diagnostics.Error("Expressions can't be used as statements.", DocRange.GetRange(statementContext));
-                        return null;
-                    }
-                    else return (ExpressionTree)expr;
-                }
+                case Assignment assignment: return new SetVariableAction(this, scope, assignment);
+                case Increment increment  : return new IncrementAction(this, scope, increment);
                 case If @if            : return new IfAction(this, scope, @if);
                 case While @while      : return new WhileAction(this, scope, @while);
                 case For @for          : return new ForAction(this, scope, @for);
-                case DeltinScriptParser.S_for_autoContext s_forAuto : return new AutoForAction(this, scope, s_forAuto.for_auto());
                 case DeltinScriptParser.S_foreachContext s_foreach  : return new ForeachAction(this, scope, s_foreach.@foreach());
                 case Return @return    : return new ReturnAction(this, scope, @return);
-                case DeltinScriptParser.S_deleteContext s_delete    : return new DeleteAction(this, scope, s_delete.delete());
-                case Continue @continue: return new ContinueAction(this, DocRange.GetRange(@continue));
-                case Break @break      : return new BreakAction(this, DocRange.GetRange(@break));
+                case Delete delete     : return new DeleteAction(this, scope, delete);
+                case Continue @continue: return new ContinueAction(this, @continue.Range);
+                case Break @break      : return new BreakAction(this, @break.Range);
                 case DeltinScriptParser.S_switchContext s_switch    : return new SwitchAction(this, scope, s_switch.@switch());
                 case Block @block      : return new BlockAction(this, scope, @block);
+                // Expression statements (functions, new)
+                case ExpressionStatement exprStatement:
+
+                    // Parse the expression
+                    var expr = GetExpression(scope, exprStatement.Expression, true, false);
+
+                    if (!expr.IsStatement())
+                    {
+                        if (expr != null)
+                            Script.Diagnostics.Error("Expressions can't be used as statements.", statementContext.Range);
+                        return null;
+                    }
+                    // When IsStatement is true, expr should be castable to a statement.
+                    return (IStatement)expr;
+
                 default: return null;
             }
         }
@@ -159,16 +163,16 @@ namespace Deltin.Deltinteger.Parse
         /// <param name="scope">The scope used to parse the index values.</param>
         /// <param name="arrayContext">The context of the array.</param>
         /// <returns>An IExpression[] of each indexer in the chain. Will return null if arrayContext is null.</returns>
-        public IExpression[] ExpressionIndexArray(Scope scope, DeltinScriptParser.ArrayContext arrayContext)
+        public IExpression[] ExpressionIndexArray(Scope scope, List<ArrayIndex> arrayContext)
         {
             if (arrayContext == null) return null;
 
             IExpression[] index = null;
             if (arrayContext != null)
             {
-                index = new IExpression[arrayContext.expr().Length];
+                index = new IExpression[arrayContext.Count];
                 for (int i = 0; i < index.Length; i++)
-                    index[i] = GetExpression(scope, arrayContext.expr(i));
+                    index[i] = GetExpression(scope, arrayContext[i].Expression);
             }
             return index;
         }
@@ -178,31 +182,15 @@ namespace Deltin.Deltinteger.Parse
         /// <param name="staticScope">The scope of the macro if there is a static attribute.</param>
         /// <param name="macroContext">The context of the macro.</param>
         /// <returns>A DefinedMacro if the macro has parameters, a MacroVar if there are no parameters.</returns>
-        public IScopeable GetMacro(Scope objectScope, Scope staticScope, DeltinScriptParser.Define_macroContext macroContext)
+        public IScopeable GetMacro(Scope objectScope, Scope staticScope, MacroFunctionContext macroContext)
         {
-            // If the ; is missing, syntax error.
-            if (macroContext.STATEMENT_END() == null)
-                Script.Diagnostics.Error("Expected ;", DocRange.GetRange((object)macroContext.TERNARY_ELSE() ?? (object)macroContext.name ?? (object)macroContext).end.ToRange());
-
-            // If the : is missing, syntax error.
-            if (macroContext.TERNARY_ELSE() == null)
-                Script.Diagnostics.Error("Expected :", DocRange.GetRange(macroContext).end.ToRange());
-            else
-            {
-                // Get the expression that will be parsed.
-                if (macroContext.expr() == null)
-                    Script.Diagnostics.Error("Expected expression.", DocRange.GetRange(macroContext.TERNARY_ELSE()));
-            }
-
             // Get the return type.
-            CodeType returnType = CodeType.GetCodeTypeFromContext(this, macroContext.code_type());
+            CodeType returnType = CodeType.GetCodeTypeFromContext(this, macroContext.Type);
 
-            IScopeable newMacro;
+            IScopeable newMacro = new DefinedMacro(this, objectScope, staticScope, macroContext, returnType);
 
-            if (macroContext.LEFT_PAREN() != null || macroContext.RIGHT_PAREN() != null)
-                newMacro = new DefinedMacro(this, objectScope, staticScope, macroContext, returnType);
-            else
-                newMacro = new MacroVar(this, objectScope, staticScope, macroContext, returnType);
+            #error todo
+            // newMacro = new MacroVar(this, objectScope, staticScope, macroContext, returnType);
 
             TranslateInfo.ApplyBlock((IApplyBlock)newMacro);
             return newMacro;

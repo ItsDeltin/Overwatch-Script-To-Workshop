@@ -1,14 +1,16 @@
 using System.Collections.Generic;
 using Deltin.Deltinteger.LanguageServer;
+using Deltin.Deltinteger.Compiler;
+using Deltin.Deltinteger.Compiler.SyntaxTree;
 
 namespace Deltin.Deltinteger.Parse
 {
     class DefineContextHandler : IVarContextHandler
     {
         public ParseInfo ParseInfo { get; }
-        private readonly DeltinScriptParser.DefineContext _defineContext;
+        private readonly Declaration _defineContext;
 
-        public DefineContextHandler(ParseInfo parseInfo, DeltinScriptParser.DefineContext defineContext)
+        public DefineContextHandler(ParseInfo parseInfo, Declaration defineContext)
         {
             _defineContext = defineContext;
             ParseInfo = parseInfo;
@@ -18,15 +20,15 @@ namespace Deltin.Deltinteger.Parse
         public Location GetDefineLocation() => new Location(ParseInfo.Script.Uri, GetNameRange());
 
         // Get the name.
-        public string GetName() => _defineContext.name?.Text;
+        public string GetName() => _defineContext.Identifier.Text;
         public DocRange GetNameRange()
         {
-            if (_defineContext.name == null) return DocRange.GetRange(_defineContext);
-            return DocRange.GetRange(_defineContext.name);
+            if (_defineContext.Identifier == null) return _defineContext.Range;
+            return _defineContext.Identifier.Range;
         }
 
         // Gets the code type context.
-        public DeltinScriptParser.Code_typeContext GetCodeType() => _defineContext.code_type();
+        public ParseType GetCodeType() => _defineContext.Type;
 
         // Gets the attributes.
         public VarBuilderAttribute[] GetAttributes()

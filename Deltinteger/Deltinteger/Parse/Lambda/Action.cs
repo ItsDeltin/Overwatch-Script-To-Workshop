@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
-using Deltin.Deltinteger.LanguageServer;
+using Deltin.Deltinteger.Compiler;
+using Deltin.Deltinteger.Compiler.SyntaxTree;
 using Deltin.Deltinteger.Elements;
 
 namespace Deltin.Deltinteger.Parse.Lambda

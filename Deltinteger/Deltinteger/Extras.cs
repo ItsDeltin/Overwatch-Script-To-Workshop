@@ -69,34 +69,7 @@ namespace Deltin.Deltinteger
             return string.Join("\n", lines);
         }
 
-        public static string RemoveQuotes(string str)
-        {
-            return str.Substring(1, str.Length - 2);
-        }
-
-        public static AccessLevel GetAccessLevel(this DeltinScriptParser.AccessorContext accessorContext)
-        {
-            if (accessorContext == null) return AccessLevel.Private;
-            else if (accessorContext.PUBLIC() != null) return AccessLevel.Public;
-            else if (accessorContext.PRIVATE() != null) return AccessLevel.Private;
-            else if (accessorContext.PROTECTED() != null) return AccessLevel.Protected;
-            else throw new NotImplementedException();
-        }
-
-        public static string SerializeToXML<T>(object o)
-        {
-            XmlSerializer serializer = new XmlSerializer(typeof(T));
-            XmlSerializerNamespaces ns = new XmlSerializerNamespaces();
-            ns.Add("","");
-
-            string result;
-            using (StringWriter stringWriter = new StringWriter())
-            {
-                serializer.Serialize(stringWriter, o, ns);
-                result = stringWriter.ToString();
-            }
-            return result;
-        }
+        public static string RemoveQuotes(this string str) => str.Substring(1, str.Length - 2);
 
         public static string FilePath(this Uri uri)
         {

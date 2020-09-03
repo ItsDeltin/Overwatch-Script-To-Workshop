@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Deltin.Deltinteger.LanguageServer;
+using Deltin.Deltinteger.Compiler;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -25,7 +25,7 @@ namespace Deltin.Deltinteger.Parse
             Returns = GetReturns();
             ReturnsValue = Returns.Any(r => r.ReturningValue != null);
         }
-        public BlockTreeScan(bool doesReturnValue, ParseInfo parseInfo, DefinedMethod method) : this(parseInfo, method.Block, method.Name, DocRange.GetRange(method.Context.name))
+        public BlockTreeScan(bool doesReturnValue, ParseInfo parseInfo, DefinedMethod method) : this(parseInfo, method.Block, method.Name, method.Context.Identifier.Range)
         {
             ReturnsValue = doesReturnValue;
         }

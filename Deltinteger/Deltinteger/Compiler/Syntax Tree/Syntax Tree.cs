@@ -6,10 +6,10 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
 {
     public class RootContext
     {
+        public List<Import> Imports { get; } = new List<Import>();
         public List<RuleContext> Rules { get; } = new List<RuleContext>();
         public List<ClassContext> Classes { get; } = new List<ClassContext>();
-        public List<Declaration> RuleLevelVariables { get; } = new List<Declaration>();
-        public List<FunctionContext> Functions { get; } = new List<FunctionContext>();
+        public List<IDeclaration> Declarations { get; } = new List<IDeclaration>();
         public List<TokenCapture> NodeCaptures { get; set; }
     }
 
@@ -19,20 +19,42 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
     }
 
     // Interfaces
-    public interface IParseExpression {}
-    public interface IParseStatement {}
+    public interface INodeRange
+    {
+        DocRange Range { get; }
+    }
+    public interface IParseExpression : INodeRange {}
+    public interface IParseStatement : INodeRange {}
+    public interface ICommentableStatement
+    {
+        Token ActionComment { get; }        
+    }
+    public interface IDeclaration
+    {
+        AttributeTokens Attributes { get; }
+        ParseType Type { get; }
+        Token Identifier { get; }
+    }
 
-    public class ParseType
+    public class ParseType : Node
     {
         public Token Identifier { get; }
         public List<ParseType> TypeArgs { get; }
         public int ArrayCount { get; }
+        public bool IsVoid { get; }
 
         public ParseType(Token identifier, List<ParseType> typeArgs, int arrayCount)
         {
             Identifier = identifier;
             TypeArgs = typeArgs;
             ArrayCount = arrayCount;
+            IsVoid = false;
+        }
+
+        public ParseType(Token @void)
+        {
+            Identifier = @void;
+            IsVoid = true;
         }
 
         public bool HasTypeArgs => TypeArgs != null && TypeArgs.Count > 0;
@@ -41,26 +63,47 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public bool IsDefault => Identifier.TokenType == TokenType.Define;
     }
 
-    public class RuleContext
+    public class RuleContext : Node
     {
+        public Token RuleToken { get; }
         public Token NameToken { get; }
+        public Token Disabled { get; }
+        public Token Order { get; }
+        public List<RuleSetting> Settings { get; }
         public List<IfCondition> Conditions { get; }
         public IParseStatement Statement { get; }
         public string Name => Extras.RemoveQuotes(NameToken.Text);
 
-        public RuleContext(Token name, List<IfCondition> conditions, IParseStatement statement)
+        public RuleContext(Token ruleToken, Token name, Token disabled, Token order, List<RuleSetting> settings, List<IfCondition> conditions, IParseStatement statement)
         {
+            RuleToken = ruleToken;
             NameToken = name;
+            Disabled = disabled;
+            Order = order;
+            Settings = settings;
             Conditions = conditions;
             Statement = statement;
         }
     }
 
-    public class ClassContext
+    public class RuleSetting : Node
+    {
+        public Token Setting { get; }
+        public Token Dot { get; }
+        public Token Value { get; }
+
+        public RuleSetting(Token setting, Token dot, Token value)
+        {
+            Setting = setting;
+            Dot = dot;
+            Value = value;
+        }
+    }
+
+    public class ClassContext : Node
     {
         public Token Identifier { get; }
-        public List<FunctionContext> Functions { get; } = new List<FunctionContext>();
-        public List<Declaration> Variables { get; } = new List<Declaration>();
+        public List<IDeclaration> Declarations { get; } = new List<IDeclaration>();
 
         public ClassContext(Token identifier)
         {
@@ -68,34 +111,45 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         }
     }
 
-    public class FunctionContext
+    public class FunctionContext : IDeclaration
     {
         public AttributeTokens Attributes { get; }
         public ParseType Type { get; }
         public Token Identifier { get; }
         public List<Declaration> Parameters { get; }
         public Block Block { get; }
-        public IParseExpression Expression { get; }
-        public bool IsMacro { get; }
+        public Token GlobalVar { get; }
+        public Token PlayerVar { get; }
+        public Token Subroutine { get; }
 
-        public FunctionContext(AttributeTokens attributes, ParseType type, Token identifier, List<Declaration> parameters, Block block)
+        public FunctionContext(AttributeTokens attributes, ParseType type, Token identifier, List<Declaration> parameters, Block block, Token globalvar, Token playervar, Token subroutine)
         {
             Attributes = attributes;
             Type = type;
             Identifier = identifier;
             Parameters = parameters;
             Block = block;
-            IsMacro = false;
+            GlobalVar = globalvar;
+            PlayerVar = playervar;
+            Subroutine = subroutine;
         }
+    }
 
-        public FunctionContext(AttributeTokens attributes, ParseType type, Token identifier, List<Declaration> parameters, IParseExpression value)
+    public class MacroFunctionContext : IDeclaration
+    {
+        public AttributeTokens Attributes { get; }
+        public ParseType Type { get; }
+        public Token Identifier { get; }
+        public List<Declaration> Parameters { get; }
+        public IParseExpression Expression { get; }
+
+        public MacroFunctionContext(AttributeTokens attributes, ParseType type, Token identifier, List<Declaration> parameters, IParseExpression expression)
         {
             Attributes = attributes;
             Type = type;
             Identifier = identifier;
             Parameters = parameters;
-            Expression = value;
-            IsMacro = true;
+            Expression = expression;
         }
     }
 
@@ -123,8 +177,22 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public override string ToString() => "if (" + Expression.ToString() + ")";
     }
 
+    public class Import
+    {
+        public Token File { get; }
+        public Token As { get; }
+        public Token Identifier { get; }
+
+        public Import(Token file, Token @as, Token identifier)
+        {
+            File = file;
+            As = @as;
+            Identifier = identifier;
+        }
+    }
+
     // Both expressions and statements
-    public class FunctionExpression : IParseExpression, IParseStatement
+    public class FunctionExpression : Node, IParseExpression, IParseStatement
     {
         public Token Identifier { get; }
         public List<ParameterValue> Parameters { get; }
@@ -140,11 +208,13 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
 
     public class ParameterValue
     {
+        public Token PickyParameter { get; }
         public IParseExpression Expression { get; }
         public Token NextComma { get; }
 
-        public ParameterValue(IParseExpression value, Token comma)
+        public ParameterValue(Token pickyParameter, IParseExpression value, Token comma)
         {
+            PickyParameter = pickyParameter;
             Expression = value;
             NextComma = comma;
         }
@@ -152,7 +222,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public override string ToString() => Expression.ToString();
     }
 
-    public class NewExpression : IParseExpression, IParseStatement
+    public class NewExpression : Node, IParseExpression, IParseStatement
     {
         public Token ClassIdentifier { get; }
         public List<ParameterValue> Parameters { get; }
@@ -167,7 +237,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
     }
 
     // Expressions
-    public class BooleanExpression : IParseExpression
+    public class BooleanExpression : Node, IParseExpression
     {
         public Token Token { get; }
         public bool Value { get; }
@@ -176,12 +246,13 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         {
             Token = token;
             Value = value;
+            Range = Token.Range;
         }
 
         public override string ToString() => Value.ToString();
     }
 
-    public class NumberExpression : IParseExpression
+    public class NumberExpression : Node, IParseExpression
     {
         public Token Token { get; }
         public double Value { get; }
@@ -190,12 +261,13 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         {
             Token = token;
             Value = double.Parse(token.Text);
+            Range = Token.Range;
         }
 
         public override string ToString() => Value.ToString();
     }
 
-    public class StringExpression : IParseExpression
+    public class StringExpression : Node, IParseExpression
     {
         public Token Token { get; }
         public string Value { get; }
@@ -209,7 +281,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public override string ToString() => '"' + Value + '"'; 
     }
 
-    public class Identifier : IParseExpression
+    public class Identifier : Node, IParseExpression
     {
         public Token Token { get; }
         public List<ArrayIndex> Index { get; }
@@ -239,27 +311,28 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public override string ToString() => "[" + Expression.ToString() + "]";
     }
 
-    public class ValueInArray : IParseExpression
+    public class ValueInArray : Node, IParseExpression
     {
         public IParseExpression Array { get; }
         public IParseExpression Index { get; }
 
-        public ValueInArray(IParseExpression array, IParseExpression index)
+        public ValueInArray(IParseExpression array, IParseExpression index, Token closingToken)
         {
             Array = array;
             Index = index;
+            Range = new DocRange(Array.Range.Start, closingToken.Range.End);
         }
 
         public override string ToString() => Array.ToString() + "[" + Index.ToString() + "]";
     }
 
-    public class CreateArray : IParseExpression
+    public class CreateArray : Node, IParseExpression
     {
-        public List<ParameterValue> Values { get; }
+        public List<IParseExpression> Values { get; }
         public Token LeftBracket { get; }
         public Token RightBracket { get; }
 
-        public CreateArray(List<ParameterValue> values, Token leftBracket, Token rightBracket)
+        public CreateArray(List<IParseExpression> values, Token leftBracket, Token rightBracket)
         {
             Values = values;
             LeftBracket = leftBracket;
@@ -267,31 +340,33 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         }
     }
 
-    public class NullExpression : IParseExpression
+    public class NullExpression : Node, IParseExpression
     {
         public Token Token { get; }
 
         public NullExpression(Token token)
         {
             Token = token;
+            Range = Token.Range;
         }
 
         public override string ToString() => "null";
     }
 
-    public class ThisExpression : IParseExpression
+    public class ThisExpression : Node, IParseExpression
     {
         public Token Token { get; }
 
         public ThisExpression(Token token)
         {
             Token = token;
+            Range = Token.Range;
         }
 
         public override string ToString() => "this";
     }
 
-    public class ExpressionGroup : IParseExpression
+    public class ExpressionGroup : Node, IParseExpression
     {
         public IParseExpression Expression { get; }
         public Token Left { get; }
@@ -305,7 +380,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         }
     }
 
-    public class TypeCast : IParseExpression
+    public class TypeCast : Node, IParseExpression
     {
         public ParseType Type { get; }
         public IParseExpression Expression { get; }
@@ -320,19 +395,22 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
     }
 
     // Statements
-    public class ExpressionStatement : IParseStatement
+    public class ExpressionStatement : Node, IParseStatement
     {
         public IParseExpression Expression { get; }
+        public Token ActionComment { get; }
 
-        public ExpressionStatement(IParseExpression expression)
+        public ExpressionStatement(IParseExpression expression, Token actionComment)
         {
             Expression = expression;
+            ActionComment = actionComment;
+            Range = expression.Range;
         }
 
         public override string ToString() => Expression.ToString();
     }
 
-    public class Block : IParseStatement
+    public class Block : Node, IParseStatement
     {
         public List<IParseStatement> Statements { get; }
 
@@ -344,23 +422,25 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public override string ToString() => "block [" + Statements.Count + " statements]";
     }
 
-    public class Assignment : IParseStatement
+    public class Assignment : Node, IParseStatement, ICommentableStatement
     {
         public IParseExpression VariableExpression { get; }
         public Token AssignmentToken { get; }
         public IParseExpression Value { get; }
+        public Token ActionComment { get; }
 
-        public Assignment(IParseExpression variableExpression, Token assignmentToken, IParseExpression value)
+        public Assignment(IParseExpression variableExpression, Token assignmentToken, IParseExpression value, Token actionComment)
         {
             VariableExpression = variableExpression;
             AssignmentToken = assignmentToken;
             Value = value;
+            ActionComment = actionComment;
         }
 
         public override string ToString() => VariableExpression.ToString() + " " + AssignmentToken.Text + " " + Value.ToString();
     }
 
-    public class Return : IParseStatement
+    public class Return : Node, IParseStatement
     {
         public Token Token { get; }
         public IParseExpression Expression { get; }
@@ -374,17 +454,17 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public override string ToString() => "return " + Expression.ToString();
     }
 
-    public class Continue : IParseStatement
+    public class Continue : Node, IParseStatement
     {
         public override string ToString() => "continue";
     }
 
-    public class Break : IParseStatement
+    public class Break : Node, IParseStatement
     {
         public override string ToString() => "break";
     }
 
-    public class If : IParseStatement
+    public class If : Node, IParseStatement
     {
         public IParseExpression Expression { get; }
         public IParseStatement Statement { get; }
@@ -401,7 +481,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
     }
 
     // ElseIf inherits 'IParseStatement' in the case of an 'else if' without an 'if'.
-    public class ElseIf : IParseStatement
+    public class ElseIf : Node, IParseStatement
     {
         public IParseExpression Expression { get; }
         public IParseStatement Statement { get; }
@@ -414,7 +494,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
     }
 
     // Else inherits 'IParseStatement' in the case of an 'else' without an 'if' or 'else if'.
-    public class Else : IParseStatement
+    public class Else : Node, IParseStatement
     {
         public IParseStatement Statement { get; }
 
@@ -424,7 +504,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         }
     }
 
-    public class For : IParseStatement
+    public class For : Node, IParseStatement
     {
         public IParseStatement Initializer { get; }
         public IParseExpression Condition { get; }
@@ -440,7 +520,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         }
     }
 
-    public class While : IParseStatement
+    public class While : Node, IParseStatement
     {
         public IParseExpression Condition { get; }
         public IParseStatement Statement { get; }
@@ -452,23 +532,27 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         }
     }
 
-    public class Declaration : IParseStatement
+    public class Declaration : Node, IParseStatement, IDeclaration
     {
+        public AttributeTokens Attributes { get; }
         public ParseType Type { get; }
         public Token Identifier { get; }
-        public Token Assignment { get; }
+        public Token ValueToken { get; }
         public IParseExpression InitialValue { get; }
+        public bool IsMacro { get; }
 
-        public Declaration(ParseType type, Token identifier, Token assignment, IParseExpression initialValue)
+        public Declaration(AttributeTokens attributes, ParseType type, Token identifier, Token valueToken, IParseExpression initialValue, bool isMacro)
         {
+            Attributes = attributes;
             Type = type;
             Identifier = identifier;
-            Assignment = assignment;
+            ValueToken = valueToken;
             InitialValue = initialValue;
+            IsMacro = isMacro;
         }
     }
 
-    public class Increment : IParseStatement
+    public class Increment : Node, IParseStatement
     {
         public IParseExpression VariableExpression { get; }
         public bool Decrement { get; }
@@ -482,6 +566,22 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public override string ToString() => VariableExpression.ToString() + (Decrement ? "--" : "++");
     }
 
+    public class Delete : Node, IParseStatement
+    {
+        public IParseExpression Deleting { get; }
+
+        public Delete(IParseExpression deleting)
+        {
+            Deleting = deleting;
+        }
+    }
+
     // Errors
-    public class MissingElement : IParseExpression, IParseStatement {}
+    public class MissingElement : Node, IParseExpression, IParseStatement
+    {
+        public MissingElement(DocRange range)
+        {
+            Range = range;
+        }
+    }
 }

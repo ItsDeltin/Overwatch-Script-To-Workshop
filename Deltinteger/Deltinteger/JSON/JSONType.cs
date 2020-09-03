@@ -7,6 +7,7 @@ using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.Parse;
 using Deltin.Deltinteger.CustomMethods;
+using Deltin.Deltinteger.Compiler;
 using Newtonsoft.Json.Linq;
 using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
 using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItemKind;

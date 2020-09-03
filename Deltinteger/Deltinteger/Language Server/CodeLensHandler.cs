@@ -39,7 +39,7 @@ namespace Deltin.Deltinteger.LanguageServer
                             Name = lens.Command,
                             Arguments = lens.GetArguments()
                         },
-                        Range = lens.Range.ToLsRange()
+                        Range = lens.Range
                     });
             
             return finalLenses;

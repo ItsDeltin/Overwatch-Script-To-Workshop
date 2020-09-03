@@ -34,10 +34,7 @@ namespace Deltin.Deltinteger.Parse
         {
         }
 
-        public IToken NextToken(ITerminalNode token)
-        {
-            return Tokens[token.Symbol.TokenIndex + 1];
-        }
+        public Token NextToken(Token token) => Document.Lexer.Tokens[Document.Lexer.Tokens.IndexOf(token) + 1];
 
         public void AddCompletionRange(CompletionRange completionRange)
         {

@@ -3,13 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.LanguageServer;
+using Deltin.Deltinteger.Compiler;
+using Deltin.Deltinteger.Compiler.SyntaxTree;
 
 namespace Deltin.Deltinteger.Parse
 {
     public class DefinedMethod : DefinedFunction
     {
         /// <summary>The context of the function.</summary>
-        public DeltinScriptParser.Define_methodContext Context { get; }
+        public FunctionContext Context { get; }
 
         // Attributes
         /// <summary>Determines if the function is a subroutine.</summary>
@@ -32,14 +34,14 @@ namespace Deltin.Deltinteger.Parse
         public SubroutineInfo subroutineInfo { get; private set; }
         private readonly bool _subroutineDefaultGlobal;
 
-        public DefinedMethod(ParseInfo parseInfo, Scope objectScope, Scope staticScope, DeltinScriptParser.Define_methodContext context, CodeType containingType)
-            : base(parseInfo, context.name.Text, new Location(parseInfo.Script.Uri, DocRange.GetRange(context.name)))
+        public DefinedMethod(ParseInfo parseInfo, Scope objectScope, Scope staticScope, FunctionContext context, CodeType containingType)
+            : base(parseInfo, context.Identifier.Text, new Location(parseInfo.Script.Uri, context.Identifier.Range))
         {
             this.Context = context;
 
             Attributes.ContainingType = containingType;
 
-            DocRange nameRange = DocRange.GetRange(context.name);
+            DocRange nameRange = context.Identifier.Range;
 
             // Get the attributes.
             MethodAttributeAppender attributeResult = new MethodAttributeAppender(Attributes);
@@ -57,23 +59,23 @@ namespace Deltin.Deltinteger.Parse
             methodScope.MethodContainer = true;
 
             // Get the type.
-            if (context.VOID() == null)
+            if (!context.Type.IsVoid)
             {
                 DoesReturnValue = true;
-                ReturnType = CodeType.GetCodeTypeFromContext(parseInfo, context.code_type());
+                ReturnType = CodeType.GetCodeTypeFromContext(parseInfo, context.Type);
             }
 
             // Setup the parameters and parse the block.
             if (!IsSubroutine)
-                SetupParameters(context.setParameters(), false);
+                SetupParameters(context.Parameters, false);
             else
             {
-                _subroutineDefaultGlobal = context.PLAYER() == null;
+                _subroutineDefaultGlobal = context.PlayerVar == null;
                 Attributes.Parallelable = true;
                 parseInfo.TranslateInfo.AddSubroutine(this);
 
                 // Subroutines should not have parameters.
-                SetupParameters(context.setParameters(), true);
+                SetupParameters(context.Parameters, true);
             }
 
             // Override attribute.
@@ -102,14 +104,11 @@ namespace Deltin.Deltinteger.Parse
             if (Attributes.IsOverrideable && AccessLevel == AccessLevel.Private)
                 parseInfo.Script.Diagnostics.Error("A method marked as virtual or abstract must have the protection level 'public' or 'protected'.", nameRange);
 
-            // Syntax error if the block is missing.
-            if (context.block() == null) parseInfo.Script.Diagnostics.Error("Expected block.", nameRange);
-
             // Add to the scope. Check for conflicts if the method is not overriding.
             containingScope.AddMethod(this, parseInfo.Script.Diagnostics, nameRange, !Attributes.Override);
 
             // Add the hover info.
-            parseInfo.Script.AddHover(DocRange.GetRange(context.name), GetLabel(true));
+            parseInfo.Script.AddHover(nameRange, GetLabel(true));
 
             if (Attributes.IsOverrideable)
                 parseInfo.Script.AddCodeLensRange(new ImplementsCodeLensRange(this, parseInfo.Script, CodeLensSourceType.Function, nameRange));
@@ -120,27 +119,25 @@ namespace Deltin.Deltinteger.Parse
         // Sets up the method's block.
         public override void SetupBlock()
         {
-            if (Context.block() != null)
-            {
-                Block = new BlockAction(parseInfo.SetCallInfo(CallInfo), methodScope.Child(), Context.block());
+            Block = new BlockAction(parseInfo.SetCallInfo(CallInfo), methodScope.Child(), Context.Block);
 
-                // Validate returns.
-                BlockTreeScan validation = new BlockTreeScan(DoesReturnValue, parseInfo, this);
-                validation.ValidateReturns();
-                MultiplePaths = validation.MultiplePaths;
+            // Validate returns.
+            BlockTreeScan validation = new BlockTreeScan(DoesReturnValue, parseInfo, this);
+            validation.ValidateReturns();
+            MultiplePaths = validation.MultiplePaths;
 
-                // If there is only one return statement, set SingleReturnValue.
-                if (validation.Returns.Length == 1) SingleReturnValue = validation.Returns[0].ReturningValue;
+            // If there is only one return statement, set SingleReturnValue.
+            if (validation.Returns.Length == 1) SingleReturnValue = validation.Returns[0].ReturningValue;
 
-                // If the return type is a constant type...
-                if (ReturnType != null && ReturnType.IsConstant())
-                    // ... iterate through each return statement ...
-                    foreach (ReturnAction returnAction in validation.Returns)
-                        // ... If the current return statement returns a value and that value does not implement the return type ...
-                        if (returnAction.ReturningValue != null && (returnAction.ReturningValue.Type() == null || !returnAction.ReturningValue.Type().Implements(ReturnType)))
-                            // ... then add a syntax error.
-                            parseInfo.Script.Diagnostics.Error("Must return a value of type '" + ReturnType.GetName() + "'.", returnAction.ErrorRange);
-            }
+            // If the return type is a constant type...
+            if (ReturnType != null && ReturnType.IsConstant())
+                // ... iterate through each return statement ...
+                foreach (ReturnAction returnAction in validation.Returns)
+                    // ... If the current return statement returns a value and that value does not implement the return type ...
+                    if (returnAction.ReturningValue != null && (returnAction.ReturningValue.Type() == null || !returnAction.ReturningValue.Type().Implements(ReturnType)))
+                        // ... then add a syntax error.
+                        parseInfo.Script.Diagnostics.Error("Must return a value of type '" + ReturnType.GetName() + "'.", returnAction.ErrorRange);
+            
             WasApplied = true;
             foreach (var listener in listeners) listener.Applied();
         }

@@ -115,8 +115,8 @@ namespace Deltin.Deltinteger.Parse
                     else if (_trailingSeperator != null)
                     {
                         range = new DocRange(
-                            DocRange.GetRange(_trailingSeperator).end,
-                            DocRange.GetRange(script.NextToken(_trailingSeperator)).start
+                            _trailingSeperator.Range.End,
+                            script.NextToken(_trailingSeperator).Range.Start
                         );
                     }
                     else continue;
@@ -213,6 +213,8 @@ namespace Deltin.Deltinteger.Parse
             return new ExpressionTreeParseResult(result, resultIndex, target, resultingVariable);
         }
     
+        public bool IsStatement() => Result.IsStatement();
+
         public static IExpression ResultingExpression(IExpression expression)
         {
             if (expression is ExpressionTree expressionTree) return expressionTree.Result;
@@ -259,7 +261,7 @@ namespace Deltin.Deltinteger.Parse
 
         public Scope GetScope() => _expression.ReturningScope();
         public IExpression GetExpression() => _expression;
-        public DocRange GetRange() => DocRange.GetRange(_expressionContext);
+        public DocRange GetRange() => _expressionContext.Range;
     }
 
     /// <summary>Functions in the expression tree.</summary>
@@ -280,7 +282,7 @@ namespace Deltin.Deltinteger.Parse
 
         public Scope GetScope() => _methodCall.ReturningScope();
         public IExpression GetExpression() => _methodCall;
-        public DocRange GetRange() => DocRange.GetRange(_methodContext.Identifier);
+        public DocRange GetRange() => _methodContext.Identifier.Range;
     }
 
     /// <summary>Variables or types in the expression tree.</summary>
@@ -295,7 +297,7 @@ namespace Deltin.Deltinteger.Parse
 
         public VariableOrTypePart(Identifier variable) {
             _variable = variable;
-            _range = DocRange.GetRange(_variable.Token);
+            _range = _variable.Token.Range;
             _name = variable.Token.Text;
         }
 
@@ -396,7 +398,7 @@ namespace Deltin.Deltinteger.Parse
             return scopeBatch;
         }
         public IExpression GetExpression() => _chosenPath?.GetExpression();
-        public DocRange GetRange() => DocRange.GetRange(_variable);
+        public DocRange GetRange() => _range;
 
         private readonly List<Action<IExpression>> _onResolve = new List<Action<IExpression>>();
         public void OnResolve(Action<IExpression> resolved) => _onResolve.Add(resolved);
@@ -425,10 +427,7 @@ namespace Deltin.Deltinteger.Parse
 
             public Scope GetScope() => _type.ReturningScope();
             public IExpression GetExpression() => _type;
-            public void Accept()
-            {
-                _type.Call(_parseInfo, _callRange);
-            }
+            public void Accept() => _type.Call(_parseInfo, _callRange);
         }
         class VariableOption : IPotentialPathOption
         {
