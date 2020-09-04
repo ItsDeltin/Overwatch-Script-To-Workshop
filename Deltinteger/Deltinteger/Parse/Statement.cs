@@ -27,11 +27,11 @@ namespace Deltin.Deltinteger.Parse
 
     public class PathInfo
     {
-        public BlockAction Block { get; }
+        public IStatement Block { get; }
         public DocRange ErrorRange { get; }
         public bool WillRun { get; }
 
-        public PathInfo(BlockAction block, DocRange errorRange, bool willRun)
+        public PathInfo(IStatement block, DocRange errorRange, bool willRun)
         {
             Block = block;
             ErrorRange = errorRange;

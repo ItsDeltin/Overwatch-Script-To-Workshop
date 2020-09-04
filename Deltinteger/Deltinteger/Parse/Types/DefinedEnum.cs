@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.Elements;
+using Deltin.Deltinteger.Compiler;
+using Deltin.Deltinteger.Compiler.SyntaxTree;
 using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
 using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItemKind;
 
@@ -14,38 +16,32 @@ namespace Deltin.Deltinteger.Parse
         private DeltinScript _translateInfo { get; }
 
 
-        public DefinedEnum(ParseInfo parseInfo, DeltinScriptParser.Enum_defineContext enumContext) : base(enumContext.name.Text)
+        public DefinedEnum(ParseInfo parseInfo, EnumContext enumContext) : base(enumContext.Identifier.Text)
         {
             CanBeExtended = false;
             CanBeDeleted = false;
             Kind = "enum";
 
+            // Check if a type with the same name already exists.
             if (parseInfo.TranslateInfo.Types.IsCodeType(Name))
-                parseInfo.Script.Diagnostics.Error($"A type with the name '{Name}' already exists.", DocRange.GetRange(enumContext.name));
+                parseInfo.Script.Diagnostics.Error($"A type with the name '{Name}' already exists.", enumContext.Identifier.Range);
             
             _translateInfo = parseInfo.TranslateInfo;
             Scope = new Scope("enum " + Name);
             
-            DefinedAt = new Location(parseInfo.Script.Uri, DocRange.GetRange(enumContext.name));
+            // Set location and symbol link.
+            DefinedAt = new Location(parseInfo.Script.Uri, enumContext.Identifier.Range);
             _translateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, DefinedAt, true);
 
-            List<DefinedEnumMember> members = new List<DefinedEnumMember>();
-
             // Get the enum members.
-            if (enumContext.firstMember != null)
+            var members = new DefinedEnumMember[enumContext.Values.Count];
+            for (int i = 0; i < members.Length; i++)
             {
-                var firstExpression = (enumContext.expr() != null) ? new ExpressionOrWorkshopValue(parseInfo.GetExpression(Scope, enumContext.expr())) : new ExpressionOrWorkshopValue(new V_Number(0));
-                members.Add(new DefinedEnumMember(parseInfo, this, enumContext.firstMember.Text, new Location(parseInfo.Script.Uri, DocRange.GetRange(enumContext.firstMember)), firstExpression));
-
-                if (enumContext.enum_element() != null)
-                    for (int i = 0; i < enumContext.enum_element().Length; i++)
-                    {
-                        var expression = enumContext.enum_element(i).expr() != null
-                            ? new ExpressionOrWorkshopValue(parseInfo.GetExpression(Scope, enumContext.enum_element(i).expr()))
-                            : new ExpressionOrWorkshopValue(new V_Number(i + 1));
-                        
-                        members.Add(new DefinedEnumMember(parseInfo, this, enumContext.enum_element(i).PART().GetText(), new Location(parseInfo.Script.Uri, DocRange.GetRange(enumContext.enum_element(i).PART())), expression));
-                    }
+                var expression = enumContext.Values[i].Value != null
+                    ? new ExpressionOrWorkshopValue(parseInfo.GetExpression(Scope, enumContext.Values[i].Value))
+                    : new ExpressionOrWorkshopValue(new V_Number(i));
+                
+                members[i] = new DefinedEnumMember(parseInfo, this, enumContext.Values[i].Identifier.Text, new Location(parseInfo.Script.Uri, enumContext.Values[i].Identifier.Range), expression);
             }
 
             foreach (var member in members) Scope.AddVariable(member, parseInfo.Script.Diagnostics, member.DefinedAt.range);

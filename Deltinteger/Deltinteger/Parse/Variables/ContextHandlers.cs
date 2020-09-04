@@ -8,11 +8,13 @@ namespace Deltin.Deltinteger.Parse
     class DefineContextHandler : IVarContextHandler
     {
         public ParseInfo ParseInfo { get; }
-        private readonly Declaration _defineContext;
+        private readonly VariableDeclaration _defineContext;
+        private readonly AttributeTokens _attributes;
 
-        public DefineContextHandler(ParseInfo parseInfo, Declaration defineContext)
+        public DefineContextHandler(ParseInfo parseInfo, VariableDeclaration defineContext)
         {
             _defineContext = defineContext;
+            _attributes = _defineContext.Attributes;
             ParseInfo = parseInfo;
         }
 
@@ -36,49 +38,38 @@ namespace Deltin.Deltinteger.Parse
             List<VarBuilderAttribute> attributes = new List<VarBuilderAttribute>();
 
             // Get the accessor.
-            if (_defineContext.accessor() != null)
-            {
-                DocRange accessorRange = DocRange.GetRange(_defineContext.accessor());
-
-                if (_defineContext.accessor().PUBLIC() != null)
-                    attributes.Add(new VarBuilderAttribute(AttributeType.Public, accessorRange));
-                else if (_defineContext.accessor().PRIVATE() != null)
-                    attributes.Add(new VarBuilderAttribute(AttributeType.Private, accessorRange));
-                else if (_defineContext.accessor().PROTECTED() != null)
-                    attributes.Add(new VarBuilderAttribute(AttributeType.Protected, accessorRange));
-            }
             
             // Get the static attribute.
-            if (_defineContext.STATIC() != null)
-                attributes.Add(new VarBuilderAttribute(AttributeType.Static, DocRange.GetRange(_defineContext.STATIC())));
+            if (_attributes.Static)
+                attributes.Add(new VarBuilderAttribute(AttributeType.Static, _attributes.Static.Range));
             
             // Get the globalvar attribute.
-            if (_defineContext.GLOBAL() != null)
-                attributes.Add(new VarBuilderAttribute(AttributeType.Globalvar, DocRange.GetRange(_defineContext.GLOBAL())));
+            if (_attributes.GlobalVar != null)
+                attributes.Add(new VarBuilderAttribute(AttributeType.Globalvar, _attributes.GlobalVar.Range));
             
             // Get the playervar attribute.
-            if (_defineContext.PLAYER() != null)
-                attributes.Add(new VarBuilderAttribute(AttributeType.Playervar, DocRange.GetRange(_defineContext.PLAYER())));
+            if (_attributes.PlayerVar != null)
+                attributes.Add(new VarBuilderAttribute(AttributeType.Playervar, _attributes.PlayerVar.Range));
             
             // Get the ref attribute.
-            if (_defineContext.REF() != null)
-                attributes.Add(new VarBuilderAttribute(AttributeType.Ref, DocRange.GetRange(_defineContext.REF())));
+            if (_attributes.Ref != null)
+                attributes.Add(new VarBuilderAttribute(AttributeType.Ref, _attributes.Ref.Range));
             
             // Get the ID attribute.
-            if (_defineContext.id != null)
-                attributes.Add(new IDAttribute(_defineContext.id));
+            if (_defineContext.ID != null)
+                attributes.Add(new IDAttribute(_defineContext.ID));
             
             // Get the extended attribute.
-            if (_defineContext.NOT() != null)
-                attributes.Add(new VarBuilderAttribute(AttributeType.Ext, DocRange.GetRange(_defineContext.NOT())));
+            if (_defineContext.Extended != null)
+                attributes.Add(new VarBuilderAttribute(AttributeType.Ext, _defineContext.Extended.Range));
             
             // Get the initial value.
-            if (_defineContext.expr() != null)
-                attributes.Add(new InitialValueAttribute(_defineContext.expr()));
+            if (_defineContext.InitialValue != null)
+                attributes.Add(new InitialValueAttribute(_defineContext.InitialValue));
             
             return attributes.ToArray();
         }
 
-        public DocRange GetTypeRange() => DocRange.GetRange(_defineContext.code_type());
+        public DocRange GetTypeRange() => _defineContext.Type.Range;
     }
 }

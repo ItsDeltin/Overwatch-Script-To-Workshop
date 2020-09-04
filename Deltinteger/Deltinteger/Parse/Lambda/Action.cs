@@ -25,33 +25,36 @@ namespace Deltin.Deltinteger.Parse.Lambda
         public CallInfo CallInfo { get; }
         public IRecursiveCallHandler RecursiveCallHandler { get; }
 
-        public LambdaAction(ParseInfo parseInfo, Scope scope, DeltinScriptParser.LambdaContext context)
+        public LambdaAction(ParseInfo parseInfo, Scope scope, LambdaExpression context)
         {
             Scope lambdaScope = scope.Child();
             RecursiveCallHandler = new LambdaRecursionHandler(this);
             CallInfo = new CallInfo(RecursiveCallHandler, parseInfo.Script);
 
             // Get the lambda parameters.
-            Parameters = new Var[context.define().Length];
+            Parameters = new Var[context.Parameters.Count];
             InvokedState = new SubLambdaInvoke[Parameters.Length];
             for (int i = 0; i < Parameters.Length; i++)
             {
                 InvokedState[i] = new SubLambdaInvoke();
                 // TODO: Make custom builder.
-                Parameters[i] = new ParameterVariable(lambdaScope, new DefineContextHandler(parseInfo, context.define(i)), InvokedState[i]);
+                Parameters[i] = new ParameterVariable(lambdaScope, new LambdaContextHandler(parseInfo, context.Parameters[i]), InvokedState[i]);
             }
             
+            // Get the types of the parameters.
             CodeType[] argumentTypes = Parameters.Select(arg => arg.CodeType).ToArray();
 
-            // context.block() will not be null if the lambda is a block.
+            // Get the statements.
+            var statement = parseInfo.GetStatement(scope, context.Statement);
+
             // () => {}
-            if (context.block() != null)
+            if (statement is Block block)
             {
                 // Parse the block.
-                Block = new BlockAction(parseInfo.SetCallInfo(CallInfo), lambdaScope, context.block());
+                Block = new BlockAction(parseInfo.SetCallInfo(CallInfo), lambdaScope, block);
 
                 // Validate the block.
-                BlockTreeScan validation = new BlockTreeScan(parseInfo, Block, "lambda", DocRange.GetRange(context.INS()));
+                BlockTreeScan validation = new BlockTreeScan(parseInfo, Block, "lambda", context.Arrow.Range);
                 validation.ValidateReturns();
 
                 if (validation.ReturnsValue)
@@ -64,18 +67,20 @@ namespace Deltin.Deltinteger.Parse.Lambda
             }
             // context.expr() will not be null if the lambda is an expression.
             // () => 2 * x
-            else if (context.expr() != null)
+            else if (statement is ExpressionStatement exprStatement)
             {
                 // Get the lambda expression.
-                Expression = parseInfo.SetCallInfo(CallInfo).GetExpression(lambdaScope, context.expr());
+                Expression = parseInfo.SetCallInfo(CallInfo).GetExpression(lambdaScope, exprStatement.Expression);
                 LambdaType = new MacroLambda(Expression.Type(), argumentTypes);
             }
+            // todo
+            else throw new NotImplementedException();
 
             // Add so the lambda can be recursive-checked.
             parseInfo.TranslateInfo.RecursionCheck(CallInfo);
 
             // Add hover info
-            parseInfo.Script.AddHover(DocRange.GetRange(context.INS()), new MarkupBuilder().StartCodeLine().Add(LambdaType.GetName()).EndCodeLine().ToString());
+            parseInfo.Script.AddHover(context.Arrow.Range, new MarkupBuilder().StartCodeLine().Add(LambdaType.GetName()).EndCodeLine().ToString());
         }
 
         public IWorkshopTree Parse(ActionSet actionSet) => this;

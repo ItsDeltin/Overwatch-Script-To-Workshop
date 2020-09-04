@@ -61,7 +61,7 @@ namespace Deltin.Deltinteger.Parse
         {
             switch (statementContext)
             {
-                case Declaration declare: {
+                case VariableDeclaration declare: {
                     var newVar = new ScopedVariable(scope, new DefineContextHandler(this, declare));
                     return new DefineAction(newVar);
                 }
@@ -70,12 +70,12 @@ namespace Deltin.Deltinteger.Parse
                 case If @if            : return new IfAction(this, scope, @if);
                 case While @while      : return new WhileAction(this, scope, @while);
                 case For @for          : return new ForAction(this, scope, @for);
-                case DeltinScriptParser.S_foreachContext s_foreach  : return new ForeachAction(this, scope, s_foreach.@foreach());
+                case Foreach @foreach  : return new ForeachAction(this, scope, @foreach);
                 case Return @return    : return new ReturnAction(this, scope, @return);
                 case Delete delete     : return new DeleteAction(this, scope, delete);
                 case Continue @continue: return new ContinueAction(this, @continue.Range);
                 case Break @break      : return new BreakAction(this, @break.Range);
-                case DeltinScriptParser.S_switchContext s_switch    : return new SwitchAction(this, scope, s_switch.@switch());
+                case Switch @switch    : return new SwitchAction(this, scope, @switch);
                 case Block @block      : return new BlockAction(this, scope, @block);
                 // Expression statements (functions, new)
                 case ExpressionStatement exprStatement:
@@ -112,8 +112,7 @@ namespace Deltin.Deltinteger.Parse
                 case NumberExpression number: return new NumberAction(Script, number);
                 case BooleanExpression boolean: return new BoolAction(Script, boolean.Value);
                 case NullExpression @null: return new NullAction();
-                case StringExpression @string: return new StringAction(this, @string.@string());
-                case DeltinScriptParser.E_formatted_stringContext formattedString: return new StringAction(this, scope, formattedString.formatted_string());
+                case StringExpression @string: return new StringAction(this, scope, @string);
                 case Identifier identifier: return GetVariable(scope, getter, identifier, selfContained);
                 case FunctionExpression method: return new CallMethodAction(this, scope, method, usedAsValue, getter);
                 case NewExpression newObject: return new CreateObjectAction(this, scope, newObject);
@@ -132,7 +131,7 @@ namespace Deltin.Deltinteger.Parse
                 case DeltinScriptParser.E_rootContext root: return new RootAction(this.TranslateInfo);
                 case DeltinScriptParser.E_baseContext @base: return new BaseAction(this, scope, @base);
                 case DeltinScriptParser.E_isContext @is: return new IsAction(this, scope, @is);
-                case DeltinScriptParser.E_lambdaContext lambda: return new Lambda.LambdaAction(this, scope, lambda.lambda());
+                case LambdaExpression lambda: return new Lambda.LambdaAction(this, scope, lambda);
                 // todo
                 case MissingElement missing: throw new NotImplementedException("Todo: missing IExpression");
                 default: throw new Exception($"Could not determine the expression type '{exprContext.GetType().Name}'.");
@@ -149,14 +148,14 @@ namespace Deltin.Deltinteger.Parse
         {
             // Get the variable name and range.
             string variableName = variableContext.Token.Text;
-            DocRange variableRange = DocRange.GetRange(variableContext.Token);
+            DocRange variableRange = variableContext.Token.Range;
 
             // Get the variable.
             IVariable element = scope.GetVariable(variableName, getter, Script.Diagnostics, variableRange);
             if (element == null) return null;
             
             // Additional syntax checking.
-            return new VariableApply(this).Apply(element, ExpressionIndexArray(getter, variableContext.array()), variableRange);
+            return new VariableApply(this).Apply(element, ExpressionIndexArray(getter, variableContext.Index), variableRange);
         }
 
         /// <summary>Gets an IExpression[] from a DeltinScriptParser.ArrayContext.</summary>
@@ -189,8 +188,16 @@ namespace Deltin.Deltinteger.Parse
 
             IScopeable newMacro = new DefinedMacro(this, objectScope, staticScope, macroContext, returnType);
 
-            #error todo
-            // newMacro = new MacroVar(this, objectScope, staticScope, macroContext, returnType);
+            TranslateInfo.ApplyBlock((IApplyBlock)newMacro);
+            return newMacro;
+        }
+
+        public IScopeable GetMacro(Scope objectScope, Scope staticScope, MacroVarDeclaration macroContext)
+        {
+            // Get the return type.
+            CodeType returnType = CodeType.GetCodeTypeFromContext(this, macroContext.Type);
+
+            IScopeable newMacro = new MacroVar(this, objectScope, staticScope, macroContext, returnType);
 
             TranslateInfo.ApplyBlock((IApplyBlock)newMacro);
             return newMacro;

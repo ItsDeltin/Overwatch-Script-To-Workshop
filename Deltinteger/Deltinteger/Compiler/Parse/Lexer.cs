@@ -228,6 +228,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
                     MatchSymbol(';', TokenType.Semicolon) ||
                     MatchSymbol('.', TokenType.Dot) ||
                     MatchSymbol('~', TokenType.Squiggle) ||
+                    MatchSymbol("=>", TokenType.Arrow) ||
                     MatchSymbol("!=", TokenType.NotEqual) ||
                     MatchSymbol("==", TokenType.EqualEqual) ||
                     MatchSymbol("<=", TokenType.LessThanOrEqual) ||
@@ -253,9 +254,12 @@ namespace Deltin.Deltinteger.Compiler.Parse
                     MatchSymbol('-', TokenType.Subtract) ||
                     MatchSymbol("&&", TokenType.And) ||
                     MatchSymbol("||", TokenType.Or) ||
+                    MatchSymbol('@', TokenType.At) ||
                     MatchKeyword("import", TokenType.Import) ||
                     MatchKeyword("for", TokenType.For) ||
                     MatchKeyword("while", TokenType.While) ||
+                    MatchKeyword("foreach", TokenType.Foreach) ||
+                    MatchKeyword("in", TokenType.In) ||
                     MatchKeyword("rule", TokenType.Rule) ||
                     MatchKeyword("disabled", TokenType.Disabled) ||
                     MatchKeyword("true", TokenType.True) ||
@@ -265,7 +269,11 @@ namespace Deltin.Deltinteger.Compiler.Parse
                     MatchKeyword("else", TokenType.Else) ||
                     MatchKeyword("break", TokenType.Break) ||
                     MatchKeyword("continue", TokenType.Continue) ||
+                    MatchKeyword("switch", TokenType.Switch) ||
+                    MatchKeyword("case", TokenType.Case) ||
+                    MatchKeyword("default", TokenType.Default) ||
                     MatchKeyword("class", TokenType.Class) ||
+                    MatchKeyword("enum", TokenType.Enum) ||
                     MatchKeyword("new", TokenType.New) ||
                     MatchKeyword("delete", TokenType.Delete) ||
                     MatchKeyword("define", TokenType.Define) ||
@@ -279,6 +287,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
                     MatchKeyword("recursive", TokenType.Recursive) ||
                     MatchKeyword("globalvar", TokenType.GlobalVar) ||
                     MatchKeyword("playervar", TokenType.PlayerVar) ||
+                    MatchKeyword("ref", TokenType.Ref) ||
                     MatchKeyword("this", TokenType.This) ||
                     MatchKeyword("as", TokenType.As) ||
                     MatchNumber() ||

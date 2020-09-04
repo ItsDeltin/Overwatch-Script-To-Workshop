@@ -30,13 +30,13 @@ namespace Deltin.Deltinteger.Parse
         private readonly IParseExpression _expressionToParse;
         private readonly Scope _scope;
         private readonly ParseInfo _parseInfo;
-        private readonly Declaration _context;
+        private readonly MacroVarDeclaration _context;
         private bool _wasApplied = false;
 
         public CallInfo CallInfo { get; }
         private readonly RecursiveCallHandler _recursiveCallHandler;
 
-        public MacroVar(ParseInfo parseInfo, Scope objectScope, Scope staticScope, Declaration macroContext, CodeType returnType)
+        public MacroVar(ParseInfo parseInfo, Scope objectScope, Scope staticScope, MacroVarDeclaration macroContext, CodeType returnType)
         {
             _context = macroContext;
 
@@ -51,7 +51,7 @@ namespace Deltin.Deltinteger.Parse
             _recursiveCallHandler = new RecursiveCallHandler(this);
             CallInfo = new CallInfo(_recursiveCallHandler, parseInfo.Script);
             ReturnType = returnType;
-            _expressionToParse = macroContext.InitialValue;
+            _expressionToParse = macroContext.Value;
             _scope = Static ? staticScope : objectScope;
             this._parseInfo = parseInfo;
 

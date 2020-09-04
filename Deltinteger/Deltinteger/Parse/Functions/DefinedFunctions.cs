@@ -53,7 +53,7 @@ namespace Deltin.Deltinteger.Parse
         public virtual void SetupParameters() {}
         public abstract void SetupBlock();
 
-        protected void SetupParameters(List<Declaration> context, bool subroutineParameter)
+        protected void SetupParameters(List<VariableDeclaration> context, bool subroutineParameter)
         {
             var parameterInfo = CodeParameter.GetParameters(parseInfo, methodScope, context, subroutineParameter);
             Parameters = parameterInfo.Parameters;

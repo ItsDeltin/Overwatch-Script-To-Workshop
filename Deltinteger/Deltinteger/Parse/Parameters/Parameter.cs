@@ -101,7 +101,7 @@ namespace Deltin.Deltinteger.Parse
                 RestrictedCalls.Add(restrictedCall.CallType);
         }
 
-        public static ParameterParseResult GetParameters(ParseInfo parseInfo, Scope methodScope, List<Declaration> context, bool subroutineParameter)
+        public static ParameterParseResult GetParameters(ParseInfo parseInfo, Scope methodScope, List<VariableDeclaration> context, bool subroutineParameter)
         {
             if (context == null) return new ParameterParseResult(new CodeParameter[0], new Var[0]);
 

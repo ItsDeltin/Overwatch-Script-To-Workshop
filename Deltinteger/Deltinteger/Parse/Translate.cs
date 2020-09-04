@@ -159,8 +159,11 @@ namespace Deltin.Deltinteger.Parse
                     // Macro function
                     else if (declaration is MacroFunctionContext macroFunction)
                         parseInfo.GetMacro(RulesetScope, RulesetScope, macroFunction);
+                    // Macro var
+                    else if (declaration is MacroVarDeclaration macroVar)
+                        parseInfo.GetMacro(RulesetScope, RulesetScope, macroVar);
                     // Variables
-                    else if (declaration is Declaration variable)
+                    else if (declaration is VariableDeclaration variable)
                     {
                         Var newVar = new RuleLevelVariable(RulesetScope, new DefineContextHandler(new ParseInfo(script, this), variable));
                         rulesetVariables.Add(newVar);

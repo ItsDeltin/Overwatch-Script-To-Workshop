@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.LanguageServer;
+using Deltin.Deltinteger.Compiler;
+using Deltin.Deltinteger.Compiler.SyntaxTree;
 using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
 using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItemKind;
 
@@ -12,19 +14,19 @@ namespace Deltin.Deltinteger.Parse
     {
         public Location DefinedAt { get; }
 
-        private readonly ParseInfo parseInfo;
-        private readonly DeltinScriptParser.Type_defineContext typeContext;
+        private readonly ParseInfo _parseInfo;
+        private readonly ClassContext _typeContext;
         private readonly List<Var> staticVariables = new List<Var>();
 
-        public DefinedType(ParseInfo parseInfo, Scope scope, DeltinScriptParser.Type_defineContext typeContext) : base(typeContext.name.Text)
+        public DefinedType(ParseInfo parseInfo, Scope scope, ClassContext typeContext) : base(typeContext.name.Text)
         {
-            this.typeContext = typeContext;
-            this.parseInfo = parseInfo;
+            this._typeContext = typeContext;
+            this._parseInfo = parseInfo;
 
             if (parseInfo.TranslateInfo.Types.IsCodeType(Name))
-                parseInfo.Script.Diagnostics.Error($"A type with the name '{Name}' already exists.", DocRange.GetRange(typeContext.name));
+                parseInfo.Script.Diagnostics.Error($"A type with the name '{Name}' already exists.", typeContext.Identifier.Range);
             
-            DefinedAt = new LanguageServer.Location(parseInfo.Script.Uri, DocRange.GetRange(typeContext.name));
+            DefinedAt = new LanguageServer.Location(parseInfo.Script.Uri, typeContext.Identifier.Range);
             parseInfo.TranslateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, DefinedAt, true);
         }
 
@@ -33,112 +35,100 @@ namespace Deltin.Deltinteger.Parse
             if (elementsResolved) return;
 
             // Get the type being extended.
-            if (typeContext.TERNARY_ELSE() != null)
+            // This is an array for future interface support.
+            if (_typeContext.Inheriting.Count > 0)
             {
-                // If there is no type name, error.
-                if (typeContext.extends == null)
-                    parseInfo.Script.Diagnostics.Error("Expected type name.", DocRange.GetRange(typeContext.TERNARY_ELSE()));
-                else
+                var inheritToken = _typeContext.Inheriting[0];
+
+                // Get the type being inherited.
+                CodeType inheriting = _parseInfo.TranslateInfo.Types.GetCodeType(inheritToken.Text, _parseInfo.Script.Diagnostics, inheritToken.Range);
+
+                // GetCodeType will return null if the type is not found.
+                if (inheriting != null)
                 {
-                    // Get the type being inherited.
-                    CodeType inheriting = parseInfo.TranslateInfo.Types.GetCodeType(typeContext.extends.Text, parseInfo.Script.Diagnostics, DocRange.GetRange(typeContext.extends));
+                    inheriting.Call(_parseInfo, inheritToken.Range);
 
-                    // GetCodeType will return null if the type is not found.
-                    if (inheriting != null)
-                    {
-                        inheriting.Call(parseInfo, DocRange.GetRange(typeContext.extends));
-
-                        Inherit(inheriting, parseInfo.Script.Diagnostics, DocRange.GetRange(typeContext.extends));
-                        (Extends as ClassType)?.ResolveElements();
-                    }
+                    Inherit(inheriting, _parseInfo.Script.Diagnostics, inheritToken.Range);
+                    (Extends as ClassType)?.ResolveElements();
                 }
             }
 
             base.ResolveElements();
 
-            // Give DefinedMethod and GetMacro a scope to use in case of the static attribute.
-            foreach (var definedMethod in typeContext.define_method())
+            // Get the declarations.
+            foreach (var declaration in _typeContext.Declarations)
             {
-                var newMethod = new DefinedMethod(parseInfo, operationalScope, staticScope, definedMethod, this);
+                IScopeable scopeable;
 
-                // Copy to serving scopes.
-                if (newMethod.Static) operationalScope.CopyMethod(newMethod);
-                else serveObjectScope.CopyMethod(newMethod);
-            }
+                // Function
+                if (declaration is FunctionContext function)
+                    scopeable = new DefinedMethod(_parseInfo, operationalScope, staticScope, function, this);
+                // Macro function
+                else if (declaration is MacroFunctionContext macroFunction)
+                    scopeable = _parseInfo.GetMacro(operationalScope, staticScope, macroFunction);
+                // Variable
+                else if (declaration is VariableDeclaration variable)
+                    scopeable = new ClassVariable(operationalScope, staticScope, new DefineContextHandler(_parseInfo, variable)).GetVar();
+                // Macro variable
+                else if (declaration is MacroVarDeclaration macroVar)
+                    scopeable = _parseInfo.GetMacro(operationalScope, staticScope, macroVar);
+                // Unknown
+                else throw new NotImplementedException(declaration.GetType().ToString());
 
-            // Get the macros.
-            foreach (var macroContext in typeContext.define_macro())
-            {
-                var newMacro = parseInfo.GetMacro(operationalScope, staticScope, macroContext);
-
-                // Copy to serving scopes.
-                if (newMacro is IMethod asMethod)
+                // Add the object variable if it is an IIndexReferencer.
+                if (scopeable is IIndexReferencer referencer)
+                    AddObjectVariable(referencer);
+                
+                // Copy to scopes.
+                // Method copy
+                if (scopeable is IMethod method)
                 {
-                    if (newMacro.Static) operationalScope.CopyMethod(asMethod);
-                    else serveObjectScope.CopyMethod(asMethod);
+                    if (method.Static) operationalScope.CopyMethod(method);
+                    else serveObjectScope.CopyMethod(method);
                 }
-                else
+                // Variable copy
+                else if (scopeable is IVariable variable)
                 {
-                    if (newMacro.Static) operationalScope.CopyVariable((IVariable)newMacro);
-                    else serveObjectScope.CopyVariable((IVariable)newMacro);
+                    if (scopeable.Static) operationalScope.CopyVariable(variable);
+                    else serveObjectScope.CopyVariable(variable);
                 }
-            }
-
-            // Get the variables defined in the type.
-            foreach (var definedVariable in typeContext.define())
-            {
-                Var newVar = new ClassVariable(operationalScope, staticScope, new DefineContextHandler(parseInfo, definedVariable));
-
-                // Copy to serving scopes.
-                if (!newVar.Static)
-                {
-                    AddObjectVariable(newVar);
-                }
-                // Add to static scope.
-                else
-                {
-                    staticVariables.Add(newVar);
-                    staticScope.CopyVariable(newVar);
-                    operationalScope.CopyVariable(newVar);
-                }
+                else throw new NotImplementedException();
             }
 
             // Get the constructors.
-            if (typeContext.constructor().Length > 0)
+            if (_typeContext.constructor().Length > 0)
             {
-                Constructors = new Constructor[typeContext.constructor().Length];
+                Constructors = new Constructor[_typeContext.constructor().Length];
                 for (int i = 0; i < Constructors.Length; i++)
-                {
-                    Constructors[i] = new DefinedConstructor(parseInfo, operationalScope, this, typeContext.constructor(i));
-                }
+                    Constructors[i] = new DefinedConstructor(_parseInfo, operationalScope, this, _typeContext.constructor(i));
             }
             else
             {
                 // If there are no constructors, create a default constructor.
                 Constructors = new Constructor[] {
-                    new Constructor(this, new Location(parseInfo.Script.Uri, DocRange.GetRange(typeContext.name)), AccessLevel.Public)
+                    new Constructor(this, new Location(_parseInfo.Script.Uri, _typeContext.InheritToken.Range), AccessLevel.Public)
                 };
             }
 
             // If the extend token exists, add completion that only contains all extendable classes.
-            if (typeContext.TERNARY_ELSE() != null)
-                parseInfo.Script.AddCompletionRange(new CompletionRange(
+            if (_typeContext.InheritToken != null)
+                _parseInfo.Script.AddCompletionRange(new CompletionRange(
                     // Get the completion items of all types.
-                    parseInfo.TranslateInfo.Types.AllTypes
+                    _parseInfo.TranslateInfo.Types.AllTypes
                         .Where(t => t is ClassType ct && ct.CanBeExtended)
                         .Select(t => t.GetCompletion())
                         .ToArray(),
                     // Get the completion range.
-                    DocRange.GetRange(typeContext.TERNARY_ELSE(), parseInfo.Script.NextToken(typeContext.TERNARY_ELSE())),
+                    _typeContext.InheritToken.Range.End + _parseInfo.Script.NextToken(_typeContext.InheritToken).Range.Start,
                     // This completion takes priority.
                     CompletionRangeKind.ClearRest
                 ));
-            parseInfo.Script.AddCodeLensRange(new ReferenceCodeLensRange(this, parseInfo, CodeLensSourceType.Type, DefinedAt.range));
+            _parseInfo.Script.AddCodeLensRange(new ReferenceCodeLensRange(this, _parseInfo, CodeLensSourceType.Type, DefinedAt.range));
         }
 
         protected override void BaseScopes(string scopeName)
         {
-            Scope global = parseInfo.TranslateInfo.GlobalScope;
+            Scope global = _parseInfo.TranslateInfo.GlobalScope;
 
             staticScope = global.Child(scopeName);
             operationalScope = global.Child(scopeName);
@@ -169,7 +159,7 @@ namespace Deltin.Deltinteger.Parse
         }
         public void AddLink(LanguageServer.Location location)
         {
-            parseInfo.TranslateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, location);
+            _parseInfo.TranslateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, location);
         }
     }    
 }

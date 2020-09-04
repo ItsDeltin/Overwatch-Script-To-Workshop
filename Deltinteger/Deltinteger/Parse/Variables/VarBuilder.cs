@@ -227,9 +227,9 @@ namespace Deltin.Deltinteger.Parse
     {
         public int ID { get; }
 
-        public IDAttribute(NumberExpression context) : base(AttributeType.ID, context.Range)
+        public IDAttribute(Token numberToken) : base(AttributeType.ID, numberToken.Range)
         {
-            ID = (int)context.Value;
+            ID = int.Parse(numberToken.Text);
         }
 
         public override void Apply(VarInfo varInfo)

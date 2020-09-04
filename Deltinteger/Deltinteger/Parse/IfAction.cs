@@ -28,14 +28,14 @@ namespace Deltin.Deltinteger.Parse
             Block = parseInfo.GetStatement(scope, ifContext.Statement);
             
             // Add the if block path info.
-            paths.Add(new PathInfo(Block, DocRange.GetRange(ifContext.IF()), false));
+            paths.Add(new PathInfo(Block, ifContext.Range, false));
 
             // Get the else-ifs.
             ElseIfs = new ElseIfAction[ifContext.ElseIfs.Count];
             for (int i = 0; i < ElseIfs.Length; i++)
             {
                 ElseIfs[i] = new ElseIfAction(parseInfo, scope, ifContext.ElseIfs[i]);
-                paths.Add(new PathInfo(Block, DocRange.GetRange(ifContext.else_if(i).ELSE(), ifContext.else_if(i).IF()), false));
+                paths.Add(new PathInfo(Block, ifContext.Range, false));
             }
 
             // If there is an else statement, get the else block.
@@ -44,7 +44,7 @@ namespace Deltin.Deltinteger.Parse
                 ElseBlock = parseInfo.GetStatement(scope, ifContext.Else.Statement);
                 
                 // Add the else path info.
-                paths.Add(new PathInfo(ElseBlock, DocRange.GetRange(ifContext.@else().ELSE()), true));
+                paths.Add(new PathInfo(ElseBlock, ifContext.Range, true));
             }
             Paths = paths.ToArray();
         }

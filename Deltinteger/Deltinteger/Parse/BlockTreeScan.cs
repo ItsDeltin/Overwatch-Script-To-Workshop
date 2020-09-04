@@ -67,23 +67,31 @@ namespace Deltin.Deltinteger.Parse
             getReturns(returns, Block);
             return returns.ToArray();
 
-            void getReturns(List<ReturnAction> actions, BlockAction block)
+            void getReturns(List<ReturnAction> actions, IStatement block)
             {
                 // Loop through each statement in the block.
-                foreach (var statement in block.Statements)
-                    // If the current statement is a return statement, add it to the list.
-                    if (statement is ReturnAction returnAction)
-                    {
-                        actions.Add(returnAction);
+                if (block is BlockAction action)
+                    foreach (var statement in action.Statements)
+                        // If the current statement is a return statement, add it to the list.
+                        if (statement is ReturnAction returnAction)
+                        {
+                            actions.Add(returnAction);
 
-                        if (returnAction.ReturningValue != null && ReturnType == null)
-                            ReturnType = returnAction.ReturningValue.Type();
-                    }
+                            if (returnAction.ReturningValue != null && ReturnType == null)
+                                ReturnType = returnAction.ReturningValue.Type();
+                        }
 
-                    // If the current statement contains sub-blocks, get the return statements in those blocks recursively.
-                    else if (statement is IBlockContainer)
-                        foreach (var path in ((IBlockContainer)statement).GetPaths())
-                            getReturns(actions, path.Block);
+                        // If the current statement contains sub-blocks, get the return statements in those blocks recursively.
+                        else if (statement is IBlockContainer)
+                            foreach (var path in ((IBlockContainer)statement).GetPaths())
+                                getReturns(actions, path.Block);
+                else if (block is ReturnAction singleReturn)
+                {
+                    actions.Add(singleReturn);
+
+                    if (singleReturn.ReturningValue != null && ReturnType == null)
+                        ReturnType = singleReturn.ReturningValue.Type();
+                }
             }
         }
         
@@ -92,26 +100,27 @@ namespace Deltin.Deltinteger.Parse
         {
             bool blockReturns = false;
             // Check the statements backwards.
-            for (int i = path.Block.Statements.Length - 1; i >= 0; i--)
-            {
-                if (path.Block.Statements[i] is ReturnAction)
+            if (path.Block is BlockAction action)
+                for (int i = action.Statements.Length - 1; i >= 0; i--)
                 {
-                    blockReturns = true;
-                    break;
-                }
-                
-                if (path.Block.Statements[i] is IBlockContainer)
-                {
-                    // If any of the paths in the block container has WillRun set to true,
-                    // set blockReturns to true. The responsibility of checking if this
-                    // block will run is given to the block container.
-                    if (((IBlockContainer)path.Block.Statements[i]).GetPaths().Any(containerPath => containerPath.WillRun))
+                    if (action.Statements[i] is ReturnAction)
+                    {
                         blockReturns = true;
+                        break;
+                    }
+                    
+                    if (action.Statements[i] is IBlockContainer)
+                    {
+                        // If any of the paths in the block container has WillRun set to true,
+                        // set blockReturns to true. The responsibility of checking if this
+                        // block will run is given to the block container.
+                        if (((IBlockContainer)action.Statements[i]).GetPaths().Any(containerPath => containerPath.WillRun))
+                            blockReturns = true;
 
-                    CheckContainer((IBlockContainer)path.Block.Statements[i]);
-                    break;
+                        CheckContainer((IBlockContainer)action.Statements[i]);
+                        break;
+                    }
                 }
-            }
             if (!blockReturns)
                 _parseInfo.Script.Diagnostics.Error("Path does not return a value.", path.ErrorRange);
         }

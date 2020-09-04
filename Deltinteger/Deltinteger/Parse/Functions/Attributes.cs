@@ -33,6 +33,7 @@ namespace Deltin.Deltinteger.Parse
             CheckAttribute(diagnostics, context.Protected, MethodAttributeType.Protected);
             CheckAttribute(diagnostics, context.Public, MethodAttributeType.Public);
             CheckAttribute(diagnostics, context.Recursive, MethodAttributeType.Recursive);
+            CheckAttribute(diagnostics, context.Ref, MethodAttributeType.Ref);
             CheckAttribute(diagnostics, context.Static, MethodAttributeType.Static);
             CheckAttribute(diagnostics, context.Virtual, MethodAttributeType.Virtual);
         }
@@ -137,6 +138,7 @@ namespace Deltin.Deltinteger.Parse
     {
         GlobalVar,
         PlayerVar,
+        Ref,
         Public,
         Private,
         Protected,
@@ -196,7 +198,7 @@ namespace Deltin.Deltinteger.Parse
 
         protected override AttributeTokens GetAttributeContext() => Context.Attributes;
         protected override string GetSubroutineName() => Context.Subroutine?.Text.RemoveQuotes();
-        protected override MethodAttributeType[] DisallowAttributes() => new MethodAttributeType[] { MethodAttributeType.GlobalVar, MethodAttributeType.PlayerVar };
+        protected override MethodAttributeType[] DisallowAttributes() => new MethodAttributeType[] { MethodAttributeType.GlobalVar, MethodAttributeType.PlayerVar, MethodAttributeType.Ref };
     }
 
     // Attribute handler for defined macros
@@ -211,6 +213,6 @@ namespace Deltin.Deltinteger.Parse
 
         protected override AttributeTokens GetAttributeContext() => Declaration.Attributes;
         protected override string GetSubroutineName() => null;
-        protected override MethodAttributeType[] DisallowAttributes() => new MethodAttributeType[] { MethodAttributeType.Recursive, MethodAttributeType.GlobalVar, MethodAttributeType.PlayerVar };
+        protected override MethodAttributeType[] DisallowAttributes() => new MethodAttributeType[] { MethodAttributeType.Recursive, MethodAttributeType.GlobalVar, MethodAttributeType.PlayerVar, MethodAttributeType.Ref };
     }
 }

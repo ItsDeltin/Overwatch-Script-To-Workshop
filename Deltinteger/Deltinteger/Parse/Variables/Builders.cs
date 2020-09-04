@@ -158,7 +158,7 @@ namespace Deltin.Deltinteger.Parse
             CodeType type = CodeType.GetCodeTypeFromContext(_parseInfo, context);
             
             if (type != null && type.IsConstant())
-                _diagnostics.Error($"Constant types cannot be used in subroutine parameters.", DocRange.GetRange(context));
+                _diagnostics.Error($"Constant types cannot be used in subroutine parameters.", context.Range);
             
             _varInfo.Type = type;
         }
