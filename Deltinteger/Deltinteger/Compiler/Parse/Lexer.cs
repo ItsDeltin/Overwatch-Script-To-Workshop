@@ -217,6 +217,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
                 bool matched =
                     MatchComment() ||
+                    MatchNumber() ||
                     MatchSymbol('{', TokenType.CurlyBracket_Open) ||
                     MatchSymbol('}', TokenType.CurlyBracket_Close) ||
                     MatchSymbol('(', TokenType.Parentheses_Open) ||
@@ -290,7 +291,6 @@ namespace Deltin.Deltinteger.Compiler.Parse
                     MatchKeyword("ref", TokenType.Ref) ||
                     MatchKeyword("this", TokenType.This) ||
                     MatchKeyword("as", TokenType.As) ||
-                    MatchNumber() ||
                     MatchIdentifier() ||
                     MatchString();
                 
@@ -591,15 +591,16 @@ namespace Deltin.Deltinteger.Compiler.Parse
             Current = startingTokenIndex;
             _tokens = list;
             _stopMinimum = stopMinimum;
-            _endToken = _tokens[_stopMinimum];
+            if (_stopMinimum < _tokens.Count)
+                _endToken = _tokens[_stopMinimum];
         }
         public void PushToken(Token token)
         {
-            if(!(_lastInsertWasEqual = Current > _stopMinimum && Current < _tokens.Count && _tokens[Current].TokenType == token.TokenType && _tokens[Current].Text == token.Text))
+            if(!(_lastInsertWasEqual = Current >= _tokens.IndexOf(_endToken) && Current < _tokens.Count && _tokens[Current].TokenType == token.TokenType && _tokens[Current].Text == token.Text))
             {
                 if (Current == _tokens.Count)
                     _tokens.Add(token);
-                else if (Current >= _tokens.IndexOf(_endToken))
+                else if (_endToken != null && Current >= _tokens.IndexOf(_endToken))
                     _tokens.Insert(Current, token);
                 else
                 {

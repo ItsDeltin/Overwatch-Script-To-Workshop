@@ -136,8 +136,8 @@ namespace Deltin.Deltinteger.Compiler.Parse
                     return;
             
             // Mark the current incremental token as containing an error.
-            if (TokenCaptureStack.Count != 0)
-                TokenCaptureStack.Peek().HasError = true;
+            foreach (var item in TokenCaptureStack)
+                item.HasError = true;
 
             // Error is good to go.
             Errors.Add(error);
@@ -815,7 +815,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 Is(TokenType.Exclamation) || // Extended collection marker.
                 Is(TokenType.Number) ||      // Assigned workshop ID.
                 Is(TokenType.Colon) ||       // Macro variable value.
-                (functionDeclaration && Is(TokenType.Parentheses_Close)) || // Function parameter start.
+                (functionDeclaration && Is(TokenType.Parentheses_Open)) || // Function parameter start.
                 IsFinished                   // EOF was reached.
             );
         });
@@ -950,11 +950,8 @@ namespace Deltin.Deltinteger.Compiler.Parse
             var identifier = ParseExpected(TokenType.Identifier);
             
             // Function
-            if (Is(TokenType.Parentheses_Open))
+            if (ParseOptional(TokenType.Parentheses_Open))
             {
-                // Consume the (
-                Consume();
-
                 // Get the parameters.
                 var parameters = ParseParameters();
 
@@ -990,10 +987,8 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 }
             }
             // Variable macro
-            else if (Is(TokenType.Colon))
+            else if (ParseOptional(TokenType.Colon))
             {
-                var colon = Consume();
-
                 // Get the value.
                 var macroValue = GetContainExpression();
 
@@ -1010,11 +1005,8 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
                 // Get the initial value.
                 IParseExpression initialValue = null;
-                if (Is(TokenType.Equal))
-                {
-                    Consume(); // Consume the equals.
+                if (ParseOptional(TokenType.Equal))
                     initialValue = GetContainExpression(); // Get the initial value.
-                }
 
                 return new VariableDeclaration(attributes, type, identifier, initialValue, ext, id);
             }
@@ -1179,12 +1171,12 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 
                 // Class
                 case TokenType.Class:
-                    context.Enums.Add(ParseEnum());
+                    context.Classes.Add(ParseClass());
                     break;
                 
                 // Enum
                 case TokenType.Enum:
-                    ParseEnum();
+                    context.Enums.Add(ParseEnum());
                     break;
 
                 // Import
@@ -1240,7 +1232,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
             while (TryGetIfStatement(out var condition)) conditions.Add(condition);
 
             // Get the block.
-            TryParseStatementOrBlock(out var statement);
+            var statement = ParseStatement();
 
             return EndTokenCapture(new RuleContext(ruleToken, name, disabled, order, settings, conditions, statement));
         }
@@ -1274,6 +1266,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 else
                 {
                     // TODO: error recovery
+                    break;
                 }
             
             // End the class group.
