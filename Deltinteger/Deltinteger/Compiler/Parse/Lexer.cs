@@ -47,14 +47,6 @@ namespace Deltin.Deltinteger.Compiler.Parse
             int lineDelta = NumberOfNewLines(updateRange.Text) - updateRange.Range.LineSpan();
             int columnDelta = NumberOfCharactersInLastLine(updateRange.Text) - updateRange.Range.ColumnSpan();
 
-            var tokenInsert = new IncrementalTokenInsert(Tokens, affectedArea.StartingTokenIndex, affectedArea.EndingTokenIndex);
-            LexController controller = new LexController(newContent, tokenInsert);
-
-            // Set start range
-            controller.Index = affectedArea.StartIndex;
-            controller.Line = GetLine(controller.Index);
-            controller.Column = GetColumn(controller.Index);
-
             // Adjust token ranges.
             for (int i = affectedArea.EndingTokenIndex; i < Tokens.Count; i++)
             {
@@ -70,6 +62,14 @@ namespace Deltin.Deltinteger.Compiler.Parse
                     }
                 }
             }
+
+            var tokenInsert = new IncrementalTokenInsert(Tokens, affectedArea.StartingTokenIndex, affectedArea.EndingTokenIndex);
+            LexController controller = new LexController(newContent, tokenInsert);
+
+            // Set start range
+            controller.Index = affectedArea.StartIndex;
+            controller.Line = GetLine(controller.Index);
+            controller.Column = GetColumn(controller.Index);
 
             controller.Match();
 
@@ -142,7 +142,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 else if (startSet)
                 {
                     // Subtract by 1 because i - 1 is the last token that overlaps with the update range.
-                    endingTokenIndex = i - 1;
+                    endingTokenIndex = i;
 
                     // No more iterations are need once the end is found.
                     break;
@@ -582,6 +582,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
     {
         public int Current { get; private set; }
         private readonly List<Token> _tokens;
+        private readonly Token _endToken;
         private bool _lastInsertWasEqual;
         private int _stopMinimum;
 
@@ -590,21 +591,26 @@ namespace Deltin.Deltinteger.Compiler.Parse
             Current = startingTokenIndex;
             _tokens = list;
             _stopMinimum = stopMinimum;
+            _endToken = _tokens[_stopMinimum];
         }
         public void PushToken(Token token)
         {
-            _lastInsertWasEqual = Current < _tokens.Count && _tokens[Current].TokenType == token.TokenType && _tokens[Current].Text == token.Text;
-            if (Current == _tokens.Count)
-                _tokens.Add(token);
-            else
+            if(!(_lastInsertWasEqual = Current > _stopMinimum && Current < _tokens.Count && _tokens[Current].TokenType == token.TokenType && _tokens[Current].Text == token.Text))
             {
-                _tokens.RemoveAt(Current);
-                _tokens.Insert(Current, token);
+                if (Current == _tokens.Count)
+                    _tokens.Add(token);
+                else if (Current >= _tokens.IndexOf(_endToken))
+                    _tokens.Insert(Current, token);
+                else
+                {
+                    _tokens.RemoveAt(Current);
+                    _tokens.Insert(Current, token);
+                }
             }
             Current++;
         }
 
-        public bool IncrementalStop() => Current > _stopMinimum && _lastInsertWasEqual;
+        public bool IncrementalStop() => _lastInsertWasEqual;
 
         public void EndReached()
         {
