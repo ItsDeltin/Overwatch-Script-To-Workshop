@@ -11,6 +11,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public List<ClassContext> Classes { get; } = new List<ClassContext>();
         public List<EnumContext> Enums { get; } = new List<EnumContext>();
         public List<IDeclaration> Declarations { get; } = new List<IDeclaration>();
+        public List<Hook> Hooks { get; } = new List<Hook>();
         public List<TokenCapture> NodeCaptures { get; set; }
     }
 
@@ -107,6 +108,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public Token InheritToken { get; }
         public List<Token> Inheriting { get; }
         public List<IDeclaration> Declarations { get; } = new List<IDeclaration>();
+        public List<ConstructorContext> Constructors { get; } = new List<ConstructorContext>();
 
         public ClassContext(Token identifier, Token inheritToken, List<Token> inheriting)
         {
@@ -182,6 +184,22 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         }
     }
 
+    public class ConstructorContext
+    {
+        public AttributeTokens Attributes { get; }
+        public Token LocationToken { get; }
+        public List<VariableDeclaration> Parameters { get; }
+        public Block Block { get; }
+
+        public ConstructorContext(AttributeTokens attributes, Token locationToken, List<VariableDeclaration> parameters, Block block)
+        {
+            Attributes = attributes;
+            LocationToken = locationToken;
+            Parameters = parameters;
+            Block = block;
+        }
+    }
+
     public class AttributeTokens
     {
         public Token Public { get; set; }
@@ -195,6 +213,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public Token PlayerVar { get; set; }
         public Token Ref { get; set; }
         public List<Token> AllAttributes { get; } = new List<Token>();
+        public AccessLevel GetAccessLevel() => Public != null ? AccessLevel.Public : Protected != null ? AccessLevel.Protected : AccessLevel.Private;
     }
 
     public class IfCondition
@@ -218,6 +237,18 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
             File = file;
             As = @as;
             Identifier = identifier;
+        }
+    }
+
+    public class Hook
+    {
+        public IParseExpression Variable { get; }
+        public IParseExpression Value { get; }
+
+        public Hook(IParseExpression variable, IParseExpression value)
+        {
+            Variable = variable;
+            Value = value;
         }
     }
 

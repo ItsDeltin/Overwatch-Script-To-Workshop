@@ -84,16 +84,16 @@ namespace Deltin.Deltinteger.Parse
                 }
 
                 // Get the expression to the right of the dot.
-
-                // Missing function or variable, set the _trailingSeperator.
-                if (exprContext.Right is MissingElement)
-                    _trailingSeperator = exprContext.Operator.Token;
+                    
                 // Get the method.
-                else if (exprContext.Right is FunctionExpression rightMethod)
+                if (exprContext.Right is FunctionExpression rightMethod)
                     exprList.Add(new FunctionPart(rightMethod));
                 // Get the variable.
-                else if (exprContext.Right is Identifier rightVariable)
+                else if (exprContext.Right is Identifier rightVariable && rightVariable.Token)
                     exprList.Add(new VariableOrTypePart(rightVariable));
+                // Missing function or variable, set the _trailingSeperator.
+                else
+                    _trailingSeperator = exprContext.Operator.Token;
             }
         }
 
@@ -213,7 +213,7 @@ namespace Deltin.Deltinteger.Parse
             return new ExpressionTreeParseResult(result, resultIndex, target, resultingVariable);
         }
     
-        public bool IsStatement() => Result.IsStatement();
+        public bool IsStatement() => Result?.IsStatement() ?? true;
 
         public static IExpression ResultingExpression(IExpression expression)
         {

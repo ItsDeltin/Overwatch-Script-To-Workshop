@@ -241,6 +241,7 @@ namespace Deltin.Deltinteger.Parse
         public IWorkshopTree Parse(ActionSet actionSet) => Element.TernaryConditional(Condition.Parse(actionSet), Consequent.Parse(actionSet), Alternative.Parse(actionSet));
     }
 
+    /*
     public class RootAction : IExpression
     {
         private DeltinScript DeltinScript { get; }
@@ -254,6 +255,7 @@ namespace Deltin.Deltinteger.Parse
         public CodeType Type() => null;
         public IWorkshopTree Parse(ActionSet actionSet) => null;
     }
+    */
 
     public class ThisAction : IExpression
     {
@@ -271,6 +273,7 @@ namespace Deltin.Deltinteger.Parse
         public Scope ReturningScope() => ThisType?.GetObjectScope();
     }
 
+    /*
     public class BaseAction : IExpression
     {
         readonly CodeType baseType;
@@ -337,4 +340,5 @@ namespace Deltin.Deltinteger.Parse
         public Scope ReturningScope() => null;
         public CodeType Type() => null;
     }
+    */
 }

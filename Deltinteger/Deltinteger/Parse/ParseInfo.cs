@@ -47,7 +47,7 @@ namespace Deltin.Deltinteger.Parse
             IStatement statement = StatementFromContext(scope, statementContext);
 
             // Apply related output comment.
-            if (statementContext is ICommentableStatement comment)
+            if (statementContext is ICommentableStatement comment && comment.ActionComment != null)
             {
                 string text = comment.ActionComment.Text.Substring(1).Trim();
                 DocRange range = comment.ActionComment.Range;
@@ -77,6 +77,7 @@ namespace Deltin.Deltinteger.Parse
                 case Break @break      : return new BreakAction(this, @break.Range);
                 case Switch @switch    : return new SwitchAction(this, scope, @switch);
                 case Block @block      : return new BlockAction(this, scope, @block);
+                case FunctionExpression func: return new CallMethodAction(this, scope, func, false, scope);
                 // Expression statements (functions, new)
                 case ExpressionStatement exprStatement:
 
@@ -85,14 +86,13 @@ namespace Deltin.Deltinteger.Parse
 
                     if (!expr.IsStatement())
                     {
-                        if (expr != null)
-                            Script.Diagnostics.Error("Expressions can't be used as statements.", statementContext.Range);
-                        return null;
+                        Script.Diagnostics.Error("Expressions can't be used as statements.", statementContext.Range);
+                        return MissingElementAction.MissingElement;
                     }
                     // When IsStatement is true, expr should be castable to a statement.
                     return (IStatement)expr;
 
-                default: return null;
+                default: return MissingElementAction.MissingElement;
             }
         }
 
@@ -128,12 +128,12 @@ namespace Deltin.Deltinteger.Parse
                 case ExpressionGroup group: return GetExpression(scope, group.Expression);
                 case TypeCast typeCast: return new TypeConvertAction(this, scope, typeCast);
                 case ThisExpression @this: return new ThisAction(this, scope, @this);
-                case DeltinScriptParser.E_rootContext root: return new RootAction(this.TranslateInfo);
-                case DeltinScriptParser.E_baseContext @base: return new BaseAction(this, scope, @base);
-                case DeltinScriptParser.E_isContext @is: return new IsAction(this, scope, @is);
+                // case DeltinScriptParser.E_rootContext root: return new RootAction(this.TranslateInfo);
+                // case DeltinScriptParser.E_baseContext @base: return new BaseAction(this, scope, @base);
+                // case DeltinScriptParser.E_isContext @is: return new IsAction(this, scope, @is);
                 case LambdaExpression lambda: return new Lambda.LambdaAction(this, scope, lambda);
-                // todo
-                case MissingElement missing: throw new NotImplementedException("Todo: missing IExpression");
+                // Missing
+                case MissingElement missing: return MissingElementAction.MissingElement;
                 default: throw new Exception($"Could not determine the expression type '{exprContext.GetType().Name}'.");
             }
         }
@@ -152,7 +152,7 @@ namespace Deltin.Deltinteger.Parse
 
             // Get the variable.
             IVariable element = scope.GetVariable(variableName, getter, Script.Diagnostics, variableRange);
-            if (element == null) return null;
+            if (element == null) return new MissingVariable(variableName);
             
             // Additional syntax checking.
             return new VariableApply(this).Apply(element, ExpressionIndexArray(getter, variableContext.Index), variableRange);

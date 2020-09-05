@@ -337,7 +337,7 @@ namespace Deltin.Deltinteger.Parse
             if (parameter == 0 && OrderedParameters.All(p => p?.Value == null))
                 OrderedParameters[0].ExpressionRange = functionCallRange;
             // If this is the last contextual parameter and the context contains comma, set the expression range so signature help works with the last comma when there is no set expression.
-            else if (LastContextualParameterIndex == parameter && context[parameter].NextComma != null)
+            else if (LastContextualParameterIndex == parameter && parameter < context.Count && context[parameter].NextComma != null)
                 // Set the range to be the end of the comma to the start of the call range.
                 OrderedParameters[parameter].ExpressionRange = context[parameter].NextComma.Range.End + functionCallRange.End;
         }

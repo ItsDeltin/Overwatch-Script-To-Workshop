@@ -55,7 +55,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
             {
                 var capture = TokenCaptureStack.Pop();
                 capture.Finish(Token, node);
-                node.Range = new DocRange(Lexer.Tokens[capture.StartToken].Range.Start, Lexer.Tokens[Token].Range.End);
+                node.Range = new DocRange(Lexer.Tokens[capture.StartToken].Range.Start, CurrentOrLast.Range.End);
                 if (capture.IsValid) NodeCaptures.Add(capture);
             }
             return node;
@@ -76,7 +76,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
         T EndNode<T>(T node) where T: Node
         {
             if (LookaheadDepth == 0)
-                node.Range = new DocRange(Lexer.Tokens[TokenRangeStart.Pop()].Range.Start, Lexer.Tokens[Token].Range.End);
+                node.Range = new DocRange(Lexer.Tokens[TokenRangeStart.Pop()].Range.Start, CurrentOrLast.Range.End);
             return node;
         }
 
@@ -110,7 +110,9 @@ namespace Deltin.Deltinteger.Compiler.Parse
             foreach (var capture in _last.NodeCaptures) 
                 // If the node's type is equal to the expected node type
                 // and the cached node's start token index is equal to the current token's index (adjusted for token difference if the current token is past the change position) 
-                if (capture.Node.GetType() == typeof(T) && capture.StartToken + (Token > _incrementInfo.ChangeStart ? _incrementInfo.Delta : 0) == Token)
+                if (capture.Node.GetType() == typeof(T) && 
+                    !(capture.StartToken <= _incrementInfo.ChangeEnd && _incrementInfo.ChangeStart <= capture.StartToken + capture.Length) &&
+                    capture.StartToken + (Token > _incrementInfo.ChangeStart ? _incrementInfo.Delta : 0) == Token)
                 {
                     // Then return the node then advance by the number of tokens in the cached node.
                     node = (T)capture.Node;
@@ -132,7 +134,11 @@ namespace Deltin.Deltinteger.Compiler.Parse
             foreach (var existing in Errors)
                 if (error.Range.DoOverlap(existing.Range))
                     return;
-                
+            
+            // Mark the current incremental token as containing an error.
+            if (TokenCaptureStack.Count != 0)
+                TokenCaptureStack.Peek().HasError = true;
+
             // Error is good to go.
             Errors.Add(error);
         }
@@ -445,7 +451,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
             // Parse the next statement.
             statement = ParseStatement();
-            return !(statement is ExpressionStatement exprStatement && exprStatement.Expression is MissingElement);
+            return statement is MissingElement == false;
         }
 
         /// <summary>Parses a block.</summary>
@@ -813,6 +819,11 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 IsFinished                   // EOF was reached.
             );
         });
+
+        bool IsConstructor() => Lookahead(() => {
+            ParseAttributes();
+            return Is(TokenType.Identifier) && Is(TokenType.Parentheses_Open, 1);
+        });
         
         /// <summary>Determines if the current context is a type cast.</summary>
         bool IsTypeCast()
@@ -873,6 +884,13 @@ namespace Deltin.Deltinteger.Compiler.Parse
             }
         });
 
+        bool IsHook() => Lookahead(() => {
+            bool parsedAny = false;
+            do parsedAny = parsedAny || ParseExpected(TokenType.Identifier);
+            while (ParseOptional(TokenType.Dot));
+            return parsedAny && Is(TokenType.Equal);
+        });
+
         LambdaExpression ParseLambda()
         {
             StartNode();
@@ -912,6 +930,17 @@ namespace Deltin.Deltinteger.Compiler.Parse
             return EndNode(new LambdaExpression(parameters, arrow, statement));
         }
 
+        List<VariableDeclaration> ParseParameters()
+        {
+            var parameters = new List<VariableDeclaration>();
+            if (!Is(TokenType.Parentheses_Close))
+            {
+                do parameters.Add(ParseDeclaration());
+                while (ParseOptional(TokenType.Comma));
+            }
+            return parameters;
+        }
+
         IDeclaration ParseVariableOrFunctionDeclaration()
         {
             var attributes = ParseAttributes();
@@ -927,14 +956,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 Consume();
 
                 // Get the parameters.
-                var parameters = new List<VariableDeclaration>();
-                if (!Is(TokenType.Parentheses_Close))
-                {
-                    do {
-                        parameters.Add(ParseDeclaration());
-                    }
-                    while (ParseOptional(TokenType.Comma));
-                }
+                var parameters = ParseParameters();
 
                 // End the parameter list.
                 ParseExpected(TokenType.Parentheses_Close);
@@ -1013,11 +1035,30 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
             // Initial value
             IParseExpression initialValue = null;
-            if (Kind.IsAssignmentOperator())
+            if (ParseOptional(TokenType.Equal))
                 // Get the value.
                 initialValue = GetContainExpression();
-
+            
+            ParseSemicolon();
             return EndNode(new VariableDeclaration(attributes, type, identifier, initialValue, ext, id));
+        }
+
+        ConstructorContext ParseConstructor()
+        {
+            var attributes = ParseAttributes();
+            var identifier = ParseExpected(TokenType.Identifier);
+            ParseExpected(TokenType.Parentheses_Open);
+
+            // Get the parameters.
+            var parameters = ParseParameters();
+
+            // End the parentheses.
+            ParseExpected(TokenType.Parentheses_Close);
+
+            // Get the constructor's block.
+            Block block = ParseBlock();
+
+            return new ConstructorContext(attributes, identifier, parameters, block);
         }
 
         NewExpression ParseNew()
@@ -1156,6 +1197,9 @@ namespace Deltin.Deltinteger.Compiler.Parse
                     // Variable declaration
                     if (IsDeclaration(true))
                         context.Declarations.Add(ParseVariableOrFunctionDeclaration());
+                    // Hook
+                    else if (IsHook())
+                        context.Hooks.Add(ParseHook());
                     // Unknown
                     else
                     {
@@ -1222,9 +1266,15 @@ namespace Deltin.Deltinteger.Compiler.Parse
             ClassContext context = new ClassContext(identifier, inheritToken, inheriting);
 
             // Get the class elements.
-            while(!Is(TokenType.CurlyBracket_Close) && !IsFinished)
+            while (!Is(TokenType.CurlyBracket_Close) && !IsFinished)
                 if (IsDeclaration(true))
                     context.Declarations.Add(ParseVariableOrFunctionDeclaration());
+                else if (IsConstructor())
+                    context.Constructors.Add(ParseConstructor());
+                else
+                {
+                    // TODO: error recovery
+                }
             
             // End the class group.
             ParseExpected(TokenType.CurlyBracket_Close);
@@ -1326,8 +1376,16 @@ namespace Deltin.Deltinteger.Compiler.Parse
             return new Import(fileToken, @as, asIdentifier);
         }
 
+        Hook ParseHook()
+        {
+            var variableExpression = GetContainExpression();
+            ParseExpected(TokenType.Equal);
+            var variableValue = GetContainExpression();
+            return new Hook(variableExpression, variableValue);
+        }
+
         Identifier MakeIdentifier(Token identifier, List<ArrayIndex> indices) => new Identifier(identifier, indices);
-        MissingElement MissingElement() => new MissingElement(Current.Range);
+        MissingElement MissingElement() => new MissingElement(CurrentOrLast.Range);
         IParseStatement ExpressionStatement(IParseExpression expression, Token actionComment)
         {
             if (expression is IParseStatement statement) return statement;

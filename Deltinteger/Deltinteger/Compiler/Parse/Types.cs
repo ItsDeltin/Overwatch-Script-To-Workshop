@@ -8,6 +8,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
         public int StartToken { get; }
         public int Length { get; private set; }
         public object Node { get; private set; }
+        public bool HasError { get; set; }
 
         public TokenCapture(int startToken)
         {
@@ -20,6 +21,6 @@ namespace Deltin.Deltinteger.Compiler.Parse
             Node = node;
         }
 
-        public bool IsValid => Length > 0;
+        public bool IsValid => Length > 0 && !HasError;
     }
 }

@@ -38,15 +38,15 @@ namespace Deltin.Deltinteger.Parse
         public BlockAction Block { get; private set; }
 
         private ParseInfo parseInfo { get; }
-        private DeltinScriptParser.ConstructorContext context { get; }
+        private ConstructorContext context { get; }
 
         public CallInfo CallInfo { get; }
         private readonly RecursiveCallHandler _recursiveCallHandler;
 
-        public DefinedConstructor(ParseInfo parseInfo, Scope scope, CodeType type, DeltinScriptParser.ConstructorContext context) : base(
+        public DefinedConstructor(ParseInfo parseInfo, Scope scope, CodeType type, ConstructorContext context) : base(
             type,
-            new LanguageServer.Location(parseInfo.Script.Uri, DocRange.GetRange(context.name)),
-            context.accessor().GetAccessLevel())
+            new LanguageServer.Location(parseInfo.Script.Uri, context.LocationToken.Range),
+            context.Attributes.GetAccessLevel())
         {
             this.parseInfo = parseInfo;
             this.context = context;
@@ -65,16 +65,16 @@ namespace Deltin.Deltinteger.Parse
 
         public void SetupParameters()
         {
-            var parameterInfo = CodeParameter.GetParameters(parseInfo, ConstructorScope, context.setParameters(), false);
+            var parameterInfo = CodeParameter.GetParameters(parseInfo, ConstructorScope, context.Parameters, false);
             Parameters = parameterInfo.Parameters;
             ParameterVars = parameterInfo.Variables;
 
-            parseInfo.Script.AddHover(DocRange.GetRange(context.name), GetLabel(true));
+            parseInfo.Script.AddHover(context.LocationToken.Range, GetLabel(true));
         }
 
         public void SetupBlock()
         {
-            Block = new BlockAction(parseInfo.SetCallInfo(CallInfo), ConstructorScope, context.block());
+            Block = new BlockAction(parseInfo.SetCallInfo(CallInfo), ConstructorScope, context.Block);
             foreach (var listener in listeners) listener.Applied();
         }
 

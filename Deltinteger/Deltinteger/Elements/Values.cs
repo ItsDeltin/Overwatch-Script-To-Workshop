@@ -7,7 +7,6 @@ using System.Threading;
 using System.Text.RegularExpressions;
 using System.Diagnostics;
 using Deltin.Deltinteger.Parse;
-using Antlr4.Runtime;
 using Deltin.Deltinteger.Models;
 
 namespace Deltin.Deltinteger.Elements

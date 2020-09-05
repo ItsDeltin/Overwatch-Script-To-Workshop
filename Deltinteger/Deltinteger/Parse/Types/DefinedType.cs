@@ -18,7 +18,7 @@ namespace Deltin.Deltinteger.Parse
         private readonly ClassContext _typeContext;
         private readonly List<Var> staticVariables = new List<Var>();
 
-        public DefinedType(ParseInfo parseInfo, Scope scope, ClassContext typeContext) : base(typeContext.name.Text)
+        public DefinedType(ParseInfo parseInfo, Scope scope, ClassContext typeContext) : base(typeContext.Identifier.Text)
         {
             this._typeContext = typeContext;
             this._parseInfo = parseInfo;
@@ -96,11 +96,11 @@ namespace Deltin.Deltinteger.Parse
             }
 
             // Get the constructors.
-            if (_typeContext.constructor().Length > 0)
+            if (_typeContext.Constructors.Count > 0)
             {
-                Constructors = new Constructor[_typeContext.constructor().Length];
+                Constructors = new Constructor[_typeContext.Constructors.Count];
                 for (int i = 0; i < Constructors.Length; i++)
-                    Constructors[i] = new DefinedConstructor(_parseInfo, operationalScope, this, _typeContext.constructor(i));
+                    Constructors[i] = new DefinedConstructor(_parseInfo, operationalScope, this, _typeContext.Constructors[i]);
             }
             else
             {

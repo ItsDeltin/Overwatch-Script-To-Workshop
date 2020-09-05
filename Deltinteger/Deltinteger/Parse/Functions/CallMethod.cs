@@ -28,11 +28,12 @@ namespace Deltin.Deltinteger.Parse
 
             UsedAsExpression = usedAsExpression;
 
-            if (methodContext.ASYNC() != null)
-            {
-                if (methodContext.NOT() == null) Parallel = CallParallel.AlreadyRunning_RestartRule;
-                else Parallel = CallParallel.AlreadyRunning_DoNothing;
-            }
+            // TODO
+            // if (methodContext.ASYNC() != null)
+            // {
+            //     if (methodContext.NOT() == null) Parallel = CallParallel.AlreadyRunning_RestartRule;
+            //     else Parallel = CallParallel.AlreadyRunning_DoNothing;
+            // }
 
             // Get all functions with the same name in the current scope.
             var options = scope.GetMethodsByName(methodName);

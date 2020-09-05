@@ -111,23 +111,23 @@ namespace Deltin.Deltinteger.Parse
         void Translate()
         {
             // Get the reserved variables and IDs
-            foreach (ScriptFile script in Importer.ScriptFiles)
-            {
-                if (script.Context.reserved_global()?.reserved_list() != null)
-                {
-                    foreach (var name in script.Context.reserved_global().reserved_list().PART()) VarCollection.Reserve(name.GetText(), true);
-                    foreach (var id in script.Context.reserved_global().reserved_list().NUMBER()) VarCollection.Reserve(int.Parse(id.GetText()), true, null, null);
-                }
-                if (script.Context.reserved_player()?.reserved_list() != null)
-                {
-                    foreach (var name in script.Context.reserved_player().reserved_list().PART()) VarCollection.Reserve(name.GetText(), false);
-                    foreach (var id in script.Context.reserved_player().reserved_list().NUMBER()) VarCollection.Reserve(int.Parse(id.GetText()), false, null, null);
-                }
-            }
+            // foreach (ScriptFile script in Importer.ScriptFiles)
+            // {
+            //     if (script.Context.reserved_global()?.reserved_list() != null)
+            //     {
+            //         foreach (var name in script.Context.reserved_global().reserved_list().PART()) VarCollection.Reserve(name.GetText(), true);
+            //         foreach (var id in script.Context.reserved_global().reserved_list().NUMBER()) VarCollection.Reserve(int.Parse(id.GetText()), true, null, null);
+            //     }
+            //     if (script.Context.reserved_player()?.reserved_list() != null)
+            //     {
+            //         foreach (var name in script.Context.reserved_player().reserved_list().PART()) VarCollection.Reserve(name.GetText(), false);
+            //         foreach (var id in script.Context.reserved_player().reserved_list().NUMBER()) VarCollection.Reserve(int.Parse(id.GetText()), false, null, null);
+            //     }
+            // }
 
             // Get the enums
             foreach (ScriptFile script in Importer.ScriptFiles)
-            foreach (var enumContext in script.Context.enum_define())
+            foreach (var enumContext in script.Context.Enums)
             {
                 var newEnum = new DefinedEnum(new ParseInfo(script, this), enumContext);
                 Types.AllTypes.Add(newEnum); 
@@ -182,7 +182,7 @@ namespace Deltin.Deltinteger.Parse
 
             // Get hooks
             foreach (ScriptFile script in Importer.ScriptFiles)
-            foreach (var hookContext in script.Context.hook())
+            foreach (var hookContext in script.Context.Hooks)
                 HookVar.GetHook(new ParseInfo(script, this), RulesetScope, hookContext);
 
             // Get the rules

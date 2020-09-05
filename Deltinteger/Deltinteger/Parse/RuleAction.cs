@@ -66,6 +66,7 @@ namespace Deltin.Deltinteger.Parse
             bool setEventType = false, setTeam = false, setPlayer = false;
 
             foreach (var setting in ruleContext.Settings)
+            if (setting.Value != null)
             {
                 var alreadySet = new Diagnostic("The " + setting.Setting.Text + " rule setting was already set.", setting.Range, Diagnostic.Error);
                 string name = setting.Value.Text;
