@@ -270,6 +270,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
                     MatchKeyword("else", TokenType.Else) ||
                     MatchKeyword("break", TokenType.Break) ||
                     MatchKeyword("continue", TokenType.Continue) ||
+                    MatchKeyword("return", TokenType.Return) ||
                     MatchKeyword("switch", TokenType.Switch) ||
                     MatchKeyword("case", TokenType.Case) ||
                     MatchKeyword("default", TokenType.Default) ||

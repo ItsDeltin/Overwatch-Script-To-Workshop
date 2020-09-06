@@ -1077,7 +1077,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
         {
             StartNode();
             // Start the array creation.
-            Token left = ParseExpected(TokenType.Parentheses_Open);
+            Token left = ParseExpected(TokenType.SquareBracket_Open);
 
             // Create the list that stores the parsed values.
             List<IParseExpression> values = new List<IParseExpression>();
@@ -1088,7 +1088,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 while (ParseOptional(TokenType.Comma));
 
             // End the array creation.
-            Token right = ParseExpected(TokenType.Parentheses_Close);
+            Token right = ParseExpected(TokenType.SquareBracket_Close);
 
             return EndNode(new CreateArray(values, left, right));
         }
