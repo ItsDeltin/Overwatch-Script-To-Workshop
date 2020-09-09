@@ -55,7 +55,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
             {
                 var capture = TokenCaptureStack.Pop();
                 capture.Finish(Token, node);
-                node.Range = new DocRange(Lexer.Tokens[capture.StartToken].Range.Start, CurrentOrLast.Range.End);
+                node.Range = new DocRange(TokenAtOrEnd(capture.StartToken).Range.Start, CurrentOrLast.Range.End);
                 if (capture.IsValid) NodeCaptures.Add(capture);
             }
             return node;
@@ -164,6 +164,8 @@ namespace Deltin.Deltinteger.Compiler.Parse
         bool Is(TokenType type) => Kind == type;
 
         bool Is(TokenType type, int lookahead) => lookahead >= TokenCount ? type == TokenType.EOF : type == Lexer.Tokens[Token + lookahead].TokenType;
+
+        Token TokenAtOrEnd(int position) => Lexer.Tokens[Math.Min(Lexer.Tokens.Count - 1, position)];
 
         /// <summary>If the current token's type is equal to the specified type in the 'type' parameter,
         /// advance then return true. Otherwise, error then return false.</summary>
@@ -324,7 +326,10 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 case TokenType.LessThan:
                     // Make sure this is actually a type cast and not an operator.
                     if (IsTypeCast()) return ParseTypeCast();
-                    else if (IsFormattedString()) return ParseFormattedString();
+                    goto default;
+                // Formatted string
+                case TokenType.CurlyBracket_Open:
+                    if (Is(TokenType.String, 1) || Is(TokenType.At, 1)) return ParseFormattedString();
                     goto default;
                 // Other
                 default:
@@ -901,13 +906,14 @@ namespace Deltin.Deltinteger.Compiler.Parse
             // Parenthesized parameters.
             if (ParseOptional(TokenType.Parentheses_Open))
             {
-                do
-                {
-                    var type = ParseType();
-                    var identifier = ParseExpected(TokenType.Identifier);
-                    parameters.Add(new LambdaParameter(type, identifier));
-                }
-                while (ParseOptional(TokenType.Comma));
+                if (!Is(TokenType.Parentheses_Close))
+                    do
+                    {
+                        var type = ParseType();
+                        var identifier = ParseExpected(TokenType.Identifier);
+                        parameters.Add(new LambdaParameter(type, identifier));
+                    }
+                    while (ParseOptional(TokenType.Comma));
 
                 // Close the parentheses.
                 ParseExpected(TokenType.Parentheses_Close);
@@ -1130,7 +1136,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
         StringExpression ParseFormattedString()
         {
             StartNode();
-            ParseExpected(TokenType.LessThan);
+            ParseExpected(TokenType.CurlyBracket_Open);
 
             // Get the optional localized token.
             var localized = ParseOptional(TokenType.At);
@@ -1143,7 +1149,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
             while (ParseOptional(TokenType.Comma))
                 formats.Add(GetContainExpression());
 
-            ParseExpected(TokenType.GreaterThan);
+            ParseExpected(TokenType.CurlyBracket_Close);
             return EndNode(new StringExpression(localized, str, formats));
         }
 

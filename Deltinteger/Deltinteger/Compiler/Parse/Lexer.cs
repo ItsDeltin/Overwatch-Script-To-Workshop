@@ -8,17 +8,16 @@ namespace Deltin.Deltinteger.Compiler.Parse
     public class Lexer
     {
         public List<Token> Tokens { get; } = new List<Token>();
-        public string Content { get; private set; }
+        public VersionInstance Content { get; private set; }
         public List<int> Newlines { get; } = new List<int>();
 
         public Lexer() {}
 
-        public void Init(string content)
+        public void Init(VersionInstance content)
         {
             Content = content;
-            GetNewlines(Content); // This can be removed after debugging.
 
-            LexController controller = new LexController(Content, new InitTokenPush(Tokens));
+            LexController controller = new LexController(Content.Text, new InitTokenPush(Tokens));
             controller.Match();
         }
 
@@ -29,16 +28,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
             Newlines.Clear();
         }
 
-        public string DebugTokens()
-        {
-            StringBuilder debugString = new StringBuilder();
-            foreach (Token token in Tokens)
-                debugString.AppendLine(token.TokenType.ToString() + ": " + token.Range.ToString() + " '" + token.Text + "'");
-            
-            return debugString.ToString();
-        }
-
-        public IncrementInfo Update(string newContent, UpdateRange updateRange)
+        public IncrementInfo Update(VersionInstance newContent, UpdateRange updateRange)
         {
             int lastTokenCount = Tokens.Count;
             AffectedAreaInfo affectedArea = GetAffectedArea(updateRange);
@@ -47,34 +37,33 @@ namespace Deltin.Deltinteger.Compiler.Parse
             int lineDelta = NumberOfNewLines(updateRange.Text) - updateRange.Range.LineSpan();
             int columnDelta = NumberOfCharactersInLastLine(updateRange.Text) - updateRange.Range.ColumnSpan();
 
+            int indexOffset = updateRange.Text.Length - (Content.IndexOf(updateRange.Range.End) - Content.IndexOf(updateRange.Range.Start));
+
             // Adjust token ranges.
             for (int i = affectedArea.EndingTokenIndex; i < Tokens.Count; i++)
             {
                 if (updateRange.Range.End <= Tokens[i].Range.Start)
                 {
-                    Tokens[i].Range.Start.Line += lineDelta;
-                    Tokens[i].Range.End.Line += lineDelta;
-
-                    if (updateRange.Range.End.Line == Tokens[i].Range.Start.Line)
-                    {
-                        Tokens[i].Range.Start.Character += columnDelta;
-                        Tokens[i].Range.End.Character += columnDelta;
-                    }
+                    // Use the old content for getting the update range index.
+                    int s = Content.IndexOf(Tokens[i].Range.Start) + indexOffset,
+                        e = Content.IndexOf(Tokens[i].Range.End) + indexOffset;
+                    
+                    // Use the new content to update the positions.
+                    newContent.UpdatePosition(Tokens[i].Range.Start, s);
+                    newContent.UpdatePosition(Tokens[i].Range.End, e);
                 }
             }
 
             var tokenInsert = new IncrementalTokenInsert(Tokens, affectedArea.StartingTokenIndex, affectedArea.EndingTokenIndex);
-            LexController controller = new LexController(newContent, tokenInsert);
+            LexController controller = new LexController(newContent.Text, tokenInsert);
 
             // Set start range
             controller.Index = affectedArea.StartIndex;
-            controller.Line = GetLine(controller.Index);
-            controller.Column = GetColumn(controller.Index);
+            controller.Line = newContent.GetLine(controller.Index);
+            controller.Column = newContent.GetColumn(controller.Index);
 
             controller.Match();
-
             Content = newContent;
-            GetNewlines(newContent);
             return new IncrementInfo(affectedArea.StartingTokenIndex, affectedArea.EndingTokenIndex, Tokens.Count - lastTokenCount);
         }
 
@@ -84,11 +73,10 @@ namespace Deltin.Deltinteger.Compiler.Parse
             bool startSet = false;
 
             // The default starting range of the update range's start and end positions in the document.
-            int updateStartIndex = IndexOf(updateRange.Range.Start);
-            int updateEndIndex = IndexOf(updateRange.Range.End);
+            int updateStartIndex = Content.IndexOf(updateRange.Range.Start);
 
             int startIndex = updateStartIndex; // The position where lexing will start.
-            int startingTokenIndex = Tokens.Count; // The position in the token list where new tokens will be inserted into.
+            int startingTokenIndex = -1; // The position in the token list where new tokens will be inserted into.
             int endingTokenIndex = int.MaxValue; // The token where lexing will end.
 
             // Find the first token to the left of the update range and the first token to the right of the update range.
@@ -114,7 +102,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
                         // startIndex will be 3, causing the characters between the first x and + to be skipped.
                         // So pick the lower of the 2 values.
-                        startIndex = Math.Min(updateStartIndex, IndexOf(Tokens[i].Range.Start));
+                        startIndex = Math.Min(updateStartIndex, Content.IndexOf(Tokens[i].Range.Start));
                         // Set the starting token to the current token's index.
                         startingTokenIndex = i;
                         // Once an overlapping token is found, do not set 'startIndex' or 'startingTokenIndex' again.
@@ -133,7 +121,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 {
                     // TODO: Since the end position of the token was already checked, doing Math.Min is probably redundant
                     // simply doing 'startIndex = IndexOf(Tokens[i].Range.Start)' will probably suffice.
-                    startIndex = Math.Min(updateStartIndex, IndexOf(Tokens[i].Range.Start));
+                    startIndex = Math.Min(updateStartIndex, Content.IndexOf(Tokens[i].Range.Start));
                     // Set the starting token to the current token's index.
                     startingTokenIndex = i;
                 }
@@ -160,25 +148,6 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
             return new AffectedAreaInfo(startIndex, startingTokenIndex, endingTokenIndex);
         }
-
-        private void GetNewlines(string content)
-        {
-            Newlines.Clear();
-            for (int i = 0; i < content.Length; i++)
-                if (content[i] == '\n')
-                    Newlines.Add(i);
-        }
-
-        private int GetLine(int index)
-        {
-            int r;
-            for (r = 0; r < Newlines.Count && Newlines[r] < index; r++);
-            return r;
-        }
-        // private int GetColumn(int index) => Newlines.Count == 0 ? index : index - GetLineIndex(GetLine(index));
-        private int GetColumn(int index) => index - GetLineIndex(GetLine(index));
-        private int IndexOf(DocPos pos) => GetLineIndex(pos.Line) + pos.Character;
-        private int GetLineIndex(int line) => line == 0 ? 0 : (Newlines[line - 1] + 1);
 
         private static int NumberOfNewLines(string text)
         {
@@ -216,7 +185,9 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 if (Index >= Content.Length) break;
 
                 bool matched =
-                    MatchComment() ||
+                    MatchLineComment() ||
+                    MatchBlockComment() ||
+                    MatchActionComment() ||
                     MatchNumber() ||
                     MatchSymbol('{', TokenType.CurlyBracket_Open) ||
                     MatchSymbol('}', TokenType.CurlyBracket_Close) ||
@@ -446,7 +417,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
             return true;
         }
 
-        bool MatchComment()
+        bool MatchActionComment()
         {
             LexScanner scanner = MakeScanner();
             // Action comment.
@@ -458,6 +429,38 @@ namespace Deltin.Deltinteger.Compiler.Parse
             
             // Done.
             PushToken(scanner, TokenType.ActionComment);
+            return true;
+        }
+
+        bool MatchLineComment()
+        {
+            LexScanner scanner = MakeScanner();
+            if (!scanner.At('/') || !scanner.At('/', 1)) return false;
+
+            scanner.Advance();
+            scanner.Advance();
+
+            // Match every character to the end of the line.
+            while(!scanner.At('\n')) scanner.Advance();
+            
+            // Done.
+            Accept(scanner);
+            return true;
+        }
+
+        bool MatchBlockComment()
+        {
+            LexScanner scanner = MakeScanner();
+            if (!scanner.At('/') || !scanner.At('*', 1)) return false;
+
+            scanner.Advance();
+            scanner.Advance();
+
+            // Match every character to the end of the line.
+            while(!scanner.ReachedEnd && !scanner.At('*') && !scanner.At('/')) scanner.Advance();
+            
+            // Done.
+            Accept(scanner);
             return true;
         }
 
@@ -552,12 +555,17 @@ namespace Deltin.Deltinteger.Compiler.Parse
         }
 
         public bool At(char chr) => !ReachedEnd && _content[Index] == chr;
+        public bool At(char chr, int lookahead) => Index + lookahead < _content.Length && _content[Index + lookahead] == chr;
         public bool AtIdentifierChar() => !ReachedEnd && identifierCharacters.Contains(_content[Index]);
         public bool AtWhitespace() => !ReachedEnd && whitespaceCharacters.Contains(_content[Index]);
         public bool AtNumeric() => !ReachedEnd && numericalCharacters.Contains(_content[Index]);
         public Token AsToken(TokenType tokenType) => new Token(_captured.ToString(), new DocRange(_startPos, new DocPos(Line, Column)), tokenType);
     }
 
+    /// <summary>
+    /// When the LexController scans a token, implementers will handle the obtained token.
+    /// There are just 2 implementers: the InitTokenPush and the IncrementalTokenInsert.
+    /// </summary>
     public interface ITokenPush
     {
         void PushToken(Token token);
@@ -565,6 +573,8 @@ namespace Deltin.Deltinteger.Compiler.Parse
         void EndReached();
     }
 
+    /// <summary>The first lex of a file will use this for the ITokenPush.
+    /// When a token is encountered, simply add the token to the token list.</summary>
     class InitTokenPush : ITokenPush
     {
         private readonly List<Token> _tokens;
@@ -579,6 +589,9 @@ namespace Deltin.Deltinteger.Compiler.Parse
         public void EndReached() {}
     }
 
+    /// <summary>Every subsequent lex after the first will use this for the ITokenPush.
+    /// This is used for updating the lexer incrementally. When a token is encountered, it will be
+    /// inserted into the token list depending on where the update occured.</summary>
     class IncrementalTokenInsert : ITokenPush
     {
         public int Current { get; private set; }
@@ -595,14 +608,43 @@ namespace Deltin.Deltinteger.Compiler.Parse
             if (_stopMinimum < _tokens.Count)
                 _endToken = _tokens[_stopMinimum];
         }
+
         public void PushToken(Token token)
         {
-            if(!(_lastInsertWasEqual = Current >= _tokens.IndexOf(_endToken) && Current < _tokens.Count && _tokens[Current].TokenType == token.TokenType && _tokens[Current].Text == token.Text))
+            // Check if we have reached the end of the changed token range.
+            //
+            // First, check if _endToken is not null.
+            //   _endToken may be null when adding characters to the end of the file. In this case, we don't need to worry about stopping early.
+            //
+            // Second, check if the 'Current' index is equal to or greater than the endIndex.
+            //   TODO: Track _endToken index manually rather than polling IndexOf every time.
+            //
+            // Third, make sure Current is less than the count of the _tokens list.
+            //
+            // Now we make sure the token we got is equal to the Current token. If it is, we don't need to lex anymore.
+            // Make sure the type and text are equal. In most scenarios if TokenType is the same then text will be the same, the only exceptions being numbers, strings, and identifiers.
+            //
+            // If *all* of these conditions are met, '_lastInsertWasEqual' will be set to true, the block will be skipped
+            // and lexing will stop.
+            if(!(_lastInsertWasEqual = (_endToken != null && Current >= _tokens.IndexOf(_endToken)) && Current < _tokens.Count && _tokens[Current].TokenType == token.TokenType && _tokens[Current].Text == token.Text))
             {
-                if (Current == _tokens.Count)
+                // Specific case where the starting token was not found, insert the current token to the first index.
+                if (Current == -1)
+                {
+                    _tokens.Insert(0, token);
+                    // Set Current to 1.
+                    // This increment will set Current from -1 to 0,
+                    // the next incremeent will set Current from 0 to 1.
+                    Current++;
+                }
+                // If Current surpassed the token count, add the token to the top of the list.
+                else if (Current == _tokens.Count)
                     _tokens.Add(token);
+                // If Current is the at or pass the index of the _endToken, insert the token to the current position.
                 else if (_endToken != null && Current >= _tokens.IndexOf(_endToken))
                     _tokens.Insert(Current, token);
+                // If none of the previous conditions were satisfied,
+                // replace the current token.
                 else
                 {
                     _tokens.RemoveAt(Current);

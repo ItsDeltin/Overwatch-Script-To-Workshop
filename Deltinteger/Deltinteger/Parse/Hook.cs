@@ -39,6 +39,8 @@ namespace Deltin.Deltinteger.Parse
 
         public static void GetHook(ParseInfo parseInfo, Scope scope, Hook context)
         {
+            parseInfo = parseInfo.SetCallInfo(new CallInfo(parseInfo.Script));
+
             // Get the hook variable's expression.
             IExpression variableExpression = parseInfo.GetExpression(scope, context.Variable);
 

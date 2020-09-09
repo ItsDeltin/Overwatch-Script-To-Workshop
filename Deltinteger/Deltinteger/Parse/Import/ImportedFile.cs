@@ -68,11 +68,13 @@ namespace Deltin.Deltinteger.Parse
 
         public ImportedScript(Uri uri) : base(uri) {
             Document = new Document(uri, Content);
+            Document.Update(Content);
         }
 
         protected override void OnUpdate()
         {
-            Document.Update(Content);
+            if (Document != null)
+                Document.Update(Content);
         }
     }
 }

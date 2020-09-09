@@ -79,7 +79,7 @@ namespace Deltin.Deltinteger.Parse
                 PickyParameter parameter = new PickyParameter(false);
                 parameters[i] = parameter;
 
-                if (parameter.Picky = parameter.Name != null)
+                if (parameter.Picky = context[i].PickyParameter != null)
                 {
                     // Get the picky name.
                     parameter.Name = context[i].PickyParameter.Text;

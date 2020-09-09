@@ -22,7 +22,7 @@ namespace Deltin.Deltinteger.Compiler
             Uri = uri;
             Lexer = new Lexer();
             Content = initialContent;
-            Lexer.Init(Content);
+            Lexer.Init(new VersionInstance(Content));
             Parse();
         }
 
@@ -42,7 +42,7 @@ namespace Deltin.Deltinteger.Compiler
         {
             Version = version;
             Content = newContent;
-            var increment = Lexer.Update(newContent, updateRange);
+            var increment = Lexer.Update(new VersionInstance(newContent), updateRange);
             Parse(increment);
         }
 
@@ -56,7 +56,7 @@ namespace Deltin.Deltinteger.Compiler
         {
             Syntax = null;
             Lexer.Reset();
-            Lexer.Init(Content);
+            Lexer.Init(new VersionInstance(Content));
             Parse();
         }
 

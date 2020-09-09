@@ -5,6 +5,8 @@ using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.Compiler;
 using Deltin.Deltinteger.Compiler.SyntaxTree;
+using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
+using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItemKind;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -43,7 +45,7 @@ namespace Deltin.Deltinteger.Parse
                     CompletionRangeKind.Catch
                 ));
 
-                Conditions[i] = parseInfo.GetExpression(scope, ruleContext.Conditions[i].Expression);
+                Conditions[i] = parseInfo.SetCallInfo(callInfo).GetExpression(scope, ruleContext.Conditions[i].Expression);
             }
 
             // Get the block.
@@ -66,37 +68,48 @@ namespace Deltin.Deltinteger.Parse
             bool setEventType = false, setTeam = false, setPlayer = false;
 
             foreach (var setting in ruleContext.Settings)
-            if (setting.Value != null)
             {
-                var alreadySet = new Diagnostic("The " + setting.Setting.Text + " rule setting was already set.", setting.Range, Diagnostic.Error);
-                string name = setting.Value.Text;
-                DocRange range = setting.Value.Range;
-
-                switch(setting.Setting.Text)
+                // Add completion.
+                switch (setting.Setting.Text)
                 {
-                    case "Event":
-                        if (setEventType) parseInfo.Script.Diagnostics.AddDiagnostic(alreadySet);
-                        EventType = GetMember<RuleEvent>("Event", name, parseInfo.Script.Diagnostics, range);
-                        setEventType = true;
-                        break;
-                    
-                    case "Team":
-                        if (setTeam) parseInfo.Script.Diagnostics.AddDiagnostic(alreadySet);
-                        Team = GetMember<Team>("Team", name, parseInfo.Script.Diagnostics, range);
-                        setTeam = true;
-                        teamContext = setting;
-                        break;
-                    
-                    case "Player":
-                        if (setPlayer) parseInfo.Script.Diagnostics.AddDiagnostic(alreadySet);
-                        Player = GetMember<PlayerSelector>("Player", name, parseInfo.Script.Diagnostics, range);
-                        setPlayer = true;
-                        playerContext = setting;
-                        break;
-                    
-                    default:
-                        parseInfo.Script.Diagnostics.Error("Expected an enumerator of type 'Event', 'Team', or 'Player'.", setting.Setting.Range);
-                        break;
+                    case "Event": AddCompletion(parseInfo, setting.Dot, setting.Value, EventItems); break;
+                    case "Team": AddCompletion(parseInfo, setting.Dot, setting.Value, TeamItems); break;
+                    case "Player": AddCompletion(parseInfo, setting.Dot, setting.Value, PlayerItems); break;
+                }
+
+                // Get the value.
+                if (setting.Value != null)
+                {
+                    var alreadySet = new Diagnostic("The " + setting.Setting.Text + " rule setting was already set.", setting.Range, Diagnostic.Error);
+                    string name = setting.Value.Text;
+                    DocRange range = setting.Value.Range;
+
+                    switch(setting.Setting.Text)
+                    {
+                        case "Event":
+                            if (setEventType) parseInfo.Script.Diagnostics.AddDiagnostic(alreadySet);
+                            EventType = GetMember<RuleEvent>("Event", name, parseInfo.Script.Diagnostics, range);
+                            setEventType = true;
+                            break;
+                        
+                        case "Team":
+                            if (setTeam) parseInfo.Script.Diagnostics.AddDiagnostic(alreadySet);
+                            Team = GetMember<Team>("Team", name, parseInfo.Script.Diagnostics, range);
+                            setTeam = true;
+                            teamContext = setting;
+                            break;
+                        
+                        case "Player":
+                            if (setPlayer) parseInfo.Script.Diagnostics.AddDiagnostic(alreadySet);
+                            Player = GetMember<PlayerSelector>("Player", name, parseInfo.Script.Diagnostics, range);
+                            setPlayer = true;
+                            playerContext = setting;
+                            break;
+                        
+                        default:
+                            parseInfo.Script.Diagnostics.Error("Expected an enumerator of type 'Event', 'Team', or 'Player'.", setting.Setting.Range);
+                            break;
+                    }
                 }
             }
 
@@ -124,5 +137,32 @@ namespace Deltin.Deltinteger.Parse
             diagnostics.Error("Invalid " + groupName + " value.", range);
             return default(T);
         }
+
+        /// <summary>Adds the completion for a rule setting.</summary>
+        private static void AddCompletion(ParseInfo parseInfo, Token dot, Token value, CompletionItem[] items)
+        {
+            // Do nothing if there is no dot.
+            if (dot == null) return;
+
+            // Add the completion.
+            parseInfo.Script.AddCompletionRange(new CompletionRange(
+                items,
+                // Use the start of the next token if the value token is null.
+                dot.Range.End + (value != null ? value.Range.End : parseInfo.Script.NextToken(dot).Range.Start),
+                CompletionRangeKind.ClearRest
+            ));
+        }
+
+        private static readonly CompletionItem[] EventItems = GetItems<RuleEvent>("Event");
+        private static readonly CompletionItem[] TeamItems = GetItems<Team>("Team");
+        private static readonly CompletionItem[] PlayerItems = GetItems<PlayerSelector>("Player");
+
+        private static CompletionItem[] GetItems<T>(string tag) => EnumData.GetEnum<T>()
+            .Members.Select(m => new CompletionItem() {
+                Label = m.CodeName,
+                Detail = m.CodeName,
+                //Detail = new MarkupBuilder().StartCodeLine().Add(tag + "." + m.CodeName).ToString(),
+                Kind = CompletionItemKind.Constant
+            }).ToArray();
     }
 }

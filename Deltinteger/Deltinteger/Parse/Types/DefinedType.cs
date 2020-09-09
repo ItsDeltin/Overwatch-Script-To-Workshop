@@ -106,7 +106,7 @@ namespace Deltin.Deltinteger.Parse
             {
                 // If there are no constructors, create a default constructor.
                 Constructors = new Constructor[] {
-                    new Constructor(this, new Location(_parseInfo.Script.Uri, _typeContext.InheritToken.Range), AccessLevel.Public)
+                    new Constructor(this, new Location(_parseInfo.Script.Uri, _typeContext.Identifier.Range), AccessLevel.Public)
                 };
             }
 

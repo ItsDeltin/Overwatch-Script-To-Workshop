@@ -45,10 +45,8 @@ namespace Deltin.Deltinteger.Parse.Lambda
             CodeType[] argumentTypes = Parameters.Select(arg => arg.CodeType).ToArray();
 
             // Get the statements.
-            var statement = parseInfo.GetStatement(scope, context.Statement);
-
             // () => {}
-            if (statement is Block block)
+            if (context.Statement is Block block)
             {
                 // Parse the block.
                 Block = new BlockAction(parseInfo.SetCallInfo(CallInfo), lambdaScope, block);
@@ -67,7 +65,7 @@ namespace Deltin.Deltinteger.Parse.Lambda
             }
             // context.expr() will not be null if the lambda is an expression.
             // () => 2 * x
-            else if (statement is ExpressionStatement exprStatement)
+            else if (context.Statement is ExpressionStatement exprStatement)
             {
                 // Get the lambda expression.
                 Expression = parseInfo.SetCallInfo(CallInfo).GetExpression(lambdaScope, exprStatement.Expression);

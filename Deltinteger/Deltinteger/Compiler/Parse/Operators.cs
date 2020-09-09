@@ -33,7 +33,8 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
         // Lists
         public static CompilerOperator[] BinaryOperators { get; } = new CompilerOperator[] {
-            Squiggle, Dot, Equal, NotEqual, GreaterThan, LessThan, GreaterThanOrEqual, LessThanOrEqual, And, Or, Subtract, Add, Modulo, Divide, Multiply, Power
+            Squiggle, Dot, Equal, NotEqual, GreaterThan, LessThan, GreaterThanOrEqual, LessThanOrEqual, And, Or, Subtract, Add, Modulo, Divide, Multiply, Power,
+            Ternary, RhsTernary
         };
         public static CompilerOperator[] UnaryOperators { get; } = new CompilerOperator[] { Not, Inv };
 
