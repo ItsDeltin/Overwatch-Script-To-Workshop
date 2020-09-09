@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
 using LSPos   = OmniSharp.Extensions.LanguageServer.Protocol.Models.Position;
@@ -68,6 +69,12 @@ namespace Deltin.Deltinteger.Compiler
         }
 
         public bool EqualTo(DocPos other) => CompareTo(other) == 0;
+
+        public override bool Equals(object obj) => obj is DocPos pos &&
+            Line == pos.Line &&
+            Character == pos.Character;
+
+        public override int GetHashCode() => HashCode.Combine(Line, Character);
 
         public static bool operator <(DocPos p1, DocPos p2)  => p1.CompareTo(p2) <  0;
         public static bool operator >(DocPos p1, DocPos p2)  => p1.CompareTo(p2) >  0;
@@ -153,6 +160,12 @@ namespace Deltin.Deltinteger.Compiler
         }
 
         public override string ToString() => "[" + Start.ToString() + "] - [" + End.ToString() + "]";
+
+        public override bool Equals(object obj) => obj is DocRange range &&
+            EqualityComparer<DocPos>.Default.Equals(Start, range.Start) &&
+            EqualityComparer<DocPos>.Default.Equals(End, range.End);
+
+        public override int GetHashCode() => HashCode.Combine(Start, End);
 
         public static bool operator <(DocRange r1, DocRange r2)  => r1.CompareTo(r2) <  0;
         public static bool operator >(DocRange r1, DocRange r2)  => r1.CompareTo(r2) >  0;

@@ -622,11 +622,11 @@ namespace Deltin.Deltinteger.Compiler.Parse
             // Third, make sure Current is less than the count of the _tokens list.
             //
             // Now we make sure the token we got is equal to the Current token. If it is, we don't need to lex anymore.
-            // Make sure the type and text are equal. In most scenarios if TokenType is the same then text will be the same, the only exceptions being numbers, strings, and identifiers.
+            // Make sure the type, range, and text are equal. In most scenarios if TokenType is the same then text will be the same, the only exceptions being numbers, strings, and identifiers.
             //
             // If *all* of these conditions are met, '_lastInsertWasEqual' will be set to true, the block will be skipped
             // and lexing will stop.
-            if(!(_lastInsertWasEqual = (_endToken != null && Current >= _tokens.IndexOf(_endToken)) && Current < _tokens.Count && _tokens[Current].TokenType == token.TokenType && _tokens[Current].Text == token.Text))
+            if(!(_lastInsertWasEqual = (_endToken != null && Current >= _tokens.IndexOf(_endToken)) && Current < _tokens.Count && _tokens[Current].TokenType == token.TokenType && _tokens[Current].Range.Equals(token.Range) && _tokens[Current].Text == token.Text))
             {
                 // Specific case where the starting token was not found, insert the current token to the first index.
                 if (Current == -1)
@@ -634,7 +634,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
                     _tokens.Insert(0, token);
                     // Set Current to 1.
                     // This increment will set Current from -1 to 0,
-                    // the next incremeent will set Current from 0 to 1.
+                    // the next increment will set Current from 0 to 1.
                     Current++;
                 }
                 // If Current surpassed the token count, add the token to the top of the list.
