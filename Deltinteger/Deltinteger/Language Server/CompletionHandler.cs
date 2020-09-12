@@ -35,8 +35,7 @@ namespace Deltin.Deltinteger.LanguageServer
             List<CompletionItem> items = new List<CompletionItem>();
 
             // Add snippets.
-            items.Add(Snippet.For);
-            items.Add(Snippet.Forr);
+            Snippet.AddSnippets(items);
 
             // Add types.
             foreach (var type in _languageServer.LastParse.Types.AllTypes)

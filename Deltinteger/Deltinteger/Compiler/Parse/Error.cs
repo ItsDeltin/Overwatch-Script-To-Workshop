@@ -53,4 +53,18 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
         public string Message() => "Unexpected token '" + Type.Name() + "'";
     }
+
+    class MissingTernaryHand : IParserError
+    {
+        public DocRange Range { get; }
+        private readonly bool _left;
+
+        public MissingTernaryHand(Token token, bool left)
+        {
+            Range = token.Range;
+            _left = left;
+        }
+
+        public string Message() => "No " + (_left ? "left" : "right") + "-hand ternary operator";
+    }
 }

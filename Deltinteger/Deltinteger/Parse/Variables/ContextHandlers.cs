@@ -40,32 +40,33 @@ namespace Deltin.Deltinteger.Parse
             // Get the accessor.
             
             // Get the static attribute.
-            if (_attributes.Static)
-                attributes.Add(new VarBuilderAttribute(AttributeType.Static, _attributes.Static.Range));
+            if (_attributes.Static) attributes.Add(new VarBuilderAttribute(AttributeType.Static, _attributes.Static.Range));
             
             // Get the globalvar attribute.
-            if (_attributes.GlobalVar != null)
-                attributes.Add(new VarBuilderAttribute(AttributeType.Globalvar, _attributes.GlobalVar.Range));
+            if (_attributes.GlobalVar) attributes.Add(new VarBuilderAttribute(AttributeType.Globalvar, _attributes.GlobalVar.Range));
             
             // Get the playervar attribute.
-            if (_attributes.PlayerVar != null)
-                attributes.Add(new VarBuilderAttribute(AttributeType.Playervar, _attributes.PlayerVar.Range));
+            if (_attributes.PlayerVar) attributes.Add(new VarBuilderAttribute(AttributeType.Playervar, _attributes.PlayerVar.Range));
             
             // Get the ref attribute.
-            if (_attributes.Ref != null)
-                attributes.Add(new VarBuilderAttribute(AttributeType.Ref, _attributes.Ref.Range));
+            if (_attributes.Ref) attributes.Add(new VarBuilderAttribute(AttributeType.Ref, _attributes.Ref.Range));
+            
+            // Get Accessors.
+            // Private
+            if (_attributes.Private) attributes.Add(new VarBuilderAttribute(AttributeType.Private, _attributes.Private.Range));
+            // Protected
+            if (_attributes.Protected) attributes.Add(new VarBuilderAttribute(AttributeType.Protected, _attributes.Protected.Range));
+            // Public
+            if (_attributes.Public) attributes.Add(new VarBuilderAttribute(AttributeType.Public, _attributes.Public.Range));
             
             // Get the ID attribute.
-            if (_defineContext.ID != null)
-                attributes.Add(new IDAttribute(_defineContext.ID));
+            if (_defineContext.ID) attributes.Add(new IDAttribute(_defineContext.ID));
             
             // Get the extended attribute.
-            if (_defineContext.Extended != null)
-                attributes.Add(new VarBuilderAttribute(AttributeType.Ext, _defineContext.Extended.Range));
+            if (_defineContext.Extended) attributes.Add(new VarBuilderAttribute(AttributeType.Ext, _defineContext.Extended.Range));
             
             // Get the initial value.
-            if (_defineContext.InitialValue != null)
-                attributes.Add(new InitialValueAttribute(_defineContext.InitialValue));
+            if (_defineContext.InitialValue != null) attributes.Add(new InitialValueAttribute(_defineContext.InitialValue));
             
             return attributes.ToArray();
         }

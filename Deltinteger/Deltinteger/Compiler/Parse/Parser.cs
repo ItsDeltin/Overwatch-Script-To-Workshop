@@ -256,28 +256,44 @@ namespace Deltin.Deltinteger.Compiler.Parse
         void PopOperator()
         {
             var op = Operators.Pop();
+            // Binary
             if (op.Type == OperatorType.Binary)
             {
-                // Binary
                 var right = Operands.Pop();
                 var left = Operands.Pop();
                 Operands.Push(new BinaryOperatorExpression(left, right, op));
             }
+            // Unary
             else if (op.Type == OperatorType.Unary)
             {
-                // Unary
                 var value = Operands.Pop();
                 Operands.Push(new UnaryOperatorExpression(value, op));
             }
-            else
+            // Extraneous left-hand ternary
+            else if (op.Type == OperatorType.TernaryLeft)
             {
-                // Ternary
-                var op2 = Operators.Pop();
-                var rhs = Operands.Pop();
-                var middle = Operands.Pop();
-                var lhs = Operands.Pop();
-                Operands.Push(new TernaryExpression(lhs, middle, rhs));
+                Operands.Pop();
+                AddError(new MissingTernaryHand(op.Token, false));
             }
+            // Ternary
+            else if (op.Type == OperatorType.TernaryRight)
+            {
+                if (Operators.Peek().Type == OperatorType.TernaryLeft)
+                {
+                    var op2 = Operators.Pop();
+                    var rhs = Operands.Pop();
+                    var middle = Operands.Pop();
+                    var lhs = Operands.Pop();
+                    Operands.Push(new TernaryExpression(lhs, middle, rhs));
+                }
+                // Missing left-hand ?
+                else
+                {
+                    Operands.Pop();
+                    AddError(new MissingTernaryHand(op.Token, true));
+                }
+            }
+            else throw new NotImplementedException();
         }
 
         bool TryParseBinaryOperator(out OperatorInfo operatorInfo)
@@ -740,10 +756,11 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
             // Get the initializer.
             IParseStatement initializer = null;
-            if (!ParseOptionalSemicolon())
+            Token initializerToken = ParseOptionalSemicolon();
+            if (!initializerToken)
             {
                 initializer = ParseStatement(false);
-                ParseSemicolon();
+                initializerToken = ParseSemicolon();
             }
             
             // Get the condition.
@@ -766,7 +783,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
             var statement = ParseStatement();
 
             // Done
-            return EndTokenCapture(new For(initializer, condition, iterator, statement));
+            return EndTokenCapture(new For(initializer, condition, iterator, statement, initializerToken));
         }
 
         While ParseWhile()
@@ -944,7 +961,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
         bool IsHook() => Lookahead(() => {
             bool parsedAny = false;
-            do parsedAny = parsedAny || ParseExpected(TokenType.Identifier);
+            do parsedAny = ParseExpected(TokenType.Identifier) || parsedAny;
             while (ParseOptional(TokenType.Dot));
             return parsedAny && Is(TokenType.Equal);
         });
@@ -985,7 +1002,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
             var arrow = ParseExpected(TokenType.Arrow);
             
             // Get the statement.
-            var statement = ParseStatement();
+            var statement = ParseStatement(false);
 
             // Done.
             return EndNode(new LambdaExpression(parameters, arrow, statement));

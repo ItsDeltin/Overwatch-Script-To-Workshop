@@ -7,8 +7,8 @@ namespace Deltin.Deltinteger.Compiler.Parse
         public static CompilerOperator Sentinel { get; } = new CompilerOperator();
         public static CompilerOperator Squiggle { get; } = new CompilerOperator(1, "~", TokenType.Squiggle) { RhsHandler = new DotRhsHandler() };
         // Compare
-        public static CompilerOperator Ternary { get; } = new CompilerOperator(2, "?", TokenType.QuestionMark, OperatorType.Ternary);
-        public static CompilerOperator RhsTernary { get; } = new CompilerOperator(3, ":", TokenType.Colon, OperatorType.Ternary);
+        public static CompilerOperator Ternary { get; } = new CompilerOperator(2, "?", TokenType.QuestionMark, OperatorType.TernaryLeft);
+        public static CompilerOperator RhsTernary { get; } = new CompilerOperator(3, ":", TokenType.Colon, OperatorType.TernaryRight);
         public static CompilerOperator Equal { get; } = new CompilerOperator(4, "==", TokenType.EqualEqual);
         public static CompilerOperator NotEqual { get; } = new CompilerOperator(5, "!=", TokenType.NotEqual);
         public static CompilerOperator GreaterThan { get; } = new CompilerOperator(6, ">", TokenType.GreaterThan);
@@ -76,7 +76,8 @@ namespace Deltin.Deltinteger.Compiler.Parse
     {
         Unary,
         Binary,
-        Ternary
+        TernaryLeft,
+        TernaryRight,
     }
 
     public interface IOperatorRhsHandler

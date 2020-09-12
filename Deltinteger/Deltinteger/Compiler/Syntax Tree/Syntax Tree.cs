@@ -638,13 +638,15 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public IParseExpression Condition { get; }
         public IParseStatement Iterator { get; }
         public IParseStatement Block { get; }
+        public Token InitializerSemicolon { get; }
 
-        public For(IParseStatement initializer, IParseExpression condition, IParseStatement iterator, IParseStatement block)
+        public For(IParseStatement initializer, IParseExpression condition, IParseStatement iterator, IParseStatement block, Token initializerSemicolon)
         {
             Initializer = initializer;
             Condition = condition;
             Iterator = iterator;
             Block = block;
+            InitializerSemicolon = initializerSemicolon;
         }
     }
 

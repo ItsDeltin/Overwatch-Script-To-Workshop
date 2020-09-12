@@ -70,13 +70,6 @@ namespace Deltin.Deltinteger
         public static void Script(string parseFile)
         {
             string text = File.ReadAllText(parseFile);
-            var lex = new Compiler.Lexer();
-            lex.Init(text);
-            var parser = new Compiler.Parse.Parser(lex);
-            parser.Parse();
-
-            return;
-
             Diagnostics diagnostics = new Diagnostics();
             ScriptFile root = new ScriptFile(diagnostics, new Uri(parseFile), text);
             DeltinScript deltinScript = new DeltinScript(new TranslateSettings(diagnostics, root));

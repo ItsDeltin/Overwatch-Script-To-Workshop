@@ -183,7 +183,9 @@ namespace Deltin.Deltinteger.Parse
                 // Missing initializer.
                 if (forContext.Initializer == null)
                 {
-                    // TODO: throw error if there is no variable or assignment.
+                    // Error if there is no initializer.
+                    if (forContext.InitializerSemicolon)
+                        parseInfo.Script.Diagnostics.Error("Auto-for loops require an initializer.", forContext.InitializerSemicolon.Range);
                 }
                 // Declaration
                 else if (forContext.Initializer is VariableDeclaration declaration)
@@ -198,7 +200,7 @@ namespace Deltin.Deltinteger.Parse
                         // The for cannot be indexed and should be on the rule-level.
                         CanBeIndexed = false,
                         FullVariable = true
-                    }, parseInfo.GetExpression(scope, assignment.VariableExpression), assignment.VariableExpression.Range, parseInfo.Script.Diagnostics);
+                    }, parseInfo.GetExpression(varScope, assignment.VariableExpression), assignment.VariableExpression.Range, parseInfo.Script.Diagnostics);
 
                     InitialResolveValue = parseInfo.GetExpression(scope, assignment.Value);
                 }
@@ -211,7 +213,7 @@ namespace Deltin.Deltinteger.Parse
                         // The for cannot be indexed and should be on the rule-level.
                         CanBeIndexed = false,
                         FullVariable = true
-                    }, parseInfo.GetExpression(scope, identifier), identifier.Range, parseInfo.Script.Diagnostics);
+                    }, parseInfo.GetExpression(varScope, identifier), identifier.Range, parseInfo.Script.Diagnostics);
                 }
                 // Incorrect initializer.
                 else
@@ -230,7 +232,7 @@ namespace Deltin.Deltinteger.Parse
                 // Get the auto-for
                 if (IsAutoFor)
                 {
-                    Step = parseInfo.GetExpression(scope, ((ExpressionStatement)forContext.Iterator).Expression);
+                    Step = parseInfo.GetExpression(varScope, ((ExpressionStatement)forContext.Iterator).Expression);
                     RawContinue = true;
                 }
                 // Get the for assignment.
@@ -243,7 +245,7 @@ namespace Deltin.Deltinteger.Parse
             else RawContinue = true;
 
             // Get the block.
-            Block = parseInfo.GetStatement(scope, forContext.Block);
+            Block = parseInfo.GetStatement(varScope, forContext.Block);
             // Get the path info.
             Path = new PathInfo(Block, forContext.Range, false);
         }
