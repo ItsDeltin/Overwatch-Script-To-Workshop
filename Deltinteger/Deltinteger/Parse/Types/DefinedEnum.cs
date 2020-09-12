@@ -34,17 +34,16 @@ namespace Deltin.Deltinteger.Parse
             _translateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, DefinedAt, true);
 
             // Get the enum members.
-            var members = new DefinedEnumMember[enumContext.Values.Count];
-            for (int i = 0; i < members.Length; i++)
-            {
-                var expression = enumContext.Values[i].Value != null
-                    ? new ExpressionOrWorkshopValue(parseInfo.GetExpression(Scope, enumContext.Values[i].Value))
-                    : new ExpressionOrWorkshopValue(new V_Number(i));
-                
-                members[i] = new DefinedEnumMember(parseInfo, this, enumContext.Values[i].Identifier.Text, new Location(parseInfo.Script.Uri, enumContext.Values[i].Identifier.Range), expression);
-            }
-
-            foreach (var member in members) Scope.AddVariable(member, parseInfo.Script.Diagnostics, member.DefinedAt.range);
+            for (int i = 0; i < enumContext.Values.Count; i++)
+                if (enumContext.Values[i].Identifier)
+                {
+                    var expression = enumContext.Values[i].Value != null
+                        ? new ExpressionOrWorkshopValue(parseInfo.GetExpression(Scope, enumContext.Values[i].Value))
+                        : new ExpressionOrWorkshopValue(new V_Number(i));
+                    
+                    var newMember = new DefinedEnumMember(parseInfo, this, enumContext.Values[i].Identifier.Text, new Location(parseInfo.Script.Uri, enumContext.Values[i].Identifier.Range), expression);
+                    Scope.AddVariable(newMember, parseInfo.Script.Diagnostics, newMember.DefinedAt.range);
+                }
         }
 
         public override Scope ReturningScope() => Scope;

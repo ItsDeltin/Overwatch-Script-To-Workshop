@@ -1321,6 +1321,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 do
                 {
                     // Get the value identifier.
+                    StartNode();
                     var valueIdentifier = ParseExpected(TokenType.Identifier);
                     IParseExpression value = null;
 
@@ -1329,7 +1330,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
                         value = GetContainExpression();
                     
                     // Add the value to the list.
-                    values.Add(new EnumValue(valueIdentifier, value));
+                    values.Add(EndNode(new EnumValue(valueIdentifier, value)));
                 }
                 while (ParseOptional(TokenType.Comma));
 
