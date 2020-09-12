@@ -39,4 +39,18 @@ namespace Deltin.Deltinteger.Compiler.Parse
         public string Message() => "Invalid expression term '" + ObtainedToken.Name() + "'";
         public override string ToString() => "[" + Message() + ", range: " + Range.ToString() + "]";
     }
+
+    class UnexpectedToken : IParserError
+    {
+        public DocRange Range { get; }
+        public TokenType Type { get; }
+
+        public UnexpectedToken(Token token)
+        {
+            Range = token.Range;
+            Type = token.TokenType;
+        }
+
+        public string Message() => "Unexpected token '" + Type.Name() + "'";
+    }
 }

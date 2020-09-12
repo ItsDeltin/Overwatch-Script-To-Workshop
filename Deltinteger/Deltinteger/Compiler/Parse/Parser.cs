@@ -73,18 +73,14 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 TokenRangeStart.Push(Token - 1);
         }
 
-        T EndNode<T>(T node) where T: Node
+        T EndNode<T>(T node) where T: INodeRange
         {
             if (LookaheadDepth == 0)
                 node.Range = new DocRange(Lexer.Tokens[TokenRangeStart.Pop()].Range.Start, CurrentOrLast.Range.End);
             return node;
         }
 
-        T Discard<T>(T node)
-        {
-            TokenRangeStart.Pop();
-            return node;
-        }
+        void Discard() => TokenRangeStart.Pop();
 
         T Node<T>(Func<T> func) where T: Node
         {
@@ -229,8 +225,25 @@ namespace Deltin.Deltinteger.Compiler.Parse
             return false;
         }
 
-        Token ParseSemicolon() => ParseExpected(TokenType.Semicolon);
-        Token ParseOptionalSemicolon() => ParseOptional(TokenType.Semicolon);
+        void Unexpected(bool root)
+        {
+            if (root || Kind.IsSkippable())
+                AddError(new UnexpectedToken(Consume()));
+        }
+
+        Token ParseSemicolon(bool parse = true)
+        {
+            if (parse)
+                return ParseExpected(TokenType.Semicolon);
+            return null;
+        }
+
+        Token ParseOptionalSemicolon(bool parse = true)
+        {
+            if (parse)
+                return ParseOptional(TokenType.Semicolon);
+            return null;
+        }
 
         // Operators
         void PushOperator(OperatorInfo op)
@@ -339,8 +352,6 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 case TokenType.Null: return new NullExpression(Consume());
                 // This
                 case TokenType.This: return new ThisExpression(Consume());
-                // Functions and identifiers
-                case TokenType.Identifier: return IdentifierOrFunction();
                 // New
                 case TokenType.New: return ParseNew();
                 // Array
@@ -356,9 +367,13 @@ namespace Deltin.Deltinteger.Compiler.Parse
                     goto default;
                 // Other
                 default:
-                    // Check if this is a lambda before expression group.
+                    // Check if this is a lambda before expression group or identifier.
                     if (IsLambda())
                         return ParseLambda();
+                    
+                    // Functions and identifiers
+                    else if (Is(TokenType.Identifier))
+                        return IdentifierOrFunction();
                     
                     // Expression group.
                     else if (Is(TokenType.Parentheses_Open))
@@ -508,7 +523,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
             return result;
         }
 
-        IParseStatement ParseStatement()
+        IParseStatement ParseStatement(bool parseSemicolon = true)
         {
             switch (Kind)
             {
@@ -533,19 +548,24 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 case TokenType.Delete: return ParseDelete();
             }
 
-            if (IsDeclaration(false)) return ParseDeclaration();
-            return ParseExpressionStatement();
+            if (IsDeclaration(false)) return ParseDeclaration(parseSemicolon);
+            return ParseExpressionStatement(parseSemicolon);
         }
 
-        IParseStatement ParseExpressionStatement()
+        IParseStatement ParseExpressionStatement(bool parseSemicolon)
         {
             StartNode();
             var comment = ParseOptional(TokenType.ActionComment);
             var expression = GetContainExpression();
 
             // Default if the current token is a semicolon.
-            if (ParseOptional(TokenType.Semicolon))
-                return Discard(ExpressionStatement(expression, comment));
+            if (ParseOptionalSemicolon(parseSemicolon))
+            {
+                Discard();
+                return ExpressionStatement(expression, comment);
+            }
+            
+            IParseStatement result = null;
             
             // Assignment
             if (Kind.IsAssignmentOperator())
@@ -554,38 +574,50 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
                 // Get the value.
                 var value = GetContainExpression();
-
-                // Statement finished.
-                ParseSemicolon();
-                return EndNode(new Assignment(expression, assignmentToken, value, comment));
+                result = new Assignment(expression, assignmentToken, value, comment);
             }
 
             // Increment
             if (ParseOptional(TokenType.PlusPlus))
-                return EndNode(new Increment(expression, false));
+                result = new Increment(expression, false);
             
             // Decrement
             if (ParseOptional(TokenType.MinusMinus))
-                return EndNode(new Increment(expression, true));
+                result = new Increment(expression, true);
             
+            // Statement found.
+            if (result != null)
+            {
+                EndNode((Node)result);
+                ParseSemicolon(parseSemicolon);
+                return result;
+            }
             // Default
-            var result = ExpressionStatement(expression, comment);
-            ParseOptionalSemicolon();
-            return Discard(result);
+            else
+            {
+                Discard();
+                result = ExpressionStatement(expression, comment);
+                ParseSemicolon(parseSemicolon);
+                return result;
+            }
         }
 
         Break ParseBreak()
         {
+            StartNode();
             ParseExpected(TokenType.Break);
+            var result = EndNode(new Break());
             ParseSemicolon();
-            return new Break();
+            return result;
         }
 
         Continue ParseContinue()
         {
+            StartNode();
             ParseExpected(TokenType.Continue);
+            var result = EndNode(new Continue());
             ParseSemicolon();
-            return new Continue();
+            return result;
         }
 
         Return ParseReturn()
@@ -710,7 +742,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
             IParseStatement initializer = null;
             if (!ParseOptionalSemicolon())
             {
-                initializer = ParseStatement();
+                initializer = ParseStatement(false);
                 ParseSemicolon();
             }
             
@@ -724,11 +756,8 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
             // Get the iterator.
             IParseStatement iterator = null;
-            if (!ParseOptionalSemicolon())
-            {
-                iterator = ParseStatement();
-                ParseSemicolon();
-            }
+            if (!Is(TokenType.Parentheses_Close))
+                iterator = ParseStatement(false);
 
             // End the for parameters.
             ParseExpected(TokenType.Parentheses_Close);
@@ -836,7 +865,8 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
         bool IsDeclaration(bool functionDeclaration) => Lookahead(() => {
             ParseAttributes();
-            return ParseType().LookaheadValid && ParseExpected(TokenType.Identifier) && (
+            var typeParse = ParseType();
+            return typeParse.LookaheadValid && (typeParse.DefinitelyType || (ParseExpected(TokenType.Identifier) && (
                 // This is a declaration if the following token is:
                 Is(TokenType.Semicolon) ||   // End declaration statement.
                 Is(TokenType.Equal) ||       // Initial value.
@@ -845,7 +875,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 Is(TokenType.Colon) ||       // Macro variable value.
                 (functionDeclaration && Is(TokenType.Parentheses_Open)) || // Function parameter start.
                 IsFinished                   // EOF was reached.
-            );
+            )));
         });
 
         bool IsConstructor() => Lookahead(() => {
@@ -919,6 +949,8 @@ namespace Deltin.Deltinteger.Compiler.Parse
             return parsedAny && Is(TokenType.Equal);
         });
 
+        bool IsStartOfParameter() => Is(TokenType.Ref) || Is(TokenType.Define) || Is(TokenType.Identifier);
+
         LambdaExpression ParseLambda()
         {
             StartNode();
@@ -962,9 +994,9 @@ namespace Deltin.Deltinteger.Compiler.Parse
         List<VariableDeclaration> ParseParameters()
         {
             var parameters = new List<VariableDeclaration>();
-            if (!Is(TokenType.Parentheses_Close))
+            if (IsStartOfParameter())
             {
-                do parameters.Add(ParseDeclaration());
+                do parameters.Add(ParseDeclaration(false));
                 while (ParseOptional(TokenType.Comma));
             }
             return parameters;
@@ -972,6 +1004,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
         IDeclaration ParseVariableOrFunctionDeclaration()
         {
+            StartNode();
             var attributes = ParseAttributes();
             var type = ParseType();
             
@@ -993,7 +1026,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
                     // Get the macro's value.
                     var value = GetContainExpression();
                     ParseSemicolon();
-                    return new MacroFunctionContext(attributes, type, identifier, parameters, value);
+                    return EndNode(new MacroFunctionContext(attributes, type, identifier, parameters, value));
                 }
                 // Normal function
                 else
@@ -1012,7 +1045,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
                     // Get the function's block.
                     Block block = ParseBlock();
-                    return new FunctionContext(attributes, type, identifier, parameters, block, globalvar, playervar, subroutine);
+                    return EndNode(new FunctionContext(attributes, type, identifier, parameters, block, globalvar, playervar, subroutine));
                 }
             }
             // Variable macro
@@ -1020,8 +1053,8 @@ namespace Deltin.Deltinteger.Compiler.Parse
             {
                 // Get the value.
                 var macroValue = GetContainExpression();
-
-                return new MacroVarDeclaration(attributes, type, identifier, macroValue);
+                ParseSemicolon();
+                return EndNode(new MacroVarDeclaration(attributes, type, identifier, macroValue));
             }
             // Variable
             else
@@ -1037,11 +1070,12 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 if (ParseOptional(TokenType.Equal))
                     initialValue = GetContainExpression(); // Get the initial value.
 
-                return new VariableDeclaration(attributes, type, identifier, initialValue, ext, id);
+                ParseSemicolon();
+                return EndNode(new VariableDeclaration(attributes, type, identifier, initialValue, ext, id));
             }
         }
 
-        VariableDeclaration ParseDeclaration()
+        VariableDeclaration ParseDeclaration(bool parseSemicolon)
         {
             StartNode();
             var attributes = ParseAttributes();
@@ -1060,7 +1094,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 // Get the value.
                 initialValue = GetContainExpression();
             
-            ParseSemicolon();
+            ParseSemicolon(parseSemicolon);
             return EndNode(new VariableDeclaration(attributes, type, identifier, initialValue, ext, id));
         }
 
@@ -1223,10 +1257,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
                         context.Hooks.Add(ParseHook());
                     // Unknown
                     else
-                    {
-                        // TODO: error
-                        Consume();
-                    }
+                        Unexpected(true);
                     break;
             }
         }

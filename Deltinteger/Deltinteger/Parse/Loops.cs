@@ -148,7 +148,7 @@ namespace Deltin.Deltinteger.Parse
 
         // For
         readonly SetVariableAction Initializer;
-        readonly SetVariableAction Iterator;
+        readonly IStatement Iterator;
 
         // Auto-for
         readonly VariableResolve VariableResolve;
@@ -159,24 +159,7 @@ namespace Deltin.Deltinteger.Parse
         {
             Scope varScope = scope.Child();
 
-            // Get the iterator first in case this is an auto-for.
-            if (forContext.Iterator != null)
-            {
-                // Get the assignment.
-                if (forContext.Iterator is Assignment assignment)
-                {
-                    Iterator = new SetVariableAction(parseInfo, varScope, assignment);
-                    RawContinue = false;
-                }
-                // Get the auto-for
-                else if (forContext.Iterator is ExpressionStatement exprStatement)
-                {
-                    Step = parseInfo.GetExpression(scope, exprStatement.Expression);
-                    RawContinue = true;
-                    IsAutoFor = true;
-                }
-            }
-            else RawContinue = true;
+            IsAutoFor = forContext.Iterator is ExpressionStatement;
 
             // Get the initializer.
             if (!IsAutoFor)
@@ -240,6 +223,24 @@ namespace Deltin.Deltinteger.Parse
             // Get the condition.
             if (forContext.Condition != null)
                 Condition = parseInfo.GetExpression(varScope, forContext.Condition);
+            
+            // Get the iterator.
+            if (forContext.Iterator != null)
+            {
+                // Get the auto-for
+                if (IsAutoFor)
+                {
+                    Step = parseInfo.GetExpression(scope, ((ExpressionStatement)forContext.Iterator).Expression);
+                    RawContinue = true;
+                }
+                // Get the for assignment.
+                else
+                {
+                    Iterator = parseInfo.GetStatement(varScope, forContext.Iterator);
+                    RawContinue = false;
+                }
+            }
+            else RawContinue = true;
 
             // Get the block.
             Block = parseInfo.GetStatement(scope, forContext.Block);
@@ -406,6 +407,7 @@ namespace Deltin.Deltinteger.Parse
 
             public DocRange GetNameRange() => _foreachContext.Identifier.Range;
             public DocRange GetTypeRange() => _foreachContext.Type.Range;
+            public bool CheckName() => _foreachContext.Identifier;
         }
     }
 }

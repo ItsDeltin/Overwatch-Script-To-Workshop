@@ -15,7 +15,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public List<TokenCapture> NodeCaptures { get; set; }
     }
 
-    public class Node
+    public class Node : INodeRange
     {
         public DocRange Range { get; set; }
     }
@@ -23,7 +23,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
     // Interfaces
     public interface INodeRange
     {
-        DocRange Range { get; }
+        DocRange Range { get; set; }
     }
     public interface IParseExpression : INodeRange {}
     public interface IParseStatement : INodeRange {}
@@ -62,7 +62,8 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public bool HasTypeArgs => TypeArgs != null && TypeArgs.Count > 0;
         public bool IsArray => ArrayCount > 0;
         public bool LookaheadValid => Identifier != null;
-        public bool IsDefault => Identifier.TokenType == TokenType.Define;
+        public bool IsDefault => !Identifier || Identifier.TokenType == TokenType.Define;
+        public bool DefinitelyType => LookaheadValid && (IsVoid || Identifier.TokenType == TokenType.Define || ArrayCount > 0 || TypeArgs.Count > 0);
     }
 
     public class RuleContext : Node
@@ -142,7 +143,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         }
     }
 
-    public class FunctionContext : IDeclaration
+    public class FunctionContext : Node, IDeclaration
     {
         public AttributeTokens Attributes { get; }
         public ParseType Type { get; }
@@ -166,7 +167,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         }
     }
 
-    public class MacroFunctionContext : IDeclaration
+    public class MacroFunctionContext : Node, IDeclaration
     {
         public AttributeTokens Attributes { get; }
         public ParseType Type { get; }

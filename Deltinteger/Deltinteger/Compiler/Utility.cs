@@ -231,6 +231,36 @@ namespace Deltin.Deltinteger.Compiler
             }
         }
 
+        public static bool IsSkippable(this TokenType tokenType)
+        {
+            switch (tokenType)
+            {
+                case TokenType.Rule:
+                case TokenType.Class:
+                case TokenType.Enum:
+                case TokenType.Public:
+                case TokenType.Protected:
+                case TokenType.Private:
+                case TokenType.Override:
+                case TokenType.Virtual:
+                case TokenType.Void:
+                case TokenType.Recursive:
+                case TokenType.PlayerVar:
+                case TokenType.GlobalVar:
+                case TokenType.Static:
+                case TokenType.SquareBracket_Close:
+                case TokenType.SquareBracket_Open:
+                case TokenType.Parentheses_Close:
+                case TokenType.Parentheses_Open:
+                case TokenType.CurlyBracket_Close:
+                case TokenType.CurlyBracket_Open:
+                    return false;
+                
+                default:
+                    return true;
+            }
+        }
+
         public static bool IsAssignmentOperator(this TokenType tokenType) => Assignment_Tokens.Contains(tokenType);
 
         /// <summary>Gets the token's text. If the token is null, "?" is returned.</summary>
