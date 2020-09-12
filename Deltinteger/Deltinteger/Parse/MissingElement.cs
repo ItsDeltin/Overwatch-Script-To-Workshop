@@ -11,6 +11,7 @@ namespace Deltin.Deltinteger.Parse
         public Scope ReturningScope() => null;
         public CodeType Type() => null;
         public bool IsStatement() => true;
+        public bool ExpressionErrorHandled() => true;
         public void OutputComment(FileDiagnostics diagnostics, DocRange range, string comment) {}
         public IWorkshopTree Parse(ActionSet actionSet) => throw new NotImplementedException();
         public void Translate(ActionSet actionSet) => throw new NotImplementedException();

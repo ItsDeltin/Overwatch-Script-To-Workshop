@@ -84,16 +84,23 @@ namespace Deltin.Deltinteger.Parse
                 }
 
                 // Get the expression to the right of the dot.
-                    
-                // Get the method.
-                if (exprContext.Right is FunctionExpression rightMethod)
-                    exprList.Add(new FunctionPart(rightMethod));
-                // Get the variable.
-                else if (exprContext.Right is Identifier rightVariable && rightVariable.Token)
-                    exprList.Add(new VariableOrTypePart(rightVariable));
-                // Missing function or variable, set the _trailingSeperator.
+                
+                // If the expression is a Tree, recursively flatten.
+                if (exprContext.Right is BinaryOperatorExpression rop && rop.IsDotExpression())
+                    Flatten(script, rop, exprList);
+                // Otherwise, add the expression to the list.
                 else
-                    _trailingSeperator = exprContext.Operator.Token;
+                {
+                    // Get the method.
+                    if (exprContext.Right is FunctionExpression rightMethod)
+                        exprList.Add(new FunctionPart(rightMethod));
+                    // Get the variable.
+                    else if (exprContext.Right is Identifier rightVariable && rightVariable.Token)
+                        exprList.Add(new VariableOrTypePart(rightVariable));
+                    // Missing function or variable, set the _trailingSeperator.
+                    else
+                        _trailingSeperator = exprContext.Operator.Token;
+                }
             }
         }
 
@@ -213,7 +220,7 @@ namespace Deltin.Deltinteger.Parse
             return new ExpressionTreeParseResult(result, resultIndex, target, resultingVariable);
         }
     
-        public bool IsStatement() => Result?.IsStatement() ?? true;
+        public bool IsStatement() => _trailingSeperator || (Result?.IsStatement() ?? true);
 
         public static IExpression ResultingExpression(IExpression expression)
         {
