@@ -74,7 +74,7 @@ namespace Deltin.Deltinteger.Compiler.SyntaxTree
         public List<RuleSetting> Settings { get; }
         public List<IfCondition> Conditions { get; }
         public IParseStatement Statement { get; }
-        public string Name => Extras.RemoveQuotes(NameToken.Text);
+        public string Name => Extras.RemoveQuotes(NameToken.GetText());
 
         public RuleContext(Token ruleToken, Token name, Token disabled, Token order, List<RuleSetting> settings, List<IfCondition> conditions, IParseStatement statement)
         {

@@ -79,9 +79,6 @@ namespace Deltin.Deltinteger.Parse
                     parseInfo.TranslateInfo.VarCollection.Reserve(ID, false, parseInfo.Script.Diagnostics, DefinedAt.range);
             }
 
-            // Add the variable to the scope.
-            _operationalScope.AddVariable(this, parseInfo.Script.Diagnostics, DefinedAt.range);
-
             parseInfo.Script.AddToken(DefinedAt.range, _tokenType, _tokenModifiers);
             parseInfo.Script.AddHover(DefinedAt.range, GetLabel(true));
             parseInfo.TranslateInfo.GetComponent<SymbolLinkComponent>().AddSymbolLink(this, DefinedAt, true);

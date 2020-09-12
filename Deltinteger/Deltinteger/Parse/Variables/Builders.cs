@@ -29,12 +29,13 @@ namespace Deltin.Deltinteger.Parse
         protected override void Apply()
         {
             _varInfo.WholeContext = true;
-            _varInfo.OperationalScope = _operationalScope; // Set the operational scope.
             _varInfo.AccessLevel = AccessLevel.Public; // Set the access level.
             _varInfo.InitialValueResolve = InitialValueResolve.ApplyBlock; // Get the inital value after elements have been resolved.
             _varInfo.CodeLensType = CodeLensSourceType.RuleVariable; // Set the code lens type.
             _varInfo.HandleRestrictedCalls = true; // Handle restricted calls.
         }
+
+        protected override Scope OperationalScope() => _operationalScope;
     }
 
     class ScopedVariable : VarBuilder
@@ -59,12 +60,13 @@ namespace Deltin.Deltinteger.Parse
         protected override void Apply()
         {
             _varInfo.WholeContext = false;
-            _varInfo.OperationalScope = _operationalScope;
             _varInfo.CodeLensType = CodeLensSourceType.ScopedVariable;
 
             if (_varInfo.IsWorkshopReference && _varInfo.InitialValueContext == null)
                 _diagnostics.Error("Variables with the 'ref' attribute must have an initial value.", _nameRange);
         }
+
+        protected override Scope OperationalScope() => _operationalScope;
     }
 
     class ClassVariable : VarBuilder
@@ -93,10 +95,11 @@ namespace Deltin.Deltinteger.Parse
                 _diagnostics.Error("Non-static variables with workshop constant types are not allowed.", _typeRange);
 
             _varInfo.WholeContext = true;
-            _varInfo.OperationalScope = _varInfo.Static ? _staticScope : _objectScope;
             _varInfo.CodeLensType = CodeLensSourceType.ClassVariable;
             _varInfo.InitialValueResolve = InitialValueResolve.ApplyBlock;
         }
+
+        protected override Scope OperationalScope() => _varInfo.Static ? _staticScope : _objectScope;
     }
 
     class ParameterVariable : VarBuilder
@@ -123,7 +126,6 @@ namespace Deltin.Deltinteger.Parse
         protected override void Apply()
         {
             _varInfo.WholeContext = true; // Shouldn't matter.
-            _varInfo.OperationalScope = _operationalScope;
             _varInfo.CodeLensType = CodeLensSourceType.ParameterVariable;
             _varInfo.TokenType = TokenType.Parameter;
             _varInfo.BridgeInvocable = _bridgeInvocable;
@@ -138,6 +140,8 @@ namespace Deltin.Deltinteger.Parse
             if (refAttribute != null && _varInfo.Type != null && _varInfo.Type.IsConstant())
                 _diagnostics.Warning("Constant workshop types have the 'ref' attribute by default.", refAttribute.Range);
         }
+
+        protected override Scope OperationalScope() => _operationalScope;
     }
 
     class SubroutineParameterVariable : ParameterVariable
@@ -190,13 +194,14 @@ namespace Deltin.Deltinteger.Parse
         {
             _varInfo.WholeContext = false;
             _varInfo.IsWorkshopReference = true;
-            _varInfo.OperationalScope = _operationalScope;
             _varInfo.CodeLensType = CodeLensSourceType.ScopedVariable;
 
             _varInfo.TokenType = TokenType.Variable;
             _varInfo.TokenModifiers.Add(TokenModifier.Declaration);
             _varInfo.TokenModifiers.Add(TokenModifier.Readonly);
         }
+
+        protected override Scope OperationalScope() => _operationalScope;
     }
 
     class AutoForVariable : VarBuilder
@@ -223,8 +228,9 @@ namespace Deltin.Deltinteger.Parse
         protected override void Apply()
         {
             _varInfo.WholeContext = false;
-            _varInfo.OperationalScope = _operationalScope;
             _varInfo.CodeLensType = CodeLensSourceType.ScopedVariable;
         }
+
+        protected override Scope OperationalScope() => _operationalScope;
     }
 }

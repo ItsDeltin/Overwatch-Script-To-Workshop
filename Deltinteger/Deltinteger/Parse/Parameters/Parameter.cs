@@ -111,7 +111,7 @@ namespace Deltin.Deltinteger.Parse
             {
                 Var newVar;
 
-                CodeParameter parameter = new CodeParameter(context[i].Identifier.Text);
+                CodeParameter parameter = new CodeParameter(context[i].Identifier.GetText());
 
                 // Set up the context handler.
                 IVarContextHandler contextHandler = new DefineContextHandler(parseInfo.SetRestrictedCallHandler(parameter), context[i]);

@@ -79,7 +79,18 @@ namespace Deltin.Deltinteger.Parse
             TypeCheck();
             _varInfo.Recursive = IsRecursive();
 
-            return new Var(_varInfo);
+            // Set the scope.
+            var scope = OperationalScope();
+            _varInfo.OperationalScope = scope;
+
+            // Get the resulting variable.
+            var result = new Var(_varInfo);
+
+            // Add the variable to the operational scope.
+            if (_contextHandler.CheckName()) scope.AddVariable(result, _diagnostics, _nameRange);
+            else scope.CopyVariable(result);
+
+            return result;
         }
 
         protected void RejectAttributes(params AttributeType[] types)
@@ -104,6 +115,7 @@ namespace Deltin.Deltinteger.Parse
         protected virtual void MissingAttribute(AttributeType[] attributeTypes) {}
         protected abstract void CheckAttributes();
         protected abstract void Apply();
+        protected abstract Scope OperationalScope();
 
         protected virtual void TypeCheck()
         {
@@ -129,6 +141,7 @@ namespace Deltin.Deltinteger.Parse
         VarBuilderAttribute[] GetAttributes();
         ParseType GetCodeType();
         DocRange GetTypeRange();
+        bool CheckName();
     }
 
     public class VarBuilderAttribute

@@ -232,6 +232,9 @@ namespace Deltin.Deltinteger.Compiler
         }
 
         public static bool IsAssignmentOperator(this TokenType tokenType) => Assignment_Tokens.Contains(tokenType);
+
+        /// <summary>Gets the token's text. If the token is null, "?" is returned.</summary>
+        public static string GetText(this Token token) => token ? token.Text : "?";
     }
 
     public enum TokenType

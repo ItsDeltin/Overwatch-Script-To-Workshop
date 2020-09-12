@@ -22,7 +22,7 @@ namespace Deltin.Deltinteger.Parse
         public Location GetDefineLocation() => new Location(ParseInfo.Script.Uri, GetNameRange());
 
         // Get the name.
-        public string GetName() => _defineContext.Identifier.Text;
+        public string GetName() => _defineContext.Identifier.GetText();
         public DocRange GetNameRange()
         {
             if (_defineContext.Identifier == null) return _defineContext.Range;
@@ -71,5 +71,7 @@ namespace Deltin.Deltinteger.Parse
         }
 
         public DocRange GetTypeRange() => _defineContext.Type.Range;
+
+        public bool CheckName() => _defineContext.Identifier;
     }
 }
