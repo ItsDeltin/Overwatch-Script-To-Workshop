@@ -280,6 +280,20 @@ namespace Deltin.Deltinteger.Compiler.Parse
             return false;
         }
 
+        OperatorInfo ParseUnaryOperator()
+        {
+            // Operator !expr
+            if (ParseOptional(TokenType.Exclamation, out var not))
+                return new OperatorInfo(CompilerOperator.Not, not);
+            
+            // Operator -expr
+            else if (ParseOptional(TokenType.Subtract, out var inverse))
+                return new OperatorInfo(CompilerOperator.Inv, inverse);
+            
+            // No unary found.
+            return null;
+        }
+
         // Expressions
         /// <summary>Parses the current expression. In most cases, 'GetContainExpression' should be called instead.</summary>
         /// <returns>The resulting expression.</returns>
@@ -303,6 +317,15 @@ namespace Deltin.Deltinteger.Compiler.Parse
         {
             switch (Kind)
             {
+                // Unary operator
+                case TokenType.Exclamation:
+                case TokenType.Subtract:
+                    var op = ParseUnaryOperator();
+                    PushOperator(op);
+                    var value = GetExpressionWithArray();
+                    Operands.Push(value);
+                    return value;
+                
                 // Booleans
                 case TokenType.True: return new BooleanExpression(Consume(), true);
                 case TokenType.False: return new BooleanExpression(Consume(), false);
