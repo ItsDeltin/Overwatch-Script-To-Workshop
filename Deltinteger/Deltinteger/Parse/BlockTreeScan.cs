@@ -71,6 +71,7 @@ namespace Deltin.Deltinteger.Parse
             {
                 // Loop through each statement in the block.
                 if (block is BlockAction action)
+                {
                     foreach (var statement in action.Statements)
                         // If the current statement is a return statement, add it to the list.
                         if (statement is ReturnAction returnAction)
@@ -85,6 +86,7 @@ namespace Deltin.Deltinteger.Parse
                         else if (statement is IBlockContainer)
                             foreach (var path in ((IBlockContainer)statement).GetPaths())
                                 getReturns(actions, path.Block);
+                }
                 else if (block is ReturnAction singleReturn)
                 {
                     actions.Add(singleReturn);

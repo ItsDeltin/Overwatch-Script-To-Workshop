@@ -39,7 +39,7 @@ namespace Deltin.Deltinteger.Parse
                 var switchCase = statement as SwitchCase;
 
                 // Syntax error if there is a statement before a case.
-                if (switchCase != null && !inSection && !caseError)
+                if (switchCase == null && !inSection && !caseError)
                 {
                     parseInfo.Script.Diagnostics.Error("Expected case or default.", statement.Range);
                     caseError = true;

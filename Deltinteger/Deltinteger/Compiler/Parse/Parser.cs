@@ -19,6 +19,8 @@ namespace Deltin.Deltinteger.Compiler.Parse
         public Stack<IParseExpression> Operands { get; } = new Stack<IParseExpression>();
         public Stack<TokenCapture> TokenCaptureStack { get; } = new Stack<TokenCapture>();
         public Stack<int> TokenRangeStart { get; } = new Stack<int>();
+        public Stack<bool> TernaryCheck { get; } = new Stack<bool>();
+        public Stack<bool> StringCheck { get; } = new Stack<bool>();
         public List<TokenCapture> NodeCaptures { get; } = new List<TokenCapture>();
         public List<IParserError> Errors { get; } = new List<IParserError>();
         private readonly RootContext _last;
@@ -31,6 +33,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
             Lexer = lexer;
             _last = last;
             _incrementInfo = incrementInfo;
+            StringCheck.Push(false);
         }
 
         Token Consume()
@@ -299,11 +302,26 @@ namespace Deltin.Deltinteger.Compiler.Parse
         bool TryParseBinaryOperator(out OperatorInfo operatorInfo)
         {
             foreach (var op in CompilerOperator.BinaryOperators)
+            {
+                // Do not parse '>' if we are in a formatted string and the following token is not an identifier.
+                if (op.Operator == ">" && StringCheck.Peek() && !Lexer.Tokens[Token + 1].TokenType.IsStartOfExpression())
+                    continue;
+                
+                // Do not parse right-hand ternary if the top operator is not a left-hand ternary operator.
+                if (op.Type == OperatorType.TernaryRight && !TernaryCheck.Peek())
+                    continue;
+
                 if (ParseOptional(op.RelatedToken, out Token token))
                 {
+                    if (op.Type == OperatorType.TernaryLeft)
+                        TernaryCheck.Push(true);
+                    else if (op.Type == OperatorType.TernaryRight)
+                        TernaryCheck.Pop();
+
                     operatorInfo = new OperatorInfo(op, token);
                     return true;
                 }
+            }
             
             operatorInfo = null;
             return false;
@@ -368,6 +386,8 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 case TokenType.Null: return new NullExpression(Consume());
                 // This
                 case TokenType.This: return new ThisExpression(Consume());
+                // Root
+                case TokenType.Root: return new RootExpression(Consume());
                 // New
                 case TokenType.New: return ParseNew();
                 // Array
@@ -376,10 +396,8 @@ namespace Deltin.Deltinteger.Compiler.Parse
                 case TokenType.LessThan:
                     // Make sure this is actually a type cast and not an operator.
                     if (IsTypeCast()) return ParseTypeCast();
-                    goto default;
-                // Formatted string
-                case TokenType.CurlyBracket_Open:
-                    if (Is(TokenType.String, 1) || Is(TokenType.At, 1)) return ParseFormattedString();
+                    // Formatted string
+                    else if (Is(TokenType.String, 1) || Is(TokenType.At, 1)) return ParseFormattedString();
                     goto default;
                 // Other
                 default:
@@ -419,11 +437,18 @@ namespace Deltin.Deltinteger.Compiler.Parse
 
         /// <summary>Contains the operator stack and parses an expression.</summary>
         /// <returns>The resulting expression.</returns>
-        public IParseExpression GetContainExpression()
+        public IParseExpression GetContainExpression(bool stringCheck = false)
         {
+            StringCheck.Push(stringCheck);
+            TernaryCheck.Push(false);
+
             Operators.Push(OperatorInfo.Sentinel);
             GetExpressionWithOperators();
             Operators.Pop();
+
+            StringCheck.Pop();
+            TernaryCheck.Pop();
+
             return Operands.Pop();
         }
 
@@ -1210,7 +1235,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
         StringExpression ParseFormattedString()
         {
             StartNode();
-            ParseExpected(TokenType.CurlyBracket_Open);
+            ParseExpected(TokenType.LessThan);
 
             // Get the optional localized token.
             var localized = ParseOptional(TokenType.At);
@@ -1221,9 +1246,9 @@ namespace Deltin.Deltinteger.Compiler.Parse
             // Get the formats.
             var formats = new List<IParseExpression>();
             while (ParseOptional(TokenType.Comma))
-                formats.Add(GetContainExpression());
+                formats.Add(GetContainExpression(true));
 
-            ParseExpected(TokenType.CurlyBracket_Close);
+            ParseExpected(TokenType.GreaterThan);
             return EndNode(new StringExpression(localized, str, formats));
         }
 
@@ -1452,6 +1477,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
             var variableExpression = GetContainExpression();
             ParseExpected(TokenType.Equal);
             var variableValue = GetContainExpression();
+            ParseSemicolon();
             return new Hook(variableExpression, variableValue);
         }
 

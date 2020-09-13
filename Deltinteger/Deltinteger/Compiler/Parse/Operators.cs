@@ -9,15 +9,15 @@ namespace Deltin.Deltinteger.Compiler.Parse
         // Compare
         public static CompilerOperator Ternary { get; } = new CompilerOperator(2, "?", TokenType.QuestionMark, OperatorType.TernaryLeft);
         public static CompilerOperator RhsTernary { get; } = new CompilerOperator(3, ":", TokenType.Colon, OperatorType.TernaryRight);
-        public static CompilerOperator Equal { get; } = new CompilerOperator(4, "==", TokenType.EqualEqual);
-        public static CompilerOperator NotEqual { get; } = new CompilerOperator(5, "!=", TokenType.NotEqual);
-        public static CompilerOperator GreaterThan { get; } = new CompilerOperator(6, ">", TokenType.GreaterThan);
-        public static CompilerOperator LessThan { get; } = new CompilerOperator(7, "<", TokenType.LessThan);
-        public static CompilerOperator GreaterThanOrEqual { get; } = new CompilerOperator(8, ">=", TokenType.GreaterThanOrEqual);
-        public static CompilerOperator LessThanOrEqual { get; } = new CompilerOperator(9, "<=", TokenType.LessThanOrEqual);
+        public static CompilerOperator Equal { get; } = new CompilerOperator(6, "==", TokenType.EqualEqual);
+        public static CompilerOperator NotEqual { get; } = new CompilerOperator(7, "!=", TokenType.NotEqual);
+        public static CompilerOperator GreaterThan { get; } = new CompilerOperator(8, ">", TokenType.GreaterThan);
+        public static CompilerOperator LessThan { get; } = new CompilerOperator(9, "<", TokenType.LessThan);
+        public static CompilerOperator GreaterThanOrEqual { get; } = new CompilerOperator(10, ">=", TokenType.GreaterThanOrEqual);
+        public static CompilerOperator LessThanOrEqual { get; } = new CompilerOperator(11, "<=", TokenType.LessThanOrEqual);
         // Boolean
-        public static CompilerOperator And { get; } = new CompilerOperator(10, "&&", TokenType.And);
-        public static CompilerOperator Or { get; } = new CompilerOperator(11, "||", TokenType.Or);
+        public static CompilerOperator And { get; } = new CompilerOperator(4, "&&", TokenType.And);
+        public static CompilerOperator Or { get; } = new CompilerOperator(5, "||", TokenType.Or);
         // Math
         public static CompilerOperator Subtract { get; } = new CompilerOperator(12, "-", TokenType.Subtract);
         public static CompilerOperator Add { get; } = new CompilerOperator(13, "+", TokenType.Add);

@@ -128,7 +128,7 @@ namespace Deltin.Deltinteger.Parse
                 case ExpressionGroup group: return GetExpression(scope, group.Expression);
                 case TypeCast typeCast: return new TypeConvertAction(this, scope, typeCast);
                 case ThisExpression @this: return new ThisAction(this, scope, @this);
-                // case DeltinScriptParser.E_rootContext root: return new RootAction(this.TranslateInfo);
+                case RootExpression root: return new RootAction(this.TranslateInfo);
                 // case DeltinScriptParser.E_baseContext @base: return new BaseAction(this, scope, @base);
                 // case DeltinScriptParser.E_isContext @is: return new IsAction(this, scope, @is);
                 case LambdaExpression lambda: return new Lambda.LambdaAction(this, scope, lambda);
@@ -233,7 +233,7 @@ namespace Deltin.Deltinteger.Parse
             }
 
             // Check value in array.
-            if (index != null)
+            if (index != null && index.Length > 0)
             {
                 if (!variable.CanBeIndexed)
                     Error("This variable type cannot be indexed.", variableRange);

@@ -262,6 +262,7 @@ namespace Deltin.Deltinteger.Compiler.Parse
                     MatchKeyword("playervar", TokenType.PlayerVar) ||
                     MatchKeyword("ref", TokenType.Ref) ||
                     MatchKeyword("this", TokenType.This) ||
+                    MatchKeyword("root", TokenType.Root) ||
                     MatchKeyword("as", TokenType.As) ||
                     MatchIdentifier() ||
                     MatchString();

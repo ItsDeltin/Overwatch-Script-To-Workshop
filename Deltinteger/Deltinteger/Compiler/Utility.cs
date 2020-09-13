@@ -207,16 +207,43 @@ namespace Deltin.Deltinteger.Compiler
         {
             switch (tokenType)
             {
-                case TokenType.Colon: return ":";
-                case TokenType.Semicolon: return ";";
                 case TokenType.CurlyBracket_Close: return "}";
                 case TokenType.CurlyBracket_Open: return "{";
                 case TokenType.Parentheses_Close: return ")";
                 case TokenType.Parentheses_Open: return "(";
-                case TokenType.Dot: return ".";
-                case TokenType.Squiggle: return "~";
                 case TokenType.SquareBracket_Open: return "[";
                 case TokenType.SquareBracket_Close: return "]";
+                case TokenType.Colon: return ":";
+                case TokenType.Semicolon: return ";";
+                case TokenType.Dot: return ".";
+                case TokenType.Squiggle: return "~";
+                case TokenType.Exclamation: return "!";
+                case TokenType.Comma: return ",";
+                case TokenType.Arrow: return "=>";
+                case TokenType.At: return "@";
+                case TokenType.Equal: return "=";
+                case TokenType.HatEqual: return "^=";
+                case TokenType.MultiplyEqual: return "*=";
+                case TokenType.ModuloEqual: return "%=";
+                case TokenType.AddEqual: return "+=";
+                case TokenType.SubtractEqual: return "-=";
+                case TokenType.Hat: return "^";
+                case TokenType.Multiply: return "*";
+                case TokenType.Divide: return "/";
+                case TokenType.Modulo: return "%";
+                case TokenType.Add: return "+";
+                case TokenType.Subtract: return "-";
+                case TokenType.PlusPlus: return "++";
+                case TokenType.MinusMinus: return "--";
+                case TokenType.And: return "&&";
+                case TokenType.Or: return "||";
+                case TokenType.NotEqual: return "!=";
+                case TokenType.EqualEqual: return "==";
+                case TokenType.LessThan: return "<";
+                case TokenType.GreaterThan: return ">";
+                case TokenType.LessThanOrEqual: return "<=";
+                case TokenType.GreaterThanOrEqual: return ">=";
+                case TokenType.QuestionMark: return "?";
                 case TokenType.For: return "for";
                 case TokenType.If: return "if";
                 case TokenType.Break: return "break";
@@ -258,6 +285,24 @@ namespace Deltin.Deltinteger.Compiler
                 
                 default:
                     return true;
+            }
+        }
+
+        public static bool IsStartOfExpression(this TokenType tokenType)
+        {
+            switch (tokenType)
+            {
+                case TokenType.False:
+                case TokenType.Identifier:
+                case TokenType.New:
+                case TokenType.Null:
+                case TokenType.Number:
+                case TokenType.True:
+                case TokenType.Parentheses_Open:
+                    return true;
+                
+                default:
+                    return false;
             }
         }
 
@@ -337,6 +382,7 @@ namespace Deltin.Deltinteger.Compiler
         New,
         Delete,
         This,
+        Root,
         As,
         // Attributes
         Public,
