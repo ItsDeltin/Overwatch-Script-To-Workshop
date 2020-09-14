@@ -3,6 +3,7 @@ using Deltin.Deltinteger.CustomMethods;
 using Deltin.Deltinteger.LanguageServer;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using Deltin.Deltinteger.Parse;
+using System.Linq;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -61,7 +62,7 @@ namespace Deltin.Deltinteger.Parse
                 new TypeOperation(TypeOperator.Divide, this, this, null, TypeOperation.Divide), // Vector / vector
                 new TypeOperation(TypeOperator.Multiply, NumberType.Instance, this, null, TypeOperation.Multiply), // Vector * number
                 new TypeOperation(TypeOperator.Divide, NumberType.Instance, this, null, TypeOperation.Divide), // Vector / number
-            };
+            }.ToList();
         }
 
         private InternalVar CreateInternalVar(string name, string documentation, bool isStatic = false)

@@ -122,8 +122,8 @@ namespace Deltin.Deltinteger.Parse
 
             if(typeContext.op().Length > 0)
             {
-                Operations = new TypeOperation[typeContext.op().Length];
-                for (int i = 0; i < Operations.Length; i++)
+                Operations = new List<TypeOperation>(typeContext.op().Length);
+                for (int i = 0; i < typeContext.op().Length; i++)
                 {
                     var op_info = typeContext.op()[i]; 
                    
@@ -136,10 +136,10 @@ namespace Deltin.Deltinteger.Parse
 
                     if(op_info.expr() != null)
                     {
-                        Operations[i] = new TypeOperation(op, right, ret, operationalScope, (l,r,a) => {
+                        Operations.Add(new TypeOperation(op, right, ret, operationalScope, (l,r,a) => {
                             var expression = parseInfo.GetExpression(operationalScope, op_info.expr());
                             return expression.Parse(a);
-                        });
+                        }));
                     }
                     
                 }

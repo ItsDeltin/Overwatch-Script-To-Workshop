@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using Deltin.Deltinteger.Elements;
 using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
@@ -28,7 +30,7 @@ namespace Deltin.Deltinteger.Parse
             Operations = new TypeOperation[] {
                 new TypeOperation(TypeOperator.Equal, this, BooleanType.Instance, null, (l,r,a) => new V_Compare(l.GetVariable(), Operators.Equal, r.GetVariable())),
                 new TypeOperation(TypeOperator.NotEqual, this, BooleanType.Instance, null, (l,r,a) => new V_Compare(l.GetVariable(), Operators.NotEqual, r.GetVariable()))
-            };
+            }.ToList();
         }
 
         public override CompletionItem GetCompletion() => new CompletionItem() {
@@ -75,7 +77,7 @@ namespace Deltin.Deltinteger.Parse
                 new TypeOperation(TypeOperator.LessThanOrEqual, this, BooleanType.Instance, null, (l,r,a) => new V_Compare(l.GetVariable(), Operators.LessThanOrEqual, r.GetVariable())), // Number <= number
                 new TypeOperation(TypeOperator.GreaterThanOrEqual, this, BooleanType.Instance, null, (l,r,a) => new V_Compare(l.GetVariable(), Operators.GreaterThanOrEqual, r.GetVariable())), // Number >= number
                 new TypeOperation(TypeOperator.GreaterThan, this, BooleanType.Instance, null, (l,r,a) => new V_Compare(l.GetVariable(), Operators.GreaterThan, r.GetVariable())), // Number > number
-            };
+            }.ToList();
         }
 
         public override CompletionItem GetCompletion() => new CompletionItem() {
@@ -114,7 +116,7 @@ namespace Deltin.Deltinteger.Parse
             Operations = new TypeOperation[] {
                 new TypeOperation(TypeOperator.And, this, this, null, (l,r,a) => Element.Part<V_And>(l.GetVariable(), r.GetVariable())),
                 new TypeOperation(TypeOperator.Or, this, this, null, (l,r,a) => Element.Part<V_Or>(l.GetVariable(), r.GetVariable())),
-            };
+            }.ToList();
         }
 
         public override CompletionItem GetCompletion() => new CompletionItem() {

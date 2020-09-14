@@ -136,7 +136,7 @@ ruleset :
 	reserved_global?
 	reserved_player?
 	import_file*
-	(define STATEMENT_END | ow_rule | define_method | define_macro | type_define | enum_define | hook)*
+	(define STATEMENT_END | ow_rule | define_method | define_macro | type_define | enum_define | hook | op)*
 	EOF;
 
 // Classes/structs

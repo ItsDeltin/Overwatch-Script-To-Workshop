@@ -23,7 +23,7 @@ namespace Deltin.Deltinteger.Parse
         /// <summary>Determines if other classes can inherit this class.</summary>
         public bool CanBeExtended { get; protected set; } = false;
 
-        public TypeOperation[] Operations { get; protected set; }
+        public List<TypeOperation> Operations { get; protected set; } = new List<TypeOperation>();
 
         public CodeType(string name)
         {
@@ -71,6 +71,11 @@ namespace Deltin.Deltinteger.Parse
             }
 
             return false;
+        }
+
+        public void AddOperation(TypeOperation op)
+        {
+            Operations.Add(op);
         }
 
         // Static

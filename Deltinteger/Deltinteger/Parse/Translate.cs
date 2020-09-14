@@ -5,6 +5,7 @@ using Deltin.Deltinteger.LanguageServer;
 using Deltin.Deltinteger.Elements;
 using Deltin.Deltinteger.Lobby;
 using Deltin.Deltinteger.I18n;
+using System.Linq.Expressions;
 
 namespace Deltin.Deltinteger.Parse
 {
@@ -129,11 +130,30 @@ namespace Deltin.Deltinteger.Parse
             foreach (var typeContext in script.Context.type_define())
             {
                 var newType = new DefinedType(new ParseInfo(script, this), GlobalScope, typeContext);
+                
                 Types.AllTypes.Add(newType);
                 Types.DefinedTypes.Add(newType);
                 Types.CalledTypes.Add(newType);
             }
-            
+
+            //Get operators
+            foreach (ScriptFile script in Importer.ScriptFiles)
+                foreach (var operatorContext in script.Context.op())
+                {
+                    var parseInfo = new ParseInfo(script, this);
+                    var left = CodeType.GetCodeTypeFromContext(parseInfo, operatorContext.left);
+                    var right = CodeType.GetCodeTypeFromContext(parseInfo, operatorContext.right);
+                    var ret = CodeType.GetCodeTypeFromContext(parseInfo, operatorContext.ret);
+
+
+                    var ident = operatorContext.ident.Text;
+                    left.AddOperation(new TypeOperation(TypeOperation.TypeOperatorFromString(ident), right, ret, GlobalScope, (l, r, a) =>
+                    {
+                        var expr = parseInfo.GetExpression(GlobalScope, operatorContext.expr());
+                        return expr.Parse(a);
+                    }));
+                }
+
             // Get the methods and macros
             foreach (ScriptFile script in Importer.ScriptFiles)
             {
@@ -175,11 +195,7 @@ namespace Deltin.Deltinteger.Parse
             foreach (var ruleContext in script.Context.ow_rule())
                 rules.Add(new RuleAction(new ParseInfo(script, this), RulesetScope, ruleContext));
 
-            //Get operators
-            foreach (ScriptFile script in Importer.ScriptFiles)
-            {
-
-            }
+            
 
         }
 
